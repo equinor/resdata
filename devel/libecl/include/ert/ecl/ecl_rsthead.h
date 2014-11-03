@@ -75,7 +75,7 @@ extern "C" {
   } ecl_rsthead_type;
 
 
-
+  
   void                ecl_rsthead_free( ecl_rsthead_type * rsthead );
   ecl_rsthead_type  * ecl_rsthead_ialloc( const ecl_file_type * rst_file , int occurence);
   ecl_rsthead_type  * ecl_rsthead_alloc( const ecl_file_type * rst_file );
@@ -83,6 +83,7 @@ extern "C" {
   void                ecl_rsthead_fprintf( const ecl_rsthead_type * header , FILE * stream);
   void                ecl_rsthead_fprintf_struct( const ecl_rsthead_type * header , FILE * stream);
   bool                ecl_rsthead_equal( const ecl_rsthead_type * header1 , const ecl_rsthead_type * header2);
+  double              ecl_rsthead_get_sim_days( const ecl_rsthead_type * header );
 
 #ifdef __cplusplus
 }
