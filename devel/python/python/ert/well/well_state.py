@@ -52,13 +52,19 @@ class WellState(BaseCClass):
         return values
 
 
+    def numSegments(self):
+        """ @rtype: int """
+        segment_collection = WellState.cNamespace().get_segment_collection(self)
+        count = WellState.cNamespace().segment_collection_size(segment_collection)
+        return count
+
+
     def segments(self):
         """ @rtype: list of WellSegment """
         segment_collection = WellState.cNamespace().get_segment_collection(self)
-        count = WellState.cNamespace().segment_collection_size(segment_collection)
 
         values = []
-        for index in range(count):
+        for index in range(self.numSegments()):
             value = WellState.cNamespace().segment_collection_iget(segment_collection, index).setParent(self)
             values.append(value)
 
