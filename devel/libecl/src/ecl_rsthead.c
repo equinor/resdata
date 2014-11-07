@@ -37,6 +37,10 @@ time_t ecl_rsthead_date( const ecl_kw_type * intehead_kw ) {
 }
 
 
+double ecl_rsthead_get_sim_days( const ecl_rsthead_type * header ) {
+  return header->sim_days;
+}
+
 
 
 ecl_rsthead_type * ecl_rsthead_ialloc( const ecl_file_type * rst_file , int occurence) {
