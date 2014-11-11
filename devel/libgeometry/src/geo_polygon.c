@@ -71,6 +71,13 @@ void geo_polygon_add_point( geo_polygon_type * polygon , double x , double y) {
 }
 
 
+void geo_polygon_close( geo_polygon_type * polygon) {
+  double x = double_vector_get_first( polygon->xcoord );
+  double y = double_vector_get_first( polygon->ycoord );
+  geo_polygon_add_point( polygon , x , y );
+}
+
+
 bool geo_polygon_contains_point( const geo_polygon_type * polygon , double x , double y) {
   return geo_util_inside_polygon( double_vector_get_const_ptr( polygon->xcoord ) , 
                                   double_vector_get_const_ptr( polygon->ycoord ) ,
