@@ -32,24 +32,39 @@ static bool between(double v1, double v2 , double v) {
 }
 
 
+
 bool geo_util_inside_polygon(const double * xlist , const double * ylist , int num_points , double x0 , double y0) {
   bool inside = false;
   int point_num;
   double y = y0;
-  
+  double xc = 0;
+
   for (point_num = 0; point_num < num_points; point_num++) {
     int next_point = ((point_num + 1) % num_points);
     double x1 = xlist[point_num];  double y1 = ylist[point_num];
     double x2 = xlist[next_point]; double y2 = ylist[next_point];
+
+    double ymin = util_double_min(y1,y2);
+    double ymax = util_double_max(y1,y2);
+    double xmax = util_double_max(x1,x2);
     
-    if (between(x1,x2,x0)) {
-      double yc = (y2 - y1)/(x2 - x1) * (x0 - x1) + y1;  
-      if (y < yc) {
-        y = yc;
-        inside = !inside;
+    if ((x1 == x2) && (y1 == y2))
+      continue;
+    
+    if ((y0 > ymin) && (y <= ymax)) {
+
+      if (x0 <= xmax) {
+        if (y1 != y2)
+          xc = (y0 - y1) * (x2 - x1) / (y2 - y1) + x1;
+        
+        if ((x1 == x2) || (x0 <= xc))
+          inside = !inside;
+        
       }
     }
   }
+      
+    
   return inside;
 }
 
