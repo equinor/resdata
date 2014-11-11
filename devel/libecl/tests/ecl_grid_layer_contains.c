@@ -25,23 +25,21 @@
 
 
 void test_layer(const ecl_grid_type * grid ) {
-  int i,j,k;
+  int g;
+  
+  for (g=0; g < ecl_grid_get_global_size( grid ); g += 25) {
+    double x,y,z;
+    int i,j,k;
 
-  for (k=0; k < ecl_grid_get_nz( grid ); k++) {
-    for (j=0; j < ecl_grid_get_ny(grid); j++) {
-      for (i =0; i< ecl_grid_get_nx(grid); i++) {
-        
-        double x,y,z;
-
-        ecl_grid_get_xyz3( grid , i , j , k , &x , &y , &z );
-        {
-          int find_i , find_j;
-          test_assert_true( ecl_grid_get_ij_from_xy( grid ,  x , y , k , &find_i , &find_j ));
-          test_assert_int_equal( i , find_i );
-          test_assert_int_equal( j , find_j );
-        }
-      }
+    ecl_grid_get_xyz1( grid , g , &x , &y , &z );
+    ecl_grid_get_ijk1( grid , g , &i , &j , &k);
+    {
+      int find_i , find_j;
+      test_assert_true( ecl_grid_get_ij_from_xy( grid ,  x , y , k , &find_i , &find_j ));
+      test_assert_int_equal( i , find_i );
+      test_assert_int_equal( j , find_j );
     }
+    
   }
 }
 

@@ -3723,7 +3723,8 @@ static bool ecl_grid_sublayer_contanins_xy__(const ecl_grid_type * grid , double
     ecl_grid_get_corner_xyz( grid , i1 , j , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
     geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
   }
-  
+  geo_polygon_close( polygon );
+
   return geo_polygon_contains_point( polygon , x  , y );  
 }
 
@@ -3763,18 +3764,9 @@ bool ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y ,
         }
       }
       
-      printf("Narrowing: %d %d   %d %d \n",i1,i2,j1,j2);
-
-      /** Must have some on-edge equality testing here as well. */
       if ((i2 - i1) == 1 && (j2 - j1) == 1) {
-        double xc,yc,zc;
         *i = i1;
         *j = j1;
-        ecl_grid_get_xyz3(grid , i1,j1,k,&xc,&yc,&zc);
-        printf("Cell center: dx:%g   dy:%g \n",xc - x , yc - y);
-        geo_polygon_shift( polygon , -x , -y);
-        
-        geo_polygon_fprintf( polygon , stdout );
         break;
       }
     }
