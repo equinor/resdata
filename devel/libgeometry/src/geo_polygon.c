@@ -38,6 +38,8 @@ struct geo_polygon_struct {
 
 
 static UTIL_SAFE_CAST_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID );
+UTIL_IS_INSTANCE_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID);
+
 
 geo_polygon_type * geo_polygon_alloc() {
   geo_polygon_type * polygon = util_malloc( sizeof * polygon );

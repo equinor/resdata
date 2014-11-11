@@ -38,6 +38,7 @@ extern "C" {
   void               geo_polygon_reset(geo_polygon_type * polygon );
   void               geo_polygon_fprintf(const geo_polygon_type * polygon , FILE * stream);
   void               geo_polygon_shift(geo_polygon_type * polygon , double x0 , double y0);
+  UTIL_IS_INSTANCE_HEADER( geo_polygon );
 
 #ifdef __cplusplus
 }
