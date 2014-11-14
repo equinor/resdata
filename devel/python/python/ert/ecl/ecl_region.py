@@ -29,7 +29,7 @@ import ctypes
 import warnings
 from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 from ert.ecl import EclKW, EclTypeEnum, ECL_LIB
-from ert.geo import GeoPolygon
+from ert.geo import CPolyline
 from ert.util import IntVector
 
 
@@ -667,7 +667,7 @@ class EclRegion(CClass):
         implies that the selection polygon will effectively be
         translated if the pillars are not vertical.
         """
-        cfunc.select_inside_polygon( self , GeoPolygon( points ))
+        cfunc.select_inside_polygon( self , CPolyline( init_points = points ))
 
     @select_method
     def select_outside_polygon( self , points , intersect = False):
@@ -676,7 +676,7 @@ class EclRegion(CClass):
 
         See select_inside_polygon for more docuemntation.
         """
-        cfunc.select_outside_polygon( self , GeoPolygon( points ))
+        cfunc.select_outside_polygon( self , CPolyline( init_points = points ))
 
     def deselect_inside_polygon( self , points ):
         """
@@ -684,7 +684,7 @@ class EclRegion(CClass):
 
         See select_inside_polygon for more docuemntation.
         """
-        cfunc.deselect_inside_polygon( self , GeoPolygon( points ))
+        cfunc.deselect_inside_polygon( self , CPolyline( init_points = points ))
 
     def deselect_outside_polygon( self , points ):
         """
@@ -692,7 +692,7 @@ class EclRegion(CClass):
 
         See select_inside_polygon for more docuemntation.
         """
-        cfunc.deselect_outside_polygon( self , GeoPolygon( points ))
+        cfunc.deselect_outside_polygon( self , CPolyline( init_points = points ))
 
 
 

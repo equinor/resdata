@@ -19,12 +19,13 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <ert/util/util.h>
 
 #include <ert/geometry/geo_util.h>
 
-
+#define EPSILON  0.000001
 
 
 static bool between(double v1, double v2 , double v) {
@@ -68,6 +69,11 @@ bool geo_util_inside_polygon(const double * xlist , const double * ylist , int n
   return inside;
 }
 
+/*
+  This function will cross to infinitely long lines which go through
+  the points given by the points pointer; this function does not
+  consider line segments of finite length.
+*/
 
 geo_util_xlines_status_enum geo_util_xlines( const double ** points , double * x0, double * y0 ) {
   double x1 = points[0][0];
@@ -137,3 +143,48 @@ geo_util_xlines_status_enum geo_util_xlines( const double ** points , double * x
   }
 }
 
+
+geo_util_xlines_status_enum geo_util_xsegments( const double ** points , double * x0, double * y0 ) {
+  double x1 = points[0][0];
+  double x2 = points[1][0];
+  double x3 = points[2][0];
+  double x4 = points[3][0];
+
+  double y1 = points[0][1];
+  double y2 = points[1][1];
+  double y3 = points[2][1];
+  double y4 = points[3][1];
+    
+  double denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+  double numerator_a = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+  double numerator_b = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
+    
+  // coincident?
+  if ((fabs(numerator_a) < EPSILON) && 
+      (fabs(numerator_b) < EPSILON) && 
+      (fabs(denominator) < EPSILON)) {
+    *x0 = (x1 + x2) * 0.50;
+    *y0 = (y1 + y2) * 0.50;
+    
+    return GEO_UTIL_LINES_OVERLAPPING;
+  }
+
+  // Parallell 
+  if (fabs(denominator) < EPSILON) 
+    return GEO_UTIL_NOT_CROSSING;
+    
+
+  // Normal intersection
+  {
+    double mua = numerator_a / denominator;
+    double mub = numerator_b / denominator;
+    
+    if ((mua < 0.0) || (mua > 1.0) || (mub < 0.0) || (mub > 1.0))
+      return GEO_UTIL_NOT_CROSSING; 
+
+    *x0 = x1 + mua * (x2 - x1);
+    *y0 = y1 + mua * (y2 - y1 );
+    
+    return GEO_UTIL_LINES_CROSSING;
+  }
+}

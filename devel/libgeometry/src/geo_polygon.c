@@ -155,6 +155,11 @@ void geo_polygon_shift(geo_polygon_type * polygon , double x0 , double y0) {
 }
 
 
+int geo_polygon_get_size(const geo_polygon_type * polygon ) {
+  return double_vector_size( polygon->xcoord );
+}
+
+
 void geo_polygon_fprintf(const geo_polygon_type * polygon , FILE * stream) {
   int i;
   for (i=0; i < double_vector_size( polygon->xcoord ); i++)
