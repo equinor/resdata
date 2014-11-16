@@ -2,7 +2,7 @@ import collections
 from .geometry_tools import GeometryTools
 
 class Polyline(object):
-    def __init__(self, name="Unnamed" , init_points = None):
+    def __init__(self, name=None , init_points = None):
         super(Polyline, self).__init__()
         self.__name = name
         self.__points = []
