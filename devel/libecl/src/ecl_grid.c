@@ -3731,7 +3731,7 @@ static bool ecl_grid_sublayer_contanins_xy__(const ecl_grid_type * grid , double
 
 
 bool ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y , int k , int* i, int* j) {
-  geo_polygon_type * polygon = geo_polygon_alloc();
+  geo_polygon_type * polygon = geo_polygon_alloc( NULL );
   int nx = ecl_grid_get_nx( grid );
   int ny = ecl_grid_get_ny( grid );
   bool inside = ecl_grid_sublayer_contanins_xy__(grid , x , y , k , 0 , nx , 0 , ny , polygon);

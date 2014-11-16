@@ -29,7 +29,7 @@ extern "C" {
 
   typedef struct geo_polygon_struct geo_polygon_type;
   
-  geo_polygon_type * geo_polygon_alloc( );
+  geo_polygon_type * geo_polygon_alloc( const char * name );
   void               geo_polygon_free( geo_polygon_type * polygon );
   void               geo_polygon_free__( void * arg );
   void               geo_polygon_add_point( geo_polygon_type * polygon , double x , double y );
@@ -39,6 +39,10 @@ extern "C" {
   void               geo_polygon_fprintf(const geo_polygon_type * polygon , FILE * stream);
   void               geo_polygon_shift(geo_polygon_type * polygon , double x0 , double y0);
   void               geo_polygon_close( geo_polygon_type * polygoon);
+  int                geo_polygon_get_size(const geo_polygon_type * polygon );
+  void               geo_polygon_iget_xy(const geo_polygon_type * polygon , int index , double *x , double *y);
+  bool               geo_polygon_segment_intersects(const geo_polygon_type * polygon , double x1 , double y1 , double x2 , double y2);
+  const char       * geo_polygon_get_name( const geo_polygon_type * polygon );
 
   UTIL_IS_INSTANCE_HEADER( geo_polygon );
 

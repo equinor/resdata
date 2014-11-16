@@ -34,6 +34,7 @@ struct geo_polygon_struct {
   UTIL_TYPE_ID_DECLARATION;
   double_vector_type * xcoord;
   double_vector_type * ycoord;
+  char * name;
 };
 
 
@@ -41,19 +42,20 @@ static UTIL_SAFE_CAST_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID );
 UTIL_IS_INSTANCE_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID);
 
 
-geo_polygon_type * geo_polygon_alloc() {
+geo_polygon_type * geo_polygon_alloc(const char * name) {
   geo_polygon_type * polygon = util_malloc( sizeof * polygon );
   
   UTIL_TYPE_ID_INIT( polygon , GEO_POLYGON_TYPE_ID );
   polygon->xcoord = double_vector_alloc( 0 , 0 );
   polygon->ycoord = double_vector_alloc( 0 , 0 );
-
+  polygon->name   = util_alloc_string_copy( name );
   return polygon;
 }
 
 void geo_polygon_free( geo_polygon_type * polygon ) {
   double_vector_free( polygon->xcoord );
   double_vector_free( polygon->ycoord );
+  util_safe_free( polygon->name );
   free( polygon );
 }
 
@@ -158,3 +160,69 @@ void geo_polygon_fprintf(const geo_polygon_type * polygon , FILE * stream) {
   for (i=0; i < double_vector_size( polygon->xcoord ); i++)
     fprintf(stream , "%10.3f  %10.3f \n", double_vector_iget( polygon->xcoord , i ) , double_vector_iget( polygon->ycoord , i));
 }
+
+
+void geo_polygon_iget_xy(const geo_polygon_type * polygon , int index , double *x , double *y) {
+  *x = double_vector_iget( polygon->xcoord , index );
+  *y = double_vector_iget( polygon->ycoord , index );
+}
+
+
+bool geo_polygon_segment_intersects(const geo_polygon_type * polygon , double x1 , double y1 , double x2 , double y2) {
+  bool intersects = false;
+  int index = 0;
+  double ** points = util_malloc( 4 * sizeof * points);
+  {
+    int i;
+    for (i = 0; i < 4; i++)
+      points[i] = util_malloc( 2 * sizeof * points[i]);
+  }
+    
+  points[0][0] = x1;
+  points[1][0] = x2;
+  points[0][1] = y1;
+  points[1][1] = y2;
+  
+  while (true) {
+    
+    if (index >= (geo_polygon_get_size( polygon ) - 1)) 
+      break;
+
+    {
+      double xc,yc;
+
+      points[2][0] = double_vector_iget( polygon->xcoord , index );
+      points[3][0] = double_vector_iget( polygon->xcoord , index + 1);
+      points[2][1] = double_vector_iget( polygon->ycoord , index );
+      points[3][1] = double_vector_iget( polygon->ycoord , index + 1);
+
+      {
+        geo_util_xlines_status_enum xline_status = geo_util_xsegments(( const double **) points , &xc , &yc);
+        if (xline_status == GEO_UTIL_LINES_CROSSING)
+          intersects = true;
+      }
+      
+      if (intersects)
+        break;
+
+    } 
+    
+    index++;
+  }
+
+  {
+    int i;
+    for (i = 0; i < 4; i++)
+      free(points[i]);
+
+    free( points );
+  }
+
+  return intersects;
+}
+
+
+const char* geo_polygon_get_name( const geo_polygon_type * polygon ) {
+  return polygon->name;
+}
+
