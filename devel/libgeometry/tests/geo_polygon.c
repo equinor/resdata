@@ -30,14 +30,15 @@
 
 
 void test_create() {
-  geo_polygon_type * polygon = geo_polygon_alloc( );
+  geo_polygon_type * polygon = geo_polygon_alloc( "Name" );
   test_assert_true( geo_polygon_is_instance( polygon ));
+  test_assert_string_equal( "Name" , geo_polygon_get_name( polygon ));
   geo_polygon_free( polygon );
 }
 
 
 void test_contains__( double x , double y , int length , const double * data, bool expected) {
-  geo_polygon_type * polygon = geo_polygon_alloc( );
+  geo_polygon_type * polygon = geo_polygon_alloc( NULL );
   int i;
   for (i=0; i < length; i++) 
     geo_polygon_add_point( polygon , data[2*i] , data[2*i + 1]);
@@ -71,8 +72,8 @@ void test_contains_polygon3( int length , const double * data) {
 
 void test_contains() {
   test_contains_polygon1( 4 , (const double[8])  {0,0,1,0,1,1,0,1});  
-  //test_contains_polygon2( 5 , (const double[10]) {0,0,1,0,1,1,0,1,0,0});  
-  //test_contains_polygon3( 6 , (const double[12]) {0,0 , 1,0 , 0.6,0.5 , 0.4,0.5 , 1,1 , 1,0});  
+  test_contains_polygon2( 5 , (const double[10]) {0,0,1,0,1,1,0,1,0,0});  
+  test_contains_polygon3( 6 , (const double[12]) {0,0 , 0,1 , 0.6,0.5 , 0.4,0.5 , 1,1 , 1,0});  
 }
 
 
