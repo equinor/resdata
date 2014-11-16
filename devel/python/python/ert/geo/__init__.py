@@ -24,6 +24,7 @@ import ert.util
 ERT_GEOMETRY_LIB = clib.ert_load("libert_geometry")
 
 from .cpolyline import CPolyline
+from .cpolyline_collection import CPolylineCollection
 from .polyline import Polyline
 from .xyz_io import XYZIo
 from .geometry_tools import GeometryTools
