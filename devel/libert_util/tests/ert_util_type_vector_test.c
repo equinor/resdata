@@ -324,6 +324,18 @@ void test_del() {
 }
 
 
+void test_insert_double() {
+  double_vector_type * vec = double_vector_alloc(0,0);
+  double_vector_append( vec , 1 );
+  double_vector_insert( vec , 0 , 0 );
+  
+  test_assert_double_equal( 0 , double_vector_iget( vec , 0 ));
+  test_assert_double_equal( 1 , double_vector_iget( vec , 1 ));
+  
+  double_vector_free( vec );
+}
+
+
 void test_empty() {
   int_vector_type * vec = int_vector_alloc(0,0);
   int_vector_sort( vec );
@@ -420,5 +432,6 @@ int main(int argc , char ** argv) {
   test_iset_block();
   test_resize();
   test_empty();
+  test_insert_double();
   exit(0);
 }
