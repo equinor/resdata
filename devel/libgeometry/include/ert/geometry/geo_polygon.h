@@ -33,6 +33,7 @@ extern "C" {
   void               geo_polygon_free( geo_polygon_type * polygon );
   void               geo_polygon_free__( void * arg );
   void               geo_polygon_add_point( geo_polygon_type * polygon , double x , double y );
+  void               geo_polygon_add_point_front( geo_polygon_type * polygon , double x , double y);
   geo_polygon_type * geo_polygon_fload_alloc_irap( const char * filename );
   bool               geo_polygon_contains_point( const geo_polygon_type * polygon , double x , double y);
   void               geo_polygon_reset(geo_polygon_type * polygon );

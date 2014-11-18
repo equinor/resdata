@@ -72,6 +72,11 @@ void geo_polygon_add_point( geo_polygon_type * polygon , double x , double y) {
   double_vector_append( polygon->ycoord , y );
 }
 
+void geo_polygon_add_point_front( geo_polygon_type * polygon , double x , double y) {
+  double_vector_insert( polygon->xcoord , 0 , x );
+  double_vector_insert( polygon->ycoord , 0 , y );
+}
+
 
 void geo_polygon_close( geo_polygon_type * polygon) {
   double x = double_vector_get_first( polygon->xcoord );

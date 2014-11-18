@@ -77,9 +77,30 @@ void test_contains() {
 }
 
 
+void test_prepend() {
+  geo_polygon_type * polygon = geo_polygon_alloc( NULL );
+  geo_polygon_add_point(polygon , 1 , 1);
+  geo_polygon_add_point_front( polygon , 0,0);
+  test_assert_int_equal( 2 , geo_polygon_get_size( polygon ));
+  {
+    double x,y;
+
+    geo_polygon_iget_xy(polygon , 0 , &x , &y);
+    test_assert_double_equal( x , 0 );
+    test_assert_double_equal( x , 0 );
+    
+    geo_polygon_iget_xy(polygon , 1 , &x , &y);
+    test_assert_double_equal( x , 1 );
+    test_assert_double_equal( x , 1 );
+  }
+  geo_polygon_free( polygon );
+}
+
+
 
 int main(int argc , char ** argv) {
   test_create();
   test_contains();
+  test_prepend();
   exit(0);
 }
