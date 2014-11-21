@@ -263,6 +263,11 @@ void util_abort__(const char * file , const char * function , int line , const c
     if (abort_dump != stderr) {
       util_fclose(abort_dump);
       fprintf(stderr, "\n\nA fatal error occured, see file: %s for details.\nSetting the environment variable \"ERT_SHOW_BACKTRACE\" will show the backtrace on stderr.\n", filename);
+      fprintf(stderr, "Error message: ");
+      va_list args;
+      va_start(args , fmt);
+      vfprintf(stderr , fmt , args);
+      va_end(args);
     }
 
     free(filename);
