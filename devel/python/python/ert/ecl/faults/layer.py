@@ -90,7 +90,6 @@ class Layer(BaseCClass):
     def addFaultBarrier(self , fault , K , link_segments = True ):
         fault_layer = fault[K]
         num_lines = len(fault_layer)
-        print "DEBUG: num_lines: %d fault:%s" % (num_lines , fault.getName())
         for index , fault_line in enumerate(fault_layer):
             for segment in fault_line:
                 c1 , c2 = segment.getCorners()
@@ -105,6 +104,31 @@ class Layer(BaseCClass):
                     self.addInterpBarrier( c2 , next_c1 )
                     
 
+    def addIJBarrier(self , ij_list):
+        if len(ij_list) < 2:
+            raise ValueError("Must have at least two (i,j) points")
+
+        nx = self.getNX()
+        ny = self.getNY()
+        p1 = ij_list[0]
+        i1,j1 = p1
+        for p2 in ij_list[1:]:
+            i2,j2 = p2
+            if i1 == i2 or j1 == j2:
+                if not 0 <= i2 <= nx:
+                    raise ValueError("i value:%d invalid. Valid range: [0,%d] " % (i , i2))
+
+                if not 0 <= j2 <= ny:
+                    raise ValueError("i value:%d invalid. Valid range: [0,%d] " % (j , j2))
+                    
+                Layer.cNamespace().add_ijbarrier( self , i1 , j1 , i2 , j2 )
+                p1 = p2
+                i1,j1 = p1
+            else:
+                raise ValueError("Must have i1 == i2 or j1 == j2")
+        
+                
+
 
 
 cwrapper = CWrapper(ECL_LIB)
@@ -117,4 +141,5 @@ Layer.cNamespace().set_cell     = cwrapper.prototype("void      layer_iset_cell_
 Layer.cNamespace().get_cell     = cwrapper.prototype("int       layer_iget_cell_value(layer , int , int )")
 Layer.cNamespace().cell_contact = cwrapper.prototype("bool      layer_cell_contact(layer , int , int , int , int)")
 Layer.cNamespace().add_barrier  = cwrapper.prototype("void      layer_add_barrier(layer , int , int)")
+Layer.cNamespace().add_ijbarrier  = cwrapper.prototype("void      layer_add_ijbarrier(layer , int , int, int , int)")
 Layer.cNamespace().add_interp_barrier = cwrapper.prototype("void  layer_add_interp_barrier(layer , int , int)")

@@ -572,16 +572,7 @@ bool layer_cell_contact( const layer_type * layer , int i1 , int j1 , int i2 , i
 }
 
 
-
-void layer_add_barrier( layer_type * layer , int c1 , int c2) {
-  int dimx = layer->nx + 1;
-  int j1 = c1 / dimx;
-  int i1 = c1 % dimx;
-
-  int j2 = c2 / dimx;
-  int i2 = c2 % dimx;
-
-  
+void layer_add_ijbarrier( layer_type * layer , int i1 , int j1 , int i2 , int j2 ) {
   if ((j1 == j2) || (i1 == i2)) {
     if (i1 == i2) {
       int j;
@@ -605,6 +596,19 @@ void layer_add_barrier( layer_type * layer , int c1 , int c2) {
   } else
     util_abort("%s: fatal error must have i1 == i2 || j1 == j2 \n",__func__);
   
+}
+
+
+
+void layer_add_barrier( layer_type * layer , int c1 , int c2) {
+  int dimx = layer->nx + 1;
+  int j1 = c1 / dimx;
+  int i1 = c1 % dimx;
+
+  int j2 = c2 / dimx;
+  int i2 = c2 % dimx;
+
+  layer_add_ijbarrier( layer , i1 , j1 , i2 , j2 );
 }
 
 
