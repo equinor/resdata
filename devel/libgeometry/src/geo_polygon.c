@@ -87,29 +87,54 @@ bool geo_polygon_contains_point( const geo_polygon_type * polygon , double x , d
 
 
 
-geo_polygon_type * geo_polygon_fload_alloc_irap( const char * filename ) {
-  geo_polygon_type * polygon = geo_polygon_alloc();
+static geo_polygon_type * geo_polygon_fload_alloc_xyz( const char * filename , bool irap_format) {
+  bool stop_on_999 = irap_format;
+  bool skip_last_point = irap_format;
+
+  geo_polygon_type * polygon = geo_polygon_alloc( filename );
   {
     FILE * stream = util_fopen( filename , "r");
     double x , y , z;
     while (true) {
-      if (fscanf(stream , "%lg %lg %lg" , &x, &y , &z) == 3) 
+      if (fscanf(stream , "%lg %lg %lg" , &x, &y , &z) == 3) {
+        if (stop_on_999 && (x == 999) && (y == 999) && (z == 999))
+          break;
+        
         geo_polygon_add_point( polygon , x , y );
-      else
+      } else
         break;
     } 
+
     fclose( stream );
-    /*
-      The irap format is a polygon which closes on itself by
-      construction; i.e. the last point from file is not added to the
-      polygon data structure. In addition the final '999' termination
-      is not included.
-    */
-    double_vector_pop( polygon->xcoord );
-    double_vector_pop( polygon->xcoord );
-    double_vector_pop( polygon->ycoord );
-    double_vector_pop( polygon->ycoord );
+
+    if ((double_vector_size( polygon->xcoord ) > 1) && (skip_last_point)) {
+      if ((double_vector_get_last(polygon->xcoord) == double_vector_get_first(polygon->xcoord)) &&
+          (double_vector_get_last(polygon->ycoord) == double_vector_get_first(polygon->ycoord))) {
+        
+        double_vector_pop( polygon->xcoord );
+        double_vector_pop( polygon->ycoord );
+      }
+    }
   }
+  return polygon;
+}
+
+
+/*
+  The irap format is a polygon which closes on itself by construction,
+  and the list of numbers is terminated with (999,999,999). This is
+  supported as follows:
+
+    - Reading will stop at (999,999,999) - all points after this
+      triplet will be ignored.
+
+    - The polyline will by construction close on itself, i.e. P0 ==
+      PN. Iff the last point is identical to the first it will not be
+      included.
+*/
+
+geo_polygon_type * geo_polygon_fload_alloc_irap( const char * filename ) {
+  geo_polygon_type * polygon = geo_polygon_fload_alloc_xyz( filename , true );
   return polygon;
 }
 
