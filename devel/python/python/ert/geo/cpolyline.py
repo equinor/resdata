@@ -104,10 +104,12 @@ class CPolyline(BaseCClass):
     def unzip(self):
         x_list = [ ]
         y_list = [ ]
+        print "Starting unzip"
         for x,y in self:
             x_list.append(x)
             y_list.append(y)
-        
+
+        print "Unzip complete"
         return (x_list , y_list)
         
 

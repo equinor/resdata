@@ -50,7 +50,7 @@ class CPolylineCollection(BaseCClass):
                 index += len(self)
                 
             if 0 <= index < len(self):
-                return CPolylineCollection.cNamespace().iget(self , index)
+                return CPolylineCollection.cNamespace().iget(self , index).setParent( self )
             else:
                 raise IndexError("Invalid index:%d - valid range: [0,%d)" % (index , len(self)))
         elif isinstance(index , str):
@@ -70,7 +70,6 @@ class CPolylineCollection(BaseCClass):
 
         polyline.convertToCReference( self )
         CPolylineCollection.cNamespace().add_polyline(self , polyline , True)
-
 
 
     def createPolyline(self , name = None):
