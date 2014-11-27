@@ -20,6 +20,8 @@
 #include <ert/util/int_vector.h>
 
 #include <ert/geometry/geo_util.h>
+#include <ert/geometry/geo_polygon.h>
+#include <ert/geometry/geo_polygon_collection.h>
 
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw.h>
@@ -188,34 +190,63 @@ bool fault_block_trace_edge( const fault_block_type * block , double_vector_type
       layer_trace_block_edge(fault_block_layer_get_layer( block->parent_layer ) , start_i , start_j , block->block_id , corner_list , cell_list);
     }
     
-    double_vector_reset( x_list );
-    double_vector_reset( y_list );
-    for (c=0; c < struct_vector_get_size( corner_list ); c++) {
-      double x,y,z;
-      int_point2d_type ij;
-      struct_vector_iget( corner_list , c , &ij );
-      
-      ecl_grid_get_corner_xyz( block->grid , ij.i , ij.j , block->k , &x , &y , &z);
-      double_vector_append( x_list , x);
-      double_vector_append( y_list , y);
+    if (x_list && y_list) {
+      double_vector_reset( x_list );
+      double_vector_reset( y_list );
+      for (c=0; c < struct_vector_get_size( corner_list ); c++) {
+        double x,y,z;
+        int_point2d_type ij;
+        struct_vector_iget( corner_list , c , &ij );
+        
+        ecl_grid_get_corner_xyz( block->grid , ij.i , ij.j , block->k , &x , &y , &z);
+        double_vector_append( x_list , x);
+        double_vector_append( y_list , y);
+      }
     }
-    
+
     struct_vector_free( corner_list );
     return true;
   } else
     return false;
 }
 
+static bool fault_block_neighbour_xpolyline( const fault_block_type * block , int i1, int j1, int i2 , int j2, const geo_polygon_collection_type * polylines) {
+  int g1 = ecl_grid_get_global_index3( block->grid , i1 , j1 , block->k );
+  int g2 = ecl_grid_get_global_index3( block->grid , i2 , j2 , block->k );
+  double x1,y1,z1;
+  double x2,y2,z2;
+  
+  ecl_grid_get_xyz1( block->grid , g1 , &x1 , &y1 , &z1);
+  ecl_grid_get_xyz1( block->grid , g2 , &x2 , &y2 , &z2);
+  
+  {
+    int polyline_index = 0;
+    bool intersection = false;
+    while (true)  {
+      if (polyline_index >= geo_polygon_collection_size(polylines))
+        break;
+
+      {
+        const geo_polygon_type * polyline = geo_polygon_collection_iget_polygon( polylines , polyline_index );
+        if (geo_polygon_segment_intersects( polyline , x1,y1,x2,y2 )) {
+          intersection = true;
+          break;
+        }
+      }
+
+      polyline_index++;
+    }
+    
+    return intersection;
+  }
+}
 
 
-void fault_block_list_neighbours( const fault_block_type * block, bool connected_only , int_vector_type * neighbour_list) {
+void fault_block_list_neighbours( const fault_block_type * block, bool connected_only , const geo_polygon_collection_type * polylines , int_vector_type * neighbour_list) {
   int_vector_reset( neighbour_list );
   {
     int_vector_type * cell_list = int_vector_alloc(0,0);
-    double_vector_type * x_list = double_vector_alloc(0,0);
-    double_vector_type * y_list = double_vector_alloc(0,0);
-
-    fault_block_trace_edge( block , x_list , y_list , cell_list );
+    fault_block_trace_edge( block , NULL , NULL , cell_list );
     {
       int c;
       layer_type * layer = fault_block_layer_get_layer( block->parent_layer );
@@ -227,8 +258,13 @@ void fault_block_list_neighbours( const fault_block_type * block, bool connected
         if (i > 0) {
           int neighbour_id = layer_iget_cell_value(layer , i - 1, j);
           if (cell_id != neighbour_id) {
-            bool connected = layer_cell_contact( layer , i , j , i - 1 , j);
-            if (connected || !connected_only)
+            if (connected_only) {
+              bool connected = layer_cell_contact( layer , i , j , i - 1 , j);
+              if (connected) {
+                if (!fault_block_neighbour_xpolyline( block , i,j,i-1,j,polylines ))
+                  int_vector_append( neighbour_list , neighbour_id );
+              }
+            } else
               int_vector_append( neighbour_list , neighbour_id );
           }
         }
@@ -236,8 +272,13 @@ void fault_block_list_neighbours( const fault_block_type * block, bool connected
         if (i < (layer_get_nx( layer) - 1)) {
           int neighbour_id = layer_iget_cell_value(layer , i + 1, j);
           if (cell_id != neighbour_id) {
-            bool connected = layer_cell_contact( layer , i , j , i + 1 , j);
-            if (connected || !connected_only)
+            if (connected_only) {
+              bool connected = layer_cell_contact( layer , i , j , i + 1 , j);
+              if (connected) {
+                if (!fault_block_neighbour_xpolyline( block , i , j , i + 1 , j , polylines ))
+                  int_vector_append( neighbour_list , neighbour_id );
+              }
+            } else
               int_vector_append( neighbour_list , neighbour_id );
           }
         }
@@ -245,26 +286,33 @@ void fault_block_list_neighbours( const fault_block_type * block, bool connected
         if (j > 0) {
           int neighbour_id = layer_iget_cell_value(layer , i, j - 1);
           if (cell_id != neighbour_id) {
-            bool connected = layer_cell_contact( layer , i , j , i  , j - 1);
-            if (connected || !connected_only)
+            if (connected_only) {
+              bool connected = layer_cell_contact( layer , i , j , i  , j - 1);
+              if (connected) {
+                if (!fault_block_neighbour_xpolyline( block , i , j , i  , j - 1, polylines ))
+                  int_vector_append( neighbour_list , neighbour_id );
+              }
+            } else
               int_vector_append( neighbour_list , neighbour_id );
           }
         }
-
+        
         if (j < (layer_get_ny( layer) - 1)) {
           int neighbour_id = layer_iget_cell_value(layer , i, j + 1);
           if (cell_id != neighbour_id) {
-            bool connected = layer_cell_contact( layer , i , j , i  , j + 1);
-            if (connected || !connected_only)
+            if (connected_only) {
+              bool connected = layer_cell_contact( layer , i , j , i  , j + 1);
+              if (connected) {
+                if (!fault_block_neighbour_xpolyline( block , i , j , i  , j + 1, polylines ))
+                  int_vector_append( neighbour_list , neighbour_id );
+              }
+            } else
               int_vector_append( neighbour_list , neighbour_id );
           }
         }
       }
     }
 
-
-    double_vector_free( x_list );
-    double_vector_free( y_list );
     int_vector_free( cell_list );
   }
   int_vector_select_unique( neighbour_list );

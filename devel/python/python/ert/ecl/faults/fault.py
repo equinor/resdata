@@ -15,7 +15,7 @@
 #  for more details. 
 
 from ert.ecl import EclTypeEnum
-from ert.geo import Polyline
+from ert.geo import Polyline , CPolyline , GeometryTools
 
 from .fault_line import FaultLine
 from .fault_segments import FaultSegment , SegmentMap
@@ -61,6 +61,17 @@ class Layer(object):
         for fl in self:
             polyline += fl.getPolyline()
         return polyline
+
+
+    def getIJPolyline(self):
+        """
+        Will return a python list of (int,int) tuple.
+        """
+        polyline = []
+        for fl in self:
+            polyline += fl.getIJPolyline()
+        return polyline
+
 
         
     def processSegments(self):
@@ -211,3 +222,31 @@ class Fault(object):
         return layer.getPolyline()
         
 
+    def getIJPolyline(self , k):
+        layer = self[k]
+        return layer.getIJPolyline()
+        
+    
+
+    def extendToFault(self , other_fault , k):
+        polyline = self.getIJPolyline(k)
+
+        p0 = polyline[-2]
+        p1 = polyline[-1]
+        ray_dir = GeometryTools.lineToRay( p0 , p1 )
+        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , other_fault.getIJPolyline(k))
+        if intersections:
+            p2 = intersections[0][1]
+            return [p1 , (int(p2[0]) , int(p2[1])) ]
+            
+        p0 = polyline[1]
+        p1 = polyline[0]
+        ray_dir = GeometryTools.lineToRay( p0 , p1 )
+        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , other_fault.getIJPolyline(k))
+        if intersections:
+            p2 = intersections[0][1]
+            return [p1 , (int(p2[0]) , int(p2[1])) ]
+            
+        raise ValueError("The fault %s can not be extended to intersect with:%s" % (self.getName() , other_fault.getName()))
+        
+                             

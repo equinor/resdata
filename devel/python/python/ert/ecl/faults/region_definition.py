@@ -14,10 +14,10 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-import collections
 import os.path
+from collections import OrderedDict
 
-from ert.geo import Polyline , XYZIo, GeometryTools
+from ert.geo import Polyline , XYZIo, GeometryTools , CPolyline , CPolylineCollection
 from ert.ecl.faults import Fault, FaultBlockLayer , Layer 
 from ert.ecl import EclKW, EclTypeEnum
 
@@ -30,10 +30,11 @@ class RegionDefinition(object):
         self.region_id = region_id
         self.edges = []
         self.__has_polygon = False
-
-
-    
-                    
+        self.__faults = OrderedDict()
+        self.__polylines = CPolylineCollection( )
+        self.extend_faults = []
+        
+            
 
     @staticmethod
     def create(region_id , faults , edge_names):
@@ -42,9 +43,10 @@ class RegionDefinition(object):
         for edge_name in edge_names:
             if isinstance(edge_name , str):
                 if faults.hasFault( edge_name ):
-                    regionDef.addEdge( faults[ edge_name ] )
+                    regionDef.addFault( faults[ edge_name ] )
                 elif os.path.exists( edge_name ):
-                    regionDef.addEdge( XYZIo.readXYZFile( edge_name ) )
+                    polyline = CPolyline.createFromXYZFile( edge_name )
+                    regionDef.addPolyline( polyline )
                 else:
                     raise ValueError("The elements in edge_list must be strings with either name of faults or filename with polygon. %s: invalid" % edge_name)
             else:
@@ -57,14 +59,35 @@ class RegionDefinition(object):
         return self.region_id
 
 
-    def addEdge(self , edge):
-        if isinstance(edge , Polyline):
-            self.edges.append( edge )
-            self.__has_polygon = True
-        elif isinstance(edge , Fault):
-            self.edges.append( edge )
-        else:
-            raise TypeError("Tried to add edge of wrong type; must be Fault or Polyline")
+    def addFault(self , fault , extend_to = None):
+        self.edges.append( fault )
+        self.__faults[ fault.getName() ] = fault
+
+        if fault.getName() == "DF29_MC":
+            extend_to = self.__faults["DF27_LC"]
+            
+        if extend_to:
+            self.extend_faults.append( (fault , extend_to) )
+            
+
+
+    def addPolyline(self , polyline):
+        self.edges.append( polyline )
+        self.__has_polygon = True
+        self.__polylines.addPolyline( polyline )
+
+
+
+    def polylines(self):
+        return self.__polylines
+
+
+    def faults(self):
+        return self.__faults.values()
+
+
+    def faultConnections(self):
+        return self.extend_faults
 
 
 

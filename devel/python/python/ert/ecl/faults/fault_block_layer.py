@@ -135,6 +135,11 @@ class FaultBlockLayer(BaseCClass):
         layer.addFaultBarrier( fault , self.getK() , link_segments )
 
 
+    def addFaultLink(self , fault1 , fault2 ):
+        layer = self.getGeoLayer()
+        layer.addIJBarrier( fault1.extendToFault( fault2 , self.getK() ) )
+
+
     def addPolylineBarrier(self , polyline):
         layer = self.getGeoLayer()
         p0 = polyline[0]

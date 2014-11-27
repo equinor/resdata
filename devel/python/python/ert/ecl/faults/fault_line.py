@@ -18,7 +18,7 @@
         
 import sys
 from ert.geo import Polyline
-
+from .fault_segments import FaultSegment
 
 
 
@@ -36,6 +36,7 @@ class FaultLine(object):
         self.__k = k
         self.__segment_list = []
         self.__polyline = None
+        self.__ijpolyline = None
         self.__neighborCells = None
 
     def __len__(self):
@@ -79,29 +80,54 @@ class FaultLine(object):
 
         self.__segment_list.append( segment )
         self.__polyline = None
+        self.__ijpolyline = None
         return True
 
 
     def getK(self):
         return self.__k
 
+    
+    def __initIJPolyline(self):
+        pl = []
+        nx = self.__grid.getNX()
+        ny = self.__grid.getNY()
+        for segment in self:
+            corner = segment.getC1( )
+            i = corner % (nx + 1)
+            j = corner / (nx + 1)
+            pl.append( (i,j) )
+        
+        segment = self[-1]
+        corner = segment.getC2( )
+        i = corner % (nx + 1)
+        j = corner / (nx + 1)
+        pl.append( (i,j) )
+
+        self.__ijpolyline = pl
+        
+
 
     def __initPolyline(self):
         pl = Polyline()
-        for segment in self:
-            (x,y,z) = self.__grid.getLayerXYZ( segment.getC1( ) , self.__k )
-            pl.addPoint( x,y,z )
-
-        segment = self[-1]
-        (x,y,z) = self.__grid.getLayerXYZ( segment.getC2( ) , self.__k )
-        pl.addPoint( x,y,z )
+        for (i,j) in self.getIJPolyline():
+            x,y,z = self.__grid.getNodeXYZ(i,j,self.__k)
+            pl.addPoint( x, y , z)
         self.__polyline = pl
+
         
 
     def getPolyline(self):
         if self.__polyline is None:
             self.__initPolyline()
         return self.__polyline
+
+
+    def getIJPolyline(self):
+        if self.__ijpolyline is None:
+            self.__initIJPolyline()
+        return self.__ijpolyline
+
 
 
     def __initNeighborCells(self):

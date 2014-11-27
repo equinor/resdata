@@ -546,15 +546,18 @@ class EclGrid(CClass):
         return self.getCellCorner(corner_nr , active_index , global_index , ijk)
 
 
-    def getLayerXYZ(self , xy_corner , layer):
+    def getNodeXYZ(self , i,j,k):
+        """
+        This function returns the position of Vertex (i,j,k).
+    
+        The coordinates are in the inclusive interval [0,nx] x [0,ny] x [0,nz].
+        """
         nx = self.getNX()
         ny = self.getNY()
         nz = self.getNZ()
 
-        (j , i) = divmod(xy_corner , nx + 1)
-        k = layer
         corner = 0
-
+        
         if i == nx:
             i -= 1
             corner += 1
@@ -572,6 +575,15 @@ class EclGrid(CClass):
         else:
             raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i,j,k))
 
+
+
+    def getLayerXYZ(self , xy_corner , layer):
+        nx = self.getNX()
+        
+        (j , i) = divmod(xy_corner , nx + 1)
+        k = layer
+        return self.getNodeXYZ(i,j,k)
+        
 
 
     def distance( self , global_index1 , global_index2):

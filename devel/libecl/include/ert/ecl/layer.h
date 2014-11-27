@@ -68,7 +68,9 @@ extern "C" {
   bool         layer_trace_block_edge( const layer_type * layer , int i , int j , int value , struct_vector_type * corner_list , int_vector_type * cell_list);
   bool         layer_cell_contact( const layer_type * layer , int i1 , int j1 , int i2 , int j2);
   void         layer_add_interp_barrier( layer_type * layer , int c1 , int c2);
-  
+  void         layer_add_ijbarrier( layer_type * layer , int i1 , int j1 , int i2 , int j2 );
+  void         layer_add_barrier( layer_type * layer , int c1 , int c2);
+
 UTIL_IS_INSTANCE_HEADER( layer );
 UTIL_SAFE_CAST_HEADER( layer );
 
