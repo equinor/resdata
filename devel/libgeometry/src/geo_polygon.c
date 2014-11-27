@@ -236,3 +236,7 @@ const char* geo_polygon_get_name( const geo_polygon_type * polygon ) {
   return polygon->name;
 }
 
+void geo_polygon_set_name( geo_polygon_type * polygon , const char * name) {
+  polygon->name = util_realloc_string_copy( polygon->name , name );
+}
+

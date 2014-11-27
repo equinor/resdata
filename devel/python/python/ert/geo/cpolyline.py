@@ -32,11 +32,14 @@ class CPolyline(BaseCClass):
 
 
     @staticmethod 
-    def createFromXYZFile(filename):
+    def createFromXYZFile(filename , name = None):
         if not os.path.isfile(filename):
             raise IOError("No such file:%s" % filename)
             
-        return CPolyline.cNamespace().fread_alloc_irap( filename )
+        polyline = CPolyline.cNamespace().fread_alloc_irap( filename )
+        if not name is None:
+            CPolyline.cNamespace().set_name( polyline , name )
+        return polyline
 
 
     def __len__(self):
@@ -112,3 +115,4 @@ CPolyline.cNamespace().size               = cwrapper.prototype("int      geo_pol
 CPolyline.cNamespace().iget_xy            = cwrapper.prototype("void     geo_polygon_iget_xy( geo_polygon , int , double* , double* )")
 CPolyline.cNamespace().segment_intersects = cwrapper.prototype("bool     geo_polygon_segment_intersects( geo_polygon , double , double, double , double)")
 CPolyline.cNamespace().get_name           = cwrapper.prototype("char*    geo_polygon_get_name( geo_polygon  )")
+CPolyline.cNamespace().set_name           = cwrapper.prototype("void     geo_polygon_set_name( geo_polygon , char*  )")
