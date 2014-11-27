@@ -101,6 +101,17 @@ class CPolyline(BaseCClass):
         self.cNamespace().free(self)
 
 
+    def unzip(self):
+        x_list = [ ]
+        y_list = [ ]
+        for x,y in self:
+            x_list.append(x)
+            y_list.append(y)
+        
+        return (x_list , y_list)
+        
+
+
 #################################################################
 
 cwrapper = CWrapper(ERT_GEOMETRY_LIB)
