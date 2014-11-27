@@ -16,7 +16,7 @@ class Polyline(object):
         s += "]"
         return s
 
-    def name(self):
+    def getName(self):
         """ @rtype: str """
         return self.__name
 

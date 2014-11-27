@@ -64,7 +64,7 @@ class CPolylineCollection(BaseCClass):
             
 
     def addPolyline(self , polyline):
-        name = polyline.name()
+        name = polyline.getName()
         if name and name in self:
             raise KeyError("The polyline collection already has an object:%s" % name)
 

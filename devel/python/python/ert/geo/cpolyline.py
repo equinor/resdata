@@ -90,7 +90,7 @@ class CPolyline(BaseCClass):
             CPolyline.cNamespace().add_point(self, xc, yc)
 
 
-    def name(self):
+    def getName(self):
         return CPolyline.cNamespace().get_name( self )
 
 
