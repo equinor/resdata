@@ -38,6 +38,10 @@ class FaultCollection(object):
             self.load(file)
 
 
+    def __contains__(self , fault_name):
+        return self.__fault_map.has_key( fault_name )
+
+
     def __len__(self):
         return len(self.__fault_list)
 
@@ -63,7 +67,7 @@ class FaultCollection(object):
 
 
     def hasFault(self , fault_name):
-        return self.__fault_map.has_key( fault_name )
+        return fault_name in self
         
 
     def addFault(self, fault_name):
