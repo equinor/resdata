@@ -417,8 +417,8 @@ bool well_state_add_MSW( well_state_type * well_state ,
       
       return true;
     }
-  } else
-    return false;
+  } 
+  return false;
 }
 
 
