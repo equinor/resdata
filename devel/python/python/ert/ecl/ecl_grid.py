@@ -31,7 +31,7 @@ import warnings
 import os.path
 from ert.cwrap import CClass, CFILE, CWrapper, CWrapperNameSpace
 from ert.util import IntVector
-from ert.ecl import EclTypeEnum, EclKW, ECL_LIB
+from ert.ecl import EclTypeEnum, EclKW, ECL_LIB, FortIO
 
 
 class EclGrid(CClass):
@@ -80,7 +80,17 @@ class EclGrid(CClass):
             return EclGrid.create( specgrid , zcorn , coord , actnum , mapaxes )
         else:
             raise IOError("No such file:%s" % filename)
-        
+
+    @classmethod
+    def loadFromFile(cls , filename):
+        """
+        Will inspect the @filename argument and create a new EclGrid instance.
+        """
+        if FortIO.isFortranFile( filename ):
+            return EclGrid( filename )
+        else:
+            return EclGrid.loadFromGrdecl( filename )
+            
 
     @classmethod
     def create(cls , specgrid , zcorn , coord , actnum , mapaxes = None ):
