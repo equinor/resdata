@@ -125,6 +125,15 @@ class Polyline(object):
             index += 1
 
 
+    def unzip2(self):
+        x = []
+        y = []
+        for p in self:
+            x.append(p[0])
+            y.append(p[1])
+        
+        return (x,y)
+
 
     def unzip(self):
         first_point = self[0]
