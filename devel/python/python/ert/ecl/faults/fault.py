@@ -248,5 +248,9 @@ class Fault(object):
             return [p1 , (int(p2[0]) , int(p2[1])) ]
             
         raise ValueError("The fault %s can not be extended to intersect with:%s" % (self.getName() , other_fault.getName()))
+
         
-                             
+    def intersectsPolyline(self , polyline , k):
+        fault_line = self.getPolyline(k)
+        return fault_line.intersects( polyline )
+
