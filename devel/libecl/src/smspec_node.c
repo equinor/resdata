@@ -733,7 +733,7 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                           int param_index , float default_value) {
   
   smspec_node_type * smspec_node = smspec_node_alloc_new( param_index , default_value );
-  if (smspec_node_init_lgr( smspec_node , var_type , wgname , keyword , lgr , unit , key_join_string , lgr_i, lgr_j , lgr_k))
+  if (smspec_node_init_lgr( smspec_node , var_type , wgname , keyword , unit , lgr , key_join_string , lgr_i, lgr_j , lgr_k))
     return smspec_node;
   else {
     smspec_node_free( smspec_node );
