@@ -21,6 +21,7 @@ import os.path
 
 from ert.cwrap import BaseCClass, CWrapper
 from ert.geo import ERT_GEOMETRY_LIB
+from .geometry_tools import GeometryTools
 
 
 class CPolyline(BaseCClass):
@@ -112,7 +113,27 @@ class CPolyline(BaseCClass):
 
         return CPolyline.cNamespace().segment_length(self)
 
+    def extendToBBox(self , bbox , start = True):
+        if start:
+            p0 = self[1]
+            p1 = self[0]
+        else:
+            p0 = self[-2]
+            p1 = self[-1]
             
+        ray_dir = GeometryTools.lineToRay(p0,p1)
+        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , bbox)
+        if intersections:
+            p2 = intersections[0][1]
+            if self.getName():
+                name = "Extend:%s" % self.getName()
+            else:
+                name = None
+
+            return CPolyline( name = name , init_points = [(p1[0] , p1[1]) , p2])
+        else:
+            raise ValueError("Logical error - must intersect with bounding box")
+        
 
 
             
