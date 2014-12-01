@@ -41,6 +41,21 @@ class CPolyline(BaseCClass):
             CPolyline.cNamespace().set_name( polyline , name )
         return polyline
 
+    def __str__(self):
+        name = self.getName()
+        if name:
+            str = "%s [" % name
+        else:
+            str = "["
+
+        for index,p in enumerate(self):
+            str += "(%g,%g)" % p
+            if index < len(self) - 1:
+                str += ","
+        str += "]"
+        return str
+
+
 
     def __len__(self):
         return CPolyline.cNamespace().size( self )
