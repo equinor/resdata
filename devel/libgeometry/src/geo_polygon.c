@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <ert/util/util.h>
 #include <ert/util/double_vector.h>
@@ -240,3 +241,24 @@ void geo_polygon_set_name( geo_polygon_type * polygon , const char * name) {
   polygon->name = util_realloc_string_copy( polygon->name , name );
 }
 
+
+double geo_polygon_get_length( geo_polygon_type * polygon ) {
+  if (double_vector_size( polygon->xcoord) == 1)
+    return 0;
+  else {
+    double length = 0;
+    double x0 = double_vector_iget( polygon->xcoord , 0 );
+    double y0 = double_vector_iget( polygon->ycoord , 0 );
+    int i;
+    
+    for (i = 1; i < double_vector_size( polygon->xcoord ); i++) {
+      double x1 = double_vector_iget( polygon->xcoord , i );
+      double y1 = double_vector_iget( polygon->ycoord , i );
+      
+      length += sqrt( (x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0));
+      x0 = x1;
+      y0 = y1;
+    }
+    return length;
+  }
+}

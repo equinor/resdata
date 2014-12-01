@@ -85,6 +85,15 @@ class CPolyline(BaseCClass):
         return copy
 
 
+    def segmentLength(self):
+        if len(self) == 0:
+            raise ValueError("Can not measure length of zero point polyline")
+
+        return CPolyline.cNamespace().segment_length(self)
+
+            
+
+
             
     def addPoint( self, xc, yc , front = False):
         if front:
@@ -130,3 +139,4 @@ CPolyline.cNamespace().iget_xy            = cwrapper.prototype("void     geo_pol
 CPolyline.cNamespace().segment_intersects = cwrapper.prototype("bool     geo_polygon_segment_intersects( geo_polygon , double , double, double , double)")
 CPolyline.cNamespace().get_name           = cwrapper.prototype("char*    geo_polygon_get_name( geo_polygon  )")
 CPolyline.cNamespace().set_name           = cwrapper.prototype("void     geo_polygon_set_name( geo_polygon , char*  )")
+CPolyline.cNamespace().segment_length     = cwrapper.prototype("double   geo_polygon_get_length( geo_polygon)")

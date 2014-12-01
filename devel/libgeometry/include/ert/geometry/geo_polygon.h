@@ -45,6 +45,7 @@ extern "C" {
   bool               geo_polygon_segment_intersects(const geo_polygon_type * polygon , double x1 , double y1 , double x2 , double y2);
   const char       * geo_polygon_get_name( const geo_polygon_type * polygon );
   void               geo_polygon_set_name( geo_polygon_type * polygon , const char * name);
+  double             geo_polygon_get_length( geo_polygon_type * polygon );
 
   UTIL_IS_INSTANCE_HEADER( geo_polygon );
 
