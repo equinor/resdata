@@ -23,6 +23,7 @@
 
 #include <ert/util/util.h>
 #include <ert/util/double_vector.h>
+#include <ert/util/type_vector_functions.h>
 
 #include <ert/geometry/geo_util.h>
 #include <ert/geometry/geo_polygon.h>        
@@ -268,7 +269,16 @@ double geo_polygon_get_length( geo_polygon_type * polygon ) {
   Name is ignored in the comparison.
 */
 double geo_polygon_equal( const geo_polygon_type * polygon1 , const geo_polygon_type * polygon2 ) {
-  return 
+  bool equal = 
     double_vector_equal( polygon1->xcoord , polygon2->xcoord) && 
     double_vector_equal( polygon1->ycoord , polygon2->ycoord);
+  
+  
+  if (!equal) {
+    equal = 
+      double_vector_approx_equal( polygon1->xcoord , polygon2->xcoord , 1e-8) && 
+      double_vector_approx_equal( polygon1->ycoord , polygon2->ycoord , 1e-8);
+  }
+  
+  return equal;
 }
