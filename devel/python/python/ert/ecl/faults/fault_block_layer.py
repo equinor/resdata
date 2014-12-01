@@ -51,6 +51,17 @@ class FaultBlockLayer(BaseCClass):
                 return self.cNamespace().iget_block( self , index ).setParent(self)
             else:
                 raise IndexError("Index:%d out of range: [0,%d)" % (index , len(self)))
+        elif isinstance(index,tuple):
+            i,j = index
+            if 0 <= i < self.grid_ref.getNX() and 0 <= j < self.grid_ref.getNY():
+                geo_layer = self.getGeoLayer()
+                block_id = geo_layer[i,j]
+                if block_id == 0:
+                    raise ValueError("No fault block defined for location (%d,%d)" % (i,j))
+                else:
+                    return self.getBlock( block_id )
+            else:
+                raise IndexError("Invalid i,j : (%d,%d)" % (i,j))
         else:
             raise TypeError("Index should be integer type")
 
