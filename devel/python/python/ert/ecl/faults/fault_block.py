@@ -132,7 +132,9 @@ class FaultBlock(BaseCClass):
         for p in polyline:
             if GeometryTools.pointInPolygon( p , edge_polyline ):
                 return True
-        return False
+        else:
+            edge_polyline.assertClosed()
+            return GeometryTools.polylinesIntersect( edge_polyline , polyline )
 
         
     def getNeighbours(self, polylines = None , connected_only = True):
