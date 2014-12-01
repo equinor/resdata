@@ -210,6 +210,7 @@ class GeometryTools(object):
 
 
 
+
     @staticmethod
     def lineToRay(p0, p1):
         """
@@ -257,12 +258,13 @@ class GeometryTools(object):
         mub = numerator_b / denominator
 
         # for rays mub can be larger than 1.0
-        if mua < 0.0 or mua > 1.0 or mub < 0.0:
+        if mua < -GeometryTools.EPSILON or mua > 1.0 or mub < -GeometryTools.EPSILON:
             return None
 
         x = p1[0] + mua * (p2[0] - p1[0])
         y = p1[1] + mua * (p2[1] - p1[1])
         return x, y
+
 
     @staticmethod
     def rayPolygonIntersections(point, ray, polygon):
