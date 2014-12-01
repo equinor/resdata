@@ -46,6 +46,7 @@ extern "C" {
   const char       * geo_polygon_get_name( const geo_polygon_type * polygon );
   void               geo_polygon_set_name( geo_polygon_type * polygon , const char * name);
   double             geo_polygon_get_length( geo_polygon_type * polygon );
+  double             geo_polygon_equal( const geo_polygon_type * polygon1 , const geo_polygon_type * polygon2 );
 
   UTIL_IS_INSTANCE_HEADER( geo_polygon );
 

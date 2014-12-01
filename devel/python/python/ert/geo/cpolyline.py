@@ -84,6 +84,12 @@ class CPolyline(BaseCClass):
         copy.__iadd__(self)
         return copy
 
+    def __eq__(self , other):
+        if super(CPolyline , self).__eq__( other ):
+            return True
+        else:
+            return CPolyline.cNamespace().equal( self, other )
+
 
     def segmentLength(self):
         if len(self) == 0:
@@ -140,3 +146,4 @@ CPolyline.cNamespace().segment_intersects = cwrapper.prototype("bool     geo_pol
 CPolyline.cNamespace().get_name           = cwrapper.prototype("char*    geo_polygon_get_name( geo_polygon  )")
 CPolyline.cNamespace().set_name           = cwrapper.prototype("void     geo_polygon_set_name( geo_polygon , char*  )")
 CPolyline.cNamespace().segment_length     = cwrapper.prototype("double   geo_polygon_get_length( geo_polygon)")
+CPolyline.cNamespace().equal              = cwrapper.prototype("bool     geo_polygon_equal( geo_polygon , geo_polygon )")
