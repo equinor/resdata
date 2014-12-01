@@ -249,8 +249,166 @@ class Fault(object):
             
         raise ValueError("The fault %s can not be extended to intersect with:%s" % (self.getName() , other_fault.getName()))
 
+
+    def extendToPolyline(self , polyline , k):
+        fault_polyline = self.getPolyline( k )
+
+        p0 = fault_polyline[-2]
+        p1 = fault_polyline[-1]
+        ray_dir = GeometryTools.lineToRay( p0 , p1 )
+        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , polyline)
+        if intersections:
+            p2 = intersections[0][1]
+            return [(p1[0] , p1[1]) , p2]
+            
+        p0 = fault_polyline[1]
+        p1 = fault_polyline[0]
+        ray_dir = GeometryTools.lineToRay( p0 , p1 )
+        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , polyline)
+        if intersections:
+            p2 = intersections[0][1]
+            return [(p1[0] , p1[1]) , p2]
+
+        raise ValueError("The fault %s can not be extended to intersect with polyline:%s" % (self.getName() , polylineg.getName()))
+
         
     def intersectsPolyline(self , polyline , k):
         fault_line = self.getPolyline(k)
         return fault_line.intersects( polyline )
 
+
+    def extendToBBox(self , bbox , k , start = True):
+        fault_polyline = self.getPolyline(k)
+        if start:
+            p0 = fault_polyline[1]
+            p1 = fault_polyline[0]
+        else:
+            p0 = fault_polyline[-2]
+            p1 = fault_polyline[-1]
+            
+        ray_dir = GeometryTools.lineToRay(p0,p1)
+        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , bbox)
+        if intersections:
+            p2 = intersections[0][1]
+            if self.getName():
+                name = "Extend:%s" % self.getName()
+            else:
+                name = None
+
+            return CPolyline( name = name , init_points = [(p1[0] , p1[1]) , p2])
+        else:
+            raise Exception("Logical error - must intersect with bounding box")
+            
+    
+        
+            
+
+
+
+    @staticmethod
+    def intersectFaultRays(ray1 , ray2):
+        p1,dir1 = ray1
+        p2,dir2 = ray2
+        if p1 == p2:
+            return []
+            
+        dx = p2[0] - p1[0]
+        dy = p2[1] - p1[1]
+        if dx != 0:
+            if dir1[0] * dx <= 0 and dir2[0] * dx >= 0:
+                raise ValueError("Rays will never intersect")
+
+        if dy != 0:
+            if dir1[1] * dy <= 0 and dir2[1] * dy >= 0:
+                raise ValueError("Rays will never intersect")
+
+        if dx*dy != 0:
+            if dir1[0] != 0:
+                xc = p2[0]
+                yc = p1[1]
+            else:
+                xc = p1[0]
+                yc = p2[1]
+                
+            return [p1 , (xc,yc) , p2]
+        else:
+            return [p1,p2]
+
+
+    @staticmethod
+    def intRay(p1,p2):
+        if p1 == p2:
+            raise Exception("Can not form ray from coincident points")
+
+        if p1[0] == p2[0]:
+            # Vertical line
+            dx = 0
+            if p2[1] > p1[1]:
+                dy = 1
+            elif p2[1] < p1[1]:
+                dy = -1
+        else:
+            # Horizontal line
+            if p2[1] != p1[1]:
+                raise Exception("Invalid direction")
+                
+            dy = 0
+            if p2[0] > p1[0]:
+                dx = 1
+            else:
+                dx = -1
+
+        return [p2 , (dx,dy)]
+
+
+    
+    def getEndRays(self , k):
+        polyline = self.getIJPolyline(k)
+        
+        p0 = polyline[0]
+        p1 = polyline[1]
+        p2 = polyline[-2]
+        p3 = polyline[-1]
+
+        return (Fault.intRay(p1,p0) , Fault.intRay(p2,p3))
+
+                
+        
+    @classmethod
+    def joinFaults(cls , fault1 , fault2 , k):
+        fault1_rays = fault1.getEndRays(k)
+        fault2_rays = fault2.getEndRays(k)
+        
+        count = 0
+        join = None
+        try:
+            join = Fault.intersectFaultRays( fault1_rays[0] , fault2_rays[0] )
+            count += 1
+        except ValueError:
+            pass
+
+        try:
+            join = Fault.intersectFaultRays( fault1_rays[0] , fault2_rays[1] )
+            count += 1
+        except ValueError:
+            pass
+
+        try:
+            join = Fault.intersectFaultRays( fault1_rays[1] , fault2_rays[0] )
+            count += 1
+        except ValueError:
+            pass
+
+        try:
+            join = Fault.intersectFaultRays( fault1_rays[1] , fault2_rays[1] )
+            count += 1
+        except ValueError:
+            pass
+
+        if count == 1:
+            return join
+        else:
+            raise ValueError("Faults %s and %s could not be uniquely joined" % (fault1.getName() , fault2.getName()))
+            
+            
+    
