@@ -31,7 +31,7 @@ int main(int argc , char ** argv) {
   test_install_SIGNALS();
 
   test_assert_int_equal( well_state_translate_ecl_type_int( IWEL_UNDOCUMENTED_ZERO) , UNDOCUMENTED_ZERO);
-  test_assert_int_equal( well_state_translate_ecl_type_int( IWEL_PRODUCER) , PRODUCER);
+  test_assert_int_equal( well_state_translate_ecl_type_int( IWEL_PRODUCER) , WELL_PRODUCER);
   test_assert_int_equal( well_state_translate_ecl_type_int( IWEL_WATER_INJECTOR) , WATER_INJECTOR);
   test_assert_int_equal( well_state_translate_ecl_type_int( IWEL_GAS_INJECTOR)   , GAS_INJECTOR);
   test_assert_int_equal( well_state_translate_ecl_type_int( IWEL_OIL_INJECTOR)   , OIL_INJECTOR);

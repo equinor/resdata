@@ -279,7 +279,7 @@ well_type_enum well_state_translate_ecl_type_int(int int_type) {
     type = UNDOCUMENTED_ZERO;
     break;
   case(IWEL_PRODUCER):
-    type = PRODUCER;
+    type = WELL_PRODUCER;
     break;
   case(IWEL_OIL_INJECTOR):
     type = OIL_INJECTOR;

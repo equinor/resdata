@@ -103,12 +103,11 @@ extern "C" {
   
   typedef enum {
     UNDOCUMENTED_ZERO = 0,
-    PRODUCER          = 10,
+    WELL_PRODUCER     = 10,
     WATER_INJECTOR    = 22,
     GAS_INJECTOR      = 21,
     OIL_INJECTOR      = 78
   } well_type_enum;
-  
   
 
 #ifdef __cplusplus
