@@ -79,6 +79,7 @@ extern "C" {
   void                ecl_rsthead_free( ecl_rsthead_type * rsthead );
   ecl_rsthead_type  * ecl_rsthead_ialloc( const ecl_file_type * rst_file , int occurence);
   ecl_rsthead_type  * ecl_rsthead_alloc( const ecl_file_type * rst_file );
+  ecl_rsthead_type  * ecl_rsthead_alloc_empty();
   time_t              ecl_rsthead_date( const ecl_kw_type * intehead_kw );
   void                ecl_rsthead_fprintf( const ecl_rsthead_type * header , FILE * stream);
   void                ecl_rsthead_fprintf_struct( const ecl_rsthead_type * header , FILE * stream);
