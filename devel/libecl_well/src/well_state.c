@@ -203,7 +203,7 @@ well_state_type * well_state_alloc(const char * well_name , int global_well_nr ,
   well_state->is_MSW_well = false;
 
   /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
-  if ((type == UNDOCUMENTED_ZERO) && open)
+  if ((type == ERT_UNDOCUMENTED_ZERO) && open)
     util_abort("%s: Invalid type value for open wells.\n",__func__ );
   return well_state;
 }
@@ -271,24 +271,24 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
 
 
 well_type_enum well_state_translate_ecl_type_int(int int_type) {
-  well_type_enum type = UNDOCUMENTED_ZERO;
+  well_type_enum type = ERT_UNDOCUMENTED_ZERO;
 
   switch (int_type) {
     /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
   case(IWEL_UNDOCUMENTED_ZERO):
-    type = UNDOCUMENTED_ZERO;
+    type = ERT_UNDOCUMENTED_ZERO;
     break;
   case(IWEL_PRODUCER):
-    type = WELL_PRODUCER;
+    type = ERT_PRODUCER;
     break;
   case(IWEL_OIL_INJECTOR):
-    type = OIL_INJECTOR;
+    type = ERT_OIL_INJECTOR;
     break;
   case(IWEL_GAS_INJECTOR):
-    type = GAS_INJECTOR;
+    type = ERT_GAS_INJECTOR;
     break;
   case(IWEL_WATER_INJECTOR):
-    type = WATER_INJECTOR;
+    type = ERT_WATER_INJECTOR;
     break;
   default:
     util_abort("%s: Invalid type value %d\n",__func__ , int_type);
@@ -445,7 +445,7 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const e
     {
       char * name;
       bool open;
-      well_type_enum type = UNDOCUMENTED_ZERO;
+      well_type_enum type = ERT_UNDOCUMENTED_ZERO;
       {
         int int_state = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_STATUS_ITEM );
         if (int_state > 0)
