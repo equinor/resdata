@@ -102,12 +102,14 @@ extern "C" {
 #define IWEL_GAS_INJECTOR      4
   
   typedef enum {
-    ERT_UNDOCUMENTED_ZERO = 0,
-    ERT_PRODUCER          = 10,
-    ERT_WATER_INJECTOR    = 22,
-    ERT_GAS_INJECTOR      = 21,
-    ERT_OIL_INJECTOR      = 78
+    UNDOCUMENTED_ZERO = 0,
+    PRODUCER          = 10,
+    WATER_INJECTOR    = 22,
+    GAS_INJECTOR      = 21,
+    OIL_INJECTOR      = 78
   } well_type_enum;
+  
+  
 
 #ifdef __cplusplus
 }
