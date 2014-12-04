@@ -33,6 +33,7 @@ typedef struct ecl_sum_vector_struct ecl_sum_vector_type;
 
   bool ecl_sum_vector_get_is_rate(const ecl_sum_vector_type * ecl_sum_vector, int index);
   int ecl_sum_vector_get_node_index(const ecl_sum_vector_type * ecl_sum_vector, int index);
+  int ecl_sum_vector_get_size(const ecl_sum_vector_type * ecl_sum_vector);
 
 #ifdef __cplusplus
 }

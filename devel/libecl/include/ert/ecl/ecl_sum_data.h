@@ -33,6 +33,7 @@ extern "C" {
 
 #include <ert/ecl/ecl_sum_tstep.h>
 #include <ert/ecl/smspec_node.h>
+#include <ert/ecl/ecl_sum_vector.h>
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ; 
   void                     ecl_sum_data_fwrite_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified, int report_step);
@@ -85,7 +86,8 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   ecl_sum_tstep_type     * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int report_step , double sim_days);
   bool                     ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);
   bool                     ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);
-  
+  void                     ecl_sum_data_write_cvs_file(const ecl_sum_data_type * data , time_t sim_time , const ecl_sum_vector_type * keylist);
+
 #ifdef __cplusplus
 }
 #endif

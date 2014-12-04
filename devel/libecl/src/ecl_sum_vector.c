@@ -65,6 +65,10 @@ void ecl_sum_vector_add_key(const ecl_sum_vector_type * keylist, const char * pa
     }
 }
 
+int ecl_sum_vector_get_size(const ecl_sum_vector_type * ecl_sum_vector){
+    return int_vector_size(ecl_sum_vector->node_index_list);
+}
+
 bool ecl_sum_vector_get_is_rate(const ecl_sum_vector_type * ecl_sum_vector, int index){
     return bool_vector_iget(ecl_sum_vector->is_rate_list, index);
 }

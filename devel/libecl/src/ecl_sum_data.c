@@ -34,6 +34,7 @@
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_sum_vector.h>
 
 
 
@@ -1118,8 +1119,31 @@ double ecl_sum_data_interp_get(const ecl_sum_data_type * data , int time_index1 
   return ecl_sum_tstep_iget( ministep_data1 , params_index ) * weight1 + ecl_sum_tstep_iget( ministep_data2 , params_index ) * weight2;
 }
 
+/*
+void ecl_sum_data_write_cvs_file(const ecl_sum_data_type * data , time_t sim_time, const ecl_sum_vector_type * keylist){
+    int num_keywords = ecl_sum_vector_get_size(keylist);
 
+    double weight1 , weight2;
+    int    time_index1 , time_index2;
+    ecl_sum_data_init_interp_from_sim_time( data , sim_time , &time_index1 , &time_index2 , &weight1 , &weight2);
 
+    for(int i = 0; i< num_keywords; i++  ){
+        bool is_rate = ecl_sum_vector_get_is_rate(keylist, i);
+        int params_index = ecl_sum_vector_get_node_index(keylist , i);
+        if(is_rate){
+            int time_index;
+            if (sim_time == time_interval_get_start( data->sim_time ))
+                time_index = 0;
+            else
+                time_index = ecl_sum_data_get_index_from_sim_time( data , sim_time );
+
+            double value = ecl_sum_data_iget( data , time_index , params_index);
+        } else {
+            double value = ecl_sum_data_interp_get( data , time_index1 , time_index2 , weight1 , weight2 , params_index);
+        }
+    }
+}
+*/
 
 
 
