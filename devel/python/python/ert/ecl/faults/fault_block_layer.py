@@ -18,6 +18,7 @@
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl import ECL_LIB
 from ert.ecl import EclTypeEnum
+from ert.ecl.faults import Fault
 
 class FaultBlockLayer(BaseCClass):
 
@@ -149,6 +150,11 @@ class FaultBlockLayer(BaseCClass):
     def addFaultLink(self , fault1 , fault2 ):
         layer = self.getGeoLayer()
         layer.addIJBarrier( fault1.extendToFault( fault2 , self.getK() ) )
+
+
+    def joinFaults(self , fault1 , fault2):
+        layer = self.getGeoLayer()
+        layer.addIJBarrier( Fault.joinFaults( fault1 , fault2 , self.getK()) )
 
 
     def addPolylineBarrier(self , polyline):
