@@ -68,8 +68,12 @@ class CPolylineCollection(BaseCClass):
         if name and name in self:
             raise KeyError("The polyline collection already has an object:%s" % name)
 
-        polyline.convertToCReference( self )
-        CPolylineCollection.cNamespace().add_polyline(self , polyline , True)
+        if polyline.isReference():
+            CPolylineCollection.cNamespace().add_polyline(self , polyline , False)
+        else:
+            polyline.convertToCReference( self )
+            CPolylineCollection.cNamespace().add_polyline(self , polyline , True)
+
 
 
     def createPolyline(self , name = None):
