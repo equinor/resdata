@@ -39,6 +39,7 @@ the libecl library.
 """
 import ctypes
 import types
+import warnings
 
 import  numpy
 from ert.cwrap import CClass, CFILE, CWrapper, CWrapperNameSpace
@@ -779,17 +780,20 @@ class EclKW(CClass):
 
     @property    
     def min_max( self ):
+        warnings.warn("The min_max property has been renamed to method getMinMax()" , DeprecationWarning)
         return self.getMinMax()
 
 
     @property
     def max( self ):
+        warnings.warn("The max property has been renamed to method getMax()" , DeprecationWarning)
         mm = self.getMinMax()
         return mm[1]
     
     
     @property
     def min( self ):
+        warnings.warn("The min property has been renamed to method getMin()" , DeprecationWarning)
         mm = self.getMinMax()
         return mm[0]
 
