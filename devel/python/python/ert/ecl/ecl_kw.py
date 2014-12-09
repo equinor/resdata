@@ -779,6 +779,23 @@ class EclKW(CClass):
 
     @property    
     def min_max( self ):
+        return self.getMinMax()
+
+
+    @property
+    def max( self ):
+        mm = self.getMinMax()
+        return mm[1]
+    
+    
+    @property
+    def min( self ):
+        mm = self.getMinMax()
+        return mm[0]
+
+       
+    
+    def getMinMax(self):
         """
         Will return a touple (min,max) for numerical types.
 
@@ -802,16 +819,17 @@ class EclKW(CClass):
         return (min.value , max.value)
 
 
-    @property
-    def max( self ):
-        return self.min_max[1]
+    def getMax( self ):
+        mm = self.getMinMax()
+        return mm[1]
     
     
-    @property
-    def min( self ):
-        return self.min_max[0]
-        
-    
+    def getMin( self ):
+        mm = self.getMinMax()
+        return mm[0]
+
+
+
     @property
     def numeric(self):
         if self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
