@@ -43,8 +43,7 @@ typedef struct fortio_struct fortio_type;
 
   fortio_status_type fortio_check_buffer( FILE * stream , bool endian_flip , size_t buffer_size );
   fortio_status_type fortio_check_file( const char * filename , bool endian_flip);
-  bool               fortio_guess_endian_flip(const char * , bool *);
-  bool               fortio_is_fortran_file(const char *  , bool * );
+  bool               fortio_looks_like_fortran_file(const char *  , bool );
   void               fortio_copy_record(fortio_type * , fortio_type * , int , void * , bool *);
   fortio_type *      fortio_alloc_FILE_wrapper(const char * , bool , bool , FILE * );
   fortio_type *      fortio_open_reader(const char *, bool fmt_file , bool endian_flip_header);
