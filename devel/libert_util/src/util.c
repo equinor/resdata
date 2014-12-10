@@ -4815,6 +4815,10 @@ void util_abort_signal(int signal) {
 
 
 void util_install_signals(void) {
+#ifdef HAVE_SIGBUS
+  signal(SIGBUS  , util_abort_signal);    
+#endif
+
   signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
   signal(SIGTERM , util_abort_signal);    /* If killing the enkf program with SIGTERM (the default kill signal) you will get a backtrace. 
                                              Killing with SIGKILL (-9) will not give a backtrace.*/
