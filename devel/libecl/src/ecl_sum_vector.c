@@ -38,10 +38,9 @@ struct ecl_sum_vector_struct {
 void ecl_sum_vector_free( ecl_sum_vector_type * keylist ){
     int_vector_free(keylist->node_index_list);
     bool_vector_free(keylist->is_rate_list);
-    ecl_sum_free(keylist->ecl_sum);
 }
 
-ecl_sum_vector_type * ecl_sum_vector_alloc(ecl_sum_type * ecl_sum) {
+ecl_sum_vector_type * ecl_sum_vector_alloc( ecl_sum_type * ecl_sum){
     ecl_sum_vector_type * ecl_sum_vector = util_malloc( sizeof * ecl_sum_vector );
     ecl_sum_vector->ecl_sum  = ecl_sum;
     ecl_sum_vector->node_index_list = int_vector_alloc(0,0);
@@ -49,7 +48,18 @@ ecl_sum_vector_type * ecl_sum_vector_alloc(ecl_sum_type * ecl_sum) {
     return ecl_sum_vector;
 }
 
-void ecl_sum_vector_add_key(const ecl_sum_vector_type * keylist, const char * pattern){
+void ecl_sum_vector_add_key( ecl_sum_vector_type * keylist, const char * key){
+    const smspec_node_type * node = ecl_sum_get_general_var_node( keylist->ecl_sum , key );
+    int params_index = smspec_node_get_params_index( node );
+    bool is_rate_key = smspec_node_is_rate( node);
+
+    int_vector_append(keylist->node_index_list, params_index);
+    bool_vector_append(keylist->is_rate_list, is_rate_key);
+}
+
+
+
+void ecl_sum_vector_add_keys( ecl_sum_vector_type * keylist, const char * pattern){
     stringlist_type * ecl_sum_matching_list = ecl_sum_alloc_matching_general_var_list(keylist->ecl_sum , pattern);
 
     int num_keywords = stringlist_get_size(ecl_sum_matching_list);
