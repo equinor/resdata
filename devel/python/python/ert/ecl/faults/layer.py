@@ -106,6 +106,7 @@ class Layer(BaseCClass):
 
     def addIJBarrier(self , ij_list):
         if len(ij_list) < 2:
+            print "ij_list:%s" % ij_list
             raise ValueError("Must have at least two (i,j) points")
 
         nx = self.getNX()

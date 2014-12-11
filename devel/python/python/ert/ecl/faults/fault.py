@@ -276,6 +276,11 @@ class Fault(object):
         fault_line = self.getPolyline(k)
         return fault_line.intersects( polyline )
 
+    def intersectsFault(self , other_fault , k):
+        fault_line = other_fault.getPolyline(k)
+        return self.intersectsPolyline( fault_line , k )
+
+
 
     def extendToBBox(self , bbox , k , start = True):
         fault_polyline = self.getPolyline(k)

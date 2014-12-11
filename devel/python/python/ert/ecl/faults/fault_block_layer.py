@@ -148,13 +148,19 @@ class FaultBlockLayer(BaseCClass):
 
 
     def addFaultLink(self , fault1 , fault2 ):
-        layer = self.getGeoLayer()
-        layer.addIJBarrier( fault1.extendToFault( fault2 , self.getK() ) )
+        if not fault1.intersectsFault( fault2 , self.getK()):
+            layer = self.getGeoLayer()
+            layer.addIJBarrier( fault1.extendToFault( fault2 , self.getK() ) )
 
 
     def joinFaults(self , fault1 , fault2):
-        layer = self.getGeoLayer()
-        layer.addIJBarrier( Fault.joinFaults( fault1 , fault2 , self.getK()) )
+        if not fault1.intersectsFault( fault2 , self.getK()):
+            layer = self.getGeoLayer()
+            try:
+                layer.addIJBarrier( Fault.joinFaults( fault1 , fault2 , self.getK()) )
+            except ValueError:
+                print "Failed to join faults %s and %s" % (fault1.getName() , fault2.getName())
+                raise ValueError("")
 
 
     def addPolylineBarrier(self , polyline):
