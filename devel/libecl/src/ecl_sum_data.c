@@ -1124,7 +1124,7 @@ void ecl_sum_data_write_cvs_file(const ecl_sum_data_type * data , time_t sim_tim
     int num_keywords = ecl_sum_vector_get_size(keylist);
     double weight1 , weight2;
     int    time_index1 , time_index2;
-    double value = 0; 
+    double value = 0.0;
     ecl_sum_data_init_interp_from_sim_time( data , sim_time , &time_index1 , &time_index2 , &weight1 , &weight2);
     for(int i = 0; i< num_keywords; i++  ){
         bool is_rate = ecl_sum_vector_get_is_rate(keylist, i);
@@ -1138,9 +1138,10 @@ void ecl_sum_data_write_cvs_file(const ecl_sum_data_type * data , time_t sim_tim
 
            value = ecl_sum_data_iget( data , time_index , params_index);
         } else {      
-           value = ecl_sum_data_interp_get( data , time_index1 , time_index2 , weight1 , weight2 , params_index);      
+           value = ecl_sum_data_interp_get( data , time_index1 , time_index2 , weight1 , weight2 , params_index);
+
         }
-        fprintf(fp , ",%g",value);
+        fprintf(fp , ",%f",value);
     }
 }
 
