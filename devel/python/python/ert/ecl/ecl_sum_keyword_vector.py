@@ -52,9 +52,6 @@ class EclSumKeyWordVector(BaseCClass):
     def add_keywords(self, keyword):
         EclSumKeyWordVector.cNamespace().add_multiple(self, keyword)
 
-    def get_is_rate(self, index):
-        return EclSumKeyWordVector.cNamespace().get_is_rate(self, index)
-
 
 
 cwrapper = CWrapper(ECL_LIB)
@@ -67,4 +64,3 @@ EclSumKeyWordVector.cNamespace().free                   = cwrapper.prototype("vo
 EclSumKeyWordVector.cNamespace().add                    = cwrapper.prototype("bool ecl_sum_vector_add_key( ecl_sum_vector ,  char* )")
 EclSumKeyWordVector.cNamespace().add_multiple           = cwrapper.prototype("void ecl_sum_vector_add_keys( ecl_sum_vector ,  char* )")
 EclSumKeyWordVector.cNamespace().get_size               = cwrapper.prototype("int ecl_sum_vector_get_size( ecl_sum_vector )")
-EclSumKeyWordVector.cNamespace().get_is_rate         = cwrapper.prototype("bool ecl_sum_vector_iget( ecl_sum_vector , int)")
