@@ -22,10 +22,9 @@ import datetime
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
+
 from ert.cwrap import BaseCClass, CWrapper
-#from ert.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 from ert.ecl import ECL_LIB
-#from ert.ecl.ecl_sum import EclSum
 
 
 
