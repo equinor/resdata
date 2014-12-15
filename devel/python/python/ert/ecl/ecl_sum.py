@@ -976,9 +976,7 @@ cwrapper.registerType( "ecl_sum_ref" , EclSum.createCReference )
 #    used outside this scope.
 
 
-EclSum.cNamespace().fread_alloc                   = cwrapper.prototyp
-
-        e("c_void_p ecl_sum_fread_alloc_case__( char* , char* , bool)")
+EclSum.cNamespace().fread_alloc                   = cwrapper.prototype("c_void_p ecl_sum_fread_alloc_case__( char* , char* , bool)")
 EclSum.cNamespace().iiget                         = cwrapper.prototype("double   ecl_sum_iget( ecl_sum , int , int)")
 EclSum.cNamespace().free                          = cwrapper.prototype("void     ecl_sum_free( ecl_sum )")
 EclSum.cNamespace().data_length                   = cwrapper.prototype("int      ecl_sum_get_data_length( ecl_sum )")

@@ -50,7 +50,7 @@ class EclSumKeyWordVector(BaseCClass):
             raise KeyError("Failed to add keyword to vector")
 
     def addKeywords(self, keyword_pattern):
-        EclSumKeyWordVector.cNamespace().add_multiple(self, keyword)
+        EclSumKeyWordVector.cNamespace().add_multiple(self, keyword_pattern)
 
 
 
