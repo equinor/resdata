@@ -20,6 +20,7 @@ set(PYTHON_SOURCES
     ecl_sum_vector.py
     ecl_util.py
     fortio.py
+    ecl_sum_keyword_vector.py
 )
 
 add_python_package("python.ert.ecl"  ${PYTHON_INSTALL_PREFIX}/ert/ecl "${PYTHON_SOURCES}" True)

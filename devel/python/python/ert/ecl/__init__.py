@@ -79,6 +79,7 @@ import ert.geo
 ECL_LIB = clib.ert_load("libecl")
 
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
+from .ecl_sum_keyword_vector import EclSumKeyWordVector
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUtil
 from .ecl_default import EclDefault
 from .ecl_rft_cell import EclPLTCell, EclRFTCell
@@ -93,6 +94,7 @@ from .ecl_grav_calc import phase_deltag, deltag
 from .ecl_sum_node import EclSumNode
 from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
+
 
 #from .ecl_queue import
 
