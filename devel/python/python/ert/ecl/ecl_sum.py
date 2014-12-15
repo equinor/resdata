@@ -937,7 +937,7 @@ ime_index.
     def free(self):
         EclSum.cNamespace().free(self)
 
-    def dump_csv_line(self, time, keywords, pfile):
+    def dumpCSVLine(self, time, keywords, pfile):
         cfile = CFILE( pfile )
         ctime = CTime( time )
         EclSum.cNamespace().dump_csv_line(self, ctime, keywords, cfile)

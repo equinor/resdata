@@ -39,20 +39,19 @@ class EclSumKeyWordVector(BaseCClass):
         else:
             super(EclSumKeyWordVector, self).__init__(c_pointer)
 
+    def __len__(self):
+        return EclSumKeyWordVector.cNamespace().get_size(self)
+
     def free(self):
         EclSumKeyWordVector.cNamespace().free(self)
 
     def add_keyword(self, keyword):
-        EclSumKeyWordVector.cNamespace().add(self, keyword)
+        success = EclSumKeyWordVector.cNamespace().add(self, keyword)
+        if not success:
+            raise KeyError("Failed to add keyword to vector")
 
     def add_keywords(self, keyword):
         EclSumKeyWordVector.cNamespace().add_multiple(self, keyword)
-
-    def get_size(self):
-        return EclSumKeyWordVector.cNamespace().get_size(self)
-
-    def get_node_index(self, index):
-        return EclSumKeyWordVector.cNamespace().get_node_index(self, index)
 
     def get_is_rate(self, index):
         return EclSumKeyWordVector.cNamespace().get_is_rate(self, index)
@@ -66,8 +65,7 @@ cwrapper.registerType( "ecl_sum_vector_ref" , EclSumKeyWordVector.createCReferen
 
 EclSumKeyWordVector.cNamespace().alloc                  = cwrapper.prototype("c_void_p ecl_sum_vector_alloc(ecl_sum )")
 EclSumKeyWordVector.cNamespace().free                   = cwrapper.prototype("void ecl_sum_vector_free(ecl_sum_vector )")
-EclSumKeyWordVector.cNamespace().add                    = cwrapper.prototype("void ecl_sum_vector_add_key( ecl_sum_vector ,  char* )")
+EclSumKeyWordVector.cNamespace().add                    = cwrapper.prototype("bool ecl_sum_vector_add_key( ecl_sum_vector ,  char* )")
 EclSumKeyWordVector.cNamespace().add_multiple           = cwrapper.prototype("void ecl_sum_vector_add_keys( ecl_sum_vector ,  char* )")
 EclSumKeyWordVector.cNamespace().get_size               = cwrapper.prototype("int ecl_sum_vector_get_size( ecl_sum_vector )")
-EclSumKeyWordVector.cNamespace().get_node_index         = cwrapper.prototype("int ecl_sum_vector_get_node_index( ecl_sum_vector , int)")
-EclSumKeyWordVector.cNamespace().get_is_rate         = cwrapper.prototype("bool ecl_sum_vector_get_is_rate( ecl_sum_vector , int)")
+EclSumKeyWordVector.cNamespace().get_is_rate         = cwrapper.prototype("bool ecl_sum_vector_iget( ecl_sum_vector , int)")

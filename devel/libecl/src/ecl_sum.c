@@ -647,7 +647,7 @@ double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , c
 
 
 void ecl_sum_dump_line_to_csv_file(const ecl_sum_type * ecl_sum, time_t sim_time, const ecl_sum_vector_type * key_words, FILE *fp){
-    ecl_sum_data_write_cvs_file(ecl_sum->data, sim_time, key_words, fp);
+    ecl_sum_data_write_csv_file(ecl_sum->data, sim_time, key_words, fp);
 }
 
 
