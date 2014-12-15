@@ -48,19 +48,18 @@ ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum){
     return ecl_sum_vector;
 }
 
+
 bool ecl_sum_vector_add_key( ecl_sum_vector_type * ecl_sum_vector, const char * key){
+  if (ecl_sum_has_general_var( ecl_sum_vector->ecl_sum , key)) {
     const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum_vector->ecl_sum , key );
-    if (node){
-        int params_index = smspec_node_get_params_index( node );
-        bool is_rate_key = smspec_node_is_rate( node);
+    int params_index = smspec_node_get_params_index( node );
+    bool is_rate_key = smspec_node_is_rate( node);
 
-        int_vector_append(ecl_sum_vector->node_index_list, params_index);
-        bool_vector_append(ecl_sum_vector->is_rate_list, is_rate_key);
-        return true;
-    }else{
-        return false;
-    }
-
+    int_vector_append(ecl_sum_vector->node_index_list, params_index);
+    bool_vector_append(ecl_sum_vector->is_rate_list, is_rate_key);
+    return true;
+  } else
+    return false;
 }
 
 
