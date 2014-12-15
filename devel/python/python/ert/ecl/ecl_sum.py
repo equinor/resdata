@@ -938,9 +938,14 @@ ime_index.
         EclSum.cNamespace().free(self)
 
     def dumpCSVLine(self, time, keywords, pfile):
-        cfile = CFILE( pfile )
+        """
+        Will dump a csv formatted line of the keywords in @keywords,
+        evaluated at the intertpolated time @time. @pfile should point to an open Python file handle.
+        """
+        cfile = CFILE(pfile ) 
         ctime = CTime( time )
         EclSum.cNamespace().dump_csv_line(self, ctime, keywords, cfile)
+        
 
     @classmethod
     def createCReference(cls, c_pointer, parent=None):
@@ -971,7 +976,9 @@ cwrapper.registerType( "ecl_sum_ref" , EclSum.createCReference )
 #    used outside this scope.
 
 
-EclSum.cNamespace().fread_alloc                   = cwrapper.prototype("c_void_p ecl_sum_fread_alloc_case__( char* , char* , bool)")
+EclSum.cNamespace().fread_alloc                   = cwrapper.prototyp
+
+        e("c_void_p ecl_sum_fread_alloc_case__( char* , char* , bool)")
 EclSum.cNamespace().iiget                         = cwrapper.prototype("double   ecl_sum_iget( ecl_sum , int , int)")
 EclSum.cNamespace().free                          = cwrapper.prototype("void     ecl_sum_free( ecl_sum )")
 EclSum.cNamespace().data_length                   = cwrapper.prototype("int      ecl_sum_get_data_length( ecl_sum )")
