@@ -44,12 +44,12 @@ class EclSumKeyWordVector(BaseCClass):
     def free(self):
         EclSumKeyWordVector.cNamespace().free(self)
 
-    def add_keyword(self, keyword):
+    def addKeyword(self, keyword):
         success = EclSumKeyWordVector.cNamespace().add(self, keyword)
         if not success:
             raise KeyError("Failed to add keyword to vector")
 
-    def add_keywords(self, keyword):
+    def addKeywords(self, keyword_pattern):
         EclSumKeyWordVector.cNamespace().add_multiple(self, keyword)
 
 
