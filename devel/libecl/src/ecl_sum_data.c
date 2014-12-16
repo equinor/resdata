@@ -1129,7 +1129,7 @@ void ecl_sum_data_write_csv_file(const ecl_sum_data_type * data , time_t sim_tim
 
     ecl_sum_data_init_interp_from_sim_time( data , sim_time , &time_index1 , &time_index2 , &weight1 , &weight2);
     for(i = 0; i< num_keywords; i++  ){
-        bool is_rate = ecl_sum_vector_iget(keylist, i);
+        bool is_rate = ecl_sum_vector_iget_is_rate(keylist, i);
         int params_index = ecl_sum_vector_iget_param_index(keylist , i);
         if(is_rate){
             int time_index;
