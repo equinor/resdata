@@ -26,7 +26,8 @@ class CPolylineCollection(BaseCClass):
     def __init__(self):
         c_ptr = CPolylineCollection.cNamespace().alloc_new(  )
         super(CPolylineCollection , self).__init__( c_ptr )
-
+        self.parent_ref = None
+        
 
     def __contains__(self , name):
         return CPolylineCollection.cNamespace().has_polyline(self , name)
@@ -61,7 +62,17 @@ class CPolylineCollection(BaseCClass):
         else:
             raise TypeError("The index argument must be string or integer")
 
+
+    def shallowCopy(self):
+        copy = CPolylineCollection()
+        for pl in self:
+            CPolylineCollection.cNamespace().add_polyline(copy , pl , False)
+        # If we make a shallow copy we must ensure that source, owning
+        # all the polyline objects does not go out of scope.
+        copy.parent_ref = self
+        return copy
             
+
 
     def addPolyline(self , polyline):
         name = polyline.getName()
