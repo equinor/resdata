@@ -258,8 +258,10 @@ class Fault(object):
 
 
     def extendToPolyline(self , polyline , k):
+        if self.intersectsPolyline(polyline , k):
+            return None
+            
         fault_polyline = self.getPolyline( k )
-
         p0 = fault_polyline[-2]
         p1 = fault_polyline[-1]
         ray_dir = GeometryTools.lineToRay( p0 , p1 )
@@ -276,7 +278,7 @@ class Fault(object):
             p2 = intersections[0][1]
             return [(p1[0] , p1[1]) , p2]
 
-        raise ValueError("The fault %s can not be extended to intersect with polyline:%s" % (self.getName() , polylineg.getName()))
+        raise ValueError("The fault %s can not be extended to intersect with polyline:%s" % (self.getName() , polyline.getName()))
 
         
     def intersectsPolyline(self , polyline , k):
