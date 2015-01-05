@@ -64,7 +64,7 @@ class CPolyline(BaseCClass):
 
     def __getitem__(self , index):
         if not isinstance(index,int):
-            raise TypeError("Index argument must be integer")
+            raise TypeError("Index argument must be integer. Index:%s invalid" % index)
 
         if index < 0:
             index += len(self)
@@ -80,8 +80,22 @@ class CPolyline(BaseCClass):
 
 
     def segmentIntersects(self, p1 , p2):
-        return CPolyline.cNamespace().segment_intersects(self , p1[0] , p1[0] , p2[0] , p2[1])
+        return CPolyline.cNamespace().segment_intersects(self , p1[0] , p1[1] , p2[0] , p2[1])
             
+        
+    def intersects(self , polyline):
+        if len(self) > 1:
+            for index,p2 in enumerate(polyline):
+                if index == 0:
+                    continue
+                    
+                p1 = polyline[index - 1]
+                if self.segmentIntersects(p1 , p2):
+                    return True
+        
+        return False
+
+        
 
     def __iadd__(self , other ):
         for p in other:
