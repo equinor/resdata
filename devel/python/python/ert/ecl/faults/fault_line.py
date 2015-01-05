@@ -17,7 +17,7 @@
 
         
 import sys
-from ert.geo import Polyline
+from ert.geo import CPolyline
 from .fault_segments import FaultSegment
 
 
@@ -109,10 +109,10 @@ class FaultLine(object):
 
 
     def __initPolyline(self):
-        pl = Polyline()
+        pl = CPolyline()
         for (i,j) in self.getIJPolyline():
             x,y,z = self.__grid.getNodeXYZ(i,j,self.__k)
-            pl.addPoint( x, y , z)
+            pl.addPoint( x, y)
         self.__polyline = pl
 
         

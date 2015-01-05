@@ -73,6 +73,9 @@ class Layer(object):
         return polyline
 
 
+    def numLines(self):
+        return len(self)
+
         
     def processSegments(self):
         if self.__processed:
@@ -226,6 +229,10 @@ class Fault(object):
         layer = self[k]
         return layer.getIJPolyline()
         
+
+    def numLines( self , k):
+        layer = self[k]
+        return layer.numLines()
     
 
     def extendToFault(self , other_fault , k):
@@ -275,6 +282,7 @@ class Fault(object):
     def intersectsPolyline(self , polyline , k):
         fault_line = self.getPolyline(k)
         return fault_line.intersects( polyline )
+
 
     def intersectsFault(self , other_fault , k):
         fault_line = other_fault.getPolyline(k)
