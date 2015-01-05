@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'geo_util.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'geo_util.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 
@@ -48,24 +48,24 @@ bool geo_util_inside_polygon(const double * xlist , const double * ylist , int n
     double ymin = util_double_min(y1,y2);
     double ymax = util_double_max(y1,y2);
     double xmax = util_double_max(x1,x2);
-    
+
     if ((x1 == x2) && (y1 == y2))
       continue;
-    
+
     if ((y0 > ymin) && (y <= ymax)) {
 
       if (x0 <= xmax) {
         if (y1 != y2)
           xc = (y0 - y1) * (x2 - x1) / (y2 - y1) + x1;
-        
+
         if ((x1 == x2) || (x0 <= xc))
           inside = !inside;
-        
+
       }
     }
   }
-      
-    
+
+
   return inside;
 }
 
@@ -85,7 +85,7 @@ geo_util_xlines_status_enum geo_util_xlines( const double ** points , double * x
   double y2 = points[1][1];
   double y3 = points[2][1];
   double y4 = points[3][1];
-  
+
   double dx1 = (x2 - x1);
   double dx2 = (x4 - x3);
   double dy1 = (y2 - y1);
@@ -94,7 +94,7 @@ geo_util_xlines_status_enum geo_util_xlines( const double ** points , double * x
   if ((dx1 == 0 && dy1 == 0) ||
       (dx2 == 0 && dy2 == 0))
     return GEO_UTIL_LINES_DEGENERATE;
-  
+
   if ((dx1 != 0) && (dx2 != 0)) {
     // Both lines have a finite slope.
     double a1 = dy1 / dx1;
@@ -107,7 +107,7 @@ geo_util_xlines_status_enum geo_util_xlines( const double ** points , double * x
 
       *x0 = x;
       *y0 = y;
-      
+
       return GEO_UTIL_LINES_CROSSING;
     } else {
       // The two lines are parallell - potentially overlapping.
@@ -154,37 +154,37 @@ geo_util_xlines_status_enum geo_util_xsegments( const double ** points , double 
   double y2 = points[1][1];
   double y3 = points[2][1];
   double y4 = points[3][1];
-    
+
   double denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
   double numerator_a = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
   double numerator_b = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
-    
+
   // coincident?
-  if ((fabs(numerator_a) < EPSILON) && 
-      (fabs(numerator_b) < EPSILON) && 
+  if ((fabs(numerator_a) < EPSILON) &&
+      (fabs(numerator_b) < EPSILON) &&
       (fabs(denominator) < EPSILON)) {
     *x0 = (x1 + x2) * 0.50;
     *y0 = (y1 + y2) * 0.50;
-    
+
     return GEO_UTIL_LINES_OVERLAPPING;
   }
 
-  // Parallell 
-  if (fabs(denominator) < EPSILON) 
+  // Parallell
+  if (fabs(denominator) < EPSILON)
     return GEO_UTIL_NOT_CROSSING;
-    
+
 
   // Normal intersection
   {
     double mua = numerator_a / denominator;
     double mub = numerator_b / denominator;
-    
+
     if ((mua < 0.0) || (mua > 1.0) || (mub < 0.0) || (mub > 1.0))
-      return GEO_UTIL_NOT_CROSSING; 
+      return GEO_UTIL_NOT_CROSSING;
 
     *x0 = x1 + mua * (x2 - x1);
     *y0 = y1 + mua * (y2 - y1 );
-    
+
     return GEO_UTIL_LINES_CROSSING;
   }
 }
