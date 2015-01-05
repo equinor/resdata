@@ -57,7 +57,7 @@ class Layer(object):
         return neighbor_cells
 
     def getPolyline(self):
-        polyline = Polyline()
+        polyline = CPolyline()
         for fl in self:
             polyline += fl.getPolyline()
         return polyline
