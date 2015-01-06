@@ -212,13 +212,20 @@ class EclGrid(CClass):
         """The number of active cells fracture in the grid - for dual porosity."""
         return cfunc.get_active_fracture( self )
 
+
     @property
     def dims( self ):
+        warnings.warn("The dims property is deprecated - use getDims() method instead" , DeprecationWarning)
+        return self.getDims( )
+
+
+    def getDims(self):
         """A tuple of four elements: (nx , ny , nz , nactive)."""
         return ( cfunc.get_nx( self ) ,
                  cfunc.get_ny( self ) ,
                  cfunc.get_nz( self ) ,
                  cfunc.get_active( self ) )
+
 
     def getNX(self):
         """ The number of elements in the x direction"""
