@@ -72,8 +72,8 @@ class Ecl3DKW(EclKW):
 
         new_kw = super(Ecl3DKW , cls).create( kw , size , value_type)
         new_kw.grid = grid
-        new_kw.default_value = default_value
         new_kw.global_active = global_active
+        new_kw.setDefault( default_value )
         return new_kw
         
         
@@ -98,7 +98,7 @@ class Ecl3DKW(EclKW):
                 index = global_index
             else:
                 if not self.grid.active( global_index = global_index):
-                    return self.default_value
+                    return self.getDefault()
                 else:
                     index = self.grid.get_active_index( ijk = index )
                 
@@ -164,7 +164,6 @@ class Ecl3DKW(EclKW):
             kw.global_active = True
         elif len(kw) == grid.getNumActive():
             kw.global_active = False
-            kw.default_value = default_value
         else:
             raise ValueError("Size mismatch - must have size matching global/active size of grid")
 
@@ -176,7 +175,8 @@ class Ecl3DKW(EclKW):
             kw.global_active = True
         else:
             kw.global_active = False
-            
+
+        kw.setDefault( default_value )
         return kw
 
 
@@ -184,3 +184,10 @@ class Ecl3DKW(EclKW):
         return (self.grid.getNX() , self.grid.getNY() , self.grid.getNZ())
         
         
+    def setDefault(self, default_value):
+        self.default_value = default_value
+
+
+    def getDefault(self):
+        return self.default_value
+
