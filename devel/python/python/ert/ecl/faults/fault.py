@@ -16,6 +16,8 @@
 
 from ert.ecl import EclTypeEnum
 from ert.geo import Polyline , CPolyline , GeometryTools
+from ert.util import stat 
+from ert.util import Matrix
 
 from .fault_line import FaultLine
 from .fault_segments import FaultSegment , SegmentMap
@@ -76,6 +78,60 @@ class Layer(object):
     def numLines(self):
         return len(self)
 
+
+    # A fault can typically consist of several non connected fault
+    # segments; right after reading the fault input these can be in a
+    # complete mess:
+    #
+    #  1. The different part of the fault can be in random order.
+    #
+    #  2. Within each fault line the micro segments can be ordered in
+    #     reverse.
+    #
+    # This method goes through some desparate heuristics trying to
+    # sort things out.
+
+    def __sortFaultLines(self):
+        N = len(self.__fault_lines)
+        x = Matrix(N , 1)
+        y = Matrix(N , 1)
+
+        for index,line in enumerate(self.__fault_lines):
+            xc,yc = line.center()
+            
+            x[index,0] = xc
+            y[index,0] = yc
+
+        # y = beta[0] + beta[1] * x
+        #   = a       + b * x
+        beta = stat.polyfit(2 , x , y)
+        a = beta[0]
+        b = beta[1]
+
+        perm_list = []
+        for index,line in enumerate(self.__fault_lines):
+            x0 , y0 = line.center()
+            d = x0 + b*(y0 - a)
+            perm_list.append((index , d))
+        perm_list.sort(key = lambda x: x[1])
+
+        fault_lines = []
+        for (index,d) in perm_list:
+            fault_lines.append( self.__fault_lines[ index  ])
+        self.__fault_lines = fault_lines    
+
+        
+        for line in self.__fault_lines:
+            x1,y1 = line.startPoint()
+            x2,y2 = line.endPoint()
+            d1 = x1 + b*(y1 - a)
+            d2 = x2 + b*(y2 - a)
+
+            if d1 > d2:
+                line.reverse()
+                
+        
+
         
     def processSegments(self):
         if self.__processed:
@@ -95,7 +151,10 @@ class Layer(object):
 
                 current_segment.next_segment = self.__segment_map.popNext( current_segment )
                 current_segment = current_segment.next_segment
-                
+
+        if len(self.__fault_lines) > 1:
+            self.__sortFaultLines()
+
         self.__processed = True
 
 

@@ -17,6 +17,7 @@
 
         
 import sys
+from ert.util import DoubleVector,stat
 from ert.geo import CPolyline
 from .fault_segments import FaultSegment
 
@@ -184,6 +185,51 @@ class FaultLine(object):
 
         return self.__neighborCells
 
+        
+    def center(self):
+        xlist = DoubleVector( )
+        ylist = DoubleVector( ) 
+        for segment in self:
+            C1 = segment.getC1()
+            C2 = segment.getC2()
+            (J1 , I1) = divmod(C1 , self.__grid.getNX() + 1)
+            (J2 , I2) = divmod(C2 , self.__grid.getNX() + 1)
+            
+            (x1,y1,z) = self.__grid.getNodePos( I1 , J1 , self.__k )
+            (x2,y2,z) = self.__grid.getNodePos( I2 , J2 , self.__k )
+
+            xlist.append( x1 )
+            xlist.append( x2 )
+
+            ylist.append( y1 )
+            ylist.append( y2 )
+
+            
+        N = len(xlist)
+        return (xlist.elementSum()/N , ylist.elementSum()/N )
+
+
+
+    def reverse(self):
+        reverse_list = reversed( self.__segment_list )
+        self.__segment_list = []
+        for segment in reverse_list:
+            C1 = segment.getC1()
+            C2 = segment.getC2()
+            
+            rseg = FaultSegment(C2 , C1)
+            self.tryAppend( rseg )
+
+
+    def startPoint(self):
+        pl = self.getPolyline()
+        return pl[0]
+        
+
+    def endPoint(self):
+        pl = self.getPolyline()
+        return pl[-1]
+    
 
 
     def dump(self):
