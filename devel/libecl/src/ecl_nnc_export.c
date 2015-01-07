@@ -173,40 +173,39 @@ ecl_kw_type * ecl_nnc_export_get_tran_kw( const ecl_file_type * init_file , cons
   } else {
     if ((strcmp(kw , TRANNNC_KW) == 0) ||
         (strcmp(kw , TRANGL_KW) == 0)) {
-      int tran_kw_forward_skip;
       const int file_num_kw = ecl_file_get_size( init_file );
       int global_kw_index = 0;
       bool finished = false;
-      
-      if (strcmp(kw , TRANNNC_KW) == 0)
-        tran_kw_forward_skip = 3;
-      else
-        tran_kw_forward_skip = 4;
-      
-      while (!finished) {
+      bool correct_lgrheadi = false;
+      int head_index = 0;
+      int steps = 0;
+
+
+      while(!finished){
         ecl_kw_type * ecl_kw = ecl_file_iget_kw( init_file , global_kw_index );
-        
-        if (strcmp( LGRHEADI_KW , ecl_kw_get_header( ecl_kw )) == 0) {
+        const char *current_kw = ecl_kw_get_header(ecl_kw);
+        if (strcmp( LGRHEADI_KW , current_kw) == 0) {
           if (ecl_kw_iget_int( ecl_kw , LGRHEADI_LGR_NR_INDEX) == lgr_nr) {
-            
-            if ((global_kw_index + tran_kw_forward_skip) < file_num_kw) {
-              ecl_kw_type * ecl_kw = ecl_file_iget_kw( init_file , global_kw_index + tran_kw_forward_skip);
-
-              /* We found the TRANGL / TRANNC keyword we are after. */
-              if (strcmp( kw , ecl_kw_get_header( ecl_kw )) == 0) {
-                tran_kw = ecl_kw;
-                finished = true;
-                break;
-              } 
+            correct_lgrheadi = true;
+            head_index = global_kw_index;
+          }else{
+            correct_lgrheadi = false;
+          }
+        }
+        if(correct_lgrheadi) {
+          if (strcmp(kw, current_kw) == 0) {
+            steps  = global_kw_index - head_index; /* This is to calculate who fare from lgrheadi we found the TRANGL/TRANNNC key word */
+            if(steps == 3 || steps == 4 || steps == 6) { /* We only support a file format where TRANNNC is 3 steps and TRANGL is 4 or 6 steps from LGRHEADI */
+              tran_kw = ecl_kw;
+              finished = true;
+              break;
             }
-
-          } 
-        } 
-        
+          }
+        }
         global_kw_index++;
         if (global_kw_index == file_num_kw)
           finished = true;
-      } 
+      }
     }
   }
   return tran_kw;
