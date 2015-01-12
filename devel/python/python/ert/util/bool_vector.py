@@ -68,11 +68,10 @@ class BoolVector(VectorTemplate):
 
         return bool_vector
 
-    @classmethod
-    def createActiveList(cls, mask):
+
+    def createActiveList(self):
         """ @rtype: IntVectorTemplate """
-        assert isinstance(mask, BoolVector)
-        return cls.cNamespace().active_list(mask)
+        return BoolVector.cNamespace().active_list(self)
 
 
 cwrapper = CWrapper(UTIL_LIB)
