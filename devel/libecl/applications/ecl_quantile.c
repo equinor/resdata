@@ -227,9 +227,9 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
       const config_content_item_type * case_item = config_get_content_item( config , "CASE_LIST" );
 
       if (case_item != NULL) {
-        for (j=0; j < config_content_node_get_size( case_item ); j++) {
-          const config_content_node_type * case_node = config_content_item_iget_node( case_item );
-          for (i=0; i < config_content_node_get_size( case_node ) i++) {
+        for (j=0; j < config_content_item_get_size( case_item ); j++) {
+          const config_content_node_type * case_node = config_content_item_iget_node( case_item , j );
+          for (i=0; i < config_content_node_get_size( case_node ); i++) {
             const char * case_glob = config_content_node_iget( case_node , i );
             ensemble_load_from_glob( ensemble , case_glob , tp);
           }
@@ -720,13 +720,13 @@ void output_table_run( hash_type * output_table , ensemble_type * ensemble ) {
 void config_init( config_type * config ) {
 
 
-  config_add_schema_item( config , "CASE_LIST"      , true , true );
+  config_add_schema_item( config , "CASE_LIST"      , true );
   config_add_key_value( config , "NUM_INTERP" , false , CONFIG_INT);
 
   {
     config_schema_item_type * item;
-    item = config_add_schema_item( config , "OUTPUT" , true , true );
-    config_schema_item_set_argc_minmax( item , 2 , CONFIG_DEFAULT_ARG_MAX , 0 , NULL );
+    item = config_add_schema_item( config , "OUTPUT" , true );
+    config_schema_item_set_argc_minmax( item , 2 , CONFIG_DEFAULT_ARG_MAX );
     config_schema_item_set_indexed_selection_set( item , 1 , 3 , (const char *[3]) { S3GRAPH_STRING , HEADER_STRING , PLAIN_STRING });
   }
 
@@ -836,7 +836,7 @@ int main( int argc , char ** argv ) {
           free( config_path );
         }
       } else {
-        config_fprintf_errors( config , stderr );
+        config_fprintf_errors( config , true , stderr );
         exit(1);
       }
 
