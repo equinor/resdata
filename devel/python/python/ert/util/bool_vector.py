@@ -113,7 +113,6 @@ BoolVector.cNamespace().memcpy              = cwrapper.prototype("void   bool_ve
 BoolVector.cNamespace().set_default         = cwrapper.prototype("void   bool_vector_set_default( bool_vector , bool)")
 BoolVector.cNamespace().get_default         = cwrapper.prototype("bool   bool_vector_get_default( bool_vector )")
 BoolVector.cNamespace().element_size        = cwrapper.prototype("int    bool_vector_element_size( bool_vector )")
-BoolVector.cNamespace().count_equal         = cwrapper.prototype("int    bool_vector_count_equal( bool_vector, bool)")
 
 BoolVector.cNamespace().permute          = cwrapper.prototype("void bool_vector_permute(bool_vector, permutation_vector)")
 BoolVector.cNamespace().sort_perm        = cwrapper.prototype("permutation_vector_obj bool_vector_alloc_sort_perm(bool_vector)")
@@ -126,3 +125,4 @@ BoolVector.cNamespace().contains           = cwrapper.prototype("bool bool_vecto
 BoolVector.cNamespace().select_unique          = cwrapper.prototype("void bool_vector_select_unique(bool_vector)")
 BoolVector.cNamespace().element_sum       = cwrapper.prototype("bool bool_vector_sum(bool_vector)")
 BoolVector.cNamespace().get_data_ptr      = cwrapper.prototype("bool* bool_vector_get_ptr(bool_vector)")
+BoolVector.cNamespace().count_equal       = cwrapper.prototype("int bool_vector_count_equal(bool_vector, bool)")
