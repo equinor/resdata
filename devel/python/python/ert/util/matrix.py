@@ -58,6 +58,10 @@ class Matrix(BaseCClass):
         return Matrix.cNamespace().iset(self, index_tuple[0], index_tuple[1], value)
 
 
+    def dims(self):
+        return (Matrix.cNamespace().rows(self) , Matrix.cNamespace().columns(self))
+
+
     def rows(self):
         """ @rtype: int """
         return Matrix.cNamespace().rows(self)
