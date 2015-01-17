@@ -910,52 +910,52 @@ void ecl_sum_fmt_init_summary_x( ecl_sum_fmt_type * fmt ) {
 
 static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream , int internal_index , const bool_vector_type * has_var , const int_vector_type * var_index , char * date_string , const ecl_sum_fmt_type * fmt) {
   fprintf(stream , fmt->days_fmt , ecl_sum_iget_sim_days(ecl_sum , internal_index));
-  fprintf(stream , fmt->sep );
+  fprintf(stream , "%s", fmt->sep );
 
   {  
     struct tm ts;
     time_t sim_time = ecl_sum_iget_sim_time(ecl_sum , internal_index );
     util_localtime( &sim_time , &ts);
     strftime( date_string , DATE_STRING_LENGTH - 1 , fmt->date_fmt , &ts);
-    fprintf(stream , date_string );
+    fprintf(stream , "%s", date_string );
   }   
 
   {
     int ivar;
     for (ivar = 0; ivar < int_vector_size( var_index ); ivar++) {  
       if (bool_vector_iget( has_var , ivar )) {
-        fprintf(stream , fmt->sep);
+        fprintf(stream , "%s", fmt->sep);
         fprintf(stream , fmt->value_fmt , ecl_sum_iget(ecl_sum , internal_index, int_vector_iget( var_index , ivar )));
       }   
     }   
   }
   
-  fprintf(stream , fmt->newline);
+  fprintf(stream , "%s", fmt->newline);
 }
 
 
 static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringlist_type * key_list , const bool_vector_type * has_var , FILE * stream, const ecl_sum_fmt_type * fmt) {
-  fprintf(stream , fmt->date_header);
+  fprintf(stream , "%s", fmt->date_header);
   { 
     int i;
     for (i=0; i < stringlist_get_size( key_list ); i++)
       if (bool_vector_iget( has_var , i )) { 
-        fprintf(stream , fmt->sep);
+        fprintf(stream , "%s", fmt->sep);
         fprintf(stream , fmt->header_fmt , stringlist_iget( key_list , i ));
       }
   }
 
-  fprintf( stream , fmt->newline);
+  fprintf( stream , "%s", fmt->newline);
   if (fmt->print_dash)   {
-    fprintf(stream , fmt->date_dash);
+    fprintf(stream , "%s", fmt->date_dash);
     
     {
       int i;
       for (i=0; i < stringlist_get_size( key_list ); i++)
         if (bool_vector_iget( has_var , i ))
-          fprintf(stream , fmt->value_dash);
+          fprintf(stream , "%s", fmt->value_dash);
     }
-    fprintf( stream , fmt->newline);
+    fprintf( stream , "%s", fmt->newline);
   }
 }
 
