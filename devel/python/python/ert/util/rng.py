@@ -28,9 +28,27 @@ class RandomNumberGenerator(BaseCClass):
         c_ptr = RandomNumberGenerator.cNamespace().rng_alloc(alg_type, init_mode)
         super(RandomNumberGenerator, self).__init__(c_ptr)
 
+
+    def stateSize(self):
+        return RandomNumberGenerator.cNamespace().state_size(self)
+
+
+    def setState(self , seed_string):
+        state_size = self.stateSize()
+        if len(seed_string) < state_size:
+            raise ValueError("The seed string must be at least %d characters long" % self.stateSize())
+        RandomNumberGenerator.cNamespace().set_state(self , seed_string)
+
+
     def getDouble(self):
         """ @rtype: float """
         return RandomNumberGenerator.cNamespace().get_double(self)
+
+
+    def getInt(self):
+        """ @rtype: float """
+        return RandomNumberGenerator.cNamespace().get_int(self)
+
 
     def free(self):
         RandomNumberGenerator.cNamespace().free(self)
@@ -46,3 +64,6 @@ CWrapper.registerType("rng_ref", RandomNumberGenerator.createCReference)
 RandomNumberGenerator.cNamespace().rng_alloc = cwrapper.prototype("c_void_p rng_alloc(rng_alg_type_enum, rng_init_mode_enum)")
 RandomNumberGenerator.cNamespace().free = cwrapper.prototype("void rng_free(rng)")
 RandomNumberGenerator.cNamespace().get_double = cwrapper.prototype("double rng_get_double(rng)")
+RandomNumberGenerator.cNamespace().get_int = cwrapper.prototype("int rng_get_int(rng)")
+RandomNumberGenerator.cNamespace().state_size = cwrapper.prototype("int rng_state_size(rng)")
+RandomNumberGenerator.cNamespace().set_state = cwrapper.prototype("void rng_set_state(rng , char*)")
