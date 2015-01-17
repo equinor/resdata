@@ -38,6 +38,17 @@ class Matrix(BaseCClass):
         self.setAll(value)
 
 
+    def __str__(self):
+        s = ""
+        for i in range(self.rows()):
+            s += "["
+            for j in range(self.columns()):
+                d = Matrix.cNamespace().iget(self, i,j)
+                s += "%6.3g " % d
+            s += "]\n"
+        return s
+
+
     def __getitem__(self, index_tuple):
         if not 0 <= index_tuple[0] < self.rows():
             raise IndexError("Expected 0 <= %d < %d" % (index_tuple[0], self.rows()))
