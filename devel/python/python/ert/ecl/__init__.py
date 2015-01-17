@@ -96,5 +96,11 @@ from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
 
 
-#from .ecl_queue import
+# The EclQueue class uses the libjob_queue library which is only built
+# when the full ert distribution is built. If BUILD_ERT == False the
+# ecl_queue module is excluded from the build process.
+try:
+    from .ecl_queue import EclQueue
+except ImportError:
+    pass
 
