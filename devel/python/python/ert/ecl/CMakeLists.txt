@@ -9,7 +9,6 @@ set(PYTHON_SOURCES
     ecl_grid.py
     ecl_kw.py
     ecl_npv.py
-    ecl_queue.py
     ecl_region.py
     ecl_rft.py
     ecl_rft_cell.py
@@ -22,6 +21,11 @@ set(PYTHON_SOURCES
     fortio.py
     ecl_sum_keyword_vector.py
 )
+
+if (BUILD_ERT)
+   list(APPEND PYTHON_SOURCES ecl_queue.py)
+endif()
+
 
 add_python_package("python.ert.ecl"  ${PYTHON_INSTALL_PREFIX}/ert/ecl "${PYTHON_SOURCES}" True)
 

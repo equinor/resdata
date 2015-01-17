@@ -50,9 +50,21 @@ module import and namespace resolution.
 #
 # import ecl_default
 
+warning_message = """
+The ecl namespace is deprecated and will go away. 
+You are advised to use one of these alternatives
+when importing the ert.ecl modules and classes:
 
-#from warnings import warn
-#warn("The ecl namespace is deprecated! Please import ecl classes like this: import ert.ecl as ecl!")
+Common prefix:
+import ert.ecl as ecl  
+
+Direct import of classes:
+from ert.ecl import EclGrid,EclSum
+"""
+
+
+from warnings import warn
+warn(warning_message)
 
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
 from .ecl_rft_cell import EclPLTCell, EclRFTCell
@@ -66,7 +78,14 @@ from .ecl_case import EclCase
 from .ecl_subsidence import EclSubsidence
 from .ecl_grav_calc import deltag, phase_deltag
 from .ecl_grav import EclGrav
-from .ecl_queue import EclQueue
+
+# The EclQueue class uses the libjob_queue library which is only built
+# when the full ert distribution is built. If BUILD_ERT == False the
+# ecl_queue module is excluded from the build process.
+try:
+    from .ecl_queue import EclQueue
+except ImportError:
+    pass
 
 from .ecl_default import default
 
