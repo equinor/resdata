@@ -20,10 +20,8 @@ from ert.cwrap import CWrapper, BaseCClass
 from ert.util.enums import RngInitModeEnum
 from ert.util.enums import RngAlgTypeEnum
 
-
-
 class RandomNumberGenerator(BaseCClass):
-    def __init__(self, alg_type, init_mode):
+    def __init__(self, alg_type = RngAlgTypeEnum.MZRAN , init_mode = RngInitModeEnum.INIT_CLOCK):
         assert isinstance(alg_type, RngAlgTypeEnum)
         assert isinstance(init_mode, RngInitModeEnum)
 
