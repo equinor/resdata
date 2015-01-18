@@ -4663,7 +4663,7 @@ void util_fprintf_string(const char * s , int width , string_alignement_type ali
       for (i=0; i < (width - strlen(s)); i++) 
         fputc(' ' , stream);
     }
-    fprintf(stream , s);
+    fprintf(stream , "%s", s);
   } else if (alignement == right_pad) {
     sprintf(fmt , "%%-%ds" , width);
     fprintf(stream , fmt , s);
