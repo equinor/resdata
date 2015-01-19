@@ -313,6 +313,39 @@ matrix_type * matrix_alloc_copy(const matrix_type * src) {
   return matrix_alloc_copy__(src , false );
 }
 
+matrix_type * matrix_alloc_column_compressed_copy(const matrix_type * src, const bool_vector_type * mask) {
+  if (bool_vector_size( mask ) != matrix_get_columns( src ))
+    util_abort("%s: size mismatch. Src matrix has %d rows  mask has:%d elements\n", __func__ , matrix_get_rows( src ) , bool_vector_size( mask ));
+  {
+    int target_columns = bool_vector_count_equal( mask , true );
+    matrix_type * target = matrix_alloc( matrix_get_rows( src ) , target_columns );
+
+    matrix_column_compressed_memcpy( target , src , mask );
+    return target;
+  }
+}
+
+
+void matrix_column_compressed_memcpy(matrix_type * target, const matrix_type * src, const bool_vector_type * mask) {
+  if (bool_vector_count_equal( mask , true ) != matrix_get_columns( target ))
+    util_abort("%s: size mismatch. \n",__func__);
+
+  if (bool_vector_size( mask ) != matrix_get_columns( src))
+    util_abort("%s: size mismatch. \n",__func__);
+
+  {
+    int target_col = 0;
+    int src_col;
+    for (src_col = 0; src_col < bool_vector_size( mask ); src_col++) {
+      if (bool_vector_iget( mask , src_col)) {
+        matrix_copy_column( target , src , target_col , src_col);
+        target_col++;
+      }
+    }
+  }
+}
+
+
 
 matrix_type * matrix_realloc_copy(matrix_type * T , const matrix_type * src) {
   if (T == NULL)

@@ -24,6 +24,7 @@
 
 #include <ert/util/rng.h>
 #include <ert/util/type_macros.h>
+#include <ert/util/bool_vector.h>
 #ifdef HAVE_THREAD_POOL
 #include <ert/util/thread_pool.h>
 #endif
@@ -47,6 +48,8 @@ typedef struct matrix_struct matrix_type;
   bool          matrix_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
   bool          matrix_safe_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
   matrix_type * matrix_alloc_copy(const matrix_type * src);
+  matrix_type * matrix_alloc_column_compressed_copy(const matrix_type * src, const bool_vector_type * mask);
+  void          matrix_column_compressed_memcpy(matrix_type * target, const matrix_type * src, const bool_vector_type * mask);
   matrix_type * matrix_safe_alloc_copy(const matrix_type * src);
   matrix_type * matrix_realloc_copy(matrix_type * T , const matrix_type * src);
 

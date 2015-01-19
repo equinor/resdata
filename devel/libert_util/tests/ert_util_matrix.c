@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <ert/util/bool_vector.h>
 #include <ert/util/test_util.h>
 #include <ert/util/statistics.h>
 #include <ert/util/test_work_area.h>
@@ -219,6 +220,65 @@ void test_diag_std() {
 
 
 
+void test_masked_copy() {
+  const int N = 25;
+  bool_vector_type * mask = bool_vector_alloc(N , true);
+  rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
+  matrix_type * m1 = matrix_alloc( N , N );
+  matrix_random_init( m1 , rng );
+
+  bool_vector_iset( mask , 0 , false );
+  bool_vector_iset( mask , 10 , false );
+
+  {
+    matrix_type * m2 = matrix_alloc_column_compressed_copy( m1 , mask );
+    matrix_type * m3 = matrix_alloc( N , N - 2 );
+
+    test_assert_int_equal( matrix_get_rows( m1 ) , matrix_get_rows( m2 ));
+    test_assert_int_equal( matrix_get_columns( m1 ) , matrix_get_columns( m2 ) + 2);
+
+    matrix_column_compressed_memcpy( m3 , m1 , mask );
+    {
+      int src_col;
+      int target_col = 0;
+      for (src_col = 0; src_col < N; src_col++) {
+        if (bool_vector_iget( mask , src_col)) {
+          test_assert_true( matrix_columns_equal( m1 , src_col , m3 , target_col ));
+          target_col++;
+        }
+      }
+    }
+
+    test_assert_true( matrix_equal( m2 , m3 ));
+    matrix_free( m3 );
+    matrix_free( m2 );
+  }
+
+  matrix_free( m1 );
+  rng_free( rng );
+}
+
+
+void test_inplace_sub_column() {
+  const int N = 25;
+  bool_vector_type * mask = bool_vector_alloc(N , true);
+  rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
+  matrix_type * m1 = matrix_alloc( N , N );
+  matrix_type * m2 = matrix_alloc( N , N );
+
+  matrix_random_init( m1 , rng );
+  matrix_assign( m2 , m1 );
+  matrix_inplace_sub_column( m1 , m2 , 0 , 0 );
+  {
+    int row;
+    for (row = 0; row < N; row++) {
+      double diff = matrix_iget( m1 , row , 0);
+      test_assert_true( fabs( diff ) < 1e-6);
+    }
+  }
+}
+
+
 int main( int argc , char ** argv) {
   test_create_invalid();
   test_resize();
@@ -229,5 +289,7 @@ int main( int argc , char ** argv) {
   test_det4();
   test_readwrite();
   test_diag_std();
+  test_masked_copy();
+  test_inplace_sub_column();
   exit(0);
 }
