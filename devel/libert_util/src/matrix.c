@@ -904,7 +904,11 @@ void matrix_inplace_sub(matrix_type * A , const matrix_type * B) {
         A->data[ GET_INDEX(A,i,j) ] -= B->data[ GET_INDEX(B,i,j) ];
 
   } else
-    util_abort("%s: size mismatch \n",__func__);
+    util_abort("%s: size mismatch  A:[%d,%d]   B:[%d,%d]\n",__func__ ,
+               matrix_get_rows(A),
+               matrix_get_columns(A),
+               matrix_get_rows(B),
+               matrix_get_columns(B));
 }
 
 
