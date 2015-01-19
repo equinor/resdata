@@ -881,6 +881,19 @@ void matrix_assign(matrix_type * A , const matrix_type * B) {
 
 
 
+void matrix_inplace_sub_column(matrix_type * A , const matrix_type * B, int colA , int colB) {
+  if ((A->rows == B->rows) &&
+      (colA < A->columns) &&
+      (colB < B->columns)) {
+    int row;
+
+    for (row = 0; row < A->rows; row++)
+      A->data[ GET_INDEX(A , row , colA)] -= B->data[ GET_INDEX(B , row , colB)];
+
+  } else
+    util_abort("%s: size mismatch \n",__func__);
+}
+
 /* Updates matrix A by adding in matrix B - elementwise. */
 void matrix_inplace_add(matrix_type * A , const matrix_type * B) {
   if ((A->rows == B->rows) && (A->columns == B->columns)) {
