@@ -11,6 +11,7 @@ set(PYTHON_SOURCES
     log.py
     lookup_table.py
     matrix.py
+    profiler.py
     rng.py
     stat.py
     stringlist.py
