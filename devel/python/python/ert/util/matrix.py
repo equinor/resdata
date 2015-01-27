@@ -106,6 +106,10 @@ class Matrix(BaseCClass):
         Matrix.cNamespace().pretty_print(self, name, fmt)
 
 
+    def randomInit(self , rng):
+        Matrix.cNamespace().random_init(self, rng)
+
+
     def free(self):
         Matrix.cNamespace().free(self)
 
@@ -130,5 +134,6 @@ Matrix.cNamespace().columns = cwrapper.prototype("int matrix_get_columns(matrix)
 Matrix.cNamespace().equal = cwrapper.prototype("bool matrix_equal(matrix, matrix)")
 
 Matrix.cNamespace().pretty_print = cwrapper.prototype("void matrix_pretty_print(matrix, char*, char*)")
+Matrix.cNamespace().random_init = cwrapper.prototype("void matrix_random_init(matrix, rng)")
 
     

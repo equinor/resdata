@@ -65,6 +65,7 @@ from .time_vector import TimeVector
 
 from .stringlist import StringList
 from .stat import quantile, quantile_sorted
+from .rng import RandomNumberGenerator
 from .matrix import Matrix
 from .log import Log
 from .lookup_table import LookupTable
@@ -72,7 +73,6 @@ from .buffer import Buffer
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
-from .rng import RandomNumberGenerator
 from .thread_pool import ThreadPool
 from .install_abort_signals import installAbortSignals
 
