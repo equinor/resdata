@@ -4,6 +4,7 @@ set(PYTHON_SOURCES
     ecl_case.py
     ecl_default.py
     ecl_file.py
+    ecl_init_file.py
     ecl_grav.py
     ecl_grav_calc.py
     ecl_grid.py
