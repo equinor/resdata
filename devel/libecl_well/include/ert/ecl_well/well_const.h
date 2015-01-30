@@ -53,6 +53,7 @@ extern "C" {
 #define IWEL_HEADJ_ITEM               1
 #define IWEL_HEADK_ITEM               2
 #define IWEL_CONNECTIONS_ITEM         4
+#define IWEL_GROUP_ITEM               5
 #define IWEL_TYPE_ITEM                6
 #define IWEL_STATUS_ITEM             10
 #define IWEL_LGR_ITEM                42
