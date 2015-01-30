@@ -153,7 +153,6 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
     int j       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_J_ITEM ) - 1;
     int k       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_K_ITEM ) - 1;
     double connection_factor = -1;
-    int segment_id = ecl_kw_iget_int( icon_kw , icon_offset + ICON_SEGMENT_ITEM ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
     bool matrix_connection = true;
     bool open;
     well_conn_dir_enum dir = well_conn_fracX;
@@ -212,7 +211,10 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
       connection_factor = ecl_kw_iget_as_double(scon_kw , scon_offset + SCON_CF_ITEM);
     }
 
-    conn = well_conn_alloc__(i,j,k,connection_factor,dir,open,segment_id,matrix_connection);
+    {
+      int segment_id = ecl_kw_iget_int( icon_kw , icon_offset + ICON_SEGMENT_ITEM ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
+      conn = well_conn_alloc__(i,j,k,connection_factor,dir,open,segment_id,matrix_connection);
+    }
 
     /**
        For multisegmented wells ONLY the global part of the restart
