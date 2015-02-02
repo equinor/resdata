@@ -83,7 +83,6 @@ struct fortio_struct {
 
   /* Internal variables used during partial read.*/
   int                active_header;
-  int                rec_nr;
 };
 
 
@@ -96,7 +95,6 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
   fortio->active_header      = 0;
-  fortio->rec_nr             = 0;
   fortio->fmt_file           = fmt_file;
   fortio->stream_owner       = stream_owner;
   return fortio;
@@ -439,7 +437,6 @@ int fortio_init_read(fortio_type *fortio) {
     if (fortio->endian_flip_header)
       util_endian_flip_vector(&fortio->active_header , sizeof fortio->active_header , 1);
 
-    fortio->rec_nr++;
     return fortio->active_header;
   } else
     return -1;
@@ -478,7 +475,7 @@ void fortio_complete_read(fortio_type *fortio) {
     util_endian_flip_vector(&trailer , sizeof trailer , 1);
 
   if (trailer != fortio->active_header) {
-    fprintf(stderr,"%s: fatal error reading record:%d in file: %s - aborting \n",__func__ , fortio->rec_nr , fortio->filename);
+    fprintf(stderr,"%s: fatal error reading file: %s - aborting \n",__func__ , fortio->filename);
     util_abort("%s: Header: %d   Trailer: %d \n",__func__ , fortio->active_header , trailer);
   }
   fortio->active_header = 0;
@@ -578,7 +575,6 @@ void  fortio_init_write(fortio_type *fortio , int record_size) {
     util_endian_flip_vector(&file_header , sizeof file_header , 1);
 
   util_fwrite_int( file_header , fortio->stream );
-  fortio->rec_nr++;
 }
 
 void fortio_complete_write(fortio_type *fortio) {
