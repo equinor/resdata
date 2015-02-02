@@ -532,3 +532,6 @@ class VectorTemplate(BaseCClass):
         # Observe that the get_data_ptr() function is not implemented
         # for the TimeVector class.
         return self.cNamespace().get_data_ptr(self)
+
+    def countEqual(self , value):
+        return self.cNamespace().count_equal( self , value )
