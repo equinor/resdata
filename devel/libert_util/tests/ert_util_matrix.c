@@ -261,7 +261,6 @@ void test_masked_copy() {
 
 void test_inplace_sub_column() {
   const int N = 25;
-  bool_vector_type * mask = bool_vector_alloc(N , true);
   rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
   matrix_type * m1 = matrix_alloc( N , N );
   matrix_type * m2 = matrix_alloc( N , N );
