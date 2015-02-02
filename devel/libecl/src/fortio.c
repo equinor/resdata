@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'fortio.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'fortio.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdbool.h>
@@ -51,7 +51,7 @@ Where the "400" head and tail is the number of bytes in the following
 record. Fortran IO handles this transparently, but when mixing with
 other programming languages care must be taken. This file implements
 functionality to read and write these fortran generated files
-transparently. The three functions: 
+transparently. The three functions:
 
   1. fortio_fopen()
   2. fortio_fread_record()
@@ -65,22 +65,22 @@ fwrite() from the standard library.
 #define READ_MODE_TXT          "r"
 #define READ_MODE_BINARY       "rb"
 #define WRITE_MODE_TXT         "w"
-#define WRITE_MODE_BINARY      "wb" 
+#define WRITE_MODE_BINARY      "wb"
 #define READ_WRITE_MODE_TXT    "r+"
 #define READ_WRITE_MODE_BINARY "r+b"
 #define APPEND_MODE_TXT        "a"
-#define APPEND_MODE_BINARY     "ab"  
+#define APPEND_MODE_BINARY     "ab"
 
 
 struct fortio_struct {
   UTIL_TYPE_ID_DECLARATION;
   FILE             * stream;
   char             * filename;
-  bool               endian_flip_header;  
+  bool               endian_flip_header;
   bool               fmt_file;    /* This is not really used by the fortio instance - but it is very convenient to store it here. */
   const char *       fopen_mode;
   bool               stream_owner;
-  
+
   /* Internal variables used during partial read.*/
   int                active_header;
   int                rec_nr;
@@ -96,7 +96,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
   fortio->active_header      = 0;
-  fortio->rec_nr             = 0; 
+  fortio->rec_nr             = 0;
   fortio->fmt_file           = fmt_file;
   fortio->stream_owner       = stream_owner;
   return fortio;
@@ -105,7 +105,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
 
 
 /**
-   Helper function for fortio_is_fortran_stream__(). 
+   Helper function for fortio_is_fortran_stream__().
 */
 
 static bool __read_int(FILE * stream , int * value, bool endian_flip) {
@@ -139,7 +139,7 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
         if (util_fseek(stream , (offset_type) header , SEEK_CUR) == 0) {
           if (__read_int(stream , &tail , endian_flip)) {
             cont = true;
-            /* 
+            /*
                OK - now we have read a header and a tail - it might be
                a fortran file.
             */
@@ -148,7 +148,7 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
                 /* This is (most probably) a fortran file */
                 is_fortran_stream = true;
                 if (strict_checking)
-                  cont = true;  
+                  cont = true;
                 else
                   cont = false;
               }
@@ -160,7 +160,7 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
             }
           }
         }
-      } 
+      }
     }
   } while (cont);
   util_fseek(stream , init_pos , SEEK_SET);
@@ -170,10 +170,10 @@ static bool fortio_is_fortran_stream__(FILE * stream , bool endian_flip) {
 
 /**
    This function tries (using some heuristic) to guess whether a
-   particular file is a Fortran file. 
+   particular file is a Fortran file.
 
    The heuristic algorithm which is used is as follows:
-   
+
     1. Read four bytes as an integer (header)
     2. Skip that number of bytes forward.
     3. Read four bytes again (tail).
@@ -413,11 +413,11 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
       if (fread(&trailer , sizeof(fortio->active_header) , 1 , fortio->stream) == 1) {
         if (fortio->endian_flip_header)
           util_endian_flip_vector(&trailer , sizeof trailer , 1);
-        
+
         if (trailer == fortio->active_header)
           is_fortio_file = true;
       }
-    } 
+    }
   }
 
   fortio_fseek(fortio , init_pos , SEEK_SET);
@@ -441,7 +441,7 @@ int fortio_init_read(fortio_type *fortio) {
 
     fortio->rec_nr++;
     return fortio->active_header;
-  } else 
+  } else
     return -1;
 }
 
@@ -473,10 +473,10 @@ void fortio_data_fseek(fortio_type* fortio, offset_type data_offset, size_t data
 void fortio_complete_read(fortio_type *fortio) {
   int trailer;
   trailer = util_fread_int( fortio->stream );
-  
+
   if (fortio->endian_flip_header)
     util_endian_flip_vector(&trailer , sizeof trailer , 1);
-  
+
   if (trailer != fortio->active_header) {
     fprintf(stderr,"%s: fatal error reading record:%d in file: %s - aborting \n",__func__ , fortio->rec_nr , fortio->filename);
     util_abort("%s: Header: %d   Trailer: %d \n",__func__ , fortio->active_header , trailer);
@@ -517,7 +517,7 @@ void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) 
     bytes_read += fortio_fread_record(fortio , buffer_ptr);
   }
 
-  if (bytes_read > buffer_size) 
+  if (bytes_read > buffer_size)
     util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
 }
 
@@ -531,17 +531,17 @@ int fortio_fskip_record(fortio_type *fortio) {
 
 void fortio_fskip_buffer(fortio_type * fortio, int buffer_size) {
   int bytes_skipped = 0;
-  while (bytes_skipped < buffer_size) 
+  while (bytes_skipped < buffer_size)
     bytes_skipped += fortio_fskip_record(fortio);
 
-  if (bytes_skipped > buffer_size) 
+  if (bytes_skipped > buffer_size)
     util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
 }
 
 
 void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream , int buffer_size , void * buffer , bool *at_eof) {
   int bytes_read;
-  int record_size = fortio_init_read(src_stream); 
+  int record_size = fortio_init_read(src_stream);
   fortio_init_write(target_stream , record_size);
 
   bytes_read = 0;
@@ -554,7 +554,7 @@ void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream ,
 
     util_fread(buffer , 1 , bytes , src_stream->stream     , __func__);
     util_fwrite(buffer , 1 , bytes , target_stream->stream , __func__);
-    
+
     bytes_read += bytes;
   }
 
@@ -620,8 +620,8 @@ static fortio_status_type fortio_check_record( FILE * stream , bool endian_flip 
   else {
     if (endian_flip)
       util_endian_flip_vector(&header , sizeof header , 1);
-    
-    if (util_fseek(  stream , (offset_type) header , SEEK_CUR ) != 0) 
+
+    if (util_fseek(  stream , (offset_type) header , SEEK_CUR ) != 0)
       /* The fseek() failed - i.e. the data section was not sufficiently long. */
       status = FORTIO_MISSING_DATA;
     else {
@@ -629,14 +629,14 @@ static fortio_status_type fortio_check_record( FILE * stream , bool endian_flip 
       if (read_count == 1) {
         if (endian_flip)
           util_endian_flip_vector(&tail , sizeof tail , 1);
-      
+
         if (tail == header)
           /* All OK */
           status = FORTIO_OK;
-        else if ( tail != header ) 
+        else if ( tail != header )
           /* The numerical value of the tail did not agree with the header. */
           status = FORTIO_HEADER_MISMATCH;
-      } else 
+      } else
         /* The file ended before we could read the tail mark. */
         status = FORTIO_MISSING_TAIL;
     }
@@ -667,7 +667,7 @@ fortio_status_type fortio_check_buffer( FILE * stream , bool endian_flip , size_
     return record_status;
 }
 
-  
+
 
 fortio_status_type fortio_check_file( const char * filename , bool endian_flip) {
   if (util_file_exists( filename )) {

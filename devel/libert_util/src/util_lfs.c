@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2013  Statoil ASA, Norway. 
-    
-   The file 'util_win64.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2013  Statoil ASA, Norway.
+
+   The file 'util_win64.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 /*
@@ -36,17 +36,17 @@
   windows apply even on a 64 bit platform. To provide large file
   support windows has the functions _ftelli64() and _fseeki64() and
   the struct _stat64. Here we provide small wrapper functions
-  util_ftell(), util_fseek() and typedef struct stat_info. 
+  util_ftell(), util_fseek() and typedef struct stat_info.
 
   The final challenge is that the types 'long' and 'off_t == long'
   have different size on windows and linux:
 
 
      Windows(64 bit): sizeof(long)  = 4
-                      sizeof(off_t) = 4  
+                      sizeof(off_t) = 4
 
      Linux(64 bit):   sizeof(long)  = 8
-                      sizeof(off_t) = 8  
+                      sizeof(off_t) = 8
 
 
   To protect against this confusion we have typedefed a type
@@ -63,7 +63,7 @@ offset_type util_ftell(FILE * stream) {
   return ftell(stream);
   #endif
 #endif
-} 
+}
 
 
 int util_fseek(FILE * stream, offset_type offset, int whence) {
@@ -76,7 +76,7 @@ int util_fseek(FILE * stream, offset_type offset, int whence) {
   return fseek( stream , offset , whence );
   #endif
 #endif
-} 
+}
 
 
 
