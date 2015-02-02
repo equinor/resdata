@@ -63,7 +63,6 @@ from .int_vector import IntVector
 from .bool_vector import BoolVector
 from .time_vector import TimeVector
 from .stringlist import StringList
-from .stat import quantile, quantile_sorted
 from .rng import RandomNumberGenerator
 from .matrix import Matrix
 from .stat import quantile, quantile_sorted, polyfit
