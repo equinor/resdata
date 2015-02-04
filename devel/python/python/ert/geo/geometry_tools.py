@@ -23,9 +23,7 @@ class GeometryTools(object):
 
         # coincident?
         if abs(numerator_a) < GeometryTools.EPSILON and abs(numerator_b) < GeometryTools.EPSILON and abs(denominator) < GeometryTools.EPSILON:
-            x = (p1[0] + p2[0]) / 2.0
-            y = (p1[1] + p2[1]) / 2.0
-            return x, y
+            return None
 
         # parallel?
         if abs(denominator) < GeometryTools.EPSILON:
