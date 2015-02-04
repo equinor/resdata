@@ -188,6 +188,13 @@ class GeometryTools(object):
         intersection2 = GeometryTools.rayPolygonIntersections(p2, ray2, bounding_polygon)[0] # assume convex
 
 
+        # Check for intersection between the polyline extensions on the inside of the bounadary
+        internal_intersection = GeometryTools.lineIntersection( p1 , intersection1[1] , p2 , intersection2[1])
+        if internal_intersection:
+            return poly_line + [ internal_intersection ]
+
+
+
         if intersection2[0] < intersection1[0]:
             intersection1, intersection2 = intersection2, intersection1
             poly_line = list(reversed(poly_line))
