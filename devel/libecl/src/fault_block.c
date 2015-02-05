@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2014  Statoil ASA, Norway. 
-    
-   The file 'fault_block.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2014  Statoil ASA, Norway.
+
+   The file 'fault_block.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <ert/util/type_macros.h>
@@ -57,7 +57,7 @@ static fault_block_type * fault_block_alloc( const fault_block_layer_type * pare
   block->grid = fault_block_layer_get_grid( parent_layer );
   block->k = fault_block_layer_get_k( parent_layer );
   block->block_id = block_id;
- 
+
   block->i_list = int_vector_alloc(0,0);
   block->j_list = int_vector_alloc(0,0);
   block->global_index_list = int_vector_alloc(0,0);
@@ -68,7 +68,7 @@ static fault_block_type * fault_block_alloc( const fault_block_layer_type * pare
 
 
 int fault_block_get_size( const fault_block_type * block ) {
-  return int_vector_size( block->i_list );            
+  return int_vector_size( block->i_list );
 }
 
 
@@ -122,7 +122,7 @@ static void fault_block_assert_center( fault_block_type * fault_block ) {
     int index;
     double xc = 0;
     double yc = 0;
-    
+
     for (index = 0; index < int_vector_size( fault_block->i_list ); index++) {
       int i = int_vector_iget( fault_block->i_list , index);
       int j = int_vector_iget( fault_block->j_list , index);
@@ -133,7 +133,7 @@ static void fault_block_assert_center( fault_block_type * fault_block ) {
       xc += x;
       yc += y;
     }
-    
+
     fault_block->xc = xc / int_vector_size( fault_block->i_list );
     fault_block->yc = yc / int_vector_size( fault_block->i_list );
   }
@@ -186,10 +186,10 @@ bool fault_block_trace_edge( const fault_block_type * block , double_vector_type
     {
       int start_i = fault_block_iget_i( block , 0 );
       int start_j = fault_block_iget_j( block , 0 );
-      
+
       layer_trace_block_edge(fault_block_layer_get_layer( block->parent_layer ) , start_i , start_j , block->block_id , corner_list , cell_list);
     }
-    
+
     if (x_list && y_list) {
       double_vector_reset( x_list );
       double_vector_reset( y_list );
@@ -197,7 +197,7 @@ bool fault_block_trace_edge( const fault_block_type * block , double_vector_type
         double x,y,z;
         int_point2d_type ij;
         struct_vector_iget( corner_list , c , &ij );
-        
+
         ecl_grid_get_corner_xyz( block->grid , ij.i , ij.j , block->k , &x , &y , &z);
         double_vector_append( x_list , x);
         double_vector_append( y_list , y);
@@ -215,10 +215,10 @@ static bool fault_block_neighbour_xpolyline( const fault_block_type * block , in
   int g2 = ecl_grid_get_global_index3( block->grid , i2 , j2 , block->k );
   double x1,y1,z1;
   double x2,y2,z2;
-  
+
   ecl_grid_get_xyz1( block->grid , g1 , &x1 , &y1 , &z1);
   ecl_grid_get_xyz1( block->grid , g2 , &x2 , &y2 , &z2);
-  
+
   {
     int polyline_index = 0;
     bool intersection = false;
@@ -236,7 +236,7 @@ static bool fault_block_neighbour_xpolyline( const fault_block_type * block , in
 
       polyline_index++;
     }
-    
+
     return intersection;
   }
 }
@@ -296,7 +296,7 @@ void fault_block_list_neighbours( const fault_block_type * block, bool connected
               int_vector_append( neighbour_list , neighbour_id );
           }
         }
-        
+
         if (j < (layer_get_ny( layer) - 1)) {
           int neighbour_id = layer_iget_cell_value(layer , i, j + 1);
           if (cell_id != neighbour_id) {
@@ -324,9 +324,9 @@ void fault_block_list_neighbours( const fault_block_type * block, bool connected
 
 void  fault_block_copy_content(fault_block_type * target_block , const fault_block_type * src_block ) {
   int b;
-  for (b = 0; b < int_vector_size( src_block->i_list ); b++) 
+  for (b = 0; b < int_vector_size( src_block->i_list ); b++)
     fault_block_add_cell( target_block , int_vector_iget( src_block->i_list , b) , int_vector_iget( src_block->j_list , b));
-  
+
 }
 
 
