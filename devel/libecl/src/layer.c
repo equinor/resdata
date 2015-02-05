@@ -103,6 +103,18 @@ static cell_type* layer_iget_cell( const layer_type * layer , int i , int j) {
 
 
 
+bool layer_iget_left_barrier( const layer_type * layer, int i , int j) {
+  cell_type * cell = layer_iget_cell(layer , i,j);
+  return cell->left_barrier;
+}
+
+
+bool layer_iget_bottom_barrier( const layer_type * layer, int i , int j) {
+  cell_type * cell = layer_iget_cell(layer,i,j);
+  return cell->bottom_barrier;
+}
+
+
 int layer_iget_cell_value( const layer_type * layer, int i , int j) {
   int g = layer_get_global_cell_index( layer , i , j );
   return layer->data[g].cell_value;

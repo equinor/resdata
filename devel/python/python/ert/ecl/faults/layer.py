@@ -28,17 +28,22 @@ class Layer(BaseCClass):
             raise ValueError("Invalid input - no Layer object created")
 
 
+    def __assertIJ(self , i,j):
+        if i < 0 or i >= self.getNX():
+            raise ValueError("Invalid layer i:%d" % i)
+
+        if j < 0 or j >= self.getNY():
+            raise ValueError("Invalid layer j:%d" % j)
+        
+            
+
     def __unpackIndex(self , index):
         try:
             (i,j) = index
         except TypeError:
             raise ValueError("Index:%s is invalid - must have two integers" % str(index))
         
-        if i < 0 or i >= self.getNX():
-            raise ValueError("Invalid layer i:%d" % i)
-
-        if j < 0 or j >= self.getNY():
-            raise ValueError("Invalid layer j:%d" % j)
+        self.__assertIJ(i,j)
         
         return (i,j)
 
@@ -53,7 +58,14 @@ class Layer(BaseCClass):
         (i,j) = self.__unpackIndex(index)
         return self.cNamespace().get_cell(self , i , j)
     
-        
+    def bottomBarrier(self , i,j):
+        self.__assertIJ(i,j)
+        return self.cNamespace().get_bottom_barrier(self , i , j)
+
+    def leftBarrier(self , i,j):
+        self.__assertIJ(i,j)
+        return self.cNamespace().get_left_barrier(self , i , j)
+
     def getNX(self):
         return self.cNamespace().get_nx(self)
 
@@ -140,6 +152,8 @@ Layer.cNamespace().get_nx       = cwrapper.prototype("int       layer_get_nx(lay
 Layer.cNamespace().get_ny       = cwrapper.prototype("int       layer_get_ny(layer)")
 Layer.cNamespace().set_cell     = cwrapper.prototype("void      layer_iset_cell_value(layer , int , int , int)")
 Layer.cNamespace().get_cell     = cwrapper.prototype("int       layer_iget_cell_value(layer , int , int )")
+Layer.cNamespace().get_bottom_barrier = cwrapper.prototype("bool layer_iget_bottom_barrier(layer , int , int )")
+Layer.cNamespace().get_left_barrier = cwrapper.prototype("bool layer_iget_left_barrier(layer , int , int )")
 Layer.cNamespace().cell_contact = cwrapper.prototype("bool      layer_cell_contact(layer , int , int , int , int)")
 Layer.cNamespace().add_barrier  = cwrapper.prototype("void      layer_add_barrier(layer , int , int)")
 Layer.cNamespace().add_ijbarrier  = cwrapper.prototype("void      layer_add_ijbarrier(layer , int , int, int , int)")

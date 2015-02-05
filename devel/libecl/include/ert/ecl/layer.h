@@ -48,7 +48,9 @@ extern "C" {
 
   
   typedef struct layer_struct       layer_type;
-
+  
+  bool         layer_iget_left_barrier( const layer_type * layer, int i , int j);
+  bool         layer_iget_bottom_barrier( const layer_type * layer, int i , int j);
   int          layer_get_nx( const layer_type * layer );
   int          layer_get_ny( const layer_type * layer );
   void         layer_fprintf_cell( const layer_type * layer , int i , int j , FILE * stream);
