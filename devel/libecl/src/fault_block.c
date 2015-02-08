@@ -242,78 +242,52 @@ static bool fault_block_neighbour_xpolyline( const fault_block_type * block , in
 }
 
 
+static bool fault_block_connected_neighbour( const fault_block_type * block , int i1 , int j1 , int i2 , int j2 , bool connected_only , const geo_polygon_collection_type * polylines ) {
+  const layer_type * layer = fault_block_layer_get_layer( block->parent_layer );
+  if ((i2 < 0) || (i2 >= layer_get_nx( layer )))
+    return false;
+
+  if ((j2 < 0) || (j2 >= layer_get_ny( layer )))
+    return false;
+
+  {
+    int cell_id = layer_iget_cell_value( layer , i1 , j1 );
+    int neighbour_id = layer_iget_cell_value(layer , i2 , j2);
+    if (cell_id == neighbour_id)
+      return false;
+
+    if (!connected_only)
+      return true;
+
+    return (layer_cell_contact( layer , i1 , j1 , i2 , j2)  && !fault_block_neighbour_xpolyline( block , i1,j1,i2,j2,polylines ));
+  }
+}
+
+
+
 void fault_block_list_neighbours( const fault_block_type * block, bool connected_only , const geo_polygon_collection_type * polylines , int_vector_type * neighbour_list) {
   int_vector_reset( neighbour_list );
   {
-    int_vector_type * cell_list = int_vector_alloc(0,0);
-    fault_block_trace_edge( block , NULL , NULL , cell_list );
-    {
-      int c;
-      layer_type * layer = fault_block_layer_get_layer( block->parent_layer );
-      for (c = 0; c < int_vector_size( cell_list ); c++) {
-        int j = int_vector_iget( cell_list , c) / layer_get_nx(layer);
-        int i = int_vector_iget( cell_list , c) % layer_get_nx(layer);
-        int cell_id = layer_iget_cell_value( layer , i , j );
+    int c;
+    layer_type * layer = fault_block_layer_get_layer( block->parent_layer );
+    for (c = 0; c < int_vector_size( block->i_list ); c++) {
+      int i = int_vector_iget( block->i_list , c);
+      int j = int_vector_iget( block->j_list , c);
+      int cell_id = layer_iget_cell_value( layer , i , j );
 
-        if (i > 0) {
-          int neighbour_id = layer_iget_cell_value(layer , i - 1, j);
-          if (cell_id != neighbour_id) {
-            if (connected_only) {
-              bool connected = layer_cell_contact( layer , i , j , i - 1 , j);
-              if (connected) {
-                if (!fault_block_neighbour_xpolyline( block , i,j,i-1,j,polylines ))
-                  int_vector_append( neighbour_list , neighbour_id );
-              }
-            } else
-              int_vector_append( neighbour_list , neighbour_id );
-          }
-        }
+      if (fault_block_connected_neighbour( block , i , j , i - 1 , j , connected_only , polylines ))
+        int_vector_append( neighbour_list , layer_iget_cell_value( layer , i - 1 , j));
 
-        if (i < (layer_get_nx( layer) - 1)) {
-          int neighbour_id = layer_iget_cell_value(layer , i + 1, j);
-          if (cell_id != neighbour_id) {
-            if (connected_only) {
-              bool connected = layer_cell_contact( layer , i , j , i + 1 , j);
-              if (connected) {
-                if (!fault_block_neighbour_xpolyline( block , i , j , i + 1 , j , polylines ))
-                  int_vector_append( neighbour_list , neighbour_id );
-              }
-            } else
-              int_vector_append( neighbour_list , neighbour_id );
-          }
-        }
+      if (fault_block_connected_neighbour( block , i , j , i + 1 , j , connected_only , polylines ))
+        int_vector_append( neighbour_list , layer_iget_cell_value( layer , i + 1 , j));
 
-        if (j > 0) {
-          int neighbour_id = layer_iget_cell_value(layer , i, j - 1);
-          if (cell_id != neighbour_id) {
-            if (connected_only) {
-              bool connected = layer_cell_contact( layer , i , j , i  , j - 1);
-              if (connected) {
-                if (!fault_block_neighbour_xpolyline( block , i , j , i  , j - 1, polylines ))
-                  int_vector_append( neighbour_list , neighbour_id );
-              }
-            } else
-              int_vector_append( neighbour_list , neighbour_id );
-          }
-        }
+      if (fault_block_connected_neighbour( block , i , j , i  , j - 1, connected_only , polylines ))
+        int_vector_append( neighbour_list , layer_iget_cell_value( layer , i , j - 1));
 
-        if (j < (layer_get_ny( layer) - 1)) {
-          int neighbour_id = layer_iget_cell_value(layer , i, j + 1);
-          if (cell_id != neighbour_id) {
-            if (connected_only) {
-              bool connected = layer_cell_contact( layer , i , j , i  , j + 1);
-              if (connected) {
-                if (!fault_block_neighbour_xpolyline( block , i , j , i  , j + 1, polylines ))
-                  int_vector_append( neighbour_list , neighbour_id );
-              }
-            } else
-              int_vector_append( neighbour_list , neighbour_id );
-          }
-        }
-      }
+      if (fault_block_connected_neighbour( block , i , j , i , j + 1, connected_only , polylines ))
+        int_vector_append( neighbour_list , layer_iget_cell_value( layer , i , j + 1));
+
     }
-
-    int_vector_free( cell_list );
   }
   int_vector_select_unique( neighbour_list );
   int_vector_del_value( neighbour_list , 0 );
