@@ -142,8 +142,8 @@ class FaultBlockLayer(BaseCClass):
         self.cNamespace().export_kw( self , kw )
 
 
-    def addFaultBarrier(self , fault , link_segments = True):
-        layer = self.getGeoLayer()
+    def addFaultBarrier(self , fault , link_segments = False):
+        layer = self.getGeoLayer( )
         layer.addFaultBarrier( fault , self.getK() , link_segments )
 
 
