@@ -32,7 +32,7 @@
 #include <ert/util/arg_pack.h>
 #include <ert/util/thread_pool.h>
 
-#include <ert/config/config.h>
+#include <ert/config/config_parser.h>
 #include <ert/config/config_content_item.h>
 #include <ert/config/config_content_node.h>
 
