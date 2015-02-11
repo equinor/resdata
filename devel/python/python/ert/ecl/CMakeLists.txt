@@ -6,6 +6,7 @@ set(PYTHON_SOURCES
     ecl_file.py
     ecl_3d_file.py
     ecl_init_file.py
+    ecl_restart_file.py
     ecl_grav.py
     ecl_grav_calc.py
     ecl_grid.py
