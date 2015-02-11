@@ -211,17 +211,14 @@ bool fault_block_trace_edge( const fault_block_type * block , double_vector_type
 void fault_block_list_neighbours( const fault_block_type * block, int_vector_type * neighbour_list) {
   int_vector_reset( neighbour_list );
   {
-    int_vector_type * cell_list = int_vector_alloc(0,0);
-    double_vector_type * x_list = double_vector_alloc(0,0);
-    double_vector_type * y_list = double_vector_alloc(0,0);
+    int c;
+    layer_type * layer = fault_block_layer_get_layer( block->parent_layer );
+    for (c = 0; c < int_vector_size( block->i_list ); c++) {
+      int i = int_vector_iget( block->i_list , c);
+      int j = int_vector_iget( block->j_list , c);
 
-    fault_block_trace_edge( block , x_list , y_list , cell_list );
-    {
-      int c;
-      layer_type * layer = fault_block_layer_get_layer( block->parent_layer );
-      for (c = 0; c < int_vector_size( cell_list ); c++) {
-        int j = int_vector_iget( cell_list , c) / layer_get_nx(layer);
-        int i = int_vector_iget( cell_list , c) % layer_get_nx(layer);
+      if (fault_block_connected_neighbour( block , i , j , i - 1 , j , connected_only , polylines ))
+        int_vector_append( neighbour_list , layer_iget_cell_value( layer , i - 1 , j));
         
         if (i > 0) {
           int neighbour_id = layer_iget_cell_value(layer , i - 1, j);
