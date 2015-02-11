@@ -216,7 +216,7 @@ ensemble_type * ensemble_alloc( ) {
 }
 
 
-void ensemble_init( ensemble_type * ensemble , config_type * config) {
+void ensemble_init( ensemble_type * ensemble , config_parser_type * config) {
 
   /*1 : Loading ensembles and settings from the config instance */
   /*1a: Loading the eclipse summary cases. */
@@ -354,7 +354,7 @@ static void output_add_key( const ecl_sum_type * refcase , output_type * output 
    OUTPUT  output_file    key.q    key.q    key.q    key.q    ...
 */
 
-void output_table_init( const ecl_sum_type * refcase, hash_type * output_table , const config_type * config ) {
+void output_table_init( const ecl_sum_type * refcase, hash_type * output_table , const config_parser_type * config ) {
   int i,j;
   const config_content_item_type * output_item = config_get_content_item( config , "OUTPUT");
   if (output_item != NULL) {
@@ -717,7 +717,7 @@ void output_table_run( hash_type * output_table , ensemble_type * ensemble ) {
 
 /*****************************************************************/
 
-void config_init( config_type * config ) {
+void config_init( config_parser_type * config ) {
 
 
   config_add_schema_item( config , "CASE_LIST"      , true );
@@ -824,7 +824,7 @@ int main( int argc , char ** argv ) {
     hash_type     * output_table   = hash_alloc();
     ensemble_type * ensemble       = ensemble_alloc();
     {
-      config_type   * config      = config_alloc( );
+      config_parser_type   * config      = config_alloc( );
       const char    * config_arg  = argv[1];
 
       config_init( config );
