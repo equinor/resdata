@@ -39,6 +39,7 @@ the libecl library.
 """
 import ctypes
 import types
+import warnings
 
 import  numpy
 from ert.cwrap import CClass, CFILE, CWrapper, CWrapperNameSpace
@@ -779,6 +780,26 @@ class EclKW(CClass):
 
     @property    
     def min_max( self ):
+        warnings.warn("The min_max property has been renamed to method getMinMax()" , DeprecationWarning)
+        return self.getMinMax()
+
+
+    @property
+    def max( self ):
+        warnings.warn("The max property has been renamed to method getMax()" , DeprecationWarning)
+        mm = self.getMinMax()
+        return mm[1]
+    
+    
+    @property
+    def min( self ):
+        warnings.warn("The min property has been renamed to method getMin()" , DeprecationWarning)
+        mm = self.getMinMax()
+        return mm[0]
+
+       
+    
+    def getMinMax(self):
         """
         Will return a touple (min,max) for numerical types.
 
@@ -802,16 +823,17 @@ class EclKW(CClass):
         return (min.value , max.value)
 
 
-    @property
-    def max( self ):
-        return self.min_max[1]
+    def getMax( self ):
+        mm = self.getMinMax()
+        return mm[1]
     
     
-    @property
-    def min( self ):
-        return self.min_max[0]
-        
-    
+    def getMin( self ):
+        mm = self.getMinMax()
+        return mm[0]
+
+
+
     @property
     def numeric(self):
         if self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
