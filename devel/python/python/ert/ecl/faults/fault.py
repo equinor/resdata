@@ -350,6 +350,16 @@ class Fault(object):
         return self.intersectsPolyline( fault_line , k )
 
 
+    def extendToFault(self , fault , k):
+        fault_line = fault.getPolyline(k)
+        return self.extendToPolyline(fault_line , k)
+
+    def extendToEdge(self, edge , k):
+        if isinstance(edge , Fault):
+            return self.extendToFault( edge , k )
+        else:
+            return self.extendToPolyline( edge , k )
+            
 
     def extendToBBox(self , bbox , k , start = True):
         fault_polyline = self.getPolyline(k)
