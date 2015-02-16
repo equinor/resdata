@@ -4,10 +4,14 @@ set(PYTHON_SOURCES
     ecl_case.py
     ecl_default.py
     ecl_file.py
+    ecl_3d_file.py
+    ecl_init_file.py
+    ecl_restart_file.py
     ecl_grav.py
     ecl_grav_calc.py
     ecl_grid.py
     ecl_kw.py
+    ecl_3dkw.py
     ecl_npv.py
     ecl_region.py
     ecl_rft.py
