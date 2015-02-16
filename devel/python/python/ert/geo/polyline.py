@@ -94,9 +94,6 @@ class Polyline(object):
             
 
     def loadPoints(self , points):
-        if not isinstance( points , collections.Iterable ):
-            raise TypeError("The input argument points must be iterable")
-            
         for point in points:
             x = point[0]
             y = point[1]
