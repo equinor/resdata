@@ -307,24 +307,7 @@ ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_fi
 }
 
 
-
-/**
-   Returns an rft_node for well 'well' and time 'recording_time'. If
-   the rft can not be found, either due to "wrong" well name, or "wrong"
-   time; the function will return NULL.
-*/
-
-
-ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
-  int index = ecl_rft_file_get_node_index_time_rft(rft_file, well, recording_time);
-    if (index !=-1) {
-        return ecl_rft_file_iget_node(rft_file, index);
-    }else{
-        return NULL;
-    }
-}
-
-int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
+static int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
     ecl_rft_node_type * node = NULL;
     if (hash_has_key( rft_file->well_index , well)) {
         const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
@@ -344,6 +327,24 @@ int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_file , c
     }
     return -1;
 }
+
+
+/**
+   Returns an rft_node for well 'well' and time 'recording_time'. If
+   the rft can not be found, either due to "wrong" well name, or "wrong"
+   time; the function will return NULL.
+*/
+
+
+ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
+  int index = ecl_rft_file_get_node_index_time_rft(rft_file, well, recording_time);
+    if (index !=-1) {
+        return ecl_rft_file_iget_node(rft_file, index);
+    }else{
+        return NULL;
+    }
+}
+
 
 
 
@@ -404,7 +405,7 @@ void ecl_rft_file_update(const char * rft_file_name, ecl_rft_node_type ** nodes,
 
     int size = ecl_rft_file_get_size( rft_file );
     for(int i=0;i<size;i++) {
-        ecl_rft_node_type *new_node = vector_iget_const(rft_file->data, i);
+        const ecl_rft_node_type *new_node = vector_iget_const(rft_file->data, i);
         ecl_rft_node_fwrite(new_node, fortio, unit_set);
     }
     fortio_fclose( fortio );
