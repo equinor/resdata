@@ -308,24 +308,24 @@ ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_fi
 
 
 static int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
-    ecl_rft_node_type * node = NULL;
-    if (hash_has_key( rft_file->well_index , well)) {
-        const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
-        int index = 0;
-        while (true) {
-            if (index == int_vector_size( index_vector ))
-                break;
-            int node_index  = int_vector_iget( index_vector , index );
-            node = ecl_rft_file_iget_node( rft_file , node_index);
-            if (ecl_rft_node_get_date( node ) == recording_time)
-               return node_index;
-            else {
-                index++;
-            }
+  int global_index = -1;
+  if (hash_has_key( rft_file->well_index , well)) {
+    const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
+    int well_index = 0;
+    while (true) {
+      if (well_index == int_vector_size( index_vector ))
+        break;
 
-        }
+      global_index = int_vector_iget( index_vector , well_index );
+      {
+        const ecl_rft_node_type * node = ecl_rft_file_iget_node( rft_file , global_index);
+        if (ecl_rft_node_get_date( node ) == recording_time)
+          break;
+      }
+      global_index++;
     }
-    return -1;
+  }
+  return global_index;
 }
 
 
@@ -338,11 +338,11 @@ static int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_f
 
 ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
   int index = ecl_rft_file_get_node_index_time_rft(rft_file, well, recording_time);
-    if (index !=-1) {
-        return ecl_rft_file_iget_node(rft_file, index);
-    }else{
-        return NULL;
-    }
+  if (index !=-1) {
+    return ecl_rft_file_iget_node(rft_file, index);
+  } else{
+    return NULL;
+  }
 }
 
 
