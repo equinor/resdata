@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'ecl_rft_file.h' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'ecl_rft_file.h' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #ifndef __ECL_RFT_FILE_H__
@@ -33,8 +33,8 @@ typedef struct ecl_rft_file_struct ecl_rft_file_type;
 
 char                 * ecl_rft_file_alloc_case_filename(const char * case_input );
 const char           * ecl_rft_file_get_filename( const ecl_rft_file_type * rft_file );
-ecl_rft_file_type    * ecl_rft_file_alloc_case(const char * case_input ); 
-bool                   ecl_rft_file_case_has_rft(const char * case_input ); 
+ecl_rft_file_type    * ecl_rft_file_alloc_case(const char * case_input );
+bool                   ecl_rft_file_case_has_rft(const char * case_input );
 bool                   ecl_rft_file_case_has_rft( const char * case_input );
 ecl_rft_file_type    * ecl_rft_file_alloc(const char * );
 void                   ecl_rft_file_free(ecl_rft_file_type * );
