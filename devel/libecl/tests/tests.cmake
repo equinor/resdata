@@ -240,6 +240,7 @@ add_test( ecl_rsthead ${EXECUTABLE_OUTPUT_PATH}/ecl_rsthead ${PROJECT_SOURCE_DIR
 add_executable( ecl_rft ecl_rft.c )
 target_link_libraries( ecl_rft ecl test_util )
 add_test( ecl_rft_rft ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.RFT RFT)
+add_test( ecl_rft_rft_rw ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.RFT RFT_RW)
 add_test( ecl_rft_plt ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/RFT/TEST1_1A.RFT PLT)
 add_test( ecl_rft_plt ${EXECUTABLE_OUTPUT_PATH}/ecl_rft ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/RFT/RFT2.RFT MSW-PLT)
 
