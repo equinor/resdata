@@ -223,6 +223,7 @@ extern "C" {
 #define CONIPOS_KW   "CONIPOS"  /* The i-index of the connections in the well. */
 #define CONJPOS_KW   "CONJPOS"  /* The j-index ... */
 #define CONKPOS_KW   "CONKPOS"  /* The k-index ... */
+#define HOSTGRID_KW  "HOSTGRID"
 
 /* RFT keywords */
 #define SWAT_KW      "SWAT"     /* The kewyord containing SWAT. */
