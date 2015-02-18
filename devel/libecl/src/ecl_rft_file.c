@@ -316,26 +316,35 @@ ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_fi
 
 
 ecl_rft_node_type * ecl_rft_file_get_well_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
-  ecl_rft_node_type * node = NULL;
-  if (hash_has_key( rft_file->well_index , well)) {
-    const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
-    int index = 0;
-    while (true) {
-      if (index == int_vector_size( index_vector ))
-        break;
-      
-      node = ecl_rft_file_iget_node( rft_file , int_vector_iget( index_vector , index ));
-      if (ecl_rft_node_get_date( node ) == recording_time) 
-        break;
-      else {
-        node = NULL;
-        index++;
-      }
-      
+  int index = ecl_rft_file_get_node_index_time_rft(rft_file, well, recording_time);
+    if (index !=-1) {
+        return ecl_rft_file_iget_node(rft_file, index);
+    }else{
+        return NULL;
     }
-  }
-  return node;
 }
+
+int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
+    ecl_rft_node_type * node = NULL;
+    if (hash_has_key( rft_file->well_index , well)) {
+        const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
+        int index = 0;
+        while (true) {
+            if (index == int_vector_size( index_vector ))
+                break;
+            int node_index  = int_vector_iget( index_vector , index );
+            node = ecl_rft_file_iget_node( rft_file , node_index);
+            if (ecl_rft_node_get_date( node ) == recording_time)
+               return node_index;
+            else {
+                index++;
+            }
+
+        }
+    }
+    return -1;
+}
+
 
 
 bool ecl_rft_file_has_well( const ecl_rft_file_type * rft_file , const char * well) {
@@ -364,6 +373,42 @@ int ecl_rft_file_get_num_wells( const ecl_rft_file_type * rft_file ) {
 
 stringlist_type * ecl_rft_file_alloc_well_list(const ecl_rft_file_type * rft_file ) {
   return hash_alloc_stringlist( rft_file->well_index );
+}
+
+
+
+void ecl_rft_file_update(const char * rft_file_name, ecl_rft_node_type ** nodes,int num_nodes, ert_ecl_unit_enum unit_set){
+    ecl_rft_file_type * rft_file;
+
+    if(util_file_exists(rft_file_name)){
+        rft_file = ecl_rft_file_alloc( rft_file_name );
+        for(int i =0;i<num_nodes;i++) {
+            ecl_rft_node_type *new_node = nodes[i];
+            int index = ecl_rft_file_get_node_index_time_rft(rft_file, ecl_rft_node_get_well_name(new_node), ecl_rft_node_get_date(new_node));
+            if (index == -1) {
+                ecl_rft_file_add_node(rft_file, new_node);
+            } else {
+               vector_iset_owned_ref(rft_file->data, index, new_node,ecl_rft_node_free__);
+            }
+        }
+    }else{
+        rft_file = ecl_rft_file_alloc_empty( rft_file_name );
+        for(int i =0;i<num_nodes;i++) {
+            ecl_rft_file_add_node(rft_file, nodes[i]);
+        }
+    }
+    bool fmt_file = false;
+    fortio_type * fortio = fortio_open_writer( rft_file_name , fmt_file , ECL_ENDIAN_FLIP );
+
+    vector_sort(rft_file->data,(vector_cmp_ftype *) ecl_rft_node_cmp);
+
+    int size = ecl_rft_file_get_size( rft_file );
+    for(int i=0;i<size;i++) {
+        ecl_rft_node_type *new_node = vector_iget_const(rft_file->data, i);
+        ecl_rft_node_fwrite(new_node, fortio, unit_set);
+    }
+    fortio_fclose( fortio );
+    ecl_rft_file_free(rft_file);
 }
 
 

@@ -26,6 +26,8 @@ extern "C" {
 #include <ert/util/stringlist.h>
 
 #include <ert/ecl/ecl_rft_node.h>
+#include <ert/util/vector.h>
+#include <ert/util/int_vector.h>
 
 typedef struct ecl_rft_file_struct ecl_rft_file_type;
 
@@ -51,6 +53,7 @@ int                       ecl_rft_file_get_well_occurences( const ecl_rft_file_t
 stringlist_type         * ecl_rft_file_alloc_well_list(const ecl_rft_file_type * rft_file );
 int                       ecl_rft_file_get_num_wells( const ecl_rft_file_type * rft_file );
 void                      ecl_rft_file_free__( void * arg);
+void                      ecl_rft_file_update(const char * rft_file_name,  ecl_rft_node_type ** nodes,int num_nodes, ert_ecl_unit_enum unit_set);
 
 #ifdef __cplusplus
 }
