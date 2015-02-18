@@ -382,33 +382,47 @@ void ecl_rft_file_update(const char * rft_file_name, ecl_rft_node_type ** nodes,
     ecl_rft_file_type * rft_file;
 
     if(util_file_exists(rft_file_name)){
-        rft_file = ecl_rft_file_alloc( rft_file_name );
-        for(int i =0;i<num_nodes;i++) {
-            ecl_rft_node_type *new_node = nodes[i];
-            int index = ecl_rft_file_get_node_index_time_rft(rft_file, ecl_rft_node_get_well_name(new_node), ecl_rft_node_get_date(new_node));
-            if (index == -1) {
-                ecl_rft_file_add_node(rft_file, new_node);
-            } else {
-               vector_iset_owned_ref(rft_file->data, index, new_node,ecl_rft_node_free__);
-            }
+      int node_index;
+      rft_file = ecl_rft_file_alloc( rft_file_name );
+      for(node_index = 0; node_index < num_nodes; node_index++) {
+        ecl_rft_node_type * new_node = nodes[node_index];
+        int storage_index = ecl_rft_file_get_node_index_time_rft(rft_file, ecl_rft_node_get_well_name(new_node), ecl_rft_node_get_date(new_node));
+        if (storage_index == -1) {
+          ecl_rft_file_add_node(rft_file, new_node);
+        } else {
+          vector_iset_owned_ref(rft_file->data, storage_index, new_node,ecl_rft_node_free__);
         }
+      }
     }else{
-        rft_file = ecl_rft_file_alloc_empty( rft_file_name );
-        for(int i =0;i<num_nodes;i++) {
-            ecl_rft_file_add_node(rft_file, nodes[i]);
-        }
+      int node_index;
+      rft_file = ecl_rft_file_alloc_empty( rft_file_name );
+      for(node_index = 0; node_index < num_nodes; node_index++) {
+        ecl_rft_file_add_node(rft_file, nodes[node_index]);
+      }
     }
-    bool fmt_file = false;
-    fortio_type * fortio = fortio_open_writer( rft_file_name , fmt_file , ECL_ENDIAN_FLIP );
 
-    vector_sort(rft_file->data,(vector_cmp_ftype *) ecl_rft_node_cmp);
+    {
+      bool fmt_file = false;
+      fortio_type * fortio = fortio_open_writer( rft_file_name , fmt_file , ECL_ENDIAN_FLIP );
+      int node_index;
 
-    int size = ecl_rft_file_get_size( rft_file );
-    for(int i=0;i<size;i++) {
-        const ecl_rft_node_type *new_node = vector_iget_const(rft_file->data, i);
+      /**
+         The sorting here works directly on the internal node storage
+         rft_file->data; that might in principle ruin the indexing of
+         the ecl_file object - it is therefor absolutely essential
+         that this ecl_rft_file object does not live beyond this
+         function, and also that the ecl_rft_file api functions are
+         avoided for the rest of this function.
+      */
+
+      vector_sort(rft_file->data,(vector_cmp_ftype *) ecl_rft_node_cmp);
+      for(node_index=0; node_index < vector_get_size( rft_file->data ); node_index++) {
+        const ecl_rft_node_type *new_node = vector_iget_const(rft_file->data, node_index);
         ecl_rft_node_fwrite(new_node, fortio, unit_set);
+      }
+
+      fortio_fclose( fortio );
     }
-    fortio_fclose( fortio );
     ecl_rft_file_free(rft_file);
 }
 
