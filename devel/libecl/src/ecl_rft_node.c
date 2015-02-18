@@ -34,6 +34,7 @@
 #include <ert/ecl/ecl_rft_node.h>
 #include <ert/ecl/ecl_rft_cell.h>
 
+
 /** 
     The RFT's from several wells, and possibly also several timesteps
     are lumped togeheter in one .RFT file. The ecl_rft_node
@@ -60,8 +61,8 @@ struct ecl_rft_node_struct {
   time_t       recording_date;         /* When was the RFT recorded - date.*/ 
   double       days;                   /* When was the RFT recorded - days after simulaton start. */
   bool         MSW;
-  
-  bool              sort_perm_in_sync            ;   
+
+  bool              sort_perm_in_sync            ;
   int_vector_type * sort_perm;
   vector_type *cells; 
 };
@@ -72,20 +73,39 @@ struct ecl_rft_node_struct {
    Will return NULL if the data_type_string is equal to "SEGMENT" -
    that is not (yet) supported.
 */
+static ecl_rft_enum translate_from_sting_to_ecl_rft_enum(const char * data_type_string){
+    ecl_rft_enum data_type = SEGMENT;
+    /* According to the ECLIPSE documentaton. */
+    if (strchr(data_type_string , 'P') != NULL)
+        data_type = PLT;
+    else if (strchr(data_type_string, 'R') != NULL)
+        data_type = RFT;
+    else if (strchr(data_type_string , 'S') != NULL)
+        data_type = SEGMENT;
+    else
+        util_abort("%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
+
+    return data_type;
+}
+
+ecl_rft_node_type * ecl_rft_node_alloc_new(const char * well_name, const char * data_type_string, const time_t recording_date, const double days){
+    ecl_rft_enum data_type = translate_from_sting_to_ecl_rft_enum(data_type_string);
+    ecl_rft_node_type * rft_node = util_malloc(sizeof * rft_node );
+    UTIL_TYPE_ID_INIT( rft_node , ECL_RFT_NODE_ID );
+    rft_node->well_name = util_alloc_string_copy(well_name);
+    rft_node->cells = vector_alloc_new();
+    rft_node->recording_date = recording_date;
+    rft_node->days = days;
+    rft_node->data_type = data_type;
+    rft_node->sort_perm = NULL;
+    rft_node->sort_perm_in_sync = false;
+
+    return rft_node;
+}
+
 
 static ecl_rft_node_type * ecl_rft_node_alloc_empty(const char * data_type_string) {
-  ecl_rft_enum data_type = SEGMENT;
-  
-  /* According to the ECLIPSE documentaton. */
-  if (strchr(data_type_string , 'P') != NULL)
-    data_type = PLT;
-  else if (strchr(data_type_string, 'R') != NULL)
-    data_type = RFT;
-  else if (strchr(data_type_string , 'S') != NULL)
-    data_type = SEGMENT;                    
-  else 
-    util_abort("%s: Could not determine type of RFT/PLT/SEGMENT data - aborting\n",__func__);
-  
+  ecl_rft_enum data_type = translate_from_sting_to_ecl_rft_enum(data_type_string);
 
   /* Can return NULL */
   if (data_type == SEGMENT) {
@@ -111,7 +131,7 @@ UTIL_SAFE_CAST_FUNCTION( ecl_rft_node   , ECL_RFT_NODE_ID );
 UTIL_IS_INSTANCE_FUNCTION( ecl_rft_node , ECL_RFT_NODE_ID );
 
 
-static void ecl_rft_node_append_cell( ecl_rft_node_type * rft_node , ecl_rft_cell_type * cell) {
+void ecl_rft_node_append_cell( ecl_rft_node_type * rft_node , ecl_rft_cell_type * cell) {
   vector_append_owned_ref( rft_node->cells , cell , ecl_rft_cell_free__ );
   rft_node->sort_perm_in_sync = false;
 }
@@ -221,7 +241,7 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_type * rft) {
   if (rft_node != NULL) {
     ecl_kw_type * date_kw = ecl_file_iget_named_kw( rft , DATE_KW    , 0);
     rft_node->well_name = util_alloc_strip_copy( ecl_kw_iget_ptr(welletc , WELLETC_NAME_INDEX));
-    
+
     /* Time information. */
     {
       int * time = ecl_kw_get_int_ptr( date_kw );
@@ -364,6 +384,9 @@ double ecl_rft_node_iget_swat( const ecl_rft_node_type * rft_node , int index) {
   }
 }
 
+double ecl_rft_node_get_days(const ecl_rft_node_type * rft_node ){
+  return rft_node->days;
+}
 
 double ecl_rft_node_iget_soil( const ecl_rft_node_type * rft_node , int index) {
   assert_type_and_index( rft_node , RFT , index );
@@ -427,6 +450,141 @@ bool ecl_rft_node_is_RFT( const ecl_rft_node_type * rft_node ) {
     return true;
   else
     return false;
+}
+
+static void ecl_rft_node_fill_welletc(ecl_kw_type * welletc, ert_ecl_unit_enum unit_set){
+    if(unit_set==ERT_ECL_METRIC_UNITS) {
+        ecl_kw_iset_string8(welletc, 0, "DAYS");
+        ecl_kw_iset_string8(welletc, 2, "");
+        ecl_kw_iset_string8(welletc, 3, "METRES");
+        ecl_kw_iset_string8(welletc, 4, "BARSA");
+        ecl_kw_iset_string8(welletc, 6, "STANDARD");
+        ecl_kw_iset_string8(welletc, 7, "SM3/DAY");
+        ecl_kw_iset_string8(welletc, 8, "SM3/DAY");
+        ecl_kw_iset_string8(welletc, 9, "RM3/DAY");
+        ecl_kw_iset_string8(welletc, 10, "M/SEC");
+        ecl_kw_iset_string8(welletc, 11, "");
+        ecl_kw_iset_string8(welletc, 12, "CP");
+        ecl_kw_iset_string8(welletc, 13, "KG/SM3");
+        ecl_kw_iset_string8(welletc, 14, "KG/DAY");
+        ecl_kw_iset_string8(welletc, 15, "KG/KG");
+    }else if(unit_set==ERT_ECL_FIELD_UNITS){
+        ecl_kw_iset_string8(welletc, 0, "DAYS");
+        ecl_kw_iset_string8(welletc, 2, "");
+        ecl_kw_iset_string8(welletc, 3, "FEET");
+        ecl_kw_iset_string8(welletc, 4, "PISA");
+        ecl_kw_iset_string8(welletc, 6, "STANDARD");
+        ecl_kw_iset_string8(welletc, 7, "STB/DAY");
+        ecl_kw_iset_string8(welletc, 8, "MSCF/DAY");
+        ecl_kw_iset_string8(welletc, 9, "RB/DAY");
+        ecl_kw_iset_string8(welletc, 10, "FT/SEC");
+        ecl_kw_iset_string8(welletc, 11, "");
+        ecl_kw_iset_string8(welletc, 12, "CP");
+        ecl_kw_iset_string8(welletc, 13, "LB/STB");
+        ecl_kw_iset_string8(welletc, 14, "LB/DAY");
+        ecl_kw_iset_string8(welletc, 15, "LB/LB");
+
+    }else if(unit_set==ERT_ECL_LAB_UNITS){
+        ecl_kw_iset_string8(welletc, 0, "HR");
+        ecl_kw_iset_string8(welletc, 2, "");
+        ecl_kw_iset_string8(welletc, 3, "CM");
+        ecl_kw_iset_string8(welletc, 4, "ATMA");
+        ecl_kw_iset_string8(welletc, 6, "STANDARD");
+        ecl_kw_iset_string8(welletc, 7, "SCC/HR");
+        ecl_kw_iset_string8(welletc, 8, "SCC/HR");
+        ecl_kw_iset_string8(welletc, 9, "RCC/SCC");
+        ecl_kw_iset_string8(welletc, 10, "CM/SEC");
+        ecl_kw_iset_string8(welletc, 11, "");
+        ecl_kw_iset_string8(welletc, 12, "CP");
+        ecl_kw_iset_string8(welletc, 13, "GM/SCC");
+        ecl_kw_iset_string8(welletc, 14, "GH/HR");
+        ecl_kw_iset_string8(welletc, 15, "GM/GM");
+    }
+
+
+}
+
+void ecl_rft_node_fwrite(const ecl_rft_node_type * rft_node, fortio_type * fortio, ert_ecl_unit_enum unit_set){
+  ecl_kw_type * time = ecl_kw_alloc(TIME_KW, 1, ECL_FLOAT_TYPE);
+  ecl_kw_iset_float(time, 0, ecl_rft_node_get_days(rft_node));
+  ecl_kw_fwrite(time, fortio);
+  ecl_kw_free(time);
+  ecl_kw_type * datevalue = ecl_kw_alloc(DATE_KW, 3, ECL_INT_TYPE);
+  time_t date = ecl_rft_node_get_date(rft_node);
+  int day;
+  int month;
+  int year;
+  ecl_util_set_date_values(date , &day , &month , &year);
+  ecl_kw_iset_int(datevalue, 0, day);
+  ecl_kw_iset_int(datevalue, 1, month);
+  ecl_kw_iset_int(datevalue, 2, year);
+  ecl_kw_fwrite(datevalue, fortio);
+  ecl_kw_free(datevalue);
+  ecl_kw_type * welletc = ecl_kw_alloc(WELLETC_KW, 16, ECL_CHAR_TYPE);
+
+  ecl_kw_iset_string8(welletc, 1, ecl_rft_node_get_well_name(rft_node));
+
+  ecl_rft_enum type = ecl_rft_node_get_type(rft_node);
+  if(type == PLT) {
+      ecl_kw_iset_string8(welletc, 5, "P");
+  }else if(type == RFT){
+      ecl_kw_iset_string8(welletc, 5, "R");
+  }else if(type == SEGMENT){
+      ecl_kw_iset_string8(welletc, 5, "S");
+  }
+    ecl_rft_node_fill_welletc(welletc, unit_set);
+    ecl_kw_fwrite(welletc, fortio);
+  ecl_kw_free(welletc);
+  int size_cells = ecl_rft_node_get_size(rft_node);
+  ecl_kw_type * conipos = ecl_kw_alloc(CONIPOS_KW, size_cells, ECL_INT_TYPE);
+  ecl_kw_type * conjpos = ecl_kw_alloc(CONJPOS_KW, size_cells, ECL_INT_TYPE);
+  ecl_kw_type * conkpos = ecl_kw_alloc(CONKPOS_KW, size_cells, ECL_INT_TYPE);
+  ecl_kw_type * hostgrid = ecl_kw_alloc("HOSTGRID", size_cells, ECL_CHAR_TYPE);
+  ecl_kw_type * depth = ecl_kw_alloc(DEPTH_KW, size_cells, ECL_FLOAT_TYPE);
+  ecl_kw_type * pressure = ecl_kw_alloc(PRESSURE_KW, size_cells, ECL_FLOAT_TYPE);
+  ecl_kw_type * swat = ecl_kw_alloc(SWAT_KW, size_cells, ECL_FLOAT_TYPE);
+  ecl_kw_type * sgas = ecl_kw_alloc(SGAS_KW, size_cells, ECL_FLOAT_TYPE);
+
+  for(int i =0;i<size_cells;i++){
+    const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , i);
+    ecl_kw_iset_int(conipos, i, ecl_rft_cell_get_i(cell)+1);
+    ecl_kw_iset_int(conjpos, i, ecl_rft_cell_get_j(cell)+1);
+    ecl_kw_iset_int(conkpos, i, ecl_rft_cell_get_k(cell)+1);
+    ecl_kw_iset_float(depth, i, ecl_rft_cell_get_depth(cell));
+    ecl_kw_iset_float(pressure, i, ecl_rft_cell_get_pressure(cell));
+    ecl_kw_iset_float(swat, i, ecl_rft_cell_get_swat(cell));
+    ecl_kw_iset_float(sgas, i, ecl_rft_cell_get_sgas(cell));
+  }
+  ecl_kw_fwrite(conipos, fortio);
+  ecl_kw_fwrite(conjpos, fortio);
+  ecl_kw_fwrite(conkpos, fortio);
+  ecl_kw_fwrite(hostgrid, fortio);
+  ecl_kw_fwrite(depth, fortio);
+  ecl_kw_fwrite(pressure, fortio);
+  ecl_kw_fwrite(swat, fortio);
+  ecl_kw_fwrite(sgas, fortio);
+
+  ecl_kw_free(conipos);
+  ecl_kw_free(conjpos);
+  ecl_kw_free(conkpos);
+  ecl_kw_free(hostgrid);
+  ecl_kw_free(depth);
+  ecl_kw_free(pressure);
+  ecl_kw_free(swat);
+  ecl_kw_free(sgas);
+}
+
+int ecl_rft_node_cmp( const ecl_rft_node_type * n1 , const ecl_rft_node_type * n2) {
+    double val1 = ecl_rft_node_get_date(n1);
+    double val2 = ecl_rft_node_get_date(n2);
+
+    if (val1 < val2)
+        return -1;
+    else if (val1 == val2)
+        return 0;
+    else
+        return 1;
+
 }
 
 
