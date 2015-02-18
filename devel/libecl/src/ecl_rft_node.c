@@ -454,51 +454,51 @@ bool ecl_rft_node_is_RFT( const ecl_rft_node_type * rft_node ) {
 
 static void ecl_rft_node_fill_welletc(ecl_kw_type * welletc, ert_ecl_unit_enum unit_set){
     if(unit_set==ERT_ECL_METRIC_UNITS) {
-        ecl_kw_iset_string8(welletc, 0, "DAYS");
+        ecl_kw_iset_string8(welletc, 0, "  DAYS");
         ecl_kw_iset_string8(welletc, 2, "");
-        ecl_kw_iset_string8(welletc, 3, "METRES");
-        ecl_kw_iset_string8(welletc, 4, "BARSA");
+        ecl_kw_iset_string8(welletc, 3, " METRES");
+        ecl_kw_iset_string8(welletc, 4, "  BARSA");
         ecl_kw_iset_string8(welletc, 6, "STANDARD");
-        ecl_kw_iset_string8(welletc, 7, "SM3/DAY");
-        ecl_kw_iset_string8(welletc, 8, "SM3/DAY");
-        ecl_kw_iset_string8(welletc, 9, "RM3/DAY");
-        ecl_kw_iset_string8(welletc, 10, "M/SEC");
+        ecl_kw_iset_string8(welletc, 7, " SM3/DAY");
+        ecl_kw_iset_string8(welletc, 8, " SM3/DAY");
+        ecl_kw_iset_string8(welletc, 9, " RM3/DAY");
+        ecl_kw_iset_string8(welletc, 10, " M/SEC");
         ecl_kw_iset_string8(welletc, 11, "");
-        ecl_kw_iset_string8(welletc, 12, "CP");
-        ecl_kw_iset_string8(welletc, 13, "KG/SM3");
-        ecl_kw_iset_string8(welletc, 14, "KG/DAY");
-        ecl_kw_iset_string8(welletc, 15, "KG/KG");
+        ecl_kw_iset_string8(welletc, 12, "   CP");
+        ecl_kw_iset_string8(welletc, 13, " KG/SM3");
+        ecl_kw_iset_string8(welletc, 14, " KG/DAY");
+        ecl_kw_iset_string8(welletc, 15, "  KG/KG");
     }else if(unit_set==ERT_ECL_FIELD_UNITS){
-        ecl_kw_iset_string8(welletc, 0, "DAYS");
+        ecl_kw_iset_string8(welletc, 0, "  DAYS");
         ecl_kw_iset_string8(welletc, 2, "");
-        ecl_kw_iset_string8(welletc, 3, "FEET");
-        ecl_kw_iset_string8(welletc, 4, "PISA");
+        ecl_kw_iset_string8(welletc, 3, "  FEET");
+        ecl_kw_iset_string8(welletc, 4, "  PISA");
         ecl_kw_iset_string8(welletc, 6, "STANDARD");
-        ecl_kw_iset_string8(welletc, 7, "STB/DAY");
-        ecl_kw_iset_string8(welletc, 8, "MSCF/DAY");
-        ecl_kw_iset_string8(welletc, 9, "RB/DAY");
-        ecl_kw_iset_string8(welletc, 10, "FT/SEC");
+        ecl_kw_iset_string8(welletc, 7, " STB/DAY");
+        ecl_kw_iset_string8(welletc, 8, " MSCF/DAY");
+        ecl_kw_iset_string8(welletc, 9, " RB/DAY");
+        ecl_kw_iset_string8(welletc, 10, " FT/SEC");
         ecl_kw_iset_string8(welletc, 11, "");
-        ecl_kw_iset_string8(welletc, 12, "CP");
-        ecl_kw_iset_string8(welletc, 13, "LB/STB");
-        ecl_kw_iset_string8(welletc, 14, "LB/DAY");
-        ecl_kw_iset_string8(welletc, 15, "LB/LB");
+        ecl_kw_iset_string8(welletc, 12, "   CP");
+        ecl_kw_iset_string8(welletc, 13, " LB/STB");
+        ecl_kw_iset_string8(welletc, 14, " LB/DAY");
+        ecl_kw_iset_string8(welletc, 15, "  LB/LB");
 
     }else if(unit_set==ERT_ECL_LAB_UNITS){
-        ecl_kw_iset_string8(welletc, 0, "HR");
+        ecl_kw_iset_string8(welletc, 0, "   HR");
         ecl_kw_iset_string8(welletc, 2, "");
-        ecl_kw_iset_string8(welletc, 3, "CM");
-        ecl_kw_iset_string8(welletc, 4, "ATMA");
+        ecl_kw_iset_string8(welletc, 3, "   CM");
+        ecl_kw_iset_string8(welletc, 4, "  ATMA");
         ecl_kw_iset_string8(welletc, 6, "STANDARD");
-        ecl_kw_iset_string8(welletc, 7, "SCC/HR");
-        ecl_kw_iset_string8(welletc, 8, "SCC/HR");
-        ecl_kw_iset_string8(welletc, 9, "RCC/SCC");
-        ecl_kw_iset_string8(welletc, 10, "CM/SEC");
+        ecl_kw_iset_string8(welletc, 7, " SCC/HR");
+        ecl_kw_iset_string8(welletc, 8, " SCC/HR");
+        ecl_kw_iset_string8(welletc, 9, " RCC/SCC");
+        ecl_kw_iset_string8(welletc, 10, " CM/SEC");
         ecl_kw_iset_string8(welletc, 11, "");
-        ecl_kw_iset_string8(welletc, 12, "CP");
-        ecl_kw_iset_string8(welletc, 13, "GM/SCC");
-        ecl_kw_iset_string8(welletc, 14, "GH/HR");
-        ecl_kw_iset_string8(welletc, 15, "GM/GM");
+        ecl_kw_iset_string8(welletc, 12, "   CP");
+        ecl_kw_iset_string8(welletc, 13, " GM/SCC");
+        ecl_kw_iset_string8(welletc, 14, " GH/HR");
+        ecl_kw_iset_string8(welletc, 15, "  GM/GM");
     }
 
 
