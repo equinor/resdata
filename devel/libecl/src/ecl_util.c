@@ -1338,15 +1338,15 @@ int ecl_util_get_num_cpu(const char * data_file) {
 }
 
 
-ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
-  ecl_unit_enum units = ECL_METRIC_UNITS;
+ert_ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
+  ert_ecl_unit_enum units = ERT_ECL_METRIC_UNITS;
   basic_parser_type * parser = basic_parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
   FILE * stream = util_fopen(data_file , "r");
 
   if (basic_parser_fseek_string( parser , stream , "FIELD" , true , true)) {  /* Seeks case insensitive. */
-    units = ECL_FIELD_UNITS;
+    units = ERT_ECL_FIELD_UNITS;
   } else if (basic_parser_fseek_string( parser , stream , "LAB" , true , true)) {  /* Seeks case insensitive. */
-    units = ECL_LAB_UNITS;
+    units = ERT_ECL_LAB_UNITS;
   }
 
   basic_parser_free( parser );
@@ -1534,4 +1534,10 @@ const char * ecl_util_type_enum_iget( int index, int * value) {
   return util_enum_iget( index , ECL_TYPE_ENUM_SIZE , (const util_enum_element_type []) { ECL_TYPE_ENUM_DEFS }, value);
 }
 
+void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year) {
+    return util_set_date_values(t,mday,month,year);
+}
+
 #endif
+
+
