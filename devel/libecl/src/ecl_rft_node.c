@@ -575,8 +575,8 @@ void ecl_rft_node_fwrite(const ecl_rft_node_type * rft_node, fortio_type * forti
 }
 
 int ecl_rft_node_cmp( const ecl_rft_node_type * n1 , const ecl_rft_node_type * n2) {
-    double val1 = ecl_rft_node_get_date(n1);
-    double val2 = ecl_rft_node_get_date(n2);
+    time_t val1 = ecl_rft_node_get_date(n1);
+    time_t val2 = ecl_rft_node_get_date(n2);
 
     if (val1 < val2)
         return -1;
