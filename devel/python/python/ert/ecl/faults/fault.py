@@ -313,31 +313,85 @@ class Fault(object):
             p2 = intersections[0][1]
             return [p1 , (int(p2[0]) , int(p2[1])) ]
             
-        raise ValueError("The fault %s can not be extended to intersect with:%s" % (self.getName() , other_fault.getName()))
+        raise ValueError("The fault %s can not be extended to intersect with:%s in layer:%d" % (self.getName() , other_fault.getName() , k+1 ))
+
+
+    @staticmethod
+    def __rayIntersect(p0, p1 , polyline):
+        ray_dir = GeometryTools.lineToRay( p0 , p1 )
+        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , polyline)
+        if intersections:
+            p2 = intersections[0][1]
+            return [(p1[0] , p1[1]) , p2]
+        else:
+            return None
 
 
     def extendToPolyline(self , polyline , k):
+        """Extends the fault until it intersects @polyline in layer @k.
+
+        The return value is a list [(x1,y1) , (x2,y2)] where (x1,y1)
+        is on the tip of the fault, and (x2,y2) is on the polyline. If
+        the fault already intersects polyline None is returned, if no
+        intersection is found a ValueError exception is raised.
+
+        The method will try four different strategies for finding an
+        intersection between the extension of the fault and the
+        polyline. Assume the fault and the polyline looks like:
+
+
+        Polyline: ----------------------------------------------
+
+                        +------------+       D
+                        |            |       |
+                        |            +-------C 
+                  B-----+
+                  |
+                  A
+        
+        The algorithm will then try to intersect the following rays
+        with the polyline, the first match will return:
+
+           1. (Pc , Pd)
+           2. (Pb , Pa)
+           3. (Pa , Pd)
+           4. (Pd , Pa)
+
+        The fault object is not directed in any way; i.e. in the case
+        both (Pc,Pd) and (Pb,Pa) intersects the polyline it is
+        impossible to know which intersection is returned, without
+        actually consulting the construction of the fault object.
+        """
         if self.intersectsPolyline(polyline , k):
             return None
-            
+
         fault_polyline = self.getPolyline( k )
         p0 = fault_polyline[-2]
         p1 = fault_polyline[-1]
-        ray_dir = GeometryTools.lineToRay( p0 , p1 )
-        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , polyline)
-        if intersections:
-            p2 = intersections[0][1]
-            return [(p1[0] , p1[1]) , p2]
+        extension = self.__rayIntersect(p0 , p1 , polyline)
+        if extension:
+            return extension
             
         p0 = fault_polyline[1]
         p1 = fault_polyline[0]
-        ray_dir = GeometryTools.lineToRay( p0 , p1 )
-        intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , polyline)
-        if intersections:
-            p2 = intersections[0][1]
-            return [(p1[0] , p1[1]) , p2]
+        extension = self.__rayIntersect(p0 , p1 , polyline)
+        if extension:
+            return extension
 
-        raise ValueError("The fault %s can not be extended to intersect with polyline:%s" % (self.getName() , polyline.getName()))
+        p0 = fault_polyline[0]
+        p1 = fault_polyline[-1]
+        extension = self.__rayIntersect(p0 , p1 , polyline)
+        if extension:
+            return extension
+
+        p0 = fault_polyline[-1]
+        p1 = fault_polyline[0]
+        extension = self.__rayIntersect(p0 , p1 , polyline)
+        if extension:
+            return extension
+
+        raise ValueError("The fault %s can not be extended to intersect with polyline:%s in layer:%d" % (self.getName() , polyline.getName() , k+1))
+
 
         
     def intersectsPolyline(self , polyline , k):
