@@ -294,3 +294,15 @@ class GeometryTools(object):
                 results.append((index, intersection))
 
         return results
+
+
+    @staticmethod
+    def distance(p1,p2):
+        if len(p1) != len(p2):
+            raise ValueError("Different lenght of objects")
+        
+        sqr_distance = 0
+        for x1,x2 in zip(p1,p2):
+            sqr_distance += (x1 - x2) * (x1 - x2)
+            
+        return sqrt( sqr_distance )
