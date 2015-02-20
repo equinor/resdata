@@ -438,8 +438,32 @@ class Fault(object):
             raise Exception("Logical error - must intersect with bounding box")
             
     
-        
+    def endJoin(self , other , k):
+        fault_polyline = self.getPolyline(k)
+        p0 = fault_polyline[0]
+        p1 = fault_polyline[-1]
+
+        if isinstance(other , Fault):
+            if self.intersectsFault( other , k ):
+                return None
+                
+            other_polyline = other.getPolyline(k)
+            pa = other_polyline[0]
+            pb = other_polyline[-1]
+        else:
+            if self.intersectsPolyline( other , k ):
+                return None
+
+            pa = other[0]
+            pb = other[-1]
             
+        d_list = [ (GeometryTools.distance( p0 , pa ), [p0 , pa]),
+                   (GeometryTools.distance( p0 , pb ), [p0 , pb]),
+                   (GeometryTools.distance( p1 , pa ), [p1 , pa]),
+                   (GeometryTools.distance( p1 , pb ), [p1 , pb]) ]
+
+        d_list.sort( key = lambda x: x[0])
+        return d_list[0][1]
 
 
 
@@ -511,6 +535,7 @@ class Fault(object):
         return (Fault.intRay(p1,p0) , Fault.intRay(p2,p3))
 
                 
+        
         
     @classmethod
     def joinFaults(cls , fault1 , fault2 , k):
