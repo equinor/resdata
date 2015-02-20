@@ -32,7 +32,9 @@
 #include <ert/util/arg_pack.h>
 #include <ert/util/thread_pool.h>
 
-#include <ert/config/config.h>
+#include <ert/config/config_parser.h>
+#include <ert/config/config_content.h>
+#include <ert/config/config_error.h>
 #include <ert/config/config_content_item.h>
 #include <ert/config/config_content_node.h>
 
@@ -216,7 +218,7 @@ ensemble_type * ensemble_alloc( ) {
 }
 
 
-void ensemble_init( ensemble_type * ensemble , config_type * config) {
+void ensemble_init( ensemble_type * ensemble , config_content_type * config) {
 
   /*1 : Loading ensembles and settings from the config instance */
   /*1a: Loading the eclipse summary cases. */
@@ -224,9 +226,8 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
     thread_pool_type * tp = thread_pool_alloc( LOAD_THREADS , true );
     {
       int i,j;
-      const config_content_item_type * case_item = config_get_content_item( config , "CASE_LIST" );
-
-      if (case_item != NULL) {
+      if (config_content_has_item( config , "CASE_LIST")) {
+        const config_content_item_type * case_item = config_content_get_item( config , "CASE_LIST" );
         for (j=0; j < config_content_item_get_size( case_item ); j++) {
           const config_content_node_type * case_node = config_content_item_iget_node( case_item , j );
           for (i=0; i < config_content_node_get_size( case_node ); i++) {
@@ -247,8 +248,8 @@ void ensemble_init( ensemble_type * ensemble , config_type * config) {
   }
 
   /*1b: Other config settings */
-  if (config_item_set( config , "NUM_INTERP" ))
-    ensemble->num_interp  = config_iget_as_int( config , "NUM_INTERP" , 0 , 0 );
+  if (config_content_has_item( config , "NUM_INTERP" ))
+    ensemble->num_interp  = config_content_iget_as_int( config , "NUM_INTERP" , 0 , 0 );
 
 
   /*2: Remaining initialization */
@@ -354,10 +355,10 @@ static void output_add_key( const ecl_sum_type * refcase , output_type * output 
    OUTPUT  output_file    key.q    key.q    key.q    key.q    ...
 */
 
-void output_table_init( const ecl_sum_type * refcase, hash_type * output_table , const config_type * config ) {
+void output_table_init( const ecl_sum_type * refcase, hash_type * output_table , const config_content_type * config ) {
   int i,j;
-  const config_content_item_type * output_item = config_get_content_item( config , "OUTPUT");
-  if (output_item != NULL) {
+  if (config_content_has_item( config , "OUTPUT")) {
+    const config_content_item_type * output_item = config_content_get_item( config , "OUTPUT");
     for (i = 0; i < config_content_item_get_size( output_item ); i++) {
       const config_content_node_type * output_node = config_content_item_iget_node( output_item , i );
 
@@ -717,7 +718,7 @@ void output_table_run( hash_type * output_table , ensemble_type * ensemble ) {
 
 /*****************************************************************/
 
-void config_init( config_type * config ) {
+void config_init( config_parser_type * config ) {
 
 
   config_add_schema_item( config , "CASE_LIST"      , true );
@@ -824,11 +825,14 @@ int main( int argc , char ** argv ) {
     hash_type     * output_table   = hash_alloc();
     ensemble_type * ensemble       = ensemble_alloc();
     {
-      config_type   * config      = config_alloc( );
+      config_parser_type   * config      = config_alloc( );
+      config_content_type   * content;
       const char    * config_arg  = argv[1];
 
       config_init( config );
-      if (config_parse( config , config_arg , "--" , NULL , NULL , CONFIG_UNRECOGNIZED_WARN, true )) {
+      content = config_parse( config , config_arg , "--" , NULL , NULL , CONFIG_UNRECOGNIZED_WARN, true );
+
+      if (config_content_is_valid( content )) {
         char * config_path;
         util_alloc_file_components( config_arg , &config_path , NULL , NULL);
         if (config_path != NULL) {
@@ -836,16 +840,17 @@ int main( int argc , char ** argv ) {
           free( config_path );
         }
       } else {
-        config_fprintf_errors( config , true , stderr );
+        config_error_type * error = config_content_get_errors( content );
+        config_error_fprintf( error , true , stderr );
         exit(1);
       }
 
 
 
-      ensemble_init( ensemble , config );
-      output_table_init( ensemble_get_refcase( ensemble ) , output_table , config);
+      ensemble_init( ensemble , content );
+      output_table_init( ensemble_get_refcase( ensemble ) , output_table , content );
+      config_content_free( content );
       config_free( config );
-
     }
     output_table_run( output_table , ensemble );
     ensemble_free( ensemble );
