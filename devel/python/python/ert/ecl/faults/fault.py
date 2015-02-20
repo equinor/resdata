@@ -467,6 +467,33 @@ class Fault(object):
 
 
 
+    def extendPolylineOnto(self , polyline , k):
+        if self.intersectsPolyline( polyline , k):
+            return None
+
+        if len(polyline) > 1:
+            fault_polyline = self.getPolyline(k)
+            ext1 = self.__rayIntersect( polyline[-2] , polyline[-1] , fault_polyline )
+            ext2 = self.__rayIntersect( polyline[0]  , polyline[1]  , fault_polyline )
+            
+            if ext1 and ext2:
+                d1 = GeometryTools.distance( ext1[0] , ext1[1] )
+                d2 = GeometryTools.distance( ext2[0] , ext2[1] )
+
+                if d1 < d2:
+                    return ext1
+                else:
+                    return ext2
+
+            if ext1:
+                return ext1
+            else:
+                return ext2
+        else:
+            raise ValueError("Polyline must have length >= 2")
+
+
+
     @staticmethod
     def intersectFaultRays(ray1 , ray2):
         p1,dir1 = ray1
