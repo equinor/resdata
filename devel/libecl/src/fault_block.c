@@ -273,7 +273,6 @@ void fault_block_list_neighbours( const fault_block_type * block, bool connected
     for (c = 0; c < int_vector_size( block->i_list ); c++) {
       int i = int_vector_iget( block->i_list , c);
       int j = int_vector_iget( block->j_list , c);
-      int cell_id = layer_iget_cell_value( layer , i , j );
 
       if (fault_block_connected_neighbour( block , i , j , i - 1 , j , connected_only , polylines ))
         int_vector_append( neighbour_list , layer_iget_cell_value( layer , i - 1 , j));
