@@ -306,3 +306,37 @@ class GeometryTools(object):
             sqr_distance += (x1 - x2) * (x1 - x2)
             
         return sqrt( sqr_distance )
+    
+
+    @staticmethod
+    def joinPolylines(polyline1 , polyline2):
+        """The shortest straight line connecting polyline1 and polyline2.
+
+        The joinPolylines function does not extend the polylines with
+        a ray from the end, only the length of the straight line
+        connecting the various endpoints is considered. If the two
+        polylines already intersect the function returns None.
+        """
+
+
+        if len(polyline1) < 1:
+            raise ValueError("Length of polyline must be >= 1")
+
+        if len(polyline2) < 1:
+            raise ValueError("Length of polyline must be >= 1")
+
+        if GeometryTools.polylinesIntersect( polyline1 , polyline2):
+            return None
+            
+        p0 = polyline1[0]
+        p1 = polyline1[-1]
+        pa = polyline2[0]
+        pb = polyline2[-1]
+
+        d_list = [ (GeometryTools.distance( p0 , pa ), [p0 , pa]),
+                   (GeometryTools.distance( p0 , pb ), [p0 , pb]),
+                   (GeometryTools.distance( p1 , pa ), [p1 , pa]),
+                   (GeometryTools.distance( p1 , pb ), [p1 , pb]) ]
+
+        d_list.sort( key = lambda x: x[0])
+        return d_list[0][1]

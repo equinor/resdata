@@ -440,32 +440,15 @@ class Fault(object):
     
     def endJoin(self , other , k):
         fault_polyline = self.getPolyline(k)
-        p0 = fault_polyline[0]
-        p1 = fault_polyline[-1]
 
         if isinstance(other , Fault):
-            if self.intersectsFault( other , k ):
-                return None
-                
             other_polyline = other.getPolyline(k)
-            pa = other_polyline[0]
-            pb = other_polyline[-1]
         else:
-            if self.intersectsPolyline( other , k ):
-                return None
+            other_polyline = other
 
-            pa = other[0]
-            pb = other[-1]
-            
-        d_list = [ (GeometryTools.distance( p0 , pa ), [p0 , pa]),
-                   (GeometryTools.distance( p0 , pb ), [p0 , pb]),
-                   (GeometryTools.distance( p1 , pa ), [p1 , pa]),
-                   (GeometryTools.distance( p1 , pb ), [p1 , pb]) ]
-
-        d_list.sort( key = lambda x: x[0])
-        return d_list[0][1]
-
-
+        return GeometryTools.joinPolylines( fault_polyline , other_polyline )
+        
+        
 
     def extendPolylineOnto(self , polyline , k):
         if self.intersectsPolyline( polyline , k):
