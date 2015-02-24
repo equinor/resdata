@@ -316,13 +316,15 @@ static int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_f
       if (well_index == int_vector_size( index_vector ))
         break;
 
-      global_index = int_vector_iget( index_vector , well_index );
       {
-        const ecl_rft_node_type * node = ecl_rft_file_iget_node( rft_file , global_index);
-        if (ecl_rft_node_get_date( node ) == recording_time)
+        const ecl_rft_node_type * node = ecl_rft_file_iget_node( rft_file , int_vector_iget( index_vector , well_index ));
+        if (ecl_rft_node_get_date( node ) == recording_time) {
+          global_index = int_vector_iget( index_vector , well_index );
           break;
+        }
       }
-      global_index++;
+
+      well_index++;
     }
   }
   return global_index;
