@@ -58,8 +58,8 @@ class Layer(object):
             neighbor_cells += fl.getNeighborCells()
         return neighbor_cells
 
-    def getPolyline(self):
-        polyline = CPolyline()
+    def getPolyline(self , name = None):
+        polyline = CPolyline( name = name)
         for fl in self:
             polyline += fl.getPolyline()
         return polyline
@@ -281,7 +281,7 @@ class Fault(object):
         
     def getPolyline(self , k):
         layer = self[k]
-        return layer.getPolyline()
+        return layer.getPolyline( name = "Polyline[%s]" % self.getName() )
         
 
     def getIJPolyline(self , k):
