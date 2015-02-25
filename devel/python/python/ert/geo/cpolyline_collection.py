@@ -19,7 +19,7 @@ Create a polygon
 import ctypes
 
 from ert.cwrap import BaseCClass, CWrapper
-from ert.geo import ERT_GEOMETRY_LIB
+from ert.geo import ERT_GEOMETRY_LIB , CPolyline
 
 
 class CPolylineCollection(BaseCClass):
@@ -74,7 +74,13 @@ class CPolylineCollection(BaseCClass):
             
 
 
-    def addPolyline(self , polyline):
+    def addPolyline(self , polyline , name = None):
+        if not isinstance(polyline , CPolyline):
+            polyline = CPolyline( init_points = polyline , name = name)
+        else:
+            if not name is None:
+                raise ValueError("The name keyword argument can only be supplied when add not CPOlyline object")
+                
         name = polyline.getName()
         if name and name in self:
             raise KeyError("The polyline collection already has an object:%s" % name)
