@@ -47,6 +47,12 @@ extern "C" {
 #define test_assert_int_not_equal( i1 , i2 ) test_assert_int_not_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
   void  test_assert_int_not_equal__( int i1 , int i2 , const char * file , int line );
 
+#define test_assert_long_equal( i1 , i2 ) test_assert_long_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
+  void  test_assert_long_equal__( long i1 , long i2 , const char * file , long line );
+
+#define test_assert_long_not_equal( i1 , i2 ) test_assert_long_not_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
+  void  test_assert_long_not_equal__( long i1 , long i2 , const char * file , long line );
+
 #define test_assert_uint_equal( i1 , i2 ) test_assert_uint_equal__( (i1) , (i2) , __FILE__ , __LINE__  )
   void  test_assert_uint_equal__( unsigned int i1 , unsigned int i2 , const char * file , int line );
 
