@@ -727,6 +727,22 @@ int fortio_fileno( fortio_type * fortio ) {
 }
 
 
+/*
+  It is massively undefined behaviour to call this function for a
+  writable file; in that case the util_fd_size() function will return
+  the size of the file *when it was opened*.
+*/
+
+bool fortio_read_at_eof( fortio_type * fortio ) {
+  offset_type file_size = util_fd_size( fortio_fileno( fortio ));
+
+  if (fortio_ftell(fortio) == file_size)
+    return true;
+  else
+    return false;
+
+}
+
 
 /*****************************************************************/
 void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }
