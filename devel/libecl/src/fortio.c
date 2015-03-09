@@ -487,7 +487,7 @@ void fortio_complete_read(fortio_type *fortio) {
    the buffer with the content. The return value is the number of bytes read.
 */
 
-int fortio_fread_record(fortio_type *fortio, char *buffer) {
+static int fortio_fread_record(fortio_type *fortio, char *buffer) {
   fortio_init_read(fortio);
   {
     int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
