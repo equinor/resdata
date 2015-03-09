@@ -108,23 +108,87 @@ void test_open_close_read( const char * filename ) {
 }
 
 
-int main( int argc , char ** argv) {
-  const char * file = argv[1];
-
-  test_fortio_is_instance( file );
-  test_fortio_safe_cast( file );
-  test_assert_util_abort("fortio_safe_cast", test_fortio_unsafe_cast, NULL);
-  test_existing_read( file );
-  test_not_existing_read( );
-  test_open_close_read( file );
-  test_wrapper( file );
-  test_write( "/tmp/path/does/not/exist" , false );
+void test_fread_truncated() {
+  test_work_area_type * work_area = test_work_area_alloc("fortio_truncated" );
   {
-    test_work_area_type * work_area = test_work_area_alloc("ecl_fortio.write" );
-    util_make_path("path");
-    test_write( "path/file.x" , true );
-    test_work_area_free( work_area );
+    const size_t buffer_size = 1000;
+    void * buffer = util_malloc( buffer_size );
+    {
+      fortio_type * fortio = fortio_open_writer( "PRESSURE" , false , true );
+
+      fortio_fwrite_record( fortio , buffer , buffer_size );
+      fortio_fwrite_record( fortio , buffer , buffer_size );
+
+      fortio_fseek( fortio , 0 , SEEK_SET);
+      util_ftruncate( fortio_get_FILE(fortio) , 2 * buffer_size  - 100 );
+      fortio_fclose( fortio );
+    }
+
+    test_assert_long_equal( util_file_size( "PRESSURE") , 2*buffer_size - 100);
+
+    {
+      fortio_type * fortio = fortio_open_reader( "PRESSURE" , false , true );
+      test_assert_true( fortio_fread_buffer( fortio , buffer , buffer_size ));
+      test_assert_false( fortio_fread_buffer( fortio , buffer , buffer_size ));
+      fortio_fclose( fortio );
+    }
+    free( buffer );
+  }
+  test_work_area_free( work_area );
+}
+
+
+void test_at_eof() {
+  test_work_area_type * work_area = test_work_area_alloc("fortio_at_EOF" );
+  {
+    fortio_type * fortio = fortio_open_writer("PRESSURE" , false , true);
+    void * buffer = util_malloc( 100 );
+
+    fortio_fwrite_record( fortio , buffer , 100);
+    free( buffer );
+
+    fortio_fclose( fortio );
+  }
+  {
+    fortio_type * fortio = fortio_open_reader("PRESSURE" , false , true);
+
+    test_assert_false( fortio_read_at_eof( fortio ));
+    fortio_fseek( fortio , 50 , SEEK_SET );
+    test_assert_false( fortio_read_at_eof( fortio ));
+    fortio_fseek( fortio , 0 , SEEK_END );
+    test_assert_true( fortio_read_at_eof( fortio ));
+
+    fortio_fclose( fortio );
   }
 
-  exit(0);
+  test_work_area_free( work_area );
+}
+
+
+
+int main( int argc , char ** argv) {
+  util_install_signals();
+  {
+    const char * file = argv[1];
+
+    test_fortio_is_instance( file );
+    test_fortio_safe_cast( file );
+    test_assert_util_abort("fortio_safe_cast", test_fortio_unsafe_cast, NULL);
+    test_existing_read( file );
+    test_not_existing_read( );
+    test_open_close_read( file );
+    test_wrapper( file );
+    test_fread_truncated();
+    test_at_eof();
+
+    test_write( "/tmp/path/does/not/exist" , false );
+    {
+      test_work_area_type * work_area = test_work_area_alloc("ecl_fortio.write" );
+      util_make_path("path");
+      test_write( "path/file.x" , true );
+      test_work_area_free( work_area );
+    }
+
+    exit(0);
+  }
 }
