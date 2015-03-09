@@ -185,6 +185,11 @@ class FaultBlockLayer(BaseCClass):
         return self.cNamespace().get_layer( self )
 
 
+    def cellContact(self , p1 , p2):
+        layer = self.getGeoLayer()
+        return layer.cellContact(p1,p2)
+        
+
 
 cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("fault_block_layer", FaultBlockLayer)
