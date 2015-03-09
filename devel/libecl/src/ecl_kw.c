@@ -1148,7 +1148,11 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
              This function handles the fuc***g blocks transparently at a
              low level.
           */
-          fortio_fread_buffer(fortio , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
+          {
+            bool read_ok = fortio_fread_buffer(fortio , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
+            if (!read_ok)
+              util_abort("%s: hmmm - error when reading data for keyword:%s \n",__func__ , ecl_kw->header );
+          }
 
         if (ECL_ENDIAN_FLIP)
           ecl_kw_endian_convert_data(ecl_kw);

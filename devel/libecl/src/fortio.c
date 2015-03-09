@@ -484,17 +484,21 @@ void fortio_complete_read(fortio_type *fortio) {
 
 /**
    This function reads one record from the fortio stream, and fills
-   the buffer with the content. The return value is the number of bytes read.
+   the buffer with the content. The return value is the number of
+   bytes read; the function will return -1 on failure.
 */
 
 static int fortio_fread_record(fortio_type *fortio, char *buffer) {
   fortio_init_read(fortio);
-  {
-    int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
-    util_fread(buffer , 1 , fortio->active_header , fortio->stream , __func__);
-    fortio_complete_read(fortio);
-    return record_size;
+  int record_size = fortio->active_header; /* This is reset in fortio_complete_read - must store it for the return. */
+  if (record_size >= 0) {
+    size_t items_read = fread(buffer , 1 , record_size , fortio->stream);
+    if (items_read == record_size)
+      fortio_complete_read(fortio);
+    else
+      record_size = -1;  /* Failure */
   }
+  return record_size;
 }
 
 
@@ -507,15 +511,29 @@ static int fortio_fread_record(fortio_type *fortio, char *buffer) {
    transparent, low-level way.
 */
 
-void fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) {
-  int bytes_read = 0;
-  while (bytes_read < buffer_size) {
-    char * buffer_ptr = &buffer[bytes_read];
-    bytes_read += fortio_fread_record(fortio , buffer_ptr);
+bool fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) {
+  int total_bytes_read = 0;
+
+  while (true) {
+    char * buffer_ptr = &buffer[total_bytes_read];
+    int bytes_read = fortio_fread_record(fortio , buffer_ptr);
+
+    if (bytes_read < 0)
+      break;
+    else {
+      total_bytes_read += bytes_read;
+      if (total_bytes_read >= buffer_size)
+        break;
+    }
   }
 
-  if (bytes_read > buffer_size)
-    util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
+  if (total_bytes_read == buffer_size)
+    return true;
+
+  if (total_bytes_read < buffer_size)
+    return false;
+
+  util_abort("%s: internal inconsistency: buffer_size:%d  read %d bytes \n",__func__ , buffer_size , total_bytes_read);
 }
 
 
