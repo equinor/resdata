@@ -149,6 +149,7 @@ typedef enum {left_pad   = 0,
   double       util_file_difftime(const char * , const char *);
   bool         util_file_update_required(const char *, const char *);
   size_t       util_file_size(const char *);
+  size_t       util_fd_size(int fd);
   void         util_clear_directory(const char *path, bool strict_uid , bool unlink_root);
   void         util_unlink_existing(const char *filename);
   void         util_strupr(char *);

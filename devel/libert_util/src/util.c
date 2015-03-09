@@ -2758,15 +2758,26 @@ void util_alloc_file_components(const char * file, char **_path , char **_basena
 
 
 size_t util_file_size(const char *file) {
+  size_t file_size;
+
+  {
+    int fildes = open(file , O_RDONLY);
+    if (fildes == -1)
+      util_abort("%s: failed to open:%s - %s \n",__func__ , file , strerror(errno));
+
+    file_size = util_fd_size( fildes );
+    close(fildes);
+  }
+
+  return file_size;
+}
+
+
+
+size_t util_fd_size(int fd) {
   stat_type buffer;
-  int fildes;
 
-  fildes = open(file , O_RDONLY);
-  if (fildes == -1)
-    util_abort("%s: failed to open:%s - %s \n",__func__ , file , strerror(errno));
-
-  util_fstat(fildes, &buffer);
-  close(fildes);
+  util_fstat(fd, &buffer);
 
   return buffer.st_size;
 }
