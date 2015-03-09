@@ -196,7 +196,7 @@ class Fault(object):
         layer = Layer(self.__grid , K)
         self.__layer_map[K] = layer
         self.__layer_list.append( layer )
-
+        
 
     def createSegment(self , I1 , I2 , J1 , J2 , face):
         if face in ["X" , "I"]:
@@ -212,8 +212,8 @@ class Fault(object):
             C1 = I1 + J1 * (self.nx + 1)
             C2 = C1 + (1 + I2 - I1)
         else:
-            raise Exception("Can only handle X,Y faces")
-
+            return None
+            
         return FaultSegment(C1,C2)
          
 
@@ -265,7 +265,8 @@ class Fault(object):
                 self.addLayer(K)
             layer = self.__layer_map[K]
             segment = self.createSegment(I1,I2,J1,J2,face)
-            layer.addSegment( segment )
+            if segment:
+                layer.addSegment( segment )
             
 
     def getName(self):
