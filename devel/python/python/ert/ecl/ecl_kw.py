@@ -428,6 +428,12 @@ class EclKW(CClass):
                         return cfunc.iset_char_ptr( self , index , value)
                     else:
                         raise SystemError("Internal implementation error ...")
+        elif isinstance( index , slice):
+            (start , stop , step) = index.indices( len(self) )
+            index = start
+            while index < stop:
+                self[index] = value
+                index += step
         else:
             raise TypeError("Index should be integer type")
 
