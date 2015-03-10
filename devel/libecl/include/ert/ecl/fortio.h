@@ -62,7 +62,6 @@ typedef struct fortio_struct fortio_type;
   void               fortio_fwrite_record(fortio_type * , const char *, int);
   FILE        *      fortio_get_FILE(const fortio_type *);
   void               fortio_fflush(fortio_type * ) ;
-  int                fortio_get_record_size(const fortio_type *);
   bool               fortio_is_fortio_file(fortio_type * );
   void               fortio_rewind(const fortio_type *fortio);
   const char  *      fortio_filename_ref(const fortio_type * );
