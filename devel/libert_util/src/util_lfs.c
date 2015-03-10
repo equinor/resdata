@@ -66,12 +66,24 @@ offset_type util_ftell(FILE * stream) {
 }
 
 
+
+/*
+  The return value of fseeko() and fseek() is different. The first
+  returns current offset on success, whereas the latter returns 0 on
+  success.
+*/
 int util_fseek(FILE * stream, offset_type offset, int whence) {
 #ifdef WINDOWS_LFS
   return _fseeki64(stream , offset , whence);
 #else
   #ifdef HAVE_FSEEKO
-  return fseeko( stream , offset , whence );
+  {
+    offset_type offset = fseeko( stream , offset , whence );
+    if (offset != -1)
+      return 0;
+    else
+      return -1;
+  }
   #else
   return fseek( stream , offset , whence );
   #endif
