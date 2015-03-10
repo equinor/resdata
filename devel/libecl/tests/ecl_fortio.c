@@ -82,12 +82,14 @@ void test_write( const char * filename , bool path_exists) {
 
 void test_wrapper( const char * filename ) {
   FILE * stream = util_fopen( filename , "r");
-  fortio_type * fortio = fortio_alloc_FILE_wrapper( filename , false , false , stream );
+  fortio_type * fortio = fortio_alloc_FILE_wrapper( filename , false , false , false , stream );
+
   test_assert_not_NULL( fortio );
   test_assert_false( fortio_fclose_stream( fortio ));
   test_assert_false( fortio_fopen_stream( fortio ));
   test_assert_true( fortio_stream_is_open( fortio ));
   fortio_free_FILE_wrapper( fortio );
+
   fclose( stream );
 }
 
@@ -245,6 +247,35 @@ void test_at_eof() {
 }
 
 
+void test_fseek() {
+  test_work_area_type * work_area = test_work_area_alloc("fortio_fseek" );
+  {
+    fortio_type * fortio = fortio_open_writer("PRESSURE" , false , true);
+    void * buffer = util_malloc( 100 );
+
+    fortio_fwrite_record( fortio , buffer , 100);
+    free( buffer );
+
+    fortio_fclose( fortio );
+  }
+  {
+    fortio_type * fortio = fortio_open_reader("PRESSURE" , false , true);
+
+
+    printf("Starting fssek test \n");
+    test_assert_true( fortio_fseek( fortio , 0 , SEEK_SET ));
+    test_assert_true( fortio_fseek( fortio , 0 , SEEK_END ));
+    test_assert_false( fortio_fseek( fortio , 100000 , SEEK_END));
+    test_assert_false( fortio_fseek( fortio , 100000 , SEEK_SET));
+
+    fortio_fclose( fortio );
+  }
+
+  test_work_area_free( work_area );
+}
+
+
+
 
 int main( int argc , char ** argv) {
   util_install_signals();
@@ -262,6 +293,7 @@ int main( int argc , char ** argv) {
     test_fread_truncated_data();
     test_fread_truncated_tail();
     test_fread_invalid_tail();
+    test_fseek();
     test_at_eof();
 
     test_write( "/tmp/path/does/not/exist" , false );

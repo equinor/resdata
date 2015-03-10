@@ -648,7 +648,7 @@ void ecl_kw_fprintf_grdecl__(const ecl_kw_type * ecl_kw , const char * special_h
     fprintf(stream,"%s\n" , ecl_kw_get_header(ecl_kw));
 
   {
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , stream);   /* Endian flip should *NOT* be used */
+    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , true , stream);   /* Endian flip should *NOT* be used */
     ecl_kw_fwrite_data(ecl_kw , fortio);
     fortio_free_FILE_wrapper( fortio );
   }
