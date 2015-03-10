@@ -36,7 +36,6 @@ extern "C" {
 
   typedef struct ecl_kw_struct      ecl_kw_type;
 
-  #define ECL_KW_FORTIO_HEADER_SIZE  4 + ECL_STRING_LENGTH + 4 + ECL_TYPE_LENGTH + 4
 
   size_t         ecl_kw_fortio_size( const ecl_kw_type * ecl_kw );
   void *         ecl_kw_get_ptr(const ecl_kw_type *ecl_kw);

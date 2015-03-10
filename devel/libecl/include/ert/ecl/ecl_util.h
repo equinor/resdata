@@ -75,11 +75,10 @@ typedef enum { ECL_OTHER_FILE           = 0   ,
   i.e. 'REAL', 'INTE', ... , come as 4 character strings.
 */
 
-
 #define ECL_STRING_LENGTH 8
 #define ECL_TYPE_LENGTH   4
-
-
+#define ECL_KW_HEADER_DATA_SIZE   ECL_STRING_LENGTH + ECL_TYPE_LENGTH + 4
+#define ECL_KW_HEADER_FORTIO_SIZE ECL_KW_HEADER_DATA_SIZE + 8
 
 /*****************************************************************/
 /*

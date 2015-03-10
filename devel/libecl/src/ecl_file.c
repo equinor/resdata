@@ -283,7 +283,7 @@ static void file_map_index_fload_kw(const file_map_type * file_map, const char* 
         ecl_type_enum ecl_type = ecl_file_kw_get_type(file_kw);
         int element_count = ecl_file_kw_get_size(file_kw);
 
-        ecl_kw_fread_indexed_data(file_map->fortio, offset + ECL_KW_FORTIO_HEADER_SIZE, ecl_type, element_count, index_map, buffer);
+        ecl_kw_fread_indexed_data(file_map->fortio, offset + ECL_KW_HEADER_FORTIO_SIZE, ecl_type, element_count, index_map, buffer);
     }
 }
 

@@ -33,6 +33,10 @@
 
 #define ECL_KW_TYPE_ID  6111098
 
+
+
+
+
 struct ecl_kw_struct {
   UTIL_TYPE_ID_DECLARATION;
   int               size;
@@ -509,11 +513,12 @@ static size_t ecl_kw_fortio_data_size( const ecl_kw_type * ecl_kw) {
 
 /**
    Returns the number of bytes this ecl_kw instance would occupy in
-   BINARY file.
+   BINARY file; we add 2*4 to the header size to include the size of
+   the fortran header and trailer combo.
 */
 
 size_t ecl_kw_fortio_size( const ecl_kw_type * ecl_kw ) {
-  size_t size = ECL_KW_FORTIO_HEADER_SIZE;
+  size_t size = ECL_KW_HEADER_FORTIO_SIZE;
   size += ecl_kw_fortio_data_size(ecl_kw );
   return size;
 }
@@ -1275,10 +1280,16 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
     ecl_type_str[ECL_TYPE_LENGTH] = null_char;
     record_size = fortio_init_read(fortio);
     if (record_size > 0) {
-      util_fread(header       , sizeof(char) , ECL_STRING_LENGTH , stream , __func__);
-      util_fread(&size        , sizeof(size) , 1                 , stream , __func__);
-      util_fread(ecl_type_str , sizeof(char) , ECL_TYPE_LENGTH   , stream , __func__);
-      fortio_complete_read(fortio);
+      char buffer[ECL_KW_HEADER_DATA_SIZE];
+      size_t read_bytes = fread(buffer , 1 , ECL_KW_HEADER_DATA_SIZE , stream);
+
+      if (read_bytes == ECL_KW_HEADER_DATA_SIZE) {
+        memcpy( header , &buffer[0] , ECL_STRING_LENGTH);
+        size = *( (int *) &buffer[ECL_STRING_LENGTH] );
+        memcpy( ecl_type_str , &buffer[ECL_STRING_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
+
+        fortio_complete_read(fortio);
+      }
 
       OK = true;
       if (ECL_ENDIAN_FLIP)
