@@ -1139,14 +1139,14 @@ void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
             int  read_elm = util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
             FILE * stream = fortio_get_FILE(fortio);
             int ir;
-            fortio_init_read(fortio);
+            int record_size = fortio_init_read(fortio);
 
             for (ir = 0; ir < read_elm; ir++) {
               util_fread( &ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream , __func__);
               ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
             }
 
-            fortio_complete_read(fortio);
+            fortio_complete_read(fortio , record_size);
           }
         } else
           /**
@@ -1288,7 +1288,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
         size = *( (int *) &buffer[ECL_STRING_LENGTH] );
         memcpy( ecl_type_str , &buffer[ECL_STRING_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
 
-        fortio_complete_read(fortio);
+        fortio_complete_read(fortio , record_size);
       }
 
       OK = true;
@@ -1517,7 +1517,7 @@ static void ecl_kw_fwrite_data_unformatted( ecl_kw_type * ecl_kw , fortio_type *
         fortio_init_write(fortio , record_size );
         for (i = 0; i < this_blocksize; i++)
           fwrite(&ecl_kw->data[(block_nr * blocksize + i) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream);
-        fortio_complete_write(fortio);
+        fortio_complete_write(fortio , record_size);
       } else {
         int   record_size = this_blocksize * ecl_kw->sizeof_ctype;  /* The total size in bytes of the record written by the fortio layer. */
         fortio_fwrite_record(fortio , &ecl_kw->data[block_nr * blocksize * ecl_kw->sizeof_ctype] , record_size);
@@ -1653,13 +1653,14 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
     if (ECL_ENDIAN_FLIP)
       util_endian_flip_vector(&size , sizeof size , 1);
 
-    fortio_init_write(fortio , ECL_STRING_LENGTH + sizeof(int) + ECL_TYPE_LENGTH);
+    fortio_init_write(fortio , ECL_KW_HEADER_DATA_SIZE );
 
     fwrite(ecl_kw->header8                            , sizeof(char)    , ECL_STRING_LENGTH  , stream);
     fwrite(&size                                      , sizeof(int)     , 1                  , stream);
     fwrite(ecl_util_get_type_name( ecl_kw->ecl_type ) , sizeof(char)    , ECL_TYPE_LENGTH    , stream);
 
-    fortio_complete_write(fortio);
+    fortio_complete_write(fortio , ECL_KW_HEADER_DATA_SIZE);
+
   }
 }
 
