@@ -473,7 +473,7 @@ bool fortio_complete_read(fortio_type *fortio , int record_size) {
   if (read_count == 1) {
     if (fortio->endian_flip_header)
       util_endian_flip_vector(&trailer , sizeof trailer , 1);
-    
+
     if (record_size == trailer)
       return true;
   }
@@ -492,9 +492,11 @@ static int fortio_fread_record(fortio_type *fortio , char *buffer) {
   int record_size = fortio_init_read(fortio);
   if (record_size >= 0) {
     size_t items_read = fread(buffer , 1 , record_size , fortio->stream);
-    if (items_read == record_size)
-      fortio_complete_read(fortio , record_size);
-    else
+    if (items_read == record_size) {
+      bool complete_ok = fortio_complete_read(fortio , record_size);
+      if (!complete_ok)
+        record_size = -1;
+    } else
       record_size = -1;  /* Failure */
   }
   return record_size;
