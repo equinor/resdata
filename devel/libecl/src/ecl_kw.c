@@ -2440,15 +2440,14 @@ void ecl_kw_inplace_update_file(const ecl_kw_type * ecl_kw , const char * filena
 
 /******************************************************************/
 
-bool ecl_kw_is_kw_file(FILE * stream , bool fmt_file ) {
-  const long int init_pos = util_ftell(stream);
+bool ecl_kw_is_kw_file(fortio_type * fortio) {
+  const long int init_pos = fortio_ftell( fortio );
   bool kw_file;
 
   {
     ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , ECL_ENDIAN_FLIP , fmt_file , stream);
 
-    if (fmt_file)
+    if (fortio_fmt_file( fortio ))
       kw_file = ecl_kw_fread_header(ecl_kw , fortio);
     else {
       if (fortio_is_fortio_file(fortio))
@@ -2457,11 +2456,10 @@ bool ecl_kw_is_kw_file(FILE * stream , bool fmt_file ) {
         kw_file = false;
     }
 
-    fortio_free_FILE_wrapper(fortio);
     ecl_kw_free(ecl_kw);
   }
 
-  util_fseek(stream , init_pos , SEEK_SET);
+  fortio_fseek(fortio , init_pos , SEEK_SET);
   return kw_file;
 }
 

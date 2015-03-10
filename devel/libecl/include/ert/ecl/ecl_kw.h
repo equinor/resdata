@@ -110,7 +110,7 @@ extern "C" {
 
 
   bool ecl_kw_is_grdecl_file(FILE * );
-  bool ecl_kw_is_kw_file(FILE * , bool );
+  bool ecl_kw_is_kw_file(fortio_type * fortio);
 
   int        ecl_kw_element_sum_int( const ecl_kw_type * ecl_kw );
   double     ecl_kw_element_sum_float( const ecl_kw_type * ecl_kw );
