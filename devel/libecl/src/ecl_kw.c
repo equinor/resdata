@@ -1059,111 +1059,118 @@ static double __fscanf_ECL_double( FILE * stream , const char * fmt) {
   return value;
 }
 
-void ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
-  {
-    const char null_char         = '\0';
-    bool fmt_file                = fortio_fmt_file( fortio );
-    if (ecl_kw->size > 0) {
-      const int blocksize = get_blocksize( ecl_kw->ecl_type );
-      if (fmt_file) {
-        const int blocks      = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
-        const char * read_fmt = get_read_fmt( ecl_kw->ecl_type );
-        FILE * stream         = fortio_get_FILE(fortio);
-        int    offset         = 0;
-        int    index          = 0;
-        int    ib,ir;
-        for (ib = 0; ib < blocks; ib++) {
-          int read_elm = util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
-          for (ir = 0; ir < read_elm; ir++) {
-            switch(ecl_kw->ecl_type) {
-            case(ECL_CHAR_TYPE):
-              ecl_kw_fscanf_qstring(&ecl_kw->data[offset] , read_fmt , 8, stream);
-              break;
-            case(ECL_INT_TYPE):
-              {
-                int iread = fscanf(stream , read_fmt , (int *) &ecl_kw->data[offset]);
-                if (iread != 1)
-                  util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header8 , fortio_filename_ref(fortio));
-              }
-              break;
-            case(ECL_FLOAT_TYPE):
-              {
-                int iread = fscanf(stream , read_fmt , (float *) &ecl_kw->data[offset]);
-                if (iread != 1) {
-                  util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ ,
-                             offset / ecl_kw->sizeof_ctype ,
-                             ecl_kw->header8 ,
-                             fortio_filename_ref(fortio));
-                }
-              }
-              break;
-            case(ECL_DOUBLE_TYPE):
-              {
-                double value = __fscanf_ECL_double( stream , read_fmt );
-                ecl_kw_iset(ecl_kw , index , &value);
-              }
-              break;
-            case(ECL_BOOL_TYPE):
-              {
-                char bool_char;
-                if (fscanf(stream , read_fmt , &bool_char) == 1) {
-                  if (bool_char == BOOL_TRUE_CHAR)
-                    ecl_kw_iset_bool(ecl_kw , index , true);
-                  else if (bool_char == BOOL_FALSE_CHAR)
-                    ecl_kw_iset_bool(ecl_kw , index , false);
-                  else
-                    util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
-                } else
-                  util_abort("%s: read failed - premature file end? \n",__func__ );
-              }
-              break;
-            case(ECL_MESS_TYPE):
-              ecl_kw_fscanf_qstring(&ecl_kw->data[offset] , read_fmt , 8 , stream);
-              break;
-            default:
-              util_abort("%s: Internal error: internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
+bool ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+  const char null_char         = '\0';
+  bool fmt_file                = fortio_fmt_file( fortio );
+  if (ecl_kw->size > 0) {
+    const int blocksize = get_blocksize( ecl_kw->ecl_type );
+    if (fmt_file) {
+      const int blocks      = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
+      const char * read_fmt = get_read_fmt( ecl_kw->ecl_type );
+      FILE * stream         = fortio_get_FILE(fortio);
+      int    offset         = 0;
+      int    index          = 0;
+      int    ib,ir;
+      for (ib = 0; ib < blocks; ib++) {
+        int read_elm = util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
+        for (ir = 0; ir < read_elm; ir++) {
+          switch(ecl_kw->ecl_type) {
+          case(ECL_CHAR_TYPE):
+            ecl_kw_fscanf_qstring(&ecl_kw->data[offset] , read_fmt , 8, stream);
+            break;
+          case(ECL_INT_TYPE):
+            {
+              int iread = fscanf(stream , read_fmt , (int *) &ecl_kw->data[offset]);
+              if (iread != 1)
+                util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ , offset / ecl_kw->sizeof_ctype , ecl_kw->header8 , fortio_filename_ref(fortio));
             }
-            offset += ecl_kw->sizeof_ctype;
-            index++;
+            break;
+          case(ECL_FLOAT_TYPE):
+            {
+              int iread = fscanf(stream , read_fmt , (float *) &ecl_kw->data[offset]);
+              if (iread != 1) {
+                util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ ,
+                           offset / ecl_kw->sizeof_ctype ,
+                           ecl_kw->header8 ,
+                           fortio_filename_ref(fortio));
+              }
+            }
+            break;
+          case(ECL_DOUBLE_TYPE):
+            {
+              double value = __fscanf_ECL_double( stream , read_fmt );
+              ecl_kw_iset(ecl_kw , index , &value);
+            }
+            break;
+          case(ECL_BOOL_TYPE):
+            {
+              char bool_char;
+              if (fscanf(stream , read_fmt , &bool_char) == 1) {
+                if (bool_char == BOOL_TRUE_CHAR)
+                  ecl_kw_iset_bool(ecl_kw , index , true);
+                else if (bool_char == BOOL_FALSE_CHAR)
+                  ecl_kw_iset_bool(ecl_kw , index , false);
+                else
+                  util_abort("%s: Logical value: [%c] not recogniced - aborting \n", __func__ , bool_char);
+              } else
+                util_abort("%s: read failed - premature file end? \n",__func__ );
+            }
+            break;
+          case(ECL_MESS_TYPE):
+            ecl_kw_fscanf_qstring(&ecl_kw->data[offset] , read_fmt , 8 , stream);
+            break;
+          default:
+            util_abort("%s: Internal error: internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw->ecl_type);
           }
+          offset += ecl_kw->sizeof_ctype;
+          index++;
         }
-      } else {
-        if (ecl_kw->ecl_type == ECL_CHAR_TYPE || ecl_kw->ecl_type == ECL_MESS_TYPE) {
-          const int blocks = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
-          int ib;
-          for (ib = 0; ib < blocks; ib++) {
-            /*
-               Due to the necessary terminating \0 characters there is
-               not a continous file/memory mapping.
-            */
-            int  read_elm = util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
-            FILE * stream = fortio_get_FILE(fortio);
+      }
+      return true;
+    } else {
+      bool read_ok = true;
+      if (ecl_kw->ecl_type == ECL_CHAR_TYPE || ecl_kw->ecl_type == ECL_MESS_TYPE) {
+        const int blocks = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
+        int ib = 0;
+        while (true) {
+          /*
+            Due to the necessary terminating \0 characters there is
+            not a continous file/memory mapping.
+          */
+          int  read_elm = util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
+          FILE * stream = fortio_get_FILE(fortio);
+          int record_size = fortio_init_read(fortio);
+          if (record_size >= 0) {
             int ir;
-            int record_size = fortio_init_read(fortio);
-
             for (ir = 0; ir < read_elm; ir++) {
               util_fread( &ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream , __func__);
               ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
             }
+            read_ok = fortio_complete_read(fortio , record_size);
+          } else
+            read_ok = false;
 
-            fortio_complete_read(fortio , record_size);
-          }
-        } else
-          /**
-             This function handles the fuc***g blocks transparently at a
-             low level.
-          */
-          {
-            bool read_ok = fortio_fread_buffer(fortio , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
-            if (!read_ok)
-              util_abort("%s: hmmm - error when reading data for keyword:%s \n",__func__ , ecl_kw->header );
-          }
+          if (!read_ok)
+            break;
 
-        if (ECL_ENDIAN_FLIP)
+          ib++;
+          if (ib == blocks)
+            break;
+        }
+      } else {
+        /**
+           This function handles the fuc***g blocks transparently at a
+           low level.
+        */
+        read_ok = fortio_fread_buffer(fortio , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
+        if (read_ok && ECL_ENDIAN_FLIP)
           ecl_kw_endian_convert_data(ecl_kw);
       }
+      return read_ok;
     }
-  }
+  } else
+    /* The keyword has zero size - and reading data is trivially OK. */
+    return true;
 }
 
 
@@ -1196,9 +1203,9 @@ void ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ec
 /**
    Allocates storage and reads data.
 */
-void ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+bool ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
   ecl_kw_alloc_data(ecl_kw);
-  ecl_kw_fread_data(ecl_kw , fortio);
+  return ecl_kw_fread_data(ecl_kw , fortio);
 }
 
 /**
@@ -1263,7 +1270,7 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
   char ecl_type_str[ECL_TYPE_LENGTH + 1];
   int record_size;
   int size;
-  bool OK;
+  bool OK = true;
 
   if (fmt_file) {
     OK = ecl_kw_fscanf_qstring(header , "%8c" , 8 , stream);
@@ -1288,11 +1295,11 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
         size = *( (int *) &buffer[ECL_STRING_LENGTH] );
         memcpy( ecl_type_str , &buffer[ECL_STRING_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
 
-        fortio_complete_read(fortio , record_size);
-      }
+        OK = fortio_complete_read(fortio , record_size);
+      } else
+        OK = false;
 
-      OK = true;
-      if (ECL_ENDIAN_FLIP)
+      if (OK && ECL_ENDIAN_FLIP)
         util_endian_flip_vector(&size , sizeof size , 1);
     } else
       OK = false;
@@ -1449,12 +1456,11 @@ void ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int siz
 
 
 bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
-  bool OK;
-  OK = ecl_kw_fread_header(ecl_kw , fortio);
+  bool OK = ecl_kw_fread_header(ecl_kw , fortio);
   if (OK)
-    ecl_kw_fread_realloc_data( ecl_kw , fortio );
-
-  return OK;
+    return ecl_kw_fread_realloc_data( ecl_kw , fortio );
+  else
+    return false;
 }
 
 
@@ -1474,7 +1480,6 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio) {
   bool OK;
   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty();
   OK = ecl_kw_fread_realloc(ecl_kw , fortio);
-
   if (!OK) {
     free(ecl_kw);
     ecl_kw = NULL;

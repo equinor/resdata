@@ -41,7 +41,7 @@ extern "C" {
   void *         ecl_kw_get_ptr(const ecl_kw_type *ecl_kw);
   void           ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , void * data);
   void           ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio);
-  void           ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
+  bool           ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
   ecl_type_enum  ecl_kw_get_type(const ecl_kw_type *);
   const char   * ecl_kw_get_header8(const ecl_kw_type *);
   const char   * ecl_kw_get_header(const ecl_kw_type * ecl_kw );
@@ -105,7 +105,7 @@ extern "C" {
   bool           ecl_kw_content_equal( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2);
   void           ecl_kw_fskip_data__( ecl_type_enum ecl_type , int size , fortio_type * fortio);
   void           ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
-  void           ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
+  bool           ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
   void           ecl_kw_fskip_header( fortio_type * fortio);
 
 
