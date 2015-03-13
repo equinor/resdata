@@ -46,19 +46,23 @@ void file_convert(const char * src_file , const char * target_file, ecl_file_enu
 
   target = fortio_open_writer(target_file , !formatted_src , ECL_ENDIAN_FLIP );
   src    = fortio_open_reader(src_file  , formatted_src , ECL_ENDIAN_FLIP);
-  ecl_kw = ecl_kw_fread_alloc(src);
-  if (ecl_kw == NULL) {
-    fprintf(stderr,"Loading: %s failed - maybe you forgot the header? \n", src_file);
-    abort();
+
+  while (true) {
+    if (fortio_read_at_eof( src ))
+      break;
+
+    {
+      ecl_kw_type * ecl_kw = ecl_kw_fread_alloc( src );
+      if (ecl_kw) {
+        ecl_kw_fwrite(ecl_kw , target);
+        ecl_kw_free(ecl_kw);
+      } else {
+        fprintf(stderr, "Reading keyword failed \n");
+        break;
+      }
+    }
   }
 
-  while (ecl_kw != NULL) {
-    ecl_kw_fwrite(ecl_kw , target);
-
-    ecl_kw_free(ecl_kw);
-    ecl_kw = ecl_kw_fread_alloc(src);
-  }
-  if (ecl_kw != NULL) ecl_kw_free(ecl_kw);
   fortio_fclose(src);
   fortio_fclose(target);
 }
