@@ -939,15 +939,17 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
           */
           if (!stringlist_contains( ecl_smspec->restart_list , restart_base)) {
             ecl_file_type * restart_header = ecl_file_open( smspec_header , 0);
+            if (restart_header) {
+              if (ecl_smspec_file_equal( header , restart_header)) {
+                stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
+                ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */
+              } else
+                fprintf(stderr,"** Warning: the historical case: %s is not compatible with the current case - ignored.\n" ,
+                        ecl_file_get_src_file( restart_header));
 
-            if (ecl_smspec_file_equal( header , restart_header)) {
-              stringlist_insert_copy( ecl_smspec->restart_list , 0 , restart_base );
-              ecl_smspec_load_restart( ecl_smspec , restart_header);   /* Recursive call */
+              ecl_file_close( restart_header );
             } else
-              fprintf(stderr,"** Warning: the historical case: %s is not compatible with the current case - ignored.\n" ,
-                      ecl_file_get_src_file( restart_header));
-
-            ecl_file_close( restart_header );
+              fprintf(stderr,"** Warning: failed to historical case:%s - ignored.\n", smspec_header);
           }
         }
       }
@@ -1033,9 +1035,9 @@ const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec
 
 
 
-static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
+static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
   ecl_file_type * header = ecl_file_open( header_file , 0);
-  {
+  if (header) {
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, WGNAMES_KW  , 0);
     ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, KEYWORDS_KW , 0);
     ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, STARTDAT_KW , 0);
@@ -1110,12 +1112,16 @@ static void ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         util_safe_free( lgr_name );
       }
     }
-  }
-  ecl_smspec->header_file = util_alloc_realpath( header_file );
-  if (include_restart)
-    ecl_smspec_load_restart( ecl_smspec , header );
 
-  ecl_file_close( header );
+    ecl_smspec->header_file = util_alloc_realpath( header_file );
+    if (include_restart)
+      ecl_smspec_load_restart( ecl_smspec , header );
+
+    ecl_file_close( header );
+
+    return true;
+  } else
+    return false;
 }
 
 
@@ -1130,29 +1136,33 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
     util_safe_free(path);
   }
 
-  ecl_smspec_fread_header(ecl_smspec , header_file , include_restart);
+  if (ecl_smspec_fread_header(ecl_smspec , header_file , include_restart)) {
 
-  if (hash_has_key( ecl_smspec->misc_var_index , "TIME"))
-    ecl_smspec->time_index = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "TIME") );
+    if (hash_has_key( ecl_smspec->misc_var_index , "TIME"))
+      ecl_smspec->time_index = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "TIME") );
 
-  if (hash_has_key(ecl_smspec->misc_var_index , "DAY")) {
-    ecl_smspec->day_index   = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "DAY") );
-    ecl_smspec->month_index = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "MONTH") );
-    ecl_smspec->year_index  = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "YEAR") );
-  }
+    if (hash_has_key(ecl_smspec->misc_var_index , "DAY")) {
+      ecl_smspec->day_index   = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "DAY") );
+      ecl_smspec->month_index = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "MONTH") );
+      ecl_smspec->year_index  = smspec_node_get_params_index( hash_get(ecl_smspec->misc_var_index , "YEAR") );
+    }
 
-  if ((ecl_smspec->time_index == -1) && ( ecl_smspec->day_index == -1)) {
-    /* Unusable configuration.
+    if ((ecl_smspec->time_index == -1) && ( ecl_smspec->day_index == -1)) {
+      /* Unusable configuration.
 
-       Seems the ECLIPSE file can also have time specified with
-       'YEARS' as basic time unit; that mode is not supported.
-    */
+         Seems the ECLIPSE file can also have time specified with
+         'YEARS' as basic time unit; that mode is not supported.
+      */
 
-    util_abort("%s: Sorry the SMSPEC file seems to lack all time information, need either TIME, or DAY/MONTH/YEAR information. Can not proceed.",__func__);
+      util_abort("%s: Sorry the SMSPEC file seems to lack all time information, need either TIME, or DAY/MONTH/YEAR information. Can not proceed.",__func__);
+      return NULL;
+    }
+    return ecl_smspec;
+  } else {
+    /** Failed to load from disk. */
+    ecl_smspec_free( ecl_smspec );
     return NULL;
   }
-
-  return ecl_smspec;
 }
 
 

@@ -38,7 +38,7 @@ extern "C" {
 typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   void                     ecl_sum_data_fwrite_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified, int report_step);
   void                     ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified);
-  void                     ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist);
+  bool                     ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist);
   void                     ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_type * filelist);
   ecl_sum_data_type      * ecl_sum_data_alloc_writer( ecl_smspec_type * smspec );
   ecl_sum_data_type      * ecl_sum_data_alloc( ecl_smspec_type * smspec);

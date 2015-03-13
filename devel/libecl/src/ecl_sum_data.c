@@ -914,64 +914,69 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
   call to ecl_sum_data_build_index().
 */
 
-static void ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , const stringlist_type * filelist) {
-  ecl_file_enum file_type;
-
+static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , const stringlist_type * filelist) {
   if (stringlist_get_size( filelist ) == 0)
-    util_abort("%s: internal error - function called with empty list of data files.\n",__func__);
+    return false;
 
-  file_type = ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , NULL , NULL);
-  if ((stringlist_get_size( filelist ) > 1) && (file_type != ECL_SUMMARY_FILE))
-    util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);
   {
-    int filenr;
-    if (file_type == ECL_SUMMARY_FILE) {
+    ecl_file_enum file_type = ecl_util_get_file_type( stringlist_iget( filelist , 0 ) , NULL , NULL);
+    if ((stringlist_get_size( filelist ) > 1) && (file_type != ECL_SUMMARY_FILE))
+      util_abort("%s: internal error - when calling with more than one file - you can not supply a unified file - come on?! \n",__func__);
 
-      /* Not unified. */
-      for (filenr = 0; filenr < stringlist_get_size( filelist ); filenr++) {
-        const char * data_file = stringlist_iget( filelist , filenr);
-        ecl_file_enum file_type;
-        int report_step;
-        file_type = ecl_util_get_file_type( data_file , NULL , &report_step);
-        /**
-            ECLIPSE starts a report step by writing an empty summary
-            file, therefor we must verify that the ecl_file instance
-            returned by ecl_file_fread_alloc() is different from NULL
-            before adding it to the ecl_sum_data instance.
-        */
-        if (file_type != ECL_SUMMARY_FILE)
-          util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
-        {
-          ecl_file_type * ecl_file = ecl_file_open( data_file , 0);
-          ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
+    {
+      int filenr;
+      if (file_type == ECL_SUMMARY_FILE) {
+
+        /* Not unified. */
+        for (filenr = 0; filenr < stringlist_get_size( filelist ); filenr++) {
+          const char * data_file = stringlist_iget( filelist , filenr);
+          ecl_file_enum file_type;
+          int report_step;
+          file_type = ecl_util_get_file_type( data_file , NULL , &report_step);
+          if (file_type != ECL_SUMMARY_FILE)
+            util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
+          {
+            ecl_file_type * ecl_file = ecl_file_open( data_file , 0);
+            if (ecl_file) {
+              ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
+              ecl_file_close( ecl_file );
+            }
+          }
+        }
+      } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
+        ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
+        if (ecl_file) {
+          int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
+          while (true) {
+            /*
+              Observe that there is a number discrepancy between ECLIPSE
+              and the ecl_file_select_smryblock() function. ECLIPSE
+              starts counting report steps at 1; whereas the first
+              SEQHDR block in the unified summary file is block zero (in
+              ert counting).
+            */
+            if (ecl_file_select_smryblock( ecl_file , report_step - 1)) {
+              ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
+              report_step++;
+            } else break;
+          }
           ecl_file_close( ecl_file );
         }
-      }
-    } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
-      ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
-      int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
-      while (true) {
-        /*
-          Observe that there is a number discrepancy between ECLIPSE
-          and the ecl_file_select_smryblock() function. ECLIPSE
-          starts counting report steps at 1; whereas the first
-          SEQHDR block in the unified summary file is block zero (in
-          ert counting).
-        */
-        if (ecl_file_select_smryblock( ecl_file , report_step - 1)) {
-          ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
-          report_step++;
-        } else break;
-      }
-      ecl_file_close( ecl_file );
+      } else
+        util_abort("%s: invalid file type:%s \n",__func__ , ecl_util_file_type_name(file_type ));
+    }
+
+    if (ecl_sum_data_get_length( data ) > 0) {
+      ecl_sum_data_build_index( data );
+      return true;
     } else
-      util_abort("%s: invalid file type:%s \n",__func__ , ecl_util_file_type_name(file_type ));
+      return false;
+
   }
-  ecl_sum_data_build_index( data );
 }
 
-void ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist) {
-  ecl_sum_data_fread__( data , 0 , filelist );
+bool ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist) {
+  return ecl_sum_data_fread__( data , 0 , filelist );
 }
 
 
