@@ -835,23 +835,37 @@ static file_map_type * ecl_file_get_blockmap( ecl_file_type * ecl_file , const c
    map.
 */
 
-static void ecl_file_scan( ecl_file_type * ecl_file ) {
+static bool ecl_file_scan( ecl_file_type * ecl_file ) {
+  bool scan_ok = false;
   fortio_fseek( ecl_file->fortio , 0 , SEEK_SET );
   {
     ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT_TYPE , NULL);
-    offset_type current_offset;
+
     while (true) {
-      current_offset = fortio_ftell( ecl_file->fortio );
-      if (ecl_kw_fread_header( work_kw , ecl_file->fortio )) {
-        ecl_file_kw_type * file_kw = ecl_file_kw_alloc( work_kw , current_offset);
-        file_map_add_kw( ecl_file->global_map , file_kw );
-        ecl_file_kw_fskip_data( file_kw , ecl_file->fortio );
-      } else
+      if (fortio_read_at_eof(ecl_file->fortio)) {
+        scan_ok = true;
         break;
+      }
+
+      {
+        offset_type current_offset = fortio_ftell( ecl_file->fortio );
+        if (ecl_kw_fread_header( work_kw , ecl_file->fortio)) {
+          ecl_file_kw_type * file_kw = ecl_file_kw_alloc( work_kw , current_offset);
+          if (ecl_file_kw_fskip_data( file_kw , ecl_file->fortio ))
+            file_map_add_kw( ecl_file->global_map , file_kw );
+          else
+            break;
+        } else
+          break;
+      }
     }
+
     ecl_kw_free( work_kw );
   }
-  file_map_make_index( ecl_file->global_map );
+  if (scan_ok)
+    file_map_make_index( ecl_file->global_map );
+
+  return scan_ok;
 }
 
 
@@ -872,7 +886,7 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
 */
 
 
-static ecl_file_type * ecl_file_open__( const char * filename , int flags) {
+ecl_file_type * ecl_file_open( const char * filename , int flags) {
   fortio_type * fortio;
   bool          fmt_file;
 
@@ -890,32 +904,22 @@ static ecl_file_type * ecl_file_open__( const char * filename , int flags) {
     ecl_file->global_map = file_map_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_map , true );
 
     ecl_file_add_map( ecl_file , ecl_file->global_map );
-    ecl_file_scan( ecl_file );
-    ecl_file_select_global( ecl_file );
+    if (ecl_file_scan( ecl_file )) {
+      ecl_file_select_global( ecl_file );
 
-    if (FILE_FLAGS_SET( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
-      fortio_fclose_stream( ecl_file->fortio );
+      if (FILE_FLAGS_SET( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
+        fortio_fclose_stream( ecl_file->fortio );
 
-    return ecl_file;
+      return ecl_file;
+    } else {
+      ecl_file_close( ecl_file );
+      return NULL;
+    }
   } else
     return NULL;
 }
 
 
-ecl_file_type * ecl_file_open( const char * filename , int flags) {
-  ecl_file_type * ecl_file = ecl_file_open__(filename , flags );
-  if (ecl_file)
-    return ecl_file;
-  else {
-    util_abort("%s: failed to open ECLIPSE file:%s \n",__func__ , filename);
-    return NULL;
-  }
-}
-
-
-ecl_file_type * ecl_file_try_open( const char * filename, int flags) {
-  return ecl_file_open__(filename , flags );
-}
 
 
 

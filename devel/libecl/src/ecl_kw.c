@@ -1212,8 +1212,9 @@ bool ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
    Static method without a class instance.
 */
 
-void ecl_kw_fskip_data__( ecl_type_enum ecl_type , const int element_count , fortio_type * fortio) {
+bool ecl_kw_fskip_data__( ecl_type_enum ecl_type , const int element_count , fortio_type * fortio) {
   bool fmt_file = fortio_fmt_file(fortio);
+  bool skip_ok = true;
   if (element_count > 0) {
     if (fmt_file) {
       /* Formatted skipping actually involves reading the data - nice ??? */
@@ -1231,14 +1232,15 @@ void ecl_kw_fskip_data__( ecl_type_enum ecl_type , const int element_count , for
         element_size = ECL_STRING_LENGTH;
       }
 
-      fortio_data_fskip(fortio, element_size, element_count, block_count);
+      skip_ok = fortio_data_fskip(fortio, element_size, element_count, block_count);
     }
   }
+  return skip_ok;
 }
 
 
-void ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
-  ecl_kw_fskip_data__( ecl_kw->ecl_type , ecl_kw->size , fortio );
+bool ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
+  return ecl_kw_fskip_data__( ecl_kw->ecl_type , ecl_kw->size , fortio );
 }
 
 

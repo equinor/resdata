@@ -103,8 +103,8 @@ extern "C" {
   bool           ecl_kw_block_equal( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int cmp_elements);
   bool           ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data);
   bool           ecl_kw_content_equal( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2);
-  void           ecl_kw_fskip_data__( ecl_type_enum ecl_type , int size , fortio_type * fortio);
-  void           ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
+  bool           ecl_kw_fskip_data__( ecl_type_enum ecl_type , int size , fortio_type * fortio);
+  bool           ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
   bool           ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
   void           ecl_kw_fskip_header( fortio_type * fortio);
 

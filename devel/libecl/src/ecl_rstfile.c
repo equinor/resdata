@@ -417,10 +417,12 @@ bool ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report
 /******************************************************************/
 
 static ecl_file_type * ecl_file_open_rstblock_report_step__( const char * filename , int report_step , int flags) {
-  ecl_file_type * ecl_file = ecl_file_open__( filename , flags );
-  if (!ecl_file_select_rstblock_report_step( ecl_file , report_step )) {
-    ecl_file_close( ecl_file );
-    ecl_file = NULL;
+  ecl_file_type * ecl_file = ecl_file_open( filename , flags );
+  if (ecl_file) {
+    if (!ecl_file_select_rstblock_report_step( ecl_file , report_step )) {
+      ecl_file_close( ecl_file );
+      ecl_file = NULL;
+    }
   }
   return ecl_file;
 }
@@ -433,10 +435,12 @@ ecl_file_type * ecl_file_open_rstblock_report_step( const char * filename , int 
 /******************************************************************/
 
 static ecl_file_type * ecl_file_open_rstblock_sim_time__( const char * filename , time_t sim_time, int flags ) {
-  ecl_file_type * ecl_file = ecl_file_open__( filename , flags );
-  if (!ecl_file_select_rstblock_sim_time( ecl_file , sim_time)) {
-    ecl_file_close( ecl_file );
-    ecl_file = NULL;
+  ecl_file_type * ecl_file = ecl_file_open( filename , flags );
+  if (ecl_file) {
+    if (!ecl_file_select_rstblock_sim_time( ecl_file , sim_time)) {
+      ecl_file_close( ecl_file );
+      ecl_file = NULL;
+    }
   }
   return ecl_file;
 }
@@ -448,10 +452,12 @@ ecl_file_type * ecl_file_open_rstblock_sim_time( const char * filename , time_t 
 /******************************************************************/
 
 static ecl_file_type * ecl_file_iopen_rstblock__( const char * filename , int seqnum_index, int flags ) {
-  ecl_file_type * ecl_file = ecl_file_open__( filename , flags );
-  if (!ecl_file_iselect_rstblock( ecl_file , seqnum_index )) {
-    ecl_file_close( ecl_file );
-    ecl_file = NULL;
+  ecl_file_type * ecl_file = ecl_file_open( filename , flags );
+  if (ecl_file) {
+    if (!ecl_file_iselect_rstblock( ecl_file , seqnum_index )) {
+      ecl_file_close( ecl_file );
+      ecl_file = NULL;
+    }
   }
   return ecl_file;
 }
