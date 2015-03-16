@@ -221,6 +221,21 @@ static const char* special_vars[] = {"NEWTON",
                                      "STEPTYPE"};
 
 
+/*
+  The smspec_required_keywords variable contains a list of keywords
+  which are *absolutely* required in the SMSPEC file, but observe that
+  depending on the content of the "KEYWORDS" array other keywords
+  might bre requred as well - this typically includes the NUMS
+  keyword. Such 'second-order' dependencies are not accounted for with
+  this simple list.
+*/
+
+static const char* smspec_required_keywords[] = {WGNAMES_KW,
+                                                 KEYWORDS_KW,
+                                                 STARTDAT_KW,
+                                                 UNITS_KW,
+                                                 DIMENS_KW};
+
 
 /*****************************************************************/
 
@@ -1032,12 +1047,25 @@ const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec
   return smspec->index_map;
 }
 
+static bool ecl_smspec_check_header( ecl_file_type * header ) {
+  bool OK = true;
+  int num_required = sizeof( smspec_required_keywords ) / sizeof( smspec_required_keywords[0] );
+  int i;
 
+  for (i=0; i < num_required; i++) {
+    if (!ecl_file_has_kw( header , smspec_required_keywords[i])) {
+      OK = false;
+      break;
+    }
+  }
+
+  return OK;
+}
 
 
 static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
   ecl_file_type * header = ecl_file_open( header_file , 0);
-  if (header) {
+  if (header && ecl_smspec_check_header( header )) {
     ecl_kw_type *wells     = ecl_file_iget_named_kw(header, WGNAMES_KW  , 0);
     ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, KEYWORDS_KW , 0);
     ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, STARTDAT_KW , 0);
