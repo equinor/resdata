@@ -902,7 +902,13 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
 }
 
 
-
+static bool ecl_sum_data_check_file( ecl_file_type * ecl_file ) {
+  if (ecl_file_has_kw( ecl_file , PARAMS_KW ) &&
+      (ecl_file_get_num_named_kw( ecl_file , PARAMS_KW ) == ecl_file_get_num_named_kw( ecl_file , MINISTEP_KW)))
+    return true;
+  else
+    return false;
+}
 
 
 /*
@@ -937,7 +943,7 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
             util_abort("%s: file:%s has wrong type \n",__func__ , data_file);
           {
             ecl_file_type * ecl_file = ecl_file_open( data_file , 0);
-            if (ecl_file) {
+            if (ecl_file && ecl_sum_data_check_file( ecl_file )) {
               ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file , data->smspec);
               ecl_file_close( ecl_file );
             }
@@ -945,7 +951,7 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
         }
       } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
         ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
-        if (ecl_file) {
+        if (ecl_file && ecl_sum_data_check_file( ecl_file )) {
           int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
           while (true) {
             /*
