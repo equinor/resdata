@@ -250,6 +250,13 @@ static bool fault_block_connected_neighbour( const fault_block_type * block , in
   if ((j2 < 0) || (j2 >= layer_get_ny( layer )))
     return false;
 
+  /*
+    Inactive cells do "not exist" - can not be connected neighbour
+    with an inactive cell.
+  */
+  if (!ecl_grid_cell_active3( block->grid , i2,j2,block->k))
+    return false;
+  
   {
     int cell_id = layer_iget_cell_value( layer , i1 , j1 );
     int neighbour_id = layer_iget_cell_value(layer , i2 , j2);
