@@ -85,6 +85,17 @@ void test_assert_string_not_equal__( const char * s1 , const char * s2 , const c
 }
 
 
+void test_assert_long_equal__( long i1 , long i2 , const char * file , long line) {
+  if (i1 != i2)
+    test_error_exit( "%s:%d => Long values are different i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
+
+void test_assert_long_not_equal__( long i1 , long i2 , const char * file , long line) {
+  if (i1 == i2)
+    test_error_exit( "%s:%d => Long values are equal i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
 
 void test_assert_int_equal__( int i1 , int i2 , const char * file , int line) {
   if (i1 != i2)
