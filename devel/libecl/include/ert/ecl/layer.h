@@ -72,6 +72,7 @@ extern "C" {
   void         layer_add_interp_barrier( layer_type * layer , int c1 , int c2);
   void         layer_add_ijbarrier( layer_type * layer , int i1 , int j1 , int i2 , int j2 );
   void         layer_add_barrier( layer_type * layer , int c1 , int c2);
+  void         layer_memcpy(layer_type * target_layer , const layer_type * src_layer);
 
 UTIL_IS_INSTANCE_HEADER( layer );
 UTIL_SAFE_CAST_HEADER( layer );

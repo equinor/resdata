@@ -674,3 +674,12 @@ void layer_add_interp_barrier( layer_type * layer , int c1 , int c2) {
   }
 }
 
+
+void layer_memcpy(layer_type * target_layer , const layer_type * src_layer) {
+  if ((target_layer->nx == src_layer->nx) && (target_layer->ny == src_layer->ny)) {
+    size_t data_size = target_layer->nx * target_layer->ny * sizeof(cell_type);
+    memcpy(target_layer->data , src_layer->data , data_size );
+    target_layer->cell_sum = src_layer->cell_sum;
+  } else
+    util_abort("%s: fatal error - tried to copy elements between layers of different size\n",__func__);
+}

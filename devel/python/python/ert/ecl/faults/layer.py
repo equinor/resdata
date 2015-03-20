@@ -27,6 +27,12 @@ class Layer(BaseCClass):
         else:
             raise ValueError("Invalid input - no Layer object created")
 
+    @classmethod
+    def copy(cls , src):
+        layer = Layer( src.getNX() , src.getNY())
+        Layer.cNamespace().copy( layer , src )
+        return layer
+
 
     def __assertIJ(self , i,j):
         if i < 0 or i >= self.getNX():
@@ -140,13 +146,14 @@ class Layer(BaseCClass):
             else:
                 raise ValueError("Must have i1 == i2 or j1 == j2")
         
-                
+
 
 
 
 cwrapper = CWrapper(ECL_LIB)
 CWrapper.registerObjectType("layer", Layer)
 Layer.cNamespace().alloc        = cwrapper.prototype("c_void_p  layer_alloc(int,  int)")
+Layer.cNamespace().copy         = cwrapper.prototype("void      layer_memcpy(layer , layer)")
 Layer.cNamespace().free         = cwrapper.prototype("void      layer_free(layer)")
 Layer.cNamespace().get_nx       = cwrapper.prototype("int       layer_get_nx(layer)")
 Layer.cNamespace().get_ny       = cwrapper.prototype("int       layer_get_ny(layer)")

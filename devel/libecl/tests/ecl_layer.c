@@ -375,6 +375,22 @@ void test_interp_barrier() {
 
 
 
+void test_copy( ) {
+  layer_type * layer1 = layer_alloc(10,10);
+  layer_type * layer2 = layer_alloc(10,10);
+
+  layer_iset_cell_value( layer1 , 5,5,10 );
+  layer_memcpy( layer2 , layer1 );
+
+  test_assert_int_equal( 10 , layer_iget_edge_value( layer2 , 5,5,BOTTOM_EDGE));
+  test_assert_int_equal( 10 , layer_iget_edge_value( layer2 , 5,5,RIGHT_EDGE));
+  test_assert_int_equal( -10 , layer_iget_edge_value( layer2 , 5,5,TOP_EDGE));
+  test_assert_int_equal( -10 , layer_iget_edge_value( layer2 , 5,5,LEFT_EDGE));
+
+  layer_free( layer2 );
+  layer_free( layer1 );
+}
+
 
 int main(int argc , char ** argv) {
   test_create();
@@ -387,4 +403,5 @@ int main(int argc , char ** argv) {
   test_content2();
   test_replace();
   test_interp_barrier();
+  test_copy();
 }
