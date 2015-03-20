@@ -87,7 +87,7 @@ void test_count(const char * name) {
 
 
 
-void test_export(const char * name) {
+void test_export(const char * name, bool is_nnc_tran_null) {
   char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
   char * init_file_name = ecl_util_alloc_filename(NULL , name , ECL_INIT_FILE , false  , -1);  
   if (util_entry_exists(init_file_name)) {
@@ -112,7 +112,10 @@ void test_export(const char * name) {
           int lgr_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
           int lgr_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
           ecl_kw_type * nnc_tran = ecl_nnc_export_get_tranx_kw( grid , init_file , lgr_nr1 , lgr_nr2);
-          
+          if(is_nnc_tran_null){
+            test_assert_NULL(nnc_tran);
+            return;
+          }
           test_assert_not_NULL( nnc_tran );
           test_assert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ));
           {
@@ -309,10 +312,14 @@ void install_SIGNALS(void) {
 int main(int argc, char ** argv) {
   
   const char * base = argv[1];
+  bool is_nnc_tran_null = false;
+  if(strcmp(argv[2],"TRUE")==0){
+    is_nnc_tran_null = true;
+  }
   install_SIGNALS();
   test_cmp( );
   test_sort();
   test_count( base );
-  test_export( base );
+  test_export( base, is_nnc_tran_null );
   exit(0);
 }

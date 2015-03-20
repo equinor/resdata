@@ -177,10 +177,11 @@ ecl_kw_type * ecl_nnc_export_get_tranll_kw( const ecl_grid_type * grid , const e
 
 ecl_kw_type * ecl_nnc_export_get_tran_kw( const ecl_file_type * init_file , const char * kw , int lgr_nr ) {
   ecl_kw_type * tran_kw = NULL;
-
   if (lgr_nr == 0) {
     if (strcmp(kw , TRANNNC_KW) == 0)
-      tran_kw = ecl_file_iget_named_kw( init_file , TRANNNC_KW , 0 );
+      if(ecl_file_has_kw(init_file, kw)) {
+        tran_kw = ecl_file_iget_named_kw(init_file, TRANNNC_KW, 0);
+      }
   } else {
     if ((strcmp(kw , TRANNNC_KW) == 0) ||
         (strcmp(kw , TRANGL_KW) == 0)) {
