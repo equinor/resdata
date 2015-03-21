@@ -27,6 +27,7 @@
 #include <ert/ecl/ecl_nnc_export.h>
 #include <ert/ecl/ecl_kw_magic.h>
 
+
 int count_kw_data( const ecl_file_type * file , ecl_grid_type * grid , const char * kw1 , const char * kw2) {
   int i,j;
   int count = 0;
@@ -85,7 +86,17 @@ void test_count(const char * name) {
 }
 
 
-
+void test_nnc_export_missing_TRANX(const char * name ) {
+  char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
+  char * init_file_name = ecl_util_alloc_filename(NULL , name , ECL_INIT_FILE , false  , -1);
+  if (util_entry_exists(init_file_name)) {
+    ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
+    ecl_file_type * init_file = ecl_file_open( init_file_name , 0);
+    ecl_nnc_type  * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data1 );
+    int count = ecl_nnc_export(grid, init_file, nnc_data1);
+    test_assert_int_not_equal(count, 0);
+  }
+}
 
 void test_export(const char * name, bool is_nnc_tran_null) {
   char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
@@ -321,5 +332,6 @@ int main(int argc, char ** argv) {
   test_sort();
   test_count( base );
   test_export( base, is_nnc_tran_null );
+  test_nnc_export_missing_TRANX(base);
   exit(0);
 }
