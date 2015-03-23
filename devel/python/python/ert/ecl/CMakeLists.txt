@@ -51,3 +51,4 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ecl_local.py")
 endif()
 
 add_subdirectory(faults)
+add_subdirectory(rft)
