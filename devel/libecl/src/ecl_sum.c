@@ -167,40 +167,41 @@ static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key
 }
 
 
-static void ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type * data_files , bool include_restart) {
+static bool ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type * data_files , bool include_restart) {
   if (ecl_sum->data != NULL)
     ecl_sum_free_data( ecl_sum );
+
   ecl_sum->data = ecl_sum_data_alloc( ecl_sum->smspec );
-  ecl_sum_data_fread( ecl_sum->data , data_files );
+  if (ecl_sum_data_fread( ecl_sum->data , data_files )) {
+    if (include_restart) {
+      const char * path                     = ecl_sum->path;
+      const stringlist_type * restart_cases = ecl_smspec_get_restart_list( ecl_sum->smspec );
+      stringlist_type       * restart_files = stringlist_alloc_new();
 
-  if (include_restart) {
-    const char * path                     = ecl_sum->path;
-    const stringlist_type * restart_cases = ecl_smspec_get_restart_list( ecl_sum->smspec );
-    stringlist_type       * restart_files = stringlist_alloc_new();
-
-    int restart_nr;
-    for (restart_nr = 0; restart_nr < stringlist_get_size( restart_cases ); restart_nr++) {
-      ecl_util_alloc_summary_data_files(path , stringlist_iget( restart_cases , restart_nr ) , ecl_sum->fmt_case , restart_files );
-      ecl_sum_data_fread_restart( ecl_sum->data , restart_files );
+      int restart_nr;
+      for (restart_nr = 0; restart_nr < stringlist_get_size( restart_cases ); restart_nr++) {
+        ecl_util_alloc_summary_data_files(path , stringlist_iget( restart_cases , restart_nr ) , ecl_sum->fmt_case , restart_files );
+        ecl_sum_data_fread_restart( ecl_sum->data , restart_files );
+      }
+      stringlist_free( restart_files );
     }
-    stringlist_free( restart_files );
-  }
-
+    return true;
+  } else
+    return false;
 }
 
 
 
-static void ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , const stringlist_type *data_files , bool include_restart) {
-
+static bool ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , const stringlist_type *data_files , bool include_restart) {
   ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , ecl_sum->key_join_string , include_restart);
-  {
+  if (ecl_sum->smspec) {
     bool fmt_file;
     ecl_util_get_file_type( header_file , &fmt_file , NULL);
     ecl_sum_set_fmt_case( ecl_sum , fmt_file );
-  }
-  ecl_sum_fread_data( ecl_sum , data_files , include_restart );
+  } else
+    return false;
 
-  {
+  if (ecl_sum_fread_data( ecl_sum , data_files , include_restart )) {
     ecl_file_enum file_type = ecl_util_get_file_type( stringlist_iget( data_files , 0 ) , NULL , NULL);
 
     if (file_type == ECL_SUMMARY_FILE)
@@ -209,7 +210,10 @@ static void ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , con
       ecl_sum_set_unified( ecl_sum , true);
     else
       util_abort("%s: what the fuck? \n",__func__);
-  }
+  } else
+    return false;
+
+  return true;
 }
 
 
@@ -221,8 +225,7 @@ static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
 
   ecl_util_alloc_summary_files( ecl_sum->path , ecl_sum->base , ecl_sum->ext , &header_file , summary_file_list );
   if ((header_file != NULL) && (stringlist_get_size( summary_file_list ) > 0)) {
-    ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart );
-    caseOK = true;
+    caseOK = ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart );
   }
   util_safe_free( header_file );
   stringlist_free( summary_file_list );

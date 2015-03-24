@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'ecl_util.h' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'ecl_util.h' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #ifndef __ECL_UTIL_H__
@@ -27,19 +27,19 @@ extern "C" {
 #include <ert/util/stringlist.h>
 #include <ert/util/time_t_vector.h>
 #include <ert/util/parser.h>
-  
 
-typedef enum { ECL_OTHER_FILE           = 0   , 
-               ECL_RESTART_FILE         = 1   , 
-               ECL_UNIFIED_RESTART_FILE = 2   , 
-               ECL_SUMMARY_FILE         = 4   , 
-               ECL_UNIFIED_SUMMARY_FILE = 8   , 
-               ECL_SUMMARY_HEADER_FILE  = 16  , 
-               ECL_GRID_FILE            = 32  , 
-               ECL_EGRID_FILE           = 64  , 
+
+typedef enum { ECL_OTHER_FILE           = 0   ,
+               ECL_RESTART_FILE         = 1   ,
+               ECL_UNIFIED_RESTART_FILE = 2   ,
+               ECL_SUMMARY_FILE         = 4   ,
+               ECL_UNIFIED_SUMMARY_FILE = 8   ,
+               ECL_SUMMARY_HEADER_FILE  = 16  ,
+               ECL_GRID_FILE            = 32  ,
+               ECL_EGRID_FILE           = 64  ,
                ECL_INIT_FILE            = 128 ,
                ECL_RFT_FILE             = 256 ,
-               ECL_DATA_FILE            = 512 } ecl_file_enum;   
+               ECL_DATA_FILE            = 512 } ecl_file_enum;
 
 
 #define ECL_FILE_ENUM_DEFS {.value =   0 , .name="ECL_OTHER_FILE"},     \
@@ -62,7 +62,7 @@ typedef enum { ECL_OTHER_FILE           = 0   ,
     can be stored.
   */
 
-  
+
   typedef enum { ECL_INVALID_STORAGE       = 0,
                  ECL_BINARY_UNIFIED        = 1,
                  ECL_FORMATTED_UNIFIED     = 2,
@@ -75,24 +75,23 @@ typedef enum { ECL_OTHER_FILE           = 0   ,
   i.e. 'REAL', 'INTE', ... , come as 4 character strings.
 */
 
-
 #define ECL_STRING_LENGTH 8
 #define ECL_TYPE_LENGTH   4
-
-
+#define ECL_KW_HEADER_DATA_SIZE   ECL_STRING_LENGTH + ECL_TYPE_LENGTH + 4
+#define ECL_KW_HEADER_FORTIO_SIZE ECL_KW_HEADER_DATA_SIZE + 8
 
 /*****************************************************************/
-/* 
+/*
    Observe that these type identidiers are (ab)used in both the rms and
    ert/enkf libraries in situations where ECLIPSE is not at all involved.
 */
 
 typedef enum {
-  ECL_CHAR_TYPE   = 0, 
-  ECL_FLOAT_TYPE  = 1, 
-  ECL_DOUBLE_TYPE = 2, 
-  ECL_INT_TYPE    = 3, 
-  ECL_BOOL_TYPE   = 4, 
+  ECL_CHAR_TYPE   = 0,
+  ECL_FLOAT_TYPE  = 1,
+  ECL_DOUBLE_TYPE = 2,
+  ECL_INT_TYPE    = 3,
+  ECL_BOOL_TYPE   = 4,
   ECL_MESS_TYPE   = 5
 } ecl_type_enum;
 
@@ -111,12 +110,12 @@ typedef enum {
   The libecl library has been built and tested 99.5% with ECLIPSE100
   as context, but in thye gravity code there is some very limited
   functionality related to ECLIPSE100 versus ECLIPSE300 functionality.
-*/ 
+*/
 
 typedef enum {
   ECLIPSE_UNDEFINED = 0,
   ECLIPSE100        = 1,
-  ECLIPSE300        = 2     
+  ECLIPSE300        = 2
 } ecl_version_enum;
 
 /*
@@ -126,7 +125,7 @@ typedef enum {
 
   The function ecl_util_get_phase_name() can be used to lookup a
   string name from an enum value.
-  
+
   The phases in a simulation will typically be a sum of these
   fundamental phases, and represented as an integer.
 */
@@ -153,7 +152,7 @@ typedef enum {
 
 // For unformatted files:
 #define ECL_BOOL_TRUE_INT         -1   // Binary representation: 11111111  11111111  11111111  1111111
-#define ECL_BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000     
+#define ECL_BOOL_FALSE_INT         0   // Binary representation: 00000000  00000000  00000000  0000000
 #define ECL_COMMENT_STRING       "--"
 #define ECL_COMMENT_CHAR         '-'   // Need to consecutive to make an ECLIPSE comment
 #define ECL_DATA_TERMINATION      "/"

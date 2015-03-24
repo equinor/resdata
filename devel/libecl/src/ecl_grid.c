@@ -2410,30 +2410,33 @@ static ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file) {
     util_abort("%s: %s wrong file type - expected .EGRID file - aborting \n",__func__ , grid_file);
   {
     ecl_file_type * ecl_file   = ecl_file_open( grid_file , 0);
-    int num_grid               = ecl_file_get_num_named_kw( ecl_file , GRIDHEAD_KW );
-    ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 );
-    int grid_nr;
+    if (ecl_file) {
+      int num_grid               = ecl_file_get_num_named_kw( ecl_file , GRIDHEAD_KW );
+      ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 );
+      int grid_nr;
 
-    for ( grid_nr = 1; grid_nr < num_grid; grid_nr++) {
-      ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__( main_grid , ecl_file , grid_nr );
-      ecl_grid_add_lgr( main_grid , lgr_grid );
-      {
-        ecl_grid_type * host_grid;
-        ecl_kw_type   * hostnum_kw = ecl_file_iget_named_kw( ecl_file , HOSTNUM_KW , grid_nr - 1);
-        if (lgr_grid->parent_name == NULL)
-          host_grid = main_grid;
-        else
-          host_grid = ecl_grid_get_lgr( main_grid , lgr_grid->parent_name );
+      for ( grid_nr = 1; grid_nr < num_grid; grid_nr++) {
+        ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__( main_grid , ecl_file , grid_nr );
+        ecl_grid_add_lgr( main_grid , lgr_grid );
+        {
+          ecl_grid_type * host_grid;
+          ecl_kw_type   * hostnum_kw = ecl_file_iget_named_kw( ecl_file , HOSTNUM_KW , grid_nr - 1);
+          if (lgr_grid->parent_name == NULL)
+            host_grid = main_grid;
+          else
+            host_grid = ecl_grid_get_lgr( main_grid , lgr_grid->parent_name );
 
-        ecl_grid_install_lgr_EGRID( host_grid , lgr_grid , ecl_kw_get_int_ptr( hostnum_kw) );
+          ecl_grid_install_lgr_EGRID( host_grid , lgr_grid , ecl_kw_get_int_ptr( hostnum_kw) );
+        }
       }
-    }
-    main_grid->name = util_alloc_string_copy( grid_file );
-    ecl_grid_init_nnc(main_grid, ecl_file);
-    ecl_grid_init_nnc_amalgamated(main_grid, ecl_file);
+      main_grid->name = util_alloc_string_copy( grid_file );
+      ecl_grid_init_nnc(main_grid, ecl_file);
+      ecl_grid_init_nnc_amalgamated(main_grid, ecl_file);
 
-    ecl_file_close( ecl_file );
-    return main_grid;
+      ecl_file_close( ecl_file );
+      return main_grid;
+    } else
+      return NULL;
   }
 }
 

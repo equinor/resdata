@@ -100,7 +100,7 @@ class EclSum(BaseCClass):
         """
         c_pointer = EclSum.cNamespace().fread_alloc( load_case , join_string , include_restart)
         if c_pointer is None:
-            raise AssertionError("Failed to create summary instance from argument:%s" % load_case)
+            raise IOError("Failed to create summary instance from argument:%s" % load_case)
         else:
             super(EclSum, self).__init__(c_pointer)
             self._initialize()

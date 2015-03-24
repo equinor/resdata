@@ -748,7 +748,7 @@ cwrapper.registerType( "ecl_file" , EclFile )
 #    used outside this scope.
 cfunc = CWrapperNameSpace("ecl_file")
 
-cfunc.open                        = cwrapper.prototype("c_void_p    ecl_file_try_open( char* , int )")
+cfunc.open                        = cwrapper.prototype("c_void_p    ecl_file_open( char* , int )")
 cfunc.writable                    = cwrapper.prototype("bool        ecl_file_writable( ecl_file )")
 cfunc.new                         = cwrapper.prototype("c_void_p    ecl_file_alloc_empty(  )")
 cfunc.save_kw                     = cwrapper.prototype("void        ecl_file_save_kw( ecl_file , ecl_kw )")

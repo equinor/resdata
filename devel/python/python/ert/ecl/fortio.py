@@ -76,20 +76,6 @@ class FortIO(BaseCClass):
             FortIO.cNamespace().close(self)
             self.__open = False
 
-    def writeRecord(self, data):
-        """
-        Not a good way of implementing this. ;-)
-        @type data: bytearray
-        """
-        buffer = (ctypes.c_char * len(data)).from_buffer(data)
-        FortIO.cNamespace().write_record(self, buffer, len(data))
-
-
-    def readRecordAsString(self, record_size):
-        """ @rtype: str """
-        chars = ctypes.create_string_buffer(record_size)
-        count = FortIO.cNamespace().read_record(self, chars)
-        return ctypes.string_at(chars, count)
 
 
     def getPosition(self):
@@ -147,7 +133,6 @@ FortIO.cNamespace().open_readwrite = cwrapper.prototype("c_void_p fortio_open_re
 FortIO.cNamespace().open_append = cwrapper.prototype("c_void_p fortio_open_append(char*, bool, bool)")
 
 FortIO.cNamespace().write_record = cwrapper.prototype("void fortio_fwrite_record(fortio, char*, int)")
-FortIO.cNamespace().read_record = cwrapper.prototype("int fortio_fread_record(fortio, char*)")
 
 FortIO.cNamespace().get_position = cwrapper.prototype("long fortio_ftell(fortio)")
 FortIO.cNamespace().seek = cwrapper.prototype("void fortio_fseek(fortio, int)")
