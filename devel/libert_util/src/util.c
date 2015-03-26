@@ -748,6 +748,17 @@ void util_usleep( unsigned long micro_seconds ) {
 #endif
 }
 
+void util_yield() {
+#if defined(WITH_PTHREAD) && (defined(HAVE_YIELD_NP) || defined(HAVE_YIELD))
+  #ifdef HAVE_YIELD_NP
+    pthread_yield_np();
+  #elif HAVE_YIELD
+    pthread_yield();
+  #endif
+#else
+  util_usleep(1000);
+#endif
+}
 
 /**
    This function will allocate and read a line from stdin. If there is

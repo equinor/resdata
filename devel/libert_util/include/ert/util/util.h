@@ -172,6 +172,7 @@ typedef enum {left_pad   = 0,
   void         util_ftruncate(FILE * stream , long size);
 
   void         util_usleep( unsigned long micro_seconds );
+  void         util_yield();
   char       * util_blocking_alloc_stdin_line(unsigned long );
 
   int          util_roundf( float x );
