@@ -16,6 +16,7 @@
    for more detals. 
 */ 
 #include <stdlib.h>
+#include <math.h>
 
 #include <ert/util/int_vector.h>
 
@@ -33,10 +34,11 @@ int ecl_nnc_export_get_size( const ecl_grid_type * grid ) {
 
 
 
-static void  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , const ecl_file_type * init_file , ecl_nnc_type * nnc_data, int * nnc_offset) {
+static int  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , const ecl_file_type * init_file , ecl_nnc_type * nnc_data, int * nnc_offset) {
   int nnc_index = *nnc_offset;
   int lgr_nr1 = ecl_grid_get_lgr_nr( grid );
   int global_index1;
+  int valid_trans = 0 ;
   const ecl_grid_type * global_grid = ecl_grid_get_global_grid( grid );
 
   if (!global_grid)
@@ -53,6 +55,7 @@ static void  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , con
         const int_vector_type * nnc_index_list = nnc_vector_get_nnc_index_list( nnc_vector );
         int lgr_nr2 = nnc_vector_get_lgr_nr( nnc_vector );
         const ecl_kw_type * tran_kw = ecl_nnc_export_get_tranx_kw(global_grid  , init_file , lgr_nr1 , lgr_nr2 );
+
         int index2;
         ecl_nnc_type nnc;
 
@@ -62,7 +65,12 @@ static void  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , con
 
         for (index2 = 0; index2 < nnc_vector_get_size( nnc_vector ); index2++) {
           nnc.global_index2 = int_vector_iget( grid2_index_list , index2 );
-          nnc.trans = ecl_kw_iget_as_double( tran_kw , int_vector_iget( nnc_index_list , index2));
+          if(tran_kw) {
+            nnc.trans = ecl_kw_iget_as_double(tran_kw, int_vector_iget(nnc_index_list, index2));
+            valid_trans++;
+          }else{
+            nnc.trans = HUGE_VAL;
+          }
 
           nnc_data[nnc_index] = nnc;
           nnc_index++;
@@ -71,21 +79,24 @@ static void  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , con
     }
   }
   *nnc_offset = nnc_index;
+  return valid_trans;
 }
 
 
-void  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data) {
+int  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data) {
   int nnc_index = 0;
-  ecl_nnc_export__( grid , 0 , init_file , nnc_data , &nnc_index );
+  int total_valid_trans = 0;
+  total_valid_trans = ecl_nnc_export__( grid , 0 , init_file , nnc_data , &nnc_index );
   {
     int lgr_index; 
     for (lgr_index = 0; lgr_index < ecl_grid_get_num_lgr(grid); lgr_index++) {
       ecl_grid_type * igrid = ecl_grid_iget_lgr( grid , lgr_index );
-      ecl_nnc_export__( igrid , lgr_index , init_file , nnc_data , &nnc_index );
+      total_valid_trans += ecl_nnc_export__( igrid , lgr_index , init_file , nnc_data , &nnc_index );
     }
   }
   nnc_index = ecl_nnc_export_get_size( grid );
   ecl_nnc_sort( nnc_data , nnc_index );
+  return total_valid_trans;
 }
 
 
@@ -166,10 +177,11 @@ ecl_kw_type * ecl_nnc_export_get_tranll_kw( const ecl_grid_type * grid , const e
 
 ecl_kw_type * ecl_nnc_export_get_tran_kw( const ecl_file_type * init_file , const char * kw , int lgr_nr ) {
   ecl_kw_type * tran_kw = NULL;
-
   if (lgr_nr == 0) {
     if (strcmp(kw , TRANNNC_KW) == 0)
-      tran_kw = ecl_file_iget_named_kw( init_file , TRANNNC_KW , 0 );
+      if(ecl_file_has_kw(init_file, kw)) {
+        tran_kw = ecl_file_iget_named_kw(init_file, TRANNNC_KW, 0);
+      }
   } else {
     if ((strcmp(kw , TRANNNC_KW) == 0) ||
         (strcmp(kw , TRANGL_KW) == 0)) {
