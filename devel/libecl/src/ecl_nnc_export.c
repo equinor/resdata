@@ -16,7 +16,6 @@
    for more detals.
 */
 #include <stdlib.h>
-#include <math.h>
 
 #include <ert/util/int_vector.h>
 
@@ -69,7 +68,7 @@ static int  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , cons
             nnc.trans = ecl_kw_iget_as_double(tran_kw, int_vector_iget(nnc_index_list, index2));
             valid_trans++;
           }else{
-            nnc.trans = HUGE_VAL;
+            nnc.trans = ERT_ECL_DEFAULT_NNC_TRANS;
           }
 
           nnc_data[nnc_index] = nnc;

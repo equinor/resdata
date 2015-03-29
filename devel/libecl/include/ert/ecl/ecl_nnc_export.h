@@ -24,9 +24,13 @@
 extern "C" {
 #endif
 
+#include <math.h>
+
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_kw.h>
+
+#define ERT_ECL_DEFAULT_NNC_TRANS HUGE_VAL
 
 typedef struct {
   int grid_nr1;
