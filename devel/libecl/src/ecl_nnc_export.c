@@ -1,20 +1,20 @@
 /*
-   Copyright (C) 2013  Statoil ASA, Norway. 
-    
-   The file 'ecl_nnc_export.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more detals. 
-*/ 
+   Copyright (C) 2013  Statoil ASA, Norway.
+
+   The file 'ecl_nnc_export.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more detals.
+*/
 #include <stdlib.h>
 #include <math.h>
 
@@ -44,7 +44,7 @@ static int  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , cons
   if (!global_grid)
     global_grid = grid;
 
-  
+
   for (global_index1 = 0; global_index1 < ecl_grid_get_global_size( grid ); global_index1++) {
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1( grid , global_index1 );
     if (nnc_info) {
@@ -88,7 +88,7 @@ int  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_fil
   int total_valid_trans = 0;
   total_valid_trans = ecl_nnc_export__( grid , 0 , init_file , nnc_data , &nnc_index );
   {
-    int lgr_index; 
+    int lgr_index;
     for (lgr_index = 0; lgr_index < ecl_grid_get_num_lgr(grid); lgr_index++) {
       ecl_grid_type * igrid = ecl_grid_iget_lgr( grid , lgr_index );
       total_valid_trans += ecl_nnc_export__( igrid , lgr_index , init_file , nnc_data , &nnc_index );
@@ -104,21 +104,21 @@ int  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_fil
 int ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
 
   if (nnc1->grid_nr1 != nnc2->grid_nr1) {
-    if (nnc1->grid_nr1 < nnc2->grid_nr1) 
+    if (nnc1->grid_nr1 < nnc2->grid_nr1)
       return -1;
     else
       return 1;
   }
 
   if (nnc1->grid_nr2 != nnc2->grid_nr2) {
-    if (nnc1->grid_nr2 < nnc2->grid_nr2) 
+    if (nnc1->grid_nr2 < nnc2->grid_nr2)
       return -1;
     else
       return 1;
   }
 
   if (nnc1->global_index1 != nnc2->global_index1) {
-    if (nnc1->global_index1 < nnc2->global_index1) 
+    if (nnc1->global_index1 < nnc2->global_index1)
       return -1;
     else
       return 1;
@@ -126,12 +126,12 @@ int ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
 
 
   if (nnc1->global_index2 != nnc2->global_index2) {
-    if (nnc1->global_index2 < nnc2->global_index2) 
+    if (nnc1->global_index2 < nnc2->global_index2)
       return -1;
     else
       return 1;
   }
-  
+
   return 0;
 }
 
@@ -153,19 +153,19 @@ ecl_kw_type * ecl_nnc_export_get_tranll_kw( const ecl_grid_type * grid , const e
   ecl_kw_type * tran_kw = NULL;
   const int file_num_kw = ecl_file_get_size( init_file );
   int global_kw_index = 0;
-  
+
   while (true) {
-    if (global_kw_index >= file_num_kw) 
+    if (global_kw_index >= file_num_kw)
       break;
     {
       ecl_kw_type * ecl_kw = ecl_file_iget_kw( init_file , global_kw_index );
       if (strcmp( LGRJOIN_KW , ecl_kw_get_header( ecl_kw)) == 0) {
-        
+
         if (ecl_kw_icmp_string( ecl_kw , 0 , lgr_name1) && ecl_kw_icmp_string( ecl_kw , 1 , lgr_name2)) {
           tran_kw = ecl_file_iget_kw( init_file , global_kw_index + 1);
           break;
         }
-      } 
+      }
       global_kw_index++;
     }
   }
