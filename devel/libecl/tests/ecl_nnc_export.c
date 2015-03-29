@@ -94,11 +94,14 @@ void test_nnc_export_missing_TRANX(const char * name ) {
     ecl_file_type * init_file = ecl_file_open( init_file_name , 0);
     ecl_nnc_type  * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data1 );
     int count = ecl_nnc_export(grid, init_file, nnc_data1);
-
+    int i;
+    test_assert_int_equal( count , 0 );
+    for (i=0; i < count; i++)
+      test_assert_double_equal( nnc_data1[i].trans , ERT_ECL_DEFAULT_NNC_TRANS );
   }
 }
 
-void test_export(const char * name, bool is_nnc_tran_null) {
+void test_export(const char * name, bool have_tran_data) {
   char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
   char * init_file_name = ecl_util_alloc_filename(NULL , name , ECL_INIT_FILE , false  , -1);
   if (util_entry_exists(init_file_name)) {
@@ -123,10 +126,11 @@ void test_export(const char * name, bool is_nnc_tran_null) {
           int lgr_nr1 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
           int lgr_nr2 = ecl_kw_iget_int( nnchead , NNCHEAD_LGR_INDEX);
           ecl_kw_type * nnc_tran = ecl_nnc_export_get_tranx_kw( grid , init_file , lgr_nr1 , lgr_nr2);
-          if(is_nnc_tran_null){
+          if (!have_tran_data) {
             test_assert_NULL(nnc_tran);
             return;
           }
+
           test_assert_not_NULL( nnc_tran );
           test_assert_int_equal( ecl_kw_get_size( nnc1_kw ) , ecl_kw_get_size( nnc_tran ));
           {
@@ -206,31 +210,16 @@ void test_export(const char * name, bool is_nnc_tran_null) {
       ecl_nnc_sort( nnc_data1 , nnc_offset );
     }
 
-    ecl_nnc_export( grid , init_file , nnc_data2 );
+    {
+      int export_size = ecl_nnc_export( grid , init_file , nnc_data2 );
+      test_assert_int_equal( export_size , ecl_nnc_export_get_size( grid ));
+    }
 
-    if (0) {
+    {
       int i;
       int size = ecl_nnc_export_get_size( grid );
-      for (i=0; i < size; i++) {
-        if ((i % 1000) == 0)
-          printf("%d / %d \n",i , size);
-
-        if (ecl_nnc_cmp( &nnc_data1[i] , &nnc_data2[i]) != 0) {
-          printf("Comparing: %d 1:(%d,%d)  2:(%d,%d)   1:(%d,%d)   2:(%d,%d) %g , %g\n",
-                 i ,
-                 nnc_data1[i].grid_nr1 ,
-                 nnc_data1[i].grid_nr2 ,
-                 nnc_data2[i].grid_nr1 ,
-                 nnc_data2[i].grid_nr2,
-                 nnc_data1[i].global_index1 ,
-                 nnc_data1[i].global_index2 ,
-                 nnc_data2[i].global_index1 ,
-                 nnc_data2[i].global_index2,
-                 nnc_data1[i].trans ,
-                 nnc_data2[i].trans);
-        }
+      for (i=0; i < size; i++)
         test_assert_int_equal( 0 , ecl_nnc_cmp( &nnc_data1[i] , &nnc_data2[i]));
-      }
     }
     test_assert_int_equal( 0 , memcmp( nnc_data1 , nnc_data2 , ecl_nnc_export_get_size( grid ) * sizeof * nnc_data2 ));
 
@@ -323,15 +312,18 @@ void install_SIGNALS(void) {
 int main(int argc, char ** argv) {
 
   const char * base = argv[1];
-  bool is_nnc_tran_null = false;
-  if(strcmp(argv[2],"TRUE")==0){
-    is_nnc_tran_null = true;
-  }
+  bool have_tran_data;
   install_SIGNALS();
-  test_cmp( );
-  test_sort();
-  test_count( base );
-  test_export( base, is_nnc_tran_null );
-  test_nnc_export_missing_TRANX(base);
-  exit(0);
+
+  if (util_sscanf_bool( argv[2] , &have_tran_data)) {
+    test_cmp( );
+    test_sort();
+    test_count( base );
+    test_export( base, have_tran_data );
+    if (!have_tran_data)
+      test_nnc_export_missing_TRANX(base);
+
+    exit(0);
+  } else
+    test_error_exit("Failed to parse input:%s as bool" , argv[2]);
 }
