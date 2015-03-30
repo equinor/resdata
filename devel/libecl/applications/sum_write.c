@@ -106,7 +106,8 @@
    5. The header contains a "TIME" variable; to some extent this looks
       like just any other variable, but it must be present in the
       SMSPEC header. In the example above the first element in every
-      data block is the current time (in days) for that datablock.
+      data block is the current time (in days) for that datablock; if
+      labunits is used the stored value is the elapsed time in hours.
 
    6. In the ecl_sum library the concept of a 'gen_key' is used quite
       extensively. The gen_key is a string combination of the KEYWORD,
@@ -190,7 +191,8 @@ int main( int argc , char ** argv) {
 
       6-8: Grid dimensions.
   */
-  ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( "/tmp/CASE" , false , true , ":" , start_time , nx , ny , nz );
+  bool time_in_days = true;
+  ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( "/tmp/CASE" , false , true , ":" , start_time , time_in_days , nx , ny , nz );
 
 
   /*

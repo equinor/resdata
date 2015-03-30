@@ -52,13 +52,12 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   bool                ecl_smspec_needs_wgname( ecl_smspec_var_type var_type );
   const char        * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type );
   ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var);
-  ecl_smspec_type   * ecl_smspec_alloc_writer( const char * key_join_string , time_t sim_start , int nx , int ny , int nz);
+  ecl_smspec_type   * ecl_smspec_alloc_writer( const char * key_join_string , time_t sim_start , bool time_in_days , int nx , int ny , int nz);
   void                ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case , bool fmt_file );
 
   ecl_smspec_type *        ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string , bool include_restart);
   void                     ecl_smspec_free( ecl_smspec_type *);
 
-  int                      ecl_smspec_get_sim_days_index( const ecl_smspec_type * smspec );
   int                      ecl_smspec_get_date_day_index( const ecl_smspec_type * smspec );
   int                      ecl_smspec_get_date_month_index( const ecl_smspec_type * smspec );
   int                      ecl_smspec_get_date_year_index( const ecl_smspec_type * smspec );
@@ -117,6 +116,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   void              ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys);
   stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern);
 
+  int               ecl_smspec_get_time_seconds( const ecl_smspec_type * ecl_smspec );
   int               ecl_smspec_get_time_index( const ecl_smspec_type * ecl_smspec );
   time_t            ecl_smspec_get_start_time(const ecl_smspec_type * );
   /*****************************************************************/

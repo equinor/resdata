@@ -39,11 +39,13 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
                                                      const char * src_file ,
                                                      const ecl_smspec_type * smspec);
 
-  ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , float sim_days , const ecl_smspec_type * smspec );
+  ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , float sim_seconds , const ecl_smspec_type * smspec );
 
   double ecl_sum_tstep_iget(const ecl_sum_tstep_type * ministep , int index);
   time_t ecl_sum_tstep_get_sim_time(const ecl_sum_tstep_type * ministep);
   double ecl_sum_tstep_get_sim_days(const ecl_sum_tstep_type * ministep);
+  double ecl_sum_tstep_get_sim_seconds(const ecl_sum_tstep_type * ministep);
+
   int  ecl_sum_tstep_get_report(const ecl_sum_tstep_type * ministep);
   int  ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep);
 

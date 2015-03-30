@@ -190,14 +190,14 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   int                   ecl_sum_iget_report_end( const ecl_sum_type * ecl_sum , int report_step );
   int                   ecl_sum_iget_report_start( const ecl_sum_type * ecl_sum , int report_step );
 
-  ecl_sum_type        * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , int nx , int ny , int nz);
+  ecl_sum_type        * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , bool time_in_days , int nx , int ny , int nz);
   void                  ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case);
   void                  ecl_sum_fwrite( const ecl_sum_type * ecl_sum );
   void                  ecl_sum_fwrite_smspec( const ecl_sum_type * ecl_sum );
   smspec_node_type    * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value);
   smspec_node_type    * ecl_sum_add_blank_var( ecl_sum_type * ecl_sum , float default_value);
   void                  ecl_sum_init_var( ecl_sum_type * ecl_sum , smspec_node_type * smspec_node , const char * keyword , const char * wgname , int num , const char * unit);
-  ecl_sum_tstep_type  * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_days);
+  ecl_sum_tstep_type  * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_seconds);
   void                  ecl_sum_update_wgname( ecl_sum_type * ecl_sum , smspec_node_type * node , const char * wgname );
 
   bool                  ecl_sum_is_oil_producer( const ecl_sum_type * ecl_sum , const char * well);
