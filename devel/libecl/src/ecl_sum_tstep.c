@@ -1,19 +1,19 @@
  /*
-   Copyright (C) 2012  Statoil ASA, Norway. 
-    
-   The file 'ecl_sum_tstep.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2012  Statoil ASA, Norway.
+
+   The file 'ecl_sum_tstep.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <time.h>
@@ -35,19 +35,19 @@
   summary information for all summary vectors at one instant in
   time. If we view the summary data as this:
 
-  
-Header direction: ecl_smspec   DAYS     WWCT:OP_3     FOPT     BPR:15,10,25     
+
+Header direction: ecl_smspec   DAYS     WWCT:OP_3     FOPT     BPR:15,10,25
                                --------------------------------------------
   /|\                           0.00    0.00          0.00           256.00   <-- One timestep ecl_sum_tstep
    |                           10.00    0.56         10.00           255.00
  Time direction: ecl_sum_data  20.00    0.61         18.70           253.00
    |                           30.00    0.63         21.20           251.00
    |                           ...
-  \|/                          90.00    0.80         39.70           244.00  
+  \|/                          90.00    0.80         39.70           244.00
                                --------------------------------------------
 
   The ecl_sum_tstep structure corresponds to one 'horizontal line' in
-  the summary data. 
+  the summary data.
 
   These timesteps correspond exactly to the simulators timesteps,
   i.e. when convergence is poor they are closely spaced. In the
@@ -59,13 +59,13 @@ Header direction: ecl_smspec   DAYS     WWCT:OP_3     FOPT     BPR:15,10,25
 struct ecl_sum_tstep_struct {
   UTIL_TYPE_ID_DECLARATION;
   float                  * data;            /* A memcpy copy of the PARAMS vector in ecl_kw instance - the raw data. */
-  time_t                   sim_time;        /* The true time (i.e. 20.th of october 2010) of corresponding to this timestep. */ 
+  time_t                   sim_time;        /* The true time (i.e. 20.th of october 2010) of corresponding to this timestep. */
   int                      ministep;        /* The ECLIPSE internal time-step number; one ministep per numerical timestep. */
   int                      report_step;     /* The report step this time-step is part of - in general there can be many timestep for each report step. */
   double                   sim_days;        /* Accumulated simulation time up to this ministep. */
   int                      data_size;       /* Number of elements in data - only used for checking indices. */
   int                      internal_index;  /* Used for lookups of the next / previous ministep based on an existing ministep. */
-  const ecl_smspec_type  * smspec;          /* The smespec header information for this tstep - must be compatible. */         
+  const ecl_smspec_type  * smspec;          /* The smespec header information for this tstep - must be compatible. */
 };
 
 
@@ -76,7 +76,7 @@ static ecl_sum_tstep_type * ecl_sum_tstep_alloc( int report_step , int ministep_
   tstep->report_step = report_step;
   tstep->ministep    = ministep_nr;
   tstep->data_size   = ecl_smspec_get_params_size( smspec );
-  tstep->data        = util_calloc( tstep->data_size , sizeof * tstep->data ); 
+  tstep->data        = util_calloc( tstep->data_size , sizeof * tstep->data );
   return tstep;
 }
 
@@ -106,13 +106,13 @@ void ecl_sum_tstep_free__( void * __ministep) {
    element like e.g. the FOPT or GGPR:NAME - on the other hand the
    time information is strictly required and the summary file will
    fall to pieces if it is missing.
-   
+
    The time can be provided in using (at least) two different
    keywords:
 
       DAYS: The data vector will contain the number of days since the
             simulation start.
-            
+
       DAY,MONTH,YEAR: The data vector will contain the true date of
            the tstep.
 
@@ -147,11 +147,11 @@ static void ecl_sum_tstep_set_time_info( ecl_sum_tstep_type * tstep , const ecl_
     int sec  = 0;
     int min  = 0;
     int hour = 0;
-    
+
     int day   = util_roundf(tstep->data[date_day_index]);
     int month = util_roundf(tstep->data[date_month_index]);
     int year  = util_roundf(tstep->data[date_year_index]);
-    
+
     time_t sim_time = util_make_datetime(sec , min , hour , day , month , year);
     ecl_sum_tstep_set_time_info_from_date( tstep , sim_start , sim_time );
   } else
@@ -169,19 +169,19 @@ static void ecl_sum_tstep_set_time_info( ecl_sum_tstep_type * tstep , const ecl_
 
 ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file( int report_step    ,
                                                     int ministep_nr    ,
-                                                    const ecl_kw_type * params_kw , 
-                                                    const char * src_file , 
+                                                    const ecl_kw_type * params_kw ,
+                                                    const char * src_file ,
                                                     const ecl_smspec_type * smspec) {
 
   int data_size = ecl_kw_get_size( params_kw );
-  
+
   if (data_size == ecl_smspec_get_params_size( smspec )) {
     ecl_sum_tstep_type * ministep = ecl_sum_tstep_alloc( report_step , ministep_nr , smspec);
     ecl_kw_get_memcpy_data( params_kw , ministep->data );
     ecl_sum_tstep_set_time_info( ministep , smspec );
     return ministep;
   } else {
-    /* 
+    /*
        This is actually a fatal error / bug; the difference in smspec
        header structure should have been detected already in the
        ecl_smspec_load_restart() function and the restart case
