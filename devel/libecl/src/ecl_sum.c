@@ -884,12 +884,17 @@ void ecl_sum_fmt_init_csv( ecl_sum_fmt_type * fmt ) {
 
 
 
-void ecl_sum_fmt_init_summary_x( ecl_sum_fmt_type * fmt ) {
+void ecl_sum_fmt_init_summary_x( const ecl_sum_type * ecl_sum , ecl_sum_fmt_type * fmt ) {
   fmt->locale     = NULL;
   fmt->sep        = "";
   fmt->date_fmt   = "%d/%m/%Y   ";
   fmt->value_fmt  = " %15.6g ";
-  fmt->days_fmt   = "%7.2f   ";
+
+  if (util_string_equal( ecl_sum_get_unit( ecl_sum , "TIME") , "DAYS"))
+    fmt->days_fmt   = "%7.2f   ";
+  else
+    fmt->days_fmt   = "%7.4f   ";
+
   fmt->header_fmt = " %15s ";
 
   fmt->newline = "\n";

@@ -53,11 +53,12 @@ extern "C" {
   } ecl_sum_fmt_type;
 
   void ecl_sum_fmt_init_csv( ecl_sum_fmt_type * fmt );
-  void ecl_sum_fmt_init_summary_x( ecl_sum_fmt_type * fmt );
+
   /*****************************************************************/
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
+  void           ecl_sum_fmt_init_summary_x( const ecl_sum_type * ecl_sum , ecl_sum_fmt_type * fmt );
   double         ecl_sum_get_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const smspec_node_type * node);
   double         ecl_sum_get_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const smspec_node_type * node);
   double         ecl_sum_time2days( const ecl_sum_type * ecl_sum , time_t sim_time);
