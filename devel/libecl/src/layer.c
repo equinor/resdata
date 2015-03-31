@@ -683,3 +683,56 @@ void layer_memcpy(layer_type * target_layer , const layer_type * src_layer) {
   } else
     util_abort("%s: fatal error - tried to copy elements between layers of different size\n",__func__);
 }
+
+
+void layer_clear_cells( layer_type * layer) {
+  int i,j;
+  for (j=0; j < layer->ny; j++) {
+    for (i=0; i < layer->nx; i++) {
+      cell_type * cell = layer_iget_cell( layer , i , j );
+      cell->cell_value = 0;
+      {
+        int e;
+        for (e=0; e < 4; e++)
+          cell->edges[e] = 0;
+      }
+    }
+  }
+  layer->cell_sum = 0;
+}
+
+
+
+void layer_update_connected_cells( layer_type * layer , int i , int j , int org_value , int new_value) {
+
+  if (layer_iget_cell_value( layer , i , j ) == org_value) {
+    layer_iset_cell_value( layer , i , j , new_value);
+
+    if (i < (layer->nx - 1) && layer_cell_contact( layer , i,j,i+1,j))
+      layer_update_connected_cells( layer , i + 1 , j , org_value , new_value);
+
+    if (i > 0 && layer_cell_contact( layer , i,j,i-1,j))
+      layer_update_connected_cells( layer , i - 1 , j , org_value , new_value);
+
+    if (j < (layer->ny - 1) && layer_cell_contact( layer , i,j,i,j+1))
+      layer_update_connected_cells( layer , i , j + 1, org_value , new_value);
+
+    if (j > 0 && layer_cell_contact( layer , i,j,i,j-1))
+      layer_update_connected_cells( layer , i , j - 1, org_value , new_value);
+
+  }
+}
+
+
+void layer_cells_equal( const layer_type * layer , int value , int_vector_type * i_list , int_vector_type * j_list) {
+  int i,j;
+  for (j=0; j < layer->ny; j++) {
+    for (i=0; i < layer->nx; i++) {
+      cell_type * cell = layer_iget_cell( layer , i , j );
+      if (cell->cell_value == value) {
+        int_vector_append( i_list , i );
+        int_vector_append( j_list , j );
+      }
+    }
+  }
+}

@@ -17,6 +17,8 @@
 import ctypes
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl import ECL_LIB
+from ert.util import IntVector
+
 
 class Layer(BaseCClass):
     
@@ -145,9 +147,48 @@ class Layer(BaseCClass):
                 i1,j1 = p1
             else:
                 raise ValueError("Must have i1 == i2 or j1 == j2")
+
+
+    def cellSum(self):
+        return Layer.cNamespace().cell_sum( self )
         
 
+    def clearCells(self):
+        """
+        Will reset all cell and edge values to zero. Barriers will be left
+        unchanged.
+        """
+        Layer.cNamespace().clear_cells( self )
 
+
+
+    def updateConnected(self , ij , new_value , org_value = None):
+        """
+        Will update cell value of all cells in contact with cell ij to the
+        value @new_value. If org_value is not supplied, the current
+        value in cell ij is used.
+        """
+        if org_value is None: 
+            org_value = self[ij]
+            
+        if self[ij] == org_value:
+            Layer.cNamespace().update_connected( self , ij[0] , ij[1] , org_value , new_value )
+        else:
+            raise ValueError("Cell %s is not equal to %d \n" % (ij , org_value))
+
+
+    def cellsEqual(self , value):
+        """
+        Will return a list [(i1,j1),(i2,j2) , ...(in,jn)] of all cells with value @value.
+        """
+        i_list = IntVector()
+        j_list = IntVector()
+        Layer.cNamespace().cells_equal( self , value , i_list , j_list)
+        ij_list= []
+        for (i,j) in zip(i_list , j_list):
+            ij_list.append( (i,j) )
+        return ij_list
+        
 
 
 cwrapper = CWrapper(ECL_LIB)
@@ -165,3 +206,7 @@ Layer.cNamespace().cell_contact = cwrapper.prototype("bool      layer_cell_conta
 Layer.cNamespace().add_barrier  = cwrapper.prototype("void      layer_add_barrier(layer , int , int)")
 Layer.cNamespace().add_ijbarrier  = cwrapper.prototype("void      layer_add_ijbarrier(layer , int , int, int , int)")
 Layer.cNamespace().add_interp_barrier = cwrapper.prototype("void  layer_add_interp_barrier(layer , int , int)")
+Layer.cNamespace().clear_cells = cwrapper.prototype("void layer_clear_cells(layer)")
+Layer.cNamespace().cell_sum = cwrapper.prototype("int layer_get_cell_sum(layer)")
+Layer.cNamespace().update_connected = cwrapper.prototype("void layer_update_connected_cells(layer,int,int,int,int)")
+Layer.cNamespace().cells_equal = cwrapper.prototype("void layer_cells_equal( layer, int,int_vector,int_vector)")
