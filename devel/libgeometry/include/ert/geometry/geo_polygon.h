@@ -36,6 +36,7 @@ extern "C" {
   void               geo_polygon_add_point_front( geo_polygon_type * polygon , double x , double y);
   geo_polygon_type * geo_polygon_fload_alloc_irap( const char * filename );
   bool               geo_polygon_contains_point( const geo_polygon_type * polygon , double x , double y);
+  bool               geo_polygon_contains_point__( const geo_polygon_type * polygon , double x , double y, bool force_edge_inside);
   void               geo_polygon_reset(geo_polygon_type * polygon );
   void               geo_polygon_fprintf(const geo_polygon_type * polygon , FILE * stream);
   void               geo_polygon_shift(geo_polygon_type * polygon , double x0 , double y0);

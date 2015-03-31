@@ -32,9 +32,45 @@ static bool between(double v1, double v2 , double v) {
   return ((( v > v1) && (v < v2)) || (( v < v1) && (v > v2)));
 }
 
+static bool on_edge(double _x1 , double _y1 , double _x2 , double _y2 , double x0 , double y0) {
+  double x1 = util_double_min( _x1 , _x2 );
+  double x2 = util_double_max( _x1 , _x2 );
+  double y1 = util_double_min( _y1 , _y2 );
+  double y2 = util_double_max( _y1 , _y2 );
+
+  {
+    /* Vertical line */
+    if (((x1 == x2) && (x0 == x1)) && ((y1 <= y0) && (y0 <= y2)))
+      return true;
+
+    /* Horizontal line */
+    if (((x1 <= x0) && (x0 <= x2)) && ((y1 == y2) && (y0 == y1)))
+      return true;
+
+    /* General slope */
+    {
+      double a = (y2 - y1) / (x2 - x1);
+      double yc = a*(x0 - x1) + y1;
+
+      if (yc == y0) {
+        if ((x1 <= x0) && (x0 <= x2))
+          return true;
+      }
+    }
+    return false;
+  }
+}
 
 
-bool geo_util_inside_polygon(const double * xlist , const double * ylist , int num_points , double x0 , double y0) {
+
+/*
+  If the bool force_edge_inside is set to true, points exactly on the
+  edge will be identified as inside. If the force_edge_inside variable
+  is set to false the behaviour on the edges is undefined.
+*/
+
+
+bool geo_util_inside_polygon__(const double * xlist , const double * ylist , int num_points , double x0 , double y0 , bool force_edge_inside) {
   bool inside = false;
   int point_num;
   double y = y0;
@@ -48,6 +84,13 @@ bool geo_util_inside_polygon(const double * xlist , const double * ylist , int n
     double ymin = util_double_min(y1,y2);
     double ymax = util_double_max(y1,y2);
     double xmax = util_double_max(x1,x2);
+
+    if (force_edge_inside) {
+      if (on_edge(x1,y1,x2,y2,x0,y0)) {
+        inside = true;
+        break;
+      }
+    }
 
     if ((x1 == x2) && (y1 == y2))
       continue;
@@ -65,8 +108,12 @@ bool geo_util_inside_polygon(const double * xlist , const double * ylist , int n
     }
   }
 
-
   return inside;
+}
+
+
+bool geo_util_inside_polygon(const double * xlist , const double * ylist , int num_points , double x0 , double y0) {
+  return geo_util_inside_polygon__(xlist , ylist , num_points , x0 , y0 , false );
 }
 
 /*

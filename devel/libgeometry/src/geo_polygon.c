@@ -87,11 +87,18 @@ void geo_polygon_close( geo_polygon_type * polygon) {
 }
 
 
+
+
+bool geo_polygon_contains_point__( const geo_polygon_type * polygon , double x , double y, bool force_edge_inside) {
+  return geo_util_inside_polygon__( double_vector_get_const_ptr( polygon->xcoord ) ,
+                                    double_vector_get_const_ptr( polygon->ycoord ) ,
+                                    double_vector_size( polygon->xcoord ) ,
+                                    x , y , force_edge_inside);
+}
+
+
 bool geo_polygon_contains_point( const geo_polygon_type * polygon , double x , double y) {
-  return geo_util_inside_polygon( double_vector_get_const_ptr( polygon->xcoord ) , 
-                                  double_vector_get_const_ptr( polygon->ycoord ) ,
-                                  double_vector_size( polygon->xcoord ) , 
-                                  x , y );
+  return geo_polygon_contains_point__(polygon , x, y , false );
 }
 
 
