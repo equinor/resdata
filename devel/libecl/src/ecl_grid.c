@@ -3700,32 +3700,36 @@ static bool ecl_grid_sublayer_contanins_xy__(const ecl_grid_type * grid , double
   int i,j;
 
   geo_polygon_reset( polygon );
+
+  /* Bottom edge */
   for (i=i1; i < i2; i++) {
     double corner_pos[3];
     ecl_grid_get_corner_xyz( grid , i , j1 , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
     geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
   }
-  
+
+  /* Right edge */
   for (j=j1; j < j2; j++) {
     double corner_pos[3];
     ecl_grid_get_corner_xyz( grid , i2 , j , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
     geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
   }
-  
+
+  /* Top edge */
   for (i=i2; i > i1; i--) {
     double corner_pos[3];
     ecl_grid_get_corner_xyz( grid , i , j2 , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
     geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
   }
-  
+
+  /* Left edge */
   for (j=j2; j > j1; j--) {
     double corner_pos[3];
     ecl_grid_get_corner_xyz( grid , i1 , j , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
     geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
   }
   geo_polygon_close( polygon );
-
-  return geo_polygon_contains_point( polygon , x  , y );  
+  return geo_polygon_contains_point__( polygon , x  , y , true );
 }
 
 
@@ -3752,7 +3756,7 @@ bool ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y ,
           i1 = ic;
         }
       }
-      
+
       if ((j2 - j1) > 1) {
         int jc = (j1 + j2) / 2;
         if (ecl_grid_sublayer_contanins_xy__(grid , x , y , k , i1 , i2 , j1 , jc , polygon))
@@ -3763,7 +3767,7 @@ bool ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y ,
           j1 = jc;
         }
       }
-      
+
       if ((i2 - i1) == 1 && (j2 - j1) == 1) {
         *i = i1;
         *j = j1;
@@ -3771,7 +3775,7 @@ bool ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y ,
       }
     }
   }
-  
+
   geo_polygon_free( polygon );
   return inside;
 }
