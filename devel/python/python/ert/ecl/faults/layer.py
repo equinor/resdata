@@ -105,7 +105,19 @@ class Layer(BaseCClass):
     def addInterpBarrier(self , c1 , c2):
         self.cNamespace().add_interp_barrier( self , c1 , c2 )
 
+    
+    def addPolylineBarrier(self , polyline , grid , k):
+        if len(polyline) > 1:
+            for i in range(len(polyline) - 1):
+                x1,y1 = polyline[i]
+                x2,y2 = polyline[i + 1]
 
+                c1 = grid.findCellCornerXY( x1 , y1 , k )
+                c2 = grid.findCellCornerXY( x2 , y2 , k )
+                
+                self.addInterpBarrier( c1 , c2 )
+
+                
     
     def addFaultBarrier(self , fault , K , link_segments = True ):
         fault_layer = fault[K]

@@ -96,11 +96,30 @@ static int layer_get_global_cell_index( const layer_type * layer , int i , int j
 }
 
 
+static int layer_get_global_cell_index__( const layer_type * layer , int i , int j) {
+  if ((i < 0) || (i > layer->nx))
+    util_abort("%s: invalid i value:%d Valid range: [0,%d] \n",__func__ , i , layer->nx);
+
+  if ((j < 0) || (j > layer->ny))
+    util_abort("%s: invalid j value:%d Valid range: [0,%d] \n",__func__ , j , layer->ny);
+
+  return i + j*(layer->nx + 1);
+}
+
+
 static cell_type* layer_iget_cell( const layer_type * layer , int i , int j) {
   int g = layer_get_global_cell_index( layer , i , j );
   return &layer->data[g];
 }
 
+/*
+  To be able to update barriers on the edge we need access to the i =
+  nx and j = ny cells.
+*/
+static cell_type* layer_iget_cell__( const layer_type * layer , int i , int j) {
+  int g = layer_get_global_cell_index__( layer , i , j );
+  return &layer->data[g];
+}
 
 
 bool layer_iget_left_barrier( const layer_type * layer, int i , int j) {
@@ -592,7 +611,7 @@ void layer_add_ijbarrier( layer_type * layer , int i1 , int j1 , int i2 , int j2
       int jmax = util_int_max(j1,j2);
 
       for (j=jmin; j < jmax; j++) {
-        cell_type * cell = layer_iget_cell( layer , i1 , j );
+        cell_type * cell = layer_iget_cell__( layer , i1 , j );
         cell->left_barrier = true;
       }
     } else {
@@ -601,7 +620,7 @@ void layer_add_ijbarrier( layer_type * layer , int i1 , int j1 , int i2 , int j2
       int imax = util_int_max(i1,i2);
 
       for (i=imin; i < imax; i++) {
-        cell_type * cell = layer_iget_cell( layer , i , j1 );
+        cell_type * cell = layer_iget_cell__( layer , i , j1 );
         cell->bottom_barrier = true;
       }
     }
@@ -663,7 +682,7 @@ void layer_add_interp_barrier( layer_type * layer , int c1 , int c2) {
       double dx = distance_to_line( a , -1 , b , i + di , j );
       double dy = distance_to_line( a , -1 , b , i      , j + dj);
 
-      if (dx < dy)
+      if (dx <= dy)
         i += di;
       else
         j += dj;
