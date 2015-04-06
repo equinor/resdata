@@ -25,6 +25,7 @@ from .fault_segments import FaultSegment , SegmentMap
 
 class Layer(object):
     def __init__(self, grid , K):
+        assert( isinstance(K , int) )
         self.__grid = grid
         self.__K = K
         self.__fault_lines = []
@@ -176,6 +177,8 @@ class Fault(object):
         return "Fault:%s" % self.__name
 
     def __getitem__(self , K):
+        if not self.hasLayer(K):
+            self.addLayer(K)
         layer = self.__layer_map[K]
         return layer
 
