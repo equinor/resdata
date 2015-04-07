@@ -103,6 +103,9 @@ class EclKW(CClass):
            soil_kw = EclKW.new( "SOIL" , 10000 , ECL_FLOAT_TYPE )
            
         """
+        if len(name) > 8:
+            raise ValueError("Sorry - maximum eight characters in keyword name")
+
         obj   = cls()
         c_ptr = cfunc.alloc_new( name , size , data_type )
         obj.init_cobj( c_ptr , cfunc.free )
