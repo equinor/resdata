@@ -103,6 +103,14 @@ class EclRegion(CClass):
         return EclRegion( self.grid , False , c_ptr = cfunc.alloc_copy( self ))
 
 
+    def __zero__(self):
+        global_list = self.getGlobalList()
+        if len(global_list) > 0:
+            return True
+        else:
+            return False
+
+
     def __iand__(self , other):
         """
         Will perform set intersection operation inplace.
@@ -694,7 +702,21 @@ class EclRegion(CClass):
         """
         cfunc.deselect_outside_polygon( self , CPolyline( init_points = points ))
 
+        
+    @select_method
+    def selectTrue( self , ecl_kw , intersect = False):
+        """
+        Assume that input ecl_kw is a boolean mask.
+        """
+        cfunc.select_true( self , ecl_kw )
 
+
+    @select_method
+    def selectFalse( self , ecl_kw , intersect = False):
+        """
+        Assume that input ecl_kw is a boolean mask.
+        """
+        cfunc.select_false( self , ecl_kw )
 
 
 
@@ -998,3 +1020,9 @@ cfunc.contains_global           = cwrapper.prototype("void ecl_region_contains_g
 cfunc.contains_active           = cwrapper.prototype("void ecl_region_contains_active( ecl_region , int )")
 
 cfunc.equal = cwrapper.prototype("bool ecl_region_equal( ecl_region , ecl_region )")
+
+cfunc.select_true                  = cwrapper.prototype("void ecl_region_select_true( ecl_region , ecl_kw)")
+cfunc.select_false                 = cwrapper.prototype("void ecl_region_select_false( ecl_region , ecl_kw)")
+cfunc.deselect_true                = cwrapper.prototype("void ecl_region_deselect_true( ecl_region , ecl_kw)")
+cfunc.deselect_false               = cwrapper.prototype("void ecl_region_deselect_false( ecl_region , ecl_kw)")
+

@@ -339,6 +339,53 @@ void ecl_region_deselect_equal( ecl_region_type * region , const ecl_kw_type * e
   ecl_region_select_equal__( region , ecl_kw , value , false );
 }
 
+/*****************************************************************/
+
+static void ecl_region_select_bool_equal__( ecl_region_type * region , const ecl_kw_type * ecl_kw, bool value , bool select) {
+  bool global_kw;
+  ecl_region_assert_kw( region , ecl_kw , &global_kw);
+  if (ecl_kw_get_type( ecl_kw ) != ECL_BOOL_TYPE)
+    util_abort("%s: sorry - select by equality is only supported for boolean keywords \n",__func__);
+  {
+    if (global_kw) {
+      int global_index;
+      for (global_index = 0; global_index < region->grid_vol; global_index++) {
+        if (ecl_kw_iget_bool(ecl_kw , global_index) == value)
+          region->active_mask[ global_index ] = select;
+      }
+    } else {
+      int active_index;
+      for (active_index = 0; active_index < region->grid_active; active_index++) {
+        if (ecl_kw_iget_bool(ecl_kw , active_index) == value) {
+          int global_index = ecl_grid_get_global_index1A( region->parent_grid , active_index );
+          region->active_mask[ global_index ] = select;
+        }
+      }
+    }
+  }
+  ecl_region_invalidate_index_list( region );
+}
+
+
+void ecl_region_select_true( ecl_region_type * region , const ecl_kw_type * ecl_kw) {
+  ecl_region_select_bool_equal__( region , ecl_kw , true , true );
+}
+
+
+void ecl_region_deselect_true( ecl_region_type * region , const ecl_kw_type * ecl_kw) {
+  ecl_region_select_bool_equal__( region , ecl_kw , true , false );
+}
+
+
+void ecl_region_select_false( ecl_region_type * region , const ecl_kw_type * ecl_kw) {
+  ecl_region_select_bool_equal__( region , ecl_kw , false , true );
+}
+
+
+void ecl_region_deselect_false( ecl_region_type * region , const ecl_kw_type * ecl_kw) {
+  ecl_region_select_bool_equal__( region , ecl_kw , false , false );
+}
+
 
 /*****************************************************************/
 
