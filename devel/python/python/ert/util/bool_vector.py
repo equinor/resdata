@@ -30,7 +30,7 @@ class BoolVector(VectorTemplate):
         return BoolVector.cNamespace().count_equal(self, value)
 
     @classmethod
-    def active_mask(cls, range_string):
+    def createActiveMask(cls, range_string):
         """
         Will create a BoolVector instance with the values from @range_string.
 
@@ -59,7 +59,10 @@ class BoolVector(VectorTemplate):
 
     @classmethod
     def createFromList(cls, size, source_list):
-        """Allocates a bool vector from a Python list of indexes"""
+        """
+        Allocates a bool vector from a Python list of indexes
+        @rtype: BoolVector
+        """
         bool_vector = BoolVector(False, size)
 
         for index in source_list:
@@ -70,7 +73,7 @@ class BoolVector(VectorTemplate):
 
 
     def createActiveList(self):
-        """ @rtype: IntVectorTemplate """
+        """ @rtype: ert.util.IntVector """
         return BoolVector.cNamespace().active_list(self)
 
 
