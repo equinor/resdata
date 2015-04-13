@@ -32,6 +32,18 @@ static bool between(double v1, double v2 , double v) {
   return ((( v > v1) && (v < v2)) || (( v < v1) && (v > v2)));
 }
 
+
+static bool interval_overlap(double a1,double a2, double b1, double b2) {
+  if (between(a1,a2,b1) || between(a1,a2,b2))
+    return true;
+
+  if ((a1 == b1) && (a2 == b2))
+    return true;
+
+  return false;
+}
+
+
 static bool on_edge(double _x1 , double _y1 , double _x2 , double _y2 , double x0 , double y0) {
   double x1 = util_double_min( _x1 , _x2 );
   double x2 = util_double_max( _x1 , _x2 );
@@ -210,11 +222,13 @@ geo_util_xlines_status_enum geo_util_xsegments( const double ** points , double 
   if ((fabs(numerator_a) < EPSILON) &&
       (fabs(numerator_b) < EPSILON) &&
       (fabs(denominator) < EPSILON)) {
-    *x0 = (x1 + x2) * 0.50;
-    *y0 = (y1 + y2) * 0.50;
 
-    return GEO_UTIL_LINES_OVERLAPPING;
+    if (interval_overlap( x1,x2,x3,x4) && interval_overlap(y1,y2,y3,y4))
+      return GEO_UTIL_LINES_OVERLAPPING;
+    else
+      return GEO_UTIL_NOT_CROSSING;
   }
+
 
   // Parallell
   if (fabs(denominator) < EPSILON)
