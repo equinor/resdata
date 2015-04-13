@@ -723,22 +723,22 @@ void layer_clear_cells( layer_type * layer) {
 
 
 void layer_update_connected_cells( layer_type * layer , int i , int j , int org_value , int new_value) {
+  if (org_value != new_value) {
+    if (layer_iget_cell_value( layer , i , j ) == org_value) {
+      layer_iset_cell_value( layer , i , j , new_value);
 
-  if (layer_iget_cell_value( layer , i , j ) == org_value) {
-    layer_iset_cell_value( layer , i , j , new_value);
+      if (i < (layer->nx - 1) && layer_cell_contact( layer , i,j,i+1,j))
+        layer_update_connected_cells( layer , i + 1 , j , org_value , new_value);
 
-    if (i < (layer->nx - 1) && layer_cell_contact( layer , i,j,i+1,j))
-      layer_update_connected_cells( layer , i + 1 , j , org_value , new_value);
+      if (i > 0 && layer_cell_contact( layer , i,j,i-1,j))
+        layer_update_connected_cells( layer , i - 1 , j , org_value , new_value);
 
-    if (i > 0 && layer_cell_contact( layer , i,j,i-1,j))
-      layer_update_connected_cells( layer , i - 1 , j , org_value , new_value);
+      if (j < (layer->ny - 1) && layer_cell_contact( layer , i,j,i,j+1))
+        layer_update_connected_cells( layer , i , j + 1, org_value , new_value);
 
-    if (j < (layer->ny - 1) && layer_cell_contact( layer , i,j,i,j+1))
-      layer_update_connected_cells( layer , i , j + 1, org_value , new_value);
-
-    if (j > 0 && layer_cell_contact( layer , i,j,i,j-1))
-      layer_update_connected_cells( layer , i , j - 1, org_value , new_value);
-
+      if (j > 0 && layer_cell_contact( layer , i,j,i,j-1))
+        layer_update_connected_cells( layer , i , j - 1, org_value , new_value);
+    }
   }
 }
 
