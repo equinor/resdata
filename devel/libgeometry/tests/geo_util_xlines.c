@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2014  Statoil ASA, Norway. 
-    
-   The file 'geo_util_xlines.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2014  Statoil ASA, Norway.
+
+   The file 'geo_util_xlines.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 #include <stdlib.h>
 #include <stdbool.h>
@@ -30,7 +30,7 @@
 void test_parallell_lines(double ** points) {
   double x0 = -100;
   double y0 = -100;
-  
+
   points[0][0] = 0;
   points[1][0] = 10;
 
@@ -54,7 +54,7 @@ void test_parallell_lines(double ** points) {
 void test_overlapping_lines(double ** points) {
   double x0 = -100;
   double y0 = -100;
-  
+
   points[0][0] = 0;
   points[1][0] = 1;
 
@@ -80,7 +80,7 @@ void test_overlapping_lines(double ** points) {
 void test_crossing_lines(double ** points) {
   double x0 = -100;
   double y0 = -100;
-  
+
   points[0][0] = 0;
   points[1][0] = 1;
 
@@ -106,7 +106,7 @@ void test_crossing_lines(double ** points) {
 void test_vertical_line(double ** points) {
   double x0 = -100;
   double y0 = -100;
-  
+
   points[0][0] = -1;
   points[1][0] =  1;
 
@@ -131,7 +131,7 @@ void test_vertical_line(double ** points) {
 void test_degenerate_line(double ** points) {
   double x0 = -100;
   double y0 = -100;
-  
+
   points[0][0] = -1;
   points[1][0] = -1;
 

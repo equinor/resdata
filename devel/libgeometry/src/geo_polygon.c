@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'geo_polygon.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'geo_polygon.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 
@@ -26,7 +26,7 @@
 #include <ert/util/type_vector_functions.h>
 
 #include <ert/geometry/geo_util.h>
-#include <ert/geometry/geo_polygon.h>        
+#include <ert/geometry/geo_polygon.h>
 
 
 
@@ -46,7 +46,7 @@ UTIL_IS_INSTANCE_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID);
 
 geo_polygon_type * geo_polygon_alloc(const char * name) {
   geo_polygon_type * polygon = util_malloc( sizeof * polygon );
-  
+
   UTIL_TYPE_ID_INIT( polygon , GEO_POLYGON_TYPE_ID );
   polygon->xcoord = double_vector_alloc( 0 , 0 );
   polygon->ycoord = double_vector_alloc( 0 , 0 );
