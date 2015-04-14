@@ -314,7 +314,12 @@ class Fault(object):
         ray_dir = GeometryTools.lineToRay( p0 , p1 )
         intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , other_fault.getIJPolyline(k))
         if intersections:
-            p2 = intersections[0][1]
+            if len(intersections) > 1:
+                d_list = [ GeometryTools.distance( p1 , p[1] ) for p in intersections ]
+                index = d_list.index( min(d_list) )
+            else:
+                index = 0
+            p2 = intersections[index][1]
             return [p1 , (int(p2[0]) , int(p2[1])) ]
             
         raise ValueError("The fault %s can not be extended to intersect with:%s in layer:%d" % (self.getName() , other_fault.getName() , k+1 ))
@@ -325,8 +330,13 @@ class Fault(object):
         ray_dir = GeometryTools.lineToRay( p0 , p1 )
         intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , polyline)
         if intersections:
-            p2 = intersections[0][1]
-            return [(p1[0] , p1[1]) , p2]
+            if len(intersections) > 1:
+                d_list = [ GeometryTools.distance( p1 , p[1] ) for p in intersections ]
+                index = d_list.index( min(d_list) )
+            else:
+                index = 0
+            p2 = intersections[index][1]
+            return [p1 , p2]
         else:
             return None
 
