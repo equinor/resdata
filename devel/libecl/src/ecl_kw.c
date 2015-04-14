@@ -2688,3 +2688,5 @@ void ecl_kw_fprintf_data( const ecl_kw_type * ecl_kw , const char * fmt , FILE *
     ecl_kw_fprintf_data_char( ecl_kw , fmt , stream );
 }
 
+
+#include "ecl_kw_functions.c"
