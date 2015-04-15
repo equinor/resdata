@@ -244,33 +244,57 @@ class GeometryTools(object):
         @type p1: tuple of (float, float)
         @type p2: tuple of (float, float)
         @rtype: tuple of (float, float) or None
+
+        stackoverflow: 563198
         """
-        denominator = ray[1] * (p2[0] - p1[0]) - ray[0] * (p2[1] - p1[1])
-        numerator_a = ray[0] * (p1[1] - point[1]) - ray[1] * (p1[0] - point[0])
-        numerator_b = (p2[0] - p1[0]) * (p1[1] - point[1]) - (p2[1] - p1[1]) * (p1[0] - point[0])
+        
+        
+        s = (p2[0] - p1[0] , p2[1] - p1[1])
+        q = p1
+        r = ray
+        p = point
 
-        # coincident?
-        if abs(numerator_a) < GeometryTools.EPSILON and abs(numerator_b) < GeometryTools.EPSILON and abs(denominator) < GeometryTools.EPSILON:
-            x = (p1[0] + p2[0]) / 2.0
-            y = (p1[1] + p2[1]) / 2.0
-            return x, y
+        p_m_q = (p[0] - q[0] , p[1] - q[1])
+        q_m_p = (q[0] - p[0] , q[1] - p[1])
+        r_x_s = r[0] * s[1] - r[1]*s[0]
 
-        # parallel?
-        if abs(denominator) < GeometryTools.EPSILON:
+        q_m_p_x_r = q_m_p[0] * r[1] - q_m_p[1] * r[0]
+        q_m_p_x_s = q_m_p[0] * s[1] - q_m_p[1] * s[0]
+        
+        if abs(r_x_s) < GeometryTools.EPSILON and abs(q_m_p_x_r) < GeometryTools.EPSILON:
+            q_m_p_dot_r = q_m_p[0] * r[0] + q_m_p[1] * r[1]
+            r_dot_r = r[0] * r[0] + r[1] * r[1]
+
+            p_m_q_dot_s = p_m_q[0] * s[0] + p_m_q[1] * s[1]
+            s_dot_s = s[0] * s[0] + s[1] * s[1]
+
+            # Coincident
+            if 0 <= q_m_p_dot_r <= r_dot_r:
+                return ((p1[0] + p2[0]) / 2 , (p1[1] + p2[1]) / 2)
+
+            # Coincident
+            if 0 <= p_m_q_dot_s <= s_dot_s:
+                return ((p1[0] + p2[0]) / 2 , (p1[1] + p2[1]) / 2)
+
+            return None
+            
+        if abs(r_x_s) < GeometryTools.EPSILON:
+            # Parallell
             return None
 
 
-        # intersection along the segments?
-        mua = numerator_a / denominator
-        mub = numerator_b / denominator
+        t = 1.0 * q_m_p_x_s / r_x_s
+        u = 1.0 * q_m_p_x_r / r_x_s
 
-        # for rays mub can be larger than 1.0
-        if mua < -GeometryTools.EPSILON or mua > 1.0 or mub < -GeometryTools.EPSILON:
-            return None
+        if t >= 0 and 0 <= u <= 1:
+            x = p[0] + t*r[0]
+            y = p[1] + t*r[1]
+            
+            return x,y
 
-        x = p1[0] + mua * (p2[0] - p1[0])
-        y = p1[1] + mua * (p2[1] - p1[1])
-        return x, y
+        return None
+
+
 
 
     @staticmethod
