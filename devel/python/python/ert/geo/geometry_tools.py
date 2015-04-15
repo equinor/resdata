@@ -393,3 +393,32 @@ class GeometryTools(object):
 
         d_list.sort( key = lambda x: x[0])
         return d_list[0][1]
+
+
+
+    @staticmethod
+    def nearestPointOnPolyline( p , polyline ):
+        if len(polyline) > 1:
+            d_list = [ GeometryTools.distance( p , pi ) for pi in polyline ]
+            index1 = d_list.index( min(d_list) )
+            if index1 > 0:
+                index2 = index1 - 1
+            else:
+                index2 = index1 + 1
+
+            p1 = polyline[index1] 
+            p2 = polyline[index2]
+            dy = p2[1] - p1[1]
+            dx = p2[0] - p1[0]
+            shortest = GeometryTools.rayLineIntersection( p , (dy , -dx) , p1 , p2 )
+            if shortest is None:
+                shortest = GeometryTools.rayLineIntersection( p , (-dy , dx) , p1 , p2 )
+
+            if shortest:
+                return shortest
+            else:
+                return p1
+            
+        else:
+            raise ValueError("Polyline must have len() >= 2")
+
