@@ -500,7 +500,6 @@ static ecl_smspec_var_type ecl_smspec_identify_special_var( const char * var ) {
 
 ecl_smspec_var_type  ecl_smspec_identify_var_type(const char * var) {
   ecl_smspec_var_type var_type = ecl_smspec_identify_special_var( var );
-  int str_length = strlen(var);
   if (var_type == ECL_SMSPEC_INVALID_VAR) {
     switch(var[0]) {
     case('A'):
@@ -544,12 +543,30 @@ ecl_smspec_var_type  ecl_smspec_identify_var_type(const char * var) {
       var_type = ECL_SMSPEC_NETWORK_VAR;
       break;
     case('R'):
-      if (((3 == str_length) && var[2] == 'F') ||
-          ((4 == str_length) && var[3] == 'F')) {
-       var_type  = ECL_SMSPEC_REGION_2_REGION_VAR;
-      }
-      else {
-        var_type  = ECL_SMSPEC_REGION_VAR;
+      {
+        /*
+          The distinction between region-to-region variables and plain
+          region variables is less than clear: The current
+          interpretation is that the cases:
+
+             1. Any variable matching:
+
+                a) Starts with 'R'
+                b) Has 'F' as the third character
+
+             2. The variable "RNLF"
+
+          Get variable type ECL_SMSPEC_REGION_2_REGION_VAR. The rest
+          get the type ECL_SMSPEC_REGION_VAR.
+        */
+
+        if (util_string_equal( var , "RNLF"))
+          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
+        else if (var[2] == 'F')
+          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
+        else
+          var_type  = ECL_SMSPEC_REGION_VAR;
+
       }
       break;
     case('S'):
