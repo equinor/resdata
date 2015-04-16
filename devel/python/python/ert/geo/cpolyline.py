@@ -180,6 +180,24 @@ class CPolyline(BaseCClass):
         return self.unzip()
 
 
+    def connect(self , target):
+        end1 = self[0]
+        end2 = self[-1]
+
+        p1 = GeometryTools.nearestPointOnPolyline( end1 , target )
+        p2 = GeometryTools.nearestPointOnPolyline( end2 , target )
+            
+        d1 = GeometryTools.distance( p1 , end1 )
+        d2 = GeometryTools.distance( p2 , end2 )
+
+        if d1 < d2:
+            return [end1 , p1]
+        else:
+            return [end2 , p2]
+
+
+
+
 #################################################################
 
 cwrapper = CWrapper(ERT_GEOMETRY_LIB)

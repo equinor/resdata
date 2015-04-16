@@ -341,6 +341,26 @@ class Fault(object):
             return None
 
 
+    def connectWithPolyline(self , polyline , k):
+        """
+        """
+        if self.intersectsPolyline( polyline , k ):
+            return None
+        else:
+            self_polyline = self.getPolyline( k )
+            return self_polyline.connect( polyline )
+
+
+    def connect(self , target , k):
+        if isinstance(target, Fault):
+            polyline = target.getPolyline(k)
+        else:
+            polyline = target
+
+        return self.connectWithPolyline( polyline , k )
+
+
+
     def extendToPolyline(self , polyline , k):
         """Extends the fault until it intersects @polyline in layer @k.
 
@@ -462,7 +482,16 @@ class Fault(object):
 
         return GeometryTools.joinPolylines( fault_polyline , other_polyline )
         
+
+
+    def connectPolylineOnto(self , polyline , k):
+        if self.intersectsPolyline( polyline , k):
+            return None
+
+        self_polyline = self.getPolyline(k)
+        return polyline.connect( self_polyline )
         
+
 
     def extendPolylineOnto(self , polyline , k):
         if self.intersectsPolyline( polyline , k):

@@ -367,7 +367,7 @@ class GeometryTools(object):
 
 
     @staticmethod
-    def extendPolylineOnto( polyline , target_polyline):
+    def connectPolylines( polyline , target_polyline):
         if GeometryTools.polylinesIntersect( polyline , target_polyline ):
             return None
 
