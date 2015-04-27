@@ -27,6 +27,7 @@ extern "C" {
 #include <ert/util/struct_vector.h>
 #include <ert/util/type_macros.h>
 
+#include <ert/ecl/ecl_grid.h>
 
 /*
    The elements in this enum are (ab)used as indexes into a int[] vector;
@@ -48,7 +49,7 @@ extern "C" {
 
 
   typedef struct layer_struct       layer_type;
-  
+
   bool         layer_iget_left_barrier( const layer_type * layer, int i , int j);
   bool         layer_iget_bottom_barrier( const layer_type * layer, int i , int j);
   int          layer_get_nx( const layer_type * layer );
@@ -59,6 +60,7 @@ extern "C" {
   layer_type * layer_alloc(int nx , int ny);
   void         layer_free( layer_type * layer );
   int          layer_replace_cell_values( layer_type * layer , int old_value , int new_value);
+  bool         layer_iget_active( const layer_type * layer, int i , int j);
   int          layer_iget_cell_value( const layer_type * layer, int i , int j);
   void         layer_iset_cell_value( layer_type * layer , int i , int j , int value);
   int          layer_iget_edge_value( const layer_type * layer , int i , int j , edge_dir_enum dir);
@@ -73,6 +75,7 @@ extern "C" {
   void         layer_add_ijbarrier( layer_type * layer , int i1 , int j1 , int i2 , int j2 );
   void         layer_add_barrier( layer_type * layer , int c1 , int c2);
   void         layer_memcpy(layer_type * target_layer , const layer_type * src_layer);
+  void         layer_update_active( layer_type * layer , const ecl_grid_type * grid , int k);
 
 UTIL_IS_INSTANCE_HEADER( layer );
 UTIL_SAFE_CAST_HEADER( layer );

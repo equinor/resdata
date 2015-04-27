@@ -61,6 +61,25 @@ class Layer(BaseCClass):
         (i,j) = self.__unpackIndex(index)
         self.cNamespace().set_cell(self , i , j , value )
         
+    def activeCell(self , i,j):
+        self.__assertIJ(i,j)
+        return self.cNamespace().active_cell(self , i , j)
+        
+
+    def updateActive(self , grid , k):
+        if grid.getNX() != self.getNX():
+            raise ValueError("NX dimension mismatch. Grid:%d  layer:%d" % (grid.getNX() , self.getNX()))
+
+        if grid.getNY() != self.getNY():
+            raise ValueError("NY dimension mismatch. Grid:%d  layer:%d" % (grid.getNY() , self.getNY()))
+        
+        if k >= grid.getNZ():
+            raise ValueError("K value invalid: Grid range [0,%d)" % grid.getNZ())
+
+        self.cNamespace().update_active(self , grid , k)
+
+
+
             
     def __getitem__(self , index):
         (i,j) = self.__unpackIndex(index)
@@ -222,3 +241,5 @@ Layer.cNamespace().clear_cells = cwrapper.prototype("void layer_clear_cells(laye
 Layer.cNamespace().cell_sum = cwrapper.prototype("int layer_get_cell_sum(layer)")
 Layer.cNamespace().update_connected = cwrapper.prototype("void layer_update_connected_cells(layer,int,int,int,int)")
 Layer.cNamespace().cells_equal = cwrapper.prototype("void layer_cells_equal( layer, int,int_vector,int_vector)")
+Layer.cNamespace().active_cell = cwrapper.prototype("bool layer_iget_active( layer, int,int)")
+Layer.cNamespace().update_active = cwrapper.prototype("bool layer_update_active( layer, ecl_grid , int)")

@@ -32,6 +32,7 @@ typedef struct {
   int  edges[4];
   bool bottom_barrier;
   bool left_barrier;
+  bool active;
 } cell_type;
 
 
@@ -67,6 +68,7 @@ layer_type * layer_alloc(int nx , int ny) {
         cell->edges[TOP_EDGE] = 0;
         cell->edges[BOTTOM_EDGE] = 0;
 
+        cell->active = true;
         cell->bottom_barrier = false;
         cell->left_barrier = false;
       }
@@ -137,6 +139,11 @@ bool layer_iget_bottom_barrier( const layer_type * layer, int i , int j) {
 int layer_iget_cell_value( const layer_type * layer, int i , int j) {
   int g = layer_get_global_cell_index( layer , i , j );
   return layer->data[g].cell_value;
+}
+
+bool layer_iget_active( const layer_type * layer, int i , int j) {
+  int g = layer_get_global_cell_index( layer , i , j );
+  return layer->data[g].active;
 }
 
 
@@ -752,6 +759,19 @@ void layer_cells_equal( const layer_type * layer , int value , int_vector_type *
         int_vector_append( i_list , i );
         int_vector_append( j_list , j );
       }
+    }
+  }
+}
+
+
+
+
+void layer_update_active( layer_type * layer , const ecl_grid_type * grid , int k) {
+  int i,j;
+  for (j=0; j< ecl_grid_get_ny( grid ); j++) {
+    for (i=0; i < ecl_grid_get_nx( grid ); i++) {
+      cell_type * cell = layer_iget_cell( layer , i , j );
+      cell->active = ecl_grid_cell_active3( grid , i , j , k );
     }
   }
 }
