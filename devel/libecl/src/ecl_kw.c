@@ -24,6 +24,7 @@
 
 #include <ert/util/util.h>
 #include <ert/util/buffer.h>
+#include <ert/util/int_vector.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_util.h>

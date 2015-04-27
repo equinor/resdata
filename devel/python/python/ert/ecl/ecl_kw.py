@@ -1007,11 +1007,13 @@ class EclKW(CClass):
         cfunc.fprintf_data( self , fmt , cfile )
 
 
-    def fixUninitialized(self , dims):
+    def fixUninitialized(self , grid):
         """
         Special case function for region code.
         """
-        cfunc.fix_uninitialized( self , dims[0] , dims[1], dims[2] )
+        dims = grid.getDims( )
+        actnum = grid.exportACTNUM( )
+        cfunc.fix_uninitialized( self , dims[0] , dims[1], dims[2] , actnum.getDataPtr() )
 
 
 
@@ -1077,7 +1079,7 @@ cfunc.set_float                  = cwrapper.prototype("void     ecl_kw_scalar_se
 cfunc.max_min_int                = cwrapper.prototype("void     ecl_kw_max_min_int( ecl_kw , int* , int*)")
 cfunc.max_min_float              = cwrapper.prototype("void     ecl_kw_max_min_float( ecl_kw , float* , float*)")
 cfunc.max_min_double             = cwrapper.prototype("void     ecl_kw_max_min_double( ecl_kw , double* , double*)")
-cfunc.fix_uninitialized          = cwrapper.prototype("void     ecl_kw_fix_uninitialized( ecl_kw ,int , int , int)")
+cfunc.fix_uninitialized          = cwrapper.prototype("void     ecl_kw_fix_uninitialized( ecl_kw ,int , int , int, int*)")
 
 
 

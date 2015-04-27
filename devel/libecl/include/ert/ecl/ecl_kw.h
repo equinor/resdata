@@ -226,7 +226,7 @@ extern "C" {
   ECL_KW_MAX_MIN_HEADER( double );
 #undef ECL_KW_MAX_MIN_HEADER
 
-void ecl_kw_fix_uninitialized(ecl_kw_type * ecl_kw , int nx , int ny , int nz);
+  void ecl_kw_fix_uninitialized(ecl_kw_type * ecl_kw , int nx , int ny , int nz, const int * actnum);
 
 #include <ert/ecl/ecl_kw_grdecl.h>
 
