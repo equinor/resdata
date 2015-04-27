@@ -1030,6 +1030,11 @@ class EclGrid(CClass):
             raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.name , ecl_kw.size , self.nactive , self.size))
 
 
+    def exportACTNUM(self):
+        actnum = IntVector( initial_size = self.getGlobalSize() )
+        cfunc.init_actnum( self , actnum.getDataPtr() )
+        return actnum
+
 
 # 2. Creating a wrapper object around the libecl library, 
 #    registering the type map : ecl_kw <-> EclKW
@@ -1097,4 +1102,4 @@ cfunc.fwrite_GRID                  = cwrapper.prototype("void   ecl_grid_fwrite_
 cfunc.fwrite_EGRID                 = cwrapper.prototype("void   ecl_grid_fwrite_EGRID( ecl_grid , char* )")
 cfunc.equal                        = cwrapper.prototype("bool   ecl_grid_compare(ecl_grid , ecl_grid , bool, bool)")
 cfunc.dual_grid                    = cwrapper.prototype("bool   ecl_grid_dual_grid( ecl_grid )")
-
+cfunc.init_actnum                  = cwrapper.prototype("void   ecl_grid_init_actnum_data( ecl_grid , int* )")
