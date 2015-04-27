@@ -844,7 +844,21 @@ class EclRegion(CClass):
         global_list = cfunc.get_global_list(self)
         global_list.setParent(self)
         return global_list
+
         
+    def getIJKList(self):
+        """
+        WIll return a Python list of (i,j,k) tuples for the region.
+        """
+        global_list = self.getGlobalList()
+        ijk_list = []
+        for g in global_list:
+            ijk_list.append( self.grid.get_ijk( global_index = g ) )
+        
+        return ijk_list
+                            
+        
+
 
     @property
     def active_list(self):
