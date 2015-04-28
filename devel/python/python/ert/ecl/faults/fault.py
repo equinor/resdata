@@ -356,7 +356,6 @@ class Fault(object):
             polyline = target.getPolyline(k)
         else:
             polyline = target
-
         return self.connectWithPolyline( polyline , k )
 
 
@@ -545,9 +544,11 @@ class Fault(object):
                 xc = p1[0]
                 yc = p2[1]
                 
-            return [p1 , (xc,yc) , p2]
+            coord_list = [p1 , (xc,yc) , p2]
         else:
-            return [p1,p2]
+            coord_list = [p1,p2]
+        
+        return coord_list
 
 
     @staticmethod
@@ -590,11 +591,14 @@ class Fault(object):
                 
         
         
-    @classmethod
-    def joinFaults(cls , fault1 , fault2 , k):
+    @staticmethod
+    def joinFaults(fault1 , fault2 , k):
         fault1_rays = fault1.getEndRays(k)
         fault2_rays = fault2.getEndRays(k)
         
+        if fault1.intersectsFault( fault2 , k ):
+            return None
+
         count = 0
         join = None
         try:
@@ -622,9 +626,16 @@ class Fault(object):
             pass
 
         if count == 1:
-            return join
+            xy_list = []
+            for ij in join:
+                xyz = fault1.__grid.getNodeXYZ( ij[0] , ij[1] , k )
+                xy_list.append( (xyz[0] , xyz[1]) )
+
+            return xy_list
         else:
-            raise ValueError("Faults %s and %s could not be uniquely joined" % (fault1.getName() , fault2.getName()))
+            return fault1.endJoin( fault2 , k )
+            #raise ValueError("Faults %s and %s could not be uniquely joined" % (fault1.getName() , fault2.getName()))
+
             
             
     
