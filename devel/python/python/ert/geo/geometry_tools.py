@@ -1,5 +1,5 @@
 from math import sqrt
-
+import sys
 
 class GeometryTools(object):
     EPSILON = 0.000001
@@ -236,7 +236,7 @@ class GeometryTools(object):
 
 
     @staticmethod
-    def rayLineIntersection(point, ray, p1, p2):
+    def rayLineIntersection(point, ray, p1, p2 , flip_ray = False):
         """
         Finds the intersection between the ray starting at point and the line [p1, p2].
         @type point: tuple of (float, float)
@@ -247,8 +247,6 @@ class GeometryTools(object):
 
         stackoverflow: 563198
         """
-        
-        
         s = (p2[0] - p1[0] , p2[1] - p1[1])
         q = p1
         r = ray
@@ -278,6 +276,7 @@ class GeometryTools(object):
 
             return None
             
+            
         if abs(r_x_s) < GeometryTools.EPSILON:
             # Parallell
             return None
@@ -292,7 +291,10 @@ class GeometryTools(object):
             
             return x,y
 
-        return None
+        if flip_ray:
+            return GeometryTools.rayLineIntersection( point , (-ray[0] , -ray[1]) , p1 , p2 , False)
+        else:
+            return None
 
 
 
@@ -399,26 +401,48 @@ class GeometryTools(object):
     @staticmethod
     def nearestPointOnPolyline( p , polyline ):
         if len(polyline) > 1:
-            d_list = [ GeometryTools.distance( p , pi ) for pi in polyline ]
-            index1 = d_list.index( min(d_list) )
-            if index1 > 0:
-                index2 = index1 - 1
-            else:
-                index2 = index1 + 1
+            d_list = [ GeometryTools.distance( p  , pi ) for pi in polyline ]
+            index0 = d_list.index( min(d_list) )
+            p0 = polyline[index0]
+            dist0 = d_list[index0]
 
-            p1 = polyline[index1] 
-            p2 = polyline[index2]
-            dy = p2[1] - p1[1]
-            dx = p2[0] - p1[0]
-            shortest = GeometryTools.rayLineIntersection( p , (dy , -dx) , p1 , p2 )
-            if shortest is None:
-                shortest = GeometryTools.rayLineIntersection( p , (-dy , dx) , p1 , p2 )
+            dist1 = sys.float_info.max
+            dist2 = sys.float_info.max
+            intercept1 = None
+            intercept2 = None
 
-            if shortest:
-                return shortest
-            else:
-                return p1
+            index1 = None
+            index2 = None
+            if index0 > 0:
+                index1 = index0 - 1
+
+            if index0 < len(polyline) - 1:
+                index2 = index0 + 1
+
+            if not index1 is None:
+                p1 = polyline[index1] 
+                dy1 = p1[1] - p0[1]
+                dx1 = p1[0] - p0[0]
+                intercept1 = GeometryTools.rayLineIntersection( p , (dy1 , -dx1) , p0 , p1 , True)
+                if intercept1:
+                    dist1 = GeometryTools.distance( intercept1 , p )
+
+
+            if not index2 is None:
+                p2 = polyline[index2]
+                dy2 = p2[1] - p0[1]
+                dx2 = p2[0] - p0[0]
+                intercept2 = GeometryTools.rayLineIntersection( p , (dy2 , -dx2) , p0 , p2 , True)
+                if intercept2:
+                    dist2 = GeometryTools.distance( intercept2 , p )                
+
+
+            point_list = [ p0 , intercept1 , intercept2 ]
+            d_list = [ dist0 , dist1 , dist2 ]
+            index = d_list.index( min(d_list) )
+
             
+            return point_list[index]
         else:
             raise ValueError("Polyline must have len() >= 2")
 
