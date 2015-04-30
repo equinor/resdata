@@ -382,19 +382,19 @@ int main(int argc , char ** argv) {
   }                 
   
   
-  test_assert_true( int_vector_init_range( int_vector , 100 , 1000 , 115 ) );
+  int_vector_init_range( int_vector , 100 , 1000 , 115 );
   test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 100);
   test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 215);
   test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 330);
   test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 445);
-  test_assert_int_equal( int_vector_get_last( int_vector ) , 1000);
-  
-  test_assert_false( int_vector_init_range( int_vector , 100 , -1000 , 115 ) );
+  test_assert_int_equal( int_vector_get_last( int_vector ) , 905);
+
+  int_vector_init_range( int_vector , 100 , -1000 , -115 );
   test_assert_int_equal( int_vector_iget( int_vector , 0 ) , 100);
-  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , 215);
-  test_assert_int_equal( int_vector_iget( int_vector , 2 ) , 330);
-  test_assert_int_equal( int_vector_iget( int_vector , 3 ) , 445);
-  test_assert_int_equal( int_vector_get_last( int_vector ) , 1000);
+  test_assert_int_equal( int_vector_iget( int_vector , 1 ) , -15);
+  test_assert_int_equal( int_vector_iget( int_vector , 2 ) , -130);
+  test_assert_int_equal( int_vector_iget( int_vector , 3 ) , -245);
+  test_assert_int_equal( int_vector_get_last( int_vector ) , -935);
 
   {
     int_vector_type * v1 = int_vector_alloc(0,0);
