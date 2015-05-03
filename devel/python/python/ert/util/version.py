@@ -19,7 +19,11 @@ class Version(object):
 
     @classmethod
     def getVersion(cls):
-        return Version.cNamespace().ert_version()
+        major = Version.cNamespace().major_version()
+        minor = Version.cNamespace().minor_version()
+        micro = Version.cNamespace().micro_version()
+        return "%d.%d.%s" % (major , minor , micro)
+        
 
     @classmethod
     def cNamespace(cls):
@@ -31,4 +35,7 @@ cwrapper = CWrapper(UTIL_LIB)
 Version.cNamespace().build_time  = cwrapper.prototype("char* version_get_build_time()")
 Version.cNamespace().git_commit  = cwrapper.prototype("char* version_get_git_commit()")
 Version.cNamespace().git_commit_short  = cwrapper.prototype("char* version_get_git_commit_short()")
-Version.cNamespace().ert_version = cwrapper.prototype("char* version_get_ert_version()")
+Version.cNamespace().major_version = cwrapper.prototype("int version_get_major_ert_version()")
+Version.cNamespace().minor_version = cwrapper.prototype("int version_get_minor_ert_version()")
+Version.cNamespace().micro_version = cwrapper.prototype("char* version_get_micro_ert_version()")
+Version.cNamespace().micro_version = cwrapper.prototype("bool version_is_ert_devel_version()")
