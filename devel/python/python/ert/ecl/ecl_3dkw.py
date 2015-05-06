@@ -18,7 +18,8 @@
 from ecl_kw import EclKW
 
 class Ecl3DKW(EclKW):
-    """Class for working with Eclipse keywords defined over a grid
+    """
+    Class for working with Eclipse keywords defined over a grid
 
     The Ecl3DKW class is derived from the EclKW class, and most of the
     methods are implemented in the EclKW base class. The purpose of
@@ -35,7 +36,7 @@ class Ecl3DKW(EclKW):
     Usage example:
 
        from ert.ecl import EclInitFile,EclGrid
-    
+
        grid = EclGrid("ECLIPSE.EGRID")
        file = EclInitFile(grid , "ECLIPSE.INIT")
 
@@ -61,6 +62,7 @@ class Ecl3DKW(EclKW):
 
     we say that we want the value -1 for all inactive cells in the
     PERMX property.
+    
     """
     
     @classmethod
