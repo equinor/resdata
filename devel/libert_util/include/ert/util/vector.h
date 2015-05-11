@@ -81,6 +81,7 @@ extern "C" {
   vector_type * vector_alloc_copy(const vector_type * src , bool deep_copy);
 
   void          vector_iset_buffer(vector_type * vector , int index , const void * buffer, int buffer_size);
+  int           vector_find( const vector_type * vector , const void * ptr);
 
   UTIL_IS_INSTANCE_HEADER( vector );
   UTIL_SAFE_CAST_HEADER( vector );

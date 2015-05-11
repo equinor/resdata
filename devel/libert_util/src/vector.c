@@ -614,6 +614,25 @@ void vector_inplace_reverse(vector_type * vector) {
 }
 
 
+int vector_find( const vector_type * vector , const void * ptr) {
+  int location_index = -1;
+  int index = 0;
+
+  while (true) {
+    if (index < vector_get_size( vector )) {
+      const void * element = vector_iget( vector , index );
+      if (element == ptr) {
+        location_index = index;
+        break;
+      } else
+        index++;
+    } else
+      break;
+  }
+
+  return location_index;
+}
+
 
 /*****************************************************************/
 
