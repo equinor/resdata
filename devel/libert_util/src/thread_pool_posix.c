@@ -214,7 +214,6 @@ static void * thread_pool_start_job( void * arg ) {
 static void * thread_pool_main_loop( void * arg ) {
   thread_pool_type * tp = (thread_pool_type *) arg;
   {
-    const int usleep_busy = 1000;  /* The sleep time when all job slots are occupied. */
     const int usleep_init = 1000;  /* The sleep time when there are free slots available - but no jobs wanting to run. */
     int internal_offset   = 0;     /* Keep track of the (index of) the last job slot fired off - minor time saving. */
     while (true) {
