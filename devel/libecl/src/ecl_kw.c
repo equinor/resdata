@@ -404,21 +404,22 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
 }
 
 
-#define CMP(ctype) \
+#define CMP(ctype,ABS)                                           \
 static bool CMP_ ## ctype( ctype v1, ctype v2 , ctype epsilon) { \
-  if ((abs(v1) + abs(v2)) == 0)                                  \
+  if ((ABS(v1) + ABS(v2)) == 0)                                  \
      return true;                                                \
   else {                                                         \
-      ctype d = fabs(v1 - v2) / (fabs(v1) + fabs(v2));           \
+      ctype d = ABS(v1 - v2) / (ABS(v1) + ABS(v2));              \
       if (d < epsilon)                                           \
         return true;                                             \
    else                                                          \
         return false;                                            \
     }                                                            \
 }
-CMP(float)
-CMP(double)
+CMP(float,fabsf)
+CMP(double,fabs)
 #undef CMP
+
 
 #define ECL_KW_NUMERIC_CMP(ctype)                                                                                           \
   static bool ecl_kw_numeric_equal_ ## ctype( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , ctype rel_diff) { \
