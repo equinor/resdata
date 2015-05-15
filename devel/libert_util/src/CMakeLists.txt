@@ -148,7 +148,7 @@ endif()
 
 # The block_fs filesystem is so heavily dependant on pthreads that it is not 
 # built if de not have pthreads.
-if (WITH_PTHREAD)
+if (ERT_BUILD_BLOCK_FS)
   list( APPEND source_files block_fs.c )
   list( APPEND header_files block_fs.h )
 
