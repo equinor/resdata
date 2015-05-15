@@ -16,10 +16,11 @@
    for more details.
 */
 
-#include <util.h>
-#include <block_fs.h>
-#include <vector.h>
 #include <signal.h>
+
+#include <ert/util/util.h>
+#include <ert/util/block_fs.h>
+#include <ert/util/vector.h>
 
 
 void install_SIGNALS(void) {
@@ -32,7 +33,7 @@ void install_SIGNALS(void) {
 static int usage( void ) {
   fprintf(stderr,"\n");
   fprintf(stderr,"Usage:\n\n");
-  fprintf(stderr,"   bash%% block_fs BLOCK_FILE.mnt <pattern>\n\n");
+  fprintf(stderr,"   bash%% bls BLOCK_FILE.mnt <pattern>\n\n");
   fprintf(stderr,"Will list all elements in BLOCK_FILE matching pattern - remember to quote wildcards.\n");
   exit(1);
 }
@@ -59,7 +60,7 @@ int main(int argc , char ** argv) {
       }
 
       {
-        block_fs_type * block_fs = block_fs_mount(mount_file , 1 , 0 , 1 , 0 , false , true );
+        block_fs_type * block_fs = block_fs_mount(mount_file , 1 , 0 , 1 , 0 , false , true , false);
         vector_type   * files    = block_fs_alloc_filelist( block_fs , pattern , sort_mode , false );
         {
           int i;
