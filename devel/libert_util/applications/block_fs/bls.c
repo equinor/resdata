@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'bls.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'bls.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <util.h>
@@ -49,15 +49,15 @@ int main(int argc , char ** argv) {
       block_fs_sort_type sort_mode = OFFSET_SORT;
       const char * pattern         = NULL;
       int iarg;
-      
+
       for (iarg = 2; iarg < argc; iarg++) {
         if (argv[iarg][0] == '-') {
           /** OK - this is an option .. */
         }
-        else 
+        else
           pattern = argv[iarg];
       }
-      
+
       {
         block_fs_type * block_fs = block_fs_mount(mount_file , 1 , 0 , 1 , 0 , false , true );
         vector_type   * files    = block_fs_alloc_filelist( block_fs , pattern , sort_mode , false );
@@ -71,7 +71,7 @@ int main(int argc , char ** argv) {
         vector_free( files );
         block_fs_close( block_fs , false );
       }
-    } else 
+    } else
       fprintf(stderr,"The file:%s does not seem to be a block_fs mount file.\n" , mount_file);
   }
 }
