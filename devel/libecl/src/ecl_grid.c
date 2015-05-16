@@ -1,5 +1,3 @@
-// Fauilure Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-A3.EGRID
-
 /*
    Copyright (c) 2011  statoil asa, norway.
 
@@ -32,6 +30,7 @@
 #include <ert/util/stringlist.h>
 
 #include <ert/geometry/geo_util.h>
+#include <ert/geometry/geo_polygon.h>
 
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_kw.h>
@@ -3697,8 +3696,89 @@ int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double 
 }
 
 
+static bool ecl_grid_sublayer_contanins_xy__(const ecl_grid_type * grid , double x , double y , int k , int i1 , int i2 , int j1 , int j2, geo_polygon_type * polygon) {
+  int i,j;
+
+  geo_polygon_reset( polygon );
+
+  /* Bottom edge */
+  for (i=i1; i < i2; i++) {
+    double corner_pos[3];
+    ecl_grid_get_corner_xyz( grid , i , j1 , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
+    geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
+  }
+
+  /* Right edge */
+  for (j=j1; j < j2; j++) {
+    double corner_pos[3];
+    ecl_grid_get_corner_xyz( grid , i2 , j , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
+    geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
+  }
+
+  /* Top edge */
+  for (i=i2; i > i1; i--) {
+    double corner_pos[3];
+    ecl_grid_get_corner_xyz( grid , i , j2 , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
+    geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
+  }
+
+  /* Left edge */
+  for (j=j2; j > j1; j--) {
+    double corner_pos[3];
+    ecl_grid_get_corner_xyz( grid , i1 , j , k , &corner_pos[0] , &corner_pos[1] , &corner_pos[2]);
+    geo_polygon_add_point( polygon , corner_pos[0] , corner_pos[1]);
+  }
+  geo_polygon_close( polygon );
+  return geo_polygon_contains_point__( polygon , x  , y , true );
+}
 
 
+
+bool ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y , int k , int* i, int* j) {
+  geo_polygon_type * polygon = geo_polygon_alloc( NULL );
+  int nx = ecl_grid_get_nx( grid );
+  int ny = ecl_grid_get_ny( grid );
+  bool inside = ecl_grid_sublayer_contanins_xy__(grid , x , y , k , 0 , nx , 0 , ny , polygon);
+  if (inside) {
+    int i1 = 0;
+    int i2 = nx;
+    int j1 = 0;
+    int j2 = ny;
+
+    while (true) {
+      if ((i2 - i1) > 1) {
+        int ic = (i1 + i2) / 2;
+        if (ecl_grid_sublayer_contanins_xy__(grid , x , y , k , i1 , ic , j1 , j2 , polygon))
+          i2 = ic;
+        else {
+          if (!ecl_grid_sublayer_contanins_xy__(grid , x , y , k , ic , i2 , j1 , j2 , polygon))
+            util_abort("%s: point nowhere to be found ... \n",__func__);
+          i1 = ic;
+        }
+      }
+
+      if ((j2 - j1) > 1) {
+        int jc = (j1 + j2) / 2;
+        if (ecl_grid_sublayer_contanins_xy__(grid , x , y , k , i1 , i2 , j1 , jc , polygon))
+          j2 = jc;
+        else {
+          if (!ecl_grid_sublayer_contanins_xy__(grid , x , y , k , i1 , i2 , jc , j2 , polygon))
+            util_abort("%s: point nowhere to be found ... \n",__func__);
+          j1 = jc;
+        }
+      }
+
+      if ((i2 - i1) == 1 && (j2 - j1) == 1) {
+        *i = i1;
+        *j = j1;
+        break;
+      }
+    }
+  }
+
+  geo_polygon_free( polygon );
+  return inside;
+}
 
 
 

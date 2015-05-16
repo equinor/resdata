@@ -123,8 +123,8 @@ if (WITH_LATEX)
 endif()
 
 if (WITH_LAPACK)
-   list( APPEND source_files matrix_lapack.c matrix_blas.c regression.c lars.c stepwise.c)
-   list( APPEND header_files matrix_lapack.h matrix_blas.h regression.h lars.h stepwise.h)
+   list( APPEND source_files matrix_lapack.c matrix_blas.c matrix_stat.c regression.c lars.c stepwise.c)
+   list( APPEND header_files matrix_lapack.h matrix_blas.h matrix_stat.h regression.h lars.h stepwise.h)
 endif()
 
 if (UNISTD_HEADER)

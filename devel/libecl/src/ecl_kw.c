@@ -24,6 +24,7 @@
 
 #include <ert/util/util.h>
 #include <ert/util/buffer.h>
+#include <ert/util/int_vector.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_util.h>
@@ -2688,3 +2689,5 @@ void ecl_kw_fprintf_data( const ecl_kw_type * ecl_kw , const char * fmt , FILE *
     ecl_kw_fprintf_data_char( ecl_kw , fmt , stream );
 }
 
+
+#include "ecl_kw_functions.c"
