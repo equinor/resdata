@@ -210,7 +210,6 @@ const char * ecl_kw_get_write_fmt( ecl_type_enum ecl_type ) {
   }
 }
 
-
 static int get_blocksize( ecl_type_enum ecl_type ) {
   if (ecl_type == ECL_CHAR_TYPE)
     return BLOCKSIZE_CHAR;
