@@ -885,7 +885,7 @@ ime_index.
         Returns the first index where @key is above @limit.
         """
         key_index  = EclSum.cNamespace().get_general_var_index( self , key )
-        time_index = EclSum.cNamespace().get_first_lt( self , key_index , limit )
+        time_index = EclSum.cNamespace().get_first_gt( self , key_index , limit )
         return time_index
 
     def first_lt_index( self , key , limit ):
