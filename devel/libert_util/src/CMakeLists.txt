@@ -161,6 +161,10 @@ if (HAVE_GETUID AND HAVE_OPENDIR)
   list( APPEND header_files test_work_area.h )
 endif()
 
+if (ERT_BUILD_CXX)
+  list( APPEND header_files test_util.hpp )
+endif()
+
 add_library( ert_util   ${LIBRARY_TYPE}  ${source_files} )
 if (BUILD_TESTS)
    add_library( test_util  ${LIBRARY_TYPE}  ${test_source} )

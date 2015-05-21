@@ -170,7 +170,7 @@ add_executable( ert_util_abort_gnu_tests ert_util_abort_gnu_tests.c)
 target_link_libraries( ert_util_abort_gnu_tests ert_util test_util)
 add_test( ert_util_abort_gnu_tests ${EXECUTABLE_OUTPUT_PATH}/ert_util_abort_gnu_tests)
 
-if (WITH_PTHREAD)
+if (ERT_BUILD_BLOCK_FS)
    add_executable( ert_util_block_fs ert_util_block_fs.c)
    target_link_libraries( ert_util_block_fs ert_util test_util)
    add_test( ert_util_block_fs ${EXECUTABLE_OUTPUT_PATH}/ert_util_block_fs)
