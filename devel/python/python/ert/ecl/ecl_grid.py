@@ -987,11 +987,11 @@ class EclGrid(CClass):
         cfile = CFILE( pyfile )
         cfunc.fprintf_grdecl( self , cfile )
 
-    def save_EGRID( self , filename ):
+    def save_EGRID( self , filename , is_metric = True):
         """
         Will save the current grid as a EGRID file.
         """
-        cfunc.fwrite_EGRID( self , filename )
+        cfunc.fwrite_EGRID( self , filename, is_metric )
 
     def save_GRID( self , filename ):
         """
@@ -1099,7 +1099,7 @@ cfunc.invalid_cell                 = cwrapper.prototype("bool   ecl_grid_cell_in
 cfunc.get_distance                 = cwrapper.prototype("void   ecl_grid_get_distance( ecl_grid , int , int , double* , double* , double*)")
 cfunc.fprintf_grdecl               = cwrapper.prototype("void   ecl_grid_fprintf_grdecl( ecl_grid , FILE) ")
 cfunc.fwrite_GRID                  = cwrapper.prototype("void   ecl_grid_fwrite_GRID( ecl_grid , char* )")
-cfunc.fwrite_EGRID                 = cwrapper.prototype("void   ecl_grid_fwrite_EGRID( ecl_grid , char* )")
+cfunc.fwrite_EGRID                 = cwrapper.prototype("void   ecl_grid_fwrite_EGRID( ecl_grid , char*, bool )")
 cfunc.equal                        = cwrapper.prototype("bool   ecl_grid_compare(ecl_grid , ecl_grid , bool, bool)")
 cfunc.dual_grid                    = cwrapper.prototype("bool   ecl_grid_dual_grid( ecl_grid )")
 cfunc.init_actnum                  = cwrapper.prototype("void   ecl_grid_init_actnum_data( ecl_grid , int* )")
