@@ -987,11 +987,11 @@ class EclGrid(CClass):
         cfile = CFILE( pyfile )
         cfunc.fprintf_grdecl( self , cfile )
 
-    def save_EGRID( self , filename , is_metric = True):
+    def save_EGRID( self , filename , output_metric = True):
         """
         Will save the current grid as a EGRID file.
         """
-        cfunc.fwrite_EGRID( self , filename, is_metric )
+        cfunc.fwrite_EGRID( self , filename, output_metric )
 
     def save_GRID( self , filename ):
         """

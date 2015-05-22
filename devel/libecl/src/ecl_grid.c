@@ -5688,7 +5688,7 @@ void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum ) {
 
 
 
-static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio, bool is_metric) {
+static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio, bool metric_output) {
   bool is_lgr = true;
   if (grid->parent_grid == NULL)
     is_lgr = false;
@@ -5721,9 +5721,15 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
   {
     {
       ecl_grid_assert_coord_kw( grid );
-      if(is_metric != grid->is_metric){
-          ecl_kw_type * coord_kw = ecl_kw_alloc_data_copy(grid->coord_kw);
-          ecl_kw_scale_float(coord_kw, METER_TO_FEET_SCALE_FACTOR);
+      if(metric_output != grid->is_metric){
+          ecl_kw_type * coord_kw = ecl_kw_alloc_copy(grid->coord_kw);
+          double scale_factor = 0.0;
+          if (grid->is_metric){
+            scale_factor = METER_TO_FEET_SCALE_FACTOR;
+          } else{ 
+            scale_factor = (1 / METER_TO_FEET_SCALE_FACTOR);
+          }
+          ecl_kw_scale_float(coord_kw, scale_factor);
           ecl_kw_fwrite(coord_kw, fortio);
           ecl_kw_free(coord_kw);
       }else{
@@ -5732,8 +5738,14 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
     }
     {
       ecl_kw_type * zcorn_kw = ecl_grid_alloc_zcorn_kw( grid );
-      if(is_metric != grid->is_metric){
-          ecl_kw_scale_float(zcorn_kw, METER_TO_FEET_SCALE_FACTOR);
+      if(metric_output != grid->is_metric){
+          double scale_factor = 0.0;
+          if (grid->is_metric){
+            scale_factor = METER_TO_FEET_SCALE_FACTOR;
+          } else{ 
+            scale_factor = (1 / METER_TO_FEET_SCALE_FACTOR);
+          }
+          ecl_kw_scale_float(zcorn_kw, scale_factor);
       }
       ecl_kw_fwrite( zcorn_kw , fortio );
 
@@ -5772,16 +5784,16 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
 }
 
 
-void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool is_metric) {
+void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool output_metric) {
   bool fmt_file        = false;
   fortio_type * fortio = fortio_open_writer( filename , fmt_file , ECL_ENDIAN_FLIP );
 
-  ecl_grid_fwrite_EGRID__( grid , fortio, is_metric );
+  ecl_grid_fwrite_EGRID__( grid , fortio, output_metric );
   {
     int grid_nr;
     for (grid_nr = 0; grid_nr < vector_get_size( grid->LGR_list ); grid_nr++) {
       ecl_grid_type * igrid = vector_iget( grid->LGR_list , grid_nr );
-      ecl_grid_fwrite_EGRID__( igrid , fortio, is_metric );
+      ecl_grid_fwrite_EGRID__( igrid , fortio, output_metric );
     }
   }
   fortio_fclose( fortio );
