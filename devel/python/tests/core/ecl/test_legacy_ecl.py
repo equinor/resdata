@@ -50,9 +50,15 @@ class LegacyEclTest(TestCase):
             with self.assertRaises(NotImplementedError):
                 ecl.ecl_default.default.ecl_version
                 new_ecl.EclDefault.ecl_version()
+                
+    def test_queues(self):
+        try:
+            from ert.job_queue import JOB_QUEUE_LIB
+            self.assertEqual(ecl.EclQueue, new_ecl.ecl_queue.EclQueue)
+        except ImportError:
+            pass
 
-        self.assertEqual(ecl.EclQueue, new_ecl.ecl_queue.EclQueue)
-
+                
     def test_enums(self):
         self.assertEqual(ecl.ECL_FLOAT_TYPE, EclTypeEnum.ECL_FLOAT_TYPE)
         self.assertEqual(ecl.ECL_CHAR_TYPE, EclTypeEnum.ECL_CHAR_TYPE)
