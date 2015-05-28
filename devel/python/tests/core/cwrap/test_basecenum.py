@@ -1,4 +1,3 @@
-from ert.config import CONFIG_LIB
 from ert.cwrap import BaseCEnum
 from ert.test import ExtendedTestCase
 
@@ -76,25 +75,4 @@ class BaseCEnumTest(ExtendedTestCase):
         self.assertNotIn(PowerOf2.FOUR, three)
 
 
-    def test_enum_populate_from_c(self):
-        class ContentTypeEnum(BaseCEnum):
-            pass
-
-        ContentTypeEnum.populateEnum(CONFIG_LIB, "config_schema_item_type_enum_iget")
-
-        # CONFIG_STRING        = 1,
-        # CONFIG_INT           = 2,
-        # CONFIG_FLOAT         = 4,
-        # CONFIG_PATH          = 8,
-        # CONFIG_EXISTING_PATH = 16,
-        # CONFIG_BOOL          = 32,
-        # CONFIG_CONFIG        = 64,
-        # CONFIG_BYTESIZE      = 128,
-        # CONFIG_EXECUTABLE    = 256 ,
-        # CONFIG_INVALID       = 512
-
-        self.assertEqual(ContentTypeEnum.CONFIG_STRING, 1)
-        self.assertEqual(ContentTypeEnum.CONFIG_EXISTING_PATH, 16)
-        self.assertEqual(ContentTypeEnum.CONFIG_BYTESIZE, 128)
-        self.assertEqual(ContentTypeEnum.CONFIG_INVALID, 512)
 
