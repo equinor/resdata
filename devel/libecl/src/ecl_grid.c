@@ -565,6 +565,7 @@ typedef struct ecl_cell_struct           ecl_cell_type;
 
 #define GET_CELL_FLAG(cell,flag) (((cell->cell_flags & (flag)) == 0) ? false : true)
 #define SET_CELL_FLAG(cell,flag) ((cell->cell_flags |= (flag)))
+#define METER_TO_FEET_SCALE_FACTOR 3.28084
 
 struct ecl_cell_struct {
   point_type center;
@@ -637,6 +638,7 @@ struct ecl_grid_struct {
                                         recalculate this from the cell coordinates,
                                         but in cases with skewed cells this has proved
                                         numerically challenging. */
+  bool                  is_metric;
 };
 
 
@@ -1296,6 +1298,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
   ecl_grid_alloc_cells( grid , init_valid );
+  grid->is_metric             = true;
 
 
   if (global_grid != NULL) {
@@ -5684,7 +5687,8 @@ void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum ) {
 }
 
 
-static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio) {
+
+static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio, bool metric_output) {
   bool is_lgr = true;
   if (grid->parent_grid == NULL)
     is_lgr = false;
@@ -5717,11 +5721,36 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
   {
     {
       ecl_grid_assert_coord_kw( grid );
-      ecl_kw_fwrite( grid->coord_kw , fortio );
+      if(metric_output != grid->is_metric){
+          ecl_kw_type * coord_kw = ecl_kw_alloc_copy(grid->coord_kw);
+          double scale_factor = 0.0;
+          if (grid->is_metric){
+            scale_factor = METER_TO_FEET_SCALE_FACTOR;
+          } else{ 
+            scale_factor = (1 / METER_TO_FEET_SCALE_FACTOR);
+          }
+          ecl_kw_scale_float(coord_kw, scale_factor);
+          ecl_kw_fwrite(coord_kw, fortio);
+          ecl_kw_free(coord_kw);
+      }else{
+          ecl_kw_fwrite( grid->coord_kw , fortio );
+      }
     }
     {
       ecl_kw_type * zcorn_kw = ecl_grid_alloc_zcorn_kw( grid );
+      if(metric_output != grid->is_metric){
+          double scale_factor = 0.0;
+          if (grid->is_metric){
+            scale_factor = METER_TO_FEET_SCALE_FACTOR;
+          } else{ 
+            scale_factor = (1 / METER_TO_FEET_SCALE_FACTOR);
+          }
+          ecl_kw_scale_float(zcorn_kw, scale_factor);
+      }
       ecl_kw_fwrite( zcorn_kw , fortio );
+
+
+
       ecl_kw_free( zcorn_kw );
     }
     {
@@ -5755,16 +5784,16 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
 }
 
 
-void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename) {
+void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool output_metric) {
   bool fmt_file        = false;
   fortio_type * fortio = fortio_open_writer( filename , fmt_file , ECL_ENDIAN_FLIP );
 
-  ecl_grid_fwrite_EGRID__( grid , fortio );
+  ecl_grid_fwrite_EGRID__( grid , fortio, output_metric );
   {
     int grid_nr;
     for (grid_nr = 0; grid_nr < vector_get_size( grid->LGR_list ); grid_nr++) {
       ecl_grid_type * igrid = vector_iget( grid->LGR_list , grid_nr );
-      ecl_grid_fwrite_EGRID__( igrid , fortio );
+      ecl_grid_fwrite_EGRID__( igrid , fortio, output_metric );
     }
   }
   fortio_fclose( fortio );
