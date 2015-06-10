@@ -181,3 +181,22 @@ class Ecl3DKWTest(ExtendedTestCase):
             self.assertEqual(kw_copy[i] , 2*i)
             
         
+            
+    def test_global_copy(self):
+        actnum = IntVector(default_value = 1 , initial_size = 1000)
+        for i in range(500):
+            actnum[2*i + 1] = 0
+
+        grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
+        kw  = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = False)
+        for i in range(len(kw)):
+            kw[i] = i
+
+        kw.setDefault( 177 )
+        kw_copy = kw.globalCopy()
+        self.assertTrue( isinstance( kw_copy , EclKW ) )
+
+        self.assertEqual(len(kw_copy) , 1000)
+        for i in range(len(kw)):
+            self.assertEqual(kw_copy[2*i] , i)
+            self.assertEqual(kw_copy[2*i + 1] , kw.getDefault())

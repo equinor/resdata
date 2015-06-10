@@ -201,7 +201,19 @@ class Ecl3DKW(EclKW):
         active index, and for writing binary files.
         """
         return self.grid.compressedKWCopy( self )
-        
+
+
+    def globalCopy(self):
+        """Will return a EclKW copy with nx*ny*nz elements.
+
+        The returned copy will be of type EclKW; i.e. no default
+        interpolation and only linear access in the [] operator. The
+        main purpose of this is to facilitate iteration over the
+        global index, and for writing binary files.
+        """
+        return self.grid.globalKWCopy( self , self.getDefault() )
+
+    
 
     def dims(self):
         return (self.grid.getNX() , self.grid.getNY() , self.grid.getNZ())
