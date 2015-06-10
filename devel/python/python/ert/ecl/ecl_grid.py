@@ -1036,6 +1036,17 @@ class EclGrid(CClass):
         return actnum
 
 
+    def compressedKWCopy(self, kw):
+        if len(kw) == self.getNumActive():
+            return EclKW.copy( kw )
+        elif len(kw) == self.getGlobalSize():
+            kw_copy = EclKW.create( kw.getName() , self.getNumActive() , kw.getEclType())
+            cfunc.compressed_kw_copy( self , kw_copy , kw)
+            return kw_copy
+        else:
+            raise ValueError("The input keyword must have nx*n*nz or nactive elements. Size:%d invalid" % len(kw))
+    
+
 # 2. Creating a wrapper object around the libecl library, 
 #    registering the type map : ecl_kw <-> EclKW
 cwrapper = CWrapper(ECL_LIB)
@@ -1103,3 +1114,4 @@ cfunc.fwrite_EGRID                 = cwrapper.prototype("void   ecl_grid_fwrite_
 cfunc.equal                        = cwrapper.prototype("bool   ecl_grid_compare(ecl_grid , ecl_grid , bool, bool)")
 cfunc.dual_grid                    = cwrapper.prototype("bool   ecl_grid_dual_grid( ecl_grid )")
 cfunc.init_actnum                  = cwrapper.prototype("void   ecl_grid_init_actnum_data( ecl_grid , int* )")
+cfunc.compressed_kw_copy           = cwrapper.prototype("void   ecl_grid_compressed_kw_copy( ecl_grid , ecl_kw , ecl_kw)")

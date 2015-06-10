@@ -5609,6 +5609,21 @@ ecl_kw_type * ecl_grid_alloc_actnum_kw( const ecl_grid_type * grid ) {
   return actnum_kw;
 }
 
+void ecl_grid_compressed_kw_copy( const ecl_grid_type * grid , ecl_kw_type * target_kw , const ecl_kw_type * src_kw) {
+  if ((ecl_kw_get_size( target_kw ) == ecl_grid_get_nactive(grid)) && (ecl_kw_get_size( src_kw ) == ecl_grid_get_global_size(grid))) {
+    int active_index = 0;
+    int global_index;
+    for (global_index = 0; global_index < ecl_grid_get_global_size( grid ); global_index++) {
+      if (ecl_grid_cell_active1(grid, global_index)) {
+        ecl_kw_iset( target_kw , active_index , ecl_kw_iget_ptr(src_kw , global_index));
+        active_index++;
+      }
+    }
+  } else
+    util_abort("%s: size mismatch target:%d  src:%d  expected %d,%d \n",ecl_kw_get_size( target_kw ), ecl_kw_get_size( src_kw ) , ecl_grid_get_nactive(grid) , ecl_grid_get_global_size(grid));
+}
+
+
 /*****************************************************************/
 
 static void ecl_grid_init_hostnum_data( const ecl_grid_type * grid , int * hostnum ) {

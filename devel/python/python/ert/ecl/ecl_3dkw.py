@@ -191,6 +191,17 @@ class Ecl3DKW(EclKW):
         kw.setDefault( default_value )
         return kw
 
+    
+    def compressedCopy(self):
+        """Will return a EclKW copy with nactive elements.
+
+        The returned copy will be of type EclKW; i.e. no default
+        interpolation and only linear access in the [] operator. The
+        main purpose of this is to facilitate iteration over the
+        active index, and for writing binary files.
+        """
+        return self.grid.compressedKWCopy( self )
+        
 
     def dims(self):
         return (self.grid.getNX() , self.grid.getNY() , self.grid.getNZ())
@@ -202,4 +213,6 @@ class Ecl3DKW(EclKW):
 
     def getDefault(self):
         return self.default_value
+
+
 
