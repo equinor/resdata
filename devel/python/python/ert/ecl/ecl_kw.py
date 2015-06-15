@@ -1016,6 +1016,15 @@ class EclKW(CClass):
         cfunc.fix_uninitialized( self , dims[0] , dims[1], dims[2] , actnum.getDataPtr() )
 
 
+    def getDataPtr(self):
+        if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+            return cfunc.int_ptr( self )
+        elif self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
+            return cfunc.float_ptr( self )
+        elif self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
+            return cfunc.double_ptr( self )
+        else:
+            raise ValueError("Only numeric types can export data pointer")
 
 #################################################################
 
