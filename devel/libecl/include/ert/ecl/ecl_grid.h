@@ -207,6 +207,8 @@ extern "C" {
   bool ecl_grid_use_mapaxes( const ecl_grid_type * grid );
   void ecl_grid_init_mapaxes_data_double( const ecl_grid_type * grid , double * mapaxes);
   void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum );
+  void ecl_grid_compressed_kw_copy( const ecl_grid_type * grid , ecl_kw_type * target_kw , const ecl_kw_type * src_kw);
+  void ecl_grid_global_kw_copy( const ecl_grid_type * grid , ecl_kw_type * target_kw , const ecl_kw_type * src_kw);
 
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
   UTIL_SAFE_CAST_HEADER( ecl_grid );

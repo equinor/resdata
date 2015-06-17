@@ -19,7 +19,7 @@ from unittest import skipIf
 import time
 
 from ert.util import IntVector
-from ert.ecl import EclGrid
+from ert.ecl import EclGrid,EclKW,EclTypeEnum
 from ert.ecl.faults import Layer , FaultCollection
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -176,4 +176,11 @@ class GridTest(ExtendedTestCase):
         c = grid.findCellCornerXY( 0.90 , 0.10 , 0 )
         self.assertEqual( c , 1 )
         
-        
+    def test_compressed_copy(self):
+        nx = 10
+        ny = 10
+        nz = 10
+        grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1) )
+        kw1 = EclKW.create("KW" , 1001 , EclTypeEnum.ECL_INT_TYPE )
+        with self.assertRaises(ValueError):
+            cp = grid.compressedKWCopy( kw1 )
