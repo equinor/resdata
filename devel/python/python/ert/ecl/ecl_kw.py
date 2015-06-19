@@ -775,8 +775,11 @@ class EclKW(CClass):
         return cfunc.get_size( self )
     
     def set_name( self , name ):
+        if len(name) > 8:
+            raise ValueError("Sorry: the name property must be max 8 characters long :-(")
         cfunc.set_header( self , name )
 
+        
     def get_name( self ):
         return self.getName()
         
