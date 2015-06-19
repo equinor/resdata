@@ -42,8 +42,8 @@ class Version(object):
     def __cmpTuple(self):
         return (self.major , self.minor , self.micro_int)
 
-
-    
+    def __str__(self):
+        return self.versionString()
 
     @cmp_method
     def __eq__(self , other):
