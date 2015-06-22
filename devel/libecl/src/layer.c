@@ -711,12 +711,12 @@ void layer_memcpy(layer_type * target_layer , const layer_type * src_layer) {
 }
 
 
-void layer_clear_cells( layer_type * layer) {
+static void layer_assign__( layer_type * layer, int value) {
   int i,j;
   for (j=0; j < layer->ny; j++) {
     for (i=0; i < layer->nx; i++) {
       cell_type * cell = layer_iget_cell( layer , i , j );
-      cell->cell_value = 0;
+      cell->cell_value = value;
       {
         int e;
         for (e=0; e < 4; e++)
@@ -724,7 +724,15 @@ void layer_clear_cells( layer_type * layer) {
       }
     }
   }
-  layer->cell_sum = 0;
+  layer->cell_sum = value * layer->nx*layer->ny;
+}
+
+void layer_clear_cells( layer_type * layer) {
+  layer_assign__(layer , 0 );
+}
+
+void layer_assign( layer_type * layer, int value) {
+  layer_assign__( layer , value );
 }
 
 

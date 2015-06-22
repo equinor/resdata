@@ -192,6 +192,12 @@ class Layer(BaseCClass):
         Layer.cNamespace().clear_cells( self )
 
 
+    def assign(self , value):
+        """
+        Will set the cell value to @value in all cells. Barriers will not be changed
+        """
+        Layer.cNamespace().assign( self , value )
+        
 
     def updateConnected(self , ij , new_value , org_value = None):
         """
@@ -238,6 +244,7 @@ Layer.cNamespace().add_barrier  = cwrapper.prototype("void      layer_add_barrie
 Layer.cNamespace().add_ijbarrier  = cwrapper.prototype("void      layer_add_ijbarrier(layer , int , int, int , int)")
 Layer.cNamespace().add_interp_barrier = cwrapper.prototype("void  layer_add_interp_barrier(layer , int , int)")
 Layer.cNamespace().clear_cells = cwrapper.prototype("void layer_clear_cells(layer)")
+Layer.cNamespace().assign = cwrapper.prototype("void layer_assign(layer , int)")
 Layer.cNamespace().cell_sum = cwrapper.prototype("int layer_get_cell_sum(layer)")
 Layer.cNamespace().update_connected = cwrapper.prototype("void layer_update_connected_cells(layer,int,int,int,int)")
 Layer.cNamespace().cells_equal = cwrapper.prototype("void layer_cells_equal( layer, int,int_vector,int_vector)")
