@@ -348,7 +348,10 @@ class Fault(object):
             return None
         else:
             self_polyline = self.getPolyline( k )
-            return self_polyline.connect( polyline )
+            if len(self_polyline) > 0:
+                return self_polyline.connect( polyline )
+            else:
+                return None
 
 
     def connect(self , target , k):
