@@ -1009,22 +1009,22 @@ static void ecl_region_cylinder_select__( ecl_region_type * region , double x0 ,
         double x,y,z;
         ecl_grid_get_xyz3( region->parent_grid , i,j,0 , &x , &y , &z);
         {
-                        double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
-        bool select_column = false;
+          double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
+          bool select_column = false;
 
-        if ((pointR2 < R2) && (select_inside))
-          select_column = true;
-        else if ((pointR2 > R2) && (!select_inside))
-          select_column = true;
+          if ((pointR2 < R2) && (select_inside))
+            select_column = true;
+          else if ((pointR2 > R2) && (!select_inside))
+            select_column = true;
 
-        if (select_column) {
-          int k;
-          for (k=0; k < nz; k++) {
-            int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
-            region->active_mask[ global_index ] = select;
+          if (select_column) {
+            int k;
+            for (k=0; k < nz; k++) {
+              int global_index = ecl_grid_get_global_index3( region->parent_grid , i,j,k);
+              region->active_mask[ global_index ] = select;
+            }
           }
         }
-                }
       }
     }
   }
@@ -1193,7 +1193,37 @@ void ecl_region_select_active_index( ecl_region_type * region , int active_index
 void ecl_region_deselect_active_index( ecl_region_type * region , int active_index) {
   ecl_region_select_active_index__( region , active_index , false );
 }
+/*****************************************************************/
 
+static void ecl_region_select_from_layer__( ecl_region_type * region , const layer_type * layer , int k , int layer_value, bool select) {
+  int_vector_type * i_list = int_vector_alloc(0,0);
+  int_vector_type * j_list = int_vector_alloc(0,0);
+
+  layer_cells_equal(layer, layer_value, i_list , j_list);
+  {
+    const int * i = int_vector_get_ptr( i_list );
+    const int * j = int_vector_get_ptr( j_list );
+
+    for (int index = 0; index < int_vector_size( i_list ); index++) {
+      int global_index = ecl_grid_get_global_index3( region->parent_grid , i[index] , j[index] , k);
+      region->active_mask[ global_index ] = select;
+    }
+  }
+  if (int_vector_size( i_list ) > 0)
+    ecl_region_invalidate_index_list( region );
+
+  int_vector_free( i_list );
+  int_vector_free( j_list );
+}
+
+
+void ecl_region_select_from_layer( ecl_region_type * region , const layer_type * layer , int k , int layer_value) {
+  ecl_region_select_from_layer__( region , layer , k , layer_value , true );
+}
+
+void ecl_region_deselect_from_layer( ecl_region_type * region , const layer_type * layer , int k , int layer_value) {
+  ecl_region_select_from_layer__( region , layer , k , layer_value , false );
+}
 
 /*****************************************************************/
 

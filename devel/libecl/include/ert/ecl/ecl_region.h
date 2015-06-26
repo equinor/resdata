@@ -29,6 +29,7 @@ extern "C" {
 
 #include <ert/ecl/ecl_box.h>
 #include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/layer.h>
 
 
 typedef enum {
@@ -149,6 +150,10 @@ typedef struct ecl_region_struct ecl_region_type;
   void              ecl_region_select_outside_polygon( ecl_region_type * region   , const geo_polygon_type * polygon);
   void              ecl_region_deselect_outside_polygon( ecl_region_type * region , const geo_polygon_type * polygon);
 
+  void              ecl_region_select_from_layer( ecl_region_type * region , const layer_type * layer , int k , int layer_value);
+  void              ecl_region_deselect_from_layer( ecl_region_type * region , const layer_type * layer , int k , int layer_value);
+
+  
 /*****************************************************************/
 /* Functions to manipulate ecl_kw instances . */
 

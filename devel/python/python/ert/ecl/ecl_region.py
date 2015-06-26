@@ -28,6 +28,7 @@ queried for the corresponding list of indices.
 import ctypes
 import warnings
 from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
+from ert.ecl.faults import Layer
 from ert.ecl import EclKW, EclTypeEnum, ECL_LIB
 from ert.geo import CPolyline
 from ert.util import IntVector
@@ -718,11 +719,35 @@ class EclRegion(CClass):
         """
         cfunc.select_false( self , ecl_kw )
 
+        
+    @select_method
+    def selectFromLayer(self , layer , k , value, intersect = False):
+        """Will select all the cells in in @layer with value @value - at
+        vertical coordinate @k.
 
+        The input @layer should be of type Layer - from the
+        ert.ecl.faults.layer module. The k value must in the range
+        [0,grid.nz) and the dimensions of the layer must correspond
+        exactly to nx,ny of the grid.
+        """
+        grid = self.grid
+        if k < 0 or k >= grid.getNZ():
+            raise ValueError("Invalid k value:%d - must be in range [0,%d)" % (k , grid.getNZ()))
+
+        if grid.getNX() != layer.getNX():
+            raise ValueError("NX dimension mismatch. Grid:%d  layer:%d" % (grid.getNX() , layer.getNX()))
+
+        if grid.getNY() != layer.getNY():
+            raise ValueError("NY dimension mismatch. Grid:%d  layer:%d" % (grid.getNY() , layer.getNY()))
+        
+        cfunc.select_from_layer( self , layer , k , value )
+
+    
 
     #################################################################
 
     def scalar_apply_kw( self , target_kw , scalar , func_dict , force_active = False):
+
         """
         Helper function to apply a function with one scalar arg on target_kw.
         """
@@ -1040,3 +1065,5 @@ cfunc.select_false                 = cwrapper.prototype("void ecl_region_select_
 cfunc.deselect_true                = cwrapper.prototype("void ecl_region_deselect_true( ecl_region , ecl_kw)")
 cfunc.deselect_false               = cwrapper.prototype("void ecl_region_deselect_false( ecl_region , ecl_kw)")
 
+cfunc.select_from_layer            = cwrapper.prototype("void ecl_region_select_from_layer( ecl_region , layer , int , int)")
+cfunc.deselect_from_layer          = cwrapper.prototype("void ecl_region_deselect_from_layer( ecl_region , layer , int , int)")

@@ -287,3 +287,12 @@ class LayerTest(ExtendedTestCase):
         layer.updateActive( grid , 0 )
         self.assertTrue( layer.activeCell(1,2) )
         self.assertFalse( layer.activeCell(0,0) )
+
+
+    def test_assign(self):
+        layer = Layer(10,5)
+        self.assertEqual( layer.cellSum() , 0 )
+
+        layer.assign(10)
+        self.assertEqual( layer.cellSum() , 500 )
+        
