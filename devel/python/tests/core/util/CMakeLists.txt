@@ -14,6 +14,7 @@ set(TEST_SOURCES
     test_vectors.py
     test_version.py
     test_work_area.py
+    test_path_context.py
 )
 
 add_python_package("python.tests.core.util"  ${PYTHON_INSTALL_PREFIX}/tests/core/util "${TEST_SOURCES}" False)
@@ -29,6 +30,7 @@ addPythonTest(core.util.tvector core.util.test_vectors.UtilTest)
 addPythonTest(core.util.ui_return core.util.test_ui_return.UIReturnTest)
 addPythonTest(core.util.work_area core.util.test_work_area.WorkAreaTest)
 addPythonTest(core.util.version core.util.test_version.VersionTest)
+addPythonTest(core.util.path_context core.util.test_path_context.PathContextTest)
 
 #add_test( NAME python.tests.ert.util.latex
 #          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
