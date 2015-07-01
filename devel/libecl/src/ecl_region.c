@@ -1204,10 +1204,12 @@ static void ecl_region_select_from_layer__( ecl_region_type * region , const lay
     const int * i = int_vector_get_ptr( i_list );
     const int * j = int_vector_get_ptr( j_list );
 
-    for (int index = 0; index < int_vector_size( i_list ); index++) {
+    int index;
+    for (index = 0; index < int_vector_size( i_list ); index++) {
       int global_index = ecl_grid_get_global_index3( region->parent_grid , i[index] , j[index] , k);
       region->active_mask[ global_index ] = select;
     }
+
   }
   if (int_vector_size( i_list ) > 0)
     ecl_region_invalidate_index_list( region );
