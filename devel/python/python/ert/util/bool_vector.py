@@ -17,6 +17,7 @@
 
 from ert.cwrap import CWrapper
 from ert.util import UTIL_LIB, VectorTemplate
+import warnings
 
 
 class BoolVector(VectorTemplate):
@@ -30,7 +31,7 @@ class BoolVector(VectorTemplate):
         return BoolVector.cNamespace().count_equal(self, value)
 
     @classmethod
-    def active_mask(cls, range_string):
+    def createActiveMask(cls, range_string):
         """
         Will create a BoolVector instance with the values from @range_string.
 
@@ -48,6 +49,25 @@ class BoolVector(VectorTemplate):
         return cls.cNamespace().create_active_mask(range_string)
 
     @classmethod
+    def active_mask(cls, range_string):
+        """
+        Will create a BoolVector instance with the values from @range_string.
+
+        The range_string input should be of the type "1,3-5,9,17",
+        i.e. integer values separated by commas, and dashes to
+        represent ranges. If the input string contains ANY invalid
+        characters the returned active list will be empty:
+
+           "1,4-7,10"  =>  {F,T,F,F,T,T,T,T,F,F,T}
+           "1,4-7,10X" =>  {}
+
+        The empty list will evaluate to false
+        @rtype: BoolVector
+        """
+        warnings.warn("The active_mask(cls, rangs_string) method has been renamed: createActiveMask(cls, rangs_string)" , DeprecationWarning)
+        return cls.cNamespace().create_active_mask(range_string)
+
+    @classmethod
     def updateActiveMask(cls, range_string, bool_vector):
         """
         Updates a bool vector based on a range string.
@@ -59,7 +79,10 @@ class BoolVector(VectorTemplate):
 
     @classmethod
     def createFromList(cls, size, source_list):
-        """Allocates a bool vector from a Python list of indexes"""
+        """
+        Allocates a bool vector from a Python list of indexes
+        @rtype: BoolVector
+        """
         bool_vector = BoolVector(False, size)
 
         for index in source_list:
@@ -70,7 +93,7 @@ class BoolVector(VectorTemplate):
 
 
     def createActiveList(self):
-        """ @rtype: IntVectorTemplate """
+        """ @rtype: ert.util.IntVector """
         return BoolVector.cNamespace().active_list(self)
 
 

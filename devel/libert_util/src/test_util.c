@@ -85,6 +85,17 @@ void test_assert_string_not_equal__( const char * s1 , const char * s2 , const c
 }
 
 
+void test_assert_long_equal__( long i1 , long i2 , const char * file , long line) {
+  if (i1 != i2)
+    test_error_exit( "%s:%d => Long values are different i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
+
+void test_assert_long_not_equal__( long i1 , long i2 , const char * file , long line) {
+  if (i1 == i2)
+    test_error_exit( "%s:%d => Long values are equal i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+}
+
 
 void test_assert_int_equal__( int i1 , int i2 , const char * file , int line) {
   if (i1 != i2)
@@ -121,6 +132,19 @@ void test_assert_bool_not_equal__( bool b1 , bool b2 , const char * file , int l
     test_error_exit( "%s:%d => Booleans are equal b1:[%d]  b2:[%d]\n" , file , line , b1 , b2 );
 }
 
+
+/*****************************************************************/
+
+void test_assert_size_t_equal__( size_t s1 , size_t s2 , const char * file , int line) {
+  if (s1 != s2)
+    test_error_exit("%s:%d => size_t values are different s1:%d  s2:[%d]\n" , file , line , s1 , s2);
+}
+
+
+void test_assert_size_t_not_equal__( size_t s1 , size_t s2 , const char * file , int line) {
+  if (s1 == s2)
+    test_error_exit("%s:%d => size_t values are different s1:%d  s2:[%d]\n" , file , line , s1 , s2);
+}
 
 
 /*****************************************************************/
