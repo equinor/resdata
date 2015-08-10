@@ -76,6 +76,7 @@ from .thread_pool import ThreadPool
 from .cthread_pool import CThreadPool , startCThreadPool
 from .install_abort_signals import installAbortSignals
 from .profiler import Profiler
+from .arg_pack import ArgPack
 
 # Check if latex functionality exists in libert_util
 if hasattr(UTIL_LIB, "latex_alloc"):

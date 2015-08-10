@@ -16,6 +16,7 @@ set(TEST_SOURCES
     test_version.py
     test_work_area.py
     test_path_context.py
+    test_arg_pack.py
 )
 
 add_python_package("python.tests.core.util"  ${PYTHON_INSTALL_PREFIX}/tests/core/util "${TEST_SOURCES}" False)
@@ -34,6 +35,7 @@ addPythonTest(core.util.version core.util.test_version.VersionTest)
 addPythonTest(core.util.path_context core.util.test_path_context.PathContextTest)
 addPythonTest(core.util.thread_pool core.util.test_thread_pool.ThreadPoolTest)
 addPythonTest(core.util.cthread_pool core.util.test_cthread_pool.CThreadPoolTest)
+addPythonTest(core.util.arg_pack core.util.test_arg_pack.ArgPackTest)
 
 #add_test( NAME python.tests.ert.util.latex
 #          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
