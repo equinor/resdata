@@ -22,13 +22,19 @@ class CThreadPool(BaseCClass):
     def __init__(self , pool_size , start = True):
         c_ptr = CThreadPool.cNamespace().alloc( pool_size , start )
         super(CThreadPool, self).__init__(c_ptr)
-
+        self.arg_list = []
         
     def addTask(self , cfunc , arg):
         """ 
         The function should come from CThreadPool.lookupCFunction().
         """
-        CThreadPool.cNamespace().add_job( self , cfunc , arg )
+        if isinstance(arg, BaseCClass):
+            arg_ptr = BaseCClass.from_param( arg )
+        else:
+            arg_ptr = arg
+
+        self.arg_list.append( arg )
+        CThreadPool.cNamespace().add_job( self , cfunc , arg_ptr )
 
 
     def join(self):
