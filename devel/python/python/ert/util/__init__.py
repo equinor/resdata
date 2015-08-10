@@ -73,6 +73,7 @@ from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
 from .thread_pool import ThreadPool
+from .cthread_pool import CThreadPool , startCThreadPool
 from .install_abort_signals import installAbortSignals
 from .profiler import Profiler
 

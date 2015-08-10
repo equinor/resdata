@@ -317,3 +317,20 @@ void test_assert_util_abort(const char * function_name , void call_func (void *)
 
 
 #endif
+
+
+/*****************************************************************/
+
+#ifdef WITH_PTHREAD
+#include <pthread.h>
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void * thread_pool_test_func1( void * arg ) {
+  int * value = (int *) arg;
+  pthread_mutex_lock( &mutex );
+  value[0]++;
+  pthread_mutex_unlock( &mutex );
+  return NULL;
+}
+#endif
