@@ -259,7 +259,6 @@ class LayerTest(ExtendedTestCase):
         pl = CPolyline( init_points = [(0 , 0) , (d/2 , d/2) , (d,d)])
         layer.addPolylineBarrier( pl , grid , 0)
         for i in range(d):
-            print i
             self.assertTrue( layer.bottomBarrier(i,i) )
             if i < (d - 1):
                 self.assertTrue( layer.leftBarrier(i+1,i) )
