@@ -1057,6 +1057,11 @@ class EclGrid(CClass):
         else:
             raise ValueError("The input keyword must have nx*n*nz or nactive elements. Size:%d invalid" % len(kw))
 
+
+    def exportACTNUMKw(self):
+        actnum = EclKW.create("ACTNUM" , self.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
+        cfunc.init_actnum( self , actnum.getDataPtr() )
+        return actnum
         
 
 # 2. Creating a wrapper object around the libecl library, 
