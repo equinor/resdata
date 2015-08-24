@@ -295,3 +295,12 @@ class LayerTest(ExtendedTestCase):
         layer.assign(10)
         self.assertEqual( layer.cellSum() , 500 )
         
+
+
+    def test_count_equal(self):
+        layer = Layer(10,10)
+        self.assertEqual( 100 , layer.countEqual( 0 ))
+        self.assertEqual( 0 , layer.countEqual( 1 ))
+
+        layer[3,3] = 3
+        self.assertEqual( 1 , layer.countEqual( 3 ))
