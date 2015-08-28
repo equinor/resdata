@@ -25,6 +25,7 @@
 
 #include <ert/util/thread_pool.h>
 #include <ert/util/util.h>
+#include <ert/util/type_macros.h>
 
 /**
    This file implements a small thread_pool object based on
@@ -117,8 +118,9 @@ typedef struct {
 
 
 
-
+#define THREAD_POOL_TYPE_ID 71443207
 struct thread_pool_struct {
+  UTIL_TYPE_ID_DECLARATION;
   thread_pool_arg_type      * queue;              /* The jobs to be executed are appended in this vector. */
   int                         queue_index;        /* The index of the next job to run. */
   int                         queue_size;         /* The number of jobs in the queue - including those which are complete. [Should be protected / atomic / ... ] */
@@ -134,7 +136,7 @@ struct thread_pool_struct {
 };
 
 
-
+static UTIL_SAFE_CAST_FUNCTION( thread_pool , THREAD_POOL_TYPE_ID )
 
 
 /**
@@ -212,7 +214,7 @@ static void * thread_pool_start_job( void * arg ) {
 */
 
 static void * thread_pool_main_loop( void * arg ) {
-  thread_pool_type * tp = (thread_pool_type *) arg;
+  thread_pool_type * tp = thread_pool_safe_cast( arg );
   {
     const int usleep_init = 1000;  /* The sleep time when there are free slots available - but no jobs wanting to run. */
     int internal_offset   = 0;     /* Keep track of the (index of) the last job slot fired off - minor time saving. */
@@ -262,9 +264,8 @@ static void * thread_pool_main_loop( void * arg ) {
         if (!slot_found) {
             util_yield();
         }
-      } else {
-          util_usleep(usleep_init);    /* There are no jobs wanting to run. */
-      }
+      } else
+        util_usleep(usleep_init);    /* There are no jobs wanting to run. */
 
       /*****************************************************************/
       /*
@@ -360,6 +361,7 @@ void thread_pool_join(thread_pool_type * pool) {
 
 thread_pool_type * thread_pool_alloc(int max_running , bool start_queue) {
   thread_pool_type * pool = util_malloc( sizeof *pool );
+  UTIL_TYPE_ID_INIT( pool , THREAD_POOL_TYPE_ID );
   pool->job_slots         = util_calloc( max_running , sizeof * pool->job_slots );
   pool->max_running       = max_running;
   pool->queue             = NULL;
