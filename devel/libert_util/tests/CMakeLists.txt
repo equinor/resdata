@@ -10,6 +10,11 @@ set(PING_SERVERS "" CACHE STRING  "List of servers for testing ping")
 
 link_directories( ${ERT_BINARY_DIR}/libert_util/src )
 
+add_executable( test_thread_pool test_thread_pool.c )
+target_link_libraries( test_thread_pool ert_util test_util )
+add_test( test_thread_pool valgrind --error-exitcode=1 --tool=memcheck ${EXECUTABLE_OUTPUT_PATH}/test_thread_pool )
+
+
 add_executable( ert_util_type_vector_test ert_util_type_vector_test.c )
 target_link_libraries( ert_util_type_vector_test ert_util test_util )
 add_test( ert_util_type_vector_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_type_vector_test )
