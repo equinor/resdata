@@ -350,6 +350,39 @@ void thread_pool_join(thread_pool_type * pool) {
   }
 }
 
+/*
+  This will try to join the thread; if the manager thread has not
+  completed within @timeout_seconds the function will return false. If
+  the join fails the queue will be reset in a non-joining state and it
+  will be open for more jobs. Probably not in a 100% sane state.
+*/
+
+bool thread_pool_try_join(thread_pool_type * pool, int timeout_seconds) {
+  bool join_ok = true;
+
+  pool->join = true;                               /* Signals to the main thread that joining can start. */
+  if (pool->max_running > 0) {
+    struct timespec ts;
+    time_t timeout_time = time( NULL );
+
+    util_inplace_forward_seconds(&timeout_time , timeout_seconds );
+    ts.tv_sec = timeout_time;
+    ts.tv_nsec = 0;
+
+    {
+      int join_return = pthread_timedjoin_np( pool->dispatch_thread , NULL , &ts);  /* Wait for the main thread to complete. */
+      if (join_return == 0)
+        pool->accepting_jobs = false;
+      else {
+        pool->join = false;
+        join_ok = false;
+      }
+    }
+  }
+  return join_ok;
+}
+
+
 
 
 /**
