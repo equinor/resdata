@@ -25,6 +25,7 @@
 
 #include <ert/util/ssize_t.h>
 #include <ert/util/util.h>
+#include <ert/util/type_macros.h>
 #include <ert/util/buffer.h>
 
 
@@ -53,7 +54,7 @@
 
 
 struct buffer_struct {
-  size_t     __id;
+  UTIL_TYPE_ID_DECLARATION;
   char     * data;             /* The actual storage. */
   size_t     alloc_size;       /* The total byte size of the buffer. */
   size_t     content_size;     /* The extent of initialized data in the buffer - i.e. the meaningful content in the buffer. */
@@ -64,8 +65,8 @@ struct buffer_struct {
 /*****************************************************************/
 
 
-
-
+UTIL_IS_INSTANCE_FUNCTION( buffer , BUFFER_TYPE_ID )
+UTIL_SAFE_CAST_FUNCTION( buffer , BUFFER_TYPE_ID )
 
 
 /**
@@ -99,7 +100,7 @@ static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_o
 
 static buffer_type * buffer_alloc_empty( ) {
   buffer_type * buffer = util_malloc( sizeof * buffer );
-  buffer->__id = BUFFER_TYPE_ID;
+  UTIL_TYPE_ID_INIT( buffer , BUFFER_TYPE_ID );
   buffer->data = NULL;
 
   buffer->alloc_size   = 0;
@@ -360,15 +361,26 @@ int buffer_fgetc( buffer_type * buffer ) {
 }
 
 /**
-   This function writes all the elements in the string __NOT__
-   including the terminating \0 character into the buffer. This should
-   not be confused with buffer_fwrite_string() function which both
-   prepends the string with an integer length specifier and also
-   includes the terminating \0.
+   This function writes all the elements in the string including the
+   terminating \0 character into the buffer. This should not be
+   confused with buffer_fwrite_string() function which in addition
+   prepends the string with an integer length.
 */
 
 void buffer_fwrite_char_ptr(buffer_type * buffer , const char * string_ptr ) {
-  buffer_fwrite(buffer , string_ptr , sizeof * string_ptr , strlen( string_ptr ));
+  buffer_fwrite(buffer , string_ptr , sizeof * string_ptr , strlen( string_ptr ) + 1);
+}
+
+
+void buffer_strcat(buffer_type * buffer , const char * string) {
+  if (buffer->content_size == 0)
+    buffer_fwrite_char_ptr( buffer , string );
+  else {
+    if (buffer->data[ buffer->content_size - 1] == '\0') {
+      buffer_fseek( buffer , -1 , SEEK_END);
+      buffer_fwrite_char_ptr( buffer , string );
+    }
+  }
 }
 
 
@@ -377,7 +389,7 @@ void buffer_fwrite_char_ptr(buffer_type * buffer , const char * string_ptr ) {
    of the buffer will be checked, and no new \0 will be added if the
    buffer is already \0 terminated.
 */
-void buffer_terminate_char_ptr( buffer_type * buffer ) {
+static void buffer_terminate_char_ptr( buffer_type * buffer ) {
   if (buffer->data[ buffer->content_size - 1] != '\0')
     buffer_fwrite_char( buffer , '\0');
 }
@@ -448,57 +460,6 @@ void buffer_fwrite_double(buffer_type * buffer , double value) {
 
 
 
-/**
-   Storing strings:
-   ----------------
-
-   When storing a string (\0 terminated char pointer) what is actually
-   written to the buffer is
-
-     1. The length of the string - as returned from strlen().
-     2. The string content INCLUDING the terminating \0.
-
-
-*/
-
-
-/**
-   This function will return a pointer to the current position in the
-   buffer, and advance the buffer position forward until a \0
-   terminater is found. If \0 is not found the thing will abort().
-
-   Observe that the return value will point straight into the buffer,
-   this is highly volatile memory, and in general it will be safer to
-   use buffer_fread_alloc_string() to get a copy of the string.
-*/
-
-const char * buffer_fread_string(buffer_type * buffer) {
-  int    string_length = buffer_fread_int( buffer );
-  char * string_ptr    = &buffer->data[buffer->pos];
-  char   c;
-  buffer_fskip( buffer , string_length );
-  c = buffer_fread_char( buffer );
-  if (c != '\0')
-    util_abort("%s: internal error - malformed string representation in buffer \n",__func__);
-  return string_ptr;
-}
-
-
-
-char * buffer_fread_alloc_string(buffer_type * buffer) {
-  return util_alloc_string_copy( buffer_fread_string( buffer ));
-}
-
-
-
-/**
-   Observe that this function writes a leading integer string length.
-*/
-void buffer_fwrite_string(buffer_type * buffer , const char * string) {
-  buffer_fwrite_int( buffer , strlen( string ));               /* Writing the length of the string */
-  buffer_fwrite(buffer , string , 1 , strlen( string ) + 1);   /* Writing the string content ** WITH ** the terminating \0 */
-}
-
 
 
 
@@ -537,6 +498,11 @@ size_t buffer_get_remaining_size(const buffer_type *  buffer) {
 void * buffer_get_data(const buffer_type * buffer) {
   return buffer->data;
 }
+
+void * buffer_iget_data(const buffer_type * buffer, size_t offset) {
+  return &buffer->data[offset];
+}
+
 
 
 /**
@@ -625,7 +591,6 @@ void buffer_replace_data(buffer_type * buffer , size_t offset , size_t old_size 
 
 
 void buffer_replace_string( buffer_type * buffer , size_t offset , size_t old_size , const char * new_string) {
-
   buffer_replace_data( buffer , offset , old_size , new_string , strlen(new_string));
 }
 
@@ -642,22 +607,32 @@ void buffer_replace_string( buffer_type * buffer , size_t offset , size_t old_si
 
 
 bool buffer_strstr( buffer_type * buffer , const char * expr ) {
-  /**
-      If this condition is satisfied the assumption that buffer->data
-      is a \0 terminated string certainly breaks down.
-  */
-  if ((buffer->content_size == 0) || (buffer->pos == buffer->content_size))
-    return false;
+  bool match = false;
 
-  {
-    char * match = NULL;
+  if (strlen(expr) > 0) {
+    size_t start_pos = buffer->pos;
 
-    match = strstr( &buffer->data[buffer->pos] , expr);
-    if (match != NULL)
-      buffer->pos = match - buffer->data;
+    while (true) {
+      if (buffer_strchr( buffer , expr[0])) {
+        if (buffer->pos < (buffer->content_size - 1)) {
+          char * target = strstr( &buffer->data[buffer->pos + 1] , &expr[1]);
+          if (target) {
+            buffer->pos = target - buffer->data - 1;
+            match = true;
+            break;
+          } else
+            buffer_fskip( buffer , 1 );
+        } else
+          break;
+      } else
+        break;
+    }
 
-    return (match != NULL);
+    if (!match)
+      buffer->pos = start_pos;
+
   }
+  return match;
 }
 
 
@@ -670,30 +645,37 @@ bool buffer_strchr( buffer_type * buffer , int c) {
     return false;
 
   {
-    char * match = NULL;
+    bool match = false;
+    size_t pos = buffer->pos;
 
-    match = strchr( &buffer->data[buffer->pos] , c);
-    if (match != NULL)
-      buffer->pos = match - buffer->data;
+    while (true) {
+      if (buffer->data[pos] == c) {
+        match = true;
+        buffer->pos = pos;
+        break;
+      }
+      pos++;
+      if (pos == buffer->content_size)
+        break;
+    }
 
-    return (match != NULL);
+    return match;
   }
 }
 
 
 
 
-
 bool buffer_search_replace( buffer_type * buffer , const char * old_string , const char * new_string) {
-  const int shift = strlen( new_string ) - strlen( old_string );
   bool match = buffer_strstr( buffer , old_string );
   if (match) {
     size_t offset = buffer_get_offset( buffer ) + strlen( old_string );
+    const int shift = strlen( new_string ) - strlen( old_string );
     if (shift != 0)
       buffer_memshift( buffer , offset , shift );
 
-    /** Search continues at the end of the newly inserted string - i.e. no room for recursions. */
-    buffer_fwrite( buffer , new_string , strlen( new_string ) , sizeof * new_string );
+    buffer_fwrite( buffer , new_string , 1 , strlen(new_string));
+    buffer_terminate_char_ptr( buffer );
   }
   return match;
 }
@@ -837,6 +819,8 @@ void buffer_store(const buffer_type * buffer , const char * filename) {
   fclose( stream );
 }
 
+
+#include "buffer_string.c"
 
 #ifdef WITH_ZLIB
 #include "buffer_zlib.c"

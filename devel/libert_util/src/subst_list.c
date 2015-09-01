@@ -866,12 +866,11 @@ char * subst_list_alloc_string_representation( const subst_list_type * subst_lis
   
     for (i=0; i < size; i++) {
       buffer_fwrite_char_ptr( buffer , subst_list_iget_key( subst_list , i));
-      buffer_fwrite_char(buffer , '=');
-      buffer_fwrite_char_ptr( buffer , subst_list_iget_value( subst_list , i));
+      buffer_strcat(buffer , "=");
+      buffer_strcat( buffer , subst_list_iget_value( subst_list , i));
       if (i < (size - 1)) 
-        buffer_fwrite_char_ptr( buffer , ", ");
+        buffer_strcat( buffer , ", ");
     }
-    buffer_fwrite_char( buffer , '\0');
     buffer_shrink_to_fit( buffer );
     return_string = buffer_get_data( buffer );
     buffer_free_container( buffer );

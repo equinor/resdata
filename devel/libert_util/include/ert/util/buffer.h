@@ -28,6 +28,7 @@ extern "C" {
 #include <string.h>
 #include <time.h>
 
+#include <ert/util/type_macros.h>
 #include <ert/util/ssize_t.h>
 
 
@@ -49,13 +50,10 @@ extern "C" {
   size_t             buffer_fread(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items);
   size_t             buffer_safe_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_size , size_t items);
   size_t             buffer_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_size , size_t items);
-  const char       * buffer_fread_string(buffer_type * buffer);
-  char             * buffer_fread_alloc_string(buffer_type * buffer);
-  void               buffer_fwrite_string(buffer_type * buffer , const char * string);
   void               buffer_summarize(const buffer_type * buffer , const char *);
 
   void               buffer_fwrite_char_ptr(buffer_type * buffer , const char * string_ptr );
-  void               buffer_terminate_char_ptr( buffer_type * buffer );
+  void               buffer_strcat(buffer_type * buffer , const char * string);
   void               buffer_fwrite_char(buffer_type * buffer , char value);
   void               buffer_fwrite_int(buffer_type * buffer , int value);
   void               buffer_fskip_bool(buffer_type * buffer);
@@ -72,6 +70,7 @@ extern "C" {
   size_t             buffer_get_remaining_size(const buffer_type *  buffer);
   void             * buffer_get_data(const buffer_type * buffer);
   void             * buffer_alloc_data_copy(const buffer_type * buffer);
+  void             * buffer_iget_data(const buffer_type * buffer, size_t offset);
   void               buffer_stream_fwrite( const buffer_type * buffer , FILE * stream );
   int                buffer_fgetc( buffer_type * buffer );
   void               buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
@@ -97,6 +96,13 @@ extern "C" {
   size_t             buffer_fwrite_compressed(buffer_type * buffer, const void * ptr , size_t byte_size);
   size_t             buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , void * target_ptr , size_t target_size);
 #endif
+
+
+#include "buffer_string.h"
+
+  UTIL_IS_INSTANCE_HEADER( buffer );
+  UTIL_SAFE_CAST_HEADER( buffer );
+
 #ifdef __cplusplus
 }
 #endif
