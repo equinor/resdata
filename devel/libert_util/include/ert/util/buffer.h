@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'buffer.h' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'buffer.h' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #ifndef __BUFFER_H__
@@ -53,7 +53,7 @@ extern "C" {
   char             * buffer_fread_alloc_string(buffer_type * buffer);
   void               buffer_fwrite_string(buffer_type * buffer , const char * string);
   void               buffer_summarize(const buffer_type * buffer , const char *);
-  
+
   void               buffer_fwrite_char_ptr(buffer_type * buffer , const char * string_ptr );
   void               buffer_terminate_char_ptr( buffer_type * buffer );
   void               buffer_fwrite_char(buffer_type * buffer , char value);
@@ -77,16 +77,16 @@ extern "C" {
   void               buffer_fseek(buffer_type * buffer , ssize_t offset , int whence);
   void               buffer_fskip(buffer_type * buffer, ssize_t offset);
   void               buffer_clear( buffer_type * buffer );
-  
+
   void               buffer_fskip_int(buffer_type * buffer);
   void               buffer_fskip_time_t(buffer_type * buffer);
   time_t             buffer_fread_time_t(buffer_type * buffer);
   void               buffer_fwrite_time_t(buffer_type * buffer , time_t value);
   void               buffer_rewind(buffer_type * buffer );
-  
+
   double             buffer_fread_double(buffer_type * buffer);
   void               buffer_fwrite_double(buffer_type * buffer , double value);
-  
+
   size_t             buffer_stream_fwrite_n( const buffer_type * buffer , size_t offset , ssize_t write_size , FILE * stream );
   void               buffer_stream_fprintf( const buffer_type * buffer , FILE * stream );
   void               buffer_stream_fread( buffer_type * buffer , size_t byte_size , FILE * stream);
