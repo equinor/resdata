@@ -369,6 +369,8 @@ bool thread_pool_try_join(thread_pool_type * pool, int timeout_seconds) {
     ts.tv_sec = timeout_time;
     ts.tv_nsec = 0;
 
+#ifdef HAVE_TIMEDJOIN
+
     {
       int join_return = pthread_timedjoin_np( pool->dispatch_thread , NULL , &ts);  /* Wait for the main thread to complete. */
       if (join_return == 0)
@@ -378,6 +380,30 @@ bool thread_pool_try_join(thread_pool_type * pool, int timeout_seconds) {
         join_ok = false;
       }
     }
+
+#else
+
+    while(true) {
+        if (pthread_kill(pool->dispatch_thread, 0) == 0){
+            util_yield();
+        } else {
+            pthread_join(pool->dispatch_thread, NULL);
+            pool->accepting_jobs = false;
+            break;
+        }
+
+        time_t now = time(NULL);
+
+        if(util_difftime_seconds(now, timeout_time) <= 0) {
+            join_ok = false;
+            break;
+        }
+    }
+
+#endif
+
+
+
   }
   return join_ok;
 }
