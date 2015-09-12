@@ -231,12 +231,12 @@ rng_alg_type  rng_get_type( const rng_type * rng ) {
 }
 
 unsigned int rng_get_max_int(const rng_type * rng) {
-    unsigned int MAX = ((1 << 32) - 1);
-    if(rng->max_value < MAX) {
-        return rng->max_value;
-    } else {
-        return MAX;
-    }
+  unsigned int MAX = -1;
+  if(rng->max_value < MAX) {
+    return rng->max_value;
+  } else {
+    return MAX;
+  }
 }
 
 /*****************************************************************/
