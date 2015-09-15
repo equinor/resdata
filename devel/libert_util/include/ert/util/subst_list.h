@@ -25,6 +25,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 
+#include <ert/util/type_macros.h>
 #include <ert/util/subst_func.h>
 
   typedef struct          subst_list_struct subst_list_type;
@@ -58,6 +59,7 @@ extern "C" {
   char                  * subst_list_alloc_string_representation( const subst_list_type * subst_list );
   int                     subst_list_add_from_string( subst_list_type * subst_list , const char * arg_string, bool append);
 
+  UTIL_IS_INSTANCE_HEADER( subst_list );
 #ifdef __cplusplus
 }
 #endif

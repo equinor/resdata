@@ -238,7 +238,7 @@ static subst_list_string_type * subst_list_insert_new_node(subst_list_type * sub
 
 /*****************************************************************/
 
-static UTIL_IS_INSTANCE_FUNCTION( subst_list , SUBST_LIST_TYPE_ID )
+UTIL_IS_INSTANCE_FUNCTION( subst_list , SUBST_LIST_TYPE_ID )
 
 
 /**
