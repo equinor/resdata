@@ -73,7 +73,7 @@ void test_buffer_strstr() {
 
 
 
-void test_buffer_search_replace() {
+void test_buffer_search_replace1() {
   buffer_type * buffer = buffer_alloc( 1024 );
   test_assert_false( buffer_search_replace( buffer , "" , "XYZ"));
   test_assert_false( buffer_search_replace( buffer , "XYZ" , "ABC"));
@@ -98,6 +98,24 @@ void test_buffer_search_replace() {
   buffer_free( buffer );
 }
 
+
+void test_buffer_search_replace2() {
+  buffer_type * buffer = buffer_alloc( 1024 );
+  buffer_fwrite_char_ptr(buffer , "MAGIC_PRINT  magic-list.txt  <ERTCASE>  __MAGIC__");
+
+  buffer_rewind( buffer );
+  test_assert_false( buffer_search_replace( buffer , "<CASE>" , "SUPERCase"));
+  test_assert_string_equal( "MAGIC_PRINT  magic-list.txt  <ERTCASE>  __MAGIC__" , buffer_get_data( buffer));
+
+  buffer_rewind( buffer );
+  test_assert_true( buffer_search_replace( buffer , "<ERTCASE>" , "default"));
+  test_assert_string_equal( "MAGIC_PRINT  magic-list.txt  default  __MAGIC__" , buffer_get_data( buffer));
+
+
+  buffer_free( buffer );
+}
+
+
 void test_char_ptr( ) {
   buffer_type * buffer = buffer_alloc(1024);
   buffer_fwrite_char_ptr( buffer , "Hello World");
@@ -120,6 +138,7 @@ int main( int argc , char ** argv) {
   test_char_ptr();
   test_buffer_strchr();
   test_buffer_strstr();
-  test_buffer_search_replace();
+  test_buffer_search_replace1();
+  test_buffer_search_replace2();
   exit(0);
 }

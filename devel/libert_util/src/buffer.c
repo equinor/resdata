@@ -610,27 +610,11 @@ bool buffer_strstr( buffer_type * buffer , const char * expr ) {
   bool match = false;
 
   if (strlen(expr) > 0) {
-    size_t start_pos = buffer->pos;
-
-    while (true) {
-      if (buffer_strchr( buffer , expr[0])) {
-        if (buffer->pos < (buffer->content_size - 1)) {
-          char * target = strstr( &buffer->data[buffer->pos + 1] , &expr[1]);
-          if (target) {
-            buffer->pos = target - buffer->data - 1;
-            match = true;
-            break;
-          } else
-            buffer_fskip( buffer , 1 );
-        } else
-          break;
-      } else
-        break;
+    char * match_ptr = strstr( &buffer->data[buffer->pos] , expr );
+    if (match_ptr) {
+      buffer->pos += match_ptr - &buffer->data[buffer->pos];
+      match = true;
     }
-
-    if (!match)
-      buffer->pos = start_pos;
-
   }
   return match;
 }
