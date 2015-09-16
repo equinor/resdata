@@ -23,9 +23,18 @@ add_executable( ert_util_matrix ert_util_matrix.c )
 target_link_libraries( ert_util_matrix ert_util test_util )
 add_test( ert_util_matrix ${EXECUTABLE_OUTPUT_PATH}/ert_util_matrix )
 
+add_executable( ert_util_subst_list ert_util_subst_list.c )
+target_link_libraries( ert_util_subst_list ert_util test_util )
+add_test( ert_util_subst_list ${EXECUTABLE_OUTPUT_PATH}/ert_util_subst_list )
+
+
 add_executable( ert_util_matrix_stat ert_util_matrix_stat.c )
 target_link_libraries( ert_util_matrix_stat ert_util test_util )
 add_test( ert_util_matrix_stat ${EXECUTABLE_OUTPUT_PATH}/ert_util_matrix_stat )
+
+add_executable( ert_util_buffer ert_util_buffer.c )
+target_link_libraries( ert_util_buffer ert_util test_util )
+add_test( ert_util_buffer ${EXECUTABLE_OUTPUT_PATH}/ert_util_buffer )
 
 add_executable( ert_util_statistics ert_util_statistics.c )
 target_link_libraries( ert_util_statistics ert_util test_util )

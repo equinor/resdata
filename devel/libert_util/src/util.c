@@ -4849,6 +4849,7 @@ void util_install_signals(void) {
                                              Killing with SIGKILL (-9) will not give a backtrace.*/
   signal(SIGABRT , util_abort_signal);    /* Signal abort. */
   signal(SIGILL  , util_abort_signal);    /* Signal illegal instruction. */
+  signal(SIGFPE  , util_abort_signal);    /* Floating point exception */
 }
 
 
