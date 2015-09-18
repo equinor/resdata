@@ -160,6 +160,10 @@ add_executable( ert_util_parent_path ert_util_parent_path.c )
 target_link_libraries( ert_util_parent_path ert_util test_util )
 add_test( ert_util_parent_path ${EXECUTABLE_OUTPUT_PATH}/ert_util_parent_path)
 
+add_executable( ert_util_alloc_file_components ert_util_alloc_file_components.c )
+target_link_libraries( ert_util_alloc_file_components ert_util test_util )
+add_test( ert_util_alloc_file_components ${EXECUTABLE_OUTPUT_PATH}/ert_util_alloc_file_components)
+
 add_executable( ert_util_work_area ert_util_work_area.c )
 target_link_libraries( ert_util_work_area ert_util test_util )
 add_test( NAME ert_util_work_area 
