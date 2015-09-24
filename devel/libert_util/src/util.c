@@ -2637,6 +2637,7 @@ static int util_get_base_length(const char * file) {
   int path_length   = util_get_path_length(file);
   const char * base_start;
   const char * last_point;
+  long character_index;
 
   if (path_length == strlen(file))
     return 0;
@@ -2646,7 +2647,7 @@ static int util_get_base_length(const char * file) {
     base_start = &file[path_length + 1];
 
   last_point  = strrchr(base_start , '.');
-  long character_index = last_point - base_start;
+  character_index = last_point - base_start;
 
   if (last_point == NULL || character_index == 0)
     return strlen(base_start);
