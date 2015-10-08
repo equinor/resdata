@@ -1,8 +1,12 @@
 from datetime import datetime, date
+import time
 from pytz import timezone
-
 from ert.util import CTime
 
+
+def timezoneOffsetInSeconds(dt):
+    local_timezone = timezone(CTime.timezone())
+    return int(local_timezone.utcoffset(dt).total_seconds())
 
 try:
     from unittest2 import TestCase
@@ -12,14 +16,15 @@ except ImportError:
 
 class CTimeTest(TestCase):
 
+
     def test_creation(self):
-        tz = CTime.timezone()
-        t0 = CTime(-60 * 60)
+        delta = timezoneOffsetInSeconds(datetime(1970, 1, 1))
+        t0 = CTime(-delta)
 
         t1 = CTime(t0)
         self.assertEqual(t0, t1)
 
-        t2 = CTime(datetime(1970, 1, 1, tzinfo=timezone(tz)))
+        t2 = CTime(datetime(1970, 1, 1))
         self.assertEqual(t0, t2)
 
         t3 = CTime(date(1970, 1, 1))
@@ -30,15 +35,16 @@ class CTimeTest(TestCase):
 
 
     def test_c_time(self):
-        tz = CTime.timezone()
-        c_time = CTime(0)
-        py_time = datetime(1970, 1, 1, 1, tzinfo=timezone(tz))
-        self.assertEqual(str(c_time), py_time.strftime("%Y-%m-%d %H:%M:%S"))
+        delta = timezoneOffsetInSeconds(datetime(1970, 1, 1))
+        c_time = CTime(-delta)
+        py_time = datetime(1970, 1, 1)
 
-        date_time = CTime(datetime(1970, 1, 1, 1, 0, 0, tzinfo=timezone(tz)))
+        self.assertEqual(str(c_time), py_time.strftime("%Y-%m-%d %H:%M:%S%z"))
+
+        date_time = CTime(py_time)
         self.assertEqual(c_time, date_time)
 
-        date_time_after = CTime(datetime(1970, 1, 1, 1, 0, 5, tzinfo=timezone(tz)))
+        date_time_after = CTime(datetime(1970, 1, 1, 1, 0, 5))
 
         self.assertTrue(date_time_after > date_time)
 
@@ -131,3 +137,21 @@ class CTimeTest(TestCase):
         self.assertTrue(c0 <= c2 <= d2)
         self.assertTrue(dt0 <= c2 <= c2)
 
+
+
+    def test_conversion(self):
+        t = CTime(0)
+
+        self.assertEqual(t.value(), 0)
+        self.assertEqual(t.ctime(), 0)
+        self.assertEqual(t.time(), time.localtime(0))
+
+        # These conversions depend on timezone
+        utc = timezone('utc')
+        local_timezone = timezone(CTime.timezone())
+
+        localized_dt = local_timezone.localize(t.datetime())
+        self.assertEqual(localized_dt.astimezone(utc), datetime(1970, 1, 1, 0, tzinfo=utc))
+
+        localized_d = datetime(1970, 1, 1, 0, tzinfo=utc).astimezone(local_timezone)
+        self.assertEqual(t.date(), localized_d.date())
