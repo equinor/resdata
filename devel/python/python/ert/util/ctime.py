@@ -19,8 +19,8 @@ import math
 import ctypes
 import datetime
 import time
-from types import NoneType
 from ert.cwrap import CWrapper, BaseCValue
+from ert.util import UTIL_LIB
 
 
 class CTime(BaseCValue):
@@ -135,7 +135,17 @@ class CTime(BaseCValue):
     def stripped(self):
         return time.strptime(self, "%Y-%m-%d %H:%M:S%")
 
+    @classmethod
+    def timezone(cls):
+        """
+         Returns the current timezone "in" C
+         @rtype: str
+        """
+        return CTime._timezone()
 
-cwrapper = CWrapper(None)
+
+cwrapper = CWrapper(UTIL_LIB)
 cwrapper.registerType("time_t", CTime)
+
+CTime._timezone = cwrapper.prototype("char* util_get_timezone()")
 

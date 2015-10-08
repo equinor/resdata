@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from pytz import timezone
 
 from ert.util import CTime
 
@@ -12,12 +13,13 @@ except ImportError:
 class CTimeTest(TestCase):
 
     def test_creation(self):
+        tz = CTime.timezone()
         t0 = CTime(-60 * 60)
 
         t1 = CTime(t0)
         self.assertEqual(t0, t1)
 
-        t2 = CTime(datetime(1970, 1, 1, 0))
+        t2 = CTime(datetime(1970, 1, 1, tzinfo=timezone(tz)))
         self.assertEqual(t0, t2)
 
         t3 = CTime(date(1970, 1, 1))
@@ -28,13 +30,15 @@ class CTimeTest(TestCase):
 
 
     def test_c_time(self):
+        tz = CTime.timezone()
         c_time = CTime(0)
-        self.assertEqual(str(c_time), "1970-01-01 01:00:00")
+        py_time = datetime(1970, 1, 1, 1, tzinfo=timezone(tz))
+        self.assertEqual(str(c_time), py_time.strftime("%Y-%m-%d %H:%M:%S"))
 
-        date_time = CTime(datetime(1970, 1, 1, 1, 0, 0))
+        date_time = CTime(datetime(1970, 1, 1, 1, 0, 0, tzinfo=timezone(tz)))
         self.assertEqual(c_time, date_time)
 
-        date_time_after = CTime(datetime(1970, 1, 1, 1, 0, 5))
+        date_time_after = CTime(datetime(1970, 1, 1, 1, 0, 5, tzinfo=timezone(tz)))
 
         self.assertTrue(date_time_after > date_time)
 
