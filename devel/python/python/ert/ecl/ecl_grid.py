@@ -122,7 +122,9 @@ class EclGrid(CClass):
 
 
     @classmethod
+    @classmethod
     def create_rectangular(cls , dims , dV , actnum = None):
+        warnings.warn("The create_rectangular method is deprecated - use createRectangular( )")
         return cls.createRectangular( dims , dV , actnum )
 
 
