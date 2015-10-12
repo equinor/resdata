@@ -334,6 +334,9 @@ class EclKW(CClass):
         return EclKW.wrap( new_c_ptr , data_owner = True )
     
 
+    def isNumeric(self):
+        return cfunc.assert_numeric( self )
+    
 
     def ecl_kw_instance( self ):
         return True
@@ -445,7 +448,7 @@ class EclKW(CClass):
     
 
     def __IMUL__(self , factor , mul = True):
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if hasattr( factor , "ecl_kw_instance"):
                 if cfunc.assert_binary( self, factor ):
                     if mul:
@@ -475,7 +478,7 @@ class EclKW(CClass):
                 
 
     def __IADD__(self , delta , add = True):
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if type(self) == type(delta):
                 if cfunc.assert_binary( self, delta):
                     if add:
@@ -623,7 +626,7 @@ class EclKW(CClass):
         keyword has nx*ny*nz elements; if the keyword has nactive
         elements the @force_active flag is not considered.
         """
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if type(value) == type(self):
                 if mask:
                     mask.copy_kw( self , value , force_active)
