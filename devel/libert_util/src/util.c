@@ -3246,6 +3246,11 @@ double util_difftime_seconds( time_t start_time , time_t end_time) {
 
 */
 
+char * util_get_timezone() {
+  return tzname[0];
+}
+
+
 time_t util_make_datetime(int sec, int min, int hour , int mday , int month , int year) {
   struct tm ts;
   ts.tm_sec    = sec;
@@ -3253,7 +3258,7 @@ time_t util_make_datetime(int sec, int min, int hour , int mday , int month , in
   ts.tm_hour   = hour;
   ts.tm_mday   = mday;
   ts.tm_mon    = month - 1;
-  ts.tm_year   = year  - 1900;
+  ts.tm_year   = year - 1900;
   ts.tm_isdst  = -1;    /* Negative value means mktime tries to determine automagically whether Daylight Saving Time is in effect. */
   {
     time_t t = mktime( &ts );
