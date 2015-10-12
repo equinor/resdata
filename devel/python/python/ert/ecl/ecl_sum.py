@@ -823,10 +823,7 @@ ime_index.
 
     @property
     def data_start(self):
-        """
-        The first date we have data for.
-        """
-        return CTime( EclSum.cNamespace().get_data_start( self ) ).datetime()
+        return self.getDataStartTime()
     
 
 
@@ -842,7 +839,19 @@ ime_index.
     def start_time(self):
         return self.getStartTime()
 
-        
+
+    def getDataStartTime(self):
+        """The first date we have data for.
+
+        Thiw will mostly be equal to getStartTime(), but in the case
+        of restarts, where the case we have restarted from is not
+        found, this time will be later than the true start of the
+        field.
+        """
+        return CTime( EclSum.cNamespace().get_data_start( self ) ).datetime()
+
+
+    
     def getStartTime(self):
         """
         A Python datetime instance with the start time.
