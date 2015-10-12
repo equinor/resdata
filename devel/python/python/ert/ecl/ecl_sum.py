@@ -528,7 +528,7 @@ class EclSum(BaseCClass):
                 sim_start  = self.first_day
                 index = 0
                 for days in days_list:
-                    if (days >= sim_start) and (days < sim_length):
+                    if (days >= sim_start) and (days <= sim_length):
                         vector[index] = EclSum.cNamespace().get_general_var_from_sim_days( self , days , key)
                     else:
                         raise ValueError("Invalid days value")
