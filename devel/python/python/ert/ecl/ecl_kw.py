@@ -523,6 +523,15 @@ class EclKW(CClass):
 
     #################################################################
     
+    def __abs__(self):
+        if self.isNumeric():
+            copy = self.deep_copy()
+            cfunc.iabs( copy )
+            return copy
+        else:
+            raise TypeError("The __abs__() function is only implemented for numeric types")
+            
+
     
     def __add__(self , delta):
         copy = self.deep_copy()
@@ -1078,6 +1087,7 @@ cfunc.iadd                       = cwrapper.prototype("void     ecl_kw_inplace_a
 cfunc.imul                       = cwrapper.prototype("void     ecl_kw_inplace_mul( ecl_kw , ecl_kw )")
 cfunc.idiv                       = cwrapper.prototype("void     ecl_kw_inplace_div( ecl_kw , ecl_kw )")
 cfunc.isub                       = cwrapper.prototype("void     ecl_kw_inplace_sub( ecl_kw , ecl_kw )")
+cfunc.iabs                       = cwrapper.prototype("void     ecl_kw_inplace_abs( ecl_kw )")
 cfunc.equal                      = cwrapper.prototype("bool     ecl_kw_equal( ecl_kw , ecl_kw )")
 cfunc.equal_numeric              = cwrapper.prototype("bool     ecl_kw_numeric_equal( ecl_kw , ecl_kw , double )")
 
