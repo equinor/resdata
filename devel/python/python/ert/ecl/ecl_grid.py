@@ -122,7 +122,15 @@ class EclGrid(CClass):
 
 
     @classmethod
+    def create_ref(cls , c_ptr , parent = None ):
+        obj = object.__new__( cls )
+        obj.init_cref( c_ptr , parent )
+        return obj
+    
+
+    @classmethod
     def create_rectangular(cls , dims , dV , actnum = None):
+        warnings.warn("The create_rectangular method is deprecated - use createRectangular( )")
         return cls.createRectangular( dims , dV , actnum )
 
 
