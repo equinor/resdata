@@ -3247,7 +3247,11 @@ double util_difftime_seconds( time_t start_time , time_t end_time) {
 */
 
 char * util_get_timezone() {
+#if defined(HAVE_TZNAME)
   return tzname[0];
+#elif defined(HAVE_WINDOWS_TZNAME)
+  return _tzname[0];
+#endif
 }
 
 
