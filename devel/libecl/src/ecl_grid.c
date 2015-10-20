@@ -639,6 +639,7 @@ struct ecl_grid_struct {
                                         but in cases with skewed cells this has proved
                                         numerically challenging. */
   bool                  is_metric;
+  int                   eclipse_version;
 };
 
 
@@ -1338,6 +1339,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->parent_grid     = NULL;
   grid->children        = hash_alloc();
   grid->coarse_cells    = vector_alloc_new();
+  grid->eclipse_version = 0;
   return grid;
 }
 
@@ -2284,6 +2286,10 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
 static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_file) {
   int num_nnchead_kw = ecl_file_get_num_named_kw( ecl_file , NNCHEAD_KW );
 
+  if(num_nnchead_kw > 0 && main_grid->eclipse_version == 2015){
+      return; //Eclipse 2015 has an error with nnc.
+  }
+
   int i;
   for (i = 0; i < num_nnchead_kw; i++) {
     ecl_file_push_block(ecl_file);               /* <---------------------------------------------------------------- */
@@ -2366,11 +2372,15 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   ecl_kw_type * actnum_kw    = NULL;
   ecl_kw_type * mapaxes_kw   = NULL;
   int dualp_flag;
+  int eclipse_version;
   if (grid_nr == 0) {
     ecl_kw_type * filehead_kw  = ecl_file_iget_named_kw( ecl_file , FILEHEAD_KW  , grid_nr);
     dualp_flag                 = ecl_kw_iget_int( filehead_kw , FILEHEAD_DUALP_INDEX );
-  } else
+    eclipse_version = ecl_kw_iget_int( filehead_kw, FILEHEAD_YEAR_INDEX);
+  } else{
     dualp_flag = main_grid->dualp_flag;
+    eclipse_version = main_grid->eclipse_version;
+  }
 
 
   /** If ACTNUM is not present - that is is interpreted as - all active. */
@@ -2399,6 +2409,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
                                                            corsnum_kw );
 
     if (ECL_GRID_MAINGRID_LGR_NR != grid_nr) ecl_grid_set_lgr_name_EGRID(ecl_grid , ecl_file , grid_nr);
+    ecl_grid->eclipse_version = eclipse_version;
     return ecl_grid;
   }
 }
