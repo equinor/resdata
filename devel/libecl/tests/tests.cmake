@@ -114,6 +114,10 @@ add_executable( ecl_grid_simple ecl_grid_simple.c )
 target_link_libraries( ecl_grid_simple ecl test_util )
 add_test( ecl_grid_simple ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
+add_executable( ecl_grid_ecl2015 ecl_grid_ecl2015.c )
+target_link_libraries( ecl_grid_ecl2015 ecl test_util )
+add_test( ecl_grid_ecl2015 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_ecl2015  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_NOSIM_GRID.EGRID )
+
 
 add_executable( ecl_grid_DEPTHZ ecl_grid_DEPTHZ.c )
 target_link_libraries( ecl_grid_DEPTHZ ecl test_util )
