@@ -38,6 +38,8 @@ implementation from the libecl library.
 import re
 import types
 import datetime
+import ctypes
+import warnings
 from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
 from ert.ecl import EclKW, ECL_LIB
 from ert.util import CTime
@@ -140,7 +142,7 @@ class EclFile(CClass):
             # OK - we did not have seqnum; that might be because this
             # a non-unified restart file; or because this is not a
             # restart file at all.
-            fname = self.name
+            fname = self.getFilename( )
             matchObj = re.search("\.[XF](\d{4})$" , fname)
             if matchObj:
                 report_steps.append( int(matchObj.group(1)) )
@@ -164,7 +166,7 @@ class EclFile(CClass):
         
 
     def __str__(self):
-        return "EclFile: %s" % self.name
+        return "EclFile: %s" % self.getFilename( )
 
         
     def __init__( self , filename , flags = 0):
@@ -224,7 +226,7 @@ class EclFile(CClass):
         if cfunc.writable( self ):
             cfunc.save_kw( self , kw )
         else:
-            raise IOError("save_kw: the file:%s has been opened read only." % self.name)
+            raise IOError("save_kw: the file:%s has been opened read only." % self.getFilename( ))
         
 
     def __len__(self):
@@ -690,14 +692,20 @@ class EclFile(CClass):
         
         """
         return cfunc.iget_restart_days( self , index ) 
-    
 
-    @property
-    def name(self):
+
+    def getFilename(self):
         """
         Name of the file currently loaded.
         """
         return cfunc.get_src_file( self )
+    
+
+    @property
+    def name(self):
+        warnings.warn("The name property is deprecated - use getFilename( )")
+        return self.getFilename()
+
     
     def fwrite( self , fortio ):
         """
