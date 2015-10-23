@@ -4332,9 +4332,8 @@ double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
 
 
 double ecl_grid_get_cell_dy3( const ecl_grid_type * grid , int i , int j , int k) {
-  fprintf(stderr , "** WARNING: The ecl_grid_get_cell_dy1() function is only a stub returning -1.\n");
-  fprintf(stderr , "            If you need a correct value for cell dy you must update rebuild a new ert version.\n");
-  return ecl_grid_get_cell_dy1( grid , global_index );
+  const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
+  return ecl_grid_get_cell_dx1( grid , global_index );
 }
 
 
