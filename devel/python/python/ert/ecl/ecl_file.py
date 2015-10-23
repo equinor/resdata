@@ -41,11 +41,32 @@ import datetime
 import ctypes
 import warnings
 from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
-from ert.ecl import EclKW, ECL_LIB
+from ert.ecl import ECL_LIB, EclKW, EclFileEnum
 from ert.util import CTime
 
 
 class EclFile(CClass):
+
+    @staticmethod
+    def getFileType(filename):
+        fmt_file    = ctypes.c_bool()
+        report_step = ctypes.c_int()
+
+        file_type = cfunc.get_file_type( filename , ctypes.byref( fmt_file ) , ctypes.byref(report_step)) 
+        if file_type in [EclFileEnum.ECL_RESTART_FILE , EclFileEnum.ECL_SUMMARY_FILE]:
+            report_step = report_step.value
+        else:
+            report_step = None
+
+        if file_type in [EclFileEnum.ECL_OTHER_FILE , EclFileEnum.ECL_DATA_FILE]:
+            fmt_file = None
+        else:
+            fmt_file = fmt_file.value
+
+
+        return (file_type , report_step , fmt_file )
+
+    
 
     @classmethod
     def restart_block( cls , filename , dtime = None , report_step = None):
@@ -782,5 +803,6 @@ cfunc.fwrite                      = cwrapper.prototype("void        ecl_file_fwr
 cfunc.has_instance                = cwrapper.prototype("bool        ecl_file_has_kw_ptr(ecl_file , ecl_kw)")
 cfunc.has_report_step             = cwrapper.prototype("bool        ecl_file_has_report_step( ecl_file , int)")
 cfunc.has_sim_time                = cwrapper.prototype("bool        ecl_file_has_sim_time( ecl_file , time_t )")
+cfunc.get_file_type               = cwrapper.prototype("ecl_file_enum ecl_util_get_file_type( char* , bool* , int*)")
 
 
