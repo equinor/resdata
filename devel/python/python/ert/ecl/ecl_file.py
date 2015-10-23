@@ -659,6 +659,12 @@ class EclFile(CClass):
         else:
             return False
 
+    def __contains__(self , kw):
+        """
+        Check if the current file contains keyword @kw.
+        """
+        return self.has_kw( kw )
+
     def has_report_step( self , report_step ):
         """
         Checks if the current EclFile has report step @report_step.
