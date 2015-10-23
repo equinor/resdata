@@ -50,7 +50,8 @@ void test_file( const char * filename , int occurence , bool exists , const ecl_
 
 
 int main(int argc , char ** argv) {
-  ecl_rsthead_type true1 = {.day = 1,
+  ecl_rsthead_type true1 = {.report_step = 1,
+                            .day = 1,
                             .year = 2000,
                             .month = 1,
                             .sim_time = (time_t) 946681200,
@@ -73,7 +74,8 @@ int main(int argc , char ** argv) {
                             .dualp  = 0,
                             .sim_days  = 0};
 
-  ecl_rsthead_type true2 = {.day = 22,
+  ecl_rsthead_type true2 = {.report_step = 5,
+                            .day = 22,
                             .year = 1990,
                             .month = 1,
                             .sim_time = (time_t) 632962800,

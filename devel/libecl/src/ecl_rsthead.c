@@ -37,17 +37,25 @@ time_t ecl_rsthead_date( const ecl_kw_type * intehead_kw ) {
 }
 
 
+time_t ecl_rsthead_get_sim_time( const ecl_rsthead_type * header ) {
+  return header->sim_time;
+}
+
 double ecl_rsthead_get_sim_days( const ecl_rsthead_type * header ) {
   return header->sim_days;
 }
 
 
+int ecl_rsthead_get_report_step( const ecl_rsthead_type * header ) {
+  return header->report_step;
+}
 
 
 
 
-ecl_rsthead_type * ecl_rsthead_alloc_from_kw( const ecl_kw_type * intehead_kw , const ecl_kw_type * doubhead_kw , const ecl_kw_type * logihead_kw ) {
+ecl_rsthead_type * ecl_rsthead_alloc_from_kw( int report_step , const ecl_kw_type * intehead_kw , const ecl_kw_type * doubhead_kw , const ecl_kw_type * logihead_kw ) {
   ecl_rsthead_type * rsthead = util_malloc( sizeof * rsthead );
+  rsthead->report_step = report_step;
   {
       const int * data = (const int *) ecl_kw_get_void_ptr( intehead_kw );
 
@@ -91,10 +99,17 @@ ecl_rsthead_type * ecl_rsthead_alloc_from_kw( const ecl_kw_type * intehead_kw , 
     const ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( rst_file , INTEHEAD_KW , occurence);
     const ecl_kw_type * doubhead_kw = ecl_file_iget_named_kw( rst_file , DOUBHEAD_KW , occurence);
     const ecl_kw_type * logihead_kw = NULL;
+    int report_step;
     if (ecl_file_get_num_named_kw(rst_file, LOGIHEAD_KW) > occurence)
       logihead_kw = ecl_file_iget_named_kw( rst_file , LOGIHEAD_KW , occurence);
 
-    return ecl_rsthead_alloc_from_kw( intehead_kw , doubhead_kw , logihead_kw );
+    if (ecl_file_get_num_named_kw( rst_file , SEQNUM_KW) > occurence) {
+      const ecl_kw_type * seqnum_kw = ecl_file_iget_named_kw( rst_file , SEQNUM_KW , occurence );
+      report_step = ecl_kw_iget_int( seqnum_kw , 0);
+    } else
+      ecl_util_get_file_type( ecl_file_get_src_file(rst_file) , NULL , &report_step);
+
+    return ecl_rsthead_alloc_from_kw( report_step , intehead_kw , doubhead_kw , logihead_kw );
   } else
     return NULL;
 }
