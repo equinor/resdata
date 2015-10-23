@@ -4331,6 +4331,13 @@ double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
 }
 
 
+double ecl_grid_get_cell_dy3( const ecl_grid_type * grid , int i , int j , int k) {
+  fprintf(stderr , "** WARNING: The ecl_grid_get_cell_dy1() function is only a stub returning -1.\n");
+  fprintf(stderr , "            If you need a correct value for cell dy you must update rebuild a new ert version.\n");
+  return ecl_grid_get_cell_dy1( grid , global_index );
+}
+
+
 
 const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
