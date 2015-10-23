@@ -77,6 +77,7 @@ extern "C" {
 
 
   void                ecl_rsthead_free( ecl_rsthead_type * rsthead );
+  ecl_rsthead_type  * ecl_rsthead_alloc_from_kw( const ecl_kw_type * intehead_kw , const ecl_kw_type * doubhead_kw , const ecl_kw_type * logihead_kw );
   ecl_rsthead_type  * ecl_rsthead_ialloc( const ecl_file_type * rst_file , int occurence);
   ecl_rsthead_type  * ecl_rsthead_alloc( const ecl_file_type * rst_file );
   ecl_rsthead_type  * ecl_rsthead_alloc_empty();
