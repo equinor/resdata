@@ -40,7 +40,13 @@ class RestartFileTest(ExtendedTestCase):
         pressure = f["PRESSURE"][0]
         self.assertTrue( isinstance( pressure , Ecl3DKW ))
 
-        
+
+    def test_type(self):
+        g = EclGrid( self.grid_file )
+        with self.assertRaises(ValueError):
+            f = EclRestartFile( g , "NOT_A_RESTART_FILE")
+
+            
     def test_unified(self):
         g = EclGrid( self.grid_file )
         f_unrst = EclRestartFile( g , self.unrst_file )
