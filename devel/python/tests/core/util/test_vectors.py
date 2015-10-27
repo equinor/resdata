@@ -497,6 +497,15 @@ class UtilTest(TestCase):
             self.assertEqual(a,b)
 
 
+    def create_range_test(self,v,a,b,d):
+        v = IntVector.createRange( a,b,d )
+        r = range(a,b,d)
+
+        self.assertEqual(len(v) , len(r))
+        for a,b in zip(v,r):
+            self.assertEqual(a,b)
+
+
 
     def test_range(self):
         v = IntVector( )
@@ -508,3 +517,7 @@ class UtilTest(TestCase):
         self.range_test(v , 0 , 5 , 1)
         self.range_test(v , 0,100,3)
         self.range_test(v,0,100,-3)
+
+        self.create_range_test(v , 0 , 5 , 1)
+        self.create_range_test(v , 0,100,3)
+        self.create_range_test(v,0,100,-3)
