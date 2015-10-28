@@ -547,3 +547,12 @@ class VectorTemplate(BaseCClass):
             raise ValueError("Invalid range")
         else:
             self.cNamespace().init_range( self , min_value , max_value , delta )
+
+    @classmethod
+    def createRange(cls , min_value , max_value , delta):
+        """
+        Will create new vector and initialize a range.
+        """
+        vector = cls( )
+        vector.initRange( min_value , max_value , delta )
+        return vector
