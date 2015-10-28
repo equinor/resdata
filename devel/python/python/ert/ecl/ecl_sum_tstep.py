@@ -1,5 +1,6 @@
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl import ECL_LIB
+from ert.util import CTime
 
 
 class EclSumTStep(BaseCClass):
@@ -20,6 +21,10 @@ class EclSumTStep(BaseCClass):
     def getMiniStep(self):
         """ @rtype: int """
         return EclSumTStep.cNamespace().get_ministep(self)
+
+    def getSimTime(self):
+        """ @rtype: CTime """
+        return EclSumTStep.cNamespace().get_sim_time(self)
 
     def __getitem__(self, key):
         """ @rtype: double """
@@ -48,6 +53,7 @@ EclSumTStep.cNamespace().alloc = cwrapper.prototype("void* ecl_sum_tstep_alloc_n
 EclSumTStep.cNamespace().free = cwrapper.prototype("void ecl_sum_tstep_free(ecl_sum_tstep)")
 
 EclSumTStep.cNamespace().get_sim_days = cwrapper.prototype("double ecl_sum_tstep_get_sim_days(ecl_sum_tstep)")
+EclSumTStep.cNamespace().get_sim_time = cwrapper.prototype("time_t ecl_sum_tstep_get_sim_time(ecl_sum_tstep)")
 EclSumTStep.cNamespace().get_report = cwrapper.prototype("int ecl_sum_tstep_get_report(ecl_sum_tstep)")
 EclSumTStep.cNamespace().get_ministep = cwrapper.prototype("int ecl_sum_tstep_get_ministep(ecl_sum_tstep)")
 
