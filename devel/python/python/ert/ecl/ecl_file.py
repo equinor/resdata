@@ -38,12 +38,35 @@ implementation from the libecl library.
 import re
 import types
 import datetime
+import ctypes
+import warnings
 from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
-from ert.ecl import EclKW, ECL_LIB
+from ert.ecl import ECL_LIB, EclKW, EclFileEnum
 from ert.util import CTime
 
 
 class EclFile(CClass):
+
+    @staticmethod
+    def getFileType(filename):
+        fmt_file    = ctypes.c_bool()
+        report_step = ctypes.c_int()
+
+        file_type = cfunc.get_file_type( filename , ctypes.byref( fmt_file ) , ctypes.byref(report_step)) 
+        if file_type in [EclFileEnum.ECL_RESTART_FILE , EclFileEnum.ECL_SUMMARY_FILE]:
+            report_step = report_step.value
+        else:
+            report_step = None
+
+        if file_type in [EclFileEnum.ECL_OTHER_FILE , EclFileEnum.ECL_DATA_FILE]:
+            fmt_file = None
+        else:
+            fmt_file = fmt_file.value
+
+
+        return (file_type , report_step , fmt_file )
+
+    
 
     @classmethod
     def restart_block( cls , filename , dtime = None , report_step = None):
@@ -140,7 +163,7 @@ class EclFile(CClass):
             # OK - we did not have seqnum; that might be because this
             # a non-unified restart file; or because this is not a
             # restart file at all.
-            fname = self.name
+            fname = self.getFilename( )
             matchObj = re.search("\.[XF](\d{4})$" , fname)
             if matchObj:
                 report_steps.append( int(matchObj.group(1)) )
@@ -164,7 +187,7 @@ class EclFile(CClass):
         
 
     def __str__(self):
-        return "EclFile: %s" % self.name
+        return "EclFile: %s" % self.getFilename( )
 
         
     def __init__( self , filename , flags = 0):
@@ -224,7 +247,7 @@ class EclFile(CClass):
         if cfunc.writable( self ):
             cfunc.save_kw( self , kw )
         else:
-            raise IOError("save_kw: the file:%s has been opened read only." % self.name)
+            raise IOError("save_kw: the file:%s has been opened read only." % self.getFilename( ))
         
 
     def __len__(self):
@@ -636,6 +659,12 @@ class EclFile(CClass):
         else:
             return False
 
+    def __contains__(self , kw):
+        """
+        Check if the current file contains keyword @kw.
+        """
+        return self.has_kw( kw )
+
     def has_report_step( self , report_step ):
         """
         Checks if the current EclFile has report step @report_step.
@@ -690,14 +719,20 @@ class EclFile(CClass):
         
         """
         return cfunc.iget_restart_days( self , index ) 
-    
 
-    @property
-    def name(self):
+
+    def getFilename(self):
         """
         Name of the file currently loaded.
         """
         return cfunc.get_src_file( self )
+    
+
+    @property
+    def name(self):
+        warnings.warn("The name property is deprecated - use getFilename( )")
+        return self.getFilename()
+
     
     def fwrite( self , fortio ):
         """
@@ -774,5 +809,6 @@ cfunc.fwrite                      = cwrapper.prototype("void        ecl_file_fwr
 cfunc.has_instance                = cwrapper.prototype("bool        ecl_file_has_kw_ptr(ecl_file , ecl_kw)")
 cfunc.has_report_step             = cwrapper.prototype("bool        ecl_file_has_report_step( ecl_file , int)")
 cfunc.has_sim_time                = cwrapper.prototype("bool        ecl_file_has_sim_time( ecl_file , time_t )")
+cfunc.get_file_type               = cwrapper.prototype("ecl_file_enum ecl_util_get_file_type( char* , bool* , int*)")
 
 
