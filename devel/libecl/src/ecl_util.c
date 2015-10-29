@@ -258,54 +258,54 @@ ecl_file_enum ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int
   ecl_file_enum file_type = ECL_OTHER_FILE;
   bool fmt_file = true;
   int report_nr = -1;
-
-  if (strcmp(ext , "UNRST") == 0) {
+  char* upper_ext = util_alloc_strupr_copy(ext);
+  if (strcmp(upper_ext , "UNRST") == 0) {
     file_type = ECL_UNIFIED_RESTART_FILE;
     fmt_file = false;
-  } else if (strcmp(ext , "FUNRST") == 0) {
+  } else if (strcmp(upper_ext , "FUNRST") == 0) {
     file_type = ECL_UNIFIED_RESTART_FILE;
     fmt_file = true;
-  } else if (strcmp(ext , "UNSMRY") == 0) {
+  } else if (strcmp(upper_ext , "UNSMRY") == 0) {
     file_type = ECL_UNIFIED_SUMMARY_FILE;
     fmt_file  = false;
-  } else if (strcmp(ext , "FUNSMRY") == 0) {
+  } else if (strcmp(upper_ext , "FUNSMRY") == 0) {
     file_type = ECL_UNIFIED_SUMMARY_FILE;
     fmt_file  = true;
-  } else if (strcmp(ext , "SMSPEC") == 0) {
+  } else if (strcmp(upper_ext , "SMSPEC") == 0) {
     file_type = ECL_SUMMARY_HEADER_FILE;
     fmt_file  = false;
-  } else if (strcmp(ext , "FSMSPEC") == 0) {
+  } else if (strcmp(upper_ext , "FSMSPEC") == 0) {
     file_type = ECL_SUMMARY_HEADER_FILE;
     fmt_file  = true;
-  } else if (strcmp(ext , "GRID") == 0) {
+  } else if (strcmp(upper_ext , "GRID") == 0) {
     file_type = ECL_GRID_FILE;
     fmt_file  = false;
-  } else if (strcmp(ext , "FGRID") == 0) {
+  } else if (strcmp(upper_ext , "FGRID") == 0) {
     file_type = ECL_GRID_FILE;
     fmt_file  = true;
-  } else if (strcmp(ext , "EGRID") == 0) {
+  } else if (strcmp(upper_ext , "EGRID") == 0) {
     file_type = ECL_EGRID_FILE;
     fmt_file  = false;
-  } else if (strcmp(ext , "FEGRID") == 0) {
+  } else if (strcmp(upper_ext , "FEGRID") == 0) {
     file_type = ECL_EGRID_FILE;
     fmt_file  = true;
-  } else if (strcmp(ext , "INIT") == 0) {
+  } else if (strcmp(upper_ext , "INIT") == 0) {
     file_type = ECL_INIT_FILE;
     fmt_file  = false;
-  } else if (strcmp(ext , "FINIT") == 0) {
+  } else if (strcmp(upper_ext , "FINIT") == 0) {
     file_type = ECL_INIT_FILE;
     fmt_file  = true;
-  } else if (strcmp(ext , "FRFT") == 0) {
+  } else if (strcmp(upper_ext , "FRFT") == 0) {
     file_type = ECL_RFT_FILE;
     fmt_file  = true;
-  } else if (strcmp(ext , "RFT") == 0) {
+  } else if (strcmp(upper_ext , "RFT") == 0) {
     file_type = ECL_RFT_FILE;
     fmt_file  = false;
-  } else if (strcmp(ext , "DATA") == 0) {
+  } else if (strcmp(upper_ext , "DATA") == 0) {
     file_type = ECL_DATA_FILE;
     fmt_file  = true;  /* Not really relevant ... */
   } else {
-    switch (ext[0]) {
+    switch (upper_ext[0]) {
     case('X'):
       file_type = ECL_RESTART_FILE;
       fmt_file  = false;
@@ -326,7 +326,7 @@ ecl_file_enum ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int
       file_type = ECL_OTHER_FILE;
     }
     if (file_type != ECL_OTHER_FILE)
-      if (!util_sscanf_int(&ext[1] , &report_nr))
+      if (!util_sscanf_int(&upper_ext[1] , &report_nr))
         file_type = ECL_OTHER_FILE;
   }
 
@@ -336,6 +336,7 @@ ecl_file_enum ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int
   if (_report_nr != NULL)
     *_report_nr = report_nr;
 
+  free( upper_ext );
   return file_type;
 }
 
