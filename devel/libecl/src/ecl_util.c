@@ -253,7 +253,9 @@ bool ecl_util_numeric_extension(const char * extension) {
 */
 
 
-
+/*
+ We accept mixed lowercase/uppercase Eclipse file extensions even if Eclipse itself does not accept them.
+*/
 ecl_file_enum ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int * _report_nr) {
   ecl_file_enum file_type = ECL_OTHER_FILE;
   bool fmt_file = true;
