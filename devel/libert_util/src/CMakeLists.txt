@@ -159,7 +159,7 @@ if (BUILD_TESTS)
    target_link_libraries( test_util ert_util )
 endif()
 
-set_target_properties( ert_util PROPERTIES VERSION 1.0 SOVERSION 1.0 )
+set_target_properties( ert_util PROPERTIES VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR} SOVERSION ${ERT_VERSION_MAJOR} )
 if (USE_RUNPATH)
    add_runpath( ert_util )
 endif()   
