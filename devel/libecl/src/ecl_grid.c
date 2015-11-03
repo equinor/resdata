@@ -4322,19 +4322,42 @@ double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j 
 
 
 
+double ecl_grid_get_cell_dx1( const ecl_grid_type * grid , int global_index ) {
+  fprintf(stderr , "** WARNING: The ecl_grid_get_cell_dx1() function is only a stub returning -1.\n");
+  fprintf(stderr , "            If you need a correct value for cell dx you must rebuild a new ert version.\n");
+  return -1;
+}
+
+
+double ecl_grid_get_cell_dx3( const ecl_grid_type * grid , int i , int j , int k) {
+  const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
+  return ecl_grid_get_cell_dx1( grid , global_index );
+}
+
+
+double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
+  fprintf(stderr , "** WARNING: The ecl_grid_get_cell_dy1() function is only a stub returning -1.\n");
+  fprintf(stderr , "            If you need a correct value for cell dy you must update rebuild a new ert version.\n");
+  return -1;
+}
+
+
+double ecl_grid_get_cell_dy3( const ecl_grid_type * grid , int i , int j , int k) {
+  const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
+  return ecl_grid_get_cell_dx1( grid , global_index );
+}
+
+
 
 const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {
   const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
   return cell->nnc_info;
 }
 
-
-
 const nnc_info_type * ecl_grid_get_cell_nnc_info3( const ecl_grid_type * grid , int i , int j , int k) {
   const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
   return ecl_grid_get_cell_nnc_info1(grid, global_index);
 }
-
 
 
 /*****************************************************************/
