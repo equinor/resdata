@@ -4867,6 +4867,32 @@ void util_install_signals(void) {
   signal(SIGFPE  , util_abort_signal);    /* Floating point exception */
 }
 
+/*
+   Will install the util_abort signal handler for all signals which
+   have not been modified from the default state.
+*/
+
+static void update_signal( int signal_nr ) {
+  sighandler_t current_handler = signal(signal_nr , SIG_DFL);
+  if (current_handler == SIG_DFL)
+    signal( signal_nr , util_abort_signal );
+  else
+    signal( signal_nr , current_handler );
+}
+
+
+
+void util_update_signals(void) {
+#ifdef HAVE_SIGBUS
+  update_signal(SIGBUS );
+#endif
+
+  update_signal(SIGSEGV );
+  update_signal(SIGTERM );
+  update_signal(SIGABRT );
+  update_signal(SIGILL  );
+  update_signal(SIGFPE  );
+}
 
 
 void util_exit(const char * fmt , ...) {
