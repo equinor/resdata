@@ -98,7 +98,7 @@ from .ecl_grav_calc import phase_deltag, deltag
 from .ecl_sum_node import EclSumNode
 from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
-
+from .ecl_cmp import EclCmp
 
 # The EclQueue class uses the libjob_queue library which is only built
 # when the full ert distribution is built. If BUILD_ERT == False the

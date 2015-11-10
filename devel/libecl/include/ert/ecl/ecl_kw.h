@@ -145,6 +145,7 @@ extern "C" {
   void ecl_kw_inplace_sub( ecl_kw_type * target_kw , const ecl_kw_type * sub_kw);
   void ecl_kw_inplace_div( ecl_kw_type * target_kw , const ecl_kw_type * div_kw);
   void ecl_kw_inplace_mul( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw);
+  void ecl_kw_inplace_abs( ecl_kw_type * kw );
 
   void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * add_kw);
   void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * sub_kw);

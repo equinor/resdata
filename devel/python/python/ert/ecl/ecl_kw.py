@@ -334,6 +334,9 @@ class EclKW(CClass):
         return EclKW.wrap( new_c_ptr , data_owner = True )
     
 
+    def isNumeric(self):
+        return cfunc.assert_numeric( self )
+    
 
     def ecl_kw_instance( self ):
         return True
@@ -445,7 +448,7 @@ class EclKW(CClass):
     
 
     def __IMUL__(self , factor , mul = True):
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if hasattr( factor , "ecl_kw_instance"):
                 if cfunc.assert_binary( self, factor ):
                     if mul:
@@ -475,7 +478,7 @@ class EclKW(CClass):
                 
 
     def __IADD__(self , delta , add = True):
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if type(self) == type(delta):
                 if cfunc.assert_binary( self, delta):
                     if add:
@@ -520,6 +523,15 @@ class EclKW(CClass):
 
     #################################################################
     
+    def __abs__(self):
+        if self.isNumeric():
+            copy = self.deep_copy()
+            cfunc.iabs( copy )
+            return copy
+        else:
+            raise TypeError("The __abs__() function is only implemented for numeric types")
+            
+
     
     def __add__(self , delta):
         copy = self.deep_copy()
@@ -623,7 +635,7 @@ class EclKW(CClass):
         keyword has nx*ny*nz elements; if the keyword has nactive
         elements the @force_active flag is not considered.
         """
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if type(value) == type(self):
                 if mask:
                     mask.copy_kw( self , value , force_active)
@@ -1075,6 +1087,7 @@ cfunc.iadd                       = cwrapper.prototype("void     ecl_kw_inplace_a
 cfunc.imul                       = cwrapper.prototype("void     ecl_kw_inplace_mul( ecl_kw , ecl_kw )")
 cfunc.idiv                       = cwrapper.prototype("void     ecl_kw_inplace_div( ecl_kw , ecl_kw )")
 cfunc.isub                       = cwrapper.prototype("void     ecl_kw_inplace_sub( ecl_kw , ecl_kw )")
+cfunc.iabs                       = cwrapper.prototype("void     ecl_kw_inplace_abs( ecl_kw )")
 cfunc.equal                      = cwrapper.prototype("bool     ecl_kw_equal( ecl_kw , ecl_kw )")
 cfunc.equal_numeric              = cwrapper.prototype("bool     ecl_kw_numeric_equal( ecl_kw , ecl_kw , double )")
 

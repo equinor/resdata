@@ -32,6 +32,7 @@ set(TEST_SOURCES
     test_statoil_faults.py
     test_sum.py
     test_ecl_util.py
+    test_ecl_cmp.py
 )
 
 add_python_package("python.tests.ecl"  ${PYTHON_INSTALL_PREFIX}/tests/ecl "${TEST_SOURCES}" False)
@@ -65,6 +66,7 @@ addPythonTest(ecl.ecl_npv ecl.test_npv.NPVTest LABELS StatoilData)
 addPythonTest(ecl.ecl_deprecation ecl.test_deprecation.DeprecationTest )
 addPythonTest(ecl.ecl_util ecl.test_ecl_util.EclUtilTest )
 addPythonTest(ecl.indexed_read ecl.test_indexed_read.EclIndexedReadTest LABELS StatoilData)
+addPythonTest(ecl.ecl_cmp ecl.test_ecl_cmp.EclCmpTest LABELS StatoilData)
 
 
 if (NOT ${NFS_RUNPATH} STREQUAL "")
