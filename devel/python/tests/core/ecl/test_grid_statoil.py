@@ -361,3 +361,12 @@ class GridTest(ExtendedTestCase):
             self.assertFalse(math.isnan(xyz[0]))
             self.assertFalse(math.isnan(xyz[1]))
             self.assertFalse(math.isnan(xyz[2]))
+
+
+    def test_valid_geometry(self):
+        grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/GRID_INVALID_CELL/PRED_RESEST_0_R_13_0.GRID"))
+        self.assertTrue( grid.validCellGeometry( ijk = (27,0,0)) )
+        self.assertFalse( grid.validCellGeometry( ijk = (0,0,0)) )
+
+
+        

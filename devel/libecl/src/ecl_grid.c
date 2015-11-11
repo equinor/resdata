@@ -4399,6 +4399,25 @@ double ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index) {
 }
 
 
+bool ecl_grid_cell_valid1(const ecl_grid_type * ecl_grid , int global_index) {
+  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
+  if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED))
+    return false;
+  else
+    return (GET_CELL_FLAG(cell , CELL_FLAG_VALID));
+}
+
+bool ecl_grid_cell_valid3(const ecl_grid_type * ecl_grid , int i , int j , int k) {
+  int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k);
+  return ecl_grid_cell_valid1( ecl_grid , global_index );
+}
+
+double ecl_grid_cell_valid1A(const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_cell_valid1( grid , global_index );
+}
+
+
 
 /*****************************************************************/
 /* Functions for LGR query/lookup/... */
