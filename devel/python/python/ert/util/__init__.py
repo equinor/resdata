@@ -74,7 +74,7 @@ from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
 from .thread_pool import ThreadPool
 from .cthread_pool import CThreadPool , startCThreadPool
-from .install_abort_signals import installAbortSignals
+from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .profiler import Profiler
 from .arg_pack import ArgPack
 

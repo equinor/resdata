@@ -300,6 +300,7 @@ typedef enum {left_pad   = 0,
   void    util_abort__(const char * file , const char * function , int line , const char * fmt , ...);
 
   void    util_abort_signal(int );
+  void    util_update_signals(void);
   void    util_install_signals(void);
   void    util_abort_append_version_info(const char * );
   void    util_abort_free_version_info();
