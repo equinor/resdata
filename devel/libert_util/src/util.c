@@ -4873,6 +4873,10 @@ void util_install_signals(void) {
 */
 
 static void update_signal( int signal_nr ) {
+  /* Redefining sighandler_t in case it isn't defined (Windows).
+     This is harmless on other platforms. */
+  typedef void (*sighandler_t)(int);
+
   sighandler_t current_handler = signal(signal_nr , SIG_DFL);
   if (current_handler == SIG_DFL)
     signal( signal_nr , util_abort_signal );
