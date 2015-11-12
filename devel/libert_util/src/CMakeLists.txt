@@ -110,19 +110,6 @@ if (CMAKE_COMPILER_IS_GNUCC)
    set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
 endif()
 
-
-if (WITH_LATEX)
-   if (HAVE_FORK)
-      add_definitions( -DWITH_LATEX )
-      add_definitions( -DLATEX_CMD=\"${LATEX_PATH}\")
-
-      list( APPEND source_files latex.c )
-      list( APPEND header_files latex.h )
-   else()
-      message( STATUS "Disabling latex support due to missing fork() call")
-   endif()
-endif()
-
 if (WITH_LAPACK)
    list( APPEND source_files matrix_lapack.c matrix_blas.c matrix_stat.c regression.c lars.c stepwise.c)
    list( APPEND header_files matrix_lapack.h matrix_blas.h matrix_stat.h regression.h lars.h stepwise.h)
