@@ -170,15 +170,6 @@ add_test( NAME ert_util_work_area
           COMMAND ${EXECUTABLE_OUTPUT_PATH}/ert_util_work_area data2/file1 ${CMAKE_CURRENT_SOURCE_DIR}/data2/file2 data2
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-
-
-if (WITH_LATEX)
-   add_executable( ert_util_latex_test ert_util_latex_test.c )
-   target_link_libraries(ert_util_latex_test ert_util test_util )
-   add_test( ert_util_latex_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_latex_test ${CMAKE_CURRENT_SOURCE_DIR}/data/latex_OK.tex  latex_OK.tex)
-endif()
-
-
 add_executable( ert_util_arg_pack ert_util_arg_pack.c)
 set_target_properties( ert_util_arg_pack PROPERTIES COMPILE_FLAGS "-Werror")
 target_link_libraries( ert_util_arg_pack ert_util test_util )
