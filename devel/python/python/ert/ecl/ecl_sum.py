@@ -412,7 +412,7 @@ class EclSum(BaseCClass):
         (num , timeUnit) = TimeVector.parseTimeUnit( interval )
 
         if start is None:
-            start = self.start_time
+            start = self.getDataStartTime( )
         if isinstance(start , datetime.date):
             start = datetime.datetime( start.year , start.month , start.day , 0 , 0 , 0 )
                 
