@@ -157,6 +157,7 @@ add_library( ert_util   ${LIBRARY_TYPE}  ${source_files} )
 if (BUILD_TESTS)
    add_library( test_util  ${LIBRARY_TYPE}  ${test_source} )
    target_link_libraries( test_util ert_util )
+   set_target_properties( test_util PROPERTIES VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR} SOVERSION ${ERT_VERSION_MAJOR} )
 endif()
 
 set_target_properties( ert_util PROPERTIES VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR} SOVERSION ${ERT_VERSION_MAJOR} )
