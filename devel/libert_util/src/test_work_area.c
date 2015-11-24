@@ -16,10 +16,12 @@
    for more details.
 */
 
+
 #ifdef HAVE_GETUID
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <paths.h>
 #endif
 
 #include <stdlib.h>
@@ -42,9 +44,9 @@
   problems, to achieve this the directories created will be per user.
 
   When creating the work area you pass in a boolean flag whether you
-  want the area to be storeed when the destructor is called. After
-  the the work_area is destroyed the cwd is changed back to the value
-  it had before the area was created.
+  want the area to be stored when the destructor is called. After the
+  the work_area is destroyed the cwd is changed back to the value it
+  had before the area was created.
 
   The functions test_work_area_install_file(),
   test_work_area_copy_directory() and
@@ -82,9 +84,8 @@
 */
 
 #define DEFAULT_STORE  false
-#define DEFAULT_PREFIX "/tmp"
 
-#define TEST_PATH_FMT  "%s/ert-test/%s/%08d"     /* username/ert-test/test_name/random-integer */
+#define TEST_PATH_FMT  "%s/test/%s/%08d"         /* username/test/test_name/random-integer */
 #define FULL_PATH_FMT  "%s/%s"                   /* prefix/test-path */
 
 #define TEST_WORK_AREA_TYPE_ID 1107355
@@ -95,6 +96,8 @@ struct test_work_area_struct {
   char      * cwd;
   char      * original_cwd;
 };
+
+
 
 
 test_work_area_type * test_work_area_alloc__(const char * prefix , const char * test_path) {
@@ -141,8 +144,35 @@ test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , con
 }
 
 
+char * test_work_area_alloc_prefix( ) {
+#ifdef HAVE_WINDOWS_GET_TEMP_PATH
+
+  char tmp_path[MAX_PATH];
+  GetTempPath( MAX_PATH , tmp_path );
+  return util_alloc_string_copy( tmp_path );
+
+#else
+
+  const char * prefix_path = getenv("TMPDIR");
+
+  #ifdef P_tmpdir
+  if (!prefix_path)
+    prefix_path = P_tmpdir;
+  #endif
+
+  if (!prefix_path)
+    prefix_path = _PATH_TMP;
+
+  return util_alloc_string_copy( prefix_path );
+
+#endif
+}
+
+
 test_work_area_type * test_work_area_alloc(const char * test_name) {
-  return test_work_area_alloc_with_prefix( DEFAULT_PREFIX , test_name);
+  char * tmp_prefix = test_work_area_alloc_prefix( );
+  return test_work_area_alloc_with_prefix( tmp_prefix , test_name);
+  free( tmp_prefix );
 }
 
 

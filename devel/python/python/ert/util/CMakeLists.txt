@@ -7,7 +7,6 @@ set(PYTHON_SOURCES
     hash.py
     int_vector.py
     install_abort_signals.py
-    latex.py
     log.py
     lookup_table.py
     matrix.py
@@ -17,11 +16,13 @@ set(PYTHON_SOURCES
     stringlist.py
     substitution_list.py
     thread_pool.py
+    cthread_pool.py
     time_vector.py
     ui_return.py
     util_func.py
     vector_template.py
     version.py
+    arg_pack.py
 )
 
 add_python_package("python.ert.util"  ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)

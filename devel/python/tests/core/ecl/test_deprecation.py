@@ -17,15 +17,15 @@
 import warnings
 import time
 
-from ert.test import ExtendedTestCase
-from ert.ecl import EclGrid,EclKW,EclTypeEnum,EclGrid,EclRegion
+from ert.test import ExtendedTestCase, TestAreaContext
+from ert.ecl import EclFile,EclGrid,EclKW,EclTypeEnum,EclGrid,EclRegion,FortIO, openFortIO
 from ert.util import BoolVector
 
 
 class DeprecationTest(ExtendedTestCase):
 
     def test_EclGrid_get_corner_xyz(self):
-        grid = EclGrid.create_rectangular( (10,20,30) , (1,1,1) )
+        grid = EclGrid.createRectangular( (10,20,30) , (1,1,1) )
         with warnings.catch_warnings():
             grid.get_corner_xyz(0 , global_index = 10)
             
@@ -33,13 +33,30 @@ class DeprecationTest(ExtendedTestCase):
         with warnings.catch_warnings():
             import ert.ecl.ecl as ecl
 
+            
     # Added in 1.8.x development
     def test_EclGrid_dims_property(self):
-        grid = EclGrid.create_rectangular( (10,20,30) , (1,1,1) )
+        grid = EclGrid.createRectangular( (10,20,30) , (1,1,1) )
         with warnings.catch_warnings():
             d = grid.dims
 
 
+    # Added in 1.9.x development
+    def test_EclGrid_dims_property(self):
+        with warnings.catch_warnings():
+            grid = EclGrid.create_rectangular( (10,20,30) , (1,1,1) )
+
+
+    # Addded in 1.9.x development
+    def test_EclFile_name_property(self):
+        with TestAreaContext("name"):
+            kw = EclKW.new("TEST", 3, EclTypeEnum.ECL_INT_TYPE)
+            with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
+                kw.fwrite( f )
+
+            f = EclFile( "TEST" )
+            with warnings.catch_warnings():
+                name = f.name
 
 
     # Added in 1.8.x development
@@ -56,7 +73,7 @@ class DeprecationTest(ExtendedTestCase):
 
     # Added in 1.8.x development
     def test_EclRegion_properties(self):
-        grid = EclGrid.create_rectangular( (10,10,10) , (1,1,1))
+        grid = EclGrid.createRectangular( (10,10,10) , (1,1,1))
         region = EclRegion( grid , False )
 
         with warnings.catch_warnings():
@@ -77,3 +94,6 @@ class DeprecationTest(ExtendedTestCase):
     def test_BoolVector_active_mask(self):
         with warnings.catch_warnings():
             active_vector = BoolVector.active_mask("1,1,1,1,1,1")
+
+
+    

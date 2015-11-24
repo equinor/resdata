@@ -56,6 +56,10 @@ extern "C" {
   void            ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos );
   void            ecl_grid_get_corner_xyz(const ecl_grid_type * grid , int i , int j , int k, double * xpos , double * ypos , double * zpos );
 
+  double          ecl_grid_get_cell_dx1( const ecl_grid_type * grid , int global_index );
+  double          ecl_grid_get_cell_dx3( const ecl_grid_type * grid , int i , int j , int k);
+  double          ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index );
+  double          ecl_grid_get_cell_dy3( const ecl_grid_type * grid , int i , int j , int k);
   double          ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j , int k);
   double          ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_index );
   double          ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index);
@@ -139,6 +143,10 @@ extern "C" {
   bool            ecl_grid_cell_invalid1(const ecl_grid_type * ecl_grid , int global_index);
   bool            ecl_grid_cell_invalid3(const ecl_grid_type * ecl_grid , int i , int j , int k);
   double          ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index);
+
+  bool            ecl_grid_cell_valid1(const ecl_grid_type * ecl_grid , int global_index);
+  bool            ecl_grid_cell_valid3(const ecl_grid_type * ecl_grid , int i , int j , int k);
+  double          ecl_grid_cell_valid1A(const ecl_grid_type * grid , int active_index);
 
   void            ecl_grid_dump(const ecl_grid_type * grid , FILE * stream);
   void            ecl_grid_dump_ascii(ecl_grid_type * grid , bool active_only , FILE * stream);

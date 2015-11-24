@@ -334,6 +334,9 @@ class EclKW(CClass):
         return EclKW.wrap( new_c_ptr , data_owner = True )
     
 
+    def isNumeric(self):
+        return cfunc.assert_numeric( self )
+    
 
     def ecl_kw_instance( self ):
         return True
@@ -445,7 +448,7 @@ class EclKW(CClass):
     
 
     def __IMUL__(self , factor , mul = True):
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if hasattr( factor , "ecl_kw_instance"):
                 if cfunc.assert_binary( self, factor ):
                     if mul:
@@ -475,7 +478,7 @@ class EclKW(CClass):
                 
 
     def __IADD__(self , delta , add = True):
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if type(self) == type(delta):
                 if cfunc.assert_binary( self, delta):
                     if add:
@@ -520,6 +523,15 @@ class EclKW(CClass):
 
     #################################################################
     
+    def __abs__(self):
+        if self.isNumeric():
+            copy = self.deep_copy()
+            cfunc.iabs( copy )
+            return copy
+        else:
+            raise TypeError("The __abs__() function is only implemented for numeric types")
+            
+
     
     def __add__(self , delta):
         copy = self.deep_copy()
@@ -623,7 +635,7 @@ class EclKW(CClass):
         keyword has nx*ny*nz elements; if the keyword has nactive
         elements the @force_active flag is not considered.
         """
-        if cfunc.assert_numeric( self ):
+        if self.isNumeric():
             if type(value) == type(self):
                 if mask:
                     mask.copy_kw( self , value , force_active)
@@ -775,8 +787,11 @@ class EclKW(CClass):
         return cfunc.get_size( self )
     
     def set_name( self , name ):
+        if len(name) > 8:
+            raise ValueError("Sorry: the name property must be max 8 characters long :-(")
         cfunc.set_header( self , name )
 
+        
     def get_name( self ):
         return self.getName()
         
@@ -1016,6 +1031,15 @@ class EclKW(CClass):
         cfunc.fix_uninitialized( self , dims[0] , dims[1], dims[2] , actnum.getDataPtr() )
 
 
+    def getDataPtr(self):
+        if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+            return cfunc.int_ptr( self )
+        elif self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
+            return cfunc.float_ptr( self )
+        elif self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
+            return cfunc.double_ptr( self )
+        else:
+            raise ValueError("Only numeric types can export data pointer")
 
 #################################################################
 
@@ -1063,6 +1087,7 @@ cfunc.iadd                       = cwrapper.prototype("void     ecl_kw_inplace_a
 cfunc.imul                       = cwrapper.prototype("void     ecl_kw_inplace_mul( ecl_kw , ecl_kw )")
 cfunc.idiv                       = cwrapper.prototype("void     ecl_kw_inplace_div( ecl_kw , ecl_kw )")
 cfunc.isub                       = cwrapper.prototype("void     ecl_kw_inplace_sub( ecl_kw , ecl_kw )")
+cfunc.iabs                       = cwrapper.prototype("void     ecl_kw_inplace_abs( ecl_kw )")
 cfunc.equal                      = cwrapper.prototype("bool     ecl_kw_equal( ecl_kw , ecl_kw )")
 cfunc.equal_numeric              = cwrapper.prototype("bool     ecl_kw_numeric_equal( ecl_kw , ecl_kw , double )")
 

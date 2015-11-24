@@ -259,8 +259,35 @@ class KWTest(ExtendedTestCase):
         self.assertEqual(kw[4] , 66)
         self.assertEqual(kw[5] , 99)
 
+        
+    def test_long_name(self):
+        with self.assertRaises(ValueError):
+            EclKW.create("LONGLONGNAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
+
+        kw = EclKW.create("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        with self.assertRaises(ValueError):
+            kw.set_name("LONGLONGNAME")
 
 
+    def test_abs(self):
+        kw = EclKW.create("NAME" , 10 , EclTypeEnum.ECL_CHAR_TYPE)
+        with self.assertRaises(TypeError):
+            abs_kw = abs(kw)
+
+        kw = EclKW.create("NAME" , 10 , EclTypeEnum.ECL_BOOL_TYPE)
+        with self.assertRaises(TypeError):
+            abs_kw = abs(kw)
+
+        kw = EclKW.create("NAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        for i in range(len(kw)):
+            kw[i] = -i
+
+        abs_kw = abs(kw)
+        for i in range(len(kw)):
+            self.assertEqual(kw[i] , -i ) 
+            self.assertEqual(abs_kw[i] , i ) 
+
+            
 #def cutoff( x , arg ):
 #    if x < arg:
 #        return 0

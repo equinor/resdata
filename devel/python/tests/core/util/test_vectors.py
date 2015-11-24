@@ -128,7 +128,16 @@ class UtilTest(TestCase):
         active_list = IntVector.active_list("1,10,100-105X")
         self.assertFalse(active_list)
 
+        
+    def test_value_list(self):
+        list2 = IntVector.valueList("3,10-12,0,1")
+        self.assertTrue( len(list2) == 6 )
+        expected = [3,10,11,12,0,1]
+        for v1,v2 in zip(list2,expected):
+            self.assertEqual( v1 , v2)
+            
 
+        
 
     def test_contains_int(self):
         iv = IntVector()
@@ -488,6 +497,15 @@ class UtilTest(TestCase):
             self.assertEqual(a,b)
 
 
+    def create_range_test(self,v,a,b,d):
+        v = IntVector.createRange( a,b,d )
+        r = range(a,b,d)
+
+        self.assertEqual(len(v) , len(r))
+        for a,b in zip(v,r):
+            self.assertEqual(a,b)
+
+
 
     def test_range(self):
         v = IntVector( )
@@ -499,3 +517,7 @@ class UtilTest(TestCase):
         self.range_test(v , 0 , 5 , 1)
         self.range_test(v , 0,100,3)
         self.range_test(v,0,100,-3)
+
+        self.create_range_test(v , 0 , 5 , 1)
+        self.create_range_test(v , 0,100,3)
+        self.create_range_test(v,0,100,-3)

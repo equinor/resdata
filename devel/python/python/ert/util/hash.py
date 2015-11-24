@@ -118,21 +118,10 @@ class DoubleHash(Hash):
 
 
 cwrapper = CWrapper(UTIL_LIB)
-CWrapper.registerType("hash", Hash) #c_void_p type
-CWrapper.registerType("integer_hash", IntegerHash)
-CWrapper.registerType("string_has", StringHash)
-CWrapper.registerType("double_hash", DoubleHash)
-
-CWrapper.registerType("hash_obj", Hash.createPythonObject) #c_void_p type
-CWrapper.registerType("string_hash_obj", StringHash.createPythonObject)
-CWrapper.registerType("integer_hash_obj", IntegerHash.createPythonObject)
-CWrapper.registerType("double_hash_obj", DoubleHash.createPythonObject)
-
-CWrapper.registerType("hash_ref", Hash.createCReference) #c_void_p type
-CWrapper.registerType("string_hash_ref", StringHash.createCReference)
-CWrapper.registerType("integer_hash_ref", IntegerHash.createCReference)
-CWrapper.registerType("double_hash_ref", DoubleHash.createCReference)
-
+CWrapper.registerObjectType("hash", Hash) # c_void_p type
+CWrapper.registerObjectType("integer_hash", IntegerHash)
+CWrapper.registerObjectType("string_hash", StringHash)
+CWrapper.registerObjectType("double_hash", DoubleHash)
 
 Hash.cNamespace().alloc = cwrapper.prototype("long hash_alloc()")
 Hash.cNamespace().free = cwrapper.prototype("void hash_free(hash)")

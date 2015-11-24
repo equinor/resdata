@@ -104,6 +104,7 @@ typedef enum {left_pad   = 0,
   //#define UTIL_CXX_MALLOC(var , num_elm) (typeof (var)) util_malloc( (num_elm) * sizeof var)
 
   void         util_bitmask_on(int *  , int );
+  char       * util_get_timezone();
   time_t       util_make_datetime(int , int , int , int , int , int );
   void         util_fprintf_datetime(time_t  , FILE * );
   void         util_fprintf_date(time_t  , FILE * );
@@ -299,11 +300,13 @@ typedef enum {left_pad   = 0,
   void    util_abort__(const char * file , const char * function , int line , const char * fmt , ...);
 
   void    util_abort_signal(int );
+  void    util_update_signals(void);
   void    util_install_signals(void);
   void    util_abort_append_version_info(const char * );
   void    util_abort_free_version_info();
   void    util_abort_set_executable( const char * argv0 );
   void *  util_realloc(void *  , size_t  );
+  void    util_free(void * ptr);
   void *  util_malloc(size_t );
   void *  util_calloc( size_t elements , size_t element_size );
   void *  util_realloc_copy(void * org_ptr , const void * src , size_t byte_size );

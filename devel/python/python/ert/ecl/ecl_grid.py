@@ -122,7 +122,15 @@ class EclGrid(CClass):
 
 
     @classmethod
+    def create_ref(cls , c_ptr , parent = None ):
+        obj = object.__new__( cls )
+        obj.init_cref( c_ptr , parent )
+        return obj
+    
+
+    @classmethod
     def create_rectangular(cls , dims , dV , actnum = None):
+        warnings.warn("The create_rectangular method is deprecated - use createRectangular( )")
         return cls.createRectangular( dims , dV , actnum )
 
 
@@ -415,6 +423,31 @@ class EclGrid(CClass):
         gi = self.__global_index( global_index = global_index , ijk = ijk , active_index = active_index)
         return cfunc.invalid_cell( self , gi )
 
+
+    def validCellGeometry(self, ijk = None , global_index = None , active_index = None):
+        """Checks if the cell has valid geometry.
+
+        There are at least two reasons why a cell might have invalid
+        gemetry:
+
+          1. In the case of GRID files it is not necessary to supply
+             the geometry for all the cells; in that case this
+             function will return false for cells which do not have
+             valid coordinates.
+
+          2. Cells which are used to represent numerical aquifers are
+             typically located in UTM position (0,0); these cells have
+             completely whacked up shape and size; these cells are
+             identified by a heuristic - which might fail
+
+        If the validCellGeometry( ) returns false for a particular
+        cell functions which calculate cell volumes, real world
+        coordinates and so on - should not be used.
+        """
+        gi = self.__global_index( global_index = global_index , ijk = ijk , active_index = active_index)
+        return cfunc.valid_cell( self , gi )
+
+    
 
     def active( self , ijk = None , global_index = None):
         """
@@ -1057,6 +1090,11 @@ class EclGrid(CClass):
         else:
             raise ValueError("The input keyword must have nx*n*nz or nactive elements. Size:%d invalid" % len(kw))
 
+
+    def exportACTNUMKw(self):
+        actnum = EclKW.create("ACTNUM" , self.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
+        cfunc.init_actnum( self , actnum.getDataPtr() )
+        return actnum
         
 
 # 2. Creating a wrapper object around the libecl library, 
@@ -1119,6 +1157,7 @@ cfunc.get_top                      = cwrapper.prototype("double ecl_grid_get_top
 cfunc.get_bottom                   = cwrapper.prototype("double ecl_grid_get_bottom2( ecl_grid , int , int )") 
 cfunc.locate_depth                 = cwrapper.prototype("int    ecl_grid_locate_depth( ecl_grid , double , int , int )") 
 cfunc.invalid_cell                 = cwrapper.prototype("bool   ecl_grid_cell_invalid1( ecl_grid , int)")
+cfunc.valid_cell                   = cwrapper.prototype("bool   ecl_grid_cell_valid1( ecl_grid , int)")
 cfunc.get_distance                 = cwrapper.prototype("void   ecl_grid_get_distance( ecl_grid , int , int , double* , double* , double*)")
 cfunc.fprintf_grdecl               = cwrapper.prototype("void   ecl_grid_fprintf_grdecl( ecl_grid , FILE) ")
 cfunc.fwrite_GRID                  = cwrapper.prototype("void   ecl_grid_fwrite_GRID( ecl_grid , char* )")

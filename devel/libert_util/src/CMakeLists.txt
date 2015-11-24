@@ -67,6 +67,7 @@ set(header_files
     type_vector_functions.h
     ui_return.h
     struct_vector.h
+    buffer_string.h
 )
 
 set( test_source test_util.c )
@@ -107,19 +108,6 @@ set_source_files_properties( version.c PROPERTIES COMPILE_DEFINITIONS "COMPILE_T
 
 if (CMAKE_COMPILER_IS_GNUCC)
    set_property(SOURCE hash.c PROPERTY COMPILE_FLAGS "-Wno-error")
-endif()
-
-
-if (WITH_LATEX)
-   if (HAVE_FORK)
-      add_definitions( -DWITH_LATEX )
-      add_definitions( -DLATEX_CMD=\"${LATEX_PATH}\")
-
-      list( APPEND source_files latex.c )
-      list( APPEND header_files latex.h )
-   else()
-      message( STATUS "Disabling latex support due to missing fork() call")
-   endif()
 endif()
 
 if (WITH_LAPACK)
@@ -169,9 +157,10 @@ add_library( ert_util   ${LIBRARY_TYPE}  ${source_files} )
 if (BUILD_TESTS)
    add_library( test_util  ${LIBRARY_TYPE}  ${test_source} )
    target_link_libraries( test_util ert_util )
+   set_target_properties( test_util PROPERTIES VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR} SOVERSION ${ERT_VERSION_MAJOR} )
 endif()
 
-set_target_properties( ert_util PROPERTIES VERSION 1.0 SOVERSION 1.0 )
+set_target_properties( ert_util PROPERTIES VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR} SOVERSION ${ERT_VERSION_MAJOR} )
 if (USE_RUNPATH)
    add_runpath( ert_util )
 endif()   

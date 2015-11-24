@@ -2228,6 +2228,41 @@ void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , const int_vector_type
 
 /*****************************************************************/
 
+#define ECL_KW_TYPED_INPLACE_ABS( ctype , abs_func)     \
+void ecl_kw_inplace_abs_ ## ctype( ecl_kw_type * kw ) { \
+  ctype * data = ecl_kw_get_data_ref( kw );             \
+  int i;                                                \
+  for (i=0; i < kw->size; i++)                          \
+    data[i] = abs_func(data[i]);                        \
+}
+
+ECL_KW_TYPED_INPLACE_ABS( int , abs )
+ECL_KW_TYPED_INPLACE_ABS( double , fabs )
+ECL_KW_TYPED_INPLACE_ABS( float , fabsf )
+#undef ECL_KW_TYPED_INPLACE_ABS
+
+
+
+void ecl_kw_inplace_abs( ecl_kw_type * kw ) {
+  ecl_type_enum type = ecl_kw_get_type(kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_abs_float( kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_abs_double( kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_abs_int( kw );
+    break;
+  default:
+    util_abort("%s: inplace abs not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+  }
+}
+
+
+/*****************************************************************/
+
 #define ECL_KW_TYPED_INPLACE_MUL( ctype ) \
 void ecl_kw_inplace_mul_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw) { \
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , mul_kw ))                                \
