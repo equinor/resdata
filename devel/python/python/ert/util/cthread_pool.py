@@ -23,7 +23,15 @@ class CThreadPool(BaseCClass):
         c_ptr = CThreadPool.cNamespace().alloc( pool_size , start )
         super(CThreadPool, self).__init__(c_ptr)
         self.arg_list = []
-        
+
+    def addTaskFunction(self, name, lib, c_function_name):
+        function = CThreadPool.lookupCFunction(lib, c_function_name)
+
+        def wrappedFunction(arg):
+            return self.addTask(function, arg)
+
+        setattr(self, name, wrappedFunction)
+
     def addTask(self , cfunc , arg):
         """ 
         The function should come from CThreadPool.lookupCFunction().
@@ -52,7 +60,7 @@ class CThreadPool(BaseCClass):
             func = getattr(lib , name)
             return func
         else:
-            raise TypeError("The lib argument must of type ctypes.CDLL")
+            raise TypeError("The lib argument must be of type ctypes.CDLL")
 
         
 

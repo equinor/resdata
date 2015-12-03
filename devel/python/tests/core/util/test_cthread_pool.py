@@ -1,8 +1,8 @@
-import time
 import ctypes
+
 from ert.cwrap import clib
-from ert.util import CThreadPool , startCThreadPool
 from ert.test import ExtendedTestCase
+from ert.util import CThreadPool , startCThreadPool
 
 TEST_LIB = clib.ert_load("libtest_util")
 
@@ -39,3 +39,14 @@ class CThreadPoolTest(ExtendedTestCase):
                 tp.addTask( job , ctypes.byref( arg ) )
         self.assertEqual( arg.value , N )
 
+    def test_add_task_function(self):
+        pool = CThreadPool(32, start=True)
+        pool.addTaskFunction("testFunction", TEST_LIB, "thread_pool_test_func1")
+
+        arg = ctypes.c_int(0)
+        task_count = 256
+        for i in range(task_count):
+            pool.testFunction(ctypes.byref(arg))
+
+        pool.join()
+        self.assertEqual(arg.value, task_count)
