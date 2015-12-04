@@ -23,6 +23,7 @@ set(PYTHON_SOURCES
     vector_template.py
     version.py
     arg_pack.py
+    path_format.py
 )
 
 add_python_package("python.ert.util"  ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)

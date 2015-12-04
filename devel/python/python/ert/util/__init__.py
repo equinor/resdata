@@ -77,3 +77,4 @@ from .cthread_pool import CThreadPool , startCThreadPool
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .profiler import Profiler
 from .arg_pack import ArgPack
+from .path_format import PathFormat
