@@ -806,7 +806,7 @@ void buffer_store(const buffer_type * buffer , const char * filename) {
 
 #include "buffer_string.c"
 
-#ifdef WITH_ZLIB
+#ifdef HAVE_ZLIB
 #include "buffer_zlib.c"
 #endif
 

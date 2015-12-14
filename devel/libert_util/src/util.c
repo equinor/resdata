@@ -5097,7 +5097,7 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #include "util_fork.c"
 #endif
 
-#ifdef WITH_ZLIB
+#ifdef HAVE_ZLIB
 #include "util_zlib.c"
 #endif
 

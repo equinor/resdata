@@ -26,7 +26,8 @@
 #include <sys/types.h>
 #include <time.h>
 
-#ifdef COMPILER_GCC
+
+#ifdef HAVE_SETJMP
 #include <setjmp.h>
 #endif
 
@@ -190,6 +191,11 @@ typedef enum {left_pad   = 0,
 #define UTIL_VA_COPY(target,src) va_copy(target,src)
 #else
 #define UTIL_VA_COPY(target,src) target = src
+#endif
+
+#ifdef HAVE_SETJMP
+jmp_buf * util_abort_test_jump_buffer();
+void      util_abort_test_set_intercept_function(const char * function);
 #endif
 
 
@@ -474,27 +480,19 @@ typedef struct {
 const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value);
 
 
-#ifdef COMPILER_GCC
-
-jmp_buf * util_abort_test_jump_buffer();
-void      util_abort_test_set_intercept_function(const char * function);
-
-#define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , ##__VA_ARGS__)
-#endif
-
-#ifdef __clang__
-#define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , ##__VA_ARGS__)
-#endif
-
-#ifdef COMPILER_MSVC
+#ifdef _MSC_VER
 #define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , __VA_ARGS__)
+#elif __GNUC__
+/* Also clang defines the __GNUC__ symbol */
+#define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , ##__VA_ARGS__)
 #endif
+
 
 
 /*****************************************************************/
 /* Conditional section below here */
 
-#ifdef WITH_ZLIB
+#ifdef HAVE_ZLIB
   void     util_compress_buffer(const void * , int , void * , unsigned long * );
   int      util_fread_sizeof_compressed(FILE * stream);
   void     util_fread_compressed(void * , FILE * );
