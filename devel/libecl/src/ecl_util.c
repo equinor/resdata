@@ -22,6 +22,8 @@
 #include <ctype.h>
 #include <stdbool.h>
 
+#include <ert/util/ert_api_config.h>
+
 #include <ert/util/util.h>
 #include <ert/util/hash.h>
 #include <ert/util/stringlist.h>
@@ -1493,7 +1495,7 @@ void ecl_util_init_month_range( time_t_vector_type * date_list , time_t start_da
 time_t ecl_util_make_date__(int mday , int month , int year, int * __year_offset) {
 time_t date;
 
-#ifdef TIME_T_64BIT_ACCEPT_PRE1970
+#ifdef ERT_TIME_T_64BIT_ACCEPT_PRE1970
   *__year_offset = 0;
   date = util_make_date(mday , month , year);
 #else
@@ -1520,6 +1522,10 @@ time_t ecl_util_make_date(int mday , int month , int year) {
   return ecl_util_make_date__( mday , month , year , &year_offset);
 }
 
+void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year) {
+    return util_set_date_values(t,mday,month,year);
+}
+
 /*****************************************************************/
 /* Small functions to support enum introspection. */
 
@@ -1531,10 +1537,6 @@ const char * ecl_util_phase_enum_iget( int index, int * value) {
 
 const char * ecl_util_type_enum_iget( int index, int * value) {
   return util_enum_iget( index , ECL_TYPE_ENUM_SIZE , (const util_enum_element_type []) { ECL_TYPE_ENUM_DEFS }, value);
-}
-
-void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year) {
-    return util_set_date_values(t,mday,month,year);
 }
 
 #endif

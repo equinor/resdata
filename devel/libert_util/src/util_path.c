@@ -33,7 +33,7 @@ bool util_is_abs_path(const char * path) {
 }
 
 static int util_mkdir( const char * path ) {
-#ifdef MKDIR_POSIX
+#ifdef HAVE_MKDIR_POSIX
   return mkdir( path , UTIL_DEFAULT_MKDIR_MODE );
 #else
   return _mkdir( path );

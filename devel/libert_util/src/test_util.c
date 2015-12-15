@@ -24,6 +24,7 @@
 #include <string.h>
 #include <signal.h>
 
+#include "ert/util/build_config.h"
 #include <ert/util/util.h>
 #include <ert/util/arg_pack.h>
 #include <ert/util/test_util.h>
@@ -273,8 +274,15 @@ void test_install_SIGNALS(void) {
 
 /*****************************************************************/
 
-#ifdef HAVE_UTIL_ABORT
+#ifdef HAVE_BACKTRACE
 #include <execinfo.h>
+#include <setjmp.h>
+
+  bool      util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** file_name , int * line_nr);
+  jmp_buf * util_abort_test_jump_buffer();
+  void      util_abort_test_set_intercept_function(const char * function);
+
+
 
 void test_util_addr2line() {
   const char * file = __FILE__;
@@ -296,6 +304,12 @@ void test_util_addr2line() {
 }
 
 
+
+
+
+
+
+
 void test_assert_util_abort(const char * function_name , void call_func (void *) , void * arg) {
   bool util_abort_intercepted = false;
 
@@ -309,7 +323,8 @@ void test_assert_util_abort(const char * function_name , void call_func (void *)
       util_abort_intercepted = true;
 
     util_abort_test_set_intercept_function( NULL );
-  }
+
+ }
 
   if (!util_abort_intercepted) {
     fprintf(stderr,"Expected call to util_abort() from:%s missing \n",function_name);
@@ -323,7 +338,7 @@ void test_assert_util_abort(const char * function_name , void call_func (void *)
 
 /*****************************************************************/
 
-#ifdef WITH_PTHREAD
+#ifdef HAVE_PTHREAD
 #include <pthread.h>
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;

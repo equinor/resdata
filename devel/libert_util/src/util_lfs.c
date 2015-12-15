@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2013  Statoil ASA, Norway.
 
-   The file 'util_win64.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'util_lfs.c' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

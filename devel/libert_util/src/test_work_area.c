@@ -16,8 +16,9 @@
    for more details.
 */
 
+#include <ert/util/ert_api_config.h>
 
-#ifdef HAVE_GETUID
+#ifdef ERT_HAVE_GETUID
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>

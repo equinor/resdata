@@ -19,7 +19,9 @@
 #include <string.h>
 #include <signal.h>
 
-#ifdef HAVE_GETOPT
+#include <ert/util/ert_api_config.h>
+
+#ifdef ERT_HAVE_GETOPT
 #include <getopt.h>
 #endif
 
@@ -60,7 +62,7 @@ void print_help_and_exit()  {
   printf("   LBPR:LGR3:10,10,10 - The block pressure in cell 10,10,10 - in LGR3\n");
   printf("\n");
 
-#ifdef HAVE_GETOPT
+#ifdef ERT_HAVE_GETOPT
   printf("The option --list can be used to list all available keys.\n");
   printf("\n");
   printf("Options:\n");
@@ -147,7 +149,7 @@ int main(int argc , char ** argv) {
     bool           print_header    = true;
     int            arg_offset      = 1;
 
-#ifdef HAVE_GETOPT
+#ifdef ERT_HAVE_GETOPT
     if (argc == 1)
       print_help_and_exit();
     else {
