@@ -152,9 +152,9 @@ if (HAVE_PTHREAD)
 endif()
 
 # The test_work_area depends on that opendir() is available.
-if (HAVE_GETUID AND ERT_HAVE_OPENDIR)
+if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
   list( APPEND source_files test_work_area.c)
-  list( APPEND header_files test_work_area.h )
+  list( APPEND header_files test_work_area.h)
 endif()
 
 if (ERT_BUILD_CXX)
