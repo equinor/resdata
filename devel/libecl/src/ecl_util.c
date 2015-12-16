@@ -1529,7 +1529,6 @@ void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year) 
 /*****************************************************************/
 /* Small functions to support enum introspection. */
 
-#ifdef HAVE_FORK
 
 const char * ecl_util_phase_enum_iget( int index, int * value) {
   return util_enum_iget( index , ECL_PHASE_ENUM_SIZE , (const util_enum_element_type []) { ECL_PHASE_ENUM_DEFS }, value);
@@ -1539,6 +1538,5 @@ const char * ecl_util_type_enum_iget( int index, int * value) {
   return util_enum_iget( index , ECL_TYPE_ENUM_SIZE , (const util_enum_element_type []) { ECL_TYPE_ENUM_DEFS }, value);
 }
 
-#endif
 
 
