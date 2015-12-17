@@ -172,35 +172,6 @@ if (USE_RUNPATH)
 endif()   
 target_link_libraries( ert_util ${ERT_EXTERNAL_UTIL_LIBS} )
 
-
-#if (WITH_PTHREAD)
-#  target_link_libraries( ert_util ${PTHREAD_LIBRARY} )
-#  include_directories( ${PTHREAD_HEADER} )
-#endif()   
-#
-#if (ERT_HAVE_ZLIB)
-#  target_link_libraries( ert_util ${ZLIB_LIBRARY} )
-#  include_directories( ${ZLIB_HEADER} )
-#endif()   
-#
-#if ( ERT_WINDOWS )
-#  target_link_libraries( ert_util ${SHWLAPI_LIBRARY} )
-#endif()
-#
-#if (ERT_HAVE_LAPACK)
-#   target_link_libraries( ert_util ${LAPACK_LIBRARY} )
-#   if (BUILD_NEED_BLAS)
-#      target_link_libraries( ert_util ${BLAS_LIBRARY} )
-#   endif()
-#endif()
-#
-#if (NEED_LIBM)
-#   target_link_libraries( ert_util m )
-#endif()
-#if (NEED_LIBDL)
-#   target_link_libraries( ert_util dl )
-#endif()
-
 #-----------------------------------------------------------------
 if (INSTALL_ERT)
    install(TARGETS ert_util DESTINATION ${CMAKE_INSTALL_LIBDIR})
