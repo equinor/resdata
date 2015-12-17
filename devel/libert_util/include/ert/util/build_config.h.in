@@ -6,7 +6,8 @@
 #cmakedefine HAVE__USLEEP
 #cmakedefine HAVE_FNMATCH
 #cmakedefine HAVE_FTRUNCATE
-#cmakedefine HAVE_CHDIR
+#cmakedefine HAVE_POSIX_CHDIR
+#cmakedefine HAVE_WINDOWS_CHDIR
 #cmakedefine HAVE_TZNAME
 #cmakedefine HAVE_ROUND
 #cmakedefine HAVE_VA_COPY
