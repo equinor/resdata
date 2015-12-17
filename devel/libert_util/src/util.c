@@ -91,6 +91,11 @@
 #endif
 
 
+#ifdef HAVE_WINDOWS_GETCWD
+#include <direct.h>
+#endif
+
+
 #include <stdint.h>
 #if UINTPTR_MAX == 0xFFFFFFFF
 #define ARCH32
@@ -773,6 +778,16 @@ char * util_blocking_alloc_stdin_line(unsigned long usec) {
   return line;
 }
 
+static char * util_getcwd(char * buffer , int size) {
+#ifdef HAVE_POSIX_GETCWD
+  return getcwd( buffer , size );
+#endif
+
+#ifdef HAVE_WINDOWS_GETCWD
+  return _getcwd( buffer , size );
+#endif
+}
+
 
 char * util_alloc_cwd(void) {
   char * result_ptr;
@@ -780,7 +795,7 @@ char * util_alloc_cwd(void) {
   int buffer_size = 128;
   do {
     cwd = util_calloc(buffer_size , sizeof * cwd );
-    result_ptr = getcwd(cwd , buffer_size - 1);
+    result_ptr = util_getcwd(cwd , buffer_size - 1);
     if (result_ptr == NULL) {
       if (errno == ERANGE) {
         buffer_size *= 2;
