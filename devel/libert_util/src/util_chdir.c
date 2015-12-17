@@ -23,16 +23,16 @@ int util_chdir(const char * path) {
   return chdir( path );
 }
 
-#elif HAVE_WINDOWS_CHDIR
+#endif
 
+
+#ifdef HAVE_WINDOWS_CHDIR
 #include <direct.h>
 
 int util_chdir(const char * path) {
   return _chdir( path );
 }
 
-#else
-ERROR - have no chdir() implementation.
 #endif
 
 
