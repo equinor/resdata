@@ -16,6 +16,10 @@
    for more details.
 */
 
+#ifdef HAVE_WINDOWS_MKDIR
+#include <direct.h>
+#endif
+
 #include <stdlib.h>
 /**
   This little function checks if the supplied path is an abolute path,
@@ -33,9 +37,11 @@ bool util_is_abs_path(const char * path) {
 }
 
 static int util_mkdir( const char * path ) {
-#ifdef HAVE_MKDIR_POSIX
+#ifdef HAVE_POSIX_MKDIR
   return mkdir( path , UTIL_DEFAULT_MKDIR_MODE );
-#else
+#endif
+
+#ifdef HAVE_WINDOWS_MKDIR
   return _mkdir( path );
 #endif
 }
