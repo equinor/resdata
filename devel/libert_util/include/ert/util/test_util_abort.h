@@ -1,7 +1,7 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway.
+   Copyright (C) 2015  Statoil ASA, Norway.
 
-   The file 'thread_pool.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'test_util_abort.h' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,12 +16,25 @@
    for more details.
 */
 
-#include "ert/util/build_config.h"
-#include <ert/util/thread_pool.h>
+/*
+  This header is purely a convenience header - it is not installed.
+*/
 
-#ifdef HAVE_PTHREAD
-#include "thread_pool_posix.c"
-#else
-Error - should not be be here.
+#ifndef __TEST_UTIL_ABORT__
+#define __TEST_UTIL_ABORT__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <setjmp.h>
+
+  jmp_buf * util_abort_test_jump_buffer();
+  void   test_util_addr2line();
+  void   test_assert_util_abort(const char * function_name , void call_func (void *) , void * arg);
+
+#ifdef __cplusplus
+}
+#endif
 #endif
 

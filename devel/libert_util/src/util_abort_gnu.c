@@ -1,14 +1,14 @@
 /*
-  This file implements the fully fledged util�abort() function which
+  This file implements the fully fledged util_abort() function which
   assumes that the current build has the following features:
 
     fork()      : To support calling external program addr2line().
-    pthread     : To serialize the use of util�abort() - not very important.
-    execinfo.h  : The backtrace functions backtrace() and backtrace�symbols().
+    pthread     : To serialize the use of util_abort() - not very important.
+    execinfo.h  : The backtrace functions backtrace() and backtrace_symbols().
     _GNU_SOURCE : To get the dladdr() function.
 
   If not all these features are availbale the simpler version in
-  util�abort_simple.c is built instead.
+  util_abort_simple.c is built instead.
 */
 
 /**
@@ -25,6 +25,8 @@
 
   This function is purely a helper function for util_abort().
 */
+
+#include <pwd.h>
 
 #if !defined(__GLIBC__)         /* note: not same as __GNUC__ */
 #  if defined (__APPLE__)
@@ -101,7 +103,6 @@ static bool util_addr2line_lookup__(const void * bt_addr , char ** func_name , c
 }
 
 
-
 bool util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** file_name , int * line_nr) {
   if (util_addr2line_lookup__(bt_addr , func_name , file_name , line_nr , false))
     return true;
@@ -124,6 +125,7 @@ bool util_addr2line_lookup(const void * bt_addr , char ** func_name , char ** fi
   function/file/line information (provided the required debugging
   information is compiled in).
 */
+
 
 static pthread_mutex_t __abort_mutex  = PTHREAD_MUTEX_INITIALIZER; /* Used purely to serialize the util_abort() routine. */
 
@@ -204,6 +206,25 @@ char * util_alloc_dump_filename() {
 
     return filename;
   }
+}
+
+#include <setjmp.h>
+static jmp_buf jump_buffer;
+static char  * intercept_function = NULL;
+
+static void util_abort_test_intercept( const char * function ) {
+  if (intercept_function && (strcmp(function , intercept_function) == 0)) {
+    longjmp(jump_buffer , 0 );
+  }
+}
+
+
+jmp_buf * util_abort_test_jump_buffer() {
+  return &jump_buffer;
+}
+
+void util_abort_test_set_intercept_function(const char * function) {
+  intercept_function = util_realloc_string_copy( intercept_function , function );
 }
 
 

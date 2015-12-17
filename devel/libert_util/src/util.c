@@ -35,23 +35,17 @@
 #include <fcntl.h>
 #include <limits.h>
 
-#ifdef HAVE_FORK
-#ifdef WITH_PTHREAD
-#ifdef HAVE_EXECINFO
-#ifdef HAVE_GETPWUID
-#ifdef HAVE_DLADDR
-#define HAVE_UTIL_ABORT
-#endif
-#endif
-#endif
-#endif
-#endif
+#include <ert/util/ert_api_config.h>
+#include "ert/util/build_config.h"
 
-#ifdef HAVE_UTIL_ABORT
+
+#ifdef HAVE_BACKTRACE
 #define __USE_GNU       // Must be defined to get access to the dladdr() function; Man page says the symbol should be: _GNU_SOURCE but that does not seem to work?
 #define _GNU_SOURCE     // Must be defined _before_ #include <errno.h> to get the symbol 'program_invocation_name'.
 #include <dlfcn.h>
 #endif
+
+
 #include <errno.h>
 
 #include <stdint.h>
@@ -61,7 +55,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_OPENDIR
+#ifdef ERT_HAVE_OPENDIR
 #include <dirent.h>
 #endif
 
@@ -72,7 +66,7 @@
 #include <Shlwapi.h>
 #endif
 
-#ifdef HAVE_FORK
+#ifdef ERT_HAVE_FORK
 #include <unistd.h>
 #include <sys/wait.h>
 #endif
@@ -81,7 +75,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef WITH_PTHREAD
+#ifdef HAVE_PTHREAD
 #include <pthread.h>
 #endif
 
@@ -752,8 +746,10 @@ void util_yield() {
 #if defined(WITH_PTHREAD) && (defined(HAVE_YIELD_NP) || defined(HAVE_YIELD))
   #ifdef HAVE_YIELD_NP
     pthread_yield_np();
-  #elif HAVE_YIELD
+  #else
+    #ifdef HAVE_YIELD
     pthread_yield();
+    #endif
   #endif
 #else
   util_usleep(1000);
@@ -944,7 +940,7 @@ char * util_alloc_realpath(const char * input_path) {
   /* We do not have the realpath() implementation. Must first check if
      the entry exists; and if not we abort. If the entry indeed exists
      we call the util_alloc_cwd_abs_path() function: */
-#ifdef HAVE_SYMLINK
+#ifdef ERT_HAVE_SYMLINK
   ERROR - What the fuck; have symlinks and not realpath()?!
 #endif
   if (!util_entry_exists( input_path ))
@@ -2245,7 +2241,8 @@ static bool util_copy_file__(const char * src_file , const char * target_file, s
       fclose(src_stream);
       fclose(target_stream);
 
-#ifdef HAVE_CHMOD_AND_MODE_T
+#ifdef HAVE_CHMOD
+#ifdef HAVE_MODE_T
       {
         struct stat stat_buffer;
         mode_t src_mode;
@@ -2254,6 +2251,7 @@ static bool util_copy_file__(const char * src_file , const char * target_file, s
         src_mode = stat_buffer.st_mode;
         chmod( target_file , src_mode );
       }
+#endif
 #endif
 
       return result;
@@ -2539,7 +2537,7 @@ bool util_is_file(const char * path) {
    Will return false if the path does not exist.
 */
 
-#ifdef HAVE_FORK
+#ifdef ERT_HAVE_FORK
 bool util_is_executable(const char * path) {
   if (util_file_exists(path)) {
     stat_type stat_buffer;
@@ -4742,7 +4740,9 @@ char * util_alloc_sprintf_va(const char * fmt , va_list ap) {
   char *s = NULL;
   int length;
   va_list tmp_va;
+
   UTIL_VA_COPY(tmp_va , ap);
+
   length = vsnprintf(NULL , 0 , fmt , tmp_va);
   s = util_calloc(length + 1 , sizeof * s );
   vsprintf(s , fmt , ap);
@@ -5093,26 +5093,26 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #endif
 }
 
-#ifdef HAVE_FORK
+#ifdef ERT_HAVE_FORK
 #include "util_fork.c"
 #endif
 
-#ifdef WITH_ZLIB
+#ifdef ERT_HAVE_ZLIB
 #include "util_zlib.c"
 #endif
 
-#ifdef HAVE_GETUID
+#ifdef ERT_HAVE_GETUID
 #include "util_getuid.c"
 #endif
 
-#ifdef HAVE_LOCKF
+#ifdef ERT_HAVE_LOCKF
 #include "util_lockf.c"
 #endif
 
 
 #include "util_env.c"
 
-#ifdef HAVE_SYMLINK
+#ifdef ERT_HAVE_SYMLINK
 #include "util_symlink.c"
 #else
 bool util_is_link(const char * path) {
@@ -5126,15 +5126,14 @@ char * util_alloc_link_target(const char * link) {
 
 
 
-#ifdef HAVE_UTIL_ABORT
-#include "util_abort_test.c"
+#ifdef HAVE_BACKTRACE
 #include "util_abort_gnu.c"
 #else
 #include "util_abort_simple.c"
 #endif
 
 
-#ifdef HAVE_OPENDIR
+#ifdef ERT_HAVE_OPENDIR
 #include "util_opendir.c"
 #endif
 
