@@ -1,6 +1,3 @@
-configure_file(build_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/../include/ert/util/build_config.h)
-configure_file(ert_api_config.h.in  ${CMAKE_CURRENT_BINARY_DIR}/../include/ert/util/ert_api_config.h)
-
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
 set(source_files
