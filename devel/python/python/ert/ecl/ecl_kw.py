@@ -344,16 +344,16 @@ class EclKW(CClass):
 
     def __init(self):
         self.data_ptr   = None
-        self.ecl_type = cfunc.get_type( self )
-        if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+        ecl_type = cfunc.get_type( self )
+        if ecl_type == EclTypeEnum.ECL_INT_TYPE:
             self.data_ptr = cfunc.int_ptr( self )
             self.dtype    = numpy.int32        
             self.str_fmt  = "%8d"
-        elif self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
             self.data_ptr = cfunc.float_ptr( self )
             self.dtype    = numpy.float32
             self.str_fmt  = "%13.4f"
-        elif self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
             self.data_ptr = cfunc.double_ptr( self )
             self.dtype    = numpy.float64        
             self.str_fmt  = "%13.4f"
@@ -361,9 +361,9 @@ class EclKW(CClass):
             # Iteration not supported for CHAR / BOOL
             self.data_ptr = None
             self.dtype    = None
-            if self.ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
+            if ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
                 self.str_fmt  = "%8s"
-            elif self.ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
+            elif ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
                 self.str_fmt  = "%d"
             else:
                 self.str_fmt = "%s"  #"Message type"
@@ -400,9 +400,10 @@ class EclKW(CClass):
                 if self.data_ptr:
                     return self.data_ptr[ index ]
                 else:
-                    if self.ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
+                    ecl_type = self.getEclType( )
+                    if ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
                         return cfunc.iget_bool( self, index)
-                    elif self.ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
+                    elif ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
                         return cfunc.iget_char_ptr( self , index )
                     else:
                         raise TypeError("Internal implementation error ...")
@@ -428,9 +429,10 @@ class EclKW(CClass):
                 if self.data_ptr:
                     self.data_ptr[ index ] = value
                 else:
-                    if self.ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
+                    ecl_type = self.getEclType( )
+                    if ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
                         cfunc.iset_bool( self , index , value)
-                    elif self.ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
+                    elif ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
                         return cfunc.iset_char_ptr( self , index , value)
                     else:
                         raise SystemError("Internal implementation error ...")
@@ -460,8 +462,9 @@ class EclKW(CClass):
             else:
                 if not mul:
                     factor = 1.0 / factor
-                    
-                if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+
+                ecl_type = self.getEclType( )
+                if ecl_type == EclTypeEnum.ECL_INT_TYPE:
                     if isinstance( factor , int ):
                         cfunc.scale_int( self , factor )
                     else:
@@ -493,7 +496,8 @@ class EclKW(CClass):
                 else:
                     sign = -1
 
-                if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+                ecl_type = self.getEclType( )
+                if ecl_type == EclTypeEnum.ECL_INT_TYPE:
                     if isinstance( delta , int ):
                         cfunc.shift_int( self , delta * sign)
                     else:
@@ -571,15 +575,16 @@ class EclKW(CClass):
         String: Raise ValueError exception.
         Bool:   The number of true values
         """
-        if self.ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
+        ecl_type = self.getEclType( )
+        if ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
             raise ValueError("The keyword:%s is of string type - sum is not implemented" % self.get_name())
-        elif self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_INT_TYPE:
             return cfunc.int_sum( self )
-        elif self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
             return cfunc.float_sum( self )
-        elif self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
             return cfunc.float_sum( self )
-        elif self.ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_BOOL_TYPE:
             sum = 0
             for elm in self:
                 if elm:
@@ -648,7 +653,8 @@ class EclKW(CClass):
                 if mask:
                     mask.set_kw( self , value , force_active )
                 else:
-                    if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+                    ecl_type = self.getEclType( )
+                    if ecl_type == EclTypeEnum.ECL_INT_TYPE:
                         if isinstance( value , int ):
                             cfunc.set_int( self , value )
                         else:
@@ -830,15 +836,16 @@ class EclKW(CClass):
         Will raise TypeError exception if the keyword is not of
         numerical type.
         """
-        if self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
+        ecl_type = self.getEclType( )
+        if ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
             min = ctypes.c_float()
             max = ctypes.c_float()
             cfunc.max_min_float( self , ctypes.byref( max ) , ctypes.byref( min ))
-        elif self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
             min = ctypes.c_double()
             max = ctypes.c_double()
             cfunc.max_min_double( self , ctypes.byref( max ) , ctypes.byref( min ))
-        elif self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_INT_TYPE:
             min = ctypes.c_int()
             max = ctypes.c_int()
             cfunc.max_min_int( self , ctypes.byref( max ) , ctypes.byref( min ))
@@ -860,11 +867,12 @@ class EclKW(CClass):
 
     @property
     def numeric(self):
-        if self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
+        ecl_type = self.getEclType( )
+        if ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
             return True
-        if self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
+        if ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
             return True
-        if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+        if ecl_type == EclTypeEnum.ECL_INT_TYPE:
             return True
         return False
 
@@ -878,10 +886,10 @@ class EclKW(CClass):
         return self.typeName( )
 
     def typeName(self):
-        return EclUtil.type_name( self.ecl_type )
+        return EclUtil.type_name( self.getEclType( ))
 
     def getEclType(self):
-        return self.ecl_type
+        return cfunc.get_type( self )
 
         
 
@@ -1032,11 +1040,12 @@ class EclKW(CClass):
 
 
     def getDataPtr(self):
-        if self.ecl_type == EclTypeEnum.ECL_INT_TYPE:
+        ecl_type = self.getEclType( )
+        if ecl_type == EclTypeEnum.ECL_INT_TYPE:
             return cfunc.int_ptr( self )
-        elif self.ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
             return cfunc.float_ptr( self )
-        elif self.ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
+        elif ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
             return cfunc.double_ptr( self )
         else:
             raise ValueError("Only numeric types can export data pointer")
@@ -1058,14 +1067,14 @@ cfunc.fseek_grdecl               = cwrapper.prototype("bool     ecl_kw_grdecl_fs
 cfunc.fprintf_grdecl             = cwrapper.prototype("void     ecl_kw_fprintf_grdecl( ecl_kw , FILE )")
 cfunc.fprintf_data               = cwrapper.prototype("void     ecl_kw_fprintf_data( ecl_kw , char* , FILE )")
 
-cfunc.alloc_new                  = cwrapper.prototype("c_void_p ecl_kw_alloc( char* , int , int )")
+cfunc.alloc_new                  = cwrapper.prototype("c_void_p ecl_kw_alloc( char* , int , ecl_type_enum )")
 cfunc.copyc                      = cwrapper.prototype("c_void_p ecl_kw_alloc_copy( ecl_kw )")
 cfunc.sub_copy                   = cwrapper.prototype("c_void_p ecl_kw_alloc_sub_copy( ecl_kw , char*, int , int)")
 cfunc.slice_copyc                = cwrapper.prototype("c_void_p ecl_kw_alloc_slice_copy( ecl_kw , int , int , int )")
 cfunc.fread_alloc                = cwrapper.prototype("c_void_p ecl_kw_fread_alloc( fortio )")
 cfunc.get_size                   = cwrapper.prototype("int      ecl_kw_get_size( ecl_kw )")
 cfunc.get_fortio_size            = cwrapper.prototype("size_t   ecl_kw_fortio_size( ecl_kw )")
-cfunc.get_type                   = cwrapper.prototype("int      ecl_kw_get_type( ecl_kw )")
+cfunc.get_type                   = cwrapper.prototype("ecl_type_enum ecl_kw_get_type( ecl_kw )")
 cfunc.iget_char_ptr              = cwrapper.prototype("char*    ecl_kw_iget_char_ptr( ecl_kw , int )")
 cfunc.iset_char_ptr              = cwrapper.prototype("void     ecl_kw_iset_char_ptr( ecl_kw , int , char*)")
 cfunc.iget_bool                  = cwrapper.prototype("bool     ecl_kw_iget_bool( ecl_kw , int)")

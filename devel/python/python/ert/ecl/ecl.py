@@ -117,17 +117,6 @@ class default_wrapper(object):
 ecl_default = default_wrapper()
 
 
-from .ecl_util import EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUtil
-    
-for enum in EclFileFlagEnum.enum_names:
-    globals()[enum] = getattr(EclFileFlagEnum, enum)
-
-for enum in EclPhaseEnum.enum_names:
-    globals()[enum] = getattr(EclPhaseEnum, enum)
-
-for enum in EclTypeEnum.enum_names:
-    globals()[enum] = getattr(EclTypeEnum, enum)
-
 
         
 

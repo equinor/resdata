@@ -55,16 +55,53 @@ EclFileEnum.addEnum("ECL_DATA_FILE", 512)
 
 EclFileEnum.registerEnum(ECL_LIB, "ecl_file_enum")
 
+#-----------------------------------------------------------------
 
-# ecl_phase_enum from ecl_util.h
-EclPhaseEnum = create_enum(ECL_LIB, "ecl_util_phase_enum_iget", "ecl_phase_enum")
+class EclPhaseEnum(BaseCEnum):
+    ECL_OIL_PHASE = None
+    ECL_GAS_PHASE = None
+    ECL_WATER_PHASE = None
 
-# ecl_type_enum defintion from ecl_util.h
-EclTypeEnum = create_enum(ECL_LIB, "ecl_util_type_enum_iget", "ecl_type_enum")
+EclPhaseEnum.addEnum("ECL_OIL_PHASE" , 1 )
+EclPhaseEnum.addEnum("ECL_GAS_PHASE" , 2 )
+EclPhaseEnum.addEnum("ECL_WATER_PHASE" , 4 )
 
-# ecl_file_flag_type defintion from ecl_file.h
-EclFileFlagEnum = create_enum(ECL_LIB, "ecl_util_file_flags_enum_iget", "ecl_file_flag_enum")
+EclPhaseEnum.registerEnum(ECL_LIB, "ecl_phase_enum")
 
+#-----------------------------------------------------------------
+
+class EclTypeEnum(BaseCEnum):
+    ECL_CHAR_TYPE   = None
+    ECL_FLOAT_TYPE  = None
+    ECL_DOUBLE_TYPE = None
+    ECL_INT_TYPE    = None
+    ECL_BOOL_TYPE   = None
+    ECL_MESS_TYPE   = None
+  
+EclTypeEnum.addEnum("ECL_CHAR_TYPE" , 0 )
+EclTypeEnum.addEnum("ECL_FLOAT_TYPE" , 1 )
+EclTypeEnum.addEnum("ECL_DOUBLE_TYPE" , 2 )
+EclTypeEnum.addEnum("ECL_INT_TYPE" , 3 )
+EclTypeEnum.addEnum("ECL_BOOL_TYPE" , 4 )
+EclTypeEnum.addEnum("ECL_MESS_TYPE" , 5 )
+
+
+EclTypeEnum.registerEnum(ECL_LIB, "ecl_type_enum")
+
+#-----------------------------------------------------------------
+
+class EclFileFlagEnum(BaseCEnum):
+    ECL_FILE_CLOSE_STREAM = None
+    ECL_FILE_WRITABLE = None
+
+EclFileFlagEnum.addEnum("ECL_FILE_CLOSE_STREAM" , 1 )
+EclFileFlagEnum.addEnum("ECL_FILE_WRITABLE" , 2 )
+
+
+EclFileFlagEnum.registerEnum(ECL_LIB, "ecl_file_flag_enum")
+
+
+#-----------------------------------------------------------------
 
 cwrapper = CWrapper(ECL_LIB)
 cfunc = CWrapperNameSpace("ecl_util")
