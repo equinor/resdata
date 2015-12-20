@@ -1,6 +1,7 @@
 set(TEST_SOURCES
     __init__.py
     test_ctime.py
+    test_cstring.py
     test_hash.py
     test_lookup_table.py
     test_matrix.py
@@ -21,6 +22,7 @@ set(TEST_SOURCES
 add_python_package("python.tests.core.util"  ${PYTHON_INSTALL_PREFIX}/tests/core/util "${TEST_SOURCES}" False)
 
 addPythonTest(core.util.ctime core.util.test_ctime.CTimeTest)
+addPythonTest(core.util.cstring core.util.test_cstring.CStringTest)
 addPythonTest(core.util.hash core.util.test_hash.HashTest)
 addPythonTest(core.util.lookup_table core.util.test_lookup_table.LookupTableTest )
 addPythonTest(core.util.matrix core.util.test_matrix.MatrixTest )
