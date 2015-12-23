@@ -59,26 +59,6 @@ if (BUILD_APPLICATIONS)
    endforeach()
 endif()
 
-if (BUILD_ENS_PLOT)
-   include_directories( ${PLPLOT_HEADER} )
-   add_executable( ens_plot.x ens_plot.c )
-   target_link_libraries( ens_plot.x plot ecl)
-   if (USE_RUNPATH)
-      add_runpath( ens_plot.x )
-   endif()   
-
-   set (destination ${CMAKE_INSTALL_PREFIX}/bin)
-   if (INSTALL_ERT)
-      install(TARGETS ens_plot.x DESTINATION ${destination})
-      if (INSTALL_GROUP)
-         install(CODE "EXECUTE_PROCESS(COMMAND chgrp ${INSTALL_GROUP} ${destination}/ens_plot.x)")
-         install(CODE "EXECUTE_PROCESS(COMMAND chmod g+w ${destination}/ens_plot.x)")
-      endif()
-   endif()
-endif()
-
-
-
 if (BUILD_ECL_SUMMARY)
    add_executable( ecl_summary view_summary.c )
    target_link_libraries( ecl_summary ecl)
