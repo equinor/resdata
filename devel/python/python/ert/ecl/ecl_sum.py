@@ -457,6 +457,13 @@ class EclSum(BaseCClass):
             else:
                 trange.append( end )
 
+        # If the simulation does not start at the first of the month
+        # the start value will be before the simulation start; we
+        # manually shift the first element in the trange to the start
+        # value.
+        if trange[0] < start:
+            trange[0] = start
+                
         return trange
         
 
