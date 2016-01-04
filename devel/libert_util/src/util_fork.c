@@ -238,7 +238,7 @@ char * util_alloc_filename_from_stream( FILE * input_stream ) {
    The PING_CMD is passed as -D from the build system.
 */
 
-#ifdef PING_CMD
+#ifdef ERT_HAVE_PING
 bool util_ping(const char *hostname) {
   pid_t ping_pid = util_fork_exec(PING_CMD , 4 , (const char *[4]) {"-c" , "3" , "-q", hostname} , false , NULL , NULL , NULL , "/dev/null" , "/dev/null");
   int wait_status;
