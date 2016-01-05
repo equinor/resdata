@@ -447,22 +447,24 @@ class EclSum(BaseCClass):
             day1 = 1
             day2 = 1
 
-            start = datetime.date( year1, month1 , day1)
-            end =  datetime.date(year2 , month2 , day2)
+            range_start = datetime.date( year1, month1 , day1)
+            range_end =  datetime.date(year2 , month2 , day2)
                 
-        trange = TimeVector.createRegular(start , end , interval)
+        trange = TimeVector.createRegular(range_start , range_end , interval)
+
+        # If the simulation does not start at the first of the month
+        # the start value will be before the simulation start; we
+        # manually shift the first element in the trange to the start
+        # value; the same for the end of list.
+
         if trange[-1] < end:
             if extend_end:
                 trange.appendTime( num , timeUnit )
             else:
                 trange.append( end )
 
-        # If the simulation does not start at the first of the month
-        # the start value will be before the simulation start; we
-        # manually shift the first element in the trange to the start
-        # value.
         if trange[0] < start:
-            trange[0] = start
+            trange[0] = CTime(start)
                 
         return trange
         
