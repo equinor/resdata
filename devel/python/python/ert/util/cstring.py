@@ -16,12 +16,14 @@
 
 
 import ctypes
-from ert.cwrap import CWrapper
-from ert.util import UTIL_LIB
+
+from ert.util import UtilPrototype
+
+_free = UtilPrototype("void free(void*)")
 
 
-def cstringObj(c_ptr):
-    """The cstringObj function is a convenience function which creates a
+def cStringObject(c_ptr):
+    """The cStringObject function is a convenience function which creates a
     Python string copy, and discards the underlying C allocated storage
     for strings created with *alloc() functions in C.
 
@@ -30,12 +32,11 @@ def cstringObj(c_ptr):
 
     """
     if c_ptr is not None:
-        python_string = ctypes.c_char_p( c_ptr ).value
-        UTIL_LIB.free( c_ptr )
+        python_string = ctypes.c_char_p(c_ptr).value
+        _free(c_ptr)
         return python_string
     else:
         return None
 
 
-cwrapper = CWrapper(UTIL_LIB)
-cwrapper.registerType("cstring_obj", cstringObj)
+UtilPrototype.registerType("cstring_obj", cStringObject)

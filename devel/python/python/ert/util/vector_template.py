@@ -43,22 +43,15 @@ float and size_t not currently implemented in the Python version.
 import  sys
 from    types import IntType, SliceType
 
-from ert.cwrap import CWrapper, CFILE, BaseCClass
-from ert.util import UTIL_LIB
+from ert.cwrap import CFILE, BaseCClass
+from ert.util import BoundUtilPrototype
 
 
 class PermutationVector(BaseCClass):
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly!")
 
-    def free(self):
-        PermutationVector.cNamespace().free(self)
-
-CWrapper.registerObjectType("permutation_vector", PermutationVector)
-
-cwrapper = CWrapper(UTIL_LIB)
-PermutationVector.cNamespace().free = cwrapper.prototype("void util_safe_free(permutation_vector)")
-
+    free = BoundUtilPrototype("void util_safe_free(permutation_vector)")
 
 
 # TVector takes advantage of the fact that self.cNamespace belongs to the inheriting class
@@ -82,14 +75,14 @@ class VectorTemplate(BaseCClass):
         """
         (start, stop, step) = slice_range.indices(len(obj))
         if stop > start:
-            return cls.cNamespace().strided_copy(obj, start, stop, step)
+            return cls._strided_copy(obj, start, stop, step)
         else:
             return None
 
 
     @classmethod
     def __copy__(cls, obj):
-        return cls.cNamespace().alloc_copy(obj)
+        return cls._alloc_copy(obj)
 
 
     def copy(self):
@@ -102,7 +95,7 @@ class VectorTemplate(BaseCClass):
     def __irshift__(self,shift):
         if shift < 0:
             raise ValueError("The shift must be positive")
-        self.cNamespace().rshift(self, shift)
+        self._rshift(self, shift)
         return self
         
     def __ilshift__(self,shift):
@@ -110,7 +103,7 @@ class VectorTemplate(BaseCClass):
             raise ValueError("The shift must be positive")
         if shift > len(self):
             raise ValueError("The shift is too large %d > %d" % (shift, len(self)))
-        self.cNamespace().lshift(self, shift)
+        self._lshift(self, shift)
         return self
 
 
@@ -133,17 +126,17 @@ class VectorTemplate(BaseCClass):
         """
         Creates a new TVector instance.
         """
-        c_pointer = self.cNamespace().alloc(initial_size, default_value)
+        c_pointer = self._alloc(initial_size, default_value)
         super(VectorTemplate, self).__init__(c_pointer)
-        self.element_size = self.cNamespace().element_size(self)
+        self.element_size = self._element_size(self)
         
     def __contains__(self , value):
-        return self.cNamespace().contains(self , value)
+        return self._contains(self , value)
 
 
     def pop(self):
         if len(self) > 0:
-            return self.cNamespace().pop(self)
+            return self._pop(self)
         else:
             raise ValueError("Trying to pop from empty vector")
                              
@@ -218,7 +211,7 @@ class VectorTemplate(BaseCClass):
             if index < 0 or index >= length:
                 raise IndexError("Index must be in range %d <= %d < %d" % (0, index, length))
             else:
-                return self.cNamespace().iget(self, index)
+                return self._iget(self, index)
         elif isinstance(index, SliceType):
             return self.strided_copy(self, index)
         else:
@@ -229,7 +222,7 @@ class VectorTemplate(BaseCClass):
         Implements write [] operator - @index must be integer.
         """
         if isinstance(index, IntType):
-            self.cNamespace().iset(self, index, value)
+            self._iset(self, index, value)
         else:
             raise TypeError("Index should be integer type")
 
@@ -258,15 +251,15 @@ class VectorTemplate(BaseCClass):
             if len(self) == len(delta):
                 # This is vector + vector operation. 
                 if not add:
-                    self.cNamespace().scale(delta, -1)
-                self.cNamespace().inplace_add(self, delta)
+                    self._scale(delta, -1)
+                self._inplace_add(self, delta)
             else:
                 raise ValueError("Incompatible sizes for add self:%d  other:%d" % (len(self), len(delta)))
         else:
             if isinstance(delta, int) or isinstance(delta, float):
                 if not add:
                     delta *= -1
-                self.cNamespace().shift(self, delta)
+                self._shift(self, delta)
             else:
                 raise TypeError("delta has wrong type:%s " % type(delta))
 
@@ -334,12 +327,12 @@ class VectorTemplate(BaseCClass):
         if type(self) == type(factor):
             # This is vector * vector operation.
             if len(self) == len(factor):
-                self.cNamespace().inplace_mul(self, factor)
+                self._inplace_mul(self, factor)
             else:
                 raise ValueError("Incompatible sizes for mul self:%d  other:%d" % (len(self), len(factor)))
         else:
             if isinstance(factor, int) or isinstance(factor, float):
-                self.cNamespace().scale(self, factor)
+                self._scale(self, factor)
             else:
                 raise TypeError("factor has wrong type:%s " % type(factor))
 
@@ -358,7 +351,7 @@ class VectorTemplate(BaseCClass):
     def __div__(self, divisor):
         if isinstance(divisor, int) or isinstance(divisor, float):
             copy = self.__copy__(self)
-            copy.cNamespace().div(copy, divisor)
+            copy._div(copy, divisor)
             return copy
         else:
             raise TypeError("Divisor has wrong type:%s" % type(divisor))
@@ -387,10 +380,10 @@ class VectorTemplate(BaseCClass):
         """
         if type(self) == type(value):
             # This is a copy operation
-            self.cNamespace().memcpy(self, value)
+            self._memcpy(self, value)
         else:
             if isinstance(value, int) or isinstance(value, float):
-                self.cNamespace().assign(self, value)
+                self._assign(self, value)
             else:
                 raise TypeError("Value has wrong type")
 
@@ -398,7 +391,7 @@ class VectorTemplate(BaseCClass):
         """
         The number of elements in the vector.
         """
-        return self.cNamespace().size(self)
+        return self._size(self)
 
 
     def printf(self, fmt=None, name=None, stream=sys.stdout):
@@ -409,18 +402,18 @@ class VectorTemplate(BaseCClass):
         cfile = CFILE(stream)
         if not fmt:
             fmt = self.default_format
-        self.cNamespace().fprintf(self, cfile, name, fmt)
+        self._fprintf(self, cfile, name, fmt)
 
 
     def max(self):
         if len(self) > 0:
-            return self.cNamespace().get_max(self)
+            return self._get_max(self)
         else:
             raise IndexError("The vector is empty!")
 
     def min(self):
         if len(self) > 0:
-            return self.cNamespace().get_min(self)
+            return self._get_min(self)
         else:
             raise IndexError("The vector is empty!")
 
@@ -431,7 +424,7 @@ class VectorTemplate(BaseCClass):
         @rtype: int
         """
         if len(self) > 0:
-            return self.cNamespace().get_min_index(self, reverse)
+            return self._get_min_index(self, reverse)
         else:
             raise IndexError("The vector is empty!")
 
@@ -441,12 +434,12 @@ class VectorTemplate(BaseCClass):
         @rtype: int
         """
         if len(self) > 0:
-            return self.cNamespace().get_max_index(self, reverse)
+            return self._get_max_index(self, reverse)
         else:
             raise IndexError("The vector is empty!")
 
     def append(self, value):
-        self.cNamespace().append(self, value)
+        self._append(self, value)
 
     def deleteBlock(self, index, block_size):
         """
@@ -454,7 +447,7 @@ class VectorTemplate(BaseCClass):
         
         After the removal data will be left shifted.
         """
-        self.cNamespace().idel_block(self, index, block_size)
+        self._idel_block(self, index, block_size)
 
     def sort(self, reverse=False):
         """
@@ -462,31 +455,31 @@ class VectorTemplate(BaseCClass):
         @type reverse: bool
         """
         if not reverse:
-            self.cNamespace().sort(self)
+            self._sort(self)
         else:
-            self.cNamespace().rsort(self)
+            self._rsort(self)
 
     def clear(self):
-        self.cNamespace().reset(self)
+        self._reset(self)
 
     def safeGetByIndex(self, index):
-        return self.cNamespace().safe_iget(self, index)
+        return self._safe_iget(self, index)
 
     def setReadOnly(self, read_only):
-        self.cNamespace().set_read_only(self, read_only)
+        self._set_read_only(self, read_only)
 
     def getReadOnly(self):
-        return self.cNamespace().get_read_only(self)
+        return self._get_read_only(self)
 
     def setDefault(self, value):
-        self.cNamespace().set_default(self, value)
+        self._set_default(self, value)
 
     def getDefault(self):
-        return self.cNamespace().get_default(self)
+        return self._get_default(self)
 
 
     def free(self):
-        self.cNamespace().free(self)
+        self._free(self)
 
     def permute(self, permutation_vector):
         """
@@ -495,7 +488,7 @@ class VectorTemplate(BaseCClass):
         """
         assert isinstance(permutation_vector, PermutationVector)
 
-        self.cNamespace().permute(self, permutation_vector)
+        self._permute(self, permutation_vector)
 
     def permutationSort(self, reverse=False):
         """
@@ -505,9 +498,9 @@ class VectorTemplate(BaseCClass):
         """
         if len(self) > 0:
             if not reverse:
-                return self.cNamespace().sort_perm(self)
+                return self._sort_perm(self)
             else:
-                return self.cNamespace().rsort_perm(self)
+                return self._rsort_perm(self)
 
         return None
 
@@ -520,21 +513,21 @@ class VectorTemplate(BaseCClass):
         return l
 
     def selectUnique(self):
-        self.cNamespace().select_unique(self)
+        self._select_unique(self)
 
 
     def elementSum(self):
-        return self.cNamespace().element_sum( self )
+        return self._element_sum( self )
 
 
     def getDataPtr(self):
         "Low level function which returns a pointer to underlying storage"
         # Observe that the get_data_ptr() function is not implemented
         # for the TimeVector class.
-        return self.cNamespace().get_data_ptr(self)
+        return self._get_data_ptr(self)
 
     def countEqual(self , value):
-        return self.cNamespace().count_equal( self , value )
+        return self._count_equal( self , value )
 
 
     def initRange(self , min_value , max_value , delta):
@@ -546,7 +539,7 @@ class VectorTemplate(BaseCClass):
         if delta == 0:
             raise ValueError("Invalid range")
         else:
-            self.cNamespace().init_range( self , min_value , max_value , delta )
+            self._init_range( self , min_value , max_value , delta )
 
     @classmethod
     def createRange(cls , min_value , max_value , delta):
