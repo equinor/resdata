@@ -373,6 +373,13 @@ class SumTest(ExtendedTestCase):
         self.assertEqual( 452 , len(sum))
         self.assertFloatEqual( 1.8533144e+8 , sum.get_last_value("FOPT"))
 
+        trange = sum.timeRange( start = datetime.date( 2015 , 1 , 1), interval = "1M")
+        self.assertTrue( trange[0] == datetime.date( 2016 , 2 , 1 ))
+        for t in trange:
+            sum.get_interp( "FOPT" , date = t )
+        
+
+
     def test_regularProduction(self):
         sum = EclSum(self.case)
         with self.assertRaises(TypeError):
