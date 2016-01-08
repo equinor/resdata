@@ -812,8 +812,29 @@ class EclGrid(CClass):
         return cfunc.get_cell_thickness( self , gi )
 
 
+    def getCellDims(self , active_index = None , global_index = None , ijk = None):
+        """Will return a tuple (dx,dy,dz) for cell dimension.
+
+        The dx and dy values are best effor estimates of the cell size
+        along the i and j directions respectively. The three values
+        are guaranteed to satisfy:
+
+              dx * dy * dz = dV
+
+        See method get_xyz() for documentation of @active_index,
+        @global_index and @ijk.
+
+        """
+        gi = self.__global_index( ijk = ijk , active_index = active_index , global_index = global_index )
+        dx = cfunc.get_cell_dx( self , gi )
+        dy = cfunc.get_cell_dy( self , gi )
+        dz = cfunc.get_cell_thickness( self , gi )
+        return (dx,dy,dz)
+        
+
     @property
     def num_lgr( self ):
+
         """
         How many LGRs are attached to this main grid?
 
@@ -1150,6 +1171,8 @@ cfunc.has_lgr                      = cwrapper.prototype("bool ecl_grid_has_lgr( 
 cfunc.grid_value                   = cwrapper.prototype("double ecl_grid_get_property( ecl_grid , ecl_kw , int , int , int)")
 cfunc.get_cell_volume              = cwrapper.prototype("double ecl_grid_get_cell_volume1( ecl_grid , int )")
 cfunc.get_cell_thickness           = cwrapper.prototype("double ecl_grid_get_cell_thickness1( ecl_grid , int )")
+cfunc.get_cell_dx                  = cwrapper.prototype("double ecl_grid_get_cell_dx1( ecl_grid , int )")
+cfunc.get_cell_dy                  = cwrapper.prototype("double ecl_grid_get_cell_dy1( ecl_grid , int )")
 cfunc.get_depth                    = cwrapper.prototype("double ecl_grid_get_cdepth1( ecl_grid , int )")
 cfunc.fwrite_grdecl                = cwrapper.prototype("void   ecl_grid_grdecl_fprintf_kw( ecl_grid , ecl_kw , char* , FILE , double)") 
 cfunc.load_column                  = cwrapper.prototype("void   ecl_grid_get_column_property( ecl_grid , ecl_kw , int , int , double_vector)")

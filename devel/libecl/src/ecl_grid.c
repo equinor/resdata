@@ -4323,9 +4323,19 @@ double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j 
 
 
 double ecl_grid_get_cell_dx1( const ecl_grid_type * grid , int global_index ) {
-  fprintf(stderr , "** WARNING: The ecl_grid_get_cell_dx1() function is only a stub returning -1.\n");
-  fprintf(stderr , "            If you need a correct value for cell dx you must rebuild a new ert version.\n");
-  return -1;
+  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  double dx = 0;
+  double dy = 0;
+  int c;
+
+  for (c = 1; c < 8; c += 2) {
+    dx += cell->corner_list[c].x - cell->corner_list[c - 1].x;
+    dy += cell->corner_list[c].y - cell->corner_list[c - 1].y;
+  }
+  dx *= 0.25;
+  dy *= 0.25;
+
+  return sqrt( dx * dx + dy * dy );
 }
 
 
@@ -4336,9 +4346,11 @@ double ecl_grid_get_cell_dx3( const ecl_grid_type * grid , int i , int j , int k
 
 
 double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
-  fprintf(stderr , "** WARNING: The ecl_grid_get_cell_dy1() function is only a stub returning -1.\n");
-  fprintf(stderr , "            If you need a correct value for cell dy you must update rebuild a new ert version.\n");
-  return -1;
+  double V = ecl_grid_get_cell_volume1(grid , global_index);
+  double dz = ecl_grid_get_cell_thickness1( grid , global_index);
+  double dx = ecl_grid_get_cell_dx1( grid , global_index);
+
+  return V / (dx * dz);
 }
 
 
