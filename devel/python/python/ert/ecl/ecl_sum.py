@@ -434,6 +434,8 @@ class EclSum(BaseCClass):
             raise ValueError("Invalid time interval start after end")
 
 
+        range_start = start
+        range_end = end
         if not timeUnit == "d":
             year1 = start.year
             year2 = end.year
@@ -458,7 +460,7 @@ class EclSum(BaseCClass):
 
             range_start = datetime.date( year1, month1 , day1)
             range_end =  datetime.date(year2 , month2 , day2)
-                
+
         trange = TimeVector.createRegular(range_start , range_end , interval)
 
         # If the simulation does not start at the first of the month
