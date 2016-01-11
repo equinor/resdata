@@ -15,37 +15,45 @@
 #  for more details.
 from ctypes import c_void_p
 
-from ert.cwrap import CWrapper, BaseCClass
-from ert.util import UTIL_LIB, StringList
-
+from ert.cwrap import BaseCClass
+from ert.util import StringList, UtilPrototype
 
 
 class Hash(BaseCClass):
+    _alloc =      UtilPrototype("void* hash_alloc()")
+    _free =       UtilPrototype("void hash_free(hash)")
+    _size =       UtilPrototype("int hash_get_size(hash)")
+    _keys =       UtilPrototype("stringlist_obj hash_alloc_stringlist(hash)")
+    _has_key =    UtilPrototype("bool hash_has_key(hash, char*)")
+    _get =        UtilPrototype("void* hash_get(hash, char*)")
+    _insert_ref = UtilPrototype("void hash_insert_ref(hash, char*, void*)")
+
     """
-    Base hash class that supports string c_void_p values
+    Base hash class that supports string:void* values
     """
+
     def __init__(self):
-        c_ptr = Hash.cNamespace().alloc()
+        c_ptr = self._alloc()
         super(Hash, self).__init__(c_ptr)
 
     def __len__(self):
-        return Hash.cNamespace().size(self)
+        return self._size(self)
 
     def __getitem__(self, key):
-        if Hash.cNamespace().has_key(self, key):
-            return Hash.cNamespace().get(self, key)
+        if self._has_key(self, key):
+            return self._get(self, key)
         else:
             raise KeyError("Hash does not have key: %s" % key)
 
     def __setitem__(self, key, value):
         if isinstance(value, c_void_p):
-            Hash.cNamespace().insert_ref(self, key, value)
+            self._insert_ref(self, key, value)
         else:
             raise ValueError("Hash does not support type: %s" % value.__class__)
 
     def __contains__(self, key):
         """ @rtype: bool """
-        return Hash.cNamespace().has_key(self, key)
+        return self._has_key(self, key)
 
     def __iter__(self):
         for key in self.keys():
@@ -53,50 +61,59 @@ class Hash(BaseCClass):
 
     def keys(self):
         """ @rtype: StringList """
-        return Hash.cNamespace().keys(self)
+        return self._keys(self)
 
     def free(self):
-        Hash.cNamespace().free(self)
+        self._free(self)
 
     def __str__(self):
         return str(["%s: %s" % (key, self[key]) for key in self.keys()])
 
 
 class StringHash(Hash):
+    _get_string = UtilPrototype("char* hash_get_string(hash, char*)")
+    _insert_string = UtilPrototype("void hash_insert_string(hash, char*, char*)")
+
     def __init__(self):
         super(StringHash, self).__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, str):
-            StringHash.cNamespace().insert_string(self, key, value)
+            self._insert_string(self, key, value)
         else:
             raise ValueError("StringHash does not support type: %s" % value.__class__)
 
-
     def __getitem__(self, key):
         if key in self:
-            return StringHash.cNamespace().get_string(self, key)
+            return self._get_string(self, key)
         else:
             raise KeyError("Hash does not have key: %s" % key)
 
+
 class IntegerHash(Hash):
+    _get_int = UtilPrototype("int hash_get_int(hash, char*)")
+    _insert_int = UtilPrototype("void hash_insert_int(hash, char*, int)")
+
     def __init__(self):
         super(IntegerHash, self).__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, int):
-            IntegerHash.cNamespace().insert_int(self, key, value)
+            self._insert_int(self, key, value)
         else:
             raise ValueError("IntegerHash does not support type: %s" % value.__class__)
 
-
     def __getitem__(self, key):
         if key in self:
-            return IntegerHash.cNamespace().get_int(self, key)
+            return self._get_int(self, key)
         else:
             raise KeyError("Hash does not have key: %s" % key)
 
+
 class DoubleHash(Hash):
+    _get_double = UtilPrototype("double hash_get_double(hash, char*)")
+    _insert_double = UtilPrototype("void hash_insert_double(hash, char*, double)")
+
     def __init__(self):
         super(DoubleHash, self).__init__()
 
@@ -105,36 +122,12 @@ class DoubleHash(Hash):
             value = float(value)
 
         if isinstance(value, float):
-            DoubleHash.cNamespace().insert_double(self, key, value)
+            self._insert_double(self, key, value)
         else:
             raise ValueError("DoubleHash does not support type: %s" % value.__class__)
 
-
     def __getitem__(self, key):
         if key in self:
-            return DoubleHash.cNamespace().get_double(self, key)
+            return self._get_double(self, key)
         else:
             raise KeyError("Hash does not have key: %s" % key)
-
-
-cwrapper = CWrapper(UTIL_LIB)
-CWrapper.registerObjectType("hash", Hash) # c_void_p type
-CWrapper.registerObjectType("integer_hash", IntegerHash)
-CWrapper.registerObjectType("string_hash", StringHash)
-CWrapper.registerObjectType("double_hash", DoubleHash)
-
-Hash.cNamespace().alloc = cwrapper.prototype("long hash_alloc()")
-Hash.cNamespace().free = cwrapper.prototype("void hash_free(hash)")
-Hash.cNamespace().size = cwrapper.prototype("int hash_get_size(hash)")
-Hash.cNamespace().keys = cwrapper.prototype("stringlist_obj hash_alloc_stringlist(hash)")
-Hash.cNamespace().has_key = cwrapper.prototype("bool hash_has_key(hash, char*)")
-
-Hash.cNamespace().get = cwrapper.prototype("c_void_p hash_get(hash, char*)")
-IntegerHash.cNamespace().get_int = cwrapper.prototype("int hash_get_int(hash, char*)")
-DoubleHash.cNamespace().get_double = cwrapper.prototype("double hash_get_double(hash, char*)")
-StringHash.cNamespace().get_string = cwrapper.prototype("char* hash_get_string(hash, char*)")
-
-Hash.cNamespace().insert_ref = cwrapper.prototype("void hash_insert_ref(hash, char*, c_void_p)")
-IntegerHash.cNamespace().insert_int = cwrapper.prototype("void hash_insert_int(hash, char*, int)")
-DoubleHash.cNamespace().insert_double = cwrapper.prototype("void hash_insert_double(hash, char*, double)")
-StringHash.cNamespace().insert_string = cwrapper.prototype("void hash_insert_string(hash, char*, char*)")
