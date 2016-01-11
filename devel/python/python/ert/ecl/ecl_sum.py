@@ -413,13 +413,22 @@ class EclSum(BaseCClass):
 
         if start is None:
             start = self.getDataStartTime( )
-        if isinstance(start , datetime.date):
-            start = datetime.datetime( start.year , start.month , start.day , 0 , 0 , 0 )
-                
+        else:
+            if isinstance(start , datetime.date):
+                start = datetime.datetime( start.year , start.month , start.day , 0 , 0 , 0 )
+
+            if start < self.getDataStartTime( ):
+                start = self.getDataStartTime( )
+
+            
         if end is None:
-            end = self.end_time
-        if isinstance(end , datetime.date):
-            end = datetime.datetime( end.year , end.month , end.day , 0 , 0 , 0 )
+            end = self.getEndTime( )
+        else:
+            if isinstance(end , datetime.date):
+                end = datetime.datetime( end.year , end.month , end.day , 0 , 0 , 0 )
+
+            if end > self.getEndTime( ):
+                end = self.getEndTime( )
         
         if end < start:
             raise ValueError("Invalid time interval start after end")
@@ -463,8 +472,9 @@ class EclSum(BaseCClass):
             else:
                 trange.append( end )
 
-        if trange[0] < start:
-            trange[0] = CTime(start)
+        data_start = self.getDataStartTime( )
+        if trange[0] < data_start: 
+            trange[0] = CTime(data_start)
                 
         return trange
         
