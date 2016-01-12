@@ -105,3 +105,31 @@ class RFTTest(ExtendedTestCase):
         p37 = wt[37]
         self.assertEqual( p37 , pm1)
         
+
+
+    def test_PLT(self):
+        rft_file = EclRFTFile( self.createTestPath("Statoil/ECLIPSE/Heidrun/RFT/2C3_MR61.RFT"))
+
+        rft0 = rft_file[0]
+        rft1 = rft_file[1]
+        rft2 = rft_file[2]
+        rft3 = rft_file[3]
+
+        self.assertTrue( rft0.is_RFT() )
+        self.assertTrue( rft1.is_RFT() )
+        self.assertTrue( rft2.is_PLT() )
+        self.assertTrue( rft3.is_PLT() )
+
+        self.assertEqual( len(rft0) , 42 )
+        self.assertEqual( len(rft1) , 37 )
+        self.assertEqual( len(rft2) , 42 )
+        self.assertEqual( len(rft3) , 37 )
+
+        self.assertFloatEqual( rft0[0].pressure ,  0.22919502E+03 )
+        self.assertFloatEqual( rft0[0].depth    ,  0.21383721E+04)
+
+        self.assertFloatEqual( rft1[0].pressure ,  0.22977950E+03 )
+        self.assertFloatEqual( rft1[0].depth    ,  0.21384775E+04 )
+        
+        self.assertFloatEqual( rft2[0].pressure ,  0.19142435E+03 )
+        self.assertFloatEqual( rft2[0].depth    ,  0.21383721E+04 )
