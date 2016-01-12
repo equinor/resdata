@@ -34,6 +34,13 @@ extern "C" {
 #define SMSPEC_PARAMS_INDEX_INVALID -77
 
 
+#define SMSPEC_TIME_KEYWORD "TIME"
+#define SMSPEC_TIME_NUMS_VALUE     -32676
+
+#define SMSPEC_YEARS_KEYWORD "YEARS"
+#define SMSPEC_YEARS_NUMS_VALUE     -32676
+
+
 typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_AQUIFER_VAR            =  1 ,   
               ECL_SMSPEC_WELL_VAR               =  2 ,   /* X */
