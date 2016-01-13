@@ -839,7 +839,7 @@ bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {
         smspec_node->var_type == ECL_SMSPEC_AQUIFER_VAR)
       return true;
     else {
-      if (smspec_node->num == 0)
+      if (smspec_node->num == SMSPEC_NUMS_INVALID)
         return false;
       else
         return true;
