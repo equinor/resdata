@@ -127,7 +127,7 @@ UTIL_IS_INSTANCE_FUNCTION( test_work_area , TEST_WORK_AREA_TYPE_ID)
 test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name) {
   if (test_name) {
     rng_type * rng = rng_alloc(MZRAN , INIT_DEV_URANDOM );
-#ifdef HAVE_GETUID
+#ifdef ERT_HAVE_GETUID
     uid_t uid = getuid();
     struct passwd * pw = getpwuid( uid );
     char * user_name = util_alloc_string_copy( pw->pw_name );
