@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'geo_surface.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'geo_surface.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <math.h>
@@ -36,7 +36,7 @@ struct geo_surface_struct {
   int    nx,ny;
   double rot_angle;  // Radians
   double origo[2];
-  double cell_size[2];     
+  double cell_size[2];
   double vec1[2];
   double vec2[2];
 
@@ -57,12 +57,12 @@ static void geo_surface_init_cells( geo_surface_type * geo_surface ) {
   for (iy = 0; iy < geo_surface->ny; iy++) {
     for (ix = 0; ix < geo_surface->nx; ix++) {
       int cell_index = iy * geo_surface->nx + ix;
-      
+
       geo_surface->cells[ cell_index ].index_list[0] = geo_surface_cornerindex( geo_surface , ix     , iy    );
       geo_surface->cells[ cell_index ].index_list[1] = geo_surface_cornerindex( geo_surface , ix + 1 , iy    );
       geo_surface->cells[ cell_index ].index_list[2] = geo_surface_cornerindex( geo_surface , ix + 1 , iy + 1);
       geo_surface->cells[ cell_index ].index_list[3] = geo_surface_cornerindex( geo_surface , ix     , iy + 1);
-      
+
     }
   }
 }
@@ -83,7 +83,7 @@ static UTIL_SAFE_CAST_FUNCTION( geo_surface , GEO_SURFACE_TYPE_ID )
 static void geo_surface_init_regular( geo_surface_type * surface , const double * zcoord) {
   int zstride_nx = 1;
   int zstride_ny = surface->nx;
-  
+
   int ix,iy;
   for (iy=0; iy < surface->ny; iy++) {
     for (ix=0; ix < surface->nx; ix++) {
@@ -101,12 +101,12 @@ static void geo_surface_init_regular( geo_surface_type * surface , const double 
 
 static bool geo_surface_fscanf_zcoord( const geo_surface_type * surface , FILE * stream , double * zcoord) {
   int i;
-  for (i=0; i < surface->nx * surface->ny; i++) 
+  for (i=0; i < surface->nx * surface->ny; i++)
     if (fscanf(stream , "%lg" , &zcoord[i]) != 1) {
       util_abort("%s: hmm - fatal error when loading surface ..." , __func__);
       return false;
     }
-  
+
   return true;
 }
 
@@ -171,17 +171,17 @@ static void geo_surface_fload_irap_header( geo_surface_type * surface, FILE * st
   int const996;
   int ny,nx;
   double xinc, yinc,xstart, xend,ystart,yend,angle;
-  
+
   if (fscanf(stream , "%d  %d  %lg  %lg  %lg  %lg  %lg  %lg  %d  %lg",
-             &const996 , 
-             &ny , 
-             &xinc , 
-             &yinc , 
-             &xstart , 
-             &xend , 
-             &ystart , 
-             &yend , 
-             &nx , 
+             &const996 ,
+             &ny ,
+             &xinc ,
+             &yinc ,
+             &xstart ,
+             &xend ,
+             &ystart ,
+             &yend ,
+             &nx ,
              &angle) == 10)
     {
       {
@@ -191,19 +191,19 @@ static void geo_surface_fload_irap_header( geo_surface_type * surface, FILE * st
         if (fscanf(stream , "%lg %lg %d %d %d %d %d %d %d " , &d , &d , &i, &i, &i, &i, &i, &i, &i) != 9)
           util_abort("%s: reading irap header failed \n",__func__ );
       }
-      
+
       surface->origo[0]  = xstart;
       surface->origo[1]  = ystart;
       surface->rot_angle = angle * __PI / 180.0;
       surface->nx = nx;
       surface->ny = ny;
-      
+
       surface->vec1[0] = xinc * cos( surface->rot_angle ) ;
       surface->vec1[1] = xinc * sin( surface->rot_angle ) ;
-      
+
       surface->vec2[0] = -yinc * sin( surface->rot_angle ) ;
       surface->vec2[0] =  yinc * cos( surface->rot_angle );
-      
+
       surface->cell_size[0] = xinc;
       surface->cell_size[1] = yinc;
     }  else
@@ -217,7 +217,7 @@ static void geo_surface_fload_irap( geo_surface_type * surface , const char * fi
   geo_surface_fload_irap_header( surface , stream );
   {
     double * zcoord = NULL;
-        
+
     if (loadz) {
       zcoord = util_calloc( surface->nx * surface->ny , sizeof * zcoord  );
       geo_surface_fscanf_zcoord( surface , stream , zcoord );
@@ -235,7 +235,7 @@ static bool geo_surface_equal_header( const geo_surface_type * surface1 , const 
 
   equal = equal && (surface1->nx == surface2->nx);
   equal = equal && (surface1->ny == surface2->ny);
-  
+
   return equal;
 }
 
@@ -251,14 +251,14 @@ bool geo_surface_fload_irap_zcoord( const geo_surface_type * surface, const char
     bool loadOK = true;
     {
       geo_surface_type * tmp_surface = geo_surface_alloc_empty( false );
-      
+
       geo_surface_fload_irap_header( tmp_surface , stream );
       loadOK = geo_surface_equal_header( surface , tmp_surface );
       geo_surface_free( tmp_surface );
     }
     if (loadOK)
       loadOK = geo_surface_fscanf_zcoord( surface , stream , zcoord);
-    
+
     fclose( stream );
     return loadOK;
   } else
@@ -297,7 +297,7 @@ int geo_surface_get_size( const geo_surface_type * surface ) {
 
 
 bool geo_surface_equal( const geo_surface_type * surface1 , const geo_surface_type * surface2) {
-  if (geo_surface_equal_header(surface1 , surface2)) 
+  if (geo_surface_equal_header(surface1 , surface2))
     return geo_pointset_equal( surface1->pointset , surface2->pointset);
   else
     return false;
