@@ -100,14 +100,28 @@ static void geo_surface_init_regular( geo_surface_type * surface , const double 
 
 
 static bool geo_surface_fscanf_zcoord( const geo_surface_type * surface , FILE * stream , double * zcoord) {
-  int i;
-  for (i=0; i < surface->nx * surface->ny; i++)
-    if (fscanf(stream , "%lg" , &zcoord[i]) != 1) {
-      util_abort("%s: hmm - fatal error when loading surface ..." , __func__);
-      return false;
-    }
+  bool OK = false;
+  int index = 0;
 
-  return true;
+  while (true) {
+    if (fscanf(stream , "%lg" , &zcoord[index]) == 1)
+      index++;
+    else
+      /* File is too short */
+      break;
+
+    if (index == surface->nx * surface->ny) {
+      double extra_value;
+      int fscanf_return = fscanf( stream , "%lg" , &extra_value);
+
+      /* Check that there is not more data dangling at the end of the file. */
+      if (fscanf_return == EOF)
+        OK = true;
+      break;
+    }
+  }
+
+  return OK;
 }
 
 
@@ -212,21 +226,26 @@ static void geo_surface_fload_irap_header( geo_surface_type * surface, FILE * st
 
 
 
-static void geo_surface_fload_irap( geo_surface_type * surface , const char * filename , bool loadz) {
-  FILE * stream = util_fopen( filename , "r");
-  geo_surface_fload_irap_header( surface , stream );
+static bool geo_surface_fload_irap( geo_surface_type * surface , const char * filename , bool loadz) {
+  bool read_ok  = true;
   {
-    double * zcoord = NULL;
+    FILE * stream = util_fopen( filename , "r");
+    geo_surface_fload_irap_header( surface , stream );
+    {
+      double * zcoord = NULL;
 
-    if (loadz) {
-      zcoord = util_calloc( surface->nx * surface->ny , sizeof * zcoord  );
-      geo_surface_fscanf_zcoord( surface , stream , zcoord );
+      if (loadz) {
+        zcoord = util_calloc( surface->nx * surface->ny , sizeof * zcoord  );
+        read_ok = geo_surface_fscanf_zcoord( surface , stream , zcoord );
+      }
+
+      if (read_ok)
+        geo_surface_init_regular( surface , zcoord );
+      util_safe_free( zcoord );
     }
-
-    geo_surface_init_regular( surface , zcoord );
-    util_safe_free( zcoord );
+    fclose( stream );
   }
-  fclose( stream );
+  return read_ok;
 }
 
 
@@ -268,7 +287,11 @@ bool geo_surface_fload_irap_zcoord( const geo_surface_type * surface, const char
 
 geo_surface_type * geo_surface_fload_alloc_irap( const char * filename , bool loadz) {
   geo_surface_type * surface = geo_surface_alloc_empty( loadz );
-  geo_surface_fload_irap(  surface , filename , loadz );
+  bool load_ok = geo_surface_fload_irap(  surface , filename , loadz );
+  if (!load_ok) {
+    geo_surface_free( surface );
+    surface = NULL;
+  }
   return surface;
 }
 
@@ -296,11 +319,30 @@ int geo_surface_get_size( const geo_surface_type * surface ) {
 }
 
 
+int geo_surface_get_nx( const geo_surface_type * surface ) {
+  return surface->nx;
+}
+
+int geo_surface_get_ny( const geo_surface_type * surface ) {
+  return surface->ny;
+}
+
+
+
 bool geo_surface_equal( const geo_surface_type * surface1 , const geo_surface_type * surface2) {
   if (geo_surface_equal_header(surface1 , surface2))
     return geo_pointset_equal( surface1->pointset , surface2->pointset);
   else
     return false;
+}
+
+double geo_surface_iget_zvalue(const geo_surface_type * surface, int index) {
+  return geo_pointset_iget_z( surface->pointset , index );
+}
+
+
+void geo_surface_iset_zvalue(geo_surface_type * surface, int index , double value) {
+  return geo_pointset_iset_z( surface->pointset , index , value );
 }
 
 

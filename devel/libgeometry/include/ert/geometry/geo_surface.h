@@ -37,9 +37,12 @@ extern "C" {
   geo_pointset_type * geo_surface_get_pointset( const geo_surface_type * surface );
   geo_surface_type  * geo_surface_fload_alloc_irap( const char * filename , bool loadz);
   bool                geo_surface_fload_irap_zcoord( const geo_surface_type * surface, const char * filename, double *zlist);
+  double              geo_surface_iget_zvalue(const geo_surface_type * surface, int index);
   int                 geo_surface_get_size( const geo_surface_type * surface );
   void                geo_surface_fprintf_irap( const geo_surface_type * surface, const char * filename );
   void                geo_surface_fprintf_irap_external_zcoord( const geo_surface_type * surface, const char * filename , const double * zcoord);
+  int                 geo_surface_get_nx( const geo_surface_type * surface );
+  int                 geo_surface_get_ny( const geo_surface_type * surface );
 
 #ifdef __cplusplus
 }

@@ -36,7 +36,8 @@ typedef struct geo_pointset_struct geo_pointset_type;
   void                geo_pointset_iget_xy( const geo_pointset_type * pointset , int index , double * x , double * y);
   const double      * geo_pointset_get_zcoord( const geo_pointset_type * pointset );
   bool                geo_pointset_equal( const geo_pointset_type * pointset1 , const geo_pointset_type * pointset2);
-
+  double              geo_pointset_iget_z( const geo_pointset_type * pointset , int index );
+  void                geo_pointset_iset_z( geo_pointset_type * pointset , int index , double value);
 #ifdef __cplusplus
 }
 #endif

@@ -115,11 +115,31 @@ static void geo_pointset_assert_index( const geo_pointset_type * pointset , int 
     util_abort("%s: invalid pointset index. Size:%d \n",__func__ , index );
 }
 
+static void geo_pointset_assert_zindex( const geo_pointset_type * pointset , int index) {
+  if ((index < 0) || (index >= pointset->size))
+    util_abort("%s: invalid pointset index. Size:%d \n",__func__ , index );
+
+  if (pointset->zcoord == NULL)
+    util_abort("%s: z coordinate not set\n",__func__);
+}
+
 
 void geo_pointset_iget_xy( const geo_pointset_type * pointset , int index , double * x , double * y) {
   geo_pointset_assert_index( pointset , index );
   *x = pointset->xcoord[ index ];
   *y = pointset->ycoord[ index ];
+}
+
+
+double geo_pointset_iget_z( const geo_pointset_type * pointset , int index ) {
+  geo_pointset_assert_zindex( pointset , index );
+  return pointset->zcoord[ index ];
+}
+
+
+void geo_pointset_iset_z( geo_pointset_type * pointset , int index , double value) {
+  geo_pointset_assert_zindex( pointset , index );
+  pointset->zcoord[ index ] = value;
 }
 
 
