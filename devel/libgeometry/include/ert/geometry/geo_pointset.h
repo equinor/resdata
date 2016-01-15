@@ -38,6 +38,7 @@ typedef struct geo_pointset_struct geo_pointset_type;
   bool                geo_pointset_equal( const geo_pointset_type * pointset1 , const geo_pointset_type * pointset2);
   double              geo_pointset_iget_z( const geo_pointset_type * pointset , int index );
   void                geo_pointset_iset_z( geo_pointset_type * pointset , int index , double value);
+  void                geo_pointset_memcpy( const geo_pointset_type * src, geo_pointset_type * target , bool copy_zdata);
 #ifdef __cplusplus
 }
 #endif

@@ -33,7 +33,7 @@ class Surface(BaseCClass):
     _iset_zvalue = GeoPrototype("void   geo_surface_iset_zvalue( surface , int , double)")
     _write       = GeoPrototype("void   geo_surface_fprintf_irap( surface , char* )")
     _equal       = GeoPrototype("bool   geo_surface_equal( surface , surface )")
-
+    _copy        = GeoPrototype("surface_obj geo_surface_alloc_copy( surface , bool )")
     
     def __init__(self, filename):
         """
@@ -66,7 +66,15 @@ class Surface(BaseCClass):
         return self.getNX() * self.getNY() 
 
 
+    def copy(self , copy_data = True):
+        """Will create a deep copy of self, if copy_data is set to False the
+        copy will have all z-values set to zero.
+        """
+        return self._copy(self , copy_data)
+        
+
     def write(self , filename):
+
         """
         Will write the surface as an ascii formatted file to @filename.
         """

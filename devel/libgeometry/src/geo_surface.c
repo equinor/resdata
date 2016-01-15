@@ -45,6 +45,22 @@ struct geo_surface_struct {
 };
 
 
+static void geo_surface_copy_header( const geo_surface_type * src , geo_surface_type * target) {
+  target->nx = src->nx;
+  target->ny = src->ny;
+  target->rot_angle = src->rot_angle;
+  {
+    int i;
+    for (i = 0; i < 2; i++) {
+      target->origo[i] = src->origo[i];
+      target->cell_size[i] = src->cell_size[i];
+      target->vec1[i] = src->vec1[i];
+      target->vec2[i] = src->vec2[i];
+    }
+  }
+}
+
+
 /*
 static int geo_surface_cornerindex( const geo_surface_type * geo_surface , int cell_ix , int cell_iy) {
   return (geo_surface->nx + 1) * cell_iy + cell_ix;
@@ -296,6 +312,14 @@ geo_surface_type * geo_surface_fload_alloc_irap( const char * filename , bool lo
 }
 
 
+geo_surface_type * geo_surface_alloc_copy( const geo_surface_type * src , bool copy_zdata) {
+  geo_surface_type * target = geo_surface_alloc_empty( true );
+
+  geo_surface_copy_header( src , target );
+  geo_pointset_memcpy( src->pointset , target->pointset , copy_zdata );
+
+  return target;
+}
 
 void geo_surface_free( geo_surface_type * surface ) {
   geo_pointset_free( surface->pointset );

@@ -63,6 +63,26 @@ geo_pointset_type *  geo_pointset_alloc( bool internal_z) {
 }
 
 
+void geo_pointset_memcpy( const geo_pointset_type * src, geo_pointset_type * target , bool copy_zdata) {
+  if (src->internal_z != target->internal_z)
+    util_abort("%s: when copying geo_poitset they must have equal value for internal_z\n", __func__);
+
+  geo_pointset_resize( target , src->size );
+  target->size = src->size;
+  memcpy( target->xcoord , src->xcoord , src->size * sizeof * src->xcoord);
+  memcpy( target->ycoord , src->ycoord , src->size * sizeof * src->ycoord);
+  if (copy_zdata) {
+    if (src->internal_z)
+      memcpy( target->zcoord , src->zcoord , src->size * sizeof * src->zcoord);
+    else
+      util_abort("%s: can not pass copy_zdata = true for pointset with shared z\n",__func__);
+  } else if (target->internal_z) {
+    int i;
+    for (i=0; i < target->size; i++)
+      target->zcoord[i] = 0;
+  }
+}
+
 void geo_pointset_add_xy( geo_pointset_type * pointset , double x , double y) {
   if (!pointset->internal_z) {
     if (pointset->size == pointset->alloc_size)

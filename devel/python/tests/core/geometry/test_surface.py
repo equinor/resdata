@@ -56,4 +56,22 @@ class SurfaceTest(ExtendedTestCase):
 
             s0[0] = 99
             self.assertFalse( s1 == s0 )
+
+
+
+    def test_copy(self):
+        with TestAreaContext("surface/copy"):
+            s0 = Surface( self.surface_valid )
+            s1 = s0.copy( )
+
+            self.assertTrue( s1 == s0 )
+            s1[0] = 99
+            self.assertFalse( s1 == s0 )
+            del s0
+            self.assertEqual( s1[0] , 99)
+            
+            s2 = s1.copy( copy_data = False )
+            self.assertEqual( s2[0] , 0.0 )
+            self.assertEqual( s2[10] , 0.0 )
+            self.assertEqual( s2[100] , 0.0 )
             
