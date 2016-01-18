@@ -11,7 +11,7 @@ set(TEST_SOURCES
     test_surface.py
 )
 
-add_python_package("python.tests.core.geometry" ${PYTHON_INSTALL_PREFIX}/tests/core/geometry "${TEST_SOURCES}" True)
+add_python_package("python.tests.core.geometry" ${PYTHON_INSTALL_PREFIX}/tests/core/geometry "${TEST_SOURCES}" False)
 
 addPythonTest(core.geometry.surface tests.core.geometry.test_surface.SurfaceTest)
 addPythonTest(core.geometry.polyline tests.core.geometry.test_polyline.PolylineTest)
