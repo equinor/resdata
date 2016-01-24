@@ -113,6 +113,8 @@ extern "C" {
 #define test_assert_mem_not_equal( p1 , p2 , byte_size ) test_assert_mem_not_equal__( (p1) , (p2) , (byte_size), __FILE__ , __LINE__)
   void test_assert_mem_not_equal__( const void * p1 , const void * p2 , size_t byte_size , const char * file , int line);
 
+#define test_assert_file_content( input_file , expected) test_assert_file_content__( input_file , expected , __FILE__ , __LINE__)
+  void test_assert_file_content__( const char * input_file , const char * expected, const char * src_file , int line);
 
   void test_install_SIGNALS(void);
 

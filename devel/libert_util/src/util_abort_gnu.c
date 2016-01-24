@@ -70,7 +70,7 @@ static bool util_addr2line_lookup__(const void * bt_addr , char ** func_name , c
               rel_address -= (size_t) dl_info.dli_fbase;
             argv[2] = util_alloc_sprintf("%p" , (void *) rel_address);
           }
-          util_fork_exec("addr2line" , 3  , (const char **) argv , true , NULL , NULL , NULL , stdout_file , NULL);
+          util_spawn_blocking("addr2line", 3, (const char **) argv, stdout_file, NULL);
           util_free_stringlist(argv , 3);
         }
         
@@ -256,7 +256,7 @@ void util_abort__(const char * file , const char * function , int line , const c
 
     /*
       The backtrace is based on calling the external program
-      addr2line; the call is based on util_fork_exec() which is
+      addr2line; the call is based on util_spawn() which is
       currently only available on POSIX.
     */
     const bool include_backtrace = true;

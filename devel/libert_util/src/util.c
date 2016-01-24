@@ -66,7 +66,7 @@
 #include <Shlwapi.h>
 #endif
 
-#ifdef ERT_HAVE_FORK
+#ifdef ERT_HAVE_SPAWN
 #include <unistd.h>
 #include <sys/wait.h>
 #endif
@@ -2552,7 +2552,7 @@ bool util_is_file(const char * path) {
    Will return false if the path does not exist.
 */
 
-#ifdef ERT_HAVE_FORK
+#ifdef ERT_HAVE_SPAWN
 bool util_is_executable(const char * path) {
   if (util_file_exists(path)) {
     stat_type stat_buffer;
@@ -5092,7 +5092,7 @@ int util_fnmatch( const char * pattern , const char * string ) {
 
 /*****************************************************************/
 /* Conditional compilation; this last section includes several
-   functions which are included if certain features like e.g. fork()
+   functions which are included if certain features like e.g. posix_spawn()
    are present. */
 
 // Observe that there is some really ugly #ifdef HAVE_REALPATH in the
@@ -5108,8 +5108,8 @@ void util_localtime( time_t * t , struct tm * ts ) {
 #endif
 }
 
-#ifdef ERT_HAVE_FORK
-#include "util_fork.c"
+#ifdef ERT_HAVE_SPAWN
+#include "util_spawn.c"
 #endif
 
 #ifdef ERT_HAVE_ZLIB
