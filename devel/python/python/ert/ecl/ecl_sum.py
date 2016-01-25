@@ -1070,5 +1070,5 @@ EclSum.cNamespace().add_variable                  = cwrapper.prototype("void    
 EclSum.cNamespace().add_tstep                     = cwrapper.prototype("ecl_sum_tstep_ref ecl_sum_add_tstep(ecl_sum , int , double)")
 
 import ert.ecl.ecl_sum_keyword_vector
-EclSum.cNamespace().dump_csv_line                = cwrapper.prototype("void  ecl_sum_dump_line_to_csv_file(ecl_sum , time_t , ecl_sum_vector, FILE)")
+EclSum.cNamespace().dump_csv_line                = cwrapper.prototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t , ecl_sum_vector, FILE)")
 EclSum.cNamespace().get_smspec                   = cwrapper.prototype("void* ecl_sum_get_smspec(ecl_sum)")
