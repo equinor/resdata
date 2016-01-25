@@ -17,11 +17,11 @@
 
 import os
 import datetime
-
+import csv
 from unittest import skipIf, skipUnless, skipIf
 
 from ert.ecl import EclSum
-from ert.test import ExtendedTestCase
+from ert.test import ExtendedTestCase, TestAreaContext
 from ert.test.ecl_mock import createEclSum
 
 class SumTest(ExtendedTestCase):

@@ -957,18 +957,9 @@ ime_index.
         object.
         """
         s = StringList()
-        return self.addKeys( pattern , s )
-        
-    
-    def addKeys(self , pattern , keyList):
-        """
-        Will return a new list of keys consisting of the intersection of
-        the existing keys, and the keys matching pattern. The argument
-        input list is *not* updated in place.
-        """
-        s = StringList( initial = keyList )
         EclSum.cNamespace().select_matching_keys( self , pattern , s )
         return s
+        
 
     
     
@@ -999,6 +990,16 @@ ime_index.
         cfile = CFILE(pfile ) 
         ctime = CTime( time )
         EclSum.cNamespace().dump_csv_line(self, ctime, keywords, cfile)
+
+
+    def exportCSV(self , filename , keys = None , date_format = "%d/%d/%Y" , sep = ","):
+        if keys is None:
+            var_list = self.keys( )
+        else:
+            var_list = StringList( )
+            for key in keys:
+                var_list |= self.keys( pattern = key )
+        EclSum.cNamespace().export_csv(self, filename , var_list , date_format , sep)
         
 
     @classmethod
@@ -1083,3 +1084,4 @@ EclSum.cNamespace().add_tstep                     = cwrapper.prototype("ecl_sum_
 import ert.ecl.ecl_sum_keyword_vector
 EclSum.cNamespace().dump_csv_line                = cwrapper.prototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t , ecl_sum_vector, FILE)")
 EclSum.cNamespace().get_smspec                   = cwrapper.prototype("void* ecl_sum_get_smspec(ecl_sum)")
+EclSum.cNamespace().export_csv                   = cwrapper.prototype("void ecl_sum_export_csv( ecl_sum , char* , stringlist , char* , char*)")
