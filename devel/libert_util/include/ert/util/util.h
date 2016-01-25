@@ -499,12 +499,11 @@ void    util_abort_set_executable( const char * argv0 );
 #endif
 
 
-#ifdef ERT_HAVE_FORK
-  pid_t    util_fork_exec(const char *  , int , const char ** , bool , const char * , const char *  , const char * , const char *  , const char * );
-  uid_t  * util_alloc_file_users( const char * filename , int * __num_users);
-  char   * util_alloc_filename_from_stream( FILE * input_stream );
+#ifdef ERT_HAVE_SPAWN
+  pid_t      util_spawn(const char *executable, int argc, const char **argv, const char *stdout_file, const char *stderr_file);
+  int        util_spawn_blocking(const char *executable, int argc, const char **argv, const char *stdout_file, const char *stderr_file);
 #ifdef ERT_HAVE_PING
-  bool     util_ping( const char * hostname);
+  bool       util_ping( const char * hostname);
 #endif
 #endif
 

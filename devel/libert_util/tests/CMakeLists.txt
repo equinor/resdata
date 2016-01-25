@@ -192,4 +192,9 @@ if (HAVE_UTIL_ABORT_INTERCEPT)
    add_test( ert_util_type_vector_test ${EXECUTABLE_OUTPUT_PATH}/ert_util_type_vector_test )
 endif()
 
+if (ERT_HAVE_SPAWN)
+   add_executable( ert_util_spawn ert_util_spawn.c )
+   target_link_libraries( ert_util_spawn ert_util test_util )
+   add_test( ert_util_spawn ${EXECUTABLE_OUTPUT_PATH}/ert_util_spawn)
+endif()
 

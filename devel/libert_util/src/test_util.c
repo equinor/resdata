@@ -262,6 +262,17 @@ void test_assert_float_not_equal__( float d1 , float d2, const char * file , int
 }
 
 
+void test_assert_file_content__( const char * input_file , const char * expected, const char * src_file , int line) {
+  if (util_file_exists( input_file )) {
+    char * content = util_fread_alloc_file_content(input_file, NULL);
+    if (!util_string_equal( content , expected))
+      test_error_exit("%s:%d  content difference \n",src_file , line);
+    free( content );
+  } else
+    test_error_exit("%s:%d => No such file:%s \n", src_file , line , input_file);
+}
+
+
 /*****************************************************************/
 
 void test_install_SIGNALS(void) {
