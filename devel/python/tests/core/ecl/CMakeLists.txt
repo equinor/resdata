@@ -33,6 +33,7 @@ set(TEST_SOURCES
     test_sum_statoil.py
     test_ecl_util.py
     test_ecl_cmp.py
+    test_sum.py
 )
 
 add_python_package("python.tests.ecl"  ${PYTHON_INSTALL_PREFIX}/tests/ecl "${TEST_SOURCES}" False)
@@ -54,7 +55,8 @@ addPythonTest(ecl.ecl_restart ecl.test_restart.RestartTest LABELS StatoilData )
 addPythonTest(ecl.ecl_region ecl.test_region.RegionTest LABELS StatoilData)
 addPythonTest(ecl.ecl_rft ecl.test_rft.RFTTest LABELS StatoilData)
 addPythonTest(ecl.ecl_rft_cell ecl.test_rft_cell.RFTCellTest)
-addPythonTest(ecl.ecl_sum ecl.test_sum_statoil.SumTest LABELS StatoilData)
+addPythonTest(ecl.ecl_sum1 ecl.test_sum_statoil.SumTest LABELS StatoilData)
+addPythonTest(ecl.ecl_sum2 ecl.test_sum.SumTest)
 addPythonTest(ecl.ecl_sum_vector ecl.test_ecl_sum_vector.EclSumVectorTest LABELS StatoilData)
 addPythonTest(ecl.ecl_sum_time_range ecl.test_ecl_sum.EclSumTest LABELS StatoilData)
 addPythonTest(ecl.layer ecl.test_layer.LayerTest )
