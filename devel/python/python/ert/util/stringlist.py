@@ -141,6 +141,37 @@ class StringList(BaseCClass):
         """
         return self._contains(self, s)
 
+
+    def __iadd__(self , other):
+        if isinstance(other , str):
+            raise TypeError("Can not add strings with + - use append()")
+        for s in other:
+            self.append( s )
+        return self
+
+    
+    def __add__(self , other):
+        copy = StringList( initial = self )
+        copy += other
+        return copy
+
+
+    def __ior__(self , other):
+        if isinstance(other , str):
+            raise TypeError("Can not | with string.")
+        for s in other:
+            if not s in self:
+                self.append( s )
+        return self
+    
+                
+    def __or__(self , other):
+        copy = StringList( initial = self )
+        copy |= other
+        return copy
+
+    
+    
     def contains(self, s):
         """
         Checks if the list contains @s.
