@@ -946,7 +946,7 @@ ime_index.
 
     def keys( self , pattern = None):
         """
-        Return a list of summary keys matching @pattern.
+        Return a StringList of summary keys matching @pattern.
         
         The matching algorithm is ultimately based on the fnmatch()
         function, i.e. normal shell-character syntax is used. With
@@ -957,10 +957,21 @@ ime_index.
         object.
         """
         s = StringList()
+        return self.addKeys( pattern , s )
+        
+    
+    def addKeys(self , pattern , keyList):
+        """
+        Will return a new list of keys consisting of the intersection of
+        the existing keys, and the keys matching pattern. The argument
+        input list is *not* updated in place.
+        """
+        s = StringList( initial = keyList )
         EclSum.cNamespace().select_matching_keys( self , pattern , s )
-        return s.strings
+        return s
 
-
+    
+    
     def fwrite(self , ecl_case = None):
         if ecl_case:
             EclSum.cNamespace().set_case( self , ecl_case )
