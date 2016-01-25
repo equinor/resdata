@@ -117,7 +117,7 @@ class EclSum(BaseCClass):
 
 
     def addVariable(self , variable , wgname = None , num = 0 , unit = "None" , default_value = 0):
-        EclSum.cNamespace().add_variable(self , variable , wgname , num , unit , default_value)
+        return EclSum.cNamespace().add_variable(self , variable , wgname , num , unit , default_value)
         
 
     def addTStep(self , report_step , sim_days):
@@ -1066,7 +1066,7 @@ EclSum.cNamespace().create_well_list              = cwrapper.prototype("stringli
 EclSum.cNamespace().create_group_list             = cwrapper.prototype("stringlist_obj ecl_sum_alloc_group_list( ecl_sum , char* )")
 
 EclSum.cNamespace().create_writer                 = cwrapper.prototype("ecl_sum_obj       ecl_sum_alloc_writer( char* , bool , bool , char* , time_t , bool , int , int , int)")
-EclSum.cNamespace().add_variable                  = cwrapper.prototype("void              ecl_sum_add_var(ecl_sum , char* , char* , int , char*, double)")
+EclSum.cNamespace().add_variable                  = cwrapper.prototype("smspec_node_ref   ecl_sum_add_var(ecl_sum , char* , char* , int , char*, double)")
 EclSum.cNamespace().add_tstep                     = cwrapper.prototype("ecl_sum_tstep_ref ecl_sum_add_tstep(ecl_sum , int , double)")
 
 import ert.ecl.ecl_sum_keyword_vector
