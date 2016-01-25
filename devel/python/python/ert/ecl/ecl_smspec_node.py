@@ -104,6 +104,28 @@ class EclSMSPECNode(BaseCClass):
         else:
             return None
 
+    def getKey1(self):
+        """
+        Returns the primary composite key, i.e. like 'WOPR:OPX' for this
+        node.
+        """
+        return EclSMSPECNode.cNamespace().gen_key1(self)
+
+
+    def getKey2(self):
+        """Returns the secondary composite key for this node.
+
+        Most variables have only one composite key, but in particular
+        nodes which involve (i,j,k) coordinates will contain two
+        forms:
+
+            getKey1()  =>  "BPR:10,11,6"
+            getKey2()  =>  "BPR:52423"
+
+        Where the '52423' in getKey2() corresponds to i + j*nx +
+        k*nx*ny.
+        """
+        return EclSMSPECNode.cNamespace().gen_key2(self)
 
 
 cwrapper = CWrapper(ECL_LIB)
@@ -120,3 +142,5 @@ EclSMSPECNode.cNamespace().node_wgname = cwrapper.prototype("char* smspec_node_g
 EclSMSPECNode.cNamespace().node_keyword = cwrapper.prototype("char* smspec_node_get_keyword( smspec_node )")
 EclSMSPECNode.cNamespace().node_num = cwrapper.prototype("int   smspec_node_get_num( smspec_node )")
 EclSMSPECNode.cNamespace().node_need_num = cwrapper.prototype("bool  smspec_node_need_nums( smspec_node )")
+EclSMSPECNode.cNamespace().gen_key1 = cwrapper.prototype("char* smspec_node_get_gen_key1( smspec_node )")
+EclSMSPECNode.cNamespace().gen_key2 = cwrapper.prototype("char* smspec_node_get_gen_key2( smspec_node )")
