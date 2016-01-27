@@ -7,7 +7,7 @@ class SurfaceTest(ExtendedTestCase):
         self.surface_valid = self.createTestPath("local/geometry/surface/valid_ascii.irap")
         self.surface_short = self.createTestPath("local/geometry/surface/short_ascii.irap")
         self.surface_long  = self.createTestPath("local/geometry/surface/long_ascii.irap")
-
+        self.surface_valid2 = self.createTestPath("local/geometry/surface/valid2_ascii.irap")
 
         
     def test_create(self):
@@ -75,3 +75,16 @@ class SurfaceTest(ExtendedTestCase):
             self.assertEqual( s2[10] , 0.0 )
             self.assertEqual( s2[100] , 0.0 )
             
+
+    def test_header_equal(self):
+        s0 = Surface( self.surface_valid )
+        s1 = Surface( self.surface_valid2 )
+        s2 = s0.copy( )
+
+        self.assertTrue( s0.headerEqual( s0 ))
+        self.assertFalse( s0.headerEqual( s1 ))
+        self.assertTrue( s0.headerEqual( s2 ))
+
+
+    
+        

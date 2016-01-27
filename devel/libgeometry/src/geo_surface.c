@@ -232,7 +232,7 @@ static void geo_surface_fload_irap_header( geo_surface_type * surface, FILE * st
       surface->vec1[1] = xinc * sin( surface->rot_angle ) ;
 
       surface->vec2[0] = -yinc * sin( surface->rot_angle ) ;
-      surface->vec2[0] =  yinc * cos( surface->rot_angle );
+      surface->vec2[1] =  yinc * cos( surface->rot_angle );
 
       surface->cell_size[0] = xinc;
       surface->cell_size[1] = yinc;
@@ -265,11 +265,22 @@ static bool geo_surface_fload_irap( geo_surface_type * surface , const char * fi
 }
 
 
-static bool geo_surface_equal_header( const geo_surface_type * surface1 , const geo_surface_type * surface2 ) {
+bool geo_surface_equal_header( const geo_surface_type * surface1 , const geo_surface_type * surface2 ) {
   bool equal = true;
 
   equal = equal && (surface1->nx == surface2->nx);
   equal = equal && (surface1->ny == surface2->ny);
+  equal = equal && (util_double_approx_equal(surface1->rot_angle, surface2->rot_angle));
+
+  {
+    int i;
+    for (i = 0; i < 2; i++) {
+      equal = equal && (util_double_approx_equal(surface1->origo[i], surface2->origo[i]));
+      equal = equal && (util_double_approx_equal(surface1->cell_size[i], surface2->cell_size[i]));
+      equal = equal && (util_double_approx_equal(surface1->vec1[i], surface2->vec1[i]));
+      equal = equal && (util_double_approx_equal(surface1->vec2[i], surface2->vec2[i]));
+    }
+  }
 
   return equal;
 }
@@ -316,6 +327,9 @@ geo_surface_type * geo_surface_alloc_copy( const geo_surface_type * src , bool c
   geo_surface_type * target = geo_surface_alloc_empty( true );
 
   geo_surface_copy_header( src , target );
+  if (!geo_surface_equal_header( src , target ))
+    util_abort("%s: headers not equal after copy \n",__func__);
+
   geo_pointset_memcpy( src->pointset , target->pointset , copy_zdata );
 
   return target;

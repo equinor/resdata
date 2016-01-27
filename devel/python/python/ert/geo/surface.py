@@ -25,15 +25,16 @@ from ert.geo import GeoPrototype
 class Surface(BaseCClass):
     TYPE_NAME = "surface"
 
-    _alloc       = GeoPrototype("void*  geo_surface_fload_alloc_irap( char* , bool )")
-    _free        = GeoPrototype("void   geo_surface_free( surface )")
-    _get_nx      = GeoPrototype("int    geo_surface_get_nx( surface )")
-    _get_ny      = GeoPrototype("int    geo_surface_get_ny( surface )")
-    _iget_zvalue = GeoPrototype("double geo_surface_iget_zvalue( surface , int)")
-    _iset_zvalue = GeoPrototype("void   geo_surface_iset_zvalue( surface , int , double)")
-    _write       = GeoPrototype("void   geo_surface_fprintf_irap( surface , char* )")
-    _equal       = GeoPrototype("bool   geo_surface_equal( surface , surface )")
-    _copy        = GeoPrototype("surface_obj geo_surface_alloc_copy( surface , bool )")
+    _alloc        = GeoPrototype("void*  geo_surface_fload_alloc_irap( char* , bool )")
+    _free         = GeoPrototype("void   geo_surface_free( surface )")
+    _get_nx       = GeoPrototype("int    geo_surface_get_nx( surface )")
+    _get_ny       = GeoPrototype("int    geo_surface_get_ny( surface )")
+    _iget_zvalue  = GeoPrototype("double geo_surface_iget_zvalue( surface , int)")
+    _iset_zvalue  = GeoPrototype("void   geo_surface_iset_zvalue( surface , int , double)")
+    _write        = GeoPrototype("void   geo_surface_fprintf_irap( surface , char* )")
+    _equal        = GeoPrototype("bool   geo_surface_equal( surface , surface )")
+    _header_equal = GeoPrototype("bool   geo_surface_equal_header( surface , surface )")
+    _copy         = GeoPrototype("surface_obj geo_surface_alloc_copy( surface , bool )")
     
     def __init__(self, filename):
         """
@@ -57,6 +58,10 @@ class Surface(BaseCClass):
         else:
             return False
 
+
+    def headerEqual(self , other):
+        return self._header_equal(self , other)
+        
         
 
     def __len__(self):
