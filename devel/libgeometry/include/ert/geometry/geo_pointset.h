@@ -39,6 +39,10 @@ typedef struct geo_pointset_struct geo_pointset_type;
   double              geo_pointset_iget_z( const geo_pointset_type * pointset , int index );
   void                geo_pointset_iset_z( geo_pointset_type * pointset , int index , double value);
   void                geo_pointset_memcpy( const geo_pointset_type * src, geo_pointset_type * target , bool copy_zdata);
+  void                geo_pointset_shift_z( geo_pointset_type * pointset , double value );
+  void                geo_pointset_assign_z( geo_pointset_type * pointset , double value );
+  void                geo_pointset_scale_z( geo_pointset_type * pointset , double value );
+
 #ifdef __cplusplus
 }
 #endif

@@ -35,6 +35,10 @@ class Surface(BaseCClass):
     _equal        = GeoPrototype("bool   geo_surface_equal( surface , surface )")
     _header_equal = GeoPrototype("bool   geo_surface_equal_header( surface , surface )")
     _copy         = GeoPrototype("surface_obj geo_surface_alloc_copy( surface , bool )")
+    _assign       = GeoPrototype("void   geo_surface_assign_value( surface , double )")
+    _scale        = GeoPrototype("void   geo_surface_scale( surface , double )")
+    _shift        = GeoPrototype("void   geo_surface_shift( surface , double )")
+
     
     def __init__(self, filename):
         """
@@ -62,7 +66,22 @@ class Surface(BaseCClass):
     def headerEqual(self , other):
         return self._header_equal(self , other)
         
-        
+
+    def __iadd__(self , other):
+        if isinstance(other , Surface):
+            pass
+        else:
+            self._shift( self , other)
+        return self
+
+
+    def __imul__(self , other):
+        if isinstance(other , Surface):
+            pass
+        else:
+            self._scale( self , other)
+        return self
+
 
     def __len__(self):
         """
@@ -86,6 +105,14 @@ class Surface(BaseCClass):
         self._write( self , filename )
 
     
+
+    def assign(self , value):
+        """
+        Will set all the values in the surface to @value"
+        """
+        self._assign(self , value)
+
+
     def __setitem__(self , index , value):
         if isinstance(index , int):
             if index >= len(self):

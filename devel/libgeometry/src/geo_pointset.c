@@ -185,6 +185,25 @@ bool geo_pointset_equal( const geo_pointset_type * pointset1 , const geo_pointse
 }
 
 
+void geo_pointset_assign_z( geo_pointset_type * pointset , double value ) {
+  int index;
+  for (index = 0; index < pointset->size; index++)
+    pointset->zcoord[index] = value;
+}
+
+
+void geo_pointset_shift_z( geo_pointset_type * pointset , double value ) {
+  int index;
+  for (index = 0; index < pointset->size; index++)
+    pointset->zcoord[index] += value;
+}
+
+
+void geo_pointset_scale_z( geo_pointset_type * pointset , double value ) {
+  int index;
+  for (index = 0; index < pointset->size; index++)
+    pointset->zcoord[index] *= value;
+}
 
 
 

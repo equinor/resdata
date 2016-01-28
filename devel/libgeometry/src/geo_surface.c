@@ -384,4 +384,14 @@ void geo_surface_iset_zvalue(geo_surface_type * surface, int index , double valu
 }
 
 
+void geo_surface_assign_value( const geo_surface_type * src , double value) {
+  geo_pointset_assign_z( src->pointset , value );
+}
 
+void geo_surface_shift( const geo_surface_type * src , double value) {
+  geo_pointset_shift_z( src->pointset , value );
+}
+
+void geo_surface_scale( const geo_surface_type * src , double value) {
+  geo_pointset_scale_z( src->pointset , value );
+}

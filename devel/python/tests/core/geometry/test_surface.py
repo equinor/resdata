@@ -86,5 +86,16 @@ class SurfaceTest(ExtendedTestCase):
         self.assertTrue( s0.headerEqual( s2 ))
 
 
-    
+    def test_ops(self):
+        s0 = Surface( self.surface_valid )
+        s0.assign(1.0)
+        for v in s0:
+            self.assertEqual(v , 1.0)
+
+        s0 += 1
+        for v in s0:
+            self.assertEqual(v , 2.0)        
         
+        s0 *= 2
+        for v in s0:
+            self.assertEqual(v , 4.0)        
