@@ -22,9 +22,6 @@
 
 #include <stdbool.h>
 
-#include <ert/ecl/ecl_smspec.h>
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
