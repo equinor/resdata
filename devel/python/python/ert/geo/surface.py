@@ -38,6 +38,9 @@ class Surface(BaseCClass):
     _assign       = GeoPrototype("void   geo_surface_assign_value( surface , double )")
     _scale        = GeoPrototype("void   geo_surface_scale( surface , double )")
     _shift        = GeoPrototype("void   geo_surface_shift( surface , double )")
+    _iadd         = GeoPrototype("void   geo_surface_iadd( surface , surface )")
+    _imul         = GeoPrototype("void   geo_surface_imul( surface , surface )")
+    _sub          = GeoPrototype("void   geo_surface_isub( surface , surface )")
 
     
     def __init__(self, filename):
@@ -69,20 +72,66 @@ class Surface(BaseCClass):
 
     def __iadd__(self , other):
         if isinstance(other , Surface):
-            pass
+            if self.headerEqual(other):
+                self._iadd(self , other)
+            else:
+                raise ValueError("Tried to add incompatible surfaces")
         else:
             self._shift( self , other)
         return self
 
 
+    def __isub__(self , other):
+        if isinstance(other , Surface):
+            if self.headerEqual(other):
+                self._isub(self , other)
+            else:
+                raise ValueError("Tried to subtract incompatible surfaces")
+        else:
+            self._shift( self , -other)
+        return self
+
+
     def __imul__(self , other):
         if isinstance(other , Surface):
-            pass
+            if self.headerEqual(other):
+                self._imul(self , other)
+            else:
+                raise ValueError("Tried to add multiply ncompatible surfaces")
         else:
             self._scale( self , other)
         return self
 
 
+    def __idiv__(self , other):
+        self._scale( self , 1.0/other)
+        return self
+
+
+    def __add__(self , other):
+        copy = self.copy()
+        copy += other
+        return copy
+
+
+    def __mul__(self , other):
+        copy = self.copy()
+        copy *= other
+        return copy
+
+
+    def __sub__(self , other):
+        copy = self.copy()
+        copy -= other
+        return copy
+
+    
+    def __div__(self , other):
+        copy = self.copy()
+        copy /= other
+        return copy
+
+    
     def __len__(self):
         """
         The number of values in the surface.

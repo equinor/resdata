@@ -395,3 +395,27 @@ void geo_surface_shift( const geo_surface_type * src , double value) {
 void geo_surface_scale( const geo_surface_type * src , double value) {
   geo_pointset_scale_z( src->pointset , value );
 }
+
+
+void geo_surface_iadd( geo_surface_type * self , const geo_surface_type * other) {
+  if (geo_surface_equal_header(self, other))
+    geo_pointset_iadd( self->pointset , other->pointset);
+  else
+    util_abort("%s: tried to combine incompatible surfaces\n",__func__);
+}
+
+
+void geo_surface_isub( geo_surface_type * self , const geo_surface_type * other) {
+  if (geo_surface_equal_header(self, other))
+    geo_pointset_isub( self->pointset , other->pointset);
+  else
+    util_abort("%s: tried to combine incompatible surfaces\n",__func__);
+}
+
+
+void geo_surface_imul( geo_surface_type * self , const geo_surface_type * other) {
+  if (geo_surface_equal_header(self, other))
+    geo_pointset_imul( self->pointset , other->pointset);
+  else
+    util_abort("%s: tried to combine incompatible surfaces\n",__func__);
+}

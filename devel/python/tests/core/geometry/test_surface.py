@@ -99,3 +99,19 @@ class SurfaceTest(ExtendedTestCase):
         s0 *= 2
         for v in s0:
             self.assertEqual(v , 4.0)        
+
+        s1 = s0 + 4
+        for v in s1:
+            self.assertEqual(v , 8.0)        
+
+        s2 = Surface( self.surface_valid2 )
+        with self.assertRaises(ValueError):
+            s3 = s1 + s2
+
+        s4 = s1 + s0
+        for v in s4:
+            self.assertEqual(v , 12.0)        
+
+        s5 = s4 / 12
+        for v in s5:
+            self.assertEqual(v , 1.0)        
