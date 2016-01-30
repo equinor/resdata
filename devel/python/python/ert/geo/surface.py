@@ -40,7 +40,7 @@ class Surface(BaseCClass):
     _shift        = GeoPrototype("void   geo_surface_shift( surface , double )")
     _iadd         = GeoPrototype("void   geo_surface_iadd( surface , surface )")
     _imul         = GeoPrototype("void   geo_surface_imul( surface , surface )")
-    _sub          = GeoPrototype("void   geo_surface_isub( surface , surface )")
+    _isub         = GeoPrototype("void   geo_surface_isub( surface , surface )")
 
     
     def __init__(self, filename):

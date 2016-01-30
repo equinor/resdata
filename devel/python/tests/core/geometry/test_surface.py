@@ -1,3 +1,4 @@
+import random
 from ert.geo import Surface
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -8,6 +9,7 @@ class SurfaceTest(ExtendedTestCase):
         self.surface_short = self.createTestPath("local/geometry/surface/short_ascii.irap")
         self.surface_long  = self.createTestPath("local/geometry/surface/long_ascii.irap")
         self.surface_valid2 = self.createTestPath("local/geometry/surface/valid2_ascii.irap")
+        self.surface_small = self.createTestPath("local/geometry/surface/valid_small_ascii.irap")
 
         
     def test_create(self):
@@ -115,3 +117,24 @@ class SurfaceTest(ExtendedTestCase):
         s5 = s4 / 12
         for v in s5:
             self.assertEqual(v , 1.0)        
+
+        
+    def test_ops2(self):
+        s0 = Surface( self.surface_small )
+        surface_list = []
+        for i in range(10):
+            s = s0.copy()
+            for j in range(len(s)):
+                s[j] = random.random()
+            surface_list.append(s)
+
+        mean = s0.copy( copy_data = False )
+        for s in surface_list:
+            mean += s
+        mean /= len(surface_list)
+
+        std = s0.copy( copy_data = False )
+        for s in surface_list:
+            std += (s - mean) * (s - mean)
+        std /= (len(surface_list) - 1)
+        
