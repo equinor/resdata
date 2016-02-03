@@ -992,7 +992,7 @@ ime_index.
         EclSum.cNamespace().dump_csv_line(self, ctime, keywords, cfile)
 
 
-    def exportCSV(self , filename , keys = None , date_format = "%d/%m/%Y" , sep = ","):
+    def exportCSV(self , filename , keys = None , date_format = "%d/%m/%Y" , sep = ";"):
         if keys is None:
             var_list = self.keys( )
         else:
