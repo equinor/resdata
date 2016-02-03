@@ -50,10 +50,11 @@ class SumTest(ExtendedTestCase):
 
     def test_csv_export(self):
         case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0)])
+        sep = ";"
         with TestAreaContext("ecl/csv"):
-            case.exportCSV( "file.csv" )
+            case.exportCSV( "file.csv" , sep = sep)
             self.assertTrue( os.path.isfile( "file.csv" ) )
-            input_file = csv.DictReader( open("file.csv"))
+            input_file = csv.DictReader( open("file.csv") , delimiter = sep )
             for row in input_file:
                 self.assertIn("DAYS", row)
                 self.assertIn("DATE", row)
@@ -65,9 +66,9 @@ class SumTest(ExtendedTestCase):
             
 
         with TestAreaContext("ecl/csv"):
-            case.exportCSV( "file.csv" , keys = ["FOPT"])
+            case.exportCSV( "file.csv" , keys = ["FOPT"] , sep = sep)
             self.assertTrue( os.path.isfile( "file.csv" ) )
-            input_file = csv.DictReader( open("file.csv"))
+            input_file = csv.DictReader( open("file.csv") , delimiter=sep)
             for row in input_file:
                 self.assertIn("DAYS", row)
                 self.assertIn("DATE", row)
@@ -79,12 +80,13 @@ class SumTest(ExtendedTestCase):
 
         with TestAreaContext("ecl/csv"):
             date_format = "%y-%m-%d"
-            case.exportCSV( "file.csv" , keys = ["F*"] , sep=";" , date_format = date_format)
+            sep = ","
+            case.exportCSV( "file.csv" , keys = ["F*"] , sep=sep , date_format = date_format)
             self.assertTrue( os.path.isfile( "file.csv" ) )
             with open("file.csv") as f:
                 time_index = -1
                 for line in f.readlines():
-                    tmp = line.split(";")
+                    tmp = line.split( sep )
                     self.assertEqual( len(tmp) , 4)
 
                     if time_index >= 0:
