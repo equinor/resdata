@@ -41,6 +41,7 @@ class Surface(BaseCClass):
     _iadd         = GeoPrototype("void   geo_surface_iadd( surface , surface )")
     _imul         = GeoPrototype("void   geo_surface_imul( surface , surface )")
     _isub         = GeoPrototype("void   geo_surface_isub( surface , surface )")
+    _isqrt        = GeoPrototype("void   geo_surface_isqrt( surface )")
 
     
     def __init__(self, filename):
@@ -139,6 +140,24 @@ class Surface(BaseCClass):
         return self.getNX() * self.getNY() 
 
 
+    def inplaceSqrt(self):
+        """
+        Will do an inplcae sqrt opearation.
+        """
+        self._isqrt( self )
+        return self
+
+    
+
+    def sqrt(self):
+        """
+        Will return a new surface where all elements have been sqrt{ .. }.
+        """
+        copy = self.copy( )
+        copy.inplaceSqrt( )
+        return copy
+
+    
     def copy(self , copy_data = True):
         """Will create a deep copy of self, if copy_data is set to False the
         copy will have all z-values set to zero.

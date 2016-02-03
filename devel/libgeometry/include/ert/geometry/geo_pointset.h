@@ -45,7 +45,8 @@ typedef struct geo_pointset_struct geo_pointset_type;
   void                geo_pointset_imul( geo_pointset_type * pointset , const geo_pointset_type * other );
   void                geo_pointset_iadd( geo_pointset_type * pointset , const geo_pointset_type * other );
   void                geo_pointset_isub( geo_pointset_type * self , const geo_pointset_type * other );
-  
+  void                geo_pointset_isqrt( geo_pointset_type * pointset );
+
 #ifdef __cplusplus
 }
 #endif

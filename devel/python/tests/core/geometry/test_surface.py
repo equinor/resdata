@@ -137,4 +137,15 @@ class SurfaceTest(ExtendedTestCase):
         for s in surface_list:
             std += (s - mean) * (s - mean)
         std /= (len(surface_list) - 1)
+
+
+    def test_sqrt(self):
+        s0 = Surface( self.surface_small )
+        s0.assign(4)
+        s_sqrt = s0.sqrt( )
+        for i in range(len(s0)):
+            self.assertEqual(s0[i] , 4)
+            self.assertEqual(s_sqrt[i] , 2)
         
+        s0.inplaceSqrt( )
+        self.assertTrue( s0 == s_sqrt )

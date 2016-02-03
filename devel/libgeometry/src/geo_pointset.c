@@ -16,7 +16,7 @@
    for more details.
 */
 
-
+#include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -233,6 +233,13 @@ void geo_pointset_imul( geo_pointset_type * self , const geo_pointset_type * oth
       self->zcoord[index] *= other->zcoord[index];
   } else
     util_abort("%s: size mismatch \n",__func__);
+}
+
+
+void geo_pointset_isqrt( geo_pointset_type * pointset ) {
+  int index;
+  for (index = 0; index < pointset->size; index++)
+    pointset->zcoord[index] = sqrt(pointset->zcoord[index]);
 }
 
 

@@ -419,3 +419,8 @@ void geo_surface_imul( geo_surface_type * self , const geo_surface_type * other)
   else
     util_abort("%s: tried to combine incompatible surfaces\n",__func__);
 }
+
+
+void geo_surface_isqrt( geo_surface_type * surface ) {
+  geo_pointset_isqrt( surface->pointset );
+}
