@@ -28,6 +28,11 @@ extern "C" {
 #include <stdbool.h>
 #include <ert/util/ert_api_config.h>
 
+#if defined(__APPLE__)
+#include <wchar.h>
+#include <time.h>
+#endif
+
 
   void  test_error_exit( const char * fmt , ...);
 
