@@ -770,7 +770,7 @@ class EclKW(CClass):
         absolute.
         """
         if isinstance(other , EclKW):
-            return cfunc.equal_numeric( self , other , epsilon )
+            return cfunc.equal_numeric( self , other , epsilon , epsilon )
         else:
             raise TypeError("Can only compare with another EclKW")
 
@@ -1098,7 +1098,7 @@ cfunc.idiv                       = cwrapper.prototype("void     ecl_kw_inplace_d
 cfunc.isub                       = cwrapper.prototype("void     ecl_kw_inplace_sub( ecl_kw , ecl_kw )")
 cfunc.iabs                       = cwrapper.prototype("void     ecl_kw_inplace_abs( ecl_kw )")
 cfunc.equal                      = cwrapper.prototype("bool     ecl_kw_equal( ecl_kw , ecl_kw )")
-cfunc.equal_numeric              = cwrapper.prototype("bool     ecl_kw_numeric_equal( ecl_kw , ecl_kw , double )")
+cfunc.equal_numeric              = cwrapper.prototype("bool     ecl_kw_numeric_equal( ecl_kw , ecl_kw , double , double)")
 
 cfunc.assert_binary              = cwrapper.prototype("bool     ecl_kw_assert_binary_numeric( ecl_kw , ecl_kw )")
 cfunc.scale_int                  = cwrapper.prototype("void     ecl_kw_scale_int( ecl_kw , int )")

@@ -404,17 +404,22 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
 }
 
 
-#define CMP(ctype,ABS)                                           \
-static bool CMP_ ## ctype( ctype v1, ctype v2 , ctype epsilon) { \
+#define CMP(ctype,ABS)                                               \
+static bool CMP_ ## ctype( ctype v1, ctype v2 , ctype abs_epsilon , ctype rel_epsilon) { \
   if ((ABS(v1) + ABS(v2)) == 0)                                  \
      return true;                                                \
   else {                                                         \
-      ctype d = ABS(v1 - v2) / (ABS(v1) + ABS(v2));              \
-      if (d < epsilon)                                           \
-        return true;                                             \
-   else                                                          \
-        return false;                                            \
+      ctype diff = ABS(v1 - v2);                                 \
+      if (diff < abs_epsilon)                                    \
+         return true;                                            \
+      else {                                                     \
+        ctype sum =  ABS(v1) + ABS(v2);                          \
+        ctype d = diff / sum;                                    \
+        if (d < rel_epsilon)                                     \
+           return true;                                          \
+        }                                                        \
     }                                                            \
+    return false;                                                \
 }
 CMP(float,fabsf)
 CMP(double,fabs)
@@ -422,14 +427,14 @@ CMP(double,fabs)
 
 
 #define ECL_KW_NUMERIC_CMP(ctype)                                                                                           \
-  static bool ecl_kw_numeric_equal_ ## ctype( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , ctype rel_diff) { \
+  static bool ecl_kw_numeric_equal_ ## ctype( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , ctype abs_diff , ctype rel_diff) { \
   int index;                                                                                                                \
   bool equal = true;                                                                                                        \
   {                                                                                                                         \
      const ctype * data1 = (const ctype *) ecl_kw1->data;                                                                   \
      const ctype * data2 = (const ctype *) ecl_kw2->data;                                                                   \
      for (index = 0; index < ecl_kw1->size; index++) {                                                                      \
-        equal = CMP_ ## ctype( data1[index] , data2[index] , rel_diff);                                                     \
+       equal = CMP_ ## ctype( data1[index] , data2[index] , abs_diff , rel_diff);                                           \
         if (!equal)                                                                                                         \
            break;                                                                                                           \
      }                                                                                                                      \
@@ -448,7 +453,7 @@ ECL_KW_NUMERIC_CMP( double )
    @rel_diff. Does not consider consider the kw header.
 */
 
-bool ecl_kw_numeric_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , double rel_diff) {
+bool ecl_kw_numeric_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , double abs_diff , double rel_diff) {
   bool equal = true;
   if ( ecl_kw1->ecl_type != ecl_kw2->ecl_type)
     equal = false;
@@ -458,9 +463,9 @@ bool ecl_kw_numeric_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2
 
   if (equal) {
     if (ecl_kw1->ecl_type == ECL_FLOAT_TYPE)
-      equal = ecl_kw_numeric_equal_float( ecl_kw1 , ecl_kw2 , rel_diff );
+      equal = ecl_kw_numeric_equal_float( ecl_kw1 , ecl_kw2 , abs_diff , rel_diff );
     else if (ecl_kw1->ecl_type == ECL_DOUBLE_TYPE)
-      equal = ecl_kw_numeric_equal_double( ecl_kw1 , ecl_kw2 , rel_diff );
+      equal = ecl_kw_numeric_equal_double( ecl_kw1 , ecl_kw2 , abs_diff , rel_diff );
     else
       equal = ecl_kw_data_equal( ecl_kw1 , ecl_kw2->data );
   }
