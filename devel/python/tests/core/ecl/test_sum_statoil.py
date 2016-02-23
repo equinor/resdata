@@ -379,18 +379,6 @@ class SumTest(ExtendedTestCase):
             sum.get_interp( "FOPT" , date = t )
         
 
-        with TestAreaContext("csv/export"):
-            sum.exportCSV("file.csv")
-            input_file = csv.DictReader( open("file.csv"))
-            for row in input_file:
-                keys = sum.keys( pattern = "W*")
-                keys |= sum.keys( pattern = "G")
-                
-                for key in keys:
-                    self.assertTrue( key in row )
-                break
-
-            
 
     def test_regularProduction(self):
         sum = EclSum(self.case)
