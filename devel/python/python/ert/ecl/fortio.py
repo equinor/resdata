@@ -50,7 +50,40 @@ class FortIO(BaseCClass):
     APPEND_MODE = 4
 
     def __init__(self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True):
+        """Will open a new FortIO handle to @file_name - default for reading.
 
+        The newly created FortIO handle will open the underlying FILE*
+        for reading, but if you pass the flag mode=FortIO.WRITE_MODE
+        the file will be opened for writing.
+
+        Observe that the flag @endian_flip_header will only affect the
+        interpretation of the block size markers in the file, endian
+        flipping of the actual data blocks must be handled at a higher
+        level.
+
+        When you are finished working with the FortIO instance you can
+        manually close it with the close() method, alternatively that
+        will happen automagically when it goes out of scope. 
+
+        Small example script opening a restart file, and then writing
+        all the pressure keywords to another file:
+
+           import sys
+           from ert.ecl import FortIO,ElcFile
+
+           rst_file = EclFile(sys.argv[1])
+           fortio = FortIO( "PRESSURE" , mode=FortIO.WRITE_MODE)
+
+           for kw in rst_file:
+               if kw.name() == "PRESSURE":
+                  kw.write( fortio )
+  
+           fortio.close()     
+
+        See the documentation of openFortIO() for an alternative
+        method based on a context manager and the with statement.
+
+        """
         if mode == FortIO.READ_MODE or mode == FortIO.APPEND_MODE or mode == FortIO.READ_AND_WRITE_MODE:
             if not os.path.exists(file_name):
                 raise IOError("File '%s' does not exist!" % file_name)
@@ -119,6 +152,21 @@ class FortIOContextManager(object):
 
 
 def openFortIO( file_name , mode = FortIO.READ_MODE , fmt_file = False , endian_flip_header = True):
+    """Will create FortIO based context manager for use with with.
+
+    The with: statement and context managers is a good alternative in
+    the situation where you need to ensure resource cleanup.
+
+       import sys
+       from ert.ecl import FortIO,ElcFile
+
+       rst_file = EclFile(sys.argv[1])
+       with openFortIO( "PRESSURE" , mode = FortIO.WRITE_MODE) as fortio:
+          for kw in rst_file:
+              if kw.name() == "PRESSURE":
+                 kw.write( fortio )
+
+    """
     return FortIOContextManager( FortIO( file_name , mode = mode , fmt_file = fmt_file , endian_flip_header = endian_flip_header ))
 
 
