@@ -15,7 +15,7 @@
 #  for more details.
 
 from ert.test import ExtendedTestCase , TestAreaContext
-
+from ert.test.ecl_mock import createEclSum
 from ert.ecl import EclCmp
 
 class EclCmpTest(ExtendedTestCase):
@@ -53,8 +53,9 @@ class EclCmpTest(ExtendedTestCase):
 
         diff_sum , ref_sum = ecl_cmp.cmpSummaryVector("FOPT")
         self.assertEqual( diff_sum , 0.0 )
+        self.assertTrue( ecl_cmp.endTimeEqual( ) )
 
-
+        
     def test_wells(self):
         ecl_cmp = EclCmp( self.root1 , self.root1)
         wells = ecl_cmp.testWells()
@@ -64,3 +65,4 @@ class EclCmpTest(ExtendedTestCase):
         for well in wells:
             self.assertTrue( well in well_set )
             
+

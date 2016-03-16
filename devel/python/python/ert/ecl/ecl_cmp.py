@@ -50,6 +50,12 @@ class EclCase(object):
         else:
             return False
 
+    def endTimeEqual(self , other):
+        if self.summary.getEndTime() == other.summary.getEndTime():
+            return True
+        else:
+            return False
+
 
     def cmpSummaryVector(self , other , key , sample = 100):
         if key in self and key in other:
@@ -105,7 +111,14 @@ class EclCmp(object):
         return (key in self.test_case , key in self.ref_case)
 
 
+    def endTimeEqual(self):
+        """
+        Will check that ref_case and test_case are equally long.
+        """
+        return self.test_case.endTimeEqual( self.ref_case )
 
+    
+    
     def cmpSummaryVector(self , key , sample = 100):
         """Will compare the summary vectors according to @key.
 
