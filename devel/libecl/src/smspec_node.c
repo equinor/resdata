@@ -736,6 +736,40 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
   }
 }
 
+smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
+    if( !node ) return NULL;
+
+    smspec_node_type* copy = util_malloc( sizeof * copy );
+    UTIL_TYPE_ID_INIT( copy, SMSPEC_TYPE_ID );
+    copy->gen_key1 = util_alloc_string_copy( node->gen_key1 );
+    copy->gen_key2 = util_alloc_string_copy( node->gen_key2 );
+    copy->var_type = node->var_type;
+    copy->wgname = util_alloc_string_copy( node->wgname );
+    copy->keyword = util_alloc_string_copy( node->keyword );
+    copy->unit = util_alloc_string_copy( node->unit );
+    copy->num = node->num;
+
+    copy->ijk = NULL;
+    if( node->ijk ) {
+        copy->ijk = util_calloc( 3 , sizeof * node->ijk );
+        memcpy( copy->ijk, node->ijk, 3 * sizeof( * node->ijk ) );
+    }
+
+    copy->lgr_name = util_alloc_string_copy( node->lgr_name );
+    copy->lgr_ijk = NULL;
+    if( node->lgr_ijk ) {
+        copy->lgr_ijk = util_calloc( 3 , sizeof * node->lgr_ijk );
+        memcpy( copy->lgr_ijk, node->lgr_ijk, 3 * sizeof( * node->lgr_ijk ) );
+    }
+
+    copy->rate_variable = node->rate_variable;
+    copy->total_variable = node->total_variable;
+    copy->historical = node->historical;
+    copy->params_index = node->params_index;
+    copy->default_value = node->default_value;
+
+    return copy;
+}
 
 void smspec_node_free( smspec_node_type * index ) {
   util_safe_free( index->unit );
