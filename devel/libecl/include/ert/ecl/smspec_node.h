@@ -103,6 +103,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
                                             float default_value);
 
   smspec_node_type *  smspec_node_alloc_new(int params_index, float default_value);
+  smspec_node_type *  smspec_node_alloc_copy( const smspec_node_type* );
 
   void                smspec_node_free( smspec_node_type * index );
   void                smspec_node_free__(void * arg);
