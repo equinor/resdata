@@ -146,8 +146,8 @@ static void util_fprintf_backtrace(FILE * stream) {
   const char * func_format        = " #%02d %s(..) %s in ???\n";
   const char * unknown_format     = " #%02d ???? \n";
 
-  const int max_bt = 50;
-  const int max_func_length = 60;
+  const int max_bt = 100;
+  const int max_func_length = 70;
   void *bt_addr[max_bt];
   int    size,i;
 
@@ -160,7 +160,7 @@ static void util_fprintf_backtrace(FILE * stream) {
     char * file_name;
     char * padding = NULL;
 
-    if (util_addr2line_lookup(bt_addr[i] , &func_name , &file_name , &line_nr)) {
+    if (util_addr2line_lookup(bt_addr[i], &func_name , &file_name , &line_nr)) {
       int pad_length;
       char * function;
       // Seems it can return true - but with func_name == NULL?! Static/inlinded functions?
@@ -174,7 +174,7 @@ static void util_fprintf_backtrace(FILE * stream) {
       fprintf(stream , with_linenr_format , i , function , padding , file_name , line_nr);
     } else {
       if (func_name != NULL) {
-        int pad_length = 2 + max_func_length - strlen(func_name);
+        int pad_length = util_int_max( 2 , 2 + max_func_length - strlen(func_name));
         padding = realloc_padding( padding , pad_length);
         fprintf(stream , func_format , i , func_name , padding);
       } else {
