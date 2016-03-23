@@ -369,4 +369,17 @@ class GridTest(ExtendedTestCase):
         self.assertFalse( grid.validCellGeometry( ijk = (0,0,0)) )
 
 
+    def test_volume_kw(self):
+        grid = EclGrid(self.egrid_file())
+        vol = grid.createVolumeKeyword( )
+        self.assertEqual( len(vol) , grid.getNumActive())
+        for active_index , volume in enumerate(vol):
+            self.assertEqual( volume , grid.cell_volume( active_index = active_index ))
+
+        vol = grid.createVolumeKeyword( active_size = False )
+        self.assertEqual( len(vol) , grid.getGlobalSize())
+        for global_index , volume in enumerate(vol):
+            self.assertEqual( volume , grid.cell_volume( global_index = global_index ))
+
+                              
         

@@ -1116,7 +1116,40 @@ class EclGrid(CClass):
         actnum = EclKW.create("ACTNUM" , self.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
         cfunc.init_actnum( self , actnum.getDataPtr() )
         return actnum
-        
+
+
+    def createVolumeKeyword(self , active_size = True):
+        """Will create a EclKW initialized with cell volumes.
+
+        The purpose of this method is to create a EclKW instance which
+        is initialized with all the cell volumes, this can then be
+        used to perform volume summation; i.e. to calculate the total
+        oil volume:
+
+           soil = 1 - sgas - swat
+           cell_volume = grid.createVolumeKeyword()
+           tmp = cell_volume * soil
+           oip = tmp.sum( )
+
+        The oil in place calculation shown above could easily be
+        implemented by iterating over the soil kw, however using the
+        volume keyword has two advantages: 
+
+          1. The calculation of cell volumes is quite time consuming,
+             by storing the results in a kw they can be reused.
+
+          2. By using the compact form 'oip = cell_volume * soil' the
+             inner loop iteration will go in C - which is faster.
+
+        By default the kw will only have values for the active cells,
+        but by setting the optional variable @active_size to False you
+        will get volume values for all cells in the grid.
+        """ 
+
+        kw_c_ptr = cfunc.create_volume_keyword( self , active_size )
+        return EclKW.wrap( kw_c_ptr )
+
+    
 
 # 2. Creating a wrapper object around the libecl library, 
 #    registering the type map : ecl_kw <-> EclKW
@@ -1190,3 +1223,4 @@ cfunc.dual_grid                    = cwrapper.prototype("bool   ecl_grid_dual_gr
 cfunc.init_actnum                  = cwrapper.prototype("void   ecl_grid_init_actnum_data( ecl_grid , int* )")
 cfunc.compressed_kw_copy           = cwrapper.prototype("void   ecl_grid_compressed_kw_copy( ecl_grid , ecl_kw , ecl_kw)")
 cfunc.global_kw_copy               = cwrapper.prototype("void   ecl_grid_global_kw_copy( ecl_grid , ecl_kw , ecl_kw)")
+cfunc.create_volume_keyword        = cwrapper.prototype("c_void_p ecl_grid_alloc_volume_kw( ecl_grid , bool)")
