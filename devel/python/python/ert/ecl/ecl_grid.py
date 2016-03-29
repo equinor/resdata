@@ -66,17 +66,15 @@ class EclGrid(CClass):
                 specgrid = EclKW.read_grdecl(f, "SPECGRID", ecl_type=EclTypeEnum.ECL_INT_TYPE, strict=False)
                 zcorn = EclKW.read_grdecl(f, "ZCORN")
                 coord = EclKW.read_grdecl(f, "COORD")
-                actnum = EclKW.read_grdecl(f, "ACTNUM", ecl_type=EclTypeEnum.ECL_INT_TYPE)
-                mapaxes = EclKW.read_grdecl(f, "MAPAXES")
+                try:
+                    actnum = EclKW.read_grdecl(f, "ACTNUM", ecl_type=EclTypeEnum.ECL_INT_TYPE)
+                except ValueError:
+                    actnum = None
 
-            if specgrid is None:
-                raise ValueError("The grdecl file:%s was invalid - could not find SPECGRID keyword" % filename)
-
-            if zcorn is None:
-                raise ValueError("The grdecl file:%s was invalid - could not find ZCORN keyword" % filename)
-
-            if coord is None:
-                raise ValueError("The grdecl file:%s was invalid - could not find COORD keyword" % filename)
+                try:
+                    mapaxes = EclKW.read_grdecl(f, "MAPAXES")
+                except ValueError:
+                    mapaxes = None
 
             return EclGrid.create( specgrid , zcorn , coord , actnum , mapaxes )
         else:

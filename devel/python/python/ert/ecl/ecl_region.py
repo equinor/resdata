@@ -751,7 +751,7 @@ class EclRegion(CClass):
         """
         Helper function to apply a function with one scalar arg on target_kw.
         """
-        type = target_kw.type
+        type = target_kw.getEclType( )
         if func_dict.has_key( type ):
             func = func_dict[ type ]
             func( self , target_kw, scalar , force_active )

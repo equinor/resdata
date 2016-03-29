@@ -361,8 +361,9 @@ class EclFile(CClass):
             if index < 0 or index >= cfunc.get_size( self ):
                 raise IndexError
             else:
-                kw_c_ptr = cfunc.iget_kw( self , index )
-                return EclKW.wrap( kw_c_ptr , parent = self , data_owner = False)
+                kw = cfunc.iget_kw( self , index )
+                return kw
+            
         if isinstance( index , slice ):
             indices = index.indices( len(self) )
             kw_list = []
@@ -468,13 +469,11 @@ class EclFile(CClass):
              using the EclSum class.
         """
         if index < self.num_named_kw( kw_name ):
-            kw_c_ptr = cfunc.iget_named_kw( self , kw_name , index )
-            ecl_kw = EclKW.wrap( kw_c_ptr , parent = self , data_owner = False)
-        
+            kw = cfunc.iget_named_kw( self , kw_name , index )
             if copy:
-                return EclKW.copy( ecl_kw )
+                return EclKW.copy( kw )
             else:
-                return ecl_kw
+                return kw
         else:
             raise KeyError("Asked for occurence:%d of keyword:%s - max:%d" % (index  , kw_name , self.num_named_kw( kw_name )))
 
@@ -794,8 +793,8 @@ cfunc.restart_block_step          = cwrapper.prototype("bool        ecl_file_sel
 cfunc.restart_block_iselect       = cwrapper.prototype("bool        ecl_file_iselect_rstblock( ecl_file , int )")
 cfunc.select_global               = cwrapper.prototype("void        ecl_file_select_global( ecl_file )")
 
-cfunc.iget_kw                     = cwrapper.prototype("c_void_p    ecl_file_iget_kw( ecl_file , int)")
-cfunc.iget_named_kw               = cwrapper.prototype("c_void_p    ecl_file_iget_named_kw( ecl_file , char* , int)")
+cfunc.iget_kw                     = cwrapper.prototype("ecl_kw_ref    ecl_file_iget_kw( ecl_file , int)")
+cfunc.iget_named_kw               = cwrapper.prototype("ecl_kw_ref    ecl_file_iget_named_kw( ecl_file , char* , int)")
 cfunc.close                       = cwrapper.prototype("void        ecl_file_close( ecl_file )")
 cfunc.get_size                    = cwrapper.prototype("int         ecl_file_get_size( ecl_file )")
 cfunc.get_unique_size             = cwrapper.prototype("int         ecl_file_get_num_distinct_kw( ecl_file )")

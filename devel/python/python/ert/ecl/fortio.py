@@ -39,15 +39,30 @@ more extensive wrapping of the fortio implementation would be easy.
 import ctypes
 import os
 import sys
-from ert.cwrap import BaseCClass, CWrapper
-from ert.ecl import ECL_LIB
+from ert.cwrap import BaseCClass
+from ert.ecl import EclPrototype
 
 
 class FortIO(BaseCClass):
+    TYPE_NAME = "fortio"
+
     READ_MODE = 1
     WRITE_MODE = 2
     READ_AND_WRITE_MODE = 3
     APPEND_MODE = 4
+
+    _open_reader    = EclPrototype("void* fortio_open_reader(char*, bool, bool)" , bind = False)
+    _open_writer    = EclPrototype("void* fortio_open_writer(char*, bool, bool)" , bind = False)
+    _open_readwrite = EclPrototype("void* fortio_open_readwrite(char*, bool, bool)" , bind = False)
+    _open_append    = EclPrototype("void* fortio_open_append(char*, bool, bool)" , bind = False)
+    _guess_fortran  = EclPrototype("bool fortio_looks_like_fortran_file(char* , bool)" , bind = False)
+    
+    _write_record   = EclPrototype("void fortio_fwrite_record(fortio, char*, int)")
+    _get_position   = EclPrototype("long fortio_ftell(fortio)")
+    _seek           = EclPrototype("void fortio_fseek(fortio, int)")
+    _close          = EclPrototype("bool fortio_fclose(fortio)")
+
+
 
     def __init__(self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True):
         """Will open a new FortIO handle to @file_name - default for reading.
@@ -89,13 +104,13 @@ class FortIO(BaseCClass):
                 raise IOError("File '%s' does not exist!" % file_name)
 
         if mode == FortIO.READ_MODE:
-            c_pointer = FortIO.cNamespace().open_reader(file_name, fmt_file, endian_flip_header)
+            c_pointer = self._open_reader(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.WRITE_MODE:
-            c_pointer = FortIO.cNamespace().open_writer(file_name, fmt_file, endian_flip_header)
+            c_pointer = self._open_writer(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.READ_AND_WRITE_MODE:
-            c_pointer = FortIO.cNamespace().open_readwrite(file_name, fmt_file, endian_flip_header)
+            c_pointer = self._open_readwrite(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.APPEND_MODE:
-            c_pointer = FortIO.cNamespace().open_append(file_name, fmt_file, endian_flip_header)
+            c_pointer = self._open_append(file_name, fmt_file, endian_flip_header)
         else:
             raise UserWarning("Unknown mode: %d" % mode)
 
@@ -106,20 +121,20 @@ class FortIO(BaseCClass):
 
     def close(self):
         if self.__open:
-            FortIO.cNamespace().close(self)
+            self._close( )
             self.__open = False
 
 
 
     def getPosition(self):
         """ @rtype: long """
-        return FortIO.cNamespace().get_position(self)
+        return self._get_position( )
 
     def seek(self, position):
         # SEEK_SET = 0
         # SEEK_CUR = 1
         # SEEK_END = 2
-        FortIO.cNamespace().seek(self, position, 0)
+        self._seek(position, 0)
 
     @classmethod
     def isFortranFile(cls , filename , endian_flip = True):
@@ -131,7 +146,7 @@ class FortIO(BaseCClass):
         file written in fortran style. ASCII files will return false,
         even if they are structured as ECLIPSE keywords.
         """
-        return FortIO.cNamespace().guess_fortran( filename , endian_flip )
+        return cls._guess_fortran( filename , endian_flip )
         
 
     def free(self):
@@ -172,20 +187,5 @@ def openFortIO( file_name , mode = FortIO.READ_MODE , fmt_file = False , endian_
 
 
 
-cwrapper = CWrapper(ECL_LIB)
-cwrapper.registerObjectType("fortio", FortIO)
-
-FortIO.cNamespace().open_reader = cwrapper.prototype("c_void_p fortio_open_reader(char*, bool, bool)")
-FortIO.cNamespace().open_writer = cwrapper.prototype("c_void_p fortio_open_writer(char*, bool, bool)")
-FortIO.cNamespace().open_readwrite = cwrapper.prototype("c_void_p fortio_open_readwrite(char*, bool, bool)")
-FortIO.cNamespace().open_append = cwrapper.prototype("c_void_p fortio_open_append(char*, bool, bool)")
-
-FortIO.cNamespace().write_record = cwrapper.prototype("void fortio_fwrite_record(fortio, char*, int)")
-
-FortIO.cNamespace().get_position = cwrapper.prototype("long fortio_ftell(fortio)")
-FortIO.cNamespace().seek = cwrapper.prototype("void fortio_fseek(fortio, int)")
-
-FortIO.cNamespace().close = cwrapper.prototype("bool fortio_fclose(fortio)")
-FortIO.cNamespace().guess_fortran = cwrapper.prototype("bool fortio_looks_like_fortran_file(char* , bool)")
 
 
