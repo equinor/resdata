@@ -729,7 +729,7 @@ class EclFile(CClass):
 
     @property
     def name(self):
-        warnings.warn("The name property is deprecated - use getFilename( )")
+        warnings.warn("The name property is deprecated - use getFilename( )" , DeprecationWarning)
         return self.getFilename()
 
     

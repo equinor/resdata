@@ -182,6 +182,7 @@ class EclKW(BaseCClass):
            soil_kw = EclKW.create( "SOIL" , 10000 , ECL_FLOAT_TYPE )
            
         """
+        warnings.warn("The EclKW.create( )  method has been deprecated - use EclKW( %s , %s , %s )" % (name , size , data_type) , DeprecationWarning )
         return cls( name , size , data_type )
 
         
@@ -325,7 +326,7 @@ class EclKW(BaseCClass):
     @classmethod
     def grdecl_load( cls , file , kw , ecl_type = EclTypeEnum.ECL_FLOAT_TYPE):
         """Use read_grdecl() instead."""
-        #warnings.warn("The grdecl_load method has been renamed to read_grdecl()" , DeprecationWarning)
+        warnings.warn("The grdecl_load method has been renamed to read_grdecl()" , DeprecationWarning)
         return cls.read_grdecl(file , kw , ecl_type )
 
 
@@ -843,25 +844,37 @@ class EclKW(BaseCClass):
         ecl_kw = self.__deep_copy__( {} )
         return ecl_kw
 
-    @property
-    def fortio_size(self):
+    def fortIOSize(self):
         """
         The number of bytes this keyword would occupy in a BINARY file.
         """
         return self._get_fortio_size( )
-
+    
+    
+    @property
+    def fortio_size(self):
+        warnings.warn("The fortio_size property is deprecated - use method fortIOSize()" , DeprecationWarning)
+        return self.fortIOSize()
+        
+    
     @property
     def size(self):
+        warnings.warn("The size property is deprecated - use built in len(..) " , DeprecationWarning)
         return len(self)
 
-    
-    def set_name( self , name ):
+    def setName( self , name ):
         if len(name) > 8:
             raise ValueError("Sorry: the name property must be max 8 characters long :-(")
         self._set_header( name )
 
+    
+    def set_name( self , name ):
+        warnings.warn("The set_name method is deprectaed - use setName( )" , DeprecationWarning)
+        self.setName( name );
+
         
     def get_name( self ):
+        warnings.warn("The set_name method is deprectaed - use getName( )" , DeprecationWarning)
         return self.getName()
         
 
@@ -926,19 +939,12 @@ class EclKW(BaseCClass):
         mm = self.getMinMax()
         return mm[0]
 
-
-
+    
     @property
     def numeric(self):
-        ecl_type = self.getEclType( )
-        if ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
-            return True
-        if ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
-            return True
-        if ecl_type == EclTypeEnum.ECL_INT_TYPE:
-            return True
-        return False
-
+        warnings.warn("The numeric property has been renamed to method isNumeric()" , DeprecationWarning)
+        return self.isNumeric( ) 
+        
     
     @property
     def type( self ):

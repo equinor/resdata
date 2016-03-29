@@ -83,7 +83,7 @@ else:
     silent_warnings = set()
 
 if not "eclimport" in silent_warnings:
-    warn(warning_message)
+    warn(warning_message , DeprecationWarning)
 
 
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
