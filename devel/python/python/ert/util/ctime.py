@@ -26,8 +26,8 @@ from ert.util import UtilPrototype
 class CTime(BaseCValue):
     TYPE_NAME = "time_t"
     DATA_TYPE = ctypes.c_long
-    _timezone = UtilPrototype("char* util_get_timezone()")
-    _mktime = UtilPrototype("long util_make_datetime(int, int, int, int, int, int)")
+    _timezone = UtilPrototype("char* util_get_timezone()" , bind = False)
+    _mktime = UtilPrototype("long util_make_datetime(int, int, int, int, int, int)" , bind = False)
 
     def __init__(self, value):
         if isinstance(value, int):
