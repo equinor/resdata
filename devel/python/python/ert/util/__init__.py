@@ -54,13 +54,9 @@ from ert.cwrap.metacwrap import Prototype
 class UtilPrototype(Prototype):
     lib = clib.ert_load("libert_util")
 
-    def __init__(self, prototype, bind=False):
+    def __init__(self, prototype, bind=True):
         super(UtilPrototype, self).__init__(UtilPrototype.lib, prototype, bind=bind)
 
-
-class BoundUtilPrototype(UtilPrototype):
-    def __init__(self, prototype):
-        super(BoundUtilPrototype, self).__init__(prototype, bind=True)
 
 
 from .version import Version
