@@ -19,11 +19,11 @@ from ert.util import UtilPrototype
 
 
 class Buffer(BaseCClass):
+    _alloc = UtilPrototype("void* buffer_alloc(int)" , bind = False)
     _free = UtilPrototype("void buffer_free(buffer)")
-    _alloc = UtilPrototype("void* buffer_alloc(int)")
 
     def __init__(self, size):
         super(Buffer, self).__init__(self._alloc(size))
 
     def free(self):
-        self._free(self)
+        self._free()
