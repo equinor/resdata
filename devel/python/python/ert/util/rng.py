@@ -23,7 +23,7 @@ from ert.util.enums import RngInitModeEnum, RngAlgTypeEnum
 class RandomNumberGenerator(BaseCClass):
     TYPE_NAME = "rng"
 
-    _rng_alloc = UtilPrototype("void* rng_alloc(rng_alg_type_enum, rng_init_mode_enum)")
+    _rng_alloc = UtilPrototype("void* rng_alloc(rng_alg_type_enum, rng_init_mode_enum)" , bind = False)
     _free = UtilPrototype("void rng_free(rng)")
     _get_double = UtilPrototype("double rng_get_double(rng)")
     _get_int = UtilPrototype("int rng_get_int(rng, int)")
@@ -39,24 +39,24 @@ class RandomNumberGenerator(BaseCClass):
         super(RandomNumberGenerator, self).__init__(c_ptr)
 
     def stateSize(self):
-        return self._state_size(self)
+        return self._state_size()
 
     def setState(self, seed_string):
         state_size = self.stateSize()
         if len(seed_string) < state_size:
             raise ValueError("The seed string must be at least %d characters long" % self.stateSize())
-        self._set_state(self, seed_string)
+        self._set_state( seed_string)
 
     def getDouble(self):
         """ @rtype: float """
-        return self._get_double(self)
+        return self._get_double()
 
     def getInt(self, max=None):
         """ @rtype: float """
         if max is None:
-            max = self._get_max_int(self)
+            max = self._get_max_int()
 
-        return self._get_int(self, max)
+        return self._get_int(max)
 
     def free(self):
-        self._free(self)
+        self._free()
