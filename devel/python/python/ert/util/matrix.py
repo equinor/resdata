@@ -32,14 +32,14 @@ from ert.util import UtilPrototype
 
 
 class Matrix(BaseCClass):
-    _matrix_alloc = UtilPrototype("void*  matrix_alloc(int, int )")
+    _matrix_alloc = UtilPrototype("void*  matrix_alloc(int, int )" , bind = False)
     _free         = UtilPrototype("void   matrix_free(matrix)")
     _iget         = UtilPrototype("double matrix_iget( matrix , int , int )")
     _iset         = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
     _set_all      = UtilPrototype("void   matrix_scalar_set( matrix , double)")
     _scale_column = UtilPrototype("void matrix_scale_column(matrix , int , double)")
     _scale_row    = UtilPrototype("void matrix_scale_row(matrix , int , double)")
-    _copy_column  = UtilPrototype("void matrix_copy_column(matrix , matrix , int , int)")
+    _copy_column  = UtilPrototype("void matrix_copy_column(matrix , matrix , int , int)" , bind = False)
     _rows         = UtilPrototype("int matrix_get_rows(matrix)")
     _columns      = UtilPrototype("int matrix_get_columns(matrix)")
     _equal        = UtilPrototype("bool matrix_equal(matrix, matrix)")
@@ -68,7 +68,7 @@ class Matrix(BaseCClass):
         if not 0 <= index_tuple[1] < self.columns():
             raise IndexError("Expected 0 <= %d < %d" % (index_tuple[1], self.columns()))
 
-        return self._iget(self, index_tuple[0], index_tuple[1])
+        return self._iget(index_tuple[0], index_tuple[1])
 
     def __setitem__(self, index_tuple, value):
         if not 0 <= index_tuple[0] < self.rows():
@@ -77,35 +77,35 @@ class Matrix(BaseCClass):
         if not 0 <= index_tuple[1] < self.columns():
             raise IndexError("Expected 0 <= %d < %d" % (index_tuple[1], self.columns()))
 
-        return self._iset(self, index_tuple[0], index_tuple[1], value)
+        return self._iset(index_tuple[0], index_tuple[1], value)
 
     def dims(self):
-        return self._rows(self), self._columns(self)
+        return self._rows(), self._columns()
 
     def rows(self):
         """ @rtype: int """
-        return self._rows(self)
+        return self._rows()
 
     def columns(self):
         """ @rtype: int """
-        return self._columns(self)
+        return self._columns()
 
     def __eq__(self, other):
         assert isinstance(other, Matrix)
-        return self._equal(self, other)
+        return self._equal(other)
 
     def scaleColumn(self, column, factor):
         if not 0 <= column < self.columns():
             raise IndexError("Expected column: [0,%d) got:%d" % (self.columns(), column))
-        self._scale_column(self, column, factor)
+        self._scale_column(column, factor)
 
     def scaleRow(self, row, factor):
         if not 0 <= row < self.rows():
             raise IndexError("Expected row: [0,%d) got:%d" % (self.rows(), row))
-        self._scale_row(self, row, factor)
+        self._scale_row(row, factor)
 
     def setAll(self, value):
-        self._set_all(self, value)
+        self._set_all(value)
 
     def copyColumn(self, target_column, src_column):
         columns = self.columns()
@@ -117,13 +117,13 @@ class Matrix(BaseCClass):
 
         if src_column != target_column:
             # The underlying C function accepts column copy between matrices.
-            self._copy_column(self, self, target_column, src_column)
+            Matrix._copy_column(self, self, target_column, src_column)
 
     def prettyPrint(self, name, fmt="%6.3g"):
-        self._pretty_print(self, name, fmt)
+        self._pretty_print(name, fmt)
 
     def randomInit(self, rng):
-        self._random_init(self, rng)
+        self._random_init(rng)
 
     def free(self):
-        self._free(self)
+        self._free()
