@@ -15,19 +15,19 @@
 #  for more details. 
 
 from ert.cwrap import BaseCClass
-from ert.util import BoundUtilPrototype, UtilPrototype
+from ert.util import UtilPrototype
 
 
 class ArgPack(BaseCClass):
     TYPE_NAME = "arg_pack"
 
-    _alloc = UtilPrototype("void* arg_pack_alloc()")
+    _alloc = UtilPrototype("void* arg_pack_alloc()" , bind = False)
     _append_int = UtilPrototype("void arg_pack_append_int(arg_pack, int)")
     _append_double = UtilPrototype("void arg_pack_append_double(arg_pack, double)")
     _append_ptr = UtilPrototype("void arg_pack_append_ptr(arg_pack, void*)")
 
-    __len__ = BoundUtilPrototype("int arg_pack_size(arg_pack)")
-    free = BoundUtilPrototype("void arg_pack_free(arg_pack)")
+    _size = UtilPrototype("int arg_pack_size(arg_pack)")
+    _free = UtilPrototype("void arg_pack_free(arg_pack)")
 
     def __init__(self, *args):
         c_ptr = self._alloc()
@@ -36,13 +36,22 @@ class ArgPack(BaseCClass):
         for arg in args:
             self.append(arg)
 
+            
     def append(self, data):
         if isinstance(data, int):
-            self._append_int(self, data)
+            self._append_int(data)
         elif isinstance(data, float):
-            self._append_double(self, data)
+            self._append_double(data)
         elif isinstance(data, BaseCClass):
-            self._append_ptr(self, BaseCClass.from_param(data))
+            self._append_ptr(BaseCClass.from_param(data))
             self.child_list.append(data)
         else:
             raise TypeError("Can only add int/double/basecclass")
+
+
+    def __len__(self):
+        return self._size()
+
+
+    def free(self):
+        self._free( )
