@@ -5,7 +5,7 @@ from ert.util import UtilPrototype
 class SubstitutionList(BaseCClass):
     TYPE_NAME = "subst_list"
 
-    _alloc = UtilPrototype("void* subst_list_alloc(void*)")
+    _alloc = UtilPrototype("void* subst_list_alloc(void*)" , bind = False)
     _free = UtilPrototype("void subst_list_free(subst_list)")
     _size = UtilPrototype("int subst_list_get_size(subst_list)")
     _get_key = UtilPrototype("char* subst_list_iget_key(subst_list, int)")
@@ -18,10 +18,10 @@ class SubstitutionList(BaseCClass):
         super(SubstitutionList, self).__init__(c_ptr)
 
     def __len__(self):
-        return self._size(self)
+        return self._size()
 
     def addItem(self, key, value, doc_string=""):
-        self._append_copy(self, key, value, doc_string)
+        self._append_copy(key, value, doc_string)
 
     def __getitem__(self, index_or_key):
         if not isinstance(index_or_key, int):
@@ -30,9 +30,9 @@ class SubstitutionList(BaseCClass):
         if index_or_key < 0 or index_or_key >= len(self):
             raise IndexError("Index must be in the range: [%i, %i]" % (0, len(self) - 1))
 
-        key = self._get_key(self, index_or_key)
-        value = self._get_value(self, index_or_key)
-        doc_string = self._get_doc_string(self, index_or_key)
+        key = self._get_key(index_or_key)
+        value = self._get_value(index_or_key)
+        doc_string = self._get_doc_string(index_or_key)
 
         return key, value, doc_string
 
@@ -59,4 +59,4 @@ class SubstitutionList(BaseCClass):
         return None  # Should never happen!
 
     def free(self):
-        self._free(self)
+        self._free()
