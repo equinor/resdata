@@ -20,7 +20,9 @@ from ert.util import VectorTemplate, UtilPrototype
 class IntVector(VectorTemplate):
     default_format       = "%d"
 
-    _alloc               = UtilPrototype("void*  int_vector_alloc( int , int )")
+    _alloc               = UtilPrototype("void*  int_vector_alloc( int , int )" , bind = False)
+    _create_active_list  = UtilPrototype("int_vector_obj string_util_alloc_active_list( char*)" , bind = False)
+    _create_value_list   = UtilPrototype("int_vector_obj string_util_alloc_value_list( char*)" , bind = False)
     _alloc_copy          = UtilPrototype("int_vector_obj int_vector_alloc_copy( int_vector )")
     _strided_copy        = UtilPrototype("int_vector_obj int_vector_alloc_strided_copy( int_vector , int , int , int)")
     _free                = UtilPrototype("void   int_vector_free( int_vector )")
@@ -55,8 +57,6 @@ class IntVector(VectorTemplate):
     _set_default         = UtilPrototype("void   int_vector_set_default( int_vector , int)")
     _get_default         = UtilPrototype("int    int_vector_get_default( int_vector )")
     _element_size        = UtilPrototype("int    int_vector_element_size( int_vector )")
-    _create_active_list  = UtilPrototype("int_vector_obj string_util_alloc_active_list( char*)")
-    _create_value_list   = UtilPrototype("int_vector_obj string_util_alloc_value_list( char*)")
 
     _permute             = UtilPrototype("void int_vector_permute(int_vector, permutation_vector)")
     _sort_perm           = UtilPrototype("permutation_vector_obj int_vector_alloc_sort_perm(int_vector)")
@@ -105,4 +105,4 @@ class IntVector(VectorTemplate):
     
     def count(self, value):
         """ @rtype: int """
-        return self._count_equal(self, value)
+        return self._count_equal(value)

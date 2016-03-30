@@ -20,7 +20,7 @@ from ert.util import VectorTemplate, UtilPrototype
 class DoubleVector(VectorTemplate):
     default_format = "%8.4f"
 
-    _alloc            = UtilPrototype("void*  double_vector_alloc( int , double )")
+    _alloc            = UtilPrototype("void*  double_vector_alloc( int , double )" , bind = False)
     _alloc_copy       = UtilPrototype("double_vector_obj   double_vector_alloc_copy( double_vector )")
     _strided_copy     = UtilPrototype("double_vector_obj   double_vector_alloc_strided_copy( double_vector , int , int , int)")
     _free             = UtilPrototype("void   double_vector_free( double_vector )")

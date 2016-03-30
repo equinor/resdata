@@ -23,7 +23,7 @@ class TimeVector(VectorTemplate):
     TYPE_NAME = "time_t_vector"
     default_format = "%d"
 
-    _alloc               = UtilPrototype("void*   time_t_vector_alloc(int, time_t )")
+    _alloc               = UtilPrototype("void*   time_t_vector_alloc(int, time_t )" , bind = False)
     _alloc_copy          = UtilPrototype("time_t_vector_obj time_t_vector_alloc_copy(time_t_vector )")
     _strided_copy        = UtilPrototype("time_t_vector_obj time_t_vector_alloc_strided_copy(time_t_vector , time_t , time_t , time_t)")
     _free                = UtilPrototype("void   time_t_vector_free( time_t_vector )")
@@ -105,10 +105,10 @@ class TimeVector(VectorTemplate):
         return str(string_list)
 
     def append(self, value):
-        self._append(self, CTime(value))
+        self._append(CTime(value))
 
     def __contains__(self, value):
-        return self._contains(self, CTime(value))
+        return self._contains(CTime(value))
 
     def nextTime(self, num, timeUnit):
         currentTime = self[-1].datetime()

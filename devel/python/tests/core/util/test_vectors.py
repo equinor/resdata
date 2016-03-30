@@ -26,8 +26,10 @@ except ImportError:
 
 from ert.util import DoubleVector, IntVector, BoolVector, TimeVector, CTime
 
-
 class UtilTest(TestCase):
+    def setUp(self):
+        pass
+        
     def test_double_vector(self):
         v = DoubleVector()
 
@@ -123,7 +125,7 @@ class UtilTest(TestCase):
 
         active_list = IntVector.active_list("1,10,100-105X")
         self.assertFalse(active_list)
-
+        
     def test_value_list(self):
         list2 = IntVector.valueList("3,10-12,0,1")
         self.assertTrue(len(list2) == 6)
@@ -160,7 +162,7 @@ class UtilTest(TestCase):
     def test_update_active_mask(self):
         vec = BoolVector(False, 10)
 
-        self.assertTrue(BoolVector.updateActiveMask("1-2,5", vec))
+        self.assertTrue(vec.updateActiveMask("1-2,5"))
         self.assertTrue(vec[1])
         self.assertTrue(vec[2])
         self.assertTrue(vec[5])
@@ -168,7 +170,7 @@ class UtilTest(TestCase):
 
         vec = BoolVector(False, 10)
 
-        self.assertTrue(BoolVector.updateActiveMask("1-5,2,3", vec))
+        self.assertTrue(vec.updateActiveMask("1-5,2,3"))
         self.assertTrue(vec[1])
         self.assertTrue(vec[2])
         self.assertTrue(vec[3])
@@ -179,7 +181,7 @@ class UtilTest(TestCase):
 
         vec = BoolVector(False, 10)
 
-        self.assertTrue(BoolVector.updateActiveMask("5,6,7,15", vec))
+        self.assertTrue(vec.updateActiveMask("5,6,7,15"))
         self.assertTrue(vec[5])
         self.assertTrue(vec[6])
         self.assertTrue(vec[7])
@@ -199,6 +201,8 @@ class UtilTest(TestCase):
         with self.assertRaises(ValueError):
             a.pop()
 
+#----
+            
     def test_shift(self):
         a = IntVector()
         a.append(1)
@@ -243,30 +247,32 @@ class UtilTest(TestCase):
         a.sort(reverse=True)
         self.assertEqual(list(a), [5, 4, 3, 2, 1])
 
-        self.assertTrue(a.max, 5)
-        self.assertTrue(a.min, 1)
+        self.assertTrue(a.max(), 5)
+        self.assertTrue(a.min(), 1)
         self.assertTrue(a.minIndex(), 4)
-
+        
         self.assertEqual(a.maxIndex(reverse=True), 0)
         self.assertEqual(a.maxIndex(reverse=False), 0)
-
+        
         a[4] = 5
         self.assertTrue(a[4] == 5)
-
+        
         a_plus_one = a + 1
         self.assertEqual(list(a_plus_one), [6, 5, 4, 3, 6])
 
         sliced = a[0:3]
         self.assertEqual(list(sliced), [5, 4, 3])
-
+        
         with self.assertRaises(IndexError):
             item = a[6]
-
-        copy_of_a = copy.deepcopy(a)
+        
+        copy_of_a = a.copy()
         self.assertEqual(list(a), list(copy_of_a))
-
-        another_copy_of_a = copy.copy(a)
+        
+        another_copy_of_a = copy_of_a.copy( )
         self.assertEqual(list(a), list(another_copy_of_a))
+
+#---
 
     def test_div(self):
         v = IntVector()
