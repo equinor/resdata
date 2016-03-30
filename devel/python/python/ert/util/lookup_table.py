@@ -20,7 +20,7 @@ from ert.util import UtilPrototype
 
 
 class LookupTable(BaseCClass):
-    _alloc =          UtilPrototype("void* lookup_table_alloc_empty()")
+    _alloc =          UtilPrototype("void* lookup_table_alloc_empty()" , bind = False)
     _max =            UtilPrototype("double lookup_table_get_max_value( lookup_table )")
     _min =            UtilPrototype("double lookup_table_get_min_value( lookup_table )")
     _arg_max =        UtilPrototype("double lookup_table_get_max_arg( lookup_table )")
@@ -45,26 +45,26 @@ class LookupTable(BaseCClass):
 
     def getMaxValue(self):
         self.assertSize(1)
-        return self._max(self)
+        return self._max()
 
     def getMinValue(self):
         self.assertSize(1)
-        return self._min(self)
+        return self._min()
 
     def getMinArg(self):
         self.assertSize(1)
-        return self._arg_min(self)
+        return self._arg_min()
 
     def getMaxArg(self):
         self.assertSize(1)
-        return self._arg_max(self)
+        return self._arg_max()
 
     def assertSize(self, N):
         if len(self) < N:
             raise ValueError("Lookup table is too small")
 
     def __len__(self):
-        return self._size(self)
+        return self._size()
 
     @property
     def size(self):
@@ -88,16 +88,16 @@ class LookupTable(BaseCClass):
         return self.getMinArg()
 
     def setLowerLimit(self, value):
-        self._set_low_limit(self, value)
+        self._set_low_limit(value)
 
     def hasLowerLimit(self):
-        return self._has_low_limit(self)
+        return self._has_low_limit()
 
     def setUpperLimit(self, value):
-        self._set_high_limit(self, value)
+        self._set_high_limit(value)
 
     def hasUpperLimit(self):
-        return self._has_high_limit(self)
+        return self._has_high_limit()
 
     def interp(self, x):
         self.assertSize(2)
@@ -108,15 +108,15 @@ class LookupTable(BaseCClass):
             if not self.hasUpperLimit():
                 raise ValueError("Interpolate argument:%g is outside valid interval: [%g,%g]" % (x, self.getMinArg(), self.getMaxArg()))
 
-        return self._interp(self, x)
+        return self._interp(x)
 
     def append(self, x, y):
-        self._append(self, x, y)
+        self._append( x, y)
 
     #todo: necessary???
     def __del__(self):
-        self._free(self)
+        self._free()
 
     def free(self):
-        self._free(self)
+        self._free( )
 
