@@ -28,7 +28,7 @@ class Log(BaseCClass):
         raise NotImplementedError("Class can not be instantiated directly!")
 
     def get_filename(self):
-        return self._get_filename(self)
+        return self._get_filename()
         # return "ert_config.log"
 
     def reopen(self, filename):
@@ -36,7 +36,7 @@ class Log(BaseCClass):
         # cfunc.reopen( self , filename)
 
     def get_level(self):
-        return self._get_level(self)
+        return self._get_level()
 
     def set_level(self, level):
         pass
