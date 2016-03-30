@@ -23,7 +23,7 @@ from ert.util import UtilPrototype
 class CThreadPool(BaseCClass):
     TYPE_NAME = "thread_pool"
 
-    _alloc   = UtilPrototype("void* thread_pool_alloc(int, bool)")
+    _alloc   = UtilPrototype("void* thread_pool_alloc(int, bool)", bind = False)
     _free    = UtilPrototype("void thread_pool_free(thread_pool)")
     _add_job = UtilPrototype("void thread_pool_add_job(thread_pool, void*, void*)")
     _join    = UtilPrototype("void thread_pool_join(thread_pool)")
@@ -51,14 +51,14 @@ class CThreadPool(BaseCClass):
             arg_ptr = arg
 
         self.arg_list.append(arg)
-        self._add_job(self, cfunc, arg_ptr)
+        self._add_job(cfunc, arg_ptr)
 
     def join(self):
-        self._join(self)
+        self._join()
 
     def free(self):
         self.join()
-        self._free(self)
+        self._free()
 
     @staticmethod
     def lookupCFunction(lib, name):
