@@ -230,44 +230,46 @@ class EclGrid(BaseCClass):
             raise TypeError("The other argument must be an EclGrid instance")
         return self._equal( other , include_lgr , include_nnc , verbose)
 
-    
-    @property
-    def dual_grid( self ):
+
+    def dualGrid(self):
         """Is this grid dual porosity model?"""
         return self._dual_grid( ) 
+        
+    @property
+    def dual_grid( self ):
+        warnings.warn("The dual_grid property is deprecated - use dualGrid( ) method" , DeprecationWarning)
+        return self.dualGrid( )
 
 
     @property
     def nx( self ):
-        """The number of cells in the i direction - nx."""
-        return self._get_nx( )
-
+        warnings.warn("The nx property is deprecated - use getNX( ) method" , DeprecationWarning)
+        return self.getNX()
     
     @property
     def ny( self ):
-        """The number of cells in the j direction - ny."""
-        return self._get_ny( )
+        warnings.warn("The ny property is deprecated - use getNY( ) method" , DeprecationWarning)
+        return self.getNY()
 
     @property
     def nz( self ):
-        """The number of cells in the k direction - nz."""
-        return self._get_nz( )
+        warnings.warn("The nz property is deprecated - use getNZ( ) method" , DeprecationWarning)
+        return self.getNZ()
 
     @property
     def size( self ):
-        """The total number of cells in the grid, i.e. nx*ny*nz."""
-        return self._get_global_size( )
+        warnings.warn("The size property is deprecated - use getGlobalSize( ) method" , DeprecationWarning)
+        return self.getGlobalSize( )
 
     @property
     def nactive( self ):
-        """The number of active cells in the grid."""
-        return self.getNumActive()
+        warnings.warn("The nactive property is deprecated - use getNumActive( ) method" , DeprecationWarning)
+        return self.getNumActive( )
 
     @property
     def nactive_fracture( self ):
-        """The number of active cells fracture in the grid - for dual porosity."""
-        return self._get_active_fracture(  )
-
+        warnings.warn("The nactive_fracture property is deprecated - use getNumActiveFracture( ) method" , DeprecationWarning)
+        return self.getNumActiveFracture( )
 
     @property
     def dims( self ):
@@ -302,6 +304,11 @@ class EclGrid(BaseCClass):
     def getNumActive(self):
         """The number of active cells in the grid."""
         return self._get_active( )
+
+
+    def getNumActiveFracture(self):
+        """The number of active cells in the grid."""
+        return self._get_active_fracture( )
 
 
     def getBoundingBox2D(self , layer = 0 , lower_left = None , upper_right = None):
@@ -359,9 +366,7 @@ class EclGrid(BaseCClass):
             raise ValueError("Invalid layer value:%d  Valid range: [0,%d]" % (layer , self.getNZ()))
 
 
-
-    @property
-    def name( self ):
+    def getName(self):
         """
         Name of the current grid.
         
@@ -372,6 +377,13 @@ class EclGrid(BaseCClass):
         """
         return self._get_name( )
 
+
+    @property
+    def name( self ):
+        warnings.warn("The name property is deprecated - use getName() method instead" , DeprecationWarning)
+        return self.getName()
+
+    
     def global_index( self , active_index = None, ijk = None):
         """
         Will convert either active_index or (i,j,k) to global index.
@@ -880,9 +892,9 @@ class EclGrid(BaseCClass):
         return (dx,dy,dz)
         
 
-    @property
-    def num_lgr( self ):
 
+    def getNumLGR(self):
+        
         """
         How many LGRs are attached to this main grid?
 
@@ -891,6 +903,11 @@ class EclGrid(BaseCClass):
         """
         return self._num_lgr(  )
 
+    
+    @property
+    def num_lgr( self ):
+        warnings.warn("The num_lgr property is deprecated - use getNumLGR() method instead" , DeprecationWarning)
+        
 
     def has_lgr( self , lgr_name ):
         """

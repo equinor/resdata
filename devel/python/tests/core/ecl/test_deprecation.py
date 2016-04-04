@@ -103,6 +103,39 @@ class Deprecation_2_0_Test(ExtendedTestCase):
                     kw = EclKW.grdecl_load( poro_file , "PORO")
 
 
+    def test_ecl_grid_dual_property(self):
+        grid = EclGrid.createRectangular((10,20,30) , (1,1,1) )
+        with self.assertRaises(DeprecationWarning):
+            grid.dual_grid
+
+            
+    def test_ecl_grid_name(self):
+        grid = EclGrid.createRectangular((10,20,30) , (1,1,1) )
+        with self.assertRaises(DeprecationWarning):
+            grid.name
+
+            
+    def test_ecl_grid_dims_property(self):
+        grid = EclGrid.createRectangular((10,20,30) , (1,1,1) )
+        with self.assertRaises(DeprecationWarning):
+            grid.nx
+
+        with self.assertRaises(DeprecationWarning):
+            grid.ny
+
+        with self.assertRaises(DeprecationWarning):
+            grid.nz
+
+        with self.assertRaises(DeprecationWarning):
+            grid.size
+
+        with self.assertRaises(DeprecationWarning):
+            grid.nactive
+
+    def test_ecl_grid_num_lgr(self):
+        grid = EclGrid.createRectangular((10,20,30) , (1,1,1) )
+        with self.assertRaises(DeprecationWarning):
+            grid.num_lgr
             
 class Deprecation_1_9_Test(ExtendedTestCase):
 
