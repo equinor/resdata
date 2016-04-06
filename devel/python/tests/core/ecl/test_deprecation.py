@@ -137,6 +137,17 @@ class Deprecation_2_0_Test(ExtendedTestCase):
         with self.assertRaises(DeprecationWarning):
             grid.num_lgr
             
+
+
+    def test_ecl_region_name(self):
+        grid = EclGrid.createRectangular((10,20,30) , (1,1,1) )
+        region = EclRegion( grid , False )
+
+        with self.assertRaises(DeprecationWarning):
+            region.name = "NAME"
+
+        with self.assertRaises(DeprecationWarning):
+            region.get_name( )
 class Deprecation_1_9_Test(ExtendedTestCase):
 
     def test_EclGrid_dims_property(self):

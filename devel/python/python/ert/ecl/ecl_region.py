@@ -1031,12 +1031,23 @@ class EclRegion(BaseCClass):
         index_list = IntVector.createCReference( c_ptr, self )
         return index_list
 
+    def getName(self):
+        return self._get_name( )
 
-    def set_name( self , name ):
+
+    def setName(self , name):
         self._set_name( name )
 
+
+    def set_name( self , name ):
+        warnings.warn("The name property / set_name method is deprecated - use method \'setName()\' instead." , DeprecationWarning)
+        self.setName( name )
+
+
     def get_name( self ):
-        return self._get_name(  )
+        warnings.warn("The name property / get_name method is deprecated - use method \'getName()\' instead." , DeprecationWarning)
+        return self.getName( )
+
         
     name = property( get_name , set_name )
 
