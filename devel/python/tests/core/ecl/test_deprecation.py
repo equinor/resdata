@@ -19,6 +19,7 @@ import time
 
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.ecl import EclFile,EclGrid,EclKW,EclTypeEnum,EclGrid,EclRegion,FortIO, openFortIO
+from ert.ecl.ecl_case import EclCase
 from ert.util import BoolVector
 
 # The class Deprecation_1_9_Test contains methods which will be marked
@@ -148,6 +149,13 @@ class Deprecation_2_0_Test(ExtendedTestCase):
 
         with self.assertRaises(DeprecationWarning):
             region.get_name( )
+
+
+    def test_ecl_case( self ):
+        with self.assertRaises(DeprecationWarning):
+            case = EclCase( "CASE" )
+
+
 class Deprecation_1_9_Test(ExtendedTestCase):
 
     def test_EclGrid_dims_property(self):
