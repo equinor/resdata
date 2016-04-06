@@ -61,7 +61,8 @@ class EclRFTFile(BaseCClass):
     def __getitem__(self, index):
         if isinstance(index, int):
             if 0 <= index < len(self):
-                return EclRFT( self._iget(index), self)
+                rft = self._iget(index)
+                rft.setParent( self )
             else:
                 raise IndexError("Index '%d' must be in range: [0, %d]" % (index, len(self) - 1))
         else:
@@ -126,13 +127,14 @@ class EclRFTFile(BaseCClass):
         """
         Will look up the RFT object corresponding to @well and @date.
 
-        Returns None if no matching RFT can be found.
+        Raise Exception if not found.
         """
-        c_ptr = self._get_rft( well_name , CTime( date )) 
-        if c_ptr:
-            return EclRFT( c_ptr , self)
-        else:
-            return None
+        if self.size( well = well_name , date = date) == 0:
+            raise KeyError("No RFT for well:%s at %s" % (well_name , date))
+
+        rft = self._get_rft( well_name , CTime( date )) 
+        rft.setParent( self )
+        return rft
 
 
     
@@ -157,7 +159,6 @@ class EclRFT(BaseCClass):
     In addition to the measurements specific for RFT and PLT each cell
     has coordinates, pressure and depth.
     """
-
     TYPE_NAME = "ecl_rft"
     _get_type         = EclPrototype("int    ecl_rft_node_get_type( ecl_rft )")
     _get_well         = EclPrototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
@@ -185,31 +186,31 @@ class EclRFT(BaseCClass):
         """
         The number of completed cells in this RFT.
         """
-        return cfunc_rft.get_size( self )
+        return self._get_size( )
 
     def is_RFT(self):
         """
         Is instance an RFT; in that case all the cells will be EclRFTCell instances.
         """
-        return cfunc_rft.is_RFT( self )
+        return self._is_RFT( )
 
     def is_PLT(self):
         """
         Is instance a PLT; in that case all the cells will be EclPLTCell instances.
         """
-        return cfunc_rft.is_PLT( self )
+        return self._is_PLT( )
 
     def is_SEGMENT(self):
         """
         Is this a SEGMENT - not implemented.
         """
-        return cfunc_rft.is_SEGMENT( self )
+        return self._is_SEGMENT( )
 
     def is_MSW(self):
         """
         Is this well a MSW well. Observe that the test ONLY applies to PLTs.
         """
-        return cfunc_rft.is_MSW( self )
+        return self._is_MSW( )
 
 
     @property
@@ -229,14 +230,14 @@ class EclRFT(BaseCClass):
         """
         The name of the well we are considering.
         """
-        return cfunc_rft.get_well( self )
+        return self._get_well( )
 
     @property
     def date(self):
         """
         The date when this RFT/PLT/... was recorded.
         """
-        ct = CTime(cfunc_rft.get_date( self ))
+        ct = CTime(self._get_date( ))
         return ct.date()
 
     @property
@@ -244,7 +245,7 @@ class EclRFT(BaseCClass):
         """
         The number of completed cells.
         """
-        return self.__len__()
+        return len(self)
 
 
     def __cell_ref( self , cell_ptr ):
@@ -277,12 +278,12 @@ class EclRFT(BaseCClass):
         type of this particular RFT object. 
         """
         self.assert_cell_index( index )
-        cell_ptr = cfunc_rft.iget_cell( self , index )
+        cell_ptr = self._iget_cell( index )
         return self.__cell_ref( cell_ptr )
         
 
     def iget( self , index ):
-        return self.__getitem__( index )
+        return self[index]
 
         
     def iget_sorted( self , index ):
@@ -292,7 +293,7 @@ class EclRFT(BaseCClass):
         See method sort() for further documentation.
         """
         self.assert_cell_index( index )
-        cell_ptr = cfunc_rft.iget_cell_sorted( self , index )
+        cell_ptr = self._iget_cell_sorted( index )
         return self.__cell_ref( cell_ptr )
         
 
@@ -322,7 +323,7 @@ class EclRFT(BaseCClass):
         Currently only MSW/PLTs are sorted, based on the CONLENST
         keyword; for other wells the sort() method does nothing.  
         """
-        cfunc_rft.sort_cells( self )
+        self._sort_cells( )
 
 
     # ijk are zero offset
@@ -334,7 +335,7 @@ class EclRFT(BaseCClass):
         returned. The (i,j,k) input values should be zero offset,
         i.e. you must subtract 1 from the (i,j,k) values given in the ECLIPSE input.
         """
-        cell_ptr = cfunc_rft.lookup_ijk( self , ijk[0] , ijk[1] , ijk[2])
+        cell_ptr = self._lookup_ijk( ijk[0] , ijk[1] , ijk[2])
         if cell_ptr:
             return self.__cell_ref( cell_ptr )
         else:
@@ -344,31 +345,5 @@ class EclRFT(BaseCClass):
 
 
 
-# 2. Creating a wrapper object around the libecl library, 
-#    registering the type map : ecl_kw <-> EclKW
-cwrapper = CWrapper(ECL_LIB)
-cwrapper.registerType( "ecl_rft"      , EclRFT )
-
-cfunc_rft  = CWrapperNameSpace("ecl_rft")
 
 
-cfunc_rft.get_type                  = cwrapper.prototype("int    ecl_rft_node_get_type( ecl_rft )")
-cfunc_rft.get_well                  = cwrapper.prototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
-cfunc_rft.get_date                  = cwrapper.prototype("time_t ecl_rft_node_get_date( ecl_rft )")
-cfunc_rft.get_size                  = cwrapper.prototype("int ecl_rft_node_get_size( ecl_rft )")
-cfunc_rft.iget_cell                 = cwrapper.prototype("c_void_p ecl_rft_node_iget_cell( ecl_rft )")
-cfunc_rft.iget_cell_sorted          = cwrapper.prototype("c_void_p ecl_rft_node_iget_cell_sorted( ecl_rft )")
-cfunc_rft.sort_cells                = cwrapper.prototype("c_void_p ecl_rft_node_inplace_sort_cells( ecl_rft )")
-cfunc_rft.iget_depth                = cwrapper.prototype("double ecl_rft_node_iget_depth( ecl_rft )")
-cfunc_rft.iget_pressure             = cwrapper.prototype("double ecl_rft_node_iget_pressure(ecl_rft)")
-cfunc_rft.iget_ijk                  = cwrapper.prototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)") 
-cfunc_rft.iget_swat                 = cwrapper.prototype("double ecl_rft_node_iget_swat(ecl_rft)")
-cfunc_rft.iget_sgas                 = cwrapper.prototype("double ecl_rft_node_iget_sgas(ecl_rft)")
-cfunc_rft.iget_orat                 = cwrapper.prototype("double ecl_rft_node_iget_orat(ecl_rft)")
-cfunc_rft.iget_wrat                 = cwrapper.prototype("double ecl_rft_node_iget_wrat(ecl_rft)")
-cfunc_rft.iget_grat                 = cwrapper.prototype("double ecl_rft_node_iget_grat(ecl_rft)")
-cfunc_rft.lookup_ijk                = cwrapper.prototype("c_void_p ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
-cfunc_rft.is_RFT                    = cwrapper.prototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
-cfunc_rft.is_PLT                    = cwrapper.prototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
-cfunc_rft.is_SEGMENT                = cwrapper.prototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft )")
-cfunc_rft.is_MSW                    = cwrapper.prototype("bool   ecl_rft_node_is_MSW( ecl_rft )")
