@@ -19,12 +19,22 @@ Module for loading ECLIPSE RFT files.
 
 import types
 import warnings
-from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
-from ert.ecl import EclRFTCell, EclPLTCell, ECL_LIB
+from ert.cwrap import BaseCClass
+from ert.ecl import EclRFTCell, EclPLTCell, EclPrototype
 from ert.util import CTime
 
 
-class EclRFTFile(CClass):
+class EclRFTFile(BaseCClass):
+    TYPE_NAME = "ecl_rft_file"
+    _load          = EclPrototype("void* ecl_rft_file_alloc_case( char* )", bind = False)
+    _has_rft       = EclPrototype("bool ecl_rft_file_case_has_rft( char* )", bind = False)
+    _free          = EclPrototype("void ecl_rft_file_free( ecl_rft_file )")
+    _get_size      = EclPrototype("int ecl_rft_file_get_size__( ecl_rft_file , char* , time_t)")
+    _get_num_wells = EclPrototype("int  ecl_rft_file_get_num_wells( ecl_rft_file )")
+    _iget          = EclPrototype("void* ecl_rft_file_iget_node( ecl_rft_file , int )")
+    _get_rft       = EclPrototype("void* ecl_rft_file_get_well_time_rft( ecl_rft_file , char* , time_t)")
+
+
     """
     The EclRFTFile class is used to load an ECLIPSE RFT file.
 
@@ -38,25 +48,20 @@ class EclRFTFile(CClass):
     measurements. The class does not really differentiate between
     these.
     """
-    
-    def __new__( cls , case ):
-        c_ptr = cfunc_file.load( case )
-        if c_ptr:
-            obj = object.__new__( cls )
-            obj.init_cobj( c_ptr , cfunc_file.free )
-            return obj
-        else:
-            return None
-        
+
+    def __init__(self , case):
+        c_ptr = self._load( case )
+        super(EclRFTFile , self).__init__(c_ptr)
+
 
     def __len__(self):
-        return cfunc_file.get_size( self , None , CTime(-1))
+        return self._get_size(  None , CTime(-1))
 
 
     def __getitem__(self, index):
         if isinstance(index, int):
             if 0 <= index < len(self):
-                return EclRFT( cfunc_file.iget(self, index), self)
+                return EclRFT( self._iget(index), self)
             else:
                 raise IndexError("Index '%d' must be in range: [0, %d]" % (index, len(self) - 1))
         else:
@@ -84,15 +89,19 @@ class EclRFTFile(CClass):
         else:
             cdate = CTime( -1 )
 
-        return cfunc_file.get_size( self , well , cdate)
+        return self._get_size( well , cdate)
 
 
-    @property
-    def num_wells( self ):
+    def getNumWells(self):
         """
         Returns the total number of distinct wells in the RFT file.
         """
-        return cfunc_file.get_num_wells( self )
+        return self._get_num_wells( )
+        
+    @property
+    def num_wells( self ):
+        warnings.warn("The property num_wells is deprecated, use the getNumWells() instead." , DeprecationWarning)
+        return self.getNumWells()
 
     @property
     def headers(self):
@@ -100,7 +109,7 @@ class EclRFTFile(CClass):
         Returns a list of two tuples (well_name , date) for the whole file.
         """
         header_list = []
-        for i in (range(cfunc_file.get_size( self , None , CTime(-1)))):
+        for i in (range(self._get_size( None , CTime(-1)))):
             rft = self.iget( i )
             header_list.append( (rft.well , rft.date) )
         return header_list
@@ -110,7 +119,7 @@ class EclRFTFile(CClass):
         """
         Will lookup RFT @index - equivalent to [@index].
         """
-        return self.__getitem__( index )
+        return self[index]
 
 
     def get(self , well_name , date ):
@@ -119,7 +128,7 @@ class EclRFTFile(CClass):
 
         Returns None if no matching RFT can be found.
         """
-        c_ptr = cfunc_file.get_rft( self , well_name , CTime( date )) 
+        c_ptr = self._get_rft( well_name , CTime( date )) 
         if c_ptr:
             return EclRFT( c_ptr , self)
         else:
@@ -129,7 +138,7 @@ class EclRFTFile(CClass):
     
 
 
-class EclRFT(CClass):
+class EclRFT(BaseCClass):
     """The EclRFT class contains the information for *one* RFT.
 
     The ECLIPSE RFT file can contain three different types of RFT like
@@ -148,8 +157,29 @@ class EclRFT(CClass):
     In addition to the measurements specific for RFT and PLT each cell
     has coordinates, pressure and depth.
     """
-    def __init__(self , c_ptr , parent):
-        self.init_cref( c_ptr , parent )
+
+    TYPE_NAME = "ecl_rft"
+    _get_type         = EclPrototype("int    ecl_rft_node_get_type( ecl_rft )")
+    _get_well         = EclPrototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
+    _get_date         = EclPrototype("time_t ecl_rft_node_get_date( ecl_rft )")
+    _get_size         = EclPrototype("int ecl_rft_node_get_size( ecl_rft )")
+    _iget_cell        = EclPrototype("void* ecl_rft_node_iget_cell( ecl_rft )")
+    _iget_cell_sorted = EclPrototype("void* ecl_rft_node_iget_cell_sorted( ecl_rft )")
+    _sort_cells       = EclPrototype("void* ecl_rft_node_inplace_sort_cells( ecl_rft )")
+    _iget_depth       = EclPrototype("double ecl_rft_node_iget_depth( ecl_rft )")
+    _iget_pressure    = EclPrototype("double ecl_rft_node_iget_pressure(ecl_rft)")
+    _iget_ijk         = EclPrototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)") 
+    _iget_swat        = EclPrototype("double ecl_rft_node_iget_swat(ecl_rft)")
+    _iget_sgas        = EclPrototype("double ecl_rft_node_iget_sgas(ecl_rft)")
+    _iget_orat        = EclPrototype("double ecl_rft_node_iget_orat(ecl_rft)")
+    _iget_wrat        = EclPrototype("double ecl_rft_node_iget_wrat(ecl_rft)")
+    _iget_grat        = EclPrototype("double ecl_rft_node_iget_grat(ecl_rft)")
+    _lookup_ijk       = EclPrototype("void* ecl_rft_node_lookup_ijk( ecl_rft , int , int , int)")
+    _is_RFT           = EclPrototype("bool   ecl_rft_node_is_RFT( ecl_rft )")
+    _is_PLT           = EclPrototype("bool   ecl_rft_node_is_PLT( ecl_rft )")
+    _is_SEGMENT       = EclPrototype("bool   ecl_rft_node_is_SEGMENT( ecl_rft )")
+    _is_MSW           = EclPrototype("bool   ecl_rft_node_is_MSW( ecl_rft )")
+
 
     def __len__(self):
         """
@@ -191,8 +221,8 @@ class EclRFT(CClass):
         """
         Deprecated - use query methods: is_RFT(), is_PLT() and is_SEGMENT() instead.
         """
-        warnings.warn("The property type is deprecated, use the query methods is_RFT(), is_PLT() and is_SEGMENT() instead.")
-        return cfunc_rft.get_type( self )
+        warnings.warn("The property type is deprecated, use the query methods is_RFT(), is_PLT() and is_SEGMENT() instead." , DeprecationWarning)
+        return self._get_type( )
 
     @property
     def well(self):
@@ -317,19 +347,10 @@ class EclRFT(CClass):
 # 2. Creating a wrapper object around the libecl library, 
 #    registering the type map : ecl_kw <-> EclKW
 cwrapper = CWrapper(ECL_LIB)
-cwrapper.registerType( "ecl_rft_file" , EclRFTFile )
 cwrapper.registerType( "ecl_rft"      , EclRFT )
 
-cfunc_file = CWrapperNameSpace("ecl_rft_file")
 cfunc_rft  = CWrapperNameSpace("ecl_rft")
 
-cfunc_file.load                     = cwrapper.prototype("c_void_p ecl_rft_file_alloc_case( char* )")
-cfunc_file.has_rft                  = cwrapper.prototype("bool ecl_rft_file_case_has_rft( char* )")
-cfunc_file.free                     = cwrapper.prototype("void ecl_rft_file_free( ecl_rft_file )")
-cfunc_file.get_size                 = cwrapper.prototype("int ecl_rft_file_get_size__( ecl_rft_file , char* , time_t)")
-cfunc_file.iget                     = cwrapper.prototype("c_void_p ecl_rft_file_iget_node( ecl_rft_file , int )")
-cfunc_file.get_num_wells            = cwrapper.prototype("int  ecl_rft_file_get_num_wells( ecl_rft_file )")
-cfunc_file.get_rft                  = cwrapper.prototype("c_void_p ecl_rft_file_get_well_time_rft( ecl_rft_file , char* , time_t)")
 
 cfunc_rft.get_type                  = cwrapper.prototype("int    ecl_rft_node_get_type( ecl_rft )")
 cfunc_rft.get_well                  = cwrapper.prototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
