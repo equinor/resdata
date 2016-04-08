@@ -27,6 +27,7 @@ set(TEST_SOURCES
     test_npv.py
     test_region.py
     test_restart.py
+    test_rft.py
     test_rft_statoil.py
     test_rft_cell.py
     test_statoil_faults.py
@@ -54,6 +55,7 @@ addPythonTest(ecl.legacy_ecl ecl.test_legacy_ecl.LegacyEclTest)
 addPythonTest(ecl.ecl_restart ecl.test_restart.RestartTest LABELS StatoilData )
 addPythonTest(ecl.ecl_region ecl.test_region.RegionTest LABELS StatoilData)
 addPythonTest(ecl.ecl_rft_statoil ecl.test_rft_statoil.RFTTest LABELS StatoilData)
+addPythonTest(ecl.ecl_rft ecl.test_rft.RFTTest)
 addPythonTest(ecl.ecl_rft_cell ecl.test_rft_cell.RFTCellTest)
 addPythonTest(ecl.ecl_sum1 ecl.test_sum_statoil.SumTest LABELS StatoilData)
 addPythonTest(ecl.ecl_sum2 ecl.test_sum.SumTest)

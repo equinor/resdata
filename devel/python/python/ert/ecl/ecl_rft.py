@@ -160,6 +160,8 @@ class EclRFT(BaseCClass):
     has coordinates, pressure and depth.
     """
     TYPE_NAME = "ecl_rft"
+    _alloc            = EclPrototype("void* ecl_rft_node_alloc_new( char* , char* , time_t , double)" , bind = False)
+    _free             = EclPrototype("void  ecl_rft_node_free( ecl_rft )")
     _get_type         = EclPrototype("int    ecl_rft_node_get_type( ecl_rft )")
     _get_well         = EclPrototype("char*  ecl_rft_node_get_well_name( ecl_rft )")
     _get_date         = EclPrototype("time_t ecl_rft_node_get_date( ecl_rft )")
@@ -182,6 +184,14 @@ class EclRFT(BaseCClass):
     _is_MSW           = EclPrototype("bool   ecl_rft_node_is_MSW( ecl_rft )")
 
 
+    def __init__(self , name , type_string , date , days):
+        c_ptr = self._alloc( name , type_string , CTime( date ) , days )
+        super(EclRFT , self).__init__( c_ptr )
+
+
+    def free(self):
+        self._free( )
+    
     def __len__(self):
         """
         The number of completed cells in this RFT.
