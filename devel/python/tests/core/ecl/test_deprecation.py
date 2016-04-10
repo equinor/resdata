@@ -16,9 +16,10 @@
 #  for more details.
 import warnings
 import time
+import datetime
 
 from ert.test import ExtendedTestCase, TestAreaContext
-from ert.ecl import EclFile,EclGrid,EclKW,EclTypeEnum,EclGrid,EclRegion,FortIO, openFortIO
+from ert.ecl import EclFile,EclGrid,EclKW,EclTypeEnum,EclGrid,EclRegion,FortIO, openFortIO,EclRFT
 from ert.ecl.ecl_case import EclCase
 from ert.util import BoolVector
 
@@ -156,6 +157,34 @@ class Deprecation_2_0_Test(ExtendedTestCase):
             case = EclCase( "CASE" )
 
 
+    def test_rft(self):
+        rft = EclRFT("WELL" , "RFT" , datetime.date.today() , 100 )
+
+        # Property: type
+        with self.assertRaises(DeprecationWarning):
+            t = rft.type
+
+        # Property: date
+        with self.assertRaises(DeprecationWarning):
+            d = rft.date
+
+        # Property: well
+        with self.assertRaises(DeprecationWarning):
+            d = rft.date
+
+        # Property: size
+        with self.assertRaises(DeprecationWarning):
+            d = rft.size
+
+    def test_rft_file(self):
+        # These deprecations are not tested - but just recorded here.
+        # Property: num_wells
+        # Property: headers
+        pass
+    
+
+    
+            
 class Deprecation_1_9_Test(ExtendedTestCase):
 
     def test_EclGrid_dims_property(self):

@@ -104,8 +104,8 @@ class EclRFTFile(BaseCClass):
         warnings.warn("The property num_wells is deprecated, use the getNumWells() instead." , DeprecationWarning)
         return self.getNumWells()
 
-    @property
-    def headers(self):
+    
+    def getHeaders(self):
         """
         Returns a list of two tuples (well_name , date) for the whole file.
         """
@@ -115,6 +115,11 @@ class EclRFTFile(BaseCClass):
             header_list.append( (rft.well , rft.date) )
         return header_list
 
+    @property
+    def headers(self):
+        warnings.warn("The property headers is deprecated, use the getHeaders() instead." , DeprecationWarning)
+        return self.getNHeaders()
+    
 
     def iget(self , index):
         """
@@ -235,26 +240,39 @@ class EclRFT(BaseCClass):
         warnings.warn("The property type is deprecated, use the query methods is_RFT(), is_PLT() and is_SEGMENT() instead." , DeprecationWarning)
         return self._get_type( )
 
-    @property
-    def well(self):
+
+    def getWellName(self):
         """
         The name of the well we are considering.
         """
         return self._get_well( )
-
+    
     @property
-    def date(self):
+    def well(self):
+        warnings.warn("The property well is deprecated, use the getWellName() method instead." , DeprecationWarning)
+        return self.getWellName( )
+        
+
+    def getDate(self):
         """
-        The date when this RFT/PLT/... was recorded.
+        The date when this RFT/PLT/... was recorded. 
         """
         ct = CTime(self._get_date( ))
         return ct.date()
 
+    
+    @property
+    def date(self):
+        warnings.warn("The property date is deprecated, use the getDate() instead." , DeprecationWarning)
+        return self.getDate()
+    
+        
     @property
     def size(self):
         """
         The number of completed cells.
         """
+        warnings.warn("The property size is deprecated, use the built in len( ) function instead." , DeprecationWarning)
         return len(self)
 
 
