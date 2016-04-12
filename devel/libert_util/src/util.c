@@ -913,7 +913,14 @@ char * util_alloc_realpath__(const char * input_path) {
         int i;
         for (i=0; i < path_len; i++) {
           if (mask[i]) {
-            strcat( real_path , UTIL_PATH_SEP_STRING );
+#ifdef ERT_WINDOWS
+            if (i > 0)
+            {
+                strcat(real_path, UTIL_PATH_SEP_STRING);
+            }
+#else
+            strcat(real_path, UTIL_PATH_SEP_STRING);
+#endif
             strcat( real_path , path_list[i]);
           }
         }
