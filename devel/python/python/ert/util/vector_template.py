@@ -79,12 +79,22 @@ class VectorTemplate(BaseCClass):
         """
         (start, stop, step) = slice_range.indices(len(self))
         if stop > start:
-            print "Calling stride_copy"
             return self._strided_copy(start, stop, step)
         else:
             return None
 
+    def __bool__(self):
+        """
+        Will evaluate to False for empty vector.
+        """
+        if len(self) == 0:
+            return False
+        else:
+            return True
 
+    def __nonzero__(self):
+        return self.__bool__( )
+        
 
     def copy(self):
         """
