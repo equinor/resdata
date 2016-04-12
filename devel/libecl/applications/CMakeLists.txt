@@ -28,7 +28,7 @@ if (BUILD_APPLICATIONS)
       add_executable( summary view_summary.c )
       add_executable( select_test select_test.c )
       add_executable( load_test load_test.c )
-      set(program_list ecl_pack ecl_unpack kw_extract grdecl_grid make_grid  sum_write load_test grdecl_test grid_dump_ascii select_test grid_dump convert kw_list grid_info summary)
+      set(program_list ecl_pack ecl_unpack kw_extract grdecl_grid make_grid  sum_write load_test grid_dump_ascii select_test grid_dump  grid_info summary)
    endif()
 
    if (BUILD_ERT)
