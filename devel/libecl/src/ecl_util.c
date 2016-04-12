@@ -52,9 +52,7 @@
 
 
 #define ECL_OTHER_FILE_FMT_PATTERN        "*"
-#define ECL_RESTART_FMT_PATTERN           "F[0-9][0-9][0-9][0-9]"
 #define ECL_UNIFIED_RESTART_FMT_PATTERN   "FUNRST"
-#define ECL_SUMMARY_FMT_PATTERN           "A[0-9][0-9][0-9][0-9]"
 #define ECL_UNIFIED_SUMMARY_FMT_PATTERN   "FUNSMRY"
 #define ECL_GRID_FMT_PATTERN              "FGRID"
 #define ECL_EGRID_FMT_PATTERN             "FEGRID"
@@ -62,16 +60,30 @@
 #define ECL_RFT_FMT_PATTERN               "FRFT"
 #define ECL_DATA_PATTERN                  "DATA"
 
-
 #define ECL_OTHER_FILE_UFMT_PATTERN       "*"
-#define ECL_RESTART_UFMT_PATTERN          "X[0-9][0-9][0-9][0-9]"
 #define ECL_UNIFIED_RESTART_UFMT_PATTERN  "UNRST"
-#define ECL_SUMMARY_UFMT_PATTERN          "S[0-9][0-9][0-9][0-9]"
 #define ECL_UNIFIED_SUMMARY_UFMT_PATTERN  "UNSMRY"
 #define ECL_GRID_UFMT_PATTERN             "GRID"
 #define ECL_EGRID_UFMT_PATTERN            "EGRID"
 #define ECL_INIT_UFMT_PATTERN             "INIT"
 #define ECL_RFT_UFMT_PATTERN              "RFT"
+
+#ifdef ERT_WINDOWS
+/*
+  The filename matching function on windows onyl recognizes the '*'
+  and '?' wildcard characters.
+*/
+  #define ECL_RESTART_FMT_PATTERN           "F????"
+  #define ECL_SUMMARY_FMT_PATTERN           "A????"
+  #define ECL_RESTART_UFMT_PATTERN          "X????"
+  #define ECL_SUMMARY_UFMT_PATTERN          "S????"
+#else
+  #define ECL_RESTART_FMT_PATTERN           "F[0-9][0-9][0-9][0-9]"
+  #define ECL_SUMMARY_FMT_PATTERN           "A[0-9][0-9][0-9][0-9]"
+  #define ECL_RESTART_UFMT_PATTERN          "X[0-9][0-9][0-9][0-9]"
+  #define ECL_SUMMARY_UFMT_PATTERN          "S[0-9][0-9][0-9][0-9]"
+#endif
+
 
 
 

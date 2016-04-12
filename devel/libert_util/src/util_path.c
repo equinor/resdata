@@ -30,10 +30,21 @@
 
 
 bool util_is_abs_path(const char * path) {
+#ifdef HAVE_PATH_ISRELATIVE
+  int is_relative = PathIsRelative( path );
+  if (is_relative == 0)
+    return true;
+  else
+    return false;
+
+#else
+
   if (path[0] == UTIL_PATH_SEP_CHAR)
     return true;
   else
     return false;
+
+#endif
 }
 
 static int util_mkdir( const char * path ) {
