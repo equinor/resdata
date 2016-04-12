@@ -284,9 +284,9 @@ class EclFile(BaseCClass):
     
 
     def close(self):
-        if not self.c_ptr is None:
+        if self:
             self._close( )
-        self.c_ptr = None
+            self._invalidateCPointer( )
 
 
     def free(self):

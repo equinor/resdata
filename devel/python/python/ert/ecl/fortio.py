@@ -117,13 +117,13 @@ class FortIO(BaseCClass):
         self.__mode = mode
 
         super(FortIO, self).__init__(c_pointer)
-        self.__open = True
+
+        
 
     def close(self):
-        if self.__open:
+        if self:
             self._close( )
-            self.__open = False
-
+            self._invalidateCPointer( )
 
 
     def getPosition(self):
