@@ -40,11 +40,8 @@ class EclSumKeyWordVector(BaseCClass):
 
     def __init__(self, ecl_sum):
         c_pointer = self._alloc(ecl_sum)
-        if c_pointer is None:
-            raise AssertionError("Failed to create summary keyword vector")
-        else:
-            super(EclSumKeyWordVector, self).__init__(c_pointer)
-
+        super(EclSumKeyWordVector, self).__init__(c_pointer)
+        
     def __len__(self):
         return self._get_size( )
 

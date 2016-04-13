@@ -29,7 +29,7 @@ import datetime
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
-from ert.cwrap import BaseCClass
+from ert.cwrap import BaseCClass, CFILE
 from ert.ecl import EclSumTStep
 from ert.ecl.ecl_sum_vector import EclSumVector
 from ert.ecl.ecl_smspec_node import EclSMSPECNode
@@ -1052,7 +1052,7 @@ class EclSum(BaseCClass):
         """
         cfile = CFILE(pfile ) 
         ctime = CTime( time )
-        self._dump_csv_line(ctime, keywords, cfile)
+        EclSum._dump_csv_line(self , ctime, keywords, cfile)
         
 
     def exportCSV(self , filename , keys = None , date_format = "%d/%m/%Y" , sep = ";"):
@@ -1068,4 +1068,4 @@ class EclSum(BaseCClass):
 
 
 import ert.ecl.ecl_sum_keyword_vector
-EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t , ecl_sum_vector, FILE)")
+EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum , time_t , ecl_sum_vector, FILE)" , bind = False)
