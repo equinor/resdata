@@ -23,128 +23,6 @@ from ert.cwrap import BaseCClass
 from ert.ecl import EclRFTCell, EclPLTCell, EclPrototype
 from ert.util import CTime
 
-
-class EclRFTFile(BaseCClass):
-    TYPE_NAME = "ecl_rft_file"
-    _load          = EclPrototype("void* ecl_rft_file_alloc_case( char* )", bind = False)
-    _has_rft       = EclPrototype("bool ecl_rft_file_case_has_rft( char* )", bind = False)
-    _free          = EclPrototype("void ecl_rft_file_free( ecl_rft_file )")
-    _get_size      = EclPrototype("int ecl_rft_file_get_size__( ecl_rft_file , char* , time_t)")
-    _get_num_wells = EclPrototype("int  ecl_rft_file_get_num_wells( ecl_rft_file )")
-    _iget          = EclPrototype("void* ecl_rft_file_iget_node( ecl_rft_file , int )")
-    _get_rft       = EclPrototype("void* ecl_rft_file_get_well_time_rft( ecl_rft_file , char* , time_t)")
-
-
-    """
-    The EclRFTFile class is used to load an ECLIPSE RFT file.
-
-    The EclRFTFile serves as a container which can load and hold the
-    content of an ECLIPSE RFT file. The RFT files will in general
-    contain data for several wells and several times in one large
-    container. The EclRFTClass class contains methods get the the RFT
-    results for a specific time and/or well. 
-
-    The EclRFTFile class can in general contain a mix of RFT and PLT
-    measurements. The class does not really differentiate between
-    these.
-    """
-
-    def __init__(self , case):
-        c_ptr = self._load( case )
-        super(EclRFTFile , self).__init__(c_ptr)
-
-
-    def __len__(self):
-        return self._get_size(  None , CTime(-1))
-
-
-    def __getitem__(self, index):
-        if isinstance(index, int):
-            if 0 <= index < len(self):
-                rft = self._iget(index)
-                rft.setParent( self )
-            else:
-                raise IndexError("Index '%d' must be in range: [0, %d]" % (index, len(self) - 1))
-        else:
-            raise TypeError("Index must be integer type")
-
-    
-    def size(self, well=None, date=None):
-        """
-        The number of elements in EclRFTFile container. 
-
-        By default the size() method will return the total number of
-        RFTs/PLTs in the container, but by specifying the optional
-        arguments date and/or well the function will only count the
-        number of well measurements matching that time or well
-        name. The well argument can contain wildcards.
-
-           rftFile = ecl.EclRFTFile( "ECLIPSE.RFT" )
-           print "Total number of RFTs : %d" % rftFile.size( )
-           print "RFTs matching OP*    : %d" % rftFile.size( well = "OP*" )
-           print "RFTs at 01/01/2010   : %d" % rftFile.size( date = datetime.date( 2010 , 1 , 1 ))
-
-        """
-        if date:
-            cdate = CTime( date )
-        else:
-            cdate = CTime( -1 )
-
-        return self._get_size( well , cdate)
-
-
-    def getNumWells(self):
-        """
-        Returns the total number of distinct wells in the RFT file.
-        """
-        return self._get_num_wells( )
-        
-    @property
-    def num_wells( self ):
-        warnings.warn("The property num_wells is deprecated, use the getNumWells() instead." , DeprecationWarning)
-        return self.getNumWells()
-
-    
-    def getHeaders(self):
-        """
-        Returns a list of two tuples (well_name , date) for the whole file.
-        """
-        header_list = []
-        for i in (range(self._get_size( None , CTime(-1)))):
-            rft = self.iget( i )
-            header_list.append( (rft.well , rft.date) )
-        return header_list
-
-    @property
-    def headers(self):
-        warnings.warn("The property headers is deprecated, use the getHeaders() instead." , DeprecationWarning)
-        return self.getNHeaders()
-    
-
-    def iget(self , index):
-        """
-        Will lookup RFT @index - equivalent to [@index].
-        """
-        return self[index]
-
-
-    def get(self , well_name , date ):
-        """
-        Will look up the RFT object corresponding to @well and @date.
-
-        Raise Exception if not found.
-        """
-        if self.size( well = well_name , date = date) == 0:
-            raise KeyError("No RFT for well:%s at %s" % (well_name , date))
-
-        rft = self._get_rft( well_name , CTime( date )) 
-        rft.setParent( self )
-        return rft
-
-
-    
-
-
 class EclRFT(BaseCClass):
     """The EclRFT class contains the information for *one* RFT.
 
@@ -278,9 +156,9 @@ class EclRFT(BaseCClass):
 
     def __cell_ref( self , cell_ptr ):
         if self.is_RFT():
-            return EclRFTCell.asPythonReference( cell_ptr , self )
+            return EclRFTCell.createCReference( cell_ptr , self )
         elif self.is_PLT():
-            return EclPLTCell.asPythonReference( cell_ptr , self )
+            return EclPLTCell.createCReference( cell_ptr , self )
         else:
             raise NotImplementedError("Only RFT and PLT cells are implemented")
 
@@ -368,6 +246,133 @@ class EclRFT(BaseCClass):
             return self.__cell_ref( cell_ptr )
         else:
             return None
+
+
+
+
+class EclRFTFile(BaseCClass):
+    TYPE_NAME = "ecl_rft_file"
+    _load          = EclPrototype("void* ecl_rft_file_alloc_case( char* )", bind = False)
+    _iget          = EclPrototype("ecl_rft_ref ecl_rft_file_iget_node( ecl_rft_file , int )")
+    _get_rft       = EclPrototype("ecl_rft_ref ecl_rft_file_get_well_time_rft( ecl_rft_file , char* , time_t)")
+    _has_rft       = EclPrototype("bool ecl_rft_file_case_has_rft( char* )", bind = False)
+    _free          = EclPrototype("void ecl_rft_file_free( ecl_rft_file )")
+    _get_size      = EclPrototype("int ecl_rft_file_get_size__( ecl_rft_file , char* , time_t)")
+    _get_num_wells = EclPrototype("int  ecl_rft_file_get_num_wells( ecl_rft_file )")
+
+
+    """
+    The EclRFTFile class is used to load an ECLIPSE RFT file.
+
+    The EclRFTFile serves as a container which can load and hold the
+    content of an ECLIPSE RFT file. The RFT files will in general
+    contain data for several wells and several times in one large
+    container. The EclRFTClass class contains methods get the the RFT
+    results for a specific time and/or well. 
+
+    The EclRFTFile class can in general contain a mix of RFT and PLT
+    measurements. The class does not really differentiate between
+    these.
+    """
+
+    def __init__(self , case):
+        c_ptr = self._load( case )
+        super(EclRFTFile , self).__init__(c_ptr)
+
+
+    def __len__(self):
+        return self._get_size(  None , CTime(-1))
+
+
+    def __getitem__(self, index):
+        if isinstance(index, int):
+            if 0 <= index < len(self):
+                rft = self._iget(index)
+                rft.setParent( self )
+                return rft
+            else:
+                raise IndexError("Index '%d' must be in range: [0, %d]" % (index, len(self) - 1))
+        else:
+            raise TypeError("Index must be integer type")
+
+    
+    def size(self, well=None, date=None):
+        """
+        The number of elements in EclRFTFile container. 
+
+        By default the size() method will return the total number of
+        RFTs/PLTs in the container, but by specifying the optional
+        arguments date and/or well the function will only count the
+        number of well measurements matching that time or well
+        name. The well argument can contain wildcards.
+
+           rftFile = ecl.EclRFTFile( "ECLIPSE.RFT" )
+           print "Total number of RFTs : %d" % rftFile.size( )
+           print "RFTs matching OP*    : %d" % rftFile.size( well = "OP*" )
+           print "RFTs at 01/01/2010   : %d" % rftFile.size( date = datetime.date( 2010 , 1 , 1 ))
+
+        """
+        if date:
+            cdate = CTime( date )
+        else:
+            cdate = CTime( -1 )
+
+        return self._get_size( well , cdate)
+
+
+    def getNumWells(self):
+        """
+        Returns the total number of distinct wells in the RFT file.
+        """
+        return self._get_num_wells( )
+        
+    @property
+    def num_wells( self ):
+        warnings.warn("The property num_wells is deprecated, use the getNumWells() instead." , DeprecationWarning)
+        return self.getNumWells()
+
+    
+    def getHeaders(self):
+        """
+        Returns a list of two tuples (well_name , date) for the whole file.
+        """
+        header_list = []
+        for i in (range(self._get_size( None , CTime(-1)))):
+            rft = self.iget( i )
+            header_list.append( (rft.well , rft.date) )
+        return header_list
+
+    @property
+    def headers(self):
+        warnings.warn("The property headers is deprecated, use the getHeaders() instead." , DeprecationWarning)
+        return self.getHeaders()
+    
+
+    def iget(self , index):
+        """
+        Will lookup RFT @index - equivalent to [@index].
+        """
+        return self[index]
+
+
+    def get(self , well_name , date ):
+        """
+        Will look up the RFT object corresponding to @well and @date.
+
+        Raise Exception if not found.
+        """
+        if self.size( well = well_name , date = date) == 0:
+            raise KeyError("No RFT for well:%s at %s" % (well_name , date))
+
+        rft = self._get_rft( well_name , CTime( date )) 
+        rft.setParent( self )
+        return rft
+
+    def free(self):
+        self._free( )
+    
+
+
 
 
 
