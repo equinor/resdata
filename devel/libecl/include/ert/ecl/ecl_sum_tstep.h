@@ -16,8 +16,8 @@
    for more details.
 */
 
-#ifndef __ECL_SUM_TSTEP_H__
-#define __ECL_SUM_TSTEP_H__
+#ifndef ERT_ECL_SUM_TSTEP_H
+#define ERT_ECL_SUM_TSTEP_H
 
 #ifdef __cplusplus
 extern "C" {

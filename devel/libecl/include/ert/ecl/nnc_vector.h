@@ -17,8 +17,8 @@
 */
 
 
-#ifndef __NNC_VECTOR_H__
-#define __NNC_VECTOR_H__
+#ifndef ERT_NNC_VECTOR_H
+#define ERT_NNC_VECTOR_H
 #ifdef __cplusplus
 extern "C" {
 #endif

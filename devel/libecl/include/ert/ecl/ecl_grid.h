@@ -16,8 +16,8 @@
    for more details.
 */
 
-#ifndef __ECL_GRID_H__
-#define __ECL_GRID_H__
+#ifndef ERT_ECL_GRID_H
+#define ERT_ECL_GRID_H
 #ifdef __cplusplus
 extern "C" {
 #endif

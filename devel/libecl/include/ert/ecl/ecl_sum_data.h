@@ -16,8 +16,8 @@
    for more details.
 */
 
-#ifndef __ECL_SUM_DATA_H__
-#define __ECL_SUM_DATA_H__
+#ifndef ERT_ECL_SUM_DATA_H
+#define ERT_ECL_SUM_DATA_H
 
 
 #ifdef __cplusplus
