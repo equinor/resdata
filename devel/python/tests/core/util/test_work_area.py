@@ -63,5 +63,27 @@ class WorkAreaTest(ExtendedTestCase):
                 os.chdir("tmp")
 
             self.assertEqual( os.getcwd() , os.path.join( cwd , "tmp"))
+
+            
+    def test_IOError(self):
+        with TestAreaContext("TestArea") as test_area:
+            with self.assertRaises(IOError):
+                test_area.copy_file( "Does/not/exist" )
+
+            with self.assertRaises(IOError):
+                test_area.install_file( "Does/not/exist" )
+
+            with self.assertRaises(IOError):
+                test_area.copy_directory( "Does/not/exist" )
+
+            with self.assertRaises(IOError):
+                test_area.copy_parent_directory( "Does/not/exist" )
+
+            os.makedirs("path1/path2")
+            with open("path1/file.txt" , "w") as f:
+                f.write("File ...")
+
+            with self.assertRaises(IOError):
+                test_area.copy_directory( "path1/file.txt" )
                 
-                
+
