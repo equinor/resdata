@@ -39,7 +39,7 @@ from ert.cwrap import BaseCClass
 class StringList(BaseCClass):
     TYPE_NAME = "stringlist"
 
-    _alloc      = UtilPrototype("void* stringlist_alloc_new( )")
+    _alloc      = UtilPrototype("void* stringlist_alloc_new( )", bind = False)
     _free       = UtilPrototype("void stringlist_free(stringlist )")
     _append     = UtilPrototype("void stringlist_append_copy(stringlist , char* )")
     _iget       = UtilPrototype("char* stringlist_iget(stringlist , int )")
@@ -88,7 +88,7 @@ class StringList(BaseCClass):
     def __eq__(self , other):
         if len(self) == len(other):
             if isinstance( other , StringList):
-                return self._equal(self, other)
+                return self._equal(other)
             else:
                 equal = True
                 for index,s2 in enumerate(other):
@@ -102,7 +102,7 @@ class StringList(BaseCClass):
 
     def __setitem__(self, index, value):
         if isinstance(index, IntType):
-            length = self.__len__()
+            length = len(self)
             if index < 0:
                 # Will only wrap backwards once
                 index = len(self) + index
@@ -110,7 +110,7 @@ class StringList(BaseCClass):
             if index < 0 or index >= length:
                 raise IndexError("index must be in range %d <= %d < %d" % (0, index, len(self)))
             if isinstance(value, StringType):
-                self._iset(self, index, value)
+                self._iset(index, value)
             else:
                 raise TypeError("Item: %s not string type" % value)
 
@@ -123,13 +123,13 @@ class StringList(BaseCClass):
         indexing; but not slices.
         """
         if isinstance(index, IntType):
-            length = self.__len__()
+            length = len(self)
             if index < 0:
                 index += length
             if index < 0 or index >= length:
                 raise IndexError("index must be in range %d <= %d < %d" % (0, index, len(self)))
             else:
-                return self._iget(self, index)
+                return self._iget(index)
         else:
             raise TypeError("Index should be integer type")
 
@@ -139,7 +139,7 @@ class StringList(BaseCClass):
 
         The 'in' check is based on string equality.
         """
-        return self._contains(self, s)
+        return self._contains(s)
 
 
     def __iadd__(self , other):
@@ -179,14 +179,14 @@ class StringList(BaseCClass):
         Functionality also available through the 'in' builtin in
         Python.
         """
-        return self.__contains__(s)
+        return s in self
 
 
     def __len__(self):
         """
         The length of the list - used to support builtin len().
         """
-        return self._get_size(self)
+        return self._get_size( )
 
 
     def __str__(self):
@@ -211,7 +211,7 @@ class StringList(BaseCClass):
         Will raise IndexError if list is empty.
         """
         if len(self):
-            return self._pop(self)
+            return self._pop()
         else:
             raise IndexError("pop() failed - the list is empty")
 
@@ -222,9 +222,9 @@ class StringList(BaseCClass):
         string the string representation will be appended.
         """
         if isinstance(s, StringType):
-            self._append(self, s)
+            self._append(s)
         else:
-            self._append(self, str(s))
+            self._append(str(s))
             
 
     @property
@@ -246,7 +246,7 @@ class StringList(BaseCClass):
         Will return the last element in list. Raise IndexError if empty.
         """
         if len(self) > 0:
-            return self._last(self)
+            return self._last()
         else:
             raise IndexError("The list is empty")
 
@@ -263,25 +263,25 @@ class StringList(BaseCClass):
              2 : util_strcmp_float() string comparison
 
         """
-        self._sort(self, cmp_flag)
+        self._sort(cmp_flag)
 
     def index(self, value):
         """ @rtype: int """
         assert isinstance(value, str)
-        return self._find_first(self, value)
+        return self._find_first( value)
 
     def free(self):
-        self._free(self)
+        self._free()
 
 
     def front(self):
         if len(self) > 0:
-            return self._front(self)
+            return self._front()
         else:
             raise IndexError
 
     def back(self):
         if len(self) > 0:
-            return self._back(self)
+            return self._back()
         else:
             raise IndexError

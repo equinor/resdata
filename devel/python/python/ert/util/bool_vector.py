@@ -23,8 +23,12 @@ from ert.util import VectorTemplate, UtilPrototype
 class BoolVector(VectorTemplate):
     default_format       = "%8d"
 
-    _alloc               = UtilPrototype("void*  bool_vector_alloc( int , bool )")
+    _alloc               = UtilPrototype("void*  bool_vector_alloc( int , bool )" , bind = False)
+    _create_active_mask  = UtilPrototype("bool_vector_obj string_util_alloc_active_mask( char* )" , bind = False)
+    _active_list         = UtilPrototype("int_vector_obj bool_vector_alloc_active_list(bool_vector)", bind = False)
     _alloc_copy          = UtilPrototype("bool_vector_obj bool_vector_alloc_copy( bool_vector )")
+    _update_active_mask  = UtilPrototype("bool string_util_update_active_mask(char*, bool_vector)" , bind = False)
+
     _strided_copy        = UtilPrototype("bool_vector_obj bool_vector_alloc_strided_copy( bool_vector , int , int , int)")
     _free                = UtilPrototype("void   bool_vector_free( bool_vector )")
     _iget                = UtilPrototype("bool   bool_vector_iget( bool_vector , int )")
@@ -63,9 +67,6 @@ class BoolVector(VectorTemplate):
     _sort_perm           = UtilPrototype("permutation_vector_obj bool_vector_alloc_sort_perm(bool_vector)")
     _rsort_perm          = UtilPrototype("permutation_vector_obj bool_vector_alloc_rsort_perm(bool_vector)")
 
-    _create_active_mask  = UtilPrototype("bool_vector_obj string_util_alloc_active_mask( char* )")
-    _update_active_mask  = UtilPrototype("bool string_util_update_active_mask(char*, bool_vector)")
-    _active_list         = UtilPrototype("int_vector_obj bool_vector_alloc_active_list(bool_vector)")
     _contains            = UtilPrototype("bool bool_vector_contains(bool_vector, bool)")
     _select_unique       = UtilPrototype("void bool_vector_select_unique(bool_vector)")
     _element_sum         = UtilPrototype("bool bool_vector_sum(bool_vector)")
@@ -116,15 +117,14 @@ class BoolVector(VectorTemplate):
         warnings.warn("The active_mask(cls, rangs_string) method has been renamed: createActiveMask(cls, rangs_string)", DeprecationWarning)
         return cls._create_active_mask(range_string)
 
-    @classmethod
-    def updateActiveMask(cls, range_string, bool_vector):
+    def updateActiveMask(self, range_string):
         """
         Updates a bool vector based on a range string.
         @type range_string: str
         @type bool_vector: BoolVector
         @rtype: bool
         """
-        return cls._update_active_mask(range_string, bool_vector)
+        return self._update_active_mask(range_string , self)
 
     @classmethod
     def createFromList(cls, size, source_list):

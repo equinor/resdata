@@ -24,18 +24,11 @@ import ert.util
 class GeoPrototype(Prototype):
     lib = clib.ert_load("libert_geometry")
 
-    def __init__(self, prototype, bind=False):
+    def __init__(self, prototype, bind=True):
         super(GeoPrototype, self).__init__(GeoPrototype.lib, prototype, bind=bind)
 
 
-class BoundGeoPrototype(GeoPrototype):
-    def __init__(self, prototype):
-        super(BoundGeoPrototype, self).__init__(prototype, bind=True)
-
-
         
-ERT_GEOMETRY_LIB = clib.ert_load("libert_geometry")
-
 from .cpolyline import CPolyline
 from .cpolyline_collection import CPolylineCollection
 from .polyline import Polyline

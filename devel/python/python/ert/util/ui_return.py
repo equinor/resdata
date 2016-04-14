@@ -21,7 +21,7 @@ from enums import UIReturnStatusEnum
 
 class UIReturn(BaseCClass):
     TYPE_NAME = "ui_return"
-    _alloc = UtilPrototype("void* ui_return_alloc( ui_return_status )")
+    _alloc = UtilPrototype("void* ui_return_alloc( ui_return_status )" , bind = False)
     _free = UtilPrototype("void ui_return_free(ui_return)")
     _get_status = UtilPrototype("ui_return_status ui_return_get_status(ui_return)")
     _get_help = UtilPrototype("char* ui_return_get_help(ui_return)")
@@ -45,13 +45,13 @@ class UIReturn(BaseCClass):
         
         
     def __len__(self):
-        return self._num_error(self)
+        return self._num_error()
     
 
     def __getitem__(self , index):
         if isinstance(index , int):
             if 0 <= index < len(self):
-                return self._iget_error(self , index)
+                return self._iget_error( index)
             else:
                 raise IndexError
         else:
@@ -59,22 +59,22 @@ class UIReturn(BaseCClass):
   
         
     def iget_error(self , index):
-        return self.__getitem__(index)
+        return self[index]
   
         
     def help_text(self):
-        help_text = self._get_help(self)
+        help_text = self._get_help()
         if help_text:
             return help_text
         else:
             return ""
         
     def add_help(self, help_text):
-        self._add_help(self , help_text)
+        self._add_help(help_text)
         
         
     def status(self):
-        return self._get_status(self)
+        return self._get_status()
         
     
     def __assert_error(self):
@@ -84,18 +84,18 @@ class UIReturn(BaseCClass):
     
     def add_error(self, error):
         self.__assert_error()
-        self._add_error(self , error)
+        self._add_error(error)
 
     
     def last_error(self):
         self.__assert_error()
-        return self._last_error(self)
+        return self._last_error()
     
     
     def first_error(self):
         self.__assert_error()
-        return self._first_error(self)
+        return self._first_error()
     
 
     def free(self):
-        self._free(self)
+        self._free()

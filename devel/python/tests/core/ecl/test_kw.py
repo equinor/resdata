@@ -43,7 +43,7 @@ class KWTest(ExtendedTestCase):
         self.assertTrue(size == stat.st_size)
 
     def test_min_max(self):
-        kw = EclKW.new("TEST", 3, EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("TEST", 3, EclTypeEnum.ECL_INT_TYPE)
         kw[0] = 10
         kw[1] = 5
         kw[2] = 0
@@ -55,12 +55,12 @@ class KWTest(ExtendedTestCase):
         
 
     def test_equal(self):
-        kw1 = EclKW.new("TEST", 3, EclTypeEnum.ECL_CHAR_TYPE)
+        kw1 = EclKW("TEST", 3, EclTypeEnum.ECL_CHAR_TYPE)
         kw1[0] = "Test1"
         kw1[1] = "Test13"
         kw1[2] = "Test15"
 
-        kw2 = EclKW.new("TEST", 3, EclTypeEnum.ECL_CHAR_TYPE)
+        kw2 = EclKW("TEST", 3, EclTypeEnum.ECL_CHAR_TYPE)
         kw2[0] = "Test1"
         kw2[1] = "Test13"
         kw2[2] = "Test15"
@@ -98,7 +98,7 @@ class KWTest(ExtendedTestCase):
     def kw_test( self, data_type, data, fmt ):
         name1 = "file1.txt"
         name2 = "file2.txt"
-        kw = EclKW.new("TEST", len(data), data_type)
+        kw = EclKW("TEST", len(data), data_type)
         i = 0
         for d in data:
             kw[i] = d
@@ -195,7 +195,7 @@ class KWTest(ExtendedTestCase):
 
             data = [random.random() for i in range(10000)]
 
-            kw = EclKW.new("TEST", len(data), EclTypeEnum.ECL_DOUBLE_TYPE)
+            kw = EclKW("TEST", len(data), EclTypeEnum.ECL_DOUBLE_TYPE)
             i = 0
             for d in data:
                 kw[i] = d

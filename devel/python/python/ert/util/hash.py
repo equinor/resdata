@@ -20,7 +20,7 @@ from ert.util import StringList, UtilPrototype
 
 
 class Hash(BaseCClass):
-    _alloc =      UtilPrototype("void* hash_alloc()")
+    _alloc =      UtilPrototype("void* hash_alloc()" , bind = False)
     _free =       UtilPrototype("void hash_free(hash)")
     _size =       UtilPrototype("int hash_get_size(hash)")
     _keys =       UtilPrototype("stringlist_obj hash_alloc_stringlist(hash)")
@@ -37,23 +37,23 @@ class Hash(BaseCClass):
         super(Hash, self).__init__(c_ptr)
 
     def __len__(self):
-        return self._size(self)
+        return self._size()
 
     def __getitem__(self, key):
-        if self._has_key(self, key):
-            return self._get(self, key)
+        if self._has_key(key):
+            return self._get(key)
         else:
             raise KeyError("Hash does not have key: %s" % key)
 
     def __setitem__(self, key, value):
         if isinstance(value, c_void_p):
-            self._insert_ref(self, key, value)
+            self._insert_ref(key, value)
         else:
             raise ValueError("Hash does not support type: %s" % value.__class__)
 
     def __contains__(self, key):
         """ @rtype: bool """
-        return self._has_key(self, key)
+        return self._has_key(key)
 
     def __iter__(self):
         for key in self.keys():
@@ -61,10 +61,10 @@ class Hash(BaseCClass):
 
     def keys(self):
         """ @rtype: StringList """
-        return self._keys(self)
+        return self._keys()
 
     def free(self):
-        self._free(self)
+        self._free()
 
     def __str__(self):
         return str(["%s: %s" % (key, self[key]) for key in self.keys()])
@@ -79,13 +79,13 @@ class StringHash(Hash):
 
     def __setitem__(self, key, value):
         if isinstance(value, str):
-            self._insert_string(self, key, value)
+            self._insert_string(key, value)
         else:
             raise ValueError("StringHash does not support type: %s" % value.__class__)
 
     def __getitem__(self, key):
         if key in self:
-            return self._get_string(self, key)
+            return self._get_string(key)
         else:
             raise KeyError("Hash does not have key: %s" % key)
 
@@ -99,13 +99,13 @@ class IntegerHash(Hash):
 
     def __setitem__(self, key, value):
         if isinstance(value, int):
-            self._insert_int(self, key, value)
+            self._insert_int(key, value)
         else:
             raise ValueError("IntegerHash does not support type: %s" % value.__class__)
 
     def __getitem__(self, key):
         if key in self:
-            return self._get_int(self, key)
+            return self._get_int(key)
         else:
             raise KeyError("Hash does not have key: %s" % key)
 
@@ -122,12 +122,12 @@ class DoubleHash(Hash):
             value = float(value)
 
         if isinstance(value, float):
-            self._insert_double(self, key, value)
+            self._insert_double(key, value)
         else:
             raise ValueError("DoubleHash does not support type: %s" % value.__class__)
 
     def __getitem__(self, key):
         if key in self:
-            return self._get_double(self, key)
+            return self._get_double( key)
         else:
             raise KeyError("Hash does not have key: %s" % key)

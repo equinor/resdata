@@ -25,8 +25,8 @@ In addition to the enum definitions there are a few stateless
 functions from ecl_util.c which are not bound to any class type.
 """
 import ctypes
-from ert.cwrap import create_enum, CWrapper, CWrapperNameSpace, BaseCEnum
-from ert.ecl import ECL_LIB
+from ert.cwrap import BaseCEnum
+from ert.ecl import EclPrototype, ECL_LIB
 
 class EclFileEnum(BaseCEnum):
     ECL_OTHER_FILE = None
@@ -103,17 +103,12 @@ EclFileFlagEnum.registerEnum(ECL_LIB, "ecl_file_flag_enum")
 
 #-----------------------------------------------------------------
 
-cwrapper = CWrapper(ECL_LIB)
-cfunc = CWrapperNameSpace("ecl_util")
-
-cfunc.get_num_cpu = cwrapper.prototype("int ecl_util_get_num_cpu( char* )")
-cfunc.get_file_type = cwrapper.prototype("ecl_file_enum ecl_util_get_file_type( char* , bool* , int*)")
-cfunc.get_type_name = cwrapper.prototype("char* ecl_util_get_type_name( int )")
-cfunc.get_start_date = cwrapper.prototype("time_t ecl_util_get_start_date( char* )")
-
-
-
 class EclUtil(object):
+    _get_num_cpu    = EclPrototype("int ecl_util_get_num_cpu( char* )", bind = False)
+    _get_file_type  = EclPrototype("ecl_file_enum ecl_util_get_file_type( char* , bool* , int*)" , bind = False)
+    _get_type_name  = EclPrototype("char* ecl_util_get_type_name( int )" , bind = False)
+    _get_start_date = EclPrototype("time_t ecl_util_get_start_date( char* )" , bind = False)
+
     @staticmethod
     def get_num_cpu( datafile ):
         """
@@ -123,7 +118,7 @@ class EclUtil(object):
         number of CPUs required. Will return one if no PARALLELL keyword
         is found.
         """
-        return cfunc.get_num_cpu(datafile)
+        return EclUtil._get_num_cpu(datafile)
 
     @staticmethod
     def get_file_type( filename ):
@@ -135,11 +130,11 @@ class EclUtil(object):
     
     @staticmethod
     def type_name(ecl_type):
-        return cfunc.get_type_name(ecl_type)
+        return EclUtil._get_type_name(ecl_type)
 
     @staticmethod
     def get_start_date(datafile):
-        return cfunc.get_start_date(datafile).datetime()
+        return EclUtil._get_start_date(datafile).datetime()
 
     @staticmethod
     def inspectExtension( filename ):
@@ -150,7 +145,7 @@ class EclUtil(object):
         """
         fmt_file = ctypes.c_bool()
         report_step = ctypes.c_int(-1)
-        file_type = cfunc.get_file_type(filename, ctypes.byref(fmt_file) , ctypes.byref(report_step))
+        file_type = EclUtil._get_file_type(filename, ctypes.byref(fmt_file) , ctypes.byref(report_step))
         if report_step.value == -1:
             step = None
         else:

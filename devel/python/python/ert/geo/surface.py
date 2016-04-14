@@ -25,7 +25,7 @@ from ert.geo import GeoPrototype
 class Surface(BaseCClass):
     TYPE_NAME = "surface"
 
-    _alloc        = GeoPrototype("void*  geo_surface_fload_alloc_irap( char* , bool )")
+    _alloc        = GeoPrototype("void*  geo_surface_fload_alloc_irap( char* , bool )" , bind = False)
     _free         = GeoPrototype("void   geo_surface_free( surface )")
     _get_nx       = GeoPrototype("int    geo_surface_get_nx( surface )")
     _get_ny       = GeoPrototype("int    geo_surface_get_ny( surface )")
@@ -62,50 +62,50 @@ class Surface(BaseCClass):
         to compare as equal.
         """
         if isinstance( other , Surface):
-            return self._equal(self, other)
+            return self._equal(other)
         else:
             return False
 
 
     def headerEqual(self , other):
-        return self._header_equal(self , other)
+        return self._header_equal( other)
         
 
     def __iadd__(self , other):
         if isinstance(other , Surface):
             if self.headerEqual(other):
-                self._iadd(self , other)
+                self._iadd(other)
             else:
                 raise ValueError("Tried to add incompatible surfaces")
         else:
-            self._shift( self , other)
+            self._shift(other)
         return self
 
 
     def __isub__(self , other):
         if isinstance(other , Surface):
             if self.headerEqual(other):
-                self._isub(self , other)
+                self._isub(other)
             else:
                 raise ValueError("Tried to subtract incompatible surfaces")
         else:
-            self._shift( self , -other)
+            self._shift( -other)
         return self
 
 
     def __imul__(self , other):
         if isinstance(other , Surface):
             if self.headerEqual(other):
-                self._imul(self , other)
+                self._imul( other)
             else:
                 raise ValueError("Tried to add multiply ncompatible surfaces")
         else:
-            self._scale( self , other)
+            self._scale( other)
         return self
 
 
     def __idiv__(self , other):
-        self._scale( self , 1.0/other)
+        self._scale( 1.0/other)
         return self
 
 
@@ -144,7 +144,7 @@ class Surface(BaseCClass):
         """
         Will do an inplcae sqrt opearation.
         """
-        self._isqrt( self )
+        self._isqrt( )
         return self
 
     
@@ -162,7 +162,7 @@ class Surface(BaseCClass):
         """Will create a deep copy of self, if copy_data is set to False the
         copy will have all z-values set to zero.
         """
-        return self._copy(self , copy_data)
+        return self._copy( copy_data)
         
 
     def write(self , filename):
@@ -170,7 +170,7 @@ class Surface(BaseCClass):
         """
         Will write the surface as an ascii formatted file to @filename.
         """
-        self._write( self , filename )
+        self._write(  filename )
 
     
 
@@ -178,7 +178,7 @@ class Surface(BaseCClass):
         """
         Will set all the values in the surface to @value"
         """
-        self._assign(self , value)
+        self._assign(value)
 
 
     def __setitem__(self , index , value):
@@ -188,7 +188,7 @@ class Surface(BaseCClass):
             if index < 0:
                 index += len(self)
 
-            self._iset_zvalue(self , index , value)
+            self._iset_zvalue(index , value)
         else:
              raise TypeError("Invalid index type:%s - must be integer" % index)
 
@@ -201,17 +201,17 @@ class Surface(BaseCClass):
             if index < 0:
                 index += len(self)
 
-            return self._iget_zvalue(self , index)
+            return self._iget_zvalue( index)
         else:
              raise TypeError("Invalid index type:%s - must be integer" % index)
 
     def getNX(self):
-        return self._get_nx( self )
+        return self._get_nx(  )
 
 
     def getNY(self):
-        return self._get_ny( self )
+        return self._get_ny(  )
         
 
     def free(self):
-        self._free( self )
+        self._free( )
