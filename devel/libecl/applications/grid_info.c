@@ -60,7 +60,6 @@ int main(int argc, char ** argv) {
     }
     printf("----\n");
     */
-    ecl_grid_fwrite_EGRID( ecl_grid , "/tmp/INFO.EGRID", true);
     ecl_grid_free(ecl_grid);
   }
 }
