@@ -16,7 +16,7 @@
 #  for more details.
 import os
 import random
-from ert.ecl import EclKW, EclTypeEnum, EclFile, FortIO, EclFileFlagEnum
+from ert.ecl import EclKW, EclTypeEnum, EclFile, FortIO, EclFileFlagEnum , openFortIO
 
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -197,15 +197,15 @@ class KWTest(ExtendedTestCase):
 
 
     def test_abs(self):
-        kw = EclKW.create("NAME" , 10 , EclTypeEnum.ECL_CHAR_TYPE)
+        kw = EclKW("NAME" , 10 , EclTypeEnum.ECL_CHAR_TYPE)
         with self.assertRaises(TypeError):
             abs_kw = abs(kw)
 
-        kw = EclKW.create("NAME" , 10 , EclTypeEnum.ECL_BOOL_TYPE)
+        kw = EclKW("NAME" , 10 , EclTypeEnum.ECL_BOOL_TYPE)
         with self.assertRaises(TypeError):
             abs_kw = abs(kw)
 
-        kw = EclKW.create("NAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("NAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
         for i in range(len(kw)):
             kw[i] = -i
 
@@ -214,4 +214,31 @@ class KWTest(ExtendedTestCase):
             self.assertEqual(kw[i] , -i ) 
             self.assertEqual(abs_kw[i] , i ) 
 
+
+    def test_fmt(self):
+        kw1 = EclKW( "NAME1" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw2 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_INT_TYPE)
+
+        for i in range(len(kw1)):
+            kw1[i] = i + 1
+            kw2[i] = len(kw1) - kw1[i]
+            
+        with TestAreaContext("ecl_kw/fmt") as ta:
+            with openFortIO( "TEST.FINIT" , FortIO.WRITE_MODE , fmt_file = True ) as f:
+                kw1.fwrite( f )
+                kw2.fwrite( f )
+                
+            with openFortIO( "TEST.FINIT" , fmt_file = True ) as f:
+                kw1b = EclKW.fread( f )
+                kw2b = EclKW.fread( f )
+
+            self.assertTrue( kw1 == kw1b )
+            self.assertTrue( kw2 == kw2b )
+
+            f = EclFile( "TEST.FINIT" )
+            self.assertTrue( kw1 == f[0] )
+            self.assertTrue( kw2 == f[1] )
+            
+
+            
             
