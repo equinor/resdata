@@ -869,7 +869,7 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
 
 char * util_alloc_realpath__(const char * input_path) {
   char * abs_path  = util_alloc_cwd_abs_path( input_path );
-  char * real_path = util_malloc( strlen(abs_path) + 1 );
+  char * real_path = util_malloc( strlen(abs_path) + 2 );
   real_path[0] = '\0';
 
   {
@@ -911,17 +911,34 @@ char * util_alloc_realpath__(const char * input_path) {
       /* Build up the new string. */
       {
         int i;
+        bool first = true;
+
         for (i=0; i < path_len; i++) {
           if (mask[i]) {
+            const char * path_elm = path_list[i];
+            if (first) {
+
 #ifdef ERT_WINDOWS
-            if (i > 0)
-            {
+              // Windows:
+              //   1) If the path starts with X: - just do nothing
+              //   2) Else add \\ - for a UNC path.
+              if (path_elm[1] != ':') {
                 strcat(real_path, UTIL_PATH_SEP_STRING);
-            }
+                strcat(real_path, UTIL_PATH_SEP_STRING);
+              }
 #else
-            strcat(real_path, UTIL_PATH_SEP_STRING);
+              // Posix: just start with a leading '/'
+              strcat(real_path, UTIL_PATH_SEP_STRING);
 #endif
-            strcat( real_path , path_list[i]);
+              strcat( real_path , path_elm);
+            } else {
+
+              strcat(real_path, UTIL_PATH_SEP_STRING);
+              strcat( real_path , path_elm);
+
+            }
+
+            first = false;
           }
         }
       }
