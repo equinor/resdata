@@ -21,6 +21,7 @@ set(TEST_SOURCES
     test_grid_statoil.py
     test_indexed_read.py
     test_ecl_kw_statoil.py
+    test_ecl_kw.py
     test_kw_function.py
     test_layer.py
     test_legacy_ecl.py
@@ -46,7 +47,8 @@ addPythonTest(ecl.fortio ecl.test_fortio.FortIOTest LABELS StatoilData)
 addPythonTest(ecl.ecl_grdecl ecl.test_grdecl.GRDECLTest LABELS StatoilData)
 addPythonTest(ecl.ecl_grid_statoil ecl.test_grid_statoil.GridTest LABELS StatoilData:Slow)
 addPythonTest(ecl.ecl_grid ecl.test_grid.GridTest )
-addPythonTest(ecl.ecl_kw ecl.test_ecl_kw_statoil.KWTest LABELS StatoilData)
+addPythonTest(ecl.ecl_kw_statoil ecl.test_ecl_kw_statoil.KWTest LABELS StatoilData)
+addPythonTest(ecl.ecl_kw ecl.test_ecl_kw.KWTest)
 addPythonTest(ecl.ecl_kw_function ecl.test_kw_function.KWFunctionTest)
 addPythonTest(ecl.ecl_3dkw ecl.test_ecl_3dkw.Ecl3DKWTest )
 addPythonTest(ecl.ecl_init_file ecl.test_ecl_init_file.InitFileTest LABELS StatoilData)
