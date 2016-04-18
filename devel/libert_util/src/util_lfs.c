@@ -57,7 +57,7 @@ offset_type util_ftell(FILE * stream) {
 #ifdef ERT_WINDOWS_LFS
   return _ftelli64(stream);
 #else
-  #ifdef ERT_HAVE_FSEEKO
+  #ifdef HAVE_FSEEKO
   return ftello(stream);
   #else
   return ftell(stream);
@@ -71,7 +71,7 @@ int util_fseek(FILE * stream, offset_type offset, int whence) {
 #ifdef ERT_WINDOWS_LFS
   return _fseeki64(stream , offset , whence);
 #else
-  #ifdef ERT_HAVE_FSEEKO
+  #ifdef HAVE_FSEEKO
   return fseeko( stream , offset , whence );
   #else
   return fseek( stream , offset , whence );
