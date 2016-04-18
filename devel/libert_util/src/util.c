@@ -2283,7 +2283,7 @@ static bool util_copy_file__(const char * src_file , const char * target_file, s
 #ifdef HAVE_CHMOD
 #ifdef HAVE_MODE_T
       {
-        struct stat stat_buffer;
+        stat_type stat_buffer;
         mode_t src_mode;
 
         stat( src_file , &stat_buffer );
