@@ -1132,6 +1132,9 @@ bool ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
           index++;
         }
       }
+
+      /* Skip the trailing newline */
+      fortio_fseek( fortio , 1 , SEEK_CUR);
       return true;
     } else {
       bool read_ok = true;
