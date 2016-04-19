@@ -67,7 +67,7 @@ typedef struct _stat64 stat_type;
 typedef __int64 offset_type;
 #else
 typedef struct stat stat_type;
-#ifdef ERT_HAVE_FSEEKO
+#ifdef HAVE_FSEEKO
   typedef off_t offset_type;
 #else
   typedef long offset_type;
