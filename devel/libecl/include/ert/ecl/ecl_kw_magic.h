@@ -1,5 +1,5 @@
-#ifndef __ECL_KW_MAGIC_H__
-#define __ECL_KW_MAGIC_H__
+#ifndef ERT_ECL_KW_MAGIC_H
+#define ERT_ECL_KW_MAGIC_H
 
 #ifdef __cplusplus
 extern "C" {

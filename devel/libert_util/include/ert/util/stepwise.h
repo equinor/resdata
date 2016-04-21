@@ -1,5 +1,5 @@
-#ifndef __STEPWISE_H__
-#define __STEPWISE_H__
+#ifndef ERT_STEPWISE_H
+#define ERT_STEPWISE_H
 
 #ifdef __cplusplus
 extern "C" {

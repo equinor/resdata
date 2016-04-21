@@ -17,8 +17,8 @@
 */
 
 
-#ifndef __SMSPEC_NODE_H__
-#define __SMSPEC_NODE_H__
+#ifndef ERT_SMSPEC_NODE_H
+#define ERT_SMSPEC_NODE_H
 
 #include <stdbool.h>
 

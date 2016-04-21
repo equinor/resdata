@@ -16,8 +16,8 @@
    for more details. 
 */
 
-#ifndef __REGRESSION_H__
-#define __REGRESSION_H__
+#ifndef ERT_REGRESSION_H
+#define ERT_REGRESSION_H
 
 #ifdef __cplusplus 
 extern "C" {
