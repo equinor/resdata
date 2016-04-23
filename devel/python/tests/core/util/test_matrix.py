@@ -100,4 +100,6 @@ class MatrixTest(ExtendedTestCase):
 
         self.assertEqual(m, r)
 
-
+    def test_str(self):
+        m = Matrix(2, 2)
+        s = "%s" % m

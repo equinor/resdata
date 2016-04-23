@@ -56,7 +56,7 @@ class Matrix(BaseCClass):
         for i in range(self.rows()):
             s += "["
             for j in range(self.columns()):
-                d = self._iget(self, i, j)
+                d = self._iget(i, j)
                 s += "%6.3g " % d
             s += "]\n"
         return s
