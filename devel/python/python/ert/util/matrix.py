@@ -27,7 +27,7 @@
 # choice.
 
 
-from ert.cwrap import BaseCClass
+from ert.cwrap import BaseCClass,CFILE
 from ert.util import UtilPrototype
 
 
@@ -44,6 +44,7 @@ class Matrix(BaseCClass):
     _columns      = UtilPrototype("int matrix_get_columns(matrix)")
     _equal        = UtilPrototype("bool matrix_equal(matrix, matrix)")
     _pretty_print = UtilPrototype("void matrix_pretty_print(matrix, char*, char*)")
+    _fprint       = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
     _random_init  = UtilPrototype("void matrix_random_init(matrix, rng)")
 
     def __init__(self, rows, columns, value=0):
@@ -86,6 +87,7 @@ class Matrix(BaseCClass):
         """ @rtype: int """
         return self._rows()
 
+
     def columns(self):
         """ @rtype: int """
         return self._columns()
@@ -122,6 +124,33 @@ class Matrix(BaseCClass):
     def prettyPrint(self, name, fmt="%6.3g"):
         self._pretty_print(name, fmt)
 
+    def fprint(self , fileH , fmt = "%g "):
+        """Will print ASCII representation of matrix.
+
+        The fileH argument should point to an open Python
+        filehandle. If you supply a fmt string it is important that it
+        contains a separator, otherwise you might risk that elements
+        overlap in the output. For the matrix:
+
+                  [0 1 2]
+              m = [3 4 5]
+                  [6 7 8]
+
+        The code:
+    
+        with open("matrix.txt" , "w") as f:
+           m.fprintf( f )
+
+         The file 'matrix.txt' will look like:
+
+         0 1 2 
+         3 4 5
+         6 7 8
+
+        """
+        self._fprint( fmt , CFILE( fileH))
+
+        
     def randomInit(self, rng):
         self._random_init(rng)
 
