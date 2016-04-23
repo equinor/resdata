@@ -121,5 +121,15 @@ class MatrixTest(ExtendedTestCase):
             self.assertEqual( l1[1] , m[0,1])
             self.assertEqual( l2[0] , m[1,0])
             self.assertEqual( l2[1] , m[1,1])
+
             
-            
+    def test_copy_equal(self):
+        m1 = Matrix(2, 2)
+        m1[0,0] = 0
+        m1[0,1] = 1
+        m1[1,0] = 2
+        m1[1,1] = 3
+
+        m2 = m1.copy( )
+        self.assertTrue( m1 == m2 )
+        
