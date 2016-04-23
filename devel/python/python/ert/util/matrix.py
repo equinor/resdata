@@ -1,3 +1,4 @@
+
 #  Copyright (C) 2011  Statoil ASA, Norway. 
 #   
 #  The file 'matrix.py' is part of ERT - Ensemble based Reservoir Tool. 
@@ -33,6 +34,7 @@ from ert.util import UtilPrototype
 
 class Matrix(BaseCClass):
     _matrix_alloc = UtilPrototype("void*  matrix_alloc(int, int )" , bind = False)
+    _copy         = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
     _free         = UtilPrototype("void   matrix_free(matrix)")
     _iget         = UtilPrototype("double matrix_iget( matrix , int , int )")
     _iset         = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
@@ -52,6 +54,9 @@ class Matrix(BaseCClass):
         super(Matrix, self).__init__(c_ptr)
         self.setAll(value)
 
+    def copy(self):
+        return self._copy( )
+        
     def __str__(self):
         s = ""
         for i in range(self.rows()):
