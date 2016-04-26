@@ -19,6 +19,8 @@
 #ifndef ERT_TEST_AREA_CXX
 #define ERT_TEST_AREA_CXX
 
+#include <string>
+
 #include <ert/util/test_work_area.h>
 
 #include <ert/util/ert_unique_ptr.hpp>
