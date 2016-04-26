@@ -25,12 +25,8 @@ struct stepwise_struct {
   matrix_type      * X_norm;
   bool_vector_type * active_set;
   rng_type         * rng;           // Needed in the cross-validation
+  double             R2;            // Final R2
 };
-
-
-
-
-
 
 
 
@@ -97,32 +93,13 @@ static double stepwise_estimate__( stepwise_type * stepwise , bool_vector_type *
 
     stepwise->X_norm = matrix_alloc( 1 , nvar );
 
-
-
-
-
-
     matrix_type * beta     = matrix_alloc( nvar , 1);           /* This is the beta vector as estimated from the OLS estimator. */
     matrix_type * tmp_beta = matrix_alloc_copy( beta );         /* This is the beta vector shifted and scaled back to original variables. */
-
-
 
     stepwise->Y_mean = regression_scale( X , Y , stepwise->X_mean , stepwise->X_norm );
 
     regression_OLS( X , Y , beta );
     y_mean = regression_unscale( beta , stepwise->X_norm , stepwise->X_mean , stepwise->Y_mean , tmp_beta );
-
-
-    /*Compute the actual mean of y:
-    double tmpMean = 0.0;
-    for (int ii = 0; ii < nsample; ii++) {
-      tmpMean += matrix_iget( Y , ii , 0 );
-    }
-
-    tmpMean = tmpMean / nsample;
-    printf("Average of y = %0.2f\n",tmpMean); */
-
-
 
 
     /*
@@ -295,10 +272,6 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
       }
     }
 
-
-
-    printf("Current best variable  = %d\n",best_var);
-
     /*
       If the best relative improvement in prediction error is better
       than @deltaR2_limit, the corresponding variable is added to the
@@ -308,18 +281,13 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
 
     {
       MSE_min = minR2;
-      printf("MSE_min = %f\n",MSE_min);
       double deltaR2 = MSE_min / Prev_MSE_min;
 
-      printf("deltaR2 for variable %d = %0.2f\n",best_var,deltaR2);
-
       if (( currentR2 < 0) || deltaR2 < deltaR2_limit) {
-        printf("adding %d to active set:\n",best_var);
         bool_vector_iset( stepwise->active_set , best_var , true );
         currentR2 = minR2;
         stepwise_estimate__( stepwise , active_rows );
       } else {
-        printf("Done with forward stepwise regression! \n");
         /* The gain in prediction error is so small that we just leave the building. */
         /* NB! Need one final compuation of beta (since the test_var function does not reset the last tested beta value !) */
         stepwise_estimate__( stepwise , active_rows );
@@ -327,25 +295,13 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
       }
 
       if (bool_vector_count_equal( stepwise->active_set , true) == matrix_get_columns( stepwise->X0 )) {
-        printf("All variable are active -  done with the forward stepwise regression!\n");
         stepwise_estimate__( stepwise , active_rows );
         break;   /* All variables are active. */
       }
     }
-
   }
 
-  printf("Beta = ");
-  for (int i = 0; i < nvar; i++) {
-    printf(" %f ",matrix_iget(stepwise->beta,i,0));
-  }
-
-
-
-  printf("\n");
-
-
-
+  stepwise_set_R2(stepwise, currentR2);
   bool_vector_free( active_rows );
 }
 
@@ -386,8 +342,7 @@ stepwise_type * stepwise_alloc0( rng_type * rng) {
   stepwise->X_mean      = NULL;
   stepwise->X_norm      = NULL;
   stepwise->Y_mean      = 0.0;
-
-
+  stepwise->R2          = -1.0;
 
   return stepwise;
 }
@@ -452,6 +407,10 @@ void stepwise_set_active_set( stepwise_type * stepwise ,  bool_vector_type * a) 
   stepwise->active_set = a;
 }
 
+void stepwise_set_R2( stepwise_type * stepwise ,  const double R2) {
+  stepwise->R2 = R2;
+}
+
 matrix_type * stepwise_get_X0( stepwise_type * stepwise ) {
   return stepwise->X0;
 }
@@ -460,6 +419,9 @@ matrix_type * stepwise_get_Y0( stepwise_type * stepwise ) {
   return stepwise->Y0;
 }
 
+double stepwise_get_R2(const stepwise_type * stepwise ) {
+  return stepwise->R2;
+}
 
 int stepwise_get_nsample( stepwise_type * stepwise ) {
   return matrix_get_rows( stepwise->X0 );
@@ -500,4 +462,19 @@ void stepwise_free( stepwise_type * stepwise ) {
   }
   free( stepwise );
 
+}
+
+void stepwise_printf( const stepwise_type * stepwise , const int index ) {
+
+ int n_active = bool_vector_count_equal( stepwise->active_set , true);
+
+ printf("%-15d%-15d%-15.4f", index, n_active, stepwise_get_R2(stepwise));
+
+ printf("%s","[");
+ for (int ivar = 0; ivar < bool_vector_size( stepwise->active_set); ivar++) {
+  if (!bool_vector_iget( stepwise->active_set , ivar))
+    continue;
+   printf("%d ",ivar);
+ }
+ printf("]\n");
 }
