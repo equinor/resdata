@@ -13,7 +13,7 @@ set_target_properties( ert_utilxx PROPERTIES VERSION ${ERT_VERSION_MAJOR}.${ERT_
 if (USE_RUNPATH)
    add_runpath( ert_utilxx )
 endif()
-target_link_libraries( ert_utilxx util )
+target_link_libraries( ert_utilxx ert_util )
 
 
 if (INSTALL_ERT) 
