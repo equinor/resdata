@@ -283,6 +283,17 @@ smspec_node_type * ecl_sum_add_blank_var( ecl_sum_type * ecl_sum , float default
 
 
 
+/*
+  Observe the time argument in ecl_sum_add_tstep() and the bool flag
+  time_in_days in ecl_sum_alloc_writer() can be misleading:
+
+  - The time argument 'sim_seconds' to ecl_sum_add_tstep() should
+    *ALWAYS* be in seconds.
+
+  - The 'sim_in_days' argument to the ecl_sum_alloc_writer( ) is just
+    a very very basic unit support in the output. If sim_in_days ==
+    true the output time unit will be days, otherwise it will be hours.
+*/
 
 ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_seconds) {
   return ecl_sum_data_add_new_tstep( ecl_sum->data , report_step , sim_seconds );
