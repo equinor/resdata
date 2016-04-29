@@ -1055,7 +1055,20 @@ class EclSum(BaseCClass):
         EclSum._dump_csv_line(self , ctime, keywords, cfile)
         
 
-    def exportCSV(self , filename , keys = None , date_format = "%d/%m/%Y" , sep = ";"):
+    def exportCSV(self , filename , keys = None , date_format = "%Y-%m-%d" , sep = ";"):
+        """Will create a CSV file with summary data.
+
+        By default all the vectors in the summary case will be
+        exported, but by using the optional keys parameter you can
+        limit the keys which are exported:
+
+          ecl_sum = EclSum("CASE")
+          ecl_sum.exportCSV( "case.csv" , keys = ["W*:OP1" , "W*:OP2" , "F*T"])
+
+        Will export all well related variables for wells 'OP1' and
+        'OP2' and all total field vectors.
+        """
+
         if keys is None:
             var_list = self.keys( )
         else:
