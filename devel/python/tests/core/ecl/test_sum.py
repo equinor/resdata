@@ -20,7 +20,7 @@ import datetime
 import csv
 from unittest import skipIf, skipUnless, skipIf
 
-from ert.ecl import EclSum
+from ert.ecl import EclSum, EclSumVarType
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.test.ecl_mock import createEclSum
 
@@ -46,6 +46,15 @@ class SumTest(ExtendedTestCase):
         self.assertIn( "FOPT" , keys )
         self.assertIn( "FOPR" , keys )
 
+
+    def test_identify_var_type(self):
+        self.assertEnumIsFullyDefined( EclSumVarType , "ecl_smspec_var_type" , "libecl/include/ert/ecl/smspec_node.h")
+        self.assertEqual( EclSum.varType( "WWCT:OP_X") , EclSumVarType.ECL_SMSPEC_WELL_VAR )
+        self.assertEqual( EclSum.varType( "RPR") , EclSumVarType.ECL_SMSPEC_REGION_VAR )
+        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0)])
+        node = case.smspec_node( "FOPT" )
+
+        self.assertEqual( node.varType( ) , EclSumVarType.ECL_SMSPEC_FIELD_VAR )
         
 
     def test_csv_export(self):
