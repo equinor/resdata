@@ -31,6 +31,7 @@ import datetime
 # argument. In the python code this order has been reversed.
 from ert.cwrap import BaseCClass, CFILE
 from ert.ecl import EclSumTStep
+from ert.ecl import EclSumVarType
 from ert.ecl.ecl_sum_vector import EclSumVector
 from ert.ecl.ecl_smspec_node import EclSMSPECNode
 from ert.util import StringList, CTime, DoubleVector, TimeVector, IntVector
@@ -126,6 +127,8 @@ class EclSum(BaseCClass):
     _add_variable                  = EclPrototype("smspec_node_ref   ecl_sum_add_var(ecl_sum , char* , char* , int , char*, double)")
     _add_tstep                     = EclPrototype("ecl_sum_tstep_ref ecl_sum_add_tstep(ecl_sum , int , double)")
     _export_csv                    = EclPrototype("void ecl_sum_export_csv( ecl_sum , char* , stringlist , char* , char*)")
+    _identify_var_type             = EclPrototype("ecl_sum_var_type ecl_sum_identify_var_type( char* )", bind = False)
+
     
 
     def __init__(self, load_case , join_string = ":" , include_restart = True):
@@ -169,6 +172,9 @@ class EclSum(BaseCClass):
         return result
 
 
+    @classmethod
+    def varType(cls , keyword):
+        return cls._identify_var_type( keyword )
             
 
     @staticmethod
