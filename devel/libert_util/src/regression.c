@@ -97,13 +97,27 @@ double regression_unscale(const matrix_type * beta , const matrix_type * X_norm 
    beta = inv(X'·X)·X'·y
 */
 
-void regression_OLS( const matrix_type * X , const matrix_type * Y , matrix_type * beta) {
+void regression_OLS( const matrix_type * X , const matrix_type * Y , const matrix_type* E, matrix_type * beta) {
+  int nvar = matrix_get_columns( E );
   matrix_type * Xt   = matrix_alloc_transpose( X );
-  matrix_type * Xinv = matrix_alloc( matrix_get_columns( X ) ,  matrix_get_columns( X ));
+  matrix_type * Xinv = matrix_alloc( nvar ,  nvar);
 
   matrix_matmul( Xinv , Xt , X );
-  matrix_inv( Xinv );
 
+  if (E){ // Add E'E to Xinv
+    matrix_type * Et  = matrix_alloc_transpose( E );
+    matrix_type * EtE = matrix_alloc( nvar ,  nvar);
+    matrix_matmul( EtE , Et , E );
+    matrix_inplace_add(Xinv, EtE);
+
+    for (int i = 0; i < nvar; ++i) // Sometimes the inversion fails, adding a small regularization
+        matrix_iadd(Xinv, i, i, 1e-10);
+
+    matrix_free( Et );
+    matrix_free( EtE );
+  }
+
+  matrix_inv( Xinv ); // Xinv is always invertible
   {
     matrix_type * tmp = matrix_alloc_matmul( Xinv , Xt );
     matrix_matmul( beta , tmp , Y );
