@@ -98,7 +98,7 @@ double regression_unscale(const matrix_type * beta , const matrix_type * X_norm 
 */
 
 void regression_OLS( const matrix_type * X , const matrix_type * Y , const matrix_type* E, matrix_type * beta) {
-  int nvar = matrix_get_columns( E );
+  int nvar = matrix_get_columns( X );
   matrix_type * Xt   = matrix_alloc_transpose( X );
   matrix_type * Xinv = matrix_alloc( nvar ,  nvar);
 
