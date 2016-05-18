@@ -147,7 +147,6 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
     int nvar                       = matrix_get_columns( stepwise->X0 );
     int nsample                    = matrix_get_rows( stepwise->X0 );
     int block_size                 = nsample / blocks;
-    matrix_type * beta             = matrix_alloc( nvar , 1 );
     bool_vector_type * active_rows = bool_vector_alloc( nsample, true );
 
 
@@ -177,9 +176,7 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
         false, and the remaining part of the vector is set to true.
       */
       {
-        bool_vector_reset( active_rows );
-
-        bool_vector_iset( active_rows , nsample - 1 , true );
+        bool_vector_set_all(active_rows, true);
         /*
            If blocks == 1 that means all datapoint are used in the
            regression, and then subsequently reused in the R2
@@ -203,10 +200,9 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
           int irow;
           matrix_type * x_vector = matrix_alloc( 1 , nvar );
           for (irow=validation_start; irow <= validation_end; irow++) {
-            matrix_copy_row( x_vector , stepwise->X0 , 0 , irow);
-
+            matrix_copy_row( x_vector , stepwise->X0 , 0 , randperms[irow]);
             {
-              double true_value      = matrix_iget( stepwise->Y0 , irow , 0 );
+              double true_value      = matrix_iget( stepwise->Y0 , randperms[irow] , 0 );
               double estimated_value = stepwise_eval__( stepwise , x_vector );
               prediction_error += (true_value - estimated_value) * (true_value - estimated_value);
             }
@@ -217,7 +213,6 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
       }
     }
 
-    matrix_free( beta );
     free( randperms );
     bool_vector_free( active_rows );
   }
@@ -246,9 +241,7 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
 
 
 
-  bool_vector_set_default( stepwise->active_set , false );
-  bool_vector_reset( stepwise->active_set );
-  bool_vector_iset( stepwise->active_set , nvar - 1 , false );
+  bool_vector_set_all( stepwise->active_set , false );
 
   double MSE_min = 10000000;
   double Prev_MSE_min = MSE_min;
@@ -287,10 +280,12 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
       if (( currentR2 < 0) || deltaR2 < deltaR2_limit) {
         bool_vector_iset( stepwise->active_set , best_var , true );
         currentR2 = minR2;
+        bool_vector_set_all(active_rows, true);
         stepwise_estimate__( stepwise , active_rows );
       } else {
         /* The gain in prediction error is so small that we just leave the building. */
         /* NB! Need one final compuation of beta (since the test_var function does not reset the last tested beta value !) */
+        bool_vector_set_all(active_rows, true);
         stepwise_estimate__( stepwise , active_rows );
         break;
       }
