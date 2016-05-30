@@ -25,11 +25,12 @@ extern "C" {
   double          stepwise_get_R2(const stepwise_type * stepwise );
   int             stepwise_get_nvar( stepwise_type * stepwise );
   int             stepwise_get_nsample( stepwise_type * stepwise );
+  int             stepwise_get_n_active( stepwise_type * stepwise );
+  bool_vector_type * stepwise_get_active_set( stepwise_type * stepwise );
 
 
   void            stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV_blocks);
   double          stepwise_eval( const stepwise_type * stepwise , const matrix_type * x );
-  void            stepwise_printf( const stepwise_type * stepwise , const int index);
 
 
 
