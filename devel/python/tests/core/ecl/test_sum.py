@@ -24,6 +24,20 @@ from ert.ecl import EclSum, EclSumVarType
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.test.ecl_mock import createEclSum
 
+def fopr(days):
+    return days
+
+def fopt(days):
+    return days
+
+def fgpt(days):
+    if days < 50:
+        return days
+    else:
+        return 100 - days
+    
+
+
 class SumTest(ExtendedTestCase):
 
     
@@ -107,3 +121,55 @@ class SumTest(ExtendedTestCase):
                     time_index += 1
                 
                 
+    def test_solve(self):
+        length = 100
+        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                            sim_length_days = length,
+                            num_report_step = 10,
+                            num_mini_step = 10,
+                            func_table = {"FOPT" : fopt,
+                                          "FOPR" : fopr ,
+                                          "FGPT" : fgpt })
+        
+        with self.assertRaises( KeyError ):
+            case.solveDays( "MISSING:KEY" , 0.56)
+            
+        sol = case.solveDays( "FOPT" , 150 )
+        self.assertEqual( len(sol) , 0 )
+
+        sol = case.solveDays( "FOPT" , -10 )
+        self.assertEqual( len(sol) , 0 )
+
+        sol = case.solveDays( "FOPT" , 50 )
+        self.assertEqual( len(sol) , 1 )
+        self.assertFloatEqual( sol[0] , 50 )
+
+        sol = case.solveDays( "FOPT" , 50.50 )
+        self.assertEqual( len(sol) , 1 )
+        self.assertFloatEqual( sol[0] , 50.50 )
+
+        sol = case.solveDays( "FOPR" , 50.90 )
+        self.assertEqual( len(sol) , 1 )
+        self.assertFloatEqual( sol[0] , 50.00 + 1.0/86400 )
+
+        sol = case.solveDates("FOPR" , 50.90)
+        t = case.getDataStartTime( ) + datetime.timedelta( days = 50 ) + datetime.timedelta( seconds = 1 )
+        self.assertEqual( sol[0] , t )
+        
+        sol = case.solveDays( "FOPR" , 50.90 , rates_clamp_lower = False)
+        self.assertEqual( len(sol) , 1 )
+        self.assertFloatEqual( sol[0] , 51.00 )
+
+        sol = case.solveDays( "FGPT" ,25.0)
+        self.assertEqual( len(sol) , 2 )
+        self.assertFloatEqual( sol[0] , 25.00 )
+        self.assertFloatEqual( sol[1] , 75.00 )
+
+        sol = case.solveDates( "FGPT" , 25 )
+        self.assertEqual( len(sol) , 2 )
+        t0 = case.getDataStartTime( )
+        t1 = t0 + datetime.timedelta( days = 25 )
+        t2 = t0 + datetime.timedelta( days = 75 )
+        self.assertEqual( sol[0] , t1 )
+        self.assertEqual( sol[1] , t2 )
+        

@@ -1260,4 +1260,30 @@ bool ecl_sum_report_step_compatible( const ecl_sum_type * ecl_sum1 , const ecl_s
 }
 
 
+double_vector_type * ecl_sum_alloc_seconds_solution( const ecl_sum_type * ecl_sum , const char * gen_key , double cmp_value , bool rates_clamp_lower) {
+  const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key);
+  return ecl_sum_data_alloc_seconds_solution( ecl_sum->data , node , cmp_value , rates_clamp_lower);
+}
 
+
+double_vector_type * ecl_sum_alloc_days_solution( const ecl_sum_type * ecl_sum , const char * gen_key , double cmp_value , bool rates_clamp_lower) {
+  double_vector_type * solution = ecl_sum_alloc_seconds_solution( ecl_sum , gen_key , cmp_value , rates_clamp_lower );
+  double_vector_scale( solution , 1.0 / 86400 );
+  return solution;
+}
+
+
+time_t_vector_type * ecl_sum_alloc_time_solution( const ecl_sum_type * ecl_sum , const char * gen_key , double cmp_value , bool rates_clamp_lower) {
+  time_t_vector_type * solution = time_t_vector_alloc( 0 , 0);
+  {
+    double_vector_type * seconds = ecl_sum_alloc_seconds_solution( ecl_sum , gen_key , cmp_value , rates_clamp_lower );
+    time_t start_time = ecl_sum_get_start_time(ecl_sum);
+    for (int i=0; i < double_vector_size( seconds ); i++) {
+      time_t t = start_time;
+      util_inplace_forward_seconds( &t , double_vector_iget( seconds , i ));
+      time_t_vector_append( solution , t );
+    }
+    double_vector_free( seconds );
+  }
+  return solution;
+}
