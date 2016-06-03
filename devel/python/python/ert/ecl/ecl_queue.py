@@ -173,5 +173,6 @@ class EclQueue(JobQueue):
 
         num_cpu = EclUtil.get_num_cpu(data_file)
         argv = [self.ecl_version, path_base, "%s" % num_cpu]
-        return super(EclQueue, self).submit(self.ecl_cmd, run_path, base, argv, num_cpu=num_cpu)
+
+        self.submit(self.ecl_cmd, run_path, base, argv, num_cpu=num_cpu)
 
