@@ -163,10 +163,6 @@ class EclQueue(JobQueue):
     def submitDataFile(self, data_file):
         """
         Will submit a new simulation of case given by @data_file.
-        
-        The return value is a Job instance from the
-        ert.job_queue.queue.job module which can be used to query the
-        status of the job while it is running.
         """
         (path_base, ext) = os.path.splitext(data_file)
         (run_path, base) = os.path.split(path_base)
@@ -174,5 +170,5 @@ class EclQueue(JobQueue):
         num_cpu = EclUtil.get_num_cpu(data_file)
         argv = [self.ecl_version, path_base, "%s" % num_cpu]
 
-        self.submit(self.ecl_cmd, run_path, base, argv, num_cpu=num_cpu)
+        return self.submit(self.ecl_cmd, run_path, base, argv, num_cpu=num_cpu)
 
