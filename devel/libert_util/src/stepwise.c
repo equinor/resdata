@@ -100,7 +100,7 @@ static double stepwise_estimate__( stepwise_type * stepwise , bool_vector_type *
 
     matrix_type * beta     = matrix_alloc( nvar , 1);           /* This is the beta vector as estimated from the OLS estimator. */
 
-    regression_OLS( X , Y , E, beta );
+    regression_augmented_OLS( X , Y , E, beta );
 
 
     /*

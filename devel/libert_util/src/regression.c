@@ -97,25 +97,36 @@ double regression_unscale(const matrix_type * beta , const matrix_type * X_norm 
    beta = inv(X'·X)·X'·y
 */
 
-void regression_OLS( const matrix_type * X , const matrix_type * Y , const matrix_type* E, matrix_type * beta) {
+void regression_augmented_OLS( const matrix_type * X , const matrix_type * Y , const matrix_type* Z, matrix_type * beta) {
+  /*
+    Solves the following especial augmented regression problem:
+
+    [Y ; 0] = [X ; Z] beta + epsilon
+
+    where 0 is the zero matrix of same size as Y.
+
+    The solution to this OLS is:
+
+     inv(X'X + Z'Z) * X' * Y
+
+    The semicolon denotes row concatenation and the apostrophe the transpose.
+
+   */
   int nvar = matrix_get_columns( X );
   matrix_type * Xt   = matrix_alloc_transpose( X );
   matrix_type * Xinv = matrix_alloc( nvar ,  nvar);
-
   matrix_matmul( Xinv , Xt , X );
 
-  if (E){ // Add E'E to Xinv
-    matrix_type * Et  = matrix_alloc_transpose( E );
-    matrix_type * EtE = matrix_alloc( nvar ,  nvar);
-    matrix_matmul( EtE , Et , E );
-    matrix_inplace_add(Xinv, EtE);
+  matrix_type * Zt  = matrix_alloc_transpose( Z );
+  matrix_type * ZtZ = matrix_alloc( nvar ,  nvar);
+  matrix_matmul( ZtZ , Zt , Z );
 
-    for (int i = 0; i < nvar; ++i) // Sometimes the inversion fails, adding a small regularization
-        matrix_iadd(Xinv, i, i, 1e-10);
+  // Xinv <- X'X + Z'Z
+  matrix_inplace_add(Xinv, ZtZ);
 
-    matrix_free( Et );
-    matrix_free( EtE );
-  }
+  // Sometimes the inversion fails - add a small regularization to diagonal
+  for (int i = 0; i < nvar; ++i)
+    matrix_iadd(Xinv, i, i, 1e-10);
 
   matrix_inv( Xinv ); // Xinv is always invertible
   {
@@ -126,5 +137,7 @@ void regression_OLS( const matrix_type * X , const matrix_type * Y , const matri
 
   matrix_free( Xt );
   matrix_free( Xinv );
+  matrix_free( Zt );
+  matrix_free( ZtZ );
 }
 
