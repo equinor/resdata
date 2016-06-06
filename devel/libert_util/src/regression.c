@@ -67,7 +67,7 @@ double regression_scale(matrix_type * X , matrix_type * Y , matrix_type * X_mean
       }
 
       for (col=0; col < nvar; col++) {
-        double norm = sqrt( (1.0 / (nsample - 1)) * matrix_get_column_sum2( X , col ));
+        double norm = 1.0/sqrt( (1.0 / (nsample - 1)) * matrix_get_column_sum2( X , col ));
         matrix_iset( X_norm , 0 , col , norm );
       }
     }
@@ -97,13 +97,38 @@ double regression_unscale(const matrix_type * beta , const matrix_type * X_norm 
    beta = inv(X'·X)·X'·y
 */
 
-void regression_OLS( const matrix_type * X , const matrix_type * Y , matrix_type * beta) {
+void regression_augmented_OLS( const matrix_type * X , const matrix_type * Y , const matrix_type* Z, matrix_type * beta) {
+  /*
+    Solves the following especial augmented regression problem:
+
+    [Y ; 0] = [X ; Z] beta + epsilon
+
+    where 0 is the zero matrix of same size as Y.
+
+    The solution to this OLS is:
+
+     inv(X'X + Z'Z) * X' * Y
+
+    The semicolon denotes row concatenation and the apostrophe the transpose.
+
+   */
+  int nvar = matrix_get_columns( X );
   matrix_type * Xt   = matrix_alloc_transpose( X );
-  matrix_type * Xinv = matrix_alloc( matrix_get_columns( X ) ,  matrix_get_columns( X ));
-
+  matrix_type * Xinv = matrix_alloc( nvar ,  nvar);
   matrix_matmul( Xinv , Xt , X );
-  matrix_inv( Xinv );
 
+  matrix_type * Zt  = matrix_alloc_transpose( Z );
+  matrix_type * ZtZ = matrix_alloc( nvar ,  nvar);
+  matrix_matmul( ZtZ , Zt , Z );
+
+  // Xinv <- X'X + Z'Z
+  matrix_inplace_add(Xinv, ZtZ);
+
+  // Sometimes the inversion fails - add a small regularization to diagonal
+  for (int i = 0; i < nvar; ++i)
+    matrix_iadd(Xinv, i, i, 1e-10);
+
+  matrix_inv( Xinv ); // Xinv is always invertible
   {
     matrix_type * tmp = matrix_alloc_matmul( Xinv , Xt );
     matrix_matmul( beta , tmp , Y );
@@ -112,5 +137,7 @@ void regression_OLS( const matrix_type * X , const matrix_type * Y , matrix_type
 
   matrix_free( Xt );
   matrix_free( Xinv );
+  matrix_free( Zt );
+  matrix_free( ZtZ );
 }
 
