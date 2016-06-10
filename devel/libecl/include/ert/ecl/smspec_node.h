@@ -127,7 +127,13 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   void                smspec_node_set_default( smspec_node_type * smspec_node , float default_value);
   float               smspec_node_get_default( const smspec_node_type * smspec_node);
 
-  
+  const int*  smspec_node_get_ijk( const smspec_node_type * smpsec_node );
+  const char* smspec_node_get_lgr_name( const smspec_node_type * smpsec_node );
+  const int*  smspec_node_get_lgr_ijk( const smspec_node_type * smpsec_node );
+
+  int smspec_node_get_R1( const smspec_node_type * smpsec_node );
+  int smspec_node_get_R2( const smspec_node_type * smpsec_node );
+
 #ifdef __cplusplus
 }
 #endif
