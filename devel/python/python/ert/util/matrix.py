@@ -51,6 +51,22 @@ class Matrix(BaseCClass):
     _fprint            = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
     _random_init       = UtilPrototype("void matrix_random_init(matrix, rng)")
 
+    # Requires BLAS!
+    _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False)
+
+
+    # Requires BLAS!
+    @classmethod
+    def matmul(cls, m1,m2):
+        """
+        Will return a new matrix which is matrix product of m1 and m2.
+        """
+        if m1.columns( ) == m2.rows( ):
+            return cls._alloc_matmul( m1, m2)
+        else:
+            raise ValueError("Matrix size mismathc")
+        
+    
     def __init__(self, rows, columns, value=0):
         c_ptr = self._matrix_alloc(rows, columns)
         super(Matrix, self).__init__(c_ptr)

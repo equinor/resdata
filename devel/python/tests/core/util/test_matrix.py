@@ -167,3 +167,29 @@ class MatrixTest(ExtendedTestCase):
         
         m.transpose( inplace = True )
         self.assertEqual( m , mt )
+
+
+    def test_matmul(self):
+        m1 = Matrix(3,3)
+        m2 = Matrix(2,2)
+
+        with self.assertRaises(ValueError):
+            Matrix.matmul( m1 , m2 )
+
+        m = Matrix(3,2)
+        m[0,0] = 0
+        m[1,0] = 2
+        m[2,0] = 4
+
+        m[0,1] = 1
+        m[1,1] = 3
+        m[2,1] = 5
+        
+        mt = m.transpose( ) 
+
+        m2 = Matrix.matmul( m , mt )
+        
+        self.assertEqual( m2[0,0] , 1  )
+        self.assertEqual( m2[1,1] , 13 )
+        self.assertEqual( m2[2,2] , 41 )
+        
