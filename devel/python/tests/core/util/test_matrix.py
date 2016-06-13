@@ -133,3 +133,37 @@ class MatrixTest(ExtendedTestCase):
         m2 = m1.copy( )
         self.assertTrue( m1 == m2 )
         
+
+    def test_transpose(self):
+        m = Matrix(3,2)
+        m[0,0] = 0
+        m[1,0] = 2
+        m[2,0] = 4
+
+        m[0,1] = 1
+        m[1,1] = 3
+        m[2,1] = 5
+        
+        mt = m.transpose( ) 
+        
+        self.assertEqual(m[0,0] , 0)
+        self.assertEqual(m[1,0] , 2)
+        self.assertEqual(m[2,0] , 4)
+
+        self.assertEqual(m[0,1] , 1)
+        self.assertEqual(m[1,1] , 3)
+        self.assertEqual(m[2,1] , 5)
+
+        self.assertEqual( mt.rows() , m.columns())
+        self.assertEqual( mt.columns() , m.rows())
+        self.assertEqual(mt[0,0] , 0)
+        self.assertEqual(mt[1,0] , 1)
+
+        self.assertEqual(mt[0,1] , 2)
+        self.assertEqual(mt[1,1] , 3)
+
+        self.assertEqual(mt[0,2] , 4)
+        self.assertEqual(mt[1,2] , 5)
+        
+        m.transpose( inplace = True )
+        self.assertEqual( m , mt )

@@ -73,7 +73,7 @@ typedef struct matrix_struct matrix_type;
   void          matrix_mul( matrix_type * A , const matrix_type * B , const matrix_type * C);
   void          matrix_transpose(const matrix_type * A , matrix_type * T);
   void          matrix_inplace_sub_column(matrix_type * A , const matrix_type * B, int colA , int colB);
-
+  void          matrix_inplace_transpose(matrix_type * A );
 
   void          matrix_iset_safe(matrix_type * matrix , int i , int j, double value);
   void          matrix_iset(matrix_type * matrix , int i , int j, double value);

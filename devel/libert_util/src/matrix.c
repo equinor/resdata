@@ -491,12 +491,17 @@ void matrix_full_size( matrix_type * matrix ) {
 
 /*****************************************************************/
 
-void matrix_free(matrix_type * matrix) {
+static void matrix_free_content(matrix_type * matrix) {
   if (matrix->data_owner)
     util_safe_free(matrix->data);
   util_safe_free( matrix->name );
+}
+
+void matrix_free(matrix_type * matrix) {
+  matrix_free_content( matrix );
   free(matrix);
 }
+
 
 void matrix_safe_free( matrix_type * matrix ) {
   if (matrix != NULL)
@@ -1016,6 +1021,15 @@ void matrix_transpose(const matrix_type * A , matrix_type * T) {
   } else
     util_abort("%s: size mismatch\n",__func__);
 }
+
+
+void matrix_inplace_transpose(matrix_type * A ) {
+  matrix_type * B = matrix_alloc_transpose( A );
+  matrix_free_content( A );
+  memcpy( A , B , sizeof * A );
+  free( B );
+}
+
 
 
 matrix_type * matrix_alloc_transpose( const matrix_type * A) {
