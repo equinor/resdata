@@ -33,22 +33,40 @@ from ert.util import UtilPrototype
 
 
 class Matrix(BaseCClass):
-    _matrix_alloc = UtilPrototype("void*  matrix_alloc(int, int )" , bind = False)
-    _copy         = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
-    _free         = UtilPrototype("void   matrix_free(matrix)")
-    _iget         = UtilPrototype("double matrix_iget( matrix , int , int )")
-    _iset         = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
-    _set_all      = UtilPrototype("void   matrix_scalar_set( matrix , double)")
-    _scale_column = UtilPrototype("void matrix_scale_column(matrix , int , double)")
-    _scale_row    = UtilPrototype("void matrix_scale_row(matrix , int , double)")
-    _copy_column  = UtilPrototype("void matrix_copy_column(matrix , matrix , int , int)" , bind = False)
-    _rows         = UtilPrototype("int matrix_get_rows(matrix)")
-    _columns      = UtilPrototype("int matrix_get_columns(matrix)")
-    _equal        = UtilPrototype("bool matrix_equal(matrix, matrix)")
-    _pretty_print = UtilPrototype("void matrix_pretty_print(matrix, char*, char*)")
-    _fprint       = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
-    _random_init  = UtilPrototype("void matrix_random_init(matrix, rng)")
+    _matrix_alloc      = UtilPrototype("void*  matrix_alloc(int, int )" , bind = False)
+    _alloc_transpose   = UtilPrototype("matrix_obj  matrix_alloc_transpose(matrix)")
+    _inplace_transpose = UtilPrototype("void        matrix_inplace_transpose(matrix)")
+    _copy              = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
+    _free              = UtilPrototype("void   matrix_free(matrix)")
+    _iget              = UtilPrototype("double matrix_iget( matrix , int , int )")
+    _iset              = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
+    _set_all           = UtilPrototype("void   matrix_scalar_set( matrix , double)")
+    _scale_column      = UtilPrototype("void matrix_scale_column(matrix , int , double)")
+    _scale_row         = UtilPrototype("void matrix_scale_row(matrix , int , double)")
+    _copy_column       = UtilPrototype("void matrix_copy_column(matrix , matrix , int , int)" , bind = False)
+    _rows              = UtilPrototype("int matrix_get_rows(matrix)")
+    _columns           = UtilPrototype("int matrix_get_columns(matrix)")
+    _equal             = UtilPrototype("bool matrix_equal(matrix, matrix)")
+    _pretty_print      = UtilPrototype("void matrix_pretty_print(matrix, char*, char*)")
+    _fprint            = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
+    _random_init       = UtilPrototype("void matrix_random_init(matrix, rng)")
 
+    # Requires BLAS!
+    _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False)
+
+
+    # Requires BLAS!
+    @classmethod
+    def matmul(cls, m1,m2):
+        """
+        Will return a new matrix which is matrix product of m1 and m2.
+        """
+        if m1.columns( ) == m2.rows( ):
+            return cls._alloc_matmul( m1, m2)
+        else:
+            raise ValueError("Matrix size mismathc")
+        
+    
     def __init__(self, rows, columns, value=0):
         c_ptr = self._matrix_alloc(rows, columns)
         super(Matrix, self).__init__(c_ptr)
@@ -92,6 +110,16 @@ class Matrix(BaseCClass):
         """ @rtype: int """
         return self._rows()
 
+    def transpose(self , inplace = False):
+        """
+        Will transpose the matrix. By default a transposed copy is returned.
+        """
+        if inplace:
+            self._inplace_transpose( )
+            return self
+        else:
+            return self._alloc_transpose( )
+    
 
     def columns(self):
         """ @rtype: int """
