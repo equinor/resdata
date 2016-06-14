@@ -44,7 +44,6 @@ module import and namespace resolution.
 # from   ecl_subsidence        import EclSubsidence
 # from   ecl_region            import EclRegion
 # from   fortio                import FortIO
-# from   ecl_queue             import EclQueue
 # import ecl_util
 # from   ecl_util              import *
 #
@@ -99,13 +98,6 @@ from .ecl_subsidence import EclSubsidence
 from .ecl_grav_calc import deltag, phase_deltag
 from .ecl_grav import EclGrav
 
-# The EclQueue class uses the libjob_queue library which is only built
-# when the full ert distribution is built. If BUILD_ERT == False the
-# ecl_queue module is excluded from the build process.
-try:
-    from .ecl_queue import EclQueue
-except ImportError:
-    pass
 
 from .ecl_default import default
 
@@ -115,12 +107,3 @@ class default_wrapper(object):
     default = default
 
 ecl_default = default_wrapper()
-
-
-
-        
-
-
-
-        
-    

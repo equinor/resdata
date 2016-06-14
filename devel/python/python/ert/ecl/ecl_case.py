@@ -180,11 +180,6 @@ class EclCase:
           * The driver_options argument will only be used when
             creating a new driver instance, and will not be used to
             modify an existing driver instance.
-
-        This method will immediately start/submit an ECLIPSE
-        simulation of the current case. If you have many simulations
-        you might want use an EclQueue() and the submit() method instead, in
-        particular if you are running locally.
         """
         import ert.job_queue.driver as queue_driver
         
@@ -206,23 +201,3 @@ class EclCase:
             driver = queue_driver.Driver( driver_type , max_running = 0 , options = driver_options )
         job = driver.submit( self.base , ecl_cmd , self.path , argv , blocking = blocking)
         return job
-        
-        
-    def submit( self , queue ):
-        """
-        Will submit an ECLIPSE simulation of current case to @queue.
-        
-        The submit method will submit an ECLIPSE simulation of the
-        current case to the @queue. The advantage of using submit()
-        instead of run() is that the queue can be used to control the
-        number of concurrent simulations; if you have few simulations
-        in total, or if you are submitting to LSF anyway, you might
-        just as well use the run() method.
-
-        The @queue argument should be an existing EclQueue() instance
-        which will collect the jobs, and pass them on to a driver when
-        there is free capacity.
-
-        @type queue: EclQueue
-        """
-        queue.submitDataFile( self.datafile )

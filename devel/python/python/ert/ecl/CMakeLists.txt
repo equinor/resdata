@@ -30,11 +30,6 @@ set(PYTHON_SOURCES
     ecl_sum_var_type.py
 )
 
-if (BUILD_ERT)
-   list(APPEND PYTHON_SOURCES ecl_queue.py)
-endif()
-
-
 add_python_package("python.ert.ecl"  ${PYTHON_INSTALL_PREFIX}/ert/ecl "${PYTHON_SOURCES}" True)
 
 

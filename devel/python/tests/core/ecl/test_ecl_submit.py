@@ -1,6 +1,6 @@
 #  Copyright (C) 2011  Statoil ASA, Norway.
 #
-#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
+#  This file is part of ERT - Ensemble based Reservoir Tool.
 #
 #  ERT is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -25,10 +25,8 @@ except ImportError:
 import time
 import shutil
 from ert.ecl import EclSum
-from ert.ecl.ecl_queue import EclQueue
 from ert.job_queue import QueueDriverEnum, RSHDriver
 from ert.test import ExtendedTestCase , TestAreaContext
-
 
 path = "Statoil/ECLIPSE/Gurbat"
 
@@ -65,103 +63,3 @@ class EclSubmitTest(ExtendedTestCase):
             shutil.copy("%s.DATA" % self.createTestPath(case), run_path)
 
         return os.path.abspath(run_path)
-
-
-class LSFSubmitTest(EclSubmitTest):
-
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow LSF job submit skipped!")
-    def test_start_parameters(self):
-        self.assertIsNotNone(self.nfs_work_path, "NFS work path missing!")
-        self.assertIsNone(self.rsh_servers)
-
-
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow LSF job submit skipped!")
-    def test_LSF_submit(self):
-        root = os.path.join(self.nfs_work_path, getpass.getuser(), "ert-test/python/ecl_submit/LSF")
-        if not os.path.exists(root):
-            os.makedirs(root)
-        os.chdir(root)
-
-        num_submit = 6
-        queue = EclQueue(driver_type=QueueDriverEnum.LSF_DRIVER, max_running=4, size=num_submit)
-        path_list = []
-
-        for iens in (range(num_submit)):
-            run_path = self.make_run_path(iens, LSF=True)
-            path_list.append(run_path)
-            job = queue.submitDataFile("%s/%s.DATA" % (run_path, LSF_base))
-
-        while queue.isRunning():
-            time.sleep(1)
-
-        for path in path_list:
-            sum = EclSum("%s/%s" % (path, LSF_base))
-            self.assertIsInstance(sum, EclSum)
-            self.assertEqual(2, sum.last_report)
-
-
-class RSHSubmitTest(EclSubmitTest):
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow RSH job submit skipped!")
-    def test_start_parameters(self):
-        self.assertIsNotNone(self.nfs_work_path, "NFS work path missing!")
-        self.assertIsNotNone(self.rsh_servers, "RSH servers missing!")
-
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow RSH job submit skipped!")
-    def test_RSH_submit(self):
-        root = os.path.join(self.nfs_work_path, getpass.getuser(), "ert-test/python/ecl_submit/RSH")
-        if not os.path.exists(root):
-            os.makedirs(root)
-        os.chdir(root)
-
-        num_submit = 6
-        host_list = []
-        for h in self.rsh_servers.split():
-            tmp = h.split(":")
-            if len(tmp) > 1:
-                num = int(tmp[1])
-            else:
-                num = 1
-            host_list.append((tmp[0], num))
-
-        queue = EclQueue(RSHDriver(3, host_list), size=num_submit)
-        path_list = []
-
-        for iens in (range(num_submit)):
-            run_path = self.make_run_path(iens)
-            path_list.append(run_path)
-            job = queue.submitDataFile("%s/%s.DATA" % (run_path, base))
-
-        while queue.isRunning():
-            time.sleep(1)
-
-        for path in path_list:
-            sum = EclSum("%s/%s" % (path, base))
-            self.assertIsInstance(sum, EclSum)
-            self.assertEqual(2, sum.last_report)
-
-class LocalSubmitTest(EclSubmitTest):
-
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow LOCAL job submit skipped!")
-    def test_LOCAL_submit(self):
-        #work_area = TestArea("python/ecl_submit/LOCAL", True)
-
-        with TestAreaContext("python/ecl_submit/LOCAL") as work_area:
-            num_submit = 4
-            queue = EclQueue(driver_type=QueueDriverEnum.LOCAL_DRIVER, max_running=2)
-            path_list = []
-
-            for iens in range(num_submit):
-                run_path = self.make_run_path(iens)
-                path_list.append(run_path)
-                queue.submitDataFile("%s/%s.DATA" % (run_path, base))
-
-            queue.submit_complete()
-            while queue.isRunning():
-                time.sleep(1)
-
-            for path in path_list:
-                sum = EclSum("%s/%s" % (path, base))
-                self.assertIsInstance(sum, EclSum)
-                self.assertEqual(2, sum.last_report)
-                shutil.rmtree(path)
-

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Copyright (C) 2013  Statoil ASA, Norway.
 #
-#  The file 'test_rft_cell.py' is part of ERT - Ensemble based Reservoir Tool.
+#  This file is part of ERT - Ensemble based Reservoir Tool.
 #
 #  ERT is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -50,15 +50,7 @@ class LegacyEclTest(TestCase):
             with self.assertRaises(NotImplementedError):
                 ecl.ecl_default.default.ecl_version
                 new_ecl.EclDefault.ecl_version()
-                
-    def test_queues(self):
-        try:
-            from ert.job_queue import JOB_QUEUE_LIB
-            self.assertEqual(ecl.EclQueue, new_ecl.ecl_queue.EclQueue)
-        except ImportError:
-            pass
 
-        
     def test_ecl_defaults(self):
         # Should be either non-null, or throw an NotImplementedError.
         try:
@@ -75,7 +67,7 @@ class LegacyEclTest(TestCase):
             self.assertIsNotNone(ecl_default.default.ecl_cmd)
         except NotImplementedError:
             pass
- 
+
         try:
             self.assertIsNotNone(ecl_default.default.driver_type)
         except NotImplementedError:
