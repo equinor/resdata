@@ -114,13 +114,13 @@ void test_assert_int_not_equal__( int i1 , int i2 , const char * file , int line
 
 void test_assert_uint_equal__( unsigned int i1 , unsigned int i2 , const char * file , int line) {
   if (i1 != i2)
-    test_error_exit( "%s:%d => Integers are different i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+    test_error_exit( "%s:%d => Unsigned integers are different i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
 }
 
 
 void test_assert_uint_not_equal__( unsigned int i1 , unsigned int i2 , const char * file , int line) {
   if (i1 == i2)
-    test_error_exit( "%s:%d => Integers are equal i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
+    test_error_exit( "%s:%d => Unsigned integers are equal i1:[%d]  i2:[%d]\n" , file , line , i1 , i2 );
 }
 
 

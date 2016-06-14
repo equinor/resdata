@@ -1,5 +1,8 @@
 if (BUILD_TESTS)
    include( tests.cmake ) 
+   if (STATOIL_TESTDATA_ROOT)
+     include (statoil_tests.cmake)
+   endif()
 endif()
 
 # The ecl_win64 application is not built as a proper test integrated
