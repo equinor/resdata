@@ -182,22 +182,9 @@ class EclCase:
             modify an existing driver instance.
         """
         import ert.job_queue.driver as queue_driver
-        
+
         num_cpu = EclUtil.get_num_cpu( self.datafile )
         argv = [ecl_version , self.datafile , num_cpu]
 
-        if ecl_cmd is None:
-            ecl_cmd = EclDefault.ecl_cmd()
-
-        if driver_type is None:
-            driver_type = EclDefault.driver_type()
-
-        if ecl_version is None:
-            ecl_version = EclDefault.ecl_version()
-
-        if driver is None:
-            if driver_options is None:
-                driver_options = EclDefault.driver_options()[ driver_type ]
-            driver = queue_driver.Driver( driver_type , max_running = 0 , options = driver_options )
         job = driver.submit( self.base , ecl_cmd , self.path , argv , blocking = blocking)
         return job
