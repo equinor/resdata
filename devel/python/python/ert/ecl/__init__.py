@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file '__init__.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file '__init__.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Package for working with ECLIPSE files.
 
@@ -54,9 +54,6 @@ wrap the content of the c-file ecl_xxx.c The main content is:
      subsidence from ECLIPSE simulations; analogous to the EcLGrav
      functionality.
 
-  ecl_queue/EclQueue: Class implementing a queue to run ECLIPSE
-     simulations.
-
 In addition there are some modules which do not follow the one class
 per module organization:
 
@@ -82,8 +79,6 @@ class EclPrototype(Prototype):
     def __init__(self, prototype, bind=True):
         super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
 
-
-        
 ECL_LIB = clib.ert_load("libecl")
 
 from .ecl_sum_var_type import EclSumVarType
@@ -91,16 +86,15 @@ from .ecl_sum_tstep import EclSumTStep
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
 from .ecl_sum_keyword_vector import EclSumKeyWordVector
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUtil
-from .ecl_default import EclDefault
 from .ecl_rft_cell import EclPLTCell, EclRFTCell
 from .ecl_rft import EclRFT, EclRFTFile
 from .fortio import FortIO, openFortIO
 from .ecl_kw import EclKW
 from .ecl_3dkw import Ecl3DKW
 from .ecl_file import EclFile , openEclFile
-from .ecl_3d_file import Ecl3DFile 
-from .ecl_init_file import EclInitFile 
-from .ecl_restart_file import EclRestartFile 
+from .ecl_3d_file import Ecl3DFile
+from .ecl_init_file import EclInitFile
+from .ecl_restart_file import EclRestartFile
 from .ecl_grid import EclGrid
 from .ecl_region import EclRegion
 from .ecl_subsidence import EclSubsidence
@@ -110,12 +104,3 @@ from .ecl_sum_node import EclSumNode
 from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
 from .ecl_cmp import EclCmp
-
-# The EclQueue class uses the libjob_queue library which is only built
-# when the full ert distribution is built. If BUILD_ERT == False the
-# ecl_queue module is excluded from the build process.
-try:
-    from .ecl_queue import EclQueue
-except ImportError:
-    pass
-

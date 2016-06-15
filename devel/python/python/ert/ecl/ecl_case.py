@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'ecl_case.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'ecl_case.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Implements EclCase class which is a container for one ECLIPSE case.
 
@@ -21,7 +21,7 @@ C based functions.
 """
 import os
 import warnings
-from ert.ecl import EclRFTFile, EclGrid, EclSum, EclUtil, EclDefault
+from ert.ecl import EclRFTFile, EclGrid, EclSum, EclUtil
 
 
 
@@ -42,10 +42,10 @@ class EclCase:
         case, it can contain an additional path component. The
         @input_case argument can contain an extension, but that is not
         necessary; it does not need to point an existing file.
-        
+
         These are all valid:
 
-           case1 = EclCase( "ECLIPSE" )   
+           case1 = EclCase( "ECLIPSE" )
            case2 = EclCase( "relative/path/ECLIPSE.SMSPEC" )
            case3 = EclCase( "/absolute/path/simulation/ECLIPSE_3.xxx" )
 
@@ -59,12 +59,12 @@ class EclCase:
         else:
             self.__path = os.getcwd()
         (self.__base , self.ext) = os.path.splitext( tmp )
-        
+
         self.__sum         = None
         self.__grid        = None
         self.__data_file   = None
         self.__rft         = None
-    
+
 
     @property
     def datafile( self ):
@@ -74,7 +74,7 @@ class EclCase:
         Observe that this method is purely about string manipulation;
         i.e. it is not checked if the datafile actually exists.
         """
-        
+
         if not self.__data_file:
             self.__data_file = "%s/%s.DATA" % ( self.__path , self.__base )
         return self.__data_file
@@ -94,7 +94,7 @@ class EclCase:
         if not self.__sum:
             self.__sum = EclSum( self.case )
         return self.__sum
-    
+
 
     @property
     def grid( self ):
@@ -131,13 +131,13 @@ class EclCase:
         """
         return self.__path
 
-        
-    def run( self , 
+
+    def run( self,
              ecl_cmd = None,
              ecl_version = None,
-             driver = None , 
+             driver = None,
              driver_type = None,
-             driver_options = None, 
+             driver_options = None,
              blocking = False ):
         """
         Will start an ECLIPSE simulation of the current case.
@@ -150,7 +150,7 @@ class EclCase:
              typically be a script of some kind. The command will be
              called with three commandline arguments: version datafile
              num_cpu
-          
+
           ecl_version: The eclipse version you want to use, this
              should be a string of the type "2010.2".
 
@@ -180,49 +180,11 @@ class EclCase:
           * The driver_options argument will only be used when
             creating a new driver instance, and will not be used to
             modify an existing driver instance.
-
-        This method will immediately start/submit an ECLIPSE
-        simulation of the current case. If you have many simulations
-        you might want use an EclQueue() and the submit() method instead, in
-        particular if you are running locally.
         """
         import ert.job_queue.driver as queue_driver
-        
+
         num_cpu = EclUtil.get_num_cpu( self.datafile )
         argv = [ecl_version , self.datafile , num_cpu]
 
-        if ecl_cmd is None:
-            ecl_cmd = EclDefault.ecl_cmd()
-
-        if driver_type is None:
-            driver_type = EclDefault.driver_type()
-
-        if ecl_version is None:
-            ecl_version = EclDefault.ecl_version()
-
-        if driver is None:
-            if driver_options is None:
-                driver_options = EclDefault.driver_options()[ driver_type ]
-            driver = queue_driver.Driver( driver_type , max_running = 0 , options = driver_options )
         job = driver.submit( self.base , ecl_cmd , self.path , argv , blocking = blocking)
         return job
-        
-        
-    def submit( self , queue ):
-        """
-        Will submit an ECLIPSE simulation of current case to @queue.
-        
-        The submit method will submit an ECLIPSE simulation of the
-        current case to the @queue. The advantage of using submit()
-        instead of run() is that the queue can be used to control the
-        number of concurrent simulations; if you have few simulations
-        in total, or if you are submitting to LSF anyway, you might
-        just as well use the run() method.
-
-        The @queue argument should be an existing EclQueue() instance
-        which will collect the jobs, and pass them on to a driver when
-        there is free capacity.
-
-        @type queue: EclQueue
-        """
-        queue.submitDataFile( self.datafile )
