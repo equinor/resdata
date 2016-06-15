@@ -5,7 +5,6 @@ set(TEST_SOURCES
     __init__.py
     test_deprecation.py
     test_ecl_3dkw.py
-    test_ecl_default.py
     test_ecl_file.py
     test_ecl_init_file.py
     test_ecl_restart_file.py
@@ -40,7 +39,6 @@ set(TEST_SOURCES
 
 add_python_package("python.tests.ecl"  ${PYTHON_INSTALL_PREFIX}/tests/ecl "${TEST_SOURCES}" False)
 
-addPythonTest(ecl.ecl_default ecl.test_ecl_default.EclDefaultTest )
 addPythonTest(ecl.ecl_grid ecl.test_grid.GridTest )
 addPythonTest(ecl.ecl_kw ecl.test_ecl_kw.KWTest)
 addPythonTest(ecl.ecl_kw_function ecl.test_kw_function.KWFunctionTest)
@@ -56,9 +54,8 @@ addPythonTest(ecl.ecl_deprecation1.9 ecl.test_deprecation.Deprecation_1_9_Test )
 addPythonTest(ecl.ecl_deprecation2.0 ecl.test_deprecation.Deprecation_2_0_Test )
 addPythonTest(ecl.ecl_util ecl.test_ecl_util.EclUtilTest )
 
-if (STATOIL_TESTDATA_ROOT) 
+if (STATOIL_TESTDATA_ROOT)
   addPythonTest(ecl.ecl_file ecl.test_ecl_file.EclFileTest LABELS StatoilData)
-  addPythonTest(ecl.ecl_queue_LOCAL ecl.test_ecl_submit.LocalSubmitTest LABELS StatoilData:Slow)
   addPythonTest(ecl.fortio ecl.test_fortio.FortIOTest LABELS StatoilData)
   addPythonTest(ecl.ecl_grdecl ecl.test_grdecl.GRDECLTest LABELS StatoilData)
   addPythonTest(ecl.ecl_grid_statoil ecl.test_grid_statoil.GridTest LABELS StatoilData:Slow)
