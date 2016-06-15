@@ -46,8 +46,7 @@ module import and namespace resolution.
 # from   fortio                import FortIO
 # import ecl_util
 # from   ecl_util              import *
-#
-# import ecl_default
+
 import os
 
 warning_message = """
@@ -97,13 +96,3 @@ from .ecl_case import EclCase
 from .ecl_subsidence import EclSubsidence
 from .ecl_grav_calc import deltag, phase_deltag
 from .ecl_grav import EclGrav
-
-
-from .ecl_default import default
-
-
-#Legacy import support
-class default_wrapper(object):
-    default = default
-
-ecl_default = default_wrapper()

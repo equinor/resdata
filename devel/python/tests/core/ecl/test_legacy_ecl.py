@@ -23,8 +23,6 @@ from ert.ecl import EclTypeEnum, EclFileFlagEnum, EclPhaseEnum
 
 import ert.ecl.ecl as ecl
 import ert.ecl as new_ecl
-import ert.ecl.ecl_default as ecl_default
-
 
 class LegacyEclTest(TestCase):
 
@@ -43,37 +41,3 @@ class LegacyEclTest(TestCase):
         self.assertEqual(ecl.EclGrid, new_ecl.EclGrid)
 
         self.assertEqual(ecl.EclRegion, new_ecl.EclRegion)
-
-        try:
-            self.assertEqual(ecl.ecl_default.default.ecl_version, new_ecl.EclDefault.ecl_version())
-        except NotImplementedError:
-            with self.assertRaises(NotImplementedError):
-                ecl.ecl_default.default.ecl_version
-                new_ecl.EclDefault.ecl_version()
-
-    def test_ecl_defaults(self):
-        # Should be either non-null, or throw an NotImplementedError.
-        try:
-            self.assertIsNotNone(ecl_default.default.ecl_version)
-        except NotImplementedError:
-            pass
-
-        try:
-            self.assertIsNotNone(ecl_default.default.driver_options)
-        except NotImplementedError:
-            pass
-
-        try:
-            self.assertIsNotNone(ecl_default.default.ecl_cmd)
-        except NotImplementedError:
-            pass
-
-        try:
-            self.assertIsNotNone(ecl_default.default.driver_type)
-        except NotImplementedError:
-            pass
-
-        try:
-            self.assertIsNotNone(ecl_default.default.lsf_resource_request)
-        except NotImplementedError:
-            pass
