@@ -73,16 +73,4 @@ if (STATOIL_TESTDATA_ROOT)
   addPythonTest(ecl.ecl_npv ecl.test_npv.NPVTest LABELS StatoilData)
   addPythonTest(ecl.indexed_read ecl.test_indexed_read.EclIndexedReadTest LABELS StatoilData)
   addPythonTest(ecl.ecl_cmp ecl.test_ecl_cmp.EclCmpTest LABELS StatoilData)
-
-
-  if (NOT ${NFS_RUNPATH} STREQUAL "")
-      if (ERT_LSF_SUBMIT_TEST)
-          addPythonTest(ert.ecl.ecl_queue_LSF tests.ecl.test_ecl_submit.LSFSubmitTest ARGUMENTS ${NFS_RUNPATH} LABELS StatoilData:Slow)
-      endif()
-
-
-      if (NOT ${RSH_SERVERS} STREQUAL "")
-          addPythonTest(ert.ecl.ecl_queue_RSH tests.ecl.test_ecl_submit.RSHSubmitTest ARGUMENTS ${NFS_RUNPATH} ${RSH_SERVERS} LABELS StatoilData:Slow)
-      endif()
-  endif()
 endif()
