@@ -1457,6 +1457,14 @@ int ecl_sum_data_get_length( const ecl_sum_data_type * data ) {
   return vector_get_size( data->data );
 }
 
+void ecl_sum_data_scale_vector(ecl_sum_data_type * data, int index, double scalar) {
+  int len = vector_get_size(data->data);
+  for (int i = 0; i < len; i++) {
+    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(vector_iget(data->data, i), index);
+    float val = ecl_sum_tstep_iget(ministep, index);
+    ecl_sum_tstep_iset(ministep, index, val * scalar);
+  }
+}
 
 bool ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2) {
   bool equal = true;

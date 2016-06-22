@@ -1181,6 +1181,10 @@ int ecl_sum_get_data_length( const ecl_sum_type * ecl_sum ) {
   return ecl_sum_data_get_length( ecl_sum->data );
 }
 
+void ecl_sum_scale_vector( ecl_sum_type * ecl_sum, int index, double scalar ) {
+  ecl_sum_data_scale_vector( ecl_sum->data, index, scalar );
+}
+
 
 bool ecl_sum_check_sim_time( const ecl_sum_type * sum , time_t sim_time) {
   return ecl_sum_data_check_sim_time( sum->data , sim_time );

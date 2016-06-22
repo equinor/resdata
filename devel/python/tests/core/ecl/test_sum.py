@@ -172,4 +172,19 @@ class SumTest(ExtendedTestCase):
         t2 = t0 + datetime.timedelta( days = 75 )
         self.assertEqual( sol[0] , t1 )
         self.assertEqual( sol[1] , t2 )
-        
+
+    def test_ecl_sum_vector_algebra(self):
+        # setup
+        length = 100
+        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                            sim_length_days = length,
+                            num_report_step = 10,
+                            num_mini_step = 10,
+                            func_table = {"FOPT" : fopt,
+                                          "FOPR" : fopr ,
+                                          "FGPT" : fgpt })
+        with self.assertRaises( KeyError ):
+            case.solveDays( "MISSING:KEY" , 0.56)
+        sol = case.solveDays( "FOPT" , 150 )
+        x = case
+        x.scaleVector('FOPT' , 0.78)

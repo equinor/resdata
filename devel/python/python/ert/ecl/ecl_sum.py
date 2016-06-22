@@ -87,6 +87,7 @@ class EclSum(BaseCClass):
     _iiget                         = EclPrototype("double   ecl_sum_iget( ecl_sum , int , int)")
     _free                          = EclPrototype("void     ecl_sum_free( ecl_sum )")
     _data_length                   = EclPrototype("int      ecl_sum_get_data_length( ecl_sum )")
+    _scale_vector                  = EclPrototype("void     ecl_sum_scale_vector( ecl_sum, int, double )")
     _iget_sim_days                 = EclPrototype("double   ecl_sum_iget_sim_days( ecl_sum , int) ")
     _iget_report_step              = EclPrototype("int      ecl_sum_iget_report_step( ecl_sum , int) ")
     _iget_mini_step                = EclPrototype("int      ecl_sum_iget_mini_step( ecl_sum , int) ")
@@ -431,6 +432,15 @@ class EclSum(BaseCClass):
         """
         return self.get_vector( key )
 
+    def scaleVector(self, key, scalar):
+        """ecl_sum.scaleVector("WOPR:OPX" , 0.78 )
+        will scale all the elements in the 'WOPR:OPX' vector with 0.78.
+        """
+        if not key in self:
+            raise KeyError("Summary object does not have key:%s" % key)
+
+        key_index = self._get_general_var_index( key )
+        self._scale_vector(key_index, float(scalar))
 
     def check_sim_time( self , date):
         """
