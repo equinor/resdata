@@ -15,6 +15,7 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
+#include <string>
 
 #include <ert/util/util.h>
 #include <ert/util/TestArea.hpp>
@@ -34,6 +35,18 @@ namespace ERT {
     c_ptr.reset( test_work_area_alloc( name.c_str() ));
   }
 
+  void TestArea::setStore(bool store) {
+    test_work_area_set_store( c_ptr.get() , store );
+  }
+
+
+
+  std::string TestArea::getCwd() const {
+    char * cwd_ptr = util_alloc_cwd( );
+    std::string cwd( cwd_ptr );
+    free( cwd_ptr );
+    return cwd;
+  }
 
   void TestArea::assertOpen() const {
     if (!c_ptr)

@@ -83,7 +83,9 @@ namespace ERT {
 	    copyDirectory("path0") <=> copyParentDirectory("path0/file1.txt")
       */
       void copyParentDirectory( const std::string& entry ) const; 
-	
+
+      std::string getCwd() const;
+      void setStore(bool store);
 
     private: 
       void assertOpen( ) const;
