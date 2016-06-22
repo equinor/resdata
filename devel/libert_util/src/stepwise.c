@@ -199,12 +199,16 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
         {
           int irow;
           matrix_type * x_vector = matrix_alloc( 1 , nvar );
+          //matrix_type * e_vector = matrix_alloc( 1 , nvar );
           for (irow=validation_start; irow <= validation_end; irow++) {
             matrix_copy_row( x_vector , stepwise->X0 , 0 , randperms[irow]);
+            //matrix_copy_row( e_vector , stepwise->E0 , 0 , randperms[irow]);
             {
               double true_value      = matrix_iget( stepwise->Y0 , randperms[irow] , 0 );
               double estimated_value = stepwise_eval__( stepwise , x_vector );
               prediction_error += (true_value - estimated_value) * (true_value - estimated_value);
+              //double e_estimated_value = stepwise_eval__( stepwise , e_vector );
+              //prediction_error += e_estimated_value*e_estimated_value;
             }
 
           }
@@ -221,10 +225,6 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
   bool_vector_iset( stepwise->active_set , test_var , false );
   return prediction_error;
 }
-
-
-
-
 
 
 void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV_blocks) {
@@ -423,6 +423,14 @@ int stepwise_get_nvar( stepwise_type * stepwise ) {
   return matrix_get_columns( stepwise->X0 );
 }
 
+int stepwise_get_n_active( stepwise_type * stepwise ) {
+  return bool_vector_count_equal( stepwise->active_set , true);
+}
+
+bool_vector_type * stepwise_get_active_set( stepwise_type * stepwise ) {
+  return stepwise->active_set;
+}
+
 void stepwise_isetY0( stepwise_type * stepwise , int i , double value ) {
   matrix_iset( stepwise->Y0, i , 0 , value );
 }
@@ -457,17 +465,3 @@ void stepwise_free( stepwise_type * stepwise ) {
 
 }
 
-void stepwise_printf( const stepwise_type * stepwise , const int index ) {
-
- int n_active = bool_vector_count_equal( stepwise->active_set , true);
-
- printf("%-15d%-15d%-15.4f", index, n_active, stepwise_get_R2(stepwise));
-
- printf("%s","[");
- for (int ivar = 0; ivar < bool_vector_size( stepwise->active_set); ivar++) {
-  if (!bool_vector_iget( stepwise->active_set , ivar))
-    continue;
-   printf("%d ",ivar);
- }
- printf("]\n");
-}
