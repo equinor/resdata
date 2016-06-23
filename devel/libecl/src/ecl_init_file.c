@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2012 Statoil ASA, Norway. 
-    
-   The file 'ecl_init_file.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2012 Statoil ASA, Norway.
+
+   The file 'ecl_init_file.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 /*
@@ -21,7 +21,7 @@
   file does (currently) not contain any datastructures, only
   functions. Essentially this file is only a codifying of the ECLIPSE
   documentation of INIT files.
-  
+
   The functionality is mainly targeted at saving grid properties like
   PORO, PERMX and FIPNUM. The thermodynamic/relperm properties are
   mainly hardcoded to FALSE (in particular in the
@@ -41,7 +41,7 @@
 static ecl_kw_type * ecl_init_file_alloc_INTEHEAD( const ecl_grid_type * ecl_grid , int phases, time_t start_date , int simulator) {
   ecl_kw_type * intehead_kw = ecl_kw_alloc( INTEHEAD_KW , INTEHEAD_INIT_SIZE , ECL_INT_TYPE );
   ecl_kw_scalar_set_int( intehead_kw , 0 );
-  
+
   ecl_kw_iset_int( intehead_kw , INTEHEAD_UNIT_INDEX    , INTEHEAD_METRIC_VALUE );
   ecl_kw_iset_int( intehead_kw , INTEHEAD_NX_INDEX      , ecl_grid_get_nx( ecl_grid ));
   ecl_kw_iset_int( intehead_kw , INTEHEAD_NY_INDEX      , ecl_grid_get_ny( ecl_grid ));
@@ -55,8 +55,8 @@ static ecl_kw_type * ecl_init_file_alloc_INTEHEAD( const ecl_grid_type * ecl_gri
     ecl_kw_iset_int( intehead_kw , INTEHEAD_MONTH_INDEX  , month );
     ecl_kw_iset_int( intehead_kw , INTEHEAD_YEAR_INDEX   , year );
   }
-  ecl_kw_iset_int( intehead_kw , INTEHEAD_IPROG_INDEX , simulator);   
-  
+  ecl_kw_iset_int( intehead_kw , INTEHEAD_IPROG_INDEX , simulator);
+
   return intehead_kw;
 }
 
@@ -71,12 +71,12 @@ static ecl_kw_type * ecl_init_file_alloc_LOGIHEAD( int simulator ) {
     The documentation
   */
   bool with_RS                            = false;
-  bool with_RV                            = false; 
-  bool with_directional_relperm           = false;    
+  bool with_RV                            = false;
+  bool with_directional_relperm           = false;
   bool with_reversible_relperm_ECLIPSE100 = false;
   bool radial_grid_ECLIPSE100             = false;
   bool radial_grid_ECLIPSE300             = false;
-  bool with_reversible_relperm_ECLIPSE300 = false;   
+  bool with_reversible_relperm_ECLIPSE300 = false;
   bool with_hysterisis                    = false;
   bool dual_porosity                      = false;
   bool endpoint_scaling                   = false;
@@ -86,14 +86,14 @@ static ecl_kw_type * ecl_init_file_alloc_LOGIHEAD( int simulator ) {
   bool miscible_displacement              = false;
   bool scale_water_PC_at_max_sat          = false;
   bool scale_gas_PC_at_max_sat            = false;
-  
+
 
   ecl_kw_type * logihead_kw = ecl_kw_alloc( LOGIHEAD_KW , LOGIHEAD_INIT_SIZE , ECL_BOOL_TYPE );
-  
+
   ecl_kw_scalar_set_bool( logihead_kw , false );
-  
+
   ecl_kw_iset_bool( logihead_kw , LOGIHEAD_RS_INDEX                        , with_RS);
-  ecl_kw_iset_bool( logihead_kw , LOGIHEAD_RV_INDEX                        , with_RV);       
+  ecl_kw_iset_bool( logihead_kw , LOGIHEAD_RV_INDEX                        , with_RV);
   ecl_kw_iset_bool( logihead_kw , LOGIHEAD_DIR_RELPERM_INDEX               , with_directional_relperm);
 
   if (simulator == INTEHEAD_ECLIPSE100_VALUE) {
@@ -122,7 +122,7 @@ static ecl_kw_type * ecl_init_file_alloc_DOUBHEAD( ) {
   ecl_kw_type * doubhead_kw = ecl_kw_alloc( DOUBHEAD_KW , DOUBHEAD_INIT_SIZE , ECL_DOUBLE_TYPE );
 
   ecl_kw_scalar_set_double( doubhead_kw , 0);
-  
+
   return doubhead_kw;
 }
 
@@ -166,7 +166,7 @@ void ecl_init_file_fwrite_header( fortio_type * fortio , const ecl_grid_type * e
     ecl_kw_fwrite( intehead_kw , fortio );
     ecl_kw_free( intehead_kw );
   }
-  
+
   {
     ecl_kw_type * logihead_kw = ecl_init_file_alloc_LOGIHEAD( simulator );
     ecl_kw_fwrite( logihead_kw , fortio );
