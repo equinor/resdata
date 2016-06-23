@@ -62,6 +62,7 @@ void test_create() {
     ERT::TestArea ta("test/area");
     cwd1 = util_alloc_cwd();
     test_assert_string_not_equal( cwd0 , cwd1 );
+    test_assert_string_equal( cwd1 , ta.getCwd().c_str());
   }
   test_assert_false( util_is_directory(cwd1) );
   free( cwd1 );
