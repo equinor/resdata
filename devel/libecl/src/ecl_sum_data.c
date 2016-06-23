@@ -1465,6 +1465,14 @@ void ecl_sum_data_scale_vector(ecl_sum_data_type * data, int index, double scala
   }
 }
 
+void ecl_sum_data_shift_vector(ecl_sum_data_type * data, int index, double addend) {
+  int len = vector_get_size(data->data);
+  for (int i = 0; i < len; i++) {
+    ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data,i);
+    ecl_sum_tstep_ishift(ministep, index, addend);
+  }
+}
+
 bool ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2) {
   bool equal = true;
   if (int_vector_size( data1->report_last_index ) == int_vector_size(data2->report_last_index)) {

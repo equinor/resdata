@@ -35,13 +35,6 @@ def fgpt(days):
         return days
     else:
         return 100 - days
-    
-
-def close(f1,f2):
-    return abs(f1-f2) < 0.00001 # to test vector scaling
-
-def lists_close(l1,l2):
-    return min( [close(l1[i], l2[i]) for i in range(len(l1))] )
 
 class SumTest(ExtendedTestCase):
 
@@ -180,6 +173,7 @@ class SumTest(ExtendedTestCase):
 
     def test_ecl_sum_vector_algebra(self):
         scalar = 0.78
+        addend = 2.718281828459045
 
         # setup
         length = 100
@@ -192,9 +186,22 @@ class SumTest(ExtendedTestCase):
                                           "FGPT" : fgpt })
         with self.assertRaises( KeyError ):
             case.scaleVector( "MISSING:KEY" , scalar)
+            case.shiftVector( "MISSING:KEY" , addend)
+
+        # scale all vectors with scalar
         for key in case.keys():
             x = case.get_values(key) # get vector key
             case.scaleVector(key , scalar)
             y = case.get_values(key)
             x = x * scalar # numpy vector scaling
-            self.assertTrue( lists_close(x,y) )
+            for i in range(len(x)):
+                self.assertFloatEqual(x[i], y[i])
+
+        # shift all vectors with addend
+        for key in case.keys():
+            x = case.get_values(key) # get vector key
+            case.shiftVector(key , addend)
+            y = case.get_values(key)
+            x = x + addend # numpy vector shifting
+            for i in range(len(x)):
+                self.assertFloatEqual(x[i], y[i])

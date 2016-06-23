@@ -1185,6 +1185,9 @@ void ecl_sum_scale_vector( ecl_sum_type * ecl_sum, int index, double scalar ) {
   ecl_sum_data_scale_vector( ecl_sum->data, index, scalar );
 }
 
+void ecl_sum_shift_vector( ecl_sum_type * ecl_sum, int index, double addend ) {
+  ecl_sum_data_shift_vector( ecl_sum->data, index, addend );
+}
 
 bool ecl_sum_check_sim_time( const ecl_sum_type * sum , time_t sim_time) {
   return ecl_sum_data_check_sim_time( sum->data , sim_time );
