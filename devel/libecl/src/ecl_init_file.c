@@ -138,17 +138,23 @@ static ecl_kw_type * ecl_init_file_alloc_DOUBHEAD( ) {
    quantity, and the PORV field is calculated from PORO and the volume
    of the grid cells. Apart from PORV all the remaining fields in the
    INIT file should have nactive elements.
+
+   If you do not wish this function to be used for the PORV special
+   casing you can just pass NULL as the poro_kw in the
+   ecl_init_file_fwrite_header() function.
  */
 
 static void ecl_init_file_fwrite_poro( fortio_type * fortio , const ecl_grid_type * ecl_grid , const ecl_kw_type * poro ) {
   {
     ecl_kw_type * porv = ecl_kw_alloc( PORV_KW , ecl_grid_get_global_size( ecl_grid ) , ECL_FLOAT_TYPE);
     int global_index;
+    bool global_poro = (ecl_kw_get_size( poro ) == ecl_grid_get_global_size( ecl_grid )) ? true : false;
     for ( global_index = 0; global_index < ecl_grid_get_global_size( ecl_grid ); global_index++) {
       int active_index = ecl_grid_get_active_index1( ecl_grid , global_index );
-      if (active_index >= 0)
-        ecl_kw_iset_float( porv , global_index , ecl_kw_iget_float( poro , active_index ) * ecl_grid_get_cell_volume1( ecl_grid , global_index ));
-      else
+      if (active_index >= 0) {
+        int poro_index = global_poro ? global_index : active_index;
+        ecl_kw_iset_float( porv , global_index , ecl_kw_iget_float( poro , poro_index ) * ecl_grid_get_cell_volume1( ecl_grid , global_index ));
+      } else
         ecl_kw_iset_float( porv , global_index , 0 );
     }
     ecl_kw_fwrite( porv , fortio );
@@ -158,6 +164,12 @@ static void ecl_init_file_fwrite_poro( fortio_type * fortio , const ecl_grid_typ
   ecl_kw_fwrite( poro , fortio );
 }
 
+
+/*
+  If the poro keyword is non NULL this function will write both the
+  PORO keyword itself and also calculate the PORV keyword and write
+  that.
+*/
 
 void ecl_init_file_fwrite_header( fortio_type * fortio , const ecl_grid_type * ecl_grid , const ecl_kw_type * poro , int phases , time_t start_date) {
   int simulator = INTEHEAD_ECLIPSE100_VALUE;
@@ -179,8 +191,11 @@ void ecl_init_file_fwrite_header( fortio_type * fortio , const ecl_grid_type * e
     ecl_kw_free( doubhead_kw );
   }
 
-  if (ecl_kw_get_size( poro ) == ecl_grid_get_nactive( ecl_grid )) {
-    ecl_init_file_fwrite_poro( fortio , ecl_grid , poro );
-  } else
-    util_abort("%s: keyword:%s (PORO ?) has wrong size:%d  active cells in grid:%d \n",__func__ , ecl_kw_get_header( poro ) , ecl_kw_get_size( poro ) , ecl_grid_get_nactive( ecl_grid ));
+  if (poro) {
+    int poro_size = ecl_kw_get_size( poro );
+    if ((poro_size == ecl_grid_get_nactive( ecl_grid )) || (poro_size == ecl_grid_get_global_size(ecl_grid)))
+      ecl_init_file_fwrite_poro( fortio , ecl_grid , poro );
+    else
+      util_abort("%s: keyword PORO has wrong size:%d  Grid: %d/%d \n",__func__  , ecl_kw_get_size( poro ) , ecl_grid_get_nactive( ecl_grid ) , ecl_grid_get_global_size( ecl_grid ));
+  }
 }
