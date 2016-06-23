@@ -35,8 +35,6 @@ def fgpt(days):
         return days
     else:
         return 100 - days
-    
-
 
 class SumTest(ExtendedTestCase):
 
@@ -172,4 +170,38 @@ class SumTest(ExtendedTestCase):
         t2 = t0 + datetime.timedelta( days = 75 )
         self.assertEqual( sol[0] , t1 )
         self.assertEqual( sol[1] , t2 )
-        
+
+    def test_ecl_sum_vector_algebra(self):
+        scalar = 0.78
+        addend = 2.718281828459045
+
+        # setup
+        length = 100
+        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                            sim_length_days = length,
+                            num_report_step = 10,
+                            num_mini_step = 10,
+                            func_table = {"FOPT" : fopt,
+                                          "FOPR" : fopr ,
+                                          "FGPT" : fgpt })
+        with self.assertRaises( KeyError ):
+            case.scaleVector( "MISSING:KEY" , scalar)
+            case.shiftVector( "MISSING:KEY" , addend)
+
+        # scale all vectors with scalar
+        for key in case.keys():
+            x = case.get_values(key) # get vector key
+            case.scaleVector(key , scalar)
+            y = case.get_values(key)
+            x = x * scalar # numpy vector scaling
+            for i in range(len(x)):
+                self.assertFloatEqual(x[i], y[i])
+
+        # shift all vectors with addend
+        for key in case.keys():
+            x = case.get_values(key) # get vector key
+            case.shiftVector(key , addend)
+            y = case.get_values(key)
+            x = x + addend # numpy vector shifting
+            for i in range(len(x)):
+                self.assertFloatEqual(x[i], y[i])

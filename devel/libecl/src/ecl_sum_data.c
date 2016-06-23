@@ -300,8 +300,8 @@ ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
 */
 
 
-static const ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
-  return vector_iget_const( data->data , internal_index );
+static ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
+  return vector_iget( data->data , internal_index );
 }
 
 
@@ -1457,6 +1457,21 @@ int ecl_sum_data_get_length( const ecl_sum_data_type * data ) {
   return vector_get_size( data->data );
 }
 
+void ecl_sum_data_scale_vector(ecl_sum_data_type * data, int index, double scalar) {
+  int len = vector_get_size(data->data);
+  for (int i = 0; i < len; i++) {
+    ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data,i);
+    ecl_sum_tstep_iscale(ministep, index, scalar);
+  }
+}
+
+void ecl_sum_data_shift_vector(ecl_sum_data_type * data, int index, double addend) {
+  int len = vector_get_size(data->data);
+  for (int i = 0; i < len; i++) {
+    ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data,i);
+    ecl_sum_tstep_ishift(ministep, index, addend);
+  }
+}
 
 bool ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2) {
   bool equal = true;
