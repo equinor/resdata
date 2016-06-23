@@ -37,6 +37,11 @@ def fgpt(days):
         return 100 - days
     
 
+def close(f1,f2):
+    return abs(f1-f2) < 0.00001 # to test vector scaling
+
+def lists_close(l1,l2):
+    return min( [close(l1[i], l2[i]) for i in range(len(l1))] )
 
 class SumTest(ExtendedTestCase):
 
@@ -174,6 +179,8 @@ class SumTest(ExtendedTestCase):
         self.assertEqual( sol[1] , t2 )
 
     def test_ecl_sum_vector_algebra(self):
+        scalar = 0.78
+
         # setup
         length = 100
         case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
@@ -184,7 +191,10 @@ class SumTest(ExtendedTestCase):
                                           "FOPR" : fopr ,
                                           "FGPT" : fgpt })
         with self.assertRaises( KeyError ):
-            case.solveDays( "MISSING:KEY" , 0.56)
-        sol = case.solveDays( "FOPT" , 150 )
-        x = case
-        x.scaleVector('FOPT' , 0.78)
+            case.scaleVector( "MISSING:KEY" , scalar)
+        for key in case.keys():
+            x = case.get_values(key) # get vector key
+            case.scaleVector(key , scalar)
+            y = case.get_values(key)
+            x = x * scalar # numpy vector scaling
+            self.assertTrue( lists_close(x,y) )

@@ -300,8 +300,8 @@ ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
 */
 
 
-static const ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
-  return vector_iget_const( data->data , internal_index );
+static ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
+  return vector_iget( data->data , internal_index );
 }
 
 
@@ -1460,9 +1460,8 @@ int ecl_sum_data_get_length( const ecl_sum_data_type * data ) {
 void ecl_sum_data_scale_vector(ecl_sum_data_type * data, int index, double scalar) {
   int len = vector_get_size(data->data);
   for (int i = 0; i < len; i++) {
-    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(vector_iget(data->data, i), index);
-    float val = ecl_sum_tstep_iget(ministep, index);
-    ecl_sum_tstep_iset(ministep, index, val * scalar);
+    ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data,i);
+    ecl_sum_tstep_iscale(ministep, index, scalar);
   }
 }
 

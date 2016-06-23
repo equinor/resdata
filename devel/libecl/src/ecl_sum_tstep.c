@@ -282,6 +282,9 @@ void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value) {
     util_abort("%s: index:%d invalid. Valid range: [0,%d) \n",__func__  ,index , tstep->data_size);
 }
 
+void ecl_sum_tstep_iscale(ecl_sum_tstep_type * tstep, int index, float scalar) {
+  ecl_sum_tstep_iset(tstep, index, ecl_sum_tstep_iget(tstep, index) * scalar);
+}
 
 void ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const smspec_node_type * smspec_node , float value) {
   int data_index = smspec_node_get_params_index( smspec_node );
