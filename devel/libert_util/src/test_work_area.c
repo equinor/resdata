@@ -234,7 +234,7 @@ const char * test_work_area_get_original_cwd( const test_work_area_type * work_a
   return work_area->original_cwd;
 }
 
-static char * test_work_area_alloc_input_path( const test_work_area_type * work_area , const char * input_path ) {
+char * test_work_area_alloc_input_path( const test_work_area_type * work_area , const char * input_path ) {
   if (util_is_abs_path( input_path ))
     return util_alloc_string_copy( input_path );
   else {
