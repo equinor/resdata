@@ -30,6 +30,7 @@ extern "C" {
 
   typedef struct test_work_area_struct test_work_area_type;
 
+  char                * test_work_area_alloc_input_path( const test_work_area_type * work_area , const char * input_path );
   test_work_area_type * test_work_area_alloc(const char * test_name );
   test_work_area_type * test_work_area_alloc_relative(const char * prefix , const char * test_path);
   void                  test_work_area_set_store( test_work_area_type * work_area , bool store);

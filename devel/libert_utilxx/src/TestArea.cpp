@@ -36,9 +36,15 @@ namespace ERT {
   }
 
   void TestArea::setStore(bool store) {
+    assertOpen();
     test_work_area_set_store( c_ptr.get() , store );
   }
 
+  std::string TestArea::getOriginalCwd() const {
+    assertOpen();
+    std::string orgCwd( test_work_area_get_original_cwd( c_ptr.get() ));
+    return orgCwd;
+  }
 
 
   std::string TestArea::getCwd() const {
@@ -48,26 +54,38 @@ namespace ERT {
     return cwd;
   }
 
+
+  std::string TestArea::inputPath( const std::string& path) const {
+    assertOpen();
+    {
+        char * ptr = test_work_area_alloc_input_path( c_ptr.get() , path.c_str());
+        std::string input_path( ptr );
+        free( ptr );
+        return input_path;
+    }
+  }
+
+
   void TestArea::assertOpen() const {
     if (!c_ptr)
       throw std::runtime_error("Must call TestArea::enter( \"name\" ) before invoking copy operations");
   }
 
   void TestArea::assertFileExists( const std::string& filename ) const {
-    assertOpen();
-    if (!util_is_file( filename.c_str() ))
+    std::string input_file = inputPath( filename );
+    if (!util_is_file( input_file.c_str() ))
       throw std::invalid_argument("File " + filename + " does not exist ");
   }
 
   void TestArea::assertDirectoryExists( const std::string& directory ) const {
-    assertOpen();
-    if (!util_is_directory( directory.c_str() ))
+    std::string input_dir = inputPath( directory );
+    if (!util_is_directory( input_dir.c_str() ))
       throw std::invalid_argument("Directory " + directory  + " does not exist ");
   }
 
   void TestArea::assertEntryExists( const std::string& entry ) const {
-    assertOpen();
-    if (!util_entry_exists( entry.c_str() ))
+    std::string input_entry = inputPath( entry );
+    if (!util_entry_exists( input_entry.c_str() ))
       throw std::invalid_argument("Entry " + entry+ " does not exist ");
   }
 

@@ -85,9 +85,11 @@ namespace ERT {
       void copyParentDirectory( const std::string& entry ) const; 
 
       std::string getCwd() const;
+      std::string getOriginalCwd() const;
       void setStore(bool store);
 
-    private: 
+    private:
+      std::string inputPath( const std::string& path) const;
       void assertOpen( ) const;
       void assertFileExists( const std::string& ) const;
       void assertDirectoryExists( const std::string& ) const;

@@ -29,7 +29,7 @@
 void test_enter( const char* argv0 ) {
   ERT::TestArea ta;
   test_assert_throw( ta.copyFile( argv0 ) , std::runtime_error );
-  
+
   ta.enter("test/enter");
   ta.copyFile( argv0 );
   test_assert_true( util_file_exists( LOCAL_ARGV0 ));
@@ -50,6 +50,12 @@ void test_copy( const char* argv0 ) {
 
    ta.copyParentContent( argv0 );
    test_assert_true( util_file_exists( LOCAL_ARGV0));
+
+   {
+       ERT::TestArea ta2("test2/copy");
+       ta2.copyFile( LOCAL_ARGV0 );
+       test_assert_true( util_file_exists( LOCAL_ARGV0));
+   }
 }
 
 
@@ -63,6 +69,7 @@ void test_create() {
     cwd1 = util_alloc_cwd();
     test_assert_string_not_equal( cwd0 , cwd1 );
     test_assert_string_equal( cwd1 , ta.getCwd().c_str());
+    test_assert_string_equal( cwd0 , ta.getOriginalCwd( ).c_str() );
   }
   test_assert_false( util_is_directory(cwd1) );
   free( cwd1 );
