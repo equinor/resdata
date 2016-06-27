@@ -19,6 +19,7 @@
 
 #include <ert/util/util.h>
 #include <ert/util/TestArea.hpp>
+#include <cstdlib>
 
 namespace ERT {
 
