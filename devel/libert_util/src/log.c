@@ -90,7 +90,10 @@ int log_get_level( const log_type * logh) {
   return logh->log_level;
 }
 
-
+/**
+ * If an incoming message is below or equal to the configured log_level, it is included. So a high log_level will
+ * include more messages.
+ */
 void log_set_level( log_type * logh , int log_level) {
   logh->log_level = log_level;
 }
@@ -115,7 +118,9 @@ log_type * log_open( const char * filename , int log_level) {
 }
 
 
-
+/**
+ * The message_level is compared to the configured log_level. Low message_level means "more important".
+ */
 bool log_include_message(const log_type *logh , int message_level) {
   if (message_level <= logh->log_level)
     return true;
