@@ -14,6 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
+import ert
 from ert.test import ExtendedTestCase
 from ert.util import Version
 
@@ -90,3 +91,7 @@ class VersionTest(ExtendedTestCase):
         v2 = Version(1, 1, 2)
 
         self.assertTrue(v1 == v2)
+
+    def test_root_version(self):
+        cv = Version.currentVersion( )
+        self.assertEqual( ert.__version__ , cv.versionString() )
