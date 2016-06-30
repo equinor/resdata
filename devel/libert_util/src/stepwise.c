@@ -431,6 +431,14 @@ bool_vector_type * stepwise_get_active_set( stepwise_type * stepwise ) {
   return stepwise->active_set;
 }
 
+double stepwise_iget_beta(const stepwise_type * stepwise, const int index ) {
+  return matrix_iget( stepwise->beta, index, 0);
+}
+
+double stepwise_get_sum_beta(const stepwise_type * stepwise ) {
+  return matrix_get_column_abssum( stepwise->beta, 0);
+}
+
 void stepwise_isetY0( stepwise_type * stepwise , int i , double value ) {
   matrix_iset( stepwise->Y0, i , 0 , value );
 }
