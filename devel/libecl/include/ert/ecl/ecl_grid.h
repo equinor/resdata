@@ -56,15 +56,24 @@ extern "C" {
   void            ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos );
   void            ecl_grid_get_corner_xyz(const ecl_grid_type * grid , int i , int j , int k, double * xpos , double * ypos , double * zpos );
 
+  double          ecl_grid_get_cell_dx1A( const ecl_grid_type * grid , int active_index);
+  double          ecl_grid_get_cell_dy1A( const ecl_grid_type * grid , int active_index);
+  double          ecl_grid_get_cell_dz1A( const ecl_grid_type * grid , int active_index );
+  double          ecl_grid_get_cell_thickness1A( const ecl_grid_type * grid , int active_index );
+
   double          ecl_grid_get_cell_dx1( const ecl_grid_type * grid , int global_index );
-  double          ecl_grid_get_cell_dx3( const ecl_grid_type * grid , int i , int j , int k);
   double          ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index );
-  double          ecl_grid_get_cell_dy3( const ecl_grid_type * grid , int i , int j , int k);
-  double          ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j , int k);
+  double          ecl_grid_get_cell_dz1( const ecl_grid_type * grid , int global_index );
   double          ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_index );
+
+  double          ecl_grid_get_cell_dx3( const ecl_grid_type * grid , int i , int j , int k);
+  double          ecl_grid_get_cell_dy3( const ecl_grid_type * grid , int i , int j , int k);
+  double          ecl_grid_get_cell_dz3( const ecl_grid_type * grid , int i , int j , int k);
+  double          ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j , int k);
+
+  double          ecl_grid_get_cdepth1A(const ecl_grid_type * grid , int active_index);
   double          ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index);
   double          ecl_grid_get_cdepth3(const ecl_grid_type * grid , int i, int j , int k);
-  double          ecl_grid_get_depth3(const ecl_grid_type * grid , int i, int j , int k);
   int             ecl_grid_get_global_index_from_xy( const ecl_grid_type * ecl_grid , int k , bool lower_layer , double x , double y);
   bool            ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z);
   bool            ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i , int j , int k, double x , double y , double z );
@@ -182,7 +191,11 @@ extern "C" {
   void                    ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , const char * special_header , FILE * stream , double double_default);
   bool                    ecl_grid_test_lgr_consistency( const ecl_grid_type * ecl_grid );
 
+  void                    ecl_grid_fwrite_dims( const ecl_grid_type * grid , fortio_type * init_file,  ert_ecl_unit_enum output_unit);
+  void                    ecl_grid_fwrite_depth( const ecl_grid_type * grid , fortio_type * init_file , ert_ecl_unit_enum ouput_unit);
   void                    ecl_grid_fwrite_EGRID(  ecl_grid_type * grid , const char * filename, bool metric_output);
+  void                    ecl_grid_fwrite_EGRID2( ecl_grid_type * grid , const char * filename, ert_ecl_unit_enum output_unit);
+
   void                    ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename);
   void                    ecl_grid_fprintf_grdecl(  ecl_grid_type * grid , FILE * stream );
   void                    ecl_grid_fwrite_EGRID_header__( int dims[3] , const float mapaxes[6], int dualp_flag , fortio_type * fortio);

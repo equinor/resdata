@@ -90,13 +90,28 @@ EclTypeEnum.registerEnum(ECL_LIB, "ecl_type_enum")
 
 #-----------------------------------------------------------------
 
+class EclUnitTypeEnum(BaseCEnum):
+    TYPE_NAME = "ecl_unit_enum"
+
+    ERT_ECL_METRIC_UNITS = None
+    ERT_ECL_FIELD_UNITS  = None
+    ERT_ECL_LAB_UNITS    = None
+
+EclUnitTypeEnum.addEnum("ERT_ECL_METRIC_UNITS" , 0 )
+EclUnitTypeEnum.addEnum("ERT_ECL_FIELD_UNITS" , 1 )
+EclUnitTypeEnum.addEnum("ERT_ECL_LAB_UNITS" , 2 )
+
+EclUnitTypeEnum.registerEnum(ECL_LIB, "ecl_unit_enum")
+
+
+#-----------------------------------------------------------------
+
 class EclFileFlagEnum(BaseCEnum):
     ECL_FILE_CLOSE_STREAM = None
     ECL_FILE_WRITABLE = None
 
 EclFileFlagEnum.addEnum("ECL_FILE_CLOSE_STREAM" , 1 )
 EclFileFlagEnum.addEnum("ECL_FILE_WRITABLE" , 2 )
-
 
 EclFileFlagEnum.registerEnum(ECL_LIB, "ecl_file_flag_enum")
 

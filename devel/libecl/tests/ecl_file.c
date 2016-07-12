@@ -24,6 +24,7 @@
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.h>
 
+#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_endian_flip.h>
@@ -134,7 +135,7 @@ void test_truncated() {
   test_work_area_type * work_area = test_work_area_alloc("ecl_file_truncated" );
   {
     ecl_grid_type * grid = ecl_grid_alloc_rectangular(20,20,20,1,1,1,NULL);
-    ecl_grid_fwrite_EGRID( grid , "TEST.EGRID", true);
+    ecl_grid_fwrite_EGRID2( grid , "TEST.EGRID", ERT_ECL_METRIC_UNITS );
     ecl_grid_free( grid );
   }
   {
