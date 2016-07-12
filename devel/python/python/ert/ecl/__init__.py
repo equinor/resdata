@@ -81,11 +81,11 @@ class EclPrototype(Prototype):
 
 ECL_LIB = clib.ert_load("libecl")
 
+from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUnitTypeEnum , EclUtil
 from .ecl_sum_var_type import EclSumVarType
 from .ecl_sum_tstep import EclSumTStep
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
 from .ecl_sum_keyword_vector import EclSumKeyWordVector
-from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUtil
 from .ecl_rft_cell import EclPLTCell, EclRFTCell
 from .ecl_rft import EclRFT, EclRFTFile
 from .fortio import FortIO, openFortIO
