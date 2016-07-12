@@ -32,7 +32,7 @@ import os.path
 import math
 from ert.cwrap import CFILE, BaseCClass
 from ert.util import IntVector
-from ert.ecl import EclPrototype, EclTypeEnum, EclKW, FortIO
+from ert.ecl import EclPrototype, EclTypeEnum, EclKW, FortIO, EclUnitTypeEnum
 
 
 class EclGrid(BaseCClass):
@@ -94,7 +94,7 @@ class EclGrid(BaseCClass):
     _get_distance                 = EclPrototype("void   ecl_grid_get_distance( ecl_grid , int , int , double* , double* , double*)")
     _fprintf_grdecl               = EclPrototype("void   ecl_grid_fprintf_grdecl( ecl_grid , FILE) ")
     _fwrite_GRID                  = EclPrototype("void   ecl_grid_fwrite_GRID( ecl_grid , char* )")
-    _fwrite_EGRID                 = EclPrototype("void   ecl_grid_fwrite_EGRID( ecl_grid , char*, bool )")
+    _fwrite_EGRID2                = EclPrototype("void   ecl_grid_fwrite_EGRID2( ecl_grid , char*, ecl_unit_enum )")
     _equal                        = EclPrototype("bool   ecl_grid_compare(ecl_grid , ecl_grid , bool, bool)")
     _dual_grid                    = EclPrototype("bool   ecl_grid_dual_grid( ecl_grid )")
     _init_actnum                  = EclPrototype("void   ecl_grid_init_actnum_data( ecl_grid , int* )")
@@ -1108,11 +1108,11 @@ class EclGrid(BaseCClass):
         cfile = CFILE( pyfile )
         self._fprintf_grdecl( cfile )
 
-    def save_EGRID( self , filename , output_metric = True):
+    def save_EGRID( self , filename , output_unit = EclUnitTypeEnum.ERT_ECL_METRIC_UNITS):
         """
         Will save the current grid as a EGRID file.
         """
-        self._fwrite_EGRID( filename, output_metric )
+        self._fwrite_EGRID2( filename, output_unit )
 
     def save_GRID( self , filename ):
         """

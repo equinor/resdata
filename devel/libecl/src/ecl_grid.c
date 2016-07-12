@@ -5952,7 +5952,7 @@ static void  ecl_grid_fwrite_self_nnc( const ecl_grid_type * grid , fortio_type 
 }
 
 
-static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio, bool metric_output) {
+static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio, ert_ecl_unit_enum output_unit) {
   bool is_lgr = true;
   if (grid->parent_grid == NULL)
     is_lgr = false;
@@ -5985,7 +5985,6 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
   {
     ecl_grid_assert_coord_kw( grid );
     {
-      ert_ecl_unit_enum output_unit = (metric_output) ? ERT_ECL_METRIC_UNITS : ERT_ECL_FIELD_UNITS;
       ecl_kw_type * coord_kw = ecl_kw_alloc_copy(grid->coord_kw);
       ecl_kw_type * zcorn_kw = ecl_grid_alloc_zcorn_kw( grid );
 
@@ -6031,20 +6030,38 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
 }
 
 
-void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool output_metric) {
+
+void ecl_grid_fwrite_EGRID2( ecl_grid_type * grid , const char * filename, ert_ecl_unit_enum output_unit) {
   bool fmt_file        = false;
   fortio_type * fortio = fortio_open_writer( filename , fmt_file , ECL_ENDIAN_FLIP );
 
-  ecl_grid_fwrite_EGRID__( grid , fortio, output_metric );
+  ecl_grid_fwrite_EGRID__( grid , fortio, output_unit );
   {
     int grid_nr;
     for (grid_nr = 0; grid_nr < vector_get_size( grid->LGR_list ); grid_nr++) {
       ecl_grid_type * igrid = vector_iget( grid->LGR_list , grid_nr );
-      ecl_grid_fwrite_EGRID__( igrid , fortio, output_metric );
+      ecl_grid_fwrite_EGRID__( igrid , fortio, output_unit );
     }
   }
   fortio_fclose( fortio );
 }
+
+
+/*
+   The construction with ecl_grid_fwrite_EGRID() and
+   ecl_grid_fwrite_EGRID2() is an attempt to create API stability. New
+   code should use the ecl_grid_fwrite_EGRID2() function.
+*/
+
+void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool output_metric) {
+  ert_ecl_unit_enum output_unit = ERT_ECL_METRIC_UNITS;
+
+  if (!output_metric)
+    output_unit = ERT_ECL_FIELD_UNITS;
+
+  ecl_grid_fwrite_EGRID2( grid , filename , output_unit );
+}
+
 
 
 void ecl_grid_fwrite_depth( const ecl_grid_type * grid , fortio_type * init_file , ert_ecl_unit_enum output_unit) {

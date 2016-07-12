@@ -194,6 +194,8 @@ extern "C" {
   void                    ecl_grid_fwrite_dims( const ecl_grid_type * grid , fortio_type * init_file,  ert_ecl_unit_enum output_unit);
   void                    ecl_grid_fwrite_depth( const ecl_grid_type * grid , fortio_type * init_file , ert_ecl_unit_enum ouput_unit);
   void                    ecl_grid_fwrite_EGRID(  ecl_grid_type * grid , const char * filename, bool metric_output);
+  void                    ecl_grid_fwrite_EGRID2( ecl_grid_type * grid , const char * filename, ert_ecl_unit_enum output_unit);
+
   void                    ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename);
   void                    ecl_grid_fprintf_grdecl(  ecl_grid_type * grid , FILE * stream );
   void                    ecl_grid_fwrite_EGRID_header__( int dims[3] , const float mapaxes[6], int dualp_flag , fortio_type * fortio);
