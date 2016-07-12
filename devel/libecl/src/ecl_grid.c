@@ -638,7 +638,8 @@ struct ecl_grid_struct {
                                         recalculate this from the cell coordinates,
                                         but in cases with skewed cells this has proved
                                         numerically challenging. */
-  bool                  is_metric;
+
+  ert_ecl_unit_enum     unit_system;
   int                   eclipse_version;
 };
 
@@ -1299,7 +1300,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
   ecl_grid_alloc_cells( grid , init_valid );
-  grid->is_metric             = true;
+  grid->unit_system            = ERT_ECL_METRIC_UNITS;
 
 
   if (global_grid != NULL) {
@@ -4266,6 +4267,14 @@ double ecl_grid_get_cdepth3(const ecl_grid_type * grid , int i, int j , int k) {
 }
 
 
+double ecl_grid_get_cdepth1A(const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_get_cdepth1( grid , global_index );
+}
+
+
+
+
 int ecl_grid_locate_depth( const ecl_grid_type * grid , double depth , int i , int j ) {
   if (depth < ecl_grid_get_top2( grid , i , j))
     return -1;
@@ -4363,21 +4372,42 @@ double ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index) {
 
 
 
-double ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_index ) {
+double ecl_grid_get_cell_dz1( const ecl_grid_type * grid , int global_index ) {
   const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
-  double thickness = 0;
+  double dz = 0;
   int ij;
 
   for (ij = 0; ij < 4; ij++)
-    thickness += (cell->corner_list[ij + 4].z - cell->corner_list[ij].z);
+    dz += (cell->corner_list[ij + 4].z - cell->corner_list[ij].z);
 
-  return thickness * 0.25;
+  return dz * 0.25;
+}
+
+
+double ecl_grid_get_cell_dz3( const ecl_grid_type * grid , int i , int j , int k) {
+  const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
+  return ecl_grid_get_cell_dz1( grid , global_index );
+}
+
+
+double ecl_grid_get_cell_dz1A( const ecl_grid_type * grid , int active_index ) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_get_cell_dz1( grid , global_index );
+}
+
+
+double ecl_grid_get_cell_thickness1( const ecl_grid_type * grid , int global_index ) {
+  return ecl_grid_get_cell_dz1( grid, global_index );
 }
 
 
 double ecl_grid_get_cell_thickness3( const ecl_grid_type * grid , int i , int j , int k) {
-  const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
-  return ecl_grid_get_cell_thickness1( grid , global_index );
+  return ecl_grid_get_cell_dz3( grid, i,j,k);
+}
+
+
+double ecl_grid_get_cell_thickness1A( const ecl_grid_type * grid , int active_index ) {
+  return ecl_grid_get_cell_dz1A( grid, active_index);
 }
 
 
@@ -4405,6 +4435,13 @@ double ecl_grid_get_cell_dx3( const ecl_grid_type * grid , int i , int j , int k
 }
 
 
+double ecl_grid_get_cell_dx1A( const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_get_cell_dx1( grid , global_index );
+}
+
+
+
 double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
   double V = ecl_grid_get_cell_volume1(grid , global_index);
   double dz = ecl_grid_get_cell_thickness1( grid , global_index);
@@ -4416,9 +4453,13 @@ double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
 
 double ecl_grid_get_cell_dy3( const ecl_grid_type * grid , int i , int j , int k) {
   const int global_index = ecl_grid_get_global_index3(grid , i,j,k);
-  return ecl_grid_get_cell_dx1( grid , global_index );
+  return ecl_grid_get_cell_dy1( grid , global_index );
 }
 
+double ecl_grid_get_cell_dy1A( const ecl_grid_type * grid , int active_index) {
+  const int global_index = ecl_grid_get_global_index1A(grid , active_index);
+  return ecl_grid_get_cell_dy1( grid , global_index );
+}
 
 
 const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {
@@ -5261,6 +5302,24 @@ static ecl_kw_type * ecl_grid_alloc_gridunits_kw( ) {
 
 /*****************************************************************/
 
+static float ecl_grid_output_scaling( const ecl_grid_type * grid , ert_ecl_unit_enum output_unit) {
+  if (output_unit == ERT_ECL_LAB_UNITS)
+    util_abort("%s: sorry - lab units not yet supported" , __func__);
+
+  if (grid->unit_system == ERT_ECL_LAB_UNITS)
+    util_abort("%s: sorry - lab units not yet supported");
+
+  if (grid->unit_system == output_unit)
+    return 1.0;
+  else {
+    if (grid->unit_system == ERT_ECL_METRIC_UNITS)
+      return METER_TO_FEET_SCALE_FACTOR;
+    else
+      return 1.0 / METER_TO_FEET_SCALE_FACTOR;
+  }
+}
+
+
 static void ecl_grid_fwrite_mapaxes( const float * mapaxes , fortio_type * fortio) {
   ecl_kw_type * mapaxes_kw = ecl_grid_alloc_mapaxes_kw( mapaxes );
   ecl_kw_fwrite( mapaxes_kw , fortio );
@@ -5924,39 +5983,21 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
   ecl_grid_fwrite_gridhead_kw( grid->nx , grid->ny , grid->nz , grid->lgr_nr , fortio);
   /* Writing main grid data */
   {
+    ecl_grid_assert_coord_kw( grid );
     {
-      ecl_grid_assert_coord_kw( grid );
-      if(metric_output != grid->is_metric){
-          ecl_kw_type * coord_kw = ecl_kw_alloc_copy(grid->coord_kw);
-          double scale_factor = 0.0;
-          if (grid->is_metric){
-            scale_factor = METER_TO_FEET_SCALE_FACTOR;
-          } else{ 
-            scale_factor = (1 / METER_TO_FEET_SCALE_FACTOR);
-          }
-          ecl_kw_scale_float(coord_kw, scale_factor);
-          ecl_kw_fwrite(coord_kw, fortio);
-          ecl_kw_free(coord_kw);
-      }else{
-          ecl_kw_fwrite( grid->coord_kw , fortio );
-      }
-    }
-    {
+      ert_ecl_unit_enum output_unit = (metric_output) ? ERT_ECL_METRIC_UNITS : ERT_ECL_FIELD_UNITS;
+      ecl_kw_type * coord_kw = ecl_kw_alloc_copy(grid->coord_kw);
       ecl_kw_type * zcorn_kw = ecl_grid_alloc_zcorn_kw( grid );
-      if(metric_output != grid->is_metric){
-          double scale_factor = 0.0;
-          if (grid->is_metric){
-            scale_factor = METER_TO_FEET_SCALE_FACTOR;
-          } else{ 
-            scale_factor = (1 / METER_TO_FEET_SCALE_FACTOR);
-          }
-          ecl_kw_scale_float(zcorn_kw, scale_factor);
+
+      if (output_unit != grid->unit_system) {
+        double scale_factor = ecl_grid_output_scaling( grid , output_unit );
+        ecl_kw_scale_float(coord_kw, scale_factor);
+        ecl_kw_scale_float(zcorn_kw, scale_factor);
       }
-      ecl_kw_fwrite( zcorn_kw , fortio );
-
-
-
+      ecl_kw_fwrite(coord_kw, fortio);
+      ecl_kw_fwrite(zcorn_kw, fortio);
       ecl_kw_free( zcorn_kw );
+      ecl_kw_free(coord_kw);
     }
     {
       ecl_kw_type * actnum_kw = ecl_grid_alloc_actnum_kw( grid );
@@ -6003,6 +6044,52 @@ void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool o
     }
   }
   fortio_fclose( fortio );
+}
+
+
+void ecl_grid_fwrite_depth( const ecl_grid_type * grid , fortio_type * init_file , ert_ecl_unit_enum output_unit) {
+  ecl_kw_type * depth_kw = ecl_kw_alloc("DEPTH" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
+  {
+    float * depth_ptr = ecl_kw_get_ptr(depth_kw);
+    for (int i = 0; i < ecl_grid_get_nactive( grid ); i++)
+      depth_ptr[i] = ecl_grid_get_cdepth1A( grid , i );
+  }
+  ecl_kw_scale_float( depth_kw , ecl_grid_output_scaling( grid , output_unit ));
+  ecl_kw_fwrite( depth_kw , init_file );
+  ecl_kw_free( depth_kw );
+}
+
+
+void ecl_grid_fwrite_dims( const ecl_grid_type * grid , fortio_type * init_file,  ert_ecl_unit_enum output_unit) {
+  ecl_kw_type * dx = ecl_kw_alloc("DX" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
+  ecl_kw_type * dy = ecl_kw_alloc("DY" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
+  ecl_kw_type * dz = ecl_kw_alloc("DZ" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
+  {
+    {
+      float * dx_ptr = ecl_kw_get_ptr(dx);
+      float * dy_ptr = ecl_kw_get_ptr(dy);
+      float * dz_ptr = ecl_kw_get_ptr(dz);
+
+      for (int i = 0; i < ecl_grid_get_nactive( grid ); i++) {
+        dx_ptr[i] = ecl_grid_get_cell_dx1A( grid , i );
+        dy_ptr[i] = ecl_grid_get_cell_dy1A( grid , i );
+        dz_ptr[i] = ecl_grid_get_cell_dz1A( grid , i );
+      }
+    }
+
+    {
+      float scale_factor = ecl_grid_output_scaling( grid , output_unit );
+      ecl_kw_scale_float( dx , scale_factor );
+      ecl_kw_scale_float( dy , scale_factor );
+      ecl_kw_scale_float( dz , scale_factor );
+    }
+  }
+  ecl_kw_fwrite( dx , init_file );
+  ecl_kw_fwrite( dy , init_file );
+  ecl_kw_fwrite( dz , init_file );
+  ecl_kw_free( dx );
+  ecl_kw_free( dy );
+  ecl_kw_free( dz );
 }
 
 

@@ -6,6 +6,10 @@ add_executable( ecl_kw_init ecl_kw_init.c )
 target_link_libraries( ecl_kw_init ecl test_util )
 add_test( ecl_kw_init ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_init  )
 
+add_executable( ecl_grid_init_fwrite ecl_grid_init_fwrite.c )
+target_link_libraries( ecl_grid_init_fwrite ecl test_util )
+add_test( ecl_grid_init_fwrite ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_init_fwrite  )
+
 add_executable( ecl_init_file ecl_init_file.c )
 target_link_libraries( ecl_init_file ecl test_util )
 add_test( ecl_init_file ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_init  )
