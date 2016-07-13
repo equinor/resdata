@@ -238,7 +238,54 @@ class KWTest(ExtendedTestCase):
             f = EclFile( "TEST.FINIT" )
             self.assertTrue( kw1 == f[0] )
             self.assertTrue( kw2 == f[1] )
-            
+
+
+    def test_first_different(self):
+        kw1 = EclKW( "NAME1" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw2 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw3 = EclKW( "NAME2" , 200 , EclTypeEnum.ECL_INT_TYPE)
+        kw4 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_FLOAT_TYPE)
+        kw5 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_FLOAT_TYPE)
 
             
+        with self.assertRaises( IndexError ):
+            EclKW.firstDifferent( kw1 , kw2 , offset = 100 )
+
+        with self.assertRaises( ValueError ):
+            EclKW.firstDifferent( kw1 , kw3 )
+
+        with self.assertRaises( TypeError ):
+            EclKW.firstDifferent( kw1 , kw4 )
+
             
+        with self.assertRaises( IndexError ):
+            kw1.firstDifferent( kw2 , offset = 100 )
+
+        with self.assertRaises( ValueError ):
+            kw1.firstDifferent( kw3 )
+
+        with self.assertRaises( TypeError ):
+            kw1.firstDifferent( kw4 )
+
+
+        kw1.assign( 1 )
+        kw2.assign( 1 )
+
+        self.assertEqual( kw1.firstDifferent( kw2 ) , len(kw1))
+
+        kw1[0] = 100
+        self.assertEqual( kw1.firstDifferent( kw2 ) , 0)
+        self.assertEqual( kw1.firstDifferent( kw2 , offset = 1) , len(kw1))
+        kw1[10] = 100
+        self.assertEqual( kw1.firstDifferent( kw2 , offset = 1) , 10)
+
+
+        kw4.assign( 1.0 )
+        kw5.assign( 1.0 )
+        self.assertEqual( kw4.firstDifferent( kw5 ) , len(kw4))
+
+        kw4[10] *= 1.0001
+        self.assertEqual( kw4.firstDifferent( kw5 ) , 10)
+
+        self.assertEqual( kw4.firstDifferent( kw5 , epsilon = 1.0) , len(kw4))
+        self.assertEqual( kw4.firstDifferent( kw5 , epsilon = 0.0000001) , 10)

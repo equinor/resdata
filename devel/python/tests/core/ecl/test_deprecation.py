@@ -28,6 +28,14 @@ from ert.util import BoolVector
 
 warnings.simplefilter("error" , DeprecationWarning)
 
+
+class Deprecation_2_1_Test(ExtendedTestCase):
+    def test_ecl_kw_classprop(self):
+        with self.assertRaises(DeprecationWarning):
+            int_kw = EclKW.int_kw
+
+    
+
 class Deprecation_2_0_Test(ExtendedTestCase):
     def test_EclGrid_dims_property(self):
         with self.assertRaises(DeprecationWarning):

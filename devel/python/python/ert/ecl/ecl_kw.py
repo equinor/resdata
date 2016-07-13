@@ -128,7 +128,7 @@ class EclKW(BaseCClass):
     _max_min_float     = EclPrototype("void     ecl_kw_max_min_float( ecl_kw , float* , float*)")
     _max_min_double    = EclPrototype("void     ecl_kw_max_min_double( ecl_kw , double* , double*)")
     _fix_uninitialized = EclPrototype("void     ecl_kw_fix_uninitialized( ecl_kw ,int , int , int, int*)")
-
+    _first_different   = EclPrototype("int      ecl_kw_first_different( ecl_kw , ecl_kw , int , double)")
 
     
     @classmethod
@@ -164,11 +164,18 @@ class EclKW(BaseCClass):
 
     @classprop
     def int_kw( cls ):
+        warnings.warn("The EclKW.int_kw  class property has been deprecated - use class method: EclKW.intKeywords( )" , DeprecationWarning )
+        return cls.intKeywords( )
+
+
+    @classmethod
+    def intKeywords(cls):
         """Will return the current set of integer keywords."""
         return cls.int_kw_set
 
-        
-        
+
+
+
     @classmethod
     def create( cls , name, size , data_type):
         """
@@ -1119,3 +1126,15 @@ class EclKW(BaseCClass):
         else:
             raise ValueError("Only numeric types can export data pointer")
 
+        
+    def firstDifferent(kw1 , kw2 , offset = 0 , epsilon = 0):
+        if len(kw1) != len(kw2):
+            raise ValueError("Keywords must have equal size")
+
+        if offset >= len(kw1):
+            raise IndexError("Offset:%d invalid - size:%d" % (offset , len(kw1)))
+
+        if kw1.getEclType() != kw2.getEclType():
+            raise TypeError("The two keywords have different type")
+
+        return kw1._first_different( kw2 , offset , epsilon )

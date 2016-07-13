@@ -370,6 +370,9 @@ static bool ecl_kw_data_equal__( const ecl_kw_type * ecl_kw , const void * data 
 }
 
 
+
+
+
 /**
    Observe that the comparison is done with memcmp() -
    i.e. "reasonably good" numerical agreement is *not* enough.
@@ -2729,6 +2732,56 @@ void ecl_kw_fprintf_data( const ecl_kw_type * ecl_kw , const char * fmt , FILE *
     ecl_kw_fprintf_data_bool( ecl_kw , fmt , stream );
   else if (ecl_kw->ecl_type == ECL_CHAR_TYPE)
     ecl_kw_fprintf_data_char( ecl_kw , fmt , stream );
+}
+
+
+
+static bool ecl_kw_elm_equal_numeric__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double epsilon) {
+  double v1 = ecl_kw_iget_as_double( ecl_kw1 , offset );
+  double v2 = ecl_kw_iget_as_double( ecl_kw2 , offset );
+  return CMP_double(v1 , v2 , epsilon , epsilon );
+}
+
+
+static bool ecl_kw_elm_equal__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset) {
+  size_t data_offset = ecl_kw1->sizeof_ctype * offset;
+  int cmp = memcmp( &ecl_kw1->data[ data_offset ] , &ecl_kw2->data[ data_offset ] , ecl_kw1->sizeof_ctype);
+  if (cmp == 0)
+    return true;
+  else
+    return false;
+}
+
+
+int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double epsilon) {
+  if (!ecl_kw_size_and_type_equal( ecl_kw1 , ecl_kw2))
+    util_abort("%s: sorry invalid comparison\n",__func__);
+
+
+  if (offset >= ecl_kw_get_size( ecl_kw1 ))
+    util_abort("%s: sorry - invalid offset value\n",__func__);
+
+  {
+    bool numeric_compare = false;
+
+    if ((epsilon > 0) && ((ecl_kw_get_type( ecl_kw1 ) == ECL_FLOAT_TYPE) || (ecl_kw_get_type( ecl_kw1 ) == ECL_DOUBLE_TYPE)))
+      numeric_compare = true;
+    {
+      int index = offset;
+
+      while (true) {
+        bool equal = (numeric_compare) ? ecl_kw_elm_equal_numeric__( ecl_kw1 , ecl_kw2, index , epsilon) : ecl_kw_elm_equal__( ecl_kw1 , ecl_kw2 , index );
+        if (!equal)
+          break;
+
+        index++;
+        if (index == ecl_kw_get_size( ecl_kw1 ))
+          break;
+      }
+
+      return index;
+    }
+  }
 }
 
 
