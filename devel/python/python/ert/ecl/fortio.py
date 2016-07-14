@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'fortio.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'fortio.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Module to support transparent binary IO of Fortran created files.
 
@@ -56,12 +56,13 @@ class FortIO(BaseCClass):
     _open_readwrite = EclPrototype("void* fortio_open_readwrite(char*, bool, bool)" , bind = False)
     _open_append    = EclPrototype("void* fortio_open_append(char*, bool, bool)" , bind = False)
     _guess_fortran  = EclPrototype("bool fortio_looks_like_fortran_file(char* , bool)" , bind = False)
-    
+
     _write_record   = EclPrototype("void fortio_fwrite_record(fortio, char*, int)")
     _get_position   = EclPrototype("long fortio_ftell(fortio)")
-    _seek           = EclPrototype("void fortio_fseek(fortio, int)")
+    _seek           = EclPrototype("void fortio_fseek(fortio, long, int)")
     _close          = EclPrototype("bool fortio_fclose(fortio)")
-
+    _truncate       = EclPrototype("bool fortio_ftruncate(fortio , long)")
+    _filename       = EclPrototype("char* fortio_filename_ref(fortio)")
 
 
     def __init__(self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True):
@@ -78,7 +79,7 @@ class FortIO(BaseCClass):
 
         When you are finished working with the FortIO instance you can
         manually close it with the close() method, alternatively that
-        will happen automagically when it goes out of scope. 
+        will happen automagically when it goes out of scope.
 
         Small example script opening a restart file, and then writing
         all the pressure keywords to another file:
@@ -92,8 +93,8 @@ class FortIO(BaseCClass):
            for kw in rst_file:
                if kw.name() == "PRESSURE":
                   kw.write( fortio )
-  
-           fortio.close()     
+
+           fortio.close()
 
         See the documentation of openFortIO() for an alternative
         method based on a context manager and the with statement.
@@ -118,7 +119,7 @@ class FortIO(BaseCClass):
 
         super(FortIO, self).__init__(c_pointer)
 
-        
+
 
     def close(self):
         if self:
@@ -130,14 +131,34 @@ class FortIO(BaseCClass):
         """ @rtype: long """
         return self._get_position( )
 
-    def seek(self, position):
+
+    def truncate(self , size = None):
+        """Will truncate the file to new size.
+
+        If the method is called without a size argument the stream
+        will be truncated to the current position.
+        """
+        if size is None:
+            size = self.getPosition( )
+
+        if not self._truncate( size ):
+            raise IOError("Truncate of fortran filehandle:%s failed" % self.filename() )
+
+
+    def filename(self):
+        return self._filename( )
+
+
+    def seek(self, position , whence = 0):
         # SEEK_SET = 0
         # SEEK_CUR = 1
         # SEEK_END = 2
-        self._seek(position, 0)
+        self._seek(position , whence)
+
 
     @classmethod
     def isFortranFile(cls , filename , endian_flip = True):
+
         """@rtype: bool
         @type filename: str
 
@@ -147,7 +168,7 @@ class FortIO(BaseCClass):
         even if they are structured as ECLIPSE keywords.
         """
         return cls._guess_fortran( filename , endian_flip )
-        
+
 
     def free(self):
         self.close()
@@ -157,13 +178,13 @@ class FortIOContextManager(object):
 
     def __init__(self , fortio):
         self.__fortio = fortio
-    
+
     def __enter__(self):
         return self.__fortio
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__fortio.close()
-        return False          
+        return False
 
 
 def openFortIO( file_name , mode = FortIO.READ_MODE , fmt_file = False , endian_flip_header = True):

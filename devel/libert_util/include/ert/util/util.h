@@ -168,7 +168,7 @@ typedef enum {left_pad   = 0,
   bool         util_file_readable( const char * file );
   bool         util_entry_readable( const char * entry );
   bool         util_entry_writable( const char * entry );
-  void         util_ftruncate(FILE * stream , long size);
+  bool         util_ftruncate(FILE * stream , long size);
 
   void         util_usleep( unsigned long micro_seconds );
   void         util_yield();
@@ -385,7 +385,17 @@ typedef enum {left_pad   = 0,
 
 
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
-#define UTIL_FREAD_SCALAR(s,stream)  { if (fread(&s , sizeof s , 1 , stream) != 1) util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); }
+
+#define UTIL_FREAD_SCALAR(s,stream)  {                               \
+  int fread_return = fread(&s , sizeof s , 1 , stream);              \
+  if (fread_return == 0) {                                           \
+     if (errno == 0)                                                 \
+        util_abort("%s: read failed - premature EOF\n",__func__);    \
+                                                                     \
+     util_abort("%s: read failed: %s\n",__func__ , strerror(errno)); \
+  }                                                                  \
+}
+
 
 #define UTIL_FWRITE_VECTOR(s,n,stream) { if (fwrite(s , sizeof s , (n) , stream) != (n)) util_abort("%s: write failed: %s \n",__func__ , strerror(errno)); }
 #define UTIL_FREAD_VECTOR(s,n,stream)  { if (fread(s , sizeof s , (n) , stream) != (n)) util_abort("%s: read failed: %s \n",__func__ , strerror(errno)); }

@@ -24,7 +24,6 @@
 
 #include <ert/util/util.h>
 #include <ert/util/type_macros.h>
-
 #include <ert/ecl/fortio.h>
 
 
@@ -784,10 +783,17 @@ bool fortio_fseek( fortio_type * fortio , offset_type offset , int whence) {
   }
 }
 
+bool fortio_ftruncate( fortio_type * fortio , offset_type size) {
+  return util_ftruncate( fortio->stream , size);
+}
+
+
 
 int fortio_fileno( fortio_type * fortio ) {
   return fileno( fortio->stream );
 }
+
+
 
 
 /*
@@ -813,4 +819,5 @@ FILE        * fortio_get_FILE(const fortio_type *fortio)        { return fortio-
 bool          fortio_fmt_file(const fortio_type *fortio)        { return fortio->fmt_file; }
 void          fortio_rewind(const fortio_type *fortio)          { util_rewind(fortio->stream); }
 const char  * fortio_filename_ref(const fortio_type * fortio)   { return (const char *) fortio->filename; }
+
 

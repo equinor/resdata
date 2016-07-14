@@ -53,10 +53,11 @@ addPythonTest(ecl.fault_blocks ecl.test_fault_blocks.FaultBlockTest )
 addPythonTest(ecl.ecl_deprecation1.9 ecl.test_deprecation.Deprecation_1_9_Test )
 addPythonTest(ecl.ecl_deprecation2.0 ecl.test_deprecation.Deprecation_2_0_Test )
 addPythonTest(ecl.ecl_util ecl.test_ecl_util.EclUtilTest )
+addPythonTest(ecl.fortio ecl.test_fortio.FortIOTest)
+
 
 if (STATOIL_TESTDATA_ROOT)
   addPythonTest(ecl.ecl_file ecl.test_ecl_file.EclFileTest LABELS StatoilData)
-  addPythonTest(ecl.fortio ecl.test_fortio.FortIOTest LABELS StatoilData)
   addPythonTest(ecl.ecl_grdecl ecl.test_grdecl.GRDECLTest LABELS StatoilData)
   addPythonTest(ecl.ecl_grid_statoil ecl.test_grid_statoil.GridTest LABELS StatoilData:Slow)
   addPythonTest(ecl.ecl_kw_statoil ecl.test_ecl_kw_statoil.KWTest LABELS StatoilData)

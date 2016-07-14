@@ -2841,13 +2841,20 @@ size_t util_fd_size(int fd) {
 
 
 
-void util_ftruncate(FILE * stream , long size) {
+bool util_ftruncate(FILE * stream , long size) {
   int fd = fileno( stream );
+  int int_return;
+
 #ifdef HAVE_FTRUNCATE
-  ftruncate( fd , size );
+  int_return = ftruncate( fd , size );
 #else
-  _chsize( fd , size );
+  int_return = _chsize( fd , size );
 #endif
+
+  if (int_return == 0)
+    return true;
+  else
+    return false;
 }
 
 
