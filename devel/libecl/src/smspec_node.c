@@ -296,9 +296,12 @@ static void smspec_node_set_flags( smspec_node_type * smspec_node) {
   */
   {
     bool is_total = false;
-    if (smspec_node->var_type == ECL_SMSPEC_WELL_VAR || smspec_node->var_type == ECL_SMSPEC_GROUP_VAR || smspec_node->var_type == ECL_SMSPEC_FIELD_VAR) {
-      const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" , "WIT" ,
-                                  "WVPT" , "WVIT" , "GMT"  , "GPTF" , "GIT"  , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
+    if (smspec_node->var_type == ECL_SMSPEC_WELL_VAR ||
+        smspec_node->var_type == ECL_SMSPEC_GROUP_VAR ||
+        smspec_node->var_type == ECL_SMSPEC_FIELD_VAR ||
+        smspec_node->var_type == ECL_SMSPEC_COMPLETION_VAR ) {
+      const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
+                                  "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
                                   "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
 
       int num_total_vars = sizeof( total_vars ) / sizeof( total_vars[0] );
