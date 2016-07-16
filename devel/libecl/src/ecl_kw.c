@@ -2736,10 +2736,10 @@ void ecl_kw_fprintf_data( const ecl_kw_type * ecl_kw , const char * fmt , FILE *
 
 
 
-static bool ecl_kw_elm_equal_numeric__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double epsilon) {
+static bool ecl_kw_elm_equal_numeric__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double abs_epsilon, double rel_epsilon) {
   double v1 = ecl_kw_iget_as_double( ecl_kw1 , offset );
   double v2 = ecl_kw_iget_as_double( ecl_kw2 , offset );
-  return CMP_double(v1 , v2 , epsilon , epsilon );
+  return CMP_double(v1 , v2 , abs_epsilon , rel_epsilon );
 }
 
 
@@ -2753,7 +2753,7 @@ static bool ecl_kw_elm_equal__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type 
 }
 
 
-int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double epsilon) {
+int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double abs_epsilon, double rel_epsilon) {
   if (!ecl_kw_size_and_type_equal( ecl_kw1 , ecl_kw2))
     util_abort("%s: sorry invalid comparison\n",__func__);
 
@@ -2764,13 +2764,13 @@ int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ec
   {
     bool numeric_compare = false;
 
-    if ((epsilon > 0) && ((ecl_kw_get_type( ecl_kw1 ) == ECL_FLOAT_TYPE) || (ecl_kw_get_type( ecl_kw1 ) == ECL_DOUBLE_TYPE)))
+    if (((abs_epsilon > 0) || (rel_epsilon > 0)) && ((ecl_kw_get_type( ecl_kw1 ) == ECL_FLOAT_TYPE) || (ecl_kw_get_type( ecl_kw1 ) == ECL_DOUBLE_TYPE)))
       numeric_compare = true;
     {
       int index = offset;
 
       while (true) {
-        bool equal = (numeric_compare) ? ecl_kw_elm_equal_numeric__( ecl_kw1 , ecl_kw2, index , epsilon) : ecl_kw_elm_equal__( ecl_kw1 , ecl_kw2 , index );
+        bool equal = (numeric_compare) ? ecl_kw_elm_equal_numeric__( ecl_kw1 , ecl_kw2, index , abs_epsilon, rel_epsilon) : ecl_kw_elm_equal__( ecl_kw1 , ecl_kw2 , index );
         if (!equal)
           break;
 

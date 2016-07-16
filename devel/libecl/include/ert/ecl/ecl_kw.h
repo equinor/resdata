@@ -37,7 +37,7 @@ extern "C" {
   typedef struct ecl_kw_struct      ecl_kw_type;
 
 
-  int            ecl_kw_first_different( const ecl_kw_type * kw1 , const ecl_kw_type * kw2 , int offset, double epsilon);
+  int            ecl_kw_first_different( const ecl_kw_type * kw1 , const ecl_kw_type * kw2 , int offset, double abs_epsilon , double rel_epsilon);
   size_t         ecl_kw_fortio_size( const ecl_kw_type * ecl_kw );
   void *         ecl_kw_get_ptr(const ecl_kw_type *ecl_kw);
   void           ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , void * data);
