@@ -411,18 +411,18 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
 static bool CMP_ ## ctype( ctype v1, ctype v2 , ctype abs_epsilon , ctype rel_epsilon) { \
   if ((ABS(v1) + ABS(v2)) == 0)                                  \
      return true;                                                \
-  else {                                                         \
+  {                                                              \
       ctype diff = ABS(v1 - v2);                                 \
-      if (diff < abs_epsilon)                                    \
-         return true;                                            \
-      else {                                                     \
-        ctype sum =  ABS(v1) + ABS(v2);                          \
-        ctype d = diff / sum;                                    \
-        if (d < rel_epsilon)                                     \
-           return true;                                          \
-        }                                                        \
-    }                                                            \
-    return false;                                                \
+      if ((abs_epsilon > 0) && (diff > abs_epsilon))             \
+         return false;                                           \
+      {                                                          \
+         ctype sum =  ABS(v1) + ABS(v2);                         \
+         ctype rel_diff = diff / sum;                            \
+         if ((rel_epsilon > 0) && (rel_diff > rel_epsilon))      \
+            return false;                                        \
+      }                                                          \
+      return true;                                               \
+   }                                                             \
 }
 CMP(float,fabsf)
 CMP(double,fabs)
@@ -438,7 +438,7 @@ CMP(double,fabs)
      const ctype * data2 = (const ctype *) ecl_kw2->data;                                                                   \
      for (index = 0; index < ecl_kw1->size; index++) {                                                                      \
        equal = CMP_ ## ctype( data1[index] , data2[index] , abs_diff , rel_diff);                                           \
-        if (!equal)                                                                                                         \
+       if (!equal)                                                                                                          \
            break;                                                                                                           \
      }                                                                                                                      \
   }                                                                                                                         \
