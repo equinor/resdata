@@ -411,18 +411,18 @@ bool ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2) {
 static bool CMP_ ## ctype( ctype v1, ctype v2 , ctype abs_epsilon , ctype rel_epsilon) { \
   if ((ABS(v1) + ABS(v2)) == 0)                                  \
      return true;                                                \
-  else {                                                         \
+  {                                                              \
       ctype diff = ABS(v1 - v2);                                 \
-      if (diff < abs_epsilon)                                    \
-         return true;                                            \
-      else {                                                     \
-        ctype sum =  ABS(v1) + ABS(v2);                          \
-        ctype d = diff / sum;                                    \
-        if (d < rel_epsilon)                                     \
-           return true;                                          \
-        }                                                        \
-    }                                                            \
-    return false;                                                \
+      if ((abs_epsilon > 0) && (diff > abs_epsilon))             \
+         return false;                                           \
+      {                                                          \
+         ctype sum =  ABS(v1) + ABS(v2);                         \
+         ctype rel_diff = diff / sum;                            \
+         if ((rel_epsilon > 0) && (rel_diff > rel_epsilon))      \
+            return false;                                        \
+      }                                                          \
+      return true;                                               \
+   }                                                             \
 }
 CMP(float,fabsf)
 CMP(double,fabs)
@@ -438,7 +438,7 @@ CMP(double,fabs)
      const ctype * data2 = (const ctype *) ecl_kw2->data;                                                                   \
      for (index = 0; index < ecl_kw1->size; index++) {                                                                      \
        equal = CMP_ ## ctype( data1[index] , data2[index] , abs_diff , rel_diff);                                           \
-        if (!equal)                                                                                                         \
+       if (!equal)                                                                                                          \
            break;                                                                                                           \
      }                                                                                                                      \
   }                                                                                                                         \
@@ -2736,10 +2736,10 @@ void ecl_kw_fprintf_data( const ecl_kw_type * ecl_kw , const char * fmt , FILE *
 
 
 
-static bool ecl_kw_elm_equal_numeric__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double epsilon) {
+static bool ecl_kw_elm_equal_numeric__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double abs_epsilon, double rel_epsilon) {
   double v1 = ecl_kw_iget_as_double( ecl_kw1 , offset );
   double v2 = ecl_kw_iget_as_double( ecl_kw2 , offset );
-  return CMP_double(v1 , v2 , epsilon , epsilon );
+  return CMP_double(v1 , v2 , abs_epsilon , rel_epsilon );
 }
 
 
@@ -2753,7 +2753,7 @@ static bool ecl_kw_elm_equal__( const ecl_kw_type * ecl_kw1 , const ecl_kw_type 
 }
 
 
-int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double epsilon) {
+int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int offset, double abs_epsilon, double rel_epsilon) {
   if (!ecl_kw_size_and_type_equal( ecl_kw1 , ecl_kw2))
     util_abort("%s: sorry invalid comparison\n",__func__);
 
@@ -2764,13 +2764,13 @@ int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ec
   {
     bool numeric_compare = false;
 
-    if ((epsilon > 0) && ((ecl_kw_get_type( ecl_kw1 ) == ECL_FLOAT_TYPE) || (ecl_kw_get_type( ecl_kw1 ) == ECL_DOUBLE_TYPE)))
+    if (((abs_epsilon > 0) || (rel_epsilon > 0)) && ((ecl_kw_get_type( ecl_kw1 ) == ECL_FLOAT_TYPE) || (ecl_kw_get_type( ecl_kw1 ) == ECL_DOUBLE_TYPE)))
       numeric_compare = true;
     {
       int index = offset;
 
       while (true) {
-        bool equal = (numeric_compare) ? ecl_kw_elm_equal_numeric__( ecl_kw1 , ecl_kw2, index , epsilon) : ecl_kw_elm_equal__( ecl_kw1 , ecl_kw2 , index );
+        bool equal = (numeric_compare) ? ecl_kw_elm_equal_numeric__( ecl_kw1 , ecl_kw2, index , abs_epsilon, rel_epsilon) : ecl_kw_elm_equal__( ecl_kw1 , ecl_kw2 , index );
         if (!equal)
           break;
 

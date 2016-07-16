@@ -289,3 +289,25 @@ class KWTest(ExtendedTestCase):
 
         self.assertEqual( kw4.firstDifferent( kw5 , epsilon = 1.0) , len(kw4))
         self.assertEqual( kw4.firstDifferent( kw5 , epsilon = 0.0000001) , 10)
+
+        
+    def test_numeric_equal(self):
+        kw1 = EclKW("Name1" , 10 , EclTypeEnum.ECL_DOUBLE_TYPE )
+        kw2 = EclKW("Name1" , 10 , EclTypeEnum.ECL_DOUBLE_TYPE )
+
+
+        shift = 0.0001
+        value = 1000
+
+        abs_diff = shift
+        rel_diff = shift / (shift + 2* value)
+        kw1.assign( value )
+        kw2.assign( value + shift )
+
+        
+        self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = rel_diff * 1.1))
+        self.assertFalse( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = rel_diff * 0.9))
+        self.assertFalse( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 0.9 , rel_epsilon = rel_diff * 1.1))
+        self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = 0 , rel_epsilon = rel_diff * 1.1))
+        self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = 0))
+
