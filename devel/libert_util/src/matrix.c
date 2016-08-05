@@ -63,33 +63,14 @@ extern "C" {
 
 #define MATRIX_TYPE_ID 712108
 
-struct matrix_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  char                  * name;           /* A name of the matrix - for printing - can be NULL. */
-  double                * data;           /* The actual storage */
-  bool                    data_owner;     /* is this matrix instance the owner of data? */
-  size_t                  data_size;      /* What is the length of data (number of double values). */
-
-  int                     rows;           /* The number of rows in the matrix. */
-  int                     columns;        /* The number of columns in the matrix. */
-  int                     alloc_rows;
-  int                     alloc_columns;
-  int                     row_stride;     /* The distance in data between two conscutive row values. */
-  int                     column_stride;  /* The distance in data between to consecutive column values. */
-
-  /*
-     Observe that the stride is considered an internal property - if
-     the matrix is stored to disk and then recovered the strides might
-     change, and also matrix_alloc_copy() will not respect strides.
-  */
-};
-
-
 /*#define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))*/
 
-static size_t GET_INDEX( const matrix_type * m , size_t i , size_t j) {
+/*
+ This GET_INDEX function has been forcely inlined for performance.
+*/
+/*static size_t GET_INDEX( const matrix_type * m , size_t i , size_t j) {
   return m->row_stride *i + m->column_stride *j;
-}
+}*/
 
 static size_t MATRIX_DATA_SIZE( const matrix_type * m) {
   size_t col    = m->columns;
