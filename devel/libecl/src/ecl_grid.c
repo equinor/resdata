@@ -4441,13 +4441,32 @@ double ecl_grid_get_cell_dx1A( const ecl_grid_type * grid , int active_index) {
 }
 
 
+/*
+  The current algorithm for calculating the cell dimensions DX,DY and
+  DZ reproduces the Eclipse results from the INIT file, but we are in
+  general *not* guaranteed to satisfy the relationship:
+
+     DX * DY * DZ = V
+
+*/
 
 double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
-  double V = ecl_grid_get_cell_volume1(grid , global_index);
-  double dz = ecl_grid_get_cell_thickness1( grid , global_index);
-  double dx = ecl_grid_get_cell_dx1( grid , global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  double dx = 0;
+  double dy = 0;
 
-  return V / (dx * dz);
+  for (int k = 0; k < 2; k++) {
+    for (int i = 0; i < 2; i++) {
+      int c1 = i + k*4;
+      int c2 = c1 + 2;
+      dx += cell->corner_list[c2].x - cell->corner_list[c1].x;
+      dy += cell->corner_list[c2].y - cell->corner_list[c1].y;
+    }
+  }
+  dx *= 0.25;
+  dy *= 0.25;
+
+  return sqrt( dx * dx + dy * dy );
 }
 
 
