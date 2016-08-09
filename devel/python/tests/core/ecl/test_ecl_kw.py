@@ -311,3 +311,19 @@ class KWTest(ExtendedTestCase):
         self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = 0 , rel_epsilon = rel_diff * 1.1))
         self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = 0))
 
+    def test_mul(self):
+        kw1 = EclKW("Name1" , 10 , EclTypeEnum.ECL_INT_TYPE )
+        kw1.assign( 10 )
+
+        kw2 = EclKW("Name1" , 10 , EclTypeEnum.ECL_INT_TYPE )
+        kw2.assign( 2 )
+
+        kw3 = kw1 * kw2
+        kw4 = kw1 + kw2
+        self.assertEqual( len(kw3) , len(kw1))
+        self.assertEqual( len(kw4) , len(kw1))
+        for v in kw3:
+            self.assertEqual( v , 20 )
+
+        for v in kw4:
+            self.assertEqual( v , 12 )
