@@ -31,12 +31,42 @@
 #include <ert/util/thread_pool.h>
 #endif
 
+#ifdef _MSC_VER
+#define __forceinline inline
+#elif __GNUC__
+/* Also clang defines the __GNUC__ symbol */
+#define __forceinline inline __attribute__((always_inline))
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct matrix_struct {
+  UTIL_TYPE_ID_DECLARATION;
+  char                  * name;           /* A name of the matrix - for printing - can be NULL. */
+  double                * data;           /* The actual storage */
+  bool                    data_owner;     /* is this matrix instance the owner of data? */
+  size_t                  data_size;      /* What is the length of data (number of double values). */
+
+  int                     rows;           /* The number of rows in the matrix. */
+  int                     columns;        /* The number of columns in the matrix. */
+  int                     alloc_rows;
+  int                     alloc_columns;
+  int                     row_stride;     /* The distance in data between two conscutive row values. */
+  int                     column_stride;  /* The distance in data between to consecutive column values. */
+
+  /*
+     Observe that the stride is considered an internal property - if
+     the matrix is stored to disk and then recovered the strides might
+     change, and also matrix_alloc_copy() will not respect strides.
+  */
+};
+
 typedef struct matrix_struct matrix_type;
 
+  __forceinline size_t GET_INDEX( const matrix_type * m , size_t i , size_t j) {return m->row_stride *i + m->column_stride *j;}
   matrix_type * matrix_fread_alloc(FILE * stream);
   void          matrix_fread(matrix_type * matrix , FILE * stream);
   void          matrix_fwrite(const matrix_type * matrix , FILE * stream);
