@@ -29,8 +29,6 @@ set( source_files
      ecl_io_config.c    
      ecl_file.c 
      ecl_region.c       
-     point.c 
-     tetrahedron.c 
      ecl_subsidence.c 
      ecl_grid_dims.c 
      grid_dims.c 

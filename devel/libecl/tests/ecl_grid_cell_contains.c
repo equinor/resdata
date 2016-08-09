@@ -21,11 +21,7 @@
 #include <stdbool.h>
 
 #include <ert/util/test_util.h>
-
 #include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/point.h>
-
-
 
 
 void test_grid_covering( const ecl_grid_type * grid) {
@@ -38,21 +34,23 @@ void test_grid_covering( const ecl_grid_type * grid) {
       for (int i=0; i < nx; i++) {
         int g1 = ecl_grid_get_global_index3(grid, i,j,k);
         int g2 = ecl_grid_get_global_index3(grid, i,j,k + 1);
-        point_type p1;
-        point_type p2;
+        double p1[ 3 ];
+        double p2[ 3 ];
 
         for (int l=0; l < 4; l++) {
-          ecl_grid_get_cell_corner_xyz1( grid , g1 , l + 4 , &p1.x , &p1.y , &p1.z);
-          ecl_grid_get_cell_corner_xyz1( grid , g2 , l , &p2.x , &p2.y , &p2.z);
-          test_assert_true( point_equal( &p1 , &p2 ));
+          ecl_grid_get_cell_corner_xyz1( grid , g1 , l + 4 , &p1[0], &p1[1], &p1[2] );
+          ecl_grid_get_cell_corner_xyz1( grid , g2 , l, &p2[0], &p2[1], &p2[2] );
+          test_assert_true( p1[ 0 ] == p2[ 0 ] );
+          test_assert_true( p1[ 1 ] == p2[ 1 ] );
+          test_assert_true( p1[ 2 ] == p2[ 2 ] );
         }
         
         
         for (int l=0; l < 4; l++) {
-          ecl_grid_get_cell_corner_xyz1( grid , g1 , l      , &p1.x , &p1.y , &p1.z);
-          ecl_grid_get_cell_corner_xyz1( grid , g1 , l + 4  , &p2.x , &p2.y , &p2.z);
+          ecl_grid_get_cell_corner_xyz1( grid , g1 , l, &p1[0], &p1[1], &p1[2] );
+          ecl_grid_get_cell_corner_xyz1( grid , g1 , l + 4 , &p2[0], &p2[1], &p2[2] );
           
-          test_assert_true( p2.z >= p1.z );
+          test_assert_true( p2[2] >= p1[2] );
         }
       }
     }
