@@ -38,10 +38,6 @@ add_executable( ecl_grid_create ecl_grid_create.c )
 target_link_libraries( ecl_grid_create ecl test_util )
 add_test( ecl_grid_create ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_create )
 
-add_executable( ecl_tetrahedron_contains ecl_tetrahedron_contains.c )
-target_link_libraries( ecl_tetrahedron_contains ecl test_util )
-add_test( ecl_tetrahedron_contains1 ${EXECUTABLE_OUTPUT_PATH}/ecl_tetrahedron_contains)
-
 add_executable( ecl_grid_DEPTHZ ecl_grid_DEPTHZ.c )
 target_link_libraries( ecl_grid_DEPTHZ ecl test_util )
 add_test( ecl_grid_DEPTHZ ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_DEPTHZ )
@@ -57,10 +53,6 @@ add_test (ecl_nnc_info_test ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_info_test )
 add_executable( ecl_nnc_vector ecl_nnc_vector.c )
 target_link_libraries( ecl_nnc_vector ecl test_util )
 add_test(ecl_nnc_vector ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_vector )
-
-add_executable( ecl_point ecl_point.c )
-target_link_libraries( ecl_point ecl test_util )
-add_test(ecl_point ${EXECUTABLE_OUTPUT_PATH}/ecl_point )
 
 add_executable( ecl_kw_grdecl ecl_kw_grdecl.c )
 target_link_libraries( ecl_kw_grdecl ecl test_util )

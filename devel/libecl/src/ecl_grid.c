@@ -39,8 +39,6 @@
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_coarse_cell.h>
 #include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/point.h>
-#include <ert/ecl/tetrahedron.h>
 #include <ert/ecl/grid_dims.h>
 #include <ert/ecl/nnc_info.h>
 
@@ -542,9 +540,145 @@ static const int bounding_planes[6][3] = {{0,1,2},
 
    1. ecl_grid   - this is the only exported datatype
    2. ecl_cell   - internal
-   3. point      - implemented in file point.c
+   3. point      - internal
 
 */
+
+typedef struct point_struct  point_type;
+
+struct point_struct {
+    double x;
+    double y;
+    double z;
+};
+
+static void point_mapaxes_transform( point_type * p , const double origo[2], const double unit_x[2] , const double unit_y[2]) {
+  double new_x =  origo[0] + p->x*unit_x[0] + p->y*unit_y[0];
+  double new_y =  origo[1] + p->x*unit_x[1] + p->y*unit_y[1];
+
+  p->x = new_x;
+  p->y = new_y;
+}
+
+static void point_mapaxes_invtransform( point_type * p , const double origo[2], const double unit_x[2] , const double unit_y[2]) {
+  double norm   =  1.0 / (unit_x[0]*unit_y[1] - unit_x[1] * unit_y[0]);
+  double dx     = p->x - origo[0];
+  double dy     = p->y - origo[1];
+
+
+  double org_x  =  ( dx*unit_y[1] - dy*unit_y[0]) * norm;
+  double org_y  =  (-dx*unit_x[1] + dy*unit_x[0]) * norm;
+
+  p->x = org_x;
+  p->y = org_y;
+}
+
+static void point_inplace_add(point_type * point , const point_type * add) {
+  point->x += add->x;
+  point->y += add->y;
+  point->z += add->z;
+}
+
+static void point_inplace_sub(point_type * point , const point_type * sub) {
+  point->x -= sub->x;
+  point->y -= sub->y;
+  point->z -= sub->z;
+}
+
+static void point_inplace_scale(point_type * point , double scale_factor) {
+  point->x *= scale_factor;
+  point->y *= scale_factor;
+  point->z *= scale_factor;
+}
+
+/**
+   Will compute the vector cross product B x C and store the result in A.
+*/
+
+static void point_vector_cross(point_type * A , const point_type * B , const point_type * C) {
+  A->x =   B->y*C->z - B->z*C->y;
+  A->y = -(B->x*C->z - B->z*C->x);
+  A->z =   B->x*C->y - B->y*C->x;
+}
+
+static double point_dot_product( const point_type * v1 , const point_type * v2) {
+  return v1->x*v2->x + v1->y*v2->y + v1->z*v2->z;
+}
+
+static bool point_equal( const point_type *p1 , const point_type * p2) {
+  return (memcmp( p1 , p2 , sizeof * p1 ) == 0);
+}
+
+/**
+   This function calculates the (signed) distance from point 'p' to
+   the plane specifed by the plane vector 'n' and the point
+   'plane_point' which is part of the plane.
+*/
+
+static double point_plane_distance(const point_type * p , const point_type * n , const point_type * plane_point) {
+  point_type diff = *p;
+  point_inplace_sub( &diff, plane_point );
+  return point_dot_product( n, &diff );
+}
+
+static void point_normal_vector(point_type * n, const point_type * p0, const point_type * p1 , const point_type * p2) {
+  point_type v1 = *p1;
+  point_type v2 = *p2;
+
+  point_inplace_sub( &v1, p0 );
+  point_inplace_sub( &v2, p0 );
+
+  point_vector_cross( n, &v1, &v2 );
+}
+
+static double point3_plane_distance(const point_type * p0 , const point_type * p1 , const point_type * p2 , const point_type * x) {
+  point_type n;
+  point_normal_vector( &n , p0 , p1 , p2 );
+  return point_plane_distance( x , &n , p0 ) / sqrt( n.x*n.x + n.y*n.y + n.z*n.z);
+}
+
+static void point_compare( const point_type *p1 , const point_type * p2, bool * equal) {
+  const double tolerance = 0.001;
+
+  double diff_x = (fabs(p1->x - p2->x) / fabs(p1->x + p2->x + 1));
+  double diff_y = (fabs(p1->y - p2->y) / fabs(p1->y + p2->y + 1));
+  double diff_z = (fabs(p1->z - p2->z) / fabs(p1->z + p2->z + 1));
+
+  if (diff_x + diff_y + diff_z > tolerance)
+    *equal = false;
+}
+
+static void point_dump( const point_type * p , FILE * stream) {
+  util_fwrite_double( p->x , stream );
+  util_fwrite_double( p->y , stream );
+  util_fwrite_double( p->z , stream );
+}
+
+static void point_dump_ascii( const point_type * p , FILE * stream , const double * offset) {
+  if (offset)
+    fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x - offset[0], p->y - offset[1] , p->z - offset[2]);
+  else
+    fprintf(stream , "(%7.2f, %7.2f, %7.2f) " , p->x , p->y , p->z);
+
+}
+
+static void point_set(point_type * p , double x , double y , double z) {
+  p->x = x;
+  p->y = y;
+  p->z = z;
+}
+
+
+static void point_shift(point_type * p , double dx , double dy , double dz) {
+  p->x += dx;
+  p->y += dy;
+  p->z += dz;
+}
+
+
+static void point_copy_values(point_type * p , const point_type * src) {
+  point_set(p , src->x , src->y , src->z);
+}
 
 /*
   Indices used in the cell->active_index[] array.
@@ -642,10 +776,6 @@ struct ecl_grid_struct {
   ert_ecl_unit_enum     unit_system;
   int                   eclipse_version;
 };
-
-
-
-
 
 static void ecl_cell_compare(const ecl_cell_type * c1 , const ecl_cell_type * c2,  bool include_nnc , bool * equal) {
   int i;
@@ -992,20 +1122,6 @@ static void ecl_cell_install_lgr( ecl_cell_type * cell , const ecl_grid_type * l
   cell->lgr       = lgr_grid;
 }
 
-
-
-
-static void ecl_cell_init_tetrahedron( const ecl_cell_type * cell , tetrahedron_type * tet , int method_nr , int tetrahedron_nr) {
-  int point0 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 0 ];
-  int point1 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 1 ];
-  int point2 = tetrahedron_permutations[ method_nr ][ tetrahedron_nr ][ 2 ];
-
-  tetrahedron_init( tet , &cell->center , &cell->corner_list[ point0 ] , &cell->corner_list[point1] , &cell->corner_list[point2]);
-}
-
-
-
-
 static double C(double *r,int f1,int f2,int f3){
   if (f1 == 0) {
     if (f2 == 0) {
@@ -1070,28 +1186,90 @@ static double ecl_cell_get_volume_tskille( ecl_cell_type * cell ) {
   return fabs(volume);
 }
 
+typedef struct tetrahedron_struct tetrahedron_type;
 
+struct tetrahedron_struct {
+    point_type p0;
+    point_type p1;
+    point_type p2;
+    point_type p3;
+};
+
+static inline double tetrahedron_volume( tetrahedron_type tet ) {
+  point_type bxc;
+
+  /* vector subtraction */
+  tet.p0.x -= tet.p3.x;
+  tet.p0.y -= tet.p3.y;
+  tet.p0.z -= tet.p3.z;
+
+  tet.p1.x -= tet.p3.x;
+  tet.p1.y -= tet.p3.y;
+  tet.p1.z -= tet.p3.z;
+
+  tet.p2.x -= tet.p3.x;
+  tet.p2.y -= tet.p3.y;
+  tet.p2.z -= tet.p3.z;
+
+  /* cross product */
+  bxc.x = tet.p1.y*tet.p2.z - tet.p1.z*tet.p2.y;
+  bxc.y = -(tet.p1.x*tet.p2.z - tet.p1.z*tet.p2.x);
+  bxc.z = tet.p1.x*tet.p2.y - tet.p1.y*tet.p2.x;
+
+  /* dot product */
+  return tet.p0.x*bxc.x + tet.p0.y*bxc.y + tet.p0.z*bxc.z;
+}
+
+/*
+ * This function used to account for a significant amount of execution time
+ * when used in opm-parser and has been optimised significantly. This means
+ * inlining several operations, e.g. vector operations, and other tricks.
+ */
 static double ecl_cell_get_signed_volume( ecl_cell_type * cell) {
-  ecl_cell_assert_center( cell);
-  {
-    tetrahedron_type tet;
-    int              itet;
-    double           volume = 0;
-    for (itet = 0; itet < 12; itet++) {
+  ecl_cell_assert_center( cell );
 
-      /*
-         using both tetrahedron decompositions - gives good agreement
-         with porv from eclipse init files.
-      */
-      ecl_cell_init_tetrahedron( cell , &tet , 0 , itet );
-      volume += tetrahedron_volume( &tet );
+  /*
+   * We make an activation record local copy of the cell's corners for less
+   * jumping in memory and better cache performance.
+   */
+  point_type center = cell->center;
+  point_type corners[ 8 ];
+  memcpy( corners, cell->corner_list, sizeof( point_type ) * 8 );
 
-      ecl_cell_init_tetrahedron( cell , &tet , 1 , itet );
-      volume += tetrahedron_volume( &tet );
-    }
+  tetrahedron_type tet = { .p0 = center };
+  double           volume = 0;
+  /*
+      using both tetrahedron decompositions - gives good agreement
+      with porv from eclipse init files.
+  */
+  /*
+   * The order of these loops is intentional and guided by profiling. It's much
+   * faster to access method, then the number, rather than the other way
+   * around. If you are to change this, please measure performance impact.
+   */
+  for( int method = 0; method < 2; ++method ) {
+      for( int itet = 0; itet < 12; ++itet  ) {
+          const int point0 = tetrahedron_permutations[ method ][ itet ][ 0 ];
+          const int point1 = tetrahedron_permutations[ method ][ itet ][ 1 ];
+          const int point2 = tetrahedron_permutations[ method ][ itet ][ 2 ];
 
-    return volume * 0.5;
+          tet.p1 = corners[ point0 ];
+          tet.p2 = corners[ point1 ];
+          tet.p3 = corners[ point2 ];
+          volume += tetrahedron_volume( tet );
+      }
   }
+
+  /* The volume of a tetrahedron is
+   *        |a·(b x c)|
+   *  V  =  -----------
+   *             6
+   * Since sum( |a·(b x c)| ) / 6 is equal to
+   * sum( |a·(b x c)| / 6 ) we can do the (rather expensive) division only once
+   * and stil get the correct result. We multiply by 0.5 because we've now
+   * considered two decompositions of the tetrahedron, and want their average.
+   */
+  return volume * 0.5 / 6.0;
 }
 
 
@@ -3428,9 +3606,6 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool
   return equal;
 }
 
-
-
-
 /*****************************************************************/
 
 bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z) {
@@ -3565,46 +3740,12 @@ bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_in
         return false;
     }
   }
-
-
-  /*
-    More 'correct' version based on tetrahedron decomposition;
-    unfortunately getting this to be reliable proved to difficult.
-
-  {
-    const int method = ecl_cell_get_tetrahedron_method( cell );
-    int tetrahedron_nr = 0;
-    tetrahedron_type tet;
-    if (ecl_cell_get_volume( cell ) > 0) {
-      //
-      //  General check if point is inside tetrahedrons. Does never
-      //  exit from this loop - only returns from the whole function.
-      //
-      while (true) {
-        ecl_cell_init_tetrahedron( cell , &tet , method , tetrahedron_nr );
-
-        if (tetrahedron_contains( &tet , &p ))
-          return true;
-
-        tetrahedron_nr++;
-        if (tetrahedron_nr == 12)
-          return false;
-      }
-    } else
-      return false;
-  }
-  util_abort("%s: internal error - should not be here \n",__func__);
-  return false;
-  */
 }
-
 
 bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i , int j , int k, double x , double y , double z) {
   int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
   return ecl_grid_cell_contains_xyz1( ecl_grid , global_index , x ,y  , z);
 }
-
-
 
 /**
    This function returns the global index for the cell (in layer 'k')
