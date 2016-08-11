@@ -39,15 +39,15 @@ extern "C" {
 
   typedef struct {
     char * locale;
-    char * sep;
+    const char * sep;
     char * newline;
     char * value_fmt;
-    char * date_fmt;
+    const char * date_fmt;
     char * days_fmt;
     char * header_fmt;
     bool   print_header;
     bool   print_dash;
-    char * date_header;
+    const char * date_header;
     char * date_dash;
     char * value_dash;
   } ecl_sum_fmt_type;
