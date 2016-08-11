@@ -30,7 +30,7 @@ set(source_files
     string_util.c
     type_vector_functions.c
     ui_return.c
-    version.c
+    ert_version.c
     struct_vector.c
     perm_vector.c
 )
@@ -70,13 +70,14 @@ set(header_files
     struct_vector.h
     buffer_string.h
     perm_vector.h
+    ert_version.h
 )
 
 set( test_source test_util.c )
 set( test_headers test_util.h )
 
 
-# Add compile time variable values to version.c
+# Add compile time variable values to ert_version.c
 if (ERT_WINDOWS)
    execute_process(COMMAND cmd.exe /c "echo %date% %time%"  OUTPUT_VARIABLE BUILD_TIME )   
 else() # Linux or Darwin
@@ -105,7 +106,7 @@ else()
    message( WARNING "Git not found. Build will not contain git revision info." )
 endif()
 
-set_source_files_properties( version.c PROPERTIES COMPILE_DEFINITIONS "COMPILE_TIME_STAMP=\"${BUILD_TIME}\";GIT_COMMIT=\"${GIT_COMMIT}\";GIT_COMMIT_SHORT=\"${GIT_COMMIT_SHORT}\";ERT_VERSION_MAJOR=${ERT_VERSION_MAJOR};ERT_VERSION_MINOR=${ERT_VERSION_MINOR};ERT_VERSION_MICRO=\"${ERT_VERSION_MICRO}\"")
+set_source_files_properties( ert_version.c PROPERTIES COMPILE_DEFINITIONS "COMPILE_TIME_STAMP=\"${BUILD_TIME}\";GIT_COMMIT=\"${GIT_COMMIT}\";GIT_COMMIT_SHORT=\"${GIT_COMMIT_SHORT}\";ERT_VERSION_MAJOR=${ERT_VERSION_MAJOR};ERT_VERSION_MINOR=${ERT_VERSION_MINOR};ERT_VERSION_MICRO=\"${ERT_VERSION_MICRO}\"")
 
 
 if (CMAKE_COMPILER_IS_GNUCC)

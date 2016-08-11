@@ -1,4 +1,5 @@
 #include <ert/util/util.h>
+#include <ert/util/ert_version.h>
 
 char* version_get_git_commit() {
     #ifdef GIT_COMMIT
