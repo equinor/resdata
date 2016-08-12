@@ -1256,7 +1256,7 @@ static double ecl_cell_get_signed_volume( ecl_cell_type * cell) {
           tet.p1 = corners[ point0 ];
           tet.p2 = corners[ point1 ];
           tet.p3 = corners[ point2 ];
-          volume += tetrahedron_volume( tet );
+          volume += tetrahedron_volume( tet ) / 6;
       }
   }
 
@@ -1268,8 +1268,16 @@ static double ecl_cell_get_signed_volume( ecl_cell_type * cell) {
    * sum( |a·(b x c)| / 6 ) we can do the (rather expensive) division only once
    * and stil get the correct result. We multiply by 0.5 because we've now
    * considered two decompositions of the tetrahedron, and want their average.
+   *
+   *
+   * Note added: these volume calculations are used to calculate pore
+   * volumes in OPM, it turns out that opm is very sensitive to these
+   * volumes. Extracting the divison by 6.0 was actually enough to
+   * induce a regression test failure in flow, this has therefor been
+   * reverted.
    */
-  return volume * 0.5 / 6.0;
+
+  return volume * 0.5;
 }
 
 
