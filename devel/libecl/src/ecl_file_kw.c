@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'ecl_file_kw.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'ecl_file_kw.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 
@@ -39,7 +39,7 @@
   If and when the keyword is actually queried for at a later stage the
   ecl_file_kw_get_kw() method will seek to the keyword position in an
   open fortio instance and call ecl_kw_fread_alloc() to instantiate
-  the keyword itself. 
+  the keyword itself.
 
   The ecl_file_kw datatype is mainly used by the ecl_file datatype;
   whose index tables consists of ecl_file_kw instances.
@@ -51,7 +51,7 @@
 struct inv_map_struct {
   size_t_vector_type * file_kw_ptr;
   size_t_vector_type * ecl_kw_ptr;
-  bool                 sorted; 
+  bool                 sorted;
 };
 
 struct ecl_file_kw_struct {
@@ -84,8 +84,8 @@ void inv_map_free( inv_map_type * map ) {
 
 static void inv_map_assert_sort( inv_map_type * map ) {
   if (!map->sorted) {
-    int * perm = size_t_vector_alloc_sort_perm( map->ecl_kw_ptr );
-    
+    perm_vector_type * perm = size_t_vector_alloc_sort_perm( map->ecl_kw_ptr );
+
     size_t_vector_permute( map->ecl_kw_ptr , perm );
     size_t_vector_permute( map->file_kw_ptr , perm );
     map->sorted = true;
@@ -100,7 +100,7 @@ static void inv_map_drop_kw( inv_map_type * map , const ecl_kw_type * ecl_kw) {
     int index = size_t_vector_index_sorted( map->ecl_kw_ptr , (size_t) ecl_kw );
     if (index == -1)
       util_abort("%s: trying to drop non-existent kw \n",__func__);
-    
+
     size_t_vector_idel( map->ecl_kw_ptr  , index );
     size_t_vector_idel( map->file_kw_ptr , index );
     map->sorted = false;
@@ -122,7 +122,7 @@ ecl_file_kw_type * inv_map_get_file_kw( inv_map_type * inv_map , const ecl_kw_ty
     if (index == -1)
       /* ecl_kw ptr not found. */
       return NULL;
-    else 
+    else
       return (ecl_file_kw_type * ) size_t_vector_iget( inv_map->file_kw_ptr , index );
   }
 }
@@ -138,7 +138,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file_kw , ECL_FILE_KW_TYPE_ID )
 static ecl_file_kw_type * ecl_file_kw_alloc__( const char * header , ecl_type_enum ecl_type , int size , offset_type offset) {
   ecl_file_kw_type * file_kw = util_malloc( sizeof * file_kw );
   UTIL_TYPE_ID_INIT( file_kw , ECL_FILE_KW_TYPE_ID );
-  
+
   file_kw->header = util_alloc_string_copy( header );
   file_kw->kw_size = size;
   file_kw->ecl_type = ecl_type;
@@ -151,13 +151,13 @@ static ecl_file_kw_type * ecl_file_kw_alloc__( const char * header , ecl_type_en
 /**
    Create a new ecl_file_kw instance based on header information from
    the input keyword. Typically only the header has been loaded from
-   the keyword.  
+   the keyword.
 
    Observe that it is the users responsability that the @offset
    argument in ecl_file_kw_alloc() comes from the same fortio instance
    as used when calling ecl_file_kw_get_kw() to actually instatiate
    the ecl_kw. This is automatically assured when using ecl_file to
-   access the ecl_file_kw instances.  
+   access the ecl_file_kw instances.
 */
 
 ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , offset_type offset ) {
@@ -165,7 +165,7 @@ ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , offset_type o
 }
 
 
-/** 
+/**
     Does NOT copy the kw pointer which must be reloaded.
 */
 ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src ) {
@@ -193,10 +193,10 @@ void ecl_file_kw_free__( void * arg ) {
 
 
 static void ecl_file_kw_assert_kw( const ecl_file_kw_type * file_kw ) {
-  if (file_kw->ecl_type != ecl_kw_get_type( file_kw->kw )) 
+  if (file_kw->ecl_type != ecl_kw_get_type( file_kw->kw ))
     util_abort("%s: type mismatch between header and file.\n",__func__);
 
-  if (file_kw->kw_size != ecl_kw_get_size( file_kw->kw )) 
+  if (file_kw->kw_size != ecl_kw_get_size( file_kw->kw ))
     util_abort("%s: size mismatch between header and file.\n",__func__);
 
   if (strcmp( file_kw->header , ecl_kw_get_header( file_kw->kw )) != 0 )
@@ -216,8 +216,8 @@ static void ecl_file_kw_drop_kw( ecl_file_kw_type * file_kw , inv_map_type * inv
 static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map) {
   if (fortio == NULL)
     util_abort("%s: trying to load a keyword after the backing file has been detached.\n",__func__);
-  
-  if (file_kw->kw != NULL) 
+
+  if (file_kw->kw != NULL)
     ecl_file_kw_drop_kw( file_kw , inv_map );
 
   {
@@ -235,20 +235,20 @@ ecl_kw_type * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type *
 /*
   Will return the ecl_kw instance of this file_kw; if it is not
   currently loaded the method will instantiate the ecl_kw instance
-  from the @fortio input handle. 
-  
+  from the @fortio input handle.
+
   After loading the keyword it will be kept in memory, so a possible
-  subsequent lookup will be served from memory. 
+  subsequent lookup will be served from memory.
 
   The ecl_file layer maintains a pointer mapping between the
   ecl_kw_type pointers and their ecl_file_kw_type containers; this
   mapping needs the new_load return value from the
-  ecl_file_kw_get_kw() function.  
+  ecl_file_kw_get_kw() function.
 */
 
 
 ecl_kw_type * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map ) {
-  if (file_kw->kw == NULL) 
+  if (file_kw->kw == NULL)
     ecl_file_kw_load_kw( file_kw , fortio , inv_map);
 
   return file_kw->kw;
@@ -265,16 +265,16 @@ bool ecl_file_kw_ptr_eq( const ecl_file_kw_type * file_kw , const ecl_kw_type * 
 
 
 void ecl_file_kw_replace_kw( ecl_file_kw_type * file_kw , fortio_type * target , ecl_kw_type * new_kw ) {
-  if ((file_kw->ecl_type == ecl_kw_get_type( new_kw )) && 
+  if ((file_kw->ecl_type == ecl_kw_get_type( new_kw )) &&
       (file_kw->kw_size == ecl_kw_get_size( new_kw ))) {
-    
+
     if (file_kw->kw != NULL)
       ecl_kw_free( file_kw->kw );
 
     file_kw->kw = new_kw;
     fortio_fseek( target , file_kw->file_offset , SEEK_SET );
     ecl_kw_fwrite( file_kw->kw , target );
-    
+
   } else
     util_abort("%s: sorry size/type mismatch between in-file keyword and new keyword \n",__func__);
 }
