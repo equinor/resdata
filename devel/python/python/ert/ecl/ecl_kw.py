@@ -1053,17 +1053,55 @@ class EclKW(BaseCClass):
         Return string representation - see method str().
         """
         return self.str( width = 5 , max_lines = 10)
-    
 
+
+    def numpyView(self):
+        """Will return a numpy view to the underlying data.
+
+        The data in this numpy array is *shared* with the EclKW
+        instance, meaning that updates in one will be reflected in the
+        other.
+        """
+
+        if self.dtype is numpy.float64:
+            ct = ctypes.c_double
+        elif self.dtype is numpy.float32:
+            ct = ctypes.c_float
+        elif self.dtype is numpy.int32:
+            ct = ctypes.c_int
+        else:
+            raise ValueError("Invalid type - numpy array only valid for int/float/double")
+        
+        ap = ctypes.cast(self.data_ptr, ctypes.POINTER(ct * len(self)))
+        return numpy.frombuffer(ap.contents, dtype = self.dtype)
+
+
+    def numpyCopy(self):
+        """Will return a numpy array which contains a copy of the EclKW data.
+
+        The numpy array has a separate copy of the data, so that
+        changes to either the numpy array or the EclKW will *not* be
+        reflected in the other datastructure. This is in contrast to
+        the EclKW.numpyView( ) method where the underlying data is
+        shared.
+        """
+        view = self.numpyView( )
+        return numpy.copy( view )
+    
 
     @property
     def numpy_array( self ):
+        warnings.warn("The EclKW.numpy_array  property has been deprecated - use method: numpyView( ) or numpyCopy( ) instead" , DeprecationWarning )
         if self.data_ptr:
             a = self.array
             value = numpy.zeros( a.size , dtype = self.dtype)
             for i in range( a.size ):
                 value[i] = a[i]
 
+    
+                
+
+                
     def fwrite( self , fortio ):
         self._fwrite( fortio )
 
