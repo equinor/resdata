@@ -34,7 +34,14 @@ class Deprecation_2_1_Test(ExtendedTestCase):
         with self.assertRaises(DeprecationWarning):
             int_kw = EclKW.int_kw
 
-    
+    def test_ecl_kw_numpy_property(self):
+        kw = EclKW("TEST" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        with self.assertRaises(DeprecationWarning):
+            n = kw.numpy_array
+
+            
+
+            
 
 class Deprecation_2_0_Test(ExtendedTestCase):
     def test_EclGrid_dims_property(self):
