@@ -338,7 +338,7 @@ bool ecl_kw_ichar_eq(const ecl_kw_type *ecl_kw , int i , const char *value) {
 }
 
 
-static bool ecl_kw_size_and_type_equal( const ecl_kw_type *ecl_kw1 , const ecl_kw_type * ecl_kw2 ) {
+bool ecl_kw_size_and_type_equal( const ecl_kw_type *ecl_kw1 , const ecl_kw_type * ecl_kw2 ) {
   bool equal = true;
 
   if (ecl_kw1->size != ecl_kw2->size)
