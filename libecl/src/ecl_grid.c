@@ -3819,6 +3819,31 @@ static int ecl_grid_box_contains_xyz( const ecl_grid_type * grid , int i1, int i
 
 
 /**
+ * Search for given xyz coordinate around global start_index in a box of size bx
+ */
+static int ecl_grid_get_global_index_from_xyz_around_box(ecl_grid_type * grid , double x , double y , double z , int start_index, int bx, point_type * p) {
+  /* Try neighbours */
+    int i,j,k;
+    int i1,i2,j1,j2,k1,k2;
+    int nx,ny,nz;
+    ecl_grid_get_dims( grid , &nx , &ny , &nz , NULL);
+    ecl_grid_get_ijk1( grid , start_index , &i , &j , &k);
+
+    i1 = util_int_max( 0 , i - bx );
+    j1 = util_int_max( 0 , j - bx );
+    k1 = util_int_max( 0 , k - bx );
+
+    i2 = util_int_min( nx , i + bx );
+    j2 = util_int_min( ny , j + bx );
+    k2 = util_int_min( nz , k + bx );
+
+    int global_index = ecl_grid_box_contains_xyz( grid , i1 , i2 , j1 , j2 , k1 , k2 , p);
+    return global_index;
+}
+
+
+
+/**
    This function will find the global index of the cell containing the
    world coordinates (x,y,z), if no cell can be found the function
    will return -1.
@@ -3842,9 +3867,6 @@ static int ecl_grid_box_contains_xyz( const ecl_grid_type * grid , int i1, int i
         3. Give up and do a linear search starting from start_index.
 
 */
-
-
-
 int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double y , double z , int start_index) {
   int global_index;
   point_type p;
@@ -3856,40 +3878,12 @@ int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double 
     if (ecl_grid_cell_contains_xyz1( grid , start_index , x,y,z))
       return start_index;
     else {
-      /* Try neighbours */
-      int i,j,k;
-      int i1,i2,j1,j2,k1,k2;
-      int nx,ny,nz;
-      ecl_grid_get_dims( grid , &nx , &ny , &nz , NULL);
-      ecl_grid_get_ijk1( grid , start_index , &i , &j , &k);
-
-      i1 = util_int_max( 0 , i - 1 );
-      j1 = util_int_max( 0 , j - 1 );
-      k1 = util_int_max( 0 , k - 1 );
-
-      i2 = util_int_min( nx , i + 1 );
-      j2 = util_int_min( ny , j + 1 );
-      k2 = util_int_min( nz , k + 1 );
-
-      global_index = ecl_grid_box_contains_xyz( grid , i1 , i2 , j1 , j2 , k1 , k2 , &p);
-      if (global_index >= 0)
-        return global_index;
-
-
-      /* Try a bigger box */
-      i1 = util_int_max( 0 , i - 2 );
-      j1 = util_int_max( 0 , j - 2 );
-      k1 = util_int_max( 0 , k - 2 );
-
-      i2 = util_int_min( nx , i + 2 );
-      j2 = util_int_min( ny , j + 2 );
-      k2 = util_int_min( nz , k + 2 );
-
-      global_index = ecl_grid_box_contains_xyz( grid , i1 , i2 , j1 , j2 , k1 , k2 , &p);
-      if (global_index >= 0)
-        return global_index;
-
-
+      /* Try boxes 2, 4, 8, ..., 64  */
+      for (int bx = 1; bx <= 6; bx++) {
+        global_index = ecl_grid_get_global_index_from_xyz_around_box( grid , x, y, z, start_index, 1<<bx , &p);
+        if (global_index >= 0)
+          return global_index;
+      }
     }
   }
 
