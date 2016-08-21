@@ -1081,7 +1081,6 @@ class EclGrid(BaseCClass):
            
         """
         if len(ecl_kw) == self.getNumActive() or len(ecl_kw) == self.getGlobalSize():
-            array = numpy.ones( [ self.getNX() , self.getNZ() , self.getNZ()] , dtype = ecl_kw.dtype) * default
             array = numpy.ones( [ self.getGlobalSize() ] , dtype = ecl_kw.dtype) * default
             kwa = ecl_kw.array
             if len(ecl_kw) == self.size:
@@ -1094,7 +1093,7 @@ class EclGrid(BaseCClass):
                         array[global_index] = kwa[data_index]
                         data_index += 1
                         
-            array = array.reshape( [self.ngetNX() , self.getNY() , self.getNZ()] , order = 'F')
+            array = array.reshape( [self.getNX() , self.getNY() , self.getNZ()] , order = 'F')
             return array
         else:
             raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.name , ecl_kw.size , self.nactive ,self.size))

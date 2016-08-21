@@ -201,3 +201,10 @@ class GridTest(ExtendedTestCase):
         self.assertEqual( dy , 3 )
         self.assertEqual( dz , 4 )
         
+    def test_numpy3D(self):
+        nx = 10
+        ny = 7
+        nz = 5
+        grid = EclGrid.createRectangular((nx,ny,nz) , (1,1,1))
+        kw = EclKW( "SWAT" , nx*ny*nz , EclTypeEnum.ECL_FLOAT_TYPE )
+        numpy_3d = grid.create3D( kw )
