@@ -358,6 +358,15 @@ class EclFile(BaseCClass):
             return False
 
 
+    def __iget(self , index):
+        return self._iget_kw( index ).setParent( parent = self )
+
+
+    def __iget_named(self, kw_name , index):
+        return self._iget_named_kw( kw_name , index ).setParent( parent = self )
+
+
+
     def __getitem__(self , index):
         """
         Implements [] operator; index can be integer or key.
@@ -390,7 +399,7 @@ class EclFile(BaseCClass):
             if index < 0 or index >= len(self):
                 raise IndexError
             else:
-                kw = self._iget_kw( index )
+                kw = self.__iget( index )
                 return kw
             
         if isinstance( index , slice ):
@@ -498,7 +507,7 @@ class EclFile(BaseCClass):
              using the EclSum class.
         """
         if index < self.num_named_kw( kw_name ):
-            kw = self._iget_named_kw( kw_name , index )
+            kw = self.__iget_named( kw_name , index )
             if copy:
                 return EclKW.copy( kw )
             else:
