@@ -16,12 +16,28 @@
 #  for more details.
 import datetime
 import os.path
+import gc
 from unittest import skipIf
+
 
 from ert.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
 from ert.ecl import EclFileFlagEnum, EclTypeEnum, EclFileEnum
 
 from ert.test import ExtendedTestCase , TestAreaContext
+
+def createFile( name , kw_list ):
+    with openFortIO(name , mode = FortIO.WRITE_MODE) as f:
+        for kw in kw_list:
+            kw.fwrite( f )
+
+
+def loadKeywords( name ):
+    kw_list = []
+    f = EclFile( name )
+    for kw in f:
+        kw_list.append( kw )
+
+    return kw_list
 
 
     
@@ -64,6 +80,22 @@ class EclFileTest(ExtendedTestCase):
 
         
                 
-                
-        
+    def test_gc(self):
+        kw1 = EclKW("KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw2 = EclKW("KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw3 = EclKW("KW3" , 100 , EclTypeEnum.ECL_INT_TYPE)
+
+        for i in range(len(kw1)):
+            kw1[i] = i
+            kw2[i] = 2*i
+            kw3[i] = 3*i
+
+        kw_list = [kw1 , kw2 , kw2]
             
+        with TestAreaContext("context") as ta:
+            createFile("TEST" , kw_list )
+            gc.collect() 
+            kw_list2 = loadKeywords( "TEST" )
+
+            for kw1,kw2 in zip(kw_list,kw_list2):
+                self.assertEqual( kw1, kw2 )
