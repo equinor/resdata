@@ -39,15 +39,6 @@ class EclFileStatoilTest(ExtendedTestCase):
 
         
         
-    def test_file_type(self):
-        self.assertFileType( "ECLIPSE.UNRST" , (EclFileEnum.ECL_UNIFIED_RESTART_FILE , False , None))
-        self.assertFileType( "ECLIPSE.X0030" , (EclFileEnum.ECL_RESTART_FILE , False , 30 ))
-        self.assertFileType( "ECLIPSE.DATA" , (EclFileEnum.ECL_DATA_FILE , None , None ))
-        self.assertFileType( "ECLIPSE.FINIT" , (EclFileEnum.ECL_INIT_FILE , True , None ))
-        self.assertFileType( "ECLIPSE.A0010" , (EclFileEnum.ECL_SUMMARY_FILE , True , 10 ))
-        self.assertFileType( "ECLIPSE.EGRID" , (EclFileEnum.ECL_EGRID_FILE , False  , None ))
-
-        
     def test_restart_days(self):
         rst_file = EclFile( self.test_file )
         self.assertAlmostEqual(  0.0 , rst_file.iget_restart_sim_days(0) )
@@ -61,12 +52,6 @@ class EclFileStatoilTest(ExtendedTestCase):
             rst_file.restart_get_kw("SWAT" , dtime = datetime.date( 1985 , 1 , 1))
             
             
-
-
-    def test_IOError(self):
-        with self.assertRaises(IOError):
-            EclFile("No/Does/not/exist")
-
 
     def test_iget_named(self):
         f = EclFile(self.test_file)
@@ -87,20 +72,6 @@ class EclFileStatoilTest(ExtendedTestCase):
             self.assertFilesAreEqual("ECLIPSE.UNRST", self.test_file)
 
 
-    def test_context( self ):
-        with TestAreaContext("python/ecl_file/context"):
-            kw1 = EclKW.create( "KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
-            kw2 = EclKW.create( "KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
-            with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
-                kw1.fwrite( f )
-                kw2.fwrite( f )
-
-            with openEclFile("TEST") as ecl_file:
-                self.assertEqual( len(ecl_file) , 2 )
-                self.assertTrue( ecl_file.has_kw("KW1"))
-                self.assertTrue( ecl_file.has_kw("KW2"))
-
-        
 
 
     @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow file test skipped!")
