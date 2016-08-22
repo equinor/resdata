@@ -16,6 +16,11 @@ namespace ERT {
         return *this;
     }
 
+    smspec_node& smspec_node::operator=( smspec_node&& rhs ) {
+        this->node = std::move( rhs.node );
+        return *this;
+    }
+
     static const int dummy_dims[ 3 ] = { -1, -1, -1 };
     const auto default_join = ":";
 

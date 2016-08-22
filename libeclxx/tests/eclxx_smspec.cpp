@@ -36,6 +36,13 @@ void test_smspec_get() {
     test_assert_true( field.get() != nullptr );
 }
 
+void test_smspec_move() {
+    std::string kw( "FOPT" );
+    ERT::smspec_node field( kw );
+    ERT::smspec_node move_ctor( std::move( field ) );
+    auto move_assignment = std::move( move_ctor );
+}
+
 void test_smspec_wg() {
     std::string wkw( "WWCT" );
     std::string gkw( "GWCT" );
@@ -106,6 +113,7 @@ void test_smspec_completion() {
 
 int main (int argc, char **argv) {
     test_smspec_copy();
+    test_smspec_move();
     test_smspec_get();
     test_smspec_wg();
     test_smspec_field();
