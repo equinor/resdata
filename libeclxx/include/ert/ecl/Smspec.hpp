@@ -15,6 +15,7 @@ namespace ERT {
             smspec_node( smspec_node&& );
 
             smspec_node& operator=( const smspec_node& );
+            smspec_node& operator=( smspec_node&& );
 
             smspec_node(
                     ecl_smspec_var_type,
