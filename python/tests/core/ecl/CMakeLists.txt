@@ -5,7 +5,7 @@ set(TEST_SOURCES
     __init__.py
     test_deprecation.py
     test_ecl_3dkw.py
-    test_ecl_file.py
+    test_ecl_file_statoil.py
     test_ecl_init_file.py
     test_ecl_restart_file.py
     test_ecl_submit.py
@@ -57,7 +57,7 @@ addPythonTest(ecl.fortio ecl.test_fortio.FortIOTest)
 
 
 if (STATOIL_TESTDATA_ROOT)
-  addPythonTest(ecl.ecl_file ecl.test_ecl_file.EclFileTest LABELS StatoilData)
+  addPythonTest(ecl.ecl_file_statoil ecl.test_ecl_file_statoil.EclFileStatoilTest LABELS StatoilData)
   addPythonTest(ecl.ecl_grdecl ecl.test_grdecl.GRDECLTest LABELS StatoilData)
   addPythonTest(ecl.ecl_grid_statoil ecl.test_grid_statoil.GridTest LABELS StatoilData:Slow)
   addPythonTest(ecl.ecl_kw_statoil ecl.test_ecl_kw_statoil.KWTest LABELS StatoilData)

@@ -26,7 +26,7 @@ from ert.test import ExtendedTestCase , TestAreaContext
 
     
 
-class EclFileTest(ExtendedTestCase):
+class EclFileStatoilTest(ExtendedTestCase):
     def setUp(self):
         self.test_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
         self.test_fmt_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.FUNRST")
