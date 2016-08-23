@@ -38,6 +38,8 @@ typedef struct {
   int grid_nr2;
   int global_index2;
 
+  int nnc_index;
+
   double trans;
 } ecl_nnc_type;
 
