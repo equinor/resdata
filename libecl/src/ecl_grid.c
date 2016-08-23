@@ -1435,19 +1435,23 @@ static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
 
 
 static void ecl_grid_free_cells( ecl_grid_type * grid ) {
+  if (!grid->cells)
+    return;
 
-  int i;
-  for (i=0; i < grid->size; i++) {
+  for (int i=0; i < grid->size; i++) {
     ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
     if (cell->nnc_info)
       nnc_info_free(cell->nnc_info);
   }
-
   free( grid->cells );
+
 }
 
-static void ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
-  grid->cells           = util_calloc(grid->size , sizeof * grid->cells );
+static bool ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
+  grid->cells = malloc(grid->size * sizeof * grid->cells );
+  if (!grid->cells)
+    return false;
+
   {
     ecl_cell_type * cell0 = ecl_grid_get_cell( grid , 0 );
     ecl_cell_init( cell0 , init_valid );
@@ -1458,6 +1462,7 @@ static void ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
         ecl_cell_memcpy( target_cell , cell0 );
       }
     }
+    return true;
   }
 }
 
@@ -1490,7 +1495,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->index_map             = NULL;
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
-  ecl_grid_alloc_cells( grid , init_valid );
   grid->unit_system            = ERT_ECL_METRIC_UNITS;
 
 
@@ -1535,6 +1539,12 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->children        = hash_alloc();
   grid->coarse_cells    = vector_alloc_new();
   grid->eclipse_version = 0;
+
+  /* This is the large allocation - which can potentially fail. */
+  if (!ecl_grid_alloc_cells( grid , init_valid )) {
+    ecl_grid_free( grid );
+    grid = NULL;
+  }
   return grid;
 }
 
@@ -2244,19 +2254,20 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
                                                     int lgr_nr) {
 
   ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , dualp_flag , nx,ny,nz,lgr_nr,true);
+  if (ecl_grid) {
+    if (mapaxes != NULL)
+      ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
 
-  if (mapaxes != NULL)
-    ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
+    if (corsnum != NULL)
+      ecl_grid->coarsening_active = true;
 
-  if (corsnum != NULL)
-    ecl_grid->coarsening_active = true;
+    ecl_grid->coord_kw = ecl_kw_alloc_new("COORD" , 6*(nx + 1) * (ny + 1) , ECL_FLOAT_TYPE , coord );
+    ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum , corsnum);
 
-  ecl_grid->coord_kw = ecl_kw_alloc_new("COORD" , 6*(nx + 1) * (ny + 1) , ECL_FLOAT_TYPE , coord );
-  ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum , corsnum);
-
-  ecl_grid_init_coarse_cells( ecl_grid );
-  ecl_grid_update_index( ecl_grid );
-  ecl_grid_taint_cells( ecl_grid );
+    ecl_grid_init_coarse_cells( ecl_grid );
+    ecl_grid_update_index( ecl_grid );
+    ecl_grid_taint_cells( ecl_grid );
+  }
   return ecl_grid;
 }
 
@@ -2296,11 +2307,17 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
 }
 
 static ecl_grid_type * ecl_grid_alloc_copy__( const ecl_grid_type * src_grid,  ecl_grid_type * main_grid ) {
-  ecl_grid_type * copy_grid = ecl_grid_alloc_empty( main_grid ,  src_grid->dualp_flag , ecl_grid_get_nx( src_grid ) , ecl_grid_get_ny( src_grid ) , ecl_grid_get_nz( src_grid ) , 0 , false );
-
-  ecl_grid_copy_content( copy_grid , src_grid );  // This will handle everything except LGR relationships which is established in the calling routine
-  ecl_grid_update_index( copy_grid );
-
+  ecl_grid_type * copy_grid = ecl_grid_alloc_empty( main_grid ,
+                                                    src_grid->dualp_flag ,
+                                                    ecl_grid_get_nx( src_grid ) ,
+                                                    ecl_grid_get_ny( src_grid ) ,
+                                                    ecl_grid_get_nz( src_grid ) ,
+                                                    0 ,
+                                                    false );
+  if (copy_grid) {
+    ecl_grid_copy_content( copy_grid , src_grid );  // This will handle everything except LGR relationships which is established in the calling routine
+    ecl_grid_update_index( copy_grid );
+  }
   return copy_grid;
 }
 
@@ -2798,19 +2815,21 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
     nz = nz / 2;
   {
     ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , dualp_flag , nx , ny , nz , grid_nr, false);
+    if (grid) {
+      if (mapaxes != NULL)
+        ecl_grid_init_mapaxes( grid , apply_mapaxes , mapaxes);
 
-    if (mapaxes != NULL)
-      ecl_grid_init_mapaxes( grid , apply_mapaxes , mapaxes);
+      {
+        int index;
+        for ( index=0; index < num_coords; index++)
+          ecl_grid_set_cell_GRID(grid , coords_size , coords[index] , corners[index]);
+      }
 
-    {
-      int index;
-      for ( index=0; index < num_coords; index++)
-        ecl_grid_set_cell_GRID(grid , coords_size , coords[index] , corners[index]);
+      ecl_grid_init_coarse_cells( grid );
+      ecl_grid_update_index( grid );
+      ecl_grid_taint_cells( grid );
+
     }
-
-    ecl_grid_init_coarse_cells( grid );
-    ecl_grid_update_index( grid );
-    ecl_grid_taint_cells( grid );
     return grid;
   }
 }
@@ -3035,26 +3054,28 @@ ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool apply_mapaxes) 
 */
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
   ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
-  const double grid_offset[3] = {0,0,0};
+  if (grid) {
+    const double grid_offset[3] = {0,0,0};
 
-  int k,j,i;
-  for (k=0; k < nz; k++) {
-    for (j=0; j< ny; j++) {
-      for (i=0; i < nx; i++) {
-        int global_index = i + j*nx + k*nx*ny;
-        double offset[3] = {
+    int k,j,i;
+    for (k=0; k < nz; k++) {
+      for (j=0; j< ny; j++) {
+        for (i=0; i < nx; i++) {
+          int global_index = i + j*nx + k*nx*ny;
+          double offset[3] = {
             grid_offset[0] + i*ivec[0] + j*jvec[0] + k*kvec[0],
             grid_offset[1] + i*ivec[1] + j*jvec[1] + k*kvec[1],
             grid_offset[2] + i*ivec[2] + j*jvec[2] + k*kvec[2]
-        };
+          };
 
-        ecl_cell_type * cell = ecl_grid_get_cell(grid , global_index );
-        ecl_cell_init_regular( cell , offset , i,j,k,global_index , ivec , jvec , kvec , actnum );
+          ecl_cell_type * cell = ecl_grid_get_cell(grid , global_index );
+          ecl_cell_init_regular( cell , offset , i,j,k,global_index , ivec , jvec , kvec , actnum );
+        }
       }
     }
+    ecl_grid_update_index( grid );
   }
 
-  ecl_grid_update_index( grid );
   return grid;
 }
 
@@ -3093,38 +3114,39 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
+    if (grid) {
+      double ivec[3] = { 0, 0, 0 };
+      double jvec[3] = { 0, 0, 0 };
+      double kvec[3] = { 0, 0, 0 };
 
-    double ivec[3] = { 0, 0, 0 };
-    double jvec[3] = { 0, 0, 0 };
-    double kvec[3] = { 0, 0, 0 };
-
-    const double grid_offset[3] = {0,0,0};
-    double offset[3];
-    int i, j, k;
-    offset[2] = grid_offset[2];
-    for (k=0; k < nz; k++) {
+      const double grid_offset[3] = {0,0,0};
+      double offset[3];
+      int i, j, k;
+      offset[2] = grid_offset[2];
+      for (k=0; k < nz; k++) {
         kvec[2] = dzv[k];
         offset[1] = grid_offset[1];
         for (j=0; j < ny; j++) {
-            jvec[1] = dyv[j];
-            offset[0] = grid_offset[0];
-            for (i=0; i < nx; i++) {
-                int global_index = i + j*nx + k*nx*ny;
-                ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
-                ivec[0] = dxv[i];
+          jvec[1] = dyv[j];
+          offset[0] = grid_offset[0];
+          for (i=0; i < nx; i++) {
+            int global_index = i + j*nx + k*nx*ny;
+            ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
+            ivec[0] = dxv[i];
 
-                ecl_cell_init_regular(cell, offset,
-                                      i,j,k,global_index,
-                                      ivec,jvec,kvec,
-                                      actnum);
-                offset[0] += dxv[i];
-            }
-            offset[1] += dyv[j];
+            ecl_cell_init_regular(cell, offset,
+                                  i,j,k,global_index,
+                                  ivec,jvec,kvec,
+                                  actnum);
+            offset[0] += dxv[i];
+          }
+          offset[1] += dyv[j];
         }
         offset[2] += dzv[k];
+      }
+      ecl_grid_update_index(grid);
     }
 
-    ecl_grid_update_index(grid);
     return grid;
 }
 
@@ -3138,7 +3160,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
 
 
     /* First layer - where the DEPTHZ keyword applies. */
-    {
+    if (grid) {
       int i,j;
       int k = 0;
       double y0 = 0;
@@ -3171,7 +3193,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
     }
 
     /* Remaining layers */
-    {
+    if (grid) {
       int i,j,k;
       for (k=1; k < nz; k++) {
         for (j=0; j <ny; j++) {
@@ -3192,7 +3214,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
       }
     }
 
-    {
+    if (grid) {
       int i,j,k;
       for (k=0; k < nz; k++) {
         for (j=0; j <ny; j++) {
@@ -3209,7 +3231,9 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
       }
     }
 
-    ecl_grid_update_index(grid);
+    if (grid)
+      ecl_grid_update_index(grid);
+
     return grid;
 }
 
@@ -3237,43 +3261,45 @@ ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const do
                                              FILEHEAD_SINGLE_POROSITY,
                                              nx, ny, nz,
                                              0, true);
-  int i, j, k;
-  double * y0 = util_calloc( nx, sizeof * y0 );
+  if (grid) {
+    int i, j, k;
+    double * y0 = util_calloc( nx, sizeof * y0 );
 
-  for (k=0; k < nz; k++) {
-    for (i=0; i < nx; i++) {
-      y0[i] = 0;
-    }
-    for (j=0; j < ny; j++) {
-      double x0 = 0;
+    for (k=0; k < nz; k++) {
       for (i=0; i < nx; i++) {
-        int g = i + j*nx + k*nx*ny;
-        ecl_cell_type* cell = ecl_grid_get_cell(grid, g);
-        double z0 = tops[ g ];
+        y0[i] = 0;
+      }
+      for (j=0; j < ny; j++) {
+        double x0 = 0;
+        for (i=0; i < nx; i++) {
+          int g = i + j*nx + k*nx*ny;
+          ecl_cell_type* cell = ecl_grid_get_cell(grid, g);
+          double z0 = tops[ g ];
 
-        point_set(&cell->corner_list[0] , x0         , y0[i]         , z0);
-        point_set(&cell->corner_list[1] , x0 + dx[g] , y0[i]         , z0);
-        point_set(&cell->corner_list[2] , x0         , y0[i] + dy[g] , z0);
-        point_set(&cell->corner_list[3] , x0 + dx[g] , y0[i] + dy[g] , z0);
+          point_set(&cell->corner_list[0] , x0         , y0[i]         , z0);
+          point_set(&cell->corner_list[1] , x0 + dx[g] , y0[i]         , z0);
+          point_set(&cell->corner_list[2] , x0         , y0[i] + dy[g] , z0);
+          point_set(&cell->corner_list[3] , x0 + dx[g] , y0[i] + dy[g] , z0);
 
-        point_set(&cell->corner_list[4] , x0         , y0[i]         , z0 + dz[g]);
-        point_set(&cell->corner_list[5] , x0 + dx[g] , y0[i]         , z0 + dz[g]);
-        point_set(&cell->corner_list[6] , x0         , y0[i] + dy[g] , z0 + dz[g]);
-        point_set(&cell->corner_list[7] , x0 + dx[g] , y0[i] + dy[g] , z0 + dz[g]);
+          point_set(&cell->corner_list[4] , x0         , y0[i]         , z0 + dz[g]);
+          point_set(&cell->corner_list[5] , x0 + dx[g] , y0[i]         , z0 + dz[g]);
+          point_set(&cell->corner_list[6] , x0         , y0[i] + dy[g] , z0 + dz[g]);
+          point_set(&cell->corner_list[7] , x0 + dx[g] , y0[i] + dy[g] , z0 + dz[g]);
 
-        x0    += dx[g];
-        y0[i] += dy[g];
+          x0    += dx[g];
+          y0[i] += dy[g];
 
-        if (actnum != NULL)
-          cell->active = actnum[g];
-        else
-          cell->active = CELL_ACTIVE;
+          if (actnum != NULL)
+            cell->active = actnum[g];
+          else
+            cell->active = CELL_ACTIVE;
+        }
       }
     }
-  }
-  free( y0 );
+    free( y0 );
 
-  ecl_grid_update_index(grid);
+    ecl_grid_update_index(grid);
+  }
   return grid;
 }
 
