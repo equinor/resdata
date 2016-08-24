@@ -138,7 +138,7 @@ static double stepwise_eval__( const stepwise_type * stepwise , const matrix_typ
 
 
 
-static double stepwise_test_var( stepwise_type * stepwise , int test_var , int blocks) {
+static double stepwise_test_var( stepwise_type * stepwise , int test_var , int blocks, bool cross_validation) {
   double prediction_error = 0;
 
   bool_vector_iset( stepwise->active_set , test_var , true );   // Temporarily activate this variable
@@ -150,7 +150,7 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
     bool_vector_type * active_rows = bool_vector_alloc( nsample, true );
 
 
-    if (block_size > 1){
+    if (cross_validation){
 
       /*True Cross-Validation: */
       int * randperms     = util_calloc( nsample , sizeof * randperms );
@@ -241,7 +241,7 @@ static double stepwise_test_var( stepwise_type * stepwise , int test_var , int b
 }
 
 
-void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV_blocks) {
+void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV_blocks, bool cross_validation) {
   int nvar          = matrix_get_columns( stepwise->X0 );
   int nsample       = matrix_get_rows( stepwise->X0 );
   double currentR2 = -1;
@@ -272,7 +272,7 @@ void stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV
     */
     for (int ivar = 0; ivar < nvar; ivar++) {
       if (!bool_vector_iget( stepwise->active_set , ivar)) {
-        double newR2 = stepwise_test_var(stepwise , ivar , CV_blocks);
+        double newR2 = stepwise_test_var(stepwise , ivar , CV_blocks, cross_validation);
         if ((minR2 < 0) || (newR2 < minR2)) {
           minR2 = newR2;
           best_var = ivar;

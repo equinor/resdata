@@ -30,7 +30,7 @@ extern "C" {
   double          stepwise_iget_beta(const stepwise_type * stepwise, const int index );
   double          stepwise_get_sum_beta(const stepwise_type * stepwise );
 
-  void            stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV_blocks);
+  void            stepwise_estimate( stepwise_type * stepwise , double deltaR2_limit , int CV_blocks, bool cross_validation);
   double          stepwise_eval( const stepwise_type * stepwise , const matrix_type * x );
 
 
