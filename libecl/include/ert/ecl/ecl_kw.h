@@ -24,6 +24,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
 
 #include <ert/util/buffer.h>
 #include <ert/util/type_macros.h>
@@ -36,6 +37,17 @@ extern "C" {
 
   typedef struct ecl_kw_struct      ecl_kw_type;
 
+/*
+  The size of an ecl_kw instance is denoted with an integer. The
+  choice of int to store the size obviously limits the maximum size to
+  INT_MAX elements. This choice is an historical mistake - it should
+  probably have been size_t; however the ecl_kw datastructure is
+  tightly bound to the on-disk binary format supplied by Eclipse, and
+  there the number of elements is stored as a signed(?) 32 bit
+  integer - so using int for size does make some sense-
+*/
+
+#define ECL_KW_MAX_SIZE INT_MAX
 
   int            ecl_kw_first_different( const ecl_kw_type * kw1 , const ecl_kw_type * kw2 , int offset, double abs_epsilon , double rel_epsilon);
   size_t         ecl_kw_fortio_size( const ecl_kw_type * ecl_kw );
