@@ -64,8 +64,9 @@ static int  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , cons
 
         for (index2 = 0; index2 < nnc_vector_get_size( nnc_vector ); index2++) {
           nnc.global_index2 = int_vector_iget( grid2_index_list , index2 );
+          nnc.input_index = int_vector_iget( nnc_index_list, index2 );
           if(tran_kw) {
-            nnc.trans = ecl_kw_iget_as_double(tran_kw, int_vector_iget(nnc_index_list, index2));
+            nnc.trans = ecl_kw_iget_as_double(tran_kw, nnc.input_index);
             valid_trans++;
           }else{
             nnc.trans = ERT_ECL_DEFAULT_NNC_TRANS;
