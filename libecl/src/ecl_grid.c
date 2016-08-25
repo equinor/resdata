@@ -3283,7 +3283,7 @@ static bool ecl_grid_file_GRID_dims( fortio_type * grid_fortio , fortio_type * d
           dims[3] = nactive;
 
    The function as a whole will return true if the grid dimensions
-   (nx,ny,nz) are sucessfully set. If the dimensions are not set the
+   (nx,ny,nz) are successfully set. If the dimensions are not set the
    dims vector is not touched.
 */
 
