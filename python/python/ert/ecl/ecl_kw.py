@@ -197,9 +197,9 @@ class EclKW(BaseCClass):
 
     
     def slice_copy( self , slice_range ):
-        (start , stop , step) = slice_range.indices( len(size) )
+        (start , stop , step) = slice_range.indices( len(self) )
         if stop > start:
-            return self._slice_copy( start , stop , step)
+            return self._slice_copyc( start , stop , step)
         else:
             return None
     
