@@ -101,7 +101,7 @@ int  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_fil
 
 
 
-int ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
+int ecl_nnc_sort_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
 
   if (nnc1->grid_nr1 != nnc2->grid_nr1) {
     if (nnc1->grid_nr1 < nnc2->grid_nr1)
@@ -135,13 +135,22 @@ int ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
   return 0;
 }
 
-static int ecl_nnc_cmp__( const void * nnc1 , const void * nnc2) {
-  return ecl_nnc_cmp( nnc1 , nnc2 );
+
+bool ecl_nnc_equal( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
+
+  if (ecl_nnc_sort_cmp( nnc1 , nnc2) == 0)
+    return ((nnc1->trans == nnc2->trans) && (nnc1->input_index == nnc2->input_index));
+
+}
+
+
+static int ecl_nnc_sort_cmp__( const void * nnc1 , const void * nnc2) {
+  return ecl_nnc_sort_cmp( nnc1 , nnc2 );
 }
 
 
 void ecl_nnc_sort( ecl_nnc_type * nnc_list , int size) {
-  qsort( nnc_list , size , sizeof * nnc_list , ecl_nnc_cmp__ );
+  qsort( nnc_list , size , sizeof * nnc_list , ecl_nnc_sort_cmp__ );
 }
 
 

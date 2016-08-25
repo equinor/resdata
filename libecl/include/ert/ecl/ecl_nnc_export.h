@@ -51,7 +51,8 @@ typedef struct {
   ecl_kw_type * ecl_nnc_export_get_tranll_kw( const ecl_grid_type * grid , const ecl_file_type * init_file ,  int lgr_nr1, int lgr_nr2 );
   ecl_kw_type * ecl_nnc_export_get_tran_kw( const ecl_file_type * init_file , const char * kw , int lgr_nr );
 
-  int           ecl_nnc_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2);
+  bool          ecl_nnc_equal( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2);
+  int           ecl_nnc_sort_cmp( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2);
   void          ecl_nnc_sort( ecl_nnc_type * nnc_list , int size);
 
 #ifdef __cplusplus
