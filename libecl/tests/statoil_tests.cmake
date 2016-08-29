@@ -93,10 +93,9 @@ add_test( ecl_grid_simple ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_S
 add_test( ecl_grid_ecl2015_1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_NOSIM_GRID.EGRID )
 add_test( ecl_grid_ecl2015_2 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_20142.EGRID )
 
-
-add_executable( ecl_grid_export ecl_grid_export.c )
-target_link_libraries( ecl_grid_export ecl test_util )
-add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
+add_executable( ecl_grid_export_statoil ecl_grid_export.c )
+target_link_libraries( ecl_grid_export_statoil ecl test_util )
+add_test( ecl_grid_export_statoil ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export_statoil  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
 add_executable( ecl_grid_volume ecl_grid_volume.c )
 target_link_libraries( ecl_grid_volume ecl test_util )

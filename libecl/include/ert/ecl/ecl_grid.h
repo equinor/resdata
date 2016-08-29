@@ -201,6 +201,7 @@ extern "C" {
   void                    ecl_grid_fwrite_EGRID_header__( int dims[3] , const float mapaxes[6], int dualp_flag , fortio_type * fortio);
   void                    ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio);
 
+  int              ecl_grid_zcorn_index(const ecl_grid_type * grid , int i, int j , int k , int c);
   float          * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid );
   ecl_kw_type    * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid );
   int            * ecl_grid_alloc_actnum_data( const ecl_grid_type * grid );
@@ -208,6 +209,7 @@ extern "C" {
   ecl_kw_type    * ecl_grid_alloc_hostnum_kw( const ecl_grid_type * grid );
   ecl_kw_type    * ecl_grid_alloc_gridhead_kw( int nx, int ny , int nz , int grid_nr);
   ecl_grid_type  * ecl_grid_alloc_copy( const ecl_grid_type * src_grid );
+  ecl_grid_type  * ecl_grid_alloc_processed_copy( const ecl_grid_type * src_grid , const double * zcorn , const int * actnum);
 
   void             ecl_grid_ri_export( const ecl_grid_type * ecl_grid , double * ri_points);
   void             ecl_grid_cell_ri_export( const ecl_grid_type * ecl_grid , int global_index , double * ri_points);
