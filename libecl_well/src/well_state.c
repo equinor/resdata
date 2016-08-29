@@ -447,7 +447,7 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const e
       bool open;
       well_type_enum type = ERT_UNDOCUMENTED_ZERO;
       {
-        int int_state = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_STATUS_ITEM );
+        int int_state = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_STATUS_INDEX );
         if (int_state > 0)
           open = true;
         else
@@ -455,7 +455,7 @@ well_state_type * well_state_alloc_from_file( ecl_file_type * ecl_file , const e
       }
 
       {
-        int int_type = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_TYPE_ITEM);
+        int int_type = ecl_kw_iget_int( global_iwel_kw , iwel_offset + IWEL_TYPE_INDEX);
         type = well_state_translate_ecl_type_int( int_type );
       }
 

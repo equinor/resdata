@@ -907,8 +907,9 @@ class EclGrid(BaseCClass):
     @property
     def num_lgr( self ):
         warnings.warn("The num_lgr property is deprecated - use getNumLGR() method instead" , DeprecationWarning)
-        
+        return self.getNumLGR()
 
+    
     def has_lgr( self , lgr_name ):
         """
         Query if the grid has an LGR with name @lgr_name.
