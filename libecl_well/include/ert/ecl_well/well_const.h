@@ -49,28 +49,28 @@ extern "C" {
   added.
 */
 
-#define IWEL_HEADI_ITEM               0
-#define IWEL_HEADJ_ITEM               1
-#define IWEL_HEADK_ITEM               2
-#define IWEL_CONNECTIONS_ITEM         4
-#define IWEL_GROUP_ITEM               5
-#define IWEL_TYPE_ITEM                6
-#define IWEL_STATUS_ITEM             10
-#define IWEL_LGR_ITEM                42
-#define IWEL_SEGMENTED_WELL_NR_ITEM  70
+#define IWEL_HEADI_INDEX               0
+#define IWEL_HEADJ_INDEX               1
+#define IWEL_HEADK_INDEX               2
+#define IWEL_CONNECTIONS_INDEX         4
+#define IWEL_GROUP_INDEX               5
+#define IWEL_TYPE_INDEX                6
+#define IWEL_STATUS_INDEX             10
+#define IWEL_LGR_INDEX                42
+#define IWEL_SEGMENTED_WELL_NR_INDEX  70
 
 #define IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE -1
 
-#define ISEG_OUTLET_ITEM        1
-#define ISEG_BRANCH_ITEM        3
+#define ISEG_OUTLET_INDEX        1
+#define ISEG_BRANCH_INDEX        3
 
-#define ICON_IC_ITEM         0
-#define ICON_I_ITEM          1
-#define ICON_J_ITEM          2
-#define ICON_K_ITEM          3
-#define ICON_STATUS_ITEM     5
-#define ICON_DIRECTION_ITEM 13
-#define ICON_SEGMENT_ITEM   14
+#define ICON_IC_INDEX         0
+#define ICON_I_INDEX          1
+#define ICON_J_INDEX          2
+#define ICON_K_INDEX          3
+#define ICON_STATUS_INDEX     5
+#define ICON_DIRECTION_INDEX 13
+#define ICON_SEGMENT_INDEX   14
 
 #define ICON_DIRX                 1
 #define ICON_DIRY                 2
@@ -80,7 +80,7 @@ extern "C" {
 #define ICON_DEFAULT_DIR_VALUE    0
 #define ICON_DEFAULT_DIR_TARGET   ICON_DIRZ
 
-#define SCON_CF_ITEM              0
+#define SCON_CF_INDEX              0
 
 #define RSEG_LENGTH_INDEX       0
 #define RSEG_DIAMETER_INDEX     2

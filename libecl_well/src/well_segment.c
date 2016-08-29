@@ -86,8 +86,8 @@ well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , co
   } else {
     const int iseg_offset = header->nisegz * ( header->nsegmx * well_nr + segment_index);
     const int rseg_offset = header->nrsegz * ( header->nsegmx * well_nr + segment_index);
-    int outlet_segment_id = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_OUTLET_ITEM ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET ;   // -1
-    int branch_id         = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_BRANCH_ITEM ) - ECLIPSE_WELL_BRANCH_OFFSET  + WELL_BRANCH_OFFSET ;    // -1
+    int outlet_segment_id = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_OUTLET_INDEX ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET ;   // -1
+    int branch_id         = ecl_kw_iget_int( iseg_kw , iseg_offset + ISEG_BRANCH_INDEX ) - ECLIPSE_WELL_BRANCH_OFFSET  + WELL_BRANCH_OFFSET ;    // -1
     const double * rseg_data = well_rseg_loader_load_values(rseg_loader, rseg_offset);
 
     well_segment_type * segment = well_segment_alloc( segment_id , outlet_segment_id , branch_id , NULL);
@@ -236,7 +236,7 @@ const well_conn_collection_type * well_segment_get_global_connections(const well
 
 bool well_segment_well_is_MSW(int well_nr , const ecl_kw_type * iwel_kw , const ecl_rsthead_type * rst_head) {
   int iwel_offset = rst_head->niwelz * well_nr;
-  int segment_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_ITEM) - 1; 
+  int segment_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1; 
   
   if (segment_well_nr == IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE) 
     return false;

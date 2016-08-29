@@ -146,12 +146,12 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
                                           int conn_nr ) {
 
   const int icon_offset = header->niconz * ( header->ncwmax * well_nr + conn_nr );
-  int IC = ecl_kw_iget_int( icon_kw , icon_offset + ICON_IC_ITEM );
+  int IC = ecl_kw_iget_int( icon_kw , icon_offset + ICON_IC_INDEX );
   if (IC > 0) {
     well_conn_type * conn;
-    int i       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_I_ITEM ) - 1;
-    int j       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_J_ITEM ) - 1;
-    int k       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_K_ITEM ) - 1;
+    int i       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_I_INDEX ) - 1;
+    int j       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_J_INDEX ) - 1;
+    int k       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_K_INDEX ) - 1;
     double connection_factor = -1;
     bool matrix_connection = true;
     bool open;
@@ -159,7 +159,7 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
 
     /* Set the status */
     {
-      int int_status = ecl_kw_iget_int( icon_kw , icon_offset + ICON_STATUS_ITEM );
+      int int_status = ecl_kw_iget_int( icon_kw , icon_offset + ICON_STATUS_INDEX );
       if (int_status > 0)
         open = true;
       else
@@ -181,7 +181,7 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
 
     /* Set the direction flag */
     {
-      int int_direction = ecl_kw_iget_int( icon_kw , icon_offset + ICON_DIRECTION_ITEM );
+      int int_direction = ecl_kw_iget_int( icon_kw , icon_offset + ICON_DIRECTION_INDEX );
       if (int_direction == ICON_DEFAULT_DIR_VALUE)
         int_direction = ICON_DEFAULT_DIR_TARGET;
 
@@ -208,11 +208,11 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
 
     if (scon_kw) {
       const int scon_offset = header->nsconz * ( header->ncwmax * well_nr + conn_nr );
-      connection_factor = ecl_kw_iget_as_double(scon_kw , scon_offset + SCON_CF_ITEM);
+      connection_factor = ecl_kw_iget_as_double(scon_kw , scon_offset + SCON_CF_INDEX);
     }
 
     {
-      int segment_id = ecl_kw_iget_int( icon_kw , icon_offset + ICON_SEGMENT_ITEM ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
+      int segment_id = ecl_kw_iget_int( icon_kw , icon_offset + ICON_SEGMENT_INDEX ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
       conn = well_conn_alloc__(i,j,k,connection_factor,dir,open,segment_id,matrix_connection);
     }
 
@@ -242,12 +242,12 @@ void well_conn_free__( void * arg ) {
 
 well_conn_type * well_conn_alloc_wellhead( const ecl_kw_type * iwel_kw , const ecl_rsthead_type * header , int well_nr)  {
   const int iwel_offset = header->niwelz * well_nr;
-  int conn_i = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADI_ITEM ) - 1;
+  int conn_i = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADI_INDEX ) - 1;
 
   if (conn_i >= 0) {
     //well_conn_type * conn = util_malloc( sizeof * conn );
-    int conn_j = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADJ_ITEM ) - 1;
-    int conn_k = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADK_ITEM ) - 1;
+    int conn_j = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADJ_INDEX ) - 1;
+    int conn_k = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_HEADK_INDEX ) - 1;
     bool matrix_connection = true;
     bool open = true;
     double connection_factor = -1;

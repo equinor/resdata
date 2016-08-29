@@ -54,7 +54,7 @@ int main(int argc , char ** argv) {
 
     for (iwell = 0; iwell < rst_head->nwells; iwell++) {
       const int iwel_offset = rst_head->niwelz * iwell;
-      int num_connections   = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_CONNECTIONS_ITEM );
+      int num_connections   = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_CONNECTIONS_INDEX );
       int iconn;
       well_conn_collection_type * wellcc = well_conn_collection_alloc( );
       well_conn_collection_type * wellcc_ref = well_conn_collection_alloc();
