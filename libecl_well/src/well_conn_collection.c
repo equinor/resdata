@@ -108,7 +108,7 @@ int well_conn_collection_load_from_kw( well_conn_collection_type * wellcc ,
                                        const ecl_rsthead_type * rst_head) {
 
   const int iwel_offset = rst_head->niwelz * iwell;
-  int num_connections   = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_CONNECTIONS_ITEM );
+  int num_connections   = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_CONNECTIONS_INDEX );
   int iconn;
 
   for (iconn = 0; iconn < num_connections; iconn++) {

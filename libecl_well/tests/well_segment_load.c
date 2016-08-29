@@ -51,7 +51,7 @@ int main(int argc , char ** argv) {
     for (well_nr = 0; well_nr < rst_head->nwells; well_nr++) {
       int iwel_offset = rst_head->niwelz * well_nr;
       well_segment_collection_type * segments = well_segment_collection_alloc();
-      int seg_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_ITEM) - 1; // -1: Ordinary well.
+      int seg_well_nr = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_SEGMENTED_WELL_NR_INDEX) - 1; // -1: Ordinary well.
       if (seg_well_nr >= 0) {
         int segment_index;
         int segment_count = 0;
