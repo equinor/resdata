@@ -140,6 +140,8 @@ bool ecl_nnc_equal( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
 
   if (ecl_nnc_sort_cmp( nnc1 , nnc2) == 0)
     return ((nnc1->trans == nnc2->trans) && (nnc1->input_index == nnc2->input_index));
+  else
+    return false;
 
 }
 
