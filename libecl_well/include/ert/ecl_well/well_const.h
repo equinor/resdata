@@ -60,7 +60,6 @@ extern "C" {
 #define IWEL_SEGMENTED_WELL_NR_INDEX  70
 
 #define IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE -1
-
 #define ISEG_OUTLET_INDEX        1
 #define ISEG_BRANCH_INDEX        3
 
@@ -81,6 +80,7 @@ extern "C" {
 #define ICON_DEFAULT_DIR_TARGET   ICON_DIRZ
 
 #define SCON_CF_INDEX              0
+#define XCON_QR_INDEX             49
 
 #define RSEG_LENGTH_INDEX       0
 #define RSEG_DIAMETER_INDEX     2
