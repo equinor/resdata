@@ -78,6 +78,7 @@ typedef struct ecl_file_view_struct ecl_file_view_type;
   int ecl_file_view_iget_occurence( const ecl_file_view_type * ecl_file_view , int global_index);
   void ecl_file_view_fprintf_kw_list(const ecl_file_view_type * ecl_file_view , FILE * stream);
   ecl_file_view_type * ecl_file_view_alloc_blockmap(const ecl_file_view_type * ecl_file_view , const char * header, int occurence);
+  void ecl_file_view_add_child( ecl_file_view_type * parent , ecl_file_view_type * child);
 
   int ecl_file_view_seqnum_index_from_sim_time( ecl_file_view_type * parent_map , time_t sim_time);
   bool ecl_file_view_has_sim_time( const ecl_file_view_type * ecl_file_view , time_t sim_time);

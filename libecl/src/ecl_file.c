@@ -133,7 +133,6 @@ struct ecl_file_struct {
                                        ecl_file object. */
   ecl_file_view_type * global_view;       /* The index of all the ecl_kw instances in the file. */
   ecl_file_view_type * active_view;       /* The currently active index. */
-  vector_type   * view_list;         /* Storage container for the map instances. */
   bool            read_only;
   int             flags;
   vector_type   * map_stack;
@@ -180,7 +179,6 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file , ECL_FILE_ID)
 ecl_file_type * ecl_file_alloc_empty( int flags ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file );
   UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
-  ecl_file->view_list  = vector_alloc_new();
   ecl_file->map_stack = vector_alloc_new();
   ecl_file->inv_view  = inv_map_alloc( );
   ecl_file->flags     = flags;
@@ -460,16 +458,12 @@ int ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int
 
 /*****************************************************************/
 
-static void ecl_file_add_view( ecl_file_type * ecl_file , ecl_file_view_type * view) {
-  vector_append_owned_ref(ecl_file->view_list , view , ecl_file_view_free__ );
-}
-
 
 static ecl_file_view_type * ecl_file_get_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
   ecl_file_view_type * view = ecl_file_view_alloc_blockmap( ecl_file->global_view , kw , occurence );
 
   if (view)
-    ecl_file_add_view( ecl_file , view );
+    ecl_file_view_add_child( ecl_file->global_view , view );
 
   return view;
 }
@@ -478,7 +472,7 @@ static ecl_file_view_type * ecl_file_get_relative_blockview( ecl_file_type * ecl
   ecl_file_view_type * view = ecl_file_view_alloc_blockmap( ecl_file->active_view , kw , occurence );
 
   if (view)
-    ecl_file_add_view( ecl_file , view );
+    ecl_file_view_add_child( ecl_file->active_view , view );
 
   return view;
 }
@@ -566,7 +560,6 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
     ecl_file->fortio = fortio;
     ecl_file->global_view = ecl_file_view_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_view , true );
 
-    ecl_file_add_view( ecl_file , ecl_file->global_view );
     if (ecl_file_scan( ecl_file )) {
       ecl_file_select_global( ecl_file );
 
@@ -642,8 +635,8 @@ void ecl_file_close(ecl_file_type * ecl_file) {
   if (ecl_file->fortio != NULL)
     fortio_fclose( ecl_file->fortio  );
 
+  ecl_file_view_free( ecl_file->global_view );
   inv_map_free( ecl_file->inv_view );
-  vector_free( ecl_file->view_list  );
   vector_free( ecl_file->map_stack );
   free( ecl_file );
 }
