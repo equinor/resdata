@@ -112,6 +112,7 @@ class CPolylineCollection(BaseCClass):
             raise KeyError("The polyline collection already has an object:%s" % name)
             
         polyline = self._create_polyline(name)
+        polyline.setParent( parent = self )
         return polyline
 
 

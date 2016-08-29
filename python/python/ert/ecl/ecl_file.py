@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'ecl_file.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'ecl_file.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 The ecl_file module contains functionality to load a an ECLIPSE file
 in 'restart format'. Files of 'restart format' include restart files,
@@ -74,13 +74,13 @@ class EclFile(BaseCClass):
     _has_sim_time                = EclPrototype("bool        ecl_file_has_sim_time( ecl_file , time_t )")
 
 
-    
+
     @staticmethod
     def getFileType(filename):
         fmt_file    = ctypes.c_bool()
         report_step = ctypes.c_int()
 
-        file_type = EclFile._get_file_type( filename , ctypes.byref( fmt_file ) , ctypes.byref(report_step)) 
+        file_type = EclFile._get_file_type( filename , ctypes.byref( fmt_file ) , ctypes.byref(report_step))
         if file_type in [EclFileEnum.ECL_RESTART_FILE , EclFileEnum.ECL_SUMMARY_FILE]:
             report_step = report_step.value
         else:
@@ -94,7 +94,7 @@ class EclFile(BaseCClass):
 
         return (file_type , report_step , fmt_file )
 
-    
+
 
     @classmethod
     def restart_block( cls , filename , dtime = None , report_step = None):
@@ -107,7 +107,7 @@ class EclFile(BaseCClass):
         specified with either one of the optional arguments
         @report_step or @dtime. If present @dtime should be a normal
         python datetime instance:
-        
+
             block1 = EclFile.restart_block( "ECLIPSE.UNRST" , dtime = datetime.datetime( year , month , day ))
             block2 = EclFile.restart_block( "ECLIPSE.UNRST" , report_step = 67 )
 
@@ -115,21 +115,21 @@ class EclFile(BaseCClass):
         will return None.
         """
         obj = EclFile( filename )
-        
+
         if dtime:
             OK = obj._restart_block_time( CTime( dtime ))
         elif not report_step is None:
             OK = obj._restart_block_step( report_step )
         else:
             raise TypeError("restart_block() requires either dtime or report_step argument - none given.")
-        
+
         if not OK:
             if dtime:
                 raise ValueError("Could not locate date:%02d/%02d/%4d in restart file: %s." % (dtime.day , dtime.month , dtime.year , filename))
             else:
                 raise ValueError("Could not locate report step:%d in restart file: %s." % (report_step , filename))
-            
-            
+
+
         return obj
 
 
@@ -149,14 +149,14 @@ class EclFile(BaseCClass):
               print "OK - file contains report step 20"
            else:
               print "File does not contain report step 20"
-              
+
         If you have already loaded the file into an EclFile instance
         you should use the has_report_step() method instead.
         """
         obj = EclFile( filename )
         return obj.has_report_step( report_step )
 
-    
+
     @classmethod
     def contains_sim_time( cls , filename , dtime ):
         """
@@ -179,7 +179,7 @@ class EclFile(BaseCClass):
         """
         obj = EclFile( filename )
         return obj.has_sim_time( dtime )
-    
+
     @property
     def report_list(self):
         report_steps = []
@@ -198,33 +198,33 @@ class EclFile(BaseCClass):
             else:
                 raise TypeError("Tried get list of report steps from file:%s - which is not a restart file" % fname)
 
-            
+
         return report_steps
 
 
-    
+
     @classmethod
     def file_report_list( cls , filename ):
         """
         Will identify the available report_steps from @filename.
         """
-        
+
         file = EclFile( filename )
         return file.report_list
 
-        
+
 
     def __str__(self):
         return "EclFile: %s" % self.getFilename( )
 
-        
+
     def __init__( self , filename , flags = 0):
         """
         Loads the complete file @filename.
 
         Will create a new EclFile instance with the content of file
         @filename. The file @filename must be in 'restart format' -
-        otherwise it will be crash and burn. 
+        otherwise it will be crash and burn.
 
         The optional argument flags can be an or'ed combination of the
         flags:
@@ -236,7 +236,7 @@ class EclFile(BaseCClass):
               when not used; to save number of open file descriptors
               in cases where a high number of EclFile instances are
               open concurrently.
-        
+
         When the file has been loaded the EclFile instance can be used
         to query for and get reference to the EclKW instances
         constituting the file, like e.g. SWAT from a restart file or
@@ -247,7 +247,7 @@ class EclFile(BaseCClass):
             raise IOError("Failed to open file file:%s" % filename)
         else:
             super(EclFile , self).__init__(c_ptr)
-        
+
 
 
     def save_kw( self , kw ):
@@ -261,10 +261,10 @@ class EclFile(BaseCClass):
           3. Call this method to save the modifications to disk.
 
         There are several restrictions to the use of this function:
-        
+
           1. The EclFile instance must have been created with the
              optional read_only flag set to False.
- 
+
           2. You can only modify the content of the keyword; if you
              try to modify the header in any way (i.e. size, datatype
              or name) the function will fail.
@@ -277,11 +277,11 @@ class EclFile(BaseCClass):
             self._save_kw(  kw )
         else:
             raise IOError("save_kw: the file:%s has been opened read only." % self.getFilename( ))
-        
+
 
     def __len__(self):
         return self._get_size( )
-    
+
 
     def close(self):
         if self:
@@ -291,13 +291,13 @@ class EclFile(BaseCClass):
 
     def free(self):
         self.close()
-        
+
 
     def select_block( self, kw , kw_index):
         OK = self._select_block( kw , kw_index )
         if not OK:
             raise ValueError("Could not find block %s:%d" % (kw , kw_index))
-        
+
 
     def select_global( self ):
         self._select_global(  )
@@ -306,16 +306,16 @@ class EclFile(BaseCClass):
     def select_restart_section( self, index = None , report_step = None , sim_time = None):
         """
         Will select a restart section as the active section.
-        
+
         You must specify a report step with the @report_step argument,
         a true time with the @sim_time argument or a plain index to
         select restart block. If none of arguments are given exception
         TypeError will be raised. If present the @sim_time argument
         should be a datetime instance.
-        
+
         If the restart section you ask for can not be found the method
         will raise a ValueError exeception. To protect against this
-        you can query first with the has_report_step(), 
+        you can query first with the has_report_step(),
         has_sim_time() or num_report_steps() methods.
 
         This method should be used when you have already loaded the
@@ -336,11 +336,11 @@ class EclFile(BaseCClass):
         else:
             raise TypeError("select_restart_section() requires either dtime or report_step argument - none given")
 
-        
+
         if not OK:
             raise TypeError("select_restart_section() Could not locate report_step/dtime")
         return self
-        
+
 
     def select_last_restart( self ):
         """
@@ -356,6 +356,15 @@ class EclFile(BaseCClass):
             return True
         else:
             return False
+
+
+    def __iget(self , index):
+        return self._iget_kw( index ).setParent( parent = self )
+
+
+    def __iget_named(self, kw_name , index):
+        return self._iget_named_kw( kw_name , index ).setParent( parent = self )
+
 
 
     def __getitem__(self , index):
@@ -390,9 +399,9 @@ class EclFile(BaseCClass):
             if index < 0 or index >= len(self):
                 raise IndexError
             else:
-                kw = self._iget_kw( index )
+                kw = self.__iget( index )
                 return kw
-            
+
         if isinstance( index , slice ):
             indices = index.indices( len(self) )
             kw_list = []
@@ -411,13 +420,13 @@ class EclFile(BaseCClass):
                     raise KeyError("Unrecognized keyword:\'%s\'" % index)
             else:
                 raise TypeError("Index must be integer or string (keyword)")
-        
+
 
 
     def iget_kw( self , index , copy = False):
         """
         Will return EclKW instance nr @index.
-        
+
         In the files loaded with the EclFile implementation the
         ECLIPSE keywords come sequentially in a long series, an INIT
         file might have the following keywords:
@@ -425,17 +434,17 @@ class EclFile(BaseCClass):
           INTEHEAD
           LOGIHEAD
           DOUBHEAD
-          PORV    
-          DX      
-          DY      
-          DZ      
-          PERMX   
-          PERMY   
-          PERMZ   
-          MULTX   
-          MULTY   
+          PORV
+          DX
+          DY
+          DZ
+          PERMX
+          PERMY
+          PERMZ
+          MULTX
+          MULTY
           .....
-          
+
         The iget_kw() method will give you a EclKW reference to
         keyword nr @index. This functionality is also available
         through the index operator []:
@@ -456,20 +465,20 @@ class EclFile(BaseCClass):
             return EclKW.copy( kw )
         else:
             return kw
-  
-  
+
+
     def iget_named_kw( self , kw_name , index , copy = False):
         """
         Will return EclKW nr @index reference with header @kw_name.
-        
+
         The keywords in a an ECLIPSE file are organized in a long
         linear array; keywords with the same name can occur many
         times. For instance a summary data[1] file might look like
         this:
 
-           SEQHDR  
+           SEQHDR
            MINISTEP
-           PARAMS  
+           PARAMS
            MINISTEP
            PARAMS
            MINISTEP
@@ -477,17 +486,17 @@ class EclFile(BaseCClass):
            ....
 
         To get the third 'PARAMS' keyword you can use the method call:
-  
+
             params_kw = file.iget_named_kw( "PARAMS" , 2 )
 
         The functionality of the iget_named_kw() method is also
         available through the __getitem__() method as:
-        
+
            params_kw = file["PARAMS"][2]
 
         Observe that the returned EclKW instance is only a reference
         to the data owned by the EclFile instance.
-        
+
         Observe that syntactically this is equivalent to
         file[kw_name][index], however the latter form will imply that
         all the keywords of this type are loaded from the file. If you
@@ -498,7 +507,7 @@ class EclFile(BaseCClass):
              using the EclSum class.
         """
         if index < self.num_named_kw( kw_name ):
-            kw = self._iget_named_kw( kw_name , index )
+            kw = self.__iget_named( kw_name , index )
             if copy:
                 return EclKW.copy( kw )
             else:
@@ -567,7 +576,7 @@ class EclFile(BaseCClass):
         into it means that this is quite low level - and potentially
         dangerous!
         """
-        
+
         # We ensure that this scope owns the new_kw instance; the
         # new_kw will be handed over to the ecl_file instance, and we
         # can not give away something we do not alreeady own.
@@ -605,8 +614,8 @@ class EclFile(BaseCClass):
             kw = self[index]
             header_dict[ kw.name ] = True
         return header_dict.keys()
-    
-    
+
+
     @property
     def headers(self):
         """
@@ -617,7 +626,7 @@ class EclFile(BaseCClass):
             kw = self[index]
             header_list.append( kw.header )
         return header_list
-    
+
     @property
     def report_steps( self ):
         """
@@ -633,16 +642,16 @@ class EclFile(BaseCClass):
         for kw in self["SEQNUM"]:
             steps.append( kw[0] )
         return steps
-    
+
     @property
     def report_dates( self ):
         """
         Will return a list of the dates for all report steps.
-        
+
         The method works by iterating through the whole restart file
         looking for 'SEQNUM/INTEHEAD' keywords; the method can
         probably be tricked by other file types also containing an
-        INTEHEAD keyword. 
+        INTEHEAD keyword.
         """
         dates = []
         if self.has_kw('SEQNUM'):
@@ -658,7 +667,7 @@ class EclFile(BaseCClass):
             date = datetime.datetime( year , month , day )
             dates = [ date ]
         return dates
-    
+
 
     @property
     def dates( self ):
@@ -666,7 +675,7 @@ class EclFile(BaseCClass):
         Will return a list of the dates for all report steps.
         """
         return self.report_dates
-    
+
 
     def num_named_kw( self , kw):
         """
@@ -715,8 +724,8 @@ class EclFile(BaseCClass):
         much higher than the return value from this function.
         """
         return len( self["SEQNUM"] )
-    
-    
+
+
 
     def has_sim_time( self , dtime ):
         """
@@ -728,9 +737,9 @@ class EclFile(BaseCClass):
         keyword(s), but is still not a restart file. The @dtime
         argument should be a normal python datetime instance.
         """
-        return self._has_sim_time( CTime(dtime) )    
+        return self._has_sim_time( CTime(dtime) )
 
-    
+
     def iget_restart_sim_time( self , index ):
         """
         Will locate restart block nr @index and return the true time
@@ -744,9 +753,9 @@ class EclFile(BaseCClass):
         """
         Will locate restart block nr @index and return the number of days
         (in METRIC at least ...) since the simulation started.
-        
+
         """
-        return self._iget_restart_days( index ) 
+        return self._iget_restart_days( index )
 
 
     def getFilename(self):
@@ -754,14 +763,14 @@ class EclFile(BaseCClass):
         Name of the file currently loaded.
         """
         return self._get_src_file( )
-    
+
 
     @property
     def name(self):
         warnings.warn("The name property is deprecated - use getFilename( )" , DeprecationWarning)
         return self.getFilename()
 
-    
+
     def fwrite( self , fortio ):
         """
         Will write current EclFile instance to fortio stream.
@@ -770,13 +779,13 @@ class EclFile(BaseCClass):
         Fortran IO must be used when reading and writing these files.
         This method will write the current EclFile instance to a
         FortIO stream already opened for writing:
-        
+
            import ert.ecl.ecl as ecl
            ...
            fortio = ecl.FortIO( "FILE.XX" )
            file.fwrite( fortio )
            fortio.close()
-           
+
         """
         self._fwrite(  fortio , 0 )
 
@@ -785,17 +794,17 @@ class EclFileContextManager(object):
 
     def __init__(self , ecl_file):
         self.__ecl_file = ecl_file
-    
+
     def __enter__(self):
         return self.__ecl_file
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__ecl_file.close()
-        return False          
+        return False
 
 
 def openEclFile( file_name , flags = 0):
     return EclFileContextManager( EclFile( file_name , flags ))
-    
+
 
 

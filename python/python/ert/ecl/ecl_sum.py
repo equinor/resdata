@@ -191,13 +191,14 @@ class EclSum(BaseCClass):
 
 
     def addVariable(self , variable , wgname = None , num = 0 , unit = "None" , default_value = 0):
-        return self._add_variable(variable , wgname , num , unit , default_value)
+        return self._add_variable(variable , wgname , num , unit , default_value).setParent( parent = self )
 
 
     def addTStep(self , report_step , sim_days):
         """ @rtype: EclSumTStep """
         sim_seconds = sim_days * 24 * 60 * 60
-        return self._add_tstep( report_step, sim_seconds)
+        return self._add_tstep( report_step, sim_seconds).setParent( parent = self )
+
 
 
     def __private_init(self):

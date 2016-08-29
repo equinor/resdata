@@ -16,20 +16,33 @@
 #  for more details.
 import datetime
 import os.path
+import gc
 from unittest import skipIf
+
 
 from ert.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
 from ert.ecl import EclFileFlagEnum, EclTypeEnum, EclFileEnum
 
 from ert.test import ExtendedTestCase , TestAreaContext
 
+def createFile( name , kw_list ):
+    with openFortIO(name , mode = FortIO.WRITE_MODE) as f:
+        for kw in kw_list:
+            kw.fwrite( f )
+
+
+def loadKeywords( name ):
+    kw_list = []
+    f = EclFile( name )
+    for kw in f:
+        kw_list.append( kw )
+
+    return kw_list
+
 
     
 
 class EclFileTest(ExtendedTestCase):
-    def setUp(self):
-        self.test_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
-        self.test_fmt_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.FUNRST")
 
     def assertFileType(self , filename , expected):
         file_type , step , fmt_file = EclFile.getFileType(filename)
@@ -38,53 +51,18 @@ class EclFileTest(ExtendedTestCase):
         self.assertEqual( step , expected[2] )
 
         
-        
     def test_file_type(self):
         self.assertFileType( "ECLIPSE.UNRST" , (EclFileEnum.ECL_UNIFIED_RESTART_FILE , False , None))
         self.assertFileType( "ECLIPSE.X0030" , (EclFileEnum.ECL_RESTART_FILE , False , 30 ))
-        self.assertFileType( "ECLIPSE.DATA" , (EclFileEnum.ECL_DATA_FILE , None , None ))
+        self.assertFileType( "ECLIPSE.DATA"  , (EclFileEnum.ECL_DATA_FILE , None , None ))
         self.assertFileType( "ECLIPSE.FINIT" , (EclFileEnum.ECL_INIT_FILE , True , None ))
         self.assertFileType( "ECLIPSE.A0010" , (EclFileEnum.ECL_SUMMARY_FILE , True , 10 ))
         self.assertFileType( "ECLIPSE.EGRID" , (EclFileEnum.ECL_EGRID_FILE , False  , None ))
 
         
-    def test_restart_days(self):
-        rst_file = EclFile( self.test_file )
-        self.assertAlmostEqual(  0.0 , rst_file.iget_restart_sim_days(0) )
-        self.assertAlmostEqual( 31.0 , rst_file.iget_restart_sim_days(1) )
-        self.assertAlmostEqual( 274.0 , rst_file.iget_restart_sim_days(10) )
-
-        with self.assertRaises(KeyError):
-            rst_file.restart_get_kw("Missing" , dtime = datetime.date( 2004,1,1))
-
-        with self.assertRaises(IndexError):
-            rst_file.restart_get_kw("SWAT" , dtime = datetime.date( 1985 , 1 , 1))
-            
-            
-
-
     def test_IOError(self):
         with self.assertRaises(IOError):
             EclFile("No/Does/not/exist")
-
-
-    def test_iget_named(self):
-        f = EclFile(self.test_file)
-        N = f.num_named_kw( "SWAT" )
-        with self.assertRaises(KeyError):
-            s = f.iget_named_kw( "SWAT" , N + 1)
-
-
-
-    def test_fwrite( self ):
-        #work_area = TestArea("python/ecl_file/fwrite")
-        with TestAreaContext("python/ecl_file/fwrite"):
-            rst_file = EclFile(self.test_file)
-            fortio = FortIO("ECLIPSE.UNRST", FortIO.WRITE_MODE)
-            rst_file.fwrite(fortio)
-            fortio.close()
-            rst_file.close()
-            self.assertFilesAreEqual("ECLIPSE.UNRST", self.test_file)
 
 
     def test_context( self ):
@@ -101,78 +79,23 @@ class EclFileTest(ExtendedTestCase):
                 self.assertTrue( ecl_file.has_kw("KW2"))
 
         
-
-
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow file test skipped!")
-    def test_save(self):
-        #work_area = TestArea("python/ecl_file/save")
-        with TestAreaContext("python/ecl_file/save", store_area=False) as work_area:
-            work_area.copy_file(self.test_file)
-            rst_file = EclFile("ECLIPSE.UNRST", flags=EclFileFlagEnum.ECL_FILE_WRITABLE)
-            swat0 = rst_file["SWAT"][0]
-            swat0.assign(0.75)
-            rst_file.save_kw(swat0)
-            rst_file.close()
-            self.assertFilesAreNotEqual("ECLIPSE.UNRST",self.test_file)
-
-            rst_file1 = EclFile(self.test_file)
-            rst_file2 = EclFile("ECLIPSE.UNRST", flags=EclFileFlagEnum.ECL_FILE_WRITABLE)
-
-            swat1 = rst_file1["SWAT"][0]
-            swat2 = rst_file2["SWAT"][0]
-            swat2.assign(swat1)
-
-            rst_file2.save_kw(swat2)
-            self.assertTrue(swat1.equal(swat2))
-            rst_file1.close()
-            rst_file2.close()
-
-            # Random failure ....
-            self.assertFilesAreEqual("ECLIPSE.UNRST", self.test_file)
-
-
-
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow file test skipped!")
-    def test_save_fmt(self):
-        #work_area = TestArea("python/ecl_file/save_fmt")
-        with TestAreaContext("python/ecl_file/save_fmt") as work_area:
-            work_area.copy_file(self.test_fmt_file)
-            rst_file = EclFile("ECLIPSE.FUNRST", flags=EclFileFlagEnum.ECL_FILE_WRITABLE)
-            swat0 = rst_file["SWAT"][0]
-            swat0.assign(0.75)
-            rst_file.save_kw(swat0)
-            rst_file.close()
-            self.assertFilesAreNotEqual("ECLIPSE.FUNRST", self.test_fmt_file)
-
-            rst_file1 = EclFile(self.test_fmt_file)
-            rst_file2 = EclFile("ECLIPSE.FUNRST", flags=EclFileFlagEnum.ECL_FILE_WRITABLE)
-
-            swat1 = rst_file1["SWAT"][0]
-            swat2 = rst_file2["SWAT"][0]
-
-            swat2.assign(swat1)
-            rst_file2.save_kw(swat2)
-            self.assertTrue(swat1.equal(swat2))
-            rst_file1.close()
-            rst_file2.close()
-
-            # Random failure ....
-            self.assertFilesAreEqual("ECLIPSE.FUNRST", self.test_fmt_file)
-
-
-    def test_truncated(self):
-        with TestAreaContext("python/ecl_file/truncated") as work_area:
-            work_area.copy_file(self.test_file)
-            size = os.path.getsize("ECLIPSE.UNRST")
-            with open("ECLIPSE.UNRST" , "r+") as f:
-                f.truncate( size / 2 )
-            
-            with self.assertRaises(IOError):
-                rst_file = EclFile("ECLIPSE.UNRST")
-
-            with self.assertRaises(IOError):
-                rst_file = EclFile("ECLIPSE.UNRST", flags=EclFileFlagEnum.ECL_FILE_WRITABLE)
                 
-                
-        
+    def test_gc(self):
+        kw1 = EclKW("KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw2 = EclKW("KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw3 = EclKW("KW3" , 100 , EclTypeEnum.ECL_INT_TYPE)
+
+        for i in range(len(kw1)):
+            kw1[i] = i
+            kw2[i] = 2*i
+            kw3[i] = 3*i
+
+        kw_list = [kw1 , kw2 , kw2]
             
+        with TestAreaContext("context") as ta:
+            createFile("TEST" , kw_list )
+            gc.collect() 
+            kw_list2 = loadKeywords( "TEST" )
+
+            for kw1,kw2 in zip(kw_list,kw_list2):
+                self.assertEqual( kw1, kw2 )
