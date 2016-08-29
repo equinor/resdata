@@ -59,6 +59,16 @@ extern "C" {
 #define IWEL_LGR_INDEX                42
 #define IWEL_SEGMENTED_WELL_NR_INDEX  70
 
+#define IWEL_HEADI_ITEM               0
+#define IWEL_HEADJ_ITEM               1
+#define IWEL_HEADK_ITEM               2
+#define IWEL_CONNECTIONS_ITEM         4
+#define IWEL_GROUP_ITEM               5
+#define IWEL_TYPE_ITEM                6
+#define IWEL_STATUS_ITEM             10
+#define IWEL_LGR_ITEM                42
+#define IWEL_SEGMENTED_WELL_NR_ITEM  70
+
 #define IWEL_SEGMENTED_WELL_NR_NORMAL_VALUE -1
 #define ISEG_OUTLET_INDEX        1
 #define ISEG_BRANCH_INDEX        3
@@ -70,6 +80,14 @@ extern "C" {
 #define ICON_STATUS_INDEX     5
 #define ICON_DIRECTION_INDEX 13
 #define ICON_SEGMENT_INDEX   14
+
+#define ICON_IC_ITEM         0
+#define ICON_I_ITEM          1
+#define ICON_J_ITEM          2
+#define ICON_K_ITEM          3
+#define ICON_STATUS_ITEM     5
+#define ICON_DIRECTION_ITEM 13
+#define ICON_SEGMENT_ITEM   14
 
 #define ICON_DIRX                 1
 #define ICON_DIRY                 2
