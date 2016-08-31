@@ -717,6 +717,10 @@ struct ecl_cell_struct {
 
 
 
+static void ecl_grid_init_mapaxes_data_float( const ecl_grid_type * grid , float * mapaxes);
+float *     ecl_grid_alloc_coord_data( const ecl_grid_type * grid );
+
+
 #define ECL_GRID_ID       991010
 
 struct ecl_grid_struct {
@@ -2108,6 +2112,34 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
 }
 
 
+/*
+  This function will calculate the index of a corner in the the zcorn
+  array.  The corner is given with i,j,k indices of the cell, and
+  corner number [0...8). The function is mainly a convenience function
+  for testing, and should not be used in a tight inner loop unrolling
+  the zcorn vector.
+*/
+
+int ecl_grid_zcorn_index(const ecl_grid_type * grid , int i, int j , int k , int c) {
+  int nx = grid->nx;
+  int ny = grid->ny;
+
+  int zcorn_index =  k*8*nx*ny + j*4*nx + 2*i;
+  if ((c % 2) == 1)
+    zcorn_index += 1;
+
+  if ((c % 4) == 2)
+    zcorn_index += 2*nx;
+
+  if ((c % 4) == 3)
+    zcorn_index += 2*nx;
+
+  if (c >= 4)
+    zcorn_index += 4*nx*ny;
+
+  return zcorn_index;
+}
+
 
 
 static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum, const int * corsnum , int j) {
@@ -2292,6 +2324,43 @@ ecl_grid_type * ecl_grid_alloc_copy( const ecl_grid_type * src_grid ) {
 
   return copy_grid;
 }
+
+/*
+  Does not handle LGR
+*/
+ecl_grid_type * ecl_grid_alloc_processed_copy( const ecl_grid_type * src_grid , const double * zcorn , const int * actnum)
+{
+  ecl_grid_type * grid;
+
+  if (zcorn == NULL) {
+    grid = ecl_grid_alloc_copy__( src_grid , NULL );
+    if (actnum)
+      ecl_grid_reset_actnum( grid , actnum );
+  } else {
+    int nx,ny,nz,na;
+    int zcorn_size = ecl_grid_get_zcorn_size( src_grid );
+    float * zcorn_float = util_malloc( zcorn_size * sizeof * zcorn_float );
+    float * coord = ecl_grid_alloc_coord_data( src_grid );
+    float * mapaxes = NULL;
+
+    if (ecl_grid_use_mapaxes(src_grid)) {
+      mapaxes = util_malloc( 6 * sizeof * mapaxes );
+      ecl_grid_init_mapaxes_data_float(src_grid, mapaxes);
+    }
+    ecl_grid_get_dims( src_grid , &nx, &ny , &nz , &na);
+    for (int i=0; i < zcorn_size; i++)
+      zcorn_float[i] = zcorn[i];
+
+    grid = ecl_grid_alloc_GRDECL_data( nx , ny , nz , zcorn_float , coord , actnum , mapaxes );
+
+    free( mapaxes );
+    free( coord );
+    free( zcorn_float );
+  }
+
+  return grid;
+}
+
 
 
 /*
@@ -5436,6 +5505,14 @@ void ecl_grid_init_mapaxes_data_double( const ecl_grid_type * grid , double * ma
   for (i = 0; i < 6; i++)
     mapaxes[i] = grid->mapaxes[i];
 }
+
+
+static void ecl_grid_init_mapaxes_data_float( const ecl_grid_type * grid , float * mapaxes) {
+  int i;
+  for (i = 0; i < 6; i++)
+    mapaxes[i] = grid->mapaxes[i];
+}
+
 
 
 static const float * ecl_grid_get_mapaxes( const ecl_grid_type * grid ) {

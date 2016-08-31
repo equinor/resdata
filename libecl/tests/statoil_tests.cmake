@@ -93,22 +93,23 @@ add_test( ecl_grid_simple ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_S
 add_test( ecl_grid_ecl2015_1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_NOSIM_GRID.EGRID )
 add_test( ecl_grid_ecl2015_2 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_simple  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_20142.EGRID )
 
-
-add_executable( ecl_grid_export ecl_grid_export.c )
-target_link_libraries( ecl_grid_export ecl test_util )
-add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
+add_executable( ecl_grid_export_statoil ecl_grid_export.c )
+target_link_libraries( ecl_grid_export_statoil ecl test_util )
+add_test( ecl_grid_export_statoil ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export_statoil  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID )
 
 add_executable( ecl_grid_volume ecl_grid_volume.c )
 target_link_libraries( ecl_grid_volume ecl test_util )
 add_test( ecl_grid_volume1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE )
 add_test( ecl_grid_volume2 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/VolumeTest/TEST1 )
+add_test( ecl_grid_volume3 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/OsebergSyd/Omega/OMEGA-0)
+add_test( ecl_grid_volume4 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Norne/reservoir_models/Norne_ATW2013/NORNE_ATW2013)
 
-# The grid volume test fails miserably on the test case given as example three; looking at
+# The grid volume test fails miserably on the test case given as example five; looking at
 # the failures one could actually suspect that the ECLIPSE algorithm for PORV calculations
 # has been different in this file - i.e. that the absolute value of the individual
 # tetrahedron parts have been taken during the sum, and not at the end. At least the ert
 # algorithm gets volumes ~ 0 whereas ECLIPSE reports ~10^9 for the same cell.
-# add_test( ecl_grid_volume3 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Heidrun/Summary/FF12_2013B3_CLEAN_RS)
+# add_test( ecl_grid_volume5 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Heidrun/Summary/FF12_2013B3_CLEAN_RS)
 
 add_executable( ecl_grid_dims ecl_grid_dims.c )
 target_link_libraries( ecl_grid_dims ecl test_util )
