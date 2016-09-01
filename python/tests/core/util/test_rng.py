@@ -1,6 +1,6 @@
 from ert.util.enums import RngAlgTypeEnum, RngInitModeEnum
 from ert.util.rng import RandomNumberGenerator
-from ert.test import ExtendedTestCase
+from ert.test import ExtendedTestCase,TestAreaContext
 
 
 class RngTest(ExtendedTestCase):
@@ -27,3 +27,19 @@ class RngTest(ExtendedTestCase):
         self.assertEqual( rng.getInt() , val1)
         self.assertEqual( rng.getInt() , val2)
         
+
+
+    def test_load_save(self):
+        rng = RandomNumberGenerator()
+        with self.assertRaises(IOError):
+            rng.loadState("does/not/exist")
+
+        with TestAreaContext("rng_state") as t:
+            rng.saveState( "rng.txt" )
+            t.sync()
+            val1 = rng.getInt()
+            val2 = rng.getInt()
+            rng.loadState( "rng.txt" )
+            self.assertEqual( rng.getInt() , val1 )
+            self.assertEqual( rng.getInt() , val2 )
+
