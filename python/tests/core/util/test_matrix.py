@@ -193,3 +193,12 @@ class MatrixTest(ExtendedTestCase):
         self.assertEqual( m2[1,1] , 13 )
         self.assertEqual( m2[2,2] , 41 )
         
+
+    def test_csv(self):
+        m = Matrix(2, 2)
+        m[0, 0] = 2
+        m[1, 1] = 4
+        with TestAreaContext("matrix_csv"):
+            m.dumpCSV("matrix.csv")
+
+        

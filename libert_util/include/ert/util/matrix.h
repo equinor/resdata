@@ -73,6 +73,7 @@ typedef struct matrix_struct matrix_type;
   bool          matrix_check_dims( const matrix_type * m , int rows , int columns);
   void          matrix_fscanf_data( matrix_type * matrix , bool row_major_order , FILE * stream );
   void          matrix_fprintf( const matrix_type * matrix , const char * fmt , FILE * stream );
+  void          matrix_dump_csv( const matrix_type * matrix  ,const char * filename);
   void          matrix_pretty_fprint(const matrix_type * matrix , const char * name , const char * fmt , FILE * stream);
   void matrix_pretty_fprint_submat(const matrix_type * matrix , const char * name , const char * fmt , FILE * stream, int m, int M, int n, int N);
   matrix_type * matrix_alloc(int rows, int columns);

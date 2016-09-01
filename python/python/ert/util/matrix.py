@@ -50,7 +50,8 @@ class Matrix(BaseCClass):
     _pretty_print      = UtilPrototype("void matrix_pretty_print(matrix, char*, char*)")
     _fprint            = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
     _random_init       = UtilPrototype("void matrix_random_init(matrix, rng)")
-
+    _dump_csv          = UtilPrototype("void matrix_dump_csv(matrix, char*)")
+    
     # Requires BLAS!
     _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False)
 
@@ -153,6 +154,11 @@ class Matrix(BaseCClass):
         if src_column != target_column:
             # The underlying C function accepts column copy between matrices.
             Matrix._copy_column(self, self, target_column, src_column)
+
+
+    def dumpCSV(self , filename):
+        self._dump_csv( filename )
+        
 
     def prettyPrint(self, name, fmt="%6.3g"):
         self._pretty_print(name, fmt)

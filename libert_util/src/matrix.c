@@ -542,6 +542,16 @@ void matrix_fprintf( const matrix_type * matrix , const char * fmt , FILE * stre
 }
 
 
+void matrix_dump_csv( const matrix_type * matrix  ,const char * filename) {
+  FILE * stream = util_fopen(filename , "w");
+  for (int i=0; i < matrix->rows; i++) {
+    for (int j=0; j < matrix->columns - 1; j++)
+      fprintf(stream , "%g, " , matrix_iget( matrix , i , j));
+    fprintf(stream , "%g\n" , matrix_iget( matrix , i , matrix->columns - 1));
+  }
+  fclose( stream );
+}
+
 
 void matrix_fwrite(const matrix_type * matrix , FILE * stream) {
   util_fwrite_int( matrix->rows , stream );
