@@ -80,6 +80,7 @@ typedef struct matrix_struct matrix_type;
   matrix_type * matrix_safe_alloc(int rows, int columns);
   bool          matrix_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
   bool          matrix_safe_resize(matrix_type * matrix , int rows , int columns , bool copy_content);
+  matrix_type * matrix_alloc_sub_copy( const matrix_type * src , int row_offset , int column_offset , int rows, int columns);
   matrix_type * matrix_alloc_copy(const matrix_type * src);
   matrix_type * matrix_alloc_column_compressed_copy(const matrix_type * src, const bool_vector_type * mask);
   void          matrix_column_compressed_memcpy(matrix_type * target, const matrix_type * src, const bool_vector_type * mask);

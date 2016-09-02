@@ -37,6 +37,7 @@ class Matrix(BaseCClass):
     _alloc_transpose   = UtilPrototype("matrix_obj  matrix_alloc_transpose(matrix)")
     _inplace_transpose = UtilPrototype("void        matrix_inplace_transpose(matrix)")
     _copy              = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
+    _sub_copy          = UtilPrototype("matrix_obj  matrix_alloc_sub_copy(matrix, int , int , int , int)" )
     _free              = UtilPrototype("void   matrix_free(matrix)")
     _iget              = UtilPrototype("double matrix_iget( matrix , int , int )")
     _iset              = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
@@ -75,7 +76,23 @@ class Matrix(BaseCClass):
 
     def copy(self):
         return self._copy( )
-        
+
+    def subCopy(self, row_offset, column_offset, rows, columns):
+        if row_offset < 0 or row_offset >= self.rows():
+            raise ValueError("Invalid row offset")
+
+        if column_offset < 0 or column_offset >= self.columns():
+            raise ValueError("Invalid column offset")
+
+        if row_offset + rows > self.rows():
+            raise ValueError("Invalid rows")
+
+        if column_offset + columns > self.columns():
+            raise ValueError("Invalid columns")
+
+        return self._sub_copy( row_offset , column_offset , rows , columns)
+
+    
     def __str__(self):
         s = ""
         for i in range(self.rows()):

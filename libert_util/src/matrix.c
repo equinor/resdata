@@ -359,6 +359,11 @@ void matrix_copy_block( matrix_type * target_matrix , int target_row , int targe
   matrix_free( src_view );
 }
 
+matrix_type * matrix_alloc_sub_copy( const matrix_type * src , int row_offset , int column_offset , int rows, int columns) {
+  matrix_type * copy = matrix_alloc( rows, columns );
+  matrix_copy_block( copy , 0 , 0 , rows , columns , src , row_offset , column_offset );
+  return copy;
+}
 
 
 /*****************************************************************/
