@@ -86,4 +86,10 @@ class WorkAreaTest(ExtendedTestCase):
             with self.assertRaises(IOError):
                 test_area.copy_directory( "path1/file.txt" )
                 
+    def test_sync(self):
+        with TestAreaContext("test_sync") as t:
+            with open("file.txt" , "w") as f:
+                f.write("content")
 
+            t.sync()
+            self.assertTrue( os.path.isfile( "file.txt"))

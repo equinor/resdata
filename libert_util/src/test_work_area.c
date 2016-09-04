@@ -34,6 +34,12 @@
 #include <ert/util/type_macros.h>
 #include <ert/util/rng.h>
 
+#include <ert/util/ert_api_config.h>
+#ifdef ERT_HAVE_OPENDIR
+#include <sys/types.h>
+#include <dirent.h>
+#endif
+
 /*
   This file implements a small work area implementation to be used for
   tests which write to disk. The implementation works by creating a
@@ -97,6 +103,22 @@ struct test_work_area_struct {
   char      * cwd;
   char      * original_cwd;
   bool        change_dir;
+
+  /*
+    There have been issues where a test like this:
+
+     1. Create new file in test area.
+     2. Open file for reading.
+
+    Fail randomly at step 2 with "File not found", although the file
+    is clearly there when checking afterwards. Inspired by this
+    article: https:/lwn.net/Articles/457667/ we try to call fsync() on
+    the directory file descriptor.
+  */
+#ifdef ERT_HAVE_OPENDIR
+  DIR       * dir_stream;
+#endif
+  int         dir_fd;
 };
 
 
@@ -119,6 +141,16 @@ static test_work_area_type * test_work_area_alloc__(const char * prefix , const 
         util_chdir( work_area->cwd );
 
       test_work_area_set_store( work_area , DEFAULT_STORE);
+
+#ifdef ERT_HAVE_OPENDIR
+      work_area->dir_stream = opendir( work_area->cwd );
+      if (work_area->dir_stream)
+        work_area->dir_fd = dirfd( work_area->dir_stream );
+      else
+        work_area->dir_fd = -1;
+#else
+      work_area->dir_fd = -1
+#endif
     } else
       free( test_cwd );
   }
@@ -212,12 +244,25 @@ void test_work_area_set_store( test_work_area_type * work_area , bool store) {
 }
 
 
+void test_work_area_sync( test_work_area_type * work_area) {
+#ifdef ERT_HAVE_OPENDIR
+  if (work_area->dir_fd >= 0)
+    fsync( work_area->dir_fd );
+#endif
+}
+
+
 void test_work_area_free(test_work_area_type * work_area) {
   if (!work_area->store)
     util_clear_directory( work_area->cwd , true , true );
 
   if (work_area->change_dir)
     util_chdir( work_area->original_cwd );
+
+#ifdef ERT_HAVE_OPENDIR
+  if (work_area->dir_stream)
+    closedir( work_area->dir_stream );
+#endif
 
   free( work_area->original_cwd );
   free( work_area->cwd );
@@ -281,6 +326,7 @@ void test_work_area_copy_directory( test_work_area_type * work_area , const char
   char * src_directory = test_work_area_alloc_input_path( work_area , input_directory );
   util_copy_directory(src_directory , work_area->cwd );
   free( src_directory );
+  test_work_area_sync( work_area );
 }
 
 
@@ -288,6 +334,7 @@ void test_work_area_copy_directory_content( test_work_area_type * work_area , co
   char * src_directory = test_work_area_alloc_input_path( work_area , input_directory );
   util_copy_directory_content(src_directory , work_area->cwd );
   free( src_directory );
+  test_work_area_sync( work_area );
 }
 
 
@@ -304,6 +351,7 @@ void test_work_area_copy_file( test_work_area_type * work_area , const char * in
       free( target_name );
     }
     free( src_file );
+    test_work_area_sync( work_area );
   }
 }
 
@@ -329,6 +377,7 @@ static bool test_work_area_copy_parent__( test_work_area_type * work_area , cons
 
     free( full_path );
     free( parent_path );
+    test_work_area_sync( work_area );
     return true;
   } else {
     free( full_path );
