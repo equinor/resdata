@@ -41,7 +41,7 @@ class EclGrid(BaseCClass):
     """
 
     TYPE_NAME = "ecl_grid"
-    _fread_alloc                  = EclPrototype("void* ecl_grid_load_case( char* )" , bind = False)
+    _fread_alloc                  = EclPrototype("void* ecl_grid_load_case__( char* , bool )" , bind = False)
     _grdecl_create                = EclPrototype("ecl_grid_obj ecl_grid_alloc_GRDECL_kw( int , int , int , ecl_kw , ecl_kw , ecl_kw , ecl_kw)" , bind = False) 
     _alloc_rectangular            = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular( int , int , int , double , double , double , int*)" , bind = False)
     _exists                       = EclPrototype("bool ecl_grid_exists( char* )" , bind = False)
@@ -94,7 +94,7 @@ class EclGrid(BaseCClass):
     _get_distance                 = EclPrototype("void   ecl_grid_get_distance( ecl_grid , int , int , double* , double* , double*)")
     _fprintf_grdecl               = EclPrototype("void   ecl_grid_fprintf_grdecl( ecl_grid , FILE) ")
     _fwrite_GRID                  = EclPrototype("void   ecl_grid_fwrite_GRID( ecl_grid , char* )")
-    _fwrite_EGRID2                = EclPrototype("void   ecl_grid_fwrite_EGRID2( ecl_grid , char*, ecl_unit_enum )")
+    _fwrite_EGRID2                = EclPrototype("void   ecl_grid_fwrite_EGRID2( ecl_grid , char*, ecl_unit_enum , float*)")
     _equal                        = EclPrototype("bool   ecl_grid_compare(ecl_grid , ecl_grid , bool, bool)")
     _dual_grid                    = EclPrototype("bool   ecl_grid_dual_grid( ecl_grid )")
     _init_actnum                  = EclPrototype("void   ecl_grid_init_actnum_data( ecl_grid , int* )")
@@ -212,7 +212,8 @@ class EclGrid(BaseCClass):
 
     
     def __init__(self , filename):
-        c_ptr = self._fread_alloc( filename )
+        apply_mapaxes = True
+        c_ptr = self._fread_alloc( filename , apply_mapaxes)
         if c_ptr:
             super(EclGrid, self).__init__(c_ptr)
         else:
@@ -1112,7 +1113,7 @@ class EclGrid(BaseCClass):
         """
         Will save the current grid as a EGRID file.
         """
-        self._fwrite_EGRID2( filename, output_unit )
+        self._fwrite_EGRID2( filename, output_unit , None )
 
     def save_GRID( self , filename ):
         """
