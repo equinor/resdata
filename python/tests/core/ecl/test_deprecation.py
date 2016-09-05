@@ -49,11 +49,13 @@ class Deprecation_2_0_Test(ExtendedTestCase):
             grid = EclGrid.create_rectangular( (10,20,30) , (1,1,1) )
 
     def test_EclFile_name_property(self):
-        with TestAreaContext("name"):
+        with TestAreaContext("name") as t:
             kw = EclKW("TEST", 3, EclTypeEnum.ECL_INT_TYPE)
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 kw.fwrite( f )
 
+            t.sync()
+            
             f = EclFile( "TEST" )
             with self.assertRaises(DeprecationWarning):
                 name = f.name
