@@ -420,9 +420,24 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
           fprintf(stderr,"Warning: character string: \'%s\' ignored when reading keyword:%s \n",buffer , header);
         */
         if (!char_input) {
-          if (data_index + multiplier >= data_size) {
-            data_size  = 2*(data_index + multiplier);
-            data       = util_realloc( data , sizeof_ctype * data_size * sizeof * data);
+          size_t min_size = data_index + multiplier;
+          if (min_size >= data_size) {
+            if (min_size <= ECL_KW_MAX_SIZE) {
+              size_t byte_size = sizeof_ctype * sizeof * data;
+
+              data_size  = util_size_t_min( ECL_KW_MAX_SIZE , 2*(data_index + multiplier));
+              byte_size *= data_size;
+
+              data = util_realloc( data , byte_size );
+            } else {
+              /*
+                We are asking for more elements than can possible be adressed in
+                an integer. Return NULL - and data size == 0; let calling scope
+                try to handle it.
+              */
+              data_index = 0;
+              break;
+            }
           }
 
           iset_range( data , data_index , sizeof_ctype , value_ptr , multiplier );

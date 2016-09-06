@@ -4569,7 +4569,7 @@ void * util_realloc(void * old_ptr , size_t new_size ) {
   } else {
     void * tmp = realloc(old_ptr , new_size);
     if (tmp == NULL)
-      util_abort("%s: failed to realloc %d bytes - aborting \n",__func__ , new_size);
+      util_abort("%s: failed to realloc %zu bytes - aborting \n",__func__ , new_size);
     return tmp;
   }
 }

@@ -383,3 +383,7 @@ class GridTest(ExtendedTestCase):
 
                               
         
+    def test_large_case(self):
+        grdecl_file = self.createTestPath("Statoil/ECLIPSE/1.6.0_issueGrdecl/test_aug2016_gridOnly.grdecl")
+        grid = EclGrid.loadFromGrdecl( grdecl_file )
+        
