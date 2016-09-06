@@ -69,13 +69,13 @@ class FortIOTest(ExtendedTestCase):
         kw2[0] = 113
         kw2[1] = 335
 
-        with TestAreaContext("python/fortio/ftruncate"):
+        with TestAreaContext("python/fortio/ftruncate") as t:
             with openFortIO("file" , mode = FortIO.WRITE_MODE) as f:
                 kw1.fwrite(f)
                 pos1 = f.getPosition( )
                 kw2.fwrite(f)
-
-
+            
+            t.sync( ) 
             # Truncate file in read mode; should fail hard.
             with openFortIO("file") as f:
                 with self.assertRaises(IOError):
@@ -109,7 +109,7 @@ class FortIOTest(ExtendedTestCase):
 
 
     def test_context(self):
-        with TestAreaContext("python/fortio/context"):
+        with TestAreaContext("python/fortio/context") as t:
             kw1 = EclKW.create("KW" , 2456 , EclTypeEnum.ECL_FLOAT_TYPE)
             for i in range(len(kw1)):
                 kw1[i] = randint(0,1000)
@@ -117,7 +117,9 @@ class FortIOTest(ExtendedTestCase):
             with openFortIO("file" , mode = FortIO.WRITE_MODE) as f:
                 kw1.fwrite( f )
                 self.assertEqual( f.filename() , "file")
-                
+
+            t.sync( ) 
+
             with openFortIO("file") as f:
                 kw2 = EclKW.fread( f )
 

@@ -44,7 +44,7 @@ extern "C" {
   void                  test_work_area_copy_file( test_work_area_type * work_area , const char * input_file);
   bool                  test_work_area_copy_parent_directory( test_work_area_type * work_area , const char * input_path);
   bool                  test_work_area_copy_parent_content( test_work_area_type * work_area , const char * input_path);
-
+  void                  test_work_area_sync( test_work_area_type * work_area);
 
   test_work_area_type * temp_area_alloc_relative(const char * prefix , const char * test_path);
   test_work_area_type * temp_area_alloc(const char * test_path);
