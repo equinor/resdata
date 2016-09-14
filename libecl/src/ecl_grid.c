@@ -694,6 +694,7 @@ static void point_copy_values(point_type * p , const point_type * src) {
 #define CELL_FLAG_TAINTED  4     /* lazy fucking stupid reservoir engineers make invalid grid
                                     cells - for kicks??  must try to keep those cells out of
                                     real-world calculations with some hysteric heuristics.*/
+#define CELL_FLAG_VOLUME 8
 
 typedef struct ecl_cell_struct           ecl_cell_type;
 
@@ -705,7 +706,7 @@ struct ecl_cell_struct {
   point_type center;
   point_type corner_list[8];
 
-
+  double                 volume;             /* Cache volume - whether it is initialized or not is handled by a cell_flags. */
   int                    active;
   int                    active_index[2];    /* [0]: The active matrix index; [1]: the active fracture index */
   const ecl_grid_type   *lgr;                /* if this cell is part of an lgr; this will point to a grid instance for that lgr; NULL if not part of lgr. */
@@ -1199,7 +1200,11 @@ struct tetrahedron_struct {
     point_type p3;
 };
 
-static inline double tetrahedron_volume( tetrahedron_type tet ) {
+/*
+  Calculates the volume of a tetrahedron, a normalization of 1/6 is
+  omitted.
+*/
+static inline double tetrahedron_volume6( tetrahedron_type tet ) {
   point_type bxc;
 
   /* vector subtraction */
@@ -1230,58 +1235,65 @@ static inline double tetrahedron_volume( tetrahedron_type tet ) {
  * inlining several operations, e.g. vector operations, and other tricks.
  */
 static double ecl_cell_get_signed_volume( ecl_cell_type * cell) {
+  if (GET_CELL_FLAG(cell , CELL_FLAG_VOLUME))
+    return cell->volume;
+
   ecl_cell_assert_center( cell );
+  {
+    /*
+     * We make an activation record local copy of the cell's corners for less
+     * jumping in memory and better cache performance.
+     */
+    point_type center = cell->center;
+    point_type corners[ 8 ];
+    memcpy( corners, cell->corner_list, sizeof( point_type ) * 8 );
 
-  /*
-   * We make an activation record local copy of the cell's corners for less
-   * jumping in memory and better cache performance.
-   */
-  point_type center = cell->center;
-  point_type corners[ 8 ];
-  memcpy( corners, cell->corner_list, sizeof( point_type ) * 8 );
-
-  tetrahedron_type tet = { .p0 = center };
-  double           volume = 0;
-  /*
+    tetrahedron_type tet = { .p0 = center };
+    double           volume = 0;
+    /*
       using both tetrahedron decompositions - gives good agreement
       with porv from eclipse init files.
-  */
-  /*
-   * The order of these loops is intentional and guided by profiling. It's much
-   * faster to access method, then the number, rather than the other way
-   * around. If you are to change this, please measure performance impact.
-   */
-  for( int method = 0; method < 2; ++method ) {
+    */
+
+    /*
+     * The order of these loops is intentional and guided by profiling. It's much
+     * faster to access method, then the number, rather than the other way
+     * around. If you are to change this, please measure performance impact.
+     */
+    for( int method = 0; method < 2; ++method ) {
       for( int itet = 0; itet < 12; ++itet  ) {
-          const int point0 = tetrahedron_permutations[ method ][ itet ][ 0 ];
-          const int point1 = tetrahedron_permutations[ method ][ itet ][ 1 ];
-          const int point2 = tetrahedron_permutations[ method ][ itet ][ 2 ];
+        const int point0 = tetrahedron_permutations[ method ][ itet ][ 0 ];
+        const int point1 = tetrahedron_permutations[ method ][ itet ][ 1 ];
+        const int point2 = tetrahedron_permutations[ method ][ itet ][ 2 ];
 
-          tet.p1 = corners[ point0 ];
-          tet.p2 = corners[ point1 ];
-          tet.p3 = corners[ point2 ];
-          volume += tetrahedron_volume( tet ) / 6;
+        tet.p1 = corners[ point0 ];
+        tet.p2 = corners[ point1 ];
+        tet.p3 = corners[ point2 ];
+        volume += tetrahedron_volume6( tet ) / 6;
       }
+    }
+
+    /* The volume of a tetrahedron is
+     *        |a·(b x c)|
+     *  V  =  -----------
+     *             6
+     * Since sum( |a·(b x c)| ) / 6 is equal to
+     * sum( |a·(b x c)| / 6 ) we can do the (rather expensive) division only once
+     * and stil get the correct result. We multiply by 0.5 because we've now
+     * considered two decompositions of the tetrahedron, and want their average.
+     *
+     *
+     * Note added: these volume calculations are used to calculate pore
+     * volumes in OPM, it turns out that opm is very sensitive to these
+     * volumes. Extracting the divison by 6.0 was actually enough to
+     * induce a regression test failure in flow, this has therefor been
+     * reverted.
+     */
+
+    cell->volume = volume * 0.5;
+    SET_CELL_FLAG( cell , CELL_FLAG_VOLUME );
   }
-
-  /* The volume of a tetrahedron is
-   *        |a·(b x c)|
-   *  V  =  -----------
-   *             6
-   * Since sum( |a·(b x c)| ) / 6 is equal to
-   * sum( |a·(b x c)| / 6 ) we can do the (rather expensive) division only once
-   * and stil get the correct result. We multiply by 0.5 because we've now
-   * considered two decompositions of the tetrahedron, and want their average.
-   *
-   *
-   * Note added: these volume calculations are used to calculate pore
-   * volumes in OPM, it turns out that opm is very sensitive to these
-   * volumes. Extracting the divison by 6.0 was actually enough to
-   * induce a regression test failure in flow, this has therefor been
-   * reverted.
-   */
-
-  return volume * 0.5;
+  return cell->volume;
 }
 
 
@@ -4189,7 +4201,7 @@ void ecl_grid_free(ecl_grid_type * grid) {
   util_safe_free(grid->fracture_index_map);
   util_safe_free(grid->inv_fracture_index_map);
   util_safe_free(grid->mapaxes);
-  
+
   if (grid->values != NULL) {
     int i;
     for (i=0; i < grid->block_size; i++)
