@@ -36,6 +36,7 @@ set(TEST_SOURCES
     test_ecl_util.py
     test_ecl_cmp.py
     test_sum.py
+    test_grav.py
 )
 
 add_python_package("python.tests.ecl"  ${PYTHON_INSTALL_PREFIX}/tests/ecl "${TEST_SOURCES}" False)
@@ -56,6 +57,8 @@ addPythonTest(ecl.ecl_deprecation2.0 ecl.test_deprecation.Deprecation_2_0_Test )
 addPythonTest(ecl.ecl_util ecl.test_ecl_util.EclUtilTest )
 addPythonTest(ecl.fortio ecl.test_fortio.FortIOTest)
 addPythonTest(ecl.ecl_file ecl.test_ecl_file.EclFileTest)
+addPythonTest(ecl.ecl_grav ecl.test_grav.EclGravTest)
+
 
 if (STATOIL_TESTDATA_ROOT)
   addPythonTest(ecl.ecl_file_statoil ecl.test_ecl_file_statoil.EclFileStatoilTest LABELS StatoilData)
