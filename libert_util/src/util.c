@@ -280,6 +280,8 @@ void util_endian_flip_vector_old(void *data, int element_size , int elements) {
 
 /*****************************************************************/
 
+static void util_time_utc( time_t * t , struct tm * ts );
+
 static bool EOL_CHAR(char c) {
   if (c == '\r' || c == '\n')
     return true;
@@ -3093,6 +3095,20 @@ static void __util_set_timevalues(time_t t , int * sec , int * min , int * hour 
 }
 
 
+static void __util_set_timevalues_utc(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
+  struct tm ts;
+
+  util_time_utc(&t , &ts);
+  if (sec   != NULL) *sec   = ts.tm_sec;
+  if (min   != NULL) *min   = ts.tm_min;
+  if (hour  != NULL) *hour  = ts.tm_hour;
+  if (mday  != NULL) *mday  = ts.tm_mday;
+  if (month != NULL) *month = ts.tm_mon  + 1;
+  if (year  != NULL) *year  = ts.tm_year + 1900;
+}
+
+
+
 /*
   This function takes a time_t instance as input, and
   returns the the time broken down in sec:min:hour  mday:month:year.
@@ -3110,9 +3126,27 @@ void util_set_date_values(time_t t , int * mday , int * month , int * year) {
 }
 
 
-bool util_is_first_day_in_month( time_t t) {
+/*
+  This function takes a time_t instance as input, and
+  returns the the time broken down in sec:min:hour  mday:month:year.
+
+  The return values are by pointers - you can pass in NULL to any of
+  the fields.
+*/
+void util_set_datetime_values_utc(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
+  __util_set_timevalues_utc(t , sec , min , hour , mday , month , year);
+}
+
+
+void util_set_date_values_utc(time_t t , int * mday , int * month , int * year) {
+  __util_set_timevalues_utc(t , NULL , NULL , NULL , mday , month , year);
+}
+
+
+
+bool util_is_first_day_in_month_utc( time_t t) {
   int mday;
-  __util_set_timevalues(t , NULL , NULL , NULL , &mday ,NULL, NULL);
+  __util_set_timevalues_utc(t , NULL , NULL , NULL , &mday ,NULL, NULL);
   if (mday == 1)
     return true;
   else
@@ -3221,8 +3255,19 @@ void util_inplace_forward_seconds(time_t * t , double seconds) {
    initialized when reading off the first isdst setting??)
 */
 
+
+
 void util_inplace_forward_days(time_t * t , double days) {
   util_inplace_forward_seconds( t , days * 3600 * 24 );
+}
+
+
+void util_inplace_forward_seconds_utc(time_t * t , double seconds) {
+  (*t) += seconds;
+}
+
+void util_inplace_forward_days_utc(time_t * t , double days) {
+  util_inplace_forward_seconds_utc( t , days * 3600 * 24 );
 }
 
 
@@ -3299,6 +3344,30 @@ char * util_get_timezone() {
 }
 
 
+time_t util_make_datetime_utc(int sec, int min, int hour , int mday , int month , int year) {
+  struct tm ts;
+  ts.tm_sec    = sec;
+  ts.tm_min    = min;
+  ts.tm_hour   = hour;
+  ts.tm_mday   = mday;
+  ts.tm_mon    = month - 1;
+  ts.tm_year   = year - 1900;
+  ts.tm_isdst  = -1;    /* Negative value means mktime tries to determine automagically whether Daylight Saving Time is in effect. */
+  {
+#ifdef HAVE_TIMEGM
+    time_t t = timegm( &ts );
+#else
+    time_t t = _mkgmtime( &ts );
+#endif
+    if (t == -1)
+      util_abort("%s: failed to make a time_t instance of %02d/%02d/%4d  %02d:%02d:%02d - aborting \n",__func__ , mday,month,year,hour,min,sec);
+
+    return t;
+  }
+}
+
+
+
 time_t util_make_datetime(int sec, int min, int hour , int mday , int month , int year) {
   struct tm ts;
   ts.tm_sec    = sec;
@@ -3324,10 +3393,22 @@ time_t util_make_date(int mday , int month , int year) {
 }
 
 
+time_t util_make_date_utc(int mday , int month , int year) {
+  return util_make_datetime_utc(0 , 0 , 0 , mday , month , year);
+}
+
+
 time_t util_make_pure_date(time_t t) {
   int day,month,year;
   util_set_date_values( t , &day , &month , &year);
   return util_make_date( day , month , year );
+}
+
+
+time_t util_make_pure_date_utc(time_t t) {
+  int day,month,year;
+  util_set_date_values_utc( t , &day , &month , &year);
+  return util_make_date_utc( day , month , year );
 }
 
 
@@ -5128,6 +5209,18 @@ int util_fnmatch( const char * pattern , const char * string ) {
 
 // Observe that there is some really ugly #ifdef HAVE_REALPATH in the
 // main code.
+
+
+
+static void util_time_utc( time_t * t , struct tm * ts ) {
+#ifdef HAVE_GMTIME_R
+  gmtime_r( t , ts );
+#else
+  struct tm * ts_shared = localtime( t );
+  memcpy( ts , ts_shared , sizeof * ts );
+#endif
+}
+
 
 
 void util_localtime( time_t * t , struct tm * ts ) {

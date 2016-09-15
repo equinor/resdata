@@ -103,12 +103,18 @@ typedef enum {left_pad   = 0,
   void         util_bitmask_on(int *  , int );
   char       * util_get_timezone();
   time_t       util_make_datetime(int , int , int , int , int , int );
+  time_t       util_make_datetime_utc(int , int , int , int , int , int );
   void         util_fprintf_datetime(time_t  , FILE * );
   void         util_fprintf_date(time_t  , FILE * );
   time_t       util_make_date(int , int , int);
+  time_t       util_make_date_utc(int , int , int);
   time_t       util_make_pure_date(time_t t);
+  time_t       util_make_pure_date_utc(time_t t);
   void         util_inplace_forward_days(time_t *  , double);
   void         util_inplace_forward_seconds(time_t * t , double seconds);
+  void         util_inplace_forward_seconds_utc(time_t * t , double seconds);
+  void         util_inplace_forward_days_utc(time_t * t , double days);
+
   time_t       util_file_mtime(const char * file);
   double       util_difftime(time_t  , time_t  , int *  , int *  , int *  , int *);
   double       util_difftime_days(time_t  , time_t );
@@ -275,9 +281,13 @@ typedef enum {left_pad   = 0,
   char       * util_alloc_substring_copy(const char *, int offset , int N);
   bool         util_is_directory(const char * );
   bool         util_is_file(const char * );
+
+  void         util_set_datetime_values_utc(time_t , int * , int * , int * , int * , int *  , int *);
+  void         util_set_date_values_utc(time_t , int * , int * , int * );
+  void         util_set_datetime_values(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year);
+  void         util_set_date_values(time_t t , int * mday , int * month , int * year);
   void         util_set_datetime_values(time_t , int * , int * , int * , int * , int *  , int *);
-  void         util_set_date_values(time_t , int * , int * , int * );
-  bool         util_is_first_day_in_month( time_t t);
+  bool         util_is_first_day_in_month_utc( time_t t);
 
 
   void     util_fread_from_buffer(void *  , size_t  , size_t , char ** );
@@ -372,6 +382,7 @@ typedef enum {left_pad   = 0,
   bool util_float_approx_equal__( float d1 , float d2, float epsilon);
   int      util_fnmatch( const char * pattern , const char * string );
   void     util_localtime( time_t * t , struct tm * ts );
+  void     util_utctime( time_t * t , struct tm * ts );
 
   char      ** util_alloc_PATH_list();
   char       * util_alloc_PATH_executable(const char * executable );

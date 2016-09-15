@@ -1,3 +1,5 @@
+#cmakedefine HAVE_GMTIME_R
+#cmakedefine HAVE_TIMEGM
 #cmakedefine HAVE_LOCALTIME_R
 #cmakedefine HAVE_REALPATH
 #cmakedefine HAVE_TIMEDJOIN
