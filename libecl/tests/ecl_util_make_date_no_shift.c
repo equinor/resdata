@@ -27,7 +27,7 @@
 
 void test_date(int mday, int month , int year) {
   time_t t0 = ecl_util_make_date( mday , month , year );
-  time_t t1 = util_make_date( mday , month , year);
+  time_t t1 = util_make_date_utc( mday , month , year);
 
   test_assert_time_t_equal( t0 , t1 );
 }

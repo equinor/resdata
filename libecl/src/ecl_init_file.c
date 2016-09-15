@@ -50,7 +50,7 @@ static ecl_kw_type * ecl_init_file_alloc_INTEHEAD( const ecl_grid_type * ecl_gri
   ecl_kw_iset_int( intehead_kw , INTEHEAD_PHASE_INDEX   , phases );
   {
     int mday,month,year;
-    util_set_date_values( start_date , &mday , &month , &year );
+    ecl_util_set_date_values( start_date , &mday , &month , &year );
     ecl_kw_iset_int( intehead_kw , INTEHEAD_DAY_INDEX    , mday );
     ecl_kw_iset_int( intehead_kw , INTEHEAD_MONTH_INDEX  , month );
     ecl_kw_iset_int( intehead_kw , INTEHEAD_YEAR_INDEX   , year );

@@ -1155,7 +1155,7 @@ void ecl_sum_resample_from_sim_days( const ecl_sum_type * ecl_sum , const double
 
 time_t ecl_sum_time_from_days( const ecl_sum_type * ecl_sum , double sim_days ) {
   time_t t = ecl_smspec_get_start_time( ecl_sum->smspec );
-  util_inplace_forward_days( &t , sim_days );
+  util_inplace_forward_days_utc( &t , sim_days );
   return t;
 }
 
@@ -1287,7 +1287,7 @@ time_t_vector_type * ecl_sum_alloc_time_solution( const ecl_sum_type * ecl_sum ,
     time_t start_time = ecl_sum_get_start_time(ecl_sum);
     for (int i=0; i < double_vector_size( seconds ); i++) {
       time_t t = start_time;
-      util_inplace_forward_seconds( &t , double_vector_iget( seconds , i ));
+      util_inplace_forward_seconds_utc( &t , double_vector_iget( seconds , i ));
       time_t_vector_append( solution , t );
     }
     double_vector_free( seconds );

@@ -124,7 +124,7 @@ void ecl_sum_tstep_free__( void * __ministep) {
 static void ecl_sum_tstep_set_time_info_from_seconds( ecl_sum_tstep_type * tstep , time_t sim_start , float sim_seconds) {
   tstep->sim_seconds = sim_seconds;
   tstep->sim_time = sim_start;
-  util_inplace_forward_seconds( &tstep->sim_time , tstep->sim_seconds );
+  util_inplace_forward_seconds_utc( &tstep->sim_time , tstep->sim_seconds );
 }
 
 
@@ -146,15 +146,11 @@ static void ecl_sum_tstep_set_time_info( ecl_sum_tstep_type * tstep , const ecl_
     double sim_seconds = sim_time * ecl_smspec_get_time_seconds( smspec );
     ecl_sum_tstep_set_time_info_from_seconds( tstep , sim_start , sim_seconds );
   } else if ( date_day_index >= 0) {
-    int sec  = 0;
-    int min  = 0;
-    int hour = 0;
-
     int day   = util_roundf(tstep->data[date_day_index]);
     int month = util_roundf(tstep->data[date_month_index]);
     int year  = util_roundf(tstep->data[date_year_index]);
 
-    time_t sim_time = util_make_datetime(sec , min , hour , day , month , year);
+    time_t sim_time = ecl_util_make_date(day , month , year);
     ecl_sum_tstep_set_time_info_from_date( tstep , sim_start , sim_time );
   } else
     util_abort("%s: Hmmm - could not extract date/time information from SMSPEC header file? \n",__func__);

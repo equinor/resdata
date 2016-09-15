@@ -24,7 +24,7 @@
 
 
 bool test_get( ecl_file_type * rst_file , int day , int month , int year , int expected_index) {
-  time_t sim_time = util_make_datetime(0,0,0,day,month,year);
+  time_t sim_time = ecl_util_make_date(day,month,year);
   int seqnum_index = ecl_file_get_restart_index( rst_file , sim_time );
   if (seqnum_index == expected_index)
     return true;

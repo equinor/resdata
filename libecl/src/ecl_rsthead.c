@@ -167,6 +167,7 @@ void ecl_rsthead_fprintf( const ecl_rsthead_type * header , FILE * stream) {
 
 bool ecl_rsthead_equal( const ecl_rsthead_type * header1 , const ecl_rsthead_type * header2) {
   bool equal = true;
+
   equal = equal && (header1->day == header2->day);
   equal = equal && (header1->year == header2->year);
   equal = equal && (header1->month == header2->month);

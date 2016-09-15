@@ -26,7 +26,7 @@
 
 void test_date(int mday, int month , int year, int * year_offset) {
   time_t t0 = ecl_util_make_date__( mday , month , year , year_offset);
-  time_t t1 = util_make_date( mday , month , year + *year_offset);
+  time_t t1 = util_make_date_utc( mday , month , year + *year_offset);
   test_assert_time_t_equal( t0 , t1 );
 }
 
@@ -34,7 +34,7 @@ void test_date(int mday, int month , int year, int * year_offset) {
 void test_offset(int mday, int month , int year , int current_offset) {
   int year_offset;
   time_t t0 = ecl_util_make_date__( mday , month , year , &year_offset);
-  time_t t1 = util_make_date( mday , month , year + current_offset);
+  time_t t1 = util_make_date_utc( mday , month , year + current_offset);
 
   test_assert_time_t_equal(t0,t1);
   test_assert_int_equal( current_offset , year_offset );

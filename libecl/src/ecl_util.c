@@ -1459,18 +1459,20 @@ bool ecl_util_valid_basename_fmt(const char * basename_fmt)
 */
 
 
-void ecl_util_append_month_range( time_t_vector_type * date_list , time_t start_date , time_t end_date , bool force_append_end) {
-  start_date = util_make_pure_date( start_date );
-  end_date   = util_make_pure_date( end_date );
 
-  if (util_is_first_day_in_month( start_date))
+
+void ecl_util_append_month_range( time_t_vector_type * date_list , time_t start_date , time_t end_date , bool force_append_end) {
+  start_date = util_make_pure_date_utc( start_date );
+  end_date   = util_make_pure_date_utc( end_date );
+
+  if (util_is_first_day_in_month_utc( start_date))
     time_t_vector_append( date_list , start_date );
 
   {
     time_t current_date = start_date;
     while (true) {
       int month,year;
-      util_set_date_values( current_date , NULL , &month , &year);
+      util_set_date_values_utc( current_date , NULL , &month , &year);
       if (month == 12) {
         month = 1;
         year += 1;
@@ -1495,8 +1497,8 @@ void ecl_util_append_month_range( time_t_vector_type * date_list , time_t start_
 
 void ecl_util_init_month_range( time_t_vector_type * date_list , time_t start_date , time_t end_date) {
   time_t_vector_reset( date_list );
-  if (!util_is_first_day_in_month( start_date ))
-    time_t_vector_append( date_list , util_make_pure_date(start_date));
+  if (!util_is_first_day_in_month_utc( start_date ))
+    time_t_vector_append( date_list , util_make_pure_date_utc(start_date));
 
   ecl_util_append_month_range( date_list , start_date , end_date , true );
 }
@@ -1509,7 +1511,7 @@ time_t date;
 
 #ifdef ERT_TIME_T_64BIT_ACCEPT_PRE1970
   *__year_offset = 0;
-  date = util_make_date(mday , month , year);
+  date = util_make_date_utc(mday , month , year);
 #else
   static bool offset_initialized = false;
   static int  year_offset = 0;
@@ -1522,7 +1524,7 @@ time_t date;
     offset_initialized = true;
   }
   *__year_offset = year_offset;
-  date = util_make_date(mday , month , year + year_offset);
+  date = util_make_date_utc(mday , month , year + year_offset);
 #endif
 
   return date;
@@ -1534,8 +1536,10 @@ time_t ecl_util_make_date(int mday , int month , int year) {
   return ecl_util_make_date__( mday , month , year , &year_offset);
 }
 
+
+
 void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year) {
-    return util_set_date_values(t,mday,month,year);
+  return util_set_date_values_utc(t,mday,month,year);
 }
 
 

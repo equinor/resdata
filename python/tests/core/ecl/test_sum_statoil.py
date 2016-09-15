@@ -81,8 +81,8 @@ class SumTest(ExtendedTestCase):
         self.assertAlmostEqual(sum.get_interp("WWCT:OP_3", days=750), 0.11719122)
         self.assertAlmostEqual(sum.get_interp("WWCT:OP_3", date=datetime.date(2004, 1, 1)), 0.603358387947)
 
-        v = sum.get_interp_vector("WOPT:OP_1", days_list=[100, 200, 400, 800])
-        self.assertAlmostEqualList([805817.11875, 1614955.34677419, 3289267.67857143, 6493021.6218035], v)
+        v = sum.get_interp_vector("WOPT:OP_1", days_list=[100, 200, 400])
+        self.assertAlmostEqualList([805817.11875, 1614955.34677419, 3289267.67857143 ], v)
 
         v = sum.get_interp_vector("WGPT:OP_2", date_list=[datetime.date(2002, 1, 1), datetime.date(2003, 1, 1), datetime.date(2004, 1, 1)])
         self.assertAlmostEqualList(v, [8.20773632e+08, 9.68444032e+08, 1.02515213e+09])
