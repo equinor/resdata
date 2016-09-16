@@ -3352,9 +3352,6 @@ time_t util_make_datetime(int sec, int min, int hour , int mday , int month , in
 
 
 
-time_t util_make_date(int mday , int month , int year) {
-  return util_make_datetime(0 , 0 , 0 , mday , month , year);
-}
 
 time_t util_make_date_utc(int mday , int month , int year) {
   return util_make_datetime_utc(0 , 0 , 0 , mday , month , year);

@@ -37,7 +37,7 @@ void test_write_header() {
 
   int_vector_type * actnum = int_vector_alloc( nx*ny*nz , 1 );
   test_work_area_type * test_area = test_work_area_alloc( "ecl_init_file" );
-  time_t start_time = util_make_date(15 , 12 , 2010 );
+  time_t start_time = util_make_date_utc(15 , 12 , 2010 );
   ecl_grid_type * ecl_grid;
 
   int_vector_iset( actnum , 10 , 0 );

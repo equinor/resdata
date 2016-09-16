@@ -26,11 +26,11 @@
 
 
 int main( int argc , char ** argv) {
-  time_t start_time = util_make_date(1,1,2000);
-  time_t end_time = util_make_date(1,1,2010);
-  time_t in = util_make_date( 1,1,2005);
-  time_t before = util_make_date( 1,1,1995);
-  time_t after  = util_make_date( 1,1,2015);
+  time_t start_time = util_make_date_utc(1,1,2000);
+  time_t end_time   = util_make_date_utc(1,1,2010);
+  time_t in         = util_make_date_utc( 1,1,2005);
+  time_t before     = util_make_date_utc( 1,1,1995);
+  time_t after      = util_make_date_utc( 1,1,2015);
   
   {
     time_interval_type * ti = time_interval_alloc( start_time , end_time );
