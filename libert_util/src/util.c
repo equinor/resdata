@@ -3082,19 +3082,6 @@ bool util_file_update_required(const char *src_file , const char *target_file) {
 
 
 
-static void __util_set_timevalues(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
-  struct tm ts;
-
-  util_localtime(&t , &ts);
-  if (sec   != NULL) *sec   = ts.tm_sec;
-  if (min   != NULL) *min   = ts.tm_min;
-  if (hour  != NULL) *hour  = ts.tm_hour;
-  if (mday  != NULL) *mday  = ts.tm_mday;
-  if (month != NULL) *month = ts.tm_mon  + 1;
-  if (year  != NULL) *year  = ts.tm_year + 1900;
-}
-
-
 static void __util_set_timevalues_utc(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
   struct tm ts;
 
@@ -3118,9 +3105,6 @@ static void __util_set_timevalues_utc(time_t t , int * sec , int * min , int * h
 */
 
 
-void util_set_date_values(time_t t , int * mday , int * month , int * year) {
-  __util_set_timevalues(t , NULL , NULL , NULL , mday , month , year);
-}
 
 
 /*
@@ -5162,6 +5146,7 @@ void util_localtime( time_t * t , struct tm * ts ) {
   memcpy( ts , ts_shared , sizeof * ts );
 #endif
 }
+
 
 #ifdef ERT_HAVE_SPAWN
 #include "util_spawn.c"

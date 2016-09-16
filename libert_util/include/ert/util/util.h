@@ -281,7 +281,6 @@ typedef enum {left_pad   = 0,
 
   void         util_set_datetime_values_utc(time_t , int * , int * , int * , int * , int *  , int *);
   void         util_set_date_values_utc(time_t , int * , int * , int * );
-  void         util_set_date_values(time_t t , int * mday , int * month , int * year);
 
   bool         util_is_first_day_in_month_utc( time_t t);
 
