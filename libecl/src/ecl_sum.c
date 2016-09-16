@@ -920,7 +920,7 @@ static void __ecl_sum_fprintf_line( const ecl_sum_type * ecl_sum , FILE * stream
   {
     struct tm ts;
     time_t sim_time = ecl_sum_iget_sim_time(ecl_sum , internal_index );
-    util_localtime( &sim_time , &ts);
+    util_time_utc( &sim_time , &ts);
     strftime( date_string , DATE_STRING_LENGTH - 1 , fmt->date_fmt , &ts);
     fprintf(stream , "%s", date_string );
   }

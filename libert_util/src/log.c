@@ -146,7 +146,7 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
       time_t    epoch_time;
       
       time(&epoch_time);
-      util_localtime(&epoch_time , &time_fields);
+      util_time_utc(&epoch_time , &time_fields);
 
       if (message != NULL)
         fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d  %s\n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec , message);

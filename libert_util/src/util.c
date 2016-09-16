@@ -280,7 +280,6 @@ void util_endian_flip_vector_old(void *data, int element_size , int elements) {
 
 /*****************************************************************/
 
-static void util_time_utc( time_t * t , struct tm * ts );
 
 static bool EOL_CHAR(char c) {
   if (c == '\r' || c == '\n')
@@ -5127,7 +5126,7 @@ int util_fnmatch( const char * pattern , const char * string ) {
 
 
 
-static void util_time_utc( time_t * t , struct tm * ts ) {
+void util_time_utc( time_t * t , struct tm * ts ) {
 #ifdef HAVE_GMTIME_R
   gmtime_r( t , ts );
 #else
@@ -5138,14 +5137,6 @@ static void util_time_utc( time_t * t , struct tm * ts ) {
 
 
 
-void util_localtime( time_t * t , struct tm * ts ) {
-#ifdef HAVE_LOCALTIME_R
-  localtime_r( t , ts );
-#else
-  struct tm * ts_shared = localtime( t );
-  memcpy( ts , ts_shared , sizeof * ts );
-#endif
-}
 
 
 #ifdef ERT_HAVE_SPAWN
