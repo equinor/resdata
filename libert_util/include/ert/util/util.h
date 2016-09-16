@@ -108,7 +108,6 @@ typedef enum {left_pad   = 0,
   void         util_fprintf_date(time_t  , FILE * );
   time_t       util_make_date(int , int , int);
   time_t       util_make_date_utc(int , int , int);
-  time_t       util_make_pure_date(time_t t);
   time_t       util_make_pure_date_utc(time_t t);
   void         util_inplace_forward_seconds_utc(time_t * t , double seconds);
   void         util_inplace_forward_days_utc(time_t * t , double days);

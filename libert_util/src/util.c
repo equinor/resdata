@@ -3366,17 +3366,10 @@ time_t util_make_date(int mday , int month , int year) {
   return util_make_datetime(0 , 0 , 0 , mday , month , year);
 }
 
-
 time_t util_make_date_utc(int mday , int month , int year) {
   return util_make_datetime_utc(0 , 0 , 0 , mday , month , year);
 }
 
-
-time_t util_make_pure_date(time_t t) {
-  int day,month,year;
-  util_set_date_values( t , &day , &month , &year);
-  return util_make_date( day , month , year );
-}
 
 
 time_t util_make_pure_date_utc(time_t t) {
