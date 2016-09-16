@@ -3332,26 +3332,6 @@ time_t util_make_datetime_utc(int sec, int min, int hour , int mday , int month 
 
 
 
-time_t util_make_datetime(int sec, int min, int hour , int mday , int month , int year) {
-  struct tm ts;
-  ts.tm_sec    = sec;
-  ts.tm_min    = min;
-  ts.tm_hour   = hour;
-  ts.tm_mday   = mday;
-  ts.tm_mon    = month - 1;
-  ts.tm_year   = year - 1900;
-  ts.tm_isdst  = -1;    /* Negative value means mktime tries to determine automagically whether Daylight Saving Time is in effect. */
-  {
-    time_t t = mktime( &ts );
-    if (t == -1)
-      util_abort("%s: failed to make a time_t instance of %02d/%02d/%4d  %02d:%02d:%02d - aborting \n",__func__ , mday,month,year,hour,min,sec);
-
-    return t;
-  }
-}
-
-
-
 
 time_t util_make_date_utc(int mday , int month , int year) {
   return util_make_datetime_utc(0 , 0 , 0 , mday , month , year);
