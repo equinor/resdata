@@ -3157,12 +3157,12 @@ bool util_is_first_day_in_month_utc( time_t t) {
 /**
    If the parsing fails the time_t pointer is set to -1;
 */
-bool util_sscanf_date(const char * date_token , time_t * t) {
+bool util_sscanf_date_utc(const char * date_token , time_t * t) {
   int day   , month , year;
   char sep1 , sep2;
 
   if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
-    *t = util_make_date(day , month , year );
+    *t = util_make_date_utc(day , month , year );
     return true;
   } else {
     *t = -1;
@@ -3184,10 +3184,10 @@ bool util_sscanf_percent(const char * percent_token, double * value) {
 }
 
 
-bool util_fscanf_date(FILE *stream , time_t *t)  {
+bool util_fscanf_date_utc(FILE *stream , time_t *t)  {
   int init_pos = util_ftell(stream);
   char * date_token = util_fscanf_alloc_token(stream);
-  bool return_value = util_sscanf_date(date_token , t);
+  bool return_value = util_sscanf_date_utc(date_token , t);
   if (!return_value) util_fseek(stream , init_pos , SEEK_SET);
   free(date_token);
   return return_value;

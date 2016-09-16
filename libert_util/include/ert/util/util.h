@@ -132,8 +132,8 @@ typedef enum {left_pad   = 0,
   void         util_fprintf_int(int , int , FILE * );
   void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
   void         util_fprintf_double(double , int , int , char , FILE *);
-  bool         util_fscanf_date(FILE * , time_t *);
-  bool         util_sscanf_date(const char * , time_t *);
+  bool         util_fscanf_date_utc(FILE * , time_t *);
+  bool         util_sscanf_date_utc(const char * , time_t *);
   bool         util_sscanf_percent(const char * string, double * value);
   char       * util_alloc_stdin_line();
   char       * util_realloc_stdin_line(char * );
