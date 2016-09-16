@@ -121,8 +121,10 @@ typedef enum {left_pad   = 0,
   bool         util_before( time_t t , time_t limit);
   bool         util_file_newer( const char * file , time_t t0);
   bool         util_file_older( const char * file , time_t t0);
-  char       * util_alloc_date_string( time_t t );
-  char       * util_alloc_date_stamp( );
+
+  char       * util_alloc_date_string_utc( time_t t );
+  char       * util_alloc_date_stamp_utc( );
+
   double       util_pow10(double x);
   bool         util_char_in(char c, int , const char *);
   char       * util_alloc_sprintf_va(const char * fmt , va_list ap);

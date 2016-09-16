@@ -3221,16 +3221,17 @@ void util_fprintf_date(time_t t , FILE * stream) {
 }
 
 
-char * util_alloc_date_string( time_t t ) {
+
+char * util_alloc_date_string_utc( time_t t ) {
   int mday,year,month;
 
-  util_set_datetime_values(t , NULL , NULL , NULL , &mday , &month , &year);
+  util_set_datetime_values_utc(t , NULL , NULL , NULL , &mday , &month , &year);
   return util_alloc_sprintf("%02d/%02d/%4d", mday,month,year);
 }
 
-char * util_alloc_date_stamp( ) {
+char * util_alloc_date_stamp_utc( ) {
   time_t now = time( NULL );
-  return util_alloc_date_string( now );
+  return util_alloc_date_string_utc( now );
 }
 
 
