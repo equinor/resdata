@@ -203,3 +203,6 @@ class EclGrav(BaseCClass):
         """
         self._add_std_density(phase_enum, pvtnum, density)
 
+        
+    def free(self):
+        self._free( )
