@@ -530,10 +530,10 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
   time_t sim_end         = time_interval_get_end( data->sim_time );
 
   if (!ecl_sum_data_check_sim_time( data , sim_time )) {
-    fprintf(stderr , "Simulation start: "); util_fprintf_date( ecl_smspec_get_start_time( data->smspec ) , stderr );
-    fprintf(stderr , "Data start......: "); util_fprintf_date( data_start_time , stderr );
-    fprintf(stderr , "Simulation end .: "); util_fprintf_date( sim_end , stderr );
-    fprintf(stderr , "Requested date .: "); util_fprintf_date( sim_time , stderr );
+    fprintf(stderr , "Simulation start: "); util_fprintf_date_utc( ecl_smspec_get_start_time( data->smspec ) , stderr );
+    fprintf(stderr , "Data start......: "); util_fprintf_date_utc( data_start_time , stderr );
+    fprintf(stderr , "Simulation end .: "); util_fprintf_date_utc( sim_end , stderr );
+    fprintf(stderr , "Requested date .: "); util_fprintf_date_utc( sim_time , stderr );
     util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , data_start_time , sim_end);
   }
 
