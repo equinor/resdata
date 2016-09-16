@@ -326,7 +326,7 @@ unsigned int util_clock_seed( ) {
   time_t now = time( NULL );
 
 
-  util_set_datetime_values(now , &sec , &min , &hour , &mday , &month , &year);
+  util_set_datetime_values_utc(now , &sec , &min , &hour , &mday , &month , &year);
   {
     unsigned int seed = clock( );
     int i,j,k;
@@ -3116,9 +3116,6 @@ static void __util_set_timevalues_utc(time_t t , int * sec , int * min , int * h
   The return values are by pointers - you can pass in NULL to any of
   the fields.
 */
-void util_set_datetime_values(time_t t , int * sec , int * min , int * hour , int * mday , int * month , int * year) {
-  __util_set_timevalues(t , sec , min , hour , mday , month , year);
-}
 
 
 void util_set_date_values(time_t t , int * mday , int * month , int * year) {
