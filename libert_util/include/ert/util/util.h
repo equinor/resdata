@@ -104,7 +104,6 @@ typedef enum {left_pad   = 0,
   char       * util_get_timezone();
   time_t       util_make_datetime(int , int , int , int , int , int );
   time_t       util_make_datetime_utc(int , int , int , int , int , int );
-  void         util_fprintf_datetime(time_t  , FILE * );
   void         util_fprintf_date_utc(time_t  , FILE * );
   time_t       util_make_date(int , int , int);
   time_t       util_make_date_utc(int , int , int);

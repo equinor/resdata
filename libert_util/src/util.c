@@ -3204,15 +3204,6 @@ bool util_fscanf_date(FILE *stream , time_t *t)  {
 */
 
 
-void util_fprintf_datetime(time_t t , FILE * stream) {
-  int sec,min,hour;
-  int mday,year,month;
-
-  util_set_datetime_values(t , &sec , &min , &hour , &mday , &month , &year);
-  fprintf(stream , "%02d/%02d/%4d  %02d:%02d:%02d", mday,month,year,hour,min,sec);
-}
-
-
 void util_fprintf_date_utc(time_t t , FILE * stream) {
   int mday,year,month;
 
