@@ -77,7 +77,7 @@ class MetaWrapTest(ExtendedTestCase):
             Prototype.registerType("test_stringlist", None)
 
     def test_error_in_prototype_illegal_return_type(self):
-        func = TestUtilPrototype("test_stringlist util_alloc_date_stamp()")
+        func = TestUtilPrototype("test_stringlist util_alloc_date_stamp_utc()")
 
         with self.assertRaises(PrototypeError):
             func()
@@ -99,7 +99,7 @@ class MetaWrapTest(ExtendedTestCase):
 
 
     def test_invalid_prototype(self):
-        func = TestUtilPrototype("void util_alloc_date_stamp(")
+        func = TestUtilPrototype("void util_alloc_date_stamp_utc(")
         with self.assertRaises(PrototypeError):
             func()
 
@@ -113,6 +113,6 @@ class MetaWrapTest(ExtendedTestCase):
 
         Prototype.registerType("string_obj", stringObj)
 
-        dateStamp  = TestUtilPrototype("string_obj util_alloc_date_stamp()")
+        dateStamp  = TestUtilPrototype("string_obj util_alloc_date_stamp_utc()")
         date_stamp = dateStamp()
         self.assertIsInstance(date_stamp, str)

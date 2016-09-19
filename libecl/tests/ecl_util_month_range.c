@@ -31,12 +31,12 @@ void test_body( time_t_vector_type * date_list , int offset) {
   for (i=offset; i < (time_t_vector_size( date_list ) - 1); i++) {
     int month,year;
     time_t current_date = time_t_vector_iget( date_list , i );
-    test_assert_true( util_is_first_day_in_month( current_date ));
-    util_set_date_values( current_date , NULL , &month , &year);
+    test_assert_true( util_is_first_day_in_month_utc( current_date ));
+    util_set_date_values_utc( current_date , NULL , &month , &year);
     if (i > offset) {
       time_t prev_date = time_t_vector_iget( date_list , i - 1 );
       int prev_month , prev_year;
-      util_set_date_values( prev_date , NULL , &prev_month , &prev_year);
+      util_set_date_values_utc( prev_date , NULL , &prev_month , &prev_year);
       
       if (prev_year == year)
         test_assert_int_equal( month , prev_month + 1);
@@ -46,7 +46,7 @@ void test_body( time_t_vector_type * date_list , int offset) {
         test_assert_int_equal( year - prev_year  , 1);
       }
     }
-    test_assert_time_t_equal( current_date , util_make_pure_date( current_date ));
+    test_assert_time_t_equal( current_date , util_make_pure_date_utc( current_date ));
   }
 }
 
@@ -60,16 +60,16 @@ void test_append( const char * name , time_t_vector_type * date_list , time_t da
   ecl_util_append_month_range( date_list , date1 , date2 , force_append_end);
 
   // The start:
-  test_assert_true( util_make_pure_date(date1) <= time_t_vector_iget( date_list , offset));
+  test_assert_true( util_make_pure_date_utc(date1) <= time_t_vector_iget( date_list , offset));
 
   // The body:
   test_body( date_list , offset );
 
   // The tail:
   if ( force_append_end )
-    test_assert_time_t_equal( time_t_vector_get_last( date_list ) , util_make_pure_date(date2));
+    test_assert_time_t_equal( time_t_vector_get_last( date_list ) , util_make_pure_date_utc(date2));
   else
-    test_assert_true( util_is_first_day_in_month( time_t_vector_get_last( date_list )));
+    test_assert_true( util_is_first_day_in_month_utc( time_t_vector_get_last( date_list )));
   
 
   printf(" OK \n");
@@ -81,19 +81,19 @@ void test_init( const char * name , time_t_vector_type * date_list , time_t star
   fflush( stdout );
   {
     ecl_util_init_month_range( date_list , start_date , end_date );
-    test_assert_time_t_equal( time_t_vector_get_first( date_list ) , util_make_pure_date( start_date ));
+    test_assert_time_t_equal( time_t_vector_get_first( date_list ) , util_make_pure_date_utc( start_date ));
     test_body( date_list , 1 );
-    test_assert_time_t_equal( time_t_vector_get_last( date_list ) , util_make_pure_date(end_date ));
+    test_assert_time_t_equal( time_t_vector_get_last( date_list ) , util_make_pure_date_utc(end_date ));
   }
   printf(" OK \n");
 }
 
 
 int main(int argc , char ** argv) {
-  time_t date1  = util_make_datetime(0,2,0,1,1,2000);
-  time_t date2  = util_make_datetime(0,3,0,1,1,2005);
-  time_t date3  = util_make_datetime(0,4,0,10,1,2000);
-  time_t date4  = util_make_datetime(0,5,0,10,1,2005);
+  time_t date1  = util_make_datetime_utc(0,2,0,1,1,2000);
+  time_t date2  = util_make_datetime_utc(0,3,0,1,1,2005);
+  time_t date3  = util_make_datetime_utc(0,4,0,10,1,2000);
+  time_t date4  = util_make_datetime_utc(0,5,0,10,1,2005);
   
   
 

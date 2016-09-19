@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <signal.h>
+#include <math.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/util.h>

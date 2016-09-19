@@ -525,7 +525,7 @@ void output_save_S3Graph( const output_type * output, ensemble_type * ensemble ,
     time_t interp_time = time_t_vector_iget( ensemble->interp_time , row_nr);
     {
       int mday,month,year;
-      util_set_datetime_values(interp_time , NULL , NULL , NULL , &mday , &month , &year);
+      ecl_util_set_date_values(interp_time , &mday , &month , &year);
       fprintf(stream , date_fmt , mday , month , year);
     }
     fprintf(stream , days_fmt , 1.0*(interp_time - ensemble->start_time) / 86400);
@@ -572,7 +572,7 @@ void output_save_plain__( const output_type * output , ensemble_type * ensemble 
     fprintf(stream , days_fmt , 1.0*(interp_time - ensemble->start_time) / 86400);
     {
       int mday,month,year;
-      util_set_datetime_values(interp_time , NULL , NULL , NULL , &mday , &month , &year);
+      ecl_util_set_date_values(interp_time , &mday , &month , &year);
       fprintf(stream , date_fmt , mday , month , year);
     }
 

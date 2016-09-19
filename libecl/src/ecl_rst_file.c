@@ -146,7 +146,7 @@ static ecl_kw_type * ecl_rst_file_alloc_INTEHEAD( ecl_rst_file_type * rst_file,
     ecl_kw_iset_int( intehead_kw , INTEHEAD_NIGRPZ_INDEX  , NIGRPZ );
     
     {
-      util_set_date_values( rsthead->sim_time , &rsthead->day , &rsthead->month , &rsthead->year );
+      ecl_util_set_date_values( rsthead->sim_time , &rsthead->day , &rsthead->month , &rsthead->year );
       ecl_kw_iset_int( intehead_kw , INTEHEAD_DAY_INDEX    , rsthead->day );
       ecl_kw_iset_int( intehead_kw , INTEHEAD_MONTH_INDEX  , rsthead->month );
       ecl_kw_iset_int( intehead_kw , INTEHEAD_YEAR_INDEX   , rsthead->year );

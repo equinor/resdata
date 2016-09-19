@@ -167,7 +167,7 @@ int main(int argc , char ** argv) {
                 
                 if (ivar == 0 && iens == 0) {                                             /* Display time info in the first columns */
                   int day,month,year;
-                  util_set_date_values( current_time , &day , &month, &year);
+                  util_set_date_values_utc( current_time , &day , &month, &year);
                   fprintf(stream , "%7.2f   %02d/%02d/%04d   " , util_difftime_days( start_time , current_time ) , day , month , year);
                 }
                 

@@ -1,14 +1,7 @@
 import time
 from datetime import datetime, date
 
-from pytz import timezone
-
 from ert.util import CTime
-
-
-def timezoneOffsetInSeconds(dt):
-    local_timezone = timezone(CTime.timezone())
-    return int(local_timezone.utcoffset(dt).total_seconds())
 
 
 try:
@@ -19,11 +12,7 @@ except ImportError:
 
 class CTimeTest(TestCase):
     def test_creation(self):
-        delta = timezoneOffsetInSeconds(datetime(1970, 1, 1))
-        t0 = CTime(-delta)
-
-        t1 = CTime(t0)
-        self.assertEqual(t0, t1)
+        t0 = CTime(0)
 
         t2 = CTime(datetime(1970, 1, 1))
         self.assertEqual(t0, t2)
@@ -35,8 +24,8 @@ class CTimeTest(TestCase):
             CTime("string")
 
     def test_c_time(self):
-        delta = timezoneOffsetInSeconds(datetime(1970, 1, 1))
-        c_time = CTime(-delta)
+        delta = 0
+        c_time = CTime(0)
         py_time = datetime(1970, 1, 1)
 
         self.assertEqual(str(c_time), py_time.strftime("%Y-%m-%d %H:%M:%S%z"))
@@ -138,14 +127,5 @@ class CTimeTest(TestCase):
 
         self.assertEqual(t.value(), 0)
         self.assertEqual(t.ctime(), 0)
-        self.assertEqual(t.time(), time.localtime(0))
+        self.assertEqual(t.time(), time.gmtime(0))
 
-        # These conversions depend on timezone
-        utc = timezone('utc')
-        local_timezone = timezone(CTime.timezone())
-
-        localized_dt = local_timezone.localize(t.datetime())
-        self.assertEqual(localized_dt.astimezone(utc), datetime(1970, 1, 1, 0, tzinfo=utc))
-
-        localized_d = datetime(1970, 1, 1, 0, tzinfo=utc).astimezone(local_timezone)
-        self.assertEqual(t.date(), localized_d.date())

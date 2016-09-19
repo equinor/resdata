@@ -82,7 +82,7 @@ class CWrapTest(ExtendedTestCase):
 
         wrapper.registerType("string_obj", stringObj)
 
-        dateStamp  = wrapper.prototype("string_obj util_alloc_date_stamp()")
+        dateStamp  = wrapper.prototype("string_obj util_alloc_date_stamp_utc()")
         date_stamp = dateStamp()
         self.assertIsInstance(date_stamp, str)
 

@@ -54,7 +54,7 @@ int main(int argc , char ** argv) {
                             .day = 1,
                             .year = 2000,
                             .month = 1,
-                            .sim_time = (time_t) 946681200,
+                            .sim_time = (time_t) 946684800,
                             .version = 100,
                             .phase_sum = 7,
                             .nx = 40,
@@ -78,7 +78,7 @@ int main(int argc , char ** argv) {
                             .day = 22,
                             .year = 1990,
                             .month = 1,
-                            .sim_time = (time_t) 632962800,
+                            .sim_time = (time_t) 632966400,
                             .version = 100,
                             .phase_sum = 7,
                             .nx = 4,
@@ -101,9 +101,8 @@ int main(int argc , char ** argv) {
   const char * unified_file = argv[1];
   const char * Xfile        = argv[2];
 
-
-  test_file( unified_file , 0 , true , &true1 );
-  test_file( unified_file , 100 , false , NULL );
+  //  test_file( unified_file , 0 , true , &true1 );
+  //test_file( unified_file , 100 , false , NULL );
   test_file( Xfile , 0 , true , &true2 );
 
   exit(0);

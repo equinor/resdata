@@ -530,10 +530,10 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
   time_t sim_end         = time_interval_get_end( data->sim_time );
 
   if (!ecl_sum_data_check_sim_time( data , sim_time )) {
-    fprintf(stderr , "Simulation start: "); util_fprintf_date( ecl_smspec_get_start_time( data->smspec ) , stderr );
-    fprintf(stderr , "Data start......: "); util_fprintf_date( data_start_time , stderr );
-    fprintf(stderr , "Simulation end .: "); util_fprintf_date( sim_end , stderr );
-    fprintf(stderr , "Requested date .: "); util_fprintf_date( sim_time , stderr );
+    fprintf(stderr , "Simulation start: "); util_fprintf_date_utc( ecl_smspec_get_start_time( data->smspec ) , stderr );
+    fprintf(stderr , "Data start......: "); util_fprintf_date_utc( data_start_time , stderr );
+    fprintf(stderr , "Simulation end .: "); util_fprintf_date_utc( sim_end , stderr );
+    fprintf(stderr , "Requested date .: "); util_fprintf_date_utc( sim_time , stderr );
     util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , data_start_time , sim_end);
   }
 
@@ -587,7 +587,7 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
 
 int ecl_sum_data_get_index_from_sim_days( const ecl_sum_data_type * data , double sim_days) {
   time_t sim_time = ecl_smspec_get_start_time( data->smspec );
-  util_inplace_forward_days( &sim_time , sim_days );
+  util_inplace_forward_days_utc( &sim_time , sim_days );
   return ecl_sum_data_get_index_from_sim_time(data , sim_time );
 }
 
@@ -656,7 +656,7 @@ void ecl_sum_data_init_interp_from_sim_time( const ecl_sum_data_type * data , ti
 
 void ecl_sum_data_init_interp_from_sim_days( const ecl_sum_data_type * data , double sim_days, int *step1, int *step2 , double * weight1 , double *weight2) {
   time_t sim_time = ecl_smspec_get_start_time( data->smspec );
-  util_inplace_forward_days( &sim_time , sim_days );
+  util_inplace_forward_days_utc( &sim_time , sim_days );
   ecl_sum_data_init_interp_from_sim_time( data , sim_time , step1 , step2 , weight1 , weight2);
 }
 
@@ -1080,7 +1080,7 @@ void ecl_sum_data_summarize(const ecl_sum_data_type * data , FILE * stream) {
     for (index = 0; index < vector_get_size( data->data ); index++) {
       const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , index );
       int day,month,year;
-      util_set_date_values( ecl_sum_tstep_get_sim_time( ministep ) , &day, &month , &year);
+      ecl_util_set_date_values( ecl_sum_tstep_get_sim_time( ministep ) , &day, &month , &year);
       fprintf(stream , "%04d          %6d               %02d/%02d/%4d           %7.2f \n", ecl_sum_tstep_get_report( ministep ) , index , day,month,year, ecl_sum_tstep_get_sim_days( ministep ));
     }
   }
@@ -1342,7 +1342,7 @@ double ecl_sum_data_time2days( const ecl_sum_data_type * data , time_t sim_time)
 
 double ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , const smspec_node_type * smspec_node) {
   time_t sim_time = ecl_smspec_get_start_time( data->smspec );
-  util_inplace_forward_days( &sim_time , sim_days );
+  util_inplace_forward_days_utc( &sim_time , sim_days );
   return ecl_sum_data_get_from_sim_time( data , sim_time , smspec_node );
 }
 

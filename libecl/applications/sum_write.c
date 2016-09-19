@@ -157,7 +157,7 @@
 
 
 int main( int argc , char ** argv) {
-  time_t start_time = util_make_date( 1,1,2010 );
+  time_t start_time = util_make_date_utc( 1,1,2010 );
   int nx = 10;
   int ny = 10;
   int nz = 10;

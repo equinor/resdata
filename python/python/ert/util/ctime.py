@@ -27,7 +27,7 @@ class CTime(BaseCValue):
     TYPE_NAME = "time_t"
     DATA_TYPE = ctypes.c_long
     _timezone = UtilPrototype("char* util_get_timezone()" , bind = False)
-    _mktime = UtilPrototype("long util_make_datetime(int, int, int, int, int, int)" , bind = False)
+    _timegm = UtilPrototype("long util_make_datetime_utc(int, int, int, int, int, int)" , bind = False)
 
     def __init__(self, value):
         if isinstance(value, int):
@@ -35,9 +35,9 @@ class CTime(BaseCValue):
         elif isinstance(value, CTime):
             value = value.value()
         elif isinstance(value, datetime.datetime):
-            value = CTime._mktime(value.second, value.minute, value.hour, value.day, value.month, value.year)
+            value = CTime._timegm(value.second, value.minute, value.hour, value.day, value.month, value.year)
         elif isinstance(value, datetime.date):
-            value = CTime._mktime(0, 0, 0, value.day, value.month, value.year)
+            value = CTime._timegm(0, 0, 0, value.day, value.month, value.year)
         else:
             raise NotImplementedError("Can not convert class %s to CTime" % value.__class__)
 
@@ -48,8 +48,8 @@ class CTime(BaseCValue):
         return self.value()
 
     def time(self):
-        """Return this time_t as a time.localtime() object"""
-        return time.localtime(self.value())
+        """Return this time_t as a time.gmtime() object"""
+        return time.gmtime(self.value())
 
     def date(self):
         """Return this time_t as a datetime.date([year, month, day])"""

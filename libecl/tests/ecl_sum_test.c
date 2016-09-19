@@ -27,8 +27,8 @@
 
 void test_time_range( const ecl_sum_type * ecl_sum ) {
   // Hardcoded Gurbat case values
-  time_t start = util_make_date( 1,1,2000);
-  time_t end   = util_make_date( 31,12,2004 );
+  time_t start = ecl_util_make_date( 1,1,2000);
+  time_t end   = ecl_util_make_date( 31,12,2004 );
 
   test_assert_time_t_equal( ecl_sum_get_start_time( ecl_sum ) , start );
   test_assert_time_t_equal( ecl_sum_get_end_time( ecl_sum )   , end );
@@ -37,9 +37,9 @@ void test_time_range( const ecl_sum_type * ecl_sum ) {
 
 
 void test_days( const ecl_sum_type * ecl_sum ) {
-  time_t date1  = util_make_date( 1,1,2000);
-  time_t date2  = util_make_date( 31,12,2004 );
-  time_t date3  = util_make_date( 2,1,2000 );
+  time_t date1  = ecl_util_make_date( 1,1,2000);
+  time_t date2  = ecl_util_make_date( 31,12,2004 );
+  time_t date3  = ecl_util_make_date( 2,1,2000 );
 
   double days1 = ecl_sum_time2days( ecl_sum , date1 );
   double days2 = ecl_sum_time2days( ecl_sum , date2);

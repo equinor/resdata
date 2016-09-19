@@ -25,8 +25,8 @@
 
 
 int main( int argc , char ** argv) {
-  time_t t1 = util_make_date(1,1,2000);
-  time_t t2 = util_make_date(1,1,2001);
+  time_t t1 = util_make_date_utc(1,1,2000);
+  time_t t2 = util_make_date_utc(1,1,2001);
 
   test_assert_true( util_before( t1 , t2 ));
   test_assert_true( util_after( t2 , t1 ));

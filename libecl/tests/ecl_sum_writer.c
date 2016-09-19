@@ -59,7 +59,7 @@ void write_summary( const char * name , time_t start_time , int nx , int ny , in
 
 void test_write_read( ) {
   const char * name = "CASE";
-  time_t start_time = util_make_date( 1,1,2010 );
+  time_t start_time = util_make_date_utc( 1,1,2010 );
   time_t end_time = start_time;
   int nx = 10;
   int ny = 11;
@@ -78,7 +78,7 @@ void test_write_read( ) {
     /* Time direction */
     test_assert_time_t_equal( start_time , ecl_sum_get_start_time(ecl_sum));
     test_assert_time_t_equal( start_time , ecl_sum_get_data_start(ecl_sum));
-    util_inplace_forward_seconds(&end_time, (num_dates * num_ministep - 1) * ministep_length );
+    util_inplace_forward_seconds_utc(&end_time, (num_dates * num_ministep - 1) * ministep_length );
     test_assert_time_t_equal( end_time , ecl_sum_get_end_time(ecl_sum));
 
     /* Keys */
