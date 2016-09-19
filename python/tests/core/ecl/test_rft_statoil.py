@@ -15,7 +15,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-
+from __future__ import print_function
 import datetime
 from ert.ecl import EclRFTFile, EclRFTCell, EclPLTCell
 from ert.ecl.rft import WellTrajectory
@@ -58,7 +58,7 @@ class RFTTest(ExtendedTestCase):
             rft.sort()
 
         for h in rftFile.headers:
-            print h
+            print(h)
             self.assertIsInstance( h[1] , datetime.date )
 
 

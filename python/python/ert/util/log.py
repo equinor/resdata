@@ -14,6 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
+from __future__ import print_function
 from ert.cwrap import BaseCClass
 from ert.util import UtilPrototype
 
@@ -32,7 +33,7 @@ class Log(BaseCClass):
         # return "ert_config.log"
 
     def reopen(self, filename):
-        print "Logfile cannot be reopened"
+        print('Logfile cannot be reopened')
         # cfunc.reopen( self , filename)
 
     def get_level(self):

@@ -29,7 +29,7 @@ three elements. The element vec[1] has not been explicitly assigned by
 the user, in that case the implementation has 'filled the hole' with
 the default value (i.e. 66 in this case). So the statement
 
-   print vec[1]
+   print(vec[1])
 
 will give '66'. The main part of the implementation is in terms of an
 "abstract base class" TVector. The TVector class should be not

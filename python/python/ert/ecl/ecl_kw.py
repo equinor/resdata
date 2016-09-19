@@ -813,7 +813,7 @@ class EclKW(BaseCClass):
             else:
                 for i in range(self.size):
                     self.data_ptr[i] = func( self.data_ptr[i] )
-                    
+
 
     def equal(self , other):
         """
@@ -827,9 +827,12 @@ class EclKW(BaseCClass):
         else:
             raise TypeError("Can only compare with another EclKW")
 
-        
+
     def __eq__(self , other):
         return self.equal( other )
+
+    def __hash__(self):
+        return hash(self._get_header( ))
 
 
     def equal_numeric(self , other , epsilon = 1e-6, abs_epsilon = None , rel_epsilon = None):
@@ -837,7 +840,7 @@ class EclKW(BaseCClass):
 
 
         If the keywords are of type integer, the comparison is
-        absolute. 
+        absolute.
 
         If you pass in xxx_epsilon <= 0 the xxx_epsilon will be
         ignored in the test.
