@@ -1,18 +1,20 @@
-#  Copyright (C) 2014  Statoil ASA, Norway. 
-#   
-#  The file 'fault_line.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2014.  Statoil ASA, Norway.
+#
+#  This file is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify it under the
+#  terms of the GNU General Public License as published by the Free Software
+#  Foundation, either version 3 of the License, or (at your option) any later
+#  version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+#  A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
+
+from __future__ import print_function
 
 class FaultSegment(object):
     def __init__(self , C1 , C2 ):
@@ -20,7 +22,7 @@ class FaultSegment(object):
         self.__C2 = C2
         self.__next_segment = None
 
-        
+
     def __eq__(self , other):
         if self.__C1 == other.__C1 and self.__C2 == other.__C2:
             return True
@@ -28,6 +30,9 @@ class FaultSegment(object):
             return True
         else:
             return False
+
+    def __hash__(self):
+        return hash(hash(self.__C1) + hash(self.__C2) + hash(self.__next_segment))
 
     def getCorners(self):
         return (self.__C1 , self.__C2)
@@ -69,7 +74,6 @@ class SegmentMap(object):
     def __len__(self):
         return len(self.__segment_map)
 
-    
     def __str__(self):
         return self.__segment_map.__str__()
 
@@ -78,12 +82,10 @@ class SegmentMap(object):
             if count > 0:
                 d = self.__segment_map[C]
                 if len(d) != count:
-                    print "CornerPoint:%d  count:%d  len(d):%d map:%s" % (C , count , len(d) , d)
+                    print('CornerPoint:%d  count:%d  len(d):%d map:%s' % (C , count , len(d) , d))
                 assert len(d) == count
             else:
                 assert self.__segment_map.get(C) is None
-                
-            
 
 
     def addSegment(self , segment):
@@ -124,12 +126,11 @@ class SegmentMap(object):
         for (C, count) in self.__count_map.iteritems():
             if count == 1:
                 end_segments.append(self.__segment_map[C].values()[0])
-                
+
         start_segment = end_segments[0]
         self.delSegment( start_segment )
         return start_segment
-        
-        
+
     def popNext(self , segment):
         (C1,C2) = segment.getCorners()
         if self.__count_map[C1] >= 1:
@@ -147,4 +148,4 @@ class SegmentMap(object):
     def printContent(self):
         for d in self.__segment_map.values():
             for (C,S) in d.iteritems():
-                print S
+                print(S)

@@ -29,10 +29,10 @@ sorting:
 
    >> l = ["CASE-9" , "CASE-10"]
    >> l.sort()
-   >> print l
+   >> print(l)
       ["CASE-10" , "CASE-9"]
    >> l.sort( strcmp_int )
-   >> print l
+   >> print(l)
       ["CASE-9" , "CASE-10"]
 
 When the standard strcmp() function is used for comparing strings

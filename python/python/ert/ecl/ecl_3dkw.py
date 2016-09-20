@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-
+from __future__ import print_function
 from ecl_kw import EclKW
 
 class Ecl3DKW(EclKW):
@@ -47,7 +47,7 @@ class Ecl3DKW(EclKW):
        for k in range(grid.getNZ()):
            for j in range(grid.getNY()):
                for i in range(grid.getNX()):
-                   print \"(%d,%d,%d)  Permx:%g  Porv:%g\" % (i,j,k,permx_kw[i,j,k] , porv_kw[i,j,k])
+                   print('"(%d,%d,%d)  Permx:%g  Porv:%g"' % (i,j,k,permx_kw[i,j,k] , porv_kw[i,j,k]))
 
     In the example we open an ECLIPSE INIT file and extract the PERMX
     and PORV properties, and then iterate over all the cells in the
@@ -170,7 +170,7 @@ class Ecl3DKW(EclKW):
         poro = EclKW.read_grdecl(open("poro.grdecl") , "PORO")
         Ecl3DKW.castFromKW( poro , grid )
 
-        print "Porosity in cell (10,11,12):%g" % poro[10,11,12]
+        print('Porosity in cell (10,11,12):%g' % poro[10,11,12])
         """
         if len(kw) == grid.getGlobalSize():
             kw.global_active = True

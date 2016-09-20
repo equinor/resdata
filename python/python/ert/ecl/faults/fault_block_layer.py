@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-
+from __future__ import print_function
 from ert.cwrap import BaseCClass, CWrapper
 from ert.ecl import ECL_LIB
 from ert.ecl import EclTypeEnum
@@ -38,7 +38,6 @@ class FaultBlockLayer(BaseCClass):
 
     def __len__(self):
         return self.cNamespace().size(self)
-        
 
     def __getitem__(self , index):
         """
@@ -159,7 +158,7 @@ class FaultBlockLayer(BaseCClass):
             try:
                 layer.addIJBarrier( Fault.joinFaults( fault1 , fault2 , self.getK()) )
             except ValueError:
-                print "Failed to join faults %s and %s" % (fault1.getName() , fault2.getName())
+                print('Failed to join faults %s and %s' % (fault1.getName() , fault2.getName()))
                 raise ValueError("")
 
 
@@ -168,17 +167,16 @@ class FaultBlockLayer(BaseCClass):
         p0 = polyline[0]
         c0 = self.grid_ref.findCellCornerXY( p0[0] ,  p0[1] , self.getK() )
         i,j = self.grid_ref.findCellXY( p0[0] ,  p0[1] , self.getK() )
-        print "%g,%g -> %d,%d   %d" % (p0[0] , p0[1] , i,j,c0)
+        print('%g,%g -> %d,%d   %d' % (p0[0] , p0[1] , i,j,c0))
         for index in range(1,len(polyline)):
             p1 = polyline[index]
             c1 = self.grid_ref.findCellCornerXY( p1[0] ,  p1[1] , self.getK() )
             i,j = self.grid_ref.findCellXY( p1[0] ,  p1[1] , self.getK() )
             layer.addInterpBarrier( c0 , c1 )
-            print "%g,%g -> %d,%d   %d" % (p1[0] , p1[1] , i,j,c1)
-            print "Adding barrier %d -> %d" % (c0 , c1)
+            print('%g,%g -> %d,%d   %d' % (p1[0] , p1[1] , i,j,c1))
+            print('Adding barrier %d -> %d' % (c0 , c1))
             c0 = c1
-            
-        
+
 
     def getGeoLayer(self):
         """Returns the underlying geometric layer."""

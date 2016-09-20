@@ -187,8 +187,11 @@ class EclRegion(BaseCClass):
 
     def __eq__(self , other):
         return self._equal(other)
- 
-            
+
+    def __hash__(self):
+        return hash(hash(self.grid) + hash(self.active_index))
+
+
     def __deep_copy__(self , memo):
         """
         Creates a deep copy of the current region.

@@ -53,6 +53,9 @@ class Version(object):
     def __ne__(self, other):
         return not (self == other)
 
+    def __hash__(self):
+        return hash(self.versionTuple())
+
     # All development versions are compared with micro version == -1;
     # i.e.  the two versions Version(1,2,"Alpha") and
     # Version(1,2,"Beta") compare as equal in the >= and <= tests -

@@ -14,8 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-
-        
+from __future__ import print_function
 import sys
 from ert.util import DoubleVector,stat
 from ert.geo import CPolyline
@@ -224,22 +223,17 @@ class FaultLine(object):
     def startPoint(self):
         pl = self.getPolyline()
         return pl[0]
-        
 
     def endPoint(self):
         pl = self.getPolyline()
         return pl[-1]
-    
-
 
     def dump(self):
-        print "-----------------------------------------------------------------"
+        print('-----------------------------------------------------------------')
         for segment in self:
             C1 = segment.getC1()
             C2 = segment.getC2()
             (J1 , I1) = divmod(C1 , self.__grid.getNX() + 1)
             (J2 , I2) = divmod(C2 , self.__grid.getNX() + 1)
-            print "[Corner:%5d   IJ:(%3d,%d)] -> [Corner:%5d   IJ:(%3d,%d)]" % (C1 , I1, J1 ,C2 , I2 , J2)
-
-
-
+            print('[Corner:%5d IJ:(%3d,%d)] -> [Corner:%5d IJ:(%3d,%d)]'
+                  % (C1, I1, J1, C2, I2, J2))

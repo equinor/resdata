@@ -1,3 +1,4 @@
+from __future__ import print_function
 import warnings
 from ert.ecl.ecl_sum_node import EclSumNode
 
@@ -247,13 +248,13 @@ class EclSumVector(object):
 
            vec = sum["WWCT:A-3"]
            w = vec.first_gt( 0.50 )
-           print "Water cut above 0.50 in well A-3 at: %s" % w.date
+           print('Water cut above 0.50 in well A-3 at: %s' % w.date)
 
         Uses first_gt_index() internally and can not be called for
         vectors with report_only = True.
         """
         time_index = self.first_gt_index(limit)
-        print time_index
+        print(time_index)
         if time_index >= 0:
             return self.__iget__(time_index)
         else:

@@ -14,6 +14,7 @@
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
+from __future__ import print_function
 from unittest import skipIf
 
 from ert.ecl import EclGrid, EclTypeEnum , EclKW , EclRegion
@@ -369,7 +370,7 @@ class FaultBlockTest(ExtendedTestCase):
             
         layer.addPolylineBarrier( polyline )
         for p1,p2 in points:
-            print p1,p2
+            print(p1,p2)
             self.assertFalse(geo_layer.cellContact( p1 , p2 ))
 
 
@@ -396,7 +397,7 @@ class FaultBlockTest(ExtendedTestCase):
             
         layer.addPolylineBarrier( polyline )
         for p1,p2 in points:
-            print p1,p2
+            print(p1,p2)
             self.assertFalse(geo_layer.cellContact( p1 , p2 ))
 
 
@@ -456,8 +457,8 @@ class FaultBlockTest(ExtendedTestCase):
 
         nb = b1.getNeighbours()
         for b in nb:
-            print "Block:%d" % b.getBlockID()
-            
+            print('Block:%d' % b.getBlockID())
+
         self.assertTrue( len(nb) == 2 )
         self.assertTrue( b3 in nb )
         self.assertTrue( b4 in nb )
@@ -465,10 +466,3 @@ class FaultBlockTest(ExtendedTestCase):
         nb = b2.getNeighbours()
         self.assertTrue( len(nb) == 1 )
         self.assertTrue( b5 in nb )
-
-
-    
-
-            
-
-
