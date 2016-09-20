@@ -1,6 +1,7 @@
 import ctypes
 from types import StringType, IntType
 
+import ert
 from ert.cwrap import BaseCClass, Prototype, PrototypeError
 from ert.test import ExtendedTestCase
 import ert.cwrap.clib as clib
@@ -8,7 +9,7 @@ import ert.cwrap.clib as clib
 
 # Local copies so that the real ones don't get changed
 class TestUtilPrototype(Prototype):
-    lib = clib.ert_load("libert_util")
+    lib = ert.load("libert_util")
     def __init__(self, prototype, bind=False):
         super(TestUtilPrototype, self).__init__(TestUtilPrototype.lib, prototype, bind=bind)
 

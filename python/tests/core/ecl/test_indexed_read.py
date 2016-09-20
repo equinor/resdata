@@ -1,11 +1,12 @@
 import ctypes
-from ert.cwrap import clib, CWrapper
+import ert
+from ert.cwrap import CWrapper
 from ert.ecl import EclKW, EclFile, EclTypeEnum, FortIO
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.util import IntVector
 
 
-ecl_lib = clib.ert_load("libecl")
+ecl_lib = ert.load("libecl")
 ecl_wrapper = CWrapper(ecl_lib)
 
 

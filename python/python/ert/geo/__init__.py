@@ -17,12 +17,12 @@
 Simple package for working with 2D geometry.
 
 """
+import ert
 from ert.cwrap.metacwrap import Prototype
-from ert.cwrap import clib
 import ert.util
 
 class GeoPrototype(Prototype):
-    lib = clib.ert_load("libert_geometry")
+    lib = ert.load("libert_geometry")
 
     def __init__(self, prototype, bind=True):
         super(GeoPrototype, self).__init__(GeoPrototype.lib, prototype, bind=bind)

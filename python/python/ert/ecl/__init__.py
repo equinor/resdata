@@ -69,17 +69,16 @@ per module organization:
 import ert.util
 import ert.geo
 
-from ert.cwrap import clib
 from ert.cwrap.metacwrap import Prototype
 
 
 class EclPrototype(Prototype):
-    lib = clib.ert_load("libecl")
+    lib = ert.load("libecl")
 
     def __init__(self, prototype, bind=True):
         super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
 
-ECL_LIB = clib.ert_load("libecl")
+ECL_LIB = ert.load("libecl")
 
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUnitTypeEnum , EclUtil
 from .ecl_sum_var_type import EclSumVarType

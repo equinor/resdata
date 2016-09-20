@@ -1,9 +1,9 @@
-import ert.cwrap.clib as clib
+import ert
 import ert.util
 import ert.geo
 import ert.ecl
 
-ECL_WELL_LIB = clib.ert_load("libecl_well")
+ECL_WELL_LIB = ert.load("libecl_well")
 
 
 from .well_type_enum import WellTypeEnum

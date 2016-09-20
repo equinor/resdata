@@ -3,11 +3,12 @@ import stat
 
 import sys
 
-from ert.cwrap import clib, CWrapper
+import ert
+from ert.cwrap import CWrapper
 from ert.test.extended_testcase import ExtendedTestCase
 from ert.test.test_area import TestAreaContext
 
-test_lib = clib.ert_load("libert_util") # create a local namespace (so we don't overwrite StringList)
+test_lib = ert.load("libert_util") # create a local namespace (so we don't overwrite StringList)
 cwrapper = CWrapper(test_lib)
 
 spawn = cwrapper.prototype("int util_spawn_blocking(char*, int, void*, char*, char*)")
