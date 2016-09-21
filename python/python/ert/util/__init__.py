@@ -36,23 +36,12 @@ The modules included in the util package are:
    
 """
 
-import ert.cwrap.clib as clib
-
-# The libert_util library requires the libraries libz, libblas and
-# liblapack. It is assumed that the library has been compiled with a
-# suitable RPATH option (i.e. ERT_USE_RPATH has been set to True in
-# the build process) and we 'just' load the final libert_util library
-# directly. In principle it would be possible preload these libraries
-# with calls like:
-#
-# clib.load("libz" , "libz.so.1")
-# clib.load("libblas" , "libblas.so" , "libblas.so.3")
-# clib.load("liblapack" , "liblapack.so")
+import ert
 from ert.cwrap.metacwrap import Prototype
 
 
 class UtilPrototype(Prototype):
-    lib = clib.ert_load("libert_util")
+    lib = ert.load("libert_util")
 
     def __init__(self, prototype, bind=True):
         super(UtilPrototype, self).__init__(UtilPrototype.lib, prototype, bind=bind)

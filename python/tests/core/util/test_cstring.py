@@ -1,9 +1,10 @@
-from ert.cwrap import clib, Prototype
+import ert
+from ert.cwrap import Prototype
 from ert.test.extended_testcase import ExtendedTestCase
 
 # Local copies so that the real ones don't get changed
 class TestUtilPrototype(Prototype):
-    lib = clib.ert_load("libert_util")
+    lib = ert.load("libert_util")
 
     def __init__(self, prototype, bind=False):
         super(TestUtilPrototype, self).__init__(TestUtilPrototype.lib, prototype, bind=bind)

@@ -1,10 +1,9 @@
 import ctypes
-
-from ert.cwrap import clib
+import ert
 from ert.test import ExtendedTestCase
 from ert.util import CThreadPool, startCThreadPool
 
-TEST_LIB = clib.ert_load("libtest_util")
+TEST_LIB = ert.load("libtest_util")
 
 
 class CThreadPoolTest(ExtendedTestCase):
