@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'set.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'set.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdlib.h>
@@ -21,20 +21,25 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <ert/util/type_macros.h>
 #include <ert/util/set.h>
 #include <ert/util/hash.h>
 #include <ert/util/util.h>
 
 
+#define SET_TYPE_ID 816523
 struct set_struct {
+  UTIL_TYPE_ID_DECLARATION;
   hash_type * key_hash;
 };
 
 
+static UTIL_SAFE_CAST_FUNCTION( set , SET_TYPE_ID )
 
 
 set_type * set_alloc(int size, const char ** keyList) {
   set_type * set = malloc(sizeof * set);
+  UTIL_TYPE_ID_INIT( set , SET_TYPE_ID );
   set->key_hash  = hash_alloc_unlocked();
   {
     int ikey;
@@ -104,14 +109,14 @@ void set_fprintf(const set_type * set, const char * sep , FILE * stream) {
   }
   free(key_list);
 }
-    
+
 
 
 int set_get_size(const set_type *set) { return hash_get_size(set->key_hash); }
 
 
-char ** set_alloc_keylist(const set_type * set) { 
-  return hash_alloc_keylist(set->key_hash); 
+char ** set_alloc_keylist(const set_type * set) {
+  return hash_alloc_keylist(set->key_hash);
 }
 
 
@@ -120,6 +125,12 @@ char ** set_alloc_keylist(const set_type * set) {
 void set_free(set_type * set) {
   hash_free(set->key_hash);
   free(set);
+}
+
+
+void set_free__(void * arg) {
+  set_type * set = set_safe_cast( arg );
+  set_free( set );
 }
 
 
@@ -159,7 +170,7 @@ set_type * set_fread_alloc(FILE * stream) {
 
 
 /**
-   set1 is updated to *ONLY* contain elements which are both in 
+   set1 is updated to *ONLY* contain elements which are both in
    set1 and set2.
 */
 
