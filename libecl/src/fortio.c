@@ -343,6 +343,7 @@ fortio_type * fortio_open_append(const char *filename , bool fmt_file , bool end
   } else
     return NULL;
 }
+
 /*****************************************************************/
 
 bool fortio_fclose_stream( fortio_type * fortio ) {
@@ -784,6 +785,13 @@ bool fortio_fseek( fortio_type * fortio , offset_type offset , int whence) {
 }
 
 bool fortio_ftruncate( fortio_type * fortio , offset_type size) {
+  fortio_fseek( fortio , size , SEEK_SET);
+  return util_ftruncate( fortio->stream , size);
+}
+
+
+bool fortio_ftruncate_current( fortio_type * fortio ) {
+  offset_type size = fortio_ftell( fortio );
   return util_ftruncate( fortio->stream , size);
 }
 

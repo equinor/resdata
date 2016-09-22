@@ -103,3 +103,7 @@ add_test( ecl_fault_block_layer ${EXECUTABLE_OUTPUT_PATH}/ecl_fault_block_layer 
 add_executable( ecl_grid_export ecl_grid_export.c )
 target_link_libraries( ecl_grid_export ecl test_util )
 add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  )
+
+add_executable( ecl_rst_file ecl_rst_file.c )
+target_link_libraries( ecl_rst_file ecl test_util )
+add_test( ecl_rst_file ${EXECUTABLE_OUTPUT_PATH}/ecl_rst_file  )

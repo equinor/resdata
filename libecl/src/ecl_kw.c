@@ -274,6 +274,12 @@ const char * ecl_kw_get_header(const ecl_kw_type * ecl_kw ) {
   return ecl_kw->header;
 }
 
+bool ecl_kw_name_equal( const ecl_kw_type * ecl_kw , const char * name) {
+  return (strcmp( ecl_kw->header , name) == 0);
+}
+
+
+
 void ecl_kw_get_memcpy_data(const ecl_kw_type *ecl_kw , void *target) {
   memcpy(target , ecl_kw->data , ecl_kw->size * ecl_kw->sizeof_ctype);
 }
