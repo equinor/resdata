@@ -109,6 +109,7 @@ extern "C" {
   double         ecl_kw_iget_as_double(const ecl_kw_type * ecl_kw , int i);
   void           ecl_kw_get_data_as_double(const ecl_kw_type *, double *);
   void           ecl_kw_get_data_as_float(const ecl_kw_type * ecl_kw , float * float_data);
+  bool           ecl_kw_name_equal( const ecl_kw_type * ecl_kw , const char * name);
   bool           ecl_kw_header_eq(const ecl_kw_type *ecl_kw1 , const ecl_kw_type * ecl_kw2);
   bool           ecl_kw_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2);
   bool           ecl_kw_size_and_type_equal( const ecl_kw_type *ecl_kw1 , const ecl_kw_type * ecl_kw2 );
