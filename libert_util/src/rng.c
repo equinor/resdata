@@ -211,6 +211,20 @@ void rng_fscanf_state( rng_type * rng , FILE * stream ) {
   rng->fscanf_state( rng->state , stream );
 }
 
+
+void rng_load_state( rng_type * rng , const char * filename) {
+  FILE * stream = util_fopen( filename , "r");
+  rng_fscanf_state( rng , stream );
+  fclose( stream );
+}
+
+void rng_save_state( rng_type * rng , const char * filename) {
+  FILE * stream = util_mkdir_fopen( filename , "w");
+  rng_fprintf_state( rng , stream );
+  fclose( stream );
+}
+
+
 /*****************************************************************/
 
 unsigned int rng_forward( rng_type * rng ) {

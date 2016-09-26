@@ -13,7 +13,7 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
-
+import os.path
 
 from ert.cwrap import BaseCClass
 from ert.util import UtilPrototype
@@ -30,6 +30,8 @@ class RandomNumberGenerator(BaseCClass):
     _get_max_int = UtilPrototype("uint rng_get_max_int(rng)")
     _state_size = UtilPrototype("int rng_state_size(rng)")
     _set_state = UtilPrototype("void rng_set_state(rng , char*)")
+    _load_state = UtilPrototype("void rng_load_state(rng , char*)")
+    _save_state = UtilPrototype("void rng_save_state(rng , char*)")
 
     def __init__(self, alg_type=RngAlgTypeEnum.MZRAN, init_mode=RngInitModeEnum.INIT_CLOCK):
         assert isinstance(alg_type, RngAlgTypeEnum)
@@ -60,3 +62,20 @@ class RandomNumberGenerator(BaseCClass):
 
     def free(self):
         self._free()
+
+    def loadState(self , seed_file):
+        """
+        Will seed the RNG from the file @seed_file.
+        """
+        if os.path.isfile( seed_file ):
+            self._load_state( seed_file )
+        else:
+            raise IOError("No such file: %s" % seed_file)
+
+
+    def saveState(self , seed_file):
+        """
+        Will save the state of the rng to @seed_file
+        """
+        self._save_state( seed_file )
+        

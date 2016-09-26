@@ -61,6 +61,8 @@ typedef enum {
   void            rng_fprintf_state( rng_type * rng , FILE * stream );
   void            rng_fscanf_state( rng_type * rng , FILE * stream );
   int             rng_state_size( const rng_type * rng );
+  void            rng_save_state( rng_type * rng , const char * filename);
+  void            rng_load_state( rng_type * rng , const char * filename);
   
   void            rng_set_state( rng_type * rng , const char * state);
   void            rng_get_state( const rng_type * rng , char * state);
