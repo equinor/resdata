@@ -234,17 +234,15 @@ char * ecl_util_alloc_base_guess(const char * path) {
 
 
 int ecl_util_filename_report_nr(const char *filename) {
-  int report_nr = -1;
   char *ext = strrchr(filename , '.');
+
   if (ext == NULL)
-    util_abort("%s: can not determine timestep from filename:%s - aborting \n",__func__ , filename);
+    return -1;
 
   if (ext[1] == 'X' || ext[1] == 'F' || ext[1] == 'S' || ext[1] == 'A')
-    report_nr = atoi(&ext[2]);
-  else
-    util_abort("%s: Filename:%s not recognized - valid extensions: Annnn / Xnnnn / Fnnnn / Snnnn - aborting \n",__func__ , filename);
+    return atoi(&ext[2]);
 
-  return report_nr;
+  return -1;
 }
 
 
