@@ -302,7 +302,7 @@ static void smspec_node_set_flags( smspec_node_type * smspec_node) {
         smspec_node->var_type == ECL_SMSPEC_COMPLETION_VAR ) {
       const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
                                   "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
-                                  "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" };
+                                  "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT"};
 
       int num_total_vars = sizeof( total_vars ) / sizeof( total_vars[0] );
       int ivar;
