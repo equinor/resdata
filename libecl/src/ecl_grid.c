@@ -5875,8 +5875,10 @@ static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, i
       if ((top_point.z == bottom_point.z) && (force_set == false)) {
         return false;
       } else {
-        point_mapaxes_invtransform( &top_point    , grid->origo , grid->unit_x , grid->unit_y );
-        point_mapaxes_invtransform( &bottom_point , grid->origo , grid->unit_x , grid->unit_y );
+        if (grid->use_mapaxes) {
+          point_mapaxes_invtransform( &top_point    , grid->origo , grid->unit_x , grid->unit_y );
+          point_mapaxes_invtransform( &bottom_point , grid->origo , grid->unit_x , grid->unit_y );
+        }
 
         if (coord_float) {
           coord_float[coord_offset]     = top_point.x;
@@ -5932,7 +5934,7 @@ void ecl_grid_init_coord_data( const ecl_grid_type * grid , float * coord ) {
     The coord vector contains the points defining the top and bottom
     of the pillars. The vector contains (nx + 1) * (ny + 1) 6 element
     chunks of data, where each chunk contains the coordinates (x,y,z)
-    f the top and the bottom of the pillar.
+    of the top and the bottom of the pillar.
   */
   int i,j;
   for (j=0; j <= grid->ny; j++) {
