@@ -47,6 +47,48 @@ void test_char() {
 }
 
 
+void test_join() {
+  const char * elt0 = "AAA";
+  const char * elt1 = "BBB";
+  const char * elt2 = "CCC";
+  const char * elt3 = "DDD";
+  const char * elt4 = "EEE";
+  const char * elt5 = "FFF";
+
+  stringlist_type * s = stringlist_alloc_new();
+  stringlist_append_ref( s , elt0 );
+  stringlist_append_ref( s , elt1 );
+  stringlist_append_ref( s , elt2 );
+
+  const char * sep0 = "";
+  const char * sep1 = "!!!";
+  const char * sep2 = " abc ";
+
+  const char * j0 = stringlist_alloc_joined_string( s, sep0);
+  const char * j1 = stringlist_alloc_joined_string( s, sep1);
+  const char * j2 = stringlist_alloc_joined_string( s, sep2);
+
+  test_assert_string_equal( j0, "AAABBBCCC");
+  test_assert_string_equal( j1, "AAA!!!BBB!!!CCC");
+  test_assert_string_equal( j2, "AAA abc BBB abc CCC");
+
+  stringlist_type * s1 = stringlist_alloc_new();
+  stringlist_append_ref( s1 , elt0 );
+  test_assert_string_equal( "AAA", stringlist_alloc_joined_string( s1, sep0));
+  test_assert_string_equal( "AAA", stringlist_alloc_joined_string( s1, sep1));
+  test_assert_string_equal( "AAA", stringlist_alloc_joined_string( s1, sep2));
+
+  stringlist_type * sub = stringlist_alloc_new();
+  stringlist_append_ref( sub , elt0 );
+  stringlist_append_ref( sub , elt1 );
+  stringlist_append_ref( sub , elt2 );
+  stringlist_append_ref( sub , elt3 );
+  stringlist_append_ref( sub , elt4 );
+  stringlist_append_ref( sub , elt5 );
+  test_assert_string_equal( "CCC:DDD:EEE", stringlist_alloc_joined_substring( sub, 2, 5, ":"));
+}
+
+
 
 void test_reverse() {
   const char *s0 = "AAA";
@@ -291,6 +333,7 @@ void test_matching() {
 int main( int argc , char ** argv) {
   test_empty();
   test_char();
+  test_join();
   test_reverse();
   test_iget_as_int();
   test_iget_as_bool();
