@@ -133,7 +133,30 @@ class MatrixTest(ExtendedTestCase):
         m2 = m1.copy( )
         self.assertTrue( m1 == m2 )
         
+    def test_sub_copy(self):
+        m1 = Matrix(3,3)
+        rng = RandomNumberGenerator(RngAlgTypeEnum.MZRAN, RngInitModeEnum.INIT_DEFAULT)
+        m1.randomInit( rng )
 
+        with self.assertRaises(ValueError):
+            m2 = m1.subCopy( 0,0,4,2 )
+            
+        with self.assertRaises(ValueError):
+            m2 = m1.subCopy( 0,0,2,4 )
+
+        with self.assertRaises(ValueError):
+            m2 = m1.subCopy( 4,0,1,1 )
+
+        with self.assertRaises(ValueError):
+            m2 = m1.subCopy( 0,2,1,2 )
+
+            
+        m2 = m1.subCopy( 0,0,2,2 )
+        for i in range(2):
+            for j in range(2):
+                self.assertEqual( m1[i,j] , m2[i,j])
+
+                
     def test_transpose(self):
         m = Matrix(3,2)
         m[0,0] = 0
@@ -192,4 +215,13 @@ class MatrixTest(ExtendedTestCase):
         self.assertEqual( m2[0,0] , 1  )
         self.assertEqual( m2[1,1] , 13 )
         self.assertEqual( m2[2,2] , 41 )
+        
+
+    def test_csv(self):
+        m = Matrix(2, 2)
+        m[0, 0] = 2
+        m[1, 1] = 4
+        with TestAreaContext("matrix_csv"):
+            m.dumpCSV("matrix.csv")
+
         

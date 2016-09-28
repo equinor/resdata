@@ -37,6 +37,7 @@ class Matrix(BaseCClass):
     _alloc_transpose   = UtilPrototype("matrix_obj  matrix_alloc_transpose(matrix)")
     _inplace_transpose = UtilPrototype("void        matrix_inplace_transpose(matrix)")
     _copy              = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
+    _sub_copy          = UtilPrototype("matrix_obj  matrix_alloc_sub_copy(matrix, int , int , int , int)" )
     _free              = UtilPrototype("void   matrix_free(matrix)")
     _iget              = UtilPrototype("double matrix_iget( matrix , int , int )")
     _iset              = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
@@ -50,7 +51,8 @@ class Matrix(BaseCClass):
     _pretty_print      = UtilPrototype("void matrix_pretty_print(matrix, char*, char*)")
     _fprint            = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
     _random_init       = UtilPrototype("void matrix_random_init(matrix, rng)")
-
+    _dump_csv          = UtilPrototype("void matrix_dump_csv(matrix, char*)")
+    
     # Requires BLAS!
     _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False)
 
@@ -74,7 +76,23 @@ class Matrix(BaseCClass):
 
     def copy(self):
         return self._copy( )
-        
+
+    def subCopy(self, row_offset, column_offset, rows, columns):
+        if row_offset < 0 or row_offset >= self.rows():
+            raise ValueError("Invalid row offset")
+
+        if column_offset < 0 or column_offset >= self.columns():
+            raise ValueError("Invalid column offset")
+
+        if row_offset + rows > self.rows():
+            raise ValueError("Invalid rows")
+
+        if column_offset + columns > self.columns():
+            raise ValueError("Invalid columns")
+
+        return self._sub_copy( row_offset , column_offset , rows , columns)
+
+    
     def __str__(self):
         s = ""
         for i in range(self.rows()):
@@ -153,6 +171,11 @@ class Matrix(BaseCClass):
         if src_column != target_column:
             # The underlying C function accepts column copy between matrices.
             Matrix._copy_column(self, self, target_column, src_column)
+
+
+    def dumpCSV(self , filename):
+        self._dump_csv( filename )
+        
 
     def prettyPrint(self, name, fmt="%6.3g"):
         self._pretty_print(name, fmt)

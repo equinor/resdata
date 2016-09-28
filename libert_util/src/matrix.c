@@ -359,6 +359,11 @@ void matrix_copy_block( matrix_type * target_matrix , int target_row , int targe
   matrix_free( src_view );
 }
 
+matrix_type * matrix_alloc_sub_copy( const matrix_type * src , int row_offset , int column_offset , int rows, int columns) {
+  matrix_type * copy = matrix_alloc( rows, columns );
+  matrix_copy_block( copy , 0 , 0 , rows , columns , src , row_offset , column_offset );
+  return copy;
+}
 
 
 /*****************************************************************/
@@ -541,6 +546,16 @@ void matrix_fprintf( const matrix_type * matrix , const char * fmt , FILE * stre
   }
 }
 
+
+void matrix_dump_csv( const matrix_type * matrix  ,const char * filename) {
+  FILE * stream = util_fopen(filename , "w");
+  for (int i=0; i < matrix->rows; i++) {
+    for (int j=0; j < matrix->columns - 1; j++)
+      fprintf(stream , "%g, " , matrix_iget( matrix , i , j));
+    fprintf(stream , "%g\n" , matrix_iget( matrix , i , matrix->columns - 1));
+  }
+  fclose( stream );
+}
 
 
 void matrix_fwrite(const matrix_type * matrix , FILE * stream) {
@@ -876,6 +891,19 @@ void matrix_inplace_sub_column(matrix_type * A , const matrix_type * B, int colA
 
     for (row = 0; row < A->rows; row++)
       A->data[ GET_INDEX(A , row , colA)] -= B->data[ GET_INDEX(B , row , colB)];
+
+  } else
+    util_abort("%s: size mismatch \n",__func__);
+}
+
+void matrix_inplace_add_column(matrix_type * A , const matrix_type * B, int colA , int colB) {
+  if ((A->rows == B->rows) &&
+      (colA < A->columns) &&
+      (colB < B->columns)) {
+    int row;
+
+    for (row = 0; row < A->rows; row++)
+      A->data[ GET_INDEX(A , row , colA)] += B->data[ GET_INDEX(B , row , colB)];
 
   } else
     util_abort("%s: size mismatch \n",__func__);
