@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'ecl_grav.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'ecl_grav.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdlib.h>
@@ -48,7 +48,7 @@ static void ecl_grav_check_rporv(const ecl_grid_type * ecl_grid , const ecl_kw_t
   int    active_index;
   int    active_delta;
   int    active_size;
-  
+
   ecl_grid_get_dims( ecl_grid , NULL , NULL , NULL , &active_size );
   active_delta = active_size / 12;
   for (active_index = active_delta; active_index < active_size; active_index += active_delta) {
@@ -58,7 +58,7 @@ static void ecl_grav_check_rporv(const ecl_grid_type * ecl_grid , const ecl_kw_t
     double rporv2       = ecl_kw_iget_as_double( rporv2_kw ,  active_index );
     double rporv12      = 0.5 * ( rporv1 + rporv2 );
     double fraction     = util_double_min( init_porv , rporv12 ) / util_double_max( init_porv , rporv12 );
-    
+
     if (fraction  < 0.50) {
       fprintf(stderr,"-----------------------------------------------------------------\n");
       fprintf(stderr,"INIT PORV: %g \n",init_porv);
@@ -77,7 +77,7 @@ static void ecl_grav_check_rporv(const ecl_grid_type * ecl_grid , const ecl_kw_t
 
 
 double ecl_grav_phase_deltag( double utm_x ,
-                              double utm_y , 
+                              double utm_y ,
                               double tvd,
                               const ecl_grid_type * grid,
                               const ecl_file_type * init_file,
@@ -90,7 +90,7 @@ double ecl_grav_phase_deltag( double utm_x ,
 
   double deltag = 0;
   const int * aquifern      = NULL;
-  
+
   const float * rho1    = ecl_kw_get_float_ptr( rho1_kw );
   const float * rho2    = ecl_kw_get_float_ptr( rho2_kw );
   const float * sat1    = ecl_kw_get_float_ptr( sat1_kw );
@@ -102,7 +102,7 @@ double ecl_grav_phase_deltag( double utm_x ,
     const ecl_kw_type * aquifern_kw = ecl_file_iget_named_kw( init_file , "AQUIFERN" , 0);
     aquifern = ecl_kw_get_int_ptr( aquifern_kw );
   }
-  
+
   {
     const ecl_kw_type * init_porv_kw = ecl_file_iget_named_kw( init_file , "PORV" , 0);
     ecl_grav_check_rporv( grid , porv1_kw , porv2_kw , init_porv_kw);
@@ -111,7 +111,7 @@ double ecl_grav_phase_deltag( double utm_x ,
   {
     int active_index;
     for (active_index = 0; active_index < ecl_grid_get_active_size( grid ); active_index++) {
-      if (aquifern != NULL && aquifern[ active_index ] != 0) 
+      if (aquifern != NULL && aquifern[ active_index ] != 0)
         continue; /* This is a numerical aquifer cell - skip it. */
       else {
         double  mas1 , mas2;
@@ -119,21 +119,21 @@ double ecl_grav_phase_deltag( double utm_x ,
 
         mas1 = rho1[ active_index ] * porv1[active_index] * sat1[active_index];
         mas2 = rho2[ active_index ] * porv2[active_index] * sat2[active_index];
-        
+
         ecl_grid_get_xyz1A(grid , active_index , &xpos , &ypos , &zpos);
         {
           double dist_x   = xpos - utm_x;
           double dist_y   = ypos - utm_y;
           double dist_z   = zpos - tvd;
           double dist_sq  = dist_x*dist_x + dist_y*dist_y + dist_z*dist_z;
-          
+
           if(dist_sq == 0)
             exit(1);
-          
-          
+
+
           /**
              The Gravitational constant is 6.67E-11 N (m/kg)^2, we
-             return the result in microGal, i.e. we scale with 10^2 * 
+             return the result in microGal, i.e. we scale with 10^2 *
              10^6 => 6.67E-3.
           */
           deltag += 6.67E-3*(mas2 - mas1) * dist_z/pow(dist_sq , 1.5);

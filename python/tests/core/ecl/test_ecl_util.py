@@ -32,3 +32,10 @@ class EclUtilTest(ExtendedTestCase):
         file_type , fmt , report = EclUtil.inspectExtension("CASE.X0078")
         self.assertEqual( file_type , EclFileEnum.ECL_RESTART_FILE )
         
+    def test_file_report_nr(self):
+        report_nr = EclUtil.reportStep("CASE.X0080")
+        self.assertEqual( report_nr , 80 )
+
+        with self.assertRaises(ValueError):
+            EclUtil.reportStep("CASE.EGRID")
+            
