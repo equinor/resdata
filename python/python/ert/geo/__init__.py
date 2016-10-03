@@ -18,7 +18,7 @@ Simple package for working with 2D geometry.
 
 """
 import ert
-from cwrap.metacwrap import Prototype
+from cwrap import Prototype
 import ert.util
 
 class GeoPrototype(Prototype):
