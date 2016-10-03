@@ -3145,8 +3145,11 @@ bool util_sscanf_isodate(const char * date_token , time_t * t) {
     *t = -1;
 
   if (sscanf(date_token , "%d-%d-%d" , &year , &month , &day) == 3) {
-    if (t)
+    if (t) {
       *t = util_make_date_utc(day , month , year );
+      if (*t == -1)
+        return false;
+    }
 
     return true;
   }
