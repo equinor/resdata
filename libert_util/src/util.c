@@ -3134,6 +3134,29 @@ bool util_is_first_day_in_month_utc( time_t t) {
 }
 
 
+/*
+  Expects date in the order YYYY-MM-DD.
+*/
+
+bool util_sscanf_isodate(const char * date_token , time_t * t) {
+  int day   , month , year;
+
+  if (t)
+    *t = -1;
+
+  if (sscanf(date_token , "%d-%d-%d" , &year , &month , &day) == 3) {
+    if (t)
+      *t = util_make_date_utc(day , month , year );
+
+    return true;
+  }
+
+  return false;
+}
+
+
+
+
 /**
    If the parsing fails the time_t pointer is set to -1;
 */
@@ -3142,10 +3165,12 @@ bool util_sscanf_date_utc(const char * date_token , time_t * t) {
   char sep1 , sep2;
 
   if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
-    *t = util_make_date_utc(day , month , year );
+    if (t)
+      *t = util_make_date_utc(day , month , year );
     return true;
   } else {
-    *t = -1;
+    if (t)
+      *t = -1;
     return false;
   }
 }

@@ -65,7 +65,34 @@ void test_sscan_percent() {
 }
 
 
+void test_date(time_t expected , const char * date_string, bool expected_return) {
+  time_t t;
+  bool valid = util_sscanf_isodate(date_string, &t);
+
+  test_assert_bool_equal( valid , expected_return );
+  if (valid)
+    test_assert_time_t_equal( t , expected );
+  else
+    test_assert_time_t_equal( t , -1 );
+}
+
+
+void test_scan_iso_date() {
+  time_t expected = util_make_date_utc(10,  11 , 2011);
+  time_t  parsed;
+  test_date( expected , "2011-11-10", true);
+
+  test_assert_false( util_sscanf_isodate( "2017.10.07" , NULL ));
+  test_assert_false( util_sscanf_isodate( "2017-10.7" , NULL ));
+  test_assert_false( util_sscanf_isodate( "2017/10/07" , NULL ));
+  test_assert_false( util_sscanf_isodate( "2017/-10/07" , &parsed ));
+  test_assert_time_t_equal( parsed , -1 );
+}
+
+
+
 int main(int argc , char ** argv) {
   test_sscan_percent();
+  test_scan_iso_date();
   exit(0);
 }
