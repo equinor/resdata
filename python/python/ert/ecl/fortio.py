@@ -39,7 +39,7 @@ more extensive wrapping of the fortio implementation would be easy.
 import ctypes
 import os
 import sys
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.ecl import EclPrototype
 
 

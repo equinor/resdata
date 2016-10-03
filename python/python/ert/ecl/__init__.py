@@ -69,7 +69,7 @@ per module organization:
 import ert.util
 import ert.geo
 
-from ert.cwrap.metacwrap import Prototype
+from cwrap.metacwrap import Prototype
 
 
 class EclPrototype(Prototype):

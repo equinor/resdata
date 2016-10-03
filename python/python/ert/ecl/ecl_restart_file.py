@@ -16,7 +16,7 @@
 
 from ert.util import CTime
 from ert.ecl import ECL_LIB , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
-from ert.cwrap import CWrapper, BaseCClass
+from cwrap import CWrapper, BaseCClass
 
 class EclRestartHead(BaseCClass):
     def __init__(self , kw_arg = None , rst_arg = None):

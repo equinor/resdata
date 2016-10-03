@@ -16,7 +16,7 @@
 """
 Create a polygon
 """
-from ert.cwrap import CClass, CWrapper, CWrapperNameSpace
+from cwrap import CClass, CWrapper, CWrapperNameSpace
 from ert.geo import ERT_GEOMETRY_LIB
 
 

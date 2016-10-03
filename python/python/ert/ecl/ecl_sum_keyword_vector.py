@@ -23,7 +23,7 @@ import datetime
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.ecl import EclPrototype
 
 

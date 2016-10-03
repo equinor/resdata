@@ -1,6 +1,6 @@
 import ert
 from ctypes import c_ubyte, c_double
-from ert.cwrap import BaseCValue, Prototype
+from cwrap import BaseCValue, Prototype
 from ert.test import ExtendedTestCase
 
 class TestPrototype(Prototype):

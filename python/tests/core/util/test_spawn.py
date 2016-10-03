@@ -4,7 +4,7 @@ import stat
 import sys
 
 import ert
-from ert.cwrap import CWrapper
+from cwrap import CWrapper
 from ert.test.extended_testcase import ExtendedTestCase
 from ert.test.test_area import TestAreaContext
 

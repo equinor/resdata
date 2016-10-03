@@ -1,5 +1,5 @@
 import ert
-from ert.cwrap import Prototype, CFILE
+from cwrap import Prototype, CFILE
 from ert.test.extended_testcase import ExtendedTestCase
 from ert.test.test_area import TestAreaContext
 

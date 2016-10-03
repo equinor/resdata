@@ -19,7 +19,7 @@ import ctypes
 import datetime
 import time
 
-from ert.cwrap import BaseCValue
+from cwrap import BaseCValue
 from ert.util import UtilPrototype
 
 

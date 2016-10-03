@@ -15,7 +15,7 @@
 #  for more details. 
 
 import warnings
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.ecl import EclPrototype
 
 

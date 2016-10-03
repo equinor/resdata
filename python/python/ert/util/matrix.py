@@ -28,7 +28,7 @@
 # choice.
 
 
-from ert.cwrap import BaseCClass,CFILE
+from cwrap import BaseCClass,CFILE
 from ert.util import UtilPrototype
 
 

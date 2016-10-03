@@ -1,6 +1,6 @@
 import ctypes
 import ert
-from ert.cwrap import CWrapper, BaseCClass, CWrapError
+from cwrap import CWrapper, BaseCClass, CWrapError
 from ert.test  import ExtendedTestCase
 
 test_lib  = ert.load("libert_util") # create a local namespace (so we don't overwrite StringList)

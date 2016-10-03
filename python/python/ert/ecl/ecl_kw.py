@@ -42,7 +42,7 @@ import types
 import warnings
 
 import  numpy
-from ert.cwrap import CFILE, BaseCClass
+from cwrap import CFILE, BaseCClass
 from ert.ecl import EclTypeEnum, EclUtil, EclPrototype
 
 

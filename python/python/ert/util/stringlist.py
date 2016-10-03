@@ -33,7 +33,7 @@ hardly need to notice that the StringList class is at play.
 
 from ert.util import UtilPrototype
 from types import StringType, IntType
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 
 
 class StringList(BaseCClass):

@@ -30,7 +30,7 @@ import sys
 import warnings
 import os.path
 import math
-from ert.cwrap import CFILE, BaseCClass
+from cwrap import CFILE, BaseCClass
 from ert.util import IntVector
 from ert.ecl import EclPrototype, EclTypeEnum, EclKW, FortIO, EclUnitTypeEnum
 

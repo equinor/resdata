@@ -15,7 +15,7 @@
 #  for more details.
 from collections import Sequence
 
-from ert.cwrap import PrototypeError
+from cwrap import PrototypeError
 from ert.util import LLSQResultEnum, UtilPrototype, Matrix
 
 
