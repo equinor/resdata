@@ -85,8 +85,10 @@ void test_scan_iso_date() {
   test_assert_false( util_sscanf_isodate( "2017.10.07" , NULL ));
   test_assert_false( util_sscanf_isodate( "2017-10.7" , NULL ));
   test_assert_false( util_sscanf_isodate( "2017/10/07" , NULL ));
-  test_assert_false( util_sscanf_isodate( "2017/-10/07" , &parsed ));
-  test_assert_time_t_equal( parsed , -1 );
+
+  /* Invalid numeric values */
+  test_assert_false( util_sscanf_isodate( "2017-15-07" , NULL ));
+  test_assert_false( util_sscanf_isodate( "2017-10-47" , NULL ));
 }
 
 
