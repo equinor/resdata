@@ -40,7 +40,7 @@ import types
 import datetime
 import ctypes
 import warnings
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.ecl import EclPrototype, EclKW, EclFileEnum
 from ert.util import CTime
 

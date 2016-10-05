@@ -27,7 +27,7 @@ queried for the corresponding list of indices.
 """
 import ctypes
 import warnings
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.ecl.faults import Layer
 from ert.ecl import EclKW, EclTypeEnum, EclPrototype
 from ert.geo import CPolyline

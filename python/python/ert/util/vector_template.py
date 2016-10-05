@@ -43,7 +43,7 @@ float and size_t not currently implemented in the Python version.
 import  sys
 from    types import IntType, SliceType
 
-from ert.cwrap import CFILE, BaseCClass
+from cwrap import CFILE, BaseCClass
 from ert.util import UtilPrototype
 
     

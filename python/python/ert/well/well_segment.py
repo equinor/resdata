@@ -1,4 +1,4 @@
-from ert.cwrap import BaseCClass, CWrapper
+from cwrap import BaseCClass, CWrapper
 from ert.well import ECL_WELL_LIB
 
 class WellSegment(BaseCClass):

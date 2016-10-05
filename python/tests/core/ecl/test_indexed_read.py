@@ -1,6 +1,6 @@
 import ctypes
 import ert
-from ert.cwrap import CWrapper
+from cwrap import CWrapper
 from ert.ecl import EclKW, EclFile, EclTypeEnum, FortIO
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.util import IntVector

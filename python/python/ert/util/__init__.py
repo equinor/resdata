@@ -37,7 +37,7 @@ The modules included in the util package are:
 """
 
 import ert
-from ert.cwrap.metacwrap import Prototype
+from cwrap import Prototype
 
 
 class UtilPrototype(Prototype):

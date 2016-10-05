@@ -15,7 +15,7 @@
 #  for more details. 
 
 import ctypes
-from ert.cwrap import BaseCClass, CWrapper
+from cwrap import BaseCClass, CWrapper
 from ert.geo import Polyline, GeometryTools , CPolylineCollection
 from ert.util import DoubleVector , IntVector
 from ert.ecl import ECL_LIB

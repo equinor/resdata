@@ -19,13 +19,13 @@ Constants from the header ecl_util.h - some stateless functions.
 This module does not contain any class definitions; it mostly consists
 of enum definitions/values from ecl_util.h; the enum values are
 extracted from the shared library using the
-ert.cwrap.cenum.create_enum() function in a semi-automagic manner.
+cwrap.cenum.create_enum() function in a semi-automagic manner.
 
 In addition to the enum definitions there are a few stateless
 functions from ecl_util.c which are not bound to any class type.
 """
 import ctypes
-from ert.cwrap import BaseCEnum
+from cwrap import BaseCEnum
 from ert.ecl import EclPrototype, ECL_LIB
 
 class EclFileEnum(BaseCEnum):

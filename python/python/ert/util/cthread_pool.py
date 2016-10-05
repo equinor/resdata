@@ -16,7 +16,7 @@
 
 import ctypes
 
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.util import UtilPrototype
 
 

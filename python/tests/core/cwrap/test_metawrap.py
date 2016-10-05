@@ -2,9 +2,9 @@ import ctypes
 from types import StringType, IntType
 
 import ert
-from ert.cwrap import BaseCClass, Prototype, PrototypeError
+from cwrap import BaseCClass, Prototype, PrototypeError
 from ert.test import ExtendedTestCase
-import ert.cwrap.clib as clib
+import cwrap.clib as clib
 
 
 # Local copies so that the real ones don't get changed

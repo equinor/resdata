@@ -29,7 +29,7 @@ import datetime
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
-from ert.cwrap import BaseCClass, CFILE
+from cwrap import BaseCClass, CFILE
 from ert.ecl import EclSumTStep
 from ert.ecl import EclSumVarType
 from ert.ecl.ecl_sum_vector import EclSumVector

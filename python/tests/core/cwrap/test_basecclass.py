@@ -1,4 +1,4 @@
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.test  import ExtendedTestCase
 
 

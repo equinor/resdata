@@ -19,7 +19,7 @@ Module for loading ECLIPSE RFT files.
 
 import types
 import warnings
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.ecl import EclRFTCell, EclPLTCell, EclPrototype
 from ert.util import CTime
 

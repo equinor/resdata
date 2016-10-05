@@ -1,4 +1,4 @@
-from ert.cwrap import BaseCEnum
+from cwrap import BaseCEnum
 from ert.well import ECL_WELL_LIB
 
 class WellConnectionDirectionEnum(BaseCEnum):

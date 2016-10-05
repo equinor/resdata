@@ -1,4 +1,4 @@
-from ert.cwrap import BaseCEnum
+from cwrap import BaseCEnum
 
 class RngInitModeEnum(BaseCEnum):
     TYPE_NAME = "rng_init_mode_enum"

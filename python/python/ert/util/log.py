@@ -15,7 +15,7 @@
 #  for more details. 
 
 from __future__ import print_function
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.util import UtilPrototype
 
 

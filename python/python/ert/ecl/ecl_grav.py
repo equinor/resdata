@@ -21,7 +21,7 @@ results and calculate the change in gravitational strength between the
 different surveys. The implementation is a thin wrapper around the
 ecl_grav.c implementation in the libecl library.
 """
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from ert.ecl import EclPhaseEnum, EclPrototype
 
 

@@ -15,7 +15,7 @@
 #  for more details. 
 
 from __future__ import print_function
-from ert.cwrap import BaseCClass, CWrapper
+from cwrap import BaseCClass, CWrapper
 from ert.ecl import ECL_LIB
 from ert.ecl import EclTypeEnum
 from ert.ecl.faults import Fault
