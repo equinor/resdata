@@ -3133,26 +3133,17 @@ bool util_is_first_day_in_month_utc( time_t t) {
     return false;
 }
 
+static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, time_t * t);
 
 /*
   Expects date in the order YYYY-MM-DD.
 */
 
 bool util_sscanf_isodate(const char * date_token , time_t * t) {
-  int day   , month , year;
+  int day, month, year;
 
-  if (t)
-    *t = -1;
-
-  if (sscanf(date_token , "%d-%d-%d" , &year , &month , &day) == 3) {
-    if (t) {
-      *t = util_make_date_utc(day , month , year );
-      if (*t == -1)
-        return false;
-    }
-
-    return true;
-  }
+  if (sscanf(date_token , "%d-%d-%d" , &year , &month , &day) == 3)
+    return util_make_datetime_utc__(0,0,0,day , month , year , t);
 
   return false;
 }
@@ -3316,7 +3307,19 @@ char * util_get_timezone() {
 }
 
 
-time_t util_make_datetime_utc(int sec, int min, int hour , int mday , int month , int year) {
+/*
+  The underlying timegm() function will happily accept dates like
+  December 33.th 2012 - which is wrapped around to 2.nd of January
+  2013. Such wrap-araounds are not accepted by this function, which
+  will return false in that case.
+
+  The time_t output is by reference, and will be set to the return
+  value of timegm() irrespective of the true/false return value.
+*/
+
+
+static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, time_t * t) {
+  bool valid = false;
   struct tm ts;
   ts.tm_sec    = sec;
   ts.tm_min    = min;
@@ -3326,16 +3329,33 @@ time_t util_make_datetime_utc(int sec, int min, int hour , int mday , int month 
   ts.tm_year   = year - 1900;
   ts.tm_isdst  = -1;    /* Negative value means mktime tries to determine automagically whether Daylight Saving Time is in effect. */
   {
-#ifdef HAVE_TIMEGM
-    time_t t = timegm( &ts );
-#else
-    time_t t = _mkgmtime( &ts );
-#endif
-    if (t == -1)
-      util_abort("%s: failed to make a time_t instance of %02d/%02d/%4d  %02d:%02d:%02d - aborting \n",__func__ , mday,month,year,hour,min,sec);
 
-    return t;
+#ifdef HAVE_TIMEGM
+    time_t work_t = timegm( &ts );
+#else
+    time_t work_t = _mkgmtime( &ts );
+#endif
+
+    if ((ts.tm_sec  == sec) &&
+        (ts.tm_sec  == min) &&
+        (ts.tm_hour == hour) &&
+        (ts.tm_mday == mday) &&
+        (ts.tm_mon == (month - 1)) &&
+        (ts.tm_year == (year - 1900)))
+      valid = true;
+
+    if (t)
+      *t = work_t;
   }
+  return valid;
+}
+
+
+
+time_t util_make_datetime_utc(int sec, int min, int hour , int mday , int month , int year) {
+  time_t t;
+  util_make_datetime_utc__( sec,min,hour,mday,month,year,&t);
+  return t;
 }
 
 
