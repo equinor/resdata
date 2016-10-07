@@ -32,7 +32,7 @@
 
 
 struct well_rseg_loader_struct {
-  ecl_file_type       * rst_file;
+  ecl_file_view_type  * rst_view;
   int_vector_type     * relative_index_map;
   int_vector_type     * absolute_index_map;
   char                * buffer;
@@ -40,12 +40,12 @@ struct well_rseg_loader_struct {
 };
 
 
-well_rseg_loader_type * well_rseg_loader_alloc(ecl_file_type * rst_file) {
+well_rseg_loader_type * well_rseg_loader_alloc(ecl_file_view_type * rst_view) {
     well_rseg_loader_type * loader = util_malloc(sizeof * loader);
 
     int element_count = 4;
 
-    loader->rst_file = rst_file;
+    loader->rst_view = rst_view;
     loader->relative_index_map = int_vector_alloc(0, 0);
     loader->absolute_index_map = int_vector_alloc(0, 0);
     loader->buffer = util_malloc(element_count * sizeof(double));
@@ -65,14 +65,14 @@ int well_rseg_loader_element_count(const well_rseg_loader_type * well_rseg_loade
 
 
 void well_rseg_loader_free(well_rseg_loader_type * loader) {
-    if(ecl_file_flags_set(loader->rst_file, ECL_FILE_CLOSE_STREAM)) {
-        ecl_file_close_fortio_stream(loader->rst_file);
-    }
 
-    int_vector_free(loader->relative_index_map);
-    int_vector_free(loader->absolute_index_map);
-    free(loader->buffer);
-    free(loader);
+  if(ecl_file_view_flags_set(loader->rst_view, ECL_FILE_CLOSE_STREAM))
+    ecl_file_view_fclose_stream(loader->rst_view);
+
+  int_vector_free(loader->relative_index_map);
+  int_vector_free(loader->absolute_index_map);
+  free(loader->buffer);
+  free(loader);
 }
 
 double * well_rseg_loader_load_values(const well_rseg_loader_type * loader, int rseg_offset) {
@@ -84,7 +84,7 @@ double * well_rseg_loader_load_values(const well_rseg_loader_type * loader, int 
         int_vector_iset(index_map, index, relative_index + rseg_offset);
     }
 
-    ecl_file_indexed_read(loader->rst_file, loader->kw, 0, index_map, loader->buffer);
+    ecl_file_view_index_fload_kw(loader->rst_view, loader->kw, 0, index_map, loader->buffer);
 
     return (double*) loader->buffer;
 }
