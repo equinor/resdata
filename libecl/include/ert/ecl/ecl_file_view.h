@@ -48,7 +48,8 @@ typedef enum {
 
 typedef struct ecl_file_view_struct ecl_file_view_type;
 
-  bool ecl_file_view_flags_set( int state_flags , int query_flags);
+  bool ecl_file_view_flags_set( const ecl_file_view_type * file_view, int query_flags);
+  bool ecl_file_view_check_flags( int state_flags , int query_flags);
 
   ecl_file_view_type * ecl_file_view_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map , bool owner );
   int ecl_file_view_get_global_index( const ecl_file_view_type * ecl_file_view , const char * kw , int ith);
@@ -77,8 +78,13 @@ typedef struct ecl_file_view_struct ecl_file_view_type;
   void ecl_file_view_fwrite( const ecl_file_view_type * ecl_file_view , fortio_type * target , int offset);
   int ecl_file_view_iget_occurence( const ecl_file_view_type * ecl_file_view , int global_index);
   void ecl_file_view_fprintf_kw_list(const ecl_file_view_type * ecl_file_view , FILE * stream);
-  ecl_file_view_type * ecl_file_view_alloc_blockmap(const ecl_file_view_type * ecl_file_view , const char * header, int occurence);
+  ecl_file_view_type * ecl_file_view_add_blockview(const ecl_file_view_type * ecl_file_view , const char * header, int occurence);
+  ecl_file_view_type * ecl_file_view_add_restart_view(ecl_file_view_type * file_view , int seqnum_index, int report_step , time_t sim_time, double sim_days);
+  ecl_file_view_type * ecl_file_view_alloc_blockview(const ecl_file_view_type * ecl_file_view , const char * header, int occurence);
+
   void ecl_file_view_add_child( ecl_file_view_type * parent , ecl_file_view_type * child);
+  bool ecl_file_view_drop_flag( ecl_file_view_type * file_view , int flag);
+  void ecl_file_view_add_flag( ecl_file_view_type * file_view , int flag);
 
   int ecl_file_view_seqnum_index_from_sim_time( ecl_file_view_type * parent_map , time_t sim_time);
   bool ecl_file_view_has_sim_time( const ecl_file_view_type * ecl_file_view , time_t sim_time);
@@ -86,6 +92,11 @@ typedef struct ecl_file_view_struct ecl_file_view_type;
   double ecl_file_view_iget_restart_sim_days(const ecl_file_view_type * ecl_file_view , int seqnum_index);
   time_t ecl_file_view_iget_restart_sim_date(const ecl_file_view_type * ecl_file_view , int seqnum_index);
   bool ecl_file_view_has_report_step( const ecl_file_view_type * ecl_file_view , int report_step);
+
+  ecl_file_view_type * ecl_file_view_add_summary_view( ecl_file_view_type * file_view , int report_step );
+  const char * ecl_file_view_get_src_file( const ecl_file_view_type * file_view );
+  void         ecl_file_view_fclose_stream( ecl_file_view_type * file_view );
+
 
 #ifdef __cplusplus
 }

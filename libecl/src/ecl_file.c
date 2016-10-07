@@ -458,22 +458,35 @@ int ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int
 
 /*****************************************************************/
 
+ecl_file_view_type * ecl_file_get_global_view( ecl_file_type * ecl_file ) {
+  return ecl_file->global_view;
+}
 
-static ecl_file_view_type * ecl_file_get_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_view_type * view = ecl_file_view_alloc_blockmap( ecl_file->global_view , kw , occurence );
+// Very deprecated ...
+ecl_file_view_type * ecl_file_get_active_view( ecl_file_type * ecl_file ) {
+  return ecl_file->active_view;
+}
 
-  if (view)
-    ecl_file_view_add_child( ecl_file->global_view , view );
-
+ecl_file_view_type * ecl_file_get_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
+  ecl_file_view_type * view = ecl_file_view_add_blockview( ecl_file->global_view , kw , occurence );
   return view;
 }
 
-static ecl_file_view_type * ecl_file_get_relative_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_view_type * view = ecl_file_view_alloc_blockmap( ecl_file->active_view , kw , occurence );
+ecl_file_view_type * ecl_file_alloc_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
+  ecl_file_view_type * view = ecl_file_view_alloc_blockview( ecl_file->global_view , kw , occurence );
+  return view;
+}
 
-  if (view)
-    ecl_file_view_add_child( ecl_file->active_view , view );
 
+
+ecl_file_view_type * ecl_file_get_restart_view( ecl_file_type * ecl_file , int input_index, int report_step , time_t sim_time, double sim_days) {
+  ecl_file_view_type * view = ecl_file_view_add_restart_view( ecl_file->global_view , input_index , report_step , sim_time , sim_days);
+  return view;
+}
+
+
+ecl_file_view_type * ecl_file_get_summary_view( ecl_file_type * ecl_file , int report_step ) {
+  ecl_file_view_type * view = ecl_file_view_add_summary_view( ecl_file->global_view , report_step );
   return view;
 }
 
@@ -532,6 +545,7 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
 }
 
 
+
 /**
    The fundamental open file function; all alternative open()
    functions start by calling this one. This function will read
@@ -550,7 +564,7 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
 
   ecl_util_fmt_file( filename , &fmt_file);
 
-  if (ecl_file_view_flags_set(flags , ECL_FILE_WRITABLE))
+  if (ecl_file_view_check_flags(flags , ECL_FILE_WRITABLE))
     fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
   else
     fortio = fortio_open_reader( filename , fmt_file , ECL_ENDIAN_FLIP);
@@ -563,7 +577,7 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
     if (ecl_file_scan( ecl_file )) {
       ecl_file_select_global( ecl_file );
 
-      if (ecl_file_view_flags_set( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
+      if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
         fortio_fclose_stream( ecl_file->fortio );
 
       return ecl_file;
@@ -588,41 +602,17 @@ void ecl_file_set_flags( ecl_file_type * ecl_file, int flags ) {
 }
 
 bool ecl_file_flags_set( const ecl_file_type * ecl_file , int flags) {
-  return ecl_file_view_flags_set( ecl_file->flags , flags );
+  return ecl_file_view_check_flags( ecl_file->flags , flags );
 }
 
 bool ecl_file_writable( const ecl_file_type * ecl_file ) {
-  return ecl_file_view_flags_set( ecl_file->flags , ECL_FILE_WRITABLE );
+  return ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_WRITABLE );
 }
 
 
-void ecl_file_push_block( ecl_file_type * ecl_file ) {
-  vector_append_ref( ecl_file->map_stack , ecl_file->active_view );
-}
-
-void ecl_file_pop_block( ecl_file_type * ecl_file ) {
-  ecl_file->active_view = vector_pop_back( ecl_file->map_stack );
-}
 
 
-bool ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_view_type * blockmap = ecl_file_get_relative_blockview( ecl_file , kw , occurence);
-  if (blockmap != NULL) {
-    ecl_file->active_view = blockmap;
-    return true;
-  } else
-    return false;
-}
 
-
-bool ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence ) {
-  ecl_file_view_type * blockmap = ecl_file_get_global_blockview( ecl_file , kw , occurence);
-  if (blockmap != NULL) {
-    ecl_file->active_view = blockmap;
-    return true;
-  } else
-    return false;
-}
 
 
 /**
@@ -676,14 +666,12 @@ void ecl_file_free__(void * arg) {
 
 
 /****************************************************************************/
-/* Here we include two files with functions specialized to work with
-   restart and summary files. Observe that the files ecl_rstfile.c and
-   ecl_smryfile are compiled as part of the same compilation unit as
-   ecl_file.c
+/* Here we include a file with functions specialized to work with
+   restart files. Observe that the files ecl_rstfile.c is compiled as
+   part of the same compilation unit as ecl_file.c
 */
 
 #include "ecl_rstfile.c"
-#include "ecl_smryfile.c"
 
 /*****************************************************************/
 /* Two small lookup functions which consider the INTEHEAD keyword,
@@ -778,7 +766,7 @@ bool ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_
 
       ecl_file_kw_inplace_fwrite( file_kw , ecl_file->fortio );
 
-      if (ecl_file_view_flags_set( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
+      if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
         fortio_fclose_stream( ecl_file->fortio );
 
       return true;
@@ -791,3 +779,4 @@ bool ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_
 }
 
 
+#include "ecl_file_deprecated.c"

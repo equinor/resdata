@@ -1,4 +1,3 @@
-
 /*
    Copyright (C) 2011  Statoil ASA, Norway.
 
@@ -30,6 +29,7 @@ extern "C" {
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_file_kw.h>
+#include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_util.h>
 
@@ -45,8 +45,6 @@ extern "C" {
 
   typedef struct ecl_file_struct ecl_file_type;
   bool             ecl_file_load_all( ecl_file_type * ecl_file );
-  void             ecl_file_push_block( ecl_file_type * ecl_file );
-  void             ecl_file_pop_block( ecl_file_type * ecl_file );
   ecl_file_type  * ecl_file_open( const char * filename , int flags);
   void             ecl_file_close( ecl_file_type * ecl_file );
   void             ecl_file_fortio_detach( ecl_file_type * ecl_file );
@@ -86,13 +84,12 @@ extern "C" {
   int                ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int ith);
   void               ecl_file_indexed_read(const ecl_file_type * file , const char * kw, int index, const int_vector_type * index_map, char* buffer);
 
-
-  bool               ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int occurence);
-  bool               ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence);
-  void               ecl_file_select_global( ecl_file_type * ecl_file );
+  ecl_file_view_type * ecl_file_alloc_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence);
+  ecl_file_view_type * ecl_file_get_global_view( ecl_file_type * ecl_file );
+  ecl_file_view_type * ecl_file_get_active_view( ecl_file_type * ecl_file );
   //bool               ecl_file_writable( const ecl_file_type * ecl_file );
-  bool               ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
-  bool               ecl_file_has_kw_ptr( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
+  bool                 ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
+  bool                 ecl_file_has_kw_ptr( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw);
 
 /*****************************************************************/
 /*               R E S T A R T  F I L E S                        */
@@ -104,25 +101,30 @@ extern "C" {
   bool             ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time);
 
 
-  bool             ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time);
-  bool             ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step);
-  bool             ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int seqnum_index );
-
   void             ecl_file_close_fortio_stream(ecl_file_type * ecl_file);
 
-  ecl_file_type  * ecl_file_open_rstblock_report_step( const char * filename , int report_step , int flags);
-  ecl_file_type  * ecl_file_open_rstblock_sim_time( const char * filename , time_t sim_time , int flags);
-  ecl_file_type  * ecl_file_iopen_rstblock( const char * filename , int seqnum_index , int flags);
-
+  ecl_file_view_type * ecl_file_get_restart_view( ecl_file_type * ecl_file , int input_index, int report_step , time_t sim_time, double sim_days);
+  ecl_file_view_type * ecl_file_get_summary_view( ecl_file_type * ecl_file , int report_step );
 
 /*****************************************************************/
 /* SUMMARY FILES */
 
-  bool             ecl_file_select_smryblock( ecl_file_type * ecl_file , int ministep_nr );
-  ecl_file_type  * ecl_file_open_smryblock( const char * filename , int ministep_nr , int flags);
-
-
   UTIL_IS_INSTANCE_HEADER( ecl_file );
+
+  //Deprecated:
+
+  void             ecl_file_push_block( ecl_file_type * ecl_file );
+  void             ecl_file_pop_block( ecl_file_type * ecl_file );
+  bool             ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int occurence);
+  bool             ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence);
+
+  bool             ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time);
+  bool             ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step);
+  bool             ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int seqnum_index );
+  ecl_file_type      * ecl_file_open_rstblock_report_step( const char * filename , int report_step , int flags);
+  ecl_file_type      * ecl_file_open_rstblock_sim_time( const char * filename , time_t sim_time , int flags);
+  ecl_file_type      * ecl_file_iopen_rstblock( const char * filename , int seqnum_index , int flags);
+
 
 #ifdef __cplusplus
 }
