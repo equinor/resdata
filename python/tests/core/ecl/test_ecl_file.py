@@ -99,3 +99,36 @@ class EclFileTest(ExtendedTestCase):
 
             for kw1,kw2 in zip(kw_list,kw_list2):
                 self.assertEqual( kw1, kw2 )
+
+
+                
+    def test_block_view(self):
+        with TestAreaContext("python/ecl_file/view"):
+            with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
+                for i in range(5):
+                    header = EclKW("HEADER" , 1 , EclTypeEnum.ECL_INT_TYPE )
+                    header[0] = i
+                    
+                    data = EclKW("DATA" , 100 , EclTypeEnum.ECL_INT_TYPE )
+                    data.assign( i )
+
+                    header.fwrite( f )
+                    data.fwrite( f )
+
+                    
+            ecl_file = EclFile("TEST")
+            with self.assertRaises(KeyError):
+                ecl_file.blockView("NO" , 1)
+
+            with self.assertRaises(IndexError):
+                ecl_file.blockView("HEADER" , 100)
+
+            for i in range(5):
+                view = ecl_file.blockView("HEADER" , i)
+                self.assertEqual( len(view) , 2)
+                header = view["HEADER"][0]
+                data = view["DATA"][0]
+                
+                self.assertEqual( header[0] , i )
+                self.assertEqual( data[99] , i )
+            
