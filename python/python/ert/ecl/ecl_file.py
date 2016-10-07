@@ -255,6 +255,10 @@ class EclFile(BaseCClass):
         return self.global_view.blockView( kw , kw_index )
 
 
+    def blockView2(self, start_kw , stop_kw , start_index):
+        return self.global_view.blockView2( start_kw , stop_kw, start_index )
+
+
     def restartView( self, seqnum_index = None, report_step = None , sim_time = None , sim_days = None):
         return self.global_view.restartView( seqnum_index, report_step , sim_time, sim_days )
     

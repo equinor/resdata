@@ -109,11 +109,16 @@ class EclFileTest(ExtendedTestCase):
                     header = EclKW("HEADER" , 1 , EclTypeEnum.ECL_INT_TYPE )
                     header[0] = i
                     
-                    data = EclKW("DATA" , 100 , EclTypeEnum.ECL_INT_TYPE )
-                    data.assign( i )
+                    data1 = EclKW("DATA1" , 100 , EclTypeEnum.ECL_INT_TYPE )
+                    data1.assign( i )
+
+
+                    data2 = EclKW("DATA2" , 100 , EclTypeEnum.ECL_INT_TYPE )
+                    data2.assign( i*10 )
 
                     header.fwrite( f )
-                    data.fwrite( f )
+                    data1.fwrite( f )
+                    data2.fwrite( f )
 
                     
             ecl_file = EclFile("TEST")
@@ -125,10 +130,33 @@ class EclFileTest(ExtendedTestCase):
 
             for i in range(5):
                 view = ecl_file.blockView("HEADER" , i)
-                self.assertEqual( len(view) , 2)
+                self.assertEqual( len(view) , 3)
                 header = view["HEADER"][0]
-                data = view["DATA"][0]
+                data1 = view["DATA1"][0]
+                data2 = view["DATA2"][0]
                 
                 self.assertEqual( header[0] , i )
-                self.assertEqual( data[99] , i )
-            
+                self.assertEqual( data1[99] , i )
+                self.assertEqual( data2[99] , i*10 )
+
+
+            for i in range(5):
+                view = ecl_file.blockView2("HEADER" , "DATA2", i )
+                self.assertEqual( len(view) , 2)
+                header = view["HEADER"][0]
+                data1 = view["DATA1"][0]
+                
+                self.assertEqual( header[0] , i )
+                self.assertEqual( data1[99] , i )
+
+                self.assertFalse( "DATA2" in view )
+
+            view = ecl_file.blockView2("HEADER" , None, 0 )
+            self.assertEqual( len(view) , len(ecl_file))
+
+            view = ecl_file.blockView2(None , "DATA2", 0 )
+            #self.assertEqual( len(view) , 2)
+            #self.assertTrue( "HEADER" in view )
+            #self.assertTrue( "DATA1" in view )
+            #self.assertFalse( "DATA2" in view )
+

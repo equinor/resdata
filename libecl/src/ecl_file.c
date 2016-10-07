@@ -472,11 +472,16 @@ ecl_file_view_type * ecl_file_get_global_blockview( ecl_file_type * ecl_file , c
   return view;
 }
 
-ecl_file_view_type * ecl_file_alloc_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_view_type * view = ecl_file_view_alloc_blockview( ecl_file->global_view , kw , occurence );
+
+ecl_file_view_type * ecl_file_alloc_global_blockview2( ecl_file_type * ecl_file , const char * start_kw , const char * end_kw, int occurence) {
+  ecl_file_view_type * view = ecl_file_view_alloc_blockview2( ecl_file->global_view , start_kw , end_kw, occurence );
   return view;
 }
 
+
+ecl_file_view_type * ecl_file_alloc_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
+  return ecl_file_alloc_global_blockview2( ecl_file , kw , kw , occurence );
+}
 
 
 ecl_file_view_type * ecl_file_get_restart_view( ecl_file_type * ecl_file , int input_index, int report_step , time_t sim_time, double sim_days) {

@@ -364,41 +364,61 @@ void ecl_file_view_fprintf_kw_list(const ecl_file_view_type * ecl_file_view , FI
   }
 }
 
-/**
-   Will return NULL if the block which is asked for is not present.
-*/
-ecl_file_view_type * ecl_file_view_alloc_blockview(const ecl_file_view_type * ecl_file_view , const char * header, int occurence) {
-  if (ecl_file_view_get_num_named_kw( ecl_file_view , header ) > occurence) {
-    ecl_file_view_type * block_map = ecl_file_view_alloc( ecl_file_view->fortio , ecl_file_view->flags , ecl_file_view->inv_map , false);
-    if (ecl_file_view_has_kw( ecl_file_view , header )) {
-      int kw_index = ecl_file_view_get_global_index( ecl_file_view , header , occurence );
-      ecl_file_kw_type * file_kw = vector_iget( ecl_file_view->kw_list , kw_index );
 
-      while (true) {
-        ecl_file_view_add_kw( block_map , file_kw );
+ecl_file_view_type * ecl_file_view_alloc_blockview2(const ecl_file_view_type * ecl_file_view , const char * start_kw, const char * end_kw, int occurence) {
+  if ((start_kw != NULL) && ecl_file_view_get_num_named_kw( ecl_file_view , start_kw ) <= occurence)
+    return NULL;
 
-        kw_index++;
-        if (kw_index == vector_get_size( ecl_file_view->kw_list ))
-          break;
-        else {
+
+  ecl_file_view_type * block_map = ecl_file_view_alloc( ecl_file_view->fortio , ecl_file_view->flags , ecl_file_view->inv_map , false);
+  int kw_index = 0;
+  if (start_kw)
+    kw_index = ecl_file_view_get_global_index( ecl_file_view , start_kw , occurence );
+
+  {
+    ecl_file_kw_type * file_kw = vector_iget( ecl_file_view->kw_list , kw_index );
+    while (true) {
+      ecl_file_view_add_kw( block_map , file_kw );
+
+      kw_index++;
+      if (kw_index == vector_get_size( ecl_file_view->kw_list ))
+        break;
+      else {
+        if (end_kw) {
           file_kw = vector_iget(ecl_file_view->kw_list , kw_index);
-          if (strcmp( header , ecl_file_kw_get_header( file_kw )) == 0)
+          if (strcmp( end_kw , ecl_file_kw_get_header( file_kw )) == 0)
             break;
         }
       }
     }
-    ecl_file_view_make_index( block_map );
-    return block_map;
-  } else
-    return NULL;
+  }
+  ecl_file_view_make_index( block_map );
+  return block_map;
+}
+
+/**
+   Will return NULL if the block which is asked for is not present.
+*/
+ecl_file_view_type * ecl_file_view_alloc_blockview(const ecl_file_view_type * ecl_file_view , const char * header, int occurence) {
+  return ecl_file_view_alloc_blockview2( ecl_file_view , header , header , occurence );
 }
 
 
 ecl_file_view_type * ecl_file_view_add_blockview(const ecl_file_view_type * file_view , const char * header, int occurence) {
-  ecl_file_view_type * child  = ecl_file_view_alloc_blockview(file_view, header, occurence);
+  ecl_file_view_type * child  = ecl_file_view_alloc_blockview2(file_view, header, header, occurence);
 
   if (child)
     vector_append_owned_ref( file_view->child_list , child , ecl_file_view_free__ );
+
+  return child;
+}
+
+
+ecl_file_view_type * ecl_file_view_add_blockview2(const ecl_file_view_type * ecl_file_view , const char * start_kw, const char * end_kw, int occurence) {
+  ecl_file_view_type * child  = ecl_file_view_alloc_blockview2(ecl_file_view, start_kw , end_kw , occurence);
+
+  if (child)
+    vector_append_owned_ref( ecl_file_view->child_list , child , ecl_file_view_free__ );
 
   return child;
 }

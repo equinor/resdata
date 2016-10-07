@@ -11,6 +11,7 @@ class EclFileView(BaseCClass):
     _get_num_named_kw     = EclPrototype("int           ecl_file_view_get_num_named_kw( ecl_file_view , char* )")
     _get_unique_size      = EclPrototype("int           ecl_file_view_get_num_distinct_kw( ecl_file_view )")
     _create_block_view    = EclPrototype("ecl_file_view_ref ecl_file_view_add_blockview( ecl_file_view , char*, int )")
+    _create_block_view2   = EclPrototype("ecl_file_view_ref ecl_file_view_add_blockview2( ecl_file_view , char*, char*, int )")
     _restart_view         = EclPrototype("ecl_file_view_ref ecl_file_view_add_restart_view( ecl_file_view , int, int, time_t, double )")
     
 
@@ -99,8 +100,25 @@ class EclFileView(BaseCClass):
     
     def uniqueSize(self):
         return self._get_unique_size( )
-    
+
+    def blockView2(self , start_kw , stop_kw, start_index):
+        if start_kw:
+            if not start_kw in self:
+                raise KeyError("The keyword:%s is not in file" % start_kw)
+
+            if start_index >= self.numKeywords( start_kw ):
+                raise IndexError("Index too high")
             
+        if stop_kw:
+            if not stop_kw in self:
+                raise KeyError("The keyword:%s is not in file" % stop_kw)
+
+        view = self._create_block_view2( start_kw , stop_kw , start_index )
+        view.setParent( parent = self )
+        return view
+
+    
+        
     def blockView(self , kw , kw_index):
         num = self.numKeywords( kw )
 
