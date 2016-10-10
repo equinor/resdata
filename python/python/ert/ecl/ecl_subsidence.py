@@ -111,8 +111,8 @@ class EclSubsidence(BaseCClass):
 
         The argument @compressibility is the total reservoir compressibility.
         """
-        return self._eval(self, base_survey, monitor_survey, region, pos[0], pos[1], pos[2], compressibility,
-                          poisson_ratio)
+
+        return self._eval(base_survey, monitor_survey, region, pos[0], pos[1], pos[2], compressibility,poisson_ratio)
 
 
     
