@@ -114,3 +114,7 @@ class EclSubsidence(BaseCClass):
         return self._eval(self, base_survey, monitor_survey, region, pos[0], pos[1], pos[2], compressibility,
                           poisson_ratio)
 
+
+    
+    def free(self):
+        self._free( )
