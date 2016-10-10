@@ -192,24 +192,16 @@ ecl_subsidence_survey_type * ecl_subsidence_add_survey_PRESSURE( ecl_subsidence_
   return survey;
 }
 
+
+bool ecl_subsidence_has_survey( const ecl_subsidence_type * subsidence , const char * name) {
+  return hash_has_key( subsidence->surveys , name );
+}
+
 static ecl_subsidence_survey_type * ecl_subsidence_get_survey( const ecl_subsidence_type * subsidence , const char * name) {
   if (name == NULL)
     return NULL;  // Calling scope must determine if this is OK?
-  else {
-    if (hash_has_key( subsidence->surveys , name))
-      return hash_get( subsidence->surveys , name );
-    else {
-      hash_iter_type * survey_iter = hash_iter_alloc( subsidence->surveys );
-      fprintf(stderr,"Survey name:%s not registered. Available surveys are: \n\n     " , name);
-      while (!hash_iter_is_complete( survey_iter )) {
-        const char * survey = hash_iter_get_next_key( survey_iter );
-        fprintf(stderr,"%s ",survey);
-      }
-      fprintf(stderr,"\n\n");
-      hash_iter_free( survey_iter );
-      exit(1);
-    }
-  }
+  else
+    return hash_get( subsidence->surveys , name );
 }
 
 

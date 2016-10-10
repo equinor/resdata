@@ -36,6 +36,8 @@ extern "C" {
   ecl_subsidence_type        * ecl_subsidence_alloc( const ecl_grid_type * ecl_grid, const ecl_file_type * init_file );
   ecl_subsidence_survey_type * ecl_subsidence_add_survey_PRESSURE( ecl_subsidence_type * subsidence , 
                                                                    const char * name , const ecl_file_view_type * restart_view );
+
+  bool                         ecl_subsidence_has_survey( const ecl_subsidence_type * subsidence , const char * name);
   double                       ecl_subsidence_eval( const ecl_subsidence_type * subsidence , 
                                                     const char * base, const char * monitor , 
                                                     ecl_region_type * region , 
