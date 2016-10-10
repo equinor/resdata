@@ -45,7 +45,7 @@ class EclSubsidence(BaseCClass):
     TYPE_NAME = "ecl_subsidence"
     _alloc               = EclPrototype("void* ecl_subsidence_alloc( ecl_grid , ecl_file )" , bind = False)
     _free                = EclPrototype("void ecl_subsidence_free( ecl_subsidence )")
-    _add_survey_PRESSURE = EclPrototype("void*  ecl_subsidence_add_survey_PRESSURE( ecl_subsidence , char* , ecl_file )")
+    _add_survey_PRESSURE = EclPrototype("void*  ecl_subsidence_add_survey_PRESSURE( ecl_subsidence , char* , ecl_file_view )")
     _eval                = EclPrototype("double ecl_subsidence_eval( ecl_subsidence , char* , char* , ecl_region , double , double , double, double, double)")
 
 
