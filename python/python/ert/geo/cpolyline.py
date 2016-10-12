@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'ecl_kw.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011 Statoil ASA, Norway.
+#
+#  This file is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify it under the
+#  terms of the GNU General Public License as published by the Free Software
+#  Foundation, either version 3 of the License, or (at your option) any later
+#  version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+#  A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Create a polygon
 """
@@ -26,7 +26,7 @@ from .geometry_tools import GeometryTools
 
 class CPolyline(BaseCClass):
     TYPE_NAME = "geo_polygon"
-    
+
     _alloc_new          = GeoPrototype("void*           geo_polygon_alloc( char* )" , bind = False)
     _fread_alloc_irap   = GeoPrototype("geo_polygon_obj geo_polygon_fload_alloc_irap( char* )" , bind = False)
     _add_point          = GeoPrototype("void     geo_polygon_add_point( geo_polygon , double , double )")
@@ -52,7 +52,7 @@ class CPolyline(BaseCClass):
     def createFromXYZFile(cls , filename , name = None):
         if not os.path.isfile(filename):
             raise IOError("No such file:%s" % filename)
-            
+
         polyline = cls._fread_alloc_irap( filename )
         if not name is None:
             polyline._set_name( name )
@@ -91,7 +91,7 @@ class CPolyline(BaseCClass):
             x = ctypes.c_double()
             y = ctypes.c_double()
             self._iget_xy( index , ctypes.byref(x) , ctypes.byref(y) )
-            
+
             return (x.value , y.value)
         else:
             raise IndexError("Invalid index:%d valid range: [0,%d)" % (index , len(self)))
@@ -99,21 +99,19 @@ class CPolyline(BaseCClass):
 
     def segmentIntersects(self, p1 , p2):
         return self._segment_intersects(p1[0] , p1[1] , p2[0] , p2[1])
-            
-        
+
+
     def intersects(self , polyline):
         if len(self) > 1:
             for index,p2 in enumerate(polyline):
                 if index == 0:
                     continue
-                    
+
                 p1 = polyline[index - 1]
                 if self.segmentIntersects(p1 , p2):
                     return True
-        
         return False
 
-        
 
     def __iadd__(self , other ):
         for p in other:
@@ -152,7 +150,7 @@ class CPolyline(BaseCClass):
         else:
             p0 = self[-2]
             p1 = self[-1]
-            
+
         ray_dir = GeometryTools.lineToRay(p0,p1)
         intersections = GeometryTools.rayPolygonIntersections( p1 , ray_dir , bbox)
         if intersections:
@@ -165,10 +163,8 @@ class CPolyline(BaseCClass):
             return CPolyline( name = name , init_points = [(p1[0] , p1[1]) , p2])
         else:
             raise ValueError("Logical error - must intersect with bounding box")
-        
 
 
-            
     def addPoint( self, xc, yc , front = False):
         if front:
             self._add_point_front(xc, yc)
@@ -192,7 +188,7 @@ class CPolyline(BaseCClass):
             y_list.append(y)
 
         return (x_list , y_list)
-        
+
 
     def unzip2(self):
         return self.unzip()
@@ -204,7 +200,7 @@ class CPolyline(BaseCClass):
 
         p1 = GeometryTools.nearestPointOnPolyline( end1 , target )
         p2 = GeometryTools.nearestPointOnPolyline( end2 , target )
-            
+
         d1 = GeometryTools.distance( p1 , end1 )
         d2 = GeometryTools.distance( p2 , end2 )
 
@@ -212,8 +208,3 @@ class CPolyline(BaseCClass):
             return [end1 , p1]
         else:
             return [end2 , p2]
-
-
-
-
-
