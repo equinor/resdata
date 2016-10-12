@@ -72,6 +72,8 @@ class CPolyline(BaseCClass):
         str += "]"
         return str
 
+    def __repr__(self):
+        return str(self)
 
 
     def __len__(self):
