@@ -125,9 +125,9 @@ class EclFile(BaseCClass):
 
         if not OK:
             if dtime:
-                raise ValueError("Could not locate date:%02d/%02d/%4d in restart file: %s." % (dtime.day , dtime.month , dtime.year , filename))
+                raise ValueError('Could not locate date:%02d/%02d/%4d in restart file "%s".' % (dtime.day , dtime.month , dtime.year , filename))
             else:
-                raise ValueError("Could not locate report step:%d in restart file: %s." % (report_step , filename))
+                raise ValueError('Could not locate report step:%d in restart file: "%s".' % (report_step , filename))
 
 
         return obj
@@ -196,7 +196,7 @@ class EclFile(BaseCClass):
             if matchObj:
                 report_steps.append( int(matchObj.group(1)) )
             else:
-                raise TypeError("Tried get list of report steps from file:%s - which is not a restart file" % fname)
+                raise TypeError('Tried get list of report steps from file "%s" - which is not a restart file' % fname)
 
 
         return report_steps
@@ -244,7 +244,7 @@ class EclFile(BaseCClass):
         """
         c_ptr = self._open( filename , flags )
         if c_ptr is None:
-            raise IOError("Failed to open file file:%s" % filename)
+            raise IOError('Failed to open file "%s"' % filename)
         else:
             super(EclFile , self).__init__(c_ptr)
 
@@ -276,7 +276,7 @@ class EclFile(BaseCClass):
         if self._writable( ):
             self._save_kw(  kw )
         else:
-            raise IOError("save_kw: the file:%s has been opened read only." % self.getFilename( ))
+            raise IOError('save_kw: the file "%s" has been opened read only.' % self.getFilename( ))
 
 
     def __len__(self):
@@ -296,7 +296,7 @@ class EclFile(BaseCClass):
     def select_block( self, kw , kw_index):
         OK = self._select_block( kw , kw_index )
         if not OK:
-            raise ValueError("Could not find block %s:%d" % (kw , kw_index))
+            raise ValueError('Could not find block "%s" (%d)' % (kw , kw_index))
 
 
     def select_global( self ):
@@ -417,7 +417,7 @@ class EclFile(BaseCClass):
                         kw_list.append(  self.iget_named_kw( kw_index , index))
                     return kw_list
                 else:
-                    raise KeyError("Unrecognized keyword:\'%s\'" % index)
+                    raise KeyError('Unrecognized keyword "%s".' % index)
             else:
                 raise TypeError("Index must be integer or string (keyword)")
 
@@ -513,7 +513,8 @@ class EclFile(BaseCClass):
             else:
                 return kw
         else:
-            raise KeyError("Asked for occurence:%d of keyword:%s - max:%d" % (index  , kw_name , self.num_named_kw( kw_name )))
+            raise KeyError('Asked for occurence:%d of %d of keyword "%s".'
+                           % (index  , self.num_named_kw( kw_name ), kw_name))
 
 
     def restart_get_kw( self , kw_name , dtime , copy = False):
@@ -547,11 +548,11 @@ class EclFile(BaseCClass):
                     return kw
             else:
                 if self.has_kw(kw_name):
-                    raise IndexError("Does not have keyword:%s at time:%s" % (kw_name , dtime))
+                    raise IndexError('Does not have keyword "%s" at time:%s.' % (kw_name , dtime))
                 else:
-                    raise KeyError("Key:%s not recognized" % kw_name)
+                    raise KeyError('Keyword "%s" not recognized.' % kw_name)
         else:
-            raise IndexError("Does not have keyword:%s at time:%s" % (kw_name , dtime))
+            raise IndexError('Does not have keyword "%s" at time:%s.' % (kw_name , dtime))
 
 
     def replace_kw( self , old_kw , new_kw):
@@ -805,6 +806,3 @@ class EclFileContextManager(object):
 
 def openEclFile( file_name , flags = 0):
     return EclFileContextManager( EclFile( file_name , flags ))
-
-
-
