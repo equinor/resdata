@@ -278,7 +278,7 @@ double geo_polygon_get_length( geo_polygon_type * polygon ) {
 /*
   Name is ignored in the comparison.
 */
-double geo_polygon_equal( const geo_polygon_type * polygon1 , const geo_polygon_type * polygon2 ) {
+bool geo_polygon_equal( const geo_polygon_type * polygon1 , const geo_polygon_type * polygon2 ) {
   bool equal =
     double_vector_equal( polygon1->xcoord , polygon2->xcoord) &&
     double_vector_equal( polygon1->ycoord , polygon2->ycoord);
