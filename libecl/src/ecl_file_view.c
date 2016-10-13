@@ -696,25 +696,19 @@ bool ecl_file_view_has_sim_days( const ecl_file_view_type * ecl_file_view , doub
 
 int ecl_file_view_seqnum_index_from_sim_time( ecl_file_view_type * parent_map , time_t sim_time) {
   int num_seqnum = ecl_file_view_get_num_named_kw( parent_map , SEQNUM_KW );
-  int seqnum_index = 0;
   ecl_file_view_type * seqnum_map;
 
-  while (true) {
-    seqnum_map = ecl_file_view_alloc_blockview( parent_map , SEQNUM_KW , seqnum_index);
+  for (int s_idx = 0; s_idx < num_seqnum; s_idx++) {
+    seqnum_map = ecl_file_view_alloc_blockview( parent_map , SEQNUM_KW , s_idx );
 
     if (seqnum_map != NULL) {
-      if (ecl_file_view_has_sim_time( seqnum_map , sim_time)) {
-        ecl_file_view_free( seqnum_map );
-        return seqnum_index;
-      } else {
-        ecl_file_view_free( seqnum_map );
-        seqnum_index++;
-      }
+      bool sim = ecl_file_view_has_sim_time( seqnum_map , sim_time);
+      ecl_file_view_free( seqnum_map );
+      if (sim)
+        return s_idx;
     }
-
-    if (num_seqnum == seqnum_index)
-      return -1;
   }
+  return -1;
 }
 
 
