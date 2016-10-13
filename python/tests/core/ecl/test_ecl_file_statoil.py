@@ -56,7 +56,7 @@ class EclFileStatoilTest(ExtendedTestCase):
     def test_iget_named(self):
         f = EclFile(self.test_file)
         N = f.num_named_kw( "SWAT" )
-        with self.assertRaises(IndexError):
+        with self.assertRaises(KeyError):
             s = f.iget_named_kw( "SWAT" , N + 1)
 
 
