@@ -26,6 +26,12 @@ class EclFileView(BaseCClass):
     
 
     def iget_named_kw(self, kw_name , index):
+        if not kw_name in self:
+            raise KeyError("No such keyword: %s" % kw_name)
+
+        if index >= self.numKeywords( kw_name ):
+            raise IndexError("Too large index: %d" % index)
+        
         return self._iget_named_kw( kw_name , index ).setParent( parent = self )
 
 
