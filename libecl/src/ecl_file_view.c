@@ -701,12 +701,13 @@ int ecl_file_view_seqnum_index_from_sim_time( ecl_file_view_type * parent_map , 
   for (int s_idx = 0; s_idx < num_seqnum; s_idx++) {
     seqnum_map = ecl_file_view_alloc_blockview( parent_map , SEQNUM_KW , s_idx );
 
-    if (seqnum_map != NULL) {
-      bool sim = ecl_file_view_has_sim_time( seqnum_map , sim_time);
-      ecl_file_view_free( seqnum_map );
-      if (sim)
-        return s_idx;
-    }
+    if (!seqnum_map)
+      continue;
+
+    bool sim = ecl_file_view_has_sim_time( seqnum_map , sim_time);
+    ecl_file_view_free( seqnum_map );
+    if (sim)
+      return s_idx;
   }
   return -1;
 }
