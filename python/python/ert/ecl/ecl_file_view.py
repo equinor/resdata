@@ -23,7 +23,9 @@ class EclFileView(BaseCClass):
         return self._iget_kw( index ).setParent( parent = self )
 
 
-    def __iget_named(self, kw_name , index):
+    
+
+    def iget_named_kw(self, kw_name , index):
         return self._iget_named_kw( kw_name , index ).setParent( parent = self )
 
 
@@ -75,7 +77,7 @@ class EclFileView(BaseCClass):
                     kw_index = index
                     kw_list = []
                     for index in range( self.numKeywords( kw_index )):
-                        kw_list.append(  self.__iget_named( kw_index , index))
+                        kw_list.append(  self.iget_named_kw( kw_index , index))
                     return kw_list
                 else:
                     raise KeyError("Unrecognized keyword:\'%s\'" % index)

@@ -389,8 +389,9 @@ class EclFile(BaseCClass):
 
 
     def iget_named_kw( self , kw_name , index , copy = False):
-        return self.global_view.iget_named_kw( kw_name , index , copy )
+        return self.global_view.iget_named_kw( kw_name , index )
 
+    
 
     def restart_get_kw( self , kw_name , dtime , copy = False):
         """Will return EclKW @kw_name from restart file at time @dtime.
