@@ -216,8 +216,10 @@ class EclGrid(BaseCClass):
         return ecl_grid
 
     
-    def __init__(self , filename):
-        apply_mapaxes = True
+    def __init__(self , filename , apply_mapaxes = True):
+        """
+        Will create a grid structure from an EGRID or GRID file.
+        """
         c_ptr = self._fread_alloc( filename , apply_mapaxes)
         if c_ptr:
             super(EclGrid, self).__init__(c_ptr)
