@@ -36,6 +36,7 @@ extern "C" {
   const double         * ecl_grid_cache_get_xpos( const ecl_grid_cache_type * grid_cache );
   const double         * ecl_grid_cache_get_ypos( const ecl_grid_cache_type * grid_cache );
   const double         * ecl_grid_cache_get_zpos( const ecl_grid_cache_type * grid_cache );
+  const double         * ecl_grid_cache_get_volume( const ecl_grid_cache_type * grid_cache );
   void                   ecl_grid_cache_free( ecl_grid_cache_type * grid_cache );
 
 

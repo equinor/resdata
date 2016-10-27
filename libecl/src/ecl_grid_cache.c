@@ -44,7 +44,9 @@ struct ecl_grid_cache_struct {
   double              * xpos;
   double              * ypos;
   double              * zpos;
+  double              * volume;       /* Will be initialized on demand. */
   int                 * global_index; /* Maps from active index (i.e. natural index in this context) - to the corresponding global index. */
+  const ecl_grid_type * grid;
 };
 
 
@@ -54,6 +56,8 @@ struct ecl_grid_cache_struct {
 ecl_grid_cache_type * ecl_grid_cache_alloc( const ecl_grid_type * grid ) {
   ecl_grid_cache_type * grid_cache = util_malloc( sizeof * grid_cache );
 
+  grid_cache->grid          = grid;
+  grid_cache->volume        = NULL;
   grid_cache->size          = ecl_grid_get_active_size( grid );
   grid_cache->xpos          = util_calloc( grid_cache->size , sizeof * grid_cache->xpos );
   grid_cache->ypos          = util_calloc( grid_cache->size , sizeof * grid_cache->ypos );
@@ -104,10 +108,25 @@ const double * ecl_grid_cache_get_zpos( const ecl_grid_cache_type * grid_cache )
   return grid_cache->zpos;
 }
 
+const double * ecl_grid_cache_get_volume( const ecl_grid_cache_type * grid_cache ) {
+
+  if (!grid_cache->volume) {
+    // C++ style const cast.
+    ecl_grid_cache_type * gc = (ecl_grid_cache_type *) grid_cache;
+    gc->volume = util_calloc( gc->size , sizeof * gc->volume );
+    for (int active_index = 0; active_index < grid_cache->size; active_index++)
+      gc->volume[active_index] = ecl_grid_get_cell_volume1A( gc->grid , active_index );
+  }
+
+  return grid_cache->volume;
+}
+
+
 void ecl_grid_cache_free( ecl_grid_cache_type * grid_cache ) {
   free( grid_cache->xpos );
   free( grid_cache->ypos );
   free( grid_cache->zpos );
   free( grid_cache->global_index );
+  free( grid_cache->volume );
   free( grid_cache );
 }
