@@ -63,7 +63,7 @@ double ecl_grav_common_eval_biot_savart( const ecl_grid_cache_type * grid_cache 
   double sum = 0;
   if (region == NULL) {
     const int      size   = ecl_grid_cache_get_size( grid_cache );
-        int index;
+    int index;
     for ( index = 0; index < size; index++) {
       if (!aquifer[index]) {
         double dist_x  = (xpos[index] - utm_x );
@@ -92,6 +92,65 @@ double ecl_grav_common_eval_biot_savart( const ecl_grid_cache_type * grid_cache 
         double dist    = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z*dist_z );
 
         sum += weight[index] * dist_z/(dist * dist * dist );
+      }
+    }
+  }
+  return sum;
+}
+
+
+static inline double ecl_grav_common_eval_geertsma_kernel(int index, const double * xpos, const double * ypos, const double * zpos , double utm_x , double utm_y , double depth, double poisson_ratio) {
+  double dist_x  = xpos[index] - utm_x;
+  double dist_y  = ypos[index] - utm_y;
+
+  double dist_z1 = zpos[index] - depth;
+  double dist_z2 = dist_z1 - 2*depth;
+
+  double dist1   = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z1*dist_z1 );
+  double dist2   = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z2*dist_z2 );
+
+  double cube_dist1 = dist1*dist1*dist1;
+  double cube_dist2 = dist2*dist2*dist2;
+
+  double displacement =
+    dist_z1 / cube_dist1 +
+    (3 - 4*poisson_ratio)*dist_z2 / cube_dist2 -
+    6*dist_z1 * (dist_z1 + depth) * dist_z2 +
+    2*dist_z1*((3 - 4*poisson_ratio)*(dist_z1 + depth) - dist_z1) / (dist2*dist2*cube_dist2);
+
+  return displacement;
+}
+
+
+double ecl_grav_common_eval_geertsma( const ecl_grid_cache_type * grid_cache , ecl_region_type * region , const bool * aquifer , const double * weight , double utm_x , double utm_y , double depth, double poisson_ratio) {
+  const double * xpos      = ecl_grid_cache_get_xpos( grid_cache );
+  const double * ypos      = ecl_grid_cache_get_ypos( grid_cache );
+  const double * zpos      = ecl_grid_cache_get_zpos( grid_cache );
+  double sum = 0;
+  if (region == NULL) {
+    const int      size = ecl_grid_cache_get_size( grid_cache );
+    int index;
+    for ( index = 0; index < size; index++) {
+      if (!aquifer[index]) {
+        double displacement = ecl_grav_common_eval_geertsma_kernel( index, xpos , ypos , zpos, utm_x, utm_y , depth, poisson_ratio);
+
+        /**
+            For numerical precision it might be benficial to use the
+            util_kahan_sum() function to do a Kahan summation.
+        */
+        sum += weight[index] * displacement;
+      }
+    }
+  } else {
+    const int_vector_type * index_vector = ecl_region_get_active_list( region );
+    const int size = int_vector_size( index_vector );
+    const int * index_list = int_vector_get_const_ptr( index_vector );
+    int i, index;
+    for (i = 0; i < size; i++) {
+      index = index_list[i];
+      if (!aquifer[index]) {
+        double displacement = ecl_grav_common_eval_geertsma_kernel( index, xpos , ypos , zpos, utm_x, utm_y , depth , poisson_ratio);
+        sum += weight[index] * displacement;
       }
     }
   }
