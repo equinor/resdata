@@ -308,6 +308,7 @@ static void smspec_node_set_flags( smspec_node_type * smspec_node) {
     if (smspec_node->var_type == ECL_SMSPEC_WELL_VAR ||
         smspec_node->var_type == ECL_SMSPEC_GROUP_VAR ||
         smspec_node->var_type == ECL_SMSPEC_FIELD_VAR ||
+        smspec_node->var_type == ECL_SMSPEC_REGION_VAR ||
         smspec_node->var_type == ECL_SMSPEC_COMPLETION_VAR ) {
       const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
                                   "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
