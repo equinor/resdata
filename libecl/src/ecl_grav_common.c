@@ -38,16 +38,16 @@
 bool * ecl_grav_common_alloc_aquifer_cell( const ecl_grid_cache_type * grid_cache , const ecl_file_type * init_file) {
   bool * aquifer_cell = util_calloc( ecl_grid_cache_get_size( grid_cache ) , sizeof * aquifer_cell  );
 
+  for (int active_index = 0; active_index < ecl_grid_cache_get_size( grid_cache ); active_index++)
+    aquifer_cell[ active_index ] = false;
+
   if (ecl_file_has_kw( init_file , AQUIFER_KW)) {
     ecl_kw_type * aquifer_kw = ecl_file_iget_named_kw( init_file , AQUIFER_KW , 0);
     const int * aquifer_data = ecl_kw_get_int_ptr( aquifer_kw );
-    int active_index;
 
-    for (active_index = 0; active_index < ecl_grid_cache_get_size( grid_cache ); active_index++) {
+    for (int active_index = 0; active_index < ecl_grid_cache_get_size( grid_cache ); active_index++) {
       if (aquifer_data[ active_index ] < 0)
         aquifer_cell[ active_index ] = true;
-      else
-        aquifer_cell[ active_index ] = false;
     }
   }
 
@@ -104,7 +104,7 @@ static inline double ecl_grav_common_eval_geertsma_kernel(int index, const doubl
   double dist_y  = ypos[index] - utm_y;
 
   double dist_z1 = zpos[index] - depth;
-  double dist_z2 = dist_z1 - 2*depth;
+  double dist_z2 = dist_z1 - 2*zpos[index];
 
   double dist1   = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z1*dist_z1 );
   double dist2   = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z2*dist_z2 );
@@ -115,8 +115,8 @@ static inline double ecl_grav_common_eval_geertsma_kernel(int index, const doubl
   double displacement =
     dist_z1 / cube_dist1 +
     (3 - 4*poisson_ratio)*dist_z2 / cube_dist2 -
-    6*dist_z1 * (dist_z1 + depth) * dist_z2 +
-    2*dist_z1*((3 - 4*poisson_ratio)*(dist_z1 + depth) - dist_z1) / (dist2*dist2*cube_dist2);
+    6*depth * (zpos[index] + depth) * dist_z2 / (dist2*dist2*cube_dist2) +
+    2*dist_z1*((3 - 4*poisson_ratio)*(zpos[index] + depth) - depth)/cube_dist2 ;
 
   return displacement;
 }

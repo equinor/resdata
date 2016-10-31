@@ -38,6 +38,7 @@ set(TEST_SOURCES
     test_ecl_cmp.py
     test_sum.py
     test_grav.py
+    test_geertsma.py
 )
 
 add_python_package("python.tests.ecl"  ${PYTHON_INSTALL_PREFIX}/tests/ecl "${TEST_SOURCES}" False)
@@ -61,6 +62,7 @@ addPythonTest(ecl.ecl_util ecl.test_ecl_util.EclUtilTest )
 addPythonTest(ecl.fortio ecl.test_fortio.FortIOTest)
 addPythonTest(ecl.ecl_file ecl.test_ecl_file.EclFileTest)
 addPythonTest(ecl.ecl_grav ecl.test_grav.EclGravTest)
+addPythonTest(ecl.ecl_geertsma ecl.test_geertsma.GeertsmaTest)
 
 
 if (STATOIL_TESTDATA_ROOT)

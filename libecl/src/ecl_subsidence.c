@@ -18,6 +18,7 @@
 */
 
 #include <stdlib.h>
+#define _USE_MATH_DEFINES // for C WINDOWS
 #include <math.h>
 #include <stdbool.h>
 
@@ -172,12 +173,17 @@ static double ecl_subsidence_survey_eval_geertsma( const ecl_subsidence_survey_t
   const ecl_grid_cache_type * grid_cache = base_survey->grid_cache;
   const double * cell_volume = ecl_grid_cache_get_volume( grid_cache );
   const int size  = ecl_grid_cache_get_size( grid_cache );
-  double scale_factor = (1 + poisson_ratio) * ( 1 - 2*poisson_ratio) / ( ( 1 - poisson_ratio) * 1e4 * youngs_modulus );
+  double scale_factor = 1e4 *(1 + poisson_ratio) * ( 1 - 2*poisson_ratio) / ( 4*M_PI*( 1 - poisson_ratio)  * youngs_modulus );
   double * weight = util_calloc( size , sizeof * weight );
   double deltaz;
 
-  for (int index = 0; index < size; index++)
-    weight[index] = scale_factor * cell_volume[index] * (base_survey->pressure[index] - monitor_survey->pressure[index]);
+  for (int index = 0; index < size; index++) {
+    if (monitor_survey) {
+        weight[index] = - scale_factor * cell_volume[index] * (base_survey->pressure[index] - monitor_survey->pressure[index]);
+    } else {
+        weight[index] = - scale_factor * cell_volume[index] * (base_survey->pressure[index] );
+    }
+  }
 
   deltaz = ecl_grav_common_eval_geertsma( grid_cache , region , base_survey->aquifer_cell , weight , utm_x , utm_y , depth , poisson_ratio);
 
