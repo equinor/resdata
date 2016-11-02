@@ -68,10 +68,10 @@ class GeertsmaTest(ExtendedTestCase):
             poisson_ratio = 0.3
 
             dz = subsidence.evalGeertsma("S1", None, (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz, -1.256514072122196e-07, 15)
+            np.testing.assert_almost_equal(dz, -1.256514072122196e-07, 10)
 
             dz = subsidence.evalGeertsma("S1", None, (1000, 1000, 1900), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz, 6.530473913611929e-05, 15)
+            np.testing.assert_almost_equal(dz, 6.530473913611929e-05, 10)
 
     @staticmethod
     def test_geertsma_kernel_2_source_points_2_vintages():
@@ -97,12 +97,12 @@ class GeertsmaTest(ExtendedTestCase):
             poisson_ratio = 0.3
 
             dz1 = subsidence.evalGeertsma("S1", None, (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz1, -5.538064265738908e-05, 15)
+            np.testing.assert_almost_equal(dz1, -5.538064265738908e-05, 10)
 
             dz2 = subsidence.evalGeertsma("S2", None, (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz2, -1.456356233609781e-04, 15)
+            np.testing.assert_almost_equal(dz2, -1.456356233609781e-04, 10)
 
-            np.testing.assert_almost_equal(dz2-dz1, -9.025498070358901e-05, 15)
+            np.testing.assert_almost_equal(dz2-dz1, -9.025498070358901e-05, 10)
 
             dz = subsidence.evalGeertsma("S1", "S2", (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz, -9.025498070358901e-05, 15)
+            np.testing.assert_almost_equal(dz, -9.025498070358901e-05, 10)
