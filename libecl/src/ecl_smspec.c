@@ -954,6 +954,28 @@ static bool ecl_smspec_file_equal( const ecl_file_type * header1 , const ecl_fil
 }
 
 
+bool ecl_smspec_equal( const ecl_smspec_type * self , const ecl_smspec_type * other) {
+  bool equal = true;
+
+  if (vector_get_size( self->smspec_nodes ) == vector_get_size( other->smspec_nodes)) {
+    for (int i=0; i < vector_get_size( self->smspec_nodes ); i++) {
+      const smspec_node_type * node1 = vector_iget_const( self->smspec_nodes , i );
+      const smspec_node_type * node2 = vector_iget_const( other->smspec_nodes , i );
+
+      if (!smspec_node_equal( node1,node2)) {
+        equal = false;
+        break;
+      }
+
+    }
+  } else
+    equal = false;
+
+  return equal;
+}
+
+
+
 /**
    This will iterate backwards through the RESTART header in the
    SMSPEC files to find names of the case(s) this case has been

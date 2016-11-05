@@ -139,6 +139,8 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
 
 
   char                     * ecl_smspec_alloc_well_key( const ecl_smspec_type * smspec , const char * keyword , const char * wgname);
+  bool                       ecl_smspec_equal( const ecl_smspec_type * self , const ecl_smspec_type * other);
+
 
 #ifdef __cplusplus
 }
