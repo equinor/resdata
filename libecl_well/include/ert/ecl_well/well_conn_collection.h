@@ -33,7 +33,7 @@ extern "C" {
 
   typedef struct well_conn_collection_struct well_conn_collection_type;
 
-  well_conn_collection_type * well_conn_collection_alloc();
+  well_conn_collection_type * well_conn_collection_alloc(void);
   void                        well_conn_collection_free( well_conn_collection_type * wellcc );
   void                        well_conn_collection_free__( void * arg );
   int                         well_conn_collection_get_size( const well_conn_collection_type * wellcc );
