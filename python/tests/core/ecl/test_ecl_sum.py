@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 #  Copyright (C) 2014  Statoil ASA, Norway.
 #   
 #  The file 'test_ecl_sum.py' is part of ERT - Ensemble based Reservoir Tool.
