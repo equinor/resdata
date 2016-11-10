@@ -49,7 +49,7 @@ bool type ## _is_instance( const void * __arg ) {          \
    if (__arg == NULL)                                      \
       return false;                                        \
    else {                                                  \
-      const type ## _type * arg = (type ## _type *) __arg; \
+      const type ## _type * arg =                   __arg; \
       if ( arg->__type_id == TYPE_ID)                      \
          return true;                                      \
       else                                                 \
