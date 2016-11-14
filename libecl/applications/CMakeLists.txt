@@ -72,5 +72,10 @@ if (BUILD_ECL_SUMMARY)
          install(CODE "EXECUTE_PROCESS(COMMAND chmod g+w ${destination}/ecl_summary)")
       endif()
    endif()
+
+   include(GNUInstallDirs)
+   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docs/ecl_summary.1
+      DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
 endif()
  
