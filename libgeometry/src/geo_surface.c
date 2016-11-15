@@ -196,6 +196,30 @@ void geo_surface_fprintf_irap_external_zcoord( const geo_surface_type * surface,
   geo_surface_fprintf_irap__( surface , filename , zcoord );
 }
 
+geo_surface_type  * geo_surface_alloc_new( int nx,        int ny,
+                                           double xinc,   double yinc,
+                                           double xstart, double ystart,
+                                           double angle ) {
+    geo_surface_type * surface = geo_surface_alloc_empty( true );
+
+    surface->origo[0]  = xstart;
+    surface->origo[1]  = ystart;
+    surface->rot_angle = angle * __PI / 180.0;
+    surface->nx = nx;
+    surface->ny = ny;
+
+    surface->vec1[0] = xinc * cos( surface->rot_angle ) ;
+    surface->vec1[1] = xinc * sin( surface->rot_angle ) ;
+
+    surface->vec2[0] = -yinc * sin( surface->rot_angle ) ;
+    surface->vec2[1] =  yinc * cos( surface->rot_angle );
+
+    surface->cell_size[0] = xinc;
+    surface->cell_size[1] = yinc;
+    geo_surface_init_regular( surface, NULL );
+    return surface;
+}
+
 
 static void geo_surface_fload_irap_header( geo_surface_type * surface, FILE * stream ) {
   int const996;

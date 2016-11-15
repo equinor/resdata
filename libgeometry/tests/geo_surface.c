@@ -57,6 +57,20 @@ void test_fprintf(const char * input_file ) {
   geo_surface_free( surface1 );
 }
 
+void test_create_new( const char * input_file) {
+    geo_surface_type * surface = geo_surface_alloc_new( 260, 511, 50.0, 50.0,
+                                                        444230.0, 6809537.0,
+                                                        -30.0);
+    test_assert_true(geo_surface_get_nx  (surface) == 260);
+    test_assert_true(geo_surface_get_ny  (surface) == 511);
+    test_assert_true(geo_surface_get_size(surface) == 511*260);
+
+    geo_surface_type * surirap = geo_surface_fload_alloc_irap( input_file , true );
+    test_assert_true( geo_surface_equal_header( surface, surirap ) );
+
+    geo_surface_free( surirap );
+    geo_surface_free( surface );
+}
 
 
 int main( int argc , char ** argv) {
@@ -65,6 +79,6 @@ int main( int argc , char ** argv) {
 
   test_load( input_file , broken_file1 );
   test_fprintf( input_file );
-  
+  test_create_new( input_file );
   exit( 0 );
 }
