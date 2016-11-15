@@ -109,7 +109,7 @@ static void geo_surface_init_regular( geo_surface_type * surface , const double 
         int z_index = ix*zstride_nx + iy*zstride_ny;
         geo_pointset_add_xyz( surface->pointset , x,y, zcoord[ z_index ]);
       } else
-        geo_pointset_add_xy( surface->pointset , x , y );
+        geo_pointset_add_xyz( surface->pointset , x , y, 0 );
     }
   }
 }

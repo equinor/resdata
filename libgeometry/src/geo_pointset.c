@@ -83,32 +83,16 @@ void geo_pointset_memcpy( const geo_pointset_type * src, geo_pointset_type * tar
   }
 }
 
-void geo_pointset_add_xy( geo_pointset_type * pointset , double x , double y) {
-  if (!pointset->internal_z) {
-    if (pointset->size == pointset->alloc_size)
-      geo_pointset_resize( pointset , 1 + pointset->alloc_size * 2);
-
-    pointset->xcoord[ pointset->size ] = x;
-    pointset->ycoord[ pointset->size ] = y;
-
-    pointset->size++;
-  } else
-    util_abort("%s: can not use function %s for pointsets with internal z.\n",__func__ , __func__);
-}
-
-
 void geo_pointset_add_xyz( geo_pointset_type * pointset , double x , double y, double z) {
-  if (pointset->internal_z) {
-    if (pointset->size == pointset->alloc_size)
-      geo_pointset_resize( pointset , 1 + pointset->alloc_size * 2);
+  if (pointset->size == pointset->alloc_size)
+    geo_pointset_resize( pointset , 1 + pointset->alloc_size * 2);
 
-    pointset->xcoord[ pointset->size ] = x;
-    pointset->ycoord[ pointset->size ] = y;
-    pointset->zcoord[ pointset->size ] = z;
+  pointset->xcoord[ pointset->size ] = x;
+  pointset->ycoord[ pointset->size ] = y;
+  if (pointset->internal_z)
+      pointset->zcoord[ pointset->size ] = z;
 
-    pointset->size++;
-  } else
-    util_abort("%s: can not use function %s for pointsets with internal z.\n",__func__ , __func__);
+  pointset->size++;
 }
 
 
