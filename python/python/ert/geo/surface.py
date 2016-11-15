@@ -27,6 +27,7 @@ class Surface(BaseCClass):
 
     _alloc        = GeoPrototype("void*  geo_surface_fload_alloc_irap( char* , bool )" , bind = False)
     _free         = GeoPrototype("void   geo_surface_free( surface )")
+    _new          = GeoPrototype("void*  geo_surface_alloc_new( int, int, double, double, double, double, double )", bind = False)
     _get_nx       = GeoPrototype("int    geo_surface_get_nx( surface )")
     _get_ny       = GeoPrototype("int    geo_surface_get_ny( surface )")
     _iget_zvalue  = GeoPrototype("double geo_surface_iget_zvalue( surface , int)")
@@ -43,17 +44,26 @@ class Surface(BaseCClass):
     _isub         = GeoPrototype("void   geo_surface_isub( surface , surface )")
     _isqrt        = GeoPrototype("void   geo_surface_isqrt( surface )")
 
-    
-    def __init__(self, filename):
+
+    def __init__(self, filename=None, nx=None, ny=None, xinc=None, yinc=None,
+                                      xstart=None, ystart=None, angle=None):
         """
         This will load a irap surface from file. The surface should
         consist of a header and a set z values.
         """
-        if os.path.isfile( filename ):
-            c_ptr = self._alloc(filename , True)
-            super(Surface , self).__init__(c_ptr)
+        if filename is not None:
+            filename = str(filename)
+            if os.path.isfile( filename ):
+                c_ptr = self._alloc(filename , True)
+                super(Surface , self).__init__(c_ptr)
+            else:
+                raise IOError('No such file "%s".' % filename)
         else:
-            raise IOError("No such file: %s" % filename)
+            s_args = [nx, ny, xinc, yinc, xstart, ystart, angle]
+            if None in s_args:
+                raise ValueError('Missing argument for creating surface, all values must be set, was: %s' % str(s_args))
+            c_ptr = self._new(*s_args)
+            super(Surface , self).__init__(c_ptr)
 
     
     def __eq__(self , other):

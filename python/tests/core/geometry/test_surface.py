@@ -11,7 +11,35 @@ class SurfaceTest(ExtendedTestCase):
         self.surface_valid2 = self.createTestPath("local/geometry/surface/valid2_ascii.irap")
         self.surface_small = self.createTestPath("local/geometry/surface/valid_small_ascii.irap")
 
-        
+    def test_create_new(self):
+        with self.assertRaises(ValueError):
+            s = Surface(None, 1, 1, 1)
+        with self.assertRaises(IOError):
+            s = Surface(50, 1, 1, 1)
+
+        # values copied from irap surface_small
+        ny,nx = 20,30
+        xinc,yinc = 50.0, 50.0
+        xstart,ystart = 463325.5625, 7336963.5
+        angle = -65.0
+        s_args = (None, nx, ny, xinc, yinc, xstart, ystart, angle)
+        s = Surface(*s_args)
+        self.assertEqual(ny*nx, len(s))
+        self.assertEqual(nx, s.getNX())
+        self.assertEqual(ny, s.getNY())
+        small = Surface (self.surface_small)
+        self.assertTrue(small.headerEqual(s))
+        valid = Surface (self.surface_valid)
+        self.assertFalse(valid.headerEqual(s))
+
+        self.assertNotEqual(s, small)
+        idx = 0
+        for i in range(nx):
+            for j in range(ny):
+                s[idx] = small[idx]
+                idx += 1
+        self.assertEqual(s, small)
+
     def test_create(self):
         with self.assertRaises(IOError):
             s = Surface("File/does/not/exist")
@@ -142,6 +170,7 @@ class SurfaceTest(ExtendedTestCase):
     def test_sqrt(self):
         s0 = Surface( self.surface_small )
         s0.assign(4)
+        self.assertEqual(20*30, len(s0))
         s_sqrt = s0.sqrt( )
         for i in range(len(s0)):
             self.assertEqual(s0[i] , 4)
