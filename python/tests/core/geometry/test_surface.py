@@ -67,17 +67,17 @@ class SurfaceTest(ExtendedTestCase):
 
         with self.assertRaises(IndexError):
             s[49*79] = 787
-        
+
         s[0] = 10
         self.assertEqual( s[0]  ,  10 )
 
         s[-1] = 77
         self.assertEqual( s[len(s) - 1]  ,  77 )
 
-        
+
     def test_write(self):
         with TestAreaContext("surface/write"):
-            
+
             s0 = Surface( self.surface_valid )
             s0.write( "new_surface.irap")
 
@@ -99,12 +99,12 @@ class SurfaceTest(ExtendedTestCase):
             self.assertFalse( s1 == s0 )
             del s0
             self.assertEqual( s1[0] , 99)
-            
+
             s2 = s1.copy( copy_data = False )
             self.assertEqual( s2[0] , 0.0 )
             self.assertEqual( s2[10] , 0.0 )
             self.assertEqual( s2[100] , 0.0 )
-            
+
 
     def test_header_equal(self):
         s0 = Surface( self.surface_valid )
@@ -124,15 +124,15 @@ class SurfaceTest(ExtendedTestCase):
 
         s0 += 1
         for v in s0:
-            self.assertEqual(v , 2.0)        
-        
+            self.assertEqual(v , 2.0)
+
         s0 *= 2
         for v in s0:
-            self.assertEqual(v , 4.0)        
+            self.assertEqual(v , 4.0)
 
         s1 = s0 + 4
         for v in s1:
-            self.assertEqual(v , 8.0)        
+            self.assertEqual(v , 8.0)
 
         s2 = Surface( self.surface_valid2 )
         with self.assertRaises(ValueError):
@@ -140,13 +140,13 @@ class SurfaceTest(ExtendedTestCase):
 
         s4 = s1 + s0
         for v in s4:
-            self.assertEqual(v , 12.0)        
+            self.assertEqual(v , 12.0)
 
         s5 = s4 / 12
         for v in s5:
-            self.assertEqual(v , 1.0)        
+            self.assertEqual(v , 1.0)
 
-        
+
     def test_ops2(self):
         s0 = Surface( self.surface_small )
         surface_list = []
@@ -175,6 +175,5 @@ class SurfaceTest(ExtendedTestCase):
         for i in range(len(s0)):
             self.assertEqual(s0[i] , 4)
             self.assertEqual(s_sqrt[i] , 2)
-        
         s0.inplaceSqrt( )
         self.assertTrue( s0 == s_sqrt )

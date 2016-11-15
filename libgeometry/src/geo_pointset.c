@@ -95,7 +95,6 @@ void geo_pointset_add_xyz( geo_pointset_type * pointset , double x , double y, d
   pointset->size++;
 }
 
-
 void geo_pointset_free( geo_pointset_type * pointset ) {
   free( pointset->xcoord );
   free( pointset->ycoord );
@@ -225,5 +224,3 @@ void geo_pointset_isqrt( geo_pointset_type * pointset ) {
   for (index = 0; index < pointset->size; index++)
     pointset->zcoord[index] = sqrt(pointset->zcoord[index]);
 }
-
-

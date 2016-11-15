@@ -1,18 +1,18 @@
-#  Copyright (C) 2016  Statoil ASA, Norway. 
-#   
-#  The file 'surface' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2016  Statoil ASA, Norway.
+#
+#  The file 'surface' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Create a polygon
 """
@@ -65,7 +65,6 @@ class Surface(BaseCClass):
             c_ptr = self._new(*s_args)
             super(Surface , self).__init__(c_ptr)
 
-    
     def __eq__(self , other):
         """
         Compares two Surface instances, both header and data must be equal
@@ -79,7 +78,7 @@ class Surface(BaseCClass):
 
     def headerEqual(self , other):
         return self._header_equal( other)
-        
+
 
     def __iadd__(self , other):
         if isinstance(other , Surface):
@@ -136,23 +135,23 @@ class Surface(BaseCClass):
         copy -= other
         return copy
 
-    
+
     def __div__(self , other):
         copy = self.copy()
         copy /= other
         return copy
 
-    
+
     def __len__(self):
         """
         The number of values in the surface.
         """
-        return self.getNX() * self.getNY() 
+        return self.getNX() * self.getNY()
 
 
     def inplaceSqrt(self):
         """
-        Will do an inplcae sqrt opearation.
+        Will do an inplace sqrt operation.
         """
         self._isqrt( )
         return self
@@ -167,13 +166,13 @@ class Surface(BaseCClass):
         copy.inplaceSqrt( )
         return copy
 
-    
+
     def copy(self , copy_data = True):
         """Will create a deep copy of self, if copy_data is set to False the
         copy will have all z-values set to zero.
         """
         return self._copy( copy_data)
-        
+
 
     def write(self , filename):
 
@@ -221,7 +220,7 @@ class Surface(BaseCClass):
 
     def getNY(self):
         return self._get_ny(  )
-        
+
 
     def free(self):
         self._free( )
