@@ -217,6 +217,7 @@ separated by '======' and the columns are separated by '@@@@'. Default
 values (2e20) are denoted with '*'.
 
 */
+#define TABDIMS_SIZE                100
 
 #define TABDIMS_IBROCK_OFFSET_ITEM  1
 #define TABDIMS_NTROCK_ITEM         2

@@ -74,7 +74,7 @@ if (BUILD_ECL_SUMMARY)
    endif()
 
    include(GNUInstallDirs)
-   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/docs/ecl_summary.1
+   install(FILES ${PROJECT_SOURCE_DIR}/docs/man/man1/ecl_summary.1
       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 endif()
