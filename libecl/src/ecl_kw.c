@@ -691,7 +691,22 @@ ecl_kw_type * ecl_kw_alloc_slice_copy( const ecl_kw_type * src, int index1, int 
 
 
 
+void ecl_kw_resize( ecl_kw_type * ecl_kw, int new_size) {
+  if (ecl_kw->shared_data)
+    util_abort("%s: trying to allocate data for ecl_kw object which has been declared with shared storage - aborting \n",__func__);
 
+  if (new_size != ecl_kw->size) {
+    size_t old_byte_size = ecl_kw->size * ecl_kw->sizeof_ctype;
+    size_t new_byte_size = new_size * ecl_kw->sizeof_ctype;
+
+    ecl_kw->data = util_realloc(ecl_kw->data , new_byte_size );
+    if (new_byte_size > old_byte_size) {
+      size_t offset = old_byte_size;
+      memset(&ecl_kw->data[offset] , 0 , new_byte_size - old_byte_size);
+    }
+    ecl_kw->size = new_size;
+  }
+}
 
 /**
    Will allocate a copy of the src_kw. Will copy @count elements
