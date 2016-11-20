@@ -86,6 +86,10 @@ namespace ERT {
             return this->m_kw;
         }
 
+        void resize(size_t new_size) {
+            ecl_kw_resize( this->m_kw , new_size );
+        }
+
     protected:
         ecl_kw_type* m_kw = nullptr;
     };

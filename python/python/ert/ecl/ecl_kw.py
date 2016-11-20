@@ -129,7 +129,7 @@ class EclKW(BaseCClass):
     _max_min_double    = EclPrototype("void     ecl_kw_max_min_double( ecl_kw , double* , double*)")
     _fix_uninitialized = EclPrototype("void     ecl_kw_fix_uninitialized( ecl_kw ,int , int , int, int*)")
     _first_different   = EclPrototype("int      ecl_kw_first_different( ecl_kw , ecl_kw , int , double, double)")
-
+    _resize            = EclPrototype("void     ecl_kw_resize( ecl_kw , int)")
     
     @classmethod
     def createCReference(cls, c_ptr, parent=None):
@@ -924,6 +924,19 @@ class EclKW(BaseCClass):
         return mm[0]
 
        
+
+    def resize(self , new_size):
+        """
+        Will set the new size of the kw to @new_size.
+        """
+        if new_size >= 0:
+            self._resize( new_size )
+
+        # Iteration is based on a pointer to the underlying storage,
+        # that will generally by reset by the resize( ) call; i.e. we
+        # need to call the __private_init() method again.
+        self.__private_init()
+
     
     def getMinMax(self):
         """

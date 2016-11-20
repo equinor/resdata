@@ -81,10 +81,21 @@ void test_exception_assing_ref_wrong_type() {
     }
 }
 
+void test_resize() {
+    ERT::EclKW< int > kw1( "short", 1 );
+
+    test_assert_int_equal( kw1.size() , 1 );
+    kw1.resize( 100 );
+    test_assert_int_equal( kw1.size() , 100 );
+}
+
+
 int main (int argc, char **argv) {
     test_kw_name();
     test_kw_vector_assign();
     test_kw_vector_string();
     test_move_semantics_no_crash();
     test_exception_assing_ref_wrong_type();
+    test_resize();
 }
+
