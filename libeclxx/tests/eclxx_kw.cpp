@@ -39,8 +39,15 @@ void test_kw_vector_assign() {
 
     test_assert_size_t_equal( kw.size(), vec.size() );
 
-    for( size_t i = 0; i < kw.size(); ++i )
+    for( size_t i = 0; i < kw.size(); ++i ) {
         test_assert_int_equal( kw.at( i ), vec[ i ] );
+        test_assert_int_equal( kw[ i ] , vec[ i ] );
+    }
+
+    for( size_t i = 0; i < kw.size(); ++i ) {
+        kw[i] *= 2;
+        test_assert_int_equal( kw[ i ] , 2*vec[ i ] );
+    }
 }
 
 void test_kw_vector_string() {
