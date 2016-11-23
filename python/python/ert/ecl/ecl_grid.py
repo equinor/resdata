@@ -226,10 +226,33 @@ class EclGrid(BaseCClass):
             super(EclGrid, self).__init__(c_ptr)
         else:
             raise IOError("Loading grid from:%s failed" % filename)
+        self.__str__ = self.__repr__
 
     def free(self):
         self._free( )
-    
+
+    def _nicename(self):
+        """name is often full path to grid, if so, output basename, else name"""
+        name = self.getName()
+        if os.path.isfile(name):
+            name = os.path.basename(name)
+        return name
+
+    def _info_str(self):
+        """Returns, e.g.:
+           EclGrid("NORNE_ATW2013.EGRID", 46x112x22, global_size = 113344, active_size = 44431) at 0x28c4a70
+        """
+        name = self._nicename()
+        if name:
+            name = '"%s", ' % name
+        g_size = self.getGlobalSize()
+        a_size = self.getNumActive()
+        addr   = self._address()
+        xyz_s  = '%dx%dx%d' % (self.getNX(),self.getNY(),self.getNZ())
+        return 'EclGrid(%s%s, global_size = %d, active_size = %d) at 0x%x' % (name, xyz_s, g_size, a_size, addr)
+
+    def __repr__(self):
+        return self._info_str()
 
     def equal(self , other , include_lgr = True , include_nnc = False , verbose = False):
         """

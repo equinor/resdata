@@ -24,6 +24,7 @@ libecl/src directory.
 
 import numpy
 import datetime
+import os.path
 
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
@@ -159,6 +160,9 @@ class EclSum(BaseCClass):
         else:
             super(EclSum, self).__init__(c_pointer)
             self.__private_init( )
+        self.__str__ = self.__repr__
+        self._load_case = load_case
+
 
 
     @classmethod
@@ -1001,7 +1005,7 @@ class EclSum(BaseCClass):
     @property
     def first_report(self):
         """
-        The number of the last report step in the dataset.
+        The number of the first report step in the dataset.
         """
         return self._get_first_report_step( )
 
@@ -1178,6 +1182,27 @@ class EclSum(BaseCClass):
 
     def free(self):
         self._free( )
+
+    def _nicename(self):
+        """load_case is often full path to summary file,
+        if so, output basename, else name
+        """
+        name = self._load_case
+        if name and os.path.isfile(name):
+            name = os.path.basename(name)
+        return name
+
+    def __repr__(self):
+        """Returns, e.g.
+           EclSum("NORNE_ATW2013.UNSMRY", [1997-11-06 00:00:00, 2006-12-01 00:00:00], keys = 3781) at 0x1609e20
+        """
+        name = self._nicename()
+        if name:
+            name = '"%s", ' % name
+        s_time   = self.getStartTime()
+        e_time   = self.getEndTime()
+        num_keys = len(self.keys())
+        return 'EclSum(%s[%s, %s], keys = %d) at 0x%x' % (name, s_time, e_time, num_keys, self._address())
 
     def dumpCSVLine(self, time, keywords, pfile):
         """
