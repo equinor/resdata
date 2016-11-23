@@ -18,7 +18,7 @@ Create a polygon
 """
 import ctypes
 
-from cwrap import BaseCClass, CWrapper
+from cwrap import BaseCClass
 from ert.geo import GeoPrototype, CPolyline
 
 

@@ -15,10 +15,19 @@
 #  for more details.
 
 from ert.util import CTime
-from ert.ecl import ECL_LIB , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
-from cwrap import CWrapper, BaseCClass
+from ert.ecl import EclPrototype , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
+from cwrap import BaseCClass
 
+# ECL_LIB
 class EclRestartHead(BaseCClass):
+    TYPE_NAME = "ecl_rsthead"
+    _alloc           = EclPrototype("void*  ecl_rsthead_alloc(ecl_file_view , int ), bind = False")
+    _alloc_from_kw   = EclPrototype("void*  ecl_rsthead_alloc_from_kw(int , ecl_kw , ecl_kw , ecl_kw )", bind = False)
+    _free            = EclPrototype("void   ecl_rsthead_free(ecl_rsthead)")
+    _get_report_step = EclPrototype("int    ecl_rsthead_get_report_step(ecl_rsthead)")
+    _get_sim_time    = EclPrototype("time_t ecl_rsthead_get_sim_time(ecl_rsthead)")
+    _get_sim_days    = EclPrototype("double ecl_rsthead_get_sim_days(ecl_rsthead)")
+
     def __init__(self , kw_arg = None , rst_view = None):
         if kw_arg is None and rst_view is None:
             raise Exception("Invalid arguments")
@@ -31,7 +40,7 @@ class EclRestartHead(BaseCClass):
 
         super(EclRestartHead, self).__init__(c_ptr)
 
-        
+
     def free(self):
         EclRestartHead.cNamespace().free( self )
 
@@ -121,15 +130,3 @@ class EclRestartFile(Ecl3DFile):
             time_list.append( (header.getReportStep() , header.getSimDate( ) , header.getSimDays( )) )
 
         return time_list
-
-    
-
-            
-CWrapper.registerObjectType("ecl_rsthead", EclRestartHead)
-cwrapper = CWrapper(ECL_LIB)
-EclRestartHead.cNamespace().alloc           = cwrapper.prototype("c_void_p ecl_rsthead_alloc(ecl_file_view , int )")
-EclRestartHead.cNamespace().alloc_from_kw   = cwrapper.prototype("c_void_p ecl_rsthead_alloc_from_kw(int , ecl_kw , ecl_kw , ecl_kw )")
-EclRestartHead.cNamespace().free            = cwrapper.prototype("void ecl_rsthead_free(ecl_rsthead)")
-EclRestartHead.cNamespace().get_report_step = cwrapper.prototype("int ecl_rsthead_get_report_step(ecl_rsthead)")
-EclRestartHead.cNamespace().get_sim_time    = cwrapper.prototype("time_t ecl_rsthead_get_sim_time(ecl_rsthead)")
-EclRestartHead.cNamespace().get_sim_days    = cwrapper.prototype("double ecl_rsthead_get_sim_days(ecl_rsthead)")
