@@ -1,18 +1,18 @@
-#  Copyright (C) 2014  Statoil ASA, Norway. 
-#   
-#  The file 'layer.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2014  Statoil ASA, Norway.
+#
+#  The file 'layer.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 import ctypes
 from cwrap import BaseCClass, CWrapper
@@ -42,29 +42,27 @@ class Layer(BaseCClass):
 
         if j < 0 or j >= self.getNY():
             raise ValueError("Invalid layer j:%d" % j)
-        
-            
+
 
     def __unpackIndex(self , index):
         try:
             (i,j) = index
         except TypeError:
             raise ValueError("Index:%s is invalid - must have two integers" % str(index))
-        
-        self.__assertIJ(i,j)
-        
-        return (i,j)
 
+        self.__assertIJ(i,j)
+
+        return (i,j)
 
 
     def __setitem__(self , index , value):
         (i,j) = self.__unpackIndex(index)
         self.cNamespace().set_cell(self , i , j , value )
-        
+
     def activeCell(self , i,j):
         self.__assertIJ(i,j)
         return self.cNamespace().active_cell(self , i , j)
-        
+
 
     def updateActive(self , grid , k):
         if grid.getNX() != self.getNX():
@@ -72,19 +70,17 @@ class Layer(BaseCClass):
 
         if grid.getNY() != self.getNY():
             raise ValueError("NY dimension mismatch. Grid:%d  layer:%d" % (grid.getNY() , self.getNY()))
-        
+
         if k >= grid.getNZ():
             raise ValueError("K value invalid: Grid range [0,%d)" % grid.getNZ())
 
         self.cNamespace().update_active(self , grid , k)
 
 
-
-            
     def __getitem__(self , index):
         (i,j) = self.__unpackIndex(index)
         return self.cNamespace().get_cell(self , i , j)
-    
+
     def bottomBarrier(self , i,j):
         self.__assertIJ(i,j)
         return self.cNamespace().get_bottom_barrier(self , i , j)
@@ -119,12 +115,12 @@ class Layer(BaseCClass):
             raise IndexError("Invalid i2:%d" % j2)
 
         return self.cNamespace().cell_contact(self , i1,j1,i2,j2)
-        
+
 
     def addInterpBarrier(self , c1 , c2):
         self.cNamespace().add_interp_barrier( self , c1 , c2 )
 
-    
+
     def addPolylineBarrier(self , polyline , grid , k):
         if len(polyline) > 1:
             for i in range(len(polyline) - 1):
@@ -133,11 +129,10 @@ class Layer(BaseCClass):
 
                 c1 = grid.findCellCornerXY( x1 , y1 , k )
                 c2 = grid.findCellCornerXY( x2 , y2 , k )
-                
+
                 self.addInterpBarrier( c1 , c2 )
 
-                
-    
+
     def addFaultBarrier(self , fault , K , link_segments = True ):
         fault_layer = fault[K]
         num_lines = len(fault_layer)
@@ -153,7 +148,7 @@ class Layer(BaseCClass):
 
                 if link_segments:
                     self.addInterpBarrier( c2 , next_c1 )
-                    
+
 
     def addIJBarrier(self , ij_list):
         if len(ij_list) < 2:
@@ -171,7 +166,7 @@ class Layer(BaseCClass):
 
                 if not 0 <= j2 <= ny:
                     raise ValueError("i value:%d invalid. Valid range: [0,%d] " % (j , j2))
-                    
+
                 Layer.cNamespace().add_ijbarrier( self , i1 , j1 , i2 , j2 )
                 p1 = p2
                 i1,j1 = p1
@@ -181,7 +176,6 @@ class Layer(BaseCClass):
 
     def cellSum(self):
         return Layer.cNamespace().cell_sum( self )
-        
 
     def clearCells(self):
         """
@@ -196,7 +190,6 @@ class Layer(BaseCClass):
         Will set the cell value to @value in all cells. Barriers will not be changed
         """
         Layer.cNamespace().assign( self , value )
-        
 
     def updateConnected(self , ij , new_value , org_value = None):
         """
@@ -204,9 +197,9 @@ class Layer(BaseCClass):
         value @new_value. If org_value is not supplied, the current
         value in cell ij is used.
         """
-        if org_value is None: 
+        if org_value is None:
             org_value = self[ij]
-            
+
         if self[ij] == org_value:
             Layer.cNamespace().update_connected( self , ij[0] , ij[1] , org_value , new_value )
         else:
@@ -224,7 +217,7 @@ class Layer(BaseCClass):
         for (i,j) in zip(i_list , j_list):
             ij_list.append( (i,j) )
         return ij_list
-        
+
 
     def countEqual(self , value):
         return Layer.cNamespace().count_equal( self , value )

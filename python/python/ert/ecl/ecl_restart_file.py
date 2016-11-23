@@ -1,18 +1,18 @@
-#  Copyright (C) 2015  Statoil ASA, Norway. 
-#   
-#  The file 'ecl_restart_file.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2015  Statoil ASA, Norway.
+#
+#  The file 'ecl_restart_file.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 from ert.util import CTime
 from ert.ecl import ECL_LIB , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
@@ -44,11 +44,11 @@ class EclRestartHead(BaseCClass):
 
     def getSimDays(self):
         return EclRestartHead.cNamespace().get_sim_days( self )
-        
-        
+
+
 
 class EclRestartFile(Ecl3DFile):
-    
+
     def __init__(self , grid , filename , flags = 0):
         """Will open an Eclipse restart file.
 
@@ -65,8 +65,9 @@ class EclRestartFile(Ecl3DFile):
 
         file_type , report_step , fmt_file = EclFile.getFileType( filename )
         if not file_type in [EclFileEnum.ECL_RESTART_FILE, EclFileEnum.ECL_UNIFIED_RESTART_FILE]:
-            raise ValueError("The input filename:%s does not correspond to a restart file - please follow the Eclipse naming conventions" % filename)
-            
+            raise ValueError('The input filename "%s" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
+                             % filename)
+
         super(EclRestartFile , self).__init__( grid, filename , flags)
         self.rst_headers = None
         if file_type == EclFileEnum.ECL_RESTART_FILE:
@@ -75,15 +76,15 @@ class EclRestartFile(Ecl3DFile):
         else:
             self.is_unified = True
 
-        
-        
+
+
     def unified(self):
         """
-        Will return True if the file we have opened is unified. 
+        Will return True if the file we have opened is unified.
         """
         return self.is_unified
 
-    
+
     def assertHeaders(self):
         if self.rst_headers is None:
             self.rst_headers = []
@@ -99,8 +100,8 @@ class EclRestartFile(Ecl3DFile):
                     logihead_kw = None
 
                 self.rst_headers.append( EclRestartHead( kw_arg = (self.report_step , intehead_kw , doubhead_kw , logihead_kw) ))
-                
-            
+
+
     def timeList(self):
         """Will return a list of report_step, simulation time and days.
 

@@ -1,18 +1,18 @@
-#  Copyright (C) 2014  Statoil ASA, Norway. 
-#   
-#  The file 'fault_block.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2014  Statoil ASA, Norway.
+#
+#  The file 'fault_block.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 import ctypes
 from cwrap import BaseCClass, CWrapper
@@ -32,7 +32,7 @@ class FaultBlockCell(object):
         self.y = y
         self.z = z
 
-        
+
     def __str__(self):
         return "(%d,%d)" % (self.i , self.j)
 
@@ -42,13 +42,13 @@ class FaultBlock(BaseCClass):
 
     def __init__(self , *args , **kwargs):
         raise NotImplementedError("Class can not be instantiated directly!")
-        
+
 
     def __getitem__(self , index):
         if isinstance(index, int):
             if index < 0:
                 index += len(self)
-                
+
             if 0 <= index < len(self):
                 x = ctypes.c_double()
                 y = ctypes.c_double()
@@ -57,7 +57,7 @@ class FaultBlock(BaseCClass):
                 i = ctypes.c_int()
                 j = ctypes.c_int()
                 k = ctypes.c_int()
-                
+
                 self.cNamespace().export_cell(self , index , ctypes.byref(i) , ctypes.byref(j) , ctypes.byref(k) , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
                 return FaultBlockCell( i.value , j.value , k.value , x.value , y.value , z.value )
             else:
@@ -67,7 +67,7 @@ class FaultBlock(BaseCClass):
 
     def __str__(self):
         return "Block ID: %d" % self.getBlockID()
-        
+
 
     def __len__(self):
         return self.cNamespace().get_size( self )
@@ -89,8 +89,8 @@ class FaultBlock(BaseCClass):
         for p in self:
             if GeometryTools.pointInPolygon( (p.x , p.y) , polygon ):
                 inside += 1
-        
-        return inside 
+
+        return inside
 
 
     def getBlockID(self):
@@ -99,7 +99,7 @@ class FaultBlock(BaseCClass):
 
     def assignToRegion(self , region_id):
         self.cNamespace().assign_to_region(self , region_id)
-        
+
 
     def getRegionList(self):
         regionList = self.cNamespace().get_region_list(self)
@@ -110,13 +110,13 @@ class FaultBlock(BaseCClass):
 
     def getGlobalIndexList(self):
         return self.cNamespace().get_global_index_list( self )
-        
+
 
     def getEdgePolygon(self):
         x_list = DoubleVector()
         y_list = DoubleVector()
         cell_list = IntVector()
-        
+
         self.cNamespace().trace_edge( self , x_list , y_list , cell_list )
         p = Polyline()
         for (x,y) in zip(x_list , y_list):
@@ -136,7 +136,7 @@ class FaultBlock(BaseCClass):
             edge_polyline.assertClosed()
             return GeometryTools.polylinesIntersect( edge_polyline , polyline )
 
-        
+
     def getNeighbours(self, polylines = None , connected_only = True):
         """
         Will return a list of FaultBlock instances which are in direct
@@ -145,7 +145,7 @@ class FaultBlock(BaseCClass):
         neighbour_id_list = IntVector()
         if polylines is None:
             polylines = CPolylineCollection()
-            
+
         self.cNamespace().get_neighbours( self , connected_only , polylines , neighbour_id_list )
 
         parent_layer = self.getParentLayer()
@@ -153,11 +153,11 @@ class FaultBlock(BaseCClass):
         for id in neighbour_id_list:
             neighbour_list.append( parent_layer.getBlock( id ))
         return neighbour_list
-        
+
 
     def getParentLayer(self):
         return self.parent()
-        
+
 
 
 cwrapper = CWrapper(ECL_LIB)

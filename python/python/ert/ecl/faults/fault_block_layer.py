@@ -1,18 +1,18 @@
-#  Copyright (C) 2014  Statoil ASA, Norway. 
-#   
-#  The file 'fault_block_layer.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2014  Statoil ASA, Norway.
+#
+#  The file 'fault_block_layer.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 from __future__ import print_function
 from cwrap import BaseCClass, CWrapper
@@ -46,7 +46,7 @@ class FaultBlockLayer(BaseCClass):
         if isinstance(index, int):
             if index < 0:
                 index += len(self)
-                
+
             if 0 <= index < len(self):
                 return self.cNamespace().iget_block( self , index ).setParent(self)
             else:
@@ -85,7 +85,7 @@ class FaultBlockLayer(BaseCClass):
         ok = self.cNamespace().load_keyword( self , fault_block_kw )
         if not ok:
             raise ValueError("The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d" % (fault_block_kw.typeName() , len(fault_block_kw) , self.grid_ref.getGlobalSize()))
-            
+
 
     def getBlock(self , block_id):
         """
@@ -111,14 +111,14 @@ class FaultBlockLayer(BaseCClass):
             raise KeyError("Layer already contains block with ID:%s" % block_id)
         else:
             return self.cNamespace().add_block( self , block_id).setParent(self)
-    
+
     def getNextID(self):
         return self.cNamespace().get_next_id( self )
 
 
     def getK(self):
         return self.cNamespace().getK( self )
-            
+
 
     def free(self):
         self.cNamespace().free(self)
@@ -126,7 +126,7 @@ class FaultBlockLayer(BaseCClass):
 
     def scanLayer( self , layer):
         self.cNamespace().scan_layer(self , layer)
-    
+
 
     def insertBlockContent(self , block):
         self.cNamespace().insert_block_content(self , block)
@@ -137,7 +137,7 @@ class FaultBlockLayer(BaseCClass):
 
         if kw.getEclType() != EclTypeEnum.ECL_INT_TYPE:
             raise TypeError("The target kewyord must be of integer type")
-            
+
         self.cNamespace().export_kw( self , kw )
 
 
@@ -186,7 +186,7 @@ class FaultBlockLayer(BaseCClass):
     def cellContact(self , p1 , p2):
         layer = self.getGeoLayer()
         return layer.cellContact(p1,p2)
-        
+
 
 
 cwrapper = CWrapper(ECL_LIB)
