@@ -1,5 +1,5 @@
 from cwrap import BaseCClass
-from ert.well import ECL_WELL_LIB, WellPrototype, WellConnectionDirectionEnum
+from ert.well import WellPrototype, WellConnectionDirectionEnum
 
 class WellConnection(BaseCClass):
     TYPE_NAME = "well_connection"

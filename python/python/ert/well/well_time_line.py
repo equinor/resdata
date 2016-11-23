@@ -1,5 +1,5 @@
-from cwrap import BaseCClass, CWrapper
-from ert.well import ECL_WELL_LIB, WellState
+from cwrap import BaseCClass
+from ert.well import WellState, WellPrototype
 
 class WellTimeLine(BaseCClass):
     TYPE_NAME = "well_time_line"
