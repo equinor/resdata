@@ -20,7 +20,7 @@ from cwrap import BaseCClass
 
 class EclRestartHead(BaseCClass):
     TYPE_NAME = "ecl_rsthead"
-    _alloc           = EclPrototype("void*  ecl_rsthead_alloc(ecl_file_view , int ), bind = False")
+    _alloc           = EclPrototype("void*  ecl_rsthead_alloc(ecl_file_view , int )", bind = False)
     _alloc_from_kw   = EclPrototype("void*  ecl_rsthead_alloc_from_kw(int , ecl_kw , ecl_kw , ecl_kw )", bind = False)
     _free            = EclPrototype("void   ecl_rsthead_free(ecl_rsthead)")
     _get_report_step = EclPrototype("int    ecl_rsthead_get_report_step(ecl_rsthead)")
@@ -29,7 +29,7 @@ class EclRestartHead(BaseCClass):
 
     def __init__(self , kw_arg = None , rst_view = None):
         if kw_arg is None and rst_view is None:
-            raise Exception("Invalid arguments")
+            raise ValueError('Cannot construct EclRestartHead without one of kw_arg and rst_view, both were None!')
 
         if not kw_arg is None:
             report_step , intehead_kw , doubhead_kw , logihead_kw = kw_arg
