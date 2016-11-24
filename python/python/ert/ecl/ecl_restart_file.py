@@ -18,10 +18,9 @@ from ert.util import CTime
 from ert.ecl import EclPrototype , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
 from cwrap import BaseCClass
 
-# ECL_LIB
 class EclRestartHead(BaseCClass):
     TYPE_NAME = "ecl_rsthead"
-    _alloc           = EclPrototype("void*  ecl_rsthead_alloc(ecl_file_view , int ), bind = False")
+    _alloc           = EclPrototype("void*  ecl_rsthead_alloc(ecl_file_view , int )", bind = False)
     _alloc_from_kw   = EclPrototype("void*  ecl_rsthead_alloc_from_kw(int , ecl_kw , ecl_kw , ecl_kw )", bind = False)
     _free            = EclPrototype("void   ecl_rsthead_free(ecl_rsthead)")
     _get_report_step = EclPrototype("int    ecl_rsthead_get_report_step(ecl_rsthead)")
@@ -30,29 +29,29 @@ class EclRestartHead(BaseCClass):
 
     def __init__(self , kw_arg = None , rst_view = None):
         if kw_arg is None and rst_view is None:
-            raise Exception("Invalid arguments")
+            raise ValueError('Cannot construct EclRestartHead without one of kw_arg and rst_view, both were None!')
 
         if not kw_arg is None:
             report_step , intehead_kw , doubhead_kw , logihead_kw = kw_arg
-            c_ptr = EclRestartHead.cNamespace().alloc_from_kw( report_step , intehead_kw , doubhead_kw , logihead_kw )
+            c_ptr = self._alloc_from_kw( report_step , intehead_kw , doubhead_kw , logihead_kw )
         else:
-            c_ptr = EclRestartHead.cNamespace().alloc( rst_view , -1 )
+            c_ptr = self._alloc( rst_view , -1 )
 
         super(EclRestartHead, self).__init__(c_ptr)
 
 
     def free(self):
-        EclRestartHead.cNamespace().free( self )
+        self._free( )
 
     def getReportStep(self):
-        return EclRestartHead.cNamespace().get_report_step( self )
+        return self._get_report_step( )
 
     def getSimDate(self):
-        ct = CTime( EclRestartHead.cNamespace().get_sim_time( self ) )
+        ct = CTime( self._get_sim_time( ) )
         return ct.datetime( )
 
     def getSimDays(self):
-        return EclRestartHead.cNamespace().get_sim_days( self )
+        return self._get_sim_days( )
 
 
 

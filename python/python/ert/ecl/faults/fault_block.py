@@ -38,7 +38,7 @@ class FaultBlockCell(object):
 
 
 class FaultBlock(BaseCClass):
-    TYPE = "fault_block"
+    TYPE_NAME = "fault_block"
 
     _get_xc                = EclPrototype("double         fault_block_get_xc(fault_block)")
     _get_yc                = EclPrototype("double         fault_block_get_yc(fault_block)")
