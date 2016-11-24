@@ -68,8 +68,8 @@ class WellConnection(BaseCClass):
     def __repr__(self):
         ijk = str(self.ijk())
         frac = 'fracture ' if self.isFractureConnection() else ''
-        open = 'open ' if self.isOpen() else 'shut '
+        open_ = 'open ' if self.isOpen() else 'shut '
         msw = ' (multi segment)' if self.isMultiSegmentWell() else ''
-        dir = str(self.direction())
+        dir = WellConnectionDirectionEnum(self.direction())
         addr = self._address()
-        return 'WellConnection(%s %s%s%s, dir = %s) at 0x%x' % (ijk, frac, open, msw, dir, addr)
+        return 'WellConnection(%s %s%s%s, direction = %s) at 0x%x' % (ijk, frac, open_, msw, dir, addr)

@@ -68,6 +68,11 @@ class WellState(BaseCClass):
             values.append(value)
         return values
 
+    def __len__(self):
+        return self.numSegments()
+
+    def __getitem__(self, idx):
+        return self.igetSegment(idx)
 
     def numSegments(self):
         """ @rtype: int """
@@ -88,16 +93,16 @@ class WellState(BaseCClass):
         return values
 
 
-    def igetSegment(self , segment_index):
+    def igetSegment(self , seg_idx):
         """ @rtype: WellSegment """
-        if segment_index < 0:
-            segment_index += len(self)
+        if seg_idx < 0:
+            seg_idx += len(self)
 
-        if not 0 <= segment_index < self.numSegments():
-            raise IndexError("Invalid index:%d - valid range [0,%d)" % (index , len(self)))
+        if not 0 <= seg_idx < self.numSegments():
+            raise IndexError("Invalid index:%d - valid range [0,%d)" % (seg_idx , len(self)))
 
         segment_collection = self._get_segment_collection( )
-        return self._segment_collection_iget(segment_collection, segment_index).setParent(self)
+        return self._segment_collection_iget(segment_collection, seg_idx).setParent(self)
 
     def isMultiSegmentWell(self):
         """ @rtype: bool """
@@ -113,6 +118,8 @@ class WellState(BaseCClass):
             name = '%s' % name
         else:
             name = '[no name]'
-        open = 'open' if self.isOpen() else 'shut'
         msw  = ' (multi segment)' if self.isMultiSegmentWell() else ''
-        return 'WellState(%s%s, len = %d, state = %s) at 0x%x' % (name, msw, open, self._address())
+        wn = str(self.wellNumber())
+        type_ = self.wellType()
+        open_ = 'open' if self.isOpen() else 'shut'
+        return 'WellState(%s%s, number = %s, type = "%s", state = %s) at 0x%x' % (name, msw, wn, type_, open_, self._address())
