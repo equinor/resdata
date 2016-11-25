@@ -947,20 +947,20 @@ class EclKW(BaseCClass):
         """
         ecl_type = self.getEclType( )
         if ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
-            min = ctypes.c_float()
-            max = ctypes.c_float()
-            self._max_min_float( ctypes.byref( max ) , ctypes.byref( min ))
+            min_ = ctypes.c_float()
+            max_ = ctypes.c_float()
+            self._max_min_float( ctypes.byref( max_ ) , ctypes.byref( min_ ))
         elif ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
-            min = ctypes.c_double()
-            max = ctypes.c_double()
-            self._max_min_double( ctypes.byref( max ) , ctypes.byref( min ))
+            min_ = ctypes.c_double()
+            max_ = ctypes.c_double()
+            self._max_min_double( ctypes.byref( max_ ) , ctypes.byref( min_ ))
         elif ecl_type == EclTypeEnum.ECL_INT_TYPE:
-            min = ctypes.c_int()
-            max = ctypes.c_int()
-            self._max_min_int( ctypes.byref( max ) , ctypes.byref( min ))
+            min_ = ctypes.c_int()
+            max_ = ctypes.c_int()
+            self._max_min_int( ctypes.byref( max_ ) , ctypes.byref( min_ ))
         else:
             raise TypeError("min_max property not defined for keywords of type: %s" % self.type)
-        return (min.value , max.value)
+        return (min_.value , max_.value)
 
 
     def getMax( self ):
