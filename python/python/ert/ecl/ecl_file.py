@@ -172,7 +172,7 @@ class EclFile(BaseCClass):
 
 
     def __str__(self):
-        return "EclFile: %s" % self.getFilename( )
+        return 'EclFile("%s") at 0x%x' % (self.getFilename( ), self._address())
 
 
     def __init__( self , filename , flags = 0):
