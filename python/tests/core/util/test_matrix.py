@@ -224,4 +224,19 @@ class MatrixTest(ExtendedTestCase):
         with TestAreaContext("matrix_csv"):
             m.dumpCSV("matrix.csv")
 
-        
+    def test_identity(self):
+        with self.assertRaises(ValueError):
+            Matrix.identity(0)
+        with self.assertRaises(ValueError):
+            Matrix.identity(-3)
+
+        m = Matrix.identity(17)
+        self.assertEqual(m.rows(), 17)
+        self.assertEqual(m.columns(), 17)
+        for i in range(17):
+            for j in range(17):
+                elt = m[i, j]
+                if i == j:
+                    self.assertEqual(elt, 1)
+                else:
+                    self.assertEqual(elt, 0)
