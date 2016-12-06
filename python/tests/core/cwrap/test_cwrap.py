@@ -1,92 +1,62 @@
-import ctypes
 import ert
-from cwrap import CWrapper, BaseCClass, CWrapError
+from cwrap import BaseCClass
 from ert.test  import ExtendedTestCase
 
-test_lib  = ert.load("libert_util") # create a local namespace (so we don't overwrite StringList)
-cwrapper =  CWrapper(test_lib)
+from cwrap import Prototype
+
+def stringlistProtoFactory(signature):
+    lib  = ert.load("libert_util")
+    return Prototype(lib, signature, bind = False)
 
 class StringListTest(BaseCClass):
+    TYPE_NAME = 'stringlisttest'
+    _alloc     = stringlistProtoFactory("void* stringlist_alloc_new( )")
+    _alloc_obj = stringlistProtoFactory("stringlisttest_obj stringlist_alloc_new( )")
+    _alloc_ref = stringlistProtoFactory("stringlisttest_ref stringlist_alloc_new( )")
+    _free      = stringlistProtoFactory("void stringlist_free(stringlisttest )")
+    _dateStamp = stringlistProtoFactory("char* util_alloc_date_stamp_utc()")
+
     def __init__(self):
-        c_pointer = self.cNamespace().alloc()
-        super(StringListTest, self).__init__(c_pointer)
+        c_ptr = self._alloc()
+        if c_ptr:
+            super(StringListTest, self).__init__(c_ptr)
+        else:
+            raise Exception('Internal error!  Unable to construct StringListType.')
+
+    @classmethod
+    def alloc_obj(cls):
+        return cls._alloc_obj()
+
+    @classmethod
+    def alloc_ref(cls):
+        return cls._alloc_ref()
 
     def free(self):
-        StringListTest.cNamespace().free(self)
+        self._free(self)
 
-CWrapper.registerObjectType("stringlisttest", StringListTest)
-
-StringListTest.cNamespace().alloc = cwrapper.prototype("c_void_p stringlist_alloc_new( )")
-StringListTest.cNamespace().free  = cwrapper.prototype("void stringlist_free(stringlisttest )")
 
 
 class CWrapTest(ExtendedTestCase):
 
+    def setUp(self):
+        self._sl = StringListTest()
+        self._sl_obj = StringListTest.alloc_obj()
+        self._sl_ref = StringListTest.alloc_ref()
+
     def test_return_type(self):
-        stringlist_alloc = cwrapper.prototype("c_void_p stringlist_alloc_new( )")
-        string_list1 = StringListTest()
+        self.assertIsInstance(self._sl, StringListTest)
+        self.assertIsInstance(self._sl_obj, StringListTest)
+        self.assertIsInstance(self._sl_ref, StringListTest)
 
-        stringlist_alloc = cwrapper.prototype("stringlisttest_obj stringlist_alloc_new( )")
-        string_list2 = stringlist_alloc()
+        self.assertFalse(self._sl.isReference())
+        self.assertFalse(self._sl_obj.isReference())
+        self.assertTrue( self._sl_ref.isReference())
 
-        stringlist_alloc = cwrapper.prototype("stringlisttest_ref stringlist_alloc_new( )")
-        string_list3 = stringlist_alloc()
+    def test_from_param(self):
+        p1 = BaseCClass.from_param(self._sl)
+        p2 = BaseCClass.from_param(self._sl_obj)
+        p3 = BaseCClass.from_param(self._sl_ref)
 
-        self.assertIsInstance(string_list1, StringListTest)
-        self.assertIsInstance(string_list2, StringListTest)
-        self.assertIsInstance(string_list3, StringListTest)
-
-        self.assertFalse(string_list1.isReference())
-        self.assertFalse(string_list2.isReference())
-        self.assertTrue(string_list3.isReference())
-
-        self.assertNotEqual(BaseCClass.from_param(string_list1), BaseCClass.from_param(string_list2))
-        self.assertNotEqual(BaseCClass.from_param(string_list2), BaseCClass.from_param(string_list3))
-        self.assertNotEqual(BaseCClass.from_param(string_list1), BaseCClass.from_param(string_list3))
-
-
-
-
-    def test_class_variables(self):
-        BaseCClass.cNamespace().hello = "BooYa!"
-        StringListTest.cNamespace()["pow"] = "Badonkadonk!"
-
-        with self.assertRaises(AssertionError):
-            StringListTest.cNamespace().pow = "Badonkadonka!"
-
-        with self.assertRaises(LookupError):
-            self.assertFalse(BaseCClass.cNamespace()["pow"])
-
-        with self.assertRaises(AttributeError):
-            self.assertFalse(StringListTest.cNamespace().hello)
-
-        self.assertEqual(StringListTest.cNamespace().pow, StringListTest.cNamespace()["pow"])
-
-
-    def test_invalid_function(self):
-        with self.assertRaises(CWrapError):
-            func = cwrapper.prototype("void stringlist_missing_function( )")
-    
-
-    def test_invalid_prototype(self):
-        with self.assertRaises(CWrapError):
-            stringlist_alloc = cwrapper.prototype("c_void_p stringlist_alloc_new( ")
-
-
-    def test_method_type(self):
-        wrapper =  CWrapper(test_lib)
-        def stringObj(c_ptr):
-            char_ptr = ctypes.c_char_p( c_ptr )
-            python_string = char_ptr.value
-            test_lib.free(c_ptr)
-            return python_string
-
-        wrapper.registerType("string_obj", stringObj)
-
-        dateStamp  = wrapper.prototype("string_obj util_alloc_date_stamp_utc()")
-        date_stamp = dateStamp()
-        self.assertIsInstance(date_stamp, str)
-
-
-
-
+        self.assertNotEqual(p1, p2)
+        self.assertNotEqual(p2, p3)
+        self.assertNotEqual(p1, p3)

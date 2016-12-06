@@ -4,7 +4,6 @@ from types import StringType, IntType
 import ert
 from cwrap import BaseCClass, Prototype, PrototypeError
 from ert.test import ExtendedTestCase
-import cwrap.clib as clib
 
 
 # Local copies so that the real ones don't get changed
@@ -22,11 +21,11 @@ class StringList(BaseCClass):
     TYPE_NAME = "test_stringlist"
 
     __len__ = BoundTestUtilPrototype("int stringlist_get_size(test_stringlist)")
-    free = BoundTestUtilPrototype("void stringlist_free(test_stringlist)")
+    free    = BoundTestUtilPrototype("void stringlist_free(test_stringlist)")
 
-    _alloc = TestUtilPrototype("void* stringlist_alloc_new()")
-    _iget = TestUtilPrototype("char* stringlist_iget(test_stringlist, int)")
-    _append = TestUtilPrototype("void stringlist_append_copy(test_stringlist, char*)")
+    _alloc  = TestUtilPrototype("void* stringlist_alloc_new()", bind = False)
+    _iget   = TestUtilPrototype("char* stringlist_iget(test_stringlist, int)")
+    _append = TestUtilPrototype("void  stringlist_append_copy(test_stringlist, char*)")
 
     def __init__(self, initial=None):
         c_ptr = self._alloc()
