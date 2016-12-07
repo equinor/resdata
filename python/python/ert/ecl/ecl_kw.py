@@ -349,6 +349,16 @@ class EclKW(BaseCClass):
     def free(self):
         self._free( )
 
+    def __repr__(self):
+        si = len(self)
+        nm = self.getName()
+        mm = 'type = %s' % str(self.getEclType())
+        if self.isNumeric():
+            mi, ma = self.getMinMax()
+            mm = 'min = %.2f, max = %.2f' % (mi,ma)
+        ad = self._ad_str()
+        fmt = 'EclKW(size = %d, name = "%s", %s) %s'
+        return fmt % (si,nm,mm,ad)
 
     def __init__(self , name , size , data_type):
         """Creates a brand new EclKW instance.
