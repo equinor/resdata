@@ -171,8 +171,11 @@ class EclFile(BaseCClass):
 
 
 
-    def __str__(self):
-        return 'EclFile("%s") at 0x%x' % (self.getFilename( ), self._address())
+    def __repr__(self):
+        fn = self.getFilename()
+        wr = ', read/write' if self._writable() else ''
+        ad = self._ad_str()
+        return 'EclFile("%s"%s) %s' % (fn,wr,ad)
 
 
     def __init__( self , filename , flags = 0):
