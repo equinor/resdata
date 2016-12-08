@@ -30,9 +30,9 @@ be an iterable consisting of strings, and the strings property will
 return a normal python list of string objects, used in this way you
 hardly need to notice that the StringList class is at play.
 """
-
+from __future__ import absolute_import, division, print_function, unicode_literals
+from six import string_types
 from ert.util import UtilPrototype
-from types import StringType, IntType
 from cwrap import BaseCClass
 
 
@@ -76,13 +76,17 @@ class StringList(BaseCClass):
 
         c_ptr = self._alloc()
         super(StringList, self).__init__(c_ptr)
-
         if initial:
-            for s in initial:
-                if isinstance(s, StringType):
-                    self.append(s)
-                else:
-                    raise TypeError("Item: %s not a string" % s)
+            self._append_all(initial)
+
+    def _append_all(self, lst):
+        for s in lst:
+            if isinstance(s, bytes):
+                s.decode('ascii')
+            if isinstance(s, string_types):
+                self.append(s)
+            else:
+                raise TypeError('Item is not a string: "%s".' % s)
 
 
     def __eq__(self , other):
@@ -101,7 +105,7 @@ class StringList(BaseCClass):
 
 
     def __setitem__(self, index, value):
-        if isinstance(index, IntType):
+        if isinstance(index, int):
             length = len(self)
             if index < 0:
                 # Will only wrap backwards once
@@ -109,7 +113,9 @@ class StringList(BaseCClass):
 
             if index < 0 or index >= length:
                 raise IndexError("index must be in range %d <= %d < %d" % (0, index, len(self)))
-            if isinstance(value, StringType):
+            if isinstance(value, bytes):
+                value = value.decode('ascii')
+            if isinstance(value, string_types):
                 self._iset(index, value)
             else:
                 raise TypeError("Item: %s not string type" % value)
@@ -122,7 +128,7 @@ class StringList(BaseCClass):
         The __getitem__ method supports negative, i.e. from the right,
         indexing; but not slices.
         """
-        if isinstance(index, IntType):
+        if isinstance(index, int):
             length = len(self)
             if index < 0:
                 index += length
@@ -143,7 +149,9 @@ class StringList(BaseCClass):
 
 
     def __iadd__(self , other):
-        if isinstance(other , str):
+        if isinstance(other, bytes):
+            other.decode('ascii')
+        if isinstance(other , string_types):
             raise TypeError("Can not add strings with + - use append()")
         for s in other:
             self.append( s )
@@ -157,7 +165,9 @@ class StringList(BaseCClass):
 
 
     def __ior__(self , other):
-        if isinstance(other , str):
+        if isinstance(other, bytes):
+            other.decode('ascii')
+        if isinstance(other , string_types):
             raise TypeError("Can not | with string.")
         for s in other:
             if not s in self:
@@ -221,7 +231,7 @@ class StringList(BaseCClass):
         Appends a new string @s to list. If the input argument is not a
         string the string representation will be appended.
         """
-        if isinstance(s, StringType):
+        if isinstance(s, str):
             self._append(s)
         else:
             self._append(str(s))
@@ -267,8 +277,11 @@ class StringList(BaseCClass):
 
     def index(self, value):
         """ @rtype: int """
-        assert isinstance(value, str)
-        return self._find_first( value)
+        if isinstance(value, bytes):
+            value.decode('ascii')
+        if isinstance(value, string_types):
+            return self._find_first(value)
+        raise KeyError('Cannot index by "%s", lst.index() needs a string.' % str(type(value)))
 
     def free(self):
         self._free()

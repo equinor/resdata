@@ -14,8 +14,10 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-from __future__ import print_function
-from ecl_kw import EclKW
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+
+from .ecl_kw import EclKW
 
 class Ecl3DKW(EclKW):
     """
