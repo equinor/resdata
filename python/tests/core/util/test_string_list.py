@@ -85,7 +85,9 @@ class StringListTest(TestCase):
         self.assertFalse(s1 == ["A","B","D"])
         self.assertFalse(s1 == ["A","B","C" , "D"])
 
-        
+        pfx = 'StringList(size' # __repr__
+        self.assertEqual(pfx, repr(s2)[:len(pfx)])
+
     def test_append_not_string(self):
         s = StringList()
         s.append(10)

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from six import string_types
 from cwrap import BaseCClass
-from ert.ecl import EclPrototype, EclKW
+from ert.ecl import EclPrototype
 from ert.util import CTime
 
 class EclFileView(BaseCClass):
@@ -24,7 +24,8 @@ class EclFileView(BaseCClass):
         return self._iget_kw( index ).setParent( parent = self )
 
 
-    
+    def __repr__(self):
+        return 'EclFileView(size = %d) %s' % (len(self), self._ad_str())
 
     def iget_named_kw(self, kw_name , index):
         if not kw_name in self:

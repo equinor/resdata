@@ -213,6 +213,12 @@ class StringList(BaseCClass):
         buffer += "]"
         return buffer
 
+    def __repr__(self):
+        return 'StringList(size = %d) %s' % (len(self), self._ad_str())
+
+    def empty(self):
+        """Returns true if and only if list is empty."""
+        return len(self) == 0
 
     def pop(self):
         """
@@ -220,10 +226,10 @@ class StringList(BaseCClass):
         
         Will raise IndexError if list is empty.
         """
-        if len(self):
+        if not self.empty():
             return self._pop()
         else:
-            raise IndexError("pop() failed - the list is empty")
+            raise IndexError("List empty.  Cannot call pop().")
 
 
     def append(self, s):
@@ -231,11 +237,13 @@ class StringList(BaseCClass):
         Appends a new string @s to list. If the input argument is not a
         string the string representation will be appended.
         """
-        if isinstance(s, str):
+        if isinstance(s, bytes):
+            s.decode('ascii')
+        if isinstance(s, string_types):
             self._append(s)
         else:
             self._append(str(s))
-            
+
 
     @property
     def strings(self):
@@ -255,10 +263,10 @@ class StringList(BaseCClass):
         """
         Will return the last element in list. Raise IndexError if empty.
         """
-        if len(self) > 0:
+        if not self.empty():
             return self._last()
         else:
-            raise IndexError("The list is empty")
+            raise IndexError("List empty.  No such element last().")
 
 
     def sort(self, cmp_flag=0):
@@ -288,13 +296,13 @@ class StringList(BaseCClass):
 
 
     def front(self):
-        if len(self) > 0:
+        if not self.empty():
             return self._front()
         else:
-            raise IndexError
+            raise IndexError('List empty.  No such element front().')
 
     def back(self):
-        if len(self) > 0:
+        if not self.empty():
             return self._back()
         else:
-            raise IndexError
+            raise IndexError('List empty.  No such element back().')
