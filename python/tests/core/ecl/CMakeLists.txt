@@ -10,7 +10,6 @@ set(TEST_SOURCES
     test_ecl_file.py
     test_ecl_init_file.py
     test_ecl_restart_file.py
-    test_ecl_submit.py
     test_ecl_sum.py
     test_ecl_sum_vector.py
     test_fault_blocks.py
