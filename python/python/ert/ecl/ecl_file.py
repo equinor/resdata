@@ -39,7 +39,7 @@ import re
 import types
 import datetime
 import ctypes
-import warnings
+
 from cwrap import BaseCClass
 from ert.ecl import EclPrototype, EclKW, EclFileEnum, EclFileView
 from ert.util import CTime
@@ -645,13 +645,6 @@ class EclFile(BaseCClass):
         Name of the file currently loaded.
         """
         return self._get_src_file( )
-
-
-    @property
-    def name(self):
-        warnings.warn("The name property is deprecated - use getFilename( )" , DeprecationWarning)
-        return self.getFilename()
-
 
     def fwrite( self , fortio ):
         """

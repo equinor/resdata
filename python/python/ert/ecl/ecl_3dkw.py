@@ -74,7 +74,7 @@ class Ecl3DKW(EclKW):
         else:
             size = grid.getNumActive( ) 
 
-        new_kw = super(Ecl3DKW , cls).create( kw , size , value_type)
+        new_kw = super(Ecl3DKW , cls).__init__( kw , size , value_type)
         new_kw.grid = grid
         new_kw.global_active = global_active
         new_kw.setDefault( default_value )

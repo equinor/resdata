@@ -103,7 +103,7 @@ class RegionTest(ExtendedTestCase):
         reg.select_islice(0, 5)
         OK = True
 
-        global_list = reg.global_list
+        global_list = reg.getGlobalList()
         self.assertEqual(global_list.parent(), reg)
 
         for gi in global_list:
@@ -111,11 +111,11 @@ class RegionTest(ExtendedTestCase):
             if i > 5:
                 OK = False
         self.assertTrue(OK)
-        self.assertTrue(self.grid.ny * self.grid.nz * 6 == len(reg.global_list))
+        self.assertTrue(self.grid.getNY() * self.grid.getNZ() * 6 == len(reg.getGlobalList()))
 
         reg.select_jslice(7, 8, intersect=True)
         OK = True
-        for gi in reg.global_list:
+        for gi in reg.getGlobalList():
             (i, j, k) = self.grid.get_ijk(global_index=gi)
             if i > 5:
                 OK = False
@@ -124,13 +124,13 @@ class RegionTest(ExtendedTestCase):
                 OK = False
 
         self.assertTrue(OK)
-        self.assertTrue(2 * self.grid.nz * 6 == len(reg.global_list))
+        self.assertTrue(2 * self.grid.getNZ() * 6 == len(reg.getGlobalList()))
 
         reg2 = EclRegion(self.grid, False)
         reg2.select_kslice(3, 5)
         reg &= reg2
         OK = True
-        for gi in reg.global_list:
+        for gi in reg.getGlobalList():
             (i, j, k) = self.grid.get_ijk(global_index=gi)
             if i > 5:
                 OK = False
@@ -149,8 +149,8 @@ class RegionTest(ExtendedTestCase):
     def test_index_list(self):
         reg = EclRegion(self.grid, False)
         reg.select_islice(0, 5)
-        active_list = reg.active_list
-        global_list = reg.global_list
+        active_list = reg.getActiveList()
+        global_list = reg.getGlobalList()
 
 
 
@@ -160,7 +160,7 @@ class RegionTest(ExtendedTestCase):
         dx = 0.1
         dy = 0.1
         reg.select_inside_polygon( [(x-dx,y-dy) , (x-dx,y+dy) , (x+dx,y+dy) , (x+dx,y-dy)] )
-        self.assertTrue( self.grid.nz == len(reg.getGlobalList()))
+        self.assertTrue( self.grid.getNZ() == len(reg.getGlobalList()))
         
 
     def test_heidrun(self):
@@ -176,7 +176,7 @@ class RegionTest(ExtendedTestCase):
 
         reg = EclRegion( grid , False )
         reg.select_inside_polygon( polygon )
-        self.assertEqual( 0 , len(reg.global_list) % grid.nz)
+        self.assertEqual( 0 , len(reg.getGlobalList()) % grid.getNZ())
 
         
     def test_layer(self):

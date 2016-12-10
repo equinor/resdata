@@ -26,7 +26,7 @@ When the selection process is complete the region instance can be
 queried for the corresponding list of indices.
 """
 import ctypes
-import warnings
+
 from cwrap import BaseCClass
 from ert.ecl.faults import Layer
 from ert.ecl import EclKW, EclTypeEnum, EclPrototype
@@ -977,37 +977,6 @@ class EclRegion(BaseCClass):
         
         return ijk_list
                             
-        
-
-
-    @property
-    def active_list(self):
-        warnings.warn("The active_list property is deprecated - use method \'getActiveList()\' instead." , DeprecationWarning)
-        return self.getActiveList()
-
-
-    @property
-    def global_list(self):
-        warnings.warn("The global_list property is deprecated - use method \'getGlobalList()\' instead." , DeprecationWarning)
-        return self.getGlobalList()
-
-
-    @property
-    def active_size( self ):
-        """
-        Number of active cells in region.
-        """
-        warnings.warn("The active_size property is deprecated - use \'len(getActiveList())\' instead." , DeprecationWarning)
-        return len(self.getActiveList())
-
-    @property
-    def global_size( self ):
-        """
-        Number of global cells in region.
-        """
-        warnings.warn("The global_size property is deprecated - use \'len(getGlobalList())\' instead." , DeprecationWarning)
-        return len(self.getGlobalList())
-
     def contains_ijk( self , i,j,k):
         """
         Will check if the cell given by i,j,k is part of the region.
@@ -1040,18 +1009,3 @@ class EclRegion(BaseCClass):
 
     def setName(self , name):
         self._set_name( name )
-
-
-    def set_name( self , name ):
-        warnings.warn("The name property / set_name method is deprecated - use method \'setName()\' instead." , DeprecationWarning)
-        self.setName( name )
-
-
-    def get_name( self ):
-        warnings.warn("The name property / get_name method is deprecated - use method \'getName()\' instead." , DeprecationWarning)
-        return self.getName( )
-
-        
-    name = property( get_name , set_name )
-
-

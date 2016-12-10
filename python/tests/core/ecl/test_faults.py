@@ -28,8 +28,8 @@ from ert.geo import Polyline , CPolyline
 class FaultTest(ExtendedTestCase):
     @classmethod
     def setUpClass(cls):
-        cls.grid = EclGrid.create_rectangular( (151,100,50) , (1,1,1))
-        
+        cls.grid = EclGrid.createRectangular( (151,100,50) , (1,1,1))
+
     def setUp(self):
         self.faults1 = self.createTestPath("local/ECLIPSE/FAULTS/fault1.grdecl")
         self.faults2 = self.createTestPath("local/ECLIPSE/FAULTS/fault2.grdecl")
@@ -39,7 +39,7 @@ class FaultTest(ExtendedTestCase):
         nx = 10
         ny = 10
         nz = 10
-        grid = EclGrid.create_rectangular( (nx,ny,nz) , (0.1,0.1,0.1))
+        grid = EclGrid.createRectangular( (nx,ny,nz) , (0.1,0.1,0.1))
         f = Fault(grid , "F")
         f.addRecord(0 , 1 , 0 , 0 , 0,0 , "Y-")
         f.addRecord(2 , 2 , 0 , 1 , 0,0 , "X-")
@@ -119,7 +119,7 @@ class FaultTest(ExtendedTestCase):
         nx = 10
         ny = 10
         nz = 2
-        grid = EclGrid.create_rectangular( (nx,ny,nz) , (0.1,0.1,0.1))
+        grid = EclGrid.createRectangular( (nx,ny,nz) , (0.1,0.1,0.1))
         fl = FaultLine(grid , 0)
         C1 = (nx + 1) * 5 + 3
         C2 = C1  +  2
@@ -204,7 +204,7 @@ class FaultTest(ExtendedTestCase):
 
 
     def test_connect_faults(self):
-        grid = EclGrid.create_rectangular( (100,100,10) , (1,1,1))
+        grid = EclGrid.createRectangular( (100,100,10) , (1,1,1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -359,7 +359,7 @@ class FaultTest(ExtendedTestCase):
 
         
     def test_join_faults(self):
-        grid = EclGrid.create_rectangular( (100,100,10) , (1,1,1))
+        grid = EclGrid.createRectangular( (100,100,10) , (1,1,1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -391,7 +391,7 @@ class FaultTest(ExtendedTestCase):
         
     
     def test_contact(self):
-        grid = EclGrid.create_rectangular( (100,100,10) , (1,1,1))
+        grid = EclGrid.createRectangular( (100,100,10) , (1,1,1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -500,7 +500,7 @@ class FaultTest(ExtendedTestCase):
         nx = 120
         ny = 60
         nz = 43
-        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl" , "w") as f:
                 f.write("""FAULTS
@@ -540,7 +540,7 @@ class FaultTest(ExtendedTestCase):
         nx = 10
         ny = 8
         nz = 7
-        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
         faults_file = self.createTestPath("local/ECLIPSE/FAULTS/faults_nb.grdecl")
         faults = FaultCollection( grid , faults_file )
 
@@ -601,7 +601,7 @@ class FaultTest(ExtendedTestCase):
 
 
     def test_polyline_intersection(self):
-        grid = EclGrid.create_rectangular( (100,100,10) , (0.25 , 0.25 , 1))
+        grid = EclGrid.createRectangular( (100,100,10) , (0.25 , 0.25 , 1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -642,7 +642,7 @@ class FaultTest(ExtendedTestCase):
         nx = 10
         ny = 10
         nz = 1
-        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl" , "w") as f:
                 f.write("""FAULTS
@@ -660,7 +660,7 @@ class FaultTest(ExtendedTestCase):
 
 
     def test_extend_to_polyline(self):
-        grid = EclGrid.create_rectangular( (3,3,1) , (1 , 1 , 1))
+        grid = EclGrid.createRectangular( (3,3,1) , (1 , 1 , 1))
 
         #  o   o   o   o
         #               
@@ -688,7 +688,7 @@ class FaultTest(ExtendedTestCase):
 
 
     def test_extend_polyline_on(self):
-        grid = EclGrid.create_rectangular( (3,3,1) , (1 , 1 , 1))
+        grid = EclGrid.createRectangular( (3,3,1) , (1 , 1 , 1))
 
         #  o   o   o   o
         #               
@@ -720,13 +720,13 @@ class FaultTest(ExtendedTestCase):
 
         
     def test_stepped(self):
-        grid = EclGrid.create_rectangular( (6,1,4) , (1,1,1))
+        grid = EclGrid.createRectangular( (6,1,4) , (1,1,1))
         f = Fault(grid , "F")
         f.addRecord(4,4,0,0,0,1,"X")
         f.addRecord(2,2,0,0,1,1,"Z")
         f.addRecord(1,1,0,0,2,3,"X")
         
-        block_kw = EclKW.create("FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
+        block_kw = EclKW("FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
         block_kw.assign(1)
         block_kw[5] = 2
         block_kw[11] = 2
@@ -761,7 +761,7 @@ class FaultTest(ExtendedTestCase):
 
 
     def test_connectWithPolyline(self):
-        grid = EclGrid.create_rectangular( (4,4,1) , (1 , 1 , 1))
+        grid = EclGrid.createRectangular( (4,4,1) , (1 , 1 , 1))
 
         
         #  o   o   o   o   o 

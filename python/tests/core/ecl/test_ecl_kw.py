@@ -23,12 +23,12 @@ from ert.test import ExtendedTestCase , TestAreaContext
 
 
 def copy_long():
-    src = EclKW.create("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
     copy = src.sub_copy(0, 2000)
 
 
 def copy_offset():
-    src = EclKW.create("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
     copy = src.sub_copy(200, 100)
 
 
@@ -70,38 +70,38 @@ class KWTest(ExtendedTestCase):
 
     def test_create(self):
         with self.assertRaises(ValueError):
-            EclKW.create( "ToGodDamnLong" , 100 , EclTypeEnum.ECL_CHAR_TYPE )
+            EclKW( "ToGodDamnLong" , 100 , EclTypeEnum.ECL_CHAR_TYPE )
 
 
 
     def test_sum( self ):
-        kw_string = EclKW.create( "STRING" , 100 , EclTypeEnum.ECL_CHAR_TYPE )
+        kw_string = EclKW( "STRING" , 100 , EclTypeEnum.ECL_CHAR_TYPE )
         with self.assertRaises(ValueError):
             kw_string.sum()
 
 
-        kw_int = EclKW.create( "INT" , 4 , EclTypeEnum.ECL_INT_TYPE )
+        kw_int = EclKW( "INT" , 4 , EclTypeEnum.ECL_INT_TYPE )
         kw_int[0] = 1
         kw_int[1] = 2
         kw_int[2] = 3
         kw_int[3] = 4
         self.assertEqual( kw_int.sum() , 10 )
 
-        kw_d = EclKW.create( "D" , 4 , EclTypeEnum.ECL_DOUBLE_TYPE )
+        kw_d = EclKW( "D" , 4 , EclTypeEnum.ECL_DOUBLE_TYPE )
         kw_d[0] = 1
         kw_d[1] = 2
         kw_d[2] = 3
         kw_d[3] = 4
         self.assertEqual( kw_d.sum() , 10 )
 
-        kw_f = EclKW.create( "F" , 4 , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw_f = EclKW( "F" , 4 , EclTypeEnum.ECL_FLOAT_TYPE )
         kw_f[0] = 1
         kw_f[1] = 2
         kw_f[2] = 3
         kw_f[3] = 4
         self.assertEqual( kw_f.sum() , 10 )
 
-        kw_b = EclKW.create( "F" , 4 , EclTypeEnum.ECL_BOOL_TYPE )
+        kw_b = EclKW( "F" , 4 , EclTypeEnum.ECL_BOOL_TYPE )
         kw_b[0] = False
         kw_b[1] = True
         kw_b[2] = False
@@ -160,7 +160,7 @@ class KWTest(ExtendedTestCase):
 
     def test_fprintf_data(self):
         with TestAreaContext("kw_no_header"):
-            kw = EclKW.create("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
             for i in range(len(kw)):
                 kw[i] = i
                 
@@ -180,7 +180,7 @@ class KWTest(ExtendedTestCase):
 
 
     def test_sliced_set(self):
-        kw = EclKW.create("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
         kw.assign(99)
         kw[0:5] = 66
         self.assertEqual(kw[0] , 66)
@@ -190,11 +190,11 @@ class KWTest(ExtendedTestCase):
         
     def test_long_name(self):
         with self.assertRaises(ValueError):
-            EclKW.create("LONGLONGNAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
+            EclKW("LONGLONGNAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
 
-        kw = EclKW.create("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
         with self.assertRaises(ValueError):
-            kw.set_name("LONGLONGNAME")
+            kw.setName("LONGLONGNAME")
 
 
     def test_abs(self):

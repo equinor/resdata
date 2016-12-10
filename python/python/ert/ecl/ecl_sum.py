@@ -584,7 +584,7 @@ class EclSum(BaseCClass):
 
     def blockedProduction(self , totalKey , timeRange):
         node = self.smspec_node(totalKey)
-        if node.is_total:
+        if node.isTotal():
             total = DoubleVector()
             for t in timeRange:
                 if t < CTime(self.start_time):

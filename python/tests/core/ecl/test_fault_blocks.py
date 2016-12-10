@@ -25,8 +25,8 @@ from ert.test import ExtendedTestCase , TestAreaContext
 
 class FaultBlockTest(ExtendedTestCase):
     def setUp(self):
-        self.grid = EclGrid.create_rectangular( (10,10,10) , (1,1,1) )
-        self.kw = EclKW.create( "FAULTBLK" , self.grid.size , EclTypeEnum.ECL_INT_TYPE )
+        self.grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) )
+        self.kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
         self.kw.assign( 1 )
 
         reg = EclRegion( self.grid , False )
@@ -40,8 +40,8 @@ class FaultBlockTest(ExtendedTestCase):
 
             
     def test_fault_block(self):
-        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW.create( "FAULTBLK" , grid.size , EclTypeEnum.ECL_INT_TYPE )
+        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
+        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
@@ -70,7 +70,7 @@ class FaultBlockTest(ExtendedTestCase):
 
             kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclTypeEnum.ECL_INT_TYPE)
         
-        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
+        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
         layer.loadKeyword( kw )
 
@@ -102,7 +102,7 @@ class FaultBlockTest(ExtendedTestCase):
 
             kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclTypeEnum.ECL_INT_TYPE)
         
-        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
+        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
 
         layer.loadKeyword( kw )
@@ -252,8 +252,8 @@ class FaultBlockTest(ExtendedTestCase):
 
 
     def test_fault_block_edge(self):
-        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW.create( "FAULTBLK" , grid.size , EclTypeEnum.ECL_INT_TYPE )
+        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
+        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
@@ -271,12 +271,12 @@ class FaultBlockTest(ExtendedTestCase):
             layer = FaultBlockLayer( self.grid , -1 )
 
         with self.assertRaises(ValueError):
-            layer = FaultBlockLayer( self.grid , self.grid.size  )
+            layer = FaultBlockLayer( self.grid , self.grid.getGlobalSize()  )
             
         layer = FaultBlockLayer( self.grid , 1 )
         self.assertEqual( 1 , layer.getK() )
 
-        kw = EclKW.create( "FAULTBLK" , self.grid.size , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
         with self.assertRaises(ValueError):
             layer.scanKeyword( kw )
 
@@ -358,7 +358,7 @@ class FaultBlockTest(ExtendedTestCase):
 
 
     def test_add_polyline_barrier1(self):
-        grid = EclGrid.create_rectangular( (4,1,1) , (1,1,1) )
+        grid = EclGrid.createRectangular( (4,1,1) , (1,1,1) )
         layer = FaultBlockLayer( self.grid , 0 )
         polyline = Polyline( init_points = [ (1.99 , 0.001) , (2.01 , 0.99)])
         
@@ -376,7 +376,7 @@ class FaultBlockTest(ExtendedTestCase):
 
 
     def test_add_polyline_barrier2(self):
-        grid = EclGrid.create_rectangular( (10,10,1) , (1,1,1) )
+        grid = EclGrid.createRectangular( (10,10,1) , (1,1,1) )
         layer = FaultBlockLayer( self.grid , 0 )
         polyline = Polyline( init_points = [ (0.1 , 0.9) , (8.9,0.9) , (8.9,8.9) ])
         
@@ -407,11 +407,11 @@ class FaultBlockTest(ExtendedTestCase):
 
     def test_fault_block_layer_export(self):
         layer = FaultBlockLayer( self.grid , 1 )
-        kw1 = EclKW.create( "FAULTBLK" , self.grid.size + 1 , EclTypeEnum.ECL_INT_TYPE )
+        kw1 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() + 1 , EclTypeEnum.ECL_INT_TYPE )
         with self.assertRaises(ValueError):
             layer.exportKeyword( kw1 )
 
-        kw2 = EclKW.create( "FAULTBLK" , self.grid.size , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw2 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
         with self.assertRaises(TypeError):
             layer.exportKeyword(kw2)
 

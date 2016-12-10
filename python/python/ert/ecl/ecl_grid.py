@@ -27,7 +27,6 @@ import ctypes
 
 import numpy
 import sys
-import warnings
 import os.path
 import math
 from cwrap import CFILE, BaseCClass
@@ -180,15 +179,6 @@ class EclGrid(BaseCClass):
         """
         return cls._grdecl_create( specgrid[0] , specgrid[1] , specgrid[2] , zcorn , coord , actnum , mapaxes )
 
-    
-    
-
-    @classmethod
-    def create_rectangular(cls , dims , dV , actnum = None):
-        warnings.warn("The create_rectangular method is deprecated - use createRectangular( )" , DeprecationWarning)
-        return cls.createRectangular( dims , dV , actnum )
-
-
     @classmethod
     def createRectangular(cls , dims , dV , actnum = None):
         """
@@ -263,48 +253,6 @@ class EclGrid(BaseCClass):
         """Is this grid dual porosity model?"""
         return self._dual_grid( ) 
         
-    @property
-    def dual_grid( self ):
-        warnings.warn("The dual_grid property is deprecated - use dualGrid( ) method" , DeprecationWarning)
-        return self.dualGrid( )
-
-
-    @property
-    def nx( self ):
-        warnings.warn("The nx property is deprecated - use getNX( ) method" , DeprecationWarning)
-        return self.getNX()
-    
-    @property
-    def ny( self ):
-        warnings.warn("The ny property is deprecated - use getNY( ) method" , DeprecationWarning)
-        return self.getNY()
-
-    @property
-    def nz( self ):
-        warnings.warn("The nz property is deprecated - use getNZ( ) method" , DeprecationWarning)
-        return self.getNZ()
-
-    @property
-    def size( self ):
-        warnings.warn("The size property is deprecated - use getGlobalSize( ) method" , DeprecationWarning)
-        return self.getGlobalSize( )
-
-    @property
-    def nactive( self ):
-        warnings.warn("The nactive property is deprecated - use getNumActive( ) method" , DeprecationWarning)
-        return self.getNumActive( )
-
-    @property
-    def nactive_fracture( self ):
-        warnings.warn("The nactive_fracture property is deprecated - use getNumActiveFracture( ) method" , DeprecationWarning)
-        return self.getNumActiveFracture( )
-
-    @property
-    def dims( self ):
-        warnings.warn("The dims property is deprecated - use getDims() method instead" , DeprecationWarning)
-        return self.getDims( )
-
-
     def getDims(self):
         """A tuple of four elements: (nx , ny , nz , nactive)."""
         return ( self.getNX(  ) ,
@@ -406,12 +354,6 @@ class EclGrid(BaseCClass):
         return self._get_name( )
 
 
-    @property
-    def name( self ):
-        warnings.warn("The name property is deprecated - use getName() method instead" , DeprecationWarning)
-        return self.getName()
-
-    
     def global_index( self , active_index = None, ijk = None):
         """
         Will convert either active_index or (i,j,k) to global index.
@@ -668,12 +610,6 @@ class EclGrid(BaseCClass):
         self._get_cell_corner_xyz1( gi , corner_nr , ctypes.byref(x) , ctypes.byref(y) , ctypes.byref(z))
         return (x.value , y.value , z.value)
 
-
-    def get_corner_xyz(self, corner_nr , active_index = None , global_index = None , ijk = None):
-        warnings.warn("The get_corner_xyz() method has been renamed: getCellCorner()" , DeprecationWarning)
-        return self.getCellCorner(corner_nr , active_index , global_index , ijk)
-
-
     def getNodeXYZ(self , i,j,k):
         """
         This function returns the position of Vertex (i,j,k).
@@ -699,7 +635,7 @@ class EclGrid(BaseCClass):
             corner += 4
 
         if self._ijk_valid( i , j , k):
-            return self.get_corner_xyz( corner , global_index = i + j*nx + k*nx*ny )
+            return self.getCellCorner( corner , global_index = i + j*nx + k*nx*ny )
         else:
             raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i,j,k))
 
@@ -943,11 +879,6 @@ class EclGrid(BaseCClass):
         return self._num_lgr(  )
 
     
-    @property
-    def num_lgr( self ):
-        warnings.warn("The num_lgr property is deprecated - use getNumLGR() method instead" , DeprecationWarning)
-        return self.getNumLGR()
-
     
     def has_lgr( self , lgr_name ):
         """
@@ -1123,7 +1054,7 @@ class EclGrid(BaseCClass):
         if len(ecl_kw) == self.getNumActive() or len(ecl_kw) == self.getGlobalSize():
             array = numpy.ones( [ self.getGlobalSize() ] , dtype = ecl_kw.dtype) * default
             kwa = ecl_kw.array
-            if len(ecl_kw) == self.size:
+            if len(ecl_kw) == self.getGlobalSize():
                 for i in range(kwa.size):
                     array[i] = kwa[i]
             else:
@@ -1136,7 +1067,7 @@ class EclGrid(BaseCClass):
             array = array.reshape( [self.getNX() , self.getNY() , self.getNZ()] , order = 'F')
             return array
         else:
-            raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.name , ecl_kw.size , self.nactive ,self.size))
+            raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.getName() , len(ecl_kw) , self.getNumActive() , self.getGlobalSize()))
         
     def save_grdecl(self , pyfile, output_unit = EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
@@ -1219,7 +1150,7 @@ class EclGrid(BaseCClass):
 
 
     def exportACTNUMKw(self):
-        actnum = EclKW.create("ACTNUM" , self.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
+        actnum = EclKW("ACTNUM" , self.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
         self._init_actnum( actnum.getDataPtr() )
         return actnum
 

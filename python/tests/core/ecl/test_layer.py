@@ -112,7 +112,7 @@ class LayerTest(ExtendedTestCase):
         nx = 120
         ny = 60
         nz = 43
-        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl" , "w") as f:
                 f.write("""FAULTS
