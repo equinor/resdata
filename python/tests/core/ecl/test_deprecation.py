@@ -20,7 +20,6 @@ import datetime
 
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.ecl import EclFile,EclGrid,EclKW,EclTypeEnum,EclGrid,EclRegion,FortIO, openFortIO,EclRFT
-from ert.ecl.ecl_case import EclCase
 from ert.test.ecl_mock import createEclSum
 from ert.util import BoolVector
 
