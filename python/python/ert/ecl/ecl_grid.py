@@ -238,7 +238,7 @@ class EclGrid(BaseCClass):
             name = os.path.basename(name)
         return name
 
-    def _info_str(self):
+    def __repr__(self):
         """Returns, e.g.:
            EclGrid("NORNE_ATW2013.EGRID", 46x112x22, global_size = 113344, active_size = 44431) at 0x28c4a70
         """
@@ -247,12 +247,8 @@ class EclGrid(BaseCClass):
             name = '"%s", ' % name
         g_size = self.getGlobalSize()
         a_size = self.getNumActive()
-        addr   = self._address()
         xyz_s  = '%dx%dx%d' % (self.getNX(),self.getNY(),self.getNZ())
-        return 'EclGrid(%s%s, global_size = %d, active_size = %d) at 0x%x' % (name, xyz_s, g_size, a_size, addr)
-
-    def __repr__(self):
-        return self._info_str()
+        return self._create_repr('%s%s, global_size = %d, active_size = %d' % (name, xyz_s, g_size, a_size))
 
     def equal(self , other , include_lgr = True , include_nnc = False , verbose = False):
         """
