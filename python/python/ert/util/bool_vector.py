@@ -155,10 +155,10 @@ class BoolVector(VectorTemplate):
         """
         cnt = ''
         ls = len(self)
-        if ls <= 10:
+        if ls <= 20:
             cnt = self._tostr()
         else:
-            a,b  = self[:4], self[-3:]
+            a,b  = self[:9], self[-8:]
             cnt  = self._tostr(a)
             cnt += "..."
             cnt += self._tostr(b)
