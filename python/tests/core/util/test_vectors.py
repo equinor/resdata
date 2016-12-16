@@ -104,6 +104,34 @@ class UtilTest(TestCase):
         with self.assertRaises(TypeError):
             iv1 *= dv1
 
+    def test_setitem_getitem(self):
+        primes = [2,3,5,7,11,13,17,19]
+        primep = [i in primes for i in range(20)]
+        b = BoolVector(initial_size = 20)
+        b[2] = True
+        b[3:8:2] = True
+        b[11::2] = True
+        self.assertTrue(b[15])
+        self.assertTrue(b[-5])
+        self.assertTrue(b[17])
+        self.assertTrue(b[19])
+        b[-5] = False
+        self.assertEqual(list(b), primep)
+
+    def test_repr(self):
+        primes = [2,3,5,7,11,13,17,19]
+        b = BoolVector()
+        for i in primes:
+            b[i] = True
+        pfx = 'BoolVector(size = 20, content = "00110101000101000101")'
+        print(repr(b))
+        self.assertEqual(pfx, repr(b)[:len(pfx)])
+        b[30] = True
+        pfx = 'BoolVector(size = 31, content = "001101010...00000001")'
+        print(repr(b))
+        self.assertEqual(pfx, repr(b)[:len(pfx)])
+
+
     def test_bool_vector(self):
         b = BoolVector()
         b.setDefault(True)
