@@ -168,7 +168,7 @@ static double ecl_subsidence_survey_eval_geertsma( const ecl_subsidence_survey_t
                                                    const ecl_subsidence_survey_type * monitor_survey,
                                                    ecl_region_type * region ,
                                                    double utm_x , double utm_y , double depth,
-                                                   double youngs_modulus, double poisson_ratio) {
+                                                   double youngs_modulus, double poisson_ratio, double seabed) {
 
   const ecl_grid_cache_type * grid_cache = base_survey->grid_cache;
   const double * cell_volume = ecl_grid_cache_get_volume( grid_cache );
@@ -185,7 +185,7 @@ static double ecl_subsidence_survey_eval_geertsma( const ecl_subsidence_survey_t
     }
   }
 
-  deltaz = ecl_grav_common_eval_geertsma( grid_cache , region , base_survey->aquifer_cell , weight , utm_x , utm_y , depth , poisson_ratio);
+  deltaz = ecl_grav_common_eval_geertsma( grid_cache , region , base_survey->aquifer_cell , weight , utm_x , utm_y , depth , poisson_ratio, seabed);
 
   free( weight );
   return deltaz;
@@ -247,10 +247,10 @@ double ecl_subsidence_eval( const ecl_subsidence_type * subsidence , const char 
 
 double ecl_subsidence_eval_geertsma( const ecl_subsidence_type * subsidence , const char * base, const char * monitor , ecl_region_type * region ,
                                      double utm_x, double utm_y , double depth,
-                                     double youngs_modulus, double poisson_ratio) {
+                                     double youngs_modulus, double poisson_ratio, double seabed) {
   ecl_subsidence_survey_type * base_survey    = ecl_subsidence_get_survey( subsidence , base );
   ecl_subsidence_survey_type * monitor_survey = ecl_subsidence_get_survey( subsidence , monitor );
-  return ecl_subsidence_survey_eval_geertsma( base_survey , monitor_survey , region , utm_x , utm_y , depth , youngs_modulus, poisson_ratio);
+  return ecl_subsidence_survey_eval_geertsma( base_survey , monitor_survey , region , utm_x , utm_y , depth , youngs_modulus, poisson_ratio, seabed);
 }
 
 void ecl_subsidence_free( ecl_subsidence_type * ecl_subsidence ) {

@@ -99,12 +99,14 @@ double ecl_grav_common_eval_biot_savart( const ecl_grid_cache_type * grid_cache 
 }
 
 
-static inline double ecl_grav_common_eval_geertsma_kernel(int index, const double * xpos, const double * ypos, const double * zpos , double utm_x , double utm_y , double depth, double poisson_ratio) {
+static inline double ecl_grav_common_eval_geertsma_kernel(int index, const double * xpos, const double * ypos, const double * zpos , double utm_x , double utm_y , double depth, double poisson_ratio, double seabed) {
+  double z = zpos[index];
+  z -= seabed;
   double dist_x  = xpos[index] - utm_x;
   double dist_y  = ypos[index] - utm_y;
 
-  double dist_z1 = zpos[index] - depth;
-  double dist_z2 = dist_z1 - 2*zpos[index];
+  double dist_z1 = z - depth;
+  double dist_z2 = dist_z1 - 2*z;
 
   double dist1   = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z1*dist_z1 );
   double dist2   = sqrt( dist_x*dist_x + dist_y*dist_y + dist_z2*dist_z2 );
@@ -115,14 +117,14 @@ static inline double ecl_grav_common_eval_geertsma_kernel(int index, const doubl
   double displacement =
     dist_z1 / cube_dist1 +
     (3 - 4*poisson_ratio)*dist_z2 / cube_dist2 -
-    6*depth * (zpos[index] + depth) * dist_z2 / (dist2*dist2*cube_dist2) +
-    2*dist_z1*((3 - 4*poisson_ratio)*(zpos[index] + depth) - depth)/cube_dist2 ;
+    6*depth * (z + depth) * dist_z2 / (dist2*dist2*cube_dist2) +
+    2*dist_z1*((3 - 4*poisson_ratio)*(z + depth) - depth)/cube_dist2 ;
 
   return displacement;
 }
 
 
-double ecl_grav_common_eval_geertsma( const ecl_grid_cache_type * grid_cache , ecl_region_type * region , const bool * aquifer , const double * weight , double utm_x , double utm_y , double depth, double poisson_ratio) {
+double ecl_grav_common_eval_geertsma( const ecl_grid_cache_type * grid_cache , ecl_region_type * region , const bool * aquifer , const double * weight , double utm_x , double utm_y , double depth, double poisson_ratio, double seabed) {
   const double * xpos      = ecl_grid_cache_get_xpos( grid_cache );
   const double * ypos      = ecl_grid_cache_get_ypos( grid_cache );
   const double * zpos      = ecl_grid_cache_get_zpos( grid_cache );
@@ -132,7 +134,8 @@ double ecl_grav_common_eval_geertsma( const ecl_grid_cache_type * grid_cache , e
     int index;
     for ( index = 0; index < size; index++) {
       if (!aquifer[index]) {
-        double displacement = ecl_grav_common_eval_geertsma_kernel( index, xpos , ypos , zpos, utm_x, utm_y , depth, poisson_ratio);
+
+        double displacement = ecl_grav_common_eval_geertsma_kernel( index, xpos , ypos , zpos, utm_x, utm_y , depth, poisson_ratio, seabed);
 
         /**
             For numerical precision it might be benficial to use the
@@ -149,7 +152,7 @@ double ecl_grav_common_eval_geertsma( const ecl_grid_cache_type * grid_cache , e
     for (i = 0; i < size; i++) {
       index = index_list[i];
       if (!aquifer[index]) {
-        double displacement = ecl_grav_common_eval_geertsma_kernel( index, xpos , ypos , zpos, utm_x, utm_y , depth , poisson_ratio);
+        double displacement = ecl_grav_common_eval_geertsma_kernel( index, xpos , ypos , zpos, utm_x, utm_y , depth , poisson_ratio, seabed);
         sum += weight[index] * displacement;
       }
     }

@@ -66,12 +66,18 @@ class GeertsmaTest(ExtendedTestCase):
 
             youngs_modulus = 5E8
             poisson_ratio = 0.3
+            seabed = 0
+            above = 100
+            topres = 2000
+            receiver = (1000, 1000, 0)
 
-            dz = subsidence.evalGeertsma("S1", None, (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz, -1.256514072122196e-07, 10)
+            dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            np.testing.assert_almost_equal(dz, -1.256514072122196e-07)
 
-            dz = subsidence.evalGeertsma("S1", None, (1000, 1000, 1900), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz, 6.530473913611929e-05, 10)
+            receiver = (1000, 1000, topres - seabed - above)
+
+            dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            np.testing.assert_almost_equal(dz, 6.530473913611929e-05)
 
     @staticmethod
     def test_geertsma_kernel_2_source_points_2_vintages():
@@ -95,14 +101,44 @@ class GeertsmaTest(ExtendedTestCase):
 
             youngs_modulus = 5E8
             poisson_ratio = 0.3
+            seabed = 0
+            receiver = (1000, 1000, 0)
 
-            dz1 = subsidence.evalGeertsma("S1", None, (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz1, -5.538064265738908e-05, 10)
+            dz1 = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            np.testing.assert_almost_equal(dz1, -5.538064265738908e-05)
 
-            dz2 = subsidence.evalGeertsma("S2", None, (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz2, -1.456356233609781e-04, 10)
+            dz2 = subsidence.evalGeertsma("S2", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            np.testing.assert_almost_equal(dz2, -1.456356233609781e-04)
 
-            np.testing.assert_almost_equal(dz2-dz1, -9.025498070358901e-05, 10)
+            np.testing.assert_almost_equal(dz2-dz1, -9.025498070358901e-05)
 
-            dz = subsidence.evalGeertsma("S1", "S2", (1000, 1000, 0), youngs_modulus, poisson_ratio)
-            np.testing.assert_almost_equal(dz, -9.025498070358901e-05, 10)
+            dz = subsidence.evalGeertsma("S1", "S2", receiver, youngs_modulus, poisson_ratio, seabed)
+            np.testing.assert_almost_equal(dz, -9.025498070358901e-05)
+
+    @staticmethod
+    def test_geertsma_kernel_seabed():
+        grid = EclGrid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        with TestAreaContext("Subsidence"):
+            p1 = [1]
+            create_restart(grid, "TEST", p1)
+            create_init(grid, "TEST")
+
+            init = EclFile("TEST.INIT")
+            restart_file = EclFile("TEST.UNRST")
+
+            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
+
+            subsidence = EclSubsidence(grid, init)
+            subsidence.add_survey_PRESSURE("S1", restart_view1)
+
+            youngs_modulus = 5E8
+            poisson_ratio = 0.3
+            seabed = 300
+            above = 100
+            topres = 2000
+            receiver = (1000, 1000, topres - seabed - above)
+
+            dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            np.testing.assert_almost_equal(dz, 6.218655705213846e-05)
+
+
