@@ -430,6 +430,9 @@ class EclSum(BaseCClass):
         if not key in self:
             raise KeyError("The summary key:%s was not recognized" % key)
 
+    def __iter__(self):
+        return iter(self.keys())
+
     def __getitem__(self , key):
         """
         Implements [] operator - @key should be a summary key.
@@ -1197,12 +1200,11 @@ class EclSum(BaseCClass):
            EclSum("NORNE_ATW2013.UNSMRY", [1997-11-06 00:00:00, 2006-12-01 00:00:00], keys = 3781) at 0x1609e20
         """
         name = self._nicename()
-        if name:
-            name = '"%s", ' % name
         s_time   = self.getStartTime()
         e_time   = self.getEndTime()
         num_keys = len(self.keys())
-        return 'EclSum(%s[%s, %s], keys = %d) at 0x%x' % (name, s_time, e_time, num_keys, self._address())
+        content = 'name = "%s", time = [%s, %s], keys = %d' % (name, s_time, e_time, num_keys)
+        return self._create_repr(content)
 
     def dumpCSVLine(self, time, keywords, pfile):
         """
