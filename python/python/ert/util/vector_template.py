@@ -489,6 +489,9 @@ class VectorTemplate(BaseCClass):
     def free(self):
         self._free()
 
+    def __repr__(self):
+        return self._create_repr('size = %d' % len(self))
+
     def permute(self, permutation_vector):
         """
         Reorders this vector based on the indexes in permutation_vector.
