@@ -40,7 +40,7 @@ class EclSumVector(object):
         return "<Summary vector: %s>" % self.key
 
     def __repr__(self):
-        return 'EclSumVector(size = %d, unit = %s)' % (len(self), self.unit)
+        return 'EclSumVector(key = %s, size = %d, unit = %s)' % (self.key, len(self), self.unit)
 
     @property
     def unit( self ):

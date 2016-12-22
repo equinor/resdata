@@ -38,3 +38,14 @@ class EclSumVectorTest(ExtendedTestCase):
             vector = EclSumVector(self.ecl_sum, "FOPT", True)
             assert len(w) == 1
             assert issubclass(w[-1].category, DeprecationWarning)
+
+    def test_basic(self):
+        self.assertEqual(512, len(self.ecl_sum.keys()))
+        pfx = 'EclSum(name'
+        self.assertEqual(pfx, repr(self.ecl_sum)[:len(pfx)])
+        it = iter(self.ecl_sum)
+        t = self.ecl_sum[it.next()] # EclSumVector
+        self.assertEqual(63, len(t))
+        self.assertEqual('BARSA', t.unit)
+        pfx = 'EclSumVector(key = '
+        self.assertEqual(pfx, repr(t)[:len(pfx)])
