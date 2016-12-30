@@ -2518,41 +2518,6 @@ bool ecl_kw_is_kw_file(fortio_type * fortio) {
 }
 
 
-
-
-
-bool ecl_kw_is_grdecl_file(FILE * stream) {
-  const long int init_pos = util_ftell(stream);
-  bool grdecl_file;
-  bool at_eof = false;
-  util_fskip_chars(stream ,  " \r\n\t"  , &at_eof);  /* Skipping intial space */
-  util_fskip_cchars(stream , " \r\n\t"  , &at_eof);  /* Skipping PORO/PERMX/... */
-  if (at_eof)
-    grdecl_file = false;
-  else {
-    grdecl_file = true;
-    {
-      int c;
-      do {
-        c = fgetc(stream);
-        if (c == '\r' || c == '\n')
-          break;
-        else {
-          if (c != ' ') {
-            grdecl_file = false;
-            break;
-          }
-        }
-      } while (c == ' ');
-    }
-  }
-  util_fseek(stream , init_pos , SEEK_SET);
-  return grdecl_file;
-}
-
-
-
-
 #define KW_MAX_MIN(type)                                       \
 {                                                              \
   type * data = ecl_kw_get_data_ref(ecl_kw);                   \

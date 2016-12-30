@@ -125,7 +125,6 @@ extern "C" {
   void           ecl_kw_fskip_header( fortio_type * fortio);
 
 
-  bool ecl_kw_is_grdecl_file(FILE * );
   bool ecl_kw_is_kw_file(fortio_type * fortio);
 
   int        ecl_kw_element_sum_int( const ecl_kw_type * ecl_kw );
