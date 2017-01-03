@@ -122,4 +122,5 @@ class WellState(BaseCClass):
         wn = str(self.wellNumber())
         type_ = self.wellType()
         open_ = 'open' if self.isOpen() else 'shut'
-        return 'WellState(%s%s, number = %s, type = "%s", state = %s) at 0x%x' % (name, msw, wn, type_, open_, self._address())
+        cnt = '%s%s, number = %s, type = "%s", state = %s' % (name, msw, wn, type_, open_)
+        return self._create_repr(cnt)

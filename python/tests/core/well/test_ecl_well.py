@@ -165,6 +165,22 @@ class EclWellTest(ExtendedTestCase):
 
         self.assertEqual(len(well_states), len(EclWellTest.ALL_WELLS))
 
+        # testing name and repr
+        info = self.getWellInfo()
+        wtl  = info['G6HT2']
+        self.assertEqual('G6HT2', wtl.getName())
+        rep = repr(wtl)
+        print(rep)
+        pfx = 'WellTimeLine('
+        self.assertEqual(pfx, rep[:len(pfx)])
+
+        # testing __getitem__ and its well state
+        ws = wtl[0]
+        self.assertTrue(ws.isOpen())
+        self.assertEqual(ws.wellType(), WellTypeEnum.ERT_PRODUCER)
+        self.assertTrue(ws.isMultiSegmentWell())
+        pfx = 'WellState('
+        self.assertEqual(pfx, repr(ws)[:len(pfx)])
 
 
     def test_well_state(self):
