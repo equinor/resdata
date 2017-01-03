@@ -4,11 +4,14 @@ from ert.well import WellState, WellPrototype
 class WellTimeLine(BaseCClass):
     TYPE_NAME = "well_time_line"
     _size = WellPrototype("int well_ts_get_size(well_time_line)")
+    _name = WellPrototype("char* well_ts_get_name(well_time_line)")
     _iget = WellPrototype("well_state_ref well_ts_iget_state(well_time_line, int)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
+    def getName(self):
+        return self._name()
 
     def __len__(self):
         """ @rtype: int """

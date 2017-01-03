@@ -147,6 +147,9 @@ well_ts_type * well_ts_alloc( const char * well_name ) {
   return well_ts;
 }
 
+char * well_ts_get_name( const well_ts_type * well_ts) {
+  return well_ts->well_name;
+}
 
 static int well_ts_get_index__( const well_ts_type * well_ts , int report_step , time_t sim_time , bool use_report) {
   const int size = vector_get_size( well_ts->ts );
