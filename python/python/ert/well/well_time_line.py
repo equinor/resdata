@@ -36,4 +36,7 @@ class WellTimeLine(BaseCClass):
         pass
 
     def __repr__(self):
-        return 'WellTimeLine(len = %d) at 0x%x' % (len(self), self._address())
+        n = self.getName()
+        l = len(self)
+        cnt = 'name = %s, size = %d' % (n,l)
+        return self._create_repr(cnt)
