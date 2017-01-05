@@ -177,3 +177,24 @@ class SurfaceTest(ExtendedTestCase):
             self.assertEqual(s_sqrt[i] , 2)
         s0.inplaceSqrt( )
         self.assertTrue( s0 == s_sqrt )
+
+
+    def test_xy(self):
+        ny,nx = 20,30
+        xinc,yinc = 50.0, 50.0
+        xstart,ystart = 463325.5625, 7336963.5
+        angle = 0
+        s_args = (None, nx, ny, xinc, yinc, xstart, ystart, angle)
+        s = Surface(*s_args)
+
+        xy = s.getXY(0)
+        self.assertEqual((xstart, ystart), xy)
+
+        xy = s.getXY(1)
+        self.assertEqual((xstart+xinc, ystart), xy)
+
+        xy = s.getXY(nx)
+        self.assertEqual((xstart, ystart+yinc), xy)
+
+        xy = s.getXY(-1)
+        self.assertEqual((xstart+xinc*(nx-1), ystart+yinc*(ny-1)), xy)

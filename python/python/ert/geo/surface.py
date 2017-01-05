@@ -17,6 +17,7 @@
 Create a polygon
 """
 import os.path
+import ctypes
 
 from cwrap import BaseCClass
 from ert.geo import GeoPrototype
@@ -43,6 +44,7 @@ class Surface(BaseCClass):
     _imul         = GeoPrototype("void   geo_surface_imul( surface , surface )")
     _isub         = GeoPrototype("void   geo_surface_isub( surface , surface )")
     _isqrt        = GeoPrototype("void   geo_surface_isqrt( surface )")
+    _iget_xy       = GeoPrototype("void   geo_surface_iget_xy(surface, int, double*, double*)")
 
 
     def __init__(self, filename=None, nx=None, ny=None, xinc=None, yinc=None,
@@ -213,6 +215,23 @@ class Surface(BaseCClass):
             return self._iget_zvalue( index)
         else:
              raise TypeError("Invalid index type:%s - must be integer" % index)
+
+
+    def getXY(self, index):
+        if isinstance(index, int):
+            if index < 0:
+                index += len(self)
+            if index >= len(self) or index < 0:
+                raise IndexError("Invalid index:%d - valid range [0,%d)" % (index, len(self)))
+        else:
+            raise TypeError("Invalid index type:%s - must be integer" % index)
+
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        self._iget_xy(index, ctypes.byref(x), ctypes.byref(y))
+
+        return x.value, y.value
+
 
     def getNX(self):
         return self._get_nx(  )

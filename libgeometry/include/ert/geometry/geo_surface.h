@@ -44,6 +44,7 @@ extern "C" {
   void                geo_surface_fprintf_irap_external_zcoord( const geo_surface_type * surface, const char * filename , const double * zcoord);
   int                 geo_surface_get_nx( const geo_surface_type * surface );
   int                 geo_surface_get_ny( const geo_surface_type * surface );
+  void                geo_surface_iget_xy( const geo_surface_type* surface, int index, double* x, double* y);
 
 #ifdef __cplusplus
 }

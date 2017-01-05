@@ -1279,7 +1279,7 @@ static double ecl_cell_get_signed_volume( ecl_cell_type * cell) {
      *             6
      * Since sum( |a·(b x c)| ) / 6 is equal to
      * sum( |a·(b x c)| / 6 ) we can do the (rather expensive) division only once
-     * and stil get the correct result. We multiply by 0.5 because we've now
+     * and still get the correct result. We multiply by 0.5 because we've now
      * considered two decompositions of the tetrahedron, and want their average.
      *
      *
