@@ -55,5 +55,8 @@ std::string EclFilename( const std::string& base, ecl_file_enum file_type , bool
 }
 
 
+ecl_file_enum EclFiletype(const std::string& filename) {
+    return ecl_util_get_file_type( filename.c_str(), nullptr, nullptr );
+}
 
 }

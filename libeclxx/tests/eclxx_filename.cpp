@@ -61,4 +61,7 @@ int main (int argc, char **argv) {
         test_assert_true( true );
     }
 
+    test_assert_int_equal( ECL_EGRID_FILE , ERT::EclFiletype("CASE.EGRID" ) );
+    test_assert_int_equal( ECL_RESTART_FILE , ERT::EclFiletype("CASE.F0098") );
+    test_assert_int_equal( ECL_UNIFIED_RESTART_FILE , ERT::EclFiletype("CASE.UNRST") );
 }
