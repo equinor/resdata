@@ -258,7 +258,6 @@ static ecl_kw_type * ecl_rst_file_alloc_DOUBHEAD( ecl_rst_file_type * rst_file ,
 
 void ecl_rst_file_fwrite_header( ecl_rst_file_type * rst_file ,
                                  int seqnum ,
-                                 ert_ecl_unit_enum unit_system,
                                  ecl_rsthead_type * rsthead_data ) {
 
   if (rst_file->unified)
