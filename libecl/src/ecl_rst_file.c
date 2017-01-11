@@ -183,7 +183,7 @@ static ecl_kw_type * ecl_rst_file_alloc_INTEHEAD( ecl_rst_file_type * rst_file,
   ecl_kw_type * intehead_kw = ecl_kw_alloc( INTEHEAD_KW , INTEHEAD_RESTART_SIZE , ECL_INT_TYPE );
   ecl_kw_scalar_set_int( intehead_kw , 0 );
 
-  ecl_kw_iset_int( intehead_kw , INTEHEAD_UNIT_INDEX    , INTEHEAD_METRIC_VALUE );
+  ecl_kw_iset_int( intehead_kw , INTEHEAD_UNIT_INDEX    , rsthead->unit_system );
   ecl_kw_iset_int( intehead_kw , INTEHEAD_NX_INDEX      , rsthead->nx);
   ecl_kw_iset_int( intehead_kw , INTEHEAD_NY_INDEX      , rsthead->ny);
   ecl_kw_iset_int( intehead_kw , INTEHEAD_NZ_INDEX      , rsthead->nz);
@@ -258,6 +258,7 @@ static ecl_kw_type * ecl_rst_file_alloc_DOUBHEAD( ecl_rst_file_type * rst_file ,
 
 void ecl_rst_file_fwrite_header( ecl_rst_file_type * rst_file ,
                                  int seqnum ,
+                                 ert_ecl_unit_enum unit_system,
                                  ecl_rsthead_type * rsthead_data ) {
 
   if (rst_file->unified)
