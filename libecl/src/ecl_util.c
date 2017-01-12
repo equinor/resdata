@@ -1353,14 +1353,14 @@ int ecl_util_get_num_cpu(const char * data_file) {
 
 
 ert_ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
-  ert_ecl_unit_enum units = ERT_ECL_METRIC_UNITS;
+  ert_ecl_unit_enum units = ECL_METRIC_UNITS;
   basic_parser_type * parser = basic_parser_alloc(" \t\r\n" , "\"\'" , NULL , NULL , "--" , "\n");
   FILE * stream = util_fopen(data_file , "r");
 
   if (basic_parser_fseek_string( parser , stream , "FIELD" , true , true)) {  /* Seeks case insensitive. */
-    units = ERT_ECL_FIELD_UNITS;
+    units = ECL_FIELD_UNITS;
   } else if (basic_parser_fseek_string( parser , stream , "LAB" , true , true)) {  /* Seeks case insensitive. */
-    units = ERT_ECL_LAB_UNITS;
+    units = ECL_LAB_UNITS;
   }
 
   basic_parser_free( parser );

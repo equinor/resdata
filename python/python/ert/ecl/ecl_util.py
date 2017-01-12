@@ -91,13 +91,15 @@ EclTypeEnum.addEnum("ECL_MESS_TYPE" , 5 )
 class EclUnitTypeEnum(BaseCEnum):
     TYPE_NAME = "ecl_unit_enum"
 
-    ERT_ECL_METRIC_UNITS = None
-    ERT_ECL_FIELD_UNITS  = None
-    ERT_ECL_LAB_UNITS    = None
-
-EclUnitTypeEnum.addEnum("ERT_ECL_METRIC_UNITS" , 0 )
-EclUnitTypeEnum.addEnum("ERT_ECL_FIELD_UNITS" , 1 )
-EclUnitTypeEnum.addEnum("ERT_ECL_LAB_UNITS" , 2 )
+    ECL_METRIC_UNITS = None
+    ECL_FIELD_UNITS  = None
+    ECL_LAB_UNITS    = None
+    ECL_PVT_M_UNITS  = None
+    
+EclUnitTypeEnum.addEnum("ECL_METRIC_UNITS" , 1 )
+EclUnitTypeEnum.addEnum("ECL_FIELD_UNITS" , 2 )
+EclUnitTypeEnum.addEnum("ECL_LAB_UNITS" , 3 )
+EclUnitTypeEnum.addEnum("ECL_PVT_M_UNITS" , 4 )
 
 
 

@@ -1507,7 +1507,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid , int du
   grid->index_map             = NULL;
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
-  grid->unit_system            = ERT_ECL_METRIC_UNITS;
+  grid->unit_system            = ECL_METRIC_UNITS;
 
 
   if (global_grid != NULL) {
@@ -5604,16 +5604,16 @@ static ecl_kw_type * ecl_grid_alloc_gridunits_kw( ) {
 /*****************************************************************/
 
 static float ecl_grid_output_scaling( const ecl_grid_type * grid , ert_ecl_unit_enum output_unit) {
-  if (output_unit == ERT_ECL_LAB_UNITS)
+  if (output_unit == ECL_LAB_UNITS)
     util_abort("%s: sorry - lab units not yet supported" , __func__);
 
-  if (grid->unit_system == ERT_ECL_LAB_UNITS)
+  if (grid->unit_system == ECL_LAB_UNITS)
     util_abort("%s: sorry - lab units not yet supported");
 
   if (grid->unit_system == output_unit)
     return 1.0;
   else {
-    if (grid->unit_system == ERT_ECL_METRIC_UNITS)
+    if (grid->unit_system == ECL_METRIC_UNITS)
       return METER_TO_FEET_SCALE_FACTOR;
     else
       return 1.0 / METER_TO_FEET_SCALE_FACTOR;
@@ -6360,10 +6360,10 @@ void ecl_grid_fwrite_EGRID2( ecl_grid_type * grid , const char * filename, ert_e
 */
 
 void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool output_metric) {
-  ert_ecl_unit_enum output_unit = ERT_ECL_METRIC_UNITS;
+  ert_ecl_unit_enum output_unit = ECL_METRIC_UNITS;
 
   if (!output_metric)
-    output_unit = ERT_ECL_FIELD_UNITS;
+    output_unit = ECL_FIELD_UNITS;
 
   ecl_grid_fwrite_EGRID2( grid , filename , output_unit );
 }

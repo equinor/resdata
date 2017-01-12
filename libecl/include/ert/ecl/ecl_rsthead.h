@@ -41,6 +41,8 @@ extern "C" {
     int    version;         // 100, 300, 500 (Eclipse300-Thermal)
     int    phase_sum;       // Oil = 1   Gas = 2    Water = 4
 
+    ert_ecl_unit_enum unit_system;
+
     int    nx;
     int    ny;
     int    nz;

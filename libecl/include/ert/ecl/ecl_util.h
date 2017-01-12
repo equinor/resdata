@@ -127,13 +127,11 @@ typedef enum {
 
 
 typedef enum {
-  ERT_ECL_METRIC_UNITS = 0,
-  ERT_ECL_FIELD_UNITS  = 1,
-  ERT_ECL_LAB_UNITS    = 2
+  ECL_METRIC_UNITS = 1,
+  ECL_FIELD_UNITS  = 2,
+  ECL_LAB_UNITS    = 3,
+  ECL_PVT_M_UNITS  = 4
 } ert_ecl_unit_enum;
-
-#define ECL_UNIT_ENUM_DEFS {.value = 0 , .name = "ECL_METRIC_UNITS"}, {.value = 1 , .name = "ECL_FIELD_UNITS"} , {.value = 2 , .name = "ECL_LAB_UNITS"}
-#define ECL_UNIT_ENUM_SIZE 3
 
 
 // For unformatted files:
