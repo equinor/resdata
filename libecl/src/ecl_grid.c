@@ -492,6 +492,12 @@ Warning: The main author of this code suspects that the coordinate
 system can be right-handed as well, giving a z axis which will
 increase 'towards the sky'; the safest is probaly to check this
 explicitly if it matters for the case at hand.
+
+Method 0 corresponds to a tetrahedron decomposition which will split
+the lower layer along the 1-2 diagonal and the upper layer along the
+4-7 diagonal, method 1 corresponds to the alternative decomposition
+which splits the lower face along the 0-3 diagnoal and the upper face
+along the 5-6 diagonal.
 */
 
 static const int tetrahedron_permutations[2][12][3] = {{{0,1,2},
@@ -520,17 +526,26 @@ static const int tetrahedron_permutations[2][12][3] = {{{0,1,2},
                                                         {7,6,3}}};
 
 
+/*
+  When determining whether a point is inside a cell each phase is
+  decomposed in two oriented triangles, and the point is deemed inside
+  if the signed distance to this plane is positive for all planes.
+*/
 
 
+static const int bounding_planes[12][3] = {{0,2,4},   // I+
+                                           {2,6,4},   // I+
+                                           {1,5,3},   // I-
+                                           {5,7,3},   // I-
+                                           {0,5,1},   // J+
+                                           {0,4,5},   // J+
+                                           {2,3,7},   // J-
+                                           {2,7,6},   // J-
+                                           {0,1,2},   // K+
+                                           {1,3,2},   // K+
+                                           {4,6,5},   // K-
+                                           {5,6,7}};  // K-
 
-
-
-static const int bounding_planes[6][3] = {{0,1,2},
-                                          {0,2,4},
-                                          {0,4,1},
-                                          {4,6,5},
-                                          {2,3,6},
-                                          {1,5,3}};
 
 
 
@@ -1128,6 +1143,7 @@ static void ecl_cell_set_center( ecl_cell_type * cell) {
 }
 
 
+
 static void ecl_cell_assert_center( ecl_cell_type * cell) {
   if (!GET_CELL_FLAG(cell , CELL_FLAG_CENTER))
     ecl_cell_set_center( cell );
@@ -1244,6 +1260,9 @@ static inline double tetrahedron_volume6( tetrahedron_type tet ) {
   /* dot product */
   return tet.p0.x*bxc.x + tet.p0.y*bxc.y + tet.p0.z*bxc.z;
 }
+
+
+
 
 /*
  * This function used to account for a significant amount of execution time
@@ -3765,11 +3784,25 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool
 
 /*****************************************************************/
 
-bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z) {
+
+/*
+  Observe the following quirks with this functions:
+
+  - It is quite simple to create a cell where the center point is
+    actually *not* inside the cell - that might come as a surprise!
+
+  - Cells with nonzero twist are completely discarded from the search,
+    if the point (x,y,z) "should" have been found on the inside of a
+    twisted cell the algorithm will incorrectly return false; a
+    warning will be printed on stderr if a cell is discarded due to
+    twist.
+*/
+
+
+bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j , int k, double x , double y , double z) {
   const double min_volume = 1e-9;
   point_type p;
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
-
+  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , ecl_grid_get_global_index3( ecl_grid , i, j , k ));
   point_set( &p , x , y , z);
   /*
     1. first check if the point z value is below the deepest point of
@@ -3801,10 +3834,6 @@ bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_in
     return false;
 
   {
-    int i,j,k;
-    ecl_grid_get_ijk1( ecl_grid , global_index , &i , &j , &k);
-    ecl_cell_assert_center( cell );
-
     /*
       Special case checks for the corner points.
     */
@@ -3865,43 +3894,53 @@ bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_in
         return false;
     }
 
+    if (ecl_cell_get_twist(cell) > 0) {
+      fprintf(stderr, "** Warning: Point (%g,%g,%g) is in vicinity of twisted cell: (%d,%d,%d) - function:%s might be mistaken.\n", x,y,z,i,j,k, __func__);
+      return false;
+    }
+
     {
-      double sign = 1.0;
-      int plane_nr = 0;
       double signed_volume = ecl_cell_get_signed_volume( cell );
-      if (fabs(signed_volume) > min_volume) {
+      if (fabs( signed_volume) > min_volume) {
+        double sign = 1.0;
         point_type * p0;
         point_type * p1;
         point_type * p2;
 
+
         if (signed_volume < 0)
           sign = -1;
         {
-          while (true) {
+          for (int plane_nr = 0; plane_nr < 12; plane_nr++) {
+
             p0 = &cell->corner_list[ bounding_planes[plane_nr][0] ];
             p1 = &cell->corner_list[ bounding_planes[plane_nr][1] ];
             p2 = &cell->corner_list[ bounding_planes[plane_nr][2] ];
 
             if (point_equal(p0, p1) || point_equal(p0,p2) || point_equal(p1,p2))
-              return false;
+              continue;
 
             if (sign * point3_plane_distance(p0 , p1 , p2 , &p ) < 0)
               return false;
 
-            plane_nr++;
-            if (plane_nr == 6)
-              return true;
           }
+          return true;
         }
-      } else
-        return false;
+      }
+
+      return false;
     }
   }
 }
 
-bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i , int j , int k, double x , double y , double z) {
-  int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
-  return ecl_grid_cell_contains_xyz1( ecl_grid , global_index , x ,y  , z);
+
+
+
+
+bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index, double x , double y , double z) {
+  int i,j,k;
+  ecl_grid_get_ijk1( ecl_grid , global_index , &i , &j , &k);
+  return ecl_grid_cell_contains_xyz3( ecl_grid , i,j,k,x ,y  , z);
 }
 
 /**
@@ -4445,11 +4484,14 @@ void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *
 /******************************************************************/
 /*
   Functions to get the 'true' (i.e. UTM or whatever) position (x,y,z).
+
+  The cell center is calculated as the plain average of the eight
+  corner positions, it is quite simple to construct cells where this
+  average position is on the outside of the cell - hence there is no
+  guarantee that the (x,y,z) position returned from this function
+  actually is on the inside of the cell.
 */
 
-/*
-  ijk are C-based zero offset.
-*/
 
 void ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
   ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
@@ -4463,12 +4505,11 @@ void ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *x
 
 
 
+
 void ecl_grid_get_xyz3(const ecl_grid_type * grid , int i, int j , int k, double *xpos , double *ypos , double *zpos) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
   ecl_grid_get_xyz1( grid , global_index , xpos , ypos , zpos);
 }
-
-
 
 
 

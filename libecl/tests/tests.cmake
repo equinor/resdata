@@ -115,3 +115,5 @@ add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  )
 add_executable( ecl_rst_file ecl_rst_file.c )
 target_link_libraries( ecl_rst_file ecl test_util )
 add_test( ecl_rst_file ${EXECUTABLE_OUTPUT_PATH}/ecl_rst_file  )
+
+add_test( ecl_grid_cell_contains1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_cell_contains )

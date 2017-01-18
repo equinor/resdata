@@ -135,9 +135,14 @@ extern "C" {
   void            ecl_grid_get_ijk1(const ecl_grid_type * , int global_index , int *, int * , int *);
   void            ecl_grid_get_ijk1A(const ecl_grid_type * , int active_index, int *, int * , int *);
   void            ecl_grid_get_ijk_from_active_index(const ecl_grid_type *, int , int *, int * , int * );
+
   void            ecl_grid_get_xyz3(const ecl_grid_type * , int , int , int , double * , double * , double *);
   void            ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos);
   void            ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *xpos , double *ypos , double *zpos);
+
+  bool            ecl_grid_get_xyz_inside1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos);
+  bool            ecl_grid_get_xyz_inside3(const ecl_grid_type * grid , int i , int j , int k , double *xpos , double *ypos , double *zpos);
+
   int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
   bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool include_nnc , bool verbose);
   int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
