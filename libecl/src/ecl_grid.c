@@ -4013,7 +4013,9 @@ int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double 
     else {
       /* Try boxes 2, 4, 8, ..., 64  */
       for (int bx = 1; bx <= 6; bx++) {
-        global_index = ecl_grid_get_global_index_from_xyz_around_box( grid , x, y, z, start_index, 1<<bx , &p);
+        global_index = ecl_grid_get_global_index_from_xyz_around_box(grid, x, y, z,
+                                                                     start_index,
+                                                                     1<<bx, &p);
         if (global_index >= 0)
           return global_index;
       }
@@ -4021,29 +4023,16 @@ int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double 
   }
 
   /*
-     OK - the attempted shortcuts did not pay off. We start on the
-     full linear search starting from start_index.
+    OK - the attempted shortcuts did not pay off. Perform full linear search.
   */
 
-  {
-    int index    = 0;
-    global_index = -1;
+  global_index = -1;
 
-    while (true) {
-      int current_index = ((index + start_index) % grid->size);
-      bool cell_contains;
-      cell_contains = ecl_grid_cell_contains_xyz1( grid , current_index , x , y , z);
-
-      if (cell_contains) {
-        global_index = current_index;
-        break;
-      }
-      index++;
-      if (index == grid->size)
-        break;
-    }
+  for (int index = 0; index < grid->size; index++) {
+    if (ecl_grid_cell_contains_xyz1( grid , index , x , y , z))
+      return index;
   }
-  return global_index;
+  return -1;
 }
 
 

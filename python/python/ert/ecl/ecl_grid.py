@@ -787,20 +787,19 @@ class EclGrid(BaseCClass):
         If the location (@x,@y,@z) can not be found in the grid, the
         method will return None.
         """
-
+        start_index = 0
         if start_ijk:
             start_index = self.__global_index( ijk = start_ijk )
-        else:
-            start_index = 0
+
         global_index = self._get_ijk_xyz( x , y , z , start_index)
         if global_index >= 0:
             i = ctypes.c_int()
             j = ctypes.c_int()
             k = ctypes.c_int()
-            self._get_ijk1( global_index , ctypes.byref(i) , ctypes.byref(j) , ctypes.byref(k))        
-            return (i.value , j.value , k.value)
-        else:
-            return None
+            self._get_ijk1( global_index,
+                            ctypes.byref(i), ctypes.byref(j), ctypes.byref(k) )
+            return (i.value, j.value, k.value)
+        return None
 
     def cell_contains( self , x , y , z , active_index = None , global_index = None , ijk = None):
         """
