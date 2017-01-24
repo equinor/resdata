@@ -32,6 +32,9 @@ extern "C" {
 #include <ert/ecl/grid_dims.h>
 #include <ert/ecl/nnc_info.h>
 
+#define ECL_GRID_COORD_SIZE(nx,ny)    (((nx) + 1) * ((ny) + 1) * 6)
+#define ECL_GRID_ZCORN_SIZE(nx,ny,nz) (((nx) * (ny) * (nz) * 8))
+
 #define ECL_GRID_GLOBAL_GRID   "Global"  // used as key in hash tables over grids.
 #define  ECL_GRID_MAINGRID_LGR_NR 0
 
@@ -205,6 +208,7 @@ extern "C" {
   void                    ecl_grid_fprintf_grdecl(  ecl_grid_type * grid , FILE * stream );
   void                    ecl_grid_fprintf_grdecl2(  ecl_grid_type * grid , FILE * stream , ert_ecl_unit_enum output_unit);
 
+  int              ecl_grid_zcorn_index__(int nx, int ny , int i, int j , int k , int c);
   int              ecl_grid_zcorn_index(const ecl_grid_type * grid , int i, int j , int k , int c);
   ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes );
   ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool apply_mapaxes );

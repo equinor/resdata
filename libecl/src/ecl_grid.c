@@ -2153,10 +2153,7 @@ static void ecl_grid_set_lgr_name_GRID(ecl_grid_type * lgr_grid , const ecl_file
   the zcorn vector.
 */
 
-int ecl_grid_zcorn_index(const ecl_grid_type * grid , int i, int j , int k , int c) {
-  int nx = grid->nx;
-  int ny = grid->ny;
-
+int ecl_grid_zcorn_index__(int nx, int ny , int i, int j , int k , int c) {
   int zcorn_index =  k*8*nx*ny + j*4*nx + 2*i;
   if ((c % 2) == 1)
     zcorn_index += 1;
@@ -2173,6 +2170,9 @@ int ecl_grid_zcorn_index(const ecl_grid_type * grid , int i, int j , int k , int
   return zcorn_index;
 }
 
+int ecl_grid_zcorn_index(const ecl_grid_type * grid , int i, int j , int k , int c) {
+  return ecl_grid_zcorn_index__( grid->nx, grid->ny , i , j , k , c );
+}
 
 
 static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid ,  const float * zcorn , const float * coord , const int * actnum, const int * corsnum , int j) {
@@ -5970,21 +5970,19 @@ void ecl_grid_init_coord_data_double( const ecl_grid_type * grid , double * coor
 
 
 float * ecl_grid_alloc_coord_data( const ecl_grid_type * grid ) {
-  float * coord = util_calloc( (grid->nx + 1) * (grid->ny + 1) * 6 , sizeof * coord );
+  float * coord = util_calloc( ecl_grid_get_coord_size(grid) , sizeof * coord );
   ecl_grid_init_coord_data( grid , coord );
   return coord;
 }
 
 void ecl_grid_assert_coord_kw( ecl_grid_type * grid ) {
   if (grid->coord_kw == NULL) {
-    grid->coord_kw = ecl_kw_alloc( COORD_KW , (grid->nx + 1) * (grid->ny + 1) * 6 , ECL_FLOAT_TYPE );
+    grid->coord_kw = ecl_kw_alloc( COORD_KW , ecl_grid_get_coord_size( grid ) , ECL_FLOAT_TYPE );
     ecl_grid_init_coord_data( grid , ecl_kw_get_void_ptr( grid->coord_kw ));
   }
 }
 
-int ecl_grid_get_coord_size( const ecl_grid_type * ecl_grid) {
-  return (ecl_grid->nx + 1) * (ecl_grid->ny + 1) * 6;
-}
+
 
 
 
@@ -6056,8 +6054,13 @@ ecl_kw_type * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid ) {
 }
 
 
+int ecl_grid_get_coord_size( const ecl_grid_type * grid) {
+  return ECL_GRID_COORD_SIZE( grid->nx , grid->ny );
+}
+
+
 int ecl_grid_get_zcorn_size( const ecl_grid_type * grid ) {
-  return 8 * grid->size;
+  return ECL_GRID_ZCORN_SIZE( grid->nx , grid->ny, grid->nz );
 }
 
 /*****************************************************************/
