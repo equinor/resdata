@@ -49,6 +49,8 @@ extern "C" {
   ecl_coarse_cell_type       * ecl_grid_get_cell_coarse_group1( const ecl_grid_type * ecl_grid , int global_index);
   ecl_coarse_cell_type       * ecl_grid_get_cell_coarse_group3( const ecl_grid_type * ecl_grid , int i , int j , int k);
 
+  int ecl_grid_get_cell_twist1( const ecl_grid_type * ecl_grid, int global_index );
+  int ecl_grid_get_cell_twist3( const ecl_grid_type * ecl_grid, int i , int j , int k);
 
   void            ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j, double_vector_type * column);
   int             ecl_grid_get_global_index_from_xy_top( const ecl_grid_type * ecl_grid , double x , double y);

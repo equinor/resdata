@@ -1066,6 +1066,21 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
 }
 
 
+
+static int ecl_cell_get_twist( const ecl_cell_type * cell ) {
+  int twist_count = 0;
+
+  for (int c = 0; c < 4; c++) {
+    const point_type * p1 = &cell->corner_list[c];
+    const point_type * p2 = &cell->corner_list[c + 4];
+    if ((p2->z - p1->z) < 0)
+      twist_count += 1;
+  }
+  return twist_count;
+}
+
+
+
 /*****************************************************************/
 
 
@@ -5044,7 +5059,31 @@ bool ecl_grid_cell_regular3( const ecl_grid_type * ecl_grid, int i,int j,int k) 
   return ecl_grid_cell_regular1( ecl_grid , global_index );
 }
 
+/*
+  The function ecl_grid_get_cell_twist() is an attempt to measure how
+  twisted or deformed a cell is. For a 'normal' cell the corners
+  [0..3] will z value <= the corners [4..7]. This function will count
+  the number of times the z value from the [4..7] is lower than the
+  corresponding z value from the [0..3] layer.
 
+  The purpose of the function is to detect twisted cells before
+  embarking on cell contains calculation. The current
+  ecl_cell_contains_xyz( ) implementation will fail badly for twisted
+  cells.
+
+  If the function return 4 you probably have an inverted z-axis!
+*/
+
+int ecl_grid_get_cell_twist1( const ecl_grid_type * ecl_grid, int global_index ) {
+  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+  return ecl_cell_get_twist( cell );
+}
+
+
+int ecl_grid_get_cell_twist3(const ecl_grid_type * ecl_grid, int i, int j , int k) {
+  int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k);
+  return ecl_grid_get_cell_twist1( ecl_grid , global_index );
+}
 
 
 double ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index ) {
