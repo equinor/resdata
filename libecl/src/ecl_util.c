@@ -161,7 +161,7 @@ ecl_type_enum ecl_util_get_type_from_name( const char * type_name ) {
 int ecl_util_get_sizeof_ctype_fortio(ecl_type_enum ecl_type) {
   int size = ecl_util_get_sizeof_ctype ( ecl_type );
   if (ecl_type == ECL_CHAR_TYPE)
-    size = ECL_STRING_LENGTH  * sizeof(char);
+    size = ECL_STRING8_LENGTH  * sizeof(char);
 
   return size;
 }
@@ -176,7 +176,7 @@ int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
        corresponds to the size requirements of ECL_CHAR_TYPE instance
        in memory; on disk the trailing \0 is not stored.
     */
-    sizeof_ctype = (ECL_STRING_LENGTH + 1) * sizeof(char);
+    sizeof_ctype = (ECL_STRING8_LENGTH + 1) * sizeof(char);
     break;
   case(ECL_FLOAT_TYPE):
     sizeof_ctype = sizeof(float);

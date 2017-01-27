@@ -321,7 +321,7 @@ static bool ecl_kw_string_eq(const char *s1 , const char *s2) {
   const int  len2       = strlen(short_kw);
   int index;
   bool eq = true;
-  if (len1 > ECL_STRING_LENGTH)
+  if (len1 > ECL_STRING8_LENGTH)
     util_abort("%s : eclipse keyword:%s is too long - aborting \n",__func__ , long_kw);
 
   for (index = 0; index < len2; index++)
@@ -338,7 +338,7 @@ static bool ecl_kw_string_eq(const char *s1 , const char *s2) {
 
 
 bool ecl_kw_ichar_eq(const ecl_kw_type *ecl_kw , int i , const char *value) {
-  char s1[ECL_STRING_LENGTH + 1];
+  char s1[ECL_STRING8_LENGTH + 1];
   ecl_kw_iget(ecl_kw , i , s1);
   return ecl_kw_string_eq(s1 , value);
 }
@@ -488,7 +488,7 @@ static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
 static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_type_enum ecl_type) {
   ecl_kw->ecl_type     = ecl_type;
   ecl_kw->sizeof_ctype = ecl_util_get_sizeof_ctype(ecl_kw->ecl_type);
-  if (strlen(header) > ECL_STRING_LENGTH)
+  if (strlen(header) > ECL_STRING8_LENGTH)
     util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
 
   ecl_kw_set_header_name(ecl_kw , header);
@@ -818,10 +818,10 @@ const char * ecl_kw_iget_char_ptr( const ecl_kw_type * ecl_kw , int i) {
 */
 void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
   char * ecl_string = (char *) ecl_kw_iget_ptr( ecl_kw , index );
-  if (strlen( s8 ) >= ECL_STRING_LENGTH) {
+  if (strlen( s8 ) >= ECL_STRING8_LENGTH) {
     /* The whole string goes in - possibly loosing content at the end. */
     int i;
-    for (i=0; i < ECL_STRING_LENGTH; i++)
+    for (i=0; i < ECL_STRING8_LENGTH; i++)
       ecl_string[i] = s8[i];
   } else {
     /* The string is padded with trailing spaces. */
@@ -831,12 +831,12 @@ void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
     for (i=0; i < string_length; i++)
       ecl_string[i] = s8[i];
 
-    for (i=string_length; i < ECL_STRING_LENGTH; i++)
+    for (i=string_length; i < ECL_STRING8_LENGTH; i++)
       ecl_string[i] = ' ';
 
   }
 
-  ecl_string[ ECL_STRING_LENGTH ] = '\0';
+  ecl_string[ ECL_STRING8_LENGTH ] = '\0';
 }
 
 /**
@@ -851,13 +851,13 @@ void ecl_kw_iset_string8(ecl_kw_type * ecl_kw , int index , const char *s8) {
    elements is not what you want?
 */
 void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
-  int strings = strlen( s ) / ECL_STRING_LENGTH;
-  if ((strlen( s ) %  ECL_STRING_LENGTH) != 0)
+  int strings = strlen( s ) / ECL_STRING8_LENGTH;
+  if ((strlen( s ) %  ECL_STRING8_LENGTH) != 0)
     strings++;
   {
     int sub_index;
     for (sub_index = 0; sub_index < strings; sub_index++)
-      ecl_kw_iset_string8( ecl_kw , index + sub_index , &s[ sub_index * ECL_STRING_LENGTH ]);
+      ecl_kw_iset_string8( ecl_kw , index + sub_index , &s[ sub_index * ECL_STRING8_LENGTH ]);
   }
 }
 
@@ -1155,8 +1155,8 @@ bool ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
           if (record_size >= 0) {
             int ir;
             for (ir = 0; ir < read_elm; ir++) {
-              util_fread( &ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream , __func__);
-              ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING_LENGTH] = null_char;
+              util_fread( &ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING8_LENGTH , stream , __func__);
+              ecl_kw->data[(ib * blocksize + ir) * ecl_kw->sizeof_ctype + ECL_STRING8_LENGTH] = null_char;
             }
             read_ok = fortio_complete_read(fortio , record_size);
           } else
@@ -1193,7 +1193,7 @@ void ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ec
     int element_size = ecl_util_get_sizeof_ctype(ecl_type);
 
     if(ecl_type == ECL_CHAR_TYPE || ecl_type == ECL_MESS_TYPE) {
-        element_size = ECL_STRING_LENGTH;
+        element_size = ECL_STRING8_LENGTH;
     }
 
 
@@ -1241,7 +1241,7 @@ bool ecl_kw_fskip_data__( ecl_type_enum ecl_type , const int element_count , for
 
       int element_size = ecl_util_get_sizeof_ctype(ecl_type );
       if(ecl_type == ECL_CHAR_TYPE || ecl_type == ECL_MESS_TYPE) {
-        element_size = ECL_STRING_LENGTH;
+        element_size = ECL_STRING8_LENGTH;
       }
 
       skip_ok = fortio_data_fskip(fortio, element_size, element_count, block_count);
@@ -1280,7 +1280,7 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
   const char null_char = '\0';
   FILE *stream  = fortio_get_FILE( fortio );
   bool fmt_file = fortio_fmt_file( fortio );
-  char header[ECL_STRING_LENGTH + 1];
+  char header[ECL_STRING8_LENGTH + 1];
   char ecl_type_str[ECL_TYPE_LENGTH + 1];
   int record_size;
   int size;
@@ -1297,7 +1297,7 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
         util_abort("%s: reading failed - at end of file?\n",__func__);
     }
   } else {
-    header[ECL_STRING_LENGTH]     = null_char;
+    header[ECL_STRING8_LENGTH]     = null_char;
     ecl_type_str[ECL_TYPE_LENGTH] = null_char;
     record_size = fortio_init_read(fortio);
     if (record_size > 0) {
@@ -1305,9 +1305,9 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
       size_t read_bytes = fread(buffer , 1 , ECL_KW_HEADER_DATA_SIZE , stream);
 
       if (read_bytes == ECL_KW_HEADER_DATA_SIZE) {
-        memcpy( header , &buffer[0] , ECL_STRING_LENGTH);
-        size = *( (int *) &buffer[ECL_STRING_LENGTH] );
-        memcpy( ecl_type_str , &buffer[ECL_STRING_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
+        memcpy( header , &buffer[0] , ECL_STRING8_LENGTH);
+        size = *( (int *) &buffer[ECL_STRING8_LENGTH] );
+        memcpy( ecl_type_str , &buffer[ECL_STRING8_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
 
         OK = fortio_complete_read(fortio , record_size);
       } else
@@ -1449,7 +1449,7 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
-  ecl_kw->header8 = realloc(ecl_kw->header8 , ECL_STRING_LENGTH + 1);
+  ecl_kw->header8 = realloc(ecl_kw->header8 , ECL_STRING8_LENGTH + 1);
   sprintf(ecl_kw->header8 , "%-8s" , header);
 
   /* Internalizing a header without the trailing spaces as well. */
@@ -1521,11 +1521,11 @@ static void ecl_kw_fwrite_data_unformatted( ecl_kw_type * ecl_kw , fortio_type *
            skipped.
         */
         FILE *stream      = fortio_get_FILE(fortio);
-        int   record_size = this_blocksize * ECL_STRING_LENGTH;     /* The total size in bytes of the record written by the fortio layer. */
+        int   record_size = this_blocksize * ECL_STRING8_LENGTH;     /* The total size in bytes of the record written by the fortio layer. */
         int   i;
         fortio_init_write(fortio , record_size );
         for (i = 0; i < this_blocksize; i++)
-          fwrite(&ecl_kw->data[(block_nr * blocksize + i) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING_LENGTH , stream);
+          fwrite(&ecl_kw->data[(block_nr * blocksize + i) * ecl_kw->sizeof_ctype] , 1 , ECL_STRING8_LENGTH , stream);
         fortio_complete_write(fortio , record_size);
       } else {
         int   record_size = this_blocksize * ecl_kw->sizeof_ctype;  /* The total size in bytes of the record written by the fortio layer. */
@@ -1664,7 +1664,7 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
     fortio_init_write(fortio , ECL_KW_HEADER_DATA_SIZE );
 
-    fwrite(ecl_kw->header8                            , sizeof(char)    , ECL_STRING_LENGTH  , stream);
+    fwrite(ecl_kw->header8                            , sizeof(char)    , ECL_STRING8_LENGTH  , stream);
     fwrite(&size                                      , sizeof(int)     , 1                  , stream);
     fwrite(ecl_util_get_type_name( ecl_kw->ecl_type ) , sizeof(char)    , ECL_TYPE_LENGTH    , stream);
 
