@@ -121,12 +121,19 @@ typedef enum {
   The libecl library has been built and tested 99.5% with ECLIPSE100
   as context, but in thye gravity code there is some very limited
   functionality related to ECLIPSE100 versus ECLIPSE300 functionality.
+
+  Observe that numerical values found as part of the INTEHAD keyword
+  differ from these values, and are found in the ecl_kw_magic.h
+  header.
 */
 
 typedef enum {
-  ECLIPSE_UNDEFINED = 0,
-  ECLIPSE100        = 1,
-  ECLIPSE300        = 2
+  ECLIPSE_UNDEFINED  = 0,
+  ECLIPSE100         = 1,
+  ECLIPSE300         = 2,
+  ECLIPSE300_THERMAL = 3,
+  INTERSECT          = 4,
+  FRONTSIM           = 5
 } ecl_version_enum;
 
 /*

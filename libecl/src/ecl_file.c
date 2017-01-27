@@ -710,12 +710,21 @@ ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
 
   if (int_value == INTEHEAD_ECLIPSE100_VALUE)
     return ECLIPSE100;
-  else if ((int_value == INTEHEAD_ECLIPSE300_VALUE) || (int_value == INTEHEAD_ECLIPSE300THERMAL_VALUE))
+
+  if (int_value == INTEHEAD_ECLIPSE300_VALUE)
     return ECLIPSE300;
-  else {
-    util_abort("%s: ECLIPSE version value:%d not recognized \n",__func__ , int_value );
-    return -1;
-  }
+
+  if (int_value == INTEHEAD_ECLIPSE300THERMAL_VALUE)
+    return ECLIPSE300_THERMAL;
+
+  if (int_value == INTEHEAD_INTERSECT_VALUE)
+    return INTERSECT;
+
+  if (int_value == INTEHEAD_FRONTSIM_VALUE)
+    return FRONTSIM;
+
+  util_abort("%s: Simulator version value:%d not recognized \n",__func__ , int_value );
+  return -1;
 }
 
 /*
