@@ -62,6 +62,7 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 
 #define BLOCKSIZE_NUMERIC  1000
 #define BLOCKSIZE_CHAR     105
+#define BLOCKSIZE_C010     105
 
 
 
@@ -113,6 +114,7 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 */
 
 #define READ_FMT_CHAR     "%8c"
+#define READ_FMT_C010     "%10c"
 #define READ_FMT_FLOAT    "%gE"
 #define READ_FMT_INT      "%d"
 #define READ_FMT_MESS     "%8c"
@@ -121,6 +123,7 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 
 
 #define WRITE_FMT_CHAR    " '%-8s'"
+#define WRITE_FMT_C010    " '%-10s'"
 #define WRITE_FMT_INT     " %11d"
 #define WRITE_FMT_FLOAT   "  %11.8fE%+03d"
 #define WRITE_FMT_DOUBLE  "  %17.14fD%+03d"
@@ -162,6 +165,9 @@ static const char * get_read_fmt( ecl_type_enum ecl_type ) {
   case(ECL_CHAR_TYPE):
     return READ_FMT_CHAR;
     break;
+  case(ECL_C010_TYPE):
+    return READ_FMT_C010;
+    break;
   case(ECL_INT_TYPE):
     return READ_FMT_INT;
     break;
@@ -189,6 +195,9 @@ const char * ecl_kw_get_write_fmt( ecl_type_enum ecl_type ) {
   case(ECL_CHAR_TYPE):
     return WRITE_FMT_CHAR;
     break;
+  case(ECL_C010_TYPE):
+    return WRITE_FMT_C010;
+    break;
   case(ECL_INT_TYPE):
     return WRITE_FMT_INT;
     break;
@@ -213,9 +222,13 @@ const char * ecl_kw_get_write_fmt( ecl_type_enum ecl_type ) {
 static int get_blocksize( ecl_type_enum ecl_type ) {
   if (ecl_type == ECL_CHAR_TYPE)
     return BLOCKSIZE_CHAR;
-  else if (ecl_type == ECL_MESS_TYPE)
+
+  if (ecl_type == ECL_MESS_TYPE)
     return BLOCKSIZE_CHAR;
-  else
+
+  if (ecl_type == ECL_C010_TYPE)
+    return BLOCKSIZE_C010;
+
     return BLOCKSIZE_NUMERIC;
 }
 
@@ -535,11 +548,17 @@ ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_type_enum ec
 
 
 ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_type ) {
-  ecl_kw_type *ecl_kw;
-  ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw_initialize(ecl_kw , header , size , ecl_type);
-  ecl_kw_alloc_data(ecl_kw);
-  return ecl_kw;
+  if (ecl_type == ECL_C010_TYPE)
+    return NULL;
+  {
+    ecl_kw_type *ecl_kw;
+
+    ecl_kw = ecl_kw_alloc_empty();
+    ecl_kw_initialize(ecl_kw , header , size , ecl_type);
+    ecl_kw_alloc_data(ecl_kw);
+
+    return ecl_kw;
+  }
 }
 
 
@@ -1240,9 +1259,11 @@ bool ecl_kw_fskip_data__( ecl_type_enum ecl_type , const int element_count , for
       const int block_count = element_count / blocksize + (element_count % blocksize == 0 ? 0 : 1);
 
       int element_size = ecl_util_get_sizeof_ctype(ecl_type );
-      if(ecl_type == ECL_CHAR_TYPE || ecl_type == ECL_MESS_TYPE) {
+      if(ecl_type == ECL_CHAR_TYPE)
         element_size = ECL_STRING8_LENGTH;
-      }
+
+      if(ecl_type == ECL_C010_TYPE)
+        element_size = ECL_STRING10_LENGTH;
 
       skip_ok = fortio_data_fskip(fortio, element_size, element_count, block_count);
     }
@@ -1322,6 +1343,10 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
   if (OK) {
     ecl_type_enum ecl_type = ecl_util_get_type_from_name( ecl_type_str );
     ecl_kw_initialize( ecl_kw , header , size , ecl_type);
+
+    if (ecl_type == ECL_C010_TYPE)
+      return ECL_KW_READ_SKIP;
+
     return ECL_KW_READ_OK;
   } else
     return ECL_KW_READ_FAIL;
@@ -1599,6 +1624,9 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
           void * data_ptr = ecl_kw_iget_ptr_static( ecl_kw , data_index );
           switch (ecl_kw->ecl_type) {
           case(ECL_CHAR_TYPE):
+            fprintf(stream , write_fmt , data_ptr);
+            break;
+          case(ECL_C010_TYPE):
             fprintf(stream , write_fmt , data_ptr);
             break;
           case(ECL_INT_TYPE):

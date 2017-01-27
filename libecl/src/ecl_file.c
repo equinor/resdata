@@ -525,14 +525,26 @@ static bool ecl_file_scan( ecl_file_type * ecl_file ) {
 
       {
         offset_type current_offset = fortio_ftell( ecl_file->fortio );
-        if (ecl_kw_fread_header( work_kw , ecl_file->fortio) == ECL_KW_READ_OK) {
+        ecl_read_status_enum read_status = ecl_kw_fread_header( work_kw , ecl_file->fortio);
+        if (read_status == ECL_KW_READ_FAIL) {
+          printf("Skipping on read:%s \n", ecl_kw_get_header( work_kw ));
+          break;
+        }
+
+        if (read_status == ECL_KW_READ_OK) {
           ecl_file_kw_type * file_kw = ecl_file_kw_alloc( work_kw , current_offset);
           if (ecl_file_kw_fskip_data( file_kw , ecl_file->fortio ))
             ecl_file_view_add_kw( ecl_file->global_view , file_kw );
           else
             break;
-        } else
-          break;
+        }
+
+        if (read_status == ECL_KW_READ_SKIP) {
+          bool skip_ok = ecl_kw_fskip_data( work_kw , ecl_file->fortio );
+          fprintf(stderr,"** Warning: keyword %s is of type \'C010\' - will be skipped when loading file. skip_ok:%d\n" , ecl_kw_get_header( work_kw ) , skip_ok);
+          if (!skip_ok)
+            break;
+        }
       }
     }
 
