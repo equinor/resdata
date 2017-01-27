@@ -37,6 +37,12 @@ extern "C" {
 
   typedef struct ecl_kw_struct      ecl_kw_type;
 
+  typedef enum {
+    ECL_KW_READ_OK = 0,
+    ECL_KW_READ_FAIL = 1,
+    ECL_KW_READ_SKIP = 2
+  } ecl_read_status_enum;
+
 /*
   The size of an ecl_kw instance is denoted with an integer. The
   choice of int to store the size obviously limits the maximum size to
@@ -59,7 +65,7 @@ extern "C" {
   const char   * ecl_kw_get_header8(const ecl_kw_type *);
   const char   * ecl_kw_get_header(const ecl_kw_type * ecl_kw );
   ecl_kw_type  * ecl_kw_alloc_empty(void);
-  bool           ecl_kw_fread_header(ecl_kw_type *, fortio_type *);
+  ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *, fortio_type *);
   void           ecl_kw_set_header_name(ecl_kw_type * , const char * );
   void           ecl_kw_set_header(ecl_kw_type  * , const char * , int , const char *);
   void           ecl_kw_set_header_alloc(ecl_kw_type  * , const char * , int , const char *);

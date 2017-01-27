@@ -1276,7 +1276,7 @@ void ecl_kw_fskip_header( fortio_type * fortio) {
 }
 
 
-bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
+ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
   const char null_char = '\0';
   FILE *stream  = fortio_get_FILE( fortio );
   bool fmt_file = fortio_fmt_file( fortio );
@@ -1318,10 +1318,12 @@ bool ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * fortio) {
     } else
       OK = false;
   }
-  if (OK)
-    ecl_kw_set_header(ecl_kw , header , size , ecl_type_str);
 
-  return OK;
+  if (OK) {
+    ecl_kw_set_header(ecl_kw , header , size , ecl_type_str);
+    return ECL_KW_READ_OK;
+  } else
+    return ECL_KW_READ_FAIL;
 }
 
 
@@ -1349,8 +1351,7 @@ bool ecl_kw_fseek_kw(const char * kw , bool rewind , bool abort_on_error , forti
   kw_found = false;
   while (cont) {
     long current_pos = fortio_ftell( fortio );
-    bool header_OK = ecl_kw_fread_header(tmp_kw , fortio);
-    if (header_OK) {
+    if (ecl_kw_fread_header(tmp_kw , fortio) == ECL_KW_READ_OK) {
       if (ecl_kw_string_eq(ecl_kw_get_header8(tmp_kw) , kw)) {
         fortio_fseek( fortio , current_pos , SEEK_SET );
         kw_found = true;
@@ -1470,8 +1471,7 @@ void ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int siz
 
 
 bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
-  bool OK = ecl_kw_fread_header(ecl_kw , fortio);
-  if (OK)
+  if (ecl_kw_fread_header(ecl_kw , fortio) == ECL_KW_READ_OK)
     return ecl_kw_fread_realloc_data( ecl_kw , fortio );
   else
     return false;
@@ -1480,7 +1480,7 @@ bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
 void ecl_kw_fread(ecl_kw_type * ecl_kw , fortio_type * fortio) {
   int current_size = ecl_kw->size;
-  if (!ecl_kw_fread_header(ecl_kw , fortio))
+  if (ecl_kw_fread_header(ecl_kw , fortio) != ECL_KW_READ_OK)
     util_abort("%s: failed to read header for ecl_kw - aborting \n",__func__);
 
   if (ecl_kw->size == current_size)
@@ -2502,10 +2502,10 @@ bool ecl_kw_is_kw_file(fortio_type * fortio) {
     ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
 
     if (fortio_fmt_file( fortio ))
-      kw_file = ecl_kw_fread_header(ecl_kw , fortio);
+      kw_file = (ecl_kw_fread_header(ecl_kw , fortio) != ECL_KW_READ_FAIL);
     else {
       if (fortio_is_fortio_file(fortio))
-        kw_file = ecl_kw_fread_header(ecl_kw , fortio);
+        kw_file = (ecl_kw_fread_header(ecl_kw , fortio) != ECL_KW_READ_FAIL);
       else
         kw_file = false;
     }

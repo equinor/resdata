@@ -112,7 +112,7 @@ ecl_rst_file_type * ecl_rst_file_open_write_seek( const char * filename , int re
         break;
       }
 
-      if (!ecl_kw_fread_header( work_kw , rst_file->fortio))
+      if (ecl_kw_fread_header( work_kw , rst_file->fortio) == ECL_KW_READ_FAIL)
         break;
 
       if (ecl_kw_name_equal( work_kw , SEQNUM_KW)) {

@@ -525,7 +525,7 @@ static bool ecl_file_scan( ecl_file_type * ecl_file ) {
 
       {
         offset_type current_offset = fortio_ftell( ecl_file->fortio );
-        if (ecl_kw_fread_header( work_kw , ecl_file->fortio)) {
+        if (ecl_kw_fread_header( work_kw , ecl_file->fortio) == ECL_KW_READ_OK) {
           ecl_file_kw_type * file_kw = ecl_file_kw_alloc( work_kw , current_offset);
           if (ecl_file_kw_fskip_data( file_kw , ecl_file->fortio ))
             ecl_file_view_add_kw( ecl_file->global_view , file_kw );
