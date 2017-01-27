@@ -1320,7 +1320,8 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
   }
 
   if (OK) {
-    ecl_kw_set_header(ecl_kw , header , size , ecl_type_str);
+    ecl_type_enum ecl_type = ecl_util_get_type_from_name( ecl_type_str );
+    ecl_kw_initialize( ecl_kw , header , size , ecl_type);
     return ECL_KW_READ_OK;
   } else
     return ECL_KW_READ_FAIL;
@@ -1457,17 +1458,6 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
 }
 
 
-
-void ecl_kw_set_header(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *type_name) {
-  ecl_type_enum ecl_type = ecl_util_get_type_from_name( type_name );
-  ecl_kw_initialize( ecl_kw , header , size , ecl_type);
-}
-
-
-void ecl_kw_set_header_alloc(ecl_kw_type *ecl_kw , const char *header ,  int size , const char *type_name ) {
-  ecl_kw_set_header(ecl_kw , header , size , type_name );
-  ecl_kw_alloc_data(ecl_kw);
-}
 
 
 bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
