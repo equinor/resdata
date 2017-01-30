@@ -307,6 +307,8 @@ values (2e20) are denoted with '*'.
 #define INTEHEAD_ECLIPSE100_VALUE        100
 #define INTEHEAD_ECLIPSE300_VALUE        300
 #define INTEHEAD_ECLIPSE300THERMAL_VALUE 500
+#define INTEHEAD_INTERSECT_VALUE         700
+#define INTEHEAD_FRONTSIM_VALUE          800
 
 #define INTEHEAD_INIT_SIZE                95
 #define INTEHEAD_RESTART_SIZE             180

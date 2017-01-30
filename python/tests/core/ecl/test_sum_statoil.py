@@ -449,3 +449,14 @@ class SumTest(ExtendedTestCase):
         self.assertTrue( "WGPR:NOT_21_D" in total )
 
         self.assertEqual( total.iget( "WGPR:NOT_21_D", 5) , 0) # Default value
+
+
+    def test_ix_case(self):
+        # This should ideally load OK; the current assertRaises() test
+        # is just to ensure that it does not go *completely* up in flames.
+        with self.assertRaises(IOError):
+            EclSum( self.createTestPath( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well"))
+
+        f = EclFile( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well.SMSPEC ")
+        self.assertTrue( "KEYWORDS" in f )
+        self.assertFalse( "NAMES" in f )
