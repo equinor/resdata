@@ -700,7 +700,8 @@ typedef struct ecl_cell_struct           ecl_cell_type;
 
 #define GET_CELL_FLAG(cell,flag) (((cell->cell_flags & (flag)) == 0) ? false : true)
 #define SET_CELL_FLAG(cell,flag) ((cell->cell_flags |= (flag)))
-#define METER_TO_FEET_SCALE_FACTOR 3.28084
+#define METER_TO_FEET_SCALE_FACTOR   3.28084
+#define METER_TO_CM_SCALE_FACTOR   100.0
 
 struct ecl_cell_struct {
   point_type center;
@@ -5577,15 +5578,33 @@ static ecl_kw_type * ecl_grid_alloc_mapaxes_kw( const float * mapaxes ) {
   return ecl_kw_alloc_new( MAPAXES_KW , 6 , ECL_FLOAT_TYPE , mapaxes);
 }
 
-static ecl_kw_type * ecl_grid_alloc_mapunits_kw( ) {
+static ecl_kw_type * ecl_grid_alloc_mapunits_kw( ert_ecl_unit_enum output_unit ) {
   ecl_kw_type * mapunits_kw = ecl_kw_alloc( MAPUNITS_KW , 1 , ECL_CHAR_TYPE);
-  ecl_kw_iset_string8( mapunits_kw , 0 , "METRES" );
+
+  if (output_unit == ECL_FIELD_UNITS)
+    ecl_kw_iset_string8( mapunits_kw , 0 , "FEET" );
+
+  if (output_unit == ECL_METRIC_UNITS)
+    ecl_kw_iset_string8( mapunits_kw , 0 , "METRES" );
+
+  if (output_unit == ECL_LAB_UNITS)
+    ecl_kw_iset_string8( mapunits_kw , 0 , "CM" );
+
   return mapunits_kw;
 }
 
-static ecl_kw_type * ecl_grid_alloc_gridunits_kw( ) {
+static ecl_kw_type * ecl_grid_alloc_gridunits_kw( ert_ecl_unit_enum output_unit ) {
   ecl_kw_type * gridunits_kw = ecl_kw_alloc( GRIDUNIT_KW , 2 , ECL_CHAR_TYPE);
-  ecl_kw_iset_string8( gridunits_kw , 0 , "METRES" );
+
+  if (output_unit == ECL_FIELD_UNITS)
+    ecl_kw_iset_string8( gridunits_kw , 0 , "FEET" );
+
+  if (output_unit == ECL_METRIC_UNITS)
+    ecl_kw_iset_string8( gridunits_kw , 0 , "METRES" );
+
+  if (output_unit == ECL_LAB_UNITS)
+    ecl_kw_iset_string8( gridunits_kw , 0 , "CM" );
+
   ecl_kw_iset_string8( gridunits_kw , 1 , "" );
   return gridunits_kw;
 }
@@ -5593,19 +5612,24 @@ static ecl_kw_type * ecl_grid_alloc_gridunits_kw( ) {
 /*****************************************************************/
 
 static float ecl_grid_output_scaling( const ecl_grid_type * grid , ert_ecl_unit_enum output_unit) {
-  if (output_unit == ECL_LAB_UNITS)
-    util_abort("%s: sorry - lab units not yet supported" , __func__);
-
-  if (grid->unit_system == ECL_LAB_UNITS)
-    util_abort("%s: sorry - lab units not yet supported");
-
   if (grid->unit_system == output_unit)
-    return 1.0;
+      return 1.0;
   else {
-    if (grid->unit_system == ECL_METRIC_UNITS)
-      return METER_TO_FEET_SCALE_FACTOR;
-    else
-      return 1.0 / METER_TO_FEET_SCALE_FACTOR;
+    double scale_factor = 1;
+
+    if (grid->unit_system == ECL_FIELD_UNITS)
+      scale_factor = 1.0 / METER_TO_FEET_SCALE_FACTOR;
+
+    if (grid->unit_system == ECL_LAB_UNITS)
+      scale_factor = 1.0 / METER_TO_CM_SCALE_FACTOR;
+
+    if (output_unit == ECL_FIELD_UNITS)
+      scale_factor *= METER_TO_FEET_SCALE_FACTOR;
+
+    if (output_unit == ECL_LAB_UNITS)
+      scale_factor *= METER_TO_CM_SCALE_FACTOR;
+
+    return scale_factor;
   }
 }
 
@@ -5616,30 +5640,31 @@ static void ecl_grid_fwrite_mapaxes( const float * mapaxes , fortio_type * forti
   ecl_kw_free( mapaxes_kw );
 }
 
-static void ecl_grid_fwrite_mapunits( fortio_type * fortio ) {
-  ecl_kw_type * mapunits_kw = ecl_grid_alloc_mapunits_kw(  );
+static void ecl_grid_fwrite_mapunits( fortio_type * fortio , ert_ecl_unit_enum output_unit) {
+  ecl_kw_type * mapunits_kw = ecl_grid_alloc_mapunits_kw( output_unit );
   ecl_kw_fwrite( mapunits_kw , fortio );
   ecl_kw_free( mapunits_kw );
 }
 
 
-static void ecl_grid_fwrite_gridunits( fortio_type * fortio)  {
-  ecl_kw_type * gridunits_kw = ecl_grid_alloc_gridunits_kw( );
+static void ecl_grid_fwrite_gridunits( fortio_type * fortio, ert_ecl_unit_enum output_unit)  {
+  ecl_kw_type * gridunits_kw = ecl_grid_alloc_gridunits_kw( output_unit );
   ecl_kw_fwrite( gridunits_kw , fortio );
   ecl_kw_free( gridunits_kw );
 }
 
-static void ecl_grid_fwrite_main_GRID_headers( const ecl_grid_type * ecl_grid , fortio_type * fortio) {
-  ecl_grid_fwrite_mapunits( fortio );
+
+static void ecl_grid_fwrite_main_GRID_headers( const ecl_grid_type * ecl_grid , fortio_type * fortio , ert_ecl_unit_enum output_unit) {
+  ecl_grid_fwrite_mapunits( fortio , output_unit );
 
   if (ecl_grid->use_mapaxes)
     ecl_grid_fwrite_mapaxes( ecl_grid->mapaxes , fortio );
 
-  ecl_grid_fwrite_gridunits( fortio );
+  ecl_grid_fwrite_gridunits( fortio , output_unit );
 }
 
 
-static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size , fortio_type * fortio) {
+static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size , fortio_type * fortio, ert_ecl_unit_enum output_unit) {
   if (grid->parent_grid != NULL) {
     ecl_kw_type * lgr_kw = ecl_kw_alloc(LGR_KW , 1 , ECL_CHAR_TYPE );
     ecl_kw_iset_string8( lgr_kw , 0 , grid->name );
@@ -5661,7 +5686,7 @@ static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size
   }
 
   if (grid->parent_grid == NULL)
-    ecl_grid_fwrite_main_GRID_headers( grid , fortio );
+    ecl_grid_fwrite_main_GRID_headers( grid , fortio , output_unit);
 
   {
     ecl_kw_type * radial_kw = ecl_kw_alloc( RADIAL_KW , 1 , ECL_CHAR_TYPE);
@@ -5701,7 +5726,7 @@ static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size
 }
 
 
-void ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename) {
+void ecl_grid_fwrite_GRID2( const ecl_grid_type * grid , const char * filename, ert_ecl_unit_enum output_unit) {
   int coords_size = 5;
   bool fmt_file   = false;
 
@@ -5712,16 +5737,20 @@ void ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename) {
   if (grid->coarsening_active)
     coords_size = 7;
 
-  ecl_grid_fwrite_GRID__( grid , coords_size , fortio );
+  ecl_grid_fwrite_GRID__( grid , coords_size , fortio , output_unit);
 
   {
     int grid_nr;
     for (grid_nr = 0; grid_nr < vector_get_size( grid->LGR_list ); grid_nr++) {
       const ecl_grid_type * igrid = vector_iget_const( grid->LGR_list , grid_nr );
-      ecl_grid_fwrite_GRID__( igrid , coords_size , fortio );
+      ecl_grid_fwrite_GRID__( igrid , coords_size , fortio , output_unit );
     }
   }
   fortio_fclose( fortio );
+}
+
+void ecl_grid_fwrite_GRID( const ecl_grid_type * grid , const char * filename) {
+  ecl_grid_fwrite_GRID2( grid , filename , ECL_METRIC_UNITS );
 }
 
 /*****************************************************************/
@@ -5745,10 +5774,11 @@ ENDGRID             0:INTE
    a standard EGRID header without creating a grid instance first.
 */
 
-static void ecl_grid_fwrite_main_EGRID_header( const float * mapaxes, int dualp_flag , fortio_type * fortio ) {
+static void ecl_grid_fwrite_main_EGRID_header( const ecl_grid_type * grid , fortio_type * fortio , ert_ecl_unit_enum output_unit) {
   int EGRID_VERSION  = 3;
   int RELEASE_YEAR   = 2007;
   int COMPAT_VERSION = 0;
+  const float * mapaxes = ecl_grid_get_mapaxes( grid );
 
   {
     ecl_kw_type * filehead_kw = ecl_kw_alloc( FILEHEAD_KW , 100 , ECL_INT_TYPE );
@@ -5758,18 +5788,18 @@ static void ecl_grid_fwrite_main_EGRID_header( const float * mapaxes, int dualp_
     ecl_kw_iset_int( filehead_kw , FILEHEAD_YEAR_INDEX      , RELEASE_YEAR );
     ecl_kw_iset_int( filehead_kw , FILEHEAD_COMPAT_INDEX    , COMPAT_VERSION );
     ecl_kw_iset_int( filehead_kw , FILEHEAD_TYPE_INDEX      , FILEHEAD_GRIDTYPE_CORNERPOINT );
-    ecl_kw_iset_int( filehead_kw , FILEHEAD_DUALP_INDEX     , dualp_flag );
+    ecl_kw_iset_int( filehead_kw , FILEHEAD_DUALP_INDEX     , grid->dualp_flag );
     ecl_kw_iset_int( filehead_kw , FILEHEAD_ORGFORMAT_INDEX , FILEHEAD_ORGTYPE_CORNERPOINT );
 
     ecl_kw_fwrite( filehead_kw , fortio );
     ecl_kw_free( filehead_kw );
   }
 
-  ecl_grid_fwrite_mapunits( fortio );
+  ecl_grid_fwrite_mapunits( fortio , output_unit );
   if (mapaxes != NULL)
     ecl_grid_fwrite_mapaxes( mapaxes , fortio );
 
-  ecl_grid_fwrite_gridunits( fortio );
+  ecl_grid_fwrite_gridunits( fortio , output_unit);
 }
 
 
@@ -5780,16 +5810,6 @@ static void ecl_grid_fwrite_gridhead_kw( int nx, int ny , int nz, int grid_nr, f
 }
 
 
-
-
-void ecl_grid_fwrite_EGRID_header__( int dims[3] , const float mapaxes[6], int dualp_flag , fortio_type * fortio) {
-  ecl_grid_fwrite_main_EGRID_header( mapaxes , dualp_flag , fortio );
-  ecl_grid_fwrite_gridhead_kw( dims[0] , dims[1] , dims[2] , 0 , fortio);
-}
-
-void ecl_grid_fwrite_EGRID_header( int dims[3] , const float mapaxes[6], fortio_type * fortio) {
-  ecl_grid_fwrite_EGRID_header__(dims , mapaxes , FILEHEAD_SINGLE_POROSITY , fortio );
-}
 
 
 /*****************************************************************/
@@ -6253,7 +6273,7 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
 
   /* Writing header */
   if (!is_lgr) {
-    ecl_grid_fwrite_main_EGRID_header( ecl_grid_get_mapaxes( grid ) , grid->dualp_flag , fortio );
+    ecl_grid_fwrite_main_EGRID_header( grid , fortio , output_unit );
   } else {
     {
       ecl_kw_type * lgr_kw = ecl_kw_alloc(LGR_KW , 1 , ECL_CHAR_TYPE );
@@ -6411,9 +6431,9 @@ void ecl_grid_fwrite_dims( const ecl_grid_type * grid , fortio_type * init_file,
    possible LGRs which are attached.
 */
 
-void ecl_grid_fprintf_grdecl(ecl_grid_type * grid , FILE * stream ) {
+void ecl_grid_fprintf_grdecl2(ecl_grid_type * grid , FILE * stream , ert_ecl_unit_enum output_unit) {
   {
-    ecl_kw_type * mapunits_kw = ecl_grid_alloc_mapunits_kw( grid );
+    ecl_kw_type * mapunits_kw = ecl_grid_alloc_mapunits_kw( output_unit );
     ecl_kw_fprintf_grdecl( mapunits_kw , stream );
     ecl_kw_free( mapunits_kw );
     fprintf(stream , "\n");
@@ -6426,7 +6446,7 @@ void ecl_grid_fprintf_grdecl(ecl_grid_type * grid , FILE * stream ) {
   }
 
   {
-    ecl_kw_type * gridunits_kw = ecl_grid_alloc_gridunits_kw( grid );
+    ecl_kw_type * gridunits_kw = ecl_grid_alloc_gridunits_kw( output_unit  );
     ecl_kw_fprintf_grdecl( gridunits_kw , stream );
     ecl_kw_free( gridunits_kw );
     fprintf(stream , "\n");
@@ -6462,6 +6482,11 @@ void ecl_grid_fprintf_grdecl(ecl_grid_type * grid , FILE * stream ) {
     ecl_kw_free( actnum_kw );
     fprintf(stream , "\n");
   }
+}
+
+
+void ecl_grid_fprintf_grdecl(ecl_grid_type * grid , FILE * stream ) {
+  ecl_grid_fprintf_grdecl2( grid , stream , ECL_METRIC_UNITS);
 }
 
 
@@ -6557,3 +6582,4 @@ ecl_kw_type * ecl_grid_alloc_volume_kw( const ecl_grid_type * grid , bool active
   else
     return ecl_grid_alloc_volume_kw_global( grid );
 }
+//

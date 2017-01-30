@@ -93,9 +93,9 @@ class EclGrid(BaseCClass):
     _invalid_cell                 = EclPrototype("bool   ecl_grid_cell_invalid1( ecl_grid , int)")
     _valid_cell                   = EclPrototype("bool   ecl_grid_cell_valid1( ecl_grid , int)")
     _get_distance                 = EclPrototype("void   ecl_grid_get_distance( ecl_grid , int , int , double* , double* , double*)")
-    _fprintf_grdecl               = EclPrototype("void   ecl_grid_fprintf_grdecl( ecl_grid , FILE) ")
-    _fwrite_GRID                  = EclPrototype("void   ecl_grid_fwrite_GRID( ecl_grid , char* )")
-    _fwrite_EGRID2                = EclPrototype("void   ecl_grid_fwrite_EGRID2( ecl_grid , char*, ecl_unit_enum , float*)")
+    _fprintf_grdecl2              = EclPrototype("void   ecl_grid_fprintf_grdecl2( ecl_grid , FILE , ecl_unit_enum) ")
+    _fwrite_GRID2                 = EclPrototype("void   ecl_grid_fwrite_GRID2( ecl_grid , char* , ecl_unit_enum)")
+    _fwrite_EGRID2                = EclPrototype("void   ecl_grid_fwrite_EGRID2( ecl_grid , char*, ecl_unit_enum)")
     _equal                        = EclPrototype("bool   ecl_grid_compare(ecl_grid , ecl_grid , bool, bool)")
     _dual_grid                    = EclPrototype("bool   ecl_grid_dual_grid( ecl_grid )")
     _init_actnum                  = EclPrototype("void   ecl_grid_init_actnum_data( ecl_grid , int* )")
@@ -1138,26 +1138,26 @@ class EclGrid(BaseCClass):
         else:
             raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.name , ecl_kw.size , self.nactive ,self.size))
         
-    def save_grdecl(self , pyfile):
+    def save_grdecl(self , pyfile, output_unit = EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
         Will write the the grid content as grdecl formatted keywords.
 
         Will only write the main grid.
         """
         cfile = CFILE( pyfile )
-        self._fprintf_grdecl( cfile )
+        self._fprintf_grdecl( cfile , output_unit)
 
     def save_EGRID( self , filename , output_unit = EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
         Will save the current grid as a EGRID file.
         """
-        self._fwrite_EGRID2( filename, output_unit , None )
+        self._fwrite_EGRID2( filename, output_unit )
 
-    def save_GRID( self , filename ):
+    def save_GRID( self , filename , output_unit = EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
         Will save the current grid as a EGRID file.
         """
-        self._fwrite_GRID(  filename )
+        self._fwrite_GRID2(  filename, output_unit )
 
         
     def write_grdecl( self , ecl_kw , pyfile , special_header = None , default_value = 0):
@@ -1185,7 +1185,7 @@ class EclGrid(BaseCClass):
         
         if len(ecl_kw) == self.getNumActive() or len(ecl_kw) == self.getGlobalSize():
             cfile = CFILE( pyfile )
-            self._fwrite_grdecl( ecl_kw , special_header , cfile , default_value )
+            self._fwrite_grdecl2( ecl_kw , special_header , cfile , default_value )
         else:
             raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.getName() , len(ecl_kw) , self.getNumActive() , self.getGlobalSize()))
 
