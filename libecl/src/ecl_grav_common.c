@@ -118,7 +118,7 @@ static inline double ecl_grav_common_eval_geertsma_kernel(int index, const doubl
     dist_z1 / cube_dist1 +
     (3 - 4*poisson_ratio)*dist_z2 / cube_dist2 -
     6*depth * (z + depth) * dist_z2 / (dist2*dist2*cube_dist2) +
-    2*dist_z1*((3 - 4*poisson_ratio)*(z + depth) - depth)/cube_dist2 ;
+    2*((3 - 4*poisson_ratio)*(z + depth) - depth)/cube_dist2 ;
 
   return displacement;
 }
