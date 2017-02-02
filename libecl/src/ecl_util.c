@@ -1336,8 +1336,15 @@ static int ecl_util_get_num_slave_cpu__(basic_parser_type* parser, FILE* stream,
         if (first_item[0] == '/') {
           break;
         }
-        else
-          ++num_cpu;
+        else{
+                int no_of_tokens = stringlist_get_size(tokens);
+                int no_of_slaves =0;
+                if(no_of_tokens == 6 && util_sscanf_int(stringlist_iget(tokens, 4), &no_of_slaves)){
+                    num_cpu += no_of_slaves;
+                }else{
+                    ++num_cpu;
+                }
+            }
       }
       stringlist_free( tokens );
     }
