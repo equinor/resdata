@@ -20,7 +20,7 @@ import datetime
 
 from unittest import skipIf, skipUnless, skipIf
 
-from ert.ecl import EclSum
+from ert.ecl import EclSum, EclFile
 
 from ert.util import StringList, TimeVector, DoubleVector
 
@@ -457,6 +457,6 @@ class SumTest(ExtendedTestCase):
         with self.assertRaises(IOError):
             EclSum( self.createTestPath( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well"))
 
-        f = EclFile( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well.SMSPEC ")
+        f = EclFile( self.createTestPath( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well.SMSPEC")) 
         self.assertTrue( "KEYWORDS" in f )
         self.assertFalse( "NAMES" in f )
