@@ -15,6 +15,15 @@ class WellConnection(BaseCClass):
     _connection_factor   = WellPrototype("double well_conn_get_connection_factor(well_connection)")
     _equal               = WellPrototype("bool   well_conn_equal(well_connection, well_connection)")
     _get_dir             = WellPrototype("void*  well_conn_get_dir(well_connection)")
+    _oil_rate            = WellPrototype("double well_conn_get_oil_rate(well_connection)")
+    _gas_rate            = WellPrototype("double well_conn_get_gas_rate(well_connection)")
+    _water_rate          = WellPrototype("double well_conn_get_water_rate(well_connection)")
+    _volume_rate         = WellPrototype("double well_conn_get_volume_rate(well_connection)")
+
+    _oil_rate_si         = WellPrototype("double well_conn_get_oil_rate_si(well_connection)")
+    _gas_rate_si         = WellPrototype("double well_conn_get_gas_rate_si(well_connection)")
+    _water_rate_si       = WellPrototype("double well_conn_get_water_rate_si(well_connection)")
+    _volume_rate_si      = WellPrototype("double well_conn_get_volume_rate_si(well_connection)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
@@ -73,3 +82,27 @@ class WellConnection(BaseCClass):
         dir = WellConnectionDirectionEnum(self.direction())
         addr = self._address()
         return 'WellConnection(%s %s%s%s, direction = %s) at 0x%x' % (ijk, frac, open_, msw, dir, addr)
+
+    def gasRate(self):
+        return self._gas_rate()
+
+    def waterRate(self):
+        return self._water_rate()
+
+    def oilRate(self):
+        return self._oil_rate()
+
+    def volumeRate(self):
+        return self._volume_rate()
+
+    def gasRateSI(self):
+        return self._gas_rate_si()
+
+    def waterRateSI(self):
+        return self._water_rate_si()
+
+    def oilRateSI(self):
+        return self._oil_rate_si()
+
+    def volumeRateSI(self):
+        return self._volume_rate_si()

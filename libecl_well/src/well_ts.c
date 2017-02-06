@@ -310,6 +310,7 @@ well_state_type * well_ts_get_last_state( const well_ts_type * well_ts) {
 
 well_state_type * well_ts_iget_state( const well_ts_type * well_ts , int index) {
   well_node_type * node = vector_iget( well_ts->ts , index );
+
   return node->well_state;
 }
 

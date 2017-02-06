@@ -73,9 +73,10 @@ ecl_rsthead_type * ecl_rsthead_alloc_from_kw( int report_step , const ecl_kw_typ
 
       rsthead->nwells    = data[INTEHEAD_NWELLS_INDEX];
       rsthead->niwelz    = data[INTEHEAD_NIWELZ_INDEX];
+      rsthead->nxwelz    = data[INTEHEAD_NXWELZ_INDEX];
       rsthead->nzwelz    = data[INTEHEAD_NZWELZ_INDEX];
-
       rsthead->nsconz    = data[INTEHEAD_NSCONZ_INDEX];
+      rsthead->nxconz    = data[INTEHEAD_NXCONZ_INDEX];
       rsthead->niconz    = data[INTEHEAD_NICONZ_INDEX];
       rsthead->ncwmax    = data[INTEHEAD_NCWMAX_INDEX];
 
