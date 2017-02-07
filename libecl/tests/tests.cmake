@@ -2,6 +2,10 @@ add_executable( ecl_alloc_grid_dxv_dyv_dzv ecl_alloc_grid_dxv_dyv_dzv.c )
 target_link_libraries( ecl_alloc_grid_dxv_dyv_dzv ecl test_util )
 add_test( ecl_alloc_grid_dxv_dyv_dzv  ${EXECUTABLE_OUTPUT_PATH}/ecl_alloc_grid_dxv_dyv_dzv )
 
+add_executable( ecl_alloc_cpgrid ecl_alloc_cpgrid.c )
+target_link_libraries( ecl_alloc_cpgrid ecl test_util )
+add_test( ecl_alloc_cpgrid  ${EXECUTABLE_OUTPUT_PATH}/ecl_alloc_cpgrid )
+
 add_executable( ecl_kw_init ecl_kw_init.c )
 target_link_libraries( ecl_kw_init ecl test_util )
 add_test( ecl_kw_init ${EXECUTABLE_OUTPUT_PATH}/ecl_kw_init  )
@@ -111,3 +115,5 @@ add_test( ecl_grid_export ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_export  )
 add_executable( ecl_rst_file ecl_rst_file.c )
 target_link_libraries( ecl_rst_file ecl test_util )
 add_test( ecl_rst_file ${EXECUTABLE_OUTPUT_PATH}/ecl_rst_file  )
+
+add_test( ecl_grid_cell_contains1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_cell_contains )
