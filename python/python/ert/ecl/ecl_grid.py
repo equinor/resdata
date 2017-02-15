@@ -1145,7 +1145,7 @@ class EclGrid(BaseCClass):
         Will only write the main grid.
         """
         cfile = CFILE( pyfile )
-        self._fprintf_grdecl( cfile , output_unit)
+        self._fprintf_grdecl2( cfile , output_unit)
 
     def save_EGRID( self , filename , output_unit = EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
