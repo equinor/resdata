@@ -62,7 +62,7 @@ add_test( ecl_grid_cell_contains4 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_cell_contai
 
 add_executable( ecl_grid_cell_contains_wellpath ecl_grid_cell_contains_wellpath.c )
 target_link_libraries( ecl_grid_cell_contains_wellpath ecl test_util )
-add_test( ecl_grid_cell_contains_wellpath1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_cell_contains_wellpath ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/CellContains/model/SMS-0.EGRID ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/CellContains/R_PB-4H.txt )
+add_test( ecl_grid_cell_contains_wellpath1 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_cell_contains_wellpath ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/CellContains/model/SMS-0.EGRID ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/CellContains/R_PB-4H.jira )
 
 add_executable( ecl_grid_cell_volume ecl_grid_cell_volume.c )
 target_link_libraries( ecl_grid_cell_volume ecl test_util )
