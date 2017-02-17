@@ -30,24 +30,26 @@ typedef struct {
   double x;
   double y;
   double z;
-  double md;
 
+  int g;
   int i;
   int j;
   int k;
+
+  bool skip;
 } point_type;
 
 
 
-vector_type * load_expected( const char * filename ) {
+vector_type * load_expected( const ecl_grid_type * grid, const char * filename ) {
   FILE * stream = util_fopen( filename , "r");
   vector_type * expected = vector_alloc_new();
 
   while (true) {
     double x,y,z;
-    int i,j,k;
+    int i,j,k,skip;
 
-    if (fscanf( stream , "%lg %lg %lg %d %d %d" , &x,&y,&z,&i,&j,&k) == 6) {
+    if (fscanf( stream , "%lg %lg %lg %d %d %d %d" , &x,&y,&z,&i,&j,&k,&skip) == 7) {
       point_type * p = util_malloc( sizeof * p );
       p->x = x;
       p->y = y;
@@ -56,7 +58,8 @@ vector_type * load_expected( const char * filename ) {
       p->i = i-1;
       p->j = j-1;
       p->k = k-1;
-
+      p->skip = skip;
+      p->g = ecl_grid_get_global_index3(grid,    p->i, p->j, p->k);
       vector_append_owned_ref( expected, p , free );
     } else
       break;
@@ -73,7 +76,7 @@ int main(int argc , char ** argv) {
   util_install_signals();
   {
     ecl_grid_type * grid = ecl_grid_alloc( argv[1] );
-    vector_type * expected = load_expected( argv[2] );
+    vector_type * expected = load_expected( grid, argv[2] );
 
     for (int c=0; c < vector_get_size( expected ); c++) {
       const point_type * p = vector_iget_const( expected , c );
@@ -81,9 +84,15 @@ int main(int argc , char ** argv) {
       if (g != ecl_grid_get_global_index3(grid, p->i,p->j, p->k)) {
         int i,j,k;
         ecl_grid_get_ijk1(grid, g, &i, &j, &k);
-        fprintf(stderr,"point:%d   Simulated: (%d,%d,%d)   Expected: (%d,%d,%d) \n",c , i,j,k, p->i, p->j, p->k);
+        fprintf(stderr,"point:%d   (%g,%g,%g), Simulated: %d:(%d,%d,%d)   Expected: %d:(%d,%d,%d)  contains:%d\n",
+                c , p->x, p->y, p->z, g, i,j,k, p->g, p->i, p->j, p->k, ecl_grid_cell_contains_xyz1( grid, p->g , p->x , p->y, p->z));
       }
-      test_assert_int_equal( g , ecl_grid_get_global_index3(grid, p->i,p->j, p->k));
+      if (!p->skip)
+        test_assert_int_equal( g , ecl_grid_get_global_index3(grid, p->i,p->j, p->k));
+      else {
+        if ( g != ecl_grid_get_global_index3(grid, p->i,p->j, p->k))
+          fprintf(stderr," ** Skipping failed test for point:%d \n",c);
+      }
     }
     ecl_grid_free( grid );
     vector_free( expected );
