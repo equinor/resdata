@@ -526,28 +526,6 @@ static const int tetrahedron_permutations[2][12][3] = {{{0,1,2},
                                                         {7,6,3}}};
 
 
-/*
-  When determining whether a point is inside a cell each phase is
-  decomposed in two oriented triangles, and the point is deemed inside
-  if the signed distance to this plane is positive for all planes.
-*/
-
-
-static const int bounding_planes[12][3] = {{0,2,4},   // I+
-                                           {2,6,4},   // I+
-                                           {1,5,3},   // I-
-                                           {5,7,3},   // I-
-                                           {0,5,1},   // J+
-                                           {0,4,5},   // J+
-                                           {2,3,7},   // J-
-                                           {2,7,6},   // J-
-                                           {0,1,2},   // K+
-                                           {1,3,2},   // K+
-                                           {4,6,5},   // K-
-                                           {5,6,7}};  // K-
-
-
-
 
 /*
 
@@ -619,6 +597,8 @@ static void point_vector_cross(point_type * A , const point_type * B , const poi
 static double point_dot_product( const point_type * v1 , const point_type * v2) {
   return v1->x*v2->x + v1->y*v2->y + v1->z*v2->z;
 }
+
+
 
 static bool point_equal( const point_type *p1 , const point_type * p2) {
   return (memcmp( p1 , p2 , sizeof * p1 ) == 0);
@@ -3812,8 +3792,10 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
 
     3. full geometric verification.
   */
-  if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED))
+  if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
+    //printf("False tainted \n");
     return false;
+  }
 
   if (p.z < ecl_cell_min_z( cell ))
     return false;
@@ -3906,23 +3888,23 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
         point_type * p0;
         point_type * p1;
         point_type * p2;
-
+        int phase0 = 0;
+        int method = (phase0 + i + j + k) % 2;
 
         if (signed_volume < 0)
           sign = -1;
         {
           for (int plane_nr = 0; plane_nr < 12; plane_nr++) {
 
-            p0 = &cell->corner_list[ bounding_planes[plane_nr][0] ];
-            p1 = &cell->corner_list[ bounding_planes[plane_nr][1] ];
-            p2 = &cell->corner_list[ bounding_planes[plane_nr][2] ];
+            p0 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][0] ];
+            p1 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][1] ];
+            p2 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][2] ];
 
             if (point_equal(p0, p1) || point_equal(p0,p2) || point_equal(p1,p2))
               continue;
 
             if (sign * point3_plane_distance(p0 , p1 , p2 , &p ) < 0)
               return false;
-
           }
           return true;
         }
