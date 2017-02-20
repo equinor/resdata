@@ -4090,6 +4090,15 @@ int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double 
   return -1;
 }
 
+bool ecl_grid_get_ijk_from_xyz(ecl_grid_type * grid , double x , double y , double z , int start_index, int *i, int *j, int *k ) {
+  int g = ecl_grid_get_global_index_from_xyz(grid, x, y, z, start_index);
+  if (g < 0)
+    return false;
+
+  ecl_grid_get_ijk1( grid , g , i,j,k);
+  return true;
+}
+
 
 static bool ecl_grid_sublayer_contanins_xy__(const ecl_grid_type * grid , double x , double y , int k , int i1 , int i2 , int j1 , int j2, geo_polygon_type * polygon) {
   int i,j;
