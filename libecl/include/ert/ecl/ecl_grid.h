@@ -89,6 +89,7 @@ extern "C" {
   bool            ecl_grid_cell_contains1(const ecl_grid_type * grid , int global_index , double x , double y , double z);
   bool            ecl_grid_cell_contains3(const ecl_grid_type * grid , int i , int j ,int k , double x , double y , double z);
   int             ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double y , double z , int start_index);
+  bool            ecl_grid_get_ijk_from_xyz(ecl_grid_type * grid , double x , double y , double z , int start_index, int *i, int *j, int *k );
   bool            ecl_grid_get_ij_from_xy( const ecl_grid_type * grid , double x , double y , int k , int* i, int* j);
   const  char   * ecl_grid_get_name( const ecl_grid_type * );
   int             ecl_grid_get_active_index3(const ecl_grid_type * ecl_grid , int i , int j , int k);

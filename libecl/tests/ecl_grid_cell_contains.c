@@ -30,7 +30,7 @@ bool get_test_point1(const ecl_grid_type * grid , int global_index, double *_xpo
   double xpos = 0;
   double ypos = 0;
   double zpos = 0;
-  const double min_volume = 1e-9;
+  const double min_volume = 1e-8;
 
   if (fabs(ecl_grid_get_cell_volume1( grid , global_index )) <= min_volume)
     return false;
@@ -55,7 +55,7 @@ bool get_test_point1(const ecl_grid_type * grid , int global_index, double *_xpo
   *_ypos = ypos * 0.25;
   *_zpos = zpos * 0.25;
 
-  return true;
+  return ecl_grid_cell_contains_xyz1(grid, global_index, *_xpos, *_ypos, *_zpos);
 }
 
 
@@ -154,7 +154,7 @@ void test_contains( const ecl_grid_type * grid ) {
 
 void test_find( ecl_grid_type * grid ) {
   int init_index;
-  int find_count = 250;
+  int find_count = 100;
   int delta = util_int_max(1 , ecl_grid_get_global_size( grid ) / find_count);
   for (init_index = 0; init_index < ecl_grid_get_global_size( grid ); init_index += delta) {
     if (ecl_grid_get_cell_twist1( grid , init_index ) == 0) {
