@@ -37,8 +37,10 @@ files. This module also has (some) support for working with GRDECL
 The ecl_kw.py implementation wraps the ecl_kw.c implementation from
 the libecl library.
 """
+
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import ctypes
-import types
 import warnings
 
 import  numpy
@@ -496,7 +498,7 @@ class EclKW(BaseCClass):
         """
         Function to support index based assignment: kw[index] = value
         """
-        if isinstance( index , types.IntType):
+        if isinstance( index , int):
             length = len(self)
             if index < 0:
                 # Will only wrap backwards once

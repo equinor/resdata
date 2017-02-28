@@ -1,6 +1,7 @@
-import types
+from __future__ import absolute_import, division, print_function, unicode_literals
+from six import string_types
 from cwrap import BaseCClass
-from ert.ecl import EclPrototype, EclKW
+from ert.ecl import EclPrototype
 from ert.util import CTime
 
 class EclFileView(BaseCClass):
@@ -23,7 +24,8 @@ class EclFileView(BaseCClass):
         return self._iget_kw( index ).setParent( parent = self )
 
 
-    
+    def __repr__(self):
+        return 'EclFileView(size = %d) %s' % (len(self), self._ad_str())
 
     def iget_named_kw(self, kw_name , index):
         if not kw_name in self:
@@ -64,7 +66,7 @@ class EclFileView(BaseCClass):
                ....
         """
 
-        if isinstance( index , types.IntType):
+        if isinstance( index , int):
             if index < 0 or index >= len(self):
                 raise IndexError
             else:
@@ -78,7 +80,9 @@ class EclFileView(BaseCClass):
                 kw_list.append( self[i] )
             return kw_list
         else:
-            if isinstance( index , types.StringType):
+            if isinstance( index , bytes):
+                index = index.decode('ascii')
+            if isinstance( index , string_types):
                 if index in self:
                     kw_index = index
                     kw_list = []

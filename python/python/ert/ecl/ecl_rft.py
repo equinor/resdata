@@ -17,7 +17,8 @@
 Module for loading ECLIPSE RFT files.
 """
 
-import types
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import warnings
 from cwrap import BaseCClass
 from ert.ecl import EclRFTCell, EclPLTCell, EclPrototype
@@ -164,7 +165,7 @@ class EclRFT(BaseCClass):
 
 
     def assert_cell_index( self , index ):
-        if isinstance( index , types.IntType):
+        if isinstance( index , int):
             length = self.__len__()
             if index < 0 or index >= length:
                 raise IndexError
