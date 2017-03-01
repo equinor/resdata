@@ -129,6 +129,9 @@ class KWTest(ExtendedTestCase):
                 kw[i] = d
                 i += 1
 
+            pfx = 'EclKW('
+            self.assertEqual(pfx, repr(kw)[:len(pfx)])
+
             fortio = FortIO("ECL_KW_TEST", FortIO.WRITE_MODE)
             kw.fwrite(fortio)
             fortio.close()
