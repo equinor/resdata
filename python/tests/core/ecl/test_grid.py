@@ -85,10 +85,22 @@ class GridTest(ExtendedTestCase):
         actnum[1] = 0
         grid = EclGrid.createRectangular( (10,20,30) , (1,1,1) , actnum = actnum)
         self.assertEqual( grid.getNumActive( ) , 30*20*10 - 2)
-    
-    
-    
-    
+
+    def test_repr_and_name(self):
+        grid = EclGrid.createRectangular((2,2,2), (10,10,10), actnum=[0,0,0,0,1,1,1,1])
+        pfx = 'EclGrid('
+        rep = repr(grid)
+        self.assertEqual(pfx, rep[:len(pfx)])
+        self.assertEqual(type(rep), type(''))
+        self.assertEqual(type(grid.getName()), type(''))
+        with TestAreaContext("python/ecl_grid/repr"):
+            grid.save_EGRID("CASE.EGRID")
+            g2 = EclGrid("CASE.EGRID")
+            r2 = repr(g2)
+            self.assertEqual(pfx, r2[:len(pfx)])
+            self.assertEqual(type(r2), type(''))
+            self.assertEqual(type(g2.getName()), type(''))
+
     def test_node_pos(self):
         grid = EclGrid.createRectangular( (10,20,30) , (1,1,1) )
         with self.assertRaises(IndexError):

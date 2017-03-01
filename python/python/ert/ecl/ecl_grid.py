@@ -344,15 +344,15 @@ class EclGrid(BaseCClass):
 
     def getName(self):
         """
-        Name of the current grid.
-        
+        Name of the current grid, returns a string.
+
         For the main grid this is the filename given to the
         constructor when loading the grid; for an LGR this is the name
         of the LGR. If the grid instance has been created with the
         create() classmethod this can be None.
         """
-        return self._get_name( )
-
+        n = self._get_name()
+        return str(n) if n else ''
 
     def global_index( self , active_index = None, ijk = None):
         """
