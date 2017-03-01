@@ -14,7 +14,6 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-import warnings
 from cwrap import BaseCClass
 from ert.ecl import EclPrototype
 
@@ -43,40 +42,9 @@ class RFTCell(BaseCClass):
 
 
 
-    def warn(self , old , new):
-        msg = """ 
-
-The cell property:%s has been deprecated, and the method:%s() should
-be used instead. Observe that the new method %s() returns coordinate
-values starting at 0, whereas the old property %s returned values
-starting at 1; hence you must adapt the calling code when you change
-from %s -> %s() 
-""" % (old , new , new , old , old , new)
-        warnings.warn( msg , DeprecationWarning )
-
     def free(self):
         self._free( )
 
-    @property
-    def i(self):
-        self.warn("i" , "get_i")
-        return self.get_i() + 1
-
-    @property
-    def j(self):
-        self.warn("j" , "get_j")
-        return self.get_j() + 1
-
-    @property
-    def k(self):
-        self.warn("k" , "get_k")
-        return self.get_k() + 1
-
-    @property
-    def ijk(self):
-        self.warn("ijk" , "get_ijk")
-        return (self.get_i() + 1 , self.get_j() + 1 , self.get_k() + 1)
-    
     def get_i(self):
         return self._get_i( )
 

@@ -31,7 +31,7 @@ class Ecl3DKWTest(ExtendedTestCase):
             actnum[i] = 0
 
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
-        kw = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw = Ecl3DKW( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE )
         self.assertEqual( len(kw) , grid.getNumActive())
 
         self.assertEqual( (10,10,10) , kw.dims() )
@@ -43,7 +43,7 @@ class Ecl3DKWTest(ExtendedTestCase):
             actnum[i] = 0
 
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
-        kw = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE , global_active = True)
+        kw = Ecl3DKW( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE , global_active = True)
         self.assertEqual( len(kw) , grid.getGlobalSize())
 
         kw.assign(50)
@@ -58,7 +58,7 @@ class Ecl3DKWTest(ExtendedTestCase):
         ny = 11
         nz = 12
         grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1) )
-        kw = Ecl3DKW.create("REGIONS" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = True)
+        kw = Ecl3DKW("REGIONS" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = True)
         kw.assign(3)
         self.assertEqual( 3 * nx*ny*nz , sum(kw))
 
@@ -78,7 +78,7 @@ class Ecl3DKWTest(ExtendedTestCase):
             actnum[i] = 0
 
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
-        kw = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE , default_value = 77)
+        kw = Ecl3DKW( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE , default_value = 77)
         
         with self.assertRaises(IndexError):
             kw[1000]
@@ -105,7 +105,7 @@ class Ecl3DKWTest(ExtendedTestCase):
             actnum[i] = 0
 
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
-        kw = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE , default_value = 77)
+        kw = Ecl3DKW( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE , default_value = 77)
         
         with self.assertRaises(IndexError):
             kw[1000]
@@ -138,9 +138,9 @@ class Ecl3DKWTest(ExtendedTestCase):
             actnum[i] = 0
 
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
-        kw_wrong_size  = EclKW.create( "KW" , 27 , EclTypeEnum.ECL_FLOAT_TYPE )
-        kw_global_size = EclKW.create( "KW" , grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
-        kw_active_size = EclKW.create( "KW" , grid.getNumActive()  , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw_wrong_size  = EclKW( "KW" , 27 , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw_global_size = EclKW( "KW" , grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw_active_size = EclKW( "KW" , grid.getNumActive()  , EclTypeEnum.ECL_FLOAT_TYPE )
         
         with self.assertRaises(ValueError):
             Ecl3DKW.castFromKW(kw_wrong_size , grid)
@@ -158,7 +158,7 @@ class Ecl3DKWTest(ExtendedTestCase):
 
     def test_default(self):
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1))
-        kw  = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw  = Ecl3DKW( "KW" , grid , EclTypeEnum.ECL_FLOAT_TYPE )
         kw.setDefault(55)
         self.assertTrue( 55 , kw.getDefault())
 
@@ -169,7 +169,7 @@ class Ecl3DKWTest(ExtendedTestCase):
             actnum[2*i + 1] = 0
 
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
-        kw  = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = True)
+        kw  = Ecl3DKW( "KW" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = True)
         for i in range(len(kw)):
             kw[i] = i
         
@@ -188,7 +188,7 @@ class Ecl3DKWTest(ExtendedTestCase):
             actnum[2*i + 1] = 0
 
         grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) , actnum = actnum)
-        kw  = Ecl3DKW.create( "KW" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = False)
+        kw  = Ecl3DKW( "KW" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = False)
         for i in range(len(kw)):
             kw[i] = i
 

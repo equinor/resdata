@@ -22,12 +22,12 @@ from ert.test import ExtendedTestCase , TestAreaContext
 
 
 def copy_long():
-    src = EclKW.create("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
     copy = src.sub_copy(0, 2000)
 
 
 def copy_offset():
-    src = EclKW.create("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
     copy = src.sub_copy(200, 100)
 
 
@@ -37,7 +37,7 @@ class KWTest(ExtendedTestCase):
         unrst_file = EclFile(unrst_file_path)
         size = 0
         for kw in unrst_file:
-            size += kw.fortio_size
+            size += kw.fortIOSize()
 
         stat = os.stat(unrst_file_path)
         self.assertTrue(size == stat.st_size)
@@ -51,16 +51,16 @@ class KWTest(ExtendedTestCase):
         swat = unrst_file["SWAT"][0]
 
         swat1 = swat.sub_copy(0, -1)
-        swat2 = swat.sub_copy(0, swat.size)
+        swat2 = swat.sub_copy(0, len(swat))
 
         self.assertTrue(swat.equal(swat1))
         self.assertTrue(swat.equal(swat2))
 
         swat3 = swat.sub_copy(20000, 100, new_header="swat")
-        self.assertTrue(swat3.name == "swat")
-        self.assertTrue(swat3.size == 100)
+        self.assertTrue(swat3.getName() == "swat")
+        self.assertTrue(len(swat3) == 100)
         equal = True
-        for i in range(swat3.size):
+        for i in range(len(swat3)):
             if swat3[i] != swat[i + 20000]:
                 equal = False
         self.assertTrue(equal)

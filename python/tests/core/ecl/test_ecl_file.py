@@ -67,8 +67,8 @@ class EclFileTest(ExtendedTestCase):
 
     def test_context( self ):
         with TestAreaContext("python/ecl_file/context"):
-            kw1 = EclKW.create( "KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
-            kw2 = EclKW.create( "KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
+            kw1 = EclKW( "KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
+            kw2 = EclKW( "KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 kw1.fwrite( f )
                 kw2.fwrite( f )

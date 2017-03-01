@@ -109,10 +109,10 @@ class RestartTest(ExtendedTestCase):
 
     def test_name(self):
         f = EclFile(self.u_file)
-        self.assertTrue(f.name == self.u_file)
+        self.assertTrue(f.getFilename() == self.u_file)
 
         f = EclFile(self.xfile0)
-        self.assertTrue(f.name == self.xfile0)
+        self.assertTrue(f.getFilename() == self.xfile0)
 
 
     def test_kw( self ):

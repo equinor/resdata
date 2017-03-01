@@ -193,7 +193,7 @@ class GridTest(ExtendedTestCase):
         ny = 10
         nz = 10
         grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1) )
-        kw1 = EclKW.create("KW" , 1001 , EclTypeEnum.ECL_INT_TYPE )
+        kw1 = EclKW("KW" , 1001 , EclTypeEnum.ECL_INT_TYPE )
         with self.assertRaises(ValueError):
             cp = grid.compressedKWCopy( kw1 )
     

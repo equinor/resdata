@@ -15,7 +15,7 @@ class EclIndexedReadTest(ExtendedTestCase):
             fortio = FortIO("index_test", mode=FortIO.WRITE_MODE)
 
             element_count = 100000
-            ecl_kw = EclKW.create("TEST", element_count, EclTypeEnum.ECL_INT_TYPE)
+            ecl_kw = EclKW("TEST", element_count, EclTypeEnum.ECL_INT_TYPE)
 
             for index in range(element_count):
                 ecl_kw[index] = index
@@ -68,8 +68,8 @@ class EclIndexedReadTest(ExtendedTestCase):
             fortio = FortIO("ecl_file_index_test", mode=FortIO.WRITE_MODE)
 
             element_count = 100000
-            ecl_kw_1 = EclKW.create("TEST1", element_count, EclTypeEnum.ECL_INT_TYPE)
-            ecl_kw_2 = EclKW.create("TEST2", element_count, EclTypeEnum.ECL_INT_TYPE)
+            ecl_kw_1 = EclKW("TEST1", element_count, EclTypeEnum.ECL_INT_TYPE)
+            ecl_kw_2 = EclKW("TEST2", element_count, EclTypeEnum.ECL_INT_TYPE)
 
             for index in range(element_count):
                 ecl_kw_1[index] = index

@@ -66,18 +66,20 @@ class Ecl3DKW(EclKW):
     PERMX property.
     
     """
-    
-    @classmethod
-    def create(cls , kw , grid , value_type , default_value = 0 , global_active = False):
+    def __init__(self, kw , grid , value_type , default_value = 0 , global_active = False):
         if global_active:
             size = grid.getGlobalSize()
         else:
-            size = grid.getNumActive( ) 
+            size = grid.getNumActive( )
+        super(Ecl3DKW , self).__init__( kw , size , value_type)
+        self.grid = grid
+        self.global_active = global_active
+        self.setDefault( default_value )
 
-        new_kw = super(Ecl3DKW , cls).create( kw , size , value_type)
-        new_kw.grid = grid
-        new_kw.global_active = global_active
-        new_kw.setDefault( default_value )
+
+    @classmethod
+    def create(cls , kw , grid , value_type , default_value = 0 , global_active = False):
+        new_kw = Ecl3DKW(kw , grid , value_type , default_value , global_active)
         return new_kw
         
     @classmethod

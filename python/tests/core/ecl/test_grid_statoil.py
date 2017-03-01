@@ -107,7 +107,7 @@ class GridTest(ExtendedTestCase):
     def test_EGRID( self ):
         grid = EclGrid(self.egrid_file())
         self.assertTrue(grid)
-        dims = grid.dims
+        dims = grid.getDims()
         self.assertEqual(dims[0] , grid.getNX())
         self.assertEqual(dims[1] , grid.getNY())
         self.assertEqual(dims[2] , grid.getNZ())
@@ -291,20 +291,20 @@ class GridTest(ExtendedTestCase):
     def test_dual(self):
         with TestAreaContext("python/grid-test/testDual"):
             grid = EclGrid(self.egrid_file())
-            self.assertFalse(grid.dual_grid)
-            self.assertTrue(grid.nactive_fracture == 0)
+            self.assertFalse(grid.dualGrid())
+            self.assertTrue(grid.getNumActiveFracture() == 0)
 
             grid2 = EclGrid(self.grid_file())
-            self.assertFalse(grid.dual_grid)
-            self.assertTrue(grid.nactive_fracture == 0)
+            self.assertFalse(grid.dualGrid())
+            self.assertTrue(grid.getNumActiveFracture() == 0)
 
             dgrid = EclGrid(self.createTestPath("Statoil/ECLIPSE/DualPoro/DUALPOR_MSW.EGRID"))
-            self.assertTrue(dgrid.nactive == dgrid.nactive_fracture)
-            self.assertTrue(dgrid.nactive == 46118)
+            self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
+            self.assertTrue(dgrid.getNumActive() == 46118)
 
             dgrid2 = EclGrid(self.createTestPath("Statoil/ECLIPSE/DualPoro/DUALPOR_MSW.GRID"))
-            self.assertTrue(dgrid.nactive == dgrid.nactive_fracture)
-            self.assertTrue(dgrid.nactive == 46118)
+            self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
+            self.assertTrue(dgrid.getNumActive() == 46118)
             self.assertTrue(dgrid.equal(dgrid2))
 
 
@@ -312,8 +312,8 @@ class GridTest(ExtendedTestCase):
             # situation where some cells are only matrix active, and some
             # cells are only fracture active.
             dgrid = EclGrid(self.createTestPath("Statoil/ECLIPSE/DualPoro/DUAL_DIFF.EGRID"))
-            self.assertTrue(dgrid.nactive == 106)
-            self.assertTrue(dgrid.nactive_fracture == 105)
+            self.assertTrue(dgrid.getNumActive() == 106)
+            self.assertTrue(dgrid.getNumActiveFracture() == 105)
 
             self.assertTrue(dgrid.get_active_fracture_index(global_index=0) == -1)
             self.assertTrue(dgrid.get_active_fracture_index(global_index=2) == -1)
@@ -330,8 +330,8 @@ class GridTest(ExtendedTestCase):
             self.assertTrue(dgrid.equal(dgrid2 , verbose = True))
 
 
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow test of nactive large memory skipped!")
-    def test_nactive_large_memory(self):
+    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow test of numActive large memory skipped!")
+    def test_num_active_large_memory(self):
         case = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE")
         vecList = []
         for i in range(12500):
@@ -341,8 +341,8 @@ class GridTest(ExtendedTestCase):
 
         grid1 = EclGrid(case)
         grid2 = EclGrid(case)
-        self.assertEqual(grid1.nactive, grid2.nactive)
-        self.assertEqual(grid1.nactive, 34770)
+        self.assertEqual(grid1.getNumActive(), grid2.getNumActive())
+        self.assertEqual(grid1.getNumActive(), 34770)
 
 
     def test_no_mapaxes_check_for_nan(self):

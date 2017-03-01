@@ -16,7 +16,6 @@
 #  for more details. 
 
 
-import warnings
 from ert.ecl import EclRFTCell, EclPLTCell
 from ert.test import ExtendedTestCase
 
@@ -75,12 +74,6 @@ class RFTCellTest(ExtendedTestCase):
         self.assertEqual(i, cell.get_i())
         self.assertEqual(j, cell.get_j())
         self.assertEqual(k, cell.get_k())
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertTrue(cell.get_i() + 1 == cell.i)
-            self.assertTrue(cell.get_j() + 1 == cell.j)
-            self.assertTrue(cell.get_k() + 1 == cell.k)
 
         self.assertFloatEqual(pressure, cell.pressure)
         self.assertFloatEqual(depth, cell.depth)

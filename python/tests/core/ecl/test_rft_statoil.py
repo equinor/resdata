@@ -57,7 +57,7 @@ class RFTTest(ExtendedTestCase):
             self.assertIsInstance(cell, EclRFTCell)
             rft.sort()
 
-        for h in rftFile.headers:
+        for h in rftFile.getHeaders():
             print(h)
             self.assertIsInstance( h[1] , datetime.date )
 

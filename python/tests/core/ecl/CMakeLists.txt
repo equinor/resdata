@@ -24,7 +24,6 @@ set(TEST_SOURCES
     test_ecl_kw.py
     test_kw_function.py
     test_layer.py
-    test_legacy_ecl.py
     test_npv.py
     test_region.py
     test_restart.py
@@ -46,7 +45,6 @@ addPythonTest(ecl.ecl_grid ecl.test_grid.GridTest )
 addPythonTest(ecl.ecl_kw ecl.test_ecl_kw.KWTest)
 addPythonTest(ecl.ecl_kw_function ecl.test_kw_function.KWFunctionTest)
 addPythonTest(ecl.ecl_3dkw ecl.test_ecl_3dkw.Ecl3DKWTest )
-addPythonTest(ecl.legacy_ecl ecl.test_legacy_ecl.LegacyEclTest)
 addPythonTest(ecl.ecl_rft ecl.test_rft.RFTTest)
 addPythonTest(ecl.ecl_rft_cell ecl.test_rft_cell.RFTCellTest)
 addPythonTest(ecl.ecl_sum2 ecl.test_sum.SumTest)

@@ -48,15 +48,6 @@ from cwrap import CFILE, BaseCClass
 from ert.ecl import EclTypeEnum, EclUtil, EclPrototype
 
 
-class classprop(object):
-    def __init__(self , f):
-        self.f = classmethod( f )
-
-    def __get__(self , *a):
-        return self.f.__get__(*a)()
-
-
-
 
 class EclKW(BaseCClass):
     """
@@ -164,40 +155,12 @@ class EclKW(BaseCClass):
         """Will remove keyword @kw from the standard set of integer keywords."""
         cls.int_kw_set.discard( kw )
 
-    @classprop
-    def int_kw( cls ):
-        warnings.warn("The EclKW.int_kw  class property has been deprecated - use class method: EclKW.intKeywords( )" , DeprecationWarning )
-        return cls.intKeywords( )
-
-
     @classmethod
     def intKeywords(cls):
         """Will return the current set of integer keywords."""
         return cls.int_kw_set
 
 
-
-
-    @classmethod
-    def create( cls , name, size , data_type):
-        """
-        Creates a brand new EclKW instance.
-
-        This method will create a grand spanking new EclKW
-        instance. The instance will get name @name (silently truncated
-        to eight characters), @size elements and datatype @data_type. Using
-        this method you could create a SOIL keyword with:
-
-           soil_kw = EclKW.create( "SOIL" , 10000 , ECL_FLOAT_TYPE )
-           
-        """
-        warnings.warn("The EclKW.create( )  method has been deprecated - use EclKW( %s , %s , %s )" % (name , size , data_type) , DeprecationWarning )
-        return cls( name , size , data_type )
-
-        
-
-
-    
     def slice_copy( self , slice_range ):
         (start , stop , step) = slice_range.indices( len(self) )
         if stop > start:
@@ -329,15 +292,6 @@ class EclKW(BaseCClass):
         """
         cfile = CFILE( fileH )
         return cls._fseek_grdecl( kw , rewind , cfile)
-        
-
-
-    @classmethod
-    def grdecl_load( cls , file , kw , ecl_type = EclTypeEnum.ECL_FLOAT_TYPE):
-        """Use read_grdecl() instead."""
-        warnings.warn("The grdecl_load method has been renamed to read_grdecl()" , DeprecationWarning)
-        return cls.read_grdecl(file , kw , ecl_type )
-
 
 
     @classmethod
@@ -429,10 +383,10 @@ class EclKW(BaseCClass):
         If the count or index arguments are in some way invalid the
         method will raise IndexError.
         """
-        if offset < 0 or offset >= self.size:
-            raise IndexError("Offset:%d invalid - valid range:[0,%d)" % (offset , self.size))
+        if offset < 0 or offset >= len(self):
+            raise IndexError("Offset:%d invalid - valid range:[0,%d)" % (offset , len(self)))
 
-        if offset + count > self.size:
+        if offset + count > len(self):
             raise IndexError("Invalid value of (offset + count):%d" % (offset + count))
 
         return self._sub_copy( new_header , offset , count )
@@ -473,7 +427,7 @@ class EclKW(BaseCClass):
             length = self.__len__()
             if index < 0:
                 # We allow one level of negative indexing
-                index += self.size
+                index += len(self)
 
             if index < 0 or index >= length:
                 raise IndexError
@@ -502,7 +456,7 @@ class EclKW(BaseCClass):
             length = len(self)
             if index < 0:
                 # Will only wrap backwards once
-                index = self.size + index
+                index = len(self) + index
 
             if index < 0 or index >= length:
                 raise IndexError
@@ -658,7 +612,7 @@ class EclKW(BaseCClass):
         """
         ecl_type = self.getEclType( )
         if ecl_type == EclTypeEnum.ECL_CHAR_TYPE:
-            raise ValueError("The keyword:%s is of string type - sum is not implemented" % self.get_name())
+            raise ValueError('The keyword "%s" is of string type - sum is not implemented' % self.getName())
         elif ecl_type == EclTypeEnum.ECL_INT_TYPE:
             return self._int_sum( )
         elif ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
@@ -820,10 +774,10 @@ class EclKW(BaseCClass):
                     self.data_ptr[index] = func( self.data_ptr[index] )
         else:
             if arg:
-                for i in range(self.size):
+                for i in range(len(self)):
                     self.data_ptr[i] = func( self.data_ptr[i] , arg)
             else:
-                for i in range(self.size):
+                for i in range(len(self)):
                     self.data_ptr[i] = func( self.data_ptr[i] )
 
 
@@ -881,61 +835,14 @@ class EclKW(BaseCClass):
         The number of bytes this keyword would occupy in a BINARY file.
         """
         return self._get_fortio_size( )
-    
-    
-    @property
-    def fortio_size(self):
-        warnings.warn("The fortio_size property is deprecated - use method fortIOSize()" , DeprecationWarning)
-        return self.fortIOSize()
-        
-    
-    @property
-    def size(self):
-        warnings.warn("The size property is deprecated - use built in len(..) " , DeprecationWarning)
-        return len(self)
 
     def setName( self , name ):
         if len(name) > 8:
             raise ValueError("Sorry: the name property must be max 8 characters long :-(")
         self._set_header( name )
 
-    
-    def set_name( self , name ):
-        warnings.warn("The set_name method is deprectaed - use setName( )" , DeprecationWarning)
-        self.setName( name );
-
-        
-    def get_name( self ):
-        warnings.warn("The set_name method is deprectaed - use getName( )" , DeprecationWarning)
-        return self.getName()
-        
-
-    name = property( get_name , set_name )
-
     def getName(self):
         return self._get_header( )
-
-
-    @property    
-    def min_max( self ):
-        warnings.warn("The min_max property has been renamed to method getMinMax()" , DeprecationWarning)
-        return self.getMinMax()
-
-
-    @property
-    def max( self ):
-        warnings.warn("The max property has been renamed to method getMax()" , DeprecationWarning)
-        mm = self.getMinMax()
-        return mm[1]
-    
-    
-    @property
-    def min( self ):
-        warnings.warn("The min property has been renamed to method getMin()" , DeprecationWarning)
-        mm = self.getMinMax()
-        return mm[0]
-
-       
 
     def resize(self , new_size):
         """
@@ -984,13 +891,6 @@ class EclKW(BaseCClass):
         mm = self.getMinMax()
         return mm[0]
 
-    
-    @property
-    def numeric(self):
-        warnings.warn("The numeric property has been renamed to method isNumeric()" , DeprecationWarning)
-        return self.isNumeric( ) 
-        
-    
     @property
     def type( self ):
         return self.getEclType()
@@ -1010,15 +910,8 @@ class EclKW(BaseCClass):
     
     @property
     def header( self ):
-        return (self.name , self.size , self.type_name )
+        return (self.name , len(self) , self.type_name )
 
-
-    def iget( self , index ):
-        from warnings import warn
-        warn("The iget() method is deprecated use array notation: kw[index] instead.", DeprecationWarning)
-        return self.__getitem__( index )
-    
-    
     @property
     def array(self):
         a = self.data_ptr
@@ -1061,18 +954,18 @@ class EclKW(BaseCClass):
         the elements. The implementation of the builtin method
         __str__() is based on this method.
         """
-        s = "%-8s %8d %-4s\n" % (self.name , self.size , self.type_name)
-        lines = self.size / width
+        s = "%-8s %8d %-4s\n" % (self.name , len(self) , self.type_name)
+        lines = len(self) / width
         if not fmt:
             fmt = self.str_fmt + " "
 
         if max_lines is None or lines <= max_lines:
-            s += self.str_data( width , 0 , self.size , fmt)
+            s += self.str_data( width , 0 , len(self) , fmt)
         else:
             s1 = width * max_lines / 2
             s += self.str_data( width  , 0 , s1 , fmt)
             s += "   ....   \n"
-            s += self.str_data( width  , self.size - s1 , self.size , fmt)
+            s += self.str_data( width  , len(self) - s1 , len(self) , fmt)
         
         return s
 
@@ -1115,21 +1008,7 @@ class EclKW(BaseCClass):
         """
         view = self.numpyView( )
         return numpy.copy( view )
-    
 
-    @property
-    def numpy_array( self ):
-        warnings.warn("The EclKW.numpy_array  property has been deprecated - use method: numpyView( ) or numpyCopy( ) instead" , DeprecationWarning )
-        if self.data_ptr:
-            a = self.array
-            value = numpy.zeros( a.size , dtype = self.dtype)
-            for i in range( a.size ):
-                value[i] = a[i]
-
-    
-                
-
-                
     def fwrite( self , fortio ):
         self._fwrite( fortio )
 
