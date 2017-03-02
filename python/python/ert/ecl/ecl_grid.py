@@ -999,9 +999,9 @@ class EclGrid(BaseCClass):
                 kw = EclKW( kw_name , size , type )
                 active_index = 0
                 global_index = 0
-                for k in range( self.nz ):
-                    for j in range( self.ny ):
-                        for i in range( self.nx ):
+                for k in range( self.getNZ() ):
+                    for j in range( self.getNY() ):
+                        for i in range( self.getNX() ):
                             if pack:
                                 if self.active( global_index = global_index ):
                                     kw[active_index] = array[i,j,k]
@@ -1116,7 +1116,7 @@ class EclGrid(BaseCClass):
         
         if len(ecl_kw) == self.getNumActive() or len(ecl_kw) == self.getGlobalSize():
             cfile = CFILE( pyfile )
-            self._fwrite_grdecl2( ecl_kw , special_header , cfile , default_value )
+            self._fwrite_grdecl( ecl_kw , special_header , cfile , default_value )
         else:
             raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.getName() , len(ecl_kw) , self.getNumActive() , self.getGlobalSize()))
 

@@ -941,7 +941,7 @@ class EclRegion(BaseCClass):
 
     #################################################################
 
-    def ecl_region_instance(  ):
+    def ecl_region_instance(self):
         """
         Helper function (attribute) to support run-time typechecking.
         """

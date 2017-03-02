@@ -78,7 +78,7 @@ class EclRFTCell(RFTCell):
 
     def __init__(self , i , j , k , depth , pressure , swat , sgas):
         c_ptr = self._alloc_RFT( i , j , k , depth , pressure , swat , sgas )
-        super(RFTCell , self).__init__( c_ptr )
+        super(EclRFTCell , self).__init__( c_ptr )
 
     @property
     def swat(self):
@@ -114,7 +114,7 @@ class EclPLTCell(RFTCell):
     
     def __init__(self , i , j , k , depth , pressure , orat , grat , wrat , conn_start ,conn_end, flowrate , oil_flowrate , gas_flowrate , water_flowrate ):
         c_ptr = self._alloc_PLT( i , j , k , depth , pressure , orat , grat , wrat , conn_start ,conn_end, flowrate , oil_flowrate , gas_flowrate , water_flowrate )
-        super( RFTCell , self).__init__( c_ptr )
+        super( EclPLTCell , self).__init__( c_ptr )
 
 
     @property
