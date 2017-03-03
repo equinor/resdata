@@ -560,3 +560,88 @@ class VectorTemplate(BaseCClass):
         vector = cls( )
         vector.initRange( min_value , max_value , delta )
         return vector
+
+    def _strided_copy(self, *_):
+        raise NotImplementedError()
+    def _rshift(self, *_):
+        raise NotImplementedError()
+    def _lshift(self, *_):
+        raise NotImplementedError()
+    def _alloc(self, *_):
+        raise NotImplementedError()
+    def _element_size(self, *_):
+        raise NotImplementedError()
+    def _contains(self, *_):
+        raise NotImplementedError()
+    def _pop(self, *_):
+        raise NotImplementedError()
+    def default_format(self, *_):
+        raise NotImplementedError()
+    def _iget(self, *_):
+        raise NotImplementedError()
+    def _iset(self, *_):
+        raise NotImplementedError()
+    def _inplace_add(self, *_):
+        raise NotImplementedError()
+    def _shift(self, *_):
+        raise NotImplementedError()
+    def _alloc_copy(self, *_):
+        raise NotImplementedError()
+    def _inplace_mul(self, *_):
+        raise NotImplementedError()
+    def _scale(self, *_):
+        raise NotImplementedError()
+    def _memcpy(self, *_):
+        raise NotImplementedError()
+    def _assign(self, *_):
+        raise NotImplementedError()
+    def _size(self, *_):
+        raise NotImplementedError()
+    def _fprintf(self, *_):
+        raise NotImplementedError()
+    def _get_max(self, *_):
+        raise NotImplementedError()
+    def _get_min(self, *_):
+        raise NotImplementedError()
+    def _get_min_index(self, *_):
+        raise NotImplementedError()
+    def _get_max_index(self, *_):
+        raise NotImplementedError()
+    def _append(self, *_):
+        raise NotImplementedError()
+    def _idel_block(self, *_):
+        raise NotImplementedError()
+    def _sort(self, *_):
+        raise NotImplementedError()
+    def _rsort(self, *_):
+        raise NotImplementedError()
+    def _reset(self, *_):
+        raise NotImplementedError()
+    def _safe_iget(self, *_):
+        raise NotImplementedError()
+    def _set_read_only(self, *_):
+        raise NotImplementedError()
+    def _get_read_only(self, *_):
+        raise NotImplementedError()
+    def _set_default(self, *_):
+        raise NotImplementedError()
+    def _get_default(self, *_):
+        raise NotImplementedError()
+    def _free(self, *_):
+        raise NotImplementedError()
+    def _permute(self, *_):
+        raise NotImplementedError()
+    def _sort_perm(self, *_):
+        raise NotImplementedError()
+    def _rsort_perm(self, *_):
+        raise NotImplementedError()
+    def _select_unique(self, *_):
+        raise NotImplementedError()
+    def _element_sum(self, *_):
+        raise NotImplementedError()
+    def _get_data_ptr(self, *_):
+        raise NotImplementedError()
+    def _count_equal(self, *_):
+        raise NotImplementedError()
+    def _init_range(self, *_):
+        raise NotImplementedError()

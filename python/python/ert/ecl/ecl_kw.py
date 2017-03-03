@@ -907,10 +907,10 @@ class EclKW(BaseCClass):
 
         
 
-    
+
     @property
-    def header( self ):
-        return (self.name , len(self) , self.type_name )
+    def header(self):
+        return (self.getName(), len(self), self.typeName())
 
     @property
     def array(self):
@@ -1081,15 +1081,15 @@ class EclKW(BaseCClass):
         else:
             raise ValueError("Only numeric types can export data pointer")
 
-        
-    def firstDifferent(kw1 , kw2 , offset = 0 , epsilon = 0 , abs_epsilon = None , rel_epsilon = None):
-        if len(kw1) != len(kw2):
+
+    def firstDifferent(self , other , offset = 0 , epsilon = 0 , abs_epsilon = None , rel_epsilon = None):
+        if len(self) != len(other):
             raise ValueError("Keywords must have equal size")
 
-        if offset >= len(kw1):
-            raise IndexError("Offset:%d invalid - size:%d" % (offset , len(kw1)))
+        if offset >= len(self):
+            raise IndexError("Offset:%d invalid - size:%d" % (offset , len(self)))
 
-        if kw1.getEclType() != kw2.getEclType():
+        if self.getEclType() != other.getEclType():
             raise TypeError("The two keywords have different type")
 
         if abs_epsilon is None:
@@ -1098,4 +1098,4 @@ class EclKW(BaseCClass):
         if rel_epsilon is None:
             rel_epsilon = epsilon
 
-        return kw1._first_different( kw2 , offset , abs_epsilon , rel_epsilon )
+        return self._first_different( other , offset , abs_epsilon , rel_epsilon )
