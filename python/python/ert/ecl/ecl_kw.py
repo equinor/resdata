@@ -907,10 +907,10 @@ class EclKW(BaseCClass):
 
         
 
-    
+
     @property
-    def header( self ):
-        return (self.name , len(self) , self.type_name )
+    def header(self):
+        return (self.getName(), len(self), self.typeName())
 
     @property
     def array(self):
