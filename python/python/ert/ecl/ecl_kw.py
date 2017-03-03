@@ -842,7 +842,8 @@ class EclKW(BaseCClass):
         self._set_header( name )
 
     def getName(self):
-        return self._get_header( )
+        n = self._get_header( )
+        return str(n) if n else ''
 
     def resize(self , new_size):
         """
@@ -954,8 +955,8 @@ class EclKW(BaseCClass):
         the elements. The implementation of the builtin method
         __str__() is based on this method.
         """
-        s = "%-8s %8d %-4s\n" % (self.name , len(self) , self.type_name)
-        lines = len(self) / width
+        s = "%-8s %8d %-4s\n" % (self.getName() , len(self) , self.typeName())
+        lines = len(self) // width
         if not fmt:
             fmt = self.str_fmt + " "
 

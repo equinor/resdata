@@ -174,8 +174,7 @@ class EclFile(BaseCClass):
     def __repr__(self):
         fn = self.getFilename()
         wr = ', read/write' if self._writable() else ''
-        ad = self._ad_str()
-        return 'EclFile("%s"%s) %s' % (fn,wr,ad)
+        return self._create_repr('"%s"%s' % (fn,wr))
 
 
     def __init__( self , filename , flags = 0):
@@ -493,7 +492,7 @@ class EclFile(BaseCClass):
         header_dict = {}
         for index in range(len(self)):
             kw = self[index]
-            header_dict[ kw.name ] = True
+            header_dict[ kw.getName() ] = True
         return header_dict.keys()
 
 
@@ -534,11 +533,12 @@ class EclFile(BaseCClass):
         probably be tricked by other file types also containing an
         INTEHEAD keyword.
         """
-        dates = []
         if self.has_kw('SEQNUM'):
+            dates = []
             for index in range( self.num_named_kw( 'SEQNUM' )):
                 dates.append( self.iget_restart_sim_time( index ))
-        else:
+            return dates
+        elif 'INTEHEAD' in self:
             # This is a uber-hack; should export the ecl_rsthead
             # object as ctypes structure.
             intehead = self["INTEHEAD"][0]
@@ -546,8 +546,8 @@ class EclFile(BaseCClass):
             month = intehead[65]
             day = intehead[64]
             date = datetime.datetime( year , month , day )
-            dates = [ date ]
-        return dates
+            return [ date ]
+        return None
 
 
     @property
@@ -572,11 +572,8 @@ class EclFile(BaseCClass):
         If the optional argument @num is given it will check if the
         EclFile has at least @num occurences of @kw.
         """
-        num_named_kw = self.num_named_kw( kw )
-        if num_named_kw > num:
-            return True
-        else:
-            return False
+
+        return self.num_named_kw( kw ) > num
 
     def __contains__(self , kw):
         """
@@ -644,7 +641,8 @@ class EclFile(BaseCClass):
         """
         Name of the file currently loaded.
         """
-        return self._get_src_file( )
+        fn = self._get_src_file()
+        return str(fn) if fn else ''
 
     def fwrite( self , fortio ):
         """

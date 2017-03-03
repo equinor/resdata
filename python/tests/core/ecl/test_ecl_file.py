@@ -122,6 +122,8 @@ class EclFileTest(ExtendedTestCase):
 
                     
             ecl_file = EclFile("TEST")
+            pfx = 'EclFile('
+            self.assertEqual(pfx, repr(ecl_file)[:len(pfx)])
             with self.assertRaises(KeyError):
                 ecl_file.blockView("NO" , 1)
 
