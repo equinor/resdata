@@ -72,12 +72,12 @@ class GeertsmaTest(ExtendedTestCase):
             receiver = (1000, 1000, 0)
 
             dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
-            np.testing.assert_almost_equal(dz, -3.944214576168326e-09)
+            np.testing.assert_almost_equal(dz, 3.944214576168326e-09)
 
             receiver = (1000, 1000, topres - seabed - above)
 
             dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
-            np.testing.assert_almost_equal(dz, -5.8160298201497136e-08)
+            np.testing.assert_almost_equal(dz, 5.8160298201497136e-08)
 
     @staticmethod
     def test_geertsma_kernel_2_source_points_2_vintages():
@@ -105,15 +105,15 @@ class GeertsmaTest(ExtendedTestCase):
             receiver = (1000, 1000, 0)
 
             dz1 = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
-            np.testing.assert_almost_equal(dz1, -8.65322541521704e-07)
+            np.testing.assert_almost_equal(dz1, 8.65322541521704e-07)
 
             dz2 = subsidence.evalGeertsma("S2", None, receiver, youngs_modulus, poisson_ratio, seabed)
-            np.testing.assert_almost_equal(dz2, -2.275556615015282e-06)
+            np.testing.assert_almost_equal(dz2, 2.275556615015282e-06)
 
-            np.testing.assert_almost_equal(dz2-dz1, -1.4102340734935779e-06)
+            np.testing.assert_almost_equal(dz2-dz1, 1.4102340734935779e-06)
 
             dz = subsidence.evalGeertsma("S1", "S2", receiver, youngs_modulus, poisson_ratio, seabed)
-            np.testing.assert_almost_equal(dz, -1.4102340734935779e-06)
+            np.testing.assert_almost_equal(dz, 1.4102340734935779e-06)
 
     @staticmethod
     def test_geertsma_kernel_seabed():
@@ -139,6 +139,6 @@ class GeertsmaTest(ExtendedTestCase):
             receiver = (1000, 1000, topres - seabed - above)
 
             dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
-            np.testing.assert_almost_equal(dz, -5.819790154474284e-08)
+            np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
 
 
