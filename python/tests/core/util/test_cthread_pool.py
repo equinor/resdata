@@ -3,7 +3,7 @@ import ert
 from ert.test import ExtendedTestCase
 from ert.util import CThreadPool, startCThreadPool
 
-TEST_LIB = ert.load("libtest_util")
+TEST_LIB = ert.load("libert_util")
 
 
 class CThreadPoolTest(ExtendedTestCase):

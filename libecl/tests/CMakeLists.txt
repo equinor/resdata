@@ -2,7 +2,7 @@ if (BUILD_TESTS)
 
    # Common test binary used in both the Statoil internal tests and the open tests.
    add_executable( ecl_grid_cell_contains ecl_grid_cell_contains.c )
-   target_link_libraries( ecl_grid_cell_contains ecl test_util )
+   target_link_libraries( ecl_grid_cell_contains ecl  )
 
    include( tests.cmake ) 
    if (STATOIL_TESTDATA_ROOT)
