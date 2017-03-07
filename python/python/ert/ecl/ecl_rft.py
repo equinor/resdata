@@ -88,7 +88,7 @@ class EclRFT(BaseCClass):
         if self.is_MSW():
             rs.append('MSW')
         rstr = ', '.join(rs)
-	return self._create_repr(rstr)
+        return self._create_repr(rstr)
 
     def __len__(self):
         """
