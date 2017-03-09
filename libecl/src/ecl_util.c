@@ -741,7 +741,7 @@ bool ecl_util_fmt_file(const char *filename , bool * __fmt_file) {
   int report_nr;
   ecl_file_enum file_type;
   bool status = true;
-  bool fmt_file;
+  bool fmt_file = 0;
 
   if (util_file_exists(filename)) {
     file_type = ecl_util_get_file_type(filename , &fmt_file , &report_nr);
