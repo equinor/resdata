@@ -27,21 +27,21 @@ extern "C" {
 struct ecl_type_struct {
     const ecl_type_enum type;
 
-    // In case of ECL_STRING_TYPE:
-    // length denotes the number of characters in the string
-    const size_t length; 
+    // Denotes the number of charachters used to represent
+    // the data type in *MEMORY*
+    const size_t element_size;
 };
 
 typedef struct ecl_type_struct ecl_data_type;
 
 
-#define ECL_CHAR (ecl_data_type) {.type = ECL_CHAR_TYPE, .length = 0}
-#define ECL_INT (ecl_data_type) {.type = ECL_INT_TYPE, .length = 0}
-#define ECL_FLOAT (ecl_data_type) {.type = ECL_FLOAT_TYPE, .length = 0}
-#define ECL_DOUBLE (ecl_data_type) {.type = ECL_DOUBLE_TYPE, .length = 0}
-#define ECL_BOOL (ecl_data_type) {.type = ECL_BOOL_TYPE, .length = 0}
-#define ECL_MESS (ecl_data_type) {.type = ECL_MESS_TYPE, .length = 0}
-#define ECL_C010 (ecl_data_type) {.type = ECL_C010_TYPE, .length = 0}
+#define ECL_CHAR (ecl_data_type) {.type = ECL_CHAR_TYPE, .element_size = 8+1}
+#define ECL_INT (ecl_data_type) {.type = ECL_INT_TYPE, .element_size = sizeof(int)/sizeof(char)}
+#define ECL_FLOAT (ecl_data_type) {.type = ECL_FLOAT_TYPE, .element_size = sizeof(float)/sizeof(char)}
+#define ECL_DOUBLE (ecl_data_type) {.type = ECL_DOUBLE_TYPE, .element_size = sizeof(double)/sizeof(char)}
+#define ECL_BOOL (ecl_data_type) {.type = ECL_BOOL_TYPE, .element_size = sizeof(int)/sizeof(char)}
+#define ECL_MESS (ecl_data_type) {.type = ECL_MESS_TYPE, .element_size = 1}
+#define ECL_C010 (ecl_data_type) {.type = ECL_C010_TYPE, .element_size = 10+1}
 
 
 ecl_data_type *    ecl_type_alloc_copy(const ecl_data_type *);
@@ -53,7 +53,7 @@ int                ecl_type_get_sizeof_ctype_fortio(const ecl_data_type*);
 const char *       ecl_type_get_type_name(const ecl_data_type *);
 
 ecl_data_type      ecl_type_get_type_from_name(const char *);
-ecl_data_type      ecl_type_get_data_type(const ecl_type_enum ecl_type, const int length);
+ecl_data_type      ecl_type_get_data_type(const ecl_type_enum, const size_t);
 ecl_data_type      ecl_type_get_data_type_from_type(const ecl_type_enum ecl_type);
 
 bool               ecl_type_is_equal(const ecl_data_type *, const ecl_data_type *);
@@ -65,6 +65,7 @@ bool               ecl_type_is_float(const ecl_data_type *);
 bool               ecl_type_is_double(const ecl_data_type *);
 bool               ecl_type_is_mess(const ecl_data_type *);
 bool               ecl_type_is_bool(const ecl_data_type *);
+bool               ecl_type_is_C010(const ecl_data_type *);
 
 #ifdef __cplusplus
 }

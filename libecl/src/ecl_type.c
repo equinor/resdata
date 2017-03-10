@@ -37,8 +37,8 @@
 
 ecl_data_type * ecl_type_alloc_copy(const ecl_data_type * src_type) {
     ecl_data_type * ecl_type;
-    ecl_type = util_malloc(sizeof * ecl_type);
-    memcpy(ecl_type, src_type, sizeof * ecl_type);
+    ecl_type = util_malloc(ecl_type_get_sizeof_ctype(src_type));
+    memcpy(ecl_type, src_type, ecl_type_get_sizeof_ctype(src_type));
     return ecl_type;
 }
 
@@ -49,7 +49,7 @@ void ecl_type_free(ecl_data_type * ecl_type) {
     free(ecl_type);
 }
 
-ecl_data_type ecl_type_get_data_type(const ecl_type_enum type, const int length) {
+ecl_data_type ecl_type_get_data_type(const ecl_type_enum type, const size_t element_size) {
     ecl_data_type * ecl_type = NULL;
     switch(type) {
     case(ECL_CHAR_TYPE):
@@ -71,13 +71,13 @@ ecl_data_type ecl_type_get_data_type(const ecl_type_enum type, const int length)
       ecl_type = &ECL_MESS;
       break;
     default:
-      util_abort("%s: invalid ecl_type:(%d, %d)\n", __func__, type, length);
+      util_abort("%s: invalid ecl_type:(%d, %d)\n", __func__, type, element_size);
     }
 
-    if(ecl_type->length != length)
+    if(ecl_type->element_size != element_size)
         util_abort(
-                "%s: length mismatch for type %d, was: %d, expected: %d\n",
-                __func__, type, length, ecl_type->length);   
+                "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
+                __func__, type, element_size, ecl_type->element_size);
 
     return *ecl_type;
 }
@@ -155,56 +155,14 @@ ecl_data_type ecl_type_get_type_from_name( const char * type_name ) {
 
 
 int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type * ecl_type) {
-  int size = ecl_type_get_sizeof_ctype ( ecl_type );
-  if (ecl_type->type == ECL_CHAR_TYPE)
-    size = ECL_STRING8_LENGTH  * sizeof(char);
-
-  if (ecl_type->type == ECL_C010_TYPE)
-    size = ECL_STRING10_LENGTH  * sizeof(char);
-
-  return size;
+  if(ecl_type_is_char(ecl_type) || ecl_type_is_C010(ecl_type))
+      return (ecl_type->element_size - 1) * sizeof(char);
+  else
+      return ecl_type_get_sizeof_ctype(ecl_type);
 }
 
 int ecl_type_get_sizeof_ctype(const ecl_data_type * ecl_type) {
-  int sizeof_ctype = -1;
-  switch (ecl_type->type) {
-  case(ECL_CHAR_TYPE):
-    /*
-       One element of character data is a string section of 8
-       characters + \0.  Observe that the return value here
-       corresponds to the size requirements of ECL_CHAR_TYPE instance
-       in memory; on disk the trailing \0 is not stored.
-    */
-    sizeof_ctype = (ECL_STRING8_LENGTH + 1) * sizeof(char);
-    break;
-  case(ECL_C010_TYPE):
-    /*
-       One element of character data is a string section of 8
-       characters + \0.  Observe that the return value here
-       corresponds to the size requirements of ECL_CHAR_TYPE instance
-       in memory; on disk the trailing \0 is not stored.
-    */
-    sizeof_ctype = (ECL_STRING10_LENGTH + 1) * sizeof(char);
-    break;
-  case(ECL_FLOAT_TYPE):
-    sizeof_ctype = sizeof(float);
-    break;
-  case(ECL_DOUBLE_TYPE):
-    sizeof_ctype = sizeof(double);
-    break;
-  case(ECL_INT_TYPE):
-    sizeof_ctype = sizeof(int);
-    break;
-  case(ECL_BOOL_TYPE):
-    sizeof_ctype = sizeof(int); // The ECL_BOOL_TYPE type is internally implemented as an integer - and not a bool.
-    break;
-  case(ECL_MESS_TYPE):
-    sizeof_ctype = sizeof(char);
-    break;
-  default:
-    util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type->type);
-  }
-  return sizeof_ctype;
+   return ecl_type->element_size * sizeof(char);
 }
 
 bool ecl_type_is_numeric(const ecl_data_type * ecl_type) {
@@ -214,7 +172,7 @@ bool ecl_type_is_numeric(const ecl_data_type * ecl_type) {
 }
 
 bool ecl_type_is_equal(const ecl_data_type * ecl_type1, const ecl_data_type * ecl_type2) {
-    return (ecl_type1->type == ecl_type2->type && ecl_type1->length == ecl_type2->length);
+    return (ecl_type1->type == ecl_type2->type && ecl_type1->element_size == ecl_type2->element_size);
 }
 
 bool ecl_type_is_char(const ecl_data_type * ecl_type) {
@@ -239,4 +197,8 @@ bool ecl_type_is_mess(const ecl_data_type * ecl_type) {
  
 bool ecl_type_is_bool(const ecl_data_type * ecl_type) {
     return (ecl_type->type == ECL_BOOL_TYPE);
+}
+
+bool ecl_type_is_C010(const ecl_data_type * ecl_type) {
+    return (ecl_type->type == ECL_C010_TYPE);
 }
