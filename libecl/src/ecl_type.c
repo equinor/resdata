@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include <ert/util/util.h>
+#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_type.h>
 
 /*****************************************************************/
@@ -35,7 +36,8 @@
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
 ecl_data_type * ecl_type_alloc_copy(const ecl_data_type * src_type) {
-    ecl_data_type * ecl_type = util_malloc(sizeof * ecl_type);
+    ecl_data_type * ecl_type;
+    ecl_type = util_malloc(sizeof * ecl_type);
     memcpy(ecl_type, src_type, sizeof * ecl_type);
     return ecl_type;
 }
