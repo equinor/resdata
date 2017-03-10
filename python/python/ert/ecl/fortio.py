@@ -184,7 +184,7 @@ class FortIOContextManager(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__fortio.close()
-        return False
+        return exc_type is not None
 
 
 def openFortIO( file_name , mode = FortIO.READ_MODE , fmt_file = False , endian_flip_header = True):
@@ -203,10 +203,5 @@ def openFortIO( file_name , mode = FortIO.READ_MODE , fmt_file = False , endian_
                  kw.write( fortio )
 
     """
-    return FortIOContextManager( FortIO( file_name , mode = mode , fmt_file = fmt_file , endian_flip_header = endian_flip_header ))
-
-
-
-
-
-
+    return FortIOContextManager(FortIO(file_name, mode=mode, fmt_file=fmt_file,
+                                       endian_flip_header=endian_flip_header))
