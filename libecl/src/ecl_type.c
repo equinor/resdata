@@ -35,79 +35,43 @@
 #define ECL_TYPE_NAME_BOOL     "LOGI"
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
-ecl_data_type * ecl_type_alloc_copy(const ecl_data_type * src_type) {
-    ecl_data_type * ecl_type;
-    ecl_type = util_malloc(ecl_type_get_sizeof_ctype(src_type));
-    memcpy(ecl_type, src_type, ecl_type_get_sizeof_ctype(src_type));
+ecl_data_type ecl_type_create_data_type(const ecl_type_enum type, const size_t element_size) {
+    ecl_data_type ecl_type = ecl_type_create_data_type_from_type(type);
+
+    if(ecl_type.element_size != element_size)
+        util_abort(
+                "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
+                __func__, type, element_size, ecl_type.element_size);
+
     return ecl_type;
 }
 
-void ecl_type_free(ecl_data_type * ecl_type) {
-    if(ecl_type == NULL)
-        return;
-
-    free(ecl_type);
-}
-
-ecl_data_type ecl_type_get_data_type(const ecl_type_enum type, const size_t element_size) {
-    ecl_data_type * ecl_type = NULL;
+ecl_data_type ecl_type_create_data_type_from_type(const ecl_type_enum type) {
     switch(type) {
     case(ECL_CHAR_TYPE):
-      ecl_type = &ECL_CHAR;
-      break;
+      return ECL_CHAR;
     case(ECL_INT_TYPE):
-      ecl_type = &ECL_INT;
-      break;
+      return ECL_INT;
     case(ECL_FLOAT_TYPE):
-      ecl_type = &ECL_FLOAT;
-      break;
+      return ECL_FLOAT;
     case(ECL_DOUBLE_TYPE):
-      ecl_type = &ECL_DOUBLE;
-      break;
+      return ECL_DOUBLE;
     case(ECL_BOOL_TYPE):
-      ecl_type = &ECL_BOOL;
-      break;
+      return ECL_BOOL;
     case(ECL_MESS_TYPE):
-      ecl_type = &ECL_MESS;
-      break;
-    default:
-      util_abort("%s: invalid ecl_type:(%d, %d)\n", __func__, type, element_size);
-    }
-
-    if(ecl_type->element_size != element_size)
-        util_abort(
-                "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
-                __func__, type, element_size, ecl_type->element_size);
-
-    return *ecl_type;
-}
-
-ecl_data_type ecl_type_get_data_type_from_type(const ecl_type_enum type) {
-    ecl_data_type * ecl_type = NULL;
-    switch(type) {
-    case(ECL_CHAR_TYPE):
-      ecl_type = &ECL_CHAR;
-      break;
-    case(ECL_INT_TYPE):
-      ecl_type = &ECL_INT;
-      break;
-    case(ECL_FLOAT_TYPE):
-      ecl_type = &ECL_FLOAT;
-      break;
-    case(ECL_DOUBLE_TYPE):
-      ecl_type = &ECL_DOUBLE;
-      break;
-    case(ECL_BOOL_TYPE):
-      ecl_type = &ECL_BOOL;
-      break;
-    case(ECL_MESS_TYPE):
-      ecl_type = &ECL_MESS;
-      break;
+      return ECL_MESS;
     default:
       util_abort("%s: invalid ecl_type: %d\n", __func__, type);
+      return ECL_INT; /* Dummy */
     }
+}
 
-    return *ecl_type;
+ecl_type_enum ecl_type_get_type(const ecl_data_type * ecl_type) {
+    return ecl_type->type;
+}
+
+size_t ecl_type_get_element_size(const ecl_data_type * ecl_type) {
+    return ecl_type->element_size;
 }
 
 const char * ecl_type_get_type_name(const ecl_data_type * ecl_type) {
@@ -128,11 +92,11 @@ const char * ecl_type_get_type_name(const ecl_data_type * ecl_type) {
     return ECL_TYPE_NAME_MESSAGE;
   default:
     util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type->type);
+    return NULL; /* Dummy */
   }
-  return NULL; /* Dummy */
 }
 
-ecl_data_type ecl_type_get_type_from_name( const char * type_name ) {
+ecl_data_type ecl_type_create_data_type_from_name( const char * type_name ) {
   if (strncmp( type_name , ECL_TYPE_NAME_FLOAT , ECL_TYPE_LENGTH) == 0)
     return ECL_FLOAT;
   else if (strncmp( type_name , ECL_TYPE_NAME_INT , ECL_TYPE_LENGTH) == 0)
@@ -201,4 +165,36 @@ bool ecl_type_is_bool(const ecl_data_type * ecl_type) {
 
 bool ecl_type_is_C010(const ecl_data_type * ecl_type) {
     return (ecl_type->type == ECL_C010_TYPE);
+}
+
+
+/**
+ *
+ * Functions only to be used by the *PYTHON* prototype!
+ *
+ */
+
+static ecl_data_type * alloc_copy(const ecl_data_type * src_type) {
+    ecl_data_type * data_type = util_malloc(sizeof * src_type);
+    memcpy(data_type, src_type, sizeof * data_type);
+    return data_type;
+}
+
+ecl_data_type * python_ecl_type_alloc(const ecl_type_enum type, const size_t element_size) {
+    ecl_data_type src_type = ecl_type_create_data_type(type, element_size);
+    return alloc_copy(&src_type);
+}
+
+ecl_data_type * python_ecl_type_alloc_from_type(const ecl_type_enum type) {
+    ecl_data_type src_type = ecl_type_create_data_type_from_type(type);
+    return alloc_copy(&src_type);
+}
+
+ecl_data_type * python_ecl_type_alloc_from_name(const char * name) {
+    ecl_data_type src_type = ecl_type_create_data_type_from_name(name);
+    return alloc_copy(&src_type);
+}
+
+void python_ecl_type_free(ecl_data_type * data_type) {
+    free(data_type);
 }

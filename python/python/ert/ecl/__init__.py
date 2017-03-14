@@ -28,6 +28,9 @@ wrap the content of the c-file ecl_xxx.c The main content is:
   ecl_kw/EclKW: This class holds one ECLIPSE keyword, like SWAT, in
      restart format.
 
+  ecl_type/EclDataType: This class is used to represent the data type
+    of the elements in EclKW.
+
   ecl_file/EclFile: This class is used to load an ECLIPSE file in
      restart format, alternatively only parts of the file can be
      loaded. Internally it consists of a collection of EclKW
@@ -104,3 +107,4 @@ from .ecl_sum_node import EclSumNode
 from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
 from .ecl_cmp import EclCmp
+from .ecl_type import EclDataType

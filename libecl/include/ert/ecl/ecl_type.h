@@ -44,21 +44,19 @@ typedef struct ecl_type_struct ecl_data_type;
 #define ECL_C010 (ecl_data_type) {.type = ECL_C010_TYPE, .element_size = 10+1}
 
 
-ecl_data_type *    ecl_type_alloc_copy(const ecl_data_type *);
-void               ecl_type_free(ecl_data_type *);
+ecl_data_type      ecl_type_create_data_type_from_name(const char *);
+ecl_data_type      ecl_type_create_data_type(const ecl_type_enum, const size_t);
+ecl_data_type      ecl_type_create_data_type_from_type(const ecl_type_enum);
 
-int                ecl_type_get_sizeof_ctype(const ecl_data_type*);
-int                ecl_type_get_sizeof_ctype_fortio(const ecl_data_type*);
-
+ecl_type_enum      ecl_type_get_type(const ecl_data_type *);
 const char *       ecl_type_get_type_name(const ecl_data_type *);
 
-ecl_data_type      ecl_type_get_type_from_name(const char *);
-ecl_data_type      ecl_type_get_data_type(const ecl_type_enum, const size_t);
-ecl_data_type      ecl_type_get_data_type_from_type(const ecl_type_enum ecl_type);
+int                ecl_type_get_sizeof_ctype(const ecl_data_type *);
+int                ecl_type_get_sizeof_ctype_fortio(const ecl_data_type *);
 
 bool               ecl_type_is_equal(const ecl_data_type *, const ecl_data_type *);
-bool               ecl_type_is_numeric(const ecl_data_type*);
 
+bool               ecl_type_is_numeric(const ecl_data_type*);
 bool               ecl_type_is_char(const ecl_data_type *);
 bool               ecl_type_is_int(const ecl_data_type *);
 bool               ecl_type_is_float(const ecl_data_type *);
