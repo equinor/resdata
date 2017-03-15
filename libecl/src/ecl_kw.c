@@ -486,7 +486,7 @@ static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
 
 
 static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_type_enum ecl_type) {
-  ecl_kw->data_type = ecl_type_create_data_type_from_type(ecl_type);
+  ecl_kw_set_data_type(ecl_kw, ecl_type_create_data_type_from_type(ecl_type));
   if (strlen(header) > ECL_STRING8_LENGTH)
     util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
 
@@ -599,7 +599,7 @@ void ecl_kw_memcpy_data( ecl_kw_type * target , const ecl_kw_type * src) {
 
 void ecl_kw_memcpy(ecl_kw_type *target, const ecl_kw_type *src) {
   target->size                = src->size;
-  target->data_type           = src->data_type;
+  ecl_kw_set_data_type(target, src->data_type);
 
   ecl_kw_set_header_name( target , src->header );
   ecl_kw_alloc_data(target);
@@ -1465,6 +1465,10 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
   /* Internalizing a header without the trailing spaces as well. */
   util_safe_free( ecl_kw->header );
   ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
+}
+
+void ecl_kw_set_data_type(ecl_kw_type * ecl_kw, ecl_data_type data_type) {
+    memcpy(&ecl_kw->data_type, &data_type, sizeof data_type);
 }
 
 

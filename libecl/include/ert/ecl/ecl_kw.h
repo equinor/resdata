@@ -31,6 +31,7 @@ extern "C" {
 
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_type.h>
 
   UTIL_IS_INSTANCE_HEADER(ecl_kw);
 
@@ -68,6 +69,7 @@ extern "C" {
   ecl_kw_type  * ecl_kw_alloc_empty(void);
   ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *, fortio_type *);
   void           ecl_kw_set_header_name(ecl_kw_type * , const char * );
+  void           ecl_kw_set_data_type(ecl_kw_type * , ecl_data_type);
   bool           ecl_kw_fseek_kw(const char * , bool , bool , fortio_type *);
   bool           ecl_kw_fseek_last_kw(const char * , bool  , fortio_type *);
   void           ecl_kw_inplace_update_file(const ecl_kw_type * , const char * , int ) ;
