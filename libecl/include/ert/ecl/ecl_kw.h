@@ -107,7 +107,7 @@ extern "C" {
   int            ecl_kw_get_size(const ecl_kw_type *);
   bool           ecl_kw_ichar_eq(const ecl_kw_type *, int , const char *);
   ecl_kw_type *  ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_type );
-  ecl_kw_type *  ecl_kw_alloc_new(const char * ,  int , ecl_type_enum , const void * );
+  ecl_kw_type *  ecl_kw_alloc_new(const char * ,  int , ecl_data_type , const void * );
   ecl_kw_type *  ecl_kw_alloc_new_shared(const char * ,  int , ecl_type_enum , void * );
   void           ecl_kw_fwrite_param(const char * , bool  , const char * ,  ecl_type_enum , int , void * );
   void           ecl_kw_fwrite_param_fortio(fortio_type *, const char * ,  ecl_type_enum , int , void * );

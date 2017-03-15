@@ -36,6 +36,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/ecl/ecl_file_kw.h>
+#include <ert/ecl/ecl_type.h>
 
 /**
    This file implements functionality to load an ECLIPSE file in
@@ -515,7 +516,7 @@ static bool ecl_file_scan( ecl_file_type * ecl_file ) {
   bool scan_ok = false;
   fortio_fseek( ecl_file->fortio , 0 , SEEK_SET );
   {
-    ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT_TYPE , NULL);
+    ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT , NULL);
 
     while (true) {
       if (fortio_read_at_eof(ecl_file->fortio)) {

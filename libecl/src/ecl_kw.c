@@ -520,8 +520,7 @@ size_t ecl_kw_fortio_size( const ecl_kw_type * ecl_kw ) {
 /**
    The data is copied from the input argument to the ecl_kw; data can be NULL.
 */
-ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_type_enum ecl_type , const void * data) {
-  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
+ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_data_type data_type , const void * data) {
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
   ecl_kw_initialize(ecl_kw , header , size , data_type);
@@ -713,7 +712,7 @@ ecl_kw_type * ecl_kw_alloc_sub_copy( const ecl_kw_type * src, const char * new_k
 
   {
     void * src_data = ecl_kw_iget_ptr( src , offset );
-    return ecl_kw_alloc_new( new_kw , count , ecl_kw_get_type(src) , src_data );
+    return ecl_kw_alloc_new( new_kw , count , src->data_type , src_data );
   }
 }
 

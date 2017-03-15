@@ -33,6 +33,7 @@
 #include <ert/geometry/geo_polygon.h>
 
 #include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_type.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_kw_magic.h>
@@ -2330,7 +2331,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid 
     if (corsnum != NULL)
       ecl_grid->coarsening_active = true;
 
-    ecl_grid->coord_kw = ecl_kw_alloc_new("COORD" , 6*(nx + 1) * (ny + 1) , ECL_FLOAT_TYPE , coord );
+    ecl_grid->coord_kw = ecl_kw_alloc_new("COORD" , 6*(nx + 1) * (ny + 1) , ECL_FLOAT , coord );
     ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum , corsnum);
 
     ecl_grid_init_coarse_cells( ecl_grid );
@@ -5680,7 +5681,7 @@ static const float * ecl_grid_get_mapaxes( const ecl_grid_type * grid ) {
 }
 
 static ecl_kw_type * ecl_grid_alloc_mapaxes_kw( const float * mapaxes ) {
-  return ecl_kw_alloc_new( MAPAXES_KW , 6 , ECL_FLOAT_TYPE , mapaxes);
+  return ecl_kw_alloc_new( MAPAXES_KW , 6 , ECL_FLOAT , mapaxes);
 }
 
 static ecl_kw_type * ecl_grid_alloc_mapunits_kw( ert_ecl_unit_enum output_unit ) {

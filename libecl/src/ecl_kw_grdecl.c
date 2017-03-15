@@ -22,6 +22,7 @@
 #include <ert/util/util.h>
 
 #include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_type.h>
 #include <ert/ecl/ecl_util.h>
 
 
@@ -517,7 +518,9 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
 
 
 static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_type_enum ecl_type) {
-  if (! (ecl_type == ECL_FLOAT_TYPE || ecl_type == ECL_INT_TYPE || ecl_type == ECL_DOUBLE_TYPE))
+  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
+
+  if (!ecl_type_is_numeric(data_type))
     util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",__func__);
 
   if (header != NULL)
@@ -539,7 +542,7 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
         }
 
       {
-        ecl_kw_type * ecl_kw = ecl_kw_alloc_new( file_header , kw_size , ecl_type , NULL );
+        ecl_kw_type * ecl_kw = ecl_kw_alloc_new( file_header , kw_size , data_type , NULL );
         ecl_kw_set_data_ptr( ecl_kw , data );
         return ecl_kw;
       }

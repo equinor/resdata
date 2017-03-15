@@ -37,6 +37,7 @@
 #include <ert/ecl/ecl_file_kw.h>
 #include <ert/ecl/ecl_rst_file.h>
 #include <ert/ecl/ecl_rsthead.h>
+#include <ert/ecl/ecl_type.h>
 
 struct ecl_rst_file_struct {
   fortio_type * fortio;
@@ -101,7 +102,7 @@ ecl_rst_file_type * ecl_rst_file_open_write_seek( const char * filename , int re
 
   fortio_fseek( rst_file->fortio , 0 , SEEK_SET );
   {
-    ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT_TYPE , NULL);
+    ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT, NULL);
 
     while (true) {
       offset_type current_offset = fortio_ftell( rst_file->fortio );
