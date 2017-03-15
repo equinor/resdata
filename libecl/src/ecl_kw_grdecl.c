@@ -516,7 +516,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
    if there is something wrong it can be difficult to detect.
 */
 
-
+// TODO: Should take ecl_data_type as input
 static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_type_enum ecl_type) {
   ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
 

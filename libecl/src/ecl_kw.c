@@ -2033,17 +2033,18 @@ void ecl_kw_shift_float_or_double( ecl_kw_type * ecl_kw , double shift_value ) {
 }
 
 
-
+// TODO: remove
 bool ecl_kw_assert_numeric( const ecl_kw_type * kw ) {
   return ecl_type_is_numeric(kw->data_type);
 }
 
 
+// TODO: remove
 bool ecl_kw_assert_binary( const ecl_kw_type * kw1, const ecl_kw_type * kw2) {
   return ecl_kw_size_and_type_equal(kw1, kw2);
 }
 
-
+// TODO: rename
 bool ecl_kw_assert_binary_numeric( const ecl_kw_type * kw1, const ecl_kw_type * kw2) {
   return ecl_kw_assert_binary(kw1, kw2) && ecl_kw_assert_numeric(kw1);
 }

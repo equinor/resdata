@@ -108,7 +108,7 @@ const char * ecl_util_get_phase_name( ecl_phase_enum phase ) {
 
 
 
-
+// TODO: remove
 const char * ecl_util_get_type_name( ecl_type_enum ecl_type ) {
   switch (ecl_type) {
   case(ECL_CHAR_TYPE):
@@ -138,7 +138,7 @@ const char * ecl_util_get_type_name( ecl_type_enum ecl_type ) {
   return NULL; /* Dummy */
 }
 
-
+// TODO: remove
 ecl_type_enum ecl_util_get_type_from_name( const char * type_name ) {
   ecl_type_enum ecl_type;
 
@@ -163,7 +163,7 @@ ecl_type_enum ecl_util_get_type_from_name( const char * type_name ) {
   return ecl_type;
 }
 
-
+// TODO: remove
 int ecl_util_get_sizeof_ctype_fortio(ecl_type_enum ecl_type) {
   int size = ecl_util_get_sizeof_ctype ( ecl_type );
   if (ecl_type == ECL_CHAR_TYPE)
@@ -175,6 +175,7 @@ int ecl_util_get_sizeof_ctype_fortio(ecl_type_enum ecl_type) {
   return size;
 }
 
+// TODO: remove
 int ecl_util_get_sizeof_ctype(ecl_type_enum ecl_type) {
   int sizeof_ctype = -1;
   switch (ecl_type) {

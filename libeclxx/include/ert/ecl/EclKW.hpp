@@ -33,7 +33,7 @@
 #include <ert/util/ert_unique_ptr.hpp>
 #include <ert/ecl/FortIO.hpp>
 
-
+// TODO: Expose ecl_data_type
 namespace ERT {
     template< typename > struct ecl_type {};
 
