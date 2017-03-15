@@ -1732,21 +1732,22 @@ ecl_kw_type * ecl_kw_buffer_alloc(buffer_type * buffer) {
   const char * header    = buffer_fread_string( buffer );
   int size               = buffer_fread_int( buffer );
   ecl_type_enum ecl_type = buffer_fread_int( buffer );
-  {
-    ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
-    ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-    ecl_kw_initialize( ecl_kw , header , size , data_type );
-    ecl_kw_alloc_data(ecl_kw);
-    buffer_fread(buffer , ecl_kw->data , ecl_kw_get_sizeof_ctype(ecl_kw) , ecl_kw->size);
-    return ecl_kw;
-  }
+  size_t element_size    = buffer_fread_int( buffer );
+
+  ecl_data_type data_type = ecl_type_create_data_type(ecl_type, element_size);
+  ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
+  ecl_kw_initialize( ecl_kw , header , size , data_type );
+  ecl_kw_alloc_data(ecl_kw);
+  buffer_fread(buffer , ecl_kw->data , ecl_kw_get_sizeof_ctype(ecl_kw) , ecl_kw->size);
+  return ecl_kw;
 }
 
 
 void ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer) {
   buffer_fwrite_string( buffer , ecl_kw->header8 );
   buffer_fwrite_int( buffer , ecl_kw->size );
-  buffer_fwrite_int( buffer , ecl_kw_get_type(ecl_kw) );
+  buffer_fwrite_int( buffer , ecl_type_get_type(ecl_kw->data_type) );
+  buffer_fwrite_int( buffer , ecl_type_get_element_size(ecl_kw->data_type));
   buffer_fwrite( buffer , ecl_kw->data , ecl_kw_get_sizeof_ctype(ecl_kw) , ecl_kw->size);
 }
 

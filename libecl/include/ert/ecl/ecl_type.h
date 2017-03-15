@@ -49,6 +49,7 @@ ecl_data_type      ecl_type_create_data_type(const ecl_type_enum, const size_t);
 ecl_data_type      ecl_type_create_data_type_from_type(const ecl_type_enum);
 
 ecl_type_enum      ecl_type_get_type(const ecl_data_type);
+size_t             ecl_type_get_element_size(const ecl_data_type);
 const char *       ecl_type_get_type_name(const ecl_data_type);
 
 int                ecl_type_get_sizeof_ctype(const ecl_data_type);
