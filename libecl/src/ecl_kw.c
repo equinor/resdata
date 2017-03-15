@@ -449,7 +449,7 @@ ECL_KW_NUMERIC_CMP( double )
 */
 
 bool ecl_kw_numeric_equal(const ecl_kw_type *ecl_kw1, const ecl_kw_type *ecl_kw2 , double abs_diff , double rel_diff) {
-  if(!ecl_kw_equal(ecl_kw1, ecl_kw2))
+  if(!ecl_kw_size_and_type_equal(ecl_kw1, ecl_kw2))
     return false;
 
   if (ecl_type_is_float(ecl_kw1->data_type))
