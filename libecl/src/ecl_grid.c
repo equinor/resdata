@@ -6353,8 +6353,8 @@ static void  ecl_grid_fwrite_self_nnc( const ecl_grid_type * grid , fortio_type 
   }
   {
     int num_nnc = int_vector_size( g1 );
-    ecl_kw_type * nnc1_kw = ecl_kw_alloc_new_shared( NNC1_KW , num_nnc , ECL_INT_TYPE , int_vector_get_ptr( g1 ));
-    ecl_kw_type * nnc2_kw = ecl_kw_alloc_new_shared( NNC2_KW , num_nnc , ECL_INT_TYPE , int_vector_get_ptr( g2 ));
+    ecl_kw_type * nnc1_kw = ecl_kw_alloc_new_shared( NNC1_KW , num_nnc , ECL_INT , int_vector_get_ptr( g1 ));
+    ecl_kw_type * nnc2_kw = ecl_kw_alloc_new_shared( NNC2_KW , num_nnc , ECL_INT , int_vector_get_ptr( g2 ));
     ecl_kw_type * nnchead_kw = ecl_kw_alloc( NNCHEAD_KW , NNCHEAD_SIZE , ECL_INT_TYPE );
 
     ecl_kw_scalar_set_int( nnchead_kw , 0 );

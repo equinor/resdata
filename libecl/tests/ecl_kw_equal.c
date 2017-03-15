@@ -21,6 +21,7 @@
 #include <ert/util/test_util.h>
 #include <ert/util/util.h>
 #include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_type.h>
 
 
 int main(int argc , char ** argv) {
@@ -49,8 +50,8 @@ int main(int argc , char ** argv) {
   }
 
   {
-    ecl_kw_type * ecl_ikw = ecl_kw_alloc_new_shared( "KW" , 10 , ECL_INT_TYPE , data);
-    ecl_kw_type * ecl_fkw = ecl_kw_alloc_new_shared( "KW" , 10 , ECL_FLOAT_TYPE , data);
+    ecl_kw_type * ecl_ikw = ecl_kw_alloc_new_shared( "KW" , 10 , ECL_INT , data);
+    ecl_kw_type * ecl_fkw = ecl_kw_alloc_new_shared( "KW" , 10 , ECL_FLOAT , data);
 
     test_assert_true( ecl_kw_content_equal( ecl_kw1 , ecl_ikw ));
     test_assert_false( ecl_kw_content_equal( ecl_kw1 , ecl_fkw ));

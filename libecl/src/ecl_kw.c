@@ -550,8 +550,7 @@ ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_t
 
 
 
-ecl_kw_type * ecl_kw_alloc_new_shared(const char * header ,  int size, ecl_type_enum ecl_type , void * data) {
-  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
+ecl_kw_type * ecl_kw_alloc_new_shared(const char * header ,  int size, ecl_data_type data_type , void * data) {
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
   ecl_kw_initialize(ecl_kw , header , size , data_type);
@@ -1754,7 +1753,8 @@ void ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer) {
 
 
 void ecl_kw_fwrite_param_fortio(fortio_type * fortio, const char * header ,  ecl_type_enum ecl_type , int size, void * data) {
-  ecl_kw_type   * ecl_kw = ecl_kw_alloc_new_shared(header , size , ecl_type , data);
+  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
+  ecl_kw_type   * ecl_kw = ecl_kw_alloc_new_shared(header , size , data_type , data);
   ecl_kw_fwrite(ecl_kw , fortio);
   ecl_kw_free(ecl_kw);
 }
