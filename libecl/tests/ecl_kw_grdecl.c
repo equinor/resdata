@@ -26,7 +26,7 @@
 
 int main(int argc , char ** argv) {  
   int i;
-  ecl_kw_type * ecl_kw = ecl_kw_alloc("HEAD" , 10  , ECL_INT_TYPE);
+  ecl_kw_type * ecl_kw = ecl_kw_alloc("HEAD" , 10  , ECL_INT);
 
   for (i=0; i < 10; i++) 
     ecl_kw_iset_int(ecl_kw , i , i );

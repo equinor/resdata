@@ -25,7 +25,7 @@
 
 
 int main(int argc , char ** argv) {
-  ecl_kw_type * ecl_kw1 = ecl_kw_alloc( "KW" , 10 , ECL_INT_TYPE );
+  ecl_kw_type * ecl_kw1 = ecl_kw_alloc( "KW" , 10 , ECL_INT );
   int data[10];
   int i;
   for (i=0; i < 10; i++) {

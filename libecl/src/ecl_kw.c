@@ -533,9 +533,8 @@ ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_data_type da
 
 
 
-ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_type ) {
-  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
-  if (ecl_type == ECL_C010_TYPE)
+ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_data_type data_type ) {
+  if (ecl_type_is_C010(data_type))
     return NULL;
   {
     ecl_kw_type *ecl_kw;
@@ -1837,7 +1836,7 @@ ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target
   float default_float       = 0;
   int   default_bool        = ECL_BOOL_FALSE_INT;
   const char * default_char = "";
-  ecl_kw_type * new_kw = ecl_kw_alloc( src_kw->header , target_size , ecl_kw_get_type(src_kw) );
+  ecl_kw_type * new_kw = ecl_kw_alloc( src_kw->header , target_size , src_kw->data_type );
 
   if (def_value != NULL)
     ecl_kw_scalar_set__( new_kw , def_value );

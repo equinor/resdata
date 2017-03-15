@@ -106,7 +106,7 @@ extern "C" {
   void        *  ecl_kw_iget_ptr(const ecl_kw_type *, int);
   int            ecl_kw_get_size(const ecl_kw_type *);
   bool           ecl_kw_ichar_eq(const ecl_kw_type *, int , const char *);
-  ecl_kw_type *  ecl_kw_alloc( const char * header , int size , ecl_type_enum );
+  ecl_kw_type *  ecl_kw_alloc( const char * header , int size , ecl_data_type );
   ecl_kw_type *  ecl_kw_alloc_new(const char * ,  int , ecl_data_type , const void * );
   ecl_kw_type *  ecl_kw_alloc_new_shared(const char * ,  int , ecl_data_type , void * );
   void           ecl_kw_fwrite_param(const char * , bool  , const char * ,  ecl_type_enum , int , void * );

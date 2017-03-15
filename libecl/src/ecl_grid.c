@@ -5685,7 +5685,7 @@ static ecl_kw_type * ecl_grid_alloc_mapaxes_kw( const float * mapaxes ) {
 }
 
 static ecl_kw_type * ecl_grid_alloc_mapunits_kw( ert_ecl_unit_enum output_unit ) {
-  ecl_kw_type * mapunits_kw = ecl_kw_alloc( MAPUNITS_KW , 1 , ECL_CHAR_TYPE);
+  ecl_kw_type * mapunits_kw = ecl_kw_alloc( MAPUNITS_KW , 1 , ECL_CHAR);
 
   if (output_unit == ECL_FIELD_UNITS)
     ecl_kw_iset_string8( mapunits_kw , 0 , "FEET" );
@@ -5700,7 +5700,7 @@ static ecl_kw_type * ecl_grid_alloc_mapunits_kw( ert_ecl_unit_enum output_unit )
 }
 
 static ecl_kw_type * ecl_grid_alloc_gridunits_kw( ert_ecl_unit_enum output_unit ) {
-  ecl_kw_type * gridunits_kw = ecl_kw_alloc( GRIDUNIT_KW , 2 , ECL_CHAR_TYPE);
+  ecl_kw_type * gridunits_kw = ecl_kw_alloc( GRIDUNIT_KW , 2 , ECL_CHAR);
 
   if (output_unit == ECL_FIELD_UNITS)
     ecl_kw_iset_string8( gridunits_kw , 0 , "FEET" );
@@ -5772,14 +5772,14 @@ static void ecl_grid_fwrite_main_GRID_headers( const ecl_grid_type * ecl_grid , 
 
 static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size , fortio_type * fortio, ert_ecl_unit_enum output_unit) {
   if (grid->parent_grid != NULL) {
-    ecl_kw_type * lgr_kw = ecl_kw_alloc(LGR_KW , 1 , ECL_CHAR_TYPE );
+    ecl_kw_type * lgr_kw = ecl_kw_alloc(LGR_KW , 1 , ECL_CHAR);
     ecl_kw_iset_string8( lgr_kw , 0 , grid->name );
     ecl_kw_fwrite( lgr_kw , fortio );
     ecl_kw_free( lgr_kw );
   }
 
   {
-    ecl_kw_type * dimens_kw = ecl_kw_alloc(DIMENS_KW , 3 , ECL_INT_TYPE );
+    ecl_kw_type * dimens_kw = ecl_kw_alloc(DIMENS_KW , 3 , ECL_INT);
     ecl_kw_iset_int( dimens_kw , 0 , grid->nx );
     ecl_kw_iset_int( dimens_kw , 1 , grid->ny );
     if (grid->dualp_flag == FILEHEAD_SINGLE_POROSITY)
@@ -5795,15 +5795,15 @@ static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size
     ecl_grid_fwrite_main_GRID_headers( grid , fortio , output_unit);
 
   {
-    ecl_kw_type * radial_kw = ecl_kw_alloc( RADIAL_KW , 1 , ECL_CHAR_TYPE);
+    ecl_kw_type * radial_kw = ecl_kw_alloc( RADIAL_KW , 1 , ECL_CHAR);
     ecl_kw_iset_string8( radial_kw , 0 , "FALSE" );
     ecl_kw_fwrite( radial_kw , fortio );
     ecl_kw_free( radial_kw );
   }
 
   {
-    ecl_kw_type * coords_kw  = ecl_kw_alloc( COORDS_KW  , coords_size , ECL_INT_TYPE );
-    ecl_kw_type * corners_kw = ecl_kw_alloc( CORNERS_KW , 24 , ECL_FLOAT_TYPE );
+    ecl_kw_type * coords_kw  = ecl_kw_alloc( COORDS_KW  , coords_size , ECL_INT);
+    ecl_kw_type * corners_kw = ecl_kw_alloc( CORNERS_KW , 24 , ECL_FLOAT);
     int i,j,k;
     for (k=0; k < grid->nz; k++) {
       for (j=0; j < grid->ny; j++) {
@@ -5887,7 +5887,7 @@ static void ecl_grid_fwrite_main_EGRID_header( const ecl_grid_type * grid , fort
   const float * mapaxes = ecl_grid_get_mapaxes( grid );
 
   {
-    ecl_kw_type * filehead_kw = ecl_kw_alloc( FILEHEAD_KW , 100 , ECL_INT_TYPE );
+    ecl_kw_type * filehead_kw = ecl_kw_alloc( FILEHEAD_KW , 100 , ECL_INT);
     ecl_kw_scalar_set_int( filehead_kw , 0 );
 
     ecl_kw_iset_int( filehead_kw , FILEHEAD_VERSION_INDEX   , EGRID_VERSION );
@@ -6083,7 +6083,7 @@ float * ecl_grid_alloc_coord_data( const ecl_grid_type * grid ) {
 
 void ecl_grid_assert_coord_kw( ecl_grid_type * grid ) {
   if (grid->coord_kw == NULL) {
-    grid->coord_kw = ecl_kw_alloc( COORD_KW , ecl_grid_get_coord_size( grid ) , ECL_FLOAT_TYPE );
+    grid->coord_kw = ecl_kw_alloc( COORD_KW , ecl_grid_get_coord_size( grid ) , ECL_FLOAT);
     ecl_grid_init_coord_data( grid , ecl_kw_get_void_ptr( grid->coord_kw ));
   }
 }
@@ -6154,7 +6154,7 @@ float * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid ) {
 
 
 ecl_kw_type * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * zcorn_kw = ecl_kw_alloc( ZCORN_KW , 8 * grid->size , ECL_FLOAT_TYPE );
+  ecl_kw_type * zcorn_kw = ecl_kw_alloc( ZCORN_KW , 8 * grid->size , ECL_FLOAT);
   ecl_grid_init_zcorn_data( grid , ecl_kw_get_void_ptr( zcorn_kw ));
   return zcorn_kw;
 }
@@ -6218,7 +6218,7 @@ int * ecl_grid_alloc_actnum_data( const ecl_grid_type * grid ) {
 
 
 ecl_kw_type * ecl_grid_alloc_actnum_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * actnum_kw = ecl_kw_alloc( ACTNUM_KW , grid->size  , ECL_INT_TYPE );
+  ecl_kw_type * actnum_kw = ecl_kw_alloc( ACTNUM_KW , grid->size  , ECL_INT);
   ecl_grid_init_actnum_data( grid , ecl_kw_get_void_ptr( actnum_kw ));
   return actnum_kw;
 }
@@ -6272,7 +6272,7 @@ int * ecl_grid_alloc_hostnum_data( const ecl_grid_type * grid ) {
 
 
 ecl_kw_type * ecl_grid_alloc_hostnum_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * hostnum_kw = ecl_kw_alloc( HOSTNUM_KW , grid->size  , ECL_INT_TYPE );
+  ecl_kw_type * hostnum_kw = ecl_kw_alloc( HOSTNUM_KW , grid->size  , ECL_INT);
   ecl_grid_init_hostnum_data( grid , ecl_kw_get_void_ptr( hostnum_kw ));
   return hostnum_kw;
 }
@@ -6295,7 +6295,7 @@ int * ecl_grid_alloc_corsnum_data( const ecl_grid_type * grid ) {
 
 
 ecl_kw_type * ecl_grid_alloc_corsnum_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * corsnum_kw = ecl_kw_alloc( CORSNUM_KW , grid->size  , ECL_INT_TYPE );
+  ecl_kw_type * corsnum_kw = ecl_kw_alloc( CORSNUM_KW , grid->size  , ECL_INT);
   ecl_grid_init_corsnum_data( grid , ecl_kw_get_void_ptr( corsnum_kw ));
   return corsnum_kw;
 }
@@ -6304,7 +6304,7 @@ ecl_kw_type * ecl_grid_alloc_corsnum_kw( const ecl_grid_type * grid ) {
 
 
 ecl_kw_type * ecl_grid_alloc_gridhead_kw( int nx, int ny , int nz , int grid_nr) {
-  ecl_kw_type * gridhead_kw = ecl_kw_alloc( GRIDHEAD_KW , GRIDHEAD_SIZE , ECL_INT_TYPE );
+  ecl_kw_type * gridhead_kw = ecl_kw_alloc( GRIDHEAD_KW , GRIDHEAD_SIZE , ECL_INT);
   ecl_kw_scalar_set_int( gridhead_kw , 0 );
   ecl_kw_iset_int( gridhead_kw , GRIDHEAD_TYPE_INDEX , GRIDHEAD_GRIDTYPE_CORNERPOINT );
   ecl_kw_iset_int( gridhead_kw , GRIDHEAD_NX_INDEX , nx);
@@ -6355,7 +6355,7 @@ static void  ecl_grid_fwrite_self_nnc( const ecl_grid_type * grid , fortio_type 
     int num_nnc = int_vector_size( g1 );
     ecl_kw_type * nnc1_kw = ecl_kw_alloc_new_shared( NNC1_KW , num_nnc , ECL_INT , int_vector_get_ptr( g1 ));
     ecl_kw_type * nnc2_kw = ecl_kw_alloc_new_shared( NNC2_KW , num_nnc , ECL_INT , int_vector_get_ptr( g2 ));
-    ecl_kw_type * nnchead_kw = ecl_kw_alloc( NNCHEAD_KW , NNCHEAD_SIZE , ECL_INT_TYPE );
+    ecl_kw_type * nnchead_kw = ecl_kw_alloc( NNCHEAD_KW , NNCHEAD_SIZE , ECL_INT);
 
     ecl_kw_scalar_set_int( nnchead_kw , 0 );
     ecl_kw_iset_int( nnchead_kw , NNCHEAD_NUMNNC_INDEX , num_nnc );
@@ -6385,14 +6385,14 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
     ecl_grid_fwrite_main_EGRID_header( grid , fortio , output_unit );
   } else {
     {
-      ecl_kw_type * lgr_kw = ecl_kw_alloc(LGR_KW , 1 , ECL_CHAR_TYPE );
+      ecl_kw_type * lgr_kw = ecl_kw_alloc(LGR_KW , 1 , ECL_CHAR);
       ecl_kw_iset_string8( lgr_kw , 0 , grid->name );
       ecl_kw_fwrite( lgr_kw , fortio );
       ecl_kw_free( lgr_kw );
     }
 
     {
-      ecl_kw_type * lgr_parent_kw = ecl_kw_alloc(LGR_PARENT_KW , 1 , ECL_CHAR_TYPE );
+      ecl_kw_type * lgr_parent_kw = ecl_kw_alloc(LGR_PARENT_KW , 1 , ECL_CHAR);
       if (grid->parent_name != NULL)
         ecl_kw_iset_string8( lgr_parent_kw , 0 , grid->parent_name );
       else
@@ -6438,14 +6438,14 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
     }
 
     {
-      ecl_kw_type * endgrid_kw = ecl_kw_alloc( ENDGRID_KW , 0 , ECL_INT_TYPE );
+      ecl_kw_type * endgrid_kw = ecl_kw_alloc( ENDGRID_KW , 0 , ECL_INT);
       ecl_kw_fwrite( endgrid_kw , fortio );
       ecl_kw_free( endgrid_kw );
     }
   }
 
   if (is_lgr) {
-    ecl_kw_type * endlgr_kw = ecl_kw_alloc( ENDLGR_KW , 0 , ECL_INT_TYPE );
+    ecl_kw_type * endlgr_kw = ecl_kw_alloc( ENDLGR_KW , 0 , ECL_INT);
     ecl_kw_fwrite( endlgr_kw , fortio );
     ecl_kw_free( endlgr_kw );
   }
@@ -6489,7 +6489,7 @@ void ecl_grid_fwrite_EGRID( ecl_grid_type * grid , const char * filename, bool o
 
 
 void ecl_grid_fwrite_depth( const ecl_grid_type * grid , fortio_type * init_file , ert_ecl_unit_enum output_unit) {
-  ecl_kw_type * depth_kw = ecl_kw_alloc("DEPTH" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
+  ecl_kw_type * depth_kw = ecl_kw_alloc("DEPTH" , ecl_grid_get_nactive(grid) , ECL_FLOAT);
   {
     float * depth_ptr = ecl_kw_get_ptr(depth_kw);
     for (int i = 0; i < ecl_grid_get_nactive( grid ); i++)
@@ -6502,9 +6502,9 @@ void ecl_grid_fwrite_depth( const ecl_grid_type * grid , fortio_type * init_file
 
 
 void ecl_grid_fwrite_dims( const ecl_grid_type * grid , fortio_type * init_file,  ert_ecl_unit_enum output_unit) {
-  ecl_kw_type * dx = ecl_kw_alloc("DX" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
-  ecl_kw_type * dy = ecl_kw_alloc("DY" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
-  ecl_kw_type * dz = ecl_kw_alloc("DZ" , ecl_grid_get_nactive(grid) , ECL_FLOAT_TYPE );
+  ecl_kw_type * dx = ecl_kw_alloc("DX" , ecl_grid_get_nactive(grid) , ECL_FLOAT);
+  ecl_kw_type * dy = ecl_kw_alloc("DY" , ecl_grid_get_nactive(grid) , ECL_FLOAT);
+  ecl_kw_type * dz = ecl_kw_alloc("DZ" , ecl_grid_get_nactive(grid) , ECL_FLOAT);
   {
     {
       float * dx_ptr = ecl_kw_get_ptr(dx);
@@ -6657,7 +6657,7 @@ int ecl_grid_get_num_nnc( const ecl_grid_type * grid ) {
 
 
 static ecl_kw_type * ecl_grid_alloc_volume_kw_active( const ecl_grid_type * grid) {
-  ecl_kw_type * volume_kw = ecl_kw_alloc("VOLUME" , ecl_grid_get_active_size(grid) , ECL_DOUBLE_TYPE);
+  ecl_kw_type * volume_kw = ecl_kw_alloc("VOLUME" , ecl_grid_get_active_size(grid) , ECL_DOUBLE);
   {
     double * volume_data = ecl_kw_get_ptr( volume_kw );
     int active_index;
@@ -6671,7 +6671,7 @@ static ecl_kw_type * ecl_grid_alloc_volume_kw_active( const ecl_grid_type * grid
 
 
 static ecl_kw_type * ecl_grid_alloc_volume_kw_global( const ecl_grid_type * grid) {
-  ecl_kw_type * volume_kw = ecl_kw_alloc("VOLUME" , ecl_grid_get_global_size(grid) , ECL_DOUBLE_TYPE);
+  ecl_kw_type * volume_kw = ecl_kw_alloc("VOLUME" , ecl_grid_get_global_size(grid) , ECL_DOUBLE);
   {
     double * volume_data = ecl_kw_get_ptr( volume_kw );
     int global_index;
