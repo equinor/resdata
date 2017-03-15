@@ -485,8 +485,8 @@ static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
 
 
 
-static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_type_enum ecl_type) {
-  ecl_kw_set_data_type(ecl_kw, ecl_type_create_data_type_from_type(ecl_type));
+static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_data_type data_type) {
+  ecl_kw_set_data_type(ecl_kw, data_type);
   if (strlen(header) > ECL_STRING8_LENGTH)
     util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
 
@@ -521,9 +521,10 @@ size_t ecl_kw_fortio_size( const ecl_kw_type * ecl_kw ) {
    The data is copied from the input argument to the ecl_kw; data can be NULL.
 */
 ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_type_enum ecl_type , const void * data) {
+  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw_initialize(ecl_kw , header , size , ecl_type);
+  ecl_kw_initialize(ecl_kw , header , size , data_type);
   if (data != NULL) {
     ecl_kw_alloc_data(ecl_kw);
     ecl_kw_set_memcpy_data(ecl_kw , data);
@@ -534,13 +535,14 @@ ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_type_enum ec
 
 
 ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_type ) {
+  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
   if (ecl_type == ECL_C010_TYPE)
     return NULL;
   {
     ecl_kw_type *ecl_kw;
 
     ecl_kw = ecl_kw_alloc_empty();
-    ecl_kw_initialize(ecl_kw , header , size , ecl_type);
+    ecl_kw_initialize(ecl_kw , header , size , data_type);
     ecl_kw_alloc_data(ecl_kw);
 
     return ecl_kw;
@@ -550,9 +552,10 @@ ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_type_enum ecl_t
 
 
 ecl_kw_type * ecl_kw_alloc_new_shared(const char * header ,  int size, ecl_type_enum ecl_type , void * data) {
+  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
   ecl_kw_type *ecl_kw;
   ecl_kw = ecl_kw_alloc_empty();
-  ecl_kw_initialize(ecl_kw , header , size , ecl_type);
+  ecl_kw_initialize(ecl_kw , header , size , data_type);
   ecl_kw_set_shared_ref(ecl_kw , data);
   return ecl_kw;
 }
@@ -647,7 +650,7 @@ ecl_kw_type * ecl_kw_alloc_slice_copy( const ecl_kw_type * src, int index1, int 
       }
       if (new_size > 0) {
         new_kw = ecl_kw_alloc_empty();
-        ecl_kw_initialize(new_kw , src->header , new_size , ecl_kw_get_type(src));
+        ecl_kw_initialize(new_kw , src->header , new_size , src->data_type);
         ecl_kw_alloc_data(new_kw);
 
         /* 2: Copy over the elements. */
@@ -1228,18 +1231,18 @@ bool ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 */
 
 bool ecl_kw_fskip_data__( ecl_type_enum ecl_type , const int element_count , fortio_type * fortio) {
+  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
   bool fmt_file = fortio_fmt_file(fortio);
   bool skip_ok = true;
   if (element_count > 0) {
     if (fmt_file) {
       /* Formatted skipping actually involves reading the data - nice ??? */
       ecl_kw_type * tmp_kw = ecl_kw_alloc_empty( );
-      ecl_kw_initialize( tmp_kw , "WORK" , element_count , ecl_type );
+      ecl_kw_initialize( tmp_kw , "WORK" , element_count , data_type );
       ecl_kw_alloc_data(tmp_kw);
       ecl_kw_fread_data(tmp_kw , fortio);
       ecl_kw_free( tmp_kw );
     } else {
-      ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
       const int blocksize = get_blocksize( data_type );
       const int block_count = element_count / blocksize + (element_count % blocksize == 0 ? 0 : 1);
 
@@ -1326,10 +1329,10 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
   }
 
   if (OK) {
-    ecl_type_enum ecl_type = ecl_util_get_type_from_name( ecl_type_str );
-    ecl_kw_initialize( ecl_kw , header , size , ecl_type);
+    ecl_data_type data_type = ecl_type_create_data_type_from_name( ecl_type_str );
+    ecl_kw_initialize( ecl_kw , header , size , data_type);
 
-    if (ecl_type == ECL_C010_TYPE)
+    if (ecl_type_is_C010(data_type))
       return ECL_KW_READ_SKIP;
 
     return ECL_KW_READ_OK;
@@ -1730,8 +1733,9 @@ ecl_kw_type * ecl_kw_buffer_alloc(buffer_type * buffer) {
   int size               = buffer_fread_int( buffer );
   ecl_type_enum ecl_type = buffer_fread_int( buffer );
   {
+    ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
     ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
-    ecl_kw_initialize( ecl_kw , header , size , ecl_type );
+    ecl_kw_initialize( ecl_kw , header , size , data_type );
     ecl_kw_alloc_data(ecl_kw);
     buffer_fread(buffer , ecl_kw->data , ecl_kw_get_sizeof_ctype(ecl_kw) , ecl_kw->size);
     return ecl_kw;

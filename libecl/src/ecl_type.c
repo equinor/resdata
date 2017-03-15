@@ -60,6 +60,8 @@ ecl_data_type ecl_type_create_data_type_from_type(const ecl_type_enum type) {
       return ECL_BOOL;
     case(ECL_MESS_TYPE):
       return ECL_MESS;
+    case(ECL_C010_TYPE):
+      return ECL_C010;
     default:
       util_abort("%s: invalid ecl_type: %d\n", __func__, type);
       return ECL_INT; /* Dummy */
