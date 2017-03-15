@@ -66,16 +66,16 @@ ecl_data_type ecl_type_create_data_type_from_type(const ecl_type_enum type) {
     }
 }
 
-ecl_type_enum ecl_type_get_type(const ecl_data_type * ecl_type) {
-    return ecl_type->type;
+ecl_type_enum ecl_type_get_type(const ecl_data_type ecl_type) {
+    return ecl_type.type;
 }
 
-size_t ecl_type_get_element_size(const ecl_data_type * ecl_type) {
-    return ecl_type->element_size;
+size_t ecl_type_get_element_size(const ecl_data_type ecl_type) {
+    return ecl_type.element_size;
 }
 
-const char * ecl_type_get_type_name(const ecl_data_type * ecl_type) {
-  switch (ecl_type->type) {
+const char * ecl_type_get_type_name(const ecl_data_type ecl_type) {
+  switch (ecl_type.type) {
   case(ECL_CHAR_TYPE):
     return ECL_TYPE_NAME_CHAR ;
   case(ECL_C010_TYPE):
@@ -91,7 +91,7 @@ const char * ecl_type_get_type_name(const ecl_data_type * ecl_type) {
   case(ECL_MESS_TYPE):
     return ECL_TYPE_NAME_MESSAGE;
   default:
-    util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type->type);
+    util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type.type);
     return NULL; /* Dummy */
   }
 }
@@ -118,53 +118,55 @@ ecl_data_type ecl_type_create_data_type_from_name( const char * type_name ) {
 }
 
 
-int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type * ecl_type) {
+int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type ecl_type) {
   if(ecl_type_is_char(ecl_type) || ecl_type_is_C010(ecl_type))
-      return (ecl_type->element_size - 1) * sizeof(char);
+      return (ecl_type.element_size - 1) * sizeof(char);
   else
       return ecl_type_get_sizeof_ctype(ecl_type);
 }
 
-int ecl_type_get_sizeof_ctype(const ecl_data_type * ecl_type) {
-   return ecl_type->element_size * sizeof(char);
+int ecl_type_get_sizeof_ctype(const ecl_data_type ecl_type) {
+   return ecl_type.element_size * sizeof(char);
 }
 
-bool ecl_type_is_numeric(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_INT_TYPE ||
-            ecl_type->type == ECL_FLOAT_TYPE ||
-            ecl_type->type == ECL_DOUBLE_TYPE);
+bool ecl_type_is_numeric(const ecl_data_type ecl_type) {
+    return (ecl_type_is_int(ecl_type) ||
+            ecl_type_is_float(ecl_type) ||
+            ecl_type_is_double(ecl_type));
 }
 
-bool ecl_type_is_equal(const ecl_data_type * ecl_type1, const ecl_data_type * ecl_type2) {
-    return (ecl_type1->type == ecl_type2->type && ecl_type1->element_size == ecl_type2->element_size);
+bool ecl_type_is_equal(const ecl_data_type ecl_type1,
+                       const ecl_data_type ecl_type2) {
+    return (ecl_type1.type         == ecl_type2.type &&
+            ecl_type1.element_size == ecl_type2.element_size);
 }
 
-bool ecl_type_is_char(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_CHAR_TYPE);
+bool ecl_type_is_char(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_CHAR_TYPE);
 }
 
-bool ecl_type_is_int(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_INT_TYPE);
+bool ecl_type_is_int(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_INT_TYPE);
 }
 
-bool ecl_type_is_float(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_FLOAT_TYPE);
+bool ecl_type_is_float(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_FLOAT_TYPE);
 }
 
-bool ecl_type_is_double(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_DOUBLE_TYPE);
+bool ecl_type_is_double(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_DOUBLE_TYPE);
 }
 
-bool ecl_type_is_mess(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_MESS_TYPE);
+bool ecl_type_is_mess(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_MESS_TYPE);
 }
  
-bool ecl_type_is_bool(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_BOOL_TYPE);
+bool ecl_type_is_bool(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_BOOL_TYPE);
 }
 
-bool ecl_type_is_C010(const ecl_data_type * ecl_type) {
-    return (ecl_type->type == ECL_C010_TYPE);
+bool ecl_type_is_C010(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_C010_TYPE);
 }
 
 
@@ -197,4 +199,61 @@ ecl_data_type * python_ecl_type_alloc_from_name(const char * name) {
 
 void python_ecl_type_free(ecl_data_type * data_type) {
     free(data_type);
+}
+
+ecl_type_enum python_ecl_type_get_type(const ecl_data_type * ecl_type) {
+    return ecl_type_get_type(*ecl_type);
+}
+
+size_t python_ecl_type_get_element_size(const ecl_data_type * ecl_type) {
+    return ecl_type_get_element_size(*ecl_type);
+}
+
+const char * python_ecl_type_get_type_name(const ecl_data_type * ecl_type) {
+    return ecl_type_get_type_name(*ecl_type);
+}
+
+int python_ecl_type_get_sizeof_ctype_fortio(const ecl_data_type * ecl_type) {
+    return ecl_type_get_sizeof_ctype_fortio(*ecl_type);
+}
+
+int python_ecl_type_get_sizeof_ctype(const ecl_data_type * ecl_type) {
+    return ecl_type_get_sizeof_ctype(*ecl_type);
+}
+
+bool python_ecl_type_is_numeric(const ecl_data_type * ecl_type) {
+    return ecl_type_is_numeric(*ecl_type);
+}
+
+bool python_ecl_type_is_equal(const ecl_data_type * ecl_type1,
+                       const ecl_data_type * ecl_type2) {
+    return ecl_type_is_equal(*ecl_type1, *ecl_type2);
+}
+
+bool python_ecl_type_is_char(const ecl_data_type * ecl_type) {
+    return ecl_type_is_char(*ecl_type);
+}
+
+bool python_ecl_type_is_int(const ecl_data_type * ecl_type) {
+    return ecl_type_is_int(*ecl_type);
+}
+
+bool python_ecl_type_is_float(const ecl_data_type * ecl_type) {
+    return ecl_type_is_float(*ecl_type);
+}
+
+bool python_ecl_type_is_double(const ecl_data_type * ecl_type) {
+    return ecl_type_is_double(*ecl_type);
+}
+
+bool python_ecl_type_is_mess(const ecl_data_type * ecl_type) {
+    return ecl_type_is_mess(*ecl_type);
+}
+
+bool python_ecl_type_is_bool(const ecl_data_type * ecl_type) {
+    return ecl_type_is_bool(*ecl_type);
+}
+
+bool python_ecl_type_is_C010(const ecl_data_type * ecl_type) {
+    return ecl_type_is_C010(*ecl_type);
 }
