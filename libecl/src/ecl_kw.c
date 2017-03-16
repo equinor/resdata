@@ -1717,6 +1717,10 @@ ecl_type_enum ecl_kw_get_type(const ecl_kw_type * ecl_kw) {
   return ecl_type_get_type(ecl_kw->data_type);
 }
 
+ecl_data_type ecl_kw_get_data_type(const ecl_kw_type * ecl_kw) {
+  return ecl_kw->data_type;
+}
+
 size_t ecl_kw_get_sizeof_ctype(const ecl_kw_type * ecl_kw) {
   return ecl_type_get_sizeof_ctype(ecl_kw->data_type);
 }
