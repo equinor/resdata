@@ -66,6 +66,13 @@ bool               ecl_type_is_mess(const ecl_data_type);
 bool               ecl_type_is_bool(const ecl_data_type);
 bool               ecl_type_is_C010(const ecl_data_type);
 
+/**
+ *
+ * Functions only to be used by the *PYTHON* prototype!
+ *
+ */
+ecl_data_type * python_ecl_type_alloc_copy(const ecl_data_type * src_type);
+
 #ifdef __cplusplus
 }
 #endif

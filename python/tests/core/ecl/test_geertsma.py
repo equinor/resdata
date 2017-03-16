@@ -1,5 +1,5 @@
 import datetime
-from ert.ecl import EclGrid, EclKW, EclTypeEnum, openFortIO, FortIO, EclFile, EclSubsidence
+from ert.ecl import EclGrid, EclKW, EclDataType, openFortIO, FortIO, EclFile, EclSubsidence
 
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -7,7 +7,7 @@ import numpy as np
 
 
 def create_init(grid, case):
-    poro = EclKW("PORO", grid.getNumActive(), EclTypeEnum.ECL_FLOAT_TYPE)
+    poro = EclKW("PORO", grid.getNumActive(), EclDataType.ECL_FLOAT)
     porv = poro.copy()
     porv.setName("PORV")
     for g in range(grid.getGlobalSize()):
@@ -20,13 +20,13 @@ def create_init(grid, case):
 
 def create_restart(grid, case, p1, p2=None):
     with openFortIO("%s.UNRST" % case, mode=FortIO.WRITE_MODE) as f:
-        seq_hdr = EclKW("SEQNUM", 1, EclTypeEnum.ECL_FLOAT_TYPE)
+        seq_hdr = EclKW("SEQNUM", 1, EclDataType.ECL_FLOAT)
         seq_hdr[0] = 10
-        p = EclKW("PRESSURE", grid.getNumActive(), EclTypeEnum.ECL_FLOAT_TYPE)
+        p = EclKW("PRESSURE", grid.getNumActive(), EclDataType.ECL_FLOAT)
         for i in range(len(p1)):
             p[i] = p1[i]
 
-        header = EclKW("INTEHEAD", 67, EclTypeEnum.ECL_INT_TYPE)
+        header = EclKW("INTEHEAD", 67, EclDataType.ECL_INT)
         header[64] = 1
         header[65] = 1
         header[66] = 2000

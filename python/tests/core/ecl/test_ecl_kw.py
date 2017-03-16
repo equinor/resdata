@@ -17,25 +17,25 @@
 import os
 import random
 import numpy
-from ert.ecl import EclKW, EclTypeEnum, EclFile, FortIO, EclFileFlagEnum , openFortIO
+from ert.ecl import EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum , openFortIO
 
 from ert.test import ExtendedTestCase , TestAreaContext
 
 
 def copy_long():
-    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
     copy = src.sub_copy(0, 2000)
 
 
 def copy_offset():
-    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
     copy = src.sub_copy(200, 100)
 
 
 class KWTest(ExtendedTestCase):
 
     def test_min_max(self):
-        kw = EclKW("TEST", 3, EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("TEST", 3, EclDataType.ECL_INT)
         kw[0] = 10
         kw[1] = 5
         kw[2] = 0
@@ -66,42 +66,42 @@ class KWTest(ExtendedTestCase):
             file2.write(fmt % d)
         file2.close()
         self.assertFilesAreEqual(name1, name2)
-        self.assertEqual( kw.getEclType() , data_type )
+        self.assertEqual( kw.data_type , data_type )
 
     def test_create(self):
         with self.assertRaises(ValueError):
-            EclKW( "ToGodDamnLong" , 100 , EclTypeEnum.ECL_CHAR_TYPE )
+            EclKW( "ToGodDamnLong" , 100 , EclDataType.ECL_CHAR )
 
 
 
     def test_sum( self ):
-        kw_string = EclKW( "STRING" , 100 , EclTypeEnum.ECL_CHAR_TYPE )
+        kw_string = EclKW( "STRING" , 100 , EclDataType.ECL_CHAR )
         with self.assertRaises(ValueError):
             kw_string.sum()
 
 
-        kw_int = EclKW( "INT" , 4 , EclTypeEnum.ECL_INT_TYPE )
+        kw_int = EclKW( "INT" , 4 , EclDataType.ECL_INT )
         kw_int[0] = 1
         kw_int[1] = 2
         kw_int[2] = 3
         kw_int[3] = 4
         self.assertEqual( kw_int.sum() , 10 )
 
-        kw_d = EclKW( "D" , 4 , EclTypeEnum.ECL_DOUBLE_TYPE )
+        kw_d = EclKW( "D" , 4 , EclDataType.ECL_DOUBLE )
         kw_d[0] = 1
         kw_d[1] = 2
         kw_d[2] = 3
         kw_d[3] = 4
         self.assertEqual( kw_d.sum() , 10 )
 
-        kw_f = EclKW( "F" , 4 , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw_f = EclKW( "F" , 4 , EclDataType.ECL_FLOAT )
         kw_f[0] = 1
         kw_f[1] = 2
         kw_f[2] = 3
         kw_f[3] = 4
         self.assertEqual( kw_f.sum() , 10 )
 
-        kw_b = EclKW( "F" , 4 , EclTypeEnum.ECL_BOOL_TYPE )
+        kw_b = EclKW( "F" , 4 , EclDataType.ECL_BOOL )
         kw_b[0] = False
         kw_b[1] = True
         kw_b[2] = False
@@ -112,18 +112,18 @@ class KWTest(ExtendedTestCase):
 
     def test_fprintf( self ):
         with TestAreaContext("python.ecl_kw"):
-            self.kw_test(EclTypeEnum.ECL_INT_TYPE, [0, 1, 2, 3, 4, 5], "%4d\n")
-            self.kw_test(EclTypeEnum.ECL_FLOAT_TYPE, [0.0, 1.1, 2.2, 3.3, 4.4, 5.5], "%12.6f\n")
-            self.kw_test(EclTypeEnum.ECL_DOUBLE_TYPE, [0.0, 1.1, 2.2, 3.3, 4.4, 5.5], "%12.6f\n")
-            self.kw_test(EclTypeEnum.ECL_BOOL_TYPE, [True, True, True, False, True], "%4d\n")
-            self.kw_test(EclTypeEnum.ECL_CHAR_TYPE, ["1", "22", "4444", "666666", "88888888"], "%-8s\n")
+            self.kw_test(EclDataType.ECL_INT, [0, 1, 2, 3, 4, 5], "%4d\n")
+            self.kw_test(EclDataType.ECL_FLOAT, [0.0, 1.1, 2.2, 3.3, 4.4, 5.5], "%12.6f\n")
+            self.kw_test(EclDataType.ECL_DOUBLE, [0.0, 1.1, 2.2, 3.3, 4.4, 5.5], "%12.6f\n")
+            self.kw_test(EclDataType.ECL_BOOL, [True, True, True, False, True], "%4d\n")
+            self.kw_test(EclDataType.ECL_CHAR, ["1", "22", "4444", "666666", "88888888"], "%-8s\n")
 
     def test_kw_write(self):
         with TestAreaContext("python/ecl_kw/writing"):
 
             data = [random.random() for i in range(10000)]
 
-            kw = EclKW("TEST", len(data), EclTypeEnum.ECL_DOUBLE_TYPE)
+            kw = EclKW("TEST", len(data), EclDataType.ECL_DOUBLE)
             i = 0
             for d in data:
                 kw[i] = d
@@ -163,7 +163,7 @@ class KWTest(ExtendedTestCase):
 
     def test_fprintf_data(self):
         with TestAreaContext("kw_no_header"):
-            kw = EclKW("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW("REGIONS" , 10 , EclDataType.ECL_INT)
             for i in range(len(kw)):
                 kw[i] = i
                 
@@ -183,7 +183,7 @@ class KWTest(ExtendedTestCase):
 
 
     def test_sliced_set(self):
-        kw = EclKW("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("REGIONS" , 10 , EclDataType.ECL_INT)
         kw.assign(99)
         kw[0:5] = 66
         self.assertEqual(kw[0] , 66)
@@ -193,23 +193,23 @@ class KWTest(ExtendedTestCase):
         
     def test_long_name(self):
         with self.assertRaises(ValueError):
-            EclKW("LONGLONGNAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
+            EclKW("LONGLONGNAME" , 10 , EclDataType.ECL_INT)
 
-        kw = EclKW("REGIONS" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("REGIONS" , 10 , EclDataType.ECL_INT)
         with self.assertRaises(ValueError):
             kw.setName("LONGLONGNAME")
 
 
     def test_abs(self):
-        kw = EclKW("NAME" , 10 , EclTypeEnum.ECL_CHAR_TYPE)
+        kw = EclKW("NAME" , 10 , EclDataType.ECL_CHAR)
         with self.assertRaises(TypeError):
             abs_kw = abs(kw)
 
-        kw = EclKW("NAME" , 10 , EclTypeEnum.ECL_BOOL_TYPE)
+        kw = EclKW("NAME" , 10 , EclDataType.ECL_BOOL)
         with self.assertRaises(TypeError):
             abs_kw = abs(kw)
 
-        kw = EclKW("NAME" , 10 , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("NAME" , 10 , EclDataType.ECL_INT)
         for i in range(len(kw)):
             kw[i] = -i
 
@@ -220,8 +220,8 @@ class KWTest(ExtendedTestCase):
 
 
     def test_fmt(self):
-        kw1 = EclKW( "NAME1" , 100 , EclTypeEnum.ECL_INT_TYPE)
-        kw2 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw1 = EclKW( "NAME1" , 100 , EclDataType.ECL_INT)
+        kw2 = EclKW( "NAME2" , 100 , EclDataType.ECL_INT)
 
         for i in range(len(kw1)):
             kw1[i] = i + 1
@@ -245,11 +245,11 @@ class KWTest(ExtendedTestCase):
 
 
     def test_first_different(self):
-        kw1 = EclKW( "NAME1" , 100 , EclTypeEnum.ECL_INT_TYPE)
-        kw2 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_INT_TYPE)
-        kw3 = EclKW( "NAME2" , 200 , EclTypeEnum.ECL_INT_TYPE)
-        kw4 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_FLOAT_TYPE)
-        kw5 = EclKW( "NAME2" , 100 , EclTypeEnum.ECL_FLOAT_TYPE)
+        kw1 = EclKW( "NAME1" , 100 , EclDataType.ECL_INT)
+        kw2 = EclKW( "NAME2" , 100 , EclDataType.ECL_INT)
+        kw3 = EclKW( "NAME2" , 200 , EclDataType.ECL_INT)
+        kw4 = EclKW( "NAME2" , 100 , EclDataType.ECL_FLOAT)
+        kw5 = EclKW( "NAME2" , 100 , EclDataType.ECL_FLOAT)
 
             
         with self.assertRaises( IndexError ):
@@ -296,8 +296,8 @@ class KWTest(ExtendedTestCase):
 
         
     def test_numeric_equal(self):
-        kw1 = EclKW("Name1" , 10 , EclTypeEnum.ECL_DOUBLE_TYPE )
-        kw2 = EclKW("Name1" , 10 , EclTypeEnum.ECL_DOUBLE_TYPE )
+        kw1 = EclKW("Name1" , 10 , EclDataType.ECL_DOUBLE )
+        kw2 = EclKW("Name1" , 10 , EclDataType.ECL_DOUBLE )
 
 
         shift = 0.0001
@@ -316,10 +316,10 @@ class KWTest(ExtendedTestCase):
         self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = 0))
 
     def test_mul(self):
-        kw1 = EclKW("Name1" , 10 , EclTypeEnum.ECL_INT_TYPE )
+        kw1 = EclKW("Name1" , 10 , EclDataType.ECL_INT )
         kw1.assign( 10 )
 
-        kw2 = EclKW("Name1" , 10 , EclTypeEnum.ECL_INT_TYPE )
+        kw2 = EclKW("Name1" , 10 , EclDataType.ECL_INT )
         kw2.assign( 2 )
 
         kw3 = kw1 * kw2
@@ -334,7 +334,7 @@ class KWTest(ExtendedTestCase):
 
 
     def test_numpy(self):
-        kw1 = EclKW("DOUBLE", 10, EclTypeEnum.ECL_DOUBLE_TYPE )
+        kw1 = EclKW("DOUBLE", 10, EclDataType.ECL_DOUBLE )
  
         view = kw1.numpyView( )
         copy = kw1.numpyCopy( )
@@ -347,17 +347,17 @@ class KWTest(ExtendedTestCase):
         self.assertTrue( copy[ 0 ] == kw1[ 0 ] - 1)
 
 
-        kw2 = EclKW("CHAR", 10, EclTypeEnum.ECL_CHAR_TYPE )
+        kw2 = EclKW("CHAR", 10, EclDataType.ECL_CHAR )
         with self.assertRaises(ValueError):
             kw2.numpyView( )
 
-        kw3 = EclKW("BOOL", 10, EclTypeEnum.ECL_BOOL_TYPE )
+        kw3 = EclKW("BOOL", 10, EclDataType.ECL_BOOL )
         with self.assertRaises(ValueError):
             kw3.numpyView( )
 
     def test_slice(self):
         N = 100
-        kw = EclKW("KW" , N , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("KW" , N , EclDataType.ECL_INT)
         for i in range(len(kw)):
             kw[i] = i
 
@@ -374,7 +374,7 @@ class KWTest(ExtendedTestCase):
 
     def test_resize(self):
         N = 4
-        kw = EclKW("KW" , N , EclTypeEnum.ECL_INT_TYPE)
+        kw = EclKW("KW" , N , EclDataType.ECL_INT)
         for i in range(N):
             kw[i] = i
 

@@ -16,7 +16,7 @@
 #  for more details.
 import os
 from random import randint
-from ert.ecl import FortIO, EclTypeEnum, EclKW , openFortIO, EclFile
+from ert.ecl import FortIO, EclDataType, EclKW , openFortIO, EclFile
 from ert.test import ExtendedTestCase, TestAreaContext
 
 
@@ -37,8 +37,8 @@ class FortIOTest(ExtendedTestCase):
             f = FortIO("odes_not_exist", FortIO.READ_MODE)
 
     def test_kw(self):
-        kw1 = EclKW("KW1", 2, EclTypeEnum.ECL_INT_TYPE)
-        kw2 = EclKW("KW2", 2, EclTypeEnum.ECL_INT_TYPE)
+        kw1 = EclKW("KW1", 2, EclDataType.ECL_INT)
+        kw2 = EclKW("KW2", 2, EclDataType.ECL_INT)
 
         kw1[0] = 99
         kw1[1] = 77
@@ -61,8 +61,8 @@ class FortIOTest(ExtendedTestCase):
 
 
     def test_truncate(self):
-        kw1 = EclKW("KW1", 2, EclTypeEnum.ECL_INT_TYPE)
-        kw2 = EclKW("KW2", 2, EclTypeEnum.ECL_INT_TYPE)
+        kw1 = EclKW("KW1", 2, EclDataType.ECL_INT)
+        kw2 = EclKW("KW2", 2, EclDataType.ECL_INT)
 
         kw1[0] = 99
         kw1[1] = 77
@@ -110,7 +110,7 @@ class FortIOTest(ExtendedTestCase):
 
     def test_context(self):
         with TestAreaContext("python/fortio/context") as t:
-            kw1 = EclKW("KW" , 2456 , EclTypeEnum.ECL_FLOAT_TYPE)
+            kw1 = EclKW("KW" , 2456 , EclDataType.ECL_FLOAT)
             for i in range(len(kw1)):
                 kw1[i] = randint(0,1000)
 
@@ -128,7 +128,7 @@ class FortIOTest(ExtendedTestCase):
 
     def test_is_fortran_file(self):
         with TestAreaContext("python/fortio/guess"):
-            kw1 = EclKW("KW" , 12345 , EclTypeEnum.ECL_FLOAT_TYPE)
+            kw1 = EclKW("KW" , 12345 , EclDataType.ECL_FLOAT)
             with openFortIO("fortran_file" , mode = FortIO.WRITE_MODE) as f:
                 kw1.fwrite( f )
 

@@ -17,7 +17,7 @@
 from __future__ import print_function
 from unittest import skipIf
 
-from ert.ecl import EclGrid, EclTypeEnum , EclKW , EclRegion
+from ert.ecl import EclGrid, EclTypeEnum , EclKW , EclRegion, EclDataType
 from ert.ecl.faults import FaultBlock, FaultBlockLayer, FaultBlockCell,FaultCollection
 from ert.geo import Polyline , CPolylineCollection
 from ert.test import ExtendedTestCase , TestAreaContext
@@ -26,7 +26,7 @@ from ert.test import ExtendedTestCase , TestAreaContext
 class FaultBlockTest(ExtendedTestCase):
     def setUp(self):
         self.grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) )
-        self.kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
+        self.kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_INT )
         self.kw.assign( 1 )
 
         reg = EclRegion( self.grid , False )
@@ -41,7 +41,7 @@ class FaultBlockTest(ExtendedTestCase):
             
     def test_fault_block(self):
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
+        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
@@ -253,7 +253,7 @@ class FaultBlockTest(ExtendedTestCase):
 
     def test_fault_block_edge(self):
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
+        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
@@ -276,7 +276,7 @@ class FaultBlockTest(ExtendedTestCase):
         layer = FaultBlockLayer( self.grid , 1 )
         self.assertEqual( 1 , layer.getK() )
 
-        kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_FLOAT )
         with self.assertRaises(ValueError):
             layer.scanKeyword( kw )
 
@@ -407,11 +407,11 @@ class FaultBlockTest(ExtendedTestCase):
 
     def test_fault_block_layer_export(self):
         layer = FaultBlockLayer( self.grid , 1 )
-        kw1 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() + 1 , EclTypeEnum.ECL_INT_TYPE )
+        kw1 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() + 1 , EclDataType.ECL_INT )
         with self.assertRaises(ValueError):
             layer.exportKeyword( kw1 )
 
-        kw2 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw2 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_FLOAT )
         with self.assertRaises(TypeError):
             layer.exportKeyword(kw2)
 

@@ -20,7 +20,7 @@ import time
 from ert import util
 
 from ert.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
-from ert.ecl import EclGrid, EclKW, EclTypeEnum
+from ert.ecl import EclGrid, EclKW, EclDataType
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.geo import Polyline , CPolyline
 
@@ -726,7 +726,7 @@ class FaultTest(ExtendedTestCase):
         f.addRecord(2,2,0,0,1,1,"Z")
         f.addRecord(1,1,0,0,2,3,"X")
         
-        block_kw = EclKW("FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
+        block_kw = EclKW("FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT)
         block_kw.assign(1)
         block_kw[5] = 2
         block_kw[11] = 2
