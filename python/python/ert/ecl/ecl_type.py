@@ -56,11 +56,17 @@ class EclDataType(BaseCClass):
         elif type_enum is None:
             raise ValueError("Both type_enum and type_name is None!")
 
-    def get_type(self):
+    @property
+    def type(self):
         return self._get_type()
 
-    def get_element_size(self):
+    @property
+    def element_size(self):
         return self._get_element_size()
+
+    @property
+    def type_name(self):
+        return self._get_type_name()
 
     def free(self):
         self._free()
@@ -83,15 +89,56 @@ class EclDataType(BaseCClass):
     def is_bool(self):
         return self._is_bool()
 
-    def get_type_name(self):
-        return self._get_type_name()
-
     def is_numeric(self):
         return self._is_numeric()
 
     def is_equal(self, other):
         return self._is_equal(other)
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.is_equal(other)
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self.type, self. element_size))
+
     @classmethod
     def create_from_type_name(cls, name):
         return EclDataType(type_name = name)
+
+    # Enables one to fetch a type as EclDataType.ECL_XXXX
+    class classproperty(object):
+
+        def __init__(self, fget):
+            self.fget = fget
+
+        def __get__(self, owner_self, owner_cls):
+            return self.fget(owner_cls)
+
+    @classproperty
+    def ECL_INT(cls):
+        return EclDataType(EclTypeEnum.ECL_INT_TYPE)
+
+    @classproperty
+    def ECL_FLOAT(cls):
+        return EclDataType(EclTypeEnum.ECL_FLOAT_TYPE)
+
+    @classproperty
+    def ECL_DOUBLE(cls):
+        return EclDataType(EclTypeEnum.ECL_DOUBLE_TYPE)
+
+    @classproperty
+    def ECL_BOOL(cls):
+        return EclDataType(EclTypeEnum.ECL_BOOL_TYPE)
+
+    @classproperty
+    def ECL_MESS(cls):
+        return EclDataType(EclTypeEnum.ECL_MESS_TYPE)
+
+    @classproperty
+    def ECL_CHAR(cls):
+        return EclDataType(EclTypeEnum.ECL_CHAR_TYPE)

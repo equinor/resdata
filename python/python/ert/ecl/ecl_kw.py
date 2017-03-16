@@ -45,6 +45,7 @@ import warnings
 
 import  numpy
 from cwrap import CFILE, BaseCClass
+from ert.ecl import EclDataType
 from ert.ecl import EclTypeEnum, EclUtil, EclPrototype
 
 
@@ -68,7 +69,7 @@ class EclKW(BaseCClass):
     int_kw_set = set( ["PVTNUM" , "FIPNUM" , "EQLNUM" , "FLUXNUM" , "MULTNUM" , "ACTNUM" , "SPECGRID" , "REGIONS"] )
 
     TYPE_NAME          = "ecl_kw"
-    _alloc_new         = EclPrototype("void* ecl_kw_alloc( char* , int , ecl_type_enum )", bind = False)
+    _alloc_new         = EclPrototype("void* python_ecl_kw_alloc( char* , int , ecl_data_type )", bind = False)
     _fread_alloc       = EclPrototype("ecl_kw_obj ecl_kw_fread_alloc( fortio )" , bind = False)
     _load_grdecl       = EclPrototype("ecl_kw_obj ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE , char* , bool , int )" , bind = False)
     _fseek_grdecl      = EclPrototype("bool     ecl_kw_grdecl_fseek_kw(char* , bool , FILE )" , bind = False)
@@ -81,6 +82,7 @@ class EclKW(BaseCClass):
 
     _get_size          = EclPrototype("int      ecl_kw_get_size( ecl_kw )")
     _get_fortio_size   = EclPrototype("size_t   ecl_kw_fortio_size( ecl_kw )")
+    # TODO: remove this prototype
     _get_type          = EclPrototype("ecl_type_enum ecl_kw_get_type( ecl_kw )")
     _iget_char_ptr     = EclPrototype("char*    ecl_kw_iget_char_ptr( ecl_kw , int )")
     _iset_char_ptr     = EclPrototype("void     ecl_kw_iset_char_ptr( ecl_kw , int , char*)")
@@ -96,6 +98,7 @@ class EclKW(BaseCClass):
     _fwrite            = EclPrototype("void     ecl_kw_fwrite( ecl_kw , fortio )")
     _get_header        = EclPrototype("char*    ecl_kw_get_header ( ecl_kw )")
     _set_header        = EclPrototype("void     ecl_kw_set_header_name ( ecl_kw , char*)")
+    _get_data_type     = EclPrototype("ecl_data_type_obj python_ecl_kw_get_data_type(ecl_kw)");
 
     _int_sum           = EclPrototype("int      ecl_kw_element_sum_int( ecl_kw )")
     _float_sum         = EclPrototype("double   ecl_kw_element_sum_float( ecl_kw )")
@@ -329,6 +332,11 @@ class EclKW(BaseCClass):
         """
         if len(name) > 8:
             raise ValueError("Sorry - maximum eight characters in keyword name")
+
+        if not isinstance(data_type, EclDataType):
+            raise TypeError("Expected an EclDataType, received: %s" %
+                    type(data_type))
+
         c_ptr = self._alloc_new( name , size , data_type )
         super(EclKW, self).__init__(c_ptr)
         self.__private_init()
@@ -895,6 +903,10 @@ class EclKW(BaseCClass):
     @property
     def type( self ):
         return self.getEclType()
+
+    @property
+    def data_type( self ):
+        return self._get_data_type()
 
     @property
     def type_name( self ):

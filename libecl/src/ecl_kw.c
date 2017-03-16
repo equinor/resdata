@@ -2755,5 +2755,18 @@ int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ec
   }
 }
 
+/**
+ *
+ * Functions only to be used by the *PYTHON* prototype!
+ *
+ */
+
+ecl_kw_type * python_ecl_kw_alloc( const char * header , int size , const ecl_data_type * data_type ) {
+  return ecl_kw_alloc(header, size, *data_type);
+}
+
+ecl_data_type * python_ecl_kw_get_data_type( const ecl_kw_type * ecl_kw ) {
+  return python_ecl_type_alloc_copy(&ecl_kw->data_type);
+}
 
 #include "ecl_kw_functions.c"

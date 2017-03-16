@@ -84,6 +84,7 @@ class EclPrototype(Prototype):
 ECL_LIB = ert.load("libecl")
 
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclTypeEnum, EclUnitTypeEnum , EclUtil
+from .ecl_type import EclDataType
 from .ecl_sum_var_type import EclSumVarType
 from .ecl_sum_tstep import EclSumTStep
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
@@ -107,4 +108,3 @@ from .ecl_sum_node import EclSumNode
 from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
 from .ecl_cmp import EclCmp
-from .ecl_type import EclDataType

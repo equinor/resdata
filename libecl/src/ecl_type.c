@@ -178,7 +178,7 @@ bool ecl_type_is_C010(const ecl_data_type ecl_type) {
  *
  */
 
-static ecl_data_type * alloc_copy(const ecl_data_type * src_type) {
+ecl_data_type * python_ecl_type_alloc_copy(const ecl_data_type * src_type) {
     ecl_data_type * data_type = util_malloc(sizeof * src_type);
     memcpy(data_type, src_type, sizeof * data_type);
     return data_type;
@@ -186,17 +186,17 @@ static ecl_data_type * alloc_copy(const ecl_data_type * src_type) {
 
 ecl_data_type * python_ecl_type_alloc(const ecl_type_enum type, const size_t element_size) {
     ecl_data_type src_type = ecl_type_create_data_type(type, element_size);
-    return alloc_copy(&src_type);
+    return python_ecl_type_alloc_copy(&src_type);
 }
 
 ecl_data_type * python_ecl_type_alloc_from_type(const ecl_type_enum type) {
     ecl_data_type src_type = ecl_type_create_data_type_from_type(type);
-    return alloc_copy(&src_type);
+    return python_ecl_type_alloc_copy(&src_type);
 }
 
 ecl_data_type * python_ecl_type_alloc_from_name(const char * name) {
     ecl_data_type src_type = ecl_type_create_data_type_from_name(name);
-    return alloc_copy(&src_type);
+    return python_ecl_type_alloc_copy(&src_type);
 }
 
 void python_ecl_type_free(ecl_data_type * data_type) {

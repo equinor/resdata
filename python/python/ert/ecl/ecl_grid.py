@@ -31,7 +31,7 @@ import os.path
 import math
 from cwrap import CFILE, BaseCClass
 from ert.util import IntVector
-from ert.ecl import EclPrototype, EclTypeEnum, EclKW, FortIO, EclUnitTypeEnum
+from ert.ecl import EclPrototype, EclTypeEnum, EclDataType, EclKW, FortIO, EclUnitTypeEnum
 
 
 class EclGrid(BaseCClass):
@@ -1134,7 +1134,7 @@ class EclGrid(BaseCClass):
         if len(kw) == self.getNumActive():
             return kw.copy( )
         elif len(kw) == self.getGlobalSize():
-            kw_copy = EclKW( kw.getName() , self.getNumActive() , kw.getEclType())
+            kw_copy = EclKW( kw.getName() , self.getNumActive() , kw.data_type)
             self._compressed_kw_copy( kw_copy , kw)
             return kw_copy
         else:
@@ -1144,7 +1144,7 @@ class EclGrid(BaseCClass):
         if len(kw) == self.getGlobalSize( ):
             return kw.copy( )
         elif len(kw) == self.getNumActive():
-            kw_copy = EclKW( kw.getName() , self.getGlobalSize() , kw.getEclType())
+            kw_copy = EclKW( kw.getName() , self.getGlobalSize() , kw.data_type)
             kw_copy.assign( default_value )
             self._global_kw_copy( kw_copy , kw)
             return kw_copy
@@ -1153,7 +1153,7 @@ class EclGrid(BaseCClass):
 
 
     def exportACTNUMKw(self):
-        actnum = EclKW("ACTNUM" , self.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
+        actnum = EclKW("ACTNUM" , self.getGlobalSize() , EclDataType.ECL_INT)
         self._init_actnum( actnum.getDataPtr() )
         return actnum
 
