@@ -308,7 +308,7 @@ offset_type ecl_file_kw_get_offset(const ecl_file_kw_type * file_kw) {
 }
 
 bool ecl_file_kw_fskip_data( const ecl_file_kw_type * file_kw , fortio_type * fortio) {
-  return ecl_kw_fskip_data__( ecl_file_kw_get_type(file_kw) , file_kw->kw_size , fortio );
+  return ecl_kw_fskip_data__( ecl_file_kw_get_data_type(file_kw) , file_kw->kw_size , fortio );
 }
 
 

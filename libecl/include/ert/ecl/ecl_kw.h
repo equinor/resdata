@@ -110,8 +110,8 @@ extern "C" {
   ecl_kw_type *  ecl_kw_alloc( const char * header , int size , ecl_data_type );
   ecl_kw_type *  ecl_kw_alloc_new(const char * ,  int , ecl_data_type , const void * );
   ecl_kw_type *  ecl_kw_alloc_new_shared(const char * ,  int , ecl_data_type , void * );
-  void           ecl_kw_fwrite_param(const char * , bool  , const char * ,  ecl_type_enum , int , void * );
-  void           ecl_kw_fwrite_param_fortio(fortio_type *, const char * ,  ecl_type_enum , int , void * );
+  void           ecl_kw_fwrite_param(const char * , bool  , const char * ,  ecl_data_type , int , void * );
+  void           ecl_kw_fwrite_param_fortio(fortio_type *, const char * ,  ecl_data_type , int , void * );
   void           ecl_kw_summarize(const ecl_kw_type * ecl_kw);
   void           ecl_kw_fread_double_param(const char * , bool , double *);
   float          ecl_kw_iget_as_float(const ecl_kw_type * ecl_kw , int i);
@@ -127,7 +127,7 @@ extern "C" {
   bool           ecl_kw_block_equal( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2 , int cmp_elements);
   bool           ecl_kw_data_equal( const ecl_kw_type * ecl_kw , const void * data);
   bool           ecl_kw_content_equal( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ecl_kw2);
-  bool           ecl_kw_fskip_data__( ecl_type_enum ecl_type , int size , fortio_type * fortio);
+  bool           ecl_kw_fskip_data__( ecl_data_type, int, fortio_type *);
   bool           ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
   bool           ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio);
   void           ecl_kw_fskip_header( fortio_type * fortio);
