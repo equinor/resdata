@@ -677,3 +677,11 @@ void ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream) {
   ecl_kw_fprintf_grdecl__(ecl_kw , NULL , stream );
 }
 
+/**
+ *
+ * Functions only to be used by the *PYTHON* prototype!
+ *
+ */
+ecl_kw_type * python_ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , const ecl_data_type * data_type) {
+  return ecl_kw_fscanf_alloc_grdecl_dynamic__( stream , kw , strict, *data_type );
+}

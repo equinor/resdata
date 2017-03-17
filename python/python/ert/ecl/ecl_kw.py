@@ -71,7 +71,7 @@ class EclKW(BaseCClass):
     TYPE_NAME          = "ecl_kw"
     _alloc_new         = EclPrototype("void* python_ecl_kw_alloc( char* , int , ecl_data_type )", bind = False)
     _fread_alloc       = EclPrototype("ecl_kw_obj ecl_kw_fread_alloc( fortio )" , bind = False)
-    _load_grdecl       = EclPrototype("ecl_kw_obj ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE , char* , bool , int )" , bind = False)
+    _load_grdecl       = EclPrototype("ecl_kw_obj python_ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE , char* , bool , ecl_data_type )" , bind = False)
     _fseek_grdecl      = EclPrototype("bool     ecl_kw_grdecl_fseek_kw(char* , bool , FILE )" , bind = False)
 
     _sub_copy          = EclPrototype("ecl_kw_obj ecl_kw_alloc_sub_copy( ecl_kw , char*, int , int)")
@@ -182,7 +182,7 @@ class EclKW(BaseCClass):
 
 
     @classmethod
-    def read_grdecl( cls , fileH , kw , strict = True , ecl_type = None):
+    def read_grdecl( cls , fileH , kw , strict = True , data_type = None):
         """
         Function to load an EclKW instance from a grdecl formatted filehandle.
 
@@ -217,10 +217,10 @@ class EclKW(BaseCClass):
         1. The optional argument @ecl_type can be used to specify
            the type:
 
-           special_int_kw = EclKW.read_grdecl( fileH , 'INTKW' , ecl_type = ECL_INT_TYPE )
+           special_int_kw = EclKW.read_grdecl( fileH , 'INTKW' , ecl_type = ECL_INT )
 
-           If ecl_type is different from ECL_INT_TYPE or
-           ECL_FLOAT_TYPE a TypeError exception will be raised.
+           If ecl_type is different from ECL_INT or
+           ECL_FLOAT a TypeError exception will be raised.
 
            If ecl_type == None (the default), the method will continue
            to point 2. or 3. to determine the correct type.
@@ -236,8 +236,9 @@ class EclKW(BaseCClass):
            accesible through the int_kw property.
 
 
-        3. Otherwise the default is float, i.e. ECL_FLOAT_TYPE.
-
+        3. Otherwise the default is float, i.e. ECL_FLOAT.
+        
+           EclKw reads grdecl with EclDataType
            poro_kw = EclKW.read_grdecl( fileH , 'PORO')
 
 
@@ -256,16 +257,19 @@ class EclKW(BaseCClass):
             if len(kw) > 8:
                 raise TypeError("Sorry keyword:%s is too long, must be eight characters or less." % kw)
 
-        if ecl_type is None:
+        if data_type is None:
             if cls.int_kw_set.__contains__( kw ):
-                ecl_type = EclTypeEnum.ECL_INT_TYPE
+                data_type = EclDataType.ECL_INT
             else:
-                ecl_type = EclTypeEnum.ECL_FLOAT_TYPE
+                data_type = EclDataType.ECL_FLOAT
 
-        if not ecl_type in [EclTypeEnum.ECL_FLOAT_TYPE , EclTypeEnum.ECL_INT_TYPE]:
-            raise TypeError("The type:%d is invalid when loading keyword:%s" % (ecl_type , kw))
+        if not isinstance(data_type, EclDataType):
+            raise TypeError("Expected EclDataType, was: %s" % type(data_type))
 
-        return cls._load_grdecl( cfile , kw , strict , ecl_type )
+        if not data_type in [EclDataType.ECL_FLOAT , EclDataType.ECL_INT]:
+            raise ValueError("The type:%s is invalid when loading keyword:%s" % (data_type.type_name, kw))
+
+        return cls._load_grdecl( cfile , kw , strict , data_type )
 
 
     @classmethod
