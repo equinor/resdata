@@ -914,10 +914,7 @@ class EclKW(BaseCClass):
 
     @property
     def type_name( self ):
-        return self.typeName( )
-
-    def typeName(self):
-        return EclUtil.type_name( self.getEclType( ))
+        return self.data_type.type_name
 
     def getEclType(self):
         return self._get_type( )

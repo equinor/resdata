@@ -27,7 +27,6 @@
 #include <ert/util/int_vector.h>
 
 #include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_type.h>
@@ -2123,7 +2122,7 @@ void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_add_indexed_int( target_kw , index_set , add_kw );
     break;
   default:
-    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2161,7 +2160,7 @@ void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) {
     ecl_kw_inplace_add_int( target_kw , add_kw );
     break;
   default:
-    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2200,7 +2199,7 @@ void ecl_kw_inplace_sub( ecl_kw_type * target_kw , const ecl_kw_type * sub_kw) {
     ecl_kw_inplace_sub_int( target_kw , sub_kw );
     break;
   default:
-    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2240,7 +2239,7 @@ void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_sub_indexed_int( target_kw , index_set , sub_kw );
     break;
   default:
-    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2275,7 +2274,7 @@ void ecl_kw_inplace_abs( ecl_kw_type * kw ) {
     ecl_kw_inplace_abs_int( kw );
     break;
   default:
-    util_abort("%s: inplace abs not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace abs not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(kw) ));
   }
 }
 
@@ -2312,7 +2311,7 @@ void ecl_kw_inplace_mul( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw) {
     ecl_kw_inplace_mul_int( target_kw , mul_kw );
     break;
   default:
-    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2352,7 +2351,7 @@ void ecl_kw_inplace_mul_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_mul_indexed_int( target_kw , index_set , mul_kw );
     break;
   default:
-    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2390,7 +2389,7 @@ void ecl_kw_inplace_div( ecl_kw_type * target_kw , const ecl_kw_type * div_kw) {
     ecl_kw_inplace_div_int( target_kw , div_kw );
     break;
   default:
-    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2431,7 +2430,7 @@ void ecl_kw_inplace_div_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_div_indexed_int( target_kw , index_set , div_kw );
     break;
   default:
-    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_util_get_type_name( type ));
+    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_type_get_type_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 

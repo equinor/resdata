@@ -42,7 +42,7 @@
          formatted numbers it is in general impossible to determine
          whether the underlying datatype should be integer, float or
          double. Therefor all the file-reading routines here expect an
-         ecl_type_enum variable as input.
+         ecl_data_type as input.
 
    2. The files can have comment sections; even in the data block.
 

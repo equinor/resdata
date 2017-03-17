@@ -92,7 +92,7 @@ class FaultBlockLayer(BaseCClass):
         """
         ok = self._scan_keyword( fault_block_kw )
         if not ok:
-            raise ValueError("The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d" % (fault_block_kw.typeName() , len(fault_block_kw) , self.grid_ref.getGlobalSize()))
+            raise ValueError("The fault block keyword had wrong type/size: type:%s  size:%d  grid_size:%d" % (fault_block_kw.type_name , len(fault_block_kw) , self.grid_ref.getGlobalSize()))
 
 
     def loadKeyword(self , fault_block_kw):

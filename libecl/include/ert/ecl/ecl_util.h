@@ -96,6 +96,7 @@ typedef enum { ECL_OTHER_FILE           = 0   ,
      - The type is not exported to Python.
 */
 
+// TODO: move enum to ecl_type
 typedef enum {
   ECL_CHAR_TYPE   = 0,
   ECL_FLOAT_TYPE  = 1,
@@ -115,7 +116,7 @@ typedef enum {
 
 #define ECL_TYPE_ENUM_SIZE 6
 
-
+#include <ert/ecl/ecl_type.h>
 
 /*
   The libecl library has been built and tested 99.5% with ECLIPSE100
@@ -173,10 +174,6 @@ typedef enum {
 #define ECL_COMMENT_CHAR         '-'   // Need to consecutive to make an ECLIPSE comment
 #define ECL_DATA_TERMINATION      "/"
 
-int              ecl_util_get_sizeof_ctype_fortio(ecl_type_enum ecl_type);
-int              ecl_util_get_sizeof_ctype(ecl_type_enum );
-ecl_type_enum    ecl_util_get_type_from_name( const char * type_name );
-const char     * ecl_util_get_type_name( ecl_type_enum ecl_type );
 
 /*****************************************************************/
 bool            ecl_util_unified_file(const char *filename);
@@ -187,7 +184,7 @@ ecl_file_enum   ecl_util_get_file_type(const char * , bool * , int * );
 ecl_file_enum   ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int * _report_nr);
 char          * ecl_util_alloc_filename(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/);
 char          * ecl_util_alloc_exfilename(const char * /* path */, const char * /* base */, ecl_file_enum , bool /* fmt_file */ , int /*report_nr*/);
-void            ecl_util_memcpy_typed_data(void *, const void * , ecl_type_enum , ecl_type_enum , int );
+void            ecl_util_memcpy_typed_data(void *, const void * , ecl_data_type , ecl_data_type , int );
 void            ecl_util_escape_kw(char * kw);
 bool            ecl_util_alloc_summary_files(const char * , const char * , const char * , char ** , stringlist_type * );
 void            ecl_util_alloc_summary_data_files(const char * path , const char * base , bool fmt_file , stringlist_type * filelist);
