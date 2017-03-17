@@ -122,13 +122,13 @@ ecl_data_type ecl_type_create_data_type_from_name( const char * type_name ) {
 
 int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type ecl_type) {
   if(ecl_type_is_char(ecl_type) || ecl_type_is_C010(ecl_type))
-      return (ecl_type.element_size - 1) * sizeof(char);
+      return ecl_type.element_size - 1;
   else
       return ecl_type_get_sizeof_ctype(ecl_type);
 }
 
 int ecl_type_get_sizeof_ctype(const ecl_data_type ecl_type) {
-   return ecl_type.element_size * sizeof(char);
+   return ecl_type.element_size;
 }
 
 bool ecl_type_is_numeric(const ecl_data_type ecl_type) {
@@ -169,93 +169,4 @@ bool ecl_type_is_bool(const ecl_data_type ecl_type) {
 
 bool ecl_type_is_C010(const ecl_data_type ecl_type) {
     return (ecl_type.type == ECL_C010_TYPE);
-}
-
-
-/**
- *
- * Functions only to be used by the *PYTHON* prototype!
- *
- */
-
-ecl_data_type * python_ecl_type_alloc_copy(const ecl_data_type * src_type) {
-    ecl_data_type * data_type = util_malloc(sizeof * src_type);
-    memcpy(data_type, src_type, sizeof * data_type);
-    return data_type;
-}
-
-ecl_data_type * python_ecl_type_alloc(const ecl_type_enum type, const size_t element_size) {
-    ecl_data_type src_type = ecl_type_create_data_type(type, element_size);
-    return python_ecl_type_alloc_copy(&src_type);
-}
-
-ecl_data_type * python_ecl_type_alloc_from_type(const ecl_type_enum type) {
-    ecl_data_type src_type = ecl_type_create_data_type_from_type(type);
-    return python_ecl_type_alloc_copy(&src_type);
-}
-
-ecl_data_type * python_ecl_type_alloc_from_name(const char * name) {
-    ecl_data_type src_type = ecl_type_create_data_type_from_name(name);
-    return python_ecl_type_alloc_copy(&src_type);
-}
-
-void python_ecl_type_free(ecl_data_type * data_type) {
-    free(data_type);
-}
-
-ecl_type_enum python_ecl_type_get_type(const ecl_data_type * ecl_type) {
-    return ecl_type_get_type(*ecl_type);
-}
-
-size_t python_ecl_type_get_element_size(const ecl_data_type * ecl_type) {
-    return ecl_type_get_element_size(*ecl_type);
-}
-
-const char * python_ecl_type_get_type_name(const ecl_data_type * ecl_type) {
-    return ecl_type_get_type_name(*ecl_type);
-}
-
-int python_ecl_type_get_sizeof_ctype_fortio(const ecl_data_type * ecl_type) {
-    return ecl_type_get_sizeof_ctype_fortio(*ecl_type);
-}
-
-int python_ecl_type_get_sizeof_ctype(const ecl_data_type * ecl_type) {
-    return ecl_type_get_sizeof_ctype(*ecl_type);
-}
-
-bool python_ecl_type_is_numeric(const ecl_data_type * ecl_type) {
-    return ecl_type_is_numeric(*ecl_type);
-}
-
-bool python_ecl_type_is_equal(const ecl_data_type * ecl_type1,
-                       const ecl_data_type * ecl_type2) {
-    return ecl_type_is_equal(*ecl_type1, *ecl_type2);
-}
-
-bool python_ecl_type_is_char(const ecl_data_type * ecl_type) {
-    return ecl_type_is_char(*ecl_type);
-}
-
-bool python_ecl_type_is_int(const ecl_data_type * ecl_type) {
-    return ecl_type_is_int(*ecl_type);
-}
-
-bool python_ecl_type_is_float(const ecl_data_type * ecl_type) {
-    return ecl_type_is_float(*ecl_type);
-}
-
-bool python_ecl_type_is_double(const ecl_data_type * ecl_type) {
-    return ecl_type_is_double(*ecl_type);
-}
-
-bool python_ecl_type_is_mess(const ecl_data_type * ecl_type) {
-    return ecl_type_is_mess(*ecl_type);
-}
-
-bool python_ecl_type_is_bool(const ecl_data_type * ecl_type) {
-    return ecl_type_is_bool(*ecl_type);
-}
-
-bool python_ecl_type_is_C010(const ecl_data_type * ecl_type) {
-    return ecl_type_is_C010(*ecl_type);
 }

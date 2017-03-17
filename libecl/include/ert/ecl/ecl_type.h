@@ -36,11 +36,11 @@ typedef struct ecl_type_struct ecl_data_type;
 
 
 #define ECL_CHAR (ecl_data_type) {.type = ECL_CHAR_TYPE, .element_size = 8+1}
-#define ECL_INT (ecl_data_type) {.type = ECL_INT_TYPE, .element_size = sizeof(int)/sizeof(char)}
-#define ECL_FLOAT (ecl_data_type) {.type = ECL_FLOAT_TYPE, .element_size = sizeof(float)/sizeof(char)}
-#define ECL_DOUBLE (ecl_data_type) {.type = ECL_DOUBLE_TYPE, .element_size = sizeof(double)/sizeof(char)}
-#define ECL_BOOL (ecl_data_type) {.type = ECL_BOOL_TYPE, .element_size = sizeof(int)/sizeof(char)}
-#define ECL_MESS (ecl_data_type) {.type = ECL_MESS_TYPE, .element_size = 1}
+#define ECL_INT (ecl_data_type) {.type = ECL_INT_TYPE, .element_size = sizeof(int)}
+#define ECL_FLOAT (ecl_data_type) {.type = ECL_FLOAT_TYPE, .element_size = sizeof(float)}
+#define ECL_DOUBLE (ecl_data_type) {.type = ECL_DOUBLE_TYPE, .element_size = sizeof(double)}
+#define ECL_BOOL (ecl_data_type) {.type = ECL_BOOL_TYPE, .element_size = sizeof(int)}
+#define ECL_MESS (ecl_data_type) {.type = ECL_MESS_TYPE, .element_size = 0}
 #define ECL_C010 (ecl_data_type) {.type = ECL_C010_TYPE, .element_size = 10+1}
 
 
@@ -65,13 +65,6 @@ bool               ecl_type_is_double(const ecl_data_type);
 bool               ecl_type_is_mess(const ecl_data_type);
 bool               ecl_type_is_bool(const ecl_data_type);
 bool               ecl_type_is_C010(const ecl_data_type);
-
-/**
- *
- * Functions only to be used by the *PYTHON* prototype!
- *
- */
-ecl_data_type * python_ecl_type_alloc_copy(const ecl_data_type * src_type);
 
 #ifdef __cplusplus
 }

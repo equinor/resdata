@@ -159,6 +159,7 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 
 
 ecl_type_enum  ecl_kw_get_type(const ecl_kw_type *);
+void ecl_kw_set_data_type(ecl_kw_type * ecl_kw, ecl_data_type data_type);
 
 static const char * get_read_fmt(const ecl_data_type data_type ) {
   switch(ecl_type_get_type(data_type)) {
@@ -1465,11 +1466,10 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
   ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
 }
 
+
 void ecl_kw_set_data_type(ecl_kw_type * ecl_kw, ecl_data_type data_type) {
     memcpy(&ecl_kw->data_type, &data_type, sizeof data_type);
 }
-
-
 
 
 bool ecl_kw_fread_realloc(ecl_kw_type *ecl_kw , fortio_type *fortio) {
@@ -2754,20 +2754,6 @@ int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ec
       return index;
     }
   }
-}
-
-/**
- *
- * Functions only to be used by the *PYTHON* prototype!
- *
- */
-
-ecl_kw_type * python_ecl_kw_alloc( const char * header , int size , const ecl_data_type * data_type ) {
-  return ecl_kw_alloc(header, size, *data_type);
-}
-
-ecl_data_type * python_ecl_kw_get_data_type( const ecl_kw_type * ecl_kw ) {
-  return python_ecl_type_alloc_copy(&ecl_kw->data_type);
 }
 
 #include "ecl_kw_functions.c"

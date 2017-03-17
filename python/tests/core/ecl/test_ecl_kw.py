@@ -17,7 +17,9 @@
 import os
 import random
 import numpy
-from ert.ecl import EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum , openFortIO
+import warnings
+
+from ert.ecl import EclKW, EclDataType, EclTypeEnum, EclFile, FortIO, EclFileFlagEnum , openFortIO
 
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -45,8 +47,12 @@ class KWTest(ExtendedTestCase):
         self.assertEqual( (0,10)  , kw.getMinMax())
 
         
-
-
+    def test_invalid_datatypes(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            kw = EclKW("Test", 10, EclTypeEnum.ECL_INT_TYPE)
+            self.assertTrue(len(w) > 0)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
 
     def kw_test( self, data_type, data, fmt ):
         name1 = "file1.txt"

@@ -16,8 +16,9 @@
 #  for more details.
 from __future__ import print_function
 from unittest import skipIf
+import warnings
 
-from ert.ecl import EclGrid, EclKW , EclRegion, EclDataType
+from ert.ecl import EclGrid, EclKW , EclRegion, EclDataType, EclTypeEnum
 from ert.ecl.faults import FaultBlock, FaultBlockLayer, FaultBlockCell,FaultCollection
 from ert.geo import Polyline , CPolylineCollection
 from ert.test import ExtendedTestCase , TestAreaContext
@@ -56,6 +57,13 @@ class FaultBlockTest(ExtendedTestCase):
         self.assertEqual( len(block) , 9)
         self.assertEqual( layer , block.getParentLayer() )
 
+    def test_invalid_datatypes(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
+            kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
+            self.assertTrue(len(w) > 0)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
 
     def test_get_ijk(self):
         with TestAreaContext("python/fault_block_layer/neighbour") as work_area:

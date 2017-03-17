@@ -8,7 +8,7 @@ class EclDataTypeTest(ExtendedTestCase):
     # EclTypeEnum!
     # [char, float, double, int, bool, mess]
 
-    ELEMENT_SIZE = [9, 4, 8, 4, 4, 1]
+    ELEMENT_SIZE = [9, 4, 8, 4, 4, 0]
 
     VERIFIERS = [
             EclDataType.is_char,

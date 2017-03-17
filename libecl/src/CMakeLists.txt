@@ -40,6 +40,7 @@ set( source_files
      layer.c
      fault_block_layer.c
      ecl_type.c
+     ecl_type_python.c
      ${ext_source})
 
 set( header_files 

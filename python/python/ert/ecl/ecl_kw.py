@@ -48,7 +48,31 @@ from cwrap import CFILE, BaseCClass
 from ert.ecl import EclDataType
 from ert.ecl import EclTypeEnum, EclUtil, EclPrototype
 
+def dump_warning():
+    warnings.warn("EclTypeEnum is deprecated. " +
+        "You should instead provide an EclDataType",
+        DeprecationWarning)
 
+def constant_size_data_type(ecl_type):
+    return (ecl_type in [
+                        EclTypeEnum.ECL_CHAR_TYPE,
+                        EclTypeEnum.ECL_FLOAT_TYPE,
+                        EclTypeEnum.ECL_DOUBLE_TYPE,
+                        EclTypeEnum.ECL_INT_TYPE,
+                        EclTypeEnum.ECL_BOOL_TYPE,
+                        EclTypeEnum.ECL_MESS_TYPE
+                        ])
+
+def warn_and_cast_data_type(data_type):
+    if isinstance(data_type, EclDataType):
+        return data_type
+    if isinstance(data_type, EclTypeEnum):
+        if not constant_size_data_type(data_type):
+            raise ValueError("Cannot cast EclTypeEnum (%d) to EclDataType due "
+                    "to non-constant size. Please provide an EclDataType instead.")
+
+        dump_warning()
+        return EclDataType(data_type)
 
 class EclKW(BaseCClass):
     """
@@ -69,9 +93,9 @@ class EclKW(BaseCClass):
     int_kw_set = set( ["PVTNUM" , "FIPNUM" , "EQLNUM" , "FLUXNUM" , "MULTNUM" , "ACTNUM" , "SPECGRID" , "REGIONS"] )
 
     TYPE_NAME          = "ecl_kw"
-    _alloc_new         = EclPrototype("void* python_ecl_kw_alloc( char* , int , ecl_data_type )", bind = False)
+    _alloc_new         = EclPrototype("void* ecl_kw_alloc_python( char* , int , ecl_data_type )", bind = False)
     _fread_alloc       = EclPrototype("ecl_kw_obj ecl_kw_fread_alloc( fortio )" , bind = False)
-    _load_grdecl       = EclPrototype("ecl_kw_obj python_ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE , char* , bool , ecl_data_type )" , bind = False)
+    _load_grdecl       = EclPrototype("ecl_kw_obj ecl_kw_fscanf_alloc_grdecl_dynamic_python( FILE , char* , bool , ecl_data_type )" , bind = False)
     _fseek_grdecl      = EclPrototype("bool     ecl_kw_grdecl_fseek_kw(char* , bool , FILE )" , bind = False)
 
     _sub_copy          = EclPrototype("ecl_kw_obj ecl_kw_alloc_sub_copy( ecl_kw , char*, int , int)")
@@ -98,7 +122,7 @@ class EclKW(BaseCClass):
     _fwrite            = EclPrototype("void     ecl_kw_fwrite( ecl_kw , fortio )")
     _get_header        = EclPrototype("char*    ecl_kw_get_header ( ecl_kw )")
     _set_header        = EclPrototype("void     ecl_kw_set_header_name ( ecl_kw , char*)")
-    _get_data_type     = EclPrototype("ecl_data_type_obj python_ecl_kw_get_data_type(ecl_kw)");
+    _get_data_type     = EclPrototype("ecl_data_type_obj ecl_kw_get_data_type_python(ecl_kw)");
 
     _int_sum           = EclPrototype("int      ecl_kw_element_sum_int( ecl_kw )")
     _float_sum         = EclPrototype("double   ecl_kw_element_sum_float( ecl_kw )")
@@ -336,6 +360,8 @@ class EclKW(BaseCClass):
         """
         if len(name) > 8:
             raise ValueError("Sorry - maximum eight characters in keyword name")
+
+        data_type = warn_and_cast_data_type(data_type)
 
         if not isinstance(data_type, EclDataType):
             raise TypeError("Expected an EclDataType, received: %s" %

@@ -70,6 +70,7 @@ EclPhaseEnum.addEnum("ECL_WATER_PHASE" , 4 )
 
 #-----------------------------------------------------------------
 
+# TODO: Move to ecl_type.py
 class EclTypeEnum(BaseCEnum):
     TYPE_NAME="ecl_type_enum"
     ECL_CHAR_TYPE   = None
