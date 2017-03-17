@@ -166,10 +166,10 @@ void ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, cons
 
     if (fortio_assert_stream_open( ecl_file_view->fortio )) {
         offset_type offset = ecl_file_kw_get_offset(file_kw);
-        ecl_type_enum ecl_type = ecl_file_kw_get_type(file_kw);
+        ecl_data_type data_type = ecl_file_kw_get_data_type(file_kw);
         int element_count = ecl_file_kw_get_size(file_kw);
 
-        ecl_kw_fread_indexed_data(ecl_file_view->fortio, offset + ECL_KW_HEADER_FORTIO_SIZE, ecl_type, element_count, index_map, buffer);
+        ecl_kw_fread_indexed_data(ecl_file_view->fortio, offset + ECL_KW_HEADER_FORTIO_SIZE, data_type, element_count, index_map, buffer);
     }
 }
 

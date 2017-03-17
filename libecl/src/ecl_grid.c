@@ -5258,8 +5258,8 @@ static int ecl_grid_get_property_index__(const ecl_grid_type * ecl_grid , const 
 
 
 static bool ecl_grid_get_property__(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k, void * value) {
-  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-  if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
+  ecl_data_type data_type = ecl_kw_get_data_type( ecl_kw );
+  if (ecl_type_is_numeric(data_type)) {
     int lookup_index   = ecl_grid_get_property_index__( ecl_grid , ecl_kw , i , j , k );
 
     if (lookup_index >= 0) {
@@ -5269,15 +5269,15 @@ static bool ecl_grid_get_property__(const ecl_grid_type * ecl_grid , const ecl_k
       return false;
 
   } else {
-    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
+    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_type_get_type_name( data_type ) , __func__);
     return false;
   }
 }
 
 
 double ecl_grid_get_double_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
-  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-  if (ecl_type == ECL_DOUBLE_TYPE) {
+  ecl_data_type data_type = ecl_kw_get_data_type( ecl_kw );
+  if (ecl_type_is_double(data_type)) {
     double value;
     if (ecl_grid_get_property__( ecl_grid , ecl_kw , i , j , k , &value))
       return value;
@@ -5291,8 +5291,8 @@ double ecl_grid_get_double_property(const ecl_grid_type * ecl_grid , const ecl_k
 
 
 int ecl_grid_get_int_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
-  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-  if (ecl_type == ECL_INT_TYPE) {
+  ecl_data_type data_type = ecl_kw_get_data_type( ecl_kw );
+  if (ecl_type_is_int(data_type)) {
     int value;
 
     if (ecl_grid_get_property__( ecl_grid , ecl_kw , i , j , k , &value))
@@ -5308,8 +5308,8 @@ int ecl_grid_get_int_property(const ecl_grid_type * ecl_grid , const ecl_kw_type
 
 
 float ecl_grid_get_float_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
-  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-  if (ecl_type == ECL_FLOAT_TYPE) {
+  ecl_data_type data_type = ecl_kw_get_data_type( ecl_kw );
+  if (ecl_type_is_float(data_type)) {
     float value;
 
     if (ecl_grid_get_property__( ecl_grid , ecl_kw , i , j , k , &value))
@@ -5324,8 +5324,8 @@ float ecl_grid_get_float_property(const ecl_grid_type * ecl_grid , const ecl_kw_
 }
 
 double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j , int k) {
-  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-  if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
+  ecl_data_type data_type = ecl_kw_get_data_type( ecl_kw );
+  if (ecl_type_is_numeric(data_type)) {
     int lookup_index   = ecl_grid_get_property_index__( ecl_grid , ecl_kw , i , j , k );
 
     if (lookup_index >= 0)
@@ -5334,7 +5334,7 @@ double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type 
       return -1;   /* Tried to lookup an inactive cell. */
 
   } else {
-    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
+    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_type_get_type_name( data_type ) , __func__);
     return -1;
   }
 }
@@ -5358,8 +5358,8 @@ double ecl_grid_get_property(const ecl_grid_type * ecl_grid , const ecl_kw_type 
 
 
 void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , int i , int j, double_vector_type * column) {
-  ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
-  if ((ecl_type == ECL_FLOAT_TYPE) || (ecl_type == ECL_INT_TYPE) || (ecl_type == ECL_DOUBLE_TYPE)) {
+  ecl_data_type data_type = ecl_kw_get_data_type(ecl_kw);
+  if (ecl_type_is_numeric(data_type)) {
     int kw_size           = ecl_kw_get_size( ecl_kw );
     bool use_global_index = false;
 
@@ -5385,7 +5385,7 @@ void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_
       }
     }
   } else
-    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_util_get_type_name( ecl_type ) , __func__);
+    util_abort("%s: sorry - can not lookup ECLIPSE type:%s with %s.\n",__func__ , ecl_type_get_type_name( data_type ) , __func__);
 }
 
 
@@ -5422,7 +5422,7 @@ void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_
 int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list) {
   int cells_found = 0;
   if (ecl_kw_get_size( region_kw ) == ecl_grid->size) {
-    if (ecl_kw_get_type( region_kw ) == ECL_INT_TYPE) {
+    if (ecl_type_is_int(ecl_kw_get_data_type( region_kw ))) {
                 const int * region_ptr = ecl_kw_iget_ptr( region_kw , 0);
                 int_vector_reset( index_list );
 
@@ -5465,7 +5465,7 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
     float   float_default;
     int     int_default;
     int     bool_default;
-    ecl_type_enum ecl_type = ecl_kw_get_type( ecl_kw );
+    ecl_type_enum ecl_type = ecl_type_get_type(ecl_kw_get_data_type( ecl_kw ));
 
     if (ecl_type == ECL_FLOAT_TYPE) {
       float_default = (float) double_default;

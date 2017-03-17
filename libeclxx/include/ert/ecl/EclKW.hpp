@@ -56,7 +56,7 @@ namespace ERT {
     class EclKW_ref {
     public:
         explicit EclKW_ref( ecl_kw_type* kw ) : m_kw( kw ) {
-            if( ecl_kw_get_type( kw ) != ecl_type< T >::type )
+            if( ecl_type_get_type(ecl_kw_get_data_type( kw )) != ecl_type< T >::type )
                 throw std::invalid_argument("Type error");
         }
 

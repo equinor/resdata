@@ -135,8 +135,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file_kw , ECL_FILE_KW_TYPE_ID )
 
 
 
-static ecl_file_kw_type * ecl_file_kw_alloc__( const char * header , ecl_type_enum ecl_type , int size , offset_type offset) {
-  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
+static ecl_file_kw_type * ecl_file_kw_alloc__( const char * header , ecl_data_type data_type , int size , offset_type offset) {
   ecl_file_kw_type * file_kw = util_malloc( sizeof * file_kw );
   UTIL_TYPE_ID_INIT( file_kw , ECL_FILE_KW_TYPE_ID );
 
@@ -162,7 +161,7 @@ static ecl_file_kw_type * ecl_file_kw_alloc__( const char * header , ecl_type_en
 */
 
 ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , offset_type offset ) {
-  return ecl_file_kw_alloc__( ecl_kw_get_header( ecl_kw ) , ecl_kw_get_type( ecl_kw ) , ecl_kw_get_size( ecl_kw ) , offset );
+  return ecl_file_kw_alloc__( ecl_kw_get_header( ecl_kw ) , ecl_kw_get_data_type( ecl_kw ) , ecl_kw_get_size( ecl_kw ) , offset );
 }
 
 
@@ -170,7 +169,7 @@ ecl_file_kw_type * ecl_file_kw_alloc( const ecl_kw_type * ecl_kw , offset_type o
     Does NOT copy the kw pointer which must be reloaded.
 */
 ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src ) {
-  return ecl_file_kw_alloc__( src->header , ecl_file_kw_get_type(src) , src->kw_size , src->file_offset );
+  return ecl_file_kw_alloc__( src->header , ecl_file_kw_get_data_type(src) , src->kw_size , src->file_offset );
 }
 
 

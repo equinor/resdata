@@ -159,6 +159,7 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 #define BOOL_FALSE_CHAR      'F'
 
 
+ecl_type_enum  ecl_kw_get_type(const ecl_kw_type *);
 
 static const char * get_read_fmt(const ecl_data_type data_type ) {
   switch(ecl_type_get_type(data_type)) {
@@ -1188,14 +1189,13 @@ bool ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 }
 
 
-void ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ecl_type_enum ecl_type, int element_count, const int_vector_type* index_map, char* buffer) {
-    ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
+void ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ecl_data_type data_type, int element_count, const int_vector_type* index_map, char* buffer) {
     const int block_size = get_blocksize(data_type);
     FILE *stream  = fortio_get_FILE( fortio );
     int index;
     int element_size = ecl_type_get_sizeof_ctype(data_type);
 
-    if(ecl_type == ECL_CHAR_TYPE || ecl_type == ECL_MESS_TYPE) {
+    if(ecl_type_is_char(data_type) || ecl_type_is_mess(data_type)) {
         element_size = ECL_STRING8_LENGTH;
     }
 
