@@ -76,7 +76,7 @@ extern "C" {
   ecl_file_kw_type * ecl_file_iget_file_kw( const ecl_file_type * file , int global_index);
   ecl_file_kw_type * ecl_file_iget_named_file_kw( const ecl_file_type * file , const char * kw, int ith);
   ecl_kw_type      * ecl_file_iget_kw( const ecl_file_type * file , int global_index);
-  ecl_type_enum      ecl_file_iget_type( const ecl_file_type * file , int global_index);
+  ecl_type_enum      ecl_file_iget_data_type( const ecl_file_type * file , int global_index);
   int                ecl_file_iget_size( const ecl_file_type * file , int global_index);
   const char       * ecl_file_iget_header( const ecl_file_type * file , int global_index);
   ecl_kw_type      * ecl_file_iget_named_kw( const ecl_file_type * file , const char * kw, int ith);

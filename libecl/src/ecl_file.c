@@ -420,7 +420,7 @@ ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * file , int global_index) {
 }
 
 ecl_type_enum ecl_file_iget_type( const ecl_file_type * file , int global_index) {
-  return ecl_file_view_iget_type( file->active_view , global_index);
+  return ecl_type_get_type(ecl_file_view_iget_data_type( file->active_view , global_index));
 }
 
 int ecl_file_iget_size( const ecl_file_type * file , int global_index) {
@@ -448,7 +448,7 @@ void ecl_file_indexed_read(const ecl_file_type * file , const char * kw, int ind
 }
 
 ecl_type_enum ecl_file_iget_named_type( const ecl_file_type * file , const char * kw , int ith) {
-  return ecl_file_view_iget_named_type( file->active_view , kw , ith );
+  return ecl_type_get_type(ecl_file_view_iget_named_data_type( file->active_view , kw , ith ));
 }
 
 int ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int ith) {

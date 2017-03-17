@@ -205,10 +205,9 @@ int ecl_file_view_get_size( const ecl_file_view_type * ecl_file_view ) {
 }
 
 
-ecl_type_enum ecl_file_view_iget_type( const ecl_file_view_type * ecl_file_view , int index) {
+ecl_data_type ecl_file_view_iget_data_type( const ecl_file_view_type * ecl_file_view , int index) {
   ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
-  ecl_data_type data_type = ecl_file_kw_get_data_type( file_kw );
-  return ecl_type_get_type(data_type);
+  return ecl_file_kw_get_data_type( file_kw );
 }
 
 int ecl_file_view_iget_size( const ecl_file_view_type * ecl_file_view , int index) {
@@ -237,10 +236,9 @@ ecl_kw_type * ecl_file_view_iget_named_kw( const ecl_file_view_type * ecl_file_v
   return ecl_kw;
 }
 
-ecl_type_enum ecl_file_view_iget_named_type( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
+ecl_data_type ecl_file_view_iget_named_data_type( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
   ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw, ith);
-  ecl_data_type data_type = ecl_file_kw_get_data_type( file_kw );
-  return ecl_type_get_type(data_type);
+  return ecl_file_kw_get_data_type( file_kw );
 }
 
 int ecl_file_view_iget_named_size( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
