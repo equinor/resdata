@@ -27,6 +27,7 @@
 #include <ert/ecl/ecl_file_kw.h>
 #include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/ecl_rsthead.h>
+#include <ert/ecl/ecl_type.h>
 
 
 struct ecl_file_view_struct {
@@ -206,7 +207,8 @@ int ecl_file_view_get_size( const ecl_file_view_type * ecl_file_view ) {
 
 ecl_type_enum ecl_file_view_iget_type( const ecl_file_view_type * ecl_file_view , int index) {
   ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
-  return ecl_file_kw_get_type( file_kw );
+  ecl_data_type data_type = ecl_file_kw_get_data_type( file_kw );
+  return ecl_type_get_type(data_type);
 }
 
 int ecl_file_view_iget_size( const ecl_file_view_type * ecl_file_view , int index) {
@@ -237,7 +239,8 @@ ecl_kw_type * ecl_file_view_iget_named_kw( const ecl_file_view_type * ecl_file_v
 
 ecl_type_enum ecl_file_view_iget_named_type( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
   ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw, ith);
-  return ecl_file_kw_get_type( file_kw );
+  ecl_data_type data_type = ecl_file_kw_get_data_type( file_kw );
+  return ecl_type_get_type(data_type);
 }
 
 int ecl_file_view_iget_named_size( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
@@ -360,7 +363,7 @@ void ecl_file_view_fprintf_kw_list(const ecl_file_view_type * ecl_file_view , FI
     fprintf(stream , "%-8s %7d:%s\n",
             ecl_file_kw_get_header( file_kw ) ,
             ecl_file_kw_get_size( file_kw ) ,
-            ecl_util_get_type_name( ecl_file_kw_get_type( file_kw )));
+            ecl_type_get_type_name( ecl_file_kw_get_data_type( file_kw )));
   }
 }
 

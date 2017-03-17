@@ -294,10 +294,6 @@ int ecl_file_kw_get_size( const ecl_file_kw_type * file_kw ) {
   return file_kw->kw_size;
 }
 
-ecl_type_enum ecl_file_kw_get_type( const ecl_file_kw_type * file_kw) {
-  return ecl_type_get_type(file_kw->data_type);
-}
-
 ecl_data_type ecl_file_kw_get_data_type(const ecl_file_kw_type * file_kw) {
   return file_kw->data_type;
 }
