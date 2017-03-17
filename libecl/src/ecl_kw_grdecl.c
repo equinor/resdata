@@ -334,13 +334,13 @@ static void iset_range( char * data , int data_offset , int sizeof_ctype , void 
    Observe that no-spaces-are-allowed-around-the-*
 */
 
-static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_type_enum ecl_type , int * kw_size , FILE * stream ) {
+static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_data_type data_type , int * kw_size , FILE * stream ) {
   char newline        = '\n';
   bool atEOF          = false;
   int init_size       = 32;
   int buffer_size     = 64;
   int data_index      = 0;
-  int sizeof_ctype    = ecl_util_get_sizeof_ctype( ecl_type );
+  int sizeof_ctype    = ecl_type_get_sizeof_ctype( data_type );
   int data_size       = init_size;
   char * buffer       = util_calloc( (buffer_size + 1) , sizeof * buffer      );
   char * data         = util_calloc( sizeof_ctype * data_size , sizeof * data );
@@ -370,7 +370,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
         void * value_ptr = NULL;
         bool   char_input = false;
 
-        if (ecl_type == ECL_INT_TYPE) {
+        if (ecl_type_is_int(data_type)) {
           int value;
 
           if (sscanf(buffer , "%d*%d" , &multiplier , &value) == 2)
@@ -384,7 +384,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
           }
 
           value_ptr = &value;
-        } else if (ecl_type == ECL_FLOAT_TYPE) {
+        } else if (ecl_type_is_float(data_type)) {
           float value;
 
           if (sscanf(buffer , "%d*%g" , &multiplier , &value) == 2)
@@ -398,7 +398,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
           }
 
           value_ptr = &value;
-        } else if (ecl_type == ECL_DOUBLE_TYPE) {
+        } else if (ecl_type_is_double(data_type)) {
           double value;
 
           if (sscanf(buffer , "%d*%lg" , &multiplier , &value) == 2)
@@ -413,7 +413,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
 
           value_ptr = &value;
         } else
-          util_abort("%s: sorry type:%s not supported \n",__func__ , ecl_util_get_type_name(ecl_type));
+          util_abort("%s: sorry type:%s not supported \n",__func__ , ecl_type_get_type_name(data_type));
 
         /*
           Removing this warning on user request:
@@ -516,10 +516,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
    if there is something wrong it can be difficult to detect.
 */
 
-// TODO: Should take ecl_data_type as input
-static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_type_enum ecl_type) {
-  ecl_data_type data_type = ecl_type_create_data_type_from_type(ecl_type);
-
+static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_data_type data_type) {
   if (!ecl_type_is_numeric(data_type))
     util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",__func__);
 
@@ -531,7 +528,7 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
     char file_header[9];
     if (fscanf(stream , "%s" , file_header) == 1) {
       int kw_size;
-      char * data = fscanf_alloc_grdecl_data( file_header , strict , ecl_type , &kw_size , stream );
+      char * data = fscanf_alloc_grdecl_data( file_header , strict , data_type , &kw_size , stream );
 
       // Verify size
       if (size > 0)
@@ -572,14 +569,14 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
 
 /*****************************************************************/
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data__(FILE * stream , bool strict , int size ,  ecl_type_enum ecl_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , size , ecl_type );
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data__(FILE * stream , bool strict , int size ,  ecl_data_type data_type) {
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , size , data_type );
 }
 
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_type_enum ecl_type) {
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_data_type data_type) {
  bool strict = true;
- return ecl_kw_fscanf_alloc_grdecl_data__( stream , strict , size , ecl_type );
+ return ecl_kw_fscanf_alloc_grdecl_data__( stream , strict , size , data_type );
 }
 
 /*****************************************************************/
@@ -594,13 +591,13 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_typ
    the whole keyword is loaded, and then return.
 */
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_type_enum ecl_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , ecl_type );
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_data_type data_type) {
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , data_type );
 }
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_type_enum ecl_type) {
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_data_type data_type) {
   bool strict = true;
-  return ecl_kw_fscanf_alloc_grdecl_dynamic__( stream , kw , strict , ecl_type );
+  return ecl_kw_fscanf_alloc_grdecl_dynamic__( stream , kw , strict , data_type );
 }
 
 /*****************************************************************/
@@ -618,14 +615,14 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * k
    size == 0.
 */
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__( FILE * stream , const char * kw , bool strict , int size , ecl_type_enum ecl_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , ecl_type );
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__( FILE * stream , const char * kw , bool strict , int size , ecl_data_type data_type) {
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , data_type );
 }
 
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int size , ecl_type_enum ecl_type) {
+ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int size , ecl_data_type data_type) {
   bool strict = true;
-  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , ecl_type );
+  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , data_type );
 }
 
 /*****************************************************************/
@@ -639,14 +636,14 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int 
    input file is well formatted.
 */
 
-ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl__( FILE * stream , bool strict , ecl_type_enum ecl_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , 0 , ecl_type );
+ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl__( FILE * stream , bool strict , ecl_data_type data_type) {
+  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , 0 , data_type );
 }
 
 
-ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl( FILE * stream , ecl_type_enum ecl_type) {
+ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl( FILE * stream , ecl_data_type data_type) {
   bool strict = true;
-  return ecl_kw_fscanf_alloc_current_grdecl__( stream , strict ,  ecl_type );
+  return ecl_kw_fscanf_alloc_current_grdecl__( stream , strict ,  data_type );
 }
 
 
