@@ -29,7 +29,7 @@
 #include <ert/util/arg_pack.h>
 #include <ert/util/test_util.h>
 #include <ert/util/stringlist.h>
-
+#include <ert/util/util.h>
 
 void test_error_exit( const char * fmt , ...) {
   char * s;
