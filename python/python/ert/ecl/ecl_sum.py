@@ -160,7 +160,6 @@ class EclSum(BaseCClass):
         else:
             super(EclSum, self).__init__(c_pointer)
             self.__private_init( )
-        self.__str__ = self.__repr__
         self._load_case = load_case
 
 
