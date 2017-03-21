@@ -133,12 +133,11 @@ class EclKW(BaseCClass):
     _equal             = EclPrototype("bool     ecl_kw_equal( ecl_kw , ecl_kw )")
     _equal_numeric     = EclPrototype("bool     ecl_kw_numeric_equal( ecl_kw , ecl_kw , double , double)")
 
-    _assert_binary     = EclPrototype("bool     ecl_kw_assert_binary_numeric( ecl_kw , ecl_kw )")
+    _assert_binary     = EclPrototype("bool     ecl_kw_size_and_numeric_type_equal( ecl_kw , ecl_kw )")
     _scale_int         = EclPrototype("void     ecl_kw_scale_int( ecl_kw , int )")
     _scale_float       = EclPrototype("void     ecl_kw_scale_float_or_double( ecl_kw , double )")
     _shift_int         = EclPrototype("void     ecl_kw_shift_int( ecl_kw , int )")
     _shift_float       = EclPrototype("void     ecl_kw_shift_float_or_double( ecl_kw , double )")
-    _assert_numeric    = EclPrototype("bool     ecl_kw_assert_numeric( ecl_kw )")
     _copy_data         = EclPrototype("void     ecl_kw_memcpy_data( ecl_kw , ecl_kw )")
     _set_int           = EclPrototype("void     ecl_kw_scalar_set_int( ecl_kw , int )")
     _set_float         = EclPrototype("void     ecl_kw_scalar_set_float_or_double( ecl_kw , double )")
@@ -433,8 +432,7 @@ class EclKW(BaseCClass):
         """
         Will check if the keyword contains numeric data, i.e int, float or double.
         """
-        return self._assert_numeric( )
-
+        return self.data_type.is_numeric()
 
     def ecl_kw_instance( self ):
         return True
