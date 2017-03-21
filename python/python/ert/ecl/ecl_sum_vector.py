@@ -1,3 +1,19 @@
+#  Copyright (C) 2017  Statoil ASA, Norway.
+#
+#  This file is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
+
 from __future__ import print_function
 import warnings
 from ert.ecl.ecl_sum_node import EclSumNode
@@ -24,7 +40,7 @@ class EclSumVector(object):
         self.parent = parent
         self.key = key
         self.report_only = report_only
-        
+
         if report_only:
             warnings.warn("The report_only flag to the EclSumVector will be removed" , DeprecationWarning)
 

@@ -87,7 +87,7 @@ class EclFile(BaseCClass):
     @classmethod
     def restart_block( cls , filename , dtime = None , report_step = None):
         raise NotImplementedError("The restart_block implementation has been removed - open file normally and use EclFileView.")
-        
+
 
 
     @classmethod
@@ -208,7 +208,7 @@ class EclFile(BaseCClass):
             super(EclFile , self).__init__(c_ptr)
             self.global_view = self._get_global_view( )
             self.global_view.setParent( self )
-            
+
 
     def save_kw( self , kw ):
         """
@@ -253,8 +253,16 @@ class EclFile(BaseCClass):
         self.close()
 
 
-    def blockView(self, kw , kw_index):
-        return self.global_view.blockView( kw , kw_index )
+    def blockView(self, kw, kw_index):
+        if not kw in self:
+            raise KeyError('No such keyword "%s".' % kw)
+        ls = self.global_view.numKeywords(kw)
+        idx = kw_index
+        if idx < 0:
+            idx += ls
+        if 0 <= idx < ls:
+            return self.global_view.blockView(kw, idx)
+        raise IndexError('Index out of range, must be in [0, %d), was %d.' % (ls, kw_index))
 
 
     def blockView2(self, start_kw , stop_kw , start_index):
@@ -263,9 +271,9 @@ class EclFile(BaseCClass):
 
     def restartView( self, seqnum_index = None, report_step = None , sim_time = None , sim_days = None):
         return self.global_view.restartView( seqnum_index, report_step , sim_time, sim_days )
-    
 
-    
+
+
     def select_block( self, kw , kw_index):
         raise NotImplementedError("The select_block implementation has been removed - use EclFileView")
 
@@ -310,7 +318,7 @@ class EclFile(BaseCClass):
         is a non-unified restart file (or not a restart file at all),
         the method will do nothing and return False.
         """
-        
+
 
 
 
@@ -401,7 +409,7 @@ class EclFile(BaseCClass):
     def iget_named_kw( self , kw_name , index , copy = False):
         return self.global_view.iget_named_kw( kw_name , index )
 
-    
+
 
     def restart_get_kw( self , kw_name , dtime , copy = False):
         """Will return EclKW @kw_name from restart file at time @dtime.
@@ -572,7 +580,7 @@ class EclFile(BaseCClass):
         """
         return self.global_view.numKeywords( kw )
 
-    
+
     def has_kw( self , kw , num = 0):
         """
         Check if current EclFile instance has a keyword @kw.

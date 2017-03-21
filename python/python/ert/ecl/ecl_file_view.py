@@ -1,3 +1,19 @@
+#  Copyright (C) 2017  Statoil ASA, Norway.
+#
+#  This file is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 from six import string_types
 from cwrap import BaseCClass
@@ -14,7 +30,7 @@ class EclFileView(BaseCClass):
     _create_block_view    = EclPrototype("ecl_file_view_ref ecl_file_view_add_blockview( ecl_file_view , char*, int )")
     _create_block_view2   = EclPrototype("ecl_file_view_ref ecl_file_view_add_blockview2( ecl_file_view , char*, char*, int )")
     _restart_view         = EclPrototype("ecl_file_view_ref ecl_file_view_add_restart_view( ecl_file_view , int, int, time_t, double )")
-    
+
 
     def __init__(self):
         raise NotImplementedError("Can not instantiate directly")
@@ -33,7 +49,7 @@ class EclFileView(BaseCClass):
 
         if index >= self.numKeywords( kw_name ):
             raise IndexError("Too large index: %d" % index)
-        
+
         return self._iget_named_kw( kw_name , index ).setParent( parent = self )
 
 
@@ -100,19 +116,19 @@ class EclFileView(BaseCClass):
 
     def __len__(self):
         return self._get_size( )
-            
-            
+
+
     def __contains__(self , kw):
         if self.numKeywords(kw) > 0:
             return True
         else:
             return False
 
-            
+
     def numKeywords(self , kw):
         return self._get_num_named_kw( kw )
 
-    
+
     def uniqueSize(self):
         return self._get_unique_size( )
 
@@ -167,7 +183,7 @@ class EclFileView(BaseCClass):
 
         if seqnum_index is None:
             seqnum_index = -1
-        
+
         view = self._restart_view( seqnum_index , report_step , CTime( sim_time ) , sim_days )
         if view is None:
             raise ValueError("No such restart block could be identiefied")
