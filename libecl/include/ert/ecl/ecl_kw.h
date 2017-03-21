@@ -56,6 +56,16 @@ extern "C" {
 
 #define ECL_KW_MAX_SIZE INT_MAX
 
+/*
+  Character data in ECLIPSE files comes as an array of fixed-length
+  string. Each of these strings is 8 characters long. The type name,
+  i.e. 'REAL', 'INTE', ... , come as 4 character strings.
+*/
+#define ECL_KW_HEADER_DATA_SIZE   ECL_STRING8_LENGTH + ECL_TYPE_LENGTH + 4
+#define ECL_KW_HEADER_FORTIO_SIZE ECL_KW_HEADER_DATA_SIZE + 8
+
+
+
   int            ecl_kw_first_different( const ecl_kw_type * kw1 , const ecl_kw_type * kw2 , int offset, double abs_epsilon , double rel_epsilon);
   size_t         ecl_kw_fortio_size( const ecl_kw_type * ecl_kw );
   void *         ecl_kw_get_ptr(const ecl_kw_type *ecl_kw);

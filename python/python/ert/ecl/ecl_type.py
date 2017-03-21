@@ -14,8 +14,26 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
-from cwrap import BaseCClass
-from ert.ecl import EclTypeEnum, EclUtil, EclPrototype
+from cwrap import BaseCClass, BaseCEnum
+from ert.ecl import EclPrototype
+
+class EclTypeEnum(BaseCEnum):
+    TYPE_NAME="ecl_type_enum"
+    ECL_CHAR_TYPE   = None
+    ECL_FLOAT_TYPE  = None
+    ECL_DOUBLE_TYPE = None
+    ECL_INT_TYPE    = None
+    ECL_BOOL_TYPE   = None
+    ECL_MESS_TYPE   = None
+
+EclTypeEnum.addEnum("ECL_CHAR_TYPE" , 0 )
+EclTypeEnum.addEnum("ECL_FLOAT_TYPE" , 1 )
+EclTypeEnum.addEnum("ECL_DOUBLE_TYPE" , 2 )
+EclTypeEnum.addEnum("ECL_INT_TYPE" , 3 )
+EclTypeEnum.addEnum("ECL_BOOL_TYPE" , 4 )
+EclTypeEnum.addEnum("ECL_MESS_TYPE" , 5 )
+
+#-----------------------------------------------------------------
 
 class EclDataType(BaseCClass):
 

@@ -70,25 +70,6 @@ EclPhaseEnum.addEnum("ECL_WATER_PHASE" , 4 )
 
 #-----------------------------------------------------------------
 
-# TODO: Move to ecl_type.py
-class EclTypeEnum(BaseCEnum):
-    TYPE_NAME="ecl_type_enum"
-    ECL_CHAR_TYPE   = None
-    ECL_FLOAT_TYPE  = None
-    ECL_DOUBLE_TYPE = None
-    ECL_INT_TYPE    = None
-    ECL_BOOL_TYPE   = None
-    ECL_MESS_TYPE   = None
-  
-EclTypeEnum.addEnum("ECL_CHAR_TYPE" , 0 )
-EclTypeEnum.addEnum("ECL_FLOAT_TYPE" , 1 )
-EclTypeEnum.addEnum("ECL_DOUBLE_TYPE" , 2 )
-EclTypeEnum.addEnum("ECL_INT_TYPE" , 3 )
-EclTypeEnum.addEnum("ECL_BOOL_TYPE" , 4 )
-EclTypeEnum.addEnum("ECL_MESS_TYPE" , 5 )
-
-#-----------------------------------------------------------------
-
 class EclUnitTypeEnum(BaseCEnum):
     TYPE_NAME = "ecl_unit_enum"
 

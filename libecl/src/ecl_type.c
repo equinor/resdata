@@ -20,7 +20,6 @@
 #include <string.h>
 
 #include <ert/util/util.h>
-#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_type.h>
 
 /*****************************************************************/
@@ -34,6 +33,7 @@
 #define ECL_TYPE_NAME_DOUBLE   "DOUB"
 #define ECL_TYPE_NAME_BOOL     "LOGI"
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
+
 
 ecl_data_type ecl_type_create_data_type(const ecl_type_enum type, const size_t element_size) {
     ecl_data_type ecl_type = ecl_type_create_data_type_from_type(type);
