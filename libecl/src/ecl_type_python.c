@@ -107,3 +107,7 @@ ecl_data_type * ecl_kw_get_data_type_python( const ecl_kw_type * ecl_kw ) {
   ecl_data_type data_type = ecl_kw_get_data_type(ecl_kw);
   return ecl_type_alloc_copy_python(&data_type);
 }
+
+void ecl_kw_fread_indexed_data_python(fortio_type * fortio, offset_type data_offset, const ecl_data_type * data_type, int element_count, const int_vector_type* index_map, char* buffer) {
+  return ecl_kw_fread_indexed_data(fortio, data_offset, *data_type, element_count, index_map, buffer);
+}

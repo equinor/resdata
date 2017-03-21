@@ -280,12 +280,13 @@ class EclKW(BaseCClass):
             if len(kw) > 8:
                 raise TypeError("Sorry keyword:%s is too long, must be eight characters or less." % kw)
 
-    
         if ecl_type is None:
             if cls.int_kw_set.__contains__( kw ):
                 ecl_type = EclDataType.ECL_INT
             else:
                 ecl_type = EclDataType.ECL_FLOAT
+
+        ecl_type = warn_and_cast_data_type(ecl_type)
 
         if not isinstance(ecl_type, EclDataType):
             raise TypeError("Expected EclDataType, was: %s" % type(ecl_type))
