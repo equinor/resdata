@@ -47,10 +47,20 @@ class KWTest(ExtendedTestCase):
         self.assertEqual( (0,10)  , kw.getMinMax())
 
         
-    def test_invalid_datatypes(self):
+    def test_deprecated_datatypes(self):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             kw = EclKW("Test", 10, EclTypeEnum.ECL_INT_TYPE)
+            self.assertTrue(len(w) > 0)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            kw = EclKW("Test", 10, EclDataType.ECL_INT)
+            self.assertTrue(len(w) == 0)
+
+            self.assertEqual(EclTypeEnum.ECL_INT_TYPE, kw.type)
+
             self.assertTrue(len(w) > 0)
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
 

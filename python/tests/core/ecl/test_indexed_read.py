@@ -2,11 +2,12 @@ import ctypes
 import ert
 
 from ert.ecl import EclPrototype
-from ert.ecl import EclKW, EclFile, EclTypeEnum, FortIO
+from ert.ecl import EclKW, EclFile, EclDataType, FortIO
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.util import IntVector
 
 class EclIndexedReadTest(ExtendedTestCase):
+    # TODO: This prototype needs to be fixed!
     _freadIndexedData   = EclPrototype("void ecl_kw_fread_indexed_data(fortio, int, int, int, int_vector, char*)", bind = False) # fortio, offset, type, count, index_map, buffer
     _eclFileIndexedRead = EclPrototype("void ecl_file_indexed_read(ecl_file, char*, int, int_vector, char*)", bind = False) # ecl_file, kw, index, index_map, buffer
 
@@ -15,7 +16,7 @@ class EclIndexedReadTest(ExtendedTestCase):
             fortio = FortIO("index_test", mode=FortIO.WRITE_MODE)
 
             element_count = 100000
-            ecl_kw = EclKW("TEST", element_count, EclTypeEnum.ECL_INT_TYPE)
+            ecl_kw = EclKW("TEST", element_count, EclDataType.ECL_INT)
 
             for index in range(element_count):
                 ecl_kw[index] = index
@@ -54,7 +55,7 @@ class EclIndexedReadTest(ExtendedTestCase):
 
             char_buffer = ctypes.create_string_buffer(len(index_map) * ctypes.sizeof(ctypes.c_int))
 
-            self._freadIndexedData(fortio, 24, EclTypeEnum.ECL_INT_TYPE, element_count, index_map, char_buffer)
+            self._freadIndexedData(fortio, 24, EclDataType.ECL_INT, element_count, index_map, char_buffer)
 
             int_buffer = ctypes.cast(char_buffer, ctypes.POINTER(ctypes.c_int))
 
@@ -68,8 +69,8 @@ class EclIndexedReadTest(ExtendedTestCase):
             fortio = FortIO("ecl_file_index_test", mode=FortIO.WRITE_MODE)
 
             element_count = 100000
-            ecl_kw_1 = EclKW("TEST1", element_count, EclTypeEnum.ECL_INT_TYPE)
-            ecl_kw_2 = EclKW("TEST2", element_count, EclTypeEnum.ECL_INT_TYPE)
+            ecl_kw_1 = EclKW("TEST1", element_count, EclDataType.ECL_INT)
+            ecl_kw_2 = EclKW("TEST2", element_count, EclDataType.ECL_INT)
 
             for index in range(element_count):
                 ecl_kw_1[index] = index

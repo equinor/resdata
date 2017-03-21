@@ -31,7 +31,7 @@ import os.path
 import math
 from cwrap import CFILE, BaseCClass
 from ert.util import IntVector
-from ert.ecl import EclPrototype, EclTypeEnum, EclDataType, EclKW, FortIO, EclUnitTypeEnum
+from ert.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum
 
 
 class EclGrid(BaseCClass):
@@ -127,11 +127,11 @@ class EclGrid(BaseCClass):
 
         if os.path.isfile(filename):
             with open(filename) as f:
-                specgrid = EclKW.read_grdecl(f, "SPECGRID", ecl_type=EclTypeEnum.ECL_INT_TYPE, strict=False)
+                specgrid = EclKW.read_grdecl(f, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
                 zcorn = EclKW.read_grdecl(f, "ZCORN")
                 coord = EclKW.read_grdecl(f, "COORD")
                 try:
-                    actnum = EclKW.read_grdecl(f, "ACTNUM", ecl_type=EclTypeEnum.ECL_INT_TYPE)
+                    actnum = EclKW.read_grdecl(f, "ACTNUM", ecl_type=EclDataType.ECL_INT)
                 except ValueError:
                     actnum = None
 
@@ -979,11 +979,11 @@ class EclGrid(BaseCClass):
             if dims[0] == self.getNX() and dims[1] == self.getNY() and dims[2] == self.getNZ():
                 dtype = array.dtype
                 if dtype == numpy.int32:
-                    type = EclTypeEnum.ECL_INT_TYPE
+                    type = EclDataType.ECL_INT
                 elif dtype == numpy.float32:
-                    type = EclTypeEnum.ECL_FLOAT_TYPE
+                    type = EclDataType.ECL_FLOAT
                 elif dtype == numpy.float64:
-                    type = EclTypeEnum.ECL_DOUBLE_TYPE
+                    type = EclDataType.ECL_DOUBLE
                 else:
                     sys.exit("Do not know how to create ecl_kw from type:%s" % dtype)
 

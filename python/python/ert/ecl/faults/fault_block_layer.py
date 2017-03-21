@@ -16,7 +16,7 @@
 
 from __future__ import print_function
 from cwrap import BaseCClass
-from ert.ecl import EclTypeEnum, EclPrototype
+from ert.ecl import EclDataType, EclPrototype
 from ert.ecl.faults import Fault
 
 class FaultBlockLayer(BaseCClass):
@@ -152,7 +152,7 @@ class FaultBlockLayer(BaseCClass):
         if len(kw) != self.grid_ref.getGlobalSize():
             raise ValueError("The size of the target keyword must be equal to the size of the grid. Got:%d Expected:%d" % (len(kw) , self.grid_ref.getGlobalSize()))
 
-        if kw.getEclType() != EclTypeEnum.ECL_INT_TYPE:
+        if not kw.data_type.is_int():
             raise TypeError("The target kewyord must be of integer type")
 
         self._export_kw( kw )
