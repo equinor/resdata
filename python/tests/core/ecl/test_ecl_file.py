@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import datetime
 import os.path
@@ -40,7 +40,7 @@ def loadKeywords( name ):
     return kw_list
 
 
-    
+
 
 class EclFileTest(ExtendedTestCase):
 
@@ -50,7 +50,7 @@ class EclFileTest(ExtendedTestCase):
         self.assertEqual( fmt_file , expected[1] )
         self.assertEqual( step , expected[2] )
 
-        
+
     def test_file_type(self):
         self.assertFileType( "ECLIPSE.UNRST" , (EclFileEnum.ECL_UNIFIED_RESTART_FILE , False , None))
         self.assertFileType( "ECLIPSE.X0030" , (EclFileEnum.ECL_RESTART_FILE , False , 30 ))
@@ -59,7 +59,7 @@ class EclFileTest(ExtendedTestCase):
         self.assertFileType( "ECLIPSE.A0010" , (EclFileEnum.ECL_SUMMARY_FILE , True , 10 ))
         self.assertFileType( "ECLIPSE.EGRID" , (EclFileEnum.ECL_EGRID_FILE , False  , None ))
 
-        
+
     def test_IOError(self):
         with self.assertRaises(IOError):
             EclFile("No/Does/not/exist")
@@ -77,9 +77,10 @@ class EclFileTest(ExtendedTestCase):
                 self.assertEqual( len(ecl_file) , 2 )
                 self.assertTrue( ecl_file.has_kw("KW1"))
                 self.assertTrue( ecl_file.has_kw("KW2"))
+                self.assertEqual(ecl_file[1], ecl_file[-1])
 
-        
-                
+
+
     def test_gc(self):
         kw1 = EclKW("KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
         kw2 = EclKW("KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
@@ -91,24 +92,24 @@ class EclFileTest(ExtendedTestCase):
             kw3[i] = 3*i
 
         kw_list = [kw1 , kw2 , kw2]
-            
+
         with TestAreaContext("context") as ta:
             createFile("TEST" , kw_list )
-            gc.collect() 
+            gc.collect()
             kw_list2 = loadKeywords( "TEST" )
 
             for kw1,kw2 in zip(kw_list,kw_list2):
                 self.assertEqual( kw1, kw2 )
 
 
-                
+
     def test_block_view(self):
         with TestAreaContext("python/ecl_file/view"):
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 for i in range(5):
                     header = EclKW("HEADER" , 1 , EclTypeEnum.ECL_INT_TYPE )
                     header[0] = i
-                    
+
                     data1 = EclKW("DATA1" , 100 , EclTypeEnum.ECL_INT_TYPE )
                     data1.assign( i )
 
@@ -120,7 +121,7 @@ class EclFileTest(ExtendedTestCase):
                     data1.fwrite( f )
                     data2.fwrite( f )
 
-                    
+
             ecl_file = EclFile("TEST")
             pfx = 'EclFile('
             self.assertEqual(pfx, repr(ecl_file)[:len(pfx)])
@@ -130,13 +131,19 @@ class EclFileTest(ExtendedTestCase):
             with self.assertRaises(IndexError):
                 ecl_file.blockView("HEADER" , 100)
 
+            with self.assertRaises(IndexError):
+                ecl_file.blockView("HEADER" , 1000)
+
+            bv = ecl_file.blockView("HEADER" , -1)
+
+
             for i in range(5):
                 view = ecl_file.blockView("HEADER" , i)
                 self.assertEqual( len(view) , 3)
                 header = view["HEADER"][0]
                 data1 = view["DATA1"][0]
                 data2 = view["DATA2"][0]
-                
+
                 self.assertEqual( header[0] , i )
                 self.assertEqual( data1[99] , i )
                 self.assertEqual( data2[99] , i*10 )
@@ -147,7 +154,7 @@ class EclFileTest(ExtendedTestCase):
                 self.assertEqual( len(view) , 2)
                 header = view["HEADER"][0]
                 data1 = view["DATA1"][0]
-                
+
                 self.assertEqual( header[0] , i )
                 self.assertEqual( data1[99] , i )
 
@@ -161,4 +168,3 @@ class EclFileTest(ExtendedTestCase):
             #self.assertTrue( "HEADER" in view )
             #self.assertTrue( "DATA1" in view )
             #self.assertFalse( "DATA2" in view )
-
