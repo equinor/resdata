@@ -342,8 +342,16 @@ class EclFile(BaseCClass):
            for swat in restart_file["SWAT"]:
                ....
         """
+        if isinstance(index, int):
+            ls = len(self)
+            idx = index
+            if idx < 0:
+                idx += ls
+            if 0 <= idx < ls:
+                return self.global_view[idx]
+            else:
+                raise IndexError('Index must be in [0, %d), was: %d.' % (ls, index))
         return self.global_view[index]
-
 
 
     def iget_kw( self , index , copy = False):

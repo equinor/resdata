@@ -109,7 +109,7 @@ class EclSumVector(object):
         return self.__report_step
 
 
-    def __iget__( self, index ):
+    def __iget( self, index ):
         """
         Will return an EclSumNode for element @index; should be called
         through the [] operator, otherwise you can come across
@@ -151,7 +151,7 @@ class EclSumVector(object):
             if index < 0 or index > length:
                 raise KeyError("Invalid index:%d out of range [0:%d)" % ( index, length))
             else:
-                return self.__iget__(index)
+                return self.__iget(index)
         elif isinstance(index, slice):
             # Observe that the slice based lookup does __not__ return
             # a proper EclSumVector instance; it will merely return
@@ -160,7 +160,7 @@ class EclSumVector(object):
             index = start
             sub_vector = []
             while index < stop:
-                sub_vector.append(self.__iget__(index))
+                sub_vector.append(self.__iget(index))
                 index += step
             return sub_vector
 
@@ -172,7 +172,7 @@ class EclSumVector(object):
         Will return the first EclSumNode in this vector.
         """
         self.assert_values()
-        return self.__iget__(0)
+        return self.__iget(0)
 
     @property
     def last( self ):
@@ -182,7 +182,7 @@ class EclSumVector(object):
         self.assert_values()
 
         index = len(self.__values) - 1
-        return self.__iget__(index)
+        return self.__iget(index)
 
     @property
     def last_value( self ):
@@ -192,7 +192,7 @@ class EclSumVector(object):
         self.assert_values()
 
         index = len(self.__values) - 1
-        return self.__iget__(index).value
+        return self.__iget(index).value
 
 
     def get_interp( self, days=None, date=None):
@@ -258,7 +258,7 @@ class EclSumVector(object):
         time_index = self.first_gt_index(limit)
         print(time_index)
         if time_index >= 0:
-            return self.__iget__(time_index)
+            return self.__iget(time_index)
         else:
             return None
 
@@ -283,6 +283,6 @@ class EclSumVector(object):
         """
         time_index = self.first_lt_index(limit)
         if time_index >= 0:
-            return self.__iget__(time_index)
+            return self.__iget(time_index)
         else:
             return None

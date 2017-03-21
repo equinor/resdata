@@ -67,11 +67,14 @@ class EclFileView(BaseCClass):
         """
 
         if isinstance( index , int):
-            if index < 0 or index >= len(self):
-                raise IndexError
+            ls = len(self)
+            idx = index
+            if idx < 0:
+                idx += ls
+            if 0 <= idx < ls:
+                return self.__iget(idx)
             else:
-                kw = self.__iget( index )
-                return kw
+                raise IndexError('Index must be in [0, %d), was: %d.' % (ls, index))
 
         if isinstance( index , slice ):
             indices = index.indices( len(self) )
@@ -114,38 +117,44 @@ class EclFileView(BaseCClass):
         return self._get_unique_size( )
 
     def blockView2(self , start_kw , stop_kw, start_index):
+        idx = start_index
         if start_kw:
             if not start_kw in self:
                 raise KeyError("The keyword:%s is not in file" % start_kw)
 
-            if start_index >= self.numKeywords( start_kw ):
-                raise IndexError("Index too high")
-            
+            ls = self.numKeywords(start_kw)
+            if idx < 0:
+                idx += ls
+            if not (0 <= idx < ls):
+                raise IndexError('Index must be in [0, %d), was: %d.' % (ls, start_index))
+
         if stop_kw:
             if not stop_kw in self:
                 raise KeyError("The keyword:%s is not in file" % stop_kw)
 
-        view = self._create_block_view2( start_kw , stop_kw , start_index )
+        view = self._create_block_view2(start_kw, stop_kw, idx)
         view.setParent( parent = self )
         return view
 
-    
-        
+
     def blockView(self , kw , kw_index):
         num = self.numKeywords( kw )
 
         if num == 0:
             raise KeyError("Unknown keyword: %s" % kw)
 
-        if kw_index >= num:
-            raise IndexError("Index too high")
-        
+        idx = kw_index
+        if idx < 0:
+            idx += num
+
+        if not (0 <= idx < num):
+            raise IndexError('Index must be in [0, %d), was: %d.' % (num, kw_index))
+
         view = self._create_block_view( kw , kw_index )
         view.setParent( parent = self )
         return view
 
 
-    
     def restartView(self , seqnum_index = None, report_step = None , sim_time = None , sim_days = None):
         if report_step is None:
             report_step = -1
