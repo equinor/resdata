@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+#include <stdlib.h>
+#include <stdbool.h>
+
 /*
   Character data in ECLIPSE files comes as an array of fixed-length
   string. Each of these strings is 8 characters long. The type name,

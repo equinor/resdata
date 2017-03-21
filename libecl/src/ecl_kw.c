@@ -590,7 +590,7 @@ void ecl_kw_free__(void *void_ecl_kw) {
 
 
 void ecl_kw_memcpy_data( ecl_kw_type * target , const ecl_kw_type * src) {
-  if (!ecl_kw_assert_binary( target , src ))
+  if (!ecl_kw_size_and_type_equal( target , src ))
     util_abort("%s: type/size mismatch \n",__func__);
 
   memcpy(target->data , src->data , target->size * ecl_kw_get_sizeof_ctype(target));
@@ -2033,28 +2033,15 @@ void ecl_kw_shift_float_or_double( ecl_kw_type * ecl_kw , double shift_value ) {
     util_abort("%s: wrong type \n",__func__);
 }
 
-
-// TODO: remove
-bool ecl_kw_assert_numeric( const ecl_kw_type * kw ) {
-  return ecl_type_is_numeric(kw->data_type);
-}
-
-
-// TODO: remove
-bool ecl_kw_assert_binary( const ecl_kw_type * kw1, const ecl_kw_type * kw2) {
-  return ecl_kw_size_and_type_equal(kw1, kw2);
-}
-
-// TODO: rename
-bool ecl_kw_assert_binary_numeric( const ecl_kw_type * kw1, const ecl_kw_type * kw2) {
-  return ecl_kw_assert_binary(kw1, kw2) && ecl_kw_assert_numeric(kw1);
+bool ecl_kw_size_and_numeric_type_equal( const ecl_kw_type * kw1, const ecl_kw_type * kw2) {
+  return ecl_kw_size_and_type_equal(kw1, kw2) && ecl_type_is_numeric(kw1->data_type);
 }
 
 
 
 #define ECL_KW_ASSERT_TYPED_BINARY_OP( ctype , ECL_TYPE ) \
 bool ecl_kw_assert_binary_ ## ctype( const ecl_kw_type * kw1 , const ecl_kw_type * kw2) { \
- if (!ecl_kw_assert_binary_numeric( kw1 , kw2))                                                \
+ if (!ecl_kw_size_and_numeric_type_equal( kw1 , kw2))                                                \
     return false;                                                                         \
  if (ecl_kw_get_type(kw1) != ECL_TYPE)                                                           \
     return false;   /* Type mismatch */                                                   \
@@ -2068,7 +2055,7 @@ ECL_KW_ASSERT_TYPED_BINARY_OP( double , ECL_DOUBLE_TYPE )
 
 
 void ecl_kw_copy_indexed( ecl_kw_type * target_kw , const int_vector_type * index_set , const ecl_kw_type * src_kw) {
-  if (!ecl_kw_assert_binary( target_kw , src_kw ))
+  if (!ecl_kw_size_and_type_equal( target_kw , src_kw ))
     util_abort("%s: type/size  mismatch\n",__func__);
   {
     char * target_data = ecl_kw_get_data_ref( target_kw );

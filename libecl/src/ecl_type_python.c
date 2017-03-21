@@ -1,4 +1,3 @@
-#include <ert/ecl/ecl_util.h> // TODO: remove
 #include <ert/ecl/ecl_type.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_kw_grdecl.h>
