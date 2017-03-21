@@ -11,6 +11,16 @@ class SurfaceTest(ExtendedTestCase):
         self.surface_valid2 = self.createTestPath("local/geometry/surface/valid2_ascii.irap")
         self.surface_small = self.createTestPath("local/geometry/surface/valid_small_ascii.irap")
 
+    def test_xyz(self):
+        s = Surface(self.surface_valid2)
+        self.assertEqual(s.getXYZ(i=5,j=13), s.getXYZ(idx=642))
+        x,y,z = s.getXYZ(i=5,j=13)
+        self.assertFloatEqual(464041.44804, x)
+        self.assertFloatEqual(7336966.309535, y)
+        self.assertFloatEqual(0.0051, z)
+        self.assertAlmostEqualList(s.getXYZ(i=6,j=13), s.getXYZ(idx=643))
+        self.assertFloatEqual(-0.0006, s.getXYZ(i=6,j=13)[2]) # z value
+
     def test_create_new(self):
         with self.assertRaises(ValueError):
             s = Surface(None, 1, 1, 1)
