@@ -33,7 +33,6 @@
 #include <ert/util/ert_unique_ptr.hpp>
 #include <ert/ecl/FortIO.hpp>
 
-// TODO: Expose ecl_data_type
 namespace ERT {
     template< typename > struct ecl_type {};
 
@@ -133,7 +132,7 @@ class EclKW : public EclKW_ref< T > {
         }
 
         EclKW( const std::string& kw, int size_ ) :
-            base( ecl_kw_alloc( kw.c_str(), size_, ecl_type_create_data_type_from_type(ecl_type< T >::type) ) )
+            base( ecl_kw_alloc( kw.c_str(), size_, ecl_type_create_from_type(ecl_type< T >::type) ) )
         {}
 
         EclKW( const std::string& kw, const std::vector< T >& data ) :

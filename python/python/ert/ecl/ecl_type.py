@@ -44,14 +44,14 @@ class EclDataType(BaseCClass):
     _alloc_from_name  = EclPrototype("void* ecl_type_alloc_from_name_python(char*)", bind = False)
     _free             = EclPrototype("void ecl_type_free_python(ecl_data_type)")
     _get_type         = EclPrototype("ecl_type_enum ecl_type_get_type_python(ecl_data_type)")
-    _get_element_size = EclPrototype("size_t ecl_type_get_element_size_python(ecl_data_type)")
+    _get_element_size = EclPrototype("size_t ecl_type_get_sizeof_ctype_python(ecl_data_type)")
     _is_int           = EclPrototype("bool ecl_type_is_int_python(ecl_data_type)")
     _is_char          = EclPrototype("bool ecl_type_is_char_python(ecl_data_type)")
     _is_float         = EclPrototype("bool ecl_type_is_float_python(ecl_data_type)")
     _is_double        = EclPrototype("bool ecl_type_is_double_python(ecl_data_type)")
     _is_mess          = EclPrototype("bool ecl_type_is_mess_python(ecl_data_type)")
     _is_bool          = EclPrototype("bool ecl_type_is_bool_python(ecl_data_type)")
-    _get_type_name    = EclPrototype("char* ecl_type_get_type_name_python(ecl_data_type)")
+    _get_name         = EclPrototype("char* ecl_type_get_name_python(ecl_data_type)")
     _is_numeric       = EclPrototype("bool ecl_type_is_numeric_python(ecl_data_type)")
     _is_equal         = EclPrototype("bool ecl_type_is_equal_python(ecl_data_type, ecl_data_type)")
 
@@ -84,7 +84,7 @@ class EclDataType(BaseCClass):
 
     @property
     def type_name(self):
-        return self._get_type_name()
+        return self._get_name()
 
     def free(self):
         self._free()

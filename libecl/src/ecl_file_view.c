@@ -361,7 +361,7 @@ void ecl_file_view_fprintf_kw_list(const ecl_file_view_type * ecl_file_view , FI
     fprintf(stream , "%-8s %7d:%s\n",
             ecl_file_kw_get_header( file_kw ) ,
             ecl_file_kw_get_size( file_kw ) ,
-            ecl_type_get_type_name( ecl_file_kw_get_data_type( file_kw )));
+            ecl_type_get_name( ecl_file_kw_get_data_type( file_kw )));
   }
 }
 

@@ -106,13 +106,12 @@ typedef struct ecl_type_struct ecl_data_type;
 #define ECL_C010 (ecl_data_type) {.type = ECL_C010_TYPE, .element_size = 10+1}
 
 
-ecl_data_type      ecl_type_create_data_type_from_name(const char *);
-ecl_data_type      ecl_type_create_data_type(const ecl_type_enum, const size_t);
-ecl_data_type      ecl_type_create_data_type_from_type(const ecl_type_enum);
+ecl_data_type      ecl_type_create_from_name(const char *);
+ecl_data_type      ecl_type_create(const ecl_type_enum, const size_t);
+ecl_data_type      ecl_type_create_from_type(const ecl_type_enum);
 
 ecl_type_enum      ecl_type_get_type(const ecl_data_type);
-size_t             ecl_type_get_element_size(const ecl_data_type);
-const char *       ecl_type_get_type_name(const ecl_data_type);
+const char *       ecl_type_get_name(const ecl_data_type);
 
 int                ecl_type_get_sizeof_ctype(const ecl_data_type);
 int                ecl_type_get_sizeof_ctype_fortio(const ecl_data_type);

@@ -35,8 +35,8 @@
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
 
-ecl_data_type ecl_type_create_data_type(const ecl_type_enum type, const size_t element_size) {
-    ecl_data_type ecl_type = ecl_type_create_data_type_from_type(type);
+ecl_data_type ecl_type_create(const ecl_type_enum type, const size_t element_size) {
+    ecl_data_type ecl_type = ecl_type_create_from_type(type);
 
     if(ecl_type.element_size != element_size)
         util_abort(
@@ -46,7 +46,7 @@ ecl_data_type ecl_type_create_data_type(const ecl_type_enum type, const size_t e
     return ecl_type;
 }
 
-ecl_data_type ecl_type_create_data_type_from_type(const ecl_type_enum type) {
+ecl_data_type ecl_type_create_from_type(const ecl_type_enum type) {
     switch(type) {
     case(ECL_CHAR_TYPE):
       return ECL_CHAR;
@@ -76,7 +76,7 @@ size_t ecl_type_get_element_size(const ecl_data_type ecl_type) {
     return ecl_type.element_size;
 }
 
-const char * ecl_type_get_type_name(const ecl_data_type ecl_type) {
+const char * ecl_type_get_name(const ecl_data_type ecl_type) {
   switch (ecl_type.type) {
   case(ECL_CHAR_TYPE):
     return ECL_TYPE_NAME_CHAR ;
@@ -98,7 +98,7 @@ const char * ecl_type_get_type_name(const ecl_data_type ecl_type) {
   }
 }
 
-ecl_data_type ecl_type_create_data_type_from_name( const char * type_name ) {
+ecl_data_type ecl_type_create_from_name( const char * type_name ) {
   if (strncmp( type_name , ECL_TYPE_NAME_FLOAT , ECL_TYPE_LENGTH) == 0)
     return ECL_FLOAT;
   else if (strncmp( type_name , ECL_TYPE_NAME_INT , ECL_TYPE_LENGTH) == 0)

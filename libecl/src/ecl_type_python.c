@@ -14,17 +14,17 @@ ecl_data_type * ecl_type_alloc_copy_python(const ecl_data_type * src_type) {
 }
 
 ecl_data_type * ecl_type_alloc_python(const ecl_type_enum type, const size_t element_size) {
-    ecl_data_type src_type = ecl_type_create_data_type(type, element_size);
+    ecl_data_type src_type = ecl_type_create(type, element_size);
     return ecl_type_alloc_copy_python(&src_type);
 }
 
 ecl_data_type * ecl_type_alloc_from_type_python(const ecl_type_enum type) {
-    ecl_data_type src_type = ecl_type_create_data_type_from_type(type);
+    ecl_data_type src_type = ecl_type_create_from_type(type);
     return ecl_type_alloc_copy_python(&src_type);
 }
 
 ecl_data_type * ecl_type_alloc_from_name_python(const char * name) {
-    ecl_data_type src_type = ecl_type_create_data_type_from_name(name);
+    ecl_data_type src_type = ecl_type_create_from_name(name);
     return ecl_type_alloc_copy_python(&src_type);
 }
 
@@ -36,12 +36,8 @@ ecl_type_enum ecl_type_get_type_python(const ecl_data_type * ecl_type) {
     return ecl_type_get_type(*ecl_type);
 }
 
-size_t ecl_type_get_element_size_python(const ecl_data_type * ecl_type) {
-    return ecl_type_get_element_size(*ecl_type);
-}
-
-const char * ecl_type_get_type_name_python(const ecl_data_type * ecl_type) {
-    return ecl_type_get_type_name(*ecl_type);
+const char * ecl_type_get_name_python(const ecl_data_type * ecl_type) {
+    return ecl_type_get_name(*ecl_type);
 }
 
 int ecl_type_get_sizeof_ctype_fortio_python(const ecl_data_type * ecl_type) {
