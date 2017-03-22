@@ -39,6 +39,9 @@ class VersionTest(ExtendedTestCase):
         v2 = Version(1, 2, 3)
 
         self.assertTrue(v1 == v2)
+        self.assertEqual(v1, v2)
+        self.assertEqual(str(v1), str(v2))
+        self.assertEqual(repr(v1), repr(v2))
         self.assertFalse(v1 != v2)
 
         v1 = Version(1, 2, "X")
@@ -66,6 +69,9 @@ class VersionTest(ExtendedTestCase):
         v2 = Version(1, 2, 3)
         v3 = (1, 2, 2)
 
+        self.assertEqual(str(v1), str(v2))
+        self.assertEqual(repr(v1), repr(v2))
+
         self.assertTrue(v1 >= v2)
         self.assertFalse(v1 < v2)
 
@@ -82,9 +88,15 @@ class VersionTest(ExtendedTestCase):
         v2 = Version(1, 2, 0)
         self.assertFalse(v1 >= v2)
 
+        self.assertNotEqual(str(v1), str(v2))
+        self.assertNotEqual(repr(v1), repr(v2))
+
+
     def test_current(self):
         current = Version.currentVersion()
         self.assertTrue(current > (0, 0, 0))
+        pfx = 'Version(major='
+        self.assertEqual(pfx, repr(current)[:len(pfx)])
 
     def test_import(self):
         from ert import Version as globalVersion
@@ -92,6 +104,9 @@ class VersionTest(ExtendedTestCase):
         v2 = Version(1, 1, 2)
 
         self.assertTrue(v1 == v2)
+        self.assertEqual(v1, v2)
+        self.assertEqual(repr(v1), repr(v2))
+
 
     def test_root_version(self):
         cv = Version.currentVersion( )
