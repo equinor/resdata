@@ -293,7 +293,7 @@ void util_abort__(const char * file , const char * function , int line , const c
       }
       fprintf(stderr, "\nSee file: %s for more details of the crash.\nSetting the environment variable \"ERT_SHOW_BACKTRACE\" will show the backtrace on stderr.\n", filename);
     }
-
+    chmod(filename, 00644); // -rw-r--r--
     free(filename);
   }
 
@@ -304,4 +304,3 @@ void util_abort__(const char * file , const char * function , int line , const c
 
 
 /*****************************************************************/
-
