@@ -17,17 +17,38 @@
 import os.path
 from unittest import skipIf
 import time
+import itertools
 
 from ert.util import IntVector
 from ert.ecl import EclGrid,EclKW,EclTypeEnum, EclUnitTypeEnum, EclFile
 from ert.ecl.faults import Layer , FaultCollection
 from ert.test import ExtendedTestCase , TestAreaContext
 
+# This dict is used to verify that corners are mapped to the correct
+# cell with respect to containment.
+CORNER_HOME = {
+        (0, 0, 0) : 0,  (0, 0, 1) : 9,  (0, 0, 2) : 18, (0, 0, 3) : 18,
+        (0, 1, 0) : 3,  (0, 1, 1) : 12, (0, 1, 2) : 21, (0, 1, 3) : 21,
+        (0, 2, 0) : 6,  (0, 2, 1) : 15, (0, 2, 2) : 24, (0, 2, 3) : 24,
+        (0, 3, 0) : 6,  (0, 3, 1) : 15, (0, 3, 2) : 24, (0, 3, 3) : 24,
+        (1, 0, 0) : 1,  (1, 0, 1) : 10, (1, 0, 2) : 19, (1, 0, 3) : 19,
+        (1, 1, 0) : 4,  (1, 1, 1) : 13, (1, 1, 2) : 22, (1, 1, 3) : 22,
+        (1, 2, 0) : 7,  (1, 2, 1) : 16, (1, 2, 2) : 25, (1, 2, 3) : 25,
+        (1, 3, 0) : 7,  (1, 3, 1) : 16, (1, 3, 2) : 25, (1, 3, 3) : 25,
+        (2, 0, 0) : 2,  (2, 0, 1) : 11, (2, 0, 2) : 20, (2, 0, 3) : 20,
+        (2, 1, 0) : 5,  (2, 1, 1) : 14, (2, 1, 2) : 23, (2, 1, 3) : 23,
+        (2, 2, 0) : 8,  (2, 2, 1) : 17, (2, 2, 2) : 26, (2, 2, 3) : 26,
+        (2, 3, 0) : 8,  (2, 3, 1) : 17, (2, 3, 2) : 26, (2, 3, 3) : 26,
+        (3, 0, 0) : 2,  (3, 0, 1) : 11, (3, 0, 2) : 20, (3, 0, 3) : 20,
+        (3, 1, 0) : 5,  (3, 1, 1) : 14, (3, 1, 2) : 23, (3, 1, 3) : 23,
+        (3, 2, 0) : 8,  (3, 2, 1) : 17, (3, 2, 2) : 26, (3, 2, 3) : 26,
+        (3, 3, 0) : 8,  (3, 3, 1) : 17, (3, 3, 2) : 26, (3, 3, 3) : 26
+}
+
 
 # This test class should only have test cases which do not require
 # external test data. Tests involving Statoil test data are in the
 # test_grid_statoil module.
-
 class GridTest(ExtendedTestCase):
     
     def test_oom_grid(self):
@@ -255,3 +276,55 @@ class GridTest(ExtendedTestCase):
             self.assertEqual( g[0].strip() , "CM" )
             g2 = EclGrid("CASE.EGRID")
             self.assertFloatEqual( g2.cell_volume( global_index = 0 ) , 100*100*100 )
+
+    def test_cell_corner_containment(self):
+        n = 4
+        d = 10
+        grid = EclGrid.createRectangular( (n, n, n), (d, d, d))
+
+        for x, y, z in itertools.product(range(0, n*d+1, d), repeat=3):
+            self.assertEqual(
+                    1,
+                    [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
+                    )
+
+    def test_cell_corner_containment_compatability(self):
+        grid = EclGrid.createRectangular( (3,3,3), (1,1,1) )
+
+        for x, y, z in itertools.product(range(4), repeat=3):
+            for i in range(27):
+                if grid.cell_contains(x, y, z, i):
+                    self.assertEqual(
+                            CORNER_HOME[(x,y,z)],
+                            i
+                            )
+
+    def test_cell_face_containment(self):
+        # TODO: Activate this test
+        return
+        n = 4
+        d = 10
+        grid = EclGrid.createRectangular( (n, n, n), (d, d, d))
+
+        for x, y, z in itertools.product(range(d/2, n*d, d), repeat=3):
+            for axis, direction in itertools.product(range(3), [-1, 1]):
+                p = [x, y, z]
+                p[axis] = p[axis] + direction*d/2
+                self.assertEqual(
+                        1,
+                        [grid.cell_contains(p[0], p[1], p[2], i) for i in range(n**3)].count(True)
+                    )
+
+    def test_cell_unique_containment(self):
+        # TODO: Activate this test
+        return
+        n = 4
+        d = 4
+        grid = EclGrid.createRectangular( (n, n, n), (d, d, d))
+
+        coordinates = range(0, n*d+1)
+        for x, y, z in itertools.product(coordinates, repeat=3):
+            self.assertEqual(
+                    1,
+                    [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
+                    )
