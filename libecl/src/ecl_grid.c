@@ -3853,10 +3853,6 @@ static bool ecl_grid_on_plane(const ecl_cell_type * cell, const int method,
 
    Note: The correctness of this function relies *HEAVILY* on the permutation of the
    tetrahedrons in the decompositions.
-
-    TODO: Right now this method checks for face containment and uses this information
-    only to deduce whether p is one of the corners of the cell. In other words, it matches
-    the old functionality.
 */
 static int ecl_grid_on_cell_face(const ecl_cell_type * cell, const int method,
         const point_type * p,
@@ -3865,65 +3861,26 @@ static int ecl_grid_on_cell_face(const ecl_cell_type * cell, const int method,
   int top = 0, north = 1, west = 2, east = 3, south = 4, bottom = 5;
   bool on[6];
   for(int i = 0; i < 6; ++i) {
-      on[i] = (
-          ecl_grid_on_plane(cell, method, 2*i, p) ||
-          ecl_grid_on_plane(cell, method, 2*i+1, p)
-              );
+    on[i] = (
+        ecl_grid_on_plane(cell, method, 2*i, p) ||
+        ecl_grid_on_plane(cell, method, 2*i+1, p)
+            );
   }
 
-  if (on[top] && on[south] && on[west])
+  // Not on any of the cell sides
+  if(!on[top] && !on[bottom] && !on[north] && !on[south] && !on[west] && !on[east])
+    return NOT_ON_FACE;
+
+  // Not on any of the lower priority sides
+  if(!on[bottom] && !on[north] && !on[east])
     return BELONGS_TO_CELL;
 
-  if (on[top] && on[south] && on[east]) {
-    if (max_i)
-      return BELONGS_TO_CELL;
-    else
-      return BELONGS_TO_OTHER;
-  }
+  // Contained in cell due to border conditions
+  // NOTE: One should read X <= Y as X "implies" Y
+  if((on[east] <= max_i) && (on[north] <= max_j) && (on[bottom] <= max_k))
+    return BELONGS_TO_CELL;
 
-  if (on[top] && on[north] && on[west]) {
-    if (max_j)
-      return BELONGS_TO_CELL;
-    else
-      return BELONGS_TO_OTHER;
-  }
-
-  if (on[top] && on[north] && on[east]) {
-    if (max_i && max_j)
-      return BELONGS_TO_CELL;
-    else
-      return BELONGS_TO_OTHER;
-  }
-
-  if (on[bottom] && on[south] && on[west]) {
-    if (max_k)
-      return BELONGS_TO_CELL;
-    else
-      return BELONGS_TO_OTHER;
-  }
-
-  if (on[bottom] && on[south] && on[east]) {
-    if (max_i && max_k)
-      return BELONGS_TO_CELL;
-    else
-      return BELONGS_TO_OTHER;
-  }
-
-  if (on[bottom] && on[north] && on[west]) {
-    if (max_j && max_k)
-      return BELONGS_TO_CELL;
-    else
-      return BELONGS_TO_OTHER;
-  }
-
-  if (on[bottom] && on[north] && on[east]) {
-    if (max_i && max_j && max_k)
-      return BELONGS_TO_CELL;
-    else
-      return BELONGS_TO_OTHER;
-  }
-
-  return NOT_ON_FACE;
+  return BELONGS_TO_OTHER;
 }
 
 /*
@@ -3955,9 +3912,10 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
 
   // Checks if point is on one of the faces of the cell, and if so whether it
   // "belongs" to this cell.
-  int face_status = ecl_grid_on_cell_face(cell, method, &p,
-          i == ecl_grid->nx-1, j == ecl_grid->ny-1, k == ecl_grid->nz-1
-          );
+  bool max_i = (i == ecl_grid->nx-1);
+  bool max_j = (j == ecl_grid->ny-1);
+  bool max_k = (k == ecl_grid->nz-1);
+  int face_status = ecl_grid_on_cell_face(cell, method, &p, max_i, max_j, max_k);
 
   if(face_status != NOT_ON_FACE)
     return face_status == BELONGS_TO_CELL;
