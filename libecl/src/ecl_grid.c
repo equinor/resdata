@@ -3805,9 +3805,7 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool
 
 /*****************************************************************/
 
-#define NOT_ON_FACE 0
-#define BELONGS_TO_CELL 1
-#define BELONGS_TO_OTHER -1
+typedef enum {NOT_ON_FACE, BELONGS_TO_CELL, BELONGS_TO_OTHER} face_status_enum;
 
 /*
     Returns whether the given point is contained within the minimal cube
@@ -3854,7 +3852,7 @@ static bool ecl_grid_on_plane(const ecl_cell_type * cell, const int method,
    Note: The correctness of this function relies *HEAVILY* on the permutation of the
    tetrahedrons in the decompositions.
 */
-static int ecl_grid_on_cell_face(const ecl_cell_type * cell, const int method,
+static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const int method,
         const point_type * p,
         const bool max_i, const bool max_j, const bool max_k) {
 
@@ -3915,7 +3913,7 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
   bool max_i = (i == ecl_grid->nx-1);
   bool max_j = (j == ecl_grid->ny-1);
   bool max_k = (k == ecl_grid->nz-1);
-  int face_status = ecl_grid_on_cell_face(cell, method, &p, max_i, max_j, max_k);
+  face_status_enum face_status = ecl_grid_on_cell_face(cell, method, &p, max_i, max_j, max_k);
 
   if(face_status != NOT_ON_FACE)
     return face_status == BELONGS_TO_CELL;
