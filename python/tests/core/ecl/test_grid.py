@@ -300,8 +300,6 @@ class GridTest(ExtendedTestCase):
                             )
 
     def test_cell_face_containment(self):
-        # TODO: Activate this test
-        return
         n = 4
         d = 10
         grid = EclGrid.createRectangular( (n, n, n), (d, d, d))
@@ -316,8 +314,6 @@ class GridTest(ExtendedTestCase):
                     )
 
     def test_cell_unique_containment(self):
-        # TODO: Activate this test
-        return
         n = 4
         d = 4
         grid = EclGrid.createRectangular( (n, n, n), (d, d, d))
