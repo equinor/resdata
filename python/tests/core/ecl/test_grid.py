@@ -18,6 +18,7 @@ import os.path
 from unittest import skipIf
 import time
 import itertools
+from numpy import linspace
 
 from ert.util import IntVector
 from ert.ecl import EclGrid,EclKW,EclDataType, EclUnitTypeEnum, EclFile
@@ -45,6 +46,45 @@ CORNER_HOME = {
         (3, 3, 0) : 8,  (3, 3, 1) : 17, (3, 3, 2) : 26, (3, 3, 3) : 26
 }
 
+
+def find_cell_bounderies(grid, cell_index):
+    corners = [grid.getCellCorner(i, cell_index) for i in range(8)]
+
+    bounderies = []
+    for i in range(3):
+        min_val = min(zip(*corners)[i])
+        max_val = max(zip(*corners)[i])
+        bounderies.append((min_val, max_val))
+
+    return bounderies
+
+#
+# The following method will approximate the volume of a cell in a grid
+# in the following manner:
+#
+#   - decompose the space into small cubes of size @cube_size
+#   - if the corner of such a cube closest to origo is contained in the
+#   specified cell (@cell_index), the volume of the small cube is added to
+#   the esimate of the cell volume.
+#
+# This method provides an arbitrary good approximation of the cell volume
+# (by decreasing the value of @cube_size).
+#
+
+def approx_cell_volume(grid, cell_index, cube_size):
+    x_range, y_range, z_range = find_cell_bounderies(grid, cell_index)
+
+    frange = lambda start, stop, step : linspace(start, stop,
+            (int)((stop-start)/float(step)), endpoint=False)
+
+    volume = 0
+    for x in frange(x_range[0], x_range[1], cube_size):
+        for y in frange(y_range[0], y_range[1], cube_size):
+            for z in frange(z_range[0], z_range[1], cube_size):
+                if grid.cell_contains(x, y, z, cell_index):
+                    volume += cube_size**3
+
+    return volume
 
 # This test class should only have test cases which do not require
 # external test data. Tests involving Statoil test data are in the
@@ -250,6 +290,20 @@ class GridTest(ExtendedTestCase):
         kw = EclKW( "SWAT" , nx*ny*nz , EclDataType.ECL_FLOAT )
         numpy_3d = grid.create3D( kw )
 
+    def test_len(self):
+        nx = 10
+        ny = 11
+        nz = 12
+        actnum = EclKW( "ACTNUM" , nx*ny*nz , EclDataType.ECL_INT )
+        actnum[0] = 1
+        actnum[1] = 1
+        actnum[2] = 1
+        actnum[3] = 1
+        
+        grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1), actnum = actnum)
+        self.assertEqual( len(grid) , nx*ny*nz )
+        self.assertEqual( grid.getNumActive( ) , 4 )
+
 
     def test_output_units(self):
         n = 10
@@ -325,17 +379,56 @@ class GridTest(ExtendedTestCase):
                     [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
                     )
 
+    def verify_volume_consistency(self, grid, epsilon=1e-6, cube_size=1):
+        grid_size = grid.getNX()*grid.getNY()*grid.getNZ()
+        for i in range(grid_size):
+            ert_volume = grid.cell_volume(i)
+            approx_volume = approx_cell_volume(grid, i, cube_size)
+            self.assertTrue(abs(ert_volume - approx_volume) <= epsilon)
 
-    def test_len(self):
-        nx = 10
-        ny = 11
-        nz = 12
-        actnum = EclKW( "ACTNUM" , nx*ny*nz , EclDataType.ECL_INT )
-        actnum[0] = 1
-        actnum[1] = 1
-        actnum[2] = 1
-        actnum[3] = 1
-        
-        grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1), actnum = actnum)
-        self.assertEqual( len(grid) , nx*ny*nz )
-        self.assertEqual( grid.getNumActive( ) , 4 )
+    def test_volume_contains_consistency_rectangular(self):
+        grid = EclGrid.createRectangular((5,5,5), (2,2,2))
+        self.verify_volume_consistency(grid)
+
+    def test_volume_contains_consistency_skewed(self):
+        with TestAreaContext("volume_consistency_skewed"):
+            dump_file = "my_grid.grdecl"
+            with open(dump_file, 'w') as f:
+                f.write("""
+SPECGRID 1 1 2 1 F/
+
+ZCORN 0 0 0 0 1 2 1 2
+      1 2 1 2 4 4 4 4
+     /
+
+COORD 2 2 0 2 2 0
+      4 2 0 4 2 0
+      2 4 0 2 4 0
+      4 4 0 4 4 0
+     /
+                """)
+
+            grid = EclGrid.loadFromGrdecl(dump_file)
+            self.verify_volume_consistency(grid, cube_size=0.1)
+
+    def test_volume_contains_consistency_zigzag(self):
+        with TestAreaContext("volume_consistency_zigzag"):
+            dump_file = "my_grid.grdecl"
+            with open(dump_file, 'w') as f:
+                f.write("""
+SPECGRID 1 1 3 1 F/
+
+ZCORN 0 0 0 0 1 2 2 1
+      1 2 2 1 3 4 4 3
+      3 4 4 3 5 5 5 5
+      /
+
+COORD 2 2 0 2 2 0
+      4 2 0 4 2 0
+      2 4 0 2 4 0
+      4 4 0 4 4 0
+      /
+                """)
+
+            grid = EclGrid.loadFromGrdecl(dump_file)
+            self.verify_volume_consistency(grid, cube_size=0.1)
