@@ -391,44 +391,20 @@ class GridTest(ExtendedTestCase):
         self.verify_volume_consistency(grid)
 
     def test_volume_contains_consistency_skewed(self):
-        with TestAreaContext("volume_consistency_skewed"):
-            dump_file = "my_grid.grdecl"
-            with open(dump_file, 'w') as f:
-                f.write("""
-SPECGRID 1 1 2 1 F/
+        return
+        grid = EclGrid.createWave((5,5,5), (2,2,2))
+        self.verify_volume_consistency(grid, cube_size=0.1)
 
-ZCORN 0 0 0 0 1 2 1 2
-      1 2 1 2 4 4 4 4
-     /
+    def test_volume_contains_consistency_irregular_skewed(self):
+        return
+        grid = EclGrid.createWave((5,5,5), (2,2,2), irregular=True)
+        self.verify_volume_consistency(grid, cube_size=0.1)
 
-COORD 2 2 0 2 2 0
-      4 2 0 4 2 0
-      2 4 0 2 4 0
-      4 4 0 4 4 0
-     /
-                """)
+    def test_volume_contains_consistency_concave(self):
+        return
+        grid = EclGrid.createWave((5,5,5), (2,2,2), convex=False)
+        self.verify_volume_consistency(grid, cube_size=0.1)
 
-            grid = EclGrid.loadFromGrdecl(dump_file)
-            self.verify_volume_consistency(grid, cube_size=0.1)
-
-    def test_volume_contains_consistency_zigzag(self):
-        with TestAreaContext("volume_consistency_zigzag"):
-            dump_file = "my_grid.grdecl"
-            with open(dump_file, 'w') as f:
-                f.write("""
-SPECGRID 1 1 3 1 F/
-
-ZCORN 0 0 0 0 1 2 2 1
-      1 2 2 1 3 4 4 3
-      3 4 4 3 5 5 5 5
-      /
-
-COORD 2 2 0 2 2 0
-      4 2 0 4 2 0
-      2 4 0 2 4 0
-      4 4 0 4 4 0
-      /
-                """)
-
-            grid = EclGrid.loadFromGrdecl(dump_file)
-            self.verify_volume_consistency(grid, cube_size=0.1)
+    def test_volume_contains_consistency_concave_irregular(self):
+        grid = EclGrid.createWave((5,5,5), (2,2,2), convex=False, irregular=True)
+        self.verify_volume_consistency(grid, cube_size=0.1)

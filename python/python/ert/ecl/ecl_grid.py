@@ -29,6 +29,7 @@ import numpy
 import sys
 import os.path
 import math
+import itertools
 from cwrap import CFILE, BaseCClass
 from ert.util import IntVector
 from ert.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum
@@ -206,14 +207,6 @@ class EclGrid(BaseCClass):
 
         return ecl_grid
 
-
-    def __len__(self):
-        """
-        len(grid) wil return the total number of cells.
-        """
-        return self._get_global_size( )
-
-    
     def __init__(self , filename , apply_mapaxes = True):
         """
         Will create a grid structure from an EGRID or GRID file.
@@ -246,6 +239,12 @@ class EclGrid(BaseCClass):
         a_size = self.getNumActive()
         xyz_s  = '%dx%dx%d' % (self.getNX(),self.getNY(),self.getNZ())
         return self._create_repr('%s%s, global_size = %d, active_size = %d' % (name, xyz_s, g_size, a_size))
+
+    def __len__(self):
+        """
+        len(grid) wil return the total number of cells.
+        """
+        return self._get_global_size( )
 
     def equal(self , other , include_lgr = True , include_nnc = False , verbose = False):
         """
