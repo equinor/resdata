@@ -46,45 +46,15 @@ CORNER_HOME = {
         (3, 3, 0) : 8,  (3, 3, 1) : 17, (3, 3, 2) : 26, (3, 3, 3) : 26
 }
 
+def createGridTestBase(dim, dV, offset=1):
+    return [
+            EclGrid.createRectangular(dim, dV),
+            EclGrid.createWave(dim, dV, offset),
+            EclGrid.createWave(dim, dV, offset, irregular=True),
+            EclGrid.createWave(dim, dV, offset, concave=True),
+            EclGrid.createWave(dim, dV, offset, irregular=True, concave=True),
+            ]
 
-def find_cell_bounderies(grid, cell_index):
-    corners = [grid.getCellCorner(i, cell_index) for i in range(8)]
-
-    bounderies = []
-    for i in range(3):
-        min_val = min(zip(*corners)[i])
-        max_val = max(zip(*corners)[i])
-        bounderies.append((min_val, max_val))
-
-    return bounderies
-
-#
-# The following method will approximate the volume of a cell in a grid
-# in the following manner:
-#
-#   - decompose the space into small cubes of size @cube_size
-#   - if the corner of such a cube closest to origo is contained in the
-#   specified cell (@cell_index), the volume of the small cube is added to
-#   the esimate of the cell volume.
-#
-# This method provides an arbitrary good approximation of the cell volume
-# (by decreasing the value of @cube_size).
-#
-
-def approx_cell_volume(grid, cell_index, cube_size):
-    x_range, y_range, z_range = find_cell_bounderies(grid, cell_index)
-
-    frange = lambda start, stop, step : linspace(start, stop,
-            (int)((stop-start)/float(step)), endpoint=False)
-
-    volume = 0
-    for x in frange(x_range[0], x_range[1], cube_size):
-        for y in frange(y_range[0], y_range[1], cube_size):
-            for z in frange(z_range[0], z_range[1], cube_size):
-                if grid.cell_contains(x, y, z, cell_index):
-                    volume += cube_size**3
-
-    return volume
 
 # This test class should only have test cases which do not require
 # external test data. Tests involving Statoil test data are in the
@@ -379,78 +349,14 @@ class GridTest(ExtendedTestCase):
                     [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
                     )
 
-    def verify_volume_consistency(self, grid, epsilon=1e-6, cube_size=1):
-        grid_size = grid.getNX()*grid.getNY()*grid.getNZ()
-        for i in range(grid_size):
-            ert_volume = grid.cell_volume(i)
-            approx_volume = approx_cell_volume(grid, i, cube_size)
-            self.assertTrue(abs(ert_volume - approx_volume) <= epsilon)
-
-    def test_volume_contains_consistency_rectangular(self):
-        epsilon = 1e-10
-        grid = EclGrid.createRectangular((5,5,5), (2,2,2))
-        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
-        self.assertTrue(min(cell_volumes) >= 0)
-        self.assertTrue(abs(sum(cell_volumes) - 1000) < epsilon)
-
-    def test_volume_skewed(self):
+    def test_volume(self):
         epsilon = 1e-10
         dim     = (10,10,10)
         dV      = (2,2,2)
         tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
 
-        grid = EclGrid.createWave(dim, dV)
-        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
-        self.assertTrue(min(cell_volumes) >= 0)
-        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
-
-    def test_volume_irregular_skewed(self):
-        epsilon = 1e-10
-        dim     = (10,10,10)
-        dV      = (2,2,2)
-        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
-
-        grid = EclGrid.createWave(dim, dV, irregular=True)
-        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
-        self.assertTrue(min(cell_volumes) >= 0)
-        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
-
-    def test_volume_concave(self):
-        epsilon = 1e-10
-        dim     = (10,10,10)
-        dV      = (2,2,2)
-        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
-
-        grid = EclGrid.createWave(dim, dV, concave=True)
-        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
-        self.assertTrue(min(cell_volumes) >= 0)
-        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
-
-    def test_volume_concave_irregular(self):
-        epsilon = 1e-10
-        dim     = (10,10,10)
-        dV      = (2,2,2)
-        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
-
-        grid = EclGrid.createWave(dim, dV, concave=True, irregular=True)
-        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
-        self.assertTrue(min(cell_volumes) >= 0)
-        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
-
-    # TODO: remove
-    def test_contains_concave_irregular(self):
-        dim                 = (3,3,3)
-        dV                  = (1,1,1)
-        x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
-
-        grid = EclGrid.createWave(dim, dV, offset=0.5, concave=True, irregular=True)
-        containments = [0]*10
-        for x in linspace(0, x_max, x_max*10, endpoint=False):
-            for y in linspace(0, y_max, y_max*10, endpoint=False):
-                for z in linspace(0, z_max, z_max*10, endpoint=False):
-                    hits = [grid.cell_contains(x, y, z, i) for i in range(grid.getGlobalSize())].count(True)
-                    self.assertTrue(hits < 10)
-                    containments[hits] = containments[hits]+1
-
-        print containments
-        self.assertEqual(containments[1], sum(containments))
+        grids = createGridTestBase(dim, dV)
+        for grid in grids:
+            cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
+            self.assertTrue(min(cell_volumes) >= 0)
+            self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
