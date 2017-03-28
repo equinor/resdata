@@ -500,43 +500,44 @@ which splits the lower face along the 0-3 diagnoal and the upper face
 along the 5-6 diagonal.
 */
 
+
 static const int tetrahedron_permutations[2][12][3] = {{
-                                                        // Top
+                                                        // K-
                                                         {0,1,2},
                                                         {3,2,1},
-                                                        // North
+                                                        // J+
                                                         {6,2,7},
                                                         {3,7,2},
-                                                        // West
+                                                        // I-
                                                         {0,2,4},
                                                         {6,4,2},
-                                                        // East
+                                                        // I+
                                                         {3,1,7},
                                                         {5,7,1},
-                                                        // South
+                                                        // J-
                                                         {0,4,1},
                                                         {5,1,4},
-                                                        // Bottom
+                                                        // K+
                                                         {5,4,7},
                                                         {6,7,4}
                                                         },
                                                        {
-                                                        // Top
+                                                        // K-
                                                         {1,3,0},
                                                         {2,0,3},
-                                                        // North
+                                                        // J+
                                                         {2,3,6},
                                                         {7,6,3},
-                                                        // West
+                                                        // I-
                                                         {2,6,0},
                                                         {4,0,6},
-                                                        // East
+                                                        // I+
                                                         {7,3,5},
                                                         {1,5,3},
-                                                        // South
+                                                        // J-
                                                         {1,0,5},
                                                         {4,5,0},
-                                                        // Bottom
+                                                        // K+
                                                         {7,5,6},
                                                         {4,6,5}
                                                        }};
@@ -3856,7 +3857,7 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
         const point_type * p,
         const bool max_i, const bool max_j, const bool max_k) {
 
-  int top = 0, north = 1, west = 2, east = 3, south = 4, bottom = 5;
+  int k_minus = 0, j_pluss = 1, i_minus = 2, i_pluss = 3, j_minus = 4, k_pluss = 5;
   bool on[6];
   for(int i = 0; i < 6; ++i) {
     on[i] = (
@@ -3866,16 +3867,16 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
   }
 
   // Not on any of the cell sides
-  if(!on[top] && !on[bottom] && !on[north] && !on[south] && !on[west] && !on[east])
+  if(!on[k_minus] && !on[k_pluss] && !on[j_pluss] && !on[j_minus] && !on[i_minus] && !on[i_pluss])
     return NOT_ON_FACE;
 
   // Not on any of the lower priority sides
-  if(!on[bottom] && !on[north] && !on[east])
+  if(!on[k_pluss] && !on[j_pluss] && !on[i_pluss])
     return BELONGS_TO_CELL;
 
   // Contained in cell due to border conditions
   // NOTE: One should read X <= Y as X "implies" Y
-  if((on[east] <= max_i) && (on[north] <= max_j) && (on[bottom] <= max_k))
+  if((on[i_pluss] <= max_i) && (on[j_pluss] <= max_j) && (on[k_pluss] <= max_k))
     return BELONGS_TO_CELL;
 
   return BELONGS_TO_OTHER;
