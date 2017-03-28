@@ -387,24 +387,52 @@ class GridTest(ExtendedTestCase):
             self.assertTrue(abs(ert_volume - approx_volume) <= epsilon)
 
     def test_volume_contains_consistency_rectangular(self):
+        epsilon = 1e-10
         grid = EclGrid.createRectangular((5,5,5), (2,2,2))
-        self.verify_volume_consistency(grid)
+        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
+        self.assertTrue(min(cell_volumes) >= 0)
+        self.assertTrue(abs(sum(cell_volumes) - 1000) < epsilon)
 
-    def test_volume_contains_consistency_skewed(self):
-        return
-        grid = EclGrid.createWave((5,5,5), (2,2,2))
-        self.verify_volume_consistency(grid, cube_size=0.1)
+    def test_volume_skewed(self):
+        epsilon = 1e-10
+        dim     = (10,10,10)
+        dV      = (2,2,2)
+        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
 
-    def test_volume_contains_consistency_irregular_skewed(self):
-        return
-        grid = EclGrid.createWave((5,5,5), (2,2,2), irregular=True)
-        self.verify_volume_consistency(grid, cube_size=0.1)
+        grid = EclGrid.createWave(dim, dV)
+        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
+        self.assertTrue(min(cell_volumes) >= 0)
+        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
 
-    def test_volume_contains_consistency_concave(self):
-        return
-        grid = EclGrid.createWave((5,5,5), (2,2,2), convex=False)
-        self.verify_volume_consistency(grid, cube_size=0.1)
+    def test_volume_irregular_skewed(self):
+        epsilon = 1e-10
+        dim     = (10,10,10)
+        dV      = (2,2,2)
+        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
 
-    def test_volume_contains_consistency_concave_irregular(self):
-        grid = EclGrid.createWave((5,5,5), (2,2,2), convex=False, irregular=True)
-        self.verify_volume_consistency(grid, cube_size=0.1)
+        grid = EclGrid.createWave(dim, dV, irregular=True)
+        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
+        self.assertTrue(min(cell_volumes) >= 0)
+        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
+
+    def test_volume_concave(self):
+        epsilon = 1e-10
+        dim     = (10,10,10)
+        dV      = (2,2,2)
+        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
+
+        grid = EclGrid.createWave(dim, dV, concave=True)
+        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
+        self.assertTrue(min(cell_volumes) >= 0)
+        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
+
+    def test_volume_concave_irregular(self):
+        epsilon = 1e-10
+        dim     = (10,10,10)
+        dV      = (2,2,2)
+        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
+
+        grid = EclGrid.createWave(dim, dV, concave=True, irregular=True)
+        cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
+        self.assertTrue(min(cell_volumes) >= 0)
+        self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)

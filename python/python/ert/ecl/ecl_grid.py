@@ -204,8 +204,90 @@ class EclGrid(BaseCClass):
         # error is due to a failed malloc.
         if ecl_grid is None:
             raise MemoryError("Failed to allocated regualar grid")
-
+            
         return ecl_grid
+
+    @classmethod
+    def createWave(cls, dims, dV, offset=1, concave=False, irregular=False):
+        """
+        Will create a new grid where each cell is a parallelogram (skewed by z-value).
+        The number of cells are given by @dims = (nx, ny, nz) and the dimention
+        of each cell by @dV = (dx, dy, dz).
+
+        @offset gives how much the layers should fluctuate or "wave" as you
+        move along the X-axis.
+
+        @irregular decides whether the offset should be constant or increase by
+        dz/2 every now and then.
+
+        @concave decides whether the cells are to be convex or not. In
+        particular, if set to False, all cells of the grid will be concave.
+
+        Note that cells in the uppermost layer will have multiple corners
+        at the same point.
+
+        For testing it should give good coverage of the various scenarios this
+        method can produce, by leting @dims be (5,5,5), @dV=(2,2,2), @offset=1,
+        and try all 4 different configurations of @concave and @irregular.
+        """
+
+        # Validate arguments
+        if min(dims + dV) <= 0:
+            raise ValueError("Expected positive grid and cell dimentions")
+
+        if offset < 0:
+            raise ValueError("Expected non-negative offset")
+
+        nx, ny, nz = dims
+        dx, dy, dz = dV
+
+        verbose = lambda l : [elem for elem in l for i in range(2)][1:-1:]
+        flatten = lambda l : [elem for sublist in l for elem in sublist]
+
+        # Compute zcorn
+        z = 0
+        zcorn = [z]*(4*nx*ny)
+        for k in range(nz-1):
+            z = z+dz
+            local_offset = offset + (dz/2. if irregular and k%2 == 0 else 0)
+
+            layer = []
+            for i in range(ny+1):
+                shift = (1 if concave and (i+k/2) % 2 == 1 else 0)
+                path = [z if i%2 == shift else z+local_offset for i in range(nx+1)]
+                layer.append(verbose(path))
+
+            zcorn = zcorn + (2*flatten(verbose(layer)))
+
+        z = z+dz
+        zcorn = zcorn + ([z]*(4*nx*ny))
+
+        if len(zcorn) != 8*nx*ny*nz:
+            raise AssertionError(
+                    "Expected len(zcorn) to be %d, was %d"
+                    % (8*nx*ny*nz, len(zcorn))
+                    )
+
+        # Compute coord
+        coord = []
+        for j, i in itertools.product(range(ny+1), range(nx+1)):
+            x, y = i*dx, j*dy
+            coord = coord + [x, y, 0, x, y, 0]
+
+        if len(coord) != 6*(nx+1)*(ny+1):
+            raise AssertionError(
+                    "Expected len(coord) to be %d, was %d"
+                    % (6*(nx+1)*(ny+1), len(coord))
+                    )
+
+        # Construct grid
+        def constructFloatKW(name, values):
+            kw = EclKW(name, len(values), EclTypeEnum.ECL_FLOAT_TYPE)
+            for i in range(len(values)):
+                kw[i] = values[i]
+            return kw
+
+        return cls.create(dims, constructFloatKW("ZCORN", zcorn), constructFloatKW("COORD", coord), None)
 
     def __init__(self , filename , apply_mapaxes = True):
         """
