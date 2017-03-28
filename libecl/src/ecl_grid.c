@@ -500,30 +500,47 @@ which splits the lower face along the 0-3 diagnoal and the upper face
 along the 5-6 diagonal.
 */
 
-static const int tetrahedron_permutations[2][12][3] = {{{0,1,2},
+
+static const int tetrahedron_permutations[2][12][3] = {{
+                                                        // K-
+                                                        {0,1,2},
                                                         {3,2,1},
-                                                        {0,4,1},
-                                                        {5,1,4},
+                                                        // J+
+                                                        {6,2,7},
+                                                        {3,7,2},
+                                                        // I-
                                                         {0,2,4},
                                                         {6,4,2},
-                                                        {3,7,2},
-                                                        {6,2,7},
+                                                        // I+
                                                         {3,1,7},
                                                         {5,7,1},
+                                                        // J-
+                                                        {0,4,1},
+                                                        {5,1,4},
+                                                        // K+
                                                         {5,4,7},
-                                                        {6,7,4}},
-                                                       {{1,5,3},
+                                                        {6,7,4}
+                                                        },
+                                                       {
+                                                        // K-
                                                         {1,3,0},
-                                                        {1,0,5},
                                                         {2,0,3},
-                                                        {2,6,0},
+                                                        // J+
                                                         {2,3,6},
-                                                        {4,5,0},
-                                                        {4,6,5},
+                                                        {7,6,3},
+                                                        // I-
+                                                        {2,6,0},
                                                         {4,0,6},
-                                                        {7,5,6},
+                                                        // I+
                                                         {7,3,5},
-                                                        {7,6,3}}};
+                                                        {1,5,3},
+                                                        // J-
+                                                        {1,0,5},
+                                                        {4,5,0},
+                                                        // K+
+                                                        {7,5,6},
+                                                        {4,6,5}
+                                                       }};
 
 
 
@@ -1352,6 +1369,31 @@ static bool triangle_contains(const point_type *p0 , const point_type * p1 , con
     else
       return false;
   }
+}
+
+static double parallelogram_area3d(const point_type * p0, const point_type * p1, const point_type * p2) {
+  point_type a = *p1;
+  point_type b = *p2;
+  point_inplace_sub(&a, p0);
+  point_inplace_sub(&b, p0);
+
+  point_type c;
+  point_vector_cross(&c, &a, &b);
+  return sqrt(point_dot_product(&c, &c));
+}
+
+static bool triangle_contains3d(const point_type *p0 , const point_type * p1 , const point_type *p2 , const point_type *p) {
+  double epsilon = 1e-10;
+  double vt = parallelogram_area3d(p0, p1, p2);
+
+  if (vt < epsilon)  /* zero size cells do not contain anything. */
+    return false;
+
+  double v1 = parallelogram_area3d(p0, p1, p);
+  double v2 = parallelogram_area3d(p0, p2, p);
+  double v3 = parallelogram_area3d(p1, p2, p);
+
+  return (fabs( vt - (v1 + v2 + v3 )) < epsilon);
 }
 
 
@@ -3764,6 +3806,81 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool
 
 /*****************************************************************/
 
+typedef enum {NOT_ON_FACE, BELONGS_TO_CELL, BELONGS_TO_OTHER} face_status_enum;
+
+/*
+    Returns whether the given point is contained within the minimal cube
+    encapsulating the cell that has all faces parallel to a coordinate plane.
+*/
+static bool ecl_grid_cube_contains(const ecl_cell_type * cell, const point_type * p) {
+  if (p->z < ecl_cell_min_z( cell ))
+    return false;
+
+  if (p->z > ecl_cell_max_z( cell ))
+    return false;
+
+  if (p->x < ecl_cell_min_x( cell ))
+    return false;
+
+  if (p->x > ecl_cell_max_x( cell ))
+    return false;
+
+  if (p->y < ecl_cell_min_y( cell ))
+    return false;
+
+  if (p->y > ecl_cell_max_y( cell ))
+    return false;
+
+  return true;
+}
+
+/*
+   Returns true if and only if p is on plane "plane" of cell when decomposed by "method".
+*/
+static bool ecl_grid_on_plane(const ecl_cell_type * cell, const int method,
+        const int plane, const point_type * p) {
+  const point_type * p0 = &cell->corner_list[ tetrahedron_permutations[method][plane][0] ];
+  const point_type * p1 = &cell->corner_list[ tetrahedron_permutations[method][plane][1] ];
+  const point_type * p2 = &cell->corner_list[ tetrahedron_permutations[method][plane][2] ];
+  return triangle_contains3d(p0, p1, p2, p);
+}
+
+/*
+   Returns true if and only if p is on one of the cells faces and
+   "belongs" to this cell. This is done such that every point is contained in at most
+   one point.
+
+   Note: The correctness of this function relies *HEAVILY* on the permutation of the
+   tetrahedrons in the decompositions.
+*/
+static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const int method,
+        const point_type * p,
+        const bool max_i, const bool max_j, const bool max_k) {
+
+  int k_minus = 0, j_pluss = 1, i_minus = 2, i_pluss = 3, j_minus = 4, k_pluss = 5;
+  bool on[6];
+  for(int i = 0; i < 6; ++i) {
+    on[i] = (
+        ecl_grid_on_plane(cell, method, 2*i, p) ||
+        ecl_grid_on_plane(cell, method, 2*i+1, p)
+            );
+  }
+
+  // Not on any of the cell sides
+  if(!on[k_minus] && !on[k_pluss] && !on[j_pluss] && !on[j_minus] && !on[i_minus] && !on[i_pluss])
+    return NOT_ON_FACE;
+
+  // Not on any of the lower priority sides
+  if(!on[k_pluss] && !on[j_pluss] && !on[i_pluss])
+    return BELONGS_TO_CELL;
+
+  // Contained in cell due to border conditions
+  // NOTE: One should read X <= Y as X "implies" Y
+  if((on[i_pluss] <= max_i) && (on[j_pluss] <= max_j) && (on[k_pluss] <= max_k))
+    return BELONGS_TO_CELL;
+
+  return BELONGS_TO_OTHER;
+}
 
 /*
   Observe the following quirks with this functions:
@@ -3777,146 +3894,63 @@ bool ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool
     warning will be printed on stderr if a cell is discarded due to
     twist.
 */
-
-
 bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j , int k, double x , double y , double z) {
   const double min_volume = 1e-9;
   point_type p;
   ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , ecl_grid_get_global_index3( ecl_grid , i, j , k ));
   point_set( &p , x , y , z);
-  /*
-    1. first check if the point z value is below the deepest point of
-       the cell, or above the shallowest => return false.
+  int method = (i + j + k) % 2; // Chooses the approperiate decomposition method for the cell
 
-    2. should do similar fast checks in x/y direction.
-
-    3. full geometric verification.
-  */
   if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
     //printf("False tainted \n");
     return false;
   }
 
-  if (p.z < ecl_cell_min_z( cell ))
+  if (!ecl_grid_cube_contains(cell, &p))
     return false;
 
-  if (p.z > ecl_cell_max_z( cell ))
+  // Checks if point is on one of the faces of the cell, and if so whether it
+  // "belongs" to this cell.
+  bool max_i = (i == ecl_grid->nx-1);
+  bool max_j = (j == ecl_grid->ny-1);
+  bool max_k = (k == ecl_grid->nz-1);
+  face_status_enum face_status = ecl_grid_on_cell_face(cell, method, &p, max_i, max_j, max_k);
+
+  if(face_status != NOT_ON_FACE)
+    return face_status == BELONGS_TO_CELL;
+
+  if (ecl_cell_get_twist(cell) > 0) {
+    fprintf(stderr, "** Warning: Point (%g,%g,%g) is in vicinity of twisted cell: (%d,%d,%d) - function:%s might be mistaken.\n", x,y,z,i,j,k, __func__);
     return false;
-
-  if (p.x < ecl_cell_min_x( cell ))
-    return false;
-
-  if (p.x > ecl_cell_max_x( cell ))
-    return false;
-
-  if (p.y < ecl_cell_min_y( cell ))
-    return false;
-
-  if (p.y > ecl_cell_max_y( cell ))
-    return false;
-
-  {
-    /*
-      Special case checks for the corner points.
-    */
-    if (point_equal( &p , &cell->corner_list[0]))
-      return true;
-
-    if (point_equal( &p , &cell->corner_list[1] )) {
-      if (i == (ecl_grid->nx - 1))
-        return true;
-      else
-        return false;
-    }
-
-    if (point_equal( &p , &cell->corner_list[2])) {
-      if (j == (ecl_grid->ny - 1))
-        return true;
-      else
-        return false;
-    }
-
-    if (point_equal( &p , &cell->corner_list[3])) {
-      if ((j == (ecl_grid->ny - 1)) &&
-          (i == (ecl_grid->nx - 1)))
-        return true;
-      else
-        return false;
-    }
-
-    if (point_equal( &p , &cell->corner_list[4])) {
-      if (k == (ecl_grid->nz - 1))
-        return true;
-      else
-        return false;
-    }
-
-    if (point_equal( &p , &cell->corner_list[5] )) {
-      if ((i == (ecl_grid->nx - 1)) &&
-          (k == (ecl_grid->nz - 1)))
-        return true;
-      else
-        return false;
-    }
-
-    if (point_equal( &p , &cell->corner_list[6] )) {
-      if ((j == (ecl_grid->ny - 1)) &&
-          (k == (ecl_grid->nz - 1)))
-        return true;
-      else
-        return false;
-    }
-
-    if (point_equal( &p , &cell->corner_list[7] )) {
-      if ((i == (ecl_grid->nx - 1)) &&
-          (j == (ecl_grid->ny - 1)) &&
-          (k == (ecl_grid->nz - 1)))
-        return true;
-      else
-        return false;
-    }
-
-    if (ecl_cell_get_twist(cell) > 0) {
-      fprintf(stderr, "** Warning: Point (%g,%g,%g) is in vicinity of twisted cell: (%d,%d,%d) - function:%s might be mistaken.\n", x,y,z,i,j,k, __func__);
-      return false;
-    }
-
-    {
-      double signed_volume = ecl_cell_get_signed_volume( cell );
-      if (fabs( signed_volume) > min_volume) {
-        double sign = 1.0;
-        point_type * p0;
-        point_type * p1;
-        point_type * p2;
-        int phase0 = 0;
-        int method = (phase0 + i + j + k) % 2;
-
-        if (signed_volume < 0)
-          sign = -1;
-        {
-          for (int plane_nr = 0; plane_nr < 12; plane_nr++) {
-
-            p0 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][0] ];
-            p1 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][1] ];
-            p2 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][2] ];
-
-            if (point_equal(p0, p1) || point_equal(p0,p2) || point_equal(p1,p2))
-              continue;
-
-            if (sign * point3_plane_distance(p0 , p1 , p2 , &p ) < 0)
-              return false;
-          }
-          return true;
-        }
-      }
-
-      return false;
-    }
   }
+
+  // We now check whether the point is strictly inside the cell
+  double signed_volume = ecl_cell_get_signed_volume( cell );
+  if (fabs(signed_volume) <= min_volume)
+    return false;
+
+  double sign = 1.0;
+  point_type * p0;
+  point_type * p1;
+  point_type * p2;
+
+  if (signed_volume < 0)
+    sign = -1;
+
+  for (int plane_nr = 0; plane_nr < 12; plane_nr++) {
+    p0 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][0] ];
+    p1 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][1] ];
+    p2 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][2] ];
+
+    if (point_equal(p0, p1) || point_equal(p0,p2) || point_equal(p1,p2))
+      continue;
+
+    if (sign * point3_plane_distance(p0 , p1 , p2 , &p ) < 0)
+      return false;
+  }
+
+  return true;
 }
-
-
-
 
 
 bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index, double x , double y , double z) {
