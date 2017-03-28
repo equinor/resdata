@@ -436,3 +436,21 @@ class GridTest(ExtendedTestCase):
         cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
         self.assertTrue(min(cell_volumes) >= 0)
         self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
+
+    # TODO: remove
+    def test_contains_concave_irregular(self):
+        dim                 = (3,3,3)
+        dV                  = (1,1,1)
+        x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
+
+        grid = EclGrid.createWave(dim, dV, concave=True, irregular=True)
+        containments = [0]*10
+        for x in linspace(0, x_max, x_max*10, endpoint=False):
+            for y in linspace(0, y_max, y_max*10, endpoint=False):
+                for z in linspace(0, z_max, z_max*10, endpoint=False):
+                    hits = [grid.cell_contains(x, y, z, i) for i in range(grid.getGlobalSize())].count(True)
+                    self.assertTrue(hits < 10)
+                    containments[hits] = containments[hits]+1
+
+        print containments
+        self.assertEqual(containments[1], sum(containments))

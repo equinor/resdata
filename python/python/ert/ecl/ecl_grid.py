@@ -214,6 +214,9 @@ class EclGrid(BaseCClass):
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
         of each cell by @dV = (dx, dy, dz).
 
+        All cells are guaranteed to not be self-intersecting. Hence, no twisted
+        cells and somewhat meaningfull cells.
+
         @offset gives how much the layers should fluctuate or "wave" as you
         move along the X-axis.
 
@@ -223,7 +226,7 @@ class EclGrid(BaseCClass):
         @concave decides whether the cells are to be convex or not. In
         particular, if set to False, all cells of the grid will be concave.
 
-        Note that cells in the uppermost layer will have multiple corners
+        Note that cells in the lowermost layer can have multiple corners
         at the same point.
 
         For testing it should give good coverage of the various scenarios this
@@ -262,11 +265,7 @@ class EclGrid(BaseCClass):
         z = z+dz
         zcorn = zcorn + ([z]*(4*nx*ny))
 
-        if len(zcorn) != 8*nx*ny*nz:
-            raise AssertionError(
-                    "Expected len(zcorn) to be %d, was %d"
-                    % (8*nx*ny*nz, len(zcorn))
-                    )
+        cls.assertZcorn(nx, ny, nz, zcorn)
 
         # Compute coord
         coord = []
@@ -274,11 +273,7 @@ class EclGrid(BaseCClass):
             x, y = i*dx, j*dy
             coord = coord + [x, y, 0, x, y, 0]
 
-        if len(coord) != 6*(nx+1)*(ny+1):
-            raise AssertionError(
-                    "Expected len(coord) to be %d, was %d"
-                    % (6*(nx+1)*(ny+1), len(coord))
-                    )
+        cls.assertCoord(nx, ny, nz, coord)
 
         # Construct grid
         def constructFloatKW(name, values):
@@ -288,6 +283,67 @@ class EclGrid(BaseCClass):
             return kw
 
         return cls.create(dims, constructFloatKW("ZCORN", zcorn), constructFloatKW("COORD", coord), None)
+
+    @classmethod
+    def assertZcorn(cls, nx, ny, nz, zcorn):
+        """
+
+        Raises an AssertionError if the zcorn is not as expected. In
+        patricular, it is verified that:
+
+            - zcorn has the approperiate length (8*nx*ny*nz) and
+            - that no cell is twisted.
+
+        """
+
+        if len(zcorn) != 8*nx*ny*nz:
+            raise AssertionError(
+                    "Expected len(zcorn) to be %d, was %d" %
+                    (8*nx*ny*nz, len(zcorn))
+                    )
+
+        plane_size = 4*nx*ny
+        for p in range(8*nx*ny*nz - plane_size):
+            if zcorn[p] > zcorn[p + plane_size]:
+                raise AssertionError(
+                    "Twisted cell was created. " +
+                    "Decrease offset or increase dz to avoid this!"
+                    )
+
+    @classmethod
+    def assertCoord(cls, nx, ny, nz, coord):
+        """
+
+        Raises an AssertionError if the coord is not as expected. In
+        particular, it is verfied that:
+
+            - coord has the approperiate length (6*(nx+1)*(ny+1)) and
+            - that no two coord's are crossing when considering any of the
+              three "standard planes" (xy, xz, yz).
+
+        """
+
+        if len(coord) != 6*(nx+1)*(ny+1):
+            raise AssertionError(
+                    "Expected len(coord) to be %d, was %d" %
+                    (6*(nx+1)*(ny+1), len(coord))
+                    )
+
+        coord = [
+                    [coord[i+ix:i+6:3] for ix in range(3)]
+                    for i in range(0, len(coord), 6)
+                ]
+
+        # True if and only if line segment p is a super set of q
+        is_super = lambda p, q : min(p) < min(q) <= max(q) < max(p)
+
+        for coord1, coord2 in itertools.product(coord, repeat=2):
+            for p, q in zip(coord1, coord2):
+                if is_super(p, q) or is_super(q, p):
+                    raise AssertionError(
+                        "Coords %r and %r are axis-wise crossing!" %
+                        (zip(*coord1), zip(*coord2))
+                        )
 
     def __init__(self , filename , apply_mapaxes = True):
         """
