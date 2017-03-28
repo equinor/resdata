@@ -3952,11 +3952,6 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
   return true;
 }
 
-#undef NOT_ON_FACE
-#undef BELONGS_TO_CELL
-#undef BELONGS_TO_OTHER
-
-
 
 bool ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index, double x , double y , double z) {
   int i,j,k;
