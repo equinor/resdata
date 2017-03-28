@@ -30,13 +30,6 @@
 #include <ert/util/mzran.h>
 
 
-
-
-
-
-
-
-
 void test_resize() {
   matrix_type * m1 = matrix_alloc(5,5);
   matrix_type * m2 = matrix_alloc(5,5);
