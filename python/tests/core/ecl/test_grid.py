@@ -443,7 +443,7 @@ class GridTest(ExtendedTestCase):
         dV                  = (1,1,1)
         x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
 
-        grid = EclGrid.createWave(dim, dV, concave=True, irregular=True)
+        grid = EclGrid.createWave(dim, dV, offset=0.5, concave=True, irregular=True)
         containments = [0]*10
         for x in linspace(0, x_max, x_max*10, endpoint=False):
             for y in linspace(0, y_max, y_max*10, endpoint=False):

@@ -230,9 +230,14 @@ class EclGrid(BaseCClass):
         at the same point.
 
         For testing it should give good coverage of the various scenarios this
-        method can produce, by leting @dims be (5,5,5), @dV=(2,2,2), @offset=1,
+        method can produce, by leting @dims be (10,10,10), @dV=(2,2,2), @offset=1,
         and try all 4 different configurations of @concave and @irregular.
+
+        TODO: faults, translate, scale, rotate, skew
         """
+
+        nx, ny, nz = dims
+        dx, dy, dz = dV
 
         # Validate arguments
         if min(dims + dV) <= 0:
@@ -241,8 +246,11 @@ class EclGrid(BaseCClass):
         if offset < 0:
             raise ValueError("Expected non-negative offset")
 
-        nx, ny, nz = dims
-        dx, dy, dz = dV
+        if concave and offset + (dz/2. if irregular else 0) > dz:
+            raise AssertionError("Arguments can result in self-" +
+                    "intersecting cells. Increase dz, deactivate eiter " +
+                    "irreguler or concave, or decrease offset to avoid " +
+                    "any problems")
 
         verbose = lambda l : [elem for elem in l for i in range(2)][1:-1:]
         flatten = lambda l : [elem for sublist in l for elem in sublist]
