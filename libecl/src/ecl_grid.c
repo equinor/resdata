@@ -1259,8 +1259,31 @@ static inline double tetrahedron_volume6( tetrahedron_type tet ) {
   return tet.p0.x*bxc.x + tet.p0.y*bxc.y + tet.p0.z*bxc.z;
 }
 
+/*
+ Returns true if and only if the point p is inside the tetrahedron tet.
+*/
+static bool tetrahedron_contains(tetrahedron_type tet, const point_type p) {
+  const double epsilon = 1e-9;
+  double tetra_volume = fabs(tetrahedron_volume6(tet));
 
+  // Decomposes tetrahedron into 4 new tetrahedrons
+  point_type tetra_points[4] = {tet.p0, tet.p1, tet.p2, tet.p3};
+  double decomposition_volume = 0;
+  for(int i = 0; i < 4; ++i) {
+      const point_type tmp = tetra_points[i];
+      tetra_points[i] = p;
 
+      // Compute volum of decomposition tetrahedron
+      tetrahedron_type dec_tet;
+      dec_tet.p0 = tetra_points[0]; dec_tet.p1 = tetra_points[1];
+      dec_tet.p2 = tetra_points[2]; dec_tet.p3 = tetra_points[3];
+      decomposition_volume += fabs(tetrahedron_volume6(dec_tet));
+
+      tetra_points[i] = tmp;
+  }
+
+  return (fabs(tetra_volume - decomposition_volume) < epsilon);
+}
 
 /*
  * This function used to account for a significant amount of execution time
@@ -3899,6 +3922,96 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
 }
 
 /*
+  Checks if p is contained in cell, including faces. The concludes correctly if cell is convex,
+  otherwise it might very well give false negatives (but not false positives).
+*/
+static bool convex_cell_contains( ecl_cell_type * cell, const int method, const point_type * p) {
+  const double min_volume = 1e-9;
+  double signed_volume = ecl_cell_get_signed_volume( cell );
+  if (fabs(signed_volume) <= min_volume)
+    return false;
+
+  double sign = 1.0;
+  point_type * p0;
+  point_type * p1;
+  point_type * p2;
+
+  if (signed_volume < 0)
+    sign = -1;
+
+  for (int plane_nr = 0; plane_nr < 12; plane_nr++) {
+    p0 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][0] ];
+    p1 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][1] ];
+    p2 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][2] ];
+
+    if (point_equal(p0, p1) || point_equal(p0,p2) || point_equal(p1,p2))
+      continue;
+
+    if (sign * point3_plane_distance(p0 , p1 , p2 , p ) < 0)
+      return false;
+  }
+
+  return true;
+}
+
+/*
+ Returns true if and only if the protrusion defined by p0, p1, p2, p3
+ (which can be obsered to be a tetrahedron) contains p,
+*/
+static bool protrusion_contains(const point_type * p0,
+                                const point_type * p1,
+                                const point_type * p2,
+                                const point_type * p3,
+                                const point_type * p) {
+
+  tetrahedron_type pro_tet;
+  pro_tet.p0 = *p0;
+  pro_tet.p1 = *p1;
+  pro_tet.p2 = *p2;
+  pro_tet.p3 = *p3;
+
+  return tetrahedron_contains(pro_tet, *p);
+}
+
+/*
+ Returns true if and only if the cell "cell" decomposed by "method" contains the point "p"
+ in any of its possibly 4 protrusions.
+
+ Note: This function relies *HEAVILY* on the permutation of tetrahedron_permutations.
+*/
+static bool cell_protrusion_contains( const ecl_cell_type * cell, int method, const point_type * p) {
+
+  const point_type * dia[2][2] = {
+      {
+          &cell->corner_list[tetrahedron_permutations[method][0][1]],
+          &cell->corner_list[tetrahedron_permutations[method][0][2]]
+      },
+      {
+          &cell->corner_list[tetrahedron_permutations[method][10][1]],
+          &cell->corner_list[tetrahedron_permutations[method][10][2]]
+      }
+  };
+
+  const point_type * extra[2][2] = {
+      {
+          &cell->corner_list[tetrahedron_permutations[method][0][0]],
+          &cell->corner_list[tetrahedron_permutations[method][1][0]]
+      },
+      {
+          &cell->corner_list[tetrahedron_permutations[method][10][0]],
+          &cell->corner_list[tetrahedron_permutations[method][11][0]]
+      }
+  };
+
+  for(int i = 0; i < 2; ++i)
+    for(int k = 0; k < 2; ++k)
+      if(protrusion_contains(dia[i][0], dia[i][1], extra[i][k], dia[(i+1)%2][k], p))
+        return true;
+
+  return false;
+}
+
+/*
   Observe the following quirks with this functions:
 
   - It is quite simple to create a cell where the center point is
@@ -3914,7 +4027,6 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
     containtment of points of cell faces.
 */
 bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j , int k, double x , double y , double z) {
-  const double min_volume = 1e-9;
   point_type p;
   ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , ecl_grid_get_global_index3( ecl_grid , i, j , k ));
   point_set( &p , x , y , z);
@@ -3944,31 +4056,12 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
   }
 
   // We now check whether the point is strictly inside the cell
-  double signed_volume = ecl_cell_get_signed_volume( cell );
-  if (fabs(signed_volume) <= min_volume)
-    return false;
+  if(convex_cell_contains(cell, method, &p))
+    return true;
 
-  double sign = 1.0;
-  point_type * p0;
-  point_type * p1;
-  point_type * p2;
-
-  if (signed_volume < 0)
-    sign = -1;
-
-  for (int plane_nr = 0; plane_nr < 12; plane_nr++) {
-    p0 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][0] ];
-    p1 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][1] ];
-    p2 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][2] ];
-
-    if (point_equal(p0, p1) || point_equal(p0,p2) || point_equal(p1,p2))
-      continue;
-
-    if (sign * point3_plane_distance(p0 , p1 , p2 , &p ) < 0)
-      return false;
-  }
-
-  return true;
+  // If the cell is concave, p might still be in the cell although
+  // convex_cell_contains reporteted negatively
+  return cell_protrusion_contains(cell, method, &p);
 }
 
 

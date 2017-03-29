@@ -379,3 +379,58 @@ class GridTest(ExtendedTestCase):
                     containments[hits] = containments[hits]+1
 
         self.assertEqual(containments[1], sum(containments))
+
+    def test_unique_containment_concave(self):
+        dim                 = (3,3,3)
+        dV                  = (1,1,1)
+        steps_per_unit      = 10
+        x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
+
+        grid = EclGrid.createGrid(dim, dV,offset=1, concave=True)
+        containments = [0]*10
+        origo_shift = 1
+        for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
+            for y in linspace(origo_shift, origo_shift+y_max, y_max*steps_per_unit+1):
+                for z in linspace(0, z_max, z_max*steps_per_unit+1):
+                    hits = [grid.cell_contains(x, y, z, i) for i in range(grid.getGlobalSize())].count(True)
+                    self.assertTrue(hits < 10)
+                    containments[hits] = containments[hits]+1
+
+        self.assertEqual(containments[1], sum(containments))
+
+    def test_unique_containment_concave_large(self):
+        dim                 = (10,10,10)
+        dV                  = (1,1,1)
+        steps_per_unit      = 3
+        x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
+
+        grid = EclGrid.createGrid(dim, dV,offset=0.9, concave=True)
+        containments = [0]*10
+        origo_shift = 1
+        for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
+            for y in linspace(origo_shift, origo_shift+y_max, y_max*steps_per_unit+1):
+                for z in linspace(0, z_max, z_max*steps_per_unit+1):
+                    hits = [grid.cell_contains(x, y, z, i) for i in range(grid.getGlobalSize())].count(True)
+                    self.assertTrue(hits < 10)
+                    containments[hits] = containments[hits]+1
+
+        print containments
+        self.assertEqual(containments[1], sum(containments))
+
+    def test_unique_containment_concave_irregular(self):
+        dim                 = (3,3,3)
+        dV                  = (1,1,1)
+        steps_per_unit      = 10
+        x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
+
+        grid = EclGrid.createGrid(dim, dV,offset=0.5, concave=True, irregular=True)
+        containments = [0]*10
+        origo_shift = 1
+        for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
+            for y in linspace(origo_shift, origo_shift+y_max, y_max*steps_per_unit+1):
+                for z in linspace(0, z_max, z_max*steps_per_unit+1):
+                    hits = [grid.cell_contains(x, y, z, i) for i in range(grid.getGlobalSize())].count(True)
+                    self.assertTrue(hits < 10)
+                    containments[hits] = containments[hits]+1
+
+        self.assertEqual(containments[1], sum(containments))
