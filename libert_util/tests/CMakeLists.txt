@@ -12,7 +12,13 @@ link_directories( ${ERT_BINARY_DIR}/libert_util/src )
 
 add_executable( test_thread_pool test_thread_pool.c )
 target_link_libraries( test_thread_pool ert_util  )
-add_test( test_thread_pool valgrind --error-exitcode=1 --tool=memcheck ${EXECUTABLE_OUTPUT_PATH}/test_thread_pool )
+
+find_library( VALGRIND NAMES valgr )
+if (VALGRIND)
+    add_test( test_thread_pool valgrind --error-exitcode=1 --tool=memcheck ${EXECUTABLE_OUTPUT_PATH}/test_thread_pool )
+else()
+    add_test( test_thread_pool ${EXECUTABLE_OUTPUT_PATH}/test_thread_pool )
+endif()
 
 add_executable( ert_util_matrix ert_util_matrix.c )
 target_link_libraries( ert_util_matrix ert_util  )
