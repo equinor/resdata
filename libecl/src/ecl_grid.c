@@ -3892,6 +3892,10 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
             );
   }
 
+  // Not on any of the cell sides
+  if(!on[k_minus] && !on[k_pluss] && !on[j_pluss] && !on[j_minus] && !on[i_minus] && !on[i_pluss])
+    return NOT_ON_FACE;
+
   // Handles side collapses, i.e. the point is contained on opposite sides.
   // Cell passes on the responsibility if not on border of grid.
   bool i_collapse = (on[i_minus] && on[i_pluss]);
@@ -3905,9 +3909,9 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
   on[j_minus] &= !on[j_pluss];
   on[k_minus] &= !on[k_pluss];
 
-  // Not on any of the cell sides
+  // Removed from all sides
   if(!on[k_minus] && !on[k_pluss] && !on[j_pluss] && !on[j_minus] && !on[i_minus] && !on[i_pluss])
-    return NOT_ON_FACE;
+    return BELONGS_TO_OTHER;
 
   // Not on any of the lower priority sides
   if(!on[k_pluss] && !on[j_pluss] && !on[i_pluss])
