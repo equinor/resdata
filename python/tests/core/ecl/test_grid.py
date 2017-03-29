@@ -49,10 +49,10 @@ CORNER_HOME = {
 def createGridTestBase(dim, dV, offset=1):
     return [
             EclGrid.createRectangular(dim, dV),
-            EclGrid.createWave(dim, dV, offset),
-            EclGrid.createWave(dim, dV, offset, irregular=True),
-            EclGrid.createWave(dim, dV, offset, concave=True),
-            EclGrid.createWave(dim, dV, offset, irregular=True, concave=True),
+            EclGrid.createGrid(dim, dV, offset),
+            EclGrid.createGrid(dim, dV, offset, irregular=True),
+            EclGrid.createGrid(dim, dV, offset, concave=True),
+            EclGrid.createGrid(dim, dV, offset, irregular=True, concave=True),
             ]
 
 
@@ -360,3 +360,27 @@ class GridTest(ExtendedTestCase):
             cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
             self.assertTrue(min(cell_volumes) >= 0)
             self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
+
+    # TODO: Make into meta test
+    def test_unique_containment(self):
+        dim                 = (3,3,3)
+        dV                  = (1,1,1)
+        steps_per_unit      = 10
+        x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
+        print x_max, y_max, z_max
+
+        grid = EclGrid.createGrid(dim, dV,offset=0.9)
+        containments = [0]*10
+        origo_shift = 1
+        for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
+            for y in linspace(origo_shift, origo_shift+y_max, y_max*steps_per_unit+1):
+                for z in linspace(0, z_max, z_max*steps_per_unit+1):
+                    hits = [grid.cell_contains(x, y, z, i) for i in range(grid.getGlobalSize())].count(True)
+                    self.assertTrue(hits < 10)
+                    containments[hits] = containments[hits]+1
+
+                    if hits == 0:
+                        print x, y, z
+
+        print containments
+        self.assertEqual(containments[1], sum(containments))

@@ -208,7 +208,8 @@ class EclGrid(BaseCClass):
         return ecl_grid
 
     @classmethod
-    def createWave(cls, dims, dV, offset=1, concave=False, irregular=False):
+    def createGrid(cls, dims, dV, offset=1, concave=False, irregular=False,
+            escape_origo_shift=(1,1,0)):
         """
         Will create a new grid where each cell is a parallelogram (skewed by z-value).
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
@@ -226,6 +227,9 @@ class EclGrid(BaseCClass):
         @concave decides whether the cells are to be convex or not. In
         particular, if set to False, all cells of the grid will be concave.
 
+        @escape_origo_shift is used to prevent any cell of having corners in (0,0,z)
+        as there is a heuristic in ecl_grid.c that marks such cells as tainted.
+
         Note that cells in the lowermost layer can have multiple corners
         at the same point.
 
@@ -234,6 +238,7 @@ class EclGrid(BaseCClass):
         and try all 4 different configurations of @concave and @irregular.
 
         TODO: faults, translate, scale, rotate, skew
+        TODO: Specify a sensible test base
         """
 
         nx, ny, nz = dims
@@ -256,7 +261,7 @@ class EclGrid(BaseCClass):
         flatten = lambda l : [elem for sublist in l for elem in sublist]
 
         # Compute zcorn
-        z = 0
+        z = escape_origo_shift[2]
         zcorn = [z]*(4*nx*ny)
         for k in range(nz-1):
             z = z+dz
@@ -278,7 +283,7 @@ class EclGrid(BaseCClass):
         # Compute coord
         coord = []
         for j, i in itertools.product(range(ny+1), range(nx+1)):
-            x, y = i*dx, j*dy
+            x, y = i*dx+escape_origo_shift[0], j*dy+escape_origo_shift[1]
             coord = coord + [x, y, 0, x, y, 0]
 
         cls.assertCoord(nx, ny, nz, coord)
