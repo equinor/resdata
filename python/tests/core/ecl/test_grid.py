@@ -362,14 +362,13 @@ class GridTest(ExtendedTestCase):
             self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
 
     # TODO: Make into meta test
-    def test_unique_containment(self):
-        dim                 = (3,3,3)
+    def test_unique_containment_skewed(self):
+        dim                 = (6,6,6)
         dV                  = (1,1,1)
-        steps_per_unit      = 10
+        steps_per_unit      = 3
         x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
-        print x_max, y_max, z_max
 
-        grid = EclGrid.createGrid(dim, dV,offset=0.9)
+        grid = EclGrid.createGrid(dim, dV,offset=1)
         containments = [0]*10
         origo_shift = 1
         for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
@@ -379,8 +378,4 @@ class GridTest(ExtendedTestCase):
                     self.assertTrue(hits < 10)
                     containments[hits] = containments[hits]+1
 
-                    if hits == 0:
-                        print x, y, z
-
-        print containments
         self.assertEqual(containments[1], sum(containments))

@@ -237,7 +237,7 @@ class EclGrid(BaseCClass):
         method can produce, by leting @dims be (10,10,10), @dV=(2,2,2), @offset=1,
         and try all 4 different configurations of @concave and @irregular.
 
-        TODO: faults, translate, scale, rotate, skew
+        TODO: faults, translate, scale, rotate, skew, overlapping corners
         TODO: Specify a sensible test base
         """
 

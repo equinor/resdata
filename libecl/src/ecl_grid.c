@@ -1387,9 +1387,6 @@ static bool triangle_contains3d(const point_type *p0 , const point_type * p1 , c
   double epsilon = 1e-10;
   double vt = parallelogram_area3d(p0, p1, p2);
 
-  if (vt < epsilon)  /* zero size cells do not contain anything. */
-    return false;
-
   double v1 = parallelogram_area3d(p0, p1, p);
   double v2 = parallelogram_area3d(p0, p2, p);
   double v3 = parallelogram_area3d(p1, p2, p);
@@ -3851,6 +3848,11 @@ static bool ecl_grid_on_plane(const ecl_cell_type * cell, const int method,
    "belongs" to this cell. This is done such that every point is contained in at most
    one point.
 
+   Remark: There is a single caveat when using this function and that is if a
+   point is on the surface of a/many cells, but for all of these cells the point is contained
+   on two opposite sides of cell. This is however a somewhat obscure situation and it is
+   not possible to circumvent by only considering the grid cell by cell.
+
    Note: The correctness of this function relies *HEAVILY* on the permutation of the
    tetrahedrons in the decompositions.
 */
@@ -3866,6 +3868,19 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
         ecl_grid_on_plane(cell, method, 2*i+1, p)
             );
   }
+
+  // Handles side collapses, i.e. the point is contained on opposite sides.
+  // Cell passes on the responsibility if not on border of grid.
+  bool i_collapse = (on[i_minus] && on[i_pluss]);
+  bool j_collapse = (on[j_minus] && on[j_pluss]);
+  bool k_collapse = (on[k_minus] && on[k_pluss]);
+
+  for(int i = 0; i < 6; ++i)
+    on[i] &= (!i_collapse || max_i) && (!j_collapse || max_j) && (!k_collapse || max_k);
+
+  on[i_minus] &= !on[i_pluss];
+  on[j_minus] &= !on[j_pluss];
+  on[k_minus] &= !on[k_pluss];
 
   // Not on any of the cell sides
   if(!on[k_minus] && !on[k_pluss] && !on[j_pluss] && !on[j_minus] && !on[i_minus] && !on[i_pluss])
@@ -3894,6 +3909,9 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
     twisted cell the algorithm will incorrectly return false; a
     warning will be printed on stderr if a cell is discarded due to
     twist.
+
+  - See the documentation of ecl_grid_on_cell_face for caveats regarding
+    containtment of points of cell faces.
 */
 bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j , int k, double x , double y , double z) {
   const double min_volume = 1e-9;
