@@ -272,10 +272,6 @@ class Surface(BaseCClass):
             else:
                 fmt = 'Index error: i=%d not in [0,nx=%d) or j=%d not in [0,ny=%d).'
                 raise IndexError(fmt % (i, nx, j, ny))
-
-        from sys import stdout
-        stdout.write('idx=%d\n' % idx)
-        stdout.flush()
         x,y = self.getXY(idx)
         z = self[idx]
         return (x,y,z)
