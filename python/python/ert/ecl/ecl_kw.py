@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'ecl_kw.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'ecl_kw.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Support for working with one keyword from ECLIPSE file.
 
@@ -22,11 +22,11 @@ of a simple header and blocks of data. A keyword typically looks like:
   'SWAT    '  10000  'REAL'
   0.05  0.08  0.08  0.10
   0.11  0.11  0.10  0.09
-  ....  
+  ....
 
 I.e. it starts with of header consisting of a 8 characters name, a
 length and a datatype, immediately followed by the actual
-data. 
+data.
 
 Altough the term "restart format" is used to describe the format, this
 particular format is not limited to restart files; it is (at least)
@@ -72,7 +72,7 @@ class EclKW(BaseCClass):
     _fread_alloc       = EclPrototype("ecl_kw_obj ecl_kw_fread_alloc( fortio )" , bind = False)
     _load_grdecl       = EclPrototype("ecl_kw_obj ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE , char* , bool , int )" , bind = False)
     _fseek_grdecl      = EclPrototype("bool     ecl_kw_grdecl_fseek_kw(char* , bool , FILE )" , bind = False)
-    
+
     _sub_copy          = EclPrototype("ecl_kw_obj ecl_kw_alloc_sub_copy( ecl_kw , char*, int , int)")
     _copyc             = EclPrototype("ecl_kw_obj ecl_kw_alloc_copy( ecl_kw )")
     _slice_copyc       = EclPrototype("ecl_kw_obj ecl_kw_alloc_slice_copy( ecl_kw , int , int , int )")
@@ -123,7 +123,7 @@ class EclKW(BaseCClass):
     _fix_uninitialized = EclPrototype("void     ecl_kw_fix_uninitialized( ecl_kw ,int , int , int, int*)")
     _first_different   = EclPrototype("int      ecl_kw_first_different( ecl_kw , ecl_kw , int , double, double)")
     _resize            = EclPrototype("void     ecl_kw_resize( ecl_kw , int)")
-    
+
     @classmethod
     def createCReference(cls, c_ptr, parent=None):
         ecl_kw = super(EclKW, cls).createCReference(c_ptr , parent = parent)
@@ -143,8 +143,8 @@ class EclKW(BaseCClass):
         ecl_kw.__private_init()
         return ecl_kw
 
-    
-    
+
+
     @classmethod
     def add_int_kw(cls , kw):
         """Will add keyword @kw to the standard set of integer keywords."""
@@ -167,17 +167,17 @@ class EclKW(BaseCClass):
             return self._slice_copyc( start , stop , step)
         else:
             return None
-    
+
 
     def copy( self ):
         """
         Will create a deep copy of the current kw instance.
         """
         return self._copyc( )
-    
 
 
-    
+
+
     @classmethod
     def read_grdecl( cls , fileH , kw , strict = True , ecl_type = None):
         """
@@ -185,7 +185,7 @@ class EclKW(BaseCClass):
 
         This constructor can be used to load an EclKW instance from a
         grdecl formatted file; the input files for petrophysical
-        properties are typically given as grdecl files. 
+        properties are typically given as grdecl files.
 
         The @file argument should be a Python filehandle to an open
         file. The @kw argument should be the keyword header you are
@@ -201,7 +201,7 @@ class EclKW(BaseCClass):
         program to create grdecl files with more than 8 character
         length headers, this implementation will refuse to even try
         loading them. In that case you will have to rename the
-        keywords in your file - sorry. A TypeError exception 
+        keywords in your file - sorry. A TypeError exception
         will be raised if @kw has more than 8 characters.
 
         The implementation in ert can read integer and float type
@@ -212,7 +212,7 @@ class EclKW(BaseCClass):
         of presedence, is as follows:
 
         1. The optional argument @ecl_type can be used to specify
-           the type: 
+           the type:
 
            special_int_kw = EclKW.read_grdecl( fileH , 'INTKW' , ecl_type = ECL_INT_TYPE )
 
@@ -227,32 +227,32 @@ class EclKW(BaseCClass):
            'int_kw_set' the type will be ECL_INT_TYPE.
 
            pvtnum_kw = EclKW.read_grdecl( fileH , 'PVTNUM' )
-        
+
            Observe that (currently) no case conversions take place
            when checking the 'int_kw_set'. The current built in set is
            accesible through the int_kw property.
 
 
         3. Otherwise the default is float, i.e. ECL_FLOAT_TYPE.
-        
+
            poro_kw = EclKW.read_grdecl( fileH , 'PORO')
-        
+
 
         Observe that since the grdecl files are quite weakly
         structured it is difficult to verify the integrity of the
         files, malformed input might therefor pass unnoticed before
         things blow up at a later stage.
-        
+
         [1]: It is possible, but not recommended, to pass in None for
         @kw, in which case the method will load the first keyword
         it finds in the file.
         """
-        
+
         cfile  = CFILE( fileH )
         if kw:
             if len(kw) > 8:
                 raise TypeError("Sorry keyword:%s is too long, must be eight characters or less." % kw)
-    
+
         if ecl_type is None:
             if cls.int_kw_set.__contains__( kw ):
                 ecl_type = EclTypeEnum.ECL_INT_TYPE
@@ -264,7 +264,7 @@ class EclKW(BaseCClass):
 
         return cls._load_grdecl( cfile , kw , strict , ecl_type )
 
-    
+
     @classmethod
     def fseek_grdecl( cls , fileH , kw , rewind = False):
         """
@@ -274,7 +274,7 @@ class EclKW(BaseCClass):
         pointer will be positioned at the start of the kw, if the
         search fails the function will return false and the file
         pointer will be repositioned at the position it had prior to
-        the call. 
+        the call.
 
         Only @kw instances which are found at the beginning of a line
         (with optional leading space characters) are considered,
@@ -283,7 +283,7 @@ class EclKW(BaseCClass):
 
            -- PERMX
            EQUIL   PERMX /
-           
+
 
         The function will start searching from the current position in
         the file and forwards, if the optional argument @rewind is
@@ -334,14 +334,14 @@ class EclKW(BaseCClass):
         self.__private_init()
 
 
-        
+
     def __private_init(self):
         self.data_ptr   = None
         ecl_type = self._get_type(  )
 
         if ecl_type == EclTypeEnum.ECL_INT_TYPE:
             self.data_ptr = self._int_ptr( )
-            self.dtype    = numpy.int32        
+            self.dtype    = numpy.int32
             self.str_fmt  = "%8d"
         elif ecl_type == EclTypeEnum.ECL_FLOAT_TYPE:
             self.data_ptr = self._float_ptr( )
@@ -349,7 +349,7 @@ class EclKW(BaseCClass):
             self.str_fmt  = "%13.4f"
         elif ecl_type == EclTypeEnum.ECL_DOUBLE_TYPE:
             self.data_ptr = self._double_ptr( )
-            self.dtype    = numpy.float64        
+            self.dtype    = numpy.float64
             self.str_fmt  = "%13.4f"
         else:
             # Iteration not supported for CHAR / BOOL
@@ -363,7 +363,7 @@ class EclKW(BaseCClass):
                 self.str_fmt = "%s"  #"Message type"
 
 
-    
+
 
     def sub_copy(self , offset , count , new_header = None):
         """
@@ -379,7 +379,7 @@ class EclKW(BaseCClass):
 
            new1 = src.sub_copy(0 , 10, new_header = "NEW1")
            new2 = src.sub_copy(10 , -1 , new_header = "NEW2")
-           
+
         If the count or index arguments are in some way invalid the
         method will raise IndexError.
         """
@@ -390,14 +390,14 @@ class EclKW(BaseCClass):
             raise IndexError("Invalid value of (offset + count):%d" % (offset + count))
 
         return self._sub_copy( new_header , offset , count )
-    
+
 
     def isNumeric(self):
         """
         Will check if the keyword contains numeric data, i.e int, float or double.
         """
         return self._assert_numeric( )
-    
+
 
     def ecl_kw_instance( self ):
         return True
@@ -410,7 +410,7 @@ class EclKW(BaseCClass):
         """
         return self._get_size( )
 
-    
+
     def __deep_copy__(self , memo):
         """
         Python special routine used to perform deep copy.
@@ -482,7 +482,7 @@ class EclKW(BaseCClass):
 
 
     #################################################################
-    
+
 
     def __IMUL__(self , factor , mul = True):
         if self.isNumeric():
@@ -511,9 +511,9 @@ class EclKW(BaseCClass):
                         raise TypeError("Only muliplication with scalar supported")
         else:
             raise TypeError("Not numeric type")
-        
+
         return self
-                
+
 
     def __IADD__(self , delta , add = True):
         if self.isNumeric():
@@ -544,7 +544,7 @@ class EclKW(BaseCClass):
                         raise TypeError("Type mismatch")
         else:
             raise TypeError("Type / size mismatch")
-        
+
         return self
 
     def __iadd__(self , delta):
@@ -561,7 +561,7 @@ class EclKW(BaseCClass):
 
 
     #################################################################
-    
+
     def __abs__(self):
         if self.isNumeric():
             copy = self.copy()
@@ -569,9 +569,9 @@ class EclKW(BaseCClass):
             return copy
         else:
             raise TypeError("The __abs__() function is only implemented for numeric types")
-            
 
-    
+
+
     def __add__(self , delta):
         copy = self.copy()
         copy += delta
@@ -586,8 +586,8 @@ class EclKW(BaseCClass):
         return copy
 
     def __rsub__( self , delta):
-        return self.__sub__( delta ) * -1 
-    
+        return self.__sub__( delta ) * -1
+
     def __mul__(self , factor):
         copy  = self.copy()
         copy *= factor
@@ -595,12 +595,12 @@ class EclKW(BaseCClass):
 
     def __rmul__(self , factor):
         return self.__mul__( factor )
-    
+
     def __div__(self , factor):
         copy = self.copy()
         copy /= factor
         return copy
-    
+
     # No __rdiv__()
 
     def sum(self):
@@ -636,7 +636,7 @@ class EclKW(BaseCClass):
         return self._assert_binary( other )
 
     #################################################################
-        
+
     def assign(self , value , mask = None , force_active = False):
         """
         Assign a value to current kw instance.
@@ -654,7 +654,7 @@ class EclKW(BaseCClass):
         to only parts of the EclKW. In the example below we select all
         the elements with PORO below 0.10, and then assign EQLNUM
         value 88 to those cells:
-        
+
             grid = ecl.EclGrid("ECLIPSE.EGRID")
             reg  = ecl.EclRegion( grid , false )
             init = ecl.EclFile("ECLIPSE.INIT")
@@ -662,9 +662,9 @@ class EclKW(BaseCClass):
             poro = init["PORO"][0]
             eqlnum = init["EQLNUM"][0]
             reg.select_below( poro , 0.10 )
-            
+
             eqlnum.assign( 88 , mask = reg )
-        
+
         The EclRegion instance has two equivalent sets of selected
         indices; one consisting of active indices and one consisting
         of global indices. By default the assign() method will select
@@ -710,7 +710,7 @@ class EclKW(BaseCClass):
             mask.iadd_kw( self , other , force_active )
         else:
             return self.__iadd__( other )
-        
+
     def sub(self , other , mask = None , force_active = False):
         """
         See method assign() for documentation of optional arguments
@@ -760,7 +760,7 @@ class EclKW(BaseCClass):
           kw.apply( math.sin )
           kw.apply( cutoff , arg = 0.10 )
 
-        
+
         See method assign() for documentation of optional arguments
         @mask and @force_active.
         """
@@ -857,7 +857,7 @@ class EclKW(BaseCClass):
         # need to call the __private_init() method again.
         self.__private_init()
 
-    
+
     def getMinMax(self):
         """
         Will return a touple (min,max) for numerical types.
@@ -886,8 +886,8 @@ class EclKW(BaseCClass):
     def getMax( self ):
         mm = self.getMinMax()
         return mm[1]
-    
-    
+
+
     def getMin( self ):
         mm = self.getMinMax()
         return mm[0]
@@ -906,7 +906,7 @@ class EclKW(BaseCClass):
     def getEclType(self):
         return self._get_type( )
 
-        
+
 
 
     @property
@@ -921,7 +921,7 @@ class EclKW(BaseCClass):
             a.__parent__  = self  # Inhibit GC
         return a
 
-    
+
     def str_data( self , width , index1 , index2 , fmt):
         """
         Helper function for str() method.
@@ -936,7 +936,7 @@ class EclKW(BaseCClass):
                 s+= "\n"
         return s
 
-        
+
     def str(self , width = 5 , max_lines = 10 , fmt = None):
         """
         Return string representation of kw for pretty printing.
@@ -967,7 +967,7 @@ class EclKW(BaseCClass):
             s += self.str_data( width  , 0 , s1 , fmt)
             s += "   ....   \n"
             s += self.str_data( width  , len(self) - s1 , len(self) , fmt)
-        
+
         return s
 
     def __str__(self):
@@ -993,7 +993,7 @@ class EclKW(BaseCClass):
             ct = ctypes.c_int
         else:
             raise ValueError("Invalid type - numpy array only valid for int/float/double")
-        
+
         ap = ctypes.cast(self.data_ptr, ctypes.POINTER(ct * len(self)))
         return numpy.frombuffer(ap.contents, dtype = self.dtype)
 
@@ -1022,20 +1022,20 @@ class EclKW(BaseCClass):
         opened file. In the example below we load the porosity from an
         existing GRDECL file, set all poro values below 0.05 to 0.00
         and write back an updated GRDECL file.
-        
+
             poro = ecl.EclKW.load_grdecl( open("poro1.grdecl" , "r") , "PORO" )
             grid = ecl.EclGrid( "ECLIPSE.EGRID" )
             reg  = ecl.EclRegion( grid , False )
-            
+
             reg.select_below( poro , 0.05 )
             poro.assign( 0.0 , mask = reg )
 
             fileH = open( "poro2.grdecl" , "w")
             poro.write_grdecl( fileH )
             fileH.close()
-            
+
         """
-        cfile = CFILE( file ) 
+        cfile = CFILE( file )
         self._fprintf_grdecl( cfile )
 
 
