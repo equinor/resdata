@@ -1063,12 +1063,15 @@ class EclGrid(BaseCClass):
                     if self.active( global_index = global_index ):
                         array[global_index] = kwa[data_index]
                         data_index += 1
-                        
+
             array = array.reshape( [self.getNX() , self.getNY() , self.getNZ()] , order = 'F')
             return array
         else:
-            raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.getName() , len(ecl_kw) , self.getNumActive() , self.getGlobalSize()))
-        
+            err_msg_fmt = 'Keyword "%s" has invalid size %d; must be either nactive=%d or nx*ny*nz=%d'
+            err_msg = err_msg_fmt % (ecl_kw, len(ecl_kw), self.getNumActive(),
+                                     self.getGlobalSize())
+            raise ValueError(err_msg)
+
     def save_grdecl(self , pyfile, output_unit = EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
         Will write the the grid content as grdecl formatted keywords.
