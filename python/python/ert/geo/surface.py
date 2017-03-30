@@ -22,7 +22,7 @@ from numpy import zeros
 
 from cwrap import BaseCClass
 from ert.geo import GeoPrototype
-
+from ert.geo import GeoPointset
 
 class Surface(BaseCClass):
     TYPE_NAME = "surface"
@@ -46,6 +46,7 @@ class Surface(BaseCClass):
     _isub         = GeoPrototype("void   geo_surface_isub( surface , surface )")
     _isqrt        = GeoPrototype("void   geo_surface_isqrt( surface )")
     _iget_xy      = GeoPrototype("void   geo_surface_iget_xy(surface, int, double*, double*)")
+    _get_pointset = GeoPrototype("geo_pointset_ref geo_surface_get_pointset(surface)")
 
 
     def __init__(self, filename=None, nx=None, ny=None, xinc=None, yinc=None,
@@ -243,6 +244,9 @@ class Surface(BaseCClass):
 
     def getNY(self):
         return self._get_ny()
+
+    def getPointset(self):
+        return self._get_pointset()
 
     def _assert_idx_or_i_and_j(self, idx, i, j):
         if idx is None:
