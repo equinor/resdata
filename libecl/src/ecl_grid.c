@@ -3871,12 +3871,13 @@ static bool ecl_grid_on_plane(const ecl_cell_type * cell, const int method,
    "belongs" to this cell. This is done such that every point is contained in at most
    one point.
 
-   Remark: There is a single caveat when using this function and that is if a
-   point is on the surface of a/many cells, but for all of these cells the point is contained
-   on two opposite sides of the cell. Imagine a cake being cut as a cake should be cut. To which
-   of the slices does the center point of the cake belong? This is a somewhat
-   obscure situation and it is not possible to circumvent by only considering
-   the grid cell by cell.
+   There two caveats when using this function:
+     - if a point is on the surface of a/many cells, but for all of these cells
+       the point is contained on two opposite sides of the cell. Imagine a cake
+       being cut as a cake should be cut. To which of the slices does the center
+       point of the cake belong? This is a somewhat obscure situation and it is
+       not possible to circumvent by only considering the grid cell by cell.
+    - if there is a fault and this cell is on the border of the grid.
 
    Note: The correctness of this function relies *HEAVILY* on the permutation of the
    tetrahedrons in the decompositions.

@@ -210,7 +210,8 @@ class EclGrid(BaseCClass):
     @classmethod
     def createGrid(cls, dims, dV, offset=1,
             escape_origo_shift=(1,1,0),
-            irregular_offset=False, irregular=False, concave=False):
+            irregular_offset=False, irregular=False, concave=False,
+            faults=False):
         """
         Will create a new grid where each cell is a parallelogram (skewed by z-value).
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
@@ -233,6 +234,8 @@ class EclGrid(BaseCClass):
 
         @escape_origo_shift is used to prevent any cell of having corners in (0,0,z)
         as there is a heuristic in ecl_grid.c that marks such cells as tainted.
+
+        @faults decides if there are to be faults in the grid
 
         Note that cells in the lowermost layer can have multiple corners
         at the same point.
@@ -283,6 +286,11 @@ class EclGrid(BaseCClass):
         z = z+dz
         zcorn = zcorn + ([z]*(4*nx*ny))
 
+        if faults:
+            # Ensure that drop does not align with grid structure
+            drop = (offset+dz)/2. if abs(offset-dz/2.) > 0.2 else offset + 0.4
+            zcorn = cls.__createFaults(nx, ny, nz, zcorn, drop)
+
         cls.assertZcorn(nx, ny, nz, zcorn)
 
         # Compute coord
@@ -301,6 +309,32 @@ class EclGrid(BaseCClass):
             return kw
 
         return cls.create(dims, constructFloatKW("ZCORN", zcorn), constructFloatKW("COORD", coord), None)
+
+    @classmethod
+    def __createFaults(cls, nx, ny, nz, zcorn, drop):
+        """
+        Will create several faults consisting of all cells such that either its
+        i or j index is 1 modulo 3.
+        """
+
+        plane_size = 4*nx*ny
+        for x, y, z in itertools.product(range(nx), range(ny), range(nz)):
+            if x%3 != 1 and y%3 != 1:
+                continue
+
+            corner = [0]*8
+            corner[0] = 2*z*plane_size + 4*y*nx + 2*x
+            corner[1] = corner[0] + 1
+            corner[2] = corner[0] + 2*nx
+            corner[3] = corner[2] + 1
+
+            for i in range(4, 8):
+                corner[i] = corner[i-4] + plane_size
+
+            for c in corner:
+                zcorn[c] = zcorn[c] + drop
+
+        return zcorn
 
     @classmethod
     def assertZcorn(cls, nx, ny, nz, zcorn):

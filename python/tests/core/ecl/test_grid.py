@@ -54,6 +54,8 @@ def createGridTestBase(dim, dV, offset=1):
             EclGrid.createGrid(dim, dV, offset, irregular_offset=True),
             EclGrid.createGrid(dim, dV, offset, concave=True),
             EclGrid.createGrid(dim, dV, offset, irregular_offset=True, concave=True),
+            EclGrid.createGrid(dim, dV, offset=0, faults=True),
+            EclGrid.createGrid(dim, dV, offset=offset, faults=True)
             ]
 
 
@@ -351,8 +353,7 @@ class GridTest(ExtendedTestCase):
                     )
 
     def test_volume(self):
-        epsilon = 1e-10
-        dim     = (10,10,10)
+        dim     = (5,5,5)
         dV      = (2,2,2)
         tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
 
@@ -360,7 +361,7 @@ class GridTest(ExtendedTestCase):
         for grid in grids:
             cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
             self.assertTrue(min(cell_volumes) >= 0)
-            self.assertTrue(abs(sum(cell_volumes) - tot_vol) < epsilon)
+            self.assertFloatEqual(sum(cell_volumes), tot_vol)
 
     # TODO: Turn tests below into meta test
     def test_unique_containment_skewed(self):
@@ -415,7 +416,6 @@ class GridTest(ExtendedTestCase):
                     self.assertTrue(hits < 10)
                     containments[hits] = containments[hits]+1
 
-        print containments
         self.assertEqual(containments[1], sum(containments))
 
     def test_unique_containment_concave_small_offset(self):
@@ -425,6 +425,25 @@ class GridTest(ExtendedTestCase):
         x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
 
         grid = EclGrid.createGrid(dim, dV,offset=0.5, concave=True, irregular_offset=True)
+        containments = [0]*10
+        origo_shift = 1
+        for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
+            for y in linspace(origo_shift, origo_shift+y_max, y_max*steps_per_unit+1):
+                for z in linspace(0, z_max, z_max*steps_per_unit+1):
+                    hits = [grid.cell_contains(x, y, z, i) for i in range(grid.getGlobalSize())].count(True)
+                    self.assertTrue(hits < 10)
+                    containments[hits] = containments[hits]+1
+
+        self.assertEqual(containments[1], sum(containments))
+
+    def test_unique_containment_concave_irregular(self):
+        dim                 = (4,4,4)
+        dV                  = (1,1,1)
+        steps_per_unit      = 7
+        x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
+
+        grid = EclGrid.createGrid(dim, dV,offset=0.5, concave=True,
+                irregular_offset=True, irregular=True)
         containments = [0]*10
         origo_shift = 1
         for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
