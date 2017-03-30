@@ -208,8 +208,9 @@ class EclGrid(BaseCClass):
         return ecl_grid
 
     @classmethod
-    def createGrid(cls, dims, dV, offset=1, concave=False, irregular=False,
-            escape_origo_shift=(1,1,0)):
+    def createGrid(cls, dims, dV, offset=1,
+            escape_origo_shift=(1,1,0),
+            irregular_offset=False, irregular=False, concave=False):
         """
         Will create a new grid where each cell is a parallelogram (skewed by z-value).
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
@@ -221,8 +222,11 @@ class EclGrid(BaseCClass):
         @offset gives how much the layers should fluctuate or "wave" as you
         move along the X-axis.
 
-        @irregular decides whether the offset should be constant or increase by
-        dz/2 every now and then.
+        @irregular_offset decides whether the offset should be constant or
+        increase by dz/2 every now and then.
+
+        @irregular if true some of the layers will be inclining and others
+        declining at the start.
 
         @concave decides whether the cells are to be convex or not. In
         particular, if set to False, all cells of the grid will be concave.
@@ -235,9 +239,10 @@ class EclGrid(BaseCClass):
 
         For testing it should give good coverage of the various scenarios this
         method can produce, by leting @dims be (10,10,10), @dV=(2,2,2), @offset=1,
-        and try all 4 different configurations of @concave and @irregular.
+        and try all 4 different configurations of @concave and
+        @irregular_offset.
 
-        TODO: faults, translate, scale, rotate, skew, overlapping corners
+        TODO: faults, translate, scale, rotate, skew
         TODO: Specify a sensible test base
         """
 
@@ -251,10 +256,10 @@ class EclGrid(BaseCClass):
         if offset < 0:
             raise ValueError("Expected non-negative offset")
 
-        if concave and offset + (dz/2. if irregular else 0) > dz:
+        if irregular and offset + (dz/2. if irregular_offset else 0) > dz:
             raise AssertionError("Arguments can result in self-" +
                     "intersecting cells. Increase dz, deactivate eiter " +
-                    "irreguler or concave, or decrease offset to avoid " +
+                    "irregular or irregular_offset, or decrease offset to avoid " +
                     "any problems")
 
         verbose = lambda l : [elem for elem in l for i in range(2)][1:-1:]
@@ -265,11 +270,11 @@ class EclGrid(BaseCClass):
         zcorn = [z]*(4*nx*ny)
         for k in range(nz-1):
             z = z+dz
-            local_offset = offset + (dz/2. if irregular and k%2 == 0 else 0)
+            local_offset = offset + (dz/2. if irregular_offset and k%2 == 0 else 0)
 
             layer = []
             for i in range(ny+1):
-                shift = (1 if concave and (i+k/2) % 2 == 1 else 0)
+                shift = ((i if concave else 0) + (k/2 if irregular else 0)) % 2
                 path = [z if i%2 == shift else z+local_offset for i in range(nx+1)]
                 layer.append(verbose(path))
 

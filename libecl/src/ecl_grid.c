@@ -3873,8 +3873,10 @@ static bool ecl_grid_on_plane(const ecl_cell_type * cell, const int method,
 
    Remark: There is a single caveat when using this function and that is if a
    point is on the surface of a/many cells, but for all of these cells the point is contained
-   on two opposite sides of cell. This is however a somewhat obscure situation and it is
-   not possible to circumvent by only considering the grid cell by cell.
+   on two opposite sides of the cell. Imagine a cake being cut as a cake should be cut. To which
+   of the slices does the center point of the cake belong? This is a somewhat
+   obscure situation and it is not possible to circumvent by only considering
+   the grid cell by cell.
 
    Note: The correctness of this function relies *HEAVILY* on the permutation of the
    tetrahedrons in the decompositions.
@@ -3926,43 +3928,13 @@ static face_status_enum ecl_grid_on_cell_face(const ecl_cell_type * cell, const 
 }
 
 /*
-  Checks if p is contained in cell, including faces. The concludes correctly if cell is convex,
-  otherwise it might very well give false negatives (but not false positives).
+ Returns true if and only if the tetrahedron defined by p0, p1, p2, p3
+ contains p.
+
+ The sole purpose of this functions is to make concave_cell_contains
+ more readable.
 */
-static bool convex_cell_contains( ecl_cell_type * cell, const int method, const point_type * p) {
-  const double min_volume = 1e-9;
-  double signed_volume = ecl_cell_get_signed_volume( cell );
-  if (fabs(signed_volume) <= min_volume)
-    return false;
-
-  double sign = 1.0;
-  point_type * p0;
-  point_type * p1;
-  point_type * p2;
-
-  if (signed_volume < 0)
-    sign = -1;
-
-  for (int plane_nr = 0; plane_nr < 12; plane_nr++) {
-    p0 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][0] ];
-    p1 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][1] ];
-    p2 = &cell->corner_list[ tetrahedron_permutations[ method ][plane_nr][2] ];
-
-    if (point_equal(p0, p1) || point_equal(p0,p2) || point_equal(p1,p2))
-      continue;
-
-    if (sign * point3_plane_distance(p0 , p1 , p2 , p ) < 0)
-      return false;
-  }
-
-  return true;
-}
-
-/*
- Returns true if and only if the protrusion defined by p0, p1, p2, p3
- (which can be obsered to be a tetrahedron) contains p,
-*/
-static bool protrusion_contains(const point_type * p0,
+static bool tetrahedron_by_points_contains(const point_type * p0,
                                 const point_type * p1,
                                 const point_type * p2,
                                 const point_type * p3,
@@ -3978,12 +3950,15 @@ static bool protrusion_contains(const point_type * p0,
 }
 
 /*
- Returns true if and only if the cell "cell" decomposed by "method" contains the point "p"
- in any of its possibly 4 protrusions.
+ Returns true if and only if the cell "cell" decomposed by "method" contains the point "p".
+ This is done by decomposing the cell into 5 tetrahedrons according to the decomposition
+ method for the faces.
+
+ Assumes the cell to not be self-intersecting!
 
  Note: This function relies *HEAVILY* on the permutation of tetrahedron_permutations.
 */
-static bool cell_protrusion_contains( const ecl_cell_type * cell, int method, const point_type * p) {
+static bool concave_cell_contains( const ecl_cell_type * cell, int method, const point_type * p) {
 
   const point_type * dia[2][2] = {
       {
@@ -4007,12 +3982,14 @@ static bool cell_protrusion_contains( const ecl_cell_type * cell, int method, co
       }
   };
 
+  // Test for containment in protrusions
   for(int i = 0; i < 2; ++i)
     for(int k = 0; k < 2; ++k)
-      if(protrusion_contains(dia[i][0], dia[i][1], extra[i][k], dia[(i+1)%2][k], p))
+      if(tetrahedron_by_points_contains(dia[i][0], dia[i][1], extra[i][k], dia[(i+1)%2][k], p))
         return true;
 
-  return false;
+  // Test for containment in cell core
+  return tetrahedron_by_points_contains(dia[0][0], dia[0][1], dia[1][0], dia[1][1], p);
 }
 
 /*
@@ -4036,11 +4013,10 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
   point_set( &p , x , y , z);
   int method = (i + j + k) % 2; // Chooses the approperiate decomposition method for the cell
 
-  if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
-    //printf("False tainted \n");
+  if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED))
     return false;
-  }
 
+  // Pruning
   if (!ecl_grid_cube_contains(cell, &p))
     return false;
 
@@ -4054,18 +4030,14 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
   if(face_status != NOT_ON_FACE)
     return face_status == BELONGS_TO_CELL;
 
+  // Twisted cells
   if (ecl_cell_get_twist(cell) > 0) {
     fprintf(stderr, "** Warning: Point (%g,%g,%g) is in vicinity of twisted cell: (%d,%d,%d) - function:%s might be mistaken.\n", x,y,z,i,j,k, __func__);
     return false;
   }
 
   // We now check whether the point is strictly inside the cell
-  if(convex_cell_contains(cell, method, &p))
-    return true;
-
-  // If the cell is concave, p might still be in the cell although
-  // convex_cell_contains reporteted negatively
-  return cell_protrusion_contains(cell, method, &p);
+  return concave_cell_contains(cell, method, &p);
 }
 
 

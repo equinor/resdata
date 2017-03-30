@@ -47,12 +47,13 @@ CORNER_HOME = {
 }
 
 def createGridTestBase(dim, dV, offset=1):
+    # TODO: Toogle all create grid settings
     return [
             EclGrid.createRectangular(dim, dV),
             EclGrid.createGrid(dim, dV, offset),
-            EclGrid.createGrid(dim, dV, offset, irregular=True),
+            EclGrid.createGrid(dim, dV, offset, irregular_offset=True),
             EclGrid.createGrid(dim, dV, offset, concave=True),
-            EclGrid.createGrid(dim, dV, offset, irregular=True, concave=True),
+            EclGrid.createGrid(dim, dV, offset, irregular_offset=True, concave=True),
             ]
 
 
@@ -414,15 +415,16 @@ class GridTest(ExtendedTestCase):
                     self.assertTrue(hits < 10)
                     containments[hits] = containments[hits]+1
 
+        print containments
         self.assertEqual(containments[1], sum(containments))
 
-    def test_unique_containment_concave_irregular(self):
-        dim                 = (3,3,3)
+    def test_unique_containment_concave_small_offset(self):
+        dim                 = (4,4,4)
         dV                  = (1,1,1)
-        steps_per_unit      = 10
+        steps_per_unit      = 3
         x_max, y_max, z_max = [a*b for a,b in zip(dim, dV)]
 
-        grid = EclGrid.createGrid(dim, dV,offset=0.5, concave=True, irregular=True)
+        grid = EclGrid.createGrid(dim, dV,offset=0.5, concave=True, irregular_offset=True)
         containments = [0]*10
         origo_shift = 1
         for x in linspace(origo_shift, origo_shift+x_max, x_max*steps_per_unit+1):
