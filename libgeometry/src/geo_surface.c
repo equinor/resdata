@@ -102,7 +102,7 @@ static bool geo_surface_fscanf_zcoord( const geo_surface_type * surface , FILE *
     if (index == surface->nx * surface->ny) {
       double extra_value;
       int fscanf_return = fscanf( stream , "%lg" , &extra_value);
-      return fscanf_return == EOF; // no more data dangling at the end of the file.
+      return (fscanf_return == EOF); // no more data dangling at the end of the file.
     }
   }
 }

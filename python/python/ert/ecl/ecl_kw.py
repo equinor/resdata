@@ -963,7 +963,7 @@ class EclKW(BaseCClass):
         if max_lines is None or lines <= max_lines:
             s += self.str_data( width , 0 , len(self) , fmt)
         else:
-            s1 = width * max_lines / 2
+            s1 = width * max_lines // 2
             s += self.str_data( width  , 0 , s1 , fmt)
             s += "   ....   \n"
             s += self.str_data( width  , len(self) - s1 , len(self) , fmt)
