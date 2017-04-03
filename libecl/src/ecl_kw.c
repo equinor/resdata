@@ -1746,7 +1746,7 @@ void ecl_kw_buffer_store(const ecl_kw_type * ecl_kw , buffer_type * buffer) {
   buffer_fwrite_string( buffer , ecl_kw->header8 );
   buffer_fwrite_int( buffer , ecl_kw->size );
   buffer_fwrite_int( buffer , ecl_type_get_type(ecl_kw->data_type) );
-  buffer_fwrite_int( buffer , ecl_type_get_element_size(ecl_kw->data_type));
+  buffer_fwrite_int( buffer , ecl_type_get_sizeof_ctype(ecl_kw->data_type));
   buffer_fwrite( buffer , ecl_kw->data , ecl_kw_get_sizeof_ctype(ecl_kw) , ecl_kw->size);
 }
 
