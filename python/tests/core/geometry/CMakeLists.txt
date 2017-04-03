@@ -9,10 +9,14 @@ set(TEST_SOURCES
     test_polygon_slicing.py
     test_polyline.py
     test_surface.py
+    test_geo_pointset.py
+    test_geo_region.py
 )
 
 add_python_package("python.tests.core.geometry" ${PYTHON_INSTALL_PREFIX}/tests/core/geometry "${TEST_SOURCES}" False)
 
+addPythonTest(core.geometry.geo_pointset tests.core.geometry.test_geo_pointset.GeoPointsetTest)
+addPythonTest(core.geometry.geo_region tests.core.geometry.test_geo_region.GeoRegionTest)
 addPythonTest(core.geometry.surface tests.core.geometry.test_surface.SurfaceTest)
 addPythonTest(core.geometry.polyline tests.core.geometry.test_polyline.PolylineTest)
 addPythonTest(core.geometry.intersection tests.core.geometry.test_intersection.IntersectionTest)
