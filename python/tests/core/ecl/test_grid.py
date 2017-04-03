@@ -49,20 +49,26 @@ CORNER_HOME = {
 # TODO: Remove
 containment_tests = False
 
-def createGridTestBase(dim, dV, offset=1):
-    # TODO: Toogle all create grid settings
+def createVolumeTestGridBase(dim, dV, offset=1):
     return [
             EclGrid.createRectangular(dim, dV),
             EclGrid.createGrid(dim, dV, offset=offset),
             EclGrid.createGrid(dim, dV, offset=offset, irregular_offset=True),
             EclGrid.createGrid(dim, dV, offset=offset, concave=True),
+            EclGrid.createGrid(dim, dV, offset=offset, irregular=True),
+            EclGrid.createGrid(dim, dV, offset=offset, concave=True, irregular=True),
             EclGrid.createGrid(dim, dV, offset=offset, irregular_offset=True, concave=True),
             EclGrid.createGrid(dim, dV, offset=0, faults=True),
             EclGrid.createGrid(dim, dV, offset=offset, faults=True),
             EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), scale=2),
+            EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), scale=0.5),
             EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), translation=(50,50,0)),
             EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), rotate=True),
             EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), misalign=True),
+            EclGrid.createGrid(dim, dV, offset=offset, escape_origo_shift=(100, 100, 0),
+                irregular_offset=True, concave=True, irregular=True,
+                scale=1.5, translation=(5,5,0), rotate=True,
+                misalign=True)
             ]
 
 def createWrapperGrid(grid):
@@ -381,7 +387,7 @@ class GridTest(ExtendedTestCase):
         dim     = (5,5,5)
         dV      = (2,2,2)
 
-        grids = createGridTestBase(dim, dV)
+        grids = createVolumeTestGridBase(dim, dV)
         for grid in grids:
             tot_vol = createWrapperGrid(grid).cell_volume(0)
             cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
