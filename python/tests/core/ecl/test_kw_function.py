@@ -16,7 +16,7 @@
 #  for more details.
 import os
 import random
-from ert.ecl import EclKW, EclTypeEnum, EclGrid , Ecl3DKW
+from ert.ecl import EclKW, EclDataType, EclGrid , Ecl3DKW
 from ert.util import IntVector
 from ert.test import ExtendedTestCase
 
@@ -32,7 +32,7 @@ class KWFunctionTest(ExtendedTestCase):
         grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1) , actnum = actnum)
         self.assertEqual( grid.getNumActive() , nx*ny*nz - 1 )
         
-        kw = Ecl3DKW.create( "REGIONS" , grid , EclTypeEnum.ECL_INT_TYPE , global_active = True )
+        kw = Ecl3DKW.create( "REGIONS" , grid , EclDataType.ECL_INT , global_active = True )
         kw.assign( 0 )
         kw[0:nx*ny/2] = 1
         kw[5,2,0] = 0

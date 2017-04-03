@@ -21,7 +21,7 @@ from unittest import skipIf
 
 
 from ert.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
-from ert.ecl import EclFileFlagEnum, EclTypeEnum, EclFileEnum
+from ert.ecl import EclFileFlagEnum, EclDataType, EclFileEnum
 
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -67,8 +67,8 @@ class EclFileTest(ExtendedTestCase):
 
     def test_context( self ):
         with TestAreaContext("python/ecl_file/context"):
-            kw1 = EclKW( "KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
-            kw2 = EclKW( "KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
+            kw1 = EclKW( "KW1" , 100 , EclDataType.ECL_INT)
+            kw2 = EclKW( "KW2" , 100 , EclDataType.ECL_INT)
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 kw1.fwrite( f )
                 kw2.fwrite( f )
@@ -82,9 +82,9 @@ class EclFileTest(ExtendedTestCase):
 
 
     def test_gc(self):
-        kw1 = EclKW("KW1" , 100 , EclTypeEnum.ECL_INT_TYPE)
-        kw2 = EclKW("KW2" , 100 , EclTypeEnum.ECL_INT_TYPE)
-        kw3 = EclKW("KW3" , 100 , EclTypeEnum.ECL_INT_TYPE)
+        kw1 = EclKW("KW1" , 100 , EclDataType.ECL_INT)
+        kw2 = EclKW("KW2" , 100 , EclDataType.ECL_INT)
+        kw3 = EclKW("KW3" , 100 , EclDataType.ECL_INT)
 
         for i in range(len(kw1)):
             kw1[i] = i
@@ -107,14 +107,14 @@ class EclFileTest(ExtendedTestCase):
         with TestAreaContext("python/ecl_file/view"):
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 for i in range(5):
-                    header = EclKW("HEADER" , 1 , EclTypeEnum.ECL_INT_TYPE )
+                    header = EclKW("HEADER" , 1 , EclDataType.ECL_INT )
                     header[0] = i
 
-                    data1 = EclKW("DATA1" , 100 , EclTypeEnum.ECL_INT_TYPE )
+                    data1 = EclKW("DATA1" , 100 , EclDataType.ECL_INT )
                     data1.assign( i )
 
 
-                    data2 = EclKW("DATA2" , 100 , EclTypeEnum.ECL_INT_TYPE )
+                    data2 = EclKW("DATA2" , 100 , EclDataType.ECL_INT )
                     data2.assign( i*10 )
 
                     header.fwrite( f )

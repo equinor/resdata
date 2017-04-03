@@ -39,6 +39,8 @@ set( source_files
      ecl_nnc_export.c 
      layer.c
      fault_block_layer.c
+     ecl_type.c
+     ecl_type_python.c
      ${ext_source})
 
 set( header_files 
@@ -81,6 +83,7 @@ set( header_files
      layer.h
      fault_block.h
      fault_block_layer.h
+     ecl_type.h
      ${ext_header})
 
 if (ERT_USE_OPENMP)

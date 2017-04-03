@@ -19,7 +19,7 @@ import os.path
 from unittest import skipIf
 
 from ert.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
-from ert.ecl import EclFileFlagEnum, EclTypeEnum, EclFileEnum
+from ert.ecl import EclFileFlagEnum, EclFileEnum
 
 from ert.test import ExtendedTestCase , TestAreaContext
 

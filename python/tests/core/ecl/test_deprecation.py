@@ -19,7 +19,7 @@ import time
 import datetime
 
 from ert.test import ExtendedTestCase, TestAreaContext
-from ert.ecl import EclFile,EclGrid,EclKW,EclTypeEnum,EclGrid,EclRegion,FortIO, openFortIO,EclRFT
+from ert.ecl import EclFile,EclGrid,EclKW,EclDataType,EclGrid,EclRegion,FortIO, openFortIO,EclRFT
 from ert.test.ecl_mock import createEclSum
 from ert.util import BoolVector
 
@@ -35,7 +35,7 @@ class Deprecation_2_0_Test(ExtendedTestCase):
 
     def test_EclFile_name_property(self):
         with TestAreaContext("name") as t:
-            kw = EclKW("TEST", 3, EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW("TEST", 3, EclDataType.ECL_INT)
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 kw.fwrite( f )
 

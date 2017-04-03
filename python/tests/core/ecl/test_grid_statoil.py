@@ -22,7 +22,7 @@ except ImportError:
     from unittest import skipIf
 
 import time
-from ert.ecl import EclTypeEnum, EclKW, EclGrid, EclFile, openEclFile
+from ert.ecl import EclDataType, EclKW, EclGrid, EclFile, openEclFile
 from ert.util import DoubleVector, IntVector
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -116,11 +116,11 @@ class GridTest(ExtendedTestCase):
     
     def create(self, filename, load_actnum=True):
         fileH = open(filename, "r")
-        specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclTypeEnum.ECL_INT_TYPE, strict=False)
+        specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
         zcorn = EclKW.read_grdecl(fileH, "ZCORN")
         coord = EclKW.read_grdecl(fileH, "COORD")
         if load_actnum:
-            actnum = EclKW.read_grdecl(fileH, "ACTNUM", ecl_type=EclTypeEnum.ECL_INT_TYPE)
+            actnum = EclKW.read_grdecl(fileH, "ACTNUM", ecl_type=EclDataType.ECL_INT)
         else:
             actnum = None
     

@@ -20,7 +20,7 @@ import time
 import itertools
 
 from ert.util import IntVector
-from ert.ecl import EclGrid,EclKW,EclTypeEnum, EclUnitTypeEnum, EclFile
+from ert.ecl import EclGrid,EclKW,EclDataType, EclUnitTypeEnum, EclFile
 from ert.ecl.faults import Layer , FaultCollection
 from ert.test import ExtendedTestCase , TestAreaContext
 
@@ -226,7 +226,7 @@ class GridTest(ExtendedTestCase):
         ny = 10
         nz = 10
         grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1) )
-        kw1 = EclKW("KW" , 1001 , EclTypeEnum.ECL_INT_TYPE )
+        kw1 = EclKW("KW" , 1001 , EclDataType.ECL_INT )
         with self.assertRaises(ValueError):
             cp = grid.compressedKWCopy( kw1 )
     
@@ -247,7 +247,7 @@ class GridTest(ExtendedTestCase):
         ny = 7
         nz = 5
         grid = EclGrid.createRectangular((nx,ny,nz) , (1,1,1))
-        kw = EclKW( "SWAT" , nx*ny*nz , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw = EclKW( "SWAT" , nx*ny*nz , EclDataType.ECL_FLOAT )
         numpy_3d = grid.create3D( kw )
 
 

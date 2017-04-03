@@ -21,7 +21,7 @@ except ImportError:
 
 import time
 from ert.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment
-from ert.ecl import EclGrid,EclKW,EclTypeEnum
+from ert.ecl import EclGrid, EclKW, EclDataType
 from ert.test import ExtendedTestCase
 
 
@@ -30,10 +30,10 @@ class StatoilFaultTest(ExtendedTestCase):
     def loadGrid(self):
         grid_file   = self.createTestPath("Statoil/ECLIPSE/Faults/grid.grdecl")
         fileH = open(grid_file, "r")
-        specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclTypeEnum.ECL_INT_TYPE, strict=False)
+        specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
         zcorn = EclKW.read_grdecl(fileH, "ZCORN")
         coord = EclKW.read_grdecl(fileH, "COORD")
-        actnum = EclKW.read_grdecl(fileH, "ACTNUM", ecl_type=EclTypeEnum.ECL_INT_TYPE)
+        actnum = EclKW.read_grdecl(fileH, "ACTNUM", ecl_type=EclDataType.ECL_INT)
         
         return EclGrid.create(specgrid, zcorn, coord, actnum)
 

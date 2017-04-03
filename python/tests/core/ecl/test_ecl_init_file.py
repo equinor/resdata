@@ -16,7 +16,7 @@
 
 
 from ert.test import ExtendedTestCase
-from ert.ecl import Ecl3DKW , EclKW, EclTypeEnum, EclInitFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
+from ert.ecl import Ecl3DKW , EclKW, EclInitFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
 
 class InitFileTest(ExtendedTestCase):
     def setUp(self):

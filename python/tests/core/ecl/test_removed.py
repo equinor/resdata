@@ -2,7 +2,7 @@ import time
 import datetime
 
 from ert.test import ExtendedTestCase, TestAreaContext
-from ert.ecl import EclFile,EclKW,EclTypeEnum,openFortIO, FortIO
+from ert.ecl import EclFile,EclKW,EclDataType,openFortIO, FortIO
 
 
 
@@ -10,7 +10,7 @@ class Removed_2_1_Test(ExtendedTestCase):
     def test_ecl_file_block(self):
 
         with TestAreaContext("name") as t:
-            kw = EclKW("TEST", 3, EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW("TEST", 3, EclDataType.ECL_INT)
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 kw.fwrite( f )
 

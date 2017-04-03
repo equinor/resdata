@@ -24,11 +24,12 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/util/test_util.h>
+#include <ert/ecl/ecl_type.h>
 
 
 void test_grid(int nx, int ny, int nz) {
-  ecl_kw_type * coord_kw = ecl_kw_alloc( COORD_KW , ECL_GRID_COORD_SIZE( nx , ny ) , ECL_FLOAT_TYPE );
-  ecl_kw_type * zcorn_kw = ecl_kw_alloc( ZCORN_KW , ECL_GRID_ZCORN_SIZE( nx , ny , nz) , ECL_FLOAT_TYPE );
+  ecl_kw_type * coord_kw = ecl_kw_alloc( COORD_KW , ECL_GRID_COORD_SIZE( nx , ny ) , ECL_FLOAT );
+  ecl_kw_type * zcorn_kw = ecl_kw_alloc( ZCORN_KW , ECL_GRID_ZCORN_SIZE( nx , ny , nz) , ECL_FLOAT );
   int i,j,k;
   double a = 1.0;
   for (j= 0; j < ny; j++) {

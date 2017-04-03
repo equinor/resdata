@@ -16,8 +16,9 @@
 #  for more details.
 from __future__ import print_function
 from unittest import skipIf
+import warnings
 
-from ert.ecl import EclGrid, EclTypeEnum , EclKW , EclRegion
+from ert.ecl import EclGrid, EclKW , EclRegion, EclDataType
 from ert.ecl.faults import FaultBlock, FaultBlockLayer, FaultBlockCell,FaultCollection
 from ert.geo import Polyline , CPolylineCollection
 from ert.test import ExtendedTestCase , TestAreaContext
@@ -26,7 +27,7 @@ from ert.test import ExtendedTestCase , TestAreaContext
 class FaultBlockTest(ExtendedTestCase):
     def setUp(self):
         self.grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) )
-        self.kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
+        self.kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_INT )
         self.kw.assign( 1 )
 
         reg = EclRegion( self.grid , False )
@@ -41,7 +42,7 @@ class FaultBlockTest(ExtendedTestCase):
             
     def test_fault_block(self):
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
+        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
@@ -56,7 +57,6 @@ class FaultBlockTest(ExtendedTestCase):
         self.assertEqual( len(block) , 9)
         self.assertEqual( layer , block.getParentLayer() )
 
-
     def test_get_ijk(self):
         with TestAreaContext("python/fault_block_layer/neighbour") as work_area:
             with open("kw.grdecl","w") as fileH:
@@ -68,7 +68,7 @@ class FaultBlockTest(ExtendedTestCase):
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
         
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
@@ -100,7 +100,7 @@ class FaultBlockTest(ExtendedTestCase):
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
         
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
@@ -160,7 +160,7 @@ class FaultBlockTest(ExtendedTestCase):
                 fileH.write("3 3 3 3 2 2 2 2 \n")
                 fileH.write("/\n")
                 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FY\'   1   4   4   4   1   1  'Y'  /\n")
@@ -226,7 +226,7 @@ class FaultBlockTest(ExtendedTestCase):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
                 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")
@@ -253,7 +253,7 @@ class FaultBlockTest(ExtendedTestCase):
 
     def test_fault_block_edge(self):
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE )
+        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
@@ -276,7 +276,7 @@ class FaultBlockTest(ExtendedTestCase):
         layer = FaultBlockLayer( self.grid , 1 )
         self.assertEqual( 1 , layer.getK() )
 
-        kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_FLOAT )
         with self.assertRaises(ValueError):
             layer.scanKeyword( kw )
 
@@ -407,11 +407,11 @@ class FaultBlockTest(ExtendedTestCase):
 
     def test_fault_block_layer_export(self):
         layer = FaultBlockLayer( self.grid , 1 )
-        kw1 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() + 1 , EclTypeEnum.ECL_INT_TYPE )
+        kw1 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() + 1 , EclDataType.ECL_INT )
         with self.assertRaises(ValueError):
             layer.exportKeyword( kw1 )
 
-        kw2 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
+        kw2 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_FLOAT )
         with self.assertRaises(TypeError):
             layer.exportKeyword(kw2)
 
@@ -436,7 +436,7 @@ class FaultBlockTest(ExtendedTestCase):
                 fileH.write("/\n")
 
 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclTypeEnum.ECL_INT_TYPE)
+            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")

@@ -1,5 +1,5 @@
 import time
-from ert.ecl import EclGrav, EclKW, EclGrid, EclFile, EclTypeEnum, openFortIO, FortIO
+from ert.ecl import EclGrav, EclKW, EclGrid, EclFile, EclDataType, openFortIO, FortIO
 from ert.test import ExtendedTestCase , TestAreaContext
 
 
@@ -14,7 +14,7 @@ class EclGravTest(ExtendedTestCase):
         # The init file created here only contains a PORO field. More
         # properties must be added to this before it can be used for
         # any usefull gravity calculations.
-        poro = EclKW( "PORO" , self.grid.getGlobalSize() , EclTypeEnum.ECL_FLOAT_TYPE )
+        poro = EclKW( "PORO" , self.grid.getGlobalSize() , EclDataType.ECL_FLOAT )
         with TestAreaContext("grav_init"):
             with openFortIO( "TEST.INIT" , mode = FortIO.WRITE_MODE ) as f:
                 poro.fwrite( f )

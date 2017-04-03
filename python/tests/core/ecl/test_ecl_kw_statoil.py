@@ -16,18 +16,18 @@
 #  for more details.
 import os
 import random
-from ert.ecl import EclKW, EclTypeEnum, EclFile, FortIO, EclFileFlagEnum
+from ert.ecl import EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum
 
 from ert.test import ExtendedTestCase , TestAreaContext
 
 
 def copy_long():
-    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
     copy = src.sub_copy(0, 2000)
 
 
 def copy_offset():
-    src = EclKW("NAME", 100, EclTypeEnum.ECL_FLOAT_TYPE)
+    src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
     copy = src.sub_copy(200, 100)
 
 
@@ -70,12 +70,12 @@ class KWTest(ExtendedTestCase):
 
 
     def test_equal(self):
-        kw1 = EclKW("TEST", 3, EclTypeEnum.ECL_CHAR_TYPE)
+        kw1 = EclKW("TEST", 3, EclDataType.ECL_CHAR)
         kw1[0] = "Test1"
         kw1[1] = "Test13"
         kw1[2] = "Test15"
 
-        kw2 = EclKW("TEST", 3, EclTypeEnum.ECL_CHAR_TYPE)
+        kw2 = EclKW("TEST", 3, EclDataType.ECL_CHAR)
         kw2[0] = "Test1"
         kw2[1] = "Test13"
         kw2[2] = "Test15"

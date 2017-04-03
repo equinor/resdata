@@ -29,7 +29,7 @@ import ctypes
 
 from cwrap import BaseCClass
 from ert.ecl.faults import Layer
-from ert.ecl import EclKW, EclTypeEnum, EclPrototype
+from ert.ecl import EclKW, EclDataType, EclPrototype
 from ert.geo import CPolyline
 from ert.util import IntVector
 
@@ -846,9 +846,9 @@ class EclRegion(BaseCClass):
         """
         Helper function to apply a function with one scalar arg on target_kw.
         """
-        type = target_kw.getEclType( )
-        if func_dict.has_key( type ):
-            func = func_dict[ type ]
+        data_type = target_kw.data_type
+        if func_dict.has_key( data_type ):
+            func = func_dict[ data_type ]
             func( target_kw, scalar , force_active )
         else:
             raise Exception("scalar_apply_kw() only supported for INT/FLOAT/DOUBLE")
@@ -877,9 +877,9 @@ class EclRegion(BaseCClass):
         """
         See usage documentation on iadd_kw().
         """
-        self.scalar_apply_kw( ecl_kw , shift , {EclTypeEnum.ECL_INT_TYPE    : self._shift_kw_int,
-                                                EclTypeEnum.ECL_FLOAT_TYPE  : self._shift_kw_float ,
-                                                EclTypeEnum.ECL_DOUBLE_TYPE : self._shift_kw_double} , force_active)
+        self.scalar_apply_kw( ecl_kw , shift , {EclDataType.ECL_INT    : self._shift_kw_int,
+                                                EclDataType.ECL_FLOAT  : self._shift_kw_float ,
+                                                EclDataType.ECL_DOUBLE : self._shift_kw_double} , force_active)
 
     def isub_kw( self , target_kw , delta_kw , force_active = False):
         if isinstance(delta_kw , EclKW):
@@ -895,9 +895,9 @@ class EclRegion(BaseCClass):
         """
         See usage documentation on iadd_kw().
         """
-        self.scalar_apply_kw( ecl_kw , scale , {EclTypeEnum.ECL_INT_TYPE    : self._scale_kw_int,
-                                                EclTypeEnum.ECL_FLOAT_TYPE  : self._scale_kw_float ,
-                                                EclTypeEnum.ECL_DOUBLE_TYPE : self._scale_kw_double} , force_active)
+        self.scalar_apply_kw( ecl_kw , scale , {EclDataType.ECL_INT    : self._scale_kw_int,
+                                                EclDataType.ECL_FLOAT  : self._scale_kw_float ,
+                                                EclDataType.ECL_DOUBLE : self._scale_kw_double} , force_active)
 
     def imul_kw(self, target_kw , other , force_active = False):
         if isinstance(other , EclKW):
@@ -932,9 +932,9 @@ class EclRegion(BaseCClass):
         """
         See usage documentation on iadd_kw().
         """
-        self.scalar_apply_kw( ecl_kw , value , {EclTypeEnum.ECL_INT_TYPE    : self._set_kw_int,
-                                                EclTypeEnum.ECL_FLOAT_TYPE  : self._set_kw_float ,
-                                                EclTypeEnum.ECL_DOUBLE_TYPE : self._set_kw_double} , force_active)
+        self.scalar_apply_kw( ecl_kw , value , {EclDataType.ECL_INT    : self._set_kw_int,
+                                                EclDataType.ECL_FLOAT  : self._set_kw_float ,
+                                                EclDataType.ECL_DOUBLE : self._set_kw_double} , force_active)
 
 
 

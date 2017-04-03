@@ -26,6 +26,7 @@ set(PYTHON_SOURCES
     ecl_sum_keyword_vector.py
     ecl_cmp.py
     ecl_sum_var_type.py
+    ecl_type.py
 )
 
 add_python_package("python.ert.ecl" ${PYTHON_INSTALL_PREFIX}/ert/ecl "${PYTHON_SOURCES}" True)
