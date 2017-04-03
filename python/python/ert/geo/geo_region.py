@@ -17,6 +17,9 @@ from cwrap import BaseCClass
 from ert.util import IntVector
 from ert.geo import GeoPrototype
 from .cpolyline import CPolyline
+from ctypes import c_double
+
+cpair = c_double * 2  # this is a function that maps two doubles to a double*
 
 class GeoRegion(BaseCClass):
     TYPE_NAME = "geo_region"
@@ -29,10 +32,10 @@ class GeoRegion(BaseCClass):
     _select_outside_polygon   = GeoPrototype("void geo_region_select_outside_polygon(geo_region, geo_polygon)")
     _deselect_inside_polygon  = GeoPrototype("void geo_region_deselect_inside_polygon(geo_region, geo_polygon)")
     _deselect_outside_polygon = GeoPrototype("void geo_region_deselect_outside_polygon(geo_region, geo_polygon)")
-    #_select_above_line        = GeoPrototype("void geo_region_select_above_line(geo_region, const double xcoords[2], const double ycoords[2])")
-    #_select_below_line        = GeoPrototype("void geo_region_select_below_line(geo_region, const double xcoords[2], const double ycoords[2])")
-    #_deselect_above_line      = GeoPrototype("void geo_region_deselect_above_line(geo_region, const double xcoords[2], const double ycoords[2])")
-    #_deselect_below_line      = GeoPrototype("void geo_region_deselect_below_line(geo_region, const double xcoords[2], const double ycoords[2])")
+    _select_above_line        = GeoPrototype("void geo_region_select_above_line(geo_region, double*, double*)")
+    _select_below_line        = GeoPrototype("void geo_region_select_below_line(geo_region, double*, double*)")
+    _deselect_above_line      = GeoPrototype("void geo_region_deselect_above_line(geo_region, double*, double*)")
+    _deselect_below_line      = GeoPrototype("void geo_region_deselect_below_line(geo_region, double*, double*)")
 
 
     def __init__(self, pointset, preselect=False):
@@ -48,6 +51,12 @@ class GeoRegion(BaseCClass):
             (True, False): self._deselect_inside_polygon,
             (False, False): self._deselect_outside_polygon
         }
+        self.select_halfspace_fn = {
+            (True, True): self._select_above_line,
+            (False, True): self._select_below_line,
+            (True, False): self._deselect_above_line,
+            (False, False): self._deselect_below_line
+        }
 
 
     def getActiveList(self):
@@ -60,6 +69,19 @@ class GeoRegion(BaseCClass):
         selector_fn = self.select_polygon_fn[(inside, select)]
         selector_fn(polygon)
 
+    def select_halfspace(self, line, above=True, select=True):
+        try:
+            p1, p2 = line
+            x1, y1 = map(float, p1)
+            x2, y2 = map(float, p2)
+        except Exception as err:
+            err_msg = 'Select with pair ((x1,y1), (x2,y2)), not %s (%s).'
+            raise ValueError(err_msg % (line, err))
+        x1x2_ptr = cpair(x1, x2)
+        y1y2_ptr = cpair(y1, y2)
+        selector_fn = self.select_halfspace_fn[(above, select)]
+        selector_fn(x1x2_ptr, y1y2_ptr)  # note that it takes xx, yy
+
     def select_inside(self, polygon):
         self.select_polygon(polygon, inside=True, select=True)
 
@@ -71,6 +93,19 @@ class GeoRegion(BaseCClass):
 
     def deselect_outside(self, polygon):
         self.select_polygon(polygon, inside=False, select=False)
+
+
+    def select_above(self, line):
+        self.select_halfspace(line, above=True, select=True)
+
+    def select_below(self, line):
+        self.select_halfspace(line, above=False, select=True)
+
+    def deselect_above(self, line):
+        self.select_halfspace(line, above=True, select=False)
+
+    def deselect_below(self, line):
+        self.select_halfspace(line, above=False, select=False)
 
 
     def __len__(self):
