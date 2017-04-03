@@ -239,7 +239,8 @@ class EclGrid(BaseCClass):
     def createGrid(cls, dims, dV, offset=1,
             escape_origo_shift=(1,1,0),
             irregular_offset=False, irregular=False, concave=False,
-            faults=False, scale=1, translation=(0,0,0)):
+            faults=False, scale=1, translation=(0,0,0), rotate=False,
+            misalign=False):
         """
         Will create a new grid where each cell is a parallelogram (skewed by z-value).
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
@@ -272,6 +273,12 @@ class EclGrid(BaseCClass):
         @translation the lower part of the grid is translated ("slided") by the specified
         additive factor.
 
+        @rotate the lower part of the grid is rotated 90 degrees around its
+        center.
+
+        @misalign will toggle COORD's slightly in various directions to break
+        alignment
+
         Note that cells in the lowermost layer can have multiple corners
         at the same point.
 
@@ -280,7 +287,6 @@ class EclGrid(BaseCClass):
         and try all 4 different configurations of @concave and
         @irregular_offset.
 
-        TODO: rotate, skew
         TODO: Specify a sensible test base
         """
 
@@ -339,7 +345,15 @@ class EclGrid(BaseCClass):
                 nx*dx/2. + escape_origo_shift[0],
                 ny*dy/2. + escape_origo_shift[1]
                 )
+
+        if misalign:
+            coord = cls.__misalignCoord(coord, dims, dV)
+
         coord = cls.__scaleCoord(coord, scale, lower_center)
+
+        if rotate:
+            coord = cls.__rotateCoord(coord, lower_center)
+
         coord = cls.__translateCoord(coord, translation)
 
         cls.assertCoord(nx, ny, nz, coord)
@@ -418,6 +432,46 @@ class EclGrid(BaseCClass):
         return coord.flatten().tolist()
 
     @classmethod
+    def __misalignCoord(cls, coord, dims, dV):
+        nx, ny, nz = dims
+
+        coord = numpy.array([
+            map(float, coord[i:i+6:])
+            for i in range(0, len(coord), 6)
+            ])
+
+        adjustment = numpy.array([
+            (0, 0, 0, i*dV[0]/2., j*dV[1]/2., 0) for i, j in itertools.product([-1, 0, 1], repeat=2)
+            ])
+
+        for i, c in enumerate(coord):
+            # Leave the outermost coords alone
+            if i < nx+1 or i >= len(coord)-(nx+1):
+                continue
+            if i%(nx+1) in [0, nx]:
+                continue
+
+            c += adjustment[i%len(adjustment)]
+
+        return coord.flatten().tolist()
+
+    @classmethod
+    def __rotateCoord(cls, coord, lower_center):
+        coord = numpy.array([
+            map(float, coord[i:i+6:])
+            for i in range(0, len(coord), 6)
+            ])
+
+        origo = numpy.array(3*[0.] + list(lower_center) + [0])
+        coord -= origo
+
+        for c in coord:
+            c[3], c[4] = -c[4], c[3]
+
+        coord += origo
+        return coord.flatten().tolist()
+
+    @classmethod
     def __translateCoord(cls, coord, translation):
         coord = numpy.array([
             map(float, coord[i:i+6:])
@@ -435,10 +489,8 @@ class EclGrid(BaseCClass):
         Raises an AssertionError if the coord is not as expected. In
         particular, it is verfied that:
 
-            - coord has the approperiate length (6*(nx+1)*(ny+1)),
-            - that all values are positive and
-            - that no two coord's are crossing when considering any of the
-              three "standard planes" (xy, xz, yz).
+            - coord has the approperiate length (6*(nx+1)*(ny+1)) and
+            - that all values are positive.
 
         """
 
@@ -453,22 +505,6 @@ class EclGrid(BaseCClass):
                     "This is likely due to a tranformation. " +
                     "Increasing the escape_origio_shift will most likely " +
                     "fix the problem")
-
-        coord = [
-                    [coord[i+ix:i+6:3] for ix in range(3)]
-                    for i in range(0, len(coord), 6)
-                ]
-
-        # True if and only if line segment p is a super set of q
-        is_super = lambda p, q : min(p) < min(q) <= max(q) < max(p)
-
-        for coord1, coord2 in itertools.product(coord, repeat=2):
-            for p, q in zip(coord1, coord2):
-                if is_super(p, q) or is_super(q, p):
-                    raise AssertionError(
-                        "Coords %r and %r are axis-wise crossing!" %
-                        (zip(*coord1), zip(*coord2))
-                        )
 
     def __init__(self , filename , apply_mapaxes = True):
         """
