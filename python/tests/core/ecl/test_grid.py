@@ -46,18 +46,40 @@ CORNER_HOME = {
         (3, 3, 0) : 8,  (3, 3, 1) : 17, (3, 3, 2) : 26, (3, 3, 3) : 26
 }
 
+# TODO: Remove
+containment_tests = False
+
 def createGridTestBase(dim, dV, offset=1):
     # TODO: Toogle all create grid settings
     return [
             EclGrid.createRectangular(dim, dV),
-            EclGrid.createGrid(dim, dV, offset),
-            EclGrid.createGrid(dim, dV, offset, irregular_offset=True),
-            EclGrid.createGrid(dim, dV, offset, concave=True),
-            EclGrid.createGrid(dim, dV, offset, irregular_offset=True, concave=True),
+            EclGrid.createGrid(dim, dV, offset=offset),
+            EclGrid.createGrid(dim, dV, offset=offset, irregular_offset=True),
+            EclGrid.createGrid(dim, dV, offset=offset, concave=True),
+            EclGrid.createGrid(dim, dV, offset=offset, irregular_offset=True, concave=True),
             EclGrid.createGrid(dim, dV, offset=0, faults=True),
-            EclGrid.createGrid(dim, dV, offset=offset, faults=True)
+            EclGrid.createGrid(dim, dV, offset=offset, faults=True),
+            EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), scale=2)
             ]
 
+def createWrapperGrid(grid):
+    """
+    Creates a grid that occupies the same space as the given grid,
+    but that consists of a single cell.
+    """
+
+    x, y, z = grid.getNX()-1, grid.getNY()-1, grid.getNZ()-1
+    corner_pos = [
+                    (0, 0, 0), (x, 0, 0), (0, y, 0), (x, y, 0),
+                    (0, 0, z), (x, 0, z), (0, y, z), (x, y, z)
+                ]
+
+    corners = [
+                grid.getCellCorner(i, ijk=pos)
+                for i, pos in enumerate(corner_pos)
+              ]
+
+    return EclGrid.createSingleCellGrid(corners)
 
 # This test class should only have test cases which do not require
 # external test data. Tests involving Statoil test data are in the
@@ -355,10 +377,10 @@ class GridTest(ExtendedTestCase):
     def test_volume(self):
         dim     = (5,5,5)
         dV      = (2,2,2)
-        tot_vol = dim[0]*dV[0] * dim[1]*dV[1] * dim[2]*dV[2]
 
         grids = createGridTestBase(dim, dV)
         for grid in grids:
+            tot_vol = createWrapperGrid(grid).cell_volume(0)
             cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
             self.assertTrue(min(cell_volumes) >= 0)
             self.assertFloatEqual(sum(cell_volumes), tot_vol)

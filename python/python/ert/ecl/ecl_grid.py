@@ -208,10 +208,38 @@ class EclGrid(BaseCClass):
         return ecl_grid
 
     @classmethod
+    def createSingleCellGrid(cls, corners):
+        """
+        Provided with the corners of the grid in a similar manner as the eight
+        corners are output for a single cell, this method will create a grid
+        consisting of a single cell with the specified corners as its corners.
+        """
+
+        zcorn = [corners[i][2] for i in range(8)]
+
+        flatten = lambda l : [elem for sublist in l for elem in sublist]
+        coord = [(corners[i], corners[i+4]) for i in range(4)]
+        coord = flatten(flatten(coord))
+
+        def constructFloatKW(name, values):
+            kw = EclKW(name, len(values), EclTypeEnum.ECL_FLOAT_TYPE)
+            for i in range(len(values)):
+                kw[i] = values[i]
+            return kw
+
+        grid = cls.create((1,1,1), constructFloatKW("ZCORN", zcorn), constructFloatKW("COORD", coord), None)
+
+        if not corners == [grid.getCellCorner(i, 0) for i in range(8)]:
+            raise AssertionError("Failed to generate single cell grid. " +
+                    "Did not end up the expected corners.")
+
+        return grid
+
+    @classmethod
     def createGrid(cls, dims, dV, offset=1,
             escape_origo_shift=(1,1,0),
             irregular_offset=False, irregular=False, concave=False,
-            faults=False):
+            faults=False, scale=1):
         """
         Will create a new grid where each cell is a parallelogram (skewed by z-value).
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
@@ -235,7 +263,11 @@ class EclGrid(BaseCClass):
         @escape_origo_shift is used to prevent any cell of having corners in (0,0,z)
         as there is a heuristic in ecl_grid.c that marks such cells as tainted.
 
-        @faults decides if there are to be faults in the grid
+        @faults decides if there are to be faults in the grid.
+
+        @scale A positive number that scales the "lower" endpoint of all
+        coord's. In particular, @scale != 1 creates trapeziod cells in both the XZ
+        and YZ-plane.
 
         Note that cells in the lowermost layer can have multiple corners
         at the same point.
@@ -245,7 +277,7 @@ class EclGrid(BaseCClass):
         and try all 4 different configurations of @concave and
         @irregular_offset.
 
-        TODO: faults, translate, scale, rotate, skew
+        TODO: translate, scale, rotate, skew
         TODO: Specify a sensible test base
         """
 
@@ -297,7 +329,14 @@ class EclGrid(BaseCClass):
         coord = []
         for j, i in itertools.product(range(ny+1), range(nx+1)):
             x, y = i*dx+escape_origo_shift[0], j*dy+escape_origo_shift[1]
-            coord = coord + [x, y, 0, x, y, 0]
+            coord = coord + [x, y, 0, x, y, z]
+
+        # Apply transformations
+        lower_center = (
+                nx*dx/2. + escape_origo_shift[0],
+                ny*dy/2. + escape_origo_shift[1]
+                )
+        coord = cls.__scaleCoord(coord, scale, lower_center)
 
         cls.assertCoord(nx, ny, nz, coord)
 
@@ -363,13 +402,26 @@ class EclGrid(BaseCClass):
                     )
 
     @classmethod
+    def __scaleCoord(cls, coord, scale, lower_center):
+        coord = numpy.array([
+            map(float, coord[i:i+6:])
+            for i in range(0, len(coord), 6)
+            ])
+        origo = numpy.array(3*[0.] + list(lower_center) + [0])
+        scale = numpy.array(3*[1.] + 2*[scale] + [1])
+
+        coord = scale * (coord-origo) + origo
+        return coord.flatten().tolist()
+
+    @classmethod
     def assertCoord(cls, nx, ny, nz, coord):
         """
 
         Raises an AssertionError if the coord is not as expected. In
         particular, it is verfied that:
 
-            - coord has the approperiate length (6*(nx+1)*(ny+1)) and
+            - coord has the approperiate length (6*(nx+1)*(ny+1)),
+            - that all values are positive and
             - that no two coord's are crossing when considering any of the
               three "standard planes" (xy, xz, yz).
 
@@ -380,6 +432,12 @@ class EclGrid(BaseCClass):
                     "Expected len(coord) to be %d, was %d" %
                     (6*(nx+1)*(ny+1), len(coord))
                     )
+
+        if min(coord) < 0:
+            raise AssertionError("Negative COORD values was generated. " +
+                    "This is likely due to a tranformation. " +
+                    "Increasing the escape_origio_shift will most likely " +
+                    "fix the problem")
 
         coord = [
                     [coord[i+ix:i+6:3] for ix in range(3)]
