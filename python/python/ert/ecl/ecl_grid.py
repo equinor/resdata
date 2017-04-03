@@ -239,7 +239,7 @@ class EclGrid(BaseCClass):
     def createGrid(cls, dims, dV, offset=1,
             escape_origo_shift=(1,1,0),
             irregular_offset=False, irregular=False, concave=False,
-            faults=False, scale=1):
+            faults=False, scale=1, translation=(0,0,0)):
         """
         Will create a new grid where each cell is a parallelogram (skewed by z-value).
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
@@ -269,6 +269,9 @@ class EclGrid(BaseCClass):
         coord's. In particular, @scale != 1 creates trapeziod cells in both the XZ
         and YZ-plane.
 
+        @translation the lower part of the grid is translated ("slided") by the specified
+        additive factor.
+
         Note that cells in the lowermost layer can have multiple corners
         at the same point.
 
@@ -277,7 +280,7 @@ class EclGrid(BaseCClass):
         and try all 4 different configurations of @concave and
         @irregular_offset.
 
-        TODO: translate, scale, rotate, skew
+        TODO: rotate, skew
         TODO: Specify a sensible test base
         """
 
@@ -337,6 +340,7 @@ class EclGrid(BaseCClass):
                 ny*dy/2. + escape_origo_shift[1]
                 )
         coord = cls.__scaleCoord(coord, scale, lower_center)
+        coord = cls.__translateCoord(coord, translation)
 
         cls.assertCoord(nx, ny, nz, coord)
 
@@ -411,6 +415,17 @@ class EclGrid(BaseCClass):
         scale = numpy.array(3*[1.] + 2*[scale] + [1])
 
         coord = scale * (coord-origo) + origo
+        return coord.flatten().tolist()
+
+    @classmethod
+    def __translateCoord(cls, coord, translation):
+        coord = numpy.array([
+            map(float, coord[i:i+6:])
+            for i in range(0, len(coord), 6)
+            ])
+        translation = numpy.array(3*[0.] + list(translation))
+
+        coord = coord + translation
         return coord.flatten().tolist()
 
     @classmethod

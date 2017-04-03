@@ -59,7 +59,8 @@ def createGridTestBase(dim, dV, offset=1):
             EclGrid.createGrid(dim, dV, offset=offset, irregular_offset=True, concave=True),
             EclGrid.createGrid(dim, dV, offset=0, faults=True),
             EclGrid.createGrid(dim, dV, offset=offset, faults=True),
-            EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), scale=2)
+            EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), scale=2),
+            EclGrid.createGrid(dim, dV, escape_origo_shift=(100, 100, 0), translation=(50,50,0))
             ]
 
 def createWrapperGrid(grid):
