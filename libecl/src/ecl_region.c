@@ -306,7 +306,7 @@ void ecl_region_deselect_cell( ecl_region_type * region , int i , int j , int k)
 static void ecl_region_select_equal__( ecl_region_type * region , const ecl_kw_type * ecl_kw, int value , bool select) {
   bool global_kw;
   ecl_region_assert_kw( region , ecl_kw , &global_kw);
-  if (ecl_type_is_int(ecl_kw_get_data_type( ecl_kw )))
+  if (!ecl_type_is_int(ecl_kw_get_data_type( ecl_kw )))
     util_abort("%s: sorry - select by equality is only supported for integer keywords \n",__func__);
   {
     const int * kw_data = ecl_kw_get_int_ptr( ecl_kw );

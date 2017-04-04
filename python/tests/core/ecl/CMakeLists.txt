@@ -25,6 +25,7 @@ set(TEST_SOURCES
     test_kw_function.py
     test_layer.py
     test_npv.py
+    test_region.py
     test_region_statoil.py
     test_restart.py
     test_rft.py
@@ -62,6 +63,7 @@ addPythonTest(ecl.ecl_file ecl.test_ecl_file.EclFileTest)
 addPythonTest(ecl.ecl_grav ecl.test_grav.EclGravTest)
 addPythonTest(ecl.ecl_geertsma ecl.test_geertsma.GeertsmaTest)
 addPythonTest(ecl.ecl_type ecl.test_ecl_type.EclDataTypeTest)
+addPythonTest(ecl.ecl_region ecl.test_region.RegionTest)
 
 
 if (STATOIL_TESTDATA_ROOT)
