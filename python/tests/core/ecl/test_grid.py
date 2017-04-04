@@ -48,7 +48,7 @@ CORNER_HOME = {
 
 def createVolumeTestGridBase(dim, dV, offset=1):
     return [
-            EclGrid.createRectangular(dim, dV),
+            EclGrid.createGrid(dim, dV, offset=0),
             EclGrid.createGrid(dim, dV, offset=offset),
             EclGrid.createGrid(dim, dV, offset=offset, irregular_offset=True),
             EclGrid.createGrid(dim, dV, offset=offset, concave=True),
@@ -69,8 +69,7 @@ def createVolumeTestGridBase(dim, dV, offset=1):
             ]
 
 def createContainmentTestBase():
-    # TODO: Create larger test base
-    return [
+    special_made = [
             (3,  EclGrid.createGrid((6,6,6), (1,1,1), offset=0)),
             (3,  EclGrid.createGrid((6,6,6), (1,1,1), offset=1)),
             (10, EclGrid.createGrid((3,3,3), (1,1,1), offset=1, concave=True)),
@@ -93,6 +92,13 @@ def createContainmentTestBase():
                     )
                 )
             ]
+
+    from_volume = createVolumeTestGridBase((8,8,8),(2,2,2))[:1:]
+    from_volume = [(3, grid) for grid in from_volume]
+
+    #return special_made + from_volume
+    print len(from_volume)
+    return from_volume
 
 def getMinMaxValue(grid):
     corners = [
@@ -121,6 +127,10 @@ def createWrapperGrid(grid):
               ]
 
     return EclGrid.createSingleCellGrid(corners)
+
+def average(points):
+    p = reduce(lambda a,b: (a[0]+b[0], a[1]+b[1], a[2]+b[2]), points)
+    return [elem/float(len(points)) for elem in p]
 
 # This test class should only have test cases which do not require
 # external test data. Tests involving Statoil test data are in the
@@ -367,6 +377,47 @@ class GridTest(ExtendedTestCase):
             g2 = EclGrid("CASE.EGRID")
             self.assertFloatEqual( g2.cell_volume( global_index = 0 ) , 100*100*100 )
 
+    def test_volume(self):
+        dim     = (5,5,5)
+        dV      = (2,2,2)
+
+        grids = createVolumeTestGridBase(dim, dV)
+        for grid in grids:
+            tot_vol = createWrapperGrid(grid).cell_volume(0)
+            cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
+            self.assertTrue(min(cell_volumes) >= 0)
+            self.assertFloatEqual(sum(cell_volumes), tot_vol)
+
+    def test_unique_containment(self):
+        test_base = createContainmentTestBase()
+
+        for steps_per_unit, grid in test_base:
+            wgrid = createWrapperGrid(grid)
+
+            (xmin, xmax), (ymin, ymax), (zmin, zmax) = getMinMaxValue(wgrid)
+            x_space = linspace(xmin-1, xmax+1, (xmax-xmin+2)*steps_per_unit+1)
+            y_space = linspace(ymin-1, ymax+1, (ymax-ymin+2)*steps_per_unit+1)
+            z_space = linspace(zmin-1, zmax+1, (zmax-zmin+2)*steps_per_unit+1)
+
+            for x, y, z in itertools.product(x_space, y_space, z_space):
+                hits = [
+                            grid.cell_contains(x, y, z, i)
+                            for i in range(grid.getGlobalSize())
+                        ].count(True)
+
+                self.assertTrue(hits in [0, 1])
+
+                if hits != (1 if wgrid.cell_contains(x, y, z, 0) else 0):
+                    print "Diff!"
+                    print hits
+                    print (1 if wgrid.cell_contains(x, y, z, 0) else 0)
+                    print x, y, z
+
+                self.assertEqual(
+                        1 if wgrid.cell_contains(x, y, z, 0) else 0,
+                        hits
+                        )
+
     def test_cell_corner_containment(self):
         n = 4
         d = 10
@@ -403,49 +454,122 @@ class GridTest(ExtendedTestCase):
                         [grid.cell_contains(p[0], p[1], p[2], i) for i in range(n**3)].count(True)
                     )
 
-    def test_cell_unique_containment(self):
-        n = 4
-        d = 4
-        grid = EclGrid.createRectangular( (n, n, n), (d, d, d))
+    # This test generates a cell that is concave on ALL 6 sides
+    def test_concave_cell_containment(self):
+        points = [
+            (5, 5, 5),
+            (20, 10, 10),
+            (10, 20, 10),
+            (25, 25, 5),
+            (10, 10, 20),
+            (25, 5, 25),
+            (5, 25, 25),
+            (20, 20, 20)
+            ]
 
-        coordinates = range(0, n*d+1)
-        for x, y, z in itertools.product(coordinates, repeat=3):
-            self.assertEqual(
-                    1,
-                    [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
-                    )
+        grid = EclGrid.createSingleCellGrid(points)
 
-    def test_volume(self):
-        dim     = (5,5,5)
-        dV      = (2,2,2)
+        assertPoint = lambda p : self.assertTrue(
+                grid.cell_contains(p[0], p[1], p[2], 0)
+                )
 
-        grids = createVolumeTestGridBase(dim, dV)
-        for grid in grids:
-            tot_vol = createWrapperGrid(grid).cell_volume(0)
-            cell_volumes = [grid.cell_volume(i) for i in range(grid.getGlobalSize())]
-            self.assertTrue(min(cell_volumes) >= 0)
-            self.assertFloatEqual(sum(cell_volumes), tot_vol)
+        assertNotPoint = lambda p : self.assertFalse(
+                grid.cell_contains(p[0], p[1], p[2], 0)
+                )
 
-    def test_unique_containment(self):
-        test_base = createContainmentTestBase()
+        # Cell center
+        assertPoint(average(points));
 
-        for steps_per_unit, grid in test_base:
-            wgrid = createWrapperGrid(grid)
+        # "Side" center
+        assertNotPoint(average(points[0:4:]))
+        assertNotPoint(average(points[4:8:]))
+        assertNotPoint(average(points[1:8:2]))
+        assertNotPoint(average(points[0:8:2]))
+        assertNotPoint(average(points[0:8:4] + points[1:8:4]))
+        assertNotPoint(average(points[2:8:4] + points[3:8:4]))
 
-            (xmin, xmax), (ymin, ymax), (zmin, zmax) = getMinMaxValue(wgrid)
-            x_space = linspace(xmin-1, xmax+1, (xmax-xmin+2)*steps_per_unit+1)
-            y_space = linspace(ymin-1, ymax+1, (ymax-ymin+2)*steps_per_unit+1)
-            z_space = linspace(zmin-1, zmax+1, (zmax-zmin+2)*steps_per_unit+1)
+        # Corners
+        for p in points:
+            assertPoint(p)
 
-            for x, y, z in itertools.product(x_space, y_space, z_space):
-                hits = [
-                            grid.cell_contains(x, y, z, i)
-                            for i in range(grid.getGlobalSize())
-                        ].count(True)
+        # Edges
+        edges = ([(i, i+1) for i in range(0, 8, 2)] +
+                 [(i, i+2) for i in [0, 1, 4, 5]] +
+                 [(i, i+4) for i in range(4)] +
+                 [(1,2), (2,7), (1,7), (4,7), (2,4), (4,1)])
+        for a,b in edges:
+            assertPoint(average([points[a], points[b]]))
 
-                self.assertTrue(hits in [0, 1])
+        # Epsilon inside from corners
+        middle_point = average(points)
+        for p in points:
+            assertPoint(average(20*[p] + [middle_point]))
 
-                self.assertEqual(
-                        1 if wgrid.cell_contains(x, y, z, 0) else 0,
-                        hits
-                        )
+        # Espilon outside
+        middle_point[2] = 0
+        for p in points[0:4:]:
+            assertNotPoint(average(20*[p] + [middle_point]))
+
+        middle_point[2] = 30
+        for p in points[4:8:]:
+            assertNotPoint(average(20*[p] + [middle_point]))
+
+    # This test generates a cell that is strictly convex on ALL 6 sides
+    def test_concvex_cell_containment(self):
+        points = [
+            (10, 10, 10),
+            (25, 5, 5),
+            (5, 25, 5),
+            (20, 20, 10),
+            (5, 5, 25),
+            (20, 10, 20),
+            (10, 20, 20),
+            (25, 25, 25)
+            ]
+
+        grid = EclGrid.createSingleCellGrid(points)
+
+        assertPoint = lambda p : self.assertTrue(
+                grid.cell_contains(p[0], p[1], p[2], 0)
+                )
+
+        assertNotPoint = lambda p : self.assertFalse(
+                grid.cell_contains(p[0], p[1], p[2], 0)
+                )
+
+        # Cell center
+        assertPoint(average(points));
+
+        # "Side" center
+        assertPoint(average(points[0:4:]))
+        assertPoint(average(points[4:8:]))
+        assertPoint(average(points[1:8:2]))
+        assertPoint(average(points[0:8:2]))
+        assertPoint(average(points[0:8:4] + points[1:8:4]))
+        assertPoint(average(points[2:8:4] + points[3:8:4]))
+
+        # Corners
+        for p in points:
+            assertPoint(p)
+
+        # Edges
+        edges = ([(i, i+1) for i in range(0, 8, 2)] +
+                 [(i, i+2) for i in [0, 1, 4, 5]] +
+                 [(i, i+4) for i in range(4)] +
+                 [(1,2), (2,7), (1,7), (4,7), (2,4), (4,1)])
+        for a,b in edges:
+            assertPoint(average([points[a], points[b]]))
+
+        # Epsilon inside from corners
+        middle_point = average(points)
+        for p in points:
+            assertPoint(average(20*[p] + [middle_point]))
+
+        # Espilon outside
+        middle_point[2] = 0
+        for p in points[0:4:]:
+            assertNotPoint(average(20*[p] + [middle_point]))
+
+        middle_point[2] = 30
+        for p in points[4:8:]:
+            assertNotPoint(average(20*[p] + [middle_point]))
