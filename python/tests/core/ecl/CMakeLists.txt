@@ -25,7 +25,7 @@ set(TEST_SOURCES
     test_kw_function.py
     test_layer.py
     test_npv.py
-    test_region.py
+    test_region_statoil.py
     test_restart.py
     test_rft.py
     test_rft_statoil.py
@@ -72,7 +72,7 @@ if (STATOIL_TESTDATA_ROOT)
   addPythonTest(ecl.ecl_init_file ecl.test_ecl_init_file.InitFileTest LABELS StatoilData)
   addPythonTest(ecl.ecl_restart_file ecl.test_ecl_restart_file.RestartFileTest LABELS StatoilData)
   addPythonTest(ecl.ecl_restart ecl.test_restart.RestartTest LABELS StatoilData )
-  addPythonTest(ecl.ecl_region ecl.test_region.RegionTest LABELS StatoilData)
+  addPythonTest(ecl.ecl_region_statoil ecl.test_region_statoil.RegionTest LABELS StatoilData)
   addPythonTest(ecl.ecl_rft_statoil ecl.test_rft_statoil.RFTTest LABELS StatoilData)
   addPythonTest(ecl.ecl_sum1 ecl.test_sum_statoil.SumTest LABELS StatoilData)
   addPythonTest(ecl.ecl_sum_vector ecl.test_ecl_sum_vector.EclSumVectorTest LABELS StatoilData)
