@@ -222,7 +222,7 @@ class EclGrid(BaseCClass):
         coord = flatten(flatten(coord))
 
         def constructFloatKW(name, values):
-            kw = EclKW(name, len(values), EclTypeEnum.ECL_FLOAT_TYPE)
+            kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
             for i in range(len(values)):
                 kw[i] = values[i]
             return kw
@@ -360,7 +360,7 @@ class EclGrid(BaseCClass):
 
         # Construct grid
         def constructFloatKW(name, values):
-            kw = EclKW(name, len(values), EclTypeEnum.ECL_FLOAT_TYPE)
+            kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
             for i in range(len(values)):
                 kw[i] = values[i]
             return kw
