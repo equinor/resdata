@@ -324,3 +324,18 @@ class GridTest(ExtendedTestCase):
                     1,
                     [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
                     )
+
+
+    def test_len(self):
+        nx = 10
+        ny = 11
+        nz = 12
+        actnum = EclKW( "ACTNUM" , nx*ny*nz , EclDataType.ECL_INT )
+        actnum[0] = 1
+        actnum[1] = 1
+        actnum[2] = 1
+        actnum[3] = 1
+        
+        grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1), actnum = actnum)
+        self.assertEqual( len(grid) , nx*ny*nz )
+        self.assertEqual( grid.getNumActive( ) , 4 )
