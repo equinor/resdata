@@ -207,6 +207,13 @@ class EclGrid(BaseCClass):
         return ecl_grid
 
 
+    def __len__(self):
+        """
+        len(grid) wil return the total number of cells.
+        """
+        return self._get_global_size( )
+
+    
     def __init__(self , filename , apply_mapaxes = True):
         """
         Will create a grid structure from an EGRID or GRID file.
