@@ -404,3 +404,8 @@ class KWTest(ExtendedTestCase):
         for i in range(N/2):
             self.assertEqual( kw[i] , i )
             
+
+    def test_typename(self):
+        kw = EclKW("KW" , 100 , EclDataType.ECL_INT)
+
+        self.assertEqual( kw.typeName( ) , "INTE")

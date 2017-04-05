@@ -932,6 +932,9 @@ class EclKW(BaseCClass):
     def type_name( self ):
         return self.data_type.type_name
 
+    def typeName( self ):
+        return self.data_type.type_name
+
     def getEclType(self):
         warnings.warn("EclTypeEnum is deprecated. " +
             "You should instead provide an EclDataType",

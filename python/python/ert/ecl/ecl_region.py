@@ -417,6 +417,8 @@ class EclRegion(BaseCClass):
            region.select_equal( pvtnum_kw , 4 )
 
         """
+        if not ecl_kw.data_type.is_int():
+            raise ValueError("The select_equal method must have an integer valued keyword - got:%s" % ecl_kw.typeName( ))
         self._select_equal( ecl_kw , value )
 
 
@@ -426,6 +428,8 @@ class EclRegion(BaseCClass):
 
         See select_equal() for further documentation.
         """
+        if not ecl_kw.data_type.is_int():
+            raise ValueError("The select_equal method must have an integer valued keyword - got:%s" % ecl_kw.typeName( ))
         self._deselect_equal( ecl_kw , value )
 
     @select_method

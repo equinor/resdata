@@ -26,6 +26,7 @@ set(TEST_SOURCES
     test_layer.py
     test_npv.py
     test_region.py
+    test_region_statoil.py
     test_restart.py
     test_rft.py
     test_rft_statoil.py
@@ -62,6 +63,7 @@ addPythonTest(ecl.ecl_file ecl.test_ecl_file.EclFileTest)
 addPythonTest(ecl.ecl_grav ecl.test_grav.EclGravTest)
 addPythonTest(ecl.ecl_geertsma ecl.test_geertsma.GeertsmaTest)
 addPythonTest(ecl.ecl_type ecl.test_ecl_type.EclDataTypeTest)
+addPythonTest(ecl.ecl_region ecl.test_region.RegionTest)
 
 
 if (STATOIL_TESTDATA_ROOT)
@@ -72,7 +74,7 @@ if (STATOIL_TESTDATA_ROOT)
   addPythonTest(ecl.ecl_init_file ecl.test_ecl_init_file.InitFileTest LABELS StatoilData)
   addPythonTest(ecl.ecl_restart_file ecl.test_ecl_restart_file.RestartFileTest LABELS StatoilData)
   addPythonTest(ecl.ecl_restart ecl.test_restart.RestartTest LABELS StatoilData )
-  addPythonTest(ecl.ecl_region ecl.test_region.RegionTest LABELS StatoilData)
+  addPythonTest(ecl.ecl_region_statoil ecl.test_region_statoil.RegionTest LABELS StatoilData)
   addPythonTest(ecl.ecl_rft_statoil ecl.test_rft_statoil.RFTTest LABELS StatoilData)
   addPythonTest(ecl.ecl_sum1 ecl.test_sum_statoil.SumTest LABELS StatoilData)
   addPythonTest(ecl.ecl_sum_vector ecl.test_ecl_sum_vector.EclSumVectorTest LABELS StatoilData)
