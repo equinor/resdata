@@ -45,31 +45,21 @@ class GeoRegion(BaseCClass):
             super(GeoRegion, self).__init__(c_ptr)
         else:
             raise ValueError('Could not construct GeoRegion from pointset %s.' % pointset)
-        self.select_polygon_fn = {
-            (True, True): self._select_inside_polygon,
-            (False, True): self._select_outside_polygon,
-            (True, False): self._deselect_inside_polygon,
-            (False, False): self._deselect_outside_polygon
-        }
-        self.select_halfspace_fn = {
-            (True, True): self._select_above_line,
-            (False, True): self._select_below_line,
-            (True, False): self._deselect_above_line,
-            (False, False): self._deselect_below_line
-        }
 
 
     def getActiveList(self):
         return self._get_index_list()
 
-    def select_polygon(self, polygon, inside=True, select=True):
+    def _assert_polygon(self, polygon):
         if not isinstance(polygon, CPolyline):
             raise ValueError('Need to select with a CPolyline, not %s.'
                              % type(polygon))
-        selector_fn = self.select_polygon_fn[(inside, select)]
-        selector_fn(polygon)
 
-    def select_halfspace(self, line, above=True, select=True):
+
+    def _construct_cline(self, line):
+        """Takes a line ((x1,y1), (x2,y2)) and returns two double[2]* but
+        reordered to (x1x2, y1y2).
+        """
         try:
             p1, p2 = line
             x1, y1 = map(float, p1)
@@ -79,33 +69,41 @@ class GeoRegion(BaseCClass):
             raise ValueError(err_msg % (line, err))
         x1x2_ptr = cpair(x1, x2)
         y1y2_ptr = cpair(y1, y2)
-        selector_fn = self.select_halfspace_fn[(above, select)]
-        selector_fn(x1x2_ptr, y1y2_ptr)  # note that it takes xx, yy
+        return x1x2_ptr, y1y2_ptr
+
 
     def select_inside(self, polygon):
-        self.select_polygon(polygon, inside=True, select=True)
+        self._assert_polygon(polygon)
+        self._select_inside_polygon(polygon)
 
     def select_outside(self, polygon):
-        self.select_polygon(polygon, inside=False, select=True)
+        self._assert_polygon(polygon)
+        self._select_outside_polygon(polygon)
 
     def deselect_inside(self, polygon):
-        self.select_polygon(polygon, inside=True, select=False)
+        self._assert_polygon(polygon)
+        self._deselect_inside_polygon(polygon)
 
     def deselect_outside(self, polygon):
-        self.select_polygon(polygon, inside=False, select=False)
+        self._assert_polygon(polygon)
+        self._deselect_outside_polygon(polygon)
 
 
     def select_above(self, line):
-        self.select_halfspace(line, above=True, select=True)
+        x_ptr, y_ptr = self._construct_cline(line)
+        self._select_above_line(x_ptr, y_ptr)
 
     def select_below(self, line):
-        self.select_halfspace(line, above=False, select=True)
+        x_ptr, y_ptr = self._construct_cline(line)
+        self._select_below_line(x_ptr, y_ptr)
 
     def deselect_above(self, line):
-        self.select_halfspace(line, above=True, select=False)
+        x_ptr, y_ptr = self._construct_cline(line)
+        self._deselect_above_line(x_ptr, y_ptr)
 
     def deselect_below(self, line):
-        self.select_halfspace(line, above=False, select=False)
+        x_ptr, y_ptr = self._construct_cline(line)
+        self._deselect_below_line(x_ptr, y_ptr)
 
 
     def __len__(self):
