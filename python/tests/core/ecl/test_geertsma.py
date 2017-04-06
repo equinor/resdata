@@ -110,10 +110,10 @@ class GeertsmaTest(ExtendedTestCase):
             dz2 = subsidence.evalGeertsma("S2", None, receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz2, 2.275556615015282e-06)
 
-            np.testing.assert_almost_equal(dz2-dz1, 1.4102340734935779e-06)
+            np.testing.assert_almost_equal(dz1-dz2, -1.4102340734935779e-06)
 
             dz = subsidence.evalGeertsma("S1", "S2", receiver, youngs_modulus, poisson_ratio, seabed)
-            np.testing.assert_almost_equal(dz, 1.4102340734935779e-06)
+            np.testing.assert_almost_equal(dz, dz1-dz2)
 
     @staticmethod
     def test_geertsma_kernel_seabed():
