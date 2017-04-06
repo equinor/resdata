@@ -286,8 +286,6 @@ class EclGrid(BaseCClass):
         method can produce, by leting @dims be (10,10,10), @dV=(2,2,2), @offset=1,
         and try all 4 different configurations of @concave and
         @irregular_offset.
-
-        TODO: Specify a sensible test base
         """
 
         nx, ny, nz = dims
@@ -338,7 +336,7 @@ class EclGrid(BaseCClass):
         coord = []
         for j, i in itertools.product(range(ny+1), range(nx+1)):
             x, y = i*dx+escape_origo_shift[0], j*dy+escape_origo_shift[1]
-            coord = coord + [x, y, 0, x, y, z]
+            coord = coord + [x, y, escape_origo_shift[2], x, y, z]
 
         # Apply transformations
         lower_center = (

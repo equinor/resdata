@@ -69,36 +69,19 @@ def createVolumeTestGridBase(dim, dV, offset=1):
             ]
 
 def createContainmentTestBase():
-    special_made = [
-            (3,  EclGrid.createGrid((6,6,6), (1,1,1), offset=0)),
+    return [
             (3,  EclGrid.createGrid((6,6,6), (1,1,1), offset=1)),
             (10, EclGrid.createGrid((3,3,3), (1,1,1), offset=1, concave=True)),
+            (4,  EclGrid.createGrid((10,10,1), (1,1,1), offset=0., misalign=True)),
             (3,
-                EclGrid.createGrid(
-                    (10,10,10), (1,1,1), offset=1, concave=True
-                    )
-                ),
-            (3,
-                EclGrid.createGrid(
-                    (4,4,4), (1,1,1), offset=0.5,
-                    concave=True, irregular_offset=True
-                    )
-                ),
-            (7,
-                EclGrid.createGrid(
-                    (4,4,4), (1,1,1), offset=0.5,
-                    concave=True, irregular_offset=True,
-                    irregular=True
+                EclGrid.createGrid((6,6,6), (1,1,1), offset=0.,
+                    escape_origo_shift=(100, 100, 0),
+                    irregular_offset=True, concave=True, irregular=True,
+                    scale=1.5, translation=(5,5,0),
+                    misalign=True
                     )
                 )
             ]
-
-    from_volume = createVolumeTestGridBase((8,8,8),(2,2,2))[:1:]
-    from_volume = [(3, grid) for grid in from_volume]
-
-    #return special_made + from_volume
-    print len(from_volume)
-    return from_volume
 
 def getMinMaxValue(grid):
     corners = [
@@ -378,7 +361,7 @@ class GridTest(ExtendedTestCase):
             self.assertFloatEqual( g2.cell_volume( global_index = 0 ) , 100*100*100 )
 
     def test_volume(self):
-        dim     = (5,5,5)
+        dim     = (10,10,10)
         dV      = (2,2,2)
 
         grids = createVolumeTestGridBase(dim, dV)
@@ -406,12 +389,6 @@ class GridTest(ExtendedTestCase):
                         ].count(True)
 
                 self.assertTrue(hits in [0, 1])
-
-                if hits != (1 if wgrid.cell_contains(x, y, z, 0) else 0):
-                    print "Diff!"
-                    print hits
-                    print (1 if wgrid.cell_contains(x, y, z, 0) else 0)
-                    print x, y, z
 
                 self.assertEqual(
                         1 if wgrid.cell_contains(x, y, z, 0) else 0,
