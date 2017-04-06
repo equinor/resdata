@@ -4014,9 +4014,10 @@ static bool concave_cell_contains( const ecl_cell_type * cell, int method, const
       }
   };
 
+  // Test for containment in cell core
+  bool contained = tetrahedron_by_points_contains(dia[0][0], dia[1][0], dia[0][1], dia[1][1], p);
+
   // Test for containment in protrusions
-  // TODO: Clean up this code
-  bool contained = false;
   for(int i = 0; i < 2; ++i) {
     if(tetrahedron_by_points_contains(dia[i][0], dia[i][1], dia[(i+1)%2][0], extra[i][0], p)) {
       contained = true;
@@ -4039,11 +4040,6 @@ static bool concave_cell_contains( const ecl_cell_type * cell, int method, const
       if(!on_inner_faces && !tetrahedron_positive_volume(dia[i][0], dia[(i+1)%2][1], dia[i][1], extra[i][1]))
         return false;
     }
-  }
-
-  // Test for containment in cell core
-  if(tetrahedron_by_points_contains(dia[0][0], dia[1][0], dia[0][1], dia[1][1], p)) {
-    contained = true;
   }
 
   return contained;
