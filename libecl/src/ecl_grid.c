@@ -616,12 +616,6 @@ static double point_dot_product( const point_type * v1 , const point_type * v2) 
   return v1->x*v2->x + v1->y*v2->y + v1->z*v2->z;
 }
 
-
-
-static bool point_equal( const point_type *p1 , const point_type * p2) {
-  return (memcmp( p1 , p2 , sizeof * p1 ) == 0);
-}
-
 /**
    This function calculates the (signed) distance from point 'p' to
    the plane specifed by the plane vector 'n' and the point
@@ -642,12 +636,6 @@ static void point_normal_vector(point_type * n, const point_type * p0, const poi
   point_inplace_sub( &v2, p0 );
 
   point_vector_cross( n, &v1, &v2 );
-}
-
-static double point3_plane_distance(const point_type * p0 , const point_type * p1 , const point_type * p2 , const point_type * x) {
-  point_type n;
-  point_normal_vector( &n , p0 , p1 , p2 );
-  return point_plane_distance( x , &n , p0 ) / sqrt( n.x*n.x + n.y*n.y + n.z*n.z);
 }
 
 static void point_compare( const point_type *p1 , const point_type * p2, bool * equal) {
