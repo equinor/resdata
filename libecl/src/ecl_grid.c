@@ -2709,9 +2709,16 @@ static void ecl_grid_init_nnc(ecl_grid_type * main_grid, ecl_file_type * ecl_fil
   int num_nnchead_kw = ecl_file_get_num_named_kw( ecl_file , NNCHEAD_KW );
   int i;
 
-  if(num_nnchead_kw > 0 && main_grid->eclipse_version == 2015){
-      return; //Eclipse 2015 has an error with nnc.
-  }
+  /*
+    NB: There is a bug in Eclipse version 2015.1, for MPI runs with
+        six or more processors (I think ...) the NNC datastructures
+        are in an internally inconsistent state; and will lead to a
+        hard crash. The issue has been fixed in version 2015.2, but
+        unfortunately it is not possible to test for micro version.
+
+        if(num_nnchead_kw > 0 && main_grid->eclipse_version == 2015)
+           return;
+  */
 
   for (i = 0; i < num_nnchead_kw; i++) {
     ecl_file_view_type * lgr_view = ecl_file_alloc_global_blockview(ecl_file , NNCHEAD_KW , i);
