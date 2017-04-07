@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <ert/util/util.h>
 #include <ert/ecl/ecl_type.h>
@@ -34,9 +35,34 @@
 #define ECL_TYPE_NAME_BOOL     "LOGI"
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
+char ecl_type_string_name [1000][5];
+static const char * ECL_TYPE_NAME_STRING(const size_t size) {
+  sprintf(ecl_type_string_name[size], "C%03zd", size);
+  return ecl_type_string_name[size];
+}
+
+static bool is_ecl_string_name(const char * type_name) {
+  return (type_name[0] == 'C'   &&
+          isdigit(type_name[1]) &&
+          isdigit(type_name[2]) &&
+          isdigit(type_name[3])
+          );
+}
+
+static size_t get_ecl_string_length(const char * type_name) {
+  if(!is_ecl_string_name(type_name))
+    util_abort("%s: Expected eclipse string (CXXX), received %s\n",
+               __func__, type_name);
+
+  return atoi(type_name+1);
+}
 
 ecl_data_type ecl_type_create(const ecl_type_enum type, const size_t element_size) {
-    ecl_data_type ecl_type = ecl_type_create_from_type(type);
+    ecl_data_type ecl_type = (
+                                  type == ECL_STRING_TYPE ?
+                                  ECL_STRING(element_size) :
+                                  ecl_type_create_from_type(type)
+                              );
 
     if(ecl_type.element_size != element_size)
         util_abort(
@@ -60,6 +86,10 @@ ecl_data_type ecl_type_create_from_type(const ecl_type_enum type) {
       return ECL_BOOL;
     case(ECL_MESS_TYPE):
       return ECL_MESS;
+    case(ECL_STRING_TYPE):
+      util_abort("%s: Variable length string type cannot be created"
+              " from type alone!\n" , __func__);
+      return ECL_STRING(0); /* Dummy */
     case(ECL_C010_TYPE):
       return ECL_C010;
     default:
@@ -79,7 +109,9 @@ size_t ecl_type_get_element_size(const ecl_data_type ecl_type) {
 const char * ecl_type_get_name(const ecl_data_type ecl_type) {
   switch (ecl_type.type) {
   case(ECL_CHAR_TYPE):
-    return ECL_TYPE_NAME_CHAR ;
+    return ECL_TYPE_NAME_CHAR;
+  case(ECL_STRING_TYPE):
+    return ECL_TYPE_NAME_STRING(ecl_type.element_size);
   case(ECL_C010_TYPE):
     return ECL_TYPE_NAME_C010;
   case(ECL_FLOAT_TYPE):
@@ -107,6 +139,8 @@ ecl_data_type ecl_type_create_from_name( const char * type_name ) {
     return ECL_DOUBLE;
   else if (strncmp( type_name , ECL_TYPE_NAME_CHAR , ECL_TYPE_LENGTH) == 0)
     return ECL_CHAR;
+  else if (is_ecl_string_name(type_name))
+    return ECL_STRING(get_ecl_string_length(type_name));
   else if (strncmp( type_name , ECL_TYPE_NAME_C010 , ECL_TYPE_LENGTH) == 0)
     return ECL_C010;
   else if (strncmp( type_name , ECL_TYPE_NAME_MESSAGE , ECL_TYPE_LENGTH) == 0)
@@ -121,7 +155,7 @@ ecl_data_type ecl_type_create_from_name( const char * type_name ) {
 
 
 int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type ecl_type) {
-  if(ecl_type_is_char(ecl_type) || ecl_type_is_C010(ecl_type))
+  if(ecl_type_is_char(ecl_type) || ecl_type_is_string(ecl_type) || ecl_type_is_C010(ecl_type))
       return ecl_type.element_size - 1;
   else
       return ecl_type_get_sizeof_ctype(ecl_type);
@@ -169,4 +203,8 @@ bool ecl_type_is_bool(const ecl_data_type ecl_type) {
 
 bool ecl_type_is_C010(const ecl_data_type ecl_type) {
     return (ecl_type.type == ECL_C010_TYPE);
+}
+
+bool ecl_type_is_string(const ecl_data_type ecl_type) {
+    return (ecl_type.type == ECL_STRING_TYPE);
 }
