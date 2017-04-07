@@ -35,6 +35,8 @@
 #define ECL_TYPE_NAME_BOOL     "LOGI"
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
+// TODO: We need to make a choice here
+// In other words, this code has definitively not reatched its final form!
 char ecl_type_string_name [1000][5];
 static const char * ECL_TYPE_NAME_STRING(const size_t size) {
   sprintf(ecl_type_string_name[size], "C%03zd", size);

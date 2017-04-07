@@ -85,6 +85,10 @@ bool ecl_type_is_C010_python(const ecl_data_type * ecl_type) {
     return ecl_type_is_C010(*ecl_type);
 }
 
+bool ecl_type_is_string_python(const ecl_data_type * ecl_type) {
+    return ecl_type_is_string(*ecl_type);
+}
+
 /**
  *
  * Functions for the EclKw prototype

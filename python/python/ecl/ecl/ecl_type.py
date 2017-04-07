@@ -25,6 +25,7 @@ class EclTypeEnum(BaseCEnum):
     ECL_INT_TYPE    = None
     ECL_BOOL_TYPE   = None
     ECL_MESS_TYPE   = None
+    ECL_STRING_TYPE = None
 
 EclTypeEnum.addEnum("ECL_CHAR_TYPE" , 0 )
 EclTypeEnum.addEnum("ECL_FLOAT_TYPE" , 1 )
@@ -32,6 +33,7 @@ EclTypeEnum.addEnum("ECL_DOUBLE_TYPE" , 2 )
 EclTypeEnum.addEnum("ECL_INT_TYPE" , 3 )
 EclTypeEnum.addEnum("ECL_BOOL_TYPE" , 4 )
 EclTypeEnum.addEnum("ECL_MESS_TYPE" , 5 )
+EclTypeEnum.addEnum("ECL_STRING_TYPE" , 7 )
 
 #-----------------------------------------------------------------
 
@@ -51,6 +53,7 @@ class EclDataType(BaseCClass):
     _is_double        = EclPrototype("bool ecl_type_is_double_python(ecl_data_type)")
     _is_mess          = EclPrototype("bool ecl_type_is_mess_python(ecl_data_type)")
     _is_bool          = EclPrototype("bool ecl_type_is_bool_python(ecl_data_type)")
+    _is_string        = EclPrototype("bool ecl_type_is_string_python(ecl_data_type)")
     _get_name         = EclPrototype("char* ecl_type_get_name_python(ecl_data_type)")
     _is_numeric       = EclPrototype("bool ecl_type_is_numeric_python(ecl_data_type)")
     _is_equal         = EclPrototype("bool ecl_type_is_equal_python(ecl_data_type, ecl_data_type)")
@@ -60,7 +63,7 @@ class EclDataType(BaseCClass):
 
         if type_name:
             c_ptr = self._alloc_from_name(type_name)
-        elif not element_size:
+        elif element_size is None:
             c_ptr = self._alloc_from_type(type_enum)
         else:
             c_ptr = self._alloc(type_enum, element_size)
@@ -70,9 +73,21 @@ class EclDataType(BaseCClass):
     def _assert_valid_arguments(self, type_enum, element_size, type_name):
         if type_name is not None:
             if type_enum is not None or element_size is not None:
-                raise ValueError("Type name given (%s). Expected both type_enum and element_size to be None")
+                err_msg = ("Type name given (%s). Expected both " +
+                        "type_enum and element_size to be None")
+                raise ValueError(err_msg % type_name)
+
         elif type_enum is None:
             raise ValueError("Both type_enum and type_name is None!")
+
+        elif type_enum == EclTypeEnum.ECL_STRING_TYPE:
+            if element_size is None:
+                raise ValueError("When creating an ECL_STRING one must " +
+                        "provide an element size!")
+
+            if not (0 <= element_size <= 999):
+                raise ValueError("Expected element_size to be in the range " +
+                        "[0, 999], was: %d" % element_size)
 
     @property
     def type(self):
@@ -106,6 +121,9 @@ class EclDataType(BaseCClass):
 
     def is_bool(self):
         return self._is_bool()
+
+    def is_string(self):
+        return self._is_string()
 
     def is_numeric(self):
         return self._is_numeric()
@@ -160,3 +178,7 @@ class EclDataType(BaseCClass):
     @classproperty
     def ECL_CHAR(cls):
         return EclDataType(EclTypeEnum.ECL_CHAR_TYPE)
+
+    @classproperty
+    def ECL_STRING(cls, size):
+        return EclDataType(EclTypeEnum.ECL_STRING_TYPE, size)
