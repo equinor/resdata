@@ -39,6 +39,9 @@ wrap the content of the c-file ecl_xxx.c The main content is:
   ecl_grid/EclGrid: This will load an ECLIPSE GRID or EGRID file, and
      can then subsequently be used for queries about the grid.
 
+  ecl_grid_generator/EclGridGenerator: This can be used to generate various
+    grids.
+
   ecl_sum/EclSum: This will load summary results from an ECLIPSE run;
      both data file(s) and the SMSPEC file. The EclSum object can be
      used as basis for queries on summary vectors.
@@ -108,3 +111,4 @@ from .ecl_sum_node import EclSumNode
 from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
 from .ecl_cmp import EclCmp
+from .ecl_grid_generator import EclGridGenerator
