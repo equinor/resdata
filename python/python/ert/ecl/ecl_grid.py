@@ -25,10 +25,12 @@ wrapper around the ecl_grid.c implementation from the libecl library.
 """
 import ctypes
 
+import warnings
 import numpy
 import sys
 import os.path
 import math
+import itertools
 from cwrap import CFILE, BaseCClass
 from ert.util import IntVector
 from ert.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum
@@ -180,12 +182,17 @@ class EclGrid(BaseCClass):
         return cls._grdecl_create( specgrid[0] , specgrid[1] , specgrid[2] , zcorn , coord , actnum , mapaxes )
 
     @classmethod
-    def createRectangular(cls , dims , dV , actnum = None):
+    def createRectangular(cls, dims , dV , actnum = None):
         """
         Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
 
         With the default value @actnum == None all cells will be active,
         """
+
+        warnings.warn("EclGrid.createRectangular is deprecated. " +
+                "Please used the similar method in EclGridGenerator!",
+                DeprecationWarning)
+
         if actnum is None:
             ecl_grid = cls._alloc_rectangular( dims[0] , dims[1] , dims[2] , dV[0] , dV[1] , dV[2] , None )
         else:
@@ -203,17 +210,9 @@ class EclGrid(BaseCClass):
         # error is due to a failed malloc.
         if ecl_grid is None:
             raise MemoryError("Failed to allocated regualar grid")
-
+            
         return ecl_grid
 
-
-    def __len__(self):
-        """
-        len(grid) wil return the total number of cells.
-        """
-        return self._get_global_size( )
-
-    
     def __init__(self , filename , apply_mapaxes = True):
         """
         Will create a grid structure from an EGRID or GRID file.
@@ -246,6 +245,12 @@ class EclGrid(BaseCClass):
         a_size = self.getNumActive()
         xyz_s  = '%dx%dx%d' % (self.getNX(),self.getNY(),self.getNZ())
         return self._create_repr('%s%s, global_size = %d, active_size = %d' % (name, xyz_s, g_size, a_size))
+
+    def __len__(self):
+        """
+        len(grid) wil return the total number of cells.
+        """
+        return self._get_global_size( )
 
     def equal(self , other , include_lgr = True , include_nnc = False , verbose = False):
         """

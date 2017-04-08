@@ -19,7 +19,8 @@ import time
 import datetime
 
 from ert.test import ExtendedTestCase, TestAreaContext
-from ert.ecl import EclFile,EclGrid,EclKW,EclDataType,EclGrid,EclRegion,FortIO, openFortIO,EclRFT
+from ert.ecl import EclFile, EclGrid, EclKW, EclDataType, EclGrid, EclRegion
+from ert.ecl import FortIO, openFortIO, EclRFT, EclGridGenerator
 from ert.test.ecl_mock import createEclSum
 from ert.util import BoolVector
 
@@ -45,5 +46,5 @@ class Deprecation_2_0_Test(ExtendedTestCase):
 class Deprecation_1_9_Test(ExtendedTestCase):
 
     def test_EclRegion_properties(self):
-        grid = EclGrid.createRectangular( (10,10,10) , (1,1,1))
+        grid = EclGridGenerator.createRectangular( (10,10,10) , (1,1,1))
         region = EclRegion( grid , False )
