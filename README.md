@@ -1,5 +1,7 @@
-Coming from OPM??
------------------
+# libecl [![Build Status](https://travis-ci.org/Statoil/libecl.svg?branch=master)](https://travis-ci.org/Statoil/libecl)
+
+
+## Coming from OPM?
 
 ERT is a package for handling an ensemble of reservoir models, an
 important part of that is beeing able to read and write the files from
@@ -11,31 +13,35 @@ used by the OPM simulator codes.
 The ERT build system has many configuration options, but when
 compiling for OPM you should be able to use the all defaults route:
 
-   git clone https://github.com/Ensembles/ert.git
-   cd ert
-   mkdir build
-   cd build
-   cmake ..
-   make
+```bash
+git clone https://github.com/Statoil/libecl.git
+cd libecl
+mkdir build
+cd build
+cmake ..
+make
+```
 
 The OPM build system can find an ERT distribution in the sibling
 location, i.e. if you have cloned ert beside the opm modules like:
 
-   ert/
-   opm-common/
-   opm-parser/
-   opm-material/
-   ....
+```
+libecl/
+opm-common/
+opm-parser/
+opm-material/
+...
+```
 
 The opm build system will find the ert distribution in-place,
 otherwise you should install ert with 'make install' and the normal
 cmake machinery of the opm build system should find it.
 
-
+```
 ------------------------------------------------------------------------
 
-                    _________________________________ 
-                   /                                 \ 
+                    _________________________________
+                   /                                 \
                    |   ______   ______   _______     |
                    |  |  ____| |  __  \ |__   __|    |
                    |  | |__    | |__) |    | |       |
@@ -48,20 +54,21 @@ cmake machinery of the opm build system should find it.
 
 
 ------------------------------------------------------------------------
+```
 
-   1. ERT
-   2. ECLIPSE utilities.
-   3. Building ERT
-      3.1 CMake settings you might want to adjust
-   4. The code:
-     4.1 The different libraries
-     4.2 The general structure
-     4.3 Python wrappers
-   5. Tests
+1. ERT
+2. ECLIPSE utilities.
+3. Building ERT
+   3.1 CMake settings you might want to adjust
+4. The code:
+  4.1 The different libraries
+  4.2 The general structure
+  4.3 Python wrappers
+5. Tests
 
 ------------------------------------------------------------------------
 
-1. ERT
+### 1. ERT
 
 ERT - Ensemble based Reservoir Tool is a tool for managing an ensemble
 of reservoir models. The initial motivation for creating ERT was a as
@@ -95,7 +102,7 @@ workflow manager, i.e. herding a large collection of reservoir models
 through the required simulations steps.
 
 
-2. ECLIPSE Utilities
+### 2. ECLIPSE Utilities
 
 ERT has a quite large amount of code devoted to reading and writing
 the ECLIPSE output files (grid/rft/restart/init/summary). In addition,
@@ -110,7 +117,7 @@ built on Windows with Visual Studio (albeit with maaaany warnings) and
 with MinGW.
 
 
-3. Building ERT
+### 3. Building ERT
 
 CMake is the build system for ERT. The top level CMakeLists.txt file
 is located in the top level directory of the repository, and this
@@ -124,8 +131,8 @@ Building with CMake is performed like this:
      a practical choice.
 
   2. Go to the build directory and invoke the command:
-  
-        ccmake <path/to/directory/containing/CMakeLists.txt> 
+
+        ccmake <path/to/directory/containing/CMakeLists.txt>
 
      Go through several 'configure' steps with CMake and generate
      native build files.
@@ -136,7 +143,7 @@ Building with CMake is performed like this:
   4. Subsequent builds can be performed using just the native make
      command, as in step 3.
 
-3.1 CMake settings you might want to adjust
+#### 3.1 CMake settings you might want to adjust
 
 The main setting you should adjust is BUILD_ERT which is default to
 OFF, i.e.  by default only the ECLIPSE related utilities will be
@@ -145,11 +152,11 @@ ECLIPSE utilities should build on Windows, but to build all of ERT you
 will need a Linux (Posix) system.
 
 
-4. The code
+### 4. The code
 
 The code is mainly a collection of libraries written in C.
 
-4.1 The different libraries
+#### 4.1 The different libraries
 
 The provided libraries are:
 
@@ -172,44 +179,10 @@ The provided libraries are:
       restart and RFT files. There is also support for reading an
       writing grdecl formatted files, but there is no support for
       general parsing of the ECLIPSE input format.
-   
-   ----------------------------------------------------------------------------
-
-   librms: This is a library for reading and writing RMS Roff
-      files. It turns out that ECLIPSE file formats is by far the most
-      common external file format for RMS and that the ROFF support is
-      not essential for this reason.
-
-   libconfig: This library implements a parser for the ERT config file
-      format, this format is used in the main ERT configuration file,
-      and also in several small special-purpose configuration files used
-      by ERT. The config format parsed by this library was inspired by
-      the ECLIPSE format, in retrospect that was a mistake - it should
-      have been based on a standard format like xml.
-
-      To confuse things even further, the libconfig library implements
-      /two/ formats for configuration files -- the 'second format' is
-      implemented in the file conf.c, and only used as format for the
-      observations in ERT.
-
-   libplot: A *very* simple library for creating plots which only
-      satisfies the needs of ERT.
-
-   libanalysis: The EnKF algorithm is implemented in this library.
-
-   libjob_queue: This library implements a system to manage and run
-      simulations in the form of external programs. The library has a
-      queue manager, and a system with drivers which communicate with
-      the underlying system. Currently, the library has a LSF driver
-      to work with LSF, a LOCAL driver which starts simulations on the
-      current workstation and a RSH driver which submits jobs to a
-      'cluster' of workstation using ssh.
-
-   libenkf: This is the main functionality which is ERT specific; this
-      library is too large.
 
 
-4.2 General structure
+
+#### 4.2 General structure
 
 The code is written in C, but conventions give a 'scent of object
 orientation'. Most of the code is uses the following conventions:
@@ -232,13 +205,13 @@ orientation'. Most of the code is uses the following conventions:
        should be a matching xxx_free() function to discard the objects.
      * Containers can optionally destroy their content if the content
        is installed with a destructor.
- 
+
    - In libert_util/src/type_macros.h there is a macro based
      'type-system' which is used to runtime check casts of (void *).
 
-   
-4.3 Python wrappers
-     
+
+#### 4.3 Python wrappers
+
 Some of the code, in particular the ECLIPSE related functionality, has
 been wrapped for usage in Python. Using these wrappers, it is quite
 easy work with ECLIPSE files. The python wrappers are quite well
@@ -246,7 +219,7 @@ documented both in the directory python/docs and in the Python classes
 themselves.
 
 
-5. Tests
+### 5. Tests
 
 The ERT codebase has a small but increasing test coverage. The tests
 are typically located in a per-library subdirectory tests/. The test
@@ -265,7 +238,7 @@ framework is based on ctest which basically works like this:
      in principle be an arbitrary executable like a dedicated test
      runner or e.g. the Python interpreter.
 
-5.1 Testing of C code
+#### 5.1 Testing of C code
 
 The main part of the testing infrastructure are small C applications
 which are added like this:
@@ -277,14 +250,14 @@ which are added like this:
 Where the first two lines create the test executable in the normal
 way, and the last line adds it as a test.
 
-5.2 Testing of Python Code
+#### 5.2 Testing of Python Code
 
 In python/test there are several files with Python tests, these files
 are executable files and they are invoked directly from the command
 line. A limited number of the tests have been integrated in the ctest
 system.
 
-5.3 Test names
+#### 5.3 Test names
 
 The tests in the cmake build system follow the naming convention of
 the library regarding the functionality which they are testing: For
@@ -297,15 +270,17 @@ exclude tests based on their name
    ctest -E ecl      # Run all tests NOT containing the regular expression 'ecl'
 
 
-5.4 Test labels
+#### 5.4 Test labels
 
 Using the cmake set_property() function it is possible to assign
 labels to the test, and the -L and -LE options to ctest can be used to
 limit which tests to run. A test can only have one label; in the
 current ctest setup different labels are combined into one composite
-label with a ":" separator, e.g. 
+label with a ":" separator, e.g.
 
-      set_property( TEST test_xxx PROPERTY LABELS StatoilData:Python)
+```
+set_property( TEST test_xxx PROPERTY LABELS StatoilData:Python)
+```
 
 will set the 'StatoilData' and 'Python' properties on test_xxx. The
 labels currently available in the ERT test setup are:
@@ -332,10 +307,9 @@ labels currently available in the ERT test setup are:
       environment to run.
 
 
-5.5 ctest examples
+#### 5.5 ctest examples
 
    ctest -L Statoil         # Run all tests labeled with Statoil - both
                             # StatoilData and StatoilBuild
 
    ctest -EL "Statoil|LSF"  # Exclude all tests labeled with Statoil or LSF.
-
