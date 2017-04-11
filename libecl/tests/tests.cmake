@@ -1,3 +1,7 @@
+add_executable( ecl_nnc_geometry ecl_nnc_geometry.c )
+target_link_libraries( ecl_nnc_geometry ecl  )
+add_test( ecl_nnc_geometry  ${EXECUTABLE_OUTPUT_PATH}/ecl_nnc_geometry )
+
 add_executable( ecl_alloc_grid_dxv_dyv_dzv ecl_alloc_grid_dxv_dyv_dzv.c )
 target_link_libraries( ecl_alloc_grid_dxv_dyv_dzv ecl  )
 add_test( ecl_alloc_grid_dxv_dyv_dzv  ${EXECUTABLE_OUTPUT_PATH}/ecl_alloc_grid_dxv_dyv_dzv )

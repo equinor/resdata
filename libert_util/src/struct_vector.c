@@ -43,6 +43,12 @@ static void struct_vector_resize( struct_vector_type * struct_vector , int new_a
 }
 
 
+void struct_vector_reserve( struct_vector_type * struct_vector , int reserve_size) {
+  if (reserve_size > struct_vector->alloc_size)
+    struct_vector_resize( struct_vector , reserve_size );
+}
+
+
 
 struct_vector_type * struct_vector_alloc( int element_size ) {
   if (element_size <= 0) {
@@ -88,6 +94,10 @@ void struct_vector_append( struct_vector_type * struct_vector , void * value) {
 }
 
 
+void * struct_vector_get_data( const struct_vector_type * struct_vector ) {
+  return struct_vector->data;
+}
+
 
 void struct_vector_iget( const struct_vector_type * struct_vector , int index , void * value) {
   if (index < struct_vector->size) {
@@ -98,7 +108,20 @@ void struct_vector_iget( const struct_vector_type * struct_vector , int index , 
 }
 
 
+void * struct_vector_iget_ptr( const struct_vector_type * struct_vector , int index ) {
+  if (index < struct_vector->size) {
+    size_t offset = index * struct_vector->element_size;
+    return &struct_vector->data[offset];
+  } else
+    util_abort("%s: fatal error - invalid index:%d size:%d\n",__func__ , index , struct_vector->size);
+}
+
 
 void struct_vector_reset( struct_vector_type * struct_vector ) {
   struct_vector->size = 0;
+}
+
+
+void struct_vector_sort( struct_vector_type * struct_vector , struct_vector_cmp_ftype * cmp) {
+  qsort(struct_vector->data , struct_vector->size , struct_vector->element_size ,  cmp);
 }
