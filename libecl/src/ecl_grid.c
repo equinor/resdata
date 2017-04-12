@@ -616,27 +616,6 @@ static double point_dot_product( const point_type * v1 , const point_type * v2) 
   return v1->x*v2->x + v1->y*v2->y + v1->z*v2->z;
 }
 
-/**
-   This function calculates the (signed) distance from point 'p' to
-   the plane specifed by the plane vector 'n' and the point
-   'plane_point' which is part of the plane.
-*/
-
-static double point_plane_distance(const point_type * p , const point_type * n , const point_type * plane_point) {
-  point_type diff = *p;
-  point_inplace_sub( &diff, plane_point );
-  return point_dot_product( n, &diff );
-}
-
-static void point_normal_vector(point_type * n, const point_type * p0, const point_type * p1 , const point_type * p2) {
-  point_type v1 = *p1;
-  point_type v2 = *p2;
-
-  point_inplace_sub( &v1, p0 );
-  point_inplace_sub( &v2, p0 );
-
-  point_vector_cross( n, &v1, &v2 );
-}
 
 static void point_compare( const point_type *p1 , const point_type * p2, bool * equal) {
   const double tolerance = 0.001;

@@ -114,6 +114,7 @@ void * struct_vector_iget_ptr( const struct_vector_type * struct_vector , int in
     return &struct_vector->data[offset];
   } else
     util_abort("%s: fatal error - invalid index:%d size:%d\n",__func__ , index , struct_vector->size);
+  return NULL;
 }
 
 
