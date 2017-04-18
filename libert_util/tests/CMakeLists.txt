@@ -1,13 +1,3 @@
-# This should be a space separated list of up to three servers which
-# will be tried out when testing the util_ping() functionality. The
-# list of servers should behave like this:
-#
-# 1. First server - this should be an existing server which should return true.
-# 2. This should be an invalid hostname - should return false.
-# 3. This should be an valid host which does not answer ping - i.e currently off?
-set(PING_SERVERS "" CACHE STRING  "List of servers for testing ping")
-
-
 link_directories( ${ERT_BINARY_DIR}/libert_util/src )
 
 add_executable( test_thread_pool test_thread_pool.c )
@@ -128,10 +118,10 @@ add_executable( ert_util_approx_equal ert_util_approx_equal.c )
 target_link_libraries( ert_util_approx_equal ert_util  )
 add_test( ert_util_approx_equal ${EXECUTABLE_OUTPUT_PATH}/ert_util_approx_equal )
 
-if (PING_PATH)
+if (ERT_HAVE_PING)
    add_executable( ert_util_ping ert_util_ping.c )
    target_link_libraries( ert_util_ping ert_util  )
-   add_test( ert_util_ping ${EXECUTABLE_OUTPUT_PATH}/ert_util_ping ${PING_SERVERS})
+   add_test( ert_util_ping ${EXECUTABLE_OUTPUT_PATH}/ert_util_ping)
 endif()
 
 add_executable( ert_util_file_readable ert_util_file_readable.c )
