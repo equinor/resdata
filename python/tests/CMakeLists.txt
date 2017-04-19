@@ -3,6 +3,7 @@ set(TEST_SOURCES
     ctest_import.py
     ctest_run.py
     import_tester.py
+    test_pylint.py
 )
 
 set(TEST_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
@@ -33,4 +34,4 @@ endfunction(addPythonTest)
 
 add_subdirectory(core)
 add_subdirectory(cwrap)
-
+addPythonTest(lint test_pylint.LintErt)

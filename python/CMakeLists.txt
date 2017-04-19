@@ -14,17 +14,6 @@ if (NOT DEFINED PY_numpy)
    return()
 endif()
 
-
-if (ERT_BUILD_GUI)
-   python_package(PyQt4 4.8.0)
-   python_package( matplotlib 1.2.0  )
-   python_package( pandas     0.15.1)
-   python_package( scipy      0.12.1 )
-   if(NOT DEFINED PY_PyQt4 OR NOT DEFINED PY_matplotlib OR NOT DEFINED PY_scipy OR NOT DEFINED PY_pandas)
-     message(SEND_ERROR "Cannot build GUI without PyQt4, matplotlib, scipy, and pandas")
-   endif()
-endif()
-
 if (EXISTS "/etc/debian_version")
    set( PYTHON_PACKAGE_PATH "dist-packages")
 else()
