@@ -75,7 +75,7 @@ static bool util_addr2line_lookup__(const void * bt_addr , char ** func_name , c
         }
 
         /* 2: Parse stdout output */
-        {
+        if (util_file_exists( stdout_file )) {
           bool at_eof;
           FILE * stream = util_fopen(stdout_file , "r");
           char * tmp_fname = util_fscanf_alloc_line(stream , &at_eof);
