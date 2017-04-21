@@ -13,3 +13,7 @@ add_test(eclxx_smspec ${EXECUTABLE_OUTPUT_PATH}/eclxx_smspec)
 add_executable(eclxx_filename eclxx_filename.cpp)
 target_link_libraries(eclxx_filename eclxx  ert_utilxx)
 add_test(eclxx_filename ${EXECUTABLE_OUTPUT_PATH}/eclxx_filename)
+
+add_executable(eclxx_types eclxx_types.cpp)
+target_link_libraries(eclxx_types eclxx  ert_utilxx)
+add_test(eclxx_types ${EXECUTABLE_OUTPUT_PATH}/eclxx_types)
