@@ -95,7 +95,7 @@ if (ERT_USE_OPENMP)
    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OpenMP_SHARED_LINKER_FLAGS}")
 endif()
 
-add_library( ecl ${LIBRARY_TYPE} ${source_files} )
+add_library( ecl ${source_files} )
 set_target_properties( ecl PROPERTIES VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR} SOVERSION ${ERT_VERSION_MAJOR})
 if (USE_RUNPATH)
    add_runpath( ecl )
