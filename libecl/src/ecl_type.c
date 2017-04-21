@@ -35,12 +35,10 @@
 #define ECL_TYPE_NAME_BOOL     "LOGI"
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
-// TODO: We need to make a choice here
-// In other words, this code has definitively not reatched its final form!
-char ecl_type_string_name [1000][5];
-static const char * ECL_TYPE_NAME_STRING(const size_t size) {
-  sprintf(ecl_type_string_name[size], "C%03zd", size);
-  return ecl_type_string_name[size];
+static char * alloc_string_name(const size_t element_size) {
+  char string_name[5];
+  sprintf(string_name, "C%03zd", element_size);
+  return util_alloc_string_copy(string_name);
 }
 
 static bool is_ecl_string_name(const char * type_name) {
@@ -108,24 +106,24 @@ size_t ecl_type_get_element_size(const ecl_data_type ecl_type) {
     return ecl_type.element_size;
 }
 
-const char * ecl_type_get_name(const ecl_data_type ecl_type) {
+char * ecl_type_alloc_name(const ecl_data_type ecl_type) {
   switch (ecl_type.type) {
   case(ECL_CHAR_TYPE):
-    return ECL_TYPE_NAME_CHAR;
+    return util_alloc_string_copy(ECL_TYPE_NAME_CHAR);
   case(ECL_STRING_TYPE):
-    return ECL_TYPE_NAME_STRING(ecl_type.element_size);
+    return alloc_string_name(ecl_type.element_size);
   case(ECL_C010_TYPE):
-    return ECL_TYPE_NAME_C010;
+    return util_alloc_string_copy(ECL_TYPE_NAME_C010);
   case(ECL_FLOAT_TYPE):
-    return ECL_TYPE_NAME_FLOAT;
+    return util_alloc_string_copy(ECL_TYPE_NAME_FLOAT);
   case(ECL_DOUBLE_TYPE):
-    return ECL_TYPE_NAME_DOUBLE;
+    return util_alloc_string_copy(ECL_TYPE_NAME_DOUBLE);
   case(ECL_INT_TYPE):
-    return ECL_TYPE_NAME_INT;
+    return util_alloc_string_copy(ECL_TYPE_NAME_INT);
   case(ECL_BOOL_TYPE):
-    return ECL_TYPE_NAME_BOOL;
+    return util_alloc_string_copy(ECL_TYPE_NAME_BOOL);
   case(ECL_MESS_TYPE):
-    return ECL_TYPE_NAME_MESSAGE;
+    return util_alloc_string_copy(ECL_TYPE_NAME_MESSAGE);
   default:
     util_abort("Internal error in %s - internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_type.type);
     return NULL; /* Dummy */

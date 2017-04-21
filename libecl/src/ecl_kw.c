@@ -1670,8 +1670,10 @@ void ecl_kw_fwrite_data(const ecl_kw_type *_ecl_kw , fortio_type *fortio) {
 void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   FILE *stream  = fortio_get_FILE(fortio);
   bool fmt_file = fortio_fmt_file(fortio);
+  char * type_name = ecl_type_alloc_name(ecl_kw->data_type);
+
   if (fmt_file)
-    fprintf(stream , WRITE_HEADER_FMT , ecl_kw->header8 , ecl_kw->size , ecl_type_get_name( ecl_kw->data_type ));
+    fprintf(stream , WRITE_HEADER_FMT , ecl_kw->header8 , ecl_kw->size , type_name);
   else {
     int size = ecl_kw->size;
     if (ECL_ENDIAN_FLIP)
@@ -1681,11 +1683,13 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
     fwrite(ecl_kw->header8                            , sizeof(char)    , ECL_STRING8_LENGTH  , stream);
     fwrite(&size                                      , sizeof(int)     , 1                  , stream);
-    fwrite(ecl_type_get_name( ecl_kw->data_type ) , sizeof(char)    , ECL_TYPE_LENGTH    , stream);
+    fwrite(type_name , sizeof(char)    , ECL_TYPE_LENGTH    , stream);
 
     fortio_complete_write(fortio , ECL_KW_HEADER_DATA_SIZE);
 
   }
+
+  free(type_name);
 }
 
 
@@ -1892,9 +1896,11 @@ void ecl_kw_fread_double_param(const char * filename , bool fmt_file , double * 
 
 
 void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
+  char * type_name = ecl_type_alloc_name(ecl_kw->data_type);
   printf("%8s   %10d:%4s \n",ecl_kw_get_header8(ecl_kw),
          ecl_kw_get_size(ecl_kw),
-         ecl_type_get_name( ecl_kw->data_type));
+         type_name);
+  free(type_name);
 }
 
 
@@ -2109,7 +2115,7 @@ void ecl_kw_inplace_add_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_add_indexed_int( target_kw , index_set , add_kw );
     break;
   default:
-    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2147,7 +2153,7 @@ void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) {
     ecl_kw_inplace_add_int( target_kw , add_kw );
     break;
   default:
-    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2186,7 +2192,7 @@ void ecl_kw_inplace_sub( ecl_kw_type * target_kw , const ecl_kw_type * sub_kw) {
     ecl_kw_inplace_sub_int( target_kw , sub_kw );
     break;
   default:
-    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2226,7 +2232,7 @@ void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_sub_indexed_int( target_kw , index_set , sub_kw );
     break;
   default:
-    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace sub not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2261,7 +2267,7 @@ void ecl_kw_inplace_abs( ecl_kw_type * kw ) {
     ecl_kw_inplace_abs_int( kw );
     break;
   default:
-    util_abort("%s: inplace abs not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(kw) ));
+    util_abort("%s: inplace abs not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(kw) ));
   }
 }
 
@@ -2298,7 +2304,7 @@ void ecl_kw_inplace_mul( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw) {
     ecl_kw_inplace_mul_int( target_kw , mul_kw );
     break;
   default:
-    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2338,7 +2344,7 @@ void ecl_kw_inplace_mul_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_mul_indexed_int( target_kw , index_set , mul_kw );
     break;
   default:
-    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace mul not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2376,7 +2382,7 @@ void ecl_kw_inplace_div( ecl_kw_type * target_kw , const ecl_kw_type * div_kw) {
     ecl_kw_inplace_div_int( target_kw , div_kw );
     break;
   default:
-    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 
@@ -2417,7 +2423,7 @@ void ecl_kw_inplace_div_indexed( ecl_kw_type * target_kw , const int_vector_type
     ecl_kw_inplace_div_indexed_int( target_kw , index_set , div_kw );
     break;
   default:
-    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_type_get_name( ecl_kw_get_data_type(target_kw) ));
+    util_abort("%s: inplace div not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
   }
 }
 

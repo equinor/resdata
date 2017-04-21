@@ -700,7 +700,7 @@ void ecl_util_memcpy_typed_data(void *_target_data , const void * _src_data , ec
         break;
       }
     default:
-      util_abort("%s con not convert %s -> %s \n",__func__ , ecl_type_get_name(src_type) , ecl_type_get_name(target_type));
+      util_abort("%s con not convert %s -> %s \n",__func__ , ecl_type_alloc_name(src_type) , ecl_type_alloc_name(target_type));
     }
   }
 }

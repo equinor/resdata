@@ -54,7 +54,7 @@ class EclDataType(BaseCClass):
     _is_mess          = EclPrototype("bool ecl_type_is_mess_python(ecl_data_type)")
     _is_bool          = EclPrototype("bool ecl_type_is_bool_python(ecl_data_type)")
     _is_string        = EclPrototype("bool ecl_type_is_string_python(ecl_data_type)")
-    _get_name         = EclPrototype("char* ecl_type_get_name_python(ecl_data_type)")
+    _get_name         = EclPrototype("char* ecl_type_alloc_name_python(ecl_data_type)")
     _is_numeric       = EclPrototype("bool ecl_type_is_numeric_python(ecl_data_type)")
     _is_equal         = EclPrototype("bool ecl_type_is_equal_python(ecl_data_type, ecl_data_type)")
 

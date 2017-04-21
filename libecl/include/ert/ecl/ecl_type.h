@@ -130,7 +130,7 @@ ecl_data_type      ecl_type_create(const ecl_type_enum, const size_t);
 ecl_data_type      ecl_type_create_from_type(const ecl_type_enum);
 
 ecl_type_enum      ecl_type_get_type(const ecl_data_type);
-const char *       ecl_type_get_name(const ecl_data_type);
+char *             ecl_type_alloc_name(const ecl_data_type);
 
 int                ecl_type_get_sizeof_ctype(const ecl_data_type);
 int                ecl_type_get_sizeof_ctype_fortio(const ecl_data_type);

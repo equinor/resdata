@@ -36,8 +36,8 @@ ecl_type_enum ecl_type_get_type_python(const ecl_data_type * ecl_type) {
     return ecl_type_get_type(*ecl_type);
 }
 
-const char * ecl_type_get_name_python(const ecl_data_type * ecl_type) {
-    return ecl_type_get_name(*ecl_type);
+const char * ecl_type_alloc_name_python(const ecl_data_type * ecl_type) {
+    return ecl_type_alloc_name(*ecl_type);
 }
 
 int ecl_type_get_sizeof_ctype_fortio_python(const ecl_data_type * ecl_type) {
