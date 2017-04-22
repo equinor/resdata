@@ -611,6 +611,13 @@ const well_conn_type * well_state_get_wellhead( const well_state_type * well_sta
     return NULL;
 }
 
+const well_conn_type * well_state_get_global_wellhead( const well_state_type * well_state ) {
+  if (hash_has_key( well_state->name_wellhead , ECL_GRID_GLOBAL_GRID))
+    return hash_get( well_state->name_wellhead , ECL_GRID_GLOBAL_GRID );
+  else
+    return NULL;
+}
+
 
 well_type_enum well_state_get_type( const well_state_type * well_state){
   return well_state->type;

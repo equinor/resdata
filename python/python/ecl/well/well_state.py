@@ -30,7 +30,7 @@ class WellState(BaseCClass):
     _gas_rate_si             = WellPrototype("double well_state_get_gas_rate_si(well_state)")
     _water_rate_si           = WellPrototype("double well_state_get_water_rate_si(well_state)")
     _volume_rate_si          = WellPrototype("double well_state_get_volume_rate_si(well_state)")
-
+    _get_global_well_head    = WellPrototype("well_connection_ref well_state_get_global_wellhead(well_state)")
     
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
@@ -45,6 +45,11 @@ class WellState(BaseCClass):
 
     def free(self):
         pass
+
+    def wellHead(self):
+        well_head = self._get_global_well_head()
+        well_head.setParent( self )
+        return well_head
 
     def wellNumber(self):
         """ @rtype: int """
