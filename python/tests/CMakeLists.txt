@@ -32,6 +32,9 @@ function (addPythonTest TEST_NAME TEST_CLASS)
 endfunction(addPythonTest)
 
 
-add_subdirectory(core)
+add_subdirectory(geometry)
+add_subdirectory(util)
+add_subdirectory(ecl)
+add_subdirectory(well)
 add_subdirectory(cwrap)
 addPythonTest(lint test_pylint.LintErt)
