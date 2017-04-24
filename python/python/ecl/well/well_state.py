@@ -1,5 +1,5 @@
 from cwrap import BaseCClass
-from ert.well import WellTypeEnum, WellConnection, WellPrototype
+from ecl.well import WellTypeEnum, WellConnection, WellPrototype
 from ecl.util import CTime
 
 class WellState(BaseCClass):

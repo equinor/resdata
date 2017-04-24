@@ -1,5 +1,5 @@
 from cwrap import BaseCClass
-from ert.well import WellPrototype
+from ecl.well import WellPrototype
 
 class WellSegment(BaseCClass):
     TYPE_NAME = "well_segment"

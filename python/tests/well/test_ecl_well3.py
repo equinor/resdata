@@ -4,7 +4,7 @@ import os.path
 from ecl.ecl import EclGrid, EclFile, EclSum
 from ert.test import ExtendedTestCase
 from ecl.util.ctime import CTime
-from ert.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
+from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
 
 class EclWellTest3(ExtendedTestCase):
