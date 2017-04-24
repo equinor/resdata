@@ -27,7 +27,7 @@ try:
 except ImportError:
     sys.stderr.write("Warning: could not import file test_env.py - this might lead to test failures.")
 
-    
+
 class _AssertNotRaisesContext(object):
 
     def __init__(self, test_class):
@@ -142,7 +142,7 @@ class ExtendedTestCase(TestCase):
     @staticmethod
     def createSharePath(path):
         return os.path.realpath(os.path.join(SHARE_ROOT , path))
-    
+
 
     @staticmethod
     def createTestPath(path):
@@ -176,4 +176,3 @@ class ExtendedTestCase(TestCase):
             return True
         else:
             return False
-    
