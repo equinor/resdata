@@ -17,7 +17,7 @@
 
 
 import datetime
-from ert.util import CTime
+from ecl.util import CTime
 from ecl.ecl import EclRFTFile, EclRFTCell, EclPLTCell
 from ecl.ecl.rft import WellTrajectory
 from ert.test import ExtendedTestCase

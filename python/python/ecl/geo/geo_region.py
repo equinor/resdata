@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from cwrap import BaseCClass
-from ert.util import IntVector
+from ecl.util import IntVector
 from ecl.geo import GeoPrototype
 from .cpolyline import CPolyline
 from ctypes import c_double

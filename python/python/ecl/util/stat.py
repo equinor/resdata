@@ -16,14 +16,14 @@
 from collections import Sequence
 
 from cwrap import PrototypeError
-from ert.util import LLSQResultEnum, UtilPrototype, Matrix
+from ecl.util import LLSQResultEnum, UtilPrototype, Matrix
 
 
 quantile = UtilPrototype("double statistics_empirical_quantile(double_vector, double)")
-"""@type: (ert.util.DoubleVector, float)->float"""
+"""@type: (ecl.util.DoubleVector, float)->float"""
 
 quantile_sorted = UtilPrototype("double statistics_empirical_quantile(double_vector, double)")
-"""@type: (ert.util.DoubleVector, float)->float"""
+"""@type: (ecl.util.DoubleVector, float)->float"""
 
 try:
     _polyfit = UtilPrototype("llsq_result_enum matrix_stat_polyfit(matrix, matrix, matrix, matrix)")

@@ -17,7 +17,7 @@
 import itertools
 import numpy
 
-from ert.util import IntVector
+from ecl.util import IntVector
 from ecl.ecl import EclGrid, EclKW, EclDataType, EclPrototype
 
 class EclGridGenerator:

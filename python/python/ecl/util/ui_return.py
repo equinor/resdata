@@ -18,7 +18,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
 from cwrap import BaseCClass
-from ert.util import UtilPrototype
+from ecl.util import UtilPrototype
 from .enums import UIReturnStatusEnum
 
 

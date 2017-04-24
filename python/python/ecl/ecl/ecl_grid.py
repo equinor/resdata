@@ -32,7 +32,7 @@ import os.path
 import math
 import itertools
 from cwrap import CFILE, BaseCClass
-from ert.util import IntVector
+from ecl.util import IntVector
 from ecl.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum
 
 

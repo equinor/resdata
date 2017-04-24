@@ -27,7 +27,7 @@ except ImportError:
 from ecl.ecl import EclSum
 from ecl.ecl import EclNPV , NPVPriceVector
 
-from ert.util import StringList, TimeVector, DoubleVector , CTime
+from ecl.util import StringList, TimeVector, DoubleVector , CTime
 from ert.test import ExtendedTestCase , TestAreaContext
 
 

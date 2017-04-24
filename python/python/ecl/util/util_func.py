@@ -17,7 +17,7 @@
 Module with utility functions from util.c
 """
 
-from ert.util import UtilPrototype
+from ecl.util import UtilPrototype
 
 strcmp_int = UtilPrototype("int util_strcmp_int( char* , char* )")
 """

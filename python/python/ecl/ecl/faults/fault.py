@@ -15,8 +15,8 @@
 #  for more details.
 
 from ecl.geo import Polyline, CPolyline, GeometryTools
-from ert.util import stat
-from ert.util import Matrix
+from ecl.util import stat
+from ecl.util import Matrix
 
 from .fault_line import FaultLine
 from .fault_segments import FaultSegment, SegmentMap

@@ -1,6 +1,6 @@
 from cwrap import BaseCClass
 from ecl.ecl import EclPrototype
-from ert.util import CTime
+from ecl.util import CTime
 
 
 class EclSumTStep(BaseCClass):

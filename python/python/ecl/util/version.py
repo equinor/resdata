@@ -1,4 +1,4 @@
-from ert.util import UtilPrototype
+from ecl.util import UtilPrototype
 
 
 def cmp_method(method):

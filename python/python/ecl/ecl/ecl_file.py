@@ -42,7 +42,7 @@ import ctypes
 
 from cwrap import BaseCClass
 from ecl.ecl import EclPrototype, EclKW, EclFileEnum, EclFileView
-from ert.util import CTime
+from ecl.util import CTime
 
 
 class EclFile(BaseCClass):

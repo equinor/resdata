@@ -72,7 +72,7 @@ per module organization:
      namespace 'ecl'.
 
 """
-import ert.util
+import ecl.util
 import ecl.geo
 
 from cwrap import Prototype

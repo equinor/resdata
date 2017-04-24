@@ -20,7 +20,7 @@ import datetime
 import time
 
 from cwrap import BaseCValue
-from ert.util import UtilPrototype
+from ecl.util import UtilPrototype
 
 
 class CTime(BaseCValue):

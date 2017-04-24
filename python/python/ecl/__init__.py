@@ -23,7 +23,7 @@ ecl.ecl: Package for working with ECLIPSE files. The far most mature
 
 ert.job_queue: 
 
-ert.util:
+ecl.util:
 
 The ert package is based on wrapping the libriaries from the ERT C
 code with ctypes; an essential part of ctypes approach is to load the
@@ -120,8 +120,8 @@ def load(name):
     return cwrapload( name , path = ert_lib_path , so_version = ert_so_version)
 
 
-from ert.util import Version
-from ert.util import updateAbortSignals
+from ecl.util import Version
+from ecl.util import updateAbortSignals
 
 updateAbortSignals( )
 

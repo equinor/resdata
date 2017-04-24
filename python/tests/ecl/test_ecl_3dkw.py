@@ -17,7 +17,7 @@
 import os
 import random
 
-from ert.util import IntVector
+from ecl.util import IntVector
 from ecl.ecl import Ecl3DKW , EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum , EclGrid
 from ert.test import ExtendedTestCase , TestAreaContext
 

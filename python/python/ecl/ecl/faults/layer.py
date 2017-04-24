@@ -17,7 +17,7 @@
 import ctypes
 from cwrap import BaseCClass
 from ecl.ecl import EclPrototype
-from ert.util import IntVector
+from ecl.util import IntVector
 
 
 class Layer(BaseCClass):

@@ -31,7 +31,7 @@ from cwrap import BaseCClass
 from ecl.ecl.faults import Layer
 from ecl.ecl import EclKW, EclDataType, EclPrototype
 from ecl.geo import CPolyline
-from ert.util import IntVector
+from ecl.util import IntVector
 
 
 def select_method(select):

@@ -18,7 +18,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from six import string_types
 from cwrap import BaseCClass
 from ecl.ecl import EclPrototype
-from ert.util import CTime
+from ecl.util import CTime
 
 class EclFileView(BaseCClass):
     TYPE_NAME             = "ecl_file_view"

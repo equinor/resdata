@@ -17,7 +17,7 @@ import os.path
 
 import ert
 from ert.test import ExtendedTestCase
-from ert.util import Version
+from ecl.util import Version
 
 
 class VersionTest(ExtendedTestCase):

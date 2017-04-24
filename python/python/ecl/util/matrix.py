@@ -29,7 +29,7 @@
 
 
 from cwrap import BaseCClass,CFILE
-from ert.util import UtilPrototype
+from ecl.util import UtilPrototype
 
 
 class Matrix(BaseCClass):

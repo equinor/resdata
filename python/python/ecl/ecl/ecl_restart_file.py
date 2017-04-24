@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ert.util import CTime
+from ecl.util import CTime
 from ecl.ecl import EclPrototype , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
 from cwrap import BaseCClass
 

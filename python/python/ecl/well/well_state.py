@@ -1,6 +1,6 @@
 from cwrap import BaseCClass
 from ert.well import WellTypeEnum, WellConnection, WellPrototype
-from ert.util import CTime
+from ecl.util import CTime
 
 class WellState(BaseCClass):
     TYPE_NAME = "well_state"

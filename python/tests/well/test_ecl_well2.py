@@ -3,7 +3,7 @@ import os.path
 
 from ecl.ecl import EclGrid, EclFile, EclFileFlagEnum
 from ert.test import ExtendedTestCase
-from ert.util.ctime import CTime
+from ecl.util.ctime import CTime
 from ert.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
 

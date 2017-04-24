@@ -18,7 +18,7 @@ import ctypes
 from ecl.ecl import EclPrototype
 from cwrap import BaseCClass
 from ecl.geo import Polyline, GeometryTools , CPolylineCollection
-from ert.util import DoubleVector , IntVector
+from ecl.util import DoubleVector , IntVector
 
 class FaultBlockCell(object):
     def __init__(self , i,j,k ,x,y,z):

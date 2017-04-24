@@ -1,6 +1,6 @@
 import ert
 from ert.test import ExtendedTestCase
-from ert.util import ArgPack, StringList
+from ecl.util import ArgPack, StringList
 
 TEST_LIB = ert.load("libert_util")
 

@@ -22,7 +22,7 @@ libert_util librarary, to ensure that the correct version of the
 libert_util.so library file is loaded we should manually load that
 first as:
 
-   import ert.util
+   import ecl.util
    GEO_LIB = ert.load("libecl.geometry")
 
 Otherwise the standard operating system dependency resolve code will

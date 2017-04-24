@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-from ert.util import VectorTemplate, UtilPrototype
+from ecl.util import VectorTemplate, UtilPrototype
 
 
 class BoolVector(VectorTemplate):
@@ -119,7 +119,7 @@ class BoolVector(VectorTemplate):
         return bool_vector
 
     def createActiveList(self):
-        """ @rtype: ert.util.IntVector """
+        """ @rtype: ecl.util.IntVector """
         return self._active_list(self)
 
     def _tostr(self, arr = None):

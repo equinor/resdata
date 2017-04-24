@@ -20,7 +20,7 @@ import time
 import itertools
 from numpy import linspace
 
-from ert.util import IntVector
+from ecl.util import IntVector
 from ecl.ecl import EclGrid, EclKW, EclDataType, EclUnitTypeEnum, EclFile
 from ecl.ecl import EclGridGenerator as GridGen
 from ecl.ecl.faults import Layer , FaultCollection

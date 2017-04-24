@@ -21,7 +21,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from cwrap import BaseCClass
 from ecl.ecl import EclRFTCell, EclPLTCell, EclPrototype
-from ert.util import CTime
+from ecl.util import CTime
 
 class EclRFT(BaseCClass):
     """The EclRFT class contains the information for *one* RFT.

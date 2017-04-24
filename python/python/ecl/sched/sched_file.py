@@ -17,7 +17,7 @@ import os.path
 
 from cwrap import BaseCClass
 from ecl.sched import SchedulePrototype
-from ert.util import CTime
+from ecl.util import CTime
 
 
 class SchedFile(BaseCClass):

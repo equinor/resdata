@@ -1,5 +1,5 @@
 import ert
-import ert.util
+import ecl.util
 import ecl.geo
 import ecl.ecl
 

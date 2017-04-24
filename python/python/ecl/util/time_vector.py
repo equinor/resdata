@@ -16,7 +16,7 @@
 import datetime
 import re
 
-from ert.util import VectorTemplate, CTime, UtilPrototype
+from ecl.util import VectorTemplate, CTime, UtilPrototype
 
 
 class TimeVector(VectorTemplate):

@@ -1,7 +1,7 @@
 import ctypes
 import ert
 from ert.test import ExtendedTestCase
-from ert.util import CThreadPool, startCThreadPool
+from ecl.util import CThreadPool, startCThreadPool
 
 TEST_LIB = ert.load("libert_util")
 

@@ -16,7 +16,7 @@
 from ctypes import c_void_p
 
 from cwrap import BaseCClass
-from ert.util import StringList, UtilPrototype
+from ecl.util import StringList, UtilPrototype
 
 
 class Hash(BaseCClass):

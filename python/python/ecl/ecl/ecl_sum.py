@@ -35,7 +35,7 @@ from ecl.ecl import EclSumTStep
 from ecl.ecl import EclSumVarType
 from ecl.ecl.ecl_sum_vector import EclSumVector
 from ecl.ecl.ecl_smspec_node import EclSMSPECNode
-from ert.util import StringList, CTime, DoubleVector, TimeVector, IntVector
+from ecl.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 from ecl.ecl import EclPrototype
 #, EclSumKeyWordVector
 
