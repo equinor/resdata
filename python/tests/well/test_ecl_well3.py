@@ -1,7 +1,7 @@
 import datetime
 import os.path
 
-from ert.ecl import EclGrid, EclFile, EclSum
+from ecl.ecl import EclGrid, EclFile, EclSum
 from ert.test import ExtendedTestCase
 from ert.util.ctime import CTime
 from ert.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment

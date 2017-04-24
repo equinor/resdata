@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import ert
-import ert.ecl
+import ecl.ecl
 import ert.util
 import ert.geo
 

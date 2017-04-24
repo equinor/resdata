@@ -33,7 +33,7 @@ import math
 import itertools
 from cwrap import CFILE, BaseCClass
 from ert.util import IntVector
-from ert.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum
+from ecl.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum
 
 
 class EclGrid(BaseCClass):

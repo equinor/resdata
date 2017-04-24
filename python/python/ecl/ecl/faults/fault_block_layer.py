@@ -16,8 +16,8 @@
 
 from __future__ import print_function
 from cwrap import BaseCClass
-from ert.ecl import EclDataType, EclPrototype
-from ert.ecl.faults import Fault
+from ecl.ecl import EclDataType, EclPrototype
+from ecl.ecl.faults import Fault
 
 class FaultBlockLayer(BaseCClass):
     TYPE_NAME = "fault_block_layer"

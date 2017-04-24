@@ -16,7 +16,7 @@
 
 import ctypes
 from cwrap import BaseCClass
-from ert.ecl import EclPrototype
+from ecl.ecl import EclPrototype
 from ert.util import IntVector
 
 

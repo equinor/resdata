@@ -31,18 +31,18 @@ import os.path
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 from cwrap import BaseCClass, CFILE
-from ert.ecl import EclSumTStep
-from ert.ecl import EclSumVarType
-from ert.ecl.ecl_sum_vector import EclSumVector
-from ert.ecl.ecl_smspec_node import EclSMSPECNode
+from ecl.ecl import EclSumTStep
+from ecl.ecl import EclSumVarType
+from ecl.ecl.ecl_sum_vector import EclSumVector
+from ecl.ecl.ecl_smspec_node import EclSMSPECNode
 from ert.util import StringList, CTime, DoubleVector, TimeVector, IntVector
-from ert.ecl import EclPrototype
+from ecl.ecl import EclPrototype
 #, EclSumKeyWordVector
 
 
 
 
-#import ert.ecl_plot.sum_plot as sum_plot
+#import ecl.ecl_plot.sum_plot as sum_plot
 
 # The date2num function is a verbatim copy of the _to_ordinalf()
 # function from the matplotlib.dates module. Inserted here only to
@@ -1240,5 +1240,5 @@ class EclSum(BaseCClass):
 
 
 
-import ert.ecl.ecl_sum_keyword_vector
+import ecl.ecl.ecl_sum_keyword_vector
 EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum , time_t , ecl_sum_vector, FILE)" , bind = False)

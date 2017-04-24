@@ -17,7 +17,7 @@
 import re
 import datetime
 import numbers
-from ert.ecl import EclSum
+from ecl.ecl import EclSum
 
 
 class NPVParseKey(object):

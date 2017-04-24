@@ -45,8 +45,8 @@ import warnings
 
 import  numpy
 from cwrap import CFILE, BaseCClass
-from ert.ecl import EclDataType
-from ert.ecl import EclTypeEnum, EclUtil, EclPrototype
+from ecl.ecl import EclDataType
+from ecl.ecl import EclTypeEnum, EclUtil, EclPrototype
 
 def dump_type_deprecation_warning():
     warnings.warn("EclTypeEnum is deprecated. " +

@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-from ert.ecl import EclFileEnum , EclFile, Ecl3DKW , Ecl3DFile
+from ecl.ecl import EclFileEnum , EclFile, Ecl3DKW , Ecl3DFile
 
 
 class EclInitFile(Ecl3DFile):

@@ -15,7 +15,7 @@
 #  for more details.
 
 from ert.util import CTime
-from ert.ecl import EclPrototype , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
+from ecl.ecl import EclPrototype , EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
 from cwrap import BaseCClass
 
 class EclRestartHead(BaseCClass):

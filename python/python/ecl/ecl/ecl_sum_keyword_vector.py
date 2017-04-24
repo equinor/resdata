@@ -24,7 +24,7 @@ import datetime
 # argument. In the python code this order has been reversed.
 
 from cwrap import BaseCClass
-from ert.ecl import EclPrototype
+from ecl.ecl import EclPrototype
 
 
 

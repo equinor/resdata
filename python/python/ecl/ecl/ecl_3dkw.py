@@ -37,7 +37,7 @@ class Ecl3DKW(EclKW):
 
     Usage example:
 
-       from ert.ecl import EclInitFile,EclGrid
+       from ecl.ecl import EclInitFile,EclGrid
 
        grid = EclGrid("ECLIPSE.EGRID")
        file = EclInitFile(grid , "ECLIPSE.INIT")
@@ -168,7 +168,7 @@ class Ecl3DKW(EclKW):
           2. Convert the keyword to a 3D keyword.
 
         
-        from ert.ecl import EclGrid,EclKW,Ecl3DKW
+        from ecl.ecl import EclGrid,EclKW,Ecl3DKW
         
         grid = EclGrid("ECLIPSE.EGRID")
         poro = EclKW.read_grdecl(open("poro.grdecl") , "PORO")

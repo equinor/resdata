@@ -16,7 +16,7 @@
 import datetime
 
 from ert.test import ExtendedTestCase
-from ert.ecl import Ecl3DKW , EclKW, EclRestartFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
+from ecl.ecl import Ecl3DKW , EclKW, EclRestartFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
 
 class RestartFileTest(ExtendedTestCase):
     def setUp(self):

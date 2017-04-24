@@ -20,7 +20,7 @@ import datetime
 
 from unittest import skipIf, skipUnless, skipIf
 
-from ert.ecl import EclSum, EclFile
+from ecl.ecl import EclSum, EclFile
 
 from ert.util import StringList, TimeVector, DoubleVector
 

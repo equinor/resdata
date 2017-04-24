@@ -16,7 +16,7 @@
 import re
 
 from .fault import Fault
-from ert.ecl import EclGrid
+from ecl.ecl import EclGrid
 
 comment_regexp = re.compile("--.*")
 

@@ -19,8 +19,8 @@ import time
 import datetime
 
 from ert.test import ExtendedTestCase, TestAreaContext
-from ert.ecl import EclFile, EclGrid, EclKW, EclDataType, EclGrid, EclRegion
-from ert.ecl import FortIO, openFortIO, EclRFT, EclGridGenerator
+from ecl.ecl import EclFile, EclGrid, EclKW, EclDataType, EclGrid, EclRegion
+from ecl.ecl import FortIO, openFortIO, EclRFT, EclGridGenerator
 from ert.test.ecl_mock import createEclSum
 from ert.util import BoolVector
 

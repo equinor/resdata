@@ -1,8 +1,8 @@
 import ctypes
 import ert
 
-from ert.ecl import EclPrototype
-from ert.ecl import EclKW, EclFile, EclDataType, FortIO
+from ecl.ecl import EclPrototype
+from ecl.ecl import EclKW, EclFile, EclDataType, FortIO
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.util import IntVector
 

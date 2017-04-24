@@ -23,7 +23,7 @@ different surveys. The implementation is a thin wrapper around the
 ecl_subsidence.c implementation in the libecl library.
 """
 from cwrap import BaseCClass
-from ert.ecl import EclPrototype
+from ecl.ecl import EclPrototype
 
 
 class EclSubsidence(BaseCClass):
@@ -79,7 +79,7 @@ class EclSubsidence(BaseCClass):
         to load the @restart_file argument is:
 
            import datetime
-           import ert.ecl.ecl as ecl
+           import ecl.ecl.ecl as ecl
            ...
            ...
            date = datetime.datetime( year , month , day )

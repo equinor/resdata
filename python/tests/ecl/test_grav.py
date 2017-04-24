@@ -1,5 +1,5 @@
 import time
-from ert.ecl import EclGrav, EclKW, EclGrid, EclFile, EclDataType, openFortIO, FortIO
+from ecl.ecl import EclGrav, EclKW, EclGrid, EclFile, EclDataType, openFortIO, FortIO
 from ert.test import ExtendedTestCase , TestAreaContext
 
 

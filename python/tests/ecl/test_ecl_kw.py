@@ -19,7 +19,7 @@ import random
 import numpy
 import warnings
 
-from ert.ecl import EclKW, EclDataType, EclTypeEnum, EclFile, FortIO, EclFileFlagEnum , openFortIO
+from ecl.ecl import EclKW, EclDataType, EclTypeEnum, EclFile, FortIO, EclFileFlagEnum , openFortIO
 
 from ert.test import ExtendedTestCase , TestAreaContext
 

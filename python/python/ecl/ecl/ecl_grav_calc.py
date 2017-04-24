@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
-from ert.ecl import EclPrototype
+from ecl.ecl import EclPrototype
 _phase_deltag = EclPrototype("double ecl_grav_phase_deltag( double, double ,double , ecl_grid , ecl_file , ecl_kw , ecl_kw , ecl_kw , ecl_kw , ecl_kw , ecl_kw")
 
 

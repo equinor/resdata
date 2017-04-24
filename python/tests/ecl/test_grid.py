@@ -21,9 +21,9 @@ import itertools
 from numpy import linspace
 
 from ert.util import IntVector
-from ert.ecl import EclGrid, EclKW, EclDataType, EclUnitTypeEnum, EclFile
-from ert.ecl import EclGridGenerator as GridGen
-from ert.ecl.faults import Layer , FaultCollection
+from ecl.ecl import EclGrid, EclKW, EclDataType, EclUnitTypeEnum, EclFile
+from ecl.ecl import EclGridGenerator as GridGen
+from ecl.ecl.faults import Layer , FaultCollection
 from ert.test import ExtendedTestCase , TestAreaContext
 
 # This dict is used to verify that corners are mapped to the correct

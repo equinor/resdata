@@ -40,7 +40,7 @@ import ctypes
 import os
 import sys
 from cwrap import BaseCClass
-from ert.ecl import EclPrototype
+from ecl.ecl import EclPrototype
 
 
 class FortIO(BaseCClass):
@@ -85,7 +85,7 @@ class FortIO(BaseCClass):
         all the pressure keywords to another file:
 
            import sys
-           from ert.ecl import FortIO, EclFile
+           from ecl.ecl import FortIO, EclFile
 
            rst_file = EclFile(sys.argv[1])
            fortio = FortIO("PRESSURE", mode=FortIO.WRITE_MODE)
@@ -194,7 +194,7 @@ def openFortIO(file_name, mode=FortIO.READ_MODE, fmt_file=False, endian_flip_hea
     the situation where you need to ensure resource cleanup.
 
        import sys
-       from ert.ecl import FortIO, EclFile
+       from ecl.ecl import FortIO, EclFile
 
        rst_file = EclFile(sys.argv[1])
        with openFortIO("PRESSURE", mode=FortIO.WRITE_MODE) as fortio:

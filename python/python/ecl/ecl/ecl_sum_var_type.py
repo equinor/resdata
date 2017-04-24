@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from cwrap import BaseCEnum
-from ert.ecl import ECL_LIB
+from ecl.ecl import ECL_LIB
 
 
 class EclSumVarType(BaseCEnum):

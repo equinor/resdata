@@ -16,7 +16,7 @@
 #  for more details.
 import os
 import random
-from ert.ecl import EclKW, EclDataType, EclGrid , Ecl3DKW
+from ecl.ecl import EclKW, EclDataType, EclGrid , Ecl3DKW
 from ert.util import IntVector
 from ert.test import ExtendedTestCase
 

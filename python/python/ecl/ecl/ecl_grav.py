@@ -22,7 +22,7 @@ different surveys. The implementation is a thin wrapper around the
 ecl_grav.c implementation in the libecl library.
 """
 from cwrap import BaseCClass
-from ert.ecl import EclPhaseEnum, EclPrototype
+from ecl.ecl import EclPhaseEnum, EclPrototype
 
 
 class EclGrav(BaseCClass):
@@ -84,7 +84,7 @@ class EclGrav(BaseCClass):
         to load the @restart_view argument is:
 
            import datetime
-           from ert.ecl import EclRestartFile
+           from ecl.ecl import EclRestartFile
            ...
            ...
            date = datetime.datetime( year , month , day )

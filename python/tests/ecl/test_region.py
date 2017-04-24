@@ -14,8 +14,8 @@
 #   
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
-from ert.ecl import EclGrid, EclKW, EclRegion, EclDataType
-from ert.ecl.faults import Layer
+from ecl.ecl import EclGrid, EclKW, EclRegion, EclDataType
+from ecl.ecl.faults import Layer
 from ert.test import ExtendedTestCase
 
 

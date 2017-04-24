@@ -28,8 +28,8 @@ queried for the corresponding list of indices.
 import ctypes
 
 from cwrap import BaseCClass
-from ert.ecl.faults import Layer
-from ert.ecl import EclKW, EclDataType, EclPrototype
+from ecl.ecl.faults import Layer
+from ecl.ecl import EclKW, EclDataType, EclPrototype
 from ert.geo import CPolyline
 from ert.util import IntVector
 
@@ -825,7 +825,7 @@ class EclRegion(BaseCClass):
         vertical coordinate @k.
 
         The input @layer should be of type Layer - from the
-        ert.ecl.faults.layer module. The k value must in the range
+        ecl.ecl.faults.layer module. The k value must in the range
         [0,grid.nz) and the dimensions of the layer must correspond
         exactly to nx,ny of the grid.
         """

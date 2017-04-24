@@ -1,6 +1,6 @@
 from cwrap import BaseCClass
-from ert.ecl import EclGrid
-from ert.ecl.ecl_file import EclFile
+from ecl.ecl import EclGrid
+from ecl.ecl.ecl_file import EclFile
 from ert.well import WellTimeLine, WellPrototype
 
 

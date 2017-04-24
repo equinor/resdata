@@ -18,7 +18,7 @@ ert - Ensemble Reservoir Tool - a package for reservoir modeling.
 
 The ert package itself has no code, but contains several subpackages:
 
-ert.ecl: Package for working with ECLIPSE files. The far most mature
+ecl.ecl: Package for working with ECLIPSE files. The far most mature
    package in ert.
 
 ert.job_queue: 

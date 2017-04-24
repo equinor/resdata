@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
-from ert.ecl import EclGrid , EclUtil, EclTypeEnum , EclFileEnum, EclPhaseEnum, EclUnitTypeEnum
+from ecl.ecl import EclGrid , EclUtil, EclTypeEnum , EclFileEnum, EclPhaseEnum, EclUnitTypeEnum
 from ert.test import ExtendedTestCase 
 
 

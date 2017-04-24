@@ -22,7 +22,7 @@ except ImportError:
     from unittest import skipIf
 
 import time
-from ert.ecl import EclDataType, EclKW, EclGrid, EclFile, openEclFile
+from ecl.ecl import EclDataType, EclKW, EclGrid, EclFile, openEclFile
 from ert.util import DoubleVector, IntVector
 from ert.test import ExtendedTestCase , TestAreaContext
 

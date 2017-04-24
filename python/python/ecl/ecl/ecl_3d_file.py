@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details. 
 
-from ert.ecl import EclFile, Ecl3DKW
+from ecl.ecl import EclFile, Ecl3DKW
 
 
 class Ecl3DFile(EclFile):

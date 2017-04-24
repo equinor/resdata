@@ -16,7 +16,7 @@
 
 from ert.test import ExtendedTestCase , TestAreaContext
 from ert.test.ecl_mock import createEclSum
-from ert.ecl import EclCmp
+from ecl.ecl import EclCmp
 
 class EclCmpTest(ExtendedTestCase):
     def setUp(self):

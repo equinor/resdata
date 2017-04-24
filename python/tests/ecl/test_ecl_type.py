@@ -1,6 +1,6 @@
 from ert.test import TestAreaContext, ExtendedTestCase
 
-from ert.ecl import EclDataType, EclTypeEnum
+from ecl.ecl import EclDataType, EclTypeEnum
 
 class EclDataTypeTest(ExtendedTestCase):
 

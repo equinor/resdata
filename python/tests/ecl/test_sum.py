@@ -20,7 +20,7 @@ import datetime
 import csv
 from unittest import skipIf, skipUnless, skipIf
 
-from ert.ecl import EclSum, EclSumVarType
+from ecl.ecl import EclSum, EclSumVarType
 from ert.test import ExtendedTestCase, TestAreaContext
 from ert.test.ecl_mock import createEclSum
 

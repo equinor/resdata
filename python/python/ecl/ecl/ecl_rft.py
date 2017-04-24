@@ -20,7 +20,7 @@ Module for loading ECLIPSE RFT files.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from cwrap import BaseCClass
-from ert.ecl import EclRFTCell, EclPLTCell, EclPrototype
+from ecl.ecl import EclRFTCell, EclPLTCell, EclPrototype
 from ert.util import CTime
 
 class EclRFT(BaseCClass):

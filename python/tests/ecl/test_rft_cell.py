@@ -16,7 +16,7 @@
 #  for more details. 
 
 
-from ert.ecl import EclRFTCell, EclPLTCell
+from ecl.ecl import EclRFTCell, EclPLTCell
 from ert.test import ExtendedTestCase
 
 

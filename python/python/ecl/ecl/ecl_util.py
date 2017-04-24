@@ -26,7 +26,7 @@ functions from ecl_util.c which are not bound to any class type.
 """
 import ctypes
 from cwrap import BaseCEnum
-from ert.ecl import EclPrototype, ECL_LIB
+from ecl.ecl import EclPrototype, ECL_LIB
 
 class EclFileEnum(BaseCEnum):
     TYPE_NAME="ecl_file_enum"

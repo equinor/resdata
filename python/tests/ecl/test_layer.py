@@ -19,9 +19,9 @@ from unittest import skipIf
 import time
 
 from ert.util import IntVector
-from ert.ecl import EclGrid
+from ecl.ecl import EclGrid
 from ert.geo import CPolyline
-from ert.ecl.faults import Layer , FaultCollection
+from ecl.ecl.faults import Layer , FaultCollection
 from ert.test import ExtendedTestCase , TestAreaContext
 
 

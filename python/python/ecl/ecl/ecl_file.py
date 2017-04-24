@@ -41,7 +41,7 @@ import datetime
 import ctypes
 
 from cwrap import BaseCClass
-from ert.ecl import EclPrototype, EclKW, EclFileEnum, EclFileView
+from ecl.ecl import EclPrototype, EclKW, EclFileEnum, EclFileView
 from ert.util import CTime
 
 
@@ -100,7 +100,7 @@ class EclFile(BaseCClass):
         corresponding to @report_step can be found. Since this is a
         classmethod it is invoked like this:
 
-           import ert.ecl.ecl as ecl
+           import ecl.ecl.ecl as ecl
            ....
            if ecl.EclFile.contains_report_step("ECLIPSE.UNRST" , 20):
               print "OK - file contains report step 20"
@@ -124,7 +124,7 @@ class EclFile(BaseCClass):
         time corresponding to @dtime can be found. Since this is a
         classmethod it is invoked like this:
 
-           import ert.ecl.ecl as ecl
+           import ecl.ecl.ecl as ecl
            ....
            if ecl.EclFile.contains_sim_time("ECLIPSE.UNRST" , datetime.datetime( 2007 , 10 , 10) ):
               print "OK - file contains 10th of October 2007"
@@ -669,7 +669,7 @@ class EclFile(BaseCClass):
         This method will write the current EclFile instance to a
         FortIO stream already opened for writing:
 
-           import ert.ecl.ecl as ecl
+           import ecl.ecl.ecl as ecl
            ...
            fortio = ecl.FortIO( "FILE.XX" )
            file.fwrite( fortio )
