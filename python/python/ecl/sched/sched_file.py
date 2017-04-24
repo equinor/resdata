@@ -16,7 +16,7 @@
 import os.path
 
 from cwrap import BaseCClass
-from ert.sched import SchedulePrototype
+from ecl.sched import SchedulePrototype
 from ert.util import CTime
 
 
