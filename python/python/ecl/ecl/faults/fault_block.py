@@ -17,7 +17,7 @@
 import ctypes
 from ecl.ecl import EclPrototype
 from cwrap import BaseCClass
-from ert.geo import Polyline, GeometryTools , CPolylineCollection
+from ecl.geo import Polyline, GeometryTools , CPolylineCollection
 from ert.util import DoubleVector , IntVector
 
 class FaultBlockCell(object):

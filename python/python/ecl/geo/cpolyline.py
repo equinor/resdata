@@ -20,7 +20,7 @@ import ctypes
 import os.path
 
 from cwrap import BaseCClass
-from ert.geo import GeoPrototype
+from ecl.geo import GeoPrototype
 from .geometry_tools import GeometryTools
 
 

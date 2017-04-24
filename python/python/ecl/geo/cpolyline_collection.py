@@ -19,7 +19,7 @@ Create a polygon
 import ctypes
 
 from cwrap import BaseCClass
-from ert.geo import GeoPrototype, CPolyline
+from ecl.geo import GeoPrototype, CPolyline
 
 
 class CPolylineCollection(BaseCClass):

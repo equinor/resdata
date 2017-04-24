@@ -21,7 +21,7 @@ import ert
 from cwrap import Prototype
 
 class GeoPrototype(Prototype):
-    lib = ert.load("libert_geometry")
+    lib = ert.load("libecl.geometry")
 
     def __init__(self, prototype, bind=True):
         super(GeoPrototype, self).__init__(GeoPrototype.lib, prototype, bind=bind)

@@ -22,7 +22,7 @@ from ert import util
 from ecl.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
 from ecl.ecl import EclGrid, EclKW, EclDataType
 from ert.test import ExtendedTestCase, TestAreaContext
-from ert.geo import Polyline , CPolyline
+from ecl.geo import Polyline , CPolyline
 
 
 class FaultTest(ExtendedTestCase):

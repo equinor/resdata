@@ -1,4 +1,4 @@
-from ert.geo import GeoRegion, GeoPointset, CPolyline, Surface
+from ecl.geo import GeoRegion, GeoPointset, CPolyline, Surface
 from ert.test import ExtendedTestCase, TestAreaContext
 
 

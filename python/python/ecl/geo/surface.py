@@ -21,8 +21,8 @@ import ctypes
 from numpy import zeros
 
 from cwrap import BaseCClass
-from ert.geo import GeoPrototype
-from ert.geo import GeoPointset
+from ecl.geo import GeoPrototype
+from ecl.geo import GeoPointset
 
 class Surface(BaseCClass):
     TYPE_NAME = "surface"

@@ -25,7 +25,7 @@ class LintErt(LintTestCase):
         self.assertLinted('ecl.ecl', whitelist=white)
 
     def test_lint_geo(self):
-        self.assertLinted('ert/geo')
+        self.assertLinted('ecl.geo')
 
     def test_lint_util(self):
         self.assertLinted('ert/util')

@@ -1,4 +1,4 @@
-from ert.geo.geometry_tools import GeometryTools
+from ecl.geo.geometry_tools import GeometryTools
 from ert.test.extended_testcase import ExtendedTestCase
 
 

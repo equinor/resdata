@@ -20,7 +20,7 @@ import time
 
 from ert.util import IntVector
 from ecl.ecl import EclGrid
-from ert.geo import CPolyline
+from ecl.geo import CPolyline
 from ecl.ecl.faults import Layer , FaultCollection
 from ert.test import ExtendedTestCase , TestAreaContext
 

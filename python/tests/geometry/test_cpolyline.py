@@ -1,7 +1,7 @@
 import math
 
-from ert.geo import CPolyline , Polyline
-from ert.geo.xyz_io import XYZIo
+from ecl.geo import CPolyline , Polyline
+from ecl.geo.xyz_io import XYZIo
 from ert.test import ExtendedTestCase , TestAreaContext
 
 

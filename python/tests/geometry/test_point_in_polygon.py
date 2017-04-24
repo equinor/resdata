@@ -1,5 +1,5 @@
-from ert.geo.geometry_tools import GeometryTools
-from ert.geo.polyline import Polyline
+from ecl.geo.geometry_tools import GeometryTools
+from ecl.geo.polyline import Polyline
 from ert.test.extended_testcase import ExtendedTestCase
 
 

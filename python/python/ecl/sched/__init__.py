@@ -16,7 +16,7 @@
 import ert
 import ecl.ecl
 import ert.util
-import ert.geo
+import ecl.geo
 
 from cwrap import Prototype
 

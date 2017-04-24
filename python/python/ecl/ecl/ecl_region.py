@@ -30,7 +30,7 @@ import ctypes
 from cwrap import BaseCClass
 from ecl.ecl.faults import Layer
 from ecl.ecl import EclKW, EclDataType, EclPrototype
-from ert.geo import CPolyline
+from ecl.geo import CPolyline
 from ert.util import IntVector
 
 

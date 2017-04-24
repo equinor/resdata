@@ -17,7 +17,7 @@
 from __future__ import print_function
 import sys
 from ert.util import DoubleVector,stat
-from ert.geo import CPolyline
+from ecl.geo import CPolyline
 from .fault_segments import FaultSegment
 
 

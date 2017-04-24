@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ert.geo import Polyline, CPolyline, GeometryTools
+from ecl.geo import Polyline, CPolyline, GeometryTools
 from ert.util import stat
 from ert.util import Matrix
 

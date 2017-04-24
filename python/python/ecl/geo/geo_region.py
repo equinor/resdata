@@ -15,7 +15,7 @@
 #  for more details.
 from cwrap import BaseCClass
 from ert.util import IntVector
-from ert.geo import GeoPrototype
+from ecl.geo import GeoPrototype
 from .cpolyline import CPolyline
 from ctypes import c_double
 

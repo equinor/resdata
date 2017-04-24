@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from cwrap import BaseCClass
-from ert.geo import GeoPrototype
+from ecl.geo import GeoPrototype
 
 class GeoPointset(BaseCClass):
     TYPE_NAME = "geo_pointset"

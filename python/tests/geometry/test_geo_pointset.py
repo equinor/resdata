@@ -1,4 +1,4 @@
-from ert.geo import GeoPointset, Surface
+from ecl.geo import GeoPointset, Surface
 from ert.test import ExtendedTestCase, TestAreaContext
 
 
