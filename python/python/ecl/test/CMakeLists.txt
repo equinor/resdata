@@ -11,6 +11,6 @@ set(PYTHON_SOURCES
     lint_test_case.py
 )
 
-add_python_package("python.ert.test"  ${PYTHON_INSTALL_PREFIX}/ert/test "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.test"  ${PYTHON_INSTALL_PREFIX}/ecl/test "${PYTHON_SOURCES}" True)
 
 add_subdirectory(ecl_mock)

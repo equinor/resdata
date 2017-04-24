@@ -6,5 +6,5 @@ set(PYTHON_SOURCES
     llsq_result_enum.py
 )
 
-add_python_package("python.ert.util.enums"  ${PYTHON_INSTALL_PREFIX}/ert/util/enums "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.util.enums"  ${PYTHON_INSTALL_PREFIX}/ecl/util/enums "${PYTHON_SOURCES}" True)
 

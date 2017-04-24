@@ -27,6 +27,6 @@ set(PYTHON_SOURCES
     path_format.py
 )
 
-add_python_package("python.ert.util"  ${PYTHON_INSTALL_PREFIX}/ert/util "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.util"  ${PYTHON_INSTALL_PREFIX}/ecl/util "${PYTHON_SOURCES}" True)
 
 add_subdirectory(enums)

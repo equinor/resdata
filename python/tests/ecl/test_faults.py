@@ -17,7 +17,7 @@
 
 from unittest import skipIf
 import time
-from ert import util
+from ecl import util
 
 from ecl.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
 from ecl.ecl import EclGrid, EclKW, EclDataType

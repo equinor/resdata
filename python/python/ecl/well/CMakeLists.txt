@@ -9,5 +9,5 @@ set(PYTHON_SOURCES
     well_type_enum.py
 )
 
-add_python_package("python.ert.well"  ${PYTHON_INSTALL_PREFIX}/ert/well "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.well"  ${PYTHON_INSTALL_PREFIX}/ecl/well "${PYTHON_SOURCES}" True)
 

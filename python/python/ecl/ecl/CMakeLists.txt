@@ -30,7 +30,7 @@ set(PYTHON_SOURCES
     ecl_grid_generator.py
 )
 
-add_python_package("python.ert.ecl" ${PYTHON_INSTALL_PREFIX}/ert/ecl "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.ecl" ${PYTHON_INSTALL_PREFIX}/ecl/ecl "${PYTHON_SOURCES}" True)
 
 add_subdirectory(faults)
 add_subdirectory(rft)

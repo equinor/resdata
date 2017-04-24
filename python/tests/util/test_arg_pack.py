@@ -1,8 +1,8 @@
-import ert
+import ecl
 from ecl.test import ExtendedTestCase
 from ecl.util import ArgPack, StringList
 
-TEST_LIB = ert.load("libert_util")
+TEST_LIB = ecl.load("libert_util")
 
 
 class ArgPackTest(ExtendedTestCase):

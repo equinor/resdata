@@ -10,4 +10,4 @@ set(PYTHON_SOURCES
     surface.py
 )
 
-add_python_package("python.ert.geo"  ${PYTHON_INSTALL_PREFIX}/ert/geo "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.geo"  ${PYTHON_INSTALL_PREFIX}/ecl/geo "${PYTHON_SOURCES}" True)

@@ -13,7 +13,7 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
-import ert
+import ecl
 import ecl.ecl
 import ecl.util
 import ecl.geo
@@ -21,12 +21,12 @@ import ecl.geo
 from cwrap import Prototype
 
 class SchedulePrototype(Prototype):
-    lib = ert.load("libsched")
+    lib = ecl.load("libsched")
 
     def __init__(self, prototype, bind=True):
         super(SchedulePrototype, self).__init__(SchedulePrototype.lib, prototype, bind=bind)
 
-SCHED_LIB = ert.load("libsched")
+SCHED_LIB = ecl.load("libsched")
 
 from .sched_file import SchedFile
 from .history_source_enum import HistorySourceEnum

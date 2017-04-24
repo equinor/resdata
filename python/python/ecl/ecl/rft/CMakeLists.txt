@@ -3,4 +3,4 @@ set(PYTHON_SOURCES
     well_trajectory.py
 )
 
-add_python_package("python.ert.ecl.rft"  ${PYTHON_INSTALL_PREFIX}/ert/ecl/rft "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.ecl.rft"  ${PYTHON_INSTALL_PREFIX}/ecl/ecl/rft "${PYTHON_SOURCES}" True)

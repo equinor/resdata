@@ -39,12 +39,12 @@ The modules included in the util package are:
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
-import ert
+import ecl
 from cwrap import Prototype
 
 
 class UtilPrototype(Prototype):
-    lib = ert.load("libert_util")
+    lib = ecl.load("libert_util")
 
     def __init__(self, prototype, bind=True):
         super(UtilPrototype, self).__init__(UtilPrototype.lib, prototype, bind=bind)

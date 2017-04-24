@@ -79,12 +79,12 @@ from cwrap import Prototype
 
 
 class EclPrototype(Prototype):
-    lib = ert.load("libecl")
+    lib = ecl.load("libecl")
 
     def __init__(self, prototype, bind=True):
         super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
 
-ECL_LIB = ert.load("libecl")
+ECL_LIB = ecl.load("libecl")
 
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclUnitTypeEnum , EclUtil
 from .ecl_type import EclTypeEnum, EclDataType

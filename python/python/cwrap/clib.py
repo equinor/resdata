@@ -23,10 +23,10 @@ libert_util.so library file is loaded we should manually load that
 first as:
 
    import ecl.util
-   GEO_LIB = ert.load("libecl.geometry")
+   GEO_LIB = ecl.load("libert_geometry")
 
 Otherwise the standard operating system dependency resolve code will
-be invoked when loading libecl.geometry, and that could in principle
+be invoked when loading libert_geometry, and that could in principle
 lead to loading a different version of libert_util.so
 """
 

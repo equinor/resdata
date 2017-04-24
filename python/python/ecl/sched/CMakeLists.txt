@@ -5,5 +5,5 @@ set(PYTHON_SOURCES
     sched_file.py
 )
 
-add_python_package("python.ert.sched"  ${PYTHON_INSTALL_PREFIX}/ert/sched "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.sched"  ${PYTHON_INSTALL_PREFIX}/ecl/sched "${PYTHON_SOURCES}" True)
 

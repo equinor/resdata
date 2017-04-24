@@ -15,7 +15,7 @@
 #  for more details.
 import os.path
 
-import ert
+import ecl
 from ecl.test import ExtendedTestCase
 from ecl.util import Version
 
@@ -99,7 +99,7 @@ class VersionTest(ExtendedTestCase):
         self.assertEqual(pfx, repr(current)[:len(pfx)])
 
     def test_import(self):
-        from ert import Version as globalVersion
+        from ecl import Version as globalVersion
         v1 = globalVersion(1, 1, 2)
         v2 = Version(1, 1, 2)
 
@@ -110,10 +110,10 @@ class VersionTest(ExtendedTestCase):
 
     def test_root_version(self):
         cv = Version.currentVersion( )
-        self.assertEqual( ert.__version__ , cv.versionString() )
+        self.assertEqual( ecl.__version__ , cv.versionString() )
 
 
     def test_root_path(self):
-        self.assertTrue( os.path.isdir( os.path.join( ert.root() , "ert")))
-        self.assertTrue( os.path.isfile( os.path.join( ert.root() , "ert", "__init__.py")))
+        self.assertTrue( os.path.isdir( os.path.join( ecl.root() , "ecl")))
+        self.assertTrue( os.path.isfile( os.path.join( ecl.root() , "ecl", "__init__.py")))
         

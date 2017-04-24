@@ -21,8 +21,6 @@ The ert package itself has no code, but contains several subpackages:
 ecl.ecl: Package for working with ECLIPSE files. The far most mature
    package in ert.
 
-ert.job_queue: 
-
 ecl.util:
 
 The ert package is based on wrapping the libriaries from the ERT C
@@ -120,8 +118,8 @@ def load(name):
     return cwrapload( name , path = ert_lib_path , so_version = ert_so_version)
 
 
-from ecl.util import Version
-from ecl.util import updateAbortSignals
+from .util import Version
+from .util import updateAbortSignals
 
 updateAbortSignals( )
 

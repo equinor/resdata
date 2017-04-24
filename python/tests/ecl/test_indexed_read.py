@@ -1,5 +1,5 @@
 import ctypes
-import ert
+import ecl
 
 from ecl.ecl import EclPrototype
 from ecl.ecl import EclKW, EclFile, EclDataType, FortIO

@@ -4,4 +4,4 @@ set(PYTHON_SOURCES
 )
 
 # The ecl_mock package is not installed.
-add_python_package("python.ert.test.ecl_mock"  ${PYTHON_INSTALL_PREFIX}/ert/test/ecl_mock "${PYTHON_SOURCES}" False)
+add_python_package("python.ecl.test.ecl_mock"  ${PYTHON_INSTALL_PREFIX}/ecl/test/ecl_mock "${PYTHON_SOURCES}" False)
