@@ -24,7 +24,7 @@ from ecl.util import IntVector
 from ecl.ecl import EclGrid, EclKW, EclDataType, EclUnitTypeEnum, EclFile
 from ecl.ecl import EclGridGenerator as GridGen
 from ecl.ecl.faults import Layer , FaultCollection
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 # This dict is used to verify that corners are mapped to the correct
 # cell with respect to containment.

@@ -1,7 +1,7 @@
 import time
 import datetime
 
-from ert.test import ExtendedTestCase, TestAreaContext
+from ecl.test import ExtendedTestCase, TestAreaContext
 from ecl.ecl import EclFile,EclKW,EclDataType,openFortIO, FortIO
 
 

@@ -15,7 +15,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ert.test import LintTestCase
+from ecl.test import LintTestCase
 
 class LintErt(LintTestCase):
     """Tests that no file in ert needs linting"""

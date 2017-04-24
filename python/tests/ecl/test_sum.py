@@ -21,8 +21,8 @@ import csv
 from unittest import skipIf, skipUnless, skipIf
 
 from ecl.ecl import EclSum, EclSumVarType
-from ert.test import ExtendedTestCase, TestAreaContext
-from ert.test.ecl_mock import createEclSum
+from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test.ecl_mock import createEclSum
 
 def fopr(days):
     return days

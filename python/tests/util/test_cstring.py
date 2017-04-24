@@ -1,6 +1,6 @@
 import ert
 from cwrap import Prototype
-from ert.test.extended_testcase import ExtendedTestCase
+from ecl.test.extended_testcase import ExtendedTestCase
 
 # Local copies so that the real ones don't get changed
 class TestUtilPrototype(Prototype):

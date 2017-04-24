@@ -23,7 +23,7 @@ except ImportError:
 import warnings
 
 from ecl.ecl import EclSumVector, EclSum
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 
 class EclSumVectorTest(ExtendedTestCase):

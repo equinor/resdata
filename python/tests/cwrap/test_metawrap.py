@@ -4,7 +4,7 @@ import ctypes
 
 import ert
 from cwrap import BaseCClass, Prototype, PrototypeError
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 
 # Local copies so that the real ones don't get changed

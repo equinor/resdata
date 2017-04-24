@@ -18,7 +18,7 @@ import os
 import random
 from ecl.ecl import EclKW, EclDataType, EclGrid , Ecl3DKW
 from ecl.util import IntVector
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 class KWFunctionTest(ExtendedTestCase):
 

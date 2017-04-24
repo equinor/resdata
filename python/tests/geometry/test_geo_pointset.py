@@ -1,5 +1,5 @@
 from ecl.geo import GeoPointset, Surface
-from ert.test import ExtendedTestCase, TestAreaContext
+from ecl.test import ExtendedTestCase, TestAreaContext
 
 
 class GeoPointsetTest(ExtendedTestCase):

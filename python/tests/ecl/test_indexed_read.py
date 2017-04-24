@@ -3,7 +3,7 @@ import ert
 
 from ecl.ecl import EclPrototype
 from ecl.ecl import EclKW, EclFile, EclDataType, FortIO
-from ert.test import ExtendedTestCase, TestAreaContext
+from ecl.test import ExtendedTestCase, TestAreaContext
 from ecl.util import IntVector
 
 class EclIndexedReadTest(ExtendedTestCase):

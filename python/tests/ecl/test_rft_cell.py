@@ -17,7 +17,7 @@
 
 
 from ecl.ecl import EclRFTCell, EclPLTCell
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 
 # def out_of_range():

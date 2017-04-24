@@ -16,7 +16,7 @@
 import os.path
 
 import ert
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 from ecl.util import Version
 
 

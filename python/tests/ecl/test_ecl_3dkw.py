@@ -19,7 +19,7 @@ import random
 
 from ecl.util import IntVector
 from ecl.ecl import Ecl3DKW , EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum , EclGrid
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
 

@@ -24,7 +24,7 @@ except ImportError:
 import time
 from ecl.ecl import EclDataType, EclKW, EclGrid, EclFile, openEclFile
 from ecl.util import DoubleVector, IntVector
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
 class GridTest(ExtendedTestCase):

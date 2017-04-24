@@ -15,7 +15,7 @@
 #  for more details.
 
 from ecl.ecl import EclGrid , EclUtil, EclTypeEnum , EclFileEnum, EclPhaseEnum, EclUnitTypeEnum
-from ert.test import ExtendedTestCase 
+from ecl.test import ExtendedTestCase 
 
 
 class EclUtilTest(ExtendedTestCase):

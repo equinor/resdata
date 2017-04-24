@@ -15,7 +15,7 @@
 #  for more details.
 
 
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 from ecl.ecl import Ecl3DKW , EclKW, EclInitFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
 
 class InitFileTest(ExtendedTestCase):

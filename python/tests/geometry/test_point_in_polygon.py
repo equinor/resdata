@@ -1,6 +1,6 @@
 from ecl.geo.geometry_tools import GeometryTools
 from ecl.geo.polyline import Polyline
-from ert.test.extended_testcase import ExtendedTestCase
+from ecl.test.extended_testcase import ExtendedTestCase
 
 
 class PointInPolygonTest(ExtendedTestCase):

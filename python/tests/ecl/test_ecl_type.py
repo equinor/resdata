@@ -1,4 +1,4 @@
-from ert.test import TestAreaContext, ExtendedTestCase
+from ecl.test import TestAreaContext, ExtendedTestCase
 
 from ecl.ecl import EclDataType, EclTypeEnum
 

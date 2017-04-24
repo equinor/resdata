@@ -1,7 +1,7 @@
 from datetime import datetime
 import random
 from ecl.ecl import EclSumTStep, EclSum
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 
 class EclSumTStepTest(ExtendedTestCase):

@@ -1,7 +1,7 @@
 import ert
 from ctypes import c_ubyte, c_double
 from cwrap import BaseCValue, Prototype
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 class TestPrototype(Prototype):
     lib = ert.load("libert_util")

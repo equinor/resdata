@@ -28,7 +28,7 @@ from ecl.ecl import EclSum
 from ecl.ecl import EclNPV , NPVPriceVector
 
 from ecl.util import StringList, TimeVector, DoubleVector , CTime
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
 base = "ECLIPSE"

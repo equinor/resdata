@@ -21,7 +21,7 @@ from ert import util
 
 from ecl.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
 from ecl.ecl import EclGrid, EclKW, EclDataType
-from ert.test import ExtendedTestCase, TestAreaContext
+from ecl.test import ExtendedTestCase, TestAreaContext
 from ecl.geo import Polyline , CPolyline
 
 

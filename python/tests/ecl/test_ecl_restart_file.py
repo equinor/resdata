@@ -15,7 +15,7 @@
 #  for more details.
 import datetime
 
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 from ecl.ecl import Ecl3DKW , EclKW, EclRestartFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
 
 class RestartFileTest(ExtendedTestCase):

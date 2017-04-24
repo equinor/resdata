@@ -1,5 +1,5 @@
 from ecl.geo import GeometryTools
-from ert.test.extended_testcase import ExtendedTestCase
+from ecl.test.extended_testcase import ExtendedTestCase
 
 
 class IntersectionTest(ExtendedTestCase):

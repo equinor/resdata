@@ -23,7 +23,7 @@ from unittest import skipIf
 from ecl.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
 from ecl.ecl import EclFileFlagEnum, EclDataType, EclFileEnum
 
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 def createFile( name , kw_list ):
     with openFortIO(name , mode = FortIO.WRITE_MODE) as f:

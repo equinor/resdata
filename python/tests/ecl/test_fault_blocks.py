@@ -21,7 +21,7 @@ import warnings
 from ecl.ecl import EclGrid, EclKW , EclRegion, EclDataType
 from ecl.ecl.faults import FaultBlock, FaultBlockLayer, FaultBlockCell,FaultCollection
 from ecl.geo import Polyline , CPolylineCollection
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
 class FaultBlockTest(ExtendedTestCase):

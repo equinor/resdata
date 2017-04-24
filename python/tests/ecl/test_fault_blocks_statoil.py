@@ -20,7 +20,7 @@ except ImportError:
     from unittest import skipIf
 
 from ecl.ecl import EclGrid, EclDataType , EclKW
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 from ecl.ecl.faults import FaultBlock, FaultBlockLayer
 
 class FaultBlockTest(ExtendedTestCase):

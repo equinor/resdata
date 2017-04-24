@@ -3,8 +3,8 @@ import stat
 import sys
 
 import ert
-from ert.test.extended_testcase import ExtendedTestCase
-from ert.test.test_area import TestAreaContext
+from ecl.test.extended_testcase import ExtendedTestCase
+from ecl.test.test_area import TestAreaContext
 
 from cwrap import Prototype
 

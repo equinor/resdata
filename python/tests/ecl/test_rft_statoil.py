@@ -19,7 +19,7 @@ from __future__ import print_function
 import datetime
 from ecl.ecl import EclRFTFile, EclRFTCell, EclPLTCell
 from ecl.ecl.rft import WellTrajectory
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 
 class RFTTest(ExtendedTestCase):

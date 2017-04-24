@@ -17,7 +17,7 @@
 
 import os
 from ecl.ecl import EclKW,EclGrid,Ecl3DKW
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 
 

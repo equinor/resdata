@@ -22,7 +22,7 @@ except ImportError:
 import time
 from ecl.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment
 from ecl.ecl import EclGrid, EclKW, EclDataType
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 
 
 

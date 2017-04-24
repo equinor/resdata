@@ -18,7 +18,7 @@ import datetime
 import os.path
 from cwrap import CFILE
 from ecl.ecl import EclSum, EclSumKeyWordVector, EclFile,FortIO, openFortIO,openEclFile,EclKW
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
 class EclSumTest(ExtendedTestCase):

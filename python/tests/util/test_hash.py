@@ -1,6 +1,6 @@
 from ctypes import c_void_p
 
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 from ecl.util import Hash, StringHash, DoubleHash, IntegerHash
 
 

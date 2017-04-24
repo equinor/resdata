@@ -18,10 +18,10 @@ import warnings
 import time
 import datetime
 
-from ert.test import ExtendedTestCase, TestAreaContext
+from ecl.test import ExtendedTestCase, TestAreaContext
 from ecl.ecl import EclFile, EclGrid, EclKW, EclDataType, EclGrid, EclRegion
 from ecl.ecl import FortIO, openFortIO, EclRFT, EclGridGenerator
-from ert.test.ecl_mock import createEclSum
+from ecl.test.ecl_mock import createEclSum
 from ecl.util import BoolVector
 
 # The class Deprecation_1_9_Test contains methods which will be marked

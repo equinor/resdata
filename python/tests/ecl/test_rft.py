@@ -20,7 +20,7 @@ import datetime
 from ecl.util import CTime
 from ecl.ecl import EclRFTFile, EclRFTCell, EclPLTCell
 from ecl.ecl.rft import WellTrajectory
-from ert.test import ExtendedTestCase
+from ecl.test import ExtendedTestCase
 from ecl.ecl import EclRFT
 
 class RFTTest(ExtendedTestCase):

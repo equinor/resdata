@@ -2,7 +2,7 @@ import math
 
 from ecl.geo import Polyline, GeometryTools , CPolyline
 from ecl.geo.xyz_io import XYZIo
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
 class GeometryToolsTest(ExtendedTestCase):

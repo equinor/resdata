@@ -1,6 +1,6 @@
 import random
 from ecl.geo import Surface
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
 class SurfaceTest(ExtendedTestCase):
