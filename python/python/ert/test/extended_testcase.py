@@ -56,7 +56,13 @@ class ExtendedTestCase(TestCase):
         self.__share_root = None
         installAbortSignals()
         super(ExtendedTestCase , self).__init__(*args , **kwargs)
+        self.__str__ = self.__repr__
 
+    def __repr__(self):
+        return 'ExtendedTestCase( TESTADATA_ROOT=%s, SOURCE_ROOT=%s, SHARE_ROOT=%s, BUILD_ROOT=%s)' % (TESDATA_ROOT,
+                                                                                                       SOURCE_ROOT,
+                                                                                                       SHARE_ROOT,
+                                                                                                       BUILD_ROOT)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:
