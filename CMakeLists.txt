@@ -170,7 +170,7 @@ add_subdirectory( libecl_well )
 
 if (BUILD_PYTHON)
    if (ERT_WINDOWS)
-      message(STATUS "Python is not supported on Windows")
+      message(WARNING "Python is not supported on Windows")
       set( BUILD_PYTHON OFF )
    else()
       include(cmake/python.cmake2)
