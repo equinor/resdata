@@ -1,16 +1,24 @@
 include(cmake/find_python_module.cmake)
 include(cmake/python_package_versions.cmake) # finds version
 
-FIND_PACKAGE(PythonInterp 2.7 EXACT)
+FIND_PACKAGE(PythonInterp)
 if (NOT DEFINED PYTHON_EXECUTABLE)
-   message("Python2.7 interpreter not found - Python wrappers not enabled")
+   message(WARNING "Python interpreter not found - Python wrappers not enabled")
+   set( BUILD_PYTHON OFF PARENT_SCOPE )
+   return()
+endif()
+
+if (NOT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}" STREQUAL "2.7")
+   message(WARNING "Need Python version 2.7, found version: ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} - Python wrappers not enabled")
+   set( BUILD_PYTHON OFF PARENT_SCOPE )
    return()
 endif()
 
 
 python_package(numpy 1.7.1)
 if (NOT DEFINED PY_numpy)
-   message("numpy module not found - Python wrappers not enabled")
+   message(WARNING "numpy module not found - Python wrappers not enabled")
+   set( BUILD_PYTHON OFF PARENT_SCOPE )
    return()
 endif()
 
@@ -26,3 +34,4 @@ if (BUILD_TESTS)
    add_subdirectory( tests )
 endif()
 add_subdirectory( python )
+

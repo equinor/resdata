@@ -129,17 +129,6 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 
-if (BUILD_SHARED_LIBS)
-   set( LIBRARY_TYPE SHARED )
-else()
-   set( LIBRARY_TYPE STATIC )
-   if (BUILD_ERT)
-      message(FATAL_ERROR "The full ERT application must be built with shared libraries")
-   endif()
-   if (BUILD_PYTHON)
-      message(FATAL_ERROR "The Python wrappers require shared libraries")
-   endif()
-endif()
 
 if (MSVC)
    add_definitions( -D__func__="\\"????\\"")
@@ -179,17 +168,27 @@ endif()
 include_directories( ${PROJECT_SOURCE_DIR}/libecl_well/include )
 add_subdirectory( libecl_well )
 
-
 if (BUILD_PYTHON)
    if (ERT_WINDOWS)
-      message(STATUS "Python is not supported on Windows")
+      message(WARNING "Python is not supported on Windows")
+      set( BUILD_PYTHON OFF )
    else()
       include(cmake/python.cmake2)
+
+      # If finding the Python interpreter and required packages
+      # fails in the python/CMakeLists.txt file the BUILD_PYTHON
+      # will be set to OFF.
       add_subdirectory( python )
 
       if(ERT_DOC)
          add_subdirectory( docs )
       endif()
+   endif()
+endif()
+
+if (BUILD_PYTHON)
+   if (NOT ${BUILD_SHARED_LIBS})
+      message(FATAL_ERROR "The Python wrappers require shared libraries")
    endif()
 endif()
 
