@@ -1,7 +1,7 @@
 include(cmake/find_python_module.cmake)
 include(cmake/python_package_versions.cmake) # finds version
 
-FIND_PACKAGE(PythonInterp 2.7 EXACT)
+FIND_PACKAGE(PythonInterp 2.7)
 if (NOT DEFINED PYTHON_EXECUTABLE)
    message("Python2.7 interpreter not found - Python wrappers not enabled")
    return()
