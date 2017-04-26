@@ -9,6 +9,7 @@ set(PYTHON_SOURCES
     temp_area.py
     path_context.py
     lint_test_case.py
+    import_test_case.py
 )
 
 add_python_package("python.ecl.test"  ${PYTHON_INSTALL_PREFIX}/ecl/test "${PYTHON_SOURCES}" True)

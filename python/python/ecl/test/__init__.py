@@ -7,6 +7,8 @@ from .temp_area import TempArea , TempAreaContext
 from .ert_test_runner import ErtTestRunner
 from .path_context import PathContext
 from .lint_test_case import LintTestCase
+from .import_test_case import ImportTestCase
+
 try:
     from .ert_test_context import ErtTestContext, ErtTest
 except ImportError:
