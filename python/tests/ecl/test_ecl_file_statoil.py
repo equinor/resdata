@@ -18,10 +18,10 @@ import datetime
 import os.path
 from unittest import skipIf
 
-from ert.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
-from ert.ecl import EclFileFlagEnum, EclFileEnum
+from ecl.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
+from ecl.ecl import EclFileFlagEnum, EclFileEnum
 
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 
 
     

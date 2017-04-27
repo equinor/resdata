@@ -20,11 +20,11 @@ import datetime
 
 from unittest import skipIf, skipUnless, skipIf
 
-from ert.ecl import EclSum, EclFile
+from ecl.ecl import EclSum, EclFile
 
-from ert.util import StringList, TimeVector, DoubleVector
+from ecl.util import StringList, TimeVector, DoubleVector
 
-from ert.test import ExtendedTestCase , TestAreaContext
+from ecl.test import ExtendedTestCase , TestAreaContext
 import csv
 
 base = "ECLIPSE"
