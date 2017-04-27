@@ -222,7 +222,7 @@ class EclGrid(BaseCClass):
             super(EclGrid, self).__init__(c_ptr)
         else:
             raise IOError("Loading grid from:%s failed" % filename)
-        self.__str__ = self.__repr__
+
 
     def free(self):
         self._free( )
