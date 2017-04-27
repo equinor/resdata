@@ -88,8 +88,6 @@ class KWTest(ExtendedTestCase):
         with self.assertRaises(ValueError):
             EclKW( "ToGodDamnLong" , 100 , EclDataType.ECL_CHAR )
 
-
-
     def test_sum( self ):
         kw_string = EclKW( "STRING" , 100 , EclDataType.ECL_CHAR )
         with self.assertRaises(ValueError):
@@ -409,3 +407,12 @@ class KWTest(ExtendedTestCase):
         kw = EclKW("KW" , 100 , EclDataType.ECL_INT)
 
         self.assertEqual( kw.typeName( ) , "INTE")
+
+    def test_string_alloc(self):
+        kw = EclKW("KW" , 10, EclDataType.ECL_STRING(30))
+
+        for i in range(10):
+            kw[i] = str(i)*29
+
+        for i in range(10):
+            self.assertEqual(str(i)*29, kw[i])

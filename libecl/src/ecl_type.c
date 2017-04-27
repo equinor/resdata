@@ -102,6 +102,7 @@ ecl_type_enum ecl_type_get_type(const ecl_data_type ecl_type) {
     return ecl_type.type;
 }
 
+// TODO: This one should disapear!
 size_t ecl_type_get_element_size(const ecl_data_type ecl_type) {
     return ecl_type.element_size;
 }

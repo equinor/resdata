@@ -179,6 +179,6 @@ class EclDataType(BaseCClass):
     def ECL_CHAR(cls):
         return EclDataType(EclTypeEnum.ECL_CHAR_TYPE)
 
-    @classproperty
-    def ECL_STRING(cls, size):
-        return EclDataType(EclTypeEnum.ECL_STRING_TYPE, size)
+    @classmethod
+    def ECL_STRING(cls, elem_size):
+        return EclDataType(EclTypeEnum.ECL_STRING_TYPE, elem_size)

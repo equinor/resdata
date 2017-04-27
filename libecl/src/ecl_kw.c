@@ -812,6 +812,12 @@ const char * ecl_kw_iget_char_ptr( const ecl_kw_type * ecl_kw , int i) {
   return ecl_kw_iget_ptr( ecl_kw , i );
 }
 
+const char * ecl_kw_iget_string_ptr( const ecl_kw_type * ecl_kw, int i) {
+  if (ecl_kw_get_type(ecl_kw) != ECL_STRING_TYPE)
+    util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));
+  return ecl_kw_iget_ptr( ecl_kw , i );
+}
+
 
 /**
    This will set the elemnts of the ecl_kw data storage in index to
@@ -862,6 +868,30 @@ void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
     for (sub_index = 0; sub_index < strings; sub_index++)
       ecl_kw_iset_string8( ecl_kw , index + sub_index , &s[ sub_index * ECL_STRING8_LENGTH ]);
   }
+}
+
+/**
+ * This function will verify that the given string is of approperiate length
+ * (0 <= lenght <= data_type.element_size). If so, the elements of @s will be
+ * written to the @ecl_kw string array starting at @index.
+ */
+void ecl_kw_iset_string_ptr( ecl_kw_type * ecl_kw, int index, const char * s) {
+  if(!ecl_type_is_string(ecl_kw_get_data_type(ecl_kw))) {
+    char * type_name = ecl_type_alloc_name(ecl_kw_get_data_type(ecl_kw));
+    util_abort("%s: Expected CXXX data type, was %s\n", __func__, type_name);
+  }
+
+  size_t input_len = strlen(s);
+  size_t type_len  = ecl_type_get_sizeof_ctype_fortio(ecl_kw_get_data_type(ecl_kw));
+
+  if(input_len > type_len)
+    util_abort("%s: String of length %d cannot hold input string of length %d\n", __func__, type_len, input_len);
+
+  char * ecl_string = (char *) ecl_kw_iget_ptr(ecl_kw, index);
+  for(int i = 0; i < input_len; ++i)
+    ecl_string[i] = s[i];
+
+  ecl_string[input_len] = '\0';
 }
 
 
