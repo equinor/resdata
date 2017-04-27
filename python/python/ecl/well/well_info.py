@@ -33,7 +33,6 @@ class WellInfo(BaseCClass):
                     self.addWellFile(item, load_segment_information)
             else:
                 self.addWellFile(rst_file, load_segment_information)
-        self.__str__ = self.__repr__
 
 
     def __repr__(self):
