@@ -89,10 +89,10 @@ class KWTest(ExtendedTestCase):
             EclKW( "ToGodDamnLong" , 100 , EclDataType.ECL_CHAR )
 
     def test_sum( self ):
-        kw_string = EclKW( "STRING" , 100 , EclDataType.ECL_CHAR )
-        with self.assertRaises(ValueError):
-            kw_string.sum()
-
+        for ecl_type in [EclDataType.ECL_CHAR, EclDataType.ECL_STRING(42)]:
+            kw_string = EclKW("STRING", 100, ecl_type)
+            with self.assertRaises(ValueError):
+                kw_string.sum()
 
         kw_int = EclKW( "INT" , 4 , EclDataType.ECL_INT )
         kw_int[0] = 1
@@ -131,6 +131,9 @@ class KWTest(ExtendedTestCase):
             self.kw_test(EclDataType.ECL_DOUBLE, [0.0, 1.1, 2.2, 3.3, 4.4, 5.5], "%12.6f\n")
             self.kw_test(EclDataType.ECL_BOOL, [True, True, True, False, True], "%4d\n")
             self.kw_test(EclDataType.ECL_CHAR, ["1", "22", "4444", "666666", "88888888"], "%-8s\n")
+
+            for str_len in range(1000):
+                self.kw_test(EclDataType.ECL_STRING(str_len), [str(i)*str_len for i in range(10)], "%s\n")
 
     def test_kw_write(self):
         with TestAreaContext("python/ecl_kw/writing"):
@@ -215,13 +218,14 @@ class KWTest(ExtendedTestCase):
 
 
     def test_abs(self):
-        kw = EclKW("NAME" , 10 , EclDataType.ECL_CHAR)
-        with self.assertRaises(TypeError):
-            abs_kw = abs(kw)
-
-        kw = EclKW("NAME" , 10 , EclDataType.ECL_BOOL)
-        with self.assertRaises(TypeError):
-            abs_kw = abs(kw)
+        for ecl_type in [
+                EclDataType.ECL_CHAR,
+                EclDataType.ECL_BOOL,
+                EclDataType.ECL_STRING(32)
+                ]:
+            kw = EclKW("NAME" , 10 , ecl_type)
+            with self.assertRaises(TypeError):
+                abs_kw = abs(kw)
 
         kw = EclKW("NAME" , 10 , EclDataType.ECL_INT)
         for i in range(len(kw)):
@@ -360,14 +364,13 @@ class KWTest(ExtendedTestCase):
         self.assertTrue( view[ 0 ] == kw1[ 0 ] )
         self.assertTrue( copy[ 0 ] == kw1[ 0 ] - 1)
 
-
-        kw2 = EclKW("CHAR", 10, EclDataType.ECL_CHAR )
-        with self.assertRaises(ValueError):
-            kw2.numpyView( )
-
-        kw3 = EclKW("BOOL", 10, EclDataType.ECL_BOOL )
-        with self.assertRaises(ValueError):
-            kw3.numpyView( )
+        for ecl_type in [
+                EclDataType.ECL_CHAR,
+                EclDataType.ECL_BOOL,
+                EclDataType.ECL_STRING(19)]:
+            kw2 = EclKW("TEST_KW", 10, ecl_type)
+            with self.assertRaises(ValueError):
+                kw2.numpyView()
 
     def test_slice(self):
         N = 100
@@ -416,3 +419,39 @@ class KWTest(ExtendedTestCase):
 
         for i in range(10):
             self.assertEqual(str(i)*30, kw[i])
+
+    def test_string_write_read_unformatted(self):
+        for str_len in range(1000):
+            with TestAreaContext("my_space"):
+
+                kw = EclKW("TEST_KW" , 10, EclDataType.ECL_STRING(str_len))
+                for i in range(10):
+                    kw[i] = str(i)*str_len
+
+                file_name = "ecl_kw_test"
+                fortio = FortIO(file_name, mode=FortIO.WRITE_MODE)
+                kw.fwrite(fortio)
+                fortio.close()
+
+                fortio = FortIO(file_name)
+                loaded_kw = EclKW.fread(fortio)
+
+                self.assertEqual(kw, loaded_kw)
+
+    def test_string_write_read_formatted(self):
+        for str_len in range(1000):
+            with TestAreaContext("my_space"):
+
+                kw = EclKW("TEST_KW" , 10, EclDataType.ECL_STRING(str_len))
+                for i in range(10):
+                    kw[i] = str(i)*str_len
+
+                file_name = "ecl_kw_test"
+                fortio = FortIO(file_name, mode=FortIO.WRITE_MODE, fmt_file=True)
+                kw.fwrite(fortio)
+                fortio.close()
+
+                fortio = FortIO(file_name, fmt_file=True)
+                loaded_kw = EclKW.fread(fortio)
+
+                self.assertEqual(kw, loaded_kw)

@@ -1067,7 +1067,7 @@ class EclKW(BaseCClass):
         existing GRDECL file, set all poro values below 0.05 to 0.00
         and write back an updated GRDECL file.
 
-            poro = ecl.EclKW.load_grdecl( open("poro1.grdecl" , "r") , "PORO" )
+            poro = ecl.EclKW.read_grdecl( open("poro1.grdecl" , "r") , "PORO" )
             grid = ecl.EclGrid( "ECLIPSE.EGRID" )
             reg  = ecl.EclRegion( grid , False )
 
