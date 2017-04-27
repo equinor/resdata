@@ -114,7 +114,7 @@ struct ecl_type_struct {
 #define ECL_MESS (ecl_data_type) {.type = ECL_MESS_TYPE, .element_size = 0}
 // TODO: The ECL_C010 macro is to be removed
 #define ECL_C010 (ecl_data_type) {.type = ECL_C010_TYPE, .element_size = ECL_STRING10_LENGTH + 1}
-#define ECL_STRING(size) (ecl_data_type) {.type = ECL_STRING_TYPE, .element_size=size}
+#define ECL_STRING(size) (ecl_data_type) {.type = ECL_STRING_TYPE, .element_size = size + 1}
 
 #endif
 

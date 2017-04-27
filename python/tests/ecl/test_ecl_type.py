@@ -11,8 +11,7 @@ class EclDataTypeTest(ExtendedTestCase):
     # EclTypeEnum!
     # [char, float, double, int, bool, mess]
 
-    # TODO: Change to 8
-    CONST_SIZES = [9, 4, 8, 4, 4, 0]
+    CONST_SIZES = [8, 4, 8, 4, 4, 0]
 
     CONST_VERIFIERS = [
             EclDataType.is_char,

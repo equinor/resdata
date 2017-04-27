@@ -35,9 +35,9 @@
 #define ECL_TYPE_NAME_BOOL     "LOGI"
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
-static char * alloc_string_name(const size_t element_size) {
+static char * alloc_string_name(const ecl_data_type ecl_type) {
   char string_name[5];
-  sprintf(string_name, "C%03zd", element_size);
+  sprintf(string_name, "C%03d", ecl_type_get_sizeof_ctype_fortio(ecl_type));
   return util_alloc_string_copy(string_name);
 }
 
@@ -64,10 +64,12 @@ ecl_data_type ecl_type_create(const ecl_type_enum type, const size_t element_siz
                                   ecl_type_create_from_type(type)
                               );
 
-    if(ecl_type.element_size != element_size)
+    if(ecl_type_get_sizeof_ctype_fortio(ecl_type) != element_size)
         util_abort(
                 "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
-                __func__, type, element_size, ecl_type.element_size);
+                __func__, type,
+                element_size, ecl_type_get_sizeof_ctype_fortio(ecl_type)
+                );
 
     return ecl_type;
 }
@@ -102,17 +104,12 @@ ecl_type_enum ecl_type_get_type(const ecl_data_type ecl_type) {
     return ecl_type.type;
 }
 
-// TODO: This one should disapear!
-size_t ecl_type_get_element_size(const ecl_data_type ecl_type) {
-    return ecl_type.element_size;
-}
-
 char * ecl_type_alloc_name(const ecl_data_type ecl_type) {
   switch (ecl_type.type) {
   case(ECL_CHAR_TYPE):
     return util_alloc_string_copy(ECL_TYPE_NAME_CHAR);
   case(ECL_STRING_TYPE):
-    return alloc_string_name(ecl_type.element_size);
+    return alloc_string_name(ecl_type);
   case(ECL_C010_TYPE):
     return util_alloc_string_copy(ECL_TYPE_NAME_C010);
   case(ECL_FLOAT_TYPE):

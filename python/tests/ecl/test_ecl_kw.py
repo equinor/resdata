@@ -412,7 +412,7 @@ class KWTest(ExtendedTestCase):
         kw = EclKW("KW" , 10, EclDataType.ECL_STRING(30))
 
         for i in range(10):
-            kw[i] = str(i)*29
+            kw[i] = str(i)*30
 
         for i in range(10):
-            self.assertEqual(str(i)*29, kw[i])
+            self.assertEqual(str(i)*30, kw[i])
