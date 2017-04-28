@@ -233,6 +233,9 @@ static int get_blocksize( ecl_data_type data_type ) {
   if (ecl_type_is_C010(data_type))
     return BLOCKSIZE_C010;
 
+  if (ecl_type_is_string(data_type))
+    return BLOCKSIZE_C010;
+
   return BLOCKSIZE_NUMERIC;
 }
 
@@ -1182,7 +1185,7 @@ bool ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
       return true;
     } else {
       bool read_ok = true;
-      if (ecl_type_is_char(ecl_kw->data_type) || ecl_type_is_mess(ecl_kw->data_type)) {
+      if (ecl_type_is_char(ecl_kw->data_type) || ecl_type_is_mess(ecl_kw->data_type) || ecl_type_is_string(ecl_kw->data_type)) {
         const int blocks = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
         int ib = 0;
         while (true) {
@@ -1195,9 +1198,11 @@ bool ecl_kw_fread_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
           int record_size = fortio_init_read(fortio);
           if (record_size >= 0) {
             int ir;
+            const int sizeof_ctype        = ecl_type_get_sizeof_ctype(ecl_kw->data_type);
+            const int sizeof_ctype_fortio = ecl_type_get_sizeof_ctype_fortio(ecl_kw->data_type);
             for (ir = 0; ir < read_elm; ir++) {
-              util_fread( &ecl_kw->data[(ib * blocksize + ir) * ecl_kw_get_sizeof_ctype(ecl_kw)] , 1 , ECL_STRING8_LENGTH , stream , __func__);
-              ecl_kw->data[(ib * blocksize + ir) * ecl_kw_get_sizeof_ctype(ecl_kw) + ECL_STRING8_LENGTH] = null_char;
+              util_fread( &ecl_kw->data[(ib * blocksize + ir) * sizeof_ctype] , 1 , sizeof_ctype_fortio , stream , __func__);
+              ecl_kw->data[(ib * blocksize + ir) * sizeof_ctype + sizeof_ctype_fortio] = null_char;
             }
             read_ok = fortio_complete_read(fortio , record_size);
           } else
@@ -1266,31 +1271,27 @@ bool ecl_kw_fread_realloc_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 */
 
 bool ecl_kw_fskip_data__( ecl_data_type data_type , const int element_count , fortio_type * fortio) {
+  if (element_count <= 0)
+    return true;
+
   bool fmt_file = fortio_fmt_file(fortio);
-  bool skip_ok = true;
-  if (element_count > 0) {
-    if (fmt_file) {
-      /* Formatted skipping actually involves reading the data - nice ??? */
-      ecl_kw_type * tmp_kw = ecl_kw_alloc_empty( );
-      ecl_kw_initialize( tmp_kw , "WORK" , element_count , data_type );
-      ecl_kw_alloc_data(tmp_kw);
-      ecl_kw_fread_data(tmp_kw , fortio);
-      ecl_kw_free( tmp_kw );
-    } else {
-      const int blocksize = get_blocksize( data_type );
-      const int block_count = element_count / blocksize + (element_count % blocksize == 0 ? 0 : 1);
+  if (fmt_file) {
+    /* Formatted skipping actually involves reading the data - nice ??? */
+    ecl_kw_type * tmp_kw = ecl_kw_alloc_empty( );
+    ecl_kw_initialize( tmp_kw , "WORK" , element_count , data_type );
+    ecl_kw_alloc_data(tmp_kw);
+    ecl_kw_fread_data(tmp_kw , fortio);
+    ecl_kw_free( tmp_kw );
+  } else {
+    const int blocksize = get_blocksize( data_type );
+    const int block_count = element_count / blocksize + (element_count % blocksize != 0);
+    int element_size = ecl_type_get_sizeof_ctype_fortio(data_type);
 
-      int element_size = ecl_type_get_sizeof_ctype(data_type);
-      if(ecl_type_is_char(data_type))
-        element_size = ECL_STRING8_LENGTH;
-
-      if(ecl_type_is_C010(data_type))
-        element_size = ECL_STRING10_LENGTH;
-
-      skip_ok = fortio_data_fskip(fortio, element_size, element_count, block_count);
-    }
+    if(!fortio_data_fskip(fortio, element_size, element_count, block_count))
+      return false;
   }
-  return skip_ok;
+
+  return true;
 }
 
 
@@ -1564,18 +1565,19 @@ static void ecl_kw_fwrite_data_unformatted( ecl_kw_type * ecl_kw , fortio_type *
 
     for (block_nr = 0; block_nr < num_blocks; block_nr++) {
       int this_blocksize = util_int_min((block_nr + 1)*blocksize , ecl_kw->size) - block_nr*blocksize;
-      if (ecl_type_is_char(ecl_kw->data_type) || ecl_type_is_mess(ecl_kw->data_type)) {
+      if (ecl_type_is_char(ecl_kw->data_type) || ecl_type_is_mess(ecl_kw->data_type) || ecl_type_is_string(ecl_kw->data_type)) {
         /*
            Due to the terminating \0 characters there is not a
            continous file/memory mapping - the \0 characters arel
            skipped.
         */
-        FILE *stream      = fortio_get_FILE(fortio);
-        int   record_size = this_blocksize * ECL_STRING8_LENGTH;     /* The total size in bytes of the record written by the fortio layer. */
-        int   i;
+        FILE *stream    = fortio_get_FILE(fortio);
+        int word_size   = ecl_type_get_sizeof_ctype_fortio(ecl_kw->data_type);
+        int record_size = this_blocksize * word_size;     /* The total size in bytes of the record written by the fortio layer. */
+        int i;
         fortio_init_write(fortio , record_size );
         for (i = 0; i < this_blocksize; i++)
-          fwrite(&ecl_kw->data[(block_nr * blocksize + i) * ecl_kw_get_sizeof_ctype(ecl_kw)] , 1 , ECL_STRING8_LENGTH , stream);
+          fwrite(&ecl_kw->data[(block_nr * blocksize + i) * ecl_kw_get_sizeof_ctype(ecl_kw)] , 1 , word_size , stream);
         fortio_complete_write(fortio , record_size);
       } else {
         int   record_size = this_blocksize * ecl_kw_get_sizeof_ctype(ecl_kw);  /* The total size in bytes of the record written by the fortio layer. */
