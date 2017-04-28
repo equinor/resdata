@@ -39,6 +39,7 @@ set(TEST_SOURCES
     test_grav.py
     test_geertsma.py
     test_ecl_type.py
+    test_restart_head.py
 )
 
 add_python_package("python.tests.ecl"  ${PYTHON_INSTALL_PREFIX}/tests/ecl "${TEST_SOURCES}" False)
@@ -84,4 +85,5 @@ if (STATOIL_TESTDATA_ROOT)
   addPythonTest(tests.ecl.test_npv.NPVTest LABELS StatoilData)
   addPythonTest(tests.ecl.test_indexed_read.EclIndexedReadTest LABELS StatoilData)
   addPythonTest(tests.ecl.test_ecl_cmp.EclCmpTest LABELS StatoilData)
+  addPythonTest(tests.ecl.test_restart_head.RestartHeadTest LABELS StatoilData)
 endif()

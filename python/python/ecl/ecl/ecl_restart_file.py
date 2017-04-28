@@ -26,7 +26,9 @@ class EclRestartHead(BaseCClass):
     _get_report_step = EclPrototype("int    ecl_rsthead_get_report_step(ecl_rsthead)")
     _get_sim_time    = EclPrototype("time_t ecl_rsthead_get_sim_time(ecl_rsthead)")
     _get_sim_days    = EclPrototype("double ecl_rsthead_get_sim_days(ecl_rsthead)")
-
+    _get_nxconz      = EclPrototype("int   ecl_rsthead_get_nxconz(ecl_rsthead)")
+    _get_ncwmax      = EclPrototype("int   ecl_rsthead_get_ncwmax(ecl_rsthead)")
+    
     def __init__(self , kw_arg = None , rst_view = None):
         if kw_arg is None and rst_view is None:
             raise ValueError('Cannot construct EclRestartHead without one of kw_arg and rst_view, both were None!')
@@ -53,6 +55,11 @@ class EclRestartHead(BaseCClass):
     def getSimDays(self):
         return self._get_sim_days( )
 
+    def well_details(self):
+        return {"NXCONZ" : self._get_nxconz(),
+                "NCWMAX" : self._get_ncwmax()}
+
+                
 
 
 class EclRestartFile(Ecl3DFile):
@@ -129,3 +136,13 @@ class EclRestartFile(Ecl3DFile):
             time_list.append( (header.getReportStep() , header.getSimDate( ) , header.getSimDays( )) )
 
         return time_list
+
+    
+    def headers(self):
+        self.assertHeaders()
+        return self.rst_headers
+
+
+    def get_header(self, index):
+        self.assertHeaders()
+        return self.rst_headers[index]
