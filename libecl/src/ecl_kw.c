@@ -162,9 +162,10 @@ ecl_type_enum  ecl_kw_get_type(const ecl_kw_type *);
 void ecl_kw_set_data_type(ecl_kw_type * ecl_kw, ecl_data_type data_type);
 
 static char * alloc_read_fmt_string(const ecl_data_type ecl_type) {
-  char fmt [6];
-  sprintf(fmt, "%%%dc", ecl_type_get_sizeof_ctype_fortio(ecl_type));
-  return util_alloc_string_copy(fmt);
+  return util_alloc_sprintf(
+          "%%%dc",
+          ecl_type_get_sizeof_ctype_fortio(ecl_type)
+          );
 }
 
 static char * alloc_read_fmt(const ecl_data_type data_type ) {
@@ -192,9 +193,10 @@ static char * alloc_read_fmt(const ecl_data_type data_type ) {
 }
 
 static char * alloc_write_fmt_string(const ecl_data_type ecl_type) {
-  char fmt [10];
-  sprintf(fmt, " '%%-%ds'", ecl_type_get_sizeof_ctype_fortio(ecl_type));
-  return util_alloc_string_copy(fmt);
+  return util_alloc_sprintf(
+          " '%%-%ds'",
+          ecl_type_get_sizeof_ctype_fortio(ecl_type)
+          );
 }
 
 static char * alloc_write_fmt(const ecl_data_type data_type) {

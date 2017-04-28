@@ -36,9 +36,10 @@
 #define ECL_TYPE_NAME_MESSAGE  "MESS"
 
 static char * alloc_string_name(const ecl_data_type ecl_type) {
-  char string_name[5];
-  sprintf(string_name, "C%03d", ecl_type_get_sizeof_ctype_fortio(ecl_type));
-  return util_alloc_string_copy(string_name);
+  return util_alloc_sprintf(
+          "C%03d",
+          ecl_type_get_sizeof_ctype_fortio(ecl_type)
+          );
 }
 
 static bool is_ecl_string_name(const char * type_name) {

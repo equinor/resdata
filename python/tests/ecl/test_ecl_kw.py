@@ -429,12 +429,12 @@ class KWTest(ExtendedTestCase):
                     kw[i] = str(i)*str_len
 
                 file_name = "ecl_kw_test"
-                fortio = FortIO(file_name, mode=FortIO.WRITE_MODE)
-                kw.fwrite(fortio)
-                fortio.close()
 
-                fortio = FortIO(file_name)
-                loaded_kw = EclKW.fread(fortio)
+                with openFortIO(file_name, mode=FortIO.WRITE_MODE) as fortio:
+                    kw.fwrite(fortio)
+
+                with openFortIO(file_name) as fortio:
+                    loaded_kw = EclKW.fread(fortio)
 
                 self.assertEqual(kw, loaded_kw)
 
@@ -447,11 +447,10 @@ class KWTest(ExtendedTestCase):
                     kw[i] = str(i)*str_len
 
                 file_name = "ecl_kw_test"
-                fortio = FortIO(file_name, mode=FortIO.WRITE_MODE, fmt_file=True)
-                kw.fwrite(fortio)
-                fortio.close()
+                with openFortIO(file_name, mode=FortIO.WRITE_MODE, fmt_file=True) as fortio:
+                    kw.fwrite(fortio)
 
-                fortio = FortIO(file_name, fmt_file=True)
-                loaded_kw = EclKW.fread(fortio)
+                with openFortIO(file_name, fmt_file=True) as fortio:
+                    loaded_kw = EclKW.fread(fortio)
 
                 self.assertEqual(kw, loaded_kw)
