@@ -1,5 +1,6 @@
-include(cmake/find_python_module.cmake)
-include(cmake/python_package_versions.cmake) # finds version
+include(cmake/python.cmake)
+include(cmake/python_package_versions.cmake) 
+
 
 FIND_PACKAGE(PythonInterp)
 if (NOT DEFINED PYTHON_EXECUTABLE)
@@ -30,8 +31,13 @@ endif()
 set(PYTHON_INSTALL_PREFIX  "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}"  CACHE STRING "Subdirectory to install Python modules in")
 
 
+
+# add_python_test is a macro which uses the variable
+# PYTHON_INSTALL_PREFIX, the macro defintion must therefor come
+# *after* the PYTHON_INSTALL_PREFIX variable has been defined.
+include(cmake/add_python_test.cmake)
+
 if (BUILD_TESTS)
    add_subdirectory( tests )
 endif()
 add_subdirectory( python )
-

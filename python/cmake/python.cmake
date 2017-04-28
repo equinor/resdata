@@ -27,14 +27,14 @@ function(add_python_package target package_path source_files install_package)
      add_custom_command(
         OUTPUT  ${build_file}
         COMMAND ${PYTHON_EXECUTABLE}
-        ARGS    ${PROJECT_SOURCE_DIR}/cmake/cmake_pyc2 ${source_file} ${build_file}
+        ARGS    ${PROJECT_SOURCE_DIR}/python/cmake/cmake_pyc ${source_file} ${build_file}
         ${dependent_target})
     
      list(APPEND build_files ${build_file} )
 
      if (install_package)
         install(FILES ${build_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/${package_path})
-        install(CODE "execute_process(COMMAND ${PROJECT_SOURCE_DIR}/cmake/cmake_pyc_file ${install_file})")
+        install(CODE "execute_process(COMMAND ${PROJECT_SOURCE_DIR}/python/cmake/cmake_pyc_file ${install_file})")
      endif()
      
   endforeach()

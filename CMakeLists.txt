@@ -173,8 +173,6 @@ if (BUILD_PYTHON)
       message(WARNING "Python is not supported on Windows")
       set( BUILD_PYTHON OFF )
    else()
-      include(cmake/python.cmake2)
-
       # If finding the Python interpreter and required packages
       # fails in the python/CMakeLists.txt file the BUILD_PYTHON
       # will be set to OFF.
