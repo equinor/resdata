@@ -40,6 +40,9 @@ macro(init_python target_version)
    set(PYTHON_INSTALL_PREFIX  "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}"  CACHE STRING "Subdirectory to install Python modules in")
    set(CTEST_PYTHONPATH ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX})
    configure_python_env( )
+   include(add_python_test)
+   include(find_python_package) 
+   include(add_python_package)
 endmacro()
 
 
