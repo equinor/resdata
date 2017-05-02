@@ -109,6 +109,8 @@ class EclKW(BaseCClass):
     _get_type          = EclPrototype("ecl_type_enum ecl_kw_get_type( ecl_kw )")
     _iget_char_ptr     = EclPrototype("char*    ecl_kw_iget_char_ptr( ecl_kw , int )")
     _iset_char_ptr     = EclPrototype("void     ecl_kw_iset_char_ptr( ecl_kw , int , char*)")
+    _iget_string_ptr   = EclPrototype("char*    ecl_kw_iget_string_ptr( ecl_kw , int )")
+    _iset_string_ptr   = EclPrototype("void     ecl_kw_iset_string_ptr( ecl_kw , int, char*)")
     _iget_bool         = EclPrototype("bool     ecl_kw_iget_bool( ecl_kw , int)")
     _iset_bool         = EclPrototype("bool     ecl_kw_iset_bool( ecl_kw , int, bool)")
     _iget_int          = EclPrototype("int      ecl_kw_iget_int( ecl_kw , int )")
@@ -398,6 +400,8 @@ class EclKW(BaseCClass):
                 self.str_fmt  = "%d"
             elif self.data_type.is_mess():
                 self.str_fmt = "%s"  #"Message type"
+            elif self.data_type.is_string():
+                self.str_fmt = "%" + str(self.data_type.element_size) + "s"
             else:
                 raise ValueError("Unknown EclDataType (%s)!" % self.data_type.type_name)
     
@@ -474,6 +478,8 @@ class EclKW(BaseCClass):
                         return self._iget_bool( index)
                     elif self.data_type.is_char():
                         return self._iget_char_ptr( index )
+                    elif self.data_type.is_string():
+                        return self._iget_string_ptr( index )
                     else:
                         raise TypeError("Internal implementation error ...")
         elif isinstance( index , slice):
@@ -502,6 +508,8 @@ class EclKW(BaseCClass):
                         self._iset_bool( index , value)
                     elif self.data_type.is_char():
                         return self._iset_char_ptr( index , value)
+                    elif self.data_type.is_string():
+                        return self._iset_string_ptr( index, value)
                     else:
                         raise SystemError("Internal implementation error ...")
         elif isinstance( index , slice):
@@ -1059,7 +1067,7 @@ class EclKW(BaseCClass):
         existing GRDECL file, set all poro values below 0.05 to 0.00
         and write back an updated GRDECL file.
 
-            poro = ecl.EclKW.load_grdecl( open("poro1.grdecl" , "r") , "PORO" )
+            poro = ecl.EclKW.read_grdecl( open("poro1.grdecl" , "r") , "PORO" )
             grid = ecl.EclGrid( "ECLIPSE.EGRID" )
             reg  = ecl.EclRegion( grid , False )
 
