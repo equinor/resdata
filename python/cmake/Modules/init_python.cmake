@@ -1,9 +1,14 @@
-# This will macro will initialize the current cmake session for
-# Python. The macro starts by looking for the Python interpreter of
-# correct version. Then afterwards the variables;
+# This macro will initialize the current cmake session for Python. The
+# macro starts by looking for the Python interpreter of correct
+# version. When a Python interepreter of the correct version has been
+# located the macro will continue to set variables, load other cmake
+# modules and generate scripts to be used in the remaining part of the
+# cmake process. 
 #
+# Variables which will be set:
+# ----------------------------
 #
-#  PYTHON_INSTALL_PREFIX: All python packages will be located in
+# PYTHON_INSTALL_PREFIX: All python packages will be located in
 #        ${GLOBAL_PREFIX}/${PYTHON_INSTALL_PREFIX} - this applies both
 #        when searching for dependencies and when installing.
 #
@@ -14,7 +19,39 @@
 #        python_package( ) function when searching for third party
 #        packages.
 #
-# will be set.
+#
+# New functions/macros which will be available:
+# ---------------------------------------------
+#
+# add_python_package( ): This function will copy python source files
+#        to the build directory, 'compile' them and set up installation.
+#
+#
+# add_python_test( ): Set up a test based on invoking a Python test
+#        class with a small python executable front end.
+#
+# find_python_package( ): Will search for a python package.
+#
+#
+# New scripts generated:
+# ----------------------
+#
+#
+# cmake_pyc: Small script which will run in-place Python compilation
+#        of a directory tree recursively.
+#
+# cmake_pyc_file: Small script which will compile one python file.
+#
+# ctest_run_python: Small script which will invoke one Python test class.
+#
+# All the generated scripts will be located in ${PROJECT_BINARY_DIR}/bin.
+#
+#
+# Downstream projects should use this as:
+#
+# include( init_python )
+# init_python( 2.7 )
+# ...
 
 macro(init_python target_version)
 
