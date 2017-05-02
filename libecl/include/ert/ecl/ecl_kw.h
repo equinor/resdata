@@ -40,8 +40,7 @@ extern "C" {
 
   typedef enum {
     ECL_KW_READ_OK = 0,
-    ECL_KW_READ_FAIL = 1,
-    ECL_KW_READ_SKIP = 2
+    ECL_KW_READ_FAIL = 1
   } ecl_read_status_enum;
 
 /*

@@ -28,7 +28,6 @@
    types.
 */
 #define ECL_TYPE_NAME_CHAR     "CHAR"
-#define ECL_TYPE_NAME_C010     "C010"
 #define ECL_TYPE_NAME_FLOAT    "REAL"
 #define ECL_TYPE_NAME_INT      "INTE"
 #define ECL_TYPE_NAME_DOUBLE   "DOUB"
@@ -93,8 +92,6 @@ ecl_data_type ecl_type_create_from_type(const ecl_type_enum type) {
       util_abort("%s: Variable length string type cannot be created"
               " from type alone!\n" , __func__);
       return ECL_STRING(0); /* Dummy */
-    case(ECL_C010_TYPE):
-      return ECL_C010;
     default:
       util_abort("%s: invalid ecl_type: %d\n", __func__, type);
       return ECL_INT; /* Dummy */
@@ -111,8 +108,6 @@ char * ecl_type_alloc_name(const ecl_data_type ecl_type) {
     return util_alloc_string_copy(ECL_TYPE_NAME_CHAR);
   case(ECL_STRING_TYPE):
     return alloc_string_name(ecl_type);
-  case(ECL_C010_TYPE):
-    return util_alloc_string_copy(ECL_TYPE_NAME_C010);
   case(ECL_FLOAT_TYPE):
     return util_alloc_string_copy(ECL_TYPE_NAME_FLOAT);
   case(ECL_DOUBLE_TYPE):
@@ -140,8 +135,6 @@ ecl_data_type ecl_type_create_from_name( const char * type_name ) {
     return ECL_CHAR;
   else if (is_ecl_string_name(type_name))
     return ECL_STRING(get_ecl_string_length(type_name));
-  else if (strncmp( type_name , ECL_TYPE_NAME_C010 , ECL_TYPE_LENGTH) == 0)
-    return ECL_C010;
   else if (strncmp( type_name , ECL_TYPE_NAME_MESSAGE , ECL_TYPE_LENGTH) == 0)
     return ECL_MESS;
   else if (strncmp( type_name , ECL_TYPE_NAME_BOOL , ECL_TYPE_LENGTH) == 0)
@@ -154,7 +147,7 @@ ecl_data_type ecl_type_create_from_name( const char * type_name ) {
 
 
 int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type ecl_type) {
-  if(ecl_type_is_char(ecl_type) || ecl_type_is_string(ecl_type) || ecl_type_is_C010(ecl_type))
+  if(ecl_type_is_char(ecl_type) || ecl_type_is_string(ecl_type))
       return ecl_type.element_size - 1;
   else
       return ecl_type_get_sizeof_ctype(ecl_type);
@@ -168,6 +161,12 @@ bool ecl_type_is_numeric(const ecl_data_type ecl_type) {
     return (ecl_type_is_int(ecl_type) ||
             ecl_type_is_float(ecl_type) ||
             ecl_type_is_double(ecl_type));
+}
+
+bool ecl_type_is_alpha(const ecl_data_type ecl_type) {
+    return (ecl_type_is_char(ecl_type) ||
+            ecl_type_is_mess(ecl_type) ||
+            ecl_type_is_string(ecl_type));
 }
 
 bool ecl_type_is_equal(const ecl_data_type ecl_type1,
@@ -198,10 +197,6 @@ bool ecl_type_is_mess(const ecl_data_type ecl_type) {
  
 bool ecl_type_is_bool(const ecl_data_type ecl_type) {
     return (ecl_type.type == ECL_BOOL_TYPE);
-}
-
-bool ecl_type_is_C010(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_C010_TYPE);
 }
 
 bool ecl_type_is_string(const ecl_data_type ecl_type) {

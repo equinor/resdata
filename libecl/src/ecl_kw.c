@@ -61,7 +61,6 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 
 #define BLOCKSIZE_NUMERIC  1000
 #define BLOCKSIZE_CHAR     105
-#define BLOCKSIZE_C010     105
 
 
 
@@ -113,7 +112,6 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 */
 
 #define READ_FMT_CHAR     "%8c"
-#define READ_FMT_C010     "%10c"
 #define READ_FMT_FLOAT    "%gE"
 #define READ_FMT_INT      "%d"
 #define READ_FMT_MESS     "%8c"
@@ -122,7 +120,6 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 
 
 #define WRITE_FMT_CHAR    " '%-8s'"
-#define WRITE_FMT_C010    " '%-10s'"
 #define WRITE_FMT_INT     " %11d"
 #define WRITE_FMT_FLOAT   "  %11.8fE%+03d"
 #define WRITE_FMT_DOUBLE  "  %17.14fD%+03d"
@@ -172,8 +169,6 @@ static char * alloc_read_fmt(const ecl_data_type data_type ) {
   switch(ecl_type_get_type(data_type)) {
   case(ECL_CHAR_TYPE):
     return util_alloc_string_copy(READ_FMT_CHAR);
-  case(ECL_C010_TYPE):
-    return util_alloc_string_copy(READ_FMT_C010);
   case(ECL_INT_TYPE):
     return util_alloc_string_copy(READ_FMT_INT);
   case(ECL_FLOAT_TYPE):
@@ -203,8 +198,6 @@ static char * alloc_write_fmt(const ecl_data_type data_type) {
   switch(ecl_type_get_type(data_type)) {
   case(ECL_CHAR_TYPE):
     return util_alloc_string_copy(WRITE_FMT_CHAR);
-  case(ECL_C010_TYPE):
-    return util_alloc_string_copy(WRITE_FMT_C010);
   case(ECL_INT_TYPE):
     return util_alloc_string_copy(WRITE_FMT_INT);
   case(ECL_FLOAT_TYPE):
@@ -224,17 +217,8 @@ static char * alloc_write_fmt(const ecl_data_type data_type) {
 }
 
 static int get_blocksize( ecl_data_type data_type ) {
-  if (ecl_type_is_char(data_type))
+  if (ecl_type_is_alpha(data_type))
     return BLOCKSIZE_CHAR;
-
-  if (ecl_type_is_mess(data_type))
-    return BLOCKSIZE_CHAR;
-
-  if (ecl_type_is_C010(data_type))
-    return BLOCKSIZE_C010;
-
-  if (ecl_type_is_string(data_type))
-    return BLOCKSIZE_C010;
 
   return BLOCKSIZE_NUMERIC;
 }
@@ -537,17 +521,13 @@ ecl_kw_type * ecl_kw_alloc_new(const char * header ,  int size, ecl_data_type da
 
 
 ecl_kw_type * ecl_kw_alloc( const char * header , int size , ecl_data_type data_type ) {
-  if (ecl_type_is_C010(data_type))
-    return NULL;
-  {
-    ecl_kw_type *ecl_kw;
+  ecl_kw_type *ecl_kw;
 
-    ecl_kw = ecl_kw_alloc_empty();
-    ecl_kw_initialize(ecl_kw , header , size , data_type);
-    ecl_kw_alloc_data(ecl_kw);
+  ecl_kw = ecl_kw_alloc_empty();
+  ecl_kw_initialize(ecl_kw , header , size , data_type);
+  ecl_kw_alloc_data(ecl_kw);
 
-    return ecl_kw;
-  }
+  return ecl_kw;
 }
 
 
@@ -1328,51 +1308,47 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
   char ecl_type_str[ECL_TYPE_LENGTH + 1];
   int record_size;
   int size;
-  bool OK = true;
 
   if (fmt_file) {
-    OK = ecl_kw_fscanf_qstring(header , "%8c" , 8 , stream);
-    if (OK) {
-      int read_count = fscanf(stream , "%d" , &size);
-      if (read_count == 1) {
-        ecl_kw_fscanf_qstring(ecl_type_str , "%4c" , 4 , stream);
-        fgetc(stream);             /* Reading the trailing newline ... */
-      } else
-        util_abort("%s: reading failed - at end of file?\n",__func__);
-    }
-  } else {
-    header[ECL_STRING8_LENGTH]     = null_char;
+    if(!ecl_kw_fscanf_qstring(header , "%8c" , 8 , stream))
+      return ECL_KW_READ_FAIL;
+
+    int read_count = fscanf(stream , "%d" , &size);
+    if (read_count != 1)
+      util_abort("%s: reading failed - at end of file?\n",__func__);
+
+    ecl_kw_fscanf_qstring(ecl_type_str , "%4c" , 4 , stream);
+    fgetc(stream);             /* Reading the trailing newline ... */
+  }
+  else {
+    header[ECL_STRING8_LENGTH]    = null_char;
     ecl_type_str[ECL_TYPE_LENGTH] = null_char;
     record_size = fortio_init_read(fortio);
-    if (record_size > 0) {
-      char buffer[ECL_KW_HEADER_DATA_SIZE];
-      size_t read_bytes = fread(buffer , 1 , ECL_KW_HEADER_DATA_SIZE , stream);
 
-      if (read_bytes == ECL_KW_HEADER_DATA_SIZE) {
-        memcpy( header , &buffer[0] , ECL_STRING8_LENGTH);
-        size = *( (int *) &buffer[ECL_STRING8_LENGTH] );
-        memcpy( ecl_type_str , &buffer[ECL_STRING8_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
+    if (record_size <= 0)
+      return ECL_KW_READ_FAIL;
 
-        OK = fortio_complete_read(fortio , record_size);
-      } else
-        OK = false;
+    char buffer[ECL_KW_HEADER_DATA_SIZE];
+    size_t read_bytes = fread(buffer , 1 , ECL_KW_HEADER_DATA_SIZE , stream);
 
-      if (OK && ECL_ENDIAN_FLIP)
-        util_endian_flip_vector(&size , sizeof size , 1);
-    } else
-      OK = false;
+    if (read_bytes != ECL_KW_HEADER_DATA_SIZE)
+      return ECL_KW_READ_FAIL;
+
+    memcpy( header , &buffer[0] , ECL_STRING8_LENGTH);
+    size = *( (int *) &buffer[ECL_STRING8_LENGTH] );
+    memcpy( ecl_type_str , &buffer[ECL_STRING8_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
+
+    if(!fortio_complete_read(fortio , record_size))
+      return ECL_KW_READ_FAIL;
+
+    if (ECL_ENDIAN_FLIP)
+      util_endian_flip_vector(&size , sizeof size , 1);
   }
 
-  if (OK) {
-    ecl_data_type data_type = ecl_type_create_from_name( ecl_type_str );
-    ecl_kw_initialize( ecl_kw , header , size , data_type);
+  ecl_data_type data_type = ecl_type_create_from_name( ecl_type_str );
+  ecl_kw_initialize( ecl_kw , header , size , data_type);
 
-    if (ecl_type_is_C010(data_type))
-      return ECL_KW_READ_SKIP;
-
-    return ECL_KW_READ_OK;
-  } else
-    return ECL_KW_READ_FAIL;
+  return ECL_KW_READ_OK;
 }
 
 
@@ -1651,9 +1627,6 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
           void * data_ptr = ecl_kw_iget_ptr_static( ecl_kw , data_index );
           switch (ecl_kw_get_type(ecl_kw)) {
           case(ECL_CHAR_TYPE):
-            fprintf(stream , write_fmt , data_ptr);
-            break;
-          case(ECL_C010_TYPE):
             fprintf(stream , write_fmt , data_ptr);
             break;
           case(ECL_STRING_TYPE):
