@@ -36,7 +36,9 @@ macro(init_python target_version)
    else()
       set( PYTHON_PACKAGE_PATH "site-packages")
    endif()
+
    set(PYTHON_INSTALL_PREFIX  "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}"  CACHE STRING "Subdirectory to install Python modules in")
    set(CTEST_PYTHONPATH ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX})
+
 
 endmacro()
