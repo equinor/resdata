@@ -1,6 +1,3 @@
-if (NOT PYTHONINTERP_FOUND)
-  find_package (PythonInterp REQUIRED)
-endif ()
 function(add_python_package target package_path source_files install_package)
 
   set(build_files "")                       
