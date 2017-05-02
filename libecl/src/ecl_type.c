@@ -58,44 +58,44 @@ static size_t get_ecl_string_length(const char * type_name) {
 }
 
 ecl_data_type ecl_type_create(const ecl_type_enum type, const size_t element_size) {
-    ecl_data_type ecl_type = (
-                                  type == ECL_STRING_TYPE ?
-                                  ECL_STRING(element_size) :
-                                  ecl_type_create_from_type(type)
-                              );
+  ecl_data_type ecl_type = (
+                                type == ECL_STRING_TYPE ?
+                                ECL_STRING(element_size) :
+                                ecl_type_create_from_type(type)
+                            );
 
-    if(ecl_type_get_sizeof_ctype_fortio(ecl_type) != element_size)
-        util_abort(
-                "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
-                __func__, type,
-                element_size, ecl_type_get_sizeof_ctype_fortio(ecl_type)
-                );
+  if(ecl_type_get_sizeof_ctype_fortio(ecl_type) != element_size)
+      util_abort(
+              "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
+              __func__, type,
+              element_size, ecl_type_get_sizeof_ctype_fortio(ecl_type)
+              );
 
-    return ecl_type;
+  return ecl_type;
 }
 
 ecl_data_type ecl_type_create_from_type(const ecl_type_enum type) {
-    switch(type) {
-    case(ECL_CHAR_TYPE):
-      return ECL_CHAR;
-    case(ECL_INT_TYPE):
-      return ECL_INT;
-    case(ECL_FLOAT_TYPE):
-      return ECL_FLOAT;
-    case(ECL_DOUBLE_TYPE):
-      return ECL_DOUBLE;
-    case(ECL_BOOL_TYPE):
-      return ECL_BOOL;
-    case(ECL_MESS_TYPE):
-      return ECL_MESS;
-    case(ECL_STRING_TYPE):
-      util_abort("%s: Variable length string type cannot be created"
-              " from type alone!\n" , __func__);
-      return ECL_STRING(0); /* Dummy */
-    default:
-      util_abort("%s: invalid ecl_type: %d\n", __func__, type);
-      return ECL_INT; /* Dummy */
-    }
+  switch(type) {
+  case(ECL_CHAR_TYPE):
+    return ECL_CHAR;
+  case(ECL_INT_TYPE):
+    return ECL_INT;
+  case(ECL_FLOAT_TYPE):
+    return ECL_FLOAT;
+  case(ECL_DOUBLE_TYPE):
+    return ECL_DOUBLE;
+  case(ECL_BOOL_TYPE):
+    return ECL_BOOL;
+  case(ECL_MESS_TYPE):
+    return ECL_MESS;
+  case(ECL_STRING_TYPE):
+    util_abort("%s: Variable length string type cannot be created"
+            " from type alone!\n" , __func__);
+    return ECL_STRING(0); /* Dummy */
+  default:
+    util_abort("%s: invalid ecl_type: %d\n", __func__, type);
+    return ECL_INT; /* Dummy */
+  }
 }
 
 ecl_type_enum ecl_type_get_type(const ecl_data_type ecl_type) {
@@ -154,51 +154,51 @@ int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type ecl_type) {
 }
 
 int ecl_type_get_sizeof_ctype(const ecl_data_type ecl_type) {
-   return ecl_type.element_size;
+  return ecl_type.element_size;
 }
 
 bool ecl_type_is_numeric(const ecl_data_type ecl_type) {
-    return (ecl_type_is_int(ecl_type) ||
-            ecl_type_is_float(ecl_type) ||
-            ecl_type_is_double(ecl_type));
+  return (ecl_type_is_int(ecl_type) ||
+          ecl_type_is_float(ecl_type) ||
+          ecl_type_is_double(ecl_type));
 }
 
 bool ecl_type_is_alpha(const ecl_data_type ecl_type) {
-    return (ecl_type_is_char(ecl_type) ||
-            ecl_type_is_mess(ecl_type) ||
-            ecl_type_is_string(ecl_type));
+  return (ecl_type_is_char(ecl_type) ||
+          ecl_type_is_mess(ecl_type) ||
+          ecl_type_is_string(ecl_type));
 }
 
 bool ecl_type_is_equal(const ecl_data_type ecl_type1,
                        const ecl_data_type ecl_type2) {
-    return (ecl_type1.type         == ecl_type2.type &&
-            ecl_type1.element_size == ecl_type2.element_size);
+  return (ecl_type1.type         == ecl_type2.type &&
+          ecl_type1.element_size == ecl_type2.element_size);
 }
 
 bool ecl_type_is_char(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_CHAR_TYPE);
+  return (ecl_type.type == ECL_CHAR_TYPE);
 }
 
 bool ecl_type_is_int(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_INT_TYPE);
+  return (ecl_type.type == ECL_INT_TYPE);
 }
 
 bool ecl_type_is_float(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_FLOAT_TYPE);
+  return (ecl_type.type == ECL_FLOAT_TYPE);
 }
 
 bool ecl_type_is_double(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_DOUBLE_TYPE);
+  return (ecl_type.type == ECL_DOUBLE_TYPE);
 }
 
 bool ecl_type_is_mess(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_MESS_TYPE);
+  return (ecl_type.type == ECL_MESS_TYPE);
 }
  
 bool ecl_type_is_bool(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_BOOL_TYPE);
+  return (ecl_type.type == ECL_BOOL_TYPE);
 }
 
 bool ecl_type_is_string(const ecl_data_type ecl_type) {
-    return (ecl_type.type == ECL_STRING_TYPE);
+  return (ecl_type.type == ECL_STRING_TYPE);
 }

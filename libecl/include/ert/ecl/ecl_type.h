@@ -80,13 +80,13 @@ typedef enum {
 #ifdef __cplusplus
 
 struct ecl_type_struct {
-    const ecl_type_enum type;
-    const size_t element_size;
+  const ecl_type_enum type;
+  const size_t element_size;
 
-    ecl_type_struct( ecl_type_enum t, size_t es) :
-      type( t ),
-      element_size( es )
-    {}
+  ecl_type_struct( ecl_type_enum t, size_t es) :
+    type( t ),
+    element_size( es )
+  {}
 };
 
 #define ECL_INT ecl_data_type( ECL_INT_TYPE, sizeof(int))
@@ -100,8 +100,8 @@ struct ecl_type_struct {
 #else
 
 struct ecl_type_struct {
-    const ecl_type_enum type;
-    const size_t element_size;
+  const ecl_type_enum type;
+  const size_t element_size;
 };
 
 #define ECL_CHAR (ecl_data_type) {.type = ECL_CHAR_TYPE, .element_size = ECL_STRING8_LENGTH + 1}
