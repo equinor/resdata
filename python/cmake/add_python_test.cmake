@@ -12,8 +12,8 @@
 #      given by ${TEST_CLASS} and run it.
 #
 #
-#   CTEST_PYTHONPATH: Normal colon separated path variable, should
-#      at least include the binary root directory of the python
+#   CTEST_PYTHONPATH: Normal colon separated path variable, should at
+#      least include the binary root directory of the current python
 #      installation, but can in addition contain the path to
 #      additional packages. The PYTHON_TEST_RUNNER should inspect the
 #      $CTEST_PYTHONPATH environment variable and update sys.path

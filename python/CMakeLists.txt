@@ -15,20 +15,22 @@ if (NOT "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}" STREQUAL "2.7")
    return()
 endif()
 
-
-python_package(numpy 1.7.1)
-if (NOT DEFINED PY_numpy)
-   message(WARNING "numpy module not found - Python wrappers not enabled")
-   set( BUILD_PYTHON OFF PARENT_SCOPE )
-   return()
-endif()
-
 if (EXISTS "/etc/debian_version")
    set( PYTHON_PACKAGE_PATH "dist-packages")
 else()
    set( PYTHON_PACKAGE_PATH "site-packages")
 endif()
 set(PYTHON_INSTALL_PREFIX  "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}"  CACHE STRING "Subdirectory to install Python modules in")
+set(CTEST_PYTHONPATH ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX})
+
+
+python_package(numpy 1.7.1 ${PYTHON_INSTALL_PREFIX})
+if (NOT DEFINED PY_numpy)
+   message(WARNING "numpy module not found - Python wrappers not enabled")
+   set( BUILD_PYTHON OFF PARENT_SCOPE )
+   return()
+endif()
+
 
 
 

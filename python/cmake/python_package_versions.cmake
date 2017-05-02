@@ -30,8 +30,25 @@ endfunction()
 # If we find the correct module and new enough version, set PY_package, where
 # "package" is the given argument to the version we found else, display warning
 # and do not set any variables.
-function(python_package package version)
-  python_package_version(${package})
+function(python_package package version python_prefix)
+
+  if (CMAKE_PREFIX_PATH)
+     set( ORG_PYTHONPATH $ENV{PYTHONPATH} )
+     foreach ( PREFIX_PATH ${CMAKE_PREFIX_PATH} )
+        set(THIS_PYTHONPATH "${PREFIX_PATH}/${python_prefix}")
+        set(ENV{PYTHONPATH} "${THIS_PYTHONPATH}:${ORG_PYTHONPATH}")
+        python_package_version(${package})
+        if (DEFINED PY_${package})
+           if (STREQUAL PY_${package}_PATH ${THIS_PYTHONPATH})
+              set(CTEST_PYTHONPATH "${PY_${package}_PATH}:${CTEST_PYTHONPATH}" PARENT_SCOPE)
+           endif()
+           break( )
+        endif()
+     endforeach()
+     set(ENV{PYTHONPATH} ${ORG_PYTHONPATH})
+  else()
+     python_package_version(${package})
+  endif()
 
   if(NOT DEFINED PY_${package})
      message("Could not find Python package " ${package})
