@@ -24,7 +24,7 @@ macro( addPythonTest TEST_CLASS )
 
     add_test(NAME ${TEST_NAME}
              WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}"
-             COMMAND ${PYTHON_TEST_RUNNER} ${TEST_CLASS} )
+             COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/bin/ctest_run_python ${TEST_CLASS} )
 
     set(oneValueArgs LABELS)
     cmake_parse_arguments(TEST_OPTIONS "" "${oneValueArgs}" "" ${ARGN})

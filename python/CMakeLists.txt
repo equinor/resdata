@@ -10,8 +10,6 @@ if (NOT DEFINED PY_numpy)
 endif()
 
 
-
-#include( cmake/Modules/add_python_test.cmake )
 if (BUILD_TESTS)
    add_subdirectory( tests )
 endif()
