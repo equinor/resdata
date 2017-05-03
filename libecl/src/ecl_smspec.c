@@ -234,11 +234,14 @@ static const char* special_vars[] = {"NEWTON",
   this simple list.
 */
 
-static const char* smspec_required_keywords[] = {WGNAMES_KW,
-                                                 KEYWORDS_KW,
-                                                 STARTDAT_KW,
-                                                 UNITS_KW,
-                                                 DIMENS_KW};
+static const size_t num_req_keywords = 5;
+static const char* smspec_required_keywords[] = {
+                                                   WGNAMES_KW,
+                                                   KEYWORDS_KW,
+                                                   STARTDAT_KW,
+                                                   UNITS_KW,
+                                                   DIMENS_KW
+                                                 };
 
 
 /*****************************************************************/
@@ -371,7 +374,7 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
 
   {
     ecl_kw_type * keywords_kw = ecl_kw_alloc( KEYWORDS_KW , num_nodes , ECL_CHAR );
-    ecl_kw_type * wgnames_kw  = ecl_kw_alloc( WGNAMES_KW  , num_nodes , ECL_CHAR );
+    ecl_kw_type * wgnames_kw  = ecl_kw_alloc( WGNAMES_KW  , num_nodes , ECL_CHAR ); // TODO: This might not be a very smart go about it anymore!
     ecl_kw_type * units_kw    = ecl_kw_alloc( UNITS_KW    , num_nodes , ECL_CHAR );
     ecl_kw_type * nums_kw     = NULL;
 
@@ -958,7 +961,7 @@ bool ecl_smspec_equal( const ecl_smspec_type * self , const ecl_smspec_type * ot
 
 static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_file_type * header ) {
   if (ecl_file_has_kw( header , RESTART_KW )) {
-    const ecl_kw_type * restart_kw = ecl_file_iget_kw( header , 0 );
+    const ecl_kw_type * restart_kw = ecl_file_iget_named_kw(header, RESTART_KW , 0);
     char   tmp_base[73];   /* To accomodate a maximum of 9 items which consist of 8 characters each. */
     char * restart_base;
     int i;
@@ -1058,16 +1061,25 @@ const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec
   return smspec->index_map;
 }
 
+/**
+ * This function is to support the NAMES alias for WGNAMES. If similar
+ * situations occur in the future, this is a sane starting point for general
+ * support.
+ */
+static const char * get_active_keyword_alias(ecl_file_type * header, const char * keyword) {
+  if (strcmp(keyword, WGNAMES_KW) == 0 || strcmp(keyword, NAMES_KW) == 0)
+    return ecl_file_has_kw(header, WGNAMES_KW) ? WGNAMES_KW : NAMES_KW;
+
+  return keyword;
+}
+
 static bool ecl_smspec_check_header( ecl_file_type * header ) {
   bool OK = true;
-  int num_required = sizeof( smspec_required_keywords ) / sizeof( smspec_required_keywords[0] );
-  int i;
-
-  for (i=0; i < num_required; i++) {
-    if (!ecl_file_has_kw( header , smspec_required_keywords[i])) {
-      OK = false;
-      break;
-    }
+  for (int i=0; i < num_req_keywords && OK; i++) {
+    OK &= ecl_file_has_kw(
+            header,
+            get_active_keyword_alias(header, smspec_required_keywords[i])
+            );
   }
 
   return OK;
@@ -1077,16 +1089,18 @@ static bool ecl_smspec_check_header( ecl_file_type * header ) {
 static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * header_file , bool include_restart) {
   ecl_file_type * header = ecl_file_open( header_file , 0);
   if (header && ecl_smspec_check_header( header )) {
-    ecl_kw_type *wells     = ecl_file_iget_named_kw(header, WGNAMES_KW  , 0);
-    ecl_kw_type *keywords  = ecl_file_iget_named_kw(header, KEYWORDS_KW , 0);
-    ecl_kw_type *startdat  = ecl_file_iget_named_kw(header, STARTDAT_KW , 0);
-    ecl_kw_type *units     = ecl_file_iget_named_kw(header, UNITS_KW    , 0);
-    ecl_kw_type *dimens    = ecl_file_iget_named_kw(header, DIMENS_KW   , 0);
-    ecl_kw_type *nums      = NULL;
-    ecl_kw_type *lgrs      = NULL;
-    ecl_kw_type *numlx     = NULL;
-    ecl_kw_type *numly     = NULL;
-    ecl_kw_type *numlz     = NULL;
+    const char * names_alias = get_active_keyword_alias(header, WGNAMES_KW);
+    ecl_kw_type *wells       = ecl_file_iget_named_kw(header, names_alias , 0);
+    ecl_kw_type *keywords    = ecl_file_iget_named_kw(header, KEYWORDS_KW , 0);
+    ecl_kw_type *startdat    = ecl_file_iget_named_kw(header, STARTDAT_KW , 0);
+    ecl_kw_type *units       = ecl_file_iget_named_kw(header, UNITS_KW    , 0);
+    ecl_kw_type *dimens      = ecl_file_iget_named_kw(header, DIMENS_KW   , 0);
+    ecl_kw_type *nums        = NULL;
+    ecl_kw_type *lgrs        = NULL;
+    ecl_kw_type *numlx       = NULL;
+    ecl_kw_type *numly       = NULL;
+    ecl_kw_type *numlz       = NULL;
+
     int params_index;
     ecl_smspec->num_regions     = 0;
     if (startdat == NULL)

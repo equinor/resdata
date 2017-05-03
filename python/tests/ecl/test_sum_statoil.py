@@ -450,111 +450,25 @@ class SumTest(ExtendedTestCase):
 
         self.assertEqual( total.iget( "WGPR:NOT_21_D", 5) , 0) # Default value
 
-
     def test_ix_case(self):
-        # This should ideally load OK; the current assertRaises() test
-        # is just to ensure that it does not go *completely* up in flames.
-        with self.assertRaises(IOError):
-            EclSum( self.createTestPath( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well"))
+        intersect_summary = EclSum(self.createTestPath("Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well"))
+        self.assertIsNotNone(intersect_summary)
 
-        f = EclFile( self.createTestPath( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well.SMSPEC")) 
+        self.assertTrue(
+                "HWELL_PROD" in
+                [intersect_summary.smspec_node(key).wgname for key in intersect_summary.keys()]
+                )
 
-        # Keywords
-        self.assertTrue( "KEYWORDS" in f )
-        keywords_loaded = list(f["KEYWORDS"][0])
-        keywords_from_file = [
-                'TIME', 'YEARS', 'AAQR', 'AAQT', 'AAQP', 'AAQR', 'AAQT',
-                'AAQP', 'AAQR', 'AAQT', 'AAQP', 'FPPW', 'FPPO', 'FPPG', 'FNQT',
-                'FNQR', 'FEIP', 'FWPT', 'FWIT', 'FWIP', 'FWGR', 'FVPT', 'FVPR',
-                'FVIT', 'FVIR', 'FPR', 'FOPT', 'FOIT', 'FOIR', 'FOIPL',
-                'FOIPG', 'FOIP', 'FGPT', 'FGIT', 'FGIPL', 'FGIPG', 'FGIP',
-                'FAQT', 'FAQR', 'FGOR', 'FWCT', 'FGSR', 'FGIR', 'FGPR', 'FWIR',
-                'FWPR', 'FOPR', 'MEMORYTS', 'NAIMFRAC', 'TCPUDAY', 'TCPUTS',
-                'NBAKFL', 'NNUMST', 'NNUMFL', 'NEWTFL', 'MSUMNEWT', 'MSUMLINS',
-                'MLINEARS', 'NLINEARS', 'NEWTON', 'ELAPSED', 'TCPU',
-                'TIMESTEP', 'GOPR', 'GOPR', 'GOPR', 'GWPR', 'GWPR', 'GWPR',
-                'GWIR', 'GWIR', 'GWIR', 'GGPR', 'GGPR', 'GGPR', 'GWCT', 'GWCT',
-                'GWCT', 'GGOR', 'GGOR', 'GGOR', 'GGIR', 'GGIR', 'GGIR', 'GGIT',
-                'GGIT', 'GGIT', 'GGPT', 'GGPT', 'GGPT', 'GOIR', 'GOIR', 'GOIR',
-                'GOIT', 'GOIT', 'GOIT', 'GOPT', 'GOPT', 'GOPT', 'GVIR', 'GVIR',
-                'GVIR', 'GVIT', 'GVIT', 'GVIT', 'GVPR', 'GVPR', 'GVPR', 'GVPT',
-                'GVPT', 'GVPT', 'GWGR', 'GWGR', 'GWGR', 'GWIT', 'GWIT', 'GWIT',
-                'GWPT', 'GWPT', 'GWPT', 'WOPR', 'WOPR', 'WOPR', 'WOPR', 'WOPR',
-                'WOPR', 'WWPR', 'WWPR', 'WWPR', 'WWPR', 'WWPR', 'WWPR', 'WWIR',
-                'WWIR', 'WWIR', 'WWIR', 'WWIR', 'WWIR', 'WGPR', 'WGPR', 'WGPR',
-                'WGPR', 'WGPR', 'WGPR', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT',
-                'WWCT', 'WMCTL', 'WMCTL', 'WMCTL', 'WMCTL', 'WMCTL', 'WMCTL',
-                'WGOR', 'WGOR', 'WGOR', 'WGOR', 'WGOR', 'WGOR', 'WAPI', 'WAPI',
-                'WAPI', 'WAPI', 'WAPI', 'WAPI', 'WBHP', 'WBHP', 'WBHP', 'WBHP',
-                'WBHP', 'WBHP', 'WGIR', 'WGIR', 'WGIR', 'WGIR', 'WGIR', 'WGIR',
-                'WGIT', 'WGIT', 'WGIT', 'WGIT', 'WGIT', 'WGIT', 'WGPT', 'WGPT',
-                'WGPT', 'WGPT', 'WGPT', 'WGPT', 'WOIR', 'WOIR', 'WOIR', 'WOIR',
-                'WOIR', 'WOIR', 'WOIT', 'WOIT', 'WOIT', 'WOIT', 'WOIT', 'WOIT',
-                'WOPT', 'WOPT', 'WOPT', 'WOPT', 'WOPT', 'WOPT', 'WPIG', 'WPIG',
-                'WPIG', 'WPIG', 'WPIG', 'WPIG', 'WPIO', 'WPIO', 'WPIO', 'WPIO',
-                'WPIO', 'WPIO', 'WPIW', 'WPIW', 'WPIW', 'WPIW', 'WPIW', 'WPIW',
-                'WTHP', 'WTHP', 'WTHP', 'WTHP', 'WTHP', 'WTHP', 'WVIR', 'WVIR',
-                'WVIR', 'WVIR', 'WVIR', 'WVIR', 'WVIT', 'WVIT', 'WVIT', 'WVIT',
-                'WVIT', 'WVIT', 'WVPR', 'WVPR', 'WVPR', 'WVPR', 'WVPR', 'WVPR',
-                'WVPT', 'WVPT', 'WVPT', 'WVPT', 'WVPT', 'WVPT', 'WWGR', 'WWGR',
-                'WWGR', 'WWGR', 'WWGR', 'WWGR', 'WWIT', 'WWIT', 'WWIT', 'WWIT',
-                'WWIT', 'WWIT', 'WWPT', 'WWPT', 'WWPT', 'WWPT', 'WWPT', 'WWPT',
-                'WBHT', 'WBHT', 'WBHT', 'WBHT', 'WBHT', 'WBHT', 'WBP', 'WBP',
-                'WBP', 'WBP', 'WBP', 'WBP', 'WWCT', 'WWCT', 'WWCT', 'WWCT',
-                'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT',
-                'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT',
-                'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT', 'WWCT'
-                ]
+        eclipse_summary = EclSum(self.createTestPath("Statoil/ECLIPSE/ix/summary/ECL100/E100_CREATE_REGION_AROUND_WELL"))
+        self.assertIsNotNone(eclipse_summary)
 
-        padd = lambda str_len : (lambda s : s + (" " * (max(0, str_len-len(s)))))
-        self.assertEqual(map(padd(8), keywords_from_file), keywords_loaded)
+        hwell_padder = lambda key : key if key.split(":")[-1] != "HWELL_PR" else key + "OD"
+        self.assertEqual(
+                intersect_summary.keys("WWCT*"),
+                map(hwell_padder, eclipse_summary.keys("WWCT*"))
+                )
 
-        # Names
-        self.assertTrue( "NAMES" in f )
-        names_loaded = list(f["NAMES"][0])
-        names_from_file = [
-                '', '', 'AQFR_1', 'AQFR_1', 'AQFR_1', 'AQFR_2', 'AQFR_2',
-                'AQFR_2', 'AQFR_3', 'AQFR_3', 'AQFR_3', 'FIELD', 'FIELD',
-                'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD',
-                'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD',
-                'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD',
-                'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD',
-                'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD',
-                'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD',
-                'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD', 'FIELD',
-                'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE',
-                'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD',
-                'ONE', 'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE', 'TWO',
-                'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE',
-                'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD',
-                'ONE', 'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE', 'TWO',
-                'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE', 'TWO', 'FIELD', 'ONE',
-                'TWO', 'FIELD', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8',
-                'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI',
-                'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6',
-                'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD',
-                'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4',
-                'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8',
-                'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI',
-                'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6',
-                'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD',
-                'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4',
-                'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8',
-                'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI',
-                'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6',
-                'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD',
-                'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4',
-                'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8',
-                'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI',
-                'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6',
-                'I8', 'HWELL_PROD', 'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD',
-                'GI', 'I2', 'I4', 'I6', 'I8', 'HWELL_PROD', 'GI', 'I2', 'I4',
-                'I6', 'I8', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+',
-                ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+',
-                ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+',
-                ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+',
-                ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+',
-                ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+'
-                ]
-
-        self.assertEqual(map(padd(10), names_from_file), names_loaded)
+    def test_ix_caseII(self):
+        troll_summary = EclSum( self.createTestPath("Statoil/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_grid2.SMSPEC"))
+        self.assertIsNotNone(troll_summary)
+        self.assertTrue("WMCTL:Q21BH1" in list(troll_summary.keys()))

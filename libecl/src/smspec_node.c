@@ -417,10 +417,7 @@ static void smspec_node_set_wgname( smspec_node_type * index , const char * wgna
     util_safe_free( index->wgname );
     index->wgname = NULL;
   } else {
-    if (strlen(wgname) > 8)
-      index->wgname = util_realloc_substring_copy(index->wgname , wgname , 8);
-    else
-      index->wgname = util_realloc_string_copy(index->wgname , wgname );
+    index->wgname = util_realloc_string_copy(index->wgname , wgname );
   }
 }
 
