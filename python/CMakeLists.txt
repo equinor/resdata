@@ -1,4 +1,4 @@
-install( DIRECTORY cmake/Modules DESTINATION share )
+install( DIRECTORY cmake DESTINATION share )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 include(init_python)
