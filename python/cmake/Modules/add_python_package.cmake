@@ -1,6 +1,3 @@
-if (NOT PYTHONINTERP_FOUND)
-  find_package (PythonInterp REQUIRED)
-endif ()
 function(add_python_package target package_path source_files install_package)
 
   set(build_files "")                       
@@ -27,14 +24,14 @@ function(add_python_package target package_path source_files install_package)
      add_custom_command(
         OUTPUT  ${build_file}
         COMMAND ${PYTHON_EXECUTABLE}
-        ARGS    ${PROJECT_SOURCE_DIR}/python/cmake/cmake_pyc ${source_file} ${build_file}
+        ARGS    ${PROJECT_BINARY_DIR}/bin/cmake_pyc ${source_file} ${build_file}
         ${dependent_target})
     
      list(APPEND build_files ${build_file} )
 
      if (install_package)
         install(FILES ${build_file} DESTINATION ${CMAKE_INSTALL_PREFIX}/${package_path})
-        install(CODE "execute_process(COMMAND ${PROJECT_SOURCE_DIR}/python/cmake/cmake_pyc_file ${install_file})")
+        install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/bin/cmake_pyc_file ${install_file})")
      endif()
      
   endforeach()
