@@ -202,3 +202,9 @@ bool ecl_type_is_bool(const ecl_data_type ecl_type) {
 bool ecl_type_is_string(const ecl_data_type ecl_type) {
   return (ecl_type.type == ECL_STRING_TYPE);
 }
+
+// Temporary fixup for OPM.
+ char * ecl_type_get_name(const ecl_data_type ecl_type) { 
+    return ecl_type_alloc_name( ecl_type ); 
+ }      
+   
