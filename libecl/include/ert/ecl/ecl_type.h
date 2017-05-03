@@ -143,6 +143,9 @@ bool               ecl_type_is_mess(const ecl_data_type);
 bool               ecl_type_is_bool(const ecl_data_type);
 bool               ecl_type_is_string(const ecl_data_type);
 
+// Temporary fixup for OPM.
+char * ecl_type_get_name(const ecl_data_type);      
+   
 #ifdef __cplusplus
 }
 #endif
