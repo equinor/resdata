@@ -858,9 +858,9 @@ void ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s) {
  * written to the @ecl_kw string array starting at @index.
  */
 void ecl_kw_iset_string_ptr( ecl_kw_type * ecl_kw, int index, const char * s) {
-  if(!ecl_type_is_string(ecl_kw_get_data_type(ecl_kw))) {
+  if(!ecl_type_is_alpha(ecl_kw_get_data_type(ecl_kw))) {
     char * type_name = ecl_type_alloc_name(ecl_kw_get_data_type(ecl_kw));
-    util_abort("%s: Expected CXXX data type, was %s\n", __func__, type_name);
+    util_abort("%s: Expected alphabetic data type (CHAR, CXXX or MESS), was %s\n", __func__, type_name);
   }
 
   size_t input_len = strlen(s);
