@@ -450,6 +450,17 @@ class SumTest(ExtendedTestCase):
 
         self.assertEqual( total.iget( "WGPR:NOT_21_D", 5) , 0) # Default value
 
+    def test_write(self):
+        with TestAreaContext("my_space") as area:
+            intersect_summary = EclSum( self.createTestPath( "Statoil/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0") )
+            self.assertIsNotNone(intersect_summary)
+
+            write_location = os.path.join(os.getcwd(), "CASE")
+            intersect_summary.fwrite(ecl_case=write_location)
+
+            reloaded_summary = EclSum(write_location)
+            self.assertEqual(intersect_summary.keys(), reloaded_summary.keys())
+
     def test_ix_case(self):
         intersect_summary = EclSum(self.createTestPath("Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well"))
         self.assertIsNotNone(intersect_summary)
@@ -467,6 +478,25 @@ class SumTest(ExtendedTestCase):
                 intersect_summary.keys("WWCT*"),
                 map(hwell_padder, eclipse_summary.keys("WWCT*"))
                 )
+
+    def test_ix_write(self):
+        for data_set in [
+                    "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well",
+                    "Statoil/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_grid2.SMSPEC"
+                    ]:
+
+            with TestAreaContext("my_space" + data_set.split("/")[-1]) as area:
+                intersect_summary = EclSum(self.createTestPath(data_set))
+                self.assertIsNotNone(intersect_summary)
+
+                write_location = os.path.join(os.getcwd(), "CASE")
+                intersect_summary.fwrite(ecl_case=write_location)
+
+                reloaded_summary = EclSum(write_location)
+                self.assertEqual(
+                        list(intersect_summary.keys()),
+                        list(reloaded_summary.keys())
+                        )
 
     def test_ix_caseII(self):
         troll_summary = EclSum( self.createTestPath("Statoil/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_grid2.SMSPEC"))

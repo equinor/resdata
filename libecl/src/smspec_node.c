@@ -407,11 +407,6 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
 }
 
 
-/**
-   Observe that the wellname can have max 8 characters; anything
-   beyond that is silently dropped.
-*/
-
 static void smspec_node_set_wgname( smspec_node_type * index , const char * wgname ) {
   if (wgname == NULL) {
     util_safe_free( index->wgname );

@@ -336,6 +336,21 @@ void ecl_smspec_lock( ecl_smspec_type * smspec ) {
   smspec->locked = true;
 }
 
+/**
+ * Returns an ecl data type for which all names will fit. If the maximum name
+ * length is at most 8, an ECL_CHAR is returned and otherwise a large enough
+ * ECL_STRING.
+ */
+static ecl_data_type get_wgnames_type(const ecl_smspec_type * smspec) {
+  size_t max_len = 0;
+  for(int i = 0; i < ecl_smspec_num_nodes(smspec); ++i) {
+    const char * name = smspec_node_get_wgname(ecl_smspec_iget_node(smspec, i));
+    if(name != NULL)
+        max_len = util_size_t_max(max_len, strlen(name));
+  }
+
+  return max_len <= 8 ? ECL_CHAR : ECL_STRING(max_len);
+}
 
 // DIMENS
 // KEYWORDS
@@ -374,9 +389,17 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
 
   {
     ecl_kw_type * keywords_kw = ecl_kw_alloc( KEYWORDS_KW , num_nodes , ECL_CHAR );
-    ecl_kw_type * wgnames_kw  = ecl_kw_alloc( WGNAMES_KW  , num_nodes , ECL_CHAR ); // TODO: This might not be a very smart go about it anymore!
     ecl_kw_type * units_kw    = ecl_kw_alloc( UNITS_KW    , num_nodes , ECL_CHAR );
     ecl_kw_type * nums_kw     = NULL;
+
+    // If the names_type is an ECL_STRING we expect this to be an INTERSECT
+    // summary, otherwise an ECLIPSE summary.
+    ecl_data_type names_type  = get_wgnames_type(smspec);
+    ecl_kw_type * wgnames_kw = ecl_kw_alloc(
+                ecl_type_is_char(names_type) ? WGNAMES_KW : NAMES_KW,
+                num_nodes,
+                names_type
+            );
 
     if (smspec->need_nums)
       nums_kw = ecl_kw_alloc( NUMS_KW , num_nodes , ECL_INT);
@@ -406,7 +429,7 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
         if (smspec_node_get_var_type( smspec_node ) == ECL_SMSPEC_INVALID_VAR) {
           ecl_kw_iset_string8( keywords_kw , i , "WWCT" );
           ecl_kw_iset_string8( units_kw , i , "????????");
-          ecl_kw_iset_string8( wgnames_kw , i , DUMMY_WELL);
+          ecl_kw_iset_string_ptr( wgnames_kw , i , DUMMY_WELL);
         } else {
           ecl_kw_iset_string8( keywords_kw , i , smspec_node_get_keyword( smspec_node ));
           ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
@@ -414,7 +437,7 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
             const char * wgname = DUMMY_WELL;
             if (smspec_node_get_wgname( smspec_node ) != NULL)
               wgname = smspec_node_get_wgname( smspec_node );
-            ecl_kw_iset_string8( wgnames_kw , i , wgname);
+            ecl_kw_iset_string_ptr( wgnames_kw , i , wgname);
           }
         }
 
