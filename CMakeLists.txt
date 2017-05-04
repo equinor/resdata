@@ -190,3 +190,10 @@ if (BUILD_PYTHON)
    endif()
 endif()
 
+
+
+configure_file( cmake/libecl-config.cmake.in libecl-config.cmake @ONLY)
+configure_file( cmake/libecl-config-version.cmake.in libecl-config-version.cmake @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libecl-config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/libecl-config-version.cmake
+        DESTINATION lib/libecl )
