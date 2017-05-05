@@ -37,6 +37,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_units.h>
 #include <ert/ecl/ecl_util.h>
 
 #include <ert/ecl_well/well_const.h>
@@ -241,17 +242,44 @@ double well_state_get_volume_rate( const well_state_type * well_state) {
 }
 
 double well_state_get_oil_rate_si( const well_state_type * well_state ) {
-  return well_state->oil_rate;
+  double conversion_factor = 1;
+
+  if (well_state->unit_system == ECL_METRIC_UNITS)
+    conversion_factor = 1.0 / ECL_UNITS_TIME_DAY;
+  else if (well_state->unit_system == ECL_FIELD_UNITS)
+    conversion_factor = ECL_UNITS_VOLUME_BARREL / ECL_UNITS_TIME_DAY;
+  else if (well_state->unit_system == ECL_LAB_UNITS)
+    conversion_factor = ECL_UNITS_VOLUME_MILLI_LITER / ECL_UNITS_TIME_HOUR;
+
+  return well_state->oil_rate * conversion_factor;
 }
 
 
 double well_state_get_gas_rate_si( const well_state_type * well_state ) {
-  return well_state->gas_rate;
+  double conversion_factor = 1;
+
+  if (well_state->unit_system == ECL_METRIC_UNITS)
+    conversion_factor = 1.0 / ECL_UNITS_TIME_DAY;
+  else if (well_state->unit_system == ECL_FIELD_UNITS)
+    conversion_factor = ECL_UNITS_VOLUME_GAS_FIELD / ECL_UNITS_TIME_DAY;
+  else if (well_state->unit_system == ECL_LAB_UNITS)
+    conversion_factor = ECL_UNITS_VOLUME_MILLI_LITER / ECL_UNITS_TIME_HOUR;
+
+  return well_state->gas_rate * conversion_factor;
 }
 
 
 double well_state_get_water_rate_si( const well_state_type * well_state) {
-  return well_state->water_rate;
+  double conversion_factor = 1;
+
+  if (well_state->unit_system == ECL_METRIC_UNITS)
+    conversion_factor = 1.0 / ECL_UNITS_TIME_DAY;
+  else if (well_state->unit_system == ECL_FIELD_UNITS)
+    conversion_factor = ECL_UNITS_VOLUME_BARREL / ECL_UNITS_TIME_DAY;
+  else if (well_state->unit_system == ECL_LAB_UNITS)
+    conversion_factor = ECL_UNITS_VOLUME_MILLI_LITER / ECL_UNITS_TIME_HOUR;
+
+  return well_state->water_rate * conversion_factor;
 }
 
 double well_state_get_volume_rate_si( const well_state_type * well_state) {

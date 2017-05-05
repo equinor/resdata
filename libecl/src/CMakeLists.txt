@@ -45,6 +45,7 @@ set( source_files
      ${ext_source})
 
 set( header_files
+     ecl_units.h
      ecl_rsthead.h
      ecl_sum_tstep.h
      ecl_rst_file.h
