@@ -1,7 +1,8 @@
 set(libecl_INCLUDE_DIRS @CMAKE_INSTALL_PREFIX@/include)
-set(libecl_LIBRARIES -L@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@ -lecl_well -lecl -lert_geometry -lert_util)
+set(libecl_LIBRARIES -lecl_well -lecl -lert_geometry -lert_util)
 
 set( CMAKE_MODULE_PATH @CMAKE_INSTALL_PREFIX@/share/cmake/Modules ${CMAKE_MODULE_PATH})
+link_directories( L@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@ )
 
 if (@BUILD_PYTHON@)
    set(libecl_PYTHONPATH @CMAKE_INSTALL_PREFIX@/@PYTHON_INSTALL_PREFIX@ )
