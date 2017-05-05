@@ -37,6 +37,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_util.h>
 
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl_well/well_conn.h>
@@ -173,7 +174,7 @@ struct well_state_struct {
   double           gas_rate;
   double           water_rate;
   double           volume_rate;
-
+  ert_ecl_unit_enum unit_system;
 
   hash_type      * connections;                                                       // hash<grid_name,well_conn_collection>
   well_segment_collection_type * segments;
@@ -210,7 +211,7 @@ well_state_type * well_state_alloc(const char * well_name , int global_well_nr ,
   well_state->gas_rate = 0;
   well_state->water_rate = 0;
   well_state->volume_rate = 0;
-
+  well_state->unit_system = ECL_METRIC_UNITS;
 
   /* See documentation of the 'IWEL_UNDOCUMENTED_ZERO' in well_const.h */
   if ((type == ECL_WELL_ZERO) && open)
@@ -278,6 +279,7 @@ static bool well_state_add_rates( well_state_type * well_state ,
     ecl_rsthead_type *header = ecl_rsthead_alloc(rst_view, -1);
     int offset = header->nxwelz * well_nr;
 
+    well_state->unit_system = header->unit_system;
     well_state->oil_rate = ecl_kw_iget_double(xwel_kw, offset + XWEL_RES_ORAT_ITEM);
     well_state->gas_rate = ecl_kw_iget_double(xwel_kw, offset + XWEL_RES_GRAT_ITEM);
     well_state->water_rate = ecl_kw_iget_double(xwel_kw, offset + XWEL_RES_WRAT_ITEM);
