@@ -25,7 +25,7 @@ option( INSTALL_ERT         "Should anything be installed when issuing make inst
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( ERT_DOC             "Build ERT documantation"                                 OFF)
 option( ERT_BUILD_CXX       "Build some CXX wrappers"                                 ON)
-
+option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF) 
 
 
 
