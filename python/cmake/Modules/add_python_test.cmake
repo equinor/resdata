@@ -19,11 +19,11 @@
 #      $CTEST_PYTHONPATH environment variable and update sys.path
 #      accordingly.
 
-macro( addPythonTest TEST_CLASS )
+macro( add_python_test TEST_CLASS TEST_CWD)
     set(TEST_NAME ${TEST_CLASS})
 
     add_test(NAME ${TEST_NAME}
-             WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}"
+             WORKING_DIRECTORY ${TEST_CWD}
              COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_BINARY_DIR}/bin/ctest_run_python ${TEST_CLASS} )
 
     set(oneValueArgs LABELS)
@@ -36,3 +36,18 @@ macro( addPythonTest TEST_CLASS )
 
     set_property(TEST ${TEST_NAME} PROPERTY ENVIRONMENT "CTEST_PYTHONPATH=${CTEST_PYTHONPATH}")
 endmacro( )
+
+
+macro( addPythonTest TEST_CLASS )
+    add_python_test( ${TEST_CLASS} "${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}")
+endmacro()
+
+
+macro( add_python_build_test TEST_CLASS )
+    add_python_test( ${TEST_CLASS} "${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}")   
+endmacro()
+
+
+macro( add_python_cwd_test TEST_CLASS )
+    add_python_test( ${TEST_CLASS} "${CMAKE_CURRENT_SOURCE_DIR}")   
+endmacro()
