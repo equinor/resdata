@@ -106,8 +106,9 @@ def runTestCase(tests, verbosity=0):
 
 
 def update_path():
-    for path in os.environ['CTEST_PYTHONPATH'].split(':'):
-        sys.path.insert(0 , path)
+    if 'CTEST_PYTHONPATH' in os.environ:
+        for path in os.environ['CTEST_PYTHONPATH'].split(':'):
+            sys.path.insert(0 , path)
         
     
 if __name__ == '__main__':
