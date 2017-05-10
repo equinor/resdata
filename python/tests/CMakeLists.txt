@@ -12,5 +12,6 @@ add_subdirectory(well)
 add_subdirectory(cwrap)
 add_subdirectory(global)
 
-
-
+if (INSTALL_ERT_LEGACY)
+   add_subdirectory(legacy)
+endif()
