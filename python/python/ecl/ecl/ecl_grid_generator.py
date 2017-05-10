@@ -282,8 +282,9 @@ class EclGridGenerator:
             for i in range(0, len(coord), 6)
             ])
 
+        tf = lambda i, j: 1./2 if abs(i)+abs(j) <= 1 else 0.25
         adjustment = numpy.array([
-            (0, 0, 0, i*dV[0]/2., j*dV[1]/2., 0) for i, j in itertools.product([-1, 0, 1], repeat=2)
+            (0, 0, 0, i*tf(i,j)*dV[0], j*tf(i,j)*dV[1], 0) for i, j in itertools.product([-1, 0, 1], repeat=2)
             ])
 
         for i, c in enumerate(coord):

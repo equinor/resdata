@@ -4037,14 +4037,8 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
   bool max_k = (k == ecl_grid->nz-1);
   face_status_enum face_status = ecl_grid_on_cell_face(cell, method, &p, max_i, max_j, max_k);
 
-  if(face_status != NOT_ON_FACE) {
-    // Since we might get false positives in the case when the cells
-    // projections to the xy-plane is concave, we still check whether
-    // the point is contained in the cell if it face_status is
-    // BELONGS_TO_CELL.
-    if(face_status == BELONGS_TO_OTHER)
-      return false;
-  }
+  if(face_status != NOT_ON_FACE)
+    return face_status == BELONGS_TO_CELL;
 
   // Twisted cells
   if (ecl_cell_get_twist(cell) > 0) {
