@@ -20,6 +20,9 @@ import numpy
 from ecl.util import IntVector
 from ecl.ecl import EclGrid, EclKW, EclDataType, EclPrototype
 
+def flatten(l):
+    return [elem for sublist in l for elem in sublist]
+
 class EclGridGenerator:
 
     _alloc_rectangular = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular( int , int , int , double , double , double , int*)" , bind = False)
@@ -61,7 +64,6 @@ class EclGridGenerator:
 
         zcorn = [corners[i][2] for i in range(8)]
 
-        flatten = lambda l : [elem for sublist in l for elem in sublist]
         coord = [(corners[i], corners[i+4]) for i in range(4)]
         coord = flatten(flatten(coord))
 
@@ -149,7 +151,6 @@ class EclGridGenerator:
                     "any problems")
 
         verbose = lambda l : [elem for elem in l for i in range(2)][1:-1:]
-        flatten = lambda l : [elem for sublist in l for elem in sublist]
 
         # Compute zcorn
         z = escape_origo_shift[2]
@@ -236,7 +237,7 @@ class EclGridGenerator:
         return zcorn
 
     @classmethod
-    def assertZcorn(cls, nx, ny, nz, zcorn):
+    def assertZcorn(cls, nx, ny, nz, zcorn, twisted_check=True):
         """
 
         Raises an AssertionError if the zcorn is not as expected. In
@@ -255,7 +256,7 @@ class EclGridGenerator:
 
         plane_size = 4*nx*ny
         for p in range(8*nx*ny*nz - plane_size):
-            if zcorn[p] > zcorn[p + plane_size]:
+            if zcorn[p] > zcorn[p + plane_size] and twisted_check:
                 raise AssertionError(
                     "Twisted cell was created. " +
                     "Decrease offset or increase dz to avoid this!"
@@ -349,4 +350,72 @@ class EclGridGenerator:
                     "Increasing the escape_origio_shift will most likely " +
                     "fix the problem")
 
+    @classmethod
+    def extract_grid(cls, dims, coord, zcorn, ijk_bounds,
+            decomposition_change=False, translate=None):
+        """
+        TODO
+        """
+        ijk_bounds = list(ijk_bounds)
+        cls.assert_ijk_bounds(dims, ijk_bounds)
+        cls.assert_decomposition_change(ijk_bounds, decomposition_change)
 
+        nx, ny, nz = dims
+        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
+        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+
+        cls.assertCoord(nx, ny, nz, coord)
+        cls.assertZcorn(nx, ny, nz, zcorn, twisted_check=False)
+
+        divide = lambda l, size: [l[i:i+size:] for i in range(0, len(l), size)]
+        coord = divide(divide(coord, 6), nx+1)
+
+        new_coord = [coord_slice[lx:ux+2:]
+                        for coord_slice in coord[ly:uy+2]]
+
+        new_coord = flatten(flatten(new_coord))
+        cls.assertCoord(new_nx, new_ny, new_nz, new_coord)
+        return new_coord
+
+    @classmethod
+    def assert_ijk_bounds(cls, dims, ijk_bounds):
+        for i in range(len(ijk_bounds)):
+            if isinstance(ijk_bounds[i], int):
+                ijk_bounds[i] = [ijk_bounds[i]]
+            if len(ijk_bounds[i]) == 1:
+                ijk_bounds[i] += ijk_bounds[i]
+
+        if len(ijk_bounds) != 3:
+            raise ValueError(
+                    "Expected ijk_bounds to contain three intervals, " +
+                    "contained only %d" % len(ijk_bounds))
+
+        for n, bound in zip(dims, ijk_bounds):
+            if len(bound) != 2:
+                raise ValueError(
+                    "Expected bound to consist of two elements, was %s",
+                    str(bound))
+
+            if not (isinstance(bound[0], int) and isinstance(bound[1], int)):
+                raise TypeError(
+                    "Expected bound to consist of two integers, ",
+                    "was %s (%s)"
+                    %(str(bound), str((map(type,bound))))
+                    )
+
+            if not (0 <= bound[0] <= bound[1] < n):
+                raise ValueError(
+                    "Expected bounds to have the following format: " +
+                    "0 <= lower bound <= upper_bound < ni, "+
+                    "was %d <=? %d <=? %d <? %d."
+                    % (0, bound[0], bound[1], n))
+
+    @classmethod
+    def assert_decomposition_change(cls, ijk_bounds, decomposition_change):
+        if sum(zip(*ijk_bounds)[0])%2 == 1 and not decomposition_change:
+            raise ValueError(
+                    "The subgrid defined by %s " % str(ijk_bounds) +
+                    "will cause an unintended decomposition change. " +
+                    "Either change one of the lower bounds by 1 " +
+                    "or activate decomposition_change."
+                    )
