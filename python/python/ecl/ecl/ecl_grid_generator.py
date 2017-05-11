@@ -26,6 +26,15 @@ def flatten(l):
 def divide(l, size):
     return [l[i:i+size:] for i in range(0, len(l), size)]
 
+def verbose(l):
+    return [elem for elem in l for i in range(2)][1:-1:]
+
+def constructFloatKW(name, values):
+     kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
+     for i in range(len(values)):
+         kw[i] = values[i]
+     return kw
+
 class EclGridGenerator:
 
     _alloc_rectangular = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular( int , int , int , double , double , double , int*)" , bind = False)
@@ -85,6 +94,99 @@ class EclGridGenerator:
         return grid
 
     @classmethod
+    def createZcorn(cls, dims, dV, offset, escape_origo_shift,
+                    irregular_offset, irregular, concave, faults):
+
+        cls.__assertZcornParameters(dims, dV, offset, escape_origo_shift,
+                    irregular_offset, irregular, concave, faults)
+
+        nx, ny, nz = dims
+        dx, dy, dz = dV
+
+        # Compute zcorn
+        z = escape_origo_shift[2]
+        zcorn = [z]*(4*nx*ny)
+        for k in range(nz-1):
+            z = z+dz
+            local_offset = offset + (dz/2. if irregular_offset and k%2 == 0 else 0)
+
+            layer = []
+            for i in range(ny+1):
+                shift = ((i if concave else 0) + (k/2 if irregular else 0)) % 2
+                path = [z if i%2 == shift else z+local_offset for i in range(nx+1)]
+                layer.append(verbose(path))
+
+            zcorn = zcorn + (2*flatten(verbose(layer)))
+
+        z = z+dz
+        zcorn = zcorn + ([z]*(4*nx*ny))
+
+        if faults:
+            # Ensure that drop does not align with grid structure
+            drop = (offset+dz)/2. if abs(offset-dz/2.) > 0.2 else offset + 0.4
+            zcorn = cls.__createFaults(nx, ny, nz, zcorn, drop)
+
+
+        if z != escape_origo_shift[2] + nz*dz:
+            raise ValueError("%f != %f" % (z, escape_origo_shift[2] + nz*dz))
+
+        cls.assertZcorn(nx, ny, nz, zcorn)
+        return constructFloatKW("ZCORN", zcorn)
+
+    @classmethod
+    def createCoord(cls, dims, dV, offset, escape_origo_shift, scale,
+                    translation, rotate, misalign):
+
+        nx, ny, nz = dims
+        dx, dy, dz = dV
+
+        # Compute coord
+        z = escape_origo_shift[2] + nz*dz
+        coord = []
+        for j, i in itertools.product(range(ny+1), range(nx+1)):
+            x, y = i*dx+escape_origo_shift[0], j*dy+escape_origo_shift[1]
+            coord = coord + [x, y, escape_origo_shift[2], x, y, z]
+
+        # Apply transformations
+        lower_center = (
+                nx*dx/2. + escape_origo_shift[0],
+                ny*dy/2. + escape_origo_shift[1]
+                )
+
+        if misalign:
+            coord = cls.__misalignCoord(coord, dims, dV)
+
+        coord = cls.__scaleCoord(coord, scale, lower_center)
+
+        if rotate:
+            coord = cls.__rotateCoord(coord, lower_center)
+
+        coord = cls.__translateCoord(coord, translation)
+
+        cls.assertCoord(nx, ny, nz, coord)
+        return constructFloatKW("COORD", coord)
+
+    @classmethod
+    def __assertZcornParameters(cls, dims, dV, offset, escape_origo_shift,
+            irregular_offset, irregular, concave, faults):
+
+        nx, ny, nz = dims
+        dx, dy, dz = dV
+
+        # Validate arguments
+        if min(dims + dV) <= 0:
+            raise ValueError("Expected positive grid and cell dimentions")
+
+        if offset < 0:
+            raise ValueError("Expected non-negative offset")
+
+        if irregular and offset + (dz/2. if irregular_offset else 0) > dz:
+            raise AssertionError("Arguments can result in self-" +
+                    "intersecting cells. Increase dz, deactivate eiter " +
+                    "irregular or irregular_offset, or decrease offset to avoid " +
+                    "any problems")
+
+    @classmethod
     def createGrid(cls, dims, dV, offset=1,
             escape_origo_shift=(1,1,0),
             irregular_offset=False, irregular=False, concave=False,
@@ -137,81 +239,13 @@ class EclGridGenerator:
         @irregular_offset.
         """
 
-        nx, ny, nz = dims
-        dx, dy, dz = dV
+        zcorn = cls.createZcorn(dims, dV, offset, escape_origo_shift,
+                                irregular_offset, irregular, concave, faults)
 
-        # Validate arguments
-        if min(dims + dV) <= 0:
-            raise ValueError("Expected positive grid and cell dimentions")
+        coord = cls.createCoord(dims, dV, offset, escape_origo_shift, scale,
+                                translation, rotate, misalign)
 
-        if offset < 0:
-            raise ValueError("Expected non-negative offset")
-
-        if irregular and offset + (dz/2. if irregular_offset else 0) > dz:
-            raise AssertionError("Arguments can result in self-" +
-                    "intersecting cells. Increase dz, deactivate eiter " +
-                    "irregular or irregular_offset, or decrease offset to avoid " +
-                    "any problems")
-
-        verbose = lambda l : [elem for elem in l for i in range(2)][1:-1:]
-
-        # Compute zcorn
-        z = escape_origo_shift[2]
-        zcorn = [z]*(4*nx*ny)
-        for k in range(nz-1):
-            z = z+dz
-            local_offset = offset + (dz/2. if irregular_offset and k%2 == 0 else 0)
-
-            layer = []
-            for i in range(ny+1):
-                shift = ((i if concave else 0) + (k/2 if irregular else 0)) % 2
-                path = [z if i%2 == shift else z+local_offset for i in range(nx+1)]
-                layer.append(verbose(path))
-
-            zcorn = zcorn + (2*flatten(verbose(layer)))
-
-        z = z+dz
-        zcorn = zcorn + ([z]*(4*nx*ny))
-
-        if faults:
-            # Ensure that drop does not align with grid structure
-            drop = (offset+dz)/2. if abs(offset-dz/2.) > 0.2 else offset + 0.4
-            zcorn = cls.__createFaults(nx, ny, nz, zcorn, drop)
-
-        cls.assertZcorn(nx, ny, nz, zcorn)
-
-        # Compute coord
-        coord = []
-        for j, i in itertools.product(range(ny+1), range(nx+1)):
-            x, y = i*dx+escape_origo_shift[0], j*dy+escape_origo_shift[1]
-            coord = coord + [x, y, escape_origo_shift[2], x, y, z]
-
-        # Apply transformations
-        lower_center = (
-                nx*dx/2. + escape_origo_shift[0],
-                ny*dy/2. + escape_origo_shift[1]
-                )
-
-        if misalign:
-            coord = cls.__misalignCoord(coord, dims, dV)
-
-        coord = cls.__scaleCoord(coord, scale, lower_center)
-
-        if rotate:
-            coord = cls.__rotateCoord(coord, lower_center)
-
-        coord = cls.__translateCoord(coord, translation)
-
-        cls.assertCoord(nx, ny, nz, coord)
-
-        # Construct grid
-        def constructFloatKW(name, values):
-            kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
-            for i in range(len(values)):
-                kw[i] = values[i]
-            return kw
-
-        return EclGrid.create(dims, constructFloatKW("ZCORN", zcorn), constructFloatKW("COORD", coord), None)
+        return EclGrid.create(dims, zcorn, coord, None)
 
     @classmethod
     def __createFaults(cls, nx, ny, nz, zcorn, drop):
