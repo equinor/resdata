@@ -23,6 +23,9 @@ from ecl.ecl import EclGrid, EclKW, EclDataType, EclPrototype
 def flatten(l):
     return [elem for sublist in l for elem in sublist]
 
+def divide(l, size):
+    return [l[i:i+size:] for i in range(0, len(l), size)]
+
 class EclGridGenerator:
 
     _alloc_rectangular = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular( int , int , int , double , double , double , int*)" , bind = False)
@@ -351,34 +354,67 @@ class EclGridGenerator:
                     "fix the problem")
 
     @classmethod
+    def extract_coord(cls, dims, coord, ijk_bounds):
+        nx, ny, nz = dims
+        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
+        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+
+        # Format COORD
+        coord = divide(divide(coord, 6), nx+1)
+
+        # Extract new COORD
+        new_coord = [coord_slice[lx:ux+2:]
+                        for coord_slice in coord[ly:uy+2]]
+
+        # Flatten and verify
+        new_coord = flatten(flatten(new_coord))
+        cls.assertCoord(new_nx, new_ny, new_nz, new_coord)
+
+        return new_coord
+
+    @classmethod
+    def extract_zcorn(cls, dims, zcorn, ijk_bounds):
+        nx, ny, nz = dims
+        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
+        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+
+        # Format ZCORN
+        zcorn = divide(divide(zcorn, 2*nx), 2*ny)
+
+        # Extract new ZCORN
+        new_zcorn = [
+                        y_slice[2*lx:2*ux+2:]
+                        for z_slice in zcorn[2*lz:2*uz+2:]
+                        for y_slice in z_slice[2*ly:2*uy+2:]
+                    ]
+
+        # Flatten and verify
+        new_zcorn = flatten(new_zcorn)
+        cls.assertZcorn(new_nx, new_ny, new_nz, new_zcorn)
+
+        return new_zcorn
+
+    @classmethod
     def extract_grid(cls, dims, coord, zcorn, ijk_bounds,
             decomposition_change=False, translate=None):
         """
         TODO
         """
-        ijk_bounds = list(ijk_bounds)
-        cls.assert_ijk_bounds(dims, ijk_bounds)
-        cls.assert_decomposition_change(ijk_bounds, decomposition_change)
-
         nx, ny, nz = dims
-        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
-
+        ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
+        cls.assert_decomposition_change(ijk_bounds, decomposition_change)
         cls.assertCoord(nx, ny, nz, coord)
         cls.assertZcorn(nx, ny, nz, zcorn, twisted_check=False)
 
-        divide = lambda l, size: [l[i:i+size:] for i in range(0, len(l), size)]
-        coord = divide(divide(coord, 6), nx+1)
+        new_coord = cls.extract_coord(dims, coord, ijk_bounds)
+        new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
 
-        new_coord = [coord_slice[lx:ux+2:]
-                        for coord_slice in coord[ly:uy+2]]
-
-        new_coord = flatten(flatten(new_coord))
-        cls.assertCoord(new_nx, new_ny, new_nz, new_coord)
-        return new_coord
+        return new_coord, new_zcorn
 
     @classmethod
     def assert_ijk_bounds(cls, dims, ijk_bounds):
+        ijk_bounds = list(ijk_bounds)
+
         for i in range(len(ijk_bounds)):
             if isinstance(ijk_bounds[i], int):
                 ijk_bounds[i] = [ijk_bounds[i]]
@@ -409,6 +445,8 @@ class EclGridGenerator:
                     "0 <= lower bound <= upper_bound < ni, "+
                     "was %d <=? %d <=? %d <? %d."
                     % (0, bound[0], bound[1], n))
+
+        return ijk_bounds
 
     @classmethod
     def assert_decomposition_change(cls, ijk_bounds, decomposition_change):

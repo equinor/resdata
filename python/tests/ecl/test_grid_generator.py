@@ -54,8 +54,8 @@ class GridGeneratorTest(ExtendedTestCase):
 
     def setUp(self):
         ispace = [(l, u) for l in range(dims[0]) for u in range(l, dims[0])]
-        jspace = [(l, u) for l in range(dims[0]) for u in range(l, dims[0])]
-        kspace = [(l, u) for l in range(dims[0]) for u in range(l, dims[0])]
+        jspace = [(l, u) for l in range(dims[1]) for u in range(l, dims[1])]
+        kspace = [(l, u) for l in range(dims[2]) for u in range(l, dims[2])]
         self.ijk_space = prod(ispace, jspace, kspace)
 
     def test_extract_grid_decomposition_change(self):
