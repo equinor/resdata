@@ -31,8 +31,10 @@ install:
 before_script:
 - mkdir build
 - cd build
-- cmake -DBUILD_TESTS=ON -DBUILD_PYTHON=ON -DERT_BUILD_CXX=ON -DBUILD_APPLICATIONS=ON -DINSTALL_ERT_LEGACY=ON ..
+- cmake -DBUILD_TESTS=ON -DBUILD_PYTHON=ON -DERT_BUILD_CXX=ON -DBUILD_APPLICATIONS=ON -DCMAKE_INSTALL_PREFIX=install -DINSTALL_ERT_LEGACY=ON ..
 
 script:
 - make
 - ctest --output-on-failure -E ert_util_ping
+- make install
+- bin/test_install
