@@ -124,3 +124,5 @@ const ecl_nnc_pair_type * ecl_nnc_geometry_iget( const ecl_nnc_geometry_type * n
   return struct_vector_iget_ptr( nnc_geo->data , index );
 
 }
+
+
