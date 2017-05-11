@@ -1,6 +1,8 @@
 cmake_minimum_required( VERSION 2.8 )
 project( ERT C CXX )
 
+include(GNUInstallDirs)
+
 if(POLICY CMP0042)
   cmake_policy(SET CMP0042 OLD)
 endif()
@@ -42,9 +44,10 @@ if (EXISTS ${STATOIL_TESTDATA_ROOT})
 endif()
 
 
+# output libs to some lib/ path for testing
+set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
-include( CheckFunctionExists )
-include( CheckTypeSize )
 ENABLE_TESTING()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -66,7 +69,7 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
    message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
-   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING 
+   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
        "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
    # Set the possible values of build type for cmake-gui
    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
@@ -84,89 +87,208 @@ if (MSVC)
 endif()
 
 
-if (ERT_USE_OPENMP)
-  find_package(OpenMP)
-  if (OPENMP_FOUND) 
-     message(STATUS "Enabling OpenMP support")
-     # The actual use of OpenMP is only in the libecl library - the compile flags is only applied there.
-  else()
-     set( ERT_USE_OPENMP OFF )
-     message(STATUS "OpenMP package not found - OpenMP disabled")
-  endif()
-endif()
-
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 find_package(CXX11Features)
 
+#-----------------------------------------------------------------
 
+# create targets for (required and optional) dependencies to link to
+
+find_package(OpenMP)
+add_library(openmp INTERFACE)
+if (OPENMP_FOUND AND ERT_USE_OPENMP)
+    target_compile_options(openmp INTERFACE OpenMP_C_FLAGS)
+else ()
+     set(ERT_USE_OPENMP OFF)
+     message(STATUS "OpenMP package not found - OpenMP disabled")
+endif ()
+
+add_library(pthread INTERFACE)
+find_library(PTHREAD_LIBRARY NAMES pthread)
+if (PTHREAD_LIBRARY)
+    set(HAVE_PTHREAD TRUE)
+    set(ERT_HAVE_THREAD_POOL ON)
+    target_link_libraries(pthread INTERFACE ${PTHREAD_LIBRARY})
+endif ()
+
+add_library(dlfcn INTERFACE)
+target_link_libraries(dlfcn INTERFACE ${CMAKE_DL_LIBS})
+
+add_library(m INTERFACE)
+find_library(M_LIBRARY NAMES m)
+if(M_LIBRARY)
+    target_link_libraries(m INTERFACE ${M_LIBRARY})
+endif ()
+
+find_package(BLAS)
+add_library(blas INTERFACE)
+if (BLAS_FOUND)
+    set(ERT_HAVE_BLAS ON)
+    target_link_libraries(blas INTERFACE ${BLAS_LIBRARIES})
+endif ()
+
+set(ERT_HAVE_LAPACK OFF)
+find_package(LAPACK)
+add_library(lapack INTERFACE)
+if (LAPACK_FOUND)
+    set(ERT_HAVE_LAPACK ON)
+    target_link_libraries(blas INTERFACE ${LAPACK_LIBRARIES})
+endif()
+
+find_package(ZLIB)
+add_library(zlib INTERFACE)
+if (ZLIB_FOUND)
+    set(ERT_HAVE_ZLIB ON)
+    target_link_libraries(zlib INTERFACE ${ZLIB_LIBRARIES})
+    target_include_directories(zlib INTERFACE ${ZLIB_INCLUDE_DIRS})
+endif ()
+
+add_library(shlwapi INTERFACE)
+find_library(SHLWAPI_LIBRARY NAMES Shlwapi)
+if (ERT_WINDWS AND SHLWAPI_LIBRARY)
+    target_link_libraries(shlwapi INTERFACE ${SHLWAPI_LIBRARY})
+endif ()
+
+install(TARGETS pthread dlfcn m blas lapack zlib openmp EXPORT ecl-config)
 
 #-----------------------------------------------------------------
 
-# Checking based on compiling. Some of the code generates warnings, so we just cut down to bare-bone compiler flags.
+# feature tests
+include(CheckFunctionExists)
+include(CheckIncludeFile)
+include(CheckSymbolExists)
+include(CheckTypeSize)
 
-set( CMAKE_C_FLAGS_main ${CMAKE_C_FLAGS} )
-set( CMAKE_CXX_FLAGS_main ${CMAKE_CXX_FLAGS} )
+check_function_exists( chdir HAVE_POSIX_CHDIR )
+check_function_exists( _chdir HAVE_WINDOWS_CHDIR )
+check_function_exists( chmod HAVE_CHMOD )
+check_function_exists( fnmatch HAVE_FNMATCH )
+check_function_exists( fork HAVE_FORK )
+check_function_exists( fseeko HAVE_FSEEKO )
+check_function_exists( fsync HAVE_FSYNC )
+check_function_exists( ftruncate HAVE_FTRUNCATE )
+check_function_exists( getcwd HAVE_POSIX_GETCWD)
+check_function_exists( _getcwd HAVE_WINDOWS_GETCWD)
+check_function_exists( getpwuid HAVE_GETPWUID )
+check_function_exists( GetTempPath HAVE_WINDOWS_GET_TEMP_PATH )
+check_function_exists( getuid ERT_HAVE_GETUID )
+check_function_exists( glob ERT_HAVE_GLOB )
+check_function_exists( gmtime_r HAVE_GMTIME_R )
+check_function_exists( localtime_r HAVE_LOCALTIME_R )
+check_function_exists( lockf ERT_HAVE_LOCKF )
+check_function_exists( mkdir HAVE_POSIX_MKDIR)
+check_function_exists( _mkdir HAVE_WINDOWS_MKDIR)
+check_function_exists( opendir ERT_HAVE_OPENDIR )
+check_function_exists( posix_spawn ERT_HAVE_SPAWN )
+check_function_exists( pthread_timedjoin_np HAVE_TIMEDJOIN)
+check_function_exists( pthread_yield HAVE_YIELD)
+check_function_exists( pthread_yield_np HAVE_YIELD_NP)
+check_function_exists( readlinkat ERT_HAVE_READLINKAT )
+check_function_exists( realpath HAVE_REALPATH )
+check_function_exists( regexec ERT_HAVE_REGEXP )
+check_function_exists( round HAVE_ROUND )
+check_function_exists( setenv HAVE_POSIX_SETENV )
+check_function_exists( symlink ERT_HAVE_SYMLINK )
+check_function_exists( timegm HAVE_TIMEGM )
+check_function_exists( usleep HAVE__USLEEP )
 
-if (NOT ERT_WINDOWS)
-  set( CMAKE_C_FLAGS_main "${CMAKE_C_FLAGS} -std=gnu99" )
+check_symbol_exists(_tzname time.h HAVE_WINDOWS_TZNAME)
+check_symbol_exists( tzname time.h HAVE_TZNAME)
+
+check_include_file(execinfo.h HAVE_EXECINFO)
+check_include_file(getopt.h   ERT_HAVE_GETOPT)
+check_include_file(unistd.h   ERT_HAVE_UNISTD)
+
+check_type_size(time_t SIZE_OF_TIME_T)
+if (${SIZE_OF_TIME_T} EQUAL 8)
+    try_run(RUN_RESULT COMPILE_RESULT ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_mktime_before1970.c)
+    if (${COMPILE_RESULT})
+        if (${RUN_RESULT} EQUAL 0)
+            set( ERT_TIME_T_64BIT_ACCEPT_PRE1970 ON )
+        endif()
+    endif()
 endif()
 
-set( ERT_EXTERNAL_UTIL_LIBS "" )
-include(cmake/ert_build_check.cmake)
-include(cmake/ert_api_check.cmake)
-include(cmake/ert_lib_check.cmake)
+try_compile( HAVE_VA_COPY ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_va_copy.c )
+try_compile( HAVE_SIGBUS  ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_have_sigbus.c )
+try_compile( HAVE_PID_T   ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_pid_t.c )
+try_compile( HAVE_MODE_T  ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_mode_t.c )
+try_compile( ERT_HAVE_ISFINITE ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_isfinite.c)
 
-set( CMAKE_C_FLAGS ${CMAKE_C_FLAGS_main} )
-set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_main} )
+set( BUILD_CXX ON )
+try_compile( HAVE_CXX_SHARED_PTR ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_shared_ptr.cpp )
+if (NOT HAVE_CXX_SHARED_PTR)
+    set( BUILD_CXX OFF )
+endif()
 
-include(cmake/Modules/UseMultiArch.cmake)
-include(cmake/ert_link.cmake)
+if (HAVE_FORK AND HAVE_PTHREAD AND HAVE_EXECINFO AND HAVE_GETPWUID)
+    set( HAVE_UTIL_ABORT_INTERCEPT ON)
+    set( HAVE_BACKTRACE ON)
+endif()
+
+if (ERT_WINDOWS)
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set( ERT_WINDOWS_LFS ON )
+    endif()
+endif()
+
+find_program(PING_PATH NAMES ping)
+if (PING_PATH)
+    set(ERT_HAVE_PING ON)
+endif()
+
+find_package(Git)
+if(GIT_FOUND)
+   execute_process(
+     COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+     OUTPUT_VARIABLE GIT_COMMIT
+     OUTPUT_STRIP_TRAILING_WHITESPACE
+   )
+
+   execute_process(
+     COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+     OUTPUT_VARIABLE GIT_COMMIT_SHORT
+     OUTPUT_STRIP_TRAILING_WHITESPACE
+   )
+else()
+    set( GIT_COMMIT "unknown (git not found!)")
+    set( GIT_COMMIT_SHORT "unknown (git not found!)")
+    message( WARNING "Git not found. Build will not contain git revision info." )
+endif()
+
+if (ERT_WINDOWS)
+   execute_process(COMMAND cmd.exe /c "echo %date% %time%"  OUTPUT_VARIABLE BUILD_TIME)
+else() # Linux or Darwin
+   execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE BUILD_TIME)
+endif()
+string(STRIP ${BUILD_TIME} BUILD_TIME)
 
 #-----------------------------------------------------------------
 
 set(INSTALL_GROUP          ""     CACHE STRING "Group to install as - blank to install as current group")
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
-
-
 
 if (MSVC)
    add_definitions( -D__func__="\\"????\\"")
 endif()
 
+if (ERT_WINDOWS)
+    message(WARNING "Python is not supported on Windows")
+    set( BUILD_PYTHON OFF )
+endif ()
+
 if (ERT_LINUX)
-   set( NEED_LIBM TRUE )
-   set( LINK_STATIC FALSE )
    add_definitions( -DHAVE_PROC )
-else()
-   set( NEED_LIBM FALSE )
-   set( LINK_STATIC TRUE )
 endif()
 
-include_directories( ${PROJECT_SOURCE_DIR}/libert_util/include )
-include_directories( ${PROJECT_BINARY_DIR}/libert_util/include )
-if (MSVC)
-  include_directories( ${PROJECT_BINARY_DIR}/libert_util/include/ert/util )
-endif()
 add_subdirectory( libert_util )
-
-
-include_directories( ${PROJECT_SOURCE_DIR}/libgeometry/include )
-add_subdirectory( libgeometry )
-
-include_directories( ${PROJECT_SOURCE_DIR}/libecl/include )
 add_subdirectory( libecl )
-
-if (ERT_BUILD_CXX)
-   include_directories( ${PROJECT_SOURCE_DIR}/libert_utilxx/include )
-   include_directories( ${PROJECT_SOURCE_DIR}/libeclxx/include )
-
-   add_subdirectory( libert_utilxx )
-   add_subdirectory( libeclxx )
-endif()
-
-include_directories( ${PROJECT_SOURCE_DIR}/libecl_well/include )
+add_subdirectory( libgeometry )
 add_subdirectory( libecl_well )
+add_subdirectory( libert_utilxx )
+add_subdirectory( libeclxx )
+add_subdirectory( applications )
 
 if (BUILD_PYTHON)
    if (ERT_WINDOWS)
@@ -190,10 +312,6 @@ if (BUILD_PYTHON)
    endif()
 endif()
 
-
-
-configure_file( cmake/libecl-config.cmake.in libecl-config.cmake @ONLY)
-configure_file( cmake/libecl-config-version.cmake.in libecl-config-version.cmake @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libecl-config.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/libecl-config-version.cmake
-        DESTINATION lib/libecl )
+install(EXPORT ecl-config DESTINATION share/cmake/ecl)
+export(EXPORT ecl-config FILE eclConfig.cmake)
+export(PACKAGE ecl)
