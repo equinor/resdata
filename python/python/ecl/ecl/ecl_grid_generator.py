@@ -94,8 +94,9 @@ class EclGridGenerator:
         return grid
 
     @classmethod
-    def createZcorn(cls, dims, dV, offset, escape_origo_shift,
-                    irregular_offset, irregular, concave, faults):
+    def createZcorn(cls, dims, dV, offset=1, escape_origo_shift=(1,1,0),
+            irregular_offset=False, irregular=False, concave=False,
+            faults=False):
 
         cls.__assertZcornParameters(dims, dV, offset, escape_origo_shift,
                     irregular_offset, irregular, concave, faults)
@@ -134,8 +135,8 @@ class EclGridGenerator:
         return constructFloatKW("ZCORN", zcorn)
 
     @classmethod
-    def createCoord(cls, dims, dV, offset, escape_origo_shift, scale,
-                    translation, rotate, misalign):
+    def createCoord(cls, dims, dV, escape_origo_shift=(1,1,0),
+            scale=1, translation=(0,0,0), rotate=False, misalign=False):
 
         nx, ny, nz = dims
         dx, dy, dz = dV
@@ -242,7 +243,7 @@ class EclGridGenerator:
         zcorn = cls.createZcorn(dims, dV, offset, escape_origo_shift,
                                 irregular_offset, irregular, concave, faults)
 
-        coord = cls.createCoord(dims, dV, offset, escape_origo_shift, scale,
+        coord = cls.createCoord(dims, dV, escape_origo_shift, scale,
                                 translation, rotate, misalign)
 
         return EclGrid.create(dims, zcorn, coord, None)
@@ -404,7 +405,7 @@ class EclGridGenerator:
         new_coord = flatten(flatten(new_coord))
         cls.assertCoord(new_nx, new_ny, new_nz, new_coord)
 
-        return new_coord
+        return constructFloatKW("COORD", new_coord)
 
     @classmethod
     def extract_zcorn(cls, dims, zcorn, ijk_bounds):
@@ -426,7 +427,7 @@ class EclGridGenerator:
         new_zcorn = flatten(new_zcorn)
         cls.assertZcorn(new_nx, new_ny, new_nz, new_zcorn)
 
-        return new_zcorn
+        return constructFloatKW("ZCORN", new_zcorn)
 
     @classmethod
     def extract_grid(cls, dims, coord, zcorn, ijk_bounds,
@@ -435,6 +436,7 @@ class EclGridGenerator:
         TODO
         """
         nx, ny, nz = dims
+        coord, zcorn = list(coord), list(zcorn)
         ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
         cls.assert_decomposition_change(ijk_bounds, decomposition_change)
         cls.assertCoord(nx, ny, nz, coord)
