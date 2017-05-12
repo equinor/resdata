@@ -14,8 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-import itertools
-import numpy
+import itertools, numpy
 
 from ecl.util import IntVector
 from ecl.ecl import EclGrid, EclKW, EclDataType, EclPrototype
@@ -382,14 +381,15 @@ class EclGridGenerator:
         return coord.flatten().tolist()
 
     @classmethod
-    def assert_coord(cls, nx, ny, nz, coord):
+    def assert_coord(cls, nx, ny, nz, coord, negative_values=False):
         """
 
         Raises an AssertionError if the coord is not as expected. In
         particular, it is verified that:
 
             - coord has the approperiate length (6*(nx+1)*(ny+1)) and
-            - that all values are positive.
+            - that all values are positive unless negative_values are
+              explicitly allowed.
 
         """
 
@@ -399,7 +399,7 @@ class EclGridGenerator:
                     (6*(nx+1)*(ny+1), len(coord))
                     )
 
-        if min(coord) < 0:
+        if not negative_values and min(coord) < 0:
             raise AssertionError("Negative COORD values was generated. " +
                     "This is likely due to a tranformation. " +
                     "Increasing the escape_origio_shift will most likely " +
@@ -438,7 +438,7 @@ class EclGridGenerator:
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
         new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
 
-        cls.assert_coord(nx, ny, nz, coord)
+        cls.assert_coord(nx, ny, nz, coord, negative_values=True)
 
         # Format COORD
         coord = divide(divide(coord, 6), nx+1)
@@ -449,7 +449,8 @@ class EclGridGenerator:
 
         # Flatten and verify
         new_coord = flatten(flatten(new_coord))
-        cls.assert_coord(new_nx, new_ny, new_nz, new_coord)
+        cls.assert_coord(new_nx, new_ny, new_nz, new_coord,
+                negative_values=True)
 
         return construct_floatKW("COORD", new_coord)
 
@@ -516,9 +517,64 @@ class EclGridGenerator:
         coord = coord + translation
         return construct_floatKW("COORD", coord.flatten().tolist())
 
+
+    @classmethod
+    def extract_subgrid(cls, grid, ijk_bounds,
+            decomposition_change=False, translation=False):
+
+        """
+        Extracts a subgrid from the given grid according to the specified
+        bounds.
+
+        @ijk_bounds: The bounds describing the subgrid. Should be a tuple of
+        length 3, where each element gives the bound for the i, j, k
+        coordinates of the subgrid to be described, respectively. Each bound
+        should either be an interval of the form (a, b) where 0 <= a <= b < nx
+        or a single integer a which is equivialent to the bound (a, a).
+
+        NOTE: The given bounds are including endpoints.
+
+        @decomposition_change: Depending on the given ijk_bounds, libecl might
+        decompose the cells of the subgrid differently when extracted from
+        grid. This is somewhat unexpected behaviour and if this event occur we
+        give an exception together with an description for how to avoid this,
+        unless decompostion_change is set to True.
+
+        @translation: Gives the possibility of translating the subgrid. Should
+        be given as a tuple (dx, dy, dz), where each coordinate of the grid
+        will be moved by di in direction i.
+
+        """
+
+        gdims = grid.getDims()[:-1:]
+        nx, ny, nz = gdims
+        ijk_bounds = cls.assert_ijk_bounds(gdims, ijk_bounds)
+
+        coord = grid.export_coord()
+        cls.assert_coord(nx, ny, nz, coord, negative_values=True)
+
+        zcorn = grid.export_zcorn()
+        cls.assert_zcorn(nx, ny, nz, zcorn)
+
+        actnum = grid.export_actnum()
+        cls.assert_actnum(nx, ny, nz, actnum)
+
+        sub_data = cls.extract_subgrid_data(
+                                    gdims,
+                                    coord, zcorn,
+                                    ijk_bounds=ijk_bounds,
+                                    actnum=actnum,
+                                    decomposition_change=decomposition_change,
+                                    translation=translation)
+
+        sdim = tuple([b-a+1 for a,b in ijk_bounds])
+        sub_coord, sub_zcorn, sub_actnum = sub_data
+
+        return EclGrid.create(sdim, sub_zcorn, sub_coord, sub_actnum)
+
     @classmethod
     def extract_subgrid_data(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
-            decomposition_change=False, translation=False):
+            decomposition_change=False, translation=None):
         """
 
         Extracts subgrid data from COORD, ZCORN and potentially ACTNUM. It

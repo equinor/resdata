@@ -6256,6 +6256,16 @@ ecl_kw_type * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid ) {
   return zcorn_kw;
 }
 
+ecl_kw_type * ecl_grid_alloc_coord_kw( const ecl_grid_type * grid) {
+  ecl_kw_type * coord_kw = ecl_kw_alloc(
+          COORD_KW,
+          ECL_GRID_COORD_SIZE(grid->nx, grid->ny),
+          ECL_DOUBLE
+          );
+  ecl_grid_init_coord_data_double(grid, ecl_kw_get_double_ptr(coord_kw));
+  return coord_kw;
+}
+
 
 int ecl_grid_get_coord_size( const ecl_grid_type * grid) {
   return ECL_GRID_COORD_SIZE( grid->nx , grid->ny );
