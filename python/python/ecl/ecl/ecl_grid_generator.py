@@ -178,7 +178,7 @@ class EclGridGenerator:
         if rotate:
             coord = cls.__rotate_coord(coord, lower_center)
 
-        coord = cls.__translate_coord(coord, translation)
+        coord = cls.__translate_lower_coord(coord, translation)
 
         cls.assert_coord(nx, ny, nz, coord)
         return construct_floatKW("COORD", coord)
@@ -370,7 +370,7 @@ class EclGridGenerator:
         return coord.flatten().tolist()
 
     @classmethod
-    def __translate_coord(cls, coord, translation):
+    def __translate_lower_coord(cls, coord, translation):
         coord = numpy.array([
             map(float, coord[i:i+6:])
             for i in range(0, len(coord), 6)
