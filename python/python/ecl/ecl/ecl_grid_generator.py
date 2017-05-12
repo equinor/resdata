@@ -30,40 +30,52 @@ def duplicate_inner(l):
     return [elem for elem in l for i in range(2)][1:-1:]
 
 def construct_floatKW(name, values):
-     kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
-     for i, value in enumerate(values):
-         kw[i] = value
-     return kw
+    kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
+    for i, value in enumerate(values):
+        kw[i] = value
+    return kw
 
 class EclGridGenerator:
 
-    _alloc_rectangular = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular( int , int , int , double , double , double , int*)" , bind = False)
+    _alloc_rectangular = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular(int, int, int, double, double, double, int*)", bind=False)
 
     @classmethod
-    def createRectangular(cls, dims , dV , actnum = None):
+    def createRectangular(cls, dims, dV, actnum=None):
         """
         Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
 
         With the default value @actnum == None all cells will be active,
         """
         if actnum is None:
-            ecl_grid = cls._alloc_rectangular( dims[0] , dims[1] , dims[2] , dV[0] , dV[1] , dV[2] , None )
+            ecl_grid = cls._alloc_rectangular(
+                                     dims[0], dims[1], dims[2],
+                                     dV[0], dV[1], dV[2],
+                                     None
+                                     )
         else:
-            if not isinstance(actnum , IntVector):
-                tmp = IntVector(initial_size = len(actnum))
-                for (index , value) in enumerate(actnum):
+            if not isinstance(actnum, IntVector):
+                tmp = IntVector(initial_size=len(actnum))
+                for (index, value) in enumerate(actnum):
                     tmp[index] = value
                 actnum = tmp
 
-            if not len(actnum) == dims[0] * dims[1] * dims[2]:
-                raise ValueError("ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d" % (len(actnum) , dims[0] * dims[1] * dims[2]))
-            ecl_grid = cls._alloc_rectangular( dims[0] , dims[1] , dims[2] , dV[0] , dV[1] , dV[2] , actnum.getDataPtr() )
+            if not len(actnum) == dims[0]*dims[1]*dims[2]:
+                raise ValueError(
+                        "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
+                        % (len(actnum), dims[0]*dims[1]*dims[2])
+                        )
+
+            ecl_grid = cls._alloc_rectangular(
+                                 dims[0], dims[1], dims[2],
+                                 dV[0], dV[1], dV[2],
+                                 actnum.getDataPtr()
+                                 )
 
         # If we have not succeeded in creatin the grid we *assume* the
         # error is due to a failed malloc.
         if ecl_grid is None:
             raise MemoryError("Failed to allocated regualar grid")
-            
+
         return ecl_grid
 
     @classmethod
@@ -86,7 +98,7 @@ class EclGridGenerator:
             return kw
 
         grid = EclGrid.create(
-                (1,1,1),
+                (1, 1, 1),
                 construct_floatKW("ZCORN", zcorn),
                 construct_floatKW("COORD", coord),
                 None
