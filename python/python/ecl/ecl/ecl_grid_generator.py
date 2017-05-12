@@ -26,13 +26,13 @@ def flatten(l):
 def divide(l, size):
     return [l[i:i+size:] for i in range(0, len(l), size)]
 
-def verbose(l):
+def duplicate_inner(l):
     return [elem for elem in l for i in range(2)][1:-1:]
 
 def constructFloatKW(name, values):
      kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
-     for i in range(len(values)):
-         kw[i] = values[i]
+     for i, value in enumerate(values):
+         kw[i] = value
      return kw
 
 class EclGridGenerator:
@@ -115,9 +115,9 @@ class EclGridGenerator:
             for i in range(ny+1):
                 shift = ((i if concave else 0) + (k/2 if irregular else 0)) % 2
                 path = [z if i%2 == shift else z+local_offset for i in range(nx+1)]
-                layer.append(verbose(path))
+                layer.append(duplicate_inner(path))
 
-            zcorn = zcorn + (2*flatten(verbose(layer)))
+            zcorn = zcorn + (2*flatten(duplicate_inner(layer)))
 
         z = z+dz
         zcorn = zcorn + ([z]*(4*nx*ny))
@@ -369,7 +369,7 @@ class EclGridGenerator:
         """
 
         Raises an AssertionError if the coord is not as expected. In
-        particular, it is verfied that:
+        particular, it is verified that:
 
             - coord has the approperiate length (6*(nx+1)*(ny+1)) and
             - that all values are positive.
@@ -389,10 +389,39 @@ class EclGridGenerator:
                     "fix the problem")
 
     @classmethod
+    def assertActnum(cls, nx, ny, nz, actnum):
+        """
+
+        Raises an AssertionError if the actnum is not as expected. In
+        particular, it is verified that:
+
+            - actnum has the approperiate length nx*ny*nz and
+            - that all values are either 0 or 1.
+
+        """
+
+        if actnum is None:
+            return
+
+        if len(actnum) != nx*ny*nz:
+            raise AssertionError(
+                    "Expected the length of ACTNUM to be %d, was %s."
+                    %(nx*ny*nz, len(actnum))
+                    )
+
+        if set(actnum)-set([0,1]):
+            raise AssertionError(
+                "Expected ACTNUM to consist of 0's and 1's, was %s."
+                % ", ".join(map(str, set(actnum)))
+                )
+
+    @classmethod
     def extract_coord(cls, dims, coord, ijk_bounds):
         nx, ny, nz = dims
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
         new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+
+        cls.assertCoord(nx, ny, nz, coord)
 
         # Format COORD
         coord = divide(divide(coord, 6), nx+1)
@@ -413,6 +442,8 @@ class EclGridGenerator:
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
         new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
 
+        cls.assertZcorn(nx, ny, nz, zcorn, twisted_check=False)
+
         # Format ZCORN
         zcorn = divide(divide(zcorn, 2*nx), 2*ny)
 
@@ -430,22 +461,51 @@ class EclGridGenerator:
         return constructFloatKW("ZCORN", new_zcorn)
 
     @classmethod
-    def extract_grid(cls, dims, coord, zcorn, ijk_bounds,
+    def extract_actnum(cls, dims, actnum, ijk_bounds):
+        if actnum is None:
+            return None
+
+        nx, ny, nz = dims
+        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
+        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+
+        cls.assertActnum(nx, ny, nz, actnum)
+
+        actnum = divide(divide(actnum, nx), ny)
+
+        new_actnum = [
+                        y_slice[lx:ux+1:]
+                        for z_slice in actnum[lz:uz+1:]
+                        for y_slice in z_slice[ly:uy+1:]
+                    ]
+
+        new_actnum = flatten(new_actnum)
+        cls.assertActnum(new_nx, new_ny, new_nz, new_actnum)
+
+        actnumkw = EclKW("ACTNUM", len(new_actnum), EclDataType.ECL_INT)
+        for i, value in enumerate(new_actnum):
+            actnumkw[i] = value
+
+        return actnumkw
+
+    @classmethod
+    def extract_grid(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
             decomposition_change=False, translate=None):
         """
         TODO
         """
         nx, ny, nz = dims
         coord, zcorn = list(coord), list(zcorn)
+        actnum = None if actnum is None else list(actnum)
+
         ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
         cls.assert_decomposition_change(ijk_bounds, decomposition_change)
-        cls.assertCoord(nx, ny, nz, coord)
-        cls.assertZcorn(nx, ny, nz, zcorn, twisted_check=False)
 
         new_coord = cls.extract_coord(dims, coord, ijk_bounds)
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
+        new_actnum = cls.extract_actnum(dims, actnum, ijk_bounds)
 
-        return new_coord, new_zcorn
+        return new_coord, new_zcorn, new_actnum
 
     @classmethod
     def assert_ijk_bounds(cls, dims, ijk_bounds):

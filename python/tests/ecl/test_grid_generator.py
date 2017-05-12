@@ -15,11 +15,13 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
-from ecl.ecl import EclGrid
+from itertools import product as prod
+import operator, random
+
+from ecl.ecl import EclGrid, EclKW, EclDataType
 from ecl.ecl import EclGridGenerator as GridGen
 from ecl.test import ExtendedTestCase, TestAreaContext
-from itertools import product as prod
-import operator
+
 
 def generate_ijk_bounds(dims):
     ibounds = [(l, u) for l in range(dims[0]) for u in range(l, dims[0])]
@@ -109,10 +111,13 @@ class GridGeneratorTest(ExtendedTestCase):
         sijk_space = prod(*[range(d) for d in subgrid.getDims()[:-1:]])
         for sijk in sijk_space:
             gijk = tuple([a+b for a, b in zip(sijk, zip(*ijk_bound)[0])])
+
             self.assertEqual(
                 [subgrid.getCellCorner(i, ijk=sijk) for i in range(8)],
                 [grid.getCellCorner(i, ijk=gijk) for i in range(8)]
                 )
+
+            self.assertEqual(grid.active(ijk=gijk), subgrid.active(ijk=sijk))
 
     def test_validate_cells(self):
         for coord, zcorn, grid in self.test_base:
@@ -123,7 +128,7 @@ class GridGeneratorTest(ExtendedTestCase):
                     continue
 
                 sub_dims = tuple([u-l+1 for l, u in ijk_bound])
-                sub_coord, sub_zcorn = GridGen.extract_grid(
+                sub_coord, sub_zcorn, _ = GridGen.extract_grid(
                                                     grid_dims,
                                                     coord,
                                                     zcorn,
@@ -133,3 +138,35 @@ class GridGeneratorTest(ExtendedTestCase):
                 subgrid = EclGrid.create(sub_dims, sub_zcorn, sub_coord, None)
                 self.assertEqual(sub_dims, subgrid.getDims()[:-1:])
                 self.assertSubgrid(grid, subgrid, ijk_bound)
+
+    def test_actnum_extraction(self):
+        dims = (4,4,4)
+
+        coord = GridGen.createCoord(dims, (1,1,1))
+        zcorn = GridGen.createZcorn(dims, (1,1,1), offset=0)
+
+        actnum = EclKW("ACTNUM", reduce(operator.mul, dims), EclDataType.ECL_INT)
+        random.seed(1337)
+        for i in range(len(actnum)):
+            actnum[i] = random.randint(0, 1)
+
+        grid = EclGrid.create(dims, zcorn, coord, actnum)
+
+        ijk_bounds = generate_ijk_bounds(dims)
+        for ijk_bound in ijk_bounds:
+            if not decomposition_preserving(ijk_bound):
+                continue
+
+            sub = GridGen.extract_grid(
+                                         dims,
+                                         coord,
+                                         zcorn,
+                                         ijk_bound,
+                                         actnum=actnum
+                                       )
+
+            sub_coord, sub_zcorn, sub_actnum = sub
+            sub_dims = tuple([u-l+1 for l, u in ijk_bound])
+            subgrid = EclGrid.create(sub_dims, sub_zcorn, sub_coord, sub_actnum)
+            self.assertEqual(sub_dims, subgrid.getDims()[:-1:])
+            self.assertSubgrid(grid, subgrid, ijk_bound)
