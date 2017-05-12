@@ -103,10 +103,9 @@ if env_lib_path:
 
 # Check that the final ert_lib_path setting corresponds to an existing
 # directory.
-if ecl_lib_path:
+if ecl_lib_path and ecl_lib_path != 'ecl-pip':
     if not os.path.isdir( ecl_lib_path ):
         ecl_lib_path = None
-        
 
 if sys.hexversion < required_version_hex:
     raise Exception("ERT Python requires Python 2.7.")
