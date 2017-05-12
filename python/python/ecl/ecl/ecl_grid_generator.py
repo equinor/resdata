@@ -489,21 +489,41 @@ class EclGridGenerator:
         return actnumkw
 
     @classmethod
+    def __translate_coord(cls, coord, translation):
+        coord = numpy.array([
+            map(float, coord[i:i+6:])
+            for i in range(0, len(coord), 6)
+            ])
+        translation = numpy.array(list(translation) + list(translation))
+
+        coord = coord + translation
+        return constructFloatKW("COORD", coord.flatten().tolist())
+
+    @classmethod
     def extract_grid(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
-            decomposition_change=False, translate=None):
+            decomposition_change=False, translation=False):
         """
         TODO
         """
-        nx, ny, nz = dims
         coord, zcorn = list(coord), list(zcorn)
         actnum = None if actnum is None else list(actnum)
 
         ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
         cls.assert_decomposition_change(ijk_bounds, decomposition_change)
 
+        nx, ny, nz = dims
+        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
+        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+
         new_coord = cls.extract_coord(dims, coord, ijk_bounds)
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
         new_actnum = cls.extract_actnum(dims, actnum, ijk_bounds)
+
+        if translation:
+            new_coord = cls.__translate_coord(new_coord, translation)
+
+            for i in range(len(new_zcorn)):
+                new_zcorn[i] += translation[2]
 
         return new_coord, new_zcorn, new_actnum
 

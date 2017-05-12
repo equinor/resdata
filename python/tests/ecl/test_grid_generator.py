@@ -16,7 +16,7 @@
 #  for more details.
 
 from itertools import product as prod
-import operator, random
+import operator, random, numpy
 
 from ecl.ecl import EclGrid, EclKW, EclDataType
 from ecl.ecl import EclGridGenerator as GridGen
@@ -170,3 +170,32 @@ class GridGeneratorTest(ExtendedTestCase):
             subgrid = EclGrid.create(sub_dims, sub_zcorn, sub_coord, sub_actnum)
             self.assertEqual(sub_dims, subgrid.getDims()[:-1:])
             self.assertSubgrid(grid, subgrid, ijk_bound)
+
+    def test_translation(self):
+        dims = (3,3,3)
+
+        coord = GridGen.createCoord(dims, (1,1,1))
+        zcorn = GridGen.createZcorn(dims, (1,1,1), offset=0)
+        grid = EclGrid.create(dims, zcorn, coord, None)
+
+        ijk_bound = [(0, d-1) for d in dims]
+        translation = (1, 2, 3)
+        sub_coord, sub_zcorn, _ = GridGen.extract_grid(
+                                                        dims,
+                                                        coord,
+                                                        zcorn,
+                                                        ijk_bound,
+                                                        translation=translation
+                                                       )
+
+        tgrid = EclGrid.create(dims, sub_zcorn, sub_coord, None)
+        self.assertEqual(grid.getGlobalSize(), tgrid.getGlobalSize())
+
+        for gi in range(grid.getGlobalSize()):
+            translation = numpy.array(translation)
+            corners = [grid.getCellCorner(i, gi) for i in range(8)]
+            corners = [tuple(numpy.array(c)+translation) for c in corners]
+
+            tcorners = [tgrid.getCellCorner(i, gi) for i in range(8)]
+
+            self.assertEqual(corners, tcorners)
