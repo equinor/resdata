@@ -6251,18 +6251,22 @@ float * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid ) {
 
 
 ecl_kw_type * ecl_grid_alloc_zcorn_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * zcorn_kw = ecl_kw_alloc( ZCORN_KW , 8 * grid->size , ECL_FLOAT);
-  ecl_grid_init_zcorn_data( grid , ecl_kw_get_void_ptr( zcorn_kw ));
+  ecl_kw_type * zcorn_kw = ecl_kw_alloc( ZCORN_KW , ecl_grid_get_zcorn_size(grid), ECL_FLOAT);
+  ecl_grid_init_zcorn_data(grid , ecl_kw_get_void_ptr(zcorn_kw));
   return zcorn_kw;
 }
 
 ecl_kw_type * ecl_grid_alloc_coord_kw( const ecl_grid_type * grid) {
+  if(grid->coord_kw)
+    return ecl_kw_alloc_copy(grid->coord_kw);
+
   ecl_kw_type * coord_kw = ecl_kw_alloc(
           COORD_KW,
           ECL_GRID_COORD_SIZE(grid->nx, grid->ny),
-          ECL_DOUBLE
+          ECL_FLOAT
           );
-  ecl_grid_init_coord_data_double(grid, ecl_kw_get_double_ptr(coord_kw));
+  ecl_grid_init_coord_data(grid, ecl_kw_get_float_ptr(coord_kw));
+
   return coord_kw;
 }
 

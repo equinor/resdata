@@ -199,3 +199,17 @@ class GridGeneratorTest(ExtendedTestCase):
             tcorners = [tgrid.getCellCorner(i, gi) for i in range(8)]
 
             self.assertEqual(corners, tcorners)
+
+    def test_subgrid_extration(self):
+        for _, _, grid in self.test_base[:-1:]:
+            grid_dims = grid.getDims()[:-1:]
+            ijk_bounds = generate_ijk_bounds(grid_dims)
+            for ijk_bound in ijk_bounds:
+                if not decomposition_preserving(ijk_bound):
+                    continue
+
+                sub_dims = tuple([u-l+1 for l, u in ijk_bound])
+                subgrid = GridGen.extract_subgrid(grid, ijk_bound)
+
+                self.assertEqual(sub_dims, subgrid.getDims()[:-1:])
+                self.assertSubgrid(grid, subgrid, ijk_bound)

@@ -334,6 +334,15 @@ class GridTest(ExtendedTestCase):
         self.assertEqual( len(grid) , nx*ny*nz )
         self.assertEqual( grid.getNumActive( ) , 4 )
 
+    def test_export(self):
+        dims = (3, 3, 3)
+        coord = GridGen.create_coord(dims, (1,1,1))
+        zcorn = GridGen.create_zcorn(dims, (1,1,1), offset=0)
+
+        grid = EclGrid.create(dims, zcorn, coord, None)
+
+        self.assertEqual(zcorn, grid.export_zcorn())
+        self.assertEqual(coord, grid.export_coord())
 
     def test_output_units(self):
         n = 10
