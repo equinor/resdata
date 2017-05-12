@@ -500,10 +500,39 @@ class EclGridGenerator:
         return constructFloatKW("COORD", coord.flatten().tolist())
 
     @classmethod
-    def extract_grid(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
+    def extract_subgrid_data(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
             decomposition_change=False, translation=False):
         """
-        TODO
+
+        Extracts subgrid data from COORD, ZCORN and potentially ACTNUM. It
+        returns similar formatted data for the subgrid described by the bounds.
+
+        @dims: The dimentions (nx, ny, nz) of the grid
+
+        @coord: The COORD data of the grid.
+
+        @zcorn: The ZCORN data of the grid.
+
+        @ijk_bounds: The bounds describing the subgrid. Should be a tuple of
+        length 3, where each element gives the bound for the i, j, k
+        coordinates of the subgrid to be described, respectively. Each bound
+        should either be an interval of the form (a, b) where 0 <= a <= b < nx
+        or a single integer a which is equivialent to the bound (a, a).
+
+        NOTE: The given bounds are including endpoints.
+
+        @actnum: The ACTNUM data of the grid.
+
+        @decomposition_change: Depending on the given ijk_bounds, libecl might
+        decompose the cells of the subgrid differently when extracted from
+        grid. This is somewhat unexpected behaviour and if this event occur we
+        give an exception together with an description for how to avoid this,
+        unless decompostion_change is set to True.
+
+        @translation: Gives the possibility of translating the subgrid. Should
+        be given as a tuple (dx, dy, dz), where each coordinate of the grid
+        will be moved by di in direction i.
+
         """
         coord, zcorn = list(coord), list(zcorn)
         actnum = None if actnum is None else list(actnum)

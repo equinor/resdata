@@ -66,12 +66,12 @@ class GridGeneratorTest(ExtendedTestCase):
         ijk_bounds = generate_ijk_bounds(dims)
         for ijk_bounds in ijk_bounds:
             if decomposition_preserving(ijk_bounds):
-                GridGen.extract_grid(dims, coord, zcorn, ijk_bounds)
+                GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bounds)
             else:
                 with self.assertRaises(ValueError):
-                    GridGen.extract_grid(dims, coord, zcorn, ijk_bounds)
+                    GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bounds)
 
-            GridGen.extract_grid(dims,
+            GridGen.extract_subgrid_data(dims,
                                  coord, zcorn,
                                  ijk_bounds,
                                  decomposition_change=True)
@@ -82,13 +82,13 @@ class GridGeneratorTest(ExtendedTestCase):
         coord = list(GridGen.createCoord(dims, (1,1,1)))
 
         with self.assertRaises(ValueError):
-            GridGen.extract_grid(dims, coord, zcorn, ((-1,0), (2,2), (2,2)))
+            GridGen.extract_subgrid_data(dims, coord, zcorn, ((-1,0), (2,2), (2,2)))
 
         with self.assertRaises(ValueError):
-            GridGen.extract_grid(dims, coord, zcorn, ((1,6), (2,2), (2,2)))
+            GridGen.extract_subgrid_data(dims, coord, zcorn, ((1,6), (2,2), (2,2)))
                 
         with self.assertRaises(ValueError):
-            GridGen.extract_grid(dims, coord, zcorn, ((1,2), (2,0), (2,2)))
+            GridGen.extract_subgrid_data(dims, coord, zcorn, ((1,2), (2,0), (2,2)))
 
     def test_extract_grid_slice_spec(self):
         dims = (4,4,4)
@@ -102,7 +102,7 @@ class GridGeneratorTest(ExtendedTestCase):
                 if len(set(ijk[i])) == 1:
                     ijk[i] = ijk[i][0]
 
-            GridGen.extract_grid(dims,
+            GridGen.extract_subgrid_data(dims,
                                  coord, zcorn,
                                  ijk,
                                  decomposition_change=True)
@@ -128,7 +128,7 @@ class GridGeneratorTest(ExtendedTestCase):
                     continue
 
                 sub_dims = tuple([u-l+1 for l, u in ijk_bound])
-                sub_coord, sub_zcorn, _ = GridGen.extract_grid(
+                sub_coord, sub_zcorn, _ = GridGen.extract_subgrid_data(
                                                     grid_dims,
                                                     coord,
                                                     zcorn,
@@ -157,7 +157,7 @@ class GridGeneratorTest(ExtendedTestCase):
             if not decomposition_preserving(ijk_bound):
                 continue
 
-            sub = GridGen.extract_grid(
+            sub = GridGen.extract_subgrid_data(
                                          dims,
                                          coord,
                                          zcorn,
@@ -180,7 +180,7 @@ class GridGeneratorTest(ExtendedTestCase):
 
         ijk_bound = [(0, d-1) for d in dims]
         translation = (1, 2, 3)
-        sub_coord, sub_zcorn, _ = GridGen.extract_grid(
+        sub_coord, sub_zcorn, _ = GridGen.extract_subgrid_data(
                                                         dims,
                                                         coord,
                                                         zcorn,
