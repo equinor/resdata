@@ -37,20 +37,20 @@ class GridGeneratorTest(ExtendedTestCase):
     def setUp(self):
         self.test_base = [
             (
-                list(GridGen.createCoord((4,4,4), (1,1,1))),
-                list(GridGen.createZcorn((4,4,4), (1,1,1), offset=0)),
-                GridGen.createGrid((4,4,4), (1,1,1), offset=0)
+                list(GridGen.create_coord((4,4,4), (1,1,1))),
+                list(GridGen.create_zcorn((4,4,4), (1,1,1), offset=0)),
+                GridGen.create_grid((4,4,4), (1,1,1), offset=0)
             ),
             (
                 list(
-                    GridGen.createCoord((5,5,5), (1,1,1),
+                    GridGen.create_coord((5,5,5), (1,1,1),
                     translation=(10,10,0))
                     ),
                 list(
-                    GridGen.createZcorn((5,5,5), (1,1,1), offset=0.5,
+                    GridGen.create_zcorn((5,5,5), (1,1,1), offset=0.5,
                     irregular_offset=True, concave=True, irregular=True)
                     ),
-                GridGen.createGrid(
+                GridGen.create_grid(
                     (5,5,5), (1,1,1), offset=0.5,
                     irregular=True, irregular_offset=True, concave=True,
                     translation=(10,10,0)
@@ -60,8 +60,8 @@ class GridGeneratorTest(ExtendedTestCase):
 
     def test_extract_grid_decomposition_change(self):
         dims = (4,4,4)
-        zcorn = list(GridGen.createZcorn(dims, (1,1,1), offset=0))
-        coord = list(GridGen.createCoord(dims, (1,1,1)))
+        zcorn = list(GridGen.create_zcorn(dims, (1,1,1), offset=0))
+        coord = list(GridGen.create_coord(dims, (1,1,1)))
 
         ijk_bounds = generate_ijk_bounds(dims)
         for ijk_bounds in ijk_bounds:
@@ -78,8 +78,8 @@ class GridGeneratorTest(ExtendedTestCase):
 
     def test_extract_grid_invalid_bounds(self):
         dims = (3,3,3)
-        zcorn = list(GridGen.createZcorn(dims, (1,1,1), offset=0))
-        coord = list(GridGen.createCoord(dims, (1,1,1)))
+        zcorn = list(GridGen.create_zcorn(dims, (1,1,1), offset=0))
+        coord = list(GridGen.create_coord(dims, (1,1,1)))
 
         with self.assertRaises(ValueError):
             GridGen.extract_subgrid_data(dims, coord, zcorn, ((-1,0), (2,2), (2,2)))
@@ -92,8 +92,8 @@ class GridGeneratorTest(ExtendedTestCase):
 
     def test_extract_grid_slice_spec(self):
         dims = (4,4,4)
-        zcorn = list(GridGen.createZcorn(dims, (1,1,1), offset=0))
-        coord = list(GridGen.createCoord(dims, (1,1,1)))
+        zcorn = list(GridGen.create_zcorn(dims, (1,1,1), offset=0))
+        coord = list(GridGen.create_coord(dims, (1,1,1)))
 
         ijk_bounds = generate_ijk_bounds(dims)
         for ijk in ijk_bounds:
@@ -142,8 +142,8 @@ class GridGeneratorTest(ExtendedTestCase):
     def test_actnum_extraction(self):
         dims = (4,4,4)
 
-        coord = GridGen.createCoord(dims, (1,1,1))
-        zcorn = GridGen.createZcorn(dims, (1,1,1), offset=0)
+        coord = GridGen.create_coord(dims, (1,1,1))
+        zcorn = GridGen.create_zcorn(dims, (1,1,1), offset=0)
 
         actnum = EclKW("ACTNUM", reduce(operator.mul, dims), EclDataType.ECL_INT)
         random.seed(1337)
@@ -174,8 +174,8 @@ class GridGeneratorTest(ExtendedTestCase):
     def test_translation(self):
         dims = (3,3,3)
 
-        coord = GridGen.createCoord(dims, (1,1,1))
-        zcorn = GridGen.createZcorn(dims, (1,1,1), offset=0)
+        coord = GridGen.create_coord(dims, (1,1,1))
+        zcorn = GridGen.create_zcorn(dims, (1,1,1), offset=0)
         grid = EclGrid.create(dims, zcorn, coord, None)
 
         ijk_bound = [(0, d-1) for d in dims]

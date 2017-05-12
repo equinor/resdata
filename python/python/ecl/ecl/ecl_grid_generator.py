@@ -29,7 +29,7 @@ def divide(l, size):
 def duplicate_inner(l):
     return [elem for elem in l for i in range(2)][1:-1:]
 
-def constructFloatKW(name, values):
+def construct_floatKW(name, values):
      kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
      for i, value in enumerate(values):
          kw[i] = value
@@ -67,7 +67,7 @@ class EclGridGenerator:
         return ecl_grid
 
     @classmethod
-    def createSingleCellGrid(cls, corners):
+    def create_single_cell_grid(cls, corners):
         """
         Provided with the corners of the grid in a similar manner as the eight
         corners are output for a single cell, this method will create a grid
@@ -79,13 +79,18 @@ class EclGridGenerator:
         coord = [(corners[i], corners[i+4]) for i in range(4)]
         coord = flatten(flatten(coord))
 
-        def constructFloatKW(name, values):
+        def construct_floatKW(name, values):
             kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
             for i in range(len(values)):
                 kw[i] = values[i]
             return kw
 
-        grid = EclGrid.create((1,1,1), constructFloatKW("ZCORN", zcorn), constructFloatKW("COORD", coord), None)
+        grid = EclGrid.create(
+                (1,1,1),
+                construct_floatKW("ZCORN", zcorn),
+                construct_floatKW("COORD", coord),
+                None
+                )
 
         if not corners == [grid.getCellCorner(i, 0) for i in range(8)]:
             raise AssertionError("Failed to generate single cell grid. " +
@@ -94,11 +99,11 @@ class EclGridGenerator:
         return grid
 
     @classmethod
-    def createZcorn(cls, dims, dV, offset=1, escape_origo_shift=(1,1,0),
+    def create_zcorn(cls, dims, dV, offset=1, escape_origo_shift=(1,1,0),
             irregular_offset=False, irregular=False, concave=False,
             faults=False):
 
-        cls.__assertZcornParameters(dims, dV, offset, escape_origo_shift,
+        cls.__assert_zcorn_parameters(dims, dV, offset, escape_origo_shift,
                     irregular_offset, irregular, concave, faults)
 
         nx, ny, nz = dims
@@ -125,17 +130,17 @@ class EclGridGenerator:
         if faults:
             # Ensure that drop does not align with grid structure
             drop = (offset+dz)/2. if abs(offset-dz/2.) > 0.2 else offset + 0.4
-            zcorn = cls.__createFaults(nx, ny, nz, zcorn, drop)
+            zcorn = cls.__create_faults(nx, ny, nz, zcorn, drop)
 
 
         if z != escape_origo_shift[2] + nz*dz:
             raise ValueError("%f != %f" % (z, escape_origo_shift[2] + nz*dz))
 
-        cls.assertZcorn(nx, ny, nz, zcorn)
-        return constructFloatKW("ZCORN", zcorn)
+        cls.assert_zcorn(nx, ny, nz, zcorn)
+        return construct_floatKW("ZCORN", zcorn)
 
     @classmethod
-    def createCoord(cls, dims, dV, escape_origo_shift=(1,1,0),
+    def create_coord(cls, dims, dV, escape_origo_shift=(1,1,0),
             scale=1, translation=(0,0,0), rotate=False, misalign=False):
 
         nx, ny, nz = dims
@@ -155,20 +160,20 @@ class EclGridGenerator:
                 )
 
         if misalign:
-            coord = cls.__misalignCoord(coord, dims, dV)
+            coord = cls.__misalign_coord(coord, dims, dV)
 
-        coord = cls.__scaleCoord(coord, scale, lower_center)
+        coord = cls.__scale_coord(coord, scale, lower_center)
 
         if rotate:
-            coord = cls.__rotateCoord(coord, lower_center)
+            coord = cls.__rotate_coord(coord, lower_center)
 
-        coord = cls.__translateCoord(coord, translation)
+        coord = cls.__translate_coord(coord, translation)
 
-        cls.assertCoord(nx, ny, nz, coord)
-        return constructFloatKW("COORD", coord)
+        cls.assert_coord(nx, ny, nz, coord)
+        return construct_floatKW("COORD", coord)
 
     @classmethod
-    def __assertZcornParameters(cls, dims, dV, offset, escape_origo_shift,
+    def __assert_zcorn_parameters(cls, dims, dV, offset, escape_origo_shift,
             irregular_offset, irregular, concave, faults):
 
         nx, ny, nz = dims
@@ -188,7 +193,7 @@ class EclGridGenerator:
                     "any problems")
 
     @classmethod
-    def createGrid(cls, dims, dV, offset=1,
+    def create_grid(cls, dims, dV, offset=1,
             escape_origo_shift=(1,1,0),
             irregular_offset=False, irregular=False, concave=False,
             faults=False, scale=1, translation=(0,0,0), rotate=False,
@@ -240,16 +245,16 @@ class EclGridGenerator:
         @irregular_offset.
         """
 
-        zcorn = cls.createZcorn(dims, dV, offset, escape_origo_shift,
+        zcorn = cls.create_zcorn(dims, dV, offset, escape_origo_shift,
                                 irregular_offset, irregular, concave, faults)
 
-        coord = cls.createCoord(dims, dV, escape_origo_shift, scale,
+        coord = cls.create_coord(dims, dV, escape_origo_shift, scale,
                                 translation, rotate, misalign)
 
         return EclGrid.create(dims, zcorn, coord, None)
 
     @classmethod
-    def __createFaults(cls, nx, ny, nz, zcorn, drop):
+    def __create_faults(cls, nx, ny, nz, zcorn, drop):
         """
         Will create several faults consisting of all cells such that either its
         i or j index is 1 modulo 3.
@@ -275,7 +280,7 @@ class EclGridGenerator:
         return zcorn
 
     @classmethod
-    def assertZcorn(cls, nx, ny, nz, zcorn, twisted_check=True):
+    def assert_zcorn(cls, nx, ny, nz, zcorn, twisted_check=True):
         """
 
         Raises an AssertionError if the zcorn is not as expected. In
@@ -301,7 +306,7 @@ class EclGridGenerator:
                     )
 
     @classmethod
-    def __scaleCoord(cls, coord, scale, lower_center):
+    def __scale_coord(cls, coord, scale, lower_center):
         coord = numpy.array([
             map(float, coord[i:i+6:])
             for i in range(0, len(coord), 6)
@@ -313,7 +318,7 @@ class EclGridGenerator:
         return coord.flatten().tolist()
 
     @classmethod
-    def __misalignCoord(cls, coord, dims, dV):
+    def __misalign_coord(cls, coord, dims, dV):
         nx, ny, nz = dims
 
         coord = numpy.array([
@@ -338,7 +343,7 @@ class EclGridGenerator:
         return coord.flatten().tolist()
 
     @classmethod
-    def __rotateCoord(cls, coord, lower_center):
+    def __rotate_coord(cls, coord, lower_center):
         coord = numpy.array([
             map(float, coord[i:i+6:])
             for i in range(0, len(coord), 6)
@@ -354,7 +359,7 @@ class EclGridGenerator:
         return coord.flatten().tolist()
 
     @classmethod
-    def __translateCoord(cls, coord, translation):
+    def __translate_coord(cls, coord, translation):
         coord = numpy.array([
             map(float, coord[i:i+6:])
             for i in range(0, len(coord), 6)
@@ -365,7 +370,7 @@ class EclGridGenerator:
         return coord.flatten().tolist()
 
     @classmethod
-    def assertCoord(cls, nx, ny, nz, coord):
+    def assert_coord(cls, nx, ny, nz, coord):
         """
 
         Raises an AssertionError if the coord is not as expected. In
@@ -389,7 +394,7 @@ class EclGridGenerator:
                     "fix the problem")
 
     @classmethod
-    def assertActnum(cls, nx, ny, nz, actnum):
+    def assert_actnum(cls, nx, ny, nz, actnum):
         """
 
         Raises an AssertionError if the actnum is not as expected. In
@@ -421,7 +426,7 @@ class EclGridGenerator:
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
         new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
 
-        cls.assertCoord(nx, ny, nz, coord)
+        cls.assert_coord(nx, ny, nz, coord)
 
         # Format COORD
         coord = divide(divide(coord, 6), nx+1)
@@ -432,9 +437,9 @@ class EclGridGenerator:
 
         # Flatten and verify
         new_coord = flatten(flatten(new_coord))
-        cls.assertCoord(new_nx, new_ny, new_nz, new_coord)
+        cls.assert_coord(new_nx, new_ny, new_nz, new_coord)
 
-        return constructFloatKW("COORD", new_coord)
+        return construct_floatKW("COORD", new_coord)
 
     @classmethod
     def extract_zcorn(cls, dims, zcorn, ijk_bounds):
@@ -442,7 +447,7 @@ class EclGridGenerator:
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
         new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
 
-        cls.assertZcorn(nx, ny, nz, zcorn, twisted_check=False)
+        cls.assert_zcorn(nx, ny, nz, zcorn, twisted_check=False)
 
         # Format ZCORN
         zcorn = divide(divide(zcorn, 2*nx), 2*ny)
@@ -456,9 +461,9 @@ class EclGridGenerator:
 
         # Flatten and verify
         new_zcorn = flatten(new_zcorn)
-        cls.assertZcorn(new_nx, new_ny, new_nz, new_zcorn)
+        cls.assert_zcorn(new_nx, new_ny, new_nz, new_zcorn)
 
-        return constructFloatKW("ZCORN", new_zcorn)
+        return construct_floatKW("ZCORN", new_zcorn)
 
     @classmethod
     def extract_actnum(cls, dims, actnum, ijk_bounds):
@@ -469,7 +474,7 @@ class EclGridGenerator:
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
         new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
 
-        cls.assertActnum(nx, ny, nz, actnum)
+        cls.assert_actnum(nx, ny, nz, actnum)
 
         actnum = divide(divide(actnum, nx), ny)
 
@@ -480,7 +485,7 @@ class EclGridGenerator:
                     ]
 
         new_actnum = flatten(new_actnum)
-        cls.assertActnum(new_nx, new_ny, new_nz, new_actnum)
+        cls.assert_actnum(new_nx, new_ny, new_nz, new_actnum)
 
         actnumkw = EclKW("ACTNUM", len(new_actnum), EclDataType.ECL_INT)
         for i, value in enumerate(new_actnum):
@@ -497,7 +502,7 @@ class EclGridGenerator:
         translation = numpy.array(list(translation) + list(translation))
 
         coord = coord + translation
-        return constructFloatKW("COORD", coord.flatten().tolist())
+        return construct_floatKW("COORD", coord.flatten().tolist())
 
     @classmethod
     def extract_subgrid_data(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
