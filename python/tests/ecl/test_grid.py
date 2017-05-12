@@ -389,11 +389,13 @@ class GridTest(ExtendedTestCase):
                             for i in range(grid.getGlobalSize())
                         ].count(True)
 
-                self.assertTrue(hits in [0, 1])
+                self.assertIn(hits, [0, 1])
 
+                expected = 1 if wgrid.cell_contains(x, y, z, 0) else 0
                 self.assertEqual(
-                        1 if wgrid.cell_contains(x, y, z, 0) else 0,
-                        hits
+                        expected,
+                        hits,
+                        'Expected %d for (%g,%g,%g), got %d' % (expected, x, y, z, hits)
                         )
 
     def test_cell_corner_containment(self):
