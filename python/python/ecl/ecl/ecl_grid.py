@@ -103,7 +103,9 @@ class EclGrid(BaseCClass):
     _compressed_kw_copy           = EclPrototype("void   ecl_grid_compressed_kw_copy( ecl_grid , ecl_kw , ecl_kw)")
     _global_kw_copy               = EclPrototype("void   ecl_grid_global_kw_copy( ecl_grid , ecl_kw , ecl_kw)")
     _create_volume_keyword        = EclPrototype("ecl_kw_obj ecl_grid_alloc_volume_kw( ecl_grid , bool)")
-
+    _export_coord                 = EclPrototype("ecl_kw_obj ecl_grid_alloc_coord_kw( ecl_grid )")
+    _export_zcorn                 = EclPrototype("ecl_kw_obj ecl_grid_alloc_zcorn_kw( ecl_grid )")
+    _export_actnum                = EclPrototype("ecl_kw_obj ecl_grid_alloc_actnum_kw( ecl_grid )")
 
 
     @classmethod
@@ -1199,3 +1201,12 @@ class EclGrid(BaseCClass):
         """
 
         return self._create_volume_keyword( active_size )
+
+    def export_coord(self):
+        return self._export_coord()
+
+    def export_zcorn(self):
+        return self._export_zcorn()
+
+    def export_actnum(self):
+        return self._export_actnum()
