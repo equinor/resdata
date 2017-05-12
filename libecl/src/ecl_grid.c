@@ -3953,20 +3953,6 @@ static bool tetrahedron_by_points_contains(const point_type * p0,
   return tetrahedron_contains(pro_tet, *p);
 }
 
-static bool tetrahedron_positive_volume(const point_type * p0,
-                                        const point_type * p1,
-                                        const point_type * p2,
-                                        const point_type * p3) {
-
-  tetrahedron_type pro_tet;
-  pro_tet.p0 = *p0;
-  pro_tet.p1 = *p1;
-  pro_tet.p2 = *p2;
-  pro_tet.p3 = *p3;
-
-  return tetrahedron_volume6(pro_tet) >= 0;
-}
-
 /*
  Returns true if and only if the cell "cell" decomposed by "method" contains the point "p".
  This is done by decomposing the cell into 5 tetrahedrons according to the decomposition
@@ -4001,34 +3987,19 @@ static bool concave_cell_contains( const ecl_cell_type * cell, int method, const
   };
 
   // Test for containment in cell core
-  bool contained = tetrahedron_by_points_contains(dia[0][0], dia[1][0], dia[0][1], dia[1][1], p);
+  if (tetrahedron_by_points_contains(dia[0][0], dia[1][0], dia[0][1], dia[1][1], p))
+    return true;
 
   // Test for containment in protrusions
   for(int i = 0; i < 2; ++i) {
-    if(tetrahedron_by_points_contains(dia[i][0], dia[i][1], dia[(i+1)%2][0], extra[i][0], p)) {
-      contained = true;
+    if(tetrahedron_by_points_contains(dia[i][0], dia[i][1], dia[(i+1)%2][0], extra[i][0], p))
+      return true;
 
-      bool on_inner_faces = false;
-      on_inner_faces |= triangle_contains3d(dia[i][0], dia[(i+1)%2][0], extra[i][0], p);
-      on_inner_faces |= triangle_contains3d(dia[i][1], dia[(i+1)%2][0], extra[i][0], p);
-
-      if(!on_inner_faces && !tetrahedron_positive_volume(dia[i][0], dia[i][1], dia[(i+1)%2][0], extra[i][0]))
-        return false;
-    }
-
-    if(tetrahedron_by_points_contains(dia[i][0], dia[(i+1)%2][1], dia[i][1], extra[i][1], p)) {
-      contained = true;
-
-      bool on_inner_faces = false;
-      on_inner_faces |= triangle_contains3d(dia[i][0], dia[(i+1)%2][1], extra[i][1], p);
-      on_inner_faces |= triangle_contains3d(dia[i][1], dia[(i+1)%2][1], extra[i][1], p);
-
-      if(!on_inner_faces && !tetrahedron_positive_volume(dia[i][0], dia[(i+1)%2][1], dia[i][1], extra[i][1]))
-        return false;
-    }
+    if(tetrahedron_by_points_contains(dia[i][0], dia[(i+1)%2][1], dia[i][1], extra[i][1], p))
+      return true;
   }
 
-  return contained;
+  return false;
 }
 
 /*
@@ -4066,14 +4037,8 @@ bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j 
   bool max_k = (k == ecl_grid->nz-1);
   face_status_enum face_status = ecl_grid_on_cell_face(cell, method, &p, max_i, max_j, max_k);
 
-  if(face_status != NOT_ON_FACE) {
-    // Since we might get false positives in the case when the cells
-    // projections to the xy-plane is concave, we still check whether
-    // the point is contained in the cell if it face_status is
-    // BELONGS_TO_CELL.
-    if(face_status == BELONGS_TO_OTHER)
-      return false;
-  }
+  if(face_status != NOT_ON_FACE)
+    return face_status == BELONGS_TO_CELL;
 
   // Twisted cells
   if (ecl_cell_get_twist(cell) > 0) {
