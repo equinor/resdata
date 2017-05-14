@@ -203,11 +203,14 @@ void matrix_dgesvd(dgesvd_vector_enum jobu , dgesvd_vector_enum jobvt ,  matrix_
 
   /* Try to allocate optimal worksize. */
   worksize = (int) work[0];
-  work = realloc( work , sizeof * work * worksize );
-  if (work == NULL) {
+  double * tmp =  realloc( work , sizeof * work * worksize );
+  if (tmp == NULL) {
     /* Could not allocate optimal worksize - settle for the minimum. This can not fail. */
     worksize = min_worksize;
+    free(work);
     work = util_calloc( worksize , sizeof * work );
+  }else{
+    work = tmp; /* The request for optimal worksize succeeded */
   }
 
   dgesvd_(&_jobu , &_jobvt , &m , &n , matrix_get_data( A ) , &lda , S , U_data , &ldu , VT_data , &ldvt , work , &worksize , &info);
