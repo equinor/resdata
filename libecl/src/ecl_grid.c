@@ -5777,8 +5777,8 @@ static const float * ecl_grid_get_mapaxes( const ecl_grid_type * grid ) {
   return grid->mapaxes;
 }
 
-static ecl_kw_type * ecl_grid_alloc_mapaxes_kw( const float * mapaxes ) {
-  return ecl_kw_alloc_new( MAPAXES_KW , 6 , ECL_FLOAT , mapaxes);
+ecl_kw_type * ecl_grid_alloc_mapaxes_kw( const ecl_grid_type * grid ) {
+  return ecl_kw_alloc_new( MAPAXES_KW , 6 , ECL_FLOAT , grid->mapaxes);
 }
 
 static ecl_kw_type * ecl_grid_alloc_mapunits_kw( ert_ecl_unit_enum output_unit ) {
@@ -5837,8 +5837,8 @@ static float ecl_grid_output_scaling( const ecl_grid_type * grid , ert_ecl_unit_
 }
 
 
-static void ecl_grid_fwrite_mapaxes( const float * mapaxes , fortio_type * fortio) {
-  ecl_kw_type * mapaxes_kw = ecl_grid_alloc_mapaxes_kw( mapaxes );
+static void ecl_grid_fwrite_mapaxes( const ecl_grid_type * grid , fortio_type * fortio) {
+  ecl_kw_type * mapaxes_kw = ecl_grid_alloc_mapaxes_kw( grid );
   ecl_kw_fwrite( mapaxes_kw , fortio );
   ecl_kw_free( mapaxes_kw );
 }
@@ -5861,7 +5861,7 @@ static void ecl_grid_fwrite_main_GRID_headers( const ecl_grid_type * ecl_grid , 
   ecl_grid_fwrite_mapunits( fortio , output_unit );
 
   if (ecl_grid->use_mapaxes)
-    ecl_grid_fwrite_mapaxes( ecl_grid->mapaxes , fortio );
+    ecl_grid_fwrite_mapaxes( ecl_grid , fortio );
 
   ecl_grid_fwrite_gridunits( fortio , output_unit );
 }
@@ -6000,7 +6000,7 @@ static void ecl_grid_fwrite_main_EGRID_header( const ecl_grid_type * grid , fort
 
   ecl_grid_fwrite_mapunits( fortio , output_unit );
   if (mapaxes != NULL)
-    ecl_grid_fwrite_mapaxes( mapaxes , fortio );
+    ecl_grid_fwrite_mapaxes( grid , fortio );
 
   ecl_grid_fwrite_gridunits( fortio , output_unit);
 }
@@ -6660,7 +6660,7 @@ void ecl_grid_fprintf_grdecl2(ecl_grid_type * grid , FILE * stream , ert_ecl_uni
   }
 
   if (grid->use_mapaxes) {
-    ecl_kw_type * mapaxes_kw = ecl_grid_alloc_mapaxes_kw( grid->mapaxes );
+    ecl_kw_type * mapaxes_kw = ecl_grid_alloc_mapaxes_kw( grid );
     ecl_kw_fprintf_grdecl( mapaxes_kw , stream );
     ecl_kw_free( mapaxes_kw );
   }
