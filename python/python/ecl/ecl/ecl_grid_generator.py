@@ -559,18 +559,21 @@ class EclGridGenerator:
         actnum = grid.export_actnum()
         cls.assert_actnum(nx, ny, nz, actnum)
 
+        mapaxes = grid.export_mapaxes()
+
         sub_data = cls.extract_subgrid_data(
                                     gdims,
                                     coord, zcorn,
                                     ijk_bounds=ijk_bounds,
                                     actnum=actnum,
                                     decomposition_change=decomposition_change,
-                                    translation=translation)
+                                    translation=translation
+                                    )
 
         sdim = tuple([b-a+1 for a,b in ijk_bounds])
         sub_coord, sub_zcorn, sub_actnum = sub_data
 
-        return EclGrid.create(sdim, sub_zcorn, sub_coord, sub_actnum)
+        return EclGrid.create(sdim, sub_zcorn, sub_coord, sub_actnum, mapaxes=mapaxes)
 
     @classmethod
     def extract_subgrid_data(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
