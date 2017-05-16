@@ -213,3 +213,60 @@ class GridGeneratorTest(ExtendedTestCase):
 
                 self.assertEqual(sub_dims, subgrid.getDims()[:-1:])
                 self.assertSubgrid(grid, subgrid, ijk_bound)
+
+    def test_subgrid_translation(self):
+        grid = GridGen.create_grid((4,4,4), (1,1,1), offset=0.5,
+                    irregular=True, irregular_offset=True, concave=True,
+                    translation=(10,10,0))
+
+        # Create grid with MAPAXES
+        mapaxes = EclKW("MAPAXES", 6, EclDataType.ECL_FLOAT)
+        for i, val in enumerate([1200, 1400, 2500, 2500, 3700, 4000]):
+            mapaxes[i] = val
+
+        grid = EclGrid.create(
+                grid.getDims(),
+                grid.export_zcorn(),
+                grid.export_coord(),
+                None,
+                mapaxes=mapaxes
+                )
+
+        for translation in [
+                (0,0,0),
+                (10, 10, 100),
+                (-1, -1, -1)
+                ]:
+            subgrid = GridGen.extract_subgrid(
+                                        grid,
+                                        ((0,3), (0,3), (0,3)),
+                                        translation=translation
+                                        )
+
+            self.assertEqual(grid.getDims(), subgrid.getDims())
+
+            translation = numpy.array(translation)
+            for gindex in range(grid.getGlobalSize()):
+                grid_corners = [
+                                grid.getCellCorner(i, global_index=gindex)
+                                for i in range(8)
+                              ]
+
+                subgrid_corners = [
+                                subgrid.getCellCorner(i, global_index=gindex)
+                                for i in range(8)
+                                ]
+
+                subgrid_corners = [
+                                list(numpy.array(corner) - translation)
+                                for corner in subgrid_corners
+                                ]
+
+                for gc, sc in zip(grid_corners, subgrid_corners):
+                    self.assertAlmostEqualList(
+                            gc,
+                            sc,
+                            msg="Failed to translate corners correctly." +
+                                "Expected %s, was %s." % (gc, sc),
+                            tolerance=10e-10
+                            )

@@ -36,7 +36,7 @@ def construct_floatKW(name, values):
     return kw
 
 def pre_mapaxes_translation(translation, mapaxes):
-    if not mapaxes:
+    if mapaxes is None:
         return translation
 
     x, y, z = translation
@@ -541,7 +541,7 @@ class EclGridGenerator:
 
     @classmethod
     def extract_subgrid(cls, grid, ijk_bounds,
-            decomposition_change=False, translation=False):
+            decomposition_change=False, translation=None):
 
         """
         Extracts a subgrid from the given grid according to the specified
@@ -648,7 +648,7 @@ class EclGridGenerator:
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
         new_actnum = cls.extract_actnum(dims, actnum, ijk_bounds)
 
-        if translation:
+        if translation is not None:
             mtranslation = pre_mapaxes_translation(translation, mapaxes)
             new_coord = cls.__translate_coord(new_coord, mtranslation)
 
