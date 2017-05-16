@@ -107,9 +107,11 @@ int util_spawn_blocking(const char *executable, int argc, const char **argv, con
 */
 
 #ifdef ERT_HAVE_PING
+#define xstr(s) #s
+#define str(s) xstr(s)
 bool util_ping(const char *hostname) {
   int wait_status;
-  wait_status = util_spawn_blocking(PING_CMD, 4, (const char *[4]) {"-c" , "3" , "-q", hostname}, "/dev/null" , "/dev/null");
+  wait_status = util_spawn_blocking(str(PING_CMD), 4, (const char *[4]) {"-c" , "3" , "-q", hostname}, "/dev/null" , "/dev/null");
 
   if (WIFEXITED( wait_status )) {
       int ping_status = WEXITSTATUS( wait_status );

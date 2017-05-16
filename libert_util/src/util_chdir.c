@@ -16,7 +16,7 @@
    for more details. 
 */
 
-#ifdef HAVE_POSIX_CHDIR
+#ifdef ERT_HAVE_UNISTD
 #include <unistd.h>
 
 int util_chdir(const char * path) {
