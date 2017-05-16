@@ -71,38 +71,24 @@ typedef enum {
 #define ECL_STRING10_LENGTH 10  // 'Normal' 8 characters 'CHAR' type.
 #define ECL_TYPE_LENGTH      4
 
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#ifdef __cplusplus
-
 struct ecl_type_struct {
   const ecl_type_enum type;
   const size_t element_size;
-
-  ecl_type_struct( ecl_type_enum t, size_t es) :
-    type( t ),
-    element_size( es )
-  {}
 };
 
-#define ECL_INT ecl_data_type( ECL_INT_TYPE, sizeof(int))
-#define ECL_FLOAT ecl_data_type( ECL_FLOAT_TYPE, sizeof(float))
-#define ECL_DOUBLE ecl_data_type( ECL_DOUBLE_TYPE, sizeof(double))
-#define ECL_BOOL ecl_data_type( ECL_BOOL_TYPE, sizeof(int))
-#define ECL_CHAR ecl_data_type( ECL_CHAR_TYPE, ECL_STRING8_LENGTH + 1)
-#define ECL_MESS ecl_data_type( ECL_MESS_TYPE, 0)
-#define ECL_STRING(size) ecl_data_type(ECL_STRING_TYPE, size + 1)
+#ifdef __cplusplus
+
+#define ECL_INT ecl_data_type{ ECL_INT_TYPE, sizeof(int)}
+#define ECL_FLOAT ecl_data_type{ ECL_FLOAT_TYPE, sizeof(float)}
+#define ECL_DOUBLE ecl_data_type{ ECL_DOUBLE_TYPE, sizeof(double)}
+#define ECL_BOOL ecl_data_type{ ECL_BOOL_TYPE, sizeof(int)}
+#define ECL_CHAR ecl_data_type{ ECL_CHAR_TYPE, ECL_STRING8_LENGTH + 1}
+#define ECL_MESS ecl_data_type{ ECL_MESS_TYPE, 0}
+#define ECL_STRING(size) ecl_data_type{ECL_STRING_TYPE, (size) + 1}
+
+}
 
 #else
-
-struct ecl_type_struct {
-  const ecl_type_enum type;
-  const size_t element_size;
-};
 
 #define ECL_CHAR (ecl_data_type) {.type = ECL_CHAR_TYPE, .element_size = ECL_STRING8_LENGTH + 1}
 #define ECL_INT (ecl_data_type) {.type = ECL_INT_TYPE, .element_size = sizeof(int)}
@@ -110,10 +96,9 @@ struct ecl_type_struct {
 #define ECL_DOUBLE (ecl_data_type) {.type = ECL_DOUBLE_TYPE, .element_size = sizeof(double)}
 #define ECL_BOOL (ecl_data_type) {.type = ECL_BOOL_TYPE, .element_size = sizeof(int)}
 #define ECL_MESS (ecl_data_type) {.type = ECL_MESS_TYPE, .element_size = 0}
-#define ECL_STRING(size) (ecl_data_type) {.type = ECL_STRING_TYPE, .element_size = size + 1}
+#define ECL_STRING(size) (ecl_data_type) {.type = ECL_STRING_TYPE, .element_size = (size) + 1}
 
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
