@@ -105,20 +105,29 @@ def runTestCase(tests, verbosity=0):
         sys.exit(1)
 
 
+# This will update both the internal sys.path load order and the
+# environment variable PYTHONPATH with the following list:
+#
+#      cwd:CTEST_PYTHONPATH:PYTHONPATH
+
 def update_path():
+     path_list = [os.getcwd()]
+
      if 'CTEST_PYTHONPATH' in os.environ:
         ctest_pythonpath = os.environ['CTEST_PYTHONPATH']
-
         for path in ctest_pythonpath.split(':'):
-            sys.path.insert(0 , path)
-       
-        if 'PYTHONPATH' in os.environ:
-            pythonpath = os.environ['PYTHONPATH']
-            os.environ['PYTHONPATH'] = '%s:%s' % (ctest_pythonpath , pythonpath)
-        else:
-            os.environ['PYTHONPATH'] = ctest_pythonpath
-    
-     sys.path.insert(0 , os.getcwd())     
+            path_list.append( path )
+   
+     for path in reversed(path_list):
+         sys.path.insert(0 , path)     
+
+     if 'PYTHONPATH' in os.environ:
+        pythonpath = os.environ['PYTHONPATH']
+        for path in pythonpath.split(':'):
+            path_list.append( path )
+
+     os.environ['PYTHONPATH'] = ':'.join( path_list )
+
 
     
 if __name__ == '__main__':
