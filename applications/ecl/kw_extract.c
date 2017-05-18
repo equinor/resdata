@@ -65,7 +65,7 @@ int main(int argc, char ** argv) {
     {
       ecl_kw_type * ecl_kw = ecl_kw_alloc_empty();
       while (true) {
-        if (ecl_kw_fread_header( ecl_kw , fortio_src )) {
+        if (ecl_kw_fread_header( ecl_kw , fortio_src ) == ECL_KW_READ_OK) {
           const char * header = ecl_kw_get_header( ecl_kw ); 
           if (set_has_key( kw_set , header )) {
             ecl_kw_fread_realloc_data(ecl_kw , fortio_src );
