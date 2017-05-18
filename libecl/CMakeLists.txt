@@ -128,24 +128,22 @@ endif()
 add_executable(ecl_coarse_test tests/ecl_coarse_test.c)
 target_link_libraries(ecl_coarse_test ecl)
 add_test(NAME ecl_coarse_test COMMAND ecl_coarse_test
-    ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/LGCcase/LGC_TESTCASE2)
+    ${_eclpath}/LGCcase/LGC_TESTCASE2)
 
 add_executable(ecl_grid_layer_contains tests/ecl_grid_layer_contains.c)
 target_link_libraries(ecl_grid_layer_contains ecl)
 add_test(NAME ecl_grid_layer_contains1 COMMAND ecl_grid_layer_contains
-    ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID)
-add_test(ecl_grid_layer_contains2
-    ecl_grid_layer_contains
-    ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Mariner/MARINER.EGRID)
+    ${_eclpath}/Gurbat/ECLIPSE.EGRID)
+add_test(NAME ecl_grid_layer_contains2 COMMAND ecl_grid_layer_contains
+    ${_eclpath}/Mariner/MARINER.EGRID)
 
 add_executable(ecl_restart_test tests/ecl_restart_test.c)
 target_link_libraries(ecl_restart_test ecl)
 add_test(NAME ecl_restart_test COMMAND ecl_restart_test
-    ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST)
+    ${_eclpath}/Gurbat/ECLIPSE.UNRST)
 
 add_executable(ecl_nnc_export tests/ecl_nnc_export.c)
 target_link_libraries(ecl_nnc_export ecl)
-set(_eclpath ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE)
 add_test(NAME ecl_nnc_export1 COMMAND ecl_nnc_export ${_eclpath}/Gurbat/ECLIPSE TRUE)
 add_test(NAME ecl_nnc_export2 COMMAND ecl_nnc_export ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC TRUE)
 add_test(NAME ecl_nnc_export3 COMMAND ecl_nnc_export ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3 TRUE)
@@ -157,13 +155,13 @@ add_test(NAME ecl_nnc_export7 COMMAND ecl_nnc_export ${_eclpath}/TYRIHANS/BASE20
 add_executable(ecl_nnc_export_get_tran tests/ecl_nnc_export_get_tran.c)
 target_link_libraries(ecl_nnc_export_get_tran ecl)
 add_test(NAME ecl_nnc_export_get_tran COMMAND ecl_nnc_export_get_tran
-    ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
+    ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
 
 add_executable(ecl_util_make_date_shift tests/ecl_util_make_date_shift.c)
 target_link_libraries(ecl_util_make_date_shift ecl)
 add_test(NAME ecl_util_make_date_shift COMMAND ecl_util_make_date_shift)
 
-add_executable(ecl_sum_case_exists ecl_sum_case_exists.c)
+add_executable(ecl_sum_case_exists tests/ecl_sum_case_exists.c)
 target_link_libraries(ecl_sum_case_exists ecl)
 add_test(NAME ecl_sum_case_exists COMMAND ecl_sum_case_exists
          ${_eclpath}/Gurbat/ECLIPSE
@@ -237,7 +235,7 @@ add_test(NAME ecl_grid_volume4 COMMAND ecl_grid_volume ${_eclpath}/Norne/reservo
 # has been different in this file - i.e. that the absolute value of the individual
 # tetrahedron parts have been taken during the sum, and not at the end. At least the ert
 # algorithm gets volumes ~ 0 whereas ECLIPSE reports ~10^9 for the same cell.
-# add_test( ecl_grid_volume5 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume  ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE/Heidrun/Summary/FF12_2013B3_CLEAN_RS)
+# add_test( ecl_grid_volume5 ${EXECUTABLE_OUTPUT_PATH}/ecl_grid_volume ${_eclpath}/Heidrun/Summary/FF12_2013B3_CLEAN_RS)
 
 add_executable(ecl_grid_dims tests/ecl_grid_dims.c)
 target_link_libraries(ecl_grid_dims ecl)

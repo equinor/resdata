@@ -40,5 +40,5 @@ endif ()
 add_executable(geo_surface tests/geo_surface.c)
 target_link_libraries(geo_surface ert_geometry)
 add_test(NAME geo_surface COMMAND geo_surface
-        ${PROJECT_SOURCE_DIR}/test-data/Statoil/Geometry/Surface.irap
-        ${PROJECT_SOURCE_DIR}/test-data/Statoil/Geometry/Surface_incompatible.irap)
+        ${_geopath}/Surface.irap
+        ${_geopath}/Surface_incompatible.irap)

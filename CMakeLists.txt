@@ -41,6 +41,10 @@ if (EXISTS ${STATOIL_TESTDATA_ROOT})
 
   EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E create_symlink "${STATOIL_TESTDATA_ROOT}" "${LINK}")
   message(STATUS "Linking testdata: ${LINK} -> ${STATOIL_TESTDATA_ROOT}")
+
+  set(_statoil_test_data ${CMAKE_SOURCE_DIR}/test-data/Statoil)
+  set(_eclpath ${_statoil_test_data}/ECLIPSE)
+  set(_geopath ${_statoil_test_data}/Geometry)
 endif()
 
 
