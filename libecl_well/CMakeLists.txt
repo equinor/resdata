@@ -57,8 +57,6 @@ target_link_libraries( well_state_load ecl_well)
 add_executable(well_state_load_missing_RSEG tests/well_state_load_missing_RSEG.c)
 target_link_libraries(well_state_load_missing_RSEG ecl_well)
 
-set(_eclpath ${PROJECT_SOURCE_DIR}/test-data/Statoil/ECLIPSE)
-
 add_test(NAME well_state_load1 COMMAND well_state_load ${_eclpath}/Gurbat/ECLIPSE.EGRID
                                                        ${_eclpath}/Gurbat/ECLIPSE.X0030)
 add_test(NAME well_state_load2 COMMAND well_state_load ${_eclpath}/MSWcase/MSW_CASE.EGRID
@@ -79,7 +77,7 @@ add_test(NAME well_state_load_missing_RSEG2
 add_executable(well_segment_load tests/well_segment_load.c)
 target_link_libraries(well_segment_load ecl_well)
 add_test(NAME well_segment_load
-        COMMAND well_segment_load ${_eclpath}/ECLIPSE/MSWcase/MSW_CASE.X0021)
+        COMMAND well_segment_load ${_eclpath}/MSWcase/MSW_CASE.X0021)
 
 add_executable(well_segment_branch_conn_load tests/well_segment_branch_conn_load.c)
 target_link_libraries(well_segment_branch_conn_load ecl_well)
@@ -96,12 +94,12 @@ add_test(NAME well_conn_CF COMMAND well_conn_CF ${_eclpath}/Gurbat/ECLIPSE.X0060
 
 add_executable(well_conn_load tests/well_conn_load.c)
 target_link_libraries(well_conn_load ecl_well)
-add_test(NAME well_conn_load1 COMMADN well_conn_load ${_eclpath}/Gurbat/ECLIPSE.X0030 F)
-add_test(NAME well_conn_load2 COMMADN well_conn_load ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.X0021 F)
-add_test(NAME well_conn_load3 COMMADN well_conn_load ${_eclpath}/MSWcase/MSW_CASE.X0021 T)
-add_test(NAME well_conn_load4 COMMADN well_conn_load ${_eclpath}/AmalgLGRcase/TESTCASE_AMALG_LGR.X0021 F)
-add_test(NAME well_conn_load5 COMMADN well_conn_load ${_eclpath}/DualPoro/DUALPORO.X0009 F)
-add_test(NAME well_conn_load6 COMMADN well_conn_load ${_eclpath}/0.9.2_LGR/BASE_REF_XY3Z1_T30_WI.X0003 F)
+add_test(NAME well_conn_load1 COMMAND well_conn_load ${_eclpath}/Gurbat/ECLIPSE.X0030 F)
+add_test(NAME well_conn_load2 COMMAND well_conn_load ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.X0021 F)
+add_test(NAME well_conn_load3 COMMAND well_conn_load ${_eclpath}/MSWcase/MSW_CASE.X0021 T)
+add_test(NAME well_conn_load4 COMMAND well_conn_load ${_eclpath}/AmalgLGRcase/TESTCASE_AMALG_LGR.X0021 F)
+add_test(NAME well_conn_load5 COMMAND well_conn_load ${_eclpath}/DualPoro/DUALPORO.X0009 F)
+add_test(NAME well_conn_load6 COMMAND well_conn_load ${_eclpath}/0.9.2_LGR/BASE_REF_XY3Z1_T30_WI.X0003 F)
 
 add_executable(well_ts tests/well_ts.c)
 target_link_libraries(well_ts ecl_well)
