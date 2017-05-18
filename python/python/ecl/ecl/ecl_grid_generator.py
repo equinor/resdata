@@ -15,6 +15,7 @@
 #  for more details.
 
 import itertools, numpy
+from math import sqrt
 
 from ecl.util import IntVector
 from ecl.ecl import EclGrid, EclKW, EclDataType, EclPrototype
@@ -33,6 +34,26 @@ def construct_floatKW(name, values):
     for i, value in enumerate(values):
         kw[i] = value
     return kw
+
+def pre_mapaxes_translation(translation, mapaxes):
+    if mapaxes is None:
+        return translation
+
+    x, y, z = translation
+
+    unit_y = numpy.array((mapaxes[0]-mapaxes[2], mapaxes[1]-mapaxes[3]));
+    unit_y /= sqrt(numpy.sum(unit_y*unit_y))
+
+    unit_x = numpy.array((mapaxes[4]-mapaxes[2], mapaxes[5]-mapaxes[3]));
+    unit_x /= sqrt(numpy.sum(unit_x*unit_x))
+
+    det = 1.0 / (unit_x[0]*unit_y[1] - unit_x[1] * unit_y[0]);
+
+    return (
+                ( x*unit_y[1] - y*unit_y[0]) * det,
+                (-x*unit_x[1] + y*unit_x[0]) * det,
+                z
+           )
 
 class EclGridGenerator:
 
@@ -520,7 +541,7 @@ class EclGridGenerator:
 
     @classmethod
     def extract_subgrid(cls, grid, ijk_bounds,
-            decomposition_change=False, translation=False):
+            decomposition_change=False, translation=None):
 
         """
         Extracts a subgrid from the given grid according to the specified
@@ -566,6 +587,7 @@ class EclGridGenerator:
                                     coord, zcorn,
                                     ijk_bounds=ijk_bounds,
                                     actnum=actnum,
+                                    mapaxes=mapaxes,
                                     decomposition_change=decomposition_change,
                                     translation=translation
                                     )
@@ -577,7 +599,7 @@ class EclGridGenerator:
 
     @classmethod
     def extract_subgrid_data(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
-            decomposition_change=False, translation=None):
+            mapaxes=None, decomposition_change=False, translation=None):
         """
 
         Extracts subgrid data from COORD, ZCORN and potentially ACTNUM. It
@@ -598,6 +620,8 @@ class EclGridGenerator:
         NOTE: The given bounds are including endpoints.
 
         @actnum: The ACTNUM data of the grid.
+
+        @mapaxes The MAPAXES data of the grid.
 
         @decomposition_change: Depending on the given ijk_bounds, libecl might
         decompose the cells of the subgrid differently when extracted from
@@ -624,8 +648,9 @@ class EclGridGenerator:
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
         new_actnum = cls.extract_actnum(dims, actnum, ijk_bounds)
 
-        if translation:
-            new_coord = cls.__translate_coord(new_coord, translation)
+        if translation is not None:
+            mtranslation = pre_mapaxes_translation(translation, mapaxes)
+            new_coord = cls.__translate_coord(new_coord, mtranslation)
 
             for i in range(len(new_zcorn)):
                 new_zcorn[i] += translation[2]
