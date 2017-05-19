@@ -1,4 +1,4 @@
-project(libecl-geometry)
+project(libecl-geometry C)
 
 add_library(ert_geometry src/geo_surface.c
                          src/geo_util.c

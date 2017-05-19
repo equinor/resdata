@@ -1,4 +1,4 @@
-project(libecl-well)
+project(libecl-well C)
 
 add_library(ecl_well    src/well_state.c
                         src/well_conn.c

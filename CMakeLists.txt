@@ -27,9 +27,7 @@ option( INSTALL_ERT         "Should anything be installed when issuing make inst
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( ERT_DOC             "Build ERT documantation"                                 OFF)
 option( ERT_BUILD_CXX       "Build some CXX wrappers"                                 ON)
-option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF) 
-
-
+option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF)
 
 
 set(STATOIL_TESTDATA_ROOT "" CACHE PATH  "Root to Statoil internal testdata")
@@ -99,61 +97,77 @@ find_package(CXX11Features)
 # create targets for (required and optional) dependencies to link to
 
 find_package(OpenMP)
-add_library(openmp INTERFACE)
-if (OPENMP_FOUND AND ERT_USE_OPENMP)
-    target_compile_options(openmp INTERFACE OpenMP_C_FLAGS)
-else ()
-     set(ERT_USE_OPENMP OFF)
-     message(STATUS "OpenMP package not found - OpenMP disabled")
+if (NOT OPENMP_FOUND)
+    message(STATUS "OpenMP package not found")
+    set(ERT_USE_OPENMP OFF)
 endif ()
 
-add_library(pthread INTERFACE)
-find_library(PTHREAD_LIBRARY NAMES pthread)
-if (PTHREAD_LIBRARY)
+if (NOT ERT_USE_OPENMP)
+    message(STATUS "OpenMP disabled")
+endif ()
+
+# when cmake can be upgraded to >= 3.0, dependencies should be implemented
+# either via target-providing FindLib.cmake:
+# ```
+# find_package(Threads)
+# target_link_libraries(lib Threads::Threads)
+# ```
+#
+# or via INTERFACE libraries:
+# add_library(m INTERFACE)
+# find_library(M_LIBRARY NAMES m)
+# if (M_LIBRARY)
+#    target_link_libraries(m ${M_LIBRARY})
+# endif ()
+# target_link_libraries(m ${M_LIBRARY})
+#
+# These targets can then be exported along with targets provided by this
+# project. Linking against cmake interface targets will handle include
+# directories better than raw names given to target_link_libraries
+
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads)
+if (CMAKE_USE_PTHREADS_INIT)
     set(HAVE_PTHREAD TRUE)
     set(ERT_HAVE_THREAD_POOL ON)
-    target_link_libraries(pthread INTERFACE ${PTHREAD_LIBRARY})
+
+    set(pthread "${CMAKE_THREAD_LIBS_INIT}")
+
+    if (THREADS_HAVE_PTHREAD_ARG)
+        set(pthreadarg "-pthread")
+    endif ()
 endif ()
 
-add_library(dlfcn INTERFACE)
-target_link_libraries(dlfcn INTERFACE ${CMAKE_DL_LIBS})
+set(dl "${CMAKE_DL_LIBS}")
 
-add_library(m INTERFACE)
 find_library(M_LIBRARY NAMES m)
 if(M_LIBRARY)
-    target_link_libraries(m INTERFACE ${M_LIBRARY})
+    set(m m)
 endif ()
 
 find_package(BLAS)
-add_library(blas INTERFACE)
 if (BLAS_FOUND)
-    set(ERT_HAVE_BLAS ON)
-    target_link_libraries(blas INTERFACE ${BLAS_LIBRARIES})
+    set(blas "${BLAS_LIBRARIES}")
 endif ()
 
 set(ERT_HAVE_LAPACK OFF)
 find_package(LAPACK)
-add_library(lapack INTERFACE)
 if (LAPACK_FOUND)
     set(ERT_HAVE_LAPACK ON)
-    target_link_libraries(blas INTERFACE ${LAPACK_LIBRARIES})
+    list(APPEND lapack ${LAPACK_LIBRARIES} ${LAPACK_LINKER_FLAGS})
 endif()
 
 find_package(ZLIB)
-add_library(zlib INTERFACE)
 if (ZLIB_FOUND)
     set(ERT_HAVE_ZLIB ON)
-    target_link_libraries(zlib INTERFACE ${ZLIB_LIBRARIES})
-    target_include_directories(zlib INTERFACE ${ZLIB_INCLUDE_DIRS})
+    set(zlib "${ZLIB_LIBRARIES}")
 endif ()
 
-add_library(shlwapi INTERFACE)
 find_library(SHLWAPI_LIBRARY NAMES Shlwapi)
-if (ERT_WINDWS AND SHLWAPI_LIBRARY)
-    target_link_libraries(shlwapi INTERFACE ${SHLWAPI_LIBRARY})
+if (SHLWAPI_LIBRARY)
+    set(shlwapi ${SHLWAPI_LIBRARY})
 endif ()
-
-install(TARGETS pthread dlfcn m blas lapack zlib openmp EXPORT ecl-config)
 
 #-----------------------------------------------------------------
 
@@ -317,5 +331,12 @@ if (BUILD_PYTHON)
 endif()
 
 install(EXPORT ecl-config DESTINATION share/cmake/ecl)
-export(EXPORT ecl-config FILE eclConfig.cmake)
+export(TARGETS ert_util
+               ert_geometry
+               ecl
+               ecl_well
+               FILE eclConfig.cmake)
+if (ERT_BUILD_CXX)
+    export(TARGETS ert_utilxx eclxx APPEND FILE eclConfig.cmake)
+endif ()
 export(PACKAGE ecl)

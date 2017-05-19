@@ -1,4 +1,4 @@
-project(libecl-ecl)
+project(libecl-ecl C)
 
 add_library(ecl src/ecl_rsthead.c
                 src/ecl_sum_tstep.c
@@ -44,11 +44,17 @@ add_library(ecl src/ecl_rsthead.c
 set_target_properties(ecl PROPERTIES
                           VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR}
                           SOVERSION ${ERT_VERSION_MAJOR})
-target_link_libraries(ecl ert_geometry ert_util openmp)
+target_link_libraries(ecl PUBLIC ert_geometry ert_util)
 target_include_directories(ecl
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:include>
     )
+
+if (ERT_USE_OPENMP)
+    target_compile_options(ecl PUBLIC ${OpenMP_C_FLAGS})
+    target_link_libraries( ecl PUBLIC ${OpenMP_C_FLAGS})
+    target_link_libraries( ecl PUBLIC ${OpenMP_EXE_LINKER_FLAGS})
+endif ()
 
 install(TARGETS ecl
         EXPORT  ecl-config
