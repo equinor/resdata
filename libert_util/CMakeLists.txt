@@ -1,4 +1,4 @@
-project(libecl-util)
+project(libecl-util C)
 
 if (HAVE_PTHREAD)
     # The block_fs filesystem is so heavily dependant on pthreads that it is
@@ -83,8 +83,10 @@ target_include_directories(ert_util
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
            $<INSTALL_INTERFACE:include>
+    PRIVATE ${ZLIB_INCLUDE_DIRS}
     )
-target_compile_definitions(ert_util PUBLIC
+
+target_compile_definitions(ert_util PRIVATE
             -DGIT_COMMIT=${GIT_COMMIT}
             -DGIT_COMMIT_SHORT=${GIT_COMMIT_SHORT}
             -DERT_VERSION_MAJOR=${ERT_VERSION_MAJOR}
@@ -93,10 +95,19 @@ target_compile_definitions(ert_util PUBLIC
         )
 
 if (PING_PATH)
-    target_compile_definitions(ert_util PUBLIC -DPING_CMD=${PING_PATH})
+    target_compile_definitions(ert_util PRIVATE -DPING_CMD=${PING_PATH})
 endif()
 
-target_link_libraries(ert_util PUBLIC m pthread dlfcn blas lapack zlib)
+target_link_libraries(ert_util PUBLIC ${m}
+                                      ${dl}
+                                      ${pthread}
+                                      ${blas}
+                                      ${lapack}
+                                      ${zlib}
+                                      ${shlwapi}
+                     )
+
+target_compile_options(ert_util PUBLIC ${pthreadarg})
 
 set_target_properties(ert_util PROPERTIES
                         VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR}

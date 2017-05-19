@@ -1,4 +1,4 @@
-project(libecl-utilxx)
+project(libecl-utilxx CXX)
 
 if (NOT ERT_BUILD_CXX)
     return ()
