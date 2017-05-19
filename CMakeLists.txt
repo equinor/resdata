@@ -27,6 +27,7 @@ option( INSTALL_ERT         "Should anything be installed when issuing make inst
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( ERT_DOC             "Build ERT documantation"                                 OFF)
 option( ERT_BUILD_CXX       "Build some CXX wrappers"                                 ON)
+option( USE_RPATH           "Don't strip RPATH from libraries and binaries"           OFF)
 option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF)
 
 
@@ -49,6 +50,11 @@ endif()
 # output libs to some lib/ path for testing
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
+
+if (USE_RPATH)
+    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif ()
 
 ENABLE_TESTING()
 
