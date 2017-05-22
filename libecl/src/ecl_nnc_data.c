@@ -34,47 +34,39 @@ struct ecl_nnc_data_struct {
 
 
 
-static ecl_kw_type * ecl_nnc_data_get_trangl_kw( const ecl_file_view_type * view_file, int lgr_nr ) {
+static ecl_kw_type * ecl_nnc_data_get_trangl_kw( const ecl_file_view_type * init_file, int lgr_nr ) {
   ecl_kw_type * tran_kw = NULL;
   return tran_kw;
 }
 
 
-static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * view_file) {
+static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * init_file) {
  
    data->size = ecl_nnc_geometry_size( nnc_geo );
    
    data->values = util_malloc( data->size * sizeof(double));
-
-   ecl_kw_type * trannnc_kw;
-
-   if (ecl_file_view_has_kw( view_file, TRANNNC_KW ) ) {    
-      trannnc_kw =  ecl_file_view_iget_named_kw( view_file, TRANNNC_KW , 0);
-   }
 
    for (int nnc_index = 0; nnc_index < data->size; nnc_index++) {
       ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
       int grid1 = pair->grid_nr1;
       int grid2 = pair->grid_nr2;
       if (grid1 == grid2) {
-            data->values[nnc_index] = ecl_kw_iget_as_double(trannnc_kw, pair->input_index);
+         ecl_kw_type * trannnc_kw = ecl_file_view_iget_named_kw( init_file, TRANNNC_KW , 0);
+         data->values[nnc_index] = ecl_kw_iget_as_double(trannnc_kw, pair->input_index);
       }
       else if (grid1 == 0) {
          data->values[nnc_index] = -12;
       }
       else 
          data->values[nnc_index] = -12; 
-      
    }
-   
-
 }
 
 
-ecl_nnc_data_type * ecl_nnc_data_alloc_tran(ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * view_file) {
+ecl_nnc_data_type * ecl_nnc_data_alloc_tran(ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * init_file) {
    ecl_nnc_data_type * data = util_malloc( sizeof * data );
 
-   ecl_nnc_data_set_trans(data, nnc_geo, view_file);
+   ecl_nnc_data_set_trans(data, nnc_geo, init_file);
 
    return data;
 }
@@ -98,7 +90,10 @@ double * ecl_nnc_data_get_values( const ecl_nnc_data_type * data ) {
 
 
 double ecl_nnc_data_iget_value(const ecl_nnc_data_type * data, int index) {
-    return data->values[index];
+    if (index < data->size)
+        return data->values[index];
+     else
+        util_abort("%s: index value:%d out range: [0,%d) \n",__func__ , index , data->size);
 }
 
 
