@@ -115,7 +115,10 @@ set_target_properties(ert_util PROPERTIES
                      )
 
 install(DIRECTORY include/ DESTINATION include)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/ DESTINATION include)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+        DESTINATION include
+        PATTERN *.h
+)
 install(TARGETS ert_util
         EXPORT  ecl-config
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
