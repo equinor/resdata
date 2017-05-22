@@ -34,16 +34,6 @@ struct ecl_nnc_data_struct {
 
 
 
-
-static void ecl_nnc_data_set_trans_simple(ecl_nnc_data_type * data, ecl_file_view_type * view_file) {
-   if (ecl_file_view_has_kw( view_file, TRANNNC_KW)) {
-     ecl_kw_type * tran_kw =  ecl_file_view_iget_named_kw( view_file, TRANNNC_KW, 0 );
-     for (int n = 0; n < data->size; n++)   
-        data->values[n] = ecl_kw_iget_as_double(tran_kw, n);
-   }
-}
-
-
 static ecl_kw_type * ecl_nnc_data_get_trangl_kw( const ecl_file_view_type * view_file, int lgr_nr ) {
   ecl_kw_type * tran_kw = NULL;
   return tran_kw;
@@ -52,8 +42,8 @@ static ecl_kw_type * ecl_nnc_data_get_trangl_kw( const ecl_file_view_type * view
 
 static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * view_file) {
  
-   int nnc_size = ecl_nnc_geometry_size( nnc_geo );
-   data->size = nnc_size;
+   data->size = ecl_nnc_geometry_size( nnc_geo );
+   
    data->values = util_malloc( data->size * sizeof(double));
 
    ecl_kw_type * trannnc_kw;
@@ -62,7 +52,7 @@ static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, ecl_nnc_geometry_ty
       trannnc_kw =  ecl_file_view_iget_named_kw( view_file, TRANNNC_KW , 0);
    }
 
-   for (int nnc_index = 0; nnc_index < nnc_size; nnc_index++) {
+   for (int nnc_index = 0; nnc_index < data->size; nnc_index++) {
       ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
       int grid1 = pair->grid_nr1;
       int grid2 = pair->grid_nr2;
