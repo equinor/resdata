@@ -33,7 +33,7 @@ ecl_nnc_data_type       *  ecl_nnc_data_alloc_tran(ecl_nnc_geometry_type * nnc_g
 void                       ecl_nnc_data_free(ecl_nnc_data_type * data);
 
 int                        ecl_nnc_data_get_size(ecl_nnc_data_type * data);
-double                  *  ecl_nnc_data_get_values( const ecl_nnc_data_type * data );
+const double            *  ecl_nnc_data_get_values( const ecl_nnc_data_type * data );
 
 double                     ecl_nnc_data_iget_value(const ecl_nnc_data_type * data, int index);
 

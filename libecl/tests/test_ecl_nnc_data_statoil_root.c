@@ -60,11 +60,13 @@ void test_alloc_file(char * filename) {
    index = find_index( nnc_geo, 0, 0, 48365, 118191);
    test_assert_double_equal(0.580284 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
 
-   ecl_file_view_free( view_file );
+
    ecl_nnc_geometry_free(nnc_geo);
    ecl_grid_free(grid);
+   ecl_file_close(init_file);
    free(grid_file_name);
    free(init_file_name);
+
 }
 
 

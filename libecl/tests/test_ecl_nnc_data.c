@@ -70,13 +70,13 @@ void test_alloc_global_only() {
          test_assert_true(nnc_data_size == 3);
 
          double * values = ecl_nnc_data_get_values( nnc_geo_data );
-         test_assert_true(values[0] == 0);
-         test_assert_true(values[1] == 1.5);
-         test_assert_true(values[2] == 3.0);
+         test_assert_double_equal(values[0] , 0);
+         test_assert_double_equal(values[1] , 1.5);
+         test_assert_double_equal(values[2] , 3.0);
          
          ecl_nnc_data_free( nnc_geo_data );
-         ecl_file_view_free( view_file );
          ecl_nnc_geometry_free( nnc_geo );
+         ecl_file_close(init_file);
       }
       ecl_grid_free( grid0 );
    }
