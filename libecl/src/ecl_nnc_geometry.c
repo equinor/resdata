@@ -126,3 +126,9 @@ const ecl_nnc_pair_type * ecl_nnc_geometry_iget( const ecl_nnc_geometry_type * n
 }
 
 
+bool ecl_nnc_geometry_same_kw( const ecl_nnc_pair_type * nnc1 , const ecl_nnc_pair_type * nnc2) {
+  if ((nnc1->grid_nr1 == nnc2->grid_nr1) && (nnc1->grid_nr2 == nnc2->grid_nr2))
+    return true;
+  else
+    return false;
+}

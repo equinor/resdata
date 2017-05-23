@@ -94,6 +94,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_util_month_range
                 ecl_valid_basename
                 test_ecl_nnc_data
+                ecl_nnc_pair
         )
         add_executable(${name} tests/${name}.c)
         target_link_libraries(${name} ecl)
