@@ -43,6 +43,65 @@ int find_index(ecl_nnc_geometry_type * nnc_geo, int grid1, int grid2, int indx1,
    return index;
 }
 
+void print_pair(ecl_nnc_type * exp_nnc_pairs, int n) {
+   ecl_nnc_type nnc = exp_nnc_pairs[n];
+   printf("**** grid1: %d\n", nnc.grid_nr1);
+   printf("**** grid2: %d\n", nnc.grid_nr2);
+   printf("**** indx1: %d\n", nnc.global_index1);
+   printf("**** indx2: %d\n", nnc.global_index2);
+   printf("**** trans: %f\n\n", nnc.trans); 
+}
+
+void try_out(const char * name)
+{
+   char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
+   char * init_file_name = ecl_util_alloc_filename(NULL , name , ECL_INIT_FILE , false  , -1);
+   ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
+   ecl_file_type * grid_file = ecl_file_open( grid_file_name , 0 );
+   ecl_file_type * init_file = ecl_file_open( init_file_name , 0 );
+   ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
+   int nnc_size = ecl_nnc_geometry_size( nnc_geo );
+   ecl_nnc_type * exp_nnc_pairs = util_malloc(nnc_size * sizeof * exp_nnc_pairs);
+   ecl_nnc_export(grid, init_file, exp_nnc_pairs );
+
+   printf("**** size : %d\n\n", nnc_size);
+   print_pair(exp_nnc_pairs, 0);
+   print_pair(exp_nnc_pairs, 3000);
+   print_pair(exp_nnc_pairs, 10000);
+   print_pair(exp_nnc_pairs, 20000);
+   print_pair(exp_nnc_pairs, 30000);
+   print_pair(exp_nnc_pairs, 40000);
+   print_pair(exp_nnc_pairs, 47927);
+
+}
+
+
+void check_if_init_file(char * filename) {
+   char * grid_file_name = ecl_util_alloc_filename(NULL , filename , ECL_EGRID_FILE , false  , -1);
+   char * init_file_name = ecl_util_alloc_filename(NULL , filename , ECL_INIT_FILE , false  , -1);
+   ecl_file_type * init_file = ecl_file_open( init_file_name , 0 );
+   ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
+   ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
+
+   int nnc_size = ecl_nnc_geometry_size( nnc_geo );
+   bool found = false;
+   for (int n = 0; n < nnc_size; n++) {
+      ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, n );
+      if (pair->grid_nr1 == pair->grid_nr2 && pair->grid_nr1 != 0)
+         found = true;
+   }
+   if (found)
+      printf(" ******************** FILE found: grid1 == grid2 != 0 \n");
+   else
+      printf(" ************************ NO SUCH FILE WAS FOUND\n");
+
+   ecl_nnc_geometry_free(nnc_geo);
+   ecl_grid_free(grid);
+   ecl_file_close(init_file);
+   free(grid_file_name);
+   free(init_file_name);
+}
+
 void test_alloc_file(char * filename) {
    char * grid_file_name = ecl_util_alloc_filename(NULL , filename , ECL_EGRID_FILE , false  , -1);
    char * init_file_name = ecl_util_alloc_filename(NULL , filename , ECL_INIT_FILE , false  , -1);
@@ -63,6 +122,8 @@ void test_alloc_file(char * filename) {
    index = find_index( nnc_geo, 0, 19, 42830, 211);
    test_assert_double_equal(0.571021 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
 
+   index = find_index( nnc_geo, 0, 79, 132406, 76);
+   test_assert_double_equal(37.547710 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
 
    ecl_nnc_geometry_free(nnc_geo);
    ecl_grid_free(grid);
@@ -73,8 +134,9 @@ void test_alloc_file(char * filename) {
 }
 
 
-
 int main(int argc , char ** argv) {
+   //try_out(argv[1]);
    test_alloc_file(argv[1]);
+   //check_if_init_file(argv[2]);
    return 0;
 }
