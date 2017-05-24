@@ -43,6 +43,7 @@ int find_index(ecl_nnc_geometry_type * nnc_geo, int grid1, int grid2, int indx1,
    return index;
 }
 
+
 void test_alloc_file(char * filename) {
    char * grid_file_name = ecl_util_alloc_filename(NULL , filename , ECL_EGRID_FILE , false  , -1);
    char * init_file_name = ecl_util_alloc_filename(NULL , filename , ECL_INIT_FILE , false  , -1);
@@ -51,8 +52,10 @@ void test_alloc_file(char * filename) {
    ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
    ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
 
-   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(nnc_geo, view_file);
+   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid, nnc_geo, view_file);
    
+   //These numerical values are hand-tuned the specific input file at:
+   //${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
    int index;
    index = find_index( nnc_geo, 0, 0, 541, 14507);
    test_assert_double_equal(13.784438, ecl_nnc_data_iget_value( nnc_geo_data, index) );   
@@ -60,6 +63,20 @@ void test_alloc_file(char * filename) {
    index = find_index( nnc_geo, 0, 0, 48365, 118191);
    test_assert_double_equal(0.580284 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
 
+   index = find_index( nnc_geo, 0, 19, 42830, 211);
+   test_assert_double_equal(0.571021 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
+
+   index = find_index( nnc_geo, 0, 79, 132406, 76);
+   test_assert_double_equal(37.547710 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
+
+   index = find_index( nnc_geo, 18, 12, 303, 115);
+   test_assert_double_equal(0.677443 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
+
+   index = find_index( nnc_geo, 72, 71, 255, 179);
+   test_assert_double_equal(0.045813 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
+
+   index = find_index( nnc_geo, 110, 109, 271, 275);
+   test_assert_double_equal(16.372242 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
 
    ecl_nnc_geometry_free(nnc_geo);
    ecl_grid_free(grid);
@@ -68,7 +85,6 @@ void test_alloc_file(char * filename) {
    free(init_file_name);
 
 }
-
 
 
 int main(int argc , char ** argv) {

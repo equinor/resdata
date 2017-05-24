@@ -29,7 +29,7 @@ extern "C" {
 
 typedef struct ecl_nnc_data_struct ecl_nnc_data_type;
 
-ecl_nnc_data_type       *  ecl_nnc_data_alloc_tran(ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * view_file);
+ecl_nnc_data_type * ecl_nnc_data_alloc_tran(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file);
 void                       ecl_nnc_data_free(ecl_nnc_data_type * data);
 
 int                        ecl_nnc_data_get_size(ecl_nnc_data_type * data);

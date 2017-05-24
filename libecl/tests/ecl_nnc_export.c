@@ -28,6 +28,7 @@
 #include <ert/ecl/ecl_nnc_geometry.h>
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_file_view.h>
+#include <ert/ecl/ecl_nnc_data.h>
 
 
 
@@ -234,6 +235,9 @@ void test_export(const char * name, bool have_tran_data) {
 
     {
       ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
+      ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
+      ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid, nnc_geo, view_file);
+     
       test_assert_int_equal( ecl_nnc_export_get_size( grid ), ecl_nnc_geometry_size( nnc_geo ));
       for (int i=0; i < ecl_nnc_geometry_size( nnc_geo ); i++) {
         const ecl_nnc_pair_type *nnc_pair = ecl_nnc_geometry_iget( nnc_geo , i );
@@ -243,7 +247,10 @@ void test_export(const char * name, bool have_tran_data) {
         test_assert_int_equal( nnc_pair->grid_nr2      , nnc1->grid_nr2 );
         test_assert_int_equal( nnc_pair->global_index1 , nnc1->global_index1 );
         test_assert_int_equal( nnc_pair->global_index2 , nnc1->global_index2 );
+        test_assert_double_equal(ecl_nnc_data_iget_value(nnc_geo_data, i), nnc1->trans);
+
       }
+      ecl_nnc_data_free (nnc_geo_data );
       ecl_nnc_geometry_free( nnc_geo );
     }
 
