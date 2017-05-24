@@ -54,6 +54,8 @@ void test_alloc_file(char * filename) {
 
    ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid, nnc_geo, view_file);
    
+   //These numerical values are hand-tuned the specific input file at:
+   //${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
    int index;
    index = find_index( nnc_geo, 0, 0, 541, 14507);
    test_assert_double_equal(13.784438, ecl_nnc_data_iget_value( nnc_geo_data, index) );   
