@@ -140,18 +140,6 @@ static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, const ecl_grid_type
          tran_kw = ecl_nnc_data_get_tranx_kw( grid, init_file, grid1 , grid2);
       }
       data->values[nnc_index] = ecl_kw_iget_as_double(tran_kw, pair->input_index);
-
-
-      /*if (grid1 == 0 || grid2 == 0) {
-         if (grid1 != current_grid1 || grid2 != current_grid2) {
-             current_grid1 = grid1;
-             current_grid2 = grid2;
-             tran_kw = ecl_nnc_data_get_tranx_kw( grid, init_file, grid1 , grid2);
-         }
-         data->values[nnc_index] = ecl_kw_iget_as_double(tran_kw, pair->input_index);
-      }
-      else 
-         data->values[nnc_index] = -12; */
       
    }
 }
