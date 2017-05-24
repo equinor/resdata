@@ -83,31 +83,73 @@ static ecl_kw_type * ecl_nnc_data_get_tran_kw( const ecl_file_view_type * init_f
 }
 
 
+static ecl_kw_type * ecl_nnc_data_get_tranll_kw( const ecl_grid_type * grid , const ecl_file_type * init_file ,  int lgr_nr1, int lgr_nr2 ) {
+  const char * lgr_name1 = ecl_grid_get_lgr_name( grid , lgr_nr1 );
+  const char * lgr_name2 = ecl_grid_get_lgr_name( grid , lgr_nr2 );
+
+  ecl_kw_type * tran_kw = NULL;
+  const int file_num_kw = ecl_file_get_size( init_file );
+  int global_kw_index = 0;
+
+  while (true) {
+    if (global_kw_index >= file_num_kw)
+      break;
+    {
+      ecl_kw_type * ecl_kw = ecl_file_iget_kw( init_file , global_kw_index );
+      if (strcmp( LGRJOIN_KW , ecl_kw_get_header( ecl_kw)) == 0) {
+
+        if (ecl_kw_icmp_string( ecl_kw , 0 , lgr_name1) && ecl_kw_icmp_string( ecl_kw , 1 , lgr_name2)) {
+          tran_kw = ecl_file_iget_kw( init_file , global_kw_index + 1);
+          break;
+        }
+      }
+      global_kw_index++;
+    }
+  }
+
+  return tran_kw;
+}
+
+
+static ecl_kw_type * ecl_nnc_data_get_tranx_kw( const ecl_file_view_type * init_file_view, int lgr_nr1, int lgr_nr2 ) {
+  if (lgr_nr1 == lgr_nr2)
+    return ecl_nnc_data_get_tran_kw( init_file_view , TRANNNC_KW , lgr_nr2 );
+  else {
+    if (lgr_nr1 == 0)
+      return ecl_nnc_data_get_tran_kw( init_file_view , TRANGL_KW , lgr_nr2 );
+    /*else
+      return ecl_nnc_export_get_tranll_kw( grid , init_file , lgr_nr1 , lgr_nr2 );*/
+  }
+}
+
+
 static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * init_file) {
 
+   int current_grid1 = -1;
+   int current_grid2 = -1;
+   ecl_kw_type * tran_kw = NULL;
+   
    for (int nnc_index = 0; nnc_index < data->size; nnc_index++) {
       ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
       int grid1 = pair->grid_nr1;
       int grid2 = pair->grid_nr2;
-      ecl_kw_type * global_trannnc_kw = ecl_file_view_iget_named_kw( init_file, TRANNNC_KW , 0);
-      if (grid1 == grid2) {
-         if (grid1 == 0) {
-            data->values[nnc_index] = ecl_kw_iget_as_double(global_trannnc_kw, pair->input_index);
+     
+      if (grid1 == 0 || grid2 == 0) {
+         if (grid1 != current_grid1 || grid2 != current_grid2) {
+             current_grid1 = grid1;
+             current_grid2 = grid2;
+             tran_kw = ecl_nnc_data_get_tranx_kw( init_file, grid1 , grid2);
          }
-         else
-            data->values[nnc_index] = -12;
-      }
-      else if (grid1 == 0) {
-         ecl_kw_type *  tran_kw = ecl_nnc_data_get_tran_kw( init_file, TRANGL_KW , grid2);
          data->values[nnc_index] = ecl_kw_iget_as_double(tran_kw, pair->input_index);
       }
       else 
          data->values[nnc_index] = -12; 
+      
    }
 }
 
 
-ecl_nnc_data_type * ecl_nnc_data_alloc_tran(ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * init_file, ecl_file_type * DEBUG_FILE) {
+ecl_nnc_data_type * ecl_nnc_data_alloc_tran(ecl_nnc_geometry_type * nnc_geo, ecl_file_view_type * init_file) {
    ecl_nnc_data_type * data = util_malloc( sizeof * data );
 
    data->size = ecl_nnc_geometry_size( nnc_geo );

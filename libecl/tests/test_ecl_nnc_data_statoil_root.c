@@ -110,7 +110,7 @@ void test_alloc_file(char * filename) {
    ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
    ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
 
-   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(nnc_geo, view_file, init_file);
+   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(nnc_geo, view_file);
    
    int index;
    index = find_index( nnc_geo, 0, 0, 541, 14507);
@@ -124,6 +124,9 @@ void test_alloc_file(char * filename) {
 
    index = find_index( nnc_geo, 0, 79, 132406, 76);
    test_assert_double_equal(37.547710 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
+
+   //index = find_index( nnc_geo, 18, 12, 303, 115);
+   //test_assert_double_equal(0.677443 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
 
    ecl_nnc_geometry_free(nnc_geo);
    ecl_grid_free(grid);
