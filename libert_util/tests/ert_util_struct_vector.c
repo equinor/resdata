@@ -53,11 +53,10 @@ void test_create_invalid() {
 }
 
 void test_append_iget() {
-  struct test_struct d1,d2;
+  struct test_struct d1 = (struct test_struct) {.x = 100, .y = 99, .z = 234};
+  struct test_struct d2 = (struct test_struct) {.x = 0, .y = 0, .z = 0};
+
   struct_vector_type * struct_vector = struct_vector_alloc( sizeof d1 );
-  d1.x = 100;
-  d1.y = 99;
-  d1.z = 234;
 
   struct_vector_append( struct_vector , &d1 );
   test_assert_int_equal( struct_vector_get_size( struct_vector ) , 1 );
