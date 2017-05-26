@@ -58,7 +58,7 @@ if (BUILD_ECL_SUMMARY)
    target_link_libraries(ecl_summary ecl)
    list(APPEND apps ecl_summary)
 
-   install(FILES ${PROJECT_SOURCE_DIR}/docs/man/man1/ecl_summary.1
+   install(FILES ${PROJECT_SOURCE_DIR}/man/man1/ecl_summary.1
            DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endif()
 
