@@ -23,7 +23,6 @@ option( BUILD_APPLICATIONS  "Should we build small utility applications"        
 option( BUILD_ECL_SUMMARY   "Build the commandline application ecl_summary"           OFF)
 option( BUILD_PYTHON        "Run py_compile on the python wrappers"                   ON )
 option( BUILD_SHARED_LIBS   "Build shared libraries"                                  ON )
-option( INSTALL_ERT         "Should anything be installed when issuing make install?" ON )
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( ERT_DOC             "Build ERT documantation"                                 OFF)
 option( ERT_BUILD_CXX       "Build some CXX wrappers"                                 ON)
