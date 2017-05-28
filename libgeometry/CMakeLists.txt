@@ -6,7 +6,7 @@ add_library(ert_geometry src/geo_surface.c
                          src/geo_region.c
                          src/geo_polygon.c
                          src/geo_polygon_collection.c)
-target_include_directories(ert_util
+target_include_directories(ert_geometry
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:include>
     )
