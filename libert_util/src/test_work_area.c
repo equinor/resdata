@@ -211,7 +211,7 @@ static char * test_work_area_alloc_prefix( ) {
   if (!prefix_path)
     prefix_path = _PATH_TMP;
 
-  return util_alloc_string_copy( prefix_path );
+  return util_alloc_realpath(prefix_path);
 
 #endif
 }
