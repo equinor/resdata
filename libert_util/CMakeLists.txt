@@ -68,6 +68,7 @@ add_library(ert_util src/rng.c
                      src/node_ctype.c
                      src/util.c
                      src/util_env.c
+                     src/util_symlink.c
                      src/msg.c
                      src/arg_pack.c
                      src/path_fmt.c

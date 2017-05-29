@@ -5196,20 +5196,6 @@ void util_time_utc( time_t * t , struct tm * ts ) {
 #endif
 }
 
-#ifdef ERT_HAVE_SYMLINK
-#include "util_symlink.c"
-#else
-bool util_is_link(const char * path) {
-  return false;
-}
-
-char * util_alloc_link_target(const char * link) {
-  return util_alloc_string_copy( link );
-}
-#endif
-
-
-
 #ifdef HAVE_BACKTRACE
 #include "util_abort_gnu.c"
 #else

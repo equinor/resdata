@@ -1,9 +1,25 @@
-/*
-  This file contains utility functions all related to symbolic links;
-  this file is not compiled at all on platforms which do not have the
-  symlink() call.  
-*/
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include "ert/util/build_config.h"
+#include <ert/util/ert_api_config.h>
+#include <ert/util/util.h>
+
+#ifndef ERT_HAVE_SYMLINK
+
+bool util_is_link(const char * path) {
+  return false;
+}
+
+char * util_alloc_link_target(const char * link) {
+  return util_alloc_string_copy( link );
+}
+
+#else
+
+#include <dirent.h>
+#include <unistd.h>
 
 void util_make_slink(const char *target , const char * link) {
   if (util_file_exists(link)) {
@@ -124,3 +140,4 @@ char * util_alloc_atlink_target(const char * path , const char * link) {
 }
 #endif
 
+#endif // ERT_HAVE_SYMLINK
