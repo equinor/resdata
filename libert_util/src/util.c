@@ -5196,10 +5196,6 @@ void util_time_utc( time_t * t , struct tm * ts ) {
 #endif
 }
 
-#ifdef ERT_HAVE_GETUID
-#include "util_getuid.c"
-#endif
-
 #ifdef ERT_HAVE_LOCKF
 #include "util_lockf.c"
 #endif

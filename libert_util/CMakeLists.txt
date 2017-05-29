@@ -16,8 +16,9 @@ if (LAPACK_FOUND)
         )
 endif ()
 
+
 if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
-    list(APPEND opt_srcs src/test_work_area.c)
+    list(APPEND opt_srcs src/test_work_area.c src/util_getuid.c)
 endif()
 
 if (ERT_HAVE_SPAWN)

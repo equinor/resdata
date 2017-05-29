@@ -1,3 +1,12 @@
+#include <stdlib.h>
+#include <string.h>
+
+#include <ert/util/util.h>
+
+#include <dirent.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 uid_t util_get_entry_uid( const char * file ) {
   stat_type buffer;
   util_stat( file , &buffer);
