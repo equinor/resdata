@@ -1,6 +1,17 @@
-dist: trusty
-sudo: false
 language: c
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - os: osx
+  include:
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+    - os: linux
+      sudo: false
+      compiler: gcc
+      dist: trusty
 
 addons:
   apt:
@@ -11,6 +22,9 @@ addons:
     - valgrind
     - gcc-4.8
     - g++-4.8
+    - clang
+    - cmake
+    - cmake-data
 
 env:
   global:
@@ -18,7 +32,22 @@ env:
 
 install:
 - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
-- wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+- export TRAVIS_PYTHON_VERSION="2.7"
+# We do this conditionally because it saves us some downloading if the version is the same.
+- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  else
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  fi
+
 - bash miniconda.sh -b -p $HOME/miniconda
 - export CONDA_HOME="$HOME/miniconda"
 - export PATH="$CONDA_HOME/bin:$PATH"
