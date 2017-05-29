@@ -2,10 +2,14 @@
    This file implements a simpler version of the util_abort() function
    which does not present a backtrace.
 */
+#include <stdio.h>
+#include <stdarg.h>
+
 #include <assert.h>
+#include <signal.h>
 
-
-
+char * __abort_program_message;
+char * __current_executable;
 
 
 

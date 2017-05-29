@@ -38,14 +38,6 @@
 #include <ert/util/ert_api_config.h>
 #include "ert/util/build_config.h"
 
-
-#ifdef HAVE_BACKTRACE
-#define __USE_GNU       // Must be defined to get access to the dladdr() function; Man page says the symbol should be: _GNU_SOURCE but that does not seem to work?
-#define _GNU_SOURCE     // Must be defined _before_ #include <errno.h> to get the symbol 'program_invocation_name'.
-#include <dlfcn.h>
-#endif
-
-
 #include <errno.h>
 
 #include <stdint.h>
@@ -77,10 +69,6 @@
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>
-#endif
-
-#ifdef HAVE_EXECINFO
-#include <execinfo.h>
 #endif
 
 #ifdef HAVE_FTRUNCATE
@@ -5078,9 +5066,9 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 }
 
 
-static char * __abort_program_message = NULL;                      /* Can use util_abort_append_version_info() to fill this with
-                                                                      version info+++ wich will be printed when util_abort() is called. */
-static char * __current_executable    = NULL;
+char * __abort_program_message = NULL;                      /* Can use util_abort_append_version_info() to fill this with
+                                                               version info+++ wich will be printed when util_abort() is called. */
+char * __current_executable    = NULL;
 
 
 void util_abort_append_version_info(const char * msg) {
@@ -5195,13 +5183,6 @@ void util_time_utc( time_t * t , struct tm * ts ) {
   memcpy( ts , ts_shared , sizeof * ts );
 #endif
 }
-
-#ifdef HAVE_BACKTRACE
-#include "util_abort_gnu.c"
-#else
-#include "util_abort_simple.c"
-#endif
-
 
 #ifdef ERT_HAVE_OPENDIR
 #include "util_opendir.c"

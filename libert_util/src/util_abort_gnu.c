@@ -26,7 +26,23 @@
   This function is purely a helper function for util_abort().
 */
 
+#define __USE_GNU       // Must be defined to get access to the dladdr() function; Man page says the symbol should be: _GNU_SOURCE but that does not seem to work?
+#define _GNU_SOURCE     // Must be defined _before_ #include <errno.h> to get the symbol 'program_invocation_name'.
+
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <ert/util/util.h>
+
+#include <stdbool.h>
+
+#include <dlfcn.h>
+#include <execinfo.h>
+#include <pthread.h>
 #include <pwd.h>
+#include <signal.h>
+#include <unistd.h>
 
 #if !defined(__GLIBC__)         /* note: not same as __GNUC__ */
 #  if defined (__APPLE__)
@@ -227,6 +243,8 @@ void util_abort_test_set_intercept_function(const char * function) {
   intercept_function = util_realloc_string_copy( intercept_function , function );
 }
 
+char* __abort_program_message;
+char* __current_executable;
 
 void util_abort__(const char * file , const char * function , int line , const char * fmt , ...) {
   util_abort_test_intercept( function );

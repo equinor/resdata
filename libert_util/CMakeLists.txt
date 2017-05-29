@@ -16,6 +16,11 @@ if (LAPACK_FOUND)
         )
 endif ()
 
+if (HAVE_BACKTRACE)
+    list(APPEND opt_srcs src/util_abort_gnu.c)
+else()
+    list(APPEND opt_srcs src/util_abort_simple.c)
+endif()
 
 if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
     list(APPEND opt_srcs src/test_work_area.c src/util_getuid.c)
