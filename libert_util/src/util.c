@@ -5459,8 +5459,6 @@ char * util_alloc_parent_path( const char * path) {
   return parent_path;
 }
 
-#include "util_lfs.c"
-
 #ifdef ERT_HAVE_UNISTD
 
 int util_type_get_id( const void * data ) {

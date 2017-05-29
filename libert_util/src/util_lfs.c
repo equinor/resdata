@@ -53,6 +53,8 @@
   'offset_type' in util.h, and all file operations should use that type.
 */
 
+#include <ert/util/util.h>
+
 offset_type util_ftell(FILE * stream) {
 #ifdef ERT_WINDOWS_LFS
   return _ftelli64(stream);
