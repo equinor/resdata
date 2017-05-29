@@ -58,10 +58,6 @@ if (ZLIB_FOUND)
     list(APPEND opt_srcs src/util_zlib.c)
 endif ()
 
-if (ZLIB_FOUND)
-    list(APPEND opt_srcs src/util_zlib.c)
-endif ()
-
 configure_file(build_config.h.in   include/ert/util/build_config.h)
 configure_file(ert_api_config.h.in include/ert/util/ert_api_config.h)
 

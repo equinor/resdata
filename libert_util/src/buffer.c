@@ -804,10 +804,131 @@ void buffer_store(const buffer_type * buffer , const char * filename) {
   fclose( stream );
 }
 
+/*
+   The functions buffer_fread_string() and buffer_fwrite_string()
+   should not be used; the embedded integer just creates chaos and
+   should the sole responsability of the calling scope.
+*/
 
-#include "buffer_string.c"
+/**
+   Storing strings:
+   ----------------
+
+   When storing a string (\0 terminated char pointer) what is actually
+   written to the buffer is
+
+     1. The length of the string - as returned from strlen().
+     2. The string content INCLUDING the terminating \0.
+
+
+*/
+
+
+/**
+   This function will return a pointer to the current position in the
+   buffer, and advance the buffer position forward until a \0
+   terminater is found. If \0 is not found the thing will abort().
+
+   Observe that the return value will point straight into the buffer,
+   this is highly volatile memory, and in general it will be safer to
+   use buffer_fread_alloc_string() to get a copy of the string.
+*/
+
+const char * buffer_fread_string(buffer_type * buffer) {
+  int    string_length = buffer_fread_int( buffer );
+  char * string_ptr    = &buffer->data[buffer->pos];
+  char   c;
+  buffer_fskip( buffer , string_length );
+  c = buffer_fread_char( buffer );
+  if (c != '\0')
+    util_abort("%s: internal error - malformed string representation in buffer \n",__func__);
+  return string_ptr;
+}
+
+
+
+char * buffer_fread_alloc_string(buffer_type * buffer) {
+  return util_alloc_string_copy( buffer_fread_string( buffer ));
+}
+
+/**
+   Observe that this function writes a leading integer string length.
+*/
+void buffer_fwrite_string(buffer_type * buffer , const char * string) {
+  buffer_fwrite_int( buffer , strlen( string ));               /* Writing the length of the string */
+  buffer_fwrite(buffer , string , 1 , strlen( string ) + 1);   /* Writing the string content ** WITH ** the terminating \0 */
+}
 
 #ifdef ERT_HAVE_ZLIB
-#include "buffer_zlib.c"
-#endif
+#include <zlib.h>
 
+/**
+  Unfortunately the old RedHat3 computers have a zlib version which
+  does not have the compressBound function. For that reason the
+  compressBound function from a 1.2xx version of zlib is pasted in
+  here verbatim:
+  */
+
+
+/* Snipped from zlib source code: */
+static size_t __compress_bound (size_t sourceLen)
+{
+    return sourceLen + (sourceLen >> 12) + (sourceLen >> 14) + 11;
+}
+
+
+/**
+  Return value is the size (in bytes) of the compressed buffer.
+  */
+size_t buffer_fwrite_compressed(buffer_type * buffer, const void * ptr , size_t byte_size) {
+    size_t compressed_size = 0;
+    bool abort_on_error    = true;
+    buffer->content_size   = buffer->pos;   /* Invalidating possible buffer content coming after the compressed content; that is uninterpretable anyway. */
+
+    if (byte_size > 0) {
+        size_t remaining_size = buffer->alloc_size - buffer->pos;
+        size_t compress_bound = __compress_bound( byte_size );
+        if (compress_bound > remaining_size)
+            buffer_resize__(buffer , remaining_size + compress_bound , abort_on_error);
+
+        compressed_size = buffer->alloc_size - buffer->pos;
+        util_compress_buffer( ptr , byte_size , &buffer->data[buffer->pos] , &compressed_size);
+        buffer->pos          += compressed_size;
+        buffer->content_size += compressed_size;
+    }
+
+    return compressed_size;
+}
+
+
+/**
+  Return value is the size of the uncompressed buffer.
+  */
+size_t buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , void * target_ptr , size_t target_size) {
+    size_t remaining_size    = buffer->content_size - buffer->pos;
+    size_t uncompressed_size = target_size;
+    if (remaining_size < compressed_size)
+        util_abort("%s: trying to read beyond end of buffer\n",__func__);
+
+
+    if (compressed_size > 0) {
+        int uncompress_result = uncompress(target_ptr , &uncompressed_size , (unsigned char *) &buffer->data[buffer->pos] , compressed_size);
+        if (uncompress_result != Z_OK) {
+            fprintf(stderr,"%s: ** Warning uncompress result:%d != Z_OK.\n" , __func__ , uncompress_result);
+            /**
+              According to the zlib documentation:
+
+              1. Values > 0 are not errors - just rare events?
+              2. The value Z_BUF_ERROR is not fatal - we let that pass?!
+              */
+            if (uncompress_result < 0 && uncompress_result != Z_BUF_ERROR)
+                util_abort("%s: fatal uncompress error: %d \n",__func__ , uncompress_result);
+        }
+    } else
+        uncompressed_size = 0;
+
+    buffer->pos += compressed_size;
+    return uncompressed_size;
+}
+
+#endif // ERT_HAVE_ZLIB
