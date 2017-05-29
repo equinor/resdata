@@ -24,6 +24,7 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fault_block_layer.h>
+#include <ert/ecl/fault_block.h>
 #include <ert/ecl/layer.h>
 
 #define FAULT_BLOCK_LAYER_ID 2297476
@@ -34,21 +35,18 @@
    the fault_block.c file; however the fault blocks should be closely
    linked to the layer object in the fault_block_layer structure - it
    is therefor not possible/legal to create a fault block instance by
-   itself. To support that encapsulation the fault_block.c file is
-   included here, and the functions:
+   itself. To support that encapsulation the fault_block.c file is included
+   here, and the functions:
 
      fault_block_alloc();
      fault_block_free();
 
    Which must be called through the fault_block_layer class are made
-   static.
+   declared here.
 */
 
-static fault_block_type * fault_block_alloc( const fault_block_layer_type * parent_layer , int block_id );
-static void               fault_block_free( fault_block_type * block );
-
-#include "fault_block.c"
-
+fault_block_type * fault_block_alloc( const fault_block_layer_type * parent_layer ,  int block_id );
+void               fault_block_free( fault_block_type * block,  int block_id );
 
 struct fault_block_layer_struct {
   UTIL_TYPE_ID_DECLARATION;

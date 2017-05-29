@@ -26,6 +26,7 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fault_block.h>
+#include <ert/ecl/fault_block_layer.h>
 #include <ert/ecl/layer.h>
 
 #define FAULT_BLOCK_ID 3297376
@@ -50,7 +51,7 @@ UTIL_IS_INSTANCE_FUNCTION( fault_block , FAULT_BLOCK_ID )
 static UTIL_SAFE_CAST_FUNCTION( fault_block , FAULT_BLOCK_ID )
 
 
-static fault_block_type * fault_block_alloc( const fault_block_layer_type * parent_layer ,  int block_id ) {
+fault_block_type * fault_block_alloc( const fault_block_layer_type * parent_layer ,  int block_id ) {
   fault_block_type * block = util_malloc( sizeof * block );
   UTIL_TYPE_ID_INIT( block , FAULT_BLOCK_ID );
   block->parent_layer = parent_layer;
@@ -77,7 +78,7 @@ int fault_block_get_id( const fault_block_type * block ) {
 }
 
 
-static void fault_block_free( fault_block_type * block ) {
+void fault_block_free( fault_block_type * block ) {
   int_vector_free( block->i_list );
   int_vector_free( block->j_list );
   int_vector_free( block->region_list );

@@ -37,6 +37,7 @@ add_library(ecl src/ecl_rsthead.c
                 src/ecl_nnc_data.c
                 src/ecl_nnc_geometry.c
                 src/layer.c
+                src/fault_block.c
                 src/fault_block_layer.c
                 src/ecl_type.c
                 src/ecl_type_python.c
