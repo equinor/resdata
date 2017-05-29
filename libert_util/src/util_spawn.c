@@ -1,5 +1,17 @@
-#include <spawn.h>
+#include <ert/util/ert_api_config.h>
+#include "ert/util/build_config.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+#include <fcntl.h>
 #include <pthread.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#include <ert/util/util.h>
+
 extern char **environ;
 
 

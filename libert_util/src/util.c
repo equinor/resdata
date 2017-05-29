@@ -5196,14 +5196,6 @@ void util_time_utc( time_t * t , struct tm * ts ) {
 #endif
 }
 
-
-
-
-
-#ifdef ERT_HAVE_SPAWN
-#include "util_spawn.c"
-#endif
-
 #ifdef ERT_HAVE_ZLIB
 #include "util_zlib.c"
 #endif

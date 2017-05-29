@@ -20,6 +20,10 @@ if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
     list(APPEND opt_srcs src/test_work_area.c)
 endif()
 
+if (ERT_HAVE_SPAWN)
+    list(APPEND opt_srcs src/util_spawn.c)
+endif()
+
 if (ERT_HAVE_UNISTD)
    list(APPEND opt_srcs src/path_stack.c)
 endif ()
@@ -35,6 +39,10 @@ foreach (type int double bool long time_t size_t float)
     configure_file(src/vector_template.c ${type}_vector.c)
     list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)
 endforeach ()
+
+if (ZLIB_FOUND)
+    list(APPEND opt_srcs src/util_zlib.c)
+endif ()
 
 configure_file(build_config.h.in   include/ert/util/build_config.h)
 configure_file(ert_api_config.h.in include/ert/util/ert_api_config.h)
