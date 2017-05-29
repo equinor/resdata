@@ -5196,11 +5196,6 @@ void util_time_utc( time_t * t , struct tm * ts ) {
 #endif
 }
 
-#ifdef ERT_HAVE_LOCKF
-#include "util_lockf.c"
-#endif
-
-
 #include "util_env.c"
 
 #ifdef ERT_HAVE_SYMLINK

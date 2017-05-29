@@ -1,3 +1,12 @@
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <ert/util/util.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+
 /** 
     This function will TRY to aquire an exclusive lock to the file
     filename. If the file does not exist it will be created. The mode

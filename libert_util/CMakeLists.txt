@@ -25,6 +25,10 @@ if (ERT_HAVE_SPAWN)
     list(APPEND opt_srcs src/util_spawn.c)
 endif()
 
+if (ERT_HAVE_LOCKF)
+    list(APPEND opt_srcs src/util_lockf.c)
+endif ()
+
 if (ERT_HAVE_UNISTD)
    list(APPEND opt_srcs src/path_stack.c)
 endif ()
