@@ -1,3 +1,13 @@
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <ert/util/util.h>
+
+#include <dirent.h>
+#include <sys/types.h>
+
+bool util_copy_file__(const char * src_file , const char * target_file, size_t buffer_size , void * buffer , bool abort_on_error);
 
 static void util_copy_directory__(const char * src_path , const char * target_path , int buffer_size , void * buffer ) {
   if (!util_is_directory(src_path))

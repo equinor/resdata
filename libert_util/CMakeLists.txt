@@ -26,6 +26,10 @@ if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
     list(APPEND opt_srcs src/test_work_area.c src/util_getuid.c)
 endif()
 
+if (ERT_HAVE_OPENDIR)
+    list(APPEND opt_srcs src/util_opendir.c)
+endif()
+
 if (ERT_HAVE_SPAWN)
     list(APPEND opt_srcs src/util_spawn.c)
 endif()

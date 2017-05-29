@@ -43,13 +43,8 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <signal.h>
 #include <sys/stat.h>
-
-#ifdef ERT_HAVE_OPENDIR
-#include <dirent.h>
-#endif
 
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
@@ -2269,7 +2264,7 @@ bool util_copy_stream(FILE *src_stream , FILE *target_stream , size_t buffer_siz
 }
 
 
-static bool util_copy_file__(const char * src_file , const char * target_file, size_t buffer_size , void * buffer , bool abort_on_error) {
+bool util_copy_file__(const char * src_file , const char * target_file, size_t buffer_size , void * buffer , bool abort_on_error) {
   if (util_same_file(src_file , target_file)) {
     fprintf(stderr,"%s Warning: trying to copy %s onto itself - nothing done\n",__func__ , src_file);
     return false;
@@ -5183,11 +5178,6 @@ void util_time_utc( time_t * t , struct tm * ts ) {
   memcpy( ts , ts_shared , sizeof * ts );
 #endif
 }
-
-#ifdef ERT_HAVE_OPENDIR
-#include "util_opendir.c"
-#endif
-
 
 #ifdef HAVE_ROUND
 int util_roundf( float x ) { return roundf(x); }
