@@ -3,25 +3,25 @@ project(libecl-util C)
 if (HAVE_PTHREAD)
     # The block_fs filesystem is so heavily dependant on pthreads that it is
     # not built if de not have pthreads.
-    list(APPEND thread_srcs src/thread_pool.c src/block_fs.c)
+    list(APPEND opt_srcs src/thread_pool.c src/block_fs.c)
 endif ()
 
 if (LAPACK_FOUND)
-    list(APPEND lapack_srcs src/matrix_lapack.c
-                            src/matrix_blas.c
-                            src/matrix_stat.c
-                            src/regression.c
-                            src/lars.c
-                            src/stepwise.c
+    list(APPEND opt_srcs src/matrix_lapack.c
+                         src/matrix_blas.c
+                         src/matrix_stat.c
+                         src/regression.c
+                         src/lars.c
+                         src/stepwise.c
         )
 endif ()
 
 if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
-    list(APPEND test_area src/test_work_area.c)
+    list(APPEND opt_srcs src/test_work_area.c)
 endif()
 
 if (ERT_HAVE_UNISTD)
-   list(APPEND stack_srcs src/path_stack.c)
+   list(APPEND opt_srcs src/path_stack.c)
 endif ()
 
 if (MSVC)
@@ -33,7 +33,7 @@ foreach (type int double bool long time_t size_t float)
     configure_file(include/ert/util/vector_template.h
                    include/ert/util/${type}_vector.h)
     configure_file(src/vector_template.c ${type}_vector.c)
-    list(APPEND vector_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)
+    list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)
 endforeach ()
 
 configure_file(build_config.h.in   include/ert/util/build_config.h)
@@ -72,11 +72,7 @@ add_library(ert_util src/rng.c
                      src/struct_vector.c
                      src/perm_vector.c
                      src/test_util.c
-                     ${vector_srcs}
-                     ${thread_srcs}
-                     ${test_area}
-                     ${lapack_srcs}
-                     ${stack_srcs}
+                     ${opt_srcs}
            )
 
 target_include_directories(ert_util
