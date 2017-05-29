@@ -37,8 +37,13 @@ namespace ERT {
     {}
 
     smspec_node::smspec_node( const std::string& keyword ) :
-        smspec_node( ECL_SMSPEC_FIELD_VAR, "", keyword.c_str(),
-                "", default_join, dummy_dims, 0 )
+        smspec_node( ecl_smspec_identify_var_type( keyword.c_str() ),
+                     "",
+                     keyword.c_str(),
+                     "",
+                     default_join,
+                     dummy_dims,
+                     0 )
     {}
 
     smspec_node::smspec_node(
