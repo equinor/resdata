@@ -1,4 +1,11 @@
+#include <errno.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <zlib.h>
+
+#include <ert/util/util.h>
 
 /**
   This function reads data from the input pointer data, and writes a
