@@ -38,6 +38,10 @@ if (ERT_HAVE_LOCKF)
     list(APPEND opt_srcs src/util_lockf.c)
 endif ()
 
+if (ERT_HAVE_REGEXP)
+    list(APPEND opt_srcs src/template_loop.c)
+endif ()
+
 if (ERT_HAVE_UNISTD)
    list(APPEND opt_srcs src/path_stack.c)
 endif ()
@@ -105,6 +109,9 @@ target_include_directories(ert_util
            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
            $<INSTALL_INTERFACE:include>
     PRIVATE ${ZLIB_INCLUDE_DIRS}
+            src
+            include
+            ${CMAKE_CURRENT_BINARY_DIR}/include
     )
 
 target_compile_definitions(ert_util PRIVATE

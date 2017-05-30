@@ -22,47 +22,12 @@
 
 #include <ert/util/ert_api_config.h>
 
-#ifdef ERT_HAVE_REGEXP
-#include <sys/types.h>
-#include <regex.h>
-#include <ctype.h>
-
-#define END_REGEXP           "[{]%[[:space:]]+endfor[[:space:]]+%[}]"
-#define LOOP_REGEXP          "[{]%[[:space:]]+for[[:space:]]+([$]?[[:alpha:]][[:alnum:]]*)[[:space:]]+in[[:space:]]+[[]([^]]*)[]][[:space:]]+%[}]"
-
-#define LOOP_OPTIONS REG_EXTENDED
-#define END_OPTIONS  REG_EXTENDED
-#endif
-
 #include <ert/util/util.h>
 #include <ert/util/subst_list.h>
 #include <ert/util/subst_func.h>
 #include <ert/util/template.h>
+#include <ert/util/template_type.h>
 #include <ert/util/stringlist.h>
-
-
-
-
-#define TEMPLATE_TYPE_ID 7781045
-
-struct template_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  char            * template_file;           /* The template file - if internalize_template == false this filename can contain keys which will be replaced at instantiation time. */
-  char            * template_buffer;         /* The content of the template buffer; only has valid content if internalize_template == true. */
-  bool              internalize_template;    /* Should the template be loadad and internalized at template_alloc(). */
-  subst_list_type * arg_list;                /* Key-value mapping established at alloc time. */
-  char            * arg_string;              /* A string representation of the arguments - ONLY used for a _get_ function. */ 
-  #ifdef ERT_HAVE_REGEXP
-  regex_t start_regexp;
-  regex_t end_regexp;
-  #endif
-};
-
-#ifdef ERT_HAVE_REGEXP
-#include "template_loop.c"
-#endif
-
-
 
 /**
    Iff the template is set up with internaliz_template == false the

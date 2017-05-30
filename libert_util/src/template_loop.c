@@ -16,20 +16,31 @@
    for more details. 
 */
 
+#include <ert/util/ert_api_config.h>
+
+#include <ctype.h>
+#include <sys/types.h>
+#include <regex.h>
+
 #include <ert/util/parser.h>
 #include <ert/util/stringlist.h>
+#include <ert/util/template.h>
+#include <ert/util/template_type.h>
+
+#define END_REGEXP           "[{]%[[:space:]]+endfor[[:space:]]+%[}]"
+#define LOOP_REGEXP          "[{]%[[:space:]]+for[[:space:]]+([$]?[[:alpha:]][[:alnum:]]*)[[:space:]]+in[[:space:]]+[[]([^]]*)[]][[:space:]]+%[}]"
+
+#define LOOP_OPTIONS REG_EXTENDED
+#define END_OPTIONS  REG_EXTENDED
 
 #define DOLLAR  '$'
 /*
-  This file implements a simple looping construct in the
-  templates. The support is strongly based on the POSIX regexp
-  functionality; and this file should not be included/compiled unless
-  that support is present. The file is included from template.c.  
+  This file implements a simple looping construct in the templates. The support
+  is strongly based on the POSIX regexp functionality; and this file will not
+  be compiled unless that support is present.
 */
 
-
-
-typedef struct {
+struct loop_struct {
   int               opentag_offset;
   int               opentag_length;
 
@@ -43,8 +54,7 @@ typedef struct {
   int               var_length;
   char            * loop_var;
   stringlist_type * items;
-} loop_type;
-
+};
 
 static void regcompile(regex_t * reg , const char * reg_string , int flags) {
   int error = regcomp(reg , reg_string , flags);
@@ -93,12 +103,6 @@ static loop_type * loop_alloc( const char * buffer , int global_offset , regmatc
   }
   return loop;
 }
-
-void loop_fprintf(const loop_type * loop ) {
-  printf("loop_var  : %s \n",loop->loop_var );
-  printf("loop_items: "); stringlist_fprintf( loop->items , "," , stdout ); printf("\n");
-}
-
 
 static void loop_set_endmatch( loop_type * loop , int global_offset , regmatch_t end_offset) {
   loop->endtag_offset = global_offset + end_offset.rm_so;
@@ -183,7 +187,7 @@ static void loop_eval( const loop_type * loop , const char * body , buffer_type 
 }
 
 
-static int template_eval_loop( const template_type * template , buffer_type * buffer , int global_offset , loop_type * loop) {
+int template_eval_loop( const template_type * template , buffer_type * buffer , int global_offset , loop_type * loop) {
   int flags = 0;
   int NMATCH = 3;
   regmatch_t match_list_loop[NMATCH];
@@ -260,13 +264,13 @@ static int template_eval_loop( const template_type * template , buffer_type * bu
 
 
 
-static void template_init_loop_regexp( template_type * template ) {
+void template_init_loop_regexp( template_type * template ) {
   regcompile( &template->start_regexp , LOOP_REGEXP , LOOP_OPTIONS );
   regcompile( &template->end_regexp , END_REGEXP , END_OPTIONS );
 }
 
 
-static void template_eval_loops( const template_type * template , buffer_type * buffer ) {
+void template_eval_loops( const template_type * template , buffer_type * buffer ) {
   int NMATCH = 10;
   regmatch_t match_list[NMATCH];
   {
