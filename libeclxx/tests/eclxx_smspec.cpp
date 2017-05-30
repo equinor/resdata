@@ -89,6 +89,12 @@ void test_smspec_block() {
     test_assert_true( block.num() == 556 );
 }
 
+void test_smspec_misc() {
+    ERT::smspec_node tcpu( "TCPU" );
+    test_assert_true( tcpu.type() == ECL_SMSPEC_MISC_VAR );
+}
+
+
 void test_smspec_region() {
     std::string kw( "ROIP" );
     int dims[ 3 ] = { 10, 10, 10 };
@@ -120,4 +126,5 @@ int main (int argc, char **argv) {
     test_smspec_block();
     test_smspec_region();
     test_smspec_completion();
+    test_smspec_misc();
 }
