@@ -219,6 +219,10 @@ install(TARGETS ecl
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY include/
         DESTINATION include
+        PATTERN *.h
+)
+install(DIRECTORY include/
+        DESTINATION include
         PATTERN *.hpp EXCLUDE
 )
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
