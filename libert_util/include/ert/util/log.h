@@ -26,12 +26,23 @@ extern "C" {
 #include <stdbool.h>
 #include <stdlib.h>
 
+//Same as pythons default log levels, but with different numeric values.
+typedef enum {
+  LOG_CRITICAL=0, //OOM.
+  LOG_ERROR=1, //When something we really expected to work does not, e.g. IO failure.
+  LOG_WARNING=2, //Important, but not error. E.g. combination of settings which can be intended, but probably are not.
+  LOG_INFO=3, //Entering functions/parts of the code
+  LOG_DEBUG=4 //Inside the for-loop, when you need the nitty gritty details. Think TRACE.
+} message_level_type;
+
+
 typedef struct log_struct log_type;
 
   FILE       * log_get_stream(log_type * logh );
   void         log_reopen( log_type * logh , const char * filename );
   log_type   * log_open(const char *filename, int log_level);
   void         log_add_message(log_type *logh, int message_level , FILE * dup_stream , char* message, bool free_message);
+  void         log_add_message_str(log_type *logh, message_level_type message_level , const char* message);
   void         log_add_fmt_message(log_type * logh , int message_level , FILE * dup_stream , const char * fmt , ...);
   int          log_get_level( const log_type * logh);
   void         log_set_level( log_type * logh , int new_level);
