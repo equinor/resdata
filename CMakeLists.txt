@@ -305,13 +305,7 @@ if (ERT_LINUX)
    add_definitions( -DHAVE_PROC )
 endif()
 
-add_subdirectory( libert_util )
-add_subdirectory( libecl )
-add_subdirectory( libgeometry )
-add_subdirectory( libecl_well )
-add_subdirectory( libert_utilxx )
-add_subdirectory( libeclxx )
-add_subdirectory( applications )
+add_subdirectory( lib )
 
 if (BUILD_PYTHON)
    if (ERT_WINDOWS)
@@ -336,12 +330,5 @@ if (BUILD_PYTHON)
 endif()
 
 install(EXPORT ecl-config DESTINATION share/cmake/ecl)
-export(TARGETS ert_util
-               ert_geometry
-               ecl
-               ecl_well
-               FILE eclConfig.cmake)
-if (ERT_BUILD_CXX)
-    export(TARGETS ert_utilxx eclxx APPEND FILE eclConfig.cmake)
-endif ()
+export(TARGETS ecl FILE eclConfig.cmake)
 export(PACKAGE ecl)
