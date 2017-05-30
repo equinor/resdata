@@ -188,6 +188,7 @@ extern "C" {
   ecl_grid_type         * ecl_grid_get_lgr_from_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr);
   ecl_grid_type         * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
   bool                    ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name);
+  bool                    ecl_grid_has_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr);
   const char            * ecl_grid_iget_lgr_name( const ecl_grid_type * ecl_grid , int lgr_index);
   const char            * ecl_grid_get_lgr_name( const ecl_grid_type * ecl_grid , int lgr_nr);
   stringlist_type       * ecl_grid_alloc_lgr_name_list(const ecl_grid_type * ecl_grid);

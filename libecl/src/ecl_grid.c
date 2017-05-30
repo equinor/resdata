@@ -5042,6 +5042,18 @@ bool ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name) 
   }
 }
 
+bool ecl_grid_has_lgr_nr(const ecl_grid_type * main_grid, int lgr_nr) {
+  __assert_main_grid( main_grid );
+  {
+    if (int_vector_size( main_grid->lgr_index_map ) > lgr_nr)
+      return true;
+    else
+      return false;
+  }
+}
+
+
+
 
 int ecl_grid_get_num_coarse_groups( const ecl_grid_type * main_grid ) {
   return vector_get_size( main_grid->coarse_cells );
