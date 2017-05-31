@@ -39,6 +39,8 @@ void util_setenv( const char * variable , const char * value) {
 
 #else
 
+#include <Windows.h>
+
 #define PATHVAR_SPLIT ";"
 void util_setenv( const char * variable , const char * value) {
   SetEnvironmentVariable( variable , NULL );
