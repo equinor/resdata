@@ -79,7 +79,7 @@ class EclGrid(BaseCClass):
     _cell_contains                = EclPrototype("bool ecl_grid_cell_contains_xyz1( ecl_grid , int , double , double , double )")
     _cell_regular                 = EclPrototype("bool ecl_grid_cell_regular1( ecl_grid , int)")
     _num_lgr                      = EclPrototype("int  ecl_grid_get_num_lgr( ecl_grid )")
-    _has_numbered_lgr_            = EclPrototype("bool ecl_grid_has_lgr_nr( ecl_grid , int)")
+    _has_numbered_lgr             = EclPrototype("bool ecl_grid_has_lgr_nr( ecl_grid , int)")
     _has_named_lgr                = EclPrototype("bool ecl_grid_has_lgr( ecl_grid , char* )")
     _grid_value                   = EclPrototype("double ecl_grid_get_property( ecl_grid , ecl_kw , int , int , int)")
     _get_cell_volume              = EclPrototype("double ecl_grid_get_cell_volume1( ecl_grid , int )")
@@ -909,7 +909,7 @@ class EclGrid(BaseCClass):
             return False
 
 
-    def get_lgr( self , lgr ):
+    def get_lgr(self, lgr_key):
         """Get EclGrid instance with LGR content.
 
         Return an EclGrid instance based on the LGR @lgr, the input
@@ -923,17 +923,17 @@ class EclGrid(BaseCClass):
 
         """
         lgr = None
-        if isinstance(lgr, int):
-            if self._has_numbered_lgr( lgr):
-                lgr = self._get_numbered_lgr( lgr )
+        if isinstance(lgr_key, int):
+            if self._has_numbered_lgr(lgr_key):
+                lgr = self._get_numbered_lgr(lgr_key)
         else:
-            if self._has_named_lgr( lgr ):
-                lgr = self._get_named_lgr( lgr )
+            if self._has_named_lgr(lgr_key):
+                lgr = self._get_named_lgr(lgr_key)
 
         if lgr is None:
-            raise KeyError("No such LGR:%s" % lgr)
+            raise KeyError("No such LGR: %s" % lgr_key)
 
-        lgr.setParent( self )
+        lgr.setParent(self)
         return lgr
 
     

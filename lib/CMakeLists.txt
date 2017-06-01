@@ -683,10 +683,10 @@ if (HAVE_UTIL_ABORT_INTERCEPT)
    add_test(NAME ecl_fortio COMMAND ecl_fortio ${_eclpath}/Gurbat/ECLIPSE.UNRST)
 endif()
 
-add_executable(well_state_load tests/well_state_load.c)
+add_executable(well_state_load ecl/tests/well_state_load.c)
 target_link_libraries( well_state_load ecl)
 
-add_executable(well_state_load_missing_RSEG tests/well_state_load_missing_RSEG.c)
+add_executable(well_state_load_missing_RSEG ecl/tests/well_state_load_missing_RSEG.c)
 target_link_libraries(well_state_load_missing_RSEG ecl)
 
 add_test(NAME well_state_load1 COMMAND well_state_load ${_eclpath}/Gurbat/ECLIPSE.EGRID
@@ -706,25 +706,25 @@ add_test(NAME well_state_load_missing_RSEG2
          COMMAND well_state_load_missing_RSEG ${_eclpath}/Troll/MSW/MSW.EGRID
                                               ${_eclpath}/Troll/MSW/MSW.X0123)
 
-add_executable(well_segment_load tests/well_segment_load.c)
+add_executable(well_segment_load ecl/tests/well_segment_load.c)
 target_link_libraries(well_segment_load ecl)
 add_test(NAME well_segment_load
         COMMAND well_segment_load ${_eclpath}/MSWcase/MSW_CASE.X0021)
 
-add_executable(well_segment_branch_conn_load tests/well_segment_branch_conn_load.c)
+add_executable(well_segment_branch_conn_load ecl/tests/well_segment_branch_conn_load.c)
 target_link_libraries(well_segment_branch_conn_load ecl)
 add_test(NAME well_segment_branch_conn_load
          COMMAND well_segment_branch_conn_load ${_eclpath}/MSWcase/MSW_CASE.X0021)
 
-add_executable(well_info tests/well_info.c)
+add_executable(well_info ecl/tests/well_info.c)
 target_link_libraries(well_info ecl)
 add_test(NAME well_info COMMAND well_info ${_eclpath}/Gurbat/ECLIPSE.EGRID)
 
-add_executable(well_conn_CF tests/well_conn_CF.c)
+add_executable(well_conn_CF ecl/tests/well_conn_CF.c)
 target_link_libraries(well_conn_CF ecl)
 add_test(NAME well_conn_CF COMMAND well_conn_CF ${_eclpath}/Gurbat/ECLIPSE.X0060)
 
-add_executable(well_conn_load tests/well_conn_load.c)
+add_executable(well_conn_load ecl/tests/well_conn_load.c)
 target_link_libraries(well_conn_load ecl)
 add_test(NAME well_conn_load1 COMMAND well_conn_load ${_eclpath}/Gurbat/ECLIPSE.X0030 F)
 add_test(NAME well_conn_load2 COMMAND well_conn_load ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.X0021 F)
@@ -733,17 +733,17 @@ add_test(NAME well_conn_load4 COMMAND well_conn_load ${_eclpath}/AmalgLGRcase/TE
 add_test(NAME well_conn_load5 COMMAND well_conn_load ${_eclpath}/DualPoro/DUALPORO.X0009 F)
 add_test(NAME well_conn_load6 COMMAND well_conn_load ${_eclpath}/0.9.2_LGR/BASE_REF_XY3Z1_T30_WI.X0003 F)
 
-add_executable(well_ts tests/well_ts.c)
+add_executable(well_ts ecl/tests/well_ts.c)
 target_link_libraries(well_ts ecl)
 add_test(NAME well_ts COMMAND well_ts ${_eclpath}/CO2case/BASE_CASE)
 
-add_executable(well_dualp tests/well_dualp.c)
+add_executable(well_dualp ecl/tests/well_dualp.c)
 target_link_libraries(well_dualp ecl)
 add_test(NAME well_dualp COMMAND well_dualp
     ${_eclpath}/Gurbat/ECLIPSE.UNRST
     ${_eclpath}/DualPoro/DUALPORO.X0005)
 
-add_executable(well_lgr_load tests/well_lgr_load.c)
+add_executable(well_lgr_load ecl/tests/well_lgr_load.c)
 target_link_libraries(well_lgr_load ecl)
 
 add_test(NAME well_lgr_load1 COMMAND well_lgr_load ${_eclpath}/0.9.2_LGR/BASE_REF_XY3Z1_T30_WI.EGRID
