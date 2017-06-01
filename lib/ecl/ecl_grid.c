@@ -5033,6 +5033,9 @@ ecl_grid_type * ecl_grid_get_lgr(const ecl_grid_type * main_grid, const char * _
 */
 
 bool ecl_grid_has_lgr(const ecl_grid_type * main_grid, const char * __lgr_name) {
+  if(!__lgr_name)
+    return false;
+
   __assert_main_grid( main_grid );
   {
     char * lgr_name          = util_alloc_strip_copy( __lgr_name );
