@@ -25,6 +25,14 @@ from ert.ecl import EclNPV , NPVPriceVector
 from ert.ecl import EclCmp
 from ert.ecl import EclGridGenerator
 
+from ert.ecl.faults import Layer
+from ert.ecl.faults import FaultCollection
+from ert.ecl.faults import Fault
+from ert.ecl.faults import FaultLine
+from ert.ecl.faults import FaultSegment , SegmentMap
+from ert.ecl.faults import FaultBlock , FaultBlockCell
+from ert.ecl.faults import FaultBlockLayer
+
 
 from ecl.test import ExtendedTestCase
 
