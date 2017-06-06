@@ -47,10 +47,13 @@ if (ERT_LINUX)
 endif ()
 
 
+# This minor eclipse application depends on the config parser library
+# and should be moved to the libres repository - it can not be
+# built here.
 if (BUILD_ERT)
-    add_executable( ecl_quantile ecl/ecl_quantile.c )
-    target_link_libraries( ecl_quantile config )
-    list(APPEND apps ecl_quantile)
+   add_executable( ecl_quantile ecl/ecl_quantile.c )
+   target_link_libraries( ecl_quantile config )
+   list(APPEND apps ecl_quantile)
 endif()
 
 if (BUILD_ECL_SUMMARY)
