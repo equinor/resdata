@@ -53,6 +53,8 @@ install:
 - conda info -a  # Useful for debugging any issues with conda
 - conda install pylint numpy pandas
 
-script:
+before_script:
   - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
+
+script:
   - python build_total.py ecl
