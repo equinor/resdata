@@ -113,7 +113,6 @@ class MetaWrapTest(ExtendedTestCase):
         def stringObj(c_ptr):
             char_ptr = ctypes.c_char_p(c_ptr)
             python_string = char_ptr.value
-            TestUtilPrototype.lib.free(c_ptr)
             return python_string.decode('ascii')
 
         Prototype.registerType("string_obj", stringObj)
