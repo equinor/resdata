@@ -150,7 +150,7 @@ static test_work_area_type * test_work_area_alloc__(const char * prefix , const 
       else
         work_area->dir_fd = -1;
 #else
-      work_area->dir_fd = -1
+      work_area->dir_fd = -1;
 #endif
     } else
       free( test_cwd );
