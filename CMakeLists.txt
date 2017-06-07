@@ -306,6 +306,8 @@ if (ERT_LINUX)
 endif()
 
 add_subdirectory( lib )
+add_subdirectory( applications )
+
 
 if (BUILD_PYTHON)
    if (ERT_WINDOWS)

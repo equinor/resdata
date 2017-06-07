@@ -25,7 +25,7 @@ foreach (app ecl_pack
              load_test
         )
     add_executable(${app} ecl/${app}.c)
-    target_link_libraries(${app} ecl ert_util)
+    target_link_libraries(${app} ecl)
     list(APPEND apps ${app})
     if (ERT_LINUX)
         # The stupid .x extension creates problems on windows
@@ -37,7 +37,7 @@ endforeach ()
 if (ERT_LINUX)
     foreach (app convert esummary grdecl_test kw_list)
         add_executable(${app} ecl/${app}.c)
-        target_link_libraries(${app} ecl ert_util)
+        target_link_libraries(${app} ecl)
         # The stupid .x extension creates problems on windows
         set_target_properties(${app} PROPERTIES SUFFIX ".x")
         list(APPEND apps ${app})
@@ -47,10 +47,13 @@ if (ERT_LINUX)
 endif ()
 
 
+# This minor eclipse application depends on the config parser library
+# and should be moved to the libres repository - it can not be
+# built here.
 if (BUILD_ERT)
-    add_executable( ecl_quantile ecl/ecl_quantile.c )
-    target_link_libraries( ecl_quantile config )
-    list(APPEND apps ecl_quantile)
+   add_executable( ecl_quantile ecl/ecl_quantile.c )
+   target_link_libraries( ecl_quantile config )
+   list(APPEND apps ecl_quantile)
 endif()
 
 if (BUILD_ECL_SUMMARY)
@@ -64,7 +67,7 @@ endif()
 
 if (PTHREAD_LIBRARY)
     add_executable(bls block_fs/bls.c)
-    target_link_libraries(bls ert_util)
+    target_link_libraries(bls ecl)
     list(APPEND apps bls)
 endif ()
 
@@ -72,9 +75,9 @@ add_executable(segment_info well/segment_info.c)
 add_executable(CF_dump      well/well_CF_dump.c)
 add_executable(ri_well_test well/ri_well_test.c)
 
-target_link_libraries(segment_info ecl_well)
-target_link_libraries(CF_dump ecl_well)
-target_link_libraries(ri_well_test ecl_well)
+target_link_libraries(segment_info ecl)
+target_link_libraries(CF_dump ecl)
+target_link_libraries(ri_well_test ecl)
 
 list(APPEND apps segment_info CF_dump ri_well_test)
 

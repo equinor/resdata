@@ -72,13 +72,13 @@ void unpack_file(const char * filename) {
         break;
 
       if (target_type == ECL_SUMMARY_FILE) {
-        active_view = ecl_file_alloc_global_blockview(src_file, SEQHDR_KW, block_index);
+        active_view = ecl_file_get_global_blockview(src_file, SEQHDR_KW, block_index);
         report_step += 1;
         offset = 0;
       } else {
         ecl_kw_type * seqnum_kw;
-        active_view = ecl_file_alloc_global_blockview(src_file, SEQNUM_KW, block_index);
-        seqnum_kw = ecl_file_iget_named_kw( src_file , SEQNUM_KW , 0);
+        active_view = ecl_file_get_global_blockview(src_file, SEQNUM_KW, block_index);
+        seqnum_kw = ecl_file_view_iget_named_kw( active_view , SEQNUM_KW , 0);
         report_step = ecl_kw_iget_int( seqnum_kw , 0);
         offset = 1;
       }
@@ -100,7 +100,6 @@ void unpack_file(const char * filename) {
         free(target_file);
       }
       block_index++;
-      ecl_file_view_free( active_view );
     } 
     ecl_file_close( src_file );
     util_safe_free(path);
