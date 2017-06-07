@@ -157,6 +157,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ecl_lib_info_install.py
         DESTINATION ${PYTHON_INSTALL_PREFIX}/ecl
         RENAME __ecl_lib_info.py)
 
+add_setup_py(pyecl setup.py.in)
+
 # add a separate package for the legacy bindings
 
 if (INSTALL_ERT_LEGACY)

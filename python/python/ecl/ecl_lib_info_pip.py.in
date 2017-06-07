@@ -1,0 +1,2 @@
+so_version = ""
+__version__ = "${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR}.${ERT_VERSION_MICRO}"

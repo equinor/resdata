@@ -72,6 +72,7 @@ required_version_hex = 0x02070000
 ecl_lib_path = None
 ert_so_version = ""
 __version__ = "0.0.0"
+ecl_pip = False
 
 
 # 1. Try to load the __ecl_lib_info module; this module has been
@@ -86,6 +87,14 @@ try:
 except ImportError:
     pass
 except AttributeError:
+    pass
+
+try:
+    import __ecl_pip
+    ert_so_version = __ecl_pip.so_version
+    __version__ = __ecl_pip.__version__
+    ecl_pip = True
+except ImportError:
     pass
 
 
@@ -103,7 +112,7 @@ if env_lib_path:
 
 # Check that the final ert_lib_path setting corresponds to an existing
 # directory.
-if ecl_lib_path and ecl_lib_path != 'ecl-pip':
+if ecl_lib_path:
     if not os.path.isdir( ecl_lib_path ):
         ecl_lib_path = None
 
@@ -114,6 +123,10 @@ if sys.hexversion < required_version_hex:
 # libraries.
 
 def load(name):
+    if ecl_pip:
+        name = '/'.join([os.path.dirname(os.path.realpath(__file__)), name[3:]])
+        return cwrapload(name, so_version=ert_so_version)
+
     return cwrapload(name, path=ecl_lib_path, so_version=ert_so_version)
 
 
