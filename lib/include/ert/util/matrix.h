@@ -66,7 +66,6 @@ struct matrix_struct {
 
 typedef struct matrix_struct matrix_type;
 
-  __forceinline size_t GET_INDEX( const matrix_type * m , size_t i , size_t j) {return m->row_stride *i + m->column_stride *j;}
   matrix_type * matrix_fread_alloc(FILE * stream);
   void          matrix_fread(matrix_type * matrix , FILE * stream);
   void          matrix_fwrite(const matrix_type * matrix , FILE * stream);

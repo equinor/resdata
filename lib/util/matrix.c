@@ -63,7 +63,7 @@ extern "C" {
 
 #define MATRIX_TYPE_ID 712108
 
-/*#define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))*/
+#define GET_INDEX(m,i,j) (m->row_stride * (i) + m->column_stride * (j))
 
 /*
  This GET_INDEX function has been forcely inlined for performance.
