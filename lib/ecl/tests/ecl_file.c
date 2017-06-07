@@ -30,11 +30,10 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_endian_flip.h>
 
-void test_writable() {
+void test_writable(size_t data_size) {
   test_work_area_type * work_area = test_work_area_alloc("ecl_file_writable");
   const char * data_file_name = "test_file";
 
-  size_t data_size = 10;
   ecl_kw_type * kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
   for(int i = 0; i < data_size; ++i)
     ecl_kw_iset_int(kw, i, ((i*37)+11)%data_size);
@@ -43,7 +42,7 @@ void test_writable() {
   ecl_kw_fwrite(kw, fortio); 
   fortio_fclose(fortio);
 
-  for(int i = 0; i < 2; ++i) {
+  for(int i = 0; i < 4; ++i) {
     ecl_file_type * ecl_file = ecl_file_open(data_file_name, ECL_FILE_WRITABLE);
     ecl_kw_type * loaded_kw = ecl_file_view_iget_kw(
                                   ecl_file_get_global_view(ecl_file),
@@ -86,21 +85,8 @@ void test_truncated() {
 
 
 int main( int argc , char ** argv) {
-  /*
-  {
-    test_work_area_type * work_area = test_work_area_alloc("ecl_file");
-
-    test_work_area_copy_file( work_area , src_file );
-    test_loadall(src_file , target_file );
-
-    test_close_stream1( src_file , target_file);
-    test_close_stream2( src_file , target_file);
-    test_writable( src_file );
-
-    test_work_area_free( work_area );
-  }
-  */
-  test_writable();
+  test_writable(10);
+  test_writable(1337);
   test_truncated();
   exit(0);
 }

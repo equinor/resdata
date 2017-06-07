@@ -318,6 +318,7 @@ void ecl_file_kw_inplace_fwrite( ecl_file_kw_type * file_kw , fortio_type * fort
   ecl_file_kw_assert_kw( file_kw );
   fortio_fseek( fortio , file_kw->file_offset , SEEK_SET );
   ecl_kw_fskip_header( fortio );
+  fortio_fclean(fortio);
   ecl_kw_fwrite_data( file_kw->kw , fortio );
 }
 
