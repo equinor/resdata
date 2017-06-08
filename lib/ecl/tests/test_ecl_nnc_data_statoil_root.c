@@ -50,11 +50,29 @@ void probe_nnc_geometry(ecl_nnc_geometry_type * nnc_geo) {
    }
 }
 
+void probe_file(ecl_file_view_type * view_file) {
+   const int file_num_kw = ecl_file_view_get_size( view_file);
+   for (int n = 0; n < file_num_kw; n++) {
+      ecl_kw_type * ecl_kw = ecl_file_view_iget_kw( view_file , n );
+      const char *current_kw = ecl_kw_get_header(ecl_kw);
+      printf(" ************ %d: KEYWORD: %s", n, current_kw);
+      if (strcmp( LGRHEADI_KW , current_kw) == 0) {
+         int m = ecl_kw_iget_int( ecl_kw , LGRHEADI_LGR_NR_INDEX);
+         printf(" ************************* %d", m);
+      }
+      if (strcmp( "FLROILL+", current_kw) == 0) {
+         int m = ecl_kw_get_size(ecl_kw); 
+         printf(" SIZE: %d", m);   
+      }
+      printf("\n");
+   }
+}
+
 //GENERALIZE
 void assert_data_values_read(ecl_nnc_data_type * nnc_data) {
    int data_size = ecl_nnc_data_get_size(nnc_data);
    for (int n = 0; n < data_size; n++) {
-      if (n < 260) 
+      if (true) 
          test_assert_double_not_equal(-1.0, ecl_nnc_data_iget_value(nnc_data, n));
    }
 }
@@ -129,6 +147,8 @@ void test_alloc_file_flux(char * filename) {
    probe_nnc_geometry(nnc_geo);
    {   
       ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
+      //probe_file ( view_file );
+
       ecl_nnc_data_type * nnc_flux_data = ecl_nnc_data_alloc_flux(grid, nnc_geo, view_file);
       assert_data_values_read(nnc_flux_data);
       ecl_nnc_data_free( nnc_flux_data );
