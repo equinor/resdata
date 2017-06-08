@@ -502,7 +502,8 @@ add_test(NAME ecl_nnc_export_get_tran COMMAND ecl_nnc_export_get_tran
 add_executable(ecl_nnc_data_statoil_root ecl/tests/test_ecl_nnc_data_statoil_root.c)
 target_link_libraries(ecl_nnc_data_statoil_root ecl)
 add_test(NAME ecl_nnc_data_statoil_root COMMAND ecl_nnc_data_statoil_root
-    ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
+    ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
+    ${_eclpath}/flow-nnc/Simple4/SIMPLE_SUMMARY4)
 
 add_executable(ecl_util_make_date_shift ecl/tests/ecl_util_make_date_shift.c)
 target_link_libraries(ecl_util_make_date_shift ecl)
