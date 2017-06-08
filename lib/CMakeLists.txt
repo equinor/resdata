@@ -391,6 +391,7 @@ foreach (name   ecl_alloc_cpgrid
                 well_segment
                 well_segment_conn
                 well_segment_collection
+                ecl_file
         )
         add_executable(${name} ecl/tests/${name}.c)
         target_link_libraries(${name} ecl)
@@ -632,10 +633,10 @@ add_test(NAME ecl_sum_report_step_compatible4 COMMAND ecl_sum_report_step_compat
 add_test(NAME ecl_sum_report_step_compatible5 COMMAND ecl_sum_report_step_compatible ${_eclpath}/Gurbat/ECLIPSE ${_eclpath}/modGurbat/enkf/ECLIPSE TRUE)
 add_test(NAME ecl_sum_report_step_compatible6 COMMAND ecl_sum_report_step_equal      ${_eclpath}/Snorre/SNORRE  ${_eclpath}/Snorre2/SNORRE2 FALSE)
 
-add_executable(ecl_file ecl/tests/ecl_file.c)
-target_link_libraries(ecl_file ecl)
-add_test(NAME ecl_file
-         COMMAND ecl_file ${_eclpath}/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
+add_executable(ecl_file_statoil ecl/tests/ecl_file_statoil.c)
+target_link_libraries(ecl_file_statoil ecl)
+add_test(NAME ecl_file_statoil
+         COMMAND ecl_file_statoil ${_eclpath}/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
 
 add_executable(ecl_fmt ecl/tests/ecl_fmt.c)
 target_link_libraries(ecl_fmt  ecl)

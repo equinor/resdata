@@ -488,6 +488,17 @@ void fortio_data_fseek(fortio_type* fortio, offset_type data_offset, size_t data
     }
 }
 
+int fortio_fclean(fortio_type * fortio) {
+  long current_pos = ftell(fortio->stream);
+  if(current_pos == -1)
+    return -1;
+
+  int flush_status = fflush(fortio->stream);
+  if(flush_status != 0)
+    return flush_status;
+
+  return fseek(fortio->stream, current_pos, SEEK_SET);
+}
 
 bool fortio_complete_read(fortio_type *fortio , int record_size) {
   int trailer;
