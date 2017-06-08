@@ -2,8 +2,6 @@ language: c
 
 matrix:
   fast_finish: true
-  allow_failures:
-    - os: osx
   include:
     - os: osx
       osx_image: xcode7.3
