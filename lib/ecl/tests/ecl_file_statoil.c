@@ -1,8 +1,8 @@
 
 /*
-   Copyright (C) 2013  Statoil ASA, Norway.
+   Copyright (C) 2017  Statoil ASA, Norway.
 
-   The file 'ecl_file.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ecl_file_statoil.c' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -124,7 +124,7 @@ void test_writable(const char * src_file ) {
     ecl_file_close( ecl_file );
 
     ecl_file = ecl_file_open( fname , 0);
-    swat = ecl_file_iget_named_kw( ecl_file , "SWAT" , 1 );
+    swat = ecl_file_iget_named_kw( ecl_file , "SWAT" , 0 );
     test_assert_true( util_double_approx_equal( ecl_kw_iget_float( swat , 0 ) , 1000 ));
   }
   test_work_area_free( work_area );
