@@ -1,6 +1,3 @@
-option( ERT_RST_DOC           "Build RST based documentation"  ON)
-
-if (ERT_RST_DOC)
   find_package(Sphinx REQUIRED)
   if (SPHINX_FOUND)
     set( ERT_DOC_INSTALL_PATH  "" CACHE PATH "Absolute path to install documentation *in addition* to $PREFIX/documentation")
@@ -38,6 +35,5 @@ if (ERT_RST_DOC)
   else()
     message(STATUS "Sphinx documentation tool not found - documentation not generated")
   endif()
-endif()
 
 INSTALL( DIRECTORY ${PROJECT_BINARY_DIR}/documentation DESTINATION ${CMAKE_INSTALL_PREFIX} )
