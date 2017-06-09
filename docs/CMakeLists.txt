@@ -22,7 +22,8 @@
        EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/code" "${PROJECT_BINARY_DIR}/doc-src/code")
        add_custom_target(api-doc ALL
          COMMAND sphinx-apidoc -e -o doc-src/API/python ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}
-         DEPENDS ert_util ert_utilxx ecl eclxx ecl_well ert_geometry
+         DEPENDS ecl
+         # what about geometry ?
          WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
     endif()
 
