@@ -65,6 +65,16 @@ class EclWellTest(ExtendedTestCase):
         return EclWellTest.__well_info
 
 
+    def test_no_such_well(self):
+        grid_path = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")
+        rst_path1 = self.createTestPath("nosuch/path/ECLIPSE.X001")
+        rst_path2 = self.createTestPath("nosuch/path/ECLIPSE.X002")
+        grid = EclGrid(grid_path)
+        with self.assertRaises(IOError):
+            _ = WellInfo(grid, rst_path1)
+        with self.assertRaises(IOError):
+            _ = WellInfo(grid, [rst_path1, rst_path2])
+
     def test_construction(self):
         grid_path = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")
         rst_path_1 = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.X0011")
