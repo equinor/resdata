@@ -65,7 +65,7 @@ void test_alloc_global_only() {
 
          test_assert_true( ecl_file_view_has_kw( view_file, TRANNNC_KW) );
          
-         ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid0, nnc_geo, view_file);
+         ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc(grid0, nnc_geo, view_file, TRANS_DATA);
          int nnc_data_size = ecl_nnc_data_get_size( nnc_geo_data );
          test_assert_true(nnc_data_size == 3);
 

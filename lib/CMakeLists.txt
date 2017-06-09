@@ -503,7 +503,8 @@ add_executable(ecl_nnc_data_statoil_root ecl/tests/test_ecl_nnc_data_statoil_roo
 target_link_libraries(ecl_nnc_data_statoil_root ecl)
 add_test(NAME ecl_nnc_data_statoil_root COMMAND ecl_nnc_data_statoil_root
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
-    ${_eclpath}/flow-nnc/Simple4/SIMPLE_SUMMARY4)
+    ${_eclpath}/flow-nnc/Simple4/SIMPLE_SUMMARY4
+    ${_eclpath}/flow-nnc/Gullfaks/GF_ACT_NEW_TEMP)
 
 add_executable(ecl_util_make_date_shift ecl/tests/ecl_util_make_date_shift.c)
 target_link_libraries(ecl_util_make_date_shift ecl)

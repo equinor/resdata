@@ -48,6 +48,7 @@ void probe_nnc_geometry(ecl_nnc_geometry_type * nnc_geo) {
          num++;
       }
    }
+   printf(" ******************* %d: g1, g2 = %d, %d, num: %d\n", nnc_size - 1, current_grid1, current_grid2, num);
 }
 
 void probe_file(ecl_file_view_type * view_file) {
@@ -68,12 +69,10 @@ void probe_file(ecl_file_view_type * view_file) {
    }
 }
 
-//GENERALIZE
 void assert_data_values_read(ecl_nnc_data_type * nnc_data) {
    int data_size = ecl_nnc_data_get_size(nnc_data);
    for (int n = 0; n < data_size; n++) {
-      if (true) 
-         test_assert_double_not_equal(-1.0, ecl_nnc_data_iget_value(nnc_data, n));
+      test_assert_double_not_equal(-1.0, ecl_nnc_data_iget_value(nnc_data, n));
    }
 }
 
@@ -100,7 +99,7 @@ void test_alloc_file_tran(char * filename) {
    ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
    ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
 
-   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid, nnc_geo, view_file);
+   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc(grid, nnc_geo, view_file, TRANS_DATA);
    
    //These numerical values are hand-tuned the specific input file at:
    //${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
@@ -136,20 +135,18 @@ void test_alloc_file_tran(char * filename) {
 }
 
 
-void test_alloc_file_flux(char * filename) {
+void test_alloc_file_flux(char * filename, int file_num) {
    char * grid_file_name = ecl_util_alloc_filename(NULL , filename , ECL_EGRID_FILE , false  , -1);
-   char * init_file_name = ecl_util_alloc_filename(NULL , filename , ECL_RESTART_FILE , false  , 0);
+   char * init_file_name = ecl_util_alloc_filename(NULL , filename , ECL_RESTART_FILE , false  , file_num);
 
    ecl_file_type * init_file = ecl_file_open( init_file_name , 0 );
    ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
    ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
-  
    probe_nnc_geometry(nnc_geo);
    {   
       ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
-      //probe_file ( view_file );
 
-      ecl_nnc_data_type * nnc_flux_data = ecl_nnc_data_alloc_flux(grid, nnc_geo, view_file);
+      ecl_nnc_data_type * nnc_flux_data = ecl_nnc_data_alloc(grid, nnc_geo, view_file, WTR_FLUX_DATA);
       assert_data_values_read(nnc_flux_data);
       ecl_nnc_data_free( nnc_flux_data );
    }
@@ -163,6 +160,6 @@ void test_alloc_file_flux(char * filename) {
 
 int main(int argc , char ** argv) {
    test_alloc_file_tran(argv[1]);
-   test_alloc_file_flux(argv[2]);
+   test_alloc_file_flux(argv[2], 6);
    return 0;
 }

@@ -236,7 +236,7 @@ void test_export(const char * name, bool have_tran_data) {
     {
       ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
       ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
-      ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid, nnc_geo, view_file);
+      ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc(grid, nnc_geo, view_file, TRANS_DATA);
      
       test_assert_int_equal( ecl_nnc_export_get_size( grid ), ecl_nnc_geometry_size( nnc_geo ));
       for (int i=0; i < ecl_nnc_geometry_size( nnc_geo ); i++) {

@@ -18,11 +18,6 @@
 
 #define ECL_NNC_DATA_TYPE_ID 83756236
 
-#define TRANS_DATA     1
-#define WTR_FLUX_DATA  2
-#define OIL_FLUX_DATA  4
-#define GAS_FLUX_DATA  8
-
 #include <ert/ecl/ecl_nnc_data.h>
 #include <ert/ecl/ecl_nnc_geometry.h>
 #include <ert/ecl/ecl_file.h>
@@ -37,25 +32,49 @@ struct ecl_nnc_data_struct {
    double * values;
 };
 
-
-
-static ecl_kw_type * ecl_nnc_data_get_gl_kw( const ecl_file_view_type * init_file_view , bool nnnc, int data_type, int lgr_nr) {
-  ecl_kw_type * tran_kw = NULL;
-
-  //REFACTOR a function returning char *  kw
+static const char * ecl_nnc_data_get_str_kw(int kw_type, int grid1, int grid2) {
   char * kw = NULL;
-   
-  if (data_type == TRANS_DATA)
-    if (nnnc) 
-       kw = TRANNNC_KW;
-    else
-       kw = TRANGL_KW;
+  switch (kw_type) { 
 
-  if (data_type == OIL_FLUX_DATA)
-     if (nnnc)
-        kw = "FLROILN+";
-     else
-        kw = "FLROILL+";
+    case TRANS_DATA:
+      if (grid1 == grid2)
+        kw = TRANNNC_KW;
+      else if (grid1 == 0)
+        kw = TRANGL_KW;
+      else
+        kw = TRANLL_KW;
+      break;
+
+    case WTR_FLUX_DATA:
+     if (grid1 == grid2)
+       kw = FLRWATNNC_KW;
+     else if (grid1 == 0)
+       kw = FLRWATLG_KW;
+     break;
+
+    case OIL_FLUX_DATA:
+      if (grid1 == grid2)
+        kw = FLROILNNC_KW;
+      else if (grid1 == 0)
+        kw = FLROILLG_KW; 
+      break;
+        
+    case GAS_FLUX_DATA:
+      if (grid1 == grid2)
+        kw = FLRGASNNC_KW;
+      else if (grid1 == 0)
+        kw = FLRGASLG_KW;
+      break;
+
+    default:
+      kw = NULL;
+
+  }
+  return kw;
+}
+
+static ecl_kw_type * ecl_nnc_data_get_gl_kw( const ecl_file_view_type * init_file_view , const char * kw, int kw_type, int lgr_nr) {
+  ecl_kw_type * tran_kw = NULL;
 
   if (kw != NULL)
   if (lgr_nr == 0) {
@@ -69,7 +88,6 @@ static ecl_kw_type * ecl_nnc_data_get_gl_kw( const ecl_file_view_type * init_fil
       bool correct_lgrheadi = false;
       int head_index = 0;
       int steps = 0;
-
 
       while(!finished){
         ecl_kw_type * ecl_kw = ecl_file_view_iget_kw( init_file_view , global_kw_index );
@@ -85,7 +103,7 @@ static ecl_kw_type * ecl_nnc_data_get_gl_kw( const ecl_file_view_type * init_fil
         if(correct_lgrheadi) {
           if (strcmp(kw, current_kw) == 0) {
             steps  = global_kw_index - head_index; /* This is to calculate who fare from lgrheadi we found the TRANGL/TRANNNC key word */
-            if (data_type != TRANS_DATA || steps == 3 || steps == 4 || steps == 6) { /* We only support a file format where TRANNNC is 3 steps and TRANGL is 4 or 6 steps from LGRHEADI */
+            if (kw_type != TRANS_DATA || steps == 3 || steps == 4 || steps == 6) { /* We only support a file format where TRANNNC is 3 steps and TRANGL is 4 or 6 steps from LGRHEADI */
               tran_kw = ecl_kw;
               finished = true;
               break;
@@ -130,23 +148,29 @@ static ecl_kw_type * ecl_nnc_data_get_tranll_kw( const ecl_grid_type * grid , co
 }
 
 
-static ecl_kw_type * ecl_nnc_data_get_tranx_kw( const ecl_grid_type * grid, const ecl_file_view_type * init_file_view, int lgr_nr1, int lgr_nr2 ) {
-  if (lgr_nr1 == lgr_nr2)
-    return ecl_nnc_data_get_gl_kw( init_file_view , true , TRANS_DATA, lgr_nr2 );
+static ecl_kw_type * ecl_nnc_data_get_kw( const ecl_grid_type * grid, const ecl_file_view_type * init_file_view, int lgr_nr1, int lgr_nr2 , int kw_type) {
+
+  const char * kw = ecl_nnc_data_get_str_kw(kw_type, lgr_nr1, lgr_nr2);
+  if (lgr_nr1 == lgr_nr2) 
+    return ecl_nnc_data_get_gl_kw( init_file_view , kw, kw_type, lgr_nr2 );
   else {
     if (lgr_nr1 == 0)
-      return ecl_nnc_data_get_gl_kw( init_file_view , false , TRANS_DATA, lgr_nr2 );
-    else
-      return ecl_nnc_data_get_tranll_kw( grid , init_file_view , lgr_nr1 , lgr_nr2 );
+      return ecl_nnc_data_get_gl_kw( init_file_view , kw, kw_type, lgr_nr2 );
+    else 
+      if (kw_type == TRANS_DATA)
+        return ecl_nnc_data_get_tranll_kw( grid , init_file_view , lgr_nr1 , lgr_nr2 );
+      else
+        return NULL;
   }
 }
 
 
-static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int data_type) {
+static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
 
    int current_grid1 = -1;
    int current_grid2 = -1;
    ecl_kw_type * current_kw = NULL;
+   int sum_kw_size = 0;
    
    for (int nnc_index = 0; nnc_index < data->size; nnc_index++) {
       const ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
@@ -156,50 +180,27 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
       if (grid1 != current_grid1 || grid2 != current_grid2) {
          current_grid1 = grid1;
          current_grid2 = grid2;
-         switch(data_type) {
-            case TRANS_DATA: 
-               current_kw = ecl_nnc_data_get_tranx_kw( grid, init_file, grid1 , grid2);
-               break;
-            case OIL_FLUX_DATA:
-               if (current_grid1 == 0 && current_grid2 == 0)
-                  current_kw = ecl_nnc_data_get_gl_kw( init_file , true , OIL_FLUX_DATA, current_grid2 );                  
-               else if (current_grid1 == 0)
-                  current_kw =  ecl_nnc_data_get_gl_kw( init_file , false , OIL_FLUX_DATA, current_grid2 );
-               break;
-            default:
-               current_kw = NULL;
-         }
+         current_kw = ecl_nnc_data_get_kw( grid, init_file, grid1 , grid2 , kw_type);
+         sum_kw_size += ecl_kw_get_size( current_kw );
       }
       if (current_kw)
          data->values[nnc_index] = ecl_kw_iget_as_double(current_kw, pair->input_index);
       else
          data->values[nnc_index] = -1;
-      
    }
+   if (sum_kw_size != data->size)
+      util_abort("Error: error reading keyword data in %s.\n", __func__);
 }
 
-//REFACTOR 1
-ecl_nnc_data_type * ecl_nnc_data_alloc_tran(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
-   ecl_nnc_data_type * data = util_malloc( sizeof * data );
 
-   data->size = ecl_nnc_geometry_size( nnc_geo );
-   
-   data->values = util_malloc( data->size * sizeof(double));
-
-   ecl_nnc_data_set_values(data, grid, nnc_geo, init_file, TRANS_DATA);
-
-   return data;
-}
-
-//REFACTOR 1
-ecl_nnc_data_type * ecl_nnc_data_alloc_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+ecl_nnc_data_type * ecl_nnc_data_alloc(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
    ecl_nnc_data_type * data = util_malloc(sizeof * data);
 
    data->size = ecl_nnc_geometry_size( nnc_geo );
 
    data->values = util_malloc( data->size * sizeof(double));
 
-   ecl_nnc_data_set_values(data, grid, nnc_geo, init_file, OIL_FLUX_DATA);
+   ecl_nnc_data_set_values(data, grid, nnc_geo, init_file, kw_type);
 
    return data;
 }
