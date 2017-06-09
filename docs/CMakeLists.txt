@@ -1,6 +1,4 @@
 option( ERT_RST_DOC           "Build RST based documentation"  ON)
-option( ERT_DOXY_DOC          "Build doxygen documentation"  ON)
-option( ERT_DOXY_GRAPHICAL    "Add graphics to doxygen documentation"  OFF)
 
 if (ERT_RST_DOC)
   find_package(Sphinx REQUIRED)
@@ -41,32 +39,5 @@ if (ERT_RST_DOC)
     message(STATUS "Sphinx documentation tool not found - documentation not generated")
   endif()
 endif()
-
-
-if (ERT_DOXY_DOC)
-  find_package(Doxygen)
-  if (DOXYGEN_FOUND)
-    file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/documentation/doxy")
-    set( DOXYGEN_HAVE_DOT "NO" )
-    if ( ERT_DOXY_GRAPHICAL)
-      if (DOXYGEN_DOT_FOUND)
-        set( DOXYGEN_HAVE_DOT "YES" )
-      endif()
-    endif()
-
-    if (BUILD_ERT)
-        SET( DOXYGEN_INPUT "${PROJECT_SOURCE_DIR}/libecl ${PROJECT_SOURCE_DIR}/libecl_well ${PROJECT_SOURCE_DIR}/libeclxx ${PROJECT_SOURCE_DIR}/libert_util ${PROJECT_SOURCE_DIR}/libert_utilxx ${PROJECT_SOURCE_DIR}/libgeometry")
-     endif()
-
-    configure_file(doxygen.cfg.in ${PROJECT_BINARY_DIR}/doxygen.cfg)
-    add_custom_target(doxy ALL
-      COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/doxygen.cfg
-      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/../
-      COMMENT "Generating doxygen documentation"
-      DEPENDS ert_util ert_utilxx ecl eclxx ecl_well ert_geometry)
-
-  endif()
-endif()
-
 
 INSTALL( DIRECTORY ${PROJECT_BINARY_DIR}/documentation DESTINATION ${CMAKE_INSTALL_PREFIX} )
