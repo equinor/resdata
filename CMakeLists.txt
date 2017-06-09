@@ -21,7 +21,7 @@ set( ERT_VERSION_MICRO git ) # with "new in Ert Version X.X.X"!
 option( BUILD_TESTS         "Should the tests be built"                               OFF)
 option( BUILD_APPLICATIONS  "Should we build small utility applications"              OFF)
 option( BUILD_ECL_SUMMARY   "Build the commandline application ecl_summary"           OFF)
-option( BUILD_PYTHON        "Run py_compile on the python wrappers"                   OFF)
+option( BUILD_PYTHON        "Build python wrappers"                                   OFF)
 option( BUILD_SHARED_LIBS   "Build shared libraries"                                  ON )
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( RST_DOC             "Build RST documentation"                                 OFF)
