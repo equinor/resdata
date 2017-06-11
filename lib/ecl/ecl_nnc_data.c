@@ -25,6 +25,12 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw_magic.h>
 
+enum kw_data_type {
+   TRANS_DATA    = 1, 
+   WTR_FLUX_DATA = 2, 
+   OIL_FLUX_DATA = 3, 
+   GAS_FLUX_DATA = 4
+};
 
 struct ecl_nnc_data_struct {
    UTIL_TYPE_ID_DECLARATION;
@@ -193,8 +199,7 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
       util_abort("Error: error reading keyword data in %s.\n", __func__);
 }
 
-
-ecl_nnc_data_type * ecl_nnc_data_alloc(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
+static ecl_nnc_data_type * ecl_nnc_data_alloc__(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
    ecl_nnc_data_type * data = util_malloc(sizeof * data);
 
    data->size = ecl_nnc_geometry_size( nnc_geo );
@@ -206,6 +211,21 @@ ecl_nnc_data_type * ecl_nnc_data_alloc(const ecl_grid_type * grid, const ecl_nnc
    return data;
 }
 
+ecl_nnc_data_type * ecl_nnc_data_alloc_tran(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, TRANS_DATA);
+}
+
+ecl_nnc_data_type * ecl_nnc_data_alloc_wat_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, WTR_FLUX_DATA);
+}
+
+ecl_nnc_data_type * ecl_nnc_data_alloc_oil_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, OIL_FLUX_DATA);
+}
+
+ecl_nnc_data_type * ecl_nnc_data_alloc_gas_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, GAS_FLUX_DATA);
+}
 
 void ecl_nnc_data_free(ecl_nnc_data_type * data) {
    free(data->values);

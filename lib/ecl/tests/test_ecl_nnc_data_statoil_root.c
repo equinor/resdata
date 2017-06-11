@@ -60,7 +60,7 @@ void test_alloc_file_tran(char * filename) {
    ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
    ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
 
-   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc(grid, nnc_geo, view_file, TRANS_DATA);
+   ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid, nnc_geo, view_file);
    
    //These numerical values are hand-tuned the specific input file at:
    //${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
@@ -106,7 +106,7 @@ void test_alloc_file_flux(char * filename, int file_num) {
    {   
       ecl_file_view_type * view_file = ecl_file_get_global_view( restart_file );
 
-      ecl_nnc_data_type * nnc_flux_data = ecl_nnc_data_alloc(grid, nnc_geo, view_file, WTR_FLUX_DATA);
+      ecl_nnc_data_type * nnc_flux_data = ecl_nnc_data_alloc_wat_flux(grid, nnc_geo, view_file);
       assert_data_values_read(nnc_flux_data);
       ecl_nnc_data_free( nnc_flux_data );
    }

@@ -27,14 +27,12 @@ extern "C" {
 #include <ert/ecl/ecl_nnc_geometry.h>
 #include <ert/ecl/ecl_nnc_export.h>
 
-#define TRANS_DATA     1
-#define WTR_FLUX_DATA  2
-#define OIL_FLUX_DATA  4
-#define GAS_FLUX_DATA  8
-
 typedef struct ecl_nnc_data_struct ecl_nnc_data_type;
 
-ecl_nnc_data_type * ecl_nnc_data_alloc(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type);
+ecl_nnc_data_type * ecl_nnc_data_alloc_tran(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file);
+ecl_nnc_data_type * ecl_nnc_data_alloc_wat_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file);
+ecl_nnc_data_type * ecl_nnc_data_alloc_oil_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file);
+ecl_nnc_data_type * ecl_nnc_data_alloc_gas_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file);
 void                       ecl_nnc_data_free(ecl_nnc_data_type * data);
 
 int                        ecl_nnc_data_get_size(ecl_nnc_data_type * data);
