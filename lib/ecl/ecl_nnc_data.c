@@ -170,6 +170,8 @@ static ecl_kw_type * ecl_nnc_data_get_kw( const ecl_grid_type * grid, const ecl_
   else
     if (kw_type == TRANS_DATA)
       return ecl_nnc_data_get_tranll_kw( grid , init_file_view , lgr_nr1 , lgr_nr2 );
+    else
+      return NULL;
 }
 
 static void assert_correct_kw_count(ecl_kw_type * kw, char * function_name, bool check_kw_count, int correct_kw_count, int kw_count) {
