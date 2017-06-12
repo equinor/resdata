@@ -57,6 +57,8 @@ static const char * ecl_nnc_data_get_str_kw(int kw_type, int grid1, int grid2) {
        kw = FLRWATNNC_KW;
      else if (grid1 == 0)
        kw = FLRWATLG_KW;
+     else
+       kw = FLRWATLL_KW;
      break;
 
     case OIL_FLUX_DATA:
@@ -64,6 +66,8 @@ static const char * ecl_nnc_data_get_str_kw(int kw_type, int grid1, int grid2) {
         kw = FLROILNNC_KW;
       else if (grid1 == 0)
         kw = FLROILLG_KW; 
+      else
+        kw = FLROILLL_KW;
       break;
         
     case GAS_FLUX_DATA:
@@ -71,6 +75,8 @@ static const char * ecl_nnc_data_get_str_kw(int kw_type, int grid1, int grid2) {
         kw = FLRGASNNC_KW;
       else if (grid1 == 0)
         kw = FLRGASLG_KW;
+      else
+        kw = FLRGASLL_KW;
       break;
 
     default:
@@ -166,14 +172,19 @@ static ecl_kw_type * ecl_nnc_data_get_kw( const ecl_grid_type * grid, const ecl_
       return ecl_nnc_data_get_tranll_kw( grid , init_file_view , lgr_nr1 , lgr_nr2 );
 }
 
+static void assert_correct_kw_count(ecl_kw_type * kw, char * function_name, bool check_kw_count, int correct_kw_count, int kw_count) {
+   if (check_kw_count & (correct_kw_count != kw_count))
+      util_abort("In function %s, reading kw: %s. %d != %d", function_name, ecl_kw_get_header(kw), correct_kw_count, kw_count);
+}
 
 static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
 
    int current_grid1 = -1;
    int current_grid2 = -1;
    ecl_kw_type * current_kw = NULL;
-   int sum_kw_size = 0;
-   bool check_kw_size = true;
+   int correct_kw_count = 0;
+   int kw_count = 0;
+   bool check_kw_count = false;
    
    for (int nnc_index = 0; nnc_index < data->size; nnc_index++) {
       const ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
@@ -183,20 +194,27 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
       if (grid1 != current_grid1 || grid2 != current_grid2) {
          current_grid1 = grid1;
          current_grid2 = grid2;
+         assert_correct_kw_count(current_kw, __func__, check_kw_count, correct_kw_count, kw_count);
          current_kw = ecl_nnc_data_get_kw( grid, init_file, grid1 , grid2 , kw_type);
+         kw_count = 0;
          if (current_kw) {            
-            sum_kw_size += ecl_kw_get_size( current_kw );
+            correct_kw_count = ecl_kw_get_size( current_kw );
+            check_kw_count = true;
          }
-         else
-            check_kw_size = false;
+         else {
+            check_kw_count = false;
+            printf("Warning: failed to obtain kw from file in function %s. ", __func__);
+            printf("Grid1: %d, Grid2 %d\n", current_grid1, current_grid2);
+         }
       }
-      if (current_kw)
+      if (current_kw) {
          data->values[nnc_index] = ecl_kw_iget_as_double(current_kw, pair->input_index);
+         kw_count++;
+      }
       else
          data->values[nnc_index] = -1;
    }
-   if (check_kw_size && sum_kw_size != data->size)
-      util_abort("Error: error reading keyword data in %s.\n", __func__);
+   assert_correct_kw_count(current_kw, __func__, check_kw_count, correct_kw_count, kw_count);
 }
 
 static ecl_nnc_data_type * ecl_nnc_data_alloc__(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
