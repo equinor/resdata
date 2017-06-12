@@ -179,6 +179,7 @@ static void assert_correct_kw_count(ecl_kw_type * kw, char * function_name, bool
       util_abort("In function %s, reading kw: %s. %d != %d", function_name, ecl_kw_get_header(kw), correct_kw_count, kw_count);
 }
 
+
 static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
 
    int current_grid1 = -1;
