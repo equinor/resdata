@@ -380,6 +380,17 @@ values (2e20) are denoted with '*'.
 #define RFIPWAT_KW              "RFIPWAT"
 #define RFIPOIL_KW              "RFIPOIL"
 
+#define FLRWATNNC_KW             "FLRWATN+" //nnc wtr flux, grid1 == grid2
+#define FLROILNNC_KW             "FLROILN+" //nnc oil flux, grid1 == grid2
+#define FLRGASNNC_KW             "FLRGASN+" //nnc gas flux, grid1 == grid2
+
+#define FLRWATLG_KW              "FLRWATL+" //nnc wtr flux, grid1 == 0, grid != 0
+#define FLROILLG_KW              "FLROILL+" //nnc oil flux, grid1 == 0, grid != 0
+#define FLRGASLG_KW              "FLRGASL+" //nnc gas flux, grid1 == 0, grid != 0
+
+#define FLRWATLL_KW              "FLRWATA+" //nnc wtr flux, grid1 != 0, grid2 != 0, grid1 != grid2
+#define FLROILLL_KW              "FLROILA+" //nnc oil flux, grid1 != 0, grid2 != 0, grid1 != grid2
+#define FLRGASLL_KW              "FLRGASA+" //nnc gas flux, grid1 != 0, grid2 != 0, grid1 != grid2
 
 #define INTEHEAD_NWELLS_INDEX  16     // Number of wells
 #define INTEHEAD_NIWELZ_INDEX  24     // Number of elements pr. well in the IWEL array.

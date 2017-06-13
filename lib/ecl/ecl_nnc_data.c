@@ -25,6 +25,12 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw_magic.h>
 
+enum kw_data_type {
+   TRANS_DATA    = 1, 
+   WTR_FLUX_DATA = 2, 
+   OIL_FLUX_DATA = 3, 
+   GAS_FLUX_DATA = 4
+};
 
 struct ecl_nnc_data_struct {
    UTIL_TYPE_ID_DECLARATION;
@@ -33,24 +39,69 @@ struct ecl_nnc_data_struct {
 };
 
 
+static const char * ecl_nnc_data_get_str_kw(int kw_type, int grid1, int grid2) {
+  char * kw = NULL;
+  switch (kw_type) { 
 
-static ecl_kw_type * ecl_nnc_data_get_tran_kw( const ecl_file_view_type * init_file_view , const char * kw , int lgr_nr) {
-  ecl_kw_type * tran_kw = NULL;
+    case TRANS_DATA:
+      if (grid1 == grid2)
+        kw = TRANNNC_KW;
+      else if (grid1 == 0)
+        kw = TRANGL_KW;
+      else
+        kw = TRANLL_KW;
+      break;
+
+    case WTR_FLUX_DATA:
+     if (grid1 == grid2)
+       kw = FLRWATNNC_KW;
+     else if (grid1 == 0)
+       kw = FLRWATLG_KW;
+     else
+       kw = FLRWATLL_KW;
+     break;
+
+    case OIL_FLUX_DATA:
+      if (grid1 == grid2)
+        kw = FLROILNNC_KW;
+      else if (grid1 == 0)
+        kw = FLROILLG_KW; 
+      else
+        kw = FLROILLL_KW;
+      break;
+        
+    case GAS_FLUX_DATA:
+      if (grid1 == grid2)
+        kw = FLRGASNNC_KW;
+      else if (grid1 == 0)
+        kw = FLRGASLG_KW;
+      else
+        kw = FLRGASLL_KW;
+      break;
+
+    default:
+      kw = NULL;
+
+  }
+  return kw;
+}
+
+
+static ecl_kw_type * ecl_nnc_data_get_gl_kw( const ecl_file_view_type * init_file_view , const char * kw, int kw_type, int lgr_nr) {
+  ecl_kw_type * return_kw = NULL;
+
+  if (kw != NULL)
   if (lgr_nr == 0) {
-    if (strcmp(kw , TRANNNC_KW) == 0)
-      if(ecl_file_view_has_kw(init_file_view, kw)) {
-        tran_kw = ecl_file_view_iget_named_kw(init_file_view, TRANNNC_KW, 0);
-      }
+    if(ecl_file_view_has_kw(init_file_view, kw)) 
+      return_kw = ecl_file_view_iget_named_kw(init_file_view, kw, 0);
   } else {
-    if ((strcmp(kw , TRANNNC_KW) == 0) ||
-        (strcmp(kw , TRANGL_KW) == 0)) {
+    {
       const int file_num_kw = ecl_file_view_get_size( init_file_view );
       int global_kw_index = 0;
       bool finished = false;
       bool correct_lgrheadi = false;
       int head_index = 0;
       int steps = 0;
-
 
       while(!finished){
         ecl_kw_type * ecl_kw = ecl_file_view_iget_kw( init_file_view , global_kw_index );
@@ -66,8 +117,8 @@ static ecl_kw_type * ecl_nnc_data_get_tran_kw( const ecl_file_view_type * init_f
         if(correct_lgrheadi) {
           if (strcmp(kw, current_kw) == 0) {
             steps  = global_kw_index - head_index; /* This is to calculate who fare from lgrheadi we found the TRANGL/TRANNNC key word */
-            if(steps == 3 || steps == 4 || steps == 6) { /* We only support a file format where TRANNNC is 3 steps and TRANGL is 4 or 6 steps from LGRHEADI */
-              tran_kw = ecl_kw;
+            if (kw_type != TRANS_DATA || steps == 3 || steps == 4 || steps == 6) { /* We only support a file format where TRANNNC is 3 steps and TRANGL is 4 or 6 steps from LGRHEADI */
+              return_kw = ecl_kw;
               finished = true;
               break;
             }
@@ -79,7 +130,7 @@ static ecl_kw_type * ecl_nnc_data_get_tran_kw( const ecl_file_view_type * init_f
       }
     }
   }
-  return tran_kw;
+  return return_kw;
 }
 
 
@@ -111,25 +162,35 @@ static ecl_kw_type * ecl_nnc_data_get_tranll_kw( const ecl_grid_type * grid , co
 }
 
 
-static ecl_kw_type * ecl_nnc_data_get_tranx_kw( const ecl_grid_type * grid, const ecl_file_view_type * init_file_view, int lgr_nr1, int lgr_nr2 ) {
-  if (lgr_nr1 == lgr_nr2)
-    return ecl_nnc_data_get_tran_kw( init_file_view , TRANNNC_KW , lgr_nr2 );
-  else {
-    if (lgr_nr1 == 0)
-      return ecl_nnc_data_get_tran_kw( init_file_view , TRANGL_KW , lgr_nr2 );
-    else
+static ecl_kw_type * ecl_nnc_data_get_kw( const ecl_grid_type * grid, const ecl_file_view_type * init_file_view, int lgr_nr1, int lgr_nr2 , int kw_type) {
+
+  const char * kw = ecl_nnc_data_get_str_kw(kw_type, lgr_nr1, lgr_nr2);
+  if (lgr_nr1 == 0 || lgr_nr1 == lgr_nr2)
+    return ecl_nnc_data_get_gl_kw( init_file_view , kw, kw_type, lgr_nr2 );
+  else
+    if (kw_type == TRANS_DATA)
       return ecl_nnc_data_get_tranll_kw( grid , init_file_view , lgr_nr1 , lgr_nr2 );
-  }
+    else
+      return NULL;
+}
+
+static void assert_correct_kw_count(ecl_kw_type * kw, char * function_name, bool check_kw_count, int correct_kw_count, int kw_count) {
+   if (check_kw_count & (correct_kw_count != kw_count))
+      util_abort("In function %s, reading kw: %s. %d != %d", function_name, ecl_kw_get_header(kw), correct_kw_count, kw_count);
 }
 
 
-static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
 
    int current_grid1 = -1;
    int current_grid2 = -1;
-   ecl_kw_type * tran_kw = NULL;
-   
-   for (int nnc_index = 0; nnc_index < data->size; nnc_index++) {
+   ecl_kw_type * current_kw = NULL;
+   int correct_kw_count = 0;
+   int kw_count = 0;
+   bool check_kw_count = false;
+   int nnc_size = ecl_nnc_geometry_size( nnc_geo );   
+
+   for (int nnc_index = 0; nnc_index < nnc_size; nnc_index++) {
       const ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
       int grid1 = pair->grid_nr1;
       int grid2 = pair->grid_nr2;
@@ -137,27 +198,59 @@ static void ecl_nnc_data_set_trans(ecl_nnc_data_type * data, const ecl_grid_type
       if (grid1 != current_grid1 || grid2 != current_grid2) {
          current_grid1 = grid1;
          current_grid2 = grid2;
-         tran_kw = ecl_nnc_data_get_tranx_kw( grid, init_file, grid1 , grid2);
+         assert_correct_kw_count(current_kw, __func__, check_kw_count, correct_kw_count, kw_count);
+         current_kw = ecl_nnc_data_get_kw( grid, init_file, grid1 , grid2 , kw_type);
+         kw_count = 0;
+         if (current_kw) {            
+            correct_kw_count = ecl_kw_get_size( current_kw );
+            check_kw_count = true;
+            data->size = nnc_index + correct_kw_count;
+         }
+         else {
+            check_kw_count = false;
+            printf("Warning: failed to obtain kw from file in function %s. ", __func__);
+            printf("Grid1: %d, Grid2 %d\n", current_grid1, current_grid2);
+         }
       }
-      data->values[nnc_index] = ecl_kw_iget_as_double(tran_kw, pair->input_index);
-      
+      if (current_kw) {
+         data->values[nnc_index] = ecl_kw_iget_as_double(current_kw, pair->input_index);
+         kw_count++;
+      }
+      else
+         data->values[nnc_index] = -1;
    }
+   assert_correct_kw_count(current_kw, __func__, check_kw_count, correct_kw_count, kw_count);
 }
 
+static ecl_nnc_data_type * ecl_nnc_data_alloc__(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
+   ecl_nnc_data_type * data = util_malloc(sizeof * data);
 
-ecl_nnc_data_type * ecl_nnc_data_alloc_tran(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
-   ecl_nnc_data_type * data = util_malloc( sizeof * data );
+   data->size = 0;
 
-   data->size = ecl_nnc_geometry_size( nnc_geo );
-   
-   data->values = util_malloc( data->size * sizeof(double));
+   int nnc_size = ecl_nnc_geometry_size( nnc_geo );
 
-   ecl_nnc_data_set_trans(data, grid, nnc_geo, init_file);
+   data->values = util_malloc( nnc_size * sizeof(double));
+
+   ecl_nnc_data_set_values(data, grid, nnc_geo, init_file, kw_type);
 
    return data;
 }
 
+ecl_nnc_data_type * ecl_nnc_data_alloc_tran(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, TRANS_DATA);
+}
 
+ecl_nnc_data_type * ecl_nnc_data_alloc_wat_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, WTR_FLUX_DATA);
+}
+
+ecl_nnc_data_type * ecl_nnc_data_alloc_oil_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, OIL_FLUX_DATA);
+}
+
+ecl_nnc_data_type * ecl_nnc_data_alloc_gas_flux(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
+   return ecl_nnc_data_alloc__(grid, nnc_geo, init_file, GAS_FLUX_DATA);
+}
 
 void ecl_nnc_data_free(ecl_nnc_data_type * data) {
    free(data->values);
