@@ -188,8 +188,9 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
    int correct_kw_count = 0;
    int kw_count = 0;
    bool check_kw_count = false;
-   
-   for (int nnc_index = 0; nnc_index < data->size; nnc_index++) {
+   int nnc_size = ecl_nnc_geometry_size( nnc_geo );   
+
+   for (int nnc_index = 0; nnc_index < nnc_size; nnc_index++) {
       const ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
       int grid1 = pair->grid_nr1;
       int grid2 = pair->grid_nr2;
@@ -203,6 +204,7 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
          if (current_kw) {            
             correct_kw_count = ecl_kw_get_size( current_kw );
             check_kw_count = true;
+            data->size = nnc_index + correct_kw_count;
          }
          else {
             check_kw_count = false;
@@ -223,9 +225,11 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
 static ecl_nnc_data_type * ecl_nnc_data_alloc__(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
    ecl_nnc_data_type * data = util_malloc(sizeof * data);
 
-   data->size = ecl_nnc_geometry_size( nnc_geo );
+   data->size = 0;
 
-   data->values = util_malloc( data->size * sizeof(double));
+   int nnc_size = ecl_nnc_geometry_size( nnc_geo );
+
+   data->values = util_malloc( nnc_size * sizeof(double));
 
    ecl_nnc_data_set_values(data, grid, nnc_geo, init_file, kw_type);
 
