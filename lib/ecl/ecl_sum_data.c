@@ -526,10 +526,10 @@ bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_da
 
 
 static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  time_t data_start_time = time_interval_get_start( data->sim_time );
-  time_t sim_end         = time_interval_get_end( data->sim_time );
+  time_t data_start_time = time_interval_get_start(data->sim_time);
+  time_t sim_end = time_interval_get_end(data->sim_time);
 
-  if (!ecl_sum_data_check_sim_time( data , sim_time )) {
+  if (!ecl_sum_data_check_sim_time(data, sim_time)) {
     fprintf(stderr , "Simulation start: "); util_fprintf_date_utc( ecl_smspec_get_start_time( data->smspec ) , stderr );
     fprintf(stderr , "Data start......: "); util_fprintf_date_utc( data_start_time , stderr );
     fprintf(stderr , "Simulation end .: "); util_fprintf_date_utc( sim_end , stderr );
@@ -543,45 +543,23 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
      perfectly well be 'holes' in the time domain, because of e.g. the
      RPTONLY keyword.
   */
-  {
-    int  low_index      = 0;
-    int  high_index     = vector_get_size( data->data );
-    int  internal_index = INVALID_MINISTEP_NR;
+  int low_index  = 0;
+  int high_index = vector_get_size(data->data);
 
+  // perform binary search
+  while (low_index+1 < high_index) {
+    int center_index = (low_index + high_index) / 2;
+    const ecl_sum_tstep_type * center_step = ecl_sum_data_iget_ministep(data, center_index);
+    const time_t center_time = ecl_sum_tstep_get_sim_time(center_step);
 
-    while (internal_index < 0) {
-      if (low_index == high_index)
-        internal_index = low_index;
-      else {
-        int center_index = 0.5*( low_index + high_index );
-        const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , center_index );
-
-        if ((high_index - low_index) == 1) {
-          /* Degenerate special case. */
-          if (sim_time < ecl_sum_tstep_get_sim_time( ministep ))
-            internal_index = low_index;
-          else
-            internal_index = high_index;
-        } else {
-          if (sim_time > ecl_sum_tstep_get_sim_time( ministep ))    /*     Low-----Center---X---High */
-            low_index = center_index;
-          else {
-            time_t prev_time = data_start_time;
-            if (center_index > 0) {
-              const ecl_sum_tstep_type * prev_step = ecl_sum_data_iget_ministep( data , center_index - 1  );
-              prev_time = ecl_sum_tstep_get_sim_time( prev_step );
-            }
-
-            if (prev_time < sim_time)
-              internal_index = center_index; /* Found it */
-            else
-              high_index = center_index;
-          }
-        }
-      }
-    }
-    return internal_index;
+    if (sim_time > center_time)
+      low_index = center_index;
+    else
+      high_index = center_index;
   }
+
+  const ecl_sum_tstep_type * low_step = ecl_sum_data_iget_ministep(data, low_index);
+  return sim_time <= ecl_sum_tstep_get_sim_time(low_step) ? low_index+1 : high_index;
 }
 
 
@@ -594,7 +572,7 @@ int ecl_sum_data_get_index_from_sim_days( const ecl_sum_data_type * data , doubl
 
 /**
    This function will take a true time 'sim_time' as input. The
-   ministep indices bracketing this sim_time is identified, and the
+   ministep indices bracketing this sim_time are identified, and the
    corresponding weights are calculated.
 
    The actual value we are interested in can then be computed with the
@@ -616,40 +594,45 @@ int ecl_sum_data_get_index_from_sim_days( const ecl_sum_data_type * data , doubl
    function should be used), consult documentation at the top of this
    file.
 */
+void ecl_sum_data_init_interp_from_sim_time(const ecl_sum_data_type* data,
+                                            time_t sim_time,
+                                            int* index1,
+                                            int* index2,
+                                            double* weight1,
+                                            double* weight2) {
+  int i1;
+  int i2 = ecl_sum_data_get_index_from_sim_time(data, sim_time);
 
-
-
-void ecl_sum_data_init_interp_from_sim_time( const ecl_sum_data_type * data , time_t sim_time, int *_index1, int *_index2 , double * _weight1 , double *_weight2) {
-  int     index2                          = ecl_sum_data_get_index_from_sim_time( data , sim_time);
-  int     index1;
-  const ecl_sum_tstep_type * ministep2 = ecl_sum_data_iget_ministep( data , index2 );
   const ecl_sum_tstep_type * ministep1;
-  time_t sim_time2 = ecl_sum_tstep_get_sim_time( ministep2 );
+  const ecl_sum_tstep_type * ministep2 = ecl_sum_data_iget_ministep(data, i2);
 
+  time_t sim_time1;
+  time_t sim_time2 = ecl_sum_tstep_get_sim_time(ministep2);
 
-  index1 = index2;
-  while (true) {
-    index1--;
-    ministep1 = ecl_sum_data_iget_ministep( data , index1 );
-    {
-      time_t sim_time1 = ecl_sum_tstep_get_sim_time( ministep1 );
-      if (sim_time1 < sim_time2)
-        break;
-    }
-    if (index1 == 0)
-      util_abort("%s: Hmm internal error?? \n",__func__);
+  // find first ministep whose time is strictly earlier than given sim_time
+  for (i1 = i2 - 1; i1 >= 0; --i1) {
+    ministep1 = ecl_sum_data_iget_ministep(data, i1);
+    sim_time1 = ecl_sum_tstep_get_sim_time(ministep1);
+
+    if (sim_time1 < sim_time2) break;
   }
 
-  {
-    double  weight2    =  (sim_time - ecl_sum_tstep_get_sim_time( ministep1 ));
-    double  weight1    = -(sim_time - ecl_sum_tstep_get_sim_time( ministep2 ));
-
-
-    *_index1   = index1;
-    *_index2   = index2;
-    *_weight1 = weight1 / ( weight1 + weight2 );
-    *_weight2 = weight2 / ( weight1 + weight2 );
+  if (i1 < 0) {
+    int mday = 0, month = 0, year = 0;
+    ecl_util_set_date_values(sim_time2, &mday, &month, &year);
+    util_abort("%s: No ministep prior to %d-%02d-%02d (idx=%d)\n", __func__, year, month, mday, i2);
   }
+
+  *index1 = i1;
+  *index2 = i2;
+
+  // weights
+  double time_diff  = sim_time2 - sim_time1;
+  double time_dist1 =  (sim_time - sim_time1);
+  double time_dist2 = -(sim_time - sim_time2);
+
+  *weight1 = time_dist2 / time_diff;
+  *weight2 = time_dist1 / time_diff;
 }
 
 
