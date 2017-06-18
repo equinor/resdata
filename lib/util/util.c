@@ -3090,6 +3090,7 @@ static void __util_set_timevalues_utc(time_t t , int * sec , int * min , int * h
 }
 
 
+static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, bool force_set, time_t * t);
 
 /*
   This function takes a time_t instance as input, and
@@ -3129,7 +3130,6 @@ bool util_is_first_day_in_month_utc( time_t t) {
     return false;
 }
 
-static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, time_t * t);
 
 /*
   Expects date in the order YYYY-MM-DD.
@@ -3139,7 +3139,7 @@ bool util_sscanf_isodate(const char * date_token , time_t * t) {
   int day, month, year;
 
   if (sscanf(date_token , "%d-%d-%d" , &year , &month , &day) == 3)
-    return util_make_datetime_utc__(0,0,0,day , month , year , t);
+    return util_make_datetime_utc__(0,0,0,day , month , year , false, t);
 
   return false;
 }
@@ -3314,7 +3314,7 @@ char * util_get_timezone() {
 */
 
 
-static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, time_t * t) {
+static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, bool force_set, time_t * t) {
   bool valid = false;
   struct tm ts;
   ts.tm_sec    = sec;
@@ -3333,24 +3333,29 @@ static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int
 #endif
 
     if ((ts.tm_sec  == sec) &&
-        (ts.tm_sec  == min) &&
+        (ts.tm_min  == min) &&
         (ts.tm_hour == hour) &&
         (ts.tm_mday == mday) &&
         (ts.tm_mon == (month - 1)) &&
         (ts.tm_year == (year - 1900)))
       valid = true;
 
-    if (t)
-      *t = work_t;
+    if (t) {
+      if (valid || force_set)
+        *t = work_t;
+    }
   }
   return valid;
 }
 
 
+bool util_make_datetime_utc_validated(int sec, int min, int hour , int mday , int month , int year, time_t * t) {
+  return util_make_datetime_utc__( sec,min,hour,mday,month,year,false, t);
+}
 
 time_t util_make_datetime_utc(int sec, int min, int hour , int mday , int month , int year) {
   time_t t;
-  util_make_datetime_utc__( sec,min,hour,mday,month,year,&t);
+  util_make_datetime_utc__( sec,min,hour,mday,month,year,true, &t);
   return t;
 }
 
