@@ -471,18 +471,13 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) {
 */
 
 bool ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  if (time_interval_contains( data->sim_time , sim_time ) || (sim_time == time_interval_get_end( data->sim_time)))
-    return true;
-  else
-    return false;
+  return (time_interval_contains(data->sim_time, sim_time)
+      || (sim_time == time_interval_get_end(data->sim_time)));
 }
 
 
 bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_days) {
-  if ((sim_days < data->days_start) || ( sim_days > data->sim_length))
-    return false;
-  else
-    return true;
+  return sim_days >= data->days_start && sim_days <= data->sim_length;
 }
 
 
@@ -543,8 +538,9 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
      perfectly well be 'holes' in the time domain, because of e.g. the
      RPTONLY keyword.
   */
-  int low_index  = 0;
-  int high_index = vector_get_size(data->data);
+
+  int low_index = 0;
+  int high_index = vector_get_size(data->data) - 1;
 
   // perform binary search
   while (low_index+1 < high_index) {
@@ -559,9 +555,8 @@ static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data 
   }
 
   const ecl_sum_tstep_type * low_step = ecl_sum_data_iget_ministep(data, low_index);
-  return sim_time <= ecl_sum_tstep_get_sim_time(low_step) ? low_index+1 : high_index;
+  return sim_time <= ecl_sum_tstep_get_sim_time(low_step) ? low_index : high_index;
 }
-
 
 int ecl_sum_data_get_index_from_sim_days( const ecl_sum_data_type * data , double sim_days) {
   time_t sim_time = ecl_smspec_get_start_time( data->smspec );
@@ -600,33 +595,28 @@ void ecl_sum_data_init_interp_from_sim_time(const ecl_sum_data_type* data,
                                             int* index2,
                                             double* weight1,
                                             double* weight2) {
-  int i1;
-  int i2 = ecl_sum_data_get_index_from_sim_time(data, sim_time);
+  int idx = ecl_sum_data_get_index_from_sim_time(data, sim_time);
 
-  const ecl_sum_tstep_type * ministep1;
-  const ecl_sum_tstep_type * ministep2 = ecl_sum_data_iget_ministep(data, i2);
+  // if sim_time is first date, idx=0 and then we cannot interpolate, so we give
+  // weight 1 to index1=index2=0.
+  if (idx == 0) {
+    *index1 = 0;
+    *index2 = 0;
+    *weight1 = 1;
+    *weight2 = 0;
+    return;
+  }
 
-  time_t sim_time1;
+  const ecl_sum_tstep_type * ministep1 = ecl_sum_data_iget_ministep(data, idx-1);
+  const ecl_sum_tstep_type * ministep2 = ecl_sum_data_iget_ministep(data, idx);
+
+  time_t sim_time1 = ecl_sum_tstep_get_sim_time(ministep1);
   time_t sim_time2 = ecl_sum_tstep_get_sim_time(ministep2);
 
-  // find first ministep whose time is strictly earlier than given sim_time
-  for (i1 = i2 - 1; i1 >= 0; --i1) {
-    ministep1 = ecl_sum_data_iget_ministep(data, i1);
-    sim_time1 = ecl_sum_tstep_get_sim_time(ministep1);
+  *index1 = idx-1;
+  *index2 = idx;
 
-    if (sim_time1 < sim_time2) break;
-  }
-
-  if (i1 < 0) {
-    int mday = 0, month = 0, year = 0;
-    ecl_util_set_date_values(sim_time2, &mday, &month, &year);
-    util_abort("%s: No ministep prior to %d-%02d-%02d (idx=%d)\n", __func__, year, month, mday, i2);
-  }
-
-  *index1 = i1;
-  *index2 = i2;
-
-  // weights
+  // weights the interpolation each of the ministeps according to distance from sim_time
   double time_diff  = sim_time2 - sim_time1;
   double time_dist1 =  (sim_time - sim_time1);
   double time_dist2 = -(sim_time - sim_time2);
@@ -644,51 +634,42 @@ void ecl_sum_data_init_interp_from_sim_days( const ecl_sum_data_type * data , do
 }
 
 
-double_vector_type * ecl_sum_data_alloc_seconds_solution( const ecl_sum_data_type * data , const smspec_node_type * node , double cmp_value, bool rates_clamp_lower) {
-  double_vector_type * solution = double_vector_alloc( 0, 0);
-  const int param_index = smspec_node_get_params_index( node );
-  const int size = vector_get_size( data->data);
-  const double is_rate = smspec_node_is_rate( node );
+double_vector_type * ecl_sum_data_alloc_seconds_solution(const ecl_sum_data_type * data, const smspec_node_type * node, double cmp_value, bool rates_clamp_lower) {
+  double_vector_type * solution = double_vector_alloc(0, 0);
+  const int param_index = smspec_node_get_params_index(node);
+  const int size = vector_get_size(data->data);
 
-  if (size > 1) {
-    int index = 0;
-    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , index );
-    const ecl_sum_tstep_type * prev_ministep;
-    double value = ecl_sum_tstep_iget( ministep , param_index );
-    double prev_value;
+  if (size <= 1)
+    return solution;
 
-    while (true) {
-      index++;
-      if (index >= size)
-        break;
+  for (int index = 0; index < size; ++index) {
+    int prev_index = util_int_max(0, index-1);
 
-      prev_ministep = ministep;
-      prev_value = value;
+    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data, index);
+    const ecl_sum_tstep_type * prev_ministep = ecl_sum_data_iget_ministep(data, prev_index);
+    double value = ecl_sum_tstep_iget(ministep, param_index);
+    double prev_value = ecl_sum_tstep_iget(prev_ministep, param_index);
 
-      ministep = ecl_sum_data_iget_ministep( data , index );
-      value = ecl_sum_tstep_iget( ministep , param_index );
+    // cmp_value in interval value (closed) and prev_value (open)
+    bool contained = value == cmp_value;
+    contained |= (util_double_min(prev_value, value) < cmp_value) &&
+            (cmp_value < util_double_max(prev_value, value));
 
-      if ((value == cmp_value) ||
-          (((value - cmp_value) * (cmp_value - prev_value)) > 0)) {
-        double time1 = ecl_sum_tstep_get_sim_seconds( prev_ministep );
-        double time2 = ecl_sum_tstep_get_sim_seconds( ministep );
+    if (!contained)
+      continue;
 
-        if (is_rate) {
-          if (rates_clamp_lower)
-            double_vector_append( solution ,  time1 + 1 );
-          else
-            double_vector_append( solution ,  time2 );
-        } else {
-          double slope = (value - prev_value) / (time2 - time1);
-          double seconds = (cmp_value - prev_value) / slope + time1;
+    double prev_time = ecl_sum_tstep_get_sim_seconds(prev_ministep);
+    double time = ecl_sum_tstep_get_sim_seconds(ministep);
 
-          double_vector_append( solution , seconds );
-        }
+    if (smspec_node_is_rate(node)) {
+      double_vector_append(solution, rates_clamp_lower ? prev_time + 1 : time);
+    } else {
+      double slope = (value - prev_value) / (time - prev_time);
+      double seconds = (cmp_value - prev_value)/slope + prev_time;
 
-      }
+      double_vector_append(solution, seconds);
     }
   }
-
   return solution;
 }
 
@@ -1199,35 +1180,32 @@ double ecl_sum_data_interp_get(const ecl_sum_data_type * data , int time_index1 
 }
 
 
-void ecl_sum_data_fwrite_interp_csv_line(const ecl_sum_data_type * data , time_t sim_time, const ecl_sum_vector_type * keylist, FILE *fp){
-    int num_keywords = ecl_sum_vector_get_size(keylist);
-    double weight1 , weight2;
-    int    time_index1 , time_index2;
+void ecl_sum_data_fwrite_interp_csv_line(const ecl_sum_data_type * data, time_t sim_time, const ecl_sum_vector_type * keylist, FILE *fp){
+  int num_keywords = ecl_sum_vector_get_size(keylist);
+  double weight1, weight2;
+  int    time_index1, time_index2;
+
+  ecl_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
+
+  for (int i = 0; i < num_keywords; i++) {
+    int params_index = ecl_sum_vector_iget_param_index(keylist, i);
+
     double value = 0.0;
-    int i;
-
-    ecl_sum_data_init_interp_from_sim_time( data , sim_time , &time_index1 , &time_index2 , &weight1 , &weight2);
-    for(i = 0; i< num_keywords; i++  ){
-        bool is_rate = ecl_sum_vector_iget_is_rate(keylist, i);
-        int params_index = ecl_sum_vector_iget_param_index(keylist , i);
-        if(is_rate){
-            int time_index;
-            if (sim_time == time_interval_get_start( data->sim_time ))
-                time_index = 0;
-            else
-                time_index = ecl_sum_data_get_index_from_sim_time( data , sim_time );
-
-           value = ecl_sum_data_iget( data , time_index , params_index);
-        } else {
-           value = ecl_sum_data_interp_get( data , time_index1 , time_index2 , weight1 , weight2 , params_index);
-
-        }
-        if(i == 0){
-            fprintf(fp , "%f",value);
-        }else{
-            fprintf(fp , ",%f",value);
-        }
+    bool is_rate = ecl_sum_vector_iget_is_rate(keylist, i);
+    if (is_rate) {
+      int time_index = ecl_sum_data_get_index_from_sim_time(data, sim_time);
+      // uses step function since it is a rate
+      value = ecl_sum_data_iget(data, time_index, params_index);
+    } else {
+      // uses interpolation between timesteps
+      value = ecl_sum_data_interp_get(data, time_index1, time_index2, weight1, weight2, params_index);
     }
+
+    if (i == 0)
+      fprintf(fp, "%f", value);
+    else
+      fprintf(fp, ",%f", value);
+  }
 }
 
 
@@ -1236,7 +1214,6 @@ void ecl_sum_data_fwrite_interp_csv_line(const ecl_sum_data_type * data , time_t
 double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t sim_time , const smspec_node_type * smspec_node) {
   int params_index = smspec_node_get_params_index( smspec_node );
   if (smspec_node_is_rate( smspec_node )) {
-    int time_index;
     /*
       In general the mapping from sim_time to index is based on half
       open intervals, which are closed in the upper end:
@@ -1250,11 +1227,7 @@ double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t s
        with the ECLIPSE results if you ask for a value interpolated to
        the starting time.
     */
-    if (sim_time == time_interval_get_start( data->sim_time ))
-      time_index = 0;
-    else
-      time_index = ecl_sum_data_get_index_from_sim_time( data , sim_time );
-
+    int time_index = ecl_sum_data_get_index_from_sim_time( data , sim_time );
     return ecl_sum_data_iget( data , time_index , params_index);
   } else {
     /* Interpolated lookup based on two (hopefully) consecutive ministeps. */
