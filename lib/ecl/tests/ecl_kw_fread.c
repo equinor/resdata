@@ -74,9 +74,33 @@ void test_fread_alloc() {
   test_work_area_free( work_area );
 }
 
+void test_kw_io_charlength() {
+  test_work_area_type * work_area = test_work_area_alloc("ecl_kw_io_charlength");
+  {
+    //0: ecl_kw_alloc shall accept HEADER of more than 8 chars in length
+   
+    //1: write ecl_kw to TEST.INIT, assert return fail (false)
+
+    //2: write ecl_kw to TEST.ECLGRID, assert return success (true)
+
+    //3: a) rename TEST.INIT to TEST.ECLGRID, try to read, assert return success (true)
+    //   b) assert correct float values
+
+    //Part1:
+    {
+       //ecl_kw_type * ecl_kw = ecl_kw_alloc_long_str("ABCDEFGHIJ" , 5, ECL_FLOAT);
+     
+
+       //ecl_kw_free( ecl_kw );
+    }
+  }
+  test_work_area_free( work_area );
+}
+
 
 int main(int argc , char ** argv) {
   test_fread_alloc();
+  test_kw_io_charlength();
   exit(0);
 }
 
