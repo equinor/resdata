@@ -25,6 +25,7 @@
 #include <ert/ecl/ecl_type.h>
 #include <ert/ecl/ecl_util.h>
 
+#define MAX_GRDECL_KW_SIZE 512
 
 /*
   This file is devoted to different routines for reading and writing
@@ -517,6 +518,9 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
 */
 
 static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_data_type data_type) {
+  if (strlen(header) > MAX_GRDECL_KW_SIZE)
+    util_abort("%s cannot read KW of more than %d bytes. strlen(header) == %d\n", __func__, MAX_GRDECL_KW_SIZE, strlen(header) );
+
   if (!ecl_type_is_numeric(data_type))
     util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",__func__);
 
@@ -525,7 +529,7 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
       return NULL;  /* Could not find it. */
 
   {
-    char file_header[9];
+    char file_header[MAX_GRDECL_KW_SIZE];
     if (fscanf(stream , "%s" , file_header) == 1) {
       int kw_size;
       char * data = fscanf_alloc_grdecl_data( file_header , strict , data_type , &kw_size , stream );

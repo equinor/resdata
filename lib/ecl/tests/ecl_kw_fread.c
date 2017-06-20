@@ -22,8 +22,11 @@
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.h>
 
+#include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fortio.h>
+#include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_file_view.h>
 
 
 void test_truncated(const char * filename , offset_type truncate_size) {
@@ -76,23 +79,38 @@ void test_fread_alloc() {
 
 void test_kw_io_charlength() {
   test_work_area_type * work_area = test_work_area_alloc("ecl_kw_io_charlength");
-  {
-    //0: ecl_kw_alloc shall accept HEADER of more than 8 chars in length
-   
-    //1: write ecl_kw to TEST.INIT, assert return fail (false)
+  { 
+    const char * KW = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
+    ecl_kw_type * ecl_kw_out = ecl_kw_alloc(KW , 5, ECL_FLOAT);
+    for (int i=0; i < ecl_kw_get_size( ecl_kw_out); i++)
+       ecl_kw_iset_float( ecl_kw_out , i , i*1.5 );
 
-    //2: write ecl_kw to TEST.ECLGRID, assert return success (true)
-
-    //3: a) rename TEST.INIT to TEST.ECLGRID, try to read, assert return success (true)
-    //   b) assert correct float values
-
-    //Part1:
     {
-       //ecl_kw_type * ecl_kw = ecl_kw_alloc_long_str("ABCDEFGHIJ" , 5, ECL_FLOAT);
-     
-
-       //ecl_kw_free( ecl_kw );
+       fortio_type * f = fortio_open_writer( "TEST1" , false, ECL_ENDIAN_FLIP );
+       test_assert_false(ecl_kw_fwrite( ecl_kw_out, f ));
+       fortio_fclose( f );
     }
+   
+    {
+       FILE * file = util_fopen("TEST2", "w");
+       ecl_kw_fprintf_grdecl(ecl_kw_out , file);
+       fclose(file);
+    }
+    
+    {
+       FILE * file = util_fopen("TEST2", "r");
+       ecl_kw_type * ecl_kw_in = ecl_kw_fscanf_alloc_grdecl( file , KW , -1 , ECL_FLOAT);
+       test_assert_string_equal(KW, ecl_kw_get_header(ecl_kw_in) );
+       test_assert_int_equal(5, ecl_kw_get_size( ecl_kw_in) );
+
+       test_assert_double_equal(ecl_kw_iget_as_double(ecl_kw_in, 0), 0.0);
+       test_assert_double_equal(ecl_kw_iget_as_double(ecl_kw_in, 4), 6.0);
+
+       fclose(file);
+    }
+    
+
+    ecl_kw_free( ecl_kw_out );
   }
   test_work_area_free( work_area );
 }
