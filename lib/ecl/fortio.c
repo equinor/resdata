@@ -831,6 +831,17 @@ bool fortio_read_at_eof( fortio_type * fortio ) {
 
 }
 
+/*
+  When this function is called the underlying file is unlinked, and
+  the entry will be removed from the filsystem. Subsequent calls which
+  write to this file will still (superficially) succeed.
+*/
+
+void fortio_fwrite_error(fortio_type * fortio) {
+  if (fortio->writable)
+    unlink( fortio->filename );
+}
+
 
 /*****************************************************************/
 void          fortio_fflush(fortio_type * fortio) { fflush( fortio->stream); }
