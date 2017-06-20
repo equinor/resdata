@@ -80,27 +80,37 @@ void test_fread_alloc() {
 void test_kw_io_charlength() {
   test_work_area_type * work_area = test_work_area_alloc("ecl_kw_io_charlength");
   { 
-    const char * KW = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
-    ecl_kw_type * ecl_kw_out = ecl_kw_alloc(KW , 5, ECL_FLOAT);
-    for (int i=0; i < ecl_kw_get_size( ecl_kw_out); i++)
-       ecl_kw_iset_float( ecl_kw_out , i , i*1.5 );
+    const char * KW0 = "QWERTYUI";
+    const char * KW1 = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
+    ecl_kw_type * ecl_kw_out0 = ecl_kw_alloc(KW0 , 5, ECL_FLOAT);
+    ecl_kw_type * ecl_kw_out1 = ecl_kw_alloc(KW1 , 5, ECL_FLOAT);
+    for (int i=0; i < ecl_kw_get_size( ecl_kw_out1); i++) {
+       ecl_kw_iset_float( ecl_kw_out0 , i , i*1.5 );
+       ecl_kw_iset_float( ecl_kw_out1 , i , i*1.5 );
+    }
 
     {
        fortio_type * f = fortio_open_writer( "TEST1" , false, ECL_ENDIAN_FLIP );
-       test_assert_false(ecl_kw_fwrite( ecl_kw_out, f ));
+       test_assert_true( ecl_kw_fwrite( ecl_kw_out0, f ));
+       test_assert_false(ecl_kw_fwrite( ecl_kw_out1, f ));
        fortio_fclose( f );
+    }
+
+    {
+       FILE * file = fopen("TEST1", "r");
+       test_assert_true(file == NULL);
     }
    
     {
        FILE * file = util_fopen("TEST2", "w");
-       ecl_kw_fprintf_grdecl(ecl_kw_out , file);
+       ecl_kw_fprintf_grdecl(ecl_kw_out1 , file);
        fclose(file);
     }
     
     {
        FILE * file = util_fopen("TEST2", "r");
-       ecl_kw_type * ecl_kw_in = ecl_kw_fscanf_alloc_grdecl( file , KW , -1 , ECL_FLOAT);
-       test_assert_string_equal(KW, ecl_kw_get_header(ecl_kw_in) );
+       ecl_kw_type * ecl_kw_in = ecl_kw_fscanf_alloc_grdecl( file , KW1 , -1 , ECL_FLOAT);
+       test_assert_string_equal(KW1, ecl_kw_get_header(ecl_kw_in) );
        test_assert_int_equal(5, ecl_kw_get_size( ecl_kw_in) );
 
        test_assert_double_equal(ecl_kw_iget_as_double(ecl_kw_in, 0), 0.0);
@@ -109,8 +119,8 @@ void test_kw_io_charlength() {
        fclose(file);
     }
     
-
-    ecl_kw_free( ecl_kw_out );
+    ecl_kw_free( ecl_kw_out0 );
+    ecl_kw_free( ecl_kw_out1 );
   }
   test_work_area_free( work_area );
 }
