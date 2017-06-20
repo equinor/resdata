@@ -6,6 +6,10 @@ matrix:
     - os: osx
       osx_image: xcode7.3
       compiler: clang
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+      env: WERROR=true
     - os: linux
       sudo: false
       compiler: gcc
@@ -55,4 +59,14 @@ before_script:
   - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
 script:
-  - python build_total.py ecl
+  # TODO: This is a proof of concept! Should be streamlined..
+  - if [[ "$WERROR" != "true" ]]; then
+      python build_total.py ecl || travis_terminate 1;
+    else
+      cmake -DBUILD_TESTS="ON" \
+            -DBUILD_PYTHON="ON"\
+            -DCMAKE_C_FLAGS="-Wall -Werror" ..\
+            || travis_terminate 1;
+      make || travis_terminate 1;
+      ctest || travis_terminate 1;
+    fi
