@@ -871,14 +871,24 @@ void @TYPE@_vector_set_all(@TYPE@_vector_type * vector , @TYPE@ value) {
 void @TYPE@_vector_init_range(@TYPE@_vector_type * vector , @TYPE@ value1 , @TYPE@ value2 , @TYPE@ delta) {
   @TYPE@_vector_reset( vector );
   if (delta != 0) {
-    if (((delta > 0) && (value2 > value1)) || ((delta < 0) && (value2 < value1))) {
+    bool valid_range = delta > 0 && value2 > value1;
+    #if @UNSIGNED_TYPE@ == 0
+    valid_range |= delta < 0 && value2 < value1;
+    #endif
+
+    if (valid_range) {
       @TYPE@ current_value = value1;
       while (true) {
-	@TYPE@_vector_append( vector , current_value );
-	current_value += delta;
+	    @TYPE@_vector_append( vector , current_value );
+	    current_value += delta;
 
-	if (((delta > 0) && (current_value >= value2)) || ((delta < 0) && (current_value <= value2)))
-	  break;
+        if (delta > 0 && current_value >= value2)
+	      break;
+
+        #if @UNSIGNED_TYPE@ == 0
+        if (delta < 0 && current_value <= value2)
+	      break;
+        #endif
       }
     }
   }
@@ -1518,8 +1528,10 @@ void @TYPE@_vector_range_fill(@TYPE@_vector_type * vector , @TYPE@ limit1 , @TYP
     if (delta > 0 && current_value > limit2)
       break;
 
+    #if @UNSIGNED_TYPE@ == 0
     if (delta < 0 && current_value < limit2)
       break;
+    #endif
   }
 }
 
