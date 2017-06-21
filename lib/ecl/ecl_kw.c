@@ -1715,17 +1715,13 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 
 
 bool ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
-  bool verify_kw_header_len = true;
-
-  if (  strlen(ecl_kw_get_header(ecl_kw)) > ECL_STRING8_LENGTH   ) {
-     verify_kw_header_len = false;
+  if (strlen(ecl_kw_get_header( ecl_kw)) > ECL_STRING8_LENGTH) {
      fortio_fwrite_error(fortio);
+     return false;
   }
-  else {  
-     ecl_kw_fwrite_header(ecl_kw ,  fortio);
-     ecl_kw_fwrite_data(ecl_kw   ,  fortio);
-  }
-  return verify_kw_header_len;
+  ecl_kw_fwrite_header(ecl_kw ,  fortio);
+  ecl_kw_fwrite_data(ecl_kw   ,  fortio);
+  return true;
 }
 
 
