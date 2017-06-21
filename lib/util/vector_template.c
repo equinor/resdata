@@ -872,7 +872,7 @@ void @TYPE@_vector_init_range(@TYPE@_vector_type * vector , @TYPE@ value1 , @TYP
   @TYPE@_vector_reset( vector );
   if (delta != 0) {
     bool valid_range = delta > 0 && value2 > value1;
-    #if @UNSIGNED_TYPE@ == 0
+    #if @SIGNED_TYPE@
     valid_range |= delta < 0 && value2 < value1;
     #endif
 
@@ -885,7 +885,7 @@ void @TYPE@_vector_init_range(@TYPE@_vector_type * vector , @TYPE@ value1 , @TYP
         if (delta > 0 && current_value >= value2)
 	      break;
 
-        #if @UNSIGNED_TYPE@ == 0
+        #if @SIGNED_TYPE@
         if (delta < 0 && current_value <= value2)
 	      break;
         #endif
@@ -1528,7 +1528,7 @@ void @TYPE@_vector_range_fill(@TYPE@_vector_type * vector , @TYPE@ limit1 , @TYP
     if (delta > 0 && current_value > limit2)
       break;
 
-    #if @UNSIGNED_TYPE@ == 0
+    #if @SIGNED_TYPE@
     if (delta < 0 && current_value < limit2)
       break;
     #endif
