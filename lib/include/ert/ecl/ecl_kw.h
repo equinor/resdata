@@ -105,7 +105,7 @@ extern "C" {
   void           ecl_kw_get_memcpy_double_data(const ecl_kw_type *ecl_kw , double *target);
   void           ecl_kw_get_memcpy_int_data(const ecl_kw_type *ecl_kw , int *target);
   void           ecl_kw_set_memcpy_data(ecl_kw_type * , const void *);
-  void           ecl_kw_fwrite(const ecl_kw_type *,  fortio_type *);
+  bool           ecl_kw_fwrite(const ecl_kw_type *,  fortio_type *);
   void           ecl_kw_iget(const ecl_kw_type *, int , void *);
   void           ecl_kw_iset(ecl_kw_type *ecl_kw , int i , const void *iptr);
   void           ecl_kw_iset_char_ptr( ecl_kw_type * ecl_kw , int index, const char * s);

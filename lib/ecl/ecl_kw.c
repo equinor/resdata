@@ -474,9 +474,6 @@ static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
 
 static void ecl_kw_initialize(ecl_kw_type * ecl_kw , const char *header ,  int size , ecl_data_type data_type) {
   ecl_kw_set_data_type(ecl_kw, data_type);
-  if (strlen(header) > ECL_STRING8_LENGTH)
-    util_abort("%s: Fatal error: ecl_header_name:%s is longer than eight characters - aborting \n",__func__,header);
-
   ecl_kw_set_header_name(ecl_kw , header);
   ecl_kw->size = size;
 }
@@ -1474,11 +1471,17 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
   ecl_kw->header8 = realloc(ecl_kw->header8 , ECL_STRING8_LENGTH + 1);
-  sprintf(ecl_kw->header8 , "%-8s" , header);
+  if (strlen(header) <= 8) {
+     sprintf(ecl_kw->header8 , "%-8s" , header);
 
-  /* Internalizing a header without the trailing spaces as well. */
-  util_safe_free( ecl_kw->header );
-  ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
+     /* Internalizing a header without the trailing spaces as well. */
+     util_safe_free( ecl_kw->header );
+     ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
+  }
+  else {
+     ecl_kw->header = util_alloc_copy(header, strlen( header ) + 1);
+  }
+
 }
 
 
@@ -1711,9 +1714,14 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
 }
 
 
-void ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
+bool ecl_kw_fwrite(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
+  if (strlen(ecl_kw_get_header( ecl_kw)) > ECL_STRING8_LENGTH) {
+     fortio_fwrite_error(fortio);
+     return false;
+  }
   ecl_kw_fwrite_header(ecl_kw ,  fortio);
   ecl_kw_fwrite_data(ecl_kw   ,  fortio);
+  return true;
 }
 
 
