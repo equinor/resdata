@@ -22,8 +22,11 @@
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.h>
 
+#include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fortio.h>
+#include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_file_view.h>
 
 
 void test_truncated(const char * filename , offset_type truncate_size) {
@@ -74,9 +77,57 @@ void test_fread_alloc() {
   test_work_area_free( work_area );
 }
 
+void test_kw_io_charlength() {
+  test_work_area_type * work_area = test_work_area_alloc("ecl_kw_io_charlength");
+  { 
+    const char * KW0 = "QWERTYUI";
+    const char * KW1 = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
+    ecl_kw_type * ecl_kw_out0 = ecl_kw_alloc(KW0 , 5, ECL_FLOAT);
+    ecl_kw_type * ecl_kw_out1 = ecl_kw_alloc(KW1 , 5, ECL_FLOAT);
+    for (int i=0; i < ecl_kw_get_size( ecl_kw_out1); i++) {
+       ecl_kw_iset_float( ecl_kw_out0 , i , i*1.5 );
+       ecl_kw_iset_float( ecl_kw_out1 , i , i*1.5 );
+    }
+
+    {
+       fortio_type * f = fortio_open_writer( "TEST1" , false, ECL_ENDIAN_FLIP );
+       test_assert_true( ecl_kw_fwrite( ecl_kw_out0, f ));
+       test_assert_false(ecl_kw_fwrite( ecl_kw_out1, f ));
+       fortio_fclose( f );
+    }
+
+    {
+       test_assert_false( util_file_exists( "TEST1"));
+    }
+   
+    {
+       FILE * file = util_fopen("TEST2", "w");
+       ecl_kw_fprintf_grdecl(ecl_kw_out1 , file);
+       fclose(file);
+    }
+    
+    {
+       FILE * file = util_fopen("TEST2", "r");
+       ecl_kw_type * ecl_kw_in = ecl_kw_fscanf_alloc_grdecl( file , KW1 , -1 , ECL_FLOAT);
+       test_assert_string_equal(KW1, ecl_kw_get_header(ecl_kw_in) );
+       test_assert_int_equal(5, ecl_kw_get_size( ecl_kw_in) );
+
+       test_assert_double_equal(ecl_kw_iget_as_double(ecl_kw_in, 0), 0.0);
+       test_assert_double_equal(ecl_kw_iget_as_double(ecl_kw_in, 4), 6.0);
+
+       fclose(file);
+    }
+    
+    ecl_kw_free( ecl_kw_out0 );
+    ecl_kw_free( ecl_kw_out1 );
+  }
+  test_work_area_free( work_area );
+}
+
 
 int main(int argc , char ** argv) {
   test_fread_alloc();
+  test_kw_io_charlength();
   exit(0);
 }
 
