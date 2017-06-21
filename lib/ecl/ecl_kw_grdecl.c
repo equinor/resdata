@@ -25,7 +25,7 @@
 #include <ert/ecl/ecl_type.h>
 #include <ert/ecl/ecl_util.h>
 
-#define MAX_GRDECL_KW_SIZE 512
+#define MAX_GRDECL_HEADER_SIZE 512
 
 /*
   This file is devoted to different routines for reading and writing
@@ -75,7 +75,7 @@
 bool ecl_kw_grdecl_fseek_next_kw( FILE * stream ) {
   long start_pos = util_ftell( stream );
   long current_pos;
-  char next_kw[256];
+  char next_kw[MAX_GRDECL_HEADER_SIZE];
 
   /*
     Determine if the current position of the file pointer is at the
@@ -147,7 +147,7 @@ bool ecl_kw_grdecl_fseek_next_kw( FILE * stream ) {
 
 char * ecl_kw_grdecl_alloc_next_header( FILE * stream ) {
   if (ecl_kw_grdecl_fseek_next_kw( stream )) {
-    char next_kw[256];
+    char next_kw[MAX_GRDECL_HEADER_SIZE];
     fscanf( stream , "%s" , next_kw);
     return util_alloc_string_copy( next_kw );
   } else
@@ -188,89 +188,7 @@ static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
 
 
 
-// static bool ecl_kw_grdecl_fseek_kw__OLD(const char * kw , FILE * stream) {
-//   const int newline_char = '\n';
-//   long int init_pos = ftell(stream);
-//
-//   if (util_fseek_string(stream , kw , false , true)) {
-//     /*
-//       OK the keyword is found in the file; now we must verify that:
-//
-//       1. It is terminated with a blank, i.e. when searching for
-//          'COORD' we do not want a positive on 'COORDSYS'.
-//
-//       2. That the keyword indeed starts with a isspace() character; we
-//          are not interested in the 'SYS' in 'COORDSYS'.
-//
-//       3. That the current location is not a comment section.
-//     */
-//     long int kw_pos = ftell( stream );
-//     bool valid_kw = false;
-//     int c;
-//
-//     fseek( stream , strlen(kw) , SEEK_CUR);    // Seek to end of kw
-//     c = fgetc( stream );                       // Read one character
-//     fseek( stream , kw_pos , SEEK_SET );       // Seek back to beginning of kw
-//
-//     if (isspace(c)) {
-//       if (kw_pos > 0) {
-//         fseek( stream , kw_pos - 1 , SEEK_SET);
-//         c = fgetc( stream );
-//         if (isspace(c))
-//           // OK - we have verifed that the kw string we have found both
-//           // starts and ends with a isspace() character.
-//           valid_kw = true;
-//       } else
-//         valid_kw = true;  // kw is at the very beginning of the file.
-//     }
-//
-//
-//     if (valid_kw) {
-//       // OK - the kw is validly terminated with a space/tab/newline; now
-//       // we must verify that it is not in a comment section.
-//       if (kw_pos >= strlen(ECL_COMMENT_STRING) ) {  // Must have this check to avoid infinite spinning
-//                                                     // when the keyword is in the very beginning of the file.
-//         fseek( stream , 1 , SEEK_CUR );
-//         while (true) {
-//           fseek( stream , -2 , SEEK_CUR );
-//           c = fgetc( stream );
-//           if ((c == newline_char) || (ftell(stream) == 0))
-//             break;
-//         }
-//         {
-//           // We have gone as far back as necessary.
-//           int line_length = kw_pos - ftell( stream );
-//           char * line = util_malloc(line_length + 1  , __func__);
-//
-//           fread( stream , sizeof * line , line_length , stream);
-//           line[line_length] = '\0';
-//
-//           if (strstr( line , ECL_COMMENT_STRING) == NULL)
-//             // We are not in a commen section.
-//             valid_kw = true;
-//           else
-//             valid_kw = false;
-//
-//           free( line );
-//         }
-//       }
-//     } else
-//       valid_kw = false;
-//
-//     if (valid_kw)
-//       return true;
-//     else {
-//       fseek( stream , strlen(kw) , SEEK_CUR );  // Skip over the kw so we don't find it again.
-//       if (ecl_kw_grdecl_fseek_kw__(kw , stream))
-//         return true;
-//       else {
-//         fseek( stream , init_pos , SEEK_SET );
-//         return false;
-//       }
-//     }
-//   } else
-//     return false;
-// }
+
 
 
 bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , FILE * stream) {
@@ -289,7 +207,6 @@ bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , FILE * stream) {
   /* OK: If we are here - that means that we failed to find the kw. */
   return false;
 }
-
 
 
 
@@ -477,9 +394,9 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
 
    The ecl_kw class has a quite deeply wired assumption that the
    header is a string of length 8 (I hope/think that is an ECLIPSE
-   limitation), and the the class is not able to create ecl_kw
-   instances with header length of more than 8 characters - code will
-   abort hard if @kw is longer than 8 characters.
+   limitation). The class cannot read/write kw with headers longer than 8 bytes. 
+   ecl_kw_grdecl is a workaround allowing for reading/writing kw with long
+   headers. 
 
    -----------------------------------------------------------------
 
@@ -518,8 +435,8 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
 */
 
 static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_data_type data_type) {
-  if (strlen(header) > MAX_GRDECL_KW_SIZE)
-    util_abort("%s cannot read KW of more than %d bytes. strlen(header) == %d\n", __func__, MAX_GRDECL_KW_SIZE, strlen(header) );
+  if (header && strlen(header) >MAX_GRDECL_HEADER_SIZE)
+    util_abort("%s cannot read KW of more than %d bytes. strlen(header) == %d\n", __func__, MAX_GRDECL_HEADER_SIZE, strlen(header) );
 
   if (!ecl_type_is_numeric(data_type))
     util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",__func__);
@@ -529,7 +446,7 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
       return NULL;  /* Could not find it. */
 
   {
-    char file_header[MAX_GRDECL_KW_SIZE];
+    char file_header[MAX_GRDECL_HEADER_SIZE];
     if (fscanf(stream , "%s" , file_header) == 1) {
       int kw_size;
       char * data = fscanf_alloc_grdecl_data( file_header , strict , data_type , &kw_size , stream );
