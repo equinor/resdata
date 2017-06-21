@@ -276,6 +276,25 @@ void test_fseek() {
 
 
 
+void test_write_failure() {
+  test_work_area_type * work_area = test_work_area_alloc("fortio_fseek" );
+  {
+    fortio_type * fortio = fortio_open_writer("PRESSURE" , false , true);
+    void * buffer = util_malloc( 100 );
+
+    fortio_fwrite_record( fortio , buffer , 100);
+    test_assert_true( util_file_exists( "PRESSURE"));
+    fortio_fwrite_error( fortio );
+    test_assert_false( util_file_exists( "PRESSURE"));
+    fortio_fwrite_record( fortio , buffer , 100);
+    free( buffer );
+    fortio_fclose( fortio );
+    test_assert_false( util_file_exists( "PRESSURE"));
+
+  }
+  test_work_area_free( work_area );
+}
+
 
 int main( int argc , char ** argv) {
   util_install_signals();
@@ -303,6 +322,8 @@ int main( int argc , char ** argv) {
       test_write( "path/file.x" , true );
       test_work_area_free( work_area );
     }
+
+    test_write_failure();
 
     exit(0);
   }
