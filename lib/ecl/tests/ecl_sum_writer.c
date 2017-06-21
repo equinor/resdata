@@ -101,6 +101,8 @@ void test_write_read( ) {
   }
 }
 
+void test_ecl_sum_alloc_restart_writer() {
+}
 
 
 int main( int argc , char ** argv) {
