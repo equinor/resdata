@@ -97,8 +97,7 @@ void test_kw_io_charlength() {
     }
 
     {
-       FILE * file = fopen("TEST1", "r");
-       test_assert_true(file == NULL);
+       test_assert_false( util_file_exists( "TEST1"));
     }
    
     {
