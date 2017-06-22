@@ -591,12 +591,13 @@ values (2e20) are denoted with '*'.
 
 #define GLOBAL_STRING  "GLOBAL"
 
-#define GRIDHEAD_TYPE_INDEX   0
-#define GRIDHEAD_NX_INDEX     1
-#define GRIDHEAD_NY_INDEX     2
-#define GRIDHEAD_NZ_INDEX     3
-#define GRIDHEAD_LGR_INDEX    4
-#define GRIDHEAD_SIZE       100
+#define GRIDHEAD_TYPE_INDEX    0
+#define GRIDHEAD_NX_INDEX      1
+#define GRIDHEAD_NY_INDEX      2
+#define GRIDHEAD_NZ_INDEX      3
+#define GRIDHEAD_LGR_INDEX     4
+#define GRIDHEAD_NUMRES_INDEX 24
+#define GRIDHEAD_SIZE        100
 
 /* Observe that these indices are one value lower than the values used
    in the ecl_smspec file. */
