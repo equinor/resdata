@@ -66,10 +66,10 @@ static bool util_addr2line_lookup__(const void * bt_addr , char ** func_name , c
   *line_nr   = 0;
   {
     bool  address_found = false;
-    Dl_info dl_info;
 #if defined(__APPLE__)
-    return false;
+    return address_found;
 #else
+    Dl_info dl_info;
     if (dladdr(bt_addr , &dl_info)) {
       const char * executable = dl_info.dli_fname;
       *func_name = util_alloc_string_copy( dl_info.dli_sname );

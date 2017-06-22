@@ -273,7 +273,7 @@ void ecl_file_kw_replace_kw( ecl_file_kw_type * file_kw , fortio_type * target ,
               ecl_kw_get_data_type(new_kw)
               ))
     util_abort("%s: sorry type mismatch between in-file keyword and new keyword \n",__func__);
-  if((file_kw->kw_size == ecl_kw_get_size( new_kw )))
+  if(file_kw->kw_size != ecl_kw_get_size(new_kw))
     util_abort("%s: sorry size mismatch between in-file keyword and new keyword \n",__func__);
 
   if (file_kw->kw != NULL)

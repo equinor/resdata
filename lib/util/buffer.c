@@ -572,8 +572,8 @@ void buffer_memshift(buffer_type * buffer , size_t offset, ssize_t shift) {
   {
     size_t move_size;
     if (shift < 0)
-      if (abs(shift) > offset)
-        offset = abs(shift);  /* We are 'trying' to left shift beyond the start of the buffer. */
+      if (labs(shift) > offset)
+        offset = labs(shift);  /* We are 'trying' to left shift beyond the start of the buffer. */
 
     move_size = buffer->content_size - offset;
     memmove( &buffer->data[offset + shift] , &buffer->data[offset] , move_size );
@@ -763,7 +763,7 @@ buffer_type * buffer_fread_alloc(const char * filename) {
 */
 
 size_t buffer_stream_fwrite_n( const buffer_type * buffer , size_t offset , ssize_t write_size , FILE * stream ) {
-  if (offset < 0 || offset > buffer->content_size)
+  if (offset > buffer->content_size)
     util_abort("%s: invalid offset:%ld - valid range: [0,%ld) \n",__func__ , offset , offset);
   {
     ssize_t len;
@@ -773,7 +773,7 @@ size_t buffer_stream_fwrite_n( const buffer_type * buffer , size_t offset , ssiz
     else if (write_size == 0)       /* Write everything from the offset */
       len = buffer->content_size - offset;
     else                            /* @write_size < 0 - write everything excluding the last abs(write_size) bytes. */
-      len = buffer->content_size - offset - abs( write_size );
+      len = buffer->content_size - offset - labs( write_size );
 
     if (len < 0)
       util_abort("%s: invalid length spesifier - tried to write %ld bytes \n",__func__ , len);
