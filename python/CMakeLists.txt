@@ -219,12 +219,6 @@ set(NFS_RUNPATH "" CACHE
 set(RSH_SERVERS "" CACHE
     STRING  "List of nodes which will be used to test the RSH driver")
 
-
-set(NFS_RUNPATH "" CACHE
-    STRING  "Disk area which is shared among cluster nodes and can be used as CWD for LSF/RSH jobs.")
-set(RSH_SERVERS "" CACHE
-    STRING  "List of nodes which will be used to test the RSH driver")
-
 add_python_test(tests.ecl.test_fk_user_data.FKTest              tests/ecl/test_fk_user_data.py)
 add_python_test(tests.ecl.test_grid.GridTest                    tests/ecl/test_grid.py)
 add_python_test(tests.ecl.test_grid_generator.GridGeneratorTest tests/ecl/test_grid_generator.py)
