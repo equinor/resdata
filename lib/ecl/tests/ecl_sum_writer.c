@@ -25,9 +25,11 @@
 
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_kw_magic.h>
 
 
-void write_summary( const char * name , time_t start_time , int nx , int ny , int nz , int num_dates, int num_ministep, double ministep_length) {
+double write_summary( const char * name , time_t start_time , int nx , int ny , int nz , int num_dates, int num_ministep, double ministep_length) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( name , false , true , ":" , start_time , true , nx , ny , nz );
   double sim_seconds = 0;
 
@@ -54,6 +56,38 @@ void write_summary( const char * name , time_t start_time , int nx , int ny , in
   }
   ecl_sum_fwrite( ecl_sum );
   ecl_sum_free( ecl_sum );
+  return sim_seconds;
+}
+
+void write_restart_summary(const char * name, const char * restart_name , int start_report_step, time_t start_time , int nx , int ny , int nz , int num_dates, int num_ministep, double ministep_length) {
+  ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( name , restart_name, false , true , ":" , start_time , true , nx , ny , nz );
+  double sim_seconds = 0;
+
+  smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
+  smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
+  smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
+
+  int num_report_steps = start_report_step + num_dates;
+  for (int report_step = start_report_step; report_step < num_report_steps; report_step++) {
+    for (int step = 0; step < num_ministep; step++) {
+      
+
+      {
+        ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 1 , sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , node1 , sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , node2 , 10*sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , node3 , 100*sim_seconds );
+
+        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , node1 ), sim_seconds );
+        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , node2 ), sim_seconds*10 );
+        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , node3 ), sim_seconds*100 );
+      }
+      sim_seconds += ministep_length;
+    }
+  }
+  ecl_sum_fwrite( ecl_sum );
+  ecl_sum_free( ecl_sum );
+
 }
 
 
@@ -101,11 +135,92 @@ void test_write_read( ) {
   }
 }
 
+
 void test_ecl_sum_alloc_restart_writer() {
+   
+   // Checked, 1  : Lag en summary CASE1
+   // Checked, 2  : Skriv CASE1 til fil
+   // Checked  3  : Lag CASE2 = ecl_sum_restart_writer(CASE2, CASE1, ...)
+   //               CASE2 inneholder strengern CASE1
+   // Checked  4  : Skriv CASE2 til fil
+   // Checked  5  : Load CASE2 fra fil
+   // 6  : Sjekk at ecl_sum instans fra CASE2 inneholder også data fra CASE1
+   
+
+   test_work_area_type * work_area = test_work_area_alloc("sum_write_restart");
+   {
+      const char * name1 = "CASE1";
+      const char * name2 = "CASE2";
+      time_t start_time = util_make_date_utc( 1,1,2010 );
+      time_t end_time = start_time;
+      int nx = 10;
+      int ny = 11;
+      int nz = 12;
+      int num_dates = 5;
+      int num_ministep = 10;
+      double ministep_length = 36000; // Seconds
+
+      write_summary( name1 , start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);  
+      write_restart_summary( name2 , name1 , num_dates, start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);
+
+      ecl_sum_type *  ecl_sum_restart = ecl_sum_fread_alloc_case( name2 , ":" );
+      test_assert_true( ecl_sum_is_instance(ecl_sum_restart) );
+
+      test_assert_true( ecl_sum_has_key( ecl_sum_restart , "FOPT" ));
+
+      ecl_file_type * restart_file = ecl_file_open( "CASE2.SMSPEC" , 0 );
+      ecl_file_view_type * view_file = ecl_file_get_global_view( restart_file );    
+      test_assert_true( ecl_file_view_has_kw(view_file, RESTART_KW));
+      ecl_kw_type * kw = ecl_file_view_iget_kw(view_file, 0);
+      test_assert_int_equal(8, ecl_kw_get_size(kw));
+      test_assert_string_equal("CASE1   ", ecl_kw_iget_char_ptr(kw, 0) );
+
+      util_inplace_forward_seconds_utc(&end_time, (num_dates * num_ministep - 1) * ministep_length * 2);
+
+      
+
+      ecl_sum_free(ecl_sum_restart);
+      ecl_file_close(restart_file);
+       
+   }
+   test_work_area_free( work_area );
 }
 
 
+void test_long_restart_names() {
+   char restart_case[65] = "";
+   for (int n = 0; n < 8; n++) {
+      char s[9];
+      sprintf(s, "WWWWGGG%d", n);
+      strcat(restart_case, s);
+   }
+   const char * name = "THE_CASE";
+   test_work_area_type * work_area = test_work_area_alloc("sum_write_restart_long_name");
+   {
+       time_t start_time = util_make_date_utc( 1,1,2010 );
+       ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( name , restart_case , false , true , ":" , start_time , true , 3, 3, 3);
+       ecl_sum_fwrite( ecl_sum );
+       ecl_sum_free(ecl_sum);
+             
+       ecl_file_type * smspec_file = ecl_file_open( "THE_CASE.SMSPEC" , 0 );
+       ecl_file_view_type * view_file = ecl_file_get_global_view( smspec_file );    
+       test_assert_true( ecl_file_view_has_kw(view_file, RESTART_KW));
+       ecl_kw_type * kw = ecl_file_view_iget_kw(view_file, 0);
+       test_assert_int_equal(8, ecl_kw_get_size(kw));
+
+       for (int n = 0; n < 8; n++) {
+         char s[9]; sprintf(s, "WWWWGGG%d", n);
+         test_assert_string_equal(s, ecl_kw_iget_char_ptr(kw, n) );
+       }
+
+   }
+   test_work_area_free( work_area );
+  
+}
+
 int main( int argc , char ** argv) {
   test_write_read();
+  test_ecl_sum_alloc_restart_writer();
+  test_long_restart_names();
   exit(0);
 }
