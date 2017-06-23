@@ -221,6 +221,7 @@ check_symbol_exists( tzname time.h HAVE_TZNAME)
 check_include_file(execinfo.h HAVE_EXECINFO)
 check_include_file(getopt.h   ERT_HAVE_GETOPT)
 check_include_file(unistd.h   ERT_HAVE_UNISTD)
+check_include_file(io.h       ERT_HAVE_IO)
 
 check_type_size(time_t SIZE_OF_TIME_T)
 if (${SIZE_OF_TIME_T} EQUAL 8)
