@@ -366,14 +366,27 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
     ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
     const char * restart_case = smspec->restart_case;
     if (restart_case != NULL) {
-       if (strlen(restart_case) > 64)
+       int restart_case_len = strlen(restart_case);
+       if (restart_case_len > 64)
           util_abort("%s: Restart case name, %s, is too long.\n", __func__, restart_case);
-       else {
+       else {                     
           for (int i = 0; i < SUMMARY_RESTART_SIZE; i++) {
              char str[9];
-             str[8] = '\0';
-             for (int j = 0; j < 8; j++)
-                str[j] = restart_case[8 * i + j];
+             
+             for (int j = 0; j < 9; j++) {
+                int index = 8 * i + j;
+                if (j == 8) {
+                   str[8] = '\0';
+                   break;
+                }
+                if (index < restart_case_len)
+                   str[j] = restart_case[index];
+                else {
+                   str[j] = '\0'; 
+                   break;
+                }
+             }
+
              ecl_kw_iset_string8( restart_kw, i, str);  
           }              
        }
@@ -1005,7 +1018,7 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
     char * restart_base;
     int i;
     tmp_base[0] = '\0';
-    for (i=0; i < ecl_kw_get_size( restart_kw ); i++)
+    for (i=0; i < ecl_kw_get_size( restart_kw ); i++) 
       strcat( tmp_base , ecl_kw_iget_ptr( restart_kw , i ));
 
     restart_base = util_alloc_strip_copy( tmp_base );
