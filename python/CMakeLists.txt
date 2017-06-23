@@ -210,12 +210,11 @@ if (NOT BUILD_TESTS)
     return ()
 endif()
 
+set(NFS_RUNPATH "" CACHE
+    STRING  "Disk area which is shared among cluster nodes and can be used as CWD for LSF/RSH jobs.")
+set(RSH_SERVERS "" CACHE
+    STRING  "List of nodes which will be used to test the RSH driver")
 
-add_python_test(tests.cwrap.test_basecclass.BaseCClassTest      tests/cwrap/test_basecclass.py)
-add_python_test(tests.cwrap.test_basecenum.BaseCEnumTest        tests/cwrap/test_basecenum.py)
-add_python_test(tests.cwrap.test_basecvalue.BaseCValueTest      tests/cwrap/test_basecvalue.py)
-add_python_test(tests.cwrap.test_metawrap.MetaWrapTest          tests/cwrap/test_metawrap.py)
-add_python_test(tests.cwrap.test_cfile.CFILETest                tests/cwrap/test_cfile.py)
 
 set(NFS_RUNPATH "" CACHE
     STRING  "Disk area which is shared among cluster nodes and can be used as CWD for LSF/RSH jobs.")
