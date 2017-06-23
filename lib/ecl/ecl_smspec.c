@@ -141,6 +141,7 @@ struct ecl_smspec_struct {
   float_vector_type * params_default;
 
   char              * restart_case;
+  char              * write_restart_case;
 };
 
 
@@ -274,6 +275,7 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * k
 
   ecl_smspec->index_map = int_vector_alloc(0,0);
   ecl_smspec->restart_case = NULL;
+  ecl_smspec->write_restart_case = NULL;
   ecl_smspec->params_default = float_vector_alloc(0 , PARAMS_GLOBAL_DEFAULT);
   ecl_smspec->write_mode = write_mode;
   ecl_smspec->need_nums = false;
@@ -1683,6 +1685,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   float_vector_free( ecl_smspec->params_default );
   vector_free( ecl_smspec->smspec_nodes );
   free( ecl_smspec->restart_case );
+  free( ecl_smspec->write_restart_case );
   free( ecl_smspec );
 }
 
