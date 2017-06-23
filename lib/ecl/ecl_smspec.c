@@ -366,11 +366,11 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
   int num_nodes           = ecl_smspec_num_nodes( smspec );
   {
     ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
-    const char * restart_case = smspec->restart_case;
+    const char * restart_case = smspec->write_restart_case;
     if (restart_case != NULL) {
        int restart_case_len = strlen(restart_case);
        if (restart_case_len > 64)
-          util_abort("%s: Restart case name, %s, is too long.\n", __func__, restart_case);
+          util_abort("%s: Restart case name, %s, is too long w/ %d chars.\n", __func__, restart_case, restart_case_len);
        else {                     
           for (int i = 0; i < SUMMARY_RESTART_SIZE; i++) {
              char str[9];
@@ -515,11 +515,11 @@ void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case ,
   free( filename );
 }
 
-ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
+ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * write_restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
   ecl_smspec_type * ecl_smspec = ecl_smspec_alloc_empty( true , key_join_string );
   
-  if (restart_case != NULL)
-     ecl_smspec->restart_case = util_alloc_copy(restart_case, strlen( restart_case ) + 1);
+  if (write_restart_case != NULL)
+     ecl_smspec->write_restart_case = util_alloc_copy(write_restart_case, strlen( write_restart_case ) + 1);
   ecl_smspec->grid_dims[0] = nx;
   ecl_smspec->grid_dims[1] = ny;
   ecl_smspec->grid_dims[2] = nz;
