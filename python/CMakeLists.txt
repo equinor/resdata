@@ -210,6 +210,8 @@ add_python_package(testpyecl ecl SUBDIR test/ecl_mock
 
 configure_file(tests/test_install.in ${CMAKE_BINARY_DIR}/bin/test_install @ONLY)
 
+install(DIRECTORY cmake/Modules DESTINATION share/cmake/Modules)
+
 if (NOT BUILD_TESTS)
     return ()
 endif()
