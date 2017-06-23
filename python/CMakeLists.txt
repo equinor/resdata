@@ -208,6 +208,8 @@ add_python_package(testpyecl ecl SUBDIR test/ecl_mock
 
 #----------------------------------------------------------
 
+configure_file(tests/test_install.in ${CMAKE_BINARY_DIR}/bin/test_install @ONLY)
+
 if (NOT BUILD_TESTS)
     return ()
 endif()
