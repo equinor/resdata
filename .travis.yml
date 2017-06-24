@@ -43,7 +43,7 @@ before_install:
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh
     - before_install
-    - pip install requests pandas scipy matplotlib future pyqt4
+    - pip install requests pandas scipy matplotlib future PyQt4
 
 install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
