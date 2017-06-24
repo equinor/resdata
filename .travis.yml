@@ -29,6 +29,7 @@ addons:
             - liblapack-dev
             - zlib1g-dev
             - valgrind
+            - python-pyqt4
 
 services: docker
 sudo: required
@@ -43,6 +44,7 @@ before_install:
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh
     - before_install
+    - pip search pyqt4
     - pip install requests pandas scipy matplotlib future PyQt4
 
 install:
