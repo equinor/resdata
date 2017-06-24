@@ -92,7 +92,9 @@ endif()
 
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-find_package(CXX11Features)
+if (ERT_BUILD_CXX)
+    find_package(CXX11Features)
+endif()
 
 #-----------------------------------------------------------------
 
