@@ -44,8 +44,7 @@ before_install:
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh
     - before_install
-    - pip search pyqt4
-    - pip install requests pandas scipy matplotlib future PyQt4
+    - pip install requests pandas scipy matplotlib future
 
 install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -60,6 +59,7 @@ install:
 before_script:
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
     - pip install -r requirements.txt
+    - pip search pyqt4
     - mkdir build
     - pushd build
     - cmake -DBUILD_TESTS=ON
