@@ -1,25 +1,26 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..57771f6 100644
+index 0f18a3b..073f665 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
-@@ -624,6 +624,7 @@ function(add_setup_py target template)
+@@ -624,14 +624,22 @@ function(add_setup_py target template)
  
          set(_lnk "")
          foreach (item ${lnk})
 +            message(STATUS "LNK ITEM: ${item}")
              get_filename_component(_libdir ${item} DIRECTORY)
  
++            if( ${item} MATCHES .framework)
++                message(STATUS "::::::::::: FOUND FRAMEWORK ${item}")
++                set(item "-framework ${item}")
++            endif()
++
              if (_libdir)
-@@ -632,6 +633,13 @@ function(add_setup_py target template)
+                 list(APPEND _dir '${_libdir}')
+                 get_filename_component(item ${item} NAME_WE)
                  string(REGEX REPLACE "lib" "" item ${item})
              endif ()
  
 +            message(STATUS "Item is :: ${item}")
-+
-+            if( "${item}" MATCHES "framework")
-+                message(STATUS "::::::::::: FOUND FRAMEWORK ${item}")
-+                set(item "-framework ${item}")
-+            endif()
 +
              list(APPEND _lnk "'${item}'")
          endforeach ()
