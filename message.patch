@@ -1,27 +1,41 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..9461fd4 100644
+index 0f18a3b..35892fd 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
-@@ -624,6 +624,8 @@ function(add_setup_py target template)
+@@ -624,15 +624,17 @@ function(add_setup_py target template)
  
          set(_lnk "")
          foreach (item ${lnk})
-+            set(_item ${item})
 +            message(STATUS "LNK ITEM: ${item}")
              get_filename_component(_libdir ${item} DIRECTORY)
  
-             if (_libdir)
-@@ -632,6 +634,13 @@ function(add_setup_py target template)
+-            if (_libdir)
++            if( ${item} MATCHES .framework)
++                list(APPEND _xlk "-framework ${item}")
++            elseif (_libdir)
+                 list(APPEND _dir '${_libdir}')
+                 get_filename_component(item ${item} NAME_WE)
                  string(REGEX REPLACE "lib" "" item ${item})
++                list(APPEND _lnk "'${item}'")
              endif ()
- 
-+            if( ${_item} MATCHES .framework)
-+                message(STATUS "::::::::::: FOUND FRAMEWORK ${item}")
-+                set(item "-framework ${item}")
-+            endif()
-+
-+            message(STATUS "Appending: ${item}")
-+
-             list(APPEND _lnk "'${item}'")
+-
+-            list(APPEND _lnk "'${item}'")
          endforeach ()
  
+         # defines are a bit more work, because setup.py expects them as tuples
+@@ -673,6 +675,7 @@ function(add_setup_py target template)
+         string(REGEX REPLACE ";" "," def "${_def}")
+         string(REGEX REPLACE ";" "," opt "${_opt}")
+         string(REGEX REPLACE ";" "," lnk "${_lnk}")
++        string(REGEX REPLACE ";" "," xlk "${_xlk}")
+         string(REGEX REPLACE ";" "," dir "${_dir}")
+ 
+         # TODO: be able to set other name than ext
+@@ -682,6 +685,7 @@ function(add_setup_py target template)
+                                                 define_macros=[${def}],
+                                                 library_dirs=[${dir}],
+                                                 libraries=[${lnk}],
++                                                extra_link_options[${xlk}],
+                                                 extra_compile_args=[${opt}])")
+ 
+     endforeach()
