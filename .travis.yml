@@ -58,7 +58,7 @@ install:
 
 before_script:
     - pushd pycmake
-    - patch -p ../message.patch
+    - patch PythonPackage.cmake ../message.patch
     - popd
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
     - pip install -r requirements.txt
