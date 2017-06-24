@@ -1,5 +1,5 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..35892fd 100644
+index 0f18a3b..d06ed30 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
 @@ -624,15 +624,17 @@ function(add_setup_py target template)
@@ -35,7 +35,7 @@ index 0f18a3b..35892fd 100644
                                                  define_macros=[${def}],
                                                  library_dirs=[${dir}],
                                                  libraries=[${lnk}],
-+                                                extra_link_options[${xlk}],
++                                                extra_link_args=[${xlk}],
                                                  extra_compile_args=[${opt}])")
  
      endforeach()
