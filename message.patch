@@ -1,21 +1,24 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..5ada2ab 100644
+index 0f18a3b..f8e6e81 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
-@@ -624,15 +624,17 @@ function(add_setup_py target template)
+@@ -624,15 +624,18 @@ function(add_setup_py target template)
  
          set(_lnk "")
          foreach (item ${lnk})
 +            message(STATUS "LNK ITEM: ${item}")
              get_filename_component(_libdir ${item} DIRECTORY)
++            get_filename_component(_name   ${item} NAME_WE)
  
 -            if (_libdir)
 +            if( ${item} MATCHES .framework)
-+                list(APPEND _xlk "'-framework ${item}'")
++                list(APPEND _xlk "'-F ${_libdir}'")
++                list(APPEND _xlk "'-framework ${_name}'")
 +            elseif (_libdir)
                  list(APPEND _dir '${_libdir}')
-                 get_filename_component(item ${item} NAME_WE)
-                 string(REGEX REPLACE "lib" "" item ${item})
+-                get_filename_component(item ${item} NAME_WE)
+-                string(REGEX REPLACE "lib" "" item ${item})
++                string(REGEX REPLACE "lib" "" item ${_name})
 +                list(APPEND _lnk "'${item}'")
              endif ()
 -
@@ -23,7 +26,7 @@ index 0f18a3b..5ada2ab 100644
          endforeach ()
  
          # defines are a bit more work, because setup.py expects them as tuples
-@@ -673,6 +675,7 @@ function(add_setup_py target template)
+@@ -673,6 +676,7 @@ function(add_setup_py target template)
          string(REGEX REPLACE ";" "," def "${_def}")
          string(REGEX REPLACE ";" "," opt "${_opt}")
          string(REGEX REPLACE ";" "," lnk "${_lnk}")
@@ -31,7 +34,7 @@ index 0f18a3b..5ada2ab 100644
          string(REGEX REPLACE ";" "," dir "${_dir}")
  
          # TODO: be able to set other name than ext
-@@ -682,6 +685,7 @@ function(add_setup_py target template)
+@@ -682,6 +686,7 @@ function(add_setup_py target template)
                                                  define_macros=[${def}],
                                                  library_dirs=[${dir}],
                                                  libraries=[${lnk}],
