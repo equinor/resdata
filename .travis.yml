@@ -43,7 +43,7 @@ before_install:
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh
     - before_install
-    - pip install requests
+    - pip install requests pandas scipy matplotlib future pyqt4
 
 install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -75,6 +75,7 @@ script:
     - make
     - make install
     - cmake .. -DINSTALL_ERT_LEGACY=OFF
+               -DERT_BUILD_CXX=OFF
     - make
     - cat python/setup.py
     - popd
