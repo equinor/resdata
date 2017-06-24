@@ -29,7 +29,7 @@ addons:
             - liblapack-dev
             - zlib1g-dev
             - valgrind
-            - python-pyqt4
+            - python-qt4
 
 services: docker
 sudo: required
