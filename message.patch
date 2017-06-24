@@ -1,12 +1,12 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..002a269 100644
+index 0f18a3b..fef168e 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
 @@ -623,6 +623,7 @@ function(add_setup_py target template)
          endforeach ()
  
          set(_lnk "")
-+        message(STATUS "LNK: " ${lnk})
++        message(STATUS "LNK: ${lnk}")
          foreach (item ${lnk})
              get_filename_component(_libdir ${item} DIRECTORY)
  
