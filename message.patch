@@ -10,3 +10,14 @@ index 0f18a3b..fef168e 100644
          foreach (item ${lnk})
              get_filename_component(_libdir ${item} DIRECTORY)
  
+@@ -632,6 +633,10 @@ function(add_setup_py target template)
+                 string(REGEX REPLACE "lib" "" item ${item})
+             endif ()
+ 
++            if( ${item} MATCHES framework)
++                set(item "-framework ${item}")
++            endif()
++
+             list(APPEND _lnk "'${item}'")
+         endforeach ()
+ 
