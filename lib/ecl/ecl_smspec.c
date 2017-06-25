@@ -366,11 +366,11 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
   int num_nodes           = ecl_smspec_num_nodes( smspec );
   {
     ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
-    const char * restart_case = smspec->write_restart_case;
-    if (restart_case != NULL) {
-       int restart_case_len = strlen(restart_case);
+    
+    if (smspec->write_restart_case != NULL) {
+       int restart_case_len = strlen(smspec->write_restart_case);
        if (restart_case_len > 64)
-          util_abort("%s: Restart case name, %s, is too long w/ %d chars.\n", __func__, restart_case, restart_case_len);
+          util_abort("%s: Restart case name, %s, is too long w/ %d chars.\n", __func__, smspec->write_restart_case, restart_case_len);
        else {                     
           for (int i = 0; i < SUMMARY_RESTART_SIZE; i++) {
              char str[9];
@@ -382,7 +382,7 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
                    break;
                 }
                 if (index < restart_case_len)
-                   str[j] = restart_case[index];
+                   str[j] = smspec->write_restart_case[index];
                 else {
                    str[j] = '\0'; 
                    break;
