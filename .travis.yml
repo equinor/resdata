@@ -86,7 +86,7 @@ script:
     - make VERBOSE=1
     - cat python/setup.py
     - popd
-    - BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
+    - CC=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
     - install_run $PLAT
     - mv wheelhouse build/python/dist
     - python build_total.py ecl
