@@ -1,5 +1,5 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..f8e6e81 100644
+index 0f18a3b..3aada8e 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
 @@ -624,15 +624,18 @@ function(add_setup_py target template)
@@ -13,7 +13,7 @@ index 0f18a3b..f8e6e81 100644
 -            if (_libdir)
 +            if( ${item} MATCHES .framework)
 +                list(APPEND _xlk "'-F ${_libdir}'")
-+                list(APPEND _xlk "'-framework ${_name}'")
++                list(APPEND _xlk "'-Wl,-framework ${_name}'")
 +            elseif (_libdir)
                  list(APPEND _dir '${_libdir}')
 -                get_filename_component(item ${item} NAME_WE)
