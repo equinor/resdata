@@ -83,7 +83,7 @@ script:
     - cmake .. -DINSTALL_ERT_LEGACY=OFF
                -DERT_BUILD_CXX=OFF
                -DBUILD_PYTHON=ON
-    - make
+    - make VERBOSE=1
     - cat python/setup.py
     - popd
     - BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
