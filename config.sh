@@ -6,7 +6,9 @@ function pre_build {
 }
 
 function run_tests {
-    sudo apt-get install -y libblas3 liblapack3
+    if [ ! -n "$IS_OSX" ]; then
+        sudo apt-get install -y libblas3 liblapack3
+    fi
 
     python -c "import ecl; print(ecl.__version__)"
 }

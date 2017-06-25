@@ -30,7 +30,7 @@ index 0f18a3b..a90a38f 100644
          endforeach ()
  
          # defines are a bit more work, because setup.py expects them as tuples
-@@ -673,6 +678,7 @@ function(add_setup_py target template)
+@@ -673,6 +679,7 @@ function(add_setup_py target template)
          string(REGEX REPLACE ";" "," def "${_def}")
          string(REGEX REPLACE ";" "," opt "${_opt}")
          string(REGEX REPLACE ";" "," lnk "${_lnk}")
@@ -38,7 +38,7 @@ index 0f18a3b..a90a38f 100644
          string(REGEX REPLACE ";" "," dir "${_dir}")
  
          # TODO: be able to set other name than ext
-@@ -682,6 +688,7 @@ function(add_setup_py target template)
+@@ -682,6 +689,7 @@ function(add_setup_py target template)
                                                  define_macros=[${def}],
                                                  library_dirs=[${dir}],
                                                  libraries=[${lnk}],
