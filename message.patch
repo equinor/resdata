@@ -1,8 +1,16 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..a90a38f 100644
+index 0f18a3b..2b23ab9 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
-@@ -624,15 +624,21 @@ function(add_setup_py target template)
+@@ -499,6 +499,7 @@ function(add_python_package pkg NAME)
+         # set_property seem to combine it with previously-set options or
+         # mangles it in some other way
+         set(LINK_FLAGS " -undefined dynamic_lookup ")
++        set(SUFFIX ".dylib")
+     else()
+         set(LINK_FLAGS " -Xlinker -export-dynamic ")
+     endif()
+@@ -624,15 +625,21 @@ function(add_setup_py target template)
  
          set(_lnk "")
          foreach (item ${lnk})
@@ -30,7 +38,7 @@ index 0f18a3b..a90a38f 100644
          endforeach ()
  
          # defines are a bit more work, because setup.py expects them as tuples
-@@ -673,6 +679,7 @@ function(add_setup_py target template)
+@@ -673,6 +680,7 @@ function(add_setup_py target template)
          string(REGEX REPLACE ";" "," def "${_def}")
          string(REGEX REPLACE ";" "," opt "${_opt}")
          string(REGEX REPLACE ";" "," lnk "${_lnk}")
@@ -38,7 +46,7 @@ index 0f18a3b..a90a38f 100644
          string(REGEX REPLACE ";" "," dir "${_dir}")
  
          # TODO: be able to set other name than ext
-@@ -682,6 +689,7 @@ function(add_setup_py target template)
+@@ -682,6 +690,7 @@ function(add_setup_py target template)
                                                  define_macros=[${def}],
                                                  library_dirs=[${dir}],
                                                  libraries=[${lnk}],
