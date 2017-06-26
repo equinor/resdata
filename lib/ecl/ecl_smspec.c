@@ -368,30 +368,26 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
     ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
     
     if (smspec->write_restart_case != NULL) {
-       int restart_case_len = strlen(smspec->write_restart_case);
-       if (restart_case_len > 64)
-          util_abort("%s: Restart case name, %s, is too long w/ %d chars.\n", __func__, smspec->write_restart_case, restart_case_len);
-       else {                     
-          for (int i = 0; i < SUMMARY_RESTART_SIZE; i++) {
-             char str[9];
-             
-             for (int j = 0; j < 9; j++) {
-                int index = 8 * i + j;
-                if (j == 8) {
-                   str[8] = '\0';
-                   break;
-                }
-                if (index < restart_case_len)
-                   str[j] = smspec->write_restart_case[index];
-                else {
-                   str[j] = '\0'; 
-                   break;
-                }
+       int restart_case_len = strlen(smspec->write_restart_case);                           
+       for (int i = 0; i < SUMMARY_RESTART_SIZE; i++) {
+          char str[ECL_STRING8_LENGTH + 1];
+          
+          for (int j = 0; j <= ECL_STRING8_LENGTH; j++) {
+             int index = ECL_STRING8_LENGTH * i + j;
+             if (j == ECL_STRING8_LENGTH) {
+                str[ECL_STRING8_LENGTH] = '\0';
+                break;
              }
-
-             ecl_kw_iset_string8( restart_kw, i, str);  
-          }              
-       }
+             if (index < restart_case_len)
+                str[j] = smspec->write_restart_case[index];
+             else {
+                str[j] = '\0'; 
+                break;
+             }
+          }
+          ecl_kw_iset_string8( restart_kw, i, str);  
+       }              
+       
     }
     else
        for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
@@ -518,8 +514,12 @@ void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case ,
 ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * write_restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
   ecl_smspec_type * ecl_smspec = ecl_smspec_alloc_empty( true , key_join_string );
   
-  if (write_restart_case != NULL)
-     ecl_smspec->write_restart_case = util_alloc_copy(write_restart_case, strlen( write_restart_case ) + 1);
+  if (write_restart_case != NULL) {
+     if (strlen(write_restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
+        ecl_smspec->write_restart_case = util_alloc_string_copy( write_restart_case );
+     else
+        printf("Error in function %s: restart_case name is too long. Restart_case_name set to NULL.\n", __func__);
+  }
   ecl_smspec->grid_dims[0] = nx;
   ecl_smspec->grid_dims[1] = ny;
   ecl_smspec->grid_dims[2] = nz;
