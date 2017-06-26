@@ -15,7 +15,7 @@ index 141849e..d27390e 100644
              endif ()
  
 -            string(REGEX REPLACE "^lib" "" _lib ${_lib}${SUFFIX})
-+            string(REGEX REPLACE "" "" _lib ${_lib}${SUFFIX})
++            string(REGEX REPLACE "lib" "lib" _lib ${_lib}${SUFFIX})
              file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${dstpath})
  
              add_custom_command(OUTPUT ${dstpath}/${_lib}
