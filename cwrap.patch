@@ -1,0 +1,43 @@
+diff --git a/cwrap/clib.py b/cwrap/clib.py
+index e32a978..c981d5c 100644
+--- a/cwrap/clib.py
++++ b/cwrap/clib.py
+@@ -47,13 +47,15 @@ so_extension = {"linux"  : "so",
+ # the current runnning process, i.e. like dlopen( NULL ). We must
+ # special case this to avoid creating the bogus argument 'None.so'.
+ 
+-def lib_name(lib , path = None , so_version = ""):
++def lib_name(lib , path = None , so_version = "", so_ext = None):
+     if lib is None:
+         return None
+     else:
+         platform_key = platform.system().lower()
+ 
+-        if platform_key == "darwin":
++        if so_ext:
++            so_name = "%s.%s%s" % (lib, so_ext, so_version)
++        elif platform_key == "darwin":
+             so_name = "%s%s.%s" % (lib, so_version, so_extension[ platform_key ])
+         else:
+             so_name = "%s.%s%s" % (lib, so_extension[ platform_key ], so_version)
+@@ -66,7 +68,7 @@ def lib_name(lib , path = None , so_version = ""):
+ 
+ 
+ 
+-def load( lib, so_version = None, path = None):
++def load( lib, so_version = None, path = None, so_ext = None):
+     """Thin wrapper around the ctypes.CDLL function for loading shared
+     library.
+ 
+@@ -76,9 +78,9 @@ def load( lib, so_version = None, path = None):
+     """
+ 
+     dll = None
+-    lib_files = [ lib_name( lib , path = path , so_version = so_version) ]
++    lib_files = [ lib_name( lib , path = path , so_version = so_version, so_ext = so_ext ) ]
+     if path:
+-        lib_files.append( lib_name( lib , path = None , so_version = so_version) )
++        lib_files.append( lib_name( lib , path = None , so_version = so_version, so_ext = so_ext ) )
+ 
+     for lib_file in lib_files:
+         try:
