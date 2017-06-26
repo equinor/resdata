@@ -15,14 +15,15 @@ index 141849e..28097de 100644
              endif ()
  
 -            string(REGEX REPLACE "^lib" "" _lib ${_lib}${SUFFIX})
-+            string(REGEX REPLACE "lib" "lib" _lib ${_lib}${SUFFIX})
++            string(REGEX REPLACE "" "" _lib ${_lib}${SUFFIX})
              file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${dstpath})
  
              add_custom_command(OUTPUT ${dstpath}/${_lib}
-@@ -710,15 +711,21 @@ function(add_setup_py target template)
+@@ -710,15 +710,21 @@ function(add_setup_py target template)
  
          set(_lnk "")
-         foreach (item ${lnk})
+-        foreach (item ${lnk})
++        foreach (item ${lnk} blas lapack)
 +            message(STATUS "LNK ITEM: ${item}")
              get_filename_component(_libdir ${item} DIRECTORY)
 -
