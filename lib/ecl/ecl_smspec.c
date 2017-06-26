@@ -369,29 +369,19 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
     
     if (smspec->write_restart_case != NULL) {
        int restart_case_len = strlen(smspec->write_restart_case);                           
-       for (int i = 0; i < SUMMARY_RESTART_SIZE; i++) {
-          char str[ECL_STRING8_LENGTH + 1];
-          
-          for (int j = 0; j <= ECL_STRING8_LENGTH; j++) {
-             int index = ECL_STRING8_LENGTH * i + j;
-             if (j == ECL_STRING8_LENGTH) {
-                str[ECL_STRING8_LENGTH] = '\0';
-                break;
-             }
-             if (index < restart_case_len)
-                str[j] = smspec->write_restart_case[index];
-             else {
-                str[j] = '\0'; 
-                break;
-             }
-          }
-          ecl_kw_iset_string8( restart_kw, i, str);  
-       }              
-       
+     
+       int offset = 0;
+       for (int i = 0; i < SUMMARY_RESTART_SIZE ; i++) {
+          if (offset < restart_case_len)
+              ecl_kw_iset_string8( restart_kw , i , &smspec->write_restart_case[ offset ]);
+          else
+              ecl_kw_iset_string8( restart_kw , i , "");
+          offset += ECL_STRING8_LENGTH;
+       } 
     }
     else
        for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
-          ecl_kw_iset_string8( restart_kw , i , "");
+           ecl_kw_iset_string8( restart_kw , i , "");
 
     ecl_kw_fwrite( restart_kw , fortio );
     ecl_kw_free( restart_kw );
