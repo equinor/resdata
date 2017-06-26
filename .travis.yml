@@ -62,8 +62,8 @@ before_script:
     - popd
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
     - git clone https://github.com/statoil/cwrap
+    - patch cwrap/cwrap/clib.py cwrap.patch
     - pushd cwrap
-    - patch cwrap/cwrap/clib.py ../cwrap.patch
     - python setup.py bdist_wheel
     - pip install dist/*.whl
     - popd
