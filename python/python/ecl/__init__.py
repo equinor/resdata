@@ -126,7 +126,7 @@ def load(name):
     print("LOAD SHARED NAME :: ", name)
     if ecl_pip:
         name = '/'.join([os.path.dirname(os.path.realpath(__file__)), name[3:]])
-        return cwrapload(name, so_version=ert_so_version, so_ext=".so")
+        return cwrapload(name, so_version=ert_so_version, so_ext="so")
 
     return cwrapload(name, path=ecl_lib_path, so_version=ert_so_version)
 
