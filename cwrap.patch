@@ -16,6 +16,7 @@ index e32a978..c981d5c 100644
 -        if platform_key == "darwin":
 +        if so_ext:
 +            so_name = "%s.%s%s" % (lib, so_ext, so_version)
++            print("CWRAP SO NAME: %s" % so_name)
 +        elif platform_key == "darwin":
              so_name = "%s%s.%s" % (lib, so_version, so_extension[ platform_key ])
          else:
