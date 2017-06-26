@@ -148,20 +148,14 @@ void test_ecl_sum_alloc_restart_writer() {
       int num_ministep = 10;
       double ministep_length = 36000; // Seconds
 
-      printf(" ************************ %s: %d\n", __func__, 1);
-
       int sim_seconds = write_summary( name1 , start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);  
       sim_seconds = write_restart_summary( name2 , name1 , num_dates, sim_seconds, start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);
-
-      printf(" ************************ %s: %d\n", __func__, 2);
 
       ecl_sum_type * case1 = ecl_sum_fread_alloc_case( name1 , ":" );
       ecl_sum_type * case2 = ecl_sum_fread_alloc_case( name2 , ":" );
       test_assert_true( ecl_sum_is_instance(case2) );
 
       test_assert_true( ecl_sum_has_key( case2 , "FOPT" ));
-
-      printf(" ************************ %s: %d\n", __func__, 3);
 
       ecl_file_type * restart_file = ecl_file_open( "CASE2.SMSPEC" , 0 );
       ecl_file_view_type * view_file = ecl_file_get_global_view( restart_file );    
@@ -170,8 +164,6 @@ void test_ecl_sum_alloc_restart_writer() {
       test_assert_int_equal(8, ecl_kw_get_size(kw));
       test_assert_string_equal( "CASE1   ", ecl_kw_iget_ptr( kw , 0 ) );
       test_assert_string_equal( "        ", ecl_kw_iget_ptr( kw , 1 ) );
-
-      printf(" ************************ %s: %d\n", __func__, 4);
 
       for (int time_index=0; time_index < ecl_sum_get_data_length( case1 ); time_index++) 
          test_assert_double_equal(  ecl_sum_get_general_var( case1 , time_index , "FOPT"), ecl_sum_get_general_var( case2 , time_index , "FOPT"));
@@ -192,19 +184,13 @@ void test_long_restart_names() {
       sprintf(s, "WWWWGGG%d", n);
       strcat(restart_case, s);
    }
-   printf(" ************************ %s: %d\n", __func__, 1);
    const char * name = "THE_CASE";
    test_work_area_type * work_area = test_work_area_alloc("sum_write_restart_long_name");
-
-   printf(" ************************ %s: %d\n", __func__, 2);
-
    {
        time_t start_time = util_make_date_utc( 1,1,2010 );
        ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( name , restart_case , false , true , ":" , start_time , true , 3, 3, 3);
        ecl_sum_fwrite( ecl_sum );
        ecl_sum_free(ecl_sum);
-    
-       printf(" ************************ %s: %d\n", __func__, 3);
              
        ecl_file_type * smspec_file = ecl_file_open( "THE_CASE.SMSPEC" , 0 );
        ecl_file_view_type * view_file = ecl_file_get_global_view( smspec_file );    
@@ -212,14 +198,10 @@ void test_long_restart_names() {
        ecl_kw_type * kw = ecl_file_view_iget_kw(view_file, 0);
        test_assert_int_equal(8, ecl_kw_get_size(kw));
 
-       printf(" ************************ %s: %d\n", __func__, 4);
-
        for (int n = 0; n < 8; n++) {
          char s[9]; sprintf(s, "WWWWGGG%d", n);
          test_assert_string_equal(s, ecl_kw_iget_char_ptr(kw, n) );
        }
-
-       printf(" ************************ %s: %d\n", __func__, 5);
 
    }
    test_work_area_free( work_area );
