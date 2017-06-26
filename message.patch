@@ -1,8 +1,8 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 0f18a3b..2b23ab9 100644
+index 141849e..d27390e 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
-@@ -499,6 +499,7 @@ function(add_python_package pkg NAME)
+@@ -518,6 +518,7 @@ function(add_python_package pkg NAME)
          # set_property seem to combine it with previously-set options or
          # mangles it in some other way
          set(LINK_FLAGS " -undefined dynamic_lookup ")
@@ -10,7 +10,16 @@ index 0f18a3b..2b23ab9 100644
      else()
          set(LINK_FLAGS " -Xlinker -export-dynamic ")
      endif()
-@@ -624,15 +625,21 @@ function(add_setup_py target template)
+@@ -546,7 +547,7 @@ function(add_python_package pkg NAME)
+                 set(_lib ${tgt})
+             endif ()
+ 
+-            string(REGEX REPLACE "^lib" "" _lib ${_lib}${SUFFIX})
++            string(REGEX REPLACE "" "" _lib ${_lib}${SUFFIX})
+             file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${dstpath})
+ 
+             add_custom_command(OUTPUT ${dstpath}/${_lib}
+@@ -710,15 +711,21 @@ function(add_setup_py target template)
  
          set(_lnk "")
          foreach (item ${lnk})
@@ -38,7 +47,7 @@ index 0f18a3b..2b23ab9 100644
          endforeach ()
  
          # defines are a bit more work, because setup.py expects them as tuples
-@@ -673,6 +680,7 @@ function(add_setup_py target template)
+@@ -759,6 +766,7 @@ function(add_setup_py target template)
          string(REGEX REPLACE ";" "," def "${_def}")
          string(REGEX REPLACE ";" "," opt "${_opt}")
          string(REGEX REPLACE ";" "," lnk "${_lnk}")
@@ -46,7 +55,7 @@ index 0f18a3b..2b23ab9 100644
          string(REGEX REPLACE ";" "," dir "${_dir}")
  
          # TODO: be able to set other name than ext
-@@ -682,6 +690,7 @@ function(add_setup_py target template)
+@@ -768,6 +776,7 @@ function(add_setup_py target template)
                                                  define_macros=[${def}],
                                                  library_dirs=[${dir}],
                                                  libraries=[${lnk}],
