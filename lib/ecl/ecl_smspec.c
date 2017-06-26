@@ -141,7 +141,6 @@ struct ecl_smspec_struct {
   float_vector_type * params_default;
 
   char              * restart_case;
-  char              * write_restart_case;
 };
 
 
@@ -275,7 +274,6 @@ static ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * k
 
   ecl_smspec->index_map = int_vector_alloc(0,0);
   ecl_smspec->restart_case = NULL;
-  ecl_smspec->write_restart_case = NULL;
   ecl_smspec->params_default = float_vector_alloc(0 , PARAMS_GLOBAL_DEFAULT);
   ecl_smspec->write_mode = write_mode;
   ecl_smspec->need_nums = false;
@@ -366,22 +364,19 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
   int num_nodes           = ecl_smspec_num_nodes( smspec );
   {
     ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
-    
-    if (smspec->write_restart_case != NULL) {
-       int restart_case_len = strlen(smspec->write_restart_case);                           
+    for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
+           ecl_kw_iset_string8( restart_kw , i , "");
+
+    if (smspec->restart_case != NULL) {
+       int restart_case_len = strlen(smspec->restart_case);                           
      
        int offset = 0;
        for (int i = 0; i < SUMMARY_RESTART_SIZE ; i++) {
           if (offset < restart_case_len)
-              ecl_kw_iset_string8( restart_kw , i , &smspec->write_restart_case[ offset ]);
-          else
-              ecl_kw_iset_string8( restart_kw , i , "");
+              ecl_kw_iset_string8( restart_kw , i , &smspec->restart_case[ offset ]);
           offset += ECL_STRING8_LENGTH;
        } 
     }
-    else
-       for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
-           ecl_kw_iset_string8( restart_kw , i , "");
 
     ecl_kw_fwrite( restart_kw , fortio );
     ecl_kw_free( restart_kw );
@@ -501,12 +496,12 @@ void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case ,
   free( filename );
 }
 
-ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * write_restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
+ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
   ecl_smspec_type * ecl_smspec = ecl_smspec_alloc_empty( true , key_join_string );
   
-  if (write_restart_case != NULL) {
-     if (strlen(write_restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
-        ecl_smspec->write_restart_case = util_alloc_string_copy( write_restart_case );
+  if (restart_case != NULL) {
+     if (strlen(restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
+        ecl_smspec->restart_case = util_alloc_string_copy( restart_case );
      else
         printf("Error in function %s: restart_case name is too long. Restart_case_name set to NULL.\n", __func__);
   }
@@ -1675,7 +1670,6 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   float_vector_free( ecl_smspec->params_default );
   vector_free( ecl_smspec->smspec_nodes );
   free( ecl_smspec->restart_case );
-  free( ecl_smspec->write_restart_case );
   free( ecl_smspec );
 }
 
