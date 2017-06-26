@@ -210,10 +210,7 @@ void test_long_restart_names() {
 
 int main( int argc , char ** argv) {
   test_write_read();
-  printf(" ******************* HERE MAIN 1\n");
   test_ecl_sum_alloc_restart_writer();
-  printf(" ******************* HERE MAIN 2\n");
   test_long_restart_names();
-  printf(" ******************* HERE MAIN 3\n");
   exit(0);
 }
