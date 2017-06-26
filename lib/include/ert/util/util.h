@@ -531,9 +531,7 @@ void    util_abort_set_executable( const char * argv0 );
   bool         util_try_lockf(const char *  , mode_t  , int * );
 #endif
 
-
-
-
+#include "util_unlink.h"
 
 #ifdef __cplusplus
 }

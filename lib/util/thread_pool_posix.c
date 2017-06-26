@@ -366,14 +366,14 @@ bool thread_pool_try_join(thread_pool_type * pool, int timeout_seconds) {
 
   pool->join = true;                               /* Signals to the main thread that joining can start. */
   if (pool->max_running > 0) {
-    struct timespec ts;
     time_t timeout_time = time( NULL );
-
     util_inplace_forward_seconds_utc(&timeout_time , timeout_seconds );
-    ts.tv_sec = timeout_time;
-    ts.tv_nsec = 0;
 
 #ifdef HAVE_TIMEDJOIN
+
+    struct timespec ts;
+    ts.tv_sec = timeout_time;
+    ts.tv_nsec = 0;
 
     {
       int join_return = pthread_timedjoin_np( pool->dispatch_thread , NULL , &ts);  /* Wait for the main thread to complete. */

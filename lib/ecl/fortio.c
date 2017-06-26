@@ -839,7 +839,7 @@ bool fortio_read_at_eof( fortio_type * fortio ) {
 
 void fortio_fwrite_error(fortio_type * fortio) {
   if (fortio->writable)
-    unlink( fortio->filename );
+    util_unlink( fortio->filename );
 }
 
 
