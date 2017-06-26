@@ -1,5 +1,5 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 141849e..d27390e 100644
+index 141849e..28097de 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
 @@ -518,6 +518,7 @@ function(add_python_package pkg NAME)
@@ -47,7 +47,7 @@ index 141849e..d27390e 100644
          endforeach ()
  
          # defines are a bit more work, because setup.py expects them as tuples
-@@ -759,6 +766,7 @@ function(add_setup_py target template)
+@@ -759,15 +766,17 @@ function(add_setup_py target template)
          string(REGEX REPLACE ";" "," def "${_def}")
          string(REGEX REPLACE ";" "," opt "${_opt}")
          string(REGEX REPLACE ";" "," lnk "${_lnk}")
@@ -55,7 +55,10 @@ index 141849e..d27390e 100644
          string(REGEX REPLACE ";" "," dir "${_dir}")
  
          # TODO: be able to set other name than ext
-@@ -768,6 +776,7 @@ function(add_setup_py target template)
+-        list(APPEND setup_extensions "Extension('${PYCMAKE_PACKAGE_NAME}.${ext}',
++        list(APPEND setup_extensions "Extension('${PYCMAKE_PACKAGE_NAME}.lib${ext}',
+                                                 sources=[${src}],
+                                                 include_dirs=[${inc}],
                                                  define_macros=[${def}],
                                                  library_dirs=[${dir}],
                                                  libraries=[${lnk}],
