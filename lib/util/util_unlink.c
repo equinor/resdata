@@ -34,4 +34,8 @@ int util_unlink(const char * filename) {
  return unlink(filename);
 }
 
+#else
+
+#error "No unlinke implementation on this platform"
+
 #endif
