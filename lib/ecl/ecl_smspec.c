@@ -364,9 +364,19 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
   int num_nodes           = ecl_smspec_num_nodes( smspec );
   {
     ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
-    int i;
-    for (i=0; i < SUMMARY_RESTART_SIZE; i++)
-      ecl_kw_iset_string8( restart_kw , i , "");
+    for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
+           ecl_kw_iset_string8( restart_kw , i , "");
+
+    if (smspec->restart_case != NULL) {
+       int restart_case_len = strlen(smspec->restart_case);                           
+     
+       int offset = 0;
+       for (int i = 0; i < SUMMARY_RESTART_SIZE ; i++) {
+          if (offset < restart_case_len)
+              ecl_kw_iset_string8( restart_kw , i , &smspec->restart_case[ offset ]);
+          offset += ECL_STRING8_LENGTH;
+       } 
+    }
 
     ecl_kw_fwrite( restart_kw , fortio );
     ecl_kw_free( restart_kw );
@@ -486,9 +496,15 @@ void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case ,
   free( filename );
 }
 
-ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
+ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
   ecl_smspec_type * ecl_smspec = ecl_smspec_alloc_empty( true , key_join_string );
-
+  
+  if (restart_case != NULL) {
+     if (strlen(restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
+        ecl_smspec->restart_case = util_alloc_string_copy( restart_case );
+     else 
+        return NULL;
+  }
   ecl_smspec->grid_dims[0] = nx;
   ecl_smspec->grid_dims[1] = ny;
   ecl_smspec->grid_dims[2] = nz;
@@ -989,7 +1005,7 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
     char * restart_base;
     int i;
     tmp_base[0] = '\0';
-    for (i=0; i < ecl_kw_get_size( restart_kw ); i++)
+    for (i=0; i < ecl_kw_get_size( restart_kw ); i++) 
       strcat( tmp_base , ecl_kw_iget_ptr( restart_kw , i ));
 
     restart_base = util_alloc_strip_copy( tmp_base );
