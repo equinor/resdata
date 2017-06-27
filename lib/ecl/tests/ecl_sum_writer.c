@@ -140,7 +140,6 @@ void test_ecl_sum_alloc_restart_writer() {
       const char * name1 = "CASE1";
       const char * name2 = "CASE2";
       time_t start_time = util_make_date_utc( 1,1,2010 );
-      time_t end_time = start_time;
       int nx = 10;
       int ny = 11;
       int nz = 12;
@@ -178,7 +177,7 @@ void test_ecl_sum_alloc_restart_writer() {
 
 
 void test_long_restart_names() {
-   char restart_case[65] = "";
+   char restart_case[65] = { 0 };
    for (int n = 0; n < 8; n++) {
       char s[9];
       sprintf(s, "WWWWGGG%d", n);
