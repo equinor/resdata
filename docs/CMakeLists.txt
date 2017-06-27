@@ -1,6 +1,5 @@
 find_package(Sphinx REQUIRED)
 if (SPHINX_FOUND)
-  set( ERT_DOC_INSTALL_PATH  "" CACHE PATH "Absolute path to install documentation *in addition* to $PREFIX/documentation")
   set( ERT_DOC_EXTERNAL_ROOT "" CACHE PATH "Path to site local ERT documentation")
 
   file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/doc-src")
