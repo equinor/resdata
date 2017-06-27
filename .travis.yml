@@ -69,17 +69,17 @@ before_script:
     - popd
 
 script:
+    - python build_total.py ecl
     - pushd build
-    - make install
     - cmake .. -DINSTALL_ERT_LEGACY=OFF
                -DERT_BUILD_CXX=OFF
+               -DBUILD_APPLICATIONS=ON
     - make
     - cat python/setup.py
     - popd
     - BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
     - install_run $PLAT
     - mv wheelhouse build/python/dist
-    - python build_total.py ecl
 
 before_deploy:
     - pushd build/python
