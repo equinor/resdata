@@ -16,22 +16,22 @@
    for more details.
 */
 
+#include "ert/util/build_config.h"
 
-#if defined(ERT_HAVE_UNISTD)
-  #include <unistd.h>
-#elif defined(ERT_HAVE_IO)
-  #include <io.h>
-#else
-  #include <ert/util/util.h>
-#endif
+#if defined(HAVE_WINDOWS_UNLINK)
+
+#include <io.h>
 
 int util_unlink(const char * filename) {
-#if defined(ERT_HAVE_UNISTD)
- return unlink(filename);
-#elif defined(ERT_HAVE_IO)
  return _unlink(filename);
-#else
- util_abort("%s: No unlink functionality available.\n", __func__);
- return -1;
-#endif
 }
+
+#elif defined(HAVE_POSIX_UNLINK)
+
+#include <unistd.h>
+
+int util_unlink(const char * filename) {
+ return unlink(filename);
+}
+
+#endif

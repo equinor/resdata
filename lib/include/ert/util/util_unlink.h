@@ -20,11 +20,17 @@
 #ifndef ERT_UTIL_UNLINK_H
 #define ERT_UTIL_UNLINK_H
 
+#include "ert/util/build_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
+#if defined(HAVE_POSIX_UNLINK) || defined(HAVE_WINDOWS_UNLINK)
+
   int util_unlink(const char * filename);
+
+#endif
   
 #ifdef __cplusplus
 }
