@@ -202,8 +202,10 @@ void test_long_restart_names() {
          char s[9]; sprintf(s, "WWWWGGG%d", n);
          test_assert_string_equal(s, ecl_kw_iget_char_ptr(kw, n) );
        }
-
+       strcat(restart_case, "A");
+       test_assert_NULL( ecl_smspec_alloc_writer( ":" , restart_case, start_time, true, 3, 3 ,3) );
    }
+
    test_work_area_free( work_area );
   
 }

@@ -502,8 +502,8 @@ ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const 
   if (restart_case != NULL) {
      if (strlen(restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
         ecl_smspec->restart_case = util_alloc_string_copy( restart_case );
-     else
-        printf("Error in function %s: restart_case name is too long. Restart_case_name set to NULL.\n", __func__);
+     else 
+        return NULL;
   }
   ecl_smspec->grid_dims[0] = nx;
   ecl_smspec->grid_dims[1] = ny;
