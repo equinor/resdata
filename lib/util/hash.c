@@ -87,10 +87,6 @@ typedef struct hash_sort_node {
 /*                          locking                              */
 /*****************************************************************/
 #ifdef HAVE_PTHREAD
-static void __hash_deadlock_abort(hash_type * hash) {
-  util_abort("%s: A deadlock condition has been detected in the hash routine - and the program will abort.\n", __func__);
-}
-
 
 static void __hash_rdlock(hash_type * hash) {
   int lock_error = pthread_rwlock_tryrdlock( &hash->rwlock );
