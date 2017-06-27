@@ -1,5 +1,5 @@
 diff --git a/PythonPackage.cmake b/PythonPackage.cmake
-index 141849e..28097de 100644
+index 141849e..5cf2d0e 100644
 --- a/PythonPackage.cmake
 +++ b/PythonPackage.cmake
 @@ -518,6 +518,7 @@ function(add_python_package pkg NAME)
@@ -19,11 +19,10 @@ index 141849e..28097de 100644
              file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${dstpath})
  
              add_custom_command(OUTPUT ${dstpath}/${_lib}
-@@ -710,15 +710,21 @@ function(add_setup_py target template)
+@@ -710,15 +711,21 @@ function(add_setup_py target template)
  
          set(_lnk "")
--        foreach (item ${lnk})
-+        foreach (item ${lnk} blas lapack)
+         foreach (item ${lnk})
 +            message(STATUS "LNK ITEM: ${item}")
              get_filename_component(_libdir ${item} DIRECTORY)
 -
@@ -33,9 +32,9 @@ index 141849e..28097de 100644
 +            if( ${item} MATCHES .framework)
 +                #list(APPEND _opt "'-F ${_libdir}'")
 +                #list(APPEND _opt "'-framework ${_name}'")
-+                list(APPEND _lnk "'${item}'")
++                #list(APPEND _lnk "'${item}'")
 +                #list(APPEND _xlk "'-F${_libdir}'")
-+                #list(APPEND _xlk "'-framework ${_name}.framework'")
++                list(APPEND _xlk "'-Wl,-framework'" "'-Wl,${_name}'")
 +            elseif (_libdir)
                  list(APPEND _dir '${_libdir}')
 -                get_filename_component(item ${item} NAME_WE)
