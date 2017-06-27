@@ -54,16 +54,8 @@ install:
     fi
 
 before_script:
-    - pushd pycmake
-    - patch PythonPackage.cmake ../message.patch
-    - popd
+    - patch pycmake/PythonPackage.cmake message.patch
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
-    - git clone https://github.com/statoil/cwrap
-    - patch cwrap/cwrap/clib.py cwrap.patch
-    - pushd cwrap
-    - python setup.py bdist_wheel
-    - pip install dist/*.whl
-    - popd
     - mkdir build
     - pushd build
     - cmake -DBUILD_TESTS=ON
