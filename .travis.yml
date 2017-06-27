@@ -70,13 +70,10 @@ before_script:
 
 script:
     - pushd build
-    - make
     - make install
-    - rm -rf *
     - cmake .. -DINSTALL_ERT_LEGACY=OFF
                -DERT_BUILD_CXX=OFF
-               -DBUILD_PYTHON=ON
-    - make VERBOSE=1
+    - make
     - cat python/setup.py
     - popd
     - BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
