@@ -47,14 +47,11 @@ before_install:
     - pip install requests pandas scipy matplotlib future numpy
 
 install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-        brew update && brew install cppcheck;
-        if [[ -n "${MB_PYTHON_VERSION+1}" ]]; then
-            prefix=`python-config --prefix`;
-            pypath=$prefix/lib/libpython$MB_PYTHON_VERSION.dylib;
-            pylib="-DPYTHON_LIBRARY=$pypath";
-        fi
-      fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" && -n "${MB_PYTHON_VERSION+1}" ]]; then
+        prefix=`python-config --prefix`;
+        pypath=$prefix/lib/libpython$MB_PYTHON_VERSION.dylib;
+        pylib="-DPYTHON_LIBRARY=$pypath";
+    fi
 
 before_script:
     - pushd pycmake
@@ -90,7 +87,7 @@ script:
     - make VERBOSE=1
     - cat python/setup.py
     - popd
-    - usr/bin/clang BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
+    - BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
     - install_run $PLAT
     - mv wheelhouse build/python/dist
     - python build_total.py ecl
