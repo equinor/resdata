@@ -178,7 +178,7 @@ void test_ecl_sum_alloc_restart_writer() {
 
 
 void test_long_restart_names() {
-   char restart_case[65] = "";
+   char restart_case[65] = { 0 };
    for (int n = 0; n < 8; n++) {
       char s[9];
       sprintf(s, "WWWWGGG%d", n);
