@@ -16,7 +16,7 @@ matrix:
           compiler: clang
     include:
         - os: osx
-          language: generic
+          language: c
           osx_image: xcode7.3
           compiler: clang
           env: MB_PYTHON_VERSION=2.7
@@ -58,7 +58,6 @@ before_script:
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
 script:
-    - patch build_total.py build.patch
     - python build_total.py ecl
     - pushd build
     - cmake .. -DINSTALL_ERT_LEGACY=OFF
