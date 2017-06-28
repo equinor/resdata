@@ -12,8 +12,6 @@ matrix:
     fast_finish: true
     exclude:
         - os: osx
-        - os: linux
-          compiler: clang
     include:
         - os: osx
           language: c

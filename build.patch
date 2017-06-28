@@ -1,12 +1,18 @@
 --- build_total.py	2017-06-28 09:36:23.309231723 +0200
-+++ build_total.py.mod	2017-06-28 10:18:17.731527404 +0200
-@@ -164,7 +164,8 @@
++++ build_total.py.mod	2017-06-28 10:44:16.972178251 +0200
+@@ -164,13 +164,13 @@
                        "-DINSTALL_ERT_LEGACY=ON",
                        "-DCMAKE_PREFIX_PATH=%s" % install_dir,
                        "-DCMAKE_MODULE_PATH=%s/share/cmake/Modules" % install_dir,
 -                      "-DCMAKE_C_FLAGS=%s" % c_flags
 +                      "-DCMAKE_C_FLAGS=%s" % c_flags,
-+                      '-D"CMAKE_OSX_ARCHITECTURES=x86_64"'
                        ]
  
          cwd = os.getcwd()
+         os.chdir(build_dir)
+         subprocess.check_call(cmake_args)
+-        subprocess.check_call(["make"])
++        subprocess.check_call(["make", "VERBOSE=1"])
+         if test:
+             subprocess.check_call(["ctest", "--output-on-failure"])
+         subprocess.check_call(["make", "install"])
