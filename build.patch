@@ -1,0 +1,10 @@
+--- build_total.py.mod	2017-06-28 09:37:16.205038784 +0200
++++ build_total.py	2017-06-28 09:36:23.309231723 +0200
+@@ -165,7 +165,6 @@
+                       "-DCMAKE_PREFIX_PATH=%s" % install_dir,
+                       "-DCMAKE_MODULE_PATH=%s/share/cmake/Modules" % install_dir,
+                       "-DCMAKE_C_FLAGS=%s" % c_flags
+-                      "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+                       ]
+ 
+         cwd = os.getcwd()

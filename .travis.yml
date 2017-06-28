@@ -39,8 +39,6 @@ env:
         - ERT_SHOW_BACKTRACE=1
         - UNICODE_WIDTH=32
         - PLAT=x86_64
-        - CFLAGS="-arch i386 -arch x86_64"
-        - CXXFLAGS="-arch i386 -arch x86_64"
 
 before_install:
     - source multibuild/common_utils.sh
@@ -60,11 +58,12 @@ before_script:
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
 script:
+    - patch build_total.py build.patch
     - python build_total.py ecl
     - pushd build
     - cmake .. -DINSTALL_ERT_LEGACY=OFF
                -DERT_BUILD_CXX=OFF
-               -DBUILD_APPLICATIONS=ON
+               -DBUILD_APPLICATIONS=OFF
     - make
     - cat python/setup.py
     - popd
