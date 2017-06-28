@@ -39,6 +39,8 @@ env:
         - ERT_SHOW_BACKTRACE=1
         - UNICODE_WIDTH=32
         - PLAT=x86_64
+        - CFLAGS="-arch i386 -arch x86_64"
+        - CXXFLAGS="-arch i386 -arch x86_64"
 
 before_install:
     - source multibuild/common_utils.sh
