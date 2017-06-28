@@ -15,7 +15,6 @@ matrix:
     include:
         - os: osx
           language: c
-          osx_image: xcode7.3
           compiler: clang
           env: MB_PYTHON_VERSION=2.7
 
