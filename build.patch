@@ -1,12 +1,12 @@
 --- build_total.py	2017-06-28 09:36:23.309231723 +0200
-+++ build_total.py.mod	2017-06-28 10:04:37.214046808 +0200
++++ build_total.py.mod	2017-06-28 10:18:17.731527404 +0200
 @@ -164,7 +164,8 @@
                        "-DINSTALL_ERT_LEGACY=ON",
                        "-DCMAKE_PREFIX_PATH=%s" % install_dir,
                        "-DCMAKE_MODULE_PATH=%s/share/cmake/Modules" % install_dir,
 -                      "-DCMAKE_C_FLAGS=%s" % c_flags
 +                      "-DCMAKE_C_FLAGS=%s" % c_flags,
-+                      "-DCMAKE_OSX_ARCHITECTURES=x86_64"
++                      '-D"CMAKE_OSX_ARCHITECTURES=x86_64"'
                        ]
  
          cwd = os.getcwd()
