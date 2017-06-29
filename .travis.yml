@@ -60,7 +60,7 @@ script:
     - mkdir build
     - pushd build
     - cmake .. -DINSTALL_ERT_LEGACY=OFF
-               -DERT_BUILD_CXX=OFF
+               -DERT_BUILD_CXX=ON
                -DBUILD_APPLICATIONS=OFF
     - make VERBOSE=1
     - cat python/setup.py
