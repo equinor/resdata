@@ -1,4 +1,4 @@
-language: python
+language: c
 
 compiler:
     - gcc
@@ -14,7 +14,6 @@ matrix:
         - os: osx
     include:
         - os: osx
-          language: generic
           compiler: clang
           osx_image: xcode7.3
           env: MB_PYTHON_VERSION=2.7
