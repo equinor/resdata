@@ -55,16 +55,15 @@ before_script:
     - patch pycmake/PythonPackage.cmake message.patch
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
-#- VERBOSE=1 python build_total.py ecl
 script:
-    - mkdir build
+    - VERBOSE=1 python build_total.py ecl
     - pushd build
-    - cmake .. -DINSTALL_ERT_LEGACY=ON
-               -DERT_BUILD_CXX=ON
-               -DBUILD_APPLICATIONS=ON
+    - cmake .. -DINSTALL_ERT_LEGACY=OFF
+               -DERT_BUILD_CXX=OFF
+               -DBUILD_APPLICATIONS=OFF
                -DBUILD_PYTHON=ON
                -DBUILD_TESTS=ON
-               -DINSTALL_ERT_LEGACY=ON
+               -DINSTALL_ERT_LEGACY=OFF
     - make
     - cat python/setup.py
     - popd
