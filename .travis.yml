@@ -58,8 +58,7 @@ before_script:
 
 #- VERBOSE=1 python build_total.py ecl
 script:
-    - mkdir build
-    - pushd build
+    - mkdir build && pushd build
     - cmake .. -DINSTALL_ERT_LEGACY=ON
                -DERT_BUILD_CXX=ON
                -DBUILD_APPLICATIONS=ON
