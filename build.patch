@@ -1,18 +1,11 @@
 --- build_total.py	2017-06-28 09:36:23.309231723 +0200
-+++ build_total.py.mod	2017-06-28 10:44:16.972178251 +0200
-@@ -164,13 +164,13 @@
++++ total.py	2017-06-29 10:22:58.632355949 +0200
+@@ -158,7 +158,7 @@
+                       source_dir,
+                       "-DBUILD_TESTS=ON",
+                       "-DBUILD_PYTHON=ON",
+-                      "-DERT_BUILD_CXX=ON",
++                      "-DERT_BUILD_CXX=OFF",
+                       "-DBUILD_APPLICATIONS=ON",
+                       "-DCMAKE_INSTALL_PREFIX=%s" % install_dir,
                        "-DINSTALL_ERT_LEGACY=ON",
-                       "-DCMAKE_PREFIX_PATH=%s" % install_dir,
-                       "-DCMAKE_MODULE_PATH=%s/share/cmake/Modules" % install_dir,
--                      "-DCMAKE_C_FLAGS=%s" % c_flags
-+                      "-DCMAKE_C_FLAGS=%s" % c_flags,
-                       ]
- 
-         cwd = os.getcwd()
-         os.chdir(build_dir)
-         subprocess.check_call(cmake_args)
--        subprocess.check_call(["make"])
-+        subprocess.check_call(["make", "VERBOSE=1"])
-         if test:
-             subprocess.check_call(["ctest", "--output-on-failure"])
-         subprocess.check_call(["make", "install"])
