@@ -54,6 +54,7 @@ install:
 before_script:
     - patch pycmake/PythonPackage.cmake message.patch
     - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
+    - patch build_total.py build.patch
 
 script:
     - VERBOSE=1 python build_total.py ecl
