@@ -62,7 +62,7 @@ script:
     - cmake .. -DINSTALL_ERT_LEGACY=ON
                -DERT_BUILD_CXX=ON
                -DBUILD_APPLICATIONS=ON
-               -DBUILD_PYHTON=ON
+               -DBUILD_PYTHON=ON
                -DBUILD_TESTS=ON
                -DINSTALL_ERT_LEGACY=ON
     - make
