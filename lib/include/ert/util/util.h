@@ -288,6 +288,7 @@ typedef enum {left_pad   = 0,
 
   void     util_fread_from_buffer(void *  , size_t  , size_t , char ** );
 
+  unsigned int util_dev_urandom_seed( );
   unsigned int util_clock_seed( void );
   void         util_fread_dev_random(int , char * );
   void         util_fread_dev_urandom(int , char * );

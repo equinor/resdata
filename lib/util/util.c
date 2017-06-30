@@ -302,6 +302,12 @@ void util_fread_dev_urandom(int buffer_size , char * buffer) {
 }
 
 
+unsigned int util_dev_urandom_seed( ) {
+  unsigned int seed;
+  util_fread_dev_urandom( sizeof seed, &seed );
+  return seed;
+}
+
 unsigned int util_clock_seed( ) {
   int sec,min,hour;
   int mday,year,month;
