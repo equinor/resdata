@@ -10,20 +10,20 @@ class SubstitutionListTest(ExtendedTestCase):
 
         self.assertEqual(len(subst_list), 1)
 
-        with self.assertRaises(IndexError):
-            item = subst_list["1"]
-
-        with self.assertRaises(IndexError):
-            item = subst_list[2]
-
-        key, value, doc_string = subst_list[0]
-
-        self.assertEqual(key, "Key")
-        self.assertEqual(value, "Value")
-        self.assertEqual(doc_string, "Doc String")
-
-        self.assertTrue("Key" in subst_list)
-        self.assertEqual(subst_list.indexForKey("Key"), 0)
+        with self.assertRaises(KeyError):
+            item = subst_list["NoSuchKey"]
 
         with self.assertRaises(KeyError):
-            subst_list.indexForKey("AnotherKey")
+            item = subst_list.doc("NoSuchKey")
+
+        self.assertTrue("Key" in subst_list)
+        self.assertEqual(subst_list["Key"] , "Value")
+        self.assertEqual(subst_list.doc("Key") , "Doc String")
+        
+        subst_list.addItem("Key2", "Value2", "Doc String2")
+        self.assertEqual(len(subst_list), 2)
+
+        keys = subst_list.keys( )
+        self.assertEqual(keys[0] , "Key")
+        self.assertEqual(keys[1] , "Key2")
+        

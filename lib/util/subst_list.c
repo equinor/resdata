@@ -826,6 +826,12 @@ const char * subst_list_get_value( const subst_list_type * subst_list , const ch
 
 
 
+const char * subst_list_get_doc_string( const subst_list_type * subst_list , const char * key) {
+  const subst_list_string_type * node = hash_get( subst_list->map , key );
+  return node->doc_string;
+}
+
+
 const char * subst_list_iget_doc_string( const subst_list_type * subst_list , int index) {
   if (index < vector_get_size(subst_list->string_data)) {
     const subst_list_string_type * node = vector_iget_const( subst_list->string_data , index );

@@ -8,11 +8,14 @@ class SubstitutionList(BaseCClass):
     _alloc = UtilPrototype("void* subst_list_alloc(void*)" , bind = False)
     _free = UtilPrototype("void subst_list_free(subst_list)")
     _size = UtilPrototype("int subst_list_get_size(subst_list)")
-    _get_key = UtilPrototype("char* subst_list_iget_key(subst_list, int)")
-    _get_value = UtilPrototype("char* subst_list_iget_value(subst_list, int)")
-    _get_doc_string = UtilPrototype("char* subst_list_iget_doc_string(subst_list, int)")
+    _iget_key = UtilPrototype("char* subst_list_iget_key(subst_list, int)")
+    _iget_value = UtilPrototype("char* subst_list_iget_value(subst_list, int)")
+    _get_value = UtilPrototype("char* subst_list_get_value(subst_list, char*)")
+    _has_key = UtilPrototype("bool subst_list_has_key(subst_list, char*)")
+    _get_doc = UtilPrototype("char* subst_list_get_doc_string(subst_list, char*)")
     _append_copy = UtilPrototype("void subst_list_append_copy(subst_list, char*, char*, char*)")
-
+    
+    
     def __init__(self):
         c_ptr = self._alloc(0)
         super(SubstitutionList, self).__init__(c_ptr)
@@ -23,31 +26,37 @@ class SubstitutionList(BaseCClass):
     def addItem(self, key, value, doc_string=""):
         self._append_copy(key, value, doc_string)
 
-    def __getitem__(self, index_or_key):
-        if not isinstance(index_or_key, int):
-            raise IndexError("Index must be a number!")
-
-        if index_or_key < 0 or index_or_key >= len(self):
-            raise IndexError("Index must be in the range: [%i, %i]" % (0, len(self) - 1))
-
-        key = self._get_key(index_or_key)
-        value = self._get_value(index_or_key)
-        doc_string = self._get_doc_string(index_or_key)
-
-        return key, value, doc_string
+        
+    def keys(self):
+        key_list = []
+        for i in range(len(self)):
+            key_list.append( self._iget_key( i ))
+        return key_list
+    
 
     def __iter__(self):
         index = 0
-        while index < len(self):
-            yield self[index]
-            index += 1
+        keys = self.keys( )
+        for index in range(len(self)):
+            key = keys[index]
+            yield (key , self[key], self.doc(key))
 
     def __contains__(self, key):
-        for kw, value, doc in self:
-            if key == kw:
-                return True
-        return False
+        return self._has_key( key )
+    
+    def __getitem__(self, key):
+        if key in self:
+            return self._get_value( key )
+        else:
+            raise KeyError("No such key:%s" % key)
 
+    def doc(self,key):
+        if key in self:
+            return self._get_doc( key )
+        else:
+            raise KeyError("No such key:%s" % key)
+
+        
     def indexForKey(self, key):
         if not key in self:
             raise KeyError("Key '%s' not in substitution list!" % key)
