@@ -21,7 +21,7 @@ set( ERT_VERSION_MICRO git ) # with "new in Ert Version X.X.X"!
 option( BUILD_TESTS         "Should the tests be built"                               OFF)
 option( BUILD_APPLICATIONS  "Should we build small utility applications"              OFF)
 option( BUILD_ECL_SUMMARY   "Build the commandline application ecl_summary"           OFF)
-option( BUILD_PYTHON        "Run py_compile on the python wrappers"                   OFF)
+option( BUILD_PYTHON        "Build python wrappers"                                   OFF)
 option( BUILD_SHARED_LIBS   "Build shared libraries"                                  ON )
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( RST_DOC             "Build RST documentation"                                 OFF)
@@ -45,15 +45,12 @@ if (EXISTS ${STATOIL_TESTDATA_ROOT})
   set(_geopath ${_statoil_test_data}/Geometry)
 endif()
 
-
-# output libs to some lib/ path for testing
-set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
-
 if (USE_RPATH)
     SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif ()
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/pycmake)
 
 ENABLE_TESTING()
 
@@ -95,7 +92,9 @@ endif()
 
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-find_package(CXX11Features)
+if (ERT_BUILD_CXX)
+    find_package(CXX11Features)
+endif()
 
 #-----------------------------------------------------------------
 
@@ -137,7 +136,7 @@ if (CMAKE_USE_PTHREADS_INIT)
     set(HAVE_PTHREAD TRUE)
     set(ERT_HAVE_THREAD_POOL ON)
 
-    set(pthread "${CMAKE_THREAD_LIBS_INIT}")
+    set(pthread "pthread")
 
     if (THREADS_HAVE_PTHREAD_ARG)
         set(pthreadarg "-pthread")
@@ -159,12 +158,13 @@ endif ()
 set(ERT_HAVE_LAPACK OFF)
 find_package(LAPACK)
 if (LAPACK_FOUND)
+    message(STATUS "HAVE LAPACK :: libs: ${LAPACK_LIBRARIES} linker flags: ${LAPACK_LINKER_FLAGS}")
     set(ERT_HAVE_LAPACK ON)
     list(APPEND lapack ${LAPACK_LIBRARIES} ${LAPACK_LINKER_FLAGS})
 endif()
 
 find_package(ZLIB)
-if (ZLIB_FOUND)
+if (ZLIB_FOUND AND ZLIB_INCLUDE_DIRS)
     set(ERT_HAVE_ZLIB ON)
     set(zlib "${ZLIB_LIBRARIES}")
 endif ()
@@ -193,7 +193,6 @@ check_function_exists( ftruncate HAVE_FTRUNCATE )
 check_function_exists( getcwd HAVE_POSIX_GETCWD)
 check_function_exists( _getcwd HAVE_WINDOWS_GETCWD)
 check_function_exists( getpwuid HAVE_GETPWUID )
-check_function_exists( GetTempPath HAVE_WINDOWS_GET_TEMP_PATH )
 check_function_exists( getuid ERT_HAVE_GETUID )
 check_function_exists( glob ERT_HAVE_GLOB )
 check_function_exists( gmtime_r HAVE_GMTIME_R )
@@ -298,39 +297,23 @@ if (MSVC)
    add_definitions( -D__func__="\\"????\\"")
 endif()
 
-if (ERT_WINDOWS)
-    message(WARNING "Python is not supported on Windows")
-    set( BUILD_PYTHON OFF )
+if (ERT_WINDOWS AND BUILD_PYTHON)
+    message(WARNING "Python is experimental on Windows")
 endif ()
 
 if (ERT_LINUX)
    add_definitions( -DHAVE_PROC )
 endif()
 
+# If finding the Python interpreter and required packages
+# fails in the python/CMakeLists.txt file the BUILD_PYTHON
+# will be set to OFF.
 add_subdirectory( lib )
+add_subdirectory( python )
 add_subdirectory( applications )
 
-
-if (BUILD_PYTHON)
-   if (ERT_WINDOWS)
-      message(WARNING "Python is not supported on Windows")
-      set( BUILD_PYTHON OFF )
-   else()
-      # If finding the Python interpreter and required packages
-      # fails in the python/CMakeLists.txt file the BUILD_PYTHON
-      # will be set to OFF.
-      add_subdirectory( python )
-
-      if(RST_DOC)
-         add_subdirectory( docs )
-      endif()
-   endif()
-endif()
-
-if (BUILD_PYTHON)
-   if (NOT ${BUILD_SHARED_LIBS})
-      message(FATAL_ERROR "The Python wrappers require shared libraries")
-   endif()
+if(ERT_DOC)
+    add_subdirectory( docs )
 endif()
 
 install(EXPORT ecl-config DESTINATION share/cmake/ecl)

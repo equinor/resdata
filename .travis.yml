@@ -1,58 +1,91 @@
-language: c
+language: python
+
+compiler:
+    - gcc
+    - clang
+
+os:
+    - linux
+    - osx
 
 matrix:
-  fast_finish: true
-  include:
-    - os: osx
-      osx_image: xcode7.3
-      compiler: clang
-    - os: linux
-      sudo: false
-      compiler: gcc
-      dist: trusty
+    fast_finish: true
+    exclude:
+        - os: osx
+    include:
+        - os: osx
+          language: c
+          compiler: clang
+          osx_image: xcode7.3
+          env: MB_PYTHON_VERSION=2.7
 
 addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - liblapack-dev
-    - valgrind
-    - gcc-4.8
-    - g++-4.8
-    - clang
-    - cmake
-    - cmake-data
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - liblapack-dev
+            - zlib1g-dev
+            - valgrind
+            - python-qt4
+
+services: docker
+sudo: required
 
 env:
-  global:
-  - ERT_SHOW_BACKTRACE=1
+    global:
+        - ERT_SHOW_BACKTRACE=1
+        - UNICODE_WIDTH=32
+        - PLAT=x86_64
+
+before_install:
+    - source multibuild/common_utils.sh
+    - source multibuild/travis_steps.sh
+    - before_install
+    - pip install requests pandas scipy matplotlib future numpy
 
 install:
-- if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    export CONDA_OS=MacOSX;
-  else
-    export CONDA_OS=Linux;
-  fi
-- export TRAVIS_PYTHON_VERSION="2.7"
-# We do this conditionally because it saves us some downloading if the version is the same.
-- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-    wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDA_OS}-x86_64.sh -O miniconda.sh;
-  else
-    wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDA_OS}-x86_64.sh -O miniconda.sh;
-  fi
-- bash miniconda.sh -b -p $HOME/miniconda
-- export CONDA_HOME="$HOME/miniconda"
-- export PATH="$CONDA_HOME/bin:$PATH"
-- hash -r
-- conda config --set always_yes yes --set changeps1 no
-- conda update -q conda
-- conda info -a  # Useful for debugging any issues with conda
-- conda install pylint numpy pandas
+  - if [[ "$TRAVIS_OS_NAME" == "osx" && -n "${MB_PYTHON_VERSION+1}" ]]; then
+        prefix=`python-config --prefix`;
+        pypath=$prefix/lib/libpython$MB_PYTHON_VERSION.dylib;
+        pylib="-DPYTHON_LIBRARY=$pypath";
+    fi
 
 before_script:
-  - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
+    - patch pycmake/PythonPackage.cmake message.patch
+    - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
+    - patch build_total.py build.patch
 
+#- VERBOSE=1 python build_total.py ecl
 script:
-  - python build_total.py ecl
+    - mkdir build && pushd build
+    - cmake .. -DINSTALL_ERT_LEGACY=ON
+               -DERT_BUILD_CXX=ON
+               -DBUILD_APPLICATIONS=ON
+               -DBUILD_PYTHON=ON
+               -DBUILD_TESTS=ON
+               -DINSTALL_ERT_LEGACY=ON
+    - make
+    - cat python/setup.py
+    - popd
+    - BUILD_COMMANDS=build_bdist_wheel build_wheel build/python
+    - install_run $PLAT
+    - mv wheelhouse build/python/dist
+
+before_deploy:
+    - pushd build/python
+
+after_deploy:
+    - popd
+
+deploy:
+    - provider: pypi # upload built wheels
+      skip_cleanup: true
+      skip_upload_docs: true
+      user: statoil-travis
+      distributions: sdist build
+      password:
+        secure: YlsAgk9t2Lc5wfCv2aMeOmB10HLoqcRBiYVQ3oGwsaEj6OP09iCEs+lvfyPU2wDVDrYmbbom8icUShFbue1B7qwUV9liVXRXvH80RAmVaWJaRhQ/FaiKWmP9hKnACutjEOc2QqTPcZvRRJb7Tr3RlMz1tcqJKVW47oil/TA5E3XZ9EIreX2JuUvcVeJ59aQ7X+EAu4NQBYXgqTI4rnpLncojt0cuBI5OdQ4+VvEmSuZY2CS/UX3ZsWuaC7REVn3NPK/a40ka47OnbPXkZJRJCa+06vukC9SProuX0d5ck93UCJxOBuSf8876Tx9QvpPMNknDVKmxf1ZBfSsZY74LzVY2PAbImvinaPfGodIXC7zGp6uxVObf6Ku3UJX66ZfRXLsQhK5uvEpZOyGAqyk8UEffXconqYKwVzfJKHVpusLYU3VmrRfyy+Xg/hBfRYJI/sePllm+bvNzzJuiWN3Pky3t0XZxQ09mVXgkbjvmjhZfewMawe833DcfIxD8h6EMHf2Zas6swohbYUPdsMePcBZy+CV9+zi4L39EDu99lYT2Li0oufC9q5ukDMWgnKSXuGMBGv/+vn//b6nMgyRfGIqV3GhAvACbODE+6TAHmcUJLSTBvQNrv/Oc7mBiOFJw3hGYkNsIvJ6IOHffY4NspoTSjPpXxn/+/fhHxyDwoyg=
+      on:
+        tags: true
+        branch: master

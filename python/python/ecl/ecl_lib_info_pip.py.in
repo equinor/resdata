@@ -1,3 +1,2 @@
-lib_path = "$<TARGET_FILE_DIR:ecl>"
-so_version = "${ERT_BINARY_POSTFIX}"
+so_version = ""
 __version__ = "${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR}.${ERT_VERSION_MICRO}"

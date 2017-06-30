@@ -17,6 +17,7 @@
 */
 
 #include <ert/util/ert_api_config.h>
+#include <ert/util/build_config.h>
 
 #ifdef ERT_HAVE_GETUID
 #include <unistd.h>
@@ -34,7 +35,6 @@
 #include <ert/util/type_macros.h>
 #include <ert/util/rng.h>
 
-#include <ert/util/ert_api_config.h>
 #ifdef ERT_HAVE_OPENDIR
 #include <sys/types.h>
 #include <dirent.h>
@@ -150,7 +150,7 @@ static test_work_area_type * test_work_area_alloc__(const char * prefix , const 
       else
         work_area->dir_fd = -1;
 #else
-      work_area->dir_fd = -1
+      work_area->dir_fd = -1;
 #endif
     } else
       free( test_cwd );

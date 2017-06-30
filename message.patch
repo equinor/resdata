@@ -1,0 +1,68 @@
+diff --git a/PythonPackage.cmake b/PythonPackage.cmake
+index 141849e..5cf2d0e 100644
+--- a/PythonPackage.cmake
++++ b/PythonPackage.cmake
+@@ -518,6 +518,7 @@ function(add_python_package pkg NAME)
+         # set_property seem to combine it with previously-set options or
+         # mangles it in some other way
+         set(LINK_FLAGS " -undefined dynamic_lookup ")
++        set(SUFFIX ".dylib")
+     else()
+         set(LINK_FLAGS " -Xlinker -export-dynamic ")
+     endif()
+@@ -546,7 +547,7 @@ function(add_python_package pkg NAME)
+                 set(_lib ${tgt})
+             endif ()
+ 
+-            string(REGEX REPLACE "^lib" "" _lib ${_lib}${SUFFIX})
++            string(REGEX REPLACE "lib" "lib" _lib ${_lib}${SUFFIX})
+             file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${dstpath})
+ 
+             add_custom_command(OUTPUT ${dstpath}/${_lib}
+@@ -710,15 +711,21 @@ function(add_setup_py target template)
+ 
+         set(_lnk "")
+         foreach (item ${lnk})
++            message(STATUS "LNK ITEM: ${item}")
+             get_filename_component(_libdir ${item} DIRECTORY)
+-
+-            if (_libdir)
++            get_filename_component(_name   ${item} NAME_WE)
++
++            if( ${item} MATCHES .framework)
++                #list(APPEND _opt "'-F ${_libdir}'")
++                #list(APPEND _opt "'-framework ${_name}'")
++                #list(APPEND _lnk "'${item}'")
++                #list(APPEND _xlk "'-F${_libdir}'")
++                list(APPEND _xlk "'-Wl,-framework'" "'-Wl,${_name}'")
++            elseif (_libdir)
+                 list(APPEND _dir '${_libdir}')
+-                get_filename_component(item ${item} NAME_WE)
+-                string(REGEX REPLACE "lib" "" item ${item})
++                string(REGEX REPLACE "lib" "" item ${_name})
++                list(APPEND _lnk "'${item}'")
+             endif ()
+-
+-            list(APPEND _lnk "'${item}'")
+         endforeach ()
+ 
+         # defines are a bit more work, because setup.py expects them as tuples
+@@ -759,15 +766,17 @@ function(add_setup_py target template)
+         string(REGEX REPLACE ";" "," def "${_def}")
+         string(REGEX REPLACE ";" "," opt "${_opt}")
+         string(REGEX REPLACE ";" "," lnk "${_lnk}")
++        string(REGEX REPLACE ";" "," xlk "${_xlk}")
+         string(REGEX REPLACE ";" "," dir "${_dir}")
+ 
+         # TODO: be able to set other name than ext
+-        list(APPEND setup_extensions "Extension('${PYCMAKE_PACKAGE_NAME}.${ext}',
++        list(APPEND setup_extensions "Extension('${PYCMAKE_PACKAGE_NAME}.lib${ext}',
+                                                 sources=[${src}],
+                                                 include_dirs=[${inc}],
+                                                 define_macros=[${def}],
+                                                 library_dirs=[${dir}],
+                                                 libraries=[${lnk}],
++                                                extra_link_args=[${xlk}],
+                                                 extra_compile_args=[${opt}])")
+ 
+     endforeach()

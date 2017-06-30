@@ -1,0 +1,11 @@
+--- build_total.py	2017-06-28 09:36:23.309231723 +0200
++++ total.py	2017-06-29 10:22:58.632355949 +0200
+@@ -158,7 +158,7 @@
+                       source_dir,
+                       "-DBUILD_TESTS=ON",
+                       "-DBUILD_PYTHON=ON",
+-                      "-DERT_BUILD_CXX=ON",
++                      "-DERT_BUILD_CXX=OFF",
+                       "-DBUILD_APPLICATIONS=ON",
+                       "-DCMAKE_INSTALL_PREFIX=%s" % install_dir,
+                       "-DINSTALL_ERT_LEGACY=ON",
