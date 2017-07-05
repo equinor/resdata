@@ -16,6 +16,7 @@ set(TEST_SOURCES
     test_version.py
     test_work_area.py
     test_path_context.py
+    test_path_fmt.py
     test_arg_pack.py
     test_spawn.py
 )
@@ -32,6 +33,7 @@ addPythonTest(tests.util.test_stat.StatTest )
 addPythonTest(tests.util.test_string_list.StringListTest)
 addPythonTest(tests.util.test_vectors.UtilTest)
 addPythonTest(tests.util.test_ui_return.UIReturnTest)
+addPythonTest(tests.util.test_path_fmt.PathFmtTest)
 addPythonTest(tests.util.test_work_area.WorkAreaTest)
 addPythonTest(tests.util.test_version.VersionTest)
 addPythonTest(tests.util.test_path_context.PathContextTest)
