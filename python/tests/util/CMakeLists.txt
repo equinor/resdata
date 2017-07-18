@@ -19,6 +19,7 @@ set(TEST_SOURCES
     test_path_fmt.py
     test_arg_pack.py
     test_spawn.py
+    test_log.py
 )
 
 add_python_package("python.tests.util"  ${PYTHON_INSTALL_PREFIX}/tests/util "${TEST_SOURCES}" False)
@@ -42,3 +43,4 @@ addPythonTest(tests.util.test_cthread_pool.CThreadPoolTest)
 addPythonTest(tests.util.test_arg_pack.ArgPackTest)
 addPythonTest(tests.util.test_spawn.SpawnTest)
 addPythonTest(tests.util.test_substitution_list.SubstitutionListTest)
+addPythonTest(tests.util.test_log.LogTest)
