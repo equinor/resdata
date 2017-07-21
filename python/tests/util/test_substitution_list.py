@@ -19,7 +19,7 @@ class SubstitutionListTest(ExtendedTestCase):
         self.assertTrue("Key" in subst_list)
         self.assertEqual(subst_list["Key"] , "Value")
         self.assertEqual(subst_list.doc("Key") , "Doc String")
-        
+
         subst_list.addItem("Key2", "Value2", "Doc String2")
         self.assertEqual(len(subst_list), 2)
 

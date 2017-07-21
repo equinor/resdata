@@ -14,8 +14,8 @@ class SubstitutionList(BaseCClass):
     _has_key = UtilPrototype("bool subst_list_has_key(subst_list, char*)")
     _get_doc = UtilPrototype("char* subst_list_get_doc_string(subst_list, char*)")
     _append_copy = UtilPrototype("void subst_list_append_copy(subst_list, char*, char*, char*)")
-    
-    
+
+
     def __init__(self):
         c_ptr = self._alloc(0)
         super(SubstitutionList, self).__init__(c_ptr)
@@ -26,13 +26,13 @@ class SubstitutionList(BaseCClass):
     def addItem(self, key, value, doc_string=""):
         self._append_copy(key, value, doc_string)
 
-        
+
     def keys(self):
         key_list = []
         for i in range(len(self)):
             key_list.append( self._iget_key( i ))
         return key_list
-    
+
 
     def __iter__(self):
         index = 0
@@ -43,7 +43,7 @@ class SubstitutionList(BaseCClass):
 
     def __contains__(self, key):
         return self._has_key( key )
-    
+
     def __getitem__(self, key):
         if key in self:
             return self._get_value( key )
@@ -56,7 +56,7 @@ class SubstitutionList(BaseCClass):
         else:
             raise KeyError("No such key:%s" % key)
 
-        
+
     def indexForKey(self, key):
         if not key in self:
             raise KeyError("Key '%s' not in substitution list!" % key)
