@@ -11,6 +11,9 @@ class SubstitutionListTest(ExtendedTestCase):
         self.assertEqual(len(subst_list), 1)
 
         with self.assertRaises(KeyError):
+            item = subst_list[2]
+
+        with self.assertRaises(KeyError):
             item = subst_list["NoSuchKey"]
 
         with self.assertRaises(KeyError):
@@ -26,4 +29,13 @@ class SubstitutionListTest(ExtendedTestCase):
         keys = subst_list.keys( )
         self.assertEqual(keys[0] , "Key")
         self.assertEqual(keys[1] , "Key2")
-        
+
+        self.assertIn('Key', str(subst_list))
+        self.assertIn('SubstitutionList', repr(subst_list))
+        self.assertIn('2', repr(subst_list))
+
+        self.assertEqual(1729, subst_list.get('nosuchkey', 1729))
+        self.assertIsNone(subst_list.get('nosuchkey'))
+        self.assertIsNone(subst_list.get(513))
+        for key in ('Key', 'Key2'):
+            self.assertEqual(subst_list[key], subst_list.get(key))

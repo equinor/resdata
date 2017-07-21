@@ -42,6 +42,8 @@ class SubstitutionList(BaseCClass):
             yield (key , self[key], self.doc(key))
 
     def __contains__(self, key):
+        if not isinstance(key, str):
+            return False
         return self._has_key( key )
 
     def __getitem__(self, key):
@@ -49,6 +51,10 @@ class SubstitutionList(BaseCClass):
             return self._get_value( key )
         else:
             raise KeyError("No such key:%s" % key)
+
+
+    def get(self, key, default=None):
+        return self[key] if key in self else default
 
     def doc(self,key):
         if key in self:
@@ -69,3 +75,10 @@ class SubstitutionList(BaseCClass):
 
     def free(self):
         self._free()
+
+
+    def __repr__(self):
+        return self._create_repr('len=%d' % len(self))
+
+    def __str__(self):
+        return 'SubstitutionList{%s}' % ", ".join(map(str, self.keys()))
