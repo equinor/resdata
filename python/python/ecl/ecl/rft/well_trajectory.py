@@ -1,18 +1,18 @@
-#  Copyright (C) 2015  Statoil ASA, Norway. 
-#   
-#  The file 'well_trajectory.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2015  Statoil ASA, Norway.
+#
+#  The file 'well_trajectory.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 import sys
 import os
@@ -22,7 +22,7 @@ TrajectoryPoint = namedtuple("TrajectoryPoint", "utm_x utm_y measured_depth true
 
 class WellTrajectory:
 
-    def __init__(self , filename):
+    def __init__(self, filename):
         if os.path.isfile(filename):
             self.points = []
             with open(filename) as fileH:
@@ -31,9 +31,11 @@ class WellTrajectory:
                     line = line.strip()
                     if line:
                         point = line.split()
-                        if len(point) < 4 or len(point) > 5:
-                            raise UserWarning("Trajectory data file not on correct format: \"utm_x utm_y md tvd [zone]\" - zone is optional")
-                            
+                        if len(point) not in (4, 5):
+                            fmt = 'utm_x utm_y md tvd [zone]'
+                            err = 'Trajectory data file not on correct format: "%s" - zone is optional'
+                            raise UserWarning(err % fmt)
+
                         try:
                             utm_x = float(point[0])
                             utm_y = float(point[1])
@@ -45,18 +47,18 @@ class WellTrajectory:
                                 zone = None
                         except ValueError:
                             raise UserWarning("Error: Failed to extract data from line %s\n" % line)
-                            
-                        self.points.append(TrajectoryPoint(utm_x , utm_y , md , tvd , zone))
-                
+
+                        self.points.append(TrajectoryPoint(utm_x, utm_y, md, tvd, zone))
+
         else:
             raise IOError("File not found:%s" % filename)
-            
-    
+
+
     def __len__(self):
         return len(self.points)
 
-        
-    def __getitem__(self , index):
+
+    def __getitem__(self, index):
         if index < 0:
             index += len(self)
 
