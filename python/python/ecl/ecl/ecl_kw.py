@@ -42,9 +42,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import ctypes
 import warnings
+import numpy
 
-import  numpy
 from cwrap import CFILE, BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.ecl import EclDataType
 from ecl.ecl import EclTypeEnum, EclUtil, EclPrototype
 
@@ -183,7 +184,7 @@ class EclKW(BaseCClass):
         cls.int_kw_set.discard(kw)
 
     @classmethod
-    def intKeywords(cls):
+    def int_keywords(cls):
         """Will return the current set of integer keywords."""
         return cls.int_kw_set
 
@@ -867,20 +868,24 @@ class EclKW(BaseCClass):
         ecl_kw = self.__deep_copy__({})
         return ecl_kw
 
-    def fortIOSize(self):
+    def fort_io_size(self):
         """
         The number of bytes this keyword would occupy in a BINARY file.
         """
         return self._get_fortio_size()
 
-    def setName( self , name ):
+    def set_name(self, name):
         if len(name) > 8:
             raise ValueError("Sorry: the name property must be max 8 characters long :-(")
         self._set_header(name)
 
-    def getName(self):
-        n = self._get_header( )
+    @property
+    def name(self):
+        n = self._get_header()
         return str(n) if n else ''
+
+    def get_name(self):
+        return self.name
 
     def resize(self, new_size):
         """
@@ -895,7 +900,7 @@ class EclKW(BaseCClass):
         self.__private_init()
 
 
-    def getMinMax(self):
+    def get_min_max(self):
         """
         Will return a touple (min,max) for numerical types.
 
@@ -919,12 +924,12 @@ class EclKW(BaseCClass):
         return (min_.value, max_.value)
 
 
-    def getMax( self ):
+    def get_max(self):
         mm = self.getMinMax()
         return mm[1]
 
 
-    def getMin( self ):
+    def get_min(self):
         mm = self.getMinMax()
         return mm[0]
 
@@ -940,10 +945,10 @@ class EclKW(BaseCClass):
     def type_name(self):
         return self.data_type.type_name
 
-    def typeName( self ):
+    def type_name(self):
         return self.data_type.type_name
 
-    def getEclType(self):
+    def get_ecl_type(self):
         warnings.warn("EclTypeEnum is deprecated. " +
             "You should instead provide an EclDataType",
             DeprecationWarning)
@@ -1021,7 +1026,7 @@ class EclKW(BaseCClass):
         return self.str(width=5, max_lines=10)
 
 
-    def numpyView(self):
+    def numpy_view(self):
         """Will return a numpy view to the underlying data.
 
         The data in this numpy array is *shared* with the EclKW
@@ -1042,7 +1047,7 @@ class EclKW(BaseCClass):
         return numpy.frombuffer(ap.contents, dtype=self.dtype)
 
 
-    def numpyCopy(self):
+    def numpy_copy(self):
         """Will return a numpy array which contains a copy of the EclKW data.
 
         The numpy array has a separate copy of the data, so that
@@ -1106,7 +1111,7 @@ class EclKW(BaseCClass):
         self._fprintf_data(fmt, cfile)
 
 
-    def fixUninitialized(self , grid):
+    def fix_uninitialized(self, grid):
         """
         Special case function for region code.
         """
@@ -1115,7 +1120,7 @@ class EclKW(BaseCClass):
         self._fix_uninitialized(dims[0], dims[1], dims[2], actnum.getDataPtr())
 
 
-    def getDataPtr(self):
+    def get_data_ptr(self):
         if self.data_type.is_int():
             return self._int_ptr()
         elif self.data_type.is_float():
@@ -1126,7 +1131,7 @@ class EclKW(BaseCClass):
             raise ValueError("Only numeric types can export data pointer")
 
 
-    def firstDifferent(self , other , offset = 0 , epsilon = 0 , abs_epsilon = None , rel_epsilon = None):
+    def first_different(self, other, offset=0, epsilon=0, abs_epsilon=None, rel_epsilon=None):
         if len(self) != len(other):
             raise ValueError("Keywords must have equal size")
 
@@ -1143,3 +1148,19 @@ class EclKW(BaseCClass):
             rel_epsilon = epsilon
 
         return self._first_different(other, offset, abs_epsilon, rel_epsilon)
+
+monkey_the_camel(EclKW, 'intKeywords', EclKW.int_keywords, classmethod)
+monkey_the_camel(EclKW, 'isNumeric', EclKW.is_numeric)
+monkey_the_camel(EclKW, 'fortIOSize', EclKW.fort_io_size)
+monkey_the_camel(EclKW, 'setName', EclKW.set_name)
+monkey_the_camel(EclKW, 'getName', EclKW.get_name)
+monkey_the_camel(EclKW, 'getMinMax', EclKW.get_min_max)
+monkey_the_camel(EclKW, 'getMax', EclKW.get_max)
+monkey_the_camel(EclKW, 'getMin', EclKW.get_min)
+monkey_the_camel(EclKW, 'typeName', EclKW.type_name)
+monkey_the_camel(EclKW, 'getEclType', EclKW.get_ecl_type)
+monkey_the_camel(EclKW, 'numpyView', EclKW.numpy_view)
+monkey_the_camel(EclKW, 'numpyCopy', EclKW.numpy_copy)
+monkey_the_camel(EclKW, 'fixUninitialized', EclKW.fix_uninitialized)
+monkey_the_camel(EclKW, 'getDataPtr', EclKW.get_data_ptr)
+monkey_the_camel(EclKW, 'firstDifferent', EclKW.first_different)

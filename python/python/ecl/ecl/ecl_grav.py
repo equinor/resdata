@@ -22,6 +22,7 @@ different surveys. The implementation is a thin wrapper around the
 ecl_grav.c implementation in the libecl library.
 """
 from cwrap import BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.ecl import EclPhaseEnum, EclPrototype
 
 class EclGrav(BaseCClass):
@@ -134,7 +135,7 @@ class EclGrav(BaseCClass):
         """
         self._add_survey_RFIP(survey_name, restart_view)
 
-    def addSurvey(self, name, restart_view, method):
+    def add_survey(self, name, restart_view, method):
         method = self.dispatch[ method ]
         return method(name, restart_view)
 
@@ -211,4 +212,6 @@ class EclGrav(BaseCClass):
 
 
     def free(self):
-        self._free( )
+        self._free()
+
+monkey_the_camel(EclGrav, 'addSurvey', EclGrav.add_survey)

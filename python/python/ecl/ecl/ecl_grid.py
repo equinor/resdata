@@ -32,6 +32,7 @@ import os.path
 import math
 import itertools
 from cwrap import CFILE, BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.util import IntVector
 from ecl.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum
 
@@ -114,7 +115,7 @@ class EclGrid(BaseCClass):
 
 
     @classmethod
-    def loadFromGrdecl(cls, filename):
+    def load_from_grdecl(cls, filename):
         """Will create a new EclGrid instance from grdecl file.
 
         This function will scan the input file @filename and look for
@@ -154,7 +155,7 @@ class EclGrid(BaseCClass):
             raise IOError("No such file:%s" % filename)
 
     @classmethod
-    def loadFromFile(cls, filename):
+    def load_from_file(cls, filename):
         """
         Will inspect the @filename argument and create a new EclGrid instance.
         """
@@ -189,7 +190,7 @@ class EclGrid(BaseCClass):
         return cls._grdecl_create(specgrid[0], specgrid[1], specgrid[2], zcorn, coord, actnum, mapaxes)
 
     @classmethod
-    def createRectangular(cls, dims, dV, actnum=None):
+    def create_rectangular(cls, dims, dV, actnum=None):
         """
         Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
 
@@ -268,11 +269,11 @@ class EclGrid(BaseCClass):
         return self._equal(other, include_lgr, include_nnc, verbose)
 
 
-    def dualGrid(self):
+    def dual_grid(self):
         """Is this grid dual porosity model?"""
         return self._dual_grid()
 
-    def getDims(self):
+    def get_dims(self):
         """A tuple of four elements: (nx, ny, nz, nactive)."""
         return (self.getNX(),
                  self.getNY(),
@@ -280,33 +281,45 @@ class EclGrid(BaseCClass):
                  self.getNumActive())
 
 
-    def getNX(self):
+    @property
+    def nx(self):
+        return self._get_nx()
+
+    def get_nx(self):
         """ The number of elements in the x direction"""
         return self._get_nx()
 
-    def getNY(self):
+    @property
+    def ny(self):
+        return self._get_ny()
+
+    def get_ny(self):
         """ The number of elements in the y direction"""
         return self._get_ny()
 
-    def getNZ(self):
+    @property
+    def nz(self):
+        return self._get_nz()
+
+    def get_nz(self):
         """ The number of elements in the z direction"""
         return self._get_nz()
 
-    def getGlobalSize(self):
+    def get_global_size(self):
         """Returns the total number of cells in this grid"""
         return self._get_global_size()
 
-    def getNumActive(self):
+    def get_num_active(self):
         """The number of active cells in the grid."""
         return self._get_active()
 
 
-    def getNumActiveFracture(self):
+    def get_num_active_fracture(self):
         """The number of active cells in the grid."""
         return self._get_active_fracture()
 
 
-    def getBoundingBox2D(self, layer=0, lower_left=None, upper_right=None):
+    def get_bounding_box_2d(self, layer=0, lower_left=None, upper_right=None):
         if 0 <= layer <= self.getNZ():
             x = ctypes.c_double()
             y = ctypes.c_double()
@@ -361,7 +374,7 @@ class EclGrid(BaseCClass):
             raise ValueError("Invalid layer value:%d  Valid range: [0,%d]" % (layer, self.getNZ()))
 
 
-    def getName(self):
+    def get_name(self):
         """
         Name of the current grid, returns a string.
 
@@ -473,7 +486,7 @@ class EclGrid(BaseCClass):
         return self._invalid_cell(gi)
 
 
-    def validCellGeometry(self, ijk=None, global_index=None, active_index=None):
+    def valid_cell_geometry(self, ijk=None, global_index=None, active_index=None):
         """Checks if the cell has valid geometry.
 
         There are at least two reasons why a cell might have invalid
@@ -580,7 +593,7 @@ class EclGrid(BaseCClass):
         return (x.value, y.value, z.value)
 
 
-    def getNodePos(self, i, j, k):
+    def get_node_pos(self, i, j, k):
         """Will return the (x,y,z) for the node given by (i,j,k).
 
         Observe that this method does not consider cells, but the
@@ -610,7 +623,7 @@ class EclGrid(BaseCClass):
         return (x.value, y.value, z.value)
 
 
-    def getCellCorner(self, corner_nr, active_index=None, global_index=None, ijk=None):
+    def get_cell_corner(self, corner_nr, active_index=None, global_index=None, ijk=None):
         """
         Will look up xyz of corner nr @corner_nr
 
@@ -629,7 +642,7 @@ class EclGrid(BaseCClass):
         self._get_cell_corner_xyz1(gi, corner_nr, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
         return (x.value, y.value, z.value)
 
-    def getNodeXYZ(self, i,j,k):
+    def get_node_xyz(self, i,j,k):
         """
         This function returns the position of Vertex (i,j,k).
 
@@ -660,7 +673,7 @@ class EclGrid(BaseCClass):
 
 
 
-    def getLayerXYZ(self, xy_corner, layer):
+    def get_layer_xyz(self, xy_corner, layer):
         nx = self.getNX()
 
         (j, i) = divmod(xy_corner, nx + 1)
@@ -768,7 +781,7 @@ class EclGrid(BaseCClass):
         return self._cell_contains(gi, x,y,z)
 
 
-    def findCellXY(self, x, y, k):
+    def find_cell_xy(self, x, y, k):
         """Will find the i,j of cell with utm coordinates x,y.
 
         The @k input is the layer you are interested in, the allowed
@@ -792,7 +805,7 @@ class EclGrid(BaseCClass):
         return cmp(a[0], b[0])
 
 
-    def findCellCornerXY(self, x, y, k):
+    def find_cell_corner_xy(self, x, y, k):
         """Will find the corner nr of corner closest to utm coordinates x,y.
 
         The @k input is the layer you are interested in, the allowed
@@ -866,7 +879,7 @@ class EclGrid(BaseCClass):
         return self._get_cell_thickness( gi)
 
 
-    def getCellDims(self, active_index=None, global_index=None, ijk=None):
+    def get_cell_dims(self, active_index=None, global_index=None, ijk=None):
         """Will return a tuple (dx,dy,dz) for cell dimension.
 
         The dx and dy values are best effor estimates of the cell size
@@ -887,7 +900,7 @@ class EclGrid(BaseCClass):
 
 
 
-    def getNumLGR(self):
+    def get_num_lgr(self):
 
         """
         How many LGRs are attached to this main grid?
@@ -993,7 +1006,7 @@ class EclGrid(BaseCClass):
         self._load_column( kw, i, j, column)
 
 
-    def createKW(self, array, kw_name, pack):
+    def create_kw(self, array, kw_name, pack):
         """
         Creates an EclKW instance based on existing 3D numpy object.
 
@@ -1060,7 +1073,7 @@ class EclGrid(BaseCClass):
         return self._in_coarse_group1(global_index)
 
 
-    def create3D(self, ecl_kw, default = 0):
+    def create_3d(self, ecl_kw, default = 0):
         """
         Creates a 3D numpy array object with the data from  @ecl_kw.
 
@@ -1158,7 +1171,7 @@ class EclGrid(BaseCClass):
         return actnum
 
 
-    def compressedKWCopy(self, kw):
+    def compressed_kw_copy(self, kw):
         if len(kw) == self.getNumActive():
             return kw.copy()
         elif len(kw) == self.getGlobalSize():
@@ -1168,7 +1181,7 @@ class EclGrid(BaseCClass):
         else:
             raise ValueError("The input keyword must have nx*n*nz or nactive elements. Size:%d invalid" % len(kw))
 
-    def globalKWCopy(self, kw, default_value):
+    def global_kw_copy(self, kw, default_value):
         if len(kw) == self.getGlobalSize():
             return kw.copy()
         elif len(kw) == self.getNumActive():
@@ -1180,13 +1193,13 @@ class EclGrid(BaseCClass):
             raise ValueError("The input keyword must have nx*n*nz or nactive elements. Size:%d invalid" % len(kw))
 
 
-    def exportACTNUMKw(self):
+    def export_ACTNUM_kw(self):
         actnum = EclKW("ACTNUM", self.getGlobalSize(), EclDataType.ECL_INT)
         self._init_actnum(actnum.getDataPtr())
         return actnum
 
 
-    def createVolumeKeyword(self, active_size=True):
+    def create_volume_keyword(self, active_size=True):
         """Will create a EclKW initialized with cell volumes.
 
         The purpose of this method is to create a EclKW instance which
@@ -1230,3 +1243,32 @@ class EclGrid(BaseCClass):
             return None
 
         return self._export_mapaxes()
+
+monkey_the_camel(EclGrid, 'loadFromGrdecl', EclGrid.load_from_grdecl, classmethod)
+monkey_the_camel(EclGrid, 'loadFromFile', EclGrid.load_from_file, classmethod)
+monkey_the_camel(EclGrid, 'createRectangular', EclGrid.create_rectangular, classmethod)
+monkey_the_camel(EclGrid, 'dualGrid', EclGrid.dual_grid)
+monkey_the_camel(EclGrid, 'getDims', EclGrid.get_dims)
+monkey_the_camel(EclGrid, 'getNX', EclGrid.get_nx)
+monkey_the_camel(EclGrid, 'getNY', EclGrid.get_ny)
+monkey_the_camel(EclGrid, 'getNZ', EclGrid.get_nz)
+monkey_the_camel(EclGrid, 'getGlobalSize', EclGrid.get_global_size)
+monkey_the_camel(EclGrid, 'getNumActive', EclGrid.get_num_active)
+monkey_the_camel(EclGrid, 'getNumActiveFracture', EclGrid.get_num_active_fracture)
+monkey_the_camel(EclGrid, 'getBoundingBox2D', EclGrid.get_bounding_box_2d)
+monkey_the_camel(EclGrid, 'getName', EclGrid.get_name)
+monkey_the_camel(EclGrid, 'validCellGeometry', EclGrid.valid_cell_geometry)
+monkey_the_camel(EclGrid, 'getNodePos', EclGrid.get_node_pos)
+monkey_the_camel(EclGrid, 'getCellCorner', EclGrid.get_cell_corner)
+monkey_the_camel(EclGrid, 'getNodeXYZ', EclGrid.get_node_xyz)
+monkey_the_camel(EclGrid, 'getLayerXYZ', EclGrid.get_layer_xyz)
+monkey_the_camel(EclGrid, 'findCellXY', EclGrid.find_cell_xy)
+monkey_the_camel(EclGrid, 'findCellCornerXY', EclGrid.find_cell_corner_xy)
+monkey_the_camel(EclGrid, 'getCellDims', EclGrid.get_cell_dims)
+monkey_the_camel(EclGrid, 'getNumLGR', EclGrid.get_num_lgr)
+monkey_the_camel(EclGrid, 'createKW', EclGrid.create_kw)
+monkey_the_camel(EclGrid, 'create3D', EclGrid.create_3d)
+monkey_the_camel(EclGrid, 'compressedKWCopy', EclGrid.compressed_kw_copy)
+monkey_the_camel(EclGrid, 'globalKWCopy', EclGrid.global_kw_copy)
+monkey_the_camel(EclGrid, 'exportACTNUMKw', EclGrid.export_ACTNUM_kw)
+monkey_the_camel(EclGrid, 'createVolumeKeyword', EclGrid.create_volume_keyword)

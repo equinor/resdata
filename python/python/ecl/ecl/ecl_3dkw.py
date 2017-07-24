@@ -17,6 +17,7 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
+from ecl.util import monkey_the_camel
 from .ecl_kw import EclKW
 
 class Ecl3DKW(EclKW):
@@ -150,7 +151,7 @@ class Ecl3DKW(EclKW):
 
 
     @classmethod
-    def castFromKW(cls , kw , grid , default_value = 0):
+    def cast_from_kw(cls, kw, grid, default_value=0):
         """Will convert a normal EclKW to a Ecl3DKW.
 
         The method will convert a normal EclKW instance to Ecl3DKw
@@ -196,7 +197,7 @@ class Ecl3DKW(EclKW):
         return kw
 
 
-    def compressedCopy(self):
+    def compressed_copy(self):
         """Will return a EclKW copy with nactive elements.
 
         The returned copy will be of type EclKW; i.e. no default
@@ -207,7 +208,7 @@ class Ecl3DKW(EclKW):
         return self.grid.compressedKWCopy( self )
 
 
-    def globalCopy(self):
+    def global_copy(self):
         """Will return a EclKW copy with nx*ny*nz elements.
 
         The returned copy will be of type EclKW; i.e. no default
@@ -223,9 +224,16 @@ class Ecl3DKW(EclKW):
         return (self.grid.getNX() , self.grid.getNY() , self.grid.getNZ())
 
 
-    def setDefault(self, default_value):
+    def set_default(self, default_value):
         self.default_value = default_value
 
 
-    def getDefault(self):
+    def get_default(self):
         return self.default_value
+
+
+monkey_the_camel(Ecl3DKW, 'castFromKW', Ecl3DKW.cast_from_kw, classmethod)
+monkey_the_camel(Ecl3DKW, 'compressedCopy', Ecl3DKW.compressed_copy)
+monkey_the_camel(Ecl3DKW, 'globalCopy', Ecl3DKW.global_copy)
+monkey_the_camel(Ecl3DKW, 'setDefault', Ecl3DKW.set_default)
+monkey_the_camel(Ecl3DKW, 'getDefault', Ecl3DKW.get_default)

@@ -17,6 +17,8 @@
 import re
 import datetime
 import numbers
+
+from ecl.util import monkey_the_camel
 from ecl.ecl import EclSum
 
 
@@ -50,7 +52,8 @@ class NPVPriceVector(object):
             raise ValueError("Constructor argument must be list")
 
 
-    def addItem(self , item):
+
+    def add_item(self, item):
         dateItem = item[0]
         try:
             year = dateItem.year
@@ -80,8 +83,8 @@ class NPVPriceVector(object):
         else:
             raise ValueError("The value argument must be a scalar number or callable")
 
-    @classmethod
-    def assertDate(cls , date):
+    @staticmethod
+    def assert_date(date):
         try:
             year = date.year
             month = date.month
@@ -92,8 +95,10 @@ class NPVPriceVector(object):
         except AttributeError:
             return date.date()
 
-    def evalDate(self , dateItem , date):
-        value = dateItem[1] 
+
+
+    def eval_date(self, dateItem, date):
+        value = dateItem[1]
         if callable(value):
             td = date - dateItem[0]
             return value(td.days)
@@ -153,23 +158,24 @@ class EclNPV(object):
         pass
 
 
-    def getExpression(self):
+    def get_expression(self):
         return self.expression
 
 
-    def setExpression(self , expression):
-        self.compiled_expr = self.compile( expression )
+    def set_expression(self, expression):
+        self.compiled_expr = self.compile(expression)
         self.expression = expression
 
 
-    def getKeyList(self):
+    def get_key_list(self):
         return self.keyList.keys()
 
 
-    def addKey(self , key , var):
+    def add_key(self, key, var):
         self.keyList[key] = var
 
-    def parseExpression(self , expression):
+
+    def parse_expression(self, expression):
         self.keyList = {}
         if expression.count("[") != expression.count("]"):
             raise ValueError("Expression:%s invalid - not matching [ and ]" % expression)
@@ -194,9 +200,21 @@ varDict[\"npv\"] = npv
 
 
 
-    def evalNPV(self):
-        byteCode = compile( self.code , "<string>" , 'exec')
+    def eval_npv(self):
+        byteCode = compile(self.code, "<string>", 'exec')
         varDict = {}
         eval(byteCode)
         return varDict["npv"]
-        
+
+
+
+monkey_the_camel(NPVPriceVector, 'addItem', NPVPriceVector.add_item)
+monkey_the_camel(NPVPriceVector, 'assertDate', NPVPriceVector.assert_date, staticmethod)
+monkey_the_camel(NPVPriceVector, 'evalDate', NPVPriceVector.eval_date)
+
+monkey_the_camel(EclNPV, 'getExpression', EclNPV.get_expression)
+monkey_the_camel(EclNPV, 'setExpression', EclNPV.set_expression)
+monkey_the_camel(EclNPV, 'getKeyList', EclNPV.get_key_list)
+monkey_the_camel(EclNPV, 'addKey', EclNPV.add_key)
+monkey_the_camel(EclNPV, 'parseExpression', EclNPV.parse_expression)
+monkey_the_camel(EclNPV, 'evalNPV', EclNPV.eval_npv)

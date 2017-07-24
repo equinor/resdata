@@ -24,7 +24,7 @@ ecl_subsidence.c implementation in the libecl library.
 """
 from cwrap import BaseCClass
 from ecl.ecl import EclPrototype
-
+from ecl.util import monkey_the_camel
 
 class EclSubsidence(BaseCClass):
     """
@@ -138,3 +138,6 @@ class EclSubsidence(BaseCClass):
 
     def free(self):
         self._free( )
+
+
+monkey_the_camel(EclSubsidence, 'evalGeertsma', EclSubsidence.eval_geertsma)

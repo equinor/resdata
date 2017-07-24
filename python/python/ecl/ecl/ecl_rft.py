@@ -20,8 +20,10 @@ Module for loading ECLIPSE RFT files.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from cwrap import BaseCClass
-from ecl.ecl import EclRFTCell, EclPLTCell, EclPrototype
+
+from ecl.util import monkey_the_camel
 from ecl.util import CTime
+from ecl.ecl import EclRFTCell, EclPLTCell, EclPrototype
 
 class EclRFT(BaseCClass):
     """The EclRFT class contains the information for *one* RFT.
@@ -121,13 +123,13 @@ class EclRFT(BaseCClass):
         return self._is_MSW( )
 
 
-    def getWellName(self):
+    def get_well_name(self):
         """
         The name of the well we are considering.
         """
         return self._get_well( )
 
-    def getDate(self):
+    def get_date(self):
         """
         The date when this RFT/PLT/... was recorded.
         """
@@ -300,14 +302,14 @@ class EclRFTFile(BaseCClass):
         return self._get_size( well , cdate)
 
 
-    def getNumWells(self):
+    def get_num_wells(self):
         """
         Returns the total number of distinct wells in the RFT file.
         """
         return self._get_num_wells( )
 
 
-    def getHeaders(self):
+    def get_headers(self):
         """
         Returns a list of two tuples (well_name , date) for the whole file.
         """
@@ -344,3 +346,10 @@ class EclRFTFile(BaseCClass):
     def __repr__(self):
         w = len(self)
         return self._create_repr('wells = %d' % w)
+
+
+monkey_the_camel(EclRFT, 'getWellName', EclRFT.get_well_name)
+monkey_the_camel(EclRFT, 'getDate', EclRFT.get_date)
+
+monkey_the_camel(EclRFTFile, 'getNumWells', EclRFTFile.get_num_wells)
+monkey_the_camel(EclRFTFile, 'getHeaders', EclRFTFile.get_headers)

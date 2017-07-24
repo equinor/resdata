@@ -31,11 +31,14 @@ import os.path
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 from cwrap import BaseCClass, CFILE
+
+from ecl.util import monkey_the_camel
+from ecl.util import StringList, CTime, DoubleVector, TimeVector, IntVector
+
 from ecl.ecl import EclSumTStep
 from ecl.ecl import EclSumVarType
 from ecl.ecl.ecl_sum_vector import EclSumVector
 from ecl.ecl.ecl_smspec_node import EclSMSPECNode
-from ecl.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 from ecl.ecl import EclPrototype
 #, EclSumKeyWordVector
 
@@ -180,7 +183,7 @@ class EclSum(BaseCClass):
 
 
     @classmethod
-    def varType(cls , keyword):
+    def var_type(cls , keyword):
         return cls._identify_var_type( keyword )
 
 
@@ -200,11 +203,11 @@ class EclSum(BaseCClass):
         """
         return EclSum._create_restart_writer( case , restart_case , fmt_output , unified , key_join_string , CTime(start_time) , time_in_days , nx , ny , nz)
 
-    def addVariable(self , variable , wgname = None , num = 0 , unit = "None" , default_value = 0):
+    def add_variable(self , variable , wgname = None , num = 0 , unit = "None" , default_value = 0):
         return self._add_variable(variable , wgname , num , unit , default_value).setParent( parent = self )
 
 
-    def addTStep(self , report_step , sim_days):
+    def add_t_step(self , report_step , sim_days):
         """ @rtype: EclSumTStep """
         sim_seconds = sim_days * 24 * 60 * 60
         return self._add_tstep( report_step, sim_seconds).setParent( parent = self )
@@ -432,7 +435,7 @@ class EclSum(BaseCClass):
         else:
             return False
 
-    def assertKeyValid(self , key):
+    def assert_key_valid(self , key):
         if not key in self:
             raise KeyError("The summary key:%s was not recognized" % key)
 
@@ -447,7 +450,7 @@ class EclSum(BaseCClass):
         """
         return self.get_vector( key )
 
-    def scaleVector(self, key, scalar):
+    def scale_vector(self, key, scalar):
         """ecl_sum.scaleVector("WOPR:OPX" , 0.78 )
         will scale all the elements in the 'WOPR:OPX' vector with 0.78.
         """
@@ -457,7 +460,7 @@ class EclSum(BaseCClass):
         key_index = self._get_general_var_index( key )
         self._scale_vector(key_index, float(scalar))
 
-    def shiftVector(self, key, addend):
+    def shift_vector(self, key, addend):
         """ecl_sum.shiftVector("WOPR:OPX" , 0.78 )
         will shift (add) all the elements in the 'WOPR:OPX' vector with 0.78.
         """
@@ -514,7 +517,7 @@ class EclSum(BaseCClass):
             raise ValueError("Must supply either days or date")
 
 
-    def timeRange(self , start = None , end = None , interval = "1Y", extend_end = True):
+    def time_range(self , start = None , end = None , interval = "1Y", extend_end = True):
         (num , timeUnit) = TimeVector.parseTimeUnit( interval )
 
         if start is None:
@@ -588,7 +591,7 @@ class EclSum(BaseCClass):
 
 
 
-    def blockedProduction(self , totalKey , timeRange):
+    def blocked_production(self , totalKey , timeRange):
         node = self.smspec_node(totalKey)
         if node.isTotal():
             total = DoubleVector()
@@ -966,7 +969,7 @@ class EclSum(BaseCClass):
         return self.getStartTime()
 
 
-    def getDataStartTime(self):
+    def get_data_start_time(self):
         """The first date we have data for.
 
         Thiw will mostly be equal to getStartTime(), but in the case
@@ -978,7 +981,7 @@ class EclSum(BaseCClass):
 
 
 
-    def getStartTime(self):
+    def get_start_time(self):
         """
         A Python datetime instance with the start time.
 
@@ -987,7 +990,7 @@ class EclSum(BaseCClass):
         return CTime( self._get_start_date( ) ).datetime()
 
 
-    def getEndTime(self):
+    def get_end_time(self):
         """
         A Python datetime instance with the last loaded time.
         """
@@ -1048,7 +1051,7 @@ class EclSum(BaseCClass):
         vector = self[key]
         return vector.first_lt( limit )
 
-    def solveDates(self , key , value , rates_clamp_lower = True):
+    def solve_dates(self , key , value , rates_clamp_lower = True):
         """Will solve the equation vector[@key] == value for dates.
 
         See solveDays() for further details.
@@ -1060,9 +1063,9 @@ class EclSum(BaseCClass):
             raise ValueError("Must have at least two elements to start solving")
 
         return [ x.datetime() for x in self._solve_dates( key , value , rates_clamp_lower)]
-    
 
-    def solveDays(self , key , value , rates_clamp_lower = True):
+
+    def solve_days(self , key , value , rates_clamp_lower = True):
         """Will solve the equation vector[@key] == value.
 
         This method will solve find tha approximate simulation days
@@ -1212,7 +1215,7 @@ class EclSum(BaseCClass):
         content = 'name = "%s", time = [%s, %s], keys = %d' % (name, s_time, e_time, num_keys)
         return self._create_repr(content)
 
-    def dumpCSVLine(self, time, keywords, pfile):
+    def dump_csv_line(self, time, keywords, pfile):
         """
         Will dump a csv formatted line of the keywords in @keywords,
         evaluated at the intertpolated time @time. @pfile should point to an open Python file handle.
@@ -1222,7 +1225,7 @@ class EclSum(BaseCClass):
         EclSum._dump_csv_line(self , ctime, keywords, cfile)
 
 
-    def exportCSV(self , filename , keys = None , date_format = "%Y-%m-%d" , sep = ";"):
+    def export_csv(self , filename , keys = None , date_format = "%Y-%m-%d" , sep = ";"):
         """Will create a CSV file with summary data.
 
         By default all the vectors in the summary case will be
@@ -1249,3 +1252,19 @@ class EclSum(BaseCClass):
 
 import ecl.ecl.ecl_sum_keyword_vector
 EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum , time_t , ecl_sum_vector, FILE)" , bind = False)
+
+monkey_the_camel(EclSum, 'varType', EclSum.var_type, classmethod)
+monkey_the_camel(EclSum, 'addVariable', EclSum.add_variable)
+monkey_the_camel(EclSum, 'addTStep', EclSum.add_t_step)
+monkey_the_camel(EclSum, 'assertKeyValid', EclSum.assert_key_valid)
+monkey_the_camel(EclSum, 'scaleVector', EclSum.scale_vector)
+monkey_the_camel(EclSum, 'shiftVector', EclSum.shift_vector)
+monkey_the_camel(EclSum, 'timeRange', EclSum.time_range)
+monkey_the_camel(EclSum, 'blockedProduction', EclSum.blocked_production)
+monkey_the_camel(EclSum, 'getDataStartTime', EclSum.get_data_start_time)
+monkey_the_camel(EclSum, 'getStartTime', EclSum.get_start_time)
+monkey_the_camel(EclSum, 'getEndTime', EclSum.get_end_time)
+monkey_the_camel(EclSum, 'solveDates', EclSum.solve_dates)
+monkey_the_camel(EclSum, 'solveDays', EclSum.solve_days)
+monkey_the_camel(EclSum, 'dumpCSVLine', EclSum.dump_csv_line)
+monkey_the_camel(EclSum, 'exportCSV', EclSum.export_csv)
