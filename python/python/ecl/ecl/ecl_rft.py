@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'ecl_rft.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'ecl_rft.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Module for loading ECLIPSE RFT files.
 """
@@ -30,10 +30,10 @@ class EclRFT(BaseCClass):
     objects which are lumped together; the EclRFTClass is a container
     for such objects. The three different object types which can be
     found in an RFT file are:
-   
+
        RFT: This is old-fashioned RFT which contains measurements of
             saturations for each of the completed cells.
-       
+
        PLT: This contains production and flow rates for each phase in
             each cell.
 
@@ -54,7 +54,7 @@ class EclRFT(BaseCClass):
     _sort_cells       = EclPrototype("void* ecl_rft_node_inplace_sort_cells( ecl_rft )")
     _iget_depth       = EclPrototype("double ecl_rft_node_iget_depth( ecl_rft )")
     _iget_pressure    = EclPrototype("double ecl_rft_node_iget_pressure(ecl_rft)")
-    _iget_ijk         = EclPrototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)") 
+    _iget_ijk         = EclPrototype("void ecl_rft_node_iget_ijk( ecl_rft , int , int*, int*, int*)")
     _iget_swat        = EclPrototype("double ecl_rft_node_iget_swat(ecl_rft)")
     _iget_sgas        = EclPrototype("double ecl_rft_node_iget_sgas(ecl_rft)")
     _iget_orat        = EclPrototype("double ecl_rft_node_iget_orat(ecl_rft)")
@@ -126,10 +126,10 @@ class EclRFT(BaseCClass):
         The name of the well we are considering.
         """
         return self._get_well( )
-    
+
     def getDate(self):
         """
-        The date when this RFT/PLT/... was recorded. 
+        The date when this RFT/PLT/... was recorded.
         """
         ct = CTime(self._get_date( ))
         return ct.date()
@@ -161,27 +161,27 @@ class EclRFT(BaseCClass):
 
         The return value from the __getitem__() method is either an
         EclRFTCell instance or a EclPLTCell instance, depending on the
-        type of this particular RFT object. 
+        type of this particular RFT object.
         """
         self.assert_cell_index( index )
         cell_ptr = self._iget_cell( index )
         return self.__cell_ref( cell_ptr )
-        
+
 
     def iget( self , index ):
         return self[index]
 
-        
+
     def iget_sorted( self , index ):
         """
-        Will return the cell nr @index in the list of sorted cells. 
+        Will return the cell nr @index in the list of sorted cells.
 
         See method sort() for further documentation.
         """
         self.assert_cell_index( index )
         cell_ptr = self._iget_cell_sorted( index )
         return self.__cell_ref( cell_ptr )
-        
+
 
     def sort(self):
         """
@@ -205,9 +205,9 @@ class EclRFT(BaseCClass):
 
                  for i in range(len(rft)):
                      cell = rft.iget_sorted( i )
-        
+
         Currently only MSW/PLTs are sorted, based on the CONLENST
-        keyword; for other wells the sort() method does nothing.  
+        keyword; for other wells the sort() method does nothing.
         """
         self._sort_cells( )
 
@@ -248,7 +248,7 @@ class EclRFTFile(BaseCClass):
     content of an ECLIPSE RFT file. The RFT files will in general
     contain data for several wells and several times in one large
     container. The EclRFTClass class contains methods get the the RFT
-    results for a specific time and/or well. 
+    results for a specific time and/or well.
 
     The EclRFTFile class can in general contain a mix of RFT and PLT
     measurements. The class does not really differentiate between
@@ -275,10 +275,10 @@ class EclRFTFile(BaseCClass):
         else:
             raise TypeError("Index must be integer type")
 
-    
+
     def size(self, well=None, date=None):
         """
-        The number of elements in EclRFTFile container. 
+        The number of elements in EclRFTFile container.
 
         By default the size() method will return the total number of
         RFTs/PLTs in the container, but by specifying the optional
@@ -334,7 +334,7 @@ class EclRFTFile(BaseCClass):
         if self.size( well = well_name , date = date) == 0:
             raise KeyError("No RFT for well:%s at %s" % (well_name , date))
 
-        rft = self._get_rft( well_name , CTime( date )) 
+        rft = self._get_rft( well_name , CTime( date ))
         rft.setParent( self )
         return rft
 
