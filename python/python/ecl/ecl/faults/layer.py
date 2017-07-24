@@ -15,9 +15,11 @@
 #  for more details.
 
 import ctypes
+
 from cwrap import BaseCClass
-from ecl.ecl import EclPrototype
+from ecl.util import monkey_the_camel
 from ecl.util import IntVector
+from ecl.ecl import EclPrototype
 
 
 class Layer(BaseCClass):
@@ -58,7 +60,7 @@ class Layer(BaseCClass):
         return layer
 
 
-    def __assertIJ(self, i,j):
+    def _assert_ij(self, i,j):
         if i < 0 or i >= self.getNX():
             raise ValueError("Invalid layer i:%d" % i)
 
@@ -66,27 +68,27 @@ class Layer(BaseCClass):
             raise ValueError("Invalid layer j:%d" % j)
 
 
-    def __unpackIndex(self, index):
+    def __unpack_index(self, index):
         try:
             (i,j) = index
         except TypeError:
             raise ValueError("Index:%s is invalid - must have two integers" % str(index))
 
-        self.__assertIJ(i,j)
+        self._assert_ij(i,j)
 
         return (i,j)
 
 
     def __setitem__(self, index, value):
-        (i,j) = self.__unpackIndex(index)
+        (i,j) = self.__unpack_index(index)
         self._set_cell(i, j, value)
 
-    def activeCell(self, i,j):
-        self.__assertIJ(i,j)
+    def active_cell(self, i,j):
+        self._assert_ij(i,j)
         return self._active_cell(i, j)
 
 
-    def updateActive(self, grid, k):
+    def update_active(self, grid, k):
         if grid.getNX() != self.getNX():
             raise ValueError("NX dimension mismatch. Grid:%d  layer:%d" % (grid.getNX(), self.getNX()))
 
@@ -100,27 +102,35 @@ class Layer(BaseCClass):
 
 
     def __getitem__(self, index):
-        (i,j) = self.__unpackIndex(index)
+        (i,j) = self.__unpack_index(index)
         return self._get_cell(i, j)
 
-    def bottomBarrier(self, i,j):
-        self.__assertIJ(i,j)
+    def bottom_barrier(self, i,j):
+        self._assert_ij(i,j)
         return self._get_bottom_barrier(i, j)
 
-    def leftBarrier(self, i,j):
-        self.__assertIJ(i,j)
+    def left_barrier(self, i,j):
+        self._assert_ij(i,j)
         return self._get_left_barrier(i, j)
 
-    def getNX(self):
+    def get_nx(self):
         return self._get_nx()
 
-    def getNY(self):
+    @property
+    def nx(self):
+        return self._get_nx()
+
+    def get_ny(self):
+        return self._get_ny()
+
+    @property
+    def ny(self):
         return self._get_ny()
 
     def free(self):
         self._free()
 
-    def cellContact(self, p1, p2):
+    def cell_contact(self, p1, p2):
         i1,j1 = p1
         i2,j2 = p2
 
@@ -139,11 +149,11 @@ class Layer(BaseCClass):
         return self._cell_contact(i1, j1, i2, j2)
 
 
-    def addInterpBarrier(self, c1, c2):
+    def add_interp_barrier(self, c1, c2):
         self._add_interp_barrier(c1, c2)
 
 
-    def addPolylineBarrier(self, polyline, grid, k):
+    def add_polyline_barrier(self, polyline, grid, k):
         if len(polyline) > 1:
             for i in range(len(polyline) - 1):
                 x1,y1 = polyline[i]
@@ -155,7 +165,7 @@ class Layer(BaseCClass):
                 self.addInterpBarrier(c1, c2)
 
 
-    def addFaultBarrier(self, fault, K, link_segments=True):
+    def add_fault_barrier(self, fault, K, link_segments=True):
         fault_layer = fault[K]
         num_lines = len(fault_layer)
         for index, fault_line in enumerate(fault_layer):
@@ -172,7 +182,7 @@ class Layer(BaseCClass):
                     self.addInterpBarrier(c2, next_c1)
 
 
-    def addIJBarrier(self, ij_list):
+    def add_ij_barrier(self, ij_list):
         if len(ij_list) < 2:
             raise ValueError("Must have at least two (i,j) points")
 
@@ -196,10 +206,10 @@ class Layer(BaseCClass):
                 raise ValueError("Must have i1 == i2 or j1 == j2")
 
 
-    def cellSum(self):
+    def cell_sum(self):
         return self._cell_sum()
 
-    def clearCells(self):
+    def clear_cells(self):
         """
         Will reset all cell and edge values to zero. Barriers will be left
         unchanged.
@@ -213,7 +223,7 @@ class Layer(BaseCClass):
         """
         self._assign(value)
 
-    def updateConnected(self, ij, new_value, org_value=None):
+    def update_connected(self, ij, new_value, org_value=None):
         """
         Will update cell value of all cells in contact with cell ij to the
         value @new_value. If org_value is not supplied, the current
@@ -228,7 +238,7 @@ class Layer(BaseCClass):
             raise ValueError("Cell %s is not equal to %d \n" % (ij, org_value))
 
 
-    def cellsEqual(self, value):
+    def cells_equal(self, value):
         """
         Will return a list [(i1,j1),(i2,j2), ...(in,jn)] of all cells with value @value.
         """
@@ -241,5 +251,24 @@ class Layer(BaseCClass):
         return ij_list
 
 
-    def countEqual(self, value):
+    def count_equal(self, value):
         return self._count_equal(value)
+
+
+
+monkey_the_camel(Layer, 'activeCell', Layer.active_cell)
+monkey_the_camel(Layer, 'updateActive', Layer.update_active)
+monkey_the_camel(Layer, 'bottomBarrier', Layer.bottom_barrier)
+monkey_the_camel(Layer, 'leftBarrier', Layer.left_barrier)
+monkey_the_camel(Layer, 'getNX', Layer.get_nx)
+monkey_the_camel(Layer, 'getNY', Layer.get_ny)
+monkey_the_camel(Layer, 'cellContact', Layer.cell_contact)
+monkey_the_camel(Layer, 'addInterpBarrier', Layer.add_interp_barrier)
+monkey_the_camel(Layer, 'addPolylineBarrier', Layer.add_polyline_barrier)
+monkey_the_camel(Layer, 'addFaultBarrier', Layer.add_fault_barrier)
+monkey_the_camel(Layer, 'addIJBarrier', Layer.add_ij_barrier)
+monkey_the_camel(Layer, 'cellSum', Layer.cell_sum)
+monkey_the_camel(Layer, 'clearCells', Layer.clear_cells)
+monkey_the_camel(Layer, 'updateConnected', Layer.update_connected)
+monkey_the_camel(Layer, 'cellsEqual', Layer.cells_equal)
+monkey_the_camel(Layer, 'countEqual', Layer.count_equal)

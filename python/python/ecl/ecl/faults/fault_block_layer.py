@@ -17,6 +17,7 @@
 from __future__ import print_function
 from cwrap import BaseCClass
 
+from ecl.util import monkey_the_camel
 from ecl.ecl import EclDataType, EclPrototype
 from ecl.ecl.faults import Fault
 
@@ -91,7 +92,7 @@ class FaultBlockLayer(BaseCClass):
         return self._has_block(block_id)
 
 
-    def scanKeyword(self, fault_block_kw):
+    def scan_keyword(self, fault_block_kw):
         """
         Will reorder the block ids, and ensure single connectedness. Assign block_id to zero blocks.
         """
@@ -100,7 +101,7 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError("The fault block keyword had wrong type/size: type:%s  size:%d  grid_size:%d" % (fault_block_kw.type_name, len(fault_block_kw), self.grid_ref.getGlobalSize()))
 
 
-    def loadKeyword(self, fault_block_kw):
+    def load_keyword(self, fault_block_kw):
         """
         Will load directly from keyword - without reorder; ignoring zero.
         """
@@ -109,7 +110,7 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError("The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d" % (fault_block_kw.typeName(), len(fault_block_kw), self.grid_ref.getGlobalSize()))
 
 
-    def getBlock(self, block_id):
+    def get_block(self, block_id):
         """
         @rtype: FaultBlock
         """
@@ -119,13 +120,13 @@ class FaultBlockLayer(BaseCClass):
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
 
-    def deleteBlock(self, block_id):
+    def delete_block(self, block_id):
         if block_id in self:
             self._del_block(block_id)
         else:
             raise KeyError("No blocks with ID:%d in this layer" % block_id)
 
-    def addBlock(self, block_id=None):
+    def add_block(self, block_id=None):
         if block_id is None:
             block_id = self.getNextID()
 
@@ -134,26 +135,29 @@ class FaultBlockLayer(BaseCClass):
         else:
             return self._add_block(block_id).setParent(self)
 
-    def getNextID(self):
+    def get_next_id(self):
         return self._get_next_id()
 
 
-    def getK(self):
+    def get_k(self):
         return self._getK()
 
+    @property
+    def k(self):
+        return self._getK()
 
     def free(self):
         self._free()
 
 
-    def scanLayer(self, layer):
+    def scan_layer(self, layer):
         self._scan_layer(layer)
 
 
-    def insertBlockContent(self, block):
+    def insert_block_content(self, block):
         self._insert_block_content(block)
 
-    def exportKeyword(self, kw):
+    def export_keyword(self, kw):
         if len(kw) != self.grid_ref.getGlobalSize():
             msg = 'The size of the target keyword must be equal to the size of the grid.'
             msg += '  Got:%d Expected:%d.'
@@ -165,18 +169,18 @@ class FaultBlockLayer(BaseCClass):
         self._export_kw(kw)
 
 
-    def addFaultBarrier(self, fault, link_segments=False):
+    def add_fault_barrier(self, fault, link_segments=False):
         layer = self.getGeoLayer()
         layer.addFaultBarrier(fault, self.getK(), link_segments)
 
 
-    def addFaultLink(self, fault1, fault2):
+    def add_fault_link(self, fault1, fault2):
         if not fault1.intersectsFault(fault2, self.getK()):
             layer = self.getGeoLayer()
             layer.addIJBarrier(fault1.extendToFault(fault2, self.getK()))
 
 
-    def joinFaults(self, fault1, fault2):
+    def join_faults(self, fault1, fault2):
         if not fault1.intersectsFault(fault2, self.getK()):
             layer = self.getGeoLayer()
             try:
@@ -188,7 +192,7 @@ class FaultBlockLayer(BaseCClass):
                 raise ValueError(err % names)
 
 
-    def addPolylineBarrier(self, polyline):
+    def add_polyline_barrier(self, polyline):
         layer = self.getGeoLayer()
         p0 = polyline[0]
         c0 = self.grid_ref.findCellCornerXY(p0[0],  p0[1], self.getK())
@@ -204,11 +208,28 @@ class FaultBlockLayer(BaseCClass):
             c0 = c1
 
 
-    def getGeoLayer(self):
+    def get_geo_layer(self):
         """Returns the underlying geometric layer."""
         return self._get_layer()
 
 
-    def cellContact(self, p1, p2):
+    def cell_contact(self, p1, p2):
         layer = self.getGeoLayer()
         return layer.cellContact(p1,p2)
+
+monkey_the_camel(FaultBlockLayer, 'scanKeyword', FaultBlockLayer.scan_keyword)
+monkey_the_camel(FaultBlockLayer, 'loadKeyword', FaultBlockLayer.load_keyword)
+monkey_the_camel(FaultBlockLayer, 'getBlock', FaultBlockLayer.get_block)
+monkey_the_camel(FaultBlockLayer, 'deleteBlock', FaultBlockLayer.delete_block)
+monkey_the_camel(FaultBlockLayer, 'addBlock', FaultBlockLayer.add_block)
+monkey_the_camel(FaultBlockLayer, 'getNextID', FaultBlockLayer.get_next_id)
+monkey_the_camel(FaultBlockLayer, 'getK', FaultBlockLayer.get_k)
+monkey_the_camel(FaultBlockLayer, 'scanLayer', FaultBlockLayer.scan_layer)
+monkey_the_camel(FaultBlockLayer, 'insertBlockContent', FaultBlockLayer.insert_block_content)
+monkey_the_camel(FaultBlockLayer, 'exportKeyword', FaultBlockLayer.export_keyword)
+monkey_the_camel(FaultBlockLayer, 'addFaultBarrier', FaultBlockLayer.add_fault_barrier)
+monkey_the_camel(FaultBlockLayer, 'addFaultLink', FaultBlockLayer.add_fault_link)
+monkey_the_camel(FaultBlockLayer, 'joinFaults', FaultBlockLayer.join_faults)
+monkey_the_camel(FaultBlockLayer, 'addPolylineBarrier', FaultBlockLayer.add_polyline_barrier)
+monkey_the_camel(FaultBlockLayer, 'getGeoLayer', FaultBlockLayer.get_geo_layer)
+monkey_the_camel(FaultBlockLayer, 'cellContact', FaultBlockLayer.cell_contact)

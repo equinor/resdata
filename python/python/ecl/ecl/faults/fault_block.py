@@ -17,6 +17,7 @@
 import ctypes
 from cwrap import BaseCClass
 
+from ecl.util import monkey_the_camel
 from ecl.util import DoubleVector, IntVector
 from ecl.ecl import EclPrototype
 from ecl.geo import Polyline, GeometryTools, CPolylineCollection
@@ -92,13 +93,13 @@ class FaultBlock(BaseCClass):
     def free(self):
         self._free()
 
-    def getCentroid(self):
+    def get_centroid(self):
         xc = self._get_xc()
         yc = self._get_yc()
         return (xc,yc)
 
 
-    def countInside(self, polygon):
+    def count_inside(self, polygon):
         """
         Will count the number of points in block which are inside polygon.
         """
@@ -110,26 +111,26 @@ class FaultBlock(BaseCClass):
         return inside
 
 
-    def getBlockID(self):
+    def get_block_id(self):
         return self._get_block_id()
 
 
-    def assignToRegion(self, region_id):
+    def assign_to_region(self, region_id):
         self._assign_to_region(region_id)
 
 
-    def getRegionList(self):
+    def get_region_list(self):
         regionList = self._get_region_list()
         return regionList.copy()
 
-    def addCell(self, i, j):
+    def add_cell(self, i, j):
         self._add_cell(i, j)
 
-    def getGlobalIndexList(self):
+    def get_global_index_list(self):
         return self._get_global_index_list()
 
 
-    def getEdgePolygon(self):
+    def get_edge_polygon(self):
         x_list = DoubleVector()
         y_list = DoubleVector()
         cell_list = IntVector()
@@ -141,7 +142,7 @@ class FaultBlock(BaseCClass):
         return p
 
 
-    def containsPolyline(self, polyline):
+    def contains_polyline(self, polyline):
         """
         Will return true if at least one point from the polyline is inside the block.
         """
@@ -154,7 +155,7 @@ class FaultBlock(BaseCClass):
             return GeometryTools.polylinesIntersect(edge_polyline, polyline)
 
 
-    def getNeighbours(self, polylines=None, connected_only=True):
+    def get_neighbours(self, polylines=None, connected_only=True):
         """
         Will return a list of FaultBlock instances which are in direct
         contact with this block.
@@ -172,5 +173,18 @@ class FaultBlock(BaseCClass):
         return neighbour_list
 
 
-    def getParentLayer(self):
+    def get_parent_layer(self):
         return self.parent()
+
+
+monkey_the_camel(FaultBlock, 'getCentroid', FaultBlock.get_centroid)
+monkey_the_camel(FaultBlock, 'countInside', FaultBlock.count_inside)
+monkey_the_camel(FaultBlock, 'getBlockID', FaultBlock.get_block_id)
+monkey_the_camel(FaultBlock, 'assignToRegion', FaultBlock.assign_to_region)
+monkey_the_camel(FaultBlock, 'getRegionList', FaultBlock.get_region_list)
+monkey_the_camel(FaultBlock, 'addCell', FaultBlock.add_cell)
+monkey_the_camel(FaultBlock, 'getGlobalIndexList', FaultBlock.get_global_index_list)
+monkey_the_camel(FaultBlock, 'getEdgePolygon', FaultBlock.get_edge_polygon)
+monkey_the_camel(FaultBlock, 'containsPolyline', FaultBlock.contains_polyline)
+monkey_the_camel(FaultBlock, 'getNeighbours', FaultBlock.get_neighbours)
+monkey_the_camel(FaultBlock, 'getParentLayer', FaultBlock.get_parent_layer)

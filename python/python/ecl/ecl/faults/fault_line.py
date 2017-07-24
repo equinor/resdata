@@ -16,18 +16,19 @@
 
 from __future__ import print_function
 import sys
+
+from ecl.util import monkey_the_camel
 from ecl.util import DoubleVector,stat
 from ecl.geo import CPolyline
+
 from .fault_segments import FaultSegment
 
 
-
-def cmpIndexPair(p1,p2):
+def cmp_index_pair(p1, p2):
     if p1[0] == p2[0]:
         return cmp(p1[1], p2[1])
     else:
         return cmp(p1[0], p2[0])
-
 
 
 class FaultLine(object):
@@ -60,7 +61,8 @@ class FaultLine(object):
                     assert current.getC2() == next_segment.getC1()
                 current = next_segment
 
-    def tryAppend(self , segment):
+
+    def try_append(self, segment):
         if len(self.__segment_list) > 0:
             tail = self.__segment_list[-1]
             if tail.getC2() != segment.getC1():
@@ -83,11 +85,15 @@ class FaultLine(object):
         return True
 
 
-    def getK(self):
+    def get_k(self):
         return self.__k
 
-    
-    def __initIJPolyline(self):
+    @property
+    def k(self):
+        return self.__k
+
+
+    def __init_ij_polyline(self):
         pl = []
         nx = self.__grid.getNX()
         ny = self.__grid.getNY()
@@ -106,28 +112,30 @@ class FaultLine(object):
         self.__ijpolyline = pl
 
 
-    def __initPolyline(self):
+
+    def __init_polyline(self):
         pl = CPolyline()
         for (i,j) in self.getIJPolyline():
-            x,y,z = self.__grid.getNodeXYZ(i,j,self.__k)
+            x,y,z = self.__grid.getNodeXYZ(i, j, self.__k)
             pl.addPoint(x, y)
         self.__polyline = pl
 
 
-    def getPolyline(self):
+
+    def get_polyline(self):
         if self.__polyline is None:
-            self.__initPolyline()
+            self.__init_polyline()
         return self.__polyline
 
 
-    def getIJPolyline(self):
+    def get_ij_polyline(self):
         if self.__ijpolyline is None:
-            self.__initIJPolyline()
+            self.__init_ij_polyline()
         return self.__ijpolyline
 
 
 
-    def __initNeighborCells(self):
+    def __init_neighbor_cells(self):
         self.__neighborCells = []
         nx = self.__grid.getNX()
         ny = self.__grid.getNY()
@@ -156,7 +164,7 @@ class FaultLine(object):
                     if i == nx:
                         g2 = -1
 
-                    self.__neighborCells.append( (g1,g2) )
+                    self.__neighborCells.append((g1,g2))
             elif j1 == j2:
                 j = j1
                 for i in range(i1,i2):
@@ -172,12 +180,12 @@ class FaultLine(object):
                     self.__neighborCells.append((g1,g2))
             else:
                 raise Exception("Internal error: found fault segment with variation in two directions")
-            self.__neighborCells.sort( cmpIndexPair )
+            self.__neighborCells.sort(cmp_index_pair)
 
-            
-    def getNeighborCells(self):
+
+    def get_neighbor_cells(self):
         if self.__neighborCells is None:
-            self.__initNeighborCells()
+            self.__init_neighbor_cells()
 
         return self.__neighborCells
 
@@ -212,16 +220,16 @@ class FaultLine(object):
         for segment in reverse_list:
             C1 = segment.getC1()
             C2 = segment.getC2()
-            
-            rseg = FaultSegment(C2 , C1)
-            self.tryAppend( rseg )
+
+            rseg = FaultSegment(C2, C1)
+            self.tryAppend(rseg)
 
 
-    def startPoint(self):
+    def start_point(self):
         pl = self.getPolyline()
         return pl[0]
 
-    def endPoint(self):
+    def end_point(self):
         pl = self.getPolyline()
         return pl[-1]
 
@@ -234,3 +242,12 @@ class FaultLine(object):
             (J2, I2) = divmod(C2, self.__grid.getNX() + 1)
             print('[Corner:%5d IJ:(%3d,%d)] -> [Corner:%5d IJ:(%3d,%d)]'
                   % (C1, I1, J1, C2, I2, J2))
+
+
+monkey_the_camel(FaultLine, 'tryAppend', FaultLine.try_append)
+monkey_the_camel(FaultLine, 'getK', FaultLine.get_k)
+monkey_the_camel(FaultLine, 'getPolyline', FaultLine.get_polyline)
+monkey_the_camel(FaultLine, 'getIJPolyline', FaultLine.get_ij_polyline)
+monkey_the_camel(FaultLine, 'getNeighborCells', FaultLine.get_neighbor_cells)
+monkey_the_camel(FaultLine, 'startPoint', FaultLine.start_point)
+monkey_the_camel(FaultLine, 'endPoint', FaultLine.end_point)

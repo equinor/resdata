@@ -28,6 +28,7 @@ functions from ecl_util.c which are not bound to any class type.
 import ctypes
 
 from cwrap import BaseCEnum
+from ecl.util import monkey_the_camel
 from ecl.ecl import EclPrototype, ECL_LIB
 
 class EclFileEnum(BaseCEnum):
@@ -131,7 +132,7 @@ class EclUtil(object):
         return EclUtil._get_start_date(datafile).datetime()
 
     @staticmethod
-    def inspectExtension( filename ):
+    def inspect_extension(filename):
         """Will inspect an ECLIPSE filename and return a tuple consisting of
         file type (EclFileEnum), a bool for formatted or not, and an
         integer for the step number.
@@ -148,7 +149,7 @@ class EclUtil(object):
         return (file_type, fmt_file.value, step)
 
     @staticmethod
-    def reportStep(filename):
+    def report_step(filename):
         report_step = EclUtil._get_report_step(filename)
         if report_step < 0:
             raise ValueError("Could not infer report step from: %s" % filename)
@@ -160,3 +161,6 @@ class EclUtil(object):
 get_num_cpu = EclUtil.get_num_cpu
 get_file_type = EclUtil.get_file_type
 get_start_date = EclUtil.get_start_date
+
+monkey_the_camel(EclUtil, 'inspectExtension', EclUtil.inspect_extension, staticmethod)
+monkey_the_camel(EclUtil, 'reportStep', EclUtil.report_step, staticmethod)
