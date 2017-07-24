@@ -79,3 +79,30 @@ from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .profiler import Profiler
 from .arg_pack import ArgPack
 from .path_format import PathFormat
+
+
+
+
+###
+###  monkey_the_camel is a function temporarily added to libecl while we are in
+###  the process of changing camelCase function names to snake_case function
+###  names.
+###
+###  See https://github.com/Statoil/libecl/issues/142 for a discussion and for
+###  usage.
+###
+def monkey_the_camel(class_, camel, method_, method_type=None):
+    """Creates a method "class_.camel" in class_ which prints a warning and forwards
+    to method_.  method_type should be one of (None, classmethod, staticmethod),
+    and generates new methods accordingly.
+    """
+    def shift(*args):
+        return args if (method_type != classmethod) else args[1:]
+    def warned_method(*args, **kwargs):
+        print('Warning, %s is deprecated' % camel)
+        return method_(*shift(*args), **kwargs)
+    if method_type == staticmethod:
+        warned_method = staticmethod(warned_method)
+    elif method_type == classmethod:
+        warned_method = classmethod(warned_method)
+    setattr(class_, camel, warned_method)
