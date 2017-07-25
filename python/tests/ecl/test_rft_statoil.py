@@ -80,6 +80,13 @@ class RFTTest(ExtendedTestCase):
             rft = rftFile[100]
 
 
+    def test_basics(self):
+        wt = WellTrajectory(self.createTestPath("Statoil/ert-statoil/spotfire/gendata_rft_zone/E-3H.txt"))
+        self.assertEqual(len(wt), 38)
+        self.assertTrue(isinstance(str(wt), str))
+        self.assertTrue(isinstance(repr(wt), str))
+        self.assertEqual('WellTrajectory(len=38)', repr(wt))
+
     def test_trajectory(self):
         with self.assertRaises(IOError):
             WellTrajectory("/does/no/exist")
