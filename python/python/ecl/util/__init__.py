@@ -91,6 +91,34 @@ from .path_format import PathFormat
 ###  See https://github.com/Statoil/libecl/issues/142 for a discussion and for
 ###  usage.
 ###
+
+import os
+import warnings
+
+__cc = os.environ.get('ECLWARNING', None)  # __cc in (None, 'user', 'dev', 'hard')
+
+def __silencio(msg):
+    pass
+
+def __user_warning(msg):
+    print('User warning: ' + msg)
+
+def __dev_warning(msg):
+    warnings.warn(msg, DeprecationWarning)
+
+def __hard_warning(msg):
+    raise UserWarning('CamelCase exception: ' + msg)
+
+
+__ecl_camel_case_warning = __silencio
+if __cc == 'user':
+    __ecl_camel_case_warning = __user_warning
+elif __cc == 'dev':
+    __ecl_camel_case_warning = __dev_warning
+elif __cc == 'hard':
+    __ecl_camel_case_warning = __hard_warning
+
+
 def monkey_the_camel(class_, camel, method_, method_type=None):
     """Creates a method "class_.camel" in class_ which prints a warning and forwards
     to method_.  method_type should be one of (None, classmethod, staticmethod),
@@ -99,7 +127,7 @@ def monkey_the_camel(class_, camel, method_, method_type=None):
     def shift(*args):
         return args if (method_type != classmethod) else args[1:]
     def warned_method(*args, **kwargs):
-        print('Warning, %s is deprecated' % camel)
+        __ecl_camel_case_warning('Warning, %s is deprecated, use %s' % (camel, str(method_)))
         return method_(*shift(*args), **kwargs)
     if method_type == staticmethod:
         warned_method = staticmethod(warned_method)
