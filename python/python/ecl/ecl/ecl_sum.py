@@ -157,6 +157,8 @@ class EclSum(BaseCClass):
         loader will, in the case of a restarted ECLIPSE simulation,
         try to load summary results also from the restarted case.
         """
+        if not load_case:
+            raise ValueError('load_case must be the basename of the simulation')
         c_pointer = self._fread_alloc(load_case, join_string, include_restart)
         if c_pointer is None:
             raise IOError("Failed to create summary instance from argument:%s" % load_case)
