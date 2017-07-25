@@ -41,8 +41,9 @@ import datetime
 import ctypes
 
 from cwrap import BaseCClass
-from ecl.ecl import EclPrototype, EclKW, EclFileEnum, EclFileView
 from ecl.util import CTime
+from ecl.util import monkey_the_camel
+from ecl.ecl import EclPrototype, EclKW, EclFileEnum, EclFileView
 
 
 class EclFile(BaseCClass):
@@ -64,7 +65,7 @@ class EclFile(BaseCClass):
 
 
     @staticmethod
-    def getFileType(filename):
+    def get_filetype(filename):
         fmt_file    = ctypes.c_bool()
         report_step = ctypes.c_int()
 
@@ -253,7 +254,7 @@ class EclFile(BaseCClass):
         self.close()
 
 
-    def blockView(self, kw, kw_index):
+    def block_view(self, kw, kw_index):
         if not kw in self:
             raise KeyError('No such keyword "%s".' % kw)
         ls = self.global_view.numKeywords(kw)
@@ -265,16 +266,15 @@ class EclFile(BaseCClass):
         raise IndexError('Index out of range, must be in [0, %d), was %d.' % (ls, kw_index))
 
 
-    def blockView2(self, start_kw , stop_kw , start_index):
+    def block_view2(self, start_kw, stop_kw, start_index):
         return self.global_view.blockView2( start_kw , stop_kw, start_index )
 
 
-    def restartView( self, seqnum_index = None, report_step = None , sim_time = None , sim_days = None):
+    def restart_view(self, seqnum_index=None, report_step=None, sim_time=None, sim_days=None):
         return self.global_view.restartView( seqnum_index, report_step , sim_time, sim_days )
 
 
-
-    def select_block( self, kw , kw_index):
+    def select_block(self, kw, kw_index):
         raise NotImplementedError("The select_block implementation has been removed - use EclFileView")
 
 
@@ -653,7 +653,7 @@ class EclFile(BaseCClass):
         return self._iget_restart_days( index )
 
 
-    def getFilename(self):
+    def get_filename(self):
         """
         Name of the file currently loaded.
         """
@@ -693,4 +693,16 @@ class EclFileContextManager(object):
 
 
 def openEclFile( file_name , flags = 0):
-    return EclFileContextManager( EclFile( file_name , flags ))
+    print('The function openEclFile is deprecated, use open_ecl_file.')
+    return open_ecl_file(file_name, flags)
+
+def open_ecl_file(file_name, flags=0):
+    return EclFileContextManager(EclFile(file_name, flags))
+
+
+
+monkey_the_camel(EclFile, 'getFileType', EclFile.get_filetype, staticmethod)
+monkey_the_camel(EclFile, 'blockView', EclFile.block_view)
+monkey_the_camel(EclFile, 'blockView2', EclFile.block_view2)
+monkey_the_camel(EclFile, 'restartView', EclFile.restart_view)
+monkey_the_camel(EclFile, 'getFilename', EclFile.get_filename)
