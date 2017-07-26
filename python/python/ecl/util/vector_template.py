@@ -45,6 +45,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import  sys
 
 from cwrap import CFILE, BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.util import UtilPrototype
 
 
@@ -427,7 +428,7 @@ class VectorTemplate(BaseCClass):
             raise IndexError("The vector is empty!")
 
 
-    def minIndex(self, reverse=False):
+    def min_index(self, reverse=False):
         """
         @type reverse: bool
         @rtype: int
@@ -437,7 +438,7 @@ class VectorTemplate(BaseCClass):
         else:
             raise IndexError("The vector is empty!")
 
-    def maxIndex(self, reverse=False):
+    def max_index(self, reverse=False):
         """
         @type reverse: bool
         @rtype: int
@@ -450,7 +451,7 @@ class VectorTemplate(BaseCClass):
     def append(self, value):
         self._append(value)
 
-    def deleteBlock(self, index, block_size):
+    def delete_block(self, index, block_size):
         """
         Remove a block of size @block_size starting at @index.
 
@@ -471,19 +472,19 @@ class VectorTemplate(BaseCClass):
     def clear(self):
         self._reset()
 
-    def safeGetByIndex(self, index):
+    def safe_get_by_index(self, index):
         return self._safe_iget(index)
 
-    def setReadOnly(self, read_only):
+    def set_read_only(self, read_only):
         self._set_read_only(read_only)
 
-    def getReadOnly(self):
+    def get_read_only(self):
         return self._get_read_only()
 
-    def setDefault(self, value):
+    def set_default(self, value):
         self._set_default(value)
 
-    def getDefault(self):
+    def get_default(self):
         return self._get_default()
 
 
@@ -501,7 +502,7 @@ class VectorTemplate(BaseCClass):
 
         self._permute(permutation_vector)
 
-    def permutationSort(self, reverse=False):
+    def permutation_sort(self, reverse=False):
         """
         Returns the permutation vector for sorting of this vector. Vector is not sorted.
          @type reverse: bool
@@ -516,32 +517,32 @@ class VectorTemplate(BaseCClass):
         return None
 
 
-    def asList(self):
+    def as_list(self):
         l = [0] * len(self)
         for (index,value) in enumerate(self):
             l[index] = value
 
         return l
 
-    def selectUnique(self):
+    def select_unique(self):
         self._select_unique()
 
 
-    def elementSum(self):
+    def element_sum(self):
         return self._element_sum()
 
 
-    def getDataPtr(self):
+    def get_data_ptr(self):
         "Low level function which returns a pointer to underlying storage"
         # Observe that the get_data_ptr() function is not implemented
         # for the TimeVector class.
         return self._get_data_ptr()
 
-    def countEqual(self, value):
+    def count_equal(self, value):
         return self._count_equal( value)
 
 
-    def initRange(self, min_value, max_value, delta):
+    def init_range(self, min_value, max_value, delta):
         """
         Will fill the vector with the values from min_value to
         max_value in steps of delta. The upper limit is guaranteed to
@@ -553,7 +554,7 @@ class VectorTemplate(BaseCClass):
             self._init_range( min_value, max_value, delta)
 
     @classmethod
-    def createRange(cls, min_value, max_value, delta):
+    def create_range(cls, min_value, max_value, delta):
         """
         Will create new vector and initialize a range.
         """
@@ -645,3 +646,20 @@ class VectorTemplate(BaseCClass):
         raise NotImplementedError()
     def _init_range(self, *_):
         raise NotImplementedError()
+
+monkey_the_camel(VectorTemplate, 'minIndex', VectorTemplate.min_index)
+monkey_the_camel(VectorTemplate, 'maxIndex', VectorTemplate.max_index)
+monkey_the_camel(VectorTemplate, 'deleteBlock', VectorTemplate.delete_block)
+monkey_the_camel(VectorTemplate, 'safeGetByIndex', VectorTemplate.safe_get_by_index)
+monkey_the_camel(VectorTemplate, 'setReadOnly', VectorTemplate.set_read_only)
+monkey_the_camel(VectorTemplate, 'getReadOnly', VectorTemplate.get_read_only)
+monkey_the_camel(VectorTemplate, 'setDefault', VectorTemplate.set_default)
+monkey_the_camel(VectorTemplate, 'getDefault', VectorTemplate.get_default)
+monkey_the_camel(VectorTemplate, 'permutationSort', VectorTemplate.permutation_sort)
+monkey_the_camel(VectorTemplate, 'asList', VectorTemplate.as_list)
+monkey_the_camel(VectorTemplate, 'selectUnique', VectorTemplate.select_unique)
+monkey_the_camel(VectorTemplate, 'elementSum', VectorTemplate.element_sum)
+monkey_the_camel(VectorTemplate, 'getDataPtr', VectorTemplate.get_data_ptr)
+monkey_the_camel(VectorTemplate, 'countEqual', VectorTemplate.count_equal)
+monkey_the_camel(VectorTemplate, 'initRange', VectorTemplate.init_range)
+monkey_the_camel(VectorTemplate, 'createRange', VectorTemplate.create_range, classmethod)
