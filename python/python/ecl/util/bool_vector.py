@@ -21,45 +21,45 @@ from ecl.util import VectorTemplate, UtilPrototype
 class BoolVector(VectorTemplate):
     default_format       = "%8d"
 
-    _alloc               = UtilPrototype("void*  bool_vector_alloc( int , bool )" , bind = False)
-    _create_active_mask  = UtilPrototype("bool_vector_obj string_util_alloc_active_mask( char* )" , bind = False)
-    _active_list         = UtilPrototype("int_vector_obj bool_vector_alloc_active_list(bool_vector)", bind = False)
-    _alloc_copy          = UtilPrototype("bool_vector_obj bool_vector_alloc_copy( bool_vector )")
-    _update_active_mask  = UtilPrototype("bool string_util_update_active_mask(char*, bool_vector)" , bind = False)
+    _alloc               = UtilPrototype("void*  bool_vector_alloc(int , bool)" , bind=False)
+    _create_active_mask  = UtilPrototype("bool_vector_obj string_util_alloc_active_mask(char*)" , bind=False)
+    _active_list         = UtilPrototype("int_vector_obj bool_vector_alloc_active_list(bool_vector)", bind=False)
+    _alloc_copy          = UtilPrototype("bool_vector_obj bool_vector_alloc_copy(bool_vector)")
+    _update_active_mask  = UtilPrototype("bool string_util_update_active_mask(char*, bool_vector)" , bind=False)
 
-    _strided_copy        = UtilPrototype("bool_vector_obj bool_vector_alloc_strided_copy( bool_vector , int , int , int)")
-    _free                = UtilPrototype("void   bool_vector_free( bool_vector )")
-    _iget                = UtilPrototype("bool   bool_vector_iget( bool_vector , int )")
-    _safe_iget           = UtilPrototype("bool   bool_vector_safe_iget( bool_vector , int )")
-    _iset                = UtilPrototype("void   bool_vector_iset( bool_vector , int , bool)")
-    _size                = UtilPrototype("int    bool_vector_size( bool_vector )")
-    _append              = UtilPrototype("void   bool_vector_append( bool_vector , bool )")
-    _idel_block          = UtilPrototype("void   bool_vector_idel_block( bool_vector , bool , bool )")
-    _idel                = UtilPrototype("void   bool_vector_idel( bool_vector , int )")
-    _pop                 = UtilPrototype("bool   bool_vector_pop( bool_vector )")
-    _lshift              = UtilPrototype("void   bool_vector_lshift( bool_vector , int )")
-    _rshift              = UtilPrototype("void   bool_vector_rshift( bool_vector , int )")
-    _insert              = UtilPrototype("void   bool_vector_insert( bool_vector , int , bool)")
-    _fprintf             = UtilPrototype("void   bool_vector_fprintf( bool_vector , FILE , char* , char*)")
-    _sort                = UtilPrototype("void   bool_vector_sort( bool_vector )")
-    _rsort               = UtilPrototype("void   bool_vector_rsort( bool_vector )")
-    _reset               = UtilPrototype("void   bool_vector_reset( bool_vector )")
-    _set_read_only       = UtilPrototype("void   bool_vector_set_read_only( bool_vector , bool )")
-    _get_read_only       = UtilPrototype("bool   bool_vector_get_read_only( bool_vector )")
-    _get_max             = UtilPrototype("bool   bool_vector_get_max( bool_vector )")
-    _get_min             = UtilPrototype("bool   bool_vector_get_min( bool_vector )")
-    _get_max_index       = UtilPrototype("int    bool_vector_get_max_index( bool_vector , bool)")
-    _get_min_index       = UtilPrototype("int    bool_vector_get_min_index( bool_vector , bool)")
-    _shift               = UtilPrototype("void   bool_vector_shift( bool_vector , bool )")
-    _scale               = UtilPrototype("void   bool_vector_scale( bool_vector , bool )")
-    _div                 = UtilPrototype("void   bool_vector_div( bool_vector , bool )")
-    _inplace_add         = UtilPrototype("void   bool_vector_inplace_add( bool_vector , bool_vector )")
-    _inplace_mul         = UtilPrototype("void   bool_vector_inplace_mul( bool_vector , bool_vector )")
-    _assign              = UtilPrototype("void   bool_vector_set_all( bool_vector , bool)")
-    _memcpy              = UtilPrototype("void   bool_vector_memcpy(bool_vector , bool_vector )")
-    _set_default         = UtilPrototype("void   bool_vector_set_default( bool_vector , bool)")
-    _get_default         = UtilPrototype("bool   bool_vector_get_default( bool_vector )")
-    _element_size        = UtilPrototype("int    bool_vector_element_size( bool_vector )")
+    _strided_copy        = UtilPrototype("bool_vector_obj bool_vector_alloc_strided_copy(bool_vector , int , int , int)")
+    _free                = UtilPrototype("void   bool_vector_free(bool_vector)")
+    _iget                = UtilPrototype("bool   bool_vector_iget(bool_vector , int)")
+    _safe_iget           = UtilPrototype("bool   bool_vector_safe_iget(bool_vector , int)")
+    _iset                = UtilPrototype("void   bool_vector_iset(bool_vector , int , bool)")
+    _size                = UtilPrototype("int    bool_vector_size(bool_vector)")
+    _append              = UtilPrototype("void   bool_vector_append(bool_vector , bool)")
+    _idel_block          = UtilPrototype("void   bool_vector_idel_block(bool_vector , bool , bool)")
+    _idel                = UtilPrototype("void   bool_vector_idel(bool_vector , int)")
+    _pop                 = UtilPrototype("bool   bool_vector_pop(bool_vector)")
+    _lshift              = UtilPrototype("void   bool_vector_lshift(bool_vector , int)")
+    _rshift              = UtilPrototype("void   bool_vector_rshift(bool_vector , int)")
+    _insert              = UtilPrototype("void   bool_vector_insert(bool_vector , int , bool)")
+    _fprintf             = UtilPrototype("void   bool_vector_fprintf(bool_vector , FILE , char* , char*)")
+    _sort                = UtilPrototype("void   bool_vector_sort(bool_vector)")
+    _rsort               = UtilPrototype("void   bool_vector_rsort(bool_vector)")
+    _reset               = UtilPrototype("void   bool_vector_reset(bool_vector)")
+    _set_read_only       = UtilPrototype("void   bool_vector_set_read_only(bool_vector , bool)")
+    _get_read_only       = UtilPrototype("bool   bool_vector_get_read_only(bool_vector)")
+    _get_max             = UtilPrototype("bool   bool_vector_get_max(bool_vector)")
+    _get_min             = UtilPrototype("bool   bool_vector_get_min(bool_vector)")
+    _get_max_index       = UtilPrototype("int    bool_vector_get_max_index(bool_vector , bool)")
+    _get_min_index       = UtilPrototype("int    bool_vector_get_min_index(bool_vector , bool)")
+    _shift               = UtilPrototype("void   bool_vector_shift(bool_vector , bool)")
+    _scale               = UtilPrototype("void   bool_vector_scale(bool_vector , bool)")
+    _div                 = UtilPrototype("void   bool_vector_div(bool_vector , bool)")
+    _inplace_add         = UtilPrototype("void   bool_vector_inplace_add(bool_vector , bool_vector)")
+    _inplace_mul         = UtilPrototype("void   bool_vector_inplace_mul(bool_vector , bool_vector)")
+    _assign              = UtilPrototype("void   bool_vector_set_all(bool_vector , bool)")
+    _memcpy              = UtilPrototype("void   bool_vector_memcpy(bool_vector , bool_vector)")
+    _set_default         = UtilPrototype("void   bool_vector_set_default(bool_vector , bool)")
+    _get_default         = UtilPrototype("bool   bool_vector_get_default(bool_vector)")
+    _element_size        = UtilPrototype("int    bool_vector_element_size(bool_vector)")
 
     _permute             = UtilPrototype("void bool_vector_permute(bool_vector, permutation_vector)")
     _sort_perm           = UtilPrototype("permutation_vector_obj bool_vector_alloc_sort_perm(bool_vector)")
@@ -125,14 +125,14 @@ class BoolVector(VectorTemplate):
         """ @rtype: ecl.util.IntVector """
         return self._active_list(self)
 
-    def _tostr(self, arr = None):
+    def _tostr(self, arr=None):
         if arr is None:
             arr = self
         return "".join(['1' if x else '0' for x in arr])
 
     def __repr__(self):
-        """Will return BoolVector(size = 4, content = "0010") at 0x1729 and
-        if size > 10, will return content = "0001...100", i.e., |content|<=10.
+        """Will return BoolVector(size=4, content="0010") at 0x1729 and
+        if size > 10, will return content="0001...100", i.e., |content|<=10.
         """
         cnt = ''
         ls = len(self)
@@ -143,7 +143,7 @@ class BoolVector(VectorTemplate):
             cnt  = self._tostr(a)
             cnt += "..."
             cnt += self._tostr(b)
-        return 'BoolVector(size = %d, content = "%s") %s' % (ls, cnt, self._ad_str())
+        return 'BoolVector(size=%d, content="%s") %s' % (ls, cnt, self._ad_str())
 
 monkey_the_camel(BoolVector, 'createActiveMask', BoolVector.create_active_mask, classmethod)
 monkey_the_camel(BoolVector, 'updateActiveMask', BoolVector.update_active_mask, classmethod)
