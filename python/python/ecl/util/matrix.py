@@ -27,7 +27,8 @@
 # choice.
 
 
-from cwrap import BaseCClass,CFILE
+from cwrap import BaseCClass, CFILE
+from ecl.util import monkey_the_camel
 from ecl.util import UtilPrototype
 
 
@@ -84,7 +85,7 @@ class Matrix(BaseCClass):
             raise ValueError('Identity matrix must have positive size, %d not allowed.' % dim)
         return cls._matrix_alloc_identity(dim)
 
-    def subCopy(self, row_offset, column_offset, rows, columns):
+    def sub_copy(self, row_offset, column_offset, rows, columns):
         if row_offset < 0 or row_offset >= self.rows():
             raise ValueError("Invalid row offset")
 
@@ -154,20 +155,20 @@ class Matrix(BaseCClass):
         assert isinstance(other, Matrix)
         return self._equal(other)
 
-    def scaleColumn(self, column, factor):
+    def scale_column(self, column, factor):
         if not 0 <= column < self.columns():
             raise IndexError("Expected column: [0,%d) got:%d" % (self.columns(), column))
         self._scale_column(column, factor)
 
-    def scaleRow(self, row, factor):
+    def scale_row(self, row, factor):
         if not 0 <= row < self.rows():
             raise IndexError("Expected row: [0,%d) got:%d" % (self.rows(), row))
         self._scale_row(row, factor)
 
-    def setAll(self, value):
+    def set_all(self, value):
         self._set_all(value)
 
-    def copyColumn(self, target_column, src_column):
+    def copy_column(self, target_column, src_column):
         columns = self.columns()
         if not 0 <= src_column < columns:
             raise ValueError("src column:%d invalid" % src_column)
@@ -180,11 +181,11 @@ class Matrix(BaseCClass):
             Matrix._copy_column(self, self, target_column, src_column)
 
 
-    def dumpCSV(self, filename):
+    def dump_csv(self, filename):
         self._dump_csv(filename)
 
 
-    def prettyPrint(self, name, fmt="%6.3g"):
+    def pretty_print(self, name, fmt="%6.3g"):
         self._pretty_print(name, fmt)
 
     def fprint(self, fileH, fmt="%g "):
@@ -214,8 +215,19 @@ class Matrix(BaseCClass):
         self._fprint(fmt, CFILE(fileH))
 
 
-    def randomInit(self, rng):
+    def random_init(self, rng):
         self._random_init(rng)
 
     def free(self):
         self._free()
+
+
+
+monkey_the_camel(Matrix, 'subCopy', Matrix.sub_copy)
+monkey_the_camel(Matrix, 'scaleColumn', Matrix.scale_column)
+monkey_the_camel(Matrix, 'scaleRow', Matrix.scale_row)
+monkey_the_camel(Matrix, 'setAll', Matrix.set_all)
+monkey_the_camel(Matrix, 'copyColumn', Matrix.copy_column)
+monkey_the_camel(Matrix, 'dumpCSV', Matrix.dump_csv)
+monkey_the_camel(Matrix, 'prettyPrint', Matrix.pretty_print)
+monkey_the_camel(Matrix, 'randomInit', Matrix.random_init)
