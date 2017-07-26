@@ -18,7 +18,7 @@ class Task(Thread):
 
         self.__verbose = False
 
-    def setVerbose(self, verbose):
+    def set_verbose(self, verbose):
         self.__verbose = verbose
 
     def run(self):
@@ -36,16 +36,16 @@ class Task(Thread):
             running_time = time.time() - self.__start_time
             print("Running time of task: %f" % running_time)
 
-    def isDone(self):
+    def is_done(self):
         return self.__done
 
-    def hasStarted(self):
+    def has_started(self):
         return self.__started or self.isAlive()
 
-    def isRunning(self):
+    def is_running(self):
         return self.hasStarted() and not self.__done
 
-    def hasFailed(self):
+    def has_failed(self):
         return self.__failed
 
     def join(self, timeout=None):
@@ -70,7 +70,7 @@ class ThreadPool(object):
         self.__start_time = None
 
 
-    def addTask(self, func, *args, **kwargs):
+    def add_task(self, func, *args, **kwargs):
         if self.__start_time is None:
             task = Task(func, *args, **kwargs)
             # task.setVerbose(self.__verbose)
@@ -78,20 +78,20 @@ class ThreadPool(object):
         else:
             raise UserWarning("Can not add task after the pool has started!")
 
-    def poolSize(self):
+    def pool_size(self):
         return self.__size
 
-    def taskCount(self):
+    def task_count(self):
         return len(self.__task_list)
 
-    def __allTasksFinished(self):
+    def __all_tasks_finished(self):
         for task in self.__task_list:
             if not task.isDone():
                 return False
 
         return True
 
-    def runningCount(self):
+    def running_count(self):
         count = 0
 
         for task in self.__task_list:
@@ -100,7 +100,7 @@ class ThreadPool(object):
 
         return count
 
-    def doneCount(self):
+    def done_count(self):
         count = 0
 
         for task in self.__task_list:
@@ -109,7 +109,7 @@ class ThreadPool(object):
 
         return count
 
-    def __findNextTask(self):
+    def __find_next_task(self):
         for task in self.__task_list:
             if not task.hasStarted():
                 return task
@@ -117,9 +117,9 @@ class ThreadPool(object):
         return None
 
     def __start(self):
-        while not self.__allTasksFinished():
+        while not self.__all_tasks_finished():
             if self.runningCount() < self.poolSize():
-                task = self.__findNextTask()
+                task = self.__find_next_task()
 
                 if task is not None:
                     task.start()
@@ -129,7 +129,7 @@ class ThreadPool(object):
         self.__pool_finished = True
 
 
-    def nonBlockingStart(self):
+    def non_blocking_start(self):
         self.__runner_thread = Thread()
         self.__runner_thread.run = self.__start
         self.__runner_thread.start()
@@ -143,9 +143,23 @@ class ThreadPool(object):
             running_time = time.time() - self.__start_time
             print("Running time: %f using a pool size of: %d" % (running_time, self.poolSize()))
 
-    def hasFailedTasks(self):
+    def has_failed_tasks(self):
         for task in self.__task_list:
             if task.hasFailed():
                 return True
 
         return False
+
+
+monkey_the_camel(Task, 'setVerbose', Task.set_verbose)
+monkey_the_camel(Task, 'isDone', Task.is_done)
+monkey_the_camel(Task, 'hasStarted', Task.has_started)
+monkey_the_camel(Task, 'isRunning', Task.is_running)
+monkey_the_camel(Task, 'hasFailed', Task.has_failed)
+monkey_the_camel(ThreadPool, 'addTask', ThreadPool.add_task)
+monkey_the_camel(ThreadPool, 'poolSize', ThreadPool.pool_size)
+monkey_the_camel(ThreadPool, 'taskCount', ThreadPool.task_count)
+monkey_the_camel(ThreadPool, 'runningCount', ThreadPool.running_count)
+monkey_the_camel(ThreadPool, 'doneCount', ThreadPool.done_count)
+monkey_the_camel(ThreadPool, 'nonBlockingStart', ThreadPool.non_blocking_start)
+monkey_the_camel(ThreadPool, 'hasFailedTasks', ThreadPool.has_failed_tasks)
