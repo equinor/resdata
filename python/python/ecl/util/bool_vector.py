@@ -146,6 +146,6 @@ class BoolVector(VectorTemplate):
         return 'BoolVector(size=%d, content="%s") %s' % (ls, cnt, self._ad_str())
 
 monkey_the_camel(BoolVector, 'createActiveMask', BoolVector.create_active_mask, classmethod)
-monkey_the_camel(BoolVector, 'updateActiveMask', BoolVector.update_active_mask, classmethod)
-monkey_the_camel(BoolVector, 'createFromList', BoolVector.create_from_list)
+monkey_the_camel(BoolVector, 'updateActiveMask', BoolVector.update_active_mask)
+monkey_the_camel(BoolVector, 'createFromList', BoolVector.create_from_list, classmethod)
 monkey_the_camel(BoolVector, 'createActiveList', BoolVector.create_active_list)
