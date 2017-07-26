@@ -14,6 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
+from ecl.util import monkey_the_camel
 from ecl.util import VectorTemplate, UtilPrototype
 
 
@@ -93,7 +94,7 @@ class IntVector(VectorTemplate):
         return cls._create_active_list(range_string)
 
     @classmethod
-    def valueList(cls, range_string):
+    def value_list(cls, range_string):
         """Will create a IntVector of all the values in the @range_string.
 
         Will not sort the values, and not uniquiefy - in contrast to
@@ -106,3 +107,5 @@ class IntVector(VectorTemplate):
     def count(self, value):
         """ @rtype: int """
         return self._count_equal(value)
+
+monkey_the_camel(IntVector, 'valueList', IntVector.value_list, classmethod)
