@@ -23,7 +23,7 @@ class SubstitutionList(BaseCClass):
     def __len__(self):
         return self._size()
 
-    def addItem(self, key, value, doc_string=""):
+    def add_item(self, key, value, doc_string=""):
         self._append_copy(key, value, doc_string)
 
 
@@ -63,7 +63,7 @@ class SubstitutionList(BaseCClass):
             raise KeyError("No such key:%s" % key)
 
 
-    def indexForKey(self, key):
+    def index_for_key(self, key):
         if not key in self:
             raise KeyError("Key '%s' not in substitution list!" % key)
 
@@ -82,3 +82,7 @@ class SubstitutionList(BaseCClass):
 
     def __str__(self):
         return 'SubstitutionList{%s}' % ", ".join(map(str, self.keys()))
+
+
+monkey_the_camel(SubstitutionList, 'addItem', SubstitutionList.add_item)
+monkey_the_camel(SubstitutionList, 'indexForKey', SubstitutionList.index_for_key)
