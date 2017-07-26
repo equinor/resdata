@@ -1,18 +1,18 @@
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'ctime.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'ctime.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 
 import ctypes
@@ -26,8 +26,8 @@ from ecl.util import UtilPrototype
 class CTime(BaseCValue):
     TYPE_NAME = "time_t"
     DATA_TYPE = ctypes.c_long
-    _timezone = UtilPrototype("char* util_get_timezone()" , bind = False)
-    _timegm = UtilPrototype("long util_make_datetime_utc(int, int, int, int, int, int)" , bind = False)
+    _timezone = UtilPrototype("char* util_get_timezone()", bind=False)
+    _timegm = UtilPrototype("long util_make_datetime_utc(int, int, int, int, int, int)", bind=False)
 
     def __init__(self, value):
         if isinstance(value, int):
@@ -129,7 +129,8 @@ class CTime(BaseCValue):
         return self * other
 
     def timetuple(self):
-        # this function is a requirement for comparing against datetime objects where the CTime is on the right side
+        # this function is a requirement for comparing against datetime objects
+        # where the CTime is on the right side
         pass
 
     def __repr__(self):
