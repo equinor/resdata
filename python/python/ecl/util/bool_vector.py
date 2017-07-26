@@ -78,7 +78,7 @@ class BoolVector(VectorTemplate):
         return self._count_equal(self, value)
 
     @classmethod
-    def createActiveMask(cls, range_string):
+    def create_active_mask(cls, range_string):
         """
         Will create a BoolVector instance with the values from @range_string.
 
@@ -89,13 +89,13 @@ class BoolVector(VectorTemplate):
 
            "1,4-7,10"  =>  {F,T,F,F,T,T,T,T,F,F,T}
            "1,4-7,10X" =>  {}
-        
+
         The empty list will evaluate to false
         @rtype: BoolVector
         """
         return cls._create_active_mask(range_string)
 
-    def updateActiveMask(self, range_string):
+    def update_active_mask(self, range_string):
         """
         Updates a bool vector based on a range string.
         @type range_string: str
@@ -105,7 +105,7 @@ class BoolVector(VectorTemplate):
         return self._update_active_mask(range_string , self)
 
     @classmethod
-    def createFromList(cls, size, source_list):
+    def create_from_list(cls, size, source_list):
         """
         Allocates a bool vector from a Python list of indexes
         @rtype: BoolVector
@@ -118,7 +118,7 @@ class BoolVector(VectorTemplate):
 
         return bool_vector
 
-    def createActiveList(self):
+    def create_active_list(self):
         """ @rtype: ecl.util.IntVector """
         return self._active_list(self)
 
@@ -141,3 +141,8 @@ class BoolVector(VectorTemplate):
             cnt += "..."
             cnt += self._tostr(b)
         return 'BoolVector(size = %d, content = "%s") %s' % (ls, cnt, self._ad_str())
+
+monkey_the_camel(BoolVector, 'createActiveMask', BoolVector.create_active_mask, classmethod)
+monkey_the_camel(BoolVector, 'updateActiveMask', BoolVector.update_active_mask, classmethod)
+monkey_the_camel(BoolVector, 'createFromList', BoolVector.create_from_list)
+monkey_the_camel(BoolVector, 'createActiveList', BoolVector.create_active_list)
