@@ -16,6 +16,7 @@
 
 
 from cwrap import BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.util import UtilPrototype
 
 
@@ -43,23 +44,23 @@ class LookupTable(BaseCClass):
         if not upper_limit is None:
             self.setUpperLimit(upper_limit)
 
-    def getMaxValue(self):
+    def get_max_value(self):
         self.assertSize(1)
         return self._max()
 
-    def getMinValue(self):
+    def get_min_value(self):
         self.assertSize(1)
         return self._min()
 
-    def getMinArg(self):
+    def get_min_arg(self):
         self.assertSize(1)
         return self._arg_min()
 
-    def getMaxArg(self):
+    def get_max_arg(self):
         self.assertSize(1)
         return self._arg_max()
 
-    def assertSize(self, N):
+    def assert_size(self, N):
         if len(self) < N:
             raise ValueError("Lookup table is too small")
 
@@ -87,16 +88,16 @@ class LookupTable(BaseCClass):
     def arg_min(self):
         return self.getMinArg()
 
-    def setLowerLimit(self, value):
+    def set_lower_limit(self, value):
         self._set_low_limit(value)
 
-    def hasLowerLimit(self):
+    def has_lower_limit(self):
         return self._has_low_limit()
 
-    def setUpperLimit(self, value):
+    def set_upper_limit(self, value):
         self._set_high_limit(value)
 
-    def hasUpperLimit(self):
+    def has_upper_limit(self):
         return self._has_high_limit()
 
     def interp(self, x):
@@ -120,3 +121,12 @@ class LookupTable(BaseCClass):
     def free(self):
         self._free( )
 
+monkey_the_camel(LookupTable, 'getMaxValue', LookupTable.get_max_value)
+monkey_the_camel(LookupTable, 'getMinValue', LookupTable.get_min_value)
+monkey_the_camel(LookupTable, 'getMinArg', LookupTable.get_min_arg)
+monkey_the_camel(LookupTable, 'getMaxArg', LookupTable.get_max_arg)
+monkey_the_camel(LookupTable, 'assertSize', LookupTable.assert_size)
+monkey_the_camel(LookupTable, 'setLowerLimit', LookupTable.set_lower_limit)
+monkey_the_camel(LookupTable, 'hasLowerLimit', LookupTable.has_lower_limit)
+monkey_the_camel(LookupTable, 'setUpperLimit', LookupTable.set_upper_limit)
+monkey_the_camel(LookupTable, 'hasUpperLimit', LookupTable.has_upper_limit)
