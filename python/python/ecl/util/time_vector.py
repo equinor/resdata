@@ -16,6 +16,7 @@
 import datetime
 import re
 
+from ecl.util import monkey_the_camel
 from ecl.util import VectorTemplate, CTime, UtilPrototype
 
 
@@ -80,7 +81,7 @@ class TimeVector(VectorTemplate):
             super(TimeVector, self).__init__(default, initial_size)
 
     @classmethod
-    def parseTimeUnit(cls, deltaString):
+    def parse_time_unit(cls, deltaString):
         deltaRegexp = re.compile("(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE)
         matchObj = deltaRegexp.match(deltaString)
         if matchObj:
@@ -110,7 +111,7 @@ class TimeVector(VectorTemplate):
     def __contains__(self, value):
         return self._contains(CTime(value))
 
-    def nextTime(self, num, timeUnit):
+    def next_time(self, num, timeUnit):
         currentTime = self[-1].datetime()
         hour = currentTime.hour
         minute = currentTime.minute
@@ -135,12 +136,12 @@ class TimeVector(VectorTemplate):
 
         return currentTime
 
-    def appendTime(self, num, timeUnit):
+    def append_time(self, num, timeUnit):
         next = self.nextTime(num, timeUnit)
         self.append(CTime(next))
 
     @classmethod
-    def createRegular(cls, start, end, deltaString):
+    def create_regular(cls, start, end, deltaString):
         """
         The last element in the vector will be <= end; i.e. if the
         question of whether the range is closed in the upper end
@@ -166,5 +167,11 @@ class TimeVector(VectorTemplate):
 
         return timeVector
 
-    def getDataPtr(self):
+    def get_data_ptr(self):
         raise NotImplementedError("The getDataPtr() function is not implemented for time_t vectors")
+
+monkey_the_camel(TimeVector, 'parseTimeUnit', TimeVector.parse_time_unit, classmethod)
+monkey_the_camel(TimeVector, 'nextTime', TimeVector.next_time)
+monkey_the_camel(TimeVector, 'appendTime', TimeVector.append_time)
+monkey_the_camel(TimeVector, 'createRegular', TimeVector.create_regular, classmethod)
+monkey_the_camel(TimeVector, 'getDataPtr', TimeVector.get_data_ptr)
