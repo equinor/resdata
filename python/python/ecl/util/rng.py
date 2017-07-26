@@ -16,6 +16,7 @@
 import os.path
 
 from cwrap import BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.util import UtilPrototype
 from ecl.util.enums import RngInitModeEnum, RngAlgTypeEnum
 

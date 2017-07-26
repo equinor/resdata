@@ -3,6 +3,7 @@ from threading import Thread
 import time
 import traceback
 
+from ecl.util import monkey_the_camel
 
 class Task(Thread):
     def __init__(self, func, *args, **kwargs):
