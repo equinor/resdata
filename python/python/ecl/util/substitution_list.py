@@ -1,3 +1,19 @@
+#  Copyright (C) 2017  Statoil ASA, Norway.
+#
+#  This file is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
+
 from cwrap import BaseCClass
 from ecl.util import UtilPrototype
 
@@ -5,7 +21,7 @@ from ecl.util import UtilPrototype
 class SubstitutionList(BaseCClass):
     TYPE_NAME = "subst_list"
 
-    _alloc = UtilPrototype("void* subst_list_alloc(void*)" , bind = False)
+    _alloc = UtilPrototype("void* subst_list_alloc(void*)", bind=False)
     _free = UtilPrototype("void subst_list_free(subst_list)")
     _size = UtilPrototype("int subst_list_get_size(subst_list)")
     _iget_key = UtilPrototype("char* subst_list_iget_key(subst_list, int)")
@@ -30,25 +46,25 @@ class SubstitutionList(BaseCClass):
     def keys(self):
         key_list = []
         for i in range(len(self)):
-            key_list.append( self._iget_key( i ))
+            key_list.append(self._iget_key(i))
         return key_list
 
 
     def __iter__(self):
         index = 0
-        keys = self.keys( )
+        keys = self.keys()
         for index in range(len(self)):
             key = keys[index]
-            yield (key , self[key], self.doc(key))
+            yield (key, self[key], self.doc(key))
 
     def __contains__(self, key):
         if not isinstance(key, str):
             return False
-        return self._has_key( key )
+        return self._has_key(key)
 
     def __getitem__(self, key):
         if key in self:
-            return self._get_value( key )
+            return self._get_value(key)
         else:
             raise KeyError("No such key:%s" % key)
 
@@ -58,7 +74,7 @@ class SubstitutionList(BaseCClass):
 
     def doc(self,key):
         if key in self:
-            return self._get_doc( key )
+            return self._get_doc(key)
         else:
             raise KeyError("No such key:%s" % key)
 
