@@ -112,14 +112,14 @@ class LookupTable(BaseCClass):
         return self._interp(x)
 
     def append(self, x, y):
-        self._append( x, y)
+        self._append(x, y)
 
     #todo: necessary???
     def __del__(self):
         self._free()
 
     def free(self):
-        self._free( )
+        self._free()
 
 monkey_the_camel(LookupTable, 'getMaxValue', LookupTable.get_max_value)
 monkey_the_camel(LookupTable, 'getMinValue', LookupTable.get_min_value)
