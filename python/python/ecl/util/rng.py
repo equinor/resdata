@@ -40,20 +40,20 @@ class RandomNumberGenerator(BaseCClass):
         c_ptr = self._rng_alloc(alg_type, init_mode)
         super(RandomNumberGenerator, self).__init__(c_ptr)
 
-    def stateSize(self):
+    def state_size(self):
         return self._state_size()
 
-    def setState(self, seed_string):
+    def set_state(self, seed_string):
         state_size = self.stateSize()
         if len(seed_string) < state_size:
             raise ValueError("The seed string must be at least %d characters long" % self.stateSize())
         self._set_state(seed_string)
 
-    def getDouble(self):
+    def get_double(self):
         """ @rtype: float """
         return self._get_double()
 
-    def getInt(self, max=None):
+    def get_int(self, max=None):
         """ @rtype: float """
         if max is None:
             max = self._get_max_int()
@@ -63,7 +63,7 @@ class RandomNumberGenerator(BaseCClass):
     def free(self):
         self._free()
 
-    def loadState(self, seed_file):
+    def load_state(self, seed_file):
         """
         Will seed the RNG from the file @seed_file.
         """
@@ -73,8 +73,16 @@ class RandomNumberGenerator(BaseCClass):
             raise IOError("No such file: %s" % seed_file)
 
 
-    def saveState(self, seed_file):
+    def save_state(self, seed_file):
         """
         Will save the state of the rng to @seed_file
         """
         self._save_state(seed_file)
+
+
+monkey_the_camel(RandomNumberGenerator, 'stateSize', RandomNumberGenerator.state_size)
+monkey_the_camel(RandomNumberGenerator, 'setState', RandomNumberGenerator.set_state)
+monkey_the_camel(RandomNumberGenerator, 'getDouble', RandomNumberGenerator.get_double)
+monkey_the_camel(RandomNumberGenerator, 'getInt', RandomNumberGenerator.get_int)
+monkey_the_camel(RandomNumberGenerator, 'loadState', RandomNumberGenerator.load_state)
+monkey_the_camel(RandomNumberGenerator, 'saveState', RandomNumberGenerator.save_state)
