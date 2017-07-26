@@ -1,19 +1,20 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
 #
-#  The file 'vector_template.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  This file is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
+from ecl.util import monkey_the_camel
 from ecl.util import VectorTemplate, UtilPrototype
 
 
@@ -73,9 +74,11 @@ class BoolVector(VectorTemplate):
     def __init__(self, default_value=False, initial_size=0):
         super(BoolVector, self).__init__(default_value, initial_size)
 
+
     def count(self, value=True):
         """ @rtype: int """
         return self._count_equal(self, value)
+
 
     @classmethod
     def create_active_mask(cls, range_string):
