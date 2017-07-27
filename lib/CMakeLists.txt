@@ -3,7 +3,7 @@ project(libecl-ecl C CXX)
 if (HAVE_PTHREAD)
     # The block_fs filesystem is so heavily dependant on pthreads that it is
     # not built if de not have pthreads.
-    list(APPEND opt_srcs util/thread_pool.c util/block_fs.c)
+     list(APPEND opt_srcs util/thread_pool.c)
 endif ()
 
 if (LAPACK_FOUND)
@@ -36,10 +36,6 @@ endif()
 
 if (ERT_HAVE_LOCKF)
     list(APPEND opt_srcs util/util_lockf.c)
-endif ()
-
-if (ERT_HAVE_REGEXP)
-    list(APPEND opt_srcs util/template_loop.c)
 endif ()
 
 if (ERT_HAVE_UNISTD)
@@ -100,7 +96,6 @@ add_library(ecl util/rng.c
                 util/arg_pack.c
                 util/path_fmt.c
                 util/menu.c
-                util/subst_list.c
                 util/subst_func.c
                 util/vector.c
                 util/parser.c
@@ -108,7 +103,6 @@ add_library(ecl util/rng.c
                 util/matrix.c
                 util/buffer.c
                 util/log.c
-                util/template.c
                 util/timer.c
                 util/time_interval.c
                 util/string_util.c
@@ -273,7 +267,6 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_stringlist_test
                 ert_util_string_util
                 ert_util_strstr_int_format
-                ert_util_subst_list
                 ert_util_time_interval
                 ert_util_type_vector_functions
                 ert_util_ui_return
@@ -344,10 +337,6 @@ if (HAVE_BACKTRACE)
 endif()
 
 if (HAVE_UTIL_ABORT_INTERCEPT)
-   add_executable(ert_util_block_fs util/tests/ert_util_block_fs.c)
-   target_link_libraries(ert_util_block_fs ecl)
-   add_test(NAME ert_util_block_fs COMMAND ert_util_block_fs)
-
    add_executable(ert_util_struct_vector util/tests/ert_util_struct_vector.c)
    target_link_libraries(ert_util_struct_vector ecl)
    add_test(NAME ert_util_struct_vector COMMAND ert_util_struct_vector)

@@ -14,7 +14,7 @@ set(PYTHON_SOURCES
     rng.py
     stat.py
     stringlist.py
-    substitution_list.py
+    #substitution_list.py
     thread_pool.py
     cthread_pool.py
     time_vector.py
