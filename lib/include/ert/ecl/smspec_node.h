@@ -40,19 +40,19 @@ extern "C" {
 
 
 typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
-              ECL_SMSPEC_AQUIFER_VAR            =  1 ,   
-              ECL_SMSPEC_WELL_VAR               =  2 ,   /* X */
-              ECL_SMSPEC_REGION_VAR             =  3 ,   /* X */
-              ECL_SMSPEC_FIELD_VAR              =  4 ,   /* X */
-              ECL_SMSPEC_GROUP_VAR              =  5 ,   /* X */
+              ECL_SMSPEC_FIELD_VAR              =  1 ,   /* X */
+              ECL_SMSPEC_REGION_VAR             =  2 ,   /* X */
+              ECL_SMSPEC_GROUP_VAR              =  3 ,   /* X */
+              ECL_SMSPEC_WELL_VAR               =  4 ,   /* X */
+              ECL_SMSPEC_SEGMENT_VAR            =  5 ,   /* X */ 
               ECL_SMSPEC_BLOCK_VAR              =  6 ,   /* X */
-              ECL_SMSPEC_COMPLETION_VAR         =  7 ,   /* X */ 
-              ECL_SMSPEC_LOCAL_BLOCK_VAR        =  8 ,   /* X */
-              ECL_SMSPEC_LOCAL_COMPLETION_VAR   =  9 ,   /* X */
-              ECL_SMSPEC_LOCAL_WELL_VAR         = 10 ,   /* X */
-              ECL_SMSPEC_NETWORK_VAR            = 11 ,
-              ECL_SMSPEC_REGION_2_REGION_VAR    = 12 ,
-              ECL_SMSPEC_SEGMENT_VAR            = 13 ,   /* X */ 
+              ECL_SMSPEC_AQUIFER_VAR            =  7 ,
+              ECL_SMSPEC_COMPLETION_VAR         =  8 ,   /* X */ 
+              ECL_SMSPEC_NETWORK_VAR            =  9 ,
+              ECL_SMSPEC_REGION_2_REGION_VAR    = 10 ,
+              ECL_SMSPEC_LOCAL_BLOCK_VAR        = 11 ,   /* X */
+              ECL_SMSPEC_LOCAL_COMPLETION_VAR   = 12 ,   /* X */
+              ECL_SMSPEC_LOCAL_WELL_VAR         = 13 ,   /* X */
               ECL_SMSPEC_MISC_VAR               = 14     /* X */}  ecl_smspec_var_type;
 
 
@@ -136,6 +136,8 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
 
   int smspec_node_get_R1( const smspec_node_type * smpsec_node );
   int smspec_node_get_R2( const smspec_node_type * smpsec_node );
+
+  int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * node2);
 
 #ifdef __cplusplus
 }

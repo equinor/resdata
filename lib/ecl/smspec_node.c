@@ -980,3 +980,204 @@ void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) 
   fprintf(stream, "WGNAME : %s \n",smspec_node->wgname);
   fprintf(stream, "UNIT   : %s \n",smspec_node->unit);
 }
+
+
+static bool smspec_node_equal_MISC( const smspec_node_type * node1, const smspec_node_type * node2) {
+  return util_string_equal( node1->keyword , node2->keyword);
+}
+
+
+/*
+  MISC variables are generally sorted to the end of the list,
+  but some special case variables come at the very beginning.
+*/
+
+static int smspec_node_cmp_MISC( const smspec_node_type * node1, const smspec_node_type * node2) {
+  static const char* early_vars[] = {"TIME",
+                                     "DAYS",
+                                     "DAY",
+                                     "MONTH",
+                                     "YEAR",
+                                     "YEARS"};
+
+  if (smspec_node_equal_MISC( node1, node2) )
+    return 0;
+
+  bool node1_early = false;
+  bool node2_early = false;
+
+  for (int i=0; i < 6; i++) {
+    if (util_string_equal( node1->keyword, early_vars[i] ))
+      node1_early = true;
+
+    if (util_string_equal( node2->keyword, early_vars[i] ))
+      node2_early = true;
+
+  }
+  if (node1_early && !node2_early)
+    return -1;
+
+  if (!node1_early && node2_early)
+    return 1;
+
+  return strcmp( node1->keyword, node2->keyword);
+}
+
+
+static int int_cmp(int v1, int v2) {
+  if (v1 < v2)
+    return -1;
+
+  if (v1 > v2)
+    return 1;
+
+  return 0;
+}
+
+static int smspec_node_cmp_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
+  int i_cmp = int_cmp( node1->lgr_ijk[0] , node2->lgr_ijk[0]);
+  if (i_cmp != 0)
+    return i_cmp;
+
+  int j_cmp = int_cmp( node1->lgr_ijk[1] , node2->lgr_ijk[1]);
+  if (j_cmp != 0)
+    return j_cmp;
+
+  return int_cmp( node1->lgr_ijk[2] , node2->lgr_ijk[2]);
+}
+
+
+static int smspec_node_cmp_KEYWORD_LGR_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
+  int keyword_cmp = strcmp( node1->keyword , node2->keyword);
+  if (keyword_cmp != 0)
+    return keyword_cmp;
+
+  int lgr_cmp = strcmp( node1->lgr_name , node2->lgr_name);
+  if (lgr_cmp != 0)
+    return lgr_cmp;
+
+  return smspec_node_cmp_LGRIJK( node1, node2);
+}
+
+
+static int smspec_node_cmp_KEYWORD_WGNAME_NUM( const smspec_node_type * node1, const smspec_node_type * node2) {
+  int keyword_cmp = strcmp( node1->keyword , node2->keyword);
+  if (keyword_cmp != 0)
+    return keyword_cmp;
+
+  int wgname_cmp = strcmp( node1->wgname , node2->wgname);
+  if (wgname_cmp != 0)
+    return wgname_cmp;
+
+  return int_cmp( node1->num , node2->num);
+}
+
+static int smspec_node_cmp_KEYWORD_WGNAME_LGR( const smspec_node_type * node1, const smspec_node_type * node2) {
+  int keyword_cmp = strcmp( node1->keyword , node2->keyword);
+  if (keyword_cmp != 0)
+    return keyword_cmp;
+
+  int wgname_cmp = strcmp( node1->wgname , node2->wgname);
+  if (wgname_cmp != 0)
+    return wgname_cmp;
+
+  return strcmp( node1->lgr_name , node2->lgr_name);
+}
+
+
+static int smspec_node_cmp_KEYWORD_WGNAME_LGR_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
+  int keyword_cmp = strcmp( node1->keyword , node2->keyword);
+  if (keyword_cmp != 0)
+    return keyword_cmp;
+
+  int wgname_cmp = strcmp( node1->wgname , node2->wgname);
+  if (wgname_cmp != 0)
+    return wgname_cmp;
+
+  int lgr_cmp = strcmp( node1->lgr_name , node2->lgr_name);
+  if (lgr_cmp != 0)
+    return lgr_cmp;
+
+  return smspec_node_cmp_LGRIJK( node1, node2);
+}
+
+
+
+
+static int smspec_node_cmp_KEYWORD_WGNAME( const smspec_node_type * node1, const smspec_node_type * node2) {
+  int keyword_cmp = strcmp( node1->keyword , node2->keyword);
+  if (keyword_cmp != 0)
+    return keyword_cmp;
+
+  return strcmp( node1->wgname , node2->wgname);
+}
+
+
+static int smspec_node_cmp_KEYWORD_NUM( const smspec_node_type * node1, const smspec_node_type * node2) {
+  int keyword_cmp = strcmp( node1->keyword , node2->keyword);
+  if (keyword_cmp != 0)
+    return keyword_cmp;
+
+  return int_cmp( node1->num , node2->num);
+}
+
+
+static int smspec_node_cmp_KEYWORD( const smspec_node_type * node1, const smspec_node_type * node2) {
+  return strcmp( node1->keyword , node2->keyword );
+}
+
+static int smspec_node_cmp_key1( const smspec_node_type * node1, const smspec_node_type * node2) {
+  return util_strcmp_int( node1->gen_key1 , node2->gen_key1 );
+}
+
+
+
+int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * node2) {
+  /* 1: Start with special casing for the MISC variables. */
+  if ((node1->var_type == ECL_SMSPEC_MISC_VAR) || (node2->var_type == ECL_SMSPEC_MISC_VAR))
+    return smspec_node_cmp_MISC( node1 , node2 );
+
+  /* 2: Sort according to variable type */
+  if (node1->var_type < node2->var_type)
+    return -1;
+
+  if (node1->var_type > node2->var_type)
+    return 1;
+
+  /* 3: Internal sort of variables of the same type. */
+  switch (node1->var_type) {
+
+  case( ECL_SMSPEC_FIELD_VAR):
+    return smspec_node_cmp_KEYWORD( node1, node2);
+
+  case( ECL_SMSPEC_WELL_VAR):
+  case( ECL_SMSPEC_GROUP_VAR):
+    return smspec_node_cmp_KEYWORD_WGNAME( node1, node2);
+
+  case( ECL_SMSPEC_BLOCK_VAR):
+  case( ECL_SMSPEC_REGION_VAR):
+  case( ECL_SMSPEC_REGION_2_REGION_VAR):
+  case( ECL_SMSPEC_AQUIFER_VAR):
+    return smspec_node_cmp_KEYWORD_NUM( node1, node2);
+
+  case( ECL_SMSPEC_COMPLETION_VAR):
+  case( ECL_SMSPEC_SEGMENT_VAR):
+    return smspec_node_cmp_KEYWORD_WGNAME_NUM( node1, node2);
+
+  case (ECL_SMSPEC_NETWORK_VAR):
+    return smspec_node_cmp_key1( node1, node2);
+
+  case( ECL_SMSPEC_LOCAL_BLOCK_VAR):
+    return smspec_node_cmp_KEYWORD_LGR_LGRIJK( node1, node2);
+
+  case( ECL_SMSPEC_LOCAL_WELL_VAR):
+    return smspec_node_cmp_KEYWORD_WGNAME_LGR( node1, node2);
+
+  case( ECL_SMSPEC_LOCAL_COMPLETION_VAR):
+    return smspec_node_cmp_KEYWORD_WGNAME_LGR_LGRIJK( node1, node2);
+
+  default:
+    /* Should not really end up here. */
+    return smspec_node_cmp_key1( node1, node2);
+  }
+}

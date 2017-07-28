@@ -279,6 +279,11 @@ foreach (name   ert_util_alloc_file_components
     add_test(NAME ${name} COMMAND ${name})
 endforeach ()
 
+add_executable(ecl_smspec_node ecl/tests/ecl_smspec_node.c)
+target_link_libraries( ecl_smspec_node ecl)
+add_test(NAME ecl_smspec_node COMMAND ecl_smspec_node)
+
+
 add_executable(ert_util_work_area util/tests/ert_util_work_area.c)
 target_link_libraries(ert_util_work_area ecl)
 add_test(NAME ert_util_work_area
