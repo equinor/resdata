@@ -21,6 +21,7 @@
 #define ERT_SMSPEC_NODE_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
