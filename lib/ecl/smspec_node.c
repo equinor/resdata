@@ -70,6 +70,7 @@ struct smspec_node_struct {
   bool                   historical;         /* Does the name end with 'H'? */
   int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
   float                  default_value;      /* Default value for this variable. */
+  bool                   valid;
 };
 
 
@@ -295,6 +296,7 @@ static void smspec_node_set_invalid_flags( smspec_node_type * smspec_node) {
   smspec_node->rate_variable  = false;
   smspec_node->total_variable = false;
   smspec_node->historical     = false;
+  smspec_node->valid          = false;
 }
 
 static char LAST_CHAR(const char * s) {
@@ -550,6 +552,7 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
   default:
     util_abort("%s: internal error - should not be here? \n" , __func__);
   }
+  smspec_node->valid = true;
 }
 
 
@@ -572,15 +575,17 @@ static void smspec_node_common_init( smspec_node_type * node , ecl_smspec_var_ty
 }
 
 
-
-bool smspec_node_init( smspec_node_type * smspec_node,
-                        ecl_smspec_var_type var_type ,
-                        const char * wgname  ,
-                        const char * keyword ,
-                        const char * unit    ,
-                        const char * key_join_string ,
-                        const int grid_dims[3] ,
-                        int num) {
+/*
+  This *should* become static.
+*/
+void smspec_node_init( smspec_node_type * smspec_node,
+                       ecl_smspec_var_type var_type ,
+                       const char * wgname  ,
+                       const char * keyword ,
+                       const char * unit    ,
+                       const char * key_join_string ,
+                       const int grid_dims[3] ,
+                       int num) {
 
   bool initOK    = true;
   bool wgnameOK = true;
@@ -591,31 +596,25 @@ bool smspec_node_init( smspec_node_type * smspec_node,
   switch (var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
     /* Completion variable : WGNAME & NUM */
-    if (wgnameOK) {
-      smspec_node_set_num( smspec_node , grid_dims , num );
-      smspec_node_set_wgname( smspec_node , wgname );
-    } else
+    smspec_node_set_num( smspec_node , grid_dims , num );
+    smspec_node_set_wgname( smspec_node , wgname );
+    if (!wgnameOK || num < 0)
       initOK = false;
     break;
   case(ECL_SMSPEC_GROUP_VAR):
     /* Group variable : WGNAME */
-    if (wgnameOK)
-      smspec_node_set_wgname( smspec_node , wgname );
-    else
-      initOK = false;
+    smspec_node_set_wgname( smspec_node , wgname );
+    initOK = wgnameOK;
     break;
   case(ECL_SMSPEC_WELL_VAR):
     /* Well variable : WGNAME */
-    if (wgnameOK)
-      smspec_node_set_wgname( smspec_node , wgname );
-    else
-      initOK = false;
+    smspec_node_set_wgname( smspec_node , wgname );
+    initOK = wgnameOK;
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
-    if (wgnameOK && num >= 0) {
-      smspec_node_set_wgname( smspec_node , wgname );
-      smspec_node_set_num( smspec_node , grid_dims , num );
-    } else
+    smspec_node_set_wgname( smspec_node , wgname );
+    smspec_node_set_num( smspec_node , grid_dims , num );
+    if (!wgnameOK || num < 0)
       initOK = false;
     break;
   case(ECL_SMSPEC_FIELD_VAR):
@@ -662,7 +661,6 @@ bool smspec_node_init( smspec_node_type * smspec_node,
 
   if (initOK)
     smspec_node_set_gen_keys( smspec_node , key_join_string );
-  return initOK;
 }
 
 /**
@@ -719,25 +717,21 @@ smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
   */
 
   smspec_node_type * smspec_node = smspec_node_alloc_new( param_index , default_value );
-  if (smspec_node_init( smspec_node , var_type , wgname , keyword , unit , key_join_string , grid_dims, num))
-    return smspec_node;
-  else {
-    smspec_node_free( smspec_node );
-    return NULL;
-  }
+  smspec_node_init( smspec_node , var_type , wgname , keyword , unit , key_join_string , grid_dims, num);
+  return smspec_node;
 }
 
 
 
-bool smspec_node_init_lgr( smspec_node_type * smspec_node ,
-                           ecl_smspec_var_type var_type ,
-                           const char * wgname  ,
-                           const char * keyword ,
-                           const char * unit    ,
-                           const char * lgr ,
-                           const char * key_join_string ,
-                           int   lgr_i, int lgr_j , int lgr_k
-                           ) {
+static void smspec_node_init_lgr( smspec_node_type * smspec_node ,
+                                  ecl_smspec_var_type var_type ,
+                                  const char * wgname  ,
+                                  const char * keyword ,
+                                  const char * unit    ,
+                                  const char * lgr ,
+                                  const char * key_join_string ,
+                                  int   lgr_i, int lgr_j , int lgr_k
+                                  ) {
   bool initOK = true;
   bool wgnameOK = true;
   if ((wgname != NULL) && (IS_DUMMY_WELL(wgname)))
@@ -746,30 +740,26 @@ bool smspec_node_init_lgr( smspec_node_type * smspec_node ,
   smspec_node_common_init( smspec_node , var_type , keyword , unit );
   switch (var_type) {
   case(ECL_SMSPEC_LOCAL_WELL_VAR):
-    if (wgnameOK) {
-      smspec_node_set_wgname( smspec_node , wgname );
-      smspec_node_set_lgr_name( smspec_node , lgr );
-    } else
-      initOK = false;
+    smspec_node_set_wgname( smspec_node , wgname );
+    smspec_node_set_lgr_name( smspec_node , lgr );
+    initOK = wgnameOK;
     break;
   case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
     smspec_node_set_lgr_name( smspec_node , lgr );
     smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
     break;
   case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
-    if (wgnameOK) {
-      smspec_node_set_lgr_name( smspec_node , lgr );
-      smspec_node_set_wgname( smspec_node , wgname );
-      smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
-    } else
-      initOK = false;
+    smspec_node_set_lgr_name( smspec_node , lgr );
+    smspec_node_set_wgname( smspec_node , wgname );
+    smspec_node_set_lgr_ijk( smspec_node , lgr_i, lgr_j , lgr_k );
+    initOK = wgnameOK;
     break;
   default:
     util_abort("%s: internal error:  in LGR function with  non-LGR keyword:%s \n",__func__ , keyword);
   }
+
   if (initOK)
     smspec_node_set_gen_keys( smspec_node , key_join_string );
-  return initOK;
 }
 
 
@@ -784,12 +774,8 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                           int param_index , float default_value) {
 
   smspec_node_type * smspec_node = smspec_node_alloc_new( param_index , default_value );
-  if (smspec_node_init_lgr( smspec_node , var_type , wgname , keyword , unit , lgr , key_join_string , lgr_i, lgr_j , lgr_k))
-    return smspec_node;
-  else {
-    smspec_node_free( smspec_node );
-    return NULL;
-  }
+  smspec_node_init_lgr( smspec_node , var_type , wgname , keyword , unit , lgr , key_join_string , lgr_i, lgr_j , lgr_k);
+  return smspec_node;
 }
 
 smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
@@ -820,6 +806,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
         memcpy( copy->lgr_ijk, node->lgr_ijk, 3 * sizeof( * node->lgr_ijk ) );
     }
 
+    copy->valid = node->valid;
     copy->rate_variable = node->rate_variable;
     copy->total_variable = node->total_variable;
     copy->historical = node->historical;
@@ -898,6 +885,11 @@ bool smspec_node_is_total( const smspec_node_type * smspec_node ){
 
 bool smspec_node_is_historical( const smspec_node_type * smspec_node ){
   return smspec_node->historical;
+}
+
+
+bool smspec_node_is_valid( const smspec_node_type * smspec_node ){
+  return smspec_node->valid;
 }
 
 
@@ -1109,6 +1101,16 @@ static int smspec_node_cmp_KEYWORD_WGNAME( const smspec_node_type * node1, const
   if (keyword_cmp != 0)
     return keyword_cmp;
 
+  if (IS_DUMMY_WELL( node1->wgname )) {
+    if (IS_DUMMY_WELL( node2->wgname ))
+      return 0;
+    else
+      return 1;
+  }
+
+  if (IS_DUMMY_WELL( node2->wgname ))
+    return -1;
+
   return strcmp( node1->wgname , node2->wgname);
 }
 
@@ -1181,3 +1183,5 @@ int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * no
     return smspec_node_cmp_key1( node1, node2);
   }
 }
+
+

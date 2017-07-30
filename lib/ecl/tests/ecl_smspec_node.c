@@ -75,6 +75,7 @@ void test_cmp_well() {
   smspec_node_type * well_node1_2 = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
   smspec_node_type * well_node2_1 = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WWCT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
   smspec_node_type * well_node2_2 = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WWWT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * well_node_dummy = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , DUMMY_WELL , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
 
   test_assert_int_equal( smspec_node_cmp( well_node1_1 , well_node1_1 ), 0);
   test_assert_int_equal( smspec_node_cmp( well_node2_2 , well_node2_2 ), 0);
@@ -86,11 +87,15 @@ void test_cmp_well() {
   test_assert_true( smspec_node_cmp( well_node1_2, well_node1_1) > 0 );
   test_assert_true( smspec_node_cmp( well_node1_2, well_node2_1) < 0 );
 
+  test_assert_true( smspec_node_cmp( well_node1_1, well_node_dummy) < 0 );
+  test_assert_false( smspec_node_is_valid( well_node_dummy ));
+  test_assert_true( smspec_node_is_valid( well_node1_1 ));
 
   smspec_node_free( well_node1_1 );
   smspec_node_free( well_node2_1 );
   smspec_node_free( well_node1_2 );
   smspec_node_free( well_node2_2 );
+  smspec_node_free( well_node_dummy );
 }
 
 

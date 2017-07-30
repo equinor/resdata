@@ -76,17 +76,15 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
 
   bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type * node2);
 
-  
-  bool smspec_node_init( smspec_node_type * smspec_node, 
-                         ecl_smspec_var_type var_type , 
-                         const char * wgname  , 
-                         const char * keyword , 
-                         const char * unit    , 
-                         const char * key_join_string , 
-                         const int grid_dims[3] , 
+  void smspec_node_init( smspec_node_type * smspec_node,
+                         ecl_smspec_var_type var_type ,
+                         const char * wgname  ,
+                         const char * keyword ,
+                         const char * unit    ,
+                         const char * key_join_string ,
+                         const int grid_dims[3] ,
                          int num);
 
-  
   smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type , 
                                         const char * wgname  , 
                                         const char * keyword , 
@@ -124,6 +122,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   bool                smspec_node_is_rate( const smspec_node_type * smspec_node );
   bool                smspec_node_is_total( const smspec_node_type * smspec_node );
   bool                smspec_node_is_historical( const smspec_node_type * smspec_node );
+  bool                smspec_node_is_valid( const smspec_node_type * smspec_node );
   bool                smspec_node_need_nums( const smspec_node_type * smspec_node );
   void                smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream);
 

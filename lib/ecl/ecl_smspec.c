@@ -292,12 +292,14 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
   for (int i=0; i < ecl_smspec_num_nodes( self ); i++) {
     const smspec_node_type * self_node = ecl_smspec_iget_node( self , i );
-    int self_index = smspec_node_get_params_index( self_node );
-    const char * key = smspec_node_get_gen_key1( self_node );
-    if (ecl_smspec_has_general_var( other , key)) {
-      const smspec_node_type * other_node = ecl_smspec_get_general_var_node( other , key);
-      int other_index = smspec_node_get_params_index(other_node);
-      mapping[ self_index ]  =  other_index;
+    if (smspec_node_is_valid( self_node )) {
+      int self_index = smspec_node_get_params_index( self_node );
+      const char * key = smspec_node_get_gen_key1( self_node );
+      if (ecl_smspec_has_general_var( other , key)) {
+        const smspec_node_type * other_node = ecl_smspec_get_general_var_node( other , key);
+        int other_index = smspec_node_get_params_index(other_node);
+        mapping[ self_index ]  =  other_index;
+      }
     }
   }
 
@@ -1036,13 +1038,13 @@ void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * sm
     well or group name can be left at NULL. In that case the node is
     not installed in the different indexes.
   */
-  // var_type == ECL_SMSPEC_INVALID_VAR??
-  if (smspec_node_get_gen_key1( smspec_node ) != NULL) {
+  if (smspec_node_is_valid( smspec_node )) {
     ecl_smspec_install_gen_keys( ecl_smspec , smspec_node );
     ecl_smspec_install_special_keys( ecl_smspec , smspec_node );
+
+    if (smspec_node_need_nums( smspec_node ))
+      ecl_smspec->need_nums = true;
   }
-  if (smspec_node_need_nums( smspec_node ))
-    ecl_smspec->need_nums = true;
 }
 
 
@@ -1089,10 +1091,8 @@ void ecl_smspec_add_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smsp
 
 
 void ecl_smspec_init_var( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node , const char * keyword , const char * wgname , int num, const char * unit ) {
-  if (smspec_node_init( smspec_node , ecl_smspec_identify_var_type( keyword ) , wgname , keyword , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num ))
-    ecl_smspec_index_node( ecl_smspec , smspec_node );
-  else
-    util_abort("%s: initializing node failed \n",__func__);
+  smspec_node_init( smspec_node , ecl_smspec_identify_var_type( keyword ) , wgname , keyword , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num );
+  ecl_smspec_index_node( ecl_smspec , smspec_node );
 }
 
 
@@ -1193,10 +1193,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);
 
 
-        if (smspec_node != NULL) {
-          /** OK - we know this is valid shit. */
-          ecl_smspec_add_node( ecl_smspec , smspec_node );
-        }
+        ecl_smspec_add_node( ecl_smspec , smspec_node );
 
         free( kw );
         free( well );
