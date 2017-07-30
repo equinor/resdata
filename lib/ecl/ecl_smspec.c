@@ -1874,3 +1874,14 @@ void ecl_smspec_update_wgname( ecl_smspec_type * smspec , smspec_node_type * nod
 char * ecl_smspec_alloc_well_key( const ecl_smspec_type * smspec , const char * keyword , const char * wgname) {
   return smspec_alloc_well_key( smspec->key_join_string , keyword , wgname );
 }
+
+
+void ecl_smspec_sort( ecl_smspec_type * smspec ) {
+  vector_sort( smspec->smspec_nodes , smspec_node_cmp__);
+
+  for (int i=0; i < vector_get_size( smspec->smspec_nodes ); i++) {
+    smspec_node_type * node = vector_iget( smspec->smspec_nodes , i );
+    smspec_node_set_params_index( node , i );
+  }
+
+}

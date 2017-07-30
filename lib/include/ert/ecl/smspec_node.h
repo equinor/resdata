@@ -137,6 +137,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   int smspec_node_get_R2( const smspec_node_type * smpsec_node );
 
   int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * node2);
+  int smspec_node_cmp__( const void * node1, const void * node2);
 
 #ifdef __cplusplus
 }
