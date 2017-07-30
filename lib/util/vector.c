@@ -597,6 +597,15 @@ int_vector_type * vector_alloc_sort_perm(const vector_type * vector , vector_cmp
 }
 
 
+void vector_permute(vector_type * vector , const int_vector_type * perm_vector) {
+  node_data_type ** new_data = util_calloc( vector->size , sizeof * new_data );
+  for (int index = 0; index < vector->size; index++) {
+    int perm_index = int_vector_iget( perm_vector , index );
+    new_data[index] = vector->data[ perm_index ];
+  }
+  free(vector->data);
+  vector->data = new_data;
+}
 
 
 
