@@ -370,7 +370,6 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
   smspec_node_set_default( node , default_value );
 
   node->wgname        = NULL;
-  node->num           = SMSPEC_NUMS_INVALID;
   node->ijk           = NULL;
 
   node->gen_key1      = NULL;
@@ -413,6 +412,21 @@ static void smspec_node_set_lgr_ijk( smspec_node_type * index , int lgr_i , int 
 }
 
 
+static void smspec_node_init_num( smspec_node_type * node , ecl_smspec_var_type var_type) {
+  switch( node->var_type ) {
+  case(ECL_SMSPEC_WELL_VAR):
+    node->num = SMSPEC_NUMS_WELL;
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    node->num = SMSPEC_NUMS_GROUP;
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    node->num = SMSPEC_NUMS_FIELD;
+    break;
+  default:
+    node->num = SMSPEC_NUMS_INVALID;
+  }
+}
 static void smspec_node_set_num( smspec_node_type * index , const int grid_dims[3] , int num) {
   if (num == SMSPEC_NUMS_INVALID)
     util_abort("%s: explicitly trying to set nums == SMSPEC_NUMS_INVALID - seems like a bug?!\n",__func__);
@@ -548,6 +562,7 @@ static void smspec_node_common_init( smspec_node_type * node , ecl_smspec_var_ty
     smspec_node_set_keyword( node , keyword);
     node->var_type = var_type;
     smspec_node_set_flags( node );
+    smspec_node_init_num( node , var_type );
   } else
     util_abort("%s: trying to re-init smspec node with keyword:%s - invalid \n",__func__ , keyword );
 }

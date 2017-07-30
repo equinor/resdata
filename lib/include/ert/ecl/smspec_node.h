@@ -57,6 +57,9 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
 
 
 #define SMSPEC_NUMS_INVALID   -991199
+#define SMSPEC_NUMS_WELL       1
+#define SMSPEC_NUMS_GROUP      2
+#define SMSPEC_NUMS_FIELD      0
 
   typedef struct smspec_node_struct smspec_node_type;
 
