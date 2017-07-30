@@ -346,12 +346,15 @@ void ecl_smspec_lock( ecl_smspec_type * smspec ) {
 static ecl_data_type get_wgnames_type(const ecl_smspec_type * smspec) {
   size_t max_len = 0;
   for(int i = 0; i < ecl_smspec_num_nodes(smspec); ++i) {
-    const char * name = smspec_node_get_wgname(ecl_smspec_iget_node(smspec, i));
-    if(name != NULL)
+    const smspec_node_type * node = ecl_smspec_iget_node(smspec, i);
+    if (smspec_node_is_valid( node )) {
+      const char * name = smspec_node_get_wgname( node );
+      if(name)
         max_len = util_size_t_max(max_len, strlen(name));
+    }
   }
 
-  return max_len <= 8 ? ECL_CHAR : ECL_STRING(max_len);
+  return max_len <= ECL_STRING8_LENGTH ? ECL_CHAR : ECL_STRING(max_len);
 }
 
 // DIMENS
@@ -447,7 +450,7 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
           ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
           {
             const char * wgname = DUMMY_WELL;
-            if (smspec_node_get_wgname( smspec_node ) != NULL)
+            if (smspec_node_get_wgname( smspec_node ))
               wgname = smspec_node_get_wgname( smspec_node );
             ecl_kw_iset_string_ptr( wgnames_kw , i , wgname);
           }
