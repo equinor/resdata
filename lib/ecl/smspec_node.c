@@ -74,32 +74,9 @@ struct smspec_node_struct {
 };
 
 
-static bool string_equal(const char * s1 , const char * s2)
-{
-  if ((s1 == NULL) && (s2 == NULL))
-    return true;
-  else
-    return util_string_equal( s1 , s2 );
-}
 
 bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type * node2) {
-  if ((node1->params_index == node2->params_index) &&
-      (node1->num == node2->num) &&
-      (node1->var_type == node2->var_type) &&
-      (string_equal( node1->keyword, node2->keyword)) &&
-      (string_equal( node1->wgname, node2->wgname)) &&
-      (string_equal( node1->unit, node2->unit)) &&
-      (string_equal( node1->lgr_name, node2->lgr_name)))
-    {
-      if (node1->lgr_ijk)
-        return ((node1->lgr_ijk[0] == node2->lgr_ijk[0]) &&
-                (node1->lgr_ijk[1] == node2->lgr_ijk[1]) &&
-                (node1->lgr_ijk[2] == node2->lgr_ijk[2]));
-
-      return true;
-    }
-
-  return false;
+  return smspec_node_cmp( node1 , node2 ) == 0;
 }
 
 
@@ -129,6 +106,7 @@ bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type 
 #define ECL_SUM_KEYFMT_LOCAL_WELL             "%s%s%s%s%s"
 
 UTIL_SAFE_CAST_FUNCTION( smspec_node , SMSPEC_TYPE_ID )
+static UTIL_SAFE_CAST_FUNCTION_CONST( smspec_node , SMSPEC_TYPE_ID )
 
 
 char * smspec_alloc_block_num_key( const char * join_string , const char * keyword , int num) {
@@ -1184,4 +1162,8 @@ int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * no
   }
 }
 
+int smspec_node_cmp__( const void * node1, const void * node2) {
+  return smspec_node_cmp( smspec_node_safe_cast_const( node1 ),
+                          smspec_node_safe_cast_const( node2 ));
+}
 
