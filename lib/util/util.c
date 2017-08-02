@@ -4595,15 +4595,6 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 }
 
 
-
-void util_fread_from_buffer(void * ptr , size_t element_size , size_t items , char ** buffer) {
-  int bytes = element_size * items;
-  memcpy( ptr , *buffer , bytes);
-  *buffer += bytes;
-}
-
-
-
 #undef ABORT_READ
 #undef ABORT_WRITE
 
