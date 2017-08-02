@@ -194,98 +194,52 @@ void buffer_clear( buffer_type * buffer ) {
 }
 
 
-/*****************************************************************/
-/**
-    Observe that it is the functions with _safe_ in the name which
-    most closely mimicks the behaviour of fread(), and fwrite() -
-    these functions will *NOT* abort if the buffer is to small,
-    instead they will just return the number of items read/written,
-    and it is the responsability of the calling scope to check the
-    return values.
-
-    The functions buffer_fread() and buffer_fwrite() will abort if
-    read/write to buffer failed.
-*/
-
-
-
-static size_t buffer_fread__(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items, bool abort_on_error) {
+size_t buffer_fread(buffer_type * buffer,
+                    void * target_ptr,
+                    size_t item_size,
+                    size_t items) {
   size_t remaining_size  = buffer->content_size - buffer->pos;
   size_t remaining_items = remaining_size / item_size;
-  size_t read_items      = util_size_t_min( items , remaining_items );
-  size_t read_bytes      = read_items * item_size;
+  if (remaining_items < items)
+    util_abort("%s: read beyond the length of the buffer (%d exceeds %d)\n",
+               __func__, items, remaining_items);
 
-  memcpy( target_ptr , &buffer->data[buffer->pos] , read_bytes );
+  size_t read_bytes = items * item_size;
+
+  memcpy(target_ptr, &buffer->data[buffer->pos], read_bytes);
   buffer->pos += read_bytes;
 
-  if (read_items < items) {
-    /* The buffer was not large enough - what to do now???? */
-    if (abort_on_error)
-      util_abort("%s: tried to read beyond the length of the buffer: Wanted:%ld Size:%ld \n",__func__ , items , read_items);
-    else
-      /* OK we emulate fread() behaviour - setting errno to EOVERFLOW*/
-      errno = ENOMEM;//EOVERFLOW;
-  }
-
-  return read_items;
-}
-
-
-size_t buffer_safe_fread(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items) {
-  return buffer_fread__(buffer , target_ptr , item_size , items , false);
-}
-
-
-size_t buffer_fread(buffer_type * buffer , void * target_ptr , size_t item_size , size_t items) {
-  return buffer_fread__(buffer , target_ptr , item_size , items , true);
+  return items;
 }
 
 
 /*****************************************************************/
 
 
-static size_t buffer_fwrite__(buffer_type * buffer , const void * src_ptr , size_t item_size , size_t items, bool abort_on_error) {
-  size_t remaining_size  = buffer->alloc_size - buffer->pos;
-  size_t target_size     = item_size * items;
+
+size_t buffer_fwrite(buffer_type * buffer,
+                     const void * src_ptr,
+                     size_t item_size,
+                     size_t items) {
+  size_t remaining_size = buffer->alloc_size - buffer->pos;
+  size_t target_size    = item_size * items;
 
   if (target_size > remaining_size) {
-    buffer_resize__(buffer , buffer->pos + 2 * (item_size * items) , abort_on_error);
-    /**
-       OK - now we have the buffer size we are going to get.
-    */
+    buffer_resize__(buffer , buffer->pos + 2 * (item_size * items), true);
     remaining_size = buffer->alloc_size - buffer->pos;
   }
 
+  size_t remaining_items = remaining_size / item_size;
+  size_t write_items     = util_size_t_min( items , remaining_items );
+  size_t write_bytes     = write_items * item_size;
 
-  {
-    size_t remaining_items = remaining_size / item_size;
-    size_t write_items     = util_size_t_min( items , remaining_items );
-    size_t write_bytes     = write_items * item_size;
+  memcpy( &buffer->data[buffer->pos] , src_ptr , write_bytes );
+  buffer->pos += write_bytes;
 
-    memcpy( &buffer->data[buffer->pos] , src_ptr , write_bytes );
-    buffer->pos += write_bytes;
-
-    if (write_items < items) {
-      /* The buffer was not large enough - what to do now???? */
-      if (abort_on_error)
-        util_abort("%s: failed to write %d elements to the buffer \n",__func__ , items); /* This code is never executed - abort is in resize__(); */
-      else
-        /* OK we emulate fwrite() behaviour - setting errno to ENOMEM */
-        errno = ENOMEM;
-    }
-    buffer->content_size = util_size_t_max(buffer->content_size , buffer->pos);
-    return write_items;
-  }
-}
-
-
-size_t buffer_safe_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_size , size_t items) {
-  return buffer_fwrite__(buffer , src_ptr , item_size , items , false);
-}
-
-
-size_t buffer_fwrite(buffer_type * buffer , const void * src_ptr , size_t item_size , size_t items) {
-  return buffer_fwrite__(buffer , src_ptr , item_size , items , true);
+  if (write_items < items)
+    util_abort("%s: failed to write %d elements to the buffer \n",__func__ , items);
+  buffer->content_size = util_size_t_max(buffer->content_size , buffer->pos);
+  return write_items;
 }
 
 
@@ -321,7 +275,8 @@ void buffer_fseek(buffer_type * buffer , ssize_t offset , int whence) {
   if ((new_pos >= 0) && (new_pos <= buffer->content_size))
     buffer->pos = new_pos;
   else
-    util_abort("%s: tried to seek to position:%ld - outside of bounds: [0,%d) \n",__func__ , new_pos , buffer->content_size);
+    util_abort("%s: tried to seek to position:%ld - outside of bounds: [0,%d) \n",
+               __func__ , new_pos , buffer->content_size);
 }
 
 
@@ -331,34 +286,36 @@ void buffer_fskip(buffer_type * buffer, ssize_t offset) {
 
 
 int buffer_fread_int(buffer_type * buffer) {
-  int value;
-  buffer_fread(buffer , &value , sizeof value , 1);
+  int value = 0;
+  int read = buffer_fread(buffer, &value, sizeof value, 1);
+  if (read != 1)
+      util_abort("%s: read mismatch, read %d expected to read %d\n",
+                 __func__, read, 1);
   return value;
 }
 
 
 bool buffer_fread_bool(buffer_type * buffer) {
-  bool value;
-  buffer_fread(buffer , &value , sizeof value , 1);
+  bool value = false;
+  buffer_fread(buffer, &value, sizeof value, 1);
   return value;
 }
 
 
 long int buffer_fread_long(buffer_type * buffer) {
-  long value;
-  buffer_fread(buffer , &value , sizeof value , 1);
+  long value = 0L;
+  buffer_fread(buffer, &value, sizeof value, 1);
   return value;
 }
 
 
-int buffer_fgetc( buffer_type * buffer ) {
+int buffer_fgetc(buffer_type * buffer) {
   if (buffer->pos == buffer->content_size)
     return EOF;
-  else {
-    unsigned char byte;
-    buffer_fread( buffer , &byte , sizeof byte , 1 );
-    return byte;
-  }
+
+  unsigned char byte = 0;
+  buffer_fread(buffer, &byte, sizeof byte, 1);
+  return byte;
 }
 
 /**
