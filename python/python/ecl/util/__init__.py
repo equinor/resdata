@@ -39,47 +39,6 @@ The modules included in the util package are:
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
-import ecl
-from cwrap import Prototype
-
-
-class UtilPrototype(Prototype):
-    lib = ecl.load("libecl")
-
-    def __init__(self, prototype, bind=True):
-        super(UtilPrototype, self).__init__(UtilPrototype.lib, prototype, bind=bind)
-
-
-
-from .version import Version
-
-from .enums import RngAlgTypeEnum, RngInitModeEnum, LLSQResultEnum
-
-from .ctime import CTime
-
-from .permutation_vector import PermutationVector
-from .vector_template import VectorTemplate
-from .double_vector import DoubleVector
-from .int_vector import IntVector
-from .bool_vector import BoolVector
-from .time_vector import TimeVector
-from .stringlist import StringList
-from .rng import RandomNumberGenerator
-from .matrix import Matrix
-from .stat import quantile, quantile_sorted, polyfit
-from .log import Log
-from .lookup_table import LookupTable
-from .buffer import Buffer
-from .hash import Hash, StringHash, DoubleHash, IntegerHash
-from .substitution_list import SubstitutionList
-from .ui_return import UIReturn
-from .thread_pool import ThreadPool
-from .cthread_pool import CThreadPool, startCThreadPool
-from .install_abort_signals import installAbortSignals, updateAbortSignals
-from .profiler import Profiler
-from .arg_pack import ArgPack
-from .path_format import PathFormat
-
 
 
 
@@ -134,3 +93,48 @@ def monkey_the_camel(class_, camel, method_, method_type=None):
     elif method_type == classmethod:
         warned_method = classmethod(warned_method)
     setattr(class_, camel, warned_method)
+
+### END OF monkey_the_camel
+
+
+
+import ecl
+from cwrap import Prototype
+
+
+class UtilPrototype(Prototype):
+    lib = ecl.load("libecl")
+
+    def __init__(self, prototype, bind=True):
+        super(UtilPrototype, self).__init__(UtilPrototype.lib, prototype, bind=bind)
+
+
+
+from .version import Version
+
+from .enums import RngAlgTypeEnum, RngInitModeEnum, LLSQResultEnum
+
+from .ctime import CTime
+
+from .permutation_vector import PermutationVector
+from .vector_template import VectorTemplate
+from .double_vector import DoubleVector
+from .int_vector import IntVector
+from .bool_vector import BoolVector
+from .time_vector import TimeVector
+from .stringlist import StringList
+from .rng import RandomNumberGenerator
+from .matrix import Matrix
+from .stat import quantile, quantile_sorted, polyfit
+from .log import Log
+from .lookup_table import LookupTable
+from .buffer import Buffer
+from .hash import Hash, StringHash, DoubleHash, IntegerHash
+from .substitution_list import SubstitutionList
+from .ui_return import UIReturn
+from .thread_pool import ThreadPool
+from .cthread_pool import CThreadPool, startCThreadPool
+from .install_abort_signals import installAbortSignals, updateAbortSignals
+from .profiler import Profiler
+from .arg_pack import ArgPack
+from .path_format import PathFormat

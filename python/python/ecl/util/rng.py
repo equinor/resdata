@@ -16,6 +16,7 @@
 import os.path
 
 from cwrap import BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.util import UtilPrototype
 from ecl.util.enums import RngInitModeEnum, RngAlgTypeEnum
 
@@ -23,15 +24,15 @@ from ecl.util.enums import RngInitModeEnum, RngAlgTypeEnum
 class RandomNumberGenerator(BaseCClass):
     TYPE_NAME = "rng"
 
-    _rng_alloc = UtilPrototype("void* rng_alloc(rng_alg_type_enum, rng_init_mode_enum)" , bind = False)
-    _free = UtilPrototype("void rng_free(rng)")
-    _get_double = UtilPrototype("double rng_get_double(rng)")
-    _get_int = UtilPrototype("int rng_get_int(rng, int)")
+    _rng_alloc   = UtilPrototype("void* rng_alloc(rng_alg_type_enum, rng_init_mode_enum)", bind=False)
+    _free        = UtilPrototype("void rng_free(rng)")
+    _get_double  = UtilPrototype("double rng_get_double(rng)")
+    _get_int     = UtilPrototype("int rng_get_int(rng, int)")
     _get_max_int = UtilPrototype("uint rng_get_max_int(rng)")
-    _state_size = UtilPrototype("int rng_state_size(rng)")
-    _set_state = UtilPrototype("void rng_set_state(rng , char*)")
-    _load_state = UtilPrototype("void rng_load_state(rng , char*)")
-    _save_state = UtilPrototype("void rng_save_state(rng , char*)")
+    _state_size  = UtilPrototype("int rng_state_size(rng)")
+    _set_state   = UtilPrototype("void rng_set_state(rng, char*)")
+    _load_state  = UtilPrototype("void rng_load_state(rng, char*)")
+    _save_state  = UtilPrototype("void rng_save_state(rng, char*)")
 
     def __init__(self, alg_type=RngAlgTypeEnum.MZRAN, init_mode=RngInitModeEnum.INIT_CLOCK):
         assert isinstance(alg_type, RngAlgTypeEnum)
@@ -40,20 +41,20 @@ class RandomNumberGenerator(BaseCClass):
         c_ptr = self._rng_alloc(alg_type, init_mode)
         super(RandomNumberGenerator, self).__init__(c_ptr)
 
-    def stateSize(self):
+    def state_size(self):
         return self._state_size()
 
-    def setState(self, seed_string):
+    def set_state(self, seed_string):
         state_size = self.stateSize()
         if len(seed_string) < state_size:
             raise ValueError("The seed string must be at least %d characters long" % self.stateSize())
-        self._set_state( seed_string)
+        self._set_state(seed_string)
 
-    def getDouble(self):
+    def get_double(self):
         """ @rtype: float """
         return self._get_double()
 
-    def getInt(self, max=None):
+    def get_int(self, max=None):
         """ @rtype: float """
         if max is None:
             max = self._get_max_int()
@@ -63,19 +64,26 @@ class RandomNumberGenerator(BaseCClass):
     def free(self):
         self._free()
 
-    def loadState(self , seed_file):
+    def load_state(self, seed_file):
         """
         Will seed the RNG from the file @seed_file.
         """
-        if os.path.isfile( seed_file ):
-            self._load_state( seed_file )
+        if os.path.isfile(seed_file):
+            self._load_state(seed_file)
         else:
             raise IOError("No such file: %s" % seed_file)
 
 
-    def saveState(self , seed_file):
+    def save_state(self, seed_file):
         """
         Will save the state of the rng to @seed_file
         """
-        self._save_state( seed_file )
-        
+        self._save_state(seed_file)
+
+
+monkey_the_camel(RandomNumberGenerator, 'stateSize', RandomNumberGenerator.state_size)
+monkey_the_camel(RandomNumberGenerator, 'setState', RandomNumberGenerator.set_state)
+monkey_the_camel(RandomNumberGenerator, 'getDouble', RandomNumberGenerator.get_double)
+monkey_the_camel(RandomNumberGenerator, 'getInt', RandomNumberGenerator.get_int)
+monkey_the_camel(RandomNumberGenerator, 'loadState', RandomNumberGenerator.load_state)
+monkey_the_camel(RandomNumberGenerator, 'saveState', RandomNumberGenerator.save_state)

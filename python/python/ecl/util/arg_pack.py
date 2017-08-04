@@ -1,18 +1,18 @@
-#  Copyright (C) 2015  Statoil ASA, Norway. 
-#   
-#  The file 'arg_pack.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2015  Statoil ASA, Norway.
+#
+#  The file 'arg_pack.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 from cwrap import BaseCClass
 from ecl.util import UtilPrototype
@@ -21,13 +21,14 @@ from ecl.util import UtilPrototype
 class ArgPack(BaseCClass):
     TYPE_NAME = "arg_pack"
 
-    _alloc = UtilPrototype("void* arg_pack_alloc()" , bind = False)
+    _alloc = UtilPrototype("void* arg_pack_alloc()", bind=False)
     _append_int = UtilPrototype("void arg_pack_append_int(arg_pack, int)")
     _append_double = UtilPrototype("void arg_pack_append_double(arg_pack, double)")
     _append_ptr = UtilPrototype("void arg_pack_append_ptr(arg_pack, void*)")
 
     _size = UtilPrototype("int arg_pack_size(arg_pack)")
     _free = UtilPrototype("void arg_pack_free(arg_pack)")
+
 
     def __init__(self, *args):
         c_ptr = self._alloc()
@@ -36,7 +37,7 @@ class ArgPack(BaseCClass):
         for arg in args:
             self.append(arg)
 
-            
+
     def append(self, data):
         if isinstance(data, int):
             self._append_int(data)
@@ -54,4 +55,4 @@ class ArgPack(BaseCClass):
 
 
     def free(self):
-        self._free( )
+        self._free()

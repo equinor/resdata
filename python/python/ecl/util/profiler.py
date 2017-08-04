@@ -9,6 +9,7 @@ import cProfile
 import pstats
 import sys
 
+from ecl.util import monkey_the_camel
 
 class Profiler(object):
 
@@ -16,12 +17,12 @@ class Profiler(object):
     """ :type: Profile """
 
     @classmethod
-    def startProfiler(cls, subcalls=True, builtins=True):
+    def start_profiler(cls, subcalls=True, builtins=True):
         cls.__profiler = cProfile.Profile()
         cls.__profiler.enable(subcalls=subcalls, builtins=builtins)
 
     @classmethod
-    def stopProfiler(cls, sort_method="cumulative"):
+    def stop_profiler(cls, sort_method="cumulative"):
         if cls.__profiler is not None:
             cls.__profiler.disable()
             stream = StringIO()
@@ -32,3 +33,5 @@ class Profiler(object):
         else:
             sys.stderr.write("WARNING: Profiler has not been started!\n")
 
+monkey_the_camel(Profiler, 'startProfiler', Profiler.start_profiler, classmethod)
+monkey_the_camel(Profiler, 'stopProfiler', Profiler.stop_profiler, classmethod)

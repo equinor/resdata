@@ -1,19 +1,18 @@
-
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'matrix.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'matrix.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 
 # The Matrix class implemented here wraps the C matrix implementation
@@ -28,24 +27,25 @@
 # choice.
 
 
-from cwrap import BaseCClass,CFILE
+from cwrap import BaseCClass, CFILE
+from ecl.util import monkey_the_camel
 from ecl.util import UtilPrototype
 
 
 class Matrix(BaseCClass):
-    _matrix_alloc      = UtilPrototype("void*  matrix_alloc(int, int )" , bind = False)
-    _matrix_alloc_identity = UtilPrototype("matrix_obj  matrix_alloc_identity( int )" , bind = False)
+    _matrix_alloc      = UtilPrototype("void*  matrix_alloc(int, int)", bind=False)
+    _matrix_alloc_identity = UtilPrototype("matrix_obj  matrix_alloc_identity(int)", bind=False)
     _alloc_transpose   = UtilPrototype("matrix_obj  matrix_alloc_transpose(matrix)")
     _inplace_transpose = UtilPrototype("void        matrix_inplace_transpose(matrix)")
-    _copy              = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
-    _sub_copy          = UtilPrototype("matrix_obj  matrix_alloc_sub_copy(matrix, int , int , int , int)" )
+    _copy              = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)")
+    _sub_copy          = UtilPrototype("matrix_obj  matrix_alloc_sub_copy(matrix, int, int, int, int)")
     _free              = UtilPrototype("void   matrix_free(matrix)")
-    _iget              = UtilPrototype("double matrix_iget( matrix , int , int )")
-    _iset              = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
-    _set_all           = UtilPrototype("void   matrix_scalar_set( matrix , double)")
-    _scale_column      = UtilPrototype("void matrix_scale_column(matrix , int , double)")
-    _scale_row         = UtilPrototype("void matrix_scale_row(matrix , int , double)")
-    _copy_column       = UtilPrototype("void matrix_copy_column(matrix , matrix , int , int)" , bind = False)
+    _iget              = UtilPrototype("double matrix_iget(matrix, int, int)")
+    _iset              = UtilPrototype("void   matrix_iset(matrix, int, int, double)")
+    _set_all           = UtilPrototype("void   matrix_scalar_set(matrix, double)")
+    _scale_column      = UtilPrototype("void matrix_scale_column(matrix, int, double)")
+    _scale_row         = UtilPrototype("void matrix_scale_row(matrix, int, double)")
+    _copy_column       = UtilPrototype("void matrix_copy_column(matrix, matrix, int, int)", bind=False)
     _rows              = UtilPrototype("int matrix_get_rows(matrix)")
     _columns           = UtilPrototype("int matrix_get_columns(matrix)")
     _equal             = UtilPrototype("bool matrix_equal(matrix, matrix)")
@@ -53,9 +53,9 @@ class Matrix(BaseCClass):
     _fprint            = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
     _random_init       = UtilPrototype("void matrix_random_init(matrix, rng)")
     _dump_csv          = UtilPrototype("void matrix_dump_csv(matrix, char*)")
-    
+
     # Requires BLAS!
-    _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False)
+    _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)", bind=False)
 
 
     # Requires BLAS!
@@ -64,19 +64,19 @@ class Matrix(BaseCClass):
         """
         Will return a new matrix which is matrix product of m1 and m2.
         """
-        if m1.columns( ) == m2.rows( ):
-            return cls._alloc_matmul( m1, m2)
+        if m1.columns() == m2.rows():
+            return cls._alloc_matmul(m1, m2)
         else:
             raise ValueError("Matrix size mismathc")
-        
-    
+
+
     def __init__(self, rows, columns, value=0):
         c_ptr = self._matrix_alloc(rows, columns)
         super(Matrix, self).__init__(c_ptr)
         self.setAll(value)
 
     def copy(self):
-        return self._copy( )
+        return self._copy()
 
     @classmethod
     def identity(cls, dim):
@@ -85,7 +85,7 @@ class Matrix(BaseCClass):
             raise ValueError('Identity matrix must have positive size, %d not allowed.' % dim)
         return cls._matrix_alloc_identity(dim)
 
-    def subCopy(self, row_offset, column_offset, rows, columns):
+    def sub_copy(self, row_offset, column_offset, rows, columns):
         if row_offset < 0 or row_offset >= self.rows():
             raise ValueError("Invalid row offset")
 
@@ -98,9 +98,9 @@ class Matrix(BaseCClass):
         if column_offset + columns > self.columns():
             raise ValueError("Invalid columns")
 
-        return self._sub_copy( row_offset , column_offset , rows , columns)
+        return self._sub_copy(row_offset, column_offset, rows, columns)
 
-    
+
     def __str__(self):
         s = ""
         for i in range(self.rows()):
@@ -136,16 +136,16 @@ class Matrix(BaseCClass):
         """ @rtype: int """
         return self._rows()
 
-    def transpose(self , inplace = False):
+    def transpose(self, inplace=False):
         """
         Will transpose the matrix. By default a transposed copy is returned.
         """
         if inplace:
-            self._inplace_transpose( )
+            self._inplace_transpose()
             return self
         else:
-            return self._alloc_transpose( )
-    
+            return self._alloc_transpose()
+
 
     def columns(self):
         """ @rtype: int """
@@ -155,20 +155,20 @@ class Matrix(BaseCClass):
         assert isinstance(other, Matrix)
         return self._equal(other)
 
-    def scaleColumn(self, column, factor):
+    def scale_column(self, column, factor):
         if not 0 <= column < self.columns():
             raise IndexError("Expected column: [0,%d) got:%d" % (self.columns(), column))
         self._scale_column(column, factor)
 
-    def scaleRow(self, row, factor):
+    def scale_row(self, row, factor):
         if not 0 <= row < self.rows():
             raise IndexError("Expected row: [0,%d) got:%d" % (self.rows(), row))
         self._scale_row(row, factor)
 
-    def setAll(self, value):
+    def set_all(self, value):
         self._set_all(value)
 
-    def copyColumn(self, target_column, src_column):
+    def copy_column(self, target_column, src_column):
         columns = self.columns()
         if not 0 <= src_column < columns:
             raise ValueError("src column:%d invalid" % src_column)
@@ -181,14 +181,14 @@ class Matrix(BaseCClass):
             Matrix._copy_column(self, self, target_column, src_column)
 
 
-    def dumpCSV(self , filename):
-        self._dump_csv( filename )
-        
+    def dump_csv(self, filename):
+        self._dump_csv(filename)
 
-    def prettyPrint(self, name, fmt="%6.3g"):
+
+    def pretty_print(self, name, fmt="%6.3g"):
         self._pretty_print(name, fmt)
 
-    def fprint(self , fileH , fmt = "%g "):
+    def fprint(self, fileH, fmt="%g "):
         """Will print ASCII representation of matrix.
 
         The fileH argument should point to an open Python
@@ -201,22 +201,33 @@ class Matrix(BaseCClass):
                   [6 7 8]
 
         The code:
-    
-        with open("matrix.txt" , "w") as f:
-           m.fprintf( f )
+
+        with open("matrix.txt", "w") as f:
+           m.fprintf(f)
 
          The file 'matrix.txt' will look like:
 
-         0 1 2 
+         0 1 2
          3 4 5
          6 7 8
 
         """
-        self._fprint( fmt , CFILE( fileH))
+        self._fprint(fmt, CFILE(fileH))
 
-        
-    def randomInit(self, rng):
+
+    def random_init(self, rng):
         self._random_init(rng)
 
     def free(self):
         self._free()
+
+
+
+monkey_the_camel(Matrix, 'subCopy', Matrix.sub_copy)
+monkey_the_camel(Matrix, 'scaleColumn', Matrix.scale_column)
+monkey_the_camel(Matrix, 'scaleRow', Matrix.scale_row)
+monkey_the_camel(Matrix, 'setAll', Matrix.set_all)
+monkey_the_camel(Matrix, 'copyColumn', Matrix.copy_column)
+monkey_the_camel(Matrix, 'dumpCSV', Matrix.dump_csv)
+monkey_the_camel(Matrix, 'prettyPrint', Matrix.pretty_print)
+monkey_the_camel(Matrix, 'randomInit', Matrix.random_init)

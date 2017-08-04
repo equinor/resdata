@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'vector_template.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Typed vectors IntVector, DoubleVector and BoolVector.
 
@@ -20,9 +20,9 @@ This module implements a quite simple typed vector which will grow
 transparently as needed. The vector is created with a default value,
 which will be used for not explicitly set indices.
 
-   vec = IntVector( default_value = 66 )
+   vec = IntVector(default_value = 66)
    vec[0] = 10
-   vec[2] = 10    
+   vec[2] = 10
 
 After the 'vec[2] = 10' statement the vector has grown to contain
 three elements. The element vec[1] has not been explicitly assigned by
@@ -34,7 +34,7 @@ the default value (i.e. 66 in this case). So the statement
 will give '66'. The main part of the implementation is in terms of an
 "abstract base class" TVector. The TVector class should be not
 instantiated directly, instead the child classes IntVector,
-DoubleVector or BoolVector should be used. 
+DoubleVector or BoolVector should be used.
 
 The C-level has implementations for several fundamental types like
 float and size_t not currently implemented in the Python version.
@@ -45,9 +45,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import  sys
 
 from cwrap import CFILE, BaseCClass
+from ecl.util import monkey_the_camel
 from ecl.util import UtilPrototype
 
-    
+
 
 class VectorTemplate(BaseCClass):
 
@@ -83,14 +84,14 @@ class VectorTemplate(BaseCClass):
             return True
 
     def __nonzero__(self):
-        return self.__bool__( )
-        
+        return self.__bool__()
+
 
     def copy(self):
         """
         Create a new copy of the current vector.
         """
-        new = self._alloc_copy( )
+        new = self._alloc_copy()
         return new
 
     def __irshift__(self,shift):
@@ -98,13 +99,13 @@ class VectorTemplate(BaseCClass):
             raise ValueError("The shift must be positive")
         self._rshift(shift)
         return self
-        
+
     def __ilshift__(self,shift):
         if shift < 0:
             raise ValueError("The shift must be positive")
         if shift > len(self):
             raise ValueError("The shift is too large %d > %d" % (shift, len(self)))
-        self._lshift( shift)
+        self._lshift(shift)
         return self
 
 
@@ -130,9 +131,9 @@ class VectorTemplate(BaseCClass):
         c_pointer = self._alloc(initial_size, default_value)
         super(VectorTemplate, self).__init__(c_pointer)
         self.element_size = self._element_size()
-        
-    def __contains__(self , value):
-        return self._contains(  value)
+
+    def __contains__(self, value):
+        return self._contains( value)
 
 
     def pop(self):
@@ -140,7 +141,7 @@ class VectorTemplate(BaseCClass):
             return self._pop()
         else:
             raise ValueError("Trying to pop from empty vector")
-                             
+
 
     def str_data(self, width, index1, index2, fmt):
         """
@@ -229,7 +230,7 @@ class VectorTemplate(BaseCClass):
             if idx < 0:
                 idx += ls
             self._iset(idx, value)
-        elif isinstance( index, slice ):
+        elif isinstance(index, slice):
             for i in range(*index.indices(ls)):
                 self[i] = value
         else:
@@ -243,7 +244,7 @@ class VectorTemplate(BaseCClass):
         Low-level function implementing inplace add.
 
         The __IADD__ function implements the operation:
-        
+
            v += a
 
         The variable which is added, i.e. @delta, can either be of the
@@ -258,7 +259,7 @@ class VectorTemplate(BaseCClass):
         """
         if type(self) == type(delta):
             if len(self) == len(delta):
-                # This is vector + vector operation. 
+                # This is vector + vector operation.
                 if not add:
                     delta *= -1
                 self._inplace_add(delta)
@@ -302,7 +303,7 @@ class VectorTemplate(BaseCClass):
            ....
            a = b + c
         """
-        copy = self._alloc_copy( )
+        copy = self._alloc_copy()
         copy += delta
         return copy
 
@@ -310,7 +311,7 @@ class VectorTemplate(BaseCClass):
         """
         Implements subtraction - creating new copy.
         """
-        copy = self._alloc_copy( )
+        copy = self._alloc_copy()
         copy -= delta
         return copy
 
@@ -349,7 +350,7 @@ class VectorTemplate(BaseCClass):
 
 
     def __mul__(self, factor):
-        copy = self._alloc_copy( )
+        copy = self._alloc_copy()
         copy *= factor
         return copy
 
@@ -359,7 +360,7 @@ class VectorTemplate(BaseCClass):
 
     def __div__(self, divisor):
         if isinstance(divisor, int) or isinstance(divisor, float):
-            copy = self._alloc_copy( )
+            copy = self._alloc_copy()
             copy._div(divisor)
             return copy
         else:
@@ -380,11 +381,11 @@ class VectorTemplate(BaseCClass):
 
            v1 = IntVector()
            v2 = IntVector()
-           
+
            v1[10] = 77
-           v2.assign( v1 )      # Now v2 contains identicall content to v1
+           v2.assign(v1)      # Now v2 contains identicall content to v1
            ....
-           v1.assign( 66 )       # Now v1 is a vector of 11 elements - all equal to 66
+           v1.assign(66)       # Now v1 is a vector of 11 elements - all equal to 66
 
         """
         if type(self) == type(value):
@@ -400,7 +401,7 @@ class VectorTemplate(BaseCClass):
         """
         The number of elements in the vector.
         """
-        return self._size( )
+        return self._size()
 
 
     def printf(self, fmt=None, name=None, stream=sys.stdout):
@@ -427,7 +428,7 @@ class VectorTemplate(BaseCClass):
             raise IndexError("The vector is empty!")
 
 
-    def minIndex(self, reverse=False):
+    def min_index(self, reverse=False):
         """
         @type reverse: bool
         @rtype: int
@@ -437,7 +438,7 @@ class VectorTemplate(BaseCClass):
         else:
             raise IndexError("The vector is empty!")
 
-    def maxIndex(self, reverse=False):
+    def max_index(self, reverse=False):
         """
         @type reverse: bool
         @rtype: int
@@ -450,10 +451,10 @@ class VectorTemplate(BaseCClass):
     def append(self, value):
         self._append(value)
 
-    def deleteBlock(self, index, block_size):
+    def delete_block(self, index, block_size):
         """
         Remove a block of size @block_size starting at @index.
-        
+
         After the removal data will be left shifted.
         """
         self._idel_block(index, block_size)
@@ -471,19 +472,19 @@ class VectorTemplate(BaseCClass):
     def clear(self):
         self._reset()
 
-    def safeGetByIndex(self, index):
+    def safe_get_by_index(self, index):
         return self._safe_iget(index)
 
-    def setReadOnly(self, read_only):
+    def set_read_only(self, read_only):
         self._set_read_only(read_only)
 
-    def getReadOnly(self):
+    def get_read_only(self):
         return self._get_read_only()
 
-    def setDefault(self, value):
+    def set_default(self, value):
         self._set_default(value)
 
-    def getDefault(self):
+    def get_default(self):
         return self._get_default()
 
 
@@ -491,7 +492,7 @@ class VectorTemplate(BaseCClass):
         self._free()
 
     def __repr__(self):
-        return self._create_repr('size = %d' % len(self))
+        return self._create_repr('size=%d' % len(self))
 
     def permute(self, permutation_vector):
         """
@@ -499,9 +500,9 @@ class VectorTemplate(BaseCClass):
         @type permutation_vector: PermutationVector
         """
 
-        self._permute( permutation_vector)
+        self._permute(permutation_vector)
 
-    def permutationSort(self, reverse=False):
+    def permutation_sort(self, reverse=False):
         """
         Returns the permutation vector for sorting of this vector. Vector is not sorted.
          @type reverse: bool
@@ -516,32 +517,32 @@ class VectorTemplate(BaseCClass):
         return None
 
 
-    def asList(self):
+    def as_list(self):
         l = [0] * len(self)
         for (index,value) in enumerate(self):
             l[index] = value
-            
+
         return l
 
-    def selectUnique(self):
+    def select_unique(self):
         self._select_unique()
 
 
-    def elementSum(self):
-        return self._element_sum( )
+    def element_sum(self):
+        return self._element_sum()
 
 
-    def getDataPtr(self):
+    def get_data_ptr(self):
         "Low level function which returns a pointer to underlying storage"
         # Observe that the get_data_ptr() function is not implemented
         # for the TimeVector class.
         return self._get_data_ptr()
 
-    def countEqual(self , value):
-        return self._count_equal(  value )
+    def count_equal(self, value):
+        return self._count_equal( value)
 
 
-    def initRange(self , min_value , max_value , delta):
+    def init_range(self, min_value, max_value, delta):
         """
         Will fill the vector with the values from min_value to
         max_value in steps of delta. The upper limit is guaranteed to
@@ -550,15 +551,15 @@ class VectorTemplate(BaseCClass):
         if delta == 0:
             raise ValueError("Invalid range")
         else:
-            self._init_range(  min_value , max_value , delta )
+            self._init_range( min_value, max_value, delta)
 
     @classmethod
-    def createRange(cls , min_value , max_value , delta):
+    def create_range(cls, min_value, max_value, delta):
         """
         Will create new vector and initialize a range.
         """
-        vector = cls( )
-        vector.initRange( min_value , max_value , delta )
+        vector = cls()
+        vector.initRange(min_value, max_value, delta)
         return vector
 
     def _strided_copy(self, *_):
@@ -645,3 +646,20 @@ class VectorTemplate(BaseCClass):
         raise NotImplementedError()
     def _init_range(self, *_):
         raise NotImplementedError()
+
+monkey_the_camel(VectorTemplate, 'minIndex', VectorTemplate.min_index)
+monkey_the_camel(VectorTemplate, 'maxIndex', VectorTemplate.max_index)
+monkey_the_camel(VectorTemplate, 'deleteBlock', VectorTemplate.delete_block)
+monkey_the_camel(VectorTemplate, 'safeGetByIndex', VectorTemplate.safe_get_by_index)
+monkey_the_camel(VectorTemplate, 'setReadOnly', VectorTemplate.set_read_only)
+monkey_the_camel(VectorTemplate, 'getReadOnly', VectorTemplate.get_read_only)
+monkey_the_camel(VectorTemplate, 'setDefault', VectorTemplate.set_default)
+monkey_the_camel(VectorTemplate, 'getDefault', VectorTemplate.get_default)
+monkey_the_camel(VectorTemplate, 'permutationSort', VectorTemplate.permutation_sort)
+monkey_the_camel(VectorTemplate, 'asList', VectorTemplate.as_list)
+monkey_the_camel(VectorTemplate, 'selectUnique', VectorTemplate.select_unique)
+monkey_the_camel(VectorTemplate, 'elementSum', VectorTemplate.element_sum)
+monkey_the_camel(VectorTemplate, 'getDataPtr', VectorTemplate.get_data_ptr)
+monkey_the_camel(VectorTemplate, 'countEqual', VectorTemplate.count_equal)
+monkey_the_camel(VectorTemplate, 'initRange', VectorTemplate.init_range)
+monkey_the_camel(VectorTemplate, 'createRange', VectorTemplate.create_range, classmethod)
