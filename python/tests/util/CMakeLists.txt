@@ -8,7 +8,7 @@ set(TEST_SOURCES
     test_rng.py
     test_stat.py
     test_string_list.py
-    test_substitution_list.py
+    #test_substitution_list.py
     test_thread_pool.py
     test_cthread_pool.py
     test_ui_return.py
@@ -42,5 +42,5 @@ addPythonTest(tests.util.test_thread_pool.ThreadPoolTest)
 addPythonTest(tests.util.test_cthread_pool.CThreadPoolTest)
 addPythonTest(tests.util.test_arg_pack.ArgPackTest)
 addPythonTest(tests.util.test_spawn.SpawnTest)
-addPythonTest(tests.util.test_substitution_list.SubstitutionListTest)
+#addPythonTest(tests.util.test_substitution_list.SubstitutionListTest)
 addPythonTest(tests.util.test_log.LogTest)

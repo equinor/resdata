@@ -71,7 +71,6 @@ from .log import Log
 from .lookup_table import LookupTable
 from .buffer import Buffer
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
-from .substitution_list import SubstitutionList
 from .ui_return import UIReturn
 from .thread_pool import ThreadPool
 from .cthread_pool import CThreadPool, startCThreadPool
