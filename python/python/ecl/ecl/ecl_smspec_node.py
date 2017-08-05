@@ -41,12 +41,35 @@ class EclSMSPECNode(BaseCClass):
     _gen_key1           = EclPrototype("char* smspec_node_get_gen_key1( smspec_node )")
     _gen_key2           = EclPrototype("char* smspec_node_get_gen_key2( smspec_node )")
     _var_type           = EclPrototype("ecl_sum_var_type smspec_node_get_var_type( smspec_node )")
-
+    _cmp                = EclPrototype("int smspec_node_cmp( smspec_node , smspec_node)")
 
     def __init__(self):
         super(EclSMSPECNode, self).__init__(0) # null pointer
         raise NotImplementedError("Class can not be instantiated directly!")
 
+    def cmp(self, other):
+        if isinstance(other, EclSMSPECNode):
+            return self._cmp( other )
+        else:
+            raise TypeError("Other argument must be of type EclSMSPECNode")
+    
+
+    def __lt__(self , other):
+        return self.cmp( other ) < 0
+
+
+    def __gt__(self , other):
+        return self.cmp( other ) > 0
+
+
+    def __eq__(self , other):
+        return self.cmp( other ) == 0
+
+
+    def __hash__(self , other):
+        return hash(self._gen_key1( ))
+
+        
     @property
     def unit(self):
         """
