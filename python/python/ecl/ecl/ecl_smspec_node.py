@@ -52,7 +52,7 @@ class EclSMSPECNode(BaseCClass):
             return self._cmp( other )
         else:
             raise TypeError("Other argument must be of type EclSMSPECNode")
-    
+
 
     def __lt__(self , other):
         return self.cmp( other ) < 0
@@ -69,7 +69,7 @@ class EclSMSPECNode(BaseCClass):
     def __hash__(self , other):
         return hash(self._gen_key1( ))
 
-        
+
     @property
     def unit(self):
         """
