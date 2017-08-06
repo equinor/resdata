@@ -280,12 +280,8 @@ class SumTest(ExtendedTestCase):
         self.assertTrue(node.isTotal())
         self.assertFalse(node.isRate())
         self.assertIsNone(node.wgname)
-
-        node = sum.smspec_node("FOPTH")
-        self.assertIsNone(node.num)
-
         node = sum.smspec_node("BPR:1095")
-        self.assertEquals(node.num, 1095)
+        self.assertEqual(node.num, 1095)
 
     def test_stringlist_gc(self):
         sum = EclSum(self.case)
