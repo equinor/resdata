@@ -105,32 +105,15 @@ rng_type * rng_alloc__(rng_alloc_ftype     * alloc_state,
 
 
 void rng_init( rng_type * rng , rng_init_mode init_mode ) {
-  if (init_mode == INIT_DEFAULT)
+  if (init_mode == INIT_DEFAULT) {
     rng_set_state( rng , NULL );
-  else {
-    char * seed_buffer = (char *) util_calloc( rng->state_size , sizeof * seed_buffer );
-
-    switch (init_mode) {
-    case(INIT_CLOCK):
-      {
-        int i;
-        for (i=0; i < rng->state_size; i++)
-          seed_buffer[i] = ( char ) util_clock_seed();
-      }
-      break;
-    case(INIT_DEV_RANDOM):
-      util_fread_dev_random( rng->state_size * sizeof * seed_buffer , seed_buffer );
-      break;
-    case(INIT_DEV_URANDOM): // TODO remove INIT_DEV_URANDOM
-      util_fread_dev_random( rng->state_size * sizeof * seed_buffer , seed_buffer );
-      break;
-    default:
-      util_abort("%s: unrecognized init_code:%d \n",__func__ , init_mode);
-    }
-
-    rng_set_state( rng , seed_buffer );
-    free( seed_buffer );
+    return;
   }
+
+  char * seed_buffer = (char *) util_calloc( rng->state_size , sizeof * seed_buffer );
+  util_fread_dev_random( rng->state_size * sizeof * seed_buffer , seed_buffer );
+  rng_set_state( rng , seed_buffer );
+  free( seed_buffer );
 }
 
 
@@ -236,8 +219,8 @@ double rng_get_double( rng_type * rng ) {
 }
 
 int rng_get_int( rng_type * rng , int max_value ) {
-  rng_safe_cast( rng );
-  return rng->forward( rng->state ) % max_value;
+  int x = (int) util_dev_urandom_seed();
+  return (max_value > 0) ? x % max_value : x;
 }
 
 rng_alg_type  rng_get_type( const rng_type * rng ) {

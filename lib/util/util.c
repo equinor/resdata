@@ -274,13 +274,27 @@ static bool EOL_CHAR(char c) {
 #undef strncpy // This is for some reason needed in RH3
 
 
-// TODO srand(time(NULL));   // should only be called once
+static bool PRNG_SEEDED = false;
+static void initialize_prng_seed() {
+  if (!PRNG_SEEDED) {
+    int t = time(NULL);
+    srand(t);
+    PRNG_SEEDED = true;
+  }
+}
+
+void util_rng_seed(unsigned int seed) {
+  initialize_prng_seed();
+  srand(seed);
+}
 
 void util_fread_dev_random(int buffer_size , char * buffer) {
+  initialize_prng_seed();
   *buffer = rand();
 }
 
 unsigned int util_dev_urandom_seed( ) {
+  initialize_prng_seed();
   return (unsigned int) rand();
 }
 
