@@ -273,39 +273,16 @@ static bool EOL_CHAR(char c) {
 
 #undef strncpy // This is for some reason needed in RH3
 
-/*
-  The difference between /dev/random and /dev/urandom is that the
-  former will block if the entropy pool is close to empty:
 
-    util_fread_dev_random() : The 'best' quality random numbers, but
-       runtime can be quite long.
-
-    util_fread_dev_urandom(): Potentially lower quality random
-       numbers, but deterministic runtime.
-*/
+// TODO srand(time(NULL));   // should only be called once
 
 void util_fread_dev_random(int buffer_size , char * buffer) {
-  FILE * stream = util_fopen("/dev/random" , "r");
-  if (fread(buffer , 1 , buffer_size , stream) != buffer_size)
-    util_abort("%s: failed to read:%d bytes from /dev/random \n",__func__ , buffer_size);
-
-  fclose(stream);
-}
-
-
-void util_fread_dev_urandom(int buffer_size , char * buffer) {
-  FILE * stream = util_fopen("/dev/urandom" , "r");
-  if (fread(buffer , 1 , buffer_size , stream) != buffer_size)
-    util_abort("%s: failed to read:%d bytes from /dev/random \n",__func__ , buffer_size);
-
-  fclose(stream);
+  *buffer = rand();
 }
 
 
 unsigned int util_dev_urandom_seed( ) {
-  unsigned int seed;
-  util_fread_dev_urandom( sizeof seed, &seed );
-  return seed;
+  return (unsigned int) rand();
 }
 
 unsigned int util_clock_seed( ) {

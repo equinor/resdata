@@ -285,10 +285,8 @@ typedef enum {left_pad   = 0,
 
   bool         util_is_first_day_in_month_utc( time_t t);
 
-  unsigned int util_dev_urandom_seed( );
   unsigned int util_clock_seed( void );
   void         util_fread_dev_random(int , char * );
-  void         util_fread_dev_urandom(int , char * );
   bool         util_string_isspace(const char * s);
 
   char *  util_alloc_dump_filename(void);
