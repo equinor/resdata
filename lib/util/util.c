@@ -303,7 +303,7 @@ void util_fread_dev_urandom(int buffer_size , char * buffer) {
 
 
 unsigned int util_dev_urandom_seed( ) {
-  unsigned int seed;
+  unsigned int seed = 0u;
   util_fread_dev_urandom( sizeof seed, &seed );
   return seed;
 }
