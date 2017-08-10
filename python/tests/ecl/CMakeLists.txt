@@ -10,6 +10,7 @@ set(TEST_SOURCES
     test_ecl_file.py
     test_ecl_init_file.py
     test_ecl_restart_file.py
+    test_debug.py
     test_ecl_sum.py
     test_ecl_sum_vector.py
     test_fault_blocks.py
@@ -69,6 +70,7 @@ addPythonTest(tests.ecl.test_grav.EclGravTest)
 addPythonTest(tests.ecl.test_geertsma.GeertsmaTest)
 addPythonTest(tests.ecl.test_ecl_type.EclDataTypeTest)
 addPythonTest(tests.ecl.test_region.RegionTest)
+addPythonTest(tests.ecl.test_debug.DebugTest)
 
 
 if (STATOIL_TESTDATA_ROOT)
