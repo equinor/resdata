@@ -231,7 +231,7 @@ typedef enum {left_pad   = 0,
   bool         util_fscanf_int(FILE * , int * );
   bool         util_fscanf_bool(FILE * stream , bool * value);
   bool         util_sscanf_bool(const char * , bool *);
-  bool         util_sscanf_octal_int(const char * buffer , unsigned int * value);
+  bool         util_sscanf_octal_int(const char * buffer , int * value);
   int          util_strcmp_int( const char * s1 , const char * s2);
   int          util_strcmp_float( const char * s1 , const char * s2);
   bool         util_sscanf_int(const char * , int * );

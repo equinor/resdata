@@ -1481,6 +1481,9 @@ char * util_fscanf_alloc_token(FILE * stream) {
 */
 
 bool util_sscanf_double(const char * buffer , double * value) {
+  if(!buffer)
+    return false;
+
   bool value_OK = false;
   char * error_ptr;
 
@@ -1504,7 +1507,10 @@ bool util_sscanf_double(const char * buffer , double * value) {
    Base 8
 */
 
-bool util_sscanf_octal_int(const char * buffer , unsigned int * value) {
+bool util_sscanf_octal_int(const char * buffer , int * value) {
+  if(!buffer)
+    return false;
+
   bool value_OK = false;
   char * error_ptr;
 
@@ -1530,10 +1536,13 @@ bool util_sscanf_octal_int(const char * buffer , unsigned int * value) {
 /**
    Takes a char buffer as input, and parses it as an integer. Returns
    true if the parsing succeeded, and false otherwise. If parsing
-   succeded, the integer value is returned by reference.
+   succeeded, the integer value is returned by reference.
 */
 
 bool util_sscanf_int(const char * buffer , int * value) {
+  if(!buffer)
+      return false;
+
   bool value_OK = false;
   char * error_ptr;
 
@@ -1548,7 +1557,7 @@ bool util_sscanf_int(const char * buffer , int * value) {
 
   if (error_ptr[0] == '\0') {
     value_OK = true;
-    if (value != NULL)
+    if(value != NULL)
       *value = tmp_value;
   }
   return value_OK;
@@ -1651,7 +1660,7 @@ const char * util_skip_sep(const char * s, const char * sep_set, bool *OK) {
 
 /**
    This function will parse string containing an integer, and an
-   optional suffix. The valid suffizes are KB,MB and GB (any case is
+   optional suffix. The valid suffixes are KB,MB and GB (any case is
    allowed); if no suffix is appended the buffer is assumed to contain
    a memory size already specified in bytes.
 
@@ -1676,6 +1685,12 @@ const char * util_skip_sep(const char * s, const char * sep_set, bool *OK) {
 
 
 bool util_sscanf_bytesize(const char * buffer, size_t *size) {
+  if(!buffer) {
+    if(size)
+      *size = 0;
+    return false;
+  }
+
   size_t value;
   char * suffix_ptr;
   size_t KB_factor = 1024;
@@ -1689,7 +1704,7 @@ bool util_sscanf_bytesize(const char * buffer, size_t *size) {
     while (isspace(suffix_ptr[0]))
       suffix_ptr++;
     {
-      char * upper = util_alloc_string_copy(suffix_ptr);
+      char * upper = util_alloc_strupr_copy(suffix_ptr);
       if (strcmp(upper,"KB") == 0)
         factor = KB_factor;
       else if (strcmp(upper,"MB") == 0)
@@ -1928,16 +1943,20 @@ int util_strcmp_int( const char * s1 , const char * s2) {
 
 
 /**
-    Succesfully parses:
+    Successfully parses:
 
       1 , T (not 't') , True (with any case) => true
       0 , F (not 'f') , False(with any case) => false
 
-    Else the parsing fails.
+    Otherwise, set _value to false and return false.
 */
-
-
 bool util_sscanf_bool(const char * buffer , bool * _value) {
+  if(!buffer) {
+    if(_value)
+      *_value = false;
+    return false;
+  }
+
   bool parse_OK = false;
   bool value    = false; /* Compiler shut up */
 
@@ -3144,9 +3163,11 @@ bool util_is_first_day_in_month_utc( time_t t) {
 bool util_sscanf_isodate(const char * date_token , time_t * t) {
   int day, month, year;
 
-  if (sscanf(date_token , "%d-%d-%d" , &year , &month , &day) == 3)
+  if (date_token && sscanf(date_token , "%d-%d-%d" , &year , &month , &day) == 3)
     return util_make_datetime_utc__(0,0,0,day , month , year , false, t);
 
+  if (t)
+    *t = -1;
   return false;
 }
 
@@ -3160,7 +3181,7 @@ bool util_sscanf_date_utc(const char * date_token , time_t * t) {
   int day   , month , year;
   char sep1 , sep2;
 
-  if (sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
+  if (date_token && sscanf(date_token , "%d%c%d%c%d" , &day , &sep1 , &month , &sep2 , &year) == 5) {
     if (t)
       *t = util_make_date_utc(day , month , year );
     return true;
@@ -3173,8 +3194,10 @@ bool util_sscanf_date_utc(const char * date_token , time_t * t) {
 
 
 bool util_sscanf_percent(const char * percent_token, double * value) {
-  char * percent_ptr;
+  if(!percent_token)
+    return false;
 
+  char * percent_ptr;
   double double_val = strtod( percent_token, &percent_ptr);
 
   if (0 == strcmp(percent_ptr, "%")) {
