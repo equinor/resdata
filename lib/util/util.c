@@ -4303,10 +4303,11 @@ void util_fskip_string(FILE *stream) {
 }
 
 
-
+void util_fwrite_offset( offset_type value , FILE * stream ) { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_bool     (bool value , FILE * stream)   { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_int      (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_time_t   (time_t value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
+void util_fwrite_size_t   (size_t value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_long  (long value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_double(double value , FILE * stream) { UTIL_FWRITE_SCALAR(value , stream); }
 

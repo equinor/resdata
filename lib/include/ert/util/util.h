@@ -349,6 +349,8 @@ typedef enum {left_pad   = 0,
   long     util_fread_long(FILE * );
   bool     util_fread_bool(FILE * );
   double   util_fread_double(FILE * stream);
+  void     util_fwrite_offset(offset_type    , FILE * );
+  void     util_fwrite_size_t (size_t    , FILE * );
   void     util_fwrite_int   (int    , FILE * );
   void     util_fwrite_long  (long    , FILE * );
   void     util_fwrite_bool  (bool    , FILE * );
