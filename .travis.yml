@@ -17,10 +17,8 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-      env: PYTHON_VERSION=2.7
     - os: linux
       compiler: gcc
-      env: PYTHON_VERSION=3.6
 
 addons:
   apt:
