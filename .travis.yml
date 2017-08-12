@@ -1,13 +1,5 @@
 language: c
 
-compiler:
-  - gcc
-  - clang
-
-os:
-  - linux
-  - osx
-
 osx_image: xcode7.3
 sudo: false
 dist: trusty
@@ -16,24 +8,19 @@ env:
   global:
     - ERT_SHOW_BACKTRACE=1
   matrix:
-    include: 
-      - TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
-        PYTHON_VERSION=2.7
-        PYTHON_VERSION=3.6
-      - TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
-        PYTHON_VERSION=2.7
-        PYTHON_VERSION=3.6
-      - TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
-        PYTHON_VERSION=2.7
-        PYTHON_VERSION=3.6
+    - TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
+    - TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
+    - TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
 
 matrix:
   fast_finish: true
-  exclude:
-    - os: osx
-      compiler: gcc
+  include:
     - os: linux
-      compiler: clang
+      compiler: gcc
+      env: PYTHON_VERSION=2.7
+    - os: linux
+      compiler: gcc
+      env: PYTHON_VERSION=3.6
 
 addons:
   apt:
@@ -56,7 +43,6 @@ install:
     else
       export CONDA_OS=Linux;
     fi
-
   - echo $ERT_SHOW_BACKTRACE
   - echo $PYTHON_VERSION
   - if [[ $PYTHON_VERSION == 2.7 ]]; then
