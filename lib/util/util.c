@@ -4259,19 +4259,12 @@ void util_double_to_float(float *float_ptr , const double *double_ptr , int size
    The util_fwrite_string / util_fread_string are BROKEN when it comes
    to NULL / versus an empty string "":
 
-    1. Writing a "" string what is actually written to disk is: "0\0",
-       whereas the disk content when writing NULL is "0".
+    1. When writing 'NULL' to disk what is actually found on the disk
+       is the sequence "0".
 
-    2. When reading back we find the '0' - but it is impossible to
-       determine whether we should interpret this as a NULL or as "".
-
-   When the harm was done, with files allover the place, it is "solved"
-   as follows:
-
-    1. Nothing is changed when writing NULL => '0' to disk.
-
-    2. When writing "" => '-1\0' to disk. The -1 is the magic length
-       signifying that the following string is "".
+    2. When writing the empty string - i.e. "" - what hits the disk is
+       the sequence "-1\0"; i.e. the -1 is used as a magic flag to
+       indicate the empty string.
 */
 
 
@@ -4333,10 +4326,11 @@ void util_fskip_string(FILE *stream) {
 }
 
 
-
+void util_fwrite_offset( offset_type value , FILE * stream ) { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_bool     (bool value , FILE * stream)   { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_int      (int value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_time_t   (time_t value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
+void util_fwrite_size_t   (size_t value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_long  (long value , FILE * stream)    { UTIL_FWRITE_SCALAR(value , stream); }
 void util_fwrite_double(double value , FILE * stream) { UTIL_FWRITE_SCALAR(value , stream); }
 
