@@ -16,7 +16,9 @@ env:
   global:
     - ERT_SHOW_BACKTRACE=1
   matrix:
-    - PYTHON_VERSION=2.7; TEST_SUITE="-LE SLOW"
+    - PYTHON_VERSION=2.7; TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
+    - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
+    - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
     - PYTHON_VERSION=3.6
 
 matrix:
@@ -50,6 +52,7 @@ install:
     fi
   - echo $ERT_SHOW_BACKTRACE
   - echo $PYTHON_VERSION
+  - echo $TEST_SUITE
   - if [[ $PYTHON_VERSION == 2.7 ]]; then
       export TRAVIS_PYTHON_VERSION="2.7";
     fi
@@ -72,4 +75,4 @@ before_script:
   - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
 script:
-  - python build_total.py ecl
+  - python build_total.py ecl ${TEST_SUITE}
