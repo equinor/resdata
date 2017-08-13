@@ -16,7 +16,7 @@ env:
   global:
     - ERT_SHOW_BACKTRACE=1
   matrix:
-    - PYTHON_VERSION=2.7
+    - PYTHON_VERSION=2.7; TEST_SUITE="-LE SLOW"
     - PYTHON_VERSION=3.6
 
 matrix:
