@@ -19,7 +19,7 @@ env:
     - PYTHON_VERSION=2.7; TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
     - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
     - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
-    - PYTHON_VERSION=3.6
+    - PYTHON_VERSION=3.6; TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
 
 matrix:
   fast_finish: true
@@ -72,4 +72,4 @@ before_script:
   - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
 script:
-  - python build_total.py ecl ${TEST_SUITE}
+  - python build_total.py ecl ${TEST_SUITE} allowPython3
