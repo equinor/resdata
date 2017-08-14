@@ -53,8 +53,6 @@ class UtilPrototype(Prototype):
 
 from .version import Version
 
-from .enums import RngAlgTypeEnum, RngInitModeEnum, LLSQResultEnum
-
 from .ctime import CTime
 
 from .permutation_vector import PermutationVector

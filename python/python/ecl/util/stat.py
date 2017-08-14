@@ -16,7 +16,8 @@
 from collections import Sequence
 
 from cwrap import PrototypeError
-from ecl.util import LLSQResultEnum, UtilPrototype, Matrix
+from ecl.util.enums import LLSQResultEnum
+from ecl.util import UtilPrototype, Matrix
 
 
 quantile = UtilPrototype("double statistics_empirical_quantile(double_vector, double)")
