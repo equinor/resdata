@@ -994,10 +994,26 @@ ecl_file_type * ecl_file_iopen_rstblock( const char * filename , int seqnum_inde
 }
 
 void  ecl_file_write_index( ecl_file_type * ecl_file , const char * filename , const char * index_filename) {
+  FILE * ostream = util_fopen(index_filename , "w");
+  util_fwrite_string( filename , ostream );
   
+  
+
+
+  fclose( ostream );
 }
 
 
-ecl_file_type * ecl_file_fast_open(const char * filename, const char * index_filename) {
-  return NULL;
+ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_file_name) {
+  if ( !(   util_file_exists( file_name ) & util_file_exists (index_file_name)   )   )
+    return NULL;
+
+  FILE * istream = util_fopen(index_file_name , "r");
+  char * file_name_ptr = util_fread_alloc_string(istream);
+  if (strcmp(file_name_ptr, file_name) != 0)   //change to free values in immature returns
+    return NULL;  
+
+
+  ecl_file_type * ecl_file_index = ecl_file_alloc_empty(0);
+  return ecl_file_index;
 }

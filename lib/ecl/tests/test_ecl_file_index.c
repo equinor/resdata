@@ -48,27 +48,34 @@ void test_create_and_load_index_file() {
    //CREATING THE DATA FILE
    test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
    {
-      const char * data_file_name = "initial_data_file";
+      const char * file_name = "initial_data_file";
+      const char * index_file_name = "index_file";
 
       size_t data_size = 10;
       ecl_kw_type * kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
       for(int i = 0; i < data_size; ++i)
          ecl_kw_iset_int(kw, i, 537 + i);
 
-      fortio_type * fortio = fortio_open_writer(data_file_name, false, ECL_ENDIAN_FLIP);
+      fortio_type * fortio = fortio_open_writer(file_name, false, ECL_ENDIAN_FLIP);
       ecl_kw_fwrite(kw, fortio); 
       ecl_kw_free(kw);
 
       fortio_fclose(fortio);
 
-      ecl_file_type * ecl_file = ecl_file_open( "initial_data_file" , 0 );
+      ecl_file_type * ecl_file = ecl_file_open( file_name , 0 );
       test_assert_true( ecl_file_has_kw( ecl_file , "TEST_KW" )  );
 
 
-      ecl_file_write_index( ecl_file , "initial_data_file" , "index_data_file");
+      ecl_file_write_index( ecl_file ,  file_name , index_file_name);
 
       
+      ecl_file_type * ecl_file_index = ecl_file_fast_open( file_name, index_file_name );
+      test_assert_true( ecl_file_is_instance(ecl_file_index)  );
 
+      //Add timestamp check
+
+      //test_assert_int_equal(ecl_file_get_size(ecl_file), ecl_file_get_size(ecl_file_index) );
+      
 
       ecl_file_close( ecl_file );
    }
