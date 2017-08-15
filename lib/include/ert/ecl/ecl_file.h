@@ -47,6 +47,8 @@ extern "C" {
   typedef struct ecl_file_struct ecl_file_type;
   bool             ecl_file_load_all( ecl_file_type * ecl_file );
   ecl_file_type  * ecl_file_open( const char * filename , int flags);
+  ecl_file_type  * ecl_file_fast_open( const char * filename , const char * index_filename);
+  void             ecl_file_write_index( ecl_file_type * ecl_file , const char * filename , const char * index_filename);
   void             ecl_file_close( ecl_file_type * ecl_file );
   void             ecl_file_fortio_detach( ecl_file_type * ecl_file );
   void             ecl_file_free__(void * arg);

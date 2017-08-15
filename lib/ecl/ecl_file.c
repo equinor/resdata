@@ -992,3 +992,12 @@ static ecl_file_type * ecl_file_iopen_rstblock__( const char * filename , int se
 ecl_file_type * ecl_file_iopen_rstblock( const char * filename , int seqnum_index , int flags) {
   return ecl_file_iopen_rstblock__(filename , seqnum_index , flags );
 }
+
+void  ecl_file_write_index( ecl_file_type * ecl_file , const char * filename , const char * index_filename) {
+  
+}
+
+
+ecl_file_type * ecl_file_fast_open(const char * filename, const char * index_filename) {
+  return NULL;
+}

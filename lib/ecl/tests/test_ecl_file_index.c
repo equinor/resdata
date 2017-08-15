@@ -16,8 +16,68 @@
    for more details.
 */
 
+#include <stdio.h>
+
+#include <ert/util/test_util.h>
+#include <ert/util/util.h>
+#include <ert/util/test_work_area.h>
+
+#include <ert/ecl/ecl_endian_flip.h>
+#include <ert/ecl/ecl_file.h>
+
+void test_load_nonexisting_file() {
+   ecl_file_type * ecl_file = ecl_file_fast_open("base_file", "a_file_that_does_not_exist_2384623");
+   test_assert_NULL( ecl_file );
+}
+
+
+void test_create_and_load_index_file() {
+   //X1: Start w/ just one kw
+   //X2: Expand to several kw 
+
+   //***1: create/get an ecl type file
+   //***2: use ecl_file_open to read from the file -> ecl_file_start
+   //3: store some values from the file, V1 ...  Vn
+   //4: use NEW function ecl_file_write_index to create an ecl_index file
+   //5: use NEW function ecl_file_fast_open to create a new ecl_file type -> ecl_file_end
+   //6: Use ecl_file_end to read from file and compare values to V1 ... Vn
+   //7: Remove from work area "initial_data_file", close/free variable ecl_file_start, ecl_file_end
+   //8: Create new initial_data_file
+   //9: Read index_file again w/ ecl_file_fast_open, assert return of NULL
+
+   //CREATING THE DATA FILE
+   test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
+   {
+      const char * data_file_name = "initial_data_file";
+
+      size_t data_size = 10;
+      ecl_kw_type * kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
+      for(int i = 0; i < data_size; ++i)
+         ecl_kw_iset_int(kw, i, 537 + i);
+
+      fortio_type * fortio = fortio_open_writer(data_file_name, false, ECL_ENDIAN_FLIP);
+      ecl_kw_fwrite(kw, fortio); 
+      ecl_kw_free(kw);
+
+      fortio_fclose(fortio);
+
+      ecl_file_type * ecl_file = ecl_file_open( "initial_data_file" , 0 );
+      test_assert_true( ecl_file_has_kw( ecl_file , "TEST_KW" )  );
+
+
+      ecl_file_write_index( ecl_file , "initial_data_file" , "index_data_file");
+
+      
+
+
+      ecl_file_close( ecl_file );
+   }
+   test_work_area_free( work_area );
+}
 
 
 int main( int argc , char ** argv) {
-
+   util_install_signals();
+   test_load_nonexisting_file();
+   test_create_and_load_index_file();
 }
