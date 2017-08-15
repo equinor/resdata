@@ -24,7 +24,12 @@ env:
 matrix:
   fast_finish: true
   allow_failures:
-  - env: PYTHON_VERSION=3.6
+  - os: osx
+    compiler: clang
+    env: PYTHON_VERSION=3.6 TEST_SUITE="-LE SLOW"
+  - os: linux
+    compiler: gcc
+    env: PYTHON_VERSION=3.6 TEST_SUITE="-LE SLOW"
   exclude:
     - os: osx
       compiler: gcc
