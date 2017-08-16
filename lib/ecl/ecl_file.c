@@ -1048,14 +1048,12 @@ ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_fi
       ecl_file_kw_type * file_kw;
       for (int i = 0; i < index_size; i++) {
         file_kw = ecl_file_kw_fread_alloc( istream );
-        printf(" ********************************** %s: %s\n", __func__, ecl_file_kw_get_header(file_kw) );
+        fprintf(stderr, " ********************************** %s: %s\n", __func__, ecl_file_kw_get_header(file_kw) );
    
         ecl_file_view_add_kw( ecl_file_index->global_view , file_kw );
       }   
       ecl_file_view_make_index( ecl_file_index->global_view );
       ecl_file_select_global(ecl_file_index);
-
-      ecl_file_view_check_flags( ecl_file_index->flags , ECL_FILE_CLOSE_STREAM);     //debug
 
     {
     

@@ -63,15 +63,16 @@ void test_create_and_load_index_file() {
       ecl_kw_fwrite(kw, fortio); 
       ecl_kw_free(kw);
 
-      //kw = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
+      fortio_fclose(fortio); 
+      //finished creating data file
 
-      fortio_fclose(fortio); //finished creating data file
-
+      //creating ecl_file
       ecl_file_type * ecl_file = ecl_file_open( file_name , 0 );
       test_assert_true( ecl_file_has_kw( ecl_file , "TEST1_KW" )  );
       ecl_file_write_index( ecl_file ,  file_name , index_file_name);
       int ecl_file_size = ecl_file_get_size( ecl_file );
-      ecl_file_close( ecl_file ); //finished using ecl_file
+      ecl_file_close( ecl_file ); 
+      //finished using ecl_file
 
       
       ecl_file_type * ecl_file_index = ecl_file_fast_open( file_name, index_file_name , 0);
@@ -83,11 +84,12 @@ void test_create_and_load_index_file() {
       
        //debug
        ecl_file_view_type * ecl_file_view = ecl_file_get_global_view( ecl_file_index );
-       printf(" *************************** %s: %d\n", __func__, ecl_file_view_get_size( ecl_file_view ) );
+       fprintf(stderr, " *************************** %s: %d\n", __func__, ecl_file_view_get_size( ecl_file_view ) );
        kw = ecl_file_view_iget_file_kw( ecl_file_view , 0 );
-       printf(" *************************** %s: ***%s***\n", __func__, ecl_file_kw_get_header( kw ));
-       //test_assert_true( ecl_file_view_has_kw( ecl_file_index, "TEST1_KW" )  );
-       //debug
+       fprintf(stderr, " *************************** %s: ***%s***, size: %d, offset: %d\n", __func__, ecl_file_kw_get_header( kw ) , ecl_file_kw_get_size( kw) , ecl_file_kw_get_offset(kw)  );
+       
+       ecl_file_view_has_kw( ecl_file_index, "TEST1_KW" );
+       //end debug
 
       //test_assert_true( ecl_file_has_kw( ecl_file_index, "TEST1_KW" )  );
       
