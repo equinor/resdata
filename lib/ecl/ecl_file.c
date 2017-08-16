@@ -569,8 +569,8 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
 */
 
 
-ecl_file_type * ecl_file_open( const char * filename , int flags) {
-  fortio_type * fortio;
+static fortio_type * ecl_file_alloc_fortio(const char * filename, int flags) {
+  fortio_type * fortio = NULL;
   bool          fmt_file;
 
   ecl_util_fmt_file( filename , &fmt_file);
@@ -579,6 +579,13 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
     fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
   else
     fortio = fortio_open_reader( filename , fmt_file , ECL_ENDIAN_FLIP);
+
+  return fortio;
+}
+
+
+ecl_file_type * ecl_file_open( const char * filename , int flags) {
+  fortio_type * fortio = ecl_file_alloc_fortio(filename, flags);
 
   if (fortio) {
     ecl_file_type * ecl_file = ecl_file_alloc_empty( flags );
@@ -1020,47 +1027,41 @@ ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_fi
 
   FILE * istream = util_fopen(index_file_name , "r");
   char * file_name_ptr = util_fread_alloc_string(istream);
-  ecl_file_type * ecl_file_index = NULL;
+  ecl_file_type * ecl_file = NULL;
   
   if (strcmp(file_name_ptr, file_name) == 0) {
 
-
-    //start copied from ecl_file_open
-    /*fortio_type * fortio;
-    bool          fmt_file;
-
-    ecl_util_fmt_file( file_name , &fmt_file);
-
-    if (ecl_file_view_check_flags(flags , ECL_FILE_WRITABLE))
-      fortio = fortio_open_readwrite( file_name , fmt_file , ECL_ENDIAN_FLIP);
-    else
-      fortio = fortio_open_reader( file_name , fmt_file , ECL_ENDIAN_FLIP);*/
-    //end copied from ecl_file_open
-
+    fortio_type * fortio = ecl_file_alloc_fortio(file_name, flags);
     
-    }
+    if (fortio) {
       
-      ecl_file_index = ecl_file_alloc_empty( flags );
-      ecl_file_index->fortio = NULL;
-      ecl_file_index->global_view = ecl_file_view_alloc( ecl_file_index->fortio , &ecl_file_index->flags , ecl_file_index->inv_view , true );   
+      ecl_file = ecl_file_alloc_empty( flags );
+      ecl_file->fortio = fortio;
+      ecl_file->global_view = ecl_file_view_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_view , true );   
     
       int index_size = util_fread_int(istream);
+
       ecl_file_kw_type * file_kw;
       for (int i = 0; i < index_size; i++) {
         file_kw = ecl_file_kw_fread_alloc( istream );
-        fprintf(stderr, " ********************************** %s: %s\n", __func__, ecl_file_kw_get_header(file_kw) );
-   
-        ecl_file_view_add_kw( ecl_file_index->global_view , file_kw );
+        ecl_file_view_add_kw( ecl_file->global_view , file_kw );
       }   
-      ecl_file_view_make_index( ecl_file_index->global_view );
-      ecl_file_select_global(ecl_file_index);
 
-    {
+      /*ecl_file_kw_type ** file_kw_list = ecl_file_kw_fread_alloc_multiple( istream, index_size);
+      for (int i=0; i < index_size; i++)
+        ecl_file_view_add_kw(ecl_file->global_view , file_kw_list[i]);*/
+
+
+
+      ecl_file_view_make_index( ecl_file->global_view );
+      ecl_file_select_global(ecl_file);
+
+    }    
     
 
   }
 
   free(file_name_ptr);
   fclose(istream);
-  return ecl_file_index;
+  return ecl_file;
 }
