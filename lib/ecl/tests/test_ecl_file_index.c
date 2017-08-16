@@ -26,7 +26,7 @@
 #include <ert/ecl/ecl_file.h>
 
 void test_load_nonexisting_file() {
-   ecl_file_type * ecl_file = ecl_file_fast_open("base_file", "a_file_that_does_not_exist_2384623");
+   ecl_file_type * ecl_file = ecl_file_fast_open("base_file", "a_file_that_does_not_exist_2384623", 0);
    test_assert_NULL( ecl_file );
 }
 
@@ -45,14 +45,17 @@ void test_create_and_load_index_file() {
    //8: Create new initial_data_file
    //9: Read index_file again w/ ecl_file_fast_open, assert return of NULL
 
-   //CREATING THE DATA FILE
+   
+
+   
    test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
    {
       const char * file_name = "initial_data_file";
       const char * index_file_name = "index_file";
 
+      //creating the data file
       size_t data_size = 10;
-      ecl_kw_type * kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
+      ecl_kw_type * kw = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
       for(int i = 0; i < data_size; ++i)
          ecl_kw_iset_int(kw, i, 537 + i);
 
@@ -60,24 +63,36 @@ void test_create_and_load_index_file() {
       ecl_kw_fwrite(kw, fortio); 
       ecl_kw_free(kw);
 
-      fortio_fclose(fortio);
+      //kw = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
+
+      fortio_fclose(fortio); //finished creating data file
 
       ecl_file_type * ecl_file = ecl_file_open( file_name , 0 );
-      test_assert_true( ecl_file_has_kw( ecl_file , "TEST_KW" )  );
-
-
+      test_assert_true( ecl_file_has_kw( ecl_file , "TEST1_KW" )  );
       ecl_file_write_index( ecl_file ,  file_name , index_file_name);
+      int ecl_file_size = ecl_file_get_size( ecl_file );
+      ecl_file_close( ecl_file ); //finished using ecl_file
 
       
-      ecl_file_type * ecl_file_index = ecl_file_fast_open( file_name, index_file_name );
+      ecl_file_type * ecl_file_index = ecl_file_fast_open( file_name, index_file_name , 0);
       test_assert_true( ecl_file_is_instance(ecl_file_index)  );
 
       //Add timestamp check
 
-      //test_assert_int_equal(ecl_file_get_size(ecl_file), ecl_file_get_size(ecl_file_index) );
+      test_assert_int_equal(ecl_file_size, ecl_file_get_size(ecl_file_index) );
       
+       //debug
+       ecl_file_view_type * ecl_file_view = ecl_file_get_global_view( ecl_file_index );
+       printf(" *************************** %s: %d\n", __func__, ecl_file_view_get_size( ecl_file_view ) );
+       kw = ecl_file_view_iget_file_kw( ecl_file_view , 0 );
+       printf(" *************************** %s: ***%s***\n", __func__, ecl_file_kw_get_header( kw ));
+       //test_assert_true( ecl_file_view_has_kw( ecl_file_index, "TEST1_KW" )  );
+       //debug
 
-      ecl_file_close( ecl_file );
+      //test_assert_true( ecl_file_has_kw( ecl_file_index, "TEST1_KW" )  );
+      
+      ecl_file_close( ecl_file_index );
+      
    }
    test_work_area_free( work_area );
 }

@@ -997,23 +997,72 @@ void  ecl_file_write_index( ecl_file_type * ecl_file , const char * filename , c
   FILE * ostream = util_fopen(index_filename , "w");
   util_fwrite_string( filename , ostream );
   
+  ecl_file_view_type * current_ecl_file_view  = ecl_file->active_view;
+  ecl_file_select_global( ecl_file );
+  int ecl_file_size = ecl_file_get_size(ecl_file);
+  util_fwrite_int( ecl_file_size , ostream);
   
-
-
+  ecl_file_kw_type * ecl_file_kw;
+  for (int i = 0; i < ecl_file_size; i++) {
+     ecl_file_kw = ecl_file_iget_file_kw( ecl_file, i );
+     ecl_file_kw_fwrite( ecl_file_kw , ostream );
+  }
+    
+  ecl_file->active_view = current_ecl_file_view;
+  
   fclose( ostream );
 }
 
 
-ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_file_name) {
-  if ( !(   util_file_exists( file_name ) & util_file_exists (index_file_name)   )   )
+ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_file_name, int flags) {
+  if ( !(   util_file_exists( file_name ) && util_file_exists (index_file_name)   )   )
     return NULL;
 
   FILE * istream = util_fopen(index_file_name , "r");
   char * file_name_ptr = util_fread_alloc_string(istream);
-  if (strcmp(file_name_ptr, file_name) != 0)   //change to free values in immature returns
-    return NULL;  
+  ecl_file_type * ecl_file_index = NULL;
+  
+  if (strcmp(file_name_ptr, file_name) == 0) {
 
 
-  ecl_file_type * ecl_file_index = ecl_file_alloc_empty(0);
+    //start copied from ecl_file_open
+    /*fortio_type * fortio;
+    bool          fmt_file;
+
+    ecl_util_fmt_file( file_name , &fmt_file);
+
+    if (ecl_file_view_check_flags(flags , ECL_FILE_WRITABLE))
+      fortio = fortio_open_readwrite( file_name , fmt_file , ECL_ENDIAN_FLIP);
+    else
+      fortio = fortio_open_reader( file_name , fmt_file , ECL_ENDIAN_FLIP);*/
+    //end copied from ecl_file_open
+
+    
+    }
+      
+      ecl_file_index = ecl_file_alloc_empty( flags );
+      ecl_file_index->fortio = NULL;
+      ecl_file_index->global_view = ecl_file_view_alloc( ecl_file_index->fortio , &ecl_file_index->flags , ecl_file_index->inv_view , true );   
+    
+      int index_size = util_fread_int(istream);
+      ecl_file_kw_type * file_kw;
+      for (int i = 0; i < index_size; i++) {
+        file_kw = ecl_file_kw_fread_alloc( istream );
+        printf(" ********************************** %s: %s\n", __func__, ecl_file_kw_get_header(file_kw) );
+   
+        ecl_file_view_add_kw( ecl_file_index->global_view , file_kw );
+      }   
+      ecl_file_view_make_index( ecl_file_index->global_view );
+      ecl_file_select_global(ecl_file_index);
+
+      ecl_file_view_check_flags( ecl_file_index->flags , ECL_FILE_CLOSE_STREAM);     //debug
+
+    {
+    
+
+  }
+
+  free(file_name_ptr);
+  fclose(istream);
   return ecl_file_index;
 }
