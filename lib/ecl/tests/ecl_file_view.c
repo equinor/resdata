@@ -52,21 +52,23 @@ void test_file_kw_equal() {
 }
 
 void test_create_file_kw() {
-  ecl_file_kw_type * file_kw = ecl_file_kw_alloc0( "PRESSURE" , ECL_FLOAT, 1000 , 66);
-  test_assert_string_equal( ecl_file_kw_get_header( file_kw ) , "PRESSURE" );
-  test_assert_int_equal( ecl_file_kw_get_size( file_kw ) , 1000 );
-  test_assert_true( ecl_type_is_equal( ecl_file_kw_get_data_type( file_kw ) , ECL_FLOAT ));
+  ecl_file_kw_type * file_kw0 = ecl_file_kw_alloc0( "PRESSURE" , ECL_FLOAT, 1000 , 66);
+  ecl_file_kw_type * file_kw1 = ecl_file_kw_alloc0( "TEST1_KW" , ECL_FLOAT, 2000 , 1066);
+  ecl_file_kw_type * file_kw2 = ecl_file_kw_alloc0( "TEST2_KW" , ECL_FLOAT, 3000 , 2066);
+  test_assert_string_equal( ecl_file_kw_get_header( file_kw0 ) , "PRESSURE" );
+  test_assert_int_equal( ecl_file_kw_get_size( file_kw0 ) , 1000 );
+  test_assert_true( ecl_type_is_equal( ecl_file_kw_get_data_type( file_kw0 ) , ECL_FLOAT ));
   {
     test_work_area_type * work_area = test_work_area_alloc("file_kw");
     {
       FILE * ostream = util_fopen("file_kw" , "w");
-      ecl_file_kw_fwrite( file_kw , ostream );
+      ecl_file_kw_fwrite( file_kw0 , ostream );
       fclose( ostream );
     }
     {
       FILE * istream = util_fopen("file_kw" , "r");
       ecl_file_kw_type * disk_kw = ecl_file_kw_fread_alloc( istream );
-      test_assert_true( ecl_file_kw_equal( file_kw , disk_kw ));
+      test_assert_true( ecl_file_kw_equal( file_kw0 , disk_kw ));
 
       /* Beyond the end of stream - return NULL */
       test_assert_NULL( ecl_file_kw_fread_alloc( istream ));
@@ -76,18 +78,18 @@ void test_create_file_kw() {
 
     {
       FILE * ostream = util_fopen("file_kw" , "w");
-      ecl_file_kw_fwrite( file_kw , ostream );
-      ecl_file_kw_fwrite( file_kw , ostream );
-      ecl_file_kw_fwrite( file_kw , ostream );
+      ecl_file_kw_fwrite( file_kw0 , ostream );
+      ecl_file_kw_fwrite( file_kw1 , ostream );
+      ecl_file_kw_fwrite( file_kw2 , ostream );
       fclose( ostream );
     }
 
     {
       FILE * istream = util_fopen("file_kw" , "r");
       ecl_file_kw_type ** disk_kw = ecl_file_kw_fread_alloc_multiple( istream , 3);
-      test_assert_true( ecl_file_kw_equal( file_kw , disk_kw[0] ));
-      test_assert_true( ecl_file_kw_equal( file_kw , disk_kw[1] ));
-      test_assert_true( ecl_file_kw_equal( file_kw , disk_kw[2] ));
+      test_assert_true( ecl_file_kw_equal( file_kw0 , disk_kw[0] ));
+      test_assert_true( ecl_file_kw_equal( file_kw1 , disk_kw[1] ));
+      test_assert_true( ecl_file_kw_equal( file_kw2 , disk_kw[2] ));
 
       for (int i=0; i < 3; i++)
         ecl_file_kw_free( disk_kw[i] );
@@ -101,7 +103,10 @@ void test_create_file_kw() {
     }
     test_work_area_free( work_area );
   }
-  ecl_file_kw_free( file_kw );
+  ecl_file_kw_free( file_kw0 );
+  ecl_file_kw_free( file_kw1 );
+  ecl_file_kw_free( file_kw2 );
+  
 }
 
 

@@ -55,19 +55,17 @@ void test_create_and_load_index_file() {
 
       //creating the data file
       size_t data_size = 10;
-      ecl_kw_type * kw = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
+      ecl_kw_type * kw1 = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
       for(int i = 0; i < data_size; ++i)
-         ecl_kw_iset_int(kw, i, 537 + i);
+         ecl_kw_iset_int(kw1, i, 537 + i);
       fortio_type * fortio = fortio_open_writer(file_name, false, ECL_ENDIAN_FLIP);
-      ecl_kw_fwrite(kw, fortio); 
-      ecl_kw_free(kw);
+      ecl_kw_fwrite(kw1, fortio); 
       
       data_size = 5;
-      kw = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
+      ecl_kw_type * kw2 = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
       for(int i = 0; i < data_size; ++i)
-         ecl_kw_iset_float(kw, i, 0.15 * i);
-      ecl_kw_fwrite(kw, fortio);
-      ecl_kw_free(kw);
+         ecl_kw_iset_float(kw2, i, 0.15 * i);
+      ecl_kw_fwrite(kw2, fortio);
       fortio_fclose(fortio); 
       //finished creating data file
 
@@ -88,15 +86,18 @@ void test_create_and_load_index_file() {
       test_assert_int_equal(ecl_file_size, ecl_file_get_size(ecl_file_index) );    
   
       test_assert_true( ecl_file_has_kw( ecl_file_index, "TEST1_KW" )  );
-      printf("***************************************************\n");
       test_assert_true( ecl_file_has_kw( ecl_file_index, "TEST2_KW" )  );
-      kw = ecl_file_iget_kw( ecl_file_index , 0 );  
-      test_assert_double_equal( 537.0, ecl_kw_iget_as_double(kw, 0)  );
-      test_assert_double_equal( 546.0, ecl_kw_iget_as_double(kw, 9)  );
-      kw = ecl_file_iget_kw( ecl_file_index , 1 );
-      test_assert_double_equal( 0.15, ecl_kw_iget_as_double(kw, 1)  );
-      test_assert_double_equal( 0.60, ecl_kw_iget_as_double(kw, 4)  );     
+      ecl_kw_type * kwi1 = ecl_file_iget_kw( ecl_file_index , 0 );  
+      test_assert_true (ecl_kw_equal(kw1, kwi1));
+      test_assert_double_equal( 537.0, ecl_kw_iget_as_double(kw1, 0)  );
+      test_assert_double_equal( 546.0, ecl_kw_iget_as_double(kw1, 9)  );
+      ecl_kw_type * kwi2 = ecl_file_iget_kw( ecl_file_index , 1 );
+      test_assert_true (ecl_kw_equal(kw1, kwi1));
+      test_assert_double_equal( 0.15, ecl_kw_iget_as_double(kw2, 1)  );
+      test_assert_double_equal( 0.60, ecl_kw_iget_as_double(kw2, 4)  );     
 
+      ecl_kw_free(kw1);
+      ecl_kw_free(kw2);
       ecl_file_close( ecl_file_index );
       
    }

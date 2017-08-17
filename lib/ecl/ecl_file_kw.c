@@ -353,7 +353,9 @@ void ecl_file_kw_fwrite( const ecl_file_kw_type * file_kw , FILE * stream ) {
 
 
 ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num) {
-  size_t buffer_size = num * (ECL_STRING8_LENGTH + 2 * sizeof(int) + sizeof(offset_type) + sizeof(size_t));
+  
+  size_t file_kw_size = ECL_STRING8_LENGTH + 2 * sizeof(int) + sizeof(offset_type) + sizeof(size_t);
+  size_t buffer_size = num * file_kw_size;
   char * buffer = util_malloc( buffer_size * sizeof * buffer );
   size_t num_read = fread( buffer, 1 , buffer_size , stream);
 
@@ -365,7 +367,7 @@ ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num) {
   {
     ecl_file_kw_type ** kw_list = util_malloc( num * sizeof * kw_list );
     for (int ikw = 0; ikw < num; ikw++) {
-      int buffer_offset = 0;
+      int buffer_offset = ikw * file_kw_size;
       char header[ECL_STRING8_LENGTH + 1];
       int kw_size;
       offset_type file_offset;
