@@ -32,22 +32,7 @@ void test_load_nonexisting_file() {
 
 
 void test_create_and_load_index_file() {
-   //X1: Start w/ just one kw
-   //X2: Expand to several kw 
 
-   //***1: create/get an ecl type file
-   //***2: use ecl_file_open to read from the file -> ecl_file_start
-   //3: store some values from the file, V1 ...  Vn
-   //4: use NEW function ecl_file_write_index to create an ecl_index file
-   //5: use NEW function ecl_file_fast_open to create a new ecl_file type -> ecl_file_end
-   //6: Use ecl_file_end to read from file and compare values to V1 ... Vn
-   //7: Remove from work area "initial_data_file", close/free variable ecl_file_start, ecl_file_end
-   //8: Create new initial_data_file
-   //9: Read index_file again w/ ecl_file_fast_open, assert return of NULL
-
-   
-
-   
    test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
    {
       const char * file_name = "initial_data_file";
@@ -77,24 +62,26 @@ void test_create_and_load_index_file() {
       ecl_file_close( ecl_file ); 
       //finished using ecl_file
 
-      
+      test_assert_true( ecl_file_index_valid(file_name, index_file_name) );
+
       ecl_file_type * ecl_file_index = ecl_file_fast_open( file_name, index_file_name , 0);
       test_assert_true( ecl_file_is_instance(ecl_file_index)  );
-
-      //Add timestamp check
+      test_assert_true( ecl_file_get_global_view(ecl_file_index) );
 
       test_assert_int_equal(ecl_file_size, ecl_file_get_size(ecl_file_index) );    
   
       test_assert_true( ecl_file_has_kw( ecl_file_index, "TEST1_KW" )  );
       test_assert_true( ecl_file_has_kw( ecl_file_index, "TEST2_KW" )  );
+
       ecl_kw_type * kwi1 = ecl_file_iget_kw( ecl_file_index , 0 );  
       test_assert_true (ecl_kw_equal(kw1, kwi1));
-      test_assert_double_equal( 537.0, ecl_kw_iget_as_double(kw1, 0)  );
-      test_assert_double_equal( 546.0, ecl_kw_iget_as_double(kw1, 9)  );
+      test_assert_double_equal( 537.0, ecl_kw_iget_as_double(kwi1, 0)  );
+      test_assert_double_equal( 546.0, ecl_kw_iget_as_double(kwi1, 9)  );
+
       ecl_kw_type * kwi2 = ecl_file_iget_kw( ecl_file_index , 1 );
-      test_assert_true (ecl_kw_equal(kw1, kwi1));
-      test_assert_double_equal( 0.15, ecl_kw_iget_as_double(kw2, 1)  );
-      test_assert_double_equal( 0.60, ecl_kw_iget_as_double(kw2, 4)  );     
+      test_assert_true (ecl_kw_equal(kw2, kwi2));
+      test_assert_double_equal( 0.15, ecl_kw_iget_as_double(kwi2, 1)  );
+      test_assert_double_equal( 0.60, ecl_kw_iget_as_double(kwi2, 4)  );     
 
       ecl_kw_free(kw1);
       ecl_kw_free(kw2);

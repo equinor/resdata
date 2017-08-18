@@ -787,7 +787,6 @@ void ecl_file_view_write_index(ecl_file_view_type * file_view, FILE * ostream) {
      file_kw = ecl_file_view_iget_file_kw( file_view, i );
      ecl_file_kw_fwrite( file_kw , ostream );
   }
-
 }
 
 ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map, FILE * istream ) {
