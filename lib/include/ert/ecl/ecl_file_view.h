@@ -100,7 +100,7 @@ typedef struct ecl_file_view_struct ecl_file_view_type;
   const char *         ecl_file_view_get_src_file( const ecl_file_view_type * file_view );
   void                 ecl_file_view_fclose_stream( ecl_file_view_type * file_view );
 
-  void                 ecl_file_view_write_index(ecl_file_view_type * file_view, FILE * ostream);
+  void                 ecl_file_view_write_index(const ecl_file_view_type * file_view, const char * filename, FILE * ostream);
   ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map, FILE * istream );
 
 #ifdef __cplusplus

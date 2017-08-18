@@ -1003,17 +1003,18 @@ ecl_file_type * ecl_file_iopen_rstblock( const char * filename , int seqnum_inde
 }
 
 bool ecl_file_index_valid(const char * file_name, const char * index_file_name) {
-  if ( !(   util_file_exists( file_name ) && util_file_exists (index_file_name)   )   )
+  if ( !util_file_exists( file_name ))
+    return false;
+  if (!util_file_exists (index_file_name))
     return false;
   if (util_file_difftime( file_name , index_file_name) > 0)
     return false;
   return true;
 }
 
-void  ecl_file_write_index( ecl_file_type * ecl_file , const char * filename , const char * index_filename) {
+void  ecl_file_write_index( const ecl_file_type * ecl_file , const char * index_filename) {
   FILE * ostream = util_fopen(index_filename , "w");
-  util_fwrite_string( filename , ostream );
-  ecl_file_view_write_index( ecl_file->global_view , ostream );
+  ecl_file_view_write_index( ecl_file->global_view , fortio_filename_ref(ecl_file->fortio), ostream );
   fclose( ostream );
 }
 
@@ -1023,6 +1024,7 @@ ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_fi
     return NULL;
 
   FILE * istream = util_fopen(index_file_name , "r");
+  util_fread_int(istream);
   char * source_file = util_fread_alloc_string(istream);
 
   ecl_file_type * ecl_file = NULL;

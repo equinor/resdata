@@ -778,8 +778,12 @@ void ecl_file_view_fclose_stream( ecl_file_view_type * file_view ) {
   fortio_fclose_stream( file_view->fortio );
 }
 
-void ecl_file_view_write_index(ecl_file_view_type * file_view, FILE * ostream) {
+void ecl_file_view_write_index(const ecl_file_view_type * file_view, const char * filename, FILE * ostream) {
   int size = ecl_file_view_get_size(file_view);
+
+  int total_file_size = 3 * sizeof(int) + strlen(filename) + size * ecl_file_kw_get_buffer_size();
+  util_fwrite_int( total_file_size , ostream);
+  util_fwrite_string( filename , ostream );
   util_fwrite_int( size , ostream);
   
   ecl_file_kw_type * file_kw;

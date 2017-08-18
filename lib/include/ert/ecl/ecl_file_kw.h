@@ -53,6 +53,7 @@ typedef struct inv_map_struct inv_map_type;
   bool               ecl_file_kw_fskip_data( const ecl_file_kw_type * file_kw , fortio_type * fortio);
   void               ecl_file_kw_inplace_fwrite( ecl_file_kw_type * file_kw , fortio_type * fortio);
 
+  size_t              ecl_file_kw_get_buffer_size();
   void                ecl_file_kw_fwrite( const ecl_file_kw_type * file_kw , FILE * stream );
   ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num);
   ecl_file_kw_type *  ecl_file_kw_fread_alloc( FILE * stream );

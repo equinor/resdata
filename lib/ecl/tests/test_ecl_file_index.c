@@ -57,7 +57,7 @@ void test_create_and_load_index_file() {
       //creating ecl_file
       ecl_file_type * ecl_file = ecl_file_open( file_name , 0 );
       test_assert_true( ecl_file_has_kw( ecl_file , "TEST1_KW" )  );
-      ecl_file_write_index( ecl_file ,  file_name , index_file_name);
+      ecl_file_write_index( ecl_file , index_file_name);
       int ecl_file_size = ecl_file_get_size( ecl_file );
       ecl_file_close( ecl_file ); 
       //finished using ecl_file
