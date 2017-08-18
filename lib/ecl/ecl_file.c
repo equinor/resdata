@@ -643,7 +643,9 @@ void ecl_file_close(ecl_file_type * ecl_file) {
   if (ecl_file->fortio != NULL)
     fortio_fclose( ecl_file->fortio  );
 
-  ecl_file_view_free( ecl_file->global_view );
+  if (ecl_file->global_view)
+    ecl_file_view_free( ecl_file->global_view );
+
   inv_map_free( ecl_file->inv_view );
   vector_free( ecl_file->map_stack );
   free( ecl_file );
@@ -1031,7 +1033,15 @@ ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_fi
       ecl_file = ecl_file_alloc_empty( flags );
       ecl_file->fortio = fortio;
       ecl_file->global_view = ecl_file_view_fread_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_view , istream );
-      ecl_file_select_global( ecl_file );
+      if (ecl_file->global_view) {
+        ecl_file_select_global( ecl_file );
+        if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
+          fortio_fclose_stream( ecl_file->fortio );
+      }
+      else {
+        ecl_file_close( ecl_file );
+        ecl_file = NULL;
+      }
     }    
   }
   free(source_file);
