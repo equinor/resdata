@@ -17,6 +17,7 @@
 */
 
 #include <stdio.h>
+#include <utime.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/util.h>
@@ -35,8 +36,8 @@ void test_create_and_load_index_file() {
 
    test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
    {
-      const char * file_name = "initial_data_file";
-      const char * index_file_name = "index_file";
+      char * file_name = "initial_data_file";
+      char * index_file_name = "index_file";
 
       //creating the data file
       size_t data_size = 10;
@@ -62,6 +63,16 @@ void test_create_and_load_index_file() {
       ecl_file_close( ecl_file ); 
       //finished using ecl_file
 
+      test_assert_false( ecl_file_index_valid(file_name, "nofile"));
+      test_assert_false( ecl_file_index_valid("nofile", index_file_name));
+
+      struct utimbuf tm1 = {1 , 1};
+      struct utimbuf tm2 = {2 , 2};
+      utime(file_name, &tm2);
+      utime(index_file_name, &tm1);
+      test_assert_false( ecl_file_index_valid(file_name, index_file_name) );
+      utime(file_name, &tm1);
+      utime(index_file_name, &tm2);
       test_assert_true( ecl_file_index_valid(file_name, index_file_name) );
 
       ecl_file_type * ecl_file_index = ecl_file_fast_open( file_name, index_file_name , 0);
@@ -86,7 +97,6 @@ void test_create_and_load_index_file() {
       ecl_kw_free(kw1);
       ecl_kw_free(kw2);
       ecl_file_close( ecl_file_index );
-      
    }
    test_work_area_free( work_area );
 }

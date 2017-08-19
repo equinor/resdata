@@ -802,6 +802,7 @@ ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * fla
     for (int i=0; i < index_size; i++)
       ecl_file_view_add_kw(file_view , file_kw_list[i]);
 
+    free(file_kw_list);
     ecl_file_view_make_index( file_view );
     return file_view;
   }
