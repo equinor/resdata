@@ -348,7 +348,7 @@ void ecl_file_kw_fwrite( const ecl_file_kw_type * file_kw , FILE * stream ) {
   util_fwrite_int( file_kw->kw_size , stream );
   util_fwrite_offset( file_kw->file_offset , stream );
   util_fwrite_int( ecl_type_get_type( file_kw->data_type ) , stream );
-  util_fwrite_size_t( ecl_type_get_sizeof_ctype( file_kw->data_type ) , stream );
+  util_fwrite_size_t( ecl_type_get_sizeof_ctype_fortio( file_kw->data_type ) , stream );
 }
 
 ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num) {
