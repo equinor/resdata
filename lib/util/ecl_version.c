@@ -30,20 +30,20 @@ const char* ecl_version_get_build_time() {
 }
 
 int ecl_version_get_major_version() {
-  return ERT_VERSION_MAJOR;
+  return ECL_VERSION_MAJOR;
 }
 
 
 int ecl_version_get_minor_version() {
-  return ERT_VERSION_MINOR;
+  return ECL_VERSION_MINOR;
 }
 
 
 const char * ecl_version_get_micro_version() {
-  return str(ERT_VERSION_MICRO);
+  return str(ECL_VERSION_MICRO);
 }
 
 
 bool ecl_version_is_devel_version() {
-  return util_sscanf_int(str(ERT_VERSION_MICRO), NULL);
+  return util_sscanf_int(str(ECL_VERSION_MICRO), NULL);
 }
