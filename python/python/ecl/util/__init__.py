@@ -51,7 +51,7 @@ class UtilPrototype(Prototype):
 
 
 
-from .version import Version
+from .version import Version, EclVersion
 
 from .enums import RngAlgTypeEnum, RngInitModeEnum, LLSQResultEnum
 
