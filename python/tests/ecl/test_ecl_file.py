@@ -79,6 +79,23 @@ class EclFileTest(ExtendedTestCase):
                 self.assertTrue( ecl_file.has_kw("KW2"))
                 self.assertEqual(ecl_file[1], ecl_file[-1])
 
+    def test_ecl_index(self):
+        with TestAreaContext("python/ecl_file/context"):
+            kw1 = EclKW( "KW1" , 100 , EclDataType.ECL_INT)
+            kw2 = EclKW( "KW2" , 100 , EclDataType.ECL_FLOAT)
+            with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
+                kw1.fwrite( f )
+                kw2.fwrite( f )
+
+            ecl_file = EclFile("TEST")
+            ecl_file.write_index("INDEX_FILE")
+            ecl_file.close()
+
+            ecl_file_index = EclFile("TEST", 0, "INDEX_FILE")
+            self.assertTrue( ecl_file_index.has_kw("KW1") )
+            self.assertTrue( ecl_file_index.has_kw("KW2") )
+            
+
     def test_save_kw(self):
         with TestAreaContext("python/ecl_file/save_kw"):
             data = range(1000)

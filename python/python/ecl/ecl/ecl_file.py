@@ -62,6 +62,8 @@ class EclFile(BaseCClass):
     _has_report_step             = EclPrototype("bool        ecl_file_has_report_step( ecl_file , int)")
     _has_sim_time                = EclPrototype("bool        ecl_file_has_sim_time( ecl_file , time_t )")
     _get_global_view             = EclPrototype("ecl_file_view_ref ecl_file_get_global_view( ecl_file )")
+    _write_index                 = EclPrototype("void        ecl_file_write_index( ecl_file , char*)")
+    _fast_open                   = EclPrototype("void*       ecl_file_fast_open( char* , char* , int )" , bind=False)
 
 
     @staticmethod
@@ -178,7 +180,7 @@ class EclFile(BaseCClass):
         return self._create_repr('"%s"%s' % (fn,wr))
 
 
-    def __init__( self , filename , flags = 0):
+    def __init__( self , filename , flags = 0 , index_filename = None):
         """
         Loads the complete file @filename.
 
@@ -202,7 +204,10 @@ class EclFile(BaseCClass):
         constituting the file, like e.g. SWAT from a restart file or
         FIPNUM from an INIT file.
         """
-        c_ptr = self._open( filename , flags )
+        if index_filename is None:
+            c_ptr = self._open( filename , flags )
+        else:
+            c_ptr = self._fast_open(filename, index_filename, flags)
         if c_ptr is None:
             raise IOError('Failed to open file "%s"' % filename)
         else:
@@ -677,6 +682,9 @@ class EclFile(BaseCClass):
 
         """
         self._fwrite(  fortio , 0 )
+
+    def write_index(self, index_file_name):
+        self._write_index(index_file_name)
 
 
 class EclFileContextManager(object):
