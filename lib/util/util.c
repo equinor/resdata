@@ -304,7 +304,7 @@ void util_fread_dev_urandom(int buffer_size , char * buffer) {
 
 unsigned int util_dev_urandom_seed( ) {
   unsigned int seed;
-  util_fread_dev_urandom( sizeof seed, &seed );
+  util_fread_dev_urandom( sizeof seed, (char*)&seed );
   return seed;
 }
 
@@ -404,7 +404,7 @@ bool util_double_approx_equal( double d1 , double d2) {
 char * util_alloc_substring_copy(const char *src , int offset , int N) {
   char *copy;
   if ((N + offset) < strlen(src)) {
-    copy = util_calloc(N + 1 , sizeof * copy );
+    copy = (char*)util_calloc(N + 1 , sizeof * copy );
     strncpy(copy , &src[offset] , N);
     copy[N] = '\0';
   } else
@@ -416,7 +416,7 @@ char * util_alloc_substring_copy(const char *src , int offset , int N) {
 char * util_alloc_dequoted_copy(const char *s) {
   char first_char = s[0];
   char last_char  = s[strlen(s) - 1];
-  char *new;
+  char *next;
   int offset , len;
 
   if ((first_char == '\'') || (first_char == '\"'))
@@ -429,8 +429,8 @@ char * util_alloc_dequoted_copy(const char *s) {
   else
     len = strlen(s) - offset;
 
-  new = util_alloc_substring_copy(s , offset , len);
-  return new;
+  next = util_alloc_substring_copy(s , offset , len);
+  return next;
 }
 
 
@@ -442,7 +442,7 @@ char * util_alloc_dequoted_copy(const char *s) {
 char * util_realloc_dequoted_string(char *s) {
   char first_char = s[0];
   char last_char  = s[strlen(s) - 1];
-  char *new;
+  char *next;
   int offset , len;
 
   if ((first_char == '\'') || (first_char == '\"'))
@@ -455,9 +455,9 @@ char * util_realloc_dequoted_string(char *s) {
   else
     len = strlen(s) - offset;
 
-  new = util_alloc_substring_copy(s , offset , len);
+  next = util_alloc_substring_copy(s , offset , len);
   free(s);
-  return new;
+  return next;
 }
 
 void util_strupr(char *s) {
@@ -593,7 +593,7 @@ char * util_fscanf_alloc_upto(FILE * stream , const char * stop_string, bool inc
   if (util_fseek_string(stream , stop_string , include_stop_string , true)) {   /* Default case sensitive. */
     long int end_pos = util_ftell(stream);
     int      len     = end_pos - start_pos;
-    char * buffer    = util_calloc( (len + 1) ,  sizeof * buffer );
+    char * buffer    = (char*)util_calloc( (len + 1) ,  sizeof * buffer );
 
     util_fseek(stream , start_pos , SEEK_SET);
     util_fread( buffer , 1 , len , stream , __func__);
@@ -639,7 +639,7 @@ static char * util_fscanf_alloc_line__(FILE *stream , bool *at_eof , char * line
   if (util_fseek(stream , init_pos , SEEK_SET) != 0)
     util_abort("%s: fseek failed: %d/%s \n",__func__ , errno , strerror(errno));
 
-  new_line = util_realloc(line , len + 1 );
+  new_line = (char*)util_realloc(line , len + 1 );
   util_fread(new_line , sizeof * new_line , len , stream , __func__);
   new_line[len] = '\0';
 
@@ -696,7 +696,7 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
 
 char * util_alloc_stdin_line(void) {
   int input_size = 256;
-  char * input   = util_calloc(input_size , sizeof * input );
+  char * input   = (char*)util_calloc(input_size , sizeof * input );
   int index = 0;
   bool end = false;
   int c;
@@ -707,7 +707,7 @@ char * util_alloc_stdin_line(void) {
       index++;
       if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
         input_size *= 2;
-        input = util_realloc(input , input_size );
+        input = (char*)util_realloc(input , input_size );
       }
     } else end = true;
   } while (!end);
@@ -716,7 +716,7 @@ char * util_alloc_stdin_line(void) {
     input = NULL;
   } else {
     input[index] = '\0';
-    input = util_realloc(input , strlen(input) + 1 );
+    input = (char*)util_realloc(input , strlen(input) + 1 );
   }
 
   return input;
@@ -797,7 +797,7 @@ char * util_alloc_cwd(void) {
   char * cwd;
   int buffer_size = 128;
   do {
-    cwd = util_calloc(buffer_size , sizeof * cwd );
+    cwd = (char*)util_calloc(buffer_size , sizeof * cwd );
     result_ptr = util_getcwd(cwd , buffer_size - 1);
     if (result_ptr == NULL) {
       if (errno == ERANGE) {
@@ -806,7 +806,7 @@ char * util_alloc_cwd(void) {
       }
     }
   } while ( result_ptr == NULL );
-  cwd = util_realloc(cwd , strlen(cwd) + 1 );
+  cwd = (char*)util_realloc(cwd , strlen(cwd) + 1 );
   return cwd;
 }
 
@@ -851,7 +851,7 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
     return util_alloc_string_copy( path );
   else {
     char * cwd       = util_alloc_cwd( );
-    char * abs_path  = util_realloc( cwd , strlen( cwd ) + 1 + strlen( path ) + 1 );
+    char * abs_path  = (char*)util_realloc( cwd , strlen( cwd ) + 1 + strlen( path ) + 1 );
     strcat( abs_path , UTIL_PATH_SEP_STRING );
     strcat( abs_path , path );
     return abs_path;
@@ -872,7 +872,7 @@ static char * util_alloc_cwd_abs_path( const char * path ) {
 
 char * util_alloc_realpath__(const char * input_path) {
   char * abs_path  = util_alloc_cwd_abs_path( input_path );
-  char * real_path = util_malloc( strlen(abs_path) + 2 );
+  char * real_path = (char*)util_malloc( strlen(abs_path) + 2 );
   real_path[0] = '\0';
 
   {
@@ -881,7 +881,7 @@ char * util_alloc_realpath__(const char * input_path) {
     int     path_len;
 
     util_path_split( abs_path , &path_len , &path_list );
-    mask = util_malloc( path_len * sizeof * mask );
+    mask = (bool*)util_malloc( path_len * sizeof * mask );
     {
       int i;
       for (i=0; i < path_len; i++)
@@ -968,14 +968,14 @@ char * util_alloc_realpath__(const char * input_path) {
 
 char * util_alloc_realpath(const char * input_path) {
 #ifdef HAVE_REALPATH
-  char * buffer   = util_calloc(PATH_MAX + 1 , sizeof * buffer );
+  char * buffer   = (char*)util_calloc(PATH_MAX + 1 , sizeof * buffer );
   char * new_path = NULL;
 
   new_path = realpath( input_path , buffer);
   if (new_path == NULL)
     util_abort("%s: input_path:%s - failed: %s(%d) \n",__func__ , input_path , strerror(errno) , errno);
   else
-    new_path = util_realloc(new_path , strlen(new_path) + 1);
+    new_path = (char*)util_realloc(new_path , strlen(new_path) + 1);
 
   return new_path;
 #else
@@ -1138,7 +1138,7 @@ char * util_alloc_rel_path( const char * __root_path , const char * path) {
 char * util_isscanf_alloc_envvar( const char * string , int env_index ) {
   int env_count = 0;
   const char * offset = string;
-  char       * env_ptr;
+  const char * env_ptr;
   do {
     env_ptr = strchr( offset , '$' );
     offset = &env_ptr[1];
@@ -1447,7 +1447,7 @@ char * util_fscanf_alloc_token(FILE * stream) {
     } while (cont);
     if (EOL_CHAR(c)) util_fseek(stream , -1 , SEEK_CUR);
 
-    token = util_calloc(length + 1 , sizeof * token );
+    token = (char*)util_calloc(length + 1 , sizeof * token );
     util_fseek(stream , token_start , SEEK_SET);
     {
       int i;
@@ -2241,7 +2241,7 @@ int util_count_content_file_lines(FILE * stream) {
 
 char * util_fread_alloc_file_content(const char * filename , int * buffer_size) {
   size_t file_size = util_file_size(filename);
-  char * buffer = util_calloc(file_size + 1 , sizeof * buffer );
+  char * buffer = (char*)util_calloc(file_size + 1 , sizeof * buffer );
   {
     FILE * stream = util_fopen(filename , "r");
     util_fread( buffer , 1 , file_size , stream , __func__);
@@ -2385,8 +2385,8 @@ void util_move_file4( const char * src_name , const char * target_name , const c
 bool util_files_equal( const char * file1 , const char * file2 ) {
   bool equal = true;
   const int buffer_size = 4096;
-  char * buffer1 = util_calloc( buffer_size , sizeof * buffer1 );
-  char * buffer2 = util_calloc( buffer_size , sizeof * buffer2 );
+  char * buffer1 = (char*)util_calloc( buffer_size , sizeof * buffer1 );
+  char * buffer2 = (char*)util_calloc( buffer_size , sizeof * buffer2 );
 
   FILE * stream1 = util_fopen( file1 , "r" );
   FILE * stream2 = util_fopen( file2 , "r" );
@@ -2475,7 +2475,7 @@ int util_fmove( FILE * stream , long offset , long shift) {
 
   if (shift != 0) {
     int buffer_size = 1024 * 1024 * 4;  /* 4MB buffer size. */
-    char * buffer = util_calloc( buffer_size , sizeof * buffer );
+    char * buffer = (char*)util_calloc( buffer_size , sizeof * buffer );
 
     /* Shift > 0: We are opening up a hole in the file. */
     if (shift > 0) {
@@ -2933,7 +2933,7 @@ bool util_fmt_bit8_stream(FILE * stream ) {
     double bit8set_fraction;
     int N_bit8set = 0;
     int elm_read,i;
-    char *buffer = util_calloc(buffer_size , sizeof * buffer );
+    char *buffer = (char*)util_calloc(buffer_size , sizeof * buffer );
 
     elm_read = fread(buffer , 1 , buffer_size , stream);
     if (elm_read < min_read)
@@ -3450,11 +3450,11 @@ char * util_alloc_strip_copy(const char *src) {
     while (src[start_index] == ' ')
       start_index++;
     strip_length = end_index - start_index + 1;
-    target = util_calloc(strip_length + 1 , sizeof * target );
+    target = (char*)util_calloc(strip_length + 1 , sizeof * target );
     memcpy(target , &src[start_index] , strip_length);
   } else
     /* A blank string */
-    target = util_calloc(strip_length + 1 , sizeof * target );
+    target = (char*)util_calloc(strip_length + 1 , sizeof * target );
 
   target[strip_length] = '\0';
   return target;
@@ -3476,7 +3476,7 @@ char * util_realloc_strip_copy(char *src) {
 char ** util_alloc_stringlist_copy(const char **src, int len) {
   if (src != NULL) {
     int i;
-    char ** copy = util_calloc(len , sizeof * copy );
+    char ** copy = (char**)util_calloc(len , sizeof * copy );
     for (i=0; i < len; i++)
       copy[i] = util_alloc_string_copy(src[i]);
     return copy;
@@ -3518,7 +3518,7 @@ char ** util_stringlist_append_copy(char ** string_list, int size , const char *
 */
 
 char ** util_stringlist_append_ref(char ** string_list, int size , const char * append_string) {
-  string_list = util_realloc(string_list , (size + 1) * sizeof * string_list );
+  string_list = (char**)util_realloc(string_list , (size + 1) * sizeof * string_list );
   string_list[size] = (char *) append_string;
   return string_list;
 }
@@ -3528,7 +3528,7 @@ char ** util_stringlist_append_ref(char ** string_list, int size , const char * 
 char * util_alloc_string_copy(const char *src ) {
   if (src != NULL) {
     int byte_size = (strlen(src) + 1) * sizeof * src;
-    char * copy   = util_calloc( byte_size , sizeof * copy );
+    char * copy   = (char*)util_calloc( byte_size , sizeof * copy );
     memcpy( copy , src , byte_size );
     return copy;
   } else
@@ -3539,7 +3539,7 @@ char * util_alloc_string_copy(const char *src ) {
 
 char * util_realloc_string_copy(char * old_string , const char *src ) {
   if (src != NULL) {
-    char *copy = util_realloc(old_string , (strlen(src) + 1) * sizeof *copy );
+    char *copy = (char*)util_realloc(old_string , (strlen(src) + 1) * sizeof *copy );
     strcpy(copy , src);
     return copy;
   } else {
@@ -3559,7 +3559,7 @@ char * util_realloc_substring_copy(char * old_string , const char *src , int len
     else
       str_len = len;
 
-    copy = realloc(old_string , (str_len + 1) * sizeof *copy);
+    copy = (char*)realloc(old_string , (str_len + 1) * sizeof *copy);
     strncpy(copy , src , str_len);
     copy[str_len] = '\0';
 
@@ -3618,10 +3618,10 @@ bool util_string_match(const char * string , const char * pattern) {
   if (strcmp(wildcard_st , pattern) == 0)
     return true;
   else {
-    bool    match = true;
-    char ** sub_pattern;
-    int     num_patterns;
-    char *  string_ptr;
+    bool          match = true;
+    char **       sub_pattern;
+    int           num_patterns;
+    const char *  string_ptr;
     util_split_string( pattern , wildcard_st , &num_patterns , &sub_pattern );
 
     if (pattern[0] == '*')
@@ -3634,7 +3634,7 @@ bool util_string_match(const char * string , const char * pattern) {
       int i;
           string_ptr += strlen( sub_pattern[0] );
       for (i=1; i < num_patterns; i++) {
-        char * match_ptr = strstr(string_ptr , sub_pattern[i]);
+        const char * match_ptr = strstr(string_ptr , sub_pattern[i]);
         if (match_ptr != NULL)
           string_ptr = match_ptr + strlen( sub_pattern[i] );
         else {
@@ -3695,7 +3695,9 @@ void util_free_stringlist(char **list , int N) {
 
 
 char * util_strstr_int_format(const char * string ) {
-  char * percent_ptr = strchr(string , '%');
+  // the function itself is essentially removing the const from *string
+  // so do it explicitly here to make C++ happy
+  char * percent_ptr = strchr((char*)string , '%');
 
   if (percent_ptr) {
 
@@ -3770,7 +3772,7 @@ char * util_strcat_realloc(char *s1 , const char * s2) {
   else {
     if (s2 != NULL) {
       int new_length = strlen(s1) + strlen(s2) + 1;
-      s1 = util_realloc( s1 , new_length );
+      s1 = (char*)util_realloc( s1 , new_length );
       strcat(s1 , s2);
     }
   }
@@ -3786,7 +3788,7 @@ char * util_alloc_string_sum(const char ** string_list , int N) {
     if (string_list[i] != NULL)
       len += strlen(string_list[i]);
   }
-  buffer = util_calloc(len + 1 , sizeof * buffer );
+  buffer = (char*)util_calloc(len + 1 , sizeof * buffer );
   buffer[0] = '\0';
   for (i=0; i < N; i++) {
     if (string_list[i] != NULL)
@@ -3823,7 +3825,7 @@ char * util_alloc_joined_string(const char ** item_list , int len , const char *
 
     if (eff_len > 0) {
       total_length += (eff_len - 1) * sep_length + 1;
-      joined_string = util_calloc(total_length , sizeof * joined_string );
+      joined_string = (char*)util_calloc(total_length , sizeof * joined_string );
       joined_string[0] = '\0';
       for (i=0; i < len; i++) {
         if (item_list[i] != NULL) {
@@ -3846,7 +3848,7 @@ char * util_alloc_joined_string(const char ** item_list , int len , const char *
 */
 char * util_alloc_multiline_string(const char ** item_list , int len) {
   char * multiline_string = util_alloc_joined_string(item_list , len , UTIL_NEWLINE_STRING);
-  multiline_string = util_realloc(multiline_string , (strlen(multiline_string) + strlen(UTIL_NEWLINE_STRING) + 1) * sizeof * multiline_string );
+  multiline_string = (char*)util_realloc(multiline_string , (strlen(multiline_string) + strlen(UTIL_NEWLINE_STRING) + 1) * sizeof * multiline_string );
   strcat(multiline_string , UTIL_NEWLINE_STRING);
   return multiline_string;
 }
@@ -3878,7 +3880,7 @@ void util_split_string(const char *line , const char *sep_set, int *_tokens, cha
   } while (line[offset] != '\0');
 
   if (tokens > 0) {
-    token_list = util_calloc(tokens , sizeof * token_list );
+    token_list = (char**)util_calloc(tokens , sizeof * token_list );
     offset = strspn(line , sep_set);
     token  = 0;
     do {
@@ -4126,7 +4128,7 @@ int static util_string_replace_inplace__(char ** _buffer , const char * expr , c
         int    new_size      = size  + len_subs - len_expr;
         if (new_size >= (buffer_size - 1)) {
           buffer_size += buffer_size + 2*len_subs;
-          buffer = util_realloc( buffer , buffer_size );
+          buffer = (char*)util_realloc( buffer , buffer_size );
         }
         {
           char * target    = &buffer[target_offset];
@@ -4162,13 +4164,13 @@ int util_string_replace_inplace(char ** _buffer , const char * expr , const char
 char * util_string_replace_alloc(const char * buff_org, const char * expr, const char * subs)
 {
   int buffer_size   = strlen(buff_org) * 2;
-  char * new_buffer = util_calloc(buffer_size ,  sizeof * new_buffer );
+  char * new_buffer = (char*)util_calloc(buffer_size ,  sizeof * new_buffer );
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
   util_string_replace_inplace__( &new_buffer , expr , subs);
 
   {
     int size = strlen(new_buffer);
-    new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer);
+    new_buffer = (char*)util_realloc(new_buffer, (size + 1) * sizeof * new_buffer);
   }
 
   return new_buffer;
@@ -4182,7 +4184,7 @@ char * util_string_replace_alloc(const char * buff_org, const char * expr, const
 char * util_string_replacen_alloc(const char * buff_org, int num_expr, const char ** expr, const char ** subs)
 {
   int buffer_size   = strlen(buff_org) * 2;
-  char * new_buffer = util_calloc(buffer_size , sizeof * new_buffer );
+  char * new_buffer = (char*)util_calloc(buffer_size , sizeof * new_buffer );
   memcpy(new_buffer , buff_org , strlen(buff_org) + 1);
   {
           int i;
@@ -4192,7 +4194,7 @@ char * util_string_replacen_alloc(const char * buff_org, int num_expr, const cha
 
   {
           int size = strlen(new_buffer);
-          new_buffer = util_realloc(new_buffer, (size + 1) * sizeof * new_buffer);
+          new_buffer = (char*)util_realloc(new_buffer, (size + 1) * sizeof * new_buffer);
   }
 
   return new_buffer;
@@ -4209,7 +4211,7 @@ char * util_string_strip_chars_alloc(const char * buff_org, const char * chars)
   int pos_org = 0;
   int pos_new = 0;
 
-  char * buff_new = util_calloc( (len_org +1) ,  sizeof * buff_new);
+  char * buff_new = (char*)util_calloc( (len_org +1) ,  sizeof * buff_new);
 
   while(pos_org < len_org)
   {
@@ -4228,7 +4230,7 @@ char * util_string_strip_chars_alloc(const char * buff_org, const char * chars)
     }
   }
   buff_new[pos_new + 1] = '\0';
-  buff_new = util_realloc(buff_new, (pos_new + 1) * sizeof buff_new);
+  buff_new = (char*)util_realloc(buff_new, (pos_new + 1) * sizeof buff_new);
 
   return buff_new;
 }
@@ -4289,10 +4291,10 @@ char * util_fread_alloc_string(FILE *stream) {
   char *s = NULL;
   util_fread(&len , sizeof len , 1 , stream , __func__);
   if (len > 0) {
-    s = util_calloc(len + 1 , sizeof * s );
+    s = (char*)util_calloc(len + 1 , sizeof * s );
     util_fread(s , 1 , len + 1 , stream , __func__);
   } else if (len == -1) /* Magic length for "" */ {
-    s = util_calloc(1 , sizeof * s );
+    s = (char*)util_calloc(1 , sizeof * s );
     util_fread(s , 1 , 1 , stream , __func__);
   }
   return s;
@@ -4304,10 +4306,10 @@ char * util_fread_realloc_string(char * old_s , FILE *stream) {
   char *s = NULL;
   util_fread(&len , sizeof len , 1 , stream , __func__);
   if (len > 0) {
-    s = util_realloc(old_s , len + 1 );
+    s = (char*)util_realloc(old_s , len + 1 );
     util_fread(s , 1 , len + 1 , stream , __func__);
   } else if (len == -1) /* Magic length for "" */ {
-    s = util_realloc(s , 1 );
+    s = (char*)util_realloc(s , 1 );
     util_fread(s , 1 , 1 , stream , __func__);
   }
   return s;
@@ -4501,7 +4503,7 @@ double util_double_vector_stddev(int N, const double * vector) {
   {
           double   stddev         = 0.0;
           double   mean           = util_double_vector_mean(N, vector);
-          double * vector_shifted = util_calloc(N , sizeof *vector_shifted);
+          double * vector_shifted = (double*)util_calloc(N , sizeof *vector_shifted);
 
           {
           int i;
@@ -4685,9 +4687,9 @@ void * util_alloc_copy(const void * src , size_t byte_size ) {
   if (byte_size == 0 && src == NULL)
     return NULL;
   {
-    void * new = util_malloc(byte_size );
-    memcpy(new , src , byte_size);
-    return new;
+    void * next = util_malloc(byte_size );
+    memcpy(next , src , byte_size);
+    return next;
   }
 }
 
@@ -4697,9 +4699,9 @@ void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size ) 
   if (byte_size == 0 && src == NULL)
     return util_realloc( org_ptr , 0 );
   {
-    void * new = util_realloc(org_ptr , byte_size );
-    memcpy(new , src , byte_size);
-    return new;
+    void * next = util_realloc(org_ptr , byte_size );
+    memcpy(next , src , byte_size);
+    return next;
   }
 }
 
@@ -4848,7 +4850,7 @@ char * util_alloc_sprintf_va(const char * fmt , va_list ap) {
   UTIL_VA_COPY(tmp_va , ap);
 
   length = vsnprintf(NULL , 0 , fmt , tmp_va);
-  s = util_calloc(length + 1 , sizeof * s );
+  s = (char*)util_calloc(length + 1 , sizeof * s );
   vsprintf(s , fmt , ap);
   return s;
 }
@@ -4873,7 +4875,7 @@ char * util_alloc_sprintf_escape(const char * src , int max_escape) {
 
   {
     const int src_len = strlen( src );
-    char * target = util_calloc( max_escape + strlen(src) + 1 , sizeof * target);
+    char * target = (char*)util_calloc( max_escape + strlen(src) + 1 , sizeof * target);
 
     int escape_count = 0;
     int src_offset = 0;
@@ -4894,7 +4896,7 @@ char * util_alloc_sprintf_escape(const char * src , int max_escape) {
         break;
     }
     target[target_offset] = '\0';
-    target = util_realloc( target , (target_offset + 1) * sizeof * target);
+    target = (char*)util_realloc( target , (target_offset + 1) * sizeof * target);
     return target;
   }
 }
@@ -5080,9 +5082,9 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 }
 
 
-char * __abort_program_message = NULL;                      /* Can use util_abort_append_version_info() to fill this with
+static char * __abort_program_message = NULL;                  /* Can use util_abort_append_version_info() to fill this with
                                                                version info+++ wich will be printed when util_abort() is called. */
-char * __current_executable    = NULL;
+static char * __current_executable    = NULL;
 
 
 void util_abort_append_version_info(const char * msg) {
@@ -5244,7 +5246,7 @@ void util_make_path(const char *_path) {
 
   if (!util_is_directory(path)) {
     int i = 0;
-    active_path = util_calloc(strlen(path) + 1 , sizeof * active_path );
+    active_path = (char*)util_calloc(strlen(path) + 1 , sizeof * active_path );
     do {
       int n = strcspn(path , UTIL_PATH_SEP_STRING);
       if (n < strlen(path))
@@ -5311,7 +5313,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   int    pid            = 0;
 #endif
 
-  char * file           = util_calloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1 , sizeof * file );
+  char * file           = (char*)util_calloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1 , sizeof * file );
   char * tmp_prefix     = util_alloc_string_copy( prefix );
 
   if (!util_is_directory(path))
@@ -5350,7 +5352,7 @@ char * util_alloc_filename(const char * path , const char * basename , const cha
   if (extension != NULL)
     length += strlen(extension) + 1;
 
-  file = util_calloc(length , sizeof * file );
+  file = (char*)util_calloc(length , sizeof * file );
 
   if (path == NULL) {
     if (extension == NULL)
@@ -5455,7 +5457,7 @@ char * util_alloc_parent_path( const char * path) {
       int current_length = 4;
       int ip;
 
-      parent_path = util_realloc( parent_path , current_length * sizeof * parent_path);
+      parent_path = (char*)util_realloc( parent_path , current_length * sizeof * parent_path);
       parent_path[0] = '\0';
 
       for (ip=0; ip < path_ncomp - 1; ip++) {
@@ -5464,7 +5466,7 @@ char * util_alloc_parent_path( const char * path) {
 
         if (min_length >= current_length) {
           current_length = 2 * min_length;
-          parent_path = util_realloc( parent_path , current_length * sizeof * parent_path);
+          parent_path = (char*)util_realloc( parent_path , current_length * sizeof * parent_path);
         }
 
         if (is_abs || (ip > 0))

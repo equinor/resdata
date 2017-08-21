@@ -85,12 +85,12 @@ UTIL_SAFE_CAST_FUNCTION( buffer , BUFFER_TYPE_ID )
 
 static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_on_error) {
   if (abort_on_error) {
-    buffer->data       = util_realloc(buffer->data , new_size );
+    buffer->data       = (char*)util_realloc(buffer->data , new_size );
     buffer->alloc_size = new_size;
   } else {
     void * tmp   = realloc(buffer->data , new_size);
     if (tmp != NULL) {
-      buffer->data = tmp;
+      buffer->data = (char*)tmp;
       buffer->alloc_size = new_size;
     }
   }
@@ -100,7 +100,7 @@ static void buffer_resize__(buffer_type * buffer , size_t new_size, bool abort_o
 
 
 static buffer_type * buffer_alloc_empty( ) {
-  buffer_type * buffer = util_malloc( sizeof * buffer );
+  buffer_type * buffer = (buffer_type*)util_malloc( sizeof * buffer );
   UTIL_TYPE_ID_INIT( buffer , BUFFER_TYPE_ID );
   buffer->data = NULL;
 
@@ -142,7 +142,7 @@ void buffer_shrink_to_fit( buffer_type * buffer ) {
 buffer_type * buffer_alloc_private_wrapper(void * data , size_t buffer_size ) {
   buffer_type * buffer = buffer_alloc_empty();
 
-  buffer->data         = data;        /* We have stolen the data pointer. */
+  buffer->data         = (char*)data;        /* We have stolen the data pointer. */
   buffer->content_size = buffer_size;
   buffer->pos          = buffer_size;
   buffer->alloc_size   = buffer_size;
@@ -869,7 +869,7 @@ size_t buffer_fread_compressed(buffer_type * buffer , size_t compressed_size , v
 
 
     if (compressed_size > 0) {
-        int uncompress_result = uncompress(target_ptr , &uncompressed_size , (unsigned char *) &buffer->data[buffer->pos] , compressed_size);
+        int uncompress_result = uncompress((Bytef*)target_ptr , &uncompressed_size , (unsigned char *) &buffer->data[buffer->pos] , compressed_size);
         if (uncompress_result != Z_OK) {
             fprintf(stderr,"%s: ** Warning uncompress result:%d != Z_OK.\n" , __func__ , uncompress_result);
             /**

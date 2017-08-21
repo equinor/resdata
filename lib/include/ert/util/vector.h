@@ -19,12 +19,13 @@
 #ifndef ERT_VECTOR_H
 #define ERT_VECTOR_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <ert/util/node_data.h>
 #include <ert/util/type_macros.h>
 #include <ert/util/int_vector.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
   typedef void ( vector_func_type ) (void * , void *);
   typedef int  ( vector_cmp_ftype)  (const void * , const void *);
