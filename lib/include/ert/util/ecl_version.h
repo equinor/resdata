@@ -25,9 +25,9 @@
 extern"C" {
 #endif
 
-char * 	     ecl_version_get_git_commit();
-char * 	     ecl_version_get_git_commit_short();
-char * 	     ecl_version_get_build_time();
+const char * ecl_version_get_git_commit();
+const char * ecl_version_get_git_commit_short();
+const char * ecl_version_get_build_time();
 int    	     ecl_version_get_major_version();
 int    	     ecl_version_get_minor_version();
 const char * ecl_version_get_micro_version();

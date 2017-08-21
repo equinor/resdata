@@ -4,7 +4,7 @@
 #define xstr(s) #s
 #define str(s) xstr(s)
 
-char* ecl_version_get_git_commit() {
+const char* ecl_version_get_git_commit() {
     #ifdef GIT_COMMIT
         return str(GIT_COMMIT);
     #else
@@ -12,7 +12,7 @@ char* ecl_version_get_git_commit() {
     #endif
 }
 
-char* ecl_version_get_git_commit_short() {
+const char* ecl_version_get_git_commit_short() {
     #ifdef GIT_COMMIT_SHORT
         return str(GIT_COMMIT_SHORT);
     #else
@@ -21,7 +21,7 @@ char* ecl_version_get_git_commit_short() {
 }
 
 
-char* ecl_version_get_build_time() {
+const char* ecl_version_get_build_time() {
     #ifdef COMPILE_TIME_STAMP
         return COMPILE_TIME_STAMP;
     #else
