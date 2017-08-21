@@ -108,7 +108,7 @@ add_library(ecl util/rng.c
                 util/string_util.c
                 util/type_vector_functions.c
                 util/ui_return.c
-                util/ert_version.c
+                util/ecl_version.c
                 util/struct_vector.c
                 util/perm_vector.c
                 util/test_util.c

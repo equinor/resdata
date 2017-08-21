@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2016  Statoil ASA, Norway.
 
-   The file 'ert_version.h' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ecl_version.h' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,8 +16,8 @@
    for more details.
 */
 
-#ifndef ERT_VERSION
-#define ERT_VERSION
+#ifndef ECL_VERSION
+#define ECL_VERSION
 
 #include <stdbool.h>
 

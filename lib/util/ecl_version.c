@@ -1,5 +1,5 @@
 #include <ert/util/util.h>
-#include <ert/util/ert_version.h>
+#include <ert/util/ecl_version.h>
 
 #define xstr(s) #s
 #define str(s) xstr(s)
