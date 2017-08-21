@@ -154,6 +154,17 @@ class EclFileStatoilTest(ExtendedTestCase):
         v = f.restartView( report_step = 30 )
         v = f.restartView( seqnum_index = 30 )
 
+
+    def test_index(self):
+        with TestAreaContext("python/ecl_file/truncated"):
+            f0 = EclFile( self.test_file )
+            f0.write_index( "index" )
+
+            f1 = EclFile( self.test_file , index_filename = "index")
+            for kw0,kw1 in zip(f0,f1):
+                self.assertEqual(kw0,kw1)
+
+
     def test_ix_case(self):
         f = EclFile( self.createTestPath( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well.SMSPEC"))
 
