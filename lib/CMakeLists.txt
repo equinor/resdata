@@ -381,6 +381,8 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_nnc_info_test
                 ecl_nnc_vector
                 ecl_rft_cell
+                ecl_file_view
+                test_ecl_file_index
                 ecl_rst_file
                 ecl_sum_writer
                 ecl_util_make_date_no_shift
