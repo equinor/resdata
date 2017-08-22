@@ -72,4 +72,4 @@ before_script:
   - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
 script:
-  - python build_total.py ecl ${TEST_SUITE} allowPython3
+  - python build_total.py ecl ${TEST_SUITE}
