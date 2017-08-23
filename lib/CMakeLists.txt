@@ -108,7 +108,7 @@ add_library(ecl util/rng.c
                 util/string_util.c
                 util/type_vector_functions.c
                 util/ui_return.c
-                util/ert_version.c
+                util/ecl_version.c
                 util/struct_vector.c
                 util/perm_vector.c
                 util/test_util.c
@@ -195,9 +195,9 @@ target_include_directories(ecl
 target_compile_definitions(ecl PRIVATE
             -DGIT_COMMIT=${GIT_COMMIT}
             -DGIT_COMMIT_SHORT=${GIT_COMMIT_SHORT}
-            -DERT_VERSION_MAJOR=${ERT_VERSION_MAJOR}
-            -DERT_VERSION_MINOR=${ERT_VERSION_MINOR}
-            -DERT_VERSION_MICRO=${ERT_VERSION_MICRO}
+            -DECL_VERSION_MAJOR=${ECL_VERSION_MAJOR}
+            -DECL_VERSION_MINOR=${ECL_VERSION_MINOR}
+            -DECL_VERSION_MICRO=${ECL_VERSION_MICRO}
 )
 
 target_compile_options(ecl PUBLIC ${pthreadarg})
@@ -212,8 +212,8 @@ if (ERT_USE_OPENMP)
 endif ()
 
 set_target_properties(ecl PROPERTIES
-                          VERSION ${ERT_VERSION_MAJOR}.${ERT_VERSION_MINOR}
-                          SOVERSION ${ERT_VERSION_MAJOR})
+                          VERSION ${ECL_VERSION_MAJOR}.${ECL_VERSION_MINOR}
+                          SOVERSION ${ECL_VERSION_MAJOR})
 
 install(TARGETS ecl
         EXPORT  ecl-config
