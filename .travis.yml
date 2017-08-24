@@ -16,9 +16,10 @@ env:
   global:
     - ERT_SHOW_BACKTRACE=1
   matrix:
-    - TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
-    - TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
-    - TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
+    - PYTHON_VERSION=2.7; TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
+    - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
+    - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
+    - PYTHON_VERSION=3.6; TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
 
 matrix:
   fast_finish: true
@@ -49,7 +50,9 @@ install:
     else
       export CONDA_OS=Linux;
     fi
-  - export TRAVIS_PYTHON_VERSION="2.7"
+  - if [[ $PYTHON_VERSION == 2.7 ]]; then
+      export TRAVIS_PYTHON_VERSION="2.7";
+    fi
   # We do this conditionally because it saves us some downloading if the version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDA_OS}-x86_64.sh -O miniconda.sh;
