@@ -18,6 +18,8 @@
 
 #include "ert/util/build_config.h"
 
+#include <ert/util/util.h>
+
 #if defined(HAVE_WINDOWS_UNLINK)
 
 #include <io.h>

@@ -141,7 +141,7 @@ static void @TYPE@_vector_realloc_data__(@TYPE@_vector_type * vector , int new_a
     if (vector->data_owner) {
       if (new_alloc_size > 0) {
         int i;
-        vector->data = util_realloc(vector->data , new_alloc_size * sizeof * vector->data );
+        vector->data = (@TYPE@*)util_realloc(vector->data , new_alloc_size * sizeof * vector->data );
         for (i=vector->alloc_size;  i < new_alloc_size; i++)
           vector->data[i] = vector->default_value;
       } else {
@@ -185,7 +185,7 @@ static void @TYPE@_vector_assert_index(const @TYPE@_vector_type * vector , int i
 
 
 static @TYPE@_vector_type * @TYPE@_vector_alloc__(int init_size , @TYPE@ default_value, @TYPE@ * data, int alloc_size , bool data_owner ) {
-  @TYPE@_vector_type * vector = util_malloc( sizeof * vector );
+  @TYPE@_vector_type * vector = (@TYPE@_vector_type*)util_malloc( sizeof * vector );
   UTIL_TYPE_ID_INIT( vector , TYPE_VECTOR_ID);
   vector->default_value       = default_value;
 
@@ -832,7 +832,7 @@ const @TYPE@ * @TYPE@_vector_get_const_ptr(const @TYPE@_vector_type * vector) {
 
 @TYPE@ * @TYPE@_vector_alloc_data_copy( const @TYPE@_vector_type * vector ) {
   int      size = vector->size * sizeof ( @TYPE@ );
-  @TYPE@ * copy = util_calloc(vector->size , sizeof * copy );
+  @TYPE@ * copy = (@TYPE@*)util_calloc(vector->size , sizeof * copy );
   if (copy != NULL)
     memcpy( copy , vector->data , size);
   return copy;
@@ -1216,8 +1216,8 @@ static int @TYPE@_vector_rcmp_node(const void *a, const void *b) {
 
 
 static perm_vector_type * @TYPE@_vector_alloc_sort_perm__(const @TYPE@_vector_type * vector, bool reverse) {
-  int * perm = util_calloc( vector->size , sizeof * perm ); // The perm_vector return value will take ownership of this array.
-  sort_node_type * sort_nodes = util_calloc( vector->size , sizeof * sort_nodes );
+  int * perm = (int*)util_calloc( vector->size , sizeof * perm ); // The perm_vector return value will take ownership of this array.
+  sort_node_type * sort_nodes = (sort_node_type*)util_calloc( vector->size , sizeof * sort_nodes );
   int i;
   for (i=0; i < vector->size; i++) {
     sort_nodes[i].index = i;
@@ -1250,7 +1250,7 @@ void @TYPE@_vector_permute(@TYPE@_vector_type * vector , const perm_vector_type 
   @TYPE@_vector_assert_writable( vector );
   {
     int i;
-    @TYPE@ * tmp = util_alloc_copy( vector->data , sizeof * tmp * vector->size );
+    @TYPE@ * tmp = (@TYPE@*)util_alloc_copy( vector->data , sizeof * tmp * vector->size );
     for (i=0; i < vector->size; i++)
       vector->data[i] = tmp[perm_vector_iget( perm , i )];
     free( tmp );
