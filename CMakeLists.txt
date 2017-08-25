@@ -17,7 +17,7 @@ set( ECL_VERSION_MICRO git ) # with "new in Ert Version X.X.X"!
 # development version leading towards version MAJOR.MINOR.0
 
 execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE RES_BUILD_TIME )
-string(STRIP ${RES_BUILD_TIME} RES_BUILD_TIME)
+string(STRIP "${RES_BUILD_TIME}" RES_BUILD_TIME)
 
 find_package(Git)
 if(GIT_FOUND)
@@ -312,7 +312,7 @@ if (ERT_WINDOWS)
 else() # Linux or Darwin
    execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE BUILD_TIME)
 endif()
-string(STRIP ${BUILD_TIME} BUILD_TIME)
+string(STRIP "${BUILD_TIME}" BUILD_TIME)
 
 #-----------------------------------------------------------------
 
