@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import datetime
 import os.path
@@ -24,7 +24,7 @@ from ecl.ecl import EclFileFlagEnum, EclFileEnum
 from ecl.test import ExtendedTestCase , TestAreaContext
 
 
-    
+
 
 class EclFileStatoilTest(ExtendedTestCase):
     def setUp(self):
@@ -58,8 +58,8 @@ class EclFileStatoilTest(ExtendedTestCase):
 
         with self.assertRaises(IndexError):
             rst_file.restart_get_kw("SWAT" , dtime = datetime.date( 1985 , 1 , 1))
-            
-            
+
+
 
     def test_iget_named(self):
         f = EclFile(self.test_file)
@@ -145,13 +145,13 @@ class EclFileStatoilTest(ExtendedTestCase):
             size = os.path.getsize("ECLIPSE.UNRST")
             with open("ECLIPSE.UNRST" , "r+") as f:
                 f.truncate( size / 2 )
-            
+
             with self.assertRaises(IOError):
                 rst_file = EclFile("ECLIPSE.UNRST")
 
             with self.assertRaises(IOError):
                 rst_file = EclFile("ECLIPSE.UNRST", flags=EclFileFlagEnum.ECL_FILE_WRITABLE)
-                
+
     def test_restart_view(self):
         f = EclFile( self.test_file )
         with self.assertRaises(ValueError):
