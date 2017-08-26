@@ -62,7 +62,7 @@ class EclFile(BaseCClass):
     _has_report_step             = EclPrototype("bool        ecl_file_has_report_step( ecl_file , int)")
     _has_sim_time                = EclPrototype("bool        ecl_file_has_sim_time( ecl_file , time_t )")
     _get_global_view             = EclPrototype("ecl_file_view_ref ecl_file_get_global_view( ecl_file )")
-    _write_index                 = EclPrototype("void        ecl_file_write_index( ecl_file , char*)")
+    _write_index                 = EclPrototype("bool        ecl_file_write_index( ecl_file , char*)")
     _fast_open                   = EclPrototype("void*       ecl_file_fast_open( char* , char* , int )" , bind=False)
 
 
@@ -208,6 +208,7 @@ class EclFile(BaseCClass):
             c_ptr = self._open( filename , flags )
         else:
             c_ptr = self._fast_open(filename, index_filename, flags)
+
         if c_ptr is None:
             raise IOError('Failed to open file "%s"' % filename)
         else:
@@ -684,7 +685,8 @@ class EclFile(BaseCClass):
         self._fwrite(  fortio , 0 )
 
     def write_index(self, index_file_name):
-        self._write_index(index_file_name)
+        if not self._write_index(index_file_name):
+            raise IOError("Failed to write index file:%s" % index_file_name)
 
 
 class EclFileContextManager(object):

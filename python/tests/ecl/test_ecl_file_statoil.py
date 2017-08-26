@@ -37,8 +37,16 @@ class EclFileStatoilTest(ExtendedTestCase):
         self.assertEqual( fmt_file , expected[1] )
         self.assertEqual( step , expected[2] )
 
-        
-        
+
+    def test_fast_open(self):
+        with TestAreaContext("index"):
+            f0 = EclFile( self.test_file )
+            f0.write_index("index")
+            f1 = EclFile( self.test_file , 0 , "index")
+            for kw0,kw1 in zip(f0,f1):
+                self.assertEqual( kw0,kw1 )
+
+
     def test_restart_days(self):
         rst_file = EclFile( self.test_file )
         self.assertAlmostEqual(  0.0 , rst_file.iget_restart_sim_days(0) )
