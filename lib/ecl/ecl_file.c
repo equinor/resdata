@@ -1002,34 +1002,72 @@ ecl_file_type * ecl_file_iopen_rstblock( const char * filename , int seqnum_inde
   return ecl_file_iopen_rstblock__(filename , seqnum_index , flags );
 }
 
-bool ecl_file_index_valid(const char * file_name, const char * index_file_name) {
+static bool ecl_file_index_valid0(const char * file_name, const char * index_file_name) {
   if ( !util_file_exists( file_name ))
     return false;
+
   if (!util_file_exists (index_file_name))
     return false;
+
   if (util_file_difftime( file_name , index_file_name) > 0)
     return false;
+
   return true;
 }
 
-void  ecl_file_write_index( const ecl_file_type * ecl_file , const char * index_filename) {
-  FILE * ostream = util_fopen(index_filename , "wb");
-  util_fwrite_string( fortio_filename_ref(ecl_file->fortio) , ostream );
+static bool ecl_file_index_valid1(const char * file_name, FILE * stream ) {
+  bool name_equal;
+  char * source_file = util_fread_alloc_string(stream);
+  char * input_name = util_split_alloc_filename( file_name );
+
+  name_equal = util_string_equal( source_file , input_name );
+
+  free( source_file );
+  free( input_name );
+  return name_equal;
+}
+
+bool ecl_file_index_valid(const char * file_name, const char * index_file_name) {
+  if (!ecl_file_index_valid0( file_name , index_file_name))
+    return false;
+
+  bool valid = false;
+  FILE * stream = fopen(index_file_name, "rb");
+  if (stream) {
+    valid = ecl_file_index_valid1( file_name , stream );
+    fclose( stream );
+  }
+
+  return valid;
+}
+
+
+bool  ecl_file_write_index( const ecl_file_type * ecl_file , const char * index_filename) {
+  FILE * ostream = fopen(index_filename, "wb");
+  if (!ostream)
+    return false;
+  {
+    char * filename = util_split_alloc_filename( fortio_filename_ref(ecl_file->fortio));
+    util_fwrite_string( filename , ostream );
+    free( filename );
+  }
   ecl_file_view_write_index( ecl_file->global_view , ostream );
   fclose( ostream );
+  return true;
 }
 
 
 ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_file_name, int flags) {
-  if ( !ecl_file_index_valid(file_name, index_file_name)  )
+  if ( !ecl_file_index_valid0(file_name, index_file_name)  )
     return NULL;
 
-  FILE * istream = util_fopen(index_file_name , "rb");
-  char * source_file = util_fread_alloc_string(istream);
+  FILE * istream = fopen(index_file_name, "rb");
+  if (!istream)
+    return NULL;
 
   ecl_file_type * ecl_file = NULL;
-  
-  if (strcmp(source_file, file_name) == 0) {
+
+  if (ecl_file_index_valid1( file_name, istream))  {
     fortio_type * fortio = ecl_file_alloc_fortio(file_name, flags);
     if (fortio) {
       ecl_file = ecl_file_alloc_empty( flags );
@@ -1044,9 +1082,8 @@ ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_fi
         ecl_file_close( ecl_file );
         ecl_file = NULL;
       }
-    }    
+    }
   }
-  free(source_file);
   fclose(istream);
   return ecl_file;
 }
