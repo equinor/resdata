@@ -328,9 +328,9 @@ class KWTest(ExtendedTestCase):
 
         
         self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = rel_diff * 1.1))
-        self.assertFalse( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = rel_diff * 0.9))
+        self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = rel_diff * 0.9))
         self.assertFalse( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 0.9 , rel_epsilon = rel_diff * 1.1))
-        self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = 0 , rel_epsilon = rel_diff * 1.1))
+        self.assertFalse( kw1.equal_numeric( kw2 , abs_epsilon = 0 , rel_epsilon = rel_diff * 1.1))
         self.assertTrue( kw1.equal_numeric( kw2 , abs_epsilon = abs_diff * 1.1 , rel_epsilon = 0))
 
     def test_mul(self):
