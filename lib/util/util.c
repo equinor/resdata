@@ -352,46 +352,37 @@ double util_kahan_sum(const double *data, size_t N) {
 }
 
 
-bool util_float_approx_equal__( float d1 , float d2, float rel_eps, float abs_eps) {
-  if ((fabsf(d1) + fabsf(d2)) == 0)
+bool util_float_approx_equal__( float f1 , float f2, float rel_eps, float abs_eps) {
+  float diff = fabsf(f1 - f2);
+  if (diff < abs_eps)
     return true;
-  else {
-    float diff = fabsf(d1 - d2);
-    if ((abs_eps > 0) && (diff > abs_eps))
-      return false;
-    {
-      float sum  = fabsf(d1) + fabsf(d2);
-      float rel_diff = diff / sum;
 
-      if ((rel_eps > 0) && (rel_diff > rel_eps))
-        return false;
-    }
+  float scale = util_float_max( fabsf(f1) , fabsf(f2));
+  if (diff < scale * rel_eps)
     return true;
-  }
+
+  return false;
 }
 
 
+
 /*
-  If an epsilon value is identically equal to zero that comparison
-  will be ignored.
+  The comparison is in a "expected-equal" mode, which will only return
+  false if *BOTH* the relative and the absolute criteria fails.
+
+  https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
 */
 
 bool util_double_approx_equal__( double d1 , double d2, double rel_eps, double abs_eps) {
-  if ((fabs(d1) + fabs(d2)) == 0)
+  double diff = fabs(d1 - d2);
+  if (diff < abs_eps)
     return true;
-  else {
-    double diff = fabs(d1 - d2);
-    if ((abs_eps > 0) && (diff > abs_eps))
-      return false;
-    {
-      double sum  = fabs(d1) + fabs(d2);
-      double rel_diff = diff / sum;
 
-      if ((rel_eps > 0) && (rel_diff > rel_eps))
-        return false;
-    }
+  double scale = util_double_max( fabs(d1) , fabs(d2));
+  if (diff < scale * rel_eps)
     return true;
-  }
+
+  return false;
 }
 
 
