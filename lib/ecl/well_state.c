@@ -438,7 +438,9 @@ static void well_state_add_global_connections( well_state_type * well_state ,
   well_state_add_connections__( well_state , rst_view , ECL_GRID_GLOBAL_GRID , 0 , well_nr );
 }
 
-static void well_state_add_LGR_connections( well_state_type * well_state , const ecl_grid_type * grid , ecl_file_view_type * file_view , int global_well_nr ) {
+static void well_state_add_LGR_connections(well_state_type * well_state,
+                                           const ecl_grid_type * grid,
+                                           ecl_file_view_type * file_view) {
   // Go through all the LGRs and add connections; both in the bulk
   // grid and as wellhead.
 
@@ -470,7 +472,7 @@ void well_state_add_connections2( well_state_type * well_state ,
                                  int well_nr) {
 
   well_state_add_global_connections( well_state , rst_view , well_nr );
-  well_state_add_LGR_connections( well_state , grid , rst_view , well_nr );
+  well_state_add_LGR_connections( well_state , grid , rst_view);
 
 }
 
@@ -667,10 +669,6 @@ const char * well_state_get_name( const well_state_type * well_state ) {
 
 
 /*****************************************************************/
-
-void well_state_summarize( const well_state_type * well_state , FILE * stream ) {
-}
-
 
 const well_conn_collection_type * well_state_get_grid_connections( const well_state_type * well_state , const char * grid_name) {
   if (hash_has_key( well_state->connections , grid_name))

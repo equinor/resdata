@@ -85,8 +85,7 @@ extern "C" {
   const well_conn_type * well_state_get_global_wellhead( const well_state_type * well_state );
   const well_conn_type * well_state_iget_wellhead( const well_state_type * well_state , int grid_nr);
   const well_conn_type * well_state_get_wellhead( const well_state_type * well_state , const char * grid_name);
-  
-  void                    well_state_summarize( const well_state_type * well_state , FILE * stream );
+
   well_type_enum          well_state_translate_ecl_type_int(int int_type);
 
   const well_conn_collection_type * well_state_get_grid_connections( const well_state_type * well_state , const char * grid_name);

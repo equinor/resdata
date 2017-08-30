@@ -51,15 +51,9 @@ int main( int argc , char ** argv) {
     well_info_load_rstfile( well_info , argv[2] , true);
 
     // List all wells:
-    {
-      int iwell;
-      for (iwell = 0; iwell < well_info_get_num_wells( well_info ); iwell++) {
-        well_ts_type * well_ts = well_info_get_ts( well_info , well_info_iget_well_name( well_info , iwell));
-        well_state_type * well_state = well_ts_get_last_state( well_ts );
-        
-        well_state_summarize( well_state , stdout );
-        printf("\n");
-      }
+    for (int iwell = 0; iwell < well_info_get_num_wells( well_info ); iwell++) {
+      well_ts_type * well_ts = well_info_get_ts( well_info , well_info_iget_well_name( well_info , iwell));
+      well_state_type * well_state = well_ts_get_last_state( well_ts );
     }
     well_info_free( well_info );
   }
