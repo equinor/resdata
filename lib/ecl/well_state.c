@@ -443,8 +443,7 @@ static void well_state_add_LGR_connections( well_state_type * well_state , const
   // grid and as wellhead.
 
   int num_lgr = ecl_grid_get_num_lgr( grid );
-  int lgr_index;
-  for (lgr_index = 0; lgr_index < num_lgr; lgr_index++) {
+  for (int lgr_index = 0; lgr_index < num_lgr; lgr_index++) {
     ecl_file_view_type * lgr_view = ecl_file_view_add_blockview(file_view , LGR_KW , lgr_index);
     const char * grid_name = ecl_grid_iget_lgr_name( grid , lgr_index );
     int well_nr = well_state_get_lgr_well_nr( well_state , lgr_view );
@@ -707,4 +706,3 @@ well_segment_collection_type * well_state_get_segments( const well_state_type * 
 well_branch_collection_type * well_state_get_branches( const well_state_type * well_state ) {
   return well_state->branches;
 }
-
