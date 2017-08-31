@@ -415,6 +415,10 @@ ecl_file_kw_type * ecl_file_iget_named_file_kw( const ecl_file_type * file , con
 
 /* ---- */
 
+ecl_kw_type * ecl_file_alloc_kw( const ecl_file_type * file , int global_index) {
+  return ecl_file_view_alloc_kw( file->active_view , global_index );
+}
+
 ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * file , int global_index) {
   return ecl_file_view_iget_kw( file->active_view , global_index);
 }

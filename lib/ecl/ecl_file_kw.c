@@ -244,7 +244,7 @@ static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fort
   }
 }
 
-ecl_kw_type * ecl_file_kw_alloc_kw( ecl_file_kw_type * file_kw, fortio_type * fortio) {
+ecl_kw_type * ecl_file_kw_alloc_kw( const ecl_file_kw_type * file_kw, fortio_type * fortio) {
   if (fortio == NULL)
     util_abort("%s: trying to load a keyword after the backing file has been detached.\n",__func__);
 

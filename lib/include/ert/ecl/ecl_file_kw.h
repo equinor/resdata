@@ -41,6 +41,7 @@ typedef struct inv_map_struct inv_map_type;
   ecl_file_kw_type * ecl_file_kw_alloc0( const char * header , ecl_data_type data_type , int size , offset_type offset);
   void               ecl_file_kw_free( ecl_file_kw_type * file_kw );
   void               ecl_file_kw_free__( void * arg );
+  ecl_kw_type      * ecl_file_kw_alloc_kw( const ecl_file_kw_type * file_kw, fortio_type * fortio);
   ecl_kw_type      * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio, inv_map_type * inv_map);
   ecl_kw_type      * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map );
   ecl_file_kw_type * ecl_file_kw_alloc_copy( const ecl_file_kw_type * src );

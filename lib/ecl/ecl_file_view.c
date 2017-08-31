@@ -147,16 +147,19 @@ void ecl_file_view_add_flag( ecl_file_view_type * file_view , int flag)  {
 }
 
 
+ecl_kw_type * ecl_file_view_alloc_kw( const ecl_file_view_type * ecl_file_view , int index) {
+  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
+  return ecl_file_kw_alloc_kw( file_kw, ecl_file_view->fortio );
+}
+
 ecl_kw_type * ecl_file_view_iget_kw( const ecl_file_view_type * ecl_file_view , int index) {
   ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
   ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw , ecl_file_view->fortio , ecl_file_view->inv_map);
-  printf(" *******************' %s: ### 1\n", __func__);
   if (!ecl_kw) {
-    printf(" *******************' %s: ### 2\n", __func__);
     if (fortio_assert_stream_open( ecl_file_view->fortio )) {
 
       if (ecl_file_view_flags_set( ecl_file_view , ECL_FILE_RETURN_COPY ) )
-        ecl_kw = ecl_kw_fread_alloc( ecl_file_view->fortio );
+        ecl_kw = ecl_file_kw_alloc_kw( file_kw, ecl_file_view->fortio );
       else
         ecl_kw = ecl_file_kw_get_kw( file_kw , ecl_file_view->fortio , ecl_file_view->inv_map);
 

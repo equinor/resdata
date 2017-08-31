@@ -61,6 +61,7 @@ typedef struct ecl_file_view_struct ecl_file_view_type;
   ecl_file_kw_type        * ecl_file_view_iget_file_kw( const ecl_file_view_type * ecl_file_view , int global_index);
   ecl_file_kw_type        * ecl_file_view_iget_named_file_kw( const ecl_file_view_type * ecl_file_view , const char * kw, int ith);
   ecl_kw_type             * ecl_file_view_iget_kw( const ecl_file_view_type * ecl_file_view , int index);
+  ecl_kw_type             * ecl_file_view_alloc_kw( const ecl_file_view_type * ecl_file_view , int index);
   void                      ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, const char* kw, int index, const int_vector_type * index_map, char* buffer);
   int                       ecl_file_view_find_kw_value( const ecl_file_view_type * ecl_file_view , const char * kw , const void * value);
   const char              * ecl_file_view_iget_distinct_kw( const ecl_file_view_type * ecl_file_view , int index);

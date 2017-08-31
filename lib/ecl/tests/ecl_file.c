@@ -114,13 +114,14 @@ void test_return_copy() {
     ecl_kw_type * kw1_copy = ecl_file_iget_kw( ecl_file , 0 );
     ecl_kw_type * kw2_copy = ecl_file_iget_kw( ecl_file , 1 );
 
-    test_assert_NULL(kw1_copy);
-    //printf(" ******** %s: kw_size: %d\n", ecl_kw_get_size( kw1_copy ));
-    ecl_file_close( ecl_file ); 
+    ecl_file_close( ecl_file );
 
-    //test_assert_true (ecl_kw_equal(kw1, kw1_copy));
-    //test_assert_true (ecl_kw_equal(kw2, kw2_copy));
-    
+    test_assert_true (ecl_kw_equal(kw1, kw1_copy));
+    test_assert_true (ecl_kw_equal(kw2, kw2_copy));
+    ecl_kw_free(kw1);
+    ecl_kw_free(kw2);
+    ecl_kw_free(kw1_copy);
+    ecl_kw_free(kw2_copy);
   }
   test_work_area_free( work_area );
 
@@ -128,9 +129,9 @@ void test_return_copy() {
 
 int main( int argc , char ** argv) {
   util_install_signals();
-  //test_writable(10);
-  //test_writable(1337);
-  //test_truncated();
+  test_writable(10);
+  test_writable(1337);
+  test_truncated();
   test_return_copy();
   exit(0);
 }
