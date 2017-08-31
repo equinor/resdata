@@ -172,13 +172,7 @@ static bool ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type *
     ecl_sum_free_data( ecl_sum );
 
   ecl_sum->data = ecl_sum_data_alloc( ecl_sum->smspec );
-  if (ecl_sum_data_fread( ecl_sum->data , data_files )) {
-    if (include_restart) {
-
-    }
-    return true;
-  } else
-    return false;
+  return ecl_sum_data_fread( ecl_sum->data , data_files);
 }
 
 
@@ -250,7 +244,10 @@ static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
 
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc__( header_file , key_join_string );
-  ecl_sum_fread( ecl_sum , header_file , data_files , include_restart);
+  if (!ecl_sum_fread( ecl_sum , header_file , data_files , include_restart)) {
+    ecl_sum_free( ecl_sum );
+    ecl_sum = NULL;
+  }
   return ecl_sum;
 }
 

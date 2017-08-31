@@ -20,7 +20,7 @@ import csv
 import shutil
 from unittest import skipIf, skipUnless, skipIf
 
-from ecl.ecl import EclSum, EclSumVarType
+from ecl.ecl import EclSum, EclSumVarType, FortIO, openFortIO, EclKW, EclDataType
 from ecl.test import ExtendedTestCase, TestAreaContext
 from ecl.test.ecl_mock import createEclSum
 
@@ -251,3 +251,36 @@ class SumTest(ExtendedTestCase):
 
             case2 = EclSum.load( "CSVX.SMSPEC" , "CSV.UNSMRY" )
             self.assert_solve( case2 )
+
+    def test_invalid(self):
+        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                            sim_length_days = 100,
+                            num_report_step = 10,
+                            num_mini_step = 10,
+                            func_table = {"FOPT" : fopt,
+                                          "FOPR" : fopr ,
+                                          "FGPT" : fgpt })
+
+        with TestAreaContext("sum_invalid"):
+            case.fwrite( )
+            with open("CASE.txt", "w") as f:
+                f.write("No - this is not EclKW file ....")
+
+            with self.assertRaises( IOError ):
+                case2 = EclSum.load( "CSV.SMSPEC" , "CASE.txt" )
+
+            with self.assertRaises( IOError ):
+                case2 = EclSum.load( "CASE.txt" , "CSV.UNSMRY" )
+
+            kw1 = EclKW("TEST1", 30, EclDataType.ECL_INT)
+            kw2 = EclKW("TEST2", 30, EclDataType.ECL_INT)
+
+            with openFortIO( "CASE.KW" , FortIO.WRITE_MODE) as f:
+                kw1.fwrite( f )
+                kw2.fwrite( f )
+
+            with self.assertRaises( IOError ):
+                case2 = EclSum.load( "CSV.SMSPEC" , "CASE.KW")
+
+            with self.assertRaises( IOError ):
+                case2 = EclSum.load( "CASE.KW" , "CSV.UNSMRY" )

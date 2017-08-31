@@ -1017,9 +1017,9 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
           }
           ecl_file_close( ecl_file );
         }
-      } else
-        util_abort("%s: invalid file type:%s \n",__func__ , ecl_util_file_type_name(file_type ));
+      }
     }
+
 
     if (ecl_sum_data_get_length( data ) > 0) {
       ecl_sum_data_build_index( data );
