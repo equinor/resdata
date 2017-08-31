@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 import os
 import datetime
@@ -38,7 +38,7 @@ def fgpt(days):
 
 class SumTest(ExtendedTestCase):
 
-    
+
     def test_mock(self):
         case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0)])
         self.assertTrue("FOPT" in case)
@@ -86,10 +86,10 @@ class SumTest(ExtendedTestCase):
         self.assertGreater( node2, node3 )
         self.assertEqual( node1, node1 )
         self.assertNotEqual( node1, node2 )
-        
+
         with self.assertRaises(TypeError):
             a = node1 < 1
-        
+
     def test_csv_export(self):
         case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0)])
         sep = ";"
@@ -104,8 +104,8 @@ class SumTest(ExtendedTestCase):
                 self.assertIn("FOPR", row)
                 self.assertEqual( len(row) , 4 )
                 break
-                
-            
+
+
 
         with TestAreaContext("ecl/csv"):
             case.exportCSV( "file.csv" , keys = ["FOPT"] , sep = sep)
@@ -117,8 +117,8 @@ class SumTest(ExtendedTestCase):
                 self.assertIn("FOPT", row)
                 self.assertEqual( len(row) , 3 )
                 break
-            
-            
+
+
 
         with TestAreaContext("ecl/csv"):
             date_format = "%y-%m-%d"
@@ -136,8 +136,8 @@ class SumTest(ExtendedTestCase):
                         self.assertEqual( case.iget_date( time_index ) , d )
 
                     time_index += 1
-                
-                
+
+
     def test_solve(self):
         length = 100
         case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
@@ -147,10 +147,10 @@ class SumTest(ExtendedTestCase):
                             func_table = {"FOPT" : fopt,
                                           "FOPR" : fopr ,
                                           "FGPT" : fgpt })
-        
+
         with self.assertRaises( KeyError ):
             case.solveDays( "MISSING:KEY" , 0.56)
-            
+
         sol = case.solveDays( "FOPT" , 150 )
         self.assertEqual( len(sol) , 0 )
 
@@ -172,7 +172,7 @@ class SumTest(ExtendedTestCase):
         sol = case.solveDates("FOPR" , 50.90)
         t = case.getDataStartTime( ) + datetime.timedelta( days = 50 ) + datetime.timedelta( seconds = 1 )
         self.assertEqual( sol[0] , t )
-        
+
         sol = case.solveDays( "FOPR" , 50.90 , rates_clamp_lower = False)
         self.assertEqual( len(sol) , 1 )
         self.assertFloatEqual( sol[0] , 51.00 )
