@@ -248,9 +248,9 @@ static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
 */
 
 
-ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string) {
+ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc__( header_file , key_join_string );
-  ecl_sum_fread( ecl_sum , header_file , data_files , false );
+  ecl_sum_fread( ecl_sum , header_file , data_files , include_restart);
   return ecl_sum;
 }
 
