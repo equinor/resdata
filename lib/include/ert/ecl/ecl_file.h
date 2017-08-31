@@ -38,7 +38,8 @@ extern "C" {
 
 #define ECL_FILE_FLAGS_ENUM_DEFS \
   {.value =   1 , .name="ECL_FILE_CLOSE_STREAM"}, \
-  {.value =   2 , .name="ECL_FILE_WRITABLE"}
+  {.value =   2 , .name="ECL_FILE_WRITABLE"}, \
+  {.value =   4 , .name="ECL_FILE_RETURN_COPY"}.
 #define ECL_FILE_FLAGS_ENUM_SIZE 2
 
 

@@ -38,12 +38,14 @@ typedef enum {
                                     mainly to save filedescriptors in cases where many ecl_file instances are open at
                                     the same time. */
   //
-  ECL_FILE_WRITABLE      =  2    /*
+  ECL_FILE_WRITABLE      =  2 ,  /*
                                     This flag opens the file in a mode where it can be updated and modified, but it
                                     must still exist and be readable. I.e. this should not compared with the normal:
                                     fopen(filename , "w") where an existing file is truncated to zero upon successfull
                                     open.
                                  */
+  ECL_FILE_RETURN_COPY   =  4    /* ecl_file will return ecl_kw objects, but will not retain their reference 
+                                    This is to save memory in case of very large data files.*/
 } ecl_file_flag_type;
 
 
