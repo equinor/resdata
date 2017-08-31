@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #  Copyright (C) 2011  Statoil ASA, Norway.
 #
 #  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
@@ -18,6 +17,7 @@
 import os
 import datetime
 import csv
+import shutil
 from unittest import skipIf, skipUnless, skipIf
 
 from ecl.ecl import EclSum, EclSumVarType
@@ -148,6 +148,9 @@ class SumTest(ExtendedTestCase):
                                           "FOPR" : fopr ,
                                           "FGPT" : fgpt })
 
+        self.assert_solve( case )
+
+    def assert_solve(self, case):
         with self.assertRaises( KeyError ):
             case.solveDays( "MISSING:KEY" , 0.56)
 
@@ -190,6 +193,7 @@ class SumTest(ExtendedTestCase):
         self.assertEqual( sol[0] , t1 )
         self.assertEqual( sol[1] , t2 )
 
+
     def test_ecl_sum_vector_algebra(self):
         scalar = 0.78
         addend = 2.718281828459045
@@ -224,3 +228,26 @@ class SumTest(ExtendedTestCase):
             x = x + addend # numpy vector shifting
             for i in range(len(x)):
                 self.assertFloatEqual(x[i], y[i])
+
+
+    def test_different_names(self):
+        length = 100
+        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                            sim_length_days = length,
+                            num_report_step = 10,
+                            num_mini_step = 10,
+                            func_table = {"FOPT" : fopt,
+                                          "FOPR" : fopr ,
+                                          "FGPT" : fgpt })
+
+        with TestAreaContext("sum_different"):
+            case.fwrite( )
+            shutil.move("CSV.SMSPEC" , "CSVX.SMSPEC")
+            with self.assertRaises(IOError):
+                case2 = EclSum.load( "Does/not/exist" , "CSV.UNSMRY")
+
+            with self.assertRaises(IOError):
+                case2 = EclSum.load( "CSVX.SMSPEC" , "CSVX.UNSMRY")
+
+            case2 = EclSum.load( "CSVX.SMSPEC" , "CSV.UNSMRY" )
+            self.assert_solve( case2 )

@@ -86,7 +86,8 @@ def date2num(dt):
 
 class EclSum(BaseCClass):
     TYPE_NAME = "ecl_sum"
-    _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
+    _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
+    _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
     _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer(char*, char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
     _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
     _free                          = EclPrototype("void     ecl_sum_free(ecl_sum)")
@@ -159,14 +160,32 @@ class EclSum(BaseCClass):
         """
         if not load_case:
             raise ValueError('load_case must be the basename of the simulation')
-        c_pointer = self._fread_alloc(load_case, join_string, include_restart)
+        c_pointer = self._fread_alloc_case(load_case, join_string, include_restart)
         if c_pointer is None:
             raise IOError("Failed to create summary instance from argument:%s" % load_case)
-        else:
-            super(EclSum, self).__init__(c_pointer)
-            self.__private_init()
+
+        super(EclSum, self).__init__(c_pointer)
+        self.__private_init()
         self._load_case = load_case
 
+
+    @classmethod
+    def load(cls, smspec_file, unsmry_file, key_join_string = ":", include_restart = True):
+        if not os.path.isfile( smspec_file ):
+            raise IOError("No such file: %s" % smspec_file)
+
+        if not os.path.isfile( unsmry_file ):
+            raise IOError("No such file: %s" % unsmry_file )
+
+        data_files = StringList( )
+        data_files.append( unsmry_file )
+        c_ptr = cls._fread_alloc(smspec_file, data_files, key_join_string, include_restart)
+        if c_ptr is None:
+            raise IOError("Failed to create summary instance")
+
+        ecl_sum = cls.createPythonObject( c_ptr )
+        ecl_sum._load_case = smspec_file
+        return ecl_sum
 
 
     @classmethod
