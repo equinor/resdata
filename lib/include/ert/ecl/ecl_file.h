@@ -86,6 +86,7 @@ extern "C" {
   int                ecl_file_iget_size( const ecl_file_type * file , int global_index);
   const char       * ecl_file_iget_header( const ecl_file_type * file , int global_index);
   ecl_kw_type      * ecl_file_iget_named_kw( const ecl_file_type * file , const char * kw, int ith);
+  ecl_kw_type      * ecl_file_alloc_named_kw( const ecl_file_type * file , const char * kw, int ith);
   ecl_data_type      ecl_file_iget_named_data_type( const ecl_file_type * file , const char * kw , int ith);
   int                ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int ith);
   void               ecl_file_indexed_read(const ecl_file_type * file , const char * kw, int index, const int_vector_type * index_map, char* buffer);

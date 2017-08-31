@@ -84,12 +84,6 @@ void test_truncated() {
 }
 
 void test_return_copy() {
-  // create some dummy kws
-  // create a dummy file w the kws
-  // open ecl_file in RETURN_COPY mode
-  // extract kws from the file, using ecl_file_get_kw
-  // close ecl_file thus destroying kws within ecl_file
-  // assert correct values in kws
   test_work_area_type * work_area = test_work_area_alloc("ecl_file_RETURN_COPY_testing");
   {
     char * file_name = "data_file";
@@ -113,15 +107,24 @@ void test_return_copy() {
     ecl_file_type * ecl_file = ecl_file_open(file_name, ECL_FILE_RETURN_COPY);
     ecl_kw_type * kw1_copy = ecl_file_iget_kw( ecl_file , 0 );
     ecl_kw_type * kw2_copy = ecl_file_iget_kw( ecl_file , 1 );
-
+    ecl_kw_type * kw_alloc1 = ecl_file_alloc_kw( ecl_file , 0 );
+    ecl_kw_type * kw_named = ecl_file_iget_named_kw( ecl_file, "TEST1_KW", 0);
+    ecl_kw_type * kw_alloc2 = ecl_file_alloc_named_kw( ecl_file, "TEST2_KW", 0);
+    
     ecl_file_close( ecl_file );
 
     test_assert_true (ecl_kw_equal(kw1, kw1_copy));
     test_assert_true (ecl_kw_equal(kw2, kw2_copy));
+    test_assert_true (ecl_kw_equal(kw1, kw_alloc1));
+    test_assert_true (ecl_kw_equal(kw1, kw_named));
+    test_assert_true (ecl_kw_equal(kw2, kw_alloc2));
     ecl_kw_free(kw1);
     ecl_kw_free(kw2);
     ecl_kw_free(kw1_copy);
     ecl_kw_free(kw2_copy);
+    ecl_kw_free(kw_alloc1);
+    ecl_kw_free(kw_named);
+    ecl_kw_free(kw_alloc2);
   }
   test_work_area_free( work_area );
 
