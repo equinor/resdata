@@ -662,6 +662,9 @@ double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , c
   return ecl_sum_data_iget( ecl_sum->data , time_index  , params_index);
 }
 
+void ecl_sum_get_interp_vector(const ecl_sum_type * ecl_sum, time_t sim_time, const ecl_sum_vector_type * key_words, double_vector_type * data){
+  ecl_sum_data_get_interp_vector(ecl_sum->data, sim_time, key_words, data);
+}
 
 void ecl_sum_fwrite_interp_csv_line(const ecl_sum_type * ecl_sum, time_t sim_time, const ecl_sum_vector_type * key_words, FILE *fp){
   ecl_sum_data_fwrite_interp_csv_line(ecl_sum->data, sim_time, key_words, fp);

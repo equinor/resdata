@@ -20,7 +20,7 @@ import csv
 import shutil
 from unittest import skipIf, skipUnless, skipIf
 
-from ecl.ecl import EclSum, EclSumVarType, FortIO, openFortIO, EclKW, EclDataType
+from ecl.ecl import EclSum, EclSumVarType, FortIO, openFortIO, EclKW, EclDataType, EclSumKeyWordVector
 from ecl.test import ExtendedTestCase, TestAreaContext
 from ecl.test.ecl_mock import createEclSum
 
@@ -284,3 +284,25 @@ class SumTest(ExtendedTestCase):
 
             with self.assertRaises( IOError ):
                 case2 = EclSum.load( "CASE.KW" , "CSV.UNSMRY" )
+
+
+    def test_kw_vector(self):
+        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                            sim_length_days = 100,
+                            num_report_step = 10,
+                            num_mini_step = 10,
+                            func_table = {"FOPT" : fopt,
+                                          "FOPR" : fopr ,
+                                          "FGPT" : fgpt })
+        kw_list = EclSumKeyWordVector( case )
+        kw_list.add_keyword("FOPT")
+        kw_list.add_keyword("FOPR")
+        kw_list.add_keyword("FGPT")
+
+        t = case.getDataStartTime( ) + datetime.timedelta( days = 43 );
+        data = case.get_interp_row( kw_list , t )
+        for d1,d2 in zip(data, [ case.get_interp("FOPT", date = t),
+                                 case.get_interp("FOPT", date = t),
+                                 case.get_interp("FOPT", date = t) ]):
+
+            self.assertFloatEqual(d1,d2)
