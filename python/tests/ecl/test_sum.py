@@ -306,3 +306,10 @@ class SumTest(ExtendedTestCase):
                                  case.get_interp("FOPT", date = t) ]):
 
             self.assertFloatEqual(d1,d2)
+
+        tmp = []
+        for key in kw_list:
+            tmp.append(key)
+
+        for (k1,k2) in zip(kw_list,tmp):
+            self.assertEqual(k1,k2)
