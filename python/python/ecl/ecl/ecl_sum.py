@@ -538,6 +538,13 @@ class EclSum(BaseCClass):
             raise ValueError("Must supply either days or date")
 
 
+    def get_interp_row(self, key_list, sim_time):
+        ctime = CTime(sim_time)
+        data = DoubleVector( initial_size = len(key_list) )
+        EclSum._get_interp_vector(self, ctime, key_list, data)
+        return data
+
+
     def time_range(self, start=None, end=None, interval="1Y", extend_end=True):
         (num, timeUnit) = TimeVector.parseTimeUnit(interval)
 
@@ -1246,6 +1253,7 @@ class EclSum(BaseCClass):
         EclSum._dump_csv_line(self, ctime, keywords, cfile)
 
 
+
     def export_csv(self, filename, keys=None, date_format="%Y-%m-%d", sep=";"):
         """Will create a CSV file with summary data.
 
@@ -1273,6 +1281,7 @@ class EclSum(BaseCClass):
 
 import ecl.ecl.ecl_sum_keyword_vector
 EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)", bind=False)
+EclSum._get_interp_vector = EclPrototype("void  ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)", bind=False)
 
 monkey_the_camel(EclSum, 'varType', EclSum.var_type, classmethod)
 monkey_the_camel(EclSum, 'addVariable', EclSum.add_variable)
