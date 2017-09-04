@@ -59,6 +59,7 @@ struct ecl_file_kw_struct {
   offset_type      file_offset;
   ecl_data_type    data_type;
   int              kw_size;
+  int              ref_count;
   char           * header;
   ecl_kw_type    * kw;
 };
@@ -143,6 +144,7 @@ ecl_file_kw_type * ecl_file_kw_alloc0( const char * header , ecl_data_type data_
   memcpy(&file_kw->data_type, &data_type, sizeof data_type);
   file_kw->kw_size = size;
   file_kw->file_offset = offset;
+  file_kw->ref_count = 0;
   file_kw->kw = NULL;
 
   return file_kw;
