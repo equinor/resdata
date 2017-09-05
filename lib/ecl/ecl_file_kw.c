@@ -247,6 +247,8 @@ static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fort
 }
 
 ecl_kw_type * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map ) {
+  if (file_kw->kw)
+    file_kw->ref_count++;
   return file_kw->kw;
 }
 
@@ -268,7 +270,8 @@ ecl_kw_type * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type *
 ecl_kw_type * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map ) {
   if (file_kw->kw == NULL)
     ecl_file_kw_load_kw( file_kw , fortio , inv_map);
-
+  if(file_kw->kw)
+    file_kw->ref_count++;
   return file_kw->kw;
 }
 
@@ -425,10 +428,6 @@ ecl_file_kw_type * ecl_file_kw_fread_alloc( FILE * stream ) {
   return file_kw;
 }
 
-
-void ecl_file_kw_increment_ref_count(ecl_file_kw_type * file_kw) {
-  file_kw->ref_count++;
-}
 
 int ecl_file_kw_get_ref_count(ecl_file_kw_type * file_kw) {
   return file_kw->ref_count;

@@ -157,8 +157,6 @@ static ecl_kw_type * ecl_file_view_get_kw(const ecl_file_view_type * ecl_file_vi
         fortio_fclose_stream( ecl_file_view->fortio );
     }
   }
-  if (ecl_kw)
-    ecl_file_kw_increment_ref_count(file_kw);
   return ecl_kw;
 }
 
