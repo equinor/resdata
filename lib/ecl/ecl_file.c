@@ -415,6 +415,10 @@ ecl_file_kw_type * ecl_file_iget_named_file_kw( const ecl_file_type * file , con
 
 /* ---- */
 
+ecl_kw_type * ecl_file_alloc_kw( const ecl_file_type * file , int global_index) {
+  return ecl_file_view_alloc_kw( file->active_view , global_index );
+}
+
 ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * file , int global_index) {
   return ecl_file_view_iget_kw( file->active_view , global_index);
 }
@@ -438,6 +442,10 @@ const char * ecl_file_iget_header( const ecl_file_type * file , int global_index
    ecl_file. Will abort hard if the request can not be satisifed - use
    query functions if you can not take that.
 */
+
+ecl_kw_type * ecl_file_alloc_named_kw( const ecl_file_type * file , const char * kw, int ith) {
+  return ecl_file_view_alloc_named_kw( file->active_view, kw, ith);
+}
 
 ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * file , const char * kw, int ith) {
   return ecl_file_view_iget_named_kw( file->active_view , kw , ith);

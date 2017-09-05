@@ -305,9 +305,10 @@ void well_info_add_UNRST_wells2( well_info_type * well_info , ecl_file_view_type
   int block_nr;
   for (block_nr = 0; block_nr < num_blocks; block_nr++) {
     ecl_file_view_type * step_view = ecl_file_view_add_restart_view(rst_view, block_nr , -1 , -1 , -1 );
-    const ecl_kw_type * seqnum_kw = ecl_file_view_iget_named_kw( step_view , SEQNUM_KW , 0);
+    ecl_kw_type * seqnum_kw = ecl_file_view_alloc_named_kw( step_view , SEQNUM_KW , 0);    
     int report_nr = ecl_kw_iget_int( seqnum_kw , 0 );
     well_info_add_wells2( well_info , step_view , report_nr , load_segment_information );
+    ecl_kw_free( seqnum_kw );
   }
 }
 

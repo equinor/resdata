@@ -244,6 +244,19 @@ static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fort
   }
 }
 
+ecl_kw_type * ecl_file_kw_alloc_kw( const ecl_file_kw_type * file_kw, fortio_type * fortio) {
+  if (file_kw->kw) {
+    return ecl_kw_alloc_copy(file_kw->kw);
+  }
+  else { 
+    if (fortio == NULL)
+      util_abort("%s: trying to load a keyword after the backing file has been detached.\n",__func__);
+
+    fortio_fseek( fortio , file_kw->file_offset , SEEK_SET );
+    return ecl_kw_fread_alloc( fortio );   
+  }
+}
+
 ecl_kw_type * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map ) {
   return file_kw->kw;
 }

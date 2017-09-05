@@ -83,10 +83,58 @@ void test_truncated() {
   test_work_area_free( work_area );
 }
 
+void test_return_copy() {
+  test_work_area_type * work_area = test_work_area_alloc("ecl_file_RETURN_COPY_testing");
+  {
+    char * file_name = "data_file";
+
+    //creating the data file
+    size_t data_size = 10;
+    ecl_kw_type * kw1 = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
+    for(int i = 0; i < data_size; ++i)
+       ecl_kw_iset_int(kw1, i, 537 + i);
+    fortio_type * fortio = fortio_open_writer(file_name, false, ECL_ENDIAN_FLIP);
+    ecl_kw_fwrite(kw1, fortio); 
+   
+    data_size = 5;
+    ecl_kw_type * kw2 = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
+    for(int i = 0; i < data_size; ++i)
+      ecl_kw_iset_float(kw2, i, 0.15 * i);
+    ecl_kw_fwrite(kw2, fortio);
+    fortio_fclose(fortio); 
+    //finished creating data file
+
+    ecl_file_type * ecl_file = ecl_file_open(file_name, ECL_FILE_RETURN_COPY);
+    ecl_kw_type * kw1_copy = ecl_file_iget_kw( ecl_file , 0 );
+    ecl_kw_type * kw2_copy = ecl_file_iget_kw( ecl_file , 1 );
+    ecl_kw_type * kw_alloc1 = ecl_file_alloc_kw( ecl_file , 0 );
+    ecl_kw_type * kw_named = ecl_file_iget_named_kw( ecl_file, "TEST1_KW", 0);
+    ecl_kw_type * kw_alloc2 = ecl_file_alloc_named_kw( ecl_file, "TEST2_KW", 0);
+    
+    ecl_file_close( ecl_file );
+
+    test_assert_true (ecl_kw_equal(kw1, kw1_copy));
+    test_assert_true (ecl_kw_equal(kw2, kw2_copy));
+    test_assert_true (ecl_kw_equal(kw1, kw_alloc1));
+    test_assert_true (ecl_kw_equal(kw1, kw_named));
+    test_assert_true (ecl_kw_equal(kw2, kw_alloc2));
+    ecl_kw_free(kw1);
+    ecl_kw_free(kw2);
+    ecl_kw_free(kw1_copy);
+    ecl_kw_free(kw2_copy);
+    ecl_kw_free(kw_alloc1);
+    ecl_kw_free(kw_named);
+    ecl_kw_free(kw_alloc2);
+  }
+  test_work_area_free( work_area );
+
+}
 
 int main( int argc , char ** argv) {
+  util_install_signals();
   test_writable(10);
   test_writable(1337);
   test_truncated();
+  test_return_copy();
   exit(0);
 }
