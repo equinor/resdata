@@ -30,20 +30,10 @@
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/transaction.h>
+#include <ert/ecl/ecl_file_transaction.h>
 
 
 void transact() {
-  //x: create testfile w/ 3 kw added
-  //x: create an ecl_file_view object
-  //x: access 2 kw
-  //x: create a start transaction object t1
-  //x: access 1 kw three times
-  //x: create a start transaction object t2
-  //x: access 2 kw 1 time each
-  //end transaction t2 and assert
-  //end transaction t1 and assert
-  //free ecl_file_kw object
 
   test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
   {
@@ -80,26 +70,18 @@ void transact() {
      ecl_file_view_iget_kw(file_view, 1);
      test_assert_int_equal( ecl_file_kw_get_ref_count(file_kw2) , 2);
      
-     transaction_type * t1 = transaction_start(file_view);
+     ecl_file_transaction_type * t1 = ecl_file_transaction_start(file_view);
        ecl_file_view_iget_kw(file_view, 0);
        ecl_file_view_iget_kw(file_view, 0);
        ecl_file_view_iget_kw(file_view, 0);
 
-       transaction_type * t2 = transaction_start(file_view);
+       ecl_file_transaction_type * t2 = ecl_file_transaction_start(file_view);
          ecl_file_view_iget_kw(file_view, 1);
          ecl_file_view_iget_kw(file_view, 2);
 
-       transaction_end(t2);
-       test_assert_int_equal( transaction_iget_value(t2, 0), 0);
-       test_assert_int_equal( transaction_iget_value(t2, 1), 1);
-       test_assert_int_equal( transaction_iget_value(t2, 2), 1);
-       transaction_free(t2);
+       ecl_file_transaction_end(t2);
      
-     transaction_end(t1);
-     test_assert_int_equal( transaction_iget_value(t1, 0), 3);
-     test_assert_int_equal( transaction_iget_value(t1, 1), 1);
-     test_assert_int_equal( transaction_iget_value(t1, 2), 1);
-     transaction_free(t1);
+     ecl_file_transaction_end(t1);
 
      ecl_file_close(file);
 

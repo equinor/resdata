@@ -16,21 +16,22 @@
    for more details.
 */
 
-#ifndef ERT_TRANSACTION_H
-#define ERT_TRANSACTION_H
+#ifndef ERT_ECL_FILE_TRANSACTION_H
+#define ERT_ECL_FILE_TRANSACTION_H
 
 #include <ert/ecl/ecl_file_view.h>
+#include <ert/ecl/ecl_file_kw.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct transaction_struct transaction_type;
 
-transaction_type * transaction_start(ecl_file_view_type * file_view);
-void               transaction_end(transaction_type * transaction);
-int                transaction_iget_value(transaction_type * tran, int index);
-void               transaction_free(transaction_type * tran);
+typedef struct ecl_file_transaction_struct ecl_file_transaction_type;
+
+ecl_file_transaction_type * ecl_file_transaction_start(ecl_file_view_type * file_view);
+void                        ecl_file_transaction_end(ecl_file_transaction_type * transaction);
+int                         ecl_file_transaction_iget_value(ecl_file_transaction_type * tran, int index);
 
 
 #ifdef __cplusplus

@@ -28,6 +28,7 @@
 #include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_file_transaction.h>
 
 
 struct ecl_file_view_struct {
@@ -801,4 +802,10 @@ ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * fla
   }
   
 }
+
+
+ecl_file_transaction_type * ecl_file_view_start_transaction(ecl_file_view_type * file_view) {
+  return NULL;
+}
+
 

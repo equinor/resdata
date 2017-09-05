@@ -172,7 +172,7 @@ add_library(ecl util/rng.c
                 geometry/geo_polygon.c
                 geometry/geo_polygon_collection.c
 
-                ecl/transaction.c
+                ecl/ecl_file_transaction.c
 )
 
 target_link_libraries(ecl PUBLIC ${m}

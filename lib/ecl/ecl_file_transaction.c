@@ -17,21 +17,20 @@
 */
 
 #include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/transaction.h>
+#include <ert/ecl/ecl_file_kw.h>
+#include <ert/ecl/ecl_file_transaction.h>
 
 
-struct transaction_struct {
+struct ecl_file_transaction_struct {
   int * value;
   int size;
-  ecl_file_view_type * file_view;
 };
 
 
-transaction_type * transaction_start(ecl_file_view_type * file_view) {
-  transaction_type * transaction = util_malloc( sizeof * transaction );
+ecl_file_transaction_type * ecl_file_transaction_start(ecl_file_view_type * file_view) {
+  ecl_file_transaction_type * transaction = util_malloc( sizeof * transaction );
   transaction->size = ecl_file_view_get_size( file_view );
   transaction->value = util_malloc( transaction->size * sizeof(int));
-  transaction->file_view = file_view;
   for (int i = 0; i < transaction->size; i++) {
     ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( file_view, i);
     transaction->value[i] = ecl_file_kw_get_ref_count(file_kw);
@@ -39,18 +38,11 @@ transaction_type * transaction_start(ecl_file_view_type * file_view) {
   return transaction;
 }
 
-int transaction_iget_value(transaction_type * tran, int index) {
+int ecl_file_transaction_iget_value(ecl_file_transaction_type * tran, int index) {
   return tran->value[index];
 }
 
-void transaction_end(transaction_type * tran) {
-  for (int i = 0; i < tran->size; i++) {
-    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( tran->file_view, i);
-    tran->value[i] = ecl_file_kw_get_ref_count(file_kw) - tran->value[i];
-  }
-}
-
-void transaction_free(transaction_type * tran) {
+void ecl_file_transaction_end(ecl_file_transaction_type * tran) {
   free(tran->value);
   free(tran);
 }
