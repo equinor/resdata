@@ -56,6 +56,9 @@ typedef struct inv_map_struct inv_map_type;
   void                ecl_file_kw_fwrite( const ecl_file_kw_type * file_kw , FILE * stream );
   ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num);
   ecl_file_kw_type *  ecl_file_kw_fread_alloc( FILE * stream );
+
+  void                ecl_file_kw_increment_ref_count(ecl_file_kw_type * file_kw);
+  int                 ecl_file_kw_get_ref_count(ecl_file_kw_type * file_kw);
  
 #ifdef __cplusplus
 }

@@ -424,3 +424,12 @@ ecl_file_kw_type * ecl_file_kw_fread_alloc( FILE * stream ) {
 
   return file_kw;
 }
+
+
+void ecl_file_kw_increment_ref_count(ecl_file_kw_type * file_kw) {
+  file_kw->ref_count++;
+}
+
+int ecl_file_kw_get_ref_count(ecl_file_kw_type * file_kw) {
+  return file_kw->ref_count;
+}
