@@ -808,16 +808,11 @@ ecl_file_transaction_type * ecl_file_view_start_transaction(ecl_file_view_type *
 
   int size = ecl_file_view_get_size(file_view);
   int * ref_count = util_malloc(size * sizeof(int));
-
-  
-  printf(" USING THE RIGHT CODE\n");
   
 
   for (int i = 0; i < size; i++) {
     ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i);
-    printf(" ********DDDD %d\n", ecl_file_kw_get_ref_count(file_kw));
-    int a = 50;
-    ref_count[i] = a;
+    ref_count[i] = ecl_file_kw_get_ref_count(file_kw);
   }
   ecl_file_transaction_type * t = ecl_file_transaction_start(ref_count);
   return t;
@@ -827,7 +822,6 @@ void ecl_file_view_end_transaction( ecl_file_view_type * file_view, ecl_file_tra
   int * ref_count = ecl_file_transaction_get_ref_counts(transaction);
   for (int i = 0; i < ecl_file_view_get_size(file_view); i++) {
     ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i); 
-    printf(" **************** %d: init_ref_count: %d\n", i, ref_count[i]);
     ecl_file_kw_reset(file_kw, ref_count[i]);
   }
   ecl_file_transaction_end(transaction);

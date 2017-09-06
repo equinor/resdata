@@ -33,24 +33,8 @@
 #include <ert/ecl/ecl_file_transaction.h>
 
 
-void test_transact() {
+void test_transaction() {
 
-
-   //x: create a file with 3 kws,1,2,3
-   //x: create an ecil_file open object
-   //x: alsoa n ecl_file_viewobject
-   //x: iget kw1
-   //x: start transaction t1
-   //x: iget kw1
-   //x: iget kw2
-   //x: start transaction t2
-   //x: iget kw1
-   //x: iget kw2
-   //x: iget kw3
-   //x: end transaction t2
-   //assert kw3 == NULL kw2, kw1 not NULL
-   //end transaction t1
-   //assert kw2, kw3 NULL, kw1 not NULL
   test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
   {
      char * file_name = "data_file";
@@ -85,16 +69,13 @@ void test_transact() {
      ecl_file_kw_type * file_kw2 = ecl_file_view_iget_file_kw( file_view , 2);
 
      ecl_file_view_iget_kw( file_view, 0);
-     test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw0), 1); //DEBUG
-     test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw1), 0); //DEBUG
-     test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw2), 0); //DEBUG
+     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0, NULL, NULL) );
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1, NULL, NULL) );
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2, NULL, NULL) );
      ecl_file_transaction_type * t1 = ecl_file_view_start_transaction( file_view );
 
        ecl_file_view_iget_kw(file_view, 0);
        ecl_file_view_iget_kw(file_view, 1);
-       test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw0), 2); //DEBUG
-       test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw1), 1); //DEBUG
-       test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw2), 0); //DEBUG
        ecl_file_transaction_type * t2 = ecl_file_view_start_transaction( file_view );
          
          ecl_file_view_iget_kw(file_view, 0);
@@ -102,19 +83,17 @@ void test_transact() {
          ecl_file_view_iget_kw(file_view, 1);
          ecl_file_view_iget_kw(file_view, 2);
 
-         test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw0), 3); //DEBUG
-         test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw1), 3); //DEBUG
-         test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw2), 1); //DEBUG
-
        ecl_file_view_end_transaction( file_view , t2 );
-       test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw0), 2); //DEBUG
-       test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw1), 1); //DEBUG
-       //test_assert_int_equal( ecl_file_kw_get_ref_count( file_kw2), 0); //DEBUG
-
 
        test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0, NULL, NULL) );
        test_assert_true( ecl_file_kw_get_kw_ptr(file_kw1, NULL, NULL) );
-       //test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2, NULL, NULL) );
+       test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2, NULL, NULL) );
+       ecl_file_view_iget_kw(file_view, 2);
+
+     ecl_file_view_end_transaction(file_view, t1);
+     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0, NULL, NULL) );
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1, NULL, NULL) );
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2, NULL, NULL) );
 
      ecl_file_close(file);
 
@@ -126,6 +105,6 @@ void test_transact() {
 
 int main( int argc , char ** argv) {
   util_install_signals();
-  test_transact();
+  test_transaction();
   exit(0);
 }

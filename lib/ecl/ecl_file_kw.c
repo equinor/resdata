@@ -430,15 +430,14 @@ ecl_file_kw_type * ecl_file_kw_fread_alloc( FILE * stream ) {
 
 
 int ecl_file_kw_get_ref_count(ecl_file_kw_type * file_kw) {
-  //return file_kw->ref_count;
-  return 66;
+  return file_kw->ref_count;
 }
 
 
 void ecl_file_kw_reset(ecl_file_kw_type * file_kw, int ref_count) {
-  if (file_kw->ref_count > 0 && ref_count == 0) {
+  if (ref_count == 0 && file_kw->ref_count > 0) {
     ecl_kw_free(file_kw->kw);
-    file_kw->kw == NULL;
+    file_kw->kw = NULL;
   }
   file_kw->ref_count = ref_count;
 }
