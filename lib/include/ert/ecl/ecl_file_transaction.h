@@ -19,7 +19,7 @@
 #ifndef ERT_ECL_FILE_TRANSACTION_H
 #define ERT_ECL_FILE_TRANSACTION_H
 
-#include <ert/ecl/ecl_file_view.h>
+
 #include <ert/ecl/ecl_file_kw.h>
 
 #ifdef __cplusplus
@@ -29,9 +29,9 @@ extern "C" {
 
 typedef struct ecl_file_transaction_struct ecl_file_transaction_type;
 
-ecl_file_transaction_type * ecl_file_transaction_start(ecl_file_view_type * file_view);
+ecl_file_transaction_type * ecl_file_transaction_start(int * value);     
+int                       * ecl_file_transaction_get_ref_counts(ecl_file_transaction_type * transaction);
 void                        ecl_file_transaction_end(ecl_file_transaction_type * transaction);
-int                         ecl_file_transaction_iget_value(ecl_file_transaction_type * tran, int index);
 
 
 #ifdef __cplusplus

@@ -16,33 +16,26 @@
    for more details.
 */
 
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_file_kw.h>
+
 #include <ert/ecl/ecl_file_transaction.h>
 
 
 struct ecl_file_transaction_struct {
   int * value;
-  int size;
 };
 
 
-ecl_file_transaction_type * ecl_file_transaction_start(ecl_file_view_type * file_view) {
-  ecl_file_transaction_type * transaction = util_malloc( sizeof * transaction );
-  transaction->size = ecl_file_view_get_size( file_view );
-  transaction->value = util_malloc( transaction->size * sizeof(int));
-  for (int i = 0; i < transaction->size; i++) {
-    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( file_view, i);
-    transaction->value[i] = ecl_file_kw_get_ref_count(file_kw);
-  }
-  return transaction;
+ecl_file_transaction_type * ecl_file_transaction_start(int * value) {
+  ecl_file_transaction_type * t = util_malloc(sizeof * t);
+  t->value = value;
+  return t;
 }
 
-int ecl_file_transaction_iget_value(ecl_file_transaction_type * tran, int index) {
-  return tran->value[index];
+int * ecl_file_transaction_get_ref_counts(ecl_file_transaction_type * transaction) {
+  return transaction->value;
 }
 
-void ecl_file_transaction_end(ecl_file_transaction_type * tran) {
-  free(tran->value);
-  free(tran);
+void ecl_file_transaction_end(ecl_file_transaction_type * transaction) {
+  free(transaction->value);
+  free(transaction);
 }

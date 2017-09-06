@@ -26,7 +26,7 @@
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_file_kw.h>
 #include <ert/ecl/ecl_type.h>
-//#include <ert/ecl/ecl_file_transaction.h>
+#include <ert/ecl/ecl_file_transaction.h>
 
 
 #ifdef __cplusplus
@@ -104,7 +104,8 @@ typedef struct ecl_file_view_struct ecl_file_view_type;
   void                 ecl_file_view_write_index(const ecl_file_view_type * file_view, FILE * ostream);
   ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map, FILE * istream );
 
-  //ecl_file_transaction_type * ecl_file_view_start_transaction(ecl_file_view_type * file_view);
+  ecl_file_transaction_type * ecl_file_view_start_transaction(ecl_file_view_type * file_view);
+  void                        ecl_file_view_end_transaction( ecl_file_view_type * file_view, ecl_file_transaction_type * transaction);
 
 #ifdef __cplusplus
 }
