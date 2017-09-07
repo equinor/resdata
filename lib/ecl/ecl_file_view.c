@@ -28,6 +28,7 @@
 #include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_file_transaction.h>
 
 
 struct ecl_file_view_struct {
@@ -146,9 +147,7 @@ void ecl_file_view_add_flag( ecl_file_view_type * file_view , int flag)  {
   *file_view->flags |= flag;
 }
 
-
-ecl_kw_type * ecl_file_view_iget_kw( const ecl_file_view_type * ecl_file_view , int index) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
+static ecl_kw_type * ecl_file_view_get_kw(const ecl_file_view_type * ecl_file_view, ecl_file_kw_type * file_kw) {
   ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw , ecl_file_view->fortio , ecl_file_view->inv_map);
   if (!ecl_kw) {
     if (fortio_assert_stream_open( ecl_file_view->fortio )) {
@@ -160,6 +159,11 @@ ecl_kw_type * ecl_file_view_iget_kw( const ecl_file_view_type * ecl_file_view , 
     }
   }
   return ecl_kw;
+}
+
+ecl_kw_type * ecl_file_view_iget_kw( const ecl_file_view_type * ecl_file_view , int index) {
+  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
+  return ecl_file_view_get_kw(ecl_file_view, file_kw);
 }
 
 void ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, const char* kw, int index, const int_vector_type * index_map, char* buffer) {
@@ -223,17 +227,7 @@ const char * ecl_file_view_iget_header( const ecl_file_view_type * ecl_file_view
 
 ecl_kw_type * ecl_file_view_iget_named_kw( const ecl_file_view_type * ecl_file_view , const char * kw, int ith) {
   ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw , ith);
-  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw , ecl_file_view->fortio , ecl_file_view->inv_map );
-  if (!ecl_kw) {
-    if (fortio_assert_stream_open( ecl_file_view->fortio )) {
-
-      ecl_kw = ecl_file_kw_get_kw( file_kw , ecl_file_view->fortio , ecl_file_view->inv_map);
-
-      if (ecl_file_view_flags_set( ecl_file_view , ECL_FILE_CLOSE_STREAM))
-        fortio_fclose_stream( ecl_file_view->fortio );
-    }
-  }
-  return ecl_kw;
+  return ecl_file_view_get_kw(ecl_file_view, file_kw);
 }
 
 ecl_data_type ecl_file_view_iget_named_data_type( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
@@ -808,4 +802,29 @@ ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * fla
   }
   
 }
+
+
+ecl_file_transaction_type * ecl_file_view_start_transaction(ecl_file_view_type * file_view) {
+
+  int size = ecl_file_view_get_size(file_view);
+  int * ref_count = util_malloc(size * sizeof(int));
+  
+
+  for (int i = 0; i < size; i++) {
+    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i);
+    ref_count[i] = ecl_file_kw_get_ref_count(file_kw);
+  }
+  ecl_file_transaction_type * t = ecl_file_transaction_start(ref_count);
+  return t;
+}
+
+void ecl_file_view_end_transaction( ecl_file_view_type * file_view, ecl_file_transaction_type * transaction) {
+  int * ref_count = ecl_file_transaction_get_ref_counts(transaction);
+  for (int i = 0; i < ecl_file_view_get_size(file_view); i++) {
+    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i); 
+    ecl_file_kw_reset(file_kw, ref_count[i]);
+  }
+  ecl_file_transaction_end(transaction);
+}
+
 

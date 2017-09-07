@@ -171,6 +171,8 @@ add_library(ecl util/rng.c
                 geometry/geo_region.c
                 geometry/geo_polygon.c
                 geometry/geo_polygon_collection.c
+
+                ecl/ecl_file_transaction.c
 )
 
 target_link_libraries(ecl PUBLIC ${m}
@@ -383,6 +385,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_rft_cell
                 ecl_file_view
                 test_ecl_file_index
+                test_transactions
                 ecl_rst_file
                 ecl_sum_writer
                 ecl_util_make_date_no_shift
