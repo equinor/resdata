@@ -37,7 +37,7 @@ class EclWellTest2(ExtendedTestCase):
 
                 
     def testWell(self):
-        self.checkWell("T07-4A-W2014-06.X0695")
-        self.checkWell("T07-4A-W2014-06.X0709")
+        #self.checkWell("T07-4A-W2014-06.X0695")
+        #self.checkWell("T07-4A-W2014-06.X0709")
         self.checkWell("T07-4A-W2014-06.UNRST")
         
