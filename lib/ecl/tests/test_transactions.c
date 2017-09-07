@@ -30,8 +30,11 @@
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file_transaction.h>
 
+
+/*
+  This test is slightly awkward beacuse it tests quite internal implementation details.
+*/
 
 void test_transaction() {
 
@@ -69,9 +72,9 @@ void test_transaction() {
      ecl_file_kw_type * file_kw2 = ecl_file_view_iget_file_kw( file_view , 2);
 
      ecl_file_view_iget_kw( file_view, 0);
-     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0, NULL, NULL) );
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1, NULL, NULL) );
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2, NULL, NULL) );
+     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0));
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1) );
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2) );
      ecl_file_transaction_type * t1 = ecl_file_view_start_transaction( file_view );
 
        ecl_file_view_iget_kw(file_view, 0);
@@ -85,15 +88,15 @@ void test_transaction() {
 
        ecl_file_view_end_transaction( file_view , t2 );
 
-       test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0, NULL, NULL) );
-       test_assert_true( ecl_file_kw_get_kw_ptr(file_kw1, NULL, NULL) );
-       test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2, NULL, NULL) );
+       test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0) );
+       test_assert_true( ecl_file_kw_get_kw_ptr(file_kw1) );
+       test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2) );
        ecl_file_view_iget_kw(file_view, 2);
 
      ecl_file_view_end_transaction(file_view, t1);
-     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0, NULL, NULL) );
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1, NULL, NULL) );
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2, NULL, NULL) );
+     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0 ) );
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1) );
+     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2) );
 
      ecl_file_close(file);
 

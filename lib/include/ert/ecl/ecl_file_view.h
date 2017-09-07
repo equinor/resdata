@@ -26,7 +26,6 @@
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_file_kw.h>
 #include <ert/ecl/ecl_type.h>
-#include <ert/ecl/ecl_file_transaction.h>
 
 
 #ifdef __cplusplus
@@ -49,6 +48,8 @@ typedef enum {
 
 
 typedef struct ecl_file_view_struct ecl_file_view_type;
+typedef struct ecl_file_transaction_struct ecl_file_transaction_type;
+
 
   bool ecl_file_view_flags_set( const ecl_file_view_type * file_view, int query_flags);
   bool ecl_file_view_check_flags( int state_flags , int query_flags);
