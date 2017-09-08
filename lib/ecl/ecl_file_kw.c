@@ -246,9 +246,17 @@ static void ecl_file_kw_load_kw( ecl_file_kw_type * file_kw , fortio_type * fort
   }
 }
 
-ecl_kw_type * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map ) {
-  if (file_kw->kw)
-    file_kw->ref_count++;
+/*
+  Calling scope will handle the NULL return value, and (optionally)
+  reopen the fortio stream and then call the ecl_file_kw_get_kw()
+  function.
+*/
+
+ecl_kw_type * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw) {
+  if (file_kw->ref_count == 0)
+    return NULL;
+
+  file_kw->ref_count++;
   return file_kw->kw;
 }
 
@@ -268,10 +276,12 @@ ecl_kw_type * ecl_file_kw_get_kw_ptr( ecl_file_kw_type * file_kw , fortio_type *
 
 
 ecl_kw_type * ecl_file_kw_get_kw( ecl_file_kw_type * file_kw , fortio_type * fortio , inv_map_type * inv_map ) {
-  if (file_kw->kw == NULL)
+  if (file_kw->ref_count == 0)
     ecl_file_kw_load_kw( file_kw , fortio , inv_map);
+
   if(file_kw->kw)
     file_kw->ref_count++;
+
   return file_kw->kw;
 }
 
@@ -429,12 +439,12 @@ ecl_file_kw_type * ecl_file_kw_fread_alloc( FILE * stream ) {
 }
 
 
-int ecl_file_kw_get_ref_count(ecl_file_kw_type * file_kw) {
-  return file_kw->ref_count;
+void ecl_file_kw_start_transaction(const ecl_file_kw_type * file_kw, int * ref_count) {
+  *ref_count = file_kw->ref_count;
 }
 
 
-void ecl_file_kw_reset(ecl_file_kw_type * file_kw, int ref_count) {
+void ecl_file_kw_end_transaction(ecl_file_kw_type * file_kw, int ref_count) {
   if (ref_count == 0 && file_kw->ref_count > 0) {
     ecl_kw_free(file_kw->kw);
     file_kw->kw = NULL;

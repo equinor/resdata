@@ -28,7 +28,6 @@
 #include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/ecl/ecl_type.h>
-#include <ert/ecl/ecl_file_transaction.h>
 
 
 struct ecl_file_view_struct {
@@ -42,6 +41,10 @@ struct ecl_file_view_struct {
   int               * flags;
 };
 
+struct ecl_file_transaction_struct {
+  const ecl_file_view_type * file_view;
+  int * ref_count;
+};
 
 
 /*****************************************************************/
@@ -148,7 +151,7 @@ void ecl_file_view_add_flag( ecl_file_view_type * file_view , int flag)  {
 }
 
 static ecl_kw_type * ecl_file_view_get_kw(const ecl_file_view_type * ecl_file_view, ecl_file_kw_type * file_kw) {
-  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw , ecl_file_view->fortio , ecl_file_view->inv_map);
+  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw );
   if (!ecl_kw) {
     if (fortio_assert_stream_open( ecl_file_view->fortio )) {
 
@@ -800,31 +803,32 @@ ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * fla
     fprintf(stderr, "%s: error reading ecl_file_type index file.\n", __func__);
     return NULL;
   }
-  
 }
 
 
 ecl_file_transaction_type * ecl_file_view_start_transaction(ecl_file_view_type * file_view) {
-
+  ecl_file_transaction_type * t = util_malloc(sizeof * t);
   int size = ecl_file_view_get_size(file_view);
-  int * ref_count = util_malloc(size * sizeof(int));
-  
-
+  t->file_view = file_view;
+  t->ref_count = util_malloc( size * sizeof * t->ref_count );
   for (int i = 0; i < size; i++) {
     ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i);
-    ref_count[i] = ecl_file_kw_get_ref_count(file_kw);
+    ecl_file_kw_start_transaction(file_kw, &t->ref_count[i]);
   }
-  ecl_file_transaction_type * t = ecl_file_transaction_start(ref_count);
+
   return t;
 }
 
 void ecl_file_view_end_transaction( ecl_file_view_type * file_view, ecl_file_transaction_type * transaction) {
-  int * ref_count = ecl_file_transaction_get_ref_counts(transaction);
+  if (transaction->file_view != file_view)
+    util_abort("%s: internal error - file_view / transaction mismatch\n",__func__);
+
+  const int * ref_count = transaction->ref_count;
   for (int i = 0; i < ecl_file_view_get_size(file_view); i++) {
-    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i); 
-    ecl_file_kw_reset(file_kw, ref_count[i]);
+    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i);
+    ecl_file_kw_end_transaction(file_kw, ref_count[i]);
   }
-  ecl_file_transaction_end(transaction);
 }
+
 
 
