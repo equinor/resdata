@@ -54,9 +54,11 @@ class Matrix(BaseCClass):
     _random_init       = UtilPrototype("void matrix_random_init(matrix, rng)")
     _dump_csv          = UtilPrototype("void matrix_dump_csv(matrix, char*)")
 
-    # Requires BLAS!
-    _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False)
-
+    # Requires BLAS. If the library does not have the
+    # matrix_alloc_matmul() function the prototype will have _func =
+    # None, and NotImplementedError( ) will be raised int the
+    # __call__() method if we try to use this function.
+    _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False, allow_attribute_error = True)
 
     # Requires BLAS!
     @classmethod
@@ -67,7 +69,7 @@ class Matrix(BaseCClass):
         if m1.columns( ) == m2.rows( ):
             return cls._alloc_matmul( m1, m2)
         else:
-            raise ValueError("Matrix size mismathc")
+            raise ValueError("Matrix size mismatch")
 
 
     def __init__(self, rows, columns, value=0):
@@ -220,3 +222,6 @@ class Matrix(BaseCClass):
 
     def free(self):
         self._free()
+
+
+
