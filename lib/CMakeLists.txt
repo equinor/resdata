@@ -251,6 +251,7 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_binary_split
                 ert_util_buffer
                 ert_util_clamp
+                ert_util_chdir
                 ert_util_filename
                 ert_util_hash_test
                 ert_util_logh
