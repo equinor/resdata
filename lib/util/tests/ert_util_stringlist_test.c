@@ -338,6 +338,22 @@ void test_matching() {
 }
 
 
+
+void test_unique() {
+  stringlist_type * s = stringlist_alloc_new();
+
+  test_assert_true( stringlist_unique( s ));
+
+  stringlist_append_ref( s, "S1");
+  test_assert_true( stringlist_unique( s ));
+
+  stringlist_append_ref( s, "S2");
+  test_assert_true( stringlist_unique( s ));
+
+  stringlist_append_ref( s, "S2");
+  test_assert_false( stringlist_unique( s ));
+}
+
 int main( int argc , char ** argv) {
   test_empty();
   test_char();
@@ -348,5 +364,6 @@ int main( int argc , char ** argv) {
   test_iget_as_double();
   test_split();
   test_matching();
+  test_unique();
   exit(0);
 }
