@@ -52,6 +52,7 @@ typedef int  ( string_cmp_ftype)  (const void * , const void *);
   void              stringlist_append_owned_ref(stringlist_type * , const char *);
   
   const      char * stringlist_safe_iget( const stringlist_type * stringlist , int index);
+  bool              stringlist_unique(const stringlist_type * stringlist );
   bool              stringlist_iequal( const stringlist_type * stringlist , int index, const char * s );
   const      char * stringlist_iget(const stringlist_type * , int);
   int               stringlist_iget_as_int( const stringlist_type * stringlist , int index , bool * valid);
