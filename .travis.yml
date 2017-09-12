@@ -1,3 +1,5 @@
+language: python
+
 compiler:
   - gcc
   - clang
@@ -46,10 +48,6 @@ addons:
     - cmake-data
 
 before_install:
-  - language: python
-
-install:
-  - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       export CONDA_OS=MacOSX;
     else
@@ -63,6 +61,10 @@ install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export CONDA_HOME="$HOME/miniconda"
+- export PATH="$CONDA_HOME/bin:$PATH"
+
+install:
+  - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
   - export PATH="$CONDA_HOME/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
