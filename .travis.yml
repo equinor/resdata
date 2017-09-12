@@ -1,5 +1,3 @@
-language: generic
-
 compiler:
   - gcc
   - clang
@@ -47,6 +45,8 @@ addons:
     - cmake
     - cmake-data
 
+before_install:
+  - language: python
 
 install:
   - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
