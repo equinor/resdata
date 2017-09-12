@@ -1,8 +1,12 @@
-language: c
+language: python
 
 compiler:
   - gcc
   - clang
+
+python:
+  - "2.7"
+  - "3.6"
 
 os:
   - linux
@@ -16,13 +20,14 @@ env:
   global:
     - ERT_SHOW_BACKTRACE=1
   matrix:
-    - PYTHON_VERSION=2.7; TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
-    - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
-    - PYTHON_VERSION=2.7; TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
-    - PYTHON_VERSION=3.6; TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
+    - TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
+    - TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
+    - TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
 
 matrix:
   fast_finish: true
+  allow_failures:
+  - python: "3.6"
   exclude:
     - os: osx
       compiler: gcc
@@ -42,16 +47,11 @@ addons:
     - cmake
     - cmake-data
 
-
-install:
-  - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
+before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       export CONDA_OS=MacOSX;
     else
       export CONDA_OS=Linux;
-    fi
-  - if [[ $PYTHON_VERSION == 2.7 ]]; then
-      export TRAVIS_PYTHON_VERSION="2.7";
     fi
   # We do this conditionally because it saves us some downloading if the version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -61,6 +61,10 @@ install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export CONDA_HOME="$HOME/miniconda"
+  - export PATH="$CONDA_HOME/bin:$PATH"
+
+install:
+  - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
   - export PATH="$CONDA_HOME/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
