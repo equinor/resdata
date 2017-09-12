@@ -61,7 +61,7 @@ before_install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export CONDA_HOME="$HOME/miniconda"
-- export PATH="$CONDA_HOME/bin:$PATH"
+  - export PATH="$CONDA_HOME/bin:$PATH"
 
 install:
   - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
