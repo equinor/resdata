@@ -79,6 +79,12 @@ if (BUILD_ECL_SUMMARY)
 endif()
 
 if(apps)
+     if (ERT_USE_OPENMP)
+        foreach(app ${apps})
+            target_compile_options(${app} PUBLIC ${OpenMP_C_FLAGS})
+            set_property(TARGET ${app} APPEND PROPERTY LINK_FLAGS ${OpenMP_C_FLAGS})
+        endforeach()
+    endif()
     install(TARGETS ${apps}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
