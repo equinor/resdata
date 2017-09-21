@@ -12,7 +12,7 @@ Vcs-Browser: https://github.com/Ensembles/ert
 Package: libecl-dev
 Section: libdevel
 Architecture: any
-Depends: libecl1 (= ${binary:Version})
+Depends: libecl1 (= ${binary:Version}), libblas-dev, liblapack-dev
 Description: libecl Eclipse IO library -- Development files
  libecl is a package for reading and writing the result files from the Eclipse reservoir simulator.
 
