@@ -1,0 +1,18 @@
+This files contains additional information about the structure of restart files generated in ECLIPSE. 
+
+
+INTEHEAD:
+0: Value based on computer time in which the file was written
+67: Timestep
+68: Report step
+219: Report step-1
+
+
+DOUBHEAD:
+0: days
+157: Reservoir mean pressure
+161: A whole number, value = 735979 + days
+
+
+
+
