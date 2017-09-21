@@ -1,0 +1,65 @@
+Source:
+kw_magic: K
+Schlum  : S
+Decrypt : D
+
+INTEHEAD
+INDEX           SOURCE  VALUE
+0               S/D     ISNUM = Time encoded number
+1               D       201601
+2               K/S     units type = 1 (METRIC), 2 (FIELD), 3 (LAB), 4 (PVT-M)
+3               D       CONSTANT, -2345
+4               D       CONSTANT, -2345        
+5               D       CONSTANT, -2345
+6               D       CONSTANT, -2345
+7               D       CONSTANT, -2345
+8               K/S     NX, cells in x dimension
+9               K/S     NY, cells in y dimension
+10              K/S     NZ, cells in z dimenstion
+11              K/S     NACTIV, number of active cells
+12              -       -
+13              -       -
+14              K/S     IPHS, intehead phase indicator
+15              D       CONSTANT, -2345
+16              K/S     NWELLS=number of wells
+17              K/S     NCWMAX=maximum number of completions per wells
+18              -       -
+19              K/S     NWGMAX=maximum number of wells in any well group
+20              K/S     NGMAXZ=maximum number of groups in field
+21              D       CONSTANT, 0
+22              D       CONSTANT, 0
+23              D       CONSTANT, 0
+24              K/S     NWELZ=number of data elements per well in IWEL array
+25              K/S     NSWELZ=number of data elements per well in SWEL array
+26              K/S     NXWELZ=number of data elements per well in XWEL array
+27              K/S     NZWELZ=number of data elements per well in ZWEL array
+28              -       -
+29              -       -
+30              D       CONSTANT, 1
+31              D       CONSTANT, -2345
+32              K/S     NICONZ=number of elements in ICON array
+33              K/S     NSCONZ=number of elements in SCON array
+34              K/S     NXCONZ=number of elements in XCON array
+35              D       CONSTANT, -2345
+36              K/S     NIGRPZ=number of data elements per group in IGRP array
+37              S       NSGRPZ=number of data elements per group in SGRP array
+38              S       NXGRPZ=number of data elements per group in XGRP array
+39              S       NZGRPZ=number of data elements per group in ZGRP array
+40              D       CONSTANT, 0
+41              S       NCAMAX=maximum number of analytic aquifer connections
+42              S       NIAAQZ=number of data elements per aquifer in IAAQ array
+43              S       NSAAQZ=number of data elements per aquifer in SAAQ array
+44              S       NXAAQZ=number of data elements per aquifer in XAAQ array
+45              S       NICAQZ=number of data elements per aquifer in ICAQ array
+46              S       NSCAQZ=number of data elements per aquifer in SCAQ array
+47              S       NXCAQZ=number of data elements per aquifer in XCAQ array
+48              D       CONSTANT, 0
+49              -       -
+50              D       CONSTANT, 1 
+
+              
+     
+
+
+
+
