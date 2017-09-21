@@ -1,5 +1,6 @@
 This files contains additional information about the structure of restart files generated in ECLIPSE. 
 
+This applies to the case spe1 in the opm-data repository. 
 
 INTEHEAD:
 0: Value based on computer time in which the file was written
@@ -14,6 +15,31 @@ DOUBHEAD:
 158: A double related to RS, but does not impact solution
 161: A whole number, value = 735979 + days
 
+These KS are unchanged during simulation:
+LOGIHEAD
+IGRP
+SGRP
+IWEL
+SWEL
+ZWLS
+ICON
+SCON
+
+
+KW that does not need to be present:
+XGRP
+ZGRP
+XWEL
+IWLS
+XCON
+DLYTIM
+HIDDEN
+REGDIMS
+FIPFAMNA
+REGRPT
+
+note about STARTSOL:
+ECLIPSE may cause if error or bugs anything unknwon or unecessary is added after STARTSOL
 
 
 
