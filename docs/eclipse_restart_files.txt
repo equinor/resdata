@@ -11,6 +11,7 @@ INTEHEAD:
 DOUBHEAD:
 0: days
 157: Reservoir mean pressure
+158: A double related to RS, but does not impact solution
 161: A whole number, value = 735979 + days
 
 
