@@ -15,11 +15,13 @@ DOUBHEAD:
 158: A double related to RS, but does not impact solution
 161: A whole number, value = 735979 + days
 
+IWEL:
+Changes during eclipse simulation. Reset to start values at restart stage does not impact solution. 
+
 These KS are unchanged during simulation:
 LOGIHEAD
 IGRP
 SGRP
-IWEL
 SWEL
 ZWLS
 ICON
