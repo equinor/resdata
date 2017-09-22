@@ -1,22 +1,22 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'log.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'log.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
-#include <string.h> 
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -42,8 +42,8 @@
 
 struct log_struct {
   char             * filename;
-  FILE             * stream; 
-  int                fd; 
+  FILE             * stream;
+  int                fd;
   int                log_level;
 #ifdef HAVE_PTHREAD
   pthread_mutex_t    mutex;
@@ -58,9 +58,9 @@ void log_reopen(log_type *logh , const char *filename) {
     fclose( logh->stream );
     file_size = util_file_size( logh->filename );
     if (file_size == 0)
-      remove( logh->filename ); /* Unlink the old log file if it had zero size. */ 
+      remove( logh->filename ); /* Unlink the old log file if it had zero size. */
   }
-  
+
   logh->filename = util_realloc_string_copy( logh->filename , filename );
 #ifdef HAVE_PTHREAD
   pthread_mutex_lock( &logh->mutex );
@@ -104,7 +104,7 @@ log_type * log_open( const char * filename , int log_level) {
   log_type   *logh;
 
   logh = (log_type*)util_malloc(sizeof *logh );
-  
+
   logh->log_level     = log_level;
   logh->filename      = NULL;
   logh->stream        = NULL;
@@ -113,7 +113,7 @@ log_type * log_open( const char * filename , int log_level) {
 #endif
   if (filename != NULL && log_level > 0)
     log_reopen( logh , filename);
-  
+
   return logh;
 }
 
@@ -146,14 +146,14 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
 
     if (logh->stream == NULL)
       util_abort("%s: logh->stream == NULL - must call log_reset_filename() first \n",__func__);
-    
+
 #ifdef HAVE_PTHREAD
     pthread_mutex_lock( &logh->mutex );
 #endif
     {
       struct tm time_fields;
       time_t    epoch_time;
-      
+
       time(&epoch_time);
       util_time_utc(&epoch_time , &time_fields);
 
@@ -161,11 +161,11 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
         fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d  %s\n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec , message);
       else
         fprintf(logh->stream,"%02d/%02d - %02d:%02d:%02d   \n",time_fields.tm_mday, time_fields.tm_mon + 1, time_fields.tm_hour , time_fields.tm_min , time_fields.tm_sec);
-      
+
       /** We duplicate the message to the stream 'dup_stream'. */
       if ((dup_stream != NULL) && (message != NULL))
         fprintf(dup_stream , "%s\n", message);
-      
+
       log_sync( logh );
     }
 #ifdef HAVE_PTHREAD
@@ -224,9 +224,9 @@ void log_sync(log_type * logh) {
 
 
 void log_close( log_type * logh ) {
-  if ((logh->stream != stdout) && (logh->stream != stderr) && (logh->stream != NULL)) 
+  if ((logh->stream != stdout) && (logh->stream != stderr) && (logh->stream != NULL))
     fclose( logh->stream );  /* This closes BOTH the FILE * stream and the integer file descriptor. */
-  
+
   util_safe_free( logh->filename );
   free( logh );
 }
