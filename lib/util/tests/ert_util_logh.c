@@ -29,7 +29,7 @@ int main(int argc , char ** argv) {
   test_work_area_type * work_area = test_work_area_alloc("util/logh");
   {
     log_type * logh = log_open( NULL , 0 );
-
+    test_assert_int_equal( 0 , log_get_msg_count( logh ));
     test_assert_false( log_is_open( logh ));
     log_reopen( logh , LOG_FILE );
     test_assert_true( log_is_open( logh ));
@@ -46,6 +46,8 @@ int main(int argc , char ** argv) {
   {
     log_type * logh = log_open( LOG_FILE , 1 );
     test_assert_true( log_is_open( logh ));
+    log_add_message( logh , 1 , NULL , "Message" , false);
+    test_assert_int_equal( 1 , log_get_msg_count( logh ));
     log_close( logh );
   }
 

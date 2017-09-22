@@ -45,6 +45,7 @@ struct log_struct {
   FILE             * stream;
   int                fd;
   int                log_level;
+  int                msg_count;
 #ifdef HAVE_PTHREAD
   pthread_mutex_t    mutex;
 #endif
@@ -75,7 +76,7 @@ void log_reopen(log_type *logh , const char *filename) {
     logh->stream = NULL;
     logh->fd     = -1;
   }
-
+  logh->msg_count = 0;
 #ifdef HAVE_PTHREAD
   pthread_mutex_unlock( &logh->mutex );
 #endif
@@ -84,6 +85,10 @@ void log_reopen(log_type *logh , const char *filename) {
 
 const char * log_get_filename( const log_type * logh ) {
   return logh->filename;
+}
+
+int log_get_msg_count( const log_type * logh) {
+  return logh->msg_count;
 }
 
 int log_get_level( const log_type * logh) {
@@ -105,6 +110,7 @@ log_type * log_open( const char * filename , int log_level) {
 
   logh = (log_type*)util_malloc(sizeof *logh );
 
+  logh->msg_count     = 0;
   logh->log_level     = log_level;
   logh->filename      = NULL;
   logh->stream        = NULL;
@@ -167,6 +173,7 @@ void log_add_message(log_type *logh, int message_level , FILE * dup_stream , cha
         fprintf(dup_stream , "%s\n", message);
 
       log_sync( logh );
+      logh->msg_count++;
     }
 #ifdef HAVE_PTHREAD
     pthread_mutex_unlock( &logh->mutex );

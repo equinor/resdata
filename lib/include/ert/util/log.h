@@ -54,7 +54,7 @@ typedef struct log_struct log_type;
   void         log_set_level( log_type * logh , int log_level);
   bool         log_is_open( const log_type * logh);
   bool         log_include_message(const log_type *logh , int message_level);
-
+  int          log_get_msg_count(const log_type * logh);
 
 #ifdef __cplusplus
 }
