@@ -36,6 +36,14 @@ def copy_offset():
 
 class KWTest(ExtendedTestCase):
 
+    def test_name(self):
+        kw = EclKW('TEST', 3, EclDataType.ECL_INT)
+        self.assertEqual(kw.name, 'TEST')
+        self.assertIn('TEST', repr(kw))
+        kw.name = 'SCHMEST'
+        self.assertEqual(kw.name, 'SCHMEST')
+        self.assertIn('SCHMEST', repr(kw))
+
     def test_min_max(self):
         kw = EclKW("TEST", 3, EclDataType.ECL_INT)
         kw[0] = 10
@@ -207,14 +215,14 @@ class KWTest(ExtendedTestCase):
         self.assertEqual(kw[4] , 66)
         self.assertEqual(kw[5] , 99)
 
-        
+
     def test_long_name(self):
         with self.assertRaises(ValueError):
             EclKW("LONGLONGNAME" , 10 , EclDataType.ECL_INT)
 
         kw = EclKW("REGIONS" , 10 , EclDataType.ECL_INT)
         with self.assertRaises(ValueError):
-            kw.setName("LONGLONGNAME")
+            kw.name = "LONGLONGNAME"
 
 
     def test_abs(self):
