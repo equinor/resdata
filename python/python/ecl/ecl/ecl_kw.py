@@ -884,6 +884,10 @@ class EclKW(BaseCClass):
         n = self._get_header()
         return str(n) if n else ''
 
+    @name.setter
+    def name(self, value):
+        self.set_name(value)
+
     def get_name(self):
         return self.name
 
