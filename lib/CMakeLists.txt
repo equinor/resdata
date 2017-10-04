@@ -171,6 +171,8 @@ add_library(ecl util/rng.c
                 geometry/geo_region.c
                 geometry/geo_polygon.c
                 geometry/geo_polygon_collection.c
+
+                nexus/nexus_plot.c
 )
 
 target_link_libraries(ecl PUBLIC ${m}
@@ -460,6 +462,13 @@ if (ERT_BUILD_CXX)
         add_test(NAME ${test} COMMAND ${test})
     endforeach ()
 endif ()
+
+foreach (name   nexus_plot_alloc
+        )
+    add_executable(${name} nexus/tests/${name}.c)
+    target_link_libraries(${name} ecl)
+    add_test(NAME ${name} COMMAND ${name})
+endforeach ()
 
 if (NOT STATOIL_TESTDATA_ROOT)
     return ()
