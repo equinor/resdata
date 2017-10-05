@@ -18,11 +18,46 @@
 
 
 #include <stdlib.h>
-#include <stdbool.h>
+#include <stdio.h>
 
+#include <ert/util/util.h>
+#include <ert/util/type_macros.h>
 #include <ert/nexus/nexus_plot.h>
 
+#define NEXUS_PLOT_HEADER "PLOT  BIN "
 
-void* nexus_plot_alloc(char* file) {
-    return NULL;
+#define NEXUS_PLOT_ID  884298
+
+struct nexus_plot_struct {
+    UTIL_TYPE_ID_DECLARATION;
+};
+
+UTIL_IS_INSTANCE_FUNCTION(nexus_plot, NEXUS_PLOT_ID);
+
+UTIL_SAFE_CAST_FUNCTION(nexus_plot, NEXUS_PLOT_ID);
+
+
+nexus_plot_type *nexus_plot_alloc(char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL)
+        return NULL;
+
+    char content[11];
+    fseek(fp, 4, SEEK_SET);
+    fread(content, 1, 10, fp);
+    content[10] = '\0';
+
+    if (!util_string_equal(content, NEXUS_PLOT_HEADER)) {
+        fclose(fp);
+        return NULL;
+    } else {
+        nexus_plot_type *plt = util_malloc(sizeof *plt);
+        UTIL_TYPE_ID_INIT(plt, NEXUS_PLOT_ID);
+        return plt;
+    }
+}
+
+
+void nexus_plot_free(nexus_plot_type *nexus_plot) {
+    free(nexus_plot);
 }
