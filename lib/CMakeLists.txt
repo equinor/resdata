@@ -464,6 +464,7 @@ if (ERT_BUILD_CXX)
 endif ()
 
 foreach (name   nexus_plot_alloc
+                nexus2ecl
         )
     add_executable(${name} nexus/tests/${name}.c)
     target_link_libraries(${name} ecl)
