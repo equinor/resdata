@@ -22,7 +22,22 @@
 extern "C" {
 #endif
 
-void* nexus_plot_alloc(char* file);
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+
+#include <ert/util/util.h>
+#include <ert/util/type_macros.h>
+
+typedef struct nexus_plot_struct nexus_plot_type;
+
+nexus_plot_type *nexus_plot_alloc(char *file);
+
+void nexus_plot_free(nexus_plot_type *nexus_plot);
+
+UTIL_IS_INSTANCE_HEADER(nexus_plot);
+
+UTIL_SAFE_CAST_HEADER(nexus_plot);
 
 #ifdef __cplusplus
 }
