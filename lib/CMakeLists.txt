@@ -467,7 +467,8 @@ foreach (name   nexus_plot_alloc
         )
     add_executable(${name} nexus/tests/${name}.c)
     target_link_libraries(${name} ecl)
-    add_test(NAME ${name} COMMAND ${name})
+    add_test(NAME ${name} COMMAND ${name}
+        ${_statoil_test_data}/nexus/plot1/gf_cook_test_plotbin.plt)
 endforeach ()
 
 if (NOT STATOIL_TESTDATA_ROOT)

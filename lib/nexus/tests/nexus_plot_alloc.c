@@ -67,6 +67,12 @@ void test_valid_header() {
     test_work_area_free(work_area);
 }
 
+void test_real_header(char **argv) {
+    nexus_plot_type *plt = nexus_plot_alloc(argv);
+    test_assert_true(nexus_plot_is_instance(plt));
+    nexus_plot_free(plt);
+}
+
 
 int main(int argc, char **argv) {
     util_install_signals();
@@ -74,5 +80,6 @@ int main(int argc, char **argv) {
     test_invalid_header1();
     test_invalid_header2();
     test_valid_header();
+    test_real_header(argv[1]);
     exit(0);
 }
