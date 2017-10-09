@@ -68,11 +68,9 @@ void test_valid_header() {
 }
 
 void test_real_header(char **argv) {
-
     nexus_plot_type *plt = nexus_plot_alloc(argv);
     test_assert_true(nexus_plot_is_instance(plt));
     nexus_plot_free(plt);
-
 }
 
 
