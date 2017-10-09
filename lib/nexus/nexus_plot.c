@@ -61,3 +61,20 @@ nexus_plot_type *nexus_plot_alloc(char *filename) {
 void nexus_plot_free(nexus_plot_type *nexus_plot) {
     free(nexus_plot);
 }
+
+ecl_sum_type * nexus_plot_alloc_ecl_sum( const nexus_plot_type * nexus_plot, const char * ecl_case) {
+  bool unified = true;
+  bool fmt_output = false;
+  const char * key_join_string = ":";
+  time_t sim_start = 0;
+  bool time_in_days = true;
+  int nx = 10;
+  int ny = 10;
+  int nz = 10;
+
+  ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( ecl_case, fmt_output, unified, key_join_string, sim_start, time_in_days, nx, ny, nz);
+
+  return ecl_sum;
+}
+
+

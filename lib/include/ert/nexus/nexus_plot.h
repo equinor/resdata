@@ -29,11 +29,13 @@ extern "C" {
 #include <ert/util/util.h>
 #include <ert/util/type_macros.h>
 
+#include <ert/ecl/ecl_sum.h>
+
 typedef struct nexus_plot_struct nexus_plot_type;
 
 nexus_plot_type *nexus_plot_alloc(char *file);
-
-void nexus_plot_free(nexus_plot_type *nexus_plot);
+void             nexus_plot_free(nexus_plot_type *nexus_plot);
+ecl_sum_type *   nexus_plot_alloc_ecl_sum( const nexus_plot_type * nexus_plot, const char * base_name);
 
 UTIL_IS_INSTANCE_HEADER(nexus_plot);
 
