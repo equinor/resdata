@@ -73,8 +73,8 @@ During simulation spe1, SWEL is constant.
 ICON:
 1: I coordinate
 2: J coordinate
-3: K coordinate
-4: Number of cells IF: I, J, K is are max. 
+3: K coordinatel
+4: K + (I-1) * NZ + (J-1) * NZ * NX
 During simulation spe1, ICON is constant. 
 
 
