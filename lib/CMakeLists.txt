@@ -172,7 +172,7 @@ add_library(ecl util/rng.c
                 geometry/geo_polygon.c
                 geometry/geo_polygon_collection.c
 
-                nexus/nexus_plot.c
+                nexus/nexus_plot.cpp
 )
 
 target_link_libraries(ecl PUBLIC ${m}
@@ -463,10 +463,10 @@ if (ERT_BUILD_CXX)
     endforeach ()
 endif ()
 
-foreach (name   nexus_plot_alloc
-                nexus2ecl
+foreach (name   nexus_plot_load
+                # nexus2ecl
         )
-    add_executable(${name} nexus/tests/${name}.c)
+    add_executable(${name} nexus/tests/${name}.cpp)
     target_link_libraries(${name} ecl)
     add_test(NAME ${name} COMMAND ${name})
 endforeach ()
