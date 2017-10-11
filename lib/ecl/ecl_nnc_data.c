@@ -173,7 +173,7 @@ static void assert_correct_kw_count(ecl_kw_type * kw, const char * function_name
 }
 
 
-static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
+static bool ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
 
    int current_grid1 = -1;
    int current_grid2 = -1;
@@ -182,6 +182,7 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
    int kw_count = 0;
    bool check_kw_count = false;
    int nnc_size = ecl_nnc_geometry_size( nnc_geo );   
+   bool all_nnc_kw_present = true;
 
    for (int nnc_index = 0; nnc_index < nnc_size; nnc_index++) {
       const ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
@@ -200,33 +201,35 @@ static void ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
             data->size = nnc_index + correct_kw_count;
          }
          else {
-            check_kw_count = false;
-            printf("Warning: failed to obtain kw from file in function %s. ", __func__);
-            printf("Grid1: %d, Grid2 %d\n", current_grid1, current_grid2);
+            all_nnc_kw_present = false;
          }
       }
       if (current_kw) {
-         data->values[nnc_index] = ecl_kw_iget_as_double(current_kw, pair->input_index);
-         kw_count++;
+        data->values[nnc_index] = ecl_kw_iget_as_double(current_kw, pair->input_index);
+        kw_count++;
       }
-      else
-         data->values[nnc_index] = -1;
+      
    }
    assert_correct_kw_count(current_kw, __func__, check_kw_count, correct_kw_count, kw_count);
+   return all_nnc_kw_present;
 }
 
 static ecl_nnc_data_type * ecl_nnc_data_alloc__(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
    ecl_nnc_data_type * data = util_malloc(sizeof * data);
-
    data->size = 0;
 
    int nnc_size = ecl_nnc_geometry_size( nnc_geo );
 
    data->values = util_malloc( nnc_size * sizeof(double));
 
-   ecl_nnc_data_set_values(data, grid, nnc_geo, init_file, kw_type);
+   if (ecl_nnc_data_set_values(data, grid, nnc_geo, init_file, kw_type))
+     return data;
+   else {
+     ecl_nnc_data_free( data );
+     return NULL;
+   }
 
-   return data;
+
 }
 
 ecl_nnc_data_type * ecl_nnc_data_alloc_tran(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file) {
