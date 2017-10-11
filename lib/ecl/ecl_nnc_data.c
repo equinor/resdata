@@ -198,7 +198,6 @@ static bool ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
          if (current_kw) {            
             correct_kw_count = ecl_kw_get_size( current_kw );
             check_kw_count = true;
-            data->size = nnc_index + correct_kw_count;
          }
          else {
             all_nnc_kw_present = false;
@@ -216,9 +215,9 @@ static bool ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
 
 static ecl_nnc_data_type * ecl_nnc_data_alloc__(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
    ecl_nnc_data_type * data = util_malloc(sizeof * data);
-   data->size = 0;
 
    int nnc_size = ecl_nnc_geometry_size( nnc_geo );
+   data->size = nnc_size;
 
    data->values = util_malloc( nnc_size * sizeof(double));
 
