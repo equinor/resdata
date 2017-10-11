@@ -20,6 +20,7 @@
 #include <array>
 #include <sstream>
 #include <iostream>
+#include <sstream>
 
 #include <ert/util/build_config.h>
 #ifdef HAVE_NETINET_IN_H
@@ -31,6 +32,7 @@
 #endif
 
 #include <ert/nexus/nexus_plot.hpp>
+#include <ert/ecl/ecl_sum.h>
 
 
 const std::string NEXUS_PLOT_TYPE_HEADER = "PLOT  BIN ";
@@ -134,4 +136,22 @@ void nex::NexusPlot::load(std::istream& stream) {
     this->ncomp         = header.ncomp;
     this->class_names   = header.class_names;
     this->vars_in_class = header.vars_in_class;
+}
+
+ecl_sum_type* nex::NexusPlot::ecl_summary( const std::string& ecl_case ) {
+    bool unified = true;
+    bool fmt_output = false;
+    const char* key_join_string = ":";
+    time_t sim_start = 0;
+    bool time_in_days = true;
+
+    ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( ecl_case.c_str(),
+        fmt_output,
+        unified,
+        key_join_string,
+        sim_start,
+        time_in_days,
+        this->nx, this->ny, this->nz);
+
+    return ecl_sum;
 }

@@ -25,6 +25,8 @@
 #include <string>
 #include <vector>
 
+typedef struct ecl_sum_struct ecl_sum_type;
+
 namespace nex {
 
 struct bad_header : public std::runtime_error {
@@ -48,6 +50,8 @@ public:
     int32_t ncomp;
     std::vector<std::string> class_names;
     std::vector<int32_t> vars_in_class;
+
+    ecl_sum_type* ecl_summary( const std::string& ecl_case );
 
 private:
     void load( std::istream& );
