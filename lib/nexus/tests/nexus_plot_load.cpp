@@ -38,9 +38,14 @@ void test_valid_header() {
     nex::NexusPlot::load(stream);
 }
 
+void test_real_header(char *argv) {
+    nex::NexusPlot::load(argv);
+}
+
 int main(int argc, char* argv[]) {
     test_invalid_header1();
     test_invalid_header2();
     test_valid_header();
+    test_real_header(argv[1]);
     return 0;
 }
