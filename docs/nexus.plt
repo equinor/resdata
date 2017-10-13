@@ -1,7 +1,7 @@
 
 
 bbbbPLOT__BIN_           : Header - verify file type
-576*b                    : Header - skipped
+562*b                    : Header - skipped
 264*b                    : Header - skipped
 i                        : num_classes
 iii                      : Day Month Year

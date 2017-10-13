@@ -20,18 +20,37 @@
 #define NEXUS_PLOT_H
 
 #include <cinttypes>
-#include <exception>
+#include <stdexcept>
 #include <fstream>
 #include <string>
+#include <vector>
 
 namespace nex {
 
-class bad_header : public std::exception {};
+struct bad_header : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+struct read_error : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+struct unexpected_eof : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
 
 class NexusPlot {
 public:
-    static NexusPlot load( const std::string& );
-    static NexusPlot load( std::istream& );
+    NexusPlot( const std::string& );
+    NexusPlot( std::istream& );
+
+    int32_t num_classes = 0;
+    int32_t day, month, year;
+    int32_t nx, ny, nz;
+    int32_t ncomp;
+    std::vector<std::string> class_names;
+    std::vector<int32_t> vars_in_class;
+
+private:
+    void load( std::istream& );
 };
 
 }

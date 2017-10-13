@@ -248,6 +248,11 @@ check_include_file(execinfo.h HAVE_EXECINFO)
 check_include_file(getopt.h   ERT_HAVE_GETOPT)
 check_include_file(unistd.h   ERT_HAVE_UNISTD)
 
+# Portability checks; look for htons function
+check_include_file("netinet/in.h" HAVE_NETINET_IN_H)
+check_include_file("arpa/inet.h"  HAVE_ARPA_INET_H)
+check_include_file("winsock2.h"   HAVE_WINSOCK2_H)
+
 check_type_size(time_t SIZE_OF_TIME_T)
 if (${SIZE_OF_TIME_T} EQUAL 8)
     try_run(RUN_RESULT COMPILE_RESULT ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_mktime_before1970.c)

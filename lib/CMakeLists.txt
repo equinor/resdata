@@ -468,8 +468,7 @@ foreach (name   nexus_plot_load
         )
     add_executable(${name} nexus/tests/${name}.cpp)
     target_link_libraries(${name} ecl)
-    add_test(NAME ${name} COMMAND ${name}
-        ${CMAKE_SOURCE_DIR}/test-data/local/nexus/SPE1.plt)
+    add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
 endforeach ()
 
 if (NOT STATOIL_TESTDATA_ROOT)
