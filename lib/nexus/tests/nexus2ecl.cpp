@@ -17,38 +17,39 @@
 */
 #include <stdio.h>
 #include <string.h>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 #include <ert/util/test_work_area.h>
 #include <ert/util/test_util.h>
 
 #include <ert/ecl/ecl_sum.h>
 
-#include <ert/nexus/nexus_plot.h>
+#include <ert/nexus/nexus_plot.hpp>
 
 
-void test_create_ecl_sum() {
-  test_work_area_type *work_area = test_work_area_alloc("nexus_header");
-  FILE *stream = fopen("valid_file", "w");
-  const char *header = "xxxxPLOT  BIN ";
-  fwrite(header, 1, strlen(header), stream);
-  fclose(stream);
+void test_create_ecl_sum(char *root_folder) {
+    test_work_area_type *work_area = test_work_area_alloc("nexus_header");
 
-  nexus_plot_type *plt = nexus_plot_alloc("valid_file");
-  test_assert_true(nexus_plot_is_instance(plt));
+    std::stringstream ss;
+    ss << root_folder << "/test-data/local/nexus/SPE1.plt";
+    std::cout << ss.str() << std::endl;
+    nex::NexusPlot plt = nex::NexusPlot { ss.str() };
 
-  ecl_sum_type * ecl_sum = nexus_plot_alloc_ecl_sum( plt , "ECL_CASE");
-  test_assert_true( ecl_sum_is_instance( ecl_sum ));
-  ecl_sum_fwrite( ecl_sum );
-  ecl_sum_free( ecl_sum );
-  test_assert_true( util_file_exists( "ECL_CASE.SMSPEC"));
-  nexus_plot_free(plt);
-  test_work_area_free(work_area);
+    ecl_sum_type *ecl_sum = plt.ecl_summary( "ECL_CASE" );
+    test_assert_true( ecl_sum_is_instance( ecl_sum ));
+    ecl_sum_fwrite( ecl_sum );
+    ecl_sum_free( ecl_sum );
+    test_assert_true( util_file_exists( "ECL_CASE.SMSPEC"));
+
+    test_work_area_free(work_area);
 }
 
 
 
 int main(int argc, char **argv) {
     util_install_signals();
-    test_create_ecl_sum();
+    test_create_ecl_sum(argv[1]);
     exit(0);
 }

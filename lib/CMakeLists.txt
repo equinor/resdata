@@ -464,7 +464,7 @@ if (ERT_BUILD_CXX)
 endif ()
 
 foreach (name   nexus_plot_load
-                # nexus2ecl
+                nexus2ecl
         )
     add_executable(${name} nexus/tests/${name}.cpp)
     target_link_libraries(${name} ecl)
