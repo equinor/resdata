@@ -16,10 +16,11 @@ num_classes *i           : The number of variables in each class (var_in_class[]
 8*b                      : Skipped
 
 for c in classes:
+    4*b                  : TIME var name
     for v in vars[c]:
          4*b             : The variable names
-    12*b                 : Skipped
-
+    8*b                  : Skipped
+4*b                      : Skipped
 
 ---->                    : This is the position of first timestep
 
