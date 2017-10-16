@@ -71,7 +71,12 @@ if (ERT_BUILD_CXX)
                          ecl/FortIO.cpp
                          ecl/Smspec.cpp
                          ecl/EclFilename.cpp
+                         nexus/nexus_plot.cpp
 )
+endif ()
+
+if (BUILD_NEXUS)
+    list(APPEND opt_srcs nexus/nexus_plot.cpp)
 endif ()
 
 configure_file(build_config.h.in   include/ert/util/build_config.h)
@@ -171,8 +176,6 @@ add_library(ecl util/rng.c
                 geometry/geo_region.c
                 geometry/geo_polygon.c
                 geometry/geo_polygon_collection.c
-
-                nexus/nexus_plot.cpp
 )
 
 target_link_libraries(ecl PUBLIC ${m}
@@ -463,13 +466,14 @@ if (ERT_BUILD_CXX)
     endforeach ()
 endif ()
 
-foreach (name   nexus_plot_load
-                nexus2ecl
-        )
-    add_executable(${name} nexus/tests/${name}.cpp)
-    target_link_libraries(${name} ecl)
-    add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
-endforeach ()
+if (BUILD_NEXUS)
+    foreach (name nexus_plot_load nexus2ecl)
+        add_executable(${name} nexus/tests/${name}.cpp)
+        target_link_libraries(${name} ecl)
+        add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
+    endforeach ()
+endif()
+
 
 if (NOT STATOIL_TESTDATA_ROOT)
     return ()
