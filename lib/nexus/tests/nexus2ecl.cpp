@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2017 Statoil ASA, Norway.
 
-   The file 'nexus2ecl.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'nexus2ecl.cpp' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
