@@ -467,7 +467,7 @@ if (ERT_BUILD_CXX)
 endif ()
 
 if (BUILD_NEXUS)
-    foreach (name nexus_plot_load nexus2ecl)
+    foreach (name nexus_plot_load nexus_plot_spe1 nexus2ecl)
         add_executable(${name} nexus/tests/${name}.cpp)
         target_link_libraries(${name} ecl)
         add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
