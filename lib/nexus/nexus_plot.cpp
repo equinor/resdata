@@ -53,6 +53,7 @@ struct hinfo {
     int32_t ncomp;
     std::vector<std::string> class_names;
     std::vector<int32_t> vars_in_class;
+    std::vector< std::vector<std::string> > var_names;
 };
 
 hinfo headerinfo( std::istream& stream ) {
@@ -72,13 +73,15 @@ hinfo headerinfo( std::istream& stream ) {
         buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7],
         {},
         std::vector< int32_t >( buf[0], 0 ),
+        std::vector< std::vector<std::string> >( buf[0],
+            std::vector<std::string>()),
     };
 
     stream.seekg(8, std::ios::cur);
-    std::array< char, 8 > strbuf;
+    std::array< char, 8 > class_name;
     for (int i = 0; i < h.num_classes; i++) {
-        stream.read(strbuf.data(), 8);
-        h.class_names.push_back(std::string( strbuf.data(), 8 ));
+        stream.read(class_name.data(), 8);
+        h.class_names.push_back(std::string( class_name.data(), 8 ));
     }
 
     stream.seekg(8, std::ios::cur);
@@ -91,6 +94,15 @@ hinfo headerinfo( std::istream& stream ) {
         throw nex::bad_header("Negative value, corrupted file");
 
     stream.seekg(8, std::ios::cur);
+    for (int i = 0; i < h.num_classes; ++i) {
+        stream.seekg(4, std::ios::cur);
+        std::vector< char > var_names( h.vars_in_class[i] * 4, 0 );
+        stream.read( var_names.data(), h.vars_in_class[i] * 4 );
+        for (int k = 0; k < h.vars_in_class[i]; ++k)
+            h.var_names[i].push_back( std::string( var_names.data() + k*4 ,4 ));
+        stream.seekg(8, std::ios::cur);
+    }
+    stream.seekg(4, std::ios::cur);
 
     return h;
 }
@@ -136,6 +148,7 @@ void nex::NexusPlot::load(std::istream& stream) {
     this->ncomp         = header.ncomp;
     this->class_names   = header.class_names;
     this->vars_in_class = header.vars_in_class;
+    this->var_names     = header.var_names;
 }
 
 ecl_sum_type* nex::NexusPlot::ecl_summary( const std::string& ecl_case ) {

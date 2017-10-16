@@ -50,6 +50,7 @@ public:
     int32_t ncomp;
     std::vector<std::string> class_names;
     std::vector<int32_t> vars_in_class;
+    std::vector< std::vector<std::string> > var_names;
 
     ecl_sum_type* ecl_summary( const std::string& ecl_case );
 
