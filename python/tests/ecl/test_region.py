@@ -34,3 +34,28 @@ class RegionTest(ExtendedTestCase):
 
         with self.assertRaises(ValueError):
             region.select_equal( kw_float , 1 )
+
+    def test_sum(self):
+        grid = EclGrid.createRectangular( (10,10,1) , (1,1,1))
+        kw_mask = EclKW( "INT" , grid.getGlobalSize( ) , EclDataType.ECL_INT )
+        int_value =  EclKW( "INT" , grid.getGlobalSize( ) , EclDataType.ECL_INT )
+        float_value =  EclKW( "FLOAT" , grid.getGlobalSize( ) , EclDataType.ECL_FLOAT)
+        double_value =  EclKW( "DOUBLE" , grid.getGlobalSize( ) , EclDataType.ECL_DOUBLE )
+        bool_value =  EclKW( "BOOL" , grid.getGlobalSize( ) , EclDataType.ECL_BOOL )
+
+        kw_mask[0:50] = 1
+
+        for i in range(len(int_value)):
+            float_value[i] = i
+            double_value[i] = i
+            int_value[i] = i
+            bool_value[i] = True
+
+        region = EclRegion(grid, False)
+        region.select_equal( kw_mask , 1 )
+
+        self.assertEqual( int_value.sum( ) , 99*100/2 )
+        self.assertEqual( int_value.sum( mask = region ) , 49*50/2 )
+        self.assertEqual( double_value.sum( mask = region ) , 1.0*49*50/2 )
+        self.assertEqual( float_value.sum( mask = region ) , 1.0*49*50/2 )
+        self.assertEqual( bool_value.sum( mask = region ) , 50 )

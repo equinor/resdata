@@ -89,6 +89,10 @@ class EclRegion(BaseCClass):
     _scale_kw_int               = EclPrototype("void ecl_region_scale_kw_int( ecl_region , ecl_kw , int, bool) ")
     _scale_kw_float             = EclPrototype("void ecl_region_scale_kw_float( ecl_region , ecl_kw , float, bool ) ")
     _scale_kw_double            = EclPrototype("void ecl_region_scale_kw_double( ecl_region , ecl_kw , double , bool) ")
+    _sum_kw_int                 = EclPrototype("int ecl_region_sum_kw_int( ecl_region , ecl_kw , bool) ")
+    _sum_kw_float               = EclPrototype("float ecl_region_sum_kw_float( ecl_region , ecl_kw , bool ) ")
+    _sum_kw_double              = EclPrototype("double ecl_region_sum_kw_double( ecl_region , ecl_kw , bool) ")
+    _sum_kw_bool                = EclPrototype("int ecl_region_sum_kw_int( ecl_region , ecl_kw , bool) ")
 
     _free                       = EclPrototype("void ecl_region_free( ecl_region )")
     _reset                      = EclPrototype("void ecl_region_reset( ecl_region )")
@@ -944,6 +948,21 @@ class EclRegion(BaseCClass):
                                                 EclDataType.ECL_DOUBLE : self._set_kw_double} , force_active)
 
 
+    def sum_kw(self, kw, force_active = False):
+        data_type = kw.data_type
+        if data_type == EclDataType.ECL_FLOAT:
+            return self._sum_kw_float( kw, force_active )
+
+        if data_type == EclDataType.ECL_INT:
+            return self._sum_kw_int( kw, force_active )
+
+        if data_type == EclDataType.ECL_DOUBLE:
+            return self._sum_kw_double( kw, force_active )
+
+        if data_type == EclDataType.ECL_BOOL:
+            return self._sum_kw_bool( kw, force_active )
+
+        raise ValueError("sum_kw only supported for; INT/FLOAT/DOUBLE/BOOL")
 
 
     #################################################################
