@@ -72,11 +72,13 @@ if (ERT_BUILD_CXX)
                          ecl/Smspec.cpp
                          ecl/EclFilename.cpp
                          nexus/nexus_plot.cpp
+                         nexus/nexus_plot_c.cpp
 )
 endif ()
 
 if (BUILD_NEXUS)
-    list(APPEND opt_srcs nexus/nexus_plot.cpp)
+    list(APPEND opt_srcs nexus/nexus_plot.cpp
+                         nexus/nexus_plot_c.cpp)
 endif ()
 
 configure_file(build_config.h.in   include/ert/util/build_config.h)
@@ -469,6 +471,11 @@ endif ()
 if (BUILD_NEXUS)
     foreach (name nexus_plot_load nexus2ecl)
         add_executable(${name} nexus/tests/${name}.cpp)
+        target_link_libraries(${name} ecl)
+        add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
+    endforeach ()
+    foreach(name nexus_plot_c_api)
+        add_executable(${name} nexus/tests/${name}.c)
         target_link_libraries(${name} ecl)
         add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
     endforeach ()

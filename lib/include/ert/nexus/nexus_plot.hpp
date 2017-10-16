@@ -16,8 +16,8 @@
    for more details.
 */
 
-#ifndef NEXUS_PLOT_H
-#define NEXUS_PLOT_H
+#ifndef NEXUS_PLOT_HPP
+#define NEXUS_PLOT_HPP
 
 #include <cinttypes>
 #include <stdexcept>
@@ -60,4 +60,4 @@ private:
 
 }
 
-#endif // NEXUS_PLOT_H
+#endif // NEXUS_PLOT_HPP
