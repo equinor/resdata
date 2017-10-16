@@ -16,7 +16,7 @@
 from ecl.ecl import EclGrid, EclKW, EclRegion, EclDataType
 from ecl.ecl.faults import Layer
 from ecl.test import ExtendedTestCase
-
+from ecl.util import IntVector
 
 class RegionTest(ExtendedTestCase):
 
@@ -59,3 +59,19 @@ class RegionTest(ExtendedTestCase):
         self.assertEqual( double_value.sum( mask = region ) , 1.0*49*50/2 )
         self.assertEqual( float_value.sum( mask = region ) , 1.0*49*50/2 )
         self.assertEqual( bool_value.sum( mask = region ) , 50 )
+
+
+    def test_truth_and_size(self):
+        actnum = IntVector( initial_size = 100, default_value = 0)
+        actnum[0:50] = 1
+        grid = EclGrid.createRectangular( (10,10,1) , (1,1,1), actnum = actnum)
+        region = EclRegion(grid, False)
+
+        self.assertFalse( region )
+        self.assertEqual( 0, region.active_size( ))
+        self.assertEqual( 0, region.global_size( ))
+        region.select_all( )
+        self.assertTrue( region )
+
+        self.assertEqual( 50, region.active_size( ))
+        self.assertEqual( 100, region.global_size( ))

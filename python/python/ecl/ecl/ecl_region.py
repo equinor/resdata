@@ -206,7 +206,7 @@ class EclRegion(BaseCClass):
         return self._alloc_copy( )
 
 
-    def __zero__(self):
+    def __nonzero__(self):
         global_list = self.getGlobalList()
         if len(global_list) > 0:
             return True
@@ -972,6 +972,14 @@ class EclRegion(BaseCClass):
         Helper function (attribute) to support run-time typechecking.
         """
         return True
+
+
+    def active_size(self):
+        return len(self._get_active_list())
+
+
+    def global_size(self):
+        return len(self._get_global_list())
 
 
     def get_active_list(self):
