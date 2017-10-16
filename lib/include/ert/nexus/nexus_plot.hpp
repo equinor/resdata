@@ -20,12 +20,15 @@
 #define NEXUS_PLOT_H
 
 #include <cinttypes>
-#include <stdexcept>
 #include <fstream>
+#include <map>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
-typedef struct ecl_sum_struct ecl_sum_type;
+#include <ert/ecl/ecl_sum.h>
+
 
 namespace nex {
 
@@ -39,24 +42,66 @@ struct unexpected_eof : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
-class NexusPlot {
-public:
-    NexusPlot( const std::string& );
-    NexusPlot( std::istream& );
-
-    int32_t num_classes = 0;
+struct NexusHeader {
+    int32_t num_classes;
     int32_t day, month, year;
     int32_t nx, ny, nz;
     int32_t ncomp;
-    std::vector<std::string> class_names;
-    std::vector<int32_t> vars_in_class;
-    std::vector< std::vector<std::string> > var_names;
-
-    ecl_sum_type* ecl_summary( const std::string& ecl_case );
-
-private:
-    void load( std::istream& );
 };
+
+struct NexusData {
+    int32_t timestep;
+    float time;
+    int32_t max_perfs;
+    std::array< char, 8 > classname;
+    std::array< char, 8 > instance_name;
+    std::array< char, 4 > varname;
+    float value;
+
+    std::string classname_str()     {
+        return std::string(classname.begin(), classname.end());
+    }
+    std::string instance_name_str() { 
+        return std::string(instance_name.begin(), instance_name.end());
+    }
+    std::string varname_str()       {
+        return std::string(varname.begin(), varname.end());
+    }
+
+    constexpr bool operator==(const NexusData& rhs) const noexcept {
+        return this->timestep      == rhs.timestep &&
+               this->time          == rhs.time &&
+               this->max_perfs     == rhs.max_perfs &&
+               this->classname     == rhs.classname &&
+               this->instance_name == rhs.instance_name &&
+               this->varname       == rhs.varname &&
+               this->value         == rhs.value;
+    }
+    constexpr bool operator!=(const NexusData& rhs) const noexcept {
+        return ! (*this == rhs);
+    }
+    // bool operator< (const NexusData& rhs) { }
+    // bool operator<=(const NexusData& rhs) { }
+    // bool operator> (const NexusData& rhs) { }
+    // bool operator>=(const NexusData& rhs) { }
+};
+
+struct NexusPlot {
+    NexusHeader header;
+    std::vector< NexusData > data;
+};
+
+NexusHeader read_header( std::istream& stream );
+NexusPlot load( const std::string& );
+NexusPlot load( std::istream& );
+
+struct ecl_sum_deleter {
+    void operator()( ecl_sum_type* e ) {
+        ecl_sum_free( e );
+    }
+};
+
+ecl_sum_type* ecl_summary( const std::string&, const NexusPlot& );
 
 }
 
