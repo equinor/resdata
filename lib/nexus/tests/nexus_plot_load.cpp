@@ -125,12 +125,30 @@ void test_spe1_header(char *argv) {
     for (int i = 0; i < plt.num_classes; i++)
         test_assert_std_string_equal(class_names[i], plt.class_names[i]);
     for (int i = 0; i < plt.num_classes; i++)
-        test_assert_int_equal(vars_in_class[i], plt.vars_in_class[i]);
-    for (int i = 0; i < plt.num_classes; ++i) {
-        for (int k = 0; k < plt.vars_in_class[i]; ++k) {
-            test_assert_std_string_equal(var_names[i][k], plt.var_names[i][k]);
-        }
-    }
+        test_assert_int_equal(vars_in_class[i],
+                              plt.vars_in_class[plt.class_names[i]]);
+//    for (int i = 0; i < plt.num_classes; ++i) {
+//        for (int k = 0; k < plt.vars_in_class[plt.class_names[i]]; ++k) {
+//            test_assert_std_string_equal(var_names[i][k],
+//                                         plt.var_names[plt.class_names[i]][k]);
+//        }
+//    }
+}
+
+void test_spe1_body(char *argv) {
+    std::stringstream ss;
+    ss << argv << "/test-data/local/nexus/SPE1.plt";
+    auto plt = nex::NexusPlot {ss.str()};
+
+//    nex::NexusPlot::NexusClass wellname = plt.classes[0];
+//
+//    test_assert_std_string_equal(wellname.name,   std::string("WELL    "));
+//    test_assert_float_equal(wellname.timestep,      33);
+//    test_assert_float_equal(wellname.time,         366);
+//    test_assert_int_equal(wellname.num_items,        2);
+//    test_assert_float_equal(wellname.max_items,      2);
+//    test_assert_float_equal(wellname.max_perfs,      1);
+
 }
 
 int main(int argc, char* argv[]) {
@@ -138,5 +156,6 @@ int main(int argc, char* argv[]) {
     test_invalid_header2();
     test_valid_header();
     test_spe1_header(argv[1]);
+    test_spe1_body(argv[1]);
     return 0;
 }
