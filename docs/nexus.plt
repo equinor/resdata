@@ -20,7 +20,6 @@ for c in classes:
     for v in vars[c]:
          4*b             : The variable names
     8*b                  : Skipped
-4*b                      : Skipped
 
 ---->                    : This is the position of first timestep
 

@@ -24,6 +24,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <map>
 
 typedef struct ecl_sum_struct ecl_sum_type;
 
@@ -41,6 +42,18 @@ struct unexpected_eof : public std::runtime_error {
 
 class NexusPlot {
 public:
+    struct NexusClassItem {
+        std::string name;
+        float timestep;
+        float time;
+        float num_items;
+        float max_items;
+        float max_perfs;
+        std::map< std::string, float > var;
+    };
+
+    typedef std::map< std::string, std::vector<NexusClassItem> > timestep_data;
+
     NexusPlot( const std::string& );
     NexusPlot( std::istream& );
 
@@ -48,9 +61,10 @@ public:
     int32_t day, month, year;
     int32_t nx, ny, nz;
     int32_t ncomp;
-    std::vector<std::string> class_names;
-    std::vector<int32_t> vars_in_class;
-    std::vector< std::vector<std::string> > var_names;
+    std::vector< std::string > class_names;
+    std::map< std::string, int32_t > vars_in_class;
+    std::map< std::string, std::vector<std::string> > var_names;
+    std::map< float, timestep_data > data;
 
     ecl_sum_type* ecl_summary( const std::string& ecl_case );
 
