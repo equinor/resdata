@@ -182,7 +182,6 @@ static bool ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
    int kw_count = 0;
    bool check_kw_count = false;
    int nnc_size = ecl_nnc_geometry_size( nnc_geo );   
-   bool all_nnc_kw_present = true;
 
    for (int nnc_index = 0; nnc_index < nnc_size; nnc_index++) {
       const ecl_nnc_pair_type * pair = ecl_nnc_geometry_iget( nnc_geo, nnc_index );
@@ -200,7 +199,7 @@ static bool ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
             check_kw_count = true;
          }
          else {
-            all_nnc_kw_present = false;
+            return false;
          }
       }
       if (current_kw) {
@@ -210,7 +209,7 @@ static bool ecl_nnc_data_set_values(ecl_nnc_data_type * data, const ecl_grid_typ
       
    }
    assert_correct_kw_count(current_kw, __func__, check_kw_count, correct_kw_count, kw_count);
-   return all_nnc_kw_present;
+   return true;
 }
 
 static ecl_nnc_data_type * ecl_nnc_data_alloc__(const ecl_grid_type * grid, const ecl_nnc_geometry_type * nnc_geo, const ecl_file_view_type * init_file, int kw_type) {
