@@ -643,27 +643,30 @@ class EclKW(BaseCClass):
 
     # No __rdiv__()
 
-    def sum(self):
+    def sum(self, mask = None, force_active = False):
         """
         Will calculate the sum of all the elements in the keyword.
 
         String: Raise ValueError exception.
         Bool:   The number of true values
         """
-        if self.data_type.is_int():
-            return self._int_sum()
-        elif self.data_type.is_float():
-            return self._float_sum()
-        elif self.data_type.is_double():
-            return self._float_sum()
-        elif self.data_type.is_bool():
-            sum = 0
-            for elm in self:
-                if elm:
-                    sum += 1
-            return sum
-        else:
-            raise ValueError('The keyword "%s" is of string type - sum is not implemented' % self.getName())
+        if mask is None:
+            if self.data_type.is_int():
+                return self._int_sum()
+            elif self.data_type.is_float():
+                return self._float_sum()
+            elif self.data_type.is_double():
+                return self._float_sum()
+            elif self.data_type.is_bool():
+                sum = 0
+                for elm in self:
+                    if elm:
+                        sum += 1
+                return sum
+            else:
+                raise ValueError('The keyword "%s" is of string type - sum is not implemented' % self.getName())
+
+        return mask.sum_kw(self, force_active)
 
 
 
