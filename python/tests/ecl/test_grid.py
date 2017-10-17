@@ -176,6 +176,30 @@ class GridTest(ExtendedTestCase):
         grid = GridGen.createRectangular( (10,20,30) , (1,1,1) , actnum = actnum)
         self.assertEqual( grid.getNumActive( ) , 30*20*10 - 2)
 
+    def test_all_iters(self):
+        fk = self.createTestPath('local/ECLIPSE/faarikaal/faarikaal1.EGRID')
+        grid = EclGrid(fk)
+        cell = grid[3455]
+        self.assertEqual(3455, cell.global_index)
+        cell = grid[(4,1,82)]
+        self.assertEqual(3455, cell.global_index)
+        self.assertEqual(grid.cell(global_index=3455),
+                         grid.cell(active_index=2000))
+        self.assertEqual(grid.cell(global_index=3455),
+                         grid.cell(i=4, j=1, k=82))
+
+        na = grid.get_num_active()
+        self.assertEqual(na, 4160)
+        cnt = 0
+        for c in grid.cells(active=True):
+            cnt += 1
+            self.assertTrue(c.active)
+        self.assertEqual(cnt, 4160)
+
+        cnt = len([c for c in grid.cells()])
+        self.assertEqual(cnt, len(grid))
+
+
     def test_repr_and_name(self):
         grid = GridGen.createRectangular((2,2,2), (10,10,10), actnum=[0,0,0,0,1,1,1,1])
         pfx = 'EclGrid('
