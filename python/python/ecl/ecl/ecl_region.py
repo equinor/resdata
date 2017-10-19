@@ -207,12 +207,9 @@ class EclRegion(BaseCClass):
 
 
     def __nonzero__(self):
-        global_list = self.getGlobalList()
-        if len(global_list) > 0:
-            return True
-        else:
-            return False
-
+        global_list = self.get_global_list()
+        return len(global_list) > 0
+    
 
     def __iand__(self , other):
         """

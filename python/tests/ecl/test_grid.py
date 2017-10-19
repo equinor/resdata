@@ -161,7 +161,6 @@ class GridTest(ExtendedTestCase):
         self.assertEqual( grid.getGlobalSize() , 30*10*20 )
     
         self.assertEqual( grid.getDims() , (10,20,30,6000) )
-        
     
     
     def test_create(self):
@@ -171,6 +170,9 @@ class GridTest(ExtendedTestCase):
         with self.assertRaises(ValueError):
             grid = GridGen.createRectangular( (10,20,30) , (1,1,1) , actnum = IntVector(initial_size = 10))
     
+        grid = GridGen.createRectangular( (10,20,30) , (1,1,1) ) # actnum=None -> all active
+        self.assertEqual( grid.getNumActive( ) , 30*20*10)
+        
         actnum = IntVector(default_value = 1 , initial_size = 6000)
         actnum[0] = 0
         actnum[1] = 0
