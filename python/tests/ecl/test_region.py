@@ -70,8 +70,20 @@ class RegionTest(ExtendedTestCase):
         self.assertFalse( region )
         self.assertEqual( 0, region.active_size( ))
         self.assertEqual( 0, region.global_size( ))
+
         region.select_all( )
         self.assertTrue( region )
-
         self.assertEqual( 50, region.active_size( ))
         self.assertEqual( 100, region.global_size( ))
+        
+        region.deselect_all()
+        self.assertFalse( region )
+        self.assertEqual( 0, region.active_size( ))
+        self.assertEqual( 0, region.global_size( ))
+        
+        region = EclRegion(grid, False)
+        region.select_inactive()
+        self.assertTrue( region )
+        self.assertEqual( 0 , region.active_size( ))
+        self.assertEqual( 50, region.global_size( ))
+        

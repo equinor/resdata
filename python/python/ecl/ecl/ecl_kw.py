@@ -719,7 +719,7 @@ class EclKW(BaseCClass):
         """
         if self.isNumeric():
             if type(value) == type(self):
-                if mask:
+                if mask is not None:
                     mask.copy_kw(self, value, force_active)
                 else:
                     if self.assert_binary(value):
@@ -727,7 +727,7 @@ class EclKW(BaseCClass):
                     else:
                         raise TypeError("Type / size mismatch")
             else:
-                if mask:
+                if mask is not None:
                     mask.set_kw(self, value, force_active)
                 else:
                     if self.data_type.is_int():
@@ -747,7 +747,7 @@ class EclKW(BaseCClass):
         See method assign() for documentation of optional arguments
         @mask and @force_active.
         """
-        if mask:
+        if mask is not None:
             mask.iadd_kw(self, other, force_active)
         else:
             return self.__iadd__(other)
@@ -757,7 +757,7 @@ class EclKW(BaseCClass):
         See method assign() for documentation of optional arguments
         @mask and @force_active.
         """
-        if mask:
+        if mask is not None:
             mask.isub_kw(self, other, force_active)
         else:
             return self.__isub__(other)
@@ -767,7 +767,7 @@ class EclKW(BaseCClass):
         See method assign() for documentation of optional arguments
         @mask and @force_active.
         """
-        if mask:
+        if mask is not None:
             mask.imul_kw(self, other, force_active)
         else:
             return self.__imul__(other)
@@ -777,7 +777,7 @@ class EclKW(BaseCClass):
         See method assign() for documentation of optional arguments
         @mask and @force_active.
         """
-        if mask:
+        if mask is not None:
             mask.idiv_kw(self, other, force_active)
         else:
             return self.__idiv__(other)
@@ -805,7 +805,7 @@ class EclKW(BaseCClass):
         See method assign() for documentation of optional arguments
         @mask and @force_active.
         """
-        if mask:
+        if mask is not None:
             active_list = mask.kw_index_list(self, force_active)
             if arg:
                 for index in active_list:
