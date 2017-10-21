@@ -34,7 +34,8 @@ import itertools
 from cwrap import CFILE, BaseCClass
 from ecl.util import monkey_the_camel
 from ecl.util import IntVector
-from ecl.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum, Cell
+from ecl.ecl import FortIO, EclUnitTypeEnum, Cell
+from ecl.ecl import EclRegion, EclPrototype, EclDataType, EclKW
 
 
 class EclGrid(BaseCClass):
@@ -1270,6 +1271,12 @@ class EclGrid(BaseCClass):
             return None
 
         return self._export_mapaxes()
+
+
+    ## Exposing Region functionality
+    def region(self, preselect=False):
+        return EclRegion(grid=self, preselect=preselect)
+
 
 monkey_the_camel(EclGrid, 'loadFromGrdecl', EclGrid.load_from_grdecl, classmethod)
 monkey_the_camel(EclGrid, 'loadFromFile', EclGrid.load_from_file, classmethod)
