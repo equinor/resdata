@@ -512,7 +512,7 @@ ecl_file_view_type * ecl_file_get_summary_view( ecl_file_type * ecl_file , int r
    map.
 */
 
-static bool ecl_file_scan( ecl_file_type * ecl_file ) {
+static bool ecl_file_scan( ecl_file_type * ecl_file, bool ignore_errors ) {
   bool scan_ok = false;
   fortio_fseek( ecl_file->fortio , 0 , SEEK_SET );
   {
@@ -542,10 +542,8 @@ static bool ecl_file_scan( ecl_file_type * ecl_file ) {
 
     ecl_kw_free( work_kw );
   }
-  if (scan_ok)
-    ecl_file_view_make_index( ecl_file->global_view );
-
-  return scan_ok;
+  ecl_fkile_view_make_index( ecl_file->global_view );
+  return (scan_ok || ignore_errors);
 }
 
 
@@ -582,7 +580,7 @@ static fortio_type * ecl_file_alloc_fortio(const char * filename, int flags) {
 }
 
 
-ecl_file_type * ecl_file_open( const char * filename , int flags) {
+ecl_file_type * ecl_file_open__( const char * filename , bool ignore_errors, int flags) {
   fortio_type * fortio = ecl_file_alloc_fortio(filename, flags);
 
   if (fortio) {
@@ -590,7 +588,7 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
     ecl_file->fortio = fortio;
     ecl_file->global_view = ecl_file_view_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_view , true );
 
-    if (ecl_file_scan( ecl_file )) {
+    if (ecl_file_scan( ecl_file, ignore_errors )) {
       ecl_file_select_global( ecl_file );
 
       if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
@@ -607,6 +605,9 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
 
 
 
+ecl_file_type * ecl_file_open( const char * filename ,  int flags) {
+  return ecl_file_open__(filename, false, flags);
+}
 
 
 int ecl_file_get_flags( const ecl_file_type * ecl_file ) {
