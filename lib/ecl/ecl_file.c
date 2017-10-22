@@ -542,7 +542,7 @@ static bool ecl_file_scan( ecl_file_type * ecl_file, bool ignore_errors ) {
 
     ecl_kw_free( work_kw );
   }
-  ecl_fkile_view_make_index( ecl_file->global_view );
+  ecl_file_view_make_index( ecl_file->global_view );
   return (scan_ok || ignore_errors);
 }
 
