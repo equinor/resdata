@@ -24,6 +24,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <map>
 
 typedef struct ecl_sum_struct ecl_sum_type;
 
@@ -39,18 +40,40 @@ struct unexpected_eof : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
+struct NexusClassItem {
+    std::string name;
+    int timestep;
+    float time;
+    int num_items;
+    int max_items;
+    int max_perfs;
+    std::map<std::string, float> variables;
+};
+
+typedef std::map<std::string, std::vector<NexusClassItem>> timestep_data;
+
+struct NexusHeader {
+    int32_t num_classes;
+    int32_t day, month, year;
+    int32_t nx, ny, nz;
+    int32_t ncomp;
+    std::vector<std::string> _class_names;
+    std::map< std::string, int32_t> _vars_in_class;
+    std::map< std::string, std::vector<std::string> > _var_names;
+};
+
 class NexusPlot {
 public:
     NexusPlot( const std::string& );
     NexusPlot( std::istream& );
 
-    int32_t num_classes = 0;
-    int32_t day, month, year;
-    int32_t nx, ny, nz;
-    int32_t ncomp;
-    std::vector<std::string> class_names;
-    std::vector<int32_t> vars_in_class;
-    std::vector< std::vector<std::string> > var_names;
+private:
+    NexusHeader _header;
+    std::map<int, timestep_data> _timesteps;
+
+public:
+    const NexusHeader& header() const;
+    const std::map<int, const timestep_data>& timesteps() const;
 
     ecl_sum_type* ecl_summary( const std::string& ecl_case );
 

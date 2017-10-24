@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2017 Statoil ASA, Norway.
 
-   The file 'nexus_plot_constructor.cpp' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'nexus_plot_load.cpp' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
    for more details.
 */
 
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -44,7 +45,7 @@ void test_valid_header() {
 void test_spe1_header(char *argv) {
     std::stringstream ss;
     ss << argv << "/test-data/local/nexus/SPE1.plt";
-    auto plt = nex::NexusPlot { ss.str() };
+    const auto plt = nex::NexusPlot { ss.str() };
 
     std::array< std::string, 9 > class_names = {
         "WELL    ", "WLLYR   ", "NODE    ", "CONN    ", "REGION  ", "FIELD   ",
@@ -114,23 +115,72 @@ void test_spe1_header(char *argv) {
             "Q2I " }
     };
 
-    test_assert_int_equal(plt.num_classes, 9);
-    test_assert_int_equal(plt.day,         1);
-    test_assert_int_equal(plt.month,       1);
-    test_assert_int_equal(plt.year,        1980);
-    test_assert_int_equal(plt.nx,          1);
-    test_assert_int_equal(plt.ny,          1);
-    test_assert_int_equal(plt.nz,          1);
-    test_assert_int_equal(plt.ncomp,       2);
-    for (int i = 0; i < plt.num_classes; i++)
-        test_assert_std_string_equal(class_names[i], plt.class_names[i]);
-    for (int i = 0; i < plt.num_classes; i++)
-        test_assert_int_equal(vars_in_class[i], plt.vars_in_class[i]);
-    for (int i = 0; i < plt.num_classes; ++i) {
-        for (int k = 0; k < plt.vars_in_class[i]; ++k) {
-            test_assert_std_string_equal(var_names[i][k], plt.var_names[i][k]);
+    test_assert_int_equal(plt.header().num_classes, 9);
+    test_assert_int_equal(plt.header().day,         1);
+    test_assert_int_equal(plt.header().month,       1);
+    test_assert_int_equal(plt.header().year,        1980);
+    test_assert_int_equal(plt.header().nx,          1);
+    test_assert_int_equal(plt.header().ny,          1);
+    test_assert_int_equal(plt.header().nz,          1);
+    test_assert_int_equal(plt.header().ncomp,       2);
+    for (int i = 0; i < plt.header().num_classes; i++)
+        test_assert_std_string_equal(class_names.at(i),
+                                     plt.header().class_names.at(i));
+    for (int i = 0; i < plt.header().num_classes; i++)
+        test_assert_int_equal(vars_in_class.at(i),
+            plt.header().vars_in_class.at(plt.header().class_names.at(i)));
+   for (int i = 0; i < plt.header().num_classes; ++i) {
+       int vic = plt.header().vars_in_class.at(plt.header().class_names.at(i));
+       for (int k = 0; k < vic; ++k) {
+           test_assert_std_string_equal(var_names.at(i).at(k),
+               plt.header().var_names.at(plt.header().class_names.at(i).at(k)));
+       }
+   }
+}
+
+void test_spe1_body(char *argv) {
+    std::stringstream ss;
+    ss << argv << "/test-data/local/nexus/SPE1.plt";
+    const auto plt = nex::NexusPlot {ss.str()};
+
+    std::array< std::string, 9 > class_names = {
+        "WELL    ", "WLLYR   ", "NODE    ", "CONN    ", "REGION  ", "FIELD   ",
+        "CONNLIST", "TARGET  ", "FLOSTA  "
+    };
+    std::array< int, 9 > vars_in_class = {
+        56, 52, 4, 43, 69, 58, 20, 25, 25
+    };
+    std::array< int, 10 > timesteps = {
+        33, 46, 59, 72, 85, 89, 91, 92, 94, 97
+    };
+
+    test_assert_true(std::all_of( timesteps.begin(), timesteps.end(),
+        [&plt](int t) -> bool {
+            return plt.find(t) != plt.end();
+        }));
+
+    test_assert_true(std::all_of( plt.begin(), plt.end(),
+        [&timesteps](const std::pair<int, nex::timestep_data> &it) -> bool {
+            auto t = std::find(timesteps.begin(), timesteps.end(), it.first);
+            return t !=  timesteps.end();
+        }));
+
+    for (auto it : plt) {
+        std::cout <<  "time(" << it.first << ") -> {" << std::endl;
+        for (auto it1 : it.second) {
+            std::cout << "  " << it1.first << ":" << it1.second.size();
         }
+        std::cout << std::endl << "}" << std::endl;
     }
+
+    std::cout << plt
+        .timesteps()
+        .at(33)
+        .at("CONN    ")
+        .at(0)
+        .variables
+        .at("CGAS")
+    << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -138,5 +188,6 @@ int main(int argc, char* argv[]) {
     test_invalid_header2();
     test_valid_header();
     test_spe1_header(argv[1]);
+    test_spe1_body(argv[1]);
     return 0;
 }
