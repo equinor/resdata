@@ -30,7 +30,7 @@
 
 
 void test_create_ecl_sum(char *root_folder) {
-    test_work_area_type *work_area = test_work_area_alloc("nexus_header");
+//    test_work_area_type *work_area = test_work_area_alloc("nexus_header");
 
     std::stringstream ss;
     ss << root_folder << "/test-data/local/nexus/SPE1.plt";
@@ -43,7 +43,7 @@ void test_create_ecl_sum(char *root_folder) {
     ecl_sum_free( ecl_sum );
     test_assert_true( util_file_exists( "ECL_CASE.SMSPEC"));
 
-    test_work_area_free(work_area);
+//    test_work_area_free(work_area);
 }
 
 
