@@ -166,5 +166,54 @@ ecl_sum_type* nex::NexusPlot::ecl_summary( const std::string& ecl_case ) {
         time_in_days,
         this->nx, this->ny, this->nz);
 
+    // Data container
+    NexusType plt;
+
+    for (const auto& clas : classes) {
+        for (const auto& key : keywords[clas]) {
+            for (int n = 0; n < number_of_wells; n++) {
+
+                //Get relevant data struct from plt
+                NexusType current_struct = std::copy_if(plt.class_name(clas).var_name(key).id(n), plt);
+
+                //Copy values from struct
+                current_values = copy_if(plt.begin(), plt.end(), std::back_inserter(classes),
+                                     [](x) { x.classname != clases.back(); });
+
+                //Add variable to ecl_sum
+                //ecl_sum_add_var( ecl_sum , keyword , size, unit, default_value )
+                current_handler = ecl_sum_add_var(ecl_sum, ecl_key[key], number_of_timesteps, ecl_unit[key], 0.0);
+
+                //Initialize variable
+                //ecl_sum_init_var( ecl_sum , node , keyword , wgname , num , unit )
+                ecl_sum_init_var(ecl_sum, current_handler, ecl_key[key], str(n), number_of_timesteps, ecl_unit[key]);
+
+                int sim_days = 0;
+                for (int timestep = 0; timestep < number_of_timesteps; timestep++) {
+                    sim_days += 10;
+
+                    //Create timestep
+                    ecl_sum_tstep_type *tstep = ecl_sum_add_tstep(ecl_sum, timestep + 1, sim_days);
+
+                    //Add values to ecl_sum for current timestep
+                    ecl_sum_tstep_iset(tstep, current_handler, current_values[timestep]);
+                }
+            }
+        }
+    }
+
+    /**TODO:
+     *
+     * define string classes    %List of all classnames
+     * define string keywords   %List of keywords for each classname
+     * define ecl_key[key]      %Map from nexus keyword to eclipse keyword
+     * define ecl_key[key]      %Unit for keywords
+     *
+     * timestep --> simulation days connection
+     *
+     * **/
+
+
+
     return ecl_sum;
 }
