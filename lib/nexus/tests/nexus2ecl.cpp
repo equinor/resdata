@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2017 Statoil ASA, Norway.
 
-   The file 'nexus2ecl.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'nexus2ecl.cpp' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -35,9 +35,9 @@ void test_create_ecl_sum(char *root_folder) {
     std::stringstream ss;
     ss << root_folder << "/test-data/local/nexus/SPE1.plt";
     std::cout << ss.str() << std::endl;
-    nex::NexusPlot plt = nex::NexusPlot { ss.str() };
+    nex::NexusPlot plt = nex::load(ss.str());
 
-    ecl_sum_type *ecl_sum = plt.ecl_summary( "ECL_CASE" );
+    ecl_sum_type *ecl_sum = nex::ecl_summary( "ECL_CASE", plt );
     test_assert_true( ecl_sum_is_instance( ecl_sum ));
     ecl_sum_fwrite( ecl_sum );
     ecl_sum_free( ecl_sum );
