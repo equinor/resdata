@@ -151,6 +151,8 @@ void nex::NexusPlot::load(std::istream& stream) {
     this->var_names     = header.var_names;
 }
 
+
+
 ecl_sum_type* nex::NexusPlot::ecl_summary( const std::string& ecl_case ) {
     bool unified = true;
     bool fmt_output = false;
@@ -167,38 +169,59 @@ ecl_sum_type* nex::NexusPlot::ecl_summary( const std::string& ecl_case ) {
         this->nx, this->ny, this->nz);
 
     // Data container
-    NexusType plt;
+    nex::NexusPlot plt;
+    auto& data = plt.data;
 
-    for (const auto& clas : classes) {
-        for (const auto& key : keywords[clas]) {
-            for (int n = 0; n < number_of_wells; n++) {
+    /* Find unique classes */
+    auto unique_cls = std::unique(data.begin(), data.end(),
+        [](const nex::NexusData& a, const nex::NexusData& b ){
+            return a.classname == b.classname;
+        });
 
-                //Get relevant data struct from plt
-                NexusType current_struct = std::copy_if(plt.class_name(clas).var_name(key).id(n), plt);
+    for (const auto& cl : unique_cls) {
 
-                //Copy values from struct
-                current_values = copy_if(plt.begin(), plt.end(), std::back_inserter(classes),
-                                     [](x) { x.classname != clases.back(); });
+        auto unique_varname = std::unique(of_class.begin(), of_class.end(),
+             [](const nex::NexusData& a, const nex::NexusData& b ){
+                 return a.varname == b.varname;
+             });
 
-                //Add variable to ecl_sum
-                //ecl_sum_add_var( ecl_sum , keyword , size, unit, default_value )
-                current_handler = ecl_sum_add_var(ecl_sum, ecl_key[key], number_of_timesteps, ecl_unit[key], 0.0);
 
-                //Initialize variable
-                //ecl_sum_init_var( ecl_sum , node , keyword , wgname , num , unit )
-                ecl_sum_init_var(ecl_sum, current_handler, ecl_key[key], str(n), number_of_timesteps, ecl_unit[key]);
+        for (const auto& varname : unique_varname) {
 
-                int sim_days = 0;
-                for (int timestep = 0; timestep < number_of_timesteps; timestep++) {
-                    sim_days += 10;
 
-                    //Create timestep
-                    ecl_sum_tstep_type *tstep = ecl_sum_add_tstep(ecl_sum, timestep + 1, sim_days);
+            //Add variable to ecl_sum
+            //ecl_sum_add_var( ecl_sum , keyword , size, unit, default_value )
+            current_handler = ecl_sum_add_var(ecl_sum, ecl_key(nd.varname_str()), num_timest, ecl_unit(nd.varname_str()), 0.0);
 
-                    //Add values to ecl_sum for current timestep
-                    ecl_sum_tstep_iset(tstep, current_handler, current_values[timestep]);
-                }
+            //Initialize variable
+            //ecl_sum_init_var( ecl_sum , node , keyword , wgname , num , unit )
+            ecl_sum_init_var(ecl_sum, current_handler, ecl_key(nd.varname_str()), nd.instance_name_str().c_str(), num_timest, ecl_unit[key]);
+
+            std::vector< nex::NexusData > timesteps;
+            std::copy_if(data.begin(), data.end(), std::back_inserter( timesteps ),
+                         [](const nex::NexusData& nd){
+                             return nd.classname == cl.classname && nd.varname == varname.varname
+                         });
+
+            for (const auto& timestep : timesteps) {
+                //Create timestep
+                ecl_sum_tstep_type *tstep = ecl_sum_add_tstep(ecl_sum, timestep.timestep, (int) timestep.time);
+
+                //Add values to ecl_sum for current timestep
+                ecl_sum_tstep_iset(tstep, current_handler, timestep.value);
             }
+
+//            int sim_days = 0;
+//            for (int timestep = 0; timestep < num_timest; timestep++) {
+//
+//                sim_days += 10;
+//                //Create timestep
+//                ecl_sum_tstep_type *tstep = ecl_sum_add_tstep(ecl_sum, timestep + 1, sim_days);
+//
+//                //Add values to ecl_sum for current timestep
+//                ecl_sum_tstep_iset(tstep, current_handler, nd.value);
+//            }
+
         }
     }
 
