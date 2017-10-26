@@ -37,7 +37,7 @@ void test_create_ecl_sum(char *root_folder) {
     std::cout << ss.str() << std::endl;
     nex::NexusPlot plt = nex::NexusPlot { ss.str() };
 
-    ecl_sum_type *ecl_sum = plt.ecl_summary( "ECL_CASE" );
+    ecl_sum_type *ecl_sum = plt.ecl_summary( "/tmp/ECL_CASE" );
     test_assert_true( ecl_sum_is_instance( ecl_sum ));
     ecl_sum_fwrite( ecl_sum );
     ecl_sum_free( ecl_sum );

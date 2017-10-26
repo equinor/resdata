@@ -163,18 +163,18 @@ void nex::NexusPlot::load(std::istream& stream) {
 
 ecl_sum_type *nex::ecl_summary(const std::string &ecl_case, const NexusPlot &plt) {
     bool unified = true;
-    bool fmt_output = false;
+    bool fmt_output = true;
     const char* key_join_string = ":";
     time_t sim_start = 0;
     bool time_in_days = true;
 
     ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( ecl_case.c_str(),
-        fmt_output,
-        unified,
-        key_join_string,
-        sim_start,
-        time_in_days,
-        this->nx, this->ny, this->nz);
+                                                   fmt_output,
+                                                   unified,
+                                                   key_join_string,
+                                                   sim_start,
+                                                   time_in_days,
+                                                   plt.header.nx, plt.header.ny, plt.header.nz);
 
     // Data container
     auto data = plt.data;
@@ -221,9 +221,9 @@ ecl_sum_type *nex::ecl_summary(const std::string &ecl_case, const NexusPlot &plt
 
     // Get all WOPR
     auto pred_well_1_qop = [](const nex::NexusData& d) {
-        return nex::is::classname("WELL    ")
-            && nex::is::instance_name("1       ")
-            && nex::is::varname("QOP ");
+        return nex::is::classname("WELL    ")(d)
+               && nex::is::instance_name("1       ")(d)
+               && nex::is::varname("QOP ")(d);
     };
     std::vector< nex::NexusData > well_1_qop;
     std::copy_if( data.begin(), data.end(), std::back_inserter( well_1_qop ),
@@ -238,16 +238,11 @@ ecl_sum_type *nex::ecl_summary(const std::string &ecl_case, const NexusPlot &plt
                                         wgname.c_str(),
                                         -1,
                                         "Barrels",
-                                        -1.0);
-    ecl_sum_init_var(ecl_sum ,
-                     smspec_node ,
-                     "WOPR",
-                     wgname.c_str(),
-                     -1,
-                     "Barrels");
+                                        3.14);
+
 
     auto* tstep = ecl_sum_add_tstep( ecl_sum, fst.timestep, fst.time );
-    ecl_sum_tstep_set_from_node( tstep , smspec_node, fst.time );
+    ecl_sum_tstep_set_from_node( tstep , smspec_node, fst.value );
 
 
 
@@ -264,4 +259,3 @@ ecl_sum_type *nex::ecl_summary(const std::string &ecl_case, const NexusPlot &plt
      * **/
 
     return ecl_sum;
-}
