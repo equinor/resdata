@@ -2,7 +2,7 @@
 # spec file for package ecl
 #
 
-%define tag rc1
+%define tag final
 
 Name:           ecl
 Version:        2017.10
