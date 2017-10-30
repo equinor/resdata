@@ -93,3 +93,32 @@ class WorkAreaTest(ExtendedTestCase):
 
             t.sync()
             self.assertTrue( os.path.isfile( "file.txt"))
+            
+    def test_multiple_areas(self):
+        original_dir = os.getcwd()
+        context_dirs = []
+        for i in range(3):
+            loop_dir = os.getcwd()
+            self.assertEqual(loop_dir, original_dir, 
+                    'Wrong folder before creating TestAreaContext. Loop: {} -- CWD: {} '
+                    .format(i, loop_dir))
+            
+            with TestAreaContext("test_multiple_areas") as t:
+                t_dir = t.get_cwd()
+                
+                self.assertNotIn(t_dir, context_dirs, 
+                        'Multiple TestAreaContext objects in the same folder. Loop {} -- CWD: {}'
+                        .format(i, loop_dir))
+                context_dirs.append(t_dir)
+                
+                # It is possible to make the following assert fail, but whoever run the tests should
+                # try really really hard to make that happen
+                self.assertNotEqual(t_dir, original_dir, 
+                        'TestAreaContext in the current working directory. Loop: {} -- CWD: {}'
+                        .format(i, loop_dir))               
+            
+            loop_dir = os.getcwd()
+            self.assertEqual(loop_dir, original_dir, 
+                    'Wrong folder after creating TestAreaContext. Loop: {} -- CWD: {} '
+                            .format(i, loop_dir))
+                   
