@@ -151,20 +151,111 @@ void nex::NexusPlot::load(std::istream& stream) {
     this->var_names     = header.var_names;
 }
 
-ecl_sum_type* nex::NexusPlot::ecl_summary( const std::string& ecl_case ) {
+//char* ecl_key(char* key) {
+//    std::string ecl_keys = "FOPT";
+//    return ecl_keys.c_str();
+//}
+//
+//const char* ecl_unit(const char key) {
+//    const char *ecl_units = "Barrels";
+//    return ecl_units;
+//}
+
+ecl_sum_type *nex::ecl_summary(const std::string &ecl_case, const NexusPlot &plt) {
     bool unified = true;
-    bool fmt_output = false;
+    bool fmt_output = true;
     const char* key_join_string = ":";
     time_t sim_start = 0;
     bool time_in_days = true;
 
     ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( ecl_case.c_str(),
-        fmt_output,
-        unified,
-        key_join_string,
-        sim_start,
-        time_in_days,
-        this->nx, this->ny, this->nz);
+                                                   fmt_output,
+                                                   unified,
+                                                   key_join_string,
+                                                   sim_start,
+                                                   time_in_days,
+                                                   plt.header.nx, plt.header.ny, plt.header.nz);
+
+    // Data container
+    auto data = plt.data;
+
+
+
+//    nex::NexusData classes = ;
+//    for (const auto& cl : classes) {
+//
+//        nex::NexusData varnames = ;
+//        for (const auto& varname : varnames) {
+//
+//            nex::NexusData wells = ;
+//            for (const auto& well : wells) {
+//
+//                //Get relevant data struct from plt
+//                nex::NexusData current_struct = std::copy_if(data.classname(cl).var_name(varname).instance_name(well), plt);
+//
+//                //Copy values from struct
+//                current_values = copy_if(plt.begin(), plt.end(), std::back_inserter(classes),
+//                                     [](x) { x.classname != classes.back(); });
+//
+//                //Add variable to ecl_sum
+//                //ecl_sum_add_var( ecl_sum , keyword, wgname, size, unit, default_value )
+//                current_handler = ecl_sum_add_var(ecl_sum, ecl_key(varname), data.instance_name(well), sizeof(timesteps), ecl_unit(varname), 0.0);
+//
+//                //Initialize variable
+//                //ecl_sum_init_var( ecl_sum , node , keyword , wgname , num , unit )
+//                ecl_sum_init_var(ecl_sum, current_handler, ecl_key(varname), data.instance_name(well), sizeof(timesteps), ecl_unit(varname));
+//
+//                //Iterate through all timesteps
+//                nex::NexusData timesteps = ;
+//                for (const auto &timestep : timesteps) {
+//                    //Create timestep
+//                    ecl_sum_tstep_type *tstep = ecl_sum_add_tstep(ecl_sum, timestep.timestep, (int) timestep.time);
+//
+//                    //Add values to ecl_sum for current timestep
+//                    ecl_sum_tstep_iset(tstep, current_handler, timestep.value);
+//                }
+//            }
+//        }
+//    }
+
+
+    // Get all WOPR
+    auto pred_well_1_qop = [](const nex::NexusData& d) {
+        return nex::is::classname("WELL    ")(d)
+               && nex::is::instance_name("1       ")(d)
+               && nex::is::varname("QOP ")(d);
+    };
+    std::vector< nex::NexusData > well_1_qop;
+    std::copy_if( data.begin(), data.end(), std::back_inserter( well_1_qop ),
+                  pred_well_1_qop );
+
+    const auto& fst = well_1_qop.front();
+    std::string wgname = nex::get::instance_name_str(fst);
+    std::string ecl_key = std::string("WOPR:") + wgname;
+
+    auto *smspec_node = ecl_sum_add_var(ecl_sum,
+                                        "WOPR",
+                                        wgname.c_str(),
+                                        -1,
+                                        "Barrels",
+                                        3.14);
+
+
+    auto* tstep = ecl_sum_add_tstep( ecl_sum, fst.timestep, fst.time );
+    ecl_sum_tstep_set_from_node( tstep , smspec_node, fst.value );
+
+
+
+
+
+    /**TODO:
+     *
+     * define string classes    %List of all classnames
+     * define string keywords   %List of keywords for each classname
+     * define ecl_key[key]      %Map from nexus keyword to eclipse keyword
+     * define ecl_key[key]      %Unit for keywords
+     *
+     *
+     * **/
 
     return ecl_sum;
-}
