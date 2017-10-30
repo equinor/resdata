@@ -145,5 +145,7 @@ class TestAreaContext(object):
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.test_area.free()      # free the TestData object (and cd back to the original dir)
+        self.test_area.free = None # avoid double free
         del self.test_area
         return False
