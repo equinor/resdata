@@ -231,7 +231,7 @@ NexusPlot nex::load(std::istream& stream) {
 }
 
 ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt) {
-    bool fmt_output = true;
+    bool fmt_output = false;
     bool unified = true;
     const char* key_join_string = ":";
     std::time_t sim_start = util_make_date_utc( plt.header.day,
@@ -277,6 +277,27 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt
         {"CPP ", "FCPC" }
     };
 
+
+    std::map< std::string, std::string > well_kw_nex2ecl {
+        {"QOP ", "WOPR" },
+        {"QWP ", "WWPR" },
+        {"QGP ", "WGPR" },
+        {"GOR ", "WGOR" },
+        {"WCUT", "WWCT" },
+        {"MULT", "WPR"  },
+        {"MULT", "WPR"  },
+        {"COP ", "WOPT" },
+        {"CWP ", "WWPT" },
+        {"CGP ", "WGPT" },
+        {"QWI ", "WWIR" },
+        {"QGI ", "WGIR" },
+        {"CWI ", "WWIT" },
+        {"CGI ", "WGIT" },
+        {"QPP ", "WCPR" },
+        {"CPP ", "WCPC" }
+    };
+
+    //Field header
     auto field_class_vars = plt.varnames( "FIELD" );
     std::vector< std::string > field_vars;
     std::vector< smspec_node_type* > smspecs;
@@ -290,10 +311,30 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt
             field_vars.push_back( var );
         } else {
             std::cerr << "Warning: could not convert nexus variable " <<
-                var << " to ecl keyword." << std::endl;
+                      var << " to ecl keyword." << std::endl;
         }
     }
 
+    //Well header
+    auto well_class_vars = plt.varnames( "WELL" );
+    std::vector< std::string > well_vars;
+    std::vector< smspec_node_type* > well_smspecs;
+    for ( const auto& var : well_class_vars ) {
+        auto it = well_kw_nex2ecl.find( var );
+        if ( it != well_kw_nex2ecl.end() ) {
+            const auto& well_ecl_kw = it->second;
+            auto* well_node = ecl_sum_add_var( ecl_sum, well_ecl_kw.c_str(), "2", -1,
+                                          "x", 0.0);
+            well_smspecs.push_back( well_node );
+            well_vars.push_back( var );
+        } else {
+            std::cerr << "Warning: could not convert nexus variable " <<
+                      var << " to ecl keyword." << std::endl;
+        }
+    }
+
+
+    //timesteps
     auto nex_timesteps = plt.get_unique(get::timestep);
     auto nex_times = plt.get_unique(get::time);
     std::vector< ecl_sum_tstep_type* > timesteps;
@@ -302,15 +343,16 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt
         timesteps.push_back( ts );
     }
 
-    /*
-     * Write Field
-     */
 
+
+    /*
+    * Write Field
+    */
     std::vector< NexusData > field;
     std::copy_if( data.begin(), data.end(), std::back_inserter( field ),
                   []( const NexusData& nd ) {
                       return is::classname( "FIELD" )(nd)
-                          && is::instancename( "NETWORK" )(nd);
+                             && is::instancename( "NETWORK" )(nd);
                   });
     std::sort( field.begin(), field.end(), cmp::timestep );
 
@@ -322,7 +364,33 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt
         for (size_t k = 0; k < timesteps.size(); k++) {
             ecl_sum_tstep_set_from_node( timesteps[k], smspecs[i],
                                          values[k].value );
+            std::cout << "values: " << values[k].value << std::endl;
         }
     }
+
+
+    /*
+     * Write Well
+     */
+    std::vector< NexusData > well;
+    std::copy_if( data.begin(), data.end(), std::back_inserter( well ),
+                  []( const NexusData& nd ) {
+                      return is::classname( "WELL" )(nd)
+                             && is::instancename( "2" )(nd);
+                  });
+    std::sort( well.begin(), well.end(), cmp::timestep );
+
+    for (size_t i = 0; i < well_vars.size(); i++) {
+        std::vector< NexusData > values;
+        std::copy_if( well.begin(), well.end(), std::back_inserter( values ),
+                      is::varname( well_vars[i] ));
+
+        for (size_t k = 0; k < timesteps.size(); k++) {
+            ecl_sum_tstep_set_from_node( timesteps[k], well_smspecs[i],
+                                         values[k].value );
+        }
+    }
+
+
     return ecl_sum;
 }
