@@ -184,6 +184,7 @@ target_link_libraries(ecl PUBLIC ${m}
                                  ${lapack}
                                  ${zlib}
                                  ${shlwapi}
+                                 ${ws2_32}
 )
 
 target_include_directories(ecl

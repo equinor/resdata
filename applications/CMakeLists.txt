@@ -12,7 +12,10 @@ if (BUILD_APPLICATIONS)
 
     if (BUILD_NEXUS)
         add_executable(nex2ecl   nexus/nex2ecl.cpp)
-        target_link_libraries(nex2ecl   ecl)
+        target_link_libraries(nex2ecl    ecl)
+        if (HAVE_WINSOCK2_H)
+            target_link_libraries(nex2ecl ws2_32)
+        endif()
         list( APPEND apps nex2ecl )
     endif ()
 

@@ -199,6 +199,11 @@ if (SHLWAPI_LIBRARY)
     set(shlwapi ${SHLWAPI_LIBRARY})
 endif ()
 
+find_library(WS2_32_LIBRARY NAMES Ws2_32)
+if (WS2_32_LIBRARY)
+    set(ws2_32 ${WS2_32_LIBRARY})
+endif ()
+
 #-----------------------------------------------------------------
 
 # feature tests

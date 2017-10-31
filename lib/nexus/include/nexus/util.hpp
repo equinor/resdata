@@ -24,37 +24,37 @@ NexusPlot load( std::istream& );
 
 namespace get {
 
-    std::array< char, 8 > classname( const NexusData& nd ) {
+    inline std::array< char, 8 > classname( const NexusData& nd ) {
         return nd.classname;
     }
-    std::array< char, 8 > instancename( const NexusData& nd ) {
+    inline std::array< char, 8 > instancename( const NexusData& nd ) {
         return nd.instancename;
     }
-    std::array< char, 4 > varname( const NexusData& nd ) {
+    inline std::array< char, 4 > varname( const NexusData& nd ) {
         return nd.varname;
     }
-    std::string classname_str( const NexusData& nd ) {
+    inline std::string classname_str( const NexusData& nd ) {
         auto end = std::find( nd.classname.begin(), nd.classname.end(), ' ' );
         return std::string(nd.classname.begin(), end);
     }
-    std::string instancename_str( const NexusData& nd ) {
+    inline std::string instancename_str( const NexusData& nd ) {
         auto end = std::find( nd.instancename.begin(), nd.instancename.end(), ' ' );
         return std::string(nd.instancename.begin(), end);
     }
-    std::string varname_str( const NexusData& nd ) {
+    inline std::string varname_str( const NexusData& nd ) {
         auto end = std::find( nd.varname.begin(), nd.varname.end(), ' ' );
         return std::string(nd.varname.begin(), end);
     }
-    int32_t timestep( const NexusData& nd ) {
+    inline int32_t timestep( const NexusData& nd ) {
         return nd.timestep;
     }
-    float time( const NexusData& nd ) {
+    inline float time( const NexusData& nd ) {
         return nd.time;
     }
-    int32_t max_perfs( const NexusData& nd ) {
+    inline int32_t max_perfs( const NexusData& nd ) {
         return nd.max_perfs;
     }
-    float value( const NexusData& nd ) {
+    inline float value( const NexusData& nd ) {
         return nd.value;
     }
 }
@@ -143,49 +143,49 @@ namespace is {
 }
 
 namespace cmp {
-    bool timestep( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool timestep( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.timestep < rhs.timestep;
     }
-    bool time( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool time( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.time < rhs.time;
     }
-    bool max_perfs( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool max_perfs( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.max_perfs < rhs.max_perfs;
     }
-    bool classname( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool classname( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.classname < rhs.classname;
     }
-    bool instancename( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool instancename( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.instancename < rhs.instancename;
     }
-    bool varname( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool varname( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.varname < rhs.varname;
     }
-    bool value( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool value( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.value < rhs.value;
     }
 }
 
 namespace equal {
-    bool timestep( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool timestep( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.timestep == rhs.timestep;
     }
-    bool time( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool time( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.time == rhs.time;
     }
-    bool max_perfs( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool max_perfs( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.max_perfs == rhs.max_perfs;
     }
-    bool classname( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool classname( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.classname == rhs.classname;
     }
-    bool instancename( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool instancename( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.instancename == rhs.instancename;
     }
-    bool varname( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool varname( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.varname == rhs.varname;
     }
-    bool value( const NexusData& lhs, const NexusData& rhs ) {
+    inline bool value( const NexusData& lhs, const NexusData& rhs ) {
         return lhs.value == rhs.value;
     }
 }
