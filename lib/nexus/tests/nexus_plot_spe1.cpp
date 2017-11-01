@@ -25,7 +25,7 @@
 
 
 #include <ert/util/test_util.hpp>
-#include <ert/nexus/nexus_plot.hpp>
+#include <nexus/util.hpp>
 
 using namespace nex;
 
@@ -102,7 +102,7 @@ void test_spe1_header(const NexusPlot& spe1) {
 }
 
 void test_spe1_classes(const NexusPlot& spe1) {
-    auto classes = spe1.get_unique(get::classname_str);
+    auto classes = unique( spe1, get::classname_str );
     for (const auto& c : classes) {
         auto f = std::find( spe1_classnames.begin(), spe1_classnames.end(), c );
         test_assert_true( f != spe1_classnames.end() );
@@ -194,14 +194,14 @@ void test_spe1_class_varnames(const NexusPlot& plt) {
     auto data = plt.data;
 
     for (size_t i = 0; i < spe1_classnames.size(); i++) {
-        auto varnames = plt.varnames( spe1_classnames[i] );
+        auto vn = varnames( plt, spe1_classnames[i] );
         auto spe1_varnames_sorted = spe1_varnames[i];
         std::sort( spe1_varnames_sorted.begin(), spe1_varnames_sorted.end() );
 
-        test_assert_int_equal( varnames.size(),
+        test_assert_int_equal( vn.size(),
                                spe1_varnames_sorted.size() );
-        for (size_t k = 0; k < varnames.size(); k++) {
-            test_assert_std_string_equal( varnames[k],
+        for (size_t k = 0; k < vn.size(); k++) {
+            test_assert_std_string_equal( vn[k],
                                           spe1_varnames_sorted[k] );
         }
     }

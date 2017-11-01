@@ -25,7 +25,7 @@
 
 
 #include <ert/util/test_util.hpp>
-#include <ert/nexus/nexus_plot.hpp>
+#include <nexus/util.hpp>
 
 
 void test_invalid_header1() {

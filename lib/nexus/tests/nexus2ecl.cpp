@@ -26,7 +26,7 @@
 
 #include <ert/ecl/ecl_sum.h>
 
-#include <ert/nexus/nexus_plot.hpp>
+#include <nexus/util.hpp>
 
 
 void test_create_ecl_sum(char *root_folder) {
