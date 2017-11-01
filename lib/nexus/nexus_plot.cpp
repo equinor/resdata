@@ -35,6 +35,8 @@
 #include <winsock2.h>
 #endif
 
+#include <ert/util/util.h>
+
 #include <nexus/util.hpp>
 
 using namespace nex;
@@ -257,12 +259,12 @@ void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
     std::sort( field.begin(), field.end(), cmp::timestep );
 
     static const std::map< std::string, std::string > kw_nex2ecl {
-        {"QOP ", "FOPR" }, {"QWP ", "FWPR" }, {"QGP ", "FGPR" },
-        {"GOR ", "FGOR" }, {"WCUT", "FWCT" }, {"MULT", "FPR"  },
-        {"MULT", "FPR"  }, {"COP ", "FOPT" }, {"CWP ", "FWPT" },
-        {"CGP ", "FGPT" }, {"QWI ", "FWIR" }, {"QGI ", "FGIR" },
-        {"CWI ", "FWIT" }, {"CGI ", "FGIT" }, {"QPP ", "FCPR" },
-        {"CPP ", "FCPC" }
+        {"QOP" , "FOPR" }, {"QWP" , "FWPR" }, {"QGP" , "FGPR" },
+        {"GOR" , "FGOR" }, {"WCUT", "FWCT" }, {"MULT", "FPR"  },
+        {"MULT", "FPR"  }, {"COP" , "FOPT" }, {"CWP" , "FWPT" },
+        {"CGP" , "FGPT" }, {"QWI" , "FWIR" }, {"QGI" , "FGIR" },
+        {"CWI" , "FWIT" }, {"CGI" , "FGIT" }, {"QPP" , "FCPR" },
+        {"CPP" , "FCPC" }
     };
 
     auto field_class_vars = varnames( plt, "FIELD" );
