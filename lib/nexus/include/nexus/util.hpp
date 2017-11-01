@@ -191,7 +191,7 @@ namespace equal {
 }
 
 template< typename T >
-std::vector< T > unique( const NexusPlot& plt, T (&f)(const NexusData&) ) {
+inline std::vector< T > unique( const NexusPlot& plt, T (&f)(const NexusData&) ) {
     std::vector< T > vec;
     vec.reserve( plt.data.size() );
     std::transform( plt.data.begin(), plt.data.end(),
@@ -204,7 +204,7 @@ std::vector< T > unique( const NexusPlot& plt, T (&f)(const NexusData&) ) {
     return vec;
 }
 
-std::vector< std::string > varnames( const NexusPlot& plt, std::array< char, 8 > classname ) {
+inline std::vector< std::string > varnames( const NexusPlot& plt, std::array< char, 8 > classname ) {
     std::vector< NexusData > of_class;
     std::copy_if( plt.data.begin(), plt.data.end(),
                   std::back_inserter( of_class ),
@@ -228,7 +228,7 @@ std::vector< std::string > varnames( const NexusPlot& plt, std::array< char, 8 >
     return vec;
 }
 
-std::vector< std::string > varnames( const NexusPlot& plt, const std::string& classname ) {
+inline std::vector< std::string > varnames( const NexusPlot& plt, const std::string& classname ) {
     std::array< char, 8> cn {{ ' ' }};
     if (classname.size() > cn.max_size())
         throw std::runtime_error("Could not get varnames, given classname was larger than 8 bytes");
@@ -238,7 +238,7 @@ std::vector< std::string > varnames( const NexusPlot& plt, const std::string& cl
     return varnames( plt, cn );
 }
 
-std::vector< std::string > varnames( const NexusPlot& plt, char (&classname)[9] ) {
+inline std::vector< std::string > varnames( const NexusPlot& plt, char (&classname)[9] ) {
     std::array< char, 8> cn {{ ' ' }};
     std::copy( std::begin(classname), std::end(classname),
                std::begin( cn ) );

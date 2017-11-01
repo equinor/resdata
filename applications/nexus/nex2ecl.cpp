@@ -15,11 +15,15 @@
    for more details.
 */
 
+#include <cctype>
+
 #include <string>
 
 #include <iostream>
 
-#include <ert/nexus/nexus_plot.hpp>
+#include <ert/util/util.h>
+
+#include "nexus/util.hpp"
 
 
 void create_ecl_sum(char *file_path) {
@@ -31,12 +35,14 @@ void create_ecl_sum(char *file_path) {
 
     nex::NexusPlot plt = nex::load(filename);
 
-    std::string basename(filename);
-    basename.erase(basename.find_last_of('.'), basename.size());
+    char * basename;
+    util_alloc_file_components( file_path , NULL, &basename , NULL);
+    util_strupr( basename );
 
     ecl_sum_type *ecl_sum = nex::ecl_summary(basename, plt);
     ecl_sum_fwrite(ecl_sum);
     ecl_sum_free(ecl_sum);
+    free( basename );
 }
 
 
