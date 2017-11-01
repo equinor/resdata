@@ -12,6 +12,7 @@ if (NOT DEFINED PY_numpy)
    return()
 endif()
 
+find_python_package(cwrap 1 ${PYTHON_INSTALL_PREFIX})
 
 if (BUILD_TESTS)
    add_subdirectory( tests )
