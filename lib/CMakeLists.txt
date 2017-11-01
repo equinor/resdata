@@ -71,7 +71,6 @@ if (ERT_BUILD_CXX)
                          ecl/FortIO.cpp
                          ecl/Smspec.cpp
                          ecl/EclFilename.cpp
-                         nexus/nexus_plot.cpp
 )
 endif ()
 
@@ -194,6 +193,7 @@ target_include_directories(ecl
     PRIVATE ${ZLIB_INCLUDE_DIRS}
             util
             include
+            nexus/include
             ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
@@ -470,6 +470,7 @@ if (BUILD_NEXUS)
     foreach (name nexus_plot_load nexus_plot_spe1 nexus2ecl)
         add_executable(${name} nexus/tests/${name}.cpp)
         target_link_libraries(${name} ecl)
+        target_include_directories(${name} PRIVATE nexus/include)
         add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
     endforeach ()
 endif()

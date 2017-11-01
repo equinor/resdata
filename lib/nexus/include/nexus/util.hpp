@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2017 Statoil ASA, Norway.
 
-   The file 'nexus_plot.hpp' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'util.hpp' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,64 +16,11 @@
    for more details.
 */
 
-#ifndef NEXUS_PLOT_H
-#define NEXUS_PLOT_H
-
-#include <algorithm>
-#include <array>
-#include <cinttypes>
-#include <fstream>
-#include <map>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-#include <ert/ecl/ecl_sum.h>
-
+#include <nexus/nexus_plot.hpp>
 
 namespace nex {
 
-struct bad_header : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-struct read_error : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-struct unexpected_eof : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-
-struct NexusHeader {
-    int32_t num_classes;
-    int32_t day, month, year;
-    int32_t nx, ny, nz;
-    int32_t ncomp;
-};
-
-
-struct NexusData {
-    int32_t timestep;
-    float time;
-    int32_t max_perfs;
-    std::array< char, 8 > classname;
-    std::array< char, 8 > instancename;
-    std::array< char, 4 > varname;
-    float value;
-
-    constexpr bool operator==(const NexusData& rhs) const noexcept {
-        return this->timestep      == rhs.timestep &&
-               this->time          == rhs.time &&
-               this->max_perfs     == rhs.max_perfs &&
-               this->classname     == rhs.classname &&
-               this->instancename == rhs.instancename &&
-               this->varname       == rhs.varname &&
-               this->value         == rhs.value;
-    }
-    constexpr bool operator!=(const NexusData& rhs) const noexcept {
-        return ! (*this == rhs);
-    }
-};
+NexusPlot load( std::istream& );
 
 namespace get {
 
@@ -243,76 +190,60 @@ namespace equal {
     }
 }
 
-struct NexusPlot {
-    NexusHeader header;
-    std::vector< NexusData > data;
-
-    template< typename T >
-    std::vector< T > get_unique( T (&f)(const NexusData&) ) const {
-        std::vector< T > vec;
-        vec.reserve( this->data.size() );
-        std::transform( this->data.begin(), this->data.end(),
-                        std::back_inserter( vec ),
-                        f);
-        auto last = std::unique(vec.begin(), vec.end());
-        std::sort(vec.begin(), last);
-        last = std::unique(vec.begin(), last);
-        vec.erase(last, vec.end());
-        return vec;
-    }
-
-    std::vector< std::string > varnames(char (&classname)[9]) const {
-        std::array< char, 8> cn {{ ' ' }};
-        std::copy( std::begin(classname), std::end(classname),
-                   std::begin( cn ) );
-        std::replace(cn.begin(), cn.end(), '\0', ' ');
-        return this->varnames( cn );
-    }
-    std::vector< std::string > varnames(std::string classname) const {
-        std::array< char, 8> cn {{ ' ' }};
-        if (classname.size() > cn.max_size())
-            throw std::runtime_error("Could not get varnames, given classname was larger than 8 bytes");
-        std::copy( std::begin(classname), std::end(classname),
-                   std::begin( cn ) );
-        std::replace(cn.begin(), cn.end(), '\0', ' ');
-        return this->varnames( cn );
-    }
-    std::vector< std::string > varnames(std::array< char, 8 > classname) const {
-        std::vector< NexusData > of_class;
-        std::copy_if( this->data.begin(), this->data.end(),
-                      std::back_inserter( of_class ),
-                      nex::is::classname(classname) );
-
-        std::vector< std::string > vec;
-        vec.reserve( of_class.size() );
-        std::transform( of_class.begin(), of_class.end(),
-                        std::back_inserter( vec ),
-                        nex::get::varname_str);
-        std::transform ( vec.begin(), vec.end(), vec.begin(),
-            []( std::string& str ){
-                auto end = std::find( str.begin(), str.end(), ' ' );
-                str.erase( end, str.end() );
-                return str;
-            });
-        auto last = std::unique(vec.begin(), vec.end());
-        std::sort(vec.begin(), last);
-        last = std::unique(vec.begin(), last);
-        vec.erase(last, vec.end());
-        return vec;
-    }
-};
-
-NexusPlot load( const std::string& );
-NexusPlot load( std::istream& );
-
-struct ecl_sum_deleter {
-    void operator()( ecl_sum_type* e ) {
-        ecl_sum_free( e );
-    }
-};
-
-ecl_sum_type* ecl_summary( const std::string&, const NexusPlot& );
-
+template< typename T >
+std::vector< T > unique( const NexusPlot& plt, T (&f)(const NexusData&) ) {
+    std::vector< T > vec;
+    vec.reserve( plt.data.size() );
+    std::transform( plt.data.begin(), plt.data.end(),
+                    std::back_inserter( vec ),
+                    f);
+    auto last = std::unique(vec.begin(), vec.end());
+    std::sort(vec.begin(), last);
+    last = std::unique(vec.begin(), last);
+    vec.erase(last, vec.end());
+    return vec;
 }
 
-#endif // NEXUS_PLOT_H
+std::vector< std::string > varnames( const NexusPlot& plt, std::array< char, 8 > classname ) {
+    std::vector< NexusData > of_class;
+    std::copy_if( plt.data.begin(), plt.data.end(),
+                  std::back_inserter( of_class ),
+                  nex::is::classname(classname) );
+
+    std::vector< std::string > vec;
+    vec.reserve( of_class.size() );
+    std::transform( of_class.begin(), of_class.end(),
+                    std::back_inserter( vec ),
+                    nex::get::varname_str);
+    std::transform ( vec.begin(), vec.end(), vec.begin(),
+        []( std::string& str ) {
+            auto end = std::find( str.begin(), str.end(), ' ' );
+            str.erase( end, str.end() );
+            return str;
+        });
+    auto last = std::unique(vec.begin(), vec.end());
+    std::sort(vec.begin(), last);
+    last = std::unique(vec.begin(), last);
+    vec.erase(last, vec.end());
+    return vec;
+}
+
+std::vector< std::string > varnames( const NexusPlot& plt, const std::string& classname ) {
+    std::array< char, 8> cn {{ ' ' }};
+    if (classname.size() > cn.max_size())
+        throw std::runtime_error("Could not get varnames, given classname was larger than 8 bytes");
+    std::copy( std::begin(classname), std::end(classname),
+               std::begin( cn ) );
+    std::replace(cn.begin(), cn.end(), '\0', ' ');
+    return varnames( plt, cn );
+}
+
+std::vector< std::string > varnames( const NexusPlot& plt, char (&classname)[9] ) {
+    std::array< char, 8> cn {{ ' ' }};
+    std::copy( std::begin(classname), std::end(classname),
+               std::begin( cn ) );
+    std::replace(cn.begin(), cn.end(), '\0', ' ');
+    return varnames( plt, cn );
+}
+
+} /* nex */

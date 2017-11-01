@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -34,7 +35,9 @@
 #include <winsock2.h>
 #endif
 
-#include <ert/nexus/nexus_plot.hpp>
+#include <ert/util/util.h>
+
+#include <nexus/util.hpp>
 
 using namespace nex;
 
@@ -157,7 +160,7 @@ void read_vars(std::istream& stream,
     }
 }
 
-}
+} // anonymous namespace
 
 NexusPlot nex::load( const std::string& filename ) {
     std::ifstream stream(filename, std::ios::binary);
@@ -229,11 +232,85 @@ NexusPlot nex::load(std::istream& stream) {
     }
 }
 
+
+/*
+ * ecl summary output
+ */
+
+namespace {
+
+struct eclvar {
+    smspec_node_type* node;
+    float value;
+    size_t timestep_index;
+};
+
+void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
+                   const NexusPlot& plt ) {
+
+    auto data = plt.data;
+
+    std::vector< NexusData > field;
+    std::copy_if( data.begin(), data.end(), std::back_inserter( field ),
+                  []( const NexusData& nd ) {
+                      return is::classname( "FIELD" )(nd)
+                          && is::instancename( "NETWORK" )(nd);
+                  });
+    std::sort( field.begin(), field.end(), cmp::timestep );
+
+    static const std::map< std::string, std::string > kw_nex2ecl {
+        {"QOP" , "FOPR" }, {"QWP" , "FWPR" }, {"QGP" , "FGPR" },
+        {"GOR" , "FGOR" }, {"WCUT", "FWCT" }, {"MULT", "FPR"  },
+        {"MULT", "FPR"  }, {"COP" , "FOPT" }, {"CWP" , "FWPT" },
+        {"CGP" , "FGPT" }, {"QWI" , "FWIR" }, {"QGI" , "FGIR" },
+        {"CWI" , "FWIT" }, {"CGI" , "FGIT" }, {"QPP" , "FCPR" },
+        {"CPP" , "FCPC" }
+    };
+
+    auto field_class_vars = varnames( plt, "FIELD" );
+    for ( const auto& var : field_class_vars ) {
+        auto it = kw_nex2ecl.find( var );
+        if ( it != kw_nex2ecl.end() ) {
+
+            const auto& nex_kw = it->first;
+            const auto& ecl_kw = it->second;
+            auto* node = ecl_sum_add_var( ecl_sum, ecl_kw.c_str(), NULL, -1,
+                                          "x", 0.0);
+            std::vector< NexusData > var_values;
+            std::copy_if( field.begin(), field.end(),
+                          std::back_inserter( var_values ),
+                          is::varname( nex_kw ) );
+
+            for (size_t i = 0; i < var_values.size(); i++)
+                nodes.push_back( { node, var_values[i].value, i } );
+
+        } else {
+            std::cerr << "Warning: could not convert nexus variable " <<
+                var << " to ecl keyword." << std::endl;
+        }
+    }
+}
+
+std::vector< eclvar > make_smspec( ecl_sum_type* ecl_sum,
+                                   const NexusPlot& plt ) {
+    std::vector< eclvar > nodes;
+
+    field_smspec( nodes, ecl_sum, plt );
+    // well_smspec( nodes, ecl_sum, plt );
+
+    return nodes;
+}
+
+} // anonymous namespace
+
+
 ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt) {
     bool fmt_output = true;
     bool unified = true;
     const char* key_join_string = ":";
-    time_t sim_start = 0;
+    std::time_t sim_start = util_make_date_utc( plt.header.day,
+                                           plt.header.month,
+                                           plt.header.year );
     bool time_in_days = true;
 
     ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( ecl_case.c_str(),
@@ -248,43 +325,29 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt
 
 
     /*
+     * Create ecl smspec nodes
+     */
+    auto smspec_nodes = make_smspec( ecl_sum, plt );
 
-    1) Lag header
-    2) Lag timesteps
-    3) Set verdier
-
+    /*
+     * Create ecl timesteps
      */
 
-    auto *smspec = ecl_sum_add_var(ecl_sum, "FOPR", NULL, -1, "x", 0.0);
-
-    auto nex_timesteps = plt.get_unique(get::timestep);
-    auto nex_times = plt.get_unique(get::time);
+    auto nex_timesteps = unique( plt, get::timestep );
+    auto nex_times = unique( plt, get::time );
     std::vector< ecl_sum_tstep_type* > timesteps;
     for (size_t i = 0; i < nex_timesteps.size(); i++) {
-        auto* ts = ecl_sum_add_tstep(ecl_sum, nex_timesteps[i], nex_times[i] );
+        auto* ts = ecl_sum_add_tstep(ecl_sum, i + 1, nex_times[i] * 86400.f );
         timesteps.push_back( ts );
     }
 
     /*
-     * Write Field
+     * Set ecl data
      */
 
-    std::vector< NexusData > field;
-    std::copy_if( data.begin(), data.end(), std::back_inserter( field ),
-                  []( const NexusData& nd ) {
-                      return is::classname( "FIELD" )(nd)
-                          && is::instancename( "NETWORK" )(nd);
-                  });
-    std::sort( field.begin(), field.end(), cmp::timestep );
-
-
-    std::vector< NexusData > cop;
-    std::copy_if( field.begin(), field.end(), std::back_inserter( cop ),
-        nex::is::varname( "COP" ));
-
-
-    for (size_t i = 0; i < timesteps.size(); i++) {
-        ecl_sum_tstep_set_from_node( timesteps[i], smspec, cop[i].value );
+    for ( const auto& node : smspec_nodes ) {
+        auto* ts = timesteps[ node.timestep_index ];
+        ecl_sum_tstep_set_from_node( ts, node.node, node.value );
     }
 
     return ecl_sum;
