@@ -65,15 +65,27 @@ str< N > read_str(std::istream& stream) {
 NexusHeader read_header( std::istream& stream ) {
     stream.seekg(4, std::ios::beg); // skip 4 bytes
 
-    static constexpr const char th0[11] = "PLOT  BIN ";
-    auto th1 = read_str<10>(stream);
+    static constexpr const char th0[13] = "PLOT  BIN   ";
+    auto th1 = read_str<12>(stream);
     auto ok = std::equal(std::begin(th1), std::end(th1), std::begin(th0));
 
     if (!ok || !stream.good())
         throw bad_header("Could not verify file type");
 
     // skip unknown blob
-    stream.seekg(562 + 264, std::ios::cur);
+    stream.seekg(6, std::ios::cur); // Plot file version
+    stream.seekg(6, std::ios::cur); // Simulator
+    stream.seekg(6, std::ios::cur); // Simulator version 0
+    stream.seekg(6, std::ios::cur); // Simulator version 1
+    auto us = read_str< 6 >( stream ); // Read unit system
+
+    if (!stream.good())
+        throw unexpected_eof("File has no content");
+
+    UnitSystem unit_system( us );
+
+    // skip unknown blob
+    stream.seekg(530 + 264, std::ios::cur);
 
     std::array< int32_t, 8 > buf {};
     stream.read( (char*)buf.data(), buf.max_size() * 4 );
@@ -85,7 +97,8 @@ NexusHeader read_header( std::istream& stream ) {
         throw bad_header("Negative value, corrupted file");
 
     NexusHeader h = {
-        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7],
+        unit_system, buf[0], buf[1], buf[2], buf[3], buf[4],
+        buf[5], buf[6], buf[7]
     };
 
     return h;
@@ -260,11 +273,10 @@ void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
 
     static const std::map< std::string, std::string > kw_nex2ecl {
         {"QOP" , "FOPR" }, {"QWP" , "FWPR" }, {"QGP" , "FGPR" },
-        {"GOR" , "FGOR" }, {"WCUT", "FWCT" }, {"MULT", "FPR"  },
-        {"MULT", "FPR"  }, {"COP" , "FOPT" }, {"CWP" , "FWPT" },
-        {"CGP" , "FGPT" }, {"QWI" , "FWIR" }, {"QGI" , "FGIR" },
-        {"CWI" , "FWIT" }, {"CGI" , "FGIT" }, {"QPP" , "FCPR" },
-        {"CPP" , "FCPC" }
+        {"GOR" , "FGOR" }, {"WCUT", "FWCT" }, {"COP" , "FOPT" },
+        {"CWP" , "FWPT" }, {"CGP" , "FGPT" }, {"QWI" , "FWIR" },
+        {"QGI" , "FGIR" }, {"CWI" , "FWIT" }, {"CGI" , "FGIT" },
+        {"QPP" , "FCPR" }, {"CPP" , "FCPC" }
     };
 
     auto field_class_vars = varnames( plt, "FIELD" );
@@ -274,8 +286,11 @@ void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
 
             const auto& nex_kw = it->first;
             const auto& ecl_kw = it->second;
+            const auto& unit = plt.header.unit_system.unit_str(nex_kw);
+
             auto* node = ecl_sum_add_var( ecl_sum, ecl_kw.c_str(), NULL, -1,
-                                          "x", 0.0);
+                                          unit.c_str(), 0.0);
+
             std::vector< NexusData > var_values;
             std::copy_if( field.begin(), field.end(),
                           std::back_inserter( var_values ),
@@ -289,16 +304,6 @@ void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
                 var << " to ecl keyword." << std::endl;
         }
     }
-}
-
-std::vector< eclvar > make_smspec( ecl_sum_type* ecl_sum,
-                                   const NexusPlot& plt ) {
-    std::vector< eclvar > nodes;
-
-    field_smspec( nodes, ecl_sum, plt );
-    // well_smspec( nodes, ecl_sum, plt );
-
-    return nodes;
 }
 
 } // anonymous namespace
@@ -327,7 +332,9 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt
     /*
      * Create ecl smspec nodes
      */
-    auto smspec_nodes = make_smspec( ecl_sum, plt );
+    std::vector< eclvar > smspec_nodes;
+    field_smspec( smspec_nodes, ecl_sum, plt );
+    // well_smspec( smspec_nodes, ecl_sum, plt );
 
     /*
      * Create ecl timesteps

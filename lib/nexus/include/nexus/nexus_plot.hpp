@@ -30,6 +30,7 @@
 #include <vector>
 
 #include <ert/ecl/ecl_sum.h>
+#include <nexus/unit.hpp>
 
 namespace nex {
 
@@ -44,6 +45,7 @@ struct unexpected_eof : public std::runtime_error {
 };
 
 struct NexusHeader {
+    UnitSystem unit_system;
     int32_t num_classes;
     int32_t day, month, year;
     int32_t nx, ny, nz;

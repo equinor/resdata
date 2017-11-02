@@ -39,7 +39,7 @@ void test_invalid_header2() {
 }
 
 void test_valid_header() {
-    std::stringstream stream( "xxxxPLOT  BIN " );
+    std::stringstream stream( "xxxxPLOT  BIN   " );
     test_assert_throw(nex::load(stream), nex::unexpected_eof);
 }
 

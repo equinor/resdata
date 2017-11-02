@@ -73,7 +73,8 @@ if (ERT_BUILD_CXX)
 endif ()
 
 if (BUILD_NEXUS)
-    list(APPEND opt_srcs nexus/nexus_plot.cpp)
+    list(APPEND opt_srcs nexus/nexus_plot.cpp
+                         nexus/unit.cpp)
 endif ()
 
 configure_file(build_config.h.in   include/ert/util/build_config.h)
@@ -466,7 +467,8 @@ endif ()
 if (BUILD_NEXUS)
     foreach (name nexus_plot_load
                   nexus_plot_spe1
-                  nexus_nexus2ecl)
+                  nexus_nexus2ecl
+                  nexus_unit)
         add_executable(${name} nexus/tests/${name}.cpp)
         target_link_libraries(${name} ecl)
         target_include_directories(${name} PRIVATE nexus/include)
