@@ -279,6 +279,7 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_ui_return
                 ert_util_vector_test
                 ert_util_datetime
+                ert_util_normal_path
         )
 
     add_executable(${name} util/tests/${name}.c)

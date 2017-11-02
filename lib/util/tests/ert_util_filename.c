@@ -61,6 +61,16 @@ void test_filename() {
 
 }
 
+void test_alloc_filename_empty_strings() {
+  const char * path = "";
+  const char * filename = "file";
+  const char * extension = "";
+
+  char * alloc_filename = util_alloc_filename( path, filename , extension);
+  test_assert_string_equal( alloc_filename , filename );
+  free( alloc_filename );
+
+}
 
 
 
@@ -68,6 +78,7 @@ int main(int argc , char ** argv) {
 
   test_dirname();
   test_filename();
+  test_alloc_filename_empty_strings();
   exit(0);
 
 }

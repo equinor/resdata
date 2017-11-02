@@ -164,6 +164,7 @@ typedef enum {left_pad   = 0,
   bool         util_copy_file(const char * , const char * );
   char       * util_alloc_cwd(void);
   bool         util_is_cwd( const char * path );
+  char       * util_alloc_normal_path( const char * input_path );
   char       * util_alloc_realpath(const char * );
   char       * util_alloc_realpath__(const char * input_path);
   bool         util_string_match(const char * string , const char * pattern);

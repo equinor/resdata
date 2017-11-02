@@ -875,78 +875,67 @@ char * util_alloc_realpath__(const char * input_path) {
   char * real_path = (char*)util_malloc( strlen(abs_path) + 2 );
   real_path[0] = '\0';
 
+
   {
-    bool  * mask;
     char ** path_list;
+    char ** path_stack;
     int     path_len;
 
     util_path_split( abs_path , &path_len , &path_list );
-    mask = (bool*)util_malloc( path_len * sizeof * mask );
-    {
-      int i;
-      for (i=0; i < path_len; i++)
-        mask[i] = true;
-    }
+    path_stack = util_malloc( path_len * sizeof * path_stack );
+    for (int i=0; i < path_len; i++)
+      path_stack[i] = NULL;
 
     {
-      int path_index = 1;  // Path can not start with ..
-      int prev_index = 0;
-      while (true) {
-        if (path_index == path_len)
-          break;
+      int stack_size = 0;
 
-        if (strcmp(path_list[path_index] , BACKREF ) == 0) {
-          mask[path_index] = false;
-          mask[prev_index] = false;
-          prev_index--;
-          path_index++;
-        } else if (strcmp( path_list[path_index] , CURRENT) == 0) {
-          mask[path_index] = false;
-          path_index++;
-        } else {
-          path_index++;
-          prev_index++;
-          while (!mask[prev_index])
-            prev_index++;
+      for (int path_index=0; path_index < path_len; path_index++) {
+        const char * path_elm = path_list[path_index];
+
+         if (strcmp( path_elm , CURRENT) == 0)
+          continue;
+
+        /* Backref - pop from stack. */
+        if (strcmp(path_elm , BACKREF ) == 0) {
+          if (stack_size > 0) {
+            memmove(path_stack, &path_stack[1] , (stack_size - 1) * sizeof * path_stack);
+            stack_size--;
+          }
+          continue;
         }
+
+        /* Normal path element - push onto stack. */
+        memmove(&path_stack[1], path_stack, stack_size * sizeof * path_stack);
+        path_stack[0] = path_elm;
+        stack_size++;
       }
 
       /* Build up the new string. */
-      {
-        int i;
-        bool first = true;
-
-        for (i=0; i < path_len; i++) {
-          if (mask[i]) {
-            const char * path_elm = path_list[i];
-            if (first) {
-
+      if (stack_size > 0) {
+        for (int pos = stack_size - 1; pos >= 0; pos--) {
+          const char * path_elm = path_stack[pos];
+          if (pos == stack_size) {
 #ifdef ERT_WINDOWS
-              // Windows:
-              //   1) If the path starts with X: - just do nothing
-              //   2) Else add \\ - for a UNC path.
-              if (path_elm[1] != ':') {
-                strcat(real_path, UTIL_PATH_SEP_STRING);
-                strcat(real_path, UTIL_PATH_SEP_STRING);
-              }
-#else
-              // Posix: just start with a leading '/'
+            // Windows:
+            //   1) If the path starts with X: - just do nothing
+            //   2) Else add \\ - for a UNC path.
+            if (path_elm[1] != ':') {
               strcat(real_path, UTIL_PATH_SEP_STRING);
-#endif
-              strcat( real_path , path_elm);
-            } else {
-
               strcat(real_path, UTIL_PATH_SEP_STRING);
-              strcat( real_path , path_elm);
-
             }
-
-            first = false;
+#else
+            // Posix: just start with a leading '/'
+            strcat(real_path, UTIL_PATH_SEP_STRING);
+#endif
+            strcat( real_path , path_elm);
+          } else {
+            strcat(real_path, UTIL_PATH_SEP_STRING);
+            strcat(real_path , path_elm);
           }
         }
       }
     }
-    free(mask);
+    free( path_stack );
     util_free_stringlist( path_list , path_len );
   }
 
@@ -1085,10 +1074,7 @@ char * util_alloc_rel_path( const char * __root_path , const char * path) {
     util_free_stringlist( path_list , path_length );
     free( root_path );
 
-    if (strlen(rel_path) == 0) {
-      free(rel_path);
-      rel_path = NULL;
-    } return rel_path;
+    return rel_path;
   } else {
     /*
        One or both the input arguments do not correspond to an
@@ -1099,6 +1085,20 @@ char * util_alloc_rel_path( const char * __root_path , const char * path) {
   }
 }
 
+/*
+  This function will return a new string where all "../" and "./"
+  occurences have been normalized away. The function is based on pure
+  string scanning, and will not consider the filesystem at
+  all.
+*/
+
+char * util_alloc_normal_path( const char * input_path ) {
+  if (util_is_abs_path(input_path))
+    return util_alloc_realpath__( input_path );
+
+  char * realpath = util_alloc_realpath__(input_path);
+  return util_alloc_rel_path( NULL , realpath );
+}
 
 
 
@@ -5346,24 +5346,23 @@ char * util_alloc_filename(const char * path , const char * basename , const cha
   char * file;
   int    length = strlen(basename) + 1;
 
-  if (path != NULL)
+  if (path && strlen(path))
     length += strlen(path) + 1;
 
-  if (extension != NULL)
+  if (extension && strlen(extension))
     length += strlen(extension) + 1;
 
-  file = (char*)util_calloc(length , sizeof * file );
-
-  if (path == NULL) {
-    if (extension == NULL)
-      memcpy(file , basename , strlen(basename) + 1);
-    else
-      sprintf(file , "%s.%s" , basename , extension);
-  } else {
-    if (extension == NULL)
-      sprintf(file , "%s%c%s" , path , UTIL_PATH_SEP_CHAR , basename);
-    else
-      sprintf(file , "%s%c%s.%s" , path , UTIL_PATH_SEP_CHAR , basename , extension);
+  file = (char*) util_calloc(length , sizeof * file );
+  file[0] = '\0';
+  
+  if (path && strlen(path)) {
+    strcat(file, path);
+    strcat(file, UTIL_PATH_SEP_STRING );
+  }
+  strcat(file, basename);
+  if (extension && strlen(extension)) {
+    strcat(file, ".");
+    strcat(file, extension);
   }
 
   return file;
