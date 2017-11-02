@@ -10,6 +10,16 @@ if (BUILD_APPLICATIONS)
     target_link_libraries(grdecl_grid   ecl)
     target_link_libraries(summary       ecl)
 
+    if (BUILD_NEXUS)
+        add_executable(nex2ecl   nexus/nex2ecl.cpp)
+        target_link_libraries(nex2ecl    ecl)
+        target_include_directories(nex2ecl PRIVATE ../lib/nexus/include)
+        if (HAVE_WINSOCK2_H)
+            target_link_libraries(nex2ecl ws2_32)
+        endif()
+        list( APPEND apps nex2ecl )
+    endif ()
+
     list(APPEND apps make_grid grdecl_grid summary)
 
     foreach (app ecl_pack
