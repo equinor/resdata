@@ -15,14 +15,22 @@ namespace nex {
             metric_bars
         };
 
+
+        /**
+         * This list of measures are the measures supported by nexus and might
+         * be incomplete for ecl. The eclipse unit for the measures that are
+         * commented out is unknown. The units for reservoir_volumes,
+         * surface_volumes_gas, and surface_volumes_liquid are given in k SM3 in
+         * nexus, while they are just SM3 in eclipse. We carry this k over to
+         * the eclipse output.
+         */
         enum class Measure : int {
-            acoustic_impedance,
-            acoustic_wave_velocity,
-            angle,
-            area,
-            bulk_modulus,
+            // acoustic_impedance,
+            // acoustic_wave_velocity,
+            // angle,
+            // area,
+            // bulk_modulus,
             compressibility,
-            critial_pressure,
             density,
             formation_volume_factor_gas,
             formation_volume_factor_oil,
@@ -31,10 +39,11 @@ namespace nex {
             gravity_gradient,
             length,
             moles,
-            molar_density,
-            molar_rates,
+            // molar_density,
+            // molar_rates,
             permeability,
             pressure,
+            pressure_absolute,
             reservoir_rates,
             reservoir_volumes,
             saturation,
@@ -45,7 +54,7 @@ namespace nex {
             temperature,
             time,
             tracer_consentrations,
-            transmissibility,
+            // transmissibility,
             viscosity,
             volume
         };
