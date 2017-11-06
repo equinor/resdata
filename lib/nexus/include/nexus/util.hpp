@@ -191,10 +191,11 @@ namespace equal {
 }
 
 template< typename T >
-inline std::vector< T > unique( const NexusPlot& plt, T (&f)(const NexusData&) ) {
+inline std::vector< T > unique( const std::vector< NexusData >& data,
+                                T (&f)(const NexusData&) ) {
     std::vector< T > vec;
-    vec.reserve( plt.data.size() );
-    std::transform( plt.data.begin(), plt.data.end(),
+    vec.reserve( data.size() );
+    std::transform( data.begin(), data.end(),
                     std::back_inserter( vec ),
                     f);
     auto last = std::unique(vec.begin(), vec.end());
@@ -202,6 +203,12 @@ inline std::vector< T > unique( const NexusPlot& plt, T (&f)(const NexusData&) )
     last = std::unique(vec.begin(), last);
     vec.erase(last, vec.end());
     return vec;
+}
+
+template< typename T >
+inline std::vector< T > unique( const NexusPlot& plt,
+                                T (&f)(const NexusData&) ) {
+    return unique(plt.data, f);
 }
 
 inline std::vector< std::string > varnames( const NexusPlot& plt, std::array< char, 8 > classname ) {
