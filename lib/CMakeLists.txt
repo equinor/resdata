@@ -11,8 +11,6 @@ if (LAPACK_FOUND)
                          util/matrix_blas.c
                          util/matrix_stat.c
                          util/regression.c
-                         util/lars.c
-                         util/stepwise.c
 )
 endif ()
 
