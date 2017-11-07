@@ -97,7 +97,6 @@ add_library(ecl util/rng.c
                 util/msg.c
                 util/arg_pack.c
                 util/path_fmt.c
-                util/menu.c
                 util/vector.c
                 util/parser.c
                 util/stringlist.c
