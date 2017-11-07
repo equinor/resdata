@@ -1180,12 +1180,10 @@ double ecl_sum_data_interp_get(const ecl_sum_data_type * data , int time_index1 
 }
 
 
-static double ecl_sum_data_vector_iget(const ecl_sum_data_type * data,  time_t sim_time, const ecl_sum_vector_type * keylist, int key_index,
+static double ecl_sum_data_vector_iget(const ecl_sum_data_type * data,  time_t sim_time, int params_index, bool is_rate,
                                        int time_index1 , int time_index2 , double weight1 , double weight2 ) {
 
-  int params_index = ecl_sum_vector_iget_param_index(keylist, key_index);
   double value = 0.0;
-  bool is_rate = ecl_sum_vector_iget_is_rate(keylist, key_index);
   if (is_rate) {
     int time_index = ecl_sum_data_get_index_from_sim_time(data, sim_time);
     // uses step function since it is a rate
@@ -1205,12 +1203,21 @@ void ecl_sum_data_fwrite_interp_csv_line(const ecl_sum_data_type * data, time_t 
   ecl_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
 
   for (int i = 0; i < num_keywords; i++) {
-    double value = ecl_sum_data_vector_iget( data, sim_time, keylist , i , time_index1, time_index2, weight1, weight2);
+    int params_index = ecl_sum_vector_iget_param_index(keylist, i);
+    if (params_index >= 0) {
+      bool is_rate = ecl_sum_vector_iget_is_rate(keylist, i);
+      double value = ecl_sum_data_vector_iget( data, sim_time, params_index , is_rate, time_index1, time_index2, weight1, weight2);
 
-    if (i == 0)
-      fprintf(fp, "%f", value);
-    else
-      fprintf(fp, ",%f", value);
+      if (i == 0)
+        fprintf(fp, "%f", value);
+      else
+        fprintf(fp, ",%f", value);
+    } else {
+      if (i == 0)
+        fputs("", fp);
+      else
+        fputs(",", fp);
+    }
   }
 }
 
@@ -1218,12 +1225,18 @@ void ecl_sum_data_get_interp_vector( const ecl_sum_data_type * data , time_t sim
   int num_keywords = ecl_sum_vector_get_size(keylist);
   double weight1, weight2;
   int    time_index1, time_index2;
+  double missing_value = -1;
 
   ecl_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
   double_vector_reset( results );
   for (int i = 0; i < num_keywords; i++) {
-    double value = ecl_sum_data_vector_iget( data, sim_time, keylist , i , time_index1, time_index2, weight1, weight2);
-    double_vector_iset( results, i , value );
+    int params_index = ecl_sum_vector_iget_param_index(keylist, i);
+    if (params_index >= 0) {
+      bool is_rate = ecl_sum_vector_iget_is_rate(keylist, i);
+      double value = ecl_sum_data_vector_iget( data, sim_time, params_index, is_rate, time_index1, time_index2, weight1, weight2);
+      double_vector_iset( results, i , value );
+    } else
+      double_vector_iset( results, i , missing_value);
   }
 }
 
