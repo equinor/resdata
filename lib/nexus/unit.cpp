@@ -21,7 +21,7 @@ static const constexpr char* metric_bars_table[] = {
     /* formation_volume_factor_oil */ "RM3/SM3",
     /* fraction                    */ "FRACTION",
     /* gas_liquid_ratio            */ "SM3/SM3",
-    /* gravity_gradient            */ "BARS/M",
+    // /* gravity_gradient            */ "BARS/M",
     /* length                      */ "M",
     /* moles                       */ "KG-M",
     // /* molar_density               */ "KG-MOLES/M3",
@@ -31,17 +31,17 @@ static const constexpr char* metric_bars_table[] = {
     /* pressure_absolute           */ "BARSA",
     /* reservoir_rates             */ "RM3/DAY",
     /* reservoir_volumes           */ "kRM3",
-    /* saturation                  */ "FRACTION",
+    // /* saturation                  */ "FRACTION",
     /* surface_rates_gas           */ "SM3/DAY",
     /* surface_rates_liquid        */ "SM3/DAY",
     /* surface_volumes_gas         */ "kSM3",
     /* surface_volumes_liquid      */ "kSM3",
     /* temperature                 */ "C",
-    /* time                        */ "DAYS",
-    /* tracer_consentrations       */ "FRACTION",
+    /* time                        */ "DAY",
+    // /* tracer_consentrations       */ "FRACTION",
     // /* transmissibility            */ "M3 CP/DAY/BARS",
     /* viscosity                   */ "CP",
-    /* volum                       */ "RM3"
+    /* volum                       */ "M3"
 };
 
 
