@@ -9,9 +9,7 @@ endif ()
 if (LAPACK_FOUND)
     list(APPEND opt_srcs util/matrix_lapack.c
                          util/matrix_blas.c
-                         util/matrix_stat.c
-                         util/regression.c
-)
+                         util/matrix_stat.c)
 endif ()
 
 if (HAVE_BACKTRACE)
