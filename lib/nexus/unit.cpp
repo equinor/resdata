@@ -19,7 +19,7 @@ static const constexpr char* metric_bars_table[] = {
     /* density                     */ "KG/M3",
     /* formation_volume_factor_gas */ "RM3/SM3",
     /* formation_volume_factor_oil */ "RM3/SM3",
-    /* fraction                    */ "FRACTION",
+    /* fraction                    */ "",
     /* gas_liquid_ratio            */ "SM3/SM3",
     // /* gravity_gradient            */ "BARS/M",
     /* length                      */ "M",
@@ -41,7 +41,8 @@ static const constexpr char* metric_bars_table[] = {
     // /* tracer_consentrations       */ "FRACTION",
     // /* transmissibility            */ "M3 CP/DAY/BARS",
     /* viscosity                   */ "CP",
-    /* volum                       */ "M3"
+    /* volum                       */ "M3",
+    /* water_cut                   */ "SM3/SM3"
 };
 
 
@@ -51,7 +52,7 @@ varname_to_unit_str = {
     {"QWP" , UnitSystem::Measure::surface_rates_liquid   },
     {"QGP" , UnitSystem::Measure::surface_rates_gas      },
     {"GOR" , UnitSystem::Measure::gas_liquid_ratio       },
-    {"WCUT", UnitSystem::Measure::fraction               },
+    {"WCUT", UnitSystem::Measure::water_cut              },
     {"COP" , UnitSystem::Measure::surface_volumes_liquid },
     {"CWP" , UnitSystem::Measure::surface_volumes_liquid },
     {"CGP" , UnitSystem::Measure::surface_volumes_gas    },

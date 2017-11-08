@@ -56,7 +56,8 @@ namespace nex {
             // tracer_consentrations,
             // transmissibility,
             viscosity,
-            volume
+            volume,
+            water_cut
         };
 
         UnitSystem( std::array< char, 6 > );

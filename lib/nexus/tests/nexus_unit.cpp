@@ -30,6 +30,7 @@ void test_metric_bars_units() {
     auto time                        = u.unit_str(nex::UnitSystem::Measure::time);
     auto viscosity                   = u.unit_str(nex::UnitSystem::Measure::viscosity);
     auto volume                      = u.unit_str(nex::UnitSystem::Measure::volume);
+    auto water_cut                   = u.unit_str(nex::UnitSystem::Measure::water_cut);
 
     test_assert_string_equal( compressibility.c_str(),             "BARS-1");
     test_assert_string_equal( density.c_str(),                     "KG/M3");
@@ -46,12 +47,13 @@ void test_metric_bars_units() {
     test_assert_string_equal( reservoir_volumes.c_str(),           "kRM3");
     test_assert_string_equal( surface_rates_gas.c_str(),           "SM3/DAY");
     test_assert_string_equal( surface_rates_liquid.c_str(),        "SM3/DAY");
-    test_assert_string_equal( surface_volumes_gas.c_str(),         "SM3");
-    test_assert_string_equal( surface_volumes_liquid.c_str(),      "SM3");
+    test_assert_string_equal( surface_volumes_gas.c_str(),         "kSM3");
+    test_assert_string_equal( surface_volumes_liquid.c_str(),      "kSM3");
     test_assert_string_equal( temperature.c_str(),                 "C");
     test_assert_string_equal( time.c_str(),                        "DAY");
     test_assert_string_equal( viscosity.c_str(),                   "CP");
     test_assert_string_equal( volume.c_str(),                      "M3");
+    test_assert_string_equal( water_cut.c_str(),                   "SM3/SM3");
 }
 
 
