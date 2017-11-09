@@ -10,7 +10,7 @@ if (BUILD_APPLICATIONS)
     target_link_libraries(grdecl_grid   ecl)
     target_link_libraries(summary       ecl)
 
-    if (BUILD_NEXUS)
+    if (BUILD_NEXUS AND ERT_HAVE_GETOPT)
         add_executable(nex2ecl   nexus/nex2ecl.cpp)
         target_link_libraries(nex2ecl    ecl)
         target_include_directories(nex2ecl PRIVATE ../lib/nexus/include)

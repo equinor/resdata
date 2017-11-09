@@ -37,8 +37,10 @@ R"(Usage:
 Options:
   -f --format                Format the output.
   -h --help                  Show this screen.
-  -o --output <file>|<path>  Write output to files prefixed by <file> or place
-                             output at <path>.
+  -o --output <file>|<path>  Write output to files with basename <file> or place
+                             output at <path>. The argument is considered a
+                             <file> if it is not a directory and does not end
+                             with a trailing slash.
 )";
 
 static struct option long_options[] = {
@@ -69,20 +71,18 @@ void create_ecl_sum( std::string input_path,
         if ( output_path.empty() ) {
             ecl_case_name = std::string( plt_basename );
         } else if ( util_is_directory(output_path.c_str()) ) {
-            ecl_case_name = output_path + std::string( plt_basename );
+            ecl_case_name = output_path + UTIL_PATH_SEP_CHAR
+                                        + std::string( plt_basename );
         } else {
-            char *path = 0, *basename = 0;
+            char *path = NULL, *basename = NULL;
             util_alloc_file_components(output_path.c_str(), &path, &basename, NULL);
 
             if ( !basename ) {
-                std::cerr << "Failed to parse output path "
-                          << output_path << "." << std::endl;
-                exit(1);
+                basename = plt_basename;
             }
 
             if ( path && !util_is_directory(path) ) {
-                std::cerr << path << " does not exists." << std::endl;
-                exit(1);
+                util_make_path( path );
             }
 
             util_strupr( basename );
@@ -93,8 +93,8 @@ void create_ecl_sum( std::string input_path,
             }
             ecl_case_name += std::string( basename );
 
-            if ( path ) free( path );
-            if ( basename ) free( basename );
+            free( path );
+            if ( basename != plt_basename ) free( basename );
         }
 
         free( plt_basename );
@@ -122,9 +122,8 @@ int main( int argc, char **argv ) {
      * Parse options
      */
 
-    int c;
     for (;;) {
-        c = getopt_long (argc, argv, "fho:", long_options, 0);
+        int c = getopt_long (argc, argv, "fho:", long_options, 0);
         if (c == -1) // No more options
             break;
 
