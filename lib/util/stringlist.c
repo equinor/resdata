@@ -790,12 +790,17 @@ int stringlist_append_matching_elements(stringlist_type * target , const stringl
   return stringlist_append_matching_elements( target , src , pattern );
 }
 
+
+static int void_strcmp(const void* s1, const void *s2) {
+  return strcmp(s1,s2);
+}
+
 bool stringlist_unique(const stringlist_type * stringlist )
 {
   bool unique = true;
   stringlist_type * cpy = stringlist_alloc_shallow_copy(stringlist);
 
-  stringlist_sort(cpy, strcmp);
+  stringlist_sort(cpy, void_strcmp);
   for (int i = 0; i < stringlist_get_size(cpy) - 1; i++) {
     const char* s1 = stringlist_iget(cpy, i);
     const char* s2 = stringlist_iget(cpy, i+1);
