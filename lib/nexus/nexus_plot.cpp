@@ -269,7 +269,15 @@ static const std::map< std::string, std::string > kw_nex2ecl {
     {"CWI" , "WIT" },
     {"CGI" , "GIT" },
     {"QPP" , "CPR" },
-    {"CPP" , "CPC" }
+    {"CPP" , "CPC" },
+    {"COWP", "LPT" },
+    {"QOWP", "LPR" },
+    {"GOR" , "GOR" },
+    {"PRDW", "MWPT"},
+    {"CCPP", "CPT" },
+    {"CCPI", "CIT" },
+    {"QPI" , "CIR" },
+    {"CPI" , "CIC" }
 };
 
 struct eclvar {
@@ -279,7 +287,7 @@ struct eclvar {
 };
 
 void field_smspec( std::vector< eclvar >& nodes,
-                   std::set< std::string > unknown_varnames,
+                   std::set< std::string >& unknown_varnames,
                    ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
 
@@ -295,15 +303,12 @@ void field_smspec( std::vector< eclvar >& nodes,
 
     /* Only keep entries we have translations for */
     auto field_class_vars = varnames( plt, "FIELD" );
-    auto last = std::remove_if( field_class_vars.begin(), field_class_vars.end(),
-        [&unknown_varnames]( const std::string& var ) {
-            if (!kw_nex2ecl.count( var )) {
-                unknown_varnames.insert( var );
-                return true;
-            }
-            return false;
+    auto mid = std::partition( field_class_vars.begin(), field_class_vars.end(),
+        []( const std::string& var ) {
+          return (bool) kw_nex2ecl.count( var );
         });
-    field_class_vars.erase( last, field_class_vars.end() );
+    unknown_varnames.insert( mid, field_class_vars.end() );
+    field_class_vars.erase( mid, field_class_vars.end() );
 
     for ( const auto& var : field_class_vars ) {
         const auto& ecl_kw = "F" + kw_nex2ecl.at( var ); // F for FIELD
@@ -323,7 +328,7 @@ void field_smspec( std::vector< eclvar >& nodes,
 }
 
 void well_smspec( std::vector< eclvar >& nodes,
-                   std::set< std::string > unknown_varnames,
+                   std::set< std::string >& unknown_varnames,
                    ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
 
@@ -336,15 +341,12 @@ void well_smspec( std::vector< eclvar >& nodes,
 
     /* Only keep entries we have translations for */
     auto well_class_vars = varnames( plt, "WELL" );
-    auto last = std::remove_if( well_class_vars.begin(), well_class_vars.end(),
-        [&unknown_varnames]( const std::string& var ) {
-            if (!kw_nex2ecl.count( var )) {
-                unknown_varnames.insert( var );
-                return true;
-            }
-            return false;
+    auto mid = std::partition( well_class_vars.begin(), well_class_vars.end(),
+        []( const std::string& var ) {
+           return (bool) kw_nex2ecl.count( var );
         });
-    well_class_vars.erase( last, well_class_vars.end() );
+    unknown_varnames.insert( mid, well_class_vars.end() );
+    well_class_vars.erase( mid, well_class_vars.end() );
 
     auto instancenames = unique( well, get::instancename_str );
     for ( const auto& well_name : instancenames ) {

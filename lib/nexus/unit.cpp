@@ -16,12 +16,14 @@ static const constexpr char* metric_bars_table[] = {
     // /* area                        */ "m2",
     // /* bulk_modulus                */ "BARS",
     /* compressibility             */ "BARS-1",
+    /* concentration               */ "KG/SM3",
     /* density                     */ "KG/M3",
     /* formation_volume_factor_gas */ "RM3/SM3",
     /* formation_volume_factor_oil */ "RM3/SM3",
     /* fraction                    */ "",
     /* gas_liquid_ratio            */ "SM3/SM3",
     // /* gravity_gradient            */ "BARS/M",
+    /* identity                    */ "",
     /* length                      */ "M",
     /* moles                       */ "KG-M",
     // /* molar_density               */ "KG-MOLES/M3",
@@ -61,7 +63,15 @@ varname_to_unit_str = {
     {"CWI" , UnitSystem::Measure::surface_volumes_liquid },
     {"CGI" , UnitSystem::Measure::surface_volumes_gas    },
     {"QPP" , UnitSystem::Measure::surface_rates_liquid   },
-    {"CPP" , UnitSystem::Measure::surface_volumes_liquid }
+    {"CPP" , UnitSystem::Measure::concentration          },
+    {"COWP", UnitSystem::Measure::surface_volumes_liquid },
+    {"QOWP", UnitSystem::Measure::surface_rates_liquid   },
+    {"GOR" , UnitSystem::Measure::gas_liquid_ratio       },
+    {"PRDW", UnitSystem::Measure::identity               },
+    {"CCPP", UnitSystem::Measure::surface_volumes_liquid },
+    {"CCPI", UnitSystem::Measure::surface_volumes_liquid },
+    {"QPI" , UnitSystem::Measure::surface_rates_liquid   },
+    {"CPI" , UnitSystem::Measure::concentration          }
 };
 
 
