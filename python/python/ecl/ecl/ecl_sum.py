@@ -538,9 +538,9 @@ class EclSum(BaseCClass):
             raise ValueError("Must supply either days or date")
 
 
-    def get_interp_row(self, key_list, sim_time):
+    def get_interp_row(self, key_list, sim_time, invalid_value = -1):
         ctime = CTime(sim_time)
-        data = DoubleVector( initial_size = len(key_list) )
+        data = DoubleVector( initial_size = len(key_list) , default_value = invalid_value)
         EclSum._get_interp_vector(self, ctime, key_list, data)
         return data
 
