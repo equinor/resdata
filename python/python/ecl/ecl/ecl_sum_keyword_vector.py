@@ -32,6 +32,7 @@ from ecl.ecl import EclPrototype
 class EclSumKeyWordVector(BaseCClass):
     TYPE_NAME       = "ecl_sum_vector"
     _alloc          = EclPrototype("void* ecl_sum_vector_alloc(ecl_sum)", bind=False)
+    _alloc_copy     = EclPrototype("ecl_sum_vector_obj ecl_sum_vector_alloc_layout_copy(ecl_sum_vector, ecl_sum)")
     _free           = EclPrototype("void ecl_sum_vector_free(ecl_sum_vector)")
     _add            = EclPrototype("bool ecl_sum_vector_add_key(ecl_sum_vector,  char*)")
     _add_multiple   = EclPrototype("void ecl_sum_vector_add_keys(ecl_sum_vector,  char*)")
@@ -67,6 +68,10 @@ class EclSumKeyWordVector(BaseCClass):
 
     def __repr__(self):
         return self._create_repr('len=%d' % len(self))
+
+    def copy(self, ecl_sum):
+        return self._alloc_copy(ecl_sum)
+
 
 monkey_the_camel(EclSumKeyWordVector, 'addKeyword', EclSumKeyWordVector.add_keyword)
 monkey_the_camel(EclSumKeyWordVector, 'addKeywords', EclSumKeyWordVector.add_keywords)

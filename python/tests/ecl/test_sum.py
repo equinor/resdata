@@ -15,6 +15,7 @@
 #  for more details.
 
 import os
+import inspect
 import datetime
 import csv
 import shutil
@@ -287,23 +288,32 @@ class SumTest(ExtendedTestCase):
 
 
     def test_kw_vector(self):
-        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
-                            sim_length_days = 100,
-                            num_report_step = 10,
-                            num_mini_step = 10,
-                            func_table = {"FOPT" : fopt,
-                                          "FOPR" : fopr ,
-                                          "FGPT" : fgpt })
-        kw_list = EclSumKeyWordVector( case )
-        kw_list.add_keyword("FOPT")
-        kw_list.add_keyword("FOPR")
-        kw_list.add_keyword("FGPT")
+        case1 = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                             sim_length_days = 100,
+                             num_report_step = 10,
+                             num_mini_step = 10,
+                             func_table = {"FOPT" : fopt,
+                                           "FOPR" : fopr ,
+                                           "FGPT" : fgpt })
 
-        t = case.getDataStartTime( ) + datetime.timedelta( days = 43 );
-        data = case.get_interp_row( kw_list , t )
-        for d1,d2 in zip(data, [ case.get_interp("FOPT", date = t),
-                                 case.get_interp("FOPT", date = t),
-                                 case.get_interp("FOPT", date = t) ]):
+        case2 = createEclSum("CSV" , [("FOPR", None , 0) , ("FOPT" , None , 0), ("FWPT" , None , 0)],
+                             sim_length_days = 100,
+                             num_report_step = 10,
+                             num_mini_step = 10,
+                             func_table = {"FOPT" : fopt,
+                                           "FOPR" : fopr ,
+                                           "FWPT" : fgpt })
+
+        kw_list = EclSumKeyWordVector( case1 )
+        kw_list.add_keyword("FOPT")
+        kw_list.add_keyword("FGPT")
+        kw_list.add_keyword("FOPR")
+
+        t = case1.getDataStartTime( ) + datetime.timedelta( days = 43 );
+        data = case1.get_interp_row( kw_list , t )
+        for d1,d2 in zip(data, [ case1.get_interp("FOPT", date = t),
+                                 case1.get_interp("FOPT", date = t),
+                                 case1.get_interp("FOPT", date = t) ]):
 
             self.assertFloatEqual(d1,d2)
 
@@ -313,3 +323,30 @@ class SumTest(ExtendedTestCase):
 
         for (k1,k2) in zip(kw_list,tmp):
             self.assertEqual(k1,k2)
+
+        kw_list2 = kw_list.copy(case2)
+        self.assertIn("FOPT", kw_list2)
+        self.assertIn("FOPR", kw_list2)
+        self.assertIn("FGPT", kw_list2)
+        data2 = case2.get_interp_row( kw_list2 , t )
+
+        self.assertEqual(len(data2), 3)
+        self.assertEqual(data[0], data2[0])
+        self.assertEqual(data[2], data2[2])
+
+        with TestAreaContext("sum_vector"):
+            with open("f1.txt","w") as f:
+                case1.dumpCSVLine(t, kw_list, f)
+
+            with open("f2.txt", "w") as f:
+                case2.dumpCSVLine(t,kw_list2,f)
+
+            with open("f1.txt") as f:
+                d1 = f.readline().split(",")
+
+            with open("f2.txt") as f:
+                d2 = f.readline().split(",")
+
+            self.assertEqual(d1[0],d2[0])
+            self.assertEqual(d1[2],d2[2])
+            self.assertEqual(d2[1],"")

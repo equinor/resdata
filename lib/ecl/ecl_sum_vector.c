@@ -58,6 +58,39 @@ ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum){
     return ecl_sum_vector;
 }
 
+static void ecl_sum_vector_add_invalid_key(ecl_sum_vector_type * vector, const char * key) {
+  int_vector_append(vector->node_index_list, -1);
+  bool_vector_append(vector->is_rate_list, false);
+  stringlist_append_copy(vector->key_list, key);
+}
+
+
+/*
+  This function will allocate a keyword vector for the keys in the @ecl_sum
+  argument passed in, it will contain all the same keys as in the input argument
+  @src_vector. If the @src_vector contains keys which are not present in
+  @ecl_sum an entry marked as *invalid* will be added. The whole point about
+  this function is to ensure that calls to:
+
+       ecl_sum_fwrite_interp_csv_line( )
+
+  will result in nicely aligned output even if the different summary cases do
+  not have the exact same keys.
+*/
+
+ecl_sum_vector_type * ecl_sum_vector_alloc_layout_copy(const ecl_sum_vector_type * src_vector, const ecl_sum_type * ecl_sum) {
+  ecl_sum_vector_type * new_vector = ecl_sum_vector_alloc(ecl_sum);
+  for (int i=0; i < stringlist_get_size(src_vector->key_list); i++) {
+    const char * key = stringlist_iget(src_vector->key_list, i);
+    if (ecl_sum_has_general_var(ecl_sum, key))
+      ecl_sum_vector_add_key(new_vector, key);
+    else
+      ecl_sum_vector_add_invalid_key(new_vector, key);
+  }
+  return new_vector;
+}
+
+
 
 bool ecl_sum_vector_add_key( ecl_sum_vector_type * ecl_sum_vector, const char * key){
   if (ecl_sum_has_general_var( ecl_sum_vector->ecl_sum , key)) {
@@ -72,8 +105,6 @@ bool ecl_sum_vector_add_key( ecl_sum_vector_type * ecl_sum_vector, const char * 
   } else
     return false;
 }
-
-
 
 void ecl_sum_vector_add_keys( ecl_sum_vector_type * ecl_sum_vector, const char * pattern){
     stringlist_type * keylist = ecl_sum_alloc_matching_general_var_list(ecl_sum_vector->ecl_sum , pattern);
@@ -99,6 +130,10 @@ int ecl_sum_vector_get_size(const ecl_sum_vector_type * ecl_sum_vector){
 
 bool ecl_sum_vector_iget_is_rate(const ecl_sum_vector_type * ecl_sum_vector, int index){
     return bool_vector_iget(ecl_sum_vector->is_rate_list, index);
+}
+
+bool ecl_sum_vector_iget_valid(const ecl_sum_vector_type * ecl_sum_vector, int index) {
+  return (int_vector_iget(ecl_sum_vector->node_index_list, index) >= 0);
 }
 
 int ecl_sum_vector_iget_param_index(const ecl_sum_vector_type * ecl_sum_vector, int index){
