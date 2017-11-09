@@ -12,7 +12,8 @@ namespace nex {
             lab,
             metric_kPa,
             metric_kg_cm2,
-            metric_bars
+            metric_bars,
+            unit_type_count
         };
 
 
@@ -59,12 +60,18 @@ namespace nex {
             // transmissibility,
             viscosity,
             volume,
-            water_cut
+            water_cut,
+            measure_enum_size
         };
 
         UnitSystem( std::array< char, 6 > );
         UnitSystem( std::string );
         UnitSystem( UnitType );
+
+        Measure measure( const std::string& ) const;
+
+        float conversion( Measure ) const;
+        float conversion( const std::string& ) const;
 
         std::string unit_str( Measure ) const;
         std::string unit_str( const std::string& ) const;
