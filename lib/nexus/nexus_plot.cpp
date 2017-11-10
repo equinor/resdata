@@ -252,13 +252,43 @@ NexusPlot nex::load(std::istream& stream) {
 
 namespace {
 
+/* The eclipse variable names in this map must, when used, be prefixed with the
+   letter of the class they are from. For example for FIELD data they should be
+   prefixed with F, and for well, W. */
+static const std::map< std::string, std::string > kw_nex2ecl {
+    {"QOP" , "OPR" },
+    {"QWP" , "WPR" },
+    {"QGP" , "GPR" },
+    {"GOR" , "GOR" },
+    {"WCUT", "WCT" },
+    {"COP" , "OPT" },
+    {"CWP" , "WPT" },
+    {"CGP" , "GPT" },
+    {"QWI" , "WIR" },
+    {"QGI" , "GIR" },
+    {"CWI" , "WIT" },
+    {"CGI" , "GIT" },
+    {"QPP" , "CPR" },
+    {"CPP" , "CPC" },
+    {"COWP", "LPT" },
+    {"QOWP", "LPR" },
+    {"GOR" , "GOR" },
+    {"PRDW", "MWPT"},
+    {"CCPP", "CPT" },
+    {"CCPI", "CIT" },
+    {"QPI" , "CIR" },
+    {"CPI" , "CIC" }
+};
+
 struct eclvar {
     smspec_node_type* node;
     float value;
     size_t timestep_index;
 };
 
-void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
+void field_smspec( std::vector< eclvar >& nodes,
+                   std::set< std::string >& unknown_varnames,
+                   ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
 
     auto data = plt.data;
@@ -271,37 +301,75 @@ void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
                   });
     std::sort( field.begin(), field.end(), cmp::timestep );
 
-    static const std::map< std::string, std::string > kw_nex2ecl {
-        {"QOP" , "FOPR" }, {"QWP" , "FWPR" }, {"QGP" , "FGPR" },
-        {"GOR" , "FGOR" }, {"WCUT", "FWCT" }, {"COP" , "FOPT" },
-        {"CWP" , "FWPT" }, {"CGP" , "FGPT" }, {"QWI" , "FWIR" },
-        {"QGI" , "FGIR" }, {"CWI" , "FWIT" }, {"CGI" , "FGIT" },
-        {"QPP" , "FCPR" }, {"CPP" , "FCPC" }
-    };
-
+    /* Only keep entries we have translations for */
     auto field_class_vars = varnames( plt, "FIELD" );
+    auto mid = std::partition( field_class_vars.begin(), field_class_vars.end(),
+        []( const std::string& var ) {
+          return (bool) kw_nex2ecl.count( var );
+        });
+    unknown_varnames.insert( mid, field_class_vars.end() );
+    field_class_vars.erase( mid, field_class_vars.end() );
+
     for ( const auto& var : field_class_vars ) {
-        auto it = kw_nex2ecl.find( var );
-        if ( it != kw_nex2ecl.end() ) {
+        const auto& ecl_kw = "F" + kw_nex2ecl.at( var ); // F for FIELD
+        const auto& unit = plt.header.unit_system.unit_str( var );
 
-            const auto& nex_kw = it->first;
-            const auto& ecl_kw = it->second;
-            const auto& unit = plt.header.unit_system.unit_str(nex_kw);
+        auto* node = ecl_sum_add_var( ecl_sum, ecl_kw.c_str(), NULL, -1,
+                                      unit.c_str(), 0.0);
 
-            auto* node = ecl_sum_add_var( ecl_sum, ecl_kw.c_str(), NULL, -1,
+        std::vector< NexusData > var_values;
+        std::copy_if( field.begin(), field.end(),
+                      std::back_inserter( var_values ),
+                      is::varname( var ) );
+
+        for (size_t i = 0; i < var_values.size(); i++)
+            nodes.push_back( { node, var_values[i].value, i } );
+    }
+}
+
+void well_smspec( std::vector< eclvar >& nodes,
+                   std::set< std::string >& unknown_varnames,
+                   ecl_sum_type* ecl_sum,
+                   const NexusPlot& plt ) {
+
+    auto data = plt.data;
+
+    std::vector< NexusData > well;
+    std::copy_if( data.begin(), data.end(), std::back_inserter( well ),
+                  is::classname( "WELL" ) );
+    std::sort( well.begin(), well.end(), cmp::timestep );
+
+    /* Only keep entries we have translations for */
+    auto well_class_vars = varnames( plt, "WELL" );
+    auto mid = std::partition( well_class_vars.begin(), well_class_vars.end(),
+        []( const std::string& var ) {
+           return (bool) kw_nex2ecl.count( var );
+        });
+    unknown_varnames.insert( mid, well_class_vars.end() );
+    well_class_vars.erase( mid, well_class_vars.end() );
+
+    auto instancenames = unique( well, get::instancename_str );
+    for ( const auto& well_name : instancenames ) {
+        std::vector< NexusData > well_instance;
+        std::copy_if( well_instance.begin(), well_instance.end(),
+                      std::back_inserter( well ),
+                      is::instancename( well_name ) );
+
+        for ( const auto& var : well_class_vars) {
+            const auto& ecl_kw = "W" + kw_nex2ecl.at( var );
+            const auto& unit = plt.header.unit_system.unit_str( var );
+
+            auto* node = ecl_sum_add_var( ecl_sum,
+                                          ecl_kw.c_str(),
+                                          well_name.c_str(), -1,
                                           unit.c_str(), 0.0);
-
             std::vector< NexusData > var_values;
-            std::copy_if( field.begin(), field.end(),
-                          std::back_inserter( var_values ),
-                          is::varname( nex_kw ) );
+            std::copy_if( well_instance.begin(), well_instance.end(),
+                        std::back_inserter( var_values ),
+                        is::varname( var ) );
 
             for (size_t i = 0; i < var_values.size(); i++)
-                nodes.push_back( { node, var_values[i].value, i } );
-
-        } else {
-            std::cerr << "Warning: could not convert nexus variable " <<
-                var << " to ecl keyword." << std::endl;
+              nodes.push_back( { node, var_values[i].value, i } );
         }
     }
 }
@@ -333,9 +401,14 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
     /*
      * Create ecl smspec nodes
      */
+    std::set< std::string > unknown_varnames;
     std::vector< eclvar > smspec_nodes;
-    field_smspec( smspec_nodes, ecl_sum, plt );
-    // well_smspec( smspec_nodes, ecl_sum, plt );
+    field_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
+    well_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
+
+    for ( const auto& var : unknown_varnames )
+        std::cerr << "Warning: could not convert nexus variable " <<
+            var << " to ecl keyword." << std::endl;
 
     /*
      * Create ecl timesteps

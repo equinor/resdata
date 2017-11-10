@@ -52,6 +52,8 @@ void test_create_ecl_sum(char *root_folder) {
     ecl_sum_type * ecl_sum_loaded = ecl_sum_fread_alloc_case("ECL_CASE", ":");
 
     auto timesteps = unique( plt, nex::get::timestep );
+
+    /* FOPR values */
     std::vector< nex::NexusData > fopr_values;
     std::copy_if( data.begin(), data.end(), std::back_inserter( fopr_values ),
         []( const nex::NexusData& d ) {
@@ -61,20 +63,38 @@ void test_create_ecl_sum(char *root_folder) {
         });
     std::sort( fopr_values.begin(), fopr_values.end(), nex::cmp::timestep );
 
+    /* WLPT values */
+    std::vector< nex::NexusData > wlpt_values;
+    std::copy_if( data.begin(), data.end(), std::back_inserter( wlpt_values ),
+                  []( const nex::NexusData& d ) {
+                      return nex::is::classname( "WELL" )(d)
+                             && nex::is::instancename( "1" )(d)
+                             && nex::is::varname( "COWP" )(d);
+                  });
+    std::sort( wlpt_values.begin(), wlpt_values.end(), nex::cmp::timestep );
+
     /* Check data */
 
     test_assert_true( ecl_sum_has_key(ecl_sum_loaded, "FOPR"));
+    test_assert_true( ecl_sum_has_key(ecl_sum_loaded, "WLPT:1"));
+    test_assert_true( ecl_sum_has_key(ecl_sum_loaded, "WLPT:2"));
     test_assert_time_t_equal( ecl_sum_get_start_time( ecl_sum_loaded ),
                              util_make_date_utc( 1, 1, 1980));
     test_assert_int_equal( ecl_sum_get_data_length( ecl_sum_loaded ),
                             timesteps.size());
 
-    for (int t = 0; t < ecl_sum_get_data_length( ecl_sum_loaded ); t++)
+    for (int t = 0; t < ecl_sum_get_data_length( ecl_sum_loaded ); t++) {
         test_assert_double_equal(
-            ecl_sum_get_general_var( ecl_sum_loaded, t , "FOPR"),
-            fopr_values[t].value );
+                ecl_sum_get_general_var(ecl_sum_loaded, t, "FOPR"),
+                fopr_values[t].value);
+
+        test_assert_double_equal(
+                ecl_sum_get_general_var(ecl_sum_loaded, t, "WLPT:1"),
+                wlpt_values[t].value);
+    }
 
     test_work_area_free(work_area);
+
 }
 
 
