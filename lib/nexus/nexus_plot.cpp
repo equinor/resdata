@@ -309,8 +309,9 @@ void field_smspec( std::vector< eclvar >& nodes, ecl_sum_type* ecl_sum,
 } // anonymous namespace
 
 
-ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt) {
-    bool fmt_output = true;
+ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
+                               bool format_output,
+                               const NexusPlot& plt) {
     bool unified = true;
     const char* key_join_string = ":";
     std::time_t sim_start = util_make_date_utc( plt.header.day,
@@ -319,7 +320,7 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case, const NexusPlot& plt
     bool time_in_days = true;
 
     ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( ecl_case.c_str(),
-        fmt_output,
+        format_output,
         unified,
         key_join_string,
         sim_start,
