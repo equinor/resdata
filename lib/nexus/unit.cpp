@@ -32,12 +32,12 @@ static const constexpr char* metric_bars_table[] = {
     /* pressure                    */ "BARS",
     /* pressure_absolute           */ "BARSA",
     /* reservoir_rates             */ "RM3/DAY",
-    /* reservoir_volumes           */ "kRM3",
+    /* reservoir_volumes           */ "RM3",
     // /* saturation                  */ "FRACTION",
     /* surface_rates_gas           */ "SM3/DAY",
     /* surface_rates_liquid        */ "SM3/DAY",
-    /* surface_volumes_gas         */ "kSM3",
-    /* surface_volumes_liquid      */ "kSM3",
+    /* surface_volumes_gas         */ "SM3",
+    /* surface_volumes_liquid      */ "SM3",
     /* temperature                 */ "C",
     /* time                        */ "DAY",
     // /* tracer_consentrations       */ "FRACTION",
@@ -47,9 +47,37 @@ static const constexpr char* metric_bars_table[] = {
     /* water_cut                   */ "SM3/SM3"
 };
 
+static const constexpr float conversion_table
+[static_cast<int>( UnitSystem::Measure::measure_enum_size )]
+[static_cast<int>( UnitSystem::UnitType::unit_type_count )] = {
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* compressibility             */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* concentration               */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* density                     */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* formation_volume_factor_gas */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* formation_volume_factor_oil */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* fraction                    */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* gas_liquid_ratio            */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* identity                    */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* length                      */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* moles                       */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* permeability                */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* pressure                    */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* pressure_absolute           */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* reservoir_rates             */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1000.0f }, /* reservoir_volumes           */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* surface_rates_gas           */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* surface_rates_liquid        */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1000.0f }, /* surface_volumes_gas         */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1000.0f }, /* surface_volumes_liquid      */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* temperature                 */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* time                        */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* viscosity                   */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* volum                       */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }  /* water_cut                   */
+};
 
 static const std::map< std::string, UnitSystem::Measure >
-varname_to_unit_str = {
+varname_to_measure = {
     {"QOP" , UnitSystem::Measure::surface_rates_liquid   },
     {"QWP" , UnitSystem::Measure::surface_rates_liquid   },
     {"QGP" , UnitSystem::Measure::surface_rates_gas      },
@@ -121,17 +149,31 @@ UnitSystem::UnitSystem( UnitType unit ) {
     }
 }
 
-std::string UnitSystem::unit_str( Measure measure ) const {
-    return this->unit_str_table[static_cast<int>(measure)];
+UnitSystem::Measure UnitSystem::measure( const std::string& varname ) const {
+    auto it = varname_to_measure.find( varname );
+    if ( it != varname_to_measure.end() )
+        return it->second;
+    std::cerr << "Warning: no unit found for nexus variable " << varname
+              << std::endl;
+    return Measure::identity;
+}
+
+float UnitSystem::conversion( Measure m ) const {
+    int ui = static_cast<int>( this->unit );
+    int mi = static_cast<int>( m );
+    return conversion_table[mi][ui];
+}
+
+float UnitSystem::conversion( const std::string& varname ) const {
+    return this->conversion( this->measure(varname) );
+}
+
+std::string UnitSystem::unit_str( Measure m ) const {
+    return this->unit_str_table[ static_cast<int>(m) ];
 }
 
 std::string UnitSystem::unit_str( const std::string& varname ) const {
-    auto it = varname_to_unit_str.find( varname );
-    if (it != varname_to_unit_str.end())
-        return this->unit_str_table[static_cast<int>(it->second)];
-    std::cerr << "Warning: no unit found for nexus variable " << varname
-              << std::endl;
-    return "";
+    return this->unit_str( this->measure(varname) );
 }
 
 
