@@ -28,6 +28,21 @@ except ImportError:
     sys.stderr.write("Warning: could not import file test_env.py - this might lead to test failures.")
 
 
+# Function wrapper which can be used to add decorator @log_test to test
+# methods. When a test has been decorated with @log_test it will print
+# "starting: <test_name>" when a method is complete and "complete: <test_name>"
+# when the method is complete. Convenient when debugging tests which fail hard
+# or lock up.
+
+def log_test(test):
+    def wrapper(*args):
+        sys.stderr.write("starting: %s \n" % test.__name__)
+        test(*args)
+        sys.stderr.write("complete: %s \n" % test.__name__)
+    return wrapper
+
+
+
 class _AssertNotRaisesContext(object):
 
     def __init__(self, test_class):
