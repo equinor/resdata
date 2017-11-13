@@ -213,7 +213,7 @@ bool well_segment_add_connection( well_segment_type * segment , const char * gri
     
     {
       well_conn_collection_type * connections = hash_get( segment->connections , grid_name );
-      well_conn_collection_add_ref( connections , conn );
+      well_conn_collection_add( connections , conn );
     }
     return true;
   } else

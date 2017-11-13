@@ -43,8 +43,6 @@ well_conn_type       * well_conn_collection_iget(const well_conn_collection_type
                                                  int index);
 void                   well_conn_collection_add(well_conn_collection_type * wellcc,
                                                 well_conn_type * conn);
-void                   well_conn_collection_add_ref(well_conn_collection_type * wellcc,
-                                                    well_conn_type * conn);
 int                    well_conn_collection_load_from_kw(well_conn_collection_type * wellcc,
                                                          const ecl_kw_type * iwel_kw,
                                                          const ecl_kw_type * icon_kw,

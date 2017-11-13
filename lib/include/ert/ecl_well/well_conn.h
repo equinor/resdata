@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-   
-   The file 'well_conn.h' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'well_conn.h' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 
@@ -24,12 +24,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
 #include <stdbool.h>
 
 #include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_rsthead.h>
+
+
+#define WELL_CONN_TYPE_ID 702052013
 
   typedef enum {
     well_conn_dirX  = 1,
@@ -40,7 +43,36 @@ extern "C" {
   } well_conn_dir_enum;
 
 
+
+  struct  well_conn_struct {
+    UTIL_TYPE_ID_DECLARATION;
+    int                i;
+    int                j;
+    int                k;
+    well_conn_dir_enum dir;
+    bool               open;
+    int                segment_id;             // -1: Ordinary well
+    bool               matrix_connection;   // k >= nz => fracture (and k -= nz )
+    double             connection_factor;
+    double             oil_rate;
+    double             gas_rate;
+    double             water_rate;
+    double             volume_rate;
+
+  };
+
   typedef struct well_conn_struct well_conn_type;
+
+  bool well_conn_init_from_kw( well_conn_type * conn,
+                               const ecl_kw_type * icon_kw ,
+                               const ecl_kw_type * scon_kw ,
+                               const ecl_kw_type * xcon_kw ,
+                               const ecl_rsthead_type * header ,
+                               int well_nr ,
+                               int conn_nr );
+
+
+
 
 
   void             well_conn_free( well_conn_type * conn);
