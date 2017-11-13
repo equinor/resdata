@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'path_fmt.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'path_fmt.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdlib.h>
@@ -55,7 +55,7 @@ char * path = path_fmt_alloc(path_fmt , "BaseCase" , 67);
 */
 
 #define PATH_FMT_ID 7519200
-   
+
 
 struct path_fmt_struct {
   UTIL_TYPE_ID_DECLARATION;
@@ -69,7 +69,7 @@ static UTIL_SAFE_CAST_FUNCTION( path_fmt , PATH_FMT_ID)
 
 void path_fmt_reset_fmt(path_fmt_type * path , const char * fmt) {
   path->fmt = util_realloc_string_copy(path->fmt , fmt);
-  if (path->is_directory) 
+  if (path->is_directory)
     path->file_fmt = util_alloc_sprintf("%s/%%s" , fmt);
 }
 
@@ -81,7 +81,7 @@ static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory) {
   path->fmt            = NULL;
   path->file_fmt       = NULL;
   path->is_directory   = is_directory;
-  
+
   path_fmt_reset_fmt(path , fmt);
   return path;
 }
@@ -105,12 +105,12 @@ static path_fmt_type * path_fmt_alloc__(const char * fmt , bool is_directory) {
   After the two last function calls we will have:
 
    o path = "/tmp/scratch/member10/12.15" - and this directory has
-     been created. 
+     been created.
 
    o file = "/tmp/scratch/member8/12.17/SomeFile - and the directory
      /tmp/scratch/member8/12.17 has been created.
 
-     
+
   Observe that the functionality is implemented with the help av
   variable length argument lists, and **NO** checking of argument list
   versus format string is performed.
@@ -123,7 +123,7 @@ path_fmt_type * path_fmt_alloc_directory_fmt(const char * fmt) {
 
 
 
-/* 
+/*
    Most general. Can afterwards be used to allocate strings
    representing both directories and files.
 */
@@ -133,17 +133,6 @@ path_fmt_type * path_fmt_alloc_path_fmt(const char * fmt) {
 }
 
 
-
-/**
-   Present the user with a prompt, and reads format specifier string
-   from stdin. Currently not possible to specify argument types.
-*/
-
-path_fmt_type * path_fmt_scanf_alloc(const char * prompt , int types , const node_ctype * type_list, bool is_directory) {
-  char * fmt;
-  fmt = util_scanf_alloc_string(prompt);
-  return path_fmt_alloc__(fmt , is_directory);
-}
 
 path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
   path_fmt_type *new_path = path_fmt_alloc__(path->fmt , path->is_directory);
@@ -172,7 +161,7 @@ char * path_fmt_alloc_path(const path_fmt_type * path , bool auto_mkdir , ...) {
 
 /**
   This function is used to allocate a filename (full path) from a
-  path_fmt instance: 
+  path_fmt instance:
 
   Eaxample:
 
@@ -191,7 +180,7 @@ char * path_fmt_alloc_path(const path_fmt_type * path , bool auto_mkdir , ...) {
   seriously ugly.
 
   -----------------------------------------------------------------
-  
+
   If auto_mkdir == true the function behaves in two different ways
   depending on whether the path_instance was allocated as a directory
   or as a path:
@@ -213,7 +202,7 @@ char * path_fmt_alloc_file(const path_fmt_type * path , bool auto_mkdir , ...) {
     filename = util_alloc_sprintf_va( path->file_fmt , tmp_va );
     if (auto_mkdir) {
       const char * __path = util_alloc_sprintf_va( path->fmt , tmp_va );
-      if (! util_is_directory(__path)) 
+      if (! util_is_directory(__path))
         util_make_path( __path );
       free((char *) __path );
     }
