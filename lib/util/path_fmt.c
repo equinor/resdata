@@ -134,17 +134,6 @@ path_fmt_type * path_fmt_alloc_path_fmt(const char * fmt) {
 
 
 
-/**
-   Present the user with a prompt, and reads format specifier string
-   from stdin. Currently not possible to specify argument types.
-*/
-
-path_fmt_type * path_fmt_scanf_alloc(const char * prompt , int types , const node_ctype * type_list, bool is_directory) {
-  char * fmt;
-  fmt = util_scanf_alloc_string(prompt);
-  return path_fmt_alloc__(fmt , is_directory);
-}
-
 path_fmt_type * path_fmt_copyc(const path_fmt_type *path) {
   path_fmt_type *new_path = path_fmt_alloc__(path->fmt , path->is_directory);
   return new_path;

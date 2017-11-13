@@ -214,7 +214,7 @@ typedef enum {left_pad   = 0,
   int          util_count_file_lines(FILE * );
   FILE       * util_mkdir_fopen( const char * filename , const char * mode );
   int          util_fmove( FILE * stream , long offset , long shift);
-  FILE       * util_fopen(const char *  , const char *);
+  FILE       * util_fopen(const char *  , const char *); 
   FILE       * util_fopen__(const char * filename , const char * mode);
   void         util_fclose( FILE * stream );
   bool         util_fopen_test(const char *, const char *);
@@ -239,14 +239,7 @@ typedef enum {left_pad   = 0,
   bool         util_sscanf_int(const char * , int * );
   const char * util_parse_int(const char * , int * , bool *);
   const char * util_skip_sep(const char * , const char * , bool *);
-  int          util_scanf_int_with_limits(const char * , int  , int  , int );
-  char       * util_scanf_int_with_limits_return_char(const char * , int  , int  , int );
-  void         util_printf_prompt(const char * , int , char , const char *);
-  int          util_scanf_int(const char * , int);
-  char       * util_scanf_int_return_char(const char * , int);
-  double       util_scanf_double(const char * prompt , int prompt_len);
-  char       * util_scanf_alloc_string(const char * );
-  bool         util_sscanf_double(const char * , double * );
+ bool         util_sscanf_double(const char * , double * );
   //char   * util_alloc_full_path(const char *, const char *);
   char       * util_alloc_filename(const char * , const char *  , const char * );
   char       * util_realloc_filename(char *  , const char *  , const char *  , const char * );
