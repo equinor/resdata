@@ -313,6 +313,7 @@ void field_smspec( std::vector< eclvar >& nodes,
     for ( const auto& var : field_class_vars ) {
         const auto& ecl_kw = "F" + kw_nex2ecl.at( var ); // F for FIELD
         const auto& unit = plt.header.unit_system.unit_str( var );
+        float conversion = plt.header.unit_system.conversion( var );
 
         auto* node = ecl_sum_add_var( ecl_sum, ecl_kw.c_str(), NULL, -1,
                                       unit.c_str(), 0.0);
@@ -323,7 +324,7 @@ void field_smspec( std::vector< eclvar >& nodes,
                       is::varname( var ) );
 
         for (size_t i = 0; i < var_values.size(); i++)
-            nodes.push_back( { node, var_values[i].value, i } );
+            nodes.push_back( { node, var_values[i].value * conversion, i } );
     }
 }
 
@@ -351,13 +352,14 @@ void well_smspec( std::vector< eclvar >& nodes,
     auto instancenames = unique( well, get::instancename_str );
     for ( const auto& well_name : instancenames ) {
         std::vector< NexusData > well_instance;
-        std::copy_if( well_instance.begin(), well_instance.end(),
-                      std::back_inserter( well ),
+        std::copy_if( well.begin(), well.end(),
+                      std::back_inserter( well_instance ),
                       is::instancename( well_name ) );
 
-        for ( const auto& var : well_class_vars) {
+        for ( const auto& var : well_class_vars ) {
             const auto& ecl_kw = "W" + kw_nex2ecl.at( var );
             const auto& unit = plt.header.unit_system.unit_str( var );
+            float conversion = plt.header.unit_system.conversion( var );
 
             auto* node = ecl_sum_add_var( ecl_sum,
                                           ecl_kw.c_str(),
@@ -369,7 +371,7 @@ void well_smspec( std::vector< eclvar >& nodes,
                         is::varname( var ) );
 
             for (size_t i = 0; i < var_values.size(); i++)
-              nodes.push_back( { node, var_values[i].value, i } );
+              nodes.push_back( { node, var_values[i].value * conversion, i } );
         }
     }
 }
