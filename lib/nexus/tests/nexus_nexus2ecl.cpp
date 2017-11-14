@@ -68,7 +68,7 @@ void test_create_ecl_sum(char *root_folder) {
     std::copy_if( data.begin(), data.end(), std::back_inserter( wlpt_values ),
                   []( const nex::NexusData& d ) {
                       return nex::is::classname( "WELL" )(d)
-                             && nex::is::instancename( "1" )(d)
+                             && nex::is::instancename( "2" )(d)
                              && nex::is::varname( "COWP" )(d);
                   });
     std::sort( wlpt_values.begin(), wlpt_values.end(), nex::cmp::timestep );
@@ -88,9 +88,10 @@ void test_create_ecl_sum(char *root_folder) {
                 ecl_sum_get_general_var(ecl_sum_loaded, t, "FOPR"),
                 fopr_values[t].value);
 
+        float conversion = plt.header.unit_system.conversion("COWP");
         test_assert_double_equal(
-                ecl_sum_get_general_var(ecl_sum_loaded, t, "WLPT:1"),
-                wlpt_values[t].value);
+                ecl_sum_get_general_var(ecl_sum_loaded, t, "WLPT:2"),
+                wlpt_values[t].value * conversion);
     }
 
     test_work_area_free(work_area);
