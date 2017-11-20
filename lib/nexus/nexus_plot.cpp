@@ -283,7 +283,7 @@ static const std::map< std::string, std::string > kw_nex2ecl {
 struct eclvar {
     smspec_node_type* node;
     float value;
-    size_t timestep_index;
+    int32_t nexus_timestep;
 };
 
 void field_smspec( std::vector< eclvar >& nodes,
@@ -324,7 +324,8 @@ void field_smspec( std::vector< eclvar >& nodes,
                       is::varname( var ) );
 
         for (size_t i = 0; i < var_values.size(); i++)
-            nodes.push_back( { node, var_values[i].value * conversion, i } );
+            nodes.push_back( { node, var_values[i].value * conversion,
+                               var_values[i].timestep } );
     }
 }
 
@@ -371,7 +372,8 @@ void well_smspec( std::vector< eclvar >& nodes,
                         is::varname( var ) );
 
             for (size_t i = 0; i < var_values.size(); i++)
-              nodes.push_back( { node, var_values[i].value * conversion, i } );
+              nodes.push_back( { node, var_values[i].value * conversion,
+                                 var_values[i].timestep } );
         }
     }
 }
@@ -429,7 +431,12 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
      */
 
     for ( const auto& node : smspec_nodes ) {
-        auto* ts = timesteps[ node.timestep_index ];
+        int32_t nts = node.nexus_timestep;
+        auto dist = std::distance( nex_timesteps.begin(),
+                                   std::find( nex_timesteps.begin(),
+                                              nex_timesteps.end(),
+                                              nts ) );
+        auto* ts = timesteps[ dist ];
         ecl_sum_tstep_set_from_node( ts, node.node, node.value );
     }
 
