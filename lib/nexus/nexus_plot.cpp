@@ -286,7 +286,7 @@ struct eclvar {
     int32_t nexus_timestep;
 };
 
-void field_smspec( std::vector< eclvar >& nodes,
+void field_smspec( std::vector< eclvar >& ecl_values,
                    std::set< std::string >& unknown_varnames,
                    ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
@@ -324,12 +324,12 @@ void field_smspec( std::vector< eclvar >& nodes,
                       is::varname( var ) );
 
         for (size_t i = 0; i < var_values.size(); i++)
-            nodes.push_back( { node, var_values[i].value * conversion,
-                               var_values[i].timestep } );
+            ecl_values.push_back( { node, var_values[i].value * conversion,
+                                    var_values[i].timestep } );
     }
 }
 
-void well_smspec( std::vector< eclvar >& nodes,
+void well_smspec( std::vector< eclvar >& ecl_values,
                    std::set< std::string >& unknown_varnames,
                    ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
@@ -372,8 +372,8 @@ void well_smspec( std::vector< eclvar >& nodes,
                         is::varname( var ) );
 
             for (size_t i = 0; i < var_values.size(); i++)
-              nodes.push_back( { node, var_values[i].value * conversion,
-                                 var_values[i].timestep } );
+              ecl_values.push_back( { node, var_values[i].value * conversion,
+                                      var_values[i].timestep } );
         }
     }
 }
@@ -405,10 +405,11 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
     /*
      * Create ecl smspec nodes
      */
+
     std::set< std::string > unknown_varnames;
-    std::vector< eclvar > smspec_nodes;
-    field_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
-    well_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
+    std::vector< eclvar > ecl_values;
+    field_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
+    well_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
 
     for ( const auto& var : unknown_varnames )
         std::cerr << "Warning: could not convert nexus variable " <<
@@ -430,7 +431,7 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
      * Set ecl data
      */
 
-    for ( const auto& node : smspec_nodes ) {
+    for ( const auto& node : ecl_values ) {
         int32_t nts = node.nexus_timestep;
         auto dist = std::distance( nex_timesteps.begin(),
                                    std::find( nex_timesteps.begin(),
