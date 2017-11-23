@@ -35,7 +35,6 @@ void test_create_ecl_sum(char *root_folder) {
 
     std::stringstream ss;
     ss << root_folder << "/test-data/local/nexus/SPE1.plt";
-    std::cout << ss.str() << std::endl;
     const nex::NexusPlot plt = nex::load(ss.str());
     auto data = plt.data;
 
@@ -83,12 +82,13 @@ void test_create_ecl_sum(char *root_folder) {
     test_assert_int_equal( ecl_sum_get_data_length( ecl_sum_loaded ),
                             timesteps.size());
 
+    float conversion = plt.header.unit_system.conversion("COWP");
+
     for (int t = 0; t < ecl_sum_get_data_length( ecl_sum_loaded ); t++) {
         test_assert_double_equal(
                 ecl_sum_get_general_var(ecl_sum_loaded, t, "FOPR"),
                 fopr_values[t].value);
 
-        float conversion = plt.header.unit_system.conversion("COWP");
         test_assert_double_equal(
                 ecl_sum_get_general_var(ecl_sum_loaded, t, "WLPT:2"),
                 wlpt_values[t].value * conversion);
@@ -98,10 +98,52 @@ void test_create_ecl_sum(char *root_folder) {
 
 }
 
+/**
+ * In nexus, instances aren't present in the dataset before the first timestep
+ * they appare. In the dataset SPE1_delayedWell.plt, the well instance "3" does
+ * not appare before timestep number 5. In ecl, however, the well is present
+ * from the beginning. Because of this, the indices where the data starts is
+ * different in the nex and ecl representations.
+ */
+void test_ecl_timesteps(char *root_folder) {
+    test_work_area_type *work_area = test_work_area_alloc("nexus_timesteps");
+
+    std::stringstream ss;
+    ss << root_folder << "/test-data/local/nexus/SPE1_delayedWell.plt";
+    const nex::NexusPlot plt = nex::load(ss.str());
+    auto data = plt.data;
+
+    ecl_sum_type *ecl_sum = nex::ecl_summary( "ECL_CASE", false, plt );
+    ecl_sum_fwrite( ecl_sum );
+    ecl_sum_free( ecl_sum );
+
+    ecl_sum_type * ecl_sum_loaded = ecl_sum_fread_alloc_case("ECL_CASE", ":");
+    test_assert_true( ecl_sum_has_key(ecl_sum_loaded, "WLPT:3"));
+
+    std::vector< nex::NexusData > wlpt_values;
+    std::copy_if( data.begin(), data.end(), std::back_inserter( wlpt_values ),
+                  []( const nex::NexusData& d ) {
+                      return nex::is::classname( "WELL" )(d)
+                             && nex::is::instancename( "3" )(d)
+                             && nex::is::varname( "COWP" )(d);
+                  });
+    std::sort( wlpt_values.begin(), wlpt_values.end(), nex::cmp::timestep );
+
+    float cowp_conversion = plt.header.unit_system.conversion( "COWP" );
+    test_assert_double_equal( ecl_sum_get_general_var(ecl_sum_loaded, 4, "WLPT:3"), wlpt_values[0].value * cowp_conversion);
+    test_assert_double_equal( ecl_sum_get_general_var(ecl_sum_loaded, 5, "WLPT:3"), wlpt_values[1].value * cowp_conversion);
+    test_assert_double_equal( ecl_sum_get_general_var(ecl_sum_loaded, 6, "WLPT:3"), wlpt_values[2].value * cowp_conversion);
+    test_assert_double_equal( ecl_sum_get_general_var(ecl_sum_loaded, 7, "WLPT:3"), wlpt_values[3].value * cowp_conversion);
+    test_assert_double_equal( ecl_sum_get_general_var(ecl_sum_loaded, 8, "WLPT:3"), wlpt_values[4].value * cowp_conversion);
+    test_assert_double_equal( ecl_sum_get_general_var(ecl_sum_loaded, 9, "WLPT:3"), wlpt_values[5].value * cowp_conversion);
+
+    test_work_area_free(work_area);
+}
 
 
 int main(int argc, char **argv) {
     util_install_signals();
     test_create_ecl_sum(argv[1]);
+    test_ecl_timesteps(argv[1]);
     exit(0);
 }

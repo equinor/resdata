@@ -256,37 +256,37 @@ namespace {
    letter of the class they are from. For example for FIELD data they should be
    prefixed with F, and for well, W. */
 static const std::map< std::string, std::string > kw_nex2ecl {
-    {"QOP" , "OPR" },
-    {"QWP" , "WPR" },
-    {"QGP" , "GPR" },
-    {"GOR" , "GOR" },
-    {"WCUT", "WCT" },
-    {"COP" , "OPT" },
-    {"CWP" , "WPT" },
-    {"CGP" , "GPT" },
-    {"QWI" , "WIR" },
-    {"QGI" , "GIR" },
-    {"CWI" , "WIT" },
-    {"CGI" , "GIT" },
-    {"QPP" , "CPR" },
-    {"CPP" , "CPC" },
-    {"COWP", "LPT" },
-    {"QOWP", "LPR" },
-    {"GOR" , "GOR" },
-    {"PRDW", "MWPT"},
-    {"CCPP", "CPT" },
-    {"CCPI", "CIT" },
-    {"QPI" , "CIR" },
-    {"CPI" , "CIC" }
+    { "QOP" , "OPR" },
+    { "QWP" , "WPR" },
+    { "QGP" , "GPR" },
+    { "GOR" , "GOR" },
+    { "WCUT", "WCT" },
+    { "COP" , "OPT" },
+    { "CWP" , "WPT" },
+    { "CGP" , "GPT" },
+    { "QWI" , "WIR" },
+    { "QGI" , "GIR" },
+    { "CWI" , "WIT" },
+    { "CGI" , "GIT" },
+    { "QPP" , "CPR" },
+    { "CPP" , "CPC" },
+    { "COWP", "LPT" },
+    { "QOWP", "LPR" },
+    { "GOR" , "GOR" },
+    { "PRDW", "MWPT"},
+    { "CCPP", "CPT" },
+    { "CCPI", "CIT" },
+    { "QPI" , "CIR" },
+    { "CPI" , "CIC" }
 };
 
 struct eclvar {
     smspec_node_type* node;
     float value;
-    size_t timestep_index;
+    int32_t nexus_timestep;
 };
 
-void field_smspec( std::vector< eclvar >& nodes,
+void field_smspec( std::vector< eclvar >& ecl_values,
                    std::set< std::string >& unknown_varnames,
                    ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
@@ -324,11 +324,12 @@ void field_smspec( std::vector< eclvar >& nodes,
                       is::varname( var ) );
 
         for (size_t i = 0; i < var_values.size(); i++)
-            nodes.push_back( { node, var_values[i].value * conversion, i } );
+            ecl_values.push_back( { node, var_values[i].value * conversion,
+                                    var_values[i].timestep } );
     }
 }
 
-void well_smspec( std::vector< eclvar >& nodes,
+void well_smspec( std::vector< eclvar >& ecl_values,
                    std::set< std::string >& unknown_varnames,
                    ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
@@ -371,7 +372,8 @@ void well_smspec( std::vector< eclvar >& nodes,
                         is::varname( var ) );
 
             for (size_t i = 0; i < var_values.size(); i++)
-              nodes.push_back( { node, var_values[i].value * conversion, i } );
+              ecl_values.push_back( { node, var_values[i].value * conversion,
+                                      var_values[i].timestep } );
         }
     }
 }
@@ -403,10 +405,11 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
     /*
      * Create ecl smspec nodes
      */
+
     std::set< std::string > unknown_varnames;
-    std::vector< eclvar > smspec_nodes;
-    field_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
-    well_smspec( smspec_nodes, unknown_varnames, ecl_sum, plt );
+    std::vector< eclvar > ecl_values;
+    field_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
+    well_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
 
     for ( const auto& var : unknown_varnames )
         std::cerr << "Warning: could not convert nexus variable " <<
@@ -428,8 +431,13 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
      * Set ecl data
      */
 
-    for ( const auto& node : smspec_nodes ) {
-        auto* ts = timesteps[ node.timestep_index ];
+    for ( const auto& node : ecl_values ) {
+        int32_t nts = node.nexus_timestep;
+        auto dist = std::distance( nex_timesteps.begin(),
+                                   std::find( nex_timesteps.begin(),
+                                              nex_timesteps.end(),
+                                              nts ) );
+        auto* ts = timesteps[ dist ];
         ecl_sum_tstep_set_from_node( ts, node.node, node.value );
     }
 
