@@ -277,7 +277,14 @@ static const std::map< std::string, std::string > kw_nex2ecl {
     { "CCPP", "CPT" },
     { "CCPI", "CIT" },
     { "QPI" , "CIR" },
-    { "CPI" , "CIC" }
+    { "CPI" , "CIC" },
+    { "BHP" , "BHP" },
+    { "THP" , "THP" },
+    { "WPAV", "BP"  },
+    { "OIP" , "OIP" },
+    { "WIP" , "WIP" },
+    { "GIP" , "GIP" },
+    { "PAVH", "PR"  },
 };
 
 struct eclvar {

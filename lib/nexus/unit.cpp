@@ -99,7 +99,14 @@ varname_to_measure = {
     {"CCPP", UnitSystem::Measure::surface_volumes_liquid },
     {"CCPI", UnitSystem::Measure::surface_volumes_liquid },
     {"QPI" , UnitSystem::Measure::surface_rates_liquid   },
-    {"CPI" , UnitSystem::Measure::concentration          }
+    {"CPI" , UnitSystem::Measure::concentration          },
+    {"BHP" , UnitSystem::Measure::pressure               },
+    {"THP" , UnitSystem::Measure::pressure               },
+    {"WPAV", UnitSystem::Measure::pressure               },
+    {"OIP" , UnitSystem::Measure::surface_volumes_liquid },
+    {"WIP" , UnitSystem::Measure::surface_volumes_liquid },
+    {"GIP" , UnitSystem::Measure::surface_volumes_gas    },
+    {"PAVH", UnitSystem::Measure::pressure               }
 };
 
 
