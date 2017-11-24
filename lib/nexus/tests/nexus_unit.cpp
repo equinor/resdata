@@ -90,11 +90,11 @@ void test_metric_conversions() {
     test_single_conversion( u, nex::UnitSystem::Measure::pressure,                    dist(gen), 1.0f    );
     test_single_conversion( u, nex::UnitSystem::Measure::pressure_absolute,           dist(gen), 1.0f    );
     test_single_conversion( u, nex::UnitSystem::Measure::reservoir_rates,             dist(gen), 1.0f    );
-    test_single_conversion( u, nex::UnitSystem::Measure::reservoir_volumes,           dist(gen), 1000.0f );
+    test_single_conversion( u, nex::UnitSystem::Measure::reservoir_volumes,           dist(gen), 1.0f    );
     test_single_conversion( u, nex::UnitSystem::Measure::surface_rates_gas,           dist(gen), 1.0f    );
     test_single_conversion( u, nex::UnitSystem::Measure::surface_rates_liquid,        dist(gen), 1.0f    );
-    test_single_conversion( u, nex::UnitSystem::Measure::surface_volumes_gas,         dist(gen), 1000.0f );
-    test_single_conversion( u, nex::UnitSystem::Measure::surface_volumes_liquid,      dist(gen), 1000.0f );
+    test_single_conversion( u, nex::UnitSystem::Measure::surface_volumes_gas,         dist(gen), 1.0f    );
+    test_single_conversion( u, nex::UnitSystem::Measure::surface_volumes_liquid,      dist(gen), 1.0f    );
     test_single_conversion( u, nex::UnitSystem::Measure::temperature,                 dist(gen), 1.0f    );
     test_single_conversion( u, nex::UnitSystem::Measure::time,                        dist(gen), 1.0f    );
     test_single_conversion( u, nex::UnitSystem::Measure::viscosity,                   dist(gen), 1.0f    );
