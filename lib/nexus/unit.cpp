@@ -64,11 +64,11 @@ static const constexpr float conversion_table
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* pressure                    */
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* pressure_absolute           */
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* reservoir_rates             */
-    { 0.0f, 0.0f, 0.0f, 0.0f, 1000.0f }, /* reservoir_volumes           */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* reservoir_volumes           */
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* surface_rates_gas           */
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* surface_rates_liquid        */
-    { 0.0f, 0.0f, 0.0f, 0.0f, 1000.0f }, /* surface_volumes_gas         */
-    { 0.0f, 0.0f, 0.0f, 0.0f, 1000.0f }, /* surface_volumes_liquid      */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* surface_volumes_gas         */
+    { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* surface_volumes_liquid      */
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* temperature                 */
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* time                        */
     { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f    }, /* viscosity                   */
