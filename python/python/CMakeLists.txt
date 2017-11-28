@@ -1,6 +1,6 @@
 configure_file(test_env.py.in   ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}/test_env.py )
 
-if (NOT PY_cwrap)
+if (INSTALL_CWRAP)
     add_subdirectory(cwrap)
 endif ()
 
