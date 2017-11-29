@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'ecl_pack.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'ecl_pack.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdlib.h>
@@ -24,7 +24,7 @@
 
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_endian_flip.h>   
+#include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_type.h>
 
 
@@ -50,7 +50,7 @@ int main(int argc, char ** argv) {
     }
     util_alloc_file_components( argv[1] , &path , &ecl_base , NULL);
 
-    
+
     /**
        Will pack to cwd, even though the source files might be
        somewhere else. To unpack to the same directory as the source
@@ -69,14 +69,14 @@ int main(int argc, char ** argv) {
       if (target_type == ECL_UNIFIED_RESTART_FILE) {
         int dummy;
         seqnum_kw = ecl_kw_alloc_new("SEQNUM" , 1 , ECL_INT , &dummy);
-      } 
-      
+      }
+
       {
         char * msg_format = util_alloc_sprintf("Packing %s <= " , target_file_name);
         msg = msg_alloc( msg_format , false);
         free( msg_format );
       }
-      
+
 
       msg_show( msg );
       stringlist_sort( filelist , ecl_util_fname_report_cmp);
@@ -87,7 +87,7 @@ int main(int argc, char ** argv) {
         if (this_file_type == file_type) {
           if (report_step == prev_report_step)
             util_exit("Tried to write same report step twice: %s / %s \n",
-                      stringlist_iget(filelist , i-1) , 
+                      stringlist_iget(filelist , i-1) ,
                       stringlist_iget(filelist , i));
 
           prev_report_step = report_step;
@@ -114,4 +114,4 @@ int main(int argc, char ** argv) {
     util_safe_free(path);
   }
 }
-  
+
