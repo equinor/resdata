@@ -23,7 +23,6 @@
 #include <ert/util/set.h>
 #include <ert/util/util.h>
 #include <ert/util/hash.h>
-#include <ert/util/msg.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fortio.h>

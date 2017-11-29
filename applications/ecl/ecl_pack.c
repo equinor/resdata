@@ -20,7 +20,6 @@
 
 #include <ert/util/util.h>
 #include <ert/util/stringlist.h>
-#include <ert/util/msg.h>
 
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_util.h>
@@ -59,7 +58,6 @@ int main(int argc, char ** argv) {
     */
 
     {
-      msg_type * msg;
       int i , report_step , prev_report_step;
       char *  target_file_name   = ecl_util_alloc_filename( NULL , ecl_base , target_type , fmt_file , -1);
       stringlist_type * filelist = stringlist_alloc_argv_copy( (const char **) &argv[1] , num_files );
@@ -71,14 +69,6 @@ int main(int argc, char ** argv) {
         seqnum_kw = ecl_kw_alloc_new("SEQNUM" , 1 , ECL_INT , &dummy);
       }
 
-      {
-        char * msg_format = util_alloc_sprintf("Packing %s <= " , target_file_name);
-        msg = msg_alloc( msg_format , false);
-        free( msg_format );
-      }
-
-
-      msg_show( msg );
       stringlist_sort( filelist , ecl_util_fname_report_cmp);
       prev_report_step = -1;
       for (i=0; i < num_files; i++) {
@@ -91,7 +81,6 @@ int main(int argc, char ** argv) {
                       stringlist_iget(filelist , i));
 
           prev_report_step = report_step;
-          msg_update(msg , stringlist_iget( filelist , i));
           {
             ecl_file_type * src_file = ecl_file_open( stringlist_iget( filelist , i) , 0 );
             if (target_type == ECL_UNIFIED_RESTART_FILE) {
@@ -104,7 +93,6 @@ int main(int argc, char ** argv) {
           }
         }  /* Else skipping file of incorrect type. */
       }
-      msg_free(msg , false);
       fortio_fclose( target );
       free(target_file_name);
       stringlist_free( filelist );

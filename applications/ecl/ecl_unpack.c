@@ -19,7 +19,6 @@
 #include <stdbool.h>
 
 #include <ert/util/util.h>
-#include <ert/util/msg.h>
 
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_util.h>
@@ -50,14 +49,7 @@ void unpack_file(const char * filename) {
     int    block_index = 0;
     char * path;
     char * base;
-    msg_type * msg;
     util_alloc_file_components( filename , &path , &base , NULL);
-    {
-      char * label  = util_alloc_sprintf("Unpacking %s => ", filename);
-      msg = msg_alloc( label , false);
-      free( label );
-    }
-    msg_show(msg);
 
     if (target_type == ECL_SUMMARY_FILE)
       size = ecl_file_get_num_named_kw( src_file , "SEQHDR" );
@@ -93,7 +85,6 @@ void unpack_file(const char * filename) {
       {
         char * target_file = ecl_util_alloc_filename( NULL , base , target_type , fmt_file , report_step);
         fortio_type * fortio_target = fortio_open_writer( target_file , fmt_file , ECL_ENDIAN_FLIP );
-        msg_update(msg , target_file);
         ecl_file_view_fwrite( active_view , fortio_target , offset);
 
         fortio_fclose(fortio_target);
@@ -104,7 +95,6 @@ void unpack_file(const char * filename) {
     ecl_file_close( src_file );
     util_safe_free(path);
     free(base);
-    msg_free(msg , true);
   }
 }
 
