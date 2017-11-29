@@ -303,7 +303,9 @@ values (2e20) are denoted with '*'.
 #define INTEHEAD_TIMESTEP_INDEX 67
 #define INTEHEAD_REPORT_STEP    68
 #define INTEHEAD_IPROG_INDEX    94
-#define INTEHEAD_REPORT_INDEX   219 (report_steps-1)
+
+// The value seems to be: report_step - 1; might be previous?
+#define INTEHEAD_REPORT_INDEX   219
 
 
 #define INTEHEAD_METRIC_VALUE              1
