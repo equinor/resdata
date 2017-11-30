@@ -254,3 +254,26 @@ class EclFileTest(ExtendedTestCase):
             #self.assertTrue( "HEADER" in view )
             #self.assertTrue( "DATA1" in view )
             #self.assertFalse( "DATA2" in view )
+
+
+    def test_error(self):
+        with TestAreaContext("python/ecl_file/error"):
+            kw1 = EclKW("KW1", 1000, EclDataType.ECL_INT)
+            kw2 = EclKW("KW2", 100, EclDataType.ECL_INT)
+            kw3 = EclKW("KW3", 1000, EclDataType.ECL_INT)
+
+            with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
+                kw1.fwrite(f)
+                kw2.fwrite(f)
+                kw3.fwrite(f)
+
+            with open("TEST", "a") as f:
+                f.write("SomethingExtra")
+
+            with self.assertRaises(IOError):
+                f = EclFile("TEST")
+
+            f = EclFile("TEST", ignore_errors=True)
+            self.assertEqual(len(f), 3)
+            self.assertIn("KW1", f)
+            self.assertIn("KW3", f)

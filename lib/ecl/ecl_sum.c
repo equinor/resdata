@@ -167,17 +167,17 @@ static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key
 }
 
 
-static bool ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type * data_files , bool include_restart) {
+static bool ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type * data_files , bool include_restart, bool ignore_errors) {
   if (ecl_sum->data != NULL)
     ecl_sum_free_data( ecl_sum );
 
   ecl_sum->data = ecl_sum_data_alloc( ecl_sum->smspec );
-  return ecl_sum_data_fread( ecl_sum->data , data_files);
+  return ecl_sum_data_fread( ecl_sum->data , data_files, ignore_errors);
 }
 
 
-static void ecl_sum_fread_history( ecl_sum_type * ecl_sum ) {
-  ecl_sum_type * history = ecl_sum_fread_alloc_case__( ecl_smspec_get_restart_case( ecl_sum->smspec ) , ":" , true);
+static void ecl_sum_fread_history( ecl_sum_type * ecl_sum, bool ignore_errors ) {
+  ecl_sum_type * history = ecl_sum_fread_alloc_case__( ecl_smspec_get_restart_case( ecl_sum->smspec ) , ":" , true, ignore_errors);
   if (history) {
     ecl_sum_data_add_case(ecl_sum->data , history->data );
     ecl_sum_free( history );
@@ -186,7 +186,7 @@ static void ecl_sum_fread_history( ecl_sum_type * ecl_sum ) {
 
 
 
-static bool ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , const stringlist_type *data_files , bool include_restart) {
+static bool ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , const stringlist_type *data_files , bool include_restart, bool ignore_errors) {
   ecl_sum->smspec = ecl_smspec_fread_alloc( header_file , ecl_sum->key_join_string , include_restart);
   if (ecl_sum->smspec) {
     bool fmt_file;
@@ -195,7 +195,7 @@ static bool ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , con
   } else
     return false;
 
-  if (ecl_sum_fread_data( ecl_sum , data_files , include_restart )) {
+  if (ecl_sum_fread_data( ecl_sum , data_files , include_restart, ignore_errors )) {
     ecl_file_enum file_type = ecl_util_get_file_type( stringlist_iget( data_files , 0 ) , NULL , NULL);
 
     if (file_type == ECL_SUMMARY_FILE)
@@ -208,13 +208,13 @@ static bool ecl_sum_fread(ecl_sum_type * ecl_sum , const char *header_file , con
     return false;
 
   if (include_restart && ecl_smspec_get_restart_case( ecl_sum->smspec ))
-    ecl_sum_fread_history( ecl_sum );
+    ecl_sum_fread_history( ecl_sum, ignore_errors );
 
   return true;
 }
 
 
-static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
+static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart, bool ignore_errors) {
   char * header_file;
   stringlist_type * summary_file_list = stringlist_alloc_new();
 
@@ -222,7 +222,7 @@ static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
 
   ecl_util_alloc_summary_files( ecl_sum->path , ecl_sum->base , ecl_sum->ext , &header_file , summary_file_list );
   if ((header_file != NULL) && (stringlist_get_size( summary_file_list ) > 0)) {
-    caseOK = ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart );
+    caseOK = ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart , ignore_errors);
   }
   util_safe_free( header_file );
   stringlist_free( summary_file_list );
@@ -242,15 +242,20 @@ static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
 */
 
 
-ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
+ecl_sum_type * ecl_sum_fread_alloc__(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart, bool ignore_errors) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc__( header_file , key_join_string );
-  if (!ecl_sum_fread( ecl_sum , header_file , data_files , include_restart)) {
+  if (!ecl_sum_fread( ecl_sum , header_file , data_files , include_restart, ignore_errors)) {
     ecl_sum_free( ecl_sum );
     ecl_sum = NULL;
   }
   return ecl_sum;
 }
 
+
+ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
+  bool ignore_errors = false;
+  return ecl_sum_fread_alloc__(header_file, data_files, key_join_string, include_restart, ignore_errors);
+}
 /*****************************************************************/
 
 void ecl_sum_set_unified( ecl_sum_type * ecl_sum , bool unified ) {
@@ -389,9 +394,9 @@ void ecl_sum_free__(void * __ecl_sum) {
 */
 
 
-ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart){
+ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart, bool ignore_errors){
   ecl_sum_type * ecl_sum     = ecl_sum_alloc__(input_file , key_join_string);
-  if (ecl_sum_fread_case( ecl_sum , include_restart))
+  if (ecl_sum_fread_case( ecl_sum , include_restart, ignore_errors))
     return ecl_sum;
   else {
     /*
@@ -407,7 +412,8 @@ ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char *
 
 ecl_sum_type * ecl_sum_fread_alloc_case(const char * input_file , const char * key_join_string){
   bool include_restart = true;
-  return ecl_sum_fread_alloc_case__( input_file , key_join_string , include_restart );
+  bool ignore_errors = false;
+  return ecl_sum_fread_alloc_case__( input_file , key_join_string , include_restart, ignore_errors );
 }
 
 

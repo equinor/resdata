@@ -138,6 +138,7 @@ struct ecl_file_struct {
   int             flags;
   vector_type   * map_stack;
   inv_map_type  * inv_view;
+  bool            input_error;
 };
 
 
@@ -180,9 +181,10 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file , ECL_FILE_ID)
 ecl_file_type * ecl_file_alloc_empty( int flags ) {
   ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file );
   UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
-  ecl_file->map_stack = vector_alloc_new();
-  ecl_file->inv_view  = inv_map_alloc( );
-  ecl_file->flags     = flags;
+  ecl_file->map_stack   = vector_alloc_new();
+  ecl_file->inv_view    = inv_map_alloc( );
+  ecl_file->flags       = flags;
+  ecl_file->input_error = false;
   return ecl_file;
 }
 
@@ -512,41 +514,45 @@ ecl_file_view_type * ecl_file_get_summary_view( ecl_file_type * ecl_file , int r
    map.
 */
 
-static bool ecl_file_scan( ecl_file_type * ecl_file ) {
-  bool scan_ok = false;
+static void ecl_file_scan( ecl_file_type * ecl_file) {
   fortio_fseek( ecl_file->fortio , 0 , SEEK_SET );
   {
     ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT , NULL);
 
     while (true) {
-      if (fortio_read_at_eof(ecl_file->fortio)) {
-        scan_ok = true;
+      if (fortio_read_at_eof(ecl_file->fortio))
         break;
-      }
 
       {
         offset_type current_offset = fortio_ftell( ecl_file->fortio );
         ecl_read_status_enum read_status = ecl_kw_fread_header( work_kw , ecl_file->fortio);
-        if (read_status == ECL_KW_READ_FAIL)
+        if (read_status == ECL_KW_READ_FAIL) {
+          ecl_file->input_error = true;
           break;
+        }
 
         if (read_status == ECL_KW_READ_OK) {
           ecl_file_kw_type * file_kw = ecl_file_kw_alloc( work_kw , current_offset);
           if (ecl_file_kw_fskip_data( file_kw , ecl_file->fortio ))
             ecl_file_view_add_kw( ecl_file->global_view , file_kw );
-          else
+          else {
+            ecl_file->input_error = true;
             break;
+          }
         }
       }
     }
 
     ecl_kw_free( work_kw );
   }
-  if (scan_ok)
-    ecl_file_view_make_index( ecl_file->global_view );
-
-  return scan_ok;
+  ecl_file_view_make_index( ecl_file->global_view );
 }
+
+
+bool ecl_file_valid_input( const ecl_file_type * ecl_file) {
+  return !ecl_file->input_error;
+}
+
 
 
 void ecl_file_select_global( ecl_file_type * ecl_file ) {
@@ -574,6 +580,7 @@ static fortio_type * ecl_file_alloc_fortio(const char * filename, int flags) {
   ecl_util_fmt_file( filename , &fmt_file);
 
   if (ecl_file_view_check_flags(flags , ECL_FILE_WRITABLE))
+
     fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
   else
     fortio = fortio_open_reader( filename , fmt_file , ECL_ENDIAN_FLIP);
@@ -582,7 +589,7 @@ static fortio_type * ecl_file_alloc_fortio(const char * filename, int flags) {
 }
 
 
-ecl_file_type * ecl_file_open( const char * filename , int flags) {
+ecl_file_type * ecl_file_open__( const char * filename , bool ignore_errors, int flags) {
   fortio_type * fortio = ecl_file_alloc_fortio(filename, flags);
 
   if (fortio) {
@@ -590,11 +597,15 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
     ecl_file->fortio = fortio;
     ecl_file->global_view = ecl_file_view_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_view , true );
 
-    if (ecl_file_scan( ecl_file )) {
+    ecl_file_scan( ecl_file );
+    if ((ecl_file_valid_input( ecl_file ) || ignore_errors)) {
       ecl_file_select_global( ecl_file );
 
       if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
         fortio_fclose_stream( ecl_file->fortio );
+
+      if (!ecl_file_valid_input( ecl_file ))
+        fprintf(stderr,"** Warning: errors were encountered while reading: %s - data has been ignored\n", filename);
 
       return ecl_file;
     } else {
@@ -607,6 +618,9 @@ ecl_file_type * ecl_file_open( const char * filename , int flags) {
 
 
 
+ecl_file_type * ecl_file_open( const char * filename ,  int flags) {
+  return ecl_file_open__(filename, false, flags);
+}
 
 
 int ecl_file_get_flags( const ecl_file_type * ecl_file ) {

@@ -199,9 +199,9 @@ int main(int argc , char ** argv) {
       ecl_sum_type * ecl_sum;
       int            num_keys  = argc - arg_offset - 1;
       const char  ** arg_list  = (const char **) &argv[arg_offset + 1];
+      bool ignore_errors = false;
 
-
-      ecl_sum = ecl_sum_fread_alloc_case__( data_file , ":" , include_restart);
+      ecl_sum = ecl_sum_fread_alloc_case__( data_file , ":" , include_restart, ignore_errors);
       /** If no keys have been presented the function will list available keys. */
       if (num_keys == 0)
         list_mode = true;

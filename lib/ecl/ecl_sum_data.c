@@ -969,7 +969,7 @@ static bool ecl_sum_data_check_file( ecl_file_type * ecl_file ) {
   call to ecl_sum_data_build_index().
 */
 
-static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , const stringlist_type * filelist) {
+static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , const stringlist_type * filelist, bool ignore_errors) {
   if (stringlist_get_size( filelist ) == 0)
     return false;
 
@@ -999,7 +999,7 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
           }
         }
       } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
-        ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
+        ecl_file_type * ecl_file = ecl_file_open__( stringlist_iget(filelist ,0 ) , 0, ignore_errors);
         if (ecl_file && ecl_sum_data_check_file( ecl_file )) {
           int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
           while (true) {
@@ -1031,8 +1031,8 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
   }
 }
 
-bool ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist) {
-  return ecl_sum_data_fread__( data , 0 , filelist );
+bool ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist, bool ignore_errors) {
+  return ecl_sum_data_fread__( data , 0 , filelist, ignore_errors );
 }
 
 
@@ -1045,7 +1045,8 @@ static time_t ecl_sum_data_get_load_end( const ecl_sum_data_type * data ) {
 
 void ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_type * filelist) {
   time_t load_end = ecl_sum_data_get_load_end( data );
-  ecl_sum_data_fread__( data , load_end , filelist );
+  bool ignore_errors = false;
+  ecl_sum_data_fread__( data , load_end , filelist, ignore_errors );
 }
 
 
@@ -1061,8 +1062,9 @@ void ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_typ
 */
 
 ecl_sum_data_type * ecl_sum_data_fread_alloc( ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
+  bool ignore_errors = false;
   ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
-  ecl_sum_data_fread__( data , 0 , filelist );
+  ecl_sum_data_fread__( data , 0 , filelist, ignore_errors );
 
   /*****************************************************************/
   /* OK - now we have loaded all the data. Must sort the internal

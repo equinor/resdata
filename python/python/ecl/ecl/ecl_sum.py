@@ -86,7 +86,7 @@ def date2num(dt):
 
 class EclSum(BaseCClass):
     TYPE_NAME = "ecl_sum"
-    _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
+    _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool, bool)", bind=False)
     _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
     _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer(char*, char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
     _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
@@ -140,7 +140,7 @@ class EclSum(BaseCClass):
 
 
 
-    def __init__(self, load_case, join_string=":", include_restart=True):
+    def __init__(self, load_case, join_string=":", include_restart=True, ignore_errors=False):
         """
         Loads a new EclSum instance with summary data.
 
@@ -157,10 +157,14 @@ class EclSum(BaseCClass):
         If the @include_restart parameter is set to true the summary
         loader will, in the case of a restarted ECLIPSE simulation,
         try to load summary results also from the restarted case.
+
+        If the @ignore_errors parameter is set to True the summary
+        loader will ignore errors in summary data file (UNSMRY or .Snnnn files),
+
         """
         if not load_case:
             raise ValueError('load_case must be the basename of the simulation')
-        c_pointer = self._fread_alloc_case(load_case, join_string, include_restart)
+        c_pointer = self._fread_alloc_case(load_case, join_string, include_restart, ignore_errors)
         if c_pointer is None:
             raise IOError("Failed to create summary instance from argument:%s" % load_case)
 
