@@ -341,6 +341,7 @@ values (2e20) are denoted with '*'.
 #define LOGIHEAD_REV_ENDPOINT_SCALING_INDEX        18
 #define LOGIHEAD_ALT_ENDPOINT_SCALING_INDEX        19
 #define LOGIHEAD_MISC_DISPLACEMENT_INDEX           35
+#define LOGIHEAD_CONSTANT_OILCOMPR_INDEX          (39-1) /* Constant oil compressibility (PVCDO)? */
 #define LOGIHEAD_SCALE_WATER_PC_AT_MAX_SAT_INDEX   55
 #define LOGIHEAD_SCALE_GAS_PC_AT_MAX_SAT_INDEX     56
 
