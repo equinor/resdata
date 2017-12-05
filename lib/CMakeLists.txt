@@ -93,7 +93,6 @@ add_library(ecl util/rng.c
                 util/util_symlink.c
                 util/util_lfs.c
                 util/util_unlink.c
-                util/msg.c
                 util/arg_pack.c
                 util/path_fmt.c
                 util/vector.c
