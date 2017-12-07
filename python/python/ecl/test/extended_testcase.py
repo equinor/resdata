@@ -19,14 +19,8 @@ SOURCE_ROOT = None
 BUILD_ROOT = None
 try:
     from test_env import *
-    assert( os.path.isdir( TESTDATA_ROOT ))
-    assert( os.path.isdir( SOURCE_ROOT ))
-    assert( os.path.isdir( BUILD_ROOT ))
-    if not SHARE_ROOT is None:
-        assert( os.path.isdir( SHARE_ROOT ))
 except ImportError:
-    sys.stderr.write("Warning: could not import file test_env.py - this might lead to test failures.")
-
+    pass
 
 # Function wrapper which can be used to add decorator @log_test to test
 # methods. When a test has been decorated with @log_test it will print
