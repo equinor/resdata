@@ -36,6 +36,8 @@ R"(Usage:
   nex2ecl -h | --help
 Options:
   -f --format                Format the output.
+  -F --field <field_name>    Specify which field <field_name> in a multifield
+                             dataset to output. Defaults to FIELD.
   -h --help                  Show this screen.
   -o --output <file>|<path>  Write output to files with basename <file> or place
                              output at <path>. The argument is considered a
@@ -45,6 +47,7 @@ Options:
 
 static struct option long_options[] = {
     {"format", no_argument,       nullptr, 'f'},
+    {"field",  required_argument, nullptr, 'F'},
     {"help",   no_argument,       nullptr, 'h'},
     {"output", required_argument, nullptr, 'o'}
 };
@@ -53,7 +56,8 @@ static struct option long_options[] = {
 
 void create_ecl_sum( std::string input_path,
                      std::string output_path,
-                     bool format_output ) {
+                     std::string field_name,
+                     bool format_output) {
     auto ending = input_path.rfind(".plt");
     if (ending == std::string::npos) {
         input_path += ".plt";
@@ -101,9 +105,9 @@ void create_ecl_sum( std::string input_path,
     }
 
     nex::NexusPlot plt = nex::load( input_path );
-    ecl_sum_type *ecl_sum = nex::ecl_summary( ecl_case_name.c_str(),
-                                              format_output,
-                                              plt );
+    ecl_sum_type *ecl_sum = field_name.empty()
+        ? nex::ecl_summary( ecl_case_name.c_str(), format_output, plt )
+        : nex::ecl_summary( ecl_case_name.c_str(), format_output, plt, field_name );
     ecl_sum_fwrite(ecl_sum);
     ecl_sum_free(ecl_sum);
 }
@@ -117,13 +121,14 @@ int main( int argc, char **argv ) {
     bool format_output = false;
     std::string output_path {};
     std::string input_path {};
+    std::string field_name {};
 
     /*
      * Parse options
      */
 
     for (;;) {
-        int c = getopt_long (argc, argv, "fho:", long_options, 0);
+        int c = getopt_long (argc, argv, "fF:ho:", long_options, 0);
         if (c == -1) // No more options
             break;
 
@@ -132,6 +137,9 @@ int main( int argc, char **argv ) {
             break;
         case 'f':
             format_output = true;
+            break;
+        case 'F':
+            field_name = std::string( optarg );
             break;
         case 'h':
             std::cout << help;
@@ -153,7 +161,7 @@ int main( int argc, char **argv ) {
     input_path = std::string( argv[optind] );
 
     try {
-        create_ecl_sum( input_path, output_path, format_output );
+        create_ecl_sum( input_path, output_path, field_name, format_output );
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

@@ -83,7 +83,8 @@ struct NexusPlot {
 
 NexusPlot load( const std::string& );
 ecl_sum_type* ecl_summary( const std::string&, bool format_output,
-                           const NexusPlot& );
+                           const NexusPlot&,
+                           const std::string field_name = "FIELD" );
 
 }
 

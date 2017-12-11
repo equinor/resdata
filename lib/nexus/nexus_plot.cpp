@@ -293,7 +293,8 @@ struct eclvar {
     int32_t nexus_timestep;
 };
 
-void field_smspec( std::vector< eclvar >& ecl_values,
+void field_smspec( const std::string& field_name,
+                   std::vector< eclvar >& ecl_values,
                    std::set< std::string >& unknown_varnames,
                    ecl_sum_type* ecl_sum,
                    const NexusPlot& plt ) {
@@ -302,11 +303,14 @@ void field_smspec( std::vector< eclvar >& ecl_values,
 
     std::vector< NexusData > field;
     std::copy_if( data.begin(), data.end(), std::back_inserter( field ),
-                  []( const NexusData& nd ) {
+                  [ &field_name ]( const NexusData& nd ) {
                       return is::classname( "FIELD" )(nd)
-                          && is::instancename( "NETWORK" )(nd);
+                          && is::instancename( field_name )(nd);
                   });
     std::sort( field.begin(), field.end(), cmp::timestep );
+    if (field.empty())
+        throw std::invalid_argument( "No field named " + field_name +
+                ".\nTry -F <field_name> to specify a field." );
 
     /* Only keep entries we have translations for */
     auto field_class_vars = varnames( plt, "FIELD" );
@@ -390,7 +394,8 @@ void well_smspec( std::vector< eclvar >& ecl_values,
 
 ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
                                bool format_output,
-                               const NexusPlot& plt) {
+                               const NexusPlot& plt,
+                               const std::string field_name) {
     bool unified = true;
     const char* key_join_string = ":";
     std::time_t sim_start = util_make_date_utc( plt.header.day,
@@ -415,7 +420,7 @@ ecl_sum_type* nex::ecl_summary(const std::string& ecl_case,
 
     std::set< std::string > unknown_varnames;
     std::vector< eclvar > ecl_values;
-    field_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
+    field_smspec( field_name, ecl_values, unknown_varnames, ecl_sum, plt );
     well_smspec( ecl_values, unknown_varnames, ecl_sum, plt );
 
     for ( const auto& var : unknown_varnames )
