@@ -22,7 +22,7 @@
 #include <iostream>
 
 #include <ert/util/test_work_area.h>
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 
 #include <ert/util/util.h>
 #include <ert/ecl/ecl_sum.h>
@@ -140,10 +140,26 @@ void test_ecl_timesteps(char *root_folder) {
     test_work_area_free(work_area);
 }
 
+void test_multiple_field(char *root_folder) {
+
+    std::stringstream ss;
+    ss << root_folder << "/test-data/local/nexus/SPE1.plt";
+    const nex::NexusPlot plt = nex::load(ss.str());
+
+
+    /* Check data */
+    ecl_sum_type *ecl_sum1 = nex::ecl_summary( "ECL_CASE", false, plt, "FIELD" );
+    ecl_sum_type *ecl_sum2 = nex::ecl_summary( "ECL_CASE", false, plt, "NETWORK" );
+    test_assert_throw(nex::ecl_summary( "ECL_CASE", false, plt, "INVALID" ), std::invalid_argument);
+
+
+}
+
 
 int main(int argc, char **argv) {
     util_install_signals();
     test_create_ecl_sum(argv[1]);
     test_ecl_timesteps(argv[1]);
+    test_multiple_field(argv[1]);
     exit(0);
 }
