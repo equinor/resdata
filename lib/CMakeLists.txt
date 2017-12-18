@@ -70,10 +70,6 @@ if (ERT_BUILD_CXX)
 )
 endif ()
 
-if (BUILD_NEXUS)
-    list(APPEND opt_srcs nexus/nexus_plot.cpp
-                         nexus/unit.cpp)
-endif ()
 
 configure_file(build_config.h.in   include/ert/util/build_config.h)
 configure_file(ert_api_config.h.in include/ert/util/ert_api_config.h)
@@ -188,7 +184,6 @@ target_include_directories(ecl
     PRIVATE ${ZLIB_INCLUDE_DIRS}
             util
             include
-            nexus/include
             ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
@@ -461,18 +456,6 @@ if (ERT_BUILD_CXX)
         add_test(NAME ${test} COMMAND ${test})
     endforeach ()
 endif ()
-
-if (BUILD_NEXUS)
-    foreach (name nexus_plot_load
-                  nexus_plot_spe1
-                  nexus_nexus2ecl
-                  nexus_unit)
-        add_executable(${name} nexus/tests/${name}.cpp)
-        target_link_libraries(${name} ecl)
-        target_include_directories(${name} PRIVATE nexus/include)
-        add_test(NAME ${name} COMMAND ${name} ${CMAKE_SOURCE_DIR})
-    endforeach ()
-endif()
 
 
 if (NOT STATOIL_TESTDATA_ROOT)
