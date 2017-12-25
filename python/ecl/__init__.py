@@ -115,11 +115,19 @@ if ecl_lib_path:
 if sys.hexversion < required_version_hex:
     raise Exception("ERT Python requires Python 2.7.")
 
+
 def load(name):
-    return cwrapload(name, path=ecl_lib_path, so_version=ert_so_version)
+    return cwrapload(name, path = ecl_lib_path, so_version = ert_so_version)
+
+
+# Will load the extension _ecl.so using dlopen.
+def load_ext():
+    path = os.path.dirname(__file__)
+    return cwrapload("_ecl", path = path, so_version = ert_so_version)
+
 
 class EclPrototype(Prototype):
-    lib = load("libecl")
+    lib = load_ext()
 
     def __init__(self, prototype, bind=True):
         super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)

@@ -112,6 +112,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp
                 ecl/ecl_sum_vector.cpp
+                ecl/ecl_python_init.c
                 ecl/fortio.c
                 ecl/ecl_rft_file.cpp
                 ecl/ecl_rft_node.cpp
