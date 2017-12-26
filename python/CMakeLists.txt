@@ -8,7 +8,7 @@ init_python( 2.7 )
 find_python_package(numpy 1.7.1 ${PYTHON_INSTALL_PREFIX})
 if (NOT DEFINED PY_numpy)
    message(WARNING "numpy module not found - Python wrappers not enabled. Install with: \"pip install numpy\"")
-   set( BUILD_PYTHON OFF PARENT_SCOPE )
+   set( ENABLE_PYTHON OFF PARENT_SCOPE )
    return()
 endif()
 
