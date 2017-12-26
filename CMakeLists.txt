@@ -46,6 +46,7 @@ option( BUILD_TESTS         "Should the tests be built"                         
 option( BUILD_APPLICATIONS  "Should we build small utility applications"              OFF)
 option( BUILD_ECL_SUMMARY   "Build the commandline application ecl_summary"           OFF)
 option( BUILD_PYTHON        "Run py_compile on the python wrappers"                   OFF)
+option( ENABLE_PYTHON       "Build and install the Python wrappers"                   OFF)
 option( BUILD_SHARED_LIBS   "Build shared libraries"                                  ON )
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( RST_DOC             "Build RST documentation"                                 OFF)
@@ -69,6 +70,11 @@ if (EXISTS ${STATOIL_TESTDATA_ROOT})
   set(_geopath ${_statoil_test_data}/Geometry)
 endif()
 
+
+if (BUILD_PYTHON)
+  set(ENABLE_PYTHON ON)
+  message(WARNING "The option 'BUILD_PYTHON' is deprecated - use ENABLE_PYTHON.")
+endif()
 
 # output libs to some lib/ path for testing
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -334,7 +340,7 @@ endif()
 
 if (ERT_WINDOWS)
     message(WARNING "Python is not supported on Windows")
-    set( BUILD_PYTHON OFF )
+    set( ENABLE_PYTHON OFF )
 endif ()
 
 if (ERT_LINUX)
@@ -345,13 +351,13 @@ add_subdirectory( lib )
 add_subdirectory( applications )
 
 
-if (BUILD_PYTHON)
+if (ENABLE_PYTHON)
    if (ERT_WINDOWS)
       message(WARNING "Python is not supported on Windows")
-      set( BUILD_PYTHON OFF )
+      set( ENABLE_PYTHON OFF )
    else()
       # If finding the Python interpreter and required packages
-      # fails in the python/CMakeLists.txt file the BUILD_PYTHON
+      # fails in the python/CMakeLists.txt file the ENABLE_PYTHON
       # will be set to OFF.
       add_subdirectory( python )
 
@@ -361,7 +367,7 @@ if (BUILD_PYTHON)
    endif()
 endif()
 
-if (BUILD_PYTHON)
+if (ENABLE_PYTHON)
    if (NOT ${BUILD_SHARED_LIBS})
       message(FATAL_ERROR "The Python wrappers require shared libraries")
    endif()
