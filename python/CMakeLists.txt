@@ -14,13 +14,14 @@ endif()
 
 find_python_package(cwrap 1 ${PYTHON_INSTALL_PREFIX})
 if (NOT DEFINED PY_cwrap)
-  if (NOT INSTALL_CWRAP)
-    message(WARNING "cwrap module not found Python wrappers not enabled. Install with: \"pip install cwrap\"")
-  endif()
+   message(WARNING "cwrap module not found Python wrappers not enabled. Install with: \"pip install cwrap\"")
+   set( ENABLE_PYTHON OFF PARENT_SCOPE )
+   return()
 endif()
+
+add_subdirectory( python )
 
 if (BUILD_TESTS)
    add_subdirectory( tests )
 endif()
-add_subdirectory( python )
 
