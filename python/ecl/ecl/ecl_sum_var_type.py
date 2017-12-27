@@ -15,7 +15,7 @@
 #  for more details.
 
 from cwrap import BaseCEnum
-from ecl.ecl import ECL_LIB
+
 
 
 class EclSumVarType(BaseCEnum):
@@ -36,7 +36,7 @@ class EclSumVarType(BaseCEnum):
     ECL_SMSPEC_LOCAL_WELL_VAR         = None
     ECL_SMSPEC_MISC_VAR               = None
 
-    
+
 EclSumVarType.addEnum("ECL_SMSPEC_INVALID_VAR", 0)
 EclSumVarType.addEnum("ECL_SMSPEC_FIELD_VAR", 1)
 EclSumVarType.addEnum("ECL_SMSPEC_REGION_VAR", 2)

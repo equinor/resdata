@@ -60,6 +60,7 @@ import warnings
 warnings.simplefilter('always', DeprecationWarning) # see #1437
 
 from cwrap import load as cwrapload
+from cwrap import Prototype
 
 try:
     import ert_site_init
@@ -114,11 +115,15 @@ if ecl_lib_path:
 if sys.hexversion < required_version_hex:
     raise Exception("ERT Python requires Python 2.7.")
 
-# This load() function is *the* function actually loading shared
-# libraries.
-
 def load(name):
     return cwrapload(name, path=ecl_lib_path, so_version=ert_so_version)
+
+class EclPrototype(Prototype):
+    lib = load("libecl")
+
+    def __init__(self, prototype, bind=True):
+        super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
+
 
 
 from .util import EclVersion

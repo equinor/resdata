@@ -84,7 +84,6 @@ class EclPrototype(Prototype):
     def __init__(self, prototype, bind=True):
         super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
 
-ECL_LIB = ecl.load("libecl")
 
 from .cell import Cell
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclUnitTypeEnum , EclUtil

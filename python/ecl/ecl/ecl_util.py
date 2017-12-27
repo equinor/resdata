@@ -29,7 +29,7 @@ import ctypes
 
 from cwrap import BaseCEnum
 from ecl.util import monkey_the_camel
-from ecl.ecl import EclPrototype, ECL_LIB
+from ecl.ecl import EclPrototype
 
 class EclFileEnum(BaseCEnum):
     TYPE_NAME = "ecl_file_enum"
