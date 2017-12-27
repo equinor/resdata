@@ -16,23 +16,23 @@
 import os.path
 
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class TestArea(BaseCClass):
-    _test_area_alloc           = UtilPrototype("void* test_work_area_alloc( char* )" , bind = False)
-    _test_area_alloc_relative  = UtilPrototype("void* test_work_area_alloc_relative( char* , char* )" , bind = False)
-    _free                      = UtilPrototype("void test_work_area_free( test_area )")
-    _install_file              = UtilPrototype("void test_work_area_install_file( test_area , char* )")
-    _copy_directory            = UtilPrototype("void test_work_area_copy_directory( test_area , char* )")
-    _copy_file                 = UtilPrototype("void test_work_area_copy_file( test_area , char* )")
-    _copy_directory_content    = UtilPrototype("void test_work_area_copy_directory_content( test_area , char* )")
-    _copy_parent_directory     = UtilPrototype("void test_work_area_copy_parent_directory( test_area , char* )")
-    _copy_parent_content       = UtilPrototype("void test_work_area_copy_parent_content( test_area , char* )")
-    _get_cwd                   = UtilPrototype("char* test_work_area_get_cwd( test_area )")
-    _get_original_cwd          = UtilPrototype("char* test_work_area_get_original_cwd( test_area )")
-    _set_store                 = UtilPrototype("void test_work_area_set_store( test_area , bool)")
-    _sync                      = UtilPrototype("void test_work_area_sync( test_area )")
+    _test_area_alloc           = EclPrototype("void* test_work_area_alloc( char* )" , bind = False)
+    _test_area_alloc_relative  = EclPrototype("void* test_work_area_alloc_relative( char* , char* )" , bind = False)
+    _free                      = EclPrototype("void test_work_area_free( test_area )")
+    _install_file              = EclPrototype("void test_work_area_install_file( test_area , char* )")
+    _copy_directory            = EclPrototype("void test_work_area_copy_directory( test_area , char* )")
+    _copy_file                 = EclPrototype("void test_work_area_copy_file( test_area , char* )")
+    _copy_directory_content    = EclPrototype("void test_work_area_copy_directory_content( test_area , char* )")
+    _copy_parent_directory     = EclPrototype("void test_work_area_copy_parent_directory( test_area , char* )")
+    _copy_parent_content       = EclPrototype("void test_work_area_copy_parent_content( test_area , char* )")
+    _get_cwd                   = EclPrototype("char* test_work_area_get_cwd( test_area )")
+    _get_original_cwd          = EclPrototype("char* test_work_area_get_original_cwd( test_area )")
+    _set_store                 = EclPrototype("void test_work_area_set_store( test_area , bool)")
+    _sync                      = EclPrototype("void test_work_area_sync( test_area )")
     
     def __init__(self, test_name, prefix = None , store_area=False , c_ptr = None):
 
