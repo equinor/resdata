@@ -136,3 +136,14 @@ def root():
     Will print the filesystem root of the current ert package.
     """
     return os.path.abspath( os.path.join( os.path.dirname( __file__ ) , "../"))
+
+
+from cwrap import Prototype
+
+
+class EclPrototype(Prototype):
+    lib = cwrapload("libecl", path=ecl_lib_path, so_version=ert_so_version)
+
+    def __init__(self, prototype, bind=True):
+        super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
+

@@ -23,7 +23,7 @@ different surveys. The implementation is a thin wrapper around the
 ecl_subsidence.c implementation in the libecl library.
 """
 from cwrap import BaseCClass
-from ecl.ecl import EclPrototype
+from ecl import EclPrototype
 from ecl.util import monkey_the_camel
 
 class EclSubsidence(BaseCClass):

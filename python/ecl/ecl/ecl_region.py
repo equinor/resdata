@@ -32,8 +32,9 @@ from cwrap import BaseCClass
 from ecl.util import monkey_the_camel
 from ecl.util import IntVector
 
+from ecl import EclPrototype
 from ecl.ecl.faults import Layer
-from ecl.ecl import EclKW, EclDataType, EclPrototype
+from ecl.ecl import EclKW, EclDataType
 from ecl.geo import CPolyline
 
 

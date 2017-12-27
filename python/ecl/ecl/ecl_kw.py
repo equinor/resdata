@@ -45,9 +45,11 @@ import warnings
 import numpy
 
 from cwrap import CFILE, BaseCClass
+
+from ecl import EclPrototype
 from ecl.util import monkey_the_camel
 from ecl.ecl import EclDataType
-from ecl.ecl import EclTypeEnum, EclUtil, EclPrototype
+from ecl.ecl import EclTypeEnum, EclUtil
 
 def dump_type_deprecation_warning():
     warnings.warn("EclTypeEnum is deprecated. " +

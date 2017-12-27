@@ -75,15 +75,6 @@ per module organization:
 import ecl.util
 import ecl.geo
 
-from cwrap import Prototype
-
-
-class EclPrototype(Prototype):
-    lib = ecl.load("libecl")
-
-    def __init__(self, prototype, bind=True):
-        super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
-
 
 from .cell import Cell
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclUnitTypeEnum , EclUtil
