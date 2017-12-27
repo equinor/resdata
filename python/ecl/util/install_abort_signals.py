@@ -1,4 +1,4 @@
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 def installAbortSignals():
@@ -12,5 +12,5 @@ def updateAbortSignals():
     update_signals()
 
 
-install_signals = UtilPrototype("void util_install_signals()")
-update_signals = UtilPrototype("void util_update_signals()")
+install_signals = EclPrototype("void util_install_signals()")
+update_signals = EclPrototype("void util_update_signals()")

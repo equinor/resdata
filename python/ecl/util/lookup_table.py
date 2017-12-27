@@ -16,23 +16,23 @@
 
 
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class LookupTable(BaseCClass):
-    _alloc =          UtilPrototype("void* lookup_table_alloc_empty()" , bind = False)
-    _max =            UtilPrototype("double lookup_table_get_max_value( lookup_table )")
-    _min =            UtilPrototype("double lookup_table_get_min_value( lookup_table )")
-    _arg_max =        UtilPrototype("double lookup_table_get_max_arg( lookup_table )")
-    _arg_min =        UtilPrototype("double lookup_table_get_min_arg( lookup_table )")
-    _append =         UtilPrototype("void lookup_table_append( lookup_table , double , double )")
-    _size =           UtilPrototype("int lookup_table_get_size( lookup_table )")
-    _interp =         UtilPrototype("double lookup_table_interp( lookup_table , double)")
-    _free =           UtilPrototype("void lookup_table_free( lookup_table )")
-    _set_low_limit =  UtilPrototype("void lookup_table_set_low_limit( lookup_table , double)")
-    _set_high_limit = UtilPrototype("void lookup_table_set_high_limit( lookup_table , double)")
-    _has_low_limit =  UtilPrototype("bool lookup_table_has_low_limit( lookup_table)")
-    _has_high_limit = UtilPrototype("bool lookup_table_has_high_limit( lookup_table)")
+    _alloc =          EclPrototype("void* lookup_table_alloc_empty()" , bind = False)
+    _max =            EclPrototype("double lookup_table_get_max_value( lookup_table )")
+    _min =            EclPrototype("double lookup_table_get_min_value( lookup_table )")
+    _arg_max =        EclPrototype("double lookup_table_get_max_arg( lookup_table )")
+    _arg_min =        EclPrototype("double lookup_table_get_min_arg( lookup_table )")
+    _append =         EclPrototype("void lookup_table_append( lookup_table , double , double )")
+    _size =           EclPrototype("int lookup_table_get_size( lookup_table )")
+    _interp =         EclPrototype("double lookup_table_interp( lookup_table , double)")
+    _free =           EclPrototype("void lookup_table_free( lookup_table )")
+    _set_low_limit =  EclPrototype("void lookup_table_set_low_limit( lookup_table , double)")
+    _set_high_limit = EclPrototype("void lookup_table_set_high_limit( lookup_table , double)")
+    _has_low_limit =  EclPrototype("bool lookup_table_has_low_limit( lookup_table)")
+    _has_high_limit = EclPrototype("bool lookup_table_has_high_limit( lookup_table)")
 
     def __init__(self, lower_limit=None, upper_limit=None):
         super(LookupTable, self).__init__(self._alloc())

@@ -18,23 +18,23 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 from .enums import UIReturnStatusEnum
 
 
 class UIReturn(BaseCClass):
     TYPE_NAME = "ui_return"
 
-    _alloc       = UtilPrototype("void* ui_return_alloc( ui_return_status )" , bind = False)
-    _free        = UtilPrototype("void ui_return_free(ui_return)")
-    _get_status  = UtilPrototype("ui_return_status ui_return_get_status(ui_return)")
-    _get_help    = UtilPrototype("char* ui_return_get_help(ui_return)")
-    _add_help    = UtilPrototype("void ui_return_add_help(ui_return)")
-    _add_error   = UtilPrototype("void ui_return_add_error(ui_return)")
-    _num_error   = UtilPrototype("int ui_return_get_error_count(ui_return)")
-    _last_error  = UtilPrototype("char* ui_return_get_last_error(ui_return)")
-    _first_error = UtilPrototype("char* ui_return_get_first_error(ui_return)")
-    _iget_error  = UtilPrototype("char* ui_return_iget_error(ui_return ,       int)")
+    _alloc       = EclPrototype("void* ui_return_alloc( ui_return_status )" , bind = False)
+    _free        = EclPrototype("void ui_return_free(ui_return)")
+    _get_status  = EclPrototype("ui_return_status ui_return_get_status(ui_return)")
+    _get_help    = EclPrototype("char* ui_return_get_help(ui_return)")
+    _add_help    = EclPrototype("void ui_return_add_help(ui_return)")
+    _add_error   = EclPrototype("void ui_return_add_error(ui_return)")
+    _num_error   = EclPrototype("int ui_return_get_error_count(ui_return)")
+    _last_error  = EclPrototype("char* ui_return_get_last_error(ui_return)")
+    _first_error = EclPrototype("char* ui_return_get_first_error(ui_return)")
+    _iget_error  = EclPrototype("char* ui_return_iget_error(ui_return ,       int)")
 
     def __init__(self , status):
         c_ptr = self._alloc(status)

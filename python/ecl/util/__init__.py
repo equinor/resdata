@@ -43,13 +43,6 @@ import ecl
 from cwrap import Prototype
 
 
-class UtilPrototype(Prototype):
-    lib = ecl.load("libecl")
-
-    def __init__(self, prototype, bind=True, allow_attribute_error=False):
-        super(UtilPrototype, self).__init__(UtilPrototype.lib, prototype, bind=bind, allow_attribute_error=allow_attribute_error)
-
-
 
 from .version import Version, EclVersion
 

@@ -1,9 +1,10 @@
 import ctypes
 import ecl
+from ecl import EclPrototype
 from ecl.test import ExtendedTestCase
 from ecl.util import CThreadPool, startCThreadPool
 
-TEST_LIB = ecl.load("libecl")
+TEST_LIB = EclPrototype.lib 
 
 
 class CThreadPoolTest(ExtendedTestCase):

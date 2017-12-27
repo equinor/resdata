@@ -45,7 +45,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import  sys
 
 from cwrap import CFILE, BaseCClass
-from ecl.util import UtilPrototype
 
     
 

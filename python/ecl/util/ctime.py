@@ -20,14 +20,14 @@ import datetime
 import time
 
 from cwrap import BaseCValue
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class CTime(BaseCValue):
     TYPE_NAME = "time_t"
     DATA_TYPE = ctypes.c_long
-    _timezone = UtilPrototype("char* util_get_timezone()" , bind = False)
-    _timegm = UtilPrototype("long util_make_datetime_utc(int, int, int, int, int, int)" , bind = False)
+    _timezone = EclPrototype("char* util_get_timezone()" , bind = False)
+    _timegm = EclPrototype("long util_make_datetime_utc(int, int, int, int, int, int)" , bind = False)
 
     def __init__(self, value):
         if isinstance(value, int):

@@ -1,8 +1,9 @@
 import ecl
+from ecl import EclPrototype
 from ecl.test import ExtendedTestCase
 from ecl.util import ArgPack, StringList
 
-TEST_LIB = ecl.load("libecl")
+TEST_LIB = EclPrototype.lib
 
 
 class ArgPackTest(ExtendedTestCase):

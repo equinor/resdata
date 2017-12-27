@@ -15,12 +15,12 @@
 #  for more details. 
 
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class Buffer(BaseCClass):
-    _alloc = UtilPrototype("void* buffer_alloc(int)" , bind = False)
-    _free = UtilPrototype("void buffer_free(buffer)")
+    _alloc = EclPrototype("void* buffer_alloc(int)" , bind = False)
+    _free = EclPrototype("void buffer_free(buffer)")
 
     def __init__(self, size):
         super(Buffer, self).__init__(self._alloc(size))

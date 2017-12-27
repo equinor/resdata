@@ -1,4 +1,4 @@
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 def cmp_method(method):
@@ -99,12 +99,12 @@ class Version(object):
 
 
 class EclVersion(Version):
-    _build_time = UtilPrototype("char* ecl_version_get_build_time()")
-    _git_commit = UtilPrototype("char* ecl_version_get_git_commit()")
-    _major_version = UtilPrototype("int ecl_version_get_major_version()")
-    _minor_version = UtilPrototype("int ecl_version_get_minor_version()")
-    _micro_version = UtilPrototype("char* ecl_version_get_micro_version()")
-    _is_devel = UtilPrototype("bool ecl_version_is_devel_version()")
+    _build_time = EclPrototype("char* ecl_version_get_build_time()")
+    _git_commit = EclPrototype("char* ecl_version_get_git_commit()")
+    _major_version = EclPrototype("int ecl_version_get_major_version()")
+    _minor_version = EclPrototype("int ecl_version_get_minor_version()")
+    _micro_version = EclPrototype("char* ecl_version_get_micro_version()")
+    _is_devel = EclPrototype("bool ecl_version_is_devel_version()")
 
     def __init__(self):
         major = self._major_version( )

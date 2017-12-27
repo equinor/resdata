@@ -15,19 +15,19 @@
 #  for more details. 
 
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class ArgPack(BaseCClass):
     TYPE_NAME = "arg_pack"
 
-    _alloc = UtilPrototype("void* arg_pack_alloc()" , bind = False)
-    _append_int = UtilPrototype("void arg_pack_append_int(arg_pack, int)")
-    _append_double = UtilPrototype("void arg_pack_append_double(arg_pack, double)")
-    _append_ptr = UtilPrototype("void arg_pack_append_ptr(arg_pack, void*)")
+    _alloc = EclPrototype("void* arg_pack_alloc()" , bind = False)
+    _append_int = EclPrototype("void arg_pack_append_int(arg_pack, int)")
+    _append_double = EclPrototype("void arg_pack_append_double(arg_pack, double)")
+    _append_ptr = EclPrototype("void arg_pack_append_ptr(arg_pack, void*)")
 
-    _size = UtilPrototype("int arg_pack_size(arg_pack)")
-    _free = UtilPrototype("void arg_pack_free(arg_pack)")
+    _size = EclPrototype("int arg_pack_size(arg_pack)")
+    _free = EclPrototype("void arg_pack_free(arg_pack)")
 
     def __init__(self, *args):
         c_ptr = self._alloc()

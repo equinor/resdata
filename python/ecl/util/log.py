@@ -16,14 +16,14 @@
 
 from __future__ import print_function
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class Log(BaseCClass):
-    _get_filename = UtilPrototype("char* log_get_filename(log)")
-    _reopen = UtilPrototype("void log_reopen(log, char*)")
-    _get_level = UtilPrototype("int log_get_level(log)")
-    _set_level = UtilPrototype("void log_set_level(log, int)")
+    _get_filename = EclPrototype("char* log_get_filename(log)")
+    _reopen = EclPrototype("void log_reopen(log, char*)")
+    _get_level = EclPrototype("int log_get_level(log)")
+    _set_level = EclPrototype("void log_set_level(log, int)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly!")

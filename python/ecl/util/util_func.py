@@ -17,9 +17,9 @@
 Module with utility functions from util.c
 """
 
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
-strcmp_int = UtilPrototype("int util_strcmp_int( char* , char* )")
+strcmp_int = EclPrototype("int util_strcmp_int( char* , char* )")
 """
 Function to compare strings with embedded integers.
 
@@ -45,7 +45,7 @@ as a descimal point.
 @type: (str, str) -> int
 """
 
-strcmp_float = UtilPrototype("int util_strcmp_float( char* , char* )")
+strcmp_float = EclPrototype("int util_strcmp_float( char* , char* )")
 """
 Function to compare strings with embedded numbers.
 
