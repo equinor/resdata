@@ -15,7 +15,7 @@
 #  for more details.
 from cwrap import BaseCClass
 from ecl.util import IntVector
-from ecl.geo import GeoPrototype
+from ecl import EclPrototype
 from .cpolyline import CPolyline
 from ctypes import c_double
 
@@ -24,18 +24,18 @@ cpair = c_double * 2  # this is a function that maps two doubles to a double*
 class GeoRegion(BaseCClass):
     TYPE_NAME = "geo_region"
 
-    _alloc = GeoPrototype("void* geo_region_alloc(geo_pointset, bool)", bind=False)
-    _free  = GeoPrototype("void  geo_region_free(geo_region)")
-    _reset = GeoPrototype("void  geo_region_reset(geo_region)")
-    _get_index_list = GeoPrototype("int_vector_ref geo_region_get_index_list(geo_region)")
-    _select_inside_polygon    = GeoPrototype("void geo_region_select_inside_polygon(geo_region, geo_polygon)")
-    _select_outside_polygon   = GeoPrototype("void geo_region_select_outside_polygon(geo_region, geo_polygon)")
-    _deselect_inside_polygon  = GeoPrototype("void geo_region_deselect_inside_polygon(geo_region, geo_polygon)")
-    _deselect_outside_polygon = GeoPrototype("void geo_region_deselect_outside_polygon(geo_region, geo_polygon)")
-    _select_above_line        = GeoPrototype("void geo_region_select_above_line(geo_region, double*, double*)")
-    _select_below_line        = GeoPrototype("void geo_region_select_below_line(geo_region, double*, double*)")
-    _deselect_above_line      = GeoPrototype("void geo_region_deselect_above_line(geo_region, double*, double*)")
-    _deselect_below_line      = GeoPrototype("void geo_region_deselect_below_line(geo_region, double*, double*)")
+    _alloc = EclPrototype("void* geo_region_alloc(geo_pointset, bool)", bind=False)
+    _free  = EclPrototype("void  geo_region_free(geo_region)")
+    _reset = EclPrototype("void  geo_region_reset(geo_region)")
+    _get_index_list = EclPrototype("int_vector_ref geo_region_get_index_list(geo_region)")
+    _select_inside_polygon    = EclPrototype("void geo_region_select_inside_polygon(geo_region, geo_polygon)")
+    _select_outside_polygon   = EclPrototype("void geo_region_select_outside_polygon(geo_region, geo_polygon)")
+    _deselect_inside_polygon  = EclPrototype("void geo_region_deselect_inside_polygon(geo_region, geo_polygon)")
+    _deselect_outside_polygon = EclPrototype("void geo_region_deselect_outside_polygon(geo_region, geo_polygon)")
+    _select_above_line        = EclPrototype("void geo_region_select_above_line(geo_region, double*, double*)")
+    _select_below_line        = EclPrototype("void geo_region_select_below_line(geo_region, double*, double*)")
+    _deselect_above_line      = EclPrototype("void geo_region_deselect_above_line(geo_region, double*, double*)")
+    _deselect_below_line      = EclPrototype("void geo_region_deselect_below_line(geo_region, double*, double*)")
 
 
     def __init__(self, pointset, preselect=False):
