@@ -18,20 +18,21 @@ from os.path import isfile
 from cwrap import BaseCClass
 from ecl.ecl import EclGrid
 from ecl.ecl.ecl_file import EclFile
-from ecl.well import WellTimeLine, WellPrototype
+from ecl.well import WellTimeLine
+from ecl import EclPrototype
 
 
 class WellInfo(BaseCClass):
     TYPE_NAME = "well_info"
 
-    _alloc            = WellPrototype("void* well_info_alloc(ecl_grid)", bind = False)
-    _free             = WellPrototype("void  well_info_free(well_info)")
-    _load_rstfile     = WellPrototype("void  well_info_load_rstfile(well_info, char*, bool)")
-    _load_rst_eclfile = WellPrototype("void  well_info_load_rst_eclfile(well_info, ecl_file, bool)")
-    _get_well_count   = WellPrototype("int   well_info_get_num_wells(well_info)")
-    _iget_well_name   = WellPrototype("char* well_info_iget_well_name(well_info, int)")
-    _has_well         = WellPrototype("bool  well_info_has_well(well_info, char*)")
-    _get_ts           = WellPrototype("well_time_line_ref well_info_get_ts(well_info, char*)")
+    _alloc            = EclPrototype("void* well_info_alloc(ecl_grid)", bind = False)
+    _free             = EclPrototype("void  well_info_free(well_info)")
+    _load_rstfile     = EclPrototype("void  well_info_load_rstfile(well_info, char*, bool)")
+    _load_rst_eclfile = EclPrototype("void  well_info_load_rst_eclfile(well_info, ecl_file, bool)")
+    _get_well_count   = EclPrototype("int   well_info_get_num_wells(well_info)")
+    _iget_well_name   = EclPrototype("char* well_info_iget_well_name(well_info, int)")
+    _has_well         = EclPrototype("bool  well_info_has_well(well_info, char*)")
+    _get_ts           = EclPrototype("well_time_line_ref well_info_get_ts(well_info, char*)")
 
 
     def __init__(self, grid, rst_file=None, load_segment_information=True):

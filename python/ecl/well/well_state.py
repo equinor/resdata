@@ -1,36 +1,38 @@
 from cwrap import BaseCClass
-from ecl.well import WellTypeEnum, WellConnection, WellPrototype
+
+from ecl import EclPrototype
+from ecl.well import WellTypeEnum, WellConnection
 from ecl.util import CTime
 
 class WellState(BaseCClass):
     TYPE_NAME = "well_state"
 
-    _global_connections_size = WellPrototype("int well_conn_collection_get_size(void*)", bind = False)
-    _global_connections_iget = WellPrototype("well_connection_ref well_conn_collection_iget(void*, int)", bind = False)
-    _segment_collection_size = WellPrototype("int well_segment_collection_get_size(void*)", bind = False)
-    _segment_collection_iget = WellPrototype("well_segment_ref well_segment_collection_iget(void*, int)", bind = False)
-    _has_global_connections  = WellPrototype("bool  well_state_has_global_connections(well_state)")
-    _get_global_connections  = WellPrototype("void* well_state_get_global_connections(well_state)")
-    _get_segment_collection  = WellPrototype("void* well_state_get_segments(well_state)")
-    _branches                = WellPrototype("void* well_state_get_branches(well_state)")
-    _segments                = WellPrototype("void* well_state_get_segments(well_state)")
-    _get_name                = WellPrototype("char* well_state_get_name(well_state)")
-    _is_open                 = WellPrototype("bool  well_state_is_open(well_state)")
-    _is_msw                  = WellPrototype("bool  well_state_is_MSW(well_state)")
-    _well_number             = WellPrototype("int   well_state_get_well_nr(well_state)")
-    _report_number           = WellPrototype("int   well_state_get_report_nr(well_state)")
-    _has_segment_data        = WellPrototype("bool  well_state_has_segment_data(well_state)")
-    _sim_time                = WellPrototype("time_t well_state_get_sim_time(well_state)")
-    _well_type               = WellPrototype("well_type_enum well_state_get_type(well_state)")
-    _oil_rate                = WellPrototype("double well_state_get_oil_rate(well_state)")
-    _gas_rate                = WellPrototype("double well_state_get_gas_rate(well_state)")
-    _water_rate              = WellPrototype("double well_state_get_water_rate(well_state)")
-    _volume_rate             = WellPrototype("double well_state_get_volume_rate(well_state)")
-    _oil_rate_si             = WellPrototype("double well_state_get_oil_rate_si(well_state)")
-    _gas_rate_si             = WellPrototype("double well_state_get_gas_rate_si(well_state)")
-    _water_rate_si           = WellPrototype("double well_state_get_water_rate_si(well_state)")
-    _volume_rate_si          = WellPrototype("double well_state_get_volume_rate_si(well_state)")
-    _get_global_well_head    = WellPrototype("well_connection_ref well_state_get_global_wellhead(well_state)")
+    _global_connections_size = EclPrototype("int well_conn_collection_get_size(void*)", bind = False)
+    _global_connections_iget = EclPrototype("well_connection_ref well_conn_collection_iget(void*, int)", bind = False)
+    _segment_collection_size = EclPrototype("int well_segment_collection_get_size(void*)", bind = False)
+    _segment_collection_iget = EclPrototype("well_segment_ref well_segment_collection_iget(void*, int)", bind = False)
+    _has_global_connections  = EclPrototype("bool  well_state_has_global_connections(well_state)")
+    _get_global_connections  = EclPrototype("void* well_state_get_global_connections(well_state)")
+    _get_segment_collection  = EclPrototype("void* well_state_get_segments(well_state)")
+    _branches                = EclPrototype("void* well_state_get_branches(well_state)")
+    _segments                = EclPrototype("void* well_state_get_segments(well_state)")
+    _get_name                = EclPrototype("char* well_state_get_name(well_state)")
+    _is_open                 = EclPrototype("bool  well_state_is_open(well_state)")
+    _is_msw                  = EclPrototype("bool  well_state_is_MSW(well_state)")
+    _well_number             = EclPrototype("int   well_state_get_well_nr(well_state)")
+    _report_number           = EclPrototype("int   well_state_get_report_nr(well_state)")
+    _has_segment_data        = EclPrototype("bool  well_state_has_segment_data(well_state)")
+    _sim_time                = EclPrototype("time_t well_state_get_sim_time(well_state)")
+    _well_type               = EclPrototype("well_type_enum well_state_get_type(well_state)")
+    _oil_rate                = EclPrototype("double well_state_get_oil_rate(well_state)")
+    _gas_rate                = EclPrototype("double well_state_get_gas_rate(well_state)")
+    _water_rate              = EclPrototype("double well_state_get_water_rate(well_state)")
+    _volume_rate             = EclPrototype("double well_state_get_volume_rate(well_state)")
+    _oil_rate_si             = EclPrototype("double well_state_get_oil_rate_si(well_state)")
+    _gas_rate_si             = EclPrototype("double well_state_get_gas_rate_si(well_state)")
+    _water_rate_si           = EclPrototype("double well_state_get_water_rate_si(well_state)")
+    _volume_rate_si          = EclPrototype("double well_state_get_volume_rate_si(well_state)")
+    _get_global_well_head    = EclPrototype("well_connection_ref well_state_get_global_wellhead(well_state)")
     
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")

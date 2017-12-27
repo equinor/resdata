@@ -1,29 +1,30 @@
 from cwrap import BaseCClass
-from ecl.well import WellPrototype, WellConnectionDirectionEnum
+from ecl import EclPrototype
+from ecl.well import WellConnectionDirectionEnum
 
 class WellConnection(BaseCClass):
     TYPE_NAME = "well_connection"
 
-    _i                   = WellPrototype("int    well_conn_get_i(well_connection)")
-    _j                   = WellPrototype("int    well_conn_get_j(well_connection)")
-    _k                   = WellPrototype("int    well_conn_get_k(well_connection)")
-    _segment_id          = WellPrototype("int    well_conn_get_segment_id(well_connection)")
-    _is_open             = WellPrototype("bool   well_conn_open(well_connection)")
-    _is_msw              = WellPrototype("bool   well_conn_MSW(well_connection)")
-    _fracture_connection = WellPrototype("bool   well_conn_fracture_connection(well_connection)")
-    _matrix_connection   = WellPrototype("bool   well_conn_matrix_connection(well_connection)")
-    _connection_factor   = WellPrototype("double well_conn_get_connection_factor(well_connection)")
-    _equal               = WellPrototype("bool   well_conn_equal(well_connection, well_connection)")
-    _get_dir             = WellPrototype("void*  well_conn_get_dir(well_connection)")
-    _oil_rate            = WellPrototype("double well_conn_get_oil_rate(well_connection)")
-    _gas_rate            = WellPrototype("double well_conn_get_gas_rate(well_connection)")
-    _water_rate          = WellPrototype("double well_conn_get_water_rate(well_connection)")
-    _volume_rate         = WellPrototype("double well_conn_get_volume_rate(well_connection)")
+    _i                   = EclPrototype("int    well_conn_get_i(well_connection)")
+    _j                   = EclPrototype("int    well_conn_get_j(well_connection)")
+    _k                   = EclPrototype("int    well_conn_get_k(well_connection)")
+    _segment_id          = EclPrototype("int    well_conn_get_segment_id(well_connection)")
+    _is_open             = EclPrototype("bool   well_conn_open(well_connection)")
+    _is_msw              = EclPrototype("bool   well_conn_MSW(well_connection)")
+    _fracture_connection = EclPrototype("bool   well_conn_fracture_connection(well_connection)")
+    _matrix_connection   = EclPrototype("bool   well_conn_matrix_connection(well_connection)")
+    _connection_factor   = EclPrototype("double well_conn_get_connection_factor(well_connection)")
+    _equal               = EclPrototype("bool   well_conn_equal(well_connection, well_connection)")
+    _get_dir             = EclPrototype("void*  well_conn_get_dir(well_connection)")
+    _oil_rate            = EclPrototype("double well_conn_get_oil_rate(well_connection)")
+    _gas_rate            = EclPrototype("double well_conn_get_gas_rate(well_connection)")
+    _water_rate          = EclPrototype("double well_conn_get_water_rate(well_connection)")
+    _volume_rate         = EclPrototype("double well_conn_get_volume_rate(well_connection)")
 
-    _oil_rate_si         = WellPrototype("double well_conn_get_oil_rate_si(well_connection)")
-    _gas_rate_si         = WellPrototype("double well_conn_get_gas_rate_si(well_connection)")
-    _water_rate_si       = WellPrototype("double well_conn_get_water_rate_si(well_connection)")
-    _volume_rate_si      = WellPrototype("double well_conn_get_volume_rate_si(well_connection)")
+    _oil_rate_si         = EclPrototype("double well_conn_get_oil_rate_si(well_connection)")
+    _gas_rate_si         = EclPrototype("double well_conn_get_gas_rate_si(well_connection)")
+    _water_rate_si       = EclPrototype("double well_conn_get_water_rate_si(well_connection)")
+    _volume_rate_si      = EclPrototype("double well_conn_get_volume_rate_si(well_connection)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
