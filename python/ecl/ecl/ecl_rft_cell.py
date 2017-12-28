@@ -15,7 +15,7 @@
 #  for more details.
 
 from cwrap import BaseCClass
-from ecl.ecl import EclPrototype
+from ecl import EclPrototype
 
 
 class RFTCell(BaseCClass):

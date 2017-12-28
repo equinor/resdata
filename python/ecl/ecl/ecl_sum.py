@@ -39,7 +39,7 @@ from ecl.ecl import EclSumTStep
 from ecl.ecl import EclSumVarType
 from ecl.ecl.ecl_sum_vector import EclSumVector
 from ecl.ecl.ecl_smspec_node import EclSMSPECNode
-from ecl.ecl import EclPrototype
+from ecl import EclPrototype
 #, EclSumKeyWordVector
 
 

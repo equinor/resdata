@@ -15,7 +15,7 @@
 #  for more details.
 
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 # The path_fmt implementation hinges strongly on variable length
 # argument lists in C - not clear if/how that maps over to Python,
@@ -24,9 +24,9 @@ from ecl.util import UtilPrototype
 
 class PathFormat(BaseCClass):
     TYPE_NAME = "path_fmt"
-    _alloc = UtilPrototype("void* path_fmt_alloc_directory_fmt(char*)", bind = False)
-    _str  = UtilPrototype("char* path_fmt_get_fmt(path_fmt)")
-    _free = UtilPrototype("void path_fmt_free(path_fmt)")
+    _alloc = EclPrototype("void* path_fmt_alloc_directory_fmt(char*)", bind = False)
+    _str  = EclPrototype("char* path_fmt_get_fmt(path_fmt)")
+    _free = EclPrototype("void path_fmt_free(path_fmt)")
 
     def __init__(self, path_fmt):
         c_ptr = self._alloc( path_fmt )

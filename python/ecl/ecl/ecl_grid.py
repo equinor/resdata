@@ -32,9 +32,11 @@ import os.path
 import math
 import itertools
 from cwrap import CFILE, BaseCClass
+
+from ecl import EclPrototype
 from ecl.util import monkey_the_camel
 from ecl.util import IntVector
-from ecl.ecl import EclPrototype, EclDataType, EclKW, FortIO, EclUnitTypeEnum, Cell
+from ecl.ecl import  EclDataType, EclKW, FortIO, EclUnitTypeEnum, Cell
 
 
 class EclGrid(BaseCClass):

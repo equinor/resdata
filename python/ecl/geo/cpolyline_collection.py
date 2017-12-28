@@ -19,20 +19,21 @@ Create a polygon
 import ctypes
 
 from cwrap import BaseCClass
-from ecl.geo import GeoPrototype, CPolyline
+from ecl import EclPrototype
+from ecl.geo import CPolyline
 
 
 class CPolylineCollection(BaseCClass):
     TYPE_NAME = "geo_polygon_collection"
 
-    _alloc_new          = GeoPrototype("void*            geo_polygon_collection_alloc(  )" , bind = False)
-    _free               = GeoPrototype("void             geo_polygon_collection_free( geo_polygon_collection )" )
-    _size               = GeoPrototype("int              geo_polygon_collection_size( geo_polygon_collection)" )
-    _create_polyline    = GeoPrototype("geo_polygon_ref  geo_polygon_collection_create_polygon(geo_polygon_collection , char*)" )
-    _has_polyline       = GeoPrototype("bool             geo_polygon_collection_has_polygon(geo_polygon_collection , char*)" )
-    _iget               = GeoPrototype("geo_polygon_ref  geo_polygon_collection_iget_polygon(geo_polygon_collection , int)" )
-    _get                = GeoPrototype("geo_polygon_ref  geo_polygon_collection_get_polygon(geo_polygon_collection , char*)" )
-    _add_polyline       = GeoPrototype("void             geo_polygon_collection_add_polygon(geo_polygon_collection , geo_polygon , bool)")
+    _alloc_new          = EclPrototype("void*            geo_polygon_collection_alloc(  )" , bind = False)
+    _free               = EclPrototype("void             geo_polygon_collection_free( geo_polygon_collection )" )
+    _size               = EclPrototype("int              geo_polygon_collection_size( geo_polygon_collection)" )
+    _create_polyline    = EclPrototype("geo_polygon_ref  geo_polygon_collection_create_polygon(geo_polygon_collection , char*)" )
+    _has_polyline       = EclPrototype("bool             geo_polygon_collection_has_polygon(geo_polygon_collection , char*)" )
+    _iget               = EclPrototype("geo_polygon_ref  geo_polygon_collection_iget_polygon(geo_polygon_collection , int)" )
+    _get                = EclPrototype("geo_polygon_ref  geo_polygon_collection_get_polygon(geo_polygon_collection , char*)" )
+    _add_polyline       = EclPrototype("void             geo_polygon_collection_add_polygon(geo_polygon_collection , geo_polygon , bool)")
 
 
 

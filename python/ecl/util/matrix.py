@@ -29,36 +29,39 @@
 
 
 from cwrap import BaseCClass,CFILE
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class Matrix(BaseCClass):
-    _matrix_alloc      = UtilPrototype("void*  matrix_alloc(int, int )" , bind = False)
-    _matrix_alloc_identity = UtilPrototype("matrix_obj  matrix_alloc_identity( int )" , bind = False)
-    _alloc_transpose   = UtilPrototype("matrix_obj  matrix_alloc_transpose(matrix)")
-    _inplace_transpose = UtilPrototype("void        matrix_inplace_transpose(matrix)")
-    _copy              = UtilPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
-    _sub_copy          = UtilPrototype("matrix_obj  matrix_alloc_sub_copy(matrix, int , int , int , int)" )
-    _free              = UtilPrototype("void   matrix_free(matrix)")
-    _iget              = UtilPrototype("double matrix_iget( matrix , int , int )")
-    _iset              = UtilPrototype("void   matrix_iset( matrix , int , int , double)")
-    _set_all           = UtilPrototype("void   matrix_scalar_set( matrix , double)")
-    _scale_column      = UtilPrototype("void matrix_scale_column(matrix , int , double)")
-    _scale_row         = UtilPrototype("void matrix_scale_row(matrix , int , double)")
-    _copy_column       = UtilPrototype("void matrix_copy_column(matrix , matrix , int , int)" , bind = False)
-    _rows              = UtilPrototype("int matrix_get_rows(matrix)")
-    _columns           = UtilPrototype("int matrix_get_columns(matrix)")
-    _equal             = UtilPrototype("bool matrix_equal(matrix, matrix)")
-    _pretty_print      = UtilPrototype("void matrix_pretty_print(matrix, char*, char*)")
-    _fprint            = UtilPrototype("void matrix_fprintf(matrix, char*, FILE)")
-    _random_init       = UtilPrototype("void matrix_random_init(matrix, rng)")
-    _dump_csv          = UtilPrototype("void matrix_dump_csv(matrix, char*)")
+    _matrix_alloc      = EclPrototype("void*  matrix_alloc(int, int )" , bind = False)
+    _matrix_alloc_identity = EclPrototype("matrix_obj  matrix_alloc_identity( int )" , bind = False)
+    _alloc_transpose   = EclPrototype("matrix_obj  matrix_alloc_transpose(matrix)")
+    _inplace_transpose = EclPrototype("void        matrix_inplace_transpose(matrix)")
+    _copy              = EclPrototype("matrix_obj  matrix_alloc_copy(matrix)" )
+    _sub_copy          = EclPrototype("matrix_obj  matrix_alloc_sub_copy(matrix, int , int , int , int)" )
+    _free              = EclPrototype("void   matrix_free(matrix)")
+    _iget              = EclPrototype("double matrix_iget( matrix , int , int )")
+    _iset              = EclPrototype("void   matrix_iset( matrix , int , int , double)")
+    _set_all           = EclPrototype("void   matrix_scalar_set( matrix , double)")
+    _scale_column      = EclPrototype("void matrix_scale_column(matrix , int , double)")
+    _scale_row         = EclPrototype("void matrix_scale_row(matrix , int , double)")
+    _copy_column       = EclPrototype("void matrix_copy_column(matrix , matrix , int , int)" , bind = False)
+    _rows              = EclPrototype("int matrix_get_rows(matrix)")
+    _columns           = EclPrototype("int matrix_get_columns(matrix)")
+    _equal             = EclPrototype("bool matrix_equal(matrix, matrix)")
+    _pretty_print      = EclPrototype("void matrix_pretty_print(matrix, char*, char*)")
+    _fprint            = EclPrototype("void matrix_fprintf(matrix, char*, FILE)")
+    _random_init       = EclPrototype("void matrix_random_init(matrix, rng)")
+    _dump_csv          = EclPrototype("void matrix_dump_csv(matrix, char*)")
 
     # Requires BLAS. If the library does not have the
     # matrix_alloc_matmul() function the prototype will have _func =
     # None, and NotImplementedError( ) will be raised int the
     # __call__() method if we try to use this function.
-    _alloc_matmul      = UtilPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False, allow_attribute_error = True)
+    try:
+        _alloc_matmul = EclPrototype("matrix_obj  matrix_alloc_matmul(matrix, matrix)" , bind = False)
+    except AttributeError:
+        _alloc_matmul = None
 
     # Requires BLAS!
     @classmethod

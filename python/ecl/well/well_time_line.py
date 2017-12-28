@@ -1,11 +1,12 @@
 from cwrap import BaseCClass
-from ecl.well import WellState, WellPrototype
+from ecl import EclPrototype
+from ecl.well import WellState
 
 class WellTimeLine(BaseCClass):
     TYPE_NAME = "well_time_line"
-    _size = WellPrototype("int well_ts_get_size(well_time_line)")
-    _name = WellPrototype("char* well_ts_get_name(well_time_line)")
-    _iget = WellPrototype("well_state_ref well_ts_iget_state(well_time_line, int)")
+    _size = EclPrototype("int well_ts_get_size(well_time_line)")
+    _name = EclPrototype("char* well_ts_get_name(well_time_line)")
+    _iget = EclPrototype("well_state_ref well_ts_iget_state(well_time_line, int)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")

@@ -20,13 +20,6 @@ Simple package for working with 2D geometry.
 import ecl
 from cwrap import Prototype
 
-class GeoPrototype(Prototype):
-    lib = ecl.load("libecl")
-
-    def __init__(self, prototype, bind=True):
-        super(GeoPrototype, self).__init__(GeoPrototype.lib, prototype, bind=bind)
-
-
 from .geo_pointset import GeoPointset
 from .geo_region import GeoRegion
 from .cpolyline import CPolyline

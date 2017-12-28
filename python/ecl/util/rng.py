@@ -16,22 +16,22 @@
 import os.path
 
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 from ecl.util.enums import RngInitModeEnum, RngAlgTypeEnum
 
 
 class RandomNumberGenerator(BaseCClass):
     TYPE_NAME = "rng"
 
-    _rng_alloc = UtilPrototype("void* rng_alloc(rng_alg_type_enum, rng_init_mode_enum)" , bind = False)
-    _free = UtilPrototype("void rng_free(rng)")
-    _get_double = UtilPrototype("double rng_get_double(rng)")
-    _get_int = UtilPrototype("int rng_get_int(rng, int)")
-    _get_max_int = UtilPrototype("uint rng_get_max_int(rng)")
-    _state_size = UtilPrototype("int rng_state_size(rng)")
-    _set_state = UtilPrototype("void rng_set_state(rng , char*)")
-    _load_state = UtilPrototype("void rng_load_state(rng , char*)")
-    _save_state = UtilPrototype("void rng_save_state(rng , char*)")
+    _rng_alloc = EclPrototype("void* rng_alloc(rng_alg_type_enum, rng_init_mode_enum)" , bind = False)
+    _free = EclPrototype("void rng_free(rng)")
+    _get_double = EclPrototype("double rng_get_double(rng)")
+    _get_int = EclPrototype("int rng_get_int(rng, int)")
+    _get_max_int = EclPrototype("uint rng_get_max_int(rng)")
+    _state_size = EclPrototype("int rng_state_size(rng)")
+    _set_state = EclPrototype("void rng_set_state(rng , char*)")
+    _load_state = EclPrototype("void rng_load_state(rng , char*)")
+    _save_state = EclPrototype("void rng_save_state(rng , char*)")
 
     def __init__(self, alg_type=RngAlgTypeEnum.MZRAN, init_mode=RngInitModeEnum.INIT_CLOCK):
         assert isinstance(alg_type, RngAlgTypeEnum)

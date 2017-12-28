@@ -16,17 +16,18 @@
 from ctypes import c_void_p
 
 from cwrap import BaseCClass
-from ecl.util import StringList, UtilPrototype
+from ecl import EclPrototype
+from ecl.util import StringList
 
 
 class Hash(BaseCClass):
-    _alloc =      UtilPrototype("void* hash_alloc()" , bind = False)
-    _free =       UtilPrototype("void hash_free(hash)")
-    _size =       UtilPrototype("int hash_get_size(hash)")
-    _keys =       UtilPrototype("stringlist_obj hash_alloc_stringlist(hash)")
-    _has_key =    UtilPrototype("bool hash_has_key(hash, char*)")
-    _get =        UtilPrototype("void* hash_get(hash, char*)")
-    _insert_ref = UtilPrototype("void hash_insert_ref(hash, char*, void*)")
+    _alloc =      EclPrototype("void* hash_alloc()" , bind = False)
+    _free =       EclPrototype("void hash_free(hash)")
+    _size =       EclPrototype("int hash_get_size(hash)")
+    _keys =       EclPrototype("stringlist_obj hash_alloc_stringlist(hash)")
+    _has_key =    EclPrototype("bool hash_has_key(hash, char*)")
+    _get =        EclPrototype("void* hash_get(hash, char*)")
+    _insert_ref = EclPrototype("void hash_insert_ref(hash, char*, void*)")
 
     """
     Base hash class that supports string:void* values
@@ -71,8 +72,8 @@ class Hash(BaseCClass):
 
 
 class StringHash(Hash):
-    _get_string = UtilPrototype("char* hash_get_string(hash, char*)")
-    _insert_string = UtilPrototype("void hash_insert_string(hash, char*, char*)")
+    _get_string = EclPrototype("char* hash_get_string(hash, char*)")
+    _insert_string = EclPrototype("void hash_insert_string(hash, char*, char*)")
 
     def __init__(self):
         super(StringHash, self).__init__()
@@ -91,8 +92,8 @@ class StringHash(Hash):
 
 
 class IntegerHash(Hash):
-    _get_int = UtilPrototype("int hash_get_int(hash, char*)")
-    _insert_int = UtilPrototype("void hash_insert_int(hash, char*, int)")
+    _get_int = EclPrototype("int hash_get_int(hash, char*)")
+    _insert_int = EclPrototype("void hash_insert_int(hash, char*, int)")
 
     def __init__(self):
         super(IntegerHash, self).__init__()
@@ -111,8 +112,8 @@ class IntegerHash(Hash):
 
 
 class DoubleHash(Hash):
-    _get_double = UtilPrototype("double hash_get_double(hash, char*)")
-    _insert_double = UtilPrototype("void hash_insert_double(hash, char*, double)")
+    _get_double = EclPrototype("double hash_get_double(hash, char*)")
+    _insert_double = EclPrototype("void hash_insert_double(hash, char*, double)")
 
     def __init__(self):
         super(DoubleHash, self).__init__()

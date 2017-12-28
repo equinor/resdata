@@ -32,28 +32,28 @@ hardly need to notice that the StringList class is at play.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from six import string_types
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 from cwrap import BaseCClass
 
 
 class StringList(BaseCClass):
     TYPE_NAME = "stringlist"
 
-    _alloc      = UtilPrototype("void* stringlist_alloc_new( )", bind = False)
-    _free       = UtilPrototype("void stringlist_free(stringlist )")
-    _append     = UtilPrototype("void stringlist_append_copy(stringlist , char* )")
-    _iget       = UtilPrototype("char* stringlist_iget(stringlist , int )")
-    _front      = UtilPrototype("char* stringlist_front( stringlist )")
-    _back       = UtilPrototype("char* stringlist_back( stringlist )")
-    _iget_copy  = UtilPrototype("char* stringlist_iget_copy(stringlist, int)")
-    _iset       = UtilPrototype("void  stringlist_iset_copy( stringlist , int , char* )")
-    _get_size   = UtilPrototype("int  stringlist_get_size( stringlist )")
-    _contains   = UtilPrototype("bool stringlist_contains(stringlist , char*)")
-    _equal      = UtilPrototype("bool stringlist_equal(stringlist , stringlist)")
-    _sort       = UtilPrototype("void stringlist_python_sort( stringlist , int)")
-    _pop        = UtilPrototype("char* stringlist_pop(stringlist)")
-    _last       = UtilPrototype("char* stringlist_get_last(stringlist)")
-    _find_first = UtilPrototype("int stringlist_find_first(stringlist, char*)")
+    _alloc      = EclPrototype("void* stringlist_alloc_new( )", bind = False)
+    _free       = EclPrototype("void stringlist_free(stringlist )")
+    _append     = EclPrototype("void stringlist_append_copy(stringlist , char* )")
+    _iget       = EclPrototype("char* stringlist_iget(stringlist , int )")
+    _front      = EclPrototype("char* stringlist_front( stringlist )")
+    _back       = EclPrototype("char* stringlist_back( stringlist )")
+    _iget_copy  = EclPrototype("char* stringlist_iget_copy(stringlist, int)")
+    _iset       = EclPrototype("void  stringlist_iset_copy( stringlist , int , char* )")
+    _get_size   = EclPrototype("int  stringlist_get_size( stringlist )")
+    _contains   = EclPrototype("bool stringlist_contains(stringlist , char*)")
+    _equal      = EclPrototype("bool stringlist_equal(stringlist , stringlist)")
+    _sort       = EclPrototype("void stringlist_python_sort( stringlist , int)")
+    _pop        = EclPrototype("char* stringlist_pop(stringlist)")
+    _last       = EclPrototype("char* stringlist_get_last(stringlist)")
+    _find_first = EclPrototype("int stringlist_find_first(stringlist, char*)")
 
     def __init__(self, initial=None):
         """

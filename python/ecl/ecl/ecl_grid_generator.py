@@ -17,9 +17,10 @@
 import itertools, numpy
 from math import sqrt
 
+from ecl import EclPrototype
 from ecl.util import monkey_the_camel
 from ecl.util import IntVector
-from ecl.ecl import EclGrid, EclKW, EclDataType, EclPrototype
+from ecl.ecl import EclGrid, EclKW, EclDataType
 
 def flatten(l):
     return [elem for sublist in l for elem in sublist]

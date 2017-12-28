@@ -1,20 +1,20 @@
 from cwrap import BaseCClass
-from ecl.well import WellPrototype
+from ecl import EclPrototype
 
 class WellSegment(BaseCClass):
     TYPE_NAME = "well_segment"
 
-    _active           = WellPrototype("bool well_segment_active(well_segment)")
-    _main_stem        = WellPrototype("bool well_segment_main_stem(well_segment)")
-    _nearest_wellhead = WellPrototype("bool well_segment_nearest_wellhead(well_segment)")
-    _id               = WellPrototype("int well_segment_get_id(well_segment)")
-    _link_count       = WellPrototype("int well_segment_get_link_count(well_segment)")
-    _branch_id        = WellPrototype("int well_segment_get_branch_id(well_segment)")
-    _outlet_id        = WellPrototype("int well_segment_get_outlet_id(well_segment)")
-    _depth            = WellPrototype("double well_segment_get_depth(well_segment)")
-    _length           = WellPrototype("double well_segment_get_length(well_segment)")
-    _total_length     = WellPrototype("double well_segment_get_total_length(well_segment)")
-    _diameter         = WellPrototype("double well_segment_get_diameter(well_segment)")
+    _active           = EclPrototype("bool well_segment_active(well_segment)")
+    _main_stem        = EclPrototype("bool well_segment_main_stem(well_segment)")
+    _nearest_wellhead = EclPrototype("bool well_segment_nearest_wellhead(well_segment)")
+    _id               = EclPrototype("int well_segment_get_id(well_segment)")
+    _link_count       = EclPrototype("int well_segment_get_link_count(well_segment)")
+    _branch_id        = EclPrototype("int well_segment_get_branch_id(well_segment)")
+    _outlet_id        = EclPrototype("int well_segment_get_outlet_id(well_segment)")
+    _depth            = EclPrototype("double well_segment_get_depth(well_segment)")
+    _length           = EclPrototype("double well_segment_get_length(well_segment)")
+    _total_length     = EclPrototype("double well_segment_get_total_length(well_segment)")
+    _diameter         = EclPrototype("double well_segment_get_diameter(well_segment)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")

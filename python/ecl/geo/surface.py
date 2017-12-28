@@ -21,32 +21,32 @@ import ctypes
 from numpy import zeros
 
 from cwrap import BaseCClass
-from ecl.geo import GeoPrototype
+from ecl import EclPrototype
 from ecl.geo import GeoPointset
 
 class Surface(BaseCClass):
     TYPE_NAME = "surface"
 
-    _alloc        = GeoPrototype("void*  geo_surface_fload_alloc_irap( char* , bool )" , bind = False)
-    _free         = GeoPrototype("void   geo_surface_free( surface )")
-    _new          = GeoPrototype("void*  geo_surface_alloc_new( int, int, double, double, double, double, double )", bind = False)
-    _get_nx       = GeoPrototype("int    geo_surface_get_nx( surface )")
-    _get_ny       = GeoPrototype("int    geo_surface_get_ny( surface )")
-    _iget_zvalue  = GeoPrototype("double geo_surface_iget_zvalue( surface , int)")
-    _iset_zvalue  = GeoPrototype("void   geo_surface_iset_zvalue( surface , int , double)")
-    _write        = GeoPrototype("void   geo_surface_fprintf_irap( surface , char* )")
-    _equal        = GeoPrototype("bool   geo_surface_equal( surface , surface )")
-    _header_equal = GeoPrototype("bool   geo_surface_equal_header( surface , surface )")
-    _copy         = GeoPrototype("surface_obj geo_surface_alloc_copy( surface , bool )")
-    _assign       = GeoPrototype("void   geo_surface_assign_value( surface , double )")
-    _scale        = GeoPrototype("void   geo_surface_scale( surface , double )")
-    _shift        = GeoPrototype("void   geo_surface_shift( surface , double )")
-    _iadd         = GeoPrototype("void   geo_surface_iadd( surface , surface )")
-    _imul         = GeoPrototype("void   geo_surface_imul( surface , surface )")
-    _isub         = GeoPrototype("void   geo_surface_isub( surface , surface )")
-    _isqrt        = GeoPrototype("void   geo_surface_isqrt( surface )")
-    _iget_xy      = GeoPrototype("void   geo_surface_iget_xy(surface, int, double*, double*)")
-    _get_pointset = GeoPrototype("geo_pointset_ref geo_surface_get_pointset(surface)")
+    _alloc        = EclPrototype("void*  geo_surface_fload_alloc_irap( char* , bool )" , bind = False)
+    _free         = EclPrototype("void   geo_surface_free( surface )")
+    _new          = EclPrototype("void*  geo_surface_alloc_new( int, int, double, double, double, double, double )", bind = False)
+    _get_nx       = EclPrototype("int    geo_surface_get_nx( surface )")
+    _get_ny       = EclPrototype("int    geo_surface_get_ny( surface )")
+    _iget_zvalue  = EclPrototype("double geo_surface_iget_zvalue( surface , int)")
+    _iset_zvalue  = EclPrototype("void   geo_surface_iset_zvalue( surface , int , double)")
+    _write        = EclPrototype("void   geo_surface_fprintf_irap( surface , char* )")
+    _equal        = EclPrototype("bool   geo_surface_equal( surface , surface )")
+    _header_equal = EclPrototype("bool   geo_surface_equal_header( surface , surface )")
+    _copy         = EclPrototype("surface_obj geo_surface_alloc_copy( surface , bool )")
+    _assign       = EclPrototype("void   geo_surface_assign_value( surface , double )")
+    _scale        = EclPrototype("void   geo_surface_scale( surface , double )")
+    _shift        = EclPrototype("void   geo_surface_shift( surface , double )")
+    _iadd         = EclPrototype("void   geo_surface_iadd( surface , surface )")
+    _imul         = EclPrototype("void   geo_surface_imul( surface , surface )")
+    _isub         = EclPrototype("void   geo_surface_isub( surface , surface )")
+    _isqrt        = EclPrototype("void   geo_surface_isqrt( surface )")
+    _iget_xy      = EclPrototype("void   geo_surface_iget_xy(surface, int, double*, double*)")
+    _get_pointset = EclPrototype("geo_pointset_ref geo_surface_get_pointset(surface)")
 
 
     def __init__(self, filename=None, nx=None, ny=None, xinc=None, yinc=None,

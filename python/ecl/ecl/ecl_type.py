@@ -15,7 +15,7 @@
 #  for more details.
 
 from cwrap import BaseCClass, BaseCEnum
-from ecl.ecl import EclPrototype
+from ecl import EclPrototype
 
 class EclTypeEnum(BaseCEnum):
     TYPE_NAME="ecl_type_enum"

@@ -1,12 +1,12 @@
 from cwrap import BaseCClass
-from ecl.util import UtilPrototype
+from ecl import EclPrototype
 
 
 class PermutationVector(BaseCClass):
     TYPE_NAME = "permutation_vector"
-    _free = UtilPrototype("void   perm_vector_free( permutation_vector )")
-    _size = UtilPrototype("int    perm_vector_get_size( permutation_vector )")
-    _iget = UtilPrototype("int    perm_vector_iget( permutation_vector , int)")
+    _free = EclPrototype("void   perm_vector_free( permutation_vector )")
+    _size = EclPrototype("int    perm_vector_get_size( permutation_vector )")
+    _iget = EclPrototype("int    perm_vector_iget( permutation_vector , int)")
 
     
     def __init__(self):

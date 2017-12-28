@@ -3,13 +3,14 @@ import stat
 import sys
 
 import ecl
+from ecl import EclPrototype
 from ecl.test.extended_testcase import ExtendedTestCase
 from ecl.test.test_area import TestAreaContext
 
 from cwrap import Prototype
 
 class _TestSpawnPrototype(Prototype):
-    lib = ecl.load('libecl')
+    lib = EclPrototype.lib
 
     def __init__(self, prototype, bind=True):
         super(_TestSpawnPrototype, self).__init__(_TestSpawnPrototype.lib, prototype, bind=bind)

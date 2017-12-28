@@ -20,25 +20,25 @@ import ctypes
 import os.path
 
 from cwrap import BaseCClass
-from ecl.geo import GeoPrototype
+from ecl import EclPrototype
 from .geometry_tools import GeometryTools
 
 
 class CPolyline(BaseCClass):
     TYPE_NAME = "geo_polygon"
 
-    _alloc_new          = GeoPrototype("void*           geo_polygon_alloc( char* )" , bind = False)
-    _fread_alloc_irap   = GeoPrototype("geo_polygon_obj geo_polygon_fload_alloc_irap( char* )" , bind = False)
-    _add_point          = GeoPrototype("void     geo_polygon_add_point( geo_polygon , double , double )")
-    _add_point_front    = GeoPrototype("void     geo_polygon_add_point_front( geo_polygon , double , double )")
-    _free               = GeoPrototype("void     geo_polygon_free( geo_polygon )")
-    _size               = GeoPrototype("int      geo_polygon_get_size( geo_polygon )")
-    _iget_xy            = GeoPrototype("void     geo_polygon_iget_xy( geo_polygon , int , double* , double* )")
-    _segment_intersects = GeoPrototype("bool     geo_polygon_segment_intersects( geo_polygon , double , double, double , double)")
-    _get_name           = GeoPrototype("char*    geo_polygon_get_name( geo_polygon  )")
-    _set_name           = GeoPrototype("void     geo_polygon_set_name( geo_polygon , char*  )")
-    _segment_length     = GeoPrototype("double   geo_polygon_get_length( geo_polygon)")
-    _equal              = GeoPrototype("bool     geo_polygon_equal( geo_polygon , geo_polygon )")
+    _alloc_new          = EclPrototype("void*           geo_polygon_alloc( char* )" , bind = False)
+    _fread_alloc_irap   = EclPrototype("geo_polygon_obj geo_polygon_fload_alloc_irap( char* )" , bind = False)
+    _add_point          = EclPrototype("void     geo_polygon_add_point( geo_polygon , double , double )")
+    _add_point_front    = EclPrototype("void     geo_polygon_add_point_front( geo_polygon , double , double )")
+    _free               = EclPrototype("void     geo_polygon_free( geo_polygon )")
+    _size               = EclPrototype("int      geo_polygon_get_size( geo_polygon )")
+    _iget_xy            = EclPrototype("void     geo_polygon_iget_xy( geo_polygon , int , double* , double* )")
+    _segment_intersects = EclPrototype("bool     geo_polygon_segment_intersects( geo_polygon , double , double, double , double)")
+    _get_name           = EclPrototype("char*    geo_polygon_get_name( geo_polygon  )")
+    _set_name           = EclPrototype("void     geo_polygon_set_name( geo_polygon , char*  )")
+    _segment_length     = EclPrototype("double   geo_polygon_get_length( geo_polygon)")
+    _equal              = EclPrototype("bool     geo_polygon_equal( geo_polygon , geo_polygon )")
 
 
     def __init__(self, name = None , init_points = ()):

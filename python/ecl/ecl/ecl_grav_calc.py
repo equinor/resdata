@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl.ecl import EclPrototype
+from ecl import EclPrototype
 
 __arglist  = 'double, double, double, '
 __arglist += 'ecl_grid, ecl_file, '

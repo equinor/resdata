@@ -19,7 +19,7 @@ import ctypes
 from cwrap import BaseCClass
 from ecl.util import monkey_the_camel
 from ecl.util import IntVector
-from ecl.ecl import EclPrototype
+from ecl import EclPrototype
 
 
 class Layer(BaseCClass):
