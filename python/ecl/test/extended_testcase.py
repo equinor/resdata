@@ -16,7 +16,6 @@ from ecl.util import Version
 TESTDATA_ROOT = None
 SHARE_ROOT = None
 SOURCE_ROOT = None
-BUILD_ROOT = None
 try:
     from test_env import *
 except ImportError:
@@ -68,10 +67,9 @@ class ExtendedTestCase(TestCase):
 
 
     def __str__(self):
-        return 'ExtendedTestCase( TESTADATA_ROOT=%s, SOURCE_ROOT=%s, SHARE_ROOT=%s, BUILD_ROOT=%s)' % (TESTDATA_ROOT,
-                                                                                                       SOURCE_ROOT,
-                                                                                                       SHARE_ROOT,
-                                                                                                       BUILD_ROOT)
+        return 'ExtendedTestCase( TESTADATA_ROOT=%s, SOURCE_ROOT=%s, SHARE_ROOT=%s)' % (TESTDATA_ROOT,
+                                                                                        SOURCE_ROOT,
+                                                                                        SHARE_ROOT)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:
