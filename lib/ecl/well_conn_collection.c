@@ -20,7 +20,7 @@
 
 #include <ert/util/util.h>
 #include <ert/util/type_macros.h>
-#include <ert/util/vector.h>
+#include <ert/util/struct_vector.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_rsthead.h>
@@ -34,7 +34,7 @@
 
 struct well_conn_collection_struct {
   UTIL_TYPE_ID_DECLARATION;
-  vector_type * connection_list;
+  struct_vector_type * connection_list;
 };
 
 
@@ -45,30 +45,20 @@ static UTIL_SAFE_CAST_FUNCTION( well_conn_collection , WELL_CONN_COLLECTION_TYPE
 well_conn_collection_type * well_conn_collection_alloc() {
   well_conn_collection_type * wellcc = util_malloc( sizeof * wellcc );
   UTIL_TYPE_ID_INIT( wellcc , WELL_CONN_COLLECTION_TYPE_ID );
-  wellcc->connection_list = vector_alloc_new();
+  wellcc->connection_list = struct_vector_alloc( sizeof(well_conn_type) );
   return wellcc;
 }
 
-/*
-  The collection takes ownership of the connection object and frees it
-  when the collection is discarded.
-*/
 
 void well_conn_collection_add( well_conn_collection_type * wellcc , well_conn_type * conn) {
-  vector_append_owned_ref( wellcc->connection_list , conn , well_conn_free__);
+   struct_vector_append( wellcc->connection_list , conn  );
 }
 
-/*
-  The collection only stores a refernce to the object, which will be destroyed by 'someone else'.
-*/
 
-void well_conn_collection_add_ref( well_conn_collection_type * wellcc , well_conn_type * conn) {
-  vector_append_ref( wellcc->connection_list , conn );
-}
 
 
 void well_conn_collection_free( well_conn_collection_type * wellcc ) {
-  vector_free( wellcc->connection_list );
+  struct_vector_free( wellcc->connection_list );
   free( wellcc );
 }
 
@@ -79,14 +69,14 @@ void well_conn_collection_free__( void * arg ) {
 
 
 int well_conn_collection_get_size( const well_conn_collection_type * wellcc ) {
-  return vector_get_size( wellcc->connection_list );
+  return struct_vector_get_size( wellcc->connection_list );
 }
 
 
 const well_conn_type * well_conn_collection_iget_const(const well_conn_collection_type * wellcc , int index) {
   int size = well_conn_collection_get_size( wellcc );
   if (index < size)
-    return vector_iget_const( wellcc->connection_list , index );
+    return struct_vector_iget_ptr( wellcc->connection_list , index );
   else
     return NULL;
 }
@@ -94,7 +84,7 @@ const well_conn_type * well_conn_collection_iget_const(const well_conn_collectio
 well_conn_type * well_conn_collection_iget(const well_conn_collection_type * wellcc , int index) {
   int size = well_conn_collection_get_size( wellcc );
   if (index < size)
-    return vector_iget( wellcc->connection_list , index );
+    return struct_vector_iget_ptr( wellcc->connection_list , index );
   else
     return NULL;
 }
@@ -111,11 +101,11 @@ int well_conn_collection_load_from_kw( well_conn_collection_type * wellcc ,
   const int iwel_offset = rst_head->niwelz * iwell;
   int num_connections   = ecl_kw_iget_int( iwel_kw , iwel_offset + IWEL_CONNECTIONS_INDEX );
   int iconn;
+  well_conn_type tmp_well_conn;
 
   for (iconn = 0; iconn < num_connections; iconn++) {
-    well_conn_type * conn = well_conn_alloc_from_kw( icon_kw , scon_kw, xcon_kw, rst_head , iwell , iconn );
-    if (conn)
-      well_conn_collection_add( wellcc , conn );
+    if (well_conn_init_from_kw( &tmp_well_conn, icon_kw , scon_kw, xcon_kw, rst_head , iwell , iconn ))
+      well_conn_collection_add( wellcc , &tmp_well_conn );
   }
   return num_connections;
 

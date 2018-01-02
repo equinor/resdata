@@ -38,25 +38,6 @@
   ert libraries.
 */
 
-#define WELL_CONN_TYPE_ID 702052013
-
-struct  well_conn_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  int                i;
-  int                j;
-  int                k;
-  well_conn_dir_enum dir;
-  bool               open;
-  int                segment_id;             // -1: Ordinary well
-  bool               matrix_connection;   // k >= nz => fracture (and k -= nz )
-  double             connection_factor;
-  double             oil_rate;
-  double             gas_rate;
-  double             water_rate;
-  double             volume_rate;
-
-};
-
 
 
 bool well_conn_equal( const well_conn_type *conn1  , const well_conn_type * conn2) {
@@ -89,10 +70,8 @@ static bool well_conn_assert_direction( well_conn_dir_enum dir, bool matrix_conn
 UTIL_IS_INSTANCE_FUNCTION( well_conn , WELL_CONN_TYPE_ID)
 UTIL_SAFE_CAST_FUNCTION( well_conn , WELL_CONN_TYPE_ID)
 
-
-static well_conn_type * well_conn_alloc__( int i , int j , int k , double connection_factor , well_conn_dir_enum dir , bool open, int segment_id, bool matrix_connection) {
+static bool well_conn_init__( well_conn_type * conn, int i , int j , int k , double connection_factor , well_conn_dir_enum dir , bool open, int segment_id, bool matrix_connection) {
   if (well_conn_assert_direction( dir , matrix_connection)) {
-    well_conn_type * conn = util_malloc( sizeof * conn );
     UTIL_TYPE_ID_INIT( conn , WELL_CONN_TYPE_ID );
     conn->i = i;
     conn->j = j;
@@ -112,11 +91,22 @@ static well_conn_type * well_conn_alloc__( int i , int j , int k , double connec
     conn->oil_rate = 0;
     conn->volume_rate = 0;
 
-    return conn;
+    return true;
   } else {
     printf("assert-direction failed.  dir:%d  matrix_connection:%d \n",dir , matrix_connection);
-    return NULL;
+    return false;
   }
+}
+
+static well_conn_type * well_conn_alloc__( int i , int j , int k , double connection_factor , well_conn_dir_enum dir , bool open, int segment_id, bool matrix_connection) {
+  well_conn_type * conn = util_malloc( sizeof * conn );
+
+  if(well_conn_init__(conn, i, j, k, connection_factor, dir, open, segment_id, matrix_connection))
+    return conn;
+ else {
+   well_conn_free(conn);
+   return NULL;
+ }
 }
 
 
@@ -149,17 +139,17 @@ well_conn_type * well_conn_alloc_fracture_MSW( int i , int j , int k , double co
   Observe that the (ijk) and branch values are shifted to zero offset to be
   aligned with the rest of the ert libraries.
 */
-well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
-                                          const ecl_kw_type * scon_kw ,
-                                          const ecl_kw_type * xcon_kw ,
-                                          const ecl_rsthead_type * header ,
-                                          int well_nr ,
-                                          int conn_nr ) {
+bool well_conn_init_from_kw( well_conn_type * conn,
+                             const ecl_kw_type * icon_kw ,
+                             const ecl_kw_type * scon_kw ,
+                             const ecl_kw_type * xcon_kw ,
+                             const ecl_rsthead_type * header ,
+                             int well_nr ,
+                             int conn_nr ) {
 
   const int icon_offset = header->niconz * ( header->ncwmax * well_nr + conn_nr );
   int IC = ecl_kw_iget_int( icon_kw , icon_offset + ICON_IC_INDEX );
   if (IC > 0) {
-    well_conn_type * conn;
     int i       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_I_INDEX ) - 1;
     int j       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_J_INDEX ) - 1;
     int k       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_K_INDEX ) - 1;
@@ -223,7 +213,8 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
     }
 
     int segment_id = ecl_kw_iget_int( icon_kw , icon_offset + ICON_SEGMENT_INDEX ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
-    conn = well_conn_alloc__(i,j,k,connection_factor,dir,open,segment_id,matrix_connection);
+    if (!well_conn_init__(conn,i,j,k,connection_factor,dir,open,segment_id,matrix_connection))
+      return false;
 
     if (xcon_kw) {
       const int xcon_offset = header->nxconz * (header->ncwmax * well_nr + conn_nr);
@@ -241,9 +232,26 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
        MSW + LGR well.
     */
 
-    return conn;
+    return true;
   } else
-    return NULL;  /* IC < 0: Connection not in current LGR. */
+    return false; /* IC < 0: Connection not in current LGR. */
+}
+
+
+
+well_conn_type * well_conn_alloc_from_kw(const ecl_kw_type * icon_kw ,
+                                         const ecl_kw_type * scon_kw ,
+                                         const ecl_kw_type * xcon_kw ,
+                                         const ecl_rsthead_type * header ,
+                                         int well_nr ,
+                                         int conn_nr ) {
+  well_conn_type * well_conn = util_malloc( sizeof * well_conn);
+  if (well_conn_init_from_kw(well_conn, icon_kw, scon_kw, xcon_kw, header, well_nr, conn_nr))
+    return well_conn;
+  else {
+    well_conn_free(well_conn);
+    return NULL;
+  }
 }
 
 
