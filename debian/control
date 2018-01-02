@@ -33,6 +33,6 @@ Description: Utilities for wrapping C code from python
 Package: python-ecl
 Section: python
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libert.ecl1, python-cwrap
+Depends: ${shlibs:Depends}, ${misc:Depends}, libecl1, python-cwrap
 Description: libecl Eclipse IO library - Python bindings
  libecl is a package for reading and writing the result files from the Eclipse reservoir simulator.
