@@ -16,7 +16,6 @@ from ecl.util import Version
 TESTDATA_ROOT = None
 SHARE_ROOT = None
 SOURCE_ROOT = None
-BUILD_ROOT = None
 try:
     from test_env import *
 except ImportError:
@@ -61,17 +60,14 @@ This class provides some extra functionality for testing values that are almost 
 """
 class ExtendedTestCase(TestCase):
     def __init__(self , *args , **kwargs):
-        self.__testdata_root = None
-        self.__share_root = None
         installAbortSignals()
         super(ExtendedTestCase , self).__init__(*args , **kwargs)
 
 
     def __str__(self):
-        return 'ExtendedTestCase( TESTADATA_ROOT=%s, SOURCE_ROOT=%s, SHARE_ROOT=%s, BUILD_ROOT=%s)' % (TESTDATA_ROOT,
-                                                                                                       SOURCE_ROOT,
-                                                                                                       SHARE_ROOT,
-                                                                                                       BUILD_ROOT)
+        return 'ExtendedTestCase( TESTADATA_ROOT=%s, SOURCE_ROOT=%s, SHARE_ROOT=%s)' % (TESTDATA_ROOT,
+                                                                                        SOURCE_ROOT,
+                                                                                        SHARE_ROOT)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:
@@ -153,11 +149,15 @@ class ExtendedTestCase(TestCase):
 
     @staticmethod
     def createSharePath(path):
+        if SHARE_ROOT is None:
+            raise Exception("Trying to create directory rooted in 'SHARE_ROOT' - variable 'SHARE_ROOT' is not set.")
         return os.path.realpath(os.path.join(SHARE_ROOT , path))
 
 
     @staticmethod
     def createTestPath(path):
+        if TESTDATA_ROOT is None:
+            raise Exception("Trying to create directory rooted in 'TESTDATA_ROOT' - variable 'TESTDATA_ROOT' has not been set.")
         return os.path.realpath(os.path.join(TESTDATA_ROOT , path))
 
 
