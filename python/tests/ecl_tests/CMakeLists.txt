@@ -1,6 +1,3 @@
-set(NFS_RUNPATH "" CACHE STRING  "Disk area which is shared among cluster nodes and can be used as CWD for LSF/RSH jobs.")
-set(RSH_SERVERS "" CACHE STRING  "List of nodes which will be used to test the RSH driver")
-
 set(TEST_SOURCES
     __init__.py
     test_deprecation.py
