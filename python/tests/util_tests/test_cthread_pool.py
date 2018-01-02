@@ -1,13 +1,13 @@
 import ctypes
 import ecl
 from ecl import EclPrototype
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util import CThreadPool, startCThreadPool
 
 TEST_LIB = EclPrototype.lib 
 
 
-class CThreadPoolTest(ExtendedTestCase):
+class CThreadPoolTest(EclTest):
     def test_cfunc(self):
         with self.assertRaises(TypeError):
             func = CThreadPool.lookupCFunction("WRONG-TYPE", "no-this-does-not-exist")

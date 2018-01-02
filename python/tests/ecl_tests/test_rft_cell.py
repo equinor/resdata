@@ -17,7 +17,7 @@
 
 
 from ecl.ecl import EclRFTCell, EclPLTCell
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
 # def out_of_range():
@@ -25,7 +25,7 @@ from ecl.test import ExtendedTestCase
 #     rft = rftFile[100]
 
 
-class RFTCellTest(ExtendedTestCase):
+class RFTCellTest(EclTest):
     def setUp(self):
         self.RFT_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.RFT")
         self.PLT_file = self.createTestPath("Statoil/ECLIPSE/RFT/TEST1_1A.RFT")

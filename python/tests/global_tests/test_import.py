@@ -21,6 +21,6 @@ import sys
 from ecl.test import ImportTestCase
 
 class ImportEcl(ImportTestCase):
-    
+
     def test_import_ecl(self):
         self.assertTrue( self.import_package( "ecl" ))

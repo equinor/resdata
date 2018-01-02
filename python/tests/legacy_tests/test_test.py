@@ -9,8 +9,8 @@ from ert.test import PathContext
 from ert.test import LintTestCase
 from ert.test import ImportTestCase
 
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class ErtLegacyTestTest(ExtendedTestCase):
+class ErtLegacyTestTest(EclTest):
     pass

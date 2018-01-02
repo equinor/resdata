@@ -34,8 +34,9 @@ from ert.ecl.faults import FaultBlock , FaultBlockCell
 from ert.ecl.faults import FaultBlockLayer
 
 
-from ecl.test import ExtendedTestCase
+
+from tests import EclTest
 
 
-class ErtLegacyEclTest(ExtendedTestCase):
+class ErtLegacyEclTest(EclTest):
     pass

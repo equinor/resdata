@@ -2,12 +2,12 @@ import datetime
 import os.path
 
 from ecl.ecl import EclGrid, EclFile, EclSum
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
 
-class EclWellTest3(ExtendedTestCase):
+class EclWellTest3(EclTest):
     grid = None
 
     def test_rates(self):

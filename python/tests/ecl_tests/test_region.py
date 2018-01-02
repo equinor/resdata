@@ -15,10 +15,10 @@
 #  for more details.
 from ecl.ecl import EclGrid, EclKW, EclRegion, EclDataType
 from ecl.ecl.faults import Layer
-from ecl.test import ExtendedTestCase
 from ecl.util import IntVector
+from tests import EclTest
 
-class RegionTest(ExtendedTestCase):
+class RegionTest(EclTest):
 
     def test_equal(self):
         grid = EclGrid.createRectangular( (10,10,1) , (1,1,1))

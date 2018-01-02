@@ -4,7 +4,7 @@ import sys
 
 import ecl
 from ecl import EclPrototype
-from ecl.test.extended_testcase import ExtendedTestCase
+from tests import EclTest
 from ecl.test.test_area import TestAreaContext
 
 from cwrap import Prototype
@@ -16,7 +16,7 @@ class _TestSpawnPrototype(Prototype):
         super(_TestSpawnPrototype, self).__init__(_TestSpawnPrototype.lib, prototype, bind=bind)
 
 
-class SpawnTest(ExtendedTestCase):
+class SpawnTest(EclTest):
     _spawn = _TestSpawnPrototype("int util_spawn_blocking(char*, int, void*, char*, char*)", bind = False)
     def createScript(self, name, stdout_string , stderr_string):
         with open(name, "w") as f:

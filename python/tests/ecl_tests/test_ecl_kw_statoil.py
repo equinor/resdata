@@ -18,8 +18,8 @@ import os
 import random
 from ecl.ecl import EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum
 
-from ecl.test import ExtendedTestCase , TestAreaContext
-
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 def copy_long():
     src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
@@ -31,7 +31,7 @@ def copy_offset():
     copy = src.sub_copy(200, 100)
 
 
-class KWTest(ExtendedTestCase):
+class KWTest(EclTest):
     def test_fortio_size( self ):
         unrst_file_path = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
         unrst_file = EclFile(unrst_file_path)

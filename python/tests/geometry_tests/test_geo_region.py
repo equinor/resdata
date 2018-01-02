@@ -1,8 +1,9 @@
 from ecl.geo import GeoRegion, GeoPointset, CPolyline, Surface
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class GeoRegionTest(ExtendedTestCase):
+class GeoRegionTest(EclTest):
 
     def test_init(self):
         pointset = GeoPointset()

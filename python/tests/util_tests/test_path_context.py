@@ -1,8 +1,9 @@
 import os
-from ecl.test import ExtendedTestCase, PathContext,TestAreaContext
+from ecl.test import PathContext,TestAreaContext
+from tests import EclTest
 
 
-class PathContextTest(ExtendedTestCase):
+class PathContextTest(EclTest):
     
     def test_error(self):
         with TestAreaContext("pathcontext"):

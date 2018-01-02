@@ -17,13 +17,13 @@
 
 import os
 from ecl.ecl import EclKW,EclGrid,Ecl3DKW
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
 
 
 
-class GRDECLTest(ExtendedTestCase):
+class GRDECLTest(EclTest):
     def setUp(self):
         self.src_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/include/example_permx.GRDECL")
         self.file_list = []

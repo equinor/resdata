@@ -14,9 +14,10 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl.test import debug_msg, ExtendedTestCase
+from ecl.test import debug_msg
+from tests import EclTest
 
-class DebugTest(ExtendedTestCase):
+class DebugTest(EclTest):
 
     def test_create(self):
         msg = debug_msg( "DEBUG" )

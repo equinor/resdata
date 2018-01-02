@@ -22,7 +22,8 @@ import shutil
 from unittest import skipIf, skipUnless, skipIf
 
 from ecl.ecl import EclSum, EclSumVarType, FortIO, openFortIO, EclKW, EclDataType, EclSumKeyWordVector
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 from ecl.test.ecl_mock import createEclSum
 
 def fopr(days):
@@ -37,7 +38,7 @@ def fgpt(days):
     else:
         return 100 - days
 
-class SumTest(ExtendedTestCase):
+class SumTest(EclTest):
 
 
     def test_mock(self):

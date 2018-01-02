@@ -1,8 +1,8 @@
 from ecl.geo.geometry_tools import GeometryTools
-from ecl.test.extended_testcase import ExtendedTestCase
+from tests import EclTest
 
 
-class ConvexHullTest(ExtendedTestCase):
+class ConvexHullTest(EclTest):
 
     def test_ccw(self):
         p1 = (0, 0)

@@ -1,7 +1,8 @@
 import datetime
 from ecl.ecl import EclGrid, EclKW, EclDataType, openFortIO, FortIO, EclFile, EclSubsidence
 
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 import numpy as np
 
@@ -46,7 +47,7 @@ def create_restart(grid, case, p1, p2=None):
             p.fwrite(f)
 
 
-class GeertsmaTest(ExtendedTestCase):
+class GeertsmaTest(EclTest):
 
     @staticmethod
     def test_geertsma_kernel():

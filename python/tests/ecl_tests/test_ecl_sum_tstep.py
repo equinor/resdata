@@ -1,10 +1,10 @@
 from datetime import datetime
 import random
 from ecl.ecl import EclSumTStep, EclSum
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class EclSumTStepTest(ExtendedTestCase):
+class EclSumTStepTest(EclTest):
 
     def test_creation(self):
         ecl_sum = EclSum.writer("TEST", datetime(2010, 1, 1), 10, 10, 10)

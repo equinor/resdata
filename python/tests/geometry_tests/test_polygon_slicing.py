@@ -1,9 +1,9 @@
 from math import sqrt
 from ecl.geo.geometry_tools import GeometryTools
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class PolygonSlicingTest(ExtendedTestCase):
+class PolygonSlicingTest(EclTest):
 
     def test_slicing_internal_hull(self):
         polygon = [(2,2),(2,1),(1,1),(1,5),(5,5),(5,4),(4,4)]

@@ -1,9 +1,9 @@
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util import UIReturn
 from ecl.util.enums import UIReturnStatusEnum
 
 
-class UIReturnTest(ExtendedTestCase):
+class UIReturnTest(EclTest):
     def test_create(self):
         ui_return = UIReturn(UIReturnStatusEnum.UI_RETURN_OK)
         self.assertTrue(ui_return)

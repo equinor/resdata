@@ -20,10 +20,10 @@ except ImportError:
     from unittest import skipIf
 
 from ecl.ecl import EclGrid, EclDataType , EclKW
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.ecl.faults import FaultBlock, FaultBlockLayer
 
-class FaultBlockTest(ExtendedTestCase):
+class FaultBlockTest(EclTest):
     def setUp(self):
         self.grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/Mariner/MARINER.EGRID"))
         fileH = open( self.createTestPath("Statoil/ECLIPSE/Mariner/faultblock.grdecl") )

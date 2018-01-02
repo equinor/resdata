@@ -15,10 +15,9 @@
 #  for more details.
 
 from ecl.ecl import EclGrid , EclUtil, EclTypeEnum , EclFileEnum, EclPhaseEnum, EclUnitTypeEnum
-from ecl.test import ExtendedTestCase 
+from tests import EclTest
 
-
-class EclUtilTest(ExtendedTestCase):
+class EclUtilTest(EclTest):
 
     def test_enums(self):
         source_file_path = "lib/include/ert/ecl/ecl_util.h"

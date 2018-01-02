@@ -23,10 +23,11 @@ try:
 except ImportError:
     from unittest import skipIf
 
-from ecl.test import ExtendedTestCase , TestAreaContext, TempAreaContext
+from ecl.test import TestAreaContext, TempAreaContext
+from tests import EclTest
 
 
-class WorkAreaTest(ExtendedTestCase):
+class WorkAreaTest(EclTest):
 
     def test_full_path(self):
         with TestAreaContext("TestArea") as test_area:

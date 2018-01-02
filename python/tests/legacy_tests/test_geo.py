@@ -7,8 +7,8 @@ from ert.geo import XYZIo
 from ert.geo import GeometryTools
 from ert.geo import Surface
 
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class ErtLegacyGeoTest(ExtendedTestCase):
+class ErtLegacyGeoTest(EclTest):
     pass

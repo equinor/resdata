@@ -19,11 +19,11 @@ import random
 
 from ecl.util import IntVector
 from ecl.ecl import Ecl3DKW , EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum , EclGrid
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-
-class Ecl3DKWTest(ExtendedTestCase):
+class Ecl3DKWTest(EclTest):
 
     def test_create( self ):
         actnum = IntVector(default_value = 1 , initial_size = 1000)

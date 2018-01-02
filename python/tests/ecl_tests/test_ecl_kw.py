@@ -22,7 +22,8 @@ import warnings
 from ecl.ecl import (EclKW, EclDataType, EclTypeEnum, EclFile, FortIO,
                      EclFileFlagEnum, openFortIO)
 
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
 def copy_long():
@@ -35,7 +36,7 @@ def copy_offset():
     copy = src.sub_copy(200, 100)
 
 
-class KWTest(ExtendedTestCase):
+class KWTest(EclTest):
 
     def test_name(self):
         kw = EclKW('TEST', 3, EclDataType.ECL_INT)

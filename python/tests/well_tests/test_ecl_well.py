@@ -1,11 +1,11 @@
 import datetime
 from ecl.ecl import EclGrid, EclFile, EclFileFlagEnum
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
 
-class EclWellTest(ExtendedTestCase):
+class EclWellTest(EclTest):
     ALL_WELLS = ['E5H', 'G1H', 'M41', 'J41', 'D10H', 'P41', 'L41', 'M42', 'S41', 'S13H', 'Q12HT2', 'O41', 'L11H', 'Q21H',
                  'E6CH', 'D4Y1H', 'D4Y2H', 'I13Y1H', 'Q21AY1H', 'F5AH', 'O14Y4HT2', 'K24Y1H', 'K24Y3H', 'S21H', 'N11H',
                  'L23Y1H', 'D7AY1H', 'S21AHT2', 'H2AH', 'S21AHT3', 'L23Y6H', 'N11AH', 'N11BY1H', 'X23Y2H', 'N22Y3HT3',

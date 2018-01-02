@@ -23,12 +23,12 @@ from ert.util import Profiler
 from ert.util import ArgPack
 from ert.util import PathFormat
 
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 try:
     from res.util import SubstitutionList
 except ImportError:
     pass
 
-class ErtLegacyUtilTest(ExtendedTestCase):
+class ErtLegacyUtilTest(EclTest):
     pass

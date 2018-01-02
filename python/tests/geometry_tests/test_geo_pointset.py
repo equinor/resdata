@@ -1,8 +1,9 @@
 from ecl.geo import GeoPointset, Surface
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class GeoPointsetTest(ExtendedTestCase):
+class GeoPointsetTest(EclTest):
 
     def test_init(self):
         gp = GeoPointset()

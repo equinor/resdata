@@ -15,10 +15,10 @@
 #  for more details.
 import datetime
 
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.ecl import Ecl3DKW , EclKW, EclRestartFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
 
-class RestartFileTest(ExtendedTestCase):
+class RestartFileTest(EclTest):
     def setUp(self):
         self.grid_file =   self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")
         self.unrst_file   = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")

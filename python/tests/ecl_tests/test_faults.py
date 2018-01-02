@@ -21,11 +21,11 @@ from ecl import util
 
 from ecl.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
 from ecl.ecl import EclGrid, EclKW, EclDataType
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
 from ecl.geo import Polyline , CPolyline
+from tests import EclTest
 
-
-class FaultTest(ExtendedTestCase):
+class FaultTest(EclTest):
     @classmethod
     def setUpClass(cls):
         cls.grid = EclGrid.createRectangular( (151,100,50) , (1,1,1))

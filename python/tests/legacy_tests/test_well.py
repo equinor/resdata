@@ -6,8 +6,8 @@ from ert.well import WellState
 from ert.well import WellTimeLine
 from ert.well import WellInfo
 
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class ErtLegacyWellTest(ExtendedTestCase):
+class ErtLegacyWellTest(EclTest):
     pass
