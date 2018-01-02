@@ -1,7 +1,7 @@
 import ctypes
 import ecl
 
-from ecl.ecl import EclPrototype
+from ecl import EclPrototype
 from ecl.ecl import EclKW, EclFile, EclDataType, FortIO
 from ecl.test import ExtendedTestCase, TestAreaContext
 from ecl.util import IntVector
