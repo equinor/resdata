@@ -1,8 +1,8 @@
 from ecl.geo import GeometryTools
-from ecl.test.extended_testcase import ExtendedTestCase
+from tests import EclTest
 
 
-class IntersectionTest(ExtendedTestCase):
+class IntersectionTest(EclTest):
 
     def test_intersection(self):
 

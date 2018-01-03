@@ -21,12 +21,12 @@ from unittest import skipIf
 from ecl.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
 from ecl.ecl import EclFileFlagEnum, EclFileEnum
 
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
 
-
-class EclFileStatoilTest(ExtendedTestCase):
+class EclFileStatoilTest(EclTest):
     def setUp(self):
         self.test_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
         self.test_fmt_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.FUNRST")

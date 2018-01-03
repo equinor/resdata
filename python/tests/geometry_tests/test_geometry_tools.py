@@ -2,10 +2,11 @@ import math
 
 from ecl.geo import Polyline, GeometryTools , CPolyline
 from ecl.geo.xyz_io import XYZIo
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class GeometryToolsTest(ExtendedTestCase):
+class GeometryToolsTest(EclTest):
 
     def test_distance(self):
         p1 = (1,1)

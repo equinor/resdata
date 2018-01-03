@@ -1,9 +1,10 @@
 import random
 from ecl.geo import Surface
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class SurfaceTest(ExtendedTestCase):
+class SurfaceTest(EclTest):
     def setUp(self):
         self.surface_valid = self.createTestPath("local/geometry/surface/valid_ascii.irap")
         self.surface_short = self.createTestPath("local/geometry/surface/short_ascii.irap")

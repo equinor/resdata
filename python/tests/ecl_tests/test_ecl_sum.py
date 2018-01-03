@@ -21,10 +21,11 @@ import os.path
 from cwrap import CFILE
 from ecl.ecl import EclSum, EclSumKeyWordVector, EclFile
 from ecl.ecl import FortIO, openFortIO, openEclFile, EclKW
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class EclSumTest(ExtendedTestCase):
+class EclSumTest(EclTest):
 
 
     def setUp(self):

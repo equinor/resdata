@@ -1,9 +1,10 @@
 from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
 from ecl.util.rng import RandomNumberGenerator
-from ecl.test import ExtendedTestCase,TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class RngTest(ExtendedTestCase):
+class RngTest(EclTest):
 
     def test_enums(self):
         self.assertEnumIsFullyDefined(RngAlgTypeEnum, "rng_alg_type", "lib/include/ert/util/rng.h")

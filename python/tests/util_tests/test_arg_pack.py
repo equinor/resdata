@@ -1,12 +1,12 @@
 import ecl
 from ecl import EclPrototype
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util import ArgPack, StringList
 
 TEST_LIB = EclPrototype.lib
 
 
-class ArgPackTest(ExtendedTestCase):
+class ArgPackTest(EclTest):
     def test_create(self):
         arg = ArgPack()
         self.assertEqual(len(arg), 0)

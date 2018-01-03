@@ -22,10 +22,11 @@ from ecl.util import IntVector
 from ecl.ecl import EclGrid
 from ecl.geo import CPolyline
 from ecl.ecl.faults import Layer , FaultCollection
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class LayerTest(ExtendedTestCase):
+class LayerTest(EclTest):
     def setUp(self):
         pass
 

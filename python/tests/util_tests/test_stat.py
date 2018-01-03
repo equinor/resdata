@@ -1,9 +1,9 @@
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util import DoubleVector, quantile, quantile_sorted, polyfit
 from ecl.util.rng import RandomNumberGenerator
 
 
-class StatTest(ExtendedTestCase):
+class StatTest(EclTest):
     def test_stat_quantiles(self):
         rng = RandomNumberGenerator()
         rng.setState("0123456789ABCDEF")

@@ -24,7 +24,8 @@ from ecl.util import IntVector
 from ecl.ecl import EclGrid, EclKW, EclDataType, EclUnitTypeEnum, EclFile
 from ecl.ecl import EclGridGenerator as GridGen
 from ecl.ecl.faults import Layer , FaultCollection
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 # This dict is used to verify that corners are mapped to the correct
 # cell with respect to containment.
@@ -119,7 +120,7 @@ def average(points):
 # This test class should only have test cases which do not require
 # external test data. Tests involving Statoil test data are in the
 # test_grid_statoil module.
-class GridTest(ExtendedTestCase):
+class GridTest(EclTest):
 
     def test_oom_grid(self):
         nx = 2000

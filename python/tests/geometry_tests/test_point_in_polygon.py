@@ -1,9 +1,9 @@
 from ecl.geo.geometry_tools import GeometryTools
 from ecl.geo.polyline import Polyline
-from ecl.test.extended_testcase import ExtendedTestCase
+from tests import EclTest
 
 
-class PointInPolygonTest(ExtendedTestCase):
+class PointInPolygonTest(EclTest):
 
     def test_point_in_polygon(self):
         p1 = (0.5, 0.5)

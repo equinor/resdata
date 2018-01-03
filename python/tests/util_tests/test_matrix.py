@@ -1,8 +1,9 @@
 from ecl.util import Matrix , RandomNumberGenerator
 from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
-class MatrixTest(ExtendedTestCase):
+class MatrixTest(EclTest):
     def test_matrix(self):
         m = Matrix(2, 3)
 

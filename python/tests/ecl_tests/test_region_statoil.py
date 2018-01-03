@@ -16,10 +16,10 @@
 #  for more details.
 from ecl.ecl import EclFile, EclGrid, EclRegion
 from ecl.ecl.faults import Layer
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class RegionTest(ExtendedTestCase):
+class RegionTest(EclTest):
     def setUp(self):
         case = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE")
         self.grid = EclGrid(case)

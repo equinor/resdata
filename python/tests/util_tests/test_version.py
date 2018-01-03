@@ -16,11 +16,11 @@
 import os.path
 
 import ecl
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util import Version,EclVersion
 
 
-class VersionTest(ExtendedTestCase):
+class VersionTest(EclTest):
     def setUp(self):
         pass
 

@@ -13,13 +13,6 @@ from .source_enumerator import SourceEnumerator
 from ecl.util import installAbortSignals
 from ecl.util import Version
 
-TESTDATA_ROOT = None
-SHARE_ROOT = None
-SOURCE_ROOT = None
-try:
-    from test_env import *
-except ImportError:
-    pass
 
 # Function wrapper which can be used to add decorator @log_test to test
 # methods. When a test has been decorated with @log_test it will print
@@ -59,15 +52,20 @@ class _AssertNotRaisesContext(object):
 This class provides some extra functionality for testing values that are almost equal.
 """
 class ExtendedTestCase(TestCase):
+    TESTDATA_ROOT = None
+    SHARE_ROOT = None
+    SOURCE_ROOT = None
+
+
     def __init__(self , *args , **kwargs):
         installAbortSignals()
         super(ExtendedTestCase , self).__init__(*args , **kwargs)
 
 
     def __str__(self):
-        return 'ExtendedTestCase( TESTADATA_ROOT=%s, SOURCE_ROOT=%s, SHARE_ROOT=%s)' % (TESTDATA_ROOT,
-                                                                                        SOURCE_ROOT,
-                                                                                        SHARE_ROOT)
+        return 'ExtendedTestCase( TESTADATA_ROOT=%s, SOURCE_ROOT=%s, SHARE_ROOT=%s)' % (self.TESTDATA_ROOT,
+                                                                                        self.SOURCE_ROOT,
+                                                                                        self.SHARE_ROOT)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:
@@ -136,7 +134,10 @@ class ExtendedTestCase(TestCase):
         return buffer1 == buffer2
 
     def assertEnumIsFullyDefined(self, enum_class, enum_name, source_path, verbose=False):
-        enum_values = SourceEnumerator.findEnumerators(enum_name, os.path.join( SOURCE_ROOT , source_path))
+        if self.SOURCE_ROOT is None:
+            raise Exception("SOURCE_ROOT is not set.")
+
+        enum_values = SourceEnumerator.findEnumerators(enum_name, os.path.join( self.SOURCE_ROOT , source_path))
 
         for identifier, value in enum_values:
             if verbose:
@@ -147,18 +148,18 @@ class ExtendedTestCase(TestCase):
             self.assertEqual(class_value, value, "Enum value for identifier: %s does not match: %s != %s" % (identifier, class_value, value))
 
 
-    @staticmethod
-    def createSharePath(path):
-        if SHARE_ROOT is None:
+    @classmethod
+    def createSharePath(cls, path):
+        if cls.SHARE_ROOT is None:
             raise Exception("Trying to create directory rooted in 'SHARE_ROOT' - variable 'SHARE_ROOT' is not set.")
-        return os.path.realpath(os.path.join(SHARE_ROOT , path))
+        return os.path.realpath(os.path.join(cls.SHARE_ROOT , path))
 
 
-    @staticmethod
-    def createTestPath(path):
-        if TESTDATA_ROOT is None:
+    @classmethod
+    def createTestPath(cls, path):
+        if cls.TESTDATA_ROOT is None:
             raise Exception("Trying to create directory rooted in 'TESTDATA_ROOT' - variable 'TESTDATA_ROOT' has not been set.")
-        return os.path.realpath(os.path.join(TESTDATA_ROOT , path))
+        return os.path.realpath(os.path.join(cls.TESTDATA_ROOT , path))
 
 
     def assertNotRaises(self, func=None):

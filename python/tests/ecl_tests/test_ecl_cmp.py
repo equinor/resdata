@@ -14,11 +14,12 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
 from ecl.test.ecl_mock import createEclSum
 from ecl.ecl import EclCmp
+from tests import EclTest
 
-class EclCmpTest(ExtendedTestCase):
+class EclCmpTest(EclTest):
     def setUp(self):
         self.root1 = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE")
         self.root2 = self.createTestPath("Statoil/ECLIPSE/Oseberg/F8MLT/F8MLT-F4")

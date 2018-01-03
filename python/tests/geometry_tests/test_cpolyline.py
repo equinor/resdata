@@ -2,10 +2,11 @@ import math
 
 from ecl.geo import CPolyline , Polyline
 from ecl.geo.xyz_io import XYZIo
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class CPolylineTest(ExtendedTestCase):
+class CPolylineTest(EclTest):
     def setUp(self):
         self.polyline1 = self.createTestPath("local/geometry/pol11.xyz")
         self.polyline2 = self.createTestPath("local/geometry/pol8.xyz")

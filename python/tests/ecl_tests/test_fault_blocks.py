@@ -21,10 +21,11 @@ import warnings
 from ecl.ecl import EclGrid, EclKW , EclRegion, EclDataType
 from ecl.ecl.faults import FaultBlock, FaultBlockLayer, FaultBlockCell,FaultCollection
 from ecl.geo import Polyline , CPolylineCollection
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class FaultBlockTest(ExtendedTestCase):
+class FaultBlockTest(EclTest):
     def setUp(self):
         self.grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) )
         self.kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_INT )

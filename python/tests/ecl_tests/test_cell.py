@@ -16,9 +16,10 @@
 #  for more details.
 
 from ecl.ecl import Cell, EclGrid
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
-class CellTest(ExtendedTestCase):
+
+class CellTest(EclTest):
 
     def setUp(self):
         fk = self.createTestPath('local/ECLIPSE/faarikaal/faarikaal1.EGRID')
@@ -96,3 +97,4 @@ class CellTest(ExtendedTestCase):
         r = repr(c)
         self.assertTrue(r.startswith('Cell(4, 1, 82, active, '))
         self.assertIn('faarikaal1.EGRID', r)
+

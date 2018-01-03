@@ -1,12 +1,13 @@
 import time
 import datetime
 
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 from ecl.ecl import EclFile,EclKW,EclDataType,openFortIO, FortIO
 
 
 
-class Removed_2_1_Test(ExtendedTestCase):
+class Removed_2_1_Test(EclTest):
     def test_ecl_file_block(self):
 
         with TestAreaContext("name") as t:

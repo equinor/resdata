@@ -23,7 +23,8 @@ from unittest import skipIf
 from ecl.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
 from ecl.ecl import EclFileFlagEnum, EclDataType, EclFileEnum
 from ecl.util import CWDContext
-from ecl.test import ExtendedTestCase , TestAreaContext, PathContext
+from ecl.test import TestAreaContext, PathContext
+from tests import EclTest
 
 def createFile( name , kw_list ):
     with openFortIO(name , mode = FortIO.WRITE_MODE) as f:
@@ -42,7 +43,7 @@ def loadKeywords( name ):
 
 
 
-class EclFileTest(ExtendedTestCase):
+class EclFileTest(EclTest):
 
     def assertFileType(self , filename , expected):
         file_type , step , fmt_file = EclFile.getFileType(filename)

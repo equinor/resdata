@@ -17,14 +17,15 @@
 import os
 from random import randint
 from ecl.ecl import FortIO, EclDataType, EclKW , openFortIO, EclFile
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
 
 
-class FortIOTest(ExtendedTestCase):
+class FortIOTest(EclTest):
 
-        
+
 
 
     def test_open_write(self):

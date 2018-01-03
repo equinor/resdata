@@ -16,9 +16,10 @@
 #  for more details.
 
 from ecl.ecl import EclGrid
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
-class FKTest(ExtendedTestCase):
+class FKTest(EclTest):
 
     def test_cell_containment(self):
 

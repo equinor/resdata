@@ -2,13 +2,13 @@ import datetime
 import os.path
 
 from ecl.ecl import EclGrid, EclFile, EclFileFlagEnum
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
 
 
-class EclWellTest2(ExtendedTestCase):
+class EclWellTest2(EclTest):
     grid = None
 
 

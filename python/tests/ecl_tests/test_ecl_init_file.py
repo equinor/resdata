@@ -15,11 +15,11 @@
 #  for more details.
 
 
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 from ecl.ecl import (Ecl3DKW, EclKW, EclInitFile, EclFile, FortIO,
                      EclFileFlagEnum, EclGrid)
 
-class InitFileTest(ExtendedTestCase):
+class InitFileTest(EclTest):
 
 
     def setUp(self):

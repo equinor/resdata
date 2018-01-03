@@ -1,11 +1,12 @@
-from ecl.test import TestAreaContext, ExtendedTestCase
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 from ecl.ecl import EclDataType, EclTypeEnum
 
 def get_const_size_types():
     return EclTypeEnum.enums()[:-1:]
 
-class EclDataTypeTest(ExtendedTestCase):
+class EclDataTypeTest(EclTest):
 
     # All of the below should list their elements in the same order as
     # EclTypeEnum!

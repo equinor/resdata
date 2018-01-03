@@ -1,9 +1,10 @@
 import time
 from ecl.ecl import EclGrav, EclKW, EclGrid, EclFile, EclDataType, openFortIO, FortIO
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class EclGravTest(ExtendedTestCase):
+class EclGravTest(EclTest):
 
 
     def setUp(self):

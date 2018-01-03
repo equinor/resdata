@@ -1,8 +1,9 @@
 import os
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 from ecl.util import PathFormat
 
-class PathFmtTest(ExtendedTestCase):
+class PathFmtTest(EclTest):
 
     def test_create(self):
         path_fmt = PathFormat("random/path/%d-%d")

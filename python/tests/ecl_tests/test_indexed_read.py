@@ -3,10 +3,11 @@ import ecl
 
 from ecl import EclPrototype
 from ecl.ecl import EclKW, EclFile, EclDataType, FortIO
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 from ecl.util import IntVector
 
-class EclIndexedReadTest(ExtendedTestCase):
+class EclIndexedReadTest(EclTest):
     _freadIndexedData   = EclPrototype("void ecl_kw_fread_indexed_data_python(fortio, int, ecl_data_type, int, int_vector, char*)", bind = False) # fortio, offset, type, count, index_map, buffer
     _eclFileIndexedRead = EclPrototype("void ecl_file_indexed_read(ecl_file, char*, int, int_vector, char*)", bind = False) # ecl_file, kw, index, index_map, buffer
 

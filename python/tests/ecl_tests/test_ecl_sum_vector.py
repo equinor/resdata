@@ -23,10 +23,10 @@ except ImportError:
 import warnings
 
 from ecl.ecl import EclSumVector, EclSum
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class EclSumVectorTest(ExtendedTestCase):
+class EclSumVectorTest(EclTest):
 
 
     def setUp(self):

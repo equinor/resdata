@@ -28,7 +28,8 @@ from ecl.ecl import EclSum
 from ecl.ecl import EclNPV , NPVPriceVector
 
 from ecl.util import StringList, TimeVector, DoubleVector , CTime
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
 base = "ECLIPSE"
@@ -45,7 +46,7 @@ def linear2(x):
     return 2*x
 
 
-class NPVTest(ExtendedTestCase):
+class NPVTest(EclTest):
     def setUp(self):
         self.case = self.createTestPath(case)
 

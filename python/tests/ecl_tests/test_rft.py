@@ -20,10 +20,10 @@ import datetime
 from ecl.util import CTime
 from ecl.ecl import EclRFTFile, EclRFTCell, EclPLTCell
 from ecl.ecl.rft import WellTrajectory
-from ecl.test import ExtendedTestCase
 from ecl.ecl import EclRFT
+from tests import EclTest
 
-class RFTTest(ExtendedTestCase):
+class RFTTest(EclTest):
 
     def test_create(self):
         rft = EclRFT( "WELL" , "RFT" , datetime.date(2015 , 10 , 1 ) , 100 )
