@@ -2,7 +2,7 @@ Source: ecl
 Priority: extra
 Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
 Build-Depends: debhelper (>= 8.0.0), cmake, liblapack-dev, libquadmath0,
-               iputils-ping, zlib1g-dev, git, python-dev, python-numpy
+               iputils-ping, zlib1g-dev, git, python-dev, python-numpy, python-cwrap
 Standards-Version: 3.9.2
 Section: libs
 Homepage: http://ert.nr.no
@@ -22,13 +22,6 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: libecl Eclipse IO library
  libecl is a package for reading and writing the result files from the Eclipse reservoir simulator.
-
-Package: python-cwrap
-Section: python
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Utilities for wrapping C code from python
- python-cwrap is a package helping to write python bindings for C libraries
 
 Package: python-ecl
 Section: python
