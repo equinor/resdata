@@ -19,10 +19,9 @@ from __future__ import print_function
 import datetime
 from ecl.ecl import EclRFTFile, EclRFTCell, EclPLTCell
 from ecl.ecl.rft import WellTrajectory
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
-
-class RFTTest(ExtendedTestCase):
+class RFTTest(EclTest):
     def setUp(self):
         self.RFT_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.RFT")
         self.PLT_file = self.createTestPath("Statoil/ECLIPSE/RFT/TEST1_1A.RFT")

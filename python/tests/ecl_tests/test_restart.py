@@ -1,30 +1,30 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from _ctypes import ArgumentError
 import os
 import datetime
 from ecl.ecl import EclFile
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
 
 
 
-class RestartTest(ExtendedTestCase):
+class RestartTest(EclTest):
     def setUp(self):
         self.xfile0 = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.X0000")
         self.u_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
@@ -123,7 +123,7 @@ class RestartTest(ExtendedTestCase):
 
         self.assertTrue(kw1.equal(kw2))
         self.assertTrue(kw1.equal(kw3))
-        
+
         with self.assertRaises(IndexError):
             kw4 = f.restart_get_kw("SWAT", datetime.datetime(2009, 3, 17))
-            
+

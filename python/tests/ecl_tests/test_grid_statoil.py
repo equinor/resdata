@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
 #  The file 'test_grid.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import math
 
@@ -24,10 +24,11 @@ except ImportError:
 import time
 from ecl.ecl import EclDataType, EclKW, EclGrid, EclFile, openEclFile
 from ecl.util import DoubleVector, IntVector
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
-class GridTest(ExtendedTestCase):
+class GridTest(EclTest):
     def egrid_file(self):
         return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")
 
@@ -45,14 +46,14 @@ class GridTest(ExtendedTestCase):
 
         self.assertTrue( isinstance( g1 , EclGrid ) )
         self.assertTrue( isinstance( g2 , EclGrid ) )
-        
+
 
     def test_corner(self):
         grid = EclGrid(self.egrid_file())
         nx = grid.getNX()
         ny = grid.getNY()
         nz = grid.getNZ()
-        
+
         (x1,y1,z1) = grid.getCellCorner( 0 , ijk = (0,0,0))
         (x2,y2,z2) = grid.getLayerXYZ( 0 , 0 )
         self.assertEqual(x1,x2)
@@ -84,7 +85,7 @@ class GridTest(ExtendedTestCase):
         self.assertEqual(z1,z2)
 
 
-    
+
         with self.assertRaises(IndexError):
             grid.getLayerXYZ( -1 , 0 )
 
@@ -101,9 +102,9 @@ class GridTest(ExtendedTestCase):
     def test_GRID( self ):
         grid = EclGrid(self.grid_file())
         self.assertTrue(grid)
-    
-    
-    
+
+
+
     def test_EGRID( self ):
         grid = EclGrid(self.egrid_file())
         self.assertTrue(grid)
@@ -111,9 +112,9 @@ class GridTest(ExtendedTestCase):
         self.assertEqual(dims[0] , grid.getNX())
         self.assertEqual(dims[1] , grid.getNY())
         self.assertEqual(dims[2] , grid.getNZ())
-    
-    
-    
+
+
+
     def create(self, filename, load_actnum=True):
         fileH = open(filename, "r")
         specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
@@ -123,12 +124,12 @@ class GridTest(ExtendedTestCase):
             actnum = EclKW.read_grdecl(fileH, "ACTNUM", ecl_type=EclDataType.ECL_INT)
         else:
             actnum = None
-    
+
         mapaxes = EclKW.read_grdecl(fileH, "MAPAXES")
         grid = EclGrid.create(specgrid, zcorn, coord, actnum, mapaxes=mapaxes)
         return grid
-    
-    
+
+
     def test_rect(self):
         with TestAreaContext("python/grid-test/testRect"):
             a1 = 1.0
@@ -139,32 +140,32 @@ class GridTest(ExtendedTestCase):
             grid2 = EclGrid("rect.EGRID")
             self.assertTrue(grid)
             self.assertTrue(grid2)
-    
+
             (x, y, z) = grid.get_xyz(ijk=(4, 4, 4))
             self.assertAlmostEqualList([x, y, z], [4.5 * a1, 4.5 * a2, 4.5 * a3])
-    
+
             v = grid.cell_volume(ijk=(4, 4, 4))
             self.assertFloatEqual(v, a1 * a2 * a3)
-    
+
             z = grid.depth(ijk=(4, 4, 4 ))
             self.assertFloatEqual(z, 4.5 * a3)
-    
+
             g1 = grid.global_index(ijk=(2, 2, 2))
             g2 = grid.global_index(ijk=(4, 4, 4))
             (dx, dy, dz) = grid.distance(g2, g1)
             self.assertAlmostEqualList([dx, dy, dz], [2 * a1, 2 * a2, 2 * a3])
-    
+
             self.assertTrue(grid.cell_contains(2.5 * a1, 2.5 * a2, 2.5 * a3, ijk=(2, 2, 2)))
-    
+
             #ijk = grid.find_cell(1.5 * a1 , 2.5 * a2 , 3.5 * a3)
             #self.assertAlmostEqualList(ijk, [1, 2, 3])
-    
-    
+
+
     def test_create(self):
         grid = self.create(self.grdecl_file())
         self.assertTrue(grid)
-    
-    
+
+
     def test_grdecl_load(self):
         with self.assertRaises(IOError):
             grid = EclGrid.loadFromGrdecl("/file/does/not/exists")
@@ -172,10 +173,10 @@ class GridTest(ExtendedTestCase):
         with TestAreaContext("python/grid-test/grdeclLoad"):
             with open("grid.grdecl","w") as f:
                 f.write("Hei ...")
-                
+
             with self.assertRaises(ValueError):
                 grid = EclGrid.loadFromGrdecl("grid.grdecl")
-        
+
             actnum = IntVector(default_value = 1 , initial_size = 1000)
             actnum[0] = 0
             g1 = EclGrid.createRectangular((10,10,10) , (1,1,1) , actnum = actnum )
@@ -189,69 +190,69 @@ class GridTest(ExtendedTestCase):
 
                     coord_kw = f["COORD"][0]
                     coord_kw.write_grdecl( f2 )
-                    
+
                     zcorn_kw = f["ZCORN"][0]
                     zcorn_kw.write_grdecl( f2 )
-                
+
                     actnum_kw = f["ACTNUM"][0]
                     actnum_kw.write_grdecl( f2 )
-            
+
             g2 = EclGrid.loadFromGrdecl("grid.grdecl")
             self.assertTrue( g1.equal( g2 ))
-                    
 
-    
+
+
     def test_ACTNUM(self):
         g1 = self.create(self.grdecl_file())
         g2 = self.create(self.grdecl_file(), load_actnum=False)
         self.assertTrue(g1.equal(g2))
-    
-    
+
+
     def test_time(self):
         t0 = time.clock()
         g1 = EclGrid(self.egrid_file())
         t1 = time.clock()
         t = t1 - t0
         self.assertTrue(t < 1.0)
-    
-    
+
+
     def test_save(self):
         with TestAreaContext("python/grid-test/testSave"):
             g1 = EclGrid(self.egrid_file())
-    
+
             g1.save_EGRID("test.EGRID")
             g2 = EclGrid("test.EGRID")
             self.assertTrue(g1.equal(g2))
-    
+
             g1.save_GRID("test.GRID")
             g2 = EclGrid("test.GRID")
             self.assertTrue(g1.equal(g2))
-    
+
             fileH = open("test.grdecl", "w")
             g1.save_grdecl(fileH)
             fileH.close()
             g2 = self.create("test.grdecl")
             self.assertTrue(g1.equal(g2))
-    
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow test of coarse grid skipped!")
+
+    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test of coarse grid skipped!")
     def test_coarse(self):
         #work_area = TestArea("python/grid-test/testCoarse")
         with TestAreaContext("python/grid-test/testCoarse"):
             testGRID = True
             g1 = EclGrid(self.createTestPath("Statoil/ECLIPSE/LGCcase/LGC_TESTCASE2.EGRID"))
-    
+
             g1.save_EGRID("LGC.EGRID")
             g2 = EclGrid("LGC.EGRID")
             self.assertTrue(g1.equal(g2, verbose=True))
-    
+
             if testGRID:
                 g1.save_GRID("LGC.GRID")
                 g3 = EclGrid("LGC.GRID")
                 self.assertTrue(g1.equal(g3, verbose=True))
-    
+
             self.assertTrue(g1.coarse_groups() == 3384)
-    
-    
+
+
     def test_raise_IO_error(self):
         with self.assertRaises(IOError):
             g = EclGrid("/does/not/exist.EGRID")
@@ -287,7 +288,7 @@ class GridTest(ExtendedTestCase):
 
 
 
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow test of dual grid skipped!")
+    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test of dual grid skipped!")
     def test_dual(self):
         with TestAreaContext("python/grid-test/testDual"):
             grid = EclGrid(self.egrid_file())
@@ -330,7 +331,7 @@ class GridTest(ExtendedTestCase):
             self.assertTrue(dgrid.equal(dgrid2 , verbose = True))
 
 
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow test of numActive large memory skipped!")
+    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test of numActive large memory skipped!")
     def test_num_active_large_memory(self):
         case = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE")
         vecList = []
@@ -381,12 +382,12 @@ class GridTest(ExtendedTestCase):
         for global_index , volume in enumerate(vol):
             self.assertEqual( volume , grid.cell_volume( global_index = global_index ))
 
-                              
-        
+
+
     def test_large_case(self):
         grdecl_file = self.createTestPath("Statoil/ECLIPSE/1.6.0_issueGrdecl/test_aug2016_gridOnly.grdecl")
         grid = EclGrid.loadFromGrdecl( grdecl_file )
-        
+
 
     def test_lgr_get(self):
         grid = EclGrid(self.createTestPath("Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID"))

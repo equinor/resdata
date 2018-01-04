@@ -82,7 +82,7 @@ class EclFileStatoilTest(EclTest):
 
 
 
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow file test skipped!")
+    @skipIf(EclTest.slowTestShouldNotRun(), "Slow file test skipped!")
     def test_save(self):
         #work_area = TestArea("python/ecl_file/save")
         with TestAreaContext("python/ecl_file/save", store_area=False) as work_area:
@@ -111,7 +111,7 @@ class EclFileStatoilTest(EclTest):
 
 
 
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow file test skipped!")
+    @skipIf(EclTest.slowTestShouldNotRun(), "Slow file test skipped!")
     def test_save_fmt(self):
         #work_area = TestArea("python/ecl_file/save_fmt")
         with TestAreaContext("python/ecl_file/save_fmt") as work_area:

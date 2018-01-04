@@ -24,7 +24,8 @@ from ecl.ecl import EclSum, EclFile
 
 from ecl.util import StringList, TimeVector, DoubleVector
 
-from ecl.test import ExtendedTestCase , TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 import csv
 
 base = "ECLIPSE"
@@ -40,7 +41,7 @@ def sum_get(*args):
     vec = sum[key]
 
 
-class SumTest(ExtendedTestCase):
+class SumTest(EclTest):
     def setUp(self):
         self.case = self.createTestPath(case)
         self.ecl_sum = EclSum(self.case)
@@ -199,7 +200,7 @@ class SumTest(ExtendedTestCase):
         self.assertFloatEqual(sum.get_from_report("FOPT", 10), 6.67447e+06)
 
 
-    @skipIf(ExtendedTestCase.slowTestShouldNotRun(), "Slow test skipped")
+    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test skipped")
     def test_fwrite(self):
         # todo: What is tested here?
         # work_area = TestArea("python/sum-test/fwrite", True)
