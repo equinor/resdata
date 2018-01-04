@@ -379,6 +379,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_nnc_info_test
                 ecl_nnc_vector
                 ecl_rft_cell
+                ecl_sum_alloc_resampled_test
                 ecl_file_view
                 test_ecl_file_index
                 test_transactions
