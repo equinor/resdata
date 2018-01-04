@@ -1,10 +1,10 @@
 import time
 from ecl.util import ThreadPool
 from ecl.util.thread_pool import Task
-from ecl.test import ExtendedTestCase
+from tests import EclTest
 
 
-class ThreadPoolTest(ExtendedTestCase):
+class ThreadPoolTest(EclTest):
 
 
     def sleepTask(self, *args, **kwargs):

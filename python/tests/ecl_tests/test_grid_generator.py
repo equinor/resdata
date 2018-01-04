@@ -1,18 +1,18 @@
 #!/usr/bin/env python
-#  Copyright (C) 2017  Statoil ASA, Norway. 
-#   
+#  Copyright (C) 2017  Statoil ASA, Norway.
+#
 #  The file 'test_grid_generator.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
 from itertools import product as prod
@@ -20,7 +20,8 @@ import operator, random, numpy
 
 from ecl.ecl import EclGrid, EclKW, EclDataType
 from ecl.ecl import EclGridGenerator as GridGen
-from ecl.test import ExtendedTestCase, TestAreaContext
+from ecl.test import TestAreaContext
+from tests import EclTest
 
 
 def generate_ijk_bounds(dims):
@@ -32,7 +33,7 @@ def generate_ijk_bounds(dims):
 def decomposition_preserving(ijk_bound):
     return sum(zip(*ijk_bound)[0])%2 is 0
 
-class GridGeneratorTest(ExtendedTestCase):
+class GridGeneratorTest(EclTest):
 
     def setUp(self):
         self.test_base = [
@@ -86,7 +87,7 @@ class GridGeneratorTest(ExtendedTestCase):
 
         with self.assertRaises(ValueError):
             GridGen.extract_subgrid_data(dims, coord, zcorn, ((1,6), (2,2), (2,2)))
-                
+
         with self.assertRaises(ValueError):
             GridGen.extract_subgrid_data(dims, coord, zcorn, ((1,2), (2,0), (2,2)))
 
