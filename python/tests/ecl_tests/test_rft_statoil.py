@@ -20,8 +20,6 @@ import datetime
 from ecl.rft import EclRFTFile, EclRFTCell, EclPLTCell, WellTrajectory
 from tests import EclTest, statoil_test
 
-
-@statoil_test()
 class RFTTest(EclTest):
     def setUp(self):
         self.RFT_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.RFT")
