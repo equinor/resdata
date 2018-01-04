@@ -25,7 +25,7 @@ from ecl.ecl import EclSum, EclFile
 from ecl.util import StringList, TimeVector, DoubleVector
 
 from ecl.test import TestAreaContext
-from tests import EclTest
+from tests import EclTest, statoil_test
 import csv
 
 base = "ECLIPSE"
@@ -41,6 +41,7 @@ def sum_get(*args):
     vec = sum[key]
 
 
+@statoil_test()
 class SumTest(EclTest):
     def setUp(self):
         self.case = self.createTestPath(case)

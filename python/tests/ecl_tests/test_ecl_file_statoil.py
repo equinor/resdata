@@ -22,10 +22,10 @@ from ecl.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
 from ecl.ecl import EclFileFlagEnum, EclFileEnum
 
 from ecl.test import TestAreaContext
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 
-
+@statoil_test()
 class EclFileStatoilTest(EclTest):
     def setUp(self):
         self.test_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
@@ -46,7 +46,6 @@ class EclFileStatoilTest(EclTest):
             for kw0,kw1 in zip(f0,f1):
                 self.assertEqual( kw0,kw1 )
 
-
     def test_restart_days(self):
         rst_file = EclFile( self.test_file )
         self.assertAlmostEqual(  0.0 , rst_file.iget_restart_sim_days(0) )
@@ -58,7 +57,6 @@ class EclFileStatoilTest(EclTest):
 
         with self.assertRaises(IndexError):
             rst_file.restart_get_kw("SWAT" , dtime = datetime.date( 1985 , 1 , 1))
-
 
 
     def test_iget_named(self):

@@ -22,10 +22,10 @@ except ImportError:
 import time
 from ecl.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment
 from ecl.ecl import EclGrid, EclKW, EclDataType
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 
-
+@statoil_test()
 class StatoilFaultTest(EclTest):
     def loadGrid(self):
         grid_file   = self.createTestPath("Statoil/ECLIPSE/Faults/grid.grdecl")

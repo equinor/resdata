@@ -1,28 +1,28 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
-#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
+#  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 import os
 from ecl.ecl import EclKW,EclGrid,Ecl3DKW
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 
 
 
-
+@statoil_test()
 class GRDECLTest(EclTest):
     def setUp(self):
         self.src_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/include/example_permx.GRDECL")
@@ -94,7 +94,7 @@ class GRDECLTest(EclTest):
         self.assertTrue(EclKW.fseek_grdecl(file, "MARKER"))
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMXYZ"))
 
-        # Test rewind 
+        # Test rewind
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMX", rewind=False))
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX", rewind=True))
 
@@ -116,7 +116,7 @@ class GRDECLTest(EclTest):
         self.assertTrue(EclKW.fseek_grdecl(file, "MARKER"))
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMXYZ"))
 
-        # Test rewind 
+        # Test rewind
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMX", rewind=False))
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX", rewind=True))
 

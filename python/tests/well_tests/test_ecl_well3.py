@@ -2,11 +2,11 @@ import datetime
 import os.path
 
 from ecl.ecl import EclGrid, EclFile, EclSum
-from tests import EclTest
+from tests import EclTest, statoil_test
 from ecl.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
-
+@statoil_test()
 class EclWellTest3(EclTest):
     grid = None
 

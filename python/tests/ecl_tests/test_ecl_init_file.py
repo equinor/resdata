@@ -15,10 +15,11 @@
 #  for more details.
 
 
-from tests import EclTest
+from tests import EclTest, statoil_test
 from ecl.ecl import (Ecl3DKW, EclKW, EclInitFile, EclFile, FortIO,
                      EclFileFlagEnum, EclGrid)
 
+@statoil_test()
 class InitFileTest(EclTest):
 
 

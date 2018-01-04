@@ -1,25 +1,25 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
 #  The file 'test_kw.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import os
 import random
 from ecl.ecl import EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum
 
 from ecl.test import TestAreaContext
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 def copy_long():
     src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
@@ -31,6 +31,7 @@ def copy_offset():
     copy = src.sub_copy(200, 100)
 
 
+@statoil_test()
 class KWTest(EclTest):
     def test_fortio_size( self ):
         unrst_file_path = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
@@ -109,4 +110,4 @@ class KWTest(EclTest):
         self.assertFalse(kw1.equal(kw2))
         self.assertFalse(kw1.equal_numeric(kw2))
 
-            
+

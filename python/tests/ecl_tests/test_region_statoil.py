@@ -1,24 +1,25 @@
 #!/usr/bin/env python
-#  Copyright (C) 2012  Statoil ASA, Norway. 
-#   
+#  Copyright (C) 2012  Statoil ASA, Norway.
+#
 #  The file 'test_region.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from ecl.ecl import EclFile, EclGrid, EclRegion
 from ecl.ecl.faults import Layer
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 
+@statoil_test()
 class RegionTest(EclTest):
     def setUp(self):
         case = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE")
@@ -52,7 +53,7 @@ class RegionTest(EclTest):
         self.assertFalse( reg1 == reg2 )
         reg1.select_islice(7,7)
         self.assertTrue( reg1 == reg2 )
-        
+
 
     def test_kw_idiv(self):
         P = self.rst_file["PRESSURE"][5]
@@ -161,7 +162,7 @@ class RegionTest(EclTest):
         dy = 0.1
         reg.select_inside_polygon( [(x-dx,y-dy) , (x-dx,y+dy) , (x+dx,y+dy) , (x+dx,y-dy)] )
         self.assertTrue( self.grid.getNZ() == len(reg.getGlobalList()))
-        
+
 
     def test_heidrun(self):
         root = self.createTestPath("Statoil/ECLIPSE/Heidrun")
@@ -178,7 +179,7 @@ class RegionTest(EclTest):
         reg.select_inside_polygon( polygon )
         self.assertEqual( 0 , len(reg.getGlobalList()) % grid.getNZ())
 
-        
+
     def test_layer(self):
         region = EclRegion(self.grid, False)
         layer = Layer( self.grid.getNX() , self.grid.getNY() + 1)
@@ -194,8 +195,8 @@ class RegionTest(EclTest):
             region.selectFromLayer( layer , -1 , 1 )
 
         with self.assertRaises(ValueError):
-            region.selectFromLayer( layer , self.grid.getNZ() , 1 ) 
-        
+            region.selectFromLayer( layer , self.grid.getNZ() , 1 )
+
         region.selectFromLayer( layer , 0 , 2 )
         glist = region.getGlobalList()
         self.assertEqual(0 , len(glist))
