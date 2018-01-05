@@ -54,6 +54,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   bool                ecl_smspec_needs_wgname( ecl_smspec_var_type var_type );
   const char        * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type );
   ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var);
+  ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string);
   ecl_smspec_type   * ecl_smspec_alloc_writer( const char * key_join_string , const char * restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz);
   void                ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case , bool fmt_file );
 

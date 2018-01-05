@@ -274,6 +274,15 @@ smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keywor
   return smspec_node;
 }
 
+smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const smspec_node_type * node) {
+  return ecl_sum_add_var(ecl_sum,
+                         smspec_node_get_keyword(node),
+                         smspec_node_get_wgname(node),
+                         smspec_node_get_num(node),
+                         smspec_node_get_unit(node),
+                         smspec_node_get_default(node));
+}
+
 
 smspec_node_type * ecl_sum_add_blank_var( ecl_sum_type * ecl_sum , float default_value) {
   smspec_node_type * smspec_node = smspec_node_alloc_new( -1 , default_value );

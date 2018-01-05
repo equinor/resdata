@@ -221,6 +221,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   void                  ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case);
   void                  ecl_sum_fwrite( const ecl_sum_type * ecl_sum );
   void                  ecl_sum_fwrite_smspec( const ecl_sum_type * ecl_sum );
+  smspec_node_type    * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const smspec_node_type * node);
   smspec_node_type    * ecl_sum_add_var(ecl_sum_type * ecl_sum ,
                                         const char * keyword ,
                                         const char * wgname ,
