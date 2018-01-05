@@ -38,6 +38,16 @@ def fgpt(days):
     else:
         return 100 - days
 
+def create_case():
+    length = 100
+    return createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                        sim_length_days = length,
+                        num_report_step = 10,
+                        num_mini_step = 10,
+                        func_table = {"FOPT" : fopt,
+                                      "FOPR" : fopr ,
+                                      "FGPT" : fgpt })
+
 class SumTest(EclTest):
 
 
@@ -70,7 +80,7 @@ class SumTest(EclTest):
         case = createEclSum("CSV" , [("FOPT", None , 0) ,
                                      ("FOPR" , None , 0),
                                      ("AARQ" , None , 10),
-                                     ("RGPT" , None  ,1)])
+                                    ("RGPT" , None  ,1)])
 
         node1 = case.smspec_node( "FOPT" )
         self.assertEqual( node1.varType( ) , EclSumVarType.ECL_SMSPEC_FIELD_VAR )
@@ -351,3 +361,15 @@ class SumTest(EclTest):
             self.assertEqual(d1[0],d2[0])
             self.assertEqual(d1[2],d2[2])
             self.assertEqual(d2[1],"")
+
+
+
+    def test_vector_select_all(self):
+        case = create_case()
+        ecl_sum_vector = EclSumKeyWordVector(case, True)
+        keys = case.keys()
+        self.assertEqual( len(keys), len(ecl_sum_vector))
+        for key in keys:
+            self.assertIn(key, ecl_sum_vector)
+
+
