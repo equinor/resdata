@@ -10,7 +10,6 @@ set(TEST_SOURCES
     #test_substitution_list.py
     test_thread_pool.py
     test_cthread_pool.py
-    test_ui_return.py
     test_vectors.py
     test_version.py
     test_work_area.py
@@ -31,7 +30,6 @@ addPythonTest(tests.util_tests.test_rng.RngTest )
 addPythonTest(tests.util_tests.test_stat.StatTest )
 addPythonTest(tests.util_tests.test_string_list.StringListTest)
 addPythonTest(tests.util_tests.test_vectors.UtilTest)
-addPythonTest(tests.util_tests.test_ui_return.UIReturnTest)
 addPythonTest(tests.util_tests.test_path_fmt.PathFmtTest)
 addPythonTest(tests.util_tests.test_work_area.WorkAreaTest)
 addPythonTest(tests.util_tests.test_version.VersionTest)
