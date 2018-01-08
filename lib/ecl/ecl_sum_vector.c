@@ -47,14 +47,37 @@ void ecl_sum_vector_free( ecl_sum_vector_type * ecl_sum_vector ){
 
 UTIL_IS_INSTANCE_FUNCTION( ecl_sum_vector , ECL_SUM_VECTOR_TYPE_ID )
 
+static void ecl_sum_vector_add_node(ecl_sum_vector_type * vector, const smspec_node_type * node, const char * key ) {
+  int params_index = smspec_node_get_params_index( node );
+  bool is_rate_key = smspec_node_is_rate( node);
 
-ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum){
+  int_vector_append(vector->node_index_list, params_index);
+  bool_vector_append(vector->is_rate_list, is_rate_key);
+  stringlist_append_copy( vector->key_list, key );
+}
+
+
+ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum, bool add_keywords) {
     ecl_sum_vector_type * ecl_sum_vector = util_malloc( sizeof * ecl_sum_vector );
     UTIL_TYPE_ID_INIT( ecl_sum_vector , ECL_SUM_VECTOR_TYPE_ID);
     ecl_sum_vector->ecl_sum  = ecl_sum;
     ecl_sum_vector->node_index_list = int_vector_alloc(0,0);
     ecl_sum_vector->is_rate_list  = bool_vector_alloc(0,false);
     ecl_sum_vector->key_list = stringlist_alloc_new( );
+    if (add_keywords) {
+      const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
+      for (int i=0; i < ecl_smspec_num_nodes(smspec); i++) {
+        const smspec_node_type * node = ecl_smspec_iget_node( smspec , i );
+        const char * key = smspec_node_get_gen_key1(node);
+
+        /*
+          The TIME keyword is special case handled to not be included; that is
+          to match the same special casing in the key matching function.
+        */
+        if (!util_string_equal(key, "TIME"))
+          ecl_sum_vector_add_node( ecl_sum_vector, node, key);
+      }
+    }
     return ecl_sum_vector;
 }
 
@@ -79,7 +102,7 @@ static void ecl_sum_vector_add_invalid_key(ecl_sum_vector_type * vector, const c
 */
 
 ecl_sum_vector_type * ecl_sum_vector_alloc_layout_copy(const ecl_sum_vector_type * src_vector, const ecl_sum_type * ecl_sum) {
-  ecl_sum_vector_type * new_vector = ecl_sum_vector_alloc(ecl_sum);
+  ecl_sum_vector_type * new_vector = ecl_sum_vector_alloc(ecl_sum, false);
   for (int i=0; i < stringlist_get_size(src_vector->key_list); i++) {
     const char * key = stringlist_iget(src_vector->key_list, i);
     if (ecl_sum_has_general_var(ecl_sum, key))
@@ -95,12 +118,7 @@ ecl_sum_vector_type * ecl_sum_vector_alloc_layout_copy(const ecl_sum_vector_type
 bool ecl_sum_vector_add_key( ecl_sum_vector_type * ecl_sum_vector, const char * key){
   if (ecl_sum_has_general_var( ecl_sum_vector->ecl_sum , key)) {
     const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum_vector->ecl_sum , key );
-    int params_index = smspec_node_get_params_index( node );
-    bool is_rate_key = smspec_node_is_rate( node);
-
-    int_vector_append(ecl_sum_vector->node_index_list, params_index);
-    bool_vector_append(ecl_sum_vector->is_rate_list, is_rate_key);
-    stringlist_append_copy( ecl_sum_vector->key_list, key );
+    ecl_sum_vector_add_node(ecl_sum_vector, node, key);
     return true;
   } else
     return false;
@@ -114,12 +132,7 @@ void ecl_sum_vector_add_keys( ecl_sum_vector_type * ecl_sum_vector, const char *
     for(i = 0; i < num_keywords ;i++){
         const char * key = stringlist_iget(keylist, i);
         const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum_vector->ecl_sum , key );
-        int params_index = smspec_node_get_params_index( node );
-        bool is_rate_key = smspec_node_is_rate( node);
-
-        int_vector_append(ecl_sum_vector->node_index_list, params_index);
-        bool_vector_append(ecl_sum_vector->is_rate_list, is_rate_key);
-        stringlist_append_copy( ecl_sum_vector->key_list, key );
+        ecl_sum_vector_add_node(ecl_sum_vector, node, key);
     }
     stringlist_free(keylist);
 }

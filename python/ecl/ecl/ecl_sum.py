@@ -1278,6 +1278,10 @@ class EclSum(BaseCClass):
 
 
 
+    def resample(self, new_case, time_points):
+        #return self._resample(new_case, time_points)
+        return None
+
 
 import ecl.ecl.ecl_sum_keyword_vector
 EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)", bind=False)

@@ -31,7 +31,7 @@ from ecl import EclPrototype
 
 class EclSumKeyWordVector(BaseCClass):
     TYPE_NAME       = "ecl_sum_vector"
-    _alloc          = EclPrototype("void* ecl_sum_vector_alloc(ecl_sum)", bind=False)
+    _alloc          = EclPrototype("void* ecl_sum_vector_alloc(ecl_sum, bool)", bind=False)
     _alloc_copy     = EclPrototype("ecl_sum_vector_obj ecl_sum_vector_alloc_layout_copy(ecl_sum_vector, ecl_sum)")
     _free           = EclPrototype("void ecl_sum_vector_free(ecl_sum_vector)")
     _add            = EclPrototype("bool ecl_sum_vector_add_key(ecl_sum_vector,  char*)")
@@ -39,8 +39,8 @@ class EclSumKeyWordVector(BaseCClass):
     _get_size       = EclPrototype("int ecl_sum_vector_get_size(ecl_sum_vector)")
     _iget_key       = EclPrototype("char* ecl_sum_vector_iget_key(ecl_sum_vector, int)")
 
-    def __init__(self, ecl_sum):
-        c_pointer = self._alloc(ecl_sum)
+    def __init__(self, ecl_sum, add_keywords = False):
+        c_pointer = self._alloc(ecl_sum, add_keywords)
         super(EclSumKeyWordVector, self).__init__(c_pointer)
 
     def __getitem__(self, index):
