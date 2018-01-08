@@ -1,8 +1,9 @@
-set(TEST_SOURCES
-    __init__.py
+configure_file(
+   __init__.py 
+   "${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}/tests/__init__.py"
+   @ONLY
 )
 
-add_python_package("python.tests" "${PYTHON_INSTALL_PREFIX}/tests" "${TEST_SOURCES}" False)
 set(CTEST_PYTHONPATH ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX})
 
 add_subdirectory(geometry_tests)
