@@ -103,3 +103,4 @@ from .ecl_sum_vector import EclSumVector
 from .ecl_npv import EclNPV , NPVPriceVector
 from .ecl_cmp import EclCmp
 from .ecl_grid_generator import EclGridGenerator
+from .load import load

@@ -1,5 +1,6 @@
 set(TEST_SOURCES
     __init__.py
+    test_load.py
     test_deprecation.py
     test_removed.py
     test_ecl_3dkw.py
@@ -45,6 +46,7 @@ set(TEST_SOURCES
 
 add_python_package("python.tests.ecl_tests"  ${PYTHON_INSTALL_PREFIX}/tests/ecl_tests "${TEST_SOURCES}" False)
 
+addPythonTest(tests.ecl_tests.test_load.LoadTest)
 addPythonTest(tests.ecl_tests.test_fk_user_data.FKTest)
 addPythonTest(tests.ecl_tests.test_cell.CellTest)
 addPythonTest(tests.ecl_tests.test_grid.GridTest LABELS SLOW_1)
