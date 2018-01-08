@@ -15,7 +15,6 @@ from ecl.util import Log
 from ecl.util import LookupTable
 from ecl.util import Buffer
 from ecl.util import Hash, StringHash, DoubleHash, IntegerHash
-from ecl.util import UIReturn
 from ecl.util import ThreadPool
 from ecl.util import CThreadPool, startCThreadPool
 from ecl.util import installAbortSignals, updateAbortSignals

@@ -18,7 +18,6 @@ set(PYTHON_SOURCES
     thread_pool.py
     cthread_pool.py
     time_vector.py
-    ui_return.py
     util_func.py
     vector_template.py
     permutation_vector.py

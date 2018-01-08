@@ -15,7 +15,6 @@ from ert.util import Log
 from ert.util import LookupTable
 from ert.util import Buffer
 from ert.util import Hash, StringHash, DoubleHash, IntegerHash
-from ert.util import UIReturn
 from ert.util import ThreadPool
 from ert.util import CThreadPool, startCThreadPool
 from ert.util import installAbortSignals, updateAbortSignals

@@ -101,7 +101,6 @@ add_library(ecl util/rng.c
                 util/time_interval.c
                 util/string_util.c
                 util/type_vector_functions.c
-                util/ui_return.c
                 util/ecl_version.c
                 util/struct_vector.c
                 util/perm_vector.c
@@ -266,7 +265,6 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_strstr_int_format
                 ert_util_time_interval
                 ert_util_type_vector_functions
-                ert_util_ui_return
                 ert_util_vector_test
                 ert_util_datetime
                 ert_util_normal_path
