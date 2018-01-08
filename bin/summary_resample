@@ -22,4 +22,4 @@ delta = end_time - start_time
 time_points.initRange(CTime(start_time), CTime(end_time), CTime(int(delta.total_seconds() / args.num_timestep)))
 
 output_case = input_case.resample(args.output_case, input_case, time_points)
-#output_case.fwrite( )
+output_case.fwrite( )

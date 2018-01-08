@@ -328,55 +328,6 @@ ecl_sum_type * ecl_sum_alloc_writer( const char * ecl_case , bool fmt_output , b
 }
 
 
-ecl_sum_type * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type * ecl_sum, const time_t_vector_type * times) {
-
-  time_t start_time = ecl_sum_data_get_data_start(ecl_sum->data);
-
-  if ( time_t_vector_get_first(times) < start_time )
-    return NULL;
-  if ( time_t_vector_get_last(times) > ecl_sum_data_get_sim_end(ecl_sum->data) )
-    return NULL;
-  if ( !time_t_vector_is_sorted(times, false) )
-    return NULL;
-  
-  bool   fmt_case        = ecl_sum->fmt_case;
-  bool   unified         = ecl_sum->unified;
-  char * key_join_string = util_alloc_string_copy(ecl_sum->key_join_string);
-  const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
-
-  bool time_in_days = false;
-  const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, 0);
-  if ( util_string_equal(smspec_node_get_unit(node), "DAYS" ) )
-    time_in_days = true;
-
-  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_writer( ecl_case , fmt_case , unified , key_join_string , start_time , time_in_days , grid_dims[0] , grid_dims[1] , grid_dims[2] );
-
-  ecl_sum_vector_type * ecl_sum_vector = ecl_sum_vector_alloc(ecl_sum, true);
-
-  for (int i = 1; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
-    const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, i);
-    smspec_node_type * node_resampled = ecl_sum_add_smspec_node(  ecl_sum_resampled, node );
-  }
-
-  double_vector_type * data = double_vector_alloc( ecl_smspec_num_nodes(ecl_sum->smspec) , 0);  
-
-  for (int report_step = 0; report_step < time_t_vector_size(times); report_step++) {
-    time_t t = time_t_vector_iget(times, report_step);
-    ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum_resampled , report_step , t - start_time);
-    ecl_sum_get_interp_vector( ecl_sum, t, ecl_sum_vector, data);
-
-    for (int i = 1; i < ecl_smspec_num_nodes(ecl_sum_resampled->smspec); i++) {
-      const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum_resampled->smspec, i);
-      ecl_sum_tstep_set_from_node( tstep , node , double_vector_iget(data, i - 1) );
-    }
-
-  }
-  double_vector_free( data );
-  ecl_sum_vector_free( ecl_sum_vector );
-  free(key_join_string);
-  return ecl_sum_resampled;
-}
-
 void ecl_sum_fwrite( const ecl_sum_type * ecl_sum ) {
   ecl_sum_fwrite_smspec( ecl_sum );
   ecl_sum_data_fwrite( ecl_sum->data , ecl_sum->ecl_case , ecl_sum->fmt_case , ecl_sum->unified );
@@ -750,6 +701,57 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 }
 
 /*****************************************************************/
+
+
+ecl_sum_type * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type * ecl_sum, const time_t_vector_type * times) {
+
+  time_t start_time = ecl_sum_data_get_data_start(ecl_sum->data);
+
+  if ( time_t_vector_get_first(times) < start_time )
+    return NULL;
+  if ( time_t_vector_get_last(times) > ecl_sum_data_get_sim_end(ecl_sum->data) )
+    return NULL;
+  if ( !time_t_vector_is_sorted(times, false) )
+    return NULL;
+  
+  bool   fmt_case        = ecl_sum->fmt_case;
+  bool   unified         = ecl_sum->unified;
+  char * key_join_string = util_alloc_string_copy(ecl_sum->key_join_string);
+  const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
+
+  bool time_in_days = false;
+  const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, 0);
+  if ( util_string_equal(smspec_node_get_unit(node), "DAYS" ) )
+    time_in_days = true;
+
+  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_writer( ecl_case , fmt_case , unified , key_join_string , start_time , time_in_days , grid_dims[0] , grid_dims[1] , grid_dims[2] );
+
+  ecl_sum_vector_type * ecl_sum_vector = ecl_sum_vector_alloc(ecl_sum, true);
+
+  for (int i = 1; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
+    const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, i);
+    ecl_sum_add_smspec_node(  ecl_sum_resampled, node );
+  }
+
+  double_vector_type * data = double_vector_alloc( ecl_smspec_num_nodes(ecl_sum->smspec) , 0);  
+
+  for (int report_step = 0; report_step < time_t_vector_size(times); report_step++) {
+    time_t t = time_t_vector_iget(times, report_step);
+    ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum_resampled , report_step , t - start_time);
+    ecl_sum_get_interp_vector( ecl_sum, t, ecl_sum_vector, data);
+
+    for (int i = 1; i < ecl_smspec_num_nodes(ecl_sum_resampled->smspec); i++) {
+      const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum_resampled->smspec, i);
+      ecl_sum_tstep_set_from_node( tstep , node , double_vector_iget(data, i - 1) );
+    }
+
+  }
+  double_vector_free( data );
+  ecl_sum_vector_free( ecl_sum_vector );
+  free(key_join_string);
+  return ecl_sum_resampled;
+}
+
 
 double ecl_sum_iget( const ecl_sum_type * ecl_sum , int time_index , int param_index) {
   return ecl_sum_data_iget(ecl_sum->data , time_index , param_index);

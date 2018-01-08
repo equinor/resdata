@@ -49,4 +49,4 @@ class SummaryResampleTest(EclTest):
 
             # Should run OK:
             subprocess.check_call([self.script, "CSV", "OUTPUT"])
-            #output_case = EclSum("OUTPUT")
+            output_case = EclSum("OUTPUT")
