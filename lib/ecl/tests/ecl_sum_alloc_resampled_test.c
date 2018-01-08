@@ -10,7 +10,6 @@ ecl_sum_type * test_alloc_ecl_sum() {
   double sim_seconds = 0;
   
   int num_dates = 4;
-  int num_ministep = 1;
   double ministep_length = 86400; // seconds in a day
 
   smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
@@ -54,6 +53,7 @@ void test_correct_time_vector() {
  
 
   ecl_sum_free(ecl_sum_resampled);
+  time_t_vector_free(t);
   ecl_sum_free(ecl_sum); 
 }
 
@@ -62,6 +62,7 @@ void test_time_before() {
   time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
   time_t_vector_append(t, util_make_date_utc( 1,1,2009 ));
   test_assert_NULL( ecl_sum_alloc_resample("kk", ecl_sum, t) );
+  time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }
 
@@ -71,6 +72,7 @@ void test_time_after() {
   time_t_vector_append(t, util_make_date_utc( 1,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 11,1,2010 ));
   test_assert_NULL( ecl_sum_alloc_resample("kk", ecl_sum, t) );
+  time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }
 
@@ -81,6 +83,7 @@ void test_not_sorted() {
   time_t_vector_append(t, util_make_date_utc( 3,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 2,1,2010 ));
   test_assert_NULL( ecl_sum_alloc_resample("kk", ecl_sum, t) );
+  time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }
 
