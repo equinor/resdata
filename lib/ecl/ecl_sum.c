@@ -714,9 +714,6 @@ ecl_sum_type * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type 
   if ( !time_t_vector_is_sorted(times, false) )
     return NULL;
   
-  bool   fmt_case        = ecl_sum->fmt_case;
-  bool   unified         = ecl_sum->unified;
-  char * key_join_string = ecl_sum->key_join_string;
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
 
   bool time_in_days = false;
@@ -724,7 +721,7 @@ ecl_sum_type * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type 
   if ( util_string_equal(smspec_node_get_unit(node), "DAYS" ) )
     time_in_days = true;
 
-  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_writer( ecl_case , fmt_case , unified , key_join_string , start_time , time_in_days , grid_dims[0] , grid_dims[1] , grid_dims[2] );
+  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_writer( ecl_case , ecl_sum->fmt_case , ecl_sum->unified , ecl_sum->key_join_string , start_time , time_in_days , grid_dims[0] , grid_dims[1] , grid_dims[2] );
 
   ecl_sum_vector_type * ecl_sum_vector = ecl_sum_vector_alloc(ecl_sum, true);
 

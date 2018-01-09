@@ -42,6 +42,7 @@ void ecl_sum_vector_free( ecl_sum_vector_type * ecl_sum_vector ){
     int_vector_free(ecl_sum_vector->node_index_list);
     bool_vector_free(ecl_sum_vector->is_rate_list);
     stringlist_free(ecl_sum_vector->key_list);
+    free(ecl_sum_vector);
 }
 
 
