@@ -1,10 +1,10 @@
 import datetime
 from ecl.ecl import EclGrid, EclFile, EclFileFlagEnum
-from tests import EclTest
+from tests import EclTest, statoil_test
 from ecl.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
-
+@statoil_test()
 class EclWellTest(EclTest):
     ALL_WELLS = ['E5H', 'G1H', 'M41', 'J41', 'D10H', 'P41', 'L41', 'M42', 'S41', 'S13H', 'Q12HT2', 'O41', 'L11H', 'Q21H',
                  'E6CH', 'D4Y1H', 'D4Y2H', 'I13Y1H', 'Q21AY1H', 'F5AH', 'O14Y4HT2', 'K24Y1H', 'K24Y3H', 'S21H', 'N11H',

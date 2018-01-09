@@ -25,9 +25,10 @@ import time
 from ecl.ecl import EclDataType, EclKW, EclGrid, EclFile, openEclFile
 from ecl.util import DoubleVector, IntVector
 from ecl.test import TestAreaContext
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 
+@statoil_test()
 class GridTest(EclTest):
     def egrid_file(self):
         return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")

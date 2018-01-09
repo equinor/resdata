@@ -23,9 +23,9 @@ except ImportError:
 import warnings
 
 from ecl.ecl import EclSumVector, EclSum
-from tests import EclTest
+from tests import EclTest, statoil_test
 
-
+@statoil_test()
 class EclSumVectorTest(EclTest):
 
 

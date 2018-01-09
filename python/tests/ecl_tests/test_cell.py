@@ -17,7 +17,7 @@
 
 from ecl.ecl import Cell, EclGrid
 from tests import EclTest
-
+from unittest import skipUnless
 
 class CellTest(EclTest):
 

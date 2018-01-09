@@ -15,9 +15,10 @@
 #  for more details.
 import datetime
 
-from tests import EclTest
+from tests import EclTest, statoil_test
 from ecl.ecl import Ecl3DKW , EclKW, EclRestartFile , EclFile, FortIO, EclFileFlagEnum , EclGrid
 
+@statoil_test()
 class RestartHeadTest(EclTest):
     def setUp(self):
         self.grid_file =   self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")

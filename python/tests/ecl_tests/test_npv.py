@@ -29,7 +29,7 @@ from ecl.ecl import EclNPV , NPVPriceVector
 
 from ecl.util import StringList, TimeVector, DoubleVector , CTime
 from ecl.test import TestAreaContext
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 
 base = "ECLIPSE"
@@ -45,7 +45,7 @@ def linear1(x):
 def linear2(x):
     return 2*x
 
-
+@statoil_test()
 class NPVTest(EclTest):
     def setUp(self):
         self.case = self.createTestPath(case)

@@ -18,12 +18,12 @@ from _ctypes import ArgumentError
 import os
 import datetime
 from ecl.ecl import EclFile
-from tests import EclTest
+from tests import EclTest, statoil_test
 
 
 
 
-
+@statoil_test()
 class RestartTest(EclTest):
     def setUp(self):
         self.xfile0 = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.X0000")

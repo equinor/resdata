@@ -7,8 +7,6 @@ set(TEST_SOURCES
 
 add_python_package("python.tests.well_tests"  ${PYTHON_INSTALL_PREFIX}/tests/well_tests "${TEST_SOURCES}" False)
 
-if (STATOIL_TESTDATA_ROOT)
-  addPythonTest(tests.well_tests.test_ecl_well.EclWellTest LABELS StatoilData)
-  addPythonTest(tests.well_tests.test_ecl_well2.EclWellTest2 LABELS StatoilData)
-  addPythonTest(tests.well_tests.test_ecl_well3.EclWellTest3 LABELS StatoilData)
-endif()
+addPythonTest(tests.well_tests.test_ecl_well.EclWellTest)
+addPythonTest(tests.well_tests.test_ecl_well2.EclWellTest2)
+addPythonTest(tests.well_tests.test_ecl_well3.EclWellTest3)
