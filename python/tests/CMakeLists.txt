@@ -11,6 +11,7 @@ add_subdirectory(util_tests)
 add_subdirectory(ecl_tests)
 add_subdirectory(well_tests)
 add_subdirectory(global_tests)
+add_subdirectory(bin_tests)
 
 if (INSTALL_ERT_LEGACY)
    add_subdirectory(legacy_tests)

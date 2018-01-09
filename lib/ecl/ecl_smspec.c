@@ -246,7 +246,7 @@ static const char* smspec_required_keywords[] = {
 
 /*****************************************************************/
 
-static ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string) {
+ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string) {
   ecl_smspec_type *ecl_smspec;
   ecl_smspec = util_malloc(sizeof *ecl_smspec );
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
