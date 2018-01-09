@@ -348,7 +348,7 @@ endif()
 
 add_subdirectory( lib )
 add_subdirectory( applications )
-
+add_subdirectory( bin )
 
 if (ENABLE_PYTHON)
    if (ERT_WINDOWS)
