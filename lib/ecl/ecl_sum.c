@@ -716,7 +716,7 @@ ecl_sum_type * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type 
   
   bool   fmt_case        = ecl_sum->fmt_case;
   bool   unified         = ecl_sum->unified;
-  char * key_join_string = util_alloc_string_copy(ecl_sum->key_join_string);
+  char * key_join_string = ecl_sum->key_join_string;
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
 
   bool time_in_days = false;
@@ -748,7 +748,6 @@ ecl_sum_type * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type 
   }
   double_vector_free( data );
   ecl_sum_vector_free( ecl_sum_vector );
-  free(key_join_string);
   return ecl_sum_resampled;
 }
 
