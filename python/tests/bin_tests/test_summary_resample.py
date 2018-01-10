@@ -24,12 +24,36 @@ from ecl.test.ecl_mock import createEclSum
 from ecl.test import TestAreaContext
 
 
+def fopr(days):
+    return days
+
+def fopt(days):
+    return days
+
+def fgpt(days):
+    if days < 50:
+        return days
+    else:
+        return 100 - days
+
+def create_case():
+    length = 100
+    return createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+                        sim_length_days = length,
+                        num_report_step = 10,
+                        num_mini_step = 10,
+                        func_table = {"FOPT" : fopt,
+                                      "FOPR" : fopr ,
+                                      "FGPT" : fgpt })
+
+
+
 class SummaryResampleTest(EclTest):
 
     @classmethod
     def setUpClass(cls):
         cls.script = os.path.join(cls.SOURCE_ROOT, "bin/summary_resample")
-        cls.case = createEclSum("CSV", [("FOPT", None, 0), ("FOPR", None, 0)])
+        cls.case = create_case()
 
     def test_run_default(self):
         with TestAreaContext(""):
@@ -50,3 +74,5 @@ class SummaryResampleTest(EclTest):
             # Should run OK:
             subprocess.check_call([self.script, "CSV", "OUTPUT"])
             output_case = EclSum("OUTPUT")
+            self.assertEqual( output_case.get_data_start_time(), self.case.get_data_start_time())
+            self.assertEqual( output_case.get_end_time(), self.case.get_end_time())

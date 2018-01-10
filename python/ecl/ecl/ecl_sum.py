@@ -89,7 +89,7 @@ class EclSum(BaseCClass):
     _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
     _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
     _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer(char*, char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
-    _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample(char*, ecl_sum, time_t_vector)", bind = False)
+    _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector)")
     _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
     _free                          = EclPrototype("void     ecl_sum_free(ecl_sum)")
     _data_length                   = EclPrototype("int      ecl_sum_get_data_length(ecl_sum)")
@@ -1279,8 +1279,8 @@ class EclSum(BaseCClass):
 
 
 
-    def resample(self, new_case_name, ecl_sum, time_points):
-        return self._resample(new_case_name, ecl_sum, time_points, True)
+    def resample(self, new_case_name, time_points):
+        return self._resample(new_case_name, time_points)
 
 
 import ecl.ecl.ecl_sum_keyword_vector

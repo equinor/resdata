@@ -8,7 +8,7 @@ ecl_sum_type * test_alloc_ecl_sum() {
   time_t start_time = util_make_date_utc( 1,1,2010 );
   ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( "/tmp/CASE" , false , true , ":" , start_time , true , 10 , 10 , 10 );
   double sim_seconds = 0;
-  
+
   int num_dates = 4;
   double ministep_length = 86400; // seconds in a day
 
@@ -24,7 +24,7 @@ ecl_sum_type * test_alloc_ecl_sum() {
         ecl_sum_tstep_set_from_node( tstep , node3 , report_step*6.0 + 4.0 );
       }
       sim_seconds += ministep_length * 3;
-    
+
   }
   return ecl_sum;
 }
@@ -37,7 +37,7 @@ void test_correct_time_vector() {
   time_t_vector_append(t, util_make_date_utc( 4,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 6,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 8,1,2010 ));
-  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_resample("kk", ecl_sum, t);
+  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_resample(ecl_sum, "kk", t);
   test_assert_int_equal(  ecl_sum_get_report_time(ecl_sum_resampled, 2)  , util_make_date_utc( 6,1,2010 ));
 
   const ecl_smspec_type * smspec_resampled = ecl_sum_get_smspec(ecl_sum_resampled);
@@ -45,23 +45,23 @@ void test_correct_time_vector() {
   const smspec_node_type * node2 = ecl_smspec_iget_node(smspec_resampled, 2);
   const smspec_node_type * node3 = ecl_smspec_iget_node(smspec_resampled, 3);
   test_assert_string_equal( "BPR" , smspec_node_get_keyword(node2) );
-  test_assert_string_equal( "BARS" , smspec_node_get_unit(node2) );  
+  test_assert_string_equal( "BARS" , smspec_node_get_unit(node2) );
 
   test_assert_double_equal(3.33333, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 6,1,2010 ), node1) );
   test_assert_double_equal(3.33333, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 2,1,2010 ), node2) );
   test_assert_double_equal(10.0000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4,1,2010 ), node3) );
- 
+
 
   ecl_sum_free(ecl_sum_resampled);
   time_t_vector_free(t);
-  ecl_sum_free(ecl_sum); 
+  ecl_sum_free(ecl_sum);
 }
 
 void test_time_before() {
   ecl_sum_type * ecl_sum = test_alloc_ecl_sum();
   time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
   time_t_vector_append(t, util_make_date_utc( 1,1,2009 ));
-  test_assert_NULL( ecl_sum_alloc_resample("kk", ecl_sum, t) );
+  test_assert_NULL( ecl_sum_alloc_resample(ecl_sum, "kk", t) );
   time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }
@@ -71,7 +71,7 @@ void test_time_after() {
   time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
   time_t_vector_append(t, util_make_date_utc( 1,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 11,1,2010 ));
-  test_assert_NULL( ecl_sum_alloc_resample("kk", ecl_sum, t) );
+  test_assert_NULL( ecl_sum_alloc_resample(ecl_sum, "kk", t) );
   time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }
@@ -82,7 +82,7 @@ void test_not_sorted() {
   time_t_vector_append(t, util_make_date_utc( 1,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 3,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 2,1,2010 ));
-  test_assert_NULL( ecl_sum_alloc_resample("kk", ecl_sum, t) );
+  test_assert_NULL( ecl_sum_alloc_resample( ecl_sum, "kk", t) );
   time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }
