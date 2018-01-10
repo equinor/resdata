@@ -11,7 +11,6 @@ from ecl.util import StringList
 from ecl.util import RandomNumberGenerator
 from ecl.util import Matrix
 from ecl.util import quantile, quantile_sorted, polyfit
-from ecl.util import Log
 from ecl.util import LookupTable
 from ecl.util import Buffer
 from ecl.util import Hash, StringHash, DoubleHash, IntegerHash

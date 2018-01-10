@@ -60,7 +60,6 @@ from .stringlist import StringList
 from .rng import RandomNumberGenerator
 from .matrix import Matrix
 from .stat import quantile, quantile_sorted, polyfit
-from .log import Log
 from .lookup_table import LookupTable
 from .buffer import Buffer
 from .hash import Hash, StringHash, DoubleHash, IntegerHash

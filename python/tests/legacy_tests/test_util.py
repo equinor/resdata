@@ -11,7 +11,6 @@ from ert.util import StringList
 from ert.util import RandomNumberGenerator
 from ert.util import Matrix
 from ert.util import quantile, quantile_sorted, polyfit
-from ert.util import Log
 from ert.util import LookupTable
 from ert.util import Buffer
 from ert.util import Hash, StringHash, DoubleHash, IntegerHash
