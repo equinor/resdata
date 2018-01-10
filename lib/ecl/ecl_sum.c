@@ -703,9 +703,9 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 /*****************************************************************/
 
 
-ecl_sum_type * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type * ecl_sum, const time_t_vector_type * times) {
 
   time_t start_time = ecl_sum_data_get_data_start(ecl_sum->data);
+ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times) {
 
   if ( time_t_vector_get_first(times) < start_time )
     return NULL;

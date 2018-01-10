@@ -94,7 +94,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   ecl_sum_type   * ecl_sum_fread_alloc(const char * , const stringlist_type * data_files, const char * key_join_string, bool include_restart);
   ecl_sum_type   * ecl_sum_fread_alloc_case(const char *  , const char * key_join_string);
   ecl_sum_type   * ecl_sum_fread_alloc_case__(const char *  , const char * key_join_string , bool include_restart);
-  ecl_sum_type   * ecl_sum_alloc_resample(const char * ecl_case, const ecl_sum_type * ecl_sum, const time_t_vector_type * times);
+  ecl_sum_type   * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times);
   bool             ecl_sum_case_exists( const char * input_file );
 
   /* Accessor functions : */
