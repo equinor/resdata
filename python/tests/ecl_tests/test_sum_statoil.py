@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #  Copyright (C) 2011  Statoil ASA, Norway.
 #
 #  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
@@ -22,7 +21,7 @@ from unittest import skipIf, skipUnless, skipIf
 
 from ecl.ecl import EclSum, EclFile
 
-from ecl.util import StringList, TimeVector, DoubleVector
+from ecl.util import StringList, TimeVector, DoubleVector, CTime
 
 from ecl.test import TestAreaContext
 from tests import EclTest, statoil_test
@@ -500,3 +499,28 @@ class SumTest(EclTest):
         troll_summary = EclSum( self.createTestPath("Statoil/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_grid2.SMSPEC"))
         self.assertIsNotNone(troll_summary)
         self.assertTrue("WMCTL:Q21BH1" in list(troll_summary.keys()))
+
+
+    def test_resample(self):
+        time_points = TimeVector()
+        start_time = self.ecl_sum.get_data_start_time()
+        end_time = self.ecl_sum.get_end_time()
+        delta = end_time - start_time
+        N = 25
+        time_points.initRange( CTime(start_time),
+                               CTime(end_time),
+                               CTime(int(delta.total_seconds()/(N - 1))))
+        time_points.append(CTime(end_time))
+        resampled = self.ecl_sum.resample( "OUTPUT_CASE", time_points )
+
+        for key in self.ecl_sum.keys():
+            self.assertIn( key, resampled )
+
+        self.assertEqual(self.ecl_sum.get_data_start_time(), resampled.get_data_start_time())
+        delta = self.ecl_sum.get_end_time() - resampled.get_end_time()
+        self.assertTrue( delta.total_seconds() <= 1 )
+
+        keys = ["FOPT", "FOPR", "BPR:15,28,1", "WGOR:OP_1"]
+        for key in keys:
+            for time_index,t in enumerate(time_points):
+                self.assertFloatEqual(resampled.iget( key, time_index), self.ecl_sum.get_interp_direct( key, t))

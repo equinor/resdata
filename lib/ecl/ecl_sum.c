@@ -312,7 +312,7 @@ ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step
 
 
 ecl_sum_type * ecl_sum_alloc_restart_writer( const char * ecl_case , const char * restart_case , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
-  
+
   ecl_sum_type * ecl_sum = ecl_sum_alloc__( ecl_case , key_join_string );
   ecl_sum_set_unified( ecl_sum , unified );
   ecl_sum_set_fmt_case( ecl_sum , fmt_output );
@@ -703,17 +703,16 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 /*****************************************************************/
 
 
-
-  time_t start_time = ecl_sum_data_get_data_start(ecl_sum->data);
 ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times) {
+  time_t start_time = ecl_sum_get_data_start(ecl_sum);
 
   if ( time_t_vector_get_first(times) < start_time )
     return NULL;
-  if ( time_t_vector_get_last(times) > ecl_sum_data_get_sim_end(ecl_sum->data) )
+  if ( time_t_vector_get_last(times) > ecl_sum_get_end_time(ecl_sum) )
     return NULL;
   if ( !time_t_vector_is_sorted(times, false) )
     return NULL;
-  
+
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
 
   bool time_in_days = false;
@@ -723,25 +722,40 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
 
   ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_writer( ecl_case , ecl_sum->fmt_case , ecl_sum->unified , ecl_sum->key_join_string , start_time , time_in_days , grid_dims[0] , grid_dims[1] , grid_dims[2] );
 
-  ecl_sum_vector_type * ecl_sum_vector = ecl_sum_vector_alloc(ecl_sum, true);
 
-  for (int i = 1; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
+
+  for (int i = 0; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
     const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, i);
+    if (util_string_equal(smspec_node_get_gen_key1(node), "TIME"))
+      continue;
+
+    if (!smspec_node_is_valid(node))
+      continue;
+
     ecl_sum_add_smspec_node(  ecl_sum_resampled, node );
   }
 
-  double_vector_type * data = double_vector_alloc( ecl_smspec_num_nodes(ecl_sum->smspec) , 0);  
+  /*
+    The SMSPEC header structure has been completely initialized, it is time to
+    start filling it up with data.
+  */
+  ecl_sum_vector_type * ecl_sum_vector = ecl_sum_vector_alloc(ecl_sum, true);
+  double_vector_type * data = double_vector_alloc( ecl_sum_vector_get_size(ecl_sum_vector) , 0);
+
 
   for (int report_step = 0; report_step < time_t_vector_size(times); report_step++) {
     time_t t = time_t_vector_iget(times, report_step);
-    ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum_resampled , report_step , t - start_time);
+
+    /* Look up interpolated data in the original case. */
     ecl_sum_get_interp_vector( ecl_sum, t, ecl_sum_vector, data);
 
-    for (int i = 1; i < ecl_smspec_num_nodes(ecl_sum_resampled->smspec); i++) {
-      const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum_resampled->smspec, i);
-      ecl_sum_tstep_set_from_node( tstep , node , double_vector_iget(data, i - 1) );
+    /* Add timestep corresponding to the interpolated data in the resampled case. */
+    ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum_resampled , report_step , t - start_time);
+    for (int data_index = 0; data_index < ecl_sum_vector_get_size(ecl_sum_vector); data_index++) {
+      double value = double_vector_iget(data,data_index);
+      int params_index = data_index + 1;  // The +1 shift is because the first element in the tstep is time value.
+      ecl_sum_tstep_iset(tstep, params_index, value);
     }
-
   }
   double_vector_free( data );
   ecl_sum_vector_free( ecl_sum_vector );
