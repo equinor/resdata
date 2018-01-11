@@ -7,7 +7,6 @@ set(PYTHON_SOURCES
     hash.py
     int_vector.py
     install_abort_signals.py
-    log.py
     lookup_table.py
     matrix.py
     profiler.py

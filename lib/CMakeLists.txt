@@ -96,7 +96,6 @@ add_library(ecl util/rng.c
                 util/stringlist.c
                 util/matrix.c
                 util/buffer.c
-                util/log.c
                 util/timer.c
                 util/time_interval.c
                 util/string_util.c
@@ -249,7 +248,6 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_chdir
                 ert_util_filename
                 ert_util_hash_test
-                ert_util_logh
                 ert_util_matrix
                 ert_util_parent_path
                 ert_util_PATH_test
