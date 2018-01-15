@@ -1,7 +1,6 @@
 set(PYTHON_SOURCES
     __init__.py
     bool_vector.py
-    buffer.py
     ctime.py
     double_vector.py
     hash.py

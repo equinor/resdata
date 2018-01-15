@@ -61,7 +61,6 @@ from .rng import RandomNumberGenerator
 from .matrix import Matrix
 from .stat import quantile, quantile_sorted, polyfit
 from .lookup_table import LookupTable
-from .buffer import Buffer
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .thread_pool import ThreadPool
 from .cthread_pool import CThreadPool, startCThreadPool
