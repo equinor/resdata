@@ -22,7 +22,6 @@ set(PYTHON_SOURCES
     permutation_vector.py
     version.py
     arg_pack.py
-    path_format.py
     cwd_context.py
 )
 

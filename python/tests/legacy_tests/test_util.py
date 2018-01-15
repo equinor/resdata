@@ -19,7 +19,6 @@ from ert.util import CThreadPool, startCThreadPool
 from ert.util import installAbortSignals, updateAbortSignals
 from ert.util import Profiler
 from ert.util import ArgPack
-from ert.util import PathFormat
 
 from tests import EclTest
 
