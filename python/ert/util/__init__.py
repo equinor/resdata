@@ -19,7 +19,6 @@ from ecl.util import CThreadPool, startCThreadPool
 from ecl.util import installAbortSignals, updateAbortSignals
 from ecl.util import Profiler
 from ecl.util import ArgPack
-from ecl.util import PathFormat
 
 try:
     from res.util import SubstitutionList

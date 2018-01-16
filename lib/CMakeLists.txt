@@ -90,7 +90,6 @@ add_library(ecl util/rng.c
                 util/util_lfs.c
                 util/util_unlink.c
                 util/arg_pack.c
-                util/path_fmt.c
                 util/vector.c
                 util/parser.c
                 util/stringlist.c

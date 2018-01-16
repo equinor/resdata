@@ -56,19 +56,18 @@ from .double_vector import DoubleVector
 from .int_vector import IntVector
 from .bool_vector import BoolVector
 from .time_vector import TimeVector
+from .buffer import Buffer
 from .stringlist import StringList
 from .rng import RandomNumberGenerator
 from .matrix import Matrix
 from .stat import quantile, quantile_sorted, polyfit
 from .lookup_table import LookupTable
-from .buffer import Buffer
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .thread_pool import ThreadPool
 from .cthread_pool import CThreadPool, startCThreadPool
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .profiler import Profiler
 from .arg_pack import ArgPack
-from .path_format import PathFormat
 from .cwd_context import CWDContext
 
 
