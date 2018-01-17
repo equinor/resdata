@@ -56,7 +56,6 @@ from .double_vector import DoubleVector
 from .int_vector import IntVector
 from .bool_vector import BoolVector
 from .time_vector import TimeVector
-from .buffer import Buffer
 from .stringlist import StringList
 from .rng import RandomNumberGenerator
 from .matrix import Matrix
