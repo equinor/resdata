@@ -30,7 +30,7 @@ import os.path
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
-from cwrap import BaseCClass, CFILE
+from cwrap import BaseCClass
 
 from ecl.util import monkey_the_camel
 from ecl.util import StringList, CTime, DoubleVector, TimeVector, IntVector
@@ -1247,12 +1247,18 @@ class EclSum(BaseCClass):
     def dump_csv_line(self, time, keywords, pfile):
         """
         Will dump a csv formatted line of the keywords in @keywords,
-        evaluated at the intertpolated time @time. @pfile should point to an open Python file handle.
+        evaluated at the intertpolated time @time. @pfile should point to an
+        open Python file handle.
         """
-        cfile = CFILE(pfile)
-        ctime = CTime(time)
-        EclSum._dump_csv_line(self, ctime, keywords, cfile)
-
+        data = self.get_interp_row(keywords, time, invalid_value=-1E21)
+        for i, d in enumerate(data):
+            v = str(d)
+            if d == -1E21:
+                v = ''
+            if i == 0:
+                pfile.write('{}'.format(v))
+            else:
+                pfile.write(',{}'.format(v))
 
 
     def export_csv(self, filename, keys=None, date_format="%Y-%m-%d", sep=";"):
@@ -1284,7 +1290,6 @@ class EclSum(BaseCClass):
 
 
 import ecl.ecl.ecl_sum_keyword_vector
-EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)", bind=False)
 EclSum._get_interp_vector = EclPrototype("void  ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)", bind=False)
 
 monkey_the_camel(EclSum, 'varType', EclSum.var_type, classmethod)
