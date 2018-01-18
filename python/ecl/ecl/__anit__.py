@@ -77,22 +77,13 @@ import ecl.geo
 
 
 from .cell import Cell
-from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclUnitTypeEnum , EclUtil
-from .ecl_type import EclTypeEnum, EclDataType
 from .ecl_sum_var_type import EclSumVarType
 from .ecl_sum_tstep import EclSumTStep
 from .ecl_sum import EclSum #, EclSumVector, EclSumNode, EclSMSPECNode
 from .ecl_sum_keyword_vector import EclSumKeyWordVector
 from .ecl_rft_cell import EclPLTCell, EclRFTCell
 from .ecl_rft import EclRFT, EclRFTFile
-from .fortio import FortIO, openFortIO
-from .ecl_kw import EclKW
 from .ecl_3dkw import Ecl3DKW
-from .ecl_file_view import EclFileView
-from .ecl_file import EclFile , openEclFile
-from .ecl_3d_file import Ecl3DFile
-from .ecl_init_file import EclInitFile
-from .ecl_restart_file import EclRestartFile
 from .ecl_grid import EclGrid
 from .ecl_region import EclRegion
 from .ecl_subsidence import EclSubsidence

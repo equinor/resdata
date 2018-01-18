@@ -1,7 +1,7 @@
 from ecl.test import TestAreaContext
 from tests import EclTest
 
-from ecl.ecl import EclDataType, EclTypeEnum
+from ecl import EclDataType, EclTypeEnum
 
 def get_const_size_types():
     return EclTypeEnum.enums()[:-1:]

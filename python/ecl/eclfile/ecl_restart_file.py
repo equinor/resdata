@@ -19,7 +19,8 @@ from cwrap import BaseCClass
 from ecl import EclPrototype
 from ecl.util import monkey_the_camel
 from ecl.util import CTime
-from ecl.ecl import EclFile, Ecl3DKW , Ecl3DFile, EclFileEnum
+from ecl import EclFileEnum
+from ecl.eclfile import EclFile, Ecl3DFile, Ecl3DKW
 
 class EclRestartHead(BaseCClass):
     TYPE_NAME = "ecl_rsthead"

@@ -18,8 +18,8 @@ import datetime
 import os.path
 from unittest import skipIf
 
-from ecl.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
-from ecl.ecl import EclFileFlagEnum, EclFileEnum
+from ecl import EclFileFlagEnum, EclFileEnum
+from ecl.eclfile import EclFile, FortIO, EclKW , openFortIO , openEclFile
 
 from ecl.test import TestAreaContext
 from tests import EclTest, statoil_test
