@@ -44,7 +44,7 @@ import ctypes
 import warnings
 import numpy
 
-from cwrap import CFILE, BaseCClass
+from cwrap import BaseCClass
 
 from ecl import EclPrototype
 from ecl.util import monkey_the_camel
@@ -98,16 +98,16 @@ class EclKW(BaseCClass):
     TYPE_NAME          = "ecl_kw"
     _alloc_new         = EclPrototype("void* ecl_kw_alloc_python(char*, int, ecl_data_type)", bind = False)
     _fread_alloc       = EclPrototype("ecl_kw_obj ecl_kw_fread_alloc(fortio)", bind = False)
-    _load_grdecl       = EclPrototype("ecl_kw_obj ecl_kw_fscanf_alloc_grdecl_dynamic_python(FILE, char*, bool, ecl_data_type)", bind = False)
-    _fseek_grdecl      = EclPrototype("bool     ecl_kw_grdecl_fseek_kw(char*, bool, FILE)", bind = False)
+    # _load_grdecl       = EclPrototype("ecl_kw_obj ecl_kw_fscanf_alloc_grdecl_dynamic_python(FILE, char*, bool, ecl_data_type)", bind = False)
+    # _fseek_grdecl      = EclPrototype("bool     ecl_kw_grdecl_fseek_kw(char*, bool, FILE)", bind = False)
 
     _sub_copy          = EclPrototype("ecl_kw_obj ecl_kw_alloc_sub_copy(ecl_kw, char*, int, int)")
     _copyc             = EclPrototype("ecl_kw_obj ecl_kw_alloc_copy(ecl_kw)")
     _slice_copyc       = EclPrototype("ecl_kw_obj ecl_kw_alloc_slice_copy(ecl_kw, int, int, int)")
-    _fprintf_grdecl    = EclPrototype("void     ecl_kw_fprintf_grdecl(ecl_kw, FILE)")
-    _fprintf_data      = EclPrototype("void     ecl_kw_fprintf_data(ecl_kw, char*, FILE)")
+    # _fprintf_grdecl    = EclPrototype("void     ecl_kw_fprintf_grdecl(ecl_kw, FILE)")
+    # _fprintf_data      = EclPrototype("void     ecl_kw_fprintf_data(ecl_kw, char*, FILE)")
 
-    _get_size          = EclPrototype("int      ecl_kw_get_size(ecl_kw)")
+    _get_size = EclPrototype("int      ecl_kw_get_size(ecl_kw)")
     _get_fortio_size   = EclPrototype("size_t   ecl_kw_fortio_size(ecl_kw)")
     _get_type          = EclPrototype("ecl_type_enum ecl_kw_get_type(ecl_kw)")
     _iget_char_ptr     = EclPrototype("char*    ecl_kw_iget_char_ptr(ecl_kw, int)")
@@ -1096,8 +1096,6 @@ class EclKW(BaseCClass):
         cfile = CFILE(file)
         self._fprintf_grdecl(cfile)
 
-
-
     def fprintf_data(self, file, fmt=None):
         """
         Will print the keyword data formatted to file.
@@ -1116,9 +1114,8 @@ class EclKW(BaseCClass):
         """
         if fmt is None:
             fmt = self.str_fmt + "\n"
-        cfile = CFILE(file)
-        self._fprintf_data(fmt, cfile)
-
+        for i in self:
+            file.write(fmt % i)
 
     def fix_uninitialized(self, grid):
         """
@@ -1127,7 +1124,6 @@ class EclKW(BaseCClass):
         dims = grid.getDims()
         actnum = grid.exportACTNUM()
         self._fix_uninitialized(dims[0], dims[1], dims[2], actnum.getDataPtr())
-
 
     def get_data_ptr(self):
         if self.data_type.is_int():

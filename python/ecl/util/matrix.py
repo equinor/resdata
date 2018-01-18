@@ -28,7 +28,7 @@
 # choice.
 
 
-from cwrap import BaseCClass,CFILE
+from cwrap import BaseCClass
 from ecl import EclPrototype
 
 
@@ -50,7 +50,7 @@ class Matrix(BaseCClass):
     _columns           = EclPrototype("int matrix_get_columns(matrix)")
     _equal             = EclPrototype("bool matrix_equal(matrix, matrix)")
     _pretty_print      = EclPrototype("void matrix_pretty_print(matrix, char*, char*)")
-    _fprint            = EclPrototype("void matrix_fprintf(matrix, char*, FILE)")
+    # _fprint            = EclPrototype("void matrix_fprintf(matrix, char*, FILE)")
     _random_init       = EclPrototype("void matrix_random_init(matrix, rng)")
     _dump_csv          = EclPrototype("void matrix_dump_csv(matrix, char*)")
 
@@ -217,7 +217,13 @@ class Matrix(BaseCClass):
          6 7 8
 
         """
-        self._fprint( fmt , CFILE( fileH))
+        s = ""
+        for i in range(self.rows()):
+            for j in range(self.columns()):
+                d = self._iget(i, j)
+                s += fmt % d
+            s += "\n"
+        fileH.write(s)
 
 
     def randomInit(self, rng):
@@ -225,6 +231,3 @@ class Matrix(BaseCClass):
 
     def free(self):
         self._free()
-
-
-

@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'int_vector.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 from ecl import EclPrototype
 from ecl.util import VectorTemplate
@@ -38,7 +38,7 @@ class IntVector(VectorTemplate):
     _insert              = EclPrototype("void   int_vector_insert( int_vector , int , int)")
     _lshift              = EclPrototype("void   int_vector_lshift( int_vector , int )")
     _rshift              = EclPrototype("void   int_vector_rshift( int_vector , int )")
-    _fprintf             = EclPrototype("void   int_vector_fprintf( int_vector , FILE , char* , char*)")
+    # _fprintf             = EclPrototype("void   int_vector_fprintf( int_vector , FILE , char* , char*)")
     _sort                = EclPrototype("void   int_vector_sort( int_vector )")
     _rsort               = EclPrototype("void   int_vector_rsort( int_vector )")
     _reset               = EclPrototype("void   int_vector_reset( int_vector )")
@@ -83,13 +83,13 @@ class IntVector(VectorTemplate):
 
            "1,4-7,10"  =>  {1,4,5,6,7,10}
            "1,4-7,10X" =>  {}
-        
+
         The empty list will evaluate to false. The values in the input
         string are meant to indicate "active values", i.e. the output
         values are sorted and repeated values are only counted once:
-        
+
            "1,1,7,2" => {1,2,7}
-        
+
         """
         return cls._create_active_list(range_string)
 
@@ -102,8 +102,8 @@ class IntVector(VectorTemplate):
 
         """
         return cls._create_value_list(range_string)
-    
-    
+
+
     def count(self, value):
         """ @rtype: int """
         return self._count_equal(value)

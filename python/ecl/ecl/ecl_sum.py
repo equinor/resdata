@@ -89,7 +89,7 @@ class EclSum(BaseCClass):
     _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
     _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
     _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer(char*, char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
-    _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector)")
+    # _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector)")
     _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
     _free                          = EclPrototype("void     ecl_sum_free(ecl_sum)")
     _data_length                   = EclPrototype("int      ecl_sum_get_data_length(ecl_sum)")
@@ -1252,9 +1252,7 @@ class EclSum(BaseCClass):
         """
         data = self.get_interp_row(keywords, time, invalid_value=-1E21)
         for i, d in enumerate(data):
-            v = str(d)
-            if d == -1E21:
-                v = ''
+            v = d == str(d) if d != -1E21 else ''
             if i == 0:
                 pfile.write('{}'.format(v))
             else:

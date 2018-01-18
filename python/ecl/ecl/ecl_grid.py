@@ -31,7 +31,7 @@ import sys
 import os.path
 import math
 import itertools
-from cwrap import CFILE, BaseCClass
+from cwrap import BaseCClass
 
 from ecl import EclPrototype
 from ecl.util import monkey_the_camel
@@ -90,7 +90,7 @@ class EclGrid(BaseCClass):
     _get_cell_dx                  = EclPrototype("double ecl_grid_get_cell_dx1(ecl_grid, int)")
     _get_cell_dy                  = EclPrototype("double ecl_grid_get_cell_dy1(ecl_grid, int)")
     _get_depth                    = EclPrototype("double ecl_grid_get_cdepth1(ecl_grid, int)")
-    _fwrite_grdecl                = EclPrototype("void   ecl_grid_grdecl_fprintf_kw(ecl_grid, ecl_kw, char*, FILE, double)")
+    # _fwrite_grdecl                = EclPrototype("void   ecl_grid_grdecl_fprintf_kw(ecl_grid, ecl_kw, char*, FILE, double)")
     _load_column                  = EclPrototype("void   ecl_grid_get_column_property(ecl_grid, ecl_kw, int, int, double_vector)")
     _get_top                      = EclPrototype("double ecl_grid_get_top2(ecl_grid, int, int)")
     _get_top1A                    = EclPrototype("double ecl_grid_get_top1A(ecl_grid, int)")
@@ -99,7 +99,7 @@ class EclGrid(BaseCClass):
     _invalid_cell                 = EclPrototype("bool   ecl_grid_cell_invalid1(ecl_grid, int)")
     _valid_cell                   = EclPrototype("bool   ecl_grid_cell_valid1(ecl_grid, int)")
     _get_distance                 = EclPrototype("void   ecl_grid_get_distance(ecl_grid, int, int, double*, double*, double*)")
-    _fprintf_grdecl2              = EclPrototype("void   ecl_grid_fprintf_grdecl2(ecl_grid, FILE, ecl_unit_enum) ")
+    # _fprintf_grdecl2              = EclPrototype("void   ecl_grid_fprintf_grdecl2(ecl_grid, FILE, ecl_unit_enum) ")
     _fwrite_GRID2                 = EclPrototype("void   ecl_grid_fwrite_GRID2(ecl_grid, char*, ecl_unit_enum)")
     _fwrite_EGRID2                = EclPrototype("void   ecl_grid_fwrite_EGRID2(ecl_grid, char*, ecl_unit_enum)")
     _equal                        = EclPrototype("bool   ecl_grid_compare(ecl_grid, ecl_grid, bool, bool)")

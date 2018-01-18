@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'vector_template.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 import datetime
 import re
 
@@ -39,7 +39,7 @@ class TimeVector(VectorTemplate):
     _lshift              = EclPrototype("void     time_t_vector_lshift( time_t_vector , int )")
     _rshift              = EclPrototype("void     time_t_vector_rshift( time_t_vector , int )")
     _insert              = EclPrototype("void     time_t_vector_insert( time_t_vector , int , time_t)")
-    _fprintf             = EclPrototype("void     time_t_vector_fprintf( time_t_vector , FILE , char* , char*)")
+    # _fprintf             = EclPrototype("void     time_t_vector_fprintf( time_t_vector , FILE , char* , char*)")
     _sort                = EclPrototype("void     time_t_vector_sort( time_t_vector )")
     _rsort               = EclPrototype("void     time_t_vector_rsort( time_t_vector )")
     _reset               = EclPrototype("void     time_t_vector_reset( time_t_vector )")
