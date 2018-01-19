@@ -546,7 +546,14 @@ class EclSum(BaseCClass):
         return data
 
 
-    def time_range(self, start=None, end=None, interval="1Y", extend_end=True):
+    def time_range(self, start=None, end=None, interval="1Y", num_timestep = None, extend_end=True):
+        """Will create a vector of timepoints based on the current case.
+
+        By default the timepoints will be regularly sampled based on the
+        interval given by the @interval string. Alternatively the total number
+        of timesteps can be specified, if the @num_timestep option is specified
+        that will take presedence.
+        """
         (num, timeUnit) = TimeVector.parseTimeUnit(interval)
 
         if start is None:
@@ -571,6 +578,9 @@ class EclSum(BaseCClass):
         if end < start:
             raise ValueError("Invalid time interval start after end")
 
+
+        if not num_timestep is None:
+            return TimeVector.create_linear(CTime(start), CTime(end), num_timestep)
 
         range_start = start
         range_end = end

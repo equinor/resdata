@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
 #
 #  The file 'vector_template.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 from ecl import EclPrototype
 from ecl.util import VectorTemplate
@@ -70,6 +70,8 @@ class BoolVector(VectorTemplate):
     _element_sum         = EclPrototype("bool bool_vector_sum(bool_vector)")
     _get_data_ptr        = EclPrototype("bool* bool_vector_get_ptr(bool_vector)")
     _count_equal         = EclPrototype("int bool_vector_count_equal(bool_vector, bool)")
+    _init_linear         = None
+
 
     def __init__(self, default_value=False, initial_size=0):
         super(BoolVector, self).__init__(default_value, initial_size)
