@@ -1508,6 +1508,51 @@ bool @TYPE@_vector_equal(const @TYPE@_vector_type * vector1 , const @TYPE@_vecto
 }
 
 
+int @TYPE@_vector_first_equal(const @TYPE@_vector_type * vector1, const @TYPE@_vector_type * vector2, int offset) {
+  if (offset >= vector1->size)
+    return -2;
+
+  if (offset >= vector2->size)
+    return -2;
+
+  int index = offset;
+  while (vector1->data[index] != vector2->data[index]) {
+    index++;
+
+    if (index == vector1->size)
+      return -1;
+
+    if (index == vector2->size)
+      return -1;
+  }
+
+  return index;
+}
+
+
+
+int @TYPE@_vector_first_not_equal(const @TYPE@_vector_type * vector1, const @TYPE@_vector_type * vector2, int offset) {
+  if (offset >= vector1->size)
+    return -2;
+
+  if (offset >= vector2->size)
+    return -2;
+
+  int index = offset;
+  while (vector1->data[index] == vector2->data[index]) {
+    index++;
+
+    if (index == vector1->size)
+      return -1;
+
+    if (index == vector2->size)
+      return -1;
+  }
+
+  return index;
+}
+
+
 
 void  @TYPE@_vector_apply(@TYPE@_vector_type * vector , @TYPE@_ftype * func) {
   @TYPE@_vector_assert_writable( vector );

@@ -570,3 +570,11 @@ class UtilTest(TestCase):
         for i in range(len(d)):
             self.assertEqual( d[i] , i*0.10)
 
+    def test_equal(self):
+        v1 = IntVector()
+        v1[3] = 99
+
+        v2 = IntVector()
+        self.assertNotEqual( v1,v2 )
+        v2[3] = 99
+        self.assertEqual(v1,v2)

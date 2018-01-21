@@ -71,6 +71,9 @@ class BoolVector(VectorTemplate):
     _get_data_ptr        = EclPrototype("bool* bool_vector_get_ptr(bool_vector)")
     _count_equal         = EclPrototype("int bool_vector_count_equal(bool_vector, bool)")
     _init_linear         = None
+    _equal               = EclPrototype("bool bool_vector_equal(bool_vector, bool_vector)")
+    _first_eq            = EclPrototype("int bool_vector_first_equal(bool_vector, bool_vector, int)")
+    _first_neq           = EclPrototype("int bool_vector_first_not_equal(bool_vector, bool_vector, int)")
 
 
     def __init__(self, default_value=False, initial_size=0):
