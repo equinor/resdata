@@ -1437,7 +1437,7 @@ void ecl_sum_data_init_time_vector( const ecl_sum_data_type * data , time_t_vect
     }
   } else {
     int i;
-    for (i = 0; i < vector_get_size(data->data); i++) {
+    for (i = 1; i < vector_get_size(data->data); i++) {
       const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , i  );
       time_t_vector_append( time_vector , ecl_sum_tstep_get_sim_time( ministep ));
     }
