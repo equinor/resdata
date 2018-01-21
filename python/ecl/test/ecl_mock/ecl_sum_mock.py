@@ -18,7 +18,7 @@ def createEclSum( case , keys , start = datetime.date(2010 , 1, 1) , sim_length_
         for mini_step in range(num_mini_step):
             days = report_step * report_step_length + mini_step * mini_step_length
             t_step = ecl_sum.addTStep( report_step + 1 , sim_days = days )
-                
+
             for var in var_list:
                 key = var.getKey1( )
                 if key in func_table:

@@ -384,3 +384,12 @@ class SumTest(EclTest):
         self.assertEqual( len(time_range), 10)
         self.assertEqual( time_range[0], case.get_data_start_time())
         self.assertEqual( time_range[-1], case.get_end_time())
+
+
+    def test_resample(self):
+        case = create_case()
+        time_vector = case.alloc_time_vector( False )
+        case2 = case.resample( "RS", time_vector)
+        time_vector_resample = case2.alloc_time_vector(False)
+        first_diff = time_vector_resample.first_neq( time_vector)
+        self.assertEqual( time_vector_resample, time_vector)
