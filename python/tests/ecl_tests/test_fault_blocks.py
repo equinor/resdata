@@ -69,7 +69,7 @@ class FaultBlockTest(EclTest):
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
+            kw = EclKW.read_grdecl("kw.grdecl" , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
         
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
@@ -101,7 +101,7 @@ class FaultBlockTest(EclTest):
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
+            kw = EclKW.read_grdecl("kw.grdecl" , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
         
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
@@ -161,7 +161,7 @@ class FaultBlockTest(EclTest):
                 fileH.write("3 3 3 3 2 2 2 2 \n")
                 fileH.write("/\n")
                 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
+            kw = EclKW.read_grdecl("faultblock.grdecl" , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FY\'   1   4   4   4   1   1  'Y'  /\n")
@@ -227,7 +227,7 @@ class FaultBlockTest(EclTest):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
                 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
+            kw = EclKW.read_grdecl("faultblock.grdecl" , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")
@@ -437,7 +437,7 @@ class FaultBlockTest(EclTest):
                 fileH.write("/\n")
 
 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
+            kw = EclKW.read_grdecl("faultblock.grdecl" , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")

@@ -38,17 +38,17 @@ class GRDECLTest(EclTest):
 
 
     def test_Load( self ):
-        kw = EclKW.read_grdecl(open(self.src_file, "r"), "PERMX")
+        kw = EclKW.read_grdecl(self.src_file, "PERMX")
         self.assertTrue(kw)
 
         grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE" ))
-        kw = Ecl3DKW.read_grdecl(grid , open(self.src_file, "r"), "PERMX")
+        kw = Ecl3DKW.read_grdecl(grid , self.src_file, "PERMX")
         self.assertTrue( isinstance( kw , Ecl3DKW ))
 
 
 
     def test_reload( self ):
-        kw = EclKW.read_grdecl(open(self.src_file, "r"), "PERMX")
+        kw = EclKW.read_grdecl(self.src_file, "PERMX")
         tmp_file1 = "/tmp/permx1.grdecl"
         tmp_file2 = "/tmp/permx2.grdecl"
         self.addFile(tmp_file1)
@@ -58,7 +58,7 @@ class GRDECLTest(EclTest):
         kw.write_grdecl(fileH)
         fileH.close()
 
-        kw1 = EclKW.read_grdecl(open(tmp_file1, "r"), "PERMX")
+        kw1 = EclKW.read_grdecl(tmp_file1, "PERMX")
 
         fileH = open(tmp_file2, "w")
         kw1.write_grdecl(fileH)
@@ -73,11 +73,10 @@ class GRDECLTest(EclTest):
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMY"))
         file.close()
 
-        file = open(self.src_file, "r")
-        kw1 = EclKW.read_grdecl(file, "PERMX")
-        self.assertFalse(EclKW.fseek_grdecl(file, "PERMX"))
-        self.assertTrue(EclKW.fseek_grdecl(file, "PERMX", rewind=True))
-        file.close()
+        kw1 = EclKW.read_grdecl(self.src_file, "PERMX")
+        self.assertFalse(EclKW.fseek_grdecl(self.src_file, "PERMX"))
+        self.assertTrue(EclKW.fseek_grdecl(self.src_file, "PERMX", rewind=True))
+
 
 
     def test_fseek2(self):
