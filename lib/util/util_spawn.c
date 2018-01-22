@@ -19,6 +19,13 @@ extern char **environ;
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
+
+static void __init_attributes(posix_spawnattr_t * attributes) {
+  posix_spawnattr_init(attributes);
+  attributes->__flags |= POSIX_SPAWN_SETPGROUP;
+  attributes->__pgrp= 0;
+}
+
 static void __init_redirection(posix_spawn_file_actions_t * file_actions, const char *stdout_file, const char *stderr_file) {
   int status;
   status = posix_spawn_file_actions_init(file_actions);
@@ -73,16 +80,17 @@ pid_t util_spawn(const char *executable, int argc, const char **argv, const char
   }
 
   {
+      posix_spawnattr_t spawn_attr;
       posix_spawn_file_actions_t file_actions;
       __init_redirection(&file_actions , stdout_file , stderr_file);
-
+      __init_attributes(&spawn_attr);
       pthread_mutex_lock( &spawn_mutex );
       {
         int spawn_status;
         if (util_is_executable(executable)) { // the executable is in current directory or an absolute path
-          spawn_status = posix_spawn(&pid, executable, &file_actions, NULL, __argv, environ);
+          spawn_status = posix_spawn(&pid, executable, &file_actions, &spawn_attr, __argv, environ);
         } else { // Try to find executable in path
-          spawn_status = posix_spawnp(&pid, executable, &file_actions, NULL, __argv, environ);
+          spawn_status = posix_spawnp(&pid, executable, &file_actions, &spawn_attr, __argv, environ);
         }
 
         if (spawn_status != 0)
@@ -90,6 +98,7 @@ pid_t util_spawn(const char *executable, int argc, const char **argv, const char
       }
       pthread_mutex_unlock( &spawn_mutex );
       posix_spawn_file_actions_destroy(&file_actions);
+      posix_spawnattr_destroy(&spawn_attr);
   }
 
   free(__argv);
