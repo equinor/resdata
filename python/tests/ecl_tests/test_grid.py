@@ -21,8 +21,10 @@ import itertools
 from numpy import linspace
 
 from ecl.util import IntVector
-from ecl.ecl import EclGrid, EclKW, EclDataType, EclUnitTypeEnum, EclFile
-from ecl.ecl import EclGridGenerator as GridGen
+from ecl import EclDataType, EclUnitTypeEnum
+from ecl.eclfile import EclKW, EclFile
+from ecl.grid import EclGrid
+from ecl.grid import EclGridGenerator as GridGen
 from ecl.ecl.faults import Layer , FaultCollection
 from ecl.test import TestAreaContext
 from tests import EclTest

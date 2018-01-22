@@ -20,7 +20,9 @@ from math import sqrt
 from ecl import EclPrototype
 from ecl.util import monkey_the_camel
 from ecl.util import IntVector
-from ecl.ecl import EclGrid, EclKW, EclDataType
+from ecl import EclDataType
+from ecl.eclfile import EclKW
+from ecl.grid import EclGrid
 
 def flatten(l):
     return [elem for sublist in l for elem in sublist]

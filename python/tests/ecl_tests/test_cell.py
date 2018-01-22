@@ -15,7 +15,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl.ecl import Cell, EclGrid
+from ecl.grid import Cell, EclGrid
 from tests import EclTest
 from unittest import skipUnless
 

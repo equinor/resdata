@@ -34,7 +34,8 @@ from ecl.util import IntVector
 
 from ecl import EclPrototype
 from ecl.ecl.faults import Layer
-from ecl.ecl import EclKW, EclDataType
+from ecl import EclDataType
+from ecl.eclfile import EclKW
 from ecl.geo import CPolyline
 
 
