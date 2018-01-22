@@ -2,7 +2,7 @@ set(PYTHON_SOURCES
     __init__.py
     cell.py
     ecl_grid.py
-#    ecl_region.py
+    ecl_region.py
     ecl_grid_generator.py
 )
 

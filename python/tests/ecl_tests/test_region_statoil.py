@@ -14,8 +14,9 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
-from ecl.ecl import EclFile, EclGrid, EclRegion
-from ecl.ecl.faults import Layer
+from ecl.eclfile import EclFile
+from ecl.grid import EclGrid, EclRegion
+from ecl.faults import Layer
 from tests import EclTest, statoil_test
 
 

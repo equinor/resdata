@@ -6,6 +6,7 @@ set(PYTHON_SOURCES
 add_python_package("python.ecl"  ${PYTHON_INSTALL_PREFIX}/ecl "${PYTHON_SOURCES}" True)
 
 add_subdirectory(eclfile)
+add_subdirectory(faults)
 #add_subdirectory(ecl)
 add_subdirectory(geo)
 add_subdirectory(test)

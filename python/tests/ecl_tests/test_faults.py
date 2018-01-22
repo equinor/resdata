@@ -19,8 +19,10 @@ from unittest import skipIf
 import time
 from ecl import util
 
-from ecl.ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
-from ecl.ecl import EclGrid, EclKW, EclDataType
+from ecl import EclDataType
+from ecl.eclfile import EclKW
+from ecl.grid import EclGrid
+from ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
 from ecl.test import TestAreaContext
 from ecl.geo import Polyline , CPolyline
 from tests import EclTest

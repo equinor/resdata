@@ -18,9 +18,9 @@ from __future__ import print_function
 from cwrap import BaseCClass
 
 from ecl.util import monkey_the_camel
-from ecl.ecl import EclDataType
+from ecl import EclDataType
 from ecl import EclPrototype
-from ecl.ecl.faults import Fault
+from ecl.faults import Fault
 
 class FaultBlockLayer(BaseCClass):
     TYPE_NAME = "fault_block_layer"

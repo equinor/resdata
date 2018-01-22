@@ -13,8 +13,10 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
-from ecl.ecl import EclGrid, EclKW, EclRegion, EclDataType
-from ecl.ecl.faults import Layer
+from ecl import EclDataType
+from ecl.eclfile import EclKW
+from ecl.grid import EclGrid, EclRegion
+from ecl.faults import Layer
 from ecl.util import IntVector
 from tests import EclTest
 

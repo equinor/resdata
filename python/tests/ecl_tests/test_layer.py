@@ -19,9 +19,9 @@ from unittest import skipIf
 import time
 
 from ecl.util import IntVector
-from ecl.ecl import EclGrid
+from ecl.grid import EclGrid
 from ecl.geo import CPolyline
-from ecl.ecl.faults import Layer , FaultCollection
+from ecl.faults import Layer , FaultCollection
 from ecl.test import TestAreaContext
 from tests import EclTest
 
