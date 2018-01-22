@@ -19,7 +19,14 @@ extern char **environ;
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
-static void __init_redirection(posix_spawn_file_actions_t * file_actions, const char *stdout_file, const char *stderr_file) {
+
+static void spawn_init_attributes__(posix_spawnattr_t * attributes) {
+  posix_spawnattr_init(attributes);
+  attributes->__flags |= POSIX_SPAWN_SETPGROUP;
+  attributes->__pgrp= 0;
+}
+
+static void spawn_init_redirection__(posix_spawn_file_actions_t * file_actions, const char *stdout_file, const char *stderr_file) {
   int status;
   status = posix_spawn_file_actions_init(file_actions);
 
@@ -62,27 +69,28 @@ static pthread_mutex_t spawn_mutex = PTHREAD_MUTEX_INITIALIZER;
 */
 pid_t util_spawn(const char *executable, int argc, const char **argv, const char *stdout_file, const char *stderr_file) {
   pid_t pid;
-  char **__argv = (char**)util_malloc((argc + 2) * sizeof *__argv);
+  char **argv__ = (char**)util_malloc((argc + 2) * sizeof *argv__);
 
   {
     int iarg;
-    __argv[0] = (char *) executable;
+    argv__[0] = (char *) executable;
     for (iarg = 0; iarg < argc; iarg++)
-      __argv[iarg + 1] = (char *) argv[iarg];
-    __argv[argc + 1] = NULL;
+      argv__[iarg + 1] = (char *) argv[iarg];
+    argv__[argc + 1] = NULL;
   }
 
   {
+      posix_spawnattr_t spawn_attr;
       posix_spawn_file_actions_t file_actions;
-      __init_redirection(&file_actions , stdout_file , stderr_file);
-
+      spawn_init_redirection__(&file_actions , stdout_file , stderr_file);
+      spawn_init_attributes__(&spawn_attr);
       pthread_mutex_lock( &spawn_mutex );
       {
         int spawn_status;
         if (util_is_executable(executable)) { // the executable is in current directory or an absolute path
-          spawn_status = posix_spawn(&pid, executable, &file_actions, NULL, __argv, environ);
+          spawn_status = posix_spawn(&pid, executable, &file_actions, &spawn_attr, argv__, environ);
         } else { // Try to find executable in path
-          spawn_status = posix_spawnp(&pid, executable, &file_actions, NULL, __argv, environ);
+          spawn_status = posix_spawnp(&pid, executable, &file_actions, &spawn_attr, argv__, environ);
         }
 
         if (spawn_status != 0)
@@ -90,9 +98,10 @@ pid_t util_spawn(const char *executable, int argc, const char **argv, const char
       }
       pthread_mutex_unlock( &spawn_mutex );
       posix_spawn_file_actions_destroy(&file_actions);
+      posix_spawnattr_destroy(&spawn_attr);
   }
 
-  free(__argv);
+  free(argv__);
   return pid;
 }
 
