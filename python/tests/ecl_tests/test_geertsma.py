@@ -1,5 +1,8 @@
 import datetime
-from ecl.ecl import EclGrid, EclKW, EclDataType, openFortIO, FortIO, EclFile, EclSubsidence
+from ecl import EclDataType
+from ecl.eclfile import EclKW, openFortIO, FortIO, EclFile
+from ecl.grid import EclGrid
+from ecl.gravimetry import EclSubsidence
 
 from ecl.test import TestAreaContext
 from tests import EclTest

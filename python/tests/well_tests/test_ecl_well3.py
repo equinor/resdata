@@ -1,7 +1,9 @@
 import datetime
 import os.path
 
-from ecl.ecl import EclGrid, EclFile, EclSum
+from ecl.eclfile import EclFile
+from ecl.grid import EclGrid
+from ecl.summary import EclSum
 from tests import EclTest, statoil_test
 from ecl.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment

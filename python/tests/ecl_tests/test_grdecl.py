@@ -16,7 +16,8 @@
 #  for more details.
 
 import os
-from ecl.ecl import EclKW,EclGrid,Ecl3DKW
+from ecl.eclfile import EclKW, Ecl3DKW
+from ecl.grid import EclGrid
 from tests import EclTest, statoil_test
 
 

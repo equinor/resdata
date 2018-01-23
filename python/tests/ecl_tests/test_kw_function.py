@@ -16,7 +16,9 @@
 #  for more details.
 import os
 import random
-from ecl.ecl import EclKW, EclDataType, EclGrid , Ecl3DKW
+from ecl import EclDataType
+from ecl.eclfile import EclKW, Ecl3DKW
+from ecl.grid import EclGrid
 from ecl.util import IntVector
 from tests import EclTest
 

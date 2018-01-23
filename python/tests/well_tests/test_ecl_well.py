@@ -1,5 +1,7 @@
 import datetime
-from ecl.ecl import EclGrid, EclFile, EclFileFlagEnum
+from ecl import EclFileFlagEnum
+from ecl.eclfile import EclFile
+from ecl.grid import EclGrid
 from tests import EclTest, statoil_test
 from ecl.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
