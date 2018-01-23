@@ -1,17 +1,17 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'double_vector.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
 from ecl import EclPrototype
@@ -36,7 +36,7 @@ class DoubleVector(VectorTemplate):
     _lshift           = EclPrototype("void   double_vector_lshift( double_vector , int )")
     _rshift           = EclPrototype("void   double_vector_rshift( double_vector , int )")
     _insert           = EclPrototype("void   double_vector_insert( double_vector , int , double)")
-    _fprintf          = EclPrototype("void   double_vector_fprintf( double_vector , FILE , char* , char*)")
+    # _fprintf          = EclPrototype("void   double_vector_fprintf( double_vector , FILE , char* , char*)")
     _sort             = EclPrototype("void   double_vector_sort( double_vector )")
     _rsort            = EclPrototype("void   double_vector_rsort( double_vector )")
     _reset            = EclPrototype("void   double_vector_reset( double_vector )")

@@ -18,7 +18,6 @@
 import datetime
 import os.path
 
-from cwrap import CFILE
 from ecl.ecl import EclSum, EclSumKeyWordVector, EclFile
 from ecl.ecl import FortIO, openFortIO, openEclFile, EclKW
 from ecl.test import TestAreaContext

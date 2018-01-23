@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
 #
 #  The file 'vector_template.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 from ecl import EclPrototype
 from ecl.util import VectorTemplate
@@ -40,7 +40,7 @@ class BoolVector(VectorTemplate):
     _lshift              = EclPrototype("void   bool_vector_lshift( bool_vector , int )")
     _rshift              = EclPrototype("void   bool_vector_rshift( bool_vector , int )")
     _insert              = EclPrototype("void   bool_vector_insert( bool_vector , int , bool)")
-    _fprintf             = EclPrototype("void   bool_vector_fprintf( bool_vector , FILE , char* , char*)")
+    # _fprintf             = EclPrototype("void   bool_vector_fprintf( bool_vector , FILE , char* , char*)")
     _sort                = EclPrototype("void   bool_vector_sort( bool_vector )")
     _rsort               = EclPrototype("void   bool_vector_rsort( bool_vector )")
     _reset               = EclPrototype("void   bool_vector_reset( bool_vector )")
@@ -90,7 +90,7 @@ class BoolVector(VectorTemplate):
 
            "1,4-7,10"  =>  {F,T,F,F,T,T,T,T,F,F,T}
            "1,4-7,10X" =>  {}
-        
+
         The empty list will evaluate to false
         @rtype: BoolVector
         """

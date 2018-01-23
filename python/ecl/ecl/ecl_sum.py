@@ -30,7 +30,7 @@ import os.path
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
-from cwrap import BaseCClass, CFILE
+from cwrap import BaseCClass
 
 from ecl.util import monkey_the_camel
 from ecl.util import StringList, CTime, DoubleVector, TimeVector, IntVector
@@ -89,7 +89,7 @@ class EclSum(BaseCClass):
     _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
     _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
     _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer(char*, char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
-    _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector)")
+    # _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector)")
     _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
     _free                          = EclPrototype("void     ecl_sum_free(ecl_sum)")
     _data_length                   = EclPrototype("int      ecl_sum_get_data_length(ecl_sum)")
@@ -1247,12 +1247,16 @@ class EclSum(BaseCClass):
     def dump_csv_line(self, time, keywords, pfile):
         """
         Will dump a csv formatted line of the keywords in @keywords,
-        evaluated at the intertpolated time @time. @pfile should point to an open Python file handle.
+        evaluated at the intertpolated time @time. @pfile should point to an
+        open Python file handle.
         """
-        cfile = CFILE(pfile)
-        ctime = CTime(time)
-        EclSum._dump_csv_line(self, ctime, keywords, cfile)
-
+        data = self.get_interp_row(keywords, time, invalid_value=-1E21)
+        for i, d in enumerate(data):
+            v = str(d) if d != -1E21 else ''
+            if i == 0:
+                pfile.write('{}'.format(v))
+            else:
+                pfile.write(',{}'.format(v))
 
 
     def export_csv(self, filename, keys=None, date_format="%Y-%m-%d", sep=";"):
@@ -1284,7 +1288,6 @@ class EclSum(BaseCClass):
 
 
 import ecl.ecl.ecl_sum_keyword_vector
-EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)", bind=False)
 EclSum._get_interp_vector = EclPrototype("void  ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)", bind=False)
 
 monkey_the_camel(EclSum, 'varType', EclSum.var_type, classmethod)
