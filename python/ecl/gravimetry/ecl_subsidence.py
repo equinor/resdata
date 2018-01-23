@@ -25,6 +25,7 @@ ecl_subsidence.c implementation in the libecl library.
 from cwrap import BaseCClass
 from ecl import EclPrototype
 from ecl.util import monkey_the_camel
+import ecl.grid
 
 class EclSubsidence(BaseCClass):
     """

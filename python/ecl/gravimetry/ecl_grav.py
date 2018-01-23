@@ -25,7 +25,8 @@ from cwrap import BaseCClass
 
 from ecl import EclPrototype
 from ecl.util import monkey_the_camel
-from ecl.ecl import EclPhaseEnum
+from ecl import EclPhaseEnum
+import ecl.eclfile
 
 class EclGrav(BaseCClass):
     """
