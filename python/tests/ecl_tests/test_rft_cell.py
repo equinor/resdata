@@ -16,7 +16,7 @@
 #  for more details. 
 
 
-from ecl.ecl import EclRFTCell, EclPLTCell
+from ecl.rft import EclRFTCell, EclPLTCell
 from tests import EclTest
 
 
