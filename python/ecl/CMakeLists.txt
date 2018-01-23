@@ -14,7 +14,7 @@ add_subdirectory(summary)
 add_subdirectory(geo)
 add_subdirectory(test)
 add_subdirectory(util)
-#add_subdirectory(well)
+add_subdirectory(well)
 
 configure_file(ecl_lib_info_build.py.in   ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}/ecl/__ecl_lib_info.py )
 configure_file(ecl_lib_info_install.py.in ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}/ecl_lib_info_install.py )

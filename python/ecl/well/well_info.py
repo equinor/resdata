@@ -16,8 +16,8 @@
 
 from os.path import isfile
 from cwrap import BaseCClass
-from ecl.ecl import EclGrid
-from ecl.ecl.ecl_file import EclFile
+from ecl.grid import EclGrid
+from ecl.eclfile.ecl_file import EclFile
 from ecl.well import WellTimeLine
 from ecl import EclPrototype
 
