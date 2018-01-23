@@ -14,8 +14,9 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
+import numpy as np
+
 from ecl.util import monkey_the_camel
-from ecl.util import stat
 from ecl.util import Matrix
 from ecl.geo import Polyline, CPolyline, GeometryTools
 
@@ -99,18 +100,18 @@ class FaultLayer(object):
         """
 
         N = len(self.__fault_lines)
-        x = Matrix(N, 1)
-        y = Matrix(N, 1)
+        x = np.array([N,1])
+        y = np.array([N,1])
 
         for index,line in enumerate(self.__fault_lines):
             xc,yc = line.center()
 
-            x[index,0] = xc
-            y[index,0] = yc
+            x[index] = xc
+            y[index] = yc
 
         # y = beta[0] + beta[1] * x
         #   = a       + b * x
-        beta = stat.polyfit(2, x, y)
+        beta = np.polyfit(x, y, 2)
         a = beta[0]
         b = beta[1]
 
