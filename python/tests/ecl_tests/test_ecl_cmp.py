@@ -16,7 +16,7 @@
 
 from ecl.test import TestAreaContext
 from ecl.test.ecl_mock import createEclSum
-from ecl.ecl import EclCmp
+from ecl.summary import EclCmp
 from tests import EclTest, statoil_test
 
 @statoil_test()

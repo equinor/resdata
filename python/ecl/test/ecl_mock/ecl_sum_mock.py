@@ -1,5 +1,5 @@
 import datetime
-from ecl.ecl import EclSum
+from ecl.summary import EclSum
 
 
 def mock_func(ecl_sum , key , days):

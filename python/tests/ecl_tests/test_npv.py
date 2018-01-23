@@ -24,8 +24,8 @@ try:
 except ImportError:
     from unittest import skipIf, skipUnless, skipIf
 
-from ecl.ecl import EclSum
-from ecl.ecl import EclNPV , NPVPriceVector
+from ecl.summary import EclSum
+from ecl.summary import EclNPV , NPVPriceVector
 
 from ecl.util import StringList, TimeVector, DoubleVector , CTime
 from ecl.test import TestAreaContext

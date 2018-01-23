@@ -21,7 +21,9 @@ import csv
 import shutil
 from unittest import skipIf, skipUnless, skipIf
 
-from ecl.ecl import EclSum, EclSumVarType, FortIO, openFortIO, EclKW, EclDataType, EclSumKeyWordVector
+from ecl import EclDataType
+from ecl.eclfile import FortIO, openFortIO, EclKW
+from ecl.summary import EclSum, EclSumVarType, EclSumKeyWordVector
 from ecl.test import TestAreaContext
 from tests import EclTest
 from ecl.test.ecl_mock import createEclSum

@@ -18,7 +18,8 @@ import os.path
 import subprocess
 from subprocess import CalledProcessError as CallError
 
-from ecl.ecl import Cell, EclGrid, EclSum
+from ecl.grid import Cell, EclGrid
+from ecl.summary import EclSum
 from tests import EclTest
 from ecl.test.ecl_mock import createEclSum
 from ecl.test import TestAreaContext

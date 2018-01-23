@@ -19,7 +19,7 @@ import datetime
 import numbers
 
 from ecl.util import monkey_the_camel
-from ecl.ecl import EclSum
+from ecl.summary import EclSum
 
 
 class NPVParseKey(object):
