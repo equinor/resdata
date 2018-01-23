@@ -1252,7 +1252,7 @@ class EclSum(BaseCClass):
         """
         data = self.get_interp_row(keywords, time, invalid_value=-1E21)
         for i, d in enumerate(data):
-            v = d == str(d) if d != -1E21 else ''
+            v = str(d) if d != -1E21 else ''
             if i == 0:
                 pfile.write('{}'.format(v))
             else:
