@@ -7,7 +7,8 @@ import sys
 # typically be achieved with the bash script bin/test_install which is
 # generated during the configure process.
 
-from ecl.ecl import EclSum, EclGrid
+from ecl.grid import EclGrid
+from ecl.summary import EclSum
 
 
 
