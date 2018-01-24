@@ -68,6 +68,7 @@ class IntVector(VectorTemplate):
     _get_data_ptr        = EclPrototype("int* int_vector_get_ptr(int_vector)")
     _count_equal         = EclPrototype("int int_vector_count_equal(int_vector, int)")
     _init_range          = EclPrototype("void int_vector_init_range(int_vector, int , int , int)")
+    _init_linear         = EclPrototype("bool int_vector_init_linear(int_vector, int, int, int)")
 
     def __init__(self, default_value=0, initial_size=0):
         super(IntVector, self).__init__(default_value, initial_size)

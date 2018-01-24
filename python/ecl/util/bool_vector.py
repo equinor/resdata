@@ -90,7 +90,7 @@ class BoolVector(VectorTemplate):
 
            "1,4-7,10"  =>  {F,T,F,F,T,T,T,T,F,F,T}
            "1,4-7,10X" =>  {}
-        
+
         The empty list will evaluate to false
         @rtype: BoolVector
         """
@@ -142,3 +142,8 @@ class BoolVector(VectorTemplate):
             cnt += "..."
             cnt += self._tostr(b)
         return 'BoolVector(size = %d, content = "%s") %s' % (ls, cnt, self._ad_str())
+
+
+    @classmethod
+    def create_linear(cls, start_value, end_value, num_values):
+        raise NotImplementedError("The init_linear method does not make sense for bool vectors")

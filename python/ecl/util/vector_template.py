@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'vector_template.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 """
 Typed vectors IntVector, DoubleVector and BoolVector.
 
@@ -22,7 +22,7 @@ which will be used for not explicitly set indices.
 
    vec = IntVector( default_value = 66 )
    vec[0] = 10
-   vec[2] = 10    
+   vec[2] = 10
 
 After the 'vec[2] = 10' statement the vector has grown to contain
 three elements. The element vec[1] has not been explicitly assigned by
@@ -34,7 +34,7 @@ the default value (i.e. 66 in this case). So the statement
 will give '66'. The main part of the implementation is in terms of an
 "abstract base class" TVector. The TVector class should be not
 instantiated directly, instead the child classes IntVector,
-DoubleVector or BoolVector should be used. 
+DoubleVector or BoolVector should be used.
 
 The C-level has implementations for several fundamental types like
 float and size_t not currently implemented in the Python version.
@@ -46,7 +46,7 @@ import  sys
 
 from cwrap import CFILE, BaseCClass
 
-    
+
 
 class VectorTemplate(BaseCClass):
 
@@ -83,7 +83,7 @@ class VectorTemplate(BaseCClass):
 
     def __nonzero__(self):
         return self.__bool__( )
-        
+
 
     def copy(self):
         """
@@ -97,7 +97,7 @@ class VectorTemplate(BaseCClass):
             raise ValueError("The shift must be positive")
         self._rshift(shift)
         return self
-        
+
     def __ilshift__(self,shift):
         if shift < 0:
             raise ValueError("The shift must be positive")
@@ -129,7 +129,7 @@ class VectorTemplate(BaseCClass):
         c_pointer = self._alloc(initial_size, default_value)
         super(VectorTemplate, self).__init__(c_pointer)
         self.element_size = self._element_size()
-        
+
     def __contains__(self , value):
         return self._contains(  value)
 
@@ -139,7 +139,7 @@ class VectorTemplate(BaseCClass):
             return self._pop()
         else:
             raise ValueError("Trying to pop from empty vector")
-                             
+
 
     def str_data(self, width, index1, index2, fmt):
         """
@@ -242,7 +242,7 @@ class VectorTemplate(BaseCClass):
         Low-level function implementing inplace add.
 
         The __IADD__ function implements the operation:
-        
+
            v += a
 
         The variable which is added, i.e. @delta, can either be of the
@@ -257,7 +257,7 @@ class VectorTemplate(BaseCClass):
         """
         if type(self) == type(delta):
             if len(self) == len(delta):
-                # This is vector + vector operation. 
+                # This is vector + vector operation.
                 if not add:
                     delta *= -1
                 self._inplace_add(delta)
@@ -379,7 +379,7 @@ class VectorTemplate(BaseCClass):
 
            v1 = IntVector()
            v2 = IntVector()
-           
+
            v1[10] = 77
            v2.assign( v1 )      # Now v2 contains identicall content to v1
            ....
@@ -452,7 +452,7 @@ class VectorTemplate(BaseCClass):
     def deleteBlock(self, index, block_size):
         """
         Remove a block of size @block_size starting at @index.
-        
+
         After the removal data will be left shifted.
         """
         self._idel_block(index, block_size)
@@ -519,7 +519,7 @@ class VectorTemplate(BaseCClass):
         l = [0] * len(self)
         for (index,value) in enumerate(self):
             l[index] = value
-            
+
         return l
 
     def selectUnique(self):
@@ -550,6 +550,16 @@ class VectorTemplate(BaseCClass):
             raise ValueError("Invalid range")
         else:
             self._init_range(  min_value , max_value , delta )
+
+
+    @classmethod
+    def create_linear(cls, start_value, end_value, num_values):
+        vector = cls()
+        if not vector._init_linear(start_value, end_value, num_values):
+            raise ValueError("init_linear arguments invalid")
+
+        return vector
+
 
     @classmethod
     def createRange(cls , min_value , max_value , delta):

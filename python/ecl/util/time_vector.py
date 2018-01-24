@@ -68,6 +68,8 @@ class TimeVector(VectorTemplate):
     _element_sum         = EclPrototype("time_t time_t_vector_sum(time_t_vector)")
     _count_equal         = EclPrototype("int time_t_vector_count_equal(time_t_vector, time_t)")
     _init_range          = EclPrototype("void time_t_vector_init_range(time_t_vector, time_t , time_t , time_t)")
+    _init_linear         = EclPrototype("bool time_t_vector_init_linear(time_t_vector, time_t, time_t, int)")
+
 
     def __init__(self, default_value=None, initial_size=0):
         if default_value is None:
