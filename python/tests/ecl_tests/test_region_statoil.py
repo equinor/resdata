@@ -16,7 +16,7 @@
 #  for more details.
 from ecl.eclfile import EclFile
 from ecl.grid import EclGrid, EclRegion
-from ecl.faults import Layer
+from ecl.grid.faults import Layer
 from tests import EclTest, statoil_test
 
 

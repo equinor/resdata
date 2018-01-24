@@ -23,7 +23,7 @@ import time
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
-from ecl.faults import FaultCollection, Fault, FaultLine, FaultSegment
+from ecl.grid.faults import FaultCollection, Fault, FaultLine, FaultSegment
 from tests import EclTest, statoil_test
 
 

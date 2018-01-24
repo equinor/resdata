@@ -23,7 +23,7 @@ from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
 from tests import EclTest, statoil_test
-from ecl.faults import FaultBlock, FaultBlockLayer
+from ecl.grid.faults import FaultBlock, FaultBlockLayer
 
 
 @statoil_test()

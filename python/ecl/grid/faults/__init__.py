@@ -1,6 +1,4 @@
-import sys
-if not 'ecl.grid' in sys.modules:
-  raise ImportError("ecl.grid must be imported before ecl.faults.")
+
 
 from .layer import Layer
 from .fault_collection import FaultCollection

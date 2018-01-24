@@ -7,3 +7,5 @@ set(PYTHON_SOURCES
 )
 
 add_python_package("python.ecl.grid" ${PYTHON_INSTALL_PREFIX}/ecl/grid "${PYTHON_SOURCES}" True)
+
+add_subdirectory(faults)

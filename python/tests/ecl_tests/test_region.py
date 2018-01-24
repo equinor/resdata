@@ -16,7 +16,7 @@
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid, EclRegion
-from ecl.faults import Layer
+from ecl.grid.faults import Layer
 from ecl.util import IntVector
 from tests import EclTest
 

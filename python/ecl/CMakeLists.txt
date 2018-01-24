@@ -7,7 +7,6 @@ add_python_package("python.ecl"  ${PYTHON_INSTALL_PREFIX}/ecl "${PYTHON_SOURCES}
 
 add_subdirectory(eclfile)
 add_subdirectory(grid)
-add_subdirectory(faults)
 add_subdirectory(rft)
 add_subdirectory(gravimetry)
 add_subdirectory(summary)

@@ -21,7 +21,7 @@ import time
 from ecl.util import IntVector
 from ecl.grid import EclGrid
 from ecl.geo import CPolyline
-from ecl.faults import Layer , FaultCollection
+from ecl.grid.faults import Layer , FaultCollection
 from ecl.test import TestAreaContext
 from tests import EclTest
 
