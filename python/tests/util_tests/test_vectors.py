@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway. 
-#   
+#  Copyright (C) 2011  Statoil ASA, Norway.
+#
 #  The file 'test_vectors.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 
 import copy
@@ -184,7 +184,7 @@ class UtilTest(TestCase):
 
         active_list = IntVector.active_list("1,10,100-105X")
         self.assertFalse(active_list)
-        
+
     def test_value_list(self):
         list2 = IntVector.valueList("3,10-12,0,1")
         self.assertTrue(len(list2) == 6)
@@ -261,7 +261,7 @@ class UtilTest(TestCase):
             a.pop()
 
 #----
-            
+
     def test_shift(self):
         a = IntVector()
         a.append(1)
@@ -309,25 +309,25 @@ class UtilTest(TestCase):
         self.assertTrue(a.max(), 5)
         self.assertTrue(a.min(), 1)
         self.assertTrue(a.minIndex(), 4)
-        
+
         self.assertEqual(a.maxIndex(reverse=True), 0)
         self.assertEqual(a.maxIndex(reverse=False), 0)
-        
+
         a[4] = 5
         self.assertTrue(a[4] == 5)
-        
+
         a_plus_one = a + 1
         self.assertEqual(list(a_plus_one), [6, 5, 4, 3, 6])
 
         sliced = a[0:3]
         self.assertEqual(list(sliced), [5, 4, 3])
-        
+
         with self.assertRaises(IndexError):
             item = a[6]
-        
+
         copy_of_a = a.copy()
         self.assertEqual(list(a), list(copy_of_a))
-        
+
         another_copy_of_a = copy_of_a.copy( )
         self.assertEqual(list(a), list(another_copy_of_a))
 
@@ -543,10 +543,30 @@ class UtilTest(TestCase):
         self.create_range_test(v, 0, 100, -3)
 
 
-        
+
     def test_perm_vector(self):
         v = IntVector.createRange( 11 , 0 , -1 )
         perm = v.permutationSort( )
         self.assertEqual( perm[0]  , 10 )
         self.assertEqual( perm[5]  ,  5 )
         self.assertEqual( perm[10] ,  0 )
+
+
+    def test_init_linear(self):
+        with self.assertRaises(ValueError):
+            v = IntVector.create_linear(0, 10, 1)
+
+        v = IntVector.create_linear(0,10,11)
+        for i in range(len(v)):
+            self.assertEqual(v[i], i)
+
+
+        v = IntVector.create_linear(10,0,11)
+        for i in range(len(v)):
+            self.assertEqual(v[i], 10 - i)
+
+
+        d = DoubleVector.create_linear(0,1,11)
+        for i in range(len(d)):
+            self.assertEqual( d[i] , i*0.10)
+

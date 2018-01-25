@@ -373,3 +373,12 @@ class SumTest(EclTest):
             self.assertIn(key, ecl_sum_vector)
 
 
+    def test_time_range(self):
+        case = create_case()
+        with self.assertRaises(ValueError):
+            case.time_range(num_timestep = 1)
+
+        time_range = case.time_range( num_timestep = 10)
+        self.assertEqual( len(time_range), 10)
+        self.assertEqual( time_range[0], case.get_data_start_time())
+        self.assertEqual( time_range[-1], case.get_end_time())

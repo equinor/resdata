@@ -895,6 +895,25 @@ void @TYPE@_vector_init_range(@TYPE@_vector_type * vector , @TYPE@ value1 , @TYP
 }
 
 
+
+bool @TYPE@_vector_init_linear(@TYPE@_vector_type * vector , @TYPE@ start_value, @TYPE@ end_value, int num_values) {
+  if (num_values < 2)
+    return false;
+
+  @TYPE@_vector_reset( vector );
+  @TYPE@_vector_iset( vector, 0 , start_value);
+  @TYPE@_vector_iset( vector, num_values - 1, end_value);
+  double slope = (end_value - start_value) / (num_values - 1);
+
+  for (int i=1; i < num_values; i++) {
+    @TYPE@ value = (@TYPE@) start_value + slope*i;
+    @TYPE@_vector_iset(vector, i, value);
+  }
+
+  return true;
+}
+
+
 void @TYPE@_vector_append_many(@TYPE@_vector_type * vector , const @TYPE@ * data , int length) {
   @TYPE@_vector_set_many( vector , @TYPE@_vector_size( vector ) , data , length);
 }

@@ -66,6 +66,8 @@ class DoubleVector(VectorTemplate):
     _get_data_ptr     = EclPrototype("double* double_vector_get_ptr(double_vector)")
     _count_equal      = EclPrototype("int double_vector_count_equal(double_vector, double)")
     _init_range       = EclPrototype("void double_vector_init_range(double_vector, double , double , double)")
+    _init_linear      = EclPrototype("bool double_vector_init_linear(double_vector, double, double, int)")
+
 
     def __init__(self, default_value=0, initial_size=0):
         super(DoubleVector, self).__init__(default_value, initial_size)
