@@ -17,7 +17,6 @@
 import numpy as np
 
 from ecl.util import monkey_the_camel
-from ecl.util import Matrix
 from ecl.geo import Polyline, CPolyline, GeometryTools
 
 from .fault_line import FaultLine
@@ -100,20 +99,22 @@ class FaultLayer(object):
         """
 
         N = len(self.__fault_lines)
-        x = np.array([N,1])
-        y = np.array([N,1])
-
+        x = np.zeros(N)
+        y = np.zeros(N)
         for index,line in enumerate(self.__fault_lines):
             xc,yc = line.center()
-
             x[index] = xc
             y[index] = yc
 
-        # y = beta[0] + beta[1] * x
+
+
+
+
+        # y = beta[1] + beta[0] * x
         #   = a       + b * x
-        beta = np.polyfit(x, y, 2)
-        a = beta[0]
-        b = beta[1]
+        beta = np.polyfit(x, y, 1)
+        a = beta[1]
+        b = beta[0]
 
         perm_list = []
         for index,line in enumerate(self.__fault_lines):
