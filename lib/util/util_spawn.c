@@ -19,11 +19,15 @@ extern char **environ;
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
-
 static void spawn_init_attributes__(posix_spawnattr_t * attributes) {
   posix_spawnattr_init(attributes);
-  attributes->__flags |= POSIX_SPAWN_SETPGROUP;
-  attributes->__pgrp= 0;
+  short flags;
+
+  posix_spawnattr_getflags(attributes, &flags);
+  flags |= POSIX_SPAWN_SETPGROUP;
+  posix_spawnattr_setflags(attributes, flags);
+
+  posix_spawnattr_setpgroup( attributes, 0);
 }
 
 static void spawn_init_redirection__(posix_spawn_file_actions_t * file_actions, const char *stdout_file, const char *stderr_file) {
