@@ -154,14 +154,7 @@ class SumTest(EclTest):
 
     def test_solve(self):
         length = 100
-        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
-                            sim_length_days = length,
-                            num_report_step = 10,
-                            num_mini_step = 10,
-                            func_table = {"FOPT" : fopt,
-                                          "FOPR" : fopr ,
-                                          "FGPT" : fgpt })
-
+        case = create_case()
         self.assert_solve( case )
 
     def assert_solve(self, case):
@@ -212,15 +205,7 @@ class SumTest(EclTest):
         scalar = 0.78
         addend = 2.718281828459045
 
-        # setup
-        length = 100
-        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
-                            sim_length_days = length,
-                            num_report_step = 10,
-                            num_mini_step = 10,
-                            func_table = {"FOPT" : fopt,
-                                          "FOPR" : fopr ,
-                                          "FGPT" : fgpt })
+        case = create_case()
         with self.assertRaises( KeyError ):
             case.scaleVector( "MISSING:KEY" , scalar)
             case.shiftVector( "MISSING:KEY" , addend)
@@ -245,15 +230,7 @@ class SumTest(EclTest):
 
 
     def test_different_names(self):
-        length = 100
-        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
-                            sim_length_days = length,
-                            num_report_step = 10,
-                            num_mini_step = 10,
-                            func_table = {"FOPT" : fopt,
-                                          "FOPR" : fopr ,
-                                          "FGPT" : fgpt })
-
+        case = create_case()
         with TestAreaContext("sum_different"):
             case.fwrite( )
             shutil.move("CSV.SMSPEC" , "CSVX.SMSPEC")
@@ -267,14 +244,7 @@ class SumTest(EclTest):
             self.assert_solve( case2 )
 
     def test_invalid(self):
-        case = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
-                            sim_length_days = 100,
-                            num_report_step = 10,
-                            num_mini_step = 10,
-                            func_table = {"FOPT" : fopt,
-                                          "FOPR" : fopr ,
-                                          "FGPT" : fgpt })
-
+        case = create_case()
         with TestAreaContext("sum_invalid"):
             case.fwrite( )
             with open("CASE.txt", "w") as f:
@@ -301,14 +271,7 @@ class SumTest(EclTest):
 
 
     def test_kw_vector(self):
-        case1 = createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
-                             sim_length_days = 100,
-                             num_report_step = 10,
-                             num_mini_step = 10,
-                             func_table = {"FOPT" : fopt,
-                                           "FOPR" : fopr ,
-                                           "FGPT" : fgpt })
-
+        case1 = create_case()
         case2 = createEclSum("CSV" , [("FOPR", None , 0) , ("FOPT" , None , 0), ("FWPT" , None , 0)],
                              sim_length_days = 100,
                              num_report_step = 10,
