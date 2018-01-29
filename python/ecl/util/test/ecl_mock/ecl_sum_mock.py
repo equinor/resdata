@@ -6,8 +6,8 @@ def mock_func(ecl_sum , key , days):
     return days * 10
 
 
-def createEclSum( case , keys , start = datetime.date(2010 , 1, 1) , sim_length_days = 5 * 365 , num_report_step = 5, num_mini_step = 10, dims = (20,10,5) , func_table = {}):
-    ecl_sum = EclSum.writer(case , start , dims[0] , dims[1] , dims[2])
+def createEclSum( case , keys , start = datetime.date(2010 , 1, 1) , sim_length_days = 5 * 365 , num_report_step = 5, num_mini_step = 10, dims = (20,10,5) , func_table = {}, restart_case = None):
+    ecl_sum = EclSum.restart_writer(case , restart_case, start , dims[0] , dims[1] , dims[2])
     var_list = []
     for (kw,wgname,num) in keys:
         var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num) )
