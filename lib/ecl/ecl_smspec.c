@@ -1017,9 +1017,13 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
       util_alloc_file_components( ecl_smspec->header_file , &path , NULL , NULL );
       smspec_header = ecl_util_alloc_exfilename( path , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
       if (!util_same_file(smspec_header , ecl_smspec->header_file))    /* Restart from the current case is ignored. */ {
-        char * tmp_path = util_alloc_filename( path , restart_base , NULL );
-        ecl_smspec->restart_case = util_alloc_abs_path(tmp_path);
-        free( tmp_path );
+        if (util_is_abs_path(restart_base))
+          ecl_smspec->restart_case = util_alloc_string_copy( restart_base );
+        else {
+          char * tmp_path = util_alloc_filename( path , restart_base , NULL );
+          ecl_smspec->restart_case = util_alloc_abs_path(tmp_path);
+          free( tmp_path );
+        }
       }
 
       util_safe_free( path );
