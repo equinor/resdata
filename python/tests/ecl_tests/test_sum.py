@@ -14,12 +14,14 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
+import os.path
 import os
 import inspect
 import datetime
 import csv
 import shutil
 import cwrap
+from contextlib import contextmanager
 from unittest import skipIf, skipUnless, skipIf
 
 from ecl import EclDataType
@@ -28,6 +30,25 @@ from ecl.summary import EclSum, EclSumVarType, EclSumKeyWordVector
 from ecl.util.test import TestAreaContext
 from tests import EclTest
 from ecl.util.test.ecl_mock import createEclSum
+
+
+@contextmanager
+def pushd(path):
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    cwd = os.getcwd()
+    os.chdir(path)
+
+    yield
+
+    os.chdir(cwd)
+
+def create_prediction(history, pred_path):
+    restart_case = os.path.join( os.getcwd(), history.base)
+    with pushd(pred_path):
+        prediction = create_case( case = "PREDICTION", restart_case = restart_case, data_start = history.end_date)
+        prediction.fwrite()
+
 
 def fopr(days):
     return days
@@ -41,15 +62,17 @@ def fgpt(days):
     else:
         return 100 - days
 
-def create_case():
+def create_case(case = "CSV", restart_case = None, data_start = None):
     length = 100
-    return createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+    return createEclSum(case , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
                         sim_length_days = length,
                         num_report_step = 10,
                         num_mini_step = 10,
+                        data_start = data_start,
                         func_table = {"FOPT" : fopt,
                                       "FOPR" : fopr ,
-                                      "FGPT" : fgpt })
+                                      "FGPT" : fgpt },
+                        restart_case = restart_case)
 
 class SumTest(EclTest):
 
@@ -357,3 +380,35 @@ class SumTest(EclTest):
         time_vector_resample = case2.alloc_time_vector(False)
         first_diff = time_vector_resample.first_neq( time_vector)
         self.assertEqual( time_vector_resample, time_vector)
+
+
+
+    # The purpose of this test is to reproduce a slightly contrived error situation.
+    #
+    # 1. A history simulation is created and stored somewhere in the
+    #    filesystem.
+    #
+    # 2. We create a prediction, which has 'RESTART' reference to
+    #    the history case.
+    #
+    # 3. The prediction case is loaded from disk, with a cwd different from the
+    #    location of the predition case.
+    #
+    # This configuration would previously lead to a bug in the path used to
+    # resolve the history case, and the history would silently be ignored.
+
+    def test_restart_abs_path(self):
+        with TestAreaContext("restart_test"):
+           history =  create_case(case = "HISTORY")
+           history.fwrite()
+
+           pred_path = "prediction"
+           create_prediction(history, pred_path)
+
+           pred = EclSum(os.path.join(pred_path, "PREDICTION"))
+           length = pred.sim_length
+           pred_times = pred.alloc_time_vector(False)
+           hist_times = history.alloc_time_vector(False)
+
+           for index in range(len(hist_times)):
+               self.assertEqual(hist_times[index], pred_times[index])
