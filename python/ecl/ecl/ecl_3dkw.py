@@ -83,16 +83,18 @@ class Ecl3DKW(EclKW):
         new_kw = Ecl3DKW(kw , grid , value_type , default_value , global_active)
         return new_kw
 
+
     @classmethod
-    def read_grdecl( cls , grid , fileH , kw , strict = True , ecl_type = None):
+    def read_grdecl(cls, grid, fname, kw, strict=True, ecl_type=None):
         """
         Will load an Ecl3DKW instance from a grdecl formatted filehandle.
 
         See the base class EclKW.read_grdecl() for more documentation.
         """
-        kw = super(Ecl3DKW , cls).read_grdecl( fileH , kw , strict , ecl_type)
-        Ecl3DKW.castFromKW(kw , grid)
+        kw = super(Ecl3DKW, cls).read_grdecl(fname, kw, strict, ecl_type)
+        Ecl3DKW.castFromKW(kw, grid)
         return kw
+
 
 
 

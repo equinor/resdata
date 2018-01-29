@@ -136,25 +136,27 @@ class EclGrid(BaseCClass):
         the default EclGrid() constructor - that is also considerably
         faster.
         """
-
+        int_ = EclDataType.ECL_INT
         if os.path.isfile(filename):
-            with open(filename) as f:
-                specgrid = EclKW.read_grdecl(f, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
-                zcorn = EclKW.read_grdecl(f, "ZCORN")
-                coord = EclKW.read_grdecl(f, "COORD")
-                try:
-                    actnum = EclKW.read_grdecl(f, "ACTNUM", ecl_type=EclDataType.ECL_INT)
-                except ValueError:
-                    actnum = None
-
-                try:
-                    mapaxes = EclKW.read_grdecl(f, "MAPAXES")
-                except ValueError:
-                    mapaxes = None
+            specgrid = EclKW.read_grdecl(filename,
+                                         "SPECGRID",
+                                         ecl_type=int_,
+                                         strict=False)
+            zcorn = EclKW.read_grdecl(filename, "ZCORN")
+            coord = EclKW.read_grdecl(filename, "COORD")
+            try:
+                actnum = EclKW.read_grdecl(filename, "ACTNUM", ecl_type=int_)
+            except ValueError:
+                actnum = None
+            try:
+                mapaxes = EclKW.read_grdecl(filename, "MAPAXES")
+            except ValueError:
+                mapaxes = None
 
             return EclGrid.create(specgrid, zcorn, coord, actnum, mapaxes)
         else:
             raise IOError("No such file:%s" % filename)
+
 
     @classmethod
     def load_from_file(cls, filename):

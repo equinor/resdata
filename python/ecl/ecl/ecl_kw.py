@@ -209,22 +209,19 @@ class EclKW(BaseCClass):
 
 
     @classmethod
-    def read_grdecl(cls, fileH, kw, strict=True, ecl_type=None):
+    def read_grdecl(cls, fname, kw, strict=True, ecl_type=None):
         """
-        Function to load an EclKW instance from a grdecl formatted filehandle.
+        Function to load an EclKW instance from a grdecl formatted file.
 
         This constructor can be used to load an EclKW instance from a
         grdecl formatted file; the input files for petrophysical
         properties are typically given as grdecl files.
 
-        The @file argument should be a Python filehandle to an open
-        file. The @kw argument should be the keyword header you are
+        The @fname argument should be an existing file.  The @kw
+        argument should be the keyword header you are
         searching for, e.g. "PORO" or "PVTNUM"[1], the method will
         then search forward through the file to look for this @kw. If
-        the keyword can not be found the method will return None. The
-        searching will start from the current position in the file; so
-        if you want to reposition the file pointer you should use the
-        seek() method of the file object first.
+        the keyword can not be found the method will return None.
 
         Observe that there is a strict 8 character limit on @kw -
         altough you could in principle use an arbitrary external
@@ -244,7 +241,7 @@ class EclKW(BaseCClass):
         1. The optional argument @ecl_type can be used to specify
            the type:
 
-           special_int_kw = EclKW.read_grdecl(fileH, 'INTKW', ecl_type=ECL_INT)
+           special_int_kw = EclKW.read_grdecl(fname, 'INTKW', ecl_type=ECL_INT)
 
            If ecl_type is different from ECL_INT or
            ECL_FLOAT a TypeError exception will be raised.
@@ -256,7 +253,7 @@ class EclKW(BaseCClass):
         2. If the keyword is included in the set built in set
            'int_kw_set' the type will be ECL_INT_TYPE.
 
-           pvtnum_kw = EclKW.read_grdecl(fileH, 'PVTNUM')
+           pvtnum_kw = EclKW.read_grdecl(fname, 'PVTNUM')
 
            Observe that (currently) no case conversions take place
            when checking the 'int_kw_set'. The current built in set is
@@ -266,7 +263,7 @@ class EclKW(BaseCClass):
         3. Otherwise the default is float, i.e. ECL_FLOAT.
 
            EclKw reads grdecl with EclDataType
-           poro_kw = EclKW.read_grdecl(fileH, 'PORO')
+           poro_kw = EclKW.read_grdecl(fname, 'PORO')
 
 
         Observe that since the grdecl files are quite weakly
@@ -279,10 +276,9 @@ class EclKW(BaseCClass):
         it finds in the file.
         """
 
-        cfile  = CFILE(fileH)
-        if kw:
-            if len(kw) > 8:
-                raise TypeError("Sorry keyword:%s is too long, must be eight characters or less." % kw)
+        if kw and len(kw) > 8:
+            raise TypeError("Sorry keyword:%s is too long, "
+                            "must be eight characters or less." % kw)
 
         if ecl_type is None:
             if cls.int_kw_set.__contains__(kw):
@@ -296,9 +292,11 @@ class EclKW(BaseCClass):
             raise TypeError("Expected EclDataType, was: %s" % type(ecl_type))
 
         if not ecl_type in [EclDataType.ECL_FLOAT, EclDataType.ECL_INT]:
-            raise ValueError("The type:%s is invalid when loading keyword:%s" % (ecl_type.type_name, kw))
+            raise ValueError("The type:%s is invalid when loading keyword:%s" %
+                             (ecl_type.type_name, kw))
 
-        return cls._load_grdecl(cfile, kw, strict, ecl_type)
+        with open(fname, 'r') as f:
+            return cls._load_grdecl(CFILE(f), kw, strict, ecl_type)
 
 
     @classmethod
