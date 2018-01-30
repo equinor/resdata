@@ -44,7 +44,6 @@ addons:
     - cmake
     - cmake-data
 
-
 install:
   - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
