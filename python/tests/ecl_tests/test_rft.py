@@ -18,9 +18,7 @@
 
 import datetime
 from ecl.util import CTime
-from ecl.ecl import EclRFTFile, EclRFTCell, EclPLTCell
-from ecl.ecl.rft import WellTrajectory
-from ecl.ecl import EclRFT
+from ecl.rft import EclRFTFile, EclRFTCell, EclPLTCell, EclRFT, WellTrajectory
 from tests import EclTest
 
 class RFTTest(EclTest):

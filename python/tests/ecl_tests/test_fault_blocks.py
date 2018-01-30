@@ -18,8 +18,10 @@ from __future__ import print_function
 from unittest import skipIf
 import warnings
 
-from ecl.ecl import EclGrid, EclKW , EclRegion, EclDataType
-from ecl.ecl.faults import FaultBlock, FaultBlockLayer, FaultBlockCell,FaultCollection
+from ecl import EclDataType
+from ecl.eclfile import EclKW
+from ecl.grid import EclGrid, EclRegion
+from ecl.grid.faults import FaultBlock, FaultBlockLayer, FaultBlockCell,FaultCollection
 from ecl.geo import Polyline , CPolylineCollection
 from ecl.test import TestAreaContext
 from tests import EclTest

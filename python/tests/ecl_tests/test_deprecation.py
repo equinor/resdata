@@ -19,8 +19,10 @@ import time
 import datetime
 
 from ecl.test import TestAreaContext
-from ecl.ecl import EclFile, EclGrid, EclKW, EclDataType, EclGrid, EclRegion
-from ecl.ecl import FortIO, openFortIO, EclRFT, EclGridGenerator
+from ecl import EclDataType
+from ecl.eclfile import EclFile, EclKW, FortIO, openFortIO
+from ecl.grid import EclGrid, EclGrid, EclRegion, EclGridGenerator
+from ecl.rft import EclRFT
 from ecl.test.ecl_mock import createEclSum
 from ecl.util import BoolVector
 from tests import EclTest

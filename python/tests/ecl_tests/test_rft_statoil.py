@@ -17,8 +17,7 @@
 
 from __future__ import print_function
 import datetime
-from ecl.ecl import EclRFTFile, EclRFTCell, EclPLTCell
-from ecl.ecl.rft import WellTrajectory
+from ecl.rft import EclRFTFile, EclRFTCell, EclPLTCell, WellTrajectory
 from tests import EclTest, statoil_test
 
 

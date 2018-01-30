@@ -1,9 +1,15 @@
 set(PYTHON_SOURCES
     __init__.py
+    ecl_type.py
+    ecl_util.py
 )
 add_python_package("python.ecl"  ${PYTHON_INSTALL_PREFIX}/ecl "${PYTHON_SOURCES}" True)
 
-add_subdirectory(ecl)
+add_subdirectory(eclfile)
+add_subdirectory(grid)
+add_subdirectory(rft)
+add_subdirectory(gravimetry)
+add_subdirectory(summary)
 add_subdirectory(geo)
 add_subdirectory(test)
 add_subdirectory(util)

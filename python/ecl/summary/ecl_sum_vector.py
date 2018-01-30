@@ -16,7 +16,7 @@
 
 from __future__ import print_function
 import warnings
-from ecl.ecl.ecl_sum_node import EclSumNode
+from ecl.summary.ecl_sum_node import EclSumNode
 
 
 class EclSumVector(object):

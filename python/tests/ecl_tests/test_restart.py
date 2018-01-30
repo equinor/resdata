@@ -17,7 +17,7 @@
 from _ctypes import ArgumentError
 import os
 import datetime
-from ecl.ecl import EclFile
+from ecl.eclfile import EclFile
 from tests import EclTest, statoil_test
 
 

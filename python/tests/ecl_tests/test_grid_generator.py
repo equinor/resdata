@@ -18,8 +18,10 @@
 from itertools import product as prod
 import operator, random, numpy
 
-from ecl.ecl import EclGrid, EclKW, EclDataType
-from ecl.ecl import EclGridGenerator as GridGen
+from ecl import EclDataType
+from ecl.eclfile import EclKW
+from ecl.grid import EclGrid
+from ecl.grid import EclGridGenerator as GridGen
 from ecl.test import TestAreaContext
 from tests import EclTest
 

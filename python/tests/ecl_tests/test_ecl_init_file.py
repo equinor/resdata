@@ -16,8 +16,9 @@
 
 
 from tests import EclTest, statoil_test
-from ecl.ecl import (Ecl3DKW, EclKW, EclInitFile, EclFile, FortIO,
-                     EclFileFlagEnum, EclGrid)
+from ecl import EclFileFlagEnum
+from ecl.eclfile import Ecl3DKW, EclKW, EclInitFile, EclFile, FortIO
+from ecl.grid import EclGrid
 
 @statoil_test()
 class InitFileTest(EclTest):

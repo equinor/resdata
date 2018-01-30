@@ -19,9 +19,8 @@ import os.path
 import gc
 from unittest import skipIf
 
-
-from ecl.ecl import EclFile, FortIO, EclKW , openFortIO , openEclFile
-from ecl.ecl import EclFileFlagEnum, EclDataType, EclFileEnum
+from ecl import EclFileFlagEnum, EclDataType, EclFileEnum
+from ecl.eclfile import EclFile, FortIO, EclKW , openFortIO , openEclFile
 from ecl.util import CWDContext
 from ecl.test import TestAreaContext, PathContext
 from tests import EclTest

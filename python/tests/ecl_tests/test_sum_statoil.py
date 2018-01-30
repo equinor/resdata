@@ -19,7 +19,8 @@ import datetime
 
 from unittest import skipIf, skipUnless, skipIf
 
-from ecl.ecl import EclSum, EclFile
+from ecl.eclfile import EclFile
+from ecl.summary import EclSum
 
 from ecl.util import StringList, TimeVector, DoubleVector, CTime
 

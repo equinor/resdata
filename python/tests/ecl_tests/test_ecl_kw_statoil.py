@@ -16,7 +16,8 @@
 #  for more details.
 import os
 import random
-from ecl.ecl import EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum
+from ecl import EclDataType, EclFileFlagEnum
+from ecl.eclfile import EclKW, EclFile, FortIO
 
 from ecl.test import TestAreaContext
 from tests import EclTest, statoil_test

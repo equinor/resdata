@@ -19,9 +19,11 @@ try:
 except ImportError:
     from unittest import skipIf
 
-from ecl.ecl import EclGrid, EclDataType , EclKW
+from ecl import EclDataType
+from ecl.eclfile import EclKW
+from ecl.grid import EclGrid
 from tests import EclTest, statoil_test
-from ecl.ecl.faults import FaultBlock, FaultBlockLayer
+from ecl.grid.faults import FaultBlock, FaultBlockLayer
 
 
 @statoil_test()

@@ -18,7 +18,9 @@ import os
 import random
 
 from ecl.util import IntVector
-from ecl.ecl import Ecl3DKW , EclKW, EclDataType, EclFile, FortIO, EclFileFlagEnum , EclGrid
+from ecl import EclDataType, EclFileFlagEnum
+from ecl.eclfile import Ecl3DKW , EclKW, EclFile, FortIO
+from ecl.grid import EclGrid
 from ecl.test import TestAreaContext
 from tests import EclTest
 

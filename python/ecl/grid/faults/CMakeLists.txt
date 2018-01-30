@@ -9,4 +9,4 @@ set(PYTHON_SOURCES
     layer.py
 )
 
-add_python_package("python.ecl.ecl.faults"  ${PYTHON_INSTALL_PREFIX}/ecl/ecl/faults "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.grid.faults"  ${PYTHON_INSTALL_PREFIX}/ecl/grid/faults "${PYTHON_SOURCES}" True)

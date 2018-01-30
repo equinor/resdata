@@ -15,7 +15,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
-from ecl.ecl import EclGrid
+from ecl.grid import EclGrid
 from ecl.test import TestAreaContext
 from tests import EclTest
 

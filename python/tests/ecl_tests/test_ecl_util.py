@@ -14,7 +14,8 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
 #  for more details.
 
-from ecl.ecl import EclGrid , EclUtil, EclTypeEnum , EclFileEnum, EclPhaseEnum, EclUnitTypeEnum
+from ecl import EclTypeEnum , EclFileEnum, EclPhaseEnum, EclUnitTypeEnum, EclUtil
+from ecl.grid import EclGrid
 from tests import EclTest
 
 class EclUtilTest(EclTest):

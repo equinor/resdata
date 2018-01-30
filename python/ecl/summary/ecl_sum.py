@@ -35,10 +35,10 @@ from cwrap import BaseCClass, CFILE
 from ecl.util import monkey_the_camel
 from ecl.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 
-from ecl.ecl import EclSumTStep
-from ecl.ecl import EclSumVarType
-from ecl.ecl.ecl_sum_vector import EclSumVector
-from ecl.ecl.ecl_smspec_node import EclSMSPECNode
+from ecl.summary import EclSumTStep
+from ecl.summary import EclSumVarType
+from ecl.summary.ecl_sum_vector import EclSumVector
+from ecl.summary.ecl_smspec_node import EclSMSPECNode
 from ecl import EclPrototype
 #, EclSumKeyWordVector
 
@@ -1293,7 +1293,7 @@ class EclSum(BaseCClass):
         return self._resample(new_case_name, time_points)
 
 
-import ecl.ecl.ecl_sum_keyword_vector
+import ecl.summary.ecl_sum_keyword_vector
 EclSum._dump_csv_line = EclPrototype("void  ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)", bind=False)
 EclSum._get_interp_vector = EclPrototype("void  ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)", bind=False)
 

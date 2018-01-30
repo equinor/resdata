@@ -22,7 +22,9 @@ except ImportError:
     from unittest import skipIf
 
 import time
-from ecl.ecl import EclDataType, EclKW, EclGrid, EclFile, openEclFile
+from ecl import EclDataType
+from ecl.eclfile import EclKW, EclFile, openEclFile
+from ecl.grid import EclGrid
 from ecl.util import DoubleVector, IntVector
 from ecl.test import TestAreaContext
 from tests import EclTest, statoil_test

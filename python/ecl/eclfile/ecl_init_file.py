@@ -14,7 +14,8 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl.ecl import EclFileEnum, EclFile, Ecl3DFile
+from ecl import EclFileEnum
+from ecl.eclfile import EclFile, Ecl3DFile
 
 
 class EclInitFile(Ecl3DFile):
