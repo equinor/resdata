@@ -1,4 +1,4 @@
-from ecl.geo import GeometryTools
+from ecl.util.geometry import GeometryTools
 from tests import EclTest
 
 

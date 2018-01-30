@@ -22,7 +22,7 @@ from numpy import zeros
 
 from cwrap import BaseCClass
 from ecl import EclPrototype
-from ecl.geo import GeoPointset
+from ecl.util.geometry import GeoPointset
 
 class Surface(BaseCClass):
     TYPE_NAME = "surface"

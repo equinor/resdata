@@ -36,7 +36,7 @@ from ecl import EclPrototype
 from ecl.grid.faults import Layer
 from ecl import EclDataType
 from ecl.eclfile import EclKW
-from ecl.geo import CPolyline
+from ecl.util.geometry import CPolyline
 
 
 def select_method(select):

@@ -19,7 +19,7 @@ import sys
 
 from ecl.util import monkey_the_camel
 from ecl.util import DoubleVector,stat
-from ecl.geo import CPolyline
+from ecl.util.geometry import CPolyline
 
 from .fault_segments import FaultSegment
 

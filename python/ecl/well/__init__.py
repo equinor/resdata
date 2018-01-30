@@ -1,6 +1,6 @@
 import ecl
 import ecl.util
-import ecl.geo
+import ecl.util.geometry
 
 from cwrap import Prototype
 

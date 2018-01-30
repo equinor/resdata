@@ -1,5 +1,5 @@
 import random
-from ecl.geo import Surface
+from ecl.util.geometry import Surface
 from ecl.test import TestAreaContext
 from tests import EclTest
 

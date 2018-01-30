@@ -1,7 +1,7 @@
 import math
 
-from ecl.geo import CPolyline , Polyline
-from ecl.geo.xyz_io import XYZIo
+from ecl.util.geometry import CPolyline , Polyline
+from ecl.util.geometry.xyz_io import XYZIo
 from ecl.test import TestAreaContext
 from tests import EclTest
 

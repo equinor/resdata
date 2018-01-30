@@ -1,5 +1,5 @@
-from ecl.geo.geometry_tools import GeometryTools
-from ecl.geo.polyline import Polyline
+from ecl.util.geometry.geometry_tools import GeometryTools
+from ecl.util.geometry.polyline import Polyline
 from tests import EclTest
 
 
