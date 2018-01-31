@@ -27,7 +27,7 @@
 """
 
 import ecl.util
-import ecl.geo
+import ecl.util.geometry
 
 from .cell import Cell
 from .ecl_grid import EclGrid

@@ -22,7 +22,7 @@
 
 
 import ecl.util
-import ecl.geo
+import ecl.util.geometry
 
 from .ecl_sum_var_type import EclSumVarType
 from .ecl_sum_tstep import EclSumTStep

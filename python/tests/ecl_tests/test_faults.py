@@ -24,7 +24,7 @@ from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
 from ecl.grid.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
 from ecl.test import TestAreaContext
-from ecl.geo import Polyline , CPolyline
+from ecl.util.geometry import Polyline , CPolyline
 from tests import EclTest
 
 class FaultTest(EclTest):

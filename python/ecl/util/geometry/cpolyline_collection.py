@@ -20,7 +20,7 @@ import ctypes
 
 from cwrap import BaseCClass
 from ecl import EclPrototype
-from ecl.geo import CPolyline
+from ecl.util.geometry import CPolyline
 
 
 class CPolylineCollection(BaseCClass):
