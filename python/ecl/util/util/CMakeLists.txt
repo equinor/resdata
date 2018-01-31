@@ -11,7 +11,6 @@ set(PYTHON_SOURCES
     stringlist.py
     #substitution_list.py
     thread_pool.py
-    cthread_pool.py
     time_vector.py
     util_func.py
     vector_template.py

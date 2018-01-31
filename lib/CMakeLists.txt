@@ -1,10 +1,5 @@
 project(libecl-ecl C CXX)
 
-if (HAVE_PTHREAD)
-    # The block_fs filesystem is so heavily dependant on pthreads that it is
-    # not built if de not have pthreads.
-     list(APPEND opt_srcs util/thread_pool.c)
-endif ()
 
 
 if (HAVE_BACKTRACE)
@@ -274,15 +269,6 @@ add_test(NAME ert_util_work_area
                                 data2
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/util/tests
 )
-
-find_library( VALGRIND NAMES valgr )
-if (VALGRIND)
-    set(valgrind_cmd valgrind --error-exitcode=1 --tool=memcheck)
-endif ()
-
-add_executable(test_thread_pool util/tests/test_thread_pool.c)
-target_link_libraries(test_thread_pool ecl)
-add_test(NAME test_thread_pool COMMAND ${valgrind_cmd} test_thread_pool)
 
 add_executable(ert_util_cwd_test util/tests/ert_util_cwd_test.c)
 target_link_libraries(ert_util_cwd_test ecl)
