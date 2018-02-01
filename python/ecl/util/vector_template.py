@@ -85,6 +85,29 @@ class VectorTemplate(BaseCClass):
         return self.__bool__( )
 
 
+    def __eq__(self, other):
+        return self._equal(other)
+
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
+
+    def first_eq(self, other, offset = 0):
+        index = self._first_eq(other, offset)
+        if index <= -2:
+            raise ValueError("Invalid offset")
+
+        return index
+
+
+    def first_neq(self, other, offset = 0):
+        index = self._first_neq(other, offset)
+        if index <= -2:
+            raise ValueError("Invalid offset")
+
+        return index
+
+
     def copy(self):
         """
         Create a new copy of the current vector.

@@ -902,14 +902,15 @@ bool @TYPE@_vector_init_linear(@TYPE@_vector_type * vector , @TYPE@ start_value,
 
   @TYPE@_vector_reset( vector );
   @TYPE@_vector_iset( vector, 0 , start_value);
-  @TYPE@_vector_iset( vector, num_values - 1, end_value);
-  double slope = (end_value - start_value) / (num_values - 1);
+  {
+    double slope = (end_value - start_value) / (num_values - 1);
 
-  for (int i=1; i < num_values; i++) {
-    @TYPE@ value = (@TYPE@) start_value + slope*i;
-    @TYPE@_vector_iset(vector, i, value);
+    for (int i=1; i < num_values - 1; i++) {
+      @TYPE@ value = (@TYPE@) start_value + slope*i;
+      @TYPE@_vector_iset(vector, i, value);
+    }
   }
-
+  @TYPE@_vector_iset( vector, num_values - 1, end_value);
   return true;
 }
 
@@ -1505,6 +1506,51 @@ bool @TYPE@_vector_equal(const @TYPE@_vector_type * vector1 , const @TYPE@_vecto
       return false;
   } else
     return false;
+}
+
+
+int @TYPE@_vector_first_equal(const @TYPE@_vector_type * vector1, const @TYPE@_vector_type * vector2, int offset) {
+  if (offset >= vector1->size)
+    return -2;
+
+  if (offset >= vector2->size)
+    return -2;
+
+  int index = offset;
+  while (vector1->data[index] != vector2->data[index]) {
+    index++;
+
+    if (index == vector1->size)
+      return -1;
+
+    if (index == vector2->size)
+      return -1;
+  }
+
+  return index;
+}
+
+
+
+int @TYPE@_vector_first_not_equal(const @TYPE@_vector_type * vector1, const @TYPE@_vector_type * vector2, int offset) {
+  if (offset >= vector1->size)
+    return -2;
+
+  if (offset >= vector2->size)
+    return -2;
+
+  int index = offset;
+  while (vector1->data[index] == vector2->data[index]) {
+    index++;
+
+    if (index == vector1->size)
+      return -1;
+
+    if (index == vector2->size)
+      return -1;
+  }
+
+  return index;
 }
 
 

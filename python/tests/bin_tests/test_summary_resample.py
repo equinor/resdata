@@ -37,12 +37,12 @@ def fgpt(days):
     else:
         return 100 - days
 
-def create_case():
+def create_case(num_mini_step = 10, case = "CSV"):
     length = 100
-    return createEclSum("CSV" , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
+    return createEclSum(case, [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
                         sim_length_days = length,
                         num_report_step = 10,
-                        num_mini_step = 10,
+                        num_mini_step = num_mini_step,
                         func_table = {"FOPT" : fopt,
                                       "FOPR" : fopr ,
                                       "FGPT" : fgpt })
@@ -77,3 +77,17 @@ class SummaryResampleTest(EclTest):
             output_case = EclSum("OUTPUT")
             self.assertEqual( output_case.get_data_start_time(), self.case.get_data_start_time())
             self.assertEqual( output_case.get_end_time(), self.case.get_end_time())
+
+            with self.assertRaises(CallError):
+                subprocess.check_call([self.script, "CSV", "OUTPUT", "--refcase=does/not/exist"])
+
+            refcase = create_case( num_mini_step = 7, case = "REFCASE")
+            refcase.fwrite()
+            subprocess.check_call([self.script, "CSV", "OUTPUT", "--refcase=REFCASE"])
+            output_case = EclSum("OUTPUT")
+            self.assertEqual( output_case.get_data_start_time(), refcase.get_data_start_time())
+            self.assertEqual( output_case.get_end_time(), refcase.get_end_time())
+            time_points = output_case.alloc_time_vector(False)
+            t1 = output_case.alloc_time_vector(False)
+            t2 = refcase.alloc_time_vector(False)
+            self.assertEqual(t1,t2)

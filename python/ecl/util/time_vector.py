@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'vector_template.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 import datetime
 import re
 
@@ -69,6 +69,10 @@ class TimeVector(VectorTemplate):
     _count_equal         = EclPrototype("int time_t_vector_count_equal(time_t_vector, time_t)")
     _init_range          = EclPrototype("void time_t_vector_init_range(time_t_vector, time_t , time_t , time_t)")
     _init_linear         = EclPrototype("bool time_t_vector_init_linear(time_t_vector, time_t, time_t, int)")
+    _equal               = EclPrototype("bool time_t_vector_equal(time_t_vector, time_t_vector)")
+    _first_eq            = EclPrototype("int time_t_vector_first_equal(time_t_vector, time_t_vector, int)")
+    _first_neq           = EclPrototype("int time_t_vector_first_not_equal(time_t_vector, time_t_vector, int)")
+
 
 
     def __init__(self, default_value=None, initial_size=0):

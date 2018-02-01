@@ -1,17 +1,17 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'double_vector.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
 from ecl import EclPrototype
@@ -67,6 +67,10 @@ class DoubleVector(VectorTemplate):
     _count_equal      = EclPrototype("int double_vector_count_equal(double_vector, double)")
     _init_range       = EclPrototype("void double_vector_init_range(double_vector, double , double , double)")
     _init_linear      = EclPrototype("bool double_vector_init_linear(double_vector, double, double, int)")
+    _equal            = EclPrototype("bool double_vector_equal(double_vector, double_vector)")
+    _first_eq         = EclPrototype("int double_vector_first_equal(double_vector, double_vector, int)")
+    _first_neq        = EclPrototype("int double_vector_first_not_equal(double_vector, double_vector, int)")
+
 
 
     def __init__(self, default_value=0, initial_size=0):

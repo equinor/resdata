@@ -1,18 +1,18 @@
 #  Copyright (C) 2014  Statoil ASA, Norway.
-#   
+#
 #  The file 'int_vector.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 from ecl import EclPrototype
 from ecl.util import VectorTemplate
@@ -69,6 +69,9 @@ class IntVector(VectorTemplate):
     _count_equal         = EclPrototype("int int_vector_count_equal(int_vector, int)")
     _init_range          = EclPrototype("void int_vector_init_range(int_vector, int , int , int)")
     _init_linear         = EclPrototype("bool int_vector_init_linear(int_vector, int, int, int)")
+    _equal               = EclPrototype("bool int_vector_equal(int_vector, int_vector)")
+    _first_eq            = EclPrototype("int int_vector_first_equal(int_vector, int_vector, int)")
+    _first_neq           = EclPrototype("int int_vector_first_not_equal(int_vector, int_vector, int)")
 
     def __init__(self, default_value=0, initial_size=0):
         super(IntVector, self).__init__(default_value, initial_size)
@@ -84,13 +87,13 @@ class IntVector(VectorTemplate):
 
            "1,4-7,10"  =>  {1,4,5,6,7,10}
            "1,4-7,10X" =>  {}
-        
+
         The empty list will evaluate to false. The values in the input
         string are meant to indicate "active values", i.e. the output
         values are sorted and repeated values are only counted once:
-        
+
            "1,1,7,2" => {1,2,7}
-        
+
         """
         return cls._create_active_list(range_string)
 
@@ -103,8 +106,8 @@ class IntVector(VectorTemplate):
 
         """
         return cls._create_value_list(range_string)
-    
-    
+
+
     def count(self, value):
         """ @rtype: int """
         return self._count_equal(value)

@@ -10,16 +10,18 @@ parser = argparse.ArgumentParser()
 parser.add_argument("input_case", metavar="input_case", type=str)
 parser.add_argument("output_case", metavar="output_case", type=str)
 parser.add_argument("--num-timestep", type=int, default=50)
-
+parser.add_argument("--refcase", metavar="refcase", type=str)
 args = parser.parse_args()
 
 input_case = EclSum(args.input_case)
-time_points = TimeVector()
-start_time = input_case.get_data_start_time()
-end_time = input_case.get_end_time()
-delta = end_time - start_time
+if args.refcase:
+    refcase = EclSum(args.refcase)
+    report_only = False
+    time_points = refcase.alloc_time_vector( report_only )
+else:
+    start_time = input_case.get_data_start_time()
+    end_time = input_case.get_end_time()
+    time_points = TimeVector.create_linear(CTime(start_time), CTime(end_time), args.num_timestep)
 
-time_points.initRange(CTime(start_time), CTime(end_time), CTime(int(delta.total_seconds() / (args.num_timestep - 1))))
-time_points.append( CTime(end_time) )
 output_case = input_case.resample(args.output_case, time_points)
 output_case.fwrite( )
