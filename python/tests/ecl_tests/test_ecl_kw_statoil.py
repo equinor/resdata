@@ -19,7 +19,7 @@ import random
 from ecl import EclDataType, EclFileFlagEnum
 from ecl.eclfile import EclKW, EclFile, FortIO
 
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest, statoil_test
 
 def copy_long():

@@ -23,7 +23,7 @@ from ecl import EclDataType, EclTypeEnum, EclFileFlagEnum
 from ecl.eclfile import EclKW, EclFile, FortIO, openFortIO
                      
 
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 

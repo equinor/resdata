@@ -23,7 +23,7 @@ from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
 from ecl.grid.faults import FaultCollection, Fault, FaultLine, FaultSegment,FaultBlockLayer
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from ecl.util.geometry import Polyline , CPolyline
 from tests import EclTest
 

@@ -14,7 +14,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl.test import LintTestCase
+from ecl.util.test import LintTestCase
 
 class LintErt(LintTestCase):
     """Tests that no file in ert needs linting"""
@@ -28,7 +28,18 @@ class LintErt(LintTestCase):
         self.assertLinted('ecl/geo')
 
     def test_lint_util(self):
-        self.assertLinted('ecl/util', whitelist = ["vector_template.py"])
+        self.assertLinted('ecl/util', whitelist = ["vector_template.py", 
+                                                   "test_area.py", 
+                                                   "extended_testcase.py", 
+                                                   "ert_test_context.py", 
+                                                   "ert_test_runnet.py", 
+                                                   "import_test_case.py",
+                                                   "lint_test_case.py",
+                                                   "path_context.py"
+                                                   "source_enumerator.py",
+                                                   "temp_area.py",
+                                                   "test_run.py"
+                                                   ])
 
     def test_lint_well(self):
         self.assertLinted('ecl/well')

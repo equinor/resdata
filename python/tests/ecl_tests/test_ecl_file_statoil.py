@@ -21,7 +21,7 @@ from unittest import skipIf
 from ecl import EclFileFlagEnum, EclFileEnum
 from ecl.eclfile import EclFile, FortIO, EclKW , openFortIO , openEclFile
 
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest, statoil_test
 
 

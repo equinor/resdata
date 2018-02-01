@@ -21,8 +21,8 @@ from subprocess import CalledProcessError as CallError
 from ecl.grid import Cell, EclGrid
 from ecl.summary import EclSum
 from tests import EclTest
-from ecl.test.ecl_mock import createEclSum
-from ecl.test import TestAreaContext
+from ecl.util.test.ecl_mock import createEclSum
+from ecl.util.test import TestAreaContext
 
 
 def fopr(days):

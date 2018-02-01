@@ -1,5 +1,5 @@
 from ecl.util.geometry import GeoPointset, Surface
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 

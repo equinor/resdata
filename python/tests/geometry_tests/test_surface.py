@@ -1,6 +1,6 @@
 import random
 from ecl.util.geometry import Surface
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 
