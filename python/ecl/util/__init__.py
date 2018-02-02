@@ -65,7 +65,6 @@ from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .thread_pool import ThreadPool
 from .cthread_pool import CThreadPool, startCThreadPool
 from .install_abort_signals import installAbortSignals, updateAbortSignals
-from .profiler import Profiler
 from .arg_pack import ArgPack
 from .cwd_context import CWDContext
 

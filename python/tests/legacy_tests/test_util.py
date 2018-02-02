@@ -16,7 +16,6 @@ from ert.util import Hash, StringHash, DoubleHash, IntegerHash
 from ert.util import ThreadPool
 from ert.util import CThreadPool, startCThreadPool
 from ert.util import installAbortSignals, updateAbortSignals
-from ert.util import Profiler
 from ert.util import ArgPack
 
 from tests import EclTest

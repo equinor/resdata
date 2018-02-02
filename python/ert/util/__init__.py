@@ -16,7 +16,6 @@ from ecl.util import Hash, StringHash, DoubleHash, IntegerHash
 from ecl.util import ThreadPool
 from ecl.util import CThreadPool, startCThreadPool
 from ecl.util import installAbortSignals, updateAbortSignals
-from ecl.util import Profiler
 from ecl.util import ArgPack
 
 try:
