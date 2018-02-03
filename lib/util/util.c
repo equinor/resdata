@@ -2303,9 +2303,27 @@ int util_fmove( FILE * stream , long offset , long shift) {
 }
 
 
+/*
+  Windows *might* have both the symbols _access() and access(), but we prefer
+  the _access() symbol as that seems to be preferred by Windows. We therefor do
+  the #HAVE_WINDOWS__ACCESS check first.
+*/
 
+#ifdef HAVE_WINDOWS__ACCESS
 
+bool util_access(const char * entry, int mode) {
+  return (_access(entry, mode) == 0);
+}
 
+#else
+
+#ifdef HAVE_POSIX_ACCESS
+bool util_access(const char * entry, mode_t mode) {
+  return (access(entry, mode) == 0);
+}
+#endif
+
+#endif
 
 
 /**
@@ -2325,20 +2343,8 @@ bool util_file_exists(const char *filename) {
 */
 
 bool util_entry_exists( const char * entry ) {
-  stat_type stat_buffer;
-  int stat_return = util_stat(entry, &stat_buffer);
-  if (stat_return == 0)
-    return true;
-  else {
-    if (errno == ENOENT)
-      return false;
-    else {
-      util_abort("%s: error checking for entry:%s  %d/%s \n",__func__ , entry , errno , strerror(errno));
-      return false;
-    }
-  }
+  return util_access(entry, F_OK);
 }
-
 /*****************************************************************/
 
 

@@ -35,6 +35,8 @@
 #cmakedefine HAVE_WINSOCK2_H
 
 
+#cmakedefine HAVE_POSIX_ACCESS
+#cmakedefine HAVE_WINDOWS__ACCESS
 #cmakedefine HAVE_WINDOWS_GET_TEMP_PATH
 #cmakedefine HAVE_WINDOWS_TZNAME
 
