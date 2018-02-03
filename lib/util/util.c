@@ -1927,8 +1927,10 @@ bool util_sscanf_bool(const char * buffer , bool * _value) {
 
 bool util_fscanf_bool(FILE * stream , bool * value) {
   char buffer[256];
-  fscanf(stream , "%s" , buffer);
-  return util_sscanf_bool( buffer , value );
+  if (fscanf(stream , "%s" , buffer) == 1)
+    return util_sscanf_bool( buffer , value );
+
+  return false;
 }
 
 
