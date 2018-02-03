@@ -124,30 +124,6 @@ int util_spawn_blocking(const char *executable, int argc, const char **argv, con
 
 
 
-/**
-   The ping program must(?) be setuid root, so implementing a simple
-   version based on sockets() proved to be nontrivial.
-
-   The PING_CMD is passed as -D from the build system.
-*/
-
-#ifdef ERT_HAVE_PING
-#define xstr(s) #s
-#define str(s) xstr(s)
-bool util_ping(const char *hostname) {
-  int wait_status;
-  const char* args[ 4 ] = { "-c", "3", "-q", hostname };
-  wait_status = util_spawn_blocking(str(PING_CMD), 4, args, "/dev/null" , "/dev/null");
-
-  if (WIFEXITED( wait_status )) {
-      int ping_status = WEXITSTATUS( wait_status );
-      return ping_status == 0;
-  } else {
-      return false;
-  }
-}
-#endif
-
 
 
 
