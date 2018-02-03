@@ -21,6 +21,7 @@ import datetime
 import csv
 import shutil
 import cwrap
+import stat
 from contextlib import contextmanager
 from unittest import skipIf, skipUnless, skipIf
 
@@ -35,7 +36,7 @@ from ecl.util.test.ecl_mock import createEclSum
 @contextmanager
 def pushd(path):
     if not os.path.isdir(path):
-        os.mkdir(path)
+        os.makedirs(path)
     cwd = os.getcwd()
     os.chdir(path)
 
@@ -432,3 +433,21 @@ class SumTest(EclTest):
 
             pred = EclSum(os.path.join(pred_path, "PREDICTION"))
             self.assertIsNone(pred.restart_case)
+
+
+    def test_restart_perm_denied(self):
+        with TestAreaContext("restart_test"):
+            with pushd("history/case1"):
+                history =  create_case(case = "HISTORY")
+                history.fwrite()
+
+            prediction = create_case( case = "PREDICTION", restart_case = "history/case1/HISTORY", data_start = history.end_date)
+            prediction.fwrite()
+
+            os.chmod("history", 0)
+
+            # This just tests that we can create a summary instance even if we do not
+            # have access to load the history case.
+            pred = EclSum("PREDICTION")
+
+            os.chmod("history", stat.S_IRWXU)
