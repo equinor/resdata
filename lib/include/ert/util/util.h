@@ -334,9 +334,6 @@ typedef enum {left_pad   = 0,
   double   util_double_min(double  , double );
   void     util_fskip_lines(FILE * , int);
   bool     util_same_file(const char *  , const char * );
-  void     util_read_path(const char * , int , bool , char *  );
-  char *   util_fscanf_alloc_filename(const char * , int , int);
-  void     util_read_string(const char *  , int  , char * );
   void     util_fread (void *, size_t , size_t , FILE * , const char * );
   void     util_fwrite(const void *, size_t , size_t , FILE * , const char * );
   time_t   util_fread_time_t(FILE * stream);

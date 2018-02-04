@@ -4577,35 +4577,6 @@ void util_free(void * ptr) {
 
 
 
-static void util_display_prompt(const char * prompt , int prompt_len2) {
-  int i;
-  printf("%s" , prompt);
-  for (i=0; i < util_int_max(strlen(prompt) , prompt_len2) - strlen(prompt); i++)
-    fputc(' ' , stdout);
-  printf(": ");
-}
-
-
-
-void util_read_string(const char * prompt , int prompt_len , char * s) {
-  util_display_prompt(prompt , prompt_len);
-  fscanf(stdin , "%s" , s);
-}
-
-
-void util_read_path(const char * prompt , int prompt_len , bool must_exist , char * path) {
-  bool ok = false;
-  while (!ok) {
-    util_read_string(prompt , prompt_len , path);
-    if (must_exist)
-      ok = util_is_directory(path);
-    else
-      ok = true;
-    if (!ok)
-      fprintf(stderr,"Path: %s does not exist - try again.\n",path);
-  }
-}
-
 
 /*****************************************************************/
 
