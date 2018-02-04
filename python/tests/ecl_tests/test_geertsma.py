@@ -4,7 +4,7 @@ from ecl.eclfile import EclKW, openFortIO, FortIO, EclFile
 from ecl.grid import EclGrid
 from ecl.gravimetry import EclSubsidence
 
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 import numpy as np

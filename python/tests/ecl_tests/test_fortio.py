@@ -18,7 +18,7 @@ import os
 from random import randint
 from ecl import EclDataType
 from ecl.eclfile import FortIO, EclKW , openFortIO, EclFile
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 

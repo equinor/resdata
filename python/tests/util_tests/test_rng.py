@@ -1,6 +1,6 @@
 from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
 from ecl.util.rng import RandomNumberGenerator
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 

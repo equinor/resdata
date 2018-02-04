@@ -16,7 +16,7 @@
 #  for more details.
 
 from ecl.grid import EclGrid
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 class FKTest(EclTest):

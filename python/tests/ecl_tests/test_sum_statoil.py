@@ -24,7 +24,7 @@ from ecl.summary import EclSum
 
 from ecl.util import StringList, TimeVector, DoubleVector, CTime
 
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest, statoil_test
 import csv
 

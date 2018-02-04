@@ -1,5 +1,5 @@
 import os
-from ecl.test import PathContext,TestAreaContext
+from ecl.util.test import PathContext,TestAreaContext
 from tests import EclTest
 
 

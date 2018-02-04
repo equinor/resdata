@@ -21,7 +21,7 @@ from ecl.util import IntVector
 from ecl import EclDataType, EclFileFlagEnum
 from ecl.eclfile import Ecl3DKW , EclKW, EclFile, FortIO
 from ecl.grid import EclGrid
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 

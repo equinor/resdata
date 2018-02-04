@@ -10,7 +10,6 @@ add_subdirectory(grid)
 add_subdirectory(rft)
 add_subdirectory(gravimetry)
 add_subdirectory(summary)
-add_subdirectory(test)
 add_subdirectory(util)
 add_subdirectory(well)
 

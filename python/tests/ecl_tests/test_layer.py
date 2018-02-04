@@ -22,7 +22,7 @@ from ecl.util import IntVector
 from ecl.grid import EclGrid
 from ecl.util.geometry import CPolyline
 from ecl.grid.faults import Layer , FaultCollection
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 

@@ -21,7 +21,7 @@ import os.path
 from cwrap import CFILE
 from ecl.eclfile import EclFile, FortIO, openFortIO, openEclFile, EclKW
 from ecl.summary import EclSum, EclSumKeyWordVector
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest, statoil_test
 
 @statoil_test()

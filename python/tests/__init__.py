@@ -1,6 +1,6 @@
 import os.path
 import types
-from ecl.test import ExtendedTestCase
+from ecl.util.test import ExtendedTestCase
 from functools import wraps
 from functools import partial
 import unittest

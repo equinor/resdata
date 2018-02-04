@@ -22,7 +22,7 @@ from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
 from ecl.grid import EclGridGenerator as GridGen
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 

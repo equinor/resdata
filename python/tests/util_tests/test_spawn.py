@@ -5,7 +5,7 @@ import sys
 import ecl
 from ecl import EclPrototype
 from tests import EclTest
-from ecl.test.test_area import TestAreaContext
+from ecl.util.test.test_area import TestAreaContext
 
 from cwrap import Prototype
 

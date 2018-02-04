@@ -14,8 +14,8 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl.test import TestAreaContext
-from ecl.test.ecl_mock import createEclSum
+from ecl.util.test import TestAreaContext
+from ecl.util.test.ecl_mock import createEclSum
 from ecl.summary import EclCmp
 from tests import EclTest, statoil_test
 

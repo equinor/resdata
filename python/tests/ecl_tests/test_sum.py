@@ -24,9 +24,9 @@ from unittest import skipIf, skipUnless, skipIf
 from ecl import EclDataType
 from ecl.eclfile import FortIO, openFortIO, EclKW
 from ecl.summary import EclSum, EclSumVarType, EclSumKeyWordVector
-from ecl.test import TestAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
-from ecl.test.ecl_mock import createEclSum
+from ecl.util.test.ecl_mock import createEclSum
 
 def fopr(days):
     return days
