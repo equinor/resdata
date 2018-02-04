@@ -680,56 +680,6 @@ char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
 
 
 
-/**
-   Reads characters from stdin until EOL/EOF is detected. A '\0' is
-   appended to the resulting string before it is returned. If the
-   function reads an immediate EOF/EOL, i.e. the user enters an empty
-   input string, NULL (and not "") is returned.
-
-   Observe that is this function does *not* cooperate very nicely with
-   fscanf() based input, because fscanf will leave a EOL character in
-   the input buffer, which will lead to immediate return from this
-   function. Hence if this function is called after a fscanf() based
-   function it is essential to preceede this function with one call to
-   getchar() to clear the EOL character.
-*/
-
-char * util_alloc_stdin_line(void) {
-  int input_size = 256;
-  char * input   = (char*)util_calloc(input_size , sizeof * input );
-  int index = 0;
-  bool end = false;
-  int c;
-  do {
-    c = getchar();
-    if ((!EOL_CHAR(c)) && (c != EOF)) {
-      input[index] = c;
-      index++;
-      if (index == (input_size - 1)) { /* Reserve space for terminating \0 */
-        input_size *= 2;
-        input = (char*)util_realloc(input , input_size );
-      }
-    } else end = true;
-  } while (!end);
-  if (index == 0) {
-    free(input);
-    input = NULL;
-  } else {
-    input[index] = '\0';
-    input = (char*)util_realloc(input , strlen(input) + 1 );
-  }
-
-  return input;
-}
-
-
-
-char * util_realloc_stdin_line(char * p) {
-  util_safe_free(p);
-  return util_alloc_stdin_line();
-}
-
-
 
 /**
    WIndows does not have the usleep() function, on the other hand
@@ -762,23 +712,6 @@ void util_yield() {
 #else
   util_usleep(1000);
 #endif
-}
-
-/**
-   This function will allocate and read a line from stdin. If there is
-   no input waiting on stdin (this typically only applies if stdin is
-   redirected from a file/PIPE), the function will sleep for 'usec'
-   microseconds and try again.
-*/
-
-char * util_blocking_alloc_stdin_line(unsigned long usec) {
-  char * line;
-  do {
-    line = util_alloc_stdin_line();
-    if (line == NULL)
-      util_usleep(usec);
-  } while (line == NULL);
-  return line;
 }
 
 static char * util_getcwd(char * buffer , int size) {

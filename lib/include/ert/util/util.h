@@ -134,8 +134,6 @@ typedef enum {left_pad   = 0,
   bool         util_sscanf_date_utc(const char * , time_t *);
   bool         util_sscanf_isodate(const char * , time_t *);
   bool         util_sscanf_percent(const char * string, double * value);
-  char       * util_alloc_stdin_line(void);
-  char       * util_realloc_stdin_line(char * );
   bool         util_is_executable(const char * );
   bool         util_entry_exists( const char * entry );
   bool         util_file_exists(const char *);
@@ -176,7 +174,6 @@ typedef enum {left_pad   = 0,
 
   void         util_usleep( unsigned long micro_seconds );
   void         util_yield(void);
-  char       * util_blocking_alloc_stdin_line(unsigned long );
 
   int          util_roundf( float x );
   int          util_round( double x );
