@@ -21,7 +21,7 @@ from unittest import skipIf
 
 from ecl import EclFileFlagEnum, EclDataType, EclFileEnum
 from ecl.eclfile import EclFile, FortIO, EclKW , openFortIO , openEclFile
-from ecl.util import CWDContext
+from ecl.util.util import CWDContext
 from ecl.util.test import TestAreaContext, PathContext
 from tests import EclTest
 

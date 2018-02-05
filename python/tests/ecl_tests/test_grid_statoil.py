@@ -25,7 +25,7 @@ import time
 from ecl import EclDataType
 from ecl.eclfile import EclKW, EclFile, openEclFile
 from ecl.grid import EclGrid
-from ecl.util import DoubleVector, IntVector
+from ecl.util.util import DoubleVector, IntVector
 from ecl.util.test import TestAreaContext
 from tests import EclTest, statoil_test
 

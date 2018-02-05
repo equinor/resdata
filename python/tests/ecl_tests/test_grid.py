@@ -20,7 +20,7 @@ import time
 import itertools
 from numpy import linspace
 
-from ecl.util import IntVector
+from ecl.util.util import IntVector
 from ecl import EclDataType, EclUnitTypeEnum
 from ecl.eclfile import EclKW, EclFile
 from ecl.grid import EclGrid

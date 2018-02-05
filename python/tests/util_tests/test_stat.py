@@ -1,6 +1,6 @@
 from tests import EclTest
-from ecl.util import DoubleVector, quantile, quantile_sorted, polyfit
-from ecl.util.rng import RandomNumberGenerator
+from ecl.util.util import DoubleVector, quantile, quantile_sorted, polyfit
+from ecl.util.util import RandomNumberGenerator
 
 
 class StatTest(EclTest):

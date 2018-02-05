@@ -1,7 +1,7 @@
 import ecl
 from ecl import EclPrototype
 from tests import EclTest
-from ecl.util import ArgPack, StringList
+from ecl.util.util import ArgPack, StringList
 
 TEST_LIB = EclPrototype.lib
 

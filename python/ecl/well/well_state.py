@@ -2,7 +2,7 @@ from cwrap import BaseCClass
 
 from ecl import EclPrototype
 from ecl.well import WellTypeEnum, WellConnection
-from ecl.util import CTime
+from ecl.util.util import CTime
 
 class WellState(BaseCClass):
     TYPE_NAME = "well_state"

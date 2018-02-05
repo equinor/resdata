@@ -16,7 +16,7 @@
 
 from __future__ import print_function
 
-from ecl.util import monkey_the_camel
+from ecl.util.util import monkey_the_camel
 
 
 class FaultSegment(object):

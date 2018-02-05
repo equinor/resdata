@@ -47,7 +47,7 @@ import numpy
 from cwrap import CFILE, BaseCClass
 
 from ecl import EclPrototype
-from ecl.util import monkey_the_camel
+from ecl.util.util import monkey_the_camel
 from ecl import EclDataType
 from ecl import EclTypeEnum, EclUtil
 

@@ -6,7 +6,7 @@ from ecl import EclDataType
 from ecl.eclfile import EclKW, EclFile, FortIO
 from ecl.util.test import TestAreaContext
 from tests import EclTest
-from ecl.util import IntVector
+from ecl.util.util import IntVector
 
 class EclIndexedReadTest(EclTest):
     _freadIndexedData   = EclPrototype("void ecl_kw_fread_indexed_data_python(fortio, int, ecl_data_type, int, int_vector, char*)", bind = False) # fortio, offset, type, count, index_map, buffer

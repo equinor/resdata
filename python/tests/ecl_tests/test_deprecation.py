@@ -24,7 +24,7 @@ from ecl.eclfile import EclFile, EclKW, FortIO, openFortIO
 from ecl.grid import EclGrid, EclGrid, EclRegion, EclGridGenerator
 from ecl.rft import EclRFT
 from ecl.util.test.ecl_mock import createEclSum
-from ecl.util import BoolVector
+from ecl.util.util import BoolVector
 from tests import EclTest
 
 # The class Deprecation_1_9_Test contains methods which will be marked

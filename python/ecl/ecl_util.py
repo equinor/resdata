@@ -28,7 +28,7 @@ functions from ecl_util.c which are not bound to any class type.
 import ctypes
 
 from cwrap import BaseCEnum
-from ecl.util import monkey_the_camel
+from ecl.util.util import monkey_the_camel
 from ecl import EclPrototype
 
 class EclFileEnum(BaseCEnum):

@@ -16,7 +16,7 @@
 
 import numpy as np
 
-from ecl.util import monkey_the_camel
+from ecl.util.util import monkey_the_camel
 from ecl.util.geometry import Polyline, CPolyline, GeometryTools
 
 from .fault_line import FaultLine

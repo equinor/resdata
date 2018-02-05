@@ -5,7 +5,7 @@ try:
 except ImportError:
     from unittest import TestCase
 
-from ecl.util import StringList
+from ecl.util.util import StringList
 
 
 class StringListTest(TestCase):

@@ -17,7 +17,7 @@
 import os
 import random
 
-from ecl.util import IntVector
+from ecl.util.util import IntVector
 from ecl import EclDataType, EclFileFlagEnum
 from ecl.eclfile import Ecl3DKW , EclKW, EclFile, FortIO
 from ecl.grid import EclGrid

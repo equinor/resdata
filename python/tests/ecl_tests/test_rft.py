@@ -17,7 +17,7 @@
 
 
 import datetime
-from ecl.util import CTime
+from ecl.util.util import CTime
 from ecl.rft import EclRFTFile, EclRFTCell, EclPLTCell, EclRFT, WellTrajectory
 from tests import EclTest
 

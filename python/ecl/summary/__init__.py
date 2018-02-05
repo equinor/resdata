@@ -21,7 +21,7 @@
 """
 
 
-import ecl.util
+import ecl.util.util
 import ecl.util.geometry
 
 from .ecl_sum_var_type import EclSumVarType

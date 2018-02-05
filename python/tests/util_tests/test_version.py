@@ -17,7 +17,7 @@ import os.path
 
 import ecl
 from tests import EclTest
-from ecl.util import Version,EclVersion
+from ecl.util.util import Version,EclVersion
 
 
 class VersionTest(EclTest):

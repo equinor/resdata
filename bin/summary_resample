@@ -2,7 +2,7 @@
 import sys
 import argparse
 from ecl.summary import EclSum
-from ecl.util import TimeVector, CTime
+from ecl.util.util import TimeVector, CTime
 
 
 
