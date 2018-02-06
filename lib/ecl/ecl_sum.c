@@ -1126,6 +1126,10 @@ void ecl_sum_export_csv(const ecl_sum_type * ecl_sum , const char * filename  , 
 }
 
 
+const char * ecl_sum_get_restart_case(const ecl_sum_type * ecl_sum) {
+  return ecl_smspec_get_restart_case(ecl_sum->smspec);
+}
+
 
 const char * ecl_sum_get_case(const ecl_sum_type * ecl_sum) {
   return ecl_sum->ecl_case;

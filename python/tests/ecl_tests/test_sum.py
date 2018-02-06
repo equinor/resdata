@@ -406,9 +406,29 @@ class SumTest(EclTest):
            create_prediction(history, pred_path)
 
            pred = EclSum(os.path.join(pred_path, "PREDICTION"))
-           length = pred.sim_length
-           pred_times = pred.alloc_time_vector(False)
-           hist_times = history.alloc_time_vector(False)
+           # The restart case has a maximum length of 72 characters, depending
+           # on the path used for $TMP and so on we do not really know here if
+           # the restart_case has been set or not.
+           if pred.restart_case:
+               self.assertEqual(pred.restart_case, os.path.join(os.getcwd(), history.case))
 
-           for index in range(len(hist_times)):
-               self.assertEqual(hist_times[index], pred_times[index])
+               length = pred.sim_length
+               pred_times = pred.alloc_time_vector(False)
+               hist_times = history.alloc_time_vector(False)
+
+               for index in range(len(hist_times)):
+                   self.assertEqual(hist_times[index], pred_times[index])
+
+
+
+
+    def test_restart_too_long_history_path(self):
+        with TestAreaContext("restart_test_too_fucking_long_path_for_the_eclipse_restart_keyword_1234567890123456789012345678901234567890"):
+            history =  create_case(case = "HISTORY")
+            history.fwrite()
+
+            pred_path = "prediction"
+            create_prediction(history, pred_path)
+
+            pred = EclSum(os.path.join(pred_path, "PREDICTION"))
+            self.assertIsNone(pred.restart_case)
