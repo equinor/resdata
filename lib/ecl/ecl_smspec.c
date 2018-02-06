@@ -373,14 +373,14 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
            ecl_kw_iset_string8( restart_kw , i , "");
 
     if (smspec->restart_case != NULL) {
-       int restart_case_len = strlen(smspec->restart_case);                           
-     
+       int restart_case_len = strlen(smspec->restart_case);
+
        int offset = 0;
        for (int i = 0; i < SUMMARY_RESTART_SIZE ; i++) {
           if (offset < restart_case_len)
               ecl_kw_iset_string8( restart_kw , i , &smspec->restart_case[ offset ]);
           offset += ECL_STRING8_LENGTH;
-       } 
+       }
     }
 
     ecl_kw_fwrite( restart_kw , fortio );
@@ -503,12 +503,14 @@ void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case ,
 
 ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
   ecl_smspec_type * ecl_smspec = ecl_smspec_alloc_empty( true , key_join_string );
-  
-  if (restart_case != NULL) {
-     if (strlen(restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
-        ecl_smspec->restart_case = util_alloc_string_copy( restart_case );
-     else 
-        return NULL;
+
+  /*
+    Only a total of 9 * 8 characters is set aside for the restart keyword, if
+    the supplied restart case is longer than that we silently ignore it.
+  */
+  if (restart_case) {
+    if (strlen(restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
+      ecl_smspec->restart_case = util_alloc_string_copy( restart_case );
   }
   ecl_smspec->grid_dims[0] = nx;
   ecl_smspec->grid_dims[1] = ny;
