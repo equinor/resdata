@@ -3,7 +3,6 @@ set(PYTHON_SOURCES
     bool_vector.py
     ctime.py
     double_vector.py
-    hash.py
     int_vector.py
     install_abort_signals.py
     lookup_table.py

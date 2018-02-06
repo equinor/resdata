@@ -12,7 +12,6 @@ from ert.util import RandomNumberGenerator
 from ert.util import Matrix
 from ert.util import quantile, quantile_sorted, polyfit
 from ert.util import LookupTable
-from ert.util import Hash, StringHash, DoubleHash, IntegerHash
 from ert.util import ThreadPool
 from ert.util import CThreadPool, startCThreadPool
 from ert.util import installAbortSignals, updateAbortSignals
