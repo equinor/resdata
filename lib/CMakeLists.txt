@@ -194,9 +194,6 @@ target_compile_definitions(ecl PRIVATE
 
 target_compile_options(ecl PUBLIC ${pthreadarg})
 
-if (PING_PATH)
-    target_compile_definitions(ecl PRIVATE -DPING_CMD=${PING_PATH})
-endif()
 
 if (ERT_USE_OPENMP)
     target_compile_options(ecl PUBLIC ${OpenMP_C_FLAGS})

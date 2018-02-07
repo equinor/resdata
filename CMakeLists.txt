@@ -296,10 +296,6 @@ if (ERT_WINDOWS)
     endif()
 endif()
 
-find_program(PING_PATH NAMES ping)
-if (PING_PATH)
-    set(ERT_HAVE_PING ON)
-endif()
 
 find_package(Git)
 if(GIT_FOUND)

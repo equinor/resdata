@@ -515,9 +515,6 @@ void    util_abort_set_executable( const char * argv0 );
 #ifdef ERT_HAVE_SPAWN
   pid_t      util_spawn(const char *executable, int argc, const char **argv, const char *stdout_file, const char *stderr_file);
   int        util_spawn_blocking(const char *executable, int argc, const char **argv, const char *stdout_file, const char *stderr_file);
-#ifdef ERT_HAVE_PING
-  bool       util_ping( const char * hostname);
-#endif
 #endif
 
 
