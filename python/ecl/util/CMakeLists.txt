@@ -8,7 +8,6 @@ set(PYTHON_SOURCES
     install_abort_signals.py
     lookup_table.py
     matrix.py
-    profiler.py
     rng.py
     stat.py
     stringlist.py
