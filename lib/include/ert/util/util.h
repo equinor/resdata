@@ -184,6 +184,8 @@ typedef enum {left_pad   = 0,
   int          util_stat(const char * filename , stat_type * stat_info);
   int          util_fstat(int fileno, stat_type * stat_info);
 
+  bool         EOL_CHAR(char c);
+
 
 
 #ifdef ERT_HAVE_OPENDIR

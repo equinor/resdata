@@ -264,7 +264,7 @@ void util_endian_flip_vector_old(void *data, int element_size , int elements) {
 /*****************************************************************/
 
 
-static bool EOL_CHAR(char c) {
+bool EOL_CHAR(char c) {
   if (c == '\r' || c == '\n')
     return true;
   else
