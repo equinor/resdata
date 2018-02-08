@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <ert/util/test_work_area.h>
 #include <ert/util/test_util.h>
 #include <ert/util/time_t_vector.h>
 #include <ert/util/util.h>
@@ -29,9 +30,53 @@ void test_filename_report_nr() {
   test_assert_int_equal(78, ecl_util_filename_report_nr("Path/with/mixedCASE/case.x0078"));
   test_assert_int_equal(78, ecl_util_filename_report_nr("Case.X0078"));
   test_assert_int_equal(ECL_EGRID_FILE, ecl_util_get_file_type("path/WITH/xase/MyGrid.EGrid", NULL, NULL));
-
 }
+
+void test_filename_case() {
+  test_assert_NULL( ecl_util_alloc_filename(NULL, "mixedBase", ECL_EGRID_FILE, false, -1));
+  test_assert_string_equal( ecl_util_alloc_filename(NULL, "UPPER", ECL_EGRID_FILE, false, -1), "UPPER.EGRID");
+  test_assert_string_equal( ecl_util_alloc_filename(NULL , "lower", ECL_EGRID_FILE, false, -1), "lower.egrid");
+}
+
+
+void test_file_list() {
+  test_work_area_type * work_area = test_work_area_alloc("RESTART_FILES");
+  stringlist_type * s = stringlist_alloc_new();
+
+  for (int i = 0; i < 10; i += 2) {
+    char * fname = ecl_util_alloc_filename(NULL, "case", ECL_RESTART_FILE, true, i);
+    FILE * stream = util_fopen(fname, "w");
+    fclose(stream);
+    free( fname);
+  }
+
+  for (int i = 0; i < 10; i += 2) {
+    char * fname = util_alloc_sprintf("Case.F%04d", i);
+    FILE * stream = util_fopen(fname, "w");
+    fclose(stream);
+    free( fname);
+  }
+
+
+  ecl_util_select_filelist(NULL , "case" , ECL_RESTART_FILE, true, s);
+  test_assert_int_equal( stringlist_get_size(s), 5);
+  for (int i = 0; i < 5; i++) {
+    char * fname = ecl_util_alloc_filename(NULL, "case", ECL_RESTART_FILE, true, 2*i);
+    test_assert_string_equal( fname, stringlist_iget(s,i));
+    free( fname);
+  }
+
+  ecl_util_select_filelist(NULL , "Case" , ECL_RESTART_FILE, true, s);
+  test_assert_int_equal( stringlist_get_size(s), 0);
+
+
+  stringlist_free(s);
+  test_work_area_free(work_area);
+}
+
 
 int main(int argc , char ** argv) {
   test_filename_report_nr();
+  test_filename_case();
+  test_file_list();
 }
