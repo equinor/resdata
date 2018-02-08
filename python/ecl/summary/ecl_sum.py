@@ -120,6 +120,7 @@ class EclSum(BaseCClass):
     _get_first_day                 = EclPrototype("double   ecl_sum_get_first_day(ecl_sum)")
     _get_data_start                = EclPrototype("time_t   ecl_sum_get_data_start(ecl_sum)")
     _get_unit                      = EclPrototype("char*    ecl_sum_get_unit(ecl_sum, char*)")
+    _get_restart_case              = EclPrototype("char*    ecl_sum_get_restart_case(ecl_sum)")
     _get_simcase                   = EclPrototype("char*    ecl_sum_get_case(ecl_sum)")
     _get_base                      = EclPrototype("char*    ecl_sum_get_base(ecl_sum)")
     _get_path                      = EclPrototype("char*    ecl_sum_get_path(ecl_sum)")
@@ -765,6 +766,11 @@ class EclSum(BaseCClass):
         Will return the case name of the current instance - optionally including path.
         """
         return self._get_simcase()
+
+
+    @property
+    def restart_case(self):
+        return self._get_restart_case()
 
 
     @property
