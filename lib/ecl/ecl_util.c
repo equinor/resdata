@@ -135,24 +135,6 @@ int ecl_util_filename_report_nr(const char *filename) {
 }
 
 
-/*
-bool ecl_util_numeric_extension(const char * extension) {
-
-  const char digit_ascii_min = 48;
-  const char digit_ascii_max = 57;
-  bool valid = true;
-  int pos = 1;
-  while (valid && pos <= 5) {
-    char c = extension[pos];
-    valid = (valid & (c >= digit_ascii_min && c <= digit_ascii_max));
-    if (!valid)
-      break;
-  }
-
-  return valid;
-}
-*/
-
 
 /*
  We accept mixed lowercase/uppercase Eclipse file extensions even if Eclipse itself does not accept them.
