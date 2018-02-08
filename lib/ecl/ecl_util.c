@@ -122,16 +122,12 @@ char * ecl_util_alloc_base_guess(const char * path) {
 
 
 
+
+
 int ecl_util_filename_report_nr(const char *filename) {
-  char *ext = strrchr(filename , '.');
-
-  if (ext == NULL)
-    return -1;
-
-  if (ext[1] == 'X' || ext[1] == 'F' || ext[1] == 'S' || ext[1] == 'A')
-    return atoi(&ext[2]);
-
-  return -1;
+  int report_nr = -1;
+  ecl_util_get_file_type(filename, NULL, &report_nr);
+  return report_nr;
 }
 
 
@@ -234,23 +230,16 @@ ecl_file_enum ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int
   to the fundamental type, it is also determined whether the file is
   formatted or not, and in the case of summary/restart files, which
   report number this corresponds to.
-
-
 */
 
 
-ecl_file_enum ecl_util_get_file_type(const char * filename, bool *_fmt_file, int * _report_nr) {
-
+ecl_file_enum ecl_util_get_file_type(const char * filename, bool *fmt_file, int * report_nr) {
   char *ext = strrchr(filename , '.');
-  if (ext != NULL) {
-    ext++;
-    return ecl_util_inspect_extension( ext , _fmt_file , _report_nr);
-  } else
+  if (ext == NULL)
     return ECL_OTHER_FILE;
 
+  return ecl_util_inspect_extension( &ext[1] , fmt_file , report_nr);
 }
-
-
 
 static const char * ecl_util_get_file_pattern( ecl_file_enum file_type , bool fmt_file ) {
   if (fmt_file) {
@@ -374,7 +363,28 @@ const char * ecl_util_file_type_name( ecl_file_enum file_type ) {
   return NULL;
 }
 
+static bool valid_base(const char * input_base, bool * upper_case) {
+  bool upper = false;
+  bool lower = false;
+  char * base = strrchr(input_base, UTIL_PATH_SEP_CHAR);
+  if (base == NULL)
+    base = input_base;
 
+  for (int i=0; i < strlen(base); i++) {
+    char c = base[i];
+
+    if (isupper(c))
+      upper = true;
+
+    if (islower(c))
+      lower = true;
+
+  }
+
+  if (upper_case)
+    *upper_case = upper;
+  return !(lower == upper == true);
+}
 
 
 
@@ -1256,29 +1266,7 @@ ert_ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
 
 
 bool ecl_util_valid_basename( const char * basename ) {
-
-  char * eclbasename = util_split_alloc_filename(basename);
-
-  int upper_count = 0;
-  int lower_count = 0;
-  int index;
-
-  for (index = 0; index < strlen( eclbasename ); index++) {
-    int c = eclbasename[index];
-    if (isalpha(c)) {
-      if (isupper(c))
-        upper_count++;
-      else
-        lower_count++;
-    }
-  }
-
-  free(eclbasename);
-
-  if ((lower_count * upper_count) != 0)
-    return false;
-  else
-    return true;
+  return valid_base(basename, NULL);
 }
 
 
