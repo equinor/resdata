@@ -10,8 +10,8 @@ except ImportError:
     from unittest import TestCase
 
 from .source_enumerator import SourceEnumerator
-from ecl.util import installAbortSignals
-from ecl.util import Version
+from ecl.util.util import installAbortSignals
+from ecl.util.util import Version
 
 
 # Function wrapper which can be used to add decorator @log_test to test

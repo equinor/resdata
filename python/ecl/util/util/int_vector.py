@@ -15,7 +15,7 @@
 #  for more details.
 
 from ecl import EclPrototype
-from ecl.util import VectorTemplate
+from ecl.util.util import VectorTemplate
 
 
 class IntVector(VectorTemplate):

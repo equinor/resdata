@@ -19,7 +19,7 @@ import random
 from ecl import EclDataType
 from ecl.eclfile import EclKW, Ecl3DKW
 from ecl.grid import EclGrid
-from ecl.util import IntVector
+from ecl.util.util import IntVector
 from tests import EclTest
 
 class KWFunctionTest(EclTest):

@@ -32,8 +32,8 @@ import os.path
 # argument. In the python code this order has been reversed.
 from cwrap import BaseCClass, CFILE
 
-from ecl.util import monkey_the_camel
-from ecl.util import StringList, CTime, DoubleVector, TimeVector, IntVector
+from ecl.util.util import monkey_the_camel
+from ecl.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 
 from ecl.summary import EclSumTStep
 from ecl.summary import EclSumVarType

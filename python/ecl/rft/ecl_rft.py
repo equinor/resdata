@@ -22,8 +22,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from cwrap import BaseCClass
 
 from ecl import EclPrototype
-from ecl.util import monkey_the_camel
-from ecl.util import CTime
+from ecl.util.util import monkey_the_camel
+from ecl.util.util import CTime
 from ecl.rft import EclRFTCell, EclPLTCell
 
 class EclRFT(BaseCClass):

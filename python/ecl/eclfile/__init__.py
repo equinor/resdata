@@ -33,7 +33,7 @@ files.
      instances.
 """
 
-import ecl.util
+import ecl.util.util
 
 from .fortio import FortIO, openFortIO
 from .ecl_kw import EclKW

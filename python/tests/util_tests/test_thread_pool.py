@@ -1,6 +1,6 @@
 import time
-from ecl.util import ThreadPool
-from ecl.util.thread_pool import Task
+from ecl.util.util import ThreadPool
+from ecl.util.util.thread_pool import Task
 from tests import EclTest
 
 

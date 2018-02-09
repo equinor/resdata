@@ -24,7 +24,7 @@ ecl_grav.c implementation in the libecl library.
 from cwrap import BaseCClass
 
 from ecl import EclPrototype
-from ecl.util import monkey_the_camel
+from ecl.util.util import monkey_the_camel
 from ecl import EclPhaseEnum
 import ecl.eclfile
 

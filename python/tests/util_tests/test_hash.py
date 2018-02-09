@@ -1,7 +1,7 @@
 from ctypes import c_void_p
 
 from tests import EclTest
-from ecl.util import Hash, StringHash, DoubleHash, IntegerHash
+from ecl.util.util import Hash, StringHash, DoubleHash, IntegerHash
 
 
 class HashTest(EclTest):

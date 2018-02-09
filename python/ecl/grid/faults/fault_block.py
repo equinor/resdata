@@ -17,8 +17,8 @@
 import ctypes
 from cwrap import BaseCClass
 
-from ecl.util import monkey_the_camel
-from ecl.util import DoubleVector, IntVector
+from ecl.util.util import monkey_the_camel
+from ecl.util.util import DoubleVector, IntVector
 from ecl import EclPrototype
 from ecl.util.geometry import Polyline, GeometryTools, CPolylineCollection
 

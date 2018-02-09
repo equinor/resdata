@@ -5,7 +5,7 @@ from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl.summary import EclSum
 from tests import EclTest, statoil_test
-from ecl.util.ctime import CTime
+from ecl.util.util.ctime import CTime
 from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
 
 @statoil_test()

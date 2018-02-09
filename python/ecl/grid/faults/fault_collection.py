@@ -15,7 +15,7 @@
 #  for more details.
 import re
 
-from ecl.util import monkey_the_camel
+from ecl.util.util import monkey_the_camel
 from ecl.grid import EclGrid
 from .fault import Fault
 

@@ -4,7 +4,7 @@ from ecl.util.geometry import CPolylineCollection , CPolyline
 from ecl.util.geometry.xyz_io import XYZIo
 from ecl.util.test import TestAreaContext
 from tests import EclTest
-from ecl.util import DoubleVector
+from ecl.util.util import DoubleVector
 
 class CPolylineCollectionTest(EclTest):
 

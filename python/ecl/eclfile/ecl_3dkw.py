@@ -17,7 +17,7 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
-from ecl.util import monkey_the_camel
+from ecl.util.util import monkey_the_camel
 from .ecl_kw import EclKW
 
 class Ecl3DKW(EclKW):

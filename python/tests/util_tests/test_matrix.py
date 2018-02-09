@@ -1,4 +1,4 @@
-from ecl.util import Matrix , RandomNumberGenerator
+from ecl.util.util import Matrix , RandomNumberGenerator
 from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
 from ecl.util.test import TestAreaContext
 from tests import EclTest

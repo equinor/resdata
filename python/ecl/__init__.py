@@ -127,8 +127,8 @@ class EclPrototype(Prototype):
 from .ecl_type import EclTypeEnum, EclDataType
 from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclUnitTypeEnum , EclUtil
 
-from .util import EclVersion
-from .util import updateAbortSignals
+from .util.util import EclVersion
+from .util.util import updateAbortSignals
 
 updateAbortSignals( )
 

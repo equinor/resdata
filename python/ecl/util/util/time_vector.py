@@ -17,7 +17,7 @@ import datetime
 import re
 
 from ecl import EclPrototype
-from ecl.util import VectorTemplate, CTime
+from ecl.util.util import VectorTemplate, CTime
 
 
 class TimeVector(VectorTemplate):

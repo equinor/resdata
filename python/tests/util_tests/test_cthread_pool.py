@@ -2,7 +2,7 @@ import ctypes
 import ecl
 from ecl import EclPrototype
 from tests import EclTest
-from ecl.util import CThreadPool, startCThreadPool
+from ecl.util.util import CThreadPool, startCThreadPool
 
 TEST_LIB = EclPrototype.lib 
 

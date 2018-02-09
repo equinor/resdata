@@ -26,7 +26,7 @@
     grids.
 """
 
-import ecl.util
+import ecl.util.util
 import ecl.util.geometry
 
 from .cell import Cell

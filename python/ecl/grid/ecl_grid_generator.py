@@ -18,8 +18,8 @@ import itertools, numpy
 from math import sqrt
 
 from ecl import EclPrototype
-from ecl.util import monkey_the_camel
-from ecl.util import IntVector
+from ecl.util.util import monkey_the_camel
+from ecl.util.util import IntVector
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
