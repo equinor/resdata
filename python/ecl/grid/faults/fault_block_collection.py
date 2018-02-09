@@ -37,7 +37,7 @@ class FaultBlockCollection(BaseCClass):
             raise ValueError("Invalid input - failed to create FaultBlockCollection")
 
         # The underlying C implementation uses lazy evaluation and
-        # needs to hold on to the grid reference. We therefor take
+        # needs to hold on to the grid reference. We therefore take
         # references to it here, to protect against premature garbage
         # collection.
         self.grid_ref = grid
