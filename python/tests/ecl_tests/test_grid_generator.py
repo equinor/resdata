@@ -16,7 +16,10 @@
 #  for more details.
 
 from itertools import product as prod
-import operator, random, numpy
+import operator
+import random
+import numpy
+import six
 
 from ecl import EclDataType
 from ecl.eclfile import EclKW
@@ -33,7 +36,7 @@ def generate_ijk_bounds(dims):
     return prod(ibounds, jbounds, kbounds)
 
 def decomposition_preserving(ijk_bound):
-    return sum(zip(*ijk_bound)[0])%2 is 0
+    return sum(list(zip(*ijk_bound))[0]) % 2 is 0
 
 class GridGeneratorTest(EclTest):
 
@@ -113,7 +116,8 @@ class GridGeneratorTest(EclTest):
     def assertSubgrid(self, grid, subgrid, ijk_bound):
         sijk_space = prod(*[range(d) for d in subgrid.getDims()[:-1:]])
         for sijk in sijk_space:
-            gijk = tuple([a+b for a, b in zip(sijk, zip(*ijk_bound)[0])])
+            gijk = tuple([a + b for a, b in
+                         zip(sijk, list(zip(*ijk_bound))[0])])
 
             self.assertEqual(
                 [subgrid.getCellCorner(i, ijk=sijk) for i in range(8)],
@@ -148,7 +152,8 @@ class GridGeneratorTest(EclTest):
         coord = GridGen.create_coord(dims, (1,1,1))
         zcorn = GridGen.create_zcorn(dims, (1,1,1), offset=0)
 
-        actnum = EclKW("ACTNUM", reduce(operator.mul, dims), EclDataType.ECL_INT)
+        actnum = EclKW("ACTNUM", six.functools.reduce(operator.mul, dims),
+                       EclDataType.ECL_INT)
         random.seed(1337)
         for i in range(len(actnum)):
             actnum[i] = random.randint(0, 1)

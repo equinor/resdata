@@ -1,5 +1,6 @@
 from math import sqrt
 import sys
+import six
 
 class GeometryTools(object):
     EPSILON = 0.000001
@@ -104,9 +105,9 @@ class GeometryTools(object):
 
             return hull
 
-        l = reduce(keepLeft, points, [])
-        u = reduce(keepLeft, reversed(points), [])
-        l.extend([u[i] for i in xrange(1, len(u) - 1)])
+        l = six.functools.reduce(keepLeft, points, [])
+        u = six.functools.reduce(keepLeft, reversed(points), [])
+        l.extend([u[i] for i in six.moves.xrange(1, len(u) - 1)])
 
         return l
 

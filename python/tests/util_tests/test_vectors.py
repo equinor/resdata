@@ -18,6 +18,7 @@
 
 import copy
 import datetime
+import six
 
 try:
     from unittest2 import TestCase
@@ -155,11 +156,9 @@ class UtilTest(TestCase):
         for i in primes:
             b[i] = True
         pfx = 'BoolVector(size = 20, content = "00110101000101000101")'
-        print(repr(b))
         self.assertEqual(pfx, repr(b)[:len(pfx)])
         b[30] = True
         pfx = 'BoolVector(size = 31, content = "001101010...00000001")'
-        print(repr(b))
         self.assertEqual(pfx, repr(b)[:len(pfx)])
 
 
@@ -282,9 +281,7 @@ class UtilTest(TestCase):
         b = a << 2
         self.assertEqual(list(b), [3, 4, 5])
 
-        print(a)
         a <<= 2
-        print(a)
         self.assertEqual(list(a), [3, 4, 5])
 
         b = a >> 2
@@ -368,7 +365,6 @@ class UtilTest(TestCase):
 
         tv2 = TimeVector()
         tv2.append(time2)
-        print(tv2)
 
     def test_permutation_vector(self):
         vector = DoubleVector()
@@ -473,7 +469,7 @@ class UtilTest(TestCase):
         start = datetime.datetime(1980, 1, 1, 0, 0, 0)
         end = datetime.datetime(2020, 1, 1, 0, 0, 0)
         trange = TimeVector.createRegular(start, end, "2Y")
-        for (y, t) in zip(xrange(1980, 2022, 2), trange):
+        for (y, t) in zip(six.moves.xrange(1980, 2022, 2), trange):
             self.assertTrue(t == datetime.datetime(y, 1, 1, 0, 0, 0))
 
         trange = TimeVector.createRegular(start, datetime.date(2050, 1, 1), "1Y")

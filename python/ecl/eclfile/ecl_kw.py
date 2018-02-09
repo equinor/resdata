@@ -903,7 +903,7 @@ class EclKW(BaseCClass):
         Will set the new size of the kw to @new_size.
         """
         if new_size >= 0:
-            self._resize(new_size)
+            self._resize(int(new_size))
 
         # Iteration is based on a pointer to the underlying storage,
         # that will generally by reset by the resize() call; i.e. we

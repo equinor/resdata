@@ -66,7 +66,7 @@ def select_method(select):
     """
 
     def select_wrapper(self , *args ,  **kwargs):
-        intersect = kwargs.has_key('intersect') and kwargs['intersect']
+        intersect = 'intersect' in kwargs and kwargs['intersect']
         if intersect:
             new_region = EclRegion( self.grid , False )
             select(new_region , *args )
@@ -207,11 +207,12 @@ class EclRegion(BaseCClass):
         """
         return self._alloc_copy( )
 
-
     def __nonzero__(self):
         global_list = self.get_global_list()
         return len(global_list) > 0
-    
+
+    def __bool__(self):
+        return self.__nonzero__()
 
     def __iand__(self , other):
         """
@@ -857,7 +858,7 @@ class EclRegion(BaseCClass):
         Helper function to apply a function with one scalar arg on target_kw.
         """
         data_type = target_kw.data_type
-        if func_dict.has_key( data_type ):
+        if data_type in func_dict:
             func = func_dict[ data_type ]
             func( target_kw, scalar , force_active )
         else:

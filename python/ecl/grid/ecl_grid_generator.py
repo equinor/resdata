@@ -344,12 +344,11 @@ class EclGridGenerator:
     @classmethod
     def __scale_coord(cls, coord, scale, lower_center):
         coord = numpy.array([
-            map(float, coord[i:i+6:])
+            list(map(float, coord[i:i+6:]))
             for i in range(0, len(coord), 6)
             ])
         origo = numpy.array(3*[0.] + list(lower_center) + [0])
         scale = numpy.array(3*[1.] + 2*[scale] + [1])
-
         coord = scale * (coord-origo) + origo
         return coord.flatten().tolist()
 
@@ -358,7 +357,7 @@ class EclGridGenerator:
         nx, ny, nz = dims
 
         coord = numpy.array([
-            map(float, coord[i:i+6:])
+            list(map(float, coord[i:i+6:]))
             for i in range(0, len(coord), 6)
             ])
 
@@ -381,7 +380,7 @@ class EclGridGenerator:
     @classmethod
     def __rotate_coord(cls, coord, lower_center):
         coord = numpy.array([
-            map(float, coord[i:i+6:])
+            list(map(float, coord[i:i+6:]))
             for i in range(0, len(coord), 6)
             ])
 
@@ -397,7 +396,7 @@ class EclGridGenerator:
     @classmethod
     def __translate_lower_coord(cls, coord, translation):
         coord = numpy.array([
-            map(float, coord[i:i+6:])
+            list(map(float, coord[i:i+6:]))
             for i in range(0, len(coord), 6)
             ])
         translation = numpy.array(3*[0.] + list(translation))
@@ -534,7 +533,7 @@ class EclGridGenerator:
     @classmethod
     def __translate_coord(cls, coord, translation):
         coord = numpy.array([
-            map(float, coord[i:i+6:])
+            list(map(float, coord[i:i+6:]))
             for i in range(0, len(coord), 6)
             ])
         translation = numpy.array(list(translation) + list(translation))
@@ -700,7 +699,7 @@ class EclGridGenerator:
 
     @classmethod
     def assert_decomposition_change(cls, ijk_bounds, decomposition_change):
-        if sum(zip(*ijk_bounds)[0])%2 == 1 and not decomposition_change:
+        if sum(list(zip(*ijk_bounds))[0]) % 2 == 1 and not decomposition_change:
             raise ValueError(
                     "The subgrid defined by %s " % str(ijk_bounds) +
                     "will cause an unintended decomposition change. " +

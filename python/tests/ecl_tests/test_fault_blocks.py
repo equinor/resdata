@@ -1,22 +1,23 @@
 #!/usr/bin/env python
-#  Copyright (C) 2014  Statoil ASA, Norway. 
-#   
+#  Copyright (C) 2014  Statoil ASA, Norway.
+#
 #  The file 'test_fault_blocks.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from __future__ import print_function
 from unittest import skipIf
 import warnings
+import cwrap
 
 from ecl import EclDataType
 from ecl.eclfile import EclKW
@@ -70,9 +71,10 @@ class FaultBlockTest(EclTest):
                 fileH.write("4 4 4 0 0\n")
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
+            with cwrap.open("kw.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-        
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
         layer.loadKeyword( kw )
@@ -103,8 +105,10 @@ class FaultBlockTest(EclTest):
                 fileH.write("4 4 4 0 5\n")
                 fileH.write("/\n")
 
-            kw = EclKW.read_grdecl(open("kw.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-        
+            with cwrap.open("kw.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
+
         grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
 
@@ -162,14 +166,17 @@ class FaultBlockTest(EclTest):
                 fileH.write("3 3 3 3 2 2 2 2 \n")
                 fileH.write("3 3 3 3 2 2 2 2 \n")
                 fileH.write("/\n")
-                
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-            with open("faults.grdecl" , "w") as f:
+
+            with cwrap.open("faultblock.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
+
+            with open("faults.grdecl", "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FY\'   1   4   4   4   1   1  'Y'  /\n")
                 f.write("\'FX\'   4   4   1   8   1   1  'X'  /\n")
                 f.write("/")
-            
+
             faults = FaultCollection( grid , "faults.grdecl")
         layer.loadKeyword( kw )
         b1 = layer.getBlock( 1 )
@@ -228,14 +235,16 @@ class FaultBlockTest(EclTest):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
-                
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
+
+            with cwrap.open("faultblock.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
             with open("faults.grdecl" , "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")
                 f.write("\'FX\'   5   5   5   8   1   1  'X'  /\n")
                 f.write("/")
-            
+
             faults = FaultCollection( grid , "faults.grdecl")
         layer.loadKeyword( kw )
         b1 = layer.getBlock( 1 )
@@ -438,15 +447,17 @@ class FaultBlockTest(EclTest):
                 fileH.write("1 1 1 1 1 2 2 2 \n")
                 fileH.write("/\n")
 
+            with cwrap.open("faultblock.grdecl") as f:
+                kw = EclKW.read_grdecl(
+                    f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
 
-            kw = EclKW.read_grdecl(open("faultblock.grdecl") , "FAULTBLK" , ecl_type = EclDataType.ECL_INT)
-            with open("faults.grdecl" , "w") as f:
+            with open("faults.grdecl", "w") as f:
                 f.write("FAULTS\n")
                 f.write("\'FX\'   4   4   1   4   1   1  'X'  /\n")
                 f.write("\'FX\'   5   5   4   4   1   1  'Y'  /\n")
                 f.write("\'FX\'   5   5   5   8   1   1  'X'  /\n")
                 f.write("/")
-            
+
             faults = FaultCollection( grid , "faults.grdecl")
 
         layer.loadKeyword( kw )

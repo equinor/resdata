@@ -199,7 +199,7 @@ class Fault(object):
 
 
     def has_layer(self, K):
-        return self.__layer_map.has_key(K)
+        return K in self.__layer_map
 
 
     def add_layer(self, K):

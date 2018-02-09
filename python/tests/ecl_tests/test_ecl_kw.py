@@ -14,14 +14,13 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
-import os
 import random
-import numpy
 import warnings
+import cwrap
 
 from ecl import EclDataType, EclTypeEnum, EclFileFlagEnum
 from ecl.eclfile import EclKW, EclFile, FortIO, openFortIO
-                     
+
 
 from ecl.util.test import TestAreaContext
 from tests import EclTest
@@ -84,7 +83,7 @@ class KWTest(EclTest):
             kw[i] = d
             i += 1
 
-        file1 = open(name1, "w")
+        file1 = cwrap.open(name1, "w")
         kw.fprintf_data(file1, fmt)
         file1.close()
 
@@ -195,7 +194,7 @@ class KWTest(EclTest):
             for i in range(len(kw)):
                 kw[i] = i
 
-            fileH = open("test", "w")
+            fileH = cwrap.open("test", "w")
             kw.fprintf_data(fileH)
             fileH.close()
 
@@ -413,7 +412,7 @@ class KWTest(EclTest):
 
         kw.resize(N/2)
         self.assertEqual(len(kw), N/2)
-        for i in range(N/2):
+        for i in range(int(N / 2)):
             self.assertEqual(kw[i], i)
 
 

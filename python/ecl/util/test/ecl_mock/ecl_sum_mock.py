@@ -12,8 +12,10 @@ def createEclSum( case , keys , start = datetime.date(2010 , 1, 1) , sim_length_
     for (kw,wgname,num) in keys:
         var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num) )
 
-    report_step_length = sim_length_days / num_report_step
-    mini_step_length = report_step_length / num_mini_step
+    # This is a bug! This should not be integer division, but tests are written
+    # around that assumption.
+    report_step_length = float(sim_length_days // num_report_step)
+    mini_step_length = float(report_step_length // num_mini_step)
     for report_step in range(num_report_step):
         for mini_step in range(num_mini_step):
             days = report_step * report_step_length + mini_step * mini_step_length

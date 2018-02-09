@@ -23,16 +23,19 @@ import inspect
 import imp
 
 class ImportTestCase(unittest.TestCase):
-    
+
     def import_file(self, path):
         return imp.load_source( "module", path)
-    
+
     def import_module(self , module):
         mod = importlib.import_module( module )
         return mod
-            
+
     def import_package(self, package):
+        if "__" in package:
+            return True
         module = self.import_module( package )
+
         path = os.path.dirname( inspect.getfile( module ) )
 
         for entry in sorted(os.listdir(path)):
