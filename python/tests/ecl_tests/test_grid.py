@@ -15,6 +15,7 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import os.path
+import six
 from unittest import skipIf
 import time
 import itertools
@@ -116,7 +117,8 @@ def createWrapperGrid(grid):
     return GridGen.create_single_cell_grid(corners)
 
 def average(points):
-    p = reduce(lambda a,b: (a[0]+b[0], a[1]+b[1], a[2]+b[2]), points)
+    p = six.functools.reduce(
+        lambda a, b: (a[0] + b[0], a[1] + b[1], a[2] + b[2]), points)
     return [elem/float(len(points)) for elem in p]
 
 # This test class should only have test cases which do not require
@@ -460,7 +462,7 @@ class GridTest(EclTest):
         d = 10
         grid = GridGen.createRectangular( (n, n, n), (d, d, d))
 
-        for x, y, z in itertools.product(range(d/2, n*d, d), repeat=3):
+        for x, y, z in itertools.product(range(d//2, n*d, d), repeat=3):
             for axis, direction in itertools.product(range(3), [-1, 1]):
                 p = [x, y, z]
                 p[axis] = p[axis] + direction*d/2

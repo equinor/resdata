@@ -45,7 +45,7 @@ class FaultCollection(object):
 
 
     def __contains__(self, fault_name):
-        return self.__fault_map.has_key(fault_name)
+        return fault_name in self.__fault_map
 
 
     def __len__(self):

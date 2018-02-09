@@ -378,14 +378,22 @@ class VectorTemplate(BaseCClass):
     def __rmul__(self, factor):
         return self.__mul__(factor)
 
-
     def __div__(self, divisor):
         if isinstance(divisor, int) or isinstance(divisor, float):
-            copy = self._alloc_copy( )
+            copy = self._alloc_copy()
             copy._div(divisor)
             return copy
         else:
             raise TypeError("Divisor has wrong type:%s" % type(divisor))
+
+    def __truediv__(self, divisor):
+        return self.__div__(divisor)
+
+    def __idiv__(self, divisor):
+        return self.__div__(divisor)
+
+    def __itruediv__(self, divisor):
+        return self.__div__(divisor)
 
     # End mathematical operations
     #################################################################

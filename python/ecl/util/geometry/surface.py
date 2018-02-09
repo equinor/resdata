@@ -13,16 +13,18 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
+from __future__ import division
+
 """
 Create a polygon
 """
 import os.path
 import ctypes
-from numpy import zeros
 
 from cwrap import BaseCClass
 from ecl import EclPrototype
 from ecl.util.geometry import GeoPointset
+
 
 class Surface(BaseCClass):
     TYPE_NAME = "surface"
@@ -116,10 +118,12 @@ class Surface(BaseCClass):
             self._scale( other)
         return self
 
-
-    def __idiv__(self , other):
-        self._scale( 1.0/other)
+    def __itruediv__(self , other):
+        self._scale(1.0 / other)
         return self
+
+    def __idiv__(self, other):
+        return self.__itruediv__(other)
 
 
     def __add__(self , other):
@@ -140,10 +144,14 @@ class Surface(BaseCClass):
         return copy
 
 
-    def __div__(self , other):
+    def __truediv__(self , other):
         copy = self.copy()
         copy /= other
         return copy
+
+
+    def __div__(self, other):
+        return self.__truediv__(other)
 
 
     def __len__(self):

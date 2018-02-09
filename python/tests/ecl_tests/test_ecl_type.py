@@ -125,7 +125,7 @@ class EclDataTypeTest(EclTest):
 
     def test_hash(self):
         all_types = set()
-        test_base = zip(self.TYPES, self.SIZES)
+        test_base = list(zip(self.TYPES, self.SIZES))
 
         for index, (ecl_type, elem_size) in enumerate(test_base):
             all_types.add(EclDataType(ecl_type, elem_size))

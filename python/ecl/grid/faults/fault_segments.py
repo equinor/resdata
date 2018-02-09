@@ -101,18 +101,18 @@ class SegmentMap(object):
 
     def add_segment(self, segment):
         (C1,C2) = segment.getCorners()
-        if not self.__segment_map.has_key(C1):
+        if C1 not in self.__segment_map:
             self.__segment_map[C1] = {}
             self.__count_map[C1] = 0
-        if not self.__segment_map.has_key(C2):
+        if C2 not in self.__segment_map:
             self.__segment_map[C2] = {}
             self.__count_map[C2] = 0
 
-        if not self.__segment_map[C1].has_key(C2):
+        if C2 not in self.__segment_map[C1]:
             self.__segment_map[C1][C2] = segment
             self.__count_map[C1] += 1
 
-        if not self.__segment_map[C2].has_key(C1):
+        if C1 not in self.__segment_map[C2]:
             self.__segment_map[C2][C1] = segment
             self.__count_map[C2] += 1
 
@@ -134,9 +134,9 @@ class SegmentMap(object):
 
     def pop_start(self):
         end_segments = []
-        for (C, count) in self.__count_map.iteritems():
+        for (C, count) in self.__count_map.items():
             if count == 1:
-                end_segments.append(self.__segment_map[C].values()[0])
+                end_segments.append(list(self.__segment_map[C].values())[0])
 
         start_segment = end_segments[0]
         self.delSegment(start_segment)
@@ -145,9 +145,9 @@ class SegmentMap(object):
     def pop_next(self, segment):
         (C1,C2) = segment.getCorners()
         if self.__count_map[C1] >= 1:
-            next_segment = self.__segment_map[C1].values()[0]
+            next_segment = list(self.__segment_map[C1].values())[0]
         elif self.__count_map[C2] >= 1:
-            next_segment = self.__segment_map[C2].values()[0]
+            next_segment = list(self.__segment_map[C2].values())[0]
         else:
             next_segment = None
 

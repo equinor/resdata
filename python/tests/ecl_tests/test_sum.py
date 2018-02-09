@@ -19,6 +19,7 @@ import inspect
 import datetime
 import csv
 import shutil
+import cwrap
 from unittest import skipIf, skipUnless, skipIf
 
 from ecl import EclDataType
@@ -348,10 +349,10 @@ class SumTest(EclTest):
         self.assertEqual(data[2], data2[2])
 
         with TestAreaContext("sum_vector"):
-            with open("f1.txt","w") as f:
+            with cwrap.open("f1.txt","w") as f:
                 case1.dumpCSVLine(t, kw_list, f)
 
-            with open("f2.txt", "w") as f:
+            with cwrap.open("f2.txt", "w") as f:
                 case2.dumpCSVLine(t,kw_list2,f)
 
             with open("f1.txt") as f:

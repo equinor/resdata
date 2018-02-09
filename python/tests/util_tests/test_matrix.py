@@ -2,6 +2,7 @@ from ecl.util.util import Matrix , RandomNumberGenerator
 from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
 from ecl.util.test import TestAreaContext
 from tests import EclTest
+import cwrap
 
 class MatrixTest(EclTest):
     def test_matrix(self):
@@ -109,9 +110,9 @@ class MatrixTest(EclTest):
         m[0,1] = 1
         m[1,0] = 2
         m[1,1] = 3
-        
+
         with TestAreaContext("matrix_fprint"):
-            with open("matrix.txt", "w") as f:
+            with cwrap.open("matrix.txt", "w") as f:
                 m.fprint( f )
 
             with open("matrix.txt") as f:
