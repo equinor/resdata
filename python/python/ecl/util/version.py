@@ -99,12 +99,12 @@ class Version(object):
 
 
 class EclVersion(Version):
-    _build_time = UtilPrototype("char* ecl_version_get_build_time()")
-    _git_commit = UtilPrototype("char* ecl_version_get_git_commit()")
-    _major_version = UtilPrototype("int ecl_version_get_major_version()")
-    _minor_version = UtilPrototype("int ecl_version_get_minor_version()")
-    _micro_version = UtilPrototype("char* ecl_version_get_micro_version()")
-    _is_devel = UtilPrototype("bool ecl_version_is_devel_version()")
+    _build_time = UtilPrototype("char* ecl_version_get_build_time()", bind = False)
+    _git_commit = UtilPrototype("char* ecl_version_get_git_commit()", bind = False)
+    _major_version = UtilPrototype("int ecl_version_get_major_version()", bind = False)
+    _minor_version = UtilPrototype("int ecl_version_get_minor_version()", bind = False)
+    _micro_version = UtilPrototype("char* ecl_version_get_micro_version()", bind = False)
+    _is_devel = UtilPrototype("bool ecl_version_is_devel_version()", bind = False)
 
     def __init__(self):
         major = self._major_version( )
