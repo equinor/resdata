@@ -163,7 +163,7 @@ static void thread_pool_resize_queue( thread_pool_type * pool, int queue_length 
 /**
    This function updates an element in the queue, the function is
    called by the executing threads, on the same time the main thread
-   might be resizing the thread, we therefor take a read lock during
+   might be resizing the thread, we therefore take a read lock during
    execution of this function. (Write lock is not necessary because we
    will not change the queue pointer itself, only something it points
    to.)

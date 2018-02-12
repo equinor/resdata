@@ -107,7 +107,7 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw , ECL_KW_TYPE_ID )
 
     3. The logical type involves converting back and forth between 'T'
        and 'F' and internal logical representation. The format strings
-       are therefor for reading/writing a character.
+       are therefore for reading/writing a character.
 
 */
 
@@ -1289,7 +1289,7 @@ bool ecl_kw_fskip_data(ecl_kw_type *ecl_kw, fortio_type *fortio) {
 /**
    This function will skip the header part of an ecl_kw instance. The
    function will read the file content at the current position, it is
-   therefor essential that the file pointer is positioned at the
+   therefore essential that the file pointer is positioned at the
    beginning of a keyword when this function is called; otherwise it
    will be complete crash and burn.
 */

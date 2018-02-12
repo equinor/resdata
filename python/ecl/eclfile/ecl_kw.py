@@ -273,7 +273,7 @@ class EclKW(BaseCClass):
 
         Observe that since the grdecl files are quite weakly
         structured it is difficult to verify the integrity of the
-        files, malformed input might therefor pass unnoticed before
+        files, malformed input might therefore pass unnoticed before
         things blow up at a later stage.
 
         [1]: It is possible, but not recommended, to pass in None for

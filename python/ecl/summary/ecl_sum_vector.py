@@ -33,7 +33,7 @@ class EclSumVector(object):
         The EclSumVector contains a reference to the parent EclSum
         structure and this is used to implement several of the
         properties and methods of the object; the EclSum vector
-        instances should therefor only be instantiated through the
+        instances should therefore only be instantiated through the
         EclSum.get_vector() method, and not manually with the
         EclSumVector() constructor.
         """
