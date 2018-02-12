@@ -9,7 +9,6 @@ set(PYTHON_SOURCES
     lookup_table.py
     matrix.py
     rng.py
-    stat.py
     stringlist.py
     #substitution_list.py
     thread_pool.py

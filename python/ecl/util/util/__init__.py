@@ -46,7 +46,7 @@ from cwrap import Prototype
 
 from .version import Version, EclVersion
 
-from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum, LLSQResultEnum
+from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
 from .ctime import CTime
 
@@ -59,7 +59,6 @@ from .time_vector import TimeVector
 from .stringlist import StringList
 from .rng import RandomNumberGenerator
 from .matrix import Matrix
-from .stat import quantile, quantile_sorted, polyfit
 from .lookup_table import LookupTable
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .thread_pool import ThreadPool
