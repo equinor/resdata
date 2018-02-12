@@ -1,5 +1,5 @@
 from ecl.util.util import Version
-from ecl.util.util import RngAlgTypeEnum, RngInitModeEnum, LLSQResultEnum
+from ecl.util.util import RngAlgTypeEnum, RngInitModeEnum
 from ecl.util.util import CTime
 from ecl.util.util import PermutationVector
 from ecl.util.util import VectorTemplate
@@ -10,7 +10,6 @@ from ecl.util.util import TimeVector
 from ecl.util.util import StringList
 from ecl.util.util import RandomNumberGenerator
 from ecl.util.util import Matrix
-from ecl.util.util import quantile, quantile_sorted, polyfit
 from ecl.util.util import LookupTable
 from ecl.util.util import Hash, StringHash, DoubleHash, IntegerHash
 from ecl.util.util import ThreadPool

@@ -18,7 +18,7 @@ from __future__ import print_function
 import sys
 
 from ecl.util.util import monkey_the_camel
-from ecl.util.util import DoubleVector,stat
+from ecl.util.util import DoubleVector
 from ecl.util.geometry import CPolyline
 
 from .fault_segments import FaultSegment
