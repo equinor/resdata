@@ -216,6 +216,8 @@ include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckTypeSize)
 
+check_function_exists( access HAVE_POSIX_ACCESS)
+check_function_exists( _access HAVE_WINDOWS__ACCESS)
 check_function_exists( chdir HAVE_POSIX_CHDIR )
 check_function_exists( _chdir HAVE_WINDOWS_CHDIR )
 check_function_exists( chmod HAVE_CHMOD )

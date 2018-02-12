@@ -151,6 +151,9 @@ void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
 
 
 static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key_join_string) {
+  if (!ecl_util_path_access(input_arg))
+    return NULL;
+
   ecl_sum_type * ecl_sum = util_malloc( sizeof * ecl_sum );
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
 
@@ -246,9 +249,11 @@ static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
 
 ecl_sum_type * ecl_sum_fread_alloc(const char *header_file , const stringlist_type *data_files , const char * key_join_string, bool include_restart) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc__( header_file , key_join_string );
-  if (!ecl_sum_fread( ecl_sum , header_file , data_files , include_restart)) {
-    ecl_sum_free( ecl_sum );
-    ecl_sum = NULL;
+  if (ecl_sum) {
+    if (!ecl_sum_fread( ecl_sum , header_file , data_files , include_restart)) {
+      ecl_sum_free( ecl_sum );
+      ecl_sum = NULL;
+    }
   }
   return ecl_sum;
 }
@@ -314,12 +319,13 @@ ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step
 ecl_sum_type * ecl_sum_alloc_restart_writer( const char * ecl_case , const char * restart_case , bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
 
   ecl_sum_type * ecl_sum = ecl_sum_alloc__( ecl_case , key_join_string );
-  ecl_sum_set_unified( ecl_sum , unified );
-  ecl_sum_set_fmt_case( ecl_sum , fmt_output );
+  if (ecl_sum) {
+    ecl_sum_set_unified( ecl_sum , unified );
+    ecl_sum_set_fmt_case( ecl_sum , fmt_output );
 
-  ecl_sum->smspec = ecl_smspec_alloc_writer( key_join_string , restart_case, sim_start , time_in_days , nx , ny , nz );
-  ecl_sum->data   = ecl_sum_data_alloc_writer( ecl_sum->smspec );
-
+    ecl_sum->smspec = ecl_smspec_alloc_writer( key_join_string , restart_case, sim_start , time_in_days , nx , ny , nz );
+    ecl_sum->data   = ecl_sum_data_alloc_writer( ecl_sum->smspec );
+  }
   return ecl_sum;
 }
 
@@ -402,7 +408,10 @@ void ecl_sum_free__(void * __ecl_sum) {
 
 
 ecl_sum_type * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart){
-  ecl_sum_type * ecl_sum     = ecl_sum_alloc__(input_file , key_join_string);
+  ecl_sum_type * ecl_sum = ecl_sum_alloc__(input_file , key_join_string);
+  if (!ecl_sum)
+    return NULL;
+
   if (ecl_sum_fread_case( ecl_sum , include_restart))
     return ecl_sum;
   else {
@@ -1125,6 +1134,10 @@ void ecl_sum_export_csv(const ecl_sum_type * ecl_sum , const char * filename  , 
   free( date_header );
 }
 
+
+const char * ecl_sum_get_restart_case(const ecl_sum_type * ecl_sum) {
+  return ecl_smspec_get_restart_case(ecl_sum->smspec);
+}
 
 
 const char * ecl_sum_get_case(const ecl_sum_type * ecl_sum) {

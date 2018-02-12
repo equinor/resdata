@@ -1432,3 +1432,59 @@ void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year) 
 }
 
 
+#ifdef ERT_HAVE_UNISTD
+#include <unistd.h>
+#endif
+
+/*
+  This is a small function which tries to give a sensible answer to the
+  question: Do I have read access to this eclipse simulation? The ecl_case
+  argument can either be a directory or the full path to a file, the filename
+  need not exists. The approach is as follows:
+
+  1. If @ecl_case corresponds to an existing filesystem entry - just return
+     access(ecl_case, R_OK).
+
+  2. If @ecl_case corresponds to a non-existing entry:
+
+       a) If there is a directory part - return access(dir, R_OK).
+       b) No directory part - return access(cwd, R_OK);
+
+      For the case 2b) the situation is that we test for read access to CWD,
+      that could in principle be denied - but that is a highly contrived
+      situation and we just return true.
+
+  ecl_util_access_path("PATH")                     ->   access("PATH", R_OK);
+  ecl_util_access_path("PATH/FILE_EXISTS")         ->   access("PATH/FILE_EXISTS", R_OK);
+  ecl_util_access_path("PATH/FILE_DOES_NOT_EXIST") ->   access("PATH", R_OK);
+  ecl_util_access_path("PATH_DOES_NOT_EXIST")      ->   true
+*/
+
+bool ecl_util_path_access(const char * ecl_case) {
+  if (util_access(ecl_case, R_OK))
+    return true;
+
+  if (util_access(ecl_case, F_OK))
+    return false;
+
+  /* Check if the input argument corresponds to an existing directory and one
+     additional element, in that case we do an access check on the directory part. */
+
+  {
+    bool path_access;
+    char * dir_name;
+    const char * path_sep = strrchr(ecl_case, UTIL_PATH_SEP_CHAR);
+
+    if (!path_sep)
+      /* We are trying to access CWD - we return true without actually checking
+         access. */
+      return true;
+
+
+    dir_name = util_alloc_substring_copy(ecl_case, 0, path_sep - ecl_case);
+    path_access = util_access(dir_name, R_OK);
+    free(dir_name);
+    return path_access;
+  }
+  return false;
+}
