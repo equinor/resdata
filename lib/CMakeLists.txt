@@ -377,6 +377,7 @@ foreach (name   ecl_alloc_cpgrid
                 test_transactions
                 ecl_rst_file
                 ecl_sum_writer
+                ecl_util_filenames
                 ecl_util_make_date_no_shift
                 ecl_util_month_range
                 ecl_valid_basename

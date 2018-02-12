@@ -122,36 +122,14 @@ char * ecl_util_alloc_base_guess(const char * path) {
 
 
 
+
+
 int ecl_util_filename_report_nr(const char *filename) {
-  char *ext = strrchr(filename , '.');
-
-  if (ext == NULL)
-    return -1;
-
-  if (ext[1] == 'X' || ext[1] == 'F' || ext[1] == 'S' || ext[1] == 'A')
-    return atoi(&ext[2]);
-
-  return -1;
+  int report_nr = -1;
+  ecl_util_get_file_type(filename, NULL, &report_nr);
+  return report_nr;
 }
 
-
-/*
-bool ecl_util_numeric_extension(const char * extension) {
-
-  const char digit_ascii_min = 48;
-  const char digit_ascii_max = 57;
-  bool valid = true;
-  int pos = 1;
-  while (valid && pos <= 5) {
-    char c = extension[pos];
-    valid = (valid & (c >= digit_ascii_min && c <= digit_ascii_max));
-    if (!valid)
-      break;
-  }
-
-  return valid;
-}
-*/
 
 
 /*
@@ -252,23 +230,16 @@ ecl_file_enum ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int
   to the fundamental type, it is also determined whether the file is
   formatted or not, and in the case of summary/restart files, which
   report number this corresponds to.
-
-
 */
 
 
-ecl_file_enum ecl_util_get_file_type(const char * filename, bool *_fmt_file, int * _report_nr) {
-
+ecl_file_enum ecl_util_get_file_type(const char * filename, bool *fmt_file, int * report_nr) {
   char *ext = strrchr(filename , '.');
-  if (ext != NULL) {
-    ext++;
-    return ecl_util_inspect_extension( ext , _fmt_file , _report_nr);
-  } else
+  if (ext == NULL)
     return ECL_OTHER_FILE;
 
+  return ecl_util_inspect_extension( &ext[1] , fmt_file , report_nr);
 }
-
-
 
 static const char * ecl_util_get_file_pattern( ecl_file_enum file_type , bool fmt_file ) {
   if (fmt_file) {
@@ -392,6 +363,28 @@ const char * ecl_util_file_type_name( ecl_file_enum file_type ) {
   return NULL;
 }
 
+static bool valid_base(const char * input_base, bool * upper_case) {
+  bool upper = false;
+  bool lower = false;
+  const char * base = strrchr(input_base, UTIL_PATH_SEP_CHAR);
+  if (base == NULL)
+    base = input_base;
+
+  for (int i=0; i < strlen(base); i++) {
+    char c = base[i];
+
+    if (isupper(c))
+      upper = true;
+
+    if (islower(c))
+      lower = true;
+
+  }
+
+  if (upper_case)
+    *upper_case = upper;
+  return !(lower && upper);
+}
 
 
 
@@ -408,6 +401,11 @@ const char * ecl_util_file_type_name( ecl_file_enum file_type ) {
 */
 
 static char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr, bool must_exist) {
+  bool upper_case;
+  if (!valid_base(base, &upper_case))
+    return NULL;
+
+
   char * filename;
   char * ext;
   switch (file_type) {
@@ -482,6 +480,11 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
     util_abort("%s: Invalid input file_type to ecl_util_alloc_filename - aborting \n",__func__);
     /* Dummy to shut up compiler */
     ext        = NULL;
+  }
+
+  if (!upper_case) {
+    for (int i=0; i < strlen(ext); i++)
+      ext[i] = tolower(ext[i]);
   }
 
   filename = util_alloc_filename(path , base , ext);
@@ -573,21 +576,35 @@ int ecl_util_fname_report_cmp(const void *f1, const void *f2) {
 
 
 int ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist) {
-  char       * file_pattern;
-  char       * base_pattern;
-  const char * extension = ecl_util_get_file_pattern( file_type , fmt_file );
-  if (base == NULL)
-    base_pattern = util_alloc_string_copy( "*" );
-  else
-    base_pattern = util_alloc_string_copy( base );
+  bool valid_case = true;
+  bool upper_case = true;
+  stringlist_clear(filelist);
 
-  file_pattern = util_alloc_filename( NULL , base_pattern , extension );
-  stringlist_select_matching_files( filelist , path , file_pattern );
-  if ((file_type == ECL_SUMMARY_FILE) || (file_type == ECL_RESTART_FILE))
-    stringlist_sort( filelist , ecl_util_fname_report_cmp );
+  if (base)
+    valid_case = valid_base(base, &upper_case);
 
-  free( base_pattern );
-  free( file_pattern );
+  if (valid_case) {
+    char * ext_pattern = util_alloc_string_copy(ecl_util_get_file_pattern( file_type , fmt_file ));
+    char * file_pattern;
+
+    if (!upper_case) {
+      for (int i=0; i < strlen(ext_pattern); i++)
+        ext_pattern[i] = tolower(ext_pattern[i]);
+    }
+
+    if (base)
+      file_pattern = util_alloc_filename(NULL , base, ext_pattern);
+    else
+      file_pattern = util_alloc_filename(NULL, "*", ext_pattern);
+
+    stringlist_select_matching_files( filelist , path , file_pattern );
+    if ((file_type == ECL_SUMMARY_FILE) || (file_type == ECL_RESTART_FILE))
+      stringlist_sort( filelist , ecl_util_fname_report_cmp );
+
+    free( file_pattern );
+    free( ext_pattern );
+  }
+
   return stringlist_get_size( filelist );
 }
 
@@ -1274,29 +1291,7 @@ ert_ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
 
 
 bool ecl_util_valid_basename( const char * basename ) {
-
-  char * eclbasename = util_split_alloc_filename(basename);
-
-  int upper_count = 0;
-  int lower_count = 0;
-  int index;
-
-  for (index = 0; index < strlen( eclbasename ); index++) {
-    int c = eclbasename[index];
-    if (isalpha(c)) {
-      if (isupper(c))
-        upper_count++;
-      else
-        lower_count++;
-    }
-  }
-
-  free(eclbasename);
-
-  if ((lower_count * upper_count) != 0)
-    return false;
-  else
-    return true;
+  return valid_base(basename, NULL);
 }
 
 
