@@ -180,18 +180,6 @@ if(M_LIBRARY)
     set(m m)
 endif ()
 
-find_package(BLAS)
-if (BLAS_FOUND)
-    set(blas "${BLAS_LIBRARIES}")
-endif ()
-
-set(ERT_HAVE_LAPACK OFF)
-find_package(LAPACK)
-if (LAPACK_FOUND)
-    set(ERT_HAVE_LAPACK ON)
-    list(APPEND lapack ${LAPACK_LIBRARIES} ${LAPACK_LINKER_FLAGS})
-endif()
-
 find_package(ZLIB)
 if (ZLIB_FOUND)
     set(ERT_HAVE_ZLIB ON)
