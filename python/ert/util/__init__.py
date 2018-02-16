@@ -9,7 +9,6 @@ from ecl.util.util import BoolVector
 from ecl.util.util import TimeVector
 from ecl.util.util import StringList
 from ecl.util.util import RandomNumberGenerator
-from ecl.util.util import Matrix
 from ecl.util.util import LookupTable
 from ecl.util.util import Hash, StringHash, DoubleHash, IntegerHash
 from ecl.util.util import ThreadPool

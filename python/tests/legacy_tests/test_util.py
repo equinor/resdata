@@ -9,7 +9,6 @@ from ert.util import BoolVector
 from ert.util import TimeVector
 from ert.util import StringList
 from ert.util import RandomNumberGenerator
-from ert.util import Matrix
 from ert.util import LookupTable
 from ert.util import Hash, StringHash, DoubleHash, IntegerHash
 from ert.util import ThreadPool
