@@ -69,8 +69,8 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a  # Useful for debugging any issues with conda
-  - conda install pylint
-  - conda install pandas
+  - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/install_python_packages.py
+  - python install_python_packages.py
 
 before_script:
   - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
