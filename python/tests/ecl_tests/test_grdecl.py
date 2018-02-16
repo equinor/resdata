@@ -20,7 +20,7 @@ from ecl.eclfile import EclKW, Ecl3DKW
 from ecl.grid import EclGrid
 from tests import EclTest, statoil_test
 
-
+from cwrap import open as copen
 
 
 @statoil_test()
@@ -39,29 +39,29 @@ class GRDECLTest(EclTest):
 
 
     def test_Load( self ):
-        kw = EclKW.read_grdecl(open(self.src_file, "r"), "PERMX")
+        kw = EclKW.read_grdecl(copen(self.src_file, "r"), "PERMX")
         self.assertTrue(kw)
 
         grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE" ))
-        kw = Ecl3DKW.read_grdecl(grid , open(self.src_file, "r"), "PERMX")
+        kw = Ecl3DKW.read_grdecl(grid , copen(self.src_file, "r"), "PERMX")
         self.assertTrue( isinstance( kw , Ecl3DKW ))
 
 
 
     def test_reload( self ):
-        kw = EclKW.read_grdecl(open(self.src_file, "r"), "PERMX")
+        kw = EclKW.read_grdecl(copen(self.src_file, "r"), "PERMX")
         tmp_file1 = "/tmp/permx1.grdecl"
         tmp_file2 = "/tmp/permx2.grdecl"
         self.addFile(tmp_file1)
         self.addFile(tmp_file2)
 
-        fileH = open(tmp_file1, "w")
+        fileH = copen(tmp_file1, "w")
         kw.write_grdecl(fileH)
         fileH.close()
 
-        kw1 = EclKW.read_grdecl(open(tmp_file1, "r"), "PERMX")
+        kw1 = EclKW.read_grdecl(copen(tmp_file1, "r"), "PERMX")
 
-        fileH = open(tmp_file2, "w")
+        fileH = copen(tmp_file2, "w")
         kw1.write_grdecl(fileH)
         fileH.close()
 
@@ -69,12 +69,12 @@ class GRDECLTest(EclTest):
 
 
     def test_fseek( self ):
-        file = open(self.src_file, "r")
+        file = copen(self.src_file, "r")
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX"))
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMY"))
         file.close()
 
-        file = open(self.src_file, "r")
+        file = copen(self.src_file, "r")
         kw1 = EclKW.read_grdecl(file, "PERMX")
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMX"))
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX", rewind=True))
@@ -84,7 +84,7 @@ class GRDECLTest(EclTest):
     def test_fseek2(self):
         test_src = self.createTestPath("local/ECLIPSE/grdecl-test/test.grdecl")
         # Test kw at the the very start
-        file = open(test_src, "r")
+        file = copen(test_src, "r")
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX"))
 
         # Test commented out kw:
@@ -106,7 +106,7 @@ class GRDECLTest(EclTest):
     def test_fseek_dos(self):
         test_src = self.createTestPath("local/ECLIPSE/grdecl-test/test.grdecl_dos")  # File formatted with \r\n line endings.
         # Test kw at the the very start
-        file = open(test_src, "r")
+        file = copen(test_src, "r")
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX"))
 
         # Test commented out kw:

@@ -474,7 +474,7 @@ class SumTest(EclTest):
         hwell_padder = lambda key : key if key.split(":")[-1] != "HWELL_PR" else key + "OD"
         self.assertEqual(
                 intersect_summary.keys("WWCT*"),
-                map(hwell_padder, eclipse_summary.keys("WWCT*"))
+                list(map(hwell_padder, eclipse_summary.keys("WWCT*")))
                 )
 
     def test_ix_write(self):

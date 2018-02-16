@@ -222,7 +222,7 @@ class EclFileStatoilTest(EclTest):
                 ]
 
         padd = lambda str_len : (lambda s : s + (" " * (max(0, str_len-len(s)))))
-        self.assertEqual(map(padd(8), keywords_from_file), keywords_loaded)
+        self.assertEqual( list(map(padd(8), keywords_from_file)), keywords_loaded)
 
         # Names
         self.assertTrue( "NAMES" in f )
@@ -272,4 +272,4 @@ class EclFileStatoilTest(EclTest):
                 ':+:+:+:+', ':+:+:+:+', ':+:+:+:+', ':+:+:+:+'
                 ]
 
-        self.assertEqual(map(padd(10), names_from_file), names_loaded)
+        self.assertEqual( list(map(padd(10), names_from_file)), names_loaded)

@@ -31,7 +31,7 @@ import sys
 import os.path
 import math
 import itertools
-from cwrap import CFILE, BaseCClass
+from cwrap import CFILE, BaseCClass, load, open as copen
 
 from ecl import EclPrototype
 from ecl.util.util import monkey_the_camel
@@ -140,7 +140,7 @@ class EclGrid(BaseCClass):
         """
 
         if os.path.isfile(filename):
-            with open(filename) as f:
+            with copen(filename) as f:
                 specgrid = EclKW.read_grdecl(f, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
                 zcorn = EclKW.read_grdecl(f, "ZCORN")
                 coord = EclKW.read_grdecl(f, "COORD")

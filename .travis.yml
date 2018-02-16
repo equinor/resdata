@@ -47,7 +47,6 @@ addons:
 
 
 install:
-  - echo $LD_LIBRARY_PATH
   - if [[ "$CC" == "gcc" ]]; then export CXX="g++-4.8"; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       export CONDA_OS=MacOSX;
