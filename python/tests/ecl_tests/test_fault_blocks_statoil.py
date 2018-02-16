@@ -25,12 +25,14 @@ from ecl.grid import EclGrid
 from tests import EclTest, statoil_test
 from ecl.grid.faults import FaultBlock, FaultBlockLayer
 
+from cwrap import open as copen
+
 
 @statoil_test()
 class FaultBlockTest(EclTest):
     def setUp(self):
         self.grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/Mariner/MARINER.EGRID"))
-        fileH = open( self.createTestPath("Statoil/ECLIPSE/Mariner/faultblock.grdecl") )
+        fileH = copen( self.createTestPath("Statoil/ECLIPSE/Mariner/faultblock.grdecl") )
         self.kw = EclKW.read_grdecl( fileH , "FAULTBLK" , ecl_type = EclDataType.ECL_INT )
 
 

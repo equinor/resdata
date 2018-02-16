@@ -47,7 +47,8 @@ class EclSumVectorTest(EclTest):
         pfx = 'EclSum(name'
         self.assertEqual(pfx, repr(self.ecl_sum)[:len(pfx)])
         it = iter(self.ecl_sum)
-        t = self.ecl_sum[it.next()] # EclSumVector
+        #t = self.ecl_sum[it.next()] # EclSumVector
+        t = self.ecl_sum[next(it)] # EclSumVector
         self.assertEqual(63, len(t))
         self.assertEqual('BARSA', t.unit)
         pfx = 'EclSumVector(key = '
