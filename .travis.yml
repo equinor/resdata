@@ -18,9 +18,6 @@ env:
     - LD_LIBRARY_PATH="$(pwd)/install/lib64"
   matrix:
     - PYTHON_VERSION=3.6                        # Run all tests
-    - PYTHON_VERSION=2.7 TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
-    - PYTHON_VERSION=2.7 TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
-    - PYTHON_VERSION=2.7 TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
 
 matrix:
   fast_finish: true
