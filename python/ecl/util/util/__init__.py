@@ -58,7 +58,6 @@ from .bool_vector import BoolVector
 from .time_vector import TimeVector
 from .stringlist import StringList
 from .rng import RandomNumberGenerator
-from .matrix import Matrix
 from .lookup_table import LookupTable
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .thread_pool import ThreadPool

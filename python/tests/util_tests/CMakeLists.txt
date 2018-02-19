@@ -3,7 +3,6 @@ set(TEST_SOURCES
     test_ctime.py
     test_hash.py
     test_lookup_table.py
-    test_matrix.py
     test_rng.py
     test_string_list.py
     #test_substitution_list.py
@@ -22,7 +21,6 @@ add_python_package("python.tests.util_tests"  ${PYTHON_INSTALL_PREFIX}/tests/uti
 addPythonTest(tests.util_tests.test_ctime.CTimeTest)
 addPythonTest(tests.util_tests.test_hash.HashTest)
 addPythonTest(tests.util_tests.test_lookup_table.LookupTableTest )
-addPythonTest(tests.util_tests.test_matrix.MatrixTest )
 addPythonTest(tests.util_tests.test_rng.RngTest )
 addPythonTest(tests.util_tests.test_string_list.StringListTest)
 addPythonTest(tests.util_tests.test_vectors.UtilTest)

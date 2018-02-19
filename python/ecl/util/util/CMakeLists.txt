@@ -7,7 +7,6 @@ set(PYTHON_SOURCES
     int_vector.py
     install_abort_signals.py
     lookup_table.py
-    matrix.py
     rng.py
     stringlist.py
     #substitution_list.py
