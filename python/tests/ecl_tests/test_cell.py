@@ -29,7 +29,6 @@ class CellTest(EclTest):
 
     def test_init(self):
         cell = self.grid[0]
-        self.assertTrue( isinstance( 1/2, int) )
         self.assertEqual(0, cell.global_index)
 
     def test_actives(self):

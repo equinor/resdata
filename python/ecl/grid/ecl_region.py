@@ -930,6 +930,8 @@ class EclRegion(BaseCClass):
         else:
             if target_kw.data_type.is_int():
                 scale = 1 // other
+                import sys
+                raise Exception(sys.version)
             else:
                 scale = 1.0 / other
             self.scale_kw( target_kw , scale , force_active )
