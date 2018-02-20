@@ -474,3 +474,28 @@ class KWTest(EclTest):
         kw = EclKW("TEST_KW", 1, EclDataType.ECL_CHAR)
         kw[0] = "ABCD"
         self.assertEqual(kw[0], "ABCD    ")
+
+
+    def test_add_squared(self):
+        kw1 = EclKW("TEST_KW", 3, EclDataType.ECL_STRING(4))
+        kw2 = EclKW("TEST_KW", 3, EclDataType.ECL_STRING(4))
+
+        with self.assertRaises(TypeError):
+            kw1.add_squared(kw2)
+
+
+        kw1 = EclKW("T1", 10, EclDataType.ECL_INT)
+        kw2 = EclKW("T2", 11, EclDataType.ECL_INT)
+        with self.assertRaises(ValueError):
+           kw1.add_squared(kw2)
+
+        kw2 = EclKW("T", 10, EclDataType.ECL_FLOAT)
+        with self.assertRaises(ValueError):
+            kw1.add_squared(kw2)
+
+        kw2 = EclKW("T2", 10, EclDataType.ECL_INT)
+        kw2.assign(2)
+        kw1.add_squared(kw2)
+
+        for elm in kw1:
+            self.assertEqual(elm, 4)

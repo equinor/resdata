@@ -132,6 +132,7 @@ class EclKW(BaseCClass):
 
     _int_sum           = EclPrototype("int      ecl_kw_element_sum_int(ecl_kw)")
     _float_sum         = EclPrototype("double   ecl_kw_element_sum_float(ecl_kw)")
+    _iadd_squared      = EclPrototype("void     ecl_kw_inplace_add_squared(ecl_kw, ecl_kw)")
     _iadd              = EclPrototype("void     ecl_kw_inplace_add(ecl_kw, ecl_kw)")
     _imul              = EclPrototype("void     ecl_kw_inplace_mul(ecl_kw, ecl_kw)")
     _idiv              = EclPrototype("void     ecl_kw_inplace_div(ecl_kw, ecl_kw)")
@@ -647,6 +648,17 @@ class EclKW(BaseCClass):
         return copy
 
     # No __rdiv__()
+
+    def add_squared(self, other):
+       if not self.is_numeric():
+           raise TypeError("Can only be called on numeric types")
+
+       if not self.assert_binary(other):
+           raise ValueError("Invalid argument to method add_squared")
+
+       self._iadd_squared(other)
+
+
 
     def sum(self, mask = None, force_active = False):
         """
