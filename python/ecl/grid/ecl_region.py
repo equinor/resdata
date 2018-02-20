@@ -922,14 +922,14 @@ class EclRegion(BaseCClass):
 
 
     def idiv_kw( self , target_kw , other , force_active = False):
+        import sys
+        raise Exception(sys.version)
         if isinstance(other , EclKW):
             if target_kw.assert_binary( other):
                 self._idiv_kw( target_kw , other )
             else:
                 raise TypeError("Type mismatch")
         else:
-            import sys
-            raise Exception(sys.version)
             if target_kw.data_type.is_int():
                 scale = 1 // other
             else:
