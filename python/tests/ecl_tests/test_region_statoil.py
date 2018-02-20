@@ -57,6 +57,8 @@ class RegionTest(EclTest):
 
 
     def test_kw_idiv(self):
+        import sys
+        raise Exception(sys.version)
         P = self.rst_file["PRESSURE"][5]
         fipnum = self.init_file["FIPNUM"][0]
         fipnum_copy = fipnum.deep_copy()

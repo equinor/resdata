@@ -19,6 +19,8 @@ try:
 except ImportError:
     from unittest import skipIf
 
+from cwrap import open as copen
+
 import time
 from ecl import EclDataType
 from ecl.eclfile import EclKW
@@ -31,7 +33,7 @@ from tests import EclTest, statoil_test
 class StatoilFaultTest(EclTest):
     def loadGrid(self):
         grid_file   = self.createTestPath("Statoil/ECLIPSE/Faults/grid.grdecl")
-        fileH = open(grid_file, "r")
+        fileH = copen(grid_file, "r")
         specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
         zcorn = EclKW.read_grdecl(fileH, "ZCORN")
         coord = EclKW.read_grdecl(fileH, "COORD")

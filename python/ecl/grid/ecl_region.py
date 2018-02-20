@@ -29,6 +29,7 @@ import ctypes
 
 from cwrap import BaseCClass
 
+import ecl
 from ecl.util.util import monkey_the_camel
 from ecl.util.util import IntVector
 
@@ -921,13 +922,19 @@ class EclRegion(BaseCClass):
 
 
     def idiv_kw( self , target_kw , other , force_active = False):
+        import sys
+        raise Exception(sys.version)
         if isinstance(other , EclKW):
             if target_kw.assert_binary( other):
                 self._idiv_kw( target_kw , other )
             else:
                 raise TypeError("Type mismatch")
         else:
-            self.scale_kw( target_kw , 1/other , force_active )
+            if target_kw.data_type.is_int():
+                scale = 1 // other
+            else:
+                scale = 1.0 / other
+            self.scale_kw( target_kw , scale , force_active )
 
 
     def copy_kw( self , target_kw , src_kw , force_active = False):
