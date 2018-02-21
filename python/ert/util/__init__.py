@@ -12,7 +12,6 @@ from ecl.util.util import RandomNumberGenerator
 from ecl.util.util import LookupTable
 from ecl.util.util import Hash, StringHash, DoubleHash, IntegerHash
 from ecl.util.util import ThreadPool
-from ecl.util.util import CThreadPool, startCThreadPool
 from ecl.util.util import installAbortSignals, updateAbortSignals
 from ecl.util.util import ArgPack
 

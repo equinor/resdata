@@ -61,7 +61,6 @@ from .rng import RandomNumberGenerator
 from .lookup_table import LookupTable
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .thread_pool import ThreadPool
-from .cthread_pool import CThreadPool, startCThreadPool
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .arg_pack import ArgPack
 from .cwd_context import CWDContext

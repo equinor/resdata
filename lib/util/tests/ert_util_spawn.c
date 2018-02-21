@@ -25,7 +25,6 @@
 #include <ert/util/test_util.h>
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.h>
-#include <ert/util/thread_pool.h>
 
 
 static const char * stdout_msg = "stdout_xxx";
@@ -177,18 +176,6 @@ void test_spawn_redirect_threaded() {
       char const * script = stringlist_iget(script_fullpaths, i);
       test_assert_true(check_script(script));
    }
-
-   // Run the scripts in parallel
-   stringlist_type * script_paths = stringlist_alloc_new(); // free the paths after threads have completed
-   thread_pool_type * tp = thread_pool_alloc( 8 , true );
-   for(int i = 0; i < num; i++) {
-      char * path = util_alloc_sprintf("%06d" , path_codes[i]);
-      stringlist_append_owned_ref(script_paths, path);
-      thread_pool_add_job( tp , test_spawn_redirect__ , path );
-   }
-   thread_pool_join( tp );
-   thread_pool_free( tp );
-   stringlist_free(script_paths);
 
    stringlist_free(script_fullpaths);
    util_free(path_codes);

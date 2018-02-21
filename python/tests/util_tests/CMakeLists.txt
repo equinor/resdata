@@ -7,7 +7,6 @@ set(TEST_SOURCES
     test_string_list.py
     #test_substitution_list.py
     test_thread_pool.py
-    test_cthread_pool.py
     test_vectors.py
     test_version.py
     test_work_area.py
@@ -28,7 +27,6 @@ addPythonTest(tests.util_tests.test_work_area.WorkAreaTest)
 addPythonTest(tests.util_tests.test_version.VersionTest)
 addPythonTest(tests.util_tests.test_path_context.PathContextTest)
 addPythonTest(tests.util_tests.test_thread_pool.ThreadPoolTest)
-addPythonTest(tests.util_tests.test_cthread_pool.CThreadPoolTest)
 addPythonTest(tests.util_tests.test_arg_pack.ArgPackTest)
 addPythonTest(tests.util_tests.test_spawn.SpawnTest)
 #addPythonTest(tests.util.test_substitution_list.SubstitutionListTest)
