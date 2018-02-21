@@ -499,3 +499,36 @@ class KWTest(EclTest):
 
         for elm in kw1:
             self.assertEqual(elm, 4)
+
+
+    def test_scatter_copy(self):
+        source = EclKW("SOURCE", 4 , EclDataType.ECL_INT)
+        with self.assertRaises(TypeError):
+            copy = source.scatter_copy([1,1,1,1])
+
+        actnum = EclKW("ACTNUM", 6 , EclDataType.ECL_FLOAT)
+        with self.assertRaises(ValueError):
+            copy = source.scatter_copy(actnum)
+
+
+        actnum = EclKW("ACTNUM", 8, EclDataType.ECL_INT)
+        actnum[0] = 1
+        actnum[1] = 1
+        with self.assertRaises(ValueError):
+            copy = source.scatter_copy(actnum)
+
+        actnum.assign(1)
+        with self.assertRaises(ValueError):
+            copy = source.scatter_copy(actnum)
+
+
+        for i in range(4):
+            source[i] = i+1
+            actnum[2*i] = 0
+
+        # src = [1,2,3,4]
+        # actnum = [0,1,0,1,0,1,0,1]
+        # copy = [0,1,0,2,0,3,0,4]
+        copy = source.scatter_copy(actnum)
+        for i in range(4):
+            self.assertEqual(copy[2*i + 1], i+1)

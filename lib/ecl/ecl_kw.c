@@ -1918,6 +1918,38 @@ ecl_kw_type * ecl_kw_alloc_scatter_copy( const ecl_kw_type * src_kw , int target
   return new_kw;
 }
 
+ecl_kw_type * ecl_kw_alloc_global_copy(const ecl_kw_type * src, const ecl_kw_type * actnum)  {
+  if (ecl_kw_get_type(actnum) != ECL_INT_TYPE)
+    return NULL;
+
+  const int global_size = ecl_kw_get_size(actnum);
+  ecl_kw_type * global_copy = ecl_kw_alloc( ecl_kw_get_header(src), global_size, src->data_type); 
+  const int * mapping = ecl_kw_get_int_ptr(actnum);
+  const int src_size = ecl_kw_get_size(src);
+  int src_index = 0;
+  for (int global_index=0; global_index < global_size; global_index++) {
+    if (mapping[global_index]) {
+      /* We ran through and beyond the size of the src keyword. */
+      if (src_index >= src_size) {
+        ecl_kw_free(global_copy);
+        global_copy = NULL;
+        break;
+      }
+      const void * value_ptr = ecl_kw_iget_ptr(src, src_index);
+      ecl_kw_iset_static(global_copy, global_index, value_ptr);
+      src_index++;
+    }
+  }
+
+  /* Not all the src data was distributed. */
+  if (src_index < src_size) {
+    ecl_kw_free(global_copy);
+    global_copy = NULL;
+  }
+
+  return global_copy;
+}
+
 
 
 void ecl_kw_fread_double_param(const char * filename , bool fmt_file , double * double_data) {
