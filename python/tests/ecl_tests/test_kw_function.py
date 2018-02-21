@@ -57,3 +57,23 @@ class KWFunctionTest(EclTest):
         for i in range(10):
             self.assertEqual( kw[i,7,0] , 1 )
 
+
+
+    def test_porv_kw(self):
+        porv_int = EclKW( "PORV", 100, EclDataType.ECL_INT)
+        with self.assertRaises(TypeError):
+            actnum = porv_int.create_actnum()
+
+
+        prv = EclKW("PRV", 100, EclDataType.ECL_FLOAT)
+        with self.assertRaises(ValueError):
+            actnum = prv.create_actnum()
+
+
+        porv = EclKW("PORV", 4, EclDataType.ECL_FLOAT)
+        porv[0] = 0
+        porv[1] = 0.50
+        porv[2] = 0.50
+        porv[3] = 0
+        actnum = porv.create_actnum()
+        self.assertEqual(tuple(actnum), (0,1,1,0))

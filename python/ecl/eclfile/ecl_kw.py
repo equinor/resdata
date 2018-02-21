@@ -153,6 +153,7 @@ class EclKW(BaseCClass):
     _max_min_float     = EclPrototype("void     ecl_kw_max_min_float(ecl_kw, float*, float*)")
     _max_min_double    = EclPrototype("void     ecl_kw_max_min_double(ecl_kw, double*, double*)")
     _fix_uninitialized = EclPrototype("void     ecl_kw_fix_uninitialized(ecl_kw,int, int, int, int*)")
+    _create_actnum     = EclPrototype("ecl_kw_obj ecl_kw_alloc_actnum(ecl_kw, float)")
     _first_different   = EclPrototype("int      ecl_kw_first_different(ecl_kw, ecl_kw, int, double, double)")
     _resize            = EclPrototype("void     ecl_kw_resize(ecl_kw, int)")
 
@@ -1120,6 +1121,25 @@ class EclKW(BaseCClass):
             fmt = self.str_fmt + "\n"
         cfile = CFILE(file)
         self._fprintf_data(fmt, cfile)
+
+    def create_actnum(self, porv_limit = 0):
+        """Will create ACTNUM keyword from PORV keyword.
+
+        This quite specialized method will create an ACTNUM keyword based on
+        interpreting the current keyword as a PORV keyword. The method will
+        raise an exception if the current keyword is not ("PORV", FLOAT). The
+        code implemented in C for speed is essentially:
+
+             actnum = [ 1 if x > porv_limit else 0 for x in self ]
+
+        """
+        if not self.data_type.is_float():
+            raise TypeError("The PORV keyword must be of type FLOAT")
+
+        if not self.get_name() == "PORV":
+            raise ValueError("Input argument must be PORV keyword")
+
+        return self._create_actnum(porv_limit)
 
 
     def fix_uninitialized(self, grid):

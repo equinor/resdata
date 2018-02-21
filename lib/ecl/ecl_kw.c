@@ -26,6 +26,7 @@
 #include <ert/util/buffer.h>
 #include <ert/util/int_vector.h>
 
+#include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_endian_flip.h>
