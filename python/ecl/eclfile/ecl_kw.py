@@ -106,6 +106,7 @@ class EclKW(BaseCClass):
     _sub_copy          = EclPrototype("ecl_kw_obj ecl_kw_alloc_sub_copy(ecl_kw, char*, int, int)")
     _copyc             = EclPrototype("ecl_kw_obj ecl_kw_alloc_copy(ecl_kw)")
     _slice_copyc       = EclPrototype("ecl_kw_obj ecl_kw_alloc_slice_copy(ecl_kw, int, int, int)")
+    _global_copy       = EclPrototype("ecl_kw_obj ecl_kw_alloc_global_copy(ecl_kw, ecl_kw)")
     _fprintf_grdecl    = EclPrototype("void     ecl_kw_fprintf_grdecl(ecl_kw, FILE)")
     _fprintf_data      = EclPrototype("void     ecl_kw_fprintf_data(ecl_kw, char*, FILE)")
 
@@ -1159,6 +1160,15 @@ class EclKW(BaseCClass):
             rel_epsilon = epsilon
 
         return self._first_different(other, offset, abs_epsilon, rel_epsilon)
+
+
+
+    def scatter_copy(self, actnum):
+        if not isinstance(actnum, EclKW):
+            raise TypeError("The actnum argument must be of type EclKW")
+
+        return self._global_copy(actnum)
+
 
 monkey_the_camel(EclKW, 'intKeywords', EclKW.int_keywords, classmethod)
 monkey_the_camel(EclKW, 'isNumeric', EclKW.is_numeric)
