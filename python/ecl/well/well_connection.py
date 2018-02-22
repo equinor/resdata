@@ -65,6 +65,9 @@ class WellConnection(BaseCClass):
     def __eq__(self, other):
         return self._equal(other)
 
+    def __hash__(self):
+        return id(self)
+
     def __ne__(self, other):
         return not self == other
 

@@ -19,6 +19,8 @@ import datetime
 import os.path
 
 from cwrap import CFILE
+from cwrap import Prototype, load, open as copen
+
 from ecl.eclfile import EclFile, FortIO, openFortIO, openEclFile, EclKW
 from ecl.summary import EclSum, EclSumKeyWordVector
 from ecl.util.test import TestAreaContext
@@ -61,7 +63,7 @@ class EclSumTest(EclTest):
         dtime = datetime.datetime(2002, 1, 1, 0, 0, 0)
         with TestAreaContext("EclSum/csv_dump"):
             test_file_name = self.createTestPath("dump.csv")
-            outputH = open(test_file_name, "w")
+            outputH = copen(test_file_name, "w")
             self.ecl_sum.dumpCSVLine(dtime, ecl_sum_vector, outputH)
             assert os.path.isfile(test_file_name)
 

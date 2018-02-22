@@ -85,7 +85,7 @@ class RestartTest(EclTest):
 
 
     def test_report_list(self):
-        rlist0 = range(63)
+        rlist0 = list(range(63))
         self.report_list_file_test(self.u_file, rlist0)
 
         rlist0 = [0]

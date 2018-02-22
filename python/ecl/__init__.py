@@ -80,10 +80,10 @@ __version__ = "0.0.0"
 #    module should contain the variable lib_path pointing to the
 #    directory with shared object files.
 try:
-    import __ecl_lib_info
-    ecl_lib_path = __ecl_lib_info.lib_path
-    ert_so_version = __ecl_lib_info.so_version
-    __version__ = __ecl_lib_info.__version__
+    from .__ecl_lib_info import EclLibInfo
+    ecl_lib_path = EclLibInfo.lib_path
+    ert_so_version = EclLibInfo.so_version
+    __version__ = EclLibInfo.__version__
 except ImportError:
     pass
 except AttributeError:

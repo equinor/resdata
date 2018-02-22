@@ -21,6 +21,9 @@ try:
 except ImportError:
     from unittest import skipIf
 
+from cwrap import Prototype
+from cwrap import open as copen
+
 import time
 from ecl import EclDataType
 from ecl.eclfile import EclKW, EclFile, openEclFile
@@ -119,7 +122,7 @@ class GridTest(EclTest):
 
 
     def create(self, filename, load_actnum=True):
-        fileH = open(filename, "r")
+        fileH = copen(filename, "r")
         specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
         zcorn = EclKW.read_grdecl(fileH, "ZCORN")
         coord = EclKW.read_grdecl(fileH, "COORD")
@@ -186,10 +189,12 @@ class GridTest(EclTest):
             self.assertEqual( g1.getNumActive() , actnum.elementSum() )
             g1.save_EGRID("G.EGRID")
 
+            with open("grid.grdecl" , "w") as f2:
+                f2.write("SPECGRID\n")
+                f2.write("  10  10  10  \'F\' /\n")
+
             with openEclFile("G.EGRID") as f:
-                with open("grid.grdecl" , "w") as f2:
-                    f2.write("SPECGRID\n")
-                    f2.write("  10  10  10  \'F\' /\n")
+                with copen("grid.grdecl" , "a") as f2:
 
                     coord_kw = f["COORD"][0]
                     coord_kw.write_grdecl( f2 )
@@ -231,7 +236,7 @@ class GridTest(EclTest):
             g2 = EclGrid("test.GRID")
             self.assertTrue(g1.equal(g2))
 
-            fileH = open("test.grdecl", "w")
+            fileH = copen("test.grdecl", "w")
             g1.save_grdecl(fileH)
             fileH.close()
             g2 = self.create("test.grdecl")
