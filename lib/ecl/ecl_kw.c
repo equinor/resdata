@@ -2378,6 +2378,45 @@ void ecl_kw_inplace_abs( ecl_kw_type * kw ) {
 
 
 /*****************************************************************/
+static int sqrti(int x) {
+  return round( sqrt(x) );
+}
+
+#define ECL_KW_TYPED_INPLACE_SQRT( ctype, sqrt_func )    \
+void ecl_kw_inplace_sqrt_ ## ctype( ecl_kw_type * kw ) { \
+  ctype * data = ecl_kw_get_data_ref( kw );              \
+  int i;                                                 \
+  for (i=0; i < kw->size; i++)                           \
+    data[i] = sqrt_func(data[i]);                        \
+}
+
+ECL_KW_TYPED_INPLACE_SQRT( double , sqrt )
+ECL_KW_TYPED_INPLACE_SQRT( float , sqrtf )
+ECL_KW_TYPED_INPLACE_SQRT( int, sqrti)
+#undef ECL_KW_TYPED_INPLACE_SQRT
+
+
+
+void ecl_kw_inplace_sqrt( ecl_kw_type * kw ) {
+  ecl_type_enum type = ecl_kw_get_type(kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_sqrt_float( kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_sqrt_double( kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_sqrt_int( kw );
+    break;
+  default:
+    util_abort("%s: inplace sqrt not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(kw) ));
+  }
+}
+
+
+/*****************************************************************/
+
 
 #define ECL_KW_TYPED_INPLACE_MUL( ctype ) \
 void ecl_kw_inplace_mul_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type * mul_kw) { \
@@ -2535,6 +2574,23 @@ void ecl_kw_inplace_div_indexed( ecl_kw_type * target_kw , const int_vector_type
   }
 }
 
+
+bool ecl_kw_inplace_safe_div(ecl_kw_type * target_kw, const ecl_kw_type * divisor) {
+  if (ecl_kw_get_type(target_kw) != ECL_FLOAT_TYPE)
+    return false;
+
+  if (ecl_kw_get_type(divisor) != ECL_INT_TYPE)
+    return false;
+
+ float * target_data = ecl_kw_get_data_ref( target_kw );
+ const int* div_data = ecl_kw_get_data_ref( divisor );
+ for (int i=0; i < target_kw->size; i++) {
+   if (div_data[i] != 0)
+     target_data[i] /= div_data[i];
+ }
+
+ return true;
+}
 
 
 
