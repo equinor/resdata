@@ -156,6 +156,8 @@ class EclKW(BaseCClass):
     _create_actnum     = EclPrototype("ecl_kw_obj ecl_kw_alloc_actnum(ecl_kw, float)")
     _first_different   = EclPrototype("int      ecl_kw_first_different(ecl_kw, ecl_kw, int, double, double)")
     _resize            = EclPrototype("void     ecl_kw_resize(ecl_kw, int)")
+    _safe_div          = EclPrototype("bool     ecl_kw_inplace_safe_div(ecl_kw,ecl_kw)")
+
 
     @classmethod
     def createCReference(cls, c_ptr, parent=None):
@@ -1179,6 +1181,22 @@ class EclKW(BaseCClass):
             rel_epsilon = epsilon
 
         return self._first_different(other, offset, abs_epsilon, rel_epsilon)
+
+    def safe_div(self, divisor):
+        if not len(self) == len(divisor):
+            raise ValueError("Length mismatch between %s and %s" % self.name, divisor.name)
+
+        if not self.is_numeric():
+            raise TypeError("The self keyword must be of numeric type")
+
+        if not divisior.is_numeric():
+            raise TypeError("Must divide by numeric keyword")
+
+        ok = self._safe_div( divisor )
+        if not ok:
+            raise NotImplementedError("safe_div not implemented for this type combination")
+
+
 
 monkey_the_camel(EclKW, 'intKeywords', EclKW.int_keywords, classmethod)
 monkey_the_camel(EclKW, 'isNumeric', EclKW.is_numeric)

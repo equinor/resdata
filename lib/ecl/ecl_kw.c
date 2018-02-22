@@ -2469,6 +2469,23 @@ void ecl_kw_inplace_div_indexed( ecl_kw_type * target_kw , const int_vector_type
 }
 
 
+bool ecl_kw_inplace_safe_div(ecl_kw_type * target_kw, const ecl_kw_type * divisor) {
+  if (ecl_kw_get_type(target_kw) != ECL_FLOAT_TYPE)
+    return false;
+
+  if (ecl_kw_get_type(divisor) != ECL_INT_TYPE)
+    return false;
+
+ float * target_data = ecl_kw_get_data_ref( target_kw );
+ const int* div_data = ecl_kw_get_data_ref( divisor );
+ for (int i=0; i < target_kw->size; i++) {
+   if (div_data[i] != 0)
+     target_data[i] /= div_data[i];
+ }
+
+ return true;
+}
+
 
 
 
