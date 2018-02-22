@@ -474,3 +474,22 @@ class KWTest(EclTest):
         kw = EclKW("TEST_KW", 1, EclDataType.ECL_CHAR)
         kw[0] = "ABCD"
         self.assertEqual(kw[0], "ABCD    ")
+
+
+    def test_safe_div(self):
+        kw1 = EclKW("SOURCE_KW", 10, EclDataType.ECL_INT)
+        kw2 = EclKW("XXX", 11, EclDataTYpe.ECL_INT)
+
+        with self.assertRaises(ValueError):
+            kw1.safe_div(kw2)
+
+        kw1 = EclKW("SOURCE", 2, EclDataType.ECL_FLOAT)
+        kw1.assign(10)
+
+        kw2 = EclKW("DIV", 2, EclDataType.ECL_INT)
+        kw2[0] = 0
+        kw2[1] = 2
+
+        kw1.safe_div( kw2 )
+        self.assertEqual(kw1[0], 10)
+        self.assertEqual(kw1[1], 5)
