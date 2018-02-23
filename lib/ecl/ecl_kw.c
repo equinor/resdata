@@ -2195,6 +2195,41 @@ void ecl_kw_inplace_add( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) {
   }
 }
 
+#define ECL_KW_TYPED_INPLACE_ADD_SQUARED( ctype ) \
+static void ecl_kw_inplace_add_squared_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) { \
+ if (!ecl_kw_assert_binary_ ## ctype( target_kw , add_kw ))                                \
+    util_abort("%s: type/size  mismatch\n",__func__);                                      \
+ {                                                                                         \
+    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
+    int i;                                                                                 \
+    for (i=0; i < target_kw->size; i++)                                                    \
+      target_data[i] += add_data[i] * add_data[i];                                         \
+ }                                                                                         \
+}
+ECL_KW_TYPED_INPLACE_ADD_SQUARED( int )
+ECL_KW_TYPED_INPLACE_ADD_SQUARED( double )
+ECL_KW_TYPED_INPLACE_ADD_SQUARED( float )
+
+#undef ECL_KW_TYPED_INPLACE_ADD
+
+void ecl_kw_inplace_add_squared( ecl_kw_type * target_kw , const ecl_kw_type * add_kw) {
+  ecl_type_enum type = ecl_kw_get_type(target_kw);
+  switch (type) {
+  case(ECL_FLOAT_TYPE):
+    ecl_kw_inplace_add_squared_float( target_kw , add_kw );
+    break;
+  case(ECL_DOUBLE_TYPE):
+    ecl_kw_inplace_add_squared_double( target_kw , add_kw );
+    break;
+  case(ECL_INT_TYPE):
+    ecl_kw_inplace_add_squared_int( target_kw , add_kw );
+    break;
+  default:
+    util_abort("%s: inplace add not implemented for type:%s \n",__func__ , ecl_type_alloc_name( ecl_kw_get_data_type(target_kw) ));
+  }
+}
+
 
 
 
