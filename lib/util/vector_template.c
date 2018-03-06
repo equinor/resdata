@@ -95,6 +95,8 @@
 
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include <ert/util/type_macros.h>
 #include <ert/util/util.h>
