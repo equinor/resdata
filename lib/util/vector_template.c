@@ -98,7 +98,6 @@
 
 #include <ert/util/type_macros.h>
 #include <ert/util/util.h>
-#include <ert/util/buffer.h>
 #include <ert/util/@TYPE@_vector.h>
 
 #ifdef __cplusplus
@@ -1469,31 +1468,6 @@ void @TYPE@_vector_fread( @TYPE@_vector_type * vector , FILE * stream ) {
 }
 
 
-
-void @TYPE@_vector_buffer_fwrite(const @TYPE@_vector_type * vector , buffer_type * buffer) {
-  buffer_fwrite_int( buffer , vector->size );
-  buffer_fwrite( buffer , &vector->default_value , sizeof vector->default_value , 1 );
-  buffer_fwrite( buffer , vector->data , sizeof * vector->data , vector->size );
-}
-
-
-void @TYPE@_vector_buffer_fread(@TYPE@_vector_type * vector , buffer_type * buffer) {
-  @TYPE@     default_value;
-  int size = buffer_fread_int( buffer );
-  buffer_fread( buffer , &default_value , sizeof default_value , 1 );
-
-  @TYPE@_vector_set_default( vector , default_value );
-  @TYPE@_vector_realloc_data__( vector , size );
-  buffer_fread( buffer , vector->data , sizeof * vector->data , size );
-  vector->size = size;
-}
-
-
-@TYPE@_vector_type * @TYPE@_vector_buffer_fread_alloc( buffer_type * buffer ) {
-  @TYPE@_vector_type * vector = @TYPE@_vector_alloc( 0 , 0);
-  @TYPE@_vector_buffer_fread( vector , buffer );
-  return vector;
-}
 
 
 /*****************************************************************/
