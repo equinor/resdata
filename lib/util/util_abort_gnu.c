@@ -266,7 +266,8 @@ void util_abort__(const char * file , const char * function , int line , const c
 
     va_start(ap , fmt);
     fprintf(abort_dump , "\n\n");
-    fprintf(abort_dump , "Abort called from: %s (%s:%d) \n\n",function , file , line);
+    fprintf(abort_dump , "Abort called from: %s (%s:%d) \n",function , file , line);
+    fprintf(abort_dump , "Abort called by process: %d\n\n", getpid());
     fprintf(abort_dump , "Error message: ");
     vfprintf(abort_dump , fmt , ap);
     fprintf(abort_dump , "\n\n");
