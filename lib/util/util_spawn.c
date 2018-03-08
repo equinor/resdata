@@ -25,7 +25,24 @@ static void spawn_init_attributes__(posix_spawnattr_t * attributes) {
 
   posix_spawnattr_getflags(attributes, &flags);
   flags |= POSIX_SPAWN_SETPGROUP;
+  flags |= POSIX_SPAWN_SETSIGDEF;
   posix_spawnattr_setflags(attributes, flags);
+
+  {
+    sigset_t def;
+    posix_spawnattr_getsigdefault(attributes, &def);
+
+    sigfillset(&def);
+
+    sigemptyset(&def);
+    sigaddset(&def, SIGTERM);
+    sigaddset(&def, SIGABRT);
+    sigaddset(&def, SIGSEGV);
+    sigaddset(&def, SIGILL);
+    sigaddset(&def, SIGFPE);
+
+    posix_spawnattr_setsigdefault( attributes, &def);
+  }
 
   posix_spawnattr_setpgroup( attributes, 0);
 }
@@ -91,14 +108,18 @@ pid_t util_spawn(const char *executable, int argc, const char **argv, const char
       pthread_mutex_lock( &spawn_mutex );
       {
         int spawn_status;
+
+        fprintf(stderr,"Calling spawn: %s\n",executable);
         if (util_is_executable(executable)) { // the executable is in current directory or an absolute path
           spawn_status = posix_spawn(&pid, executable, &file_actions, &spawn_attr, argv__, environ);
         } else { // Try to find executable in path
           spawn_status = posix_spawnp(&pid, executable, &file_actions, &spawn_attr, argv__, environ);
         }
+        fprintf(stderr,"Spawn status:%d \n",spawn_status);
+
 
         if (spawn_status != 0)
-          util_abort("%s: failed to spawn external command: \'%s\': %s \n", __func__, executable, strerror(spawn_status));
+          util_exit("%s: failed to spawn external command: \'%s\': %s \n", __func__, executable, strerror(spawn_status));
       }
       pthread_mutex_unlock( &spawn_mutex );
       posix_spawn_file_actions_destroy(&file_actions);
@@ -106,6 +127,7 @@ pid_t util_spawn(const char *executable, int argc, const char **argv, const char
   }
 
   free(argv__);
+  fprintf(stderr,"Returning: %d \n",pid);
   return pid;
 }
 
