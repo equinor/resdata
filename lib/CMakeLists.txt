@@ -83,7 +83,6 @@ add_library(ecl util/rng.c
                 util/vector.c
                 util/parser.c
                 util/stringlist.c
-                util/buffer.c
                 util/timer.c
                 util/time_interval.c
                 util/string_util.c
@@ -227,7 +226,6 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_arg_pack
                 ert_util_before_after
                 ert_util_binary_split
-                ert_util_buffer
                 ert_util_clamp
                 ert_util_chdir
                 ert_util_filename
