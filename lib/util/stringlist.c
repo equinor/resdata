@@ -30,7 +30,6 @@
 #include <ert/util/util.h>
 #include <ert/util/stringlist.h>
 #include <ert/util/vector.h>
-#include <ert/util/buffer.h>
 
 
 #define STRINGLIST_TYPE_ID 671855
@@ -621,13 +620,6 @@ stringlist_type * stringlist_alloc_from_split( const char * input_string , const
 
 /*****************************************************************/
 
-void stringlist_buffer_fwrite( const stringlist_type * s , buffer_type * buffer ) {
-  int i;
-  int size = stringlist_get_size( s );
-  buffer_fwrite_int( buffer , size );
-  for (i=0; i < size; i++)
-    buffer_fwrite_string(buffer , stringlist_iget(s , i) );
-}
 
 
 void stringlist_fwrite(const stringlist_type * s, FILE * stream) {
@@ -652,13 +644,6 @@ void  stringlist_fread(stringlist_type * s, FILE * stream) {
 }
 
 
-void stringlist_buffer_fread( stringlist_type * s , buffer_type * buffer ) {
-  int size = buffer_fread_int( buffer );
-  int i;
-  stringlist_clear(s);
-  for (i=0; i < size; i++)
-    stringlist_append_owned_ref( s , buffer_fread_alloc_string( buffer ));
-}
 
 
 
