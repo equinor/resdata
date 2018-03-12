@@ -17,6 +17,7 @@
 */
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <ert/util/test_util.h>
 #include <ert/util/stringlist.h>
