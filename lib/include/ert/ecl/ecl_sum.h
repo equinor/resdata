@@ -171,7 +171,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   const char * ecl_sum_get_base(const ecl_sum_type * ecl_sum );
   const char * ecl_sum_get_path(const ecl_sum_type * ecl_sum );
   const char * ecl_sum_get_abs_path(const ecl_sum_type * ecl_sum );
-  const char * ecl_sum_get_restart_case(const ecl_sum_type * ecl_sum);
+  const ecl_sum_type * ecl_sum_get_restart_case(const ecl_sum_type * ecl_sum);
   const char * ecl_sum_get_case(const ecl_sum_type * );
   bool         ecl_sum_same_case( const ecl_sum_type * ecl_sum , const char * input_file );
 
