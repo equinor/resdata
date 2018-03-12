@@ -106,6 +106,7 @@ class EclKW(BaseCClass):
     _sub_copy          = EclPrototype("ecl_kw_obj ecl_kw_alloc_sub_copy(ecl_kw, char*, int, int)")
     _copyc             = EclPrototype("ecl_kw_obj ecl_kw_alloc_copy(ecl_kw)")
     _slice_copyc       = EclPrototype("ecl_kw_obj ecl_kw_alloc_slice_copy(ecl_kw, int, int, int)")
+    _global_copy       = EclPrototype("ecl_kw_obj ecl_kw_alloc_global_copy(ecl_kw, ecl_kw)")
     _fprintf_grdecl    = EclPrototype("void     ecl_kw_fprintf_grdecl(ecl_kw, FILE)")
     _fprintf_data      = EclPrototype("void     ecl_kw_fprintf_data(ecl_kw, char*, FILE)")
 
@@ -132,6 +133,8 @@ class EclKW(BaseCClass):
 
     _int_sum           = EclPrototype("int      ecl_kw_element_sum_int(ecl_kw)")
     _float_sum         = EclPrototype("double   ecl_kw_element_sum_float(ecl_kw)")
+    _iadd_squared      = EclPrototype("void     ecl_kw_inplace_add_squared(ecl_kw, ecl_kw)")
+    _isqrt             = EclPrototype("void     ecl_kw_inplace_sqrt(ecl_kw)")
     _iadd              = EclPrototype("void     ecl_kw_inplace_add(ecl_kw, ecl_kw)")
     _imul              = EclPrototype("void     ecl_kw_inplace_mul(ecl_kw, ecl_kw)")
     _idiv              = EclPrototype("void     ecl_kw_inplace_div(ecl_kw, ecl_kw)")
@@ -156,6 +159,8 @@ class EclKW(BaseCClass):
     _create_actnum     = EclPrototype("ecl_kw_obj ecl_kw_alloc_actnum(ecl_kw, float)")
     _first_different   = EclPrototype("int      ecl_kw_first_different(ecl_kw, ecl_kw, int, double, double)")
     _resize            = EclPrototype("void     ecl_kw_resize(ecl_kw, int)")
+    _safe_div          = EclPrototype("bool     ecl_kw_inplace_safe_div(ecl_kw,ecl_kw)")
+
 
     @classmethod
     def createCReference(cls, c_ptr, parent=None):
@@ -647,6 +652,22 @@ class EclKW(BaseCClass):
         return copy
 
     # No __rdiv__()
+
+    def add_squared(self, other):
+       if not self.is_numeric():
+           raise TypeError("Can only be called on numeric types")
+
+       if not self.assert_binary(other):
+           raise ValueError("Invalid argument to method add_squared")
+
+       self._iadd_squared(other)
+
+    def isqrt(self):
+        if not self.is_numeric():
+            raise TypeError("Can only be called on numeric types")
+
+        self._isqrt()
+
 
     def sum(self, mask = None, force_active = False):
         """
@@ -1179,6 +1200,33 @@ class EclKW(BaseCClass):
             rel_epsilon = epsilon
 
         return self._first_different(other, offset, abs_epsilon, rel_epsilon)
+
+
+
+
+    def scatter_copy(self, actnum):
+        if not isinstance(actnum, EclKW):
+            raise TypeError("The actnum argument must be of type EclKW")
+
+        return self._global_copy(actnum)
+
+
+    def safe_div(self, divisor):
+        if not len(self) == len(divisor):
+            raise ValueError("Length mismatch between %s and %s" % (self.name, divisor.name))
+
+        if not self.is_numeric():
+            raise TypeError("The self keyword must be of numeric type")
+
+        if not divisor.is_numeric():
+            raise TypeError("Must divide by numeric keyword")
+
+        ok = self._safe_div( divisor )
+        if not ok:
+            raise NotImplementedError("safe_div not implemented for this type combination")
+
+
+
 
 monkey_the_camel(EclKW, 'intKeywords', EclKW.int_keywords, classmethod)
 monkey_the_camel(EclKW, 'isNumeric', EclKW.is_numeric)

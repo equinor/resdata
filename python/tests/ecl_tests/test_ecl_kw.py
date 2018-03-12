@@ -17,6 +17,7 @@
 import random
 import warnings
 import cwrap
+import random
 
 from ecl import EclDataType, EclTypeEnum, EclFileFlagEnum
 from ecl.eclfile import EclKW, EclFile, FortIO, openFortIO
@@ -474,3 +475,140 @@ class KWTest(EclTest):
         kw = EclKW("TEST_KW", 1, EclDataType.ECL_CHAR)
         kw[0] = "ABCD"
         self.assertEqual(kw[0], "ABCD    ")
+
+
+
+    def test_add_squared(self):
+        kw1 = EclKW("TEST_KW", 3, EclDataType.ECL_STRING(4))
+        kw2 = EclKW("TEST_KW", 3, EclDataType.ECL_STRING(4))
+
+        with self.assertRaises(TypeError):
+            kw1.add_squared(kw2)
+
+
+        kw1 = EclKW("T1", 10, EclDataType.ECL_INT)
+        kw2 = EclKW("T2", 11, EclDataType.ECL_INT)
+        with self.assertRaises(ValueError):
+           kw1.add_squared(kw2)
+
+        kw2 = EclKW("T", 10, EclDataType.ECL_FLOAT)
+        with self.assertRaises(ValueError):
+            kw1.add_squared(kw2)
+
+        kw2 = EclKW("T2", 10, EclDataType.ECL_INT)
+        kw2.assign(2)
+        kw1.add_squared(kw2)
+
+        for elm in kw1:
+            self.assertEqual(elm, 4)
+
+
+    def test_scatter_copy(self):
+        source = EclKW("SOURCE", 4 , EclDataType.ECL_INT)
+        with self.assertRaises(TypeError):
+            copy = source.scatter_copy([1,1,1,1])
+
+        actnum = EclKW("ACTNUM", 6 , EclDataType.ECL_FLOAT)
+        with self.assertRaises(ValueError):
+            copy = source.scatter_copy(actnum)
+
+
+        actnum = EclKW("ACTNUM", 8, EclDataType.ECL_INT)
+        actnum[0] = 1
+        actnum[1] = 1
+        with self.assertRaises(ValueError):
+            copy = source.scatter_copy(actnum)
+
+        actnum.assign(1)
+        with self.assertRaises(ValueError):
+            copy = source.scatter_copy(actnum)
+
+
+        for i in range(4):
+            source[i] = i+1
+            actnum[2*i] = 0
+
+        # src = [1,2,3,4]
+        # actnum = [0,1,0,1,0,1,0,1]
+        # copy = [0,1,0,2,0,3,0,4]
+        copy = source.scatter_copy(actnum)
+        for i in range(4):
+            self.assertEqual(copy[2*i + 1], i+1)
+
+    def test_safe_div(self):
+        kw1 = EclKW("SOURCE", 10, EclDataType.ECL_INT)
+        kw2 = EclKW("XXX", 11, EclDataType.ECL_INT)
+
+        with self.assertRaises(ValueError):
+            kw1.safe_div(kw2)
+
+        kw1 = EclKW("SOURCE", 2, EclDataType.ECL_FLOAT)
+        kw1.assign(10)
+
+        kw2 = EclKW("DIV", 2, EclDataType.ECL_INT)
+        kw2[0] = 0
+        kw2[1] = 2
+
+        kw1.safe_div( kw2 )
+        self.assertEqual(kw1[0], 10)
+        self.assertEqual(kw1[1], 5)
+
+
+
+    def test_fmu_stat_workflow(self):
+        N = 100
+        global_size = 100
+        active_size = 50
+        with TestAreaContext("FMU_FILES"):
+            for i in range(N):
+                permx = EclKW("PERMX", active_size, EclDataType.ECL_FLOAT)
+                poro  = EclKW("PORO", active_size, EclDataType.ECL_FLOAT)
+                porv = EclKW("PORV", global_size, EclDataType.ECL_FLOAT)
+
+                porv.assign(0)
+                for g in random.sample( range(global_size), active_size):
+                    porv[g] = 1
+
+                permx.assign(random.random())
+                poro.assign(random.random())
+
+                with openFortIO("TEST%d.INIT" % i, FortIO.WRITE_MODE) as f:
+                    permx.fwrite(f)
+                    poro.fwrite(f)
+                    porv.fwrite(f)
+
+            mean_permx = EclKW("PERMX", global_size, EclDataType.ECL_FLOAT)
+            std_permx = EclKW("PERMX", global_size, EclDataType.ECL_FLOAT)
+            mean_poro = EclKW("PORO", global_size, EclDataType.ECL_FLOAT)
+            std_poro = EclKW("PORO", global_size, EclDataType.ECL_FLOAT)
+
+            count = EclKW("COUNT", global_size, EclDataType.ECL_INT)
+            for i in range(N):
+                f = EclFile("TEST%d.INIT" % i)
+
+                porv = f["PORV"][0]
+                permx = f["PERMX"][0]
+                poro = f["PORO"][0]
+
+                actnum = porv.create_actnum()
+
+                global_permx = permx.scatter_copy( actnum )
+                mean_permx += global_permx
+                std_permx.add_squared( global_permx)
+
+                global_poro = poro.scatter_copy( actnum )
+                mean_poro += global_poro
+                std_poro.add_squared( global_poro)
+
+                count += actnum
+
+
+            mean_permx.safe_div(count)
+            std_permx.safe_div(count)
+            std_permx -= mean_permx * mean_permx
+            std_permx.isqrt()
+
+            mean_poro.safe_div(count)
+            std_poro.safe_div(count)
+            std_poro -= mean_poro * mean_poro
+            std_poro.isqrt()
