@@ -88,7 +88,8 @@ class EclSum(BaseCClass):
     TYPE_NAME = "ecl_sum"
     _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
     _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
-    _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer(char*, char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
+    _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
+    _create_writer                 = EclPrototype("ecl_sum_obj  ecl_sum_alloc_writer(char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
     _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector)")
     _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
     _free                          = EclPrototype("void     ecl_sum_free(ecl_sum)")
@@ -121,6 +122,7 @@ class EclSum(BaseCClass):
     _get_data_start                = EclPrototype("time_t   ecl_sum_get_data_start(ecl_sum)")
     _get_unit                      = EclPrototype("char*    ecl_sum_get_unit(ecl_sum, char*)")
     _get_restart_case              = EclPrototype("ecl_sum_ref ecl_sum_get_restart_case(ecl_sum)")
+    _get_restart_step              = EclPrototype("int      ecl_sum_get_restart_step(ecl_sum)")
     _get_simcase                   = EclPrototype("char*    ecl_sum_get_case(ecl_sum)")
     _get_unit_system               = EclPrototype("ecl_unit_enum ecl_sum_get_unit_system(ecl_sum)")
     _get_base                      = EclPrototype("char*    ecl_sum_get_base(ecl_sum)")
@@ -217,15 +219,15 @@ class EclSum(BaseCClass):
         The writer is not generally usable.
         @rtype: EclSum
         """
-        return EclSum._create_restart_writer(case, None, fmt_output, unified, key_join_string, CTime(start_time), time_in_days, nx, ny, nz)
+        return EclSum._create_writer(case, fmt_output, unified, key_join_string, CTime(start_time), time_in_days, nx, ny, nz)
 
     @staticmethod
-    def restart_writer(case, restart_case, start_time, nx,ny,nz, fmt_output=False, unified=True, time_in_days=True, key_join_string=":"):
+    def restart_writer(case, restart_case, restart_step, start_time, nx,ny,nz, fmt_output=False, unified=True, time_in_days=True, key_join_string=":"):
         """
         The writer is not generally usable.
         @rtype: EclSum
         """
-        return EclSum._create_restart_writer(case, restart_case, fmt_output, unified, key_join_string, CTime(start_time), time_in_days, nx, ny, nz)
+        return EclSum._create_restart_writer(case, restart_case, restart_step, fmt_output, unified, key_join_string, CTime(start_time), time_in_days, nx, ny, nz)
 
     def add_variable(self, variable, wgname=None, num=0, unit="None", default_value=0):
         return self._add_variable(variable, wgname, num, unit, default_value).setParent(parent=self)
@@ -774,6 +776,14 @@ class EclSum(BaseCClass):
         Will return the case name of the current instance - optionally including path.
         """
         return self._get_simcase()
+
+
+    @property
+    def restart_step(self):
+        """
+        Will return the report step this case has been restarted from, or -1.
+        """
+        return self._get_restart_step()
 
 
     @property

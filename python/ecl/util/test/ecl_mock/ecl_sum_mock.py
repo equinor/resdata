@@ -15,9 +15,10 @@ def createEclSum( case,
                   num_mini_step = 10,
                   dims = (20,10,5) ,
                   func_table = {},
-                  restart_case = None):
+                  restart_case = None,
+                  restart_step = -1):
 
-    ecl_sum = EclSum.restart_writer(case , restart_case, sim_start , dims[0] , dims[1] , dims[2])
+    ecl_sum = EclSum.restart_writer(case , restart_case, restart_step, sim_start , dims[0] , dims[1] , dims[2])
     var_list = []
     for (kw,wgname,num) in keys:
         var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num) )

@@ -142,6 +142,7 @@ struct ecl_smspec_struct {
 
   char              * restart_case;
   ert_ecl_unit_enum   unit_system;
+  int                 restart_step;
 };
 
 
@@ -282,6 +283,7 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
 
   ecl_smspec->index_map = int_vector_alloc(0,0);
   ecl_smspec->restart_case = NULL;
+  ecl_smspec->restart_step = -1;
   ecl_smspec->params_default = float_vector_alloc(0 , PARAMS_GLOBAL_DEFAULT);
   ecl_smspec->write_mode = write_mode;
   ecl_smspec->need_nums = false;
@@ -392,7 +394,6 @@ static void ecl_smspec_fwrite_RESTART(const ecl_smspec_type * smspec, fortio_typ
       offset += ECL_STRING8_LENGTH;
     }
   }
-
   ecl_kw_fwrite( restart_kw , fortio );
   ecl_kw_free( restart_kw );
 }
@@ -406,10 +407,8 @@ static void ecl_smspec_fwrite_DIMENS(const ecl_smspec_type * smspec, fortio_type
   ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NX_INDEX   , smspec->grid_dims[0] );
   ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NY_INDEX   , smspec->grid_dims[1] );
   ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NZ_INDEX   , smspec->grid_dims[2] );
-
-  /* Do not know what these two last items are for. */
-  ecl_kw_iset_int( dimens_kw , 4  , 0 );
-  ecl_kw_iset_int( dimens_kw , 5 , -1 );
+  ecl_kw_iset_int( dimens_kw , 4  , 0 );  // Do not know what this is for.
+  ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_RESTART_STEP_INDEX , smspec->restart_step );
 
   ecl_kw_fwrite( dimens_kw , fortio );
   ecl_kw_free( dimens_kw );
@@ -515,16 +514,19 @@ void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case ,
   free( filename );
 }
 
-ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const char * restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
-  ecl_smspec_type * ecl_smspec = ecl_smspec_alloc_empty( true , key_join_string );
 
+
+static ecl_smspec_type * ecl_smspec_alloc_writer__( const char * key_join_string , const char * restart_case, int restart_step, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
+ ecl_smspec_type * ecl_smspec = ecl_smspec_alloc_empty( true , key_join_string );
   /*
     Only a total of 9 * 8 characters is set aside for the restart keyword, if
     the supplied restart case is longer than that we silently ignore it.
   */
   if (restart_case) {
-    if (strlen(restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH))
+    if (strlen(restart_case) <= (SUMMARY_RESTART_SIZE * ECL_STRING8_LENGTH)) {
       ecl_smspec->restart_case = util_alloc_string_copy( restart_case );
+      ecl_smspec->restart_step = restart_step;
+    }
   }
   ecl_smspec->grid_dims[0] = nx;
   ecl_smspec->grid_dims[1] = ny;
@@ -561,6 +563,14 @@ ecl_smspec_type * ecl_smspec_alloc_writer( const char * key_join_string , const 
     ecl_smspec->time_index = smspec_node_get_params_index( time_node );
   }
   return ecl_smspec;
+}
+
+ecl_smspec_type * ecl_smspec_alloc_restart_writer( const char * key_join_string , const char * restart_case, int restart_step, time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
+  return ecl_smspec_alloc_writer__(key_join_string, restart_case, restart_step, sim_start, time_in_days, nx, ny, nz);
+}
+
+ecl_smspec_type * ecl_smspec_alloc_writer(const char * key_join_string, time_t sim_start, bool time_in_days, int nx, int ny , int nz) {
+  return ecl_smspec_alloc_writer__(key_join_string, NULL, 0, sim_start, time_in_days, nx, ny, nz);
 }
 
 
@@ -1196,6 +1206,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_smspec->grid_dims[0] = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NX_INDEX );
     ecl_smspec->grid_dims[1] = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NY_INDEX );
     ecl_smspec->grid_dims[2] = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NZ_INDEX );
+    ecl_smspec->restart_step = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_RESTART_STEP_INDEX);
     ecl_smspec_set_params_size( ecl_smspec , ecl_kw_get_size(keywords));
 
     ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );
@@ -1669,6 +1680,10 @@ const char * ecl_smspec_get_header_file( const ecl_smspec_type * ecl_smspec ) {
   return ecl_smspec->header_file;
 }
 
+
+int ecl_smspec_get_restart_step(const ecl_smspec_type * ecl_smspec) {
+  return ecl_smspec->restart_step;
+}
 
 
 const char * ecl_smspec_get_restart_case( const ecl_smspec_type * ecl_smspec) {

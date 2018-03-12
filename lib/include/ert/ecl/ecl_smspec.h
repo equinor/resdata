@@ -56,7 +56,10 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   const char        * ecl_smspec_get_var_type_name( ecl_smspec_var_type var_type );
   ecl_smspec_var_type ecl_smspec_identify_var_type(const char * var);
   ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string);
-  ecl_smspec_type   * ecl_smspec_alloc_writer( const char * key_join_string , const char * restart_case, time_t sim_start , bool time_in_days , int nx , int ny , int nz);
+
+  ecl_smspec_type * ecl_smspec_alloc_restart_writer( const char * key_join_string , const char * restart_case, int restart_step, time_t sim_start , bool time_in_days , int nx , int ny , int nz);
+
+  ecl_smspec_type   * ecl_smspec_alloc_writer( const char * key_join_string ,  time_t sim_start , bool time_in_days , int nx , int ny , int nz);
   void                ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case , bool fmt_file );
 
   ecl_smspec_type *        ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string , bool include_restart);
@@ -130,6 +133,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   stringlist_type          * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , const char * pattern);
   stringlist_type          * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec );
   const char               * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec);
+  int                        ecl_smspec_get_restart_step(const ecl_smspec_type * ecl_smspec);
   const char               * ecl_smspec_get_restart_case( const ecl_smspec_type * ecl_smspec);
   const char               * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);
   const float_vector_type  * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );

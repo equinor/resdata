@@ -47,8 +47,9 @@ def pushd(path):
 
 def create_prediction(history, pred_path):
     restart_case = os.path.join( os.getcwd(), history.base)
+    restart_step = history.last_report
     with pushd(pred_path):
-        prediction = create_case( case = "PREDICTION", restart_case = restart_case, data_start = history.end_date)
+        prediction = create_case( case = "PREDICTION", restart_case = restart_case, restart_step = restart_step, data_start = history.end_date)
         prediction.fwrite()
 
 
@@ -64,7 +65,7 @@ def fgpt(days):
     else:
         return 100 - days
 
-def create_case(case = "CSV", restart_case = None, data_start = None):
+def create_case(case = "CSV", restart_case = None, restart_step = -1, data_start = None):
     length = 100
     return createEclSum(case , [("FOPT", None , 0) , ("FOPR" , None , 0), ("FGPT" , None , 0)],
                         sim_length_days = length,
@@ -74,7 +75,8 @@ def create_case(case = "CSV", restart_case = None, data_start = None):
                         func_table = {"FOPT" : fopt,
                                       "FOPR" : fopr ,
                                       "FGPT" : fgpt },
-                        restart_case = restart_case)
+                        restart_case = restart_case,
+                        restart_step = restart_step)
 
 class SumTest(EclTest):
 
@@ -401,7 +403,7 @@ class SumTest(EclTest):
 
     def test_restart_abs_path(self):
         with TestAreaContext("restart_test"):
-           history =  create_case(case = "HISTORY")
+           history = create_case(case = "HISTORY")
            history.fwrite()
 
            pred_path = "prediction"
@@ -414,6 +416,7 @@ class SumTest(EclTest):
            if pred.restart_case:
                self.assertTrue(isinstance(pred.restart_case, EclSum))
                self.assertEqual(pred.restart_case.case, os.path.join(os.getcwd(), history.case))
+               self.assertEqual(pred.restart_step, history.last_report)
 
                length = pred.sim_length
                pred_times = pred.alloc_time_vector(False)
@@ -472,7 +475,7 @@ class SumTest(EclTest):
             f = EclFile("UNITS.SMSPEC")
             for kw in f:
                 if kw.name == "INTEHEAD":
-                    kw[1] = 3
+                    kw[0] = 3
                 kw_list.append(kw.copy())
 
             f.close()
