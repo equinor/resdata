@@ -96,7 +96,6 @@ typedef enum {
 #define ECL_PHASE_ENUM_DEFS {.value = 1 , .name = "ECL_OIL_PHASE"}, {.value = 2 , .name = "ECL_GAS_PHASE"} , {.value = 4 , .name = "ECL_WATER_PHASE"}
 #define ECL_PHASE_ENUM_SIZE 3
 
-
 typedef enum {
   ECL_METRIC_UNITS = 1,
   ECL_FIELD_UNITS  = 2,

@@ -21,6 +21,7 @@ from unittest import skipIf, skipUnless, skipIf
 
 from ecl.eclfile import EclFile
 from ecl.summary import EclSum
+from ecl import EclUnitTypeEnum
 
 from ecl.util.util import StringList, TimeVector, DoubleVector, CTime
 
@@ -525,3 +526,7 @@ class SumTest(EclTest):
         for key in keys:
             for time_index,t in enumerate(time_points):
                 self.assertFloatEqual(resampled.iget( key, time_index), self.ecl_sum.get_interp_direct( key, t))
+
+
+    def test_summary_units(self):
+        self.assertEqual(self.ecl_sum.unit_system, EclUnitTypeEnum.ECL_METRIC_UNITS)

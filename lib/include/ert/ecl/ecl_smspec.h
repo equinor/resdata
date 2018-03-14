@@ -29,6 +29,7 @@ extern "C" {
 #include <ert/util/float_vector.h>
 #include <ert/util/stringlist.h>
 
+#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/smspec_node.h>
 
 typedef struct ecl_smspec_struct ecl_smspec_type;
@@ -145,6 +146,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   bool                       ecl_smspec_equal( const ecl_smspec_type * self , const ecl_smspec_type * other);
 
   void                       ecl_smspec_sort( ecl_smspec_type * smspec );
+  ert_ecl_unit_enum          ecl_smspec_get_unit_system(const ecl_smspec_type * smspec);
 
 #ifdef __cplusplus
 }

@@ -141,6 +141,7 @@ struct ecl_smspec_struct {
   float_vector_type * params_default;
 
   char              * restart_case;
+  ert_ecl_unit_enum   unit_system;
 };
 
 
@@ -271,6 +272,13 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   ecl_smspec->month_index  = -1;
   ecl_smspec->locked       = false;
   ecl_smspec->time_seconds = -1;
+
+  /*
+    The unit system is given as an integer in the INTEHEAD keyword. The INTEHEAD
+    keyword is optional, and we have for a long time been completely oblivious
+    to the possibility of extracting unit system information from the SMSPEC file.
+  */
+  ecl_smspec->unit_system  = ECL_METRIC_UNITS;
 
   ecl_smspec->index_map = int_vector_alloc(0,0);
   ecl_smspec->restart_case = NULL;
@@ -1153,6 +1161,16 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     if (ecl_file_has_kw(header , NUMS_KW))
       nums = ecl_file_iget_named_kw(header , NUMS_KW , 0);
 
+    if (ecl_file_has_kw(header, INTEHEAD_KW)) {
+      const ecl_kw_type * intehead = ecl_file_iget_named_kw(header, INTEHEAD_KW, 0);
+      ecl_smspec->unit_system = ecl_kw_iget_int(intehead, INTEHEAD_SMSPEC_UNIT_INDEX);
+      /*
+        The second item in the INTEHEAD vector is an integer designating which
+        simulator has been used for the current simulation, that is currently
+        ignored.
+      */
+    }
+
     if (ecl_file_has_kw( header , LGRS_KW )) {/* The file has LGR information. */
       lgrs  = ecl_file_iget_named_kw( header , LGRS_KW  , 0 );
       numlx = ecl_file_iget_named_kw( header , NUMLX_KW , 0 );
@@ -1889,4 +1907,8 @@ void ecl_smspec_sort( ecl_smspec_type * smspec ) {
     smspec_node_set_params_index( node , i );
   }
 
+}
+
+ert_ecl_unit_enum ecl_smspec_get_unit_system(const ecl_smspec_type * smspec) {
+  return smspec->unit_system;
 }

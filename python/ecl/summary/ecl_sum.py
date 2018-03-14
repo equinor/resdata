@@ -39,7 +39,7 @@ from ecl.summary import EclSumTStep
 from ecl.summary import EclSumVarType
 from ecl.summary.ecl_sum_vector import EclSumVector
 from ecl.summary.ecl_smspec_node import EclSMSPECNode
-from ecl import EclPrototype
+from ecl import EclPrototype, EclUnitTypeEnum
 #, EclSumKeyWordVector
 
 
@@ -122,6 +122,7 @@ class EclSum(BaseCClass):
     _get_unit                      = EclPrototype("char*    ecl_sum_get_unit(ecl_sum, char*)")
     _get_restart_case              = EclPrototype("char*    ecl_sum_get_restart_case(ecl_sum)")
     _get_simcase                   = EclPrototype("char*    ecl_sum_get_case(ecl_sum)")
+    _get_unit_system               = EclPrototype("ecl_unit_enum ecl_sum_get_unit_system(ecl_sum)")
     _get_base                      = EclPrototype("char*    ecl_sum_get_base(ecl_sum)")
     _get_path                      = EclPrototype("char*    ecl_sum_get_path(ecl_sum)")
     _get_abs_path                  = EclPrototype("char*    ecl_sum_get_abs_path(ecl_sum)")
@@ -759,6 +760,13 @@ class EclSum(BaseCClass):
         node = self.smspec_node(key)
         return node.unit
 
+
+    @property
+    def unit_system(self):
+        """
+        Will return the unit system in use for this case.
+        """
+        return self._get_unit_system()
 
     @property
     def case(self):

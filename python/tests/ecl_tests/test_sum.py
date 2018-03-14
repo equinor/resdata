@@ -25,6 +25,7 @@ import stat
 from contextlib import contextmanager
 from unittest import skipIf, skipUnless, skipIf
 
+from ecl import EclUnitTypeEnum
 from ecl import EclDataType
 from ecl.eclfile import FortIO, openFortIO, EclKW
 from ecl.summary import EclSum, EclSumVarType, EclSumKeyWordVector
@@ -451,3 +452,8 @@ class SumTest(EclTest):
             pred = EclSum("PREDICTION")
 
             os.chmod("history", stat.S_IRWXU)
+
+
+    def test_units(self):
+        case = create_case()
+        self.assertEqual(case.unit_system, EclUnitTypeEnum.ECL_METRIC_UNITS)
