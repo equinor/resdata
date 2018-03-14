@@ -459,7 +459,9 @@ values (2e20) are denoted with '*'.
 #define DIMENS_SMSPEC_NZ_INDEX      3
 #define DIMENS_SIZE                 6   // Do not know what the two last items are?
 
+#define INTEHEAD_SMSPEC_IPROG_INDEX 0
 #define INTEHEAD_SMSPEC_UNIT_INDEX  1
+#define INTEHEAD_SMSPEC_SIZE        2
 
 /* Summary data files: */
 #define SEQHDR_KW    "SEQHDR"      // Contains a single 'magic' integer - not used in libecl.

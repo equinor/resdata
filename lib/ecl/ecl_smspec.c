@@ -365,137 +365,143 @@ static ecl_data_type get_wgnames_type(const ecl_smspec_type * smspec) {
   return max_len <= ECL_STRING8_LENGTH ? ECL_CHAR : ECL_STRING(max_len);
 }
 
-// DIMENS
-// KEYWORDS
-// WGNAMES
-// NUMS    - optional
-// UNITS
-// STARTDAT
+static void ecl_smspec_fwrite_INTEHEAD(const ecl_smspec_type * smspec, fortio_type * fortio) {
+  ecl_kw_type * intehead = ecl_kw_alloc( INTEHEAD_KW, INTEHEAD_SMSPEC_SIZE, ECL_INT);
+  ecl_kw_iset_int(intehead, INTEHEAD_SMSPEC_UNIT_INDEX, smspec->unit_system);
+  /*
+    The simulator type is just hardcoded to ECLIPSE100.
+  */
+  ecl_kw_iset_int(intehead, INTEHEAD_SMSPEC_IPROG_INDEX, INTEHEAD_ECLIPSE100_VALUE);
+  ecl_kw_fwrite(intehead, fortio);
+  ecl_kw_free(intehead);
+}
+
+
+static void ecl_smspec_fwrite_RESTART(const ecl_smspec_type * smspec, fortio_type * fortio) {
+  ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
+  for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
+    ecl_kw_iset_string8( restart_kw , i , "");
+
+  if (smspec->restart_case != NULL) {
+    int restart_case_len = strlen(smspec->restart_case);
+
+    int offset = 0;
+    for (int i = 0; i < SUMMARY_RESTART_SIZE ; i++) {
+      if (offset < restart_case_len)
+        ecl_kw_iset_string8( restart_kw , i , &smspec->restart_case[ offset ]);
+      offset += ECL_STRING8_LENGTH;
+    }
+  }
+
+  ecl_kw_fwrite( restart_kw , fortio );
+  ecl_kw_free( restart_kw );
+}
+
+
+
+static void ecl_smspec_fwrite_DIMENS(const ecl_smspec_type * smspec, fortio_type * fortio) {
+  ecl_kw_type * dimens_kw = ecl_kw_alloc( DIMENS_KW , DIMENS_SIZE , ECL_INT );
+  int num_nodes = ecl_smspec_num_nodes( smspec );
+  ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_SIZE_INDEX , num_nodes );
+  ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NX_INDEX   , smspec->grid_dims[0] );
+  ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NY_INDEX   , smspec->grid_dims[1] );
+  ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NZ_INDEX   , smspec->grid_dims[2] );
+
+  /* Do not know what these two last items are for. */
+  ecl_kw_iset_int( dimens_kw , 4  , 0 );
+  ecl_kw_iset_int( dimens_kw , 5 , -1 );
+
+  ecl_kw_fwrite( dimens_kw , fortio );
+  ecl_kw_free( dimens_kw );
+}
+
+
+static void ecl_smspec_fwrite_STARTDAT(const ecl_smspec_type * smspec, fortio_type * fortio) {
+  ecl_kw_type * startdat_kw = ecl_kw_alloc( STARTDAT_KW , STARTDAT_SIZE , ECL_INT );
+  int day,month,year;
+  ecl_util_set_date_values( smspec->sim_start_time , &day, &month , &year);
+
+  ecl_kw_iset_int( startdat_kw , STARTDAT_DAY_INDEX   , day );
+  ecl_kw_iset_int( startdat_kw , STARTDAT_MONTH_INDEX , month );
+  ecl_kw_iset_int( startdat_kw , STARTDAT_YEAR_INDEX  , year );
+
+  ecl_kw_fwrite( startdat_kw , fortio );
+  ecl_kw_free( startdat_kw );
+}
 
 
 static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_type * fortio) {
-  int num_nodes           = ecl_smspec_num_nodes( smspec );
-  {
-    ecl_kw_type * restart_kw = ecl_kw_alloc( RESTART_KW , SUMMARY_RESTART_SIZE , ECL_CHAR );
-    for (int i=0; i < SUMMARY_RESTART_SIZE; i++)
-           ecl_kw_iset_string8( restart_kw , i , "");
+  ecl_smspec_fwrite_INTEHEAD(smspec, fortio);
+  ecl_smspec_fwrite_RESTART(smspec, fortio);
+  ecl_smspec_fwrite_DIMENS(smspec, fortio);
 
-    if (smspec->restart_case != NULL) {
-       int restart_case_len = strlen(smspec->restart_case);
+  int num_nodes = ecl_smspec_num_nodes( smspec );
+  ecl_kw_type * keywords_kw = ecl_kw_alloc( KEYWORDS_KW , num_nodes , ECL_CHAR );
+  ecl_kw_type * units_kw    = ecl_kw_alloc( UNITS_KW    , num_nodes , ECL_CHAR );
+  ecl_kw_type * nums_kw     = NULL;
 
-       int offset = 0;
-       for (int i = 0; i < SUMMARY_RESTART_SIZE ; i++) {
-          if (offset < restart_case_len)
-              ecl_kw_iset_string8( restart_kw , i , &smspec->restart_case[ offset ]);
-          offset += ECL_STRING8_LENGTH;
-       }
-    }
+  // If the names_type is an ECL_STRING we expect this to be an INTERSECT
+  // summary, otherwise an ECLIPSE summary.
+  ecl_data_type names_type  = get_wgnames_type(smspec);
+  ecl_kw_type * wgnames_kw = ecl_kw_alloc( ecl_type_is_char(names_type) ? WGNAMES_KW : NAMES_KW,
+                                           num_nodes,
+                                           names_type );
 
-    ecl_kw_fwrite( restart_kw , fortio );
-    ecl_kw_free( restart_kw );
-  }
-  {
-    ecl_kw_type * dimens_kw = ecl_kw_alloc( DIMENS_KW , DIMENS_SIZE , ECL_INT );
-    ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_SIZE_INDEX , num_nodes );
-    ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NX_INDEX   , smspec->grid_dims[0] );
-    ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NY_INDEX   , smspec->grid_dims[1] );
-    ecl_kw_iset_int( dimens_kw , DIMENS_SMSPEC_NZ_INDEX   , smspec->grid_dims[2] );
+  if (smspec->need_nums)
+    nums_kw = ecl_kw_alloc( NUMS_KW , num_nodes , ECL_INT);
 
-    /* Do not know what these two last items are for. */
-    ecl_kw_iset_int( dimens_kw , 4  , 0 );
-    ecl_kw_iset_int( dimens_kw , 5 , -1 );
+  for (int i=0; i < ecl_smspec_num_nodes( smspec ); i++) {
+    const smspec_node_type * smspec_node = ecl_smspec_iget_node( smspec , i );
+    /*
+      It is possible to add variables with deferred initialisation
+      with the ecl_sum_add_blank_var() function. Before these
+      variables can be actually used for anything interesting they
+      must be initialized with the ecl_sum_init_var() function.
 
-    ecl_kw_fwrite( dimens_kw , fortio );
-    ecl_kw_free( dimens_kw );
-  }
+      If a call to save the smspec file comes before all the
+      variable have been initialized things will potentially go
+      belly up. This is solved with the following uber-hack:
 
+      o One of the well related keywords is chosen; in
+        particular 'WWCT' in this case.
 
-  {
-    ecl_kw_type * keywords_kw = ecl_kw_alloc( KEYWORDS_KW , num_nodes , ECL_CHAR );
-    ecl_kw_type * units_kw    = ecl_kw_alloc( UNITS_KW    , num_nodes , ECL_CHAR );
-    ecl_kw_type * nums_kw     = NULL;
+      o The wgname value is set to DUMMY_WELL
 
-    // If the names_type is an ECL_STRING we expect this to be an INTERSECT
-    // summary, otherwise an ECLIPSE summary.
-    ecl_data_type names_type  = get_wgnames_type(smspec);
-    ecl_kw_type * wgnames_kw = ecl_kw_alloc(
-                ecl_type_is_char(names_type) ? WGNAMES_KW : NAMES_KW,
-                num_nodes,
-                names_type
-            );
-
-    if (smspec->need_nums)
-      nums_kw = ecl_kw_alloc( NUMS_KW , num_nodes , ECL_INT);
-    {
-      int i;
-      for (i=0; i < ecl_smspec_num_nodes( smspec ); i++) {
-        const smspec_node_type * smspec_node = ecl_smspec_iget_node( smspec , i );
-        /*
-          It is possible to add variables with deferred initialisation
-          with the ecl_sum_add_blank_var() function. Before these
-          variables can be actually used for anything interesting they
-          must be initialized with the ecl_sum_init_var() function.
-
-          If a call to save the smspec file comes before all the
-          variable have been initialized things will potentially go
-          belly up. This is solved with the following uber-hack:
-
-            o One of the well related keywords is chosen; in
-              particular 'WWCT' in this case.
-
-            o The wgname value is set to DUMMY_WELL
-
-          The use of DUMMY_WELL ensures that this field will be
-          ignored when/if this smspec file is read in at a later
-          stage.
-        */
-        if (smspec_node_get_var_type( smspec_node ) == ECL_SMSPEC_INVALID_VAR) {
-          ecl_kw_iset_string8( keywords_kw , i , "WWCT" );
-          ecl_kw_iset_string8( units_kw , i , "????????");
-          ecl_kw_iset_string_ptr( wgnames_kw , i , DUMMY_WELL);
-        } else {
-          ecl_kw_iset_string8( keywords_kw , i , smspec_node_get_keyword( smspec_node ));
-          ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
-          {
-            const char * wgname = DUMMY_WELL;
-            if (smspec_node_get_wgname( smspec_node ))
-              wgname = smspec_node_get_wgname( smspec_node );
-            ecl_kw_iset_string_ptr( wgnames_kw , i , wgname);
-          }
-        }
-
-        if (nums_kw != NULL)
-          ecl_kw_iset_int( nums_kw , i , smspec_node_get_num( smspec_node ));
+      The use of DUMMY_WELL ensures that this field will be
+      ignored when/if this smspec file is read in at a later
+      stage.
+    */
+    if (smspec_node_get_var_type( smspec_node ) == ECL_SMSPEC_INVALID_VAR) {
+      ecl_kw_iset_string8( keywords_kw , i , "WWCT" );
+      ecl_kw_iset_string8( units_kw , i , "????????");
+      ecl_kw_iset_string_ptr( wgnames_kw , i , DUMMY_WELL);
+    } else {
+      ecl_kw_iset_string8( keywords_kw , i , smspec_node_get_keyword( smspec_node ));
+      ecl_kw_iset_string8( units_kw , i , smspec_node_get_unit( smspec_node ));
+      {
+        const char * wgname = DUMMY_WELL;
+        if (smspec_node_get_wgname( smspec_node ))
+          wgname = smspec_node_get_wgname( smspec_node );
+        ecl_kw_iset_string_ptr( wgnames_kw , i , wgname);
       }
     }
 
-
-    ecl_kw_fwrite( keywords_kw , fortio );
-    ecl_kw_fwrite( wgnames_kw , fortio );
     if (nums_kw != NULL)
-      ecl_kw_fwrite( nums_kw , fortio );
-    ecl_kw_fwrite( units_kw , fortio );
-
-
-    ecl_kw_free( keywords_kw );
-    ecl_kw_free( wgnames_kw );
-    ecl_kw_free( units_kw );
-    if (nums_kw != NULL)
-      ecl_kw_free( nums_kw );
+      ecl_kw_iset_int( nums_kw , i , smspec_node_get_num( smspec_node ));
   }
+  ecl_kw_fwrite( keywords_kw , fortio );
+  ecl_kw_fwrite( wgnames_kw , fortio );
+  if (nums_kw != NULL)
+    ecl_kw_fwrite( nums_kw , fortio );
+  ecl_kw_fwrite( units_kw , fortio );
 
-  {
-    ecl_kw_type * startdat_kw = ecl_kw_alloc( STARTDAT_KW , STARTDAT_SIZE , ECL_INT );
-    int day,month,year;
-    ecl_util_set_date_values( smspec->sim_start_time , &day, &month , &year);
+  ecl_kw_free( keywords_kw );
+  ecl_kw_free( wgnames_kw );
+  ecl_kw_free( units_kw );
+  if (nums_kw != NULL)
+    ecl_kw_free( nums_kw );
 
-    ecl_kw_iset_int( startdat_kw , STARTDAT_DAY_INDEX   , day );
-    ecl_kw_iset_int( startdat_kw , STARTDAT_MONTH_INDEX , month );
-    ecl_kw_iset_int( startdat_kw , STARTDAT_YEAR_INDEX  , year );
-
-    ecl_kw_fwrite( startdat_kw , fortio );
-    ecl_kw_free( startdat_kw );
-  }
+  ecl_smspec_fwrite_STARTDAT(smspec, fortio);
 }
 
 
