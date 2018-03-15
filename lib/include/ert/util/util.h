@@ -494,9 +494,6 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 
 void    util_abort__(const char * file , const char * function , int line , const char * fmt , ...);
 void    util_abort_signal(int );
-void    util_abort_append_version_info(const char * );
-void    util_abort_free_version_info(void);
-void    util_abort_set_executable( const char * argv0 );
 
 
 
