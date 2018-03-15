@@ -4827,39 +4827,6 @@ const char * util_enum_iget( int index , int size , const util_enum_element_type
 }
 
 
-static char * __abort_program_message = NULL;                  /* Can use util_abort_append_version_info() to fill this with
-                                                               version info+++ wich will be printed when util_abort() is called. */
-static char * __current_executable    = NULL;
-
-
-void util_abort_append_version_info(const char * msg) {
-  __abort_program_message = util_strcat_realloc( __abort_program_message , msg );
-}
-
-
-void util_abort_free_version_info() {
-  util_safe_free( __abort_program_message );
-  util_safe_free( __current_executable );
-
-  __current_executable    = NULL;
-  __abort_program_message = NULL;
-}
-
-
-void util_abort_set_executable( const char * argv0 ) {
-  if (util_is_abs_path(argv0))
-    __current_executable = util_realloc_string_copy( __current_executable , argv0 );
-  else {
-    char * executable;
-    if (util_is_executable( argv0 ))
-      executable = util_alloc_realpath(argv0);
-    else
-      executable = util_alloc_PATH_executable( argv0 );
-
-    util_abort_set_executable( executable );
-    free( executable );
-  }
-}
 
 
 
