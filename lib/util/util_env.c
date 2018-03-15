@@ -278,3 +278,68 @@ char * util_alloc_envvar( const char * value ) {
     }
   }
 }
+/**
+   This function will allocate a string copy of the env_index'th
+   occurence of an embedded environment variable from the input
+   string.
+
+   An environment variable is defined as follows:
+
+     1. It starts with '$'.
+     2. It ends with a characeter NOT in the set [a-Z,0-9,_].
+
+   The function will return environment variable number 'env_index'. If
+   no such environment variable can be found in the string the
+   function will return NULL.
+
+   Observe that the returned string will start with '$'. This is to
+   simplify subsequent calls to util_string_replace_XXX() functions,
+   however &ret_value[1] must be used in the subsequent getenv() call:
+
+   {
+      char * env_var = util_isscanf_alloc_envvar( s , 0 );
+      if (env_var != NULL) {
+         const char * env_value = getenv( &env_var[1] );   // Skip the leading '$'.
+         if (env_value != NULL)
+            util_string_replace_inplace( s , env_value );
+         else
+            fprintf(stderr,"** Warning: environment variable: \'%s\' is not defined \n", env_var);
+         free( env_var );
+      }
+   }
+
+
+*/
+
+char * util_isscanf_alloc_envvar( const char * string , int env_index ) {
+  int env_count = 0;
+  const char * offset = string;
+  const char * env_ptr;
+  do {
+    env_ptr = strchr( offset , '$' );
+    offset = &env_ptr[1];
+    env_count++;
+  } while ((env_count <= env_index) && (env_ptr != NULL));
+
+  if (env_ptr != NULL) {
+    /*
+       We found an environment variable we are interested in. Find the
+       end of this variable and return a copy.
+    */
+    int length = 1;
+    bool cont  = true;
+    do {
+
+      if ( !( isalnum(env_ptr[length]) || env_ptr[length] == '_' ))
+        cont = false;
+      else
+        length++;
+      if (length == strlen( env_ptr ))
+        cont = false;
+    } while (cont);
+
+    return util_alloc_substring_copy( env_ptr , 0 , length );
+  } else
+    return NULL; /* Could not find any env variable occurences. */
+}
+
