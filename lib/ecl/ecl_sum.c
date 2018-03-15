@@ -1386,3 +1386,8 @@ time_t_vector_type * ecl_sum_alloc_time_solution( const ecl_sum_type * ecl_sum ,
   }
   return solution;
 }
+
+
+ert_ecl_unit_enum ecl_sum_get_unit_system(const ecl_sum_type * ecl_sum) {
+  return ecl_smspec_get_unit_system(ecl_sum->smspec);
+}

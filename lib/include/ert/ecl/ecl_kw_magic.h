@@ -453,13 +453,15 @@ values (2e20) are denoted with '*'.
    keyword in the SMSPEC files. Observe that these magic indices
    differ from the magic indices used to look up grid dimensions from
    the DIMENS keyword in GRID files.  */
-#define DIMENS_SMSPEC_SIZE_INDEX      0
-#define DIMENS_SMSPEC_NX_INDEX 1
-#define DIMENS_SMSPEC_NY_INDEX 2
-#define DIMENS_SMSPEC_NZ_INDEX 3
+#define DIMENS_SMSPEC_SIZE_INDEX    0
+#define DIMENS_SMSPEC_NX_INDEX      1
+#define DIMENS_SMSPEC_NY_INDEX      2
+#define DIMENS_SMSPEC_NZ_INDEX      3
+#define DIMENS_SIZE                 6   // Do not know what the two last items are?
 
-#define DIMENS_SIZE            6   // Do not know what the two last items are?
-
+#define INTEHEAD_SMSPEC_IPROG_INDEX 0
+#define INTEHEAD_SMSPEC_UNIT_INDEX  1
+#define INTEHEAD_SMSPEC_SIZE        2
 
 /* Summary data files: */
 #define SEQHDR_KW    "SEQHDR"      // Contains a single 'magic' integer - not used in libecl.

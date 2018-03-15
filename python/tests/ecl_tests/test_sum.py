@@ -25,8 +25,9 @@ import stat
 from contextlib import contextmanager
 from unittest import skipIf, skipUnless, skipIf
 
+from ecl import EclUnitTypeEnum
 from ecl import EclDataType
-from ecl.eclfile import FortIO, openFortIO, EclKW
+from ecl.eclfile import FortIO, openFortIO, EclKW, EclFile
 from ecl.summary import EclSum, EclSumVarType, EclSumKeyWordVector
 from ecl.util.test import TestAreaContext
 from tests import EclTest
@@ -451,3 +452,33 @@ class SumTest(EclTest):
             pred = EclSum("PREDICTION")
 
             os.chmod("history", stat.S_IRWXU)
+
+
+    def test_units(self):
+        case = create_case()
+        self.assertEqual(case.unit_system, EclUnitTypeEnum.ECL_METRIC_UNITS)
+
+
+        # We do not really have support for writing anything else than the
+        # default MERIC unit system. To be able to test the read functionality
+        # we therefor monkey-patch the summary files in place.
+        with TestAreaContext("unit_test"):
+            case = create_case("UNITS")
+            case.fwrite()
+            case2 = EclSum("UNITS")
+
+            kw_list = []
+            f = EclFile("UNITS.SMSPEC")
+            for kw in f:
+                if kw.name == "INTEHEAD":
+                    kw[1] = 3
+                kw_list.append(kw.copy())
+
+            f.close()
+            with openFortIO("UNITS.SMSPEC", mode = FortIO.WRITE_MODE) as f:
+                for kw in kw_list:
+                    kw.fwrite(f)
+
+
+            case = EclSum("UNITS")
+            self.assertEqual(case.unit_system, EclUnitTypeEnum.ECL_LAB_UNITS)
