@@ -75,7 +75,6 @@ add_library(ecl util/rng.c
                 util/node_data.c
                 util/node_ctype.c
                 util/util.c
-                util/util_env.c
                 util/util_symlink.c
                 util/util_lfs.c
                 util/util_unlink.c
@@ -233,7 +232,6 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_filename
                 ert_util_hash_test
                 ert_util_parent_path
-                ert_util_PATH_test
                 ert_util_realpath
                 ert_util_relpath_test
                 ert_util_rng

@@ -370,13 +370,6 @@ typedef enum {left_pad   = 0,
   int      util_fnmatch( const char * pattern , const char * string );
   void     util_time_utc( time_t * t , struct tm * ts );
 
-  char      ** util_alloc_PATH_list(void);
-  char       * util_alloc_PATH_executable(const char * executable );
-  char       * util_isscanf_alloc_envvar( const char * string , int env_index );
-  void         util_setenv( const char * variable , const char * value);
-  const char * util_interp_setenv( const char * variable , const char * value);
-  void         util_unsetenv( const char * variable);
-  char       * util_alloc_envvar( const char * value );
   bool         util_is_link(const char * );  // Will always return false on windows
   int          util_chdir(const char * path);
   bool         util_chdir_file( const char * filename );
