@@ -97,6 +97,7 @@ struct ecl_sum_struct {
   UTIL_TYPE_ID_DECLARATION;
   ecl_smspec_type   * smspec;     /* Internalized version of the SMSPEC file. */
   ecl_sum_data_type * data;       /* The data - can be NULL. */
+  ecl_sum_type      * restart_case;
 
 
   bool                fmt_case;
@@ -167,6 +168,7 @@ static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key
 
   ecl_sum->smspec = NULL;
   ecl_sum->data   = NULL;
+  ecl_sum->restart_case = NULL;
 
   return ecl_sum;
 }
@@ -182,10 +184,10 @@ static bool ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type *
 
 
 static void ecl_sum_fread_history( ecl_sum_type * ecl_sum ) {
-  ecl_sum_type * history = ecl_sum_fread_alloc_case__( ecl_smspec_get_restart_case( ecl_sum->smspec ) , ":" , true);
-  if (history) {
-    ecl_sum_data_add_case(ecl_sum->data , history->data );
-    ecl_sum_free( history );
+  ecl_sum_type * restart_case = ecl_sum_fread_alloc_case__( ecl_smspec_get_restart_case( ecl_sum->smspec ) , ":" , true);
+  if (restart_case) {
+    ecl_sum->restart_case = restart_case;
+    ecl_sum_data_add_case(ecl_sum->data , restart_case->data );
   }
 }
 
@@ -360,10 +362,13 @@ void ecl_sum_free_data( ecl_sum_type * ecl_sum ) {
 
 
 void ecl_sum_free( ecl_sum_type * ecl_sum ) {
-  if (ecl_sum->data != NULL)
+  if (ecl_sum->restart_case)
+    ecl_sum_free(ecl_sum->restart_case);
+
+  if (ecl_sum->data)
     ecl_sum_free_data( ecl_sum );
 
-  if (ecl_sum->smspec != NULL)
+  if (ecl_sum->smspec)
     ecl_smspec_free( ecl_sum->smspec );
 
   util_safe_free( ecl_sum->path );
@@ -1135,8 +1140,8 @@ void ecl_sum_export_csv(const ecl_sum_type * ecl_sum , const char * filename  , 
 }
 
 
-const char * ecl_sum_get_restart_case(const ecl_sum_type * ecl_sum) {
-  return ecl_smspec_get_restart_case(ecl_sum->smspec);
+const ecl_sum_type * ecl_sum_get_restart_case(const ecl_sum_type * ecl_sum) {
+  return ecl_sum->restart_case;
 }
 
 

@@ -412,7 +412,8 @@ class SumTest(EclTest):
            # on the path used for $TMP and so on we do not really know here if
            # the restart_case has been set or not.
            if pred.restart_case:
-               self.assertEqual(pred.restart_case, os.path.join(os.getcwd(), history.case))
+               self.assertTrue(isinstance(pred.restart_case, EclSum))
+               self.assertEqual(pred.restart_case.case, os.path.join(os.getcwd(), history.case))
 
                length = pred.sim_length
                pred_times = pred.alloc_time_vector(False)
