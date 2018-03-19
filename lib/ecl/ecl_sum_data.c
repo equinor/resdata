@@ -928,9 +928,15 @@ void ecl_sum_data_add_case(ecl_sum_data_type * self, const ecl_sum_data_type * o
     ecl_sum_tstep_type * other_tstep = ecl_sum_data_iget_ministep( other , tstep_nr );
 
     /*
-      The dataset 'self' is the authorative in the timeinterval where
-      it has data, so if 'other' also has data in the same time interval
-      that is discarded.
+      The dataset 'self' is the authorative in the timeinterval where it has
+      data, so if 'other' also has data in the same time interval that is
+      discarded. In most cases 'other' will represent a history case, and 'self'
+      is a prediction which has been restarted.
+
+      After implementing the time_interval_contains() based check it turned out
+      that the smspec structure also contains a restart_step integer value in
+      the DIMENS vector which could probably be used to achieve the same thing.
+      That field is currently not used.
     */
 
     if (!time_interval_contains( self->sim_time , ecl_sum_tstep_get_sim_time( other_tstep ))) {

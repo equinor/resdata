@@ -184,8 +184,9 @@ void test_long_restart_names() {
    const char * name = "THE_CASE";
    test_work_area_type * work_area = test_work_area_alloc("sum_write_restart_long_name");
    {
+       int restart_step = 77;
        time_t start_time = util_make_date_utc( 1,1,2010 );
-       ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( name , restart_case , false , true , ":" , start_time , true , 3, 3, 3);
+       ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer2( name , restart_case , restart_step, false , true , ":" , start_time , true , 3, 3, 3);
        ecl_sum_fwrite( ecl_sum );
        ecl_sum_free(ecl_sum);
 
@@ -199,8 +200,9 @@ void test_long_restart_names() {
          char s[9]; sprintf(s, "WWWWGGG%d", n);
          test_assert_string_equal(s, ecl_kw_iget_char_ptr(restart_kw, n) );
        }
+       ecl_file_close( smspec_file);
        {
-         ecl_smspec_type * smspec = ecl_smspec_alloc_writer( ":" , "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ", start_time, true, 3, 3 ,3);
+         ecl_smspec_type * smspec = ecl_smspec_alloc_restart_writer( ":" , "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ", 10, start_time, true, 3, 3 ,3);
          /*
            Restart case is too long - it is ignored.
          */
