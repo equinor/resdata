@@ -273,9 +273,9 @@ class EclSum(BaseCClass):
         for i0 in range(length):
             while True:
                 time_index = index_list[i1]
+                i1 += 1
                 if time_index >= 0:
                     break
-                i1 += 1
 
             self.__daysR[i0] = self._iget_sim_days(time_index)
             self.__datesR[i0] = self.iget_date(time_index)
