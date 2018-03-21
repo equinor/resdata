@@ -584,25 +584,57 @@ int ecl_util_select_filelist( const char * path , const char * base , ecl_file_e
     valid_case = valid_base(base, &upper_case);
 
   if (valid_case) {
-    char * ext_pattern = util_alloc_string_copy(ecl_util_get_file_pattern( file_type , fmt_file ));
-    char * file_pattern;
+    if (file_type == ECL_SUMMARY_FILE) {
+      file_pred_ftype * predicate;
+      if (fmt_file) {
+        if (upper_case)
+          predicate = summary_UPPERCASE_ASCII;
+        else
+          predicate = summary_lowercase_ASCII;
+      } else {
+        if (upper_case)
+          predicate = summary_UPPERCASE_BINARY;
+        else
+          predicate = summary_lowercase_BINARY;
+      }
+      stringlist_select_files(filelist, path, predicate);
+    } else if (file_type == ECL_RESTART_FILE) {
+      file_pred_ftype * predicate;
+      if (fmt_file) {
+        if (upper_case)
+          predicate = restart_UPPERCASE_ASCII;
+        else
+          predicate = restart_lowercase_ASCII;
+      } else {
+        if (upper_case)
+          predicate = restart_UPPERCASE_BINARY;
+        else
+          predicate = restart_lowercase_BINARY;
+      }
+      stringlist_select_files(filelist, path, predicate);
+    } else {
+      char * ext_pattern = util_alloc_string_copy(ecl_util_get_file_pattern( file_type , fmt_file ));
+      char * file_pattern;
 
-    if (!upper_case) {
-      for (int i=0; i < strlen(ext_pattern); i++)
-        ext_pattern[i] = tolower(ext_pattern[i]);
-    }
+      if (!upper_case) {
+        for (int i=0; i < strlen(ext_pattern); i++)
+          ext_pattern[i] = tolower(ext_pattern[i]);
+      }
 
-    if (base)
-      file_pattern = util_alloc_filename(NULL , base, ext_pattern);
-    else
+      if (base)
+        file_pattern = util_alloc_filename(NULL , base, ext_pattern);
+      else
       file_pattern = util_alloc_filename(NULL, "*", ext_pattern);
 
-    stringlist_select_matching_files( filelist , path , file_pattern );
+      stringlist_select_matching_files( filelist , path , file_pattern );
+
+      free( file_pattern );
+      free( ext_pattern );
+    }
+
     if ((file_type == ECL_SUMMARY_FILE) || (file_type == ECL_RESTART_FILE))
       stringlist_sort( filelist , ecl_util_fname_report_cmp );
 
-    free( file_pattern );
-    free( ext_pattern );
   }
 
   return stringlist_get_size( filelist );
