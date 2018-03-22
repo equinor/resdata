@@ -428,12 +428,6 @@ endif()
 # ecl
 #
 
-if (PING_PATH)
-    add_executable(ert_util_ping util/tests/ert_util_ping.c)
-    target_link_libraries(ert_util_ping ecl)
-    add_test(NAME ert_util_ping COMMAND ert_util_ping)
-endif ()
-
 
 add_executable(ecl_coarse_test ecl/tests/ecl_coarse_test.c)
 target_link_libraries(ecl_coarse_test ecl)
