@@ -2637,6 +2637,7 @@ bool util_ftruncate(FILE * stream , long size) {
 */
 
 bool util_same_file(const char * file1 , const char * file2) {
+#ifdef ERT_HAVE_UNISTD
   stat_type buffer1 , buffer2;
   int stat1,stat2;
 
@@ -2650,6 +2651,18 @@ bool util_same_file(const char * file1 , const char * file2) {
       return false;
   } else
     return false;  // Files which do not exist are no equal!
+#else
+  if (util_file_exists(file1) && util_file_exists(file2)) {
+    char * abs_path1 = util_alloc_abs_path(file1);
+    char * abs_path2 = util_alloc_abs_path(file2);
+    bool same_file = util_string_equal(abs_path1, abs_path2);
+    free(abs_path1);
+    free(abs_path2);
+      return same_file;
+  }
+  else
+    return false;    
+#endif
 }
 
 
