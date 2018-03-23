@@ -4751,6 +4751,17 @@ void ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index
 }
 
 
+void ecl_grid_export_cell_corners1(const ecl_grid_type * grid, int global_index, double *x, double *y, double *z) {
+  const ecl_cell_type * cell = ecl_grid_get_cell(grid, global_index);
+  for (int i=0; i<8; i++) {
+    const point_type point = cell->corner_list[i];
+    x[i] = point.x;
+    y[i] = point.y;
+    z[i] = point.z;
+  }
+}
+
+
 void ecl_grid_get_cell_corner_xyz3(const ecl_grid_type * grid , int i , int j , int k, int corner_nr , double * xpos , double * ypos , double * zpos ) {
   const int global_index = ecl_grid_get_global_index__(grid , i , j , k );
   ecl_grid_get_cell_corner_xyz1( grid , global_index , corner_nr , xpos , ypos , zpos);
