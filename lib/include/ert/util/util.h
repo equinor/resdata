@@ -270,7 +270,7 @@ typedef enum {left_pad   = 0,
   void         util_safe_free(void *);
   void         util_free_stringlist(char **, int );
   void         util_free_NULL_terminated_stringlist(char ** string_list);
-  char       * util_alloc_substring_copy(const char *, int offset , int N);
+  char       * util_alloc_substring_copy(const char *, size_t offset , int N);
   bool         util_is_directory(const char * );
   bool         util_is_file(const char * );
 

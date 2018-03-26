@@ -32,9 +32,9 @@
 #include <Windows.h>
 #endif
 
-#include <ert/util/util.h>
-#include <ert/util/stringlist.h>
-#include <ert/util/vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/stringlist.hpp>
+#include <ert/util/vector.hpp>
 
 #define STRINGLIST_TYPE_ID 671855
 
@@ -718,7 +718,7 @@ int stringlist_select_matching(stringlist_type * names , const char * pattern) {
   stringlist_clear( names );
 
   {
-    int i;
+    size_t i;
     glob_t * pglob = (glob_t*)util_malloc( sizeof * pglob );
     int glob_flags = 0;
     glob( pattern , glob_flags , NULL , pglob);
@@ -843,7 +843,7 @@ int stringlist_append_matching_elements(stringlist_type * target , const stringl
 
 
 static int void_strcmp(const void* s1, const void *s2) {
-  return strcmp(s1,s2);
+  return strcmp((char*)s1, (char*)s2);
 }
 
 bool stringlist_unique(const stringlist_type * stringlist )

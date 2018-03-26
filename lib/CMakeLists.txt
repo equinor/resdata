@@ -3,29 +3,29 @@ project(libecl-ecl C CXX)
 
 
 if (HAVE_BACKTRACE)
-    list(APPEND opt_srcs util/util_abort_gnu.c)
+    list(APPEND opt_srcs util/util_abort_gnu.cpp)
 else()
-    list(APPEND opt_srcs util/util_abort_simple.c)
+    list(APPEND opt_srcs util/util_abort_simple.cpp)
 endif()
 
 if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
-    list(APPEND opt_srcs util/test_work_area.c util/util_getuid.c)
+    list(APPEND opt_srcs util/test_work_area.cpp util/util_getuid.cpp)
 endif()
 
 if (ERT_HAVE_OPENDIR)
-    list(APPEND opt_srcs util/util_opendir.c)
+    list(APPEND opt_srcs util/util_opendir.cpp)
 endif()
 
 if (ERT_HAVE_SPAWN)
-    list(APPEND opt_srcs util/util_spawn.c)
+    list(APPEND opt_srcs util/util_spawn.cpp)
 endif()
 
 if (ERT_HAVE_LOCKF)
-    list(APPEND opt_srcs util/util_lockf.c)
+    list(APPEND opt_srcs util/util_lockf.cpp)
 endif ()
 
 if (ERT_HAVE_UNISTD)
-   list(APPEND opt_srcs util/path_stack.c)
+   list(APPEND opt_srcs util/path_stack.cpp)
 endif ()
 
 if (MSVC)
@@ -36,20 +36,22 @@ foreach (type int double long time_t float)
     set(TYPE ${type})
     set(SIGNED_TYPE true)
     configure_file(vector_template.h.in include/ert/util/${type}_vector.h)
-    configure_file(util/vector_template.c ${type}_vector.c)
-    list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)
+    configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)
+    configure_file(util/vector_template.cpp ${type}_vector.cpp)
+    list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
 endforeach ()
 
 foreach (type bool size_t)
     set(TYPE ${type})
     set(SIGNED_TYPE false)
     configure_file(vector_template.h.in include/ert/util/${type}_vector.h)
-    configure_file(util/vector_template.c ${type}_vector.c)
-    list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.c)
+    configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)
+    configure_file(util/vector_template.cpp ${type}_vector.cpp)
+    list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
 endforeach ()
 
 if (ZLIB_FOUND)
-    list(APPEND opt_srcs util/util_zlib.c)
+    list(APPEND opt_srcs util/util_zlib.cpp)
 endif ()
 
 if (ERT_BUILD_CXX)
@@ -61,35 +63,35 @@ if (ERT_BUILD_CXX)
 endif ()
 
 
-configure_file(build_config.h.in   include/ert/util/build_config.h)
-configure_file(ert_api_config.h.in include/ert/util/ert_api_config.h)
+configure_file(build_config.hpp.in   include/ert/util/build_config.hpp)
+configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
-add_library(ecl util/rng.c
-                util/lookup_table.c
-                util/statistics.c
-                util/mzran.c
-                util/set.c
-                util/hash_node.c
-                util/hash_sll.c
-                util/hash.c
-                util/node_data.c
-                util/node_ctype.c
-                util/util.c
-                util/util_symlink.c
-                util/util_lfs.c
-                util/util_unlink.c
-                util/arg_pack.c
-                util/vector.c
-                util/parser.c
-                util/stringlist.c
-                util/buffer.c
-                util/timer.c
-                util/string_util.c
-                util/type_vector_functions.c
-                util/ecl_version.c
-                util/struct_vector.c
-                util/perm_vector.c
-                util/test_util.c
+add_library(ecl util/rng.cpp
+                util/lookup_table.cpp
+                util/statistics.cpp
+                util/mzran.cpp
+                util/set.cpp
+                util/hash_node.cpp
+                util/hash_sll.cpp
+                util/hash.cpp
+                util/node_data.cpp
+                util/node_ctype.cpp
+                util/util.cpp
+                util/util_symlink.cpp
+                util/util_lfs.cpp
+                util/util_unlink.cpp
+                util/arg_pack.cpp
+                util/vector.cpp
+                util/parser.cpp
+                util/stringlist.cpp
+                util/buffer.cpp
+                util/timer.cpp
+                util/string_util.cpp
+                util/type_vector_functions.cpp
+                util/ecl_version.cpp
+                util/struct_vector.cpp
+                util/perm_vector.cpp
+                util/test_util.cpp
                 ${opt_srcs}
 
                 ecl/ecl_rsthead.c
