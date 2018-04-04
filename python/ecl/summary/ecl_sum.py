@@ -214,20 +214,63 @@ class EclSum(BaseCClass):
 
 
     @staticmethod
-    def writer(case, start_time, nx,ny,nz, fmt_output=False, unified=True, time_in_days=True, key_join_string=":"):
+    def writer(case,
+               start_time,
+               nx,ny,nz,
+               fmt_output=False,
+               unified=True,
+               time_in_days=True,
+               key_join_string=":"):
         """
         The writer is not generally usable.
         @rtype: EclSum
         """
-        return EclSum._create_writer(case, fmt_output, unified, key_join_string, CTime(start_time), time_in_days, nx, ny, nz)
+
+        start = CTime(start_time)
+
+        smry = EclSum._create_writer(case,
+                                     fmt_output,
+                                     unified,
+                                     key_join_string,
+                                     start,
+                                     time_in_days,
+                                     nx,
+                                     ny,
+                                     nz)
+        smry._load_case = 'writer'
+        return smry
+
 
     @staticmethod
-    def restart_writer(case, restart_case, restart_step, start_time, nx,ny,nz, fmt_output=False, unified=True, time_in_days=True, key_join_string=":"):
+    def restart_writer(case,
+                       restart_case,
+                       restart_step,
+                       start_time,
+                       nx,ny,nz,
+                       fmt_output=False,
+                       unified=True,
+                       time_in_days=True,
+                       key_join_string=":"):
         """
         The writer is not generally usable.
         @rtype: EclSum
         """
-        return EclSum._create_restart_writer(case, restart_case, restart_step, fmt_output, unified, key_join_string, CTime(start_time), time_in_days, nx, ny, nz)
+
+        start = CTime(start_time)
+
+        smry = EclSum._create_restart_writer(case,
+                                             restart_case,
+                                             restart_step,
+                                             fmt_output,
+                                             unified,
+                                             key_join_string,
+                                             start,
+                                             time_in_days,
+                                             nx,
+                                             ny,
+                                             nz)
+        smry._load_case = 'restart_writer'
+        return smry
 
     def add_variable(self, variable, wgname=None, num=0, unit="None", default_value=0):
         return self._add_variable(variable, wgname, num, unit, default_value).setParent(parent=self)
@@ -235,7 +278,16 @@ class EclSum(BaseCClass):
 
     def add_t_step(self, report_step, sim_days):
         """ @rtype: EclSumTStep """
+        # report_step int
+        if not isinstance(report_step, int):
+            raise TypeError('Parameter report_step should be int, was %r' % report_step)
+        try:
+            float(sim_days)
+        except TypeError:
+            raise TypeError('Parameter sim_days should be float, was %r' % sim_days)
+
         sim_seconds = sim_days * 24 * 60 * 60
+
         return self._add_tstep(report_step, sim_seconds).setParent(parent=self)
 
 
