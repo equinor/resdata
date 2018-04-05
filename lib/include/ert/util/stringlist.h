@@ -33,6 +33,9 @@ extern "C" {
 
 typedef struct stringlist_struct stringlist_type;
 typedef int  ( string_cmp_ftype)  (const void * , const void *);
+typedef bool ( file_pred_ftype) (const char *, const void *);
+
+  int stringlist_select_files(stringlist_type * names, const char * path, file_pred_ftype * predicate, const void * pred_arg);
 
   const      char * stringlist_get_last( const stringlist_type * stringlist );
   char            * stringlist_pop( stringlist_type * stringlist);

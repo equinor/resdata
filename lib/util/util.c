@@ -847,7 +847,7 @@ char * util_alloc_realpath__(const char * input_path) {
       if (stack_size > 0) {
         for (int pos = stack_size - 1; pos >= 0; pos--) {
           const char * path_elm = path_stack[pos];
-          if (pos == stack_size) {
+          if (pos == (stack_size- 1)) {
 #ifdef ERT_WINDOWS
             // Windows:
             //   1) If the path starts with X: - just do nothing

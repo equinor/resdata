@@ -55,22 +55,6 @@
 #define ECL_INIT_UFMT_PATTERN             "INIT"
 #define ECL_RFT_UFMT_PATTERN              "RFT"
 
-#ifdef ERT_WINDOWS
-/*
-  The filename matching function on windows onyl recognizes the '*'
-  and '?' wildcard characters.
-*/
-  #define ECL_RESTART_FMT_PATTERN           "F????"
-  #define ECL_SUMMARY_FMT_PATTERN           "A????"
-  #define ECL_RESTART_UFMT_PATTERN          "X????"
-  #define ECL_SUMMARY_UFMT_PATTERN          "S????"
-#else
-  #define ECL_RESTART_FMT_PATTERN           "F[0-9][0-9][0-9][0-9]"
-  #define ECL_SUMMARY_FMT_PATTERN           "A[0-9][0-9][0-9][0-9]"
-  #define ECL_RESTART_UFMT_PATTERN          "X[0-9][0-9][0-9][0-9]"
-  #define ECL_SUMMARY_UFMT_PATTERN          "S[0-9][0-9][0-9][0-9]"
-#endif
-
 
 
 
@@ -247,14 +231,8 @@ static const char * ecl_util_get_file_pattern( ecl_file_enum file_type , bool fm
     case( ECL_OTHER_FILE ):
       return ECL_OTHER_FILE_FMT_PATTERN;  /* '*' */
       break;
-    case( ECL_RESTART_FILE ):
-      return ECL_RESTART_FMT_PATTERN;
-      break;
     case( ECL_UNIFIED_RESTART_FILE ):
       return ECL_UNIFIED_RESTART_FMT_PATTERN;
-      break;
-    case( ECL_SUMMARY_FILE ):
-      return ECL_SUMMARY_FMT_PATTERN;
       break;
     case( ECL_UNIFIED_SUMMARY_FILE ):
       return ECL_UNIFIED_SUMMARY_FMT_PATTERN;
@@ -283,14 +261,8 @@ static const char * ecl_util_get_file_pattern( ecl_file_enum file_type , bool fm
     case( ECL_OTHER_FILE ):
       return ECL_OTHER_FILE_UFMT_PATTERN;  /* '*' */
       break;
-    case( ECL_RESTART_FILE ):
-      return ECL_RESTART_UFMT_PATTERN;
-      break;
     case( ECL_UNIFIED_RESTART_FILE ):
       return ECL_UNIFIED_RESTART_UFMT_PATTERN;
-      break;
-    case( ECL_SUMMARY_FILE ):
-      return ECL_SUMMARY_UFMT_PATTERN;
       break;
     case( ECL_UNIFIED_SUMMARY_FILE ):
       return ECL_UNIFIED_SUMMARY_UFMT_PATTERN;
@@ -573,6 +545,103 @@ int ecl_util_fname_report_cmp(const void *f1, const void *f2) {
    starts.
 */
 
+static bool numeric_extension_predicate(const char * filename, const char * base, const char leading_char) {
+  if (strncmp(filename, base, strlen(base)) != 0)
+    return false;
+
+  const char * ext_start = strrchr(filename, '.');
+  if (!ext_start)
+    return false;
+
+  if (strlen(ext_start) != 6)
+    return false;
+
+  if (ext_start[1] != leading_char)
+    return false;
+
+  for (int i=0; i < 4; i++)
+    if (!isdigit(ext_start[i+2]))
+      return false;
+
+  return true;
+}
+
+
+static bool summary_UPPERCASE_ASCII(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 'A');
+}
+
+static bool summary_UPPERCASE_BINARY(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 'S');
+}
+
+static bool summary_lowercase_ASCII(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 'a');
+}
+
+static bool summary_lowercase_BINARY(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 's');
+}
+
+static bool restart_UPPERCASE_ASCII(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 'F');
+}
+
+static bool restart_UPPERCASE_BINARY(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 'X');
+}
+
+static bool restart_lowercase_ASCII(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 'f');
+}
+
+static bool restart_lowercase_BINARY(const char * filename, const void * base) {
+  return numeric_extension_predicate(filename, base, 'x');
+}
+
+static int ecl_util_select_predicate_filelist(const char * path, const char * base, ecl_file_enum file_type, bool fmt_file, bool upper_case, stringlist_type * filelist) {
+  file_pred_ftype * predicate = NULL;
+  char * full_path = NULL;
+  char * pure_base = NULL;
+  {
+    char * tmp = util_alloc_filename(path, base, NULL);
+    util_alloc_file_components(tmp, &full_path, &pure_base, NULL);
+    free(tmp);
+  }
+
+  if (file_type == ECL_SUMMARY_FILE) {
+    if (fmt_file) {
+      if (upper_case)
+        predicate = summary_UPPERCASE_ASCII;
+      else
+        predicate = summary_lowercase_ASCII;
+    } else {
+      if (upper_case)
+        predicate = summary_UPPERCASE_BINARY;
+      else
+        predicate = summary_lowercase_BINARY;
+    }
+  } else if (file_type == ECL_RESTART_FILE) {
+    if (fmt_file) {
+      if (upper_case)
+        predicate = restart_UPPERCASE_ASCII;
+      else
+        predicate = restart_lowercase_ASCII;
+    } else {
+      if (upper_case)
+        predicate = restart_UPPERCASE_BINARY;
+      else
+        predicate = restart_lowercase_BINARY;
+    }
+  } else
+    util_abort("%s: internal error - method called with wrong file type: %d\n", __func__, file_type);
+
+  stringlist_select_files(filelist, full_path, predicate, pure_base);
+  stringlist_sort( filelist , ecl_util_fname_report_cmp );
+  free(pure_base);
+  free(full_path);
+  return stringlist_get_size(filelist);
+}
 
 
 int ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist) {
@@ -584,6 +653,9 @@ int ecl_util_select_filelist( const char * path , const char * base , ecl_file_e
     valid_case = valid_base(base, &upper_case);
 
   if (valid_case) {
+    if (file_type == ECL_SUMMARY_FILE || file_type == ECL_RESTART_FILE)
+      return ecl_util_select_predicate_filelist(path, base, file_type, fmt_file, upper_case, filelist);
+
     char * ext_pattern = util_alloc_string_copy(ecl_util_get_file_pattern( file_type , fmt_file ));
     char * file_pattern;
 
@@ -598,13 +670,9 @@ int ecl_util_select_filelist( const char * path , const char * base , ecl_file_e
       file_pattern = util_alloc_filename(NULL, "*", ext_pattern);
 
     stringlist_select_matching_files( filelist , path , file_pattern );
-    if ((file_type == ECL_SUMMARY_FILE) || (file_type == ECL_RESTART_FILE))
-      stringlist_sort( filelist , ecl_util_fname_report_cmp );
-
     free( file_pattern );
     free( ext_pattern );
   }
-
   return stringlist_get_size( filelist );
 }
 

@@ -70,6 +70,44 @@ void test_file_list() {
   test_assert_int_equal( stringlist_get_size(s), 0);
 
 
+  util_make_path("path");
+  for (int i=0; i < 10; i++) {
+    char * summary_file1 = ecl_util_alloc_filename("path", "CASE1", ECL_SUMMARY_FILE, false, i );
+    char * summary_file2 = ecl_util_alloc_filename("path", "CASE2", ECL_SUMMARY_FILE, true, i);
+    char * restart_file1 = ecl_util_alloc_filename("path", "CASE1", ECL_RESTART_FILE, false, i);
+
+    FILE * f1 = fopen(summary_file1, "w");
+    fclose(f1);
+
+    FILE * f2 = fopen(summary_file2, "w");
+    fclose(f2);
+
+    FILE * f3 = fopen(restart_file1, "w");
+    fclose(f3);
+
+    free(summary_file1);
+    free(summary_file2);
+    free(restart_file1);
+  }
+  printf("-----------------------------------------------------------------\n");
+  ecl_util_select_filelist(NULL, "path/CASE1", ECL_SUMMARY_FILE, false, s);
+  test_assert_int_equal(stringlist_get_size(s), 10);
+
+  ecl_util_select_filelist(NULL, "path/CASE1", ECL_SUMMARY_FILE, true, s);
+  test_assert_int_equal(stringlist_get_size(s), 0);
+
+  ecl_util_select_filelist(NULL, "path/CASE2", ECL_SUMMARY_FILE, true, s);
+  test_assert_int_equal(stringlist_get_size(s), 10);
+
+  ecl_util_select_filelist("path", "CASE1", ECL_SUMMARY_FILE, false, s);
+  test_assert_int_equal(stringlist_get_size(s), 10);
+
+  ecl_util_select_filelist("path", "CASE1", ECL_SUMMARY_FILE, true, s);
+  test_assert_int_equal(stringlist_get_size(s), 0);
+
+  ecl_util_select_filelist("path", "CASE2", ECL_SUMMARY_FILE, true, s);
+  test_assert_int_equal(stringlist_get_size(s), 10);
+
   stringlist_free(s);
   test_work_area_free(work_area);
 }

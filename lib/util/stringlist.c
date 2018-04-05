@@ -21,6 +21,11 @@
 #include <stdlib.h>
 
 #include <ert/util/ert_api_config.h>
+#ifdef ERT_HAVE_OPENDIR
+#include <sys/types.h>
+#include <dirent.h>
+#endif
+
 #ifdef ERT_HAVE_GLOB
 #include <glob.h>
 #else
@@ -30,7 +35,6 @@
 #include <ert/util/util.h>
 #include <ert/util/stringlist.h>
 #include <ert/util/vector.h>
-
 
 #define STRINGLIST_TYPE_ID 671855
 
@@ -756,6 +760,68 @@ int stringlist_select_matching_files(stringlist_type * names , const char * path
   }
 #endif
 }
+
+
+int stringlist_select_files(stringlist_type * names, const char * path, file_pred_ftype * predicate, const void * pred_arg) {
+  stringlist_clear(names);
+  char * path_arg = path ? util_alloc_string_copy(path) : util_alloc_cwd();
+
+#ifdef ERT_HAVE_OPENDIR
+  DIR * dir = opendir(path_arg);
+  if (!dir) {
+    free(path_arg);
+    return 0;
+  }
+
+  while (true) {
+    struct dirent * entry = readdir(dir);
+    if (!entry)
+      break;
+
+    if (util_string_equal(entry->d_name, "."))
+      continue;
+
+    if (util_string_equal(entry->d_name, ".."))
+      continue;
+
+    if (predicate && !predicate(entry->d_name, pred_arg))
+      continue;
+
+    stringlist_append_owned_ref(names, util_alloc_filename(path, entry->d_name, NULL));
+  }
+
+  closedir(dir);
+
+#else
+
+  WIN32_FIND_DATA file_data;
+  HANDLE          file_handle;
+  char * pattern  = util_alloc_filename( path_arg , "*", NULL );
+
+  file_handle = FindFirstFile( pattern , &file_data );
+  if (file_handle != INVALID_HANDLE_VALUE) {
+    do {
+      if (util_string_equal(file_data.cFileName, "."))
+        continue;
+
+      if (util_string_equal(file_data.cFileName, ".."))
+        continue;
+
+      if (predicate && !predicate(file_data.cFileName, pred_arg))
+        continue;
+
+      stringlist_append_owned_ref(names, util_alloc_filename(path, file_data.cFileName, NULL));
+    } while (FindNextFile( file_handle , &file_data) != 0);
+    FindClose( file_handle );
+  }
+  free( pattern );
+
+#endif
+
+  free(path_arg);
+  return stringlist_get_size(names);
+}
+
 
 int stringlist_append_matching_elements(stringlist_type * target , const stringlist_type * src , const char * pattern) {
       int ielm;
