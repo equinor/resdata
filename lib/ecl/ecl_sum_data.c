@@ -24,7 +24,6 @@
 #include <ert/util/time_t_vector.h>
 #include <ert/util/int_vector.h>
 #include <ert/util/stringlist.h>
-#include <ert/util/time_interval.h>
 
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_smspec.h>
@@ -223,9 +222,9 @@ struct ecl_sum_data_struct {
   time_t                   __min_time;             /* An internal member used during the load of
                                                       restarted cases; see doc in ecl_sum_data_append_tstep. */
   bool                     index_valid;
-  time_interval_type     * sim_time;               /* The time interval sim_time goes from the first time value where we have
-                                                      data to the end of the simulation. In the case of restarts the start
-                                                      value might disagree with the simulation start reported by the smspec file. */
+  time_t                   start_time;             /* In the case of restarts the start might disagree with the value reported
+                                                      in the smspec file. */
+  time_t                   end_time;
 };
 
 
@@ -238,7 +237,6 @@ struct ecl_sum_data_struct {
   vector_free( data->data );
   int_vector_free( data->report_first_index );
   int_vector_free( data->report_last_index  );
-  time_interval_free( data->sim_time );
   free(data);
 }
 
@@ -260,7 +258,7 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
   data->first_ministep        = INVALID_MINISTEP_NR;
   data->last_ministep         = INVALID_MINISTEP_NR;
   data->index_valid           = false;
-  time_interval_reopen( data->sim_time );
+  data->start_time
 }
 
 
