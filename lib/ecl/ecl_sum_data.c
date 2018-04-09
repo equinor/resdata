@@ -876,7 +876,6 @@ ecl_sum_tstep_type * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int 
 */
 
 static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
-                                      time_t load_end ,
                                       int   report_step                ,
                                       const ecl_file_view_type * summary_view,
                                       const ecl_smspec_type * smspec) {
@@ -891,22 +890,15 @@ static void ecl_sum_data_add_ecl_file(ecl_sum_data_type * data         ,
       ecl_kw_type * params_kw   = ecl_file_view_iget_named_kw( summary_view , PARAMS_KW   , ikw);
 
       {
-        ecl_sum_tstep_type * tstep;
         int ministep_nr = ecl_kw_iget_int( ministep_kw , 0 );
-        tstep = ecl_sum_tstep_alloc_from_file( report_step ,
-                                               ministep_nr ,
-                                               params_kw ,
-                                               ecl_file_view_get_src_file( summary_view ),
-                                               smspec );
+        ecl_sum_tstep_type * tstep = ecl_sum_tstep_alloc_from_file( report_step ,
+                                                                    ministep_nr ,
+                                                                    params_kw ,
+                                                                    ecl_file_view_get_src_file( summary_view ),
+                                                                    smspec );
 
-        if (tstep != NULL) {
-          if (load_end == 0 || (ecl_sum_tstep_get_sim_time( tstep ) < load_end))
+        if (tstep)
             ecl_sum_data_append_tstep__( data , tstep );
-          else
-            /* This tstep is in a time-period overlapping with data we
-               already have; discard this. */
-            ecl_sum_tstep_free( tstep );
-        }
       }
     }
   }
@@ -973,7 +965,7 @@ static bool ecl_sum_data_check_file( ecl_file_type * ecl_file ) {
   call to ecl_sum_data_build_index().
 */
 
-static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , const stringlist_type * filelist) {
+bool ecl_sum_data_fread(ecl_sum_data_type * data , const stringlist_type * filelist) {
   if (stringlist_get_size( filelist ) == 0)
     return false;
 
@@ -997,7 +989,7 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
           {
             ecl_file_type * ecl_file = ecl_file_open( data_file , 0);
             if (ecl_file && ecl_sum_data_check_file( ecl_file )) {
-              ecl_sum_data_add_ecl_file( data , load_end , report_step , ecl_file_get_global_view( ecl_file ) , data->smspec);
+              ecl_sum_data_add_ecl_file( data , report_step , ecl_file_get_global_view( ecl_file ) , data->smspec);
               ecl_file_close( ecl_file );
             }
           }
@@ -1016,7 +1008,7 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
             */
             ecl_file_view_type * summary_view = ecl_file_get_summary_view(ecl_file , report_step - 1 );
             if (summary_view) {
-              ecl_sum_data_add_ecl_file( data , load_end , report_step , summary_view , data->smspec);
+              ecl_sum_data_add_ecl_file( data , report_step , summary_view , data->smspec);
               report_step++;
             } else break;
           }
@@ -1035,22 +1027,9 @@ static bool ecl_sum_data_fread__( ecl_sum_data_type * data , time_t load_end , c
   }
 }
 
-bool ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist) {
-  return ecl_sum_data_fread__( data , 0 , filelist );
-}
 
 
 
-static time_t ecl_sum_data_get_load_end( const ecl_sum_data_type * data ) {
-  return data->__min_time;
-}
-
-
-
-void ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_type * filelist) {
-  time_t load_end = ecl_sum_data_get_load_end( data );
-  ecl_sum_data_fread__( data , load_end , filelist );
-}
 
 
 
@@ -1066,7 +1045,7 @@ void ecl_sum_data_fread_restart( ecl_sum_data_type * data , const stringlist_typ
 
 ecl_sum_data_type * ecl_sum_data_fread_alloc( ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
   ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
-  ecl_sum_data_fread__( data , 0 , filelist );
+  ecl_sum_data_fread( data , filelist );
 
   /*****************************************************************/
   /* OK - now we have loaded all the data. Must sort the internal
