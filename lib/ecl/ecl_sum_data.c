@@ -206,13 +206,11 @@
 
 
 #define INVALID_MINISTEP_NR -1
-
+#define INVALID_TIME_T 0
 
 struct ecl_sum_data_struct {
   ecl_smspec_type        * smspec;                 /* A shared reference - only used for providing good error messages. */
   vector_type            * data;                   /* Vector of ecl_sum_tstep_type instances. */
-  int                      first_ministep;
-  int                      last_ministep;
   double                   days_start;
   double                   sim_length;
   int_vector_type        * report_first_index ;    /* Indexed by report_step - giving first internal_index in report_step.   */
@@ -253,10 +251,9 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
   data->last_report_step      = -1024 * 1024;
   data->days_start            = 0;
   data->sim_length            = -1;
-  data->first_ministep        = INVALID_MINISTEP_NR;
-  data->last_ministep         = INVALID_MINISTEP_NR;
   data->index_valid           = false;
-  data->start_time
+  data->start_time            = INVALID_TIME_T;
+  data->end_time              = INVALID_TIME_T;
 }
 
 
@@ -267,7 +264,6 @@ ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
 
   data->report_first_index    = int_vector_alloc( 0 , INVALID_MINISTEP_NR );
   data->report_last_index     = int_vector_alloc( 0 , INVALID_MINISTEP_NR );
-  data->sim_time              = time_interval_alloc_open();
 
   ecl_sum_data_clear_index( data );
   return data;
@@ -434,11 +430,10 @@ void ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case
 
 
 
-const time_interval_type * ecl_sum_data_get_sim_time( const ecl_sum_data_type * data) { return data->sim_time; }
 
-time_t ecl_sum_data_get_sim_end   (const ecl_sum_data_type * data ) { return time_interval_get_end( data->sim_time ); }
+time_t ecl_sum_data_get_sim_end   (const ecl_sum_data_type * data ) { return data->end_time; }
 
-time_t ecl_sum_data_get_data_start   ( const ecl_sum_data_type * data ) { return time_interval_get_start( data->sim_time ); }
+time_t ecl_sum_data_get_data_start   ( const ecl_sum_data_type * data ) { return data->start_time; }
 
 double ecl_sum_data_get_first_day( const ecl_sum_data_type * data) { return data->days_start; }
 
@@ -467,8 +462,13 @@ double ecl_sum_data_get_sim_length( const ecl_sum_data_type * data ) {
 */
 
 bool ecl_sum_data_check_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  return (time_interval_contains(data->sim_time, sim_time)
-      || (sim_time == time_interval_get_end(data->sim_time)));
+  if (sim_time < data->start_time)
+    return false;
+
+  if (sim_time > data->end_time)
+    return false;
+
+  return true;
 }
 
 
@@ -517,15 +517,12 @@ bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_da
 
 
 static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
-  time_t data_start_time = time_interval_get_start(data->sim_time);
-  time_t sim_end = time_interval_get_end(data->sim_time);
-
   if (!ecl_sum_data_check_sim_time(data, sim_time)) {
     fprintf(stderr , "Simulation start: "); util_fprintf_date_utc( ecl_smspec_get_start_time( data->smspec ) , stderr );
-    fprintf(stderr , "Data start......: "); util_fprintf_date_utc( data_start_time , stderr );
-    fprintf(stderr , "Simulation end .: "); util_fprintf_date_utc( sim_end , stderr );
+    fprintf(stderr , "Data start......: "); util_fprintf_date_utc( data->start_time , stderr );
+    fprintf(stderr , "Simulation end .: "); util_fprintf_date_utc( data->end_time , stderr );
     fprintf(stderr , "Requested date .: "); util_fprintf_date_utc( sim_time , stderr );
-    util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , data_start_time , sim_end);
+    util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , data->start_time , data->end_time);
   }
 
   /*
@@ -683,13 +680,6 @@ static void ecl_sum_data_append_tstep__( ecl_sum_data_type * data , ecl_sum_tste
 }
 
 
-static void ecl_sum_data_update_end_info( ecl_sum_data_type * sum_data ) {
-  const ecl_sum_tstep_type * last_ministep  = vector_get_last_const( sum_data->data );
-
-  sum_data->last_ministep   = ecl_sum_tstep_get_ministep( last_ministep );
-  sum_data->sim_length      = ecl_sum_tstep_get_sim_days( last_ministep );
-  time_interval_update_end( sum_data->sim_time , ecl_sum_tstep_get_sim_time( last_ministep ));
-}
 
 static int cmp_ministep( const void * arg1 , const void * arg2) {
   const ecl_sum_tstep_type * ministep1 = ecl_sum_tstep_safe_cast_const( arg1 );
@@ -719,9 +709,8 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
 
   /* Identify various global first and last values.  */
   {
-    const ecl_sum_tstep_type * first_ministep = ecl_sum_data_iget_ministep( sum_data , 0 );
-    sum_data->first_ministep = ecl_sum_tstep_get_ministep( first_ministep );
-
+    const ecl_sum_tstep_type * first_ministep = vector_iget_const( sum_data->data, 0 );
+    const ecl_sum_tstep_type * last_ministep  = vector_get_last_const( sum_data->data );
     /*
        In most cases the days_start and data_start_time will agree
        with the global simulation start; however in the case where we
@@ -730,9 +719,10 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
        will be a difference.
     */
     sum_data->days_start      = ecl_sum_tstep_get_sim_days( first_ministep );
-    time_interval_update_start( sum_data->sim_time , ecl_sum_tstep_get_sim_time( first_ministep ));
+    sum_data->sim_length      = ecl_sum_tstep_get_sim_days( last_ministep );
+    sum_data->start_time      = ecl_sum_tstep_get_sim_time( first_ministep);
+    sum_data->end_time        = ecl_sum_tstep_get_sim_time( last_ministep );
   }
-  ecl_sum_data_update_end_info( sum_data );
 
   /* Build up the report -> ministep mapping. */
   {
@@ -741,27 +731,27 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
       const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( sum_data , internal_index  );
       int report_step = ecl_sum_tstep_get_report(ministep);
 
-        /* Indexing internal_index - report_step */
-        {
-          int current_first_index = int_vector_safe_iget( sum_data->report_first_index , report_step );
-          if (current_first_index < 0) /* i.e. currently not set. */
+      /* Indexing internal_index - report_step */
+      {
+        int current_first_index = int_vector_safe_iget( sum_data->report_first_index , report_step );
+        if (current_first_index < 0) /* i.e. currently not set. */
             int_vector_iset( sum_data->report_first_index , report_step , internal_index);
-          else
-            if (internal_index  < current_first_index)
-              int_vector_iset( sum_data->report_first_index , report_step , internal_index);
-        }
+        else
+          if (internal_index  < current_first_index)
+            int_vector_iset( sum_data->report_first_index , report_step , internal_index);
+      }
 
-        {
-          int current_last_index =  int_vector_safe_iget( sum_data->report_last_index , report_step );
-          if (current_last_index < 0)
-            int_vector_iset( sum_data->report_last_index , report_step ,  internal_index);
-          else
-            if (internal_index > current_last_index)
-              int_vector_iset( sum_data->report_last_index , report_step , internal_index);
-        }
+      {
+        int current_last_index =  int_vector_safe_iget( sum_data->report_last_index , report_step );
+        if (current_last_index < 0)
+          int_vector_iset( sum_data->report_last_index , report_step ,  internal_index);
+        else
+          if (internal_index > current_last_index)
+            int_vector_iset( sum_data->report_last_index , report_step , internal_index);
+      }
 
-        sum_data->first_report_step = util_int_min( sum_data->first_report_step , report_step );
-        sum_data->last_report_step  = util_int_max( sum_data->last_report_step  , report_step );
+      sum_data->first_report_step = util_int_min( sum_data->first_report_step , report_step );
+      sum_data->last_report_step  = util_int_max( sum_data->last_report_step  , report_step );
     }
   }
   sum_data->index_valid = true;
@@ -799,9 +789,11 @@ ecl_sum_tstep_type * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int 
       if (ecl_sum_tstep_get_report( prev_tstep ) == ecl_sum_tstep_get_report( tstep )) {        // Same report step
         if (ecl_sum_tstep_get_sim_days( prev_tstep ) < ecl_sum_tstep_get_sim_days( tstep )) {   // This tstep will become the new latest tstep
           int internal_index = vector_get_size( data->data ) - 1;
-
-          ecl_sum_data_update_end_info( data );
           int_vector_iset( data->report_last_index , report_step , internal_index );
+
+          data->sim_length = ecl_sum_tstep_get_sim_days( tstep );
+          data->end_time = ecl_sum_tstep_get_sim_time(tstep);
+
           rebuild_index = false;
         }
       }
@@ -896,7 +888,7 @@ void ecl_sum_data_add_case(ecl_sum_data_type * self, const ecl_sum_data_type * o
       That field is currently not used.
     */
 
-    if (!time_interval_contains( self->sim_time , ecl_sum_tstep_get_sim_time( other_tstep ))) {
+    if (!ecl_sum_data_check_sim_time(self, ecl_sum_tstep_get_sim_time(other_tstep))) {
       ecl_sum_tstep_type * new_tstep;
 
       if (header_equal)
@@ -1361,14 +1353,6 @@ int ecl_sum_data_get_last_report_step( const ecl_sum_data_type * data ) {
   return data->last_report_step;
 }
 
-
-int ecl_sum_data_get_first_ministep( const ecl_sum_data_type * data ) {
-  return data->first_ministep;
-}
-
-int ecl_sum_data_get_last_ministep( const ecl_sum_data_type * data ) {
-  return data->last_ministep;
-}
 
 /*****************************************************************/
 /* High level vector routines */
