@@ -219,8 +219,6 @@ struct ecl_sum_data_struct {
   int_vector_type        * report_last_index;      /* Indexed by report_step - giving last internal_index in report_step.    */
   int                      first_report_step;
   int                      last_report_step;
-  time_t                   __min_time;             /* An internal member used during the load of
-                                                      restarted cases; see doc in ecl_sum_data_append_tstep. */
   bool                     index_valid;
   time_t                   start_time;             /* In the case of restarts the start might disagree with the value reported
                                                       in the smspec file. */
@@ -266,7 +264,6 @@ ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
   ecl_sum_data_type * data = util_malloc( sizeof * data );
   data->data        = vector_alloc_new();
   data->smspec      = smspec;
-  data->__min_time  = 0;
 
   data->report_first_index    = int_vector_alloc( 0 , INVALID_MINISTEP_NR );
   data->report_last_index     = int_vector_alloc( 0 , INVALID_MINISTEP_NR );
@@ -680,36 +677,6 @@ static void ecl_sum_data_append_tstep__( ecl_sum_data_type * data , ecl_sum_tste
      Here the tstep is just appended naively, the vector will be
      sorted by ministep_nr before the data instance is returned.
   */
-
-  /*
-    We keep track of the earliest (in true time sence) tstep we
-    have added so far; this is done somewhat manuyally because we need
-    this information before the index is ready.
-
-    The __min_time field is used to limit loading of restarted data in
-    time periods where both the main case and the source case we have
-    restarted from have data. This situation typically arises when we
-    have restarted a simulation from a report step before the end of
-    the initial simulation:
-
-    Simulation 1:      T1-------------TR------------T2
-                                      |
-    Simulation 2:                     \-----------------------T3
-
-
-    In the time interval [TR,T2] we have data from two simulations, we
-    want to use only the data from simulation 2 in this period. The
-    decision whether to to actually append the ministep or not must
-    have been performed by the scope calling this function; when a
-    ministep has arrived here it will be added.
-  */
-
-  if (data->__min_time == 0)
-    data->__min_time = ecl_sum_tstep_get_sim_time( tstep );
-  else {
-    if (ecl_sum_tstep_get_sim_time( tstep ) < data->__min_time)
-      data->__min_time = ecl_sum_tstep_get_sim_time( tstep );
-  }
 
   vector_append_owned_ref( data->data , tstep , ecl_sum_tstep_free__);
   data->index_valid = false;
