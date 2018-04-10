@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
+#include <errno.h>
 
 #include <ert/util/hash.h>
 #include <ert/util/util.h>
@@ -507,6 +508,11 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
 void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case , bool fmt_file ) {
   char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_SUMMARY_HEADER_FILE , fmt_file , 0 );
   fortio_type * fortio = fortio_open_writer( filename , fmt_file , ECL_ENDIAN_FLIP);
+
+  if (!fortio) {
+    char * error_fmt_msg = "%s: Unable to open fortio file %s, error: %s .\n";
+    util_abort( error_fmt_msg , __func__ , filename , strerror( errno ) );
+  }
 
   ecl_smspec_fortio_fwrite( smspec , fortio );
 
