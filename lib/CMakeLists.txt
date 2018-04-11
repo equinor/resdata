@@ -84,7 +84,6 @@ add_library(ecl util/rng.c
                 util/stringlist.c
                 util/buffer.c
                 util/timer.c
-                util/time_interval.c
                 util/string_util.c
                 util/type_vector_functions.c
                 util/ecl_version.c
@@ -242,7 +241,6 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_stringlist_test
                 ert_util_string_util
                 ert_util_strstr_int_format
-                ert_util_time_interval
                 ert_util_type_vector_functions
                 ert_util_vector_test
                 ert_util_datetime
