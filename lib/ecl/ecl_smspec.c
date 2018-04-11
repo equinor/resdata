@@ -1038,13 +1038,32 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
     char * restart_base;
     int i;
     tmp_base[0] = '\0';
-    for (i=0; i < ecl_kw_get_size( restart_kw ); i++) 
+    for (i=0; i < ecl_kw_get_size( restart_kw ); i++)
       strcat( tmp_base , ecl_kw_iget_ptr( restart_kw , i ));
 
     restart_base = util_alloc_strip_copy( tmp_base );
     if (strlen(restart_base)) {  /* We ignore the empty ones. */
       char * path;
       char * smspec_header;
+
+      /*
+        The conditional block here is to support the following situation:
+
+           1. A simulation with a restart has been performed on Posix with path
+              separator '/'.
+
+           2. The simulation is loaded on windows, where the native path
+              separator is '\'.
+
+        This code block will translate '/' -> '\' in the restart keyword which
+        is read from the summary file.
+      */
+#ifdef ERT_WINDOWS
+      for (int i=0; i < strlen(restart_base); i++) {
+        if (restart_base[i] == UTIL_POSIX_PATH_SEP_CHAR)
+          restart_base[i] = UTIL_PATH_SEP_CHAR;
+      }
+#endif
 
       util_alloc_file_components( ecl_smspec->header_file , &path , NULL , NULL );
       smspec_header = ecl_util_alloc_exfilename( path , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
