@@ -26,11 +26,9 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_util.h>
-
 #include <ert/util/ert_unique_ptr.hpp>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_type.h>
 #include <ert/ecl/FortIO.hpp>
 
 namespace ERT {
