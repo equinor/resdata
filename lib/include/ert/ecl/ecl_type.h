@@ -59,7 +59,6 @@ typedef enum {
 {.value = 5 , .name = "ECL_MESS_TYPE"},                            \
 {.value = 7 , .name = "ECL_STRING_TYPE"}
 
-#define ECL_TYPE_ENUM_SIZE 7
 
 /*
   Character data in ECLIPSE files comes as an array of fixed-length
