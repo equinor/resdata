@@ -5,7 +5,7 @@
 %define tag rc1
 
 Name:           ecl
-Version:        2017.10
+Version:        2018.04
 Release:        0
 Summary:        ECL library
 License:        GPL-3+
