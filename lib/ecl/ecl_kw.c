@@ -292,7 +292,6 @@ static char * ecl_kw_alloc_output_buffer(const ecl_kw_type * ecl_kw) {
   if (ecl_type_is_mess(ecl_kw->data_type))
     return buffer;
 
-
   memcpy(buffer, ecl_kw->data, buffer_size);
   util_endian_flip_vector(buffer, sizeof_iotype, ecl_kw->size);
   return buffer;
@@ -345,7 +344,6 @@ static void ecl_kw_load_from_input_buffer(ecl_kw_type * ecl_kw, char * buffer) {
     }
     return;
   }
-
 
   if (ecl_type_is_mess(ecl_kw->data_type))
     return;
@@ -2868,7 +2866,6 @@ ECL_KW_FPRINTF_DATA( float )
 ECL_KW_FPRINTF_DATA( double )
 ECL_KW_FPRINTF_DATA( bool )
 #undef ECL_KW_FPRINTF_DATA
-
 
 static void ecl_kw_fprintf_data_string( const ecl_kw_type * ecl_kw , const char * fmt , FILE * stream) {
   int i;
