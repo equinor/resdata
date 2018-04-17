@@ -123,7 +123,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
    The actual loading is implemented in the ecl_sum_data.c file.
 */
 
-void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
+void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * input_arg) {
   util_safe_free( ecl_sum->ecl_case );
   util_safe_free( ecl_sum->path );
   util_safe_free( ecl_sum->abs_path );
@@ -132,9 +132,9 @@ void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
   {
     char  *path , *base, *ext;
 
-    util_alloc_file_components( ecl_case , &path , &base , &ext);
+    util_alloc_file_components( input_arg, &path , &base , &ext);
 
-    ecl_sum->ecl_case = util_alloc_string_copy( ecl_case );
+    ecl_sum->ecl_case = util_alloc_filename( path, base, NULL );
     ecl_sum->path     = util_alloc_string_copy( path );
     ecl_sum->base     = util_alloc_string_copy( base );
     ecl_sum->ext      = util_alloc_string_copy( ext );
@@ -183,11 +183,17 @@ static bool ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type *
 
 
 static void ecl_sum_fread_history( ecl_sum_type * ecl_sum ) {
-  ecl_sum_type * restart_case = ecl_sum_fread_alloc_case__( ecl_smspec_get_restart_case( ecl_sum->smspec ) , ":" , true);
+  char * restart_header = ecl_util_alloc_filename(NULL,
+                                                  ecl_smspec_get_restart_case(ecl_sum->smspec),
+                                                  ECL_SUMMARY_HEADER_FILE,
+                                                  ecl_smspec_get_formatted(ecl_sum->smspec),
+                                                  -1);
+  ecl_sum_type * restart_case = ecl_sum_fread_alloc_case__(restart_header, ":" , true);
   if (restart_case) {
     ecl_sum->restart_case = restart_case;
     ecl_sum_data_add_case(ecl_sum->data , restart_case->data );
   }
+  free(restart_header);
 }
 
 
