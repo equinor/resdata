@@ -183,11 +183,17 @@ static bool ecl_sum_fread_data( ecl_sum_type * ecl_sum , const stringlist_type *
 
 
 static void ecl_sum_fread_history( ecl_sum_type * ecl_sum ) {
-  ecl_sum_type * restart_case = ecl_sum_fread_alloc_case__( ecl_smspec_get_restart_case( ecl_sum->smspec ) , ":" , true);
+  char * restart_header = ecl_util_alloc_filename(NULL,
+                                                  ecl_smspec_get_restart_case(ecl_sum->smspec),
+                                                  ECL_SUMMARY_HEADER_FILE,
+                                                  ecl_smspec_get_formatted(ecl_sum->smspec),
+                                                  -1);
+  ecl_sum_type * restart_case = ecl_sum_fread_alloc_case__(restart_header, ":" , true);
   if (restart_case) {
     ecl_sum->restart_case = restart_case;
     ecl_sum_data_add_case(ecl_sum->data , restart_case->data );
   }
+  free(restart_header);
 }
 
 
