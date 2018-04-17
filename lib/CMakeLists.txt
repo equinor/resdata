@@ -62,7 +62,8 @@ if (ERT_BUILD_CXX)
 )
 endif ()
 
-
+configure_file(build_config.h.in   include/ert/util/build_config.h)
+configure_file(ert_api_config.h.in include/ert/util/ert_api_config.h)
 configure_file(build_config.hpp.in   include/ert/util/build_config.hpp)
 configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
