@@ -59,7 +59,6 @@ typedef enum {
 {.value = 5 , .name = "ECL_MESS_TYPE"},                            \
 {.value = 7 , .name = "ECL_STRING_TYPE"}
 
-#define ECL_TYPE_ENUM_SIZE 7
 
 /*
   Character data in ECLIPSE files comes as an array of fixed-length
@@ -68,7 +67,6 @@ typedef enum {
 */
 
 #define ECL_STRING8_LENGTH   8  // 'Normal' 8 characters 'CHAR' type.
-#define ECL_STRING10_LENGTH 10  // 'Normal' 8 characters 'CHAR' type.
 #define ECL_TYPE_LENGTH      4
 
 struct ecl_type_struct {
@@ -129,8 +127,8 @@ bool               ecl_type_is_bool(const ecl_data_type);
 bool               ecl_type_is_string(const ecl_data_type);
 
 // Temporary fixup for OPM.
-char * ecl_type_get_name(const ecl_data_type);      
-   
+char * ecl_type_get_name(const ecl_data_type);
+
 #ifdef __cplusplus
 }
 #endif
