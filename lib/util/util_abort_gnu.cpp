@@ -282,7 +282,7 @@ void util_abort__(const char * file , const char * function , int line , const c
       if (__abort_program_message != NULL) {
 #if !defined(__GLIBC__)
         /* allocate a temporary buffer to hold the path */
-        char* program_invocation_name = alloca (PATH_MAX);
+        char* program_invocation_name = (char*)alloca (PATH_MAX);
 #  if defined(__APPLE__)
         uint32_t buflen = PATH_MAX;
         _NSGetExecutablePath (program_invocation_name, &buflen);
