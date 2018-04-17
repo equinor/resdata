@@ -211,7 +211,8 @@ typedef struct ecl_sum_struct       ecl_sum_type;
                                                        int nx,
                                                        int ny,
                                                        int nz);
- 
+  void                  ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * input_arg);
+
   ecl_sum_type * ecl_sum_alloc_restart_writer(const char * ecl_case ,
                                               const char * restart_case ,
                                               bool fmt_output ,
@@ -229,7 +230,6 @@ typedef struct ecl_sum_struct       ecl_sum_type;
                                              time_t sim_start ,
                                              bool time_in_days ,
                                              int nx , int ny , int nz);
-  void                  ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case);
   void                  ecl_sum_fwrite( const ecl_sum_type * ecl_sum );
   void                  ecl_sum_fwrite_smspec( const ecl_sum_type * ecl_sum );
   smspec_node_type    * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const smspec_node_type * node);

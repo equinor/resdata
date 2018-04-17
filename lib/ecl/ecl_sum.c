@@ -123,7 +123,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
    The actual loading is implemented in the ecl_sum_data.c file.
 */
 
-void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
+void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * input_arg) {
   util_safe_free( ecl_sum->ecl_case );
   util_safe_free( ecl_sum->path );
   util_safe_free( ecl_sum->abs_path );
@@ -132,9 +132,9 @@ void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * ecl_case) {
   {
     char  *path , *base, *ext;
 
-    util_alloc_file_components( ecl_case , &path , &base , &ext);
+    util_alloc_file_components( input_arg, &path , &base , &ext);
 
-    ecl_sum->ecl_case = util_alloc_string_copy( ecl_case );
+    ecl_sum->ecl_case = util_alloc_filename( path, base, NULL );
     ecl_sum->path     = util_alloc_string_copy( path );
     ecl_sum->base     = util_alloc_string_copy( base );
     ecl_sum->ext      = util_alloc_string_copy( ext );
