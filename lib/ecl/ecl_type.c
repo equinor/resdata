@@ -37,7 +37,7 @@
 static char * alloc_string_name(const ecl_data_type ecl_type) {
   return util_alloc_sprintf(
           "C%03d",
-          ecl_type_get_sizeof_ctype_fortio(ecl_type)
+          ecl_type_get_sizeof_iotype(ecl_type)
           );
 }
 
@@ -64,11 +64,11 @@ ecl_data_type ecl_type_create(const ecl_type_enum type, const size_t element_siz
                                 ecl_type_create_from_type(type)
                             );
 
-  if(ecl_type_get_sizeof_ctype_fortio(ecl_type) != element_size)
+  if(ecl_type_get_sizeof_iotype(ecl_type) != element_size)
       util_abort(
               "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
               __func__, type,
-              element_size, ecl_type_get_sizeof_ctype_fortio(ecl_type)
+              element_size, ecl_type_get_sizeof_iotype(ecl_type)
               );
 
   return ecl_type;
@@ -146,16 +146,24 @@ ecl_data_type ecl_type_create_from_name( const char * type_name ) {
 }
 
 
-int ecl_type_get_sizeof_ctype_fortio(const ecl_data_type ecl_type) {
-  if(ecl_type_is_char(ecl_type) || ecl_type_is_string(ecl_type))
-      return ecl_type.element_size - 1;
-  else
-      return ecl_type_get_sizeof_ctype(ecl_type);
-}
-
 int ecl_type_get_sizeof_ctype(const ecl_data_type ecl_type) {
   return ecl_type.element_size;
 }
+
+
+int ecl_type_get_sizeof_iotype(const ecl_data_type ecl_type) {
+  if (ecl_type_is_bool(ecl_type))
+    return sizeof(int);
+
+  if (ecl_type_is_char(ecl_type))
+    return ecl_type.element_size -1;
+
+  if (ecl_type_is_string(ecl_type))
+    return ecl_type.element_size - 1;
+
+  return ecl_type.element_size;
+}
+
 
 bool ecl_type_is_numeric(const ecl_data_type ecl_type) {
   return (ecl_type_is_int(ecl_type) ||

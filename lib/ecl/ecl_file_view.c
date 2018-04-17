@@ -169,7 +169,7 @@ ecl_kw_type * ecl_file_view_iget_kw( const ecl_file_view_type * ecl_file_view , 
   return ecl_file_view_get_kw(ecl_file_view, file_kw);
 }
 
-void ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, const char* kw, int index, const int_vector_type * index_map, char* buffer) {
+void ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, const char* kw, int index, const int_vector_type * index_map, char* io_buffer) {
     ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw , index);
 
     if (fortio_assert_stream_open( ecl_file_view->fortio )) {
@@ -177,7 +177,7 @@ void ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, cons
         ecl_data_type data_type = ecl_file_kw_get_data_type(file_kw);
         int element_count = ecl_file_kw_get_size(file_kw);
 
-        ecl_kw_fread_indexed_data(ecl_file_view->fortio, offset + ECL_KW_HEADER_FORTIO_SIZE, data_type, element_count, index_map, buffer);
+        ecl_kw_fread_indexed_data(ecl_file_view->fortio, offset + ECL_KW_HEADER_FORTIO_SIZE, data_type, element_count, index_map, io_buffer);
     }
 }
 
