@@ -79,7 +79,7 @@ add_library(ecl util/rng.cpp
                 util/node_ctype.cpp
                 util/util.c
                 util/util_symlink.cpp
-                util/util_lfs.cpp
+                util/util_lfs.c
                 util/util_unlink.cpp
                 util/arg_pack.cpp
                 util/vector.cpp
