@@ -3,9 +3,9 @@ project(libecl-ecl C CXX)
 
 
 if (HAVE_BACKTRACE)
-    list(APPEND opt_srcs util/util_abort_gnu.cpp)
+    list(APPEND opt_srcs util/util_abort_gnu.c)
 else()
-    list(APPEND opt_srcs util/util_abort_simple.cpp)
+    list(APPEND opt_srcs util/util_abort_simple.c)
 endif()
 
 if (ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
