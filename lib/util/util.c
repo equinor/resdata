@@ -35,8 +35,8 @@
 #include <fcntl.h>
 #include <limits.h>
 
-#include <ert/util/ert_api_config.hpp>
-#include "ert/util/build_config.hpp"
+#include <ert/util/ert_api_config.h>
+#include "ert/util/build_config.h"
 
 #include <errno.h>
 
@@ -88,8 +88,8 @@
 #error "Could not determine if this is a 32 bit or 64 bit computer?"
 #endif
 
-#include <ert/util/util.hpp>
-#include <ert/util/buffer.hpp>
+#include <ert/util/util.h>
+#include <ert/util/buffer.h>
 
 
 /*
