@@ -60,7 +60,7 @@ UTIL_SAFE_CAST_FUNCTION( ecl_box , ECL_BOX_TYPE_ID)
 */
 
 ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int __i1,int __i2 , int __j1 , int __j2 , int __k1, int __k2) {
-  ecl_box_type * ecl_box = util_malloc(sizeof * ecl_box );
+  ecl_box_type * ecl_box = (ecl_box_type *)util_malloc(sizeof * ecl_box );
   UTIL_TYPE_ID_INIT( ecl_box , ECL_BOX_TYPE_ID);
   ecl_box->parent_grid = ecl_grid;
   /* Properties of the parent grid. */
@@ -102,8 +102,8 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int __i1,int __i2 
       int global_counter = 0;
       int i,j,k;
       ecl_box->active_size = 0;
-      ecl_box->active_list = util_calloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz , sizeof * ecl_box->active_list );
-      ecl_box->global_list = util_calloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz , sizeof * ecl_box->global_list );
+      ecl_box->active_list = (int*)util_calloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz , sizeof * ecl_box->active_list );
+      ecl_box->global_list = (int*)util_calloc( ecl_box->box_nx * ecl_box->box_ny * ecl_box->box_nz , sizeof * ecl_box->global_list );
       for (k=k1; k <= k2; k++) 
         for (j=j1; j <= j2; j++)
           for (i=i1; i <= i2; i++) {
@@ -121,7 +121,7 @@ ecl_box_type * ecl_box_alloc(const ecl_grid_type * ecl_grid , int __i1,int __i2 
             }
           }
       
-      ecl_box->active_list = util_realloc( ecl_box->active_list , ecl_box->active_size * sizeof * ecl_box->active_list );
+      ecl_box->active_list = (int*)util_realloc( ecl_box->active_list , ecl_box->active_size * sizeof * ecl_box->active_list );
     }
   }
   return ecl_box;

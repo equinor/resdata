@@ -65,12 +65,12 @@ static void ecl_nnc_geometry_add_pairs( const ecl_nnc_geometry_type * nnc_geo , 
       int lgr_nr2 = nnc_vector_get_lgr_nr( nnc_vector );
 
       for (int index2 = 0; index2 < nnc_vector_get_size( nnc_vector ); index2++) {
-        ecl_nnc_pair_type pair = {.grid_nr1 = lgr_nr1,
-                                  .global_index1 = global_index1,
-                                  .grid_nr2 = lgr_nr2,
-                                  .global_index2 = int_vector_iget( grid2_index_list , index2 ),
-                                  .input_index = int_vector_iget( nnc_index_list, index2 )};
-
+        ecl_nnc_pair_type pair;
+        pair.grid_nr1 = lgr_nr1;
+        pair.global_index1 = global_index1;
+        pair.grid_nr2 = lgr_nr2;
+        pair.global_index2 = int_vector_iget( grid2_index_list , index2 );
+        pair.input_index = int_vector_iget( nnc_index_list, index2 );
         struct_vector_append( nnc_geo->data , &pair);
       }
     }
@@ -100,7 +100,7 @@ static int ecl_nnc_cmp(const void * _nnc1 , const void * _nnc2) {
 
 
 ecl_nnc_geometry_type * ecl_nnc_geometry_alloc( const ecl_grid_type * grid ) {
-  ecl_nnc_geometry_type * nnc_geo = util_malloc( sizeof * nnc_geo );
+  ecl_nnc_geometry_type * nnc_geo = (ecl_nnc_geometry_type*)util_malloc( sizeof * nnc_geo );
   UTIL_TYPE_ID_INIT( nnc_geo , ECL_NNC_GEOMETRY_TYPE_ID );
   nnc_geo->data = struct_vector_alloc( sizeof( struct ecl_nnc_pair_struct ));
 
@@ -121,7 +121,7 @@ void ecl_nnc_geometry_free( ecl_nnc_geometry_type * nnc_geo) {
 
 
 const ecl_nnc_pair_type * ecl_nnc_geometry_iget( const ecl_nnc_geometry_type * nnc_geo , int index) {
-  return struct_vector_iget_ptr( nnc_geo->data , index );
+  return (const ecl_nnc_pair_type*)struct_vector_iget_ptr( nnc_geo->data , index );
 
 }
 

@@ -78,7 +78,7 @@ struct plt_data_struct {
 /*****************************************************************/
 
 static rft_data_type * rft_data_alloc( double swat , double sgas) {
-  rft_data_type * data = util_malloc( sizeof * data );
+  rft_data_type * data = (rft_data_type*)util_malloc( sizeof * data );
   UTIL_TYPE_ID_INIT( data , RFT_DATA_TYPE_ID );
 
   data->swat = swat;
@@ -98,7 +98,7 @@ static UTIL_IS_INSTANCE_FUNCTION( rft_data , RFT_DATA_TYPE_ID)
 /*****************************************************************/
 
      static plt_data_type * plt_data_alloc( double orat , double grat , double wrat,double connection_start, double connection_end, double flowrate , double oil_flowrate , double gas_flowrate , double water_flowrate) {
-  plt_data_type * data = util_malloc( sizeof * data );
+  plt_data_type * data = (plt_data_type*)util_malloc( sizeof * data );
   UTIL_TYPE_ID_INIT( data , PLT_DATA_TYPE_ID );
 
   data->orat = orat;
@@ -133,7 +133,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_rft_cell , ECL_RFT_CELL_TYPE_ID)
 
 
 static ecl_rft_cell_type * ecl_rft_cell_alloc_common(int i , int j , int k , double depth , double pressure) {
-  ecl_rft_cell_type * cell = util_malloc( sizeof * cell );
+  ecl_rft_cell_type * cell = (ecl_rft_cell_type*)util_malloc( sizeof * cell );
   UTIL_TYPE_ID_INIT( cell , ECL_RFT_CELL_TYPE_ID );
 
   cell->i = i;
@@ -180,9 +180,9 @@ ecl_rft_cell_type * ecl_rft_cell_alloc_PLT( int i ,
 
 void ecl_rft_cell_free( ecl_rft_cell_type * cell ) {
   if (rft_data_is_instance( cell->data ))
-    rft_data_free( cell->data );
+    rft_data_free( (rft_data_type*)cell->data );
   else if (plt_data_is_instance( cell->data ))
-    plt_data_free( cell->data );
+    plt_data_free( (plt_data_type*)cell->data );
 
   free( cell );
 }

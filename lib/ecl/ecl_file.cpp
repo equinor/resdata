@@ -178,7 +178,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file , ECL_FILE_ID)
 
 
 ecl_file_type * ecl_file_alloc_empty( int flags ) {
-  ecl_file_type * ecl_file = util_malloc( sizeof * ecl_file );
+  ecl_file_type * ecl_file = (ecl_file_type *)util_malloc( sizeof * ecl_file );
   UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
   ecl_file->map_stack = vector_alloc_new();
   ecl_file->inv_view  = inv_map_alloc( );
@@ -800,7 +800,6 @@ ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
     return FRONTSIM;
 
   util_abort("%s: Simulator version value:%d not recognized \n",__func__ , int_value );
-  return -1;
 }
 
 /*
@@ -887,7 +886,7 @@ void ecl_file_push_block( ecl_file_type * ecl_file ) {
 }
 
 void ecl_file_pop_block( ecl_file_type * ecl_file ) {
-  ecl_file->active_view = vector_pop_back( ecl_file->map_stack );
+  ecl_file->active_view = (ecl_file_view_type *)vector_pop_back( ecl_file->map_stack );
 }
 
 

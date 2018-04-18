@@ -95,42 +95,42 @@ add_library(ecl util/rng.cpp
                 util/test_util.cpp
                 ${opt_srcs}
 
-                ecl/ecl_rsthead.c
+                ecl/ecl_rsthead.cpp
                 ecl/ecl_sum_tstep.c
-                ecl/ecl_rst_file.c
+                ecl/ecl_rst_file.cpp
                 ecl/ecl_init_file.c
-                ecl/ecl_grid_cache.c
+                ecl/ecl_grid_cache.cpp
                 ecl/smspec_node.c
-                ecl/ecl_kw_grdecl.c
-                ecl/ecl_file_kw.c
-                ecl/ecl_file_view.c
-                ecl/ecl_grav.c
-                ecl/ecl_grav_calc.c
-                ecl/ecl_smspec.c
+                ecl/ecl_kw_grdecl.cpp
+                ecl/ecl_file_kw.cpp
+                ecl/ecl_file_view.cpp
+                ecl/ecl_grav.cpp
+                ecl/ecl_grav_calc.cpp
+                ecl/ecl_smspec.cpp
                 ecl/ecl_sum_data.c
                 ecl/ecl_util.c
-                ecl/ecl_kw.c
-                ecl/ecl_sum.c
+                ecl/ecl_kw.cpp
+                ecl/ecl_sum.cpp
                 ecl/ecl_sum_vector.c
                 ecl/fortio.c
-                ecl/ecl_rft_file.c
-                ecl/ecl_rft_node.c
-                ecl/ecl_rft_cell.c
-                ecl/ecl_grid.c
-                ecl/ecl_coarse_cell.c
-                ecl/ecl_box.c
-                ecl/ecl_io_config.c
-                ecl/ecl_file.c
-                ecl/ecl_region.c
-                ecl/ecl_subsidence.c
-                ecl/ecl_grid_dims.c
+                ecl/ecl_rft_file.cpp
+                ecl/ecl_rft_node.cpp
+                ecl/ecl_rft_cell.cpp
+                ecl/ecl_grid.cpp
+                ecl/ecl_coarse_cell.cpp
+                ecl/ecl_box.cpp
+                ecl/ecl_io_config.cpp
+                ecl/ecl_file.cpp
+                ecl/ecl_region.cpp
+                ecl/ecl_subsidence.cpp
+                ecl/ecl_grid_dims.cpp
                 ecl/grid_dims.c
                 ecl/nnc_info.c
                 ecl/ecl_grav_common.c
                 ecl/nnc_vector.c
-                ecl/ecl_nnc_export.c
-                ecl/ecl_nnc_data.c
-                ecl/ecl_nnc_geometry.c
+                ecl/ecl_nnc_export.cpp
+                ecl/ecl_nnc_data.cpp
+                ecl/ecl_nnc_geometry.cpp
                 ecl/layer.c
                 ecl/fault_block.c
                 ecl/fault_block_layer.c

@@ -63,7 +63,7 @@ struct ecl_rft_file_struct {
 
 
 static ecl_rft_file_type * ecl_rft_file_alloc_empty(const char * filename) {
-  ecl_rft_file_type * rft_vector = util_malloc(sizeof * rft_vector );
+  ecl_rft_file_type * rft_vector = (ecl_rft_file_type*)util_malloc(sizeof * rft_vector );
   UTIL_TYPE_ID_INIT( rft_vector , ECL_RFT_FILE_ID );
   rft_vector->data       = vector_alloc_new();
   rft_vector->filename   = util_alloc_string_copy(filename);
@@ -106,7 +106,7 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
         if (!hash_has_key( rft_vector->well_index , well_name))
           hash_insert_hash_owned_ref( rft_vector->well_index , well_name , int_vector_alloc( 0 , 0 ) , int_vector_free__);
         {
-          int_vector_type * index_list = hash_get( rft_vector->well_index , well_name );
+          int_vector_type * index_list = (int_vector_type*)hash_get( rft_vector->well_index , well_name );
           int_vector_append(index_list , global_index);
         }
         global_index++;
@@ -228,7 +228,7 @@ int ecl_rft_file_get_size__( const ecl_rft_file_type * rft_file, const char * we
     int match_count = 0;
     int i;
     for ( i=0; i < vector_get_size( rft_file->data ); i++) {
-      const ecl_rft_node_type * rft = vector_iget_const( rft_file->data , i);
+      const ecl_rft_node_type * rft = (const ecl_rft_node_type*)vector_iget_const( rft_file->data , i);
 
       if (well_pattern) {
         if (util_fnmatch( well_pattern , ecl_rft_node_get_well_name( rft )) != 0)
@@ -274,7 +274,7 @@ const char * ecl_rft_file_get_filename( const ecl_rft_file_type * rft_file ) {
 */
 
 ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_file , int index) {
-  return vector_iget( rft_file->data , index );
+  return (ecl_rft_node_type*)vector_iget( rft_file->data , index );
 }
 
 
@@ -306,7 +306,7 @@ ecl_rft_node_type * ecl_rft_file_iget_node( const ecl_rft_file_type * rft_file ,
 
 
 ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_file , const char * well, int index) {
-  const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
+  const int_vector_type * index_vector = (const int_vector_type*)hash_get(rft_file->well_index , well);
   return ecl_rft_file_iget_node( rft_file , int_vector_iget(index_vector , index));
 }
 
@@ -314,7 +314,7 @@ ecl_rft_node_type * ecl_rft_file_iget_well_rft( const ecl_rft_file_type * rft_fi
 static int ecl_rft_file_get_node_index_time_rft( const ecl_rft_file_type * rft_file , const char * well , time_t recording_time) {
   int global_index = -1;
   if (hash_has_key( rft_file->well_index , well)) {
-    const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
+    const int_vector_type * index_vector = (const int_vector_type*)hash_get(rft_file->well_index , well);
     int well_index = 0;
     while (true) {
       if (well_index == int_vector_size( index_vector ))
@@ -364,7 +364,7 @@ bool ecl_rft_file_has_well( const ecl_rft_file_type * rft_file , const char * we
 */
 
 int ecl_rft_file_get_well_occurences( const ecl_rft_file_type * rft_file , const char * well) {
-  const int_vector_type * index_vector = hash_get(rft_file->well_index , well);
+  const int_vector_type * index_vector = (const int_vector_type*)hash_get(rft_file->well_index , well);
   return int_vector_size( index_vector );
 }
 
@@ -423,7 +423,7 @@ void ecl_rft_file_update(const char * rft_file_name, ecl_rft_node_type ** nodes,
 
       vector_sort(rft_file->data,(vector_cmp_ftype *) ecl_rft_node_cmp);
       for(node_index=0; node_index < vector_get_size( rft_file->data ); node_index++) {
-        const ecl_rft_node_type *new_node = vector_iget_const(rft_file->data, node_index);
+        const ecl_rft_node_type *new_node = (const ecl_rft_node_type*)vector_iget_const(rft_file->data, node_index);
         ecl_rft_node_fwrite(new_node, fortio, unit_set);
       }
 

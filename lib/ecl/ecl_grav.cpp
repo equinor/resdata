@@ -157,7 +157,7 @@ static const char * get_den_kw( ecl_phase_enum phase , ecl_version_enum ecl_vers
 
 static void ecl_grav_phase_ensure_work( ecl_grav_phase_type * grav_phase) {
   if (grav_phase->work == NULL)
-    grav_phase->work = util_calloc( ecl_grid_cache_get_size( grav_phase->grid_cache ) , sizeof * grav_phase->work  );
+    grav_phase->work = (double*)util_calloc( ecl_grid_cache_get_size( grav_phase->grid_cache ) , sizeof * grav_phase->work  );
 }
 
 
@@ -213,19 +213,19 @@ static ecl_grav_phase_type * ecl_grav_phase_alloc( ecl_grav_type * ecl_grav ,
   const ecl_grid_cache_type * grid_cache = ecl_grav->grid_cache;
   const char * sat_kw_name               = ecl_util_get_phase_name( phase );
   {
-    ecl_grav_phase_type * grav_phase = util_malloc( sizeof * grav_phase );
+    ecl_grav_phase_type * grav_phase = (ecl_grav_phase_type*)util_malloc( sizeof * grav_phase );
     const int size                   = ecl_grid_cache_get_size( grid_cache );
 
     UTIL_TYPE_ID_INIT( grav_phase , ECL_GRAV_PHASE_TYPE_ID );
     grav_phase->grid_cache   = grid_cache;
     grav_phase->aquifer_cell = ecl_grav->aquifer_cell;
-    grav_phase->fluid_mass   = util_calloc( size , sizeof * grav_phase->fluid_mass );
+    grav_phase->fluid_mass   = (double*)util_calloc( size , sizeof * grav_phase->fluid_mass );
     grav_phase->phase        = phase;
     grav_phase->work         = NULL;
 
     if (calc_type == GRAV_CALC_FIP) {
       ecl_kw_type * pvtnum_kw = ecl_file_iget_named_kw( init_file , PVTNUM_KW , 0 );
-      double_vector_type * std_density = hash_get( ecl_grav->std_density , ecl_util_get_phase_name( phase ));
+      double_vector_type * std_density = (double_vector_type*)hash_get( ecl_grav->std_density , ecl_util_get_phase_name( phase ));
       ecl_kw_type * fip_kw;
 
       if ( phase == ECL_OIL_PHASE)
@@ -349,7 +349,7 @@ static void ecl_grav_survey_add_phases( ecl_grav_type * ecl_grav , ecl_grav_surv
 static ecl_grav_survey_type * ecl_grav_survey_alloc_empty(const ecl_grav_type * ecl_grav ,
                                                           const char * name ,
                                                           grav_calc_type calc_type) {
-  ecl_grav_survey_type * survey = util_malloc( sizeof * survey );
+  ecl_grav_survey_type * survey = (ecl_grav_survey_type*)util_malloc( sizeof * survey );
   UTIL_TYPE_ID_INIT( survey , ECL_GRAV_SURVEY_ID );
   survey->grid_cache   = ecl_grav->grid_cache;
   survey->aquifer_cell = ecl_grav->aquifer_cell;
@@ -358,7 +358,7 @@ static ecl_grav_survey_type * ecl_grav_survey_alloc_empty(const ecl_grav_type * 
   survey->phase_map    = hash_alloc();
 
   if (calc_type & GRAV_CALC_USE_PORV)
-    survey->porv       = util_calloc( ecl_grid_cache_get_size( ecl_grav->grid_cache ) , sizeof * survey->porv );
+    survey->porv       = (double*)util_calloc( ecl_grid_cache_get_size( ecl_grav->grid_cache ) , sizeof * survey->porv );
   else
     survey->porv       = NULL;
 
@@ -549,10 +549,10 @@ static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey,
   int phase_nr;
   double deltag = 0;
   for (phase_nr = 0; phase_nr < vector_get_size( base_survey->phase_list ); phase_nr++) {
-    ecl_grav_phase_type * base_phase    = vector_iget( base_survey->phase_list , phase_nr );
+    ecl_grav_phase_type * base_phase    = (ecl_grav_phase_type*)vector_iget( base_survey->phase_list , phase_nr );
     if (base_phase->phase & phase_mask) {
       if (monitor_survey != NULL) {
-        const ecl_grav_phase_type * monitor_phase = vector_iget_const( monitor_survey->phase_list , phase_nr );
+        const ecl_grav_phase_type * monitor_phase = (const ecl_grav_phase_type*)vector_iget_const( monitor_survey->phase_list , phase_nr );
         deltag += ecl_grav_phase_eval( base_phase , monitor_phase , region , utm_x , utm_y , depth );
       } else
         deltag += ecl_grav_phase_eval( base_phase , NULL , region , utm_x , utm_y , depth );
@@ -570,7 +570,7 @@ static double ecl_grav_survey_eval( const ecl_grav_survey_type * base_survey,
 */
 
 ecl_grav_type * ecl_grav_alloc( const ecl_grid_type * ecl_grid, const ecl_file_type * init_file) {
-  ecl_grav_type * ecl_grav = util_malloc( sizeof * ecl_grav );
+  ecl_grav_type * ecl_grav = (ecl_grav_type*)util_malloc( sizeof * ecl_grav );
   ecl_grav->init_file      = init_file;
   ecl_grav->grid_cache     = ecl_grid_cache_alloc( ecl_grid );
   ecl_grav->aquifer_cell   = ecl_grav_common_alloc_aquifer_cell( ecl_grav->grid_cache , ecl_grav->init_file );
@@ -619,7 +619,7 @@ static ecl_grav_survey_type * ecl_grav_get_survey( const ecl_grav_type * grav , 
     return NULL;  // Calling scope must determine if this is OK?
   else {
     if (hash_has_key( grav->surveys , name))
-      return hash_get( grav->surveys , name );
+      return (ecl_grav_survey_type*)hash_get( grav->surveys , name );
     else {
       hash_iter_type * survey_iter = hash_iter_alloc( grav->surveys );
       fprintf(stderr,"Survey name:%s not registered. Available surveys are: \n\n     " , name);
@@ -680,7 +680,7 @@ void ecl_grav_new_std_density( ecl_grav_type * grav , ecl_phase_enum phase , dou
 
 
 void ecl_grav_add_std_density( ecl_grav_type * grav , ecl_phase_enum phase , int pvtnum , double density) {
-  double_vector_type * std_density = hash_get( grav->std_density , ecl_util_get_phase_name( phase ));
+  double_vector_type * std_density = (double_vector_type*)hash_get( grav->std_density , ecl_util_get_phase_name( phase ));
   double_vector_iset( std_density , pvtnum , density );
 }
 

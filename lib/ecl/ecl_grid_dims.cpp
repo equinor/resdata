@@ -101,7 +101,7 @@ ecl_grid_dims_type * ecl_grid_dims_alloc( const char * grid_file , const char * 
   if ((grid_file_type == ECL_GRID_FILE) || (grid_file_type == ECL_EGRID_FILE)) {
     fortio_type * grid_fortio = fortio_open_reader( grid_file , grid_fmt_file , ECL_ENDIAN_FLIP );
     if (grid_fortio) {
-      grid_dims = util_malloc( sizeof * grid_dims );
+      grid_dims = (ecl_grid_dims_type*)util_malloc( sizeof * grid_dims );
       grid_dims->dims_list = vector_alloc_new( );
       
       {
@@ -144,6 +144,6 @@ int ecl_grid_dims_get_num_grids( const ecl_grid_dims_type * grid_dims ) {
 
 
 const grid_dims_type * ecl_grid_dims_iget_dims( const ecl_grid_dims_type * grid_dims , int grid_nr ) {
-  return vector_iget_const( grid_dims->dims_list , grid_nr );
+  return (const grid_dims_type*)vector_iget_const( grid_dims->dims_list , grid_nr );
 }
 

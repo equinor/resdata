@@ -84,14 +84,14 @@ struct ecl_subsidence_survey_struct {
 
 static ecl_subsidence_survey_type * ecl_subsidence_survey_alloc_empty(const ecl_subsidence_type * sub,
                                                                       const char * name) {
-  ecl_subsidence_survey_type * survey = util_malloc( sizeof * survey );
+  ecl_subsidence_survey_type * survey = (ecl_subsidence_survey_type*)util_malloc( sizeof * survey );
   UTIL_TYPE_ID_INIT( survey , ECL_SUBSIDENCE_SURVEY_ID );
   survey->grid_cache   = sub->grid_cache;
   survey->aquifer_cell = sub->aquifer_cell;
   survey->name         = util_alloc_string_copy( name );
 
-  survey->porv     = util_calloc( ecl_grid_cache_get_size( sub->grid_cache ) , sizeof * survey->porv     );
-  survey->pressure = util_calloc( ecl_grid_cache_get_size( sub->grid_cache ) , sizeof * survey->pressure );
+  survey->porv     = (double*)util_calloc( ecl_grid_cache_get_size( sub->grid_cache ) , sizeof * survey->porv     );
+  survey->pressure = (double*)util_calloc( ecl_grid_cache_get_size( sub->grid_cache ) , sizeof * survey->pressure );
 
   return survey;
 }
@@ -144,7 +144,7 @@ static double ecl_subsidence_survey_eval( const ecl_subsidence_survey_type * bas
 
   const ecl_grid_cache_type * grid_cache = base_survey->grid_cache;
   const int size  = ecl_grid_cache_get_size( grid_cache );
-  double * weight = util_calloc( size , sizeof * weight );
+  double * weight = (double*)util_calloc( size , sizeof * weight );
   double deltaz;
   int index;
 
@@ -174,7 +174,7 @@ static double ecl_subsidence_survey_eval_geertsma( const ecl_subsidence_survey_t
   const double * cell_volume = ecl_grid_cache_get_volume( grid_cache );
   const int size  = ecl_grid_cache_get_size( grid_cache );
   double scale_factor = 1e4 *(1 + poisson_ratio) * ( 1 - 2*poisson_ratio) / ( 4*M_PI*( 1 - poisson_ratio)  * youngs_modulus );
-  double * weight = util_calloc( size , sizeof * weight );
+  double * weight = (double*)util_calloc( size , sizeof * weight );
   double deltaz;
 
   for (int index = 0; index < size; index++) {
@@ -202,7 +202,7 @@ static double ecl_subsidence_survey_eval_geertsma( const ecl_subsidence_survey_t
 */
 
 ecl_subsidence_type * ecl_subsidence_alloc( const ecl_grid_type * ecl_grid, const ecl_file_type * init_file) {
-  ecl_subsidence_type * ecl_subsidence = util_malloc( sizeof * ecl_subsidence );
+  ecl_subsidence_type * ecl_subsidence = (ecl_subsidence_type*)util_malloc( sizeof * ecl_subsidence );
   ecl_subsidence->init_file      = init_file;
   ecl_subsidence->grid_cache     = ecl_grid_cache_alloc( ecl_grid );
   ecl_subsidence->aquifer_cell   = ecl_grav_common_alloc_aquifer_cell( ecl_subsidence->grid_cache , init_file );
@@ -232,7 +232,7 @@ static ecl_subsidence_survey_type * ecl_subsidence_get_survey( const ecl_subside
   if (name == NULL)
     return NULL;  // Calling scope must determine if this is OK?
   else
-    return hash_get( subsidence->surveys , name );
+    return (ecl_subsidence_survey_type*)hash_get( subsidence->surveys , name );
 }
 
 

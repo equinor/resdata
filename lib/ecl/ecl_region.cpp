@@ -137,12 +137,12 @@ void ecl_region_unlock( ecl_region_type * region ){
 
 
 ecl_region_type * ecl_region_alloc( const ecl_grid_type * ecl_grid , bool preselect) {
-  ecl_region_type * region = util_malloc( sizeof * region );
+  ecl_region_type * region = (ecl_region_type*)util_malloc( sizeof * region );
   UTIL_TYPE_ID_INIT( region , ECL_REGION_TYPE_ID);
   region->parent_grid = ecl_grid;
   ecl_grid_get_dims( ecl_grid , &region->grid_nx , &region->grid_ny , &region->grid_nz , &region->grid_active);
   region->grid_vol          = region->grid_nx * region->grid_ny * region->grid_nz;
-  region->active_mask       = util_calloc(region->grid_vol , sizeof * region->active_mask );
+  region->active_mask       = (bool*)util_calloc(region->grid_vol , sizeof * region->active_mask );
   region->active_index_list  = int_vector_alloc(0 , 0);
   region->global_index_list  = int_vector_alloc(0 , 0);
   region->global_active_list = int_vector_alloc(0 , 0);

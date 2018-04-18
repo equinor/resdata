@@ -260,8 +260,8 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
   int data_index      = 0;
   int sizeof_ctype    = ecl_type_get_sizeof_ctype( data_type );
   int data_size       = init_size;
-  char * buffer       = util_calloc( (buffer_size + 1) , sizeof * buffer      );
-  char * data         = util_calloc( sizeof_ctype * data_size , sizeof * data );
+  char * buffer       = (char*)util_calloc( (buffer_size + 1) , sizeof * buffer      );
+  char * data         = (char*)util_calloc( sizeof_ctype * data_size , sizeof * data );
 
   while (true) {
     if (fscanf(stream , "%32s" , buffer) == 1) {
@@ -347,7 +347,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
               data_size  = util_size_t_min( ECL_KW_MAX_SIZE , 2*(data_index + multiplier));
               byte_size *= data_size;
 
-              data = util_realloc( data , byte_size );
+              data = (char*)util_realloc( data , byte_size );
             } else {
               /*
                 We are asking for more elements than can possible be adressed in
@@ -371,7 +371,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
   }
   free( buffer );
   *kw_size = data_index;
-  data = util_realloc( data , sizeof_ctype * data_index * sizeof * data );
+  data = (char*)util_realloc( data , sizeof_ctype * data_index * sizeof * data );
   return data;
 }
 

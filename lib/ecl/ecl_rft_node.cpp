@@ -106,7 +106,7 @@ static ecl_rft_enum translate_from_sting_to_ecl_rft_enum(const char * data_type_
 
 ecl_rft_node_type * ecl_rft_node_alloc_new(const char * well_name, const char * data_type_string, const time_t recording_date, const double days){
     ecl_rft_enum data_type = translate_from_sting_to_ecl_rft_enum(data_type_string);
-    ecl_rft_node_type * rft_node = util_malloc(sizeof * rft_node );
+    ecl_rft_node_type * rft_node = (ecl_rft_node_type*)util_malloc(sizeof * rft_node );
     UTIL_TYPE_ID_INIT( rft_node , ECL_RFT_NODE_ID );
     rft_node->well_name = util_alloc_string_copy(well_name);
     rft_node->cells = vector_alloc_new();
@@ -130,7 +130,7 @@ static ecl_rft_node_type * ecl_rft_node_alloc_empty(const char * data_type_strin
   }
 
   {
-    ecl_rft_node_type * rft_node = util_malloc(sizeof * rft_node );
+    ecl_rft_node_type * rft_node = (ecl_rft_node_type*)util_malloc(sizeof * rft_node );
     UTIL_TYPE_ID_INIT( rft_node , ECL_RFT_NODE_ID );
 
     rft_node->cells = vector_alloc_new();
@@ -269,11 +269,11 @@ static void ecl_rft_node_init_cells( ecl_rft_node_type * rft_node , const ecl_fi
 
 ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_view_type * rft_view) {
   ecl_kw_type       * welletc   = ecl_file_view_iget_named_kw(rft_view , WELLETC_KW , 0);
-  ecl_rft_node_type * rft_node  = ecl_rft_node_alloc_empty(ecl_kw_iget_ptr(welletc , WELLETC_TYPE_INDEX));
+  ecl_rft_node_type * rft_node  = ecl_rft_node_alloc_empty((const char*)ecl_kw_iget_ptr(welletc , WELLETC_TYPE_INDEX));
 
   if (rft_node != NULL) {
     ecl_kw_type * date_kw = ecl_file_view_iget_named_kw( rft_view , DATE_KW    , 0);
-    rft_node->well_name = util_alloc_strip_copy( ecl_kw_iget_ptr(welletc , WELLETC_NAME_INDEX));
+    rft_node->well_name = (char*)util_alloc_strip_copy( (const char*)ecl_kw_iget_ptr(welletc , WELLETC_NAME_INDEX));
 
     /* Time information. */
     {
@@ -325,7 +325,7 @@ ecl_rft_enum ecl_rft_node_get_type(const ecl_rft_node_type * rft_node) { return 
 /* various functions to access properties at the cell level      */
 
 const ecl_rft_cell_type * ecl_rft_node_iget_cell( const ecl_rft_node_type * rft_node , int index) {
-  return vector_iget_const( rft_node->cells , index );
+  return (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , index );
 }
 
 
@@ -349,7 +349,7 @@ const ecl_rft_cell_type * ecl_rft_node_iget_cell_sorted( ecl_rft_node_type * rft
     if (!rft_node->sort_perm_in_sync)
       ecl_rft_node_create_sort_perm( rft_node );
 
-    return vector_iget_const( rft_node->cells , int_vector_iget( rft_node->sort_perm , index ));
+    return (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , int_vector_iget( rft_node->sort_perm , index ));
   }
 }
 
@@ -403,7 +403,7 @@ static void assert_type_and_index( const ecl_rft_node_type * rft_node , ecl_rft_
 double ecl_rft_node_iget_sgas( const ecl_rft_node_type * rft_node , int index) {
   assert_type_and_index( rft_node , RFT , index );
   {
-    const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , index );
+    const ecl_rft_cell_type * cell = (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , index );
     return ecl_rft_cell_get_sgas( cell );
   }
 }
@@ -412,7 +412,7 @@ double ecl_rft_node_iget_sgas( const ecl_rft_node_type * rft_node , int index) {
 double ecl_rft_node_iget_swat( const ecl_rft_node_type * rft_node , int index) {
   assert_type_and_index( rft_node , RFT , index );
   {
-    const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , index );
+    const ecl_rft_cell_type * cell = (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , index );
     return ecl_rft_cell_get_swat( cell );
   }
 }
@@ -424,7 +424,7 @@ double ecl_rft_node_get_days(const ecl_rft_node_type * rft_node ){
 double ecl_rft_node_iget_soil( const ecl_rft_node_type * rft_node , int index) {
   assert_type_and_index( rft_node , RFT , index );
   {
-    const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , index );
+    const ecl_rft_cell_type * cell = (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , index );
     return ecl_rft_cell_get_soil( cell );
   }
 }
@@ -435,7 +435,7 @@ double ecl_rft_node_iget_soil( const ecl_rft_node_type * rft_node , int index) {
 double ecl_rft_node_iget_orat( const ecl_rft_node_type * rft_node , int index) {
   assert_type_and_index( rft_node , PLT , index );
   {
-    const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , index );
+    const ecl_rft_cell_type * cell = (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , index );
     return ecl_rft_cell_get_orat( cell );
   }
 }
@@ -444,7 +444,7 @@ double ecl_rft_node_iget_orat( const ecl_rft_node_type * rft_node , int index) {
 double ecl_rft_node_iget_wrat( const ecl_rft_node_type * rft_node , int index) {
   assert_type_and_index( rft_node , PLT , index );
   {
-    const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , index);
+    const ecl_rft_cell_type * cell = (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , index);
     return ecl_rft_cell_get_wrat( cell );
   }
 }
@@ -453,7 +453,7 @@ double ecl_rft_node_iget_wrat( const ecl_rft_node_type * rft_node , int index) {
 double ecl_rft_node_iget_grat( const ecl_rft_node_type * rft_node , int index) {
   assert_type_and_index( rft_node , PLT , index );
   {
-    const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , index);
+    const ecl_rft_cell_type * cell = (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , index);
     return ecl_rft_cell_get_grat( cell );
   }
 }
@@ -594,7 +594,7 @@ void ecl_rft_node_fwrite(const ecl_rft_node_type * rft_node, fortio_type * forti
     int i;
 
     for(i =0;i<size_cells;i++){
-      const ecl_rft_cell_type * cell = vector_iget_const( rft_node->cells , i);
+      const ecl_rft_cell_type * cell = (const ecl_rft_cell_type*)vector_iget_const( rft_node->cells , i);
       ecl_kw_iset_int(conipos, i, ecl_rft_cell_get_i(cell)+1);
       ecl_kw_iset_int(conjpos, i, ecl_rft_cell_get_j(cell)+1);
       ecl_kw_iset_int(conkpos, i, ecl_rft_cell_get_k(cell)+1);

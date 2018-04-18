@@ -61,7 +61,7 @@ struct ecl_io_config_struct {
 /*****************************************************************/
 
 static ecl_io_config_type * ecl_io_config_alloc__() {
-  ecl_io_config_type * ecl_io_config = util_malloc(sizeof * ecl_io_config );
+  ecl_io_config_type * ecl_io_config = (ecl_io_config_type*)util_malloc(sizeof * ecl_io_config );
 
   ecl_io_config->formatted       = FMT_UNDEFINED;
   ecl_io_config->unified_restart = UNIF_UNDEFINED;

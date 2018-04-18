@@ -23,7 +23,7 @@
 
 void ecl_kw_fix_uninitialized(ecl_kw_type * ecl_kw , int nx , int ny , int nz, const int * actnum) {
   int i,j,k;
-  int * data = ecl_kw_get_ptr( ecl_kw );
+  int * data = (int*)ecl_kw_get_ptr( ecl_kw );
 
   int_vector_type * undetermined1 = int_vector_alloc(0,0);
   int_vector_type * undetermined2 = int_vector_alloc(0,0);

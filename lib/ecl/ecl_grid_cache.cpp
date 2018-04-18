@@ -54,15 +54,15 @@ struct ecl_grid_cache_struct {
 
 
 ecl_grid_cache_type * ecl_grid_cache_alloc( const ecl_grid_type * grid ) {
-  ecl_grid_cache_type * grid_cache = util_malloc( sizeof * grid_cache );
+  ecl_grid_cache_type * grid_cache = (ecl_grid_cache_type*)util_malloc( sizeof * grid_cache );
 
   grid_cache->grid          = grid;
   grid_cache->volume        = NULL;
   grid_cache->size          = ecl_grid_get_active_size( grid );
-  grid_cache->xpos          = util_calloc( grid_cache->size , sizeof * grid_cache->xpos );
-  grid_cache->ypos          = util_calloc( grid_cache->size , sizeof * grid_cache->ypos );
-  grid_cache->zpos          = util_calloc( grid_cache->size , sizeof * grid_cache->zpos );
-  grid_cache->global_index  = util_calloc( grid_cache->size , sizeof * grid_cache->global_index );
+  grid_cache->xpos          = (double*)util_calloc( grid_cache->size , sizeof * grid_cache->xpos );
+  grid_cache->ypos          = (double*)util_calloc( grid_cache->size , sizeof * grid_cache->ypos );
+  grid_cache->zpos          = (double*)util_calloc( grid_cache->size , sizeof * grid_cache->zpos );
+  grid_cache->global_index  = (int*)util_calloc( grid_cache->size , sizeof * grid_cache->global_index );
   {
     int active_index;
 
@@ -113,7 +113,7 @@ const double * ecl_grid_cache_get_volume( const ecl_grid_cache_type * grid_cache
   if (!grid_cache->volume) {
     // C++ style const cast.
     ecl_grid_cache_type * gc = (ecl_grid_cache_type *) grid_cache;
-    gc->volume = util_calloc( gc->size , sizeof * gc->volume );
+    gc->volume = (double*)util_calloc( gc->size , sizeof * gc->volume );
     for (int active_index = 0; active_index < grid_cache->size; active_index++)
       gc->volume[active_index] = ecl_grid_get_cell_volume1A( gc->grid , active_index );
   }

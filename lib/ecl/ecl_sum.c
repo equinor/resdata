@@ -154,7 +154,7 @@ static ecl_sum_type * ecl_sum_alloc__( const char * input_arg , const char * key
   if (!ecl_util_path_access(input_arg))
     return NULL;
 
-  ecl_sum_type * ecl_sum = util_malloc( sizeof * ecl_sum );
+  ecl_sum_type * ecl_sum = (ecl_sum_type*)util_malloc( sizeof * ecl_sum );
   UTIL_TYPE_ID_INIT( ecl_sum , ECL_SUM_ID );
 
   ecl_sum->ecl_case  = NULL;
@@ -717,6 +717,9 @@ double ecl_sum_get_general_var(const ecl_sum_type * ecl_sum , int time_index , c
   return ecl_sum_data_iget( ecl_sum->data , time_index  , params_index);
 }
 
+#ifdef __cplusplus
+extern "C" {
+
 void ecl_sum_get_interp_vector(const ecl_sum_type * ecl_sum, time_t sim_time, const ecl_sum_vector_type * key_words, double_vector_type * data){
   ecl_sum_data_get_interp_vector(ecl_sum->data, sim_time, key_words, data);
 }
@@ -724,6 +727,9 @@ void ecl_sum_get_interp_vector(const ecl_sum_type * ecl_sum, time_t sim_time, co
 void ecl_sum_fwrite_interp_csv_line(const ecl_sum_type * ecl_sum, time_t sim_time, const ecl_sum_vector_type * key_words, FILE *fp){
   ecl_sum_data_fwrite_interp_csv_line(ecl_sum->data, sim_time, key_words, fp);
 }
+
+}
+#endif
 
 
 
@@ -1088,7 +1094,7 @@ static void ecl_sum_fprintf_header( const ecl_sum_type * ecl_sum , const stringl
 void ecl_sum_fprintf(const ecl_sum_type * ecl_sum , FILE * stream , const stringlist_type * var_list , bool report_only , const ecl_sum_fmt_type * fmt) {
   bool_vector_type  * has_var   = bool_vector_alloc( stringlist_get_size( var_list ), false );
   int_vector_type   * var_index = int_vector_alloc( stringlist_get_size( var_list ), -1 );
-  char * date_string            = util_malloc( DATE_STRING_LENGTH * sizeof * date_string);
+  char * date_string            = (char*)util_malloc( DATE_STRING_LENGTH * sizeof * date_string);
 
   char * current_locale = NULL;
   if (fmt->locale != NULL)

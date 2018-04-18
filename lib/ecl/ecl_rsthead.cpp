@@ -55,7 +55,7 @@ int ecl_rsthead_get_report_step( const ecl_rsthead_type * header ) {
 
 
 ecl_rsthead_type * ecl_rsthead_alloc_from_kw( int report_step , const ecl_kw_type * intehead_kw , const ecl_kw_type * doubhead_kw , const ecl_kw_type * logihead_kw ) {
-  ecl_rsthead_type * rsthead = util_malloc( sizeof * rsthead );
+  ecl_rsthead_type * rsthead = (ecl_rsthead_type*)util_malloc( sizeof * rsthead );
   rsthead->report_step = report_step;
   {
       const int * data = (const int *) ecl_kw_get_void_ptr( intehead_kw );
@@ -129,7 +129,7 @@ ecl_rsthead_type * ecl_rsthead_alloc( const ecl_file_view_type * rst_view, int r
 
 
 ecl_rsthead_type * ecl_rsthead_alloc_empty() {
-  ecl_rsthead_type * rsthead = util_malloc( sizeof * rsthead );
+  ecl_rsthead_type * rsthead = (ecl_rsthead_type*)util_malloc( sizeof * rsthead );
 
   rsthead->day       = 0;
   rsthead->month     = 0;

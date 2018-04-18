@@ -261,7 +261,7 @@ static void ecl_kw_assert_index(const ecl_kw_type *ecl_kw , int index, const cha
 static char * ecl_kw_alloc_output_buffer(const ecl_kw_type * ecl_kw) {
   size_t sizeof_iotype = ecl_type_get_sizeof_iotype(ecl_kw->data_type);
   size_t buffer_size = ecl_kw->size * sizeof_iotype;
-  char * buffer = util_malloc( buffer_size );
+  char * buffer = (char*)util_malloc( buffer_size );
 
   if (ecl_type_is_bool(ecl_kw->data_type)) {
     int * int_data = (int *) buffer;
@@ -300,7 +300,7 @@ static char * ecl_kw_alloc_output_buffer(const ecl_kw_type * ecl_kw) {
 
 static char * ecl_kw_alloc_input_buffer(const ecl_kw_type * ecl_kw) {
   size_t buffer_size = ecl_kw->size * ecl_type_get_sizeof_iotype(ecl_kw->data_type);
-  char * buffer = util_malloc( buffer_size );
+  char * buffer = (char*)util_malloc( buffer_size );
 
   return buffer;
 }
@@ -561,7 +561,7 @@ static void ecl_kw_set_shared_ref(ecl_kw_type * ecl_kw , void *data_ptr) {
       util_abort("%s: can not change to shared for keyword with allocated storage - aborting \n",__func__);
   }
   ecl_kw->shared_data = true;
-  ecl_kw->data = data_ptr;
+  ecl_kw->data = (char*)data_ptr;
 }
 
 
@@ -636,7 +636,7 @@ ecl_kw_type * ecl_kw_alloc_new_shared(const char * header ,  int size, ecl_data_
 ecl_kw_type * ecl_kw_alloc_empty() {
   ecl_kw_type *ecl_kw;
 
-  ecl_kw                 = util_malloc(sizeof *ecl_kw );
+  ecl_kw                 = (ecl_kw_type*)util_malloc(sizeof *ecl_kw );
   ecl_kw->header         = NULL;
   ecl_kw->header8        = NULL;
   ecl_kw->data           = NULL;
@@ -682,10 +682,10 @@ void ecl_kw_memcpy(ecl_kw_type *target, const ecl_kw_type *src) {
 
 
 ecl_kw_type *ecl_kw_alloc_copy(const ecl_kw_type *src) {
-  ecl_kw_type *new;
-  new = ecl_kw_alloc_empty();
-  ecl_kw_memcpy(new , src);
-  return new;
+  ecl_kw_type *new_;
+  new_ = ecl_kw_alloc_empty();
+  ecl_kw_memcpy(new_ , src);
+  return new_;
 }
 
 /**
@@ -754,7 +754,7 @@ void ecl_kw_resize( ecl_kw_type * ecl_kw, int new_size) {
     size_t old_byte_size = ecl_kw->size * ecl_type_get_sizeof_ctype(ecl_kw->data_type);
     size_t new_byte_size = new_size * ecl_type_get_sizeof_ctype(ecl_kw->data_type);
 
-    ecl_kw->data = util_realloc(ecl_kw->data , new_byte_size );
+    ecl_kw->data = (char*)util_realloc(ecl_kw->data , new_byte_size );
     if (new_byte_size > old_byte_size) {
       size_t offset = old_byte_size;
       memset(&ecl_kw->data[offset] , 0 , new_byte_size - old_byte_size);
@@ -869,13 +869,13 @@ ECL_KW_IGET_TYPED(bool   , ECL_BOOL_TYPE);
 const char * ecl_kw_iget_char_ptr( const ecl_kw_type * ecl_kw , int i) {
   if (ecl_kw_get_type(ecl_kw) != ECL_CHAR_TYPE)
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));
-  return ecl_kw_iget_ptr( ecl_kw , i );
+  return (const char *)ecl_kw_iget_ptr( ecl_kw , i );
 }
 
 const char * ecl_kw_iget_string_ptr( const ecl_kw_type * ecl_kw, int i) {
   if (ecl_kw_get_type(ecl_kw) != ECL_STRING_TYPE)
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));
-  return ecl_kw_iget_ptr( ecl_kw , i );
+  return (const char *)ecl_kw_iget_ptr( ecl_kw , i );
 }
 
 
@@ -972,9 +972,9 @@ void ecl_kw_iset_string_ptr( ecl_kw_type * ecl_kw, int index, const char * s) {
 */
 
 bool ecl_kw_icmp_string( const ecl_kw_type * ecl_kw , int index, const char * other_string) {
-  const char * kw_string = ecl_kw_iget_char_ptr( ecl_kw , index );
+  const char * kw_string = (const char *)ecl_kw_iget_char_ptr( ecl_kw , index );
   if (strlen(other_string)) {
-    char * match = strstr( kw_string , other_string);
+    const char * match = strstr( kw_string , other_string);
     if (match == kw_string)
       return true;
   }
@@ -1484,7 +1484,7 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 void ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , void * data) {
   if (!ecl_kw->shared_data)
     util_safe_free( ecl_kw->data );
-  ecl_kw->data = data;
+  ecl_kw->data = (char*)data;
 }
 
 
@@ -1497,7 +1497,7 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
 
   {
     size_t byte_size = ecl_kw->size * ecl_type_get_sizeof_ctype(ecl_kw->data_type);
-    ecl_kw->data = util_realloc(ecl_kw->data , byte_size );
+    ecl_kw->data = (char*)util_realloc(ecl_kw->data , byte_size );
     memset(ecl_kw->data , 0 , byte_size);
   }
 }
@@ -1514,7 +1514,7 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
-  ecl_kw->header8 = realloc(ecl_kw->header8 , ECL_STRING8_LENGTH + 1);
+  ecl_kw->header8 = (char*)realloc(ecl_kw->header8 , ECL_STRING8_LENGTH + 1);
   if (strlen(header) <= 8) {
      sprintf(ecl_kw->header8 , "%-8s" , header);
 
@@ -1523,7 +1523,7 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
      ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
   }
   else {
-     ecl_kw->header = util_alloc_copy(header, strlen( header ) + 1);
+     ecl_kw->header = (char*)util_alloc_copy(header, strlen( header ) + 1);
   }
 
 }
@@ -1781,7 +1781,7 @@ ecl_data_type ecl_kw_get_data_type(const ecl_kw_type * ecl_kw) {
 ecl_kw_type * ecl_kw_buffer_alloc(buffer_type * buffer) {
   const char * header    = buffer_fread_string( buffer );
   int size               = buffer_fread_int( buffer );
-  ecl_type_enum ecl_type = buffer_fread_int( buffer );
+  ecl_type_enum ecl_type = (ecl_type_enum)buffer_fread_int( buffer );
   size_t element_size    = buffer_fread_int( buffer );
 
   ecl_data_type data_type = ecl_type_create(ecl_type, element_size);
@@ -1991,7 +1991,7 @@ void ecl_kw_summarize(const ecl_kw_type * ecl_kw) {
 #define ECL_KW_SCALAR_SET_TYPED( ctype , ECL_TYPE ) \
 void ecl_kw_scalar_set_ ## ctype( ecl_kw_type * ecl_kw , ctype value){  \
  if (ecl_kw_get_type(ecl_kw) == ECL_TYPE) {                                    \
-    ctype * data = ecl_kw_get_data_ref(ecl_kw);                         \
+    ctype * data = (ctype *)ecl_kw_get_data_ref(ecl_kw);                \
     int i;                                                              \
     for (i=0;i < ecl_kw->size; i++)                                     \
       data[i] = value;                                                  \
@@ -2048,7 +2048,7 @@ void ecl_kw_scale_ ## ctype (ecl_kw_type * ecl_kw , ctype scale_factor) {       
   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                            \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));  \
   {                                                                                                   \
-     ctype * data = ecl_kw_get_data_ref(ecl_kw);                                                      \
+     ctype * data = (ctype *)ecl_kw_get_data_ref(ecl_kw);                                                      \
      int    size  = ecl_kw_get_size(ecl_kw);                                                          \
      int i;                                                                                           \
      for (i=0; i < size; i++)                                                                         \
@@ -2077,7 +2077,7 @@ void ecl_kw_shift_ ## ctype (ecl_kw_type * ecl_kw , ctype shift_value) {        
   if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                            \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ecl_kw_get_header8(ecl_kw));  \
   {                                                                                                   \
-     ctype * data = ecl_kw_get_data_ref(ecl_kw);                                                      \
+     ctype * data = (ctype *)ecl_kw_get_data_ref(ecl_kw);                                                      \
      int    size  = ecl_kw_get_size(ecl_kw);                                                          \
      int i;                                                                                           \
      for (i=0; i < size; i++)                                                                         \
@@ -2126,8 +2126,8 @@ void ecl_kw_copy_indexed( ecl_kw_type * target_kw , const int_vector_type * inde
   if (!ecl_kw_size_and_type_equal( target_kw , src_kw ))
     util_abort("%s: type/size  mismatch\n",__func__);
   {
-    char * target_data = ecl_kw_get_data_ref( target_kw );
-    const char * src_data = ecl_kw_get_data_ref( src_kw );
+    char * target_data = (char *)ecl_kw_get_data_ref( target_kw );
+    const char * src_data = (const char *)ecl_kw_get_data_ref( src_kw );
     int sizeof_ctype = ecl_type_get_sizeof_ctype(target_kw->data_type);
     int set_size     = int_vector_size( index_set );
     const int * index_data = int_vector_get_const_ptr( index_set );
@@ -2146,8 +2146,8 @@ static void ecl_kw_inplace_add_indexed_ ## ctype( ecl_kw_type * target_kw , cons
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , add_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                       \
+    const ctype * add_data = (const ctype *)ecl_kw_get_data_ref( add_kw );                 \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
     int i;                                                                                 \
@@ -2189,8 +2189,8 @@ static void ecl_kw_inplace_add_ ## ctype( ecl_kw_type * target_kw , const ecl_kw
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , add_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * add_data = (const ctype *)ecl_kw_get_data_ref( add_kw );                                \
     int i;                                                                                 \
     for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] += add_data[i];                                                       \
@@ -2224,8 +2224,8 @@ static void ecl_kw_inplace_add_squared_ ## ctype( ecl_kw_type * target_kw , cons
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , add_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * add_data = ecl_kw_get_data_ref( add_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * add_data = (const ctype *)ecl_kw_get_data_ref( add_kw );                                \
     int i;                                                                                 \
     for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] += add_data[i] * add_data[i];                                         \
@@ -2264,8 +2264,8 @@ void ecl_kw_inplace_sub_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type *
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , sub_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * sub_data = ecl_kw_get_data_ref( sub_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * sub_data = (const ctype *)ecl_kw_get_data_ref( sub_kw );                                \
     int i;                                                                                 \
     for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] -= sub_data[i];                                                       \
@@ -2298,8 +2298,8 @@ static void ecl_kw_inplace_sub_indexed_ ## ctype( ecl_kw_type * target_kw , cons
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , sub_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * sub_data = ecl_kw_get_data_ref( sub_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * sub_data = (const ctype *)ecl_kw_get_data_ref( sub_kw );                                \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
     int i;                                                                                 \
@@ -2338,7 +2338,7 @@ void ecl_kw_inplace_sub_indexed( ecl_kw_type * target_kw , const int_vector_type
 
 #define ECL_KW_TYPED_INPLACE_ABS( ctype , abs_func)     \
 void ecl_kw_inplace_abs_ ## ctype( ecl_kw_type * kw ) { \
-  ctype * data = ecl_kw_get_data_ref( kw );             \
+  ctype * data = (ctype *)ecl_kw_get_data_ref( kw );             \
   int i;                                                \
   for (i=0; i < kw->size; i++)                          \
     data[i] = abs_func(data[i]);                        \
@@ -2376,7 +2376,7 @@ static int sqrti(int x) {
 
 #define ECL_KW_TYPED_INPLACE_SQRT( ctype, sqrt_func )    \
 void ecl_kw_inplace_sqrt_ ## ctype( ecl_kw_type * kw ) { \
-  ctype * data = ecl_kw_get_data_ref( kw );              \
+  ctype * data = (ctype *)ecl_kw_get_data_ref( kw );              \
   int i;                                                 \
   for (i=0; i < kw->size; i++)                           \
     data[i] = sqrt_func(data[i]);                        \
@@ -2415,8 +2415,8 @@ void ecl_kw_inplace_mul_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type *
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , mul_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * mul_data = ecl_kw_get_data_ref( mul_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * mul_data = (const ctype *)ecl_kw_get_data_ref( mul_kw );                                \
     int i;                                                                                 \
     for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] *= mul_data[i];                                                       \
@@ -2449,8 +2449,8 @@ static void ecl_kw_inplace_mul_indexed_ ## ctype( ecl_kw_type * target_kw , cons
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , mul_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * mul_data = ecl_kw_get_data_ref( mul_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * mul_data = (const ctype *)ecl_kw_get_data_ref( mul_kw );                                \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
     int i;                                                                                 \
@@ -2493,8 +2493,8 @@ void ecl_kw_inplace_div_ ## ctype( ecl_kw_type * target_kw , const ecl_kw_type *
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , div_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * div_data = ecl_kw_get_data_ref( div_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * div_data = (const ctype *)ecl_kw_get_data_ref( div_kw );                                \
     int i;                                                                                 \
     for (i=0; i < target_kw->size; i++)                                                    \
       target_data[i] /= div_data[i];                                                       \
@@ -2528,8 +2528,8 @@ static void ecl_kw_inplace_div_indexed_ ## ctype( ecl_kw_type * target_kw , cons
  if (!ecl_kw_assert_binary_ ## ctype( target_kw , div_kw ))                                \
     util_abort("%s: type/size  mismatch\n",__func__);                                      \
  {                                                                                         \
-    ctype * target_data = ecl_kw_get_data_ref( target_kw );                                \
-    const ctype * div_data = ecl_kw_get_data_ref( div_kw );                                \
+    ctype * target_data = (ctype *)ecl_kw_get_data_ref( target_kw );                                \
+    const ctype * div_data = (const ctype *)ecl_kw_get_data_ref( div_kw );                                \
     int set_size     = int_vector_size( index_set );                                       \
     const int * index_data = int_vector_get_const_ptr( index_set );                        \
     int i;                                                                                 \
@@ -2574,8 +2574,8 @@ bool ecl_kw_inplace_safe_div(ecl_kw_type * target_kw, const ecl_kw_type * diviso
   if (ecl_kw_get_type(divisor) != ECL_INT_TYPE)
     return false;
 
- float * target_data = ecl_kw_get_data_ref( target_kw );
- const int* div_data = ecl_kw_get_data_ref( divisor );
+ float * target_data = (float*)ecl_kw_get_data_ref( target_kw );
+ const int* div_data = (const int*)ecl_kw_get_data_ref( divisor );
  for (int i=0; i < target_kw->size; i++) {
    if (div_data[i] != 0)
      target_data[i] /= div_data[i];
@@ -2677,7 +2677,7 @@ bool ecl_kw_is_kw_file(fortio_type * fortio) {
 
 #define KW_MAX_MIN(type)                                       \
 {                                                              \
-  type * data = ecl_kw_get_data_ref(ecl_kw);                   \
+  type * data = (type*)ecl_kw_get_data_ref(ecl_kw);                   \
   type max = data[0];                                          \
   type min = data[0];                                          \
   int i;                                                       \
@@ -2745,7 +2745,7 @@ ECL_KW_MIN( double )
 
 #define KW_SUM_INDEXED(type)                                       \
 {                                                                  \
-  const type * data = ecl_kw_get_data_ref(ecl_kw);                 \
+  const type * data = (const type *)ecl_kw_get_data_ref(ecl_kw);                 \
   type sum = 0;                                                    \
   int size = int_vector_size( index_list );                        \
   const int * index_ptr = int_vector_get_const_ptr( index_list );  \
@@ -2768,7 +2768,7 @@ void ecl_kw_element_sum_indexed(const ecl_kw_type * ecl_kw , const int_vector_ty
     break;
   case(ECL_BOOL_TYPE):
     {
-      const bool * data = ecl_kw_get_data_ref(ecl_kw);
+      const bool * data = (const bool *)ecl_kw_get_data_ref(ecl_kw);
       const int * index_ptr = int_vector_get_const_ptr( index_list );
       const int size = int_vector_size( index_list );
       int sum = 0;
@@ -2793,7 +2793,7 @@ void ecl_kw_element_sum_indexed(const ecl_kw_type * ecl_kw , const int_vector_ty
 
 #define KW_SUM(type)                                        \
 {                                                           \
-  const type * data = ecl_kw_get_data_ref(ecl_kw);          \
+  const type * data = (const type *)ecl_kw_get_data_ref(ecl_kw);          \
   type sum = 0;                                             \
   for (int i=0; i < ecl_kw_get_size(ecl_kw); i++)           \
      sum += data[i];                                        \
@@ -2937,4 +2937,4 @@ int ecl_kw_first_different( const ecl_kw_type * ecl_kw1 , const ecl_kw_type * ec
   }
 }
 
-#include "ecl_kw_functions.c"
+#include "ecl_kw_functions.cpp"

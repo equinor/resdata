@@ -140,7 +140,7 @@ void ecl_coarse_cell_assert( ecl_coarse_cell_type * coarse_cell ) {
 
 ecl_coarse_cell_type * ecl_coarse_cell_alloc() {
   const int LARGE = 1 << 30;
-  ecl_coarse_cell_type * coarse_cell = util_malloc( sizeof * coarse_cell );
+  ecl_coarse_cell_type * coarse_cell = (ecl_coarse_cell_type *) util_malloc( sizeof * coarse_cell );
   UTIL_TYPE_ID_INIT( coarse_cell , ECL_COARSE_CELL_TYPE_ID );
 
   coarse_cell->ijk[0] =  LARGE;

@@ -147,7 +147,7 @@ bool ecl_nnc_equal( const ecl_nnc_type * nnc1 , const ecl_nnc_type * nnc2) {
 
 
 static int ecl_nnc_sort_cmp__( const void * nnc1 , const void * nnc2) {
-  return ecl_nnc_sort_cmp( nnc1 , nnc2 );
+  return ecl_nnc_sort_cmp( (const ecl_nnc_type*)nnc1 , (const ecl_nnc_type*)nnc2 );
 }
 
 

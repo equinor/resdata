@@ -69,7 +69,7 @@ struct ecl_file_kw_struct {
 /*****************************************************************/
 
 inv_map_type * inv_map_alloc() {
-  inv_map_type * map = util_malloc( sizeof * map );
+  inv_map_type * map = (inv_map_type *)util_malloc( sizeof * map );
   map->file_kw_ptr = size_t_vector_alloc( 0 , 0 );
   map->ecl_kw_ptr  = size_t_vector_alloc( 0 , 0 );
   map->sorted = false;
@@ -137,7 +137,7 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_file_kw , ECL_FILE_KW_TYPE_ID )
 
 
 ecl_file_kw_type * ecl_file_kw_alloc0( const char * header , ecl_data_type data_type , int size , offset_type offset) {
-  ecl_file_kw_type * file_kw = util_malloc( sizeof * file_kw );
+  ecl_file_kw_type * file_kw = (ecl_file_kw_type *)util_malloc( sizeof * file_kw );
   UTIL_TYPE_ID_INIT( file_kw , ECL_FILE_KW_TYPE_ID );
 
   file_kw->header = util_alloc_string_copy( header );
@@ -370,7 +370,7 @@ ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num) {
 
   size_t file_kw_size = ECL_STRING8_LENGTH + 2 * sizeof(int) + sizeof(offset_type) + sizeof(size_t);
   size_t buffer_size = num * file_kw_size;
-  char * buffer = util_malloc( buffer_size * sizeof * buffer );
+  char * buffer = (char*)util_malloc( buffer_size * sizeof * buffer );
   size_t num_read = fread( buffer, 1 , buffer_size , stream);
 
   if (num_read != buffer_size) {
@@ -379,7 +379,7 @@ ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num) {
   }
 
   {
-    ecl_file_kw_type ** kw_list = util_malloc( num * sizeof * kw_list );
+    ecl_file_kw_type ** kw_list = (ecl_file_kw_type **)util_malloc( num * sizeof * kw_list );
     for (int ikw = 0; ikw < num; ikw++) {
       int buffer_offset = ikw * file_kw_size;
       char header[ECL_STRING8_LENGTH + 1];
