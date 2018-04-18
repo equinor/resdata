@@ -403,7 +403,7 @@ bool util_double_approx_equal( double d1 , double d2) {
 }
 
 
-char * util_alloc_substring_copy(const char *src , size_t offset , int N_) {
+char * util_alloc_substring_copy(const char *src , int offset , int N_) {
   size_t N = N_;
   char *copy;
   if ((N + offset) < strlen(src)) {
