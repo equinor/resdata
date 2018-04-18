@@ -318,15 +318,6 @@ string(STRIP "${BUILD_TIME}" BUILD_TIME)
 
 set(INSTALL_GROUP          ""     CACHE STRING "Group to install as - blank to install as current group")
 
-if (MSVC)
-   add_definitions( -D__func__="\\"????\\"")
-endif()
-
-if (ERT_WINDOWS)
-    message(WARNING "Python is not supported on Windows")
-    set( ENABLE_PYTHON OFF )
-endif ()
-
 if (ERT_LINUX)
    add_definitions( -DHAVE_PROC )
 endif()
@@ -336,19 +327,15 @@ add_subdirectory( applications )
 add_subdirectory( bin )
 
 if (ENABLE_PYTHON)
-   if (ERT_WINDOWS)
-      message(WARNING "Python is not supported on Windows")
-      set( ENABLE_PYTHON OFF )
-   else()
-      # If finding the Python interpreter and required packages
-      # fails in the python/CMakeLists.txt file the ENABLE_PYTHON
-      # will be set to OFF.
-      add_subdirectory( python )
+    # If finding the Python interpreter and required packages
+    # fails in the python/CMakeLists.txt file the ENABLE_PYTHON
+    # will be set to OFF.
+    add_subdirectory( python )
 
-      if(RST_DOC)
-         add_subdirectory( docs )
-      endif()
-   endif()
+    if(RST_DOC)
+       add_subdirectory( docs )
+    endif()
+
 endif()
 
 if (ENABLE_PYTHON)

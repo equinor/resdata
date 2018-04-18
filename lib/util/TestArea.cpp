@@ -15,6 +15,9 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
+
+#ifndef _MSC_VER // Currently not in Visual Studio build
+
 #include <string>
 
 #include <ert/util/util.h>
@@ -121,3 +124,4 @@ namespace ERT {
 
 }
 
+#endif
