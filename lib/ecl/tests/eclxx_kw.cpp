@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <fstream>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 
 #include <ert/ecl/ecl_file.h>
 
@@ -57,10 +57,10 @@ void test_kw_vector_string() {
     std::vector< const char* > vec = {
         "short",
         "sweet",
-        "padded  ",
-        "verylongkeyword"
+        "padded  "
     };
 
+    std::vector<const char *> too_long = {"1234567890"};
     ERT::EclKW< const char* > kw( "XYZ", vec );
 
     test_assert_size_t_equal( kw.size(), vec.size() );
@@ -68,8 +68,8 @@ void test_kw_vector_string() {
     test_assert_string_equal( kw.at( 0 ), "short   " );
     test_assert_string_equal( kw.at( 1 ), "sweet   " );
     test_assert_string_equal( kw.at( 2 ), vec.at( 2 ) );
-    test_assert_string_equal( kw.at( 3 ), "verylong" );
-    test_assert_string_not_equal( kw.at( 2 ), "verylongkeyword" );
+
+    test_assert_throw( ERT::EclKW<const char*>("XY", too_long), std::range_error);
 }
 
 void test_kw_vector_std_string() {
@@ -77,9 +77,8 @@ void test_kw_vector_std_string() {
     "short",
     "sweet",
     "padded  ",
-    "verylongkeyword"
   };
-
+  std::vector<std::string> too_long = {"1234567890"};
   ERT::EclKW< std::string > kw( "XYZ", vec );
 
   test_assert_size_t_equal( kw.size(), vec.size() );
@@ -87,8 +86,8 @@ void test_kw_vector_std_string() {
   test_assert_string_equal( kw.at( 0 ).c_str(), "short   " );
   test_assert_string_equal( kw.at( 1 ).c_str(), "sweet   " );
   test_assert_string_equal( kw.at( 2 ).c_str(), vec.at( 2 ) );
-  test_assert_string_equal( kw.at( 3 ).c_str(), "verylong" );
-  test_assert_string_not_equal( kw.at( 2 ).c_str(), "verylongkeyword" );
+
+  test_assert_throw( ERT::EclKW<std::string>("XY", too_long), std::range_error);
 }
 
 void test_logical() {

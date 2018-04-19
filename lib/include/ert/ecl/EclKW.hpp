@@ -205,8 +205,11 @@ EclKW< const char* >::EclKW( const std::string& kw,
     EclKW( kw, data.size() )
 {
     auto* ptr = this->get();
-    for( size_t i = 0; i < data.size(); ++i )
+    for( size_t i = 0; i < data.size(); ++i ) {
+        if (strlen(data[i]) > 8)
+            throw std::range_error("Strings must be maximum 8 characters long");
         ecl_kw_iset_string8( ptr, i, data[ i ] );
+    }
 }
 
 template<> inline
@@ -215,20 +218,26 @@ EclKW< std::string >::EclKW( const std::string& kw,
     EclKW( kw, data.size() )
 {
     auto* ptr = this->get();
-    for( size_t i = 0; i < data.size(); ++i )
+    for( size_t i = 0; i < data.size(); ++i ) {
+        if (data[i].size() > 8)
+            throw std::range_error("Strings must be maximum 8 characters long");
         ecl_kw_iset_string8( ptr, i, data[ i ].c_str() );
+    }
 }
 
 
 template<>
-template<>
+template<> inline
 EclKW< std::string >::EclKW( const std::string& kw,
                              const std::vector< const char* >& data ) :
     EclKW( kw, data.size() )
 {
     auto* ptr = this->get();
-    for( size_t i = 0; i < data.size(); ++i )
+    for( size_t i = 0; i < data.size(); ++i) {
+        if (strlen(data[i]) > 8)
+            throw std::range_error("Strings must be maximum 8 characters long");
         ecl_kw_iset_string8( ptr, i, data[ i ]);
+    }
 }
 
 template<> inline
@@ -264,9 +273,9 @@ void write_kw(FortIO& fortio, const std::string& kw, const std::vector<T>& data)
 /*
   Will write an empty ecl_kw instance of type 'MESS' to the Fortio file.
 */
-void write_kw(FortIO fortio, const std::string& kw) {
-    ecl_kw_type * ecl_kw = ecl_kw_alloc(kw.c_str(), 0, ECL_MESS);
-    ecl_kw_fwrite(ecl_kw, fortio.get());
+inline void write_mess(FortIO& fortio, const std::string& kw) {
+  ecl_kw_type * ecl_kw = ecl_kw_alloc(kw.c_str(), 0, ECL_MESS);
+  ecl_kw_fwrite(ecl_kw, fortio.get());
 }
 
 }
