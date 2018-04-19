@@ -221,7 +221,7 @@ EclKW< std::string >::EclKW( const std::string& kw,
 
 
 template<>
-template<>
+template<> inline
 EclKW< std::string >::EclKW( const std::string& kw,
                              const std::vector< const char* >& data ) :
     EclKW( kw, data.size() )
