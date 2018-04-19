@@ -205,8 +205,11 @@ EclKW< const char* >::EclKW( const std::string& kw,
     EclKW( kw, data.size() )
 {
     auto* ptr = this->get();
-    for( size_t i = 0; i < data.size(); ++i )
+    for( size_t i = 0; i < data.size(); ++i ) {
+        if (strlen(data[i]) > 8)
+            throw std::range_error("Strings must be maximum 8 characters long");
         ecl_kw_iset_string8( ptr, i, data[ i ] );
+    }
 }
 
 template<> inline
@@ -215,8 +218,11 @@ EclKW< std::string >::EclKW( const std::string& kw,
     EclKW( kw, data.size() )
 {
     auto* ptr = this->get();
-    for( size_t i = 0; i < data.size(); ++i )
+    for( size_t i = 0; i < data.size(); ++i ) {
+        if (data[i].size() > 8)
+            throw std::range_error("Strings must be maximum 8 characters long");
         ecl_kw_iset_string8( ptr, i, data[ i ].c_str() );
+    }
 }
 
 
@@ -227,8 +233,11 @@ EclKW< std::string >::EclKW( const std::string& kw,
     EclKW( kw, data.size() )
 {
     auto* ptr = this->get();
-    for( size_t i = 0; i < data.size(); ++i )
+    for( size_t i = 0; i < data.size(); ++i) {
+        if (strlen(data[i]) > 8)
+            throw std::range_error("Strings must be maximum 8 characters long");
         ecl_kw_iset_string8( ptr, i, data[ i ]);
+    }
 }
 
 template<> inline
