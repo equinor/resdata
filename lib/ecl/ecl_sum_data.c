@@ -1487,3 +1487,9 @@ bool ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , cons
   }
   return compatible;
 }
+
+
+double ecl_sum_data_get_last_value(const ecl_sum_data_type * data, int param_index) {
+  const ecl_sum_tstep_type * tstep = vector_get_last_const(data->data);
+  return ecl_sum_tstep_iget( tstep, param_index);
+}

@@ -142,7 +142,7 @@ class EclSum(BaseCClass):
     _add_tstep                     = EclPrototype("ecl_sum_tstep_ref ecl_sum_add_tstep(ecl_sum, int, double)")
     _export_csv                    = EclPrototype("void ecl_sum_export_csv(ecl_sum, char*, stringlist, char*, char*)")
     _identify_var_type             = EclPrototype("ecl_sum_var_type ecl_sum_identify_var_type(char*)", bind = False)
-
+    _get_last_value                = EclPrototype("double ecl_sum_get_last_value_gen_key(ecl_sum, char*)")
 
 
     def __init__(self, load_case, join_string=":", include_restart=True):
@@ -452,7 +452,10 @@ class EclSum(BaseCClass):
         The alternative method 'last' will return a EclSumNode
         instance with some extra time related information.
         """
-        return self[key].last_value
+        if not key in self:
+            raise KeyError("No such key:%s" % key)
+
+        return self._get_last_value(key)
 
     def get_last(self, key):
         """
