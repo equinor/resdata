@@ -86,6 +86,8 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   bool                     ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);
   bool                     ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);
   void                     ecl_sum_data_fwrite_interp_csv_line(const ecl_sum_data_type * data , time_t sim_time, const ecl_sum_vector_type * keylist, FILE *fp);
+  double                   ecl_sum_data_get_last_value(const ecl_sum_data_type * data, int param_index);
+
 
   double_vector_type * ecl_sum_data_alloc_seconds_solution( const ecl_sum_data_type * data , const smspec_node_type * node , double value, bool rates_clamp_lower);
 
