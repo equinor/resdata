@@ -264,9 +264,9 @@ void write_kw(FortIO& fortio, const std::string& kw, const std::vector<T>& data)
 /*
   Will write an empty ecl_kw instance of type 'MESS' to the Fortio file.
 */
-void write_kw(FortIO fortio, const std::string& kw) {
-    ecl_kw_type * ecl_kw = ecl_kw_alloc(kw.c_str(), 0, ECL_MESS);
-    ecl_kw_fwrite(ecl_kw, fortio.get());
+inline void write_mess(FortIO& fortio, const std::string& kw) {
+  ecl_kw_type * ecl_kw = ecl_kw_alloc(kw.c_str(), 0, ECL_MESS);
+  ecl_kw_fwrite(ecl_kw, fortio.get());
 }
 
 }
