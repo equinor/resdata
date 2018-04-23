@@ -39,6 +39,7 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_init_file.h>
 
 static ecl_kw_type * ecl_init_file_alloc_INTEHEAD( const ecl_grid_type * ecl_grid , ert_ecl_unit_enum unit_system, int phases, time_t start_date , int simulator) {
   ecl_kw_type * intehead_kw = ecl_kw_alloc( INTEHEAD_KW , INTEHEAD_INIT_SIZE , ECL_INT );

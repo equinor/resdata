@@ -98,7 +98,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_rsthead.cpp
                 ecl/ecl_sum_tstep.c
                 ecl/ecl_rst_file.cpp
-                ecl/ecl_init_file.c
+                ecl/ecl_init_file.cpp
                 ecl/ecl_grid_cache.cpp
                 ecl/smspec_node.c
                 ecl/ecl_kw_grdecl.cpp
