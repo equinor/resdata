@@ -112,7 +112,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp
                 ecl/ecl_sum_vector.cpp
-                ecl/fortio.c
+                ecl/fortio.cpp
                 ecl/ecl_rft_file.cpp
                 ecl/ecl_rft_node.cpp
                 ecl/ecl_rft_cell.cpp
@@ -124,14 +124,14 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_region.cpp
                 ecl/ecl_subsidence.cpp
                 ecl/ecl_grid_dims.cpp
-                ecl/grid_dims.c
+                ecl/grid_dims.cpp
                 ecl/nnc_info.c
                 ecl/ecl_grav_common.cpp
                 ecl/nnc_vector.c
                 ecl/ecl_nnc_export.cpp
                 ecl/ecl_nnc_data.cpp
                 ecl/ecl_nnc_geometry.cpp
-                ecl/layer.c
+                ecl/layer.cpp
                 ecl/fault_block.cpp
                 ecl/fault_block_layer.cpp
                 ecl/ecl_type.cpp

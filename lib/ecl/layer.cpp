@@ -50,14 +50,14 @@ UTIL_SAFE_CAST_FUNCTION( layer , LAYER_TYPE_ID )
 
 
 layer_type * layer_alloc(int nx , int ny) {
-  layer_type * layer = util_malloc( sizeof * layer );
+  layer_type * layer = (layer_type*)util_malloc( sizeof * layer );
   UTIL_TYPE_ID_INIT( layer , LAYER_TYPE_ID );
   layer->nx = nx;
   layer->ny = ny;
   layer->cell_sum = 0;
   {
     int data_size = (layer->nx + 1)* (layer->ny + 1);
-    layer->data = util_malloc( data_size * sizeof * layer->data );
+    layer->data = (cell_type*)util_malloc( data_size * sizeof * layer->data );
     {
       int g;
       for (g=0; g < data_size; g++) {
@@ -524,7 +524,7 @@ static void layer_trace_block_content__( layer_type * layer , bool erase , int i
 
 static bool * layer_alloc_visited_mask( const layer_type * layer ) {
   int total_size = (layer->nx + 1)* (layer->ny + 1);
-  bool * visited = util_malloc( total_size * sizeof * visited );
+  bool * visited = (bool*)util_malloc( total_size * sizeof * visited );
   int g;
   for (g = 0; g < total_size; g++)
     visited[g] = false;
