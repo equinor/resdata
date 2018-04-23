@@ -28,6 +28,7 @@
 #include <ert/ecl/ecl_region.h>
 #include <ert/ecl/ecl_grid_cache.h>
 #include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_grav_common.h>
 
 /*
   This file contains code which is common to both the ecl_grav
@@ -36,7 +37,7 @@
 */
 
 bool * ecl_grav_common_alloc_aquifer_cell( const ecl_grid_cache_type * grid_cache , const ecl_file_type * init_file) {
-  bool * aquifer_cell = util_calloc( ecl_grid_cache_get_size( grid_cache ) , sizeof * aquifer_cell  );
+  bool * aquifer_cell = (bool*)util_calloc( ecl_grid_cache_get_size( grid_cache ) , sizeof * aquifer_cell  );
 
   for (int active_index = 0; active_index < ecl_grid_cache_get_size( grid_cache ); active_index++)
     aquifer_cell[ active_index ] = false;
