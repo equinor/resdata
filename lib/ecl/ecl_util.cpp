@@ -218,7 +218,7 @@ ecl_file_enum ecl_util_inspect_extension(const char * ext , bool *_fmt_file, int
 
 
 ecl_file_enum ecl_util_get_file_type(const char * filename, bool *fmt_file, int * report_nr) {
-  char *ext = strrchr(filename , '.');
+  char *ext = (char*)strrchr(filename , '.');
   if (ext == NULL)
     return ECL_OTHER_FILE;
 
@@ -568,35 +568,35 @@ static bool numeric_extension_predicate(const char * filename, const char * base
 
 
 static bool summary_UPPERCASE_ASCII(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 'A');
+  return numeric_extension_predicate(filename, (const char*)base, 'A');
 }
 
 static bool summary_UPPERCASE_BINARY(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 'S');
+  return numeric_extension_predicate(filename, (const char*)base, 'S');
 }
 
 static bool summary_lowercase_ASCII(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 'a');
+  return numeric_extension_predicate(filename, (const char*)base, 'a');
 }
 
 static bool summary_lowercase_BINARY(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 's');
+  return numeric_extension_predicate(filename, (const char*)base, 's');
 }
 
 static bool restart_UPPERCASE_ASCII(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 'F');
+  return numeric_extension_predicate(filename, (const char*)base, 'F');
 }
 
 static bool restart_UPPERCASE_BINARY(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 'X');
+  return numeric_extension_predicate(filename, (const char*)base, 'X');
 }
 
 static bool restart_lowercase_ASCII(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 'f');
+  return numeric_extension_predicate(filename, (const char*)base, 'f');
 }
 
 static bool restart_lowercase_BINARY(const char * filename, const void * base) {
-  return numeric_extension_predicate(filename, base, 'x');
+  return numeric_extension_predicate(filename, (const char*)base, 'x');
 }
 
 static int ecl_util_select_predicate_filelist(const char * path, const char * base, ecl_file_enum file_type, bool fmt_file, bool upper_case, stringlist_type * filelist) {
@@ -1211,7 +1211,7 @@ time_t ecl_util_get_start_date(const char * data_file) {
       util_abort("%s: sorry - could not find \"/\" termination of START keyword in data_file: \n",__func__ , data_file);
 
     buffer_size = (util_ftell(stream) - start_pos)  ;
-    buffer = util_calloc( buffer_size + 1 , sizeof * buffer  );
+    buffer = (char*)util_calloc( buffer_size + 1 , sizeof * buffer  );
     util_fseek( stream , start_pos , SEEK_SET);
     util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
     buffer[buffer_size] = '\0';
@@ -1248,7 +1248,7 @@ static int ecl_util_get_num_parallel_cpu__(basic_parser_type* parser, FILE* stre
     util_abort("%s: sorry - could not find \"/\" termination of PARALLEL keyword in data_file: \n",__func__ , data_file);
 
   buffer_size = (util_ftell(stream) - start_pos)  ;
-  buffer = util_calloc( buffer_size + 1  , sizeof * buffer );
+  buffer = (char*)util_calloc( buffer_size + 1  , sizeof * buffer );
   util_fseek( stream , start_pos , SEEK_SET);
   util_fread( buffer , sizeof * buffer , buffer_size ,stream ,  __func__);
   buffer[buffer_size] = '\0';

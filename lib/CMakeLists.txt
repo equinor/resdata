@@ -108,7 +108,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_grav_calc.cpp
                 ecl/ecl_smspec.cpp
                 ecl/ecl_sum_data.cpp
-                ecl/ecl_util.c
+                ecl/ecl_util.cpp
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp
                 ecl/ecl_sum_vector.cpp
@@ -132,8 +132,8 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_nnc_data.cpp
                 ecl/ecl_nnc_geometry.cpp
                 ecl/layer.c
-                ecl/fault_block.c
-                ecl/fault_block_layer.c
+                ecl/fault_block.cpp
+                ecl/fault_block_layer.cpp
                 ecl/ecl_type.cpp
                 ecl/ecl_type_python.cpp
                 ecl/well_state.c

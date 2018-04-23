@@ -52,7 +52,7 @@ static UTIL_SAFE_CAST_FUNCTION( fault_block , FAULT_BLOCK_ID )
 
 
 fault_block_type * fault_block_alloc( const fault_block_layer_type * parent_layer ,  int block_id ) {
-  fault_block_type * block = util_malloc( sizeof * block );
+  fault_block_type * block = (fault_block_type*)util_malloc( sizeof * block );
   UTIL_TYPE_ID_INIT( block , FAULT_BLOCK_ID );
   block->parent_layer = parent_layer;
   block->grid = fault_block_layer_get_grid( parent_layer );

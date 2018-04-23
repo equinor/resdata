@@ -201,7 +201,7 @@ fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , i
   if ((k < 0) || (k >= ecl_grid_get_nz( grid )))
     return NULL;
   else {
-    fault_block_layer_type * layer = util_malloc( sizeof * layer );
+    fault_block_layer_type * layer = (fault_block_layer_type*)util_malloc( sizeof * layer );
     UTIL_TYPE_ID_INIT( layer , FAULT_BLOCK_LAYER_ID);
     layer->grid = grid;
     layer->k    = k;
@@ -215,7 +215,7 @@ fault_block_layer_type * fault_block_layer_alloc( const ecl_grid_type * grid , i
 
 
 fault_block_type * fault_block_layer_iget_block( const fault_block_layer_type * layer , int storage_index) {
-  return vector_iget( layer->blocks , storage_index );
+  return (fault_block_type*)vector_iget( layer->blocks , storage_index );
 }
 
 
@@ -224,7 +224,7 @@ fault_block_type * fault_block_layer_get_block( const fault_block_layer_type * l
   if (storage_index < 0)
     return NULL;
   else
-    return vector_iget( layer->blocks , storage_index );
+    return (fault_block_type*)vector_iget( layer->blocks , storage_index );
 }
 
 
@@ -233,7 +233,7 @@ fault_block_type * fault_block_layer_safe_get_block( fault_block_layer_type * la
   if (storage_index < 0)
     return fault_block_layer_add_block( layer , block_id );
   else
-    return vector_iget( layer->blocks , storage_index );
+    return (fault_block_type*)vector_iget( layer->blocks , storage_index );
 }
 
 
