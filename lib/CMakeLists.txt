@@ -96,7 +96,7 @@ add_library(ecl util/rng.cpp
                 ${opt_srcs}
 
                 ecl/ecl_rsthead.cpp
-                ecl/ecl_sum_tstep.c
+                ecl/ecl_sum_tstep.cpp
                 ecl/ecl_rst_file.cpp
                 ecl/ecl_init_file.cpp
                 ecl/ecl_grid_cache.cpp
