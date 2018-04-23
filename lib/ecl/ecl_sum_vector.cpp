@@ -59,7 +59,7 @@ static void ecl_sum_vector_add_node(ecl_sum_vector_type * vector, const smspec_n
 
 
 ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum, bool add_keywords) {
-    ecl_sum_vector_type * ecl_sum_vector = util_malloc( sizeof * ecl_sum_vector );
+    ecl_sum_vector_type * ecl_sum_vector = (ecl_sum_vector_type*)util_malloc( sizeof * ecl_sum_vector );
     UTIL_TYPE_ID_INIT( ecl_sum_vector , ECL_SUM_VECTOR_TYPE_ID);
     ecl_sum_vector->ecl_sum  = ecl_sum;
     ecl_sum_vector->node_index_list = int_vector_alloc(0,0);

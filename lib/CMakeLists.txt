@@ -111,7 +111,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_util.c
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp
-                ecl/ecl_sum_vector.c
+                ecl/ecl_sum_vector.cpp
                 ecl/fortio.c
                 ecl/ecl_rft_file.cpp
                 ecl/ecl_rft_node.cpp
@@ -134,8 +134,8 @@ add_library(ecl util/rng.cpp
                 ecl/layer.c
                 ecl/fault_block.c
                 ecl/fault_block_layer.c
-                ecl/ecl_type.c
-                ecl/ecl_type_python.c
+                ecl/ecl_type.cpp
+                ecl/ecl_type_python.cpp
                 ecl/well_state.c
                 ecl/well_conn.c
                 ecl/well_info.c
