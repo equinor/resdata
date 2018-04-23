@@ -107,7 +107,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_grav.cpp
                 ecl/ecl_grav_calc.cpp
                 ecl/ecl_smspec.cpp
-                ecl/ecl_sum_data.c
+                ecl/ecl_sum_data.cpp
                 ecl/ecl_util.c
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp

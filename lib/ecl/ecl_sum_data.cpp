@@ -258,7 +258,7 @@ static void ecl_sum_data_clear_index( ecl_sum_data_type * data ) {
 
 
 ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
-  ecl_sum_data_type * data = util_malloc( sizeof * data );
+  ecl_sum_data_type * data = (ecl_sum_data_type*)util_malloc( sizeof * data );
   data->data        = vector_alloc_new();
   data->smspec      = smspec;
 
@@ -293,7 +293,7 @@ ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
 
 
 static ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
-  return vector_iget( data->data , internal_index );
+  return (ecl_sum_tstep_type*)vector_iget( data->data , internal_index );
 }
 
 
@@ -709,8 +709,8 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * sum_data ) {
 
   /* Identify various global first and last values.  */
   {
-    const ecl_sum_tstep_type * first_ministep = vector_iget_const( sum_data->data, 0 );
-    const ecl_sum_tstep_type * last_ministep  = vector_get_last_const( sum_data->data );
+    const ecl_sum_tstep_type * first_ministep = (const ecl_sum_tstep_type*)vector_iget_const( sum_data->data, 0 );
+    const ecl_sum_tstep_type * last_ministep  = (const ecl_sum_tstep_type*)vector_get_last_const( sum_data->data );
     /*
        In most cases the days_start and data_start_time will agree
        with the global simulation start; however in the case where we
@@ -772,7 +772,7 @@ ecl_sum_tstep_type * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int 
   ecl_sum_tstep_type * prev_tstep = NULL;
 
   if (vector_get_size( data->data ) > 0)
-    prev_tstep = vector_get_last( data->data );
+    prev_tstep = (ecl_sum_tstep_type*)vector_get_last( data->data );
 
   ecl_sum_data_append_tstep__( data , tstep );
   {
@@ -1234,7 +1234,7 @@ int ecl_sum_data_get_report_step_from_days(const ecl_sum_data_type * data , doub
 
     for (i=1; i < int_vector_size( data->report_last_index ); i++) {
       int ministep_index = int_vector_iget( data->report_last_index , i );
-      const ecl_sum_tstep_type * ministep = vector_iget_const( data->data , ministep_index );
+      const ecl_sum_tstep_type * ministep = (const ecl_sum_tstep_type*)vector_iget_const( data->data , ministep_index );
 
       double_vector_iset( days_map , i , ecl_sum_tstep_get_sim_days( ministep ));
       int_vector_iset( report_map , i , ecl_sum_tstep_get_report( ministep ));
@@ -1288,7 +1288,7 @@ int ecl_sum_data_get_report_step_from_time(const ecl_sum_data_type * data , time
 
     for (i=1; i < int_vector_size( data->report_last_index ); i++) {
       int ministep_index = int_vector_iget( data->report_last_index , i );
-      const ecl_sum_tstep_type * ministep = vector_iget_const( data->data , ministep_index );
+      const ecl_sum_tstep_type * ministep = (const ecl_sum_tstep_type*)vector_iget_const( data->data , ministep_index );
 
       time_t_vector_iset( time_map , i , ecl_sum_tstep_get_sim_time( ministep ));
       int_vector_iset( report_map , i , ecl_sum_tstep_get_report( ministep ));
@@ -1490,6 +1490,6 @@ bool ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , cons
 
 
 double ecl_sum_data_get_last_value(const ecl_sum_data_type * data, int param_index) {
-  const ecl_sum_tstep_type * tstep = vector_get_last_const(data->data);
+  const ecl_sum_tstep_type * tstep = (const ecl_sum_tstep_type*)vector_get_last_const(data->data);
   return ecl_sum_tstep_iget( tstep, param_index);
 }
