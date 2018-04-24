@@ -40,7 +40,7 @@ struct well_segment_collection_struct {
 
 
 well_segment_collection_type * well_segment_collection_alloc(void) {
-  well_segment_collection_type * segment_collection = util_malloc( sizeof * segment_collection );
+  well_segment_collection_type * segment_collection = (well_segment_collection_type*)util_malloc( sizeof * segment_collection );
 
   segment_collection->__segment_storage = vector_alloc_new();
   segment_collection->segment_index_map = int_vector_alloc( 0 , -1 );
@@ -77,7 +77,7 @@ void well_segment_collection_add( well_segment_collection_type * segment_collect
 
 
 well_segment_type * well_segment_collection_iget( const well_segment_collection_type * segment_collection , int index) {
-  return vector_iget( segment_collection->__segment_storage , index );
+  return (well_segment_type*)vector_iget( segment_collection->__segment_storage , index );
 }
 
 

@@ -53,7 +53,7 @@ static UTIL_SAFE_CAST_FUNCTION( well_segment , WELL_SEGMENT_TYPE_ID )
 
 
 well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id , const double * rseg_data) {
-  well_segment_type * segment = util_malloc( sizeof * segment );
+  well_segment_type * segment = (well_segment_type*)util_malloc( sizeof * segment );
   UTIL_TYPE_ID_INIT( segment , WELL_SEGMENT_TYPE_ID );
   
   segment->link_count = 0;
@@ -212,7 +212,7 @@ bool well_segment_add_connection( well_segment_type * segment , const char * gri
       hash_insert_hash_owned_ref( segment->connections , grid_name , well_conn_collection_alloc() , well_conn_collection_free__ );
     
     {
-      well_conn_collection_type * connections = hash_get( segment->connections , grid_name );
+      well_conn_collection_type * connections = (well_conn_collection_type*)hash_get( segment->connections , grid_name );
       well_conn_collection_add_ref( connections , conn );
     }
     return true;
@@ -223,7 +223,7 @@ bool well_segment_add_connection( well_segment_type * segment , const char * gri
 
 const well_conn_collection_type * well_segment_get_connections(const well_segment_type * segment , const char * grid_name ) {
   if (well_segment_has_grid_connections( segment , grid_name))
-    return hash_get( segment->connections , grid_name);
+    return (const well_conn_collection_type*)hash_get( segment->connections , grid_name);
   else
     return NULL;
 }

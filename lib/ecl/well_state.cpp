@@ -193,7 +193,7 @@ UTIL_IS_INSTANCE_FUNCTION( well_state , WELL_STATE_TYPE_ID)
 
 
 well_state_type * well_state_alloc(const char * well_name , int global_well_nr , bool open, well_type_enum type , int report_nr, time_t valid_from) {
-  well_state_type * well_state = util_malloc( sizeof * well_state );
+  well_state_type * well_state = (well_state_type*)util_malloc( sizeof * well_state );
   UTIL_TYPE_ID_INIT( well_state , WELL_STATE_TYPE_ID );
   well_state->index_wellhead = vector_alloc_new();
   well_state->name_wellhead  = hash_alloc();
@@ -340,7 +340,7 @@ static int well_state_get_lgr_well_nr( const well_state_type * well_state , cons
     while (true) {
       bool found = false;
       {
-        char * lgr_well_name = util_alloc_strip_copy( ecl_kw_iget_ptr( zwel_kw , well_nr * header->nzwelz) );
+        char * lgr_well_name = (char*)util_alloc_strip_copy( (const char*)ecl_kw_iget_ptr( zwel_kw , well_nr * header->nzwelz) );
 
         if ( strcmp( well_state->name , lgr_well_name) == 0)
           found = true;
@@ -425,7 +425,7 @@ static void well_state_add_connections__( well_state_type * well_state ,
       xcon_kw = ecl_file_view_iget_named_kw(rst_view, XCON_KW, 0);
     }
 
-    well_conn_collection_type * wellcc = hash_get( well_state->connections , grid_name );
+    well_conn_collection_type * wellcc = (well_conn_collection_type*)hash_get( well_state->connections , grid_name );
     well_conn_collection_load_from_kw( wellcc , iwel_kw , icon_kw , scon_kw, xcon_kw , well_nr , header );
   }
   ecl_rsthead_free( header );
@@ -518,7 +518,7 @@ bool well_state_add_MSW2( well_state_type * well_state ,
         hash_iter_type * grid_iter = hash_iter_alloc( well_state->connections );
         while (!hash_iter_is_complete( grid_iter )) {
           const char * grid_name = hash_iter_get_next_key( grid_iter );
-          const well_conn_collection_type * connections = hash_get( well_state->connections , grid_name );
+          const well_conn_collection_type * connections = (const well_conn_collection_type*)hash_get( well_state->connections , grid_name );
           well_segment_collection_add_connections( well_state->segments , grid_name , connections );
         }
         hash_iter_free( grid_iter );
@@ -581,7 +581,7 @@ well_state_type * well_state_alloc_from_file2( ecl_file_view_type * file_view , 
 
       {
         const int zwel_offset         = global_header->nzwelz * global_well_nr;
-        name = util_alloc_strip_copy(ecl_kw_iget_ptr( global_zwel_kw , zwel_offset ));  // Hardwired max 8 characters in Well Name
+        name = (char*)util_alloc_strip_copy((const char*)ecl_kw_iget_ptr( global_zwel_kw , zwel_offset ));  // Hardwired max 8 characters in Well Name
       }
 
       well_state = well_state_alloc(name , global_well_nr , open , type , report_nr , global_header->sim_time);
@@ -631,20 +631,20 @@ time_t well_state_get_sim_time( const well_state_type * well_state ) {
    Will return NULL if no wellhead in this grid.
 */
 const well_conn_type * well_state_iget_wellhead( const well_state_type * well_state , int grid_nr) {
-  return vector_safe_iget_const( well_state->index_wellhead , grid_nr );
+  return (const well_conn_type*)vector_safe_iget_const( well_state->index_wellhead , grid_nr );
 }
 
 
 const well_conn_type * well_state_get_wellhead( const well_state_type * well_state , const char * grid_name) {
   if (hash_has_key( well_state->name_wellhead , grid_name))
-    return hash_get( well_state->name_wellhead , grid_name );
+    return (const well_conn_type*)hash_get( well_state->name_wellhead , grid_name );
   else
     return NULL;
 }
 
 const well_conn_type * well_state_get_global_wellhead( const well_state_type * well_state ) {
   if (hash_has_key( well_state->name_wellhead , ECL_GRID_GLOBAL_GRID))
-    return hash_get( well_state->name_wellhead , ECL_GRID_GLOBAL_GRID );
+    return (const well_conn_type*)hash_get( well_state->name_wellhead , ECL_GRID_GLOBAL_GRID );
   else
     return NULL;
 }
@@ -672,7 +672,7 @@ const char * well_state_get_name( const well_state_type * well_state ) {
 
 const well_conn_collection_type * well_state_get_grid_connections( const well_state_type * well_state , const char * grid_name) {
   if (hash_has_key( well_state->connections , grid_name))
-    return hash_get( well_state->connections , grid_name);
+    return (const well_conn_collection_type*)hash_get( well_state->connections , grid_name);
   else
     return NULL;
 }

@@ -136,13 +136,13 @@ add_library(ecl util/rng.cpp
                 ecl/fault_block_layer.cpp
                 ecl/ecl_type.cpp
                 ecl/ecl_type_python.cpp
-                ecl/well_state.c
+                ecl/well_state.cpp
                 ecl/well_conn.cpp
                 ecl/well_info.cpp
                 ecl/well_ts.c
                 ecl/well_conn_collection.cpp
-                ecl/well_segment.c
-                ecl/well_segment_collection.c
+                ecl/well_segment.cpp
+                ecl/well_segment_collection.cpp
                 ecl/well_branch_collection.cpp
                 ecl/well_rseg_loader.cpp
 
