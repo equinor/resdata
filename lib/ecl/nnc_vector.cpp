@@ -45,7 +45,7 @@ static UTIL_SAFE_CAST_FUNCTION(nnc_vector , NNC_VECTOR_TYPE_ID)
 
 
 nnc_vector_type * nnc_vector_alloc(int lgr_nr) {
-  nnc_vector_type * nnc_vector = util_malloc( sizeof * nnc_vector );
+  nnc_vector_type * nnc_vector = (nnc_vector_type*)util_malloc( sizeof * nnc_vector );
   UTIL_TYPE_ID_INIT(nnc_vector , NNC_VECTOR_TYPE_ID);
   nnc_vector->grid_index_list = int_vector_alloc(0,0);
   nnc_vector->nnc_index_list  = int_vector_alloc(0,0);
@@ -54,7 +54,7 @@ nnc_vector_type * nnc_vector_alloc(int lgr_nr) {
 }
 
 nnc_vector_type * nnc_vector_alloc_copy(const nnc_vector_type * src_vector) {
-  nnc_vector_type * copy_vector =  util_malloc( sizeof * src_vector );
+  nnc_vector_type * copy_vector =  (nnc_vector_type*)util_malloc( sizeof * src_vector );
   UTIL_TYPE_ID_INIT(copy_vector , NNC_VECTOR_TYPE_ID);
 
   copy_vector->lgr_nr = src_vector->lgr_nr;  

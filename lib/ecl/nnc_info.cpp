@@ -41,7 +41,7 @@ UTIL_IS_INSTANCE_FUNCTION( nnc_info , NNC_INFO_TYPE_ID )
 
 
 nnc_info_type * nnc_info_alloc(int lgr_nr) {
-  nnc_info_type * nnc_info = util_malloc( sizeof * nnc_info );
+  nnc_info_type * nnc_info = (nnc_info_type*)util_malloc( sizeof * nnc_info );
   UTIL_TYPE_ID_INIT(nnc_info , NNC_INFO_TYPE_ID);
   nnc_info->lgr_list = vector_alloc_new(); 
   nnc_info->lgr_index_map = int_vector_alloc(0, -1); 
@@ -56,7 +56,7 @@ nnc_info_type * nnc_info_alloc_copy( const nnc_info_type * src_info ) {
   int ivec;
   
   for (ivec = 0; ivec < vector_get_size( src_info->lgr_list ); ivec++) {
-    nnc_vector_type * copy_vector = nnc_vector_alloc_copy( vector_iget_const( src_info->lgr_list , ivec));
+    nnc_vector_type * copy_vector = nnc_vector_alloc_copy( (const nnc_vector_type*)vector_iget_const( src_info->lgr_list , ivec));
     nnc_info_add_vector( copy_info , copy_vector );
   }
 
@@ -112,12 +112,12 @@ nnc_vector_type * nnc_info_get_vector( const nnc_info_type * nnc_info , int lgr_
   if (-1 == lgr_index)
     return NULL;
   else
-    return vector_iget( nnc_info->lgr_list , lgr_index );
+    return (nnc_vector_type*)vector_iget( nnc_info->lgr_list , lgr_index );
 }
 
 
 nnc_vector_type * nnc_info_iget_vector( const nnc_info_type * nnc_info , int lgr_index) {
-  return vector_iget( nnc_info->lgr_list , lgr_index );
+  return (nnc_vector_type*)vector_iget( nnc_info->lgr_list , lgr_index );
 }
 
 
@@ -189,7 +189,7 @@ int nnc_info_get_total_size( const nnc_info_type * nnc_info ) {
   int num_nnc = 0;
   int ivec;
   for (ivec = 0; ivec < vector_get_size( nnc_info->lgr_list ); ivec++) {
-    const nnc_vector_type * nnc_vector = vector_iget( nnc_info->lgr_list , ivec );
+    const nnc_vector_type * nnc_vector = (const nnc_vector_type*)vector_iget( nnc_info->lgr_list , ivec );
     num_nnc += nnc_vector_get_size( nnc_vector );
   }
   return num_nnc;

@@ -125,9 +125,9 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_subsidence.cpp
                 ecl/ecl_grid_dims.cpp
                 ecl/grid_dims.cpp
-                ecl/nnc_info.c
+                ecl/nnc_info.cpp
                 ecl/ecl_grav_common.cpp
-                ecl/nnc_vector.c
+                ecl/nnc_vector.cpp
                 ecl/ecl_nnc_export.cpp
                 ecl/ecl_nnc_data.cpp
                 ecl/ecl_nnc_geometry.cpp
