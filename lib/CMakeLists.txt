@@ -139,7 +139,7 @@ add_library(ecl util/rng.cpp
                 ecl/well_state.cpp
                 ecl/well_conn.cpp
                 ecl/well_info.cpp
-                ecl/well_ts.c
+                ecl/well_ts.cpp
                 ecl/well_conn_collection.cpp
                 ecl/well_segment.cpp
                 ecl/well_segment_collection.cpp

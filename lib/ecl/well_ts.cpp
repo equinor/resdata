@@ -91,7 +91,7 @@ struct well_ts_struct {
 /******************************************************************/
 
 static well_node_type * well_node_alloc( well_state_type * well_state) {
-  well_node_type * node = util_malloc( sizeof * node );
+  well_node_type * node = (well_node_type*)util_malloc( sizeof * node );
   UTIL_TYPE_ID_INIT( node , WELL_NODE_TYPE_ID );
   node->report_nr  = well_state_get_report_nr( well_state );
   node->sim_time   = well_state_get_sim_time( well_state );
@@ -131,7 +131,7 @@ static int well_node_time_cmp( const void * arg1 , const void * arg2) {
 /*****************************************************************/
 
 static well_ts_type * well_ts_alloc_empty( ) {
-  well_ts_type * well_ts = util_malloc( sizeof * well_ts );
+  well_ts_type * well_ts = (well_ts_type*)util_malloc( sizeof * well_ts );
   UTIL_TYPE_ID_INIT( well_ts , WELL_TS_TYPE_ID );
 
   well_ts->ts         = vector_alloc_new();
@@ -157,8 +157,8 @@ static int well_ts_get_index__( const well_ts_type * well_ts , int report_step ,
     return 0;
 
   else {
-    const well_node_type * first_node = vector_iget_const( well_ts->ts , 0 );
-    const well_node_type * last_node  = vector_get_last_const( well_ts->ts );
+    const well_node_type * first_node = (const well_node_type*)vector_iget_const( well_ts->ts , 0 );
+    const well_node_type * last_node  = (const well_node_type*)vector_get_last_const( well_ts->ts );
 
     if (use_report) {
       if (report_step < first_node->report_nr)
@@ -181,7 +181,7 @@ static int well_ts_get_index__( const well_ts_type * well_ts , int report_step ,
 
       while (true) {
         int center_index = (lower_index + upper_index) / 2;
-        const well_node_type * center_node = vector_iget_const( well_ts->ts , center_index );
+        const well_node_type * center_node = (const well_node_type*)vector_iget_const( well_ts->ts , center_index );
         double cmp;
         if (use_report)
           cmp = center_node->report_nr - report_step;
@@ -221,11 +221,11 @@ static int well_ts_get_index( const well_ts_type * well_ts , int report_step , t
   // Inline check that the index is correct
   {
     bool OK = true;
-    const well_node_type * node = vector_iget_const( well_ts->ts , index );
+    const well_node_type * node = (const well_node_type*)vector_iget_const( well_ts->ts , index );
     well_node_type * next_node = NULL;
 
     if (index < (vector_get_size( well_ts->ts ) - 1))
-      next_node = vector_iget( well_ts->ts , index + 1);
+      next_node = (well_node_type*)vector_iget( well_ts->ts , index + 1);
 
     if (use_report) {
       if (index < 0) {
@@ -268,7 +268,7 @@ void well_ts_add_well( well_ts_type * well_ts , well_state_type * well_state ) {
   vector_append_owned_ref( well_ts->ts , new_node , well_node_free__ );
 
   if (vector_get_size( well_ts->ts ) > 1) {
-    const well_node_type * last_node = vector_get_last_const(well_ts->ts );
+    const well_node_type * last_node = (const well_node_type*)vector_get_last_const(well_ts->ts );
     if (new_node->sim_time < last_node->sim_time)
       // The new node is chronologically before the previous node;
       // i.e. we must sort the nodes in time. This should probably happen
@@ -309,7 +309,7 @@ well_state_type * well_ts_get_last_state( const well_ts_type * well_ts) {
 
 
 well_state_type * well_ts_iget_state( const well_ts_type * well_ts , int index) {
-  well_node_type * node = vector_iget( well_ts->ts , index );
+  well_node_type * node = (well_node_type*)vector_iget( well_ts->ts , index );
 
   return node->well_state;
 }
