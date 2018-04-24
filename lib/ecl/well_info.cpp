@@ -192,7 +192,7 @@ struct well_info_struct {
 */
 
 well_info_type * well_info_alloc( const ecl_grid_type * grid) {
-  well_info_type * well_info = util_malloc( sizeof * well_info );
+  well_info_type * well_info = (well_info_type*)util_malloc( sizeof * well_info );
   well_info->wells      = hash_alloc();
   well_info->well_names = stringlist_alloc_new();
   well_info->grid       = grid;
@@ -205,7 +205,7 @@ bool well_info_has_well( well_info_type * well_info , const char * well_name ) {
 }
 
 well_ts_type * well_info_get_ts( const well_info_type * well_info , const char *well_name) {
-  return hash_get( well_info->wells , well_name );
+  return (well_ts_type*)hash_get( well_info->wells , well_name );
 }
 
 static void well_info_add_new_ts( well_info_type * well_info , const char * well_name) {

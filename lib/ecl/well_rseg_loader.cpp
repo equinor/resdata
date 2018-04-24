@@ -41,14 +41,14 @@ struct well_rseg_loader_struct {
 
 
 well_rseg_loader_type * well_rseg_loader_alloc(ecl_file_view_type * rst_view) {
-    well_rseg_loader_type * loader = util_malloc(sizeof * loader);
+    well_rseg_loader_type * loader = (well_rseg_loader_type*)util_malloc(sizeof * loader);
 
     int element_count = 4;
 
     loader->rst_view = rst_view;
     loader->relative_index_map = int_vector_alloc(0, 0);
     loader->absolute_index_map = int_vector_alloc(0, 0);
-    loader->buffer = util_malloc(element_count * sizeof(double));
+    loader->buffer = (char*)util_malloc(element_count * sizeof(double));
     loader->kw = RSEG_KW;
 
     int_vector_append(loader->relative_index_map, RSEG_DEPTH_INDEX);

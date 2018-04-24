@@ -138,13 +138,13 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_type_python.cpp
                 ecl/well_state.c
                 ecl/well_conn.cpp
-                ecl/well_info.c
+                ecl/well_info.cpp
                 ecl/well_ts.c
-                ecl/well_conn_collection.c
+                ecl/well_conn_collection.cpp
                 ecl/well_segment.c
                 ecl/well_segment_collection.c
                 ecl/well_branch_collection.cpp
-                ecl/well_rseg_loader.c
+                ecl/well_rseg_loader.cpp
 
                 geometry/geo_surface.c
                 geometry/geo_util.c

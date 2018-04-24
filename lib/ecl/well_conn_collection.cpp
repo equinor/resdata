@@ -43,7 +43,7 @@ static UTIL_SAFE_CAST_FUNCTION( well_conn_collection , WELL_CONN_COLLECTION_TYPE
 
 
 well_conn_collection_type * well_conn_collection_alloc() {
-  well_conn_collection_type * wellcc = util_malloc( sizeof * wellcc );
+  well_conn_collection_type * wellcc = (well_conn_collection_type*)util_malloc( sizeof * wellcc );
   UTIL_TYPE_ID_INIT( wellcc , WELL_CONN_COLLECTION_TYPE_ID );
   wellcc->connection_list = vector_alloc_new();
   return wellcc;
@@ -86,15 +86,16 @@ int well_conn_collection_get_size( const well_conn_collection_type * wellcc ) {
 const well_conn_type * well_conn_collection_iget_const(const well_conn_collection_type * wellcc , int index) {
   int size = well_conn_collection_get_size( wellcc );
   if (index < size)
-    return vector_iget_const( wellcc->connection_list , index );
+    return (const well_conn_type*)vector_iget_const( wellcc->connection_list , index );
   else
     return NULL;
 }
 
+
 well_conn_type * well_conn_collection_iget(const well_conn_collection_type * wellcc , int index) {
   int size = well_conn_collection_get_size( wellcc );
   if (index < size)
-    return vector_iget( wellcc->connection_list , index );
+    return (well_conn_type*)vector_iget( wellcc->connection_list , index );
   else
     return NULL;
 }
