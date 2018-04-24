@@ -891,7 +891,7 @@ static size_t __compress_bound (size_t sourceLen)
   Return value is the size (in bytes) of the compressed buffer.
   */
 size_t buffer_fwrite_compressed(buffer_type * buffer, const void * ptr , size_t byte_size) {
-    size_t compressed_size = 0;
+    unsigned long compressed_size = 0;
     bool abort_on_error    = true;
     buffer->content_size   = buffer->pos;   /* Invalidating possible buffer content coming after the compressed content; that is uninterpretable anyway. */
 
