@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-#include <ert/ecl/fortio.h>
+//#include <ert/ecl/fortio.h>
 #include <ert/util/util.h>
 
 #include <ert/ecl/FortIO.hpp>
