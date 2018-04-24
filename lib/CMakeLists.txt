@@ -100,7 +100,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_rst_file.cpp
                 ecl/ecl_init_file.cpp
                 ecl/ecl_grid_cache.cpp
-                ecl/smspec_node.c
+                ecl/smspec_node.cpp
                 ecl/ecl_kw_grdecl.cpp
                 ecl/ecl_file_kw.cpp
                 ecl/ecl_file_view.cpp
@@ -137,13 +137,13 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_type.cpp
                 ecl/ecl_type_python.cpp
                 ecl/well_state.c
-                ecl/well_conn.c
+                ecl/well_conn.cpp
                 ecl/well_info.c
                 ecl/well_ts.c
                 ecl/well_conn_collection.c
                 ecl/well_segment.c
                 ecl/well_segment_collection.c
-                ecl/well_branch_collection.c
+                ecl/well_branch_collection.cpp
                 ecl/well_rseg_loader.c
 
                 geometry/geo_surface.c

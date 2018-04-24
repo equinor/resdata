@@ -363,7 +363,7 @@ float smspec_node_get_default( const smspec_node_type * smspec_node ) {
 
 
 smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) {
-  smspec_node_type * node = util_malloc( sizeof * node );
+  smspec_node_type * node = (smspec_node_type*)util_malloc( sizeof * node );
 
   UTIL_TYPE_ID_INIT( node , SMSPEC_TYPE_ID);
   node->params_index  = params_index;
@@ -404,7 +404,7 @@ static void smspec_node_set_lgr_name( smspec_node_type * index , const char * lg
 
 static void smspec_node_set_lgr_ijk( smspec_node_type * index , int lgr_i , int lgr_j , int lgr_k) {
   if (index->lgr_ijk == NULL)
-    index->lgr_ijk = util_calloc( 3 , sizeof * index->lgr_ijk );
+    index->lgr_ijk = (int*)util_calloc( 3 , sizeof * index->lgr_ijk );
 
   index->lgr_ijk[0] = lgr_i;
   index->lgr_ijk[1] = lgr_j;
@@ -434,7 +434,7 @@ static void smspec_node_set_num( smspec_node_type * index , const int grid_dims[
   index->num = num;
   if ((index->var_type == ECL_SMSPEC_COMPLETION_VAR) || (index->var_type == ECL_SMSPEC_BLOCK_VAR)) {
     int global_index = num - 1;
-    index->ijk = util_calloc( 3 , sizeof * index->ijk );
+    index->ijk = (int*)util_calloc( 3 , sizeof * index->ijk );
 
     index->ijk[2] = global_index / ( grid_dims[0] * grid_dims[1] );   global_index -= index->ijk[2] * (grid_dims[0] * grid_dims[1]);
     index->ijk[1] = global_index /  grid_dims[0] ;                    global_index -= index->ijk[1] * grid_dims[0];
@@ -776,7 +776,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
   if( !node ) return NULL;
 
   {
-    smspec_node_type* copy = util_malloc( sizeof * copy );
+    smspec_node_type* copy = (smspec_node_type*)util_malloc( sizeof * copy );
     UTIL_TYPE_ID_INIT( copy, SMSPEC_TYPE_ID );
     copy->gen_key1 = util_alloc_string_copy( node->gen_key1 );
     copy->gen_key2 = util_alloc_string_copy( node->gen_key2 );
@@ -788,14 +788,14 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
 
     copy->ijk = NULL;
     if( node->ijk ) {
-        copy->ijk = util_calloc( 3 , sizeof * node->ijk );
+        copy->ijk = (int*)util_calloc( 3 , sizeof * node->ijk );
         memcpy( copy->ijk, node->ijk, 3 * sizeof( * node->ijk ) );
     }
 
     copy->lgr_name = util_alloc_string_copy( node->lgr_name );
     copy->lgr_ijk = NULL;
     if( node->lgr_ijk ) {
-        copy->lgr_ijk = util_calloc( 3 , sizeof * node->lgr_ijk );
+        copy->lgr_ijk = (int*)util_calloc( 3 , sizeof * node->lgr_ijk );
         memcpy( copy->lgr_ijk, node->lgr_ijk, 3 * sizeof( * node->lgr_ijk ) );
     }
 

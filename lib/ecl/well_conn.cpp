@@ -92,7 +92,7 @@ UTIL_SAFE_CAST_FUNCTION( well_conn , WELL_CONN_TYPE_ID)
 
 static well_conn_type * well_conn_alloc__( int i , int j , int k , double connection_factor , well_conn_dir_enum dir , bool open, int segment_id, bool matrix_connection) {
   if (well_conn_assert_direction( dir , matrix_connection)) {
-    well_conn_type * conn = util_malloc( sizeof * conn );
+    well_conn_type * conn = (well_conn_type*)util_malloc( sizeof * conn );
     UTIL_TYPE_ID_INIT( conn , WELL_CONN_TYPE_ID );
     conn->i = i;
     conn->j = j;
@@ -279,9 +279,9 @@ well_conn_type * well_conn_alloc_wellhead( const ecl_kw_type * iwel_kw , const e
     }
 
     if (matrix_connection)
-      return well_conn_alloc( conn_i , conn_j , conn_k , connection_factor , open , well_conn_dirZ );
+      return well_conn_alloc( conn_i , conn_j , conn_k , connection_factor , (well_conn_dir_enum)open , well_conn_dirZ );
     else
-      return well_conn_alloc_fracture( conn_i , conn_j , conn_k , connection_factor , open , well_conn_dirZ );
+      return well_conn_alloc_fracture( conn_i , conn_j , conn_k , connection_factor , (well_conn_dir_enum)open , well_conn_dirZ );
   } else
     // The well is completed in this LGR - however the wellhead is in another LGR.
     return NULL;

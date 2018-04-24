@@ -43,7 +43,7 @@ static UTIL_SAFE_CAST_FUNCTION( well_branch_collection , WELL_BRANCH_COLLECTION_
 
 
 well_branch_collection_type * well_branch_collection_alloc() {
-  well_branch_collection_type * branch_collection = util_malloc( sizeof * branch_collection );
+  well_branch_collection_type * branch_collection = (well_branch_collection_type*)util_malloc( sizeof * branch_collection );
   UTIL_TYPE_ID_INIT( branch_collection , WELL_BRANCH_COLLECTION_TYPE_ID );
   branch_collection->__start_segments = vector_alloc_new();
   branch_collection->index_map = int_vector_alloc(0 , -1 );
@@ -82,7 +82,7 @@ bool well_branch_collection_has_branch( const well_branch_collection_type * bran
 
 const well_segment_type * well_branch_collection_iget_start_segment( const well_branch_collection_type * branches , int index ) {
   if (index < vector_get_size( branches->__start_segments))
-    return vector_iget_const( branches->__start_segments , index);
+    return (const well_segment_type*)vector_iget_const( branches->__start_segments , index);
   else
     return NULL;
 }
