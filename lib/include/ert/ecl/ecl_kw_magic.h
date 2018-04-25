@@ -316,7 +316,7 @@ values (2e20) are denoted with '*'.
 #define INTEHEAD_FRONTSIM_VALUE          800
 
 #define INTEHEAD_INIT_SIZE                95
-#define INTEHEAD_RESTART_SIZE             180
+#define INTEHEAD_RESTART_SIZE            411
 
 #define LOGIHEAD_ECLIPSE300_RADIAL_INDEX   3
 #define LOGIHEAD_ECLIPSE100_RADIAL_INDEX   4
@@ -349,7 +349,7 @@ values (2e20) are denoted with '*'.
 
 
 #define DOUBHEAD_INIT_SIZE                 1
-#define DOUBHEAD_RESTART_SIZE              1
+#define DOUBHEAD_RESTART_SIZE              229
 
 
 /*****************************************************************/
@@ -398,21 +398,20 @@ values (2e20) are denoted with '*'.
 #define FLROILLL_KW              "FLROILA+" //nnc oil flux, grid1 != 0, grid2 != 0, grid1 != grid2
 #define FLRGASLL_KW              "FLRGASA+" //nnc gas flux, grid1 != 0, grid2 != 0, grid1 != grid2
 
-#define INTEHEAD_NWELLS_INDEX  16     // Number of wells
-#define INTEHEAD_NIWELZ_INDEX  24     // Number of elements pr. well in the IWEL array.
-#define INTEHEAD_NXWELZ_INDEX  26     // Number of elements pr. well in the XWEL array.
-#define INTEHEAD_NZWELZ_INDEX  27     // Number of 8 character words pr. well
+#define INTEHEAD_NWELLS_INDEX   16     // Number of wells
+#define INTEHEAD_NCWMAX_INDEX   17     // Maximum number of completions per well
+#define INTEHEAD_NWGMAX_INDEX   19     // Maximum number of wells in any group
+#define INTEHEAD_NGMAXZ_INDEX   20     // Maximum number of groups in field
 
-#define INTEHEAD_NCWMAX_INDEX  17     // Maximum number of completions per well
-#define INTEHEAD_NWGMAX_INDEX  19     // Maximum number of wells in any group
-#define INTEHEAD_NGMAXZ_INDEX  20     // Maximum number of groups in field
-#define INTEHEAD_NSWELZ_INDEX  25
+#define INTEHEAD_NIWELZ_INDEX   24     // Number of elements pr. well in the IWEL array.
+#define INTEHEAD_NSWELZ_INDEX   25
+#define INTEHEAD_NXWELZ_INDEX   26     // Number of elements pr. well in the XWEL array.
+#define INTEHEAD_NZWELZ_INDEX   27     // Number of 8 character words pr. well
 
-#define INTEHEAD_NICONZ_INDEX  32     // Number of elements pr completion in the ICON array.
-#define INTEHEAD_NSCONZ_INDEX  33     // Number of elements pr completion in the SCON array
-#define INTEHEAD_NXCONZ_INDEX  34     // Number of elements pr completion in the XCON array
-#define INTEHEAD_NIGRPZ_INDEX  36     // Number of elements pr group in the IGRP array.
-
+#define INTEHEAD_NICONZ_INDEX   32     // Number of elements pr completion in the ICON array.
+#define INTEHEAD_NSCONZ_INDEX   33     // Number of elements pr completion in the SCON array
+#define INTEHEAD_NXCONZ_INDEX   34     // Number of elements pr completion in the XCON array
+#define INTEHEAD_NIGRPZ_INDEX   36     // Number of elements pr group in the IGRP array.
 
 #define INTEHEAD_NSWLMX_INDEX  175
 #define INTEHEAD_NSEGMX_INDEX  176
@@ -421,7 +420,25 @@ values (2e20) are denoted with '*'.
 #define INTEHEAD_NRSEGZ_INDEX  179
 #define INTEHEAD_NILBRZ_INDEX  180
 
-#define DOUBHEAD_DAYS_INDEX 0
+#define DOUBHEAD_DAYS_INDEX        0
+#define DOUBHEAD_DEPTH_INDEX      21  // Datum depth
+#define DOUBHEAD_PRESSURE_INDEX  157  // Reservoir mean pressure
+#define DOUBHEAD_START_DAY_INDEX 160  // Simulation start day, 1 = 1st jan year 1
+                                      // 735979 = 1st. jan 2015
+#define DOUBHEAD_TOTAL_DAY_INDEX 161  // DOUBHEAD_DAYS_INDEX + START_DAY_INDEX
+
+
+//Actual iwel_index = well_index * INTEHEAD_NIWELZ_INDEX + INDEX
+#define IWEL_I_INDEX             0   //I position of well
+#define IWEL_J_INDEX             1   //J position of well
+#define IWEL_K_START_INDEX       2   //K Start position
+#define IWEL_K_END_INDEX         3   //K End position
+#define IWEL_COMPLETIONS_INDEX   4   //Number of connections
+#define IWEL_TYPE_INDEX         15   //1 = oil, 3 = gas
+
+
+#define SWEL
+
 
 /*****************************************************************/
 /*                     Summary files                             */

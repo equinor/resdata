@@ -180,12 +180,12 @@ INDEX           SOURCE  VALUE
 172             D       CONSTANT, -1073741823
 173             D       CONSTANT, -1073741823
 174             D       CONSTANT, 0
-175             D       CONSTANT, 1
-176             D       CONSTANT, 1
-177             D       CONSTANT, 1
-178             D       CONSTANT, 22
+175             -       -
+176             -       - note in ecl_kw_magic
+177             -       -
+178             -       -
 179             -       -
-180             D       CONSTANT, 10
+180             -       -
 181             D       CONSTANT, 1
 182             D       CONSTANT, 1
 183             D       CONSTANT, 1
