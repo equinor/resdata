@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <nnc_info.h>
+#include <ert/ecl/nnc_info.h>

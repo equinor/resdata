@@ -17,4 +17,4 @@
 */
 
 
-#include <fault_block.h>
+#include <ert/ecl/fault_block.h>

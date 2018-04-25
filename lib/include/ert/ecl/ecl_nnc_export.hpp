@@ -17,4 +17,4 @@
 */
 
 
-#include <ecl_nnc_export.h>
+#include <ert/ecl/ecl_nnc_export.h>

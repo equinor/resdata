@@ -21,14 +21,14 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_region.h>
-#include <ert/ecl/ecl_grid_cache.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_grav_common.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_region.hpp>
+#include <ert/ecl/ecl_grid_cache.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_grav_common.hpp>
 
 /*
   This file contains code which is common to both the ecl_grav

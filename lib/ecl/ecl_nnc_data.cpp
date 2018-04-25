@@ -18,12 +18,12 @@
 
 #define ECL_NNC_DATA_TYPE_ID 83756236
 
-#include <ert/ecl/ecl_nnc_data.h>
-#include <ert/ecl/ecl_nnc_geometry.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_nnc_data.hpp>
+#include <ert/ecl/ecl_nnc_geometry.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
 enum kw_data_type {
    TRANS_DATA    = 1, 

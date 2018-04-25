@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_smspec.h>
+#include <ert/ecl/ecl_smspec.h>

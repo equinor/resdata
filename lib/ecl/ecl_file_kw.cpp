@@ -21,12 +21,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <ert/util/size_t_vector.h>
-#include <ert/util/util.h>
+#include <ert/util/size_t_vector.hpp>
+#include <ert/util/util.hpp>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file_kw.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_file_kw.hpp>
 #include <ert/ecl/fortio.h>
 
 /*

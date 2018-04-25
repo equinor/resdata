@@ -17,4 +17,4 @@
 */
 
 
-#include <ecl_sum_index.h>
+#include <ert/ecl/ecl_sum_index.h>

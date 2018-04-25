@@ -19,14 +19,14 @@
 #include <time.h>
 #include <math.h>
 
-#include <ert/util/util.h>
-#include <ert/util/type_macros.h>
+#include <ert/util/util.hpp>
+#include <ert/util/type_macros.hpp>
 
-#include <ert/ecl/ecl_sum_tstep.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_smspec.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_sum_tstep.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_smspec.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 #define ECL_SUM_TSTEP_ID 88631
 

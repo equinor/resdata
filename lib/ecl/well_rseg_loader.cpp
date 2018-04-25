@@ -18,15 +18,15 @@
 
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/int_vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/int_vector.hpp>
 
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl_well/well_rseg_loader.h>
+#include <ert/ecl_well/well_const.hpp>
+#include <ert/ecl_well/well_rseg_loader.hpp>
 
 #include <ert/ecl/fortio.h>
 

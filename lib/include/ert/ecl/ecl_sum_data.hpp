@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_sum_data.h>
+#include <ert/ecl/ecl_sum_data.h>

@@ -20,12 +20,12 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_grav.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_grav.hpp>
 
 
 

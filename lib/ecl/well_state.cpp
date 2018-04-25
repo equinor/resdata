@@ -25,27 +25,27 @@
 #include <time.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/vector.h>
-#include <ert/util/hash.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/type_macros.h>
+#include <ert/util/util.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/hash.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/type_macros.hpp>
 
-#include <ert/ecl/ecl_rsthead.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_units.h>
-#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_rsthead.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_units.hpp>
+#include <ert/ecl/ecl_util.hpp>
 
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl_well/well_conn.h>
-#include <ert/ecl_well/well_state.h>
-#include <ert/ecl_well/well_segment_collection.h>
-#include <ert/ecl_well/well_branch_collection.h>
-#include <ert/ecl_well/well_rseg_loader.h>
+#include <ert/ecl_well/well_const.hpp>
+#include <ert/ecl_well/well_conn.hpp>
+#include <ert/ecl_well/well_state.hpp>
+#include <ert/ecl_well/well_segment_collection.hpp>
+#include <ert/ecl_well/well_branch_collection.hpp>
+#include <ert/ecl_well/well_rseg_loader.hpp>
 
 /*
 

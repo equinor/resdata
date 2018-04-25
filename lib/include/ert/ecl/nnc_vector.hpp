@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <nnc_vector.h>
+#include <ert/ecl/nnc_vector.h>

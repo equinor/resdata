@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_endian_flip.h>
+#include <ert/ecl/ecl_endian_flip.h>

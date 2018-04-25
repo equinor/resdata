@@ -17,17 +17,17 @@
 */
 
 
-#include <ert/util/vector.h>
-#include <ert/util/hash.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/vector.hpp>
+#include <ert/util/hash.hpp>
+#include <ert/util/stringlist.hpp>
 
 #include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_file_kw.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_rsthead.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_file_kw.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_rsthead.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 
 struct ecl_file_view_struct {

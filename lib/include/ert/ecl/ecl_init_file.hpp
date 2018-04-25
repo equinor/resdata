@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_init_file.h>
+#include <ert/ecl/ecl_init_file.h>

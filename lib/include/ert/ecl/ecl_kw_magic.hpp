@@ -17,4 +17,4 @@
 */
 
 
-#include <ecl_kw_magic.h>
+#include <ert/ecl/ecl_kw_magic.h>

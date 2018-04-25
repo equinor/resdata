@@ -18,14 +18,14 @@
 
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/type_macros.h>
-#include <ert/util/vector.h>
-#include <ert/util/int_vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/type_macros.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/int_vector.hpp>
 
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl_well/well_conn.h>
-#include <ert/ecl_well/well_branch_collection.h>
+#include <ert/ecl_well/well_const.hpp>
+#include <ert/ecl_well/well_conn.hpp>
+#include <ert/ecl_well/well_branch_collection.hpp>
 
 
 #define WELL_BRANCH_COLLECTION_TYPE_ID 67177087

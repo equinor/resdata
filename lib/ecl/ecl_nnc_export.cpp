@@ -17,13 +17,13 @@
 */
 #include <stdlib.h>
 
-#include <ert/util/int_vector.h>
+#include <ert/util/int_vector.hpp>
 
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_nnc_export.h>
-#include <ert/ecl/nnc_info.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_nnc_export.hpp>
+#include <ert/ecl/nnc_info.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
 
 int ecl_nnc_export_get_size( const ecl_grid_type * grid ) {

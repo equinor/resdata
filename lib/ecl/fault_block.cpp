@@ -23,11 +23,11 @@
 #include <ert/geometry/geo_polygon.h>
 #include <ert/geometry/geo_polygon_collection.h>
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/fault_block.h>
-#include <ert/ecl/fault_block_layer.h>
-#include <ert/ecl/layer.h>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/fault_block.hpp>
+#include <ert/ecl/fault_block_layer.hpp>
+#include <ert/ecl/layer.hpp>
 
 #define FAULT_BLOCK_ID 3297376
 

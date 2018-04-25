@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_type.h>
+#include <ert/ecl/ecl_type.h>

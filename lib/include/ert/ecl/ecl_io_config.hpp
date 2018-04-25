@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_io_config.h>
+#include <ert/ecl/ecl_io_config.h>

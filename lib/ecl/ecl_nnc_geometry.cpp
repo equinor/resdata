@@ -18,7 +18,7 @@
 
 #include <ert/util/struct_vector.h>
 
-#include <ert/ecl/ecl_nnc_geometry.h>
+#include <ert/ecl/ecl_nnc_geometry.hpp>
 
 #define ECL_NNC_GEOMETRY_TYPE_ID 6124343
 

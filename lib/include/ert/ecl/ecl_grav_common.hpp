@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_grav_common.h>
+#include <ert/ecl/ecl_grav_common.h>

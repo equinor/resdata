@@ -22,23 +22,23 @@
 #include <time.h>
 #include <locale.h>
 
-#include <ert/util/hash.h>
-#include <ert/util/util.h>
-#include <ert/util/set.h>
-#include <ert/util/util.h>
-#include <ert/util/vector.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/bool_vector.h>
-#include <ert/util/time_t_vector.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/hash.hpp>
+#include <ert/util/util.hpp>
+#include <ert/util/set.hpp>
+#include <ert/util/util.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/bool_vector.hpp>
+#include <ert/util/time_t_vector.hpp>
+#include <ert/util/stringlist.hpp>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_sum.hpp>
 
-#include <ert/ecl/ecl_sum_data.h>
-#include <ert/ecl/ecl_smspec.h>
-#include <ert/ecl/ecl_sum_data.h>
-#include <ert/ecl/smspec_node.h>
+#include <ert/ecl/ecl_sum_data.hpp>
+#include <ert/ecl/ecl_smspec.hpp>
+#include <ert/ecl/ecl_sum_data.hpp>
+#include <ert/ecl/smspec_node.hpp>
 
 
 /**

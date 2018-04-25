@@ -18,10 +18,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <ert/util/type_macros.h>
-#include <ert/util/int_vector.h>
+#include <ert/util/type_macros.hpp>
+#include <ert/util/int_vector.hpp>
 
-#include <ert/ecl/layer.h>
+#include <ert/ecl/layer.hpp>
 
 #define LAYER_TYPE_ID  55185409
 

@@ -20,19 +20,19 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/hash.h>
-#include <ert/util/vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/hash.hpp>
+#include <ert/util/vector.hpp>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_grid_cache.h>
-#include <ert/ecl/ecl_region.h>
-#include <ert/ecl/ecl_grav.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_grav_common.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_grid_cache.hpp>
+#include <ert/ecl/ecl_region.hpp>
+#include <ert/ecl/ecl_grav.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_grav_common.hpp>
 
 
 /**

@@ -24,13 +24,13 @@
 
 #include <ert/util/ert_api_config.h>
 
-#include <ert/util/util.h>
-#include <ert/util/hash.h>
-#include <ert/util/stringlist.h>
-#include <ert/util/parser.h>
+#include <ert/util/util.hpp>
+#include <ert/util/hash.hpp>
+#include <ert/util/stringlist.hpp>
+#include <ert/util/parser.hpp>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 
 #define ECL_PHASE_NAME_OIL   "SOIL"   // SHould match the keywords found in restart file

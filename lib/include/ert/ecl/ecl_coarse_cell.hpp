@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_coarse_cell.hpp>
+#include <ert/ecl/ecl_coarse_cell.h>

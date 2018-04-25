@@ -20,17 +20,17 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <ert/util/int_vector.h>
-#include <ert/util/util.h>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/util.hpp>
 
 #include <ert/geometry/geo_util.h>
 #include <ert/geometry/geo_polygon.h>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_box.h>
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_region.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_box.hpp>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_region.hpp>
 
 
 /**

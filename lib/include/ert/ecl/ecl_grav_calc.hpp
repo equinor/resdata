@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_grav_calc.hpp>
+#include <ert/ecl/ecl_grav_calc.hpp>

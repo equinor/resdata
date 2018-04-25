@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_subsidence.h>
+#include <ert/ecl/ecl_subsidence.h>

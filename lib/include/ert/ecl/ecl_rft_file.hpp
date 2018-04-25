@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_rft_file.h>
+#include <ert/ecl/ecl_rft_file.h>

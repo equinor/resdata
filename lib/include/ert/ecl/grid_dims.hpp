@@ -17,4 +17,4 @@
 */
 
 
-#include <grid_dims.h>
+#include <ert/ecl/grid_dims.h>

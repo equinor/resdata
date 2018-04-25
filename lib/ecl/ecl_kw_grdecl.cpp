@@ -19,11 +19,11 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_type.h>
-#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_type.hpp>
+#include <ert/ecl/ecl_util.hpp>
 
 #define MAX_GRDECL_HEADER_SIZE 512
 

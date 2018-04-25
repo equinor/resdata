@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <layer.h>
+#include <ert/ecl/layer.h>

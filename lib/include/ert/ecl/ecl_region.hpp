@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_region.h>
+#include <ert/ecl/ecl_region.h>

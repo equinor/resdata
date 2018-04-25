@@ -22,21 +22,21 @@
 #include <time.h>
 #include <errno.h>
 
-#include <ert/util/hash.h>
-#include <ert/util/util.h>
-#include <ert/util/vector.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/float_vector.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/hash.hpp>
+#include <ert/util/util.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/float_vector.hpp>
+#include <ert/util/stringlist.hpp>
 
-#include <ert/ecl/ecl_smspec.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/smspec_node.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_smspec.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/smspec_node.hpp>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>

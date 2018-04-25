@@ -18,16 +18,16 @@
 
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/type_macros.h>
-#include <ert/util/vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/type_macros.hpp>
+#include <ert/util/vector.hpp>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_rsthead.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_rsthead.hpp>
 
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl_well/well_conn.h>
-#include <ert/ecl_well/well_conn_collection.h>
+#include <ert/ecl_well/well_const.hpp>
+#include <ert/ecl_well/well_conn.hpp>
+#include <ert/ecl_well/well_conn_collection.hpp>
 
 
 #define WELL_CONN_COLLECTION_TYPE_ID 67150087

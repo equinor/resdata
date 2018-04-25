@@ -17,4 +17,4 @@
 */
 
 
-#include <ecl_rft_node.h>
+#include <ert/ecl/ecl_rft_node.h>

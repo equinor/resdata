@@ -17,4 +17,4 @@
 */
 
 
-#include <smspec_node.h>
+#include <ert/ecl/smspec_node.h>

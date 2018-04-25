@@ -21,10 +21,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <ert/ecl/ecl_box.h>
-#include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_box.hpp>
+#include <ert/ecl/ecl_grid.hpp>
 
 
 #define ECL_BOX_TYPE_ID 6610643

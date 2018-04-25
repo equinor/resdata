@@ -25,16 +25,16 @@
 #include <fnmatch.h>
 #endif
 
-#include <ert/util/util.h>
-#include <ert/util/hash.h>
-#include <ert/util/vector.h>
-#include <ert/util/int_vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/hash.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/int_vector.hpp>
 
-#include <ert/ecl/ecl_rft_file.h>
-#include <ert/ecl/ecl_rft_node.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_rft_file.hpp>
+#include <ert/ecl/ecl_rft_node.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
 
 /**

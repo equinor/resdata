@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_kw.h>
+#include <ert/ecl/ecl_kw.h>

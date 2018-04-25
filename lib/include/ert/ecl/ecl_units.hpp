@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_units.hpp>
+#include <ert/ecl/ecl_units.h>

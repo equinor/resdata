@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_nnc_geometry.h>
+#include <ert/ecl/ecl_nnc_geometry.h>

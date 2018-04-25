@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_box.h>
+#include <ert/ecl/ecl_box.h>

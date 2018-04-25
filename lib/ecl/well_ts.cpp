@@ -62,12 +62,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/vector.hpp>
 
-#include <ert/ecl_well/well_ts.h>
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl_well/well_state.h>
+#include <ert/ecl_well/well_ts.hpp>
+#include <ert/ecl_well/well_const.hpp>
+#include <ert/ecl_well/well_state.hpp>
 
 
 

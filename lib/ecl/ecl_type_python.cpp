@@ -1,6 +1,6 @@
-#include <ert/ecl/ecl_type.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_kw_grdecl.h>
+#include <ert/ecl/ecl_type.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_kw_grdecl.hpp>
 
 /**
  *

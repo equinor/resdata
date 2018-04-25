@@ -17,13 +17,13 @@
 */
 #include <stdlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_rsthead.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_rsthead.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
 
 static time_t rsthead_date( int day , int month , int year) {

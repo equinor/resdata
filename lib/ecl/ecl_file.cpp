@@ -22,21 +22,21 @@
 #include <errno.h>
 #include <time.h>
 
-#include <ert/util/hash.h>
-#include <ert/util/util.h>
-#include <ert/util/vector.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/hash.hpp>
+#include <ert/util/util.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/stringlist.hpp>
 
 #include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_rsthead.h>
-#include <ert/ecl/ecl_file_kw.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_rsthead.hpp>
+#include <ert/ecl/ecl_file_kw.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 /**
    This file implements functionality to load an ECLIPSE file in

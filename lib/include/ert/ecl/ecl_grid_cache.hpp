@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_grid_cache.h>
+#include <ert/ecl/ecl_grid_cache.h>

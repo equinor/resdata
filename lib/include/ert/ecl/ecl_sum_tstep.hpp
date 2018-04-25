@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_sum_tstep.h>
+#include <ert/ecl/ecl_sum_tstep.h>

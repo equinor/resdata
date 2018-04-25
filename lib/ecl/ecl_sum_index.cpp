@@ -16,7 +16,7 @@
    for more details. 
 */
 
-#include <ert/ecl/ecl_sum_index.h>
+#include <ert/ecl/ecl_sum_index.hpp>
 
 /* 
    This file contains all the internalized information from parsing a

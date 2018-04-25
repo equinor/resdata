@@ -22,15 +22,15 @@
 #include <string.h>
 #include <math.h>
 
-#include <ert/util/util.h>
-#include <ert/util/buffer.h>
-#include <ert/util/int_vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/buffer.hpp>
+#include <ert/util/int_vector.hpp>
 
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 
 #define ECL_KW_TYPE_ID  6111098

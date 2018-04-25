@@ -17,4 +17,4 @@
 */
 
 
-#include <ecl_rst_file.h>
+#include <ert/ecl/ecl_rst_file.h>

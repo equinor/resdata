@@ -22,26 +22,26 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/util.h>
-#include <ert/util/double_vector.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/hash.h>
-#include <ert/util/vector.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/util.hpp>
+#include <ert/util/double_vector.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/hash.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/stringlist.hpp>
 
 #include <ert/geometry/geo_util.h>
 #include <ert/geometry/geo_polygon.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_type.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_coarse_cell.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/grid_dims.h>
-#include <ert/ecl/nnc_info.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_type.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_coarse_cell.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/grid_dims.hpp>
+#include <ert/ecl/nnc_info.hpp>
 
 
 /**

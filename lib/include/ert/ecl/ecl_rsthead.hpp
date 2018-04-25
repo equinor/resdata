@@ -16,4 +16,4 @@
    for more details. 
 */
 
-#include <ecl_rsthead.h>
+#include <ert/ecl/ecl_rsthead.h>
