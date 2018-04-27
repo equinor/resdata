@@ -136,6 +136,8 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   double            ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var);
   double            ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var);
   const char *      ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const char * var);
+  ert_ecl_unit_enum ecl_sum_get_unit_system(const ecl_sum_type * ecl_sum);
+
   /***************/
   void              ecl_sum_fprintf(const ecl_sum_type * , FILE * , const stringlist_type * , bool report_only , const ecl_sum_fmt_type * fmt);
 
@@ -143,6 +145,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
 
 
   /* Time related functions */
+  int    ecl_sum_get_restart_step(const ecl_sum_type * ecl_sum);
   int    ecl_sum_get_first_gt( const ecl_sum_type * ecl_sum , int param_index , double limit);
   int    ecl_sum_get_first_lt( const ecl_sum_type * ecl_sum , int param_index , double limit);
   int    ecl_sum_get_last_report_step( const ecl_sum_type * ecl_sum );
