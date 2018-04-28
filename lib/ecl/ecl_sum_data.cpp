@@ -1412,6 +1412,132 @@ double_vector_type * ecl_sum_data_alloc_data_vector( const ecl_sum_data_type * d
 }
 
 
+void ecl_sum_data_init_double_vector(const ecl_sum_data_type * data, int params_index, double * output_data) {
+  int i;
+  for (i = 0; i < vector_get_size(data->data); i++) {
+    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , i  );
+    output_data[i] = ecl_sum_tstep_iget(ministep, params_index);
+  }
+}
+
+void ecl_sum_data_init_datetime64_vector(const ecl_sum_data_type * data, int64_t * output_data, int multiplier) {
+  int i;
+  for (i = 0; i < vector_get_size(data->data); i++) {
+    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , i  );
+    output_data[i] = ecl_sum_tstep_get_sim_time(ministep) * multiplier;
+  }
+}
+
+void ecl_sum_data_init_double_vector_interp(const ecl_sum_data_type * data,
+                                            const smspec_node_type * smspec_node,
+                                            const time_t_vector_type * time_points,
+                                            double * output_data) {
+  bool is_rate = smspec_node_is_rate(smspec_node);
+  int params_index = smspec_node_get_params_index(smspec_node);
+  time_t start_time = ecl_sum_data_get_data_start(data);
+  time_t end_time   = ecl_sum_data_get_sim_end(data);
+  double start_value = 0;
+  double end_value = 0;
+
+  if (!is_rate) {
+    start_value = ecl_sum_data_iget_first_value(data, params_index);
+    end_value = ecl_sum_data_iget_last_value(data, params_index);
+  }
+
+  for (int time_index=0; time_index < time_t_vector_size(time_points); time_index++) {
+    time_t sim_time = time_t_vector_iget( time_points, time_index);
+    double value;
+    if (sim_time < start_time)
+      value = start_value;
+
+    else if (sim_time > end_time)
+      value = end_value;
+
+    else {
+      int time_index1, time_index2;
+      double weight1, weight2;
+      ecl_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
+      value = ecl_sum_data_vector_iget( data,
+                                        sim_time,
+                                        params_index,
+                                        is_rate,
+                                        time_index1,
+                                        time_index2,
+                                        weight1,
+                                        weight2);
+    }
+
+    output_data[time_index] = value;
+  }
+}
+
+
+
+
+void ecl_sum_data_init_double_frame(const ecl_sum_data_type * data, const ecl_sum_vector_type * keywords, double *output_data) {
+  int time_stride = ecl_sum_vector_get_size(keywords);
+  int key_stride = 1;
+  for (int time_index=0; time_index < vector_get_size(data->data); time_index++) {
+    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data , time_index);
+    for (int key_index = 0; key_index < ecl_sum_vector_get_size(keywords); key_index++) {
+      int param_index = ecl_sum_vector_iget_param_index(keywords, key_index);
+      int data_index = key_index*key_stride + time_index * time_stride;
+
+      output_data[data_index] = ecl_sum_tstep_iget(ministep, param_index);
+    }
+  }
+}
+
+
+void ecl_sum_data_init_double_frame_interp(const ecl_sum_data_type * data,
+                                           const ecl_sum_vector_type * keywords,
+                                           const time_t_vector_type * time_points,
+                                           double * output_data) {
+  int num_keywords = ecl_sum_vector_get_size(keywords);
+  int time_stride = num_keywords;
+  int key_stride = 1;
+  time_t start_time = ecl_sum_data_get_data_start(data);
+  time_t end_time   = ecl_sum_data_get_sim_end(data);
+
+
+  for (int time_index=0; time_index < time_t_vector_size(time_points); time_index++) {
+    time_t sim_time = time_t_vector_iget( time_points, time_index);
+    if (sim_time < start_time) {
+      for (int key_index = 0; key_index < num_keywords; key_index++) {
+        int param_index = ecl_sum_vector_iget_param_index(keywords, key_index);
+        int data_index = key_index*key_stride + time_index*time_stride;
+        bool is_rate = ecl_sum_vector_iget_is_rate(keywords, key_index);
+        if (is_rate)
+          output_data[data_index] = 0;
+        else
+          output_data[data_index] = ecl_sum_data_iget_first_value(data, param_index);
+      }
+    } else if (sim_time > end_time) {
+      for (int key_index = 0; key_index < num_keywords; key_index++) {
+        int param_index = ecl_sum_vector_iget_param_index(keywords, key_index);
+        int data_index = key_index*key_stride + time_index*time_stride;
+        bool is_rate = ecl_sum_vector_iget_is_rate(keywords, key_index);
+        if (is_rate)
+          output_data[data_index] = 0;
+        else
+          output_data[data_index] = ecl_sum_data_iget_last_value(data, param_index);
+      }
+    } else {
+      double weight1, weight2;
+      int    time_index1, time_index2;
+
+      ecl_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
+
+      for (int key_index = 0; key_index < num_keywords; key_index++) {
+        int param_index = ecl_sum_vector_iget_param_index(keywords, key_index);
+        int data_index = key_index*key_stride + time_index*time_stride;
+        bool is_rate = ecl_sum_vector_iget_is_rate(keywords, key_index);
+        double value = ecl_sum_data_vector_iget( data, sim_time, param_index , is_rate, time_index1, time_index2, weight1, weight2);
+        output_data[data_index] = value;
+      }
+    }
+  }
+}
 
 /**
    This function will return the total number of ministeps in the

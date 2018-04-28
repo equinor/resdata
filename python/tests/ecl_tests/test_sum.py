@@ -378,7 +378,7 @@ class SumTest(EclTest):
         with self.assertRaises(KeyError):
             case.first_value("NO_SUCH_KEY")
 
-        first_fopt = case.first_value
+        first_fopt = case.first_value("FOPT")
         self.assertEqual(first_fopt, values[0])
 
 
@@ -502,3 +502,61 @@ class SumTest(EclTest):
 
             case = EclSum("UNITS")
             self.assertEqual(case.unit_system, EclUnitTypeEnum.ECL_LAB_UNITS)
+
+
+    def test_numpy_vector(self):
+        case = create_case()
+
+        with self.assertRaises(KeyError):
+            case.numpy_vector("NO_SUCH_KEY")
+
+        numpy_vector = case.numpy_vector("FOPT")
+        self.assertEqual(len(numpy_vector), len(case))
+        numpy_dates = case.numpy_dates
+        self.assertEqual( numpy_dates[0].tolist(), case.getDataStartTime())
+        self.assertEqual( numpy_dates[-1].tolist(), case.getEndTime())
+
+        dates = case.dates
+        self.assertEqual( dates[0], case.getDataStartTime())
+        self.assertEqual( dates[-1], case.getEndTime())
+
+        dates = [datetime.datetime(2000,1,1)] + case.dates + [datetime.datetime(2020,1,1)]
+        fopr = case.numpy_vector("FOPR", time_index = dates)
+        fopt = case.numpy_vector("FOPT", time_index = dates)
+
+
+        self.assertEqual(fopr[0], 0)
+        self.assertEqual(fopr[-1], 0)
+
+        self.assertEqual(fopt[0], 0)
+        self.assertEqual(fopt[0], case.first_value("FOPT"))
+        self.assertEqual(fopt[-1], case.last_value("FOPT"))
+
+
+
+    def test_pandas(self):
+        case = create_case()
+        dates = [datetime.datetime(2000,1,1)] + case.dates + [datetime.datetime(2020,1,1)]
+        frame = case.pandas_frame(column_keys=["FOPT", "FOPR"], time_index = dates)
+
+        fopr = frame["FOPR"]
+        fopt = frame["FOPT"]
+
+        self.assertEqual(fopr[0], 0)
+        self.assertEqual(fopr[-1], 0)
+
+        self.assertEqual(fopt[0], 0)
+        self.assertEqual(fopt[0], case.first_value("FOPT"))
+        self.assertEqual(fopt[-1], case.last_value("FOPT"))
+
+
+        with self.assertRaises(ValueError):
+            frame = case.pandas_frame(column_keys=[])
+
+        with self.assertRaises(ValueError):
+            frame = case.pandas_frame(column_keys=["NO_KEY"])
+
+        frame = case.pandas_frame( )
+        rows, columns = frame.shape
+        self.assertEqual(len(case.keys()), columns)
+        self.assertEqual(len(case), rows)
