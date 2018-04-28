@@ -367,13 +367,19 @@ class SumTest(EclTest):
             self.assertIn(key, ecl_sum_vector)
 
 
-    def test_last(self):
+    def test_first_last(self):
         case = create_case()
         with self.assertRaises(KeyError):
-            case.get_last_value("NO_SUCH_KEY")
-        last_fopt = case.get_last_value("FOPT")
+            case.last_value("NO_SUCH_KEY")
+        last_fopt = case.last_value("FOPT")
         values = case.get_values("FOPT")
         self.assertEqual( last_fopt, values[-1])
+
+        with self.assertRaises(KeyError):
+            case.first_value("NO_SUCH_KEY")
+
+        first_fopt = case.first_value
+        self.assertEqual(first_fopt, values[0])
 
 
     def test_time_range(self):

@@ -1489,7 +1489,16 @@ bool ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , cons
 }
 
 
-double ecl_sum_data_get_last_value(const ecl_sum_data_type * data, int param_index) {
+double ecl_sum_data_iget_last_value(const ecl_sum_data_type * data, int param_index) {
   const ecl_sum_tstep_type * tstep = (const ecl_sum_tstep_type*)vector_get_last_const(data->data);
   return ecl_sum_tstep_iget( tstep, param_index);
+}
+
+double ecl_sum_data_get_last_value(const ecl_sum_data_type * data, int param_index) {
+  return ecl_sum_data_iget_last_value(data, param_index);
+}
+
+double ecl_sum_data_iget_first_value(const ecl_sum_data_type * data, int param_index) {
+  const ecl_sum_tstep_type * tstep = (const ecl_sum_tstep_type*) vector_iget_const(data->data, 0);
+  return ecl_sum_tstep_iget(tstep, param_index);
 }

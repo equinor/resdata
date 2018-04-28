@@ -21,7 +21,7 @@ in the C source files ecl_sum.c, ecl_smspec.c and ecl_sum_data in the
 libecl/src directory.
 """
 
-
+import warnings
 import numpy
 import datetime
 import os.path
@@ -143,6 +143,7 @@ class EclSum(BaseCClass):
     _export_csv                    = EclPrototype("void ecl_sum_export_csv(ecl_sum, char*, stringlist, char*, char*)")
     _identify_var_type             = EclPrototype("ecl_sum_var_type ecl_sum_identify_var_type(char*)", bind = False)
     _get_last_value                = EclPrototype("double ecl_sum_get_last_value_gen_key(ecl_sum, char*)")
+    _get_first_value               = EclPrototype("double ecl_sum_get_first_value_gen_key(ecl_sum, char*)")
 
 
     def __init__(self, load_case, join_string=":", include_restart=True):
@@ -440,7 +441,7 @@ class EclSum(BaseCClass):
             return None
 
 
-    def get_last_value(self, key):
+    def last_value(self, key):
         """
         Will return the last value corresponding to @key.
 
@@ -457,12 +458,26 @@ class EclSum(BaseCClass):
 
         return self._get_last_value(key)
 
+
+    def first_value(self, key):
+        """
+        Will return first value corresponding to @key.
+        """
+        if not key in self:
+            raise KeyError("No such key:%s" % key)
+
+        return self._get_first_value(key)
+
+    def get_last_value(self,key):
+        warnings.warn("The function get_last_value() is deprecated, use last_value() instead",DeprecationWarning)
+        return self.last_value(key)
+
     def get_last(self, key):
         """
         Will return the last EclSumNode corresponding to @key.
 
         If you are only interested in the final value, you can use the
-        get_last_value() method.
+        last_value() method.
         """
         return self[key].last
 
@@ -697,7 +712,7 @@ class EclSum(BaseCClass):
                 if t < CTime(self.start_time):
                     total.append(0)
                 elif t >= CTime(self.end_time):
-                    total.append(self.get_last_value(totalKey))
+                    total.append(self.last_value(totalKey))
                 else:
                     total.append(self.get_interp(totalKey, date=t))
             tmp = total << 1

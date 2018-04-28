@@ -90,6 +90,8 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
 
 
   double_vector_type * ecl_sum_data_alloc_seconds_solution( const ecl_sum_data_type * data , const smspec_node_type * node , double value, bool rates_clamp_lower);
+  double                   ecl_sum_data_iget_last_value(const ecl_sum_data_type * data, int param_index);
+  double                   ecl_sum_data_iget_first_value(const ecl_sum_data_type * data, int param_index);
 
 
 #ifdef __cplusplus

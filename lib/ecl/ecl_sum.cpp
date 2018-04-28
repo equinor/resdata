@@ -1434,7 +1434,7 @@ ert_ecl_unit_enum ecl_sum_get_unit_system(const ecl_sum_type * ecl_sum) {
 }
 
 double ecl_sum_iget_last_value(const ecl_sum_type * ecl_sum, int param_index) {
-  return ecl_sum_data_get_last_value(ecl_sum->data, param_index);
+  return ecl_sum_data_iget_last_value(ecl_sum->data, param_index);
 }
 
 double ecl_sum_get_last_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key) {
@@ -1444,4 +1444,17 @@ double ecl_sum_get_last_value_gen_key(const ecl_sum_type * ecl_sum, const char *
 
 double ecl_sum_get_last_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node) {
   return ecl_sum_iget_last_value(ecl_sum, smspec_node_get_params_index(node));
+}
+
+double ecl_sum_iget_first_value(const ecl_sum_type * ecl_sum, int param_index) {
+  return ecl_sum_data_iget_first_value(ecl_sum->data, param_index);
+}
+
+double ecl_sum_get_first_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key) {
+  const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  return ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
+}
+
+double ecl_sum_get_first_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node) {
+  return ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
 }

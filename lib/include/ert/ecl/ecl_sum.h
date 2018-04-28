@@ -272,6 +272,9 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   double               ecl_sum_get_last_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key);
   double               ecl_sum_get_last_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node);
 
+  double               ecl_sum_iget_first_value(const ecl_sum_type * ecl_sum, int param_index);
+  double               ecl_sum_get_first_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key);
+  double               ecl_sum_get_first_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node);
   UTIL_IS_INSTANCE_HEADER( ecl_sum );
 
 #ifdef __cplusplus
