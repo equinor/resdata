@@ -1,7 +1,6 @@
 #cmakedefine ERT_HAVE_ZLIB
 #cmakedefine ERT_HAVE_ISFINITE
 #cmakedefine ERT_HAVE_GETOPT
-#cmakedefine ERT_HAVE_UNISTD
 #cmakedefine ERT_HAVE_SPAWN
 #cmakedefine ERT_HAVE_THREAD_POOL
 #cmakedefine ERT_HAVE_OPENDIR

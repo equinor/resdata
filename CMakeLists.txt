@@ -236,10 +236,10 @@ check_function_exists( _unlink HAVE_WINDOWS_UNLINK )
 check_symbol_exists(_tzname time.h HAVE_WINDOWS_TZNAME)
 check_symbol_exists( tzname time.h HAVE_TZNAME)
 
-check_include_file(execinfo.h HAVE_EXECINFO)
-check_include_file(getopt.h   ERT_HAVE_GETOPT)
-check_include_file(unistd.h   ERT_HAVE_UNISTD)
-check_include_file(windows.h  HAVE_WINDOWS_H)
+check_include_file("execinfo.h" HAVE_EXECINFO)
+check_include_file("getopt.h"   ERT_HAVE_GETOPT)
+check_include_file("unistd.h"   HAVE_UNISTD_H)
+check_include_file("Windows.h"  HAVE_WINDOWS_H)
 
 test_big_endian(BIG_ENDIAN)
 

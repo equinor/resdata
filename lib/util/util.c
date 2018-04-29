@@ -2523,7 +2523,7 @@ bool util_ftruncate(FILE * stream , long size) {
 */
 
 bool util_same_file(const char * file1 , const char * file2) {
-#ifdef ERT_HAVE_UNISTD
+#ifdef HAVE_UNISTD_H
   stat_type buffer1 , buffer2;
   int stat1,stat2;
 
@@ -4838,7 +4838,7 @@ char * util_alloc_parent_path( const char * path) {
   return parent_path;
 }
 
-#ifdef ERT_HAVE_UNISTD
+#ifdef HAVE_UNISTD_H
 
 
 int util_chdir(const char * path) {

@@ -23,7 +23,7 @@
 
 
 
-#ifdef ERT_HAVE_UNISTD
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 

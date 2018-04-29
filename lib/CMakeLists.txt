@@ -24,7 +24,7 @@ if (ERT_HAVE_LOCKF)
     list(APPEND opt_srcs util/util_lockf.cpp)
 endif ()
 
-if (ERT_HAVE_UNISTD)
+if (HAVE_UNISTD_H)
    list(APPEND opt_srcs util/path_stack.cpp)
 endif ()
 

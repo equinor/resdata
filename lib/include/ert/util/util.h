@@ -352,7 +352,7 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   int          util_chdir(const char * path);
   bool         util_chdir_file( const char * filename );
 
-#ifdef ERT_HAVE_UNISTD
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
   bool         util_access(const char * entry, mode_t mode);
 #else
