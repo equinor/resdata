@@ -661,24 +661,6 @@ char * util_fscanf_alloc_line(FILE *stream , bool *at_eof) {
 
 
 
-/**
-   WIndows does not have the usleep() function, on the other hand
-   Sleep() function in windows has millisecond resolution, instead of
-   seconds as in linux.
-*/
-
-void util_usleep( unsigned long micro_seconds ) {
-#ifdef HAVE__USLEEP
-  usleep( micro_seconds );
-#else
-  #ifdef ERT_WINDOWS
-  {
-    int milli_seconds = micro_seconds / 1000;
-    Sleep( milli_seconds );
-  }
-#endif
-#endif
-}
 
 static char * util_getcwd(char * buffer , int size) {
 #ifdef HAVE_POSIX_GETCWD

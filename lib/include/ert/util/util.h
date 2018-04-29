@@ -165,8 +165,6 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   bool         util_entry_writable( const char * entry );
   bool         util_ftruncate(FILE * stream , long size);
 
-  void         util_usleep( unsigned long micro_seconds );
-
   int          util_roundf( float x );
   int          util_round( double x );
 
@@ -433,6 +431,7 @@ void    util_abort_signal(int );
 #endif
 
 #include "util_unlink.h"
+#include "util_portability.h"
 
 #ifdef __cplusplus
 }
