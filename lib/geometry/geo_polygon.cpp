@@ -21,12 +21,12 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/util.h>
-#include <ert/util/double_vector.h>
-#include <ert/util/type_vector_functions.h>
+#include <ert/util/util.hpp>
+#include <ert/util/double_vector.hpp>
+#include <ert/util/type_vector_functions.hpp>
 
-#include <ert/geometry/geo_util.h>
-#include <ert/geometry/geo_polygon.h>
+#include <ert/geometry/geo_util.hpp>
+#include <ert/geometry/geo_polygon.hpp>
 
 
 
@@ -45,7 +45,7 @@ UTIL_IS_INSTANCE_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID);
 
 
 geo_polygon_type * geo_polygon_alloc(const char * name) {
-  geo_polygon_type * polygon = util_malloc( sizeof * polygon );
+  geo_polygon_type * polygon = (geo_polygon_type*)util_malloc( sizeof * polygon );
 
   UTIL_TYPE_ID_INIT( polygon , GEO_POLYGON_TYPE_ID );
   polygon->xcoord = double_vector_alloc( 0 , 0 );
@@ -189,11 +189,11 @@ void geo_polygon_iget_xy(const geo_polygon_type * polygon , int index , double *
 
 bool geo_polygon_segment_intersects(const geo_polygon_type * polygon , double x1 , double y1 , double x2 , double y2) {
   bool intersects = false;
-  double ** points = util_malloc( 4 * sizeof * points);
+  double ** points = (double**)util_malloc( 4 * sizeof * points);
   {
     int i;
     for (i = 0; i < 4; i++)
-      points[i] = util_malloc( 2 * sizeof * points[i]);
+      points[i] = (double*)util_malloc( 2 * sizeof * points[i]);
   }
 
   points[0][0] = x1;

@@ -20,11 +20,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/type_macros.h>
+#include <ert/util/util.hpp>
+#include <ert/util/type_macros.hpp>
 
-#include <ert/geometry/geo_pointset.h>
-#include <ert/geometry/geo_surface.h>
+#include <ert/geometry/geo_pointset.hpp>
+#include <ert/geometry/geo_surface.hpp>
 
 #define __PI                3.14159265
 #define GEO_SURFACE_TYPE_ID 111743
@@ -61,7 +61,7 @@ static void geo_surface_copy_header( const geo_surface_type * src , geo_surface_
 }
 
 static geo_surface_type * geo_surface_alloc_empty( bool internal_z ) {
-  geo_surface_type * surface = util_malloc( sizeof * surface );
+  geo_surface_type * surface = (geo_surface_type*)util_malloc( sizeof * surface );
   UTIL_TYPE_ID_INIT( surface , GEO_SURFACE_TYPE_ID )
   surface->pointset = geo_pointset_alloc( internal_z );
   return surface;
@@ -242,7 +242,7 @@ static bool geo_surface_fload_irap( geo_surface_type * surface , const char * fi
       double * zcoord = NULL;
 
       if (loadz) {
-        zcoord = util_calloc( surface->nx * surface->ny , sizeof * zcoord  );
+        zcoord = (double*)util_calloc( surface->nx * surface->ny , sizeof * zcoord  );
         read_ok = geo_surface_fscanf_zcoord( surface , stream , zcoord );
       }
 

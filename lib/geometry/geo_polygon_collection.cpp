@@ -20,13 +20,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/type_macros.h>
-#include <ert/util/vector.h>
-#include <ert/util/hash.h>
+#include <ert/util/util.hpp>
+#include <ert/util/type_macros.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/hash.hpp>
 
-#include <ert/geometry/geo_polygon.h>        
-#include <ert/geometry/geo_polygon_collection.h>        
+#include <ert/geometry/geo_polygon.hpp>        
+#include <ert/geometry/geo_polygon_collection.hpp>        
 
 
 
@@ -42,7 +42,7 @@ struct geo_polygon_collection_struct {
 UTIL_IS_INSTANCE_FUNCTION( geo_polygon_collection , GEO_POLYGON_COLLECTION_TYPE_ID)
 
 geo_polygon_collection_type * geo_polygon_collection_alloc( ) {
-   geo_polygon_collection_type * polygons = util_malloc( sizeof * polygons );
+   geo_polygon_collection_type * polygons = (geo_polygon_collection_type*)util_malloc( sizeof * polygons );
    UTIL_TYPE_ID_INIT( polygons , GEO_POLYGON_COLLECTION_TYPE_ID );
    polygons->polygon_list = vector_alloc_new();
    polygons->polygon_map = hash_alloc();
@@ -106,10 +106,10 @@ void geo_polygon_collection_free( geo_polygon_collection_type * polygons ) {
 
 
 geo_polygon_type * geo_polygon_collection_iget_polygon(const geo_polygon_collection_type * polygons , int index) {
-  return vector_iget( polygons->polygon_list , index );
+  return (geo_polygon_type*)vector_iget( polygons->polygon_list , index );
 }
 
 
 geo_polygon_type * geo_polygon_collection_get_polygon(const geo_polygon_collection_type * polygons , const char * polygon_name) {
-  return hash_get( polygons->polygon_map , polygon_name );
+  return (geo_polygon_type*)hash_get( polygons->polygon_map , polygon_name );
 }
