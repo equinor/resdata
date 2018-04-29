@@ -3,10 +3,16 @@
 function(find_python_package_version package)
   set(PY_VERSION_ACCESSOR "__version__")
   set(PY_package_name ${package})
-
-  if(${package} MATCHES "PyQt4")
-    set(PY_package_name "PyQt4.Qt")
-    set(PY_VERSION_ACCESSOR "PYQT_VERSION_STR")
+  if (PYTHON_VERSION_MAJOR EQUAL 3)
+    if(${package} MATCHES "PyQt5")
+      set(PY_package_name "PyQt5.Qt")
+      set(PY_VERSION_ACCESSOR "PYQT_VERSION_STR")
+    endif()
+  else()
+    if(${package} MATCHES "PyQt4")
+      set(PY_package_name "PyQt4.Qt")
+      set(PY_VERSION_ACCESSOR "PYQT_VERSION_STR")
+    endif()
   endif()
 
   execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import os.path; import inspect; import ${PY_package_name} as py_m; print(\"%s;%s\" % (py_m.${PY_VERSION_ACCESSOR} , os.path.dirname(os.path.dirname(inspect.getfile(py_m)))))"
