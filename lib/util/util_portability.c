@@ -27,6 +27,9 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#include <Windows.h>
+#endif
 
 
 /**

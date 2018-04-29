@@ -239,6 +239,7 @@ check_symbol_exists( tzname time.h HAVE_TZNAME)
 check_include_file(execinfo.h HAVE_EXECINFO)
 check_include_file(getopt.h   ERT_HAVE_GETOPT)
 check_include_file(unistd.h   ERT_HAVE_UNISTD)
+check_include_file(windows.h  HAVE_WINDOWS_H)
 
 test_big_endian(BIG_ENDIAN)
 
