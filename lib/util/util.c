@@ -4863,7 +4863,7 @@ bool util_is_abs_path(const char * path) {
 #ifdef ERT_WINDOWS
   if ((path[0] == '/') || (path[0] == '\\'))
     return true;
-  else 
+  else
     if ((isalpha(path[0]) && (path[1] == ':')))
       return true;
 
