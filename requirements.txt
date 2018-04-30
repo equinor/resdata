@@ -1,2 +1,3 @@
 cwrap
 numpy
+deprecated

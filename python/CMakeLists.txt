@@ -19,6 +19,13 @@ if (NOT DEFINED PY_cwrap)
    return()
 endif()
 
+find_python_package(deprecated 1 ${PYTHON_INSTALL_PREFIX})
+if (NOT DEFINED PY_deprecated)
+   message(WARNING "deprecated module not found Python wrappers not enabled. Install with: \"pip install deprecated\"")
+   set( ENABLE_PYTHON OFF PARENT_SCOPE )
+   return()
+endif()
+
 configure_file(test_env.py.in   ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}/test_env.py )
 
 add_subdirectory( ecl )

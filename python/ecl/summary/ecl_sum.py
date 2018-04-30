@@ -440,7 +440,7 @@ class EclSum(BaseCClass):
             return None
 
 
-    def get_last_value(self, key):
+    def last_value(self, key):
         """
         Will return the last value corresponding to @key.
 
@@ -456,6 +456,13 @@ class EclSum(BaseCClass):
             raise KeyError("No such key:%s" % key)
 
         return self._get_last_value(key)
+
+
+    @deprecate(deprecated_in="2.3.0",removed_in="3.0.0", current_version=ecl.__version__,
+               details="Use the function: last_value() instead")
+    def get_last_value(self,key):
+        return self.last_value(key)
+
 
     def get_last(self, key):
         """
