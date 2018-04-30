@@ -21,7 +21,7 @@ in the C source files ecl_sum.c, ecl_smspec.c and ecl_sum_data in the
 libecl/src directory.
 """
 
-
+import warnings
 import numpy
 import datetime
 import os.path
@@ -440,7 +440,7 @@ class EclSum(BaseCClass):
             return None
 
 
-    def get_last_value(self, key):
+    def last_value(self, key):
         """
         Will return the last value corresponding to @key.
 
@@ -456,6 +456,10 @@ class EclSum(BaseCClass):
             raise KeyError("No such key:%s" % key)
 
         return self._get_last_value(key)
+
+    def get_last_value(self):
+        warnings.warn("The method get_last_value() has been deprecated - use last_value() instead.", DeprecationWarning)
+        return self.last_value(key)
 
     def get_last(self, key):
         """
