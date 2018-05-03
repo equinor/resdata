@@ -146,12 +146,12 @@ add_library(ecl util/rng.cpp
                 ecl/well_branch_collection.cpp
                 ecl/well_rseg_loader.cpp
 
-                geometry/geo_surface.c
-                geometry/geo_util.c
-                geometry/geo_pointset.c
-                geometry/geo_region.c
-                geometry/geo_polygon.c
-                geometry/geo_polygon_collection.c
+                geometry/geo_surface.cpp
+                geometry/geo_util.cpp
+                geometry/geo_pointset.cpp
+                geometry/geo_region.cpp
+                geometry/geo_polygon.cpp
+                geometry/geo_polygon_collection.cpp
 )
 
 target_link_libraries(ecl PUBLIC ${m}

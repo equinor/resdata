@@ -20,15 +20,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/bool_vector.h>
-#include <ert/util/type_macros.h>
+#include <ert/util/util.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/bool_vector.hpp>
+#include <ert/util/type_macros.hpp>
 
-#include <ert/geometry/geo_util.h>
-#include <ert/geometry/geo_pointset.h>
-#include <ert/geometry/geo_region.h>
-#include <ert/geometry/geo_polygon.h>
+#include <ert/geometry/geo_util.hpp>
+#include <ert/geometry/geo_pointset.hpp>
+#include <ert/geometry/geo_region.hpp>
+#include <ert/geometry/geo_polygon.hpp>
 
 #define GEO_REGION_TYPE_ID 4431973
 
@@ -47,14 +47,14 @@ struct geo_region_struct {
 static UTIL_SAFE_CAST_FUNCTION( geo_region , GEO_REGION_TYPE_ID )
 
 geo_region_type * geo_region_alloc( const geo_pointset_type * pointset , bool preselect) {
-  geo_region_type * region = util_malloc( sizeof * region );
+  geo_region_type * region = (geo_region_type*)util_malloc( sizeof * region );
   UTIL_TYPE_ID_INIT( region , GEO_REGION_TYPE_ID );
 
   region->pointset = pointset;
   region->pointset_size = geo_pointset_get_size( pointset );
   region->preselect = preselect;
   region->index_list = int_vector_alloc( 0, 0);
-  region->active_mask = util_calloc( region->pointset_size , sizeof * region->active_mask );
+  region->active_mask = (bool*)util_calloc( region->pointset_size , sizeof * region->active_mask );
   geo_region_reset( region );
 
   return region;

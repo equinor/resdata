@@ -142,9 +142,6 @@ well_conn_type * well_conn_alloc_fracture_MSW( int i , int j , int k , double co
   return well_conn_alloc__(i , j , k , connection_factor , dir , open , segment_id , false);
 }
 
-
-
-
 /*
   Observe that the (ijk) and branch values are shifted to zero offset to be
   aligned with the rest of the ert libraries.
@@ -157,73 +154,74 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
                                           int conn_nr ) {
 
   const int icon_offset = header->niconz * ( header->ncwmax * well_nr + conn_nr );
-  int IC = ecl_kw_iget_int( icon_kw , icon_offset + ICON_IC_INDEX );
-  if (IC > 0) {
-    well_conn_type * conn;
-    int i       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_I_INDEX ) - 1;
-    int j       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_J_INDEX ) - 1;
-    int k       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_K_INDEX ) - 1;
-    double connection_factor = -1;
-    bool matrix_connection = true;
-    bool open;
-    well_conn_dir_enum dir = well_conn_fracX;
-
-    /* Set the status */
-    {
-      int int_status = ecl_kw_iget_int( icon_kw , icon_offset + ICON_STATUS_INDEX );
-      if (int_status > 0)
-        open = true;
-      else
-        open = false;
-    }
+  int IC =ecl_kw_iget_int( icon_kw , icon_offset + ICON_IC_INDEX );
+  if (IC <= 0)
+    return NULL;  /* IC < 0: Connection not in current LGR. */
 
 
-    /* Set the K value and fracture flag. */
-    {
-      if (header->dualp) {
-        int geometric_nz = header->nz / 2;
-        if (k >= geometric_nz) {
-          k -= geometric_nz;
-          matrix_connection = false;
-        }
+  /*
+    Out in the wild we have encountered files where the integer value used to
+    indicate direction has had an invalid value for some connections. In this
+    case we just return NULL and forget about the connection - it seems to work.
+  */
+  int int_direction = ecl_kw_iget_int( icon_kw , icon_offset + ICON_DIRECTION_INDEX );
+  if ((int_direction < 0) || (int_direction > ICON_FRACY)) {
+    fprintf(stderr,"Invalid direction value:%d encountered for well - connection ignored\n",int_direction);
+    return NULL;
+  }
+
+
+  int i       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_I_INDEX ) - 1;
+  int j       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_J_INDEX ) - 1;
+  int k       = ecl_kw_iget_int( icon_kw , icon_offset + ICON_K_INDEX ) - 1;
+  double connection_factor = -1;
+  bool matrix_connection = true;
+  bool is_open = (ecl_kw_iget_int(icon_kw, icon_offset + ICON_STATUS_INDEX) > 0);
+  well_conn_dir_enum dir = well_conn_fracX;
+
+
+  /* Set the K value and fracture flag. */
+  {
+    if (header->dualp) {
+      int geometric_nz = header->nz / 2;
+      if (k >= geometric_nz) {
+        k -= geometric_nz;
+        matrix_connection = false;
       }
     }
+  }
+
+  /* Set the direction flag */
+  if (int_direction == ICON_DEFAULT_DIR_VALUE)
+    int_direction = ICON_DEFAULT_DIR_TARGET;
+
+  switch (int_direction) {
+  case(ICON_DIRX):
+    dir = well_conn_dirX;
+    break;
+  case(ICON_DIRY):
+    dir = well_conn_dirY;
+    break;
+  case(ICON_DIRZ):
+    dir = well_conn_dirZ;
+    break;
+  case(ICON_FRACX):
+    dir = well_conn_fracX;
+    break;
+  case(ICON_FRACY):
+    dir = well_conn_fracY;
+    break;
+  }
 
 
-    /* Set the direction flag */
-    {
-      int int_direction = ecl_kw_iget_int( icon_kw , icon_offset + ICON_DIRECTION_INDEX );
-      if (int_direction == ICON_DEFAULT_DIR_VALUE)
-        int_direction = ICON_DEFAULT_DIR_TARGET;
+  if (scon_kw) {
+    const int scon_offset = header->nsconz * ( header->ncwmax * well_nr + conn_nr );
+    connection_factor = ecl_kw_iget_as_double(scon_kw , scon_offset + SCON_CF_INDEX);
+  }
 
-      switch (int_direction) {
-      case(ICON_DIRX):
-        dir = well_conn_dirX;
-        break;
-      case(ICON_DIRY):
-        dir = well_conn_dirY;
-        break;
-      case(ICON_DIRZ):
-        dir = well_conn_dirZ;
-        break;
-      case(ICON_FRACX):
-        dir = well_conn_fracX;
-        break;
-      case(ICON_FRACY):
-        dir = well_conn_fracY;
-        break;
-      default:
-        util_abort("%s: icon direction value:%d not recognized\n",__func__ , int_direction);
-      }
-    }
-
-    if (scon_kw) {
-      const int scon_offset = header->nsconz * ( header->ncwmax * well_nr + conn_nr );
-      connection_factor = ecl_kw_iget_as_double(scon_kw , scon_offset + SCON_CF_INDEX);
-    }
-
+  {
     int segment_id = ecl_kw_iget_int( icon_kw , icon_offset + ICON_SEGMENT_INDEX ) - ECLIPSE_WELL_SEGMENT_OFFSET + WELL_SEGMENT_OFFSET;
-    conn = well_conn_alloc__(i,j,k,connection_factor,dir,open,segment_id,matrix_connection);
+    well_conn_type * conn = well_conn_alloc__(i,j,k,connection_factor,dir,is_open,segment_id,matrix_connection);
 
     if (xcon_kw) {
       const int xcon_offset = header->nxconz * (header->ncwmax * well_nr + conn_nr);
@@ -242,8 +240,7 @@ well_conn_type * well_conn_alloc_from_kw( const ecl_kw_type * icon_kw ,
     */
 
     return conn;
-  } else
-    return NULL;  /* IC < 0: Connection not in current LGR. */
+  }
 }
 
 
