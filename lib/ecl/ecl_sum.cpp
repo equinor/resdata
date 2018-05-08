@@ -913,6 +913,38 @@ void ecl_sum_init_data_vector( const ecl_sum_type * ecl_sum , double_vector_type
 }
 
 
+void ecl_sum_init_double_vector__(const ecl_sum_type * ecl_sum, int params_index, double * data) {
+  ecl_sum_data_init_double_vector(ecl_sum->data, params_index, data);
+}
+
+
+void ecl_sum_init_double_vector(const ecl_sum_type * ecl_sum, const char * gen_key, double * data) {
+  int params_index = ecl_sum_get_general_var_params_index(ecl_sum, gen_key);
+  ecl_sum_init_double_vector__(ecl_sum, params_index, data);
+}
+
+void ecl_sum_init_double_vector_interp(const ecl_sum_type * ecl_sum, const char * gen_key, const time_t_vector_type * time_points, double * data) {
+  const smspec_node_type * node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
+  ecl_sum_data_init_double_vector_interp(ecl_sum->data, node, time_points, data);
+}
+
+
+
+
+void ecl_sum_init_datetime64_vector(const ecl_sum_type * ecl_sum, int64_t * data, int multiplier) {
+  ecl_sum_data_init_datetime64_vector(ecl_sum->data, data, multiplier);
+}
+
+void ecl_sum_init_double_frame(const ecl_sum_type * ecl_sum, const ecl_sum_vector_type * keywords, double * data) {
+  ecl_sum_data_init_double_frame(ecl_sum->data, keywords, data);
+}
+
+
+void ecl_sum_init_double_frame_interp(const ecl_sum_type * ecl_sum, const ecl_sum_vector_type * keywords, const time_t_vector_type * time_points, double * data) {
+  ecl_sum_data_init_double_frame_interp(ecl_sum->data, keywords, time_points, data);
+}
+
+
 double_vector_type * ecl_sum_alloc_data_vector( const ecl_sum_type * ecl_sum  , int data_index , bool report_only) {
   return ecl_sum_data_alloc_data_vector( ecl_sum->data , data_index , report_only );
 }
@@ -1434,7 +1466,7 @@ ert_ecl_unit_enum ecl_sum_get_unit_system(const ecl_sum_type * ecl_sum) {
 }
 
 double ecl_sum_iget_last_value(const ecl_sum_type * ecl_sum, int param_index) {
-  return ecl_sum_data_get_last_value(ecl_sum->data, param_index);
+  return ecl_sum_data_iget_last_value(ecl_sum->data, param_index);
 }
 
 double ecl_sum_get_last_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key) {
@@ -1444,4 +1476,17 @@ double ecl_sum_get_last_value_gen_key(const ecl_sum_type * ecl_sum, const char *
 
 double ecl_sum_get_last_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node) {
   return ecl_sum_iget_last_value(ecl_sum, smspec_node_get_params_index(node));
+}
+
+double ecl_sum_iget_first_value(const ecl_sum_type * ecl_sum, int param_index) {
+  return ecl_sum_data_iget_first_value(ecl_sum->data, param_index);
+}
+
+double ecl_sum_get_first_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key) {
+  const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  return ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
+}
+
+double ecl_sum_get_first_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node) {
+  return ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
 }

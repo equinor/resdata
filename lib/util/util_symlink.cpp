@@ -91,12 +91,14 @@ char * util_alloc_link_target(const char * link) {
 
 #ifdef ERT_HAVE_READLINKAT
 
+#if !defined(ERT_HAVE_READLINKAT_DECLARATION)
 /*
   The manual page says that the readlinkat() function should be in the
   unistd.h header file, but not on RedHat5. On RedHat6 it is.
 
 */
 extern ssize_t readlinkat (int __fd, __const char *__restrict __path, char *__restrict __buf, size_t __len);
+#endif  /* !defined(ERT_HAVE_READLINKAT_DECLARATION) */
 
 char * util_alloc_atlink_target(const char * path , const char * link) {
   if (util_is_abs_path( link ))

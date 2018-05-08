@@ -14,7 +14,7 @@ Url:            http://ert.nr.no
 Source0:        https://github.com/Statoil/libecl/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRequires:  lapack-devel zlib-devel iputils
 BuildRequires:  devtoolset-6-toolchain
-%{?!el6:BuildRequires: python-devel numpy}
+%{?!el6:BuildRequires: python-devel numpy python-pandas}
 %{?el6:BuildRequires:  cmake3}
 %{?!el6:BuildRequires:  cmake}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build

@@ -35,7 +35,6 @@ extern "C" {
 #include <ert/ecl/ecl_sum_tstep.h>
 #include <ert/ecl/smspec_node.h>
 
-
   typedef struct {
     char * locale;
     const char * sep;
@@ -53,6 +52,8 @@ extern "C" {
 
 
   /*****************************************************************/
+  /* This is a forward declaration. */
+typedef struct ecl_sum_vector_struct ecl_sum_vector_type;
 
 typedef struct ecl_sum_struct       ecl_sum_type;
 
@@ -271,7 +272,15 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   double               ecl_sum_iget_last_value(const ecl_sum_type * ecl_sum, int param_index);
   double               ecl_sum_get_last_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key);
   double               ecl_sum_get_last_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node);
+  double               ecl_sum_iget_first_value(const ecl_sum_type * ecl_sum, int param_index);
+  double               ecl_sum_get_first_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key);
+  double               ecl_sum_get_first_value_node(const ecl_sum_type * ecl_sum, const smspec_node_type *node);
 
+  void                 ecl_sum_init_datetime64_vector(const ecl_sum_type * ecl_sum, int64_t * data, int multiplier);
+  void                 ecl_sum_init_double_vector_interp(const ecl_sum_type * ecl_sum, const char * gen_key, const time_t_vector_type * time_points, double * data);
+  void                 ecl_sum_init_double_vector(const ecl_sum_type * ecl_sum, const char * gen_key, double * data);
+  void                 ecl_sum_init_double_frame(const ecl_sum_type * ecl_sum, const ecl_sum_vector_type * keywords, double * data);
+  void                 ecl_sum_init_double_frame_interp(const ecl_sum_type * ecl_sum, const ecl_sum_vector_type * keywords, const time_t_vector_type * time_points, double * data);
   UTIL_IS_INSTANCE_HEADER( ecl_sum );
 
 #ifdef __cplusplus
