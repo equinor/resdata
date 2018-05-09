@@ -4903,8 +4903,13 @@ static int util_mkdir( const char * path ) {
 #endif
 }
 
+/*
+  Acts like the shell command 'mkdir -p' - i.e. creating a full directory tree.
+  The return value is: util_is_directory(_path) - i.e. will return true if the
+  directory exists at the end, and false otherwise.
+*/
 
-void util_make_path(const char *_path) {
+bool util_mkdir_p(const char *_path) {
   char *active_path;
   char *path = (char *) _path;
   int current_pos = 0;
@@ -4912,6 +4917,7 @@ void util_make_path(const char *_path) {
   if (!util_is_directory(path)) {
     int i = 0;
     active_path = (char*)util_calloc(strlen(path) + 1 , sizeof * active_path );
+
     do {
       size_t n = strcspn(path , UTIL_PATH_SEP_STRING);
       if (n < strlen(path))
@@ -4924,26 +4930,24 @@ void util_make_path(const char *_path) {
 
       if (!util_is_directory(active_path)) {
         if (util_mkdir(active_path) != 0) {
-          bool fail = false;
-          switch (errno) {
-          case(EEXIST):
-            if (util_is_directory(active_path))
-              fail = false;
+          if (errno != EEXIST)
             break;
-          default:
-            fail = true;
-            break;
-          }
-          if (fail)
-            util_abort("%s: failed to make directory:%s - aborting\n: %s(%d) \n",__func__ , active_path , strerror(errno), errno);
         }
       }
 
     } while (strlen(active_path) < strlen(_path));
+
     free(active_path);
   }
+  return util_is_directory(_path);
 }
 
+
+void util_make_path(const char * path) {
+  bool mkdir_ok = util_mkdir_p(path);
+  if (!mkdir_ok)
+    util_abort("%s: failed to make directory:%s - aborting\n: %s(%d) \n",__func__ , path , strerror(errno), errno);
+}
 
 /**
    This function will allocate a unique filename with a random part in
