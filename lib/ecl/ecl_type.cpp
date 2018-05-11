@@ -64,7 +64,7 @@ ecl_data_type ecl_type_create(const ecl_type_enum type, const size_t element_siz
                                 ecl_type_create_from_type(type)
                             );
 
-  if(ecl_type_get_sizeof_iotype(ecl_type) != element_size)
+  if((size_t)ecl_type_get_sizeof_iotype(ecl_type) != element_size)
       util_abort(
               "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
               __func__, type,

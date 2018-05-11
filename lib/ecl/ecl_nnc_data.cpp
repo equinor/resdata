@@ -40,7 +40,7 @@ struct ecl_nnc_data_struct {
 
 
 static const char * ecl_nnc_data_get_str_kw(int kw_type, int grid1, int grid2) {
-  char * kw = NULL;
+  const char * kw = NULL;
   switch (kw_type) { 
 
     case TRANS_DATA:

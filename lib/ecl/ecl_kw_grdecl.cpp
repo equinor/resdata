@@ -259,7 +259,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
   int buffer_size     = 64;
   int data_index      = 0;
   int sizeof_ctype    = ecl_type_get_sizeof_ctype( data_type );
-  int data_size       = init_size;
+  size_t data_size    = init_size;
   char * buffer       = (char*)util_calloc( (buffer_size + 1) , sizeof * buffer      );
   char * data         = (char*)util_calloc( sizeof_ctype * data_size , sizeof * data );
 

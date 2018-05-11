@@ -800,6 +800,7 @@ ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
     return FRONTSIM;
 
   util_abort("%s: Simulator version value:%d not recognized \n",__func__ , int_value );
+  return (ecl_version_enum)0;
 }
 
 /*
