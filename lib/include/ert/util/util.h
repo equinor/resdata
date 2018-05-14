@@ -178,7 +178,6 @@ typedef enum {left_pad   = 0,
   bool         util_ftruncate(FILE * stream , long size);
 
   void         util_usleep( unsigned long micro_seconds );
-  void         util_yield(void);
 
   int          util_roundf( float x );
   int          util_round( double x );
