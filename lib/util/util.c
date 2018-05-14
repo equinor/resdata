@@ -271,8 +271,6 @@ static bool EOL_CHAR(char c) {
     return false;
 }
 
-#undef strncpy // This is for some reason needed in RH3
-
 /*
   The difference between /dev/random and /dev/urandom is that the
   former will block if the entropy pool is close to empty:
