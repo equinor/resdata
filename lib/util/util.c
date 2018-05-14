@@ -1891,25 +1891,6 @@ bool util_fscanf_int(FILE * stream , int * value) {
 
 
 
-/**
-   This function counts the number of lines from the current position
-   in the file, to the end of line. The file pointer is repositioned
-   at the end of the counting.
-*/
-
-
-int util_count_file_lines(FILE * stream) {
-  long int init_pos = util_ftell(stream);
-  int lines = 0;
-  bool at_eof = false;
-  do {
-    int col = util_forward_line(stream , &at_eof);
-    if (col > 0) lines++;
-  } while (!at_eof);
-  util_fseek(stream , init_pos , SEEK_SET);
-  return lines;
-}
-
 
 int util_count_content_file_lines(FILE * stream) {
   int lines       = 0;
