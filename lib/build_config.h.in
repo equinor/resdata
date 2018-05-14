@@ -2,7 +2,6 @@
 #cmakedefine HAVE_TIMEGM
 #cmakedefine HAVE_LOCALTIME_R
 #cmakedefine HAVE_REALPATH
-#cmakedefine HAVE_TIMEDJOIN
 #cmakedefine HAVE__USLEEP
 #cmakedefine HAVE_FNMATCH
 #cmakedefine HAVE_FTRUNCATE
