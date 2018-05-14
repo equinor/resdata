@@ -342,7 +342,7 @@ static bool valid_base(const char * input_base, bool * upper_case) {
   if (base == NULL)
     base = input_base;
 
-  for (int i=0; i < strlen(base); i++) {
+  for (size_t i=0; i < strlen(base); i++) {
     char c = base[i];
 
     if (isupper(c))
@@ -455,7 +455,7 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
   }
 
   if (!upper_case) {
-    for (int i=0; i < strlen(ext); i++)
+    for (size_t i=0; i < strlen(ext); i++)
       ext[i] = tolower(ext[i]);
   }
 
@@ -660,7 +660,7 @@ int ecl_util_select_filelist( const char * path , const char * base , ecl_file_e
     char * file_pattern;
 
     if (!upper_case) {
-      for (int i=0; i < strlen(ext_pattern); i++)
+      for (size_t i=0; i < strlen(ext_pattern); i++)
         ext_pattern[i] = tolower(ext_pattern[i]);
     }
 
@@ -1106,7 +1106,7 @@ safely used as filenames, i.e for instance the substitution:
 The escape process is done 'in-place' memory-wise.
 */
 void ecl_util_escape_kw(char * kw) {
-  int index;
+  size_t index;
   for (index = 0; index < strlen(kw); index++) {
     switch (kw[index]) {
     case('/'):

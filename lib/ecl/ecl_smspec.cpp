@@ -510,7 +510,7 @@ void ecl_smspec_fwrite( const ecl_smspec_type * smspec , const char * ecl_case ,
   fortio_type * fortio = fortio_open_writer( filename , fmt_file , ECL_ENDIAN_FLIP);
 
   if (!fortio) {
-    char * error_fmt_msg = "%s: Unable to open fortio file %s, error: %s .\n";
+    const char * error_fmt_msg = "%s: Unable to open fortio file %s, error: %s .\n";
     util_abort( error_fmt_msg , __func__ , filename , strerror( errno ) );
   }
 
@@ -1168,7 +1168,7 @@ static const char * get_active_keyword_alias(ecl_file_type * header, const char 
 
 static bool ecl_smspec_check_header( ecl_file_type * header ) {
   bool OK = true;
-  for (int i=0; i < num_req_keywords && OK; i++) {
+  for (size_t i=0; i < num_req_keywords && OK; i++) {
     OK &= ecl_file_has_kw(
             header,
             get_active_keyword_alias(header, smspec_required_keywords[i])

@@ -951,7 +951,7 @@ void ecl_kw_iset_string_ptr( ecl_kw_type * ecl_kw, int index, const char * s) {
 
   {
     char * ecl_string = (char *) ecl_kw_iget_ptr(ecl_kw, index);
-    int i;
+    size_t i;
 
     for(i = 0; i < input_len; ++i)
       ecl_string[i] = s[i];
@@ -1376,7 +1376,9 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
       return ECL_KW_READ_FAIL;
 
     memcpy( header , &buffer[0] , ECL_STRING8_LENGTH);
-    size = *( (int *) &buffer[ECL_STRING8_LENGTH] );
+    void * ptr = &buffer[ECL_STRING8_LENGTH];
+    size = *((int*)ptr);
+ 
     memcpy( ecl_type_str , &buffer[ECL_STRING8_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
 
     if(!fortio_complete_read(fortio , record_size))

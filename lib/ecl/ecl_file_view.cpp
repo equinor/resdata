@@ -558,7 +558,7 @@ bool ecl_file_view_has_report_step( const ecl_file_view_type * ecl_file_view , i
 
 time_t ecl_file_view_iget_restart_sim_date(const ecl_file_view_type * ecl_file_view , int seqnum_index) {
   time_t sim_time = -1;
-  ecl_file_view_type * seqnum_map = seqnum_map = ecl_file_view_alloc_blockview( ecl_file_view , SEQNUM_KW , seqnum_index);
+  ecl_file_view_type * seqnum_map = ecl_file_view_alloc_blockview( ecl_file_view , SEQNUM_KW , seqnum_index);
 
   if (seqnum_map != NULL) {
     ecl_kw_type * intehead_kw = ecl_file_view_iget_named_kw( seqnum_map , INTEHEAD_KW , 0);

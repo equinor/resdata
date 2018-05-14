@@ -38,16 +38,16 @@ extern "C" {
   typedef struct {
     char * locale;
     const char * sep;
-    char * newline;
-    char * value_fmt;
+    const char * newline;
+    const char * value_fmt;
     const char * date_fmt;
-    char * days_fmt;
-    char * header_fmt;
+    const char * days_fmt;
+    const char * header_fmt;
     bool   print_header;
     bool   print_dash;
     const char * date_header;
-    char * date_dash;
-    char * value_dash;
+    const char * date_dash;
+    const char * value_dash;
   } ecl_sum_fmt_type;
 
 
