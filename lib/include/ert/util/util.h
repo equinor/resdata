@@ -153,11 +153,8 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   void         util_move_file4( const char * src_name , const char * target_name , const char *src_path , const char * target_path);
   bool         util_copy_file(const char * , const char * );
   bool         util_copy_file__(const char * src_file , const char * target_file, size_t buffer_size , void * buffer , bool abort_on_error);
-  char       * util_alloc_cwd(void);
   bool         util_is_cwd( const char * path );
   char       * util_alloc_normal_path( const char * input_path );
-  char       * util_alloc_realpath(const char * );
-  char       * util_alloc_realpath__(const char * input_path);
   bool         util_string_match(const char * string , const char * pattern);
   bool         util_string_has_wildcard( const char * s);
   bool         util_file_readable( const char * file );

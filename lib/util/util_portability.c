@@ -50,3 +50,155 @@ void util_usleep( unsigned long micro_seconds ) {
 #endif
 #endif
 }
+
+
+
+static char * util_getcwd(char * buffer , int size) {
+#ifdef HAVE_POSIX_GETCWD
+  return getcwd( buffer , size );
+#endif
+
+#ifdef HAVE_WINDOWS_GETCWD
+  return _getcwd( buffer , size );
+#endif
+}
+
+
+char * util_alloc_cwd(void) {
+  char * result_ptr;
+  char * cwd;
+  int buffer_size = 128;
+  do {
+    cwd = (char*)util_calloc(buffer_size , sizeof * cwd );
+    result_ptr = util_getcwd(cwd , buffer_size - 1);
+    if (result_ptr == NULL) {
+      if (errno == ERANGE) {
+        buffer_size *= 2;
+        free(cwd);
+      }
+    }
+  } while ( result_ptr == NULL );
+  cwd = (char*)util_realloc(cwd , strlen(cwd) + 1 );
+  return cwd;
+}
+
+/**
+   Manual realpath() implementation to be used on platforms without
+   realpath() support. Will remove /../, ./ and extra //. Will not
+   handle symlinks.
+*/
+
+
+#define BACKREF ".."
+#define CURRENT "."
+
+char * util_alloc_realpath__(const char * input_path) {
+  char * abs_path  = util_alloc_cwd_abs_path( input_path );
+  char * real_path = (char*)util_malloc( strlen(abs_path) + 2 );
+  real_path[0] = '\0';
+
+
+  {
+    char ** path_list;
+    const char ** path_stack;
+    int     path_len;
+
+    util_path_split( abs_path , &path_len , &path_list );
+    path_stack = (const char **) util_malloc( path_len * sizeof * path_stack );
+    for (int i=0; i < path_len; i++)
+      path_stack[i] = NULL;
+
+    {
+      int stack_size = 0;
+
+      for (int path_index=0; path_index < path_len; path_index++) {
+        const char * path_elm = path_list[path_index];
+
+         if (strcmp( path_elm , CURRENT) == 0)
+          continue;
+
+        /* Backref - pop from stack. */
+        if (strcmp(path_elm , BACKREF ) == 0) {
+          if (stack_size > 0) {
+            memmove(path_stack, &path_stack[1] , (stack_size - 1) * sizeof * path_stack);
+            stack_size--;
+          }
+          continue;
+        }
+
+        /* Normal path element - push onto stack. */
+        memmove(&path_stack[1], path_stack, stack_size * sizeof * path_stack);
+        path_stack[0] = path_elm;
+        stack_size++;
+      }
+
+      /* Build up the new string. */
+      if (stack_size > 0) {
+        for (int pos = stack_size - 1; pos >= 0; pos--) {
+          const char * path_elm = path_stack[pos];
+          if (pos == (stack_size- 1)) {
+#ifdef ERT_WINDOWS
+            // Windows:
+            //   1) If the path starts with X: - just do nothing
+            //   2) Else add \\ - for a UNC path.
+            if (path_elm[1] != ':') {
+              strcat(real_path, UTIL_PATH_SEP_STRING);
+              strcat(real_path, UTIL_PATH_SEP_STRING);
+            }
+#else
+            // Posix: just start with a leading '/'
+            strcat(real_path, UTIL_PATH_SEP_STRING);
+#endif
+            strcat( real_path , path_elm);
+          } else {
+            strcat(real_path, UTIL_PATH_SEP_STRING);
+            strcat(real_path , path_elm);
+          }
+        }
+      }
+    }
+    free( path_stack );
+    util_free_stringlist( path_list , path_len );
+  }
+
+  free(abs_path);
+  return real_path;
+}
+
+#undef BACKREF
+#undef CURRENT
+
+
+/**
+   The util_alloc_realpath() will fail hard if the @input_path does
+   not exist. If the path might-not-exist you should use
+   util_alloc_abs_path() instead.
+*/
+
+
+char * util_alloc_realpath(const char * input_path) {
+#ifdef HAVE_REALPATH
+  char * buffer   = (char*)util_calloc(PATH_MAX + 1 , sizeof * buffer );
+  char * new_path = NULL;
+
+  new_path = realpath( input_path , buffer);
+  if (new_path == NULL)
+    util_abort("%s: input_path:%s - failed: %s(%d) \n",__func__ , input_path , strerror(errno) , errno);
+  else
+    new_path = (char*)util_realloc(new_path , strlen(new_path) + 1);
+
+  return new_path;
+#else
+  /* We do not have the realpath() implementation. Must first check if
+     the entry exists; and if not we abort. If the entry indeed exists
+     we call the util_alloc_cwd_abs_path() function: */
+#ifdef ERT_HAVE_SYMLINK
+  ERROR - What the fuck; have symlinks and not realpath()?!
+#endif
+  if (!util_entry_exists( input_path ))
+    util_abort("%s: input_path:%s does not exist - failed.\n",__func__ , input_path);
+
+  return util_alloc_realpath__( input_path );
+#endif
+}
+
