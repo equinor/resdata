@@ -147,6 +147,7 @@ typedef enum {left_pad   = 0,
   bool         util_fmt_bit8_stream(FILE * );
   char       * util_strstr_int_format(const char * string );
   int          util_int_format_count(const char * string );
+  bool         util_mkdir_p(const char * path);
   void         util_make_path  (const char *);
   char       * util_newest_file(const char *, const char *);
   double       util_file_difftime(const char * , const char *);
