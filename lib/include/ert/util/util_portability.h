@@ -46,6 +46,7 @@ void    util_usleep( unsigned long micro_seconds );
 char  * util_alloc_cwd(void);
 char  * util_alloc_realpath(const char * );
 char  * util_alloc_realpath__(const char * input_path);
+int     util_fnmatch( const char * pattern , const char * string );
 
 
 #ifdef __cplusplus

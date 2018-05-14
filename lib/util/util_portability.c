@@ -169,6 +169,23 @@ char * util_alloc_realpath__(const char * input_path) {
 #undef CURRENT
 
 
+
+int util_fnmatch( const char * pattern , const char * string ) {
+#ifdef HAVE_FNMATCH
+  return fnmatch( pattern , string , 0 );
+#else
+#pragma comment(lib , "shlwapi.lib")
+  bool match = PathMatchSpec( string , pattern ); // shlwapi
+  if (match)
+    return 0;
+  else
+    return 1;
+
+#endif
+}
+
+
+
 /**
    The util_alloc_realpath() will fail hard if the @input_path does
    not exist. If the path might-not-exist you should use

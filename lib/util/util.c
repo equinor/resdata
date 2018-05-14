@@ -4392,20 +4392,6 @@ CONTAINS(size_t)
 
 
 
-int util_fnmatch( const char * pattern , const char * string ) {
-#ifdef HAVE_FNMATCH
-  return fnmatch( pattern , string , 0 );
-#else
-#pragma comment(lib , "shlwapi.lib")
-  bool match = PathMatchSpec( string , pattern ); // shlwapi
-  if (match)
-    return 0;
-  else
-    return 1;
-
-#endif
-}
-
 /*****************************************************************/
 /* Conditional compilation; this last section includes several
    functions which are included if certain features like e.g. posix_spawn()

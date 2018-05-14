@@ -342,7 +342,6 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   bool     util_double_approx_equal( double d1 , double d2);
   bool     util_double_approx_equal__( double d1 , double d2, double rel_eps, double abs_eps);
   bool     util_float_approx_equal__( float d1 , float d2, float rel_eps, float abs_eps);
-  int      util_fnmatch( const char * pattern , const char * string );
   void     util_time_utc( time_t * t , struct tm * ts );
 
   bool         util_is_link(const char * );  // Will always return false on windows
