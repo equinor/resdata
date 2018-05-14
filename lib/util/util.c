@@ -485,23 +485,6 @@ void util_string_tr(char * s, char c1, char c2) {
 }
 
 
-void util_rewind_line(FILE *stream) {
-  bool at_eol = false;
-  int c;
-
-  do {
-    if (util_ftell(stream) == 0)
-      at_eol = true;
-    else {
-      util_fseek(stream , -1 , SEEK_CUR);
-      c = fgetc(stream);
-      at_eol = EOL_CHAR(c);
-      if (!at_eol)
-        util_fseek(stream , -1 , SEEK_CUR);
-    }
-  } while (!at_eol);
-}
-
 
 
 /**
@@ -1060,49 +1043,6 @@ void util_fskip_lines(FILE * stream , int lines) {
   } while (cont);
 }
 
-
-/*
-  The last line(s) without content are not counted, i.e.
-
-  File:
-  ----------
-  |Line1
-  |Line2
-  |
-  |Line4
-  |empty1
-  |empty2
-  |empty3
-
-  will return a value of four.
-*/
-
-int util_forward_line(FILE * stream , bool * at_eof) {
-  bool at_eol = false;
-  int col = 0;
-  *at_eof     = false;
-
-  do {
-    char c = fgetc(stream);
-    if (c == EOF) {
-      *at_eof = true;
-      at_eol  = true;
-    } else {
-      if (EOL_CHAR(c)) {
-        at_eol = true;
-        c = fgetc(stream);
-        if (c == EOF)
-          *at_eof = true;
-        else {
-          if (!EOL_CHAR(c))
-            util_fseek(stream , -1 , SEEK_CUR);
-        }
-      } else
-        col++;
-    }
-  } while (!at_eol);
-  return col;
-}
 
 
 

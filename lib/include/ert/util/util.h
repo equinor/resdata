@@ -207,6 +207,7 @@ typedef enum {left_pad   = 0,
 
   int          util_forward_line(FILE * , bool * );
   void         util_rewind_line(FILE *);
+
   int          util_count_content_file_lines(FILE * );
   FILE       * util_mkdir_fopen( const char * filename , const char * mode );
   int          util_fmove( FILE * stream , long offset , long shift);
