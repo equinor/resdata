@@ -703,20 +703,6 @@ void util_usleep( unsigned long micro_seconds ) {
 #endif
 }
 
-void util_yield() {
-#if defined(WITH_PTHREAD) && (defined(HAVE_YIELD_NP) || defined(HAVE_YIELD))
-  #ifdef HAVE_YIELD_NP
-    pthread_yield_np();
-  #else
-    #ifdef HAVE_YIELD
-    pthread_yield();
-    #endif
-  #endif
-#else
-  util_usleep(1000);
-#endif
-}
-
 static char * util_getcwd(char * buffer , int size) {
 #ifdef HAVE_POSIX_GETCWD
   return getcwd( buffer , size );
