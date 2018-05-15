@@ -4700,19 +4700,6 @@ void util_exit(const char * fmt , ...) {
 
 
 
-/**
-   This function is quite dangerous - it will always return something;
-   it is the responsability of the calling scope to check that it
-   makes sense. Will return 0 on input NULL.
-*/
-
-int util_get_type( void * data ) {
-  if (data == NULL)
-    return 0;
-  else
-    return ((int *) data)[0];
-}
-
 
 
 

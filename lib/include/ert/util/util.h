@@ -360,7 +360,6 @@ typedef enum {left_pad   = 0,
   const char * util_update_path_var(const char * , const char * , bool );
 
 
-  int      util_get_type( void * data );
   void     util_fskip_int(FILE * stream);
   void     util_fskip_long(FILE * stream);
   void     util_fskip_bool(FILE * stream);
