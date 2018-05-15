@@ -5121,10 +5121,6 @@ char * util_alloc_parent_path( const char * path) {
 
 #ifdef ERT_HAVE_UNISTD
 
-int util_type_get_id( const void * data ) {
-  int type_id = ((const int*) data)[0];
-  return type_id;
-}
 
 int util_chdir(const char * path) {
   return chdir( path );
