@@ -301,7 +301,7 @@ void util_abort__(const char * file , const char * function , int line , const c
     }
 
     if (abort_dump != stderr) {
-      util_fclose(abort_dump);
+      fclose(abort_dump);
       fprintf(stderr, "\nError message: ");
       {
         va_list args;

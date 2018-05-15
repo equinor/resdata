@@ -212,7 +212,6 @@ typedef enum {left_pad   = 0,
   int          util_fmove( FILE * stream , long offset , long shift);
   FILE       * util_fopen(const char *  , const char *); 
   FILE       * util_fopen__(const char * filename , const char * mode);
-  void         util_fclose( FILE * stream );
   bool         util_fopen_test(const char *, const char *);
   char       * util_split_alloc_dirname( const char * input_path );
   char       * util_split_alloc_filename( const char * input_path );
