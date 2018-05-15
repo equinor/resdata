@@ -57,7 +57,7 @@ bool         util_access(const char * entry, mode_t mode);
 #endif
 
 
-
+time_t  util_timegm(struct tm * ts);
 void    util_usleep( unsigned long micro_seconds );
 char  * util_alloc_cwd(void);
 char  * util_alloc_realpath(const char * );

@@ -19,6 +19,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 
 #include <ert/util/util_portability.h>
 #include <ert/util/ert_api_config.h>
@@ -317,3 +318,11 @@ bool util_ftruncate(FILE * stream , long size) {
     return false;
 }
 
+
+time_t util_timegm(struct tm * ts) {
+#ifdef HAVE_TIMEGM
+  return timegm( ts );
+#else
+  return _mkgmtime( ts );
+#endif
+}

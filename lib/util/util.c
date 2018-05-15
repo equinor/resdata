@@ -2784,11 +2784,7 @@ static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int
   ts.tm_isdst  = -1;    /* Negative value means mktime tries to determine automagically whether Daylight Saving Time is in effect. */
   {
 
-#ifdef HAVE_TIMEGM
-    time_t work_t = timegm( &ts );
-#else
-    time_t work_t = _mkgmtime( &ts );
-#endif
+    time_t work_t = util_timegm( &ts );
 
     if ((ts.tm_sec  == sec) &&
         (ts.tm_min  == min) &&
