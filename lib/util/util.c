@@ -4166,18 +4166,6 @@ double util_double_vector_stddev(int N, const double * vector) {
 
 
 
-/**
-   This function will update *value so that on return ALL bits which
-   are set in bitmask, are also set in value. No other bits in *value
-   should be modified - i.e. it is a logical or.
-*/
-
-void util_bitmask_on(int * value , int mask) {
-  int tmp = *value;
-  tmp = (tmp | mask);
-  *value = tmp;
-}
-
 
 FILE * util_fopen__(const char * filename , const char * mode) {
   return fopen(filename, mode);

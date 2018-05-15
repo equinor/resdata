@@ -102,7 +102,6 @@ typedef enum {left_pad   = 0,
               center_pad = 2} string_alignement_type;
 
   //#define UTIL_CXX_MALLOC(var , num_elm) (typeof (var)) util_malloc( (num_elm) * sizeof var)
-  void         util_bitmask_on(int *  , int );
   char       * util_get_timezone(void);
   time_t       util_make_datetime_utc(int , int , int , int , int , int );
   bool         util_make_datetime_utc_validated(int sec, int min, int hour , int mday , int month , int year, time_t * t);
