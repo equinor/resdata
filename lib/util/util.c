@@ -658,10 +658,6 @@ char * util_fscanf_alloc_line(FILE *stream , bool *at_eof) {
 }
 
 
-char * util_fscanf_realloc_line(FILE *stream , bool *at_eof , char *line) {
-  return util_fscanf_alloc_line__(stream , at_eof , line);
-}
-
 
 
 

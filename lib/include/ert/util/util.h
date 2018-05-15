@@ -221,7 +221,6 @@ typedef enum {left_pad   = 0,
   //char           * util_realloc_full_path(char * , const char *, const char *);
   char       * util_alloc_tmp_file(const char * , const char * , bool );
   char       * util_fscanf_alloc_line(FILE *, bool *);
-  char       * util_fscanf_realloc_line(FILE *, bool * , char *);
   char       * util_fscanf_alloc_token(FILE * );
   void         util_fskip_token(FILE * );
   void         util_fskip_space(FILE *  ,  bool *);
