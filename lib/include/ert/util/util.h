@@ -205,10 +205,6 @@ typedef enum {left_pad   = 0,
   bool         util_chmod_if_owner( const char * filename , mode_t new_mode);
 #endif
 
-#ifdef HAVE_PROC
-  bool    util_proc_alive(pid_t pid);
-#endif
-
   int          util_forward_line(FILE * , bool * );
   void         util_rewind_line(FILE *);
   int          util_count_content_file_lines(FILE * );
@@ -312,7 +308,6 @@ typedef enum {left_pad   = 0,
   char *  util_fread_alloc_string(FILE *);
   void    util_fskip_string(FILE *stream);
   void     util_endian_flip_vector(void * data , int element_size , int elements);
-  int      util_proc_mem_free(void);
 
 
   void     util_clamp_double(double * value , double limit1, double limit2);

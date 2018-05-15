@@ -5017,24 +5017,6 @@ char * util_realloc_filename(char * filename , const char * path , const char * 
 
 
 
-#ifdef HAVE_PROC
-bool util_proc_alive(pid_t pid) {
-  char proc_path[16];
-  sprintf(proc_path , "/proc/%d" , pid);
-  return util_is_directory(proc_path);
-}
-#endif
-
-int util_proc_mem_free(void) {
-  FILE *stream = util_fopen("/proc/meminfo" , "r");
-  int mem;
-  util_fskip_lines(stream , 1);
-  util_fskip_token(stream);
-  util_fscanf_int(stream , &mem);
-  fclose(stream);
-  return mem;
-}
-
 
 
 
