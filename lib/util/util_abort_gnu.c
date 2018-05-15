@@ -105,7 +105,7 @@ static bool util_addr2line_lookup__(const void * bt_addr , char ** func_name , c
               address_found = true;
 
             free( stdout_file_name );
-            util_safe_free( line_string );
+            free( line_string );
           }
           free( tmp_fname );
           fclose(stream);
@@ -200,9 +200,9 @@ static void util_fprintf_backtrace(FILE * stream) {
       }
     }
 
-    util_safe_free( func_name );
-    util_safe_free( file_name );
-    util_safe_free( padding );
+    free( func_name );
+    free( file_name );
+    free( padding );
   }
   fprintf(stream , "--------------------------------------------------------------------------------\n");
 }

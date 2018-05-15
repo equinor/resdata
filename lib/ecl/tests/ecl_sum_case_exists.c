@@ -46,8 +46,8 @@ void test_case_no_path( const char * sum_case , bool expected_exist) {
       chdir( path );
     test_assert_bool_equal(expected_exist ,  ecl_sum_case_exists( basename ));
 
-    util_safe_free( path );
-    util_safe_free( basename );
+    free( path );
+    free( basename );
   }
   path_stack_pop( path_stack );
   path_stack_free( path_stack );

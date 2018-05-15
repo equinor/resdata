@@ -388,7 +388,7 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
 
 static void smspec_node_set_wgname( smspec_node_type * index , const char * wgname ) {
   if (wgname == NULL) {
-    util_safe_free( index->wgname );
+    free( index->wgname );
     index->wgname = NULL;
   } else {
     index->wgname = util_realloc_string_copy(index->wgname , wgname );
@@ -551,8 +551,8 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
 
 void smspec_node_update_wgname( smspec_node_type * index , const char * wgname , const char * key_join_string) {
   smspec_node_set_wgname( index , wgname );
-  util_safe_free( index->gen_key1 );
-  util_safe_free( index->gen_key2 );
+  free( index->gen_key1 );
+  free( index->gen_key2 );
   smspec_node_set_gen_keys( index , key_join_string );
 }
 
@@ -810,14 +810,14 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
 }
 
 void smspec_node_free( smspec_node_type * index ) {
-  util_safe_free( index->unit );
-  util_safe_free( index->keyword );
-  util_safe_free( index->ijk );
-  util_safe_free( index->gen_key1 );
-  util_safe_free( index->gen_key2 );
-  util_safe_free( index->wgname );
-  util_safe_free( index->lgr_name );
-  util_safe_free( index->lgr_ijk );
+  free( index->unit );
+  free( index->keyword );
+  free( index->ijk );
+  free( index->gen_key1 );
+  free( index->gen_key2 );
+  free( index->wgname );
+  free( index->lgr_name );
+  free( index->lgr_ijk );
   free( index );
 }
 
@@ -892,7 +892,7 @@ const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
 
 void smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit ) {
   // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  util_safe_free( smspec_node->unit );
+  free( smspec_node->unit );
   smspec_node->unit = util_alloc_substring_copy( unit , 0 , 8);
 }
 

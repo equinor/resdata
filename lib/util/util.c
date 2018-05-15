@@ -3218,16 +3218,6 @@ char * util_realloc_substring_copy(char * old_string , const char *src , int len
 }
 
 
-/**
-   This function check that a pointer is different from NULL, and
-   frees the memory if that is the case.
-*/
-
-
-void util_safe_free(void *ptr) {
-   if (ptr != NULL) free(ptr);
-}
-
 
 
 
@@ -3335,7 +3325,7 @@ void util_free_stringlist(char **list , int N) {
   int i;
   if (list != NULL) {
     for (i=0; i < N; i++) {
-      util_safe_free( list[i] );
+      free( list[i] );
     }
     free(list);
   }
@@ -4516,7 +4506,7 @@ char * util_realloc_sprintf(char * s , const char * fmt , ...) {
   va_start(ap , fmt);
 
   new_s = util_alloc_sprintf_va( fmt , ap );
-  util_safe_free(s);
+  free(s);
 
   va_end(ap);
   return new_s;
@@ -4905,7 +4895,7 @@ char * util_alloc_filename(const char * path , const char * basename , const cha
 
 
 char * util_realloc_filename(char * filename , const char * path , const char * basename , const char * extension) {
-  util_safe_free(filename);
+  free(filename);
   return util_alloc_filename( path , basename , extension );
 }
 
@@ -4933,8 +4923,8 @@ char * util_split_alloc_filename( const char * input_path ) {
     if (basename)
       filename = util_alloc_filename( NULL , basename , extension );
 
-    util_safe_free( basename );
-    util_safe_free( extension );
+    free( basename );
+    free( extension );
   }
 
   return filename;

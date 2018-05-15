@@ -4458,12 +4458,12 @@ int ecl_grid_get_block_count3d(const ecl_grid_type * grid , int i , int j, int k
 
 void ecl_grid_free(ecl_grid_type * grid) {
   ecl_grid_free_cells( grid );
-  util_safe_free(grid->index_map);
-  util_safe_free(grid->inv_index_map);
+  free(grid->index_map);
+  free(grid->inv_index_map);
 
-  util_safe_free(grid->fracture_index_map);
-  util_safe_free(grid->inv_fracture_index_map);
-  util_safe_free(grid->mapaxes);
+  free(grid->fracture_index_map);
+  free(grid->inv_fracture_index_map);
+  free(grid->mapaxes);
 
   if (grid->values != NULL) {
     int i;
@@ -4481,9 +4481,9 @@ void ecl_grid_free(ecl_grid_type * grid) {
 
   vector_free( grid->coarse_cells );
   hash_free( grid->children );
-  util_safe_free( grid->parent_name );
-  util_safe_free( grid->visited );
-  util_safe_free( grid->name );
+  free( grid->parent_name );
+  free( grid->visited );
+  free( grid->name );
   free( grid );
 }
 

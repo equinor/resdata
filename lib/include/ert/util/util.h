@@ -262,7 +262,6 @@ typedef enum {left_pad   = 0,
   char       * util_realloc_substring_copy(char * , const char *, int N);
   char       * util_realloc_dequoted_string(char *);
   char       * util_alloc_dequoted_copy(const char *s);
-  void         util_safe_free(void *);
   void         util_free_stringlist(char **, int );
   void         util_free_NULL_terminated_stringlist(char ** string_list);
   char       * util_alloc_substring_copy(const char *, int offset , int N);

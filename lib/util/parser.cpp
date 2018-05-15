@@ -115,12 +115,12 @@ basic_parser_type * basic_parser_alloc(
 
 void basic_parser_free(basic_parser_type * parser) {
 
-  util_safe_free( parser->splitters    );
-  util_safe_free( parser->quoters       ); 
-  util_safe_free( parser->specials      ); 
-  util_safe_free( parser->comment_start );
-  util_safe_free( parser->comment_end   );
-  util_safe_free( parser->delete_set    );
+  free( parser->splitters    );
+  free( parser->quoters       ); 
+  free( parser->specials      ); 
+  free( parser->comment_start );
+  free( parser->comment_end   );
+  free( parser->delete_set    );
 
   free( parser     );
 }

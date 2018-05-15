@@ -499,7 +499,7 @@ char * ecl_util_alloc_exfilename_anyfmt(const char * path, const char * base , e
   }
 
   if (! util_file_exists(filename)) {
-    util_safe_free( filename );
+    free( filename );
     filename = NULL;
   }
 
@@ -809,7 +809,7 @@ void ecl_util_alloc_summary_data_files(const char * path , const char * base , b
     stringlist_clear( filelist );      /* Clear out all the BASE.Snnnn selections. */
     stringlist_append_copy( filelist , unif_data_file );
   }
-  util_safe_free( unif_data_file );
+  free( unif_data_file );
 }
 
 
@@ -936,10 +936,10 @@ bool ecl_util_alloc_summary_files(const char * path , const char * _base , const
 
     if (fmt_file) {
       header_file = fsmspec_file;
-      util_safe_free( smspec_file );
+      free( smspec_file );
     } else {
       header_file = smspec_file;
-      util_safe_free( fsmspec_file );
+      free( fsmspec_file );
     }
 
     if (header_file == NULL)
