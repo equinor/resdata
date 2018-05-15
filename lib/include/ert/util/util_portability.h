@@ -21,6 +21,10 @@
 
 #include <ert/util/ert_api_config.h>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 
 #ifdef __cplusplus
 extern"C" {
@@ -42,13 +46,26 @@ extern"C" {
 #define UTIL_DEFAULT_MKDIR_MODE 0777         /* Directories are by default created with mode a+rwx - and then comes the umask ... */
 
 
+#ifdef HAVE_WINDOWS__ACCESS
+bool         util_access(const char * entry, int mode);
+#define F_OK 0
+#define R_OK 4
+#define W_OK 2
+#define X_OK 1
+#else
+bool         util_access(const char * entry, mode_t mode);
+#endif
+
+
+
 void    util_usleep( unsigned long micro_seconds );
 char  * util_alloc_cwd(void);
 char  * util_alloc_realpath(const char * );
 char  * util_alloc_realpath__(const char * input_path);
 int     util_fnmatch( const char * pattern , const char * string );
-
-
+int     util_mkdir( const char * path );
+int     util_getpid();
+void    util_copy_mode(const char * src_file, const char * target_file);
 #ifdef __cplusplus
 }
 #endif

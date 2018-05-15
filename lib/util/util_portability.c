@@ -16,8 +16,11 @@
    for more details.
 */
 
-#include <ert/util/util_portability.h>
+#include <limits.h>
+#include <errno.h>
+#include <string.h>
 
+#include <ert/util/util_portability.h>
 #include <ert/util/ert_api_config.h>
 #include "ert/util/build_config.h"
 
@@ -31,6 +34,17 @@
 #include <Windows.h>
 #endif
 
+#ifdef HAVE_FNMATCH
+#include <fnmatch.h>
+#endif
+
+#ifdef HAVE_SHLWAPI_H
+#include <Shlwapi.h>
+#endif
+
+#ifdef HAVE_DIRECT_H
+#include <direct.h>
+#endif
 
 /**
    WIndows does not have the usleep() function, on the other hand
@@ -217,5 +231,89 @@ char * util_alloc_realpath(const char * input_path) {
 
   return util_alloc_realpath__( input_path );
 #endif
+}
+
+
+int util_chdir(const char * path) {
+#ifdef HAVE_POSIX_CHDIR
+  return chdir(path);
+#endif
+
+#ifdef HAVE_WINDOWS_CHDIR
+  return _chdir( path );
+#endif
+}
+
+
+int util_mkdir( const char * path ) {
+#ifdef HAVE_POSIX_MKDIR
+  return mkdir( path , UTIL_DEFAULT_MKDIR_MODE );
+#endif
+
+#ifdef HAVE_WINDOWS_MKDIR
+  return _mkdir( path );
+#endif
+}
+
+
+int util_getpid( ) {
+#ifdef HAVE_POSIX_GETPID
+  return getpid();
+#endif
+
+#ifdef HAVE_WINDOWS_MKDIR
+  return _getpid();
+#endif
+}
+
+
+void util_copy_mode(const char * src_file, const char * target_file) {
+#ifdef HAVE_CHMOD
+  stat_type stat_buffer;
+  mode_t src_mode;
+
+  stat( src_file , &stat_buffer );
+  src_mode = stat_buffer.st_mode;
+  chmod( target_file , src_mode );
+#endif
+}
+
+/*
+  Windows *might* have both the symbols _access() and access(), but we prefer
+  the _access() symbol as that seems to be preferred by Windows. We therefor do
+  the #HAVE_WINDOWS__ACCESS check first.
+*/
+
+#ifdef HAVE_WINDOWS__ACCESS
+
+bool util_access(const char * entry, int mode) {
+  return (_access(entry, mode) == 0);
+}
+
+#else
+
+#ifdef HAVE_POSIX_ACCESS
+bool util_access(const char * entry, mode_t mode) {
+  return (access(entry, mode) == 0);
+}
+#endif
+#endif
+
+bool util_ftruncate(FILE * stream , long size) {
+  int fd = fileno( stream );
+  int int_return;
+
+#ifdef HAVE_FTRUNCATE
+  int_return = ftruncate( fd , size );
+#elif HAVE__CHSIZE
+  int_return = _chsize( fd , size );
+#else
+  BUG - no truncate implemantation available
+#endif
+
+  if (int_return == 0)
+    return true;
+  else
+    return false;
 }
 

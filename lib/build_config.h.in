@@ -5,6 +5,7 @@
 #cmakedefine HAVE__USLEEP
 #cmakedefine HAVE_FNMATCH
 #cmakedefine HAVE_FTRUNCATE
+#cmakedefine HAVE__CHSIZE
 #cmakedefine HAVE_POSIX_CHDIR
 #cmakedefine HAVE_WINDOWS_CHDIR
 #cmakedefine HAVE_POSIX_GETCWD
@@ -14,6 +15,8 @@
 #cmakedefine HAVE_VA_COPY
 #cmakedefine HAVE_SIGBUS
 #cmakedefine HAVE_PTHREAD
+#cmakedefine HAVE_POSIX_GETPID
+#cmakedefine HAVE_WINDOWS_GETPID
 #cmakedefine HAVE_PID_T
 #cmakedefine HAVE_EXECINFO
 #cmakedefine HAVE_FORK

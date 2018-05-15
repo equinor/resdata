@@ -77,7 +77,6 @@ add_library(ecl util/rng.cpp
                 util/node_data.cpp
                 util/node_ctype.cpp
                 util/util.c
-                util/util_portability.c
                 util/util_symlink.cpp
                 util/util_lfs.c
                 util/util_unlink.cpp

@@ -348,17 +348,6 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   int          util_chdir(const char * path);
   bool         util_chdir_file( const char * filename );
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-  bool         util_access(const char * entry, mode_t mode);
-#else
-  bool         util_access(const char * entry, int mode);
-#define F_OK 0
-#define R_OK 4
-#define W_OK 2
-#define X_OK 1
-#endif
-
 #define UTIL_FWRITE_SCALAR(s,stream) { if (fwrite(&s , sizeof s , 1 , stream) != 1) util_abort("%s: write failed: %s\n",__func__ , strerror(errno)); }
 
 #define UTIL_FREAD_SCALAR(s,stream)  {                               \

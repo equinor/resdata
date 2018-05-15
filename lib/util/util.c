@@ -33,7 +33,6 @@
 #include <stdio.h>
 
 #include <fcntl.h>
-#include <limits.h>
 
 #include <ert/util/ert_api_config.hpp>
 #include "ert/util/build_config.h"
@@ -46,12 +45,6 @@
 #include <signal.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_FNMATCH
-#include <fnmatch.h>
-#else
-#include <Windows.h>
-#include <Shlwapi.h>
-#endif
 
 #ifdef ERT_HAVE_SPAWN
 #include <unistd.h>
@@ -1775,18 +1768,7 @@ bool util_copy_file__(const char * src_file , const char * target_file, size_t b
       fclose(src_stream);
       fclose(target_stream);
 
-#ifdef HAVE_CHMOD
-#ifdef HAVE_MODE_T
-      {
-        stat_type stat_buffer;
-        mode_t src_mode;
-
-        stat( src_file , &stat_buffer );
-        src_mode = stat_buffer.st_mode;
-        chmod( target_file , src_mode );
-      }
-#endif
-#endif
+      util_copy_mode(src_file, target_file);
 
       return result;
     }
@@ -1978,28 +1960,6 @@ int util_fmove( FILE * stream , long offset , long shift) {
 }
 
 
-/*
-  Windows *might* have both the symbols _access() and access(), but we prefer
-  the _access() symbol as that seems to be preferred by Windows. We therefor do
-  the #HAVE_WINDOWS__ACCESS check first.
-*/
-
-#ifdef HAVE_WINDOWS__ACCESS
-
-bool util_access(const char * entry, int mode) {
-  return (_access(entry, mode) == 0);
-}
-
-#else
-
-#ifdef HAVE_POSIX_ACCESS
-bool util_access(const char * entry, mode_t mode) {
-  return (access(entry, mode) == 0);
-}
-#endif
-
-#endif
-
 
 /**
    Currently only checks if the entry exists - this will return true
@@ -2142,7 +2102,7 @@ bool util_entry_readable( const char * entry ) {
     return false;  /* If stat failed - typically not existing entry - we return false. */
 }
 
-/* If it exists on windows it is readable ... */
+/* If it exists on windows it is writable... */
 bool util_entry_writable( const char * entry ) {
   stat_type buffer;
   if (util_stat( entry , &buffer ) == 0)
@@ -2341,22 +2301,6 @@ size_t util_fd_size(int fd) {
 
 
 
-
-bool util_ftruncate(FILE * stream , long size) {
-  int fd = fileno( stream );
-  int int_return;
-
-#ifdef HAVE_FTRUNCATE
-  int_return = ftruncate( fd , size );
-#else
-  int_return = _chsize( fd , size );
-#endif
-
-  if (int_return == 0)
-    return true;
-  else
-    return false;
-}
 
 
 
@@ -4439,16 +4383,6 @@ bool util_is_abs_path(const char * path) {
 #endif
 }
 
-static int util_mkdir( const char * path ) {
-#ifdef HAVE_POSIX_MKDIR
-  return mkdir( path , UTIL_DEFAULT_MKDIR_MODE );
-#endif
-
-#ifdef HAVE_WINDOWS_MKDIR
-  return _mkdir( path );
-#endif
-}
-
 /*
   Acts like the shell command 'mkdir -p' - i.e. creating a full directory tree.
   The return value is: util_is_directory(_path) - i.e. will return true if the
@@ -4520,13 +4454,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   const int pid_digits    = 6;
   const int random_digits = 6;
   const int random_max    = 1000000;
-
-#ifdef HAVE_PID_T
-  const int pid_max     = 1000000;
-  pid_t  pid            = getpid() % pid_max;
-#else
-  int    pid            = 0;
-#endif
+  const int pid_int       = util_getpid();
 
   char * file           = (char*)util_calloc(strlen(path) + 1 + strlen(prefix) + 1 + pid_digits + 1 + random_digits + 1 , sizeof * file );
   char * tmp_prefix     = util_alloc_string_copy( prefix );
@@ -4538,7 +4466,7 @@ char * util_alloc_tmp_file(const char * path, const char * prefix , bool include
   do {
     long int rand_int = rand() % random_max;
     if (include_pid)
-      sprintf(file , "%s%c%s-%d-%ld" , path , UTIL_PATH_SEP_CHAR , tmp_prefix , pid , rand_int);
+      sprintf(file , "%s%c%s-%d-%ld" , path , UTIL_PATH_SEP_CHAR , tmp_prefix , pid_int , rand_int);
     else
       sprintf(file , "%s%c%s-%ld" , path , UTIL_PATH_SEP_CHAR , tmp_prefix , rand_int);
   } while (util_file_exists(file));
@@ -4676,23 +4604,6 @@ char * util_alloc_parent_path( const char * path) {
   return parent_path;
 }
 
-#ifdef HAVE_UNISTD_H
-
-
-int util_chdir(const char * path) {
-  return chdir( path );
-}
-#endif
-
-#ifdef HAVE_WINDOWS_CHDIR
-#include <direct.h>
-
-int util_chdir(const char * path) {
-  return _chdir( path );
-}
-
-#endif
-
 
 
 bool util_chdir_file( const char * filename ) {
@@ -4711,3 +4622,6 @@ bool util_chdir_file( const char * filename ) {
   free( path );
   return chdir_OK;
 }
+
+
+#include "util_portability.c"
