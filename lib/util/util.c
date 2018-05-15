@@ -4739,18 +4739,6 @@ int util_get_current_linenr(FILE * stream) {
 
 
 
-const char * util_enum_iget( int index , int size , const util_enum_element_type * enum_defs , int * value) {
-  if ((index < 0) || (index >= size)) {
-    *value = -1;
-    return NULL;
-  } else {
-    const util_enum_element_type elm = enum_defs[ index ];
-    *value = elm.value;
-    return elm.name;
-  }
-}
-
-
 
 
 
