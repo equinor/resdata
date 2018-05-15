@@ -128,7 +128,6 @@ typedef enum {left_pad   = 0,
   bool         util_char_in(char c, int , const char *);
   char       * util_alloc_sprintf_va(const char * fmt , va_list ap);
   char       * util_alloc_sprintf(const char *  , ...);
-  char       * util_alloc_sprintf_escape(const char * src , int max_escape);
   char       * util_realloc_sprintf(char * , const char *  , ...);
   void         util_fprintf_int(int , int , FILE * );
   void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
