@@ -3203,16 +3203,6 @@ char * util_alloc_strip_copy(const char *src) {
 
 
 
-char * util_realloc_strip_copy(char *src) {
-  if (src == NULL)
-    return NULL;
-  else {
-    char * strip_copy = util_alloc_strip_copy(src);
-    free(src);
-    return strip_copy;
-  }
-}
-
 
 char ** util_alloc_stringlist_copy(const char **src, int len) {
   if (src != NULL) {
