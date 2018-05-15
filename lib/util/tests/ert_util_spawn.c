@@ -128,9 +128,9 @@ void * test_spawn_redirect__( void * path ) {
   test_assert_file_content( stdout_file , stdout_msg );
   test_assert_file_content( stderr_file , stderr_msg );
 
-  util_free( stdout_file );
-  util_free( stderr_file );
-  util_free( script );
+  free( stdout_file );
+  free( stderr_file );
+  free( script );
   return NULL;
 }
 
@@ -162,7 +162,7 @@ void test_spawn_redirect_threaded() {
       char * script = util_alloc_filename( path , "script" , NULL);
       make_script(script, stdout_msg, stderr_msg);
       stringlist_append_owned_ref(script_fullpaths, script);
-      util_free(path);
+      free(path);
    }
 
    // Set file access permissions
@@ -178,7 +178,7 @@ void test_spawn_redirect_threaded() {
    }
 
    stringlist_free(script_fullpaths);
-   util_free(path_codes);
+   free(path_codes);
    test_work_area_free( test_area );
 }
 

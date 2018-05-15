@@ -4344,9 +4344,6 @@ void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size ) 
   }
 }
 
-void util_free(void * ptr) {
-  free( ptr );
-}
 
 
 

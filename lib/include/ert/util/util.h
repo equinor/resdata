@@ -288,7 +288,6 @@ typedef enum {left_pad   = 0,
 
 
   void *  util_realloc(void *  , size_t  );
-  void    util_free(void * ptr);
   void *  util_malloc(size_t );
   void *  util_calloc( size_t elements , size_t element_size );
   void *  util_realloc_copy(void * org_ptr , const void * src , size_t byte_size );
