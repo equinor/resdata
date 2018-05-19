@@ -39,7 +39,7 @@ int main(int argc , char ** argv) {
       char * path;
       util_alloc_file_components( argv[0] , &path , NULL , NULL);
       test_assert_false( util_file_readable( path ));
-      util_safe_free( path );
+      free( path );
   }
   {
     const char * file = "/tmp/test_file.txt";

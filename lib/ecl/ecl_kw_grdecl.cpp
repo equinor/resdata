@@ -454,7 +454,7 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
       // Verify size
       if (size > 0)
         if (size != kw_size) {
-          util_safe_free( data );
+          free( data );
           util_abort("%s: size mismatch when loading:%s. File:%d elements. Requested:%d elements \n",
                      __func__ , file_header , kw_size , size);
         }

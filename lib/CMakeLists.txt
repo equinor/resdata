@@ -237,7 +237,6 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_realpath
                 ert_util_relpath_test
                 ert_util_rng
-                ert_util_sprintf_escape
                 ert_util_sscan_test
                 ert_util_statistics
                 ert_util_strcat_test

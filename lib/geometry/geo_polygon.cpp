@@ -57,7 +57,7 @@ geo_polygon_type * geo_polygon_alloc(const char * name) {
 void geo_polygon_free( geo_polygon_type * polygon ) {
   double_vector_free( polygon->xcoord );
   double_vector_free( polygon->ycoord );
-  util_safe_free( polygon->name );
+  free( polygon->name );
   free( polygon );
 }
 

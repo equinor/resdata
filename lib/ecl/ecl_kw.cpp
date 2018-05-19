@@ -651,8 +651,8 @@ ecl_kw_type * ecl_kw_alloc_empty() {
 
 
 void ecl_kw_free(ecl_kw_type *ecl_kw) {
-  util_safe_free( ecl_kw->header );
-  util_safe_free(ecl_kw->header8);
+  free( ecl_kw->header );
+  free(ecl_kw->header8);
   ecl_kw_free_data(ecl_kw);
   free(ecl_kw);
 }
@@ -1485,7 +1485,7 @@ bool ecl_kw_fseek_last_kw(const char * kw , bool abort_on_error , fortio_type *f
 
 void ecl_kw_set_data_ptr(ecl_kw_type * ecl_kw , void * data) {
   if (!ecl_kw->shared_data)
-    util_safe_free( ecl_kw->data );
+    free( ecl_kw->data );
   ecl_kw->data = (char*)data;
 }
 
@@ -1508,7 +1508,7 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
 
 void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
   if (!ecl_kw->shared_data)
-    util_safe_free(ecl_kw->data);
+    free(ecl_kw->data);
 
   ecl_kw->data = NULL;
 }
@@ -1521,7 +1521,7 @@ void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
      sprintf(ecl_kw->header8 , "%-8s" , header);
 
      /* Internalizing a header without the trailing spaces as well. */
-     util_safe_free( ecl_kw->header );
+     free( ecl_kw->header );
      ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
   }
   else {

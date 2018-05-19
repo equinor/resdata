@@ -707,8 +707,8 @@ hash_type * hash_alloc_from_options(const stringlist_type * options) {
     // Warning: could not interpret string as KEY:VALUE - ignored
 
 
-    util_safe_free(option);
-    util_safe_free(value);
+    free(option);
+    free(value);
   }
 
   return opt_hash;
@@ -727,7 +727,7 @@ hash_type * hash_alloc_from_options(const stringlist_type * options) {
        addOK = true;
      }
 
-     util_safe_free( key );
+     free( key );
    }
    return addOK;
 }

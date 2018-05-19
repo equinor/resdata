@@ -124,11 +124,11 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_sum , ECL_SUM_ID );
 */
 
 void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * input_arg) {
-  util_safe_free( ecl_sum->ecl_case );
-  util_safe_free( ecl_sum->path );
-  util_safe_free( ecl_sum->abs_path );
-  util_safe_free( ecl_sum->base );
-  util_safe_free( ecl_sum->ext );
+  free( ecl_sum->ecl_case );
+  free( ecl_sum->path );
+  free( ecl_sum->abs_path );
+  free( ecl_sum->base );
+  free( ecl_sum->ext );
   {
     char  *path , *base, *ext;
 
@@ -143,9 +143,9 @@ void ecl_sum_set_case( ecl_sum_type * ecl_sum , const char * input_arg) {
     else
       ecl_sum->abs_path = util_alloc_cwd();
 
-    util_safe_free( base );
-    util_safe_free( path );
-    util_safe_free( ext );
+    free( base );
+    free( path );
+    free( ext );
   }
 }
 
@@ -236,7 +236,7 @@ static bool ecl_sum_fread_case( ecl_sum_type * ecl_sum , bool include_restart) {
   if ((header_file != NULL) && (stringlist_get_size( summary_file_list ) > 0)) {
     caseOK = ecl_sum_fread( ecl_sum , header_file , summary_file_list , include_restart );
   }
-  util_safe_free( header_file );
+  free( header_file );
   stringlist_free( summary_file_list );
 
   return caseOK;
@@ -400,9 +400,9 @@ void ecl_sum_free( ecl_sum_type * ecl_sum ) {
   if (ecl_sum->smspec)
     ecl_smspec_free( ecl_sum->smspec );
 
-  util_safe_free( ecl_sum->path );
-  util_safe_free( ecl_sum->ext );
-  util_safe_free( ecl_sum->abs_path );
+  free( ecl_sum->path );
+  free( ecl_sum->ext );
+  free( ecl_sum->abs_path );
 
   free( ecl_sum->base );
   free( ecl_sum->ecl_case );
@@ -477,10 +477,10 @@ bool ecl_sum_case_exists( const char * input_file ) {
   util_alloc_file_components( input_file , &path , &basename , &extension);
   case_exists = ecl_util_alloc_summary_files( path , basename , extension , &smspec_file , data_files );
 
-  util_safe_free( path );
-  util_safe_free( basename );
-  util_safe_free( extension );
-  util_safe_free( smspec_file );
+  free( path );
+  free( basename );
+  free( extension );
+  free( smspec_file );
   stringlist_free( data_files );
 
   return case_exists;
@@ -1259,8 +1259,8 @@ bool ecl_sum_same_case( const ecl_sum_type * ecl_sum , const char * input_file )
       }
     }
 
-    util_safe_free( path );
-    util_safe_free( base );
+    free( path );
+    free( base );
   }
   return same_case;
 }

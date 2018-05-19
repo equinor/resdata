@@ -1077,8 +1077,8 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
         }
       }
 
-      util_safe_free( path );
-      util_safe_free( smspec_header );
+      free( path );
+      free( smspec_header );
     }
     free( restart_base );
   }
@@ -1263,7 +1263,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         free( kw );
         free( well );
         free( unit );
-        util_safe_free( lgr_name );
+        free( lgr_name );
       }
     }
 
@@ -1287,7 +1287,7 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
     char *path;
     util_alloc_file_components(header_file , &path , NULL , NULL);
     ecl_smspec = ecl_smspec_alloc_empty(false , key_join_string);
-    util_safe_free(path);
+    free(path);
   }
 
   if (ecl_smspec_fread_header(ecl_smspec , header_file , include_restart)) {
@@ -1731,7 +1731,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->misc_var_index);
   hash_free(ecl_smspec->block_var_index);
   hash_free(ecl_smspec->gen_var_index);
-  util_safe_free( ecl_smspec->header_file );
+  free( ecl_smspec->header_file );
   int_vector_free( ecl_smspec->index_map );
   float_vector_free( ecl_smspec->params_default );
   vector_free( ecl_smspec->smspec_nodes );
