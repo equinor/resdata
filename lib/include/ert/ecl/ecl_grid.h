@@ -84,7 +84,6 @@ extern "C" {
   bool            ecl_grid_cell_contains_xyz1( const ecl_grid_type * ecl_grid , int global_index , double x , double y , double z);
   bool            ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i , int j , int k, double x , double y , double z );
   double          ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index );
-  double          ecl_grid_get_cell_volume1_tskille( const ecl_grid_type * ecl_grid, int global_index );
   double          ecl_grid_get_cell_volume3( const ecl_grid_type * ecl_grid, int i , int j , int k);
   double          ecl_grid_get_cell_volume1A( const ecl_grid_type * ecl_grid, int active_index );
   bool            ecl_grid_cell_contains1(const ecl_grid_type * grid , int global_index , double x , double y , double z);
