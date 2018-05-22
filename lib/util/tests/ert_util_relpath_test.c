@@ -33,7 +33,7 @@ void test_path(int nr , const char * root , const char * path , const char * tru
   else
     printf("Case:%d OK \n",nr);
   
-  util_safe_free( rel_path );
+  free( rel_path );
 }
 
 int main(int argc , char ** argv) {

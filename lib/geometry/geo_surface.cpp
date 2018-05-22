@@ -248,7 +248,7 @@ static bool geo_surface_fload_irap( geo_surface_type * surface , const char * fi
 
       if (read_ok)
         geo_surface_init_regular( surface , zcoord );
-      util_safe_free( zcoord );
+      free( zcoord );
     }
     fclose( stream );
   }

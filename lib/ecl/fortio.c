@@ -396,7 +396,7 @@ bool fortio_assert_stream_open( fortio_type * fortio ) {
 
 
 static void fortio_free__(fortio_type * fortio) {
-  util_safe_free(fortio->filename);
+  free(fortio->filename);
   free(fortio);
 }
 

@@ -170,7 +170,7 @@ void ecl_region_free( ecl_region_type * region ) {
   int_vector_free( region->active_index_list );
   int_vector_free( region->global_index_list );
   int_vector_free( region->global_active_list );
-  util_safe_free( region->name );
+  free( region->name );
   free( region );
 }
 

@@ -98,7 +98,7 @@ void geo_pointset_add_xyz( geo_pointset_type * pointset , double x , double y, d
 void geo_pointset_free( geo_pointset_type * pointset ) {
   free( pointset->xcoord );
   free( pointset->ycoord );
-  util_safe_free( pointset->zcoord );
+  free( pointset->zcoord );
   free( pointset );
 }
 

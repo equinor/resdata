@@ -752,7 +752,7 @@ void @TYPE@_vector_free_data(@TYPE@_vector_type * vector) {
 
 void @TYPE@_vector_free(@TYPE@_vector_type * vector) {
   if (vector->data_owner)
-    util_safe_free( vector->data );
+    free( vector->data );
   @TYPE@_vector_free_container( vector );
 }
 

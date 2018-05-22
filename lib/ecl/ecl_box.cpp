@@ -150,8 +150,8 @@ bool ecl_box_contains(const ecl_box_type * box , int i , int j , int k) {
 
 
 void ecl_box_free(ecl_box_type * ecl_box) { 
-  util_safe_free(ecl_box->active_list );
-  util_safe_free(ecl_box->global_list );
+  free(ecl_box->active_list );
+  free(ecl_box->global_list );
   free(ecl_box); 
 }
 
