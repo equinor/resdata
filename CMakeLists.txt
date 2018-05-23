@@ -326,6 +326,12 @@ add_subdirectory( lib )
 add_subdirectory( applications )
 add_subdirectory( bin )
 
+if (ENABLE_PYTHON AND ERT_WINDOWS)
+    if ((NOT MSVC) OR (MSVC_VERSION LESS 1900))
+      message(FATAL_ERROR "The Python wrappers require Visual Studio 2015 or newer")
+    endif()
+endif()
+
 if (ENABLE_PYTHON)
     # If finding the Python interpreter and required packages
     # fails in the python/CMakeLists.txt file the ENABLE_PYTHON
