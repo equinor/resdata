@@ -501,11 +501,6 @@ add_test(NAME ecl_grid_cell_contains_wellpath1
             ${_eclpath}/CellContains/model/SMS-0.EGRID
             ${_eclpath}/CellContains/R_PB-4H.jira)
 
-add_executable(ecl_grid_cell_volume ecl/tests/ecl_grid_cell_volume.c)
-target_link_libraries(ecl_grid_cell_volume ecl)
-add_test(NAME ecl_grid_cell_volume1 COMMAND ecl_grid_cell_volume)
-add_test(NAME ecl_grid_cell_volume2 COMMAND ecl_grid_cell_volume ${_eclpath}/Gurbat/ECLIPSE.EGRID)
-add_test(NAME ecl_grid_cell_volume3 COMMAND ecl_grid_cell_volume ${_eclpath}/Heidrun/Summary/FF12_2013B3_CLEAN_RS.EGRID)
 
 add_executable(ecl_region2region ecl/tests/ecl_region2region_test.c)
 target_link_libraries(ecl_region2region ecl)
