@@ -97,7 +97,7 @@ UTIL_IS_INSTANCE_FUNCTION( fortio , FORTIO_ID );
 UTIL_SAFE_CAST_FUNCTION( fortio, FORTIO_ID );
 
 static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool endian_flip_header , bool stream_owner , bool writable) {
-  fortio_type * fortio       = util_malloc(sizeof * fortio );
+  fortio_type * fortio       = (fortio_type*)util_malloc(sizeof * fortio );
   UTIL_TYPE_ID_INIT( fortio, FORTIO_ID );
   fortio->filename           = util_alloc_string_copy(filename);
   fortio->endian_flip_header = endian_flip_header;
@@ -396,7 +396,7 @@ bool fortio_assert_stream_open( fortio_type * fortio ) {
 
 
 static void fortio_free__(fortio_type * fortio) {
-  util_safe_free(fortio->filename);
+  free(fortio->filename);
   free(fortio);
 }
 
