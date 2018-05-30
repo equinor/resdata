@@ -318,6 +318,10 @@ string(STRIP "${BUILD_TIME}" BUILD_TIME)
 
 set(INSTALL_GROUP          ""     CACHE STRING "Group to install as - blank to install as current group")
 
+if (MSVC)
+   add_definitions( -D__func__="\\"????\\"")
+endif()
+
 if (ERT_LINUX)
    add_definitions( -DHAVE_PROC )
 endif()
