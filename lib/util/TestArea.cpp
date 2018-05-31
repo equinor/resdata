@@ -15,6 +15,7 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
+
 #include <string>
 
 #include <ert/util/util.hpp>
@@ -120,4 +121,3 @@ namespace ERT {
   }
 
 }
-

@@ -154,6 +154,13 @@ add_library(ecl util/rng.cpp
                 geometry/geo_polygon_collection.cpp
 )
 
+if (ERT_WINDOWS)
+    set_target_properties(ecl PROPERTIES PREFIX "lib")
+    if (MSVC)
+        set_target_properties(ecl PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  endif()
+endif ()
+
 target_link_libraries(ecl PUBLIC ${m}
                                  ${dl}
                                  ${pthread}
