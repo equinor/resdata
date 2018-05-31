@@ -693,6 +693,9 @@ add_test(NAME well_state_load4 COMMAND well_state_load ${_eclpath}/Troll/MSW_LGR
                                                        ${_eclpath}/Troll/MSW_LGR/LGR.X0095)
 add_test(NAME well_state_load5 COMMAND well_state_load ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID
                                                        ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.X0061)
+add_test(NAME well_state_load6 COMMAND well_state_load ${_eclpath}/Mariner/LGR-WELL/MARINER_R002_HEI_GEO_NOICD_LGR.EGRID
+                                                       ${_eclpath}/Mariner/LGR-WELL/MARINER_R002_HEI_GEO_NOICD_LGR.UNRST)
+
 add_test(NAME well_state_load_missing_RSEG1
          COMMAND well_state_load_missing_RSEG ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID
                                               ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.X0061)
