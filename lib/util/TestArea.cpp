@@ -16,8 +16,6 @@
    for more details.
 */
 
-#ifndef _MSC_VER // Currently not in Visual Studio build
-
 #include <string>
 
 #include <ert/util/util.hpp>
@@ -123,5 +121,3 @@ namespace ERT {
   }
 
 }
-
-#endif
