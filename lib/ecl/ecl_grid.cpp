@@ -1471,6 +1471,16 @@ static ecl_cell_type * ecl_grid_get_cell1(const ecl_grid_type * grid,
 }
 
 
+static ecl_cell_type * ecl_grid_get_cell1A(const ecl_grid_type * grid, int active_index) {
+  int global_index = grid->inv_index_map[active_index];
+  return &grid->global_cells[global_index];
+}
+
+
+static ecl_cell_type * ecl_grid_iget_cell(const ecl_grid_type * grid, int index) {
+  return &grid->global_cells[index];
+}
+
 /**
    this function uses heuristics (ahhh - i hate it) in an attempt to
    mark cells with fucked geometry - see further comments in the
