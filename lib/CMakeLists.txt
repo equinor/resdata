@@ -650,6 +650,7 @@ if (HAVE_UTIL_ABORT_INTERCEPT)
 endif()
 
 
+
 add_test(NAME well_state_load1 COMMAND well_state_load ${_eclpath}/Gurbat/ECLIPSE.EGRID
                                                        ${_eclpath}/Gurbat/ECLIPSE.X0030)
 add_test(NAME well_state_load2 COMMAND well_state_load ${_eclpath}/MSWcase/MSW_CASE.EGRID

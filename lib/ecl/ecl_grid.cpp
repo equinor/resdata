@@ -1621,23 +1621,8 @@ static int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid,
 static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , int k ,
                                     double x[4][2] , double y[4][2] , double z[4][2] ,
                                     const int * actnum, const int * corsnum) {
-
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j  , k );
   ecl_cell_type * cell     = ecl_grid_get_cell( ecl_grid , global_index );
-  int ip , iz;
-
-  for (iz = 0; iz < 2; iz++) {
-    for (ip = 0; ip < 4; ip++) {
-      int c = ip + iz * 4;
-      point_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
-
-      if (ecl_grid->use_mapaxes)
-        point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
-    }
-  }
-
-
-
 
   /*
     If actnum == NULL that is taken to mean active.
@@ -1649,6 +1634,17 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
     cell->active = CELL_ACTIVE;
   else
     cell->active = actnum[global_index];
+
+  int ip , iz;
+  for (iz = 0; iz < 2; iz++) {
+    for (ip = 0; ip < 4; ip++) {
+      int c = ip + iz * 4;
+      point_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
+
+      if (ecl_grid->use_mapaxes)
+        point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
+    }
+  }
 
   if (corsnum != NULL)
     cell->coarse_group = corsnum[ global_index ] - 1;
