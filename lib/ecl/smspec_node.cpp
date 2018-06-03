@@ -283,7 +283,7 @@ static char LAST_CHAR(const char * s) {
 
 
 bool smspec_node_identify_rate(const char * keyword) {
-  const char *rate_vars[] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
+  const char *rate_vars[] = {"OPR" , "GPR" , "WPR" , "LPR", "OIR", "GIR", "WIR", "LIR", "GOR" , "WCT"};
   int num_rate_vars = sizeof( rate_vars ) / sizeof( rate_vars[0] );
   bool  is_rate           = false;
   int ivar;

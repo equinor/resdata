@@ -569,3 +569,4 @@ class SumTest(EclTest):
 
         self.assertTrue( EclSum.is_rate("WOPR:OP_4"))
         self.assertFalse( EclSum.is_rate("BPR:123"))
+        self.assertTrue(EclSum.is_rate("FWIR"))
