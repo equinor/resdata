@@ -143,6 +143,8 @@ class EclSum(BaseCClass):
     _add_tstep                     = EclPrototype("ecl_sum_tstep_ref ecl_sum_add_tstep(ecl_sum, int, double)")
     _export_csv                    = EclPrototype("void ecl_sum_export_csv(ecl_sum, char*, stringlist, char*, char*)")
     _identify_var_type             = EclPrototype("ecl_sum_var_type ecl_sum_identify_var_type(char*)", bind = False)
+    _is_rate                       = EclPrototype("bool smspec_node_identify_rate(char*)", bind = False)
+    _is_total                      = EclPrototype("bool smspec_node_identify_total(char*, ecl_sum_var_type)", bind = False)
     _get_last_value                = EclPrototype("double ecl_sum_get_last_value_gen_key(ecl_sum, char*)")
     _get_first_value               = EclPrototype("double ecl_sum_get_first_value_gen_key(ecl_sum, char*)")
     _init_numpy_vector             = EclPrototype("void ecl_sum_init_double_vector(ecl_sum, char*, double*)")
@@ -213,10 +215,17 @@ class EclSum(BaseCClass):
         return result
 
 
-    @classmethod
-    def var_type(cls, keyword):
-        return cls._identify_var_type(keyword)
+    @staticmethod
+    def var_type(keyword):
+        return EclSum._identify_var_type(keyword)
 
+    @staticmethod
+    def is_rate(keyword):
+        return EclSum._is_rate(keyword)
+
+    @staticmethod
+    def is_total(keyword):
+        return EclSum._is_total(keyword, EclSum.var_type(keyword))
 
     @staticmethod
     def writer(case,

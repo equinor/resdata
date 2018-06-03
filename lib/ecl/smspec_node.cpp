@@ -281,32 +281,25 @@ static char LAST_CHAR(const char * s) {
   return s[ strlen(s) - 1];
 }
 
-static void smspec_node_set_flags( smspec_node_type * smspec_node) {
-  /*
-     Check if this is a rate variabel - that info is used when
-     interpolating results to true_time between ministeps.
-  */
-  {
-    const char *rate_vars[] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
-    int num_rate_vars = sizeof( rate_vars ) / sizeof( rate_vars[0] );
-    bool  is_rate           = false;
-    int ivar;
-    for (ivar = 0; ivar < num_rate_vars; ivar++) {
-      const char * var_substring = &smspec_node->keyword[1];
-      if (strncmp( rate_vars[ivar] , var_substring , strlen( rate_vars[ivar] )) == 0) {
-        is_rate = true;
-        break;
-      }
+
+bool smspec_node_identify_rate(const char * keyword) {
+  const char *rate_vars[] = {"OPR" , "GPR" , "WPR" , "GOR" , "WCT"};
+  int num_rate_vars = sizeof( rate_vars ) / sizeof( rate_vars[0] );
+  bool  is_rate           = false;
+  int ivar;
+  for (ivar = 0; ivar < num_rate_vars; ivar++) {
+    const char * var_substring = &keyword[1];
+    if (strncmp( rate_vars[ivar] , var_substring , strlen( rate_vars[ivar] )) == 0) {
+      is_rate = true;
+      break;
     }
-    smspec_node->rate_variable = is_rate;
   }
+  return is_rate;
+}
 
-  {
-    if (LAST_CHAR(smspec_node->keyword) == 'H')
-      smspec_node->historical = true;
-  }
 
-  /*
+bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_type) {
+ /*
     This code checks in a predefined list whether a certain WGNAMES
     variable represents a total accumulated quantity. Only the last three
     characters in the variable is considered (i.e. the leading 'W', 'G' or
@@ -316,34 +309,44 @@ static void smspec_node_set_flags( smspec_node_type * smspec_node) {
     the tables 2.7 - 2.11 in the ECLIPSE fileformat documentation.  Have
     skipped some of the most exotic keywords.
   */
-  {
-    bool is_total = false;
-    if (smspec_node->var_type == ECL_SMSPEC_WELL_VAR ||
-        smspec_node->var_type == ECL_SMSPEC_GROUP_VAR ||
-        smspec_node->var_type == ECL_SMSPEC_FIELD_VAR ||
-        smspec_node->var_type == ECL_SMSPEC_REGION_VAR ||
-        smspec_node->var_type == ECL_SMSPEC_COMPLETION_VAR ) {
-      const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
-                                  "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
-                                  "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT"};
+  bool is_total = false;
+  if (var_type == ECL_SMSPEC_WELL_VAR ||
+      var_type == ECL_SMSPEC_GROUP_VAR ||
+      var_type == ECL_SMSPEC_FIELD_VAR ||
+      var_type == ECL_SMSPEC_REGION_VAR ||
+      var_type == ECL_SMSPEC_COMPLETION_VAR ) {
+    const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
+                                "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
+                                "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT"};
 
-      int num_total_vars = sizeof( total_vars ) / sizeof( total_vars[0] );
-      int ivar;
-      for (ivar = 0; ivar < num_total_vars; ivar++) {
-        const char * var_substring = &smspec_node->keyword[1];
-        /*
-          We want to mark both FOPT and FOPTH as historical variables;
-          we use strncmp() to make certain that the trailing 'H' is
-          not included in the comparison.
-        */
-        if (strncmp( total_vars[ivar] , var_substring , strlen( total_vars[ivar] )) == 0) {
-          is_total = true;
-          break;
-        }
+    int num_total_vars = sizeof( total_vars ) / sizeof( total_vars[0] );
+    int ivar;
+    for (ivar = 0; ivar < num_total_vars; ivar++) {
+      const char * var_substring = &keyword[1];
+      /*
+        We want to mark both FOPT and FOPTH as total variables;
+        we use strncmp() to make certain that the trailing 'H' is
+        not included in the comparison.
+      */
+      if (strncmp( total_vars[ivar] , var_substring , strlen( total_vars[ivar] )) == 0) {
+        is_total = true;
+        break;
       }
     }
-    smspec_node->total_variable = is_total;
   }
+  return is_total;
+}
+
+
+static void smspec_node_set_flags( smspec_node_type * smspec_node) {
+  /*
+     Check if this is a rate variabel - that info is used when
+     interpolating results to true_time between ministeps.
+  */
+  smspec_node->rate_variable = smspec_node_identify_rate(smspec_node->keyword);
+  if (LAST_CHAR(smspec_node->keyword) == 'H')
+    smspec_node->historical = true;
+  smspec_node->total_variable = smspec_node_identify_total(smspec_node->keyword, smspec_node->var_type);
 }
 
 /**
