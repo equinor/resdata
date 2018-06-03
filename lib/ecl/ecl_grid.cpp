@@ -1660,7 +1660,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
     grid->inv_index_map = alloc_vector_content(inv_index_map);
 
     if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-      create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTUR, index_map, inv_index_map);
+      create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTURE, index_map, inv_index_map);
       grid->fracture_index_map = alloc_vector_content(index_map);
       grid->inv_fracture_index_map = alloc_vector_content(inv_index_map);
     }
@@ -3401,6 +3401,32 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
         corners[index] = ecl_kw_get_float_ptr(corners_kw);
         coords_size = ecl_kw_get_size( coords_kw );
       }
+      if (coords_size == 4) {
+        int actnum_value = CELL_ACTIVE_MATRIX;
+        if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
+          actnum_value += CELL_ACTIVE_FRACTURE;
+        for (int g=0; g < nx*ny*nz; g++)
+          actnum[g] = actnum_value;
+      } else {
+        for (int g=0; g < nx*ny*nz; g++)
+          actnum[g] = 0;
+
+        for (index = 0; num_coords; index++) {
+          int i = coords[index][0] - 1;
+          int j = coords[index][1] - 1;
+          int k = coords[index][2] - 1;
+          int global_index = i + j*nx + k*nx*ny;
+          int actnum_value = CELL_ACTIVE_MATRIX;
+
+          if (k >= nz) {
+            actnum_value = CELL_ACTIVE_FRACTURE;
+            global_index -= nx*ny*nz;
+          }
+
+          actnum[global_index] = actnum_value;
+        }
+      }
+
       // Create the grid:
 <<<<<<< 9410a29310168f205f8017d46ca613e4fd26772b
       grid = ecl_grid_alloc_GRID_data__( global_grid , num_coords , unit_system, dualp_flag , apply_mapaxes, nx , ny , nz , grid_nr , coords_size , coords , corners , mapaxes_data );
