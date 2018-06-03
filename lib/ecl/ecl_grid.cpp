@@ -722,6 +722,8 @@ struct ecl_grid_struct {
   int                 * fracture_index_map;     /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */
 
+  int                   num_cells;
+  ecl_cell_type      *  cells;
   ecl_cell_type      *  global_cells;
 
   char                * parent_name;   /* the name of the parent for a nested lgr - for the main grid, and also a
@@ -1464,7 +1466,6 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_grid , ECL_GRID_ID);
 */
 
 
-
 static ecl_cell_type * ecl_grid_get_cell1(const ecl_grid_type * grid,
                                          int global_index) {
   return &grid->global_cells[global_index];
@@ -1478,7 +1479,12 @@ static ecl_cell_type * ecl_grid_get_cell1A(const ecl_grid_type * grid, int activ
 
 
 static ecl_cell_type * ecl_grid_iget_cell(const ecl_grid_type * grid, int index) {
-  return &grid->global_cells[index];
+  if (index < grid->num_cells)
+    return &grid->global_cells[index];
+  else {
+    util_abort("%invalid cell index\n",__func__);
+    return NULL;
+  }
 }
 
 /**
@@ -1489,8 +1495,8 @@ static ecl_cell_type * ecl_grid_iget_cell(const ecl_grid_type * grid, int index)
 
 static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
   int index;
-  for (index = 0; index < ecl_grid->global_size; index++) {
-    ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , index );
+  for (index = 0; index < ecl_grid->num_cells; index++) {
+    ecl_cell_type * cell = ecl_grid_iget_cell( ecl_grid , index );
     ecl_cell_taint_cell( cell );
   }
 }
@@ -1500,8 +1506,8 @@ static void ecl_grid_free_cells( ecl_grid_type * grid ) {
   if (!grid->global_cells)
     return;
 
-  for (int i=0; i < grid->global_size; i++) {
-    ecl_cell_type * cell = ecl_grid_get_cell1( grid , i );
+  for (int i=0; i < grid->num_cells; i++) {
+    ecl_cell_type * cell = ecl_grid_iget_cell( grid , i );
     if (cell->nnc_info)
       nnc_info_free(cell->nnc_info);
   }
@@ -1509,10 +1515,13 @@ static void ecl_grid_free_cells( ecl_grid_type * grid ) {
 
 }
 
-static bool ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
+static bool ecl_grid_alloc_global_cells( ecl_grid_type * grid , bool init_valid) {
   grid->global_cells = (ecl_cell_type*)malloc(grid->global_size * sizeof * grid->global_cells );
   if (!grid->global_cells)
     return false;
+
+  grid->num_cells = grid->global_size;
+  grid->cells = grid->global_cells;
 
   {
     ecl_cell_type * cell0 = ecl_grid_get_cell1( grid , 0 );
@@ -1551,7 +1560,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->nx                    = nx;
   grid->ny                    = ny;
   grid->nz                    = nz;
-  grid->global_size                  = nx*ny*nz;
+  grid->global_size           = nx*ny*nz;
   grid->lgr_nr                = lgr_nr;
   grid->global_grid           = global_grid;
   grid->coarsening_active     = false;
@@ -1608,9 +1617,11 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->children        = hash_alloc();
   grid->coarse_cells    = vector_alloc_new();
   grid->eclipse_version = 0;
+  grid->cells           = NULL;
+  grid->num_cells       = 0;
 
-  /* This is the large allocation - which can potentially fail. */
-  if (!ecl_grid_alloc_cells( grid , init_valid )) {
+  /* This is a large allocation - which can potentially fail. */
+  if (!ecl_grid_alloc_global_cells( grid , init_valid )) {
     ecl_grid_free( grid );
     grid = NULL;
   }
