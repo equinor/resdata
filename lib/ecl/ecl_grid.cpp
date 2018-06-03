@@ -258,7 +258,6 @@
  /*
   About coarse groups
   -------------------
-
   It is possible to get ECLIPSE to join several cells together as one
   coarse cell, to reduce the size of the numerical problem. In this
   implementation this is supported as follows:
@@ -692,7 +691,6 @@ struct ecl_cell_struct {
   point_type corner_list[8];
 
   double                 volume;             /* Cache volume - whether it is initialized or not is handled by a cell_flags. */
-  int                    active;
   int                    active_index[2];    /* [0]: The active matrix index; [1]: the active fracture index */
   const ecl_grid_type   *lgr;                /* if this cell is part of an lgr; this will point to a grid instance for that lgr; NULL if not part of lgr. */
   int                    host_cell;          /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
@@ -719,6 +717,7 @@ struct ecl_grid_struct {
   int                   active_size;
   int                   active_size_fracture;
   bool                * visited;                /* internal helper struct used when searching for index - can be NULL. */
+  int                 * actnum;
   int                 * index_map;              /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map;          /* this is list of total_active elements - which point back to the index_map. */
 
@@ -776,9 +775,6 @@ ert_ecl_unit_enum ecl_grid_get_unit_system(const ecl_grid_type * grid) {
 static void ecl_cell_compare(const ecl_cell_type * c1 , const ecl_cell_type * c2,  bool include_nnc , bool * equal) {
   int i;
 
-  if (c1->active != c2->active)
-    *equal = false;
-
 
   if (c1->active_index[0] != c2->active_index[0])
     *equal = false;
@@ -816,11 +812,10 @@ static void ecl_cell_dump( const ecl_cell_type * cell , FILE * stream) {
 static void ecl_cell_assert_center( ecl_cell_type * cell);
 
 static void ecl_cell_dump_ascii( ecl_cell_type * cell , int i , int j , int k , FILE * stream , const double * offset) {
-  fprintf(stream, "Cell: i:%3d  j:%3d    k:%3d   host_cell:%d  CoarseGroup:%4d active_nr:%6d  active:%d \nCorners:\n",
+  fprintf(stream, "Cell: i:%3d  j:%3d    k:%3d   host_cell:%d  CoarseGroup:%4d active_nr:%6d  \nCorners:\n",
           i, j, k,
           cell->host_cell, cell->coarse_group,
-          cell->active_index[MATRIX_INDEX],
-          cell->active);
+          cell->active_index[MATRIX_INDEX]);
 
   ecl_cell_assert_center( cell );
   fprintf(stream , "Center   : ");
@@ -857,10 +852,10 @@ static void ecl_cell_fwrite_GRID(const ecl_grid_type * grid,
 
   ecl_kw_iset_int( coords_kw , 4 , 0);
   if (fracture_cell) {
-    if (cell->active & CELL_ACTIVE_FRACTURE)
+    if (grid->actnum[global_index] & CELL_ACTIVE_FRACTURE)
       ecl_kw_iset_int( coords_kw , 4 , 1);
   } else {
-    if (cell->active & CELL_ACTIVE_MATRIX)
+    if (grid->actnum[global_index] & CELL_ACTIVE_MATRIX)
       ecl_kw_iset_int( coords_kw , 4 , 1);
   }
 
@@ -1046,23 +1041,21 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
   /*
     Second heuristic to invalidate cells.
   */
-  if (cell->active == CELL_NOT_ACTIVE) {
-    if (!GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
-      const point_type p0 = cell->corner_list[0];
-      int cell_index = 1;
-      while (true) {
-        const point_type pi = cell->corner_list[cell_index];
-        if (pi.z != p0.z)
-          // There is a difference - the cell is certainly valid.
+  if (!GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
+    const point_type p0 = cell->corner_list[0];
+    int cell_index = 1;
+    while (true) {
+      const point_type pi = cell->corner_list[cell_index];
+      if (pi.z != p0.z)
+        // There is a difference - the cell is certainly valid.
+        break;
+      else {
+        cell_index++;
+        if (cell_index == 8) {
+          // They have all been at the same height up until now;
+          // the cell is marked as invalid.
+          SET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
           break;
-        else {
-          cell_index++;
-          if (cell_index == 8) {
-            // They have all been at the same height up until now;
-            // the cell is marked as invalid.
-            SET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
-            break;
-          }
         }
       }
     }
@@ -1112,14 +1105,34 @@ static void create_index_map(int global_size,
   }
 }
 
+
+static void ecl_grid_alloc_index_map(ecl_grid_type * grid, const int * actnum) {
+  std::vector<int> index_map;
+  std::vector<int> inv_index_map;
+
+  create_index_map(grid->global_size, actnum, CELL_ACTIVE_MATRIX, index_map, inv_index_map);
+  grid->index_map = Ecl::alloc_vector_content(index_map);
+  grid->inv_index_map = Ecl::alloc_vector_content(inv_index_map);
+  grid->active_size = inv_index_map.size();
+
+  if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
+    create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTURE, index_map, inv_index_map);
+    grid->fracture_index_map = Ecl::alloc_vector_content(index_map);
+    grid->inv_fracture_index_map = Ecl::alloc_vector_content(inv_index_map);
+    grid->active_size_fracture = inv_index_map.size();
+  }
+}
+
+
+
+
 /**
    Observe that when allocating based on a grid file not all cells are
    necessarily accessed beyond this function. In general not all cells
    will have a coords/corners section in the grid file.
 */
 
-static void ecl_cell_init( ecl_cell_type * cell , int actnum_value, int active_index, int active_index_fracture, bool init_valid) {
-  cell->active                = actnum_value;
+static void ecl_cell_init( ecl_cell_type * cell , int active_index, int active_index_fracture, bool init_valid) {
   cell->lgr                   = NULL;
   cell->host_cell             = HOST_CELL_NONE;
   cell->coarse_group          = COARSE_GROUP_NONE;
@@ -1472,11 +1485,6 @@ static void ecl_cell_init_regular(ecl_cell_type * cell,
       point_shift(&cell->corner_list[i+4] , kvec[0] , kvec[1] , kvec[2]);
     }
   }
-
-  if (actnum != NULL)
-    cell->active = actnum[global_index];
-  else
-    cell->active = CELL_ACTIVE;
 }
 
 /* end of cell implementation                                    */
@@ -1551,17 +1559,10 @@ static bool ecl_grid_alloc_global_cells( ecl_grid_type * grid , bool init_valid)
 
   for (int g=0; g < grid->global_size; g++) {
     ecl_cell_type * cell = ecl_grid_get_cell1( grid , g );
-    int active_index_fracture = (grid->inv_fracture_index_map) ? grid->inv_fracture_index_map[g] : -1;
-    int active_index = grid->inv_index_map[g];
-    int actnum_value = 0;
+    int active_index_fracture = (grid->fracture_index_map) ? grid->fracture_index_map[g] : -1;
+    int active_index = grid->index_map[g];
 
-    if (active_index >= 0)
-      actnum_value += CELL_ACTIVE_MATRIX;
-
-    if (active_index_fracture >= 0)
-      actnum_value += CELL_ACTIVE_FRACTURE;
-
-    ecl_cell_init(cell, actnum_value, active_index, active_index_fracture, init_valid);
+    ecl_cell_init(cell,  active_index, active_index_fracture, init_valid);
   }
   return true;
 }
@@ -1628,8 +1629,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
     grid->origo[1]      = 0;
     grid->use_mapaxes   = false;
   }
-
-
   grid->block_dim       = 0;
   grid->values          = NULL;
   if (ECL_GRID_MAINGRID_LGR_NR == lgr_nr) {  /* this is the main grid */
@@ -1647,28 +1646,31 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->children        = hash_alloc();
   grid->coarse_cells    = vector_alloc_new();
   grid->eclipse_version = 0;
+  grid->global_cells    = NULL;
   grid->cells           = NULL;
   grid->num_cells       = 0;
 
-  {
-    std::vector<int> index_map;
-    std::vector<int> inv_index_map;
-
-    create_index_map(grid->global_size, actnum, CELL_ACTIVE_MATRIX, index_map, inv_index_map);
-    grid->index_map = alloc_vector_content(index_map);
-    grid->inv_index_map = alloc_vector_content(inv_index_map);
-
-    if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-      create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTURE, index_map, inv_index_map);
-      grid->fracture_index_map = alloc_vector_content(index_map);
-      grid->inv_fracture_index_map = alloc_vector_content(inv_index_map);
+  if (actnum)
+    grid->actnum = (int *) util_alloc_copy(actnum, grid->global_size * sizeof * actnum);
+  else {
+    size_t byte_size = grid->global_size * sizeof * actnum;
+    grid->actnum = (int *) malloc(byte_size);
+    if (grid->actnum) {
+      for (int g=0; g < grid->global_size; g++)
+        grid->actnum[g] = CELL_ACTIVE;
+    } else {
+      ecl_grid_free(grid);
+      grid = NULL;
     }
   }
 
-  /* This is a large allocation - which can potentially fail. */
-  if (!ecl_grid_alloc_global_cells( grid , init_valid )) {
-    ecl_grid_free( grid );
-    grid = NULL;
+  if (grid) {
+    ecl_grid_alloc_index_map(grid, actnum);
+
+    if (!ecl_grid_alloc_global_cells( grid , init_valid )) {
+      ecl_grid_free( grid );
+      grid = NULL;
+    }
   }
   return grid;
 }
@@ -1689,17 +1691,6 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
                                     const int * actnum, const int * corsnum) {
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j  , k );
   ecl_cell_type * cell     = ecl_grid_get_cell1( ecl_grid , global_index );
-
-  /*
-    If actnum == NULL that is taken to mean active.
-
-    for normal runs actnum will be 1 for active cells,
-    for dual porosity models it can also be 2 and 3.
-  */
-  if (actnum == NULL)
-    cell->active = CELL_ACTIVE;
-  else
-    cell->active = actnum[global_index];
 
   int ip , iz;
   for (iz = 0; iz < 2; iz++) {
@@ -1728,7 +1719,6 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
   int global_index;
   ecl_cell_type * cell;
   bool matrix_cell = true;
-  int active_value = CELL_ACTIVE_MATRIX;
 
   /*
     This is the rather hysterical treatment of dual porosity in GRID
@@ -1741,7 +1731,6 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
   if (k >= ecl_grid->nz) {
     k -= ecl_grid->nz;
     matrix_cell = false;
-    active_value = CELL_ACTIVE_FRACTURE;
   }
 
 
@@ -1781,22 +1770,11 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
     if ((ECL_GRID_MAINGRID_LGR_NR != ecl_grid->lgr_nr) && (coords_size != 7))
       util_abort("%s: Need 7 element coords keywords for LGR - or reimplement to use LGRILG keyword.\n",__func__);
 
-    switch(coords_size) {
-    case 4:                /* all cells active */
-      cell->active += active_value;
-      break;
-    case 5:                /* only spesific cells active - no lgr */
-      cell->active  += coords[4] * active_value;
-      break;
-    case 7:
-      cell->active      += coords[4] * active_value;
+    if (coords_size == 7) {
       cell->host_cell    = coords[5] - 1;
       cell->coarse_group = coords[6] - 1;
       if (cell->coarse_group >= 0)
         ecl_grid->coarsening_active = true;
-      break;
-    default:
-      util_abort("%s: coord size:%d unrecognized - should 4,5 or 7.\n",__func__ , coords_size);
     }
 
     if (matrix_cell) {
@@ -1812,58 +1790,8 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
   SET_CELL_FLAG(cell , CELL_FLAG_VALID );
 }
 
-/**
-   The function ecl_grid_set_active_index() must be called immediately
-   prior to calling this function, to ensure that
-   ecl_grid->active_size is correct.
-*/
-
-static void ecl_grid_init_index_map__(ecl_grid_type * ecl_grid,
-                                      int * index_map,
-                                      int * inv_index_map,
-                                      int active_mask,
-                                      int type_index) {
-  for (int global_index = 0; global_index < ecl_grid->global_size; global_index++) {
-    const ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
-    if (cell->active & active_mask) {
-      index_map[global_index] = cell->active_index[type_index];
-
-      if (cell->coarse_group == COARSE_GROUP_NONE)
-        inv_index_map[cell->active_index[type_index]] = global_index;
-      //else: In the case of coarse groups the inv_index_map is set below.
-    } else
-      index_map[global_index] = -1;
-  }
-
-}
-
 
 static void ecl_grid_init_index_map(ecl_grid_type * ecl_grid, const int * actnum) {
-  /* Creating the inverse mapping for the matrix cells. */
-  ecl_grid->index_map     = (int*)util_realloc(ecl_grid->index_map,
-                                         ecl_grid->global_size * sizeof * ecl_grid->index_map);
-  ecl_grid->inv_index_map = (int*)util_realloc(ecl_grid->inv_index_map,
-                                         ecl_grid->active_size * sizeof * ecl_grid->inv_index_map);
-  ecl_grid_init_index_map__(ecl_grid,
-                            ecl_grid->index_map,
-                            ecl_grid->inv_index_map,
-                            CELL_ACTIVE_MATRIX,
-                            MATRIX_INDEX);
-
-
-  /* Create the inverse mapping for the fractures. */
-  if (ecl_grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-    ecl_grid->fracture_index_map     = (int*)util_realloc(ecl_grid->fracture_index_map,
-                                                    ecl_grid->global_size * sizeof * ecl_grid->fracture_index_map);
-    ecl_grid->inv_fracture_index_map = (int*)util_realloc(ecl_grid->inv_fracture_index_map,
-                                                    ecl_grid->active_size_fracture * sizeof * ecl_grid->inv_fracture_index_map);
-    ecl_grid_init_index_map__(ecl_grid,
-                              ecl_grid->fracture_index_map,
-                              ecl_grid->inv_fracture_index_map,
-                              CELL_ACTIVE_FRACTURE,
-                              FRACTURE_INDEX);
-  }
-
 
   /* Update the inverse map in the case of coarse cells. Observe that
      in the case of coarse cells with more than one active cell in the
@@ -1919,7 +1847,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
     for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
       ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
 
-      if (cell->active & CELL_ACTIVE_MATRIX) {
+      if (ecl_grid->actnum[global_index] & CELL_ACTIVE_MATRIX) {
         cell->active_index[MATRIX_INDEX] = active_index;
         active_index++;
       }
@@ -1928,7 +1856,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
     if (ecl_grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
       for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
         ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
-        if (cell->active & CELL_ACTIVE_FRACTURE) {
+        if (ecl_grid->actnum[global_index] & CELL_ACTIVE_FRACTURE) {
           cell->active_index[FRACTURE_INDEX] = active_fracture_index;
           active_fracture_index++;
         }
@@ -1942,16 +1870,16 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
           the entire coarse cell.
     */
     for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
-      ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
-      if (cell->active != CELL_NOT_ACTIVE) {
+      if (ecl_grid->actnum[global_index] != CELL_NOT_ACTIVE) {
+        ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
         if (cell->coarse_group == COARSE_GROUP_NONE) {
 
-          if (cell->active & CELL_ACTIVE_MATRIX) {
+          if (ecl_grid->actnum[global_index] & CELL_ACTIVE_MATRIX) {
             cell->active_index[MATRIX_INDEX] = active_index;
             active_index++;
           }
 
-          if (cell->active & CELL_ACTIVE_FRACTURE) {
+          if (ecl_grid->actnum[global_index] & CELL_ACTIVE_FRACTURE) {
             cell->active_index[FRACTURE_INDEX] = active_fracture_index;
             active_fracture_index++;
           }
@@ -1962,7 +1890,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
                                        global_index,
                                        &active_index,
                                        &active_fracture_index,
-                                       cell->active);
+                                       (ecl_grid->actnum[global_index] != CELL_NOT_ACTIVE));
         }
       }
     }
@@ -2853,7 +2781,6 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
                                                         actnum_data);
   ecl_kw_free( gridhead_kw );
   return ecl_grid;
-
 }
 
 
@@ -3691,23 +3618,6 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
       }
     }
 
-    if (grid) {
-      int i,j,k;
-      for (k=0; k < nz; k++) {
-        for (j=0; j <ny; j++) {
-          for (i=0; i < nx; i++) {
-            int global_index = i + j*nx + k*nx*ny;
-            ecl_cell_type* cell = ecl_grid_get_cell1(grid, global_index);
-
-            if (actnum)
-              cell->active = actnum[global_index];
-            else
-              cell->active = CELL_ACTIVE;
-          }
-        }
-      }
-    }
-
     if (grid)
       ecl_grid_update_index(grid, actnum);
 
@@ -3770,11 +3680,6 @@ ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const do
 
           x0    += dx[g];
           y0[i] += dy[g];
-
-          if (actnum != NULL)
-            cell->active = actnum[g];
-          else
-            cell->active = CELL_ACTIVE;
         }
       }
     }
@@ -4770,6 +4675,7 @@ int ecl_grid_get_block_count3d(const ecl_grid_type * grid , int i , int j, int k
 
 void ecl_grid_free(ecl_grid_type * grid) {
   ecl_grid_free_cells( grid );
+  free(grid->actnum);
   free(grid->index_map);
   free(grid->inv_index_map);
 
@@ -6723,40 +6629,42 @@ int ecl_grid_get_zcorn_size( const ecl_grid_type * grid ) {
 /*****************************************************************/
 
 void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum ) {
-  int i;
-  for (i=0; i < grid->global_size; i++) {
-    const ecl_cell_type * cell = ecl_grid_get_cell1( grid , i );
-    if (cell->coarse_group == COARSE_GROUP_NONE)
-      actnum[i] = cell->active;
-    else {
-      /* In the case of coarse cells we must query the coarse cell for
-         the original, uncoarsened distribution of actnum values. */
-      ecl_coarse_cell_type * coarse_cell = ecl_grid_iget_coarse_group( grid , cell->coarse_group );
+  for (int g=0; g < grid->global_size; g++)
+    actnum[g] = grid->actnum[g];
 
-      /* 1: Set all the elements in the coarse group to inactive. */
-      {
-        int group_size = ecl_coarse_cell_get_size( coarse_cell );
-        const int * index_ptr = ecl_coarse_cell_get_index_ptr( coarse_cell );
-        int j;
-        for (j=0; j < group_size; j++)
-          actnum[index_ptr[j]] = CELL_NOT_ACTIVE;
-      }
-
-      /* 2: Explicitly pick up the active cells from the coarse group
-            and mark them correctly. */
-      {
-        int num_active = ecl_coarse_cell_get_num_active( coarse_cell );
-        int j;
-
-        for (j=0; j < num_active; j++) {
-          int global_index = ecl_coarse_cell_iget_active_cell_index( coarse_cell , j );
-          int active_value = ecl_coarse_cell_iget_active_value( coarse_cell , j );
-
-          actnum[global_index] = active_value;
-        }
-      }
-    }
-  }
+  //  for (int i=0; i < grid->global_size; i++) {
+  //    const ecl_cell_type * cell = ecl_grid_get_cell1( grid , i );
+  //    if (cell->coarse_group == COARSE_GROUP_NONE)
+  //      actnum[i] = cell->active;
+  //    else {
+  //      /* In the case of coarse cells we must query the coarse cell for
+  //         the original, uncoarsened distribution of actnum values. */
+  //      ecl_coarse_cell_type * coarse_cell = ecl_grid_iget_coarse_group( grid , cell->coarse_group );
+  //
+  //      /* 1: Set all the elements in the coarse group to inactive. */
+  //      {
+  //        int group_size = ecl_coarse_cell_get_size( coarse_cell );
+  //        const int * index_ptr = ecl_coarse_cell_get_index_ptr( coarse_cell );
+  //        int j;
+  //        for (j=0; j < group_size; j++)
+  //          actnum[index_ptr[j]] = CELL_NOT_ACTIVE;
+  //      }
+  //
+  //      /* 2: Explicitly pick up the active cells from the coarse group
+  //            and mark them correctly. */
+  //      {
+  //        int num_active = ecl_coarse_cell_get_num_active( coarse_cell );
+  //        int j;
+  //
+  //        for (j=0; j < num_active; j++) {
+  //          int global_index = ecl_coarse_cell_iget_active_cell_index( coarse_cell , j );
+  //          int active_value = ecl_coarse_cell_iget_active_value( coarse_cell , j );
+  //
+  //          actnum[global_index] = active_value;
+  //        }
+  //      }
+  //    }
+  //  }
 }
 
 
@@ -6871,15 +6779,16 @@ ecl_kw_type * ecl_grid_alloc_gridhead_kw( int nx, int ny , int nz , int grid_nr)
 
 
 void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum ) {
-  const int global_size = ecl_grid_get_global_size( grid );
-  for (int g=0; g < global_size; g++) {
-    ecl_cell_type * cell = ecl_grid_get_cell1( grid , g );
-    if (actnum)
-      cell->active = actnum[g];
-    else
-      cell->active = 1;
+
+  if (actnum) {
+    for (int g=0; g < grid->global_size; g++)
+      grid->actnum[g] = actnum[g];
+  } else {
+    free(grid->actnum);
+    grid->actnum = NULL;
   }
-  ecl_grid_update_index( grid, actnum );
+
+  ecl_grid_alloc_index_map(grid, actnum);
 }
 
 
