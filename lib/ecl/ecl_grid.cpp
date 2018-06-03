@@ -16,6 +16,9 @@
    for more details.
 */
 
+#include <vector>
+#include <algorithm>
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -1085,7 +1088,29 @@ static int ecl_cell_get_twist( const ecl_cell_type * cell ) {
 /*****************************************************************/
 
 
-
+static void create_index_map(int global_size,
+                             const int * actnum,
+                             int actnum_mask,
+                             std::vector<int>& index_map,
+                             std::vector<int>& inv_index_map) {
+  index_map.resize(global_size, -1);
+  if (actnum) {
+    inv_index_map.resize(0);
+    {
+      int active_index = 0;
+      for (int g = 0; g < global_size; g++) {
+        if (actnum[g] & actnum_mask) {
+          index_map[g] = active_index;
+          inv_index_map.push_back(g);
+          active_index++;
+        }
+      }
+    }
+  } else {
+    std::iota(index_map.begin(), index_map.end(), 0);
+    inv_index_map = index_map;
+  }
+}
 
 /**
    Observe that when allocating based on a grid file not all cells are
@@ -1093,20 +1118,24 @@ static int ecl_cell_get_twist( const ecl_cell_type * cell ) {
    will have a coords/corners section in the grid file.
 */
 
-static void ecl_cell_init( ecl_cell_type * cell , bool init_valid) {
-  cell->active                = CELL_NOT_ACTIVE;
+static void ecl_cell_init__( ecl_cell_type * cell , int actnum_value, int active_index, int active_index_fracture, bool init_valid) {
+  cell->active                = actnum_value;
   cell->lgr                   = NULL;
   cell->host_cell             = HOST_CELL_NONE;
   cell->coarse_group          = COARSE_GROUP_NONE;
   cell->cell_flags            = 0;
-  cell->active_index[MATRIX_INDEX]   = -1;
-  cell->active_index[FRACTURE_INDEX] = -1;
+  cell->active_index[MATRIX_INDEX]   = active_index;
+  cell->active_index[FRACTURE_INDEX] = active_index_fracture;
   if (init_valid)
     cell->cell_flags = CELL_FLAG_VALID;
 
   cell->nnc_info = NULL;
 }
 
+
+static void ecl_cell_init(ecl_cell_type * cell, bool init_valid) {
+  ecl_cell_init__(cell, -1, -1, -1, init_valid);
+}
 
 /*
 #define mod(x,n) ((x) % (n))
@@ -1621,6 +1650,21 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->eclipse_version = 0;
   grid->cells           = NULL;
   grid->num_cells       = 0;
+
+  {
+    std::vector<int> index_map;
+    std::vector<int> inv_index_map;
+
+    create_index_map(grid->global_size, actnum, CELL_ACTIVE_MATRIX, index_map, inv_index_map);
+    grid->index_map = alloc_vector_content(index_map);
+    grid->inv_index_map = alloc_vector_content(inv_index_map);
+
+    if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
+      create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTUR, index_map, inv_index_map);
+      grid->fracture_index_map = alloc_vector_content(index_map);
+      grid->inv_fracture_index_map = alloc_vector_content(inv_index_map);
+    }
+  }
 
   /* This is a large allocation - which can potentially fail. */
   if (!ecl_grid_alloc_global_cells( grid , init_valid )) {
@@ -2485,7 +2529,11 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
+<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
   ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, unit_system, dualp_flag , nx,ny,nz,lgr_nr,true);
+=======
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, actnum, dualp_flag , nx,ny,nz,lgr_nr,true);
+>>>>>>> Create index mappings in empty alloc.
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -2541,8 +2589,13 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
 }
 
 static ecl_grid_type * ecl_grid_alloc_copy__( const ecl_grid_type * src_grid,  ecl_grid_type * main_grid ) {
+  int * actnum = ecl_grid_alloc_actnum_data( src_grid );
   ecl_grid_type * copy_grid = ecl_grid_alloc_empty( main_grid ,
+<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                                     src_grid->unit_system,
+=======
+                                                    actnum,
+>>>>>>> Create index mappings in empty alloc.
                                                     src_grid->dualp_flag ,
                                                     ecl_grid_get_nx( src_grid ) ,
                                                     ecl_grid_get_ny( src_grid ) ,
@@ -2550,11 +2603,10 @@ static ecl_grid_type * ecl_grid_alloc_copy__( const ecl_grid_type * src_grid,  e
                                                     0 ,
                                                     false );
   if (copy_grid) {
-    int * actnum = ecl_grid_alloc_actnum_data( src_grid );
     ecl_grid_copy_content( copy_grid , src_grid );  // This will handle everything except LGR relationships which is established in the calling routine
     ecl_grid_update_index( copy_grid, actnum );
-    free(actnum);
   }
+  free(actnum);
   return copy_grid;
 }
 
@@ -3164,7 +3216,11 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid ,
   if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
     nz = nz / 2;
   {
+<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
     ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , unit_system, dualp_flag , nx , ny , nz , grid_nr, false);
+=======
+    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , actnum, dualp_flag , nx , ny , nz , grid_nr, false);
+>>>>>>> Create index mappings in empty alloc.
     if (grid) {
       if (mapaxes != NULL)
         ecl_grid_init_mapaxes( grid , apply_mapaxes , mapaxes);
@@ -3432,8 +3488,12 @@ ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool apply_mapaxes) 
    which case all cells will be active.
 */
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
+<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
   ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , unit_system, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
+=======
+  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , actnum, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
+>>>>>>> Create index mappings in empty alloc.
   if (grid) {
     const double grid_offset[3] = {0,0,0};
 
@@ -3492,7 +3552,11 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
 {
     ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                                unit_system,
+=======
+                                               actnum, 
+>>>>>>> Create index mappings in empty alloc.
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3537,7 +3601,11 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
 {
     ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                                unit_system,
+=======
+                                               actnum,
+>>>>>>> Create index mappings in empty alloc.
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3642,7 +3710,11 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
 ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const double * dx , const double * dy , const double * dz , const double * tops , const int * actnum) {
   ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                              unit_system,
+=======
+                                             actnum,
+>>>>>>> Create index mappings in empty alloc.
                                              FILEHEAD_SINGLE_POROSITY,
                                              nx, ny, nz,
                                              0, true);
