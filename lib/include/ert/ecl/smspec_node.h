@@ -1,19 +1,19 @@
 /*
-  Copyright (C) 2012  Statoil ASA, Norway. 
-  
-  The file 'smspec_node.h' is part of ERT - Ensemble based Reservoir Tool. 
-  
-  ERT is free software: you can redistribute it and/or modify 
-  it under the terms of the GNU General Public License as published by 
-  the Free Software Foundation, either version 3 of the License, or 
-  (at your option) any later version. 
-  
-  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-  FITNESS FOR A PARTICULAR PURPOSE.   
-  
-  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-  for more details. 
+  Copyright (C) 2012  Statoil ASA, Norway.
+
+  The file 'smspec_node.h' is part of ERT - Ensemble based Reservoir Tool.
+
+  ERT is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE.
+
+  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+  for more details.
 */
 
 
@@ -44,10 +44,10 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_REGION_VAR             =  2 ,   /* X */
               ECL_SMSPEC_GROUP_VAR              =  3 ,   /* X */
               ECL_SMSPEC_WELL_VAR               =  4 ,   /* X */
-              ECL_SMSPEC_SEGMENT_VAR            =  5 ,   /* X */ 
+              ECL_SMSPEC_SEGMENT_VAR            =  5 ,   /* X */
               ECL_SMSPEC_BLOCK_VAR              =  6 ,   /* X */
               ECL_SMSPEC_AQUIFER_VAR            =  7 ,
-              ECL_SMSPEC_COMPLETION_VAR         =  8 ,   /* X */ 
+              ECL_SMSPEC_COMPLETION_VAR         =  8 ,   /* X */
               ECL_SMSPEC_NETWORK_VAR            =  9 ,
               ECL_SMSPEC_REGION_2_REGION_VAR    = 10 ,
               ECL_SMSPEC_LOCAL_BLOCK_VAR        = 11 ,   /* X */
@@ -88,22 +88,22 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
                          const int grid_dims[3] ,
                          int num);
 
-  smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type , 
-                                        const char * wgname  , 
-                                        const char * keyword , 
-                                        const char * unit    , 
-                                        const char * key_join_string , 
-                                        const int grid_dims[3] , 
+  smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
+                                        const char * wgname  ,
+                                        const char * keyword ,
+                                        const char * unit    ,
+                                        const char * key_join_string ,
+                                        const int grid_dims[3] ,
                                         int num , int param_index, float default_value);
 
-  smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type , 
-                                            const char * wgname  , 
-                                            const char * keyword , 
-                                            const char * unit    , 
-                                            const char * lgr , 
-                                            const char * key_join_string , 
+  smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
+                                            const char * wgname  ,
+                                            const char * keyword ,
+                                            const char * unit    ,
+                                            const char * lgr ,
+                                            const char * key_join_string ,
                                             int   lgr_i, int lgr_j , int lgr_k,
-                                            int param_index, 
+                                            int param_index,
                                             float default_value);
 
   smspec_node_type *  smspec_node_alloc_new(int params_index, float default_value);
@@ -112,7 +112,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   void                smspec_node_free( smspec_node_type * index );
   void                smspec_node_free__(void * arg);
   void                smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index);
-  int                 smspec_node_get_params_index( const smspec_node_type * smspec_node );  
+  int                 smspec_node_get_params_index( const smspec_node_type * smspec_node );
   const char        * smspec_node_get_gen_key1( const smspec_node_type * smspec_node);
   const char        * smspec_node_get_gen_key2( const smspec_node_type * smspec_node);
   ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node);
