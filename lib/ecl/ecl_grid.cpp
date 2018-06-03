@@ -1118,7 +1118,7 @@ static void create_index_map(int global_size,
    will have a coords/corners section in the grid file.
 */
 
-static void ecl_cell_init__( ecl_cell_type * cell , int actnum_value, int active_index, int active_index_fracture, bool init_valid) {
+static void ecl_cell_init( ecl_cell_type * cell , int actnum_value, int active_index, int active_index_fracture, bool init_valid) {
   cell->active                = actnum_value;
   cell->lgr                   = NULL;
   cell->host_cell             = HOST_CELL_NONE;
@@ -1132,10 +1132,6 @@ static void ecl_cell_init__( ecl_cell_type * cell , int actnum_value, int active
   cell->nnc_info = NULL;
 }
 
-
-static void ecl_cell_init(ecl_cell_type * cell, bool init_valid) {
-  ecl_cell_init__(cell, -1, -1, -1, init_valid);
-}
 
 /*
 #define mod(x,n) ((x) % (n))
@@ -1553,18 +1549,21 @@ static bool ecl_grid_alloc_global_cells( ecl_grid_type * grid , bool init_valid)
   grid->num_cells = grid->global_size;
   grid->cells = grid->global_cells;
 
-  {
-    ecl_cell_type * cell0 = ecl_grid_get_cell1( grid , 0 );
-    ecl_cell_init( cell0 , init_valid );
-    {
-      int i;
-      for (i=1; i < grid->global_size; i++) {
-        ecl_cell_type * target_cell = ecl_grid_get_cell1( grid , i );
-        ecl_cell_memcpy( target_cell , cell0 );
-      }
-    }
-    return true;
+  for (int g=0; g < grid->global_size; g++) {
+    ecl_cell_type * cell = ecl_grid_get_cell1( grid , g );
+    int active_index_fracture = (grid->inv_fracture_index_map) ? grid->inv_fracture_index_map[g] : -1;
+    int active_index = grid->inv_index_map[g];
+    int actnum_value = 0;
+
+    if (active_index >= 0)
+      actnum_value += CELL_ACTIVE_MATRIX;
+
+    if (active_index_fracture >= 0)
+      actnum_value += CELL_ACTIVE_FRACTURE;
+
+    ecl_cell_init(cell, actnum_value, active_index, active_index_fracture, init_valid);
   }
+  return true;
 }
 
 /**
