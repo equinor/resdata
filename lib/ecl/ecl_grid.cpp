@@ -1471,11 +1471,12 @@ static ecl_cell_type * ecl_grid_get_cell1(const ecl_grid_type * grid,
   return &grid->global_cells[global_index];
 }
 
-
+/*
 static ecl_cell_type * ecl_grid_get_cell1A(const ecl_grid_type * grid, int active_index) {
   int global_index = grid->inv_index_map[active_index];
   return &grid->global_cells[global_index];
 }
+*/
 
 
 static ecl_cell_type * ecl_grid_iget_cell(const ecl_grid_type * grid, int index) {
@@ -1547,6 +1548,7 @@ static bool ecl_grid_alloc_global_cells( ecl_grid_type * grid , bool init_valid)
 
 static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
                                             ert_ecl_unit_enum unit_system,
+                                            const int* actnum,
                                             int dualp_flag,
                                             int nx,
                                             int ny,
@@ -1766,7 +1768,6 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
   }
   SET_CELL_FLAG(cell , CELL_FLAG_VALID );
 }
-
 
 /**
    The function ecl_grid_set_active_index() must be called immediately
