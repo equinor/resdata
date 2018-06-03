@@ -21,4 +21,15 @@
 
 #include <ert/util/util.h>
 
+#include <vector>
+
+namespace Ecl {
+
+template<typename T>
+T * alloc_vector_content(const std::vector<T>& src) {
+  return (T*) util_alloc_copy(src.data(), src.size() * sizeof(T));
+}
+
+}
+
 #endif
