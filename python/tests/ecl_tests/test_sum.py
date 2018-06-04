@@ -560,3 +560,13 @@ class SumTest(EclTest):
         rows, columns = frame.shape
         self.assertEqual(len(case.keys()), columns)
         self.assertEqual(len(case), rows)
+
+
+    def test_total_and_rate(self):
+        self.assertTrue( EclSum.is_total("FOPT"))
+        self.assertTrue( EclSum.is_total("WWPT:OP_3"))
+        self.assertFalse( EclSum.is_total("RPR:2"))
+
+        self.assertTrue( EclSum.is_rate("WOPR:OP_4"))
+        self.assertFalse( EclSum.is_rate("BPR:123"))
+        self.assertTrue(EclSum.is_rate("FWIR"))
