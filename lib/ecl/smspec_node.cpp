@@ -54,7 +54,7 @@ struct smspec_node_struct {
   UTIL_TYPE_ID_DECLARATION;
   char                 * wgname;             /* The value of the WGNAMES vector for this element. */
   char                 * keyword;            /* The value of the KEYWORDS vector for this elements. */
-  char                 * unit;               /* The value of the UNITS vector for this elements. */
+  char                 * unit;             /* The value of the UNITS vector for this elements. */
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS vector. */
   char                 * lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
   int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
@@ -78,7 +78,7 @@ bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type 
   return smspec_node_cmp( node1 , node2 ) == 0;
 }
 
-static bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
+bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
   if (var_type == ECL_SMSPEC_COMPLETION_VAR ||
       var_type == ECL_SMSPEC_GROUP_VAR      ||
       var_type == ECL_SMSPEC_WELL_VAR       ||
@@ -94,6 +94,18 @@ static bool smspec_node_type_supported(ecl_smspec_var_type var_type) {
 
   return true;
 }
+
+
+bool smspec_node_internalize(ecl_smspec_var_type var_type, const char * wgname) {
+  if (!smspec_node_type_supported(var_type))
+    return false;
+
+  if (smspec_node_need_wgname(var_type) && IS_DUMMY_WELL(wgname))
+    return false;
+
+  return true;
+}
+
 
 
 /*****************************************************************/

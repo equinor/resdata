@@ -125,6 +125,8 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   bool                smspec_node_is_total( const smspec_node_type * smspec_node );
   bool                smspec_node_is_historical( const smspec_node_type * smspec_node );
   bool                smspec_node_need_nums( const smspec_node_type * smspec_node );
+  bool                smspec_node_need_wgname(ecl_smspec_var_type var_type);
+  bool                smspec_node_internalize(ecl_smspec_var_type var_type, const char * wgname);
   void                smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream);
 
   void                smspec_node_set_default( smspec_node_type * smspec_node , float default_value);

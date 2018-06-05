@@ -5,9 +5,9 @@
 #include <string>
 
 #include <ert/ecl/smspec_node.h>
-#include <ert/util/ert_unique_ptr.hpp>
+#include <ert/util/ecl_unique_ptr.hpp>
 
-namespace ERT {
+namespace ecl {
 
     class smspec_node {
         public:
@@ -47,15 +47,49 @@ namespace ERT {
             smspec_node_type* get();
             const smspec_node_type* get() const;
 
-        private:
-            smspec_node(
-                ecl_smspec_var_type,
-                const char*, const char*, const char*, const char*,
-                const int[3], int, int = 0, float = 0 );
+            float get_default() const;
 
-            ert_unique_ptr< smspec_node_type, smspec_node_free > node;
+            void set_params_index(int params_index);
+            int get_params_index( ) const;
+            int update_params_index(int params_index);
+        //  Should be private ...
+            smspec_node(ecl_smspec_var_type,
+                         const char*, const char*, const char*, const char*,
+                         const int[3], int, int = 0, float = 0 );
+
+            smspec_node(ecl_smspec_var_type,
+                        const char *, const char*, const char*, const char*, const char*,
+                        int, int, int, int = 0, float = 0 );
+
+
+
+    private:
+        ecl::ecl_unique_ptr< smspec_node_type, smspec_node_free > node;
     };
+
+    smspec_node * smspec_node_new(ecl_smspec_var_type var_type ,
+                                  const char * wgname  ,
+                                  const char * keyword ,
+                                  const char * unit    ,
+                                  const char * key_join_string ,
+                                  const int grid_dims[3] ,
+                                  int num , int param_index, float default_value);
+
+
+    smspec_node * smspec_node_new_lgr(ecl_smspec_var_type var_type ,
+                                      const char * wgname  ,
+                                      const char * keyword ,
+                                      const char * unit    ,
+                                      const char * lgr,
+                                      const char * key_join_string ,
+                                      int lgr_i, int lgr_j , int lgr_k,
+                                      int param_index, float default_value);
+
+    void smspec_node_delete(smspec_node * ptr);
 
 }
 
+namespace ERT {
+    typedef ecl::smspec_node smspec_node;
+}
 #endif //OPM_ERT_SMSPEC_HPP

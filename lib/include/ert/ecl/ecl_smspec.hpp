@@ -17,3 +17,10 @@
 */
 
 #include <ert/ecl/ecl_smspec.h>
+#include <ert/ecl/Smspec.hpp>
+
+namespace ERT {}
+void ecl_smspec_add_node( ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node, ERT::smspec_node& node);
+
+
+

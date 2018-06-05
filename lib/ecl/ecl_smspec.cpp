@@ -15,6 +15,7 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
+#include <vector>
 
 #include <string.h>
 #include <stdbool.h>
@@ -38,6 +39,7 @@
 #include <ert/ecl/ecl_endian_flip.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include <ert/ecl/Smspec.hpp>
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
 #endif
@@ -113,7 +115,7 @@ struct ecl_smspec_struct {
   hash_type          * block_var_index;            /* Block variables like BPR */
   hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
 
-
+  std::vector<ecl::smspec_node> new_nodes;
   vector_type        * smspec_nodes;
   bool                 write_mode;
   bool                 need_nums;
@@ -1085,6 +1087,10 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 }
 
 
+void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , const ecl::smspec_node& node) {
+  // TODO
+}
+
 
 void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node) {
   ecl_smspec_install_gen_keys( ecl_smspec , smspec_node );
@@ -1100,6 +1106,11 @@ static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int param
   float_vector_iset( ecl_smspec->params_default , ecl_smspec->params_size - 1 , PARAMS_GLOBAL_DEFAULT);
 }
 
+
+static void ecl_smspec_update_params_size(ecl_smspec_type * ecl_smspec, int params_size) {
+  if (ecl_smspec->params_size < params_size)
+    ecl_smspec_set_params_size(ecl_smspec, params_size);
+}
 
 
 void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node){
@@ -1129,11 +1140,27 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
     util_abort("%s: sorry - the smspec header has been locked (can not mix ecl_sum_add_var() and ecl_sum_add_tstep() calls.)\n",__func__);
 }
 
-
-void ecl_smspec_add_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node ) {
+void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
   ecl_smspec_insert_node( ecl_smspec , smspec_node );
   ecl_smspec_index_node( ecl_smspec , smspec_node );
 }
+
+
+void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node&& node) {
+  int params_index = node.update_params_index(ecl_smspec->new_nodes.size());
+  int internal_index = ecl_smspec->new_nodes.size();
+
+  ecl_smspec_update_params_size(ecl_smspec, params_index + 1);
+  int_vector_iset( ecl_smspec->index_map , internal_index , params_index);
+  float_vector_iset( ecl_smspec->params_default, params_index, node.get_default());
+
+  ecl_smspec->new_nodes.push_back(std::move(node));
+  ecl_smspec_index_node(ecl_smspec, ecl_smspec->new_nodes.back());
+}
+
+
+
+
 
 
 
@@ -1231,32 +1258,36 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
     {
       for (params_index=0; params_index < ecl_kw_get_size(wells); params_index++) {
-        float default_value          = PARAMS_GLOBAL_DEFAULT;
-        int num                      = SMSPEC_NUMS_INVALID;
         char * well                  = (char*)util_alloc_strip_copy((const char*)ecl_kw_iget_ptr(wells    , params_index));
         char * kw                    = (char*)util_alloc_strip_copy((const char*)ecl_kw_iget_ptr(keywords , params_index));
-        char * unit                  = (char*)util_alloc_strip_copy((const char*)ecl_kw_iget_ptr(units    , params_index));
-        char * lgr_name              = NULL;
-
-        smspec_node_type * smspec_node;
         ecl_smspec_var_type var_type = ecl_smspec_identify_var_type( kw );
-        if (nums != NULL) num        = ecl_kw_iget_int(nums , params_index);
-        if (ecl_smspec_lgr_var_type( var_type )) {
-          int lgr_i = ecl_kw_iget_int( numlx , params_index );
-          int lgr_j = ecl_kw_iget_int( numly , params_index );
-          int lgr_k = ecl_kw_iget_int( numlz , params_index );
-          lgr_name  = (char*)util_alloc_strip_copy(  (const char*)ecl_kw_iget_ptr( lgrs , params_index ));
-          smspec_node = smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string , lgr_i , lgr_j , lgr_k , params_index, default_value);
-        } else
-          smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);
 
-        if (smspec_node)
-          ecl_smspec_add_node( ecl_smspec , smspec_node );
+        if (smspec_node_internalize(var_type, well)) {
+          float default_value          = PARAMS_GLOBAL_DEFAULT;
+          char * unit                  = (char*)util_alloc_strip_copy((const char*)ecl_kw_iget_ptr(units    , params_index));
+          ecl_smspec_var_type var_type = ecl_smspec_identify_var_type( kw );
+          if (ecl_smspec_lgr_var_type( var_type )) {
+            int lgr_i = ecl_kw_iget_int( numlx , params_index );
+            int lgr_j = ecl_kw_iget_int( numly , params_index );
+            int lgr_k = ecl_kw_iget_int( numlz , params_index );
+            char * lgr_name  = (char*)util_alloc_strip_copy(  (const char*)ecl_kw_iget_ptr( lgrs , params_index ));
+
+            ecl_smspec_add_node(ecl_smspec, smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string , lgr_i , lgr_j , lgr_k , params_index, default_value));
+            ecl_smspec_add_node(ecl_smspec, ecl::smspec_node(var_type, well, kw, unit, lgr_name, ecl_smspec->key_join_string, lgr_i, lgr_j, lgr_k, params_index, default_value));
+
+            free(lgr_name);
+          } else {
+            int num                      = SMSPEC_NUMS_INVALID;
+            if (nums != NULL) num        = ecl_kw_iget_int(nums , params_index);
+            ecl_smspec_add_node(ecl_smspec, smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value));
+            ecl_smspec_add_node(ecl_smspec, ecl::smspec_node(var_type, well, kw, unit, ecl_smspec->key_join_string, ecl_smspec->grid_dims, params_index, default_value));
+          }
+
+          free( unit );
+        }
 
         free( kw );
         free( well );
-        free( unit );
-        free( lgr_name );
       }
     }
 

@@ -1,7 +1,7 @@
 #include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/Smspec.hpp>
 
-namespace ERT {
+namespace ecl {
 
     smspec_node::smspec_node( const smspec_node& rhs ) :
         node( smspec_node_alloc_copy( rhs.node.get() ) )
@@ -90,6 +90,45 @@ namespace ERT {
                     join, grid_dims, num, index, default_value ) )
     {}
 
+    smspec_node::smspec_node(ecl_smspec_var_type type,
+                             const char* wgname,
+                             const char* keyword,
+                             const char* unit,
+                             const char* lgr,
+                             const char* join,
+                             int lgr_i, int lgr_j, int lgr_k,
+                             int index, float default_value ) :
+        node( smspec_node_alloc_lgr( type, wgname, keyword, unit, lgr, 
+                                     join, lgr_i, lgr_j, lgr_k, index, default_value ) )
+    {}
+
+    smspec_node * smspec_node_new(ecl_smspec_var_type var_type ,
+                                  const char * wgname  ,
+                                  const char * keyword ,
+                                  const char * unit    ,
+                                  const char * key_join_string ,
+                                  const int grid_dims[3] ,
+                                  int num , int param_index, float default_value)
+    {
+        return new smspec_node(var_type, wgname, keyword, unit, key_join_string, grid_dims, num, param_index, default_value);
+    }
+
+    smspec_node * smspec_node_new_lgr(ecl_smspec_var_type var_type ,
+                                      const char * wgname  ,
+                                      const char * keyword ,
+                                      const char * unit    ,
+                                      const char * lgr,
+                                      const char * key_join_string ,
+                                      int lgr_i, int lgr_j, int lgr_k,
+                                      int param_index, float default_value)
+    {
+        return new smspec_node(var_type, wgname, keyword, unit, lgr, key_join_string, lgr_i, lgr_j, lgr_k, param_index, default_value);
+    }
+
+    void smspec_node_delete(smspec_node * ptr) {
+        delete ptr;
+    }
+
     int smspec_node::type() const {
         return smspec_node_get_var_type( this->node.get() );
     }
@@ -116,5 +155,26 @@ namespace ERT {
 
     const smspec_node_type* smspec_node::get() const {
         return this->node.get();
+    }
+
+    void smspec_node::set_params_index(int params_index) {
+        smspec_node_set_params_index( this->node.get(), params_index );
+    }
+
+
+    int smspec_node::get_params_index() const {
+        return smspec_node_get_params_index( this->node.get() );
+    }
+
+
+    int smspec_node::update_params_index(int params_index) {
+        if (this->get_params_index() < 0)
+            this->set_params_index(params_index);
+        return this->get_params_index();
+    }
+
+
+    float smspec_node::get_default() const {
+        return smspec_node_get_default(this->node.get() );
     }
 }
