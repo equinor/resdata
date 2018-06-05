@@ -70,7 +70,6 @@ struct smspec_node_struct {
   bool                   historical;         /* Does the name end with 'H'? */
   int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
   float                  default_value;      /* Default value for this variable. */
-  bool                   valid;
 };
 
 
@@ -79,6 +78,22 @@ bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type 
   return smspec_node_cmp( node1 , node2 ) == 0;
 }
 
+static bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
+  if (var_type == ECL_SMSPEC_COMPLETION_VAR ||
+      var_type == ECL_SMSPEC_GROUP_VAR      ||
+      var_type == ECL_SMSPEC_WELL_VAR       ||
+      var_type == ECL_SMSPEC_SEGMENT_VAR)
+    return true;
+  else
+    return false;
+}
+
+static bool smspec_node_type_supported(ecl_smspec_var_type var_type) {
+  if (var_type == ECL_SMSPEC_NETWORK_VAR)
+    return false;
+
+  return true;
+}
 
 
 /*****************************************************************/
@@ -274,7 +289,6 @@ static void smspec_node_set_invalid_flags( smspec_node_type * smspec_node) {
   smspec_node->rate_variable  = false;
   smspec_node->total_variable = false;
   smspec_node->historical     = false;
-  smspec_node->valid          = false;
 }
 
 static char LAST_CHAR(const char * s) {
@@ -390,12 +404,7 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
 
 
 static void smspec_node_set_wgname( smspec_node_type * index , const char * wgname ) {
-  if (wgname == NULL) {
-    free( index->wgname );
-    index->wgname = NULL;
-  } else {
-    index->wgname = util_realloc_string_copy(index->wgname , wgname );
-  }
+  index->wgname = util_realloc_string_copy(index->wgname , wgname );
 }
 
 
@@ -547,17 +556,9 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
   default:
     util_abort("%s: internal error - should not be here? \n" , __func__);
   }
-  smspec_node->valid = true;
 }
 
 
-
-void smspec_node_update_wgname( smspec_node_type * index , const char * wgname , const char * key_join_string) {
-  smspec_node_set_wgname( index , wgname );
-  free( index->gen_key1 );
-  free( index->gen_key2 );
-  smspec_node_set_gen_keys( index , key_join_string );
-}
 
 static void smspec_node_common_init( smspec_node_type * node , ecl_smspec_var_type var_type , const char * keyword , const char * unit ) {
   if (node->var_type == ECL_SMSPEC_INVALID_VAR) {
@@ -584,9 +585,6 @@ void smspec_node_init( smspec_node_type * smspec_node,
                        int num) {
 
   bool initOK    = true;
-  bool wgnameOK = true;
-  if ((wgname != NULL) && (IS_DUMMY_WELL(wgname)))
-    wgnameOK = false;
 
   smspec_node_common_init( smspec_node , var_type , keyword , unit );
   switch (var_type) {
@@ -594,23 +592,21 @@ void smspec_node_init( smspec_node_type * smspec_node,
     /* Completion variable : WGNAME & NUM */
     smspec_node_set_num( smspec_node , grid_dims , num );
     smspec_node_set_wgname( smspec_node , wgname );
-    if (!wgnameOK || num < 0)
+    if (num < 0)
       initOK = false;
     break;
   case(ECL_SMSPEC_GROUP_VAR):
     /* Group variable : WGNAME */
     smspec_node_set_wgname( smspec_node , wgname );
-    initOK = wgnameOK;
     break;
   case(ECL_SMSPEC_WELL_VAR):
     /* Well variable : WGNAME */
     smspec_node_set_wgname( smspec_node , wgname );
-    initOK = wgnameOK;
     break;
   case(ECL_SMSPEC_SEGMENT_VAR):
     smspec_node_set_wgname( smspec_node , wgname );
     smspec_node_set_num( smspec_node , grid_dims , num );
-    if (!wgnameOK || num < 0)
+    if (num < 0)
       initOK = false;
     break;
   case(ECL_SMSPEC_FIELD_VAR):
@@ -676,12 +672,12 @@ void smspec_node_init( smspec_node_type * smspec_node,
 
 
 smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
-                                       const char * wgname  ,
-                                       const char * keyword ,
-                                       const char * unit    ,
-                                       const char * key_join_string ,
-                                       const int grid_dims[3] ,
-                                       int num , int param_index, float default_value) {
+                                      const char * wgname  ,
+                                      const char * keyword ,
+                                      const char * unit    ,
+                                      const char * key_join_string ,
+                                      const int grid_dims[3] ,
+                                      int num , int param_index, float default_value) {
   /*
     Well and group names in the wgname parameter is quite messy. The
     situation is as follows:
@@ -711,6 +707,12 @@ smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
        at all, e.g. like "FOPT" - the wgname input value is ignored
        completely.
   */
+
+  if (smspec_node_need_wgname(var_type) && IS_DUMMY_WELL(wgname))
+    return NULL;
+
+  if (!smspec_node_type_supported(var_type))
+    return NULL;
 
   smspec_node_type * smspec_node = smspec_node_alloc_new( param_index , default_value );
   smspec_node_init( smspec_node , var_type , wgname , keyword , unit , key_join_string , grid_dims, num);
@@ -802,7 +804,6 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
         memcpy( copy->lgr_ijk, node->lgr_ijk, 3 * sizeof( * node->lgr_ijk ) );
     }
 
-    copy->valid = node->valid;
     copy->rate_variable = node->rate_variable;
     copy->total_variable = node->total_variable;
     copy->historical = node->historical;
@@ -883,12 +884,6 @@ bool smspec_node_is_historical( const smspec_node_type * smspec_node ){
   return smspec_node->historical;
 }
 
-
-bool smspec_node_is_valid( const smspec_node_type * smspec_node ){
-  return smspec_node->valid;
-}
-
-
 const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
   return smspec_node->unit;
 }
@@ -967,6 +962,8 @@ void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) 
   fprintf(stream, "KEYWORD: %s \n",smspec_node->keyword);
   fprintf(stream, "WGNAME : %s \n",smspec_node->wgname);
   fprintf(stream, "UNIT   : %s \n",smspec_node->unit);
+  fprintf(stream, "TYPE   : %d \n",smspec_node->var_type);
+  fprintf(stream, "NUM    : %d \n\n",smspec_node->num);
 }
 
 

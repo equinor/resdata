@@ -277,14 +277,19 @@ void ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case ) {
 }
 
 
-void ecl_sum_init_var( ecl_sum_type * ecl_sum , smspec_node_type * smspec_node , const char * keyword , const char * wgname , int num , const char * unit) {
-  ecl_smspec_init_var( ecl_sum->smspec , smspec_node , keyword , wgname , num, unit );
-}
 
 
 smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
-  smspec_node_type * smspec_node = ecl_sum_add_blank_var( ecl_sum , default_value );
-  ecl_sum_init_var( ecl_sum , smspec_node , keyword , wgname , num , unit );
+  smspec_node_type * smspec_node = smspec_node_alloc( ecl_smspec_identify_var_type(keyword),
+                                                      wgname,
+                                                      keyword,
+                                                      unit,
+                                                      ecl_sum->key_join_string,
+                                                      ecl_smspec_get_grid_dims(ecl_sum->smspec),
+                                                      num,
+                                                      -1,
+                                                      default_value);
+  ecl_smspec_add_node(ecl_sum->smspec, smspec_node);
   return smspec_node;
 }
 
@@ -298,11 +303,6 @@ smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const smspec_
 }
 
 
-smspec_node_type * ecl_sum_add_blank_var( ecl_sum_type * ecl_sum , float default_value) {
-  smspec_node_type * smspec_node = smspec_node_alloc_new( -1 , default_value );
-  ecl_smspec_add_node( ecl_sum->smspec , smspec_node );
-  return smspec_node;
-}
 
 
 
@@ -776,9 +776,6 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
   for (int i = 0; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
     const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, i);
     if (util_string_equal(smspec_node_get_gen_key1(node), "TIME"))
-      continue;
-
-    if (!smspec_node_is_valid(node))
       continue;
 
     ecl_sum_add_smspec_node(  ecl_sum_resampled, node );
@@ -1381,9 +1378,6 @@ const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
   return ecl_sum->smspec;
 }
 
-void ecl_sum_update_wgname( ecl_sum_type * ecl_sum , smspec_node_type * node , const char * wgname ) {
-  ecl_smspec_update_wgname( ecl_sum->smspec ,node , wgname );
-}
 
 /*****************************************************************/
 

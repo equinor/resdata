@@ -118,14 +118,12 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node);
   int                 smspec_node_get_num( const smspec_node_type * smspec_node);
   const char        * smspec_node_get_wgname( const smspec_node_type * smspec_node);
-  void                smspec_node_update_wgname( smspec_node_type * index , const char * wgname , const char * key_join_string);
   const char        * smspec_node_get_keyword( const smspec_node_type * smspec_node);
   const char        * smspec_node_get_unit( const smspec_node_type * smspec_node);
   void                smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit );
   bool                smspec_node_is_rate( const smspec_node_type * smspec_node );
   bool                smspec_node_is_total( const smspec_node_type * smspec_node );
   bool                smspec_node_is_historical( const smspec_node_type * smspec_node );
-  bool                smspec_node_is_valid( const smspec_node_type * smspec_node );
   bool                smspec_node_need_nums( const smspec_node_type * smspec_node );
   void                smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream);
 
