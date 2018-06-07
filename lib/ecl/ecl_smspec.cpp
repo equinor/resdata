@@ -217,7 +217,10 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 */
 
 static const char* special_vars[] = {"NEWTON",
+                                     "NAIMFRAC",
                                      "NLINEARS",
+                                     "NLINSMIN",
+                                     "NLINSMAX",
                                      "ELAPSED",
                                      "MAXDPR",
                                      "MAXDSO",
@@ -303,14 +306,12 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
   for (int i=0; i < ecl_smspec_num_nodes( self ); i++) {
     const smspec_node_type * self_node = ecl_smspec_iget_node( self , i );
-    if (smspec_node_is_valid( self_node )) {
-      int self_index = smspec_node_get_params_index( self_node );
-      const char * key = smspec_node_get_gen_key1( self_node );
-      if (ecl_smspec_has_general_var( other , key)) {
-        const smspec_node_type * other_node = ecl_smspec_get_general_var_node( other , key);
-        int other_index = smspec_node_get_params_index(other_node);
-        mapping[ self_index ]  =  other_index;
-      }
+    int self_index = smspec_node_get_params_index( self_node );
+    const char * key = smspec_node_get_gen_key1( self_node );
+    if (ecl_smspec_has_general_var( other , key)) {
+      const smspec_node_type * other_node = ecl_smspec_get_general_var_node( other , key);
+      int other_index = smspec_node_get_params_index(other_node);
+      mapping[ self_index ]  =  other_index;
     }
   }
 
@@ -358,11 +359,9 @@ static ecl_data_type get_wgnames_type(const ecl_smspec_type * smspec) {
   size_t max_len = 0;
   for(int i = 0; i < ecl_smspec_num_nodes(smspec); ++i) {
     const smspec_node_type * node = ecl_smspec_iget_node(smspec, i);
-    if (smspec_node_is_valid( node )) {
-      const char * name = smspec_node_get_wgname( node );
-      if(name)
-        max_len = util_size_t_max(max_len, strlen(name));
-    }
+    const char * name = smspec_node_get_wgname( node );
+    if(name)
+      max_len = util_size_t_max(max_len, strlen(name));
   }
 
   return max_len <= ECL_STRING8_LENGTH ? ECL_CHAR : ECL_STRING(max_len);
@@ -922,6 +921,7 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , smsp
   case(ECL_SMSPEC_AQUIFER_VAR):
     break;
   default:
+    smspec_node_fprintf(smspec_node, stderr);
     util_abort("%: Internal error - should never be here ?? \n",__func__);
     break;
   }
@@ -1087,18 +1087,11 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
 
 void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node) {
-  /*
-    It is possible crate a node which is not fully specified, e.g. the
-    well or group name can be left at NULL. In that case the node is
-    not installed in the different indexes.
-  */
-  if (smspec_node_is_valid( smspec_node )) {
-    ecl_smspec_install_gen_keys( ecl_smspec , smspec_node );
-    ecl_smspec_install_special_keys( ecl_smspec , smspec_node );
+  ecl_smspec_install_gen_keys( ecl_smspec , smspec_node );
+  ecl_smspec_install_special_keys( ecl_smspec , smspec_node );
 
-    if (smspec_node_need_nums( smspec_node ))
-      ecl_smspec->need_nums = true;
-  }
+  if (smspec_node_need_nums( smspec_node ))
+    ecl_smspec->need_nums = true;
 }
 
 
@@ -1257,8 +1250,8 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         } else
           smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);
 
-
-        ecl_smspec_add_node( ecl_smspec , smspec_node );
+        if (smspec_node)
+          ecl_smspec_add_node( ecl_smspec , smspec_node );
 
         free( kw );
         free( well );
@@ -1932,10 +1925,6 @@ const int * ecl_smspec_get_grid_dims( const ecl_smspec_type * smspec ) {
 }
 
 
-void ecl_smspec_update_wgname( ecl_smspec_type * smspec , smspec_node_type * node , const char * wgname ) {
-  smspec_node_update_wgname( node , wgname , smspec->key_join_string);
-  ecl_smspec_index_node( smspec , node );
-}
 
 
 /*****************************************************************/
