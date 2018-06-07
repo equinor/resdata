@@ -39,7 +39,7 @@
 #include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/ecl_sum_data.hpp>
 #include <ert/ecl/smspec_node.hpp>
-
+#include <ert/ecl/Smspec.hpp>
 
 /**
    The ECLIPSE summary data is organised in a header file (.SMSPEC)
@@ -290,6 +290,16 @@ smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keywor
                                                       -1,
                                                       default_value);
   ecl_smspec_add_node(ecl_sum->smspec, smspec_node);
+
+  ecl_smspec_add_node(ecl_sum->smspec, ecl::smspec_node(ecl_smspec_identify_var_type(keyword),
+                                                        wgname,
+                                                        keyword,
+                                                        unit,
+                                                        ecl_sum->key_join_string,
+                                                        ecl_smspec_get_grid_dims(ecl_sum->smspec),
+                                                        num,
+                                                        -1,
+                                                        default_value));
   return smspec_node;
 }
 

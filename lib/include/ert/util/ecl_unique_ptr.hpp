@@ -2,6 +2,7 @@
 #define ECL_UNIQUE_PTR
 
 #include <memory>
+#include <ert/ecl/smspec_node.h>
 
 namespace ecl {
 
@@ -9,13 +10,12 @@ namespace ecl {
     struct deleter
     {
         void operator() (T * arg) const {
-            F( arg );
+          F( arg );
         }
     };
 
     template <typename T , void (*F)(T*)>
     using ecl_unique_ptr = std::unique_ptr<T, deleter<T,F> >;
-
 }
 
 #endif

@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <ert/util/type_macros.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -143,6 +144,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   int smspec_node_cmp__( const void * node1, const void * node2);
   bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_type);
   bool smspec_node_identify_rate(const char * keyword);
+  UTIL_IS_INSTANCE_HEADER(smspec_node);
 
 #ifdef __cplusplus
 }

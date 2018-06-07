@@ -39,7 +39,7 @@
 
 
 
-/**
+  /**
    This struct contains meta-information about one element in the smspec
    file; the content is based on the smspec vectors WGNAMES, KEYWORDS, UNIT
    and NUMS. The index field of this struct points to where the actual data
@@ -72,7 +72,7 @@ struct smspec_node_struct {
   float                  default_value;      /* Default value for this variable. */
 };
 
-
+UTIL_IS_INSTANCE_FUNCTION(smspec_node, SMSPEC_TYPE_ID)
 
 bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type * node2) {
   return smspec_node_cmp( node1 , node2 ) == 0;
@@ -826,6 +826,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
 }
 
 void smspec_node_free( smspec_node_type * index ) {
+  return;
   free( index->unit );
   free( index->keyword );
   free( index->ijk );

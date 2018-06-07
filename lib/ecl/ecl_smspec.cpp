@@ -30,6 +30,7 @@
 #include <ert/util/float_vector.hpp>
 #include <ert/util/stringlist.hpp>
 
+#include <ert/ecl/Smspec.hpp>
 #include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/ecl_file.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
@@ -39,7 +40,6 @@
 #include <ert/ecl/ecl_endian_flip.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
-#include <ert/ecl/Smspec.hpp>
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
 #endif
@@ -255,8 +255,8 @@ static const char* smspec_required_keywords[] = {
 /*****************************************************************/
 
 ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string) {
-  ecl_smspec_type *ecl_smspec;
-  ecl_smspec = (ecl_smspec_type*)util_malloc(sizeof *ecl_smspec );
+  ecl_smspec_type * ecl_smspec = new ecl_smspec_type();
+  //ecl_smspec = (ecl_smspec_type*)util_malloc(sizeof *ecl_smspec );
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
 
   ecl_smspec->well_var_index                 = hash_alloc();
@@ -329,7 +329,13 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 
 const smspec_node_type * ecl_smspec_iget_node( const ecl_smspec_type * smspec , int index ) {
-  return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , index );
+  //printf("%d  %d/%d \n,",index,vector_get_size(smspec->smspec_nodes), smspec->new_nodes.size());
+  //const smspec_node_type * node1 = (const smspec_node_type *) vector_iget_const(smspec->smspec_nodes, index);
+  //const smspec_node_type * node2 = smspec->new_nodes[index].get();
+  //printf("cmp: %d %p %p  %d %s %s \n",index, node1,node2, smspec_node_cmp(node1,node2), smspec_node_get_keyword(node1), smspec_node_get_keyword(node2));
+  //return (const smspec_node_type*) vector_iget_const( smspec->smspec_nodes , index );
+  const auto& node = smspec->new_nodes[index];
+  return node.get();
 }
 
 int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
@@ -541,33 +547,37 @@ static ecl_smspec_type * ecl_smspec_alloc_writer__( const char * key_join_string
   ecl_smspec->sim_start_time = sim_start;
 
   {
-    smspec_node_type * time_node;
+    const char * time_unit;
+
     if (time_in_days) {
-      time_node = smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
-                                     NULL ,
-                                     "TIME" ,
-                                     "DAYS" ,
-                                     key_join_string ,
-                                     ecl_smspec->grid_dims ,
-                                     0  ,
-                                     -1 ,
-                                     0 );
+      time_unit = "DAYS";
       ecl_smspec->time_seconds = 3600 * 24;
     } else {
-      time_node = smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
-                                     NULL ,
-                                     "TIME" ,
-                                     "HOURS" ,
-                                     key_join_string ,
-                                     ecl_smspec->grid_dims ,
-                                     0  ,
-                                     -1 ,
-                                     0 );
+      time_unit = "HOURS";
       ecl_smspec->time_seconds = 3600;
     }
 
-    ecl_smspec_add_node( ecl_smspec , time_node );
-    ecl_smspec->time_index = smspec_node_get_params_index( time_node );
+    ecl_smspec_add_node(ecl_smspec, ecl::smspec_node(ECL_SMSPEC_MISC_VAR,
+                                                     nullptr,
+                                                     "TIME",
+                                                     time_unit,
+                                                     key_join_string,
+                                                     ecl_smspec->grid_dims,
+                                                     -1,
+                                                     0,
+                                                     0));
+
+    ecl_smspec_add_node(ecl_smspec, smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
+                                                       NULL ,
+                                                       "TIME" ,
+                                                       time_unit,
+                                                       key_join_string ,
+                                                       ecl_smspec->grid_dims ,
+                                                       0  ,
+                                                       -1 ,
+                                                       0 ));
+
+    ecl_smspec->time_index = smspec_node_get_params_index( ecl_smspec_iget_node(ecl_smspec, 0));
   }
   return ecl_smspec;
 }
@@ -1141,21 +1151,24 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
 }
 
 void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node) {
+  printf("C legger til:%s \n", smspec_node_get_keyword(smspec_node));
   ecl_smspec_insert_node( ecl_smspec , smspec_node );
   ecl_smspec_index_node( ecl_smspec , smspec_node );
 }
 
 
-void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node&& node) {
+void ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node node) {
   int params_index = node.update_params_index(ecl_smspec->new_nodes.size());
   int internal_index = ecl_smspec->new_nodes.size();
 
+  printf("C++  Legger til: %s\n",  node.keyword());
   ecl_smspec_update_params_size(ecl_smspec, params_index + 1);
   int_vector_iset( ecl_smspec->index_map , internal_index , params_index);
   float_vector_iset( ecl_smspec->params_default, params_index, node.get_default());
 
-  ecl_smspec->new_nodes.push_back(std::move(node));
+  ecl_smspec->new_nodes.push_back(node);
   ecl_smspec_index_node(ecl_smspec, ecl_smspec->new_nodes.back());
+  printf("Avslutter: size:%d \n",ecl_smspec->new_nodes.size());
 }
 
 
@@ -1279,8 +1292,9 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           } else {
             int num                      = SMSPEC_NUMS_INVALID;
             if (nums != NULL) num        = ecl_kw_iget_int(nums , params_index);
-            ecl_smspec_add_node(ecl_smspec, smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value));
-            ecl_smspec_add_node(ecl_smspec, ecl::smspec_node(var_type, well, kw, unit, ecl_smspec->key_join_string, ecl_smspec->grid_dims, params_index, default_value));
+            printf("Adding node: %s\n",kw);
+            ecl_smspec_add_node(ecl_smspec, smspec_node_alloc(var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value));
+            ecl_smspec_add_node(ecl_smspec, ecl::smspec_node(var_type, well, kw, unit, ecl_smspec->key_join_string, ecl_smspec->grid_dims, num, params_index, default_value));
           }
 
           free( unit );
@@ -1760,7 +1774,8 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   float_vector_free( ecl_smspec->params_default );
   vector_free( ecl_smspec->smspec_nodes );
   free( ecl_smspec->restart_case );
-  free( ecl_smspec );
+
+  delete ecl_smspec;
 }
 
 

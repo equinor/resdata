@@ -37,7 +37,7 @@ namespace ecl {
             ecl_smspec_var_type var_type,
             const std::string& name,
             const std::string& kw
-            ) : smspec_node( var_type, name.c_str(), kw.c_str(), "", default_join, dummy_dims, 0 )
+                             ) : smspec_node( var_type, name.c_str(), kw.c_str(), "", default_join, dummy_dims, 0 )
     {}
 
     smspec_node::smspec_node( const std::string& keyword ) :
@@ -78,14 +78,13 @@ namespace ecl {
         )
     {}
 
-    smspec_node::smspec_node(
-            ecl_smspec_var_type type,
-            const char* wgname,
-            const char* keyword,
-            const char* unit,
-            const char* join,
-            const int grid_dims[ 3 ],
-            int num, int index, float default_value ) :
+  smspec_node::smspec_node(ecl_smspec_var_type type,
+                           const char* wgname,
+                           const char* keyword,
+                           const char* unit,
+                           const char* join,
+                           const int grid_dims[ 3 ],
+                           int num, int index, float default_value ) :
         node( smspec_node_alloc( type, wgname, keyword, unit,
                     join, grid_dims, num, index, default_value ) )
     {}
