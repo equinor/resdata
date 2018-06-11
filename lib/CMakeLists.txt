@@ -113,6 +113,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp
                 ecl/ecl_sum_vector.cpp
+                ecl/ecl_unsrmy_loader.cpp
                 ecl/fortio.c
                 ecl/ecl_rft_file.cpp
                 ecl/ecl_rft_node.cpp
@@ -425,7 +426,7 @@ if (ERT_BUILD_CXX)
         add_test(NAME ${test} COMMAND ${test})
     endforeach()
 
-    foreach (test eclxx_kw eclxx_fortio eclxx_smspec eclxx_filename eclxx_types)
+    foreach (test eclxx_kw eclxx_fortio eclxx_smspec eclxx_filename eclxx_types ecl_unsrmy_loader_test)
         add_executable(${test} ecl/tests/${test}.cpp)
         target_link_libraries(${test} ecl)
         add_test(NAME ${test} COMMAND ${test})

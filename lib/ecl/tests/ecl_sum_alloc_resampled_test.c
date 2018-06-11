@@ -6,7 +6,7 @@
 
 ecl_sum_type * test_alloc_ecl_sum() {
   time_t start_time = util_make_date_utc( 1,1,2010 );
-  ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( "/tmp/CASE" , false , true , ":" , start_time , true , 10 , 10 , 10 );
+  ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( "CASE" , false , true , ":" , start_time , true , 10 , 10 , 10 );
   double sim_seconds = 0;
 
   int num_dates = 4;
