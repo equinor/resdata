@@ -2,6 +2,7 @@ cmake_minimum_required( VERSION 2.8.12 ) # If you are creating Python wrappers f
 project( ERT C CXX )
 
 include(GNUInstallDirs)
+include(TestBigEndian)
 
 if(POLICY CMP0042)
   cmake_policy(SET CMP0042 OLD)
@@ -191,11 +192,6 @@ if (SHLWAPI_LIBRARY)
     set(shlwapi ${SHLWAPI_LIBRARY})
 endif ()
 
-find_library(WS2_32_LIBRARY NAMES Ws2_32)
-if (WS2_32_LIBRARY)
-    set(ws2_32 ${WS2_32_LIBRARY})
-endif ()
-
 #-----------------------------------------------------------------
 
 # feature tests
@@ -244,10 +240,7 @@ check_include_file(execinfo.h HAVE_EXECINFO)
 check_include_file(getopt.h   ERT_HAVE_GETOPT)
 check_include_file(unistd.h   ERT_HAVE_UNISTD)
 
-# Portability checks; look for htons function
-check_include_file("netinet/in.h" HAVE_NETINET_IN_H)
-check_include_file("arpa/inet.h"  HAVE_ARPA_INET_H)
-check_include_file("winsock2.h"   HAVE_WINSOCK2_H)
+test_big_endian(BIG_ENDIAN)
 
 check_type_size(time_t SIZE_OF_TIME_T)
 if (${SIZE_OF_TIME_T} EQUAL 8)
