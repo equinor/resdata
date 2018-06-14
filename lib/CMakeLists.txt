@@ -152,6 +152,8 @@ add_library(ecl util/rng.cpp
                 geometry/geo_region.cpp
                 geometry/geo_polygon.cpp
                 geometry/geo_polygon_collection.cpp
+
+                src/fortio.cpp
 )
 
 if (ERT_WINDOWS)
@@ -177,6 +179,7 @@ target_include_directories(ecl
     PRIVATE ${ZLIB_INCLUDE_DIRS}
             util
             include
+            e3
             ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
@@ -186,6 +189,9 @@ target_compile_definitions(ecl PRIVATE
             -DECL_VERSION_MAJOR=${ECL_VERSION_MAJOR}
             -DECL_VERSION_MINOR=${ECL_VERSION_MINOR}
             -DECL_VERSION_MICRO=${ECL_VERSION_MICRO}
+            $<$<BOOL:${HAVE_NETINET_IN_H}>:HAVE_NETINET_IN_H>
+            $<$<BOOL:${HAVE_ARPA_INET_H}>: HAVE_ARPA_INET_H>
+            $<$<BOOL:${HAVE_WINSOCK2_H}>:  HAVE_WINSOCK2_H>
 )
 
 target_compile_options(ecl PUBLIC ${pthreadarg})
