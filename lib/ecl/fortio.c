@@ -539,10 +539,10 @@ bool fortio_fread_buffer(fortio_type * fortio, char * buffer , int buffer_size) 
 
 
 int fortio_fskip_record(fortio_type *fortio) {
-  int record_size = fortio_init_read(fortio);
-  fortio_fseek(fortio , (offset_type) record_size , SEEK_CUR);
-  fortio_complete_read(fortio , record_size);
-  return record_size;
+    int32_t size = 0;
+    const int err = eclfio_get( fortio->stream, fortio->opts, &size, NULL );
+    if( err ) return -1;
+    return size;
 }
 
 void fortio_fskip_buffer(fortio_type * fortio, int buffer_size) {
