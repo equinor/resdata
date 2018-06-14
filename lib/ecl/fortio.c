@@ -535,8 +535,17 @@ int fortio_fskip_record(fortio_type *fortio) {
 
 void fortio_fskip_buffer(fortio_type * fortio, int buffer_size) {
   int bytes_skipped = 0;
-  while (bytes_skipped < buffer_size)
-    bytes_skipped += fortio_fskip_record(fortio);
+  while (bytes_skipped < buffer_size) {
+      int size = fortio_fskip_record(fortio);
+
+      if( size < 0 ) util_abort( "%s: broken record in %s. "
+                                 "%d bytes skipped so far\n",
+                                 __func__,
+                                 fortio->filename,
+                                 bytes_skipped );
+
+        bytes_skipped += fortio_fskip_record(fortio);
+  }
 
   if (bytes_skipped > buffer_size)
     util_abort("%s: hmmmm - something is broken. The individual records in %s did not sum up to the expected buffer size \n",__func__ , fortio->filename);
