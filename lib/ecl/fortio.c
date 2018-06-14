@@ -439,11 +439,8 @@ int fortio_init_read(fortio_type *fortio) {
 
 
 bool fortio_data_fskip(fortio_type* fortio, const int element_size, const int element_count, const int block_count) {
-  int headers = block_count * 4;
-  int trailers = block_count * 4;
-  int bytes_to_skip = headers + trailers + (element_size * element_count);
+    return !eclfio_skip( fortio->stream, fortio->opts, block_count );
 
-  return fortio_fseek(fortio, bytes_to_skip, SEEK_CUR);
 }
 
 
