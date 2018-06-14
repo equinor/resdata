@@ -26,6 +26,7 @@
 #include <ert/util/type_macros.h>
 #include <ert/ecl/fortio.h>
 
+#include <ecl/fortio.h>
 
 #define FORTIO_ID  345116
 
