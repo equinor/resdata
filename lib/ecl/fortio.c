@@ -415,30 +415,14 @@ void fortio_fclose(fortio_type *fortio) {
 
 
 bool fortio_is_fortio_file(fortio_type * fortio) {
-  offset_type init_pos = fortio_ftell(fortio);
-  int elm_read;
-  bool is_fortio_file = false;
-  int record_size;
-  elm_read = fread(&record_size , sizeof(record_size) , 1 , fortio->stream);
-  if (elm_read == 1) {
-    int trailer;
+    fpos_t init_pos;
+    fgetpos( fortio->stream, &init_pos );
 
-    if (fortio->endian_flip_header)
-      util_endian_flip_vector(&record_size , sizeof record_size , 1);
+    int err = eclfio_get( fortio->stream, fortio->opts, NULL, NULL );
 
-    if (fortio_fseek(fortio , (offset_type) record_size , SEEK_CUR) == 0) {
-      if (fread(&trailer , sizeof(record_size) , 1 , fortio->stream) == 1) {
-        if (fortio->endian_flip_header)
-          util_endian_flip_vector(&trailer , sizeof trailer , 1);
+    fsetpos( fortio->stream, &init_pos );
 
-        if (trailer == record_size)
-          is_fortio_file = true;
-      }
-    }
-  }
-
-  fortio_fseek(fortio , init_pos , SEEK_SET);
-  return is_fortio_file;
+    return err == ECL_OK;
 }
 
 
