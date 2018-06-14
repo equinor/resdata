@@ -91,6 +91,7 @@ struct fortio_struct {
   */
   bool               writable;
   offset_type        read_size;
+  char opts[3];
 };
 
 
@@ -106,6 +107,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
   fortio->stream_owner       = stream_owner;
   fortio->writable           = writable;
   fortio->read_size = 0;
+  strcpy( fortio->opts, endian_flip_header ? "c" : "ce" );
 
   return fortio;
 }
