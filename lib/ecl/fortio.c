@@ -119,13 +119,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
 */
 
 static bool __read_int(FILE * stream , int * value, bool endian_flip) {
-  /* This fread() can legitemately fail - can not use util_fread() here. */
-  if (fread(value , sizeof * value , 1 , stream) == 1) {
-    if (endian_flip)
-      util_endian_flip_vector(value , sizeof * value , 1);
-    return true;
-  } else
-    return false;
+    return !eclfio_sizeof( stream, endian_flip ? "" : "e", value );
 }
 
 
