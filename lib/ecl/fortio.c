@@ -564,32 +564,44 @@ void fortio_fskip_buffer(fortio_type * fortio, int buffer_size) {
 }
 
 
-void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream , int buffer_size , void * buffer , bool *at_eof) {
-  int bytes_read;
-  int record_size = fortio_init_read(src_stream);
-  fortio_init_write(target_stream , record_size);
+void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream , int buffer_size , void * ext_buffer, bool *at_eof) {
+    int bytes_read = 0;
 
-  bytes_read = 0;
-  while (bytes_read < record_size) {
-    int bytes;
-    if (record_size > buffer_size)
-      bytes = buffer_size;
-    else
-      bytes = record_size - bytes_read;
 
-    util_fread(buffer , 1 , bytes , src_stream->stream     , __func__);
-    util_fwrite(buffer , 1 , bytes , target_stream->stream , __func__);
+    int32_t size = 0;
+    int err = eclfio_sizeof( src_stream->stream, src_stream->opts, &size );
+    if( err ) {
+        util_abort( "%s: could not peek record size after %d bytes\n",
+                    __func__,
+                    bytes_read );
+    }
 
-    bytes_read += bytes;
-  }
+    void* buffer = ext_buffer;
+    if( buffer_size < size ) {
+        buffer = malloc( size );
+        ext_buffer = NULL;
+    }
 
-  fortio_complete_read(src_stream , record_size);
-  fortio_complete_write(target_stream , record_size);
+    err = eclfio_get( src_stream->stream, src_stream->opts, &size, buffer );
+    if( err ) {
+        util_abort( "%s: could not read record after %d bytes\n",
+                    __func__,
+                    bytes_read );
+    }
 
-  if (feof(src_stream->stream))
-    *at_eof = true;
-  else
-    *at_eof = false;
+    err = eclfio_put( target_stream->stream,
+                      target_stream->opts,
+                      size,
+                      buffer );
+    if( err ) {
+        util_abort( "%s: could not write record after %d bytes\n",
+                    __func__,
+                    bytes_read );
+    }
+
+    if( !ext_buffer ) free( buffer );
+
+    *at_eof = feof( src_stream->stream );
 }
 
 
