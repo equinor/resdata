@@ -434,17 +434,11 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
 */
 
 int fortio_init_read(fortio_type *fortio) {
-  int elm_read;
-  int record_size;
-
-  elm_read = fread(&record_size , sizeof(record_size) , 1 , fortio->stream);
-  if (elm_read == 1) {
-    if (fortio->endian_flip_header)
-      util_endian_flip_vector(&record_size , sizeof record_size , 1);
-
-    return record_size;
-  } else
-    return -1;
+    int32_t record_size;
+    int err = eclfio_sizeof( fortio->stream, fortio->opts, &record_size );
+    // this function exposes successful reads as advanced file pointers
+    if( err == 0 ) fseek( fortio->stream, 4, SEEK_CUR );
+    return err ? -1 : record_size;
 }
 
 
