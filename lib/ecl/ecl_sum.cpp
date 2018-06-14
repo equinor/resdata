@@ -290,6 +290,7 @@ smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keywor
                                                       -1,
                                                       default_value);
   ecl_smspec_add_node(ecl_sum->smspec, smspec_node);
+  ecl_sum_data_reset_self_map( ecl_sum->data );
   return smspec_node;
 }
 
@@ -755,7 +756,7 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times) {
   time_t start_time = ecl_sum_get_data_start(ecl_sum);
 
-  if ( time_t_vector_get_first(times) < start_time )
+  if ( time_t_vector_get_first(times) < start_time ) 
     return NULL;
   if ( time_t_vector_get_last(times) > ecl_sum_get_end_time(ecl_sum) )
     return NULL;
@@ -770,7 +771,6 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
     time_in_days = true;
 
   ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_writer( ecl_case , ecl_sum->fmt_case , ecl_sum->unified , ecl_sum->key_join_string , start_time , time_in_days , grid_dims[0] , grid_dims[1] , grid_dims[2] );
-
 
 
   for (int i = 0; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {

@@ -51,7 +51,6 @@ void test_correct_time_vector() {
   test_assert_double_equal(3.33333, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 2,1,2010 ), node2) );
   test_assert_double_equal(10.0000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4,1,2010 ), node3) );
 
-
   ecl_sum_free(ecl_sum_resampled);
   time_t_vector_free(t);
   ecl_sum_free(ecl_sum);

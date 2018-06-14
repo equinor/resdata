@@ -108,6 +108,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_grav_calc.cpp
                 ecl/ecl_smspec.cpp
                 ecl/ecl_sum_data.cpp
+                ecl/ecl_sum_file_data.cpp
                 ecl/ecl_util.cpp
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp
@@ -372,6 +373,10 @@ foreach (name   ecl_alloc_cpgrid
         target_link_libraries(${name} ecl)
         add_test(NAME ${name} COMMAND ${name})
 endforeach ()
+
+add_executable(ecl_sum_data_intermediate ecl/tests/ecl_sum_data_intermediate_test.cpp)
+target_link_libraries(ecl_sum_data_intermediate ecl)
+add_test(NAME ecl_sum_data_intermediate COMMAND ecl_sum_data_intermediate)
 
 add_executable(ecl_grid_cell_contains ecl/tests/ecl_grid_cell_contains.c)
 target_link_libraries(ecl_grid_cell_contains ecl)
