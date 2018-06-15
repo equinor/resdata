@@ -154,6 +154,7 @@ add_library(ecl util/rng.cpp
                 geometry/geo_polygon_collection.cpp
 
                 src/fortio.cpp
+                src/ecl_kw.cpp
 )
 
 if (ERT_WINDOWS)
@@ -180,6 +181,7 @@ target_include_directories(ecl
             util
             include
             e3
+            src
             ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
