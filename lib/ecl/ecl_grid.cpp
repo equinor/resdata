@@ -2226,6 +2226,80 @@ int ecl_grid_zcorn_index__(int nx, int ny , int i, int j , int k , int c) {
 int ecl_grid_zcorn_index(const ecl_grid_type * grid , int i, int j , int k , int c) {
   return ecl_grid_zcorn_index__( grid->nx, grid->ny , i , j , k , c );
 }
+static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid,
+                                             const double * zcorn,
+                                             const double * coord,
+                                             const int * actnum,
+                                             const int * corsnum,
+                                             int j) {
+  const int nx = ecl_grid->nx;
+  const int ny = ecl_grid->ny;
+  const int nz = ecl_grid->nz;
+  int i;
+
+
+  for (i=0; i < nx; i++) {
+    point_type pillars[4][2];
+    int pillar_index[4];
+    pillar_index[0] = 6 * ( j      * (nx + 1) + i    );
+    pillar_index[1] = 6 * ( j      * (nx + 1) + i + 1);
+    pillar_index[2] = 6 * ((j + 1) * (nx + 1) + i    );
+    pillar_index[3] = 6 * ((j + 1) * (nx + 1) + i + 1);
+
+    {
+      int ip;
+      for (ip = 0; ip < 4; ip++) {
+        int index = pillar_index[ip];
+        point_set(&pillars[ip][0] , coord[index] , coord[index + 1] , coord[index + 2]);
+
+        index += 3;
+        point_set(&pillars[ip][1] , coord[index] , coord[index + 1] , coord[index + 2]);
+      }
+    }
+
+    {
+      double ex[4];
+      double ey[4];
+      double ez[4];
+      int k;
+
+      {
+        int ip;
+        for (ip = 0; ip <  4; ip++) {
+          ex[ip] = pillars[ip][1].x - pillars[ip][0].x;
+          ey[ip] = pillars[ip][1].y - pillars[ip][0].y;
+          ez[ip] = pillars[ip][1].z - pillars[ip][0].z;
+        }
+      }
+
+
+      for (k=0; k < nz; k++) {
+        double x[4][2];
+        double y[4][2];
+        double z[4][2];
+
+        {
+          int c;
+          for (c = 0; c < 2; c++) {
+            z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
+            z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
+            z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
+            z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+          }
+        }
+
+        {
+          int ip;
+          for (ip = 0; ip <  4; ip++)
+            ecl_grid_pillar_cross_planes(&pillars[ip][0] , ex[ip], ey[ip] , ez[ip] , z[ip] , x[ip] , y[ip]);
+        }
+
+        ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum , corsnum);
+      }
+    }
+  }
+}
+
 
 
 static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid,
@@ -2302,6 +2376,19 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid,
   }
 }
 
+void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid,
+                               const double * zcorn,
+                               const double * coord,
+                               const int * actnum,
+                               const int * corsnum) {
+  const int ny = ecl_grid->ny;
+  int j;
+#pragma omp parallel for
+  for ( j=0; j < ny; j++)
+    ecl_grid_init_GRDECL_data_jslice( ecl_grid , zcorn, coord , actnum , corsnum , j );
+}
+
+
 
 void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid,
                                const float * zcorn,
@@ -2322,6 +2409,42 @@ void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid,
   |   |
   0---1
 */
+
+static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
+                                                    int dualp_flag,
+                                                    bool apply_mapaxes,
+                                                    int nx,
+                                                    int ny,
+                                                    int nz,
+                                                    const double * zcorn,
+                                                    const double * coord,
+                                                    const int * actnum,
+                                                    const float * mapaxes,
+                                                    const int * corsnum,
+                                                    int lgr_nr) {
+
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , dualp_flag , nx,ny,nz,lgr_nr,true);
+  if (ecl_grid) {
+    if (mapaxes != NULL)
+      ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
+
+    if (corsnum != NULL)
+      ecl_grid->coarsening_active = true;
+
+    ecl_grid->coord_kw = ecl_kw_alloc("COORD" , 6*(nx + 1) * (ny + 1) , ECL_FLOAT);
+    {
+      float * coord_float = (float *)ecl_kw_get_ptr(ecl_grid->coord_kw);
+      for (int i=0; i < ecl_kw_get_size(ecl_grid->coord_kw); i++)
+        coord_float[i] = coord[i];
+    }
+    ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum , corsnum);
+
+    ecl_grid_init_coarse_cells( ecl_grid );
+    ecl_grid_update_index( ecl_grid );
+    ecl_grid_taint_cells( ecl_grid );
+  }
+  return ecl_grid;
+}
 
 static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     int dualp_flag,
@@ -2353,6 +2476,8 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
   }
   return ecl_grid;
 }
+
+
 
 
 static void ecl_grid_copy_mapaxes( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
@@ -2507,6 +2632,33 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx,
                                       mapaxes,
                                       NULL,
                                       0);
+}
+
+namespace ecl {
+
+  ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx,
+                                             int ny,
+                                             int nz,
+                                             const double * zcorn,
+                                             const double * coord,
+                                             const int * actnum,
+                                             bool apply_mapaxes,
+                                             const float * mapaxes) {
+
+    return ecl_grid_alloc_GRDECL_data__(NULL,
+                                        FILEHEAD_SINGLE_POROSITY,
+                                        apply_mapaxes,
+                                        nx,
+                                        ny,
+                                        nz,
+                                        zcorn,
+                                        coord,
+                                        actnum,
+                                        mapaxes,
+                                        NULL,
+                                        0);
+  }
+
 }
 
 
