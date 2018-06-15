@@ -28,7 +28,11 @@ namespace {
  * function-try-blocks. While it's generally bad practice to throw from
  * destructors, the eclfio functions are extern C'd, and no exceptions leak.
  * Since there are no other destructors run from these functions than that of
- * fguard, the destructor-exception is ok.
+ * fguard, the destructor-exception is ok, since it never happens during stack
+ * unwinding.
+ *
+ * A string-less exception type is used, and std::exception() is noexcept in
+ * C++11.
  */
 struct fguard {
     FILE* fp;
@@ -44,7 +48,7 @@ struct fguard {
              * to roll back from this, so set fp to nullptr and bail
              */
             this->fp = nullptr;
-            throw std::runtime_error("");
+            throw std::exception();
         }
     }
 
@@ -52,7 +56,7 @@ struct fguard {
         if( !this->fp ) return;
 
         const auto err = std::fsetpos( fp, &this->pos );
-        if( err ) throw std::runtime_error("");
+        if( err ) throw std::exception();
     }
 };
 
@@ -114,7 +118,7 @@ int eclfio_sizeof( std::FILE* fp, const char* opts, int32_t* out ) try {
     *out = size;
     return ECL_OK;
 
-} catch( std::runtime_error& ) {
+} catch( std::exception& ) {
     return ECL_ERR_SEEK;
 }
 
@@ -131,7 +135,7 @@ int eclfio_skip( FILE* fp, const char* opts, int n ) try {
 
     guard.fp = nullptr;
     return ECL_OK;
-} catch( std::runtime_error& ) {
+} catch( std::exception& ) {
     return ECL_ERR_SEEK;
 }
 
@@ -253,7 +257,7 @@ int eclfio_get( std::FILE* fp,
         return ECL_INVALID_RECORD;
 
     return ECL_ERR_UNKNOWN;
-} catch( std::runtime_error& ) {
+} catch( std::exception& ) {
     return ECL_ERR_SEEK;
 }
 
@@ -332,6 +336,6 @@ int eclfio_put( std::FILE* fp,
     guard.fp = nullptr;
     return ECL_OK;
 
-} catch( std::runtime_error& ) {
+} catch( std::exception& ) {
     return ECL_ERR_SEEK;
 }
