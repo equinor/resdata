@@ -32,7 +32,7 @@ int ecl_kw_get_header(FILE*fp, const char * opts, char * header, char * data_typ
         std::memcpy(data_type, &buffer[12], 4 * sizeof(char));
 
     if (nmemb) {
-        std::memcpy(nmemb, &buffer[8], sizeof nmemb);
+        std::memcpy(nmemb, &buffer[8], sizeof *nmemb);
         // Need to parse the opts string to determine whether endian flipping
         // should be performed; would like to use the anonymous implementation
         // in fortio
@@ -40,4 +40,10 @@ int ecl_kw_get_header(FILE*fp, const char * opts, char * header, char * data_typ
             *nmemb = (std::int32_t) htonl( (std::uint32_t) *nmemb);
     }
     return ECL_OK;
+}
+
+
+
+int ecl_kw_get_data(FILE * fp, const char * opts, int32_t * data_size, void* data) {
+
 }
