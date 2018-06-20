@@ -25,6 +25,7 @@ class EclFileView(BaseCClass):
     TYPE_NAME             = "ecl_file_view"
     _iget_kw              = EclPrototype("ecl_kw_ref    ecl_file_view_iget_kw( ecl_file_view , int)")
     _iget_named_kw        = EclPrototype("ecl_kw_ref    ecl_file_view_iget_named_kw( ecl_file_view , char* , int)")
+    _get_unique_kw        = EclPrototype("char*         ecl_file_view_iget_distinct_kw( ecl_file_view, int )")
     _get_size             = EclPrototype("int           ecl_file_view_get_size( ecl_file_view )")
     _get_num_named_kw     = EclPrototype("int           ecl_file_view_get_num_named_kw( ecl_file_view , char* )")
     _get_unique_size      = EclPrototype("int           ecl_file_view_get_num_distinct_kw( ecl_file_view )")
@@ -133,6 +134,9 @@ class EclFileView(BaseCClass):
     def unique_size(self):
         return self._get_unique_size()
 
+    def unique_keyword(self, index):
+        return self._get_unique_kw(index)
+        
     def block_view2(self, start_kw, stop_kw, start_index):
         idx = start_index
         if start_kw:
