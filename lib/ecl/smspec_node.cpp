@@ -331,7 +331,8 @@ bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_ty
       var_type == ECL_SMSPEC_COMPLETION_VAR ) {
     const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
                                 "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
-                                "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT"};
+                                "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
+                                "CPT", "CIT"};
 
     int num_total_vars = sizeof( total_vars ) / sizeof( total_vars[0] );
     int ivar;
