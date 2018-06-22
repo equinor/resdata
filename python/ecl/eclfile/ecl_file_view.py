@@ -135,8 +135,8 @@ class EclFileView(BaseCClass):
         return self._get_unique_size()
 
 
-    def unique_keyword(self, index):
-        return self._get_unique_kw(index)
+    def unique_kw(self):
+        return [self._get_unique_kw(index) for index in range(self.unique_size())]
 
 
     def block_view2(self, start_kw, stop_kw, start_index):
