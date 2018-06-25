@@ -234,6 +234,7 @@ if (NOT BUILD_TESTS)
 endif ()
 
 add_executable(ecl3-testsuite test/testsuite.cpp
+                              test/fortio.cpp
 )
 target_include_directories(ecl3-testsuite
     PRIVATE e3
