@@ -330,6 +330,7 @@ if (ERT_LINUX)
    add_definitions( -DHAVE_PROC )
 endif()
 
+add_subdirectory( external/catch2 )
 add_subdirectory( lib )
 add_subdirectory( applications )
 add_subdirectory( bin )
