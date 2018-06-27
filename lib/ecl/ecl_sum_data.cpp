@@ -370,70 +370,6 @@ ecl_sum_data_type * ecl_sum_data_alloc_writer( ecl_smspec_type * smspec ) {
 }
 
 
-static void ecl_sum_data_fwrite_report__( const ecl_sum_data_type * data , int report_step , fortio_type * fortio) {
-  {
-    ecl_kw_type * seqhdr_kw = ecl_kw_alloc( SEQHDR_KW , SEQHDR_SIZE , ECL_INT );
-    ecl_kw_iset_int( seqhdr_kw , 0 , 0 );
-    ecl_kw_fwrite( seqhdr_kw , fortio );
-    ecl_kw_free( seqhdr_kw );
-  }
-
-  {
-    int index , index1 , index2;
-
-    ecl_sum_data_report2internal_range( data , report_step , &index1 , &index2);
-    for (index = index1; index <= index2; index++) {
-      const ecl_sum_tstep_type * tstep = ecl_sum_data_iget_ministep( data , index );
-      ecl_sum_tstep_fwrite( tstep , ecl_smspec_get_index_map( data->smspec ) , fortio );
-    }
-  }
-}
-
-
-
-static void ecl_sum_data_fwrite_multiple_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , int report_step) {
-  char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_UNIFIED_SUMMARY_FILE , fmt_case , 0 );
-  fortio_type * fortio = fortio_open_readwrite( filename , fmt_case , ECL_ENDIAN_FLIP );
-
-  ecl_sum_data_fwrite_report__( data , report_step , fortio );
-
-  fortio_fclose( fortio );
-  free(filename);
-}
-
-
-static void ecl_sum_data_fwrite_unified_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , int report_step) {
-  char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_UNIFIED_SUMMARY_FILE , fmt_case , 0 );
-  fortio_type * fortio = fortio_open_readwrite( filename , fmt_case , ECL_ENDIAN_FLIP );
-
-  int current_step = 1;
-  if (report_step > 1) {
-    while (true) {
-      if (ecl_kw_fseek_kw( SEQHDR_KW , false , false , fortio )) {
-        if (current_step == report_step)
-          break;
-        current_step++;
-      } else {
-        current_step++;
-        break;
-      }
-    }
-  }
-
-  if (current_step == report_step) { // We found the position:
-    long size = fortio_ftell( fortio );
-
-    util_ftruncate( fortio_get_FILE( fortio ) , size );
-    ecl_sum_data_fwrite_report__( data , report_step , fortio );
-  } else
-    util_abort("%s: hmm could not locate the position for report step:%d in summary file:%s \n",__func__ , report_step , filename);
-
-  fortio_fclose( fortio );
-  free( filename );
-}
-
-
-
 static void ecl_sum_data_fwrite_unified( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case ) {
   char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_UNIFIED_SUMMARY_FILE , fmt_case , 0 );
   fortio_type * fortio = fortio_open_writer( filename , fmt_case , ECL_ENDIAN_FLIP );
@@ -454,24 +390,12 @@ static void ecl_sum_data_fwrite_multiple( const ecl_sum_data_type * data , const
 }
 
 
-
-void ecl_sum_data_fwrite_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified, int report_step) {
-  if (unified)
-    ecl_sum_data_fwrite_unified_step( data , ecl_case , fmt_case , report_step);
-  else
-    ecl_sum_data_fwrite_multiple_step( data , ecl_case , fmt_case , report_step);
-}
-
-
 void ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified) {
   if (unified)
     ecl_sum_data_fwrite_unified( data , ecl_case , fmt_case );
   else
     ecl_sum_data_fwrite_multiple( data , ecl_case , fmt_case );
 }
-
-
-
 
 
 time_t ecl_sum_data_get_sim_end   (const ecl_sum_data_type * data ) { 
