@@ -633,12 +633,11 @@ void fortio_fwrite_record(fortio_type *fortio, const char *buffer , int record_s
 
 
 void * fortio_fread_alloc_record(fortio_type * fortio) {
-  void * buffer;
-  int record_size = fortio_init_read(fortio);
-  buffer = util_malloc( record_size );
-  util_fread(buffer , 1 , record_size , fortio->stream , __func__);
-  fortio_complete_read(fortio , record_size);
-  return buffer;
+    int32_t record_size = 0;
+    eclfio_sizeof( fortio->stream, fortio->opts, &record_size );
+    void* buffer = calloc( 1, record_size );
+    eclfio_get( fortio->stream, fortio->opts, &record_size, buffer );
+    return buffer;
 }
 
 
