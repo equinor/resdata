@@ -626,9 +626,14 @@ void fortio_complete_write(fortio_type *fortio , int record_size) {
 
 
 void fortio_fwrite_record(fortio_type *fortio, const char *buffer , int record_size) {
-  fortio_init_write(fortio , record_size);
-  util_fwrite( buffer , 1 , record_size , fortio->stream , __func__);
-  fortio_complete_write(fortio , record_size);
+    int err = eclfio_put( fortio->stream,
+                          fortio->opts,
+                          record_size,
+                          buffer );
+
+    if( err ) util_abort( "%s: unable to write %d byte record\n",
+                          __func__,
+                          record_size );
 }
 
 
