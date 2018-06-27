@@ -239,7 +239,7 @@ void ecl_sum_file_data_type::build_index( ) {
 void ecl_sum_file_data_type::update_data_vector( double_vector_type * data_vector , int data_index , bool report_only, int end_min_step) {
 
   if (end_min_step >= get_length())
-    throw std::invalid_argument(__PRETTY_FUNCTION__ + std::string(": argument 'end_min_step' too high."));
+    throw std::invalid_argument("ecl_sum_file_data_type::update_data_vector: argument 'end_min_step' too high.");
 
   if (report_only) {
     int report_step;
