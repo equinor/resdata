@@ -245,8 +245,9 @@ add_test(NAME ecl3 COMMAND ecl3-testsuite)
 
 if(TARGET rapidcheck)
     add_executable(ecl3-fuzzy test/testsuite.cpp
+                              test/fuzzy-fortio.cpp
     )
-    target_include_directories(ecl3-fuzzed PRIVATE e3)
+    target_include_directories(ecl3-fuzzy PRIVATE e3)
     target_link_libraries(ecl3-fuzzy ecl rapidcheck catch2)
     add_test(NAME ecl3-fuzzy COMMAND ecl3-fuzzy)
 endif()
