@@ -29,25 +29,35 @@ ecl_sum_file_data_type::~ecl_sum_file_data_type() {
 }
 
 
-int ecl_sum_file_data_type::get_length() {
+int ecl_sum_file_data_type::get_length() const {
   return vector_get_size( data );
 }
 
-int  ecl_sum_file_data_type::get_first_report_step() {
+int  ecl_sum_file_data_type::get_first_report_step() const{
   return first_report_step;
 }
 
-int ecl_sum_file_data_type::get_last_report_step() {
+int ecl_sum_file_data_type::get_last_report_step() const {
   return last_report_step;
 }
 
 
 
-time_t ecl_sum_file_data_type::get_data_start() { return start_time; }
-time_t ecl_sum_file_data_type::get_sim_end() { return end_time; }
+time_t ecl_sum_file_data_type::get_data_start() const { return start_time; }
+time_t ecl_sum_file_data_type::get_sim_end() const { return end_time; }
+
+time_t ecl_sum_file_data_type::iget_sim_time(int time_index) const {
+  const ecl_sum_tstep_type * ministep = iget_ministep( time_index  );
+  return ecl_sum_tstep_get_sim_time(ministep);
+}
+
+double ecl_sum_file_data_type::iget_seconds(int time_index) const {
+  throw;
+  return 0;
+}
 
 
-double ecl_sum_file_data_type::iget( int time_index , int params_index ) {
+double ecl_sum_file_data_type::iget( int time_index , int params_index ) const {
   if (params_index >= 0) {
     const ecl_sum_tstep_type * ministep_data = iget_ministep( time_index  );
     return ecl_sum_tstep_iget( ministep_data , params_index); 

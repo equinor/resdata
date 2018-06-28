@@ -41,12 +41,14 @@ class ecl_sum_file_data_type {
     ecl_sum_file_data_type(ecl_smspec_type * smspec);
     ~ecl_sum_file_data_type();
 
-    int                  get_length();
-    time_t               get_data_start();
-    time_t               get_sim_end();
-    int                  get_first_report_step();
-    int                  get_last_report_step();
-    double               iget( int time_index , int params_index );
+    int                  get_length() const;
+    time_t               get_data_start() const;
+    time_t               get_sim_end() const;
+    int                  get_first_report_step() const;
+    int                  get_last_report_step() const;
+    double               iget( int time_index , int params_index ) const;
+    time_t               iget_sim_time(int time_index ) const;
+    double               iget_seconds(int time_index) const;
     ecl_sum_tstep_type * iget_ministep( int internal_index ) const;
 
     ecl_sum_tstep_type * add_new_tstep(int report_step , double sim_seconds);
