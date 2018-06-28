@@ -243,6 +243,14 @@ target_link_libraries(ecl3-testsuite catch2 ecl)
 
 add_test(NAME ecl3 COMMAND ecl3-testsuite)
 
+if(TARGET rapidcheck)
+    add_executable(ecl3-fuzzy test/testsuite.cpp
+    )
+    target_include_directories(ecl3-fuzzed PRIVATE e3)
+    target_link_libraries(ecl3-fuzzy ecl rapidcheck catch2)
+    add_test(NAME ecl3-fuzzy COMMAND ecl3-fuzzy)
+endif()
+
 foreach (name   ert_util_alloc_file_components
                 ert_util_approx_equal
                 ert_util_arg_pack

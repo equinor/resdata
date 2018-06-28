@@ -324,6 +324,14 @@ if (ERT_LINUX)
 endif()
 
 add_subdirectory( external/catch2 )
+if(${CMAKE_VERSION} VERSION_GREATER 2.8)
+    add_subdirectory( external/rapidcheck )
+else()
+    message(WARNING "CMake version ({CMAKE_VERSION}) is lower than 3, "
+                    "property testing disabled."
+)
+endif()
+
 add_subdirectory( lib )
 add_subdirectory( applications )
 add_subdirectory( bin )
