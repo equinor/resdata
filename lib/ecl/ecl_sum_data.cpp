@@ -199,7 +199,7 @@
    method to access the time dimension of the data, i.e. all the
    functions like ecl_sum_get_general_var() expect the time direction
    to be given as a ministep; however it is also possible to get the
-   data by giving an invector_typeternal (not that internal ...) index. In
+   data by giving an internal (not that internal ...) index. In
    ecl_sum_data.c the latter functions have _iget():
 
 
@@ -860,8 +860,6 @@ double ecl_sum_data_iget( const ecl_sum_data_type * data , int time_index , int 
   ecl::ecl_sum_file_data_type * file_data = data->data_list[list_index];
   int * param_map = data->param_map[list_index];
   return file_data->iget( time_index - data->data_list_first_index[list_index] , param_map[params_index] );
-
-  return 0;
 }
 
 
