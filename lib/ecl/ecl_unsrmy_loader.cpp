@@ -14,6 +14,8 @@ unsmry_loader::unsmry_loader(int size_, const std::string& filename_) :
   size(size_),
   file(ecl_file_open(filename_.c_str(), 0))
 {
+  file_view = ecl_file_get_global_view( file );
+  length = ecl_file_view_get_num_named_kw( file_view , PARAMS_KW);
 }
 
 
@@ -35,15 +37,13 @@ const std::vector<float>& unsmry_loader::get_vector(int pos) {
 
 void unsmry_loader::read_data(int pos) {
 
-   ecl_file_view_type * file_view = ecl_file_get_global_view( file );
-   int data_size = ecl_file_view_get_num_named_kw( file_view , PARAMS_KW);
-   cache[pos] = std::vector<float>( data_size );
+   cache[pos] = std::vector<float>( length );
    std::vector<float>& data = cache[pos];
 
    int_vector_type * index_map = int_vector_alloc( 1 , pos);
    char buffer[4];
 
-   for (int index = 0; index < data_size; index++) {
+   for (int index = 0; index < length; index++) {
       ecl_file_view_index_fload_kw(file_view, PARAMS_KW, index, index_map, buffer);
       float * data_value = (float*)buffer;
       data[index] = *data_value;
