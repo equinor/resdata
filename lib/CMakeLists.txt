@@ -108,10 +108,12 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_grav_calc.cpp
                 ecl/ecl_smspec.cpp
                 ecl/ecl_sum_data.cpp
+                ecl/ecl_sum_file_data.cpp
                 ecl/ecl_util.cpp
                 ecl/ecl_kw.cpp
                 ecl/ecl_sum.cpp
                 ecl/ecl_sum_vector.cpp
+                ecl/ecl_unsrmy_loader.cpp
                 ecl/fortio.c
                 ecl/ecl_rft_file.cpp
                 ecl/ecl_rft_node.cpp
@@ -373,6 +375,10 @@ foreach (name   ecl_alloc_cpgrid
         add_test(NAME ${name} COMMAND ${name})
 endforeach ()
 
+add_executable(ecl_sum_data_intermediate ecl/tests/ecl_sum_data_intermediate_test.cpp)
+target_link_libraries(ecl_sum_data_intermediate ecl)
+add_test(NAME ecl_sum_data_intermediate COMMAND ecl_sum_data_intermediate)
+
 add_executable(ecl_grid_cell_contains ecl/tests/ecl_grid_cell_contains.c)
 target_link_libraries(ecl_grid_cell_contains ecl)
 add_test(NAME ecl_grid_cell_contains1 COMMAND ecl_grid_cell_contains)
@@ -420,7 +426,7 @@ if (ERT_BUILD_CXX)
         add_test(NAME ${test} COMMAND ${test})
     endforeach()
 
-    foreach (test eclxx_kw eclxx_fortio eclxx_smspec eclxx_filename eclxx_types)
+    foreach (test eclxx_kw eclxx_fortio eclxx_smspec eclxx_filename eclxx_types ecl_unsrmy_loader_test)
         add_executable(${test} ecl/tests/${test}.cpp)
         target_link_libraries(${test} ecl)
         add_test(NAME ${test} COMMAND ${test})

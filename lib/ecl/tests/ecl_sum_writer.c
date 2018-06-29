@@ -164,7 +164,7 @@ void test_ecl_sum_alloc_restart_writer() {
 
       for (int time_index=0; time_index < ecl_sum_get_data_length( case1 ); time_index++)
          test_assert_double_equal(  ecl_sum_get_general_var( case1 , time_index , "FOPT"), ecl_sum_get_general_var( case2 , time_index , "FOPT"));
-
+      
       ecl_sum_free(case2);
       ecl_sum_free(case1);
       ecl_file_close(restart_file);
