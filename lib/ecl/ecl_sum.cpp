@@ -24,7 +24,6 @@
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
-#include <ert/util/set.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/int_vector.hpp>
