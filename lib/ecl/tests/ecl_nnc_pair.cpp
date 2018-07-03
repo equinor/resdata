@@ -24,13 +24,8 @@
 #include <ert/ecl/ecl_nnc_geometry.h>
 
 void test_pair( int grid1_1 , int grid1_2 , int grid2_1, int grid2_2, bool expected) {
-  ecl_nnc_pair_type pair1 = {.grid_nr1 = grid1_1, .grid_nr2 = grid1_2,
-                             .global_index1 = 0,
-                             .global_index2 = 0};
-
-  ecl_nnc_pair_type pair2 = {.grid_nr1 = grid2_1, .grid_nr2 = grid2_2,
-                             .global_index1 = 0,
-                             .global_index2 = 0};
+  ecl_nnc_pair_type pair1 = {grid1_1, grid1_2, 0, 0};
+  ecl_nnc_pair_type pair2 = {grid2_1, grid2_2, 0, 0};
 
   test_assert_bool_equal( ecl_nnc_geometry_same_kw( &pair1 , &pair2 ), expected);
 }

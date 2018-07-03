@@ -274,7 +274,7 @@ foreach (name   ert_util_alloc_file_components
     add_test(NAME ${name} COMMAND ${name})
 endforeach ()
 
-add_executable(ecl_smspec_node ecl/tests/ecl_smspec_node.c)
+add_executable(ecl_smspec_node ecl/tests/ecl_smspec_node.cpp)
 target_link_libraries( ecl_smspec_node ecl)
 add_test(NAME ecl_smspec_node COMMAND ecl_smspec_node)
 
@@ -380,26 +380,26 @@ foreach (name   ecl_alloc_cpgrid
                 well_segment_collection
                 ecl_file
         )
-        add_executable(${name} ecl/tests/${name}.c)
+        add_executable(${name} ecl/tests/${name}.cpp)
         target_link_libraries(${name} ecl)
         add_test(NAME ${name} COMMAND ${name})
 endforeach ()
 
-add_executable(ecl_grid_cell_contains ecl/tests/ecl_grid_cell_contains.c)
+add_executable(ecl_grid_cell_contains ecl/tests/ecl_grid_cell_contains.cpp)
 target_link_libraries(ecl_grid_cell_contains ecl)
 add_test(NAME ecl_grid_cell_contains1 COMMAND ecl_grid_cell_contains)
 
 if (HAVE_UTIL_ABORT_INTERCEPT)
-   add_executable(ecl_grid_corner ecl/tests/ecl_grid_corner.c)
+   add_executable(ecl_grid_corner ecl/tests/ecl_grid_corner.cpp)
    target_link_libraries(ecl_grid_corner ecl)
    add_test(NAME ecl_grid_corner COMMAND ecl_grid_corner)
 
-   add_executable(ecl_layer ecl/tests/ecl_layer.c)
+   add_executable(ecl_layer ecl/tests/ecl_layer.cpp)
    target_link_libraries(ecl_layer ecl)
    add_test(NAME ecl_layer COMMAND ecl_layer)
 endif()
 
-add_executable(ecl_get_num_cpu ecl/tests/ecl_get_num_cpu_test.c)
+add_executable(ecl_get_num_cpu ecl/tests/ecl_get_num_cpu_test.cpp)
 target_link_libraries(ecl_get_num_cpu ecl)
 add_test(NAME ecl_get_num_cpu COMMAND ecl_get_num_cpu
             ${CMAKE_CURRENT_SOURCE_DIR}/ecl/tests/data/num_cpu1
@@ -410,7 +410,7 @@ add_test(NAME ecl_get_num_cpu COMMAND ecl_get_num_cpu
 # The ecl_win64 application is not built as a proper test integrated
 # into the CTEST system. Should be invoked manually on Windows.
 if (ERT_WINDOWS)
-   add_executable(ecl_lfs ecl/tests/ecl_lfs.c)
+   add_executable(ecl_lfs ecl/tests/ecl_lfs.cpp)
    target_link_libraries(ecl_lfs ecl)
 endif()
 

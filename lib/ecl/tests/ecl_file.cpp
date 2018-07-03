@@ -35,11 +35,11 @@ void test_writable(size_t data_size) {
   const char * data_file_name = "test_file";
 
   ecl_kw_type * kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
-  for(int i = 0; i < data_size; ++i)
+  for(size_t i = 0; i < data_size; ++i)
     ecl_kw_iset_int(kw, i, ((i*37)+11)%data_size);
 
   fortio_type * fortio = fortio_open_writer(data_file_name, false, true);
-  ecl_kw_fwrite(kw, fortio); 
+  ecl_kw_fwrite(kw, fortio);
   fortio_fclose(fortio);
 
   for(int i = 0; i < 4; ++i) {

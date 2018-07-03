@@ -26,7 +26,7 @@
 
 
 void test_int() {
-  size_t N = 1000;
+  int N = 1000;
   int i;
   ecl_kw_type * kw = ecl_kw_alloc("KW" , N , ECL_INT);
   for (i=0; i < N; i++)
@@ -37,7 +37,7 @@ void test_int() {
 
 
 void test_double() {
-  size_t N = 1000;
+  int N = 1000;
   double i;
   ecl_kw_type * kw = ecl_kw_alloc("KW" , N , ECL_DOUBLE);
   for (i=0; i < N; i++)
@@ -48,7 +48,7 @@ void test_double() {
 
 
 void test_float() {
-  size_t N = 1000;
+  int N = 1000;
   int i;
   ecl_kw_type * kw = ecl_kw_alloc("KW" , N , ECL_FLOAT);
   for (i=0; i < N; i++)
@@ -59,8 +59,8 @@ void test_float() {
 
 
 void test_bool() {
-  size_t N = 100;
-  bool * data = util_malloc(N * sizeof * data);
+  int N = 100;
+  bool * data = (bool *) util_malloc(N * sizeof * data);
   ecl_kw_type * kw = ecl_kw_alloc("BOOL", N , ECL_BOOL);
   for (int i=0; i < N/2; i++) {
     ecl_kw_iset_bool(kw, 2*i, true);

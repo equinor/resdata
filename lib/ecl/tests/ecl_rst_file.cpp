@@ -58,7 +58,7 @@ void test_file( const char * src_file , const char * target_file , int report_st
     ecl_rst_file_type * rst_file = ecl_rst_file_open_write_seek( target_file , report_step );
     test_assert_true( ecl_rst_file_ftell( rst_file ) == expected_offset );
     ecl_rst_file_close( rst_file );
-    test_assert_true( util_file_size( target_file ) == expected_offset );
+    test_assert_true( util_file_size( target_file ) == (size_t) expected_offset );
   }
 }
 

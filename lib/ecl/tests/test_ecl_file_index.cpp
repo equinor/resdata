@@ -36,11 +36,11 @@ void test_create_and_load_index_file() {
 
    test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
    {
-      char * file_name = "initial_data_file";
-      char * index_file_name = "index_file";
+      const char * file_name = "initial_data_file";
+      const char * index_file_name = "index_file";
 
       //creating the data file
-      size_t data_size = 10;
+      int data_size = 10;
       ecl_kw_type * kw1 = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
       for(int i = 0; i < data_size; ++i)
          ecl_kw_iset_int(kw1, i, 537 + i);

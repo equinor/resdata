@@ -159,8 +159,8 @@ void test_ecl_sum_alloc_restart_writer() {
       test_assert_true( ecl_file_view_has_kw(view_file, RESTART_KW));
       ecl_kw_type * restart_kw = ecl_file_view_iget_named_kw(view_file, "RESTART", 0);
       test_assert_int_equal(8, ecl_kw_get_size(restart_kw));
-      test_assert_string_equal( "CASE1   ", ecl_kw_iget_ptr( restart_kw , 0 ) );
-      test_assert_string_equal( "        ", ecl_kw_iget_ptr( restart_kw , 1 ) );
+      test_assert_string_equal( "CASE1   ", (const char *) ecl_kw_iget_ptr( restart_kw , 0 ) );
+      test_assert_string_equal( "        ", (const char *) ecl_kw_iget_ptr( restart_kw , 1 ) );
 
       for (int time_index=0; time_index < ecl_sum_get_data_length( case1 ); time_index++)
          test_assert_double_equal(  ecl_sum_get_general_var( case1 , time_index , "FOPT"), ecl_sum_get_general_var( case2 , time_index , "FOPT"));
