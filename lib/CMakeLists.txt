@@ -71,7 +71,6 @@ add_library(ecl util/rng.cpp
                 util/lookup_table.cpp
                 util/statistics.cpp
                 util/mzran.cpp
-                util/set.cpp
                 util/hash_node.cpp
                 util/hash_sll.cpp
                 util/hash.cpp
