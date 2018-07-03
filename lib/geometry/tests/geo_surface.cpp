@@ -24,7 +24,7 @@
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.h>
 
-#include <ert/geometry/geo_surface.h>
+#include <ert/geometry/geo_surface.hpp>
 
 
 void test_load(const char * input_file , const char * broken_file) {

@@ -23,7 +23,7 @@
 #include <ert/util/test_util.h>
 #include <ert/util/util.h>
 
-#include <ert/geometry/geo_util.h>
+#include <ert/geometry/geo_util.hpp>
 
 
 
@@ -233,10 +233,10 @@ void test_degenerate_line(double ** points) {
 
 
 int main( int argc , char ** argv) {
-  double ** points = util_malloc( 4 * sizeof * points);
+  double ** points = (double **) util_malloc( 4 * sizeof * points);
   int i;
   for (i = 0; i < 4; i++)
-    points[i] = util_malloc( 2 * sizeof * points[i]);
+    points[i] = (double *) util_malloc( 2 * sizeof * points[i]);
   {
     test_parallell_lines(points);
     test_crossing_lines(points);
