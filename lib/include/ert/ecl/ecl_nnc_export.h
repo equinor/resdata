@@ -20,15 +20,16 @@
 #ifndef ERT_ECL_NNC_EXPORT
 #define ERT_ECL_NNC_EXPORT
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <math.h>
 
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_kw.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define ERT_ECL_DEFAULT_NNC_TRANS HUGE_VAL
 

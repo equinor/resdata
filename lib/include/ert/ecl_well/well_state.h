@@ -20,9 +20,6 @@
 #ifndef ERT_WELL_STATE_H
 #define ERT_WELL_STATE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <time.h>
 
@@ -35,6 +32,9 @@ extern "C" {
 #include <ert/ecl_well/well_segment_collection.h>
 #include <ert/ecl_well/well_branch_collection.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define GLOBAL_GRID_NAME   "GLOBAL" // The name assigned to the global grid for name based lookup.
 

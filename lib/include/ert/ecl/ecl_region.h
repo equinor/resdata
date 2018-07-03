@@ -18,9 +18,6 @@
 
 #ifndef ERT_ECL_REGION_H
 #define ERT_ECL_REGION_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdbool.h>
 
 #include <ert/util/int_vector.h>
@@ -31,6 +28,9 @@ extern "C" {
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/layer.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
   SELECT_ALL           =  0,

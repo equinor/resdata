@@ -18,15 +18,15 @@
 
 #ifndef ERT_ECL_GRAV_H
 #define ERT_ECL_GRAV_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_region.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef struct ecl_grav_struct            ecl_grav_type;
 typedef struct ecl_grav_survey_struct     ecl_grav_survey_type;
 
