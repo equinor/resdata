@@ -101,19 +101,19 @@ void test_sort() {
     test_assert_int_equal( 4 , int_vector_iget( sort_map , 3 ));
     test_assert_int_equal( 3 , int_vector_iget( sort_map , 4 ));
 
-    test_assert_string_equal( "0" , vector_iget(v2 , 0 ));
-    test_assert_string_equal( "1" , vector_iget(v2 , 1 ));
-    test_assert_string_equal( "2" , vector_iget(v2 , 2 ));
-    test_assert_string_equal( "3" , vector_iget(v2 , 3 ));
-    test_assert_string_equal( "4" , vector_iget(v2 , 4 ));
+    test_assert_string_equal( "0" , (const char *) vector_iget(v2 , 0 ));
+    test_assert_string_equal( "1" , (const char *) vector_iget(v2 , 1 ));
+    test_assert_string_equal( "2" , (const char *) vector_iget(v2 , 2 ));
+    test_assert_string_equal( "3" , (const char *) vector_iget(v2 , 3 ));
+    test_assert_string_equal( "4" , (const char *) vector_iget(v2 , 4 ));
 
     vector_permute( v1 , sort_map );
 
-    test_assert_string_equal( "0" , vector_iget(v1 , 0 ));
-    test_assert_string_equal( "1" , vector_iget(v1 , 1 ));
-    test_assert_string_equal( "2" , vector_iget(v1 , 2 ));
-    test_assert_string_equal( "3" , vector_iget(v1 , 3 ));
-    test_assert_string_equal( "4" , vector_iget(v1 , 4 ));
+    test_assert_string_equal( "0" , (const char *) vector_iget(v1 , 0 ));
+    test_assert_string_equal( "1" , (const char *) vector_iget(v1 , 1 ));
+    test_assert_string_equal( "2" , (const char *) vector_iget(v1 , 2 ));
+    test_assert_string_equal( "3" , (const char *) vector_iget(v1 , 3 ));
+    test_assert_string_equal( "4" , (const char *) vector_iget(v1 , 4 ));
     int_vector_free( sort_map );
   }
   vector_free( v1 );

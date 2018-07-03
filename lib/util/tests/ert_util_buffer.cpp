@@ -56,7 +56,7 @@ void test_buffer_strstr() {
   buffer_rewind( buffer );
   test_assert_true( buffer_strstr( buffer , "ABC"));
   test_assert_int_equal( buffer_get_offset(buffer) , 0);
-  test_assert_string_equal( "ABC" , buffer_get_data(buffer));
+  test_assert_string_equal( "ABC" , (const char *) buffer_get_data(buffer));
 
   {
     size_t pos = buffer_get_offset( buffer );
@@ -83,17 +83,17 @@ void test_buffer_search_replace1() {
   buffer_rewind(buffer);
   test_assert_true( buffer_search_replace( buffer, "ABC" , "XYZ" ));
   buffer_rewind( buffer );
-  test_assert_string_equal( "XYZ 123" , buffer_get_data( buffer ));
+  test_assert_string_equal( "XYZ 123" , (const char *) buffer_get_data( buffer ));
 
   buffer_rewind( buffer );
   test_assert_true( buffer_search_replace( buffer, "XYZ" , "A"));
   buffer_rewind( buffer );
-  test_assert_string_equal( "A 123" , buffer_get_data( buffer ));
+  test_assert_string_equal( "A 123" , (const char *) buffer_get_data( buffer ));
 
   buffer_rewind( buffer );
   test_assert_true( buffer_search_replace( buffer, "A", "XYZ"));
   buffer_rewind( buffer );
-  test_assert_string_equal( "XYZ 123" , buffer_get_data( buffer ));
+  test_assert_string_equal( "XYZ 123" , (const char *) buffer_get_data( buffer ));
 
   buffer_free( buffer );
 }
@@ -105,11 +105,11 @@ void test_buffer_search_replace2() {
 
   buffer_rewind( buffer );
   test_assert_false( buffer_search_replace( buffer , "<CASE>" , "SUPERCase"));
-  test_assert_string_equal( "MAGIC_PRINT  magic-list.txt  <ERTCASE>  __MAGIC__" , buffer_get_data( buffer));
+  test_assert_string_equal( "MAGIC_PRINT  magic-list.txt  <ERTCASE>  __MAGIC__" , (const char *) buffer_get_data( buffer));
 
   buffer_rewind( buffer );
   test_assert_true( buffer_search_replace( buffer , "<ERTCASE>" , "default"));
-  test_assert_string_equal( "MAGIC_PRINT  magic-list.txt  default  __MAGIC__" , buffer_get_data( buffer));
+  test_assert_string_equal( "MAGIC_PRINT  magic-list.txt  default  __MAGIC__" , (const char *) buffer_get_data( buffer));
 
 
   buffer_free( buffer );
@@ -120,14 +120,14 @@ void test_char_ptr( ) {
   buffer_type * buffer = buffer_alloc(1024);
   buffer_fwrite_char_ptr( buffer , "Hello World");
   test_assert_size_t_equal( buffer_get_size( buffer ) , 12 );
-  test_assert_int_equal( strlen( buffer_get_data( buffer )) , 11);
+  test_assert_int_equal( strlen( (const char *) buffer_get_data( buffer )) , 11);
 
   buffer_clear( buffer );
   buffer_fwrite_char_ptr(buffer , "Hello" );
   buffer_strcat( buffer , " " );
   buffer_strcat( buffer , "World" );
   test_assert_size_t_equal( buffer_get_size( buffer ) , 12 );
-  test_assert_int_equal( strlen( buffer_get_data( buffer )) , 11);
+  test_assert_int_equal( strlen( (const char *) buffer_get_data( buffer )) , 11);
 
   buffer_free( buffer );
 }

@@ -81,7 +81,7 @@ void test_spawn_no_redirect() {
 }
 
 
-void * test_spawn_redirect__( void * path ) {
+void * test_spawn_redirect__( const char * path ) {
   char * stdout_file;
   char * stderr_file;
   char * script;
