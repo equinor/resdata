@@ -420,7 +420,7 @@ endif()
 
 
 foreach (name geo_util_xlines geo_polygon geo_polygon_collection)
-    add_executable(${name} geometry/tests/${name}.c)
+    add_executable(${name} geometry/tests/${name}.cpp)
     target_link_libraries(${name} ecl)
     add_test(NAME ${name} COMMAND ${name})
 endforeach ()
