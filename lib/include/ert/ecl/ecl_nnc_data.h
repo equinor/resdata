@@ -18,14 +18,15 @@
 
 #ifndef ECL_NNC_DATA_H
 #define ECL_NNC_DATA_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_nnc_geometry.h>
 #include <ert/ecl/ecl_nnc_export.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ecl_nnc_data_struct ecl_nnc_data_type;
 

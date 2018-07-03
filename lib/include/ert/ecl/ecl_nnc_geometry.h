@@ -18,13 +18,14 @@
 
 #ifndef ERT_NNC_GEOMETRY_H
 #define ERT_NNC_GEOMETRY_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_grid.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ecl_nnc_geometry_struct ecl_nnc_geometry_type;
 typedef struct ecl_nnc_pair_struct ecl_nnc_pair_type;

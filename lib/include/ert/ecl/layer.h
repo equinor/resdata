@@ -19,15 +19,16 @@
 #ifndef ERT_LAYER_H
 #define ERT_LAYER_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <ert/util/int_vector.h>
 #include <ert/util/struct_vector.h>
 #include <ert/util/type_macros.h>
 
 #include <ert/ecl/ecl_grid.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
    The elements in this enum are (ab)used as indexes into a int[] vector;
