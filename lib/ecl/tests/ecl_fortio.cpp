@@ -114,7 +114,7 @@ void test_fread_truncated_data() {
   test_work_area_type * work_area = test_work_area_alloc("fortio_truncated" );
   {
     const size_t buffer_size = 1000;
-    void * buffer = util_malloc( buffer_size );
+    char * buffer = (char *) util_malloc( buffer_size );
     {
       fortio_type * fortio = fortio_open_writer( "PRESSURE" , false , true );
 
@@ -149,7 +149,7 @@ void test_fread_truncated_head() {
 
     {
       fortio_type * fortio = fortio_open_reader( "PRESSURE" , false , true );
-      void * buffer = NULL;
+      char * buffer = NULL;
       int buffer_size = 10;
       test_assert_false( fortio_fread_buffer( fortio , buffer , buffer_size ));
       test_assert_true( fortio_read_at_eof( fortio ));
@@ -164,7 +164,7 @@ void test_fread_truncated_tail() {
   test_work_area_type * work_area = test_work_area_alloc("fortio_truncated2" );
   {
     const size_t buffer_size = 1000;
-    void * buffer = util_malloc( buffer_size );
+    char * buffer = (char *) util_malloc( buffer_size );
     {
       fortio_type * fortio = fortio_open_writer( "PRESSURE" , false , true );
 
@@ -190,7 +190,7 @@ void test_fread_truncated_tail() {
 void test_fread_invalid_tail() {
   test_work_area_type * work_area = test_work_area_alloc("fortio_invalid" );
   int record_size = 10;
-  void * buffer = util_malloc( record_size );
+  char * buffer = (char *) util_malloc( record_size );
   {
     FILE * stream = util_fopen("PRESSURE" , "w");
 
@@ -224,7 +224,7 @@ void test_at_eof() {
   test_work_area_type * work_area = test_work_area_alloc("fortio_truncated2" );
   {
     fortio_type * fortio = fortio_open_writer("PRESSURE" , false , true);
-    void * buffer = util_malloc( 100 );
+    char * buffer = (char *) util_malloc( 100 );
 
     fortio_fwrite_record( fortio , buffer , 100);
     free( buffer );
@@ -251,7 +251,7 @@ void test_fseek() {
   test_work_area_type * work_area = test_work_area_alloc("fortio_fseek" );
   {
     fortio_type * fortio = fortio_open_writer("PRESSURE" , false , true);
-    void * buffer = util_malloc( 100 );
+    char * buffer = (char *) util_malloc( 100 );
 
     fortio_fwrite_record( fortio , buffer , 100);
     free( buffer );
@@ -280,7 +280,7 @@ void test_write_failure() {
   test_work_area_type * work_area = test_work_area_alloc("fortio_fseek" );
   {
     fortio_type * fortio = fortio_open_writer("PRESSURE" , false , true);
-    void * buffer = util_malloc( 100 );
+    char * buffer = (char *) util_malloc( 100 );
 
     fortio_fwrite_record( fortio , buffer , 100);
     test_assert_true( util_file_exists( "PRESSURE"));

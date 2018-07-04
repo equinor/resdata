@@ -60,53 +60,55 @@ void test_file( const char * filename , int occurence , bool exists , const ecl_
 
 
 int main(int argc , char ** argv) {
-  ecl_rsthead_type true1 = {.report_step = 1,
-                            .day = 1,
-                            .year = 2000,
-                            .month = 1,
-                            .sim_time = (time_t) 946684800,
-                            .version = 100,
-                            .phase_sum = 7,
-                            .nx = 40,
-                            .ny = 64,
-                            .nz = 14,
-                            .nactive = 34770,
-                            .nwells = 3,
-                            .niwelz = 145,
-                            .nzwelz = 3,
-                            .niconz = 20,
-                            .ncwmax = 120,
-                            .nisegz = 18,
-                            .nsegmx = 1,
-                            .nswlmx = 1,
-                            .nlbrmx = -1,
-                            .nilbrz = -1,
-                            .dualp  = 0,
-                            .sim_days  = 0};
+  ecl_rsthead_type true1;
+  true1.report_step = 1;
+  true1.day = 1;
+  true1.year = 2000;
+  true1.month = 1;
+  true1.sim_time = (time_t) 946684800;
+  true1.version = 100;
+  true1.phase_sum = 7;
+  true1.nx = 40;
+  true1.ny = 64;
+  true1.nz = 14;
+  true1.nactive = 34770;
+  true1.nwells = 3;
+  true1.niwelz = 145;
+  true1.nzwelz = 3;
+  true1.niconz = 20;
+  true1.ncwmax = 120;
+  true1.nisegz = 18;
+  true1.nsegmx = 1;
+  true1.nswlmx = 1;
+  true1.nlbrmx = -1;
+  true1.nilbrz = -1;
+  true1.dualp  = 0;
+  true1.sim_days  = 0;
 
-  ecl_rsthead_type true2 = {.report_step = 5,
-                            .day = 22,
-                            .year = 1990,
-                            .month = 1,
-                            .sim_time = (time_t) 632966400,
-                            .version = 100,
-                            .phase_sum = 7,
-                            .nx = 4,
-                            .ny = 4,
-                            .nz = 4,
-                            .nactive = 64,
-                            .nwells = 3,
-                            .niwelz = 147,
-                            .nzwelz = 3,
-                            .niconz = 20,
-                            .ncwmax = 13,
-                            .nisegz = 18,
-                            .nsegmx = 1,
-                            .nswlmx = 1,
-                            .nlbrmx = -1,
-                            .nilbrz = -1,
-                            .dualp  = 1,
-                            .sim_days  = 21};
+  ecl_rsthead_type true2;
+  true2.report_step = 5;
+  true2.day = 22;
+  true2.year = 1990;
+  true2.month = 1;
+  true2.sim_time = (time_t) 632966400;
+  true2.version = 100;
+  true2.phase_sum = 7;
+  true2.nx = 4;
+  true2.ny = 4;
+  true2.nz = 4;
+  true2.nactive = 64;
+  true2.nwells = 3;
+  true2.niwelz = 147;
+  true2.nzwelz = 3;
+  true2.niconz = 20;
+  true2.ncwmax = 13;
+  true2.nisegz = 18;
+  true2.nsegmx = 1;
+  true2.nswlmx = 1;
+  true2.nlbrmx = -1;
+  true2.nilbrz = -1;
+  true2.dualp  = 1;
+  true2.sim_days  = 21;
 
   const char * unified_file = argv[1];
   const char * Xfile        = argv[2];
