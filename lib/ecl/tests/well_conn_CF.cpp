@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2013  Statoil ASA, Norway. 
-    
-   The file 'well_conn_load.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2013  Statoil ASA, Norway.
+
+   The file 'well_conn_load.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 #include <stdlib.h>
 #include <stdbool.h>
@@ -32,7 +32,7 @@
 #include <ert/ecl_well/well_const.h>
 
 
-void well_conn_test_CF( const ecl_kw_type * iwel_kw , const ecl_kw_type * icon_kw , const ecl_kw_type * scon_kw, const ecl_kw_type * xcon_kw , const const ecl_rsthead_type * rst_head , int iwell , int iconn, double CF) {
+void well_conn_test_CF( const ecl_kw_type * iwel_kw , const ecl_kw_type * icon_kw , const ecl_kw_type * scon_kw, const ecl_kw_type * xcon_kw , const ecl_rsthead_type * rst_head , int iwell , int iconn, double CF) {
   well_conn_type * conn = well_conn_alloc_from_kw( icon_kw , scon_kw, xcon_kw , rst_head , iwell , iconn );
   test_assert_double_equal( CF , well_conn_get_connection_factor(conn));
   well_conn_free( conn );

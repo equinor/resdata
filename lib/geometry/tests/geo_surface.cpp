@@ -29,7 +29,7 @@
 
 void test_load(const char * input_file , const char * broken_file) {
   geo_surface_type * surface = geo_surface_fload_alloc_irap( input_file , false );
-  double * data = util_calloc( geo_surface_get_size( surface ) , sizeof * data );
+  double * data = (double *) util_calloc( geo_surface_get_size( surface ) , sizeof * data );
 
   test_assert_true( geo_surface_fload_irap_zcoord( surface , input_file , data ));
   test_assert_false( geo_surface_fload_irap_zcoord( surface , "/does/not/exist" , data ));

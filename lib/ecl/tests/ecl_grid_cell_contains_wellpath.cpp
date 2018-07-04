@@ -50,7 +50,7 @@ vector_type * load_expected( const ecl_grid_type * grid, const char * filename )
     int i,j,k,skip;
 
     if (fscanf( stream , "%lg %lg %lg %d %d %d %d" , &x,&y,&z,&i,&j,&k,&skip) == 7) {
-      point_type * p = util_malloc( sizeof * p );
+      point_type * p = (point_type *) util_malloc( sizeof * p );
       p->x = x;
       p->y = y;
       p->z = z;
@@ -71,7 +71,7 @@ vector_type * load_expected( const ecl_grid_type * grid, const char * filename )
 }
 
 
-void test_well_point(const ecl_grid_type * grid, const point_type * expected) {
+void test_well_point(ecl_grid_type * grid, const point_type * expected) {
   int g = ecl_grid_get_global_index_from_xyz(grid , expected->x, expected->y , expected->z , 0 );
   if (g != ecl_grid_get_global_index3(grid, expected->i,expected->j, expected->k)) {
     int i,j,k;
@@ -98,7 +98,7 @@ int main(int argc , char ** argv) {
     vector_type * expected = load_expected( grid, argv[2] );
 
     for (int c=0; c < vector_get_size( expected ); c++) {
-      const point_type * p = vector_iget_const( expected , c );
+      const point_type * p = (const point_type *) vector_iget_const( expected , c );
       test_well_point(grid, p);
     }
     ecl_grid_free( grid );

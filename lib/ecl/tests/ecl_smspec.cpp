@@ -41,7 +41,7 @@ void test_sort( ecl_smspec_type * smspec )
 
 void test_copy(const ecl_smspec_type * smspec1) {
   ecl_sum_type * ecl_sum2 = ecl_sum_alloc_writer("CASE", false, true, ":", 0, true, 100, 100, 100);
-  ecl_smspec_type * smspec2 = ecl_sum_get_smspec(ecl_sum2);
+  const ecl_smspec_type * smspec2 = ecl_sum_get_smspec(ecl_sum2);
   for (int i=0; i < ecl_smspec_num_nodes(smspec1); i++) {
     const smspec_node_type * node = ecl_smspec_iget_node(smspec1, i);
     ecl_sum_add_smspec_node(ecl_sum2, node);

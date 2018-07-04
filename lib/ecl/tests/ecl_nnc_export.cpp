@@ -97,7 +97,7 @@ void test_nnc_export_missing_TRANX(const char * name ) {
   if (util_entry_exists(init_file_name)) {
     ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
     ecl_file_type * init_file = ecl_file_open( init_file_name , 0);
-    ecl_nnc_type  * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data1 );
+    ecl_nnc_type  * nnc_data1 = (ecl_nnc_type *) util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data1 );
     int count = ecl_nnc_export(grid, init_file, nnc_data1);
     int i;
     test_assert_int_equal( count , 0 );
@@ -113,8 +113,8 @@ void test_export(const char * name, bool have_tran_data) {
     ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
     ecl_file_type * grid_file = ecl_file_open( grid_file_name , 0 );
     ecl_file_type * init_file = ecl_file_open( init_file_name , 0);
-    ecl_nnc_type  * nnc_data1 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data1 );
-    ecl_nnc_type  * nnc_data2 = util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data2 );
+    ecl_nnc_type  * nnc_data1 = (ecl_nnc_type *) util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data1 );
+    ecl_nnc_type  * nnc_data2 = (ecl_nnc_type *) util_calloc( ecl_nnc_export_get_size( grid ) , sizeof * nnc_data2 );
 
 
     {
@@ -269,38 +269,12 @@ void test_export(const char * name, bool have_tran_data) {
 
 void test_cmp() {
 
-  ecl_nnc_type nnc1 = {.grid_nr1 = 1,
-                       .grid_nr2 = 1,
-                       .global_index1 = 1,
-                       .global_index2 = 1};
-
-  ecl_nnc_type nnc2 = {.grid_nr1 = 1,   // nnc1 == nnc2
-                       .grid_nr2 = 1,
-                       .global_index1 = 1,
-                       .global_index2 = 1 };
-
-  ecl_nnc_type nnc3 = {.grid_nr1 = 4,   // nnc3 > nnc1
-                       .grid_nr2 = 1,
-                       .global_index1 = 1,
-                       .global_index2 = 1 };
-
-
-  ecl_nnc_type nnc4 = {.grid_nr1 = 4,   // nnc4 > nnc1
-                       .grid_nr2 = 2,   // nnc4 > nnc2
-                       .global_index1 = 1,
-                       .global_index2 = 1 };
-
-  ecl_nnc_type nnc5 = {.grid_nr1 = 4,   // nnc5 > nnc4
-                       .grid_nr2 = 2,
-                       .global_index1 = 3,
-                       .global_index2 = 1 };
-
-
-  ecl_nnc_type nnc6 = {.grid_nr1 = 4,   // nnc6 > nnc5
-                       .grid_nr2 = 2,
-                       .global_index1 = 3,
-                       .global_index2 = 5 };
-
+  ecl_nnc_type nnc1 = {1,1,1,1};
+  ecl_nnc_type nnc2 = {1,1,1,1};
+  ecl_nnc_type nnc3 = {4,1,1,1};
+  ecl_nnc_type nnc4 = {4,2,1,1};
+  ecl_nnc_type nnc5 = {4,2,3,1};
+  ecl_nnc_type nnc6 = {4,2,3,5};
 
   test_assert_int_equal( 0 , ecl_nnc_sort_cmp( &nnc1 , &nnc2 ));
   test_assert_int_equal( 1 , ecl_nnc_sort_cmp( &nnc3 , &nnc1 ));
@@ -313,13 +287,16 @@ void test_cmp() {
 
 void test_sort() {
   const int N = 1000;
-  ecl_nnc_type * nnc_list = util_calloc(N , sizeof * nnc_list );
+  ecl_nnc_type * nnc_list = (ecl_nnc_type *) util_calloc(N , sizeof * nnc_list );
   int i;
   for (i=0; i < N; i++) {
-    ecl_nnc_type nnc = {.grid_nr1 = (i % 19),
-                        .grid_nr2 = (i % 3),
-                        .global_index1 = (i % 7),
-                        .global_index2 = (i % 13)};
+    ecl_nnc_type nnc;
+
+    nnc.grid_nr1 = (i % 19);
+    nnc.grid_nr2 = (i % 3);
+    nnc.global_index1 = (i % 7);
+    nnc.global_index2 = (i % 13);
+
     nnc_list[i] = nnc;
   }
   ecl_nnc_sort( nnc_list , N );
