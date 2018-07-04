@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2014  Statoil ASA, Norway. 
-    
-   The file 'ert_util_struct_vector.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2014  Statoil ASA, Norway.
+
+   The file 'ert_util_struct_vector.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 #include <stdlib.h>
 #include <stdbool.h>
@@ -43,7 +43,7 @@ void test_create() {
   struct_vector_free( struct_vector );
 }
 
-void alloc_invalid() {
+void alloc_invalid(void * ) {
   struct_vector_alloc( 0 );
 }
 
@@ -73,7 +73,7 @@ void test_append_iget() {
   test_assert_true( d1.z == d2.z );
 
   {
-    struct test_struct * d = struct_vector_get_data( struct_vector );
+    struct test_struct * d = (struct test_struct *) struct_vector_get_data( struct_vector );
     struct test_struct d3 = d[0];
     test_assert_true( d1.x == d3.x );
     test_assert_true( d1.y == d3.y );
@@ -106,7 +106,7 @@ void test_sort() {
   struct_vector_type * struct_vector = struct_vector_alloc( sizeof d );
   for (int i = 0; i < 10; i++) {
     struct test_struct d = {.x = 9 - i,
-                            .y = 9 - i,
+                            .y = 9.0 - i,
                             .z = 9 - i };
     struct_vector_append( struct_vector , &d );
   }

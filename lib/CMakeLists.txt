@@ -269,7 +269,7 @@ foreach (name   ert_util_alloc_file_components
                 ert_util_mkdir_p
         )
 
-    add_executable(${name} util/tests/${name}.c)
+    add_executable(${name} util/tests/${name}.cpp)
     target_link_libraries(${name} ecl)
     add_test(NAME ${name} COMMAND ${name})
 endforeach ()
@@ -279,7 +279,7 @@ target_link_libraries( ecl_smspec_node ecl)
 add_test(NAME ecl_smspec_node COMMAND ecl_smspec_node)
 
 
-add_executable(ert_util_work_area util/tests/ert_util_work_area.c)
+add_executable(ert_util_work_area util/tests/ert_util_work_area.cpp)
 target_link_libraries(ert_util_work_area ecl)
 add_test(NAME ert_util_work_area
     COMMAND ert_util_work_area  data2/file1
@@ -288,48 +288,48 @@ add_test(NAME ert_util_work_area
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/util/tests
 )
 
-add_executable(ert_util_cwd_test util/tests/ert_util_cwd_test.c)
+add_executable(ert_util_cwd_test util/tests/ert_util_cwd_test.cpp)
 target_link_libraries(ert_util_cwd_test ecl)
 add_test(NAME ert_util_cwd_test COMMAND ert_util_cwd_test ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(ert_util_copy_file util/tests/ert_util_copy_file.c)
+add_executable(ert_util_copy_file util/tests/ert_util_copy_file.cpp)
 target_link_libraries(ert_util_copy_file ecl)
 add_test(NAME ert_util_copy_file
         COMMAND ert_util_copy_file
         $<TARGET_FILE:ert_util_copy_file>)
 
-add_executable(ert_util_file_readable util/tests/ert_util_file_readable.c)
+add_executable(ert_util_file_readable util/tests/ert_util_file_readable.cpp)
 target_link_libraries(ert_util_file_readable ecl)
 add_test(NAME ert_util_file_readable COMMAND ert_util_file_readable)
 
-add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.c)
+add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.cpp)
 target_link_libraries(ert_util_path_stack_test ecl)
 add_test(NAME ert_util_path_stack_test COMMAND ert_util_path_stack_test
     ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 if (HAVE_BACKTRACE)
-   add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.c)
+   add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.cpp)
    target_link_libraries(ert_util_abort_gnu_tests ecl)
    add_test(NAME ert_util_abort_gnu_tests COMMAND ert_util_abort_gnu_tests)
 
-   add_executable(ert_util_addr2line util/tests/ert_util_addr2line.c)
+   add_executable(ert_util_addr2line util/tests/ert_util_addr2line.cpp)
    target_link_libraries(ert_util_addr2line ecl)
    add_test(NAME ert_util_addr2line COMMAND ert_util_addr2line)
 endif()
 
 if (HAVE_UTIL_ABORT_INTERCEPT)
-   add_executable(ert_util_struct_vector util/tests/ert_util_struct_vector.c)
+   add_executable(ert_util_struct_vector util/tests/ert_util_struct_vector.cpp)
    target_link_libraries(ert_util_struct_vector ecl)
    add_test(NAME ert_util_struct_vector COMMAND ert_util_struct_vector)
 
-   add_executable(ert_util_type_vector_test util/tests/ert_util_type_vector_test.c)
+   add_executable(ert_util_type_vector_test util/tests/ert_util_type_vector_test.cpp)
    target_link_libraries(ert_util_type_vector_test ecl)
    add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
 endif()
 
 if (ERT_HAVE_SPAWN)
-   add_executable(ert_util_spawn util/tests/ert_util_spawn.c)
+   add_executable(ert_util_spawn util/tests/ert_util_spawn.cpp)
    target_link_libraries(ert_util_spawn ecl)
    add_test(NAME ert_util_spawn COMMAND ert_util_spawn)
 endif()
