@@ -1385,7 +1385,7 @@ time_t_vector_type *  ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * 
 }
 
 
-void ecl_sum_data_init_data_vector( const ecl_sum_data_type * data , double_vector_type * data_vector , int data_index , bool report_only) {
+static void ecl_sum_data_init_data_vector( const ecl_sum_data_type * data , double_vector_type * data_vector , int data_index , bool report_only) {
   double_vector_reset( data_vector );
   double_vector_append( data_vector , ecl_smspec_get_start_time( data->smspec ));
   if (report_only) {
