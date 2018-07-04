@@ -42,6 +42,7 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   void                     ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified);
   bool                     ecl_sum_data_fread( ecl_sum_data_type * data , const stringlist_type * filelist);
   ecl_sum_data_type      * ecl_sum_data_alloc_writer( ecl_smspec_type * smspec );
+  void                     ecl_sum_data_reset_self_map( ecl_sum_data_type * data );
   ecl_sum_data_type      * ecl_sum_data_alloc( ecl_smspec_type * smspec);
   double                   ecl_sum_data_time2days( const ecl_sum_data_type * data , time_t sim_time);
   int                      ecl_sum_data_get_report_step_from_time(const ecl_sum_data_type * data , time_t sim_time);

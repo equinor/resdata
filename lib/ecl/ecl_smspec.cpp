@@ -296,6 +296,14 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
 }
 
 
+int * ecl_smspec_alloc_self_mapping( const ecl_smspec_type * self ) {
+  int params_size = ecl_smspec_get_params_size( self );
+  int * mapping = (int*)util_malloc( params_size * sizeof * mapping );
+  for (int i = 0; i < ecl_smspec_get_params_size( self ); i++)
+    mapping[i] = i;
+  return mapping;
+}
+
 int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_type * other) {
   int params_size = ecl_smspec_get_params_size( self );
   int * mapping = (int*)util_malloc( params_size * sizeof * mapping );
