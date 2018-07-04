@@ -40,16 +40,16 @@ void test_transaction() {
 
   test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
   {
-     char * file_name = "data_file";
+     const char * file_name = "data_file";
      fortio_type * fortio = fortio_open_writer(file_name, false, ECL_ENDIAN_FLIP);
 
       //creating the data file
-     size_t data_size = 10;
+     int data_size = 10;
      ecl_kw_type * kw1 = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
      for(int i = 0; i < data_size; ++i)
         ecl_kw_iset_int(kw1, i, 537 + i);
-     ecl_kw_fwrite(kw1, fortio); 
-     
+     ecl_kw_fwrite(kw1, fortio);
+
      data_size = 5;
      ecl_kw_type * kw2 = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
      for(int i = 0; i < data_size; ++i)
@@ -62,9 +62,9 @@ void test_transaction() {
         ecl_kw_iset_float(kw3, i, 0.45 * i);
      ecl_kw_fwrite(kw3, fortio);
 
-     fortio_fclose(fortio); 
+     fortio_fclose(fortio);
      //finished creating data file
-     
+
      ecl_file_type * file = ecl_file_open(file_name, 0);
      ecl_file_view_type * file_view = ecl_file_get_global_view(file);
      ecl_file_kw_type * file_kw0 = ecl_file_view_iget_file_kw( file_view , 0);
@@ -80,7 +80,7 @@ void test_transaction() {
        ecl_file_view_iget_kw(file_view, 0);
        ecl_file_view_iget_kw(file_view, 1);
        ecl_file_transaction_type * t2 = ecl_file_view_start_transaction( file_view );
-         
+
          ecl_file_view_iget_kw(file_view, 0);
          ecl_file_view_iget_kw(file_view, 1);
          ecl_file_view_iget_kw(file_view, 1);

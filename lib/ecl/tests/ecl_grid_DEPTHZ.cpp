@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2014  Statoil ASA, Norway. 
-    
-   The file 'ecl_grid_DEPTHZ.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2014  Statoil ASA, Norway.
+
+   The file 'ecl_grid_DEPTHZ.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdlib.h>
@@ -33,7 +33,7 @@ double center_sum(const double * DV, int index) {
 
   for (int i=0; i < index; i++)
     sum += DV[i];
-  
+
   return sum;
 }
 
@@ -44,10 +44,10 @@ void test_create() {
   int ny = 100;
   int nz = 10;
 
-  double * DXV = util_malloc( nx * sizeof * DXV );
-  double * DYV = util_malloc( ny * sizeof * DYV );
-  double * DZV = util_malloc( nz * sizeof * DZV );
-  double * DEPTHZ = util_malloc( (nx + 1) * (ny + 1) * sizeof * DEPTHZ);
+  double * DXV = (double *) util_malloc( nx * sizeof * DXV );
+  double * DYV = (double *) util_malloc( ny * sizeof * DYV );
+  double * DZV = (double *) util_malloc( nz * sizeof * DZV );
+  double * DEPTHZ = (double *) util_malloc( (nx + 1) * (ny + 1) * sizeof * DEPTHZ);
 
   for (int i=0; i < nx; i++)
     DXV[i] = 1.0 / nx;
@@ -57,19 +57,19 @@ void test_create() {
 
   for (int k=0; k < nz; k++)
     DZV[k] = 3.0 / nz;
-  
+
 
   for (int j=0; j <= ny; j++) {
     double y = center_sum(DYV , j);
     for (int i=0; i <= nx; i++) {
       double x = center_sum(DXV , i);
-      
+
       DEPTHZ[i + j*(nx + 1)] = zfunc( x,y );
     }
   }
 
   ecl_grid = ecl_grid_alloc_dxv_dyv_dzv_depthz( nx,ny,nz,DXV , DYV , DZV , DEPTHZ , NULL);
-  
+
   for (int k=0; k < nz; k++) {
     double z0 = center_sum(DZV , k ) - 0.5*DZV[0];
     for (int j=0; j < ny; j++) {
@@ -78,8 +78,8 @@ void test_create() {
         double x0 = center_sum(DXV , i );
         double xc,yc,zc;
         int g = ecl_grid_get_global_index3( ecl_grid , i , j , k );
-        
-        ecl_grid_get_xyz1( ecl_grid , g , &xc , &yc , &zc); 
+
+        ecl_grid_get_xyz1( ecl_grid , g , &xc , &yc , &zc);
         test_assert_double_equal( x0 , xc );
         test_assert_double_equal( y0 , yc );
 
@@ -117,10 +117,10 @@ void test_compare() {
   ecl_grid_type * grid2;
 
   {
-    double * DX = util_malloc( V * sizeof * DX );
-    double * DY = util_malloc( V * sizeof * DY );
-    double * DZ = util_malloc( V * sizeof * DZ );
-    double * TOPS = util_malloc( V * sizeof * TOPS );
+    double * DX = (double *) util_malloc( V * sizeof * DX );
+    double * DY = (double *) util_malloc( V * sizeof * DY );
+    double * DZ = (double *) util_malloc( V * sizeof * DZ );
+    double * TOPS = (double *) util_malloc( V * sizeof * TOPS );
 
     for (int i = 0; i < V; i++) {
       DX[i] = dx;
@@ -149,31 +149,31 @@ void test_compare() {
   }
 
   {
-    double * DXV = util_malloc( nx * sizeof * DXV );
-    double * DYV = util_malloc( ny * sizeof * DYV );
-    double * DZV = util_malloc( nz * sizeof * DZV );
-    double * DEPTHZ = util_malloc( (nx + 1)*(ny + 1) * sizeof * DEPTHZ);
+    double * DXV = (double *) util_malloc( nx * sizeof * DXV );
+    double * DYV = (double *) util_malloc( ny * sizeof * DYV );
+    double * DZV = (double *) util_malloc( nz * sizeof * DZV );
+    double * DEPTHZ = (double *) util_malloc( (nx + 1)*(ny + 1) * sizeof * DEPTHZ);
 
-    for (int i = 0; i < nx; i++) 
+    for (int i = 0; i < nx; i++)
       DXV[i] = dx;
 
-    for (int i = 0; i < ny; i++) 
+    for (int i = 0; i < ny; i++)
       DYV[i] = dy;
 
-    for (int i = 0; i < nz; i++) 
+    for (int i = 0; i < nz; i++)
       DZV[i] = dz;
-    
-    for (int i = 0; i < (nx + 1)*(ny+ 1); i++) 
+
+    for (int i = 0; i < (nx + 1)*(ny+ 1); i++)
       DEPTHZ[i] = z0;
 
-    
+
     grid2 = ecl_grid_alloc_dxv_dyv_dzv_depthz( nx , ny , nz , DXV , DYV , DZV , DEPTHZ , NULL );
     free( DXV );
     free( DYV );
     free( DZV );
     free( DEPTHZ );
   }
-  
+
   test_assert_true( ecl_grid_compare( grid1 , grid2 , true , true , true));
   ecl_grid_free( grid1 );
   ecl_grid_free( grid2 );

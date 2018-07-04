@@ -28,7 +28,7 @@
 
 void export_actnum( const ecl_grid_type * ecl_grid , ecl_file_type * ecl_file ) {
   ecl_kw_type * actnum_kw = ecl_file_iget_named_kw( ecl_file , "ACTNUM" , 0 );
-  int * actnum = util_malloc( ecl_kw_get_size( actnum_kw ) * sizeof * actnum );
+  int * actnum = (int *) util_malloc( ecl_kw_get_size( actnum_kw ) * sizeof * actnum );
 
   ecl_grid_init_actnum_data( ecl_grid , actnum );
   for (int i=0; i < ecl_kw_get_size( actnum_kw); i++)
@@ -42,8 +42,8 @@ void export_coord( const ecl_grid_type * grid , ecl_file_type * ecl_file ) {
   ecl_kw_type * coord_kw = ecl_file_iget_named_kw( ecl_file , "COORD" , 0);
   test_assert_int_equal( ecl_kw_get_size( coord_kw ) , ecl_grid_get_coord_size( grid ));
   {
-    float * coord_float = util_malloc( ecl_grid_get_coord_size( grid ) * sizeof * coord_float );
-    double * coord_double = util_malloc( ecl_grid_get_coord_size( grid ) * sizeof * coord_double );
+    float * coord_float = (float *) util_malloc( ecl_grid_get_coord_size( grid ) * sizeof * coord_float );
+    double * coord_double = (double *) util_malloc( ecl_grid_get_coord_size( grid ) * sizeof * coord_double );
 
     ecl_grid_init_coord_data( grid , coord_float );
     ecl_grid_init_coord_data_double( grid , coord_double );
@@ -61,8 +61,8 @@ void export_zcorn( const ecl_grid_type * grid , ecl_file_type * ecl_file ) {
   ecl_kw_type * zcorn_kw = ecl_file_iget_named_kw( ecl_file , "ZCORN" , 0);
   test_assert_int_equal( ecl_kw_get_size( zcorn_kw ) , ecl_grid_get_zcorn_size( grid ));
   {
-    float * zcorn_float = util_malloc( ecl_grid_get_zcorn_size( grid ) * sizeof * zcorn_float );
-    double * zcorn_double = util_malloc( ecl_grid_get_zcorn_size( grid ) * sizeof * zcorn_double );
+    float * zcorn_float = (float *) util_malloc( ecl_grid_get_zcorn_size( grid ) * sizeof * zcorn_float );
+    double * zcorn_double = (double *) util_malloc( ecl_grid_get_zcorn_size( grid ) * sizeof * zcorn_double );
 
     ecl_grid_init_zcorn_data( grid , zcorn_float );
     ecl_grid_init_zcorn_data_double( grid , zcorn_double );
@@ -88,7 +88,7 @@ void copy_processed( const ecl_grid_type * src ) {
 
 
   {
-    int * actnum = util_malloc( ecl_grid_get_global_size( src ) * sizeof * actnum );
+    int * actnum = (int *) util_malloc( ecl_grid_get_global_size( src ) * sizeof * actnum );
     int index = 0;
     ecl_grid_init_actnum_data( src , actnum );
 
@@ -110,7 +110,7 @@ void copy_processed( const ecl_grid_type * src ) {
 
 
   {
-    double * zcorn_double = util_malloc( ecl_grid_get_zcorn_size( src ) * sizeof * zcorn_double );
+    double * zcorn_double = (double *) util_malloc( ecl_grid_get_zcorn_size( src ) * sizeof * zcorn_double );
     int i = 0;
     int j = 0;
     int k = 0;
@@ -122,7 +122,7 @@ void copy_processed( const ecl_grid_type * src ) {
       ecl_grid_free( copy );
     }
 
-    
+
     for (int c = 0; c < 4; c++) {
       double dz = zcorn_double[ ecl_grid_zcorn_index( src , i , j , k , c + 4 ) ] - zcorn_double[ ecl_grid_zcorn_index( src , i , j , k , c ) ];
       zcorn_double[ ecl_grid_zcorn_index( src , i , j , k , c + 4 ) ] += dz;
@@ -156,8 +156,8 @@ void export_mapaxes( const ecl_grid_type * grid , ecl_file_type * ecl_file ) {
 int main(int argc , char ** argv) {
   test_work_area_type * work_area = test_work_area_alloc("grid_export");
   {
-    char * test_grid = "TEST.EGRID";
-    char * grid_file;
+    const char * test_grid = "TEST.EGRID";
+    const char * grid_file;
     if (argc == 1) {
       ecl_grid_type * grid = ecl_grid_alloc_rectangular(4,4,2,1,1,1,NULL);
       grid_file = test_grid;
