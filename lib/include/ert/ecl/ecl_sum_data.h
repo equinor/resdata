@@ -50,7 +50,6 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   bool                     ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_days);
   int                      ecl_sum_data_get_num_ministep( const ecl_sum_data_type * data );
   double_vector_type     * ecl_sum_data_alloc_data_vector( const ecl_sum_data_type * data , int data_index , bool report_only);
-  void                     ecl_sum_data_init_data_vector( const ecl_sum_data_type * data , double_vector_type * data_vector , int data_index , bool report_only);
   void                     ecl_sum_data_init_time_vector( const ecl_sum_data_type * data , time_t_vector_type * time_vector , bool report_only);
   time_t_vector_type     * ecl_sum_data_alloc_time_vector( const ecl_sum_data_type * data , bool report_only);
   time_t                   ecl_sum_data_get_data_start( const ecl_sum_data_type * data );
