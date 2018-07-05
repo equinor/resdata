@@ -446,3 +446,92 @@ int eclfio_put( std::FILE* fp,
 } catch( std::exception& ) {
     return ECL_INCONSISTENT_STATE;
 }
+
+int ecl_default_blocksize( int size, int type ) {
+    switch( type ) {
+        case ECL_BLOCKSIZE_NUMERIC:
+            return ECL_DEFAULT_BLOCKSIZE_NUMERIC;
+
+        case ECL_BLOCKSIZE_STRING:
+            return ECL_DEFAULT_BLOCKSIZE_STRING;
+
+        case ECL_BLOCKSIZE_INFERRED:
+            /* infer from type argument once implemented */
+        case ECL_BLOCKSIZE_UNBOUNDED:
+        default:
+            return std::numeric_limits< std::int32_t >::max();
+    }
+}
+
+int eclfio_array_get( std::FILE* fp,
+                      const char* opts,
+                      int len,
+                      int nmemb,
+                      std::int32_t blocksize,
+                      void* array ) {
+
+    if( nmemb < 0 ) return ECL_EINVAL;
+    if( len < 1 ) len = 1;
+
+    const auto size = parse_opts( opts ).elemsize;
+
+    const bool allow_underflow = blocksize == 0;
+    if( blocksize == 0 )
+        blocksize = ecl_default_blocksize( ECL_BLOCKSIZE_UNBOUNDED, 0 );
+
+    auto* dst = static_cast< char* >( array );
+    /*
+     * always expect to read at least one block, even if the number of elements
+     * in that array is zero
+     */
+    do {
+        std::int32_t items = std::min( nmemb, blocksize );
+        const auto err = eclfio_get( fp, opts, &items, dst );
+        if( err ) return err;
+
+        // if an inner block, and the elements don't fill the full block,
+        // it's an underflow - only the last block is allowed to be different
+        // from blocksize
+        if( not allow_underflow and items < blocksize && items != nmemb )
+            return ECL_EINVAL;
+
+        /*
+         * the number of items has to be consistent with the length of each
+         * element - most items should have elem-length 1, but CNNN strings
+         * have length of 1..999.
+         */
+        if( items % len != 0 ) return ECL_TRUNCATED;
+
+        nmemb -= items / len;
+        if( dst ) dst += size * items;
+    } while( nmemb > 0 );
+
+    if( nmemb < 0 ) return ECL_UNALIGNED_ARRAY;
+
+    return ECL_OK;
+}
+
+int eclfio_array_put( std::FILE* fp,
+                      const char* opts,
+                      int len,
+                      int nmemb,
+                      int blocksize,
+                      const void* array ) {
+
+    if( nmemb < 0 )     return ECL_EINVAL;
+    if( blocksize < 1 ) return ECL_EINVAL;
+
+    const auto size = parse_opts( opts ).elemsize;
+
+    auto* src = static_cast< const char* >( array );
+    while( nmemb > 0 ) {
+        const auto items = std::min( nmemb, blocksize );
+        const auto err = eclfio_put( fp, opts, len * items, src );
+        if( err ) return err;
+
+        nmemb -= items;
+        if( src ) src += size * len * items;
+    }
+
+    return ECL_OK;
+}
