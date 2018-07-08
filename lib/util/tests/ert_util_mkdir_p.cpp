@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_work_area.hpp>
 
 
 int main(int argc , char ** argv) {

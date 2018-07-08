@@ -1,8 +1,8 @@
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 
-#include <ert/ecl/ecl_sum.h>
-#include <ert/ecl/smspec_node.h>
+#include <ert/ecl/ecl_sum.hpp>
+#include <ert/ecl/smspec_node.hpp>
 
 ecl_sum_type * test_alloc_ecl_sum() {
   time_t start_time = util_make_date_utc( 1,1,2010 );

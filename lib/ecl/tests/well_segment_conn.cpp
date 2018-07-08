@@ -18,17 +18,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_grid.hpp>
 
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl_well/well_segment.h>
-#include <ert/ecl_well/well_conn.h>
-#include <ert/ecl_well/well_conn_collection.h>
+#include <ert/ecl_well/well_const.hpp>
+#include <ert/ecl_well/well_segment.hpp>
+#include <ert/ecl_well/well_conn.hpp>
+#include <ert/ecl_well/well_conn_collection.hpp>
 
 
 int main(int argc , char ** argv) {

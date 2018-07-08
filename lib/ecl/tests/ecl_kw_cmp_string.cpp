@@ -19,9 +19,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/util/test_util.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 
 

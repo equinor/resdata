@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/thread_pool.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/thread_pool.hpp>
 
 
 pthread_mutex_t lock;

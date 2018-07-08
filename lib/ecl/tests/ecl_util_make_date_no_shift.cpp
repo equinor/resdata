@@ -18,11 +18,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_util.hpp>
 
 
 void test_date(int mday, int month , int year) {

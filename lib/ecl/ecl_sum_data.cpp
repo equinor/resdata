@@ -19,7 +19,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/util/vector.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/int_vector.hpp>

@@ -1,28 +1,28 @@
 /*
-   Copyright (C) 2012  Statoil ASA, Norway. 
-    
-   The file 'ert_util_string_util.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2012  Statoil ASA, Norway.
+
+   The file 'ert_util_string_util.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
 
-#include <ert/util/int_vector.h>
-#include <ert/util/bool_vector.h>
-#include <ert/util/test_util.h>
-#include <ert/util/string_util.h>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/bool_vector.hpp>
+#include <ert/util/test_util.hpp>
+#include <ert/util/string_util.hpp>
 
 
 void test_int_vector(const int_vector_type * list , int length , ...) {
@@ -45,7 +45,7 @@ void test_active_list() {
   int_vector_type * active_list = string_util_alloc_active_list("1,3- 10,15");
   test_assert_true( string_util_init_active_list("1,3- 10,15" , active_list) );
   test_int_vector( active_list , 10 , 1,3,4,5,6,7,8,9,10,15);
-  
+
   test_assert_true( string_util_update_active_list("1,3- 10,15,8" , active_list) );
   test_int_vector( active_list , 10 , 1,3,4,5,6,7,8,9,10,15);
 
@@ -54,7 +54,7 @@ void test_active_list() {
 
   test_assert_true( string_util_update_active_list("14-16" , active_list) );
   test_int_vector( active_list , 12 , 1,3,4,5,6,7,8,9,10,14,15,16);
-  
+
   test_assert_true( string_util_update_active_list("0" , active_list) );
   test_int_vector( active_list , 13 , 0,1,3,4,5,6,7,8,9,10,14,15,16);
 
@@ -72,7 +72,7 @@ static void test2( const bool_vector_type * active_mask ) {
   test_assert_true( bool_vector_iget( active_mask , 9 ));
   test_assert_true( bool_vector_iget( active_mask , 10 ));
   test_assert_true( bool_vector_iget( active_mask , 15 ));
-  
+
   test_assert_false( bool_vector_iget( active_mask , 0 ));
   test_assert_false( bool_vector_iget( active_mask , 2 ));
   test_assert_false( bool_vector_iget( active_mask , 11 ));
@@ -83,7 +83,7 @@ static void test2( const bool_vector_type * active_mask ) {
 
 void test_active_mask() {
   bool_vector_type * active_mask = string_util_alloc_active_mask("1,3 -6,6-  10, 15");
-  
+
   test2( active_mask );
   test_assert_true( string_util_init_active_mask("1,3- 10,15" , active_mask));
   test2( active_mask );
@@ -133,7 +133,7 @@ void test_value_list() {
     test_int_vector( int_vector , 5,1,2,3,4,5);
     int_vector_free( int_vector );
   }
-  
+
 }
 
 

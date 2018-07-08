@@ -20,7 +20,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/util/hash.hpp>
 #include <ert/util/vector.hpp>
 

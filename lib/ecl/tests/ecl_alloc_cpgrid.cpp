@@ -20,11 +20,11 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/util/test_util.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/util/test_util.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 
 void test_grid(int nx, int ny, int nz) {

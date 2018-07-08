@@ -1,33 +1,33 @@
 /*
-   Copyright (C) 2013  Statoil ASA, Norway. 
-    
-   The file 'well_state_load_missing_RSEG.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2013  Statoil ASA, Norway.
+
+   The file 'well_state_load_missing_RSEG.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
-#include <ert/ecl_well/well_state.h>
+#include <ert/ecl_well/well_state.hpp>
 
 
 int main(int argc , char ** argv) {
@@ -47,7 +47,7 @@ int main(int argc , char ** argv) {
     well_type_enum type = ECL_WELL_GAS_INJECTOR;
     int global_well_nr = 0;
     bool load_segment_information = false;
-    
+
     for (global_well_nr = 0; global_well_nr < header->nwells; global_well_nr++) {
       well_state_type * well_state = well_state_alloc(well_name , global_well_nr , open , type , report_nr , valid_from);
       test_assert_true( well_state_is_instance( well_state) );

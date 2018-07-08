@@ -19,16 +19,16 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_nnc_export.h>
-#include <ert/ecl/ecl_nnc_geometry.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_nnc_data.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_nnc_export.hpp>
+#include <ert/ecl/ecl_nnc_geometry.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_nnc_data.hpp>
 
 
 
@@ -237,7 +237,7 @@ void test_export(const char * name, bool have_tran_data) {
       ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
       ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
       ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid, nnc_geo, view_file);
-     
+
       test_assert_int_equal( ecl_nnc_export_get_size( grid ), ecl_nnc_geometry_size( nnc_geo ));
       for (int i=0; i < ecl_nnc_geometry_size( nnc_geo ); i++) {
         const ecl_nnc_pair_type *nnc_pair = ecl_nnc_geometry_iget( nnc_geo , i );

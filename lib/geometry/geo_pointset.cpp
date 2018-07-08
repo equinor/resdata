@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 
 #include <ert/geometry/geo_pointset.hpp>
 

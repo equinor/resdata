@@ -21,9 +21,9 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/test_util.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/util/vector.h>
+#include <ert/util/test_util.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/util/vector.hpp>
 
 
 typedef struct {

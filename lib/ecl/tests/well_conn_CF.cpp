@@ -18,18 +18,18 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_rsthead.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_rsthead.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
-#include <ert/ecl_well/well_conn.h>
-#include <ert/ecl_well/well_conn_collection.h>
-#include <ert/ecl_well/well_const.h>
+#include <ert/ecl_well/well_conn.hpp>
+#include <ert/ecl_well/well_conn_collection.hpp>
+#include <ert/ecl_well/well_const.hpp>
 
 
 void well_conn_test_CF( const ecl_kw_type * iwel_kw , const ecl_kw_type * icon_kw , const ecl_kw_type * scon_kw, const ecl_kw_type * xcon_kw , const ecl_rsthead_type * rst_head , int iwell , int iconn, double CF) {

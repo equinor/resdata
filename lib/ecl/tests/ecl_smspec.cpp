@@ -19,9 +19,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/ecl/ecl_sum.h>
-#include <ert/ecl/ecl_smspec.h>
+#include <ert/util/test_util.hpp>
+#include <ert/ecl/ecl_sum.hpp>
+#include <ert/ecl/ecl_smspec.hpp>
 
 void test_sort( ecl_smspec_type * smspec )
 {

@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 
 #include <ert/util/util.h>
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 
 
 bool checkPath(const char * path, const char * directory, const char * base_name, const char * extension) {

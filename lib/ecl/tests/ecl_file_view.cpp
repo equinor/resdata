@@ -19,14 +19,14 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_work_area.hpp>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_file_kw.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_file_kw.hpp>
 
 void test_file_kw_equal() {
   ecl_file_kw_type * kw1 = ecl_file_kw_alloc0( "PRESSURE" , ECL_FLOAT, 1000 , 66);
@@ -106,7 +106,7 @@ void test_create_file_kw() {
   ecl_file_kw_free( file_kw0 );
   ecl_file_kw_free( file_kw1 );
   ecl_file_kw_free( file_kw2 );
-  
+
 }
 
 

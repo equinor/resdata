@@ -20,8 +20,8 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/test_util.h>
-#include <ert/ecl/ecl_grid.h>
+#include <ert/util/test_util.hpp>
+#include <ert/ecl/ecl_grid.hpp>
 
 
 double zfunc(double x , double y) {

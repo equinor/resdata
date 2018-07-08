@@ -1,31 +1,31 @@
 /*
-   Copyright (C) 2013  Statoil ASA, Norway. 
-    
-   The file 'ecl_nnc_export.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
+   Copyright (C) 2013  Statoil ASA, Norway.
+
+   The file 'ecl_nnc_export.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
     ll
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_nnc_export.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_nnc_export.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
 void test_get_tran(const char * name) {
   char * grid_file_name = ecl_util_alloc_filename(NULL , name , ECL_EGRID_FILE , false  , -1);
@@ -51,7 +51,7 @@ void test_get_tran(const char * name) {
     ecl_kw_type * tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANNNC_KW , 48 );
     test_assert_true( ecl_kw_is_instance( tran_kw ));
     test_assert_int_equal( 0 , ecl_kw_get_size( tran_kw ));
-    
+
     tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANGL_KW , 48 );
     test_assert_int_equal( 282 , ecl_kw_get_size( tran_kw ));
     test_assert_double_equal( 22.922695 , ecl_kw_iget_as_double( tran_kw , 0 ));
@@ -63,7 +63,7 @@ void test_get_tran(const char * name) {
     ecl_kw_type * tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANNNC_KW , 99 );
     test_assert_true( ecl_kw_is_instance( tran_kw ));
     test_assert_int_equal( 0 , ecl_kw_get_size( tran_kw ));
-    
+
     tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANGL_KW , 99 );
     test_assert_int_equal( 693 , ecl_kw_get_size( tran_kw ));
     test_assert_double_equal( 0.25534782 , ecl_kw_iget_as_double( tran_kw , 0 ));
@@ -76,7 +76,7 @@ void test_get_tran(const char * name) {
     ecl_kw_type * tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANNNC_KW , 10 );
     test_assert_true( ecl_kw_is_instance( tran_kw ));
     test_assert_int_equal( 0 , ecl_kw_get_size( tran_kw ));
-    
+
     tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANGL_KW , 10 );
     test_assert_int_equal( 260 , ecl_kw_get_size( tran_kw ));
     test_assert_double_equal( 0.87355447 , ecl_kw_iget_as_double( tran_kw , 0 ));
@@ -89,13 +89,13 @@ void test_get_tran(const char * name) {
     ecl_kw_type * tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANNNC_KW , 110 );
     test_assert_true( ecl_kw_is_instance( tran_kw ));
     test_assert_int_equal( 0 , ecl_kw_get_size( tran_kw ));
-    
+
     tran_kw = ecl_nnc_export_get_tran_kw( init_file , TRANGL_KW , 110 );
     test_assert_int_equal( 208 , ecl_kw_get_size( tran_kw ));
     test_assert_double_equal( 17.287283 , ecl_kw_iget_as_double( tran_kw , 0 ));
     test_assert_double_equal( 569.26312 , ecl_kw_iget_as_double( tran_kw ,  207 ));
   }
-  
+
 
   free( init_file_name );
   free(grid_file_name);
@@ -106,13 +106,13 @@ void test_get_tran(const char * name) {
 
 
 
-void test_tranLL( const ecl_grid_type * grid , const ecl_file_type * init_file , int lgr_nr1 , int lgr_nr2, 
+void test_tranLL( const ecl_grid_type * grid , const ecl_file_type * init_file , int lgr_nr1 , int lgr_nr2,
                   int size,
-                  double first , 
+                  double first ,
                   double last) {
-  
+
   ecl_kw_type * ecl_kw = ecl_nnc_export_get_tranll_kw(grid , init_file , lgr_nr1 , lgr_nr2 );
-  
+
   printf("lgr: %d -> %d \n",lgr_nr1 , lgr_nr2);
   test_assert_not_NULL(ecl_kw);
   test_assert_true(ecl_kw_is_instance( ecl_kw ));
@@ -129,13 +129,13 @@ void test_get_tranLL(const char * name) {
   ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
   ecl_file_type * grid_file = ecl_file_open( grid_file_name , 0 );
   ecl_file_type * init_file = ecl_file_open( init_file_name , 0 );
-  
+
   test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG003017" ), ecl_grid_get_lgr_nr_from_name( grid , "LG003018" ),
                172 , 5.3957253 , 1.0099934);
 
   test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG002016" ), ecl_grid_get_lgr_nr_from_name( grid , "LG002017" ),
                93 , 1.4638059 , 0.36407200 );
-  
+
   test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG002016" ), ecl_grid_get_lgr_nr_from_name( grid , "LG003016" ),
                56 , 2.7360380 , 10.053267);
 
@@ -144,7 +144,7 @@ void test_get_tranLL(const char * name) {
 
   test_tranLL( grid , init_file , ecl_grid_get_lgr_nr_from_name( grid , "LG009027" ), ecl_grid_get_lgr_nr_from_name( grid , "LG008027" ),
                317 , 0.040260997 , 0.0066288318);
-  
+
 
   free( init_file_name );
   free(grid_file_name);

@@ -22,8 +22,8 @@
    for more details.
 */
 
-#include <ert/util/test_util.h>
-#include <ert/ecl/ecl_util.h>
+#include <ert/util/test_util.hpp>
+#include <ert/ecl/ecl_util.hpp>
 
 
 

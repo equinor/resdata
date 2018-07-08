@@ -20,14 +20,14 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
-#include <ert/util/path_stack.h>
+#include <ert/util/test_work_area.hpp>
+#include <ert/util/path_stack.hpp>
 
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_sum.hpp>
 
 
 void test_case( const char * sum_case , bool expected_exist) {

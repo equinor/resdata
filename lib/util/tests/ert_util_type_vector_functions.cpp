@@ -1,29 +1,29 @@
 /*
-   Copyright (C) 2013  Statoil ASA, Norway. 
-    
+   Copyright (C) 2013  Statoil ASA, Norway.
+
    The file 'ert_util_type_vector_functions.c' is part of ERT -
    Ensemble based Reservoir Tool.
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/int_vector.h>
-#include <ert/util/bool_vector.h>
-#include <ert/util/type_vector_functions.h>
-#include <ert/util/test_util.h>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/bool_vector.hpp>
+#include <ert/util/type_vector_functions.hpp>
+#include <ert/util/test_util.hpp>
 
 
 void test_index_list() {
@@ -33,7 +33,7 @@ void test_index_list() {
   int_vector_append( index_list , 30 );
   {
     bool_vector_type * mask = int_vector_alloc_mask( index_list );
-    
+
     test_assert_false( bool_vector_get_default( mask ));
     test_assert_int_equal( 31 , bool_vector_size( mask ));
     test_assert_true( bool_vector_iget( mask , 10 ));
@@ -115,7 +115,7 @@ void test_approx_equal() {
 
   double_vector_append( d2 , 3.0 );
   test_assert_true( double_vector_approx_equal( d1 , d2 ,1e-6));
-  
+
   double_vector_append( d3 , 1.0 );
   double_vector_append( d3 , 2.0 );
   double_vector_append( d3 , 3.0 );

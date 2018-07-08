@@ -20,8 +20,8 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/util/test_util.h>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/util/test_util.hpp>
 
 void test_grid() {
   const int nx = 5, ny = 6, nz = 7;

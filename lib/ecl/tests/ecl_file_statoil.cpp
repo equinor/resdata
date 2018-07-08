@@ -20,15 +20,15 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_work_area.hpp>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_file_view.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_endian_flip.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_endian_flip.hpp>
 
 
 void test_flags( const char * filename) {

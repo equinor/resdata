@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway. 
-    
-   The file 'rft_test.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Statoil ASA, Norway.
+
+   The file 'rft_test.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <ecl_rft_file.h>
@@ -27,9 +27,9 @@ int main (int argc , char ** argv) {
     util_exit("I want one RFT file - try again \n");
   {
     const char * filename = argv[1];
-    ecl_rft_file_type * rft_file = ecl_rft_file_alloc( filename );  
+    ecl_rft_file_type * rft_file = ecl_rft_file_alloc( filename );
     stringlist_type   * wells    = ecl_rft_file_alloc_well_list( rft_file );
-    
+
     printf("<ECLIPSE RFT FILE>\n");
     {
       int iw;
@@ -55,7 +55,7 @@ int main (int argc , char ** argv) {
 		  printf("            <cell>\n");
 		  printf("                <PRESSURE> %g </PRESSURE> \n", ecl_rft_node_iget_pressure( node, icell));
 		  printf("                <DPETH>    %g </DEPTH>     \n" , ecl_rft_node_iget_depth( node , icell));
-		  printf("                <ijk> %3d,%3d,%3d </ijk>  \n",i,j,k);     
+		  printf("                <ijk> %3d,%3d,%3d </ijk>  \n",i,j,k);
 		  printf("            </cell>\n");
 		}
 	      }

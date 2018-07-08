@@ -20,8 +20,8 @@
 #include <execinfo.h>
 #include <unistd.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/arg_pack.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/arg_pack.hpp>
 
 
 

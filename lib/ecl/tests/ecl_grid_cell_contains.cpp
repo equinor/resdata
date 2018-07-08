@@ -21,8 +21,8 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/test_util.h>
-#include <ert/ecl/ecl_grid.h>
+#include <ert/util/test_util.hpp>
+#include <ert/ecl/ecl_grid.hpp>
 
 
 bool get_test_point1(const ecl_grid_type * grid , int global_index, double *_xpos , double *_ypos , double *_zpos) {
