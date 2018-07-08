@@ -264,5 +264,21 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+namespace ecl {
+
+  ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx,
+                                             int ny,
+                                             int nz,
+                                             const double * zcorn,
+                                             const double * coord,
+                                             const int * actnum,
+                                             bool apply_mapaxes,
+                                             const float * mapaxes);
+
+}
+
+#ifdef __cplusplus
+#endif
+
 #endif
 #endif

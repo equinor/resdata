@@ -20,10 +20,6 @@
 #ifndef ERT_TEST_UTIL_H
 #define ERT_TEST_UTIL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <setjmp.h>
@@ -32,6 +28,10 @@ extern "C" {
 #if defined(__APPLE__)
 #include <wchar.h>
 #include <time.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 
@@ -134,4 +134,32 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef __cplusplus
+
+#define test_assert_throw(expr , exception_type )                       \
+  {                                                                     \
+    bool throw_ok = false;                                              \
+    try {                                                               \
+      expr;                                                             \
+    }                                                                   \
+    catch (std::exception &e) {                                         \
+      if (dynamic_cast<exception_type *>(&e))                           \
+        throw_ok = true;                                                \
+    }                                                                   \
+    if (!throw_ok)                                                      \
+      test_error_exit("Correct exception not thrown at %s:%d\n",__FILE__ , __LINE__); \
+  }
+
+#define test_assert_std_string_equal(s0, s1)                        \
+  {                                                                 \
+    if (s0.compare(s1) != 0)                                        \
+      test_error_exit("Strings not equal at%s:%d (%s != %s)\n",     \
+                      __FILE__ , __LINE__, s0.c_str(), s1.c_str()); \
+  }
+
+
+#endif
+
+
 #endif
