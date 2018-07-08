@@ -20,7 +20,7 @@
 #include <ert/ecl/ecl_sum.hpp>
 #include <ert/ecl/ecl_smspec.hpp>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>

@@ -18,15 +18,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_work_area.hpp>
 
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_file_view.h>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
 
 
 void test_truncated(const char * filename , offset_type truncate_size) {
@@ -79,7 +79,7 @@ void test_fread_alloc() {
 
 void test_kw_io_charlength() {
   test_work_area_type * work_area = test_work_area_alloc("ecl_kw_io_charlength");
-  { 
+  {
     const char * KW0 = "QWERTYUI";
     const char * KW1 = "ABCDEFGHIJTTTTTTTTTTTTTTTTTTTTTTABCDEFGHIJKLMNOP";
     ecl_kw_type * ecl_kw_out0 = ecl_kw_alloc(KW0 , 5, ECL_FLOAT);
@@ -99,13 +99,13 @@ void test_kw_io_charlength() {
     {
        test_assert_false( util_file_exists( "TEST1"));
     }
-   
+
     {
        FILE * file = util_fopen("TEST2", "w");
        ecl_kw_fprintf_grdecl(ecl_kw_out1 , file);
        fclose(file);
     }
-    
+
     {
        FILE * file = util_fopen("TEST2", "r");
        ecl_kw_type * ecl_kw_in = ecl_kw_fscanf_alloc_grdecl( file , KW1 , -1 , ECL_FLOAT);
@@ -117,7 +117,7 @@ void test_kw_io_charlength() {
 
        fclose(file);
     }
-    
+
     ecl_kw_free( ecl_kw_out0 );
     ecl_kw_free( ecl_kw_out1 );
   }

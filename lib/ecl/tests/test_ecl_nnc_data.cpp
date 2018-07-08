@@ -16,18 +16,18 @@
    for more details.
 */
 
-#include <ert/ecl/ecl_nnc_data.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_nnc_geometry.h>
+#include <ert/ecl/ecl_nnc_data.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_nnc_geometry.hpp>
 
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_kw.hpp>
 
 #include <ert/util/util.h>
-#include <ert/util/test_util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/test_work_area.hpp>
 
 
 
@@ -46,7 +46,7 @@ void test_alloc_global_only(bool data_in_file) {
       ecl_grid_add_self_nnc(grid0, 2 ,nx*ny + 2, 2 );
       {
          ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid0 );
-         test_assert_int_equal( ecl_nnc_geometry_size( nnc_geo ) , 3 );        
+         test_assert_int_equal( ecl_nnc_geometry_size( nnc_geo ) , 3 );
          /*
          Create a dummy INIT file which *ony* contains a TRANNC keyword with the correct size.
          */
@@ -63,15 +63,15 @@ void test_alloc_global_only(bool data_in_file) {
             fortio_fclose( f );
             ecl_kw_free( trann_nnc );
          }
-        
+
          ecl_file_type * init_file = ecl_file_open( "TEST.INIT" , 0 );
-         ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );       
-         
+         ecl_file_view_type * view_file = ecl_file_get_global_view( init_file );
+
          ecl_nnc_data_type * nnc_geo_data = ecl_nnc_data_alloc_tran(grid0, nnc_geo, view_file);
-         
+
 
          if (data_in_file) {
-    
+
             int nnc_data_size = ecl_nnc_data_get_size( nnc_geo_data );
             test_assert_true( ecl_file_view_has_kw( view_file, TRANNNC_KW) );
             test_assert_true(nnc_data_size == 3);
@@ -82,7 +82,7 @@ void test_alloc_global_only(bool data_in_file) {
          }
          else
             test_assert_NULL(nnc_geo_data);
-         
+
          if (data_in_file)
            ecl_nnc_data_free( nnc_geo_data );
          ecl_nnc_geometry_free( nnc_geo );
@@ -98,7 +98,7 @@ void test_alloc_global_only(bool data_in_file) {
 
 
 int main(int argc , char ** argv) {
-   
+
    test_alloc_global_only(true);
    test_alloc_global_only(false);
 

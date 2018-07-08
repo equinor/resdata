@@ -18,10 +18,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/rng.h>
-#include <ert/util/mzran.h>
+#include <ert/util/rng.hpp>
+#include <ert/util/mzran.hpp>
 
 
 #define MAX_INT 666661

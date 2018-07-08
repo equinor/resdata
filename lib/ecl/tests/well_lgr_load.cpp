@@ -21,17 +21,17 @@
 #include <signal.h>
 
 #include <ert/util/util.h>
-#include <ert/util/int_vector.h>
+#include <ert/util/int_vector.hpp>
 
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_util.hpp>
 
-#include <ert/ecl_well/well_state.h>
-#include <ert/ecl_well/well_info.h>
-#include <ert/ecl_well/well_conn.h>
-#include <ert/ecl_well/well_ts.h>
+#include <ert/ecl_well/well_state.hpp>
+#include <ert/ecl_well/well_info.hpp>
+#include <ert/ecl_well/well_conn.hpp>
+#include <ert/ecl_well/well_ts.hpp>
 
 
 

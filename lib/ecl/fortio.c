@@ -23,7 +23,7 @@
 #include <errno.h>
 
 #include <ert/util/util.h>
-#include <ert/util/type_macros.h>
+#include <ert/util/type_macros.hpp>
 #include <ert/ecl/fortio.h>
 
 #include <ecl/fortio.h>

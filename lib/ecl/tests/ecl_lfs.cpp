@@ -18,10 +18,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_type.h>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_type.hpp>
 
 
 

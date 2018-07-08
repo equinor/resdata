@@ -18,10 +18,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_nnc_geometry.h>
+#include <ert/ecl/ecl_nnc_geometry.hpp>
 
 void test_pair( int grid1_1 , int grid1_2 , int grid2_1, int grid2_2, bool expected) {
   ecl_nnc_pair_type pair1 = {grid1_1, grid1_2, 0, 0};

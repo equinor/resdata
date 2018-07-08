@@ -35,7 +35,7 @@
 #include <fcntl.h>
 #include <limits.h>
 
-#include <ert/util/ert_api_config.h>
+#include <ert/util/ert_api_config.hpp>
 #include "ert/util/build_config.h"
 
 #include <errno.h>
@@ -89,7 +89,7 @@
 #endif
 
 #include <ert/util/util.h>
-#include <ert/util/buffer.h>
+#include <ert/util/buffer.hpp>
 
 
 /*
@@ -2565,7 +2565,7 @@ bool util_same_file(const char * file1 , const char * file2) {
       return same_file;
   }
   else
-    return false;    
+    return false;
 #endif
 }
 
@@ -4819,7 +4819,7 @@ char * util_alloc_filename(const char * path , const char * basename , const cha
 
   file = (char*) util_calloc(length , sizeof * file );
   file[0] = '\0';
-  
+
   if (path && strlen(path)) {
     strcat(file, path);
     strcat(file, UTIL_PATH_SEP_STRING );

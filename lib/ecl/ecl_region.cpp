@@ -21,10 +21,10 @@
 #include <string.h>
 
 #include <ert/util/int_vector.hpp>
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 
-#include <ert/geometry/geo_util.h>
-#include <ert/geometry/geo_polygon.h>
+#include <ert/geometry/geo_util.hpp>
+#include <ert/geometry/geo_polygon.hpp>
 
 #include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/ecl_grid.hpp>

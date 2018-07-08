@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/type_vector_functions.hpp>
 

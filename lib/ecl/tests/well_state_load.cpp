@@ -18,16 +18,16 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_util.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
-#include <ert/ecl_well/well_state.h>
+#include <ert/ecl_well/well_state.hpp>
 
 
 int main(int argc , char ** argv) {

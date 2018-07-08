@@ -22,9 +22,9 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#include <ert/util/ert_api_config.h>
+#include <ert/util/ert_api_config.hpp>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/util/hash.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/parser.hpp>

@@ -1,32 +1,32 @@
 /*
-   Copyright (C) 2013  Statoil ASA, Norway. 
-    
-   The file 'ecl_rft.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2013  Statoil ASA, Norway.
+
+   The file 'ecl_rft.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_rft_file.h>
-#include <ert/util/vector.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/test_work_area.h>
-#include <ert/ecl/ecl_rft_node.h>
+#include <ert/ecl/ecl_rft_file.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/test_work_area.hpp>
+#include <ert/ecl/ecl_rft_node.hpp>
 
 
 void test_rft_read_write(const char * rft_file){
@@ -41,7 +41,7 @@ void test_rft_read_write(const char * rft_file){
     ecl_rft_node_type * new_node = ecl_rft_node_alloc_new("DUMMY", "R", ecl_rft_node_get_date(old_node), ecl_rft_node_get_days(old_node));
     nodes[2]=new_node;
     test_work_area_type * work_area = test_work_area_alloc("RFT_RW");
-    
+
     ecl_rft_file_update("eclipse.rft", nodes,3, ECL_METRIC_UNITS);
     test_work_area_free(work_area);
     free(nodes);
@@ -51,11 +51,11 @@ void test_rft_read_write(const char * rft_file){
 void test_rft( const char * rft_file ) {
   ecl_rft_file_type * rft = ecl_rft_file_alloc( rft_file );
   ecl_rft_node_type * rft_node = ecl_rft_file_iget_node( rft , 0 );
-  
+
   test_assert_true( ecl_rft_node_is_RFT( rft_node ));
   test_assert_int_equal( 14 , ecl_rft_node_get_size( rft_node ));
   test_assert_false( ecl_rft_node_is_MSW( rft_node ));
-  
+
   test_assert_double_equal( 260.6111   , ecl_rft_node_iget_pressure( rft_node , 0 ));
   test_assert_double_equal( 0.0581993  , ecl_rft_node_iget_soil( rft_node , 0 ));
   test_assert_double_equal( 0.9405648  , ecl_rft_node_iget_swat( rft_node , 0 ));
@@ -67,12 +67,12 @@ void test_rft( const char * rft_file ) {
     ecl_rft_node_iget_ijk( rft_node , 0 , &i , &j , &k );
     test_assert_int_equal( 32 , i );
     test_assert_int_equal( 53 , j );
-    test_assert_int_equal( 0  , k );    
+    test_assert_int_equal( 0  , k );
 
     ecl_rft_node_iget_ijk( rft_node , 13 , &i , &j , &k );
     test_assert_int_equal( 32 , i );
     test_assert_int_equal( 54 , j );
-    test_assert_int_equal( 12 , k );    
+    test_assert_int_equal( 12 , k );
 
     for (i=0; i < ecl_rft_node_get_size( rft_node );  i++) {
       const ecl_rft_cell_type * cell1 = ecl_rft_node_iget_cell( rft_node , i );
@@ -123,19 +123,19 @@ void test_plt( const char * plt_file ) {
   test_assert_double_equal( 167.473  , ecl_rft_node_iget_orat( plt_node , 0 ));
   test_assert_double_equal( 41682.2  , ecl_rft_node_iget_grat( plt_node , 0 ));
   test_assert_double_equal( 0.958927 , ecl_rft_node_iget_wrat( plt_node , 0 ));
-  
+
   {
     int i,j,k;
 
     ecl_rft_node_iget_ijk( plt_node , 0 , &i , &j , &k );
     test_assert_int_equal( 39 , i );
     test_assert_int_equal( 33 , j );
-    test_assert_int_equal( 16 , k );    
-    
+    test_assert_int_equal( 16 , k );
+
     ecl_rft_node_iget_ijk( plt_node , 21 , &i , &j , &k );
     test_assert_int_equal( 44 , i );
     test_assert_int_equal( 34 , j );
-    test_assert_int_equal(  7 , k );    
+    test_assert_int_equal(  7 , k );
 
     for (i=0; i < ecl_rft_node_get_size( plt_node );  i++) {
       const ecl_rft_cell_type * cell1 = ecl_rft_node_iget_cell( plt_node , i );
@@ -145,7 +145,7 @@ void test_plt( const char * plt_file ) {
     }
     ecl_rft_node_inplace_sort_cells( plt_node );
   }
-  
+
   ecl_rft_file_free( plt );
 }
 

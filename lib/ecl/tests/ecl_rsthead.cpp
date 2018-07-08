@@ -18,13 +18,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_rsthead.h>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_rsthead.hpp>
 
 
 void test_file( const char * filename , int occurence , bool exists , const ecl_rsthead_type * true_header) {

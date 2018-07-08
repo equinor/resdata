@@ -18,15 +18,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_work_area.hpp>
 
-#include <ert/ecl/ecl_sum.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_sum.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 
 
 double write_summary( const char * name , time_t start_time , int nx , int ny , int nz , int num_dates, int num_ministep, double ministep_length) {

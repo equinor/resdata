@@ -27,7 +27,7 @@
 #include <time.h>
 
 
-#include <ert/util/ert_api_config.h>
+#include <ert/util/ert_api_config.hpp>
 
 
 
@@ -209,7 +209,7 @@ typedef enum {left_pad   = 0,
   int          util_count_content_file_lines(FILE * );
   FILE       * util_mkdir_fopen( const char * filename , const char * mode );
   int          util_fmove( FILE * stream , long offset , long shift);
-  FILE       * util_fopen(const char *  , const char *); 
+  FILE       * util_fopen(const char *  , const char *);
   FILE       * util_fopen__(const char * filename , const char * mode);
   bool         util_fopen_test(const char *, const char *);
   char       * util_split_alloc_dirname( const char * input_path );

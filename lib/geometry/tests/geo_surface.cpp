@@ -20,9 +20,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_work_area.hpp>
 
 #include <ert/geometry/geo_surface.hpp>
 

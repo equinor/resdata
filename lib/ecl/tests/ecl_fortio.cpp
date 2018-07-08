@@ -18,13 +18,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/vector.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/vector.hpp>
+#include <ert/util/test_work_area.hpp>
 
 #include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_endian_flip.h>
+#include <ert/ecl/ecl_endian_flip.hpp>
 
 void test_existing_read(const char * filename) {
   fortio_type * fortio = fortio_open_reader( filename , false , ECL_ENDIAN_FLIP);

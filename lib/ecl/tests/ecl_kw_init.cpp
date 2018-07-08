@@ -18,11 +18,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/bool_vector.h>
-#include <ert/util/test_util.h>
+#include <ert/util/bool_vector.hpp>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_kw.hpp>
 
 
 void test_int() {

@@ -18,12 +18,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_work_area.h>
-#include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
+#include <ert/util/test_work_area.hpp>
+#include <ert/util/test_util.hpp>
+#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.h>
+#include <ert/ecl/ecl_util.hpp>
 
 
 void test_filename_report_nr() {

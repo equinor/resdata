@@ -18,11 +18,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
-#include <ert/util/time_t_vector.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/time_t_vector.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/ecl_sum.hpp>
 
 
 void test_time_range( const ecl_sum_type * ecl_sum ) {
@@ -63,7 +63,7 @@ void test_is_oil_producer( const ecl_sum_type * ecl_sum) {
 
 int main( int argc , char ** argv) {
   const char * case1 = argv[1];
-  
+
   ecl_sum_type * ecl_sum1 = ecl_sum_fread_alloc_case( case1 , ":");
 
   test_assert_true( ecl_sum_is_instance( ecl_sum1 ));

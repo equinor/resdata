@@ -1,28 +1,28 @@
 /*
-   Copyright (C) 2012  Statoil ASA, Norway. 
-    
-   The file 'ert_util_relpath_test.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2012  Statoil ASA, Norway.
+
+   The file 'ert_util_relpath_test.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <ert/util/vector.h>
+#include <ert/util/vector.hpp>
 #include <ert/util/util.h>
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 
 
 void test_path(int nr , const char * root , const char * path , const char * true_path) {
@@ -32,7 +32,7 @@ void test_path(int nr , const char * root , const char * path , const char * tru
     test_error_exit("Case:%d  rel_path(%s,%s) -> %s failed - expected: %s\n" , nr , root , path , rel_path , true_path);
   else
     printf("Case:%d OK \n",nr);
-  
+
   free( rel_path );
 }
 
@@ -49,7 +49,7 @@ int main(int argc , char ** argv) {
   const char * root3 = "/tmp/root/path";
   const char * path3 = "/tmp/root/";
   const char * true3 = "../";
-  
+
   const char * root4 = "/tmp/root/path";
   const char * path4 = "relative";
   const char * true4 = "relative";
@@ -61,7 +61,7 @@ int main(int argc , char ** argv) {
   const char * root6 = "/tmp/root/path";
   const char * path6 = "/tmpX/root/pathX/relative";
   const char * true6 = "../../../tmpX/root/pathX/relative";
-  
+
   const char * root7 = "/tmp/root/path";
   const char * path7 = "/tmp/root/path";
   const char * true7 = "";
@@ -71,7 +71,7 @@ int main(int argc , char ** argv) {
   const char * true8 = "root/path";
 
 #endif
-  
+
   test_path( 1 , root1 , path1 , true1 );
   test_path( 2 , root2 , path2 , true2 );
   test_path( 3 , root3 , path3 , true3 );

@@ -22,7 +22,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/util/buffer.hpp>
 #include <ert/util/int_vector.hpp>
 
@@ -1378,7 +1378,7 @@ ecl_read_status_enum ecl_kw_fread_header(ecl_kw_type *ecl_kw , fortio_type * for
     memcpy( header , &buffer[0] , ECL_STRING8_LENGTH);
     void * ptr = &buffer[ECL_STRING8_LENGTH];
     size = *((int*)ptr);
- 
+
     memcpy( ecl_type_str , &buffer[ECL_STRING8_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
 
     if(!fortio_complete_read(fortio , record_size))
@@ -1934,7 +1934,7 @@ ecl_kw_type * ecl_kw_alloc_global_copy(const ecl_kw_type * src, const ecl_kw_typ
     return NULL;
 
   const int global_size = ecl_kw_get_size(actnum);
-  ecl_kw_type * global_copy = ecl_kw_alloc( ecl_kw_get_header(src), global_size, src->data_type); 
+  ecl_kw_type * global_copy = ecl_kw_alloc( ecl_kw_get_header(src), global_size, src->data_type);
   const int * mapping = ecl_kw_get_int_ptr(actnum);
   const int src_size = ecl_kw_get_size(src);
   int src_index = 0;

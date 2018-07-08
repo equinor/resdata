@@ -15,15 +15,15 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <ert/util/test_util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/test_work_area.hpp>
 
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_nnc_geometry.h>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_nnc_geometry.hpp>
 
 
 void test_create_empty() {

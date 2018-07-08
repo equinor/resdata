@@ -19,7 +19,7 @@
 #include <time.h>
 #include <math.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/util/type_macros.hpp>
 
 #include <ert/ecl/ecl_sum_tstep.hpp>

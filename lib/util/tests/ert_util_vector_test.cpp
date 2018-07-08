@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/int_vector.h>
-#include <ert/util/vector.h>
-#include <ert/util/test_util.h>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/vector.hpp>
+#include <ert/util/test_util.hpp>
 
 
 

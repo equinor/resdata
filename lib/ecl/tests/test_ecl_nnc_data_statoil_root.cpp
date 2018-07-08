@@ -16,18 +16,18 @@
    for more details.
 */
 
-#include <ert/ecl/ecl_nnc_data.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_nnc_geometry.h>
+#include <ert/ecl/ecl_nnc_data.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_nnc_geometry.hpp>
 
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_grid.hpp>
+#include <ert/ecl/ecl_kw.hpp>
 
 #include <ert/util/util.h>
-#include <ert/util/test_util.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_util.hpp>
+#include <ert/util/test_work_area.hpp>
 
 
 
@@ -62,7 +62,7 @@ void test_alloc_file_tran(char * filename) {
    int index;
 
    index = find_index( nnc_geo, 0, 0, 541, 14507);
-   test_assert_double_equal(13.784438, ecl_nnc_data_iget_value( nnc_geo_data, index) );   
+   test_assert_double_equal(13.784438, ecl_nnc_data_iget_value( nnc_geo_data, index) );
 
    index = find_index( nnc_geo, 0, 0, 48365, 118191);
    test_assert_double_equal(0.580284 , ecl_nnc_data_iget_value( nnc_geo_data, index) );
@@ -99,7 +99,7 @@ void test_alloc_file_flux(char * filename, int file_num) {
    ecl_file_type * restart_file = ecl_file_open( restart_file_name , 0 );
    ecl_grid_type * grid = ecl_grid_alloc( grid_file_name );
    ecl_nnc_geometry_type * nnc_geo = ecl_nnc_geometry_alloc( grid );
-   {   
+   {
       ecl_file_view_type * view_file = ecl_file_get_global_view( restart_file );
 
       ecl_nnc_data_type * nnc_flux_data = ecl_nnc_data_alloc_wat_flux(grid, nnc_geo, view_file);

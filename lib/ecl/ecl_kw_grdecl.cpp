@@ -19,7 +19,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 
 #include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/ecl_type.hpp>
@@ -394,9 +394,9 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
 
    The ecl_kw class has a quite deeply wired assumption that the
    header is a string of length 8 (I hope/think that is an ECLIPSE
-   limitation). The class cannot read/write kw with headers longer than 8 bytes. 
+   limitation). The class cannot read/write kw with headers longer than 8 bytes.
    ecl_kw_grdecl is a workaround allowing for reading/writing kw with long
-   headers. 
+   headers.
 
    -----------------------------------------------------------------
 

@@ -20,7 +20,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <ert/util/util.hpp>
+#include <ert/util/util.h>
 #include <ert/ecl/ecl_type.hpp>
 
 /*****************************************************************/
@@ -202,7 +202,7 @@ bool ecl_type_is_double(const ecl_data_type ecl_type) {
 bool ecl_type_is_mess(const ecl_data_type ecl_type) {
   return (ecl_type.type == ECL_MESS_TYPE);
 }
- 
+
 bool ecl_type_is_bool(const ecl_data_type ecl_type) {
   return (ecl_type.type == ECL_BOOL_TYPE);
 }
@@ -212,7 +212,7 @@ bool ecl_type_is_string(const ecl_data_type ecl_type) {
 }
 
 // Temporary fixup for OPM.
- char * ecl_type_get_name(const ecl_data_type ecl_type) { 
-    return ecl_type_alloc_name( ecl_type ); 
- }      
-   
+ char * ecl_type_get_name(const ecl_data_type ecl_type) {
+    return ecl_type_alloc_name( ecl_type );
+ }
+

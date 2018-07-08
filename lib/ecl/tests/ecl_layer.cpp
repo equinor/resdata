@@ -18,11 +18,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
-#include <ert/util/struct_vector.h>
+#include <ert/util/struct_vector.hpp>
 
-#include <ert/ecl/layer.h>
+#include <ert/ecl/layer.hpp>
 
 
 void test_create() {
