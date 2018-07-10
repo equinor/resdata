@@ -194,8 +194,8 @@ target_compile_options(ecl PUBLIC ${pthreadarg})
 
 
 if (ERT_USE_OPENMP)
-    target_compile_options(ecl PUBLIC ${OpenMP_C_FLAGS})
-    set_property(TARGET ecl APPEND PROPERTY LINK_FLAGS ${OpenMP_C_FLAGS})
+    target_compile_options(ecl PUBLIC ${OpenMP_CXX_FLAGS})
+    set_property(TARGET ecl APPEND PROPERTY LINK_FLAGS ${OpenMP_CXX_FLAGS})
     target_link_libraries( ecl PUBLIC ${OpenMP_EXE_LINKER_FLAGS})
 endif ()
 
