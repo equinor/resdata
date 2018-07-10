@@ -289,6 +289,7 @@ smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keywor
                                                       -1,
                                                       default_value);
   ecl_smspec_add_node(ecl_sum->smspec, smspec_node);
+  ecl_sum_data_reset_self_map( ecl_sum->data );
   return smspec_node;
 }
 
@@ -754,7 +755,7 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times) {
   time_t start_time = ecl_sum_get_data_start(ecl_sum);
 
-  if ( time_t_vector_get_first(times) < start_time )
+  if ( time_t_vector_get_first(times) < start_time ) 
     return NULL;
   if ( time_t_vector_get_last(times) > ecl_sum_get_end_time(ecl_sum) )
     return NULL;

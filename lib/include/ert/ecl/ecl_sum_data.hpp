@@ -38,6 +38,7 @@ extern "C" {
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ;
 
+  void                     ecl_sum_data_reset_self_map( ecl_sum_data_type * data );
   void                     ecl_sum_data_add_case(ecl_sum_data_type * self, const ecl_sum_data_type * other);
   void                     ecl_sum_data_fwrite_step( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified, int report_step);
   void                     ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case , bool fmt_case , bool unified);
@@ -82,7 +83,6 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   int                      ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_index);
   int                      ecl_sum_data_iget_mini_step(const ecl_sum_data_type * data , int internal_index);
   int                      ecl_sum_data_iget_report_end( const ecl_sum_data_type * data , int report_step );
-  int                      ecl_sum_data_iget_report_start( const ecl_sum_data_type * data , int report_step );
   ecl_sum_tstep_type     * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int report_step , double sim_seconds);
   bool                     ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);
   bool                     ecl_sum_data_report_step_compatible( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);
