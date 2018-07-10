@@ -19,10 +19,6 @@
 #ifndef ERT_ECL_SUM_H
 #define ERT_ECL_SUM_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
@@ -34,6 +30,10 @@ extern "C" {
 #include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/ecl_sum_tstep.hpp>
 #include <ert/ecl/smspec_node.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
   typedef struct {
     char * locale;

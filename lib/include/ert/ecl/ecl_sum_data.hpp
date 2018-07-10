@@ -20,9 +20,6 @@
 #define ERT_ECL_SUM_DATA_H
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
@@ -34,6 +31,10 @@ extern "C" {
 #include <ert/ecl/ecl_sum_tstep.hpp>
 #include <ert/ecl/smspec_node.hpp>
 #include <ert/ecl/ecl_sum_vector.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ecl_sum_data_struct ecl_sum_data_type ;
 
