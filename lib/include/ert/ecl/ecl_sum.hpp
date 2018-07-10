@@ -199,7 +199,6 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   bool                  ecl_sum_var_is_total( const ecl_sum_type * ecl_sum , const char * gen_key);
 
   int                   ecl_sum_iget_report_end( const ecl_sum_type * ecl_sum , int report_step );
-  int                   ecl_sum_iget_report_start( const ecl_sum_type * ecl_sum , int report_step );
   ecl_sum_type        * ecl_sum_alloc_restart_writer2( const char * ecl_case,
                                                        const char * restart_case,
                                                        int restart_step,

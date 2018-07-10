@@ -881,9 +881,6 @@ int ecl_sum_iget_report_end( const ecl_sum_type * ecl_sum, int report_step) {
   return ecl_sum_data_iget_report_end(ecl_sum->data , report_step );
 }
 
-int ecl_sum_iget_report_start( const ecl_sum_type * ecl_sum, int report_step) {
-  return ecl_sum_data_iget_report_start(ecl_sum->data , report_step );
-}
 
 int ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index ){
   return ecl_sum_data_iget_report_step( ecl_sum->data , internal_index );
