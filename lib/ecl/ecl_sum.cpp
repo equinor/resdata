@@ -16,6 +16,8 @@
    for more details.
 */
 
+#include <stdexcept>
+
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
@@ -279,6 +281,10 @@ void ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case ) {
 
 
 smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
+  if (ecl_sum_data_get_length(ecl_sum->data) > 0)
+    throw std::invalid_argument("Can not interchange variable adding and timesteps.\n");
+
+
   smspec_node_type * smspec_node = smspec_node_alloc( ecl_smspec_identify_var_type(keyword),
                                                       wgname,
                                                       keyword,

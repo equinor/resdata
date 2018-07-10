@@ -332,10 +332,9 @@ ecl_sum_tstep_type * ecl_sum_file_data::add_new_tstep( int report_step , double 
     rebuild_index = false;
   }
 
- exit:
+exit:
   if (rebuild_index)
       build_index();
-  //ecl_smspec_lock( ecl_smspec );
 
   return tstep;
 }

@@ -142,7 +142,6 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   int                        ecl_smspec_get_params_size( const ecl_smspec_type * smspec );
   int                        ecl_smspec_num_nodes( const ecl_smspec_type * smspec);
   const   smspec_node_type * ecl_smspec_iget_node( const ecl_smspec_type * smspec , int index );
-  void                       ecl_smspec_lock( ecl_smspec_type * smspec );
 
 
   char                     * ecl_smspec_alloc_well_key( const ecl_smspec_type * smspec , const char * keyword , const char * wgname);
