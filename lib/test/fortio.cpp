@@ -249,6 +249,28 @@ TEST_CASE("record with invalid head", "[fortio][f77]") {
     }
 }
 
+TEST_CASE("requesting string does not consider endianness", "[fortio][f77]") {
+    ufile handle( std::tmpfile() );
+    REQUIRE( handle );
+    auto* fp = handle.get();
+
+    const std::string expected = "FOPT    MINISTEP";
+    Err err = eclfio_put( fp, "b", 16, expected.data() );
+    REQUIRE( err == Err::ok() );
+    std::rewind( fp );
+
+    for( const std::string opts : { "s", "st", "ts", "fst" } )
+    SECTION( "with options: " + opts ) {
+        char data[17]  = { 0 };
+        std::int32_t size = 2;
+        err = eclfio_get( fp, opts.c_str(), &size, data );
+
+        CHECK( err == Err::ok() );
+        CHECK( data == expected );
+        CHECK( size == 2 );
+    }
+}
+
 TEST_CASE("encountering EOF after valid block", "[fortio][f77]") {
     ufile handle( std::tmpfile() );
     REQUIRE( handle );

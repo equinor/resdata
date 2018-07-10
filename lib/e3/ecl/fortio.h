@@ -64,9 +64,13 @@ extern "C" {
  * -------
  *  record data types:
  *      c - characters, sizeof(char)
+ *      b - byte, alias for c
+ *      s - string of fixed length 8
  *      i - (signed)integers, sizeof(int32_t), default
  *      f - single-precision float, sizeof(float)
  *      d - double-precision float, sizeof(double)
+ *
+ *  if 's' is used, transform is disabled, even when explicitly requested
  *
  * behaviour:
  *      E - assume big-endian record data (default)

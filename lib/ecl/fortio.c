@@ -107,7 +107,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
   fortio->stream_owner       = stream_owner;
   fortio->writable           = writable;
   fortio->read_size = 0;
-  strcpy( fortio->opts, endian_flip_header ? "c" : "ce" );
+  strcpy( fortio->opts, endian_flip_header ? "b" : "be" );
 
   return fortio;
 }
@@ -119,7 +119,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
 */
 
 static bool __read_int(FILE * stream , int * value, bool endian_flip) {
-    int ok = eclfio_sizeof( stream, endian_flip ? "c" : "ce", value );
+    int ok = eclfio_sizeof( stream, endian_flip ? "b" : "be", value );
     fseek( stream, sizeof( int32_t ), SEEK_CUR );
     return !ok;
 }

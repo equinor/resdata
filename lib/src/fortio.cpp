@@ -128,12 +128,29 @@ struct options {
 options parse_opts( const char* opts ) noexcept {
     options o;
 
+    /*
+     * the size of an element type is used to determine what methods of byte
+     * swapping (to_host) is needed, but 8-byte strings should *not* be
+     * byteswapped. The problem is mixing string and transform, as string
+     * disables transform:
+     *
+     * opts = "st"
+     *
+     * If the opts are "si", then transform must be re-enabled to properly
+     * handle endianess of integers.
+     */
+    int transform = 1;
     for( const char* op = opts; *op != '\0'; ++op ) {
         switch( *op ) {
-            case 'c': o.elemsize = sizeof( char );         break;
-            case 'i': o.elemsize = sizeof( std::int32_t ); break;
-            case 'f': o.elemsize = sizeof( float );        break;
-            case 'd': o.elemsize = sizeof( double );       break;
+            case 'b': // fallthrough
+            case 'c': transform = o.elemsize = sizeof( char );         break;
+            case 'i': transform = o.elemsize = sizeof( std::int32_t ); break;
+            case 'f': transform = o.elemsize = sizeof( float );        break;
+            case 'd': transform = o.elemsize = sizeof( double );       break;
+
+            case 's': o.elemsize = sizeof( char ) * 8;
+                      transform = 0;
+                      break;
 
             case 'E': o.bigendian = true;                  break;
             case 'e': o.bigendian = false;                 break;
@@ -148,6 +165,8 @@ options parse_opts( const char* opts ) noexcept {
             default: break;
         }
     }
+
+    if( transform == 0 ) o.transform = false;
 
     return o;
 }
