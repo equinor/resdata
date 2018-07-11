@@ -9,6 +9,21 @@
 
 bool util_copy_file__(const char * src_file , const char * target_file, size_t buffer_size , void * buffer , bool abort_on_error);
 
+
+
+static DIR * util_walk_opendir__( const char * root_path ) {
+
+  DIR * dirH = opendir( root_path );
+  if (dirH == NULL) {
+    if (errno == EACCES)
+      fprintf(stderr,"** Warning could not open directory:%s - permission denied - IGNORED.\n" , root_path);
+    else
+      util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
+  }
+  return dirH;
+}
+
+
 static void util_copy_directory__(const char * src_path , const char * target_path , int buffer_size , void * buffer ) {
   if (!util_is_directory(src_path))
     util_abort("%s: %s is not a directory \n",__func__ , src_path);
@@ -76,6 +91,37 @@ void util_copy_directory(const char * src_path , const char * __target_path) {
   util_free_stringlist( path_parts , num_components );
 }
 
+/**
+   This function will evaluate all file_callbacks for all the files in
+   the root_path directory.
+*/
+
+static void util_walk_file_callbacks__(const char               * root_path ,
+                                       int                        current_depth  ,
+                                       walk_file_callback_ftype * file_callback ,
+                                       void                     * file_callback_arg) {
+
+
+  DIR * dirH = util_walk_opendir__( root_path );
+  if (dirH != NULL) {
+    struct dirent * dp;
+    do {
+      dp = readdir(dirH);
+      if (dp != NULL) {
+        if (dp->d_name[0] != '.') {
+          char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+
+          if (util_is_file( full_path ) && file_callback != NULL)
+            file_callback( root_path , dp->d_name , file_callback_arg);
+
+          free(full_path);
+        }
+      }
+    } while (dp != NULL);
+    closedir( dirH );
+  }
+}
+
 
 /**
    This function will start at 'root_path' and then recursively go
@@ -140,50 +186,7 @@ static void util_walk_directory__(const char               * root_path ,
                                   void                     * dir_callback_arg);
 
 
-static DIR * util_walk_opendir__( const char * root_path ) {
 
-  DIR * dirH = opendir( root_path );
-  if (dirH == NULL) {
-    if (errno == EACCES)
-      fprintf(stderr,"** Warning could not open directory:%s - permission denied - IGNORED.\n" , root_path);
-    else
-      util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
-  }
-  return dirH;
-}
-
-
-
-/**
-   This function will evaluate all file_callbacks for all the files in
-   the root_path directory.
-*/
-
-static void util_walk_file_callbacks__(const char               * root_path ,
-                                       int                        current_depth  ,
-                                       walk_file_callback_ftype * file_callback ,
-                                       void                     * file_callback_arg) {
-
-
-  DIR * dirH = util_walk_opendir__( root_path );
-  if (dirH != NULL) {
-    struct dirent * dp;
-    do {
-      dp = readdir(dirH);
-      if (dp != NULL) {
-        if (dp->d_name[0] != '.') {
-          char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
-
-          if (util_is_file( full_path ) && file_callback != NULL)
-            file_callback( root_path , dp->d_name , file_callback_arg);
-
-          free(full_path);
-        }
-      }
-    } while (dp != NULL);
-    closedir( dirH );
-  }
-}
 
 
 
