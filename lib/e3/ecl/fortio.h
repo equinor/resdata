@@ -39,12 +39,14 @@ extern "C" {
  * parameters are not modified, as if the function was never called.
  *
  * This comes with a few exceptions:
- * 1. if ECL_ERR_SEEK is returned, the roll-back of the file pointer itself
- *    failed and NOTHING IS GUARANTEED. The file stream is left in an unspecified
- *    state, and must be recovered accordingly.
+ * 1. if ECL_INCONSISTENT_STATE is returned, the roll-back of the file pointer
+ *    itself failed and NOTHING IS GUARANTEED. The file stream is left in an
+ *    unspecified state, and must be recovered accordingly.
  * 2. in eclfio_get, the output record buffer must always be considered dirty
  *    and incomplete unless the function suceeds, or ECL_EINVAL is returned.
  *
+ * ECL_INCONSISTENT_STATE should be rather rare, but to provide strong
+ * guarantees, this error must be handled carefully.
  *
  * ECL_ERR_SEEK should be rather rare, but to provide strong guarantees, this
  * error must be handled carefully.

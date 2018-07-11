@@ -224,7 +224,7 @@ int eclfio_sizeof( std::FILE* fp, const char* opts, int32_t* out ) try {
     return ECL_OK;
 
 } catch( std::exception& ) {
-    return ECL_ERR_SEEK;
+    return ECL_INCONSISTENT_STATE;
 }
 
 int eclfio_skip( FILE* fp, const char* opts, int n ) try {
@@ -241,7 +241,7 @@ int eclfio_skip( FILE* fp, const char* opts, int n ) try {
     guard.fp = nullptr;
     return ECL_OK;
 } catch( std::exception& ) {
-    return ECL_ERR_SEEK;
+    return ECL_INCONSISTENT_STATE;
 }
 
 int eclfio_get( std::FILE* fp,
@@ -360,7 +360,7 @@ int eclfio_get( std::FILE* fp,
 
     return ECL_ERR_UNKNOWN;
 } catch( std::exception& ) {
-    return ECL_ERR_SEEK;
+    return ECL_INCONSISTENT_STATE;
 }
 
 int eclfio_put( std::FILE* fp,
@@ -425,5 +425,5 @@ int eclfio_put( std::FILE* fp,
     return ECL_OK;
 
 } catch( std::exception& ) {
-    return ECL_ERR_SEEK;
+    return ECL_INCONSISTENT_STATE;
 }
