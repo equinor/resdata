@@ -46,6 +46,8 @@ struct Err {
     static Err ok()                { return ECL_OK; }
     static Err invalid_record()    { return ECL_INVALID_RECORD; }
     static Err read()              { return ECL_ERR_READ; }
+    static Err eof()               { return ECL_EOF; }
+    static Err unexpected_eof()    { return ECL_UNEXPECTED_EOF; }
 
     int expected;
 };
@@ -55,13 +57,16 @@ template<>
 struct StringMaker< Err > {
     static std::string convert( const Err& err ) {
         switch( err.expected ) {
-            case ECL_OK:                return "OK";
-            case ECL_ERR_SEEK:          return "SEEK";
-            case ECL_ERR_READ:          return "READ";
-            case ECL_ERR_WRITE:         return "WRITE";
-            case ECL_INVALID_RECORD:    return "INVALID RECORD";
-            case ECL_EINVAL:            return "INVALID ARGUMENT";
-            case ECL_ERR_UNKNOWN:       return "UNKNOWN";
+            case ECL_OK:                    return "OK";
+            case ECL_ERR_SEEK:              return "SEEK";
+            case ECL_ERR_READ:              return "READ";
+            case ECL_ERR_WRITE:             return "WRITE";
+            case ECL_INVALID_RECORD:        return "INVALID RECORD";
+            case ECL_EINVAL:                return "INVALID ARGUMENT";
+            case ECL_ERR_UNKNOWN:           return "UNKNOWN";
+            case ECL_INCONSISTENT_STATE:    return "INCONSISTENT STATE";
+            case ECL_EOF:                   return "EOF";
+            case ECL_UNEXPECTED_EOF:        return "UNEXPECTED EOF";
         }
 
         return "Unknown error";

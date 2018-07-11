@@ -208,8 +208,14 @@ int eclfio_sizeof( std::FILE* fp, const char* opts, int32_t* out ) try {
     fguard guard( fp );
 
     std::int32_t size;
-    const auto read = std::fread( &size, sizeof( size ), 1, fp );
-    if( read != 1 ) return ECL_ERR_READ;
+    const auto read = std::fread( &size, 1, sizeof( size ), fp );
+    if( read == 0 and std::feof( fp ) ) return ECL_EOF;
+
+    if( read != sizeof( size ) ) {
+             if( std::feof( fp ) )   return ECL_UNEXPECTED_EOF;
+        else if( std::ferror( fp ) ) return ECL_ERR_READ;
+        else                         return ECL_ERR_UNKNOWN;
+    }
 
     if( o.bigendian )
         to_host( &size, sizeof( size ), 1 );
@@ -252,8 +258,14 @@ int eclfio_get( std::FILE* fp,
     fguard guard( fp );
 
     std::int32_t head;
-    auto read = std::fread( &head, sizeof( head ), 1, fp );
-    if( read != 1 ) return ECL_ERR_READ;
+    auto read = std::fread( &head, 1, sizeof( head ), fp );
+
+    if( read == 0 and std::feof( fp ) ) return ECL_EOF;
+    if( read != sizeof( head ) ) {
+             if( std::feof( fp ) )   return ECL_UNEXPECTED_EOF;
+        else if( std::ferror( fp ) ) return ECL_ERR_READ;
+        else                         return ECL_ERR_UNKNOWN;
+    }
 
     if( o.bigendian )
         to_host( &head, sizeof( head ), 1 );
@@ -266,19 +278,25 @@ int eclfio_get( std::FILE* fp,
 
     if( record ) {
         read = std::fread( record, head, 1, fp );
-        if( read != 1 ) return ECL_ERR_READ;
+        if( read != 1 ) {
+                 if( std::feof( fp ) )   return ECL_UNEXPECTED_EOF;
+            else if( std::ferror( fp ) ) return ECL_ERR_READ;
+            else                         return ECL_ERR_UNKNOWN;
+        }
     } else {
         /* read-buffer is zero, so skip this record instead of reading it */
         const auto err = std::fseek( fp, head, SEEK_CUR );
-        if( err ) return ECL_ERR_READ;
+        if( err ) {
+                 if( std::feof( fp ) )   return ECL_UNEXPECTED_EOF;
+            else if( std::ferror( fp ) ) return ECL_ERR_READ;
+            else                         return ECL_ERR_UNKNOWN;
+        }
     }
 
     const auto elems = head / o.elemsize;
 
-    if( o.transform and o.bigendian ) {
-        if( to_host( record, o.elemsize, elems ) )
-            return ECL_EINVAL;
-    }
+    if( o.transform and o.bigendian )
+        to_host( record, o.elemsize, elems );
 
     if( o.force_notail ) {
         if( recordsize ) *recordsize = elems;
@@ -290,7 +308,7 @@ int eclfio_get( std::FILE* fp,
     std::int32_t tail;
     read = std::fread( &tail, sizeof( tail ), 1, fp );
 
-    if( read == 1 and o.bigendian )
+    if( o.bigendian )
         to_host( &tail, sizeof( tail ), 1 );
 
     /*
@@ -316,7 +334,7 @@ int eclfio_get( std::FILE* fp,
     /*
      * last record, and ok to not have tail. don't rewind as this is a success
      */
-    if( read != 1 and feof( fp ) and o.allow_notail ) {
+    if( read != 1 and std::feof( fp ) and o.allow_notail ) {
         if( recordsize ) *recordsize = elems;
         guard.fp = tailguard.fp = nullptr;
         return ECL_OK;
@@ -330,7 +348,7 @@ int eclfio_get( std::FILE* fp,
         return ECL_INVALID_RECORD;
 
     /* read failed, but not at end-of-file */
-    if( read != 1 and ferror( fp ) )
+    if( read != 1 and std::ferror( fp ) )
         return ECL_ERR_READ;
 
     /*
@@ -338,7 +356,7 @@ int eclfio_get( std::FILE* fp,
      * as invalid and roll back the file pointer
      */
     if( read != 1 and feof( fp ) and not o.allow_notail )
-        return ECL_INVALID_RECORD;
+        return ECL_UNEXPECTED_EOF;
 
     return ECL_ERR_UNKNOWN;
 } catch( std::exception& ) {
