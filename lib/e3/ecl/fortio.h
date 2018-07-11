@@ -34,9 +34,10 @@ extern "C" {
  */
 
 /*
- * The ecl_fio functions are exception safe, that is, if a function fails, the
- * file pointer is rewinded to before the function was called, and output
- * parameters are not modified, as if the function was never called.
+ * The eclfio functions get, put, seek, and sizeof are exception safe, that is,
+ * if a function fails, the file pointer is rewinded to before the function was
+ * called, and output parameters are not modified, as if the function was never
+ * called.
  *
  * This comes with a few exceptions:
  * 1. if ECL_INCONSISTENT_STATE is returned, the roll-back of the file pointer
@@ -48,8 +49,11 @@ extern "C" {
  * ECL_INCONSISTENT_STATE should be rather rare, but to provide strong
  * guarantees, this error must be handled carefully.
  *
- * ECL_ERR_SEEK should be rather rare, but to provide strong guarantees, this
- * error must be handled carefully.
+ * The list of error codes is not exhaustive, and ecl reserves the right to
+ * both add new error codes, and redefine certain errors if more specific codes
+ * are added later. robust cost should always have fallthrough error handling.
+ *
+ * If a call succeeds, ECL_OK is returned and is always 0.
  */
 
 /*
@@ -93,12 +97,20 @@ extern "C" {
  *
  * If this function fails, out is not modified.
  *
- * If the read fails, ECL_ERR_READ is returned.
- *
  * This function is largely intended for peeking the size of the next record,
  * to approperiately allocate a large enough buffer, which is useful when
  * dealing with unknown files. If it is know in advance how large the records
  * are, it is not necessary to call this function before reading a record.
+ *
+ * Returns:
+ *
+ * ECL_EOF            if fp was currently at EOF
+ * ECL_UNEXPECTED_EOF if EOF was encountered mid-head
+ * ECL_ERR_READ       if reading failed because of an fstream error
+ * ECL_ERR_UNKNOWN    some other, uncaught error. this signals a bug in ecl
+ *
+ * Note that the file pointer *is still rolled back* after ECL_EOF, so foef(fp)
+ * will return false, even if the file *is* at the real EOF.
  */
 int eclfio_sizeof( FILE*, const char* opts, int32_t* out );
 
@@ -106,12 +118,13 @@ int eclfio_sizeof( FILE*, const char* opts, int32_t* out );
  * Advance the file position n records. The file position is reset if the
  * function fails, as if the function was never called.
  *
- * Returns ECL_OK if all records were skipped. If it fails, either
- * ECL_INVALID_RECORD or ECL_ERR_READ is returned, depending on the source of
- * the error, same rules as that of eclfio_get.
- *
  * This function does not distinguish seek errors for any n not +-1, so to
  * figure out which record fails, one record at a time must be skipped.
+ *
+ * Returns:
+ *
+ * ECL_EINVAL   if n is out-of-bounds (negative)
+ * any error described in eclfio_get
  */
 int eclfio_skip( FILE*, const char* opts, int n );
 
@@ -145,10 +158,36 @@ int eclfio_skip( FILE*, const char* opts, int n );
  * be relied upon. If the function returns ECL_EINVAL, the output record is
  * untouched.
  *
- * This function returns ECL_OK upon success, ECL_ERR_READ in case of read- or
- * seek errors, ECL_INVALID_RECORD if either the record tail is broken and
- * options is set accordingly. The list of error codes is not exhaustive, and
- * robust code should have fallthrough error handling cases.
+ * Returns:
+ * ECL_EOF            if reading the header failed because file is already at
+ *                    EOF
+ * ECL_UNEXPECTED_EOF if read EOF was encountered partway through
+ * ECL_ERR_READ       if reading failed because of an fstream error
+ * ECL_INVALID_RECORD if there was a protocol error (most likely corrupted
+ *                    head or tail)
+ * ECL_EINVAL         if the size of recordsize is smaller than the block
+ * ECL_ERR_UNKNOWN    some other, uncaught error. this signals a bug in ecl
+ *
+ * Please note that the protocol error checks are NOT EXHAUSTIVE, and
+ * ECL_EINVAL *might* come from a protocol violation. Consider a the block
+ *
+ * |4200| body of 4000 bytes |4000|
+ *
+ * If this body is interpreted as int32, the head looks valid, but does not
+ * match the body and tail. From context, it is known that this block SHOULD be
+ * 4000 bytes, because the preceeding block is a record header specifying 1000
+ * integers. If recordsize is the expected 1000, this fails on with ECL_EINVAL,
+ * because of the inconsistency between recordsize and *observed* record size.
+ *
+ * It is impossible to distinguish this from recordsize being used as a guard
+ * for surprisingly large records. Assuming the current block is 1000 ints:
+ *
+ *      int32_t recordsize = 500;
+ *      int32_t* ints = malloc( sizeof( int32_t ) * recordsize );
+ *      eclfio_get( file, opts, &recordsize, ints )
+ *
+ * This would fail on ECL_EINVAL, and it can be checked if a reallocation is
+ * all that is necessary for the next attempt to succeed.
  */
 int eclfio_get( FILE*, const char* opts, int32_t* recordsize, void* record );
 
@@ -156,19 +195,20 @@ int eclfio_get( FILE*, const char* opts, int32_t* recordsize, void* record );
  * Put a record of nmemb elements
  *
  * This function will write both head and tail, unless tail writing is
- * explicitly disabled with ~. If (nmemb * elemsize) overflows int32, the write
- * is aborted and ECL_EINVAL is returned.
+ * explicitly disabled with ~.
  *
- * put largely follows the same rules as get, including those of endianness.
+ * Put largely follows the same rules as get, including those of endianness.
  * The file pointer is rolled back if any part of the function should fail, as
  * if the function was never called.
  *
  * If a write fails after partial writes, no attempts are made to roll back
  * written changes.
  *
- * Returns ECL_OK on success, or ECL_ERR_WRITE on failure. If ECL_ERR_SEEK is
- * returned, the integrity of the file stream can not be guaranteed, and its
- * state is considered unspecified.
+ * Returns:
+ * ECL_EINVAL       if nmemb*elemsize overflows int32, or if nmemb < 0
+ * ECL_ERR_WRITE    if any write errors occur. Does not distinguish between
+ *                  head, body, or tail writes.
+ *
  */
 int eclfio_put( FILE*, const char* opts, int nmemb, const void* );
 
