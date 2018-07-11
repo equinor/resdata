@@ -570,3 +570,8 @@ class SumTest(EclTest):
         self.assertTrue( EclSum.is_rate("WOPR:OP_4"))
         self.assertFalse( EclSum.is_rate("BPR:123"))
         self.assertTrue(EclSum.is_rate("FWIR"))
+
+
+    def test_load_case(self):
+        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
+        case = EclSum( path )
