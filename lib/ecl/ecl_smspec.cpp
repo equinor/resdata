@@ -117,7 +117,6 @@ struct ecl_smspec_struct {
   vector_type        * smspec_nodes;
   bool                 write_mode;
   bool                 need_nums;
-  bool                 locked;
   int_vector_type    * index_map;
 
   /*-----------------------------------------------------------------*/
@@ -275,7 +274,6 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   ecl_smspec->day_index    = -1;
   ecl_smspec->year_index   = -1;
   ecl_smspec->month_index  = -1;
-  ecl_smspec->locked       = false;
   ecl_smspec->time_seconds = -1;
 
   /*
@@ -334,21 +332,6 @@ int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
   return vector_get_size( smspec->smspec_nodes );
 }
 
-
-/*
-  In the current implementation it is impossible to mix calls to
-  ecl_sum_add_var() and ecl_sum_add_tstep() - i.e. one must first add
-  *all* the variables with ecl_sum_add_var() calls, and then
-  subsequently add timesteps with ecl_sum_add_tstep().
-
-  The locked property of the smspec structure is to ensure that no new
-  variables are added to the ecl_smspec structure after the first
-  timestep has been added.
-*/
-
-void ecl_smspec_lock( ecl_smspec_type * smspec ) {
-  smspec->locked = true;
-}
 
 /**
  * Returns an ecl data type for which all names will fit. If the maximum name
@@ -1103,30 +1086,27 @@ static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int param
 
 
 void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node){
-  if (!ecl_smspec->locked) {
-    int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
+  int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
 
-    /* This IF test should only apply in write_mode. */
-    if (smspec_node_get_params_index( smspec_node ) < 0) {
-      if (!ecl_smspec->write_mode)
-        util_abort("%s: internal error \n",__func__);
-      smspec_node_set_params_index( smspec_node , internal_index);
+  /* This IF test should only apply in write_mode. */
+  if (smspec_node_get_params_index( smspec_node ) < 0) {
+    if (!ecl_smspec->write_mode)
+      util_abort("%s: internal error \n",__func__);
+    smspec_node_set_params_index( smspec_node , internal_index);
 
-      if (internal_index >= ecl_smspec->params_size)
-        ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
-    }
-    vector_append_owned_ref( ecl_smspec->smspec_nodes , smspec_node , smspec_node_free__ );
+    if (internal_index >= ecl_smspec->params_size)
+      ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
+  }
+  vector_append_owned_ref( ecl_smspec->smspec_nodes , smspec_node , smspec_node_free__ );
 
-    {
-      int params_index = smspec_node_get_params_index( smspec_node );
+  {
+    int params_index = smspec_node_get_params_index( smspec_node );
 
-      /* This indexing must be used when writing. */
-      int_vector_iset( ecl_smspec->index_map , internal_index , params_index);
+    /* This indexing must be used when writing. */
+    int_vector_iset( ecl_smspec->index_map , internal_index , params_index);
 
-      float_vector_iset( ecl_smspec->params_default , params_index , smspec_node_get_default(smspec_node) );
-    }
-  } else
-    util_abort("%s: sorry - the smspec header has been locked (can not mix ecl_sum_add_var() and ecl_sum_add_tstep() calls.)\n",__func__);
+    float_vector_iset( ecl_smspec->params_default , params_index , smspec_node_get_default(smspec_node) );
+  }
 }
 
 

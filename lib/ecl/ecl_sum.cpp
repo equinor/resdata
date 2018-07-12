@@ -16,6 +16,8 @@
    for more details.
 */
 
+#include <stdexcept>
+
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
@@ -279,6 +281,10 @@ void ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case ) {
 
 
 smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
+  if (ecl_sum_data_get_length(ecl_sum->data) > 0)
+    throw std::invalid_argument("Can not interchange variable adding and timesteps.\n");
+
+
   smspec_node_type * smspec_node = smspec_node_alloc( ecl_smspec_identify_var_type(keyword),
                                                       wgname,
                                                       keyword,
@@ -289,6 +295,7 @@ smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keywor
                                                       -1,
                                                       default_value);
   ecl_smspec_add_node(ecl_sum->smspec, smspec_node);
+  ecl_sum_data_reset_self_map( ecl_sum->data );
   return smspec_node;
 }
 
@@ -754,7 +761,7 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times) {
   time_t start_time = ecl_sum_get_data_start(ecl_sum);
 
-  if ( time_t_vector_get_first(times) < start_time )
+  if ( time_t_vector_get_first(times) < start_time ) 
     return NULL;
   if ( time_t_vector_get_last(times) > ecl_sum_get_end_time(ecl_sum) )
     return NULL;
@@ -881,9 +888,6 @@ int ecl_sum_iget_report_end( const ecl_sum_type * ecl_sum, int report_step) {
   return ecl_sum_data_iget_report_end(ecl_sum->data , report_step );
 }
 
-int ecl_sum_iget_report_start( const ecl_sum_type * ecl_sum, int report_step) {
-  return ecl_sum_data_iget_report_start(ecl_sum->data , report_step );
-}
 
 int ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index ){
   return ecl_sum_data_iget_report_step( ecl_sum->data , internal_index );

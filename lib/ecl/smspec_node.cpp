@@ -572,17 +572,14 @@ static void smspec_node_common_init( smspec_node_type * node , ecl_smspec_var_ty
 }
 
 
-/*
-  This *should* become static.
-*/
-void smspec_node_init( smspec_node_type * smspec_node,
-                       ecl_smspec_var_type var_type ,
-                       const char * wgname  ,
-                       const char * keyword ,
-                       const char * unit    ,
-                       const char * key_join_string ,
-                       const int grid_dims[3] ,
-                       int num) {
+static bool smspec_node_init__( smspec_node_type * smspec_node,
+                                ecl_smspec_var_type var_type ,
+                                const char * wgname  ,
+                                const char * keyword ,
+                                const char * unit    ,
+                                const char * key_join_string ,
+                                const int grid_dims[3] ,
+                                int num) {
 
   bool initOK    = true;
 
@@ -653,6 +650,31 @@ void smspec_node_init( smspec_node_type * smspec_node,
 
   if (initOK)
     smspec_node_set_gen_keys( smspec_node , key_join_string );
+
+  return initOK;
+}
+
+/*
+  This function should be removed from the public API.
+*/
+void smspec_node_init( smspec_node_type * smspec_node,
+                       ecl_smspec_var_type var_type ,
+                       const char * wgname  ,
+                       const char * keyword ,
+                       const char * unit    ,
+                       const char * key_join_string ,
+                       const int grid_dims[3] ,
+                       int num) {
+
+  smspec_node_init__(smspec_node,
+                     var_type,
+                     wgname,
+                     keyword,
+                     unit,
+                     key_join_string,
+                     grid_dims,
+                     num);
+
 }
 
 /**
@@ -714,8 +736,16 @@ smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
   if (!smspec_node_type_supported(var_type))
     return NULL;
 
+  /*
+    TODO: The alloc_new and init functions should be joined in one function.
+  */
   smspec_node_type * smspec_node = smspec_node_alloc_new( param_index , default_value );
-  smspec_node_init( smspec_node , var_type , wgname , keyword , unit , key_join_string , grid_dims, num);
+  bool initOK = smspec_node_init__( smspec_node , var_type , wgname , keyword , unit , key_join_string , grid_dims, num);
+  if (!initOK) {
+    smspec_node_free(smspec_node);
+    smspec_node = NULL;
+  }
+
   return smspec_node;
 }
 
