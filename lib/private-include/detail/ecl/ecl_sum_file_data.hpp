@@ -21,7 +21,7 @@ public:
   int                  length_before(time_t end_time) const;
   void                 get_time(int length, time_t *data);
   void                 get_data(int params_index, int length, double *data);
-  int                  get_length() const;
+  int                  length() const;
   time_t               get_data_start() const;
   time_t               get_sim_end() const;
   double               iget( int time_index , int params_index ) const;
