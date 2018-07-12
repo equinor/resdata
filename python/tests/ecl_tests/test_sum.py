@@ -229,33 +229,6 @@ class SumTest(EclTest):
         self.assertEqual( sol[1] , t2 )
 
 
-    def test_ecl_sum_vector_algebra(self):
-        scalar = 0.78
-        addend = 2.718281828459045
-
-        case = create_case()
-        with self.assertRaises( KeyError ):
-            case.scaleVector( "MISSING:KEY" , scalar)
-            case.shiftVector( "MISSING:KEY" , addend)
-
-        # scale all vectors with scalar
-        for key in case.keys():
-            x = case.get_values(key) # get vector key
-            case.scaleVector(key , scalar)
-            y = case.get_values(key)
-            x = x * scalar # numpy vector scaling
-            for i in range(len(x)):
-                self.assertFloatEqual(x[i], y[i])
-
-        # shift all vectors with addend
-        for key in case.keys():
-            x = case.get_values(key) # get vector key
-            case.shiftVector(key , addend)
-            y = case.get_values(key)
-            x = x + addend # numpy vector shifting
-            for i in range(len(x)):
-                self.assertFloatEqual(x[i], y[i])
-
 
     def test_different_names(self):
         case = create_case()

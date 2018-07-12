@@ -1227,22 +1227,6 @@ int ecl_sum_data_get_length( const ecl_sum_data_type * data ) {
   return data->index.length();
 }
 
-void ecl_sum_data_scale_vector(ecl_sum_data_type * data, int index, double scalar) {
-  int len = ecl_sum_data_get_length(data);
-  for (int i = 0; i < len; i++) {
-    ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data,i);
-    ecl_sum_tstep_iscale(ministep, index, scalar);
-  }
-}
-
-void ecl_sum_data_shift_vector(ecl_sum_data_type * data, int index, double addend) {
-  int len = ecl_sum_data_get_length(data);
-  for (int i = 0; i < len; i++) {
-    ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data,i);
-    ecl_sum_tstep_ishift(ministep, index, addend);
-  }
-}
-
 static bool ecl_sum_data_report_step_equal__( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2, bool strict) {
   if (data1->data_files.size() != data2->data_files.size())
     return false;
