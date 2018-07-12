@@ -178,11 +178,9 @@ namespace ecl {
 
 
 ecl_sum_file_data::ecl_sum_file_data(const ecl_smspec_type * smspec) :
-  ecl_smspec( smspec )
+  ecl_smspec( smspec ),
+  data( vector_alloc_new() )
 {
-  data = vector_alloc_new();
-  clear_index( );
-
 }
 
 ecl_sum_file_data::~ecl_sum_file_data() {
@@ -191,7 +189,7 @@ ecl_sum_file_data::~ecl_sum_file_data() {
 
 
 int ecl_sum_file_data::length() const {
-  return vector_get_size( data );
+  return this->index.size();
 }
 
 
@@ -219,7 +217,7 @@ int ecl_sum_file_data::report_before(time_t end_time) const {
     if (r == last_report)
       return last_report;
 
-    auto next_range = this->report_map[r + 1];
+    auto next_range = this->index.report_range(r + 1);
     if (this->iget_sim_time(next_range.first) > end_time)
       return r;
 
@@ -229,22 +227,26 @@ int ecl_sum_file_data::report_before(time_t end_time) const {
 
 
 int  ecl_sum_file_data::first_report() const{
-  return first_report_step;
+  const auto& node = this->index[0];
+  return node.report_step;
 }
 
 int ecl_sum_file_data::last_report() const {
-  return last_report_step;
+  const auto& node = this->index.back();
+  return node.report_step;
 }
 
 
 
 time_t ecl_sum_file_data::get_data_start() const {
-  return this->time_range.first;
+  const auto& node = this->index[0];
+  return node.sim_time;
 }
 
 
 time_t ecl_sum_file_data::get_sim_end() const {
-  return this->time_range.second;
+  const auto& node = this->index.back();
+  return node.sim_time;
 }
 
 time_t ecl_sum_file_data::iget_sim_time(int time_index) const {
@@ -254,29 +256,19 @@ time_t ecl_sum_file_data::iget_sim_time(int time_index) const {
 
 
 double ecl_sum_file_data::get_sim_length() const {
-  return this->sim_length;
+  const auto& node = this->index.back();
+  return node.sim_seconds * 86400;
 }
 
 double ecl_sum_file_data::iget( int time_index , int params_index ) const {
   if (params_index >= 0) {
     const ecl_sum_tstep_type * ministep_data = iget_ministep( time_index  );
-    return ecl_sum_tstep_iget( ministep_data , params_index); 
+    return ecl_sum_tstep_iget( ministep_data , params_index);
   }
   else
     return 0;
 }
 
-
-
-void ecl_sum_file_data::clear_index() {
-  this->report_map.clear();
-  first_report_step     =  1024 * 1024;
-  last_report_step      = -1024 * 1024;
-  days_start            = 0;
-  sim_length            = -1;
-  index_valid           = false;
-  time_range            = std::make_pair<time_t, time_t>(INVALID_TIME_T, INVALID_TIME_T);
-}
 
 
 void ecl_sum_file_data::append_tstep(ecl_sum_tstep_type * tstep) {
@@ -286,7 +278,6 @@ void ecl_sum_file_data::append_tstep(ecl_sum_tstep_type * tstep) {
   */
 
   vector_append_owned_ref( data , tstep , ecl_sum_tstep_free__);
-  index_valid = false;
 }
 
 
@@ -303,7 +294,7 @@ ecl_sum_tstep_type * ecl_sum_file_data::add_new_tstep( int report_step , double 
   ecl_sum_tstep_type * prev_tstep = NULL;
 
   if (vector_get_size( data ) > 0)
-    prev_tstep = (ecl_sum_tstep_type*)vector_get_last( data );
+    prev_tstep = (ecl_sum_tstep_type*) vector_get_last( data );
 
   append_tstep( tstep );
 
@@ -324,17 +315,12 @@ ecl_sum_tstep_type * ecl_sum_file_data::add_new_tstep( int report_step , double 
   if (ecl_sum_tstep_get_sim_days( prev_tstep ) >= ecl_sum_tstep_get_sim_days( tstep ))
     goto exit;
 
-  {
-    int internal_index = vector_get_size( data ) - 1;
-    this->report_map[report_step].second = internal_index;
-    this->sim_length = ecl_sum_tstep_get_sim_days( tstep );
-    this->time_range.second = ecl_sum_tstep_get_sim_time(tstep);
-    rebuild_index = false;
-  }
+  this->index.add(ecl_sum_tstep_get_sim_time(tstep), sim_seconds, report_step);
+  rebuild_index = false;
 
 exit:
   if (rebuild_index)
-      build_index();
+      this->build_index();
 
   return tstep;
 }
@@ -373,48 +359,17 @@ static int cmp_ministep( const void * arg1 , const void * arg2) {
 
 
 void ecl_sum_file_data::build_index( ) {
-  /* Clear the existing index (if any): */
-  clear_index();
+  this->index.clear();
 
-  /*
-    Sort the internal storage vector after sim_time.
-  */
-  vector_sort( data , cmp_ministep );
-
-
-  /* Identify various global first and last values.  */
-  {
-    const ecl_sum_tstep_type * first_ministep = this->iget_ministep( 0 );
-    const ecl_sum_tstep_type * last_ministep  = this->iget_ministep( this->length() - 1 );
-    /*
-       In most cases the days_start and data_start_time will agree
-       with the global simulation start; however in the case where we
-       have loaded a summary case from a restarted simulation where
-       the case we have restarted from is not available - then there
-       will be a difference.
-    */
-    days_start      = ecl_sum_tstep_get_sim_days( first_ministep );
-    sim_length      = ecl_sum_tstep_get_sim_days( last_ministep );
-    this->time_range = std::make_pair<time_t, time_t>(ecl_sum_tstep_get_sim_time( first_ministep ),
-                                                      ecl_sum_tstep_get_sim_time( last_ministep ));
+  if (true) {
+    vector_sort( data , cmp_ministep );
+    for (int internal_index = 0; internal_index < vector_get_size( data ); internal_index++) {
+      const ecl_sum_tstep_type * ministep = iget_ministep( internal_index  );
+      this->index.add(ecl_sum_tstep_get_sim_time(ministep),
+                      ecl_sum_tstep_get_sim_seconds(ministep),
+                      ecl_sum_tstep_get_report(ministep));
+    }
   }
-
-  /* Build up the report -> ministep mapping. */
-  for (int internal_index = 0; internal_index < vector_get_size( data ); internal_index++) {
-    const ecl_sum_tstep_type * ministep = iget_ministep( internal_index  );
-    size_t report_step = ecl_sum_tstep_get_report(ministep);
-    /* Indexing internal_index - report_step */
-    if (this->report_map.size() <= report_step)
-      this->report_map.resize( report_step + 1, std::pair<int,int>(std::numeric_limits<int>::max(), -1));
-
-    auto& range = this->report_map[report_step];
-    range.first = std::min(range.first, internal_index);
-    range.second = std::max(range.second, internal_index);
-
-    first_report_step = util_int_min( first_report_step , report_step );
-    last_report_step  = util_int_max( last_report_step  , report_step );
-  }
-  index_valid = true;
 }
 
 void ecl_sum_file_data::get_time(int length, time_t * data) {
@@ -426,8 +381,8 @@ void ecl_sum_file_data::get_time(int length, time_t * data) {
 int ecl_sum_file_data::get_time_report(int end_index, time_t *data) {
   int offset = 0;
 
-  for (int report_step = this->first_report_step; report_step <= this->last_report_step; report_step++) {
-    const auto& range = this->report_map[report_step];
+  for (int report_step = this->first_report(); report_step <= this->last_report(); report_step++) {
+    const auto& range = this->report_range(report_step);
     int time_index = range.second;
     if (time_index >= end_index)
       break;
@@ -450,8 +405,8 @@ void ecl_sum_file_data::get_data(int params_index, int length, double *data) {
 int ecl_sum_file_data::get_data_report(int params_index, int end_index, double *data) {
   int offset = 0;
 
-  for (int report_step = this->first_report_step; report_step <= this->last_report_step; report_step++) {
-    int time_index = this->report_map[report_step].second;
+  for (int report_step = this->first_report(); report_step <= this->last_report(); report_step++) {
+    int time_index = this->index.report_range(report_step).second;
     if (time_index >= end_index)
       break;
 
@@ -468,14 +423,7 @@ int ecl_sum_file_data::get_data_report(int params_index, int end_index, double *
 
 
 bool ecl_sum_file_data::has_report(int report_step ) const {
-  if (report_step >= static_cast<int>(this->report_map.size()))
-    return false;
-
-  const auto& range_pair = this->report_map[report_step];
-  if (range_pair.second < 0)
-    return false;
-
-  return true;
+  return this->index.has_report(report_step);
 }
 
 
@@ -483,7 +431,7 @@ bool ecl_sum_file_data::has_report(int report_step ) const {
 
 
 std::pair<int,int> ecl_sum_file_data::report_range(int report_step) const {
-  return this->report_map[report_step];
+  return this->index.report_range(report_step);
 }
 
 
@@ -506,8 +454,10 @@ void ecl_sum_file_data::fwrite_report( int report_step , fortio_type * fortio) c
 
 
 void ecl_sum_file_data::fwrite_unified( fortio_type * fortio ) const {
+  if (this->length() == 0)
+    return;
 
-  for (int report_step = first_report_step; report_step <= last_report_step; report_step++) {
+  for (int report_step = first_report(); report_step <= last_report(); report_step++) {
     if (has_report( report_step ))
       fwrite_report( report_step , fortio );
   }
@@ -515,9 +465,10 @@ void ecl_sum_file_data::fwrite_unified( fortio_type * fortio ) const {
 
 
 void ecl_sum_file_data::fwrite_multiple( const char * ecl_case , bool fmt_case ) const {
-  int report_step;
+  if (this->length() == 0)
+    return;
 
-  for (report_step = first_report_step; report_step <= last_report_step; report_step++) {
+  for (int report_step = this->first_report(); report_step <= this->last_report(); report_step++) {
     if (this->has_report( report_step )) {
       char * filename = ecl_util_alloc_filename( NULL , ecl_case , ECL_SUMMARY_FILE , fmt_case , report_step );
       fortio_type * fortio = fortio_open_writer( filename , fmt_case , ECL_ENDIAN_FLIP );
@@ -532,7 +483,8 @@ void ecl_sum_file_data::fwrite_multiple( const char * ecl_case , bool fmt_case )
 }
 
 double ecl_sum_file_data::get_days_start() const {
-  return this->days_start;
+  const auto& node = this->index[0];
+  return node.sim_seconds * 86400;
 }
 
 
@@ -644,12 +596,8 @@ bool ecl_sum_file_data::fread(const stringlist_type * filelist) {
     }
   }
 
-  if (length() > 0) {
-    build_index();
-    return true;
-  } else
-    return false;
-
+  build_index();
+  return (length() > 0);
 }
 
 const ecl_smspec_type * ecl_sum_file_data::smspec() const {
@@ -658,17 +606,17 @@ const ecl_smspec_type * ecl_sum_file_data::smspec() const {
 
 
 bool ecl_sum_file_data::report_step_equal( const ecl_sum_file_data& other, bool strict) const {
-  if (strict && this->first_report_step != other.first_report_step)
+  if (strict && this->first_report() != other.first_report())
     return false;
 
-  if (strict && (this->last_report_step != other.last_report_step))
+  if (strict && (this->last_report() != other.last_report()))
     return false;
 
-  int report_step = std::max(this->first_report_step, other.first_report_step);
-  int last_report = std::min(this->last_report_step, other.last_report_step);
+  int report_step = std::max(this->first_report(), other.first_report());
+  int last_report = std::min(this->last_report(), other.last_report());
   while (true) {
-    int time_index1 = this->report_map[report_step].second;
-    int time_index2 = other.report_map[report_step].second;
+    int time_index1 = this->report_range(report_step).second;
+    int time_index2 = other.report_range(report_step).second;
 
     if ((time_index1 != INVALID_MINISTEP_NR) && (time_index2 != INVALID_MINISTEP_NR)) {
       const auto& ministep1 = this->iget_ministep( time_index1 );
@@ -693,9 +641,9 @@ bool ecl_sum_file_data::report_step_equal( const ecl_sum_file_data& other, bool 
 // ***************************** End reading *************************************
 
 int ecl_sum_file_data::report_step_from_days(double sim_days) const {
-  int report_step = this->first_report_step;
+  int report_step = this->first_report();
   while (true) {
-    const auto& range = this->report_map[report_step];
+    const auto& range = this->index.report_range(report_step);
     if (range.second >= 0) {
       const ecl_sum_tstep_type * tstep = this->iget_ministep(range.second);
 
@@ -704,23 +652,23 @@ int ecl_sum_file_data::report_step_from_days(double sim_days) const {
         return report_step;
 
       report_step++;
-      if (report_step > this->last_report_step)
+      if (report_step > this->last_report())
         return -1;
     }
   }
 }
 
-  int ecl_sum_file_data::report_step_from_time(time_t sim_time) const {
-  int report_step = this->first_report_step;
+int ecl_sum_file_data::report_step_from_time(time_t sim_time) const {
+  int report_step = this->first_report();
   while (true) {
-    const auto& range = this->report_map[report_step];
+    const auto& range = this->index.report_range(report_step);
     if (range.second >= 0) {
       const ecl_sum_tstep_type * tstep = this->iget_ministep(range.second);
       if (sim_time == ecl_sum_tstep_get_sim_time(tstep))
         return report_step;
 
       report_step++;
-      if (report_step > this->last_report_step)
+      if (report_step > this->last_report())
         return -1;
     }
   }
