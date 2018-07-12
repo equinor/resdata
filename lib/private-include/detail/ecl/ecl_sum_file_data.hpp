@@ -26,6 +26,8 @@ public:
   time_t               get_sim_end() const;
   double               iget( int time_index , int params_index ) const;
   time_t               iget_sim_time(int time_index ) const;
+  double               iget_sim_days(int time_index ) const;
+  double               iget_sim_seconds(int time_index ) const;
   ecl_sum_tstep_type * iget_ministep( int internal_index ) const;
   double               get_days_start() const;
   double               get_sim_length() const;

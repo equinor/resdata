@@ -243,6 +243,7 @@ struct ecl_sum_data_struct {
 
 
 static void ecl_sum_data_build_index( ecl_sum_data_type * self );
+static double ecl_sum_data_iget_sim_seconds( const ecl_sum_data_type * data , int internal_index );
 
 
 
@@ -299,10 +300,19 @@ static void ecl_sum_data_append_file_data( ecl_sum_data_type * sum_data, ecl::ec
 */
 
 
-static ecl_sum_tstep_type * ecl_sum_data_iget_ministep( const ecl_sum_data_type * data , int internal_index ) {
+
+
+static double ecl_sum_data_iget_sim_seconds( const ecl_sum_data_type * data , int internal_index ) {
   const auto index_node = data->index.lookup(internal_index);
   const auto data_file = data->data_files[index_node.data_index];
-  return data_file->iget_ministep( internal_index - index_node.offset );
+  return data_file->iget_sim_seconds( internal_index - index_node.offset );
+}
+
+
+double ecl_sum_data_iget_sim_days( const ecl_sum_data_type * data , int internal_index ) {
+  const auto index_node = data->index.lookup(internal_index);
+  const auto data_file = data->data_files[index_node.data_index];
+  return data_file->iget_sim_days( internal_index - index_node.offset );
 }
 
 
@@ -560,10 +570,7 @@ double_vector_type * ecl_sum_data_alloc_seconds_solution(const ecl_sum_data_type
     return solution;
 
   for (int index = 0; index < size; ++index) {
-    int prev_index = util_int_max(0, index-1);
-
-    const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep(data, index);
-    const ecl_sum_tstep_type * prev_ministep = ecl_sum_data_iget_ministep(data, prev_index);
+    int prev_index    = util_int_max(0, index-1);
     double value      = ecl_sum_data_iget(data, index, param_index);
     double prev_value = ecl_sum_data_iget(data, prev_index, param_index);
 
@@ -575,8 +582,8 @@ double_vector_type * ecl_sum_data_alloc_seconds_solution(const ecl_sum_data_type
     if (!contained)
       continue;
 
-    double prev_time = ecl_sum_tstep_get_sim_seconds(prev_ministep);
-    double time = ecl_sum_tstep_get_sim_seconds(ministep);
+    double prev_time = ecl_sum_data_iget_sim_seconds(data, prev_index);
+    double time      = ecl_sum_data_iget_sim_seconds(data, index);
 
     if (smspec_node_is_rate(node)) {
       double_vector_append(solution, rates_clamp_lower ? prev_time + 1 : time);
@@ -722,10 +729,13 @@ void ecl_sum_data_summarize(const ecl_sum_data_type * data , FILE * stream) {
   {
     int index;
     for (index = 0; index < ecl_sum_data_get_length(data); index++) {
-      const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , index );
+      time_t sim_time = ecl_sum_data_iget_sim_time(data, index);
+      int report_step = ecl_sum_data_iget_report_step(data, index);
+      double days = ecl_sum_data_iget_sim_days(data, index);
+
       int day,month,year;
-      ecl_util_set_date_values( ecl_sum_tstep_get_sim_time( ministep ) , &day, &month , &year);
-      fprintf(stream , "%04d          %6d               %02d/%02d/%4d           %7.2f \n", ecl_sum_tstep_get_report( ministep ) , index , day,month,year, ecl_sum_tstep_get_sim_days( ministep ));
+      ecl_util_set_date_values( sim_time, &day, &month , &year);
+      fprintf(stream , "%04d          %6d               %02d/%02d/%4d           %7.2f \n", report_step , index , day,month,year, days);
     }
   }
   fprintf(stream , "---------------------------------------------------------------\n");
@@ -982,11 +992,6 @@ time_t ecl_sum_data_get_report_time( const ecl_sum_data_type * data , int report
   }
 }
 
-
-double ecl_sum_data_iget_sim_days( const ecl_sum_data_type * data , int internal_index ) {
-  const ecl_sum_tstep_type * ministep_data = ecl_sum_data_iget_ministep( data , internal_index );
-  return ecl_sum_tstep_get_sim_days( ministep_data );
-}
 
 
 int ecl_sum_data_get_first_report_step( const ecl_sum_data_type * data ) {
