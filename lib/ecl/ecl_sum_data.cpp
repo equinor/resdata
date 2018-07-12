@@ -774,11 +774,6 @@ int ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_
 }
 
 
-int ecl_sum_data_iget_mini_step(const ecl_sum_data_type * data , int internal_index) {
-  const ecl_sum_tstep_type * ministep = ecl_sum_data_iget_ministep( data , internal_index );
-  return ecl_sum_tstep_get_ministep( ministep );
-}
-
 
 /**
     This will look up a value based on an internal index. The internal

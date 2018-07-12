@@ -97,7 +97,6 @@ class EclSum(BaseCClass):
     _data_length                   = EclPrototype("int      ecl_sum_get_data_length(ecl_sum)")
     _iget_sim_days                 = EclPrototype("double   ecl_sum_iget_sim_days(ecl_sum, int) ")
     _iget_report_step              = EclPrototype("int      ecl_sum_iget_report_step(ecl_sum, int) ")
-    _iget_mini_step                = EclPrototype("int      ecl_sum_iget_mini_step(ecl_sum, int) ")
     _iget_sim_time                 = EclPrototype("time_t   ecl_sum_iget_sim_time(ecl_sum, int) ")
     _get_report_end                = EclPrototype("int      ecl_sum_iget_report_end(ecl_sum, int)")
     _get_general_var               = EclPrototype("double   ecl_sum_get_general_var(ecl_sum, int, char*)")
@@ -309,7 +308,6 @@ class EclSum(BaseCClass):
         length = self.length
         self.__dates = [0] * length
         self.__report_step = numpy.zeros(length, dtype=numpy.int32)
-        self.__mini_step = numpy.zeros(length, dtype=numpy.int32)
         self.__days = numpy.zeros(length)
         self.__mpl_dates = numpy.zeros(length)
 
@@ -317,7 +315,6 @@ class EclSum(BaseCClass):
             self.__days[i] = self._iget_sim_days(i)
             self.__dates[i] = self.iget_date(i)
             self.__report_step[i] = self._iget_report_step(i)
-            self.__mini_step[i] = self._iget_mini_step(i)
             self.__mpl_dates[i] = date2num(self.__dates[i])
 
         index_list = self.report_index_list()
@@ -325,7 +322,6 @@ class EclSum(BaseCClass):
         length = len(index_list) - index_list.count(-1)
         self.__datesR = [0] * length
         self.__report_stepR = numpy.zeros(length, dtype=numpy.int32)
-        self.__mini_stepR = numpy.zeros(length, dtype=numpy.int32)
         self.__daysR = numpy.zeros(length)
         self.__mpl_datesR = numpy.zeros(length)
 
@@ -344,7 +340,6 @@ class EclSum(BaseCClass):
             self.__daysR[i0] = self._iget_sim_days(time_index)
             self.__datesR[i0] = self.iget_date(time_index)
             self.__report_stepR[i0] = self._iget_report_step(time_index)
-            self.__mini_stepR[i0] = self._iget_mini_step(time_index)
             self.__mpl_datesR[i0] = date2num(self.__datesR[i0])
 
 

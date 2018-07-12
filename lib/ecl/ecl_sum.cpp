@@ -894,11 +894,6 @@ int ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index 
 }
 
 
-int ecl_sum_iget_mini_step( const ecl_sum_type * ecl_sum , int internal_index ){
-  return ecl_sum_data_iget_mini_step( ecl_sum->data , internal_index );
-}
-
-
 
 time_t_vector_type * ecl_sum_alloc_time_vector( const ecl_sum_type * ecl_sum  , bool report_only) {
   return ecl_sum_data_alloc_time_vector( ecl_sum->data , report_only );

@@ -154,7 +154,6 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   time_t ecl_sum_iget_sim_time( const ecl_sum_type * ecl_sum , int index );
   double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int time_index);
   int    ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index );
-  int    ecl_sum_iget_mini_step( const ecl_sum_type * ecl_sum , int internal_index );
   double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_index , const char * lookup_kw);
 
 
