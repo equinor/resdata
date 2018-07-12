@@ -344,6 +344,16 @@ ecl_sum_tstep_type * ecl_sum_file_data::iget_ministep( int internal_index ) cons
   return (ecl_sum_tstep_type*)vector_iget( data , internal_index );
 }
 
+double ecl_sum_file_data::iget_sim_days(int time_index ) const {
+  const ecl_sum_tstep_type * tstep = this->iget_ministep(time_index);
+  return ecl_sum_tstep_get_sim_days(tstep);
+}
+
+double ecl_sum_file_data::iget_sim_seconds(int time_index ) const {
+  const ecl_sum_tstep_type * tstep = this->iget_ministep(time_index);
+  return ecl_sum_tstep_get_sim_seconds(tstep);
+}
+
 
 static int cmp_ministep( const void * arg1 , const void * arg2) {
   const ecl_sum_tstep_type * ministep1 = ecl_sum_tstep_safe_cast_const( arg1 );
