@@ -605,7 +605,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * self ) {
     int r2;
 
     if (i == (self->data_files.size() - 1)) {
-      self->index.add(data->get_length());
+      self->index.add(data->length());
       r2 = data->last_report();
     } else {
       const auto& next = self->data_files[i+1];

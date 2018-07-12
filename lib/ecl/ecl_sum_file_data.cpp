@@ -190,7 +190,7 @@ ecl_sum_file_data::~ecl_sum_file_data() {
 }
 
 
-int ecl_sum_file_data::get_length() const {
+int ecl_sum_file_data::length() const {
   return vector_get_size( data );
 }
 
@@ -203,7 +203,7 @@ int ecl_sum_file_data::length_before(time_t end_time) const {
       return offset;
 
     offset += 1;
-    if (offset == this->get_length())
+    if (offset == this->length())
       return offset;
   }
 }
@@ -634,7 +634,7 @@ bool ecl_sum_file_data::fread(const stringlist_type * filelist) {
     }
   }
 
-  if (get_length() > 0) {
+  if (length() > 0) {
     build_index();
     return true;
   } else
