@@ -374,8 +374,8 @@ void ecl_sum_file_data::build_index( ) {
 
   /* Identify various global first and last values.  */
   {
-    const ecl_sum_tstep_type * first_ministep = (const ecl_sum_tstep_type*)vector_iget_const( data, 0 );
-    const ecl_sum_tstep_type * last_ministep  = (const ecl_sum_tstep_type*)vector_get_last_const( data );
+    const ecl_sum_tstep_type * first_ministep = this->iget_ministep( 0 );
+    const ecl_sum_tstep_type * last_ministep  = this->iget_ministep( this->length() - 1 );
     /*
        In most cases the days_start and data_start_time will agree
        with the global simulation start; however in the case where we
