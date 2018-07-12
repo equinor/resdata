@@ -11,6 +11,83 @@ namespace ecl {
 #define INVALID_MINISTEP_NR -1
 #define INVALID_TIME_T 0
 
+
+struct IndexNode {
+
+IndexNode(time_t sim_time, double sim_seconds, int report_step) :
+  sim_time(sim_time),
+  sim_seconds(sim_seconds),
+  report_step(report_step)
+{}
+
+    time_t sim_time;
+    double sim_seconds;
+    int report_step;
+};
+
+
+class TimeIndex {
+public:
+
+  void add(time_t sim_time, double sim_seconds, int report_step) {
+    int internal_index = static_cast<int>(this->nodes.size());
+    this->nodes.emplace_back(sim_time, sim_seconds, report_step);
+
+    /* Indexing internal_index - report_step */
+    if (static_cast<int>(this->report_map.size()) <= report_step)
+      this->report_map.resize( report_step + 1, std::pair<int,int>(std::numeric_limits<int>::max(), -1));
+
+    auto& range = this->report_map[report_step];
+    range.first = std::min(range.first, internal_index);
+    range.second = std::max(range.second, internal_index);
+  }
+
+
+  bool has_report(int report_step) const {
+    if (report_step >= static_cast<int>(this->report_map.size()))
+      return false;
+
+    const auto& range_pair = this->report_map[report_step];
+    if (range_pair.second < 0)
+      return false;
+
+    return true;
+  }
+
+
+  void clear() {
+    this->nodes.clear();
+    this->report_map.clear();
+  }
+
+  const IndexNode& operator[](size_t index) const {
+    return this->nodes[index];
+  }
+
+  const IndexNode& back() const {
+    return this->nodes.back();
+  }
+
+  size_t size() const {
+    return this->nodes.size();
+  }
+
+  std::pair<int,int>& report_range(int report_step) {
+    return this->report_map[report_step];
+  }
+
+  const std::pair<int,int>& report_range(int report_step) const {
+    return this->report_map[report_step];
+  }
+
+private:
+  std::vector<IndexNode> nodes;
+  std::vector<std::pair<int,int>> report_map;
+};
+
+
+
+
 class ecl_sum_file_data {
 
 public:
@@ -50,18 +127,11 @@ public:
 
 private:
   const ecl_smspec_type         * ecl_smspec;
-  double                          days_start;
-  double                          sim_length;
-  int                             first_report_step;
-  int                             last_report_step;
 
-  std::vector<std::pair<int,int>> report_map; // This will map from a report step to first and last internal index.
-  std::pair<time_t, time_t>       time_range;
+  TimeIndex                       index;
   vector_type                   * data;
-  bool                            index_valid;
 
 
-  void                 clear_index();
   void                 append_tstep(ecl_sum_tstep_type * tstep);
   void                 build_index();
   void                 fwrite_report( int report_step , fortio_type * fortio) const;

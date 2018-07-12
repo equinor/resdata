@@ -60,7 +60,7 @@
 namespace {
 
 /*
-  The class TimeIndex and the struct IndexNode are used to maintain a list of
+  The class CaseIndex and the struct IndexNode are used to maintain a list of
   the ecl_sum_file_data instances, and lookup the correct one based one various
   time related arguments.
 */
@@ -89,7 +89,7 @@ namespace {
   };
 
 
-  class TimeIndex {
+  class CaseIndex {
   public:
 
     IndexNode& add(int length) {
@@ -238,7 +238,7 @@ namespace {
 struct ecl_sum_data_struct {
   const ecl_smspec_type  * smspec;
   std::vector<ecl::ecl_sum_file_data*> data_files;              // List of ecl_sum_file_data instances
-  TimeIndex               index;
+  CaseIndex              index;
 };
 
 
@@ -608,31 +608,36 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * self ) {
   self->index.clear();
   for (size_t i=0; i < self->data_files.size(); i++) {
     const auto& data = self->data_files[i];
-    int r1 = data->first_report();
-    int r2;
+    bool main_case = (i == (self->data_files.size() - 1));
+    time_t next_start;
 
-    if (i == (self->data_files.size() - 1)) {
+    if (main_case)
       self->index.add(data->length());
-      r2 = data->last_report();
-    } else {
+    else {
       const auto& next = self->data_files[i+1];
-      self->index.add( data->length_before(next->get_data_start()));
-      r2 = data->report_before( next->get_data_start() );
+      next_start = next->get_data_start();
+      self->index.add( data->length_before(next_start));
     }
 
     auto & node = self->index.back();
-    {
-      int * tmp_map = ecl_smspec_alloc_mapping( self->smspec , data->smspec() );
-      node.params_map.assign(tmp_map, tmp_map + ecl_smspec_get_params_size(self->smspec));
-      free( tmp_map );
-    }
+    if (node.length > 0) {
+      node.report1 = data->first_report();
 
-    node.report1 = r1;
-    node.report2 = r2;
-    node.time1   = data->get_data_start();
-    node.time2   = data->get_sim_end();
-    node.days1   = data->get_days_start();
-    node.days2   = data->get_sim_length();
+      if (main_case)
+        node.report2 = data->last_report();
+      else
+        node.report2 = data->report_before( next_start );
+
+      node.time1   = data->get_data_start();
+      node.time2   = data->get_sim_end();
+      node.days1   = data->get_days_start();
+      node.days2   = data->get_sim_length();
+      {
+        int * tmp_map = ecl_smspec_alloc_mapping( self->smspec , data->smspec() );
+        node.params_map.assign(tmp_map, tmp_map + ecl_smspec_get_params_size(self->smspec));
+        free( tmp_map );
+      }
+    }
   }
 
 }
@@ -1077,10 +1082,8 @@ static void ecl_sum_data_init_double_vector__(const ecl_sum_data_type * data, in
 
 
 void ecl_sum_data_init_datetime64_vector(const ecl_sum_data_type * data, int64_t * output_data, int multiplier) {
-  int i;
-  for (i = 0; i < ecl_sum_data_get_length(data); i++) {
+  for (int i = 0; i < ecl_sum_data_get_length(data); i++)
     output_data[i] = ecl_sum_data_iget_sim_time(data, i) * multiplier;
-  }
 }
 
 
