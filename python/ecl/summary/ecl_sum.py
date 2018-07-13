@@ -411,7 +411,7 @@ class EclSum(BaseCClass):
 
         if report_only:
             if time_index is None:
-                time_index = self.dates
+                time_index = self.report_dates
             else:
                 raise ValueError("Can not suuply both time_index and report_only=True")
 

@@ -509,7 +509,7 @@ class SumTest(EclTest):
             v = case.numpy_vector("FOPR", time_index=dates, report_only=True)
 
         v = case.numpy_vector("FOPR", report_only=True)
-        self.assertEqual(len(v), len(case.dates))
+        self.assertEqual(len(v), len(case.report_dates))
 
 
     def test_vector(self):
