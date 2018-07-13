@@ -512,6 +512,15 @@ class SumTest(EclTest):
         self.assertEqual(len(v), len(case.dates))
 
 
+    def test_vector(self):
+        case = create_case()
+
+        # The get_vector method is extremely deprecated.
+        v1 = case.get_vector("FOPT")
+        v2 = case.get_vector("FOPT", report_only = True)
+        s1 = sum( [x.value for x in v1 ])
+        s2 = sum( [x.value for x in v2 ])
+
     def test_pandas(self):
         case = create_case()
         dates = [datetime.datetime(2000,1,1)] + case.dates + [datetime.datetime(2020,1,1)]
