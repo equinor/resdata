@@ -434,7 +434,7 @@ class EclSum(BaseCClass):
             time_points.append(t)
         return time_points
 
-    def numpy_vector(self, key, time_index = None):
+    def numpy_vector(self, key, time_index=None, report_only=False):
         """Will return numpy vector of all the values corresponding to @key.
 
         The optional argument @time_index can be used to limit the time points
@@ -450,9 +450,21 @@ class EclSum(BaseCClass):
         The function will raise KeyError if the requested key does not exist.
         If many keys are needed it will be faster to use the pandas_frame()
         function.
+
+        If you set the optional argument report_only to True the you will only
+        get values at the report dates. Observe that passing report_only=True
+        can not be combined with a value for time_index, that will give you a
+        ValueError exception.
+
         """
         if key not in self:
             raise KeyError("No such key:%s" % key)
+
+        if report_only:
+            if time_index is None:
+                time_index = self.dates
+            else:
+                raise ValueError("Can not suuply both time_index and report_only=True")
 
         if time_index is None:
             np_vector = numpy.zeros(len(self))

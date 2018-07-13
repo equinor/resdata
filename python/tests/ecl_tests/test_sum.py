@@ -523,7 +523,7 @@ class SumTest(EclTest):
         dates = [datetime.datetime(2000,1,1)] + case.dates + [datetime.datetime(2020,1,1)]
         fopr = case.numpy_vector("FOPR", time_index = dates)
         fopt = case.numpy_vector("FOPT", time_index = dates)
-
+        self.assertEqual(len(fopt), len(dates))
 
         self.assertEqual(fopr[0], 0)
         self.assertEqual(fopr[-1], 0)
@@ -532,6 +532,11 @@ class SumTest(EclTest):
         self.assertEqual(fopt[0], case.first_value("FOPT"))
         self.assertEqual(fopt[-1], case.last_value("FOPT"))
 
+        with self.assertRaises(ValueError):
+            v = case.numpy_vector("FOPR", time_index=dates, report_only=True)
+
+        v = case.numpy_vector("FOPR", report_only=True)
+        self.assertEqual(len(v), len(case.dates))
 
 
     def test_pandas(self):
