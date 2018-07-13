@@ -84,7 +84,6 @@ def date2num(dt):
                  dt.microsecond/MUSECONDS_PER_DAY)
     return base
 
-
 class EclSum(BaseCClass):
     TYPE_NAME = "ecl_sum"
     _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
@@ -174,7 +173,6 @@ class EclSum(BaseCClass):
             raise IOError("Failed to create summary instance from argument:%s" % load_case)
 
         super(EclSum, self).__init__(c_pointer)
-        self.__private_init()
         self._load_case = load_case
 
 
@@ -200,15 +198,12 @@ class EclSum(BaseCClass):
     @classmethod
     def createCReference(cls, c_pointer, parent=None):
         result = super(EclSum, cls).createCReference(c_pointer, parent)
-        if not result is None:
-            result.__private_init()
         return result
 
 
     @classmethod
     def createPythonObject(cls, c_pointer):
         result = super(EclSum, cls).createPythonObject(c_pointer)
-        result.__private_init()
         return result
 
 
@@ -302,45 +297,6 @@ class EclSum(BaseCClass):
         return self._add_tstep(report_step, sim_seconds).setParent(parent=self)
 
 
-
-    def __private_init(self):
-        # Initializing the time vectors
-        length = self.length
-        self.__dates = [0] * length
-        self.__report_step = numpy.zeros(length, dtype=numpy.int32)
-        self.__days = numpy.zeros(length)
-        self.__mpl_dates = numpy.zeros(length)
-
-        for i in range(length):
-            self.__days[i] = self._iget_sim_days(i)
-            self.__dates[i] = self.iget_date(i)
-            self.__report_step[i] = self._iget_report_step(i)
-            self.__mpl_dates[i] = date2num(self.__dates[i])
-
-        index_list = self.report_index_list()
-
-        length = len(index_list) - index_list.count(-1)
-        self.__datesR = [0] * length
-        self.__report_stepR = numpy.zeros(length, dtype=numpy.int32)
-        self.__daysR = numpy.zeros(length)
-        self.__mpl_datesR = numpy.zeros(length)
-
-        # Slightly hysterical heuristics to accomoate for the
-        # situation where there are holes in the report steps series;
-        # when a report step is completely missing there will be -1
-        # entries in the index_list.
-        i1 = 0
-        for i0 in range(length):
-            while True:
-                time_index = index_list[i1]
-                i1 += 1
-                if time_index >= 0:
-                    break
-
-            self.__daysR[i0] = self._iget_sim_days(time_index)
-            self.__datesR[i0] = self.iget_date(time_index)
-            self.__report_stepR[i0] = self._iget_report_step(time_index)
-            self.__mpl_datesR[i0] = date2num(self.__datesR[i0])
 
 
     def get_vector(self, key, report_only=False):
@@ -487,6 +443,15 @@ class EclSum(BaseCClass):
         """
         np_dates = self.numpy_dates
         return np_dates.tolist()
+
+
+    @property
+    def report_dates(self):
+        dates = []
+        if len(self):
+            for report in range(self.first_report,self.last_report + 1):
+                dates.append(self.get_report_time( report ))
+        return dates
 
 
     def pandas_frame(self, time_index = None, column_keys = None):
@@ -1049,9 +1014,12 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         'days' values corresponding to report steps will be included.
         """
         if report_only:
-            return self.__daysR
+            dates = self.report_dates
+            start_date = self.data_start
+            start = datetime.date(start_date.year, start_date.month, start_date.day)
+            return [ (x - start).total_seconds( ) / 86400 for x in dates ]
         else:
-            return self.__days
+            return [ self._iget_sim_days(index) for index in range(len(self)) ]
 
     def get_dates(self, report_only=False):
         """
@@ -1063,9 +1031,9 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         to report steps will be included.
         """
         if report_only:
-            return self.__datesR
+            return self.report_dates
         else:
-            return self.__dates
+            return self.dates
 
     @property
     def mpl_dates(self):
@@ -1089,9 +1057,9 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         the top of this file.
         """
         if report_only:
-            return self.__mpl_datesR
+            return [ date2num(dt) for dt in self.report_dates ]
         else:
-            return self.__mpl_dates
+            return [ date2num(dt) for dt in self.dates ]
 
     @property
     def mini_step(self):
@@ -1141,9 +1109,13 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
     def get_report_step(self, report_only=False):
         if report_only:
-            return self.__report_stepR
+            report_steps = list(range(self.first_report, self.last_report + 1))
         else:
-            return self.__report_step
+            report_steps = []
+            for index in range(len(self)):
+                report_steps.append( self._iget_report_step(index) )
+
+        return report_steps
 
     #-----------------------------------------------------------------
 
