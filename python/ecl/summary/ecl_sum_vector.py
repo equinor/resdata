@@ -69,7 +69,7 @@ class EclSumVector(object):
         This function will load and internalize all the values.
         """
         if self.__values is None:
-            self.__values = self.parent.get_values(self.key, self.report_only)
+            self.__values = self.parent.numpy_vector(self.key, report_only = self.report_only)
 
     @property
     def values(self):
