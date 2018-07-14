@@ -78,10 +78,7 @@ typedef struct ecl_sum_data_struct ecl_sum_data_type ;
   double                   ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , const smspec_node_type * smspec_node);
 
   int                      ecl_sum_data_get_length( const ecl_sum_data_type * data );
-  void                     ecl_sum_data_scale_vector( ecl_sum_data_type * data , int index, double scalar );
-  void                     ecl_sum_data_shift_vector( ecl_sum_data_type * data , int index, double addend );
   int                      ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_index);
-  int                      ecl_sum_data_iget_mini_step(const ecl_sum_data_type * data , int internal_index);
   int                      ecl_sum_data_iget_report_end( const ecl_sum_data_type * data , int report_step );
   ecl_sum_tstep_type     * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int report_step , double sim_seconds);
   bool                     ecl_sum_data_report_step_equal( const ecl_sum_data_type * data1 , const ecl_sum_data_type * data2);

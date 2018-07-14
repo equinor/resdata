@@ -229,33 +229,6 @@ class SumTest(EclTest):
         self.assertEqual( sol[1] , t2 )
 
 
-    def test_ecl_sum_vector_algebra(self):
-        scalar = 0.78
-        addend = 2.718281828459045
-
-        case = create_case()
-        with self.assertRaises( KeyError ):
-            case.scaleVector( "MISSING:KEY" , scalar)
-            case.shiftVector( "MISSING:KEY" , addend)
-
-        # scale all vectors with scalar
-        for key in case.keys():
-            x = case.get_values(key) # get vector key
-            case.scaleVector(key , scalar)
-            y = case.get_values(key)
-            x = x * scalar # numpy vector scaling
-            for i in range(len(x)):
-                self.assertFloatEqual(x[i], y[i])
-
-        # shift all vectors with addend
-        for key in case.keys():
-            x = case.get_values(key) # get vector key
-            case.shiftVector(key , addend)
-            y = case.get_values(key)
-            x = x + addend # numpy vector shifting
-            for i in range(len(x)):
-                self.assertFloatEqual(x[i], y[i])
-
 
     def test_different_names(self):
         case = create_case()
@@ -536,8 +509,17 @@ class SumTest(EclTest):
             v = case.numpy_vector("FOPR", time_index=dates, report_only=True)
 
         v = case.numpy_vector("FOPR", report_only=True)
-        self.assertEqual(len(v), len(case.dates))
+        self.assertEqual(len(v), len(case.report_dates))
 
+
+    def test_vector(self):
+        case = create_case()
+
+        # The get_vector method is extremely deprecated.
+        v1 = case.get_vector("FOPT")
+        v2 = case.get_vector("FOPT", report_only = True)
+        s1 = sum( [x.value for x in v1 ])
+        s2 = sum( [x.value for x in v2 ])
 
     def test_pandas(self):
         case = create_case()

@@ -79,8 +79,6 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   const char *     ecl_sum_iget_wgname( const ecl_sum_type * sum , int param_index );
   const char *     ecl_sum_iget_keyword( const ecl_sum_type * sum , int param_index );
   int              ecl_sum_get_data_length( const ecl_sum_type * ecl_sum );
-  void             ecl_sum_scale_vector( ecl_sum_type * ecl_sum, int index, double scalar );
-  void             ecl_sum_shift_vector( ecl_sum_type * ecl_sum, int index, double addend );
   double           ecl_sum_iget_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , int param_index);
   double           ecl_sum_iget_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , int param_index );
 
@@ -156,7 +154,6 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   time_t ecl_sum_iget_sim_time( const ecl_sum_type * ecl_sum , int index );
   double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int time_index);
   int    ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index );
-  int    ecl_sum_iget_mini_step( const ecl_sum_type * ecl_sum , int internal_index );
   double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_index , const char * lookup_kw);
 
 
