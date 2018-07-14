@@ -1061,35 +1061,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         else:
             return [ date2num(dt) for dt in self.dates ]
 
-    @property
-    def mini_step(self):
-        """
-        Will return a a python list of ministep values.
-
-        Will return a Python list of ministep values from this summary
-        case; the ministep values are the internal indexing of
-        timesteps provided by the reservoir simulator. In normal cases
-        this will be: [0,1,2,3,4,5,....], but in the case of restarted
-        simulations it can start at a higher value, and there can also
-        be 'holes' in the series if 'RPTONLY' has been used in THE
-        ECLIPSE datafile.
-        """
-        return self.get_mini_step(False)
-
-    def get_mini_step(self, report_only=False):
-        """
-        Will return a a python list of ministep values.
-
-        If the optional argument @report_only is set to True, only
-        dates values corresponding to report steps will be
-        included. See documentation of property: 'mini_step' for
-        further documentation.
-        """
-        if report_only:
-            return self.__mini_stepR
-        else:
-            return self.__mini_step
-
 
     @property
     def report_step(self):
