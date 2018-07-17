@@ -1729,18 +1729,17 @@ void ecl_kw_fwrite_header(const ecl_kw_type *ecl_kw , fortio_type *fortio) {
   if (fmt_file)
     fprintf(stream , WRITE_HEADER_FMT , ecl_kw->header8 , ecl_kw->size , type_name);
   else {
-    int size = ecl_kw->size;
+    int32_t size = ecl_kw->size;
     if (ECL_ENDIAN_FLIP)
       util_endian_flip_vector(&size , sizeof size , 1);
 
-    fortio_init_write(fortio , ECL_KW_HEADER_DATA_SIZE );
+    char buffer[ ECL_KW_HEADER_DATA_SIZE ];
+    memcpy( buffer,      ecl_kw->header8, 8 );
+    memcpy( buffer +  8, &size, sizeof( size ) );
+    memcpy( buffer + 12, type_name, ECL_TYPE_LENGTH );
 
-    fwrite(ecl_kw->header8                            , sizeof(char)    , ECL_STRING8_LENGTH  , stream);
-    fwrite(&size                                      , sizeof(int)     , 1                  , stream);
-    fwrite(type_name , sizeof(char)    , ECL_TYPE_LENGTH    , stream);
-
-    fortio_complete_write(fortio , ECL_KW_HEADER_DATA_SIZE);
-
+    int err = eclfio_put( stream, "b", ECL_KW_HEADER_DATA_SIZE, buffer );
+    if( err ) util_abort("%s: write failed: %s\n",__func__ , strerror(errno));
   }
 
   free(type_name);
