@@ -356,6 +356,14 @@ void ecl_sum_data_fwrite( const ecl_sum_data_type * data , const char * ecl_case
 }
 
 
+bool ecl_sum_data_can_write(const ecl_sum_data_type * data) {
+  bool can_write = true;
+  for (const auto& file_ptr : data->data_files)
+    can_write &= file_ptr->can_write();
+
+  return can_write;
+}
+
 time_t ecl_sum_data_get_sim_end(const ecl_sum_data_type * data ) {
   const auto& file_data = data->data_files.back();
   return file_data->get_sim_end();
@@ -688,9 +696,9 @@ void ecl_sum_data_add_case(ecl_sum_data_type * self, const ecl_sum_data_type * o
   call to ecl_sum_data_build_index().
 */
 
-bool ecl_sum_data_fread(ecl_sum_data_type * data , const stringlist_type * filelist) {
+bool ecl_sum_data_fread(ecl_sum_data_type * data , const stringlist_type * filelist, bool lazy_load) {
   ecl::ecl_sum_file_data * file_data = new ecl::ecl_sum_file_data( data->smspec );
-  if (file_data->fread( filelist )) {
+  if (file_data->fread( filelist, lazy_load)) {
     ecl_sum_data_append_file_data( data, file_data );
     ecl_sum_data_build_index(data);
     return true;
@@ -714,9 +722,9 @@ bool ecl_sum_data_fread(ecl_sum_data_type * data , const stringlist_type * filel
    (manually) changed from the historical part.
 */
 
-ecl_sum_data_type * ecl_sum_data_fread_alloc( ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart) {
+ecl_sum_data_type * ecl_sum_data_fread_alloc( ecl_smspec_type * smspec , const stringlist_type * filelist , bool include_restart, bool lazy_load) {
   ecl_sum_data_type * data = ecl_sum_data_alloc( smspec );
-  ecl_sum_data_fread( data , filelist );
+  ecl_sum_data_fread( data , filelist, lazy_load );
 
   /*****************************************************************/
   /* OK - now we have loaded all the data. Must sort the internal
@@ -784,8 +792,7 @@ int ecl_sum_data_iget_report_end( const ecl_sum_data_type * data , int report_st
 int ecl_sum_data_iget_report_step(const ecl_sum_data_type * data , int internal_index) {
   const auto& index_node = data->index.lookup(internal_index);
   const auto& file_data = data->data_files[index_node.data_index];
-  const auto& tstep = file_data->iget_ministep(internal_index  - index_node.offset);
-  return ecl_sum_tstep_get_report( tstep );
+  return file_data->iget_report(internal_index - index_node.offset);
 }
 
 
@@ -801,7 +808,12 @@ double ecl_sum_data_iget( const ecl_sum_data_type * data , int time_index , int 
   const auto& index_node = data->index.lookup( time_index );
   ecl::ecl_sum_file_data * file_data = data->data_files[index_node.data_index];
   const auto& params_map = index_node.params_map;
-  return file_data->iget( time_index - index_node.offset, params_map[params_index] );
+  if (params_map[params_index] >= 0)
+    return file_data->iget( time_index - index_node.offset, params_map[params_index] );
+  else {
+    const smspec_node_type * smspec_node = ecl_smspec_iget_node(data->smspec, params_index);
+    return smspec_node_get_default(smspec_node);
+  }
 }
 
 
@@ -1065,15 +1077,18 @@ static void ecl_sum_data_init_double_vector__(const ecl_sum_data_type * data, in
     int params_index = params_map[main_params_index];
 
 
-    if (report_only)
-      offset += data_file->get_data_report(params_index, index_node.length, &output_data[offset]);
-    else {
+    if (report_only) {
+      const smspec_node_type * smspec_node = ecl_smspec_iget_node(data->smspec, main_params_index);
+      double default_value = smspec_node_get_default(smspec_node);
+      offset += data_file->get_data_report(params_index, index_node.length, &output_data[offset], default_value);
+    } else {
 
       if (params_index >= 0)
         data_file->get_data(params_index, index_node.length, &output_data[offset]);
       else {
+        const smspec_node_type * smspec_node = ecl_smspec_iget_node(data->smspec, main_params_index);
         for (int i=0; i < index_node.length; i++)
-          output_data[offset + i] = 0;
+          output_data[offset + i] = smspec_node_get_default(smspec_node);
       }
       offset += index_node.length;
     }

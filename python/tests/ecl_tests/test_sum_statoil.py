@@ -202,14 +202,11 @@ class SumTest(EclTest):
         self.assertFloatEqual(sum.get_from_report("FOPT", 10), 6.67447e+06)
 
 
-    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test skipped")
     def test_fwrite(self):
-        # todo: What is tested here?
-        # work_area = TestArea("python/sum-test/fwrite", True)
+        ecl_sum = EclSum(self.case, lazy_load=False)
         with TestAreaContext("python/sum-test/fwrite") as work_area:
-            self.ecl_sum.fwrite(ecl_case="CASE")
+            ecl_sum.fwrite(ecl_case="CASE")
             self.assertTrue(True)
-
 
     def test_block(self):
         sum = self.ecl_sum
@@ -447,11 +444,12 @@ class SumTest(EclTest):
         self.assertFalse( "WGPR:NOT_21_D" in history )
         self.assertTrue( "WGPR:NOT_21_D" in total )
 
-        self.assertEqual( total.iget( "WGPR:NOT_21_D", 5) , 0) # Default value
+        node = total.smspec_node("WGPR:NOT_21_D")
+        self.assertEqual( total.iget( "WGPR:NOT_21_D", 5) , node.default)
 
     def test_write(self):
         with TestAreaContext("my_space") as area:
-            intersect_summary = EclSum( self.createTestPath( "Statoil/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0") )
+            intersect_summary = EclSum( self.createTestPath( "Statoil/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0"), lazy_load=False )
             self.assertIsNotNone(intersect_summary)
 
             write_location = os.path.join(os.getcwd(), "CASE")
@@ -485,7 +483,7 @@ class SumTest(EclTest):
                     ]:
 
             with TestAreaContext("my_space" + data_set.split("/")[-1]) as area:
-                intersect_summary = EclSum(self.createTestPath(data_set))
+                intersect_summary = EclSum(self.createTestPath(data_set), lazy_load=False)
                 self.assertIsNotNone(intersect_summary)
 
                 write_location = os.path.join(os.getcwd(), "CASE")

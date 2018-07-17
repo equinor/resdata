@@ -97,7 +97,7 @@ void write_CASE1(bool unified) {
 
 
 void verify_CASE2() {
-  ecl_sum_type * sum = ecl_sum_fread_alloc_case__("CASE2", ":", false);
+  ecl_sum_type * sum = ecl_sum_fread_alloc_case2__("CASE2", ":", false, true);
 
   for (int i=0; i < 2; i++) {
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
@@ -155,7 +155,7 @@ void write_CASE2(bool unified) {
 }
 
 void verify_CASE3() {
-  ecl_sum_type * sum = ecl_sum_fread_alloc_case__("CASE3", ":", false);
+  ecl_sum_type * sum = ecl_sum_fread_alloc_case2__("CASE3", ":", false, true);
 
   for (int i=0; i < 3; i++) {
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
@@ -174,8 +174,10 @@ void verify_CASE3() {
     ieq(d,2,(2 - i)*10  + 300);
 
     if (i == 0) {
-      ieq(d,3,0);
-      ieq(d,4,0);
+      const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum_get_smspec(sum), i);
+      double default_value = smspec_node_get_default(node);
+      ieq(d,3,default_value);
+      ieq(d,4,default_value);
     } else {
       ieq(d,3,(2 - i)*100 + 1000);
       ieq(d,4,(2 - i)*100 + 2000);

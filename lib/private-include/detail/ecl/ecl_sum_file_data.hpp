@@ -1,4 +1,6 @@
 #include <vector>
+#include <memory>
+#include <array>
 
 #include <ert/util/vector.hpp>
 
@@ -86,7 +88,7 @@ private:
 };
 
 
-
+class unsmry_loader;
 
 class ecl_sum_file_data {
 
@@ -113,17 +115,19 @@ public:
   bool                 report_step_equal( const ecl_sum_file_data& other, bool strict) const;
   int                  report_before(time_t end_time) const;
   int                  get_time_report(int max_internal_index, time_t *data);
-  int                  get_data_report(int params_index, int max_internal_index, double *data);
+  int                  get_data_report(int params_index, int max_internal_index, double *data, double default_value);
   int                  first_report() const;
   int                  last_report() const;
+  int                  iget_report(int time_index) const;
   bool                 has_report(int report_step ) const;
   int                  report_step_from_days(double sim_days) const;
   int                  report_step_from_time(time_t sim_time) const;
 
   ecl_sum_tstep_type * add_new_tstep(int report_step , double sim_seconds);
+  bool                 can_write() const;
   void                 fwrite_unified( fortio_type * fortio ) const;
   void                 fwrite_multiple( const char * ecl_case , bool fmt_case ) const;
-  bool                 fread(const stringlist_type * filelist);
+  bool                 fread(const stringlist_type * filelist, bool lazy_load);
 
 private:
   const ecl_smspec_type         * ecl_smspec;
@@ -131,6 +135,7 @@ private:
   TimeIndex                       index;
   vector_type                   * data;
 
+  std::unique_ptr<ecl::unsmry_loader> loader;
 
   void                 append_tstep(ecl_sum_tstep_type * tstep);
   void                 build_index();

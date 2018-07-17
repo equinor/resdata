@@ -562,3 +562,17 @@ class SumTest(EclTest):
     def test_load_case(self):
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
         case = EclSum( path )
+        self.assertFloatEqual(case.sim_length, 545.0)
+
+        fopr = case.numpy_vector("FOPR")
+        for time_index,value in enumerate(fopr):
+            self.assertEqual(fopr[time_index], value)
+
+
+
+    def test_write_not_implemented(self):
+        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
+        case = EclSum( path, lazy_load=True )
+        self.assertFalse(case.can_write())
+        with self.assertRaises(NotImplementedError):
+            case.fwrite( )

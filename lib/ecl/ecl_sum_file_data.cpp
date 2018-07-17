@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <limits>
 #include <algorithm>
+#include <memory>
 
 #include <ert/ecl/ecl_sum_tstep.hpp>
 #include <ert/ecl/ecl_kw.h>
@@ -8,6 +9,8 @@
 #include <ert/ecl/ecl_endian_flip.h>
 
 #include "detail/ecl/ecl_sum_file_data.hpp"
+#include "detail/ecl/ecl_unsmry_loader.hpp"
+
 /*
   This file implements the type ecl_sum_data_type. The data structure
   is involved with holding all the actual summary data (i.e. the
@@ -189,7 +192,10 @@ ecl_sum_file_data::~ecl_sum_file_data() {
 
 
 int ecl_sum_file_data::length() const {
-  return this->index.size();
+  if (this->loader)
+    return this->loader->length();
+  else
+    return this->index.size();
 }
 
 
@@ -250,23 +256,25 @@ time_t ecl_sum_file_data::get_sim_end() const {
 }
 
 time_t ecl_sum_file_data::iget_sim_time(int time_index) const {
-  const ecl_sum_tstep_type * ministep = iget_ministep( time_index  );
-  return ecl_sum_tstep_get_sim_time(ministep);
+  const auto& node = this->index[time_index];
+  return node.sim_time;
 }
 
-
+/*
+  Will return the length of the simulation in whatever units were used in input.
+*/
 double ecl_sum_file_data::get_sim_length() const {
   const auto& node = this->index.back();
-  return node.sim_seconds * 86400;
+  return node.sim_seconds / ecl_smspec_get_time_seconds( this->ecl_smspec );
 }
 
 double ecl_sum_file_data::iget( int time_index , int params_index ) const {
-  if (params_index >= 0) {
+  if (this->loader)
+    return this->loader->iget(time_index, params_index);
+  else {
     const ecl_sum_tstep_type * ministep_data = iget_ministep( time_index  );
     return ecl_sum_tstep_iget( ministep_data , params_index);
   }
-  else
-    return 0;
 }
 
 
@@ -331,13 +339,13 @@ ecl_sum_tstep_type * ecl_sum_file_data::iget_ministep( int internal_index ) cons
 }
 
 double ecl_sum_file_data::iget_sim_days(int time_index ) const {
-  const ecl_sum_tstep_type * tstep = this->iget_ministep(time_index);
-  return ecl_sum_tstep_get_sim_days(tstep);
+  const auto& node = this->index[time_index];
+  return node.sim_seconds / 86400;
 }
 
 double ecl_sum_file_data::iget_sim_seconds(int time_index ) const {
-  const ecl_sum_tstep_type * tstep = this->iget_ministep(time_index);
-  return ecl_sum_tstep_get_sim_seconds(tstep);
+  const auto& node = this->index[time_index];
+  return node.sim_seconds;
 }
 
 
@@ -361,7 +369,15 @@ static int cmp_ministep( const void * arg1 , const void * arg2) {
 void ecl_sum_file_data::build_index( ) {
   this->index.clear();
 
-  if (true) {
+  if (this->loader) {
+    int offset = 0;  // SHould be first report step in this file
+    std::vector<int> report_steps = this->loader->report_steps(offset);
+    for (int i=0; i < this->loader->length(); i++) {
+      this->index.add(this->loader->iget_sim_time(i),
+                      this->loader->iget_sim_seconds(i),
+                      report_steps[i]);
+    }
+  } else {
     vector_sort( data , cmp_ministep );
     for (int internal_index = 0; internal_index < vector_get_size( data ); internal_index++) {
       const ecl_sum_tstep_type * ministep = iget_ministep( internal_index  );
@@ -402,7 +418,7 @@ void ecl_sum_file_data::get_data(int params_index, int length, double *data) {
 }
 
 
-int ecl_sum_file_data::get_data_report(int params_index, int end_index, double *data) {
+int ecl_sum_file_data::get_data_report(int params_index, int end_index, double *data, double default_value) {
   int offset = 0;
 
   for (int report_step = this->first_report(); report_step <= this->last_report(); report_step++) {
@@ -413,7 +429,7 @@ int ecl_sum_file_data::get_data_report(int params_index, int end_index, double *
     if (params_index >= 0)
       data[offset] = this->iget(time_index, params_index);
     else
-      data[offset] = 0;
+      data[offset] = default_value;
 
     offset += 1;
   }
@@ -479,7 +495,14 @@ void ecl_sum_file_data::fwrite_multiple( const char * ecl_case , bool fmt_case )
       free( filename );
     }
   }
+}
 
+
+bool ecl_sum_file_data::can_write() const {
+  if (this->loader)
+    return false;
+
+  return true;
 }
 
 double ecl_sum_file_data::get_days_start() const {
@@ -548,7 +571,7 @@ void ecl_sum_file_data::add_ecl_file(int report_step, const ecl_file_view_type *
 }
 
 
-bool ecl_sum_file_data::fread(const stringlist_type * filelist) {
+bool ecl_sum_file_data::fread(const stringlist_type * filelist, bool lazy_load) {
   if (stringlist_get_size( filelist ) == 0)
     return false;
 
@@ -575,24 +598,37 @@ bool ecl_sum_file_data::fread(const stringlist_type * filelist) {
       }
     }
   } else if (file_type == ECL_UNIFIED_SUMMARY_FILE) {
-    ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
-    if (ecl_file && check_file( ecl_file )) {
-      int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
-      while (true) {
-        /*
-          Observe that there is a number discrepancy between ECLIPSE
-          and the ecl_file_select_smryblock() function. ECLIPSE
-          starts counting report steps at 1; whereas the first
-          SEQHDR block in the unified summary file is block zero (in
-          ert counting).
-        */
-        ecl_file_view_type * summary_view = ecl_file_get_summary_view(ecl_file , report_step - 1 );
-        if (summary_view) {
-          add_ecl_file(report_step , summary_view , ecl_smspec);
-          report_step++;
-        } else break;
+    if (lazy_load) {
+      try {
+        this->loader.reset( new unsmry_loader( this->ecl_smspec, stringlist_iget(filelist, 0)) );
       }
-      ecl_file_close( ecl_file );
+      catch(const std::bad_alloc& e)
+      {
+        return false;
+      }
+    } else {
+
+      // Is this correct for a restarted chain of UNSMRY files? Looks like the
+      // report step sequence will be restarted?
+      ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
+      if (ecl_file && check_file( ecl_file )) {
+        int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
+        while (true) {
+          /*
+            Observe that there is a number discrepancy between ECLIPSE
+            and the ecl_file_select_smryblock() function. ECLIPSE
+            starts counting report steps at 1; whereas the first
+            SEQHDR block in the unified summary file is block zero (in
+            ert counting).
+        */
+          ecl_file_view_type * summary_view = ecl_file_get_summary_view(ecl_file , report_step - 1 );
+          if (summary_view) {
+            add_ecl_file(report_step , summary_view , ecl_smspec);
+            report_step++;
+          } else break;
+        }
+        ecl_file_close( ecl_file );
+      }
     }
   }
 
@@ -619,10 +655,10 @@ bool ecl_sum_file_data::report_step_equal( const ecl_sum_file_data& other, bool 
     int time_index2 = other.report_range(report_step).second;
 
     if ((time_index1 != INVALID_MINISTEP_NR) && (time_index2 != INVALID_MINISTEP_NR)) {
-      const auto& ministep1 = this->iget_ministep( time_index1 );
-      const auto& ministep2 = other.iget_ministep( time_index2 );
+      time_t time1 = this->iget_sim_time(time_index1);
+      time_t time2 = other.iget_sim_time(time_index2);
 
-      if (!ecl_sum_tstep_sim_time_equal( ministep1 , ministep2))
+      if (!time1 != time2)
         return false;
 
     } else if (time_index1 != time_index2) {
@@ -642,13 +678,14 @@ bool ecl_sum_file_data::report_step_equal( const ecl_sum_file_data& other, bool 
 
 int ecl_sum_file_data::report_step_from_days(double sim_days) const {
   int report_step = this->first_report();
+  double sim_seconds = sim_days * 86400;
   while (true) {
     const auto& range = this->index.report_range(report_step);
     if (range.second >= 0) {
-      const ecl_sum_tstep_type * tstep = this->iget_ministep(range.second);
+      const auto& node = this->index[range.second];
 
       // Warning - this is a double == comparison!
-      if (sim_days == ecl_sum_tstep_get_sim_days(tstep))
+      if (sim_seconds == node.sim_seconds)
         return report_step;
 
       report_step++;
@@ -663,8 +700,8 @@ int ecl_sum_file_data::report_step_from_time(time_t sim_time) const {
   while (true) {
     const auto& range = this->index.report_range(report_step);
     if (range.second >= 0) {
-      const ecl_sum_tstep_type * tstep = this->iget_ministep(range.second);
-      if (sim_time == ecl_sum_tstep_get_sim_time(tstep))
+      const auto& node = this->index[range.second];
+      if (sim_time == node.sim_time)
         return report_step;
 
       report_step++;
@@ -673,6 +710,12 @@ int ecl_sum_file_data::report_step_from_time(time_t sim_time) const {
     }
   }
 }
+
+int ecl_sum_file_data::iget_report(int time_index) const {
+  const auto& index_node = this->index[time_index];
+  return index_node.report_step;
+}
+
 
 } //end namespace
 

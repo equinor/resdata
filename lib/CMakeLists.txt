@@ -106,6 +106,7 @@ add_library(ecl util/rng.cpp
                 ecl/ecl_grav.cpp
                 ecl/ecl_grav_calc.cpp
                 ecl/ecl_smspec.cpp
+                ecl/ecl_unsmry_loader.cpp
                 ecl/ecl_sum_data.cpp
                 ecl/ecl_sum_file_data.cpp
                 ecl/ecl_util.cpp
@@ -386,6 +387,11 @@ foreach (name   ecl_alloc_cpgrid
         target_link_libraries(${name} ecl)
         add_test(NAME ${name} COMMAND ${name})
 endforeach ()
+
+add_executable(ecl_unsmry_loader ecl/tests/ecl_unsmry_loader_test.cpp)
+target_link_libraries(ecl_unsmry_loader ecl)
+target_include_directories(ecl_unsmry_loader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
+add_test(NAME ecl_unsmry_loader COMMAND ecl_unsmry_loader)
 
 add_executable(ecl_sum_data_intermediate ecl/tests/ecl_sum_data_intermediate_test.cpp)
 target_link_libraries(ecl_sum_data_intermediate ecl)

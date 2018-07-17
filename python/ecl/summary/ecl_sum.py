@@ -86,7 +86,7 @@ def date2num(dt):
 
 class EclSum(BaseCClass):
     TYPE_NAME = "ecl_sum"
-    _fread_alloc_case              = EclPrototype("void*     ecl_sum_fread_alloc_case__(char*, char*, bool)", bind=False)
+    _fread_alloc_case2             = EclPrototype("void*     ecl_sum_fread_alloc_case2__(char*, char*, bool, bool)", bind=False)
     _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
     _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
     _create_writer                 = EclPrototype("ecl_sum_obj  ecl_sum_alloc_writer(char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
@@ -129,6 +129,7 @@ class EclSum(BaseCClass):
     _get_report_step_from_days     = EclPrototype("int      ecl_sum_get_report_step_from_days(ecl_sum, double)")
     _get_report_time               = EclPrototype("time_t   ecl_sum_get_report_time(ecl_sum, int)")
     _fwrite_sum                    = EclPrototype("void     ecl_sum_fwrite(ecl_sum)")
+    _can_write                     = EclPrototype("bool     ecl_sum_can_write(ecl_sum)")
     _set_case                      = EclPrototype("void     ecl_sum_set_case(ecl_sum, char*)")
     _alloc_time_vector             = EclPrototype("time_t_vector_obj ecl_sum_alloc_time_vector(ecl_sum, bool)")
     _alloc_data_vector             = EclPrototype("double_vector_obj ecl_sum_alloc_data_vector(ecl_sum, int, bool)")
@@ -148,9 +149,8 @@ class EclSum(BaseCClass):
     _init_numpy_datetime64         = EclPrototype("void ecl_sum_init_datetime64_vector(ecl_sum, int64*, int)")
 
 
-    def __init__(self, load_case, join_string=":", include_restart=True):
-        """
-        Loads a new EclSum instance with summary data.
+    def __init__(self, load_case, join_string=":", include_restart=True, lazy_load=True):
+        """Loads a new EclSum instance with summary data.
 
         Loads a new summary results from the ECLIPSE case given by
         argument @load_case; @load_case should be the basename of the ECLIPSE
@@ -165,10 +165,18 @@ class EclSum(BaseCClass):
         If the @include_restart parameter is set to true the summary
         loader will, in the case of a restarted ECLIPSE simulation,
         try to load summary results also from the restarted case.
+
+        If the @lazy_load parameter is set to true the loader will not load all
+        the data from a UNSMRY file at creation time, but wait until the data
+        is actually requested. This will reduce startup time and memory usage,
+        whereas getting a vector will be slower. When the summary data is split
+        over multiple CASE.Snnn files all the data will be loaded at
+        construction time, and the @lazy_load option is ignored.
+
         """
         if not load_case:
             raise ValueError('load_case must be the basename of the simulation')
-        c_pointer = self._fread_alloc_case(load_case, join_string, include_restart)
+        c_pointer = self._fread_alloc_case2(load_case, join_string, include_restart, lazy_load)
         if c_pointer is None:
             raise IOError("Failed to create summary instance from argument:%s" % load_case)
 
@@ -1385,9 +1393,14 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         return s
 
 
+    def can_write(self):
+        return self._can_write( )
 
 
     def fwrite(self, ecl_case=None):
+        if not self.can_write():
+            raise NotImplementedError("Write method is not implemented for this case. lazy_load=True??")
+
         if ecl_case:
             self._set_case(ecl_case)
 
