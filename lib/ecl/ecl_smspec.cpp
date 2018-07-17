@@ -1683,6 +1683,13 @@ int ecl_smspec_get_restart_step(const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->restart_step;
 }
 
+int ecl_smspec_get_first_step(const ecl_smspec_type * ecl_smspec) {
+  if (ecl_smspec->restart_step > 0)
+    return ecl_smspec->restart_step + 1;
+  else
+    return 1;
+}
+
 
 const char * ecl_smspec_get_restart_case( const ecl_smspec_type * ecl_smspec) {
   return ecl_smspec->restart_case;
