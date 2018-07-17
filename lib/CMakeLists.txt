@@ -187,7 +187,7 @@ target_compile_definitions(ecl PRIVATE
             -DECL_VERSION_MAJOR=${ECL_VERSION_MAJOR}
             -DECL_VERSION_MINOR=${ECL_VERSION_MINOR}
             -DECL_VERSION_MICRO=${ECL_VERSION_MICRO}
-            $<$<BOOL:${BIG_ENDIAN}>:HOST_BIG_ENDIAN>
+            $<${BIG_ENDIAN}:HOST_BIG_ENDIAN>
 )
 
 target_compile_options(ecl PUBLIC ${pthreadarg})
