@@ -370,7 +370,7 @@ void ecl_sum_file_data::build_index( ) {
   this->index.clear();
 
   if (this->loader) {
-    int offset = 0;  // SHould be first report step in this file
+    int offset = ecl_smspec_get_first_step(this->ecl_smspec) - 1;
     std::vector<int> report_steps = this->loader->report_steps(offset);
     for (int i=0; i < this->loader->length(); i++) {
       this->index.add(this->loader->iget_sim_time(i),
@@ -612,7 +612,8 @@ bool ecl_sum_file_data::fread(const stringlist_type * filelist, bool lazy_load) 
       // report step sequence will be restarted?
       ecl_file_type * ecl_file = ecl_file_open( stringlist_iget(filelist ,0 ) , 0);
       if (ecl_file && check_file( ecl_file )) {
-        int report_step = 1;   /* <- ECLIPSE numbering - starting at 1. */
+        int first_report_step = ecl_smspec_get_first_step(this->ecl_smspec);
+        int block_index = 0;
         while (true) {
           /*
             Observe that there is a number discrepancy between ECLIPSE
@@ -621,10 +622,10 @@ bool ecl_sum_file_data::fread(const stringlist_type * filelist, bool lazy_load) 
             SEQHDR block in the unified summary file is block zero (in
             ert counting).
         */
-          ecl_file_view_type * summary_view = ecl_file_get_summary_view(ecl_file , report_step - 1 );
+          ecl_file_view_type * summary_view = ecl_file_get_summary_view(ecl_file , block_index);
           if (summary_view) {
-            add_ecl_file(report_step , summary_view , ecl_smspec);
-            report_step++;
+            add_ecl_file(block_index + first_report_step , summary_view , ecl_smspec);
+            block_index++;
           } else break;
         }
         ecl_file_close( ecl_file );

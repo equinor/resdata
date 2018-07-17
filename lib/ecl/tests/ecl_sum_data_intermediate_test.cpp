@@ -61,7 +61,6 @@ void verify_CASE1() {
       test_assert_double_equal( double_vector_iget(d, j), (i - 1)*10 + (j + 1)*100);
     }
   }
-
   ecl_sum_free(sum);
 }
 
