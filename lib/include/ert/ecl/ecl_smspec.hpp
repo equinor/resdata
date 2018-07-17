@@ -19,9 +19,6 @@
 #ifndef ERT_ECL_SMSPEC
 #define ERT_ECL_SMSPEC
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <time.h>
 #include <stdbool.h>
@@ -31,6 +28,10 @@ extern "C" {
 
 #include <ert/ecl/ecl_util.hpp>
 #include <ert/ecl/smspec_node.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ecl_smspec_struct ecl_smspec_type;
 
