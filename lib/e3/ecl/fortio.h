@@ -261,7 +261,8 @@ int ecl_default_blocksize( int size, int type );
  * The blocksize argument should almost always be a value returned from
  * ecl_default_blocksize.
  *
- * These functions can return anything eclfio_get/put returns.
+ * The len argument is how many individual values one element (nmemb) consists
+ * of. This is most useful for strings (CNNN), and should otherwise be 1.
  *
  * eclfio_array_get expects that the underlying physical blocks maps to the
  * size of the array. Assuming an array of 3200 elements, and a block size of
@@ -272,10 +273,7 @@ int ecl_default_blocksize( int size, int type );
  * If the last block is anything but 200 elements, this function returns an
  * error.
  *
- * The len argument is how many individual values one element (nmemb) consists
- * of. This is most useful for strings (CNNN), and should otherwise be 1.
- *
- * The blocksize argument to array_get controls its failure, and helps
+ * The blocksize argument to array_get controls this failure, and helps
  * verifying or checking eclipse compatibility - if zero, inner blocks of
  * arbitrary size does *not* mean failure. If positive (such as all values
  * returned by ecl_default_blocksize), inconsistent inner blocks fails this
@@ -286,6 +284,10 @@ int ecl_default_blocksize( int size, int type );
  * recommended to only output blocks of eclipse-compatible sizes (INFERRED).
  *
  * array_put does not allow zero or negative blocksize.
+ *
+ * If nmemb is zero, array_get expects exactly one (1) block with a zero-byte
+ * body, while array_put will write one block with a zero-byte body. In both
+ * cases, this is a Fortran block with only head and tail.
  *
  * array_get returns:
  * ECL_EINVAL           if nmemb is negative or if an inner block is not of
@@ -300,7 +302,25 @@ int ecl_default_blocksize( int size, int type );
  * array_put returns:
  * ECL_EINVAL   if nmemb is negative, or blocksize is zero or negative
  *
- * Also return anything returned by eclfio_put
+ * Also returns anything returned by eclfio_put
+ *
+ *
+ * About items:
+ *
+ * array_get/put has a different notion of "items" (the atom) than eclfio_get.
+ * eclfio_get's item is the physical item, given by the type in the opts
+ * argument. array_get's item is the logical item of 'len' phyiscal items.
+ * Consider an array of four C005 strings:
+ *
+ * 20|FOPT WOPT WOPR FOPR|20
+ *
+ * The eclfio_get would report a block of 20 "b" items, but array_get considers
+ * this a 5-len 4-nmemb "b" array. This is similar to how fread operates.
+ *
+ * This is mostly interesting with CNNN strings, since they are naturally
+ * multi-element. 8-strings are its own type (and should under most
+ * circumstances NOT be adjusted with len). Briefly, 'len' gives the
+ * possibility to consider items as "structs", collections of simpler items.
  */
 
 int eclfio_array_get( FILE*,
@@ -309,11 +329,12 @@ int eclfio_array_get( FILE*,
                       int nmemb,
                       int32_t blocksize,
                       void* array );
+
 int eclfio_array_put( FILE*,
                       const char* opts,
                       int len,
                       int nmemb,
-                      int blocksize,
+                      int32_t blocksize,
                       const void* );
 
 enum ecl_default_blocksizes {

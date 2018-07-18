@@ -485,15 +485,9 @@ int eclfio_array_get( std::FILE* fp,
      * in that array is zero
      */
     do {
-        std::int32_t items = std::min( nmemb, blocksize );
+        std::int32_t items = std::min( nmemb, blocksize ) * len;
         const auto err = eclfio_get( fp, opts, &items, dst );
         if( err ) return err;
-
-        // if an inner block, and the elements don't fill the full block,
-        // it's an underflow - only the last block is allowed to be different
-        // from blocksize
-        if( not allow_underflow and items < blocksize && items != nmemb )
-            return ECL_EINVAL;
 
         /*
          * the number of items has to be consistent with the length of each
@@ -502,8 +496,18 @@ int eclfio_array_get( std::FILE* fp,
          */
         if( items % len != 0 ) return ECL_TRUNCATED;
 
-        nmemb -= items / len;
-        if( dst ) dst += size * items;
+        items /= len;
+
+        /*
+         * if an inner block, and the elements don't fill the full block,
+         * it's an underflow - only the last block is allowed to be different
+         * from blocksize
+         */
+        if( not allow_underflow and items < blocksize && items != nmemb )
+            return ECL_EINVAL;
+
+        nmemb -= items;
+        if( dst ) dst += size * len * items;
     } while( nmemb > 0 );
 
     if( nmemb < 0 ) return ECL_UNALIGNED_ARRAY;
@@ -515,7 +519,7 @@ int eclfio_array_put( std::FILE* fp,
                       const char* opts,
                       int len,
                       int nmemb,
-                      int blocksize,
+                      std::int32_t blocksize,
                       const void* array ) {
 
     if( nmemb < 0 )     return ECL_EINVAL;
