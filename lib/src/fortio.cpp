@@ -448,7 +448,7 @@ int eclfio_put( std::FILE* fp,
 }
 
 int ecl_default_blocksize( int size, int type ) {
-    switch( type ) {
+    switch( size ) {
         case ECL_BLOCKSIZE_NUMERIC:
             return ECL_DEFAULT_BLOCKSIZE_NUMERIC;
 
