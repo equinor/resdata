@@ -524,14 +524,14 @@ int eclfio_array_put( std::FILE* fp,
     const auto size = parse_opts( opts ).elemsize;
 
     auto* src = static_cast< const char* >( array );
-    while( nmemb > 0 ) {
+    do {
         const auto items = std::min( nmemb, blocksize );
         const auto err = eclfio_put( fp, opts, len * items, src );
         if( err ) return err;
 
         nmemb -= items;
         if( src ) src += size * len * items;
-    }
+    } while( nmemb > 0 );
 
     return ECL_OK;
 }
