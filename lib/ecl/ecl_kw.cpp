@@ -1583,23 +1583,23 @@ void ecl_kw_fskip(fortio_type *fortio) {
 
 
 static void ecl_kw_fwrite_data_unformatted( const ecl_kw_type * ecl_kw , fortio_type * fortio ) {
-  char * iobuffer = ecl_kw_alloc_output_buffer(ecl_kw);
-  int sizeof_iotype = ecl_type_get_sizeof_iotype(ecl_kw->data_type);
+    if( ecl_kw->size <= 0 ) return;
+    char * iobuffer = ecl_kw_alloc_output_buffer(ecl_kw);
+    int sizeof_iotype = ecl_type_get_sizeof_iotype(ecl_kw->data_type);
 
-  int err = eclfio_array_put( fortio_get_FILE( fortio ),
-                              "b",
-                              sizeof_iotype,
-                              ecl_kw->size,
-                              ecl_default_blocksize(
-                                      ecl_type_is_alpha( ecl_kw->data_type )
-                                        ? ECL_BLOCKSIZE_STRING
-                                        : ECL_BLOCKSIZE_NUMERIC,
-                                      0
-                                  ),
-                              iobuffer );
-
-  if( err ) util_abort("%s: write failed: %s\n",__func__ , strerror(errno));
-  free(iobuffer);
+    int err = eclfio_array_put( fortio_get_FILE( fortio ),
+                                "b",
+                                sizeof_iotype,
+                                ecl_kw->size,
+                                ecl_default_blocksize(
+                                        ecl_type_is_alpha( ecl_kw->data_type )
+                                            ? ECL_BLOCKSIZE_STRING
+                                            : ECL_BLOCKSIZE_NUMERIC,
+                                        0
+                                    ),
+                                iobuffer );
+    if( err ) util_abort("%s: write failed: %s\n",__func__ , strerror(errno));
+    free(iobuffer);
 }
 
 
