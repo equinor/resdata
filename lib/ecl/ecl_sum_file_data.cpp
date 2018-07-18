@@ -659,7 +659,7 @@ bool ecl_sum_file_data::report_step_equal( const ecl_sum_file_data& other, bool 
       time_t time1 = this->iget_sim_time(time_index1);
       time_t time2 = other.iget_sim_time(time_index2);
 
-      if (!time1 != time2)
+      if (time1 != time2)
         return false;
 
     } else if (time_index1 != time_index2) {
