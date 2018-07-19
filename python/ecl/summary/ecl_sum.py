@@ -1144,6 +1144,11 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
     @property
     def sim_length(self):
+        """Will return the total time span for the simulation data.
+
+        The lengt will be returned in time unit used in the simulation data;
+        i.e. typically days.
+        """
         return self.getSimulationLength()
 
     @property
