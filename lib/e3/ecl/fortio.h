@@ -290,12 +290,11 @@ int ecl_default_blocksize( int size, int type );
  * cases, this is a Fortran block with only head and tail.
  *
  * array_get returns:
- * ECL_EINVAL           if nmemb is negative or if an inner block is not of
- *                      blocksize
- * ECL_TRUNCATED        If an inner block was not filled with elements (e.g.
+ * ECL_TRUNCATED        if an inner block was not filled with elements (e.g.
  *                      was of size 10 bytes, but the data type is int (4 bytes
  *                      each)
- * ECL_UNALIGNED_ARRAY  the last block was too large, i.e. elems > nmemb
+ * ECL_UNALIGNED_ARRAY  if an inner block was not blocksize, or the array does
+ *                      not was did not exactly represent nmemb elements
  *
  * Also returns anything returned by eclfio_get, if a read fails.
  *

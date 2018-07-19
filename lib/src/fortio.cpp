@@ -485,8 +485,21 @@ int eclfio_array_get( std::FILE* fp,
      * in that array is zero
      */
     do {
-        std::int32_t items = std::min( nmemb, blocksize ) * len;
+        const bool last_block = nmemb <= blocksize;
+        const std::int32_t expected_items = std::min( nmemb, blocksize );
+        std::int32_t items = expected_items * len;
         const auto err = eclfio_get( fp, opts, &items, dst );
+
+        /*
+         * get failed because it would otherwise write out-of-bounds, but other
+         * than that the block seems valid. This probably means that the array
+         * is unaligned, i.e. the last block is larger than the remaining chunk
+         * of expected elements
+         */
+
+        if( err == ECL_EINVAL and last_block )
+            return ECL_UNALIGNED_ARRAY;
+
         if( err ) return err;
 
         /*
@@ -503,8 +516,8 @@ int eclfio_array_get( std::FILE* fp,
          * it's an underflow - only the last block is allowed to be different
          * from blocksize
          */
-        if( not allow_underflow and items < blocksize && items != nmemb )
-            return ECL_EINVAL;
+        if( not allow_underflow and items != expected_items )
+            return ECL_UNALIGNED_ARRAY;
 
         nmemb -= items;
         if( dst ) dst += size * len * items;
