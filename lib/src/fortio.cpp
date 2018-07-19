@@ -523,7 +523,7 @@ int eclfio_array_get( std::FILE* fp,
         if( dst ) dst += size * len * items;
     } while( nmemb > 0 );
 
-    if( nmemb < 0 ) return ECL_UNALIGNED_ARRAY;
+    if( nmemb < 0 ) return ECL_ERR_UNKNOWN;
 
     return ECL_OK;
 }
