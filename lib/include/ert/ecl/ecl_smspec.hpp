@@ -19,9 +19,6 @@
 #ifndef ERT_ECL_SMSPEC
 #define ERT_ECL_SMSPEC
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <time.h>
 #include <stdbool.h>
@@ -31,6 +28,10 @@ extern "C" {
 
 #include <ert/ecl/ecl_util.hpp>
 #include <ert/ecl/smspec_node.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ecl_smspec_struct ecl_smspec_type;
 
@@ -133,6 +134,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   stringlist_type          * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , const char * pattern);
   stringlist_type          * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec );
   const char               * ecl_smspec_get_simulation_path(const ecl_smspec_type * ecl_smspec);
+  int                        ecl_smspec_get_first_step(const ecl_smspec_type * ecl_smspec);
   int                        ecl_smspec_get_restart_step(const ecl_smspec_type * ecl_smspec);
   const char               * ecl_smspec_get_restart_case( const ecl_smspec_type * ecl_smspec);
   const char               * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);

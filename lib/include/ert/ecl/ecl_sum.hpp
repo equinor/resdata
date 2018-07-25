@@ -79,8 +79,6 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   const char *     ecl_sum_iget_wgname( const ecl_sum_type * sum , int param_index );
   const char *     ecl_sum_iget_keyword( const ecl_sum_type * sum , int param_index );
   int              ecl_sum_get_data_length( const ecl_sum_type * ecl_sum );
-  void             ecl_sum_scale_vector( ecl_sum_type * ecl_sum, int index, double scalar );
-  void             ecl_sum_shift_vector( ecl_sum_type * ecl_sum, int index, double addend );
   double           ecl_sum_iget_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , int param_index);
   double           ecl_sum_iget_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , int param_index );
 
@@ -91,9 +89,10 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   void             ecl_sum_free_data(ecl_sum_type * );
   void             ecl_sum_free__(void * );
   void             ecl_sum_free(ecl_sum_type * );
-  ecl_sum_type   * ecl_sum_fread_alloc(const char * , const stringlist_type * data_files, const char * key_join_string, bool include_restart);
+  ecl_sum_type   * ecl_sum_fread_alloc(const char * , const stringlist_type * data_files, const char * key_join_string, bool include_restart, bool lazy_load);
   ecl_sum_type   * ecl_sum_fread_alloc_case(const char *  , const char * key_join_string);
-  ecl_sum_type   * ecl_sum_fread_alloc_case__(const char *  , const char * key_join_string , bool include_restart);
+  ecl_sum_type   * ecl_sum_fread_alloc_case__(const char * input_file , const char * key_join_string , bool include_restart);
+  ecl_sum_type   * ecl_sum_fread_alloc_case2__(const char *  , const char * key_join_string , bool include_restart, bool lazy_load);
   ecl_sum_type   * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times);
   bool             ecl_sum_case_exists( const char * input_file );
 
@@ -156,7 +155,6 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   time_t ecl_sum_iget_sim_time( const ecl_sum_type * ecl_sum , int index );
   double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int time_index);
   int    ecl_sum_iget_report_step( const ecl_sum_type * ecl_sum , int internal_index );
-  int    ecl_sum_iget_mini_step( const ecl_sum_type * ecl_sum , int internal_index );
   double ecl_sum_iget_general_var(const ecl_sum_type * ecl_sum , int internal_index , const char * lookup_kw);
 
 
@@ -230,6 +228,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
                                              bool time_in_days ,
                                              int nx , int ny , int nz);
   void                  ecl_sum_fwrite( const ecl_sum_type * ecl_sum );
+  bool                  ecl_sum_can_write( const ecl_sum_type * ecl_sum );
   void                  ecl_sum_fwrite_smspec( const ecl_sum_type * ecl_sum );
   smspec_node_type    * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const smspec_node_type * node);
   smspec_node_type    * ecl_sum_add_var(ecl_sum_type * ecl_sum ,
