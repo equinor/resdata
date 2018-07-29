@@ -372,9 +372,12 @@ void ecl_sum_file_data::build_index( ) {
   if (this->loader) {
     int offset = ecl_smspec_get_first_step(this->ecl_smspec) - 1;
     std::vector<int> report_steps = this->loader->report_steps(offset);
+    std::vector<time_t> sim_time = this->loader->sim_time();
+    std::vector<double> sim_seconds = this->loader->sim_seconds();
+
     for (int i=0; i < this->loader->length(); i++) {
-      this->index.add(this->loader->iget_sim_time(i),
-                      this->loader->iget_sim_seconds(i),
+      this->index.add(sim_time[i],
+                      sim_seconds[i],
                       report_steps[i]);
     }
   } else {

@@ -51,7 +51,7 @@ int unsmry_loader::length() const {
 }
 
 
-const std::vector<float>& unsmry_loader::get_vector(int pos) {
+const std::vector<float>& unsmry_loader::get_vector(int pos) const {
   if (pos >= size)
      throw std::invalid_argument("unsmry_loader::get_vector: argument 'pos' mst be less than size of PARAMS.");
   if (cache.count(pos) == 0)
@@ -62,7 +62,7 @@ const std::vector<float>& unsmry_loader::get_vector(int pos) {
 }
 
 
-void unsmry_loader::read_data(int pos) {
+void unsmry_loader::read_data(int pos) const {
 
    cache[pos] = std::vector<float>( this->m_length );
    std::vector<float>& data = cache[pos];
@@ -136,6 +136,49 @@ std::vector<int> unsmry_loader::report_steps(int offset) const {
   return report_steps;
 }
 
+std::vector<time_t> unsmry_loader::sim_time() const {
+  if (this->time_index >= 0) {
+    const std::vector<double> sim_seconds = this->sim_seconds();
+    std::vector<time_t> st(this->length(), this->sim_start);
 
+    for (size_t i=0; i < st.size(); i++)
+      util_inplace_forward_seconds_utc(&st[i], sim_seconds[i]);
+
+    return st;
+
+  } else {
+    const auto day   = this->get_vector(this->date_index[0]);
+    const auto month = this->get_vector(this->date_index[1]);
+    const auto year  = this->get_vector(this->date_index[2]);
+    std::vector<time_t> st(this->length());
+
+    for (size_t i=0; i < st.size(); i++)
+      st[i] = ecl_util_make_date(util_roundf(day[i]),
+                                 util_roundf(month[i]),
+                                 util_roundf(year[i]));
+
+    return st;
+  }
+}
+
+
+std::vector<double> unsmry_loader::sim_seconds() const {
+  if (this->time_index >= 0) {
+    std::vector<float> raw_seconds = this->get_vector(this->time_index);
+    std::vector<double> seconds(this->length());
+    for (size_t i=0; i < raw_seconds.size(); i++)
+      seconds[i] = this->time_seconds * raw_seconds[i];
+
+    return seconds;
+  } else {
+    std::vector<time_t> st = this->sim_time();
+    std::vector<double> seconds(st.size());
+
+    for (size_t i=0; i < st.size(); i++)
+      seconds[i] = util_difftime_seconds(this->sim_start, st[i]);
+
+    return seconds;
+  }
+}
 
 }

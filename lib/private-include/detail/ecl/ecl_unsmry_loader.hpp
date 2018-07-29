@@ -13,8 +13,11 @@ public:
   unsmry_loader(const ecl_smspec_type * smspec, const std::string& filename);
   ~unsmry_loader();
 
-  const std::vector<float>& get_vector(int pos);
+  const std::vector<float>& get_vector(int pos) const;
+  std::vector<double> sim_seconds() const;
+  std::vector<time_t> sim_time() const;
   int length() const;
+
   time_t iget_sim_time(int time_index) const;
   double iget_sim_seconds(int time_index) const;
   std::vector<int> report_steps(int offset) const;
@@ -31,9 +34,9 @@ private:
   ecl_file_type      * file;
   ecl_file_view_type * file_view;
 
-  std::map<int, std::vector<float>> cache;
+  mutable std::map<int, std::vector<float>> cache;
 
-  void read_data(int pos);
+  void read_data(int pos) const;
 };
 
 
