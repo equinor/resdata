@@ -56,18 +56,17 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
   if (pos >= size)
      throw std::invalid_argument("unsmry_loader::get_vector: argument 'pos' mst be less than size of PARAMS.");
 
-   std::vector<double> data(this->length());
-   int_vector_type * index_map = int_vector_alloc( 1 , pos);
-   char buffer[4];
+  std::vector<double> data(this->length());
+  int_vector_type * index_map = int_vector_alloc( 1 , pos);
+  char buffer[4];
 
-   for (int index = 0; index < this->length(); index++) {
-      ecl_file_view_index_fload_kw(file_view, PARAMS_KW, index, index_map, buffer);
-      float * data_value = (float*) buffer;
-      data[index] = *data_value;
-      printf("%d: %18.12f -> %18.12lf \n",index, *data_value, data[index]);
-   }
-   int_vector_free( index_map );
-   return data;
+  for (int index = 0; index < this->length(); index++) {
+    ecl_file_view_index_fload_kw(file_view, PARAMS_KW, index, index_map, buffer);
+    float * data_value = (float*) buffer;
+    data[index] = *data_value;
+  }
+  int_vector_free( index_map );
+  return data;
 }
 
 
