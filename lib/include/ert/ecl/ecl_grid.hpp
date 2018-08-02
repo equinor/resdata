@@ -109,6 +109,7 @@ extern "C" {
   void                  ecl_grid_add_self_nnc_list( ecl_grid_type * grid, const int * g1_list , const int * g2_list , int num_nnc );
 
   ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const ecl_kw_type * actnum_kw , const ecl_kw_type * mapaxes_kw );
+  ecl_grid_type * ecl_grid_alloc_GRDECL_kw_PORV( int nx, int ny , int nz , const ecl_kw_type * zcorn_kw , const ecl_kw_type * coord_kw , const int * actnum_data , const ecl_kw_type * mapaxes_kw );
   ecl_grid_type * ecl_grid_alloc_GRDECL_data(int , int , int , const float *  , const float *  , const int * , bool apply_mapaxes , const float * mapaxes);
   ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx, int ny , int nz , int coords_size , int ** coords , float ** corners , bool apply_mapaxes, const float * mapaxes);
   ecl_grid_type * ecl_grid_alloc(const char * );

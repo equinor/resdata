@@ -2685,9 +2685,9 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
                                                   const ecl_kw_type * gridhead_kw ,
                                                   const ecl_kw_type * zcorn_kw ,
                                                   const ecl_kw_type * coord_kw ,
-                                                  const ecl_kw_type * actnum_kw ,    /* Can be NULL */
+                                                  const int * actnum_data ,          /* Can be NULL */
                                                   const ecl_kw_type * mapaxes_kw ,   /* Can be NULL */
-                                                  const ecl_kw_type * corsnum_kw) {   /* Can be NULL */
+                                                  const ecl_kw_type * corsnum_kw) {  /* Can be NULL */
    int gtype, nx,ny,nz, lgr_nr;
 
   gtype   = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_TYPE_INDEX);
@@ -2710,14 +2710,10 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
 
   {
     const float * mapaxes_data = NULL;
-    const int   * actnum_data  = NULL;
     const int   * corsnum_data = NULL;
 
     if (mapaxes_kw != NULL)
       mapaxes_data = ecl_grid_get_mapaxes_from_kw__(mapaxes_kw);
-
-    if (actnum_kw != NULL)
-      actnum_data = ecl_kw_get_int_ptr(actnum_kw);
 
     if (corsnum_kw != NULL)
       corsnum_data = ecl_kw_get_int_ptr( corsnum_kw );
@@ -2737,8 +2733,8 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
 
 
 /**
-   If you create/load ecl_kw instances for the various fields, this
-   function can be used to create a GRID instance, without going
+   If you create/load ecl_kw instances for the various fields, these
+   functions can be used to create a GRID instance, without going
    through a GRID/EGRID file. Does not support LGR or coarsening
    hierarchies.
 */
@@ -2749,15 +2745,30 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
                                           const ecl_kw_type * actnum_kw ,      /* Can be NULL */
                                           const ecl_kw_type * mapaxes_kw ) {   /* Can be NULL */
 
+  const int * actnum_data = NULL;
+  if (actnum_kw)
+    actnum_data = ecl_kw_get_int_ptr(actnum_kw);
+
+  return ecl_grid_alloc_GRDECL_kw_PORV( nx, ny , nz , zcorn_kw , coord_kw , actnum_data , mapaxes_kw );
+}
+
+
+ecl_grid_type * ecl_grid_alloc_GRDECL_kw_PORV( int nx, int ny , int nz ,
+                                               const ecl_kw_type * zcorn_kw ,
+                                               const ecl_kw_type * coord_kw ,
+                                               const int * actnum_data ,            /* Can be NULL */
+                                               const ecl_kw_type * mapaxes_kw ) {   /* Can be NULL */
+
   bool apply_mapaxes = true;
   ecl_kw_type * gridhead_kw = ecl_grid_alloc_gridhead_kw( nx, ny, nz, 0);
+
   ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__(NULL,
                                                         FILEHEAD_SINGLE_POROSITY,
                                                         apply_mapaxes,
                                                         gridhead_kw,
                                                         zcorn_kw,
                                                         coord_kw,
-                                                        actnum_kw,
+                                                        actnum_data,
                                                         mapaxes_kw,
                                                         NULL);
   ecl_kw_free( gridhead_kw );
@@ -3014,7 +3025,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
       corsnum_kw   = ecl_file_iget_named_kw( ecl_file , CORSNUM_KW , 0);
   }
 
-
+  const int * actnum_data = NULL;
+  if (actnum_kw)
+    actnum_data = ecl_kw_get_int_ptr(actnum_kw);
 
   {
     ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__( main_grid ,
@@ -3023,7 +3036,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
                                                            gridhead_kw ,
                                                            zcorn_kw ,
                                                            coord_kw ,
-                                                           actnum_kw ,
+                                                           actnum_data ,
                                                            mapaxes_kw ,
                                                            corsnum_kw );
 
