@@ -95,7 +95,7 @@ void test_write_read( ) {
   int nz = 12;
   int num_dates = 5;
   int num_ministep = 10;
-  double ministep_length = 36000; // Seconds
+  double ministep_length = 86400; // Seconds - numerical value chosen to avoid rounding problems when converting between seconds and days.
   {
     test_work_area_type * work_area = test_work_area_alloc("sum/write");
     ecl_sum_type * ecl_sum;
