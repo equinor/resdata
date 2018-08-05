@@ -1,3 +1,4 @@
+#include <cmath>
 #include <string>
 #include <iostream>
 
@@ -51,36 +52,26 @@ int unsmry_loader::length() const {
 }
 
 
-const std::vector<float>& unsmry_loader::get_vector(int pos) {
+std::vector<double> unsmry_loader::get_vector(int pos) const {
   if (pos >= size)
      throw std::invalid_argument("unsmry_loader::get_vector: argument 'pos' mst be less than size of PARAMS.");
-  if (cache.count(pos) == 0)
-     //extracting data and inserting into cache
-     read_data(pos);
 
-  return cache[pos];
-}
+  std::vector<double> data(this->length());
+  int_vector_type * index_map = int_vector_alloc( 1 , pos);
+  char buffer[4];
 
-
-void unsmry_loader::read_data(int pos) {
-
-   cache[pos] = std::vector<float>( this->m_length );
-   std::vector<float>& data = cache[pos];
-
-   int_vector_type * index_map = int_vector_alloc( 1 , pos);
-   char buffer[4];
-
-   for (int index = 0; index < this->m_length; index++) {
-      ecl_file_view_index_fload_kw(file_view, PARAMS_KW, index, index_map, buffer);
-      float * data_value = (float*)buffer;
-      data[index] = *data_value;
-   }
-   int_vector_free( index_map );
+  for (int index = 0; index < this->length(); index++) {
+    ecl_file_view_index_fload_kw(file_view, PARAMS_KW, index, index_map, buffer);
+    float * data_value = (float*) buffer;
+    data[index] = *data_value;
+  }
+  int_vector_free( index_map );
+  return data;
 }
 
 
 // This is horribly inefficient
-float unsmry_loader::iget(int time_index, int params_index) const {
+double unsmry_loader::iget(int time_index, int params_index) const {
   int_vector_type * index_map = int_vector_alloc( 1 , params_index);
   float value;
   ecl_file_view_index_fload_kw(this->file_view, PARAMS_KW, time_index, index_map, (char *) &value);
@@ -94,7 +85,7 @@ time_t unsmry_loader::iget_sim_time(int time_index) const {
   if (this->time_index >= 0) {
     double sim_seconds = this->iget_sim_seconds(time_index);
     time_t sim_time = this->sim_start;
-    util_inplace_forward_seconds_utc( &sim_time , sim_seconds );
+    util_inplace_forward_seconds_utc( &sim_time ,  sim_seconds ) ;
     return sim_time;
   } else {
     int_vector_type * index_map = int_vector_alloc(3,0);
@@ -114,7 +105,7 @@ time_t unsmry_loader::iget_sim_time(int time_index) const {
 
 double unsmry_loader::iget_sim_seconds(int time_index) const {
   if (this->time_index >= 0) {
-    float raw_time = this->iget(time_index, this->time_index);
+    double raw_time = this->iget(time_index, this->time_index);
     return raw_time * this->time_seconds;
   } else {
     time_t sim_time = this->iget_sim_time(time_index);
@@ -136,6 +127,48 @@ std::vector<int> unsmry_loader::report_steps(int offset) const {
   return report_steps;
 }
 
+std::vector<time_t> unsmry_loader::sim_time() const {
+  if (this->time_index >= 0) {
+    const std::vector<double> sim_seconds = this->sim_seconds();
+    std::vector<time_t> st(this->length(), this->sim_start);
 
+    for (size_t i=0; i < st.size(); i++)
+      util_inplace_forward_seconds_utc(&st[i], sim_seconds[i]);
+
+    return st;
+
+  } else {
+    const auto day   = this->get_vector(this->date_index[0]);
+    const auto month = this->get_vector(this->date_index[1]);
+    const auto year  = this->get_vector(this->date_index[2]);
+    std::vector<time_t> st(this->length());
+
+    for (size_t i=0; i < st.size(); i++)
+      st[i] = ecl_util_make_date(util_round(day[i]),
+                                 util_round(month[i]),
+                                 util_round(year[i]));
+
+    return st;
+  }
+}
+
+
+std::vector<double> unsmry_loader::sim_seconds() const {
+  if (this->time_index >= 0) {
+    std::vector<double> seconds = this->get_vector(this->time_index);
+    for (size_t i=0; i < seconds.size(); i++)
+      seconds[i] *= this->time_seconds;
+
+    return seconds;
+  } else {
+    std::vector<time_t> st = this->sim_time();
+    std::vector<double> seconds(st.size());
+
+    for (size_t i=0; i < st.size(); i++)
+      seconds[i] = util_difftime_seconds(this->sim_start, st[i]);
+
+    return seconds;
+  }
+}
 
 }
