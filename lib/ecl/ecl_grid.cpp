@@ -2749,16 +2749,6 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
   if (actnum_kw)
     actnum_data = ecl_kw_get_int_ptr(actnum_kw);
 
-  return ecl_grid_alloc_GRDECL_kw_PORV( nx, ny , nz , zcorn_kw , coord_kw , actnum_data , mapaxes_kw );
-}
-
-
-ecl_grid_type * ecl_grid_alloc_GRDECL_kw_PORV( int nx, int ny , int nz ,
-                                               const ecl_kw_type * zcorn_kw ,
-                                               const ecl_kw_type * coord_kw ,
-                                               const int * actnum_data ,            /* Can be NULL */
-                                               const ecl_kw_type * mapaxes_kw ) {   /* Can be NULL */
-
   bool apply_mapaxes = true;
   ecl_kw_type * gridhead_kw = ecl_grid_alloc_gridhead_kw( nx, ny, nz, 0);
 
@@ -2993,7 +2983,7 @@ static void ecl_grid_init_nnc_amalgamated(ecl_grid_type * main_grid, ecl_file_ty
 */
 
 
-static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const ecl_file_type * ecl_file , int grid_nr, bool apply_mapaxes) {
+static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const ecl_file_type * ecl_file , int grid_nr, bool apply_mapaxes, const int * ext_actnum) {
   ecl_kw_type * gridhead_kw  = ecl_file_iget_named_kw( ecl_file , GRIDHEAD_KW  , grid_nr);
   ecl_kw_type * zcorn_kw     = ecl_file_iget_named_kw( ecl_file , ZCORN_KW     , grid_nr);
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
@@ -3011,10 +3001,18 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
     eclipse_version = main_grid->eclipse_version;
   }
 
+  // ext_actnum has priority in deciding which cells are active.
+  const int * actnum_data = NULL;
+  if (ext_actnum == NULL) {
+    /** If ACTNUM and ext_actnum are not present - that is is interpreted as - all active. */
+    if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr) {
+      actnum_kw = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
+      actnum_data = ecl_kw_get_int_ptr(actnum_kw);
+    }
+  }
+  else 
+    actnum_data = ext_actnum;
 
-  /** If ACTNUM is not present - that is is interpreted as - all active. */
-  if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr)
-    actnum_kw = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
 
   if (grid_nr == 0) {
     /* MAPAXES and COARSENING only apply to the global grid. */
@@ -3024,10 +3022,6 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
     if (ecl_file_has_kw( ecl_file , CORSNUM_KW))
       corsnum_kw   = ecl_file_iget_named_kw( ecl_file , CORSNUM_KW , 0);
   }
-
-  const int * actnum_data = NULL;
-  if (actnum_kw)
-    actnum_data = ecl_kw_get_int_ptr(actnum_kw);
 
   {
     ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__( main_grid ,
@@ -3047,8 +3041,15 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
 }
 
 
+static const int * ecl_grid_get_ext_actnum(const int * * ext_actnums, int grid_nr) {
+  if (ext_actnums == NULL)
+    return NULL;
+  else
+    return ext_actnums[grid_nr];
+}
 
-ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes) {
+
+static ecl_grid_type * ecl_grid_alloc_EGRID_all_grids(const char * grid_file, bool apply_mapaxes, const int * * ext_actnums) {
   ecl_file_enum   file_type;
   file_type = ecl_util_get_file_type(grid_file , NULL , NULL);
   if (file_type != ECL_EGRID_FILE)
@@ -3057,11 +3058,13 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes)
     ecl_file_type * ecl_file   = ecl_file_open( grid_file , 0);
     if (ecl_file) {
       int num_grid               = ecl_file_get_num_named_kw( ecl_file , GRIDHEAD_KW );
-      ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 , apply_mapaxes);
+      ecl_grid_type * main_grid  = ecl_grid_alloc_EGRID__( NULL , ecl_file , 0 , apply_mapaxes, ecl_grid_get_ext_actnum(ext_actnums, 0) );
       int grid_nr;
 
       for ( grid_nr = 1; grid_nr < num_grid; grid_nr++) {
-        ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__( main_grid , ecl_file , grid_nr , false);  /* The apply_mapaxes argument is ignored for LGR - it inherits from parent anyway. */
+        // The apply_mapaxes argument is ignored for LGR - 
+        //   it inherits from parent anyway.
+        ecl_grid_type * lgr_grid = ecl_grid_alloc_EGRID__( main_grid , ecl_file , grid_nr , false, ecl_grid_get_ext_actnum(ext_actnums, grid_nr) );
         ecl_grid_add_lgr( main_grid , lgr_grid );
         {
           ecl_grid_type * host_grid;
@@ -3083,6 +3086,11 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes)
     } else
       return NULL;
   }
+}
+
+
+ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes) {
+  return ecl_grid_alloc_EGRID_all_grids(grid_file, apply_mapaxes, NULL);
 }
 
 
@@ -3613,6 +3621,23 @@ ecl_grid_type * ecl_grid_alloc__(const char * grid_file , bool apply_mapaxes) {
 ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
   bool apply_mapaxes = true;
   return ecl_grid_alloc__( grid_file , apply_mapaxes );
+}
+
+
+// This function is used to override use of the keyword ACTNUM from the EGRID file.
+// ext_actnums must have size equal to the number of grids.
+// from ext_actnums[i] = NULL, actnum is taken from file, otherwise
+// ext_actnums[i] is used instead of the ACTNUM keyword.
+ecl_grid_type * ecl_grid_alloc_ext_actnums(const char * grid_file, const int * * ext_actnums) {
+  bool apply_mapaxes = true;
+  ecl_grid_type * ecl_grid = NULL;
+  ecl_file_enum file_type = ecl_util_get_file_type(grid_file , NULL ,  NULL);
+  if (file_type == ECL_EGRID_FILE)
+    return ecl_grid_alloc_EGRID_all_grids(grid_file, true, ext_actnums);
+  else
+    util_abort("%s must have .EGRID file - %s not recognized \n", __func__ , grid_file);
+  
+  return NULL;
 }
 
 
