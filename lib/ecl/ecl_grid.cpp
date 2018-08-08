@@ -3629,8 +3629,6 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
 // from ext_actnums[i] = NULL, actnum is taken from file, otherwise
 // ext_actnums[i] is used instead of the ACTNUM keyword.
 ecl_grid_type * ecl_grid_alloc_ext_actnums(const char * grid_file, const int * * ext_actnums) {
-  bool apply_mapaxes = true;
-  ecl_grid_type * ecl_grid = NULL;
   ecl_file_enum file_type = ecl_util_get_file_type(grid_file , NULL ,  NULL);
   if (file_type == ECL_EGRID_FILE)
     return ecl_grid_alloc_EGRID_all_grids(grid_file, true, ext_actnums);
