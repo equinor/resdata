@@ -17,22 +17,20 @@ void test_1() {
     ecl_grid_fwrite_EGRID( grid_write , filename, true);
     ecl_grid_free(grid_write);
 
-    int * * ext_actnums = new int * [1];
-    ext_actnums[0] = new int[4];
-    ext_actnums[0][0] = 0;
-    ext_actnums[0][1] = 1; 
-    ext_actnums[0][2] = 0; 
-    ext_actnums[0][3] = 1;
+    int * ext_actnum = new int[4];
+    ext_actnum[0] = 0;
+    ext_actnum[1] = 1; 
+    ext_actnum[2] = 0; 
+    ext_actnum[3] = 1;
 
-    ecl_grid_type * grid = ecl_grid_alloc_ext_actnums(filename, (const int**)ext_actnums);
+    ecl_grid_type * grid = ecl_grid_alloc_ext_actnum(filename, (const int*)ext_actnum);
     test_assert_int_equal( 2, ecl_grid_get_nactive(grid) );
     test_assert_true( !ecl_grid_cell_active1(grid, 0) );
     test_assert_true(  ecl_grid_cell_active1(grid, 1) );
     test_assert_true( !ecl_grid_cell_active1(grid, 2) );
     test_assert_true(  ecl_grid_cell_active1(grid, 3) );
     
-    delete[] ext_actnums[0];
-    delete[] ext_actnums;
+    delete[] ext_actnum;
     ecl_grid_free( grid );
 
   }
