@@ -2733,8 +2733,8 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
 
 
 /**
-   If you create/load ecl_kw instances for the various fields, these
-   functions can be used to create a GRID instance, without going
+   If you create/load ecl_kw instances for the various fields, this
+   function can be used to create a GRID instance, without going
    through a GRID/EGRID file. Does not support LGR or coarsening
    hierarchies.
 */
@@ -3617,9 +3617,9 @@ ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
 
 
 // This function is used to override use of the keyword ACTNUM from the EGRID file.
-// ext_actnums must have size equal to the number of grids.
-// from ext_actnums[i] = NULL, actnum is taken from file, otherwise
-// ext_actnums[i] is used instead of the ACTNUM keyword.
+// ext_actnum must have size equal to the number of cells in the main grid
+// if ext_actnum = NULL, actnum is taken from file, otherwise ext_actnums
+// determines which cells are active.
 ecl_grid_type * ecl_grid_alloc_ext_actnum(const char * grid_file, const int * ext_actnum) {
   ecl_file_enum file_type = ecl_util_get_file_type(grid_file , NULL ,  NULL);
   if (file_type == ECL_EGRID_FILE)
