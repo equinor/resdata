@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <vector>
 
 #include <ert/util/util.h>
 #include <ert/util/double_vector.hpp>
@@ -3001,18 +3002,25 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
     eclipse_version = main_grid->eclipse_version;
   }
 
-  // ext_actnum has priority in deciding which cells are active.
+  // If ACTNUM and ext_actnum are not present - that is is interpreted as - all active. 
   const int * actnum_data = NULL;
-  if (ext_actnum == NULL) {
-    /** If ACTNUM and ext_actnum are not present - that is is interpreted as - all active. */
-    if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr) {
-      actnum_kw = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
-      actnum_data = ecl_kw_get_int_ptr(actnum_kw);
-    }
+  if (ecl_file_get_num_named_kw(ecl_file , ACTNUM_KW) > grid_nr) {
+    actnum_kw = ecl_file_iget_named_kw( ecl_file , ACTNUM_KW    , grid_nr);
+    actnum_data = ecl_kw_get_int_ptr(actnum_kw);
   }
-  else 
-    actnum_data = ext_actnum;
-
+  
+  std::vector<int> actnum_product;
+  if (ext_actnum) {
+    if (actnum_kw) {
+      int size = ecl_kw_get_size(actnum_kw);
+      actnum_product = std::vector<int>(size);
+      for (int i = 0; i < size; i++)
+        actnum_product[i] = actnum_data[i] * ext_actnum[i];
+      actnum_data = actnum_product.data();
+    }
+    else
+      actnum_data = ext_actnum; 
+  }
 
   if (grid_nr == 0) {
     /* MAPAXES and COARSENING only apply to the global grid. */
