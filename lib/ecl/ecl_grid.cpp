@@ -763,6 +763,10 @@ struct ecl_grid_struct {
   int                   eclipse_version;
 };
 
+ert_ecl_unit_enum ecl_grid_get_unit_system(const ecl_grid_type * grid) {
+  return grid->unit_system;
+}
+
 static void ecl_cell_compare(const ecl_cell_type * c1 , const ecl_cell_type * c2,  bool include_nnc , bool * equal) {
   int i;
 

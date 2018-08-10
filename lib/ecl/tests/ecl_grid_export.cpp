@@ -168,6 +168,8 @@ int main(int argc , char ** argv) {
 
     {
       ecl_grid_type * ecl_grid = ecl_grid_alloc( grid_file );
+      if (argc == 1) 
+        test_assert_true( ecl_grid_get_unit_system(ecl_grid) == ECL_METRIC_UNITS );
       ecl_file_type * ecl_file = ecl_file_open( grid_file , 0) ;
 
       export_actnum( ecl_grid , ecl_file );
