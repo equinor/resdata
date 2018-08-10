@@ -11,10 +11,7 @@
 
 
 void test_1() {
-  //make a main grid (4 cells)
-  //write it to file
-  //allocate it w/ ext actnum
-  //verify correct correct cells
+
   test_work_area_type * work_area = test_work_area_alloc("ext_actnum_main_grid");
   {
     const char * filename = "FILE.EGRID";
