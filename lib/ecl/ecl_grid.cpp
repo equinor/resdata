@@ -2686,9 +2686,9 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
                                                   const ecl_kw_type * gridhead_kw ,
                                                   const ecl_kw_type * zcorn_kw ,
                                                   const ecl_kw_type * coord_kw ,
-                                                  const int * actnum_data ,          /* Can be NULL */
                                                   const ecl_kw_type * mapaxes_kw ,   /* Can be NULL */
-                                                  const ecl_kw_type * corsnum_kw) {  /* Can be NULL */
+                                                  const ecl_kw_type * corsnum_kw,    /* Can be NULL */
+                                                  const int * actnum_data) {         /* Can be NULL */
    int gtype, nx,ny,nz, lgr_nr;
 
   gtype   = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_TYPE_INDEX);
@@ -2759,9 +2759,9 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
                                                         gridhead_kw,
                                                         zcorn_kw,
                                                         coord_kw,
-                                                        actnum_data,
                                                         mapaxes_kw,
-                                                        NULL);
+                                                        NULL,
+                                                        actnum_data);
   ecl_kw_free( gridhead_kw );
   return ecl_grid;
 
@@ -3038,9 +3038,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
                                                            gridhead_kw ,
                                                            zcorn_kw ,
                                                            coord_kw ,
-                                                           actnum_data ,
                                                            mapaxes_kw ,
-                                                           corsnum_kw );
+                                                           corsnum_kw, 
+                                                           actnum_data);
 
     if (ECL_GRID_MAINGRID_LGR_NR != grid_nr) ecl_grid_set_lgr_name_EGRID(ecl_grid , ecl_file , grid_nr);
     ecl_grid->eclipse_version = eclipse_version;
