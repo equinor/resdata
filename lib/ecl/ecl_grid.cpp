@@ -3047,6 +3047,12 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
 }
 
 
+static ecl_grid_type * ecl_grid_alloc_GRID_all_grids(const char * filename) {
+  util_abort("%s .GRID files - %s - not supported \n", __func__ , filename);
+  
+}
+
+
 static ecl_grid_type * ecl_grid_alloc_EGRID_all_grids(const char * grid_file, bool apply_mapaxes, const int * ext_actnum) {
   ecl_file_enum   file_type;
   file_type = ecl_util_get_file_type(grid_file , NULL , NULL);
@@ -3630,6 +3636,8 @@ ecl_grid_type * ecl_grid_alloc_ext_actnum(const char * grid_file, const int * ex
   ecl_file_enum file_type = ecl_util_get_file_type(grid_file , NULL ,  NULL);
   if (file_type == ECL_EGRID_FILE)
     return ecl_grid_alloc_EGRID_all_grids(grid_file, true, ext_actnum);
+  else if (file_type == ECL_GRID_FILE)
+    ecl_grid_alloc_GRID_all_grids(grid_file);
   else
     util_abort("%s must have .EGRID file - %s not recognized \n", __func__ , grid_file);
   
