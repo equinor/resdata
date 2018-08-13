@@ -3049,7 +3049,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
 
 static ecl_grid_type * ecl_grid_alloc_GRID_all_grids(const char * filename) {
   util_abort("%s .GRID files - %s - not supported \n", __func__ , filename);
-  
+  return NULL;
 }
 
 
