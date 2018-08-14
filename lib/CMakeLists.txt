@@ -352,6 +352,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_grid_export
                 ecl_grid_init_fwrite
                 ecl_grid_reset_actnum
+                ecl_grid_ext_actnum
                 ecl_init_file
                 ecl_kw_cmp_string
                 ecl_kw_equal
