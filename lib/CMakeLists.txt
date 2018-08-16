@@ -349,6 +349,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_grid_copy
                 ecl_grid_create
                 ecl_grid_DEPTHZ
+                ecl_grid_unit_system
                 ecl_grid_export
                 ecl_grid_init_fwrite
                 ecl_grid_reset_actnum
