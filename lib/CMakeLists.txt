@@ -80,7 +80,6 @@ add_library(ecl util/rng.cpp
                 util/util_symlink.cpp
                 util/util_lfs.c
                 util/util_unlink.cpp
-                util/arg_pack.cpp
                 util/vector.cpp
                 util/parser.cpp
                 util/stringlist.cpp
@@ -247,7 +246,6 @@ add_test(NAME ecl3 COMMAND ecl3-testsuite)
 
 foreach (name   ert_util_alloc_file_components
                 ert_util_approx_equal
-                ert_util_arg_pack
                 ert_util_before_after
                 ert_util_binary_split
                 ert_util_buffer
