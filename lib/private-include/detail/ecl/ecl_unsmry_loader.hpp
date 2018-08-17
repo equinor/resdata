@@ -10,7 +10,7 @@ namespace ecl {
 
 class unsmry_loader {
 public:
-  unsmry_loader(const ecl_smspec_type * smspec, const std::string& filename);
+  unsmry_loader(const ecl_smspec_type * smspec, const std::string& filename, int file_options);
   ~unsmry_loader();
 
   const std::vector<float>& get_vector(int pos);
