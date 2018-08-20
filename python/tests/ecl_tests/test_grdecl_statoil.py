@@ -24,7 +24,7 @@ from cwrap import open as copen
 
 
 @statoil_test()
-class GRDECLTest(EclTest):
+class GRDECLStatoilTest(EclTest):
     def setUp(self):
         self.src_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/include/example_permx.GRDECL")
         self.file_list = []
