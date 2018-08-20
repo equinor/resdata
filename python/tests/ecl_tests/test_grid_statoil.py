@@ -25,7 +25,7 @@ from cwrap import Prototype
 from cwrap import open as copen
 
 import time
-from ecl import EclDataType
+from ecl import EclDataType, EclUnitTypeEnum
 from ecl.eclfile import EclKW, EclFile, openEclFile
 from ecl.grid import EclGrid
 from ecl.util.util import DoubleVector, IntVector
@@ -334,7 +334,7 @@ class GridTest(EclTest):
             self.assertTrue(dgrid.get_active_index(global_index=106) == -1)
             self.assertTrue(dgrid.get_global_index1F(2) == 5)
 
-            dgrid.save_EGRID("DUAL_DIFF.EGRID")
+            dgrid.save_EGRID("DUAL_DIFF.EGRID", dgrid.get_unit_system())
             dgrid2 = EclGrid("DUAL_DIFF.EGRID")
             self.assertTrue(dgrid.equal(dgrid2 , verbose = True))
 
