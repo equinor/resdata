@@ -21,7 +21,6 @@
 
 
 #include <ert/util/int_vector.hpp>
-#include <ert/util/struct_vector.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <ert/ecl/ecl_grid.hpp>
