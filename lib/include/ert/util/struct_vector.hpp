@@ -19,11 +19,11 @@
 #ifndef ERT_STRUCT_VECTOR_H
 #define ERT_STRUCT_VECTOR_H
 
+#include <ert/util/type_macros.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <ert/util/type_macros.hpp>
-
 
 typedef struct struct_vector_struct struct_vector_type;
 typedef int ( struct_vector_cmp_ftype ) (const void * , const void *);
