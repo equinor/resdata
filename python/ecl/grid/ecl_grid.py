@@ -1156,7 +1156,7 @@ class EclGrid(BaseCClass):
 
     def save_GRID(self, filename, output_unit=EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
-        Will save the current grid as an EGRID file.
+        Will save the current grid as a GRID file.
         """
         self._fwrite_GRID2( filename, output_unit)
 
@@ -1270,7 +1270,8 @@ class EclGrid(BaseCClass):
 
         return self._export_mapaxes()
 
-    def get_unit_system(self):
+    @property
+    def unit_system(self):
         return self._get_unit_system()
 
 monkey_the_camel(EclGrid, 'loadFromGrdecl', EclGrid.load_from_grdecl, classmethod)
