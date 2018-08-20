@@ -29,6 +29,8 @@
 #include <ert/ecl/fault_block_layer.hpp>
 #include <ert/ecl/layer.hpp>
 
+#include "detail/ecl/layer_cxx.hpp"
+
 #define FAULT_BLOCK_ID 3297376
 
 

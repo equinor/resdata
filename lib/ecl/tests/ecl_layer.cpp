@@ -23,7 +23,7 @@
 #include <ert/util/struct_vector.hpp>
 
 #include <ert/ecl/layer.hpp>
-
+#include "detail/ecl/layer_cxx.hpp"
 
 void test_create() {
   layer_type * layer = layer_alloc(10,20);

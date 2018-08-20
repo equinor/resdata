@@ -408,6 +408,7 @@ if (HAVE_UTIL_ABORT_INTERCEPT)
 
    add_executable(ecl_layer ecl/tests/ecl_layer.cpp)
    target_link_libraries(ecl_layer ecl)
+   target_include_directories(ecl_layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
    add_test(NAME ecl_layer COMMAND ecl_layer)
 endif()
 
