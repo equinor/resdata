@@ -334,7 +334,7 @@ class GridTest(EclTest):
             self.assertTrue(dgrid.get_active_index(global_index=106) == -1)
             self.assertTrue(dgrid.get_global_index1F(2) == 5)
 
-            dgrid.save_EGRID("DUAL_DIFF.EGRID", dgrid.unit_system)
+            dgrid.save_EGRID("DUAL_DIFF.EGRID")
             dgrid2 = EclGrid("DUAL_DIFF.EGRID")
             self.assertTrue(dgrid.equal(dgrid2 , verbose = True))
 

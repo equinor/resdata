@@ -1148,11 +1148,10 @@ class EclGrid(BaseCClass):
         cfile = CFILE(pyfile)
         self._fprintf_grdecl2(cfile, output_unit)
 
-    def save_EGRID(self, filename, output_unit=EclUnitTypeEnum.ECL_METRIC_UNITS):
-        """
-        Will save the current grid as an EGRID file.
-        """
-        self._fwrite_EGRID2(filename, output_unit)
+    def save_EGRID(self, filename, output_unit=None):
+         if output_unit is None:
+             output_unit = self.unit_system
+         self._fwrite_EGRID2(filename, output_unit)
 
     def save_GRID(self, filename, output_unit=EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
