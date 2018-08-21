@@ -26,7 +26,7 @@
 #include <math.h>
 #include <vector>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/hash.hpp>
@@ -2419,7 +2419,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , unit_system, dualp_flag , nx,ny,nz,lgr_nr,true);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , unit_system, actnum, dualp_flag , nx,ny,nz,lgr_nr,true);
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -2436,7 +2436,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
     ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum , corsnum);
 
     ecl_grid_init_coarse_cells( ecl_grid );
-    ecl_grid_update_index( ecl_grid );
+    ecl_grid_update_index( ecl_grid, actnum );
     ecl_grid_taint_cells( ecl_grid );
   }
   return ecl_grid;
@@ -2456,11 +2456,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
-<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, unit_system, dualp_flag , nx,ny,nz,lgr_nr,true);
-=======
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, actnum, dualp_flag , nx,ny,nz,lgr_nr,true);
->>>>>>> Create index mappings in empty alloc.
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, unit_system, actnum, dualp_flag , nx,ny,nz,lgr_nr,true);
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -2518,11 +2514,8 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
 static ecl_grid_type * ecl_grid_alloc_copy__( const ecl_grid_type * src_grid,  ecl_grid_type * main_grid ) {
   int * actnum = ecl_grid_alloc_actnum_data( src_grid );
   ecl_grid_type * copy_grid = ecl_grid_alloc_empty( main_grid ,
-<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                                     src_grid->unit_system,
-=======
                                                     actnum,
->>>>>>> Create index mappings in empty alloc.
                                                     src_grid->dualp_flag ,
                                                     ecl_grid_get_nx( src_grid ) ,
                                                     ecl_grid_get_ny( src_grid ) ,
@@ -3122,11 +3115,10 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes)
 
 
 
-<<<<<<< 9410a29310168f205f8017d46ca613e4fd26772b
-static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , int num_coords , ert_ecl_unit_enum unit_system, int dualp_flag , bool apply_mapaxes, int nx, int ny , int nz , int grid_nr , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
-=======
+
 static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid ,
                                                   int num_coords ,
+                                                  ert_ecl_unit_enum unit_system, 
                                                   int dualp_flag ,
                                                   bool apply_mapaxes,
                                                   int nx,
@@ -3138,15 +3130,10 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid ,
                                                   int ** coords ,
                                                   float ** corners ,
                                                   const float * mapaxes) {
->>>>>>> WIP: Started to pass actnum as argument to index creation routines
   if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
     nz = nz / 2;
   {
-<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
-    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , unit_system, dualp_flag , nx , ny , nz , grid_nr, false);
-=======
-    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , actnum, dualp_flag , nx , ny , nz , grid_nr, false);
->>>>>>> Create index mappings in empty alloc.
+    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , unit_system, actnum, dualp_flag , nx , ny , nz , grid_nr, false);
     if (grid) {
       if (mapaxes != NULL)
         ecl_grid_init_mapaxes( grid , apply_mapaxes , mapaxes);
@@ -3171,12 +3158,11 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid ,
   corners[num_coords][24]
 */
 
-<<<<<<< 9410a29310168f205f8017d46ca613e4fd26772b
-ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx , int ny , int nz , int coords_size , int ** coords , float ** corners , bool apply_mapaxes, const float * mapaxes) {
-  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
-=======
+
+
 ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx , int ny , int nz , const int * actnum, int coords_size , int ** coords , float ** corners , bool apply_mapaxes, const float * mapaxes) {
->>>>>>> WIP: Started to pass actnum as argument to index creation routines
+
+  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   return ecl_grid_alloc_GRID_data__( NULL ,
                                      num_coords ,
                                      unit_system,
@@ -3354,12 +3340,9 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
       }
 
       // Create the grid:
-<<<<<<< 9410a29310168f205f8017d46ca613e4fd26772b
-      grid = ecl_grid_alloc_GRID_data__( global_grid , num_coords , unit_system, dualp_flag , apply_mapaxes, nx , ny , nz , grid_nr , coords_size , coords , corners , mapaxes_data );
-
-=======
       grid = ecl_grid_alloc_GRID_data__( global_grid ,
                                          num_coords ,
+                                         unit_system, 
                                          dualp_flag ,
                                          apply_mapaxes,
                                          nx ,
@@ -3374,7 +3357,6 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
 
 
       free( actnum );
->>>>>>> WIP: Started to pass actnum as argument to index creation routines
       free( coords );
       free( corners );
     }
@@ -3440,12 +3422,8 @@ ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool apply_mapaxes) 
    which case all cells will be active.
 */
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
-<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
   ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
-  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , unit_system, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
-=======
-  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , actnum, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
->>>>>>> Create index mappings in empty alloc.
+  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , unit_system, actnum, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
   if (grid) {
     const double grid_offset[3] = {0,0,0};
 
@@ -3504,11 +3482,8 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
 {
     ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
-<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                                unit_system,
-=======
                                                actnum, 
->>>>>>> Create index mappings in empty alloc.
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3553,11 +3528,8 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
 {
     ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
-<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                                unit_system,
-=======
                                                actnum,
->>>>>>> Create index mappings in empty alloc.
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3645,11 +3617,8 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
 ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const double * dx , const double * dy , const double * dz , const double * tops , const int * actnum) {
   ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
-<<<<<<< c70f37e4dfb751ec275a89620356508f3f0c3e53
                                              unit_system,
-=======
                                              actnum,
->>>>>>> Create index mappings in empty alloc.
                                              FILEHEAD_SINGLE_POROSITY,
                                              nx, ny, nz,
                                              0, true);
