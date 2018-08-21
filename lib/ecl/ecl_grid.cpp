@@ -3229,7 +3229,6 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     nz   = ecl_kw_iget_int(dimens_kw , DIMENS_NZ_INDEX);
   }
 
-
   // 2: Fetching the mapaxes data from the MAPAXES keyword; the
   //    keyword is optional, and is only applicable to the global grid.
   {
@@ -3322,8 +3321,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
       } else {
         for (int g=0; g < nx*ny*nz; g++)
           actnum[g] = 0;
-
-        for (index = 0; num_coords; index++) {
+        for (index = 0; index < num_coords; index++) {
           int i = coords[index][0] - 1;
           int j = coords[index][1] - 1;
           int k = coords[index][2] - 1;
@@ -3360,6 +3358,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
       free( coords );
       free( corners );
     }
+    
   }
 
   if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
