@@ -66,6 +66,9 @@ int main(int argc , char ** argv) {
     free( buffer1 );
     free( buffer2 );
   }
+  rng_std_normal(rng);
+
+
   rng_free( rng );
   exit(0);
 }

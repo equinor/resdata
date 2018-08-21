@@ -241,6 +241,19 @@ double rng_get_double( rng_type * rng ) {
   return rng->forward( rng->state ) * rng->inv_max;
 }
 
+static double rng_get_positive_double(rng_type * rng) {
+  unsigned int int_value;
+
+  while (true) {
+    int_value = rng_forward(rng);
+    if (int_value > 0)
+      break;
+  }
+
+  return int_value * rng->inv_max;
+}
+
+
 int rng_get_int( rng_type * rng , int max_value ) {
   rng_safe_cast( rng );
   return rng->forward( rng->state ) % max_value;
@@ -285,9 +298,9 @@ void rng_shuffle_int( rng_type * rng , int * data , size_t num_elements) {
 /*****************************************************************/
 
 double rng_std_normal( rng_type * rng ) {
-  const double pi = 3.141592653589;
-  double R1 = rng_get_double( rng );
-  double R2 = rng_get_double( rng );
+  const double pi = 3.1415926535897932384626433832795028841971693993751058209749445923;
+  double R1 = rng_get_positive_double( rng );
+  double R2 = rng_get_positive_double( rng );
 
   return sqrt(-2.0 * log(R1)) * cos(2.0 * pi * R2);
 }
