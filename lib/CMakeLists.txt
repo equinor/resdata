@@ -88,7 +88,6 @@ add_library(ecl util/rng.cpp
                 util/string_util.cpp
                 util/type_vector_functions.cpp
                 util/ecl_version.cpp
-                util/struct_vector.cpp
                 util/perm_vector.cpp
                 util/test_util.cpp
                 ${opt_srcs}
@@ -320,10 +319,6 @@ if (HAVE_BACKTRACE)
 endif()
 
 if (HAVE_UTIL_ABORT_INTERCEPT)
-   add_executable(ert_util_struct_vector util/tests/ert_util_struct_vector.cpp)
-   target_link_libraries(ert_util_struct_vector ecl)
-   add_test(NAME ert_util_struct_vector COMMAND ert_util_struct_vector)
-
    add_executable(ert_util_type_vector_test util/tests/ert_util_type_vector_test.cpp)
    target_link_libraries(ert_util_type_vector_test ecl)
    add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
@@ -408,6 +403,7 @@ if (HAVE_UTIL_ABORT_INTERCEPT)
 
    add_executable(ecl_layer ecl/tests/ecl_layer.cpp)
    target_link_libraries(ecl_layer ecl)
+   target_include_directories(ecl_layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
    add_test(NAME ecl_layer COMMAND ecl_layer)
 endif()
 
