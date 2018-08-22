@@ -589,6 +589,7 @@ add_test(NAME ecl_nnc_test4 COMMAND ecl_nnc_test ${_eclpath}/DualPoro/DUAL_DIFF.
 add_test(NAME ecl_nnc_test5 COMMAND ecl_nnc_test ${_eclpath}/nestedLGRcase/TESTCASE_NESTEDLGR.EGRID)
 
 add_executable(ecl_layer_statoil ecl/tests/ecl_layer_statoil.cpp)
+target_include_directories(ecl_layer_statoil PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 target_link_libraries(ecl_layer_statoil ecl)
 add_test(NAME ecl_layer_statoil COMMAND ecl_layer_statoil
     ${_eclpath}/Mariner/MARINER.EGRID
