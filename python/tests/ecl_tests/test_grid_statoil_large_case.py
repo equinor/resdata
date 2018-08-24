@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 #  Copyright (C) 2018  Statoil ASA, Norway.
 #
-#  The file 'test_grid_statoil_3.py' is part of ERT - Ensemble based Reservoir Tool.
+#  The file 'test_grid_statoil_large_case.py' is part of ERT - Ensemble based Reservoir Tool.
 #
 #  ERT is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,15 +20,9 @@ try:
 except ImportError:
     from unittest import skipIf
 
-from cwrap import Prototype
-from cwrap import open as copen
-
-import time
-from ecl import EclDataType, EclUnitTypeEnum
-from ecl.eclfile import EclKW, EclFile, openEclFile
-from ecl.grid import EclGrid
-from ecl.util.util import DoubleVector, IntVector
 from ecl.util.test import TestAreaContext
+from ecl.grid import EclGrid
+
 from tests import EclTest, statoil_test
 
 
