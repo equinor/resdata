@@ -33,7 +33,7 @@ from ecl.util.test import TestAreaContext
 from tests import EclTest, statoil_test
 
 @statoil_test()
-class GridTest_2(EclTest):
+class GridDualTest(EclTest):
 
     def egrid_file(self):
         return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")

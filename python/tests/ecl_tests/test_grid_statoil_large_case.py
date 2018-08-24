@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Copyright (C) 2018  Statoil ASA, Norway.
 #
-#  The file 'test_grid_statoil_1.py' is part of ERT - Ensemble based Reservoir Tool.
+#  The file 'test_grid_statoil_3.py' is part of ERT - Ensemble based Reservoir Tool.
 #
 #  ERT is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -34,23 +34,8 @@ from tests import EclTest, statoil_test
 
 
 @statoil_test()
-class GridTest_1(EclTest):
+class GridLargeCaseTest(EclTest):
 
-
-    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test of coarse grid skipped!")
-    def test_coarse(self):
-        #work_area = TestArea("python/grid-test/testCoarse")
-        with TestAreaContext("python/grid-test/testCoarse"):
-            testGRID = True
-            g1 = EclGrid(self.createTestPath("Statoil/ECLIPSE/LGCcase/LGC_TESTCASE2.EGRID"))
-
-            g1.save_EGRID("LGC.EGRID")
-            g2 = EclGrid("LGC.EGRID")
-            self.assertTrue(g1.equal(g2, verbose=True))
-
-            if testGRID:
-                g1.save_GRID("LGC.GRID")
-                g3 = EclGrid("LGC.GRID")
-                self.assertTrue(g1.equal(g3, verbose=True))
-
-            self.assertTrue(g1.coarse_groups() == 3384)
+    def test_large_case(self):
+        grdecl_file = self.createTestPath("Statoil/ECLIPSE/1.6.0_issueGrdecl/test_aug2016_gridOnly.grdecl")
+        grid = EclGrid.loadFromGrdecl( grdecl_file )
