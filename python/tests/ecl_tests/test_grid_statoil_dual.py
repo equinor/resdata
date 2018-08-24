@@ -15,11 +15,6 @@
 #  for more details.
 import math
 
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
-
 from ecl.util.test import TestAreaContext
 from ecl.grid import EclGrid
 
@@ -34,7 +29,6 @@ class GridDualTest(EclTest):
     def grid_file(self):
         return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.GRID")
 
-    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test of dual grid skipped!")
     def test_dual(self):
         with TestAreaContext("python/grid-test/testDual"):
             grid = EclGrid(self.egrid_file())

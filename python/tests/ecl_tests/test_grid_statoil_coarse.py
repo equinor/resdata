@@ -15,11 +15,6 @@
 #  for more details.
 import math
 
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
-
 from ecl.util.test import TestAreaContext
 from ecl.grid import EclGrid
 
@@ -29,8 +24,6 @@ from tests import EclTest, statoil_test
 @statoil_test()
 class GridCoarceTest(EclTest):
 
-
-    @skipIf(EclTest.slowTestShouldNotRun(), "Slow test of coarse grid skipped!")
     def test_coarse(self):
         #work_area = TestArea("python/grid-test/testCoarse")
         with TestAreaContext("python/grid-test/testCoarse"):

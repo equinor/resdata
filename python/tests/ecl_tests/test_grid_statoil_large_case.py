@@ -15,11 +15,6 @@
 #  for more details.
 import math
 
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
-
 from ecl.util.test import TestAreaContext
 from ecl.grid import EclGrid
 
