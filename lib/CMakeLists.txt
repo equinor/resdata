@@ -448,6 +448,13 @@ if (ERT_BUILD_CXX)
 endif ()
 
 
+#set(_eclpath "${PROJECT_SOURCE_DIR}/../test-data/Statoil/ECLIPSE")
+#add_executable(well_state_load ecl/tests/well_state_load.c)
+#target_link_libraries( well_state_load ecl)
+#
+#add_test(NAME well_state_load6 COMMAND well_state_load ${_eclpath}/Mariner/LGR-WELL/MARINER_R002_HEI_GEO_NOICD_LGR.EGRID
+#                                                       ${_eclpath}/Mariner/LGR-WELL/MARINER_R002_HEI_GEO_NOICD_LGR.X0011)
+
 if (NOT STATOIL_TESTDATA_ROOT)
     return ()
 endif()
@@ -677,9 +684,6 @@ endif()
 add_executable(well_state_load ecl/tests/well_state_load.cpp)
 target_link_libraries( well_state_load ecl)
 
-add_executable(well_state_load_missing_RSEG ecl/tests/well_state_load_missing_RSEG.cpp)
-target_link_libraries(well_state_load_missing_RSEG ecl)
-
 add_test(NAME well_state_load1 COMMAND well_state_load ${_eclpath}/Gurbat/ECLIPSE.EGRID
                                                        ${_eclpath}/Gurbat/ECLIPSE.X0030)
 add_test(NAME well_state_load2 COMMAND well_state_load ${_eclpath}/MSWcase/MSW_CASE.EGRID
@@ -690,6 +694,13 @@ add_test(NAME well_state_load4 COMMAND well_state_load ${_eclpath}/Troll/MSW_LGR
                                                        ${_eclpath}/Troll/MSW_LGR/LGR.X0095)
 add_test(NAME well_state_load5 COMMAND well_state_load ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID
                                                        ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.X0061)
+# Temporarily disabled - this fails.
+# add_test(NAME well_state_load6 COMMAND well_state_load ${_eclpath}/Mariner/LGR-WELL/MARINER_R002_HEI_GEO_NOICD_LGR.EGRID
+#                                                        ${_eclpath}/Mariner/LGR-WELL/MARINER_R002_HEI_GEO_NOICD_LGR.UNRST)
+
+add_executable(well_state_load_missing_RSEG ecl/tests/well_state_load_missing_RSEG.cpp)
+target_link_libraries(well_state_load_missing_RSEG ecl)
+
 add_test(NAME well_state_load_missing_RSEG1
          COMMAND well_state_load_missing_RSEG ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID
                                               ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.X0061)

@@ -16,6 +16,9 @@
    for more details.
 */
 
+#include <vector>
+#include <algorithm>
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -23,7 +26,7 @@
 #include <math.h>
 #include <vector>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/hash.hpp>
@@ -255,7 +258,6 @@
  /*
   About coarse groups
   -------------------
-
   It is possible to get ECLIPSE to join several cells together as one
   coarse cell, to reduce the size of the numerical problem. In this
   implementation this is supported as follows:
@@ -689,7 +691,6 @@ struct ecl_cell_struct {
   point_type corner_list[8];
 
   double                 volume;             /* Cache volume - whether it is initialized or not is handled by a cell_flags. */
-  int                    active;
   int                    active_index[2];    /* [0]: The active matrix index; [1]: the active fracture index */
   const ecl_grid_type   *lgr;                /* if this cell is part of an lgr; this will point to a grid instance for that lgr; NULL if not part of lgr. */
   int                    host_cell;          /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
@@ -712,17 +713,20 @@ struct ecl_grid_struct {
                                           GRID files: 0 for the main grid, then 1 -> number of LGRs in order read from file*/
   char                * name;          /* the name of the file for the main grid - name of the lgr for lgrs. */
   int                   ny,nz,nx;
-  int                   size;          /* == nx*ny*nz */
-  int                   total_active;
-  int                   total_active_fracture;
+  int                   global_size;   /* == nx*ny*nz */
+  int                   active_size;
+  int                   active_size_fracture;
   bool                * visited;                /* internal helper struct used when searching for index - can be NULL. */
+  int                 * actnum;
   int                 * index_map;              /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_index_map;          /* this is list of total_active elements - which point back to the index_map. */
 
   int                 * fracture_index_map;     /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */
 
+  int                   num_cells;
   ecl_cell_type      *  cells;
+  ecl_cell_type      *  global_cells;
 
   char                * parent_name;   /* the name of the parent for a nested lgr - for the main grid, and also a
                                           lgr descending directly from the main grid this will be NULL. */
@@ -771,9 +775,6 @@ ert_ecl_unit_enum ecl_grid_get_unit_system(const ecl_grid_type * grid) {
 static void ecl_cell_compare(const ecl_cell_type * c1 , const ecl_cell_type * c2,  bool include_nnc , bool * equal) {
   int i;
 
-  if (c1->active != c2->active)
-    *equal = false;
-
 
   if (c1->active_index[0] != c2->active_index[0])
     *equal = false;
@@ -811,11 +812,10 @@ static void ecl_cell_dump( const ecl_cell_type * cell , FILE * stream) {
 static void ecl_cell_assert_center( ecl_cell_type * cell);
 
 static void ecl_cell_dump_ascii( ecl_cell_type * cell , int i , int j , int k , FILE * stream , const double * offset) {
-  fprintf(stream, "Cell: i:%3d  j:%3d    k:%3d   host_cell:%d  CoarseGroup:%4d active_nr:%6d  active:%d \nCorners:\n",
+  fprintf(stream, "Cell: i:%3d  j:%3d    k:%3d   host_cell:%d  CoarseGroup:%4d active_nr:%6d  \nCorners:\n",
           i, j, k,
           cell->host_cell, cell->coarse_group,
-          cell->active_index[MATRIX_INDEX],
-          cell->active);
+          cell->active_index[MATRIX_INDEX]);
 
   ecl_cell_assert_center( cell );
   fprintf(stream , "Center   : ");
@@ -852,10 +852,10 @@ static void ecl_cell_fwrite_GRID(const ecl_grid_type * grid,
 
   ecl_kw_iset_int( coords_kw , 4 , 0);
   if (fracture_cell) {
-    if (cell->active & CELL_ACTIVE_FRACTURE)
+    if (grid->actnum[global_index] & CELL_ACTIVE_FRACTURE)
       ecl_kw_iset_int( coords_kw , 4 , 1);
   } else {
-    if (cell->active & CELL_ACTIVE_MATRIX)
+    if (grid->actnum[global_index] & CELL_ACTIVE_MATRIX)
       ecl_kw_iset_int( coords_kw , 4 , 1);
   }
 
@@ -1041,23 +1041,21 @@ static void ecl_cell_taint_cell( ecl_cell_type * cell ) {
   /*
     Second heuristic to invalidate cells.
   */
-  if (cell->active == CELL_NOT_ACTIVE) {
-    if (!GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
-      const point_type p0 = cell->corner_list[0];
-      int cell_index = 1;
-      while (true) {
-        const point_type pi = cell->corner_list[cell_index];
-        if (pi.z != p0.z)
-          // There is a difference - the cell is certainly valid.
+  if (!GET_CELL_FLAG(cell , CELL_FLAG_TAINTED)) {
+    const point_type p0 = cell->corner_list[0];
+    int cell_index = 1;
+    while (true) {
+      const point_type pi = cell->corner_list[cell_index];
+      if (pi.z != p0.z)
+        // There is a difference - the cell is certainly valid.
+        break;
+      else {
+        cell_index++;
+        if (cell_index == 8) {
+          // They have all been at the same height up until now;
+          // the cell is marked as invalid.
+          SET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
           break;
-        else {
-          cell_index++;
-          if (cell_index == 8) {
-            // They have all been at the same height up until now;
-            // the cell is marked as invalid.
-            SET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
-            break;
-          }
         }
       }
     }
@@ -1083,6 +1081,49 @@ static int ecl_cell_get_twist( const ecl_cell_type * cell ) {
 /*****************************************************************/
 
 
+static void create_index_map(int global_size,
+                             const int * actnum,
+                             int actnum_mask,
+                             std::vector<int>& index_map,
+                             std::vector<int>& inv_index_map) {
+  index_map.resize(global_size, -1);
+  if (actnum) {
+    inv_index_map.resize(0);
+    {
+      int active_index = 0;
+      for (int g = 0; g < global_size; g++) {
+        if (actnum[g] & actnum_mask) {
+          index_map[g] = active_index;
+          inv_index_map.push_back(g);
+          active_index++;
+        }
+      }
+    }
+  } else {
+    std::iota(index_map.begin(), index_map.end(), 0);
+    inv_index_map = index_map;
+  }
+}
+
+
+static void ecl_grid_alloc_index_map(ecl_grid_type * grid, const int * actnum) {
+  std::vector<int> index_map;
+  std::vector<int> inv_index_map;
+
+  create_index_map(grid->global_size, actnum, CELL_ACTIVE_MATRIX, index_map, inv_index_map);
+  grid->index_map = Ecl::alloc_vector_content(index_map);
+  grid->inv_index_map = Ecl::alloc_vector_content(inv_index_map);
+  grid->active_size = inv_index_map.size();
+
+  if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
+    create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTURE, index_map, inv_index_map);
+    grid->fracture_index_map = Ecl::alloc_vector_content(index_map);
+    grid->inv_fracture_index_map = Ecl::alloc_vector_content(inv_index_map);
+    grid->active_size_fracture = inv_index_map.size();
+  }
+}
+
+
 
 
 /**
@@ -1091,14 +1132,13 @@ static int ecl_cell_get_twist( const ecl_cell_type * cell ) {
    will have a coords/corners section in the grid file.
 */
 
-static void ecl_cell_init( ecl_cell_type * cell , bool init_valid) {
-  cell->active                = CELL_NOT_ACTIVE;
+static void ecl_cell_init( ecl_cell_type * cell , int active_index, int active_index_fracture, bool init_valid) {
   cell->lgr                   = NULL;
   cell->host_cell             = HOST_CELL_NONE;
   cell->coarse_group          = COARSE_GROUP_NONE;
   cell->cell_flags            = 0;
-  cell->active_index[MATRIX_INDEX]   = -1;
-  cell->active_index[FRACTURE_INDEX] = -1;
+  cell->active_index[MATRIX_INDEX]   = active_index;
+  cell->active_index[FRACTURE_INDEX] = active_index_fracture;
   if (init_valid)
     cell->cell_flags = CELL_FLAG_VALID;
 
@@ -1445,11 +1485,6 @@ static void ecl_cell_init_regular(ecl_cell_type * cell,
       point_shift(&cell->corner_list[i+4] , kvec[0] , kvec[1] , kvec[2]);
     }
   }
-
-  if (actnum != NULL)
-    cell->active = actnum[global_index];
-  else
-    cell->active = CELL_ACTIVE;
 }
 
 /* end of cell implementation                                    */
@@ -1464,12 +1499,27 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_grid , ECL_GRID_ID);
 */
 
 
-
-static ecl_cell_type * ecl_grid_get_cell(const ecl_grid_type * grid,
+static ecl_cell_type * ecl_grid_get_cell1(const ecl_grid_type * grid,
                                          int global_index) {
-  return &grid->cells[global_index];
+  return &grid->global_cells[global_index];
 }
 
+/*
+static ecl_cell_type * ecl_grid_get_cell1A(const ecl_grid_type * grid, int active_index) {
+  int global_index = grid->inv_index_map[active_index];
+  return &grid->global_cells[global_index];
+}
+*/
+
+
+static ecl_cell_type * ecl_grid_iget_cell(const ecl_grid_type * grid, int index) {
+  if (index < grid->num_cells)
+    return &grid->global_cells[index];
+  else {
+    util_abort("%invalid cell index\n",__func__);
+    return NULL;
+  }
+}
 
 /**
    this function uses heuristics (ahhh - i hate it) in an attempt to
@@ -1479,43 +1529,42 @@ static ecl_cell_type * ecl_grid_get_cell(const ecl_grid_type * grid,
 
 static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
   int index;
-  for (index = 0; index < ecl_grid->size; index++) {
-    ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , index );
+  for (index = 0; index < ecl_grid->num_cells; index++) {
+    ecl_cell_type * cell = ecl_grid_iget_cell( ecl_grid , index );
     ecl_cell_taint_cell( cell );
   }
 }
 
 
 static void ecl_grid_free_cells( ecl_grid_type * grid ) {
-  if (!grid->cells)
+  if (!grid->global_cells)
     return;
 
-  for (int i=0; i < grid->size; i++) {
-    ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
+  for (int i=0; i < grid->num_cells; i++) {
+    ecl_cell_type * cell = ecl_grid_iget_cell( grid , i );
     if (cell->nnc_info)
       nnc_info_free(cell->nnc_info);
   }
-  free( grid->cells );
+  free( grid->global_cells );
 
 }
 
-static bool ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
-  grid->cells = (ecl_cell_type*)malloc(grid->size * sizeof * grid->cells );
-  if (!grid->cells)
+static bool ecl_grid_alloc_global_cells( ecl_grid_type * grid , bool init_valid) {
+  grid->global_cells = (ecl_cell_type*)malloc(grid->global_size * sizeof * grid->global_cells );
+  if (!grid->global_cells)
     return false;
 
-  {
-    ecl_cell_type * cell0 = ecl_grid_get_cell( grid , 0 );
-    ecl_cell_init( cell0 , init_valid );
-    {
-      int i;
-      for (i=1; i < grid->size; i++) {
-        ecl_cell_type * target_cell = ecl_grid_get_cell( grid , i );
-        ecl_cell_memcpy( target_cell , cell0 );
-      }
-    }
-    return true;
+  grid->num_cells = grid->global_size;
+  grid->cells = grid->global_cells;
+
+  for (int g=0; g < grid->global_size; g++) {
+    ecl_cell_type * cell = ecl_grid_get_cell1( grid , g );
+    int active_index_fracture = (grid->fracture_index_map) ? grid->fracture_index_map[g] : -1;
+    int active_index = grid->index_map[g];
+
+    ecl_cell_init(cell,  active_index, active_index_fracture, init_valid);
   }
+  return true;
 }
 
 /**
@@ -1528,6 +1577,7 @@ static bool ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
 
 static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
                                             ert_ecl_unit_enum unit_system,
+                                            const int* actnum,
                                             int dualp_flag,
                                             int nx,
                                             int ny,
@@ -1536,12 +1586,12 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
                                             bool init_valid) {
   ecl_grid_type * grid = (ecl_grid_type*)util_malloc(sizeof * grid );
   UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
-  grid->total_active   = 0;
-  grid->total_active_fracture = 0;
+  grid->active_size   = 0;
+  grid->active_size_fracture = 0;
   grid->nx                    = nx;
   grid->ny                    = ny;
   grid->nz                    = nz;
-  grid->size                  = nx*ny*nz;
+  grid->global_size           = nx*ny*nz;
   grid->lgr_nr                = lgr_nr;
   grid->global_grid           = global_grid;
   grid->coarsening_active     = false;
@@ -1579,8 +1629,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
     grid->origo[1]      = 0;
     grid->use_mapaxes   = false;
   }
-
-
   grid->block_dim       = 0;
   grid->values          = NULL;
   if (ECL_GRID_MAINGRID_LGR_NR == lgr_nr) {  /* this is the main grid */
@@ -1598,11 +1646,31 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->children        = hash_alloc();
   grid->coarse_cells    = vector_alloc_new();
   grid->eclipse_version = 0;
+  grid->global_cells    = NULL;
+  grid->cells           = NULL;
+  grid->num_cells       = 0;
 
-  /* This is the large allocation - which can potentially fail. */
-  if (!ecl_grid_alloc_cells( grid , init_valid )) {
-    ecl_grid_free( grid );
-    grid = NULL;
+  if (actnum)
+    grid->actnum = (int *) util_alloc_copy(actnum, grid->global_size * sizeof * actnum);
+  else {
+    size_t byte_size = grid->global_size * sizeof * actnum;
+    grid->actnum = (int *) malloc(byte_size);
+    if (grid->actnum) {
+      for (int g=0; g < grid->global_size; g++)
+        grid->actnum[g] = CELL_ACTIVE;
+    } else {
+      ecl_grid_free(grid);
+      grid = NULL;
+    }
+  }
+
+  if (grid) {
+    ecl_grid_alloc_index_map(grid, actnum);
+
+    if (!ecl_grid_alloc_global_cells( grid , init_valid )) {
+      ecl_grid_free( grid );
+      grid = NULL;
+    }
   }
   return grid;
 }
@@ -1621,11 +1689,10 @@ static int ecl_grid_get_global_index__(const ecl_grid_type * ecl_grid,
 static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , int k ,
                                     double x[4][2] , double y[4][2] , double z[4][2] ,
                                     const int * actnum, const int * corsnum) {
-
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j  , k );
-  ecl_cell_type * cell     = ecl_grid_get_cell( ecl_grid , global_index );
-  int ip , iz;
+  ecl_cell_type * cell     = ecl_grid_get_cell1( ecl_grid , global_index );
 
+  int ip , iz;
   for (iz = 0; iz < 2; iz++) {
     for (ip = 0; ip < 4; ip++) {
       int c = ip + iz * 4;
@@ -1635,20 +1702,6 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
         point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
     }
   }
-
-
-
-
-  /*
-    If actnum == NULL that is taken to mean active.
-
-    for normal runs actnum will be 1 for active cells,
-    for dual porosity models it can also be 2 and 3.
-  */
-  if (actnum == NULL)
-    cell->active = CELL_ACTIVE;
-  else
-    cell->active = actnum[global_index];
 
   if (corsnum != NULL)
     cell->coarse_group = corsnum[ global_index ] - 1;
@@ -1666,7 +1719,6 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
   int global_index;
   ecl_cell_type * cell;
   bool matrix_cell = true;
-  int active_value = CELL_ACTIVE_MATRIX;
 
   /*
     This is the rather hysterical treatment of dual porosity in GRID
@@ -1679,12 +1731,11 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
   if (k >= ecl_grid->nz) {
     k -= ecl_grid->nz;
     matrix_cell = false;
-    active_value = CELL_ACTIVE_FRACTURE;
   }
 
 
   global_index = ecl_grid_get_global_index__(ecl_grid , i, j , k);
-  cell = ecl_grid_get_cell( ecl_grid , global_index);
+  cell = ecl_grid_get_cell1( ecl_grid , global_index);
 
   /* the coords keyword can optionally contain 4,5 or 7 elements:
 
@@ -1719,22 +1770,11 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
     if ((ECL_GRID_MAINGRID_LGR_NR != ecl_grid->lgr_nr) && (coords_size != 7))
       util_abort("%s: Need 7 element coords keywords for LGR - or reimplement to use LGRILG keyword.\n",__func__);
 
-    switch(coords_size) {
-    case 4:                /* all cells active */
-      cell->active += active_value;
-      break;
-    case 5:                /* only spesific cells active - no lgr */
-      cell->active  += coords[4] * active_value;
-      break;
-    case 7:
-      cell->active      += coords[4] * active_value;
+    if (coords_size == 7) {
       cell->host_cell    = coords[5] - 1;
       cell->coarse_group = coords[6] - 1;
       if (cell->coarse_group >= 0)
         ecl_grid->coarsening_active = true;
-      break;
-    default:
-      util_abort("%s: coord size:%d unrecognized - should 4,5 or 7.\n",__func__ , coords_size);
     }
 
     if (matrix_cell) {
@@ -1751,58 +1791,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
 }
 
 
-/**
-   The function ecl_grid_set_active_index() must be called immediately
-   prior to calling this function, to ensure that
-   ecl_grid->total_active is correct.
-*/
-
-static void ecl_grid_init_index_map__(ecl_grid_type * ecl_grid,
-                                      int * index_map,
-                                      int * inv_index_map,
-                                      int active_mask,
-                                      int type_index) {
-  for (int global_index = 0; global_index < ecl_grid->size; global_index++) {
-    const ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
-    if (cell->active & active_mask) {
-      index_map[global_index] = cell->active_index[type_index];
-
-      if (cell->coarse_group == COARSE_GROUP_NONE)
-        inv_index_map[cell->active_index[type_index]] = global_index;
-      //else: In the case of coarse groups the inv_index_map is set below.
-    } else
-      index_map[global_index] = -1;
-  }
-
-}
-
-
-static void ecl_grid_realloc_index_map(ecl_grid_type * ecl_grid) {
-  /* Creating the inverse mapping for the matrix cells. */
-  ecl_grid->index_map     = (int*)util_realloc(ecl_grid->index_map,
-                                         ecl_grid->size * sizeof * ecl_grid->index_map);
-  ecl_grid->inv_index_map = (int*)util_realloc(ecl_grid->inv_index_map,
-                                         ecl_grid->total_active * sizeof * ecl_grid->inv_index_map);
-  ecl_grid_init_index_map__(ecl_grid,
-                            ecl_grid->index_map,
-                            ecl_grid->inv_index_map,
-                            CELL_ACTIVE_MATRIX,
-                            MATRIX_INDEX);
-
-
-  /* Create the inverse mapping for the fractures. */
-  if (ecl_grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-    ecl_grid->fracture_index_map     = (int*)util_realloc(ecl_grid->fracture_index_map,
-                                                    ecl_grid->size * sizeof * ecl_grid->fracture_index_map);
-    ecl_grid->inv_fracture_index_map = (int*)util_realloc(ecl_grid->inv_fracture_index_map,
-                                                    ecl_grid->total_active_fracture * sizeof * ecl_grid->inv_fracture_index_map);
-    ecl_grid_init_index_map__(ecl_grid,
-                              ecl_grid->fracture_index_map,
-                              ecl_grid->inv_fracture_index_map,
-                              CELL_ACTIVE_FRACTURE,
-                              FRACTURE_INDEX);
-  }
-
+static void ecl_grid_init_index_map(ecl_grid_type * ecl_grid, const int * actnum) {
 
   /* Update the inverse map in the case of coarse cells. Observe that
      in the case of coarse cells with more than one active cell in the
@@ -1855,19 +1844,19 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   if (!ecl_grid_have_coarse_cells( ecl_grid )) {
     /* Keeping a fast path for the 99% most common case of no coarse
        groups and single porosity. */
-    for (global_index = 0; global_index < ecl_grid->size; global_index++) {
-      ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
+    for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
+      ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
 
-      if (cell->active & CELL_ACTIVE_MATRIX) {
+      if (ecl_grid->actnum[global_index] & CELL_ACTIVE_MATRIX) {
         cell->active_index[MATRIX_INDEX] = active_index;
         active_index++;
       }
     }
 
     if (ecl_grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-      for (global_index = 0; global_index < ecl_grid->size; global_index++) {
-        ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
-        if (cell->active & CELL_ACTIVE_FRACTURE) {
+      for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
+        ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
+        if (ecl_grid->actnum[global_index] & CELL_ACTIVE_FRACTURE) {
           cell->active_index[FRACTURE_INDEX] = active_fracture_index;
           active_fracture_index++;
         }
@@ -1880,17 +1869,17 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
           case of coarse cells we only set the common active index of
           the entire coarse cell.
     */
-    for (global_index = 0; global_index < ecl_grid->size; global_index++) {
-      ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
-      if (cell->active != CELL_NOT_ACTIVE) {
+    for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
+      if (ecl_grid->actnum[global_index] != CELL_NOT_ACTIVE) {
+        ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
         if (cell->coarse_group == COARSE_GROUP_NONE) {
 
-          if (cell->active & CELL_ACTIVE_MATRIX) {
+          if (ecl_grid->actnum[global_index] & CELL_ACTIVE_MATRIX) {
             cell->active_index[MATRIX_INDEX] = active_index;
             active_index++;
           }
 
-          if (cell->active & CELL_ACTIVE_FRACTURE) {
+          if (ecl_grid->actnum[global_index] & CELL_ACTIVE_FRACTURE) {
             cell->active_index[FRACTURE_INDEX] = active_fracture_index;
             active_fracture_index++;
           }
@@ -1901,7 +1890,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
                                        global_index,
                                        &active_index,
                                        &active_fracture_index,
-                                       cell->active);
+                                       (ecl_grid->actnum[global_index] != CELL_NOT_ACTIVE));
         }
       }
     }
@@ -1925,7 +1914,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
         for (int i=0; i < group_size; i++) {
           global_index = coarse_cell_list[i];
 
-          ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+          ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index );
 
           if (cell_active_value & CELL_ACTIVE_MATRIX)
             cell->active_index[MATRIX_INDEX] = cell_active_index;
@@ -1939,14 +1928,14 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
       }
     }
   }
-  ecl_grid->total_active = active_index;
-  ecl_grid->total_active_fracture = active_fracture_index;
+  ecl_grid->active_size = active_index;
+  ecl_grid->active_size_fracture = active_fracture_index;
 }
 
 
-static void ecl_grid_update_index( ecl_grid_type * ecl_grid) {
+static void ecl_grid_update_index( ecl_grid_type * ecl_grid, const int* actnum) {
   ecl_grid_set_active_index(ecl_grid);
-  ecl_grid_realloc_index_map(ecl_grid);
+  ecl_grid_init_index_map(ecl_grid, actnum);
 }
 
 
@@ -1964,8 +1953,8 @@ static ecl_coarse_cell_type * ecl_grid_get_or_create_coarse_cell( ecl_grid_type 
 static void ecl_grid_init_coarse_cells( ecl_grid_type * ecl_grid ) {
   if (ecl_grid->coarsening_active) {
     int global_index;
-    for (global_index = 0; global_index < ecl_grid->size; global_index++) {
-      ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+    for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
+      ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index );
       if (cell->coarse_group != COARSE_GROUP_NONE) {
         ecl_coarse_cell_type * coarse_cell = ecl_grid_get_or_create_coarse_cell( ecl_grid , cell->coarse_group);
         int i,j,k;
@@ -1983,7 +1972,7 @@ ecl_coarse_cell_type * ecl_grid_iget_coarse_group( const ecl_grid_type * ecl_gri
 
 
 ecl_coarse_cell_type * ecl_grid_get_cell_coarse_group1( const ecl_grid_type * ecl_grid , int global_index) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+  ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index );
   if (cell->coarse_group == COARSE_GROUP_NONE)
     return NULL;
   else
@@ -1998,7 +1987,7 @@ ecl_coarse_cell_type * ecl_grid_get_cell_coarse_group3( const ecl_grid_type * ec
 
 
 bool ecl_grid_cell_in_coarse_group1( const ecl_grid_type * main_grid , int global_index ) {
-  ecl_cell_type * cell = ecl_grid_get_cell( main_grid , global_index );
+  ecl_cell_type * cell = ecl_grid_get_cell1( main_grid , global_index );
   if (cell->coarse_group == COARSE_GROUP_NONE )
     return false;
   else
@@ -2127,10 +2116,10 @@ static void ecl_grid_install_lgr_common(ecl_grid_type * host_grid , ecl_grid_typ
 static void ecl_grid_install_lgr_EGRID(ecl_grid_type * host_grid , ecl_grid_type * lgr_grid , const int * hostnum) {
   int global_lgr_index;
 
-  for (global_lgr_index = 0; global_lgr_index < lgr_grid->size; global_lgr_index++) {
+  for (global_lgr_index = 0; global_lgr_index < lgr_grid->global_size; global_lgr_index++) {
     int host_index = hostnum[ global_lgr_index ] - 1;
-    ecl_cell_type * lgr_cell  = ecl_grid_get_cell( lgr_grid , global_lgr_index);
-    ecl_cell_type * host_cell = ecl_grid_get_cell( host_grid ,  host_index );
+    ecl_cell_type * lgr_cell  = ecl_grid_get_cell1( lgr_grid , global_lgr_index);
+    ecl_cell_type * host_cell = ecl_grid_get_cell1( host_grid ,  host_index );
 
     ecl_cell_install_lgr( host_cell , lgr_grid );
     lgr_cell->host_cell = host_index;
@@ -2145,9 +2134,9 @@ static void ecl_grid_install_lgr_EGRID(ecl_grid_type * host_grid , ecl_grid_type
 static void ecl_grid_install_lgr_GRID(ecl_grid_type * host_grid , ecl_grid_type * lgr_grid) {
   int global_lgr_index;
 
-  for (global_lgr_index = 0; global_lgr_index < lgr_grid->size; global_lgr_index++) {
-    ecl_cell_type * lgr_cell = ecl_grid_get_cell( lgr_grid , global_lgr_index);
-    ecl_cell_type * host_cell = ecl_grid_get_cell( host_grid , lgr_cell->host_cell );
+  for (global_lgr_index = 0; global_lgr_index < lgr_grid->global_size; global_lgr_index++) {
+    ecl_cell_type * lgr_cell = ecl_grid_get_cell1( lgr_grid , global_lgr_index);
+    ecl_cell_type * host_cell = ecl_grid_get_cell1( host_grid , lgr_cell->host_cell );
     ecl_cell_install_lgr( host_cell , lgr_grid );
   }
   ecl_grid_install_lgr_common( host_grid , lgr_grid );
@@ -2430,7 +2419,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , unit_system, dualp_flag , nx,ny,nz,lgr_nr,true);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , unit_system, actnum, dualp_flag , nx,ny,nz,lgr_nr,true);
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -2447,7 +2436,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
     ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum , corsnum);
 
     ecl_grid_init_coarse_cells( ecl_grid );
-    ecl_grid_update_index( ecl_grid );
+    ecl_grid_update_index( ecl_grid, actnum );
     ecl_grid_taint_cells( ecl_grid );
   }
   return ecl_grid;
@@ -2467,7 +2456,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, unit_system, dualp_flag , nx,ny,nz,lgr_nr,true);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, unit_system, actnum, dualp_flag , nx,ny,nz,lgr_nr,true);
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -2479,7 +2468,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
     ecl_grid_init_GRDECL_data( ecl_grid , zcorn , coord , actnum , corsnum);
 
     ecl_grid_init_coarse_cells( ecl_grid );
-    ecl_grid_update_index( ecl_grid );
+    ecl_grid_update_index( ecl_grid, actnum );
     ecl_grid_taint_cells( ecl_grid );
   }
   return ecl_grid;
@@ -2505,9 +2494,9 @@ static void ecl_grid_copy_mapaxes( ecl_grid_type * target_grid , const ecl_grid_
 
 static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_type * src_grid ) {
   int global_index;
-  for (global_index = 0; global_index  < src_grid->size; global_index++) {
-    ecl_cell_type * target_cell = ecl_grid_get_cell( target_grid , global_index);
-    const ecl_cell_type * src_cell = ecl_grid_get_cell( src_grid , global_index );
+  for (global_index = 0; global_index  < src_grid->global_size; global_index++) {
+    ecl_cell_type * target_cell = ecl_grid_get_cell1( target_grid , global_index);
+    const ecl_cell_type * src_cell = ecl_grid_get_cell1( src_grid , global_index );
 
     ecl_cell_memcpy( target_cell , src_cell );
     if (src_cell->nnc_info)
@@ -2523,8 +2512,10 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
 }
 
 static ecl_grid_type * ecl_grid_alloc_copy__( const ecl_grid_type * src_grid,  ecl_grid_type * main_grid ) {
+  int * actnum = ecl_grid_alloc_actnum_data( src_grid );
   ecl_grid_type * copy_grid = ecl_grid_alloc_empty( main_grid ,
                                                     src_grid->unit_system,
+                                                    actnum,
                                                     src_grid->dualp_flag ,
                                                     ecl_grid_get_nx( src_grid ) ,
                                                     ecl_grid_get_ny( src_grid ) ,
@@ -2533,8 +2524,9 @@ static ecl_grid_type * ecl_grid_alloc_copy__( const ecl_grid_type * src_grid,  e
                                                     false );
   if (copy_grid) {
     ecl_grid_copy_content( copy_grid , src_grid );  // This will handle everything except LGR relationships which is established in the calling routine
-    ecl_grid_update_index( copy_grid );
+    ecl_grid_update_index( copy_grid, actnum );
   }
+  free(actnum);
   return copy_grid;
 }
 
@@ -2560,9 +2552,9 @@ ecl_grid_type * ecl_grid_alloc_copy( const ecl_grid_type * src_grid ) {
       {
         int global_lgr_index;
 
-        for (global_lgr_index = 0; global_lgr_index < copy_lgr->size; global_lgr_index++) {
-          ecl_cell_type * lgr_cell  = ecl_grid_get_cell( copy_lgr , global_lgr_index);
-          ecl_cell_type * host_cell = ecl_grid_get_cell( host_grid , lgr_cell->host_cell );
+        for (global_lgr_index = 0; global_lgr_index < copy_lgr->global_size; global_lgr_index++) {
+          ecl_cell_type * lgr_cell  = ecl_grid_get_cell1( copy_lgr , global_lgr_index);
+          ecl_cell_type * host_cell = ecl_grid_get_cell1( host_grid , lgr_cell->host_cell );
 
           ecl_cell_install_lgr( host_cell , copy_lgr );
         }
@@ -2782,7 +2774,6 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
                                                         actnum_data);
   ecl_kw_free( gridhead_kw );
   return ecl_grid;
-
 }
 
 
@@ -2791,7 +2782,7 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
 
 
 static void ecl_grid_init_cell_nnc_info(ecl_grid_type * ecl_grid, int global_index) {
-  ecl_cell_type * grid_cell = ecl_grid_get_cell(ecl_grid, global_index);
+  ecl_cell_type * grid_cell = ecl_grid_get_cell1(ecl_grid, global_index);
 
   if (!grid_cell->nnc_info)
     grid_cell->nnc_info = nnc_info_alloc(ecl_grid->lgr_nr);
@@ -2841,7 +2832,7 @@ static void ecl_grid_init_cell_nnc_info(ecl_grid_type * ecl_grid, int global_ind
 */
 
 void ecl_grid_add_self_nnc( ecl_grid_type * grid, int cell_index1, int cell_index2, int nnc_index) {
-  ecl_cell_type * grid_cell = ecl_grid_get_cell(grid, cell_index1);
+  ecl_cell_type * grid_cell = ecl_grid_get_cell1(grid, cell_index1);
   ecl_grid_init_cell_nnc_info(grid, cell_index1);
   nnc_info_add_nnc(grid_cell->nnc_info, grid->lgr_nr, cell_index2, nnc_index);
 }
@@ -2898,14 +2889,14 @@ static void ecl_grid_init_nnc_cells( ecl_grid_type * grid1, ecl_grid_type * grid
     nx*ny*nz).
   */
     if ((FILEHEAD_SINGLE_POROSITY != grid1->dualp_flag) &&
-        ((grid1_cell_index >= grid1->size) ||
-         (grid2_cell_index >= grid2->size)))
+        ((grid1_cell_index >= grid1->global_size) ||
+         (grid2_cell_index >= grid2->global_size)))
       break;
 
 
 
     {
-      ecl_cell_type * grid1_cell = ecl_grid_get_cell(grid1, grid1_cell_index);
+      ecl_cell_type * grid1_cell = ecl_grid_get_cell1(grid1, grid1_cell_index);
       ecl_grid_init_cell_nnc_info(grid1, grid1_cell_index);
       nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr, grid2_cell_index , nnc_index);
     }
@@ -3124,11 +3115,25 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes)
 
 
 
-static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , int num_coords , ert_ecl_unit_enum unit_system, int dualp_flag , bool apply_mapaxes, int nx, int ny , int nz , int grid_nr , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
+
+static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid ,
+                                                  int num_coords ,
+                                                  ert_ecl_unit_enum unit_system, 
+                                                  int dualp_flag ,
+                                                  bool apply_mapaxes,
+                                                  int nx,
+                                                  int ny ,
+                                                  int nz ,
+                                                  int grid_nr ,
+                                                  const int * actnum,
+                                                  int coords_size ,
+                                                  int ** coords ,
+                                                  float ** corners ,
+                                                  const float * mapaxes) {
   if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
     nz = nz / 2;
   {
-    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , unit_system, dualp_flag , nx , ny , nz , grid_nr, false);
+    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , unit_system, actnum, dualp_flag , nx , ny , nz , grid_nr, false);
     if (grid) {
       if (mapaxes != NULL)
         ecl_grid_init_mapaxes( grid , apply_mapaxes , mapaxes);
@@ -3140,7 +3145,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
       }
 
       ecl_grid_init_coarse_cells( grid );
-      ecl_grid_update_index( grid );
+      ecl_grid_update_index( grid, actnum );
       ecl_grid_taint_cells( grid );
 
     }
@@ -3153,14 +3158,17 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
   corners[num_coords][24]
 */
 
-ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx , int ny , int nz , int coords_size , int ** coords , float ** corners , bool apply_mapaxes, const float * mapaxes) {
+
+
+ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx , int ny , int nz , const int * actnum, int coords_size , int ** coords , float ** corners , bool apply_mapaxes, const float * mapaxes) {
+
   ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   return ecl_grid_alloc_GRID_data__( NULL ,
                                      num_coords ,
                                      unit_system,
                                      FILEHEAD_SINGLE_POROSITY , /* Does currently not support to determine dualp_flag from inspection. */
                                      apply_mapaxes,
-                                     nx , ny , nz , 0 , coords_size , coords , corners , mapaxes);
+                                     nx , ny , nz , 0 , actnum, coords_size , coords , corners , mapaxes);
 }
 
 
@@ -3220,7 +3228,6 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     ny   = ecl_kw_iget_int(dimens_kw , DIMENS_NY_INDEX);
     nz   = ecl_kw_iget_int(dimens_kw , DIMENS_NZ_INDEX);
   }
-
 
   // 2: Fetching the mapaxes data from the MAPAXES keyword; the
   //    keyword is optional, and is only applicable to the global grid.
@@ -3295,6 +3302,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
 
       int ** coords    = (int **)util_calloc( num_coords , sizeof * coords  );
       float ** corners = (float**)util_calloc( num_coords , sizeof * corners );
+      int * actnum = (int *) util_malloc( nx*ny*nz * sizeof * actnum);
 
       for (index = 0; index < num_coords; index++) {
         const ecl_kw_type * coords_kw = ecl_file_iget_named_kw(ecl_file , COORDS_KW  , index + cell_offset);
@@ -3304,12 +3312,53 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
         corners[index] = ecl_kw_get_float_ptr(corners_kw);
         coords_size = ecl_kw_get_size( coords_kw );
       }
-      // Create the grid:
-      grid = ecl_grid_alloc_GRID_data__( global_grid , num_coords , unit_system, dualp_flag , apply_mapaxes, nx , ny , nz , grid_nr , coords_size , coords , corners , mapaxes_data );
+      if (coords_size == 4) {
+        int actnum_value = CELL_ACTIVE_MATRIX;
+        if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
+          actnum_value += CELL_ACTIVE_FRACTURE;
+        for (int g=0; g < nx*ny*nz; g++)
+          actnum[g] = actnum_value;
+      } else {
+        for (int g=0; g < nx*ny*nz; g++)
+          actnum[g] = 0;
+        for (index = 0; index < num_coords; index++) {
+          int i = coords[index][0] - 1;
+          int j = coords[index][1] - 1;
+          int k = coords[index][2] - 1;
+          int global_index = i + j*nx + k*nx*ny;
+          int actnum_value = CELL_ACTIVE_MATRIX;
 
+          if (k >= nz) {
+            actnum_value = CELL_ACTIVE_FRACTURE;
+            global_index -= nx*ny*nz;
+          }
+
+          actnum[global_index] = actnum_value;
+        }
+      }
+
+      // Create the grid:
+      grid = ecl_grid_alloc_GRID_data__( global_grid ,
+                                         num_coords ,
+                                         unit_system, 
+                                         dualp_flag ,
+                                         apply_mapaxes,
+                                         nx ,
+                                         ny ,
+                                         nz ,
+                                         grid_nr ,
+                                         actnum,
+                                         coords_size ,
+                                         coords ,
+                                         corners ,
+                                         mapaxes_data );
+
+
+      free( actnum );
       free( coords );
       free( corners );
     }
+    
   }
 
   if (grid_nr > 0) ecl_grid_set_lgr_name_GRID(grid , ecl_file , grid_nr);
@@ -3373,7 +3422,7 @@ ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool apply_mapaxes) 
 */
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
   ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
-  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , unit_system, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
+  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , unit_system, actnum, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
   if (grid) {
     const double grid_offset[3] = {0,0,0};
 
@@ -3388,12 +3437,12 @@ ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double *
             grid_offset[2] + i*ivec[2] + j*jvec[2] + k*kvec[2]
           };
 
-          ecl_cell_type * cell = ecl_grid_get_cell(grid , global_index );
+          ecl_cell_type * cell = ecl_grid_get_cell1(grid , global_index );
           ecl_cell_init_regular( cell , offset , i,j,k,global_index , ivec , jvec , kvec , actnum );
         }
       }
     }
-    ecl_grid_update_index( grid );
+    ecl_grid_update_index( grid, actnum );
   }
 
   return grid;
@@ -3433,6 +3482,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
     ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
                                                unit_system,
+                                               actnum, 
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3453,7 +3503,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
           offset[0] = grid_offset[0];
           for (i=0; i < nx; i++) {
             int global_index = i + j*nx + k*nx*ny;
-            ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
+            ecl_cell_type* cell = ecl_grid_get_cell1(grid, global_index);
             ivec[0] = dxv[i];
 
             ecl_cell_init_regular(cell, offset,
@@ -3466,7 +3516,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
         }
         offset[2] += dzv[k];
       }
-      ecl_grid_update_index(grid);
+      ecl_grid_update_index(grid, actnum);
     }
 
     return grid;
@@ -3478,6 +3528,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
     ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
                                                unit_system,
+                                               actnum,
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3492,7 +3543,7 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
         double x0 = 0;
         for (i = 0; i < nx; i++) {
           int global_index = i + j*nx + k*nx*ny;
-          ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
+          ecl_cell_type* cell = ecl_grid_get_cell1(grid, global_index);
           double z0 = depthz[ i     + j*(nx + 1)];
           double z1 = depthz[ i + 1 + j*(nx + 1)];
           double z2 = depthz[ i +     (j + 1)*(nx + 1)];
@@ -3524,8 +3575,8 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
           for (i=0; i < nx; i++) {
             int g2 = i + j*nx + k*nx*ny;
             int g1 = i + j*nx + (k - 1)*nx*ny;
-            ecl_cell_type* cell2 = ecl_grid_get_cell(grid, g2);
-            ecl_cell_type* cell1 = ecl_grid_get_cell(grid, g1);
+            ecl_cell_type* cell2 = ecl_grid_get_cell1(grid, g2);
+            ecl_cell_type* cell1 = ecl_grid_get_cell1(grid, g1);
             int c;
 
             for (c = 0; c < 4; c++) {
@@ -3538,25 +3589,8 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
       }
     }
 
-    if (grid) {
-      int i,j,k;
-      for (k=0; k < nz; k++) {
-        for (j=0; j <ny; j++) {
-          for (i=0; i < nx; i++) {
-            int global_index = i + j*nx + k*nx*ny;
-            ecl_cell_type* cell = ecl_grid_get_cell(grid, global_index);
-
-            if (actnum)
-              cell->active = actnum[global_index];
-            else
-              cell->active = CELL_ACTIVE;
-          }
-        }
-      }
-    }
-
     if (grid)
-      ecl_grid_update_index(grid);
+      ecl_grid_update_index(grid, actnum);
 
     return grid;
 }
@@ -3583,6 +3617,7 @@ ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const do
   ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
                                              unit_system,
+                                             actnum,
                                              FILEHEAD_SINGLE_POROSITY,
                                              nx, ny, nz,
                                              0, true);
@@ -3598,7 +3633,7 @@ ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const do
         double x0 = 0;
         for (i=0; i < nx; i++) {
           int g = i + j*nx + k*nx*ny;
-          ecl_cell_type* cell = ecl_grid_get_cell(grid, g);
+          ecl_cell_type* cell = ecl_grid_get_cell1(grid, g);
           double z0 = tops[ g ];
 
           point_set(&cell->corner_list[0] , x0         , y0[i]         , z0);
@@ -3613,17 +3648,12 @@ ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const do
 
           x0    += dx[g];
           y0[i] += dy[g];
-
-          if (actnum != NULL)
-            cell->active = actnum[g];
-          else
-            cell->active = CELL_ACTIVE;
         }
       }
     }
     free( y0 );
 
-    ecl_grid_update_index(grid);
+    ecl_grid_update_index(grid, actnum);
   }
   return grid;
 }
@@ -3917,10 +3947,10 @@ static bool ecl_grid_compare_coarse_cells(const ecl_grid_type * g1 , const ecl_g
 static bool ecl_grid_compare_cells(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool include_nnc , bool verbose) {
   int g;
   bool equal = true;
-  for (g = 0; g < g1->size; g++) {
+  for (g = 0; g < g1->global_size; g++) {
     bool this_equal = true;
-    ecl_cell_type *c1 = ecl_grid_get_cell( g1 , g );
-    ecl_cell_type *c2 = ecl_grid_get_cell( g2 , g );
+    ecl_cell_type *c1 = ecl_grid_get_cell1( g1 , g );
+    ecl_cell_type *c2 = ecl_grid_get_cell1( g2 , g );
     ecl_cell_compare(c1 , c2 ,  include_nnc , &this_equal);
 
     if (!this_equal) {
@@ -3946,14 +3976,14 @@ static bool ecl_grid_compare_cells(const ecl_grid_type * g1 , const ecl_grid_typ
 static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool verbose) {
   bool equal = true;
 
-  if (g1->total_active != g2->total_active) {
+  if (g1->active_size != g2->active_size) {
     if (verbose)
-      fprintf(stderr,"Difference in total active:%d / %d\n",g1->total_active , g2->total_active);
+      fprintf(stderr,"Difference in total active:%d / %d\n",g1->active_size , g2->active_size);
     equal = false;
   }
 
   if (equal) {
-    if (memcmp( g1->index_map , g2->index_map , g1->size * sizeof * g1->index_map ) != 0) {
+    if (memcmp( g1->index_map , g2->index_map , g1->global_size * sizeof * g1->index_map ) != 0) {
       equal = false;
       if (verbose)
         fprintf(stderr,"Difference in index map \n");
@@ -3961,7 +3991,7 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
   }
 
   if (equal) {
-    if (memcmp( g1->inv_index_map , g2->inv_index_map , g1->total_active * sizeof * g1->inv_index_map ) != 0) {
+    if (memcmp( g1->inv_index_map , g2->inv_index_map , g1->active_size * sizeof * g1->inv_index_map ) != 0) {
       equal = false;
       if (verbose)
         fprintf(stderr,"Difference in inverse index map \n");
@@ -3969,14 +3999,14 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
   }
 
   if (equal && (g1->dualp_flag != FILEHEAD_SINGLE_POROSITY)) {
-    if (g1->total_active_fracture != g2->total_active_fracture) {
+    if (g1->active_size_fracture != g2->active_size_fracture) {
       if (verbose)
-        fprintf(stderr,"Difference in toal_active_fracture %d / %d \n",g1->total_active_fracture , g2->total_active_fracture);
+        fprintf(stderr,"Difference in toal_active_fracture %d / %d \n",g1->active_size_fracture , g2->active_size_fracture);
       equal = false;
     }
 
     if (equal) {
-      if (memcmp( g1->fracture_index_map , g2->fracture_index_map , g1->size * sizeof * g1->fracture_index_map ) != 0) {
+      if (memcmp( g1->fracture_index_map , g2->fracture_index_map , g1->global_size * sizeof * g1->fracture_index_map ) != 0) {
         equal = false;
         if (verbose)
           fprintf(stderr,"Difference in fracture_index_map \n");
@@ -3984,7 +4014,7 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
     }
 
     if (equal) {
-      if (memcmp( g1->inv_fracture_index_map , g2->inv_fracture_index_map , g1->total_active_fracture * sizeof * g1->inv_fracture_index_map ) != 0) {
+      if (memcmp( g1->inv_fracture_index_map , g2->inv_fracture_index_map , g1->active_size_fracture * sizeof * g1->inv_fracture_index_map ) != 0) {
         equal = false;
         if (verbose)
           fprintf(stderr,"Difference in inv_fracture_index_map \n");
@@ -4021,7 +4051,7 @@ static bool ecl_grid_compare_mapaxes(const ecl_grid_type * g1 , const ecl_grid_t
 static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * g2, bool include_nnc , bool verbose) {
 
   bool equal = true;
-  if (g1->size != g2->size)
+  if (g1->global_size != g2->global_size)
     equal = false;
 
   // The name of the parent grid corresponds to a filename; they can be different.
@@ -4272,7 +4302,7 @@ static bool concave_cell_contains( const ecl_cell_type * cell, int method, const
 */
 bool ecl_grid_cell_contains_xyz3( const ecl_grid_type * ecl_grid , int i, int j , int k, double x , double y , double z) {
   point_type p;
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , ecl_grid_get_global_index3( ecl_grid , i, j , k ));
+  ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , ecl_grid_get_global_index3( ecl_grid , i, j , k ));
   point_set( &p , x , y , z);
   int method = (i + j + k) % 2; // Chooses the approperiate decomposition method for the cell
 
@@ -4322,7 +4352,7 @@ int ecl_grid_get_global_index_from_xy( const ecl_grid_type * ecl_grid , int k , 
   for (j=0; j < ecl_grid->ny; j++)
     for (i=0; i < ecl_grid->nx; i++) {
       int global_index = ecl_grid_get_global_index3( ecl_grid , i , j , k );
-      if (ecl_cell_layer_contains_xy( ecl_grid_get_cell( ecl_grid , global_index ) , lower_layer , x , y))
+      if (ecl_cell_layer_contains_xy( ecl_grid_get_cell1( ecl_grid , global_index ) , lower_layer , x , y))
         return global_index;
     }
   return -1; /* Did not find x,y */
@@ -4341,11 +4371,11 @@ int ecl_grid_get_global_index_from_xy_bottom( const ecl_grid_type * ecl_grid , d
 
 static void ecl_grid_clear_visited( ecl_grid_type * grid ) {
   if (grid->visited == NULL)
-    grid->visited = (bool*)util_calloc( grid->size , sizeof * grid->visited );
+    grid->visited = (bool*)util_calloc( grid->global_size , sizeof * grid->visited );
 
   {
     int i;
-    for (i=0; i < grid->size; i++)
+    for (i=0; i < grid->global_size; i++)
       grid->visited[i] = false;
   }
 }
@@ -4450,7 +4480,7 @@ int ecl_grid_get_global_index_from_xyz(ecl_grid_type * grid , double x , double 
 
   global_index = -1;
 
-  for (int index = 0; index < grid->size; index++) {
+  for (int index = 0; index < grid->global_size; index++) {
     if (ecl_grid_cell_contains_xyz1( grid , index , x , y , z))
       return index;
   }
@@ -4559,7 +4589,7 @@ void ecl_grid_alloc_blocking_variables(ecl_grid_type * grid, int block_dim) {
   if (block_dim == 2)
     grid->block_size = grid->nx* grid->ny; // Not supported
   else if (block_dim == 3)
-    grid->block_size = grid->size;
+    grid->block_size = grid->global_size;
   else
     util_abort("%: valid values are two and three. Value:%d invaid \n",__func__ , block_dim);
 
@@ -4613,6 +4643,7 @@ int ecl_grid_get_block_count3d(const ecl_grid_type * grid , int i , int j, int k
 
 void ecl_grid_free(ecl_grid_type * grid) {
   ecl_grid_free_cells( grid );
+  free(grid->actnum);
   free(grid->index_map);
   free(grid->inv_index_map);
 
@@ -4652,8 +4683,8 @@ void ecl_grid_free__( void * arg ) {
 
 
 void ecl_grid_get_distance(const ecl_grid_type * grid , int global_index1, int global_index2 , double *dx , double *dy , double *dz) {
-  ecl_cell_type * cell1 = ecl_grid_get_cell( grid , global_index1);
-  ecl_cell_type * cell2 = ecl_grid_get_cell( grid , global_index2);
+  ecl_cell_type * cell1 = ecl_grid_get_cell1( grid , global_index1);
+  ecl_cell_type * cell2 = ecl_grid_get_cell1( grid , global_index2);
 
   ecl_cell_assert_center( cell1 );
   ecl_cell_assert_center( cell2 );
@@ -4697,7 +4728,7 @@ void ecl_grid_get_dims(const ecl_grid_type * grid , int *nx , int * ny , int * n
   if (nx != NULL) *nx                   = grid->nx;
   if (ny != NULL) *ny                   = grid->ny;
   if (nz != NULL) *nz                   = grid->nz;
-  if (active_size != NULL) *active_size = grid->total_active;
+  if (active_size != NULL) *active_size = grid->active_size;
 }
 
 
@@ -4714,7 +4745,7 @@ int ecl_grid_get_ny( const ecl_grid_type * grid ) {
 }
 
 int ecl_grid_get_nactive( const ecl_grid_type * grid ) {
-  return grid->total_active;
+  return grid->active_size;
 }
 
 
@@ -4730,7 +4761,7 @@ grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int grid_nr) {
   dims.nx = lgr->nx;
   dims.ny = lgr->ny;
   dims.nz = lgr->nz;
-  dims.nactive = lgr->total_active;
+  dims.nactive = lgr->active_size;
 
   return dims;
 }
@@ -4738,12 +4769,12 @@ grid_dims_type  ecl_grid_iget_dims( const ecl_grid_type * grid , int grid_nr) {
 
 
 int ecl_grid_get_nactive_fracture( const ecl_grid_type * grid ) {
-  return grid->total_active_fracture;
+  return grid->active_size_fracture;
 }
 
 
 int ecl_grid_get_parent_cell1( const ecl_grid_type * grid , int global_index ) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid, global_index );
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid, global_index );
   return cell->host_cell;
 }
 
@@ -4849,11 +4880,11 @@ void ecl_grid_get_ijk1(const ecl_grid_type * grid , int global_index, int *i, in
 */
 
 void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *i, int * j, int * k) {
-  if (active_index >= 0 && active_index < ecl_grid->total_active) {
+  if (active_index >= 0 && active_index < ecl_grid->active_size) {
     int global_index = ecl_grid_get_global_index1A( ecl_grid , active_index );
     ecl_grid_get_ijk1(ecl_grid , global_index , i,j,k);
   } else
-    util_abort("%s: error active_index:%d invalid - grid has only:%d active cells. \n",__func__ , active_index , ecl_grid->total_active);
+    util_abort("%s: error active_index:%d invalid - grid has only:%d active cells. \n",__func__ , active_index , ecl_grid->active_size);
 }
 
 
@@ -4870,7 +4901,7 @@ void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid , int active_index , int *
 
 
 void ecl_grid_get_xyz1(const ecl_grid_type * grid , int global_index , double *xpos , double *ypos , double *zpos) {
-  ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   ecl_cell_assert_center( cell );
   {
     *xpos = cell->center.x;
@@ -4898,7 +4929,7 @@ void ecl_grid_get_xyz3(const ecl_grid_type * grid , int i, int j , int k, double
 
 void ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index , int corner_nr , double * xpos , double * ypos , double * zpos ) {
   if ((corner_nr >= 0) &&  (corner_nr <= 7)) {
-    const ecl_cell_type * cell  = ecl_grid_get_cell( grid , global_index );
+    const ecl_cell_type * cell  = ecl_grid_get_cell1( grid , global_index );
     const point_type      point = cell->corner_list[ corner_nr ];
     *xpos = point.x;
     *ypos = point.y;
@@ -4908,7 +4939,7 @@ void ecl_grid_get_cell_corner_xyz1(const ecl_grid_type * grid , int global_index
 
 
 void ecl_grid_export_cell_corners1(const ecl_grid_type * grid, int global_index, double *x, double *y, double *z) {
-  const ecl_cell_type * cell = ecl_grid_get_cell(grid, global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell1(grid, global_index);
   for (int i=0; i<8; i++) {
     const point_type point = cell->corner_list[i];
     x[i] = point.x;
@@ -4965,7 +4996,7 @@ void ecl_grid_get_xyz1A(const ecl_grid_type * grid , int active_index , double *
 
 
 double ecl_grid_get_cdepth1(const ecl_grid_type * grid , int global_index) {
-  ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   ecl_cell_assert_center( cell );
   return cell->center.z;
 }
@@ -5015,7 +5046,7 @@ int ecl_grid_locate_depth( const ecl_grid_type * grid , double depth , int i , i
 */
 
 double ecl_grid_get_top1(const ecl_grid_type * grid , int global_index) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index );
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index );
   double depth = 0;
   int ij;
 
@@ -5057,7 +5088,7 @@ double ecl_grid_get_top1A(const ecl_grid_type * grid , int active_index) {
 */
 
 double ecl_grid_get_bottom1(const ecl_grid_type * grid , int global_index) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   double depth = 0;
   int ij;
 
@@ -5083,7 +5114,7 @@ double ecl_grid_get_bottom1A(const ecl_grid_type * grid , int active_index) {
 
 
 double ecl_grid_get_cell_dz1( const ecl_grid_type * grid , int global_index ) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   double dz = 0;
   int ij;
 
@@ -5123,7 +5154,7 @@ double ecl_grid_get_cell_thickness1A( const ecl_grid_type * grid , int active_in
 
 
 double ecl_grid_get_cell_dx1( const ecl_grid_type * grid , int global_index ) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   double dx = 0;
   double dy = 0;
   int c;
@@ -5161,7 +5192,7 @@ double ecl_grid_get_cell_dx1A( const ecl_grid_type * grid , int active_index) {
 */
 
 double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   double dx = 0;
   double dy = 0;
 
@@ -5192,7 +5223,7 @@ double ecl_grid_get_cell_dy1A( const ecl_grid_type * grid , int active_index) {
 
 
 const nnc_info_type * ecl_grid_get_cell_nnc_info1( const ecl_grid_type * grid , int global_index) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   return cell->nnc_info;
 }
 
@@ -5226,7 +5257,7 @@ bool ecl_grid_cell_active3(const ecl_grid_type * ecl_grid, int i , int j , int k
 /*****************************************************************/
 
 bool ecl_grid_cell_invalid1(const ecl_grid_type * ecl_grid , int global_index) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
+  ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
   return GET_CELL_FLAG(cell , CELL_FLAG_TAINTED);
 }
 
@@ -5242,7 +5273,7 @@ double ecl_grid_cell_invalid1A(const ecl_grid_type * grid , int active_index) {
 
 
 bool ecl_grid_cell_valid1(const ecl_grid_type * ecl_grid , int global_index) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index);
+  ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
   if (GET_CELL_FLAG(cell , CELL_FLAG_TAINTED))
     return false;
   else
@@ -5389,7 +5420,7 @@ ecl_grid_type * ecl_grid_get_lgr_from_lgr_nr(const ecl_grid_type * main_grid, in
 
 
 const ecl_grid_type * ecl_grid_get_cell_lgr1(const ecl_grid_type * grid , int global_index ) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index);
+  const ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index);
   return cell->lgr;
 }
 
@@ -5518,7 +5549,7 @@ bool ecl_grid_cell_regular3( const ecl_grid_type * ecl_grid, int i,int j,int k) 
 */
 
 int ecl_grid_get_cell_twist1( const ecl_grid_type * ecl_grid, int global_index ) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+  ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index );
   return ecl_cell_get_twist( cell );
 }
 
@@ -5530,7 +5561,7 @@ int ecl_grid_get_cell_twist3(const ecl_grid_type * ecl_grid, int i, int j , int 
 
 
 double ecl_grid_get_cell_volume1( const ecl_grid_type * ecl_grid, int global_index ) {
-  ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+  ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index );
   int i,j,k;
   ecl_grid_get_ijk1( ecl_grid , global_index, &i , &j , &k);
   return ecl_cell_get_volume( cell );
@@ -5613,7 +5644,7 @@ static int ecl_grid_get_property_index__(const ecl_grid_type * ecl_grid , const 
 
   if (kw_size == ecl_grid->nx * ecl_grid->ny * ecl_grid->nz)
     lookup_index = ecl_grid_get_global_index3(ecl_grid , i , j , k);
-  else if (kw_size == ecl_grid->total_active)
+  else if (kw_size == ecl_grid->active_size)
     /* Will be set to -1 if the cell is not active. */
     lookup_index = ecl_grid_get_active_index3(ecl_grid , i , j , k);
   else
@@ -5732,10 +5763,10 @@ void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_
 
     if (kw_size == ecl_grid->nx * ecl_grid->ny * ecl_grid->nz)
       use_global_index = true;
-    else if (kw_size == ecl_grid->total_active)
+    else if (kw_size == ecl_grid->active_size)
       use_global_index = false;
     else
-      util_abort("%s: incommensurable sizes: nx*ny*nz = %d  nactive=%d  kw_size:%d \n",__func__ , ecl_grid->size , ecl_grid->total_active , ecl_kw_get_size( ecl_kw ));
+      util_abort("%s: incommensurable sizes: nx*ny*nz = %d  nactive=%d  kw_size:%d \n",__func__ , ecl_grid->global_size , ecl_grid->active_size , ecl_kw_get_size( ecl_kw ));
 
     double_vector_reset( column );
     {
@@ -5788,7 +5819,7 @@ void ecl_grid_get_column_property(const ecl_grid_type * ecl_grid , const ecl_kw_
 
 int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type * region_kw , int region_value , bool active_only, bool export_active_index , int_vector_type * index_list) {
   int cells_found = 0;
-  if (ecl_kw_get_size( region_kw ) == ecl_grid->size) {
+  if (ecl_kw_get_size( region_kw ) == ecl_grid->global_size) {
     if (ecl_type_is_int(ecl_kw_get_data_type( region_kw ))) {
                 const int * region_ptr = (const int*)ecl_kw_iget_ptr( region_kw , 0);
                 int_vector_reset( index_list );
@@ -5796,7 +5827,7 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
 
       {
         int global_index;
-        for (global_index = 0; global_index < ecl_grid->size; global_index++) {
+        for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
           if (region_ptr[global_index] == region_value) {
              if (!active_only || (ecl_grid->index_map[global_index] >= 0)) {
               /* Okay - this index should be included */
@@ -5813,7 +5844,7 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
       util_abort("%s: type mismatch - regions_kw must be of type integer \n",__func__);
 
   } else
-    util_abort("%s: size mismatch grid has %d cells - region specifier:%d \n",__func__ , ecl_grid->size , ecl_kw_get_size( region_kw ));
+    util_abort("%s: size mismatch grid has %d cells - region specifier:%d \n",__func__ , ecl_grid->global_size , ecl_kw_get_size( region_kw ));
   return cells_found;
 }
 
@@ -5825,9 +5856,9 @@ int ecl_grid_get_region_cells(const ecl_grid_type * ecl_grid , const ecl_kw_type
 
 void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_type * ecl_kw , const char * special_header , FILE * stream , double double_default) {
   int src_size = ecl_kw_get_size( ecl_kw );
-  if (src_size == ecl_grid->size)
+  if (src_size == ecl_grid->global_size)
     ecl_kw_fprintf_grdecl__( ecl_kw , special_header , stream );
-  else if (src_size == ecl_grid->total_active) {
+  else if (src_size == ecl_grid->active_size) {
     void  * default_ptr = NULL;
     float   float_default;
     int     int_default;
@@ -5857,7 +5888,7 @@ void ecl_grid_grdecl_fprintf_kw( const ecl_grid_type * ecl_grid , const ecl_kw_t
       util_abort("%s: invalid type \n",__func__);
 
     {
-      ecl_kw_type * tmp_kw = ecl_kw_alloc_scatter_copy( ecl_kw , ecl_grid->size , ecl_grid->inv_index_map , default_ptr );
+      ecl_kw_type * tmp_kw = ecl_kw_alloc_scatter_copy( ecl_kw , ecl_grid->global_size , ecl_grid->inv_index_map , default_ptr );
       ecl_kw_fprintf_grdecl__( tmp_kw , special_header , stream );
       ecl_kw_free( tmp_kw );
     }
@@ -5910,15 +5941,15 @@ static void ecl_grid_dump__(const ecl_grid_type * grid , FILE * stream) {
   util_fwrite_int( grid->nx   , stream );
   util_fwrite_int( grid->nz   , stream );
   util_fwrite_int( grid->ny   , stream );
-  util_fwrite_int( grid->size , stream );
-  util_fwrite_int( grid->total_active , stream );
-  util_fwrite_int_vector( grid->index_map , grid->size , stream , __func__ );
-  util_fwrite_int_vector( grid->inv_index_map , grid->total_active , stream , __func__ );
+  util_fwrite_int( grid->global_size , stream );
+  util_fwrite_int( grid->active_size , stream );
+  util_fwrite_int_vector( grid->index_map , grid->global_size , stream , __func__ );
+  util_fwrite_int_vector( grid->inv_index_map , grid->active_size , stream , __func__ );
 
   {
     int i;
-    for (i=0; i < grid->size; i++) {
-      const ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
+    for (i=0; i < grid->global_size; i++) {
+      const ecl_cell_type * cell = ecl_grid_get_cell1( grid , i );
       ecl_cell_dump( cell , stream );
     }
   }
@@ -5931,13 +5962,13 @@ static void ecl_grid_dump_ascii__(ecl_grid_type * grid , bool active_only , FILE
   fprintf(stream , "nx                : %6d\n",grid->nx);
   fprintf(stream , "ny                : %6d\n",grid->ny);
   fprintf(stream , "nz                : %6d\n",grid->nz);
-  fprintf(stream , "nactive           : %6d\n",grid->total_active);
-  fprintf(stream , "nactive fracture  : %6d\n",grid->total_active_fracture);
+  fprintf(stream , "nactive           : %6d\n",grid->active_size);
+  fprintf(stream , "nactive fracture  : %6d\n",grid->active_size_fracture);
 
   {
     int l;
-    for (l=0; l < grid->size; l++) {
-      ecl_cell_type * cell = ecl_grid_get_cell( grid , l );
+    for (l=0; l < grid->global_size; l++) {
+      ecl_cell_type * cell = ecl_grid_get_cell1( grid , l );
       if (cell->active_index[MATRIX_INDEX] >= 0 || !active_only) {
         int i,j,k;
         ecl_grid_get_ijk1( grid , l , &i , &j , &k);
@@ -5977,7 +6008,7 @@ void ecl_grid_dump_ascii(ecl_grid_type * grid , bool active_only , FILE * stream
 
 
 void ecl_grid_dump_ascii_cell1(ecl_grid_type * grid , int global_index , FILE * stream , const double * offset) {
-  ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index );
+  ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index );
   int i,j,k;
   ecl_grid_get_ijk1( grid , global_index , &i , &j , &k);
   ecl_cell_dump_ascii(cell , i,j,k, stream , offset);
@@ -5986,7 +6017,7 @@ void ecl_grid_dump_ascii_cell1(ecl_grid_type * grid , int global_index , FILE * 
 
 void ecl_grid_dump_ascii_cell3(ecl_grid_type * grid , int i , int j , int k , FILE * stream , const double * offset) {
   int global_index  = ecl_grid_get_global_index3(grid , i,j,k);
-  ecl_cell_type * cell = ecl_grid_get_cell( grid , global_index );
+  ecl_cell_type * cell = ecl_grid_get_cell1( grid , global_index );
   ecl_cell_dump_ascii(cell , i,j,k, stream , offset);
 }
 
@@ -6189,7 +6220,7 @@ static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size
       for (j=0; j < grid->ny; j++) {
         for (i=0; i < grid->nx; i++) {
           int global_index = ecl_grid_get_global_index__(grid , i , j , k );
-          const ecl_cell_type * cell = ecl_grid_get_cell( grid ,  global_index );
+          const ecl_cell_type * cell = ecl_grid_get_cell1( grid ,  global_index );
 
           ecl_cell_fwrite_GRID( grid , cell , false , coords_size , i,j,k,global_index,coords_kw , corners_kw , fortio );
         }
@@ -6201,7 +6232,7 @@ static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size
         for (j=0; j < grid->ny; j++) {
           for (i=0; i < grid->nx; i++) {
             int global_index = ecl_grid_get_global_index__(grid , i , j , k - grid->nz );
-            const ecl_cell_type * cell = ecl_grid_get_cell( grid ,  global_index );
+            const ecl_cell_type * cell = ecl_grid_get_cell1( grid ,  global_index );
 
             ecl_cell_fwrite_GRID( grid , cell , true , coords_size , i,j,k,global_index ,  coords_kw , corners_kw , fortio );
           }
@@ -6315,7 +6346,7 @@ static int ecl_grid_get_valid_index( const ecl_grid_type * grid , int i , int j 
     ecl_cell_type * cell;
     global_index = ecl_grid_get_global_index3( grid , i , j , k );
 
-    cell = ecl_grid_get_cell( grid ,  global_index );
+    cell = ecl_grid_get_cell1( grid ,  global_index );
     if (GET_CELL_FLAG(cell , CELL_FLAG_VALID))
       return global_index;
     else {
@@ -6350,8 +6381,8 @@ static bool ecl_grid_init_coord_section__( const ecl_grid_type * grid , int i, i
     point_type top_point;
     point_type bottom_point;
 
-    const ecl_cell_type * bottom_cell = ecl_grid_get_cell( grid , bottom_index );
-    const ecl_cell_type * top_cell    = ecl_grid_get_cell( grid , top_index);
+    const ecl_cell_type * bottom_cell = ecl_grid_get_cell1( grid , bottom_index );
+    const ecl_cell_type * top_cell    = ecl_grid_get_cell1( grid , top_index);
 
     /*
       2---3
@@ -6483,7 +6514,7 @@ static void ecl_grid_init_zcorn_data__( const ecl_grid_type * grid , float * zco
     for (i=0; i < nx; i++) {
       for (k=0; k < nz; k++) {
         const int cell_index   = ecl_grid_get_global_index3( grid , i,j,k);
-        const ecl_cell_type * cell = ecl_grid_get_cell( grid , cell_index );
+        const ecl_cell_type * cell = ecl_grid_get_cell1( grid , cell_index );
         int l;
 
         for (l=0; l < 2; l++) {
@@ -6526,7 +6557,7 @@ void ecl_grid_init_zcorn_data_double( const ecl_grid_type * grid , double * zcor
 
 
 float * ecl_grid_alloc_zcorn_data( const ecl_grid_type * grid ) {
-  float * zcorn = (float*)util_calloc( 8 * grid->size , sizeof * zcorn );
+  float * zcorn = (float*)util_calloc( 8 * grid->global_size , sizeof * zcorn );
   ecl_grid_init_zcorn_data( grid , zcorn );
   return zcorn;
 }
@@ -6566,45 +6597,47 @@ int ecl_grid_get_zcorn_size( const ecl_grid_type * grid ) {
 /*****************************************************************/
 
 void ecl_grid_init_actnum_data( const ecl_grid_type * grid , int * actnum ) {
-  int i;
-  for (i=0; i < grid->size; i++) {
-    const ecl_cell_type * cell = ecl_grid_get_cell( grid , i );
-    if (cell->coarse_group == COARSE_GROUP_NONE)
-      actnum[i] = cell->active;
-    else {
-      /* In the case of coarse cells we must query the coarse cell for
-         the original, uncoarsened distribution of actnum values. */
-      ecl_coarse_cell_type * coarse_cell = ecl_grid_iget_coarse_group( grid , cell->coarse_group );
+  for (int g=0; g < grid->global_size; g++)
+    actnum[g] = grid->actnum[g];
 
-      /* 1: Set all the elements in the coarse group to inactive. */
-      {
-        int group_size = ecl_coarse_cell_get_size( coarse_cell );
-        const int * index_ptr = ecl_coarse_cell_get_index_ptr( coarse_cell );
-        int j;
-        for (j=0; j < group_size; j++)
-          actnum[index_ptr[j]] = CELL_NOT_ACTIVE;
-      }
-
-      /* 2: Explicitly pick up the active cells from the coarse group
-            and mark them correctly. */
-      {
-        int num_active = ecl_coarse_cell_get_num_active( coarse_cell );
-        int j;
-
-        for (j=0; j < num_active; j++) {
-          int global_index = ecl_coarse_cell_iget_active_cell_index( coarse_cell , j );
-          int active_value = ecl_coarse_cell_iget_active_value( coarse_cell , j );
-
-          actnum[global_index] = active_value;
-        }
-      }
-    }
-  }
+  //  for (int i=0; i < grid->global_size; i++) {
+  //    const ecl_cell_type * cell = ecl_grid_get_cell1( grid , i );
+  //    if (cell->coarse_group == COARSE_GROUP_NONE)
+  //      actnum[i] = cell->active;
+  //    else {
+  //      /* In the case of coarse cells we must query the coarse cell for
+  //         the original, uncoarsened distribution of actnum values. */
+  //      ecl_coarse_cell_type * coarse_cell = ecl_grid_iget_coarse_group( grid , cell->coarse_group );
+  //
+  //      /* 1: Set all the elements in the coarse group to inactive. */
+  //      {
+  //        int group_size = ecl_coarse_cell_get_size( coarse_cell );
+  //        const int * index_ptr = ecl_coarse_cell_get_index_ptr( coarse_cell );
+  //        int j;
+  //        for (j=0; j < group_size; j++)
+  //          actnum[index_ptr[j]] = CELL_NOT_ACTIVE;
+  //      }
+  //
+  //      /* 2: Explicitly pick up the active cells from the coarse group
+  //            and mark them correctly. */
+  //      {
+  //        int num_active = ecl_coarse_cell_get_num_active( coarse_cell );
+  //        int j;
+  //
+  //        for (j=0; j < num_active; j++) {
+  //          int global_index = ecl_coarse_cell_iget_active_cell_index( coarse_cell , j );
+  //          int active_value = ecl_coarse_cell_iget_active_value( coarse_cell , j );
+  //
+  //          actnum[global_index] = active_value;
+  //        }
+  //      }
+  //    }
+  //  }
 }
 
 
 int * ecl_grid_alloc_actnum_data( const ecl_grid_type * grid ) {
-  int * actnum = (int*)util_calloc( grid->size , sizeof * actnum);
+  int * actnum = (int*)util_calloc( grid->global_size , sizeof * actnum);
   ecl_grid_init_actnum_data( grid , actnum );
   return actnum;
 }
@@ -6612,7 +6645,7 @@ int * ecl_grid_alloc_actnum_data( const ecl_grid_type * grid ) {
 
 
 ecl_kw_type * ecl_grid_alloc_actnum_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * actnum_kw = ecl_kw_alloc( ACTNUM_KW , grid->size  , ECL_INT);
+  ecl_kw_type * actnum_kw = ecl_kw_alloc( ACTNUM_KW , grid->global_size  , ECL_INT);
   ecl_grid_init_actnum_data( grid , (int*)ecl_kw_get_void_ptr( actnum_kw ));
   return actnum_kw;
 }
@@ -6652,21 +6685,21 @@ void ecl_grid_global_kw_copy( const ecl_grid_type * grid , ecl_kw_type * target_
 
 static void ecl_grid_init_hostnum_data( const ecl_grid_type * grid , int * hostnum ) {
   int i;
-  for (i=0; i < grid->size; i++) {
-    const ecl_cell_type * cell = ecl_grid_get_cell(grid , i );
+  for (i=0; i < grid->global_size; i++) {
+    const ecl_cell_type * cell = ecl_grid_get_cell1(grid , i );
     hostnum[i] = cell->host_cell;
   }
 }
 
 int * ecl_grid_alloc_hostnum_data( const ecl_grid_type * grid ) {
-  int * hostnum = (int*)util_calloc( grid->size , sizeof * hostnum );
+  int * hostnum = (int*)util_calloc( grid->global_size , sizeof * hostnum );
   ecl_grid_init_hostnum_data( grid , hostnum );
   return hostnum;
 }
 
 
 ecl_kw_type * ecl_grid_alloc_hostnum_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * hostnum_kw = ecl_kw_alloc( HOSTNUM_KW , grid->size  , ECL_INT);
+  ecl_kw_type * hostnum_kw = ecl_kw_alloc( HOSTNUM_KW , grid->global_size  , ECL_INT);
   ecl_grid_init_hostnum_data( grid , (int*)ecl_kw_get_void_ptr( hostnum_kw ));
   return hostnum_kw;
 }
@@ -6675,21 +6708,21 @@ ecl_kw_type * ecl_grid_alloc_hostnum_kw( const ecl_grid_type * grid ) {
 
 static void ecl_grid_init_corsnum_data( const ecl_grid_type * grid , int * corsnum ) {
   int i;
-  for (i=0; i < grid->size; i++) {
-    const ecl_cell_type * cell = ecl_grid_get_cell(grid , i );
+  for (i=0; i < grid->global_size; i++) {
+    const ecl_cell_type * cell = ecl_grid_get_cell1(grid , i );
     corsnum[i] = cell->coarse_group + 1;
   }
 }
 
 int * ecl_grid_alloc_corsnum_data( const ecl_grid_type * grid ) {
-  int * corsnum = (int*)util_calloc( grid->size , sizeof * corsnum );
+  int * corsnum = (int*)util_calloc( grid->global_size , sizeof * corsnum );
   ecl_grid_init_corsnum_data( grid , corsnum );
   return corsnum;
 }
 
 
 ecl_kw_type * ecl_grid_alloc_corsnum_kw( const ecl_grid_type * grid ) {
-  ecl_kw_type * corsnum_kw = ecl_kw_alloc( CORSNUM_KW , grid->size  , ECL_INT);
+  ecl_kw_type * corsnum_kw = ecl_kw_alloc( CORSNUM_KW , grid->global_size  , ECL_INT);
   ecl_grid_init_corsnum_data( grid , (int*)ecl_kw_get_void_ptr( corsnum_kw ));
   return corsnum_kw;
 }
@@ -6714,16 +6747,16 @@ ecl_kw_type * ecl_grid_alloc_gridhead_kw( int nx, int ny , int nz , int grid_nr)
 
 
 void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum ) {
-  const int global_size = ecl_grid_get_global_size( grid );
-  int g;
-  for (g=0; g < global_size; g++) {
-    ecl_cell_type * cell = ecl_grid_get_cell( grid , g );
-    if (actnum)
-      cell->active = actnum[g];
-    else
-      cell->active = 1;
+
+  if (actnum) {
+    for (int g=0; g < grid->global_size; g++)
+      grid->actnum[g] = actnum[g];
+  } else {
+    free(grid->actnum);
+    grid->actnum = NULL;
   }
-  ecl_grid_update_index( grid );
+
+  ecl_grid_alloc_index_map(grid, actnum);
 }
 
 
@@ -6734,7 +6767,7 @@ static void  ecl_grid_fwrite_self_nnc( const ecl_grid_type * grid , fortio_type 
   int g;
 
   for (g=0; g < ecl_grid_get_global_size(grid); g++) {
-    ecl_cell_type * cell = ecl_grid_get_cell( grid , g );
+    ecl_cell_type * cell = ecl_grid_get_cell1( grid , g );
     const nnc_info_type * nnc_info = cell->nnc_info;
     if (nnc_info) {
       const nnc_vector_type * nnc_vector = nnc_info_get_self_vector(nnc_info);
@@ -7003,7 +7036,7 @@ void ecl_grid_fprintf_grdecl(ecl_grid_type * grid , FILE * stream ) {
 */
 
 void ecl_grid_cell_ri_export( const ecl_grid_type * ecl_grid , int global_index , double * ri_points) {
-  const ecl_cell_type * cell = ecl_grid_get_cell( ecl_grid , global_index );
+  const ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index );
   int offset = global_index * 8 * 3;
   ecl_cell_ri_export( cell , &ri_points[ offset ] );
 }
@@ -7011,7 +7044,7 @@ void ecl_grid_cell_ri_export( const ecl_grid_type * ecl_grid , int global_index 
 
 void ecl_grid_ri_export( const ecl_grid_type * ecl_grid , double * ri_points) {
   int global_index;
-  for (global_index = 0; global_index < ecl_grid->size; global_index++)
+  for (global_index = 0; global_index < ecl_grid->global_size; global_index++)
     ecl_grid_cell_ri_export( ecl_grid , global_index , ri_points );
 }
 
@@ -7028,7 +7061,7 @@ bool ecl_grid_dual_grid( const ecl_grid_type * ecl_grid ) {
 static int ecl_grid_get_num_nnc__( const ecl_grid_type * grid ) {
   int g;
   int num_nnc = 0;
-  for (g = 0; g < grid->size; g++) {
+  for (g = 0; g < grid->global_size; g++) {
     const nnc_info_type * nnc_info = ecl_grid_get_cell_nnc_info1( grid , g );
     if (nnc_info)
       num_nnc += nnc_info_get_total_size( nnc_info );
