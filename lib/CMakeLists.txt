@@ -365,6 +365,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_sum_writer
                 ecl_util_filenames
                 ecl_util_make_date_no_shift
+                ecl_util_make_date_shift
                 ecl_util_month_range
                 ecl_valid_basename
                 test_ecl_nnc_data
@@ -495,10 +496,6 @@ add_test(NAME ecl_nnc_data_statoil_root COMMAND ecl_nnc_data_statoil_root
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
     ${_eclpath}/flow-nnc/Simple4/SIMPLE_SUMMARY4
     ${_eclpath}/flow-nnc/Gullfaks/GF_ACT_NEW_TEMP)
-
-add_executable(ecl_util_make_date_shift ecl/tests/ecl_util_make_date_shift.cpp)
-target_link_libraries(ecl_util_make_date_shift ecl)
-add_test(NAME ecl_util_make_date_shift COMMAND ecl_util_make_date_shift)
 
 add_executable(ecl_sum_case_exists ecl/tests/ecl_sum_case_exists.cpp)
 target_link_libraries(ecl_sum_case_exists ecl)
