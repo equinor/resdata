@@ -1844,7 +1844,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
   if (!ecl_grid_have_coarse_cells( ecl_grid )) {
     /* Keeping a fast path for the 99% most common case of no coarse
        groups and single porosity. */
-    for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
+    /*for (global_index = 0; global_index < ecl_grid->global_size; global_index++) {
       ecl_cell_type * cell = ecl_grid_get_cell1( ecl_grid , global_index);
 
       if (ecl_grid->actnum[global_index] & CELL_ACTIVE_MATRIX) {
@@ -1861,7 +1861,7 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
           active_fracture_index++;
         }
       }
-    }
+    }*/
   } else {
     /* --- More involved path in the case of coarsening groups. --- */
 
@@ -1927,9 +1927,9 @@ static void ecl_grid_set_active_index(ecl_grid_type * ecl_grid) {
         }
       }
     }
+    ecl_grid->active_size = active_index;
+    ecl_grid->active_size_fracture = active_fracture_index;
   }
-  ecl_grid->active_size = active_index;
-  ecl_grid->active_size_fracture = active_fracture_index;
 }
 
 
@@ -3333,7 +3333,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
             global_index -= nx*ny*nz;
           }
 
-          actnum[global_index] = actnum_value;
+          actnum[global_index] += coords[index][4] * actnum_value;
         }
       }
 

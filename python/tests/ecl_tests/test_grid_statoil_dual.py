@@ -46,6 +46,12 @@ class GridDualTest(EclTest):
             dgrid2 = EclGrid(self.createTestPath("Statoil/ECLIPSE/DualPoro/DUALPOR_MSW.GRID"))
             self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
             self.assertTrue(dgrid.getNumActive() == 46118)
+
+            print("*** GRID1: Num_Active    : %d" % dgrid.getNumActive())
+            print("*** GRID1: Num_FDractures: %d" % dgrid.getNumActiveFracture())
+            print("*** GRID2: Num_Active    : %d" % dgrid2.getNumActive())
+            print("*** GRID2: Num_FDractures: %d" % dgrid2.getNumActiveFracture())
+
             self.assertTrue(dgrid.equal(dgrid2))
 
 
