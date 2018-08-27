@@ -28,20 +28,8 @@ class CMakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
-        print(ext)
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        self.announce(extdir)
-        print(extdir)
-        extdir1 = pathlib.Path(self.get_ext_fullpath(ext.name))
-        print(str(extdir1.parent.absolute()))
-        print(self.libraries)
-        libdir = extdir
-        #libdir =  os.path.join(extdir, 'ecl')
-        self.library_dirs.append(libdir)
-        print(self.library_dirs)
-        self.rpath.append(libdir)
-        print(self.rpath)
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + libdir]
+        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir]
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
 
@@ -58,17 +46,28 @@ class CMakeBuild(build_ext):
         print(build_args)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
+with open("README.md", "r") as fh:
+  long_description = fh.read()
+
 setup(
     name='opm_libecl',
     version='0.1',
     author='OPM',
     author_email='chandan.nath@gmail.com',
     description='libecl',
-    long_description='',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/dhan16opm/libecl",
+    license="GNU General Public License, Version 3, 29 June 2007",
     packages=find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_dir={'': 'python'},
     ext_package='ecl',
     ext_modules=[CMakeExtension('opm_libecl')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
+    install_requires=[
+        'cwrap',
+        'numpy',
+        'pandas',
+    ],
 )
