@@ -3,8 +3,9 @@ import re
 import sys
 import platform
 import subprocess
+import pathlib
 
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
@@ -27,38 +28,47 @@ class CMakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
+        print(ext)
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable]
-
+        self.announce(extdir)
+        print(extdir)
+        extdir1 = pathlib.Path(self.get_ext_fullpath(ext.name))
+        print(str(extdir1.parent.absolute()))
+        print(self.libraries)
+        libdir = extdir
+        #libdir =  os.path.join(extdir, 'ecl')
+        self.library_dirs.append(libdir)
+        print(self.library_dirs)
+        self.rpath.append(libdir)
+        print(self.rpath)
+        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + libdir]
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
 
-        if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
-            build_args += ['--', '/m']
-        else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j2']
+        cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+        build_args += ['--', '-j2']
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
                                                               self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
+        print(cmake_args)
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
+        print(build_args)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
-    name='opm_ecl',
-    version='0.0.1',
+    name='opm_libecl',
+    version='0.1',
     author='OPM',
     author_email='chandan.nath@gmail.com',
-    description='A test project using pybind11 and CMake',
+    description='libecl',
     long_description='',
-    ext_modules=[CMakeExtension('opm_ecl')],
+    packages=find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    package_dir={'': 'python'},
+    ext_package='ecl',
+    ext_modules=[CMakeExtension('opm_libecl')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )
