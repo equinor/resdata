@@ -458,6 +458,7 @@ foreach(name ecl_coarse_test
              ecl_lgr_test
              ecl_layer_statoil
              ecl_dualp
+             ecl_grid_dx_dy_dz
              ecl_sum_test
              ecl_sum_report_step_equal
              ecl_sum_report_step_compatible
@@ -493,12 +494,15 @@ endif()
 # ecl
 #
 
+add_test(NAME ecl_grid_dx_dy_dz1 COMMAND ecl_grid_dx_dy_dz ${_eclpath}/Gurbat/ECLIPSE)
+add_test(NAME ecl_grid_dx_dy_dz3 COMMAND ecl_grid_dx_dy_dz ${_eclpath}/Troll/Ref2014/T07-4A-W2014-06)
 
 add_test(NAME ecl_coarse_test COMMAND ecl_coarse_test
     ${_eclpath}/LGCcase/LGC_TESTCASE2)
 
 add_test(NAME ecl_grid_layer_contains1 COMMAND ecl_grid_layer_contains
     ${_eclpath}/Gurbat/ECLIPSE.EGRID)
+
 add_test(NAME ecl_grid_layer_contains2 COMMAND ecl_grid_layer_contains
     ${_eclpath}/Mariner/MARINER.EGRID)
 
