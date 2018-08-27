@@ -5152,12 +5152,16 @@ double ecl_grid_get_cell_dx1A( const ecl_grid_type * grid , int active_index) {
 
 
 /*
-  The current algorithm for calculating the cell dimensions DX,DY and
-  DZ reproduces the Eclipse results from the INIT file, but we are in
-  general *not* guaranteed to satisfy the relationship:
+  The current algorithm for calculating the cell dimensions DX,DY and DZ
+  reproduces the Eclipse results from the INIT file quite well, relative error
+  on the order 1e-4 for DX and DY and 1e-3 for DZ.
 
-     DX * DY * DZ = V
+  Observe that the DX, DY and DZ values are not tied to the cell volume; i.e. 
+  the relationship:
 
+       DX * DY * DZ = V
+
+  does generally not hold.
 */
 
 double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
