@@ -23,7 +23,6 @@ class CMakeBuild(build_ext):
         except OSError:
             raise RuntimeError("CMake must be installed to build the following extensions: " +
                                ", ".join(e.name for e in self.extensions))
-
         for ext in self.extensions:
             self.build_extension(ext)
 
@@ -32,27 +31,21 @@ class CMakeBuild(build_ext):
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir]
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
-
         cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
         build_args += ['--', '-j2']
 
-        env = os.environ.copy()
-        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
-                                                              self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        print(cmake_args)
+        env = os.environ.copy()
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        print(build_args)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 with open("README.md", "r") as fh:
   long_description = fh.read()
 
 setup(
-    name='opm_libecl',
+    name='dhan16opm_libecl',
     version='0.1',
-    author='OPM',
     author_email='chandan.nath@gmail.com',
     description='libecl',
     long_description=long_description,
@@ -62,9 +55,8 @@ setup(
     packages=find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_dir={'': 'python'},
     ext_package='ecl',
-    ext_modules=[CMakeExtension('opm_libecl')],
+    ext_modules=[CMakeExtension('libecl')],
     cmdclass=dict(build_ext=CMakeBuild),
-    zip_safe=False,
     install_requires=[
         'cwrap',
         'numpy',
