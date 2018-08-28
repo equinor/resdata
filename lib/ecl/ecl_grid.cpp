@@ -699,7 +699,7 @@ struct ecl_cell_struct {
 };
 
 
-
+static ert_ecl_unit_enum ecl_grid_check_unit_system(const ecl_kw_type * gridunit_kw);
 static void          ecl_grid_init_mapaxes_data_float( const ecl_grid_type * grid , float * mapaxes);
 float *              ecl_grid_alloc_coord_data( const ecl_grid_type * grid );
 static const float * ecl_grid_get_mapaxes( const ecl_grid_type * grid );
@@ -1527,6 +1527,7 @@ static bool ecl_grid_alloc_cells( ecl_grid_type * grid , bool init_valid) {
 */
 
 static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
+                                            ert_ecl_unit_enum unit_system,
                                             int dualp_flag,
                                             int nx,
                                             int ny,
@@ -1553,7 +1554,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->index_map             = NULL;
   grid->fracture_index_map    = NULL;
   grid->inv_fracture_index_map = NULL;
-  grid->unit_system            = ECL_METRIC_UNITS;
+  grid->unit_system            = unit_system;
 
 
   if (global_grid != NULL) {
@@ -2416,6 +2417,7 @@ void ecl_grid_init_GRDECL_data(ecl_grid_type * ecl_grid,
 */
 
 static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
+                                                    ert_ecl_unit_enum unit_system,
                                                     int dualp_flag,
                                                     bool apply_mapaxes,
                                                     int nx,
@@ -2428,7 +2430,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , dualp_flag , nx,ny,nz,lgr_nr,true);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , unit_system, dualp_flag , nx,ny,nz,lgr_nr,true);
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -2452,6 +2454,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
 }
 
 static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
+                                                    ert_ecl_unit_enum unit_system,
                                                     int dualp_flag,
                                                     bool apply_mapaxes,
                                                     int nx,
@@ -2464,7 +2467,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , dualp_flag , nx,ny,nz,lgr_nr,true);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid, unit_system, dualp_flag , nx,ny,nz,lgr_nr,true);
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -2521,6 +2524,7 @@ static void ecl_grid_copy_content( ecl_grid_type * target_grid , const ecl_grid_
 
 static ecl_grid_type * ecl_grid_alloc_copy__( const ecl_grid_type * src_grid,  ecl_grid_type * main_grid ) {
   ecl_grid_type * copy_grid = ecl_grid_alloc_empty( main_grid ,
+                                                    src_grid->unit_system,
                                                     src_grid->dualp_flag ,
                                                     ecl_grid_get_nx( src_grid ) ,
                                                     ecl_grid_get_ny( src_grid ) ,
@@ -2625,7 +2629,10 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_data(int nx,
                                            const int * actnum,
                                            bool apply_mapaxes,
                                            const float * mapaxes) {
+
+  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   return ecl_grid_alloc_GRDECL_data__(NULL,
+                                      unit_system,
                                       FILEHEAD_SINGLE_POROSITY,
                                       apply_mapaxes,
                                       nx,
@@ -2649,8 +2656,9 @@ namespace ecl {
                                              const int * actnum,
                                              bool apply_mapaxes,
                                              const float * mapaxes) {
-
+    ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     return ecl_grid_alloc_GRDECL_data__(NULL,
+                                        unit_system,
                                         FILEHEAD_SINGLE_POROSITY,
                                         apply_mapaxes,
                                         nx,
@@ -2690,11 +2698,12 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
                                                   const ecl_kw_type * gridhead_kw ,
                                                   const ecl_kw_type * zcorn_kw ,
                                                   const ecl_kw_type * coord_kw ,
+                                                  const ecl_kw_type * gridunit_kw,   /* Can be NULL */
                                                   const ecl_kw_type * mapaxes_kw ,   /* Can be NULL */
                                                   const ecl_kw_type * corsnum_kw,    /* Can be NULL */
                                                   const int * actnum_data) {         /* Can be NULL */
-   int gtype, nx,ny,nz, lgr_nr;
-
+  int gtype, nx,ny,nz, lgr_nr;
+  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   gtype   = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_TYPE_INDEX);
   nx      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NX_INDEX);
   ny      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NY_INDEX);
@@ -2717,13 +2726,17 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
     const float * mapaxes_data = NULL;
     const int   * corsnum_data = NULL;
 
-    if (mapaxes_kw != NULL)
+    if (mapaxes_kw)
       mapaxes_data = ecl_grid_get_mapaxes_from_kw__(mapaxes_kw);
 
-    if (corsnum_kw != NULL)
+    if (corsnum_kw)
       corsnum_data = ecl_kw_get_int_ptr( corsnum_kw );
 
+    if (gridunit_kw)
+      unit_system = ecl_grid_check_unit_system(gridunit_kw);
+
     return ecl_grid_alloc_GRDECL_data__(global_grid ,
+                                        unit_system,
                                         dualp_flag ,
                                         apply_mapaxes,
                                         nx , ny , nz ,
@@ -2756,13 +2769,14 @@ ecl_grid_type * ecl_grid_alloc_GRDECL_kw( int nx, int ny , int nz ,
 
   bool apply_mapaxes = true;
   ecl_kw_type * gridhead_kw = ecl_grid_alloc_gridhead_kw( nx, ny, nz, 0);
-
+  ecl_kw_type * gridunit_kw = NULL;
   ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw__(NULL,
                                                         FILEHEAD_SINGLE_POROSITY,
                                                         apply_mapaxes,
                                                         gridhead_kw,
                                                         zcorn_kw,
                                                         coord_kw,
+                                                        gridunit_kw,
                                                         mapaxes_kw,
                                                         NULL,
                                                         actnum_data);
@@ -2994,6 +3008,7 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   ecl_kw_type * coord_kw     = ecl_file_iget_named_kw( ecl_file , COORD_KW     , grid_nr);
   ecl_kw_type * corsnum_kw   = NULL;
   ecl_kw_type * actnum_kw    = NULL;
+  ecl_kw_type * gridunit_kw  = NULL;
   ecl_kw_type * mapaxes_kw   = NULL;
   int dualp_flag;
   int eclipse_version;
@@ -3031,6 +3046,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
 
     if (ecl_file_has_kw( ecl_file , CORSNUM_KW))
       corsnum_kw   = ecl_file_iget_named_kw( ecl_file , CORSNUM_KW , 0);
+
+    if (ecl_file_has_kw(ecl_file, GRIDUNIT_KW))
+      gridunit_kw = ecl_file_iget_named_kw( ecl_file, GRIDUNIT_KW, 0);
   }
 
   {
@@ -3040,8 +3058,9 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
                                                            gridhead_kw ,
                                                            zcorn_kw ,
                                                            coord_kw ,
+                                                           gridunit_kw,
                                                            mapaxes_kw ,
-                                                           corsnum_kw, 
+                                                           corsnum_kw,
                                                            actnum_data);
 
     if (ECL_GRID_MAINGRID_LGR_NR != grid_nr) ecl_grid_set_lgr_name_EGRID(ecl_grid , ecl_file , grid_nr);
@@ -3105,11 +3124,11 @@ ecl_grid_type * ecl_grid_alloc_EGRID(const char * grid_file, bool apply_mapaxes)
 
 
 
-static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , int num_coords , int dualp_flag , bool apply_mapaxes, int nx, int ny , int nz , int grid_nr , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
+static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , int num_coords , ert_ecl_unit_enum unit_system, int dualp_flag , bool apply_mapaxes, int nx, int ny , int nz , int grid_nr , int coords_size , int ** coords , float ** corners , const float * mapaxes) {
   if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
     nz = nz / 2;
   {
-    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , dualp_flag , nx , ny , nz , grid_nr, false);
+    ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , unit_system, dualp_flag , nx , ny , nz , grid_nr, false);
     if (grid) {
       if (mapaxes != NULL)
         ecl_grid_init_mapaxes( grid , apply_mapaxes , mapaxes);
@@ -3135,8 +3154,10 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid , 
 */
 
 ecl_grid_type * ecl_grid_alloc_GRID_data(int num_coords , int nx , int ny , int nz , int coords_size , int ** coords , float ** corners , bool apply_mapaxes, const float * mapaxes) {
+  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   return ecl_grid_alloc_GRID_data__( NULL ,
                                      num_coords ,
+                                     unit_system,
                                      FILEHEAD_SINGLE_POROSITY , /* Does currently not support to determine dualp_flag from inspection. */
                                      apply_mapaxes,
                                      nx , ny , nz , 0 , coords_size , coords , corners , mapaxes);
@@ -3190,6 +3211,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
   int           nx,ny,nz;
   const float * mapaxes_data = NULL;
   ecl_grid_type * grid;
+  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
 
   // 1: Fetching header data from the DIMENS keyword.
   {
@@ -3209,6 +3231,8 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     }
   }
 
+  if ((grid_nr == 0) && (ecl_file_has_kw( ecl_file , GRIDUNIT_KW)))
+    unit_system = ecl_grid_check_unit_system( ecl_file_iget_named_kw(ecl_file, GRIDUNIT_KW, 0));
 
   /*
     The number of COORDS/CORNERS blocks depends on the GRIDFILE option
@@ -3281,7 +3305,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
         coords_size = ecl_kw_get_size( coords_kw );
       }
       // Create the grid:
-      grid = ecl_grid_alloc_GRID_data__( global_grid , num_coords , dualp_flag , apply_mapaxes, nx , ny , nz , grid_nr , coords_size , coords , corners , mapaxes_data );
+      grid = ecl_grid_alloc_GRID_data__( global_grid , num_coords , unit_system, dualp_flag , apply_mapaxes, nx , ny , nz , grid_nr , coords_size , coords , corners , mapaxes_data );
 
       free( coords );
       free( corners );
@@ -3348,7 +3372,8 @@ ecl_grid_type * ecl_grid_alloc_GRID(const char * grid_file, bool apply_mapaxes) 
    which case all cells will be active.
 */
 ecl_grid_type * ecl_grid_alloc_regular( int nx, int ny , int nz , const double * ivec, const double * jvec , const double * kvec , const int * actnum) {
-  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
+  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
+  ecl_grid_type * grid = ecl_grid_alloc_empty(NULL , unit_system, FILEHEAD_SINGLE_POROSITY , nx , ny , nz , 0, true);
   if (grid) {
     const double grid_offset[3] = {0,0,0};
 
@@ -3405,7 +3430,9 @@ ecl_grid_type * ecl_grid_alloc_rectangular( int nx , int ny , int nz , double dx
    all cells will be active.  */
 ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const double * dxv , const double * dyv , const double * dzv , const int * actnum)
 {
+    ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+                                               unit_system,
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3448,7 +3475,9 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv( int nx, int ny , int nz , const doub
 
 ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , const double * dxv , const double * dyv , const double * dzv , const double * depthz , const int * actnum)
 {
+    ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
     ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+                                               unit_system,
                                                FILEHEAD_SINGLE_POROSITY,
                                                nx, ny, nz,
                                                /*lgr_nr=*/0, /*init_valid=*/true);
@@ -3551,8 +3580,9 @@ ecl_grid_type * ecl_grid_alloc_dxv_dyv_dzv_depthz( int nx, int ny , int nz , con
 */
 
 ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const double * dx , const double * dy , const double * dz , const double * tops , const int * actnum) {
-
+  ert_ecl_unit_enum unit_system = ECL_METRIC_UNITS;
   ecl_grid_type* grid = ecl_grid_alloc_empty(NULL,
+                                             unit_system,
                                              FILEHEAD_SINGLE_POROSITY,
                                              nx, ny, nz,
                                              0, true);
@@ -5122,12 +5152,16 @@ double ecl_grid_get_cell_dx1A( const ecl_grid_type * grid , int active_index) {
 
 
 /*
-  The current algorithm for calculating the cell dimensions DX,DY and
-  DZ reproduces the Eclipse results from the INIT file, but we are in
-  general *not* guaranteed to satisfy the relationship:
+  The current algorithm for calculating the cell dimensions DX,DY and DZ
+  reproduces the Eclipse results from the INIT file quite well, relative error
+  on the order 1e-4 for DX and DY and 1e-3 for DZ.
 
-     DX * DY * DZ = V
+  Observe that the DX, DY and DZ values are not tied to the cell volume; i.e. 
+  the relationship:
 
+       DX * DY * DZ = V
+
+  does generally not hold.
 */
 
 double ecl_grid_get_cell_dy1( const ecl_grid_type * grid , int global_index ) {
@@ -6051,6 +6085,19 @@ static ecl_kw_type * ecl_grid_alloc_gridunits_kw( ert_ecl_unit_enum output_unit 
   ecl_kw_iset_string8( gridunits_kw , 1 , "" );
   return gridunits_kw;
 }
+
+static ert_ecl_unit_enum ecl_grid_check_unit_system(const ecl_kw_type * gridunit_kw) {
+  const char * length_unit = ecl_kw_iget_char_ptr(gridunit_kw, 0);
+
+  if (strncmp(length_unit, "FEET", 4) == 0)
+    return ECL_FIELD_UNITS;
+
+  if (strncmp(length_unit, "CM", 2) == 0)
+    return ECL_LAB_UNITS;
+
+  return ECL_METRIC_UNITS;
+}
+
 
 /*****************************************************************/
 

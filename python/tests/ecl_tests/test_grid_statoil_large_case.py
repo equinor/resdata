@@ -1,6 +1,6 @@
 #  Copyright (C) 2018  Statoil ASA, Norway.
 #
-#  The file 'test_grdecl.py' is part of ERT - Ensemble based Reservoir Tool.
+#  The file 'test_grid_statoil_large_case.py' is part of ERT - Ensemble based Reservoir Tool.
 #
 #  ERT is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -13,25 +13,17 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
+import math
 
-import os
-from ecl.eclfile import EclKW
 from ecl.util.test import TestAreaContext
-from tests import EclTest
-import cwrap
+from ecl.grid import EclGrid
 
-class GRDECLTest(EclTest):
-
-    def test_64bit_memory(self):
-        with TestAreaContext("large_memory"):
-            block_size = 10**6
-            with open("test.grdecl","w") as f:
-                f.write("COORD\n")
-                for i in range(1000):
-                    f.write("%d*0.15 \n" % block_size)
-                f.write("/\n")
-
-            with cwrap.open("test.grdecl") as f:
-                kw = EclKW.read_grdecl(f,"COORD")
+from tests import EclTest, statoil_test
 
 
+@statoil_test()
+class GridLargeCaseTest(EclTest):
+
+    def test_large_case(self):
+        grdecl_file = self.createTestPath("Statoil/ECLIPSE/1.6.0_issueGrdecl/test_aug2016_gridOnly.grdecl")
+        grid = EclGrid.loadFromGrdecl( grdecl_file )

@@ -14,10 +14,14 @@ set(TEST_SOURCES
     test_fault_blocks_statoil.py
     test_faults.py
     test_fortio.py
+    test_grdecl_statoil.py
     test_grdecl.py
     test_grid.py
     test_cell.py
     test_grid_statoil.py
+    test_grid_statoil_coarse.py
+    test_grid_statoil_dual.py
+    test_grid_statoil_large_case.py
     test_grid_generator.py
     test_indexed_read.py
     test_ecl_kw_statoil.py
@@ -73,8 +77,12 @@ addPythonTest(tests.ecl_tests.test_debug.DebugTest)
 
 
 addPythonTest(tests.ecl_tests.test_ecl_file_statoil.EclFileStatoilTest)
+addPythonTest(tests.ecl_tests.test_grdecl_statoil.GRDECLStatoilTest)
 addPythonTest(tests.ecl_tests.test_grdecl.GRDECLTest)
 addPythonTest(tests.ecl_tests.test_grid_statoil.GridTest)
+addPythonTest(tests.ecl_tests.test_grid_statoil_coarse.GridCoarceTest)
+addPythonTest(tests.ecl_tests.test_grid_statoil_dual.GridDualTest)
+addPythonTest(tests.ecl_tests.test_grid_statoil_large_case.GridLargeCaseTest)
 addPythonTest(tests.ecl_tests.test_ecl_kw_statoil.KWTest)
 addPythonTest(tests.ecl_tests.test_ecl_init_file.InitFileTest)
 addPythonTest(tests.ecl_tests.test_ecl_restart_file.RestartFileTest)
