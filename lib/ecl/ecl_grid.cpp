@@ -1098,8 +1098,6 @@ static void create_index_map(int global_size,
           inv_index_map.push_back(g);
           active_index++;
         }
-        if (g < 5)
-          printf("******------******* %s: g = %d, actnum = %d, mask = %d, active_index = %d, index_map = %d\n", __func__, g, actnum[g], actnum_mask, active_index, index_map[g]);
       }
     }
   } else {
@@ -1120,9 +1118,6 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * grid, const int * actnum) {
 
   if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
     create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTURE, index_map, inv_index_map);
-    printf("**Q*Q*Q*Q*** %s: global_size = %d\n", __func__, grid->global_size);
-    for (int i = 0; i < 5; i++)
-       printf("**Q*Q*Q*Q*** %s: index_map[%d] = %d\n", __func__, i, index_map[i]);
     grid->fracture_index_map = Ecl::alloc_vector_content(index_map);
     grid->inv_fracture_index_map = Ecl::alloc_vector_content(inv_index_map);
     grid->active_size_fracture = inv_index_map.size();
@@ -1598,7 +1593,6 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->ny                    = ny;
   grid->nz                    = nz;
   grid->global_size           = nx*ny*nz;
-  printf("******* %s: global_size = %d\n", __func__, grid->global_size);
   grid->lgr_nr                = lgr_nr;
   grid->global_grid           = global_grid;
   grid->coarsening_active     = false;
@@ -2708,7 +2702,6 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
   ny      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NY_INDEX);
   nz      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NZ_INDEX);
   lgr_nr  = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_LGR_INDEX);
-  printf(" ***** %s: nx = %d, ny = %d, nz = %d\n", __func__, nx, ny, nz);
 
   /*
     The code used to have this test:
@@ -3037,10 +3030,6 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   else
     actnum_data = ext_actnum;
 
-  if (actnum_data) {
-    for (int i = 0; i < 5; i++)
-      printf("***** %s: actnum[%d] = %d\n", __func__, i, actnum_data[i]);
-  }
 
   if (grid_nr == 0) {
     /* MAPAXES and COARSENING only apply to the global grid. */
@@ -3337,9 +3326,6 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
           global_size /= 2;
         for (int g=0; g < global_size; g++)
           actnum[g] = 0;
-        printf("**** %s: global_size = %d, num_coords = %d\n", __func__, global_size, num_coords);
-        printf("**** %s: nx = %d, ny = %d, nz = %d\n", __func__, nx, ny, nz);
-        
         for (index = 0; index < num_coords; index++) {
           int i = coords[index][0] - 1;
           int j = coords[index][1] - 1;
@@ -4001,9 +3987,6 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
     equal = false;
   }
 
-  if (!equal)
-    printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 0);
-
   if (equal) {
     if (memcmp( g1->index_map , g2->index_map , g1->global_size * sizeof * g1->index_map ) != 0) {
       equal = false;
@@ -4011,9 +3994,6 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
         fprintf(stderr,"Difference in index map \n");
     }
   }
-
-  if (!equal)
-    printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 1);
 
   if (equal) {
     if (memcmp( g1->inv_index_map , g2->inv_index_map , g1->active_size * sizeof * g1->inv_index_map ) != 0) {
@@ -4023,18 +4003,12 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
     }
   }
 
-  if (!equal)
-    printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 2);
-
   if (equal && (g1->dualp_flag != FILEHEAD_SINGLE_POROSITY)) {
     if (g1->active_size_fracture != g2->active_size_fracture) {
       if (verbose)
         fprintf(stderr,"Difference in toal_active_fracture %d / %d \n",g1->active_size_fracture , g2->active_size_fracture);
       equal = false;
     }
-
-    if (!equal)
-      printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 3);
 
     if (equal) {
       if (memcmp( g1->fracture_index_map , g2->fracture_index_map , g1->global_size * sizeof * g1->fracture_index_map ) != 0) {
@@ -4044,9 +4018,6 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
       }
     }
 
-    if (!equal)
-      printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 4);
-
     if (equal) {
       if (memcmp( g1->inv_fracture_index_map , g2->inv_fracture_index_map , g1->active_size_fracture * sizeof * g1->inv_fracture_index_map ) != 0) {
         equal = false;
@@ -4054,9 +4025,6 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
           fprintf(stderr,"Difference in inv_fracture_index_map \n");
       }
     }
-
-    if (!equal)
-      printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 5);
 
   }
   return equal;
