@@ -1592,6 +1592,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->ny                    = ny;
   grid->nz                    = nz;
   grid->global_size           = nx*ny*nz;
+  printf("******* %s: global_size = %d\n", __func__, grid->global_size);
   grid->lgr_nr                = lgr_nr;
   grid->global_grid           = global_grid;
   grid->coarsening_active     = false;
@@ -3321,6 +3322,15 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
       } else {
         for (int g=0; g < nx*ny*nz; g++)
           actnum[g] = 0;
+        printf("**** %s: global_size = %d, num_coords = %d\n", __func__, nx*ny*nz, num_coords);
+        printf("**** %s: nx = %d, ny = %d, nz = %d\n", __func__, nx, ny, nz);
+        int global_size = nx*ny*nz;
+        int nz_ = nz;
+        if (dualp_flag != FILEHEAD_SINGLE_POROSITY) {
+          global_size /= 2;
+          nz_ /= 2;
+        }
+        
         for (index = 0; index < num_coords; index++) {
           int i = coords[index][0] - 1;
           int j = coords[index][1] - 1;
@@ -3328,9 +3338,9 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
           int global_index = i + j*nx + k*nx*ny;
           int actnum_value = CELL_ACTIVE_MATRIX;
 
-          if (k >= nz) {
+          if (k >= nz_) {
             actnum_value = CELL_ACTIVE_FRACTURE;
-            global_index -= nx*ny*nz;
+            global_index -= global_size;
           }
 
           actnum[global_index] += coords[index][4] * actnum_value;
@@ -3982,6 +3992,9 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
     equal = false;
   }
 
+  if (!equal)
+    printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 0);
+
   if (equal) {
     if (memcmp( g1->index_map , g2->index_map , g1->global_size * sizeof * g1->index_map ) != 0) {
       equal = false;
@@ -3989,6 +4002,9 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
         fprintf(stderr,"Difference in index map \n");
     }
   }
+
+  if (!equal)
+    printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 1);
 
   if (equal) {
     if (memcmp( g1->inv_index_map , g2->inv_index_map , g1->active_size * sizeof * g1->inv_index_map ) != 0) {
@@ -3998,12 +4014,18 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
     }
   }
 
+  if (!equal)
+    printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 2);
+
   if (equal && (g1->dualp_flag != FILEHEAD_SINGLE_POROSITY)) {
     if (g1->active_size_fracture != g2->active_size_fracture) {
       if (verbose)
         fprintf(stderr,"Difference in toal_active_fracture %d / %d \n",g1->active_size_fracture , g2->active_size_fracture);
       equal = false;
     }
+
+    if (!equal)
+      printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 3);
 
     if (equal) {
       if (memcmp( g1->fracture_index_map , g2->fracture_index_map , g1->global_size * sizeof * g1->fracture_index_map ) != 0) {
@@ -4013,6 +4035,9 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
       }
     }
 
+    if (!equal)
+      printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 4);
+
     if (equal) {
       if (memcmp( g1->inv_fracture_index_map , g2->inv_fracture_index_map , g1->active_size_fracture * sizeof * g1->inv_fracture_index_map ) != 0) {
         equal = false;
@@ -4020,6 +4045,9 @@ static bool ecl_grid_compare_index(const ecl_grid_type * g1 , const ecl_grid_typ
           fprintf(stderr,"Difference in inv_fracture_index_map \n");
       }
     }
+
+    if (!equal)
+      printf("**>*>*>*>*>*>***************** %s: Here %d\n", __func__, 5);
 
   }
   return equal;
@@ -4054,6 +4082,9 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
   if (g1->global_size != g2->global_size)
     equal = false;
 
+  if (!equal)
+     printf("****** %s: Here %d\n", __func__, 0);
+
   // The name of the parent grid corresponds to a filename; they can be different.
   if (equal && g1->parent_grid) {
     if (!util_string_equal( g1->name , g2->name )) {
@@ -4062,6 +4093,9 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
         fprintf(stderr,"Difference in name %s <-> %s \n" , g1->name , g2->name);
     }
   }
+
+  if (!equal)
+     printf("****** %s: Here %d\n", __func__, 1);
 
   /*
     When .GRID files are involved this is hardwired to FILEHEAD_SINGLE_POROSITY.
@@ -4072,17 +4106,32 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
       fprintf(stderr,"Dual porosity flags differ: %d / %d \n" , g1->dualp_flag , g2->dualp_flag);
   }
 
+  if (!equal)
+     printf("****** %s: Here %d\n", __func__, 2);
+
   if (equal)
     equal = ecl_grid_compare_cells(g1 , g2 , include_nnc , verbose);
+
+  if (!equal)
+     printf("****** %s: Here %d\n", __func__, 3);
 
   if (equal)
     equal = ecl_grid_compare_index( g1 , g2 , true /*verbose*/);
 
+  if (!equal)
+     printf("****** %s: Here %d\n", __func__, 4);
+
   if (equal)
     equal = ecl_grid_compare_coarse_cells( g1 , g2 , verbose );
 
+  if (!equal)
+     printf("****** %s: Here %d\n", __func__, 5);
+
   if (equal)
     equal = ecl_grid_compare_mapaxes( g1 , g2 , verbose );
+
+  if (!equal)
+     printf("****** %s: Here %d\n", __func__, 6);
 
   return equal;
 }
