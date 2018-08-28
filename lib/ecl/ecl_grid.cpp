@@ -1086,6 +1086,7 @@ static void create_index_map(int global_size,
                              int actnum_mask,
                              std::vector<int>& index_map,
                              std::vector<int>& inv_index_map) {
+  index_map.clear();
   index_map.resize(global_size, -1);
   if (actnum) {
     inv_index_map.resize(0);
@@ -1097,6 +1098,8 @@ static void create_index_map(int global_size,
           inv_index_map.push_back(g);
           active_index++;
         }
+        if (g < 5)
+          printf("******------******* %s: g = %d, actnum = %d, mask = %d, active_index = %d, index_map = %d\n", __func__, g, actnum[g], actnum_mask, active_index, index_map[g]);
       }
     }
   } else {
@@ -1117,6 +1120,9 @@ static void ecl_grid_alloc_index_map(ecl_grid_type * grid, const int * actnum) {
 
   if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
     create_index_map(grid->global_size, actnum, CELL_ACTIVE_FRACTURE, index_map, inv_index_map);
+    printf("**Q*Q*Q*Q*** %s: global_size = %d\n", __func__, grid->global_size);
+    for (int i = 0; i < 5; i++)
+       printf("**Q*Q*Q*Q*** %s: index_map[%d] = %d\n", __func__, i, index_map[i]);
     grid->fracture_index_map = Ecl::alloc_vector_content(index_map);
     grid->inv_fracture_index_map = Ecl::alloc_vector_content(inv_index_map);
     grid->active_size_fracture = inv_index_map.size();
@@ -2702,6 +2708,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_kw__(ecl_grid_type * global_grid ,
   ny      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NY_INDEX);
   nz      = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_NZ_INDEX);
   lgr_nr  = ecl_kw_iget_int(gridhead_kw , GRIDHEAD_LGR_INDEX);
+  printf(" ***** %s: nx = %d, ny = %d, nz = %d\n", __func__, nx, ny, nz);
 
   /*
     The code used to have this test:
@@ -3030,6 +3037,10 @@ static ecl_grid_type * ecl_grid_alloc_EGRID__( ecl_grid_type * main_grid , const
   else
     actnum_data = ext_actnum;
 
+  if (actnum_data) {
+    for (int i = 0; i < 5; i++)
+      printf("***** %s: actnum[%d] = %d\n", __func__, i, actnum_data[i]);
+  }
 
   if (grid_nr == 0) {
     /* MAPAXES and COARSENING only apply to the global grid. */
