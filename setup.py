@@ -18,39 +18,30 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def run(self):
-        try:
-            out = subprocess.check_output(['cmake', '--version'])
-        except OSError:
-            raise RuntimeError("CMake must be installed to build the following extensions: " +
-                               ", ".join(e.name for e in self.extensions))
         for ext in self.extensions:
             self.build_extension(ext)
 
     def build_extension(self, ext):
+        cmake_args = [] # Fill in extra stuff we may need
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir]
+        cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir]
         cfg = 'Debug' if self.debug else 'Release'
-        build_args = ['--config', cfg]
         cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-        build_args += ['--', '-j2']
-
+        build_args = ['--config', cfg, '--', '-j2']
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         env = os.environ.copy()
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
-with open("README.md", "r") as fh:
-  long_description = fh.read()
-
 setup(
     name='dhan16opm_libecl',
-    version='0.1',
+    version='0.1.1',
     author_email='chandan.nath@gmail.com',
     description='libecl',
-    long_description=long_description,
+    long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/dhan16opm/libecl",
+    url="https://github.com/statoil/libecl",
     license="GNU General Public License, Version 3, 29 June 2007",
     packages=find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_dir={'': 'python'},
