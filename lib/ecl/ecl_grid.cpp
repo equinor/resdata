@@ -3131,8 +3131,6 @@ static ecl_grid_type * ecl_grid_alloc_GRID_data__(ecl_grid_type * global_grid ,
                                                   int ** coords ,
                                                   float ** corners ,
                                                   const float * mapaxes) {
-  if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
-    nz = nz / 2;
   {
     ecl_grid_type * grid = ecl_grid_alloc_empty( global_grid , unit_system, actnum, dualp_flag , nx , ny , nz , grid_nr, false);
     if (grid) {
@@ -3229,6 +3227,10 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     ny   = ecl_kw_iget_int(dimens_kw , DIMENS_NY_INDEX);
     nz   = ecl_kw_iget_int(dimens_kw , DIMENS_NZ_INDEX);
   }
+  int global_size = nx*ny*nz;
+  if (dualp_flag != FILEHEAD_SINGLE_POROSITY) {
+    nz /= 2;
+  }
 
   // 2: Fetching the mapaxes data from the MAPAXES keyword; the
   //    keyword is optional, and is only applicable to the global grid.
@@ -3286,13 +3288,13 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
     if (global_grid == NULL) {
       /* This is the main grid - can be both nactive or nx*ny*nz coord elements. */
       int num_coords_kw = ecl_file_get_num_named_kw( ecl_file , COORDS_KW);
-      if (num_coords_kw >= nx*ny*nz)
-        num_coords = nx*ny*nz;
+      if (num_coords_kw >= global_size)
+        num_coords = global_size;
       else
         num_coords = num_coords_kw;
     } else
       /* This is an lgr - always nx*ny*nz elements. */
-      num_coords = nx*ny*nz;
+      num_coords = global_size;
 
 
     // 3: Fetching the main chunk of cell data from the COORDS and
@@ -3303,7 +3305,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
 
       int ** coords    = (int **)util_calloc( num_coords , sizeof * coords  );
       float ** corners = (float**)util_calloc( num_coords , sizeof * corners );
-      int * actnum = (int *) util_malloc( nx*ny*nz * sizeof * actnum);
+      int * actnum = (int *) util_malloc( global_size * sizeof * actnum);
 
       for (index = 0; index < num_coords; index++) {
         const ecl_kw_type * coords_kw = ecl_file_iget_named_kw(ecl_file , COORDS_KW  , index + cell_offset);
@@ -3317,19 +3319,15 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
         int actnum_value = CELL_ACTIVE_MATRIX;
         if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
           actnum_value += CELL_ACTIVE_FRACTURE;
-        for (int g=0; g < nx*ny*nz; g++)
+        for (int g=0; g < global_size; g++)
           actnum[g] = actnum_value;
       } else {
-        for (int g=0; g < nx*ny*nz; g++)
-          actnum[g] = 0;
-        printf("**** %s: global_size = %d, num_coords = %d\n", __func__, nx*ny*nz, num_coords);
-        printf("**** %s: nx = %d, ny = %d, nz = %d\n", __func__, nx, ny, nz);
-        int global_size = nx*ny*nz;
-        int nz_ = nz;
-        if (dualp_flag != FILEHEAD_SINGLE_POROSITY) {
+        if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
           global_size /= 2;
-          nz_ /= 2;
-        }
+        for (int g=0; g < global_size; g++)
+          actnum[g] = 0;
+        printf("**** %s: global_size = %d, num_coords = %d\n", __func__, global_size, num_coords);
+        printf("**** %s: nx = %d, ny = %d, nz = %d\n", __func__, nx, ny, nz);
         
         for (index = 0; index < num_coords; index++) {
           int i = coords[index][0] - 1;
@@ -3338,7 +3336,7 @@ static ecl_grid_type * ecl_grid_alloc_GRID__(ecl_grid_type * global_grid , const
           int global_index = i + j*nx + k*nx*ny;
           int actnum_value = CELL_ACTIVE_MATRIX;
 
-          if (k >= nz_) {
+          if (k >= nz) {
             actnum_value = CELL_ACTIVE_FRACTURE;
             global_index -= global_size;
           }
