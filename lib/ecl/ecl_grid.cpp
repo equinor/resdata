@@ -4059,9 +4059,6 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
   if (g1->global_size != g2->global_size)
     equal = false;
 
-  if (!equal)
-     printf("****** %s: Here %d\n", __func__, 0);
-
   // The name of the parent grid corresponds to a filename; they can be different.
   if (equal && g1->parent_grid) {
     if (!util_string_equal( g1->name , g2->name )) {
@@ -4070,9 +4067,6 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
         fprintf(stderr,"Difference in name %s <-> %s \n" , g1->name , g2->name);
     }
   }
-
-  if (!equal)
-     printf("****** %s: Here %d\n", __func__, 1);
 
   /*
     When .GRID files are involved this is hardwired to FILEHEAD_SINGLE_POROSITY.
@@ -4083,32 +4077,17 @@ static bool ecl_grid_compare__(const ecl_grid_type * g1 , const ecl_grid_type * 
       fprintf(stderr,"Dual porosity flags differ: %d / %d \n" , g1->dualp_flag , g2->dualp_flag);
   }
 
-  if (!equal)
-     printf("****** %s: Here %d\n", __func__, 2);
-
   if (equal)
     equal = ecl_grid_compare_cells(g1 , g2 , include_nnc , verbose);
-
-  if (!equal)
-     printf("****** %s: Here %d\n", __func__, 3);
 
   if (equal)
     equal = ecl_grid_compare_index( g1 , g2 , true /*verbose*/);
 
-  if (!equal)
-     printf("****** %s: Here %d\n", __func__, 4);
-
   if (equal)
     equal = ecl_grid_compare_coarse_cells( g1 , g2 , verbose );
 
-  if (!equal)
-     printf("****** %s: Here %d\n", __func__, 5);
-
   if (equal)
     equal = ecl_grid_compare_mapaxes( g1 , g2 , verbose );
-
-  if (!equal)
-     printf("****** %s: Here %d\n", __func__, 6);
 
   return equal;
 }
