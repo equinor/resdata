@@ -1,1 +1,1 @@
-python -c "import ert.ecl as ecl; s = ecl.EclSum('/Users/dhan/work/rmine/rmine-play/opm/flow/scripts/output_SPE1.DATA_20180823_105033/SPE1.DATA'); print(s)"
+python -c "import ert.ecl as ecl"

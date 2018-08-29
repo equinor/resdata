@@ -1,9 +1,5 @@
 import os
-import re
-import sys
-import platform
 import subprocess
-import pathlib
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -36,7 +32,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='dhan16opm_libecl',
-    version='0.1.1',
+    version='0.1.2',
     author_email='chandan.nath@gmail.com',
     description='libecl',
     long_description=open("README.md", "r").read(),
