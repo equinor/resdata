@@ -52,6 +52,12 @@ void test_1() {
 
     ecl_grid_free( grid );
 
+    //test upload ecl_grid without inactive cells
+    //-- ecl_grid_type * grid_small = ecl_grid_alloc_active_only(filename1);
+    //-- ecl_grid_free( grid_small );
+  
+    
+
   }
   test_work_area_free( work_area );
   
