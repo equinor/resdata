@@ -1584,7 +1584,8 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
                                             int ny,
                                             int nz,
                                             int lgr_nr,
-                                            bool init_valid) {
+                                            bool init_valid,
+                                            bool active_only = false) {
   ecl_grid_type * grid = (ecl_grid_type*)util_malloc(sizeof * grid );
   UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
   grid->active_size   = 0;
@@ -2447,7 +2448,7 @@ static ecl_grid_type * ecl_grid_alloc_GRDECL_data__(ecl_grid_type * global_grid,
                                                     const int * corsnum,
                                                     int lgr_nr) {
 
-  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , unit_system, actnum, dualp_flag , nx,ny,nz,lgr_nr,true);
+  ecl_grid_type * ecl_grid = ecl_grid_alloc_empty(global_grid , unit_system, actnum, dualp_flag , nx,ny,nz,lgr_nr,true, active_only);
   if (ecl_grid) {
     if (mapaxes != NULL)
       ecl_grid_init_mapaxes( ecl_grid , apply_mapaxes, mapaxes );
@@ -3709,15 +3710,18 @@ ecl_grid_type * ecl_grid_alloc_dx_dy_dz_tops( int nx, int ny , int nz , const do
    with these keywords.
 */
 
-ecl_grid_type * ecl_grid_alloc__(const char * grid_file , bool apply_mapaxes) {
+static ecl_grid_type * ecl_grid_alloc__(const char * grid_file , bool active_only, bool apply_mapaxes, const int * ext_actnum) {
   ecl_file_enum    file_type;
   ecl_grid_type  * ecl_grid = NULL;
 
   file_type = ecl_util_get_file_type(grid_file , NULL ,  NULL);
-  if (file_type == ECL_GRID_FILE)
+  if (file_type == ECL_GRID_FILE) {
     ecl_grid = ecl_grid_alloc_GRID(grid_file, apply_mapaxes);
+    if (ext_actnum)
+      ecl_grid_alloc_GRID_all_grids(grid_file);
+  }
   else if (file_type == ECL_EGRID_FILE)
-    ecl_grid = ecl_grid_alloc_EGRID(grid_file, apply_mapaxes);
+    ecl_grid = ecl_grid_alloc_EGRID_all_grids(grid_file, active_only, true, ext_actnum);
   else
     util_abort("%s must have .GRID or .EGRID file - %s not recognized \n", __func__ , grid_file);
 
@@ -3727,7 +3731,7 @@ ecl_grid_type * ecl_grid_alloc__(const char * grid_file , bool apply_mapaxes) {
 
 ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
   bool apply_mapaxes = true;
-  return ecl_grid_alloc__( grid_file , apply_mapaxes );
+  return ecl_grid_alloc__( grid_file , false, apply_mapaxes, NULL );
 }
 
 
@@ -3741,15 +3745,8 @@ ecl_grid_type * ecl_grid_alloc_active_only(const char * grid_file) {
 // if ext_actnum = NULL, actnum is taken from file, otherwise ext_actnums
 // determines which cells are active.
 ecl_grid_type * ecl_grid_alloc_ext_actnum(const char * grid_file, const int * ext_actnum) {
-  ecl_file_enum file_type = ecl_util_get_file_type(grid_file , NULL ,  NULL);
-  if (file_type == ECL_EGRID_FILE)
-    return ecl_grid_alloc_EGRID_all_grids(grid_file, false, true, ext_actnum);
-  else if (file_type == ECL_GRID_FILE)
-    ecl_grid_alloc_GRID_all_grids(grid_file);
-  else
-    util_abort("%s must have .EGRID file - %s not recognized \n", __func__ , grid_file);
-  
-  return NULL;
+  bool apply_mapaxes = true;
+  return ecl_grid_alloc__( grid_file , false, apply_mapaxes, ext_actnum);
 }
 
 
@@ -3943,7 +3940,7 @@ ecl_grid_type * ecl_grid_load_case__( const char * case_input , bool apply_mapax
   if (grid_file != NULL) {
 
     if (util_file_exists( grid_file ))
-      ecl_grid = ecl_grid_alloc__( grid_file , apply_mapaxes);
+      ecl_grid = ecl_grid_alloc__( grid_file , false, apply_mapaxes, NULL);
 
     free( grid_file );
   }
