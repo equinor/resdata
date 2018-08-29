@@ -2272,28 +2272,39 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid,
 
 
       for (k=0; k < nz; k++) {
-        double x[4][2];
-        double y[4][2];
-        double z[4][2];
 
-        {
-          int c;
-          for (c = 0; c < 2; c++) {
-            z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
-            z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
-            z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
-            z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+        bool set_cell = true;
+        if (actnum) {
+          if (active_only) {
+            int global_index = i + j*nx + k*nx*ny;
+            if (actnum[global_index] == 0)
+              set_cell = false;
           }
         }
+        if (set_cell) {
+          double x[4][2];
+          double y[4][2];
+          double z[4][2];
 
-        {
-          int ip;
-          for (ip = 0; ip <  4; ip++)
-            ecl_grid_pillar_cross_planes(&pillars[ip][0] , ex[ip], ey[ip] , ez[ip] , z[ip] , x[ip] , y[ip]);
+          {
+            int c;
+            for (c = 0; c < 2; c++) {
+              z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
+              z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
+              z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
+              z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+            }
+          }
+
+          {
+            int ip;
+            for (ip = 0; ip <  4; ip++)
+              ecl_grid_pillar_cross_planes(&pillars[ip][0] , ex[ip], ey[ip] , ez[ip] , z[ip] , x[ip] , y[ip]);
+          }
+
+          ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum , corsnum);
         }
-
-        ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum , corsnum);
-      }
+      } // end for(k = 0...
     }
   }
 }
@@ -2346,30 +2357,41 @@ static void ecl_grid_init_GRDECL_data_jslice(ecl_grid_type * ecl_grid,
         }
       }
 
-
-      for (k=0; k < nz; k++) {
-        double x[4][2];
-        double y[4][2];
-        double z[4][2];
-
-        {
-          int c;
-          for (c = 0; c < 2; c++) {
-            z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
-            z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
-            z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
-            z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+      
+      for (k=0; k < nz; k++) {  
+        
+        bool set_cell = true;
+        if (actnum) {
+          if (active_only) {
+            int global_index = i + j*nx + k*nx*ny;
+            if (actnum[global_index] == 0)
+              set_cell = false;
           }
         }
+        if (set_cell) {
 
-        {
-          int ip;
-          for (ip = 0; ip <  4; ip++)
-            ecl_grid_pillar_cross_planes(&pillars[ip][0] , ex[ip], ey[ip] , ez[ip] , z[ip] , x[ip] , y[ip]);
+          double x[4][2];
+          double y[4][2];
+          double z[4][2];
+          {
+            int c;
+            for (c = 0; c < 2; c++) {
+              z[0][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i            + c*4*nx*ny];
+              z[1][c] = zcorn[k*8*nx*ny + j*4*nx + 2*i  +  1      + c*4*nx*ny];
+              z[2][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i     + c*4*nx*ny];
+              z[3][c] = zcorn[k*8*nx*ny + j*4*nx + 2*nx + 2*i + 1 + c*4*nx*ny];
+            }
+          }
+
+          {
+            int ip;
+            for (ip = 0; ip <  4; ip++)
+              ecl_grid_pillar_cross_planes(&pillars[ip][0] , ex[ip], ey[ip] , ez[ip] , z[ip] , x[ip] , y[ip]);
+          }
+
+          ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum , corsnum);
         }
-
-        ecl_grid_set_cell_EGRID(ecl_grid , i , j , k , x , y , z , actnum , corsnum);
-      }
+      } // end for(k = 0...
     }
   }
 }
@@ -3706,6 +3728,11 @@ ecl_grid_type * ecl_grid_alloc__(const char * grid_file , bool apply_mapaxes) {
 ecl_grid_type * ecl_grid_alloc(const char * grid_file ) {
   bool apply_mapaxes = true;
   return ecl_grid_alloc__( grid_file , apply_mapaxes );
+}
+
+
+ecl_grid_type * ecl_grid_alloc_active_only(const char * grid_file) {
+  return NULL;
 }
 
 

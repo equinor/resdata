@@ -53,8 +53,12 @@ void test_1() {
     ecl_grid_free( grid );
 
     //test upload ecl_grid without inactive cells
-    //-- ecl_grid_type * grid_small = ecl_grid_alloc_active_only(filename1);
-    //-- ecl_grid_free( grid_small );
+    grid = ecl_grid_alloc_active_only(filename1);
+    //-- assert global size == 5;
+    //-- assert num active == 3;
+    //-- assert num fracture == 2;
+    //-- assert active index(3) == 1;
+    //-- assert fracture_index(2) == 1;
   
     
 
