@@ -32,7 +32,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='dhan16opm_libecl',
-    version='0.1.2',
+    version='0.1.5',
     author_email='chandan.nath@gmail.com',
     description='libecl',
     long_description=open("README.md", "r").read(),
