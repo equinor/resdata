@@ -714,13 +714,16 @@ struct ecl_grid_struct {
   char                * name;          /* the name of the file for the main grid - name of the lgr for lgrs. */
   int                   ny,nz,nx;
   int                   global_size;   /* == nx*ny*nz */
+  int                   active_size_all;        /* All cells active or as fracture */
   int                   active_size;
   int                   active_size_fracture;
   bool                * visited;                /* internal helper struct used when searching for index - can be NULL. */
   int                 * actnum;
-  int                 * index_map;              /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
-  int                 * inv_index_map;          /* this is list of total_active elements - which point back to the index_map. */
-
+  
+  int                 * index_all_map;          /* this a list of nx*ny*nz elements, where value -1 means inactive cell. (Actnum > 0).*/
+  int                 * inv_all_index_map;
+  int                 * index_map;              /* this a list of nx*ny*nz elements, where value -1 means inactive cell. (Actnum = 1 or 3).*/
+  int                 * inv_index_map;          /* this is list of total_active elements - which point back to the index_map. (Actnum = 2 or 3)*/
   int                 * fracture_index_map;     /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
   int                 * inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */
 
@@ -1110,6 +1113,11 @@ static void create_index_map(int global_size,
 static void ecl_grid_alloc_index_map(ecl_grid_type * grid, const int * actnum) {
   std::vector<int> index_map;
   std::vector<int> inv_index_map;
+
+  create_index_map(grid->global_size, actnum, CELL_ACTIVE_MATRIX + CELL_ACTIVE_FRACTURE, index_map, inv_index_map);
+  grid->index_all_map = Ecl::alloc_vector_content(index_map);
+  grid->inv_all_index_map = Ecl::alloc_vector_content(inv_index_map);
+  grid->active_size_all = inv_index_map.size();
 
   create_index_map(grid->global_size, actnum, CELL_ACTIVE_MATRIX, index_map, inv_index_map);
   grid->index_map = Ecl::alloc_vector_content(index_map);
@@ -1588,6 +1596,7 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
                                             bool active_only = false) {
   ecl_grid_type * grid = (ecl_grid_type*)util_malloc(sizeof * grid );
   UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
+  grid->active_size_all = 0;
   grid->active_size   = 0;
   grid->active_size_fracture = 0;
   grid->nx                    = nx;
@@ -1602,6 +1611,8 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
   grid->dualp_flag            = dualp_flag;
   grid->coord_kw              = NULL;
   grid->visited               = NULL;
+  grid->inv_all_index_map     = NULL;
+  grid->index_all_map         = NULL;
   grid->inv_index_map         = NULL;
   grid->index_map             = NULL;
   grid->fracture_index_map    = NULL;
@@ -4685,11 +4696,13 @@ int ecl_grid_get_block_count3d(const ecl_grid_type * grid , int i , int j, int k
 void ecl_grid_free(ecl_grid_type * grid) {
   ecl_grid_free_cells( grid );
   free(grid->actnum);
+
   free(grid->index_map);
   free(grid->inv_index_map);
 
   free(grid->fracture_index_map);
   free(grid->inv_fracture_index_map);
+
   free(grid->mapaxes);
 
   if (grid->values != NULL) {
