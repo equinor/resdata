@@ -94,8 +94,9 @@ bool path_stack_push( path_stack_type * path_stack , const char * path ) {
 
 void path_stack_push_cwd( path_stack_type * path_stack ) {
   char * cwd = util_alloc_cwd();
-  stringlist_append_owned_ref( path_stack->storage , cwd);
-  stringlist_append_ref( path_stack->stack , cwd );
+  stringlist_append_copy( path_stack->storage , cwd);
+  stringlist_append_copy( path_stack->stack , cwd );
+  free(cwd);
 }
 
 const char * path_stack_pop( path_stack_type * path_stack ) {
