@@ -99,15 +99,11 @@ void path_stack_push_cwd( path_stack_type * path_stack ) {
   free(cwd);
 }
 
-const char * path_stack_pop( path_stack_type * path_stack ) {
+void path_stack_pop( path_stack_type * path_stack ) {
   char * path = stringlist_pop( path_stack->stack );
-  if (util_chdir( path ) == 0)
-    return path;
-  else {
+  if (util_chdir( path ) != 0)
     // The directory has become inaccesible ...
     util_abort("%s: could not pop back to directory:%s Error:%s\n", __func__ , path , strerror( errno ));
-    return NULL;
-  }
 }
 
 
