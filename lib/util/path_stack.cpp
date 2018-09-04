@@ -42,7 +42,6 @@
 
 struct path_stack_struct {
   stringlist_type * stack;
-  stringlist_type * storage;
 };
 
 
@@ -54,21 +53,11 @@ struct path_stack_struct {
 path_stack_type * path_stack_alloc() {
   path_stack_type * path_stack = (path_stack_type*)util_malloc( sizeof * path_stack );
   path_stack->stack = stringlist_alloc_new();
-  path_stack->storage = stringlist_alloc_new();
   return path_stack;
 }
 
-/*
-   This will destroy the storage taken by the current path_stack
-   instance. This function will NOT pop any elements off the stack; so
-   if you have not manully clerad the stack with the right number of
-   path_stack_pop() calls, you will (probably) destroy the path stack
-   instance with an incorrect value of cwd.
-*/
-
 void path_stack_free( path_stack_type * path_stack ) {
   stringlist_free( path_stack->stack );
-  stringlist_free( path_stack->storage );
   free( path_stack );
 }
 
@@ -94,7 +83,6 @@ bool path_stack_push( path_stack_type * path_stack , const char * path ) {
 
 void path_stack_push_cwd( path_stack_type * path_stack ) {
   char * cwd = util_alloc_cwd();
-  stringlist_append_copy( path_stack->storage , cwd);
   stringlist_append_copy( path_stack->stack , cwd );
   free(cwd);
 }
