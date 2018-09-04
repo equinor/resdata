@@ -23,6 +23,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <vector>
+#include <string>
+#include <stack>
+
 #include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
 #include <ert/util/path_stack.hpp>
@@ -41,7 +45,7 @@
 
 
 struct path_stack_struct {
-  stringlist_type * stack;
+  std::stack<std::string, std::vector<std::string>> stack;
 };
 
 
@@ -51,14 +55,12 @@ struct path_stack_struct {
 */
 
 path_stack_type * path_stack_alloc() {
-  path_stack_type * path_stack = (path_stack_type*)util_malloc( sizeof * path_stack );
-  path_stack->stack = stringlist_alloc_new();
+  path_stack_type * path_stack = new path_stack_type();
   return path_stack;
 }
 
 void path_stack_free( path_stack_type * path_stack ) {
-  stringlist_free( path_stack->stack );
-  free( path_stack );
+  delete path_stack;
 }
 
 
@@ -83,24 +85,24 @@ bool path_stack_push( path_stack_type * path_stack , const char * path ) {
 
 void path_stack_push_cwd( path_stack_type * path_stack ) {
   char * cwd = util_alloc_cwd();
-  stringlist_append_copy( path_stack->stack , cwd );
+  path_stack->stack.push(cwd);
   free(cwd);
 }
 
 void path_stack_pop( path_stack_type * path_stack ) {
-  char * path = stringlist_pop( path_stack->stack );
-  if (util_chdir( path ) != 0)
+  const std::string& path = path_stack->stack.top();
+
+  if (util_chdir( path.c_str() ) != 0)
     // The directory has become inaccesible ...
-    util_abort("%s: could not pop back to directory:%s Error:%s\n", __func__ , path , strerror( errno ));
+    util_abort("%s: could not pop back to directory:%s Error:%s\n", __func__ , path.c_str() , strerror( errno ));
+
+  path_stack->stack.pop();
 }
 
 
 int path_stack_size( const path_stack_type * path_stack ) {
-  return stringlist_get_size( path_stack->stack );
+  return path_stack->stack.size();
 }
 
 
-const char * path_stack_peek( const path_stack_type * path_stack ) {
-  return stringlist_get_last( path_stack->stack );
-}
 
