@@ -59,4 +59,4 @@ correct version of `pycmake` into your *libecl* code:
 
 ### Installing the Python code ###
     * pip install .
-    * check with: source python/check_python
+    * check with: python -c "import ert.ecl as ecl"
