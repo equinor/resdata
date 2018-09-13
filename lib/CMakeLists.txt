@@ -215,19 +215,19 @@ install(DIRECTORY include/
 )
 install(DIRECTORY include/
         DESTINATION include
-        PATTERN *.hpp EXCLUDE
+        PATTERN *.hpp
 )
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
         DESTINATION include
         PATTERN *.h
 )
-
-if (ERT_BUILD_CXX)
-    install(DIRECTORY include/
-            DESTINATION include
-            PATTERN *.hpp
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
+        DESTINATION include
+        PATTERN *.hpp
 )
-endif ()
+
+
+
 
 if (NOT BUILD_TESTS)
     return ()
