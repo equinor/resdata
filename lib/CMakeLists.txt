@@ -426,7 +426,7 @@ foreach (name geo_util_xlines geo_polygon geo_polygon_collection)
 endforeach ()
 
 if (ERT_BUILD_CXX)
-    foreach (test ert_util_unique_ptr ert_util_test_area_xx)
+    foreach (test ert_util_unique_ptr)
         add_executable(${test} util/tests/${test}.cpp)
         target_link_libraries(${test} ecl)
         add_test(NAME ${test} COMMAND ${test})
