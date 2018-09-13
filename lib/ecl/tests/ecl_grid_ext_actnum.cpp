@@ -59,7 +59,7 @@ void test_1() {
     //-- assert num fracture == 2;
     //-- assert active index(3) == 1;
     //-- assert fracture_index(2) == 1;
-  
+    ecl_grid_free( grid );
     
 
   }
