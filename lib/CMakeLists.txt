@@ -55,8 +55,7 @@ if (ZLIB_FOUND)
 endif ()
 
 if (ERT_BUILD_CXX)
-    list(APPEND opt_srcs util/TestArea.cpp
-                         ecl/FortIO.cpp
+    list(APPEND opt_srcs ecl/FortIO.cpp
                          ecl/Smspec.cpp
                          ecl/EclFilename.cpp
 )
