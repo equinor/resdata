@@ -704,6 +704,7 @@ struct ecl_cell_struct {
 static ert_ecl_unit_enum ecl_grid_check_unit_system(const ecl_kw_type * gridunit_kw);
 static void          ecl_grid_init_mapaxes_data_float( const ecl_grid_type * grid , float * mapaxes);
 float *              ecl_grid_alloc_coord_data( const ecl_grid_type * grid );
+double *             ecl_grid_alloc_coord_double_data( const ecl_grid_type * grid );
 static const float * ecl_grid_get_mapaxes( const ecl_grid_type * grid );
 
 #define ECL_GRID_ID       991010
@@ -2593,7 +2594,7 @@ ecl_grid_type * ecl_grid_alloc_processed_copy( const ecl_grid_type * src_grid , 
     int nx,ny,nz,na;
     int zcorn_size = ecl_grid_get_zcorn_size( src_grid );
     float * zcorn_float = (float*)util_malloc( zcorn_size * sizeof * zcorn_float );
-    float * coord = ecl_grid_alloc_coord_data( src_grid );
+    double * coord = ecl_grid_alloc_coord_double_data( src_grid );
     float * mapaxes = NULL;
 
     if (ecl_grid_get_mapaxes( src_grid )) {
@@ -2604,7 +2605,19 @@ ecl_grid_type * ecl_grid_alloc_processed_copy( const ecl_grid_type * src_grid , 
     for (int i=0; i < zcorn_size; i++)
       zcorn_float[i] = zcorn[i];
 
-    grid = ecl_grid_alloc_GRDECL_data( nx , ny , nz , zcorn_float , coord , actnum , src_grid->use_mapaxes, mapaxes );
+    grid = ecl_grid_alloc_GRDECL_data__(NULL,
+                                        ECL_METRIC_UNITS,
+                                        FILEHEAD_SINGLE_POROSITY,
+                                        src_grid->use_mapaxes,
+                                        nx,
+                                        ny,
+                                        nz,
+                                        zcorn,
+                                        coord,
+                                        actnum,
+                                        mapaxes,
+                                        NULL,
+                                        0);
 
     free( mapaxes );
     free( coord );
@@ -6459,6 +6472,11 @@ void ecl_grid_init_coord_data_double( const ecl_grid_type * grid , double * coor
   }
 }
 
+double * ecl_grid_alloc_coord_double_data( const ecl_grid_type * grid ) {
+  double * coord = (double*) util_calloc( ecl_grid_get_coord_size(grid) , sizeof * coord );
+  ecl_grid_init_coord_data_double( grid , coord );
+  return coord;
+}
 
 
 float * ecl_grid_alloc_coord_data( const ecl_grid_type * grid ) {
