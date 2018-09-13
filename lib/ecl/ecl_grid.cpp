@@ -23,6 +23,8 @@
 #include <math.h>
 #include <vector>
 
+#include <cmath>
+
 #include <ert/util/util.h>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
@@ -2016,15 +2018,15 @@ bool ecl_grid_cell_in_coarse_group3( const ecl_grid_type * main_grid , int i , i
 static void ecl_grid_pillar_cross_planes(const point_type * p0,
                                          double e_x , double e_y , double e_z ,
                                          const double *z , double *x , double *y) {
-  int k;
-  if (e_z != 0) {
-    for (k=0; k < 2; k++) {
-      double t = (z[k] -  p0->z) / e_z;
-      x[k] = p0->x + t * e_x;
-      y[k] = p0->y + t * e_y;
-    }
-  } else {
-    for (k=0; k < 2; k++) {
+  double epsilon = 1e-9;
+    if (std::fabs(e_z) > epsilon) {
+      for (int k=0; k < 2; k++) {
+        double t = (z[k] -  p0->z) / e_z;
+        x[k] = p0->x + t * e_x;
+        y[k] = p0->y + t * e_y;
+      }
+    } else {
+      for (int k=0; k < 2; k++) {
       x[k] = p0->x;
       y[k] = p0->y;
     }
