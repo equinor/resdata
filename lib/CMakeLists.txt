@@ -55,7 +55,9 @@ if (ZLIB_FOUND)
 endif ()
 
 if (ERT_BUILD_CXX)
-    list(APPEND opt_srcs ecl/FortIO.cpp
+    list(APPEND opt_srcs util/TestArea.cpp
+                         ecl/FortIO.cpp
+                         ecl/Smspec.cpp
                          ecl/EclFilename.cpp
 )
 endif ()
@@ -213,19 +215,19 @@ install(DIRECTORY include/
 )
 install(DIRECTORY include/
         DESTINATION include
-        PATTERN *.hpp
+        PATTERN *.hpp EXCLUDE
 )
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
         DESTINATION include
         PATTERN *.h
 )
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
-        DESTINATION include
-        PATTERN *.hpp
+
+if (ERT_BUILD_CXX)
+    install(DIRECTORY include/
+            DESTINATION include
+            PATTERN *.hpp
 )
-
-
-
+endif ()
 
 if (NOT BUILD_TESTS)
     return ()
@@ -424,13 +426,13 @@ foreach (name geo_util_xlines geo_polygon geo_polygon_collection)
 endforeach ()
 
 if (ERT_BUILD_CXX)
-    foreach (test ert_util_unique_ptr)
+    foreach (test ert_util_unique_ptr ert_util_test_area_xx)
         add_executable(${test} util/tests/${test}.cpp)
         target_link_libraries(${test} ecl)
         add_test(NAME ${test} COMMAND ${test})
     endforeach()
 
-    foreach (test eclxx_kw eclxx_fortio eclxx_filename eclxx_types)
+    foreach (test eclxx_kw eclxx_fortio eclxx_smspec eclxx_filename eclxx_types)
         add_executable(${test} ecl/tests/${test}.cpp)
         target_link_libraries(${test} ecl)
         add_test(NAME ${test} COMMAND ${test})
