@@ -31,8 +31,8 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
-    name='dhan16opm_libecl',
-    version='0.1.5',
+    name='statoil_libecl',
+    version='0.1.1',
     author_email='chandan.nath@gmail.com',
     description='libecl',
     long_description=open("README.md", "r").read(),

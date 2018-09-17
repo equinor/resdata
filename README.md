@@ -58,5 +58,5 @@ correct version of `pycmake` into your *libecl* code:
 
 
 ### Installing the Python code ###
-    * pip install .
-    * check with: python -c "import ert.ecl as ecl"
+    * pip install statoil_libecl
+    * check with: python -c "from ecl.summary import EclSumVarType"
