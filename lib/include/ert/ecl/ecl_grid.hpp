@@ -134,6 +134,7 @@ extern "C" {
   int             ecl_grid_get_nz( const ecl_grid_type * grid );
   int             ecl_grid_get_nx( const ecl_grid_type * grid );
   int             ecl_grid_get_ny( const ecl_grid_type * grid );
+  int             ecl_grid_get_nactive_all( const ecl_grid_type * grid);
   int             ecl_grid_get_nactive( const ecl_grid_type * grid );
   int             ecl_grid_get_nactive_fracture( const ecl_grid_type * grid );
   int             ecl_grid_get_active_index(const ecl_grid_type *  , int  , int  , int );

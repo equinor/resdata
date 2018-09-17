@@ -1512,8 +1512,13 @@ UTIL_IS_INSTANCE_FUNCTION( ecl_grid , ECL_GRID_ID);
 
 static ecl_cell_type * ecl_grid_get_cell1(const ecl_grid_type * grid,
                                          int global_index) {
-  if (grid->active_only)
-    return &grid->global_cells[ grid->all_index_map[global_index] ];
+  if (grid->active_only) {
+    int index = grid->all_index_map[global_index];
+    if (index < 0)
+      return NULL;
+    else
+      return &grid->global_cells[index];
+  }
   else
     return &grid->global_cells[global_index];
 }
@@ -1565,18 +1570,21 @@ static void ecl_grid_free_cells( ecl_grid_type * grid ) {
 
 static bool ecl_grid_alloc_global_cells( ecl_grid_type * grid , bool init_valid ) {
   if (grid->active_only)
-    grid->global_cells = (ecl_cell_type*)malloc(grid->active_size_all * sizeof * grid->global_cells );
+    grid->num_cells = grid->active_size_all;
   else
-    grid->global_cells = (ecl_cell_type*)malloc(grid->global_size * sizeof * grid->global_cells );
+    grid->num_cells = grid->global_size;
+
+  grid->global_cells = (ecl_cell_type*)malloc(grid->num_cells * sizeof * grid->global_cells);
   if (!grid->global_cells)
     return false;
 
   for (int g=0; g < grid->global_size; g++) {
     ecl_cell_type * cell = ecl_grid_get_cell1( grid , g );
-    int active_index_fracture = (grid->fracture_index_map) ? grid->fracture_index_map[g] : -1;
-    int active_index = grid->index_map[g];
-
-    ecl_cell_init(cell,  active_index, active_index_fracture, init_valid);
+    if (cell) {
+      int active_index_fracture = (grid->fracture_index_map) ? grid->fracture_index_map[g] : -1;
+      int active_index = grid->index_map[g];
+      ecl_cell_init(cell,  active_index, active_index_fracture, init_valid);
+    }
   }
   return true;
 }
@@ -4816,6 +4824,10 @@ int ecl_grid_get_nx( const ecl_grid_type * grid ) {
 
 int ecl_grid_get_ny( const ecl_grid_type * grid ) {
   return grid->ny;
+}
+
+int ecl_grid_get_nactive_all( const ecl_grid_type * grid) {
+  return grid->active_size_all;
 }
 
 int ecl_grid_get_nactive( const ecl_grid_type * grid ) {
