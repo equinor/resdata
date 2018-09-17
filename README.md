@@ -59,4 +59,4 @@ correct version of `pycmake` into your *libecl* code:
 
 ### Installing the Python code ###
     * pip install statoil_libecl
-    * check with: python -c "from ecl.summary import EclSumVarType"
+    * check with: python -c "import ecl"
