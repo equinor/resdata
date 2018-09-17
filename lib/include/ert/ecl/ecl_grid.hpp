@@ -151,6 +151,7 @@ extern "C" {
   bool            ecl_grid_get_xyz_inside3(const ecl_grid_type * grid , int i , int j , int k , double *xpos , double *ypos , double *zpos);
 
   int             ecl_grid_get_global_size( const ecl_grid_type * ecl_grid );
+  int             ecl_grid_get_num_cells( const ecl_grid_type * ecl_grid );
   bool            ecl_grid_compare(const ecl_grid_type * g1 , const ecl_grid_type * g2 , bool include_lgr, bool include_nnc , bool verbose);
   int             ecl_grid_get_active_size( const ecl_grid_type * ecl_grid );
 

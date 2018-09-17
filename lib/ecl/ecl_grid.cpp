@@ -1728,19 +1728,21 @@ static void ecl_grid_set_cell_EGRID(ecl_grid_type * ecl_grid , int i, int j , in
   const int global_index   = ecl_grid_get_global_index__(ecl_grid , i , j  , k );
   ecl_cell_type * cell     = ecl_grid_get_cell1( ecl_grid , global_index );
 
-  int ip , iz;
-  for (iz = 0; iz < 2; iz++) {
-    for (ip = 0; ip < 4; ip++) {
-      int c = ip + iz * 4;
-      point_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
+  if (cell) {
+    int ip , iz;
+    for (iz = 0; iz < 2; iz++) {
+      for (ip = 0; ip < 4; ip++) {
+        int c = ip + iz * 4;
+        point_set(&cell->corner_list[c] , x[ip][iz] , y[ip][iz] , z[ip][iz]);
 
-      if (ecl_grid->use_mapaxes)
-        point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
+        if (ecl_grid->use_mapaxes)
+          point_mapaxes_transform( &cell->corner_list[c] , ecl_grid->origo , ecl_grid->unit_x , ecl_grid->unit_y );
+      }
     }
-  }
 
-  if (corsnum != NULL)
-    cell->coarse_group = corsnum[ global_index ] - 1;
+    if (corsnum != NULL)
+      cell->coarse_group = corsnum[ global_index ] - 1;
+  }
 }
 
 
@@ -5604,6 +5606,11 @@ const char * ecl_grid_get_name( const ecl_grid_type * ecl_grid ) {
 
 int ecl_grid_get_global_size( const ecl_grid_type * ecl_grid ) {
   return ecl_grid->nx * ecl_grid->ny * ecl_grid->nz;
+}
+
+
+int ecl_grid_get_num_cells( const ecl_grid_type * ecl_grid ) {
+  return ecl_grid->num_cells;
 }
 
 int ecl_grid_get_active_size( const ecl_grid_type * ecl_grid ) {

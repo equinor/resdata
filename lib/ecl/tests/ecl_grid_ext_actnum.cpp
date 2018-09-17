@@ -94,10 +94,10 @@ void test_2() {
 
     
     ecl_grid_type * grid = ecl_grid_alloc_active_only(filename1);
-    test_assert_int_equal( ecl_grid_get_nactive_all(grid), 4);
+    test_assert_int_equal( ecl_grid_get_num_cells(grid), 4);
     
 
-    //ecl_grid_free( grid );
+    ecl_grid_free( grid );
 
   }
   test_work_area_free( work_area );
@@ -105,6 +105,6 @@ void test_2() {
 
 
 int main() {
-  test_1();
+  //test_1();
   test_2();
 }
