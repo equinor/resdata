@@ -120,7 +120,6 @@ def load(name):
     except ImportError:
         # For pip installs, setup.py puts the shared lib in this directory
         own_dir=os.path.dirname(os.path.abspath(__file__))
-        sys.stderr.write("Warning: Loading %s from path=%s failed. Trying to load from path=%s...\n" % (name, ecl_lib_path, own_dir))
         return cwrapload(name, path=own_dir, so_version=ert_so_version)
 
 class EclPrototype(Prototype):
