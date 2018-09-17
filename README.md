@@ -57,4 +57,6 @@ correct version of `pycmake` into your *libecl* code:
     git submodule update --init pycmake
 
 
-
+### Installing the Python code ###
+    * pip install statoil_libecl
+    * check with: python -c "import ecl"
