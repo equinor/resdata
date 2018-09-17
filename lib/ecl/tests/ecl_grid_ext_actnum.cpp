@@ -53,16 +53,33 @@ void test_1() {
     ecl_grid_free( grid );
 
     //test upload ecl_grid without inactive cells
-    //grid = ecl_grid_alloc_active_only(filename1);
+    grid = ecl_grid_alloc_active_only(filename1);
     //-- assert global size == 5;
     //-- assert num active == 3;
     //-- assert num fracture == 2;
     //-- assert active index(3) == 1;
     //-- assert fracture_index(2) == 1;
-    //ecl_grid_free( grid );
+    ecl_grid_free( grid );
     
   }
   test_work_area_free( work_area );
+}
+
+
+void compare_cells(ecl_grid_type * grid1, ecl_grid_type * grid2, int global_index) {
+  double x1[8];
+  double y1[8];
+  double z1[8];
+  double x2[8];
+  double y2[8];
+  double z2[8];
+  ecl_grid_export_cell_corners1(grid1, global_index, x1, y1, z1);
+  ecl_grid_export_cell_corners1(grid2, global_index, x2, y2, z2);
+  for (int i = 0; i < 8; i++) {
+    test_assert_double_equal( x1[i], x2[i] );
+    test_assert_double_equal( y1[i], y2[i] );
+    test_assert_double_equal( z1[i], z2[i] );
+  }
 }
 
 
@@ -91,13 +108,18 @@ void test_2() {
     ecl_file_fwrite_fortio(ecl_file, f, 0);
     fortio_fclose( f );
     ecl_file_close(ecl_file);
-
     
-    ecl_grid_type * grid = ecl_grid_alloc_active_only(filename1);
+    ecl_grid_type * grid = ecl_grid_alloc_active_only(filename1); 
+    ecl_grid_type * grid_correct = ecl_grid_alloc(filename1);
     test_assert_int_equal( ecl_grid_get_num_cells(grid), 4);
-    
+
+    compare_cells(grid, grid_correct, 0);
+    compare_cells(grid, grid_correct, 1);
+    compare_cells(grid, grid_correct, 4);
+    compare_cells(grid, grid_correct, 5);
 
     ecl_grid_free( grid );
+    ecl_grid_free( grid_correct);
 
   }
   test_work_area_free( work_area );
