@@ -1106,7 +1106,8 @@ static void create_index_map(int global_size,
       }
     }
   } else {
-    std::iota(index_map.begin(), index_map.end(), 0);
+    for (size_t i = 0; i < index_map.size(); i++)
+      index_map[i] = i;
     inv_index_map = index_map;
   }
 }
