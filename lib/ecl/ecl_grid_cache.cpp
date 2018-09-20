@@ -27,7 +27,8 @@
 #include <ert/ecl/ecl_util.hpp>
 #include <ert/ecl/ecl_file.hpp>
 #include <ert/ecl/ecl_grid.hpp>
-#include <ert/ecl/ecl_grid_cache.hpp>
+
+#include "detail/ecl/ecl_grid_cache.hpp"
 
 
 

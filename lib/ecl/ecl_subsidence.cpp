@@ -32,10 +32,10 @@
 #include <ert/ecl/ecl_grid.hpp>
 #include <ert/ecl/ecl_region.hpp>
 #include <ert/ecl/ecl_subsidence.hpp>
-#include <ert/ecl/ecl_grid_cache.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
 #include <ert/ecl/ecl_grav_common.hpp>
 
+#include "detail/ecl/ecl_grid_cache.hpp"
 
 /**
    This file contains datastructures for calculating changes in

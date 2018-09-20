@@ -20,13 +20,14 @@
 #ifndef ERT_ECL_GRAV_COMMON_H
 #define ERT_ECL_GRAV_COMMON_H
 
+#include <stdbool.h>
+
+#include <ert/ecl/ecl_file.hpp>
+#include "detail/ecl/ecl_grid_cache.hpp"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stdbool.h>
-
-#include <ert/ecl/ecl_grid_cache.hpp>
-#include <ert/ecl/ecl_file.hpp>
 
 bool * ecl_grav_common_alloc_aquifer_cell(const ecl_grid_cache_type * grid_cache,
                                           const ecl_file_type * init_file);

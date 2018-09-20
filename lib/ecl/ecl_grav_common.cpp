@@ -26,10 +26,10 @@
 #include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/ecl_file.hpp>
 #include <ert/ecl/ecl_region.hpp>
-#include <ert/ecl/ecl_grid_cache.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
 #include <ert/ecl/ecl_grav_common.hpp>
 
+#include "detail/ecl/ecl_grid_cache.hpp"
 /*
   This file contains code which is common to both the ecl_grav
   implementation for gravity changes, and the ecl_subsidence
