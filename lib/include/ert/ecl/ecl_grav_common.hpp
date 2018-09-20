@@ -29,26 +29,26 @@
 extern "C" {
 #endif
 
-bool * ecl_grav_common_alloc_aquifer_cell(const ecl_grid_cache_type * grid_cache,
-                                          const ecl_file_type * init_file);
+  bool * ecl_grav_common_alloc_aquifer_cell(const ecl::ecl_grid_cache& grid_cache,
+                                            const ecl_file_type * init_file);
 
-double ecl_grav_common_eval_biot_savart(const ecl_grid_cache_type * grid_cache,
-                                        ecl_region_type * region,
-                                        const bool * aquifer,
-                                        const double * weight,
-                                        double utm_x,
-                                        double utm_y,
-                                        double depth);
+  double ecl_grav_common_eval_biot_savart(const ecl::ecl_grid_cache& grid_cache,
+                                          ecl_region_type * region,
+                                          const bool * aquifer,
+                                          const double * weight,
+                                          double utm_x,
+                                          double utm_y,
+                                          double depth);
 
-double ecl_grav_common_eval_geertsma(const ecl_grid_cache_type * grid_cache,
-                                     ecl_region_type * region,
-                                     const bool * aquifer,
-                                     const double * weight,
-                                     double utm_x,
-                                     double utm_y,
-                                     double depth,
-                                     double poisson_ratio,
-                                     double seabed);
+  double ecl_grav_common_eval_geertsma(const ecl::ecl_grid_cache& grid_cache,
+                                       ecl_region_type * region,
+                                       const bool * aquifer,
+                                       const double * weight,
+                                       double utm_x,
+                                       double utm_y,
+                                       double depth,
+                                       double poisson_ratio,
+                                       double seabed);
 
 #ifdef __cplusplus
 }

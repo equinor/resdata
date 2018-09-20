@@ -20,28 +20,30 @@
 #ifndef ERT_ECL_GRID_CACHE_H
 #define ERT_ECL_GRID_CACHE_H
 
+#include <vector>
+
 #include <ert/ecl/ecl_grid.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace ecl {
+  class ecl_grid_cache {
+  public:
+    ecl_grid_cache(const ecl_grid_type * grid);
 
-  typedef struct ecl_grid_cache_struct ecl_grid_cache_type;
+    const std::vector<double>& volume() const;
+    const std::vector<double>& xpos() const { return this->xp; }
+    const std::vector<double>& ypos() const { return this->yp; }
+    const std::vector<double>& zpos() const { return this->zp; }
+    const std::vector<int>& global_index( ) const { return this->gi; }
+    int size() const { return this->xp.size(); }
 
-
-  ecl_grid_cache_type  * ecl_grid_cache_alloc( const ecl_grid_type * grid );
-  int                    ecl_grid_cache_get_size( const ecl_grid_cache_type * grid_cache );
-  int                    ecl_grid_cache_iget_global_index( const ecl_grid_cache_type * grid_cache , int active_index);
-  const int            * ecl_grid_cache_get_global_index( const ecl_grid_cache_type * grid_cache );
-  const double         * ecl_grid_cache_get_xpos( const ecl_grid_cache_type * grid_cache );
-  const double         * ecl_grid_cache_get_ypos( const ecl_grid_cache_type * grid_cache );
-  const double         * ecl_grid_cache_get_zpos( const ecl_grid_cache_type * grid_cache );
-  const double         * ecl_grid_cache_get_volume( const ecl_grid_cache_type * grid_cache );
-  void                   ecl_grid_cache_free( ecl_grid_cache_type * grid_cache );
-
-
-#ifdef __cplusplus
+  private:
+    const ecl_grid_type * grid;
+    std::vector<int> gi;
+    std::vector<double> xp;
+    std::vector<double> yp;
+    std::vector<double> zp;
+    mutable std::vector<double> v;
+  };
 }
-#endif
 
 #endif
