@@ -61,7 +61,8 @@ install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDA_OS}-x86_64.sh -O miniconda.sh;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3.6-latest-${CONDA_OS}-x86_64.sh -O miniconda.sh;
+      wget https://repo.continuum.io/miniconda/Miniconda-3.6.0-Linux-x86_64.sh -O miniconda.sh;
+      #wget https://repo.continuum.io/miniconda/Miniconda3.6-latest-${CONDA_OS}-x86_64.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export CONDA_HOME="$HOME/miniconda"
@@ -78,4 +79,5 @@ before_script:
   - wget https://raw.githubusercontent.com/Statoil/ert/master/travis/build_total.py
 
 script:
+  - python --version
   - python build_total.py ecl ${TEST_SUITE}
