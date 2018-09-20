@@ -24,7 +24,6 @@
 
 #include <ert/geometry/geo_polygon.hpp>
 
-#include <ert/ecl/ecl_box.hpp>
 #include <ert/ecl/ecl_grid.hpp>
 #include <ert/ecl/layer.hpp>
 
