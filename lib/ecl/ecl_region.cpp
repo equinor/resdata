@@ -645,12 +645,12 @@ static void ecl_region_select_from_box__( ecl_region_type * region , const ecl_b
 }
 
 
-void ecl_region_select_from_box( ecl_region_type * region , const ecl_box_type * ecl_box ) {
+static void ecl_region_select_from_box( ecl_region_type * region , const ecl_box_type * ecl_box ) {
   ecl_region_select_from_box__( region , ecl_box , true );
 }
 
 
-void ecl_region_deselect_from_box( ecl_region_type * region , const ecl_box_type * ecl_box ) {
+static void ecl_region_deselect_from_box( ecl_region_type * region , const ecl_box_type * ecl_box ) {
   ecl_region_select_from_box__( region , ecl_box , false );
 }
 /*****************************************************************/
