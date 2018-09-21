@@ -67,6 +67,7 @@ install:
   - export CONDA_HOME="$HOME/miniconda"
   - export PATH="$CONDA_HOME/bin:$PATH"
   - hash -r
+  - python --version
   - pip install -r requirements.txt
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
