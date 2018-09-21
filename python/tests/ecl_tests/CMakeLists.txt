@@ -1,6 +1,7 @@
 set(TEST_SOURCES
     __init__.py
     test_deprecation.py
+    test_ecl_ecl.py
     test_removed.py
     test_ecl_3dkw.py
     test_ecl_file_statoil.py
@@ -74,6 +75,10 @@ addPythonTest(tests.ecl_tests.test_geertsma.GeertsmaTest)
 addPythonTest(tests.ecl_tests.test_ecl_type.EclDataTypeTest)
 addPythonTest(tests.ecl_tests.test_region.RegionTest)
 addPythonTest(tests.ecl_tests.test_debug.DebugTest)
+
+if (INSTALL_ERT_LEGACY)
+  addPythonTest(tests.ecl_tests.test_ecl_ecl.EclEclTest)
+endif()
 
 
 addPythonTest(tests.ecl_tests.test_ecl_file_statoil.EclFileStatoilTest)
