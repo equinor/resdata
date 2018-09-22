@@ -58,7 +58,7 @@ struct smspec_node_struct {
   std::string            keyword;            /* The value of the KEYWORDS vector for this elements. */
   std::string            unit;               /* The value of the UNITS vector for this elements. */
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS vector. */
-  char                 * lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
+  std::string            lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
   int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
 
   /*------------------------------------------- All members below this line are *derived* quantities. */
@@ -141,11 +141,11 @@ char * smspec_alloc_aquifer_key( const char * join_string , const std::string& k
 }
 
 
-char * smspec_alloc_local_block_key( const char * join_string , const std::string& keyword , const char * lgr_name , int i , int j , int k) {
+char * smspec_alloc_local_block_key( const char * join_string , const std::string& keyword , const std::string& lgr_name , int i , int j , int k) {
   return util_alloc_sprintf(ECL_SUM_KEYFMT_LOCAL_BLOCK ,
                             keyword.c_str() ,
                             join_string ,
-                            lgr_name ,
+                            lgr_name.c_str() ,
                             join_string ,
                             i,j,k);
 }
@@ -252,24 +252,24 @@ char * smspec_alloc_segment_key( const char * join_string , const std::string& k
 }
 
 
-char * smspec_alloc_local_well_key( const char * join_string , const std::string& keyword , const char * lgr_name , const std::string& wgname) {
+char * smspec_alloc_local_well_key( const char * join_string , const std::string& keyword , const std::string& lgr_name , const std::string& wgname) {
   if (wgname.size() > 0)
     return util_alloc_sprintf( ECL_SUM_KEYFMT_LOCAL_WELL ,
                                keyword.c_str() ,
                                join_string ,
-                               lgr_name ,
+                               lgr_name.c_str() ,
                                join_string ,
                                wgname.c_str());
   else
     return NULL;
 }
 
-char * smspec_alloc_local_completion_key( const char * join_string, const std::string& keyword , const char * lgr_name , const std::string& wgname , int i , int j , int k) {
+char * smspec_alloc_local_completion_key( const char * join_string, const std::string& keyword , const std::string& lgr_name , const std::string& wgname , int i , int j , int k) {
   if (wgname.size() > 0)
     return util_alloc_sprintf(ECL_SUM_KEYFMT_LOCAL_COMPLETION ,
                               keyword.c_str(),
                               join_string ,
-                              lgr_name ,
+                              lgr_name.c_str() ,
                               join_string ,
                               wgname.c_str(),
                               join_string ,
@@ -396,7 +396,6 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
   node->gen_key2      = NULL;
 
   node->var_type      = ECL_SMSPEC_INVALID_VAR;
-  node->lgr_name      = NULL;
   node->lgr_ijk       = NULL;
 
   smspec_node_set_invalid_flags( node );
@@ -410,8 +409,8 @@ static void smspec_node_set_wgname( smspec_node_type * index , const char * wgna
 
 
 
-static void smspec_node_set_lgr_name( smspec_node_type * index , const char * lgr_name ) {
-  index->lgr_name = util_realloc_string_copy(index->lgr_name , lgr_name);
+static void smspec_node_set_lgr_name( smspec_node_type * index , const std::string& lgr_name ) {
+  index->lgr_name = lgr_name;
 }
 
 
@@ -828,7 +827,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
         memcpy( copy->ijk, node->ijk, 3 * sizeof( * node->ijk ) );
     }
 
-    copy->lgr_name = util_alloc_string_copy( node->lgr_name );
+    copy->lgr_name = node->lgr_name;
     copy->lgr_ijk = NULL;
     if( node->lgr_ijk ) {
         copy->lgr_ijk = (int*)util_calloc( 3 , sizeof * node->lgr_ijk );
@@ -848,7 +847,6 @@ void smspec_node_free( smspec_node_type * index ) {
   free( index->ijk );
   free( index->gen_key1 );
   free( index->gen_key2 );
-  free( index->lgr_name );
   free( index->lgr_ijk );
 
   delete index;
@@ -917,11 +915,6 @@ const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
   return smspec_node->unit.c_str();
 }
 
-static void smspec_node_set_unit( smspec_node_type * smspec_node , const std::string& unit) {
-  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  smspec_node->unit = unit.substr(0,8);
-}
-
 void smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit) {
   // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
   std::string tmp = unit;
@@ -935,7 +928,7 @@ const int* smspec_node_get_ijk( const smspec_node_type * smspec_node ) {
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
 const char* smspec_node_get_lgr_name( const smspec_node_type * smspec_node ) {
-  return smspec_node->lgr_name;
+  return smspec_node->lgr_name.c_str();
 }
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
@@ -1058,7 +1051,7 @@ static int smspec_node_cmp_KEYWORD_LGR_LGRIJK( const smspec_node_type * node1, c
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int lgr_cmp = strcmp( node1->lgr_name , node2->lgr_name);
+  int lgr_cmp = node1->lgr_name.compare( node2->lgr_name );
   if (lgr_cmp != 0)
     return lgr_cmp;
 
@@ -1087,7 +1080,7 @@ static int smspec_node_cmp_KEYWORD_WGNAME_LGR( const smspec_node_type * node1, c
   if (wgname_cmp != 0)
     return wgname_cmp;
 
-  return strcmp( node1->lgr_name , node2->lgr_name);
+  return node1->lgr_name.compare(node2->lgr_name);
 }
 
 
@@ -1100,7 +1093,7 @@ static int smspec_node_cmp_KEYWORD_WGNAME_LGR_LGRIJK( const smspec_node_type * n
   if (wgname_cmp != 0)
     return wgname_cmp;
 
-  int lgr_cmp = strcmp( node1->lgr_name , node2->lgr_name);
+  int lgr_cmp = node1->lgr_name.compare(node2->lgr_name);
   if (lgr_cmp != 0)
     return lgr_cmp;
 
