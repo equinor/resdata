@@ -21,6 +21,8 @@
 #include <math.h>
 #include <time.h>
 
+#include <string>
+
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
 #include <ert/util/vector.hpp>
@@ -51,7 +53,7 @@
 
 struct smspec_node_struct {
   UTIL_TYPE_ID_DECLARATION;
-  char                 * wgname;             /* The value of the WGNAMES vector for this element. */
+  std::string            wgname;
   char                 * keyword;            /* The value of the KEYWORDS vector for this elements. */
   char                 * unit;               /* The value of the UNITS vector for this elements. */
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS vector. */
@@ -181,12 +183,12 @@ char * smspec_alloc_block_ijk_key( const char * join_string , const char * keywo
 
 
 
-char * smspec_alloc_completion_ijk_key( const char * join_string , const char * keyword, const char * wgname , int i , int j , int k) {
-  if (wgname != NULL)
+char * smspec_alloc_completion_ijk_key( const char * join_string , const char * keyword, const std::string& wgname , int i , int j , int k) {
+  if (wgname.size() > 0)
     return util_alloc_sprintf( ECL_SUM_KEYFMT_COMPLETION_IJK ,
                                keyword ,
                                join_string ,
-                               wgname ,
+                               wgname.c_str(),
                                join_string ,
                                i , j , k );
   else
@@ -195,12 +197,12 @@ char * smspec_alloc_completion_ijk_key( const char * join_string , const char * 
 
 
 
-char * smspec_alloc_completion_num_key( const char * join_string , const char * keyword, const char * wgname , int num) {
-  if (wgname != NULL)
+char * smspec_alloc_completion_num_key( const char * join_string , const char * keyword, const std::string& wgname , int num) {
+  if (wgname.size() > 0)
     return util_alloc_sprintf(ECL_SUM_KEYFMT_COMPLETION_NUM,
                               keyword ,
                               join_string ,
-                              wgname ,
+                              wgname.c_str() ,
                               join_string ,
                               num );
   else
@@ -211,20 +213,24 @@ char * smspec_alloc_completion_num_key( const char * join_string , const char * 
   To support ECLIPSE behaviour where new wells/groups can be created
   during the simulation it must be possible to create a smspec node
   with an initially unknown well/group name; all gen_key formats which
-  use the wgname value must therefore accept a NULL value for wgname.
+  use the wgname value must therefore accept a NULL value for wgname. HMM: Uncertain about this?
 */
 
-static char * smspec_alloc_wgname_key( const char * join_string , const char * keyword , const char * wgname) {
-  if (wgname != NULL)
+static char * smspec_alloc_wgname_key( const char * join_string , const char * keyword , const std::string& wgname) {
+  if (wgname.size() > 0)
     return util_alloc_sprintf(ECL_SUM_KEYFMT_WELL,
                               keyword ,
                               join_string ,
-                              wgname );
+                              wgname.c_str() );
   else
     return NULL;
 }
 
-char * smspec_alloc_group_key( const char * join_string , const char * keyword , const char * wgname) {
+char * smspec_alloc_group_key( const char * join_string , const char * keyword , const std::string& wgname) {
+  return smspec_alloc_wgname_key( join_string , keyword , wgname );
+}
+
+char * smspec_alloc_well_key( const char * join_string , const char * keyword , const std::string& wgname) {
   return smspec_alloc_wgname_key( join_string , keyword , wgname );
 }
 
@@ -232,12 +238,12 @@ char * smspec_alloc_well_key( const char * join_string , const char * keyword , 
   return smspec_alloc_wgname_key( join_string , keyword , wgname );
 }
 
-char * smspec_alloc_segment_key( const char * join_string , const char * keyword , const char * wgname , int num) {
-  if (wgname != NULL)
+char * smspec_alloc_segment_key( const char * join_string , const char * keyword , const std::string& wgname , int num) {
+  if (wgname.size() > 0)
     return util_alloc_sprintf(ECL_SUM_KEYFMT_SEGMENT ,
                               keyword ,
                               join_string ,
-                              wgname ,
+                              wgname.c_str(),
                               join_string ,
                               num );
   else
@@ -245,26 +251,26 @@ char * smspec_alloc_segment_key( const char * join_string , const char * keyword
 }
 
 
-char * smspec_alloc_local_well_key( const char * join_string , const char * keyword , const char * lgr_name , const char * wgname) {
-  if (wgname != NULL)
+char * smspec_alloc_local_well_key( const char * join_string , const char * keyword , const char * lgr_name , const std::string& wgname) {
+  if (wgname.size() > 0)
     return util_alloc_sprintf( ECL_SUM_KEYFMT_LOCAL_WELL ,
                                keyword ,
                                join_string ,
                                lgr_name ,
                                join_string ,
-                               wgname);
+                               wgname.c_str());
   else
     return NULL;
 }
 
-char * smspec_alloc_local_completion_key( const char * join_string, const char * keyword , const char * lgr_name , const char * wgname , int i , int j , int k) {
-  if (wgname != NULL)
+char * smspec_alloc_local_completion_key( const char * join_string, const char * keyword , const char * lgr_name , const std::string& wgname , int i , int j , int k) {
+  if (wgname.size() > 0)
     return util_alloc_sprintf(ECL_SUM_KEYFMT_LOCAL_COMPLETION ,
                               keyword  ,
                               join_string ,
                               lgr_name ,
                               join_string ,
-                              wgname ,
+                              wgname.c_str(),
                               join_string ,
                               i,j,k);
   else
@@ -380,13 +386,12 @@ float smspec_node_get_default( const smspec_node_type * smspec_node ) {
 
 
 smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) {
-  smspec_node_type * node = (smspec_node_type*)util_malloc( sizeof * node );
+  smspec_node_type * node = new smspec_node_type();
 
   UTIL_TYPE_ID_INIT( node , SMSPEC_TYPE_ID);
   node->params_index  = params_index;
   smspec_node_set_default( node , default_value );
 
-  node->wgname        = NULL;
   node->ijk           = NULL;
 
   node->gen_key1      = NULL;
@@ -404,7 +409,7 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
 
 
 static void smspec_node_set_wgname( smspec_node_type * index , const char * wgname ) {
-  index->wgname = util_realloc_string_copy(index->wgname , wgname );
+  index->wgname = wgname;
 }
 
 
@@ -816,7 +821,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
     copy->gen_key1 = util_alloc_string_copy( node->gen_key1 );
     copy->gen_key2 = util_alloc_string_copy( node->gen_key2 );
     copy->var_type = node->var_type;
-    copy->wgname = util_alloc_string_copy( node->wgname );
+    copy->wgname = node->wgname;
     copy->keyword = util_alloc_string_copy( node->keyword );
     copy->unit = util_alloc_string_copy( node->unit );
     copy->num = node->num;
@@ -849,10 +854,10 @@ void smspec_node_free( smspec_node_type * index ) {
   free( index->ijk );
   free( index->gen_key1 );
   free( index->gen_key2 );
-  free( index->wgname );
   free( index->lgr_name );
   free( index->lgr_ijk );
-  free( index );
+
+  delete index;
 }
 
 void smspec_node_free__( void * arg ) {
@@ -884,7 +889,7 @@ const char * smspec_node_get_gen_key2( const smspec_node_type * smspec_node) {
 
 
 const char * smspec_node_get_wgname( const smspec_node_type * smspec_node) {
-  return smspec_node->wgname;
+  return smspec_node->wgname.c_str();
 }
 
 const char * smspec_node_get_keyword( const smspec_node_type * smspec_node) {
@@ -990,7 +995,7 @@ bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {
 
 void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) {
   fprintf(stream, "KEYWORD: %s \n",smspec_node->keyword);
-  fprintf(stream, "WGNAME : %s \n",smspec_node->wgname);
+  fprintf(stream, "WGNAME : %s \n",smspec_node->wgname.c_str());
   fprintf(stream, "UNIT   : %s \n",smspec_node->unit);
   fprintf(stream, "TYPE   : %d \n",smspec_node->var_type);
   fprintf(stream, "NUM    : %d \n\n",smspec_node->num);
@@ -1080,7 +1085,7 @@ static int smspec_node_cmp_KEYWORD_WGNAME_NUM( const smspec_node_type * node1, c
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int wgname_cmp = strcmp( node1->wgname , node2->wgname);
+  int wgname_cmp = node1->wgname.compare(node2->wgname);
   if (wgname_cmp != 0)
     return wgname_cmp;
 
@@ -1092,7 +1097,7 @@ static int smspec_node_cmp_KEYWORD_WGNAME_LGR( const smspec_node_type * node1, c
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int wgname_cmp = strcmp( node1->wgname , node2->wgname);
+  int wgname_cmp = node1->wgname.compare(node2->wgname);
   if (wgname_cmp != 0)
     return wgname_cmp;
 
@@ -1105,7 +1110,7 @@ static int smspec_node_cmp_KEYWORD_WGNAME_LGR_LGRIJK( const smspec_node_type * n
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int wgname_cmp = strcmp( node1->wgname , node2->wgname);
+  int wgname_cmp = node1->wgname.compare(node2->wgname);
   if (wgname_cmp != 0)
     return wgname_cmp;
 
@@ -1124,17 +1129,17 @@ static int smspec_node_cmp_KEYWORD_WGNAME( const smspec_node_type * node1, const
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  if (IS_DUMMY_WELL( node1->wgname )) {
-    if (IS_DUMMY_WELL( node2->wgname ))
+  if (IS_DUMMY_WELL( node1->wgname.c_str() )) {
+    if (IS_DUMMY_WELL( node2->wgname.c_str() ))
       return 0;
     else
       return 1;
   }
 
-  if (IS_DUMMY_WELL( node2->wgname ))
+  if (IS_DUMMY_WELL( node2->wgname.c_str() ))
     return -1;
 
-  return strcmp( node1->wgname , node2->wgname);
+  return node1->wgname.compare(node2->wgname);
 }
 
 
