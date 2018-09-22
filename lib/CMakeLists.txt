@@ -89,6 +89,7 @@ add_library(ecl util/rng.cpp
                 util/ecl_version.cpp
                 util/perm_vector.cpp
                 util/test_util.cpp
+                util/cxx_string_util.cpp
                 ${opt_srcs}
 
                 ecl/ecl_rsthead.cpp

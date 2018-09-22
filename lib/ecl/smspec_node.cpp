@@ -811,7 +811,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
   if( !node ) return NULL;
 
   {
-    smspec_node_type* copy = (smspec_node_type*)util_malloc( sizeof * copy );
+    smspec_node_type * copy = new smspec_node_type();
     UTIL_TYPE_ID_INIT( copy, SMSPEC_TYPE_ID );
     copy->gen_key1 = util_alloc_string_copy( node->gen_key1 );
     copy->gen_key2 = util_alloc_string_copy( node->gen_key2 );
