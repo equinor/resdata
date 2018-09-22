@@ -56,7 +56,7 @@ struct smspec_node_struct {
   UTIL_TYPE_ID_DECLARATION;
   std::string            wgname;
   std::string            keyword;            /* The value of the KEYWORDS vector for this elements. */
-  char                 * unit;               /* The value of the UNITS vector for this elements. */
+  std::string            unit;               /* The value of the UNITS vector for this elements. */
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS vector. */
   char                 * lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
   int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
@@ -396,7 +396,6 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
   node->gen_key2      = NULL;
 
   node->var_type      = ECL_SMSPEC_INVALID_VAR;
-  node->unit          = NULL;
   node->lgr_name      = NULL;
   node->lgr_ijk       = NULL;
 
@@ -562,9 +561,9 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
 
 
 
-static void smspec_node_common_init( smspec_node_type * node , ecl_smspec_var_type var_type , const char * keyword , const char * unit ) {
+static void smspec_node_common_init( smspec_node_type * node , ecl_smspec_var_type var_type , const char * keyword , const std::string& unit ) {
   if (node->var_type == ECL_SMSPEC_INVALID_VAR) {
-    smspec_node_set_unit( node , unit );
+    smspec_node_set_unit( node , unit.c_str() );
     smspec_node_set_keyword( node , keyword);
     node->var_type = var_type;
     smspec_node_set_flags( node );
@@ -820,7 +819,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
     copy->var_type = node->var_type;
     copy->wgname = node->wgname;
     copy->keyword = node->keyword;
-    copy->unit = util_alloc_string_copy( node->unit );
+    copy->unit = node->unit;
     copy->num = node->num;
 
     copy->ijk = NULL;
@@ -846,7 +845,6 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
 }
 
 void smspec_node_free( smspec_node_type * index ) {
-  free( index->unit );
   free( index->ijk );
   free( index->gen_key1 );
   free( index->gen_key2 );
@@ -916,15 +914,19 @@ bool smspec_node_is_historical( const smspec_node_type * smspec_node ){
 }
 
 const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
-  return smspec_node->unit;
+  return smspec_node->unit.c_str();
 }
 
-void smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit ) {
+static void smspec_node_set_unit( smspec_node_type * smspec_node , const std::string& unit) {
   // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  free( smspec_node->unit );
-  smspec_node->unit = util_alloc_substring_copy( unit , 0 , 8);
+  smspec_node->unit = unit.substr(0,8);
 }
 
+void smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit) {
+  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
+  std::string tmp = unit;
+  smspec_node->unit = tmp.substr(0,8);
+}
 
 // Will be NULL for smspec_nodes which do not have i,j,k
 const int* smspec_node_get_ijk( const smspec_node_type * smspec_node ) {
@@ -992,7 +994,7 @@ bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {
 void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) {
   fprintf(stream, "KEYWORD: %s \n",smspec_node->keyword.c_str());
   fprintf(stream, "WGNAME : %s \n",smspec_node->wgname.c_str());
-  fprintf(stream, "UNIT   : %s \n",smspec_node->unit);
+  fprintf(stream, "UNIT   : %s \n",smspec_node->unit.c_str());
   fprintf(stream, "TYPE   : %d \n",smspec_node->var_type);
   fprintf(stream, "NUM    : %d \n\n",smspec_node->num);
 }
