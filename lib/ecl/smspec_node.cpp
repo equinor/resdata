@@ -67,7 +67,7 @@ struct smspec_node_struct {
   std::string            gen_key1;           /* The main composite key, i.e. WWCT:OP3 for this element. */
   std::string            gen_key2;           /* Some of the ijk based elements will have both a xxx:i,j,k and a xxx:num key. Some of the region_2_region elements will have both a xxx:num and a xxx:r2-r2 key. Mostly NULL. */
   ecl_smspec_var_type    var_type;           /* The variable type */
-  int                  * ijk;                /* The ijk coordinates (NB: OFFSET 1) corresponding to the nums value - will be NULL if not relevant. */
+  std::array<int,3>      ijk;                /* The ijk coordinates (NB: OFFSET 1) corresponding to the nums value - will be NULL if not relevant. */
   bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
   bool                   total_variable;     /* Is this a total variable like WOPT? */
   bool                   historical;         /* Does the name end with 'H'? */
@@ -394,8 +394,6 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
   node->params_index  = params_index;
   smspec_node_set_default( node , default_value );
 
-  node->ijk           = NULL;
-
   node->var_type      = ECL_SMSPEC_INVALID_VAR;
   smspec_node_set_invalid_flags( node );
   return node;               // This is NOT usable
@@ -442,8 +440,6 @@ static void smspec_node_set_num( smspec_node_type * index , const int grid_dims[
   index->num = num;
   if ((index->var_type == ECL_SMSPEC_COMPLETION_VAR) || (index->var_type == ECL_SMSPEC_BLOCK_VAR)) {
     int global_index = num - 1;
-    index->ijk = (int*)util_calloc( 3 , sizeof * index->ijk );
-
     index->ijk[2] = global_index / ( grid_dims[0] * grid_dims[1] );   global_index -= index->ijk[2] * (grid_dims[0] * grid_dims[1]);
     index->ijk[1] = global_index /  grid_dims[0] ;                    global_index -= index->ijk[1] * grid_dims[0];
     index->ijk[0] = global_index;
@@ -816,13 +812,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
     copy->keyword = node->keyword;
     copy->unit = node->unit;
     copy->num = node->num;
-
-    copy->ijk = NULL;
-    if( node->ijk ) {
-        copy->ijk = (int*)util_calloc( 3 , sizeof * node->ijk );
-        memcpy( copy->ijk, node->ijk, 3 * sizeof( * node->ijk ) );
-    }
-
+    copy->ijk = node->ijk;
     copy->lgr_name = node->lgr_name;
     copy->lgr_ijk = node->lgr_ijk;
 
@@ -836,8 +826,6 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
 }
 
 void smspec_node_free( smspec_node_type * index ) {
-  free( index->ijk );
-
   delete index;
 }
 
@@ -922,9 +910,9 @@ void smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit) {
   smspec_node->unit = tmp.substr(0,8);
 }
 
-// Will be NULL for smspec_nodes which do not have i,j,k
+// Will be garbage for smspec_nodes which do not have i,j,k
 const int* smspec_node_get_ijk( const smspec_node_type * smspec_node ) {
-  return smspec_node->ijk;
+  return smspec_node->ijk.data();
 }
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
