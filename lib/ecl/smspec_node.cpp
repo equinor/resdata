@@ -23,6 +23,7 @@
 
 #include <string>
 #include <set>
+#include <array>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
@@ -59,7 +60,7 @@ struct smspec_node_struct {
   std::string            unit;               /* The value of the UNITS vector for this elements. */
   int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS vector. */
   std::string            lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
-  int                  * lgr_ijk;            /* The (i,j,k) coordinate, in the local grid, if this is a LGR variable. WIll be NULL for no-lgr variables. */
+  std::array<int,3>      lgr_ijk;
 
   /*------------------------------------------- All members below this line are *derived* quantities. */
 
@@ -396,8 +397,6 @@ smspec_node_type * smspec_node_alloc_new(int params_index, float default_value) 
   node->ijk           = NULL;
 
   node->var_type      = ECL_SMSPEC_INVALID_VAR;
-  node->lgr_ijk       = NULL;
-
   smspec_node_set_invalid_flags( node );
   return node;               // This is NOT usable
 }
@@ -415,9 +414,6 @@ static void smspec_node_set_lgr_name( smspec_node_type * index , const std::stri
 
 
 static void smspec_node_set_lgr_ijk( smspec_node_type * index , int lgr_i , int lgr_j , int lgr_k) {
-  if (index->lgr_ijk == NULL)
-    index->lgr_ijk = (int*)util_calloc( 3 , sizeof * index->lgr_ijk );
-
   index->lgr_ijk[0] = lgr_i;
   index->lgr_ijk[1] = lgr_j;
   index->lgr_ijk[2] = lgr_k;
@@ -828,11 +824,7 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
     }
 
     copy->lgr_name = node->lgr_name;
-    copy->lgr_ijk = NULL;
-    if( node->lgr_ijk ) {
-        copy->lgr_ijk = (int*)util_calloc( 3 , sizeof * node->lgr_ijk );
-        memcpy( copy->lgr_ijk, node->lgr_ijk, 3 * sizeof( * node->lgr_ijk ) );
-    }
+    copy->lgr_ijk = node->lgr_ijk;
 
     copy->rate_variable = node->rate_variable;
     copy->total_variable = node->total_variable;
@@ -845,7 +837,6 @@ smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
 
 void smspec_node_free( smspec_node_type * index ) {
   free( index->ijk );
-  free( index->lgr_ijk );
 
   delete index;
 }
@@ -941,9 +932,9 @@ const char* smspec_node_get_lgr_name( const smspec_node_type * smspec_node ) {
   return smspec_node->lgr_name.c_str();
 }
 
-// Will be NULL for smspec_nodes which are not related to an LGR.
+// Will be garbage for smspec_nodes which are not related to an LGR.
 const int* smspec_node_get_lgr_ijk( const smspec_node_type * smspec_node ) {
-  return smspec_node->lgr_ijk;
+  return smspec_node->lgr_ijk.data();
 }
 
 /*
