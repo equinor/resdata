@@ -511,7 +511,7 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
   case(ECL_SMSPEC_MISC_VAR):
     // KEYWORD
     /* Misc variable - i.e. date or CPU time ... */
-    smspec_node->gen_key1 = util_alloc_string_copy( smspec_node->keyword.c_str() );
+    smspec_node->gen_key1 = smspec_node->keyword;
     break;
   case(ECL_SMSPEC_BLOCK_VAR):
     // KEYWORD:NUM
