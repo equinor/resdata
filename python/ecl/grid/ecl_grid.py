@@ -27,6 +27,7 @@ import ctypes
 
 import warnings
 import numpy
+import pandas
 import sys
 import os.path
 import math
@@ -116,6 +117,7 @@ class EclGrid(BaseCClass):
     _export_actnum                = EclPrototype("ecl_kw_obj ecl_grid_alloc_actnum_kw(ecl_grid)")
     _export_mapaxes               = EclPrototype("ecl_kw_obj ecl_grid_alloc_mapaxes_kw(ecl_grid)")
     _get_unit_system              = EclPrototype("ecl_unit_enum ecl_grid_get_unit_system(ecl_grid)")
+    _export_index_frame           = EclPrototype("void ecl_grid_export_index(ecl_grid, int*, int*, bool)")
 
 
 
@@ -1254,6 +1256,18 @@ class EclGrid(BaseCClass):
 
         return self._create_volume_keyword(active_size)
 
+    def export_index_frame(self, active_only = False):
+        if active_only:
+            size = self.get_num_active()
+        else:
+            size = self.get_global_size()
+        indx = numpy.zeros(size, dtype=numpy.int32)
+        data = numpy.zeros([size, 4], dtype=numpy.int32)
+        self._export_index_frame( indx.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), active_only )
+        df = pandas.DataFrame(data=data, index=indx)
+        return df
+        
+ 
     def export_coord(self):
         return self._export_coord()
 

@@ -7090,4 +7090,24 @@ ecl_kw_type * ecl_grid_alloc_volume_kw( const ecl_grid_type * grid , bool active
   else
     return ecl_grid_alloc_volume_kw_global( grid );
 }
+
+
+//Note: index_data must be allocated w/ (4 * ecl_grid->total_active or ecl_grid->global_size) int32 data points.
+void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int * index_data , bool active_only) {
+  int pos_indx = 0;
+  int pos_data = 0;
+  for (int k = 0; k < grid->nz; k++)
+    for (int j = 0; j < grid->ny; j++)
+      for (int i = 0; i < grid->nx; i++) {
+        int g = ecl_grid_get_global_index__(grid, i, j, k);
+        if (!active_only || grid->cells[g].active_index[0] >= 0) {
+          global_index[pos_indx++] = g;
+          index_data[pos_data++] = i;
+          index_data[pos_data++] = j;
+          index_data[pos_data++] = k;
+          index_data[pos_data++] = grid->cells[g].active_index[0];
+        }          
+      }
+}
+
 //
