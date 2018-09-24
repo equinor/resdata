@@ -176,12 +176,6 @@ std::string smspec_alloc_region_2_region_num_key( const char * join_string , con
 
 
 
-std::string smspec_alloc_block_ijk_key( const char * join_string , const std::string& keyword , int i , int j , int k) {
-  return ecl::util::string_format(ECL_SUM_KEYFMT_BLOCK_IJK ,
-                                  keyword.c_str(),
-                                  join_string ,
-                                  i,j,k);
-}
 
 
 
@@ -236,11 +230,30 @@ std::string smspec_alloc_well_key( const char * join_string , const std::string&
   return smspec_alloc_wgname_key( join_string , keyword , wgname );
 }
 
+
+/*
+  The smspec_alloc_well_key and smspec_alloc_block_ijk_key() require C linkage due to external use.
+*/
+
 char * smspec_alloc_well_key( const char * join_string , const char * keyword , const char * wgname) {
   return util_alloc_sprintf( ECL_SUM_KEYFMT_WELL,
                              keyword,
                              join_string,
                              wgname);
+}
+
+char * smspec_alloc_block_ijk_key( const char * join_string , const char * keyword , int i , int j , int k) {
+  return util_alloc_sprintf(ECL_SUM_KEYFMT_BLOCK_IJK,
+                            keyword,
+                            join_string,
+                            i,j,k);
+}
+
+std::string smspec_alloc_block_ijk_key( const char * join_string , const std::string& keyword , int i , int j , int k) {
+  return ecl::util::string_format(ECL_SUM_KEYFMT_BLOCK_IJK ,
+                                  keyword.c_str(),
+                                  join_string ,
+                                  i,j,k);
 }
 
 std::string smspec_alloc_segment_key( const char * join_string , const std::string& keyword , const std::string& wgname , int num) {
