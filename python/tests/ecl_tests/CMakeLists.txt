@@ -18,6 +18,7 @@ set(TEST_SOURCES
     test_grdecl_statoil.py
     test_grdecl.py
     test_grid.py
+    test_grid_pandas.py
     test_cell.py
     test_grid_statoil.py
     test_grid_statoil_coarse.py
@@ -53,6 +54,7 @@ add_python_package("python.tests.ecl_tests"  ${PYTHON_INSTALL_PREFIX}/tests/ecl_
 addPythonTest(tests.ecl_tests.test_fk_user_data.FKTest)
 addPythonTest(tests.ecl_tests.test_cell.CellTest)
 addPythonTest(tests.ecl_tests.test_grid.GridTest LABELS SLOW_1)
+addPythonTest(tests.ecl_tests.test_grid_pandas.GridPandasTest)
 addPythonTest(tests.ecl_tests.test_grid_generator.GridGeneratorTest LABELS SLOW_2)
 addPythonTest(tests.ecl_tests.test_ecl_kw.KWTest LABELS SLOW_2)
 addPythonTest(tests.ecl_tests.test_kw_function.KWFunctionTest)

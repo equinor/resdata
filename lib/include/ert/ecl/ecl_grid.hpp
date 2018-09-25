@@ -261,6 +261,7 @@ extern "C" {
   void ecl_grid_export_cell_corners1(const ecl_grid_type * grid, int global_index, double *x, double *y, double *z);
 
   ert_ecl_unit_enum ecl_grid_get_unit_system(const ecl_grid_type * grid);
+  void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int * index_data , bool active_only);
 
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
   UTIL_SAFE_CAST_HEADER( ecl_grid );
