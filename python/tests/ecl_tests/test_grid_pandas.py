@@ -26,7 +26,7 @@ class GridPandasTest(EclTest):
 
   def test_dataframe(self):
     grid = EclGrid.create_rectangular( (2,3,1), (1,1,1) , actnum=[1, 1, 0, 0, 1, 1])
-    df = grid.export_index_frame(True)
+    df = grid.export_index(True)
     index_matrix = np.array([ [0, 0, 0, 0],
                               [1, 0, 0, 1], 
                               [0, 2, 0, 2],

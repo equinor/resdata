@@ -1256,7 +1256,7 @@ class EclGrid(BaseCClass):
 
         return self._create_volume_keyword(active_size)
 
-    def export_index_frame(self, active_only = False):
+    def export_index(self, active_only = False):
         if active_only:
             size = self.get_num_active()
         else:
