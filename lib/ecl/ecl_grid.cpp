@@ -7149,4 +7149,20 @@ void ecl_grid_export_position( const ecl_grid_type * grid, int index_size, const
   }
 }
 
+//This function is meant to be used w/ pandas dataframe and numpy
+void export_corners( const ecl_grid_type * grid, int index_size, const int * global_index, double * output) {
+  double x[8], y[8], z[8];
+  int pos = 0;
+  for (int i = 0; i < index_size; i++) {
+    int g = global_index[i];
+    ecl_grid_export_cell_corners1(grid, g, x, y, z);
+    for (int j = 0; j < 8; j++) {
+      output[pos++] = x[j];
+      output[pos++] = y[j];
+      output[pos++] = z[j];
+    }
+  }
+}
+
+
 //

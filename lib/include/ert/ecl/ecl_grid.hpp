@@ -266,6 +266,7 @@ extern "C" {
   void ecl_grid_export_data_as_double( const ecl_grid_type * grid, int index_size, const int * data_index, const ecl_kw_type * kw, double * output);
   void ecl_grid_export_volume( const ecl_grid_type * grid, int index_size, const int * global_index, double * output );
   void ecl_grid_export_position( const ecl_grid_type * grid, int index_size, const int * global_index, double * output);
+  void export_corners( const ecl_grid_type * grid, int index_size, const int * global_index, double * output);
 
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
   UTIL_SAFE_CAST_HEADER( ecl_grid );
