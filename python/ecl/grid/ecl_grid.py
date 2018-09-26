@@ -118,7 +118,7 @@ class EclGrid(BaseCClass):
     _export_mapaxes               = EclPrototype("ecl_kw_obj ecl_grid_alloc_mapaxes_kw(ecl_grid)")
     _get_unit_system              = EclPrototype("ecl_unit_enum ecl_grid_get_unit_system(ecl_grid)")
     _export_index_frame           = EclPrototype("void ecl_grid_export_index(ecl_grid, int*, int*, bool)")
-    _export_data_as_int           = EclPrototype("bool ecl_grid_export_data_as_int(ecl_grid, int, int*, ecl_kw, int*)")
+    _export_data_as_int           = EclPrototype("void ecl_grid_export_data_as_int(ecl_grid, int, int*, ecl_kw, int*)")
 
 
 
@@ -1279,13 +1279,11 @@ class EclGrid(BaseCClass):
 
         if kw.type is EclTypeEnum.ECL_INT_TYPE:
             data = numpy.zeros( len(global_index), dtype=numpy.int32 )
-            if self._export_data_as_int( len(global_index), 
-                                         global_index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
-                                         kw, 
-                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))  ):
-                return data
-            else:
-                raise Exception("EclGrid.export_data failed.")
+            self._export_data_as_int( len(global_index), 
+                                       global_index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
+                                       kw, 
+                                       data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))  )
+            return data
         elif kw.type is EclTypeEnum.ECL_FLOAT_TYPE:
             return None
         elif kw.type is EclTypeEnum.ECL_DOUBLE_TYPE:

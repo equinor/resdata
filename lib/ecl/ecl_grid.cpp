@@ -7112,9 +7112,28 @@ void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int *
       }
 }
 
-bool ecl_grid_export_data_as_int( ecl_grid_type * grid, int index_size, int * global_index, ecl_kw_type * kw, int * output) {
-  
-  return true;
+//Note: index_size must equal allocated size of output
+void ecl_grid_export_data_as_int( ecl_grid_type * grid, int index_size, int * global_index, ecl_kw_type * kw, int * output) {
+  int * input = ecl_kw_get_int_ptr(kw);
+  if (index_size == ecl_kw_get_size(kw)) {
+    for (int g = 0; g < index_size; g++)
+      output[g] = input[g];
+  }
+  else if (index_size == grid->size) {
+    for (int g = 0; g < index_size; g++) {
+      int active_index = grid->index_map[g];
+      if (active_index >= 0)
+        output[g] = input[active_index];
+      else
+        output[g] = 0;
+    }    
+  }
+  else if (index_size == grid->total_active) {
+    for (int active_index = 0; active_index < index_size; active_index++) {
+      int g = grid->inv_index_map[active_index];
+      output[active_index] = input[g];
+    }
+  }
 }
 
 //
