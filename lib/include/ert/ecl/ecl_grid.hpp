@@ -263,6 +263,7 @@ extern "C" {
   ert_ecl_unit_enum ecl_grid_get_unit_system(const ecl_grid_type * grid);
   void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int * index_data , bool active_only);
   void ecl_grid_export_data_as_int( ecl_grid_type * grid, int index_size, int * global_index, ecl_kw_type * kw, int * output);
+  void ecl_grid_export_data_as_double( ecl_grid_type * grid, int index_size, int * global_index, ecl_kw_type * kw, double * output);
 
   UTIL_IS_INSTANCE_HEADER( ecl_grid );
   UTIL_SAFE_CAST_HEADER( ecl_grid );

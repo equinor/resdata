@@ -37,37 +37,55 @@ class GridPandasTest(EclTest):
                               [1, 2, 0, 3] ])
     assert( np.array_equal(df.values, index_matrix) )
 
-    kw = EclKW('qq', 4, EclTypeEnum.ECL_INT_TYPE)
-    kw[0] = 0
-    kw[1] = 2
-    kw[2] = 8
-    kw[3] = 9
-    data = grid.export_data(df, kw)
+    kw_int_active = EclKW('int_act', 4, EclTypeEnum.ECL_INT_TYPE)
+    kw_int_active[0] = 9
+    kw_int_active[1] = 8
+    kw_int_active[2] = 7
+    kw_int_active[3] = 6
+    data = grid.export_data(df, kw_int_active)
     assert( len(data) == 4 )
-    assert( np.array_equal(data, np.array([0, 2, 8, 9]))  )
+    assert( np.array_equal(data, np.array([9, 8, 7, 6]))  )
 
-    kw = EclKW('qq', 6, EclTypeEnum.ECL_INT_TYPE)
-    kw[0] = 0
-    kw[1] = 2
-    kw[2] = 4
-    kw[3] = 6
-    kw[4] = 8
-    kw[5] = 9
-    data = grid.export_data(df, kw)
+    kw_float_active = EclKW('float_at', 4, EclTypeEnum.ECL_FLOAT_TYPE)
+    kw_float_active[0] = 10.5
+    kw_float_active[1] = 9.25
+    kw_float_active[2] = 2.0
+    kw_float_active[3] = 1.625
+    data = grid.export_data(df, kw_float_active)
+    assert( len(data) == 4 )
+    assert( np.array_equal(data, np.array([10.5, 9.25, 2.0, 1.625])) )
+
+    kw_int_global = EclKW('int_glob', 6, EclTypeEnum.ECL_INT_TYPE)
+    kw_int_global[0] = 0
+    kw_int_global[1] = 2
+    kw_int_global[2] = 4
+    kw_int_global[3] = 6
+    kw_int_global[4] = 8
+    kw_int_global[5] = 9
+    data = grid.export_data(df, kw_int_global)
     assert( len(data) == 4)
     assert( np.array_equal(data, np.array([0, 2, 8, 9]))  )
 
-    df = grid.export_index()
+    kw_double_global = EclKW('double_g', 6, EclTypeEnum.ECL_DOUBLE_TYPE)
+    kw_double_global[0] = 1.1
+    kw_double_global[1] = 2.2
+    kw_double_global[2] = 3.3
+    kw_double_global[3] = 4.4
+    kw_double_global[4] = 5.5
+    kw_double_global[5] = 6.6
+    data = grid.export_data(df, kw_double_global)
+    assert( np.array_equal(data, np.array([1.1, 2.2, 5.5, 6.6])) )
+
+    df = grid.export_index()      #DataFrame has now 6 rows
     global_index = df.index;
     assert( np.array_equal(global_index, np.array([0, 1, 2, 3, 4, 5])) )
     
-    kw = EclKW('q', 4, EclTypeEnum.ECL_INT_TYPE)
-    kw[0] = 9;
-    kw[1] = 8;
-    kw[2] = 7;
-    kw[3] = 6;
-    data = grid.export_data(df, kw)
+    data = grid.export_data(df, kw_int_active)
     assert( np.array_equal(data, np.array([9, 8, 0, 0, 7, 6])) )
+
+    data = grid.export_data(df, kw_float_active)
+    assert( np.array_equal(data, np.array([10.5, 9.25, 0.0, 0.0, 2.0, 1.625])) )
+
     
     
    
