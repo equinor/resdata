@@ -502,6 +502,7 @@ which splits the lower face along the 0-3 diagnoal and the upper face
 along the 5-6 diagonal.
 */
 
+#define INDEX_DATA_FRAME_SIZE 4
 
 static const int tetrahedron_permutations[2][12][3] = {{
                                                         // K-
@@ -7093,7 +7094,7 @@ ecl_kw_type * ecl_grid_alloc_volume_kw( const ecl_grid_type * grid , bool active
 
 
 //Note: global_index must be allocated w/ ecl_grid->total_active or ecl_grid->global_size int32 data points
-//      index_data must be allocated w/ (4 * ecl_grid->total_active or ecl_grid->global_size) int32 data points.
+//      index_data must be allocated w/ (INDEX_DATA_FRAME_SIZE * ecl_grid->total_active or ecl_grid->global_size) int32 data points.
 void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int * index_data , bool active_only) {
   int pos_indx = 0;
   int pos_data = 0;
@@ -7109,6 +7110,11 @@ void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int *
           index_data[pos_data++] = grid->cells[g].active_index[0];
         }          
       }
+}
+
+bool ecl_grid_export_data_as_int( ecl_grid_type * grid, int index_size, int * global_index, ecl_kw_type * kw, int * output) {
+  
+  return true;
 }
 
 //

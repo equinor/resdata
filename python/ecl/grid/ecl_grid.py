@@ -37,7 +37,7 @@ from cwrap import CFILE, BaseCClass, load, open as copen
 from ecl import EclPrototype
 from ecl.util.util import monkey_the_camel
 from ecl.util.util import IntVector
-from ecl import  EclDataType, EclUnitTypeEnum
+from ecl import  EclDataType, EclUnitTypeEnum, EclTypeEnum
 from ecl.eclfile import EclKW, FortIO
 from ecl.grid import Cell
 
@@ -118,6 +118,7 @@ class EclGrid(BaseCClass):
     _export_mapaxes               = EclPrototype("ecl_kw_obj ecl_grid_alloc_mapaxes_kw(ecl_grid)")
     _get_unit_system              = EclPrototype("ecl_unit_enum ecl_grid_get_unit_system(ecl_grid)")
     _export_index_frame           = EclPrototype("void ecl_grid_export_index(ecl_grid, int*, int*, bool)")
+    _export_data_as_int           = EclPrototype("bool ecl_grid_export_data_as_int(ecl_grid, int, int*, ecl_kw, int*)")
 
 
 
@@ -1267,7 +1268,32 @@ class EclGrid(BaseCClass):
         df = pandas.DataFrame(data=data, index=indx)
         return df
         
- 
+    def export_data(self, index_frame, kw):
+        if not isinstance(index_frame, pandas.DataFrame):
+            raise TypeError("index_frame must be pandas.DataFrame")
+        global_index = numpy.array( index_frame.index )
+        if not(len(global_index) == self.get_global_size() or len(global_index) == self.get_num_active()):
+            raise TypeError("Argument index_frame is of wrong size. Number of rows must be either global_size or active_size.")
+        if not(len(kw) == self.get_global_size() or len(kw) == self.get_num_active()):
+            raise TypeError("Argument kw is of wrong size. Must be either global_size or active_size.")
+
+        if kw.type is EclTypeEnum.ECL_INT_TYPE:
+            data = numpy.zeros( len(global_index), dtype=numpy.int32 )
+            if self._export_data_as_int( len(global_index), 
+                                         global_index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
+                                         kw, 
+                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))  ):
+                return data
+            else:
+                raise Exception("EclGrid.export_data failed.")
+        elif kw.type is EclTypeEnum.ECL_FLOAT_TYPE:
+            return None
+        elif kw.type is EclTypeEnum.ECL_DOUBLE_TYPE:
+            return None
+        else:
+            raise TypeError("Keyword must be either int, float or double.")
+
+
     def export_coord(self):
         return self._export_coord()
 

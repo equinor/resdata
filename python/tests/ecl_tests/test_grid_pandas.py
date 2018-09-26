@@ -18,6 +18,10 @@
 import numpy as np
 import pandas as pd
 
+from ecl import  EclTypeEnum
+
+from ecl.eclfile import EclKW
+
 from ecl.grid import EclGrid
 
 from tests import EclTest
@@ -33,3 +37,13 @@ class GridPandasTest(EclTest):
                               [1, 2, 0, 3] ])
     assert( np.array_equal(df.values, index_matrix) )
 
+    kw = EclKW('qq', 6, EclTypeEnum.ECL_INT_TYPE)
+    kw[0] = 0;
+    kw[1] = 2;
+    kw[2] = 4;
+    kw[3] = 6;
+    kw[4] = 8;
+    kw[5] = 9;
+    data = grid.export_data(df, kw)
+    assert( len(data) == 4 )
+    #assert( np.array_equal(data, np.array([0, 2, 8, 9]))  )
