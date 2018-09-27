@@ -37,7 +37,7 @@ from cwrap import CFILE, BaseCClass, load, open as copen
 from ecl import EclPrototype
 from ecl.util.util import monkey_the_camel
 from ecl.util.util import IntVector
-from ecl import  EclDataType, EclUnitTypeEnum
+from ecl import  EclDataType, EclUnitTypeEnum, EclTypeEnum
 from ecl.eclfile import EclKW, FortIO
 from ecl.grid import Cell
 
@@ -118,6 +118,8 @@ class EclGrid(BaseCClass):
     _export_mapaxes               = EclPrototype("ecl_kw_obj ecl_grid_alloc_mapaxes_kw(ecl_grid)")
     _get_unit_system              = EclPrototype("ecl_unit_enum ecl_grid_get_unit_system(ecl_grid)")
     _export_index_frame           = EclPrototype("void ecl_grid_export_index(ecl_grid, int*, int*, bool)")
+    _export_data_as_int           = EclPrototype("void ecl_grid_export_data_as_int(ecl_grid, int, int*, ecl_kw, int*)")
+    _export_data_as_double        = EclPrototype("void ecl_grid_export_data_as_double(ecl_grid, int, int*, ecl_kw, double*)")
 
 
 
@@ -1264,10 +1266,37 @@ class EclGrid(BaseCClass):
         indx = numpy.zeros(size, dtype=numpy.int32)
         data = numpy.zeros([size, 4], dtype=numpy.int32)
         self._export_index_frame( indx.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), active_only )
-        df = pandas.DataFrame(data=data, index=indx)
+        df = pandas.DataFrame(data=data, index=indx, columns=['i', 'j', 'k', 'active'])
         return df
         
- 
+    def export_data(self, index_frame, kw):
+        if not isinstance(index_frame, pandas.DataFrame):
+            raise TypeError("index_frame must be pandas.DataFrame")
+        if len(kw) == self.get_global_size():
+            index = numpy.array( index_frame.index, dtype=numpy.int32 )
+        elif len(kw) == self.get_num_active():
+            index = numpy.array( index_frame["active"], dtype=numpy.int32 )
+        else:
+            raise ValueError("The keyword must have a 3D compatible length")
+
+        if kw.type is EclTypeEnum.ECL_INT_TYPE:
+            data = numpy.zeros( len(index), dtype=numpy.int32 )
+            self._export_data_as_int( len(index), 
+                                       index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
+                                       kw, 
+                                       data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))  )
+            return data
+        elif kw.type is EclTypeEnum.ECL_FLOAT_TYPE or kw.type is EclTypeEnum.ECL_DOUBLE_TYPE:
+            data = numpy.zeros( len(index), dtype=numpy.float64 )
+            self._export_data_as_double( len(index), 
+                                         index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
+                                         kw, 
+                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )            
+            return data
+        else:
+            raise TypeError("Keyword must be either int, float or double.")
+
+
     def export_coord(self):
         return self._export_coord()
 
