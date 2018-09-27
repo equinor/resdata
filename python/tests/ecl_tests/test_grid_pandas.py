@@ -94,6 +94,13 @@ class GridPandasTest(EclTest):
     assert( len(volume_data) == 6 )
     #assert( np.array_equal(volume_data, np.array([1.0, 1.0, 1.0, 1.0]))  )    Note: volume_data is not actually set in ecl_grid.cpp
     
+    position_data = grid.export_position(index_frame)
+    x_pos = position_data[:, 0]
+    y_pos = position_data[:, 1]
+    z_pos = position_data[:, 2]
+    assert( np.array_equal(x_pos, np.array([0.5, 1.5, 0.5, 1.5, 0.5, 1.5])) )
+    assert( np.array_equal(y_pos, np.array([0.5, 0.5, 1.5, 1.5, 2.5, 2.5])) )
+    assert( np.array_equal(z_pos, np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])) )
     
    
     

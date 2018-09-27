@@ -121,6 +121,7 @@ class EclGrid(BaseCClass):
     _export_data_as_int           = EclPrototype("void ecl_grid_export_data_as_int(ecl_grid, int, int*, ecl_kw, int*)")
     _export_data_as_double        = EclPrototype("void ecl_grid_export_data_as_double(ecl_grid, int, int*, ecl_kw, double*)")
     _export_volume                = EclPrototype("void ecl_grid_export_volume(ecl_grid, int, int*, double*)")
+    _export_position              = EclPrototype("void ecl_grid_export_position(ecl_grid, int, int*, double*)")
 
 
 
@@ -1303,6 +1304,14 @@ class EclGrid(BaseCClass):
         self._export_volume( len(index), 
                              index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
                              data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
+        return data
+
+    def export_position(self, index_frame):
+        index = numpy.array( index_frame.index, dtype=numpy.int32 )
+        data = numpy.zeros( [len(index), 3], dtype=numpy.float64 )
+        self._export_position( len(index), 
+                               index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+                               data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
         return data
 
     def export_coord(self):
