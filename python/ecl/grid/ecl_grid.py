@@ -1266,29 +1266,30 @@ class EclGrid(BaseCClass):
         indx = numpy.zeros(size, dtype=numpy.int32)
         data = numpy.zeros([size, 4], dtype=numpy.int32)
         self._export_index_frame( indx.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), active_only )
-        df = pandas.DataFrame(data=data, index=indx)
+        df = pandas.DataFrame(data=data, index=indx, columns=['i', 'j', 'k', 'active'])
         return df
         
     def export_data(self, index_frame, kw):
         if not isinstance(index_frame, pandas.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
-        global_index = numpy.array( index_frame.index )
-        if not(len(global_index) == self.get_global_size() or len(global_index) == self.get_num_active()):
-            raise TypeError("Argument index_frame is of wrong size. Number of rows must be either global_size or active_size.")
-        if not(len(kw) == self.get_global_size() or len(kw) == self.get_num_active()):
-            raise TypeError("Argument kw is of wrong size. Must be either global_size or active_size.")
+        if len(kw) == self.get_global_size():
+            index = numpy.array( index_frame.index, dtype=numpy.int32 )
+        elif len(kw) == self.get_num_active():
+            index = numpy.array( index_frame["active"], dtype=numpy.int32 )
+        else:
+            raise ValueError("The keyword must have a 3D compatible length")
 
         if kw.type is EclTypeEnum.ECL_INT_TYPE:
-            data = numpy.zeros( len(global_index), dtype=numpy.int32 )
-            self._export_data_as_int( len(global_index), 
-                                       global_index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
+            data = numpy.zeros( len(index), dtype=numpy.int32 )
+            self._export_data_as_int( len(index), 
+                                       index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
                                        kw, 
                                        data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))  )
             return data
         elif kw.type is EclTypeEnum.ECL_FLOAT_TYPE or kw.type is EclTypeEnum.ECL_DOUBLE_TYPE:
-            data = numpy.zeros( len(global_index), dtype=numpy.float64 )
-            self._export_data_as_double( len(global_index), 
-                                         global_index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
+            data = numpy.zeros( len(index), dtype=numpy.float64 )
+            self._export_data_as_double( len(index), 
+                                         index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
                                          kw, 
                                          data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )            
             return data
