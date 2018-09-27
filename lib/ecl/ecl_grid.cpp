@@ -7121,13 +7121,19 @@ void ecl_grid_export_data_as_int( ecl_grid_type * grid, int index_size, int * da
   }
 }
 
-
 //Note: index_size must equal allocated size of output
 void ecl_grid_export_data_as_double( ecl_grid_type * grid, int index_size, int * data_index, ecl_kw_type * kw, double * output) {
   for (int i=0; i < index_size; i++) {
     int di = data_index[i];
     if (di >= 0)
       output[i] = ecl_kw_iget_as_double(kw, di);
+  }
+}
+
+void ecl_grid_export_volume( ecl_grid_type * grid, int index_size, int * global_index, double * output ) {
+  for (int i = 0; i < index_size; i++) {
+    int g = global_index[i];
+    output[i] = grid->cells[g].volume;
   }
 }
 

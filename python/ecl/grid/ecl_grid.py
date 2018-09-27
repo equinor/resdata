@@ -120,6 +120,7 @@ class EclGrid(BaseCClass):
     _export_index_frame           = EclPrototype("void ecl_grid_export_index(ecl_grid, int*, int*, bool)")
     _export_data_as_int           = EclPrototype("void ecl_grid_export_data_as_int(ecl_grid, int, int*, ecl_kw, int*)")
     _export_data_as_double        = EclPrototype("void ecl_grid_export_data_as_double(ecl_grid, int, int*, ecl_kw, double*)")
+    _export_volume                = EclPrototype("void ecl_grid_export_volume(ecl_grid, int, int*, double*)")
 
 
 
@@ -1296,6 +1297,13 @@ class EclGrid(BaseCClass):
         else:
             raise TypeError("Keyword must be either int, float or double.")
 
+    def export_volume(self, index_frame):
+        index = numpy.array( index_frame.index, dtype=numpy.int32 )
+        data = numpy.zeros( len(index ), dtype=numpy.float64 )
+        self._export_volume( len(index), 
+                             index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+                             data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
+        return data
 
     def export_coord(self):
         return self._export_coord()

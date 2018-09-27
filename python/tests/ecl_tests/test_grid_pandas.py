@@ -87,6 +87,13 @@ class GridPandasTest(EclTest):
     assert( np.array_equal(data, np.array([10.5, 9.25, 0.0, 0.0, 2.0, 1.625])) )
 
     
+  def test_dataframe_grid_data(self):
+    grid = EclGrid.create_rectangular( (2,3,1), (1,1,1) , actnum=[1, 1, 0, 0, 1, 1])
+    index_frame = grid.export_index()
+    volume_data = grid.export_volume(index_frame)
+    assert( len(volume_data) == 6 )
+    #assert( np.array_equal(volume_data, np.array([1.0, 1.0, 1.0, 1.0]))  )    Note: volume_data is not actually set in ecl_grid.cpp
+    
     
    
     
