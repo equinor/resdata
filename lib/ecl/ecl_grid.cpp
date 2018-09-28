@@ -7113,7 +7113,7 @@ void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int *
 
 //This function is meant to be used w/ pandas datafram and numpy
 //Note: index_size must equal allocated size of output
-void ecl_grid_export_data_as_int( const ecl_grid_type * grid, int index_size, const int * data_index, const ecl_kw_type * kw, int * output) {
+void ecl_grid_export_data_as_int( int index_size, const int * data_index, const ecl_kw_type * kw, int * output) {
   int * input = ecl_kw_get_int_ptr(kw);
   for (int i=0; i < index_size; i++) {
     int di = data_index[i];
@@ -7124,7 +7124,7 @@ void ecl_grid_export_data_as_int( const ecl_grid_type * grid, int index_size, co
 
 //This function is meant to be used w/ pandas datafram and numpy
 //Note: index_size must equal allocated size of output
-void ecl_grid_export_data_as_double( const ecl_grid_type * grid, int index_size, const int * data_index, const ecl_kw_type * kw, double * output) {
+void ecl_grid_export_data_as_double( int index_size, const int * data_index, const ecl_kw_type * kw, double * output) {
   for (int i=0; i < index_size; i++) {
     int di = data_index[i];
     if (di >= 0)

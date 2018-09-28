@@ -262,8 +262,8 @@ extern "C" {
 
   ert_ecl_unit_enum ecl_grid_get_unit_system(const ecl_grid_type * grid);
   void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int * index_data , bool active_only);
-  void ecl_grid_export_data_as_int( const ecl_grid_type * grid, int index_size, const int * global_index, const ecl_kw_type * kw, int * output);
-  void ecl_grid_export_data_as_double( const ecl_grid_type * grid, int index_size, const int * data_index, const ecl_kw_type * kw, double * output);
+  void ecl_grid_export_data_as_int( int index_size, const int * global_index, const ecl_kw_type * kw, int * output);
+  void ecl_grid_export_data_as_double( int index_size, const int * data_index, const ecl_kw_type * kw, double * output);
   void ecl_grid_export_volume( const ecl_grid_type * grid, int index_size, const int * global_index, double * output );
   void ecl_grid_export_position( const ecl_grid_type * grid, int index_size, const int * global_index, double * output);
   void export_corners( const ecl_grid_type * grid, int index_size, const int * global_index, double * output);
