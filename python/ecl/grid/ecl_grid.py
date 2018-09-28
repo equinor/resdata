@@ -118,10 +118,11 @@ class EclGrid(BaseCClass):
     _export_mapaxes               = EclPrototype("ecl_kw_obj ecl_grid_alloc_mapaxes_kw(ecl_grid)")
     _get_unit_system              = EclPrototype("ecl_unit_enum ecl_grid_get_unit_system(ecl_grid)")
     _export_index_frame           = EclPrototype("void ecl_grid_export_index(ecl_grid, int*, int*, bool)")
-    _export_data_as_int           = EclPrototype("void ecl_grid_export_data_as_int(ecl_grid, int, int*, ecl_kw, int*)")
-    _export_data_as_double        = EclPrototype("void ecl_grid_export_data_as_double(ecl_grid, int, int*, ecl_kw, double*)")
+    _export_data_as_int           = EclPrototype("void ecl_grid_export_data_as_int(int, int*, ecl_kw, int*)", bind = False)
+    _export_data_as_double        = EclPrototype("void ecl_grid_export_data_as_double(int, int*, ecl_kw, double*)", bind = False)
     _export_volume                = EclPrototype("void ecl_grid_export_volume(ecl_grid, int, int*, double*)")
     _export_position              = EclPrototype("void ecl_grid_export_position(ecl_grid, int, int*, double*)")
+    _export_corners               = EclPrototype("void export_corners(ecl_grid, int, int*, double*)")
 
 
 
@@ -1271,7 +1272,7 @@ class EclGrid(BaseCClass):
         df = pandas.DataFrame(data=data, index=indx, columns=['i', 'j', 'k', 'active'])
         return df
         
-    def export_data(self, index_frame, kw):
+    def export_data(self, index_frame, kw, default = 0):
         if not isinstance(index_frame, pandas.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
         if len(kw) == self.get_global_size():
@@ -1282,18 +1283,18 @@ class EclGrid(BaseCClass):
             raise ValueError("The keyword must have a 3D compatible length")
 
         if kw.type is EclTypeEnum.ECL_INT_TYPE:
-            data = numpy.zeros( len(index), dtype=numpy.int32 )
+            data = numpy.full( len(index), default, dtype=numpy.int32 )
             self._export_data_as_int( len(index), 
                                        index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
                                        kw, 
-                                       data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))  )
+                                       data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))   )
             return data
         elif kw.type is EclTypeEnum.ECL_FLOAT_TYPE or kw.type is EclTypeEnum.ECL_DOUBLE_TYPE:
-            data = numpy.zeros( len(index), dtype=numpy.float64 )
+            data = numpy.full( len(index), default, dtype=numpy.float64 )
             self._export_data_as_double( len(index), 
                                          index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
                                          kw, 
-                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )            
+                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))   )            
             return data
         else:
             raise TypeError("Keyword must be either int, float or double.")
@@ -1313,6 +1314,15 @@ class EclGrid(BaseCClass):
                                index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
                                data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
         return data
+
+    def export_corners(self, index_frame):
+        index = numpy.array( index_frame.index, dtype=numpy.int32 )
+        data = numpy.zeros( [len(index), 24], dtype=numpy.float64 )
+        self._export_corners( len(index),
+                              index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+                              data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
+        return data
+
 
     def export_coord(self):
         return self._export_coord()
