@@ -1272,7 +1272,7 @@ class EclGrid(BaseCClass):
         df = pandas.DataFrame(data=data, index=indx, columns=['i', 'j', 'k', 'active'])
         return df
         
-    def export_data(self, index_frame, kw):
+    def export_data(self, index_frame, kw, default = 0):
         if not isinstance(index_frame, pandas.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
         if len(kw) == self.get_global_size():
@@ -1283,18 +1283,18 @@ class EclGrid(BaseCClass):
             raise ValueError("The keyword must have a 3D compatible length")
 
         if kw.type is EclTypeEnum.ECL_INT_TYPE:
-            data = numpy.zeros( len(index), dtype=numpy.int32 )
+            data = numpy.full( len(index), default, dtype=numpy.int32 )
             self._export_data_as_int( len(index), 
                                        index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
                                        kw, 
-                                       data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))  )
+                                       data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))   )
             return data
         elif kw.type is EclTypeEnum.ECL_FLOAT_TYPE or kw.type is EclTypeEnum.ECL_DOUBLE_TYPE:
-            data = numpy.zeros( len(index), dtype=numpy.float64 )
+            data = numpy.full( len(index), default, dtype=numpy.float64 )
             self._export_data_as_double( len(index), 
                                          index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
                                          kw, 
-                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )            
+                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))   )            
             return data
         else:
             raise TypeError("Keyword must be either int, float or double.")

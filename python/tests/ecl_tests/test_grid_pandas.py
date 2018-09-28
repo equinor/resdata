@@ -80,11 +80,11 @@ class GridPandasTest(EclTest):
     global_index = df.index;
     assert( np.array_equal(global_index, np.array([0, 1, 2, 3, 4, 5])) )
     
-    data = grid.export_data(df, kw_int_active)
-    assert( np.array_equal(data, np.array([9, 8, 0, 0, 7, 6])) )
+    data = grid.export_data(df, kw_int_active, 9999)
+    assert( np.array_equal(data, np.array([9, 8, 9999, 9999, 7, 6])) )
 
-    data = grid.export_data(df, kw_float_active)
-    assert( np.array_equal(data, np.array([10.5, 9.25, 0.0, 0.0, 2.0, 1.625])) )
+    data = grid.export_data(df, kw_float_active, 2222.0)
+    assert( np.array_equal(data, np.array([10.5, 9.25, 2222.0, 2222.0, 2.0, 1.625])) )
 
     
   def test_dataframe_grid_data(self):
