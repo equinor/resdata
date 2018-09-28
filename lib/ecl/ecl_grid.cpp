@@ -7091,7 +7091,7 @@ ecl_kw_type * ecl_grid_alloc_volume_kw( const ecl_grid_type * grid , bool active
     return ecl_grid_alloc_volume_kw_global( grid );
 }
 
-
+//This function is meant to be used w/ pandas datafram and numpy
 //Note: global_index must be allocated w/ ecl_grid->total_active or ecl_grid->global_size int32 data points
 //      index_data must be allocated w/ (4 * ecl_grid->total_active or ecl_grid->global_size) int32 data points.
 void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int * index_data , bool active_only) {
@@ -7109,6 +7109,44 @@ void ecl_grid_export_index(const ecl_grid_type * grid, int * global_index, int *
           index_data[pos_data++] = grid->cells[g].active_index[0];
         }          
       }
+}
+
+//This function is meant to be used w/ pandas datafram and numpy
+//Note: index_size must equal allocated size of output
+void ecl_grid_export_data_as_int( const ecl_grid_type * grid, int index_size, const int * data_index, const ecl_kw_type * kw, int * output) {
+  int * input = ecl_kw_get_int_ptr(kw);
+  for (int i=0; i < index_size; i++) {
+    int di = data_index[i];
+    if (di >= 0)
+      output[i] = input[di];
+  }
+}
+
+//This function is meant to be used w/ pandas datafram and numpy
+//Note: index_size must equal allocated size of output
+void ecl_grid_export_data_as_double( const ecl_grid_type * grid, int index_size, const int * data_index, const ecl_kw_type * kw, double * output) {
+  for (int i=0; i < index_size; i++) {
+    int di = data_index[i];
+    if (di >= 0)
+      output[i] = ecl_kw_iget_as_double(kw, di);
+  }
+}
+
+//This function is meant to be used w/ pandas datafram and numpy
+void ecl_grid_export_volume( const ecl_grid_type * grid, int index_size, const int * global_index, double * output ) {
+  for (int i = 0; i < index_size; i++) {
+    int g = global_index[i];
+    output[i] = ecl_grid_get_cell_volume1(grid, g);
+  }
+}
+
+//This function is meant to be used w/ pandas datafram and numpy
+void ecl_grid_export_position( const ecl_grid_type * grid, int index_size, const int * global_index, double * output) {
+  for (int i = 0; i < index_size; i++) {
+    int g = global_index[i];
+    int j = 3 * i;
+    ecl_grid_get_xyz1(grid, g, &output[j], &output[j+1], &output[j+2]);
+  }
 }
 
 //
