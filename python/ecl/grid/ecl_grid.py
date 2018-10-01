@@ -1263,14 +1263,15 @@ class EclGrid(BaseCClass):
 
     def export_index(self, active_only = False):
         """
-        Exports a pandas dataframe, index_frame, containing index data of grid cells.
+        Exports a pandas dataframe containing index data of grid cells.
 
-        index_frame.index contains global_index for each cell listed.
+        The global_index of the cells is used as index in the pandas frame.
         columns 0, 1, 2 are i, j, k, respectively
         column 3 contains the active_index
         if active_only == True, only active cells are listed, 
         otherwise all cells are listed.
-
+        This index frame should typically be passed to the epxport_data(), 
+        export_volume() and export_corners() functions.
         """
         if active_only:
             size = self.get_num_active()
@@ -1352,7 +1353,11 @@ class EclGrid(BaseCClass):
      
         Index_fram must be a pandas dataframe with the same structure 
         as obtained from export_index.  
-        Columns 3m, 3m+1 and 3m+2 are x, y, and z coordintates of corner m. 
+        In total there are eight 8 corners; and they are numbered as
+        described in elcl_grid.cpp L464.
+        A row of the output matrix:
+        0   1   2  ....   21   22   23
+        x1  y1  z1 ....   x8   y8   z8
         """
         index = numpy.array( index_frame.index, dtype=numpy.int32 )
         data = numpy.zeros( [len(index), 24], dtype=numpy.float64 )
