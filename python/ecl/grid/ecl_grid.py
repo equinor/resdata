@@ -1352,12 +1352,36 @@ class EclGrid(BaseCClass):
         """Exports cell corner position coordinates to a numpy vector (matrix). 
      
         Index_fram must be a pandas dataframe with the same structure 
-        as obtained from export_index.  
-        In total there are eight 8 corners; and they are numbered as
-        described in elcl_grid.cpp L464.
-        A row of the output matrix:
+        as obtained from export_index. 
+        Example of a row of the output matrix:
         0   1   2  ....   21   22   23
         x1  y1  z1 ....   x8   y8   z8
+
+        In total there are eight 8 corners. They are described as follows:
+        The corners in a cell are numbered 0 - 7, where corners 0-3 constitute
+        one layer and the corners 4-7 consitute the other layer. Observe 
+        that the numbering does not follow a consistent rotation around the face:
+
+
+                                        j
+        6---7                        /|\    
+        |   |                         |
+        4---5                         |
+                                      |
+                                      o---------->  i
+        2---3
+        |   |
+        0---1
+
+        Many grids are left-handed, i.e. the direction of increasing z will
+        point down towards the center of the earth. Hence in the figure above
+        the layer 4-7 will be deeper down in the reservoir than layer 0-3, and
+        also have higher z-value.
+
+        Warning: The main author of this code suspects that the coordinate
+        system can be right-handed as well, giving a z axis which will
+        increase 'towards the sky'; the safest way is probably to check this
+        explicitly if it matters for the case at hand.
         """
         index = numpy.array( index_frame.index, dtype=numpy.int32 )
         data = numpy.zeros( [len(index), 24], dtype=numpy.float64 )
