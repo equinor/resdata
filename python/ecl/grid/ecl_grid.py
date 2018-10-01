@@ -1262,6 +1262,17 @@ class EclGrid(BaseCClass):
         return self._create_volume_keyword(active_size)
 
     def export_index(self, active_only = False):
+        """
+        Exports a pandas dataframe containing index data of grid cells.
+
+        The global_index of the cells is used as index in the pandas frame.
+        columns 0, 1, 2 are i, j, k, respectively
+        column 3 contains the active_index
+        if active_only == True, only active cells are listed, 
+        otherwise all cells are listed.
+        This index frame should typically be passed to the epxport_data(), 
+        export_volume() and export_corners() functions.
+        """
         if active_only:
             size = self.get_num_active()
         else:
@@ -1273,6 +1284,16 @@ class EclGrid(BaseCClass):
         return df
         
     def export_data(self, index_frame, kw, default = 0):
+        """
+        Exports keywoard data to a numpy vector. 
+
+        Index_fram must be a pandas dataframe with the same structure 
+        as obtained from export_index.
+        kw must have size of either global_size or num_active.
+        The length of the numpy vector is the number of rows in index_frame.
+        If kw is of length num_active, values in the output vector
+        corresponding to inactive cells are set to default.
+        """
         if not isinstance(index_frame, pandas.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
         if len(kw) == self.get_global_size():
@@ -1300,6 +1321,12 @@ class EclGrid(BaseCClass):
             raise TypeError("Keyword must be either int, float or double.")
 
     def export_volume(self, index_frame):
+        """
+        Exports cell volume data to a numpy vector.
+
+        Index_fram must be a pandas dataframe with the same structure 
+        as obtained from export_index.  
+        """
         index = numpy.array( index_frame.index, dtype=numpy.int32 )
         data = numpy.zeros( len(index ), dtype=numpy.float64 )
         self._export_volume( len(index), 
@@ -1308,6 +1335,12 @@ class EclGrid(BaseCClass):
         return data
 
     def export_position(self, index_frame):
+        """Exports cell position coordinates to a numpy vector (matrix), with columns
+        0, 1, 2 denoting coordinates x, y, and z, respectively.
+
+        Index_fram must be a pandas dataframe with the same structure 
+        as obtained from export_index.  
+        """
         index = numpy.array( index_frame.index, dtype=numpy.int32 )
         data = numpy.zeros( [len(index), 3], dtype=numpy.float64 )
         self._export_position( len(index), 
@@ -1316,6 +1349,40 @@ class EclGrid(BaseCClass):
         return data
 
     def export_corners(self, index_frame):
+        """Exports cell corner position coordinates to a numpy vector (matrix). 
+     
+        Index_fram must be a pandas dataframe with the same structure 
+        as obtained from export_index. 
+        Example of a row of the output matrix:
+        0   1   2  ....   21   22   23
+        x1  y1  z1 ....   x8   y8   z8
+
+        In total there are eight 8 corners. They are described as follows:
+        The corners in a cell are numbered 0 - 7, where corners 0-3 constitute
+        one layer and the corners 4-7 consitute the other layer. Observe 
+        that the numbering does not follow a consistent rotation around the face:
+
+
+                                        j
+        6---7                        /|\    
+        |   |                         |
+        4---5                         |
+                                      |
+                                      o---------->  i
+        2---3
+        |   |
+        0---1
+
+        Many grids are left-handed, i.e. the direction of increasing z will
+        point down towards the center of the earth. Hence in the figure above
+        the layer 4-7 will be deeper down in the reservoir than layer 0-3, and
+        also have higher z-value.
+
+        Warning: The main author of this code suspects that the coordinate
+        system can be right-handed as well, giving a z axis which will
+        increase 'towards the sky'; the safest way is probably to check this
+        explicitly if it matters for the case at hand.
+        """
         index = numpy.array( index_frame.index, dtype=numpy.int32 )
         data = numpy.zeros( [len(index), 24], dtype=numpy.float64 )
         self._export_corners( len(index),
