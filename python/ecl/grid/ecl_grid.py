@@ -1266,7 +1266,7 @@ class EclGrid(BaseCClass):
         Exports a pandas dataframe, index_frame, containing index data of grid cells.
 
         index_frame.index contains global_index for each cell listed.
-        column3 0, 1, 2 are i, j, k, respectively
+        columns 0, 1, 2 are i, j, k, respectively
         column 3 contains the active_index
         if active_only == True, only active cells are listed, 
         otherwise all cells are listed.
