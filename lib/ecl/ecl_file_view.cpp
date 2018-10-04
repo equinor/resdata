@@ -21,8 +21,6 @@
 #include <string>
 #include <map>
 
-#include <ert/util/vector.hpp>
-
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
@@ -39,7 +37,7 @@ struct ecl_file_view_struct {
   fortio_type       * fortio;       /* The same fortio instance pointer as in the ecl_file styructure. */
   bool                owner;        /* Is this map the owner of the ecl_file_kw instances; only true for the global_map. */
   inv_map_type      * inv_map;      /* Shared reference owned by the ecl_file structure. */
-  vector_type       * child_list;
+  std::vector<ecl_file_view_type *> child_list;
   int               * flags;
 };
 
@@ -75,7 +73,6 @@ const char * ecl_file_view_get_src_file( const ecl_file_view_type * file_view ) 
 ecl_file_view_type * ecl_file_view_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map , bool owner ) {
   ecl_file_view_type * ecl_file_view  = new ecl_file_view_type();
 
-  ecl_file_view->child_list           = vector_alloc_new();
   ecl_file_view->owner                = owner;
   ecl_file_view->fortio               = fortio;
   ecl_file_view->inv_map              = inv_map;
@@ -285,11 +282,13 @@ void ecl_file_view_add_kw( ecl_file_view_type * ecl_file_view , ecl_file_kw_type
 }
 
 void ecl_file_view_free( ecl_file_view_type * ecl_file_view ) {
-  vector_free( ecl_file_view->child_list );
+
+  for (auto& child_ptr : ecl_file_view->child_list)
+    ecl_file_view_free(child_ptr);
 
   if (ecl_file_view->owner) {
-    for (auto& ptr : ecl_file_view->kw_list)
-      ecl_file_kw_free( ptr );
+    for (auto& kw_ptr : ecl_file_view->kw_list)
+      ecl_file_kw_free( kw_ptr );
   }
 
   delete ecl_file_view;
@@ -389,21 +388,21 @@ ecl_file_view_type * ecl_file_view_alloc_blockview(const ecl_file_view_type * ec
 }
 
 
-ecl_file_view_type * ecl_file_view_add_blockview(const ecl_file_view_type * file_view , const char * header, int occurence) {
+ecl_file_view_type * ecl_file_view_add_blockview(ecl_file_view_type * file_view , const char * header, int occurence) {
   ecl_file_view_type * child  = ecl_file_view_alloc_blockview2(file_view, header, header, occurence);
 
   if (child)
-    vector_append_owned_ref( file_view->child_list , child , ecl_file_view_free__ );
+    file_view->child_list.push_back(child);
 
   return child;
 }
 
 
-ecl_file_view_type * ecl_file_view_add_blockview2(const ecl_file_view_type * ecl_file_view , const char * start_kw, const char * end_kw, int occurence) {
+ecl_file_view_type * ecl_file_view_add_blockview2(ecl_file_view_type * ecl_file_view , const char * start_kw, const char * end_kw, int occurence) {
   ecl_file_view_type * child  = ecl_file_view_alloc_blockview2(ecl_file_view, start_kw , end_kw , occurence);
 
   if (child)
-    vector_append_owned_ref( ecl_file_view->child_list , child , ecl_file_view_free__ );
+    ecl_file_view->child_list.push_back(child);
 
   return child;
 }
