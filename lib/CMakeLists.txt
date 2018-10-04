@@ -72,6 +72,7 @@ add_library(ecl util/rng.cpp
                 util/mzran.cpp
                 util/hash_node.cpp
                 util/hash_sll.cpp
+                util/path.cpp
                 util/hash.cpp
                 util/node_data.cpp
                 util/node_ctype.cpp
@@ -244,6 +245,7 @@ target_link_libraries(ecl3-testsuite catch2 ecl)
 add_test(NAME ecl3 COMMAND ecl3-testsuite)
 
 foreach (name   ert_util_alloc_file_components
+                ert_util_split_path
                 ert_util_approx_equal
                 ert_util_before_after
                 ert_util_binary_split
@@ -270,6 +272,7 @@ foreach (name   ert_util_alloc_file_components
         )
 
     add_executable(${name} util/tests/${name}.cpp)
+    target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
     target_link_libraries(${name} ecl)
     add_test(NAME ${name} COMMAND ${name})
 endforeach ()
