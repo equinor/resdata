@@ -19,9 +19,9 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 #include <ert/util/vector.hpp>
-#include <ert/util/hash.hpp>
 
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_kw.hpp>
@@ -34,7 +34,7 @@
 
 struct ecl_file_view_struct {
   vector_type       * kw_list;      /* This is a vector of ecl_file_kw instances corresponding to the content of the file. */
-  hash_type         * kw_index;     /* A hash table with integer vectors of indices - see comment below. */
+  std::map<std::string,std::vector<int>> kw_index;
   std::vector<std::string> distinct_kw;  /* A list of the keywords occuring in the file - each string occurs ONLY ONCE. */
   fortio_type       * fortio;       /* The same fortio instance pointer as in the ecl_file styructure. */
   bool                owner;        /* Is this map the owner of the ecl_file_kw instances; only true for the global_map. */
@@ -76,7 +76,6 @@ ecl_file_view_type * ecl_file_view_alloc( fortio_type * fortio , int * flags , i
   ecl_file_view_type * ecl_file_view  = new ecl_file_view_type();
 
   ecl_file_view->kw_list              = vector_alloc_new();
-  ecl_file_view->kw_index             = hash_alloc();
   ecl_file_view->child_list           = vector_alloc_new();
   ecl_file_view->owner                = owner;
   ecl_file_view->fortio               = fortio;
@@ -87,9 +86,8 @@ ecl_file_view_type * ecl_file_view_alloc( fortio_type * fortio , int * flags , i
 }
 
 int ecl_file_view_get_global_index( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
-  const int_vector_type * index_vector = (const int_vector_type*)hash_get(ecl_file_view->kw_index , kw);
-  int global_index = int_vector_iget( index_vector , ith);
-  return global_index;
+  const auto& index_vector = ecl_file_view->kw_index.at(kw);
+  return index_vector[ith];
 }
 
 
@@ -105,28 +103,20 @@ int ecl_file_view_get_global_index( const ecl_file_view_type * ecl_file_view , c
 
 void ecl_file_view_make_index( ecl_file_view_type * ecl_file_view ) {
   ecl_file_view->distinct_kw.clear();
-  hash_clear( ecl_file_view->kw_index );
+  ecl_file_view->kw_index.clear();
   {
     int i;
     for (i=0; i < vector_get_size( ecl_file_view->kw_list ); i++) {
       const ecl_file_kw_type * file_kw = (const ecl_file_kw_type*)vector_iget_const( ecl_file_view->kw_list , i);
-      const char             * header  = ecl_file_kw_get_header( file_kw );
-      if ( !hash_has_key( ecl_file_view->kw_index , header )) {
-        int_vector_type * index_vector = int_vector_alloc( 0 , -1 );
-        hash_insert_hash_owned_ref( ecl_file_view->kw_index , header , index_vector , int_vector_free__);
-        ecl_file_view->distinct_kw.push_back(header);
-      }
-
-      {
-        int_vector_type * index_vector = (int_vector_type*)hash_get( ecl_file_view->kw_index , header);
-        int_vector_append( index_vector , i);
-      }
+      const std::string&  header  = ecl_file_kw_get_header( file_kw );
+      auto& index_vector = ecl_file_view->kw_index[header];
+      index_vector.push_back(i);
     }
   }
 }
 
 bool ecl_file_view_has_kw( const ecl_file_view_type * ecl_file_view, const char * kw) {
-  return hash_has_key( ecl_file_view->kw_index , kw );
+  return (ecl_file_view->kw_index.find(kw) != ecl_file_view->kw_index.end());
 }
 
 
@@ -188,12 +178,12 @@ void ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, cons
 int ecl_file_view_find_kw_value( const ecl_file_view_type * ecl_file_view , const char * kw , const void * value) {
   int global_index = -1;
   if ( ecl_file_view_has_kw( ecl_file_view , kw)) {
-    const int_vector_type * index_list = (const int_vector_type*)hash_get( ecl_file_view->kw_index , kw );
-    int index = 0;
-    while (index < int_vector_size( index_list )) {
-      const ecl_kw_type * ecl_kw = ecl_file_view_iget_kw( ecl_file_view , int_vector_iget( index_list , index ));
+    const auto& index_list = ecl_file_view->kw_index.at(kw);
+    size_t index = 0;
+    while (index < index_list.size()) {
+      const ecl_kw_type * ecl_kw = ecl_file_view_iget_kw( ecl_file_view , index_list[index]);
       if (ecl_kw_data_equal( ecl_kw , value )) {
-        global_index = int_vector_iget( index_list , index );
+        global_index = index_list[index];
         break;
       }
       index++;
@@ -304,7 +294,6 @@ void ecl_file_view_add_kw( ecl_file_view_type * ecl_file_view , ecl_file_kw_type
 
 void ecl_file_view_free( ecl_file_view_type * ecl_file_view ) {
   vector_free( ecl_file_view->child_list );
-  hash_free( ecl_file_view->kw_index );
   vector_free( ecl_file_view->kw_list );
 
   delete ecl_file_view;
@@ -317,9 +306,9 @@ void ecl_file_view_free__( void * arg ) {
 
 
 int ecl_file_view_get_num_named_kw(const ecl_file_view_type * ecl_file_view , const char * kw) {
-  if (hash_has_key(ecl_file_view->kw_index , kw)) {
-    const int_vector_type * index_vector = (const int_vector_type*)hash_get(ecl_file_view->kw_index , kw);
-    return int_vector_size( index_vector );
+  if (ecl_file_view_has_kw(ecl_file_view, kw)) {
+    const auto& index_vector = ecl_file_view->kw_index.at(kw);
+    return index_vector.size();
   } else
     return 0;
 }
@@ -338,16 +327,15 @@ void ecl_file_view_fwrite( const ecl_file_view_type * ecl_file_view , fortio_typ
 int ecl_file_view_iget_occurence( const ecl_file_view_type * ecl_file_view , int global_index) {
   const ecl_file_kw_type * file_kw = (const ecl_file_kw_type*)vector_iget_const( ecl_file_view->kw_list , global_index);
   const char * header              = ecl_file_kw_get_header( file_kw );
-  const int_vector_type * index_vector = (const int_vector_type*)hash_get( ecl_file_view->kw_index , header );
-  const int * index_data = int_vector_get_const_ptr( index_vector );
+  const auto& index_vector         = ecl_file_view->kw_index.at(header);
 
   int occurence = -1;
   {
     /* Manual reverse lookup. */
-    int i;
-    for (i=0; i < int_vector_size( index_vector ); i++)
-      if (index_data[i] == global_index)
+    for (size_t i=0; i < index_vector.size(); i++) {
+      if (index_vector[i] == global_index)
         occurence = i;
+    }
   }
   if (occurence < 0)
     util_abort("%s: internal error ... \n" , __func__);
@@ -593,10 +581,10 @@ double ecl_file_view_iget_restart_sim_days(const ecl_file_view_type * ecl_file_v
 int ecl_file_view_find_sim_time(const ecl_file_view_type * ecl_file_view , time_t sim_time) {
   int seqnum_index = -1;
   if ( ecl_file_view_has_kw( ecl_file_view , INTEHEAD_KW)) {
-    const int_vector_type * intehead_index_list = (const int_vector_type *)hash_get( ecl_file_view->kw_index , INTEHEAD_KW );
-    int index = 0;
-    while (index < int_vector_size( intehead_index_list )) {
-      const ecl_kw_type * intehead_kw = ecl_file_view_iget_kw( ecl_file_view , int_vector_iget( intehead_index_list , index ));
+    const auto& intehead_index_list = ecl_file_view->kw_index.at(INTEHEAD_KW);
+    size_t index = 0;
+    while (index < intehead_index_list.size()) {
+      const ecl_kw_type * intehead_kw = ecl_file_view_iget_kw( ecl_file_view , intehead_index_list[index] );
       if (ecl_rsthead_date( intehead_kw ) == sim_time) {
         seqnum_index = index;
         break;
