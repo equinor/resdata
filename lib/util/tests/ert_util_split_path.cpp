@@ -44,4 +44,7 @@ int main(int argc , char ** argv) {
   test_assert_std_string_equal( std::string("file") , path::basename("/tmp/user.ext/file.ext"));
   test_assert_std_string_equal( std::string("ext"), path::extension("/tmp/user.ext/file.ext"));
 
+  test_assert_std_string_equal( std::string("/tmp/user.ext"), path::dirname("/tmp/user.ext/"));
+  test_assert_std_string_equal( std::string("") , path::basename("/tmp/user.ext/"));
+  test_assert_std_string_equal( std::string(""), path::extension("/tmp/user.ext/"));
 }
