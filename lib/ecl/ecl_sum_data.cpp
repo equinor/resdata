@@ -1177,10 +1177,12 @@ void ecl_sum_data_init_double_frame(const ecl_sum_data_type * data, const ecl_su
   for (int time_index=0; time_index < ecl_sum_data_get_length(data); time_index++) {
     for (int key_index = 0; key_index < ecl_sum_vector_get_size(keywords); key_index++) {
       int param_index = ecl_sum_vector_iget_param_index(keywords, key_index);
+      printf("****** %s, param_index = %d\n", __func__, param_index);
       int data_index = key_index*key_stride + time_index * time_stride;
 
       output_data[data_index] = ecl_sum_data_iget(data, time_index, param_index);
     }
+    printf("------------------------------------ \n");
   }
 }
 

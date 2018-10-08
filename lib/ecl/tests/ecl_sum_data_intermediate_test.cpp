@@ -244,7 +244,9 @@ void verify_CASE4() {
       i = j;
     else
       i = j + 1;
+    printf("**** %s: HERE 0, j = %d\n", __func__, j);
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
+    printf("**** %s: HERE 1, j = %d\n", __func__, j);
 
     ieq(d,0,(2 - j)*10  + 100);
     ieq(d,1,(2 - j)*10  + 200);
@@ -266,10 +268,10 @@ void verify_CASE4() {
     double_vector_free(d);
   }
 
-  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
-  double frame[36]; //3 vectors X 9 data points pr. vector
+  /*ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  double frame[27]; //3 vectors X 9 data points pr. vector
   ecl_sum_init_double_frame(sum, vector, frame);
-  ecl_sum_vector_free(vector);  
+  ecl_sum_vector_free(vector);  */
 
   ecl_sum_free(sum);
 }
@@ -284,14 +286,14 @@ void write_CASE4(bool unified) {
 
     ecl_kw_type * keywords = ecl_file_iget_named_kw(smspec_file, "KEYWORDS", 0);
     ecl_kw_resize(keywords, 5);
-    ecl_kw_iset_char_ptr(keywords, 3, "HELLO");
+    ecl_kw_iset_char_ptr(keywords, 3, "WTPRWI1");
     ecl_kw_iset_char_ptr(keywords, 4, "BPR");
 
     ecl_kw_type * nums = ecl_file_iget_named_kw(smspec_file, "NUMS", 0);
     ecl_kw_resize(nums, 5);
     unsigned int * nums_ptr = (unsigned int *)ecl_kw_get_int_ptr(nums);
     nums_ptr[3] = 5;
-    nums_ptr[4] = 1;
+    nums_ptr[4] = 8;  //a different 
 
     ecl_kw_type * wgnames = ecl_file_iget_named_kw(smspec_file, "WGNAMES", 0);
     ecl_kw_resize(wgnames, 5);

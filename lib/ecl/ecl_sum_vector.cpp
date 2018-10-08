@@ -67,6 +67,7 @@ ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum, bool ad
     ecl_sum_vector->key_list = stringlist_alloc_new( );
     if (add_keywords) {
       const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
+      printf("********* %s: num nodes = %d\n", __func__, ecl_smspec_num_nodes(smspec));
       for (int i=0; i < ecl_smspec_num_nodes(smspec); i++) {
         const smspec_node_type * node = ecl_smspec_iget_node( smspec , i );
         const char * key = smspec_node_get_gen_key1(node);
