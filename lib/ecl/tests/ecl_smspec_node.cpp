@@ -25,6 +25,74 @@
 #include <ert/ecl/smspec_node.hpp>
 
 
+static void test_identify_rate_variable() {
+  const char* rate_vars[] = {
+    "WOPR" , "GGPR" , "FWPR" , "WLPR" , "WOIR" , "FGIR" , "GWIR" ,
+    "WLIR" , "GGOR" , "FWCT" , "SOFR" , "SGFR" , "SWFR" ,
+  };
+
+  const auto n_var = sizeof(rate_vars) / sizeof(rate_vars[0]);
+
+  for (auto var = rate_vars, end = rate_vars + n_var; var != end; ++var)
+    test_assert_true(smspec_node_identify_rate(*var));
+
+  test_assert_false(smspec_node_identify_rate("SPR"));
+  test_assert_false(smspec_node_identify_rate("SOFT"));
+  test_assert_false(smspec_node_identify_rate("SGFT"));
+  test_assert_false(smspec_node_identify_rate("SWFT"));
+}
+
+static void test_identify_total_variable() {
+  test_assert_true(smspec_node_identify_total("WOPT", ECL_SMSPEC_WELL_VAR));
+  test_assert_true(smspec_node_identify_total("GGPT", ECL_SMSPEC_GROUP_VAR));
+  test_assert_true(smspec_node_identify_total("FWPT", ECL_SMSPEC_FIELD_VAR));
+  test_assert_true(smspec_node_identify_total("RGIT", ECL_SMSPEC_REGION_VAR));
+  test_assert_true(smspec_node_identify_total("CWIT", ECL_SMSPEC_COMPLETION_VAR));
+
+  test_assert_true(smspec_node_identify_total("WOPTF", ECL_SMSPEC_WELL_VAR));
+  test_assert_true(smspec_node_identify_total("GOPTS", ECL_SMSPEC_GROUP_VAR));
+  test_assert_true(smspec_node_identify_total("FOIT", ECL_SMSPEC_FIELD_VAR));
+  test_assert_true(smspec_node_identify_total("ROVPT", ECL_SMSPEC_REGION_VAR));
+  test_assert_true(smspec_node_identify_total("COVIT", ECL_SMSPEC_COMPLETION_VAR));
+
+  test_assert_true(smspec_node_identify_total("WMWT", ECL_SMSPEC_WELL_VAR));
+  test_assert_true(smspec_node_identify_total("GWVPT", ECL_SMSPEC_GROUP_VAR));
+  test_assert_true(smspec_node_identify_total("FWVIT", ECL_SMSPEC_FIELD_VAR));
+  test_assert_true(smspec_node_identify_total("RGMT", ECL_SMSPEC_REGION_VAR));
+  test_assert_true(smspec_node_identify_total("CGPTF", ECL_SMSPEC_COMPLETION_VAR));
+
+  test_assert_true(smspec_node_identify_total("WSGT", ECL_SMSPEC_WELL_VAR));
+  test_assert_true(smspec_node_identify_total("GGST", ECL_SMSPEC_GROUP_VAR));
+  test_assert_true(smspec_node_identify_total("FFGT", ECL_SMSPEC_FIELD_VAR));
+  test_assert_true(smspec_node_identify_total("RGCT", ECL_SMSPEC_REGION_VAR));
+  test_assert_true(smspec_node_identify_total("CGIMT", ECL_SMSPEC_COMPLETION_VAR));
+
+  test_assert_true(smspec_node_identify_total("WWGPT", ECL_SMSPEC_WELL_VAR));
+  test_assert_true(smspec_node_identify_total("GWGIT", ECL_SMSPEC_GROUP_VAR));
+  test_assert_true(smspec_node_identify_total("FEGT", ECL_SMSPEC_FIELD_VAR));
+  test_assert_true(smspec_node_identify_total("REXGT", ECL_SMSPEC_REGION_VAR));
+  test_assert_true(smspec_node_identify_total("CGVPT", ECL_SMSPEC_COMPLETION_VAR));
+
+  test_assert_true(smspec_node_identify_total("WGVIT", ECL_SMSPEC_WELL_VAR));
+  test_assert_true(smspec_node_identify_total("GLPT", ECL_SMSPEC_GROUP_VAR));
+  test_assert_true(smspec_node_identify_total("FVPT", ECL_SMSPEC_FIELD_VAR));
+  test_assert_true(smspec_node_identify_total("RVIT", ECL_SMSPEC_REGION_VAR));
+  test_assert_true(smspec_node_identify_total("CNPT", ECL_SMSPEC_COMPLETION_VAR));
+
+  test_assert_true(smspec_node_identify_total("WNIT", ECL_SMSPEC_WELL_VAR));
+  test_assert_true(smspec_node_identify_total("GCPT", ECL_SMSPEC_GROUP_VAR));
+  test_assert_true(smspec_node_identify_total("FCIT", ECL_SMSPEC_FIELD_VAR));
+
+  test_assert_true(smspec_node_identify_total("SOFT", ECL_SMSPEC_SEGMENT_VAR));
+  test_assert_true(smspec_node_identify_total("SGFT", ECL_SMSPEC_SEGMENT_VAR));
+  test_assert_true(smspec_node_identify_total("SWFT", ECL_SMSPEC_SEGMENT_VAR));
+
+  test_assert_false(smspec_node_identify_total("SOPT", ECL_SMSPEC_SEGMENT_VAR));
+  test_assert_false(smspec_node_identify_total("HEI!", ECL_SMSPEC_SEGMENT_VAR));
+  test_assert_false(smspec_node_identify_total("xXx", ECL_SMSPEC_SEGMENT_VAR));
+  test_assert_false(smspec_node_identify_total("SPR", ECL_SMSPEC_SEGMENT_VAR));
+}
+
 void test_cmp_types() {
   const int dims[3] = {10,10,10};
   smspec_node_type * field_node = smspec_node_alloc( ECL_SMSPEC_FIELD_VAR , NULL , "FOPT" , "UNIT" , ":" , dims , 0 , 0 , 0 );
@@ -121,4 +189,6 @@ int main(int argc, char ** argv) {
   test_cmp_types();
   test_cmp_well();
   test_cmp_region( );
+  test_identify_rate_variable();
+  test_identify_total_variable();
 }
