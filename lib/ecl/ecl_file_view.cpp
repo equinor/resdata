@@ -104,6 +104,9 @@ void ecl_file_view_make_index( ecl_file_view_type * ecl_file_view ) {
     int global_index = 0;
     for (const auto& file_kw : ecl_file_view->kw_list) {
       const std::string&  header  = ecl_file_kw_get_header( file_kw );
+      if (ecl_file_view->kw_index.find(header) == ecl_file_view->kw_index.end())
+        ecl_file_view->distinct_kw.push_back(header);
+
       auto& index_vector = ecl_file_view->kw_index[header];
       index_vector.push_back(global_index);
       global_index++;

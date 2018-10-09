@@ -69,6 +69,7 @@ void test_truncated() {
     ecl_file_type * ecl_file = ecl_file_open("TEST.EGRID" , 0 );
     test_assert_true( ecl_file_is_instance( ecl_file ) );
     num_kw = ecl_file_get_size( ecl_file );
+    test_assert_int_equal( ecl_file_get_num_distinct_kw( ecl_file ), 11);
     ecl_file_close( ecl_file );
   }
 
