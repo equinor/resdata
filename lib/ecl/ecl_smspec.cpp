@@ -23,6 +23,7 @@
 #include <errno.h>
 
 #include <vector>
+#include <map>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
@@ -120,7 +121,7 @@ struct ecl_smspec_struct {
   bool                 write_mode;
   bool                 need_nums;
   int_vector_type    * index_map;
-  std::vector<int>     inv_index_map;
+  std::map<int, int>   inv_index_map;
 
   /*-----------------------------------------------------------------*/
 
@@ -331,7 +332,7 @@ const smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_typ
 }
 
 const smspec_node_type * ecl_smspec_iget_node_w_params_index( const ecl_smspec_type * smspec , int params_index ) {
-  int node_index = smspec->inv_index_map[params_index];
+  int node_index = smspec->inv_index_map.at(params_index);
   return ecl_smspec_iget_node_w_node_index(smspec, node_index);
 }
 
@@ -339,10 +340,6 @@ int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
   return vector_get_size( smspec->smspec_nodes );
 }
 
-
-int ecl_smspec_get_node_index(const ecl_smspec_type * smspec, int params_index) {
-  return smspec->inv_index_map[params_index];
-}
 
 /**
  * Returns an ecl data type for which all names will fit. If the maximum name
@@ -1104,7 +1101,7 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
     if (!ecl_smspec->write_mode)
       util_abort("%s: internal error \n",__func__);
     smspec_node_set_params_index( smspec_node , internal_index);
-    ecl_smspec->inv_index_map.push_back(internal_index);
+    ecl_smspec->inv_index_map.insert( std::make_pair(internal_index, internal_index) );
 
     if (internal_index >= ecl_smspec->params_size)
       ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
@@ -1245,10 +1242,9 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
         if (smspec_node) {
           ecl_smspec_add_node( ecl_smspec , smspec_node );
-          ecl_smspec->inv_index_map.push_back( node_count++ );
+          ecl_smspec->inv_index_map.insert( std::make_pair(params_index, node_count) );
+          node_count++;
         }
-        else
-          ecl_smspec->inv_index_map.push_back(-1);
 
         free( kw );
         free( well );
