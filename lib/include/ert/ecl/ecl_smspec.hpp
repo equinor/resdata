@@ -145,7 +145,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   int                        ecl_smspec_num_nodes( const ecl_smspec_type * smspec);
   const   smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int node_index );
   const   smspec_node_type * ecl_smspec_iget_node_w_params_index( const ecl_smspec_type * smspec , int params_index );
-
+  const smspec_node_type   * ecl_smspec_iget_node(const ecl_smspec_type * smspec, int index);
 
   char                     * ecl_smspec_alloc_well_key( const ecl_smspec_type * smspec , const char * keyword , const char * wgname);
   bool                       ecl_smspec_equal( const ecl_smspec_type * self , const ecl_smspec_type * other);

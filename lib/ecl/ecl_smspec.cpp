@@ -327,8 +327,18 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 */
 
 
-const smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int index ) {
-  return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , index );
+const smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int node_index ) {
+  return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , node_index );
+}
+
+
+/*
+  The ecl_smspec_iget_node() function is only retained for compatibility; should be
+  replaced with calls to the more explicit: ecl_smspec_iget_node_w_node_index().
+*/
+
+const smspec_node_type * ecl_smspec_iget_node(const ecl_smspec_type * smspec, int index) {
+  return ecl_smspec_iget_node_w_node_index(smspec, index);
 }
 
 const smspec_node_type * ecl_smspec_iget_node_w_params_index( const ecl_smspec_type * smspec , int params_index ) {
