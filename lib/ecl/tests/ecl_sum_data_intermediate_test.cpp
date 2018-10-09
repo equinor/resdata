@@ -235,7 +235,6 @@ void write_CASE3(bool unified) {
 void verify_CASE4() {
   ecl_sum_type * sum = ecl_sum_fread_alloc_case("CASE4", ":");
 
-  int i;
   double_vector_type * d;
   d = ecl_sum_alloc_data_vector(sum, 0, false); double_vector_free(d);
   d = ecl_sum_alloc_data_vector(sum, 1, false); double_vector_free(d);
