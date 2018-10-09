@@ -152,6 +152,9 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   void                       ecl_smspec_sort( ecl_smspec_type * smspec );
   ert_ecl_unit_enum          ecl_smspec_get_unit_system(const ecl_smspec_type * smspec);
 
+
+  int ecl_smspec_get_node_index(const ecl_smspec_type * smspec, int params_index);
+
 #ifdef __cplusplus
 }
 #endif

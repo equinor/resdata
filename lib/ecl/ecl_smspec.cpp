@@ -22,6 +22,8 @@
 #include <time.h>
 #include <errno.h>
 
+#include <vector>
+
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
 #include <ert/util/vector.hpp>
@@ -118,6 +120,7 @@ struct ecl_smspec_struct {
   bool                 write_mode;
   bool                 need_nums;
   int_vector_type    * index_map;
+  std::vector<int>     inv_index_map;
 
   /*-----------------------------------------------------------------*/
 
@@ -252,8 +255,7 @@ static const char* smspec_required_keywords[] = {
 /*****************************************************************/
 
 ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string) {
-  ecl_smspec_type *ecl_smspec;
-  ecl_smspec = (ecl_smspec_type*)util_malloc(sizeof *ecl_smspec );
+  ecl_smspec_type * ecl_smspec = new ecl_smspec_type();
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
 
   ecl_smspec->well_var_index                 = hash_alloc();
@@ -332,6 +334,10 @@ int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
   return vector_get_size( smspec->smspec_nodes );
 }
 
+
+int ecl_smspec_get_node_index(const ecl_smspec_type * smspec, int params_index) {
+  return smspec->inv_index_map[params_index];
+}
 
 /**
  * Returns an ecl data type for which all names will fit. If the maximum name
@@ -1210,6 +1216,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );
 
     {
+      int node_count = 0;
       for (params_index=0; params_index < ecl_kw_get_size(wells); params_index++) {
         float default_value          = PARAMS_GLOBAL_DEFAULT;
         int num                      = SMSPEC_NUMS_INVALID;
@@ -1230,8 +1237,12 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         } else
           smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);
 
-        if (smspec_node)
+        if (smspec_node) {
           ecl_smspec_add_node( ecl_smspec , smspec_node );
+          ecl_smspec->inv_index_map.push_back( node_count++ );
+        }
+        else
+          ecl_smspec->inv_index_map.push_back(-1);
 
         free( kw );
         free( well );
@@ -1716,7 +1727,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   float_vector_free( ecl_smspec->params_default );
   vector_free( ecl_smspec->smspec_nodes );
   free( ecl_smspec->restart_case );
-  free( ecl_smspec );
+  delete ecl_smspec;
 }
 
 

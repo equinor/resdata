@@ -236,17 +236,22 @@ void verify_CASE4() {
   ecl_sum_type * sum = ecl_sum_fread_alloc_case("CASE4", ":");
 
   int i;
+  double_vector_type * d;
+  d = ecl_sum_alloc_data_vector(sum, 0, false); double_vector_free(d);
+  d = ecl_sum_alloc_data_vector(sum, 1, false); double_vector_free(d);
+  d = ecl_sum_alloc_data_vector(sum, 2, false); double_vector_free(d);
+  d = ecl_sum_alloc_data_vector(sum, 4, false); double_vector_free(d);
 
   //NOTE: param indices 0, 1, 2, 4 are the same as 0, 1, 2, 3 in verify_CASE3
   //      vector nr. 4 (Case4) == vector nr. 3 (Case 3)
-  for (int j=0; j < 3; j++) {
+  /*for (int j=0; j < 3; j++) {
     if (j < 2)
       i = j;
     else
       i = j + 1;
-    printf("**** %s: HERE 0, j = %d\n", __func__, j);
+    printf("**** %s: HERE 0, i+1 = %d\n", __func__, i+1);
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
-    printf("**** %s: HERE 1, j = %d\n", __func__, j);
+    printf("**** %s: HERE 1, i+1 = %d\n", __func__, i+1);
 
     ieq(d,0,(2 - j)*10  + 100);
     ieq(d,1,(2 - j)*10  + 200);
@@ -266,12 +271,12 @@ void verify_CASE4() {
     ieq(d,7,(2 - j)*1000 + 30000);
     ieq(d,8,(2 - j)*1000 + 40000);
     double_vector_free(d);
-  }
+  }*/
 
-  /*ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
   double frame[27]; //3 vectors X 9 data points pr. vector
   ecl_sum_init_double_frame(sum, vector, frame);
-  ecl_sum_vector_free(vector);  */
+  ecl_sum_vector_free(vector);
 
   ecl_sum_free(sum);
 }
