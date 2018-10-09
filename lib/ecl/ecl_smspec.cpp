@@ -1099,6 +1099,7 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
     if (!ecl_smspec->write_mode)
       util_abort("%s: internal error \n",__func__);
     smspec_node_set_params_index( smspec_node , internal_index);
+    ecl_smspec->inv_index_map.push_back(internal_index);
 
     if (internal_index >= ecl_smspec->params_size)
       ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
