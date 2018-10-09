@@ -240,42 +240,17 @@ void verify_CASE4() {
   d = ecl_sum_alloc_data_vector(sum, 0, false); double_vector_free(d);
   d = ecl_sum_alloc_data_vector(sum, 1, false); double_vector_free(d);
   d = ecl_sum_alloc_data_vector(sum, 2, false); double_vector_free(d);
-  d = ecl_sum_alloc_data_vector(sum, 4, false); double_vector_free(d);
-
-  //NOTE: param indices 0, 1, 2, 4 are the same as 0, 1, 2, 3 in verify_CASE3
-  //      vector nr. 4 (Case4) == vector nr. 3 (Case 3)
-  /*for (int j=0; j < 3; j++) {
-    if (j < 2)
-      i = j;
-    else
-      i = j + 1;
-    printf("**** %s: HERE 0, i+1 = %d\n", __func__, i+1);
-    double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
-    printf("**** %s: HERE 1, i+1 = %d\n", __func__, i+1);
-
-    ieq(d,0,(2 - j)*10  + 100);
-    ieq(d,1,(2 - j)*10  + 200);
-    ieq(d,2,(2 - j)*10  + 300);
-
-    if (i == 0) {
-      const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum_get_smspec(sum), i);
-      double default_value = smspec_node_get_default(node);
-      ieq(d,3,default_value);
-      ieq(d,4,default_value);
-    } else {
-      ieq(d,3,(2 - j)*100 + 1000);
-      ieq(d,4,(2 - j)*100 + 2000);
-    }
-    ieq(d,5,(2 - j)*1000 + 10000);
-    ieq(d,6,(2 - j)*1000 + 20000);
-    ieq(d,7,(2 - j)*1000 + 30000);
-    ieq(d,8,(2 - j)*1000 + 40000);
-    double_vector_free(d);
-  }*/
+  d = ecl_sum_alloc_data_vector(sum, 4, false);
+  ieq(d, 0, -99);
+  ieq(d, 4, -99);
+  ieq(d, 5, 10000);
+  ieq(d, 8, 40000);
+  double_vector_free(d);
 
   ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
   double frame[27]; //3 vectors X 9 data points pr. vector
   ecl_sum_init_double_frame(sum, vector, frame);
+  test_assert_double_equal(frame[26], 40000);
   ecl_sum_vector_free(vector);
 
   ecl_sum_free(sum);
