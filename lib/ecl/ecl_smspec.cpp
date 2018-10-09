@@ -305,7 +305,7 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 
   for (int i=0; i < ecl_smspec_num_nodes( self ); i++) {
-    const smspec_node_type * self_node = ecl_smspec_iget_node( self , i );
+    const smspec_node_type * self_node = ecl_smspec_iget_node_w_node_index( self , i );
     int self_index = smspec_node_get_params_index( self_node );
     const char * key = smspec_node_get_gen_key1( self_node );
     if (ecl_smspec_has_general_var( other , key)) {
@@ -326,8 +326,13 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 */
 
 
-const smspec_node_type * ecl_smspec_iget_node( const ecl_smspec_type * smspec , int index ) {
+const smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int index ) {
   return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , index );
+}
+
+const smspec_node_type * ecl_smspec_iget_node_w_params_index( const ecl_smspec_type * smspec , int params_index ) {
+  int node_index = smspec->inv_index_map[params_index];
+  return ecl_smspec_iget_node_w_node_index(smspec, node_index);
 }
 
 int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
@@ -347,7 +352,7 @@ int ecl_smspec_get_node_index(const ecl_smspec_type * smspec, int params_index) 
 static ecl_data_type get_wgnames_type(const ecl_smspec_type * smspec) {
   size_t max_len = 0;
   for(int i = 0; i < ecl_smspec_num_nodes(smspec); ++i) {
-    const smspec_node_type * node = ecl_smspec_iget_node(smspec, i);
+    const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(smspec, i);
     const char * name = smspec_node_get_wgname( node );
     if(name)
       max_len = util_size_t_max(max_len, strlen(name));
@@ -439,7 +444,7 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
     nums_kw = ecl_kw_alloc( NUMS_KW , num_nodes , ECL_INT);
 
   for (int i=0; i < ecl_smspec_num_nodes( smspec ); i++) {
-    const smspec_node_type * smspec_node = ecl_smspec_iget_node( smspec , i );
+    const smspec_node_type * smspec_node = ecl_smspec_iget_node_w_node_index( smspec , i );
     /*
       It is possible to add variables with deferred initialisation
       with the ecl_sum_add_blank_var() function. Before these

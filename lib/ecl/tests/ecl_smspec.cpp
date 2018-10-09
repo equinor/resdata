@@ -30,8 +30,8 @@ void test_sort( ecl_smspec_type * smspec )
   test_assert_int_equal( num_nodes, ecl_smspec_num_nodes( smspec ));
 
   for (int i=1; i < ecl_smspec_num_nodes( smspec ); i++) {
-    const smspec_node_type * node1 = ecl_smspec_iget_node( smspec, i - 1 );
-    const smspec_node_type * node2 = ecl_smspec_iget_node( smspec, i );
+    const smspec_node_type * node1 = ecl_smspec_iget_node_w_node_index( smspec, i - 1 );
+    const smspec_node_type * node2 = ecl_smspec_iget_node_w_node_index( smspec, i );
     test_assert_true( smspec_node_cmp( node1 , node2 ) <= 0 );
 
     test_assert_int_equal( smspec_node_get_params_index( node1 ) , i - 1 );
@@ -43,7 +43,7 @@ void test_copy(const ecl_smspec_type * smspec1) {
   ecl_sum_type * ecl_sum2 = ecl_sum_alloc_writer("CASE", false, true, ":", 0, true, 100, 100, 100);
   const ecl_smspec_type * smspec2 = ecl_sum_get_smspec(ecl_sum2);
   for (int i=0; i < ecl_smspec_num_nodes(smspec1); i++) {
-    const smspec_node_type * node = ecl_smspec_iget_node(smspec1, i);
+    const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(smspec1, i);
     ecl_sum_add_smspec_node(ecl_sum2, node);
   }
   test_assert_true( ecl_smspec_equal(smspec1, smspec2));

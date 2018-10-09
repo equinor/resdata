@@ -180,7 +180,7 @@ void verify_CASE3() {
     ieq(d,2,(2 - i)*10  + 300);
 
     if (i == 0) {
-      const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum_get_smspec(sum), i);
+      const smspec_node_type * node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
       double default_value = smspec_node_get_default(node);
       ieq(d,3,default_value);
       ieq(d,4,default_value);

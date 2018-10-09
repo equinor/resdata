@@ -68,7 +68,7 @@ ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum, bool ad
     if (add_keywords) {
       const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
       for (int i=0; i < ecl_smspec_num_nodes(smspec); i++) {
-        const smspec_node_type * node = ecl_smspec_iget_node( smspec , i );
+        const smspec_node_type * node = ecl_smspec_iget_node_w_node_index( smspec , i );
         const char * key = smspec_node_get_gen_key1(node);
         /*
           The TIME keyword is special case handled to not be included; that is
