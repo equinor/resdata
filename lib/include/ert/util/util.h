@@ -100,7 +100,6 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   char       * util_get_timezone(void);
   time_t       util_make_datetime_utc(int , int , int , int , int , int );
   bool         util_make_datetime_utc_validated(int sec, int min, int hour , int mday , int month , int year, time_t * t);
-  void         util_fprintf_date_utc(time_t  , FILE * );
   time_t       util_make_date_utc(int , int , int);
   time_t       util_make_pure_date_utc(time_t t);
   void         util_inplace_forward_seconds_utc(time_t * t , double seconds);

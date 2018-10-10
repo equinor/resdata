@@ -2886,13 +2886,6 @@ bool util_fscanf_date_utc(FILE *stream , time_t *t)  {
 */
 
 
-void util_fprintf_date_utc(time_t t , FILE * stream) {
-  int mday,year,month;
-
-  util_set_datetime_values_utc(t , NULL , NULL , NULL , &mday , &month , &year);
-  fprintf(stream , "%02d/%02d/%4d", mday,month,year);
-}
-
 
 char * util_alloc_date_string_utc( time_t t ) {
   int mday,year,month;
