@@ -31,6 +31,8 @@
 #include <ert/util/util.h>
 #include <ert/util/path_stack.hpp>
 
+#include "detail/util/util_portability.h"
+
 /**
    This file implements the structure path_stack which is vaguely
    inspired by the emacs-lisp scecial form (save-excursion ...). The

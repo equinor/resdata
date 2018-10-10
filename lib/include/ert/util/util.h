@@ -416,7 +416,7 @@ void    util_abort_signal(int );
 #endif
 
 #include "util_unlink.h"
-#include "util_portability.h"
+  //#include "util_portability.h"
 
 #ifdef __cplusplus
 }

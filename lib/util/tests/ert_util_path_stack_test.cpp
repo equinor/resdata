@@ -26,6 +26,7 @@
 #include <ert/util/path_stack.hpp>
 #include <ert/util/test_util.hpp>
 
+#include "detail/util/util_portability.h"
 
 
 

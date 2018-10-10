@@ -22,6 +22,8 @@
 #include <ert/util/test_util.hpp>
 #include <ert/util/stringlist.hpp>
 
+#include "detail/util/util_portability.h"
+
 void test_path(const char * input , const char * expected) {
   char * rpath = util_alloc_realpath__( input );
   if (!test_check_string_equal( rpath , expected ))

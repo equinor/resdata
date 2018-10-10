@@ -35,6 +35,8 @@
 #include <ert/util/util.h>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/vector.hpp>
+#include "detail/util/util_portability.h"
+
 
 #define STRINGLIST_TYPE_ID 671855
 

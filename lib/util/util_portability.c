@@ -21,7 +21,7 @@
 #include <string.h>
 #include <time.h>
 
-#include <ert/util/util_portability.h>
+#include "detail/util/util_portability.h"
 #include <ert/util/ert_api_config.h>
 #include "ert/util/build_config.h"
 

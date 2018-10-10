@@ -284,6 +284,7 @@ add_test(NAME ecl_smspec_node COMMAND ecl_smspec_node)
 
 add_executable(ert_util_work_area util/tests/ert_util_work_area.cpp)
 target_link_libraries(ert_util_work_area ecl)
+target_include_directories(ert_util_work_area PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 add_test(NAME ert_util_work_area
     COMMAND ert_util_work_area  data2/file1
                                 ${CMAKE_CURRENT_SOURCE_DIR}/util/tests/data2/file2
@@ -294,6 +295,7 @@ add_test(NAME ert_util_work_area
 add_executable(ert_util_cwd_test util/tests/ert_util_cwd_test.cpp)
 target_link_libraries(ert_util_cwd_test ecl)
 add_test(NAME ert_util_cwd_test COMMAND ert_util_cwd_test ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(ert_util_cwd_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 
 add_executable(ert_util_copy_file util/tests/ert_util_copy_file.cpp)
 target_link_libraries(ert_util_copy_file ecl)
@@ -307,6 +309,7 @@ add_test(NAME ert_util_file_readable COMMAND ert_util_file_readable)
 
 add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.cpp)
 target_link_libraries(ert_util_path_stack_test ecl)
+target_include_directories(ert_util_path_stack_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 add_test(NAME ert_util_path_stack_test COMMAND ert_util_path_stack_test
     ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -318,6 +321,7 @@ if (HAVE_BACKTRACE)
 
    add_executable(ert_util_addr2line util/tests/ert_util_addr2line.cpp)
    target_link_libraries(ert_util_addr2line ecl)
+   target_include_directories(ert_util_addr2line PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
    add_test(NAME ert_util_addr2line COMMAND ert_util_addr2line)
 endif()
 

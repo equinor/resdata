@@ -42,6 +42,8 @@
 #include <ert/ecl/smspec_node.hpp>
 
 #include "detail/util/path.hpp"
+#include "detail/util/util_portability.h"
+
 
 /**
    The ECLIPSE summary data is organised in a header file (.SMSPEC)

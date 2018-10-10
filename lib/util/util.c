@@ -33,10 +33,6 @@
 #include <stdio.h>
 
 #include <fcntl.h>
-
-#include <ert/util/ert_api_config.hpp>
-#include "ert/util/build_config.h"
-
 #include <errno.h>
 
 #include <stdint.h>
@@ -45,6 +41,10 @@
 #include <signal.h>
 #include <sys/stat.h>
 
+
+#include <ert/util/ert_api_config.hpp>
+#include "ert/util/build_config.h"
+#include "detail/util/util_portability.h"
 
 #ifdef ERT_HAVE_SPAWN
 #include <unistd.h>

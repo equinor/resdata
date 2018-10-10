@@ -22,6 +22,7 @@
 #include <ert/util/test_util.hpp>
 #include <ert/util/test_work_area.hpp>
 #include <ert/util/util.h>
+#include "detail/util/util_portability.h"
 
 
 void test_path(const char * input_path, const char * expected_path) {

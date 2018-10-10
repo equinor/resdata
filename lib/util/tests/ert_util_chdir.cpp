@@ -22,6 +22,7 @@
 #include <ert/util/util.h>
 #include <ert/util/test_work_area.hpp>
 
+#include "detail/util/util_portability.h"
 
 void test_chdir() {
   test_work_area_type * work_area = test_work_area_alloc("test-area");

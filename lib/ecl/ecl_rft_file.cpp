@@ -38,6 +38,8 @@
 #include <ert/ecl/ecl_endian_flip.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
 
+#include "detail/util/util_portability.h"
+
 
 /**
    This data structure is for loading one eclipse RFT file. One RFT

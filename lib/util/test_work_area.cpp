@@ -34,6 +34,7 @@
 #include <ert/util/type_macros.hpp>
 
 #include <ert/util/ert_api_config.hpp>
+#include "detail/util/util_portability.h"
 #ifdef ERT_HAVE_OPENDIR
 #include <sys/types.h>
 #include <dirent.h>

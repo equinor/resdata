@@ -21,6 +21,7 @@
 #include <ert/util/vector.hpp>
 #include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
+#include "detail/util/util_portability.h"
 
 int main(int argc , char ** argv) {
   char * cwd = argv[1];

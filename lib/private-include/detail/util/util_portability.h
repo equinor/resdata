@@ -19,6 +19,7 @@
 #ifndef ERT_UTIL_PORTABILITY_H
 #define ERT_UTIL_PORTABILITY_H
 
+#include <stdbool.h>
 #include <ert/util/ert_api_config.h>
 
 #ifdef HAVE_UNISTD_H

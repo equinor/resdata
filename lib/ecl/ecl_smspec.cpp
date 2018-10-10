@@ -43,6 +43,8 @@
 #include <ert/ecl/ecl_endian_flip.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include "detail/util/util_portability.h"
+
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
 #endif

@@ -24,6 +24,8 @@
 #include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
 
+#include "detail/util/util_portability.h"
+
 
 
 void test_lookup(bool valid_address, bool change_cwd) {
