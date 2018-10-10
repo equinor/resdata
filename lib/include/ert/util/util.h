@@ -228,7 +228,6 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   char       * util_alloc_filename(const char * , const char *  , const char * );
   char       * util_realloc_filename(char *  , const char *  , const char *  , const char * );
   char       * util_alloc_strip_copy(const char *);
-  void         util_set_strip_copy(char * , const char *);
   char       * util_alloc_string_sum(const char **  , int);
   char       * util_strcat_realloc(char *, const char * );
   char       * util_alloc_string_copy(const char *);

@@ -3059,22 +3059,6 @@ time_t util_make_pure_date_utc(time_t t) {
 
 /*****************************************************************/
 
-void util_set_strip_copy(char * copy , const char *src) {
-  const char null_char  = '\0';
-  const char space_char = ' ';
-  int  src_index   = 0;
-  int target_index = 0;
-  while (src[src_index] == space_char)
-    src_index++;
-
-  while (src[src_index] != null_char && src[src_index] != space_char) {
-    copy[target_index] = src[src_index];
-    src_index++;
-    target_index++;
-  }
-  copy[target_index] = null_char;
-}
-
 
 /**
    The function will allocate a new copy of src where leading and
