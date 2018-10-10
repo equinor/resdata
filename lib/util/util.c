@@ -4330,53 +4330,6 @@ void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size ) 
 /*****************************************************************/
 
 
-/**
-   These small functions write formatted values onto a stream. The
-   main point about these functions is to avoid creating small one-off
-   format strings. The character base_fmt should be 'f' or 'g'
-*/
-
-void util_fprintf_double(double value , int width , int decimals , char base_fmt , FILE * stream) {
-  char * fmt = util_alloc_sprintf("%c%d.%d%c" , '%' , width , decimals , base_fmt);
-  fprintf(stream , fmt , value);
-  free(fmt);
-}
-
-
-void util_fprintf_int(int value , int width , FILE * stream) {
-  char fmt[32];
-  sprintf(fmt , "%%%dd" , width);
-  fprintf(stream , fmt , value);
-}
-
-
-
-void util_fprintf_string(const char * s , int width_ , string_alignement_type alignement , FILE * stream) {
-  char fmt[32];
-  size_t i;
-  size_t width = width_;
-  if (alignement == left_pad) {
-    i = 0;
-    if (width > strlen(s)) {
-      for (i=0; i < (width - strlen(s)); i++)
-        fputc(' ' , stream);
-    }
-    fprintf(stream , "%s", s);
-  } else if (alignement == right_pad) {
-    sprintf(fmt , "%%-%lus" , width);
-    fprintf(stream , fmt , s);
-  } else {
-    int total_pad  = width - strlen(s);
-    int front_pad  = total_pad / 2;
-    int back_pad   = total_pad - front_pad;
-    int i;
-    util_fprintf_string(s , front_pad + strlen(s) , left_pad , stream);
-    for (i=0; i < back_pad; i++)
-      fputc(' ' , stream);
-  }
-}
-
-
 
 
 

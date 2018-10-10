@@ -96,11 +96,6 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
                                           void *);       /* Arbitrary argument */
 
 
-
-typedef enum {left_pad   = 0,
-              right_pad  = 1,
-              center_pad = 2} string_alignement_type;
-
   //#define UTIL_CXX_MALLOC(var , num_elm) (typeof (var)) util_malloc( (num_elm) * sizeof var)
   char       * util_get_timezone(void);
   time_t       util_make_datetime_utc(int , int , int , int , int , int );
@@ -128,9 +123,6 @@ typedef enum {left_pad   = 0,
   char       * util_alloc_sprintf_va(const char * fmt , va_list ap);
   char       * util_alloc_sprintf(const char *  , ...);
   char       * util_realloc_sprintf(char * , const char *  , ...);
-  void         util_fprintf_int(int , int , FILE * );
-  void         util_fprintf_string(const char *  , int , string_alignement_type ,  FILE * );
-  void         util_fprintf_double(double , int , int , char , FILE *);
   bool         util_fscanf_date_utc(FILE * , time_t *);
   bool         util_sscanf_date_utc(const char * , time_t *);
   bool         util_sscanf_isodate(const char * , time_t *);
