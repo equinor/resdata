@@ -22,6 +22,9 @@
 #include <time.h>
 #include <errno.h>
 
+#include <vector>
+#include <map>
+
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
 #include <ert/util/vector.hpp>
@@ -118,6 +121,7 @@ struct ecl_smspec_struct {
   bool                 write_mode;
   bool                 need_nums;
   int_vector_type    * index_map;
+  std::map<int, int>   inv_index_map;
 
   /*-----------------------------------------------------------------*/
 
@@ -252,8 +256,7 @@ static const char* smspec_required_keywords[] = {
 /*****************************************************************/
 
 ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join_string) {
-  ecl_smspec_type *ecl_smspec;
-  ecl_smspec = (ecl_smspec_type*)util_malloc(sizeof *ecl_smspec );
+  ecl_smspec_type * ecl_smspec = new ecl_smspec_type();
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
 
   ecl_smspec->well_var_index                 = hash_alloc();
@@ -303,7 +306,7 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 
   for (int i=0; i < ecl_smspec_num_nodes( self ); i++) {
-    const smspec_node_type * self_node = ecl_smspec_iget_node( self , i );
+    const smspec_node_type * self_node = ecl_smspec_iget_node_w_node_index( self , i );
     int self_index = smspec_node_get_params_index( self_node );
     const char * key = smspec_node_get_gen_key1( self_node );
     if (ecl_smspec_has_general_var( other , key)) {
@@ -324,8 +327,23 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 */
 
 
-const smspec_node_type * ecl_smspec_iget_node( const ecl_smspec_type * smspec , int index ) {
-  return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , index );
+const smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int node_index ) {
+  return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , node_index );
+}
+
+
+/*
+  The ecl_smspec_iget_node() function is only retained for compatibility; should be
+  replaced with calls to the more explicit: ecl_smspec_iget_node_w_node_index().
+*/
+
+const smspec_node_type * ecl_smspec_iget_node(const ecl_smspec_type * smspec, int index) {
+  return ecl_smspec_iget_node_w_node_index(smspec, index);
+}
+
+const smspec_node_type * ecl_smspec_iget_node_w_params_index( const ecl_smspec_type * smspec , int params_index ) {
+  int node_index = smspec->inv_index_map.at(params_index);
+  return ecl_smspec_iget_node_w_node_index(smspec, node_index);
 }
 
 int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
@@ -341,7 +359,7 @@ int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
 static ecl_data_type get_wgnames_type(const ecl_smspec_type * smspec) {
   size_t max_len = 0;
   for(int i = 0; i < ecl_smspec_num_nodes(smspec); ++i) {
-    const smspec_node_type * node = ecl_smspec_iget_node(smspec, i);
+    const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(smspec, i);
     const char * name = smspec_node_get_wgname( node );
     if(name)
       max_len = util_size_t_max(max_len, strlen(name));
@@ -433,7 +451,7 @@ static void ecl_smspec_fortio_fwrite( const ecl_smspec_type * smspec , fortio_ty
     nums_kw = ecl_kw_alloc( NUMS_KW , num_nodes , ECL_INT);
 
   for (int i=0; i < ecl_smspec_num_nodes( smspec ); i++) {
-    const smspec_node_type * smspec_node = ecl_smspec_iget_node( smspec , i );
+    const smspec_node_type * smspec_node = ecl_smspec_iget_node_w_node_index( smspec , i );
     /*
       It is possible to add variables with deferred initialisation
       with the ecl_sum_add_blank_var() function. Before these
@@ -1093,6 +1111,7 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
     if (!ecl_smspec->write_mode)
       util_abort("%s: internal error \n",__func__);
     smspec_node_set_params_index( smspec_node , internal_index);
+    ecl_smspec->inv_index_map.insert( std::make_pair(internal_index, internal_index) );
 
     if (internal_index >= ecl_smspec->params_size)
       ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
@@ -1210,6 +1229,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );
 
     {
+      int node_count = 0;
       for (params_index=0; params_index < ecl_kw_get_size(wells); params_index++) {
         float default_value          = PARAMS_GLOBAL_DEFAULT;
         int num                      = SMSPEC_NUMS_INVALID;
@@ -1230,8 +1250,11 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         } else
           smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string , ecl_smspec->grid_dims , num , params_index , default_value);
 
-        if (smspec_node)
+        if (smspec_node) {
           ecl_smspec_add_node( ecl_smspec , smspec_node );
+          ecl_smspec->inv_index_map.insert( std::make_pair(params_index, node_count) );
+          node_count++;
+        }
 
         free( kw );
         free( well );
@@ -1716,7 +1739,7 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   float_vector_free( ecl_smspec->params_default );
   vector_free( ecl_smspec->smspec_nodes );
   free( ecl_smspec->restart_case );
-  free( ecl_smspec );
+  delete ecl_smspec;
 }
 
 

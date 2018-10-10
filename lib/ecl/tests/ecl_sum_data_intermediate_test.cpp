@@ -5,7 +5,12 @@
 #include <ert/util/double_vector.h>
 #include <ert/util/vector.h>
 
+#include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_type.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_file.hpp>
 #include <ert/ecl/ecl_sum.hpp>
+#include <ert/ecl/ecl_sum_vector.hpp>
 
 
 /*
@@ -175,7 +180,7 @@ void verify_CASE3() {
     ieq(d,2,(2 - i)*10  + 300);
 
     if (i == 0) {
-      const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum_get_smspec(sum), i);
+      const smspec_node_type * node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
       double default_value = smspec_node_get_default(node);
       ieq(d,3,default_value);
       ieq(d,4,default_value);
@@ -190,12 +195,16 @@ void verify_CASE3() {
     double_vector_free(d);
   }
 
+  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  double frame[27]; //3 vectors X 9 data points pr. vector
+  ecl_sum_init_double_frame(sum, vector, frame);
+  ecl_sum_vector_free(vector);
+
   ecl_sum_free(sum);
 }
 
 
 void write_CASE3(bool unified) {
-  test_work_area_type * work_area = test_work_area_alloc("SMSPEC");
   write_CASE2(unified);
   {
     time_t start_time = util_make_date_utc( 1,1,2010 );
@@ -221,12 +230,87 @@ void write_CASE3(bool unified) {
     ecl_sum_free(ecl_sum);
     verify_CASE3();
   }
-  test_work_area_free(work_area);
+}
+
+void verify_CASE4() {
+  ecl_sum_type * sum = ecl_sum_fread_alloc_case("CASE4", ":");
+
+  double_vector_type * d;
+  d = ecl_sum_alloc_data_vector(sum, 0, false); double_vector_free(d);
+  d = ecl_sum_alloc_data_vector(sum, 1, false); double_vector_free(d);
+  d = ecl_sum_alloc_data_vector(sum, 2, false); double_vector_free(d);
+  d = ecl_sum_alloc_data_vector(sum, 4, false);
+  ieq(d, 0, -99);
+  ieq(d, 4, -99);
+  ieq(d, 5, 10000);
+  ieq(d, 8, 40000);
+  double_vector_free(d);
+
+  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  double frame[27]; //3 vectors X 9 data points pr. vector
+  ecl_sum_init_double_frame(sum, vector, frame);
+  test_assert_double_equal(frame[26], 40000);
+  ecl_sum_vector_free(vector);
+
+  ecl_sum_free(sum);
 }
 
 
+void write_CASE4(bool unified) {
+  test_work_area_type * work_area = test_work_area_alloc("CASE4");
+  write_CASE3(unified);
+  {
+    ecl_file_type * sum_file    = ecl_file_open("CASE3.UNSMRY", 0);
+    ecl_file_type * smspec_file = ecl_file_open("CASE3.SMSPEC", 0);
+
+    ecl_kw_type * keywords = ecl_file_iget_named_kw(smspec_file, "KEYWORDS", 0);
+    ecl_kw_resize(keywords, 5);
+    ecl_kw_iset_char_ptr(keywords, 3, "WTPRWI1");
+    ecl_kw_iset_char_ptr(keywords, 4, "BPR");
+
+    ecl_kw_type * nums = ecl_file_iget_named_kw(smspec_file, "NUMS", 0);
+    ecl_kw_resize(nums, 5);
+    unsigned int * nums_ptr = (unsigned int *)ecl_kw_get_int_ptr(nums);
+    nums_ptr[3] = 5;
+    nums_ptr[4] = 8;  //a different 
+
+    ecl_kw_type * wgnames = ecl_file_iget_named_kw(smspec_file, "WGNAMES", 0);
+    ecl_kw_resize(wgnames, 5);
+    ecl_kw_iset_char_ptr(wgnames, 4, ":+:+:+:+");
+
+    ecl_kw_type * units = ecl_file_iget_named_kw(smspec_file, "UNITS", 0);
+    ecl_kw_resize(units, 5);
+    ecl_kw_iset_char_ptr(units, 4, "BARS");
+   
+    int num_params = ecl_file_get_num_named_kw(sum_file, "PARAMS");
+    for (int i = 0; i < num_params; i++) {
+      ecl_kw_type * params_kw = ecl_file_iget_named_kw(sum_file, "PARAMS", i);
+      ecl_kw_resize(params_kw, 5);
+      float * ptr = (float*)ecl_kw_get_void_ptr(params_kw);
+      ptr[4] = ptr[3];
+      ptr[3] = -1;
+    }
+  
+    fortio_type * f;
+    const char * filename_sum = "CASE4.UNSMRY";
+    f = fortio_open_writer( filename_sum, false, ECL_ENDIAN_FLIP );
+    ecl_file_fwrite_fortio(sum_file, f, 0);
+    fortio_fclose( f );
+
+    const char * filename_smspec = "CASE4.SMSPEC";
+    f = fortio_open_writer( filename_smspec, false, ECL_ENDIAN_FLIP );
+    ecl_file_fwrite_fortio(smspec_file, f, 0);
+    fortio_fclose( f );
+
+    ecl_file_close(smspec_file);
+    ecl_file_close(sum_file);
+    verify_CASE4();
+  }
+  test_work_area_free(work_area);
+}
+
 int main() {
-  write_CASE3(true);
-  write_CASE3(false);
+  write_CASE4(true);
+  write_CASE4(false);
   return 0;
 }

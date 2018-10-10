@@ -792,7 +792,7 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
 
   bool time_in_days = false;
-  const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, 0);
+  const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, 0);
   if ( util_string_equal(smspec_node_get_unit(node), "DAYS" ) )
     time_in_days = true;
 
@@ -801,7 +801,7 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
 
 
   for (int i = 0; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
-    const smspec_node_type * node = ecl_smspec_iget_node(ecl_sum->smspec, i);
+    const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
     if (util_string_equal(smspec_node_get_gen_key1(node), "TIME"))
       continue;
 
