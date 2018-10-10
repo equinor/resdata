@@ -27,10 +27,6 @@
 #endif
 
 
-#ifdef __cplusplus
-extern"C" {
-#endif
-
 
 #ifdef ERT_WINDOWS
 #define UTIL_PATH_SEP_STRING           "\\"   /* A \0 terminated separator used when we want a (char *) instance.                   */
@@ -45,6 +41,10 @@ extern"C" {
 
 #define UTIL_NEWLINE_STRING "          \n"
 #define UTIL_DEFAULT_MKDIR_MODE 0777         /* Directories are by default created with mode a+rwx - and then comes the umask ... */
+
+#ifdef __cplusplus
+extern"C" {
+#endif
 
 
 #ifdef HAVE_WINDOWS__ACCESS

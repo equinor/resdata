@@ -22,6 +22,7 @@
 #include <ert/util/util.h>
 
 #include "detail/util/path.hpp"
+#include "detail/util/util_portability.h"
 
 namespace ecl {
 
