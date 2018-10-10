@@ -506,7 +506,7 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     // KEYWORD
-    smspec_node->gen_key1 = util_alloc_string_copy( smspec_node->keyword.c_str() );
+    smspec_node->gen_key1 = smspec_node->keyword;
     break;
   case(ECL_SMSPEC_GROUP_VAR):
     // KEYWORD:WGNAME

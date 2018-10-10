@@ -471,7 +471,8 @@ void ecl_sum_file_data::fwrite_report( int report_step , fortio_type * fortio) c
     auto range = this->report_range( report_step );
     for (int index = range.first; index <= range.second; index++) {
       const ecl_sum_tstep_type * tstep = iget_ministep( index );
-      ecl_sum_tstep_fwrite( tstep , ecl_smspec_get_index_map( ecl_smspec ) , fortio );
+      //ecl_sum_tstep_fwrite( tstep , ecl_smspec_get_index_map( ecl_smspec ) , fortio );
+      ecl_sum_tstep_fwrite( tstep , ecl_smspec_get_index_map(ecl_smspec) , ecl_smspec_num_nodes(ecl_smspec), fortio );
     }
   }
 }

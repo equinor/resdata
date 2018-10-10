@@ -50,7 +50,7 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
   int  ecl_sum_tstep_get_report(const ecl_sum_tstep_type * ministep);
   int  ecl_sum_tstep_get_ministep(const ecl_sum_tstep_type * ministep);
 
-  void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int_vector_type * index_map , fortio_type * fortio);
+  void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int * index_map , int index_map_size, fortio_type * fortio);
   void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value);
 
   /// scales with value; equivalent to iset( iget() * scalar)
