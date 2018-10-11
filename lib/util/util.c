@@ -2886,13 +2886,6 @@ bool util_fscanf_date_utc(FILE *stream , time_t *t)  {
 */
 
 
-void util_fprintf_date_utc(time_t t , FILE * stream) {
-  int mday,year,month;
-
-  util_set_datetime_values_utc(t , NULL , NULL , NULL , &mday , &month , &year);
-  fprintf(stream , "%02d/%02d/%4d", mday,month,year);
-}
-
 
 char * util_alloc_date_string_utc( time_t t ) {
   int mday,year,month;
@@ -3065,22 +3058,6 @@ time_t util_make_pure_date_utc(time_t t) {
 
 
 /*****************************************************************/
-
-void util_set_strip_copy(char * copy , const char *src) {
-  const char null_char  = '\0';
-  const char space_char = ' ';
-  int  src_index   = 0;
-  int target_index = 0;
-  while (src[src_index] == space_char)
-    src_index++;
-
-  while (src[src_index] != null_char && src[src_index] != space_char) {
-    copy[target_index] = src[src_index];
-    src_index++;
-    target_index++;
-  }
-  copy[target_index] = null_char;
-}
 
 
 /**
@@ -4328,53 +4305,6 @@ void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size ) 
 
 
 /*****************************************************************/
-
-
-/**
-   These small functions write formatted values onto a stream. The
-   main point about these functions is to avoid creating small one-off
-   format strings. The character base_fmt should be 'f' or 'g'
-*/
-
-void util_fprintf_double(double value , int width , int decimals , char base_fmt , FILE * stream) {
-  char * fmt = util_alloc_sprintf("%c%d.%d%c" , '%' , width , decimals , base_fmt);
-  fprintf(stream , fmt , value);
-  free(fmt);
-}
-
-
-void util_fprintf_int(int value , int width , FILE * stream) {
-  char fmt[32];
-  sprintf(fmt , "%%%dd" , width);
-  fprintf(stream , fmt , value);
-}
-
-
-
-void util_fprintf_string(const char * s , int width_ , string_alignement_type alignement , FILE * stream) {
-  char fmt[32];
-  size_t i;
-  size_t width = width_;
-  if (alignement == left_pad) {
-    i = 0;
-    if (width > strlen(s)) {
-      for (i=0; i < (width - strlen(s)); i++)
-        fputc(' ' , stream);
-    }
-    fprintf(stream , "%s", s);
-  } else if (alignement == right_pad) {
-    sprintf(fmt , "%%-%lus" , width);
-    fprintf(stream , fmt , s);
-  } else {
-    int total_pad  = width - strlen(s);
-    int front_pad  = total_pad / 2;
-    int back_pad   = total_pad - front_pad;
-    int i;
-    util_fprintf_string(s , front_pad + strlen(s) , left_pad , stream);
-    for (i=0; i < back_pad; i++)
-      fputc(' ' , stream);
-  }
-}
 
 
 

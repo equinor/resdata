@@ -458,16 +458,24 @@ bool ecl_sum_data_check_sim_days( const ecl_sum_data_type * data , double sim_da
      sequence has no holes.
 */
 
+static void fprintf_date_utc(time_t t , FILE * stream) {
+  int mday,year,month;
+
+  util_set_datetime_values_utc(t , NULL , NULL , NULL , &mday , &month , &year);
+  fprintf(stream , "%02d/%02d/%4d", mday,month,year);
+}
+
+
 
 static int ecl_sum_data_get_index_from_sim_time( const ecl_sum_data_type * data , time_t sim_time) {
   if (!ecl_sum_data_check_sim_time(data, sim_time)) {
     time_t start_time = ecl_sum_data_get_data_start(data);
     time_t end_time = ecl_sum_data_get_sim_end(data);
 
-    fprintf(stderr , "Simulation start: "); util_fprintf_date_utc( ecl_smspec_get_start_time( data->smspec ) , stderr );
-    fprintf(stderr , "Data start......: "); util_fprintf_date_utc( start_time , stderr );
-    fprintf(stderr , "Simulation end .: "); util_fprintf_date_utc( end_time , stderr );
-    fprintf(stderr , "Requested date .: "); util_fprintf_date_utc( sim_time , stderr );
+    fprintf(stderr , "Simulation start: "); fprintf_date_utc( ecl_smspec_get_start_time( data->smspec ) , stderr );
+    fprintf(stderr , "Data start......: "); fprintf_date_utc( start_time , stderr );
+    fprintf(stderr , "Simulation end .: "); fprintf_date_utc( end_time , stderr );
+    fprintf(stderr , "Requested date .: "); fprintf_date_utc( sim_time , stderr );
     util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",__func__, sim_time , start_time, end_time);
   }
 
