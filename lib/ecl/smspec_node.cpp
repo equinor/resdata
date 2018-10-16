@@ -82,6 +82,15 @@ bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type 
   return smspec_node_cmp( node1 , node2 ) == 0;
 }
 
+
+bool smspec_node_gt( const smspec_node_type * node1,  const smspec_node_type * node2) {
+  return smspec_node_cmp( node1 , node2 ) > 0;
+}
+
+bool smspec_node_lt( const smspec_node_type * node1,  const smspec_node_type * node2) {
+  return smspec_node_cmp( node1 , node2 ) < 0;
+}
+
 static bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
   if (var_type == ECL_SMSPEC_COMPLETION_VAR ||
       var_type == ECL_SMSPEC_GROUP_VAR      ||
