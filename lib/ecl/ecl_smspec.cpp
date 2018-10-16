@@ -99,7 +99,7 @@
 #define ECL_SMSPEC_ID          806647
 #define PARAMS_GLOBAL_DEFAULT  -99
 
-typedef std::map<std::string, smspec_node_type*> node_map;
+typedef std::map<std::string, const smspec_node_type*> node_map;
 
 struct ecl_smspec_struct {
   UTIL_TYPE_ID_DECLARATION;
@@ -108,10 +108,9 @@ struct ecl_smspec_struct {
     smspec_node instances. The actual smspec_node instances are
     owned by the smspec_nodes vector;
   */
-  std::map<std::string, node_map> well_var_index; /* Indexes for all well variables: 
+  std::map<std::string, node_map> well_var_index; /* Indexes for all well variables:
                                                      {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
-  std::map<std::string, 
-           std::map<std::string, node_map>> well_completion_var_index; /* Indexes for completion indexes .*/
+  std::map<std::string, std::map<int, node_map>> well_completion_var_index; /* Indexes for completion indexes .*/
   hash_type          * group_var_index;            /* Indexes for group variables.*/
   hash_type          * field_var_index;
   hash_type          * region_var_index;           /* The stored index is an offset. */
@@ -840,11 +839,7 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , smsp
 
   switch(var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
-    {
-      std::ostringstream stm; stm << num;
-      std::string str = stm.str();
-      ecl_smspec->well_completion_var_index[well][str][keyword] = smspec_node;
-    }
+    ecl_smspec->well_completion_var_index[well][num][keyword] = smspec_node;
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     /*
@@ -1372,17 +1367,16 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
 /* Well variables */
 
 const smspec_node_type * ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var) {
+  const auto well_it = smspec->well_var_index.find(well);
+  if (well_it == smspec->well_var_index.end())
+    return NULL;
 
-  const smspec_node_type * node = NULL;
-  std::map<std::string, node_map>::const_iterator it = smspec->well_var_index.find(well);
+  const node_map& var_map = well_it->second;
+  const auto var_it = var_map.find(var);
+  if (var_it == var_map.end())
+    return NULL;
 
-  if (it != smspec->well_var_index.end()) {
-    const node_map& child = it->second;
-    node_map::const_iterator it_child = child.find(var);
-    if (it_child != child.end())
-      node = child.at(var);
-  }
-  return node;
+  return var_it->second;
 }
 
 
@@ -1575,20 +1569,21 @@ int ecl_smspec_get_misc_var_params_index(const ecl_smspec_type * ecl_smspec , co
 
 
 const smspec_node_type * ecl_smspec_get_well_completion_var_node(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
+  const auto well_iter = ecl_smspec->well_completion_var_index.find(well);
+  if (well_iter == ecl_smspec->well_completion_var_index.end())
+    return NULL;
 
-  const smspec_node_type * node = NULL;
-  std::ostringstream stm; stm << cell_nr;
-  std::string cell_str = stm.str();
-  if (ecl_smspec->well_completion_var_index.find(well) != ecl_smspec->well_completion_var_index.end()) {
-    const std::map<std::string, node_map>& cell = ecl_smspec->well_completion_var_index.at(well);
-    if (cell.find(cell_str) != cell.end()) {
-      const node_map& map = cell.at(cell_str);
-      if (map.find(var) != map.end())
-        node = map.at(var);
-    }
-  }
+  const auto& num_map = well_iter->second;
+  const auto num_iter = num_map.find(cell_nr);
+  if (num_iter == num_map.end())
+    return NULL;
 
-  return node;
+  const auto& var_map = num_iter->second;
+  const auto var_iter = var_map.find(var);
+  if (var_iter == var_map.end())
+    return NULL;
+
+  return var_iter->second;
 }
 
 
