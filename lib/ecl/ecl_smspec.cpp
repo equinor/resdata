@@ -22,9 +22,10 @@
 #include <time.h>
 #include <errno.h>
 
+#include <string>
 #include <vector>
+#include <set>
 #include <map>
-#include <sstream>
 #include <algorithm>
 
 #include <ert/util/hash.hpp>
@@ -115,8 +116,7 @@ struct ecl_smspec_struct {
   hash_type          * region_var_index;           /* The stored index is an offset. */
   hash_type          * misc_var_index;             /* Variables like 'TCPU' and 'NEWTON'. */
   hash_type          * block_var_index;            /* Block variables like BPR */
-  hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
-
+  node_map             gen_var_index              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */;
   std::vector<smspec_node_type*> smspec_nodes;
   bool                 write_mode;
   bool                 need_nums;
@@ -264,7 +264,6 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   ecl_smspec->region_var_index               = hash_alloc();
   ecl_smspec->misc_var_index                 = hash_alloc();
   ecl_smspec->block_var_index                = hash_alloc();
-  ecl_smspec->gen_var_index                  = hash_alloc();
   ecl_smspec->sim_start_time                 = -1;
   ecl_smspec->key_join_string                = key_join_string;
   ecl_smspec->header_file                    = NULL;
@@ -806,15 +805,15 @@ static void ecl_smspec_install_gen_keys( ecl_smspec_type * smspec , smspec_node_
   /* Insert the default general mapping. */
   {
     const char * gen_key1 = smspec_node_get_gen_key1( smspec_node );
-    if (gen_key1 != NULL)
-      hash_insert_ref(smspec->gen_var_index , gen_key1 , smspec_node);
+    if (gen_key1)
+      smspec->gen_var_index[gen_key1] = smspec_node;
   }
 
   /* Insert the (optional) extra mapping for block related variables and region_2_region variables: */
   {
     const char * gen_key2 = smspec_node_get_gen_key2( smspec_node );
-    if (gen_key2 != NULL)
-      hash_insert_ref(smspec->gen_var_index , gen_key2 , smspec_node);
+    if (gen_key2)
+      smspec->gen_var_index[gen_key2] = smspec_node;
   }
 }
 
@@ -1605,11 +1604,11 @@ int  ecl_smspec_get_well_completion_var_params_index(const ecl_smspec_type * ecl
 
 
 const smspec_node_type * ecl_smspec_get_general_var_node( const ecl_smspec_type * smspec , const char * lookup_kw ) {
-  if (hash_has_key( smspec->gen_var_index , lookup_kw )) {
-    const smspec_node_type * smspec_node = (const smspec_node_type*)hash_get( smspec->gen_var_index , lookup_kw );
-    return smspec_node;
-  } else
+  const auto iter = smspec->gen_var_index.find(lookup_kw);
+  if (iter == smspec->gen_var_index.end())
     return NULL;
+
+  return iter->second;
 }
 
 
@@ -1627,7 +1626,7 @@ bool ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char 
 
 /** DIES if the lookup_kw is not present. */
 const char * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
-  const smspec_node_type * smspec_node = (const smspec_node_type*)hash_get( ecl_smspec->gen_var_index , lookup_kw );
+  const auto smspec_node = ecl_smspec_get_general_var_node(ecl_smspec, lookup_kw);
   return smspec_node_get_unit( smspec_node );
 }
 
@@ -1712,7 +1711,6 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->region_var_index);
   hash_free(ecl_smspec->misc_var_index);
   hash_free(ecl_smspec->block_var_index);
-  hash_free(ecl_smspec->gen_var_index);
   free( ecl_smspec->header_file );
   float_vector_free( ecl_smspec->params_default );
   free( ecl_smspec->restart_case );
@@ -1752,7 +1750,7 @@ int ecl_smspec_get_date_year_index( const ecl_smspec_type * smspec ) {
 
 
 bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * gen_key) {
-  const  smspec_node_type * smspec_node = (const smspec_node_type*)hash_get( smspec->gen_var_index , gen_key );
+  const  smspec_node_type * smspec_node = ecl_smspec_get_general_var_node(smspec, gen_key);
   return smspec_node_is_total( smspec_node );
 }
 
@@ -1781,15 +1779,13 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
 
 
 void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
-  hash_type * ex_keys = hash_alloc( );
-  int i;
-  for (i=0; i < stringlist_get_size( keys ); i++)
-    hash_insert_int( ex_keys , stringlist_iget( keys , i ) , 1);
+  std::set<std::string> ex_keys;
+  for (int i=0; i < stringlist_get_size( keys ); i++)
+    ex_keys.insert( stringlist_iget(keys, i));
 
   {
-    hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index );
-    while (!hash_iter_is_complete( iter )) {
-      const char * key = hash_iter_get_next_key( iter );
+    for (const auto& pair : smspec->gen_var_index) {
+      const char * key = pair.first.c_str();
 
       /*
          The TIME is typically special cased by output and will not
@@ -1802,14 +1798,12 @@ void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec
 
 
       if ((pattern == NULL) || (util_fnmatch( pattern , key ) == 0)) {
-        if (!hash_has_key( ex_keys , key))
+        if (ex_keys.find(key) == ex_keys.end())
           stringlist_append_copy( keys , key );
       }
     }
-    hash_iter_free( iter );
   }
 
-  hash_free( ex_keys );
   stringlist_sort( keys , (string_cmp_ftype *) util_strcmp_int );
 }
 
@@ -1897,15 +1891,10 @@ stringlist_type * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , 
 */
 
 stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec ) {
-  /*hash_iter_type * well_iter = hash_iter_alloc( smspec->well_var_index );
-  hash_type      * var_hash = (hash_type*)hash_iter_get_next_value( well_iter );
-  hash_iter_free( well_iter );*/
-
   stringlist_type * stringlist = stringlist_alloc_new();
-  const node_map& map = smspec->well_var_index.begin()->second;
-  node_map::const_iterator it = map.begin();
-  while(it != map.end())
-    stringlist_append_copy(stringlist,  it->first.c_str());
+  for (const auto& pair : smspec->well_var_index)
+    stringlist_append_copy(stringlist, pair.first.c_str());
+
   return stringlist;
 }
 
