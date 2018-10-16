@@ -25,11 +25,10 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <algorithm>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
-#include <ert/util/vector.hpp>
-#include <ert/util/int_vector.hpp>
 #include <ert/util/float_vector.hpp>
 #include <ert/util/stringlist.hpp>
 
@@ -118,8 +117,7 @@ struct ecl_smspec_struct {
   hash_type          * block_var_index;            /* Block variables like BPR */
   hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
 
-
-  vector_type        * smspec_nodes;
+  std::vector<smspec_node_type*> smspec_nodes;
   bool                 write_mode;
   bool                 need_nums;
   std::vector<int>     index_map;
@@ -271,8 +269,6 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   ecl_smspec->key_join_string                = key_join_string;
   ecl_smspec->header_file                    = NULL;
 
-  ecl_smspec->smspec_nodes                   = vector_alloc_new();
-
   ecl_smspec->time_index   = -1;
   ecl_smspec->day_index    = -1;
   ecl_smspec->year_index   = -1;
@@ -327,7 +323,7 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 
 const smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int node_index ) {
-  return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , node_index );
+  return smspec->smspec_nodes[node_index];
 }
 
 
@@ -346,7 +342,7 @@ const smspec_node_type * ecl_smspec_iget_node_w_params_index( const ecl_smspec_t
 }
 
 int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
-  return vector_get_size( smspec->smspec_nodes );
+  return smspec->smspec_nodes.size();
 }
 
 
@@ -996,12 +992,12 @@ bool ecl_smspec_needs_num( ecl_smspec_var_type var_type ) {
 
 bool ecl_smspec_equal(const ecl_smspec_type * self,
                       const ecl_smspec_type * other) {
-  if (vector_get_size( self->smspec_nodes ) != vector_get_size( other->smspec_nodes))
+  if (self->smspec_nodes.size() != other->smspec_nodes.size())
     return false;
 
-  for (int i=0; i < vector_get_size( self->smspec_nodes ); i++) {
-    const smspec_node_type * node1 = (const smspec_node_type*)vector_iget_const(self->smspec_nodes, i);
-    const smspec_node_type * node2 = (const smspec_node_type*)vector_iget_const(other->smspec_nodes, i);
+  for (size_t i=0; i < self->smspec_nodes.size(); i++) {
+    const auto * node1 = self->smspec_nodes[i];
+    const auto * node2 = other->smspec_nodes[i];
 
     if (!smspec_node_equal(node1, node2))
       return false;
@@ -1085,7 +1081,7 @@ static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int param
 
 
 void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node){
-  int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
+  int internal_index = ecl_smspec->smspec_nodes.size();
 
   /* This IF test should only apply in write_mode. */
   if (smspec_node_get_params_index( smspec_node ) < 0) {
@@ -1097,8 +1093,7 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
     if (internal_index >= ecl_smspec->params_size)
       ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
   }
-  vector_append_owned_ref( ecl_smspec->smspec_nodes , smspec_node , smspec_node_free__ );
-
+  ecl_smspec->smspec_nodes.push_back(smspec_node);
   {
     int params_index = smspec_node_get_params_index( smspec_node );
 
@@ -1720,8 +1715,11 @@ void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
   hash_free(ecl_smspec->gen_var_index);
   free( ecl_smspec->header_file );
   float_vector_free( ecl_smspec->params_default );
-  vector_free( ecl_smspec->smspec_nodes );
   free( ecl_smspec->restart_case );
+
+  for (auto& node : ecl_smspec->smspec_nodes)
+    smspec_node_free(node);
+
   delete ecl_smspec;
 }
 
@@ -1934,10 +1932,10 @@ char * ecl_smspec_alloc_well_key( const ecl_smspec_type * smspec , const char * 
 
 
 void ecl_smspec_sort( ecl_smspec_type * smspec ) {
-  vector_sort( smspec->smspec_nodes , smspec_node_cmp__);
+  std::sort(smspec->smspec_nodes.begin(), smspec->smspec_nodes.end(), smspec_node_lt);
 
-  for (int i=0; i < vector_get_size( smspec->smspec_nodes ); i++) {
-    smspec_node_type * node = (smspec_node_type*)vector_iget( smspec->smspec_nodes , i );
+  for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
+    smspec_node_type * node = smspec->smspec_nodes[i];
     smspec_node_set_params_index( node , i );
   }
 
