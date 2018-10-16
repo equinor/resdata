@@ -17,9 +17,9 @@
 
 CASE1
 ---------
-1 : BPR:1     100      200      300      400
-2 : BPR:2     110      210      310      410
-3 : BRP:3     120      220      320      430
+1 : BPR:1     100      200      300      400     500   600   700   800   900   ....
+2 : BPR:2     110      210      310      410     510   610   710   810   910   ....
+3 : BRP:3     120      220      320      420     520   620   720   820   920   ....
 
 
 
@@ -56,13 +56,14 @@ Total CASE3:
 #define ieq(d,i,v) test_assert_double_equal(double_vector_iget(d,(i)), v)
 
 
-void verify_CASE1() {
+void verify_CASE1(int length) {
   ecl_sum_type * sum = ecl_sum_fread_alloc_case("CASE1", ":");
+  int params_size = 4;  // TIME, BPR:1, BPR:2, BPR:3
 
-  for (int i=1; i < 4; i++) {
+  for (int i=1; i < params_size; i++) {
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i, false);
-    //test_assert_int_equal(4, double_vector_size(d));
-    for (int j=0; j < 4; j++) {
+    test_assert_int_equal(length, double_vector_size(d));
+    for (int j=0; j < length; j++) {
       test_assert_double_equal( double_vector_iget(d, j), (i - 1)*10 + (j + 1)*100);
     }
     double_vector_free(d);
@@ -77,7 +78,7 @@ void write_CASE1(bool unified) {
   ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( "CASE1" , false , unified, ":" , start_time , true , 10 , 10 , 10 );
   double sim_seconds = 0;
 
-  int num_dates = 4;
+  int num_dates = 100;
   double ministep_length = 86400; // seconds in a day
 
   smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
@@ -96,18 +97,19 @@ void write_CASE1(bool unified) {
   ecl_sum_fwrite( ecl_sum );
   ecl_sum_free(ecl_sum);
 
-  verify_CASE1();
+  verify_CASE1(num_dates);
 }
 
 
 
-void verify_CASE2() {
+void verify_CASE2(int length) {
   ecl_sum_type * sum = ecl_sum_fread_alloc_case2__("CASE2", ":", false, true, 0);
+  const int params_size = 2; // TIME, BPR:2, BPR:1
 
-  for (int i=0; i < 2; i++) {
+  for (int i=0; i < params_size; i++) {
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
-    //test_assert_int_equal(4, double_vector_size(d));
-    for (int j=1; j < 4; j++)
+    test_assert_int_equal(length, double_vector_size(d));
+    for (int j=1; j < length; j++)
       test_assert_double_equal( double_vector_iget(d, j-1), (1 - i)*100 + j*1000);
     double_vector_free(d);
   }
@@ -116,9 +118,9 @@ void verify_CASE2() {
 
 
   sum = ecl_sum_fread_alloc_case("CASE2", ":");
-  for (int i=0; i < 2; i++) {
+  for (int i=0; i < params_size; i++) {
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
-    //test_assert_int_equal(double_vector_size(d), 7);
+    test_assert_int_equal(double_vector_size(d), 7);
     ieq(d,0,(1 - i)*10  + 100);
     ieq(d,1,(1 - i)*10  + 200);
     ieq(d,2,(1 - i)*10  + 300);
@@ -155,17 +157,18 @@ void write_CASE2(bool unified) {
     }
     ecl_sum_fwrite( ecl_sum );
     ecl_sum_free(ecl_sum);
-    verify_CASE2();
+    verify_CASE2(num_dates);
   }
 }
 
-void verify_CASE3() {
+void verify_CASE3(int length) {
+  const int params_size = 3;
   ecl_sum_type * sum = ecl_sum_fread_alloc_case2__("CASE3", ":", false, true, 0);
 
-  for (int i=0; i < 3; i++) {
+  for (int i=0; i < params_size; i++) {
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
-    //test_assert_int_equal(4, double_vector_size(d));
-    for (int j=0; j < 4; j++) {
+    test_assert_int_equal(length, double_vector_size(d));
+    for (int j=0; j < length; j++) {
       test_assert_double_equal( double_vector_iget(d, j), (2 - i)*1000 + (j + 1)*10000);
     }
     double_vector_free(d);
@@ -173,7 +176,7 @@ void verify_CASE3() {
   ecl_sum_free(sum);
 
   sum = ecl_sum_fread_alloc_case("CASE3", ":");
-  for (int i=0; i < 3; i++) {
+  for (int i=0; i < params_size; i++) {
     double_vector_type * d = ecl_sum_alloc_data_vector(sum, i+1, false);
     ieq(d,0,(2 - i)*10  + 100);
     ieq(d,1,(2 - i)*10  + 200);
@@ -228,7 +231,7 @@ void write_CASE3(bool unified) {
     }
     ecl_sum_fwrite( ecl_sum );
     ecl_sum_free(ecl_sum);
-    verify_CASE3();
+    verify_CASE3(num_dates);
   }
 }
 
@@ -272,7 +275,7 @@ void write_CASE4(bool unified) {
     ecl_kw_resize(nums, 5);
     unsigned int * nums_ptr = (unsigned int *)ecl_kw_get_int_ptr(nums);
     nums_ptr[3] = 5;
-    nums_ptr[4] = 8;  //a different 
+    nums_ptr[4] = 8;  //a different
 
     ecl_kw_type * wgnames = ecl_file_iget_named_kw(smspec_file, "WGNAMES", 0);
     ecl_kw_resize(wgnames, 5);
@@ -281,7 +284,7 @@ void write_CASE4(bool unified) {
     ecl_kw_type * units = ecl_file_iget_named_kw(smspec_file, "UNITS", 0);
     ecl_kw_resize(units, 5);
     ecl_kw_iset_char_ptr(units, 4, "BARS");
-   
+
     int num_params = ecl_file_get_num_named_kw(sum_file, "PARAMS");
     for (int i = 0; i < num_params; i++) {
       ecl_kw_type * params_kw = ecl_file_iget_named_kw(sum_file, "PARAMS", i);
@@ -290,7 +293,7 @@ void write_CASE4(bool unified) {
       ptr[4] = ptr[3];
       ptr[3] = -1;
     }
-  
+
     fortio_type * f;
     const char * filename_sum = "CASE4.UNSMRY";
     f = fortio_open_writer( filename_sum, false, ECL_ENDIAN_FLIP );
