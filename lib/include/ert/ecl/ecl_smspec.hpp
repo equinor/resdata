@@ -47,7 +47,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
 */
 
   int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_type * other);
-  const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec );
+  const int         * ecl_smspec_get_index_map( const ecl_smspec_type * smspec );
   void                ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node);
   void                ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node);
   void                ecl_smspec_add_node( ecl_smspec_type * ecl_smspec , smspec_node_type * smspec_node );

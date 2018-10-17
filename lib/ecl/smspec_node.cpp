@@ -82,6 +82,15 @@ bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type 
   return smspec_node_cmp( node1 , node2 ) == 0;
 }
 
+
+bool smspec_node_gt( const smspec_node_type * node1,  const smspec_node_type * node2) {
+  return smspec_node_cmp( node1 , node2 ) > 0;
+}
+
+bool smspec_node_lt( const smspec_node_type * node1,  const smspec_node_type * node2) {
+  return smspec_node_cmp( node1 , node2 ) < 0;
+}
+
 static bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
   if (var_type == ECL_SMSPEC_COMPLETION_VAR ||
       var_type == ECL_SMSPEC_GROUP_VAR      ||
@@ -506,7 +515,7 @@ static void smspec_node_set_gen_keys( smspec_node_type * smspec_node , const cha
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     // KEYWORD
-    smspec_node->gen_key1 = util_alloc_string_copy( smspec_node->keyword.c_str() );
+    smspec_node->gen_key1 = smspec_node->keyword;
     break;
   case(ECL_SMSPEC_GROUP_VAR):
     // KEYWORD:WGNAME

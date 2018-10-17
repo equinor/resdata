@@ -22,13 +22,14 @@
 #include <time.h>
 #include <errno.h>
 
+#include <string>
 #include <vector>
+#include <set>
 #include <map>
+#include <algorithm>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
-#include <ert/util/vector.hpp>
-#include <ert/util/int_vector.hpp>
 #include <ert/util/float_vector.hpp>
 #include <ert/util/stringlist.hpp>
 
@@ -98,7 +99,7 @@
 #define ECL_SMSPEC_ID          806647
 #define PARAMS_GLOBAL_DEFAULT  -99
 
-
+typedef std::map<std::string, const smspec_node_type*> node_map;
 
 struct ecl_smspec_struct {
   UTIL_TYPE_ID_DECLARATION;
@@ -107,20 +108,19 @@ struct ecl_smspec_struct {
     smspec_node instances. The actual smspec_node instances are
     owned by the smspec_nodes vector;
   */
-  hash_type          * well_var_index;             /* Indexes for all well variables: {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
-  hash_type          * well_completion_var_index;  /* Indexes for completion indexes .*/
+  std::map<std::string, node_map> well_var_index; /* Indexes for all well variables:
+                                                     {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
+  std::map<std::string, std::map<int, node_map>> well_completion_var_index; /* Indexes for completion indexes .*/
   hash_type          * group_var_index;            /* Indexes for group variables.*/
   hash_type          * field_var_index;
   hash_type          * region_var_index;           /* The stored index is an offset. */
   hash_type          * misc_var_index;             /* Variables like 'TCPU' and 'NEWTON'. */
   hash_type          * block_var_index;            /* Block variables like BPR */
-  hash_type          * gen_var_index;              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */
-
-
-  vector_type        * smspec_nodes;
+  node_map             gen_var_index              /* This is "everything" - things can either be found as gen_var("WWCT:OP_X") or as well_var("WWCT" , "OP_X") */;
+  std::vector<smspec_node_type*> smspec_nodes;
   bool                 write_mode;
   bool                 need_nums;
-  int_vector_type    * index_map;
+  std::vector<int>     index_map;
   std::map<int, int>   inv_index_map;
 
   /*-----------------------------------------------------------------*/
@@ -259,19 +259,14 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   ecl_smspec_type * ecl_smspec = new ecl_smspec_type();
   UTIL_TYPE_ID_INIT(ecl_smspec , ECL_SMSPEC_ID);
 
-  ecl_smspec->well_var_index                 = hash_alloc();
-  ecl_smspec->well_completion_var_index      = hash_alloc();
   ecl_smspec->group_var_index                = hash_alloc();
   ecl_smspec->field_var_index                = hash_alloc();
   ecl_smspec->region_var_index               = hash_alloc();
   ecl_smspec->misc_var_index                 = hash_alloc();
   ecl_smspec->block_var_index                = hash_alloc();
-  ecl_smspec->gen_var_index                  = hash_alloc();
   ecl_smspec->sim_start_time                 = -1;
   ecl_smspec->key_join_string                = key_join_string;
   ecl_smspec->header_file                    = NULL;
-
-  ecl_smspec->smspec_nodes                   = vector_alloc_new();
 
   ecl_smspec->time_index   = -1;
   ecl_smspec->day_index    = -1;
@@ -286,7 +281,6 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   */
   ecl_smspec->unit_system  = ECL_METRIC_UNITS;
 
-  ecl_smspec->index_map = int_vector_alloc(0,0);
   ecl_smspec->restart_case = NULL;
   ecl_smspec->restart_step = -1;
   ecl_smspec->params_default = float_vector_alloc(0 , PARAMS_GLOBAL_DEFAULT);
@@ -328,7 +322,7 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 
 const smspec_node_type * ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int node_index ) {
-  return (const smspec_node_type*)vector_iget_const( smspec->smspec_nodes , node_index );
+  return smspec->smspec_nodes[node_index];
 }
 
 
@@ -347,7 +341,7 @@ const smspec_node_type * ecl_smspec_iget_node_w_params_index( const ecl_smspec_t
 }
 
 int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
-  return vector_get_size( smspec->smspec_nodes );
+  return smspec->smspec_nodes.size();
 }
 
 
@@ -811,15 +805,15 @@ static void ecl_smspec_install_gen_keys( ecl_smspec_type * smspec , smspec_node_
   /* Insert the default general mapping. */
   {
     const char * gen_key1 = smspec_node_get_gen_key1( smspec_node );
-    if (gen_key1 != NULL)
-      hash_insert_ref(smspec->gen_var_index , gen_key1 , smspec_node);
+    if (gen_key1)
+      smspec->gen_var_index[gen_key1] = smspec_node;
   }
 
   /* Insert the (optional) extra mapping for block related variables and region_2_region variables: */
   {
     const char * gen_key2 = smspec_node_get_gen_key2( smspec_node );
-    if (gen_key2 != NULL)
-      hash_insert_ref(smspec->gen_var_index , gen_key2 , smspec_node);
+    if (gen_key2)
+      smspec->gen_var_index[gen_key2] = smspec_node;
   }
 }
 
@@ -840,20 +834,7 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , smsp
 
   switch(var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
-    /* Three level indexing: variable -> well -> string(cell_nr)*/
-    if (!hash_has_key(ecl_smspec->well_completion_var_index , well))
-      hash_insert_hash_owned_ref(ecl_smspec->well_completion_var_index , well , hash_alloc() , hash_free__);
-    {
-      hash_type * cell_hash = (hash_type*)hash_get(ecl_smspec->well_completion_var_index , well);
-      char cell_str[16];
-      sprintf(cell_str , "%d" , num);
-      if (!hash_has_key(cell_hash , cell_str))
-        hash_insert_hash_owned_ref(cell_hash , cell_str , hash_alloc() , hash_free__);
-      {
-        hash_type * var_hash = (hash_type*)hash_get(cell_hash , cell_str);
-        hash_insert_ref(var_hash , keyword , smspec_node );
-      }
-    }
+    ecl_smspec->well_completion_var_index[well][num][keyword] = smspec_node;
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     /*
@@ -881,12 +862,7 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , smsp
     ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
     break;
   case (ECL_SMSPEC_WELL_VAR):
-    if (!hash_has_key(ecl_smspec->well_var_index , well))
-      hash_insert_hash_owned_ref(ecl_smspec->well_var_index , well , hash_alloc() , hash_free__);
-    {
-      hash_type * var_hash = (hash_type*)hash_get(ecl_smspec->well_var_index , well);
-      hash_insert_ref(var_hash , keyword , smspec_node );
-    }
+    ecl_smspec->well_var_index[well][keyword] = smspec_node;
     break;
   case(ECL_SMSPEC_MISC_VAR):
     /* Misc variable - i.e. date or CPU time ... */
@@ -1015,12 +991,12 @@ bool ecl_smspec_needs_num( ecl_smspec_var_type var_type ) {
 
 bool ecl_smspec_equal(const ecl_smspec_type * self,
                       const ecl_smspec_type * other) {
-  if (vector_get_size( self->smspec_nodes ) != vector_get_size( other->smspec_nodes))
+  if (self->smspec_nodes.size() != other->smspec_nodes.size())
     return false;
 
-  for (int i=0; i < vector_get_size( self->smspec_nodes ); i++) {
-    const smspec_node_type * node1 = (const smspec_node_type*)vector_iget_const(self->smspec_nodes, i);
-    const smspec_node_type * node2 = (const smspec_node_type*)vector_iget_const(other->smspec_nodes, i);
+  for (size_t i=0; i < self->smspec_nodes.size(); i++) {
+    const auto * node1 = self->smspec_nodes[i];
+    const auto * node2 = other->smspec_nodes[i];
 
     if (!smspec_node_equal(node1, node2))
       return false;
@@ -1104,7 +1080,7 @@ static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int param
 
 
 void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * smspec_node){
-  int internal_index = vector_get_size( ecl_smspec->smspec_nodes );
+  int internal_index = ecl_smspec->smspec_nodes.size();
 
   /* This IF test should only apply in write_mode. */
   if (smspec_node_get_params_index( smspec_node ) < 0) {
@@ -1116,13 +1092,12 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
     if (internal_index >= ecl_smspec->params_size)
       ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
   }
-  vector_append_owned_ref( ecl_smspec->smspec_nodes , smspec_node , smspec_node_free__ );
-
+  ecl_smspec->smspec_nodes.push_back(smspec_node);
   {
     int params_index = smspec_node_get_params_index( smspec_node );
 
     /* This indexing must be used when writing. */
-    int_vector_iset( ecl_smspec->index_map , internal_index , params_index);
+    ecl_smspec->index_map.push_back(params_index);
 
     float_vector_iset( ecl_smspec->params_default , params_index , smspec_node_get_default(smspec_node) );
   }
@@ -1142,8 +1117,8 @@ void ecl_smspec_init_var( ecl_smspec_type * ecl_smspec , smspec_node_type * smsp
 }
 
 
-const int_vector_type * ecl_smspec_get_index_map( const ecl_smspec_type * smspec ) {
-  return smspec->index_map;
+const int * ecl_smspec_get_index_map( const ecl_smspec_type * smspec ) {
+  return smspec->index_map.data();
 }
 
 /**
@@ -1386,13 +1361,16 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
 /* Well variables */
 
 const smspec_node_type * ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var) {
-  const smspec_node_type * node = NULL;
-  if (hash_has_key( smspec->well_var_index , well)) {
-    hash_type * var_hash = (hash_type*)hash_get(smspec->well_var_index , well);
-    if (hash_has_key(var_hash , var))
-      node = (const smspec_node_type*)hash_get(var_hash , var);
-  }
-  return node;
+  const auto well_it = smspec->well_var_index.find(well);
+  if (well_it == smspec->well_var_index.end())
+    return NULL;
+
+  const node_map& var_map = well_it->second;
+  const auto var_it = var_map.find(var);
+  if (var_it == var_map.end())
+    return NULL;
+
+  return var_it->second;
 }
 
 
@@ -1585,20 +1563,21 @@ int ecl_smspec_get_misc_var_params_index(const ecl_smspec_type * ecl_smspec , co
 
 
 const smspec_node_type * ecl_smspec_get_well_completion_var_node(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
-  const smspec_node_type * node = NULL;
+  const auto well_iter = ecl_smspec->well_completion_var_index.find(well);
+  if (well_iter == ecl_smspec->well_completion_var_index.end())
+    return NULL;
 
-  char * cell_str = util_alloc_sprintf("%d" , cell_nr);
-  if (hash_has_key(ecl_smspec->well_completion_var_index , well)) {
-    hash_type * cell_hash = (hash_type*)hash_get(ecl_smspec->well_completion_var_index , well);
+  const auto& num_map = well_iter->second;
+  const auto num_iter = num_map.find(cell_nr);
+  if (num_iter == num_map.end())
+    return NULL;
 
-    if (hash_has_key(cell_hash , cell_str)) {
-      hash_type * var_hash = (hash_type*)hash_get(cell_hash , cell_str);
-      if (hash_has_key(var_hash , var))
-        node = (const smspec_node_type*)hash_get( var_hash , var);
-    }
-  }
-  free(cell_str);
-  return node;
+  const auto& var_map = num_iter->second;
+  const auto var_iter = var_map.find(var);
+  if (var_iter == var_map.end())
+    return NULL;
+
+  return var_iter->second;
 }
 
 
@@ -1625,11 +1604,11 @@ int  ecl_smspec_get_well_completion_var_params_index(const ecl_smspec_type * ecl
 
 
 const smspec_node_type * ecl_smspec_get_general_var_node( const ecl_smspec_type * smspec , const char * lookup_kw ) {
-  if (hash_has_key( smspec->gen_var_index , lookup_kw )) {
-    const smspec_node_type * smspec_node = (const smspec_node_type*)hash_get( smspec->gen_var_index , lookup_kw );
-    return smspec_node;
-  } else
+  const auto iter = smspec->gen_var_index.find(lookup_kw);
+  if (iter == smspec->gen_var_index.end())
     return NULL;
+
+  return iter->second;
 }
 
 
@@ -1647,7 +1626,7 @@ bool ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char 
 
 /** DIES if the lookup_kw is not present. */
 const char * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
-  const smspec_node_type * smspec_node = (const smspec_node_type*)hash_get( ecl_smspec->gen_var_index , lookup_kw );
+  const auto smspec_node = ecl_smspec_get_general_var_node(ecl_smspec, lookup_kw);
   return smspec_node_get_unit( smspec_node );
 }
 
@@ -1726,19 +1705,19 @@ const float_vector_type * ecl_smspec_get_params_default( const ecl_smspec_type *
 
 
 void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
-  hash_free(ecl_smspec->well_var_index);
-  hash_free(ecl_smspec->well_completion_var_index);
+
   hash_free(ecl_smspec->group_var_index);
   hash_free(ecl_smspec->field_var_index);
   hash_free(ecl_smspec->region_var_index);
   hash_free(ecl_smspec->misc_var_index);
   hash_free(ecl_smspec->block_var_index);
-  hash_free(ecl_smspec->gen_var_index);
   free( ecl_smspec->header_file );
-  int_vector_free( ecl_smspec->index_map );
   float_vector_free( ecl_smspec->params_default );
-  vector_free( ecl_smspec->smspec_nodes );
   free( ecl_smspec->restart_case );
+
+  for (auto& node : ecl_smspec->smspec_nodes)
+    smspec_node_free(node);
+
   delete ecl_smspec;
 }
 
@@ -1771,7 +1750,7 @@ int ecl_smspec_get_date_year_index( const ecl_smspec_type * smspec ) {
 
 
 bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * gen_key) {
-  const  smspec_node_type * smspec_node = (const smspec_node_type*)hash_get( smspec->gen_var_index , gen_key );
+  const  smspec_node_type * smspec_node = ecl_smspec_get_general_var_node(smspec, gen_key);
   return smspec_node_is_total( smspec_node );
 }
 
@@ -1800,15 +1779,13 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
 
 
 void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys) {
-  hash_type * ex_keys = hash_alloc( );
-  int i;
-  for (i=0; i < stringlist_get_size( keys ); i++)
-    hash_insert_int( ex_keys , stringlist_iget( keys , i ) , 1);
+  std::set<std::string> ex_keys;
+  for (int i=0; i < stringlist_get_size( keys ); i++)
+    ex_keys.insert( stringlist_iget(keys, i));
 
   {
-    hash_iter_type * iter = hash_iter_alloc( smspec->gen_var_index );
-    while (!hash_iter_is_complete( iter )) {
-      const char * key = hash_iter_get_next_key( iter );
+    for (const auto& pair : smspec->gen_var_index) {
+      const char * key = pair.first.c_str();
 
       /*
          The TIME is typically special cased by output and will not
@@ -1821,14 +1798,12 @@ void ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec
 
 
       if ((pattern == NULL) || (util_fnmatch( pattern , key ) == 0)) {
-        if (!hash_has_key( ex_keys , key))
+        if (ex_keys.find(key) == ex_keys.end())
           stringlist_append_copy( keys , key );
       }
     }
-    hash_iter_free( iter );
   }
 
-  hash_free( ex_keys );
   stringlist_sort( keys , (string_cmp_ftype *) util_strcmp_int );
 }
 
@@ -1864,23 +1839,23 @@ const char * ecl_smspec_get_join_string( const ecl_smspec_type * smspec) {
     i.e. standard shell wildcards.
 */
 
+
 stringlist_type * ecl_smspec_alloc_well_list( const ecl_smspec_type * smspec , const char * pattern) {
   stringlist_type * well_list = stringlist_alloc_new( );
-  {
-    hash_iter_type * iter = hash_iter_alloc( smspec->well_var_index );
 
-    while (!hash_iter_is_complete( iter )) {
-      const char * well_name = hash_iter_get_next_key( iter );
-      if (pattern == NULL)
-        stringlist_append_copy( well_list , well_name );
-      else if (util_fnmatch( pattern , well_name) == 0)
-        stringlist_append_copy( well_list , well_name );
-    }
-    hash_iter_free(iter);
+  for (const auto& pair : smspec->well_var_index) {
+    const char * well_name = pair.first.c_str();
+
+    if (pattern == NULL)
+      stringlist_append_copy( well_list , well_name );
+    else if (util_fnmatch( pattern , well_name) == 0)
+      stringlist_append_copy( well_list , well_name );
+
   }
   stringlist_sort( well_list , (string_cmp_ftype *) util_strcmp_int );
   return well_list;
 }
+
 
 
 /**
@@ -1916,10 +1891,11 @@ stringlist_type * ecl_smspec_alloc_group_list( const ecl_smspec_type * smspec , 
 */
 
 stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec ) {
-  hash_iter_type * well_iter = hash_iter_alloc( smspec->well_var_index );
-  hash_type      * var_hash = (hash_type*)hash_iter_get_next_value( well_iter );
-  hash_iter_free( well_iter );
-  return hash_alloc_stringlist( var_hash );
+  stringlist_type * stringlist = stringlist_alloc_new();
+  for (const auto& pair : smspec->well_var_index)
+    stringlist_append_copy(stringlist, pair.first.c_str());
+
+  return stringlist;
 }
 
 
@@ -1945,10 +1921,10 @@ char * ecl_smspec_alloc_well_key( const ecl_smspec_type * smspec , const char * 
 
 
 void ecl_smspec_sort( ecl_smspec_type * smspec ) {
-  vector_sort( smspec->smspec_nodes , smspec_node_cmp__);
+  std::sort(smspec->smspec_nodes.begin(), smspec->smspec_nodes.end(), smspec_node_lt);
 
-  for (int i=0; i < vector_get_size( smspec->smspec_nodes ); i++) {
-    smspec_node_type * node = (smspec_node_type*)vector_iget( smspec->smspec_nodes , i );
+  for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
+    smspec_node_type * node = smspec->smspec_nodes[i];
     smspec_node_set_params_index( node , i );
   }
 
