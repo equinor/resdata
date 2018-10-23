@@ -57,25 +57,6 @@ void test_correct_time_vector() {
   ecl_sum_free(ecl_sum);
 }
 
-void test_time_before() {
-  ecl_sum_type * ecl_sum = test_alloc_ecl_sum();
-  time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
-  time_t_vector_append(t, util_make_date_utc( 1,1,2009 ));
-  test_assert_NULL( ecl_sum_alloc_resample(ecl_sum, "kk", t) );
-  time_t_vector_free(t);
-  ecl_sum_free(ecl_sum);
-}
-
-void test_time_after() {
-  ecl_sum_type * ecl_sum = test_alloc_ecl_sum();
-  time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
-  time_t_vector_append(t, util_make_date_utc( 1,1,2010 ));
-  time_t_vector_append(t, util_make_date_utc( 11,1,2010 ));
-  test_assert_NULL( ecl_sum_alloc_resample(ecl_sum, "kk", t) );
-  time_t_vector_free(t);
-  ecl_sum_free(ecl_sum);
-}
-
 void test_not_sorted() {
   ecl_sum_type * ecl_sum = test_alloc_ecl_sum();
   time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
@@ -90,8 +71,6 @@ void test_not_sorted() {
 
 int main() {
   test_correct_time_vector();
-  test_time_before();
-  test_time_after();
   test_not_sorted();
   return 0;
 }

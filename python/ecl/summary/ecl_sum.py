@@ -1482,7 +1482,11 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
 
     def resample(self, new_case_name, time_points):
-        return self._resample(new_case_name, time_points)
+        new_case = self._resample(new_case_name, time_points)
+        if new_case is None:
+            raise ValueError("Failed to create new resampled case:{}".format(new_case_name))
+
+        return new_case
 
 
 import ecl.summary.ecl_sum_keyword_vector
