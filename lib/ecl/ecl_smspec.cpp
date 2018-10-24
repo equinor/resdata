@@ -1226,9 +1226,9 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 }
 
 
-/******************************************************************/
+namespace {
 
-static const smspec_node_type * ecl_smspec_get_var_node( const node_map& mp, const char * var) {
+const smspec_node_type * ecl_smspec_get_var_node( const node_map& mp, const char * var) {
   const auto it = mp.find(var);
   if (it == mp.end())
     return NULL; 
@@ -1236,7 +1236,7 @@ static const smspec_node_type * ecl_smspec_get_var_node( const node_map& mp, con
   return it->second; 
 }
 
-static const smspec_node_type * ecl_smspec_get_str_key_var_node( const std::map<std::string, node_map>& mp , const char * key , const char * var) {
+const smspec_node_type * ecl_smspec_get_str_key_var_node( const std::map<std::string, node_map>& mp , const char * key , const char * var) {
   const auto key_it = mp.find(key);
   if (key_it == mp.end())
     return NULL;
@@ -1245,7 +1245,7 @@ static const smspec_node_type * ecl_smspec_get_str_key_var_node( const std::map<
   return ecl_smspec_get_var_node(var_map, var);
 }
 
-static const smspec_node_type * ecl_smspec_get_int_key_var_node( const std::map<int, node_map>& mp , int key , const char * var) {
+const smspec_node_type * ecl_smspec_get_int_key_var_node( const std::map<int, node_map>& mp , int key , const char * var) {
   const auto key_it = mp.find(key);
   if (key_it == mp.end())
     return NULL;
@@ -1254,7 +1254,7 @@ static const smspec_node_type * ecl_smspec_get_int_key_var_node( const std::map<
   return ecl_smspec_get_var_node(var_map, var);
 }
 
-/*******************************************************************/
+} //end namespace
 
 
 ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * key_join_string , bool include_restart) {
