@@ -145,7 +145,7 @@ struct ecl_smspec_struct {
   int                 month_index;                   /* time information. */
   int                 year_index;
   bool                has_lgr;
-  float_vector_type * params_default;
+  std::vector<float>  params_default;
 
   std::string         restart_case;
   ert_ecl_unit_enum   unit_system;
@@ -280,7 +280,6 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   ecl_smspec->unit_system  = ECL_METRIC_UNITS;
 
   ecl_smspec->restart_step = -1;
-  ecl_smspec->params_default = float_vector_alloc(0 , PARAMS_GLOBAL_DEFAULT);
   ecl_smspec->write_mode = write_mode;
   ecl_smspec->need_nums = false;
 
@@ -1050,7 +1049,7 @@ void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , smspec_node_type * sm
 
 static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int params_size) {
   ecl_smspec->params_size = params_size;
-  float_vector_iset( ecl_smspec->params_default , ecl_smspec->params_size - 1 , PARAMS_GLOBAL_DEFAULT);
+  ecl_smspec->params_default.resize( params_size, PARAMS_GLOBAL_DEFAULT );
 }
 
 
@@ -1074,8 +1073,8 @@ void ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, smspec_node_type * sms
 
     /* This indexing must be used when writing. */
     ecl_smspec->index_map.push_back(params_index);
-
-    float_vector_iset( ecl_smspec->params_default , params_index , smspec_node_get_default(smspec_node) );
+    ecl_smspec->params_default.resize( params_index+1, PARAMS_GLOBAL_DEFAULT );
+    ecl_smspec->params_default[params_index] = smspec_node_get_default(smspec_node);
   }
 }
 
@@ -1669,15 +1668,13 @@ const char * ecl_smspec_get_restart_case( const ecl_smspec_type * ecl_smspec) {
 }
 
 
-const float_vector_type * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec ) {
-  return ecl_smspec->params_default;
+const float * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec ) {
+  return ecl_smspec->params_default.data();
 }
 
 
 
 void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
-
-  float_vector_free( ecl_smspec->params_default );
 
   for (auto& node : ecl_smspec->smspec_nodes)
     smspec_node_free(node);
