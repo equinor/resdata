@@ -114,10 +114,10 @@ struct ecl_smspec_struct {
 
   std::map<std::string, node_map> well_var_index; /* Indexes for all well variables:
                                                      {well1: {var1: index1 , var2: index2} , well2: {var1: index1 , var2: index2}} */
-  std::map<std::string, node_map> group_var_index; /* Indexes for group variables.*/
-  std::map<std::string, std::map<int, smspec_node_type*>> region_var_index;  /* The stored index is an offset. */
-  std::map<std::string, std::map<int, smspec_node_type*>>  block_var_index;            /* Block variables like BPR */
-  std::map<std::string, std::map<int, node_map>>           well_completion_var_index; /* Indexes for completion indexes .*/
+  std::map<std::string, node_map> group_var_index;   /* Indexes for group variables.*/
+  std::map<int,         node_map> region_var_index;  /* The stored index is an offset. */
+  std::map<int,         node_map> block_var_index;   /* Block variables like BPR */
+  std::map<std::string, std::map<int, node_map>> well_completion_var_index; /* Indexes for completion indexes .*/
 
 
   std::vector<smspec_node_type*> smspec_nodes;
@@ -839,7 +839,7 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , smsp
     ecl_smspec->group_var_index[group][keyword] = smspec_node;
     break;
   case(ECL_SMSPEC_REGION_VAR):
-    ecl_smspec->region_var_index[keyword][num] = smspec_node;
+    ecl_smspec->region_var_index[num][keyword] = smspec_node;
     ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
     break;
   case (ECL_SMSPEC_WELL_VAR):
@@ -850,7 +850,7 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , smsp
     ecl_smspec->misc_var_index[keyword] = smspec_node;
     break;
   case(ECL_SMSPEC_BLOCK_VAR):
-    ecl_smspec->block_var_index[keyword][num] = smspec_node;
+    ecl_smspec->block_var_index[num][keyword] = smspec_node;
     break;
     /**
         The variables below are ONLY accesable through the gen_key
@@ -1237,12 +1237,21 @@ static const smspec_node_type * ecl_smspec_get_var_node( const node_map& mp, con
   return it->second; 
 }
 
-static const smspec_node_type * ecl_smspec_get_key_var_node( const std::map<std::string, node_map>& mp , const char * key , const char * var) {
+static const smspec_node_type * ecl_smspec_get_str_key_var_node( const std::map<std::string, node_map>& mp , const char * key , const char * var) {
   const auto key_it = mp.find(key);
   if (key_it == mp.end())
     return NULL;
 
   const node_map& var_map = key_it->second;
+  return ecl_smspec_get_var_node(var_map, var);
+}
+
+static const smspec_node_type * ecl_smspec_get_int_key_var_node( const std::map<int, node_map>& mp , int key , const char * var) {
+  const auto key_it = mp.find(key);
+  if (key_it == mp.end())
+    return NULL;
+
+  const auto& var_map = key_it->second;
   return ecl_smspec_get_var_node(var_map, var);
 }
 
@@ -1359,7 +1368,7 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
 /* Well variables */
 
 const smspec_node_type * ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var) {
-  return ecl_smspec_get_key_var_node( smspec->well_var_index, well, var );
+  return ecl_smspec_get_str_key_var_node( smspec->well_var_index, well, var );
 }
 
 
@@ -1381,7 +1390,7 @@ bool ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * w
 
 
 const smspec_node_type * ecl_smspec_get_group_var_node( const ecl_smspec_type * smspec , const char * group , const char * var) {
-  return ecl_smspec_get_key_var_node( smspec->group_var_index, group, var );
+  return ecl_smspec_get_str_key_var_node( smspec->group_var_index, group, var );
 }
 
 
@@ -1431,16 +1440,7 @@ bool ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *v
 
 
 const smspec_node_type * ecl_smspec_get_block_var_node(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
-  const auto block_it = ecl_smspec->block_var_index.find(block_var);
-  if (block_it == ecl_smspec->block_var_index.end())
-    return NULL;
-  const auto& var_map = block_it->second;
-
-  const auto var_it = var_map.find(block_nr);
-  if (var_it == var_map.end())
-    return NULL;
-
-  return var_it->second;
+  return ecl_smspec_get_int_key_var_node(ecl_smspec->block_var_index, block_nr, block_var);
 }
 
 
@@ -1482,16 +1482,7 @@ int ecl_smspec_get_block_var_params_index_ijk(const ecl_smspec_type * ecl_smspec
 
 
 const smspec_node_type * ecl_smspec_get_region_var_node(const ecl_smspec_type * ecl_smspec , const char *region_var , int region_nr) {
-  const auto region_it = ecl_smspec->region_var_index.find(region_var);
-  if (region_it == ecl_smspec->region_var_index.end())
-    return NULL;
-
-  const auto& var_map = region_it->second;
-  const auto var_it = var_map.find(region_nr);
-  if (var_it == var_map.end())
-    return NULL;
-
-  return var_it->second;
+  return ecl_smspec_get_int_key_var_node(ecl_smspec->region_var_index, region_nr, region_var);
 }
 
 
@@ -1535,16 +1526,7 @@ const smspec_node_type * ecl_smspec_get_well_completion_var_node(const ecl_smspe
     return NULL;
 
   const auto& num_map = well_iter->second;
-  const auto num_iter = num_map.find(cell_nr);
-  if (num_iter == num_map.end())
-    return NULL;
-
-  const auto& var_map = num_iter->second;
-  const auto var_iter = var_map.find(var);
-  if (var_iter == var_map.end())
-    return NULL;
-
-  return var_iter->second;
+  return ecl_smspec_get_int_key_var_node( num_map, cell_nr, var );
 }
 
 
