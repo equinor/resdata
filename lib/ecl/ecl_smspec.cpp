@@ -32,6 +32,7 @@
 #include <ert/util/util.h>
 #include <ert/util/float_vector.hpp>
 #include <ert/util/stringlist.hpp>
+#include "detail/util/path.hpp"
 
 #include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/ecl_file.hpp>
@@ -993,7 +994,6 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
     restart_base = util_alloc_strip_copy( tmp_base );
     if (strlen(restart_base)) {  /* We ignore the empty ones. */
-      char * path;
       char * smspec_header;
 
       /*
@@ -1015,13 +1015,13 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
       }
 #endif
 
-      util_alloc_file_components( ecl_smspec->header_file.c_str() , &path , NULL , NULL );
-      smspec_header = ecl_util_alloc_exfilename( path , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
+      std::string path = ecl::util::path::dirname( ecl_smspec->header_file );
+      smspec_header = ecl_util_alloc_exfilename( path.c_str() , restart_base , ECL_SUMMARY_HEADER_FILE , ecl_smspec->formatted , 0);
       if (!util_same_file(smspec_header , ecl_smspec->header_file.c_str()))    /* Restart from the current case is ignored. */ {
         if (util_is_abs_path(restart_base))
           ecl_smspec->restart_case = restart_base;
         else {
-          char * tmp_path = util_alloc_filename( path , restart_base , NULL );
+          char * tmp_path = util_alloc_filename( path.c_str() , restart_base , NULL );
           char * abs_path = util_alloc_abs_path(tmp_path);
           ecl_smspec->restart_case = abs_path;
           free( abs_path );
@@ -1029,7 +1029,6 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
         }
       }
 
-      free( path );
       free( smspec_header );
     }
     free( restart_base );
