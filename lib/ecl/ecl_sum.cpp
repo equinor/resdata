@@ -782,6 +782,7 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * _times) {
   time_t start_time = ecl_sum_get_data_start(ecl_sum);
   time_t end_time = ecl_sum_get_end_time(ecl_sum);
+  time_t input_t0 = time_t_vector_get_first( _times );
   time_t_vector_type * times = time_t_vector_alloc(0,0);
 
   /*
@@ -848,7 +849,7 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
     ecl_sum_get_interp_vector( ecl_sum, t, ecl_sum_vector, data);
 
     /* Add timestep corresponding to the interpolated data in the resampled case. */
-    ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum_resampled , report_step , input_t - start_time);
+    ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum_resampled , report_step , input_t - input_t0);
     for (int data_index = 0; data_index < ecl_sum_vector_get_size(ecl_sum_vector); data_index++) {
       double value = double_vector_iget(data,data_index);
       int params_index = data_index + 1;  // The +1 shift is because the first element in the tstep is time value.
