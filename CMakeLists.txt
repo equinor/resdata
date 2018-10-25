@@ -11,7 +11,7 @@ endif()
 #-----------------------------------------------------------------
 
 set( ECL_VERSION_MAJOR 2 )   # Remember to update release notes whenever
-set( ECL_VERSION_MINOR 3 )   # you change the ERT_VERSION_MINOR or MAJOR
+set( ECL_VERSION_MINOR 4 )   # you change the ERT_VERSION_MINOR or MAJOR
 set( ECL_VERSION_MICRO git ) # with "new in Ert Version X.X.X"!
 
 # If the micro version is not integer, that should be interpreted as a
