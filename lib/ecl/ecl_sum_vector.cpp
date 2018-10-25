@@ -16,6 +16,10 @@
   for more details.
 */
 #include <stdlib.h>
+
+#include <vector>
+#include <string>
+
 #include <ert/ecl/ecl_sum_vector.hpp>
 #include <ert/ecl/ecl_sum.hpp>
 #include <ert/ecl/ecl_smspec.hpp>
@@ -31,18 +35,15 @@
 
 struct ecl_sum_vector_struct {
   UTIL_TYPE_ID_DECLARATION;
-  int_vector_type * node_index_list;
-  bool_vector_type * is_rate_list;
-  stringlist_type * key_list;
+  std::vector<int> node_index_list;
+  std::vector<bool> is_rate_list;
+  std::vector<std::string> key_list;
   const ecl_sum_type * ecl_sum;
 };
 
 
 void ecl_sum_vector_free( ecl_sum_vector_type * ecl_sum_vector ){
-    int_vector_free(ecl_sum_vector->node_index_list);
-    bool_vector_free(ecl_sum_vector->is_rate_list);
-    stringlist_free(ecl_sum_vector->key_list);
-    free(ecl_sum_vector);
+    delete ecl_sum_vector;
 }
 
 
@@ -52,19 +53,16 @@ static void ecl_sum_vector_add_node(ecl_sum_vector_type * vector, const smspec_n
   int params_index = smspec_node_get_params_index( node );
   bool is_rate_key = smspec_node_is_rate( node);
 
-  int_vector_append(vector->node_index_list, params_index);
-  bool_vector_append(vector->is_rate_list, is_rate_key);
-  stringlist_append_copy( vector->key_list, key );
+  vector->node_index_list.push_back(params_index);
+  vector->is_rate_list.push_back(is_rate_key);
+  vector->key_list.push_back(key);
 }
 
 
 ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum, bool add_keywords) {
-    ecl_sum_vector_type * ecl_sum_vector = (ecl_sum_vector_type*)util_malloc( sizeof * ecl_sum_vector );
+    ecl_sum_vector_type * ecl_sum_vector = new ecl_sum_vector_type();
     UTIL_TYPE_ID_INIT( ecl_sum_vector , ECL_SUM_VECTOR_TYPE_ID);
     ecl_sum_vector->ecl_sum  = ecl_sum;
-    ecl_sum_vector->node_index_list = int_vector_alloc(0,0);
-    ecl_sum_vector->is_rate_list  = bool_vector_alloc(0,false);
-    ecl_sum_vector->key_list = stringlist_alloc_new( );
     if (add_keywords) {
       const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
       for (int i=0; i < ecl_smspec_num_nodes(smspec); i++) {
@@ -82,9 +80,9 @@ ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum, bool ad
 }
 
 static void ecl_sum_vector_add_invalid_key(ecl_sum_vector_type * vector, const char * key) {
-  int_vector_append(vector->node_index_list, -1);
-  bool_vector_append(vector->is_rate_list, false);
-  stringlist_append_copy(vector->key_list, key);
+  vector->node_index_list.push_back(-1);
+  vector->is_rate_list.push_back(false);
+  vector->key_list.push_back(key);
 }
 
 
@@ -103,8 +101,8 @@ static void ecl_sum_vector_add_invalid_key(ecl_sum_vector_type * vector, const c
 
 ecl_sum_vector_type * ecl_sum_vector_alloc_layout_copy(const ecl_sum_vector_type * src_vector, const ecl_sum_type * ecl_sum) {
   ecl_sum_vector_type * new_vector = ecl_sum_vector_alloc(ecl_sum, false);
-  for (int i=0; i < stringlist_get_size(src_vector->key_list); i++) {
-    const char * key = stringlist_iget(src_vector->key_list, i);
+  for (size_t i=0; i < src_vector->key_list.size(); i++) {
+    const char * key = src_vector->key_list[i].c_str();
     if (ecl_sum_has_general_var(ecl_sum, key))
       ecl_sum_vector_add_key(new_vector, key);
     else
@@ -138,22 +136,22 @@ void ecl_sum_vector_add_keys( ecl_sum_vector_type * ecl_sum_vector, const char *
 }
 
 int ecl_sum_vector_get_size(const ecl_sum_vector_type * ecl_sum_vector){
-    return int_vector_size(ecl_sum_vector->node_index_list);
+    return ecl_sum_vector->node_index_list.size();
 }
 
 bool ecl_sum_vector_iget_is_rate(const ecl_sum_vector_type * ecl_sum_vector, int index){
-    return bool_vector_iget(ecl_sum_vector->is_rate_list, index);
+    return ecl_sum_vector->is_rate_list[index];
 }
 
 bool ecl_sum_vector_iget_valid(const ecl_sum_vector_type * ecl_sum_vector, int index) {
-  return (int_vector_iget(ecl_sum_vector->node_index_list, index) >= 0);
+  return (ecl_sum_vector->node_index_list[index] >= 0);
 }
 
 int ecl_sum_vector_iget_param_index(const ecl_sum_vector_type * ecl_sum_vector, int index){
-    return int_vector_iget(ecl_sum_vector->node_index_list, index);
+    return ecl_sum_vector->node_index_list[index];
 }
 
 
 const char* ecl_sum_vector_iget_key(const ecl_sum_vector_type * ecl_sum_vector, int index){
-  return stringlist_iget( ecl_sum_vector->key_list , index);
+  return ecl_sum_vector->key_list[index].c_str();
 }
