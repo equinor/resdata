@@ -302,7 +302,7 @@ void ecl_sum_tstep_fwrite( const ecl_sum_tstep_type * ministep , const int * ind
 /*****************************************************************/
 
 void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value) {
-  if ((index < (int)tstep->data.size()) && (index >= 0))
+  if ((index < static_cast<int>(tstep->data.size())) && (index >= 0)  )
     tstep->data[index] = value;
   else
     util_abort("%s: index:%d invalid. Valid range: [0,%d) \n",__func__  ,index , tstep->data.size());
