@@ -138,7 +138,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
   int                        ecl_smspec_get_restart_step(const ecl_smspec_type * ecl_smspec);
   const char               * ecl_smspec_get_restart_case( const ecl_smspec_type * ecl_smspec);
   const char               * ecl_smspec_get_join_string( const ecl_smspec_type * smspec);
-  const float_vector_type  * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );
+  const float              * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );
 
   const int                * ecl_smspec_get_grid_dims( const ecl_smspec_type * smspec );
   int                        ecl_smspec_get_params_size( const ecl_smspec_type * smspec );

@@ -223,8 +223,8 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file( int report_step    ,
 
 ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , float sim_seconds , const ecl_smspec_type * smspec ) {
   ecl_sum_tstep_type * tstep = ecl_sum_tstep_alloc( report_step , ministep , smspec );
-  const float_vector_type * default_data = ecl_smspec_get_params_default( smspec );
-  float_vector_memcpy_data( tstep->data , default_data );
+  const float * default_data = ecl_smspec_get_params_default( smspec );
+  memcpy( (void*)tstep->data, (void*)default_data, sizeof(float) * ecl_smspec_get_params_size(smspec) );
 
   ecl_sum_tstep_set_time_info_from_seconds( tstep , ecl_smspec_get_start_time( smspec ) , sim_seconds );
   ecl_sum_tstep_iset( tstep , ecl_smspec_get_time_index( smspec ) , sim_seconds / ecl_smspec_get_time_seconds( smspec ) );
