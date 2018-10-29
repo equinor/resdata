@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <string>
 
 #include <ert/util/util.h>
 
@@ -57,7 +58,7 @@
 #define ECL_RFT_NODE_ID 887195
 struct ecl_rft_node_struct {
   UTIL_TYPE_ID_DECLARATION;
-  char       * well_name;              /* Name of the well. */
+  std::string  well_name;
 
   ecl_rft_enum data_type;              /* What type of data: RFT|PLT|SEGMENT */
   time_t       recording_date;         /* When was the RFT recorded - date.*/
@@ -107,7 +108,7 @@ ecl_rft_node_type * ecl_rft_node_alloc_new(const char * well_name, const char * 
     ecl_rft_node_type * rft_node = new ecl_rft_node_type();
 
     UTIL_TYPE_ID_INIT( rft_node , ECL_RFT_NODE_ID );
-    rft_node->well_name = util_alloc_string_copy(well_name);
+    rft_node->well_name = std::string(well_name);
     rft_node->recording_date = recording_date;
     rft_node->days = days;
     rft_node->data_type = data_type;
@@ -269,8 +270,11 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_view_type * rft_view) {
 
   if (rft_node != NULL) {
     ecl_kw_type * date_kw = ecl_file_view_iget_named_kw( rft_view , DATE_KW    , 0);
-    rft_node->well_name = (char*)util_alloc_strip_copy( (const char*)ecl_kw_iget_ptr(welletc , WELLETC_NAME_INDEX));
-
+    {
+      char * tmp = util_alloc_strip_copy( (const char*) ecl_kw_iget_ptr(welletc, WELLETC_NAME_INDEX));
+      rft_node->well_name = std::string( tmp );
+      free(tmp);
+    }
     /* Time information. */
     {
       int * time = ecl_kw_get_int_ptr( date_kw );
@@ -289,13 +293,11 @@ ecl_rft_node_type * ecl_rft_node_alloc(const ecl_file_view_type * rft_view) {
 
 
 const char * ecl_rft_node_get_well_name(const ecl_rft_node_type * rft_node) {
-  return rft_node->well_name;
+  return rft_node->well_name.c_str();
 }
 
 
 void ecl_rft_node_free(ecl_rft_node_type * rft_node) {
-  free(rft_node->well_name);
-
   for (auto cell_ptr : rft_node->cells)
     ecl_rft_cell_free( cell_ptr );
 
