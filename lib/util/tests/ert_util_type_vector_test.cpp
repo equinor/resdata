@@ -94,10 +94,12 @@ void test_contains() {
   int_vector_type * int_vector = int_vector_alloc( 0 , 100);
 
   test_assert_false( int_vector_contains( int_vector , 100 ));
+  int_vector_resize( int_vector, 1, 100 );
   int_vector_iset( int_vector , 0 , 77 );
   test_assert_false( int_vector_contains( int_vector , 100 ));
   test_assert_true( int_vector_contains( int_vector , 77 ));
 
+  int_vector_resize( int_vector, 11, 100 );
   int_vector_iset( int_vector , 10 , 33 );
   test_assert_true( int_vector_contains( int_vector , 100 ));
   test_assert_true( int_vector_contains( int_vector , 77 ));
@@ -126,6 +128,7 @@ void test_contains_sorted() {
 
 void test_div() {
   int_vector_type * int_vector = int_vector_alloc( 0 , 100);
+  int_vector_resize( int_vector, 11, 100 );
   int_vector_iset( int_vector , 10 , 100 );
   int_vector_div( int_vector , 10 );
   {
@@ -393,8 +396,10 @@ int main(int argc , char ** argv) {
 
   test_assert_true( int_vector_is_instance( int_vector ));
   test_assert_false( double_vector_is_instance( int_vector ));
+  int_vector_resize( int_vector, 3, 99 );
   int_vector_iset( int_vector , 2 , 0);
   int_vector_insert( int_vector , 2 , 77 );
+  int_vector_resize( int_vector, 6, 99 );
   int_vector_iset( int_vector , 5 , -10);
 
   assert_equal( int_vector_iget(int_vector , 0 ) == 99 );

@@ -348,7 +348,8 @@ void @TYPE@_vector_memcpy_data_block( @TYPE@_vector_type * target , const @TYPE@
 
 void @TYPE@_vector_memcpy_from_data( @TYPE@_vector_type * target , const @TYPE@ * src , int src_size ) {
   @TYPE@_vector_reset( target );
-  @TYPE@_vector_iset( target , src_size - 1 , 0 );
+  //@TYPE@_vector_iset( target , src_size - 1 , 0 );
+  @TYPE@_vector_resize( target, src_size, 0);
   memcpy( target->data , src , src_size * sizeof * target->data );
 }
 
