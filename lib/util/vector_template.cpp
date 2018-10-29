@@ -230,7 +230,7 @@ static @TYPE@_vector_type * @TYPE@_vector_alloc__(int init_size , @TYPE@ default
 
   @TYPE@_vector_set_read_only( vector , false );
   if (init_size > 0)
-    @TYPE@_vector_iset( vector , init_size - 1 , default_value );  /* Filling up the init size elements with the default value */
+    @TYPE@_vector_resize( vector , init_size , default_value );  /* Filling up the init size elements with the default value */
 
   return vector;
 }
