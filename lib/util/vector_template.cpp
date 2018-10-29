@@ -255,9 +255,14 @@ static @TYPE@_vector_type * @TYPE@_vector_alloc__(int init_size , @TYPE@ default
 
 void @TYPE@_vector_resize( @TYPE@_vector_type * vector , int new_size, @TYPE@ default_value ) {
   if (new_size > vector->size) {
-    for (int i = vector->size; i < vector->alloc_size; i++)
-      vector->data[i] = default_value;
-    @TYPE@_vector_realloc_data__( vector, 2 * new_size, default_value);
+    if (new_size > vector->alloc_size) {
+      for (int i = vector->size; i < vector->alloc_size; i++)
+        vector->data[i] = default_value;
+      @TYPE@_vector_realloc_data__( vector, 2 * new_size, default_value);
+    }
+    else
+      for (int i = vector->size; i < new_size; i++)
+        vector->data[i] = default_value;
   }
   vector->size = new_size;
 }
@@ -612,6 +617,8 @@ void @TYPE@_vector_inplace_div( @TYPE@_vector_type * vector , const @TYPE@_vecto
 */
 
 void @TYPE@_vector_iset(@TYPE@_vector_type * vector , int index , @TYPE@ value) {
+  /*if (index >= vector->size)
+    util_abort("*********** %s: index out of range, range = [0, %d>, index = %d\n", __func__, vector->size, index);*/
   @TYPE@_vector_assert_writable( vector );
   {
     if (index < 0)
@@ -731,7 +738,10 @@ void @TYPE@_vector_insert( @TYPE@_vector_type * vector , int index , @TYPE@ valu
 
 
 void @TYPE@_vector_append(@TYPE@_vector_type * vector , @TYPE@ value) {
-  @TYPE@_vector_iset(vector , vector->size , value);
+  //@TYPE@_vector_iset(vector , vector->size , value);
+  int size = vector->size;
+  @TYPE@_vector_resize(vector, size+1, 0);
+  vector->data[size] = value;
 }
 
 
