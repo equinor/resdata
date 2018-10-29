@@ -100,7 +100,7 @@ ecl_rft_file_type * ecl_rft_file_alloc(const char * filename) {
 
     if (rft_view) {
       ecl_rft_node_type * rft_node = ecl_rft_node_alloc( rft_view );
-      if (rft_node != NULL) {
+      if (rft_node) {
         const char * well_name = ecl_rft_node_get_well_name( rft_node );
         ecl_rft_file_add_node(rft_vector , rft_node);
         if (!hash_has_key( rft_vector->well_index , well_name))

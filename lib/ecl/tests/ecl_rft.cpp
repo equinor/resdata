@@ -81,8 +81,6 @@ void test_rft( const char * rft_file ) {
       test_assert_ptr_equal( cell1 , cell2 );
     }
   }
-  ecl_rft_node_inplace_sort_cells( rft_node );
-
   ecl_rft_file_free( rft );
 }
 
@@ -94,7 +92,6 @@ void test_plt_msw( const char * plt_file ) {
   test_assert_true( ecl_rft_node_is_PLT( plt_node ));
   test_assert_true( ecl_rft_node_is_MSW( plt_node ));
   test_assert_int_equal( 22 , ecl_rft_node_get_size( plt_node ));
-  ecl_rft_node_inplace_sort_cells( plt_node );
   {
     int i;
     for (i=1; i < ecl_rft_node_get_size( plt_node ); i++) {
@@ -143,7 +140,6 @@ void test_plt( const char * plt_file ) {
 
       test_assert_ptr_equal( cell1 , cell2 );
     }
-    ecl_rft_node_inplace_sort_cells( plt_node );
   }
 
   ecl_rft_file_free( plt );
