@@ -613,4 +613,6 @@ int ecl_rft_node_cmp( const ecl_rft_node_type * n1 , const ecl_rft_node_type * n
 
 }
 
-
+bool ecl_rft_node_lt(const ecl_rft_node_type * n1, const ecl_rft_node_type * n2) {
+  return (ecl_rft_node_cmp(n1, n2) < 0);
+}
