@@ -155,7 +155,7 @@ void test_simple_load_rft(const char * filename) {
 int main( int argc , char ** argv) {
   const char * rft_file = argv[1];
   const char * mode_string = argv[2];
-
+  util_install_signals();
 
   if (strcmp( mode_string , "RFT") == 0)
     test_rft( rft_file );
