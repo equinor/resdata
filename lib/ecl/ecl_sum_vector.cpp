@@ -27,8 +27,6 @@
 #include <ert/util/util.h>
 #include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/int_vector.hpp>
-#include <ert/util/bool_vector.hpp>
 
 
 #define ECL_SUM_VECTOR_TYPE_ID 8768778
