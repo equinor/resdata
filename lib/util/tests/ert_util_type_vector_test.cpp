@@ -263,8 +263,8 @@ void test_resize() {
   int i;
   int def = 77;
   int_vector_type * vec = int_vector_alloc(0,def);
-  int_vector_resize( vec , 10 );
-  test_assert_int_equal( int_vector_size( vec ) , 10 );
+  int_vector_resize( vec , 10 , def);
+  test_assert_int_equal( int_vector_size( vec ) , 10  );
   for (i=0; i < 10; i++)
     test_assert_int_equal( int_vector_iget( vec , i ) , def );
 
@@ -272,12 +272,12 @@ void test_resize() {
   for (i=5; i < 10; i++)
     test_assert_int_equal( int_vector_iget( vec , i ) , 5 );
 
-  int_vector_resize( vec , 5 );
+  int_vector_resize( vec , 5 , def);
   test_assert_int_equal( int_vector_size( vec ) , 5 );
   for (i=0; i < 5; i++)
     test_assert_int_equal( int_vector_iget( vec , i ) , def );
 
-  int_vector_resize( vec , 10 );
+  int_vector_resize( vec , 10, def );
   test_assert_int_equal( int_vector_size( vec ) , 10 );
   for (i=0; i < 10; i++)
     test_assert_int_equal( int_vector_iget( vec , i ) , def );
@@ -373,9 +373,17 @@ void test_equal_index() {
   int_vector_free(v3);
 }
 
-
+void test_misc() {
+  int_vector_type * v = int_vector_alloc(5, 123);
+  test_assert_int_equal( int_vector_iget(v, 2), 123 );
+  int_vector_resize(v, 20, 0);
+  test_assert_int_equal( int_vector_iget(v, 4), 123);
+  test_assert_int_equal( int_vector_iget(v, 9), 0 );
+  test_assert_int_equal( int_vector_iget(v, 19), 0);
+}
 
 int main(int argc , char ** argv) {
+  test_misc();
 
   int_vector_type * int_vector = int_vector_alloc( 0 , 99);
 
