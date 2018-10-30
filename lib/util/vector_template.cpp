@@ -618,8 +618,6 @@ void @TYPE@_vector_inplace_div( @TYPE@_vector_type * vector , const @TYPE@_vecto
 */
 
 void @TYPE@_vector_iset(@TYPE@_vector_type * vector , int index , @TYPE@ value) {
-  /*if (index >= vector->size)
-    util_abort("*********** %s: index out of range, range = [0, %d>, index = %d\n", __func__, vector->size, index);*/
   @TYPE@_vector_assert_writable( vector );
   {
     if (index < 0)
