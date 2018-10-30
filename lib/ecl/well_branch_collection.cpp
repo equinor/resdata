@@ -107,6 +107,8 @@ bool well_branch_collection_add_start_segment( well_branch_collection_type * bra
     else {
       int new_index = vector_get_size( branches->__start_segments );
       vector_append_ref( branches->__start_segments , start_segment);
+      if (branch_id >= int_vector_size(branches->index_map))
+        int_vector_resize(branches->index_map, branch_id+1, -1);
       int_vector_iset( branches->index_map , branch_id , new_index);
     }
 

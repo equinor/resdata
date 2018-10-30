@@ -70,6 +70,8 @@ void well_segment_collection_add( well_segment_collection_type * segment_collect
   else {
     int new_index = vector_get_size(segment_collection->__segment_storage);
     vector_append_owned_ref( segment_collection->__segment_storage , segment , well_segment_free__);
+    if (segment_id >= int_vector_size(segment_collection->segment_index_map))
+      int_vector_resize(segment_collection->segment_index_map, segment_id+1, -1);
     int_vector_iset( segment_collection->segment_index_map , segment_id , new_index);
   }
 }
