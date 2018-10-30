@@ -19,14 +19,14 @@
 #ifndef ERT_ECL_SUM_TSTEP_H
 #define ERT_ECL_SUM_TSTEP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <ert/util/int_vector.hpp>
 
 #include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/ecl_kw.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
 

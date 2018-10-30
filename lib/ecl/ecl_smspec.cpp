@@ -1648,12 +1648,9 @@ const char * ecl_smspec_get_restart_case( const ecl_smspec_type * ecl_smspec) {
     return NULL;
 }
 
-
-const float * ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec ) {
-  return ecl_smspec->params_default.data();
+const std::vector<float>& ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec ) {
+  return ecl_smspec->params_default;
 }
-
-
 
 void ecl_smspec_free(ecl_smspec_type *ecl_smspec) {
 
