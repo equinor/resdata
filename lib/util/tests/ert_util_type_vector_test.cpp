@@ -242,6 +242,8 @@ void test_idel_insert() {
 void test_iset_block() {
   int_vector_type * vec = int_vector_alloc(0,0);
 
+  int_vector_resize( vec, 10, 0 );
+  int_vector_resize( vec, 20, 77 );
   int_vector_iset_block( vec , 10 , 10 , 77 );
   test_assert_int_equal( int_vector_size( vec ) , 20 );
   {
@@ -348,9 +350,9 @@ void test_empty() {
 
 
 void test_equal_index() {
-  int_vector_type * v1 = int_vector_alloc(0,0);
-  int_vector_type * v2 = int_vector_alloc(0,0);
-  int_vector_type * v3 = int_vector_alloc(0,0);
+  int_vector_type * v1 = int_vector_alloc(5,0);
+  int_vector_type * v2 = int_vector_alloc(5,0);
+  int_vector_type * v3 = int_vector_alloc(5,0);
 
   for (int i=0; i < 5; i++) {
     int_vector_iset(v1,i,i);
