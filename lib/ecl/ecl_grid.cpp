@@ -2104,6 +2104,8 @@ static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , bool apply_mapaxes
 
 static void ecl_grid_add_lgr( ecl_grid_type * main_grid , ecl_grid_type * lgr_grid) {
   vector_append_owned_ref( main_grid->LGR_list , lgr_grid , ecl_grid_free__);
+  if ( lgr_grid->lgr_nr >= int_vector_size(main_grid->lgr_index_map) )
+    int_vector_resize( main_grid->lgr_index_map, lgr_grid->lgr_nr+1 , 0);
   int_vector_iset(main_grid->lgr_index_map, lgr_grid->lgr_nr, vector_get_size(main_grid->LGR_list)-1);
   hash_insert_ref( main_grid->LGR_hash , lgr_grid->name , lgr_grid);
 }

@@ -230,7 +230,7 @@ static @TYPE@_vector_type * @TYPE@_vector_alloc__(int init_size , @TYPE@ default
 
   @TYPE@_vector_set_read_only( vector , false );
   if (init_size > 0)
-    @TYPE@_vector_iset( vector , init_size - 1 , default_value );  /* Filling up the init size elements with the default value */
+    @TYPE@_vector_resize( vector , init_size , default_value );  /* Filling up the init size elements with the default value */
 
   return vector;
 }
@@ -255,9 +255,14 @@ static @TYPE@_vector_type * @TYPE@_vector_alloc__(int init_size , @TYPE@ default
 
 void @TYPE@_vector_resize( @TYPE@_vector_type * vector , int new_size, @TYPE@ default_value ) {
   if (new_size > vector->size) {
-    for (int i = vector->size; i < vector->alloc_size; i++)
-      vector->data[i] = default_value;
-    @TYPE@_vector_realloc_data__( vector, 2 * new_size, default_value);
+    if (new_size > vector->alloc_size) {
+      for (int i = vector->size; i < vector->alloc_size; i++)
+        vector->data[i] = default_value;
+      @TYPE@_vector_realloc_data__( vector, 2 * new_size, default_value);
+    }
+    else
+      for (int i = vector->size; i < new_size; i++)
+        vector->data[i] = default_value;
   }
   vector->size = new_size;
 }
@@ -343,7 +348,8 @@ void @TYPE@_vector_memcpy_data_block( @TYPE@_vector_type * target , const @TYPE@
 
 void @TYPE@_vector_memcpy_from_data( @TYPE@_vector_type * target , const @TYPE@ * src , int src_size ) {
   @TYPE@_vector_reset( target );
-  @TYPE@_vector_iset( target , src_size - 1 , 0 );
+  //@TYPE@_vector_iset( target , src_size - 1 , 0 );
+  @TYPE@_vector_resize( target, src_size, 0);
   memcpy( target->data , src , src_size * sizeof * target->data );
 }
 
@@ -731,7 +737,10 @@ void @TYPE@_vector_insert( @TYPE@_vector_type * vector , int index , @TYPE@ valu
 
 
 void @TYPE@_vector_append(@TYPE@_vector_type * vector , @TYPE@ value) {
-  @TYPE@_vector_iset(vector , vector->size , value);
+  //@TYPE@_vector_iset(vector , vector->size , value);
+  int size = vector->size;
+  @TYPE@_vector_resize(vector, size+1, 0);
+  vector->data[size] = value;
 }
 
 

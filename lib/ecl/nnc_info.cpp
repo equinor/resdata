@@ -127,6 +127,8 @@ nnc_vector_type * nnc_info_get_self_vector( const nnc_info_type * nnc_info ) {
 
 static void nnc_info_add_vector( nnc_info_type * nnc_info , nnc_vector_type * nnc_vector) {
   vector_append_owned_ref( nnc_info->lgr_list , nnc_vector , nnc_vector_free__ );
+  if (nnc_vector_get_lgr_nr( nnc_vector ) >= int_vector_size( nnc_info->lgr_index_map ) )
+    int_vector_resize( nnc_info->lgr_index_map , nnc_vector_get_lgr_nr( nnc_vector)+1, -1);
   int_vector_iset( nnc_info->lgr_index_map , nnc_vector_get_lgr_nr( nnc_vector ) , vector_get_size( nnc_info->lgr_list ) - 1 );
 }
 
