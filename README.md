@@ -1,6 +1,6 @@
 # libecl [![Build Status](https://travis-ci.org/Statoil/libecl.svg?branch=master)](https://travis-ci.org/Statoil/libecl)
 
-
+NO MERGE
 *libecl* is a package for reading and writing the result files from
 the Eclipse reservoir simulator. The file types covered are the
 restart, init, rft, summary and grid files. Both unified and
