@@ -53,7 +53,7 @@ static UTIL_SAFE_CAST_FUNCTION( well_segment , WELL_SEGMENT_TYPE_ID )
 
 
 well_segment_type * well_segment_alloc(int segment_id , int outlet_segment_id , int branch_id , const double * rseg_data) {
-  well_segment_type * segment = (well_segment_type*)util_malloc( sizeof * segment );
+  well_segment_type * segment = new well_segment_type();
   UTIL_TYPE_ID_INIT( segment , WELL_SEGMENT_TYPE_ID );
 
   segment->link_count = 0;
@@ -117,7 +117,7 @@ well_segment_type * well_segment_alloc_from_kw( const ecl_kw_type * iseg_kw , co
 
 void well_segment_free(well_segment_type * segment ) {
   hash_free( segment->connections );
-  free( segment );
+  delete segment;
 }
 
 void well_segment_free__(void * arg) {
