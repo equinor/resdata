@@ -47,6 +47,12 @@ extern "C" {
                                        double utm_x, double utm_y , double depth,
                                        double youngs_modulus, double poisson_ratio, double seabed);
 
+  double ecl_subsidence_eval_geertsma_rporv( const ecl_subsidence_type * subsidence , const char * base, const char * monitor , ecl_region_type * region ,
+                                       double utm_x, double utm_y , double depth,
+                                       double youngs_modulus, double poisson_ratio, double seabed);
+
+
+
 
 #ifdef __cplusplus
 }
