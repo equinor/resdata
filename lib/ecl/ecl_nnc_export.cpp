@@ -19,8 +19,6 @@
 
 #include <vector>
 
-#include <ert/util/int_vector.hpp>
-
 #include <ert/ecl/ecl_file.hpp>
 #include <ert/ecl/ecl_grid.hpp>
 #include <ert/ecl/ecl_nnc_export.hpp>
