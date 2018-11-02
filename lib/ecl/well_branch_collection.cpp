@@ -43,7 +43,7 @@ static UTIL_SAFE_CAST_FUNCTION( well_branch_collection , WELL_BRANCH_COLLECTION_
 
 
 well_branch_collection_type * well_branch_collection_alloc() {
-  well_branch_collection_type * branch_collection = (well_branch_collection_type*)util_malloc( sizeof * branch_collection );
+  well_branch_collection_type * branch_collection = new well_branch_collection_type();
   UTIL_TYPE_ID_INIT( branch_collection , WELL_BRANCH_COLLECTION_TYPE_ID );
   branch_collection->__start_segments = vector_alloc_new();
   branch_collection->index_map = int_vector_alloc(0 , -1 );
@@ -55,7 +55,7 @@ well_branch_collection_type * well_branch_collection_alloc() {
 void well_branch_collection_free( well_branch_collection_type * branches ) {
   vector_free( branches->__start_segments );
   int_vector_free( branches->index_map );
-  free( branches );
+  delete branches;
 }
 
 
