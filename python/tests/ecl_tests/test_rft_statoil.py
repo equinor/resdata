@@ -53,10 +53,6 @@ class RFTTest(EclTest):
             for cell in rft:
                 self.assertIsInstance(cell, EclRFTCell)
 
-            cell0 = rft.iget_sorted(0)
-            self.assertIsInstance(cell, EclRFTCell)
-            rft.sort()
-
         for h in rftFile.getHeaders():
             print(h)
             self.assertIsInstance(h[1], datetime.date)
