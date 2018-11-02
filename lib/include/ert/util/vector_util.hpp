@@ -19,25 +19,18 @@
 #include <stdio.h>
 
 #include <vector>
+#include <algorithm>
 
 template <class T>
 int vector_util_index(const std::vector<T>& vec, T value) {
-  if (vec.size() > 0) {
-    int index = 0;
-    while (true) {
-      if (vec[index] == value)
-        break;
 
-      index++;
-      if (index == (int)vec.size()) {
-        index = -1;  /* Not found */
-        break;
-      }
-    }
-
-    return index;
-  } else
-    return -1;
+  int index;
+  auto iter = find(vec.begin(), vec.end(), value);
+  if (iter == vec.end())
+    index = -1;
+  else
+    index = iter - vec.begin();
+  return index;
 }
 
 
