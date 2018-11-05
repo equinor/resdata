@@ -37,7 +37,7 @@
 struct well_conn_collection_struct {
   UTIL_TYPE_ID_DECLARATION;
   std::vector<well_conn_type*> connection_list;
-  std::vector<bool>            connection_list_destroy;
+  std::vector<bool>            connection_list_owned;
 };
 
 
@@ -58,7 +58,7 @@ well_conn_collection_type * well_conn_collection_alloc() {
 
 void well_conn_collection_add( well_conn_collection_type * wellcc , well_conn_type * conn) {
   wellcc->connection_list.push_back(conn);
-  wellcc->connection_list_destroy.push_back(true);
+  wellcc->connection_list_owned.push_back(true);
 }
 
 /*
@@ -67,13 +67,13 @@ void well_conn_collection_add( well_conn_collection_type * wellcc , well_conn_ty
 
 void well_conn_collection_add_ref( well_conn_collection_type * wellcc , well_conn_type * conn) {
   wellcc->connection_list.push_back(conn);
-  wellcc->connection_list_destroy.push_back(false); 
+  wellcc->connection_list_owned.push_back(false); 
 }
 
 
 void well_conn_collection_free( well_conn_collection_type * wellcc ) {
   for (size_t i = 0; i < wellcc->connection_list.size(); i++)
-    if (wellcc->connection_list_destroy[i])
+    if (wellcc->connection_list_owned[i])
       well_conn_free(wellcc->connection_list[i]);
   delete wellcc;
 }
