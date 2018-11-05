@@ -54,6 +54,7 @@ option( RST_DOC             "Build RST documentation"                           
 option( ERT_BUILD_CXX       "Build some CXX wrappers"                                 ON)
 option( USE_RPATH           "Don't strip RPATH from libraries and binaries"           OFF)
 option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF)
+option( PYBIND11            "Some cpp functionality wrapped using pybind11"           OFF)
 
 set(STATOIL_TESTDATA_ROOT "" CACHE PATH  "Root to Statoil internal testdata")
 if (EXISTS ${STATOIL_TESTDATA_ROOT})
@@ -323,11 +324,6 @@ if (ERT_LINUX)
    add_definitions( -DHAVE_PROC )
 endif()
 
-add_subdirectory( external/catch2 )
-add_subdirectory( lib )
-add_subdirectory( applications )
-add_subdirectory( bin )
-
 if (ENABLE_PYTHON AND ERT_WINDOWS)
     if ((NOT MSVC) OR (MSVC_VERSION LESS 1900))
       message(FATAL_ERROR "The Python wrappers require Visual Studio 2015 or newer")
@@ -345,6 +341,15 @@ if (ENABLE_PYTHON)
     endif()
 
 endif()
+
+if (PYBIND11)
+  set( PYBIND11_CPP_STANDARD "-std=c++11" )
+  add_subdirectory( pybind11 )
+endif()
+add_subdirectory( external/catch2 )
+add_subdirectory( lib )
+add_subdirectory( applications )
+add_subdirectory( bin )
 
 if (ENABLE_PYTHON)
    if (NOT ${BUILD_SHARED_LIBS})

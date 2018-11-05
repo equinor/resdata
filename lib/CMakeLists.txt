@@ -707,3 +707,8 @@ target_link_libraries(geo_surface ecl)
 add_test(NAME geo_surface COMMAND geo_surface
         ${_geopath}/Surface.irap
         ${_geopath}/Surface_incompatible.irap)
+
+if (PYBIND11)
+  add_subdirectory( python-bind )
+endif()
+
