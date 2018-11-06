@@ -25,8 +25,6 @@
 #include <algorithm>
 
 #include <ert/util/util.h>
-#include <ert/util/hash.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <ert/ecl/ecl_rsthead.hpp>
 #include <ert/ecl/ecl_file.hpp>

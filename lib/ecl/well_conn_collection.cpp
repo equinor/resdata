@@ -22,7 +22,6 @@
 
 #include <ert/util/util.h>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/vector.hpp>
 
 #include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/ecl_rsthead.hpp>

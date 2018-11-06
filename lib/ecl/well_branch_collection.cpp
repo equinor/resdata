@@ -22,7 +22,6 @@
 
 #include <ert/util/util.h>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/int_vector.hpp>
 
 #include <ert/ecl_well/well_const.hpp>
 #include <ert/ecl_well/well_conn.hpp>
