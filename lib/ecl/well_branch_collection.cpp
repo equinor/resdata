@@ -22,7 +22,6 @@
 
 #include <ert/util/util.h>
 #include <ert/util/type_macros.hpp>
-#include <ert/util/vector.hpp>
 #include <ert/util/int_vector.hpp>
 
 #include <ert/ecl_well/well_const.hpp>
@@ -35,7 +34,7 @@
 struct well_branch_collection_struct {
   UTIL_TYPE_ID_DECLARATION;
 
-  std::vector<const well_segment_type*> __start_segments;
+  std::vector<well_segment_type*> __start_segments;
   std::vector<int> index_map;
 };
 
@@ -88,7 +87,7 @@ bool well_branch_collection_has_branch( const well_branch_collection_type * bran
 
 
 const well_segment_type * well_branch_collection_iget_start_segment( const well_branch_collection_type * branches , int index ) {
-  if (index < (int)branches->__start_segments.size())
+  if (index < static_cast<int>(branches->__start_segments.size()))
     return branches->__start_segments[index];
   else
     return NULL;
@@ -105,7 +104,7 @@ const well_segment_type * well_branch_collection_get_start_segment( const well_b
 }
 
 
-bool well_branch_collection_add_start_segment( well_branch_collection_type * branches , const well_segment_type * start_segment) {
+bool well_branch_collection_add_start_segment( well_branch_collection_type * branches , well_segment_type * start_segment) {
   if ((well_segment_get_link_count( start_segment ) == 0) && (well_segment_get_outlet(start_segment))) {
     int branch_id = well_segment_get_branch_id( start_segment );
     int current_index = well_branch_collection_safe_iget_index( branches , branch_id);

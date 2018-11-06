@@ -168,7 +168,7 @@ void well_segment_collection_add_branches( const well_segment_collection_type * 
                                            well_branch_collection_type * branches ) {
   int iseg;
   for (iseg =0; iseg < well_segment_collection_get_size( segment_collection ); iseg++) {
-    const well_segment_type * segment = well_segment_collection_iget( segment_collection , iseg );
+    well_segment_type * segment = well_segment_collection_iget( segment_collection , iseg );
     if (well_segment_get_link_count( segment ) == 0)
       well_branch_collection_add_start_segment( branches , segment );
   }
