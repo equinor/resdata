@@ -56,7 +56,6 @@ endif ()
 
 if (ERT_BUILD_CXX)
     list(APPEND opt_srcs ecl/FortIO.cpp
-                         ecl/Smspec.cpp
                          ecl/EclFilename.cpp
 )
 endif ()
@@ -436,7 +435,7 @@ if (ERT_BUILD_CXX)
         add_test(NAME ${test} COMMAND ${test})
     endforeach()
 
-    foreach (test eclxx_kw eclxx_fortio eclxx_smspec eclxx_filename eclxx_types)
+    foreach (test eclxx_kw eclxx_fortio eclxx_filename eclxx_types)
         add_executable(${test} ecl/tests/${test}.cpp)
         target_link_libraries(${test} ecl)
         add_test(NAME ${test} COMMAND ${test})
