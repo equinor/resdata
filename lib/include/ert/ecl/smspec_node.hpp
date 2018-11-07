@@ -23,21 +23,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string>
+#include <array>
 
-#define DUMMY_WELL ":+:+:+:+"
-#define IS_DUMMY_WELL(well) (strcmp((well) , DUMMY_WELL) == 0)
-#define SMSPEC_PARAMS_INDEX_INVALID -77
-
-
-#define SMSPEC_TIME_KEYWORD "TIME"
-#define SMSPEC_TIME_NUMS_VALUE     -32676
-
-#define SMSPEC_YEARS_KEYWORD "YEARS"
-#define SMSPEC_YEARS_NUMS_VALUE     -32676
-
+#include <ert/util/type_macros.hpp>
 
 typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_FIELD_VAR              =  1 ,   /* X */
@@ -56,12 +45,175 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_MISC_VAR               = 14     /* X */}  ecl_smspec_var_type;
 
 
+#define SMSPEC_TYPE_ID 61550451
+
+class smspec_node_type {
+  private:
+
+    std::string            wgname;
+    std::string            keyword;            /* The value of the KEYWORDS vector for this elements. */
+    std::string            unit;               /* The value of the UNITS vector for this elements. */
+    int                    num;                /* The value of the NUMS vector for this elements - NB this will have the value SMSPEC_NUMS_INVALID if the smspec file does not have a NUMS   vector. */
+    std::string            lgr_name;           /* The lgr name of the current variable - will be NULL for non-lgr variables. */
+    std::array<int,3>      lgr_ijk;
+
+    /*------------------------------------------- All members below this line are *derived* quantities. */
+
+    std::string            gen_key1;           /* The main composite key, i.e. WWCT:OP3 for this element. */
+    std::string            gen_key2;           /* Some of the ijk based elements will have both a xxx:i,j,k and a xxx:num key. Some of the region_2_region elements will have both a xxx:num and a xxx:r2-r2 key. Mostly NULL. */
+    ecl_smspec_var_type    var_type;           /* The variable type */
+    std::array<int,3>      ijk;                /* The ijk coordinates (NB: OFFSET 1) corresponding to the nums value - will be NULL if not relevant. */
+    bool                   rate_variable;      /* Is this a rate variable (i.e. WOPR) or a state variable (i.e. BPR). Relevant when doing time interpolation. */
+    bool                   total_variable;     /* Is this a total variable like WOPT? */
+    bool                   historical;         /* Does the name end with 'H'? */
+    int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
+    float                  default_value;      /* Default value for this variable. */
+
+    smspec_node_type();
+
+    void set_invalid_flags();
+    void init_lgr( ecl_smspec_var_type var_type ,
+                   const char * wgname  ,
+                   const char * keyword ,
+                   const char * unit    ,
+                   const char * lgr ,
+                   const char * key_join_string ,
+                   int   lgr_i, int lgr_j , int lgr_k );
+    void common_init( ecl_smspec_var_type var_type_ , const char * keyword , const std::string& unit );
+    void set_num( const int grid_dims[3] , int num_);
+    void set_keyword( const std::string& keyword_ );
+    void set_flags();
+    void init_num( ecl_smspec_var_type var_type_);
+    void set_gen_keys( const char * key_join_string_);
+    void decode_R1R2( int * r1 , int * r2)  const;
+    void set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k);
+
+
+    int cmp__(const smspec_node_type * node2) const;
+    int cmp_KEYWORD_WGNAME_NUM__(const smspec_node_type * node2) const;
+    static int cmp_KEYWORD_WGNAME_NUM( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_KEYWORD_WGNAME_NUM__(node2);
+    }
+    int cmp_KEYWORD_WGNAME_LGR__( const smspec_node_type * node2) const;
+    static int cmp_KEYWORD_WGNAME_LGR( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_KEYWORD_WGNAME_LGR__(node2);
+    }
+    int cmp_KEYWORD_WGNAME_LGR_LGRIJK__( const smspec_node_type * node2) const;
+    static int cmp_KEYWORD_WGNAME_LGR_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_KEYWORD_WGNAME_LGR_LGRIJK__(node2);
+    }
+    int cmp_KEYWORD_WGNAME__( const smspec_node_type * node2) const;
+    static int cmp_KEYWORD_WGNAME( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_KEYWORD_WGNAME__(node2);
+    }
+    static bool equal_MISC( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->keyword == node2->keyword;
+    }
+    int cmp_MISC__( const smspec_node_type * node2) const;
+    static int cmp_MISC( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_MISC__(node2);
+    }
+    int cmp_LGRIJK__( const smspec_node_type * node2) const;
+    static int cmp_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_LGRIJK__(node2);
+    }
+    int cmp_KEYWORD_LGR_LGRIJK__( const smspec_node_type * node2) const;
+    static int cmp_KEYWORD_LGR_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_KEYWORD_LGR_LGRIJK__(node2);
+    }
+    int cmp_KEYWORD_NUM__( const smspec_node_type * node2) const;
+    static int cmp_KEYWORD_NUM( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_KEYWORD_NUM__(node2);
+    }
+    static int cmp_KEYWORD( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->keyword.compare(node2->keyword);
+    }
+    int cmp_key1__( const smspec_node_type * node2) const;
+    static int cmp_key1( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp_key1__(node2);
+    }
+
+  public:
+
+    UTIL_TYPE_ID_DECLARATION;
+
+    smspec_node_type(ecl_smspec_var_type var_type ,
+                     const char * wgname  ,
+                     const char * keyword ,
+                     const char * unit    ,
+                     const char * key_join_string ,
+                     const int grid_dims[3] ,
+                     int num , int param_index, float default_value);
+
+    smspec_node_type(ecl_smspec_var_type var_type ,
+                     const char * wgname  ,
+                     const char * keyword ,
+                     const char * unit    ,
+                     const char * lgr ,
+                     const char * key_join_string ,
+                     int   lgr_i, int lgr_j , int lgr_k,
+                     int param_index , float default_value);
+
+    bool init__( ecl_smspec_var_type var_type ,
+                 const char * wgname  ,
+                 const char * keyword ,
+                 const char * unit    ,
+                 const char * key_join_string ,
+                 const int grid_dims[3] ,
+                 int num);
+
+
+    smspec_node_type * copy() const;
+
+    static int cmp( const smspec_node_type * node1, const smspec_node_type * node2) {
+      return node1->cmp__(node2);
+    }
+
+    void                  set_unit( const char * unit_);
+    int                   get_R1() const;
+    int                   get_R2() const;
+    const char          * get_gen_key1() const;
+    const char          * get_gen_key2() const;
+    ecl_smspec_var_type   get_var_type() const;
+    int                   get_num() const;
+    const char          * get_wgname() const;
+    const char          * get_keyword() const;
+    const char          * get_unit() const;
+    bool                  is_rate() const;
+    bool                  is_total() const;
+    bool                  is_historical() const;
+    bool                  need_nums() const;
+    void                  fprintf__( FILE * stream) const;
+    int                   get_params_index() const;
+    void                  set_params_index( int params_index_);
+    void                  set_default( float default_value_);
+    float                 get_default() const;
+    const                 std::array<int,3>& get_ijk() const;
+    const                 std::string& get_lgr_name() const;
+    const                 std::array<int,3>&  get_lgr_ijk() const;
+
+};
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define DUMMY_WELL ":+:+:+:+"
+#define IS_DUMMY_WELL(well) (strcmp((well) , DUMMY_WELL) == 0)
+#define SMSPEC_PARAMS_INDEX_INVALID -77
+
+
+#define SMSPEC_TIME_KEYWORD "TIME"
+#define SMSPEC_TIME_NUMS_VALUE     -32676
+
+#define SMSPEC_YEARS_KEYWORD "YEARS"
+#define SMSPEC_YEARS_NUMS_VALUE     -32676
+
+
 #define SMSPEC_NUMS_INVALID   -991199
 #define SMSPEC_NUMS_WELL       1
 #define SMSPEC_NUMS_GROUP      2
 #define SMSPEC_NUMS_FIELD      0
-
-  typedef struct smspec_node_struct smspec_node_type;
 
   char * smspec_alloc_block_ijk_key( const char * join_string , const char * keyword , int i , int j , int k);
   char * smspec_alloc_completion_ijk_key( const char * join_string , const char * keyword, const char * wgname , int i , int j , int k);
@@ -76,6 +228,9 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   char * smspec_alloc_local_well_key( const char * join_string , const char * keyword , const char * lgr_name , const char * wgname);
   char * smspec_alloc_local_block_key( const char * join_string , const char * keyword , const char * lgr_name , int i , int j , int k);
   char * smspec_alloc_local_completion_key( const char * join_string, const char * keyword , const char * lgr_name , const char * wgname , int i , int j , int k);
+
+  bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_type);
+  bool smspec_node_identify_rate(const char * keyword);
 
   bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type * node2);
 
@@ -106,7 +261,6 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
                                             int param_index,
                                             float default_value);
 
-  smspec_node_type *  smspec_node_alloc_new(int params_index, float default_value);
   smspec_node_type *  smspec_node_alloc_copy( const smspec_node_type* );
 
   void                smspec_node_free( smspec_node_type * index );
@@ -141,8 +295,6 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
   bool smspec_node_gt( const smspec_node_type * node1,  const smspec_node_type * node2);
   int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * node2);
   int smspec_node_cmp__( const void * node1, const void * node2);
-  bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_type);
-  bool smspec_node_identify_rate(const char * keyword);
 
 #ifdef __cplusplus
 }
