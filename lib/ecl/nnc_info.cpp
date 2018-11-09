@@ -18,9 +18,14 @@
 
 #include <stdlib.h>
 
+#include <vector>
+#include <stdexcept> 
+#include <string>
+
 #include <ert/util/util.h>
 #include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
+#include <ert/util/vector_util.hpp>
 
 #include <ert/ecl/nnc_info.hpp>
 #include <ert/ecl/nnc_vector.hpp>
@@ -151,27 +156,28 @@ void nnc_info_add_nnc(nnc_info_type * nnc_info, int lgr_nr, int global_cell_numb
   }
 }
 
+bool nnc_info_has_grid_index_list( const nnc_info_type * nnc_info, int lgr_nr ) {
+  return (nnc_info_get_vector( nnc_info , lgr_nr ) != NULL);
+}
 
-const int_vector_type * nnc_info_get_grid_index_list(const nnc_info_type * nnc_info, int lgr_nr) {
+const std::vector<int>& nnc_info_get_grid_index_list(const nnc_info_type * nnc_info, int lgr_nr) {
   nnc_vector_type * nnc_vector = nnc_info_get_vector( nnc_info , lgr_nr );
-  if (nnc_vector)
-    return nnc_vector_get_grid_index_list( nnc_vector );
-  else
-    return NULL;
+  if (!nnc_vector)
+    throw std::invalid_argument(std::string(__func__)); 
+  return nnc_vector_get_grid_index_list( nnc_vector );
 }
 
 
-const int_vector_type * nnc_info_iget_grid_index_list(const nnc_info_type * nnc_info, int lgr_index) {
+const std::vector<int>& nnc_info_iget_grid_index_list(const nnc_info_type * nnc_info, int lgr_index) {
   nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index );
-  if (nnc_vector)
-    return nnc_vector_get_grid_index_list( nnc_vector );
-  else
-    return NULL;
+  if (!nnc_vector)
+    throw std::invalid_argument(std::string(__func__)); 
+  return nnc_vector_get_grid_index_list( nnc_vector );
 }
 
 
 
-const int_vector_type * nnc_info_get_self_grid_index_list(const nnc_info_type * nnc_info) {
+const std::vector<int>& nnc_info_get_self_grid_index_list(const nnc_info_type * nnc_info) {
   return nnc_info_get_grid_index_list( nnc_info , nnc_info->lgr_nr );
 }
 
@@ -207,8 +213,8 @@ void nnc_info_fprintf(const nnc_info_type * nnc_info , FILE * stream) {
       if (lgr_index >= 0) {
         printf("   %02d -> %02d  => ",lgr_nr , lgr_index);
         {
-          const int_vector_type * index_list = nnc_info_iget_grid_index_list( nnc_info , lgr_index );
-          int_vector_fprintf( index_list , stream , " " , "%d");
+          const std::vector<int>& index_list = nnc_info_iget_grid_index_list( nnc_info , lgr_index );
+          vector_util_fprintf<int>( index_list , stream , " " , "%d");
           printf("\n");
         }
       }
