@@ -95,15 +95,15 @@ static void test_identify_total_variable() {
 
 void test_cmp_types() {
   const int dims[3] = {10,10,10};
-  smspec_node_type * field_node = smspec_node_alloc( ECL_SMSPEC_FIELD_VAR , NULL , "FOPT" , "UNIT" , ":" , dims , 0 , 0 , 0 );
-  smspec_node_type * region_node = smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * group_node = smspec_node_alloc( ECL_SMSPEC_GROUP_VAR , "G1" , "GOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * well_node = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * block_node = smspec_node_alloc( ECL_SMSPEC_BLOCK_VAR , NULL , "BPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * aquifer_node = smspec_node_alloc( ECL_SMSPEC_AQUIFER_VAR , NULL , "AAQP" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * segment_node = smspec_node_alloc( ECL_SMSPEC_SEGMENT_VAR , "W1" , "SGOR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * misc_node1 = smspec_node_alloc( ECL_SMSPEC_MISC_VAR , NULL , "TIME" , "UNIT" , ":", dims, 10 , 0, 0);
-  smspec_node_type * misc_node2 = smspec_node_alloc( ECL_SMSPEC_MISC_VAR , NULL , "TCPU" , "UNIT" , ":", dims, 10 , 0, 0);
+  smspec_node_type * field_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_FIELD_VAR , NULL , "FOPT" , "UNIT" , ":" , dims , 0 , 0 , 0 );
+  smspec_node_type * region_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * group_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_GROUP_VAR , "G1" , "GOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * well_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * block_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_BLOCK_VAR , NULL , "BPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * aquifer_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_AQUIFER_VAR , NULL , "AAQP" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * segment_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_SEGMENT_VAR , "W1" , "SGOR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * misc_node1 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR , NULL , "TIME" , "UNIT" , ":", dims, 10 , 0, 0);
+  smspec_node_type * misc_node2 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR , NULL , "TCPU" , "UNIT" , ":", dims, 10 , 0, 0);
 
   test_assert_int_equal( smspec_node_cmp( field_node , field_node ), 0);
   test_assert_int_equal( smspec_node_cmp( region_node , region_node ), 0);
@@ -138,11 +138,11 @@ void test_cmp_types() {
 
 void test_cmp_well() {
   const int dims[3] = {10,10,10};
-  smspec_node_type * well_node1_1 = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * well_node1_2 = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * well_node2_1 = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WWCT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * well_node2_2 = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WWWT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * well_node_dummy = smspec_node_alloc( ECL_SMSPEC_WELL_VAR , DUMMY_WELL , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * well_node1_1 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * well_node1_2 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * well_node2_1 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WWCT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * well_node2_2 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WWWT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * well_node_dummy = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , DUMMY_WELL , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
 
   test_assert_NULL( well_node_dummy);
   test_assert_int_equal( smspec_node_cmp( well_node1_1 , well_node1_1 ), 0);
@@ -165,10 +165,10 @@ void test_cmp_well() {
 
 void test_cmp_region() {
   const int dims[3] = {10,10,10};
-  smspec_node_type * region_node1_1 = smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "ROIP" ,  "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * region_node1_2 = smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "ROIP" ,  "UNIT" , ":" , dims , 11 , 0 , 0 );
-  smspec_node_type * region_node2_1 = smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" ,   "UNIT" , ":" , dims , 10 , 0 , 0 );
-  smspec_node_type * region_node2_2 = smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" ,   "UNIT" , ":" , dims , 12 , 0 , 0 );
+  smspec_node_type * region_node1_1 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "ROIP" ,  "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * region_node1_2 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "ROIP" ,  "UNIT" , ":" , dims , 11 , 0 , 0 );
+  smspec_node_type * region_node2_1 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" ,   "UNIT" , ":" , dims , 10 , 0 , 0 );
+  smspec_node_type * region_node2_2 = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" ,   "UNIT" , ":" , dims , 12 , 0 , 0 );
 
   test_assert_true( smspec_node_cmp( region_node1_1, region_node1_2) < 0 );
   test_assert_true( smspec_node_cmp( region_node1_1, region_node2_1) < 0 );

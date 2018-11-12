@@ -78,7 +78,7 @@ typedef struct smspec_node_struct smspec_node_type;
                          const int grid_dims[3] ,
                          int num);
 
-  smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
+  void * smspec_node_alloc( ecl_smspec_var_type var_type ,
                                         const char * wgname  ,
                                         const char * keyword ,
                                         const char * unit    ,
@@ -86,7 +86,7 @@ typedef struct smspec_node_struct smspec_node_type;
                                         const int grid_dims[3] ,
                                         int num , int param_index, float default_value);
 
-  smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
+  void * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                             const char * wgname  ,
                                             const char * keyword ,
                                             const char * unit    ,
@@ -96,7 +96,7 @@ typedef struct smspec_node_struct smspec_node_type;
                                             int param_index,
                                             float default_value);
 
-  smspec_node_type *  smspec_node_alloc_copy( const smspec_node_type* );
+  void *  smspec_node_alloc_copy( const smspec_node_type* );
 
   void                smspec_node_free( smspec_node_type * index );
   void                smspec_node_free__(void * arg);

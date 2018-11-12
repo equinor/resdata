@@ -1085,11 +1085,6 @@ int smspec_node_type::cmp__(const smspec_node_type * node2) const {
 /**************************************  OLD API functions ***********************''''' */
 
 
-smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
-  if( !node ) return NULL;
-  return node->copy();
-}
-
 void smspec_node_free( smspec_node_type * index ) {
   delete index;
 }
@@ -1213,7 +1208,7 @@ void smspec_node_init( smspec_node_type * smspec_node,
 }
 
 
-smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
+void * smspec_node_alloc( ecl_smspec_var_type var_type ,
                                       const char * wgname  ,
                                       const char * keyword ,
                                       const char * unit    ,
@@ -1231,7 +1226,7 @@ smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
 }
 
 
-smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
+void * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                           const char * wgname  ,
                                           const char * keyword ,
                                           const char * unit    ,
@@ -1243,4 +1238,9 @@ smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
   return new smspec_node_type( var_type, wgname, keyword, unit, lgr, key_join_string, lgr_i, lgr_j, lgr_k, param_index, default_value);
 }
 
+
+void * smspec_node_alloc_copy( const smspec_node_type* node ) {
+  if( !node ) return NULL;
+  return node->copy();
+}
 
