@@ -30,26 +30,7 @@
 
 #include <ert/ecl/smspec_node.h>
 
-#define DUMMY_WELL ":+:+:+:+"
-#define IS_DUMMY_WELL(well) (strcmp((well) , DUMMY_WELL) == 0)
-#define SMSPEC_PARAMS_INDEX_INVALID -77
-
-
-#define SMSPEC_TIME_KEYWORD "TIME"
-#define SMSPEC_TIME_NUMS_VALUE     -32676
-
-#define SMSPEC_YEARS_KEYWORD "YEARS"
-#define SMSPEC_YEARS_NUMS_VALUE     -32676
-
-
-#define SMSPEC_NUMS_INVALID   -991199
-#define SMSPEC_NUMS_WELL       1
-#define SMSPEC_NUMS_GROUP      2
-#define SMSPEC_NUMS_FIELD      0
-
-#define SMSPEC_TYPE_ID 61550451
-
-class smspec_node_class {
+struct smspec_node_struct {
   private:
 
     std::string            wgname;
@@ -71,7 +52,7 @@ class smspec_node_class {
     int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
     float                  default_value;      /* Default value for this variable. */
 
-    smspec_node_class();
+    smspec_node_struct();
 
     void set_invalid_flags();
     void init_lgr( ecl_smspec_var_type var_type ,
@@ -139,7 +120,7 @@ class smspec_node_class {
 
     UTIL_TYPE_ID_DECLARATION;
 
-    smspec_node_class(ecl_smspec_var_type var_type ,
+    smspec_node_struct(ecl_smspec_var_type var_type ,
                      const char * wgname  ,
                      const char * keyword ,
                      const char * unit    ,
@@ -147,7 +128,7 @@ class smspec_node_class {
                      const int grid_dims[3] ,
                      int num , int param_index, float default_value);
 
-    smspec_node_class(ecl_smspec_var_type var_type ,
+    smspec_node_struct(ecl_smspec_var_type var_type ,
                      const char * wgname  ,
                      const char * keyword ,
                      const char * unit    ,
@@ -195,5 +176,6 @@ class smspec_node_class {
     const                 std::array<int,3>&  get_lgr_ijk() const;
 
 };
+
 
 #endif
