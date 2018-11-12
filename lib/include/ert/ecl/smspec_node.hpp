@@ -152,7 +152,6 @@ struct smspec_node_struct {
       return node1->cmp__(node2);
     }
 
-    void                  set_unit( const char * unit_);
     int                   get_R1() const;
     int                   get_R2() const;
     const char          * get_gen_key1() const;
@@ -169,7 +168,6 @@ struct smspec_node_struct {
     void                  fprintf__( FILE * stream) const;
     int                   get_params_index() const;
     void                  set_params_index( int params_index_);
-    void                  set_default( float default_value_);
     float                 get_default() const;
     const                 std::array<int,3>& get_ijk() const;
     const                 std::string& get_lgr_name() const;

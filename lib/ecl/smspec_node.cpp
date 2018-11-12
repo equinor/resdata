@@ -288,16 +288,16 @@ void smspec_node_type::set_keyword( const std::string& keyword_ ) {
   // This function can __ONLY__ be called on time; run-time chaning of keyword is not
   // allowed.
   if (keyword.size() == 0)
-    keyword = keyword_;
+    this->keyword = keyword_;
   else
     util_abort("%s: fatal error - attempt to change keyword runtime detected - aborting\n",__func__);
 }
 
 
 void smspec_node_type::set_invalid_flags() {
-  rate_variable  = false;
-  total_variable = false;
-  historical     = false;
+  this->rate_variable  = false;
+  this->total_variable = false;
+  this->historical     = false;
 }
 
 
@@ -379,22 +379,6 @@ void smspec_node_type::set_flags() {
   if (keyword.back() == 'H')
     historical = true;
   total_variable = smspec_node_identify_total(keyword.c_str(), var_type);
-}
-
-/**
-   It is possible to change the default value of an smspec node
-   runtime, but observe that the new value will only be applied to the
-   new timesteps you add after the change. Already created timesteps
-   will not be updated if the default value is changed.
-*/
-
-
-void smspec_node_type::set_default( float default_value_) {
-  this->default_value = default_value_;
-}
-
-void smspec_node_set_default( smspec_node_type * smspec_node , float default_value) {
-  smspec_node->set_default(default_value);
 }
 
 float smspec_node_type::get_default() const {
@@ -539,9 +523,9 @@ void smspec_node_type::set_gen_keys( const char * key_join_string_) {
 
 void smspec_node_type::common_init( ecl_smspec_var_type var_type_ , const char * keyword_ , const std::string& unit_ ) {
   if (var_type == ECL_SMSPEC_INVALID_VAR) {
-    set_unit( unit_.c_str() );
-    set_keyword(keyword_);
-    var_type = var_type_;
+    this->unit = unit_;
+    this->keyword = keyword_;
+    this->var_type = var_type_;
     set_flags();
     init_num( var_type_ );
   } else
@@ -948,18 +932,6 @@ const char  * smspec_node_type::get_unit() const {
 const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
   return smspec_node->get_unit();
 }
-
-void smspec_node_type::set_unit( const char * unit_) {
-  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  std::string tmp = unit_;
-  this->unit = tmp.substr(0,8);
-}
-
-void smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit) {
-  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  smspec_node->set_unit(unit);
-}
-
 
 // Will be garbage for smspec_nodes which do not have i,j,k
 const std::array<int,3>& smspec_node_type::get_ijk() const {

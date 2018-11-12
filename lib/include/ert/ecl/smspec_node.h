@@ -109,14 +109,12 @@ typedef struct smspec_node_struct smspec_node_type;
   const char        * smspec_node_get_wgname( const smspec_node_type * smspec_node);
   const char        * smspec_node_get_keyword( const smspec_node_type * smspec_node);
   const char        * smspec_node_get_unit( const smspec_node_type * smspec_node);
-  void                smspec_node_set_unit( smspec_node_type * smspec_node , const char * unit );
   bool                smspec_node_is_rate( const smspec_node_type * smspec_node );
   bool                smspec_node_is_total( const smspec_node_type * smspec_node );
   bool                smspec_node_is_historical( const smspec_node_type * smspec_node );
   bool                smspec_node_need_nums( const smspec_node_type * smspec_node );
   void                smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream);
 
-  void                smspec_node_set_default( smspec_node_type * smspec_node , float default_value);
   float               smspec_node_get_default( const smspec_node_type * smspec_node);
 
   const int*  smspec_node_get_ijk( const smspec_node_type * smpsec_node );
