@@ -447,10 +447,19 @@ static void well_state_add_LGR_connections(well_state_type * well_state,
   int num_lgr = ecl_grid_get_num_lgr( grid );
   for (int lgr_index = 0; lgr_index < num_lgr; lgr_index++) {
     ecl_file_view_type * lgr_view = ecl_file_view_add_blockview(file_view , LGR_KW , lgr_index);
-    const char * grid_name = ecl_grid_iget_lgr_name( grid , lgr_index );
-    int well_nr = well_state_get_lgr_well_nr( well_state , lgr_view );
-    if (well_nr >= 0)
-      well_state_add_connections__( well_state , lgr_view , grid_name , lgr_index + 1, well_nr );
+    /*
+      Even though the grid has LGR information the restart file is not required
+      to have corresponding LGR information. This has for a long time been
+      unchecked, and there might be bugs lurking based on the incorrect
+      assumption that if the grid has LGR information then the corresponding LGR
+      information can also be found in the restart file.
+    */
+    if (lgr_view) {
+      const char * grid_name = ecl_grid_iget_lgr_name( grid , lgr_index );
+      int well_nr = well_state_get_lgr_well_nr( well_state , lgr_view );
+      if (well_nr >= 0)
+        well_state_add_connections__( well_state , lgr_view , grid_name , lgr_index + 1, well_nr );
+    }
   }
 }
 
