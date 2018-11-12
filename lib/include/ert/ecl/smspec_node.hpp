@@ -23,12 +23,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <string>
-#include <array>
-
 #include <ert/util/type_macros.hpp>
 
 #include <ert/ecl/smspec_node.h>
+
+#ifdef __cplusplus
+#include <string>
+#include <array>
 
 struct smspec_node_struct {
   private:
@@ -175,5 +176,5 @@ struct smspec_node_struct {
 
 };
 
-
+#endif
 #endif

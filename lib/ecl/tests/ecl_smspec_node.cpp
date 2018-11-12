@@ -22,7 +22,7 @@
 #include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
 
-#include <ert/ecl/smspec_node.hpp>
+#include <ert/ecl/smspec_node.h>
 
 
 static void test_identify_rate_variable() {
