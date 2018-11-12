@@ -12,7 +12,7 @@ endif()
 
 set( ECL_VERSION_MAJOR 2 )   # Remember to update release notes whenever
 set( ECL_VERSION_MINOR 3 )   # you change the ERT_VERSION_MINOR or MAJOR
-set( ECL_VERSION_MICRO 0 ) # with "new in Ert Version X.X.X"!
+set( ECL_VERSION_MICRO 1 ) # with "new in Ert Version X.X.X"!
 
 # If the micro version is not integer, that should be interpreted as a
 # development version leading towards version MAJOR.MINOR.0
