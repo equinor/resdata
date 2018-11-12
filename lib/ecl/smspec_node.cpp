@@ -283,24 +283,6 @@ std::string smspec_alloc_local_completion_key( const char * join_string, const s
 
 /*****************************************************************/
 
-void smspec_node_type::set_keyword( const std::string& keyword_ ) {
-  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  // This function can __ONLY__ be called on time; run-time chaning of keyword is not
-  // allowed.
-  if (keyword.size() == 0)
-    this->keyword = keyword_;
-  else
-    util_abort("%s: fatal error - attempt to change keyword runtime detected - aborting\n",__func__);
-}
-
-
-void smspec_node_type::set_invalid_flags() {
-  this->rate_variable  = false;
-  this->total_variable = false;
-  this->historical     = false;
-}
-
-
 
 bool smspec_node_identify_rate(const char * keyword) {
   const char *rate_vars[] = {"OPR" , "GPR" , "WPR" , "LPR", "OIR", "GIR", "WIR", "LIR", "GOR" , "WCT",
@@ -367,6 +349,24 @@ bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_ty
       }
   }
   return is_total;
+}
+
+
+void smspec_node_type::set_keyword( const std::string& keyword_ ) {
+  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
+  // This function can __ONLY__ be called on time; run-time chaning of keyword is not
+  // allowed.
+  if (keyword.size() == 0)
+    this->keyword = keyword_;
+  else
+    util_abort("%s: fatal error - attempt to change keyword runtime detected - aborting\n",__func__);
+}
+
+
+void smspec_node_type::set_invalid_flags() {
+  this->rate_variable  = false;
+  this->total_variable = false;
+  this->historical     = false;
 }
 
 
@@ -614,27 +614,6 @@ bool smspec_node_type::init__( ecl_smspec_var_type var_type ,
   return initOK;
 }
 
-/*
-  This function should be removed from the public API.
-*/
-void smspec_node_init( smspec_node_type * smspec_node,
-                       ecl_smspec_var_type var_type ,
-                       const char * wgname  ,
-                       const char * keyword ,
-                       const char * unit    ,
-                       const char * key_join_string ,
-                       const int grid_dims[3] ,
-                       int num) {
-
-  smspec_node->init__( var_type,
-                       wgname,
-                       keyword,
-                       unit,
-                       key_join_string,
-                       grid_dims,
-                       num );
-
-}
 
 /**
    This function will allocate a smspec_node instance, and initialize
@@ -711,23 +690,6 @@ smspec_node_struct::smspec_node_struct( ecl_smspec_var_type var_type_ ,
     throw std::invalid_argument("Wrong input params to smspec_node constructor.");
 }
 
-smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
-                                      const char * wgname  ,
-                                      const char * keyword ,
-                                      const char * unit    ,
-                                      const char * key_join_string ,
-                                      const int grid_dims[3] ,
-                                      int num , int param_index, float default_value) {
-  smspec_node_type * node = NULL;
-  try {
-    node = new smspec_node_type(var_type, wgname, keyword, unit, key_join_string, grid_dims, num, param_index, default_value);
-  }
-  catch (const std::invalid_argument& e) {
-    node = NULL;
-  }
-  return node;
-}
-
 
 void smspec_node_type::init_lgr( ecl_smspec_var_type var_type ,
                                  const char * wgname_  ,
@@ -786,18 +748,6 @@ smspec_node_struct::smspec_node_struct( ecl_smspec_var_type var_type_ ,
   
 }
 
-smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
-                                          const char * wgname  ,
-                                          const char * keyword ,
-                                          const char * unit    ,
-                                          const char * lgr ,
-                                          const char * key_join_string ,
-                                          int   lgr_i, int lgr_j , int lgr_k,
-                                          int param_index , float default_value) {
-
-  return new smspec_node_type( var_type, wgname, keyword, unit, lgr, key_join_string, lgr_i, lgr_j, lgr_k, param_index, default_value);
-}
-
 
 smspec_node_type * smspec_node_type::copy() const {
   smspec_node_type * copy = new smspec_node_type();
@@ -807,20 +757,6 @@ smspec_node_type * smspec_node_type::copy() const {
 }
 
 
-smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
-  if( !node ) return NULL;
-  return node->copy();
-}
-
-void smspec_node_free( smspec_node_type * index ) {
-  delete index;
-}
-
-void smspec_node_free__( void * arg ) {
-  smspec_node_type * node = smspec_node_safe_cast( arg );
-  smspec_node_free( node );
-}
-
 
 /*****************************************************************/
 
@@ -828,16 +764,8 @@ int smspec_node_type::get_params_index() const {
   return this->params_index;
 }
 
-int smspec_node_get_params_index( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_params_index();
-}
-
 void smspec_node_type::set_params_index( int params_index_) {
   this->params_index = params_index_;
-}
-
-void smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index) {
-  smspec_node->set_params_index( params_index );
 }
 
 
@@ -857,80 +785,40 @@ const char * smspec_node_type::get_gen_key1() const {
   return get_cstring( this->gen_key1 );
 }
 
-const char * smspec_node_get_gen_key1( const smspec_node_type * smspec_node) {
-  return smspec_node->get_gen_key1();
-}
-
 const char * smspec_node_type::get_gen_key2() const {
   return get_cstring( this->gen_key2 );
-}
-
-const char * smspec_node_get_gen_key2( const smspec_node_type * smspec_node) {
-  return smspec_node->get_gen_key2();
 }
 
 const char * smspec_node_type::get_wgname() const {
   return get_cstring( this->wgname );
 }
 
-const char * smspec_node_get_wgname( const smspec_node_type * smspec_node) {
-  return smspec_node->get_wgname();
-}
-
 const char * smspec_node_type::get_keyword() const {
   return get_cstring( this->keyword );
-}
-
-const char * smspec_node_get_keyword( const smspec_node_type * smspec_node) {
-  return smspec_node->get_keyword( );
 }
 
 ecl_smspec_var_type smspec_node_type::get_var_type() const {
   return this->var_type;
 }
 
-ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node) {
-  return smspec_node->get_var_type();
-}
-
 int smspec_node_type::get_num() const {
   return this->num;
-}
-
-int smspec_node_get_num( const smspec_node_type * smspec_node) {
-  return smspec_node->get_num();
 }
 
 bool smspec_node_type::is_rate() const {
   return this->rate_variable;
 }
 
-bool smspec_node_is_rate( const smspec_node_type * smspec_node ) {
-  return smspec_node->is_rate();
-}
-
 bool smspec_node_type::is_total() const {
   return this->total_variable;
-}
-
-bool smspec_node_is_total( const smspec_node_type * smspec_node ){
-  return smspec_node->is_total();
 }
 
 bool smspec_node_type::is_historical() const {
   return this->historical;
 }
 
-bool smspec_node_is_historical( const smspec_node_type * smspec_node ){
-  return smspec_node->is_historical();
-}
-
 const char  * smspec_node_type::get_unit() const {
   return this->unit.c_str();
-}
-
-const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
-  return smspec_node->get_unit();
 }
 
 // Will be garbage for smspec_nodes which do not have i,j,k
@@ -938,29 +826,14 @@ const std::array<int,3>& smspec_node_type::get_ijk() const {
   return this->ijk;
 }
 
-// Will be garbage for smspec_nodes which do not have i,j,k
-const int* smspec_node_get_ijk( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_ijk().data();
-}
-
 // Will be NULL for smspec_nodes which are not related to an LGR.
 const std::string& smspec_node_type::get_lgr_name() const {
   return this->lgr_name;
 }
 
-// Will be NULL for smspec_nodes which are not related to an LGR.
-const char* smspec_node_get_lgr_name( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_lgr_name().c_str();
-}
-
 // Will be garbage for smspec_nodes which are not related to an LGR.
 const std::array<int,3>&  smspec_node_type::get_lgr_ijk() const {
   return this->lgr_ijk;
-}
-
-// Will be garbage for smspec_nodes which are not related to an LGR.
-const int* smspec_node_get_lgr_ijk( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_lgr_ijk().data();
 }
 
 /*
@@ -984,15 +857,6 @@ int smspec_node_type::get_R2() const {
     return r2;
   } else
     return -1;
-}
-
-int smspec_node_get_R1( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_R1();
-}
-
-
-int smspec_node_get_R2( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_R2();
 }
 
 
@@ -1019,10 +883,6 @@ bool smspec_node_type::need_nums() const {
   }
 }
 
-bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {
-  return smspec_node->need_nums();
-}
-
 
 void smspec_node_type::fprintf__( FILE * stream) const {
   fprintf(stream, "KEYWORD: %s \n", this->keyword.c_str());
@@ -1030,10 +890,6 @@ void smspec_node_type::fprintf__( FILE * stream) const {
   fprintf(stream, "UNIT   : %s \n", this->unit.c_str());
   fprintf(stream, "TYPE   : %d \n", this->var_type);
   fprintf(stream, "NUM    : %d \n\n", this->num);
-}
-
-void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) {
-  smspec_node->fprintf__(stream);
 }
 
 /*
@@ -1225,6 +1081,106 @@ int smspec_node_type::cmp__(const smspec_node_type * node2) const {
   }
 }
 
+
+/**************************************  OLD API functions ***********************''''' */
+
+
+smspec_node_type* smspec_node_alloc_copy( const smspec_node_type* node ) {
+  if( !node ) return NULL;
+  return node->copy();
+}
+
+void smspec_node_free( smspec_node_type * index ) {
+  delete index;
+}
+
+void smspec_node_free__( void * arg ) {
+  smspec_node_type * node = smspec_node_safe_cast( arg );
+  smspec_node_free( node );
+}
+
+
+int smspec_node_get_params_index( const smspec_node_type * smspec_node ) {
+  return smspec_node->get_params_index();
+}
+
+void smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index) {
+  smspec_node->set_params_index( params_index );
+}
+
+const char * smspec_node_get_gen_key1( const smspec_node_type * smspec_node) {
+  return smspec_node->get_gen_key1();
+}
+
+const char * smspec_node_get_gen_key2( const smspec_node_type * smspec_node) {
+  return smspec_node->get_gen_key2();
+}
+
+const char * smspec_node_get_wgname( const smspec_node_type * smspec_node) {
+  return smspec_node->get_wgname();
+}
+
+const char * smspec_node_get_keyword( const smspec_node_type * smspec_node) {
+  return smspec_node->get_keyword( );
+}
+
+ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node) {
+  return smspec_node->get_var_type();
+}
+
+int smspec_node_get_num( const smspec_node_type * smspec_node) {
+  return smspec_node->get_num();
+}
+
+bool smspec_node_is_rate( const smspec_node_type * smspec_node ) {
+  return smspec_node->is_rate();
+}
+
+bool smspec_node_is_total( const smspec_node_type * smspec_node ){
+  return smspec_node->is_total();
+}
+
+bool smspec_node_is_historical( const smspec_node_type * smspec_node ){
+  return smspec_node->is_historical();
+}
+
+const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
+  return smspec_node->get_unit();
+}
+
+// Will be garbage for smspec_nodes which do not have i,j,k
+const int* smspec_node_get_ijk( const smspec_node_type * smspec_node ) {
+  return smspec_node->get_ijk().data();
+}
+
+// Will be NULL for smspec_nodes which are not related to an LGR.
+const char* smspec_node_get_lgr_name( const smspec_node_type * smspec_node ) {
+  return smspec_node->get_lgr_name().c_str();
+}
+
+
+// Will be garbage for smspec_nodes which are not related to an LGR.
+const int* smspec_node_get_lgr_ijk( const smspec_node_type * smspec_node ) {
+  return smspec_node->get_lgr_ijk().data();
+}
+
+int smspec_node_get_R1( const smspec_node_type * smspec_node ) {
+  return smspec_node->get_R1();
+}
+
+
+int smspec_node_get_R2( const smspec_node_type * smspec_node ) {
+  return smspec_node->get_R2();
+}
+
+bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {
+  return smspec_node->need_nums();
+}
+
+void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) {
+  smspec_node->fprintf__(stream);
+}
+
 int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * node2) {
   return smspec_node_type::cmp(node1, node2);
 }
@@ -1233,4 +1189,58 @@ int smspec_node_cmp__( const void * node1, const void * node2) {
   return smspec_node_type::cmp( smspec_node_safe_cast_const( node1 ),
                                 smspec_node_safe_cast_const( node2 ));
 }
+
+/*
+  This function should be removed from the public API.
+*/
+void smspec_node_init( smspec_node_type * smspec_node,
+                       ecl_smspec_var_type var_type ,
+                       const char * wgname  ,
+                       const char * keyword ,
+                       const char * unit    ,
+                       const char * key_join_string ,
+                       const int grid_dims[3] ,
+                       int num) {
+
+  smspec_node->init__( var_type,
+                       wgname,
+                       keyword,
+                       unit,
+                       key_join_string,
+                       grid_dims,
+                       num );
+
+}
+
+
+smspec_node_type * smspec_node_alloc( ecl_smspec_var_type var_type ,
+                                      const char * wgname  ,
+                                      const char * keyword ,
+                                      const char * unit    ,
+                                      const char * key_join_string ,
+                                      const int grid_dims[3] ,
+                                      int num , int param_index, float default_value) {
+  smspec_node_type * node = NULL;
+  try {
+    node = new smspec_node_type(var_type, wgname, keyword, unit, key_join_string, grid_dims, num, param_index, default_value);
+  }
+  catch (const std::invalid_argument& e) {
+    node = NULL;
+  }
+  return node;
+}
+
+
+smspec_node_type * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
+                                          const char * wgname  ,
+                                          const char * keyword ,
+                                          const char * unit    ,
+                                          const char * lgr ,
+                                          const char * key_join_string ,
+                                          int   lgr_i, int lgr_j , int lgr_k,
+                                          int param_index , float default_value) {
+
+  return new smspec_node_type( var_type, wgname, keyword, unit, lgr, key_join_string, lgr_i, lgr_j, lgr_k, param_index, default_value);
+}
+
 
