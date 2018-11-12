@@ -533,26 +533,26 @@ static ecl_smspec_type * ecl_smspec_alloc_writer__( const char * key_join_string
   {
     smspec_node_type * time_node;
     if (time_in_days) {
-      time_node = smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
-                                     NULL ,
-                                     "TIME" ,
-                                     "DAYS" ,
-                                     key_join_string ,
-                                     ecl_smspec->grid_dims ,
-                                     0  ,
-                                     -1 ,
-                                     0 );
+      time_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
+                                                        NULL ,
+                                                        "TIME" ,
+                                                        "DAYS" ,
+                                                        key_join_string ,
+                                                        ecl_smspec->grid_dims ,
+                                                        0  ,
+                                                        -1 ,
+                                                        0 );
       ecl_smspec->time_seconds = 3600 * 24;
     } else {
-      time_node = smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
-                                     NULL ,
-                                     "TIME" ,
-                                     "HOURS" ,
-                                     key_join_string ,
-                                     ecl_smspec->grid_dims ,
-                                     0  ,
-                                     -1 ,
-                                     0 );
+      time_node = (smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
+                                                        NULL ,
+                                                        "TIME" ,
+                                                        "HOURS" ,
+                                                        key_join_string ,
+                                                        ecl_smspec->grid_dims ,
+                                                        0  ,
+                                                        -1 ,
+                                                        0 );
       ecl_smspec->time_seconds = 3600;
     }
 
@@ -1195,9 +1195,9 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           int lgr_j = ecl_kw_iget_int( numly , params_index );
           int lgr_k = ecl_kw_iget_int( numlz , params_index );
           lgr_name  = (char*)util_alloc_strip_copy(  (const char*)ecl_kw_iget_ptr( lgrs , params_index ));
-          smspec_node = smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string.c_str() , lgr_i , lgr_j , lgr_k , params_index, default_value);
+          smspec_node = (smspec_node_type*)smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string.c_str() , lgr_i , lgr_j , lgr_k , params_index, default_value);
         } else
-          smspec_node = smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string.c_str() , ecl_smspec->grid_dims , num , params_index , default_value);
+          smspec_node = (smspec_node_type*)smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string.c_str() , ecl_smspec->grid_dims , num , params_index , default_value);
 
         if (smspec_node) {
           ecl_smspec_add_node( ecl_smspec , smspec_node );
