@@ -10,7 +10,20 @@
 #ifndef ERT_SMSPEC_NODE_H
 #define ERT_SMSPEC_NODE_H
 
-typedef class smspec_node_class smspec_node_type;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define DUMMY_WELL ":+:+:+:+"
+#define IS_DUMMY_WELL(well) (strcmp((well) , DUMMY_WELL) == 0)
+#define SMSPEC_PARAMS_INDEX_INVALID -77
+
+
+#define SMSPEC_TIME_KEYWORD "TIME"
+#define SMSPEC_TIME_NUMS_VALUE     -32676
+
+#define SMSPEC_YEARS_KEYWORD "YEARS"
+#define SMSPEC_YEARS_NUMS_VALUE     -32676
 
 typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_FIELD_VAR              =  1 ,   /* X */
@@ -28,9 +41,14 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_LOCAL_WELL_VAR         = 13 ,   /* X */
               ECL_SMSPEC_MISC_VAR               = 14     /* X */}  ecl_smspec_var_type;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define SMSPEC_NUMS_INVALID   -991199
+#define SMSPEC_NUMS_WELL       1
+#define SMSPEC_NUMS_GROUP      2
+#define SMSPEC_NUMS_FIELD      0
+
+typedef struct smspec_node_struct smspec_node_type;
+
+#define SMSPEC_TYPE_ID 61550451
 
   char * smspec_alloc_block_ijk_key( const char * join_string , const char * keyword , int i , int j , int k);
   char * smspec_alloc_completion_ijk_key( const char * join_string , const char * keyword, const char * wgname , int i , int j , int k);
