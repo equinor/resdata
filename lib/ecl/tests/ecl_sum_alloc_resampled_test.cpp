@@ -37,7 +37,7 @@ void test_correct_time_vector() {
   time_t_vector_append(t, util_make_date_utc( 4,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 6,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 8,1,2010 ));
-  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_resample(ecl_sum, "kk", t);
+  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_resample(ecl_sum, "kk", t, false, false);
   test_assert_int_equal(  ecl_sum_get_report_time(ecl_sum_resampled, 2)  , util_make_date_utc( 6,1,2010 ));
 
   const ecl_smspec_type * smspec_resampled = ecl_sum_get_smspec(ecl_sum_resampled);
@@ -63,7 +63,7 @@ void test_not_sorted() {
   time_t_vector_append(t, util_make_date_utc( 1,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 3,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 2,1,2010 ));
-  test_assert_NULL( ecl_sum_alloc_resample( ecl_sum, "kk", t) );
+  test_assert_NULL( ecl_sum_alloc_resample( ecl_sum, "kk", t, false, false) );
   time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }

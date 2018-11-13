@@ -525,6 +525,36 @@ class SumTest(EclTest):
             for time_index,t in enumerate(time_points):
                 self.assertFloatEqual(resampled.iget( key, time_index), self.ecl_sum.get_interp_direct( key, t))
 
+    def test_resample_extrapolate(self):
+        time_points = TimeVector()
+        start_time = self.ecl_sum.get_data_start_time() - CTime(60)
+        end_time = self.ecl_sum.get_end_time() + CTime(60)
+        delta = end_time - start_time
+        N = 25
+        time_points.initRange( CTime(start_time),
+                               CTime(end_time),
+                               CTime(int(delta.total_seconds()/(N - 1))))
+        time_points.append(CTime(end_time))
+        resampled = self.ecl_sum.resample( "OUTPUT_CASE", time_points, lower_extrapolation=True, upper_extrapolation=True )
+
+        for key in self.ecl_sum.keys():
+            self.assertIn( key, resampled )
+
+        self.assertEqual(self.ecl_sum.get_data_start_time(), resampled.get_data_start_time())
+        delta = self.ecl_sum.get_end_time() - resampled.get_end_time()
+        self.assertFalse( delta.total_seconds() <= 1 )
+
+        key_not_rate = "WOPT:OP_1"
+        for time_index,t in enumerate(time_points):
+            self.assertFloatEqual(resampled.iget( key_not_rate, time_index), self.ecl_sum.get_interp_direct( key_not_rate, t))
+
+        key_rate = "WOPR:OP_1"
+        for time_index,t in enumerate(time_points[1:-1]):
+            self.assertFloatEqual(resampled.iget( key_rate, time_index), self.ecl_sum.get_interp_direct( key_rate, t))
+
+        for time_index,t in enumerate([time_points[0],time_points[-1]]):
+            self.assertFloatEqual(resampled.iget( key_rate, time_index), 0)
+
 
     def test_summary_units(self):
         self.assertEqual(self.ecl_sum.unit_system, EclUnitTypeEnum.ECL_METRIC_UNITS)

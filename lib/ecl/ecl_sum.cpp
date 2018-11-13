@@ -779,39 +779,21 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 /*****************************************************************/
 
 
-ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * _times) {
+ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * _times, const bool lower_extrapolation, const bool upper_extrapolation) {
   time_t start_time = ecl_sum_get_data_start(ecl_sum);
   time_t end_time = ecl_sum_get_end_time(ecl_sum);
   time_t input_t0 = time_t_vector_get_first( _times );
-  time_t_vector_type * times = time_t_vector_alloc(0,0);
 
   /*
-    This is a temporary hack - the time argument used for resampling are
-    internally clamped to the [start, end] interval of the simulation; however
-    when outputting the original time values from the input argument _times is
-    used.
-
-    The real fix for this is to update the complete time interpolation code to
-    return something sensible when the time arguments are outside of simulation
-    time range.
+    If lower and  / or upper extrapolation is set to true it makes sure that resampling returns the first / last value of the simulation
+    if set to false, we jus throw exception
   */
-  for (int i=0; i < time_t_vector_size(_times); i++) {
-    time_t t = time_t_vector_iget(_times, i);
 
-    if (t < start_time)
-      t = start_time;
-
-    if (t > end_time)
-      t = end_time;
-
-    time_t_vector_append(times, t);
-  }
-
-  if ( time_t_vector_get_first(times) < start_time )
+  if ( !lower_extrapolation && time_t_vector_get_first(_times) < start_time )
     return NULL;
-  if ( time_t_vector_get_last(times) > ecl_sum_get_end_time(ecl_sum) )
+  if ( !upper_extrapolation && time_t_vector_get_last(_times) > end_time)
     return NULL;
-  if ( !time_t_vector_is_sorted(times, false) )
+  if ( !time_t_vector_is_sorted(_times, false) )
     return NULL;
 
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
@@ -840,13 +822,28 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
   ecl_sum_vector_type * ecl_sum_vector = ecl_sum_vector_alloc(ecl_sum, true);
   double_vector_type * data = double_vector_alloc( ecl_sum_vector_get_size(ecl_sum_vector) , 0);
 
-
-  for (int report_step = 0; report_step < time_t_vector_size(times); report_step++) {
-    time_t t       = time_t_vector_iget(times, report_step);
+  for (int report_step = 0; report_step < time_t_vector_size(_times); report_step++) {
     time_t input_t = time_t_vector_iget(_times, report_step);
-
-    /* Look up interpolated data in the original case. */
-    ecl_sum_get_interp_vector( ecl_sum, t, ecl_sum_vector, data);
+    if (input_t < start_time) {
+      //clamping to the first value for t < start_time or if rate that derivative is 0
+      for (int i=0; i < ecl_sum_vector_get_size(ecl_sum_vector); i++) {
+        double value = 0;
+        if (!ecl_sum_vector_iget_is_rate(ecl_sum_vector, i))
+          value = ecl_sum_iget_first_value(ecl_sum,i);
+        double_vector_iset(data, i , value );
+      }
+    } else if (input_t > end_time) {
+      //clamping to the last value for t > end_time or if is it a rate than derivative is 0
+      for (int i=0; i < ecl_sum_vector_get_size(ecl_sum_vector); i++) {
+        double value = 0;
+        if (!ecl_sum_vector_iget_is_rate(ecl_sum_vector, i))
+          value = ecl_sum_iget_last_value(ecl_sum,i);
+        double_vector_iset(data, i , value);
+      }
+    } else {
+      /* Look up interpolated data in the original case. */
+      ecl_sum_get_interp_vector( ecl_sum, input_t, ecl_sum_vector, data);
+    }
 
     /* Add timestep corresponding to the interpolated data in the resampled case. */
     ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum_resampled , report_step , input_t - input_t0);
@@ -858,7 +855,6 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
   }
   double_vector_free( data );
   ecl_sum_vector_free( ecl_sum_vector );
-  time_t_vector_free(times);
   return ecl_sum_resampled;
 }
 
