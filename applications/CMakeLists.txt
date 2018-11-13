@@ -15,7 +15,7 @@ if (BUILD_APPLICATIONS)
 
     foreach (app ecl_pack.c
                  ecl_unpack.c
-                 kw_extract.c
+                 kw_extract.cpp
                  grid_info.c
                  grid_dump.c
                  grid_dump_ascii.c
