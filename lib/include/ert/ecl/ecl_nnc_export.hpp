@@ -45,7 +45,8 @@ typedef struct {
 } ecl_nnc_type;
 
 
-  int   ecl_nnc_export_get_size( const ecl_grid_type * grid );
+bool ecl_nnc_intersect_format(const ecl_grid_type * grid, const ecl_file_type * init_file);
+  int   ecl_nnc_export_get_size( const ecl_grid_type * grid , const ecl_file_type * init_file );
   int  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_file , ecl_nnc_type * nnc_data);
 
   ecl_kw_type * ecl_nnc_export_get_tranx_kw( const ecl_grid_type * grid , const ecl_file_type * init_file ,  int lgr_nr1, int lgr_nr2 );
