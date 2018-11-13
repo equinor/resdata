@@ -54,19 +54,6 @@
 
 
 
-bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type * node2) {
-  return smspec_node_type::cmp( node1 , node2 ) == 0;
-}
-
-
-bool smspec_node_gt( const smspec_node_type * node1,  const smspec_node_type * node2) {
-  return smspec_node_type::cmp( node1 , node2 ) > 0;
-}
-
-bool smspec_node_lt( const smspec_node_type * node1,  const smspec_node_type * node2) {
-  return smspec_node_type::cmp( node1 , node2 ) < 0;
-}
-
 static bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
   if (var_type == ECL_SMSPEC_COMPLETION_VAR ||
       var_type == ECL_SMSPEC_GROUP_VAR      ||
@@ -383,10 +370,6 @@ void smspec_node_type::set_flags() {
 
 float smspec_node_type::get_default() const {
   return this->default_value;
-}
-
-float smspec_node_get_default( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_default();
 }
 
 
@@ -1085,8 +1068,8 @@ int smspec_node_type::cmp__(const smspec_node_type * node2) const {
 /**************************************  OLD API functions ***********************''''' */
 
 
-void smspec_node_free( smspec_node_type * index ) {
-  delete index;
+void smspec_node_free( void * index ) {
+  delete static_cast<smspec_node_type*>(index);
 }
 
 void smspec_node_free__( void * arg ) {
@@ -1094,90 +1077,93 @@ void smspec_node_free__( void * arg ) {
   smspec_node_free( node );
 }
 
-
-int smspec_node_get_params_index( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_params_index();
+float smspec_node_get_default( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_default();
 }
 
-void smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index) {
-  smspec_node->set_params_index( params_index );
+int smspec_node_get_params_index( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_params_index();
 }
 
-const char * smspec_node_get_gen_key1( const smspec_node_type * smspec_node) {
-  return smspec_node->get_gen_key1();
+void smspec_node_set_params_index( void * smspec_node , int params_index) {
+  static_cast<smspec_node_type*>(smspec_node)->set_params_index( params_index );
 }
 
-const char * smspec_node_get_gen_key2( const smspec_node_type * smspec_node) {
-  return smspec_node->get_gen_key2();
+const char * smspec_node_get_gen_key1( const void * smspec_node) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_gen_key1();
 }
 
-const char * smspec_node_get_wgname( const smspec_node_type * smspec_node) {
-  return smspec_node->get_wgname();
+const char * smspec_node_get_gen_key2( const void * smspec_node) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_gen_key2();
 }
 
-const char * smspec_node_get_keyword( const smspec_node_type * smspec_node) {
-  return smspec_node->get_keyword( );
+const char * smspec_node_get_wgname( const void * smspec_node) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_wgname();
 }
 
-ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node) {
-  return smspec_node->get_var_type();
+const char * smspec_node_get_keyword( const void * smspec_node) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_keyword( );
 }
 
-int smspec_node_get_num( const smspec_node_type * smspec_node) {
-  return smspec_node->get_num();
+ecl_smspec_var_type smspec_node_get_var_type( const void * smspec_node) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_var_type();
 }
 
-bool smspec_node_is_rate( const smspec_node_type * smspec_node ) {
-  return smspec_node->is_rate();
+int smspec_node_get_num( const void * smspec_node) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_num();
 }
 
-bool smspec_node_is_total( const smspec_node_type * smspec_node ){
-  return smspec_node->is_total();
+bool smspec_node_is_rate( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->is_rate();
 }
 
-bool smspec_node_is_historical( const smspec_node_type * smspec_node ){
-  return smspec_node->is_historical();
+bool smspec_node_is_total( const void * smspec_node ){
+  return static_cast<const smspec_node_type*>(smspec_node)->is_total();
 }
 
-const char  * smspec_node_get_unit( const smspec_node_type * smspec_node) {
-  return smspec_node->get_unit();
+bool smspec_node_is_historical( const void * smspec_node ){
+  return static_cast<const smspec_node_type*>(smspec_node)->is_historical();
+}
+
+const char  * smspec_node_get_unit( const void * smspec_node) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_unit();
 }
 
 // Will be garbage for smspec_nodes which do not have i,j,k
-const int* smspec_node_get_ijk( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_ijk().data();
+const int* smspec_node_get_ijk( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_ijk().data();
 }
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
-const char* smspec_node_get_lgr_name( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_lgr_name().c_str();
+const char* smspec_node_get_lgr_name( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_lgr_name().c_str();
 }
 
 
 // Will be garbage for smspec_nodes which are not related to an LGR.
-const int* smspec_node_get_lgr_ijk( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_lgr_ijk().data();
+const int* smspec_node_get_lgr_ijk( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_lgr_ijk().data();
 }
 
-int smspec_node_get_R1( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_R1();
+int smspec_node_get_R1( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_R1();
 }
 
 
-int smspec_node_get_R2( const smspec_node_type * smspec_node ) {
-  return smspec_node->get_R2();
+int smspec_node_get_R2( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->get_R2();
 }
 
-bool smspec_node_need_nums( const smspec_node_type * smspec_node ) {
-  return smspec_node->need_nums();
+bool smspec_node_need_nums( const void * smspec_node ) {
+  return static_cast<const smspec_node_type*>(smspec_node)->need_nums();
 }
 
-void smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream) {
-  smspec_node->fprintf__(stream);
+void smspec_node_fprintf( const void * smspec_node , FILE * stream) {
+  static_cast<const smspec_node_type*>(smspec_node)->fprintf__(stream);
 }
 
-int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * node2) {
-  return smspec_node_type::cmp(node1, node2);
+int smspec_node_cmp( const void * node1, const void * node2) {
+  return smspec_node_type::cmp(static_cast<const smspec_node_type*>(node1), static_cast<const smspec_node_type*>(node2));
 }
 
 int smspec_node_cmp__( const void * node1, const void * node2) {
@@ -1188,7 +1174,7 @@ int smspec_node_cmp__( const void * node1, const void * node2) {
 /*
   This function should be removed from the public API.
 */
-void smspec_node_init( smspec_node_type * smspec_node,
+void smspec_node_init( void * smspec_node,
                        ecl_smspec_var_type var_type ,
                        const char * wgname  ,
                        const char * keyword ,
@@ -1197,11 +1183,11 @@ void smspec_node_init( smspec_node_type * smspec_node,
                        const int grid_dims[3] ,
                        int num) {
 
-  smspec_node->init__( var_type,
-                       wgname,
-                       keyword,
-                       unit,
-                       key_join_string,
+  static_cast<smspec_node_type*>(smspec_node)->init__( var_type,
+                                              wgname,
+                                              keyword,
+                                              unit,
+                                              key_join_string,
                        grid_dims,
                        num );
 
@@ -1239,8 +1225,22 @@ void * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
 }
 
 
-void * smspec_node_alloc_copy( const smspec_node_type* node ) {
+void * smspec_node_alloc_copy( const void * node ) {
   if( !node ) return NULL;
-  return node->copy();
+  return static_cast<const smspec_node_type*>(node)->copy();
+}
+
+
+bool smspec_node_equal( const void * node1,  const void * node2) {
+  return smspec_node_type::cmp( static_cast<const smspec_node_type*>(node1) , static_cast<const smspec_node_type*>(node2) ) == 0;
+}
+
+
+bool smspec_node_gt( const void * node1,  const void * node2) {
+  return smspec_node_type::cmp( static_cast<const smspec_node_type*>(node1) , static_cast<const smspec_node_type*>(node2) ) > 0;
+}
+
+bool smspec_node_lt( const void * node1,  const void * node2) {
+  return smspec_node_type::cmp( static_cast<const smspec_node_type*>(node1) , static_cast<const smspec_node_type*>(node2) ) < 0;
 }
 
