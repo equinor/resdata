@@ -609,9 +609,9 @@ bool smspec_node_type::init__( ecl_smspec_var_type var_type ,
    ecl_smspec_fread_header() functions in addition. UGGGLY
 */
 
-smspec_node_struct::smspec_node_struct() {}
+smspec_node_type::smspec_node_type() {}
 
-smspec_node_struct::smspec_node_struct( ecl_smspec_var_type var_type_ ,
+smspec_node_type::smspec_node_type( ecl_smspec_var_type var_type_ ,
                                     const char * wgname  ,
                                     const char * keyword ,
                                     const char * unit    ,
@@ -708,7 +708,7 @@ void smspec_node_type::init_lgr( ecl_smspec_var_type var_type ,
     set_gen_keys( key_join_string );
 }
 
-smspec_node_struct::smspec_node_struct( ecl_smspec_var_type var_type_ ,
+smspec_node_type::smspec_node_type( ecl_smspec_var_type var_type_ ,
                                     const char * wgname_  ,
                                     const char * keyword_ ,
                                     const char * unit_    ,
