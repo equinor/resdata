@@ -96,9 +96,6 @@ static bool smspec_node_type_supported(ecl_smspec_var_type var_type) {
 #define ECL_SUM_KEYFMT_SEGMENT                "%s%s%s%s%d"
 #define ECL_SUM_KEYFMT_LOCAL_WELL             "%s%s%s%s%s"
 
-UTIL_SAFE_CAST_FUNCTION( smspec_node , SMSPEC_TYPE_ID )
-static UTIL_SAFE_CAST_FUNCTION_CONST( smspec_node , SMSPEC_TYPE_ID )
-
 
 std::string smspec_alloc_block_num_key( const char * join_string , const std::string& keyword , int num) {
   return ecl::util::string_format(ECL_SUM_KEYFMT_BLOCK_NUM,
@@ -661,7 +658,6 @@ smspec_node_struct::smspec_node_struct( ecl_smspec_var_type var_type_ ,
     TODO: The init function should be joined in this functions.
   */
 
-  UTIL_TYPE_ID_INIT( this , SMSPEC_TYPE_ID);
   params_index  = param_index_;
   default_value = default_value_;
 
@@ -720,7 +716,6 @@ smspec_node_struct::smspec_node_struct( ecl_smspec_var_type var_type_ ,
                                     const char * key_join_string_ ,
                                     int   lgr_i, int lgr_j , int lgr_k,
                                     int param_index_ , float default_value_) {
-  UTIL_TYPE_ID_INIT( this , SMSPEC_TYPE_ID);
   params_index  = param_index_;
   default_value = default_value_;
 
@@ -734,7 +729,6 @@ smspec_node_struct::smspec_node_struct( ecl_smspec_var_type var_type_ ,
 
 smspec_node_type * smspec_node_type::copy() const {
   smspec_node_type * copy = new smspec_node_type();
-  UTIL_TYPE_ID_INIT( copy, SMSPEC_TYPE_ID )
   *copy = *this;
   return copy;
 }
@@ -1073,8 +1067,7 @@ void smspec_node_free( void * index ) {
 }
 
 void smspec_node_free__( void * arg ) {
-  smspec_node_type * node = smspec_node_safe_cast( arg );
-  smspec_node_free( node );
+  smspec_node_free( arg );
 }
 
 float smspec_node_get_default( const void * smspec_node ) {
@@ -1167,8 +1160,8 @@ int smspec_node_cmp( const void * node1, const void * node2) {
 }
 
 int smspec_node_cmp__( const void * node1, const void * node2) {
-  return smspec_node_type::cmp( smspec_node_safe_cast_const( node1 ),
-                                smspec_node_safe_cast_const( node2 ));
+  return smspec_node_type::cmp( static_cast<const smspec_node_type*>( node1 ),
+                                static_cast<const smspec_node_type*>( node2 ));
 }
 
 /*

@@ -119,8 +119,6 @@ struct smspec_node_struct {
 
   public:
 
-    UTIL_TYPE_ID_DECLARATION;
-
     smspec_node_struct(ecl_smspec_var_type var_type ,
                      const char * wgname  ,
                      const char * keyword ,
