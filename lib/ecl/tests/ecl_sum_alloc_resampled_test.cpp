@@ -12,9 +12,9 @@ ecl_sum_type * test_alloc_ecl_sum() {
   int num_dates = 4;
   double ministep_length = 86400; // seconds in a day
 
-  smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
-  smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
-  smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
+  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
+  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
+  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
       {
@@ -41,9 +41,9 @@ void test_correct_time_vector() {
   test_assert_int_equal(  ecl_sum_get_report_time(ecl_sum_resampled, 2)  , util_make_date_utc( 6,1,2010 ));
 
   const ecl_smspec_type * smspec_resampled = ecl_sum_get_smspec(ecl_sum_resampled);
-  const smspec_node_type * node1 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 1);
-  const smspec_node_type * node2 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 2);
-  const smspec_node_type * node3 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 3);
+  const ecl::smspec_node_type * node1 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 1);
+  const ecl::smspec_node_type * node2 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 2);
+  const ecl::smspec_node_type * node3 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 3);
   test_assert_string_equal( "BPR" , smspec_node_get_keyword(node2) );
   test_assert_string_equal( "BARS" , smspec_node_get_unit(node2) );
 

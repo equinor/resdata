@@ -59,8 +59,8 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
   /// adds addend to tstep[index]; equivalent to iset( iget() + addend)
   void ecl_sum_tstep_ishift(ecl_sum_tstep_type * tstep, int index, float addend);
 
-  void ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const smspec_node_type * smspec_node , float value);
-  double ecl_sum_tstep_get_from_node( const ecl_sum_tstep_type * tstep , const smspec_node_type * smspec_node);
+  void ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const ecl::smspec_node_type * smspec_node , float value);
+  double ecl_sum_tstep_get_from_node( const ecl_sum_tstep_type * tstep , const ecl::smspec_node_type * smspec_node);
 
   void ecl_sum_tstep_set_from_key( ecl_sum_tstep_type * tstep , const char * gen_key , float value);
   double ecl_sum_tstep_get_from_key( const ecl_sum_tstep_type * tstep , const char * gen_key);

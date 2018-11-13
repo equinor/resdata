@@ -223,7 +223,7 @@ int main( int argc , char ** argv) {
 
   /*
     The return value from the ecl_sum_add_var() function is an
-    smspec_node_type instance (implemented in file smspec_node.c);
+    ecl::smspec_node_type instance (implemented in file smspec_node.c);
     which is essentially a struct holding header information about
     this varible. There are several options on how to handle the
     return value from the ecl_sum_add_var() function; which affect how
@@ -243,8 +243,8 @@ int main( int argc , char ** argv) {
 
   */
 
-  smspec_node_type * wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
-  smspec_node_type * wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
+  ecl::smspec_node_type * wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
+  ecl::smspec_node_type * wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
 
 
   {

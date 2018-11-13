@@ -577,7 +577,7 @@ void ecl_sum_data_init_interp_from_sim_days( const ecl_sum_data_type * data , do
 }
 
 
-double_vector_type * ecl_sum_data_alloc_seconds_solution(const ecl_sum_data_type * data, const smspec_node_type * node, double cmp_value, bool rates_clamp_lower) {
+double_vector_type * ecl_sum_data_alloc_seconds_solution(const ecl_sum_data_type * data, const ecl::smspec_node_type * node, double cmp_value, bool rates_clamp_lower) {
   double_vector_type * solution = double_vector_alloc(0, 0);
   const int param_index = smspec_node_get_params_index(node);
   const int size = ecl_sum_data_get_length(data);
@@ -819,7 +819,7 @@ double ecl_sum_data_iget( const ecl_sum_data_type * data , int time_index , int 
   if (params_map[params_index] >= 0)
     return file_data->iget( time_index - index_node.offset, params_map[params_index] );
   else {
-    const smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, params_index);
+    const ecl::smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, params_index);
     return smspec_node_get_default(smspec_node);
   }
 }
@@ -913,7 +913,7 @@ void ecl_sum_data_get_interp_vector( const ecl_sum_data_type * data , time_t sim
   }
 }
 
-double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t sim_time , const smspec_node_type * smspec_node) {
+double ecl_sum_data_get_from_sim_time( const ecl_sum_data_type * data , time_t sim_time , const ecl::smspec_node_type * smspec_node) {
   int params_index = smspec_node_get_params_index( smspec_node );
   if (smspec_node_is_rate( smspec_node )) {
     /*
@@ -994,7 +994,7 @@ double ecl_sum_data_time2days( const ecl_sum_data_type * data , time_t sim_time)
   return util_difftime_days( start_time , sim_time );
 }
 
-double ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , const smspec_node_type * smspec_node) {
+double ecl_sum_data_get_from_sim_days( const ecl_sum_data_type * data , double sim_days , const ecl::smspec_node_type * smspec_node) {
   time_t sim_time = ecl_smspec_get_start_time( data->smspec );
   util_inplace_forward_days_utc( &sim_time , sim_days );
   return ecl_sum_data_get_from_sim_time( data , sim_time , smspec_node );
@@ -1085,7 +1085,7 @@ static void ecl_sum_data_init_double_vector__(const ecl_sum_data_type * data, in
     int params_index = params_map[main_params_index];
 
     if (report_only) {
-      const smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
+      const ecl::smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
       double default_value = smspec_node_get_default(smspec_node);
       offset += data_file->get_data_report(params_index, index_node.length, &output_data[offset], default_value);
     } else {
@@ -1093,7 +1093,7 @@ static void ecl_sum_data_init_double_vector__(const ecl_sum_data_type * data, in
       if (params_index >= 0)
         data_file->get_data(params_index, index_node.length, &output_data[offset]);
       else {
-        const smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
+        const ecl::smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
         for (int i=0; i < index_node.length; i++)
           output_data[offset + i] = smspec_node_get_default(smspec_node);
       }
@@ -1133,7 +1133,7 @@ double_vector_type * ecl_sum_data_alloc_data_vector( const ecl_sum_data_type * d
 
 
 void ecl_sum_data_init_double_vector_interp(const ecl_sum_data_type * data,
-                                            const smspec_node_type * smspec_node,
+                                            const ecl::smspec_node_type * smspec_node,
                                             const time_t_vector_type * time_points,
                                             double * output_data) {
   bool is_rate = smspec_node_is_rate(smspec_node);

@@ -81,9 +81,9 @@ void write_CASE1(bool unified) {
   int num_dates = 100;
   double ministep_length = 86400; // seconds in a day
 
-  smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
-  smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-  smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
+  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
       {
@@ -144,8 +144,8 @@ void write_CASE2(bool unified) {
     double sim_seconds = ministep_length * 2.5 * 3;
     ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( "CASE2" , "CASE1", false , true , ":" , start_time , true , 10 , 10 , 10 );
 
-    smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-    smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+    ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+    ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
 
     for (int report_step = 1; report_step <= num_dates; report_step++) {
       {
@@ -183,7 +183,7 @@ void verify_CASE3(int length) {
     ieq(d,2,(2 - i)*10  + 300);
 
     if (i == 0) {
-      const smspec_node_type * node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
+      const ecl::smspec_node_type * node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
       double default_value = smspec_node_get_default(node);
       ieq(d,3,default_value);
       ieq(d,4,default_value);
@@ -216,9 +216,9 @@ void write_CASE3(bool unified) {
     double sim_seconds = ministep_length * 4.0 * 3;
     ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( "CASE3" , "CASE2", false , true , ":" , start_time , true , 10 , 10 , 10 );
 
-    smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
-    smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-    smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+    ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
+    ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+    ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
 
     for (int report_step = 1; report_step <= num_dates; report_step++) {
       {

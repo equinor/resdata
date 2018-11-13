@@ -336,6 +336,9 @@ bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_ty
 }
 
 
+namespace ecl {
+
+
 void smspec_node_type::set_keyword( const std::string& keyword_ ) {
   // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
   // This function can __ONLY__ be called on time; run-time chaning of keyword is not
@@ -1059,11 +1062,13 @@ int smspec_node_type::cmp__(const smspec_node_type * node2) const {
 }
 
 
+} // end namespace ecl
+
 /**************************************  OLD API functions ***********************''''' */
 
 
 void smspec_node_free( void * index ) {
-  delete static_cast<smspec_node_type*>(index);
+  delete static_cast<ecl::smspec_node_type*>(index);
 }
 
 void smspec_node_free__( void * arg ) {
@@ -1071,97 +1076,96 @@ void smspec_node_free__( void * arg ) {
 }
 
 float smspec_node_get_default( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_default();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_default();
 }
 
 int smspec_node_get_params_index( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_params_index();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_params_index();
 }
 
 void smspec_node_set_params_index( void * smspec_node , int params_index) {
-  static_cast<smspec_node_type*>(smspec_node)->set_params_index( params_index );
+  static_cast<ecl::smspec_node_type*>(smspec_node)->set_params_index( params_index );
 }
 
 const char * smspec_node_get_gen_key1( const void * smspec_node) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_gen_key1();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_gen_key1();
 }
 
 const char * smspec_node_get_gen_key2( const void * smspec_node) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_gen_key2();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_gen_key2();
 }
 
 const char * smspec_node_get_wgname( const void * smspec_node) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_wgname();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_wgname();
 }
 
 const char * smspec_node_get_keyword( const void * smspec_node) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_keyword( );
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_keyword( );
 }
 
 ecl_smspec_var_type smspec_node_get_var_type( const void * smspec_node) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_var_type();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_var_type();
 }
 
 int smspec_node_get_num( const void * smspec_node) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_num();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_num();
 }
 
 bool smspec_node_is_rate( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->is_rate();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->is_rate();
 }
 
 bool smspec_node_is_total( const void * smspec_node ){
-  return static_cast<const smspec_node_type*>(smspec_node)->is_total();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->is_total();
 }
 
 bool smspec_node_is_historical( const void * smspec_node ){
-  return static_cast<const smspec_node_type*>(smspec_node)->is_historical();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->is_historical();
 }
 
 const char  * smspec_node_get_unit( const void * smspec_node) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_unit();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_unit();
 }
 
 // Will be garbage for smspec_nodes which do not have i,j,k
 const int* smspec_node_get_ijk( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_ijk().data();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_ijk().data();
 }
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
 const char* smspec_node_get_lgr_name( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_lgr_name().c_str();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_lgr_name().c_str();
 }
 
 
 // Will be garbage for smspec_nodes which are not related to an LGR.
 const int* smspec_node_get_lgr_ijk( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_lgr_ijk().data();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_lgr_ijk().data();
 }
 
 int smspec_node_get_R1( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_R1();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_R1();
 }
 
 
 int smspec_node_get_R2( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->get_R2();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_R2();
 }
 
 bool smspec_node_need_nums( const void * smspec_node ) {
-  return static_cast<const smspec_node_type*>(smspec_node)->need_nums();
+  return static_cast<const ecl::smspec_node_type*>(smspec_node)->need_nums();
 }
 
 void smspec_node_fprintf( const void * smspec_node , FILE * stream) {
-  static_cast<const smspec_node_type*>(smspec_node)->fprintf__(stream);
+  static_cast<const ecl::smspec_node_type*>(smspec_node)->fprintf__(stream);
 }
 
 int smspec_node_cmp( const void * node1, const void * node2) {
-  return smspec_node_type::cmp(static_cast<const smspec_node_type*>(node1), static_cast<const smspec_node_type*>(node2));
+  return ecl::smspec_node_type::cmp(static_cast<const ecl::smspec_node_type*>(node1), static_cast<const ecl::smspec_node_type*>(node2));
 }
 
 int smspec_node_cmp__( const void * node1, const void * node2) {
-  return smspec_node_type::cmp( static_cast<const smspec_node_type*>( node1 ),
-                                static_cast<const smspec_node_type*>( node2 ));
+  return smspec_node_cmp(node1, node2);
 }
 
 /*
@@ -1176,7 +1180,7 @@ void smspec_node_init( void * smspec_node,
                        const int grid_dims[3] ,
                        int num) {
 
-  static_cast<smspec_node_type*>(smspec_node)->init__( var_type,
+  static_cast<ecl::smspec_node_type*>(smspec_node)->init__( var_type,
                                               wgname,
                                               keyword,
                                               unit,
@@ -1194,9 +1198,9 @@ void * smspec_node_alloc( ecl_smspec_var_type var_type ,
                                       const char * key_join_string ,
                                       const int grid_dims[3] ,
                                       int num , int param_index, float default_value) {
-  smspec_node_type * node = NULL;
+  ecl::smspec_node_type * node = NULL;
   try {
-    node = new smspec_node_type(var_type, wgname, keyword, unit, key_join_string, grid_dims, num, param_index, default_value);
+    node = new ecl::smspec_node_type(var_type, wgname, keyword, unit, key_join_string, grid_dims, num, param_index, default_value);
   }
   catch (const std::invalid_argument& e) {
     node = NULL;
@@ -1214,26 +1218,26 @@ void * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                           int   lgr_i, int lgr_j , int lgr_k,
                                           int param_index , float default_value) {
 
-  return new smspec_node_type( var_type, wgname, keyword, unit, lgr, key_join_string, lgr_i, lgr_j, lgr_k, param_index, default_value);
+  return new ecl::smspec_node_type( var_type, wgname, keyword, unit, lgr, key_join_string, lgr_i, lgr_j, lgr_k, param_index, default_value);
 }
 
 
 void * smspec_node_alloc_copy( const void * node ) {
   if( !node ) return NULL;
-  return static_cast<const smspec_node_type*>(node)->copy();
+  return static_cast<const ecl::smspec_node_type*>(node)->copy();
 }
 
 
 bool smspec_node_equal( const void * node1,  const void * node2) {
-  return smspec_node_type::cmp( static_cast<const smspec_node_type*>(node1) , static_cast<const smspec_node_type*>(node2) ) == 0;
+  return ecl::smspec_node_type::cmp( static_cast<const ecl::smspec_node_type*>(node1) , static_cast<const ecl::smspec_node_type*>(node2) ) == 0;
 }
 
 
 bool smspec_node_gt( const void * node1,  const void * node2) {
-  return smspec_node_type::cmp( static_cast<const smspec_node_type*>(node1) , static_cast<const smspec_node_type*>(node2) ) > 0;
+  return ecl::smspec_node_type::cmp( static_cast<const ecl::smspec_node_type*>(node1) , static_cast<const ecl::smspec_node_type*>(node2) ) > 0;
 }
 
 bool smspec_node_lt( const void * node1,  const void * node2) {
-  return smspec_node_type::cmp( static_cast<const smspec_node_type*>(node1) , static_cast<const smspec_node_type*>(node2) ) < 0;
+  return ecl::smspec_node_type::cmp( static_cast<const ecl::smspec_node_type*>(node1) , static_cast<const ecl::smspec_node_type*>(node2) ) < 0;
 }
 

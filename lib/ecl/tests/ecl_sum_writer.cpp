@@ -33,9 +33,9 @@ double write_summary( const char * name , time_t start_time , int nx , int ny , 
   ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( name , false , true , ":" , start_time , true , nx , ny , nz );
   double sim_seconds = 0;
 
-  smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
-  smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
-  smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
+  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
+  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
+  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
     for (int step = 0; step < num_ministep; step++) {
@@ -63,9 +63,9 @@ int write_restart_summary(const char * name, const char * restart_name , int sta
   ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( name , restart_name, false , true , ":" , start_time , true , nx , ny , nz );
 
 
-  smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
-  smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
-  smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
+  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
+  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
+  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
 
   int num_report_steps = start_report_step + num_dates;
   for (int report_step = start_report_step; report_step < num_report_steps; report_step++) {
