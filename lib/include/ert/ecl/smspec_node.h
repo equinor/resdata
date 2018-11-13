@@ -67,9 +67,9 @@ typedef struct smspec_node_struct smspec_node_type;
   bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_type);
   bool smspec_node_identify_rate(const char * keyword);
 
-  bool smspec_node_equal( const smspec_node_type * node1,  const smspec_node_type * node2);
+  bool smspec_node_equal( const void * node1,  const void * node2);
 
-  void smspec_node_init( smspec_node_type * smspec_node,
+  void smspec_node_init( void * smspec_node,
                          ecl_smspec_var_type var_type ,
                          const char * wgname  ,
                          const char * keyword ,
@@ -96,37 +96,37 @@ typedef struct smspec_node_struct smspec_node_type;
                                             int param_index,
                                             float default_value);
 
-  void *  smspec_node_alloc_copy( const smspec_node_type* );
+  void *  smspec_node_alloc_copy( const void* );
 
-  void                smspec_node_free( smspec_node_type * index );
+  void                smspec_node_free( void * index );
   void                smspec_node_free__(void * arg);
-  void                smspec_node_set_params_index( smspec_node_type * smspec_node , int params_index);
-  int                 smspec_node_get_params_index( const smspec_node_type * smspec_node );
-  const char        * smspec_node_get_gen_key1( const smspec_node_type * smspec_node);
-  const char        * smspec_node_get_gen_key2( const smspec_node_type * smspec_node);
-  ecl_smspec_var_type smspec_node_get_var_type( const smspec_node_type * smspec_node);
-  int                 smspec_node_get_num( const smspec_node_type * smspec_node);
-  const char        * smspec_node_get_wgname( const smspec_node_type * smspec_node);
-  const char        * smspec_node_get_keyword( const smspec_node_type * smspec_node);
-  const char        * smspec_node_get_unit( const smspec_node_type * smspec_node);
-  bool                smspec_node_is_rate( const smspec_node_type * smspec_node );
-  bool                smspec_node_is_total( const smspec_node_type * smspec_node );
-  bool                smspec_node_is_historical( const smspec_node_type * smspec_node );
-  bool                smspec_node_need_nums( const smspec_node_type * smspec_node );
-  void                smspec_node_fprintf( const smspec_node_type * smspec_node , FILE * stream);
+  void                smspec_node_set_params_index( void * smspec_node , int params_index);
+  int                 smspec_node_get_params_index( const void * smspec_node );
+  const char        * smspec_node_get_gen_key1( const void * smspec_node);
+  const char        * smspec_node_get_gen_key2( const void * smspec_node);
+  ecl_smspec_var_type smspec_node_get_var_type( const void * smspec_node);
+  int                 smspec_node_get_num( const void * smspec_node);
+  const char        * smspec_node_get_wgname( const void * smspec_node);
+  const char        * smspec_node_get_keyword( const void * smspec_node);
+  const char        * smspec_node_get_unit( const void * smspec_node);
+  bool                smspec_node_is_rate( const void * smspec_node );
+  bool                smspec_node_is_total( const void * smspec_node );
+  bool                smspec_node_is_historical( const void * smspec_node );
+  bool                smspec_node_need_nums( const void * smspec_node );
+  void                smspec_node_fprintf( const void * smspec_node , FILE * stream);
 
-  float               smspec_node_get_default( const smspec_node_type * smspec_node);
+  float               smspec_node_get_default( const void * smspec_node);
 
-  const int*  smspec_node_get_ijk( const smspec_node_type * smpsec_node );
-  const char* smspec_node_get_lgr_name( const smspec_node_type * smpsec_node );
-  const int*  smspec_node_get_lgr_ijk( const smspec_node_type * smpsec_node );
+  const int*  smspec_node_get_ijk( const void * smpsec_node );
+  const char* smspec_node_get_lgr_name( const void * smpsec_node );
+  const int*  smspec_node_get_lgr_ijk( const void * smpsec_node );
 
-  int smspec_node_get_R1( const smspec_node_type * smpsec_node );
-  int smspec_node_get_R2( const smspec_node_type * smpsec_node );
+  int smspec_node_get_R1( const void * smpsec_node );
+  int smspec_node_get_R2( const void * smpsec_node );
 
-  bool smspec_node_lt( const smspec_node_type * node1,  const smspec_node_type * node2);
-  bool smspec_node_gt( const smspec_node_type * node1,  const smspec_node_type * node2);
-  int smspec_node_cmp( const smspec_node_type * node1, const smspec_node_type * node2);
+  bool smspec_node_lt( const void * node1,  const void * node2);
+  bool smspec_node_gt( const void * node1,  const void * node2);
+  int smspec_node_cmp( const void * node1, const void * node2);
   int smspec_node_cmp__( const void * node1, const void * node2);
 
 #ifdef __cplusplus
