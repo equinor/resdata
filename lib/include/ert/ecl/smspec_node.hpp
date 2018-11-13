@@ -31,7 +31,7 @@
 #include <string>
 #include <array>
 
-struct smspec_node_struct {
+class smspec_node_type {
   private:
 
     std::string            wgname;
@@ -53,7 +53,7 @@ struct smspec_node_struct {
     int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
     float                  default_value;      /* Default value for this variable. */
 
-    smspec_node_struct();
+    smspec_node_type();
 
     void set_invalid_flags();
     void init_lgr( ecl_smspec_var_type var_type ,
@@ -119,7 +119,7 @@ struct smspec_node_struct {
 
   public:
 
-    smspec_node_struct(ecl_smspec_var_type var_type ,
+    smspec_node_type(ecl_smspec_var_type var_type ,
                      const char * wgname  ,
                      const char * keyword ,
                      const char * unit    ,
@@ -127,7 +127,7 @@ struct smspec_node_struct {
                      const int grid_dims[3] ,
                      int num , int param_index, float default_value);
 
-    smspec_node_struct(ecl_smspec_var_type var_type ,
+    smspec_node_type(ecl_smspec_var_type var_type ,
                      const char * wgname  ,
                      const char * keyword ,
                      const char * unit    ,

@@ -46,8 +46,6 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
 #define SMSPEC_NUMS_GROUP      2
 #define SMSPEC_NUMS_FIELD      0
 
-typedef struct smspec_node_struct smspec_node_type;
-
 #define SMSPEC_TYPE_ID 61550451
 
   char * smspec_alloc_block_ijk_key( const char * join_string , const char * keyword , int i , int j , int k);
