@@ -178,5 +178,7 @@ namespace ecl {
 
 }
 
+typedef class ecl::smspec_node_type smspec_node_type;
+
 #endif
 #endif
