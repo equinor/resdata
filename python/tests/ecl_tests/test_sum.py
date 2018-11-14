@@ -567,8 +567,10 @@ class SumTest(EclTest):
     def test_csv_load(self):
         case = create_case2()
         frame = case.pandas_frame()
-        with TestAreaContext("csv/load"):
-            frame.to_csv("CASE.CSV")
+        ecl_sum = EclSum.from_pandas("PANDAS", case.start_time)
+        for key in frame.columns:
+            self.assertTrue(key in ecl_sum)
+
 
     def test_total_and_rate(self):
         self.assertTrue( EclSum.is_total("FOPT"))

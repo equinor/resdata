@@ -524,6 +524,24 @@ class EclSum(BaseCClass):
         frame = pandas.DataFrame(index = time_index, columns=list(keywords), data=data)
         return frame
 
+    @classmethod
+    def from_pandas(cls, case, start_time, frame, dims = (1,1,1), headers = None):
+        nx = dims[0]
+        ny = dims[1]
+        nz = dims[2]
+        ecl_sum = EclSum.writer(case,
+                                start_time,
+                                nx, ny, nz)
+
+        var_list = []
+        for (kw,wgname,num,unit) in headers:
+            var_list.append( ecl_sum.addVariable(kw,
+                                                 wgname=wgname,
+                                                 num=num,
+                                                 unit=unit))
+
+        return ecl_sum
+
 
     def get_key_index(self, key):
         """
