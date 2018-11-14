@@ -527,8 +527,8 @@ class SumTest(EclTest):
 
     def test_resample_extrapolate(self):
         time_points = TimeVector()
-        start_time = self.ecl_sum.get_data_start_time() - CTime(60)
-        end_time = self.ecl_sum.get_end_time() + CTime(60)
+        start_time = self.ecl_sum.get_data_start_time() - datetime.timedelta(seconds=60)
+        end_time = self.ecl_sum.get_end_time() + datetime.timedelta(seconds=60)
         delta = end_time - start_time
         N = 25
         time_points.initRange( CTime(start_time),

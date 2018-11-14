@@ -779,21 +779,21 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 /*****************************************************************/
 
 
-ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * _times, const bool lower_extrapolation, const bool upper_extrapolation) {
+ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times, bool lower_extrapolation, bool upper_extrapolation) {
   time_t start_time = ecl_sum_get_data_start(ecl_sum);
   time_t end_time = ecl_sum_get_end_time(ecl_sum);
-  time_t input_t0 = time_t_vector_get_first( _times );
+  time_t input_t0 = time_t_vector_get_first( times );
 
   /*
     If lower and  / or upper extrapolation is set to true it makes sure that resampling returns the first / last value of the simulation
     if set to false, we jus throw exception
   */
 
-  if ( !lower_extrapolation && time_t_vector_get_first(_times) < start_time )
+  if ( !lower_extrapolation && time_t_vector_get_first(times) < start_time )
     return NULL;
-  if ( !upper_extrapolation && time_t_vector_get_last(_times) > end_time)
+  if ( !upper_extrapolation && time_t_vector_get_last(times) > end_time)
     return NULL;
-  if ( !time_t_vector_is_sorted(_times, false) )
+  if ( !time_t_vector_is_sorted(times, false) )
     return NULL;
 
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
@@ -822,8 +822,8 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
   ecl_sum_vector_type * ecl_sum_vector = ecl_sum_vector_alloc(ecl_sum, true);
   double_vector_type * data = double_vector_alloc( ecl_sum_vector_get_size(ecl_sum_vector) , 0);
 
-  for (int report_step = 0; report_step < time_t_vector_size(_times); report_step++) {
-    time_t input_t = time_t_vector_iget(_times, report_step);
+  for (int report_step = 0; report_step < time_t_vector_size(times); report_step++) {
+    time_t input_t = time_t_vector_iget(times, report_step);
     if (input_t < start_time) {
       //clamping to the first value for t < start_time or if rate that derivative is 0
       for (int i=0; i < ecl_sum_vector_get_size(ecl_sum_vector); i++) {
