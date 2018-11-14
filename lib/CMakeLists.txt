@@ -350,6 +350,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_grid_init_fwrite
                 ecl_grid_reset_actnum
                 ecl_grid_ext_actnum
+                ecl_nnc_export_intersect
                 ecl_sum_data_intermediate_test
                 ecl_grid_cell_contains
                 ecl_unsmry_loader_test
@@ -446,7 +447,6 @@ foreach(name ecl_coarse_test
              ecl_grid_layer_contains
              ecl_restart_test
              ecl_nnc_export
-             ecl_nnc_export_intersect
              ecl_nnc_export_get_tran
              ecl_nnc_data_statoil_root
              ecl_sum_case_exists
@@ -520,8 +520,6 @@ add_test(NAME ecl_nnc_export4 COMMAND ecl_nnc_export ${_eclpath}/DualPoro/DUAL_D
 add_test(NAME ecl_nnc_export5 COMMAND ecl_nnc_export ${_eclpath}/DualPoro/DUALPORO TRUE)
 add_test(NAME ecl_nnc_export6 COMMAND ecl_nnc_export ${_eclpath}/nestedLGRcase/TESTCASE_NESTEDLGR TRUE)
 add_test(NAME ecl_nnc_export7 COMMAND ecl_nnc_export ${_eclpath}/TYRIHANS/BASE20150218_MULTFLT FALSE)
-
-add_test(NAME ecl_nnc_export_intersect COMMAND ecl_nnc_export_intersect)
 
 add_test(NAME ecl_nnc_export_get_tran COMMAND ecl_nnc_export_get_tran
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)

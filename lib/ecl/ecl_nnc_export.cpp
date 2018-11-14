@@ -130,8 +130,7 @@ int  ecl_nnc_export( const ecl_grid_type * grid , const ecl_file_type * init_fil
     // Eclipse format
     total_valid_trans = ecl_nnc_export__( grid , 0 , init_file , nnc_data , &nnc_index );
     {
-      int lgr_index;
-      for (lgr_index = 0; lgr_index < ecl_grid_get_num_lgr(grid); lgr_index++) {
+      for (int lgr_index = 0; lgr_index < ecl_grid_get_num_lgr(grid); lgr_index++) {
         ecl_grid_type * igrid = ecl_grid_iget_lgr( grid , lgr_index );
         total_valid_trans += ecl_nnc_export__( igrid , lgr_index , init_file , nnc_data , &nnc_index );
       }
