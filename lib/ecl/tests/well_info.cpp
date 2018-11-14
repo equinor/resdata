@@ -30,6 +30,7 @@
 
 
 int main(int argc , char ** argv) {
+  util_install_signals();
   const char * grid_file    = argv[1];
 
   ecl_grid_type * grid = ecl_grid_alloc( grid_file );
@@ -37,6 +38,9 @@ int main(int argc , char ** argv) {
   {
     well_info_type * well_info = well_info_alloc( grid );
     test_assert_not_NULL( well_info );
+    if (argc >= 3)
+      well_info_load_rstfile(well_info, argv[2], true);
+
     well_info_free( well_info );
   }
   ecl_grid_free( grid );

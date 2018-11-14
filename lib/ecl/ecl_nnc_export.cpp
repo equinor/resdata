@@ -17,7 +17,7 @@
 */
 #include <stdlib.h>
 
-#include <ert/util/int_vector.hpp>
+#include <vector>
 
 #include <ert/ecl/ecl_file.hpp>
 #include <ert/ecl/ecl_grid.hpp>
@@ -50,8 +50,8 @@ static int  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , cons
       int lgr_index2;
       for (lgr_index2=0; lgr_index2 < nnc_info_get_size( nnc_info ); lgr_index2++) {
         const nnc_vector_type * nnc_vector = nnc_info_iget_vector( nnc_info , lgr_index2 );
-        const int_vector_type * grid2_index_list = nnc_vector_get_grid_index_list( nnc_vector );
-        const int_vector_type * nnc_index_list = nnc_vector_get_nnc_index_list( nnc_vector );
+        const std::vector<int>& grid2_index_list = nnc_vector_get_grid_index_list( nnc_vector );
+        const std::vector<int>& nnc_index_list = nnc_vector_get_nnc_index_list( nnc_vector );
         int lgr_nr2 = nnc_vector_get_lgr_nr( nnc_vector );
         const ecl_kw_type * tran_kw = ecl_nnc_export_get_tranx_kw(global_grid  , init_file , lgr_nr1 , lgr_nr2 );
 
@@ -63,8 +63,8 @@ static int  ecl_nnc_export__( const ecl_grid_type * grid , int lgr_index1 , cons
         nnc.global_index1 = global_index1;
 
         for (index2 = 0; index2 < nnc_vector_get_size( nnc_vector ); index2++) {
-          nnc.global_index2 = int_vector_iget( grid2_index_list , index2 );
-          nnc.input_index = int_vector_iget( nnc_index_list, index2 );
+          nnc.global_index2 = grid2_index_list[index2];
+          nnc.input_index = nnc_index_list[index2];
           if(tran_kw) {
             nnc.trans = ecl_kw_iget_as_double(tran_kw, nnc.input_index);
             valid_trans++;

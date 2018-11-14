@@ -676,7 +676,9 @@ add_test(NAME well_segment_load
 add_test(NAME well_segment_branch_conn_load
          COMMAND well_segment_branch_conn_load ${_eclpath}/MSWcase/MSW_CASE.X0021)
 
-add_test(NAME well_info COMMAND well_info ${_eclpath}/Gurbat/ECLIPSE.EGRID)
+add_test(NAME well_info1 COMMAND well_info ${_eclpath}/Gurbat/ECLIPSE.EGRID)
+add_test(NAME well_info2 COMMAND well_info ${_eclpath}/well_info_rio/BMS8_TMPL_1-BMS8_105DST_EMBED_T0_1.EGRID
+                                           ${_eclpath}/well_info_rio/BMS8_TMPL_1-BMS8_105DST_EMBED_T0_1.UNRST)
 
 add_test(NAME well_conn_CF COMMAND well_conn_CF ${_eclpath}/Gurbat/ECLIPSE.X0060)
 
