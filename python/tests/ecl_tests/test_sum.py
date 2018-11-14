@@ -78,6 +78,21 @@ def create_case(case = "CSV", restart_case = None, restart_step = -1, data_start
                         restart_case = restart_case,
                         restart_step = restart_step)
 
+def create_case2(case = "CSV", restart_case = None, restart_step = -1, data_start = None):
+    length = 100
+    return createEclSum(case , [("WOPT", "OPX" , 0, "SM3") , ("FOPR" , None , 0, "SM3/DAY"), ("BPR" , None , 10, "SM3")],
+                        sim_length_days = length,
+                        num_report_step = 10,
+                        num_mini_step = 10,
+                        data_start = data_start,
+                        func_table = {"FOPT" : fopt,
+                                      "FOPR" : fopr ,
+                                      "FGPT" : fgpt },
+                        restart_case = restart_case,
+                        restart_step = restart_step)
+
+
+
 class SumTest(EclTest):
 
 
@@ -548,6 +563,12 @@ class SumTest(EclTest):
         self.assertEqual(len(case.keys()), columns)
         self.assertEqual(len(case), rows)
 
+
+    def test_csv_load(self):
+        case = create_case2()
+        frame = case.pandas_frame()
+        with TestAreaContext("csv/load"):
+            frame.to_csv("CASE.CSV")
 
     def test_total_and_rate(self):
         self.assertTrue( EclSum.is_total("FOPT"))
