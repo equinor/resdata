@@ -33,9 +33,9 @@ double write_summary( const char * name , time_t start_time , int nx , int ny , 
   ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( name , false , true , ":" , start_time , true , nx , ny , nz );
   double sim_seconds = 0;
 
-  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
-  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
-  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
+  const ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
+  const ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
+  const ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
     for (int step = 0; step < num_ministep; step++) {
@@ -43,13 +43,13 @@ double write_summary( const char * name , time_t start_time , int nx , int ny , 
 
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 1 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node2 , 10*sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node3 , 100*sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , *node1 , sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , *node2 , 10*sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , *node3 , 100*sim_seconds );
 
-        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , node1 ), sim_seconds );
-        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , node2 ), sim_seconds*10 );
-        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , node3 ), sim_seconds*100 );
+        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , *node1 ), sim_seconds );
+        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , *node2 ), sim_seconds*10 );
+        test_assert_double_equal( ecl_sum_tstep_get_from_node( tstep , *node3 ), sim_seconds*100 );
       }
       sim_seconds += ministep_length;
     }
@@ -63,18 +63,18 @@ int write_restart_summary(const char * name, const char * restart_name , int sta
   ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( name , restart_name, false , true , ":" , start_time , true , nx , ny , nz );
 
 
-  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
-  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
-  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
+  const ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
+  const ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
+  const ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
 
   int num_report_steps = start_report_step + num_dates;
   for (int report_step = start_report_step; report_step < num_report_steps; report_step++) {
     for (int step = 0; step < num_ministep; step++) {
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 1 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , sim_seconds);
-        ecl_sum_tstep_set_from_node( tstep , node2 , 10*sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node3 , 100*sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , *node1 , sim_seconds);
+        ecl_sum_tstep_set_from_node( tstep , *node2 , 10*sim_seconds );
+        ecl_sum_tstep_set_from_node( tstep , *node3 , 100*sim_seconds );
 
       }
       sim_seconds += ministep_length;

@@ -297,8 +297,8 @@ int main( int argc , char ** argv) {
               We can use the smspec_node value from the
               ecl_sum_add_var() function directly:
             */
-            ecl_sum_tstep_set_from_node( tstep , wwct_wellx , sim_days );
-            ecl_sum_tstep_set_from_node( tstep, wopr_wellx, sim_days * 100);
+            ecl_sum_tstep_set_from_node( tstep , *wwct_wellx , sim_days );
+            ecl_sum_tstep_set_from_node( tstep, *wopr_wellx, sim_days * 100);
           }
         }
       }

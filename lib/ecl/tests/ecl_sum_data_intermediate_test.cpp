@@ -81,16 +81,16 @@ void write_CASE1(bool unified) {
   int num_dates = 100;
   double ministep_length = 86400; // seconds in a day
 
-  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
-  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
+  const ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+  const ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+  const ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 1 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , (1 + report_step) * 100 );
-        ecl_sum_tstep_set_from_node( tstep , node2 , (1 + report_step) * 100 + 10.0 );
-        ecl_sum_tstep_set_from_node( tstep , node3 , (1 + report_step) * 100 + 20.0 );
+        ecl_sum_tstep_set_from_node( tstep , *node1 , (1 + report_step) * 100 );
+        ecl_sum_tstep_set_from_node( tstep , *node2 , (1 + report_step) * 100 + 10.0 );
+        ecl_sum_tstep_set_from_node( tstep , *node3 , (1 + report_step) * 100 + 20.0 );
       }
       sim_seconds += ministep_length * 3;
   }
@@ -144,14 +144,14 @@ void write_CASE2(bool unified) {
     double sim_seconds = ministep_length * 2.5 * 3;
     ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( "CASE2" , "CASE1", false , true , ":" , start_time , true , 10 , 10 , 10 );
 
-    ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-    ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+    const ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+    const ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
 
     for (int report_step = 1; report_step <= num_dates; report_step++) {
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 3 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , report_step*1000);
-        ecl_sum_tstep_set_from_node( tstep , node2 , report_step*1000 + 100);
+        ecl_sum_tstep_set_from_node( tstep , *node1 , report_step*1000);
+        ecl_sum_tstep_set_from_node( tstep , *node2 , report_step*1000 + 100);
       }
       sim_seconds += ministep_length * 3;
     }
@@ -216,16 +216,16 @@ void write_CASE3(bool unified) {
     double sim_seconds = ministep_length * 4.0 * 3;
     ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( "CASE3" , "CASE2", false , true , ":" , start_time , true , 10 , 10 , 10 );
 
-    ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
-    ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-    ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+    const ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
+    const ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+    const ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
 
     for (int report_step = 1; report_step <= num_dates; report_step++) {
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 5 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , report_step*10000);
-        ecl_sum_tstep_set_from_node( tstep , node2 , report_step*10000 + 1000);
-        ecl_sum_tstep_set_from_node( tstep , node3 , report_step*10000 + 2000);
+        ecl_sum_tstep_set_from_node( tstep , *node1 , report_step*10000);
+        ecl_sum_tstep_set_from_node( tstep , *node2 , report_step*10000 + 1000);
+        ecl_sum_tstep_set_from_node( tstep , *node3 , report_step*10000 + 2000);
       }
       sim_seconds += ministep_length * 3;
     }
