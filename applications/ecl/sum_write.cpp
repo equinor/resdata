@@ -223,7 +223,7 @@ int main( int argc , char ** argv) {
 
   /*
     The return value from the ecl_sum_add_var() function is an
-    ecl::smspec_node_type instance (implemented in file smspec_node.c);
+    ecl::smspec_node instance (implemented in file smspec_node.c);
     which is essentially a struct holding header information about
     this varible. There are several options on how to handle the
     return value from the ecl_sum_add_var() function; which affect how
@@ -243,8 +243,8 @@ int main( int argc , char ** argv) {
 
   */
 
-  ecl::smspec_node_type * wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
-  ecl::smspec_node_type * wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
+  const ecl::smspec_node * wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
+  const ecl::smspec_node * wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
 
 
   {
@@ -297,8 +297,8 @@ int main( int argc , char ** argv) {
               We can use the smspec_node value from the
               ecl_sum_add_var() function directly:
             */
-            ecl_sum_tstep_set_from_node( tstep , wwct_wellx , sim_days );
-            ecl_sum_tstep_set_from_node( tstep, wopr_wellx, sim_days * 100);
+            ecl_sum_tstep_set_from_node( tstep , *wwct_wellx , sim_days );
+            ecl_sum_tstep_set_from_node( tstep, *wopr_wellx, sim_days * 100);
           }
         }
       }

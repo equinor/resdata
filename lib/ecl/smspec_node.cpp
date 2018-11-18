@@ -43,6 +43,33 @@
 
 #include "detail/util/string_util.hpp"
 
+/**
+   The special_vars list is used to associate keywords with special
+   types, when the kewyord name is in conflict with the default vector
+   naming convention; all the variables mentioned in the list below
+   are given the type ECL_SMSPEC_MISC_VAR.
+
+   For instance the keyword 'NEWTON' starts with 'N' and is
+   classified as a NETWORK type variable. However it should rather
+   be classified as a MISC type variable. (What a fucking mess).
+
+   The special_vars list is used in the functions
+   ecl_smspec_identify_special_var() and ecl_smspec_identify_var_type().
+*/
+
+static const char* special_vars[] = {"NEWTON",
+                                     "NAIMFRAC",
+                                     "NLINEARS",
+                                     "NLINSMIN",
+                                     "NLINSMAX",
+                                     "ELAPSED",
+                                     "MAXDPR",
+                                     "MAXDSO",
+                                     "MAXDSG",
+                                     "MAXDSW",
+                                     "STEPTYPE",
+                                     "WNEWTON"};
+
 
 /**
    This struct contains meta-information about one element in the smspec
@@ -52,24 +79,132 @@
    probably the most important field.
 */
 
+/**
+   Goes through the special_vars static table to check if @var is one
+   the special variables which does not follow normal naming
+   convention. If the test eavulates to true the function will return
+   ECL_SMSPEC_MISC_VAR, otherwise the function will return
+   ECL_SMSPEC_INVALID_VAR and the variable type will be determined
+   from the var name according to standard naming conventions.
 
+   It is important that this function is called before the standard
+   method.
+*/
 
-static bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
-  if (var_type == ECL_SMSPEC_COMPLETION_VAR ||
-      var_type == ECL_SMSPEC_GROUP_VAR      ||
-      var_type == ECL_SMSPEC_WELL_VAR       ||
-      var_type == ECL_SMSPEC_SEGMENT_VAR)
-    return true;
-  else
-    return false;
+ecl_smspec_var_type ecl::smspec_node::identify_special_var( const char * var ) {
+  ecl_smspec_var_type var_type = ECL_SMSPEC_INVALID_VAR;
+
+  int num_special = sizeof( special_vars ) / sizeof( special_vars[0] );
+  int i;
+  for (i=0; i < num_special; i++) {
+    if (strcmp( var , special_vars[i]) == 0) {
+      var_type = ECL_SMSPEC_MISC_VAR;
+      break;
+    }
+  }
+
+  return var_type;
 }
 
-static bool smspec_node_type_supported(ecl_smspec_var_type var_type) {
-  if (var_type == ECL_SMSPEC_NETWORK_VAR)
-    return false;
+/*
+   See table 3.4 in the ECLIPSE file format reference manual.
 
-  return true;
+   Observe that the combined ecl_sum style keys like e.g. WWCT:OP1
+   should be formatted with the keyword first, so that this function
+   will identify both 'WWCT' and 'WWCT:OP_1' as a ECL_SMSPEC_WELL_VAR
+   instance.
+*/
+
+ecl_smspec_var_type ecl::smspec_node::identify_var_type(const char * var) {
+  ecl_smspec_var_type var_type = ecl::smspec_node::identify_special_var(var);
+  if (var_type == ECL_SMSPEC_INVALID_VAR) {
+    switch(var[0]) {
+    case('A'):
+      var_type = ECL_SMSPEC_AQUIFER_VAR;
+      break;
+    case('B'):
+      var_type = ECL_SMSPEC_BLOCK_VAR;
+      break;
+    case('C'):
+      var_type = ECL_SMSPEC_COMPLETION_VAR;
+      break;
+    case('F'):
+      var_type = ECL_SMSPEC_FIELD_VAR;
+      break;
+    case('G'):
+      var_type = ECL_SMSPEC_GROUP_VAR;
+      break;
+    case('L'):
+      switch(var[1]) {
+      case('B'):
+        var_type = ECL_SMSPEC_LOCAL_BLOCK_VAR;
+        break;
+      case('C'):
+        var_type = ECL_SMSPEC_LOCAL_COMPLETION_VAR;
+        break;
+      case('W'):
+        var_type = ECL_SMSPEC_LOCAL_WELL_VAR;
+        break;
+      default:
+        /*
+          The documentation explicitly mentions keywords starting with
+          LB, LC and LW as special types, but keywords starting with
+          L[^BCW] are also valid. These come in the misceallaneous
+          category; at least the LLINEAR keyword is an example of such
+          a keyword.
+        */
+        var_type = ECL_SMSPEC_MISC_VAR;
+      }
+      break;
+    case('N'):
+      var_type = ECL_SMSPEC_NETWORK_VAR;
+      break;
+    case('R'):
+      {
+        /*
+          The distinction between region-to-region variables and plain
+          region variables is less than clear: The current
+          interpretation is that the cases:
+
+             1. Any variable matching:
+
+                a) Starts with 'R'
+                b) Has 'F' as the third character
+
+             2. The variable "RNLF"
+
+          Get variable type ECL_SMSPEC_REGION_2_REGION_VAR. The rest
+          get the type ECL_SMSPEC_REGION_VAR.
+        */
+
+        if (util_string_equal( var , "RNLF"))
+          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
+        else if (var[2] == 'F')
+          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
+        else
+          var_type  = ECL_SMSPEC_REGION_VAR;
+
+      }
+      break;
+    case('S'):
+      var_type = ECL_SMSPEC_SEGMENT_VAR;
+      break;
+    case('W'):
+      var_type = ECL_SMSPEC_WELL_VAR;
+      break;
+    default:
+      /*
+        It is unfortunately impossible to recognize an error situation -
+        the rest just goes in "other" variables.
+      */
+      var_type = ECL_SMSPEC_MISC_VAR;
+    }
+  }
+  return var_type;
 }
+
+
+
 
 
 /*****************************************************************/
@@ -339,84 +474,60 @@ bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_ty
 namespace ecl {
 
 
-void smspec_node_type::set_keyword( const std::string& keyword_ ) {
-  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  // This function can __ONLY__ be called on time; run-time chaning of keyword is not
-  // allowed.
-  if (keyword.size() == 0)
-    this->keyword = keyword_;
-  else
-    util_abort("%s: fatal error - attempt to change keyword runtime detected - aborting\n",__func__);
-}
 
-
-void smspec_node_type::set_invalid_flags() {
-  this->rate_variable  = false;
-  this->total_variable = false;
-  this->historical     = false;
-}
-
-
-void smspec_node_type::set_flags() {
-  /*
-     Check if this is a rate variabel - that info is used when
-     interpolating results to true_time between ministeps.
-  */
-  rate_variable = smspec_node_identify_rate(keyword.c_str());
-  if (keyword.back() == 'H')
-    historical = true;
-  total_variable = smspec_node_identify_total(keyword.c_str(), var_type);
-}
-
-float smspec_node_type::get_default() const {
+float smspec_node::get_default() const {
   return this->default_value;
 }
 
 
-void smspec_node_type::set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k) {
+void smspec_node::set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k) {
   lgr_ijk[0] = lgr_i;
   lgr_ijk[1] = lgr_j;
   lgr_ijk[2] = lgr_k;
 }
 
 
-void smspec_node_type::init_num( ecl_smspec_var_type var_type_) {
-  switch( var_type_ ) {
-  case(ECL_SMSPEC_WELL_VAR):
-    num = SMSPEC_NUMS_WELL;
-    break;
-  case(ECL_SMSPEC_GROUP_VAR):
-    num = SMSPEC_NUMS_GROUP;
-    break;
-  case(ECL_SMSPEC_FIELD_VAR):
-    num = SMSPEC_NUMS_FIELD;
-    break;
-  default:
-    num = SMSPEC_NUMS_INVALID;
-  }
+/*
+  Observe that field vectors like 'FOPT' and 'FOPR' will have the string 'FIELD'
+  in the 'WGNAME' vector, that is not internalized here.
+*/
+
+void smspec_node::set_wgname(const char * wgname) {
+  if (!wgname)
+    return;
+
+  if (IS_DUMMY_WELL(wgname))
+    return;
+
+  if (this->var_type == ECL_SMSPEC_WELL_VAR ||
+      this->var_type == ECL_SMSPEC_GROUP_VAR ||
+      this->var_type == ECL_SMSPEC_COMPLETION_VAR ||
+      this->var_type == ECL_SMSPEC_SEGMENT_VAR ||
+      this->var_type == ECL_SMSPEC_LOCAL_WELL_VAR)
+    this->wgname = wgname;
 }
 
-void smspec_node_type::set_num( const int grid_dims[3] , int num_) {
+void smspec_node::set_num( const int * grid_dims , int num_) {
   if (num_ == SMSPEC_NUMS_INVALID)
     util_abort("%s: explicitly trying to set nums == SMSPEC_NUMS_INVALID - seems like a bug?!\n",__func__);
 
-  num = num_;
+  this->num = num_;
   if ((var_type == ECL_SMSPEC_COMPLETION_VAR) || (var_type == ECL_SMSPEC_BLOCK_VAR)) {
-    int global_index = num - 1;
-    ijk[2] = global_index / ( grid_dims[0] * grid_dims[1] );   global_index -= ijk[2] * (grid_dims[0] * grid_dims[1]);
-    ijk[1] = global_index /  grid_dims[0] ;                    global_index -= ijk[1] * grid_dims[0];
-    ijk[0] = global_index;
+    int global_index = this->num - 1;
+    this->ijk[2] = global_index / ( grid_dims[0] * grid_dims[1] );   global_index -= this->ijk[2] * (grid_dims[0] * grid_dims[1]);
+    this->ijk[1] = global_index /  grid_dims[0] ;                    global_index -= this->ijk[1] * grid_dims[0];
+    this->ijk[0] = global_index;
 
-    ijk[0] += 1;
-    ijk[1] += 1;
-    ijk[2] += 1;
+    this->ijk[0] += 1;
+    this->ijk[1] += 1;
+    this->ijk[2] += 1;
   }
 }
 
-void smspec_node_type::decode_R1R2(int * r1 , int * r2) const {
+void smspec_node::decode_R1R2(int * r1 , int * r2) const {
   if (var_type == ECL_SMSPEC_REGION_2_REGION_VAR) {
-    *r1 = num % 32768;
-    *r2 = ((num - (*r1)) / 32768)-10;
+    *r1 = this->num % 32768;
+    *r2 = ((this->num - (*r1)) / 32768)-10;
   } else {
     *r1 = -1;
     *r2 = -1;
@@ -435,7 +546,7 @@ void smspec_node_type::decode_R1R2(int * r1 , int * r2) const {
 */
 
 
-void smspec_node_type::set_gen_keys( const char * key_join_string_) {
+void smspec_node::set_gen_keys( const char* key_join_string_) {
   switch( var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
     // KEYWORD:WGNAME:NUM
@@ -503,99 +614,65 @@ void smspec_node_type::set_gen_keys( const char * key_join_string_) {
 }
 
 
+/*
+  Observe the following:
 
-void smspec_node_type::common_init( ecl_smspec_var_type var_type_ , const char * keyword_ , const std::string& unit_ ) {
-  if (var_type == ECL_SMSPEC_INVALID_VAR) {
-    this->unit = unit_;
-    this->keyword = keyword_;
-    this->var_type = var_type_;
-    set_flags();
-    init_num( var_type_ );
-  } else
-    util_abort("%s: trying to re-init smspec node with keyword:%s - invalid \n",__func__ , keyword_ );
-}
+  1. There are many legitimate value types here which we do not handle, then we
+     just return false.
 
+  2. Observe that the LGR variables are not thoroughly checked; the only check
+     is that the well is not the dummy well. Experience has shown that there has
+     not been problems with SMSPEC files with invalid LGR and LGRIJK values;
+     that is therefor just assumed to be right.
 
-bool smspec_node_type::init__( ecl_smspec_var_type var_type ,
-                                           const char * wgname_  ,
-                                           const char * keyword_ ,
-                                           const char * unit    ,
-                                           const char * key_join_string ,
-                                           const int grid_dims[3] ,
-                                           int num) {
+*/
 
-  bool initOK    = true;
+ecl_smspec_var_type smspec_node::valid_type(const char * keyword, const char * wgname, int num) {
+  auto var_type = smspec_node::identify_var_type(keyword);
 
-  common_init( var_type , keyword_ , unit );
-  switch (var_type) {
-  case(ECL_SMSPEC_COMPLETION_VAR):
-    /* Completion variable : WGNAME & NUM */
-    set_num( grid_dims , num );
-    wgname = wgname_;
-    if (num < 0)
-      initOK = false;
-    break;
-  case(ECL_SMSPEC_GROUP_VAR):
-    /* Group variable : WGNAME */
-    wgname = wgname_;
-    break;
-  case(ECL_SMSPEC_WELL_VAR):
-    /* Well variable : WGNAME */
-    wgname = wgname_;
-    break;
-  case(ECL_SMSPEC_SEGMENT_VAR):
-    wgname = wgname_;
-    set_num( grid_dims , num );
-    if (num < 0)
-      initOK = false;
-    break;
-  case(ECL_SMSPEC_FIELD_VAR):
-    /* Field variable : */
-    /* Fully initialized with the smspec_common_init() function */
-    break;
-  case(ECL_SMSPEC_REGION_VAR):
-    /* Region variable : NUM */
-    set_num( grid_dims , num );
-    break;
-  case(ECL_SMSPEC_REGION_2_REGION_VAR):
-    /* Region 2 region variable : NUM */
-    set_num( grid_dims , num );
-    break;
-  case(ECL_SMSPEC_BLOCK_VAR):
-    /* A block variable : NUM*/
-    set_num( grid_dims , num );
-    break;
-  case(ECL_SMSPEC_MISC_VAR):
-    /* Misc variable : */
+  if (var_type == ECL_SMSPEC_MISC_VAR)
+    return var_type;
 
-    /*
-       For some keywords the SMSPEC files generated by Eclipse have a
-       non zero NUMS value although; it seems that value is required
-       for the generatd summaryfiles to display nicely in
-       e.g. S3GRAF.
-    */
+  if (var_type == ECL_SMSPEC_FIELD_VAR)
+    return var_type;
 
-    if (util_string_equal( keyword_ ,SMSPEC_TIME_KEYWORD))
-      set_num( grid_dims , SMSPEC_TIME_NUMS_VALUE );
+  if (var_type == ECL_SMSPEC_LOCAL_BLOCK_VAR)
+    return var_type;
 
-    if (util_string_equal( keyword_ ,SMSPEC_YEARS_KEYWORD))
-      set_num( grid_dims , SMSPEC_YEARS_NUMS_VALUE );
-
-    break;
-  case(ECL_SMSPEC_AQUIFER_VAR):
-    set_num( grid_dims , num );
-    break;
-  default:
-    /* Lots of legitimate alternatives which are not internalized. */
-    initOK = false;
-    break;
+  if (var_type == ECL_SMSPEC_WELL_VAR ||
+      var_type == ECL_SMSPEC_GROUP_VAR ||
+      var_type == ECL_SMSPEC_LOCAL_WELL_VAR ||
+      var_type == ECL_SMSPEC_LOCAL_COMPLETION_VAR) {
+    if (IS_DUMMY_WELL(wgname))
+      return ECL_SMSPEC_INVALID_VAR;
+    else
+      return var_type;
   }
 
-  if (initOK)
-    set_gen_keys( key_join_string );
+  if (var_type == ECL_SMSPEC_COMPLETION_VAR || var_type == ECL_SMSPEC_SEGMENT_VAR) {
+    if (IS_DUMMY_WELL(wgname))
+      return ECL_SMSPEC_INVALID_VAR;
 
-  return initOK;
+    if (num < 0)
+      return ECL_SMSPEC_INVALID_VAR;
+
+    return var_type;
+  }
+
+  if (var_type == ECL_SMSPEC_REGION_VAR ||
+      var_type == ECL_SMSPEC_REGION_2_REGION_VAR ||
+      var_type == ECL_SMSPEC_BLOCK_VAR ||
+      var_type == ECL_SMSPEC_AQUIFER_VAR) {
+
+    if (num < 0)
+      return ECL_SMSPEC_INVALID_VAR;
+
+    return var_type;
+  }
+
+  return ECL_SMSPEC_INVALID_VAR;
 }
+
 
 
 /**
@@ -612,15 +689,77 @@ bool smspec_node_type::init__( ecl_smspec_var_type var_type ,
    ecl_smspec_fread_header() functions in addition. UGGGLY
 */
 
-smspec_node_type::smspec_node_type() {}
+smspec_node::smspec_node(int param_index, const char * keyword, int num, const char * unit, const int grid_dims[3], float default_value, const char * key_join_string)
+  : smspec_node(param_index,
+                     keyword,
+                     nullptr,
+                     num,
+                     unit,
+                     grid_dims,
+                     default_value,
+                     key_join_string)
+{
+}
 
-smspec_node_type::smspec_node_type( ecl_smspec_var_type var_type_ ,
-                                    const char * wgname  ,
-                                    const char * keyword ,
-                                    const char * unit    ,
-                                    const char * key_join_string ,
-                                    const int grid_dims[3] ,
-                                    int num , int param_index_, float default_value_) {
+smspec_node::smspec_node(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string)
+  : smspec_node(param_index,
+                     keyword,
+                     nullptr,
+                     num,
+                     unit,
+                     nullptr,
+                     default_value,
+                     key_join_string)
+{
+}
+
+
+
+smspec_node::smspec_node(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char * key_join_string)
+  : smspec_node(param_index,
+                     keyword,
+                     wgname,
+                     0,
+                     unit,
+                     nullptr,
+                     default_value,
+                     key_join_string)
+{
+}
+
+smspec_node::smspec_node(int param_index, const char * keyword, const char * wgname, int num, const char * unit, float default_value, const char *  key_join_string)
+  : smspec_node(param_index,
+                     keyword,
+                     wgname,
+                     num,
+                     unit,
+                     nullptr,
+                     default_value,
+                     key_join_string)
+{}
+
+
+smspec_node::smspec_node(int param_index, const char * keyword, const char * unit, float default_value)
+  : smspec_node(param_index,
+                     keyword,
+                     nullptr,
+                     0,
+                     unit,
+                     nullptr,
+                     default_value,
+                     nullptr)
+{
+}
+
+
+smspec_node::smspec_node(int param_index,
+                                   const char * keyword,
+                                   const char * wgname  ,
+                                   int num,
+                                   const char * unit    ,
+                                   const int grid_dims[3] ,
+                                   float default_value,
+                                   const char * key_join_string) {
   /*
     Well and group names in the wgname parameter is quite messy. The
     situation is as follows:
@@ -651,102 +790,129 @@ smspec_node_type::smspec_node_type( ecl_smspec_var_type var_type_ ,
        completely.
   */
 
-  if (smspec_node_need_wgname(var_type_) && IS_DUMMY_WELL(wgname))
-    throw std::invalid_argument("Wrong input params to smspec_node constructor.");
+  this->var_type = this->valid_type(keyword, wgname, num);
+  if (this->var_type == ECL_SMSPEC_INVALID_VAR)
+    throw std::invalid_argument("Could not construct smspec_node from this input.");
 
-  if (!smspec_node_type_supported(var_type_))
-    throw std::invalid_argument("Wrong input params to smspec_node constructor.");
+  this->params_index = param_index;
+  this->default_value = default_value;
+  this->keyword = keyword;
+  this->unit = unit;
+  this->rate_variable = smspec_node_identify_rate(this->keyword.c_str());
+  this->total_variable = smspec_node_identify_total(this->keyword.c_str(), this->var_type);
+  this->historical = (this->keyword.back() == 'H');
+  this->set_wgname( wgname );
 
-  /*
-    TODO: The init function should be joined in this functions.
-  */
+  switch (this->var_type) {
+  case(ECL_SMSPEC_COMPLETION_VAR):
+    /* Completion variable : WGNAME & NUM */
+    set_num( grid_dims , num );
+    break;
+  case(ECL_SMSPEC_GROUP_VAR):
+    /* Group variable : WGNAME */
+    break;
+  case(ECL_SMSPEC_WELL_VAR):
+    /* Well variable : WGNAME */
+    break;
+  case(ECL_SMSPEC_SEGMENT_VAR):
+    set_num( grid_dims , num );
+    break;
+  case(ECL_SMSPEC_FIELD_VAR):
+    /* Field variable : */
+    /* Fully initialized with the smspec_common_init() function */
+    break;
+  case(ECL_SMSPEC_REGION_VAR):
+    /* Region variable : NUM */
+    set_num( grid_dims , num );
+    break;
+  case(ECL_SMSPEC_REGION_2_REGION_VAR):
+    /* Region 2 region variable : NUM */
+    set_num( grid_dims , num );
+    break;
+  case(ECL_SMSPEC_BLOCK_VAR):
+    /* A block variable : NUM*/
+    set_num( grid_dims , num );
+    break;
+  case(ECL_SMSPEC_MISC_VAR):
+    /* Misc variable : */
 
-  params_index  = param_index_;
-  default_value = default_value_;
+    /*
+       For some keywords the SMSPEC files generated by Eclipse have a
+       non zero NUMS value although; it seems that value is required
+       for the generatd summaryfiles to display nicely in
+       e.g. S3GRAF.
+    */
 
-  var_type      = ECL_SMSPEC_INVALID_VAR;
-  set_invalid_flags();
+    if (this->keyword == std::string(SMSPEC_TIME_KEYWORD))
+      set_num( grid_dims , SMSPEC_TIME_NUMS_VALUE );
 
-  bool initOK = init__( var_type_ , wgname , keyword , unit , key_join_string , grid_dims, num);
-  if (!initOK)
-    throw std::invalid_argument("Wrong input params to smspec_node constructor.");
+    if (this->keyword == std::string(SMSPEC_YEARS_KEYWORD))
+      set_num( grid_dims , SMSPEC_YEARS_NUMS_VALUE );
+
+    break;
+  case(ECL_SMSPEC_AQUIFER_VAR):
+    set_num( grid_dims , num );
+    break;
+  default:
+    throw std::invalid_argument("Should not be here ... ");
+    break;
+  }
+
+  set_gen_keys( key_join_string );
 }
 
+smspec_node::smspec_node( int param_index_,
+                                    const char * keyword_  ,
+                                    const char * wgname_ ,
+                                    const char * unit_    ,
+                                    const char * lgr_ ,
+                                    int   lgr_i, int lgr_j , int lgr_k,
+                                    float default_value_,
+                                    const char * key_join_string_) {
 
-void smspec_node_type::init_lgr( ecl_smspec_var_type var_type ,
-                                 const char * wgname_  ,
-                                 const char * keyword_ ,
-                                 const char * unit    ,
-                                 const char * lgr ,
-                                 const char * key_join_string ,
-                                 int   lgr_i, int lgr_j , int lgr_k
-                                 ) {
-  bool initOK = true;
-  bool wgnameOK = true;
-  if ((wgname_ != NULL) && (IS_DUMMY_WELL(wgname_)))
-    wgnameOK = false;
+  this->var_type = this->valid_type(keyword_, wgname_, -1);
+  printf("keyword: %s\n",keyword_);
+  if (this->var_type == ECL_SMSPEC_INVALID_VAR)
+    throw std::invalid_argument("Could not construct smspec_node from this input.");
 
-  common_init( var_type , keyword_ , unit );
-  switch (var_type) {
+  this->params_index = param_index_;
+  this->default_value = default_value_;
+  this->keyword = keyword_;
+  this->wgname = wgname_;
+  this->unit = unit_;
+  this->rate_variable = smspec_node_identify_rate(this->keyword.c_str());
+  this->total_variable = smspec_node_identify_total(this->keyword.c_str(), this->var_type);
+  this->historical = (this->keyword.back() == 'H');
+  this->lgr_name = lgr_;
+
+  switch (this->var_type) {
   case(ECL_SMSPEC_LOCAL_WELL_VAR):
-    wgname = wgname_;
-    lgr_name = lgr;
-    initOK = wgnameOK;
     break;
   case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
-    lgr_name = lgr;
     set_lgr_ijk( lgr_i, lgr_j , lgr_k );
     break;
   case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
-    lgr_name = lgr;
-    wgname = wgname_;
     set_lgr_ijk( lgr_i, lgr_j , lgr_k );
-    initOK = wgnameOK;
     break;
   default:
-    util_abort("%s: internal error:  in LGR function with  non-LGR keyword:%s \n",__func__ , keyword_);
+    throw std::invalid_argument("Should not be here .... ");
   }
 
-  if (initOK)
-    set_gen_keys( key_join_string );
+  set_gen_keys( key_join_string_ );
 }
 
-smspec_node_type::smspec_node_type( ecl_smspec_var_type var_type_ ,
-                                    const char * wgname_  ,
-                                    const char * keyword_ ,
-                                    const char * unit_    ,
-                                    const char * lgr_ ,
-                                    const char * key_join_string_ ,
-                                    int   lgr_i, int lgr_j , int lgr_k,
-                                    int param_index_ , float default_value_) {
-  params_index  = param_index_;
-  default_value = default_value_;
-
-  var_type      = ECL_SMSPEC_INVALID_VAR;
-  set_invalid_flags();
-
-  init_lgr( var_type_ , wgname_ , keyword_ , unit_ , lgr_ , key_join_string_ , lgr_i, lgr_j , lgr_k);
-  
-}
-
-
-smspec_node_type * smspec_node_type::copy() const {
-  smspec_node_type * copy = new smspec_node_type();
-  *copy = *this;
-  return copy;
-}
 
 
 
 /*****************************************************************/
 
-int smspec_node_type::get_params_index() const {
+int smspec_node::get_params_index() const {
   return this->params_index;
 }
 
-void smspec_node_type::set_params_index( int params_index_) {
-  this->params_index = params_index_;
-}
+// void smspec_node::set_params_index( int params_index_) {
+  // this->params_index = params_index_;
+// }
 
 
 namespace {
@@ -761,58 +927,58 @@ namespace {
 }
 
 
-const char * smspec_node_type::get_gen_key1() const {
+const char * smspec_node::get_gen_key1() const {
   return get_cstring( this->gen_key1 );
 }
 
-const char * smspec_node_type::get_gen_key2() const {
+const char * smspec_node::get_gen_key2() const {
   return get_cstring( this->gen_key2 );
 }
 
-const char * smspec_node_type::get_wgname() const {
+const char * smspec_node::get_wgname() const {
   return get_cstring( this->wgname );
 }
 
-const char * smspec_node_type::get_keyword() const {
+const char * smspec_node::get_keyword() const {
   return get_cstring( this->keyword );
 }
 
-ecl_smspec_var_type smspec_node_type::get_var_type() const {
+ecl_smspec_var_type smspec_node::get_var_type() const {
   return this->var_type;
 }
 
-int smspec_node_type::get_num() const {
+int smspec_node::get_num() const {
   return this->num;
 }
 
-bool smspec_node_type::is_rate() const {
+bool smspec_node::is_rate() const {
   return this->rate_variable;
 }
 
-bool smspec_node_type::is_total() const {
+bool smspec_node::is_total() const {
   return this->total_variable;
 }
 
-bool smspec_node_type::is_historical() const {
+bool smspec_node::is_historical() const {
   return this->historical;
 }
 
-const char  * smspec_node_type::get_unit() const {
+const char  * smspec_node::get_unit() const {
   return this->unit.c_str();
 }
 
 // Will be garbage for smspec_nodes which do not have i,j,k
-const std::array<int,3>& smspec_node_type::get_ijk() const {
+const std::array<int,3>& smspec_node::get_ijk() const {
   return this->ijk;
 }
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
-const std::string& smspec_node_type::get_lgr_name() const {
-  return this->lgr_name;
+const char * smspec_node::get_lgr_name() const {
+  return get_cstring(this->lgr_name);
 }
 
 // Will be garbage for smspec_nodes which are not related to an LGR.
-const std::array<int,3>&  smspec_node_type::get_lgr_ijk() const {
+const std::array<int,3>&  smspec_node::get_lgr_ijk() const {
   return this->lgr_ijk;
 }
 
@@ -821,7 +987,7 @@ const std::array<int,3>&  smspec_node_type::get_lgr_ijk() const {
   of type ECL_SMSPEC_REGION_2_REGION_VAR.
 */
 
-int smspec_node_type::get_R1() const {
+int smspec_node::get_R1() const {
   if (var_type == ECL_SMSPEC_REGION_2_REGION_VAR) {
     int r1,r2;
     decode_R1R2( &r1 , &r2);
@@ -830,7 +996,7 @@ int smspec_node_type::get_R1() const {
     return -1;
 }
 
-int smspec_node_type::get_R2() const {
+int smspec_node::get_R2() const {
   if (var_type == ECL_SMSPEC_REGION_2_REGION_VAR) {
     int r1,r2;
     decode_R1R2( &r1 , &r2);
@@ -840,7 +1006,7 @@ int smspec_node_type::get_R2() const {
 }
 
 
-bool smspec_node_type::need_nums() const {
+bool smspec_node::need_nums() const {
   /*
     Check if this node needs the nums field; if at least one of the
     nodes need the NUMS field must be stored when writing a SMSPEC
@@ -864,7 +1030,7 @@ bool smspec_node_type::need_nums() const {
 }
 
 
-void smspec_node_type::fprintf__( FILE * stream) const {
+void smspec_node::fprintf__( FILE * stream) const {
   fprintf(stream, "KEYWORD: %s \n", this->keyword.c_str());
   fprintf(stream, "WGNAME : %s \n", this->wgname.c_str());
   fprintf(stream, "UNIT   : %s \n", this->unit.c_str());
@@ -872,30 +1038,12 @@ void smspec_node_type::fprintf__( FILE * stream) const {
   fprintf(stream, "NUM    : %d \n\n", this->num);
 }
 
+
+namespace {
 /*
   MISC variables are generally sorted to the end of the list,
   but some special case variables come at the very beginning.
 */
-
-int smspec_node_type::cmp_MISC__( const smspec_node_type * node2) const {
-  static const std::set<std::string> early_vars = {"TIME", "DAYS", "DAY", "MONTH", "YEAR", "YEARS"};
-
-  if (smspec_node_type::equal_MISC( this, node2) )
-    return 0;
-
-  bool node1_early = !( early_vars.find(this->keyword) == early_vars.end() );
-  bool node2_early = !( early_vars.find(node2->keyword) == early_vars.end() );
-
-
-  if (node1_early && !node2_early)
-    return -1;
-
-  if (!node1_early && node2_early)
-    return 1;
-
-  return this->keyword.compare(node2->keyword);
-}
-
 
 int int_cmp(int v1, int v2) {
   if (v1 < v2)
@@ -907,158 +1055,193 @@ int int_cmp(int v1, int v2) {
   return 0;
 }
 
-int smspec_node_type::cmp_LGRIJK__( const smspec_node_type * node2) const {
-  int i_cmp = int_cmp( this->lgr_ijk[0] , node2->lgr_ijk[0]);
+
+int cmp_MISC( const smspec_node& node1, const smspec_node& node2) {
+  static const std::set<std::string> early_vars = {"TIME", "DAYS", "DAY", "MONTH", "YEAR", "YEARS"};
+
+  if (&node1 == &node2)
+    return 0;
+
+  bool node1_early = !( early_vars.find(node1.get_keyword()) == early_vars.end() );
+  bool node2_early = !( early_vars.find(node2.get_keyword()) == early_vars.end() );
+
+
+  if (node1_early && !node2_early)
+    return -1;
+
+  if (!node1_early && node2_early)
+    return 1;
+
+  return strcmp(node1.get_keyword(), node2.get_keyword());
+}
+
+
+int cmp_LGRIJK( const smspec_node& node1, const smspec_node& node2) {
+  const auto& ijk1 = node1.get_lgr_ijk();
+  const auto& ijk2 = node2.get_lgr_ijk();
+
+  int i_cmp = int_cmp( ijk1[0] , ijk2[0]);
   if (i_cmp != 0)
     return i_cmp;
 
-  int j_cmp = int_cmp(this->lgr_ijk[1] , node2->lgr_ijk[1]);
+  int j_cmp = int_cmp(ijk1[1] , ijk2[1]);
   if (j_cmp != 0)
     return j_cmp;
 
-  return int_cmp( this->lgr_ijk[2] , node2->lgr_ijk[2]);
+  return int_cmp( ijk1[2] , ijk2[2]);
 }
 
-int smspec_node_type::cmp_KEYWORD_LGR_LGRIJK__( const smspec_node_type * node2) const {
-  int keyword_cmp = this->keyword.compare(node2->keyword);
+int cmp_KEYWORD_LGR_LGRIJK( const smspec_node& node1, const smspec_node& node2) {
+  int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int lgr_cmp = this->lgr_name.compare( node2->lgr_name );
+  int lgr_cmp = strcmp(node1.get_lgr_name(), node2.get_lgr_name());
   if (lgr_cmp != 0)
     return lgr_cmp;
 
-  return smspec_node_type::cmp_LGRIJK( this, node2);
+  return cmp_LGRIJK( node1, node2);
 }
 
-int smspec_node_type::cmp_KEYWORD_WGNAME_NUM__(const smspec_node_type * node2) const {
-  int keyword_cmp = this->keyword.compare(node2->keyword);
+int cmp_KEYWORD_WGNAME_NUM(const smspec_node& node1, const smspec_node& node2) {
+  int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int wgname_cmp = this->wgname.compare(node2->wgname);
+  int wgname_cmp = strcmp(node1.get_wgname(), node2.get_wgname());
   if (wgname_cmp != 0)
     return wgname_cmp;
 
-  return int_cmp( this->num , node2->num);
+  return int_cmp( node1.get_num() , node2.get_num());
 }
 
-int smspec_node_type::cmp_KEYWORD_WGNAME_LGR__( const smspec_node_type * node2) const {
-  int keyword_cmp = this->keyword.compare(node2->keyword);
+int cmp_KEYWORD_WGNAME_LGR( const smspec_node& node1, const smspec_node& node2) {
+  int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int wgname_cmp = this->wgname.compare(node2->wgname);
+  int wgname_cmp = strcmp(node1.get_wgname(), node2.get_wgname());
   if (wgname_cmp != 0)
     return wgname_cmp;
 
-  return this->lgr_name.compare(node2->lgr_name);
+  return strcmp(node1.get_lgr_name(), node2.get_lgr_name());
 }
 
-int smspec_node_type::cmp_KEYWORD_WGNAME_LGR_LGRIJK__( const smspec_node_type * node2) const {
-  int keyword_cmp = this->keyword.compare(node2->keyword);
+int cmp_KEYWORD_WGNAME_LGR_LGRIJK( const smspec_node& node1, const smspec_node& node2) {
+  int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  int wgname_cmp = this->wgname.compare(node2->wgname);
+  int wgname_cmp = strcmp(node1.get_wgname(), node2.get_wgname());
   if (wgname_cmp != 0)
     return wgname_cmp;
 
-  int lgr_cmp = this->lgr_name.compare(node2->lgr_name);
+  int lgr_cmp = strcmp(node1.get_lgr_name(), node2.get_lgr_name());
   if (lgr_cmp != 0)
     return lgr_cmp;
 
-  return smspec_node_type::cmp_LGRIJK( this, node2);
+  return cmp_LGRIJK( node1, node2);
 }
 
-int smspec_node_type::cmp_KEYWORD_WGNAME__( const smspec_node_type * node2) const {
-  int keyword_cmp = this->keyword.compare(node2->keyword);
+int cmp_KEYWORD_WGNAME( const smspec_node& node1, const smspec_node& node2) {
+  int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  if (IS_DUMMY_WELL( this->wgname.c_str() )) {
-    if (IS_DUMMY_WELL( node2->wgname.c_str() ))
+  if (IS_DUMMY_WELL( node1.get_wgname() )) {
+    if (IS_DUMMY_WELL( node2.get_wgname() ))
       return 0;
     else
       return 1;
   }
 
-  if (IS_DUMMY_WELL( node2->wgname.c_str() ))
+  if (IS_DUMMY_WELL( node2.get_wgname() ))
     return -1;
 
-  return this->wgname.compare(node2->wgname);
+  return strcmp(node1.get_wgname(), node2.get_wgname());
+}
+
+int cmp_KEYWORD( const smspec_node& node1, const smspec_node& node2) {
+  return strcmp(node1.get_keyword(), node2.get_keyword());
 }
 
 
-int smspec_node_type::cmp_KEYWORD_NUM__( const smspec_node_type * node2) const {
-  int keyword_cmp = this->keyword.compare(node2->keyword);
+
+int cmp_KEYWORD_NUM( const smspec_node& node1, const smspec_node& node2) {
+  int keyword_cmp = strcmp(node1.get_keyword(), node2.get_keyword());
   if (keyword_cmp != 0)
     return keyword_cmp;
 
-  return int_cmp( this->num , node2->num);
+  return int_cmp( node1.get_num() , node2.get_num());
 }
 
 
-int smspec_node_type::cmp_key1__( const smspec_node_type * node2) const {
-  if (this->gen_key1.empty()) {
-    if (node2->gen_key1.empty())
+int cmp_key1( const smspec_node& node1, const smspec_node& node2) {
+  if (node1.get_gen_key1() == NULL) {
+    if (node2.get_gen_key1() == NULL)
       return 0;
     else
       return -1;
-  } else if (node2->gen_key1.empty()) {
+  } else if (node2.get_gen_key1() == NULL)
     return 1;
-  }
-  return util_strcmp_int( this->gen_key1.c_str() , node2->gen_key1.c_str() );
+
+  return util_strcmp_int( node1.get_gen_key1() , node2.get_gen_key1() );
+}
 }
 
-int smspec_node_type::cmp__(const smspec_node_type * node2) const {
+
+int smspec_node::cmp(const smspec_node& node1, const smspec_node& node2) {
   /* 1: Start with special casing for the MISC variables. */
-  if ((this->var_type == ECL_SMSPEC_MISC_VAR) || (node2->var_type == ECL_SMSPEC_MISC_VAR))
-    return smspec_node_type::cmp_MISC( this , node2 );
+  if ((node1.var_type == ECL_SMSPEC_MISC_VAR) || (node2.var_type == ECL_SMSPEC_MISC_VAR))
+    return cmp_MISC( node1 , node2 );
 
   /* 2: Sort according to variable type */
-  if (this->var_type < node2->var_type)
+  if (node1.var_type < node2.var_type)
     return -1;
 
-  if (this->var_type > node2->var_type)
+  if (node1.var_type > node2.var_type)
     return 1;
 
   /* 3: Internal sort of variables of the same type. */
-  switch (this->var_type) {
+  switch (node1.var_type) {
 
   case( ECL_SMSPEC_FIELD_VAR):
-    return smspec_node_type::cmp_KEYWORD( this, node2);
+    return cmp_KEYWORD( node1, node2);
 
   case( ECL_SMSPEC_WELL_VAR):
   case( ECL_SMSPEC_GROUP_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME( this, node2);
+    return cmp_KEYWORD_WGNAME( node1, node2);
 
   case( ECL_SMSPEC_BLOCK_VAR):
   case( ECL_SMSPEC_REGION_VAR):
   case( ECL_SMSPEC_REGION_2_REGION_VAR):
   case( ECL_SMSPEC_AQUIFER_VAR):
-    return smspec_node_type::cmp_KEYWORD_NUM( this, node2);
+    return cmp_KEYWORD_NUM( node1, node2);
 
   case( ECL_SMSPEC_COMPLETION_VAR):
   case( ECL_SMSPEC_SEGMENT_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME_NUM( this, node2);
+    return cmp_KEYWORD_WGNAME_NUM( node1, node2);
 
   case (ECL_SMSPEC_NETWORK_VAR):
-    return smspec_node_type::cmp_key1( this, node2);
+    return cmp_key1( node1, node2);
 
   case( ECL_SMSPEC_LOCAL_BLOCK_VAR):
-    return smspec_node_type::cmp_KEYWORD_LGR_LGRIJK( this, node2);
+    return cmp_KEYWORD_LGR_LGRIJK( node1, node2);
 
   case( ECL_SMSPEC_LOCAL_WELL_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME_LGR( this, node2);
+    return cmp_KEYWORD_WGNAME_LGR( node1, node2);
 
   case( ECL_SMSPEC_LOCAL_COMPLETION_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME_LGR_LGRIJK( this, node2);
+    return cmp_KEYWORD_WGNAME_LGR_LGRIJK( node1, node2);
 
   default:
     /* Should not really end up here. */
-    return smspec_node_type::cmp_key1( this, node2);
+    return cmp_key1( node1, node2);
   }
+}
+
+int smspec_node::cmp(const smspec_node& node2) const {
+  return smspec_node::cmp(*this, node2);
 }
 
 
@@ -1068,7 +1251,7 @@ int smspec_node_type::cmp__(const smspec_node_type * node2) const {
 
 
 void smspec_node_free( void * index ) {
-  delete static_cast<ecl::smspec_node_type*>(index);
+  delete static_cast<ecl::smspec_node*>(index);
 }
 
 void smspec_node_free__( void * arg ) {
@@ -1076,131 +1259,118 @@ void smspec_node_free__( void * arg ) {
 }
 
 float smspec_node_get_default( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_default();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_default();
 }
 
 int smspec_node_get_params_index( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_params_index();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_params_index();
 }
 
-void smspec_node_set_params_index( void * smspec_node , int params_index) {
-  static_cast<ecl::smspec_node_type*>(smspec_node)->set_params_index( params_index );
-}
+// void smspec_node_set_params_index( void * smspec_node , int params_index) {
+  // static_cast<ecl::smspec_node*>(smspec_node)->set_params_index( params_index );
+// }
 
 const char * smspec_node_get_gen_key1( const void * smspec_node) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_gen_key1();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_gen_key1();
 }
 
 const char * smspec_node_get_gen_key2( const void * smspec_node) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_gen_key2();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_gen_key2();
 }
 
 const char * smspec_node_get_wgname( const void * smspec_node) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_wgname();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_wgname();
 }
 
 const char * smspec_node_get_keyword( const void * smspec_node) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_keyword( );
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_keyword( );
 }
 
 ecl_smspec_var_type smspec_node_get_var_type( const void * smspec_node) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_var_type();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_var_type();
 }
 
 int smspec_node_get_num( const void * smspec_node) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_num();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_num();
 }
 
 bool smspec_node_is_rate( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->is_rate();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->is_rate();
 }
 
 bool smspec_node_is_total( const void * smspec_node ){
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->is_total();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->is_total();
 }
 
 bool smspec_node_is_historical( const void * smspec_node ){
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->is_historical();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->is_historical();
 }
 
 const char  * smspec_node_get_unit( const void * smspec_node) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_unit();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_unit();
 }
 
 // Will be garbage for smspec_nodes which do not have i,j,k
 const int* smspec_node_get_ijk( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_ijk().data();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_ijk().data();
 }
 
 // Will be NULL for smspec_nodes which are not related to an LGR.
 const char* smspec_node_get_lgr_name( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_lgr_name().c_str();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_lgr_name();
 }
 
 
 // Will be garbage for smspec_nodes which are not related to an LGR.
 const int* smspec_node_get_lgr_ijk( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_lgr_ijk().data();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_lgr_ijk().data();
 }
 
 int smspec_node_get_R1( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_R1();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_R1();
 }
 
 
 int smspec_node_get_R2( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_R2();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->get_R2();
 }
 
 bool smspec_node_need_nums( const void * smspec_node ) {
-  return static_cast<const ecl::smspec_node_type*>(smspec_node)->need_nums();
+  return static_cast<const ecl::smspec_node*>(smspec_node)->need_nums();
 }
 
 void smspec_node_fprintf( const void * smspec_node , FILE * stream) {
-  static_cast<const ecl::smspec_node_type*>(smspec_node)->fprintf__(stream);
+  static_cast<const ecl::smspec_node*>(smspec_node)->fprintf__(stream);
 }
 
 int smspec_node_cmp( const void * node1, const void * node2) {
-  return ecl::smspec_node_type::cmp(static_cast<const ecl::smspec_node_type*>(node1), static_cast<const ecl::smspec_node_type*>(node2));
+  return ecl::smspec_node::cmp(static_cast<const ecl::smspec_node*>(node1), static_cast<const ecl::smspec_node*>(node2));
 }
 
 int smspec_node_cmp__( const void * node1, const void * node2) {
   return smspec_node_cmp(node1, node2);
 }
 
-/*
-  This function should be removed from the public API.
-*/
-void smspec_node_init( void * smspec_node,
-                       ecl_smspec_var_type var_type ,
-                       const char * wgname  ,
-                       const char * keyword ,
-                       const char * unit    ,
-                       const char * key_join_string ,
-                       const int grid_dims[3] ,
-                       int num) {
 
-  static_cast<ecl::smspec_node_type*>(smspec_node)->init__( var_type,
-                                              wgname,
-                                              keyword,
-                                              unit,
-                                              key_join_string,
-                       grid_dims,
-                       num );
+void * smspec_node_alloc( int param_index,
+                          const char * keyword ,
+                          const char * wgname,
+                          int num,
+                          const char * unit    ,
+                          const int grid_dims[3] ,
+                          float default_value,
+                          const char * key_join_string) {
 
-}
-
-
-void * smspec_node_alloc( ecl_smspec_var_type var_type ,
-                                      const char * wgname  ,
-                                      const char * keyword ,
-                                      const char * unit    ,
-                                      const char * key_join_string ,
-                                      const int grid_dims[3] ,
-                                      int num , int param_index, float default_value) {
-  ecl::smspec_node_type * node = NULL;
+  ecl::smspec_node * node = NULL;
   try {
-    node = new ecl::smspec_node_type(var_type, wgname, keyword, unit, key_join_string, grid_dims, num, param_index, default_value);
+    node = new ecl::smspec_node(param_index,
+                                     keyword,
+                                     wgname,
+                                     num,
+                                     unit,
+                                     grid_dims,
+                                     default_value,
+                                     key_join_string);
   }
   catch (const std::invalid_argument& e) {
     node = NULL;
@@ -1218,26 +1388,21 @@ void * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                           int   lgr_i, int lgr_j , int lgr_k,
                                           int param_index , float default_value) {
 
-  return new ecl::smspec_node_type( var_type, wgname, keyword, unit, lgr, key_join_string, lgr_i, lgr_j, lgr_k, param_index, default_value);
+    return new ecl::smspec_node( param_index, keyword, wgname, unit, lgr, lgr_i, lgr_j, lgr_k, default_value, key_join_string);
 }
 
-
-void * smspec_node_alloc_copy( const void * node ) {
-  if( !node ) return NULL;
-  return static_cast<const ecl::smspec_node_type*>(node)->copy();
-}
 
 
 bool smspec_node_equal( const void * node1,  const void * node2) {
-  return ecl::smspec_node_type::cmp( static_cast<const ecl::smspec_node_type*>(node1) , static_cast<const ecl::smspec_node_type*>(node2) ) == 0;
+  return ecl::smspec_node::cmp( static_cast<const ecl::smspec_node*>(node1) , static_cast<const ecl::smspec_node*>(node2) ) == 0;
 }
 
 
 bool smspec_node_gt( const void * node1,  const void * node2) {
-  return ecl::smspec_node_type::cmp( static_cast<const ecl::smspec_node_type*>(node1) , static_cast<const ecl::smspec_node_type*>(node2) ) > 0;
+  return ecl::smspec_node::cmp( static_cast<const ecl::smspec_node*>(node1) , static_cast<const ecl::smspec_node*>(node2) ) > 0;
 }
 
 bool smspec_node_lt( const void * node1,  const void * node2) {
-  return ecl::smspec_node_type::cmp( static_cast<const ecl::smspec_node_type*>(node1) , static_cast<const ecl::smspec_node_type*>(node2) ) < 0;
+  return ecl::smspec_node::cmp( static_cast<const ecl::smspec_node*>(node1) , static_cast<const ecl::smspec_node*>(node2) ) < 0;
 }
 

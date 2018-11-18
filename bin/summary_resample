@@ -23,7 +23,6 @@ else:
     end_time = input_case.get_end_time()
     time_points = TimeVector.create_linear(CTime(start_time), CTime(end_time), args.num_timestep)
 
-
 sys.stderr.write("The summary_resample code is partly broken as of October 24.th 2018. Should be fixed\n")
 output_case = input_case.resample(args.output_case, time_points)
 output_case.fwrite( )

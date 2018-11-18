@@ -23,17 +23,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <string>
+#include <array>
+
 #include <ert/util/type_macros.hpp>
 
 #include <ert/ecl/smspec_node.h>
 
-#ifdef __cplusplus
-#include <string>
-#include <array>
 
 namespace ecl {
 
-  class smspec_node_type {
+  class smspec_node {
     private:
 
       std::string            wgname;
@@ -55,102 +55,47 @@ namespace ecl {
       int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
       float                  default_value;      /* Default value for this variable. */
 
-      smspec_node_type();
-
-      void set_invalid_flags();
-      void init_lgr( ecl_smspec_var_type var_type ,
-                     const char * wgname  ,
-                     const char * keyword ,
-                     const char * unit    ,
-                       const char * lgr ,
-                     const char * key_join_string ,
-                     int   lgr_i, int lgr_j , int lgr_k );
-      void common_init( ecl_smspec_var_type var_type_ , const char * keyword , const std::string& unit );
+      static ecl_smspec_var_type identify_special_var( const char * var );
+      void set_wgname(const char * wgname);
       void set_num( const int grid_dims[3] , int num_);
-      void set_keyword( const std::string& keyword_ );
-      void set_flags();
-      void init_num( ecl_smspec_var_type var_type_);
       void set_gen_keys( const char * key_join_string_);
       void decode_R1R2( int * r1 , int * r2)  const;
       void set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k);
 
+  public:
 
-      int cmp__(const smspec_node_type * node2) const;
-      int cmp_KEYWORD_WGNAME_NUM__(const smspec_node_type * node2) const;
-      static int cmp_KEYWORD_WGNAME_NUM( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_KEYWORD_WGNAME_NUM__(node2);
-      }
-      int cmp_KEYWORD_WGNAME_LGR__( const smspec_node_type * node2) const;
-      static int cmp_KEYWORD_WGNAME_LGR( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_KEYWORD_WGNAME_LGR__(node2);
-      }
-      int cmp_KEYWORD_WGNAME_LGR_LGRIJK__( const smspec_node_type * node2) const;
-      static int cmp_KEYWORD_WGNAME_LGR_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_KEYWORD_WGNAME_LGR_LGRIJK__(node2);
-      }
-      int cmp_KEYWORD_WGNAME__( const smspec_node_type * node2) const;
-      static int cmp_KEYWORD_WGNAME( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_KEYWORD_WGNAME__(node2);
-      }
-      static bool equal_MISC( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->keyword == node2->keyword;
-      }
-      int cmp_MISC__( const smspec_node_type * node2) const;
-      static int cmp_MISC( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_MISC__(node2);
-      }
-      int cmp_LGRIJK__( const smspec_node_type * node2) const;
-      static int cmp_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_LGRIJK__(node2);
-      }
-      int cmp_KEYWORD_LGR_LGRIJK__( const smspec_node_type * node2) const;
-      static int cmp_KEYWORD_LGR_LGRIJK( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_KEYWORD_LGR_LGRIJK__(node2);
-      }
-      int cmp_KEYWORD_NUM__( const smspec_node_type * node2) const;
-      static int cmp_KEYWORD_NUM( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_KEYWORD_NUM__(node2);
-      }
-      static int cmp_KEYWORD( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->keyword.compare(node2->keyword);
-      }
-      int cmp_key1__( const smspec_node_type * node2) const;
-      static int cmp_key1( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp_key1__(node2);
-      }
+      static ecl_smspec_var_type valid_type(const char * keyword, const char * wgname, int num);
+      int cmp(const smspec_node& node2) const;
+      static int cmp(const smspec_node& node1, const smspec_node& node2);
 
-    public:
-
-      smspec_node_type(ecl_smspec_var_type var_type ,
-                       const char * wgname  ,
-                       const char * keyword ,
+      smspec_node(int param_index,
+                       const char * keyword  ,
+                       const char * wgname,
+                       int num,
                        const char * unit    ,
-                       const char * key_join_string ,
                        const int grid_dims[3] ,
-                       int num , int param_index, float default_value);
+                       float default_value,
+                       const char * key_join_string);
 
-      smspec_node_type(ecl_smspec_var_type var_type ,
-                       const char * wgname  ,
+      smspec_node(int param_index,
                        const char * keyword ,
+                       const char * wgname  ,
                        const char * unit    ,
-                       const char * lgr ,
-                       const char * key_join_string ,
+                       const char * lgr     ,
                        int   lgr_i, int lgr_j , int lgr_k,
-                       int param_index , float default_value);
+                       float default_value,
+                       const char * key_join_string);
 
-      bool init__( ecl_smspec_var_type var_type ,
-                   const char * wgname  ,
-                   const char * keyword ,
-                   const char * unit    ,
-                   const char * key_join_string ,
-                   const int grid_dims[3] ,
-                   int num);
+      smspec_node(int param_index, const char * keyword, const char * unit, float default_value);
+      smspec_node(int param_index, const char * keyword, int num, const char * unit, const int grid_dims[3], float default_value, const char * key_join_string);
+      smspec_node(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string);
+      smspec_node(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char *  key_join_string);
+      smspec_node(int param_index, const char * keyword, const char * wgname, int num, const char * unit, float default_value, const char *  key_join_string);
 
+      static ecl_smspec_var_type identify_var_type(const char * var);
 
-      smspec_node_type * copy() const;
-
-      static int cmp( const smspec_node_type * node1, const smspec_node_type * node2) {
-        return node1->cmp__(node2);
+      static int cmp( const smspec_node * node1, const smspec_node * node2) {
+        return node1->cmp(*node2);
       }
 
       int                   get_R1() const;
@@ -168,17 +113,13 @@ namespace ecl {
       bool                  need_nums() const;
       void                  fprintf__( FILE * stream) const;
       int                   get_params_index() const;
-      void                  set_params_index( int params_index_);
       float                 get_default() const;
       const                 std::array<int,3>& get_ijk() const;
-      const                 std::string& get_lgr_name() const;
+      const char          * get_lgr_name() const;
       const                 std::array<int,3>&  get_lgr_ijk() const;
 
   };
 
 }
 
-typedef class ecl::smspec_node_type smspec_node_type;
-
-#endif
 #endif

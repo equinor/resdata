@@ -76,13 +76,14 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
                          const int grid_dims[3] ,
                          int num);
 
-  void * smspec_node_alloc( ecl_smspec_var_type var_type ,
-                                        const char * wgname  ,
-                                        const char * keyword ,
-                                        const char * unit    ,
-                                        const char * key_join_string ,
-                                        const int grid_dims[3] ,
-                                        int num , int param_index, float default_value);
+  void * smspec_node_alloc( int param_index,
+                            const char * keyword ,
+                            const char * wgname,
+                            int num,
+                            const char * unit    ,
+                            const int grid_dims[3] ,
+                            float default_value,
+                            const char * key_join_string);
 
   void * smspec_node_alloc_lgr( ecl_smspec_var_type var_type ,
                                             const char * wgname  ,
