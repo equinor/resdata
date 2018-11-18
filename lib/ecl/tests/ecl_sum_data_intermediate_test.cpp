@@ -81,16 +81,16 @@ void write_CASE1(bool unified) {
   int num_dates = 100;
   double ministep_length = 86400; // seconds in a day
 
-  ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
-  ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-  ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
+  const ecl::smspec_node * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+  const ecl::smspec_node * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+  const ecl::smspec_node * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 1 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , (1 + report_step) * 100 );
-        ecl_sum_tstep_set_from_node( tstep , node2 , (1 + report_step) * 100 + 10.0 );
-        ecl_sum_tstep_set_from_node( tstep , node3 , (1 + report_step) * 100 + 20.0 );
+        ecl_sum_tstep_set_from_node( tstep , *node1 , (1 + report_step) * 100 );
+        ecl_sum_tstep_set_from_node( tstep , *node2 , (1 + report_step) * 100 + 10.0 );
+        ecl_sum_tstep_set_from_node( tstep , *node3 , (1 + report_step) * 100 + 20.0 );
       }
       sim_seconds += ministep_length * 3;
   }
@@ -144,14 +144,14 @@ void write_CASE2(bool unified) {
     double sim_seconds = ministep_length * 2.5 * 3;
     ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( "CASE2" , "CASE1", false , true , ":" , start_time , true , 10 , 10 , 10 );
 
-    ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-    ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+    const ecl::smspec_node * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+    const ecl::smspec_node * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
 
     for (int report_step = 1; report_step <= num_dates; report_step++) {
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 3 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , report_step*1000);
-        ecl_sum_tstep_set_from_node( tstep , node2 , report_step*1000 + 100);
+        ecl_sum_tstep_set_from_node( tstep , *node1 , report_step*1000);
+        ecl_sum_tstep_set_from_node( tstep , *node2 , report_step*1000 + 100);
       }
       sim_seconds += ministep_length * 3;
     }
@@ -183,8 +183,8 @@ void verify_CASE3(int length) {
     ieq(d,2,(2 - i)*10  + 300);
 
     if (i == 0) {
-      const ecl::smspec_node_type * node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
-      double default_value = smspec_node_get_default(node);
+      const ecl::smspec_node& node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
+      double default_value = node.get_default();
       ieq(d,3,default_value);
       ieq(d,4,default_value);
     } else {
@@ -198,7 +198,7 @@ void verify_CASE3(int length) {
     double_vector_free(d);
   }
 
-  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true);
   double frame[27]; //3 vectors X 9 data points pr. vector
   ecl_sum_init_double_frame(sum, vector, frame);
   ecl_sum_vector_free(vector);
@@ -216,16 +216,16 @@ void write_CASE3(bool unified) {
     double sim_seconds = ministep_length * 4.0 * 3;
     ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( "CASE3" , "CASE2", false , true , ":" , start_time , true , 10 , 10 , 10 );
 
-    ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
-    ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
-    ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
+    const ecl::smspec_node * node3 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 3   , "BARS"    , 0.0  );
+    const ecl::smspec_node * node2 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 2   , "BARS"    , 0.0  );
+    const ecl::smspec_node * node1 = ecl_sum_add_var( ecl_sum , "BPR" , NULL   , 1   , "BARS"    , 0.0  );
 
     for (int report_step = 1; report_step <= num_dates; report_step++) {
       {
         ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 5 , sim_seconds );
-        ecl_sum_tstep_set_from_node( tstep , node1 , report_step*10000);
-        ecl_sum_tstep_set_from_node( tstep , node2 , report_step*10000 + 1000);
-        ecl_sum_tstep_set_from_node( tstep , node3 , report_step*10000 + 2000);
+        ecl_sum_tstep_set_from_node( tstep , *node1 , report_step*10000);
+        ecl_sum_tstep_set_from_node( tstep , *node2 , report_step*10000 + 1000);
+        ecl_sum_tstep_set_from_node( tstep , *node3 , report_step*10000 + 2000);
       }
       sim_seconds += ministep_length * 3;
     }
@@ -249,7 +249,7 @@ void verify_CASE4() {
   ieq(d, 8, 40000);
   double_vector_free(d);
 
-  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true);
   double frame[27]; //3 vectors X 9 data points pr. vector
   ecl_sum_init_double_frame(sum, vector, frame);
   test_assert_double_equal(frame[26], 40000);

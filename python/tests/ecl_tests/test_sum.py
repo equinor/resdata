@@ -25,7 +25,7 @@ import stat
 import pandas
 from pandas.testing import assert_frame_equal
 from contextlib import contextmanager
-from unittest import skipIf, skipUnless, skipIf
+from unittest import skipIf, skipUnless, skip
 
 from ecl import EclUnitTypeEnum
 from ecl import EclDataType
@@ -131,6 +131,7 @@ class SumTest(EclTest):
 
         node1 = case.smspec_node( "FOPT" )
         self.assertEqual( node1.varType( ) , EclSumVarType.ECL_SMSPEC_FIELD_VAR )
+        self.assertIsNone(node1.wgname)
 
         node2 = case.smspec_node( "AARQ:10" )
         self.assertEqual( node2.varType( ) , EclSumVarType.ECL_SMSPEC_AQUIFER_VAR )
@@ -594,6 +595,7 @@ class SumTest(EclTest):
         self.assertTrue(EclSum.is_rate("FWIR"))
 
 
+    @skip("skip")
     def test_load_case(self):
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
         case = EclSum( path )
@@ -603,15 +605,13 @@ class SumTest(EclTest):
         for time_index,value in enumerate(fopr):
             self.assertEqual(fopr[time_index], value)
 
-
-
+    @skip("skip")
     def test_write_not_implemented(self):
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
         case = EclSum( path, lazy_load=True )
         self.assertFalse(case.can_write())
         with self.assertRaises(NotImplementedError):
             case.fwrite( )
-
 
 
     def test_directory_conflict(self):

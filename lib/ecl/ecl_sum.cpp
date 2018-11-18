@@ -290,32 +290,21 @@ void ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case ) {
 
 
 
-ecl::smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
+const ecl::smspec_node * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
   if (ecl_sum_data_get_length(ecl_sum->data) > 0)
     throw std::invalid_argument("Can not interchange variable adding and timesteps.\n");
 
-
-  ecl::smspec_node_type * smspec_node = (ecl::smspec_node_type*)smspec_node_alloc( ecl_smspec_identify_var_type(keyword),
-                                                                          wgname,
-                                                                          keyword,
-                                                                          unit,
-                                                                          ecl_sum->key_join_string,
-                                                                          ecl_smspec_get_grid_dims(ecl_sum->smspec),
-                                                                          num,
-                                                                          -1,
-                                                                          default_value);
-  ecl_smspec_add_node(ecl_sum->smspec, smspec_node);
-  ecl_sum_data_reset_self_map( ecl_sum->data );
-  return smspec_node;
+  return ecl_smspec_add_node( ecl_sum->smspec, keyword, wgname, num, unit, default_value);
 }
 
-ecl::smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node_type * node) {
+
+const ecl::smspec_node * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node * node) {
   return ecl_sum_add_var(ecl_sum,
                          smspec_node_get_keyword(node),
                          smspec_node_get_wgname(node),
-                         smspec_node_get_num(node),
+                         node->get_num(),
                          smspec_node_get_unit(node),
-                         smspec_node_get_default(node));
+                         node->get_default());
 }
 
 
@@ -335,7 +324,8 @@ ecl::smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ec
 */
 
 ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_seconds) {
-  return ecl_sum_data_add_new_tstep( ecl_sum->data , report_step , sim_seconds );
+  ecl_sum_tstep_type * new_tstep = ecl_sum_data_add_new_tstep( ecl_sum->data , report_step , sim_seconds );
+  return new_tstep;
 }
 
 static ecl_sum_type * ecl_sum_alloc_writer__( const char * ecl_case , const char * restart_case , int restart_step, bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
@@ -516,12 +506,12 @@ bool ecl_sum_case_exists( const char * input_file ) {
 
 /*****************************************************************/
 
-double ecl_sum_get_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const ecl::smspec_node_type * node) {
-  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , node );
+double ecl_sum_get_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const ecl::smspec_node * node) {
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , *node );
 }
 
-double ecl_sum_get_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const ecl::smspec_node_type * node) {
-  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , node );
+double ecl_sum_get_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const ecl::smspec_node * node) {
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , *node );
 }
 
 double ecl_sum_time2days( const ecl_sum_type * ecl_sum , time_t sim_time) {
@@ -559,13 +549,13 @@ double  ecl_sum_get_well_var(const ecl_sum_type * ecl_sum , int time_index , con
 }
 
 double ecl_sum_get_well_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * well , const char * var) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_well_var_node( ecl_sum->smspec , well , var );
-  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , node );
+  const ecl::smspec_node& node = ecl_smspec_get_well_var_node( ecl_sum->smspec , well , var );
+  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , &node );
 }
 
 double ecl_sum_get_well_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * well , const char * var) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_well_var_node( ecl_sum->smspec , well , var );
-  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , node );
+  const ecl::smspec_node& node = ecl_smspec_get_well_var_node( ecl_sum->smspec , well , var );
+  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , &node );
 }
 
 
@@ -583,13 +573,13 @@ double  ecl_sum_get_group_var(const ecl_sum_type * ecl_sum , int time_index , co
 
 
 double ecl_sum_get_group_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * group , const char * var) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_group_var_node( ecl_sum->smspec , group , var );
-  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , node );
+  const ecl::smspec_node& node = ecl_smspec_get_group_var_node( ecl_sum->smspec , group , var );
+  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , &node );
 }
 
 double ecl_sum_get_group_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * group , const char * var) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_group_var_node( ecl_sum->smspec , group , var );
-  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , node );
+  const ecl::smspec_node& node = ecl_smspec_get_group_var_node( ecl_sum->smspec , group , var );
+  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , &node );
 }
 
 
@@ -605,13 +595,13 @@ double ecl_sum_get_field_var(const ecl_sum_type * ecl_sum , int time_index , con
 }
 
 double ecl_sum_get_field_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_field_var_node( ecl_sum->smspec , var );
-  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , node );
+  const ecl::smspec_node& node = ecl_smspec_get_field_var_node( ecl_sum->smspec , var );
+  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , &node );
 }
 
 double ecl_sum_get_field_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_field_var_node( ecl_sum->smspec , var );
-  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , node );
+  const ecl::smspec_node& node = ecl_smspec_get_field_var_node( ecl_sum->smspec , var );
+  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , &node );
 }
 
 
@@ -641,13 +631,13 @@ double ecl_sum_get_block_var_ijk(const ecl_sum_type * ecl_sum , int time_index ,
 }
 
 double ecl_sum_get_block_var_ijk_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * block_var, int i , int j , int k) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_block_var_node_ijk( ecl_sum->smspec , block_var , i ,j  , k);
-  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , node );
+  const ecl::smspec_node& node = ecl_smspec_get_block_var_node_ijk( ecl_sum->smspec , block_var , i ,j  , k);
+  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , &node );
 }
 
 double ecl_sum_get_block_var_ijk_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * block_var, int i , int j , int k) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_block_var_node_ijk( ecl_sum->smspec , block_var , i ,j  , k);
-  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , node );
+  const ecl::smspec_node& node = ecl_smspec_get_block_var_node_ijk( ecl_sum->smspec , block_var , i ,j  , k);
+  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , &node );
 }
 
 
@@ -668,13 +658,13 @@ double ecl_sum_get_region_var(const ecl_sum_type * ecl_sum , int time_index , co
 }
 
 double ecl_sum_get_region_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var , int region_nr) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_region_var_node( ecl_sum->smspec , var , region_nr);
-  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , node );
+  const ecl::smspec_node& node = ecl_smspec_get_region_var_node( ecl_sum->smspec , var , region_nr);
+  return ecl_sum_get_from_sim_time( ecl_sum , sim_time , &node );
 }
 
 double ecl_sum_get_region_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var , int region_nr) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_region_var_node( ecl_sum->smspec , var , region_nr);
-  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , node );
+  const ecl::smspec_node& node = ecl_smspec_get_region_var_node( ecl_sum->smspec , var , region_nr);
+  return ecl_sum_get_from_sim_days( ecl_sum , sim_days , &node );
 }
 
 
@@ -715,14 +705,9 @@ double ecl_sum_get_well_completion_var(const ecl_sum_type * ecl_sum , int time_i
 /*****************************************************************/
 /* General variables - this means WWCT:OP_1 - i.e. composite variables*/
 
-const ecl::smspec_node_type * ecl_sum_get_general_var_node(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_general_var_node( ecl_sum->smspec , lookup_kw );
-  if (node != NULL)
-    return node;
-  else {
-    util_abort("%s: summary case:%s does not contain key:%s\n",__func__ , ecl_sum_get_case( ecl_sum ) , lookup_kw );
-    return NULL;
-  }
+const ecl::smspec_node * ecl_sum_get_general_var_node(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
+  const ecl::smspec_node& node = ecl_smspec_get_general_var_node( ecl_sum->smspec , lookup_kw );
+  return &node;
 }
 
 int ecl_sum_get_general_var_params_index(const ecl_sum_type * ecl_sum , const char * lookup_kw) {
@@ -761,18 +746,18 @@ void ecl_sum_fwrite_interp_csv_line(const ecl_sum_type * ecl_sum, time_t sim_tim
 
 
 double ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const char * var) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , var );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , var );
   return ecl_sum_get_from_sim_time( ecl_sum , sim_time , node );
 }
 
 double ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , var );
-  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , node );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , var );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , *node );
 }
 
 
 const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const char * var) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , var );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , var );
   return smspec_node_get_unit( node );
 }
 
@@ -800,8 +785,8 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
 
   bool time_in_days = false;
-  const ecl::smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, 0);
-  if ( util_string_equal(smspec_node_get_unit(node), "DAYS" ) )
+  const ecl::smspec_node& node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, 0);
+  if ( util_string_equal(smspec_node_get_unit(&node), "DAYS" ) )
     time_in_days = true;
 
   //create elc_sum_resampled with TIME node only
@@ -809,11 +794,11 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
 
   //add remaining nodes
   for (int i = 0; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
-    const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
-    if (util_string_equal(smspec_node_get_keyword(node), "TIME"))
-        continue;
+    const ecl::smspec_node& node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
+    if (util_string_equal(smspec_node_get_gen_key1(&node), "TIME"))
+      continue;
 
-    ecl_sum_add_smspec_node(  ecl_sum_resampled, node );
+    ecl_sum_add_smspec_node(  ecl_sum_resampled, &node );
   }
 
   /*
@@ -830,18 +815,18 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
       //clamping to the first value for t < start_time or if it is a rate than derivative is 0
       for (int i=1; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
         double value = 0;
-        const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
-        if (!smspec_node_is_rate(node))
-            value = ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
+        const ecl::smspec_node& node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
+        if (!node.is_rate())
+          value = ecl_sum_iget_first_value(ecl_sum, node.get_params_index());
         double_vector_iset(data, i-1, value);
       }
     } else if (input_t > end_time) {
       //clamping to the last value for t > end_time or if it is a rate than derivative is 0
       for (int i=1; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
         double value = 0;
-        const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
-        if (!smspec_node_is_rate(node))
-          value = ecl_sum_iget_last_value(ecl_sum, smspec_node_get_params_index(node));
+        const ecl::smspec_node& node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
+        if (!node.is_rate())
+          value = ecl_sum_iget_last_value(ecl_sum, node.get_params_index());
         double_vector_iset(data, i-1, value);
       }
     } else {
@@ -871,12 +856,12 @@ double ecl_sum_iget( const ecl_sum_type * ecl_sum , int time_index , int param_i
 /* Simple get functions which take a general var key as input    */
 
 bool ecl_sum_var_is_rate( const ecl_sum_type * ecl_sum , const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return smspec_node_is_rate( node );
 }
 
 bool ecl_sum_var_is_total( const ecl_sum_type * ecl_sum , const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return smspec_node_is_total( node );
 }
 
@@ -886,27 +871,27 @@ ecl_smspec_var_type ecl_sum_identify_var_type( const char * var ) {
 }
 
 ecl_smspec_var_type ecl_sum_get_var_type( const ecl_sum_type * ecl_sum , const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return smspec_node_get_var_type( node );
 }
 
 const char * ecl_sum_get_unit( const ecl_sum_type * ecl_sum , const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return smspec_node_get_unit( node );
 }
 
 int ecl_sum_get_num( const ecl_sum_type * ecl_sum , const char * gen_key ) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return smspec_node_get_num( node );
 }
 
 const char * ecl_sum_get_wgname( const ecl_sum_type * ecl_sum , const char * gen_key ) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return smspec_node_get_wgname( node );
 }
 
 const char * ecl_sum_get_keyword( const ecl_sum_type * ecl_sum , const char * gen_key ) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return smspec_node_get_keyword( node );
 }
 
@@ -959,7 +944,7 @@ void ecl_sum_init_double_vector(const ecl_sum_type * ecl_sum, const char * gen_k
 }
 
 void ecl_sum_init_double_vector_interp(const ecl_sum_type * ecl_sum, const char * gen_key, const time_t_vector_type * time_points, double * data) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
+  const ecl::smspec_node& node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
   ecl_sum_data_init_double_vector_interp(ecl_sum->data, node, time_points, data);
 }
 
@@ -1332,7 +1317,7 @@ stringlist_type * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum ) {
 
 
 void ecl_sum_resample_from_sim_time( const ecl_sum_type * ecl_sum , const time_t_vector_type * sim_time , double_vector_type * value , const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
+  const ecl::smspec_node& node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
   double_vector_reset( value );
   {
     int i;
@@ -1343,7 +1328,7 @@ void ecl_sum_resample_from_sim_time( const ecl_sum_type * ecl_sum , const time_t
 
 
 void ecl_sum_resample_from_sim_days( const ecl_sum_type * ecl_sum , const double_vector_type * sim_days , double_vector_type * value , const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
+  const ecl::smspec_node& node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
   double_vector_reset( value );
   {
     int i;
@@ -1404,7 +1389,7 @@ int ecl_sum_get_report_step_from_days( const ecl_sum_type * sum , double sim_day
 
 /*****************************************************************/
 
-const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
+ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
   return ecl_sum->smspec;
 }
 
@@ -1457,8 +1442,8 @@ bool ecl_sum_report_step_compatible( const ecl_sum_type * ecl_sum1 , const ecl_s
 
 
 double_vector_type * ecl_sum_alloc_seconds_solution( const ecl_sum_type * ecl_sum , const char * gen_key , double cmp_value , bool rates_clamp_lower) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key);
-  return ecl_sum_data_alloc_seconds_solution( ecl_sum->data , node , cmp_value , rates_clamp_lower);
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key);
+  return ecl_sum_data_alloc_seconds_solution( ecl_sum->data , *node , cmp_value , rates_clamp_lower);
 }
 
 
@@ -1494,11 +1479,11 @@ double ecl_sum_iget_last_value(const ecl_sum_type * ecl_sum, int param_index) {
 }
 
 double ecl_sum_get_last_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return ecl_sum_iget_last_value(ecl_sum, smspec_node_get_params_index(node));
 }
 
-double ecl_sum_get_last_value_node(const ecl_sum_type * ecl_sum, const ecl::smspec_node_type *node) {
+double ecl_sum_get_last_value_node(const ecl_sum_type * ecl_sum, const ecl::smspec_node *node) {
   return ecl_sum_iget_last_value(ecl_sum, smspec_node_get_params_index(node));
 }
 
@@ -1507,10 +1492,10 @@ double ecl_sum_iget_first_value(const ecl_sum_type * ecl_sum, int param_index) {
 }
 
 double ecl_sum_get_first_value_gen_key(const ecl_sum_type * ecl_sum, const char * gen_key) {
-  const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
+  const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum , gen_key );
   return ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
 }
 
-double ecl_sum_get_first_value_node(const ecl_sum_type * ecl_sum, const ecl::smspec_node_type *node) {
+double ecl_sum_get_first_value_node(const ecl_sum_type * ecl_sum, const ecl::smspec_node *node) {
   return ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
 }
