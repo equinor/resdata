@@ -76,39 +76,39 @@ extern "C" {
   int                      ecl_smspec_get_date_year_index( const ecl_smspec_type * smspec );
 
 
-  const ecl::smspec_node_type * ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var);
+  const ecl::smspec_node_type&  ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var);
   int                      ecl_smspec_get_well_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);
   bool                     ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);
 
-  const ecl::smspec_node_type * ecl_smspec_get_group_var_node( const ecl_smspec_type * smspec , const char * group , const char * var);
+  const ecl::smspec_node_type& ecl_smspec_get_group_var_node( const ecl_smspec_type * smspec , const char * group , const char * var);
   int                      ecl_smspec_get_group_var_params_index(const ecl_smspec_type * ecl_smspec , const char * group , const char *var);
   bool                     ecl_smspec_has_group_var(const ecl_smspec_type * ecl_smspec , const char * group , const char *var);
 
-  const ecl::smspec_node_type * ecl_smspec_get_field_var_node( const ecl_smspec_type * smspec , const char * var);
+  const ecl::smspec_node_type& ecl_smspec_get_field_var_node( const ecl_smspec_type * smspec , const char * var);
   int                      ecl_smspec_get_field_var_params_index(const ecl_smspec_type * ecl_smspec , const char *var);
   bool                     ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *var);
 
-  const ecl::smspec_node_type * ecl_smspec_get_region_var_node(const ecl_smspec_type * ecl_smspec , const char *region_var , int region_nr);
+  const ecl::smspec_node_type& ecl_smspec_get_region_var_node(const ecl_smspec_type * ecl_smspec , const char *region_var , int region_nr);
   int                      ecl_smspec_get_region_var_params_index(const ecl_smspec_type * ecl_smspec , const char * region_var , int region_nr);
   bool                     ecl_smspec_has_region_var(const ecl_smspec_type * ecl_smspec , const char * region_var , int region_nr);
 
-  const ecl::smspec_node_type * ecl_smspec_get_misc_var_node(const ecl_smspec_type * ecl_smspec , const char *var);
+  const ecl::smspec_node_type& ecl_smspec_get_misc_var_node(const ecl_smspec_type * ecl_smspec , const char *var);
   int                      ecl_smspec_get_misc_var_params_index(const ecl_smspec_type * ecl_smspec , const char *var);
   bool                     ecl_smspec_has_misc_var(const ecl_smspec_type * ecl_smspec , const char *var);
 
-  const ecl::smspec_node_type * ecl_smspec_get_block_var_node(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
+  const ecl::smspec_node_type& ecl_smspec_get_block_var_node(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
   int                      ecl_smspec_get_block_var_params_index(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
   bool                     ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr);
 
-  const ecl::smspec_node_type * ecl_smspec_get_block_var_node_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k);
+  const ecl::smspec_node_type& ecl_smspec_get_block_var_node_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k);
   int                      ecl_smspec_get_block_var_params_index_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k);
   bool                     ecl_smspec_has_block_var_ijk(const ecl_smspec_type * ecl_smspec , const char * block_var , int i , int j , int k);
 
-  const ecl::smspec_node_type * ecl_smspec_get_well_completion_var_node(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr);
+  const ecl::smspec_node_type& ecl_smspec_get_well_completion_var_node(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr);
   int                      ecl_smspec_get_well_completion_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr);
   bool                     ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr);
 
-  const ecl::smspec_node_type * ecl_smspec_get_general_var_node( const ecl_smspec_type * smspec , const char * lookup_kw );
+  const ecl::smspec_node_type& ecl_smspec_get_general_var_node( const ecl_smspec_type * smspec , const char * lookup_kw );
   int                      ecl_smspec_get_general_var_params_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
   bool                     ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
   const char             * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec , const char * lookup_kw);
