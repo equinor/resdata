@@ -11,6 +11,7 @@ python/lib64
 /libenkf/src/.faultlist
 /develbranch/libenkf/src/.faultlist
 /build
+/temp-build
 /libert_util/tests/data/latex_OK.pdf
 /test-data/Statoil
 /python/python/ert/ecl/ecl_local.py
