@@ -62,6 +62,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include <string>
+
 #include <ert/util/util.h>
 #include <ert/util/vector.hpp>
 
@@ -84,7 +86,7 @@ typedef struct {
 
 struct well_ts_struct {
   UTIL_TYPE_ID_DECLARATION;
-  char               * well_name;
+  std::string          well_name;
   vector_type        * ts;
 };
 
@@ -143,12 +145,12 @@ static UTIL_SAFE_CAST_FUNCTION( well_ts , WELL_TS_TYPE_ID )
 
 well_ts_type * well_ts_alloc( const char * well_name ) {
   well_ts_type * well_ts = well_ts_alloc_empty();
-  well_ts->well_name = util_alloc_string_copy( well_name );
+  well_ts->well_name = well_name;
   return well_ts;
 }
 
-char * well_ts_get_name( const well_ts_type * well_ts) {
-  return well_ts->well_name;
+const char * well_ts_get_name( const well_ts_type * well_ts) {
+  return well_ts->well_name.c_str();
 }
 
 static int well_ts_get_index__( const well_ts_type * well_ts , int report_step , time_t sim_time , bool use_report) {
@@ -280,7 +282,6 @@ void well_ts_add_well( well_ts_type * well_ts , well_state_type * well_state ) {
 
 
 void well_ts_free( well_ts_type * well_ts ){
-  free( well_ts->well_name );
   vector_free( well_ts->ts );
   delete well_ts;
 }
