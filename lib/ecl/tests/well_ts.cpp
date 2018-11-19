@@ -70,7 +70,8 @@ int main(int argc , char ** argv) {
       well_info_load_rstfile( well_info , stringlist_iget(file_list , i), true);
     well_info_free( well_info );
   }
-
+  ecl_grid_free( grid );
+  free( grid_file );
 
   exit(0);
 }
