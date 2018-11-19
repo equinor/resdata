@@ -91,7 +91,7 @@ struct well_ts_struct {
 /******************************************************************/
 
 static well_node_type * well_node_alloc( well_state_type * well_state) {
-  well_node_type * node = (well_node_type*)util_malloc( sizeof * node );
+  well_node_type * node = new well_node_type();
   UTIL_TYPE_ID_INIT( node , WELL_NODE_TYPE_ID );
   node->report_nr  = well_state_get_report_nr( well_state );
   node->sim_time   = well_state_get_sim_time( well_state );
@@ -106,7 +106,7 @@ static UTIL_SAFE_CAST_FUNCTION_CONST( well_node , WELL_NODE_TYPE_ID )
 
 static void well_node_free( well_node_type * well_node ) {
   well_state_free( well_node->well_state );
-  free( well_node );
+  delete well_node;
 }
 
 static void well_node_free__( void * arg ) {
@@ -131,7 +131,7 @@ static int well_node_time_cmp( const void * arg1 , const void * arg2) {
 /*****************************************************************/
 
 static well_ts_type * well_ts_alloc_empty( ) {
-  well_ts_type * well_ts = (well_ts_type*)util_malloc( sizeof * well_ts );
+  well_ts_type * well_ts = new well_ts_type();
   UTIL_TYPE_ID_INIT( well_ts , WELL_TS_TYPE_ID );
 
   well_ts->ts         = vector_alloc_new();
@@ -282,7 +282,7 @@ void well_ts_add_well( well_ts_type * well_ts , well_state_type * well_state ) {
 void well_ts_free( well_ts_type * well_ts ){
   free( well_ts->well_name );
   vector_free( well_ts->ts );
-  free( well_ts );
+  delete well_ts;
 }
 
 
