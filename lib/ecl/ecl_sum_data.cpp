@@ -819,8 +819,8 @@ double ecl_sum_data_iget( const ecl_sum_data_type * data , int time_index , int 
   if (params_map[params_index] >= 0)
     return file_data->iget( time_index - index_node.offset, params_map[params_index] );
   else {
-    const ecl::smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, params_index);
-    return smspec_node_get_default(smspec_node);
+    const ecl::smspec_node_type& smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, params_index);
+    return smspec_node.get_default();
   }
 }
 
@@ -1085,17 +1085,17 @@ static void ecl_sum_data_init_double_vector__(const ecl_sum_data_type * data, in
     int params_index = params_map[main_params_index];
 
     if (report_only) {
-      const ecl::smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
-      double default_value = smspec_node_get_default(smspec_node);
+      const ecl::smspec_node_type& smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
+      double default_value = smspec_node.get_default();
       offset += data_file->get_data_report(params_index, index_node.length, &output_data[offset], default_value);
     } else {
 
       if (params_index >= 0)
         data_file->get_data(params_index, index_node.length, &output_data[offset]);
       else {
-        const ecl::smspec_node_type * smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
+        const ecl::smspec_node_type& smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
         for (int i=0; i < index_node.length; i++)
-          output_data[offset + i] = smspec_node_get_default(smspec_node);
+          output_data[offset + i] = smspec_node.get_default();
       }
       offset += index_node.length;
     }

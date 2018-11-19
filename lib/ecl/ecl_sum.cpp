@@ -290,32 +290,32 @@ void ecl_sum_set_fmt_case( ecl_sum_type * ecl_sum , bool fmt_case ) {
 
 
 
-ecl::smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
+const ecl::smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * keyword , const char * wgname , int num , const char * unit , float default_value) {
   if (ecl_sum_data_get_length(ecl_sum->data) > 0)
     throw std::invalid_argument("Can not interchange variable adding and timesteps.\n");
 
 
   ecl::smspec_node_type * smspec_node = (ecl::smspec_node_type*)smspec_node_alloc( ecl_smspec_identify_var_type(keyword),
-                                                                          wgname,
-                                                                          keyword,
-                                                                          unit,
-                                                                          ecl_sum->key_join_string,
-                                                                          ecl_smspec_get_grid_dims(ecl_sum->smspec),
-                                                                          num,
-                                                                          -1,
-                                                                          default_value);
-  ecl_smspec_add_node(ecl_sum->smspec, smspec_node);
+                                                                                   wgname,
+                                                                                   keyword,
+                                                                                   unit,
+                                                                                   ecl_sum->key_join_string,
+                                                                                   ecl_smspec_get_grid_dims(ecl_sum->smspec),
+                                                                                   num,
+                                                                                   -1,
+                                                                                   default_value);
+  const auto& new_node = ecl_smspec_add_node(ecl_sum->smspec, *smspec_node);
   ecl_sum_data_reset_self_map( ecl_sum->data );
-  return smspec_node;
+  return &new_node;
 }
 
-ecl::smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node_type * node) {
+const ecl::smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node_type * node) {
   return ecl_sum_add_var(ecl_sum,
                          smspec_node_get_keyword(node),
                          smspec_node_get_wgname(node),
-                         smspec_node_get_num(node),
+                         node->get_num(),
                          smspec_node_get_unit(node),
-                         smspec_node_get_default(node));
+                         node->get_default());
 }
 
 
@@ -795,8 +795,8 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
   const int * grid_dims  = ecl_smspec_get_grid_dims(ecl_sum->smspec);
 
   bool time_in_days = false;
-  const ecl::smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, 0);
-  if ( util_string_equal(smspec_node_get_unit(node), "DAYS" ) )
+  const ecl::smspec_node_type& node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, 0);
+  if ( util_string_equal(smspec_node_get_unit(&node), "DAYS" ) )
     time_in_days = true;
 
   //create elc_sum_resampled with TIME node only
@@ -804,11 +804,11 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
 
   //add remaining nodes
   for (int i = 0; i < ecl_smspec_num_nodes(ecl_sum->smspec); i++) {
-    const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
-    if (util_string_equal(smspec_node_get_keyword(node), "TIME"))
-        continue;
+    const ecl::smspec_node_type& node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
+    if (util_string_equal(smspec_node_get_gen_key1(&node), "TIME"))
+      continue;
 
-    ecl_sum_add_smspec_node(  ecl_sum_resampled, node );
+    ecl_sum_add_smspec_node(  ecl_sum_resampled, &node );
   }
 
   /*

@@ -230,8 +230,8 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   void                  ecl_sum_fwrite( const ecl_sum_type * ecl_sum );
   bool                  ecl_sum_can_write( const ecl_sum_type * ecl_sum );
   void                  ecl_sum_fwrite_smspec( const ecl_sum_type * ecl_sum );
-  ecl::smspec_node_type    * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node_type * node);
-  ecl::smspec_node_type    * ecl_sum_add_var(ecl_sum_type * ecl_sum ,
+  const ecl::smspec_node_type    * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node_type * node);
+  const ecl::smspec_node_type    * ecl_sum_add_var(ecl_sum_type * ecl_sum ,
                                         const char * keyword ,
                                         const char * wgname ,
                                         int num ,

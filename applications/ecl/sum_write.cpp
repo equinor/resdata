@@ -243,8 +243,8 @@ int main( int argc , char ** argv) {
 
   */
 
-  ecl::smspec_node_type * wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
-  ecl::smspec_node_type * wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
+  const ecl::smspec_node_type * wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
+  const ecl::smspec_node_type * wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
 
 
   {

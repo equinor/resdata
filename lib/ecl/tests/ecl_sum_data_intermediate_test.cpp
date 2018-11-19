@@ -183,8 +183,8 @@ void verify_CASE3(int length) {
     ieq(d,2,(2 - i)*10  + 300);
 
     if (i == 0) {
-      const ecl::smspec_node_type * node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
-      double default_value = smspec_node_get_default(node);
+      const ecl::smspec_node_type& node = ecl_smspec_iget_node_w_params_index(ecl_sum_get_smspec(sum), i);
+      double default_value = node.get_default();
       ieq(d,3,default_value);
       ieq(d,4,default_value);
     } else {
@@ -198,7 +198,7 @@ void verify_CASE3(int length) {
     double_vector_free(d);
   }
 
-  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true);
   double frame[27]; //3 vectors X 9 data points pr. vector
   ecl_sum_init_double_frame(sum, vector, frame);
   ecl_sum_vector_free(vector);
