@@ -517,11 +517,11 @@ bool ecl_sum_case_exists( const char * input_file ) {
 /*****************************************************************/
 
 double ecl_sum_get_from_sim_time( const ecl_sum_type * ecl_sum , time_t sim_time , const ecl::smspec_node_type * node) {
-  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , node );
+  return ecl_sum_data_get_from_sim_time( ecl_sum->data , sim_time , *node );
 }
 
 double ecl_sum_get_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const ecl::smspec_node_type * node) {
-  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , node );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , *node );
 }
 
 double ecl_sum_time2days( const ecl_sum_type * ecl_sum , time_t sim_time) {
@@ -762,7 +762,7 @@ double ecl_sum_get_general_var_from_sim_time( const ecl_sum_type * ecl_sum , tim
 
 double ecl_sum_get_general_var_from_sim_days( const ecl_sum_type * ecl_sum , double sim_days , const char * var) {
   const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , var );
-  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , node );
+  return ecl_sum_data_get_from_sim_days( ecl_sum->data , sim_days , *node );
 }
 
 
@@ -955,7 +955,7 @@ void ecl_sum_init_double_vector(const ecl_sum_type * ecl_sum, const char * gen_k
 
 void ecl_sum_init_double_vector_interp(const ecl_sum_type * ecl_sum, const char * gen_key, const time_t_vector_type * time_points, double * data) {
   const ecl::smspec_node_type& node = ecl_smspec_get_general_var_node( ecl_sum->smspec , gen_key);
-  ecl_sum_data_init_double_vector_interp(ecl_sum->data, &node, time_points, data);
+  ecl_sum_data_init_double_vector_interp(ecl_sum->data, node, time_points, data);
 }
 
 
@@ -1332,7 +1332,7 @@ void ecl_sum_resample_from_sim_time( const ecl_sum_type * ecl_sum , const time_t
   {
     int i;
     for (i=0; i < time_t_vector_size( sim_time ); i++)
-      double_vector_iset( value , i , ecl_sum_data_get_from_sim_time( ecl_sum->data , time_t_vector_iget( sim_time , i ) , &node));
+      double_vector_iset( value , i , ecl_sum_data_get_from_sim_time( ecl_sum->data , time_t_vector_iget( sim_time , i ) , node));
   }
 }
 
@@ -1343,7 +1343,7 @@ void ecl_sum_resample_from_sim_days( const ecl_sum_type * ecl_sum , const double
   {
     int i;
     for (i=0; i < double_vector_size( sim_days ); i++)
-      double_vector_iset( value , i , ecl_sum_data_get_from_sim_days( ecl_sum->data , double_vector_iget( sim_days , i ) , &node));
+      double_vector_iset( value , i , ecl_sum_data_get_from_sim_days( ecl_sum->data , double_vector_iget( sim_days , i ) , node));
   }
 }
 
@@ -1453,7 +1453,7 @@ bool ecl_sum_report_step_compatible( const ecl_sum_type * ecl_sum1 , const ecl_s
 
 double_vector_type * ecl_sum_alloc_seconds_solution( const ecl_sum_type * ecl_sum , const char * gen_key , double cmp_value , bool rates_clamp_lower) {
   const ecl::smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum , gen_key);
-  return ecl_sum_data_alloc_seconds_solution( ecl_sum->data , node , cmp_value , rates_clamp_lower);
+  return ecl_sum_data_alloc_seconds_solution( ecl_sum->data , *node , cmp_value , rates_clamp_lower);
 }
 
 
