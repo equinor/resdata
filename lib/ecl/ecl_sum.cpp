@@ -1399,7 +1399,7 @@ int ecl_sum_get_report_step_from_days( const ecl_sum_type * sum , double sim_day
 
 /*****************************************************************/
 
-const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
+ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum ) {
   return ecl_sum->smspec;
 }
 

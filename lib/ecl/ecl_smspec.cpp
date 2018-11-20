@@ -133,7 +133,6 @@ struct ecl_smspec_struct {
   int               grid_dims[3];                 /* Grid dimensions - in DIMENS[1,2,3] */
   int               num_regions;
   int               Nwells , param_offset;
-  int               params_size;
   std::string       key_join_string;               /* The string used to join keys when building gen_key keys - typically ":" -
                                                       but arbitrary - NOT necessary to be able to invert the joining. */
   std::string         header_file;                   /* FULL path to the currenbtly loaded header_file. */
@@ -532,37 +531,14 @@ static ecl_smspec_type * ecl_smspec_alloc_writer__( const char * key_join_string
   ecl_smspec->sim_start_time = sim_start;
 
   {
-    ecl::smspec_node_type * time_node;
-    if (time_in_days) {
-      time_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
-                                                        NULL ,
-                                                        "TIME" ,
-                                                        "DAYS" ,
-                                                        key_join_string ,
-                                                        ecl_smspec->grid_dims ,
-                                                        0  ,
-                                                        -1 ,
-                                                        0 );
-      ecl_smspec->time_seconds = 3600 * 24;
-    } else {
-      time_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR ,
-                                                        NULL ,
-                                                        "TIME" ,
-                                                        "HOURS" ,
-                                                        key_join_string ,
-                                                        ecl_smspec->grid_dims ,
-                                                        0  ,
-                                                        -1 ,
-                                                        0 );
-      ecl_smspec->time_seconds = 3600;
-    }
+    const ecl::smspec_node_type * time_node;
 
-    ecl_smspec_add_node( ecl_smspec , *time_node );
-    {
-      const auto tnode = ecl_smspec_get_misc_var_node(ecl_smspec, "TIME");
-      ecl_smspec->time_index = tnode.get_params_index();
-    }
-    smspec_node_free( time_node );
+    if (time_in_days)
+      time_node = ecl_smspec_add_node(ecl_smspec, "TIME", "DAYS", 0);
+    else
+      time_node = ecl_smspec_add_node(ecl_smspec, "TIME", "HOURS", 0);
+
+    ecl_smspec->time_index = time_node->get_params_index();
   }
   return ecl_smspec;
 }
@@ -1051,33 +1027,41 @@ void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , const ecl::smspec_nod
 }
 
 
-static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int params_size) {
-  ecl_smspec->params_size = params_size;
-  ecl_smspec->params_default.resize( params_size, PARAMS_GLOBAL_DEFAULT );
-}
 
 
 
-ecl::smspec_node_type& ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node_type& smspec_node){
+static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node_type& smspec_node){
   ecl_smspec->smspec_nodes.push_back(smspec_node);
   {
-    int params_index = smspec_node_get_params_index( &smspec_node );
+    int params_index = smspec_node.get_params_index();
 
     /* This indexing must be used when writing. */
     ecl_smspec->index_map.push_back(params_index);
     ecl_smspec->params_default.resize( params_index+1, PARAMS_GLOBAL_DEFAULT );
-    ecl_smspec->params_default[params_index] = smspec_node_get_default(&smspec_node);
+    ecl_smspec->params_default[params_index] = smspec_node.get_default();
   }
-  return ecl_smspec->smspec_nodes.back();
+  ecl_smspec_index_node(ecl_smspec, smspec_node);
+  return &ecl_smspec->smspec_nodes;
 }
 
 
-const ecl::smspec_node_type& ecl_smspec_add_node( ecl_smspec_type * ecl_smspec , ecl::smspec_node_type& smspec_node ) {
-  auto new_node = ecl_smspec_insert_node( ecl_smspec , smspec_node );
-  ecl_smspec_index_node( ecl_smspec , new_node );
-  return new_node;
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * unit, float default_value) {
+  int params_index = ecl_smspec->smspec_nodes.size();
+  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index, keyword, unit, default_value));
 }
 
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, const char * unit, float default_value) {
+  int params_index = ecl_smspec->smspec_nodes.size();
+  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index, keyword, wgname, unit, default_value, ecl_smspec->key_join_string.c_str()));
+}
+
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit, float default_value) {
+  int params_index = ecl_smspec->smspec_nodes.size();
+  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index, keyword, num, unit, default_value, ecl_smspec->key_join_string.c_str()));
+}
 
 
 void ecl_smspec_init_var( ecl_smspec_type * ecl_smspec , ecl::smspec_node_type& smspec_node , const char * keyword , const char * wgname , int num, const char * unit ) {
@@ -1168,7 +1152,6 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_smspec->grid_dims[1] = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NY_INDEX );
     ecl_smspec->grid_dims[2] = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NZ_INDEX );
     ecl_smspec->restart_step = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_RESTART_STEP_INDEX);
-    ecl_smspec_set_params_size( ecl_smspec , ecl_kw_get_size(keywords));
 
     ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );
 
@@ -1849,7 +1832,7 @@ stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec
 
 
 int ecl_smspec_get_params_size( const ecl_smspec_type * smspec ) {
-  return smspec->params_size;
+  return smspec->smspec_nodes.size();
 }
 
 

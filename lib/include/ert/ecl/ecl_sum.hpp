@@ -190,7 +190,7 @@ typedef struct ecl_sum_struct       ecl_sum_type;
   stringlist_type     * ecl_sum_alloc_well_var_list( const ecl_sum_type * ecl_sum );
   stringlist_type     * ecl_sum_alloc_matching_general_var_list(const ecl_sum_type * ecl_sum , const char * pattern);
   void                  ecl_sum_select_matching_general_var_list( const ecl_sum_type * ecl_sum , const char * pattern , stringlist_type * keys);
-  const ecl_smspec_type * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum );
+  ecl_smspec_type     * ecl_sum_get_smspec( const ecl_sum_type * ecl_sum );
   ecl_smspec_var_type   ecl_sum_identify_var_type(const char * var);
   ecl_smspec_var_type   ecl_sum_get_var_type( const ecl_sum_type * ecl_sum , const char * gen_key);
   bool                  ecl_sum_var_is_rate( const ecl_sum_type * ecl_sum , const char * gen_key);

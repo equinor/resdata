@@ -435,7 +435,7 @@ void smspec_node_type::decode_R1R2(int * r1 , int * r2) const {
 */
 
 
-void smspec_node_type::set_gen_keys( const char * key_join_string_) {
+void smspec_node_type::set_gen_keys( const char* key_join_string_) {
   switch( var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
     // KEYWORD:WGNAME:NUM
@@ -517,12 +517,12 @@ void smspec_node_type::common_init( ecl_smspec_var_type var_type_ , const char *
 
 
 bool smspec_node_type::init__( ecl_smspec_var_type var_type ,
-                                           const char * wgname_  ,
-                                           const char * keyword_ ,
-                                           const char * unit    ,
-                                           const char * key_join_string ,
-                                           const int grid_dims[3] ,
-                                           int num) {
+                               const char * wgname_  ,
+                               const char * keyword_ ,
+                               const char * unit    ,
+                               const char * key_join_string,
+                               const int grid_dims[3] ,
+                               int num) {
 
   bool initOK    = true;
 
@@ -611,6 +611,47 @@ bool smspec_node_type::init__( ecl_smspec_var_type var_type ,
    updated in the functions ecl_smspec_install_gen_key() and
    ecl_smspec_fread_header() functions in addition. UGGGLY
 */
+
+smspec_node_type::smspec_node_type(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string)
+    : smspec_node_type(ECL_SMSPEC_MISC_VAR,
+                       nullptr,
+                       keyword,
+                       unit,
+                       key_join_string,
+                       nullptr,
+                       num,
+                       param_index,
+                       default_value)
+{
+}
+
+smspec_node_type::smspec_node_type(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char * key_join_string)
+    : smspec_node_type(ECL_SMSPEC_MISC_VAR,
+                       wgname,
+                       keyword,
+                       unit,
+                       key_join_string,
+                       nullptr,
+                       0,
+                       param_index,
+                       default_value)
+{
+}
+
+
+
+smspec_node_type::smspec_node_type(int param_index, const char * keyword, const char * unit, float default_value)
+    : smspec_node_type(ECL_SMSPEC_MISC_VAR,
+                       nullptr,
+                       keyword,
+                       unit,
+                       nullptr,
+                       nullptr,
+                       0,
+                       param_index,
+                       default_value)
+{
+}
 
 smspec_node_type::smspec_node_type() {}
 

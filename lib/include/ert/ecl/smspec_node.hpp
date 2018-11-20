@@ -129,14 +129,18 @@ namespace ecl {
                        const int grid_dims[3] ,
                        int num , int param_index, float default_value);
 
-      smspec_node_type(ecl_smspec_var_type var_type ,
-                       const char * wgname  ,
+      smspec_node_type(int param_index,
                        const char * keyword ,
+                       const char * wgname  ,
                        const char * unit    ,
-                       const char * lgr ,
-                       const char * key_join_string ,
+                       const char * lgr     ,
                        int   lgr_i, int lgr_j , int lgr_k,
-                       int param_index , float default_value);
+                       float default_value,
+                       const char * key_join_string);
+
+      smspec_node_type(int param_index, const char * keyword, const char * unit, float default_value);
+      smspec_node_type(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string);
+      smspec_node_type(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char *  key_join_string);
 
       bool init__( ecl_smspec_var_type var_type ,
                    const char * wgname  ,
