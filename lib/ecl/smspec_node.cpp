@@ -744,9 +744,9 @@ int smspec_node_type::get_params_index() const {
   return this->params_index;
 }
 
-void smspec_node_type::set_params_index( int params_index_) {
-  this->params_index = params_index_;
-}
+// void smspec_node_type::set_params_index( int params_index_) {
+  // this->params_index = params_index_;
+// }
 
 
 namespace {
@@ -1083,9 +1083,9 @@ int smspec_node_get_params_index( const void * smspec_node ) {
   return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_params_index();
 }
 
-void smspec_node_set_params_index( void * smspec_node , int params_index) {
-  static_cast<ecl::smspec_node_type*>(smspec_node)->set_params_index( params_index );
-}
+// void smspec_node_set_params_index( void * smspec_node , int params_index) {
+  // static_cast<ecl::smspec_node_type*>(smspec_node)->set_params_index( params_index );
+// }
 
 const char * smspec_node_get_gen_key1( const void * smspec_node) {
   return static_cast<const ecl::smspec_node_type*>(smspec_node)->get_gen_key1();

@@ -168,7 +168,7 @@ namespace ecl {
       bool                  need_nums() const;
       void                  fprintf__( FILE * stream) const;
       int                   get_params_index() const;
-      void                  set_params_index( int params_index_);
+    //void                  set_params_index( int params_index_);
       float                 get_default() const;
       const                 std::array<int,3>& get_ijk() const;
       const                 std::string& get_lgr_name() const;

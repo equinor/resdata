@@ -1059,18 +1059,6 @@ static void ecl_smspec_set_params_size( ecl_smspec_type * ecl_smspec , int param
 
 
 ecl::smspec_node_type& ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node_type& smspec_node){
-  int internal_index = ecl_smspec->smspec_nodes.size();
-
-  /* This IF test should only apply in write_mode. */
-  if (smspec_node_get_params_index( &smspec_node ) < 0) {
-    if (!ecl_smspec->write_mode)
-      util_abort("%s: internal error \n",__func__);
-    smspec_node_set_params_index( &smspec_node , internal_index);
-    ecl_smspec->inv_index_map.insert( std::make_pair(internal_index, internal_index) );
-
-    if (internal_index >= ecl_smspec->params_size)
-      ecl_smspec_set_params_size( ecl_smspec , internal_index + 1);
-  }
   ecl_smspec->smspec_nodes.push_back(smspec_node);
   {
     int params_index = smspec_node_get_params_index( &smspec_node );
@@ -1886,7 +1874,7 @@ void ecl_smspec_sort( ecl_smspec_type * smspec ) {
 
   for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
     ecl::smspec_node_type& node = smspec->smspec_nodes[i];
-    smspec_node_set_params_index( &node , i );
+    //smspec_node_set_params_index( &node , i );
   }
 
 }

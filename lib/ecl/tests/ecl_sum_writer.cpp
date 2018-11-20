@@ -216,6 +216,7 @@ void test_long_restart_names() {
 }
 
 int main( int argc , char ** argv) {
+  util_install_signals();
   test_write_read();
   test_ecl_sum_alloc_restart_writer();
   test_long_restart_names();
