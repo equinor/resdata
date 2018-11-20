@@ -202,7 +202,7 @@ Value:   0               50                76
 */
 
 static int well_ts_get_index( const well_ts_type * well_ts , int report_step , time_t sim_time , bool use_report) {
-  size_t index = well_ts_get_index__( well_ts , report_step , sim_time , use_report );
+  int index = well_ts_get_index__( well_ts , report_step , sim_time , use_report );
 
   // Inline check that the index is correct
   {
@@ -210,7 +210,7 @@ static int well_ts_get_index( const well_ts_type * well_ts , int report_step , t
     const well_node_type * node = well_ts->ts[index];
     well_node_type * next_node = NULL;
 
-    if (index < (well_ts->ts.size() - 1))
+    if (index < (static_cast<int>(well_ts->ts.size()) - 1) )
       next_node = well_ts->ts[index + 1];
 
     if (use_report) {
