@@ -112,7 +112,7 @@ class EclSumVector(object):
     @property
     def numpy_dates(self):
         """
-        All the dates as numpy vector of dates in matplotlib format.
+        All the dates as numpy vector of dates in numpy format.
         """
         return self.__numpy_dates
 
