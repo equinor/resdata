@@ -532,43 +532,42 @@ class EclSum(BaseCClass):
             lst = re.split(':', key)
             kw = lst[0]
             wgname = None
-            num = 0
+            num = 0;
             unit = "UNIT"
             if len(lst) > 1:
-                if lst[1][0].isdigit():
+                nums = []
+                if lst[1][0].isdigit():       
                     nums = re.split(',', lst[1])
-                    if len(nums) > 1:
-                        i = int(nums[0])-1
-                        j = int(nums[1])-1
-                        k = int(nums[2])-1
-                        num = i + j * dims[0] + k * dims[0]*dims[1] + 1
-                    else:
-                        num = int(nums[0])                
                 else:
-                     wgname = lst[1]
+                    wgname = lst[1]
+                if len(lst) == 3:
+                    nums = re.split(",", lst[2])
+                if len(nums) == 3:
+                    i = int(nums[0])-1
+                    j = int(nums[1])-1
+                    k = int(nums[2])-1
+                    if dims is None:
+                        raise ValueError("For key %s When using indexing i,j,k you must supply a valid value for the dims argument" % key)
+                    num = i + j * dims[0] + k * dims[0]*dims[1] + 1
+                elif len(nums) == 1:
+                    num = int(nums[0])
+                      
             var_list.append( [kw, wgname, num, unit] )     
         return var_list   
 
     @classmethod
-    def from_pandas(cls, case, frame, dims = (1,1,1), headers = None):
-
+    def from_pandas(cls, case, frame, dims = None, headers = None):
         start_time = frame.index[0]
-
         ecl_sum = EclSum.writer(case,
                                 start_time.to_pydatetime(),
                                 dims[0], dims[1], dims[2])      
-
-        var_list = []
-        
-        frame_header_list = EclSum._compile_headers_list( frame.columns.values, dims )
-        if headers:
-             header_list = EclSum._compile_headers_list( headers, dims )
+        var_list = []        
+        if headers is None:
+             header_list = EclSum._compile_headers_list( frame.columns.values, dims )
         else:
-             header_list = []
-
-        for kw, wgname, num, unit in frame_header_list:
-             if (not headers) or [kw, wgname, num, unit] in header_list:
-                  var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num, unit =unit).getKey1() )
+             header_list = EclSum._compile_headers_list( headers, dims )
+        for kw, wgname, num, unit in header_list:
+             var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num, unit =unit).getKey1() )
 
         for i, time in enumerate(frame.index):
             days = (time - start_time).days

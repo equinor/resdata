@@ -82,7 +82,7 @@ def create_case(case = "CSV", restart_case = None, restart_step = -1, data_start
 
 def create_case2(case = "CSV", restart_case = None, restart_step = -1, data_start = None):
     length = 100
-    return createEclSum(case , [("WOPT", "OPX" , 0, "SM3") , ("FOPR" , None , 0, "SM3/DAY"), ("BPR" , None , 10, "SM3"), ("RPR", None, 3, "BARS")],
+    return createEclSum(case , [("WOPT", "OPX" , 0, "SM3") , ("FOPR" , None , 0, "SM3/DAY"), ("BPR" , None , 10, "SM3"), ("RPR", None, 3, "BARS"), ("COPR", "OPX", 421, "BARS")],
                         sim_length_days = length,
                         num_report_step = 10,
                         num_mini_step = 10,
@@ -577,7 +577,7 @@ class SumTest(EclTest):
         df = ecl_sum.pandas_frame()
         assert_frame_equal(frame, df)
 
-        ecl_sum_less = EclSum.from_pandas("PANDAS", frame, dims=[20,10,5], headers=['RPR:3,1,1', 'GNAFS:5', 'ALPHA', 'BPR:10'])
+        ecl_sum_less = EclSum.from_pandas("PANDAS", frame, dims=[20,10,5], headers=['BPR:10', 'RPR:3,1,1', 'COPR:OPX:1,2,3'])
         del frame['WOPT:OPX']
         del frame['FOPR']
         df_less = ecl_sum_less.pandas_frame()
