@@ -1088,7 +1088,14 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           lgr_name  = (char*)util_alloc_strip_copy(  (const char*)ecl_kw_iget_ptr( lgrs , params_index ));
           smspec_node = (ecl::smspec_node_type*) smspec_node_alloc_lgr( var_type , well , kw , unit , lgr_name , ecl_smspec->key_join_string.c_str() , lgr_i , lgr_j , lgr_k , params_index, default_value);
         } else
-          smspec_node = (ecl::smspec_node_type*) smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string.c_str() , ecl_smspec->grid_dims , num , params_index , default_value);
+          smspec_node = (ecl::smspec_node_type*) smspec_node_alloc(params_index,
+                                                                   kw,
+                                                                   well,
+                                                                   num,
+                                                                   unit,
+                                                                   ecl_smspec->grid_dims,
+                                                                   default_value,
+                                                                   ecl_smspec->key_join_string.c_str());
 
         //Should verify that the node actually can be inserted - before trying.
 

@@ -95,15 +95,15 @@ static void test_identify_total_variable() {
 
 void test_cmp_types() {
   const int dims[3] = {10,10,10};
-  ecl::smspec_node_type * field_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_FIELD_VAR , NULL , "FOPT" , "UNIT" , ":" , dims , 0 , 0 , 0 );
-  ecl::smspec_node_type * region_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * group_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_GROUP_VAR , "G1" , "GOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * well_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * block_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_BLOCK_VAR , NULL , "BPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * aquifer_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_AQUIFER_VAR , NULL , "AAQP" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * segment_node = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_SEGMENT_VAR , "W1" , "SGOR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * misc_node1 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR , NULL , "TIME" , "UNIT" , ":", dims, 10 , 0, 0);
-  ecl::smspec_node_type * misc_node2 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_MISC_VAR , NULL , "TCPU" , "UNIT" , ":", dims, 10 , 0, 0);
+  ecl::smspec_node_type field_node( 0, "FOPT" , "UNIT" , 0);
+  ecl::smspec_node_type region_node( 0, "RPR" , 10, "UNIT" , dims , 0 , ":");
+  ecl::smspec_node_type group_node( 0, "GOPR" , "G1", "UNIT" , 0, ":");
+  ecl::smspec_node_type well_node( 0, "WOPR" , "W1", "UNIT" , 0, ":");
+  ecl::smspec_node_type block_node( 0, "BPR", 10, "UNIT", dims, 0, ":");
+  ecl::smspec_node_type aquifer_node( 0, "AAQP" , 10, "UNIT" , dims, 0 , ":");
+  ecl::smspec_node_type segment_node( 0, "W1" , "SGOR" , 10, "UNIT" , dims , 0 , ":");
+  ecl::smspec_node_type misc_node1( 0, "TIME" , "UNIT", 0 );
+  ecl::smspec_node_type misc_node2( 0, "TCPU", "UNIT", 0);
 
   test_assert_int_equal( smspec_node_cmp( field_node , field_node ), 0);
   test_assert_int_equal( smspec_node_cmp( region_node , region_node ), 0);
@@ -124,16 +124,6 @@ void test_cmp_types() {
   test_assert_true( smspec_node_cmp( misc_node2, aquifer_node) > 0 );
   test_assert_true( smspec_node_cmp( misc_node1, misc_node2) < 0 );
   test_assert_true( smspec_node_cmp( misc_node2, misc_node1) > 0 );
-
-  smspec_node_free( segment_node );
-  smspec_node_free( aquifer_node );
-  smspec_node_free( block_node );
-  smspec_node_free( group_node );
-  smspec_node_free( well_node );
-  smspec_node_free( region_node );
-  smspec_node_free( field_node );
-  smspec_node_free( misc_node1 );
-  smspec_node_free( misc_node2 );
 }
 
 void test_cmp_well() {
