@@ -78,7 +78,6 @@ namespace ecl {
       void set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k);
 
 
-      int cmp(const smspec_node_type& node2) const;
       int cmp_KEYWORD_WGNAME_NUM__(const smspec_node_type * node2) const;
       static int cmp_KEYWORD_WGNAME_NUM( const smspec_node_type * node1, const smspec_node_type * node2) {
         return node1->cmp_KEYWORD_WGNAME_NUM__(node2);
@@ -124,6 +123,7 @@ namespace ecl {
 
     public:
 
+      int cmp(const smspec_node_type& node2) const;
       smspec_node_type(int param_index,
                        const char * keyword  ,
                        const char * wgname,

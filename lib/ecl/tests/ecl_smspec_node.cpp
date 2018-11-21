@@ -120,57 +120,47 @@ void test_cmp_types() {
   test_assert_true( block_node.cmp(aquifer_node)< 0 );
   test_assert_true( aquifer_node.cmp(misc_node2) < 0 );
 
-  test_assert_true( field_node.cmp(sc_node1) > 0 );
+  test_assert_true( field_node.cmp(misc_node1) > 0 );
   test_assert_true( misc_node2.cmp(aquifer_node) > 0 );
   test_assert_true( misc_node1.cmp(misc_node2) < 0 );
   test_assert_true( misc_node2.cmp(misc_node1) > 0 );
 }
 
 void test_cmp_well() {
-  const int dims[3] = {10,10,10};
-  ecl::smspec_node_type * well_node1_1 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * well_node1_2 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * well_node2_1 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W1" , "WWCT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * well_node2_2 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , "W2" , "WWWT" , "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * well_node_dummy = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_WELL_VAR , DUMMY_WELL , "WOPR" , "UNIT" , ":" , dims , 10 , 0 , 0 );
+  ecl::smspec_node_type well_node1_1( 0 ,  "WOPR" ,"W1" , "UNIT" , 10 ,":");
+  ecl::smspec_node_type well_node1_2( 0 ,  "WOPR" ,"W2" , "UNIT" , 10 ,":");
+  ecl::smspec_node_type well_node2_1( 0 ,  "WWCT" ,"W1" , "UNIT" , 10 ,":");
+  ecl::smspec_node_type well_node2_2( 0 ,  "WWWT" ,"W2" , "UNIT" , 10 ,":");
+  {
+    ecl::smspec_node_type well_node_dummy( 0 ,  "WOPR" ,DUMMY_WELL , "UNIT" , 10 ,":");
+    test_assert_NULL( &well_node_dummy);
+  }
+  test_assert_int_equal( well_node1_1.cmp(well_node1_1), 0);
+  test_assert_int_equal( well_node2_2.cmp(well_node2_2), 0);
 
-  test_assert_NULL( well_node_dummy);
-  test_assert_int_equal( smspec_node_cmp( well_node1_1 , well_node1_1 ), 0);
-  test_assert_int_equal( smspec_node_cmp( well_node2_2 , well_node2_2 ), 0);
+  test_assert_true( well_node1_1.cmp(well_node1_2)< 0 );
+  test_assert_true( well_node1_1.cmp(well_node2_1)< 0 );
+  test_assert_true( well_node1_1.cmp(well_node2_2)< 0 );
 
-  test_assert_true( smspec_node_cmp( well_node1_1, well_node1_2) < 0 );
-  test_assert_true( smspec_node_cmp( well_node1_1, well_node2_1) < 0 );
-  test_assert_true( smspec_node_cmp( well_node1_1, well_node2_2) < 0 );
-
-  test_assert_true( smspec_node_cmp( well_node1_2, well_node1_1) > 0 );
-  test_assert_true( smspec_node_cmp( well_node1_2, well_node2_1) < 0 );
-
-  smspec_node_free( well_node1_1 );
-  smspec_node_free( well_node2_1 );
-  smspec_node_free( well_node1_2 );
-  smspec_node_free( well_node2_2 );
+  test_assert_true( well_node1_2.cmp(well_node1_1)> 0 );
+  test_assert_true( well_node1_2.cmp(well_node2_1)< 0 );
 }
 
 
 
 void test_cmp_region() {
   const int dims[3] = {10,10,10};
-  ecl::smspec_node_type * region_node1_1 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "ROIP" ,  "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * region_node1_2 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "ROIP" ,  "UNIT" , ":" , dims , 11 , 0 , 0 );
-  ecl::smspec_node_type * region_node2_1 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" ,   "UNIT" , ":" , dims , 10 , 0 , 0 );
-  ecl::smspec_node_type * region_node2_2 = (ecl::smspec_node_type*)smspec_node_alloc( ECL_SMSPEC_REGION_VAR , NULL , "RPR" ,   "UNIT" , ":" , dims , 12 , 0 , 0 );
+  ecl::smspec_node_type region_node1_1( 0, "ROIP" ,  10 ,"UNIT" ,  dims , 0 , ":" );
+  ecl::smspec_node_type region_node1_2( 0, "ROIP" ,  11 ,"UNIT" ,  dims , 0 , ":" );
+  ecl::smspec_node_type region_node2_1( 0, "RPR" ,   10 ,"UNIT" ,  dims , 0 , ":" );
+  ecl::smspec_node_type region_node2_2( 0, "RPR" ,   12 ,"UNIT" ,  dims , 0 , ":" );
 
-  test_assert_true( smspec_node_cmp( region_node1_1, region_node1_2) < 0 );
-  test_assert_true( smspec_node_cmp( region_node1_1, region_node2_1) < 0 );
-  test_assert_true( smspec_node_cmp( region_node1_1, region_node2_2) < 0 );
+  test_assert_true( region_node1_1.cmp(region_node1_2)< 0 );
+  test_assert_true( region_node1_1.cmp(region_node2_1)< 0 );
+  test_assert_true( region_node1_1.cmp(region_node2_2)< 0 );
 
-  test_assert_true( smspec_node_cmp( region_node1_2, region_node1_1) > 0 );
-  test_assert_true( smspec_node_cmp( region_node1_2, region_node2_1) < 0 );
-
-  smspec_node_free( region_node1_1 );
-  smspec_node_free( region_node2_1 );
-  smspec_node_free( region_node1_2 );
-  smspec_node_free( region_node2_2 );
+  test_assert_true( region_node1_2.cmp(region_node1_1)> 0 );
+  test_assert_true( region_node1_2.cmp(region_node2_1)< 0 );
 }
 
 
