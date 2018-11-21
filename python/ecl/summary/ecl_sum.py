@@ -557,15 +557,17 @@ class EclSum(BaseCClass):
 
     @classmethod
     def from_pandas(cls, case, frame, dims = None, headers = None):
-        start_time = frame.index[0]
-        ecl_sum = EclSum.writer(case,
-                                start_time.to_pydatetime(),
-                                dims[0], dims[1], dims[2])      
+        start_time = frame.index[0]    
         var_list = []        
         if headers is None:
              header_list = EclSum._compile_headers_list( frame.columns.values, dims )
         else:
              header_list = EclSum._compile_headers_list( headers, dims )
+        if dims is None:
+             dims = [1,1,1];
+        ecl_sum = EclSum.writer(case,
+                                start_time.to_pydatetime(),
+                                dims[0], dims[1], dims[2])  
         for kw, wgname, num, unit in header_list:
              var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num, unit =unit).getKey1() )
 
