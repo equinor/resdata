@@ -105,25 +105,25 @@ void test_cmp_types() {
   ecl::smspec_node_type misc_node1( 0, "TIME" , "UNIT", 0 );
   ecl::smspec_node_type misc_node2( 0, "TCPU", "UNIT", 0);
 
-  test_assert_int_equal( smspec_node_cmp( field_node , field_node ), 0);
-  test_assert_int_equal( smspec_node_cmp( region_node , region_node ), 0);
-  test_assert_int_equal( smspec_node_cmp( well_node , well_node ), 0);
-  test_assert_int_equal( smspec_node_cmp( group_node , group_node ), 0);
-  test_assert_int_equal( smspec_node_cmp( block_node , block_node ), 0);
+  test_assert_int_equal( field_node.cmp(field_node), 0);
+  test_assert_int_equal( region_node.cmp(region_node), 0);
+  test_assert_int_equal( well_node.cmp(well_node), 0);
+  test_assert_int_equal( group_node.cmp(group_node), 0);
+  test_assert_int_equal( block_node.cmp(block_node), 0);
 
-  test_assert_true( smspec_node_cmp( misc_node1 , field_node ) < 0 );
-  test_assert_true( smspec_node_cmp( field_node , region_node ) < 0 );
-  test_assert_true( smspec_node_cmp( region_node , group_node ) < 0 );
-  test_assert_true( smspec_node_cmp( group_node , well_node ) < 0 );
-  test_assert_true( smspec_node_cmp( well_node , segment_node ) < 0 );
-  test_assert_true( smspec_node_cmp( segment_node , block_node ) < 0 );
-  test_assert_true( smspec_node_cmp( block_node , aquifer_node) < 0 );
-  test_assert_true( smspec_node_cmp( aquifer_node , misc_node2 ) < 0 );
+  test_assert_true( misc_node1.cmp(field_node) < 0 );
+  test_assert_true( field_node.cmp(region_node) < 0 );
+  test_assert_true( region_node.cmp(group_node) < 0 );
+  test_assert_true( group_node.cmp(well_node) < 0 );
+  test_assert_true( well_node.cmp(segment_node) < 0 );
+  test_assert_true( segment_node.cmp(block_node) < 0 );
+  test_assert_true( block_node.cmp(aquifer_node)< 0 );
+  test_assert_true( aquifer_node.cmp(misc_node2) < 0 );
 
-  test_assert_true( smspec_node_cmp( field_node, misc_node1) > 0 );
-  test_assert_true( smspec_node_cmp( misc_node2, aquifer_node) > 0 );
-  test_assert_true( smspec_node_cmp( misc_node1, misc_node2) < 0 );
-  test_assert_true( smspec_node_cmp( misc_node2, misc_node1) > 0 );
+  test_assert_true( field_node.cmp(sc_node1) > 0 );
+  test_assert_true( misc_node2.cmp(aquifer_node) > 0 );
+  test_assert_true( misc_node1.cmp(misc_node2) < 0 );
+  test_assert_true( misc_node2.cmp(misc_node1) > 0 );
 }
 
 void test_cmp_well() {

@@ -1199,53 +1199,53 @@ int smspec_node_type::cmp_key1__( const smspec_node_type * node2) const {
   return util_strcmp_int( this->gen_key1.c_str() , node2->gen_key1.c_str() );
 }
 
-int smspec_node_type::cmp__(const smspec_node_type * node2) const {
+int smspec_node_type::cmp(const smspec_node_type& node2) const {
   /* 1: Start with special casing for the MISC variables. */
-  if ((this->var_type == ECL_SMSPEC_MISC_VAR) || (node2->var_type == ECL_SMSPEC_MISC_VAR))
-    return smspec_node_type::cmp_MISC( this , node2 );
+  if ((this->var_type == ECL_SMSPEC_MISC_VAR) || (node2.var_type == ECL_SMSPEC_MISC_VAR))
+    return smspec_node_type::cmp_MISC( this , &node2 );
 
   /* 2: Sort according to variable type */
-  if (this->var_type < node2->var_type)
+  if (this->var_type < node2.var_type)
     return -1;
 
-  if (this->var_type > node2->var_type)
+  if (this->var_type > node2.var_type)
     return 1;
 
   /* 3: Internal sort of variables of the same type. */
   switch (this->var_type) {
 
   case( ECL_SMSPEC_FIELD_VAR):
-    return smspec_node_type::cmp_KEYWORD( this, node2);
+    return smspec_node_type::cmp_KEYWORD( this, &node2);
 
   case( ECL_SMSPEC_WELL_VAR):
   case( ECL_SMSPEC_GROUP_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME( this, node2);
+    return smspec_node_type::cmp_KEYWORD_WGNAME( this, &node2);
 
   case( ECL_SMSPEC_BLOCK_VAR):
   case( ECL_SMSPEC_REGION_VAR):
   case( ECL_SMSPEC_REGION_2_REGION_VAR):
   case( ECL_SMSPEC_AQUIFER_VAR):
-    return smspec_node_type::cmp_KEYWORD_NUM( this, node2);
+    return smspec_node_type::cmp_KEYWORD_NUM( this, &node2);
 
   case( ECL_SMSPEC_COMPLETION_VAR):
   case( ECL_SMSPEC_SEGMENT_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME_NUM( this, node2);
+    return smspec_node_type::cmp_KEYWORD_WGNAME_NUM( this, &node2);
 
   case (ECL_SMSPEC_NETWORK_VAR):
-    return smspec_node_type::cmp_key1( this, node2);
+    return smspec_node_type::cmp_key1( this, &node2);
 
   case( ECL_SMSPEC_LOCAL_BLOCK_VAR):
-    return smspec_node_type::cmp_KEYWORD_LGR_LGRIJK( this, node2);
+    return smspec_node_type::cmp_KEYWORD_LGR_LGRIJK( this, &node2);
 
   case( ECL_SMSPEC_LOCAL_WELL_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME_LGR( this, node2);
+    return smspec_node_type::cmp_KEYWORD_WGNAME_LGR( this, &node2);
 
   case( ECL_SMSPEC_LOCAL_COMPLETION_VAR):
-    return smspec_node_type::cmp_KEYWORD_WGNAME_LGR_LGRIJK( this, node2);
+    return smspec_node_type::cmp_KEYWORD_WGNAME_LGR_LGRIJK( this, &node2);
 
   default:
     /* Should not really end up here. */
-    return smspec_node_type::cmp_key1( this, node2);
+    return smspec_node_type::cmp_key1( this, &node2);
   }
 }
 
