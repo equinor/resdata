@@ -208,33 +208,6 @@ Completion var:    VAR_TYPE:WELL_NAME:NUM
 */
 
 
-/**
-   The special_vars list is used to associate keywords with special
-   types, when the kewyord name is in conflict with the default vector
-   naming convention; all the variables mentioned in the list below
-   are given the type ECL_SMSPEC_MISC_VAR.
-
-   For instance the keyword 'NEWTON' starts with 'N' and is
-   classified as a NETWORK type variable. However it should rather
-   be classified as a MISC type variable. (What a fucking mess).
-
-   The special_vars list is used in the functions
-   ecl_smspec_identify_special_var() and ecl_smspec_identify_var_type().
-*/
-
-static const char* special_vars[] = {"NEWTON",
-                                     "NAIMFRAC",
-                                     "NLINEARS",
-                                     "NLINSMIN",
-                                     "NLINSMAX",
-                                     "ELAPSED",
-                                     "MAXDPR",
-                                     "MAXDSO",
-                                     "MAXDSG",
-                                     "MAXDSW",
-                                     "STEPTYPE",
-                                     "WNEWTON"};
-
 
 
 /*
@@ -554,131 +527,8 @@ ecl_smspec_type * ecl_smspec_alloc_writer(const char * key_join_string, time_t s
 
 UTIL_SAFE_CAST_FUNCTION( ecl_smspec , ECL_SMSPEC_ID )
 
-
-/**
-   Goes through the special_vars static table to check if @var is one
-   the special variables which does not follow normal naming
-   convention. If the test eavulates to true the function will return
-   ECL_SMSPEC_MISC_VAR, otherwise the function will return
-   ECL_SMSPEC_INVALID_VAR and the variable type will be determined
-   from the var name according to standard naming conventions.
-
-   It is important that this function is called before the standard
-   method.
-*/
-
-static ecl_smspec_var_type ecl_smspec_identify_special_var( const char * var ) {
-  ecl_smspec_var_type var_type = ECL_SMSPEC_INVALID_VAR;
-
-  int num_special = sizeof( special_vars ) / sizeof( special_vars[0] );
-  int i;
-  for (i=0; i < num_special; i++) {
-    if (strcmp( var , special_vars[i]) == 0) {
-      var_type = ECL_SMSPEC_MISC_VAR;
-      break;
-    }
-  }
-
-  return var_type;
-}
-
-
-/*
-   See table 3.4 in the ECLIPSE file format reference manual.
-
-   Observe that the combined ecl_sum style keys like e.g. WWCT:OP1
-   should be formatted with the keyword first, so that this function
-   will identify both 'WWCT' and 'WWCT:OP_1' as a ECL_SMSPEC_WELL_VAR
-   instance.
-*/
-
-
 ecl_smspec_var_type  ecl_smspec_identify_var_type(const char * var) {
-  ecl_smspec_var_type var_type = ecl_smspec_identify_special_var( var );
-  if (var_type == ECL_SMSPEC_INVALID_VAR) {
-    switch(var[0]) {
-    case('A'):
-      var_type = ECL_SMSPEC_AQUIFER_VAR;
-      break;
-    case('B'):
-      var_type = ECL_SMSPEC_BLOCK_VAR;
-      break;
-    case('C'):
-      var_type = ECL_SMSPEC_COMPLETION_VAR;
-      break;
-    case('F'):
-      var_type = ECL_SMSPEC_FIELD_VAR;
-      break;
-    case('G'):
-      var_type = ECL_SMSPEC_GROUP_VAR;
-      break;
-    case('L'):
-      switch(var[1]) {
-      case('B'):
-        var_type = ECL_SMSPEC_LOCAL_BLOCK_VAR;
-        break;
-      case('C'):
-        var_type = ECL_SMSPEC_LOCAL_COMPLETION_VAR;
-        break;
-      case('W'):
-        var_type = ECL_SMSPEC_LOCAL_WELL_VAR;
-        break;
-      default:
-        /*
-          The documentation explicitly mentions keywords starting with
-          LB, LC and LW as special types, but keywords starting with
-          L[^BCW] are also valid. These come in the misceallaneous
-          category; at least the LLINEAR keyword is an example of such
-          a keyword.
-        */
-        var_type = ECL_SMSPEC_MISC_VAR;
-      }
-      break;
-    case('N'):
-      var_type = ECL_SMSPEC_NETWORK_VAR;
-      break;
-    case('R'):
-      {
-        /*
-          The distinction between region-to-region variables and plain
-          region variables is less than clear: The current
-          interpretation is that the cases:
-
-             1. Any variable matching:
-
-                a) Starts with 'R'
-                b) Has 'F' as the third character
-
-             2. The variable "RNLF"
-
-          Get variable type ECL_SMSPEC_REGION_2_REGION_VAR. The rest
-          get the type ECL_SMSPEC_REGION_VAR.
-        */
-
-        if (util_string_equal( var , "RNLF"))
-          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
-        else if (var[2] == 'F')
-          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
-        else
-          var_type  = ECL_SMSPEC_REGION_VAR;
-
-      }
-      break;
-    case('S'):
-      var_type = ECL_SMSPEC_SEGMENT_VAR;
-      break;
-    case('W'):
-      var_type = ECL_SMSPEC_WELL_VAR;
-      break;
-    default:
-      /*
-        It is unfortunately impossible to recognize an error situation -
-        the rest just goes in "other" variables.
-      */
-      var_type = ECL_SMSPEC_MISC_VAR;
-    }
-  }
-  return var_type;
+  return ecl::smspec_node_type::identify_var_type(var);
 }
 
 
@@ -1030,7 +880,7 @@ void ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , const ecl::smspec_nod
 
 
 
-static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node_type& smspec_node){
+static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, const ecl::smspec_node_type& smspec_node){
   ecl_smspec->smspec_nodes.push_back(smspec_node);
   {
     int params_index = smspec_node.get_params_index();
@@ -1039,9 +889,10 @@ static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ec
     ecl_smspec->index_map.push_back(params_index);
     ecl_smspec->params_default.resize( params_index+1, PARAMS_GLOBAL_DEFAULT );
     ecl_smspec->params_default[params_index] = smspec_node.get_default();
+    ecl_smspec->inv_index_map.insert( std::make_pair(params_index, ecl_smspec->smspec_nodes.size() - 1));
   }
   ecl_smspec_index_node(ecl_smspec, smspec_node);
-  return &ecl_smspec->smspec_nodes;
+  return &ecl_smspec->smspec_nodes.back();
 }
 
 
@@ -1058,17 +909,80 @@ const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, 
 }
 
 
-const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit, float default_value) {
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit,  float default_value) {
   int params_index = ecl_smspec->smspec_nodes.size();
-  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index, keyword, num, unit, default_value, ecl_smspec->key_join_string.c_str()));
+  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
+                                                                  keyword,
+                                                                  num,
+                                                                  unit,
+                                                                  ecl_smspec->grid_dims,
+                                                                  default_value,
+                                                                  ecl_smspec->key_join_string.c_str()));
 }
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
+                                                  const char * keyword,
+                                                  const char * wgname,
+                                                  int num,
+                                                  const char * unit,
+                                                  float default_value)
+{
+  int params_index = ecl_smspec->smspec_nodes.size();
+  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
+                                                                  keyword,
+                                                                  wgname,
+                                                                  num,
+                                                                  unit,
+                                                                  ecl_smspec->grid_dims,
+                                                                  default_value,
+                                                                  ecl_smspec->key_join_string.c_str()));
+}
+
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
+                                                  int params_index,
+                                                  const char * keyword,
+                                                  const char * wgname,
+                                                  int num,
+                                                  const char * unit,
+                                                  float default_value)
+{
+  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
+                                                                  keyword,
+                                                                  wgname,
+                                                                  num,
+                                                                  unit,
+                                                                  ecl_smspec->grid_dims,
+                                                                  default_value,
+                                                                  ecl_smspec->key_join_string.c_str()));
+}
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
+                                                  int params_index,
+                                                  const char * keyword,
+                                                  const char * wgname,
+                                                  int num,
+                                                  const char * unit,
+                                                  const char * lgr,
+                                                  int lgr_i, int lgr_j, int lgr_k,
+                                                  float default_value)
+{
+  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
+                                                                  keyword,
+                                                                  wgname,
+                                                                  unit,
+                                                                  lgr,
+                                                                  lgr_i, lgr_j, lgr_k,
+                                                                  default_value,
+                                                                  ecl_smspec->key_join_string.c_str()));
+}
+
 
 
 void ecl_smspec_init_var( ecl_smspec_type * ecl_smspec , ecl::smspec_node_type& smspec_node , const char * keyword , const char * wgname , int num, const char * unit ) {
   smspec_node_init( &smspec_node , ecl_smspec_identify_var_type( keyword ) , wgname , keyword , unit , ecl_smspec->key_join_string.c_str() , ecl_smspec->grid_dims , num );
   ecl_smspec_index_node( ecl_smspec , smspec_node );
 }
-
 
 const int * ecl_smspec_get_index_map( const ecl_smspec_type * smspec ) {
   return smspec->index_map.data();
@@ -1156,7 +1070,6 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     ecl_util_get_file_type( header_file , &ecl_smspec->formatted , NULL );
 
     {
-      int node_count = 0;
       for (params_index=0; params_index < ecl_kw_get_size(wells); params_index++) {
         float default_value          = PARAMS_GLOBAL_DEFAULT;
         int num                      = SMSPEC_NUMS_INVALID;
@@ -1177,10 +1090,11 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         } else
           smspec_node = (ecl::smspec_node_type*) smspec_node_alloc( var_type , well , kw , unit , ecl_smspec->key_join_string.c_str() , ecl_smspec->grid_dims , num , params_index , default_value);
 
+        //Should verify that the node actually can be inserted - before trying.
+
+
         if (smspec_node) {
-          ecl_smspec_add_node( ecl_smspec , *smspec_node );
-          ecl_smspec->inv_index_map.insert( std::make_pair(params_index, node_count) );
-          node_count++;
+          ecl_smspec_insert_node( ecl_smspec , *smspec_node );
           smspec_node_free(smspec_node);
         }
 
@@ -1192,7 +1106,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
     }
 
     char * header_str = util_alloc_realpath( header_file );
-    ecl_smspec->header_file = header_str; 
+    ecl_smspec->header_file = header_str;
     free(header_str);
     if (include_restart)
       ecl_smspec_load_restart( ecl_smspec , header );

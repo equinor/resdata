@@ -56,6 +56,9 @@ namespace ecl {
       float                  default_value;      /* Default value for this variable. */
 
       smspec_node_type();
+      static ecl_smspec_var_type identify_special_var( const char * var );
+      bool valid(const char * keyword);
+
 
       void set_invalid_flags();
       void init_lgr( ecl_smspec_var_type var_type ,
@@ -121,13 +124,14 @@ namespace ecl {
 
     public:
 
-      smspec_node_type(ecl_smspec_var_type var_type ,
-                       const char * wgname  ,
-                       const char * keyword ,
+      smspec_node_type(int param_index,
+                       const char * keyword  ,
+                       const char * wgname,
+                       int num,
                        const char * unit    ,
-                       const char * key_join_string ,
                        const int grid_dims[3] ,
-                       int num , int param_index, float default_value);
+                       float default_value,
+                       const char * key_join_string);
 
       smspec_node_type(int param_index,
                        const char * keyword ,
@@ -139,7 +143,7 @@ namespace ecl {
                        const char * key_join_string);
 
       smspec_node_type(int param_index, const char * keyword, const char * unit, float default_value);
-      smspec_node_type(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string);
+      smspec_node_type(int param_index, const char * keyword, int num, const char * unit, const int grid_dims[3], float default_value, const char * key_join_string);
       smspec_node_type(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char *  key_join_string);
 
       bool init__( ecl_smspec_var_type var_type ,
@@ -150,6 +154,7 @@ namespace ecl {
                    const int grid_dims[3] ,
                    int num);
 
+      static ecl_smspec_var_type identify_var_type(const char * var);
 
       smspec_node_type * copy() const;
 

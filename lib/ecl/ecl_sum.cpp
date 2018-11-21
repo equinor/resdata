@@ -294,20 +294,9 @@ const ecl::smspec_node_type * ecl_sum_add_var( ecl_sum_type * ecl_sum , const ch
   if (ecl_sum_data_get_length(ecl_sum->data) > 0)
     throw std::invalid_argument("Can not interchange variable adding and timesteps.\n");
 
-
-  ecl::smspec_node_type * smspec_node = (ecl::smspec_node_type*)smspec_node_alloc( ecl_smspec_identify_var_type(keyword),
-                                                                                   wgname,
-                                                                                   keyword,
-                                                                                   unit,
-                                                                                   ecl_sum->key_join_string,
-                                                                                   ecl_smspec_get_grid_dims(ecl_sum->smspec),
-                                                                                   num,
-                                                                                   -1,
-                                                                                   default_value);
-  const auto& new_node = ecl_smspec_add_node(ecl_sum->smspec, *smspec_node);
-  ecl_sum_data_reset_self_map( ecl_sum->data );
-  return &new_node;
+  return ecl_smspec_add_node( ecl_sum->smspec, keyword, wgname, num, unit, default_value);
 }
+
 
 const ecl::smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node_type * node) {
   return ecl_sum_add_var(ecl_sum,

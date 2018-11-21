@@ -160,8 +160,30 @@ extern "C" {
 #endif
 
 void                          ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , const ecl::smspec_node_type& smspec_node);
-void                          ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, ecl::smspec_node_type& smspec_node);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * unit, float default_value);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, const char * unit, float default_value);
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, int num, const char * unit, float default_value);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit, float default_value);
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
+                                                  int params_index,
+                                                  const char * keyword,
+                                                  const char * wgname,
+                                                  int num,
+                                                  const char * unit,
+                                                  float default_value);
+
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
+                                                  int params_index,
+                                                  const char * keyword,
+                                                  const char * wgname,
+                                                  int num,
+                                                  const char * unit,
+                                                  const char * lgr,
+                                                  int lgr_i, int lgr_j, int lgr_k,
+                                                  float default_value);
+
+
+
+
 #endif
