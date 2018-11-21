@@ -16,6 +16,7 @@
 
 from __future__ import print_function
 import warnings
+from ecl.summary import EclSum
 from ecl.summary.ecl_sum_node import EclSumNode
 
 
@@ -46,7 +47,6 @@ class EclSumVector(object):
 
         self.__dates = parent.get_dates(report_only)
         self.__days = parent.get_days(report_only)
-        self.__mpl_dates = parent.get_numpy_dates(report_only)
         self.__numpy_dates = parent.get_numpy_dates(report_only)
         self.__report_step = parent.get_report_step(report_only)
         self.__values = None
@@ -106,7 +106,8 @@ class EclSumVector(object):
         """
         warning.warn("The mpl_dates property has been deprecated - use numpy_dates instead",
                      DeprecationWarning)
-        return self.__numpy_dates
+
+        return EclSum.get_mpl_dates(report_only)
 
     @property
     def numpy_dates(self):
