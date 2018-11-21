@@ -110,7 +110,7 @@ static void well_node_free( well_node_type * well_node ) {
 }
 
 
-static bool well_node_time_cmp( const well_node_type * node1 , const well_node_type * node2) {
+static bool well_node_time_lt( const well_node_type * node1 , const well_node_type * node2) {
   return (node1->sim_time < node2->sim_time); 
 }
 
@@ -259,7 +259,7 @@ void well_ts_add_well( well_ts_type * well_ts , well_state_type * well_state ) {
       // The new node is chronologically before the previous node;
       // i.e. we must sort the nodes in time. This should probably happen
       // quite seldom: 
-      std::sort( well_ts->ts.begin(), well_ts->ts.end(), well_node_time_cmp );
+      std::sort( well_ts->ts.begin(), well_ts->ts.end(), well_node_time_lt );
   }
 }
 
