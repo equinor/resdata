@@ -26,6 +26,8 @@ import numpy
 import datetime
 import os.path
 import ctypes
+import pandas
+import re
 
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
@@ -500,7 +502,6 @@ class EclSum(BaseCClass):
               ....
         """
         from ecl.summary import EclSumKeyWordVector
-        import pandas
         if column_keys is None:
             keywords = EclSumKeyWordVector(self, add_keywords = True)
         else:
@@ -523,6 +524,61 @@ class EclSum(BaseCClass):
 
         frame = pandas.DataFrame(index = time_index, columns=list(keywords), data=data)
         return frame
+
+    @staticmethod
+    def _compile_headers_list(headers, dims):
+        var_list = []
+        for key in headers:
+            lst = re.split(':', key)
+            kw = lst[0]
+            wgname = None
+            num = 0;
+            unit = "UNIT"
+            if len(lst) > 1:
+                nums = []
+                if lst[1][0].isdigit():       
+                    nums = re.split(',', lst[1])
+                else:
+                    wgname = lst[1]
+                if len(lst) == 3:
+                    nums = re.split(",", lst[2])
+                if len(nums) == 3:
+                    i = int(nums[0])-1
+                    j = int(nums[1])-1
+                    k = int(nums[2])-1
+                    if dims is None:
+                        raise ValueError("For key %s When using indexing i,j,k you must supply a valid value for the dims argument" % key)
+                    num = i + j * dims[0] + k * dims[0]*dims[1] + 1
+                elif len(nums) == 1:
+                    num = int(nums[0])
+                      
+            var_list.append( [kw, wgname, num, unit] )     
+        return var_list   
+
+    @classmethod
+    def from_pandas(cls, case, frame, dims = None, headers = None):
+        start_time = frame.index[0]    
+        var_list = []        
+        if headers is None:
+             header_list = EclSum._compile_headers_list( frame.columns.values, dims )
+        else:
+             header_list = EclSum._compile_headers_list( headers, dims )
+        if dims is None:
+             dims = [1,1,1];
+        ecl_sum = EclSum.writer(case,
+                                start_time.to_pydatetime(),
+                                dims[0], dims[1], dims[2])  
+        for kw, wgname, num, unit in header_list:
+             var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num, unit =unit).getKey1() )
+
+        for i, time in enumerate(frame.index):
+            days = (time - start_time).days
+            t_step = ecl_sum.addTStep( i+1 , days )
+
+            for var in var_list:
+                t_step[var] = frame.iloc[i][var]
+
+        return ecl_sum
 
 
     def get_key_index(self, key):
