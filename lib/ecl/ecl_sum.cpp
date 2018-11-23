@@ -324,7 +324,9 @@ const ecl::smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, co
 */
 
 ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_seconds) {
-  return ecl_sum_data_add_new_tstep( ecl_sum->data , report_step , sim_seconds );
+  ecl_sum_tstep_type * new_tstep = ecl_sum_data_add_new_tstep( ecl_sum->data , report_step , sim_seconds );
+  printf("%s \n", __func__);
+  return new_tstep;
 }
 
 static ecl_sum_type * ecl_sum_alloc_writer__( const char * ecl_case , const char * restart_case , int restart_step, bool fmt_output , bool unified , const char * key_join_string , time_t sim_start , bool time_in_days , int nx , int ny , int nz) {
@@ -838,6 +840,7 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
     for (int data_index = 0; data_index < ecl_sum_vector_get_size(ecl_sum_vector); data_index++) {
       double value = double_vector_iget(data,data_index);
       int params_index = data_index + 1;  // The +1 shift is because the first element in the tstep is time value.
+      printf("Writing at index:%d\n", params_index);
       ecl_sum_tstep_iset(tstep, params_index, value);
     }
   }

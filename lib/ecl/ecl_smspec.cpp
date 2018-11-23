@@ -27,6 +27,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
+#include <memory>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
@@ -100,7 +101,7 @@
 #define ECL_SMSPEC_ID          806647
 #define PARAMS_GLOBAL_DEFAULT  -99
 
-typedef std::map<std::string, size_t> node_map;
+typedef std::map<std::string, const ecl::smspec_node_type * > node_map;
 
 struct ecl_smspec_struct {
   UTIL_TYPE_ID_DECLARATION;
@@ -121,7 +122,7 @@ struct ecl_smspec_struct {
   std::map<std::string, std::map<int, node_map>> well_completion_var_index; /* Indexes for completion indexes .*/
 
 
-  std::vector<ecl::smspec_node_type> smspec_nodes;
+  std::vector<std::unique_ptr<ecl::smspec_node_type>> smspec_nodes;
   bool                 write_mode;
   bool                 need_nums;
   std::vector<int>     index_map;
@@ -230,30 +231,31 @@ static const char* smspec_required_keywords[] = {
 
 namespace {
 
-  const ecl::smspec_node_type * ecl_smspec_get_var_node( const ecl_smspec_type * smspec, const node_map& mp, const char * var) {
+const ecl::smspec_node_type * ecl_smspec_get_var_node( const node_map& mp, const char * var) {
+    printf("%s: Ser etter:%s \n", __func__, var);
     const auto it = mp.find(var);
     if (it == mp.end())
       return nullptr;
 
-    return &smspec->smspec_nodes[it->second];
+    return it->second;
   }
 
-  const ecl::smspec_node_type * ecl_smspec_get_str_key_var_node( const ecl_smspec_type * smspec, const std::map<std::string, node_map>& mp , const char * key , const char * var) {
+  const ecl::smspec_node_type * ecl_smspec_get_str_key_var_node( const std::map<std::string, node_map>& mp , const char * key , const char * var) {
     const auto key_it = mp.find(key);
     if (key_it == mp.end())
       return nullptr;
 
     const node_map& var_map = key_it->second;
-    return ecl_smspec_get_var_node(smspec, var_map, var);
+    return ecl_smspec_get_var_node(var_map, var);
   }
 
-  const ecl::smspec_node_type * ecl_smspec_get_int_key_var_node( const ecl_smspec_type * smspec, const std::map<int, node_map>& mp , int key , const char * var) {
+  const ecl::smspec_node_type * ecl_smspec_get_int_key_var_node(const std::map<int, node_map>& mp , int key , const char * var) {
     const auto key_it = mp.find(key);
     if (key_it == mp.end())
       return nullptr;
 
     const auto& var_map = key_it->second;
-    return ecl_smspec_get_var_node(smspec, var_map, var);
+    return ecl_smspec_get_var_node(var_map, var);
   }
 
 } //end namespace
@@ -299,15 +301,17 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 
   for (int i=0; i < ecl_smspec_num_nodes( self ); i++) {
+    printf("Looking at node: %d/%d \n", i, ecl_smspec_num_nodes(self));
     const ecl::smspec_node_type& self_node = ecl_smspec_iget_node_w_node_index( self , i );
     int self_index = self_node.get_params_index();
-    const char * key = smspec_node_get_gen_key1( &self_node );
+    const char * key = self_node.get_gen_key1();
     if (ecl_smspec_has_general_var( other , key)) {
       const ecl::smspec_node_type& other_node = ecl_smspec_get_general_var_node( other , key);
       int other_index = other_node.get_params_index();
       mapping[ self_index ]  =  other_index;
     }
   }
+  printf("Mapping ok \n");
 
   return mapping;
 }
@@ -322,7 +326,7 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 const ecl::smspec_node_type& ecl_smspec_iget_node_w_node_index( const ecl_smspec_type * smspec , int node_index ) {
   const auto& node = smspec->smspec_nodes[node_index];
-  return node;
+  return *node.get();
 }
 
 
@@ -659,23 +663,23 @@ static int ecl_smspec_get_global_grid_index(const ecl_smspec_type * smspec , int
    defined through the format strings used in this function.
 */
 
-static void ecl_smspec_install_gen_keys( ecl_smspec_type * smspec , size_t storage_index, const ecl::smspec_node_type& smspec_node ) {
+static void ecl_smspec_install_gen_keys( ecl_smspec_type * smspec , const ecl::smspec_node_type& smspec_node ) {
   /* Insert the default general mapping. */
   {
     const char * gen_key1 = smspec_node.get_gen_key1();
     if (gen_key1)
-      smspec->gen_var_index[gen_key1] = storage_index;
+      smspec->gen_var_index[gen_key1] = &smspec_node;
   }
 
   /* Insert the (optional) extra mapping for block related variables and region_2_region variables: */
   {
     const char * gen_key2 = smspec_node.get_gen_key2();
     if (gen_key2)
-      smspec->gen_var_index[gen_key2] = storage_index;
+      smspec->gen_var_index[gen_key2] = &smspec_node;
   }
 }
 
-static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , size_t storage_index, const ecl::smspec_node_type& smspec_node) {
+static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , const ecl::smspec_node_type& smspec_node) {
   /**
       This large switch is for installing keys which have custom lookup
       paths, in addition to the lookup based on general keys. Examples
@@ -692,27 +696,27 @@ static void ecl_smspec_install_special_keys( ecl_smspec_type * ecl_smspec , size
 
   switch(var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
-    ecl_smspec->well_completion_var_index[well][num][keyword] = storage_index;
+    ecl_smspec->well_completion_var_index[well][num][keyword] = &smspec_node;
     break;
   case(ECL_SMSPEC_FIELD_VAR):
-    ecl_smspec->field_var_index[keyword] = storage_index;
+    ecl_smspec->field_var_index[keyword] = &smspec_node;
     break;
   case(ECL_SMSPEC_GROUP_VAR):
-    ecl_smspec->group_var_index[group][keyword] = storage_index;
+    ecl_smspec->group_var_index[group][keyword] = &smspec_node;
     break;
   case(ECL_SMSPEC_REGION_VAR):
-    ecl_smspec->region_var_index[num][keyword] = storage_index;
+    ecl_smspec->region_var_index[num][keyword] = &smspec_node;
     ecl_smspec->num_regions = util_int_max(ecl_smspec->num_regions , num);
     break;
   case (ECL_SMSPEC_WELL_VAR):
-    ecl_smspec->well_var_index[well][keyword] = storage_index;
+    ecl_smspec->well_var_index[well][keyword] = &smspec_node;
     break;
   case(ECL_SMSPEC_MISC_VAR):
     /* Misc variable - i.e. date or CPU time ... */
-    ecl_smspec->misc_var_index[keyword] = storage_index;
+    ecl_smspec->misc_var_index[keyword] = &smspec_node;
     break;
   case(ECL_SMSPEC_BLOCK_VAR):
-    ecl_smspec->block_var_index[num][keyword] = storage_index;
+    ecl_smspec->block_var_index[num][keyword] = &smspec_node;
     break;
     /**
         The variables below are ONLY accesable through the gen_key
@@ -901,51 +905,58 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
 
 
-static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, const ecl::smspec_node_type& smspec_node){
-  size_t storage_index = ecl_smspec->smspec_nodes.size();
-  ecl_smspec->smspec_nodes.push_back(smspec_node);
+static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, std::unique_ptr<ecl::smspec_node_type> smspec_node){
+  ecl_smspec->smspec_nodes.push_back(std::move(smspec_node));
   {
-    int params_index = smspec_node.get_params_index();
+    int params_index = smspec_node->get_params_index();
 
     /* This indexing must be used when writing. */
     ecl_smspec->index_map.push_back(params_index);
     ecl_smspec->params_default.resize( params_index+1, PARAMS_GLOBAL_DEFAULT );
-    ecl_smspec->params_default[params_index] = smspec_node.get_default();
+    ecl_smspec->params_default[params_index] = smspec_node->get_default();
     ecl_smspec->inv_index_map.insert( std::make_pair(params_index, ecl_smspec->smspec_nodes.size() - 1));
   }
 
-  ecl_smspec_install_gen_keys( ecl_smspec, storage_index, smspec_node );
-  ecl_smspec_install_special_keys( ecl_smspec, storage_index, smspec_node );
+  ecl_smspec_install_gen_keys( ecl_smspec, *smspec_node.get() );
+  ecl_smspec_install_special_keys( ecl_smspec, *smspec_node.get() );
 
   if (smspec_node_need_nums( &smspec_node ))
     ecl_smspec->need_nums = true;
 
-  return &ecl_smspec->smspec_nodes.back();
+  return ecl_smspec->smspec_nodes.back().get();
 }
 
 
 
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * unit, float default_value) {
   int params_index = ecl_smspec->smspec_nodes.size();
-  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index, keyword, unit, default_value));
+  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                              keyword,
+                                                                                                              unit,
+                                                                                                              default_value)));
 }
 
 
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, const char * unit, float default_value) {
   int params_index = ecl_smspec->smspec_nodes.size();
-  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index, keyword, wgname, unit, default_value, ecl_smspec->key_join_string.c_str()));
+  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                              keyword,
+                                                                                                              wgname,
+                                                                                                              unit,
+                                                                                                              default_value,
+                                                                                                              ecl_smspec->key_join_string.c_str())));
 }
 
 
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit,  float default_value) {
   int params_index = ecl_smspec->smspec_nodes.size();
-  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
-                                                                  keyword,
-                                                                  num,
-                                                                  unit,
-                                                                  ecl_smspec->grid_dims,
-                                                                  default_value,
-                                                                  ecl_smspec->key_join_string.c_str()));
+  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                              keyword,
+                                                                                                              num,
+                                                                                                              unit,
+                                                                                                              ecl_smspec->grid_dims,
+                                                                                                              default_value,
+                                                                                                              ecl_smspec->key_join_string.c_str())));
 }
 
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
@@ -956,14 +967,14 @@ const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
                                                   float default_value)
 {
   int params_index = ecl_smspec->smspec_nodes.size();
-  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
-                                                                  keyword,
-                                                                  wgname,
-                                                                  num,
-                                                                  unit,
-                                                                  ecl_smspec->grid_dims,
-                                                                  default_value,
-                                                                  ecl_smspec->key_join_string.c_str()));
+  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                              keyword,
+                                                                                                              wgname,
+                                                                                                              num,
+                                                                                                              unit,
+                                                                                                              ecl_smspec->grid_dims,
+                                                                                                              default_value,
+                                                                                                              ecl_smspec->key_join_string.c_str())));
 }
 
 
@@ -975,14 +986,14 @@ const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
                                                   const char * unit,
                                                   float default_value)
 {
-  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
-                                                                  keyword,
-                                                                  wgname,
-                                                                  num,
-                                                                  unit,
-                                                                  ecl_smspec->grid_dims,
-                                                                  default_value,
-                                                                  ecl_smspec->key_join_string.c_str()));
+  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                              keyword,
+                                                                                                              wgname,
+                                                                                                              num,
+                                                                                                              unit,
+                                                                                                              ecl_smspec->grid_dims,
+                                                                                                              default_value,
+                                                                                                              ecl_smspec->key_join_string.c_str())));
 }
 
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
@@ -995,14 +1006,14 @@ const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
                                                   int lgr_i, int lgr_j, int lgr_k,
                                                   float default_value)
 {
-  return ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
-                                                                  keyword,
-                                                                  wgname,
-                                                                  unit,
-                                                                  lgr,
-                                                                  lgr_i, lgr_j, lgr_k,
-                                                                  default_value,
-                                                                  ecl_smspec->key_join_string.c_str()));
+  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                              keyword,
+                                                                                                              wgname,
+                                                                                                              unit,
+                                                                                                              lgr,
+                                                                                                              lgr_i, lgr_j, lgr_k,
+                                                                                                              default_value,
+                                                                                                              ecl_smspec->key_join_string.c_str())));
 }
 
 
@@ -1120,27 +1131,27 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           int lgr_k = ecl_kw_iget_int( numlz , params_index );
           char * lgr_name  = (char*)util_alloc_strip_copy(  (const char*)ecl_kw_iget_ptr( lgrs , params_index ));
 
-          ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
-                                                                   kw,
-                                                                   well,
-                                                                   unit,
-                                                                   lgr_name,
-                                                                   lgr_i, lgr_j, lgr_k,
-                                                                   default_value,
-                                                                   ecl_smspec->key_join_string.c_str()));
+          ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                               kw,
+                                                                                                               well,
+                                                                                                               unit,
+                                                                                                               lgr_name,
+                                                                                                               lgr_i, lgr_j, lgr_k,
+                                                                                                               default_value,
+                                                                                                               ecl_smspec->key_join_string.c_str())));
           free(lgr_name);
         } else {
-          const auto* node_ptr = ecl_smspec_insert_node(ecl_smspec, ecl::smspec_node_type(params_index,
-                                                                                          kw,
-                                                                                          well,
-                                                                                          num,
-                                                                                          unit,
-                                                                                          ecl_smspec->grid_dims,
-                                                                                          default_value,
-                                                                                          ecl_smspec->key_join_string.c_str()));
+          const auto* node_ptr = ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                                                      kw,
+                                                                                                                                      well,
+                                                                                                                                      num,
+                                                                                                                                      unit,
+                                                                                                                                      ecl_smspec->grid_dims,
+                                                                                                                                      default_value,
+                                                                                                                                      ecl_smspec->key_join_string.c_str())));
 
-          const auto * time_node = ecl_smspec_get_var_node( ecl_smspec, ecl_smspec->misc_var_index, "TIME");
-          const auto * node2 = ecl_smspec_get_var_node( ecl_smspec, ecl_smspec->misc_var_index, kw);
+          const auto * time_node = ecl_smspec_get_var_node(  ecl_smspec->misc_var_index, "TIME");
+          const auto * node2 = ecl_smspec_get_var_node( ecl_smspec->misc_var_index, kw);
           printf("node_ptr:%p / %p ",node_ptr, node2);
           if (node2)
             printf("Have added %s / %s\n\n", node_ptr->get_unit(), node2->get_unit());
@@ -1181,7 +1192,7 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
 
   if (ecl_smspec_fread_header(ecl_smspec , header_file , include_restart)) {
 
-    const ecl::smspec_node_type * time_node = ecl_smspec_get_var_node(ecl_smspec, ecl_smspec->misc_var_index, "TIME");
+    const ecl::smspec_node_type * time_node = ecl_smspec_get_var_node(ecl_smspec->misc_var_index, "TIME");
     if (time_node) {
       const char * time_unit = time_node->get_unit();
       ecl_smspec->time_index = time_node->get_params_index();
@@ -1195,7 +1206,7 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
         util_abort("%s: time_unit:%s not recognized \n",__func__ , time_unit);
     }
 
-    const ecl::smspec_node_type * day_node = ecl_smspec_get_var_node(ecl_smspec, ecl_smspec->misc_var_index, "DAY");
+    const ecl::smspec_node_type * day_node = ecl_smspec_get_var_node(ecl_smspec->misc_var_index, "DAY");
     if (day_node != NULL) {
       ecl_smspec->day_index   = smspec_node_get_params_index( day_node );
       ecl_smspec->month_index = smspec_node_get_params_index( &ecl_smspec->misc_var_index["MONTH"] );
@@ -1281,7 +1292,7 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
 /* Well variables */
 
 const ecl::smspec_node_type& ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var) {
-  const auto node_ptr = ecl_smspec_get_str_key_var_node(smspec, smspec->well_var_index, well, var);
+  const auto node_ptr = ecl_smspec_get_str_key_var_node(smspec->well_var_index, well, var);
   if (!node_ptr)
     throw std::out_of_range("The well: " + std::string(well) + " variable: " + std::string(var) + " combination does not exist.");
 
@@ -1290,13 +1301,13 @@ const ecl::smspec_node_type& ecl_smspec_get_well_var_node( const ecl_smspec_type
 
 
 int ecl_smspec_get_well_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var) {
-  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec, ecl_smspec->well_var_index, well, var);
+  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->well_var_index, well, var);
   NODE_RETURN_INDEX(node_ptr);
 }
 
 
 bool ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var) {
-  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec, ecl_smspec->well_var_index, well, var);
+  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->well_var_index, well, var);
   NODE_RETURN_EXISTS(node_ptr);
 }
 
@@ -1306,7 +1317,7 @@ bool ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * w
 /* Group variables */
 
 const ecl::smspec_node_type& ecl_smspec_get_group_var_node( const ecl_smspec_type * smspec , const char * group , const char * var) {
-  const auto node_ptr = ecl_smspec_get_str_key_var_node(smspec, smspec->group_var_index, group, var);
+  const auto node_ptr = ecl_smspec_get_str_key_var_node(smspec->group_var_index, group, var);
   if (!node_ptr)
     throw std::out_of_range("The group: " + std::string(group) + " variable: " + std::string(var) + " combination does not exist.");
 
@@ -1315,13 +1326,13 @@ const ecl::smspec_node_type& ecl_smspec_get_group_var_node( const ecl_smspec_typ
 
 
 int ecl_smspec_get_group_var_params_index(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
-  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec, ecl_smspec->group_var_index, group, var);
+  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->group_var_index, group, var);
   NODE_RETURN_INDEX(node_ptr);
 }
 
 
 bool ecl_smspec_has_group_var(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
-  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec, ecl_smspec->group_var_index, group, var);
+  const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->group_var_index, group, var);
   NODE_RETURN_EXISTS(node_ptr);
 }
 
@@ -1330,7 +1341,7 @@ bool ecl_smspec_has_group_var(const ecl_smspec_type * ecl_smspec , const char * 
 /* Field variables */
 
 const ecl::smspec_node_type& ecl_smspec_get_field_var_node(const ecl_smspec_type * ecl_smspec , const char *var) {
-  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec, ecl_smspec->field_var_index, var);
+  const auto node_ptr = ecl_smspec_get_var_node( ecl_smspec->field_var_index, var);
   if (!node_ptr)
     throw std::out_of_range("The field variable: " + std::string(var) + " does not exist.");
 
@@ -1339,7 +1350,7 @@ const ecl::smspec_node_type& ecl_smspec_get_field_var_node(const ecl_smspec_type
 
 
 int ecl_smspec_get_field_var_params_index(const ecl_smspec_type * ecl_smspec , const char *var) {
-  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec, ecl_smspec->field_var_index, var);
+  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->field_var_index, var);
   NODE_RETURN_INDEX(node_ptr);
 }
 
@@ -1347,7 +1358,7 @@ int ecl_smspec_get_field_var_params_index(const ecl_smspec_type * ecl_smspec , c
 
 
 bool ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *var) {
-  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec, ecl_smspec->field_var_index, var);
+  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->field_var_index, var);
   NODE_RETURN_EXISTS(node_ptr);
 }
 
@@ -1364,7 +1375,7 @@ bool ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *v
 
 
 const ecl::smspec_node_type& ecl_smspec_get_block_var_node(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
-  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec, ecl_smspec->block_var_index, block_nr, block_var);
+  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->block_var_index, block_nr, block_var);
   if (!node_ptr)
     throw std::out_of_range("No such block variable");
 
@@ -1378,7 +1389,7 @@ const ecl::smspec_node_type& ecl_smspec_get_block_var_node_ijk(const ecl_smspec_
 
 
 bool ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
-  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec, ecl_smspec->block_var_index, block_nr, block_var);
+  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->block_var_index, block_nr, block_var);
   NODE_RETURN_EXISTS(node_ptr);
 }
 
@@ -1389,7 +1400,7 @@ bool ecl_smspec_has_block_var_ijk(const ecl_smspec_type * ecl_smspec , const cha
 
 
 int ecl_smspec_get_block_var_params_index(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
-  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec, ecl_smspec->block_var_index, block_nr, block_var);
+  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->block_var_index, block_nr, block_var);
   NODE_RETURN_INDEX(node_ptr);
 }
 
@@ -1408,7 +1419,7 @@ int ecl_smspec_get_block_var_params_index_ijk(const ecl_smspec_type * ecl_smspec
 
 
 const ecl::smspec_node_type& ecl_smspec_get_region_var_node(const ecl_smspec_type * ecl_smspec , const char *region_var , int region_nr) {
-  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec, ecl_smspec->region_var_index, region_nr, region_var);
+  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->region_var_index, region_nr, region_var);
   if (!node_ptr)
     throw std::out_of_range("No such block variable");
 
@@ -1417,13 +1428,13 @@ const ecl::smspec_node_type& ecl_smspec_get_region_var_node(const ecl_smspec_typ
 
 
 bool ecl_smspec_has_region_var(const ecl_smspec_type * ecl_smspec , const char *region_var, int region_nr) {
-  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec, ecl_smspec->region_var_index, region_nr, region_var);
+  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->region_var_index, region_nr, region_var);
   NODE_RETURN_EXISTS(node_ptr);
 }
 
 
 int ecl_smspec_get_region_var_params_index(const ecl_smspec_type * ecl_smspec , const char *region_var, int region_nr) {
-  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec, ecl_smspec->region_var_index, region_nr, region_var);
+  const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->region_var_index, region_nr, region_var);
   NODE_RETURN_INDEX(node_ptr);
 }
 
@@ -1431,7 +1442,7 @@ int ecl_smspec_get_region_var_params_index(const ecl_smspec_type * ecl_smspec , 
 /* Misc variables */
 
 const ecl::smspec_node_type& ecl_smspec_get_misc_var_node(const ecl_smspec_type * ecl_smspec , const char *var) {
-  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec, ecl_smspec->misc_var_index, var);
+  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->misc_var_index, var);
   if (!node_ptr)
     throw std::out_of_range("No such misc variable");
 
@@ -1440,12 +1451,12 @@ const ecl::smspec_node_type& ecl_smspec_get_misc_var_node(const ecl_smspec_type 
 
 
 bool ecl_smspec_has_misc_var(const ecl_smspec_type * ecl_smspec , const char *var) {
-  const auto node_ptr = ecl_smspec_get_var_node( ecl_smspec, ecl_smspec->misc_var_index , var );
+  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->misc_var_index , var );
   NODE_RETURN_EXISTS(node_ptr);
 }
 
 int ecl_smspec_get_misc_var_params_index(const ecl_smspec_type * ecl_smspec , const char *var) {
-  const auto node_ptr = ecl_smspec_get_var_node( ecl_smspec, ecl_smspec->misc_var_index , var );
+  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->misc_var_index , var );
   NODE_RETURN_INDEX(node_ptr);
 }
 
@@ -1460,7 +1471,7 @@ const ecl::smspec_node_type * ecl_smspec_get_well_completion_var_node__(const ec
     return nullptr;
 
   const auto& num_map = well_iter->second;
-  return ecl_smspec_get_int_key_var_node( ecl_smspec, num_map, cell_nr, var );
+  return ecl_smspec_get_int_key_var_node( num_map, cell_nr, var );
 }
 
 const ecl::smspec_node_type& ecl_smspec_get_well_completion_var_node(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
@@ -1495,7 +1506,7 @@ int  ecl_smspec_get_well_completion_var_params_index(const ecl_smspec_type * ecl
 
 
 const ecl::smspec_node_type& ecl_smspec_get_general_var_node( const ecl_smspec_type * smspec , const char * lookup_kw ) {
-  const auto node_ptr = ecl_smspec_get_var_node(smspec, smspec->gen_var_index, lookup_kw);
+  const auto node_ptr = ecl_smspec_get_var_node(smspec->gen_var_index, lookup_kw);
   if (!node_ptr)
     throw std::out_of_range("No such variable: " + std::string(lookup_kw));
 
@@ -1504,13 +1515,14 @@ const ecl::smspec_node_type& ecl_smspec_get_general_var_node( const ecl_smspec_t
 
 
 int ecl_smspec_get_general_var_params_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
-  const auto node_ptr = ecl_smspec_get_var_node( ecl_smspec, ecl_smspec->gen_var_index , lookup_kw );
+  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->gen_var_index , lookup_kw );
   NODE_RETURN_INDEX( node_ptr );
 }
 
 
 bool ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
-  const auto node_ptr = ecl_smspec_get_var_node( ecl_smspec, ecl_smspec->gen_var_index , lookup_kw );
+  printf("%s:  lookup_kw:%s \n",__func__, lookup_kw);
+  const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->gen_var_index , lookup_kw );
   NODE_RETURN_EXISTS( node_ptr );
 }
 
@@ -1790,7 +1802,7 @@ void ecl_smspec_sort( ecl_smspec_type * smspec ) {
   //std::sort(smspec->smspec_nodes.begin(), smspec->smspec_nodes.end(), smspec_node_lt);
 
   for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
-    ecl::smspec_node_type& node = smspec->smspec_nodes[i];
+    ecl::smspec_node_type& node = *smspec->smspec_nodes[i].get();
     //smspec_node_set_params_index( &node , i );
   }
 

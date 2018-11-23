@@ -305,9 +305,10 @@ class EclSum(BaseCClass):
             raise TypeError('Parameter sim_days should be float, was %r' % sim_days)
 
         sim_seconds = sim_days * 24 * 60 * 60
-
-        return self._add_tstep(report_step, sim_seconds).setParent(parent=self)
-
+        print "Python calling: tstep"
+        tstep = self._add_tstep(report_step, sim_seconds).setParent(parent=self)
+        print "Python tstep created"
+        return tstep
 
 
 
@@ -692,6 +693,8 @@ class EclSum(BaseCClass):
 
 
     def __contains__(self, key):
+        print "Python looking for:%s" % key
+        sys.exit(1)
         if self._has_key(key):
             return True
         else:

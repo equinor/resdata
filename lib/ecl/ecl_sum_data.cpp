@@ -269,6 +269,7 @@ ecl_sum_data_type * ecl_sum_data_alloc(ecl_smspec_type * smspec) {
 
 void ecl_sum_data_reset_self_map( ecl_sum_data_type * data ) {
   ecl_sum_data_build_index(data);
+  printf("%s\n", __func__);
 }
 
 
@@ -324,6 +325,7 @@ ecl_sum_data_type * ecl_sum_data_alloc_writer( ecl_smspec_type * smspec ) {
   ecl::ecl_sum_file_data * file_data = new ecl::ecl_sum_file_data( smspec );
   ecl_sum_data_append_file_data( data, file_data );
   ecl_sum_data_build_index(data);
+  printf("Calling alloc writer:%s \n",__func__);
   return data;
 }
 
@@ -654,6 +656,7 @@ static void ecl_sum_data_build_index( ecl_sum_data_type * self ) {
         free( tmp_map );
       }
     }
+    printf("%s: ok \n", __func__);
   }
 
 }
@@ -671,6 +674,7 @@ ecl_sum_tstep_type * ecl_sum_data_add_new_tstep( ecl_sum_data_type * data , int 
   ecl::ecl_sum_file_data * file_data = data->data_files.back();
   ecl_sum_tstep_type * tstep = file_data->add_new_tstep( report_step, sim_seconds );
   ecl_sum_data_build_index( data );
+  printf("OK here %s\n", __func__);
   return tstep;
 }
 
@@ -692,6 +696,7 @@ void ecl_sum_data_add_case(ecl_sum_data_type * self, const ecl_sum_data_type * o
     self->data_files.push_back( other_file );
 
   ecl_sum_data_build_index(self);
+  printf("%s\n", __func__);
 }
 
 
@@ -709,6 +714,7 @@ bool ecl_sum_data_fread(ecl_sum_data_type * data , const stringlist_type * filel
   if (file_data->fread( filelist, lazy_load, file_options)) {
     ecl_sum_data_append_file_data( data, file_data );
     ecl_sum_data_build_index(data);
+    printf("%s\n", __func__);
     return true;
   }
   return false;
@@ -740,6 +746,7 @@ ecl_sum_data_type * ecl_sum_data_fread_alloc( ecl_smspec_type * smspec , const s
      this is done in a sepearate function.
   */
   ecl_sum_data_build_index( data );
+  printf("%s\n", __func__);
   return data;
 }
 
