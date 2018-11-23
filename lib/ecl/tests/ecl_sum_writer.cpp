@@ -34,11 +34,11 @@ double write_summary( const char * name , time_t start_time , int nx , int ny , 
   double sim_seconds = 0;
   ecl_smspec_type * smspec = ecl_sum_get_smspec( ecl_sum );
 
-  test_assert_int_equal( ecl_smspec_get_params_size( smspec ), 0);
+  test_assert_int_equal( ecl_smspec_get_params_size( smspec ), 1);
   const ecl::smspec_node_type * node1 = ecl_smspec_add_node( smspec , "FOPT" , "Barrels", 99.0);
   const ecl::smspec_node_type * node2 = ecl_smspec_add_node( smspec , "BPR"  , 567 , "BARS", 0.0  );
   const ecl::smspec_node_type * node3 = ecl_smspec_add_node( smspec , "WWCT" , "OP-1" , "(1)"     , 0.0  );
-  test_assert_int_equal( ecl_smspec_get_params_size( smspec ), 3);
+  test_assert_int_equal( ecl_smspec_get_params_size( smspec ), 4);
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
     for (int step = 0; step < num_ministep; step++) {
@@ -106,7 +106,7 @@ void test_write_read( ) {
     write_summary( name , start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);
     ecl_sum = ecl_sum_fread_alloc_case( name , ":" );
     test_assert_true( ecl_sum_is_instance( ecl_sum ));
-    
+
     /* Time direction */
     test_assert_time_t_equal( start_time , ecl_sum_get_start_time(ecl_sum));
     test_assert_time_t_equal( start_time , ecl_sum_get_data_start(ecl_sum));

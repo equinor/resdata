@@ -57,18 +57,7 @@ namespace ecl {
 
       smspec_node_type();
       static ecl_smspec_var_type identify_special_var( const char * var );
-      bool valid(const char * keyword);
 
-
-      void set_invalid_flags();
-      void init_lgr( ecl_smspec_var_type var_type ,
-                     const char * wgname  ,
-                     const char * keyword ,
-                     const char * unit    ,
-                       const char * lgr ,
-                     const char * key_join_string ,
-                     int   lgr_i, int lgr_j , int lgr_k );
-      void common_init( ecl_smspec_var_type var_type_ , const char * keyword , const std::string& unit );
       void set_num( const int grid_dims[3] , int num_);
       void set_keyword( const std::string& keyword_ );
       void set_flags();
@@ -123,6 +112,7 @@ namespace ecl {
 
     public:
 
+      static ecl_smspec_var_type valid_type(const char * keyword, const char * wgname, int num);
       int cmp(const smspec_node_type& node2) const;
       smspec_node_type(int param_index,
                        const char * keyword  ,
@@ -145,14 +135,6 @@ namespace ecl {
       smspec_node_type(int param_index, const char * keyword, const char * unit, float default_value);
       smspec_node_type(int param_index, const char * keyword, int num, const char * unit, const int grid_dims[3], float default_value, const char * key_join_string);
       smspec_node_type(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char *  key_join_string);
-
-      bool init__( ecl_smspec_var_type var_type ,
-                   const char * wgname  ,
-                   const char * keyword ,
-                   const char * unit    ,
-                   const char * key_join_string ,
-                   const int grid_dims[3] ,
-                   int num);
 
       static ecl_smspec_var_type identify_var_type(const char * var);
 

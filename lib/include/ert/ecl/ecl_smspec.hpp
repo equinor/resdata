@@ -122,7 +122,6 @@ extern "C" {
 
 
 
-  void              ecl_smspec_init_var( ecl_smspec_type * ecl_smspec , ecl::smspec_node_type& smspec_node , const char * keyword , const char * wgname , int num, const char * unit );
   void              ecl_smspec_select_matching_general_var_list( const ecl_smspec_type * smspec , const char * pattern , stringlist_type * keys);
   stringlist_type * ecl_smspec_alloc_matching_general_var_list(const ecl_smspec_type * smspec , const char * pattern);
 
@@ -159,7 +158,6 @@ extern "C" {
 }
 #endif
 
-void                          ecl_smspec_index_node( ecl_smspec_type * ecl_smspec , const ecl::smspec_node_type& smspec_node);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * unit, float default_value);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, const char * unit, float default_value);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, int num, const char * unit, float default_value);
