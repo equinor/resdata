@@ -906,16 +906,13 @@ static void ecl_smspec_load_restart( ecl_smspec_type * ecl_smspec , const ecl_fi
 
 
 static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ecl_smspec, std::unique_ptr<ecl::smspec_node_type> smspec_node){
-  ecl_smspec->smspec_nodes.push_back(std::move(smspec_node));
-  {
-    int params_index = smspec_node->get_params_index();
+  int params_index = smspec_node->get_params_index();
 
-    /* This indexing must be used when writing. */
-    ecl_smspec->index_map.push_back(params_index);
-    ecl_smspec->params_default.resize( params_index+1, PARAMS_GLOBAL_DEFAULT );
-    ecl_smspec->params_default[params_index] = smspec_node->get_default();
-    ecl_smspec->inv_index_map.insert( std::make_pair(params_index, ecl_smspec->smspec_nodes.size() - 1));
-  }
+  /* This indexing must be used when writing. */
+  ecl_smspec->index_map.push_back(params_index);
+  ecl_smspec->params_default.resize( params_index+1, PARAMS_GLOBAL_DEFAULT );
+  ecl_smspec->params_default[params_index] = smspec_node->get_default();
+  ecl_smspec->inv_index_map.insert( std::make_pair(params_index, ecl_smspec->smspec_nodes.size()));
 
   ecl_smspec_install_gen_keys( ecl_smspec, *smspec_node.get() );
   ecl_smspec_install_special_keys( ecl_smspec, *smspec_node.get() );
@@ -923,7 +920,9 @@ static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ec
   if (smspec_node_need_nums( &smspec_node ))
     ecl_smspec->need_nums = true;
 
-  return ecl_smspec->smspec_nodes.back().get();
+  ecl_smspec->smspec_nodes.push_back(std::move(smspec_node));
+  const auto& node = ecl_smspec->smspec_nodes.back();
+  return node.get();
 }
 
 
