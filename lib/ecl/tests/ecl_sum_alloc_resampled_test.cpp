@@ -72,7 +72,6 @@ void test_resample_extrapolate_rate() {
 
     const ecl_smspec_type * smspec_resampled = ecl_sum_get_smspec(ecl_sum_resampled);
     const smspec_node_type * node1 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 1);
-    const smspec_node_type * node2 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 2);
     const smspec_node_type * node3 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 3);
 
 
