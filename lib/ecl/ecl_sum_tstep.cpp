@@ -1,4 +1,4 @@
- /*
+/*
    Copyright (C) 2012  Statoil ASA, Norway.
 
    The file 'ecl_sum_tstep.c' is part of ERT - Ensemble based Reservoir Tool.
@@ -176,6 +176,7 @@ static void ecl_sum_tstep_set_time_info( ecl_sum_tstep_type * tstep , const ecl_
     float sim_time = tstep->data[ sim_time_index ];
     double sim_seconds = sim_time * ecl_smspec_get_time_seconds( smspec );
     ecl_sum_tstep_set_time_info_from_seconds( tstep , sim_start , sim_seconds );
+    printf("%s days: %g \n", __func__, (sim_seconds - sim_start) / 86400.00);
   } else if ( date_day_index >= 0) {
     int day   = util_roundf(tstep->data[date_day_index]);
     int month = util_roundf(tstep->data[date_month_index]);
@@ -230,6 +231,7 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , f
   ecl_sum_tstep_type * tstep = ecl_sum_tstep_alloc( report_step , ministep , smspec );
   tstep->data = ecl_smspec_get_params_default( smspec );
 
+  printf("%s:  sim_seconds:%g  time_units:%g  \n", __func__, sim_seconds, sim_seconds/ecl_smspec_get_time_seconds(smspec));
   ecl_sum_tstep_set_time_info_from_seconds( tstep , ecl_smspec_get_start_time( smspec ) , sim_seconds );
   ecl_sum_tstep_iset( tstep , ecl_smspec_get_time_index( smspec ) , sim_seconds / ecl_smspec_get_time_seconds( smspec ) );
   return tstep;
@@ -305,6 +307,9 @@ void ecl_sum_tstep_iset( ecl_sum_tstep_type * tstep , int index , float value) {
     tstep->data[index] = value;
   else
     util_abort("%s: index:%d invalid. Valid range: [0,%d) \n",__func__  ,index , tstep->data.size());
+  if (index == 0)
+    printf("tstep[%d] = %g \n", index, value);
+  //util_abort("%s: \n", __func__);
 }
 
 void ecl_sum_tstep_iscale(ecl_sum_tstep_type * tstep, int index, float scalar) {

@@ -232,7 +232,6 @@ static const char* smspec_required_keywords[] = {
 namespace {
 
 const ecl::smspec_node_type * ecl_smspec_get_var_node( const node_map& mp, const char * var) {
-    printf("%s: Ser etter:%s \n", __func__, var);
     const auto it = mp.find(var);
     if (it == mp.end())
       return nullptr;
@@ -301,7 +300,6 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
 
 
   for (int i=0; i < ecl_smspec_num_nodes( self ); i++) {
-    printf("Looking at node: %d/%d \n", i, ecl_smspec_num_nodes(self));
     const ecl::smspec_node_type& self_node = ecl_smspec_iget_node_w_node_index( self , i );
     int self_index = self_node.get_params_index();
     const char * key = self_node.get_gen_key1();
@@ -311,7 +309,6 @@ int * ecl_smspec_alloc_mapping( const ecl_smspec_type * self, const ecl_smspec_t
       mapping[ self_index ]  =  other_index;
     }
   }
-  printf("Mapping ok \n");
 
   return mapping;
 }
@@ -540,11 +537,13 @@ static ecl_smspec_type * ecl_smspec_alloc_writer__( const char * key_join_string
   {
     const ecl::smspec_node_type * time_node;
 
-    if (time_in_days)
+    if (time_in_days) {
+      ecl_smspec->time_seconds = 3600 * 24;
       time_node = ecl_smspec_add_node(ecl_smspec, "TIME", "DAYS", 0);
-    else
+    } else {
+      ecl_smspec->time_seconds = 3600;
       time_node = ecl_smspec_add_node(ecl_smspec, "TIME", "HOURS", 0);
-
+    }
     ecl_smspec->time_index = time_node->get_params_index();
   }
   return ecl_smspec;
@@ -1122,8 +1121,6 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
           continue;
         }
 
-        printf("Adding type:%d var[%d]  kw:%s    wgname:%s   num:%d   unit:%s \n",var_type, params_index, kw, well, num, unit);
-
         if (ecl_smspec_lgr_var_type( var_type )) {
           int lgr_i = ecl_kw_iget_int( numlx , params_index );
           int lgr_j = ecl_kw_iget_int( numly , params_index );
@@ -1139,7 +1136,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
                                                                                                                default_value,
                                                                                                                ecl_smspec->key_join_string.c_str())));
           free(lgr_name);
-        } else {
+        } else
           const auto* node_ptr = ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
                                                                                                                                       kw,
                                                                                                                                       well,
@@ -1149,15 +1146,6 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
                                                                                                                                       default_value,
                                                                                                                                       ecl_smspec->key_join_string.c_str())));
 
-          const auto * time_node = ecl_smspec_get_var_node(  ecl_smspec->misc_var_index, "TIME");
-          const auto * node2 = ecl_smspec_get_var_node( ecl_smspec->misc_var_index, kw);
-          printf("node_ptr:%p / %p ",node_ptr, node2);
-          if (node2)
-            printf("Have added %s / %s\n\n", node_ptr->get_unit(), node2->get_unit());
-          else
-            printf("Have added %s \n\n", node_ptr->get_unit());
-          printf("time_node: %s \n", time_node->get_unit());
-        }
         free( kw );
         free( well );
         free( unit );
@@ -1195,14 +1183,14 @@ ecl_smspec_type * ecl_smspec_fread_alloc(const char *header_file, const char * k
     if (time_node) {
       const char * time_unit = time_node->get_unit();
       ecl_smspec->time_index = time_node->get_params_index();
-      printf("time_node:%p \n", time_node);
-      printf("Have fetched: [%s] : %d \n", time_unit, ecl_smspec->time_index);
+
       if (util_string_equal( time_unit , "DAYS"))
         ecl_smspec->time_seconds = 3600 * 24;
       else if (util_string_equal( time_unit , "HOURS"))
         ecl_smspec->time_seconds = 3600;
       else
         util_abort("%s: time_unit:%s not recognized \n",__func__ , time_unit);
+
     }
 
     const ecl::smspec_node_type * day_node = ecl_smspec_get_var_node(ecl_smspec->misc_var_index, "DAY");
@@ -1520,7 +1508,6 @@ int ecl_smspec_get_general_var_params_index(const ecl_smspec_type * ecl_smspec ,
 
 
 bool ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
-  printf("%s:  lookup_kw:%s \n",__func__, lookup_kw);
   const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->gen_var_index , lookup_kw );
   NODE_RETURN_EXISTS( node_ptr );
 }
@@ -1563,6 +1550,7 @@ const char * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec
 /*****************************************************************/
 
 int ecl_smspec_get_time_seconds( const ecl_smspec_type * ecl_smspec ) {
+  printf("%s  %d \n", __func__, ecl_smspec->time_seconds);
   return ecl_smspec->time_seconds;
 }
 
