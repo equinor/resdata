@@ -693,8 +693,6 @@ class EclSum(BaseCClass):
 
 
     def __contains__(self, key):
-        print "Python looking for:%s" % key
-        sys.exit(1)
         if self._has_key(key):
             return True
         else:

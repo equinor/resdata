@@ -39,9 +39,9 @@ def createEclSum( case,
             days = time_offset + report_step * report_step_length + mini_step * mini_step_length
             t_step = ecl_sum.addTStep( report_step + 1 , sim_days = days )
 
-            print "Var: %s" % var
 
             for var in var_list:
+                print "Var: %s" % var
                 key = var.getKey1( )
 
                 if key in func_table:
