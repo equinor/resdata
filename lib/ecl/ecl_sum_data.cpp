@@ -1084,6 +1084,8 @@ static void ecl_sum_data_init_double_vector__(const ecl_sum_data_type * data, in
     const auto& params_map = index_node.params_map;
     int params_index = params_map[main_params_index];
 
+    printf("Mapping %d -> %d \n", main_params_index, params_index);
+
     if (report_only) {
       const ecl::smspec_node_type& smspec_node = ecl_smspec_iget_node_w_params_index(data->smspec, main_params_index);
       double default_value = smspec_node.get_default();
@@ -1122,6 +1124,10 @@ double_vector_type * ecl_sum_data_alloc_data_vector( const ecl_sum_data_type * d
   else
     output_data.resize( ecl_sum_data_get_length(data) );
 
+  if (params_index >= ecl_smspec_get_params_size(data->smspec))
+    throw std::out_of_range("Out of range");
+
+  printf("%s:  asking for index:%d  params_size:%d \n", __func__, params_index, ecl_smspec_get_params_size(data->smspec));
   ecl_sum_data_init_double_vector__(data, params_index, output_data.data(), report_only);
   double_vector_type * data_vector = double_vector_alloc(output_data.size(), 0);
   {

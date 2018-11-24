@@ -249,7 +249,7 @@ void verify_CASE4() {
   ieq(d, 8, 40000);
   double_vector_free(d);
 
-  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true); 
+  ecl_sum_vector_type * vector = ecl_sum_vector_alloc(sum, true);
   double frame[27]; //3 vectors X 9 data points pr. vector
   ecl_sum_init_double_frame(sum, vector, frame);
   test_assert_double_equal(frame[26], 40000);

@@ -127,7 +127,7 @@ struct ecl_smspec_struct {
   bool                 need_nums;
   std::vector<int>     index_map;
   std::map<int, int>   inv_index_map;
-
+  int                  params_size;
   /*-----------------------------------------------------------------*/
 
   int               time_seconds;
@@ -259,6 +259,22 @@ const ecl::smspec_node_type * ecl_smspec_get_var_node( const node_map& mp, const
 
 } //end namespace
 
+int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
+  return smspec->smspec_nodes.size();
+}
+
+/*
+  When loading a summary case from file many of the nodes can be ignored, in
+  that case the size of PARAMS vector in the data files is larger than the
+  number of internalized nodes. Therefor we need to maintain the
+  params_size member.
+*/
+
+int ecl_smspec_get_params_size( const ecl_smspec_type * smspec ) {
+  return smspec->params_size;
+}
+
+
 
 /*****************************************************************/
 
@@ -275,6 +291,7 @@ ecl_smspec_type * ecl_smspec_alloc_empty(bool write_mode , const char * key_join
   ecl_smspec->year_index   = -1;
   ecl_smspec->month_index  = -1;
   ecl_smspec->time_seconds = -1;
+  ecl_smspec->params_size  = -1;
 
   /*
     The unit system is given as an integer in the INTEHEAD keyword. The INTEHEAD
@@ -340,11 +357,6 @@ const ecl::smspec_node_type& ecl_smspec_iget_node_w_params_index( const ecl_smsp
   int node_index = smspec->inv_index_map.at(params_index);
   return ecl_smspec_iget_node_w_node_index(smspec, node_index);
 }
-
-int ecl_smspec_num_nodes( const ecl_smspec_type * smspec) {
-  return smspec->smspec_nodes.size();
-}
-
 
 /**
  * Returns an ecl data type for which all names will fit. If the maximum name
@@ -920,6 +932,13 @@ static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ec
     ecl_smspec->need_nums = true;
 
   ecl_smspec->smspec_nodes.push_back(std::move(smspec_node));
+
+  if (params_index > ecl_smspec->params_size)
+    ecl_smspec->params_size = params_index + 1;
+
+  if (ecl_smspec->smspec_nodes.size() > ecl_smspec->params_size)
+    ecl_smspec->params_size = ecl_smspec->smspec_nodes.size();
+
   const auto& node = ecl_smspec->smspec_nodes.back();
   return node.get();
 }
@@ -1763,10 +1782,6 @@ stringlist_type * ecl_smspec_alloc_well_var_list( const ecl_smspec_type * smspec
 }
 
 
-
-int ecl_smspec_get_params_size( const ecl_smspec_type * smspec ) {
-  return smspec->smspec_nodes.size();
-}
 
 
 
