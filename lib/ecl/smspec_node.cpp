@@ -658,17 +658,21 @@ void smspec_node_type::set_gen_keys( const char* key_join_string_) {
 
   2. Observe that the LGR variables are not thoroughly checked; the only check
      is that the well is not the dummy well. Experience has shown that there has
-     not problems with SMSPEC files with invalid LGR and LGRIJK values; that is
-     therefor just assumed to be right.
+     not been problems with SMSPEC files with invalid LGR and LGRIJK values;
+     that is therefor just assumed to be right.
 
 */
 
 ecl_smspec_var_type smspec_node_type::valid_type(const char * keyword, const char * wgname, int num) {
   auto var_type = smspec_node_type::identify_var_type(keyword);
+
   if (var_type == ECL_SMSPEC_MISC_VAR)
     return var_type;
 
   if (var_type == ECL_SMSPEC_FIELD_VAR)
+    return var_type;
+
+  if (var_type == ECL_SMSPEC_LOCAL_BLOCK_VAR)
     return var_type;
 
   if (var_type == ECL_SMSPEC_WELL_VAR ||
@@ -694,8 +698,7 @@ ecl_smspec_var_type smspec_node_type::valid_type(const char * keyword, const cha
   if (var_type == ECL_SMSPEC_REGION_VAR ||
       var_type == ECL_SMSPEC_REGION_2_REGION_VAR ||
       var_type == ECL_SMSPEC_BLOCK_VAR ||
-      var_type == ECL_SMSPEC_AQUIFER_VAR ||
-      var_type == ECL_SMSPEC_LOCAL_BLOCK_VAR) {
+      var_type == ECL_SMSPEC_AQUIFER_VAR) {
 
     if (num < 0)
       return ECL_SMSPEC_INVALID_VAR;
@@ -883,6 +886,7 @@ smspec_node_type::smspec_node_type( int param_index_,
                                     const char * key_join_string_) {
 
   this->var_type = this->valid_type(keyword_, wgname_, -1);
+  printf("keyword: %s\n",keyword_);
   if (this->var_type == ECL_SMSPEC_INVALID_VAR)
     throw std::invalid_argument("Could not construct smspec_node from this input.");
 
