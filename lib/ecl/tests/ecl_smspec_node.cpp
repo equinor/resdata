@@ -101,7 +101,7 @@ void test_cmp_types() {
   ecl::smspec_node_type well_node( 0, "WOPR" , "W1", "UNIT" , 0, ":");
   ecl::smspec_node_type block_node( 0, "BPR", 10, "UNIT", dims, 0, ":");
   ecl::smspec_node_type aquifer_node( 0, "AAQP" , 10, "UNIT" , dims, 0 , ":");
-  ecl::smspec_node_type segment_node( 0, "W1" , "SGOR" , 10, "UNIT" , dims , 0 , ":");
+  ecl::smspec_node_type segment_node( 0, "SGOR" , "W1" , 10, "UNIT" , dims , 0 , ":");
   ecl::smspec_node_type misc_node1( 0, "TIME" , "UNIT", 0 );
   ecl::smspec_node_type misc_node2( 0, "TCPU", "UNIT", 0);
 
@@ -131,10 +131,7 @@ void test_cmp_well() {
   ecl::smspec_node_type well_node1_2( 0 ,  "WOPR" ,"W2" , "UNIT" , 10 ,":");
   ecl::smspec_node_type well_node2_1( 0 ,  "WWCT" ,"W1" , "UNIT" , 10 ,":");
   ecl::smspec_node_type well_node2_2( 0 ,  "WWWT" ,"W2" , "UNIT" , 10 ,":");
-  {
-    ecl::smspec_node_type well_node_dummy( 0 ,  "WOPR" ,DUMMY_WELL , "UNIT" , 10 ,":");
-    test_assert_NULL( &well_node_dummy);
-  }
+
   test_assert_int_equal( well_node1_1.cmp(well_node1_1), 0);
   test_assert_int_equal( well_node2_2.cmp(well_node2_2), 0);
 
