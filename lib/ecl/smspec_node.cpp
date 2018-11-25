@@ -746,6 +746,16 @@ smspec_node_type::smspec_node_type(int param_index, const char * keyword, const 
 {
 }
 
+smspec_node_type::smspec_node_type(int param_index, const char * keyword, const char * wgname, int num, const char * unit, float default_value, const char *  key_join_string)
+  : smspec_node_type(param_index,
+                     keyword,
+                     wgname,
+                     num,
+                     unit,
+                     nullptr,
+                     default_value,
+                     key_join_string)
+{}
 
 
 smspec_node_type::smspec_node_type(int param_index, const char * keyword, const char * unit, float default_value)
