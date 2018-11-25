@@ -34,6 +34,7 @@ typedef struct ecl_smspec_struct ecl_smspec_type;
 #ifdef __cplusplus
 #include <vector>
 const std::vector<float>& ecl_smspec_get_params_default( const ecl_smspec_type * ecl_smspec );
+const ecl::smspec_node_type&  ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var);
 #endif
 
 #ifdef __cplusplus
@@ -73,7 +74,6 @@ extern "C" {
   int                      ecl_smspec_get_date_year_index( const ecl_smspec_type * smspec );
 
 
-  const ecl::smspec_node_type&  ecl_smspec_get_well_var_node( const ecl_smspec_type * smspec , const char * well , const char * var);
   int                      ecl_smspec_get_well_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);
   bool                     ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var);
 
