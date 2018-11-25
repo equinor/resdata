@@ -206,23 +206,6 @@ ecl_smspec_var_type ecl::smspec_node_type::identify_var_type(const char * var) {
 
 
 
-static bool smspec_node_need_wgname(ecl_smspec_var_type var_type) {
-  if (var_type == ECL_SMSPEC_COMPLETION_VAR ||
-      var_type == ECL_SMSPEC_GROUP_VAR      ||
-      var_type == ECL_SMSPEC_WELL_VAR       ||
-      var_type == ECL_SMSPEC_SEGMENT_VAR)
-    return true;
-  else
-    return false;
-}
-
-static bool smspec_node_type_supported(ecl_smspec_var_type var_type) {
-  if (var_type == ECL_SMSPEC_NETWORK_VAR)
-    return false;
-
-  return true;
-}
-
 
 /*****************************************************************/
 /*

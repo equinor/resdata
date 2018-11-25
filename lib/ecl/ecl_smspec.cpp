@@ -936,7 +936,7 @@ static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ec
   if (params_index > ecl_smspec->params_size)
     ecl_smspec->params_size = params_index + 1;
 
-  if (ecl_smspec->smspec_nodes.size() > ecl_smspec->params_size)
+  if (static_cast<int>(ecl_smspec->smspec_nodes.size()) > ecl_smspec->params_size)
     ecl_smspec->params_size = ecl_smspec->smspec_nodes.size();
 
   const auto& node = ecl_smspec->smspec_nodes.back();
@@ -1129,7 +1129,6 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
         char * kw                    = (char*)util_alloc_strip_copy((const char*)ecl_kw_iget_ptr(keywords , params_index));
         char * unit                  = (char*)util_alloc_strip_copy((const char*)ecl_kw_iget_ptr(units    , params_index));
 
-        ecl::smspec_node_type * smspec_node;
         ecl_smspec_var_type var_type;
         if (nums != NULL) num        = ecl_kw_iget_int(nums , params_index);
         var_type = ecl::smspec_node_type::valid_type(kw, well, num);
@@ -1156,14 +1155,14 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
                                                                                                                ecl_smspec->key_join_string.c_str())));
           free(lgr_name);
         } else
-          const auto* node_ptr = ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
-                                                                                                                                      kw,
-                                                                                                                                      well,
-                                                                                                                                      num,
-                                                                                                                                      unit,
-                                                                                                                                      ecl_smspec->grid_dims,
-                                                                                                                                      default_value,
-                                                                                                                                      ecl_smspec->key_join_string.c_str())));
+          ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                               kw,
+                                                                                                               well,
+                                                                                                               num,
+                                                                                                               unit,
+                                                                                                               ecl_smspec->grid_dims,
+                                                                                                               default_value,
+                                                                                                               ecl_smspec->key_join_string.c_str())));
 
         free( kw );
         free( well );
@@ -1803,10 +1802,10 @@ void ecl_smspec_sort( ecl_smspec_type * smspec ) {
   //nullptr
   //std::sort(smspec->smspec_nodes.begin(), smspec->smspec_nodes.end(), smspec_node_lt);
 
-  for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
-    ecl::smspec_node_type& node = *smspec->smspec_nodes[i].get();
-    //smspec_node_set_params_index( &node , i );
-  }
+  // for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
+    // ecl::smspec_node_type& node = *smspec->smspec_nodes[i].get();
+    // smspec_node_set_params_index( &node , i );
+  // }
 
 }
 
