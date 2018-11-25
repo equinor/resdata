@@ -134,6 +134,7 @@ namespace ecl {
 
       smspec_node_type(int param_index, const char * keyword, const char * unit, float default_value);
       smspec_node_type(int param_index, const char * keyword, int num, const char * unit, const int grid_dims[3], float default_value, const char * key_join_string);
+      smspec_node_type(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string);
       smspec_node_type(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char *  key_join_string);
 
       static ecl_smspec_var_type identify_var_type(const char * var);

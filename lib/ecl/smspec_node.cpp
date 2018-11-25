@@ -526,7 +526,7 @@ void smspec_node_type::init_num( ecl_smspec_var_type var_type_) {
   }
 }
 
-void smspec_node_type::set_num( const int grid_dims[3] , int num_) {
+void smspec_node_type::set_num( const int * grid_dims , int num_) {
   if (num_ == SMSPEC_NUMS_INVALID)
     util_abort("%s: explicitly trying to set nums == SMSPEC_NUMS_INVALID - seems like a bug?!\n",__func__);
 
@@ -719,6 +719,20 @@ smspec_node_type::smspec_node_type(int param_index, const char * keyword, int nu
                      key_join_string)
 {
 }
+
+smspec_node_type::smspec_node_type(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string)
+  : smspec_node_type(param_index,
+                     keyword,
+                     nullptr,
+                     num,
+                     unit,
+                     nullptr,
+                     default_value,
+                     key_join_string)
+{
+}
+
+
 
 smspec_node_type::smspec_node_type(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char * key_join_string)
   : smspec_node_type(param_index,

@@ -158,6 +158,7 @@ extern "C" {
 }
 #endif
 
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit, float default_value);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * unit, float default_value);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, const char * unit, float default_value);
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * wgname, int num, const char * unit, float default_value);

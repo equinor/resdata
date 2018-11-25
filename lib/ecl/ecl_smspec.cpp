@@ -944,6 +944,18 @@ static const ecl::smspec_node_type * ecl_smspec_insert_node(ecl_smspec_type * ec
 }
 
 
+const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit, float default_value) {
+  int params_index = ecl_smspec->smspec_nodes.size();
+  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
+                                                                                                              keyword,
+                                                                                                              num,
+                                                                                                              unit,
+                                                                                                              default_value,
+                                                                                                              ecl_smspec->key_join_string.c_str())));
+}
+
+
+
 
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * unit, float default_value) {
   int params_index = ecl_smspec->smspec_nodes.size();
@@ -964,17 +976,6 @@ const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, 
                                                                                                               ecl_smspec->key_join_string.c_str())));
 }
 
-
-const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, int num, const char * unit,  float default_value) {
-  int params_index = ecl_smspec->smspec_nodes.size();
-  return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node_type>( new ecl::smspec_node_type(params_index,
-                                                                                                              keyword,
-                                                                                                              num,
-                                                                                                              unit,
-                                                                                                              ecl_smspec->grid_dims,
-                                                                                                              default_value,
-                                                                                                              ecl_smspec->key_join_string.c_str())));
-}
 
 const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec,
                                                   const char * keyword,
