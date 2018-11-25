@@ -950,6 +950,7 @@ const ecl::smspec_node_type * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, 
                                                                                                               keyword,
                                                                                                               num,
                                                                                                               unit,
+                                                                                                              ecl_smspec->grid_dims,
                                                                                                               default_value,
                                                                                                               ecl_smspec->key_join_string.c_str())));
 }
