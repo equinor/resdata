@@ -23,13 +23,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <string>
+#include <array>
+
 #include <ert/util/type_macros.hpp>
 
 #include <ert/ecl/smspec_node.h>
 
-#ifdef __cplusplus
-#include <string>
-#include <array>
 
 namespace ecl {
 
@@ -171,7 +171,4 @@ namespace ecl {
 
 }
 
-typedef class ecl::smspec_node_type smspec_node_type;
-
-#endif
 #endif

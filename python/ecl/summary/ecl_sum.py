@@ -305,9 +305,7 @@ class EclSum(BaseCClass):
             raise TypeError('Parameter sim_days should be float, was %r' % sim_days)
 
         sim_seconds = sim_days * 24 * 60 * 60
-        print "Python calling: tstep"
         tstep = self._add_tstep(report_step, sim_seconds).setParent(parent=self)
-        print "Python tstep created"
         return tstep
 
 
