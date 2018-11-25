@@ -41,7 +41,6 @@ def createEclSum( case,
 
 
             for var in var_list:
-                print "Var: %s" % var
                 key = var.getKey1( )
 
                 if key in func_table:
