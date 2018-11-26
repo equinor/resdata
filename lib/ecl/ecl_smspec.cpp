@@ -1084,6 +1084,7 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
     int params_index;
     ecl_smspec->num_regions     = 0;
+    ecl_smspec->params_size     = ecl_kw_get_size(keywords);
     if (startdat == NULL)
       util_abort("%s: could not locate STARTDAT keyword in header - aborting \n",__func__);
 
