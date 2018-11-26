@@ -1125,7 +1125,6 @@ double_vector_type * ecl_sum_data_alloc_data_vector( const ecl_sum_data_type * d
   if (params_index >= ecl_smspec_get_params_size(data->smspec))
     throw std::out_of_range("Out of range");
 
-  printf("%s:  asking for index:%d  params_size:%d \n", __func__, params_index, ecl_smspec_get_params_size(data->smspec));
   ecl_sum_data_init_double_vector__(data, params_index, output_data.data(), report_only);
   double_vector_type * data_vector = double_vector_alloc(output_data.size(), 0);
   {
