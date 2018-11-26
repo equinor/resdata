@@ -1799,16 +1799,15 @@ char * ecl_smspec_alloc_well_key( const ecl_smspec_type * smspec , const char * 
 }
 
 
-void ecl_smspec_sort( ecl_smspec_type * smspec ) {
-  //nullptr
-  //std::sort(smspec->smspec_nodes.begin(), smspec->smspec_nodes.end(), smspec_node_lt);
+/*void ecl_smspec_sort( ecl_smspec_type * smspec ) {
+  std::sort(smspec->smspec_nodes.begin(), smspec->smspec_nodes.end(), smspec_node_lt);
 
-  // for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
-    // ecl::smspec_node_type& node = *smspec->smspec_nodes[i].get();
-    // smspec_node_set_params_index( &node , i );
-  // }
-
+  for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
+    ecl::smspec_node_type& node = *smspec->smspec_nodes[i].get();
+    smspec_node_set_params_index( &node , i );
+  }
 }
+*/
 
 ert_ecl_unit_enum ecl_smspec_get_unit_system(const ecl_smspec_type * smspec) {
   return smspec->unit_system;

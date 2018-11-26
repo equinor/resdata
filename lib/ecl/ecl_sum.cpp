@@ -325,7 +325,6 @@ const ecl::smspec_node_type * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, co
 
 ecl_sum_tstep_type * ecl_sum_add_tstep( ecl_sum_type * ecl_sum , int report_step , double sim_seconds) {
   ecl_sum_tstep_type * new_tstep = ecl_sum_data_add_new_tstep( ecl_sum->data , report_step , sim_seconds );
-  printf("----------------------------------- %s days:%g \n", __func__, sim_seconds / 86400);
   return new_tstep;
 }
 
