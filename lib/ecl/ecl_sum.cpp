@@ -840,7 +840,6 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
     for (int data_index = 0; data_index < ecl_sum_vector_get_size(ecl_sum_vector); data_index++) {
       double value = double_vector_iget(data,data_index);
       int params_index = data_index + 1;  // The +1 shift is because the first element in the tstep is time value.
-      printf("Writing at index:%d\n", params_index);
       ecl_sum_tstep_iset(tstep, params_index, value);
     }
   }
