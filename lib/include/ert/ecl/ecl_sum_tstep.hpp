@@ -42,8 +42,8 @@ typedef struct ecl_sum_tstep_struct ecl_sum_tstep_type;
 
   ecl_sum_tstep_type * ecl_sum_tstep_alloc_new( int report_step , int ministep , float sim_seconds , const ecl_smspec_type * smspec );
 
-  void   ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const ecl::smspec_node_type& smspec_node , float value);
-  double ecl_sum_tstep_get_from_node( const ecl_sum_tstep_type * tstep , const ecl::smspec_node_type& smspec_node);
+  void   ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const ecl::smspec_node& smspec_node , float value);
+  double ecl_sum_tstep_get_from_node( const ecl_sum_tstep_type * tstep , const ecl::smspec_node& smspec_node);
 
   double ecl_sum_tstep_iget(const ecl_sum_tstep_type * ministep , int index);
   time_t ecl_sum_tstep_get_sim_time(const ecl_sum_tstep_type * ministep);

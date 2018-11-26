@@ -28,7 +28,7 @@ void test_copy(const ecl_smspec_type * smspec1) {
   ecl_sum_type * ecl_sum2 = ecl_sum_alloc_writer("CASE", false, true, ":", 0, true, 100, 100, 100);
   const ecl_smspec_type * smspec2 = ecl_sum_get_smspec(ecl_sum2);
   for (int i=0; i < ecl_smspec_num_nodes(smspec1); i++) {
-    const ecl::smspec_node_type& node = ecl_smspec_iget_node_w_node_index(smspec1, i);
+    const ecl::smspec_node& node = ecl_smspec_iget_node_w_node_index(smspec1, i);
     ecl_sum_add_smspec_node(ecl_sum2, &node);
   }
   test_assert_true( ecl_smspec_equal(smspec1, smspec2));

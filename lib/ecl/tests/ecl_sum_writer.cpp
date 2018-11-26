@@ -35,9 +35,9 @@ double write_summary( const char * name , time_t start_time , int nx , int ny , 
   ecl_smspec_type * smspec = ecl_sum_get_smspec( ecl_sum );
 
   test_assert_int_equal( ecl_smspec_get_params_size( smspec ), 1);
-  const ecl::smspec_node_type * node1 = ecl_smspec_add_node( smspec , "FOPT" , "Barrels", 99.0);
-  const ecl::smspec_node_type * node2 = ecl_smspec_add_node( smspec , "BPR"  , 567 , "BARS", 0.0  );
-  const ecl::smspec_node_type * node3 = ecl_smspec_add_node( smspec , "WWCT" , "OP-1" , "(1)"     , 0.0  );
+  const ecl::smspec_node * node1 = ecl_smspec_add_node( smspec , "FOPT" , "Barrels", 99.0);
+  const ecl::smspec_node * node2 = ecl_smspec_add_node( smspec , "BPR"  , 567 , "BARS", 0.0  );
+  const ecl::smspec_node * node3 = ecl_smspec_add_node( smspec , "WWCT" , "OP-1" , "(1)"     , 0.0  );
   test_assert_int_equal( ecl_smspec_get_params_size( smspec ), 4);
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
@@ -66,9 +66,9 @@ int write_restart_summary(const char * name, const char * restart_name , int sta
   ecl_sum_type * ecl_sum = ecl_sum_alloc_restart_writer( name , restart_name, false , true , ":" , start_time , true , nx , ny , nz );
   ecl_smspec_type * smspec = ecl_sum_get_smspec( ecl_sum );
 
-  const ecl::smspec_node_type * node1 = ecl_smspec_add_node( smspec , "FOPT", "Barrels" , 99.0 );
-  const ecl::smspec_node_type * node2 = ecl_smspec_add_node( smspec , "BPR"  , 567 , "BARS" , 0.0  );
-  const ecl::smspec_node_type * node3 = ecl_smspec_add_node( smspec , "WWCT" , "OP-1" , "(1)", 0.0  );
+  const ecl::smspec_node * node1 = ecl_smspec_add_node( smspec , "FOPT", "Barrels" , 99.0 );
+  const ecl::smspec_node * node2 = ecl_smspec_add_node( smspec , "BPR"  , 567 , "BARS" , 0.0  );
+  const ecl::smspec_node * node3 = ecl_smspec_add_node( smspec , "WWCT" , "OP-1" , "(1)", 0.0  );
 
   int num_report_steps = start_report_step + num_dates;
   for (int report_step = start_report_step; report_step < num_report_steps; report_step++) {

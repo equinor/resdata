@@ -17,9 +17,9 @@ ecl_sum_type * write_ecl_sum() {
   int num_dates = 4;
   double ministep_length = 86400; // seconds in a day
 
-  const ecl::smspec_node_type * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
-  const ecl::smspec_node_type * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
-  const ecl::smspec_node_type * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
+  const ecl::smspec_node * node1 = ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
+  const ecl::smspec_node * node2 = ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
+  const ecl::smspec_node * node3 = ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
 
   for (int report_step = 0; report_step < num_dates; report_step++) {
       {
