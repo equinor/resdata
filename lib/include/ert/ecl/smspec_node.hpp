@@ -57,7 +57,7 @@ namespace ecl {
 
       smspec_node_type();
       static ecl_smspec_var_type identify_special_var( const char * var );
-
+      void set_wgname(const char * wgname);
       void set_num( const int grid_dims[3] , int num_);
       void set_keyword( const std::string& keyword_ );
       void set_flags();

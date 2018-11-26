@@ -131,6 +131,7 @@ class SumTest(EclTest):
 
         node1 = case.smspec_node( "FOPT" )
         self.assertEqual( node1.varType( ) , EclSumVarType.ECL_SMSPEC_FIELD_VAR )
+        self.assertIsNone(node1.wgname)
 
         node2 = case.smspec_node( "AARQ:10" )
         self.assertEqual( node2.varType( ) , EclSumVarType.ECL_SMSPEC_AQUIFER_VAR )

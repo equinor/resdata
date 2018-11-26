@@ -526,6 +526,27 @@ void smspec_node_type::init_num( ecl_smspec_var_type var_type_) {
   }
 }
 
+
+/*
+  Observe that field vectors like 'FOPT' and 'FOPR' will have the string 'FIELD'
+  in the 'WGNAME' vector, that is not internalized here.
+*/
+
+void smspec_node_type::set_wgname(const char * wgname) {
+  if (!wgname)
+    return;
+
+  if (IS_DUMMY_WELL(wgname))
+    return;
+
+  if (this->var_type == ECL_SMSPEC_WELL_VAR ||
+      this->var_type == ECL_SMSPEC_GROUP_VAR ||
+      this->var_type == ECL_SMSPEC_COMPLETION_VAR ||
+      this->var_type == ECL_SMSPEC_SEGMENT_VAR ||
+      this->var_type == ECL_SMSPEC_LOCAL_WELL_VAR)
+    this->wgname = wgname;
+}
+
 void smspec_node_type::set_num( const int * grid_dims , int num_) {
   if (num_ == SMSPEC_NUMS_INVALID)
     util_abort("%s: explicitly trying to set nums == SMSPEC_NUMS_INVALID - seems like a bug?!\n",__func__);
@@ -821,9 +842,7 @@ smspec_node_type::smspec_node_type(int param_index,
   this->rate_variable = smspec_node_identify_rate(this->keyword.c_str());
   this->total_variable = smspec_node_identify_total(this->keyword.c_str(), this->var_type);
   this->historical = (this->keyword.back() == 'H');
-
-  if (wgname && !IS_DUMMY_WELL(wgname))
-    this->wgname = wgname;
+  this->set_wgname( wgname );
 
   switch (this->var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
