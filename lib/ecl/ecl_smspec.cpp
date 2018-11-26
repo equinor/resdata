@@ -1570,7 +1570,6 @@ const char * ecl_smspec_get_general_var_unit( const ecl_smspec_type * ecl_smspec
 /*****************************************************************/
 
 int ecl_smspec_get_time_seconds( const ecl_smspec_type * ecl_smspec ) {
-  printf("%s  %d \n", __func__, ecl_smspec->time_seconds);
   return ecl_smspec->time_seconds;
 }
 
