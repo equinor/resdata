@@ -216,7 +216,11 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file( int report_step    ,
        ecl_smspec_load_restart() function and the restart case
        discarded.
     */
-    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s and header:%s - timestep discarded.\n" , src_file , ecl_smspec_get_header_file( smspec ));
+    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s(%d) and header:%s(%d) - timestep discarded.\n" ,
+            src_file ,
+            data_size,
+            ecl_smspec_get_header_file( smspec ),
+            ecl_smspec_get_params_size( smspec ));
     return NULL;
   }
 }
