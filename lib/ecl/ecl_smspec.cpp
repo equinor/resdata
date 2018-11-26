@@ -843,10 +843,10 @@ bool ecl_smspec_equal(const ecl_smspec_type * self,
     return false;
 
   for (size_t i=0; i < self->smspec_nodes.size(); i++) {
-    const auto& node1 = self->smspec_nodes[i];
-    const auto& node2 = other->smspec_nodes[i];
+    const ecl::smspec_node_type* node1 = self->smspec_nodes[i].get();
+    const ecl::smspec_node_type* node2 = other->smspec_nodes[i].get();
 
-    if (!smspec_node_equal(&node1, &node2))
+    if (node1->cmp(*node2) != 0)
       return false;
   }
 

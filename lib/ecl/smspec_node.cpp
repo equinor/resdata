@@ -1270,6 +1270,7 @@ int smspec_node_type::cmp(const smspec_node_type& node2) const {
 
   default:
     /* Should not really end up here. */
+    //printf("key_type: %d\n", this->var_type);
     return smspec_node_type::cmp_key1( this, &node2);
   }
 }
