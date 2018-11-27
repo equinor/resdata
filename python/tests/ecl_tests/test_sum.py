@@ -625,7 +625,7 @@ class SumTest(EclTest):
     def test_resample_extrapolate(self):
         """
         Test resampling of summary with extrapolate option of lower and upper boundaries enabled
-        Note: When performing resampling on cp_simple3 test case, it fails to duplicate node 251 so suing mocked ecl_sum instead
+        Note: When performing resampling on cp_simple3 test case, it fails to duplicate node 251 so using mocked ecl_sum instead
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
         ecl_sum = EclSum( path, lazy_load=True )
         """

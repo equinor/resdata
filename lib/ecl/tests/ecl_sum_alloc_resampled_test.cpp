@@ -83,7 +83,7 @@ void test_resample_extrapolate_rate() {
     //testing extrapolation for variable wrt. 3 dates: lower, inside and upper
     test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 1, 1, 2009 ), node1) );
     test_assert_double_equal(2.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4, 1,2010 ), node1) );
-    test_assert_double_equal(9.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1,2010 ), node1) );
+    test_assert_double_equal(6.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1,2010 ), node1) );
 
 
     ecl_sum_free(ecl_sum_resampled);

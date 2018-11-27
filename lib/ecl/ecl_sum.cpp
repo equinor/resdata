@@ -831,8 +831,8 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
         double value = 0;
         const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
         if (!smspec_node_is_rate(node))
-            value = ecl_sum_iget_first_value(ecl_sum,i-1);
-        double_vector_iset(data, i-1, value );
+            value = ecl_sum_iget_first_value(ecl_sum, smspec_node_get_params_index(node));
+        double_vector_iset(data, i-1, value);
       }
     } else if (input_t > end_time) {
       //clamping to the last value for t > end_time or if it is a rate than derivative is 0
@@ -840,8 +840,8 @@ ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char *
         double value = 0;
         const smspec_node_type * node = ecl_smspec_iget_node_w_node_index(ecl_sum->smspec, i);
         if (!smspec_node_is_rate(node))
-          value = ecl_sum_iget_last_value(ecl_sum,i-1);
-        double_vector_iset(data, i-1, value );
+          value = ecl_sum_iget_last_value(ecl_sum, smspec_node_get_params_index(node));
+        double_vector_iset(data, i-1, value);
       }
     } else {
       /* Look up interpolated data in the original case. */
