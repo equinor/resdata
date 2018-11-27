@@ -780,15 +780,15 @@ const char * ecl_sum_get_general_var_unit( const ecl_sum_type * ecl_sum , const 
 
 
 ecl_sum_type * ecl_sum_alloc_resample(const ecl_sum_type * ecl_sum, const char * ecl_case, const time_t_vector_type * times, bool lower_extrapolation, bool upper_extrapolation) {
+  /*
+    If lower and  / or upper extrapolation is set to true it makes sure that resampling returns the first / last value of the simulation
+    or in the case of derivate / rate then it gets zero. if these are set to false, we jus throw exception
+  */
+
   time_t start_time = ecl_sum_get_data_start(ecl_sum);
   time_t end_time = ecl_sum_get_end_time(ecl_sum);
   time_t input_start = time_t_vector_get_first( times );
   time_t input_end = time_t_vector_get_last( times );
-  
-  /*
-    If lower and  / or upper extrapolation is set to true it makes sure that resampling returns the first / last value of the simulation
-    if set to false, we jus throw exception
-  */
 
   if ( !lower_extrapolation && input_start < start_time )
     return NULL;
