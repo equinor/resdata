@@ -72,19 +72,19 @@ void test_resample_extrapolate_rate() {
 
 
     const ecl_smspec_type * smspec_resampled = ecl_sum_get_smspec(ecl_sum_resampled);
-    const smspec_node_type * node1 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 1);
-    const smspec_node_type * node3 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 3);
+    const ecl::smspec_node& node1 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 1);
+    const ecl::smspec_node& node3 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 3);
 
 
     //testing extrapolation for rate wrt. 3 dates: lower, inside and upper
-    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 1, 1, 2009), node3));
-    test_assert_double_equal(10.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4, 1, 2010), node3));
-    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1, 2010), node3));
+    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 1, 1, 2009), &node3));
+    test_assert_double_equal(10.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4, 1, 2010), &node3));
+    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1, 2010), &node3));
 
     //testing extrapolation for variable wrt. 3 dates: lower, inside and upper
-    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 1, 1, 2009 ), node1) );
-    test_assert_double_equal(2.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4, 1,2010 ), node1) );
-    test_assert_double_equal(6.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1,2010 ), node1) );
+    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 1, 1, 2009 ), &node1) );
+    test_assert_double_equal(2.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4, 1,2010 ), &node1) );
+    test_assert_double_equal(6.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1,2010 ), &node1) );
 
 
     ecl_sum_free(ecl_sum_resampled);
