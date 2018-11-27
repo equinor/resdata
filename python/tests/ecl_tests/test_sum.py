@@ -620,3 +620,49 @@ class SumTest(EclTest):
             case.fwrite()
             os.mkdir("UNITS")
             case2 = EclSum("./UNITS")
+
+
+    def test_resample_extrapolate(self):
+        """
+        Test resampling of summary with extrapolate option of lower and upper boundaries enabled
+        Note: When performing resampling on cp_simple3 test case, it fails to duplicate node 251 so using mocked ecl_sum instead
+        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
+        ecl_sum = EclSum( path, lazy_load=True )
+        """
+        from ecl.util.util import TimeVector, CTime
+
+        time_points = TimeVector()
+        ecl_sum = create_case(data_start=datetime.date(2010, 1, 1))
+        start_time = ecl_sum.get_data_start_time() - datetime.timedelta(seconds=86400)
+        end_time = ecl_sum.get_end_time() + datetime.timedelta(seconds=86400)
+        delta = end_time - start_time
+
+        N = 25
+        time_points.initRange( CTime(start_time),
+                               CTime(end_time),
+                               CTime(int(delta.total_seconds()/(N - 1))))
+        time_points.append(CTime(end_time))
+        resampled = ecl_sum.resample( "OUTPUT_CASE", time_points, lower_extrapolation=True, upper_extrapolation=True )
+
+        for key in ecl_sum.keys():
+            self.assertIn( key, resampled )
+
+        self.assertEqual(ecl_sum.get_data_start_time() -  datetime.timedelta(seconds=86400), resampled.get_data_start_time())
+
+        key_not_rate = "FOPT"
+        for time_index,t in enumerate(time_points):
+            if t < ecl_sum.get_data_start_time():
+                self.assertFloatEqual(resampled.iget( key_not_rate, time_index), ecl_sum._get_first_value(key_not_rate))
+            elif t >  ecl_sum.get_end_time():
+                self.assertFloatEqual(resampled.iget( key_not_rate, time_index), ecl_sum.get_last_value( key_not_rate))
+            else:
+                self.assertFloatEqual(resampled.iget( key_not_rate, time_index), ecl_sum.get_interp_direct( key_not_rate, t))
+
+        key_rate = "FOPR"
+        for time_index,t in enumerate(time_points):
+            if t < ecl_sum.get_data_start_time():
+                self.assertFloatEqual(resampled.iget( key_rate, time_index), 0)
+            elif t >  ecl_sum.get_end_time():
+                self.assertFloatEqual(resampled.iget( key_rate, time_index), 0)
+            else:
+                self.assertFloatEqual(resampled.iget( key_rate, time_index), ecl_sum.get_interp_direct( key_rate, t))

@@ -525,7 +525,6 @@ class SumTest(EclTest):
             for time_index,t in enumerate(time_points):
                 self.assertFloatEqual(resampled.iget( key, time_index), self.ecl_sum.get_interp_direct( key, t))
 
-
     def test_summary_units(self):
         self.assertEqual(self.ecl_sum.unit_system, EclUnitTypeEnum.ECL_METRIC_UNITS)
 

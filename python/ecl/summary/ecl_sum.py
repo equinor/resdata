@@ -92,7 +92,7 @@ class EclSum(BaseCClass):
     _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
     _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
     _create_writer                 = EclPrototype("ecl_sum_obj  ecl_sum_alloc_writer(char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
-    _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector)")
+    _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector, bool, bool)")
     _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
     _free                          = EclPrototype("void     ecl_sum_free(ecl_sum)")
     _data_length                   = EclPrototype("int      ecl_sum_get_data_length(ecl_sum)")
@@ -1537,8 +1537,8 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
 
 
-    def resample(self, new_case_name, time_points):
-        new_case = self._resample(new_case_name, time_points)
+    def resample(self, new_case_name, time_points, lower_extrapolation=False, upper_extrapolation=False):
+        new_case = self._resample(new_case_name, time_points, lower_extrapolation, upper_extrapolation)
         if new_case is None:
             raise ValueError("Failed to create new resampled case:{}".format(new_case_name))
 

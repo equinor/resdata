@@ -37,7 +37,7 @@ void test_correct_time_vector() {
   time_t_vector_append(t, util_make_date_utc( 4,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 6,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 8,1,2010 ));
-  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_resample(ecl_sum, "kk", t);
+  ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_resample(ecl_sum, "kk", t, false, false);
   test_assert_int_equal(  ecl_sum_get_report_time(ecl_sum_resampled, 2)  , util_make_date_utc( 6,1,2010 ));
 
   const ecl_smspec_type * smspec_resampled = ecl_sum_get_smspec(ecl_sum_resampled);
@@ -57,23 +57,56 @@ void test_correct_time_vector() {
   ecl_sum_free(ecl_sum);
 }
 
+
+void test_resample_extrapolate_rate() {
+
+    ecl_sum_type * ecl_sum = test_alloc_ecl_sum();
+
+    time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
+    time_t_vector_append(t, util_make_date_utc( 1,1,2009 ));
+    time_t_vector_append(t, util_make_date_utc( 4,1,2010 ));
+    time_t_vector_append(t, util_make_date_utc( 12,1,2010 ));
+
+    ecl_sum_type * ecl_sum_resampled = ecl_sum_alloc_resample(ecl_sum, "kk", t, true, true);
+
+
+    const ecl_smspec_type * smspec_resampled = ecl_sum_get_smspec(ecl_sum_resampled);
+    const smspec_node_type * node1 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 1);
+    const smspec_node_type * node3 = ecl_smspec_iget_node_w_params_index(smspec_resampled, 3);
+
+
+    //testing extrapolation for rate wrt. 3 dates: lower, inside and upper
+    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 1, 1, 2009), node3));
+    test_assert_double_equal(10.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4, 1, 2010), node3));
+    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1, 2010), node3));
+
+    //testing extrapolation for variable wrt. 3 dates: lower, inside and upper
+    test_assert_double_equal(0, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 1, 1, 2009 ), node1) );
+    test_assert_double_equal(2.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 4, 1,2010 ), node1) );
+    test_assert_double_equal(6.000, ecl_sum_get_from_sim_time( ecl_sum_resampled, util_make_date_utc( 12, 1,2010 ), node1) );
+
+
+    ecl_sum_free(ecl_sum_resampled);
+    time_t_vector_free(t);
+    ecl_sum_free(ecl_sum);
+}
+
 void test_not_sorted() {
   ecl_sum_type * ecl_sum = test_alloc_ecl_sum();
   time_t_vector_type * t = time_t_vector_alloc( 0 , 0 );
   time_t_vector_append(t, util_make_date_utc( 1,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 3,1,2010 ));
   time_t_vector_append(t, util_make_date_utc( 2,1,2010 ));
-  test_assert_NULL( ecl_sum_alloc_resample( ecl_sum, "kk", t) );
+  test_assert_NULL( ecl_sum_alloc_resample( ecl_sum, "kk", t, false, false) );
   time_t_vector_free(t);
   ecl_sum_free(ecl_sum);
 }
 
 
 int main() {
-  fprintf(stderr,"The ecl_sum resample code is currently broken - this should be fizxed\n");
-  exit(0);
-  // test_correct_time_vector();
-  // test_not_sorted();
-  // return 0;
+  test_correct_time_vector();
+  test_resample_extrapolate_rate();
+  test_not_sorted();
+  return 0;
 }
 
