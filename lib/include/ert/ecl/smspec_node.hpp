@@ -62,54 +62,12 @@ namespace ecl {
       void decode_R1R2( int * r1 , int * r2)  const;
       void set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k);
 
-
-      int cmp_KEYWORD_WGNAME_NUM__(const smspec_node * node2) const;
-      static int cmp_KEYWORD_WGNAME_NUM( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_KEYWORD_WGNAME_NUM__(node2);
-      }
-      int cmp_KEYWORD_WGNAME_LGR__( const smspec_node * node2) const;
-      static int cmp_KEYWORD_WGNAME_LGR( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_KEYWORD_WGNAME_LGR__(node2);
-      }
-      int cmp_KEYWORD_WGNAME_LGR_LGRIJK__( const smspec_node * node2) const;
-      static int cmp_KEYWORD_WGNAME_LGR_LGRIJK( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_KEYWORD_WGNAME_LGR_LGRIJK__(node2);
-      }
-      int cmp_KEYWORD_WGNAME__( const smspec_node * node2) const;
-      static int cmp_KEYWORD_WGNAME( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_KEYWORD_WGNAME__(node2);
-      }
-      static bool equal_MISC( const smspec_node * node1, const smspec_node * node2) {
-        return node1->keyword == node2->keyword;
-      }
-      int cmp_MISC__( const smspec_node * node2) const;
-      static int cmp_MISC( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_MISC__(node2);
-      }
-      int cmp_LGRIJK__( const smspec_node * node2) const;
-      static int cmp_LGRIJK( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_LGRIJK__(node2);
-      }
-      int cmp_KEYWORD_LGR_LGRIJK__( const smspec_node * node2) const;
-      static int cmp_KEYWORD_LGR_LGRIJK( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_KEYWORD_LGR_LGRIJK__(node2);
-      }
-      int cmp_KEYWORD_NUM__( const smspec_node * node2) const;
-      static int cmp_KEYWORD_NUM( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_KEYWORD_NUM__(node2);
-      }
-      static int cmp_KEYWORD( const smspec_node * node1, const smspec_node * node2) {
-        return node1->keyword.compare(node2->keyword);
-      }
-      int cmp_key1__( const smspec_node * node2) const;
-      static int cmp_key1( const smspec_node * node1, const smspec_node * node2) {
-        return node1->cmp_key1__(node2);
-      }
-
-    public:
+  public:
 
       static ecl_smspec_var_type valid_type(const char * keyword, const char * wgname, int num);
       int cmp(const smspec_node& node2) const;
+      static int cmp(const smspec_node& node1, const smspec_node& node2);
+
       smspec_node(int param_index,
                        const char * keyword  ,
                        const char * wgname,
@@ -136,8 +94,6 @@ namespace ecl {
 
       static ecl_smspec_var_type identify_var_type(const char * var);
 
-      smspec_node * copy() const;
-
       static int cmp( const smspec_node * node1, const smspec_node * node2) {
         return node1->cmp(*node2);
       }
@@ -159,7 +115,7 @@ namespace ecl {
       int                   get_params_index() const;
       float                 get_default() const;
       const                 std::array<int,3>& get_ijk() const;
-      const                 std::string& get_lgr_name() const;
+      const char          * get_lgr_name() const;
       const                 std::array<int,3>&  get_lgr_ijk() const;
 
   };
