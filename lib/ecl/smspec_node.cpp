@@ -474,29 +474,6 @@ bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_ty
 namespace ecl {
 
 
-void smspec_node::set_keyword( const std::string& keyword_ ) {
-  // ECLIPSE Standard: Max eight characters - everything beyond is silently dropped
-  // This function can __ONLY__ be called on time; run-time chaning of keyword is not
-  // allowed.
-  if (keyword.size() == 0)
-    this->keyword = keyword_;
-  else
-    util_abort("%s: fatal error - attempt to change keyword runtime detected - aborting\n",__func__);
-}
-
-
-
-
-void smspec_node::set_flags() {
-  /*
-     Check if this is a rate variabel - that info is used when
-     interpolating results to true_time between ministeps.
-  */
-  rate_variable = smspec_node_identify_rate(keyword.c_str());
-  if (keyword.back() == 'H')
-    historical = true;
-  total_variable = smspec_node_identify_total(keyword.c_str(), var_type);
-}
 
 float smspec_node::get_default() const {
   return this->default_value;
@@ -507,23 +484,6 @@ void smspec_node::set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k) {
   lgr_ijk[0] = lgr_i;
   lgr_ijk[1] = lgr_j;
   lgr_ijk[2] = lgr_k;
-}
-
-
-void smspec_node::init_num( ecl_smspec_var_type var_type_) {
-  switch( var_type_ ) {
-  case(ECL_SMSPEC_WELL_VAR):
-    num = SMSPEC_NUMS_WELL;
-    break;
-  case(ECL_SMSPEC_GROUP_VAR):
-    num = SMSPEC_NUMS_GROUP;
-    break;
-  case(ECL_SMSPEC_FIELD_VAR):
-    num = SMSPEC_NUMS_FIELD;
-    break;
-  default:
-    num = SMSPEC_NUMS_INVALID;
-  }
 }
 
 

@@ -55,13 +55,9 @@ namespace ecl {
       int                    params_index;       /* The index of this variable (applies to all the vectors - in particular the PARAMS vectors of the summary files *.Snnnn / *.UNSMRY ). */
       float                  default_value;      /* Default value for this variable. */
 
-      smspec_node();
       static ecl_smspec_var_type identify_special_var( const char * var );
       void set_wgname(const char * wgname);
       void set_num( const int grid_dims[3] , int num_);
-      void set_keyword( const std::string& keyword_ );
-      void set_flags();
-      void init_num( ecl_smspec_var_type var_type_);
       void set_gen_keys( const char * key_join_string_);
       void decode_R1R2( int * r1 , int * r2)  const;
       void set_lgr_ijk( int lgr_i , int lgr_j , int lgr_k);
@@ -161,7 +157,6 @@ namespace ecl {
       bool                  need_nums() const;
       void                  fprintf__( FILE * stream) const;
       int                   get_params_index() const;
-    //void                  set_params_index( int params_index_);
       float                 get_default() const;
       const                 std::array<int,3>& get_ijk() const;
       const                 std::string& get_lgr_name() const;
