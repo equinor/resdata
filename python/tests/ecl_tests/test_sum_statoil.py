@@ -476,7 +476,7 @@ class SumTest(EclTest):
                 list(map(hwell_padder, eclipse_summary.keys("WWCT*")))
                 )
 
-    def Xtest_ix_write(self):
+    def test_ix_write(self):
         for data_set in [
                     "Statoil/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL",
                     "Statoil/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC"
