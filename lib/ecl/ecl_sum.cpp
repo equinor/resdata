@@ -299,12 +299,7 @@ const ecl::smspec_node * ecl_sum_add_var( ecl_sum_type * ecl_sum , const char * 
 
 
 const ecl::smspec_node * ecl_sum_add_smspec_node(ecl_sum_type * ecl_sum, const ecl::smspec_node * node) {
-  return ecl_sum_add_var(ecl_sum,
-                         smspec_node_get_keyword(node),
-                         smspec_node_get_wgname(node),
-                         node->get_num(),
-                         smspec_node_get_unit(node),
-                         node->get_default());
+    return ecl_smspec_add_node(ecl_sum->smspec, *node);
 }
 
 

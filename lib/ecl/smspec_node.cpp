@@ -510,7 +510,6 @@ void smspec_node::set_wgname(const char * wgname) {
 void smspec_node::set_num( const int * grid_dims , int num_) {
   if (num_ == SMSPEC_NUMS_INVALID)
     util_abort("%s: explicitly trying to set nums == SMSPEC_NUMS_INVALID - seems like a bug?!\n",__func__);
-
   this->num = num_;
   if ((var_type == ECL_SMSPEC_COMPLETION_VAR) || (var_type == ECL_SMSPEC_BLOCK_VAR)) {
     int global_index = this->num - 1;
@@ -751,6 +750,12 @@ smspec_node::smspec_node(int param_index, const char * keyword, const char * uni
 {
 }
 
+//copy constructor with a new id
+smspec_node::smspec_node(const smspec_node& node, int param_index)
+{
+  *this = node;
+  this->params_index = param_index;
+}
 
 smspec_node::smspec_node(int param_index,
                                    const char * keyword,
@@ -789,7 +794,6 @@ smspec_node::smspec_node(int param_index,
        at all, e.g. like "FOPT" - the wgname input value is ignored
        completely.
   */
-
   this->var_type = this->valid_type(keyword, wgname, num);
   if (this->var_type == ECL_SMSPEC_INVALID_VAR)
     throw std::invalid_argument("Could not construct smspec_node from this input.");
@@ -857,7 +861,6 @@ smspec_node::smspec_node(int param_index,
     throw std::invalid_argument("Should not be here ... ");
     break;
   }
-
   set_gen_keys( key_join_string );
 }
 
@@ -871,7 +874,6 @@ smspec_node::smspec_node( int param_index_,
                                     const char * key_join_string_) {
 
   this->var_type = this->valid_type(keyword_, wgname_, -1);
-  printf("keyword: %s\n",keyword_);
   if (this->var_type == ECL_SMSPEC_INVALID_VAR)
     throw std::invalid_argument("Could not construct smspec_node from this input.");
 
