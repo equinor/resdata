@@ -791,7 +791,6 @@ smspec_node::smspec_node(int param_index, const char * keyword, const char * uni
 {
 }
 
-smspec_node::smspec_node() {}
 
 smspec_node::smspec_node(int param_index,
                                    const char * keyword,

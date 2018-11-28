@@ -140,8 +140,6 @@ namespace ecl {
 
       static ecl_smspec_var_type identify_var_type(const char * var);
 
-      smspec_node * copy() const;
-
       static int cmp( const smspec_node * node1, const smspec_node * node2) {
         return node1->cmp(*node2);
       }
@@ -161,7 +159,6 @@ namespace ecl {
       bool                  need_nums() const;
       void                  fprintf__( FILE * stream) const;
       int                   get_params_index() const;
-    //void                  set_params_index( int params_index_);
       float                 get_default() const;
       const                 std::array<int,3>& get_ijk() const;
       const                 std::string& get_lgr_name() const;
