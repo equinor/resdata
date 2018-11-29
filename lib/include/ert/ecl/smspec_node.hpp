@@ -91,6 +91,7 @@ namespace ecl {
       smspec_node(int param_index, const char * keyword, int num, const char * unit, float default_value, const char * key_join_string);
       smspec_node(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char *  key_join_string);
       smspec_node(int param_index, const char * keyword, const char * wgname, int num, const char * unit, float default_value, const char *  key_join_string);
+      smspec_node(const smspec_node& node, int param_index);
 
       static ecl_smspec_var_type identify_var_type(const char * var);
 

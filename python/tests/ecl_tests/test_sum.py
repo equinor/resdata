@@ -623,14 +623,14 @@ class SumTest(EclTest):
     def test_resample_extrapolate(self):
         """
         Test resampling of summary with extrapolate option of lower and upper boundaries enabled
-        Note: When performing resampling on cp_simple3 test case, it fails to duplicate node 251 so using mocked ecl_sum instead
-        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
-        ecl_sum = EclSum( path, lazy_load=True )
         """
         from ecl.util.util import TimeVector, CTime
 
         time_points = TimeVector()
-        ecl_sum = create_case(data_start=datetime.date(2010, 1, 1))
+
+        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
+        ecl_sum = EclSum( path, lazy_load=True )
+
         start_time = ecl_sum.get_data_start_time() - datetime.timedelta(seconds=86400)
         end_time = ecl_sum.get_end_time() + datetime.timedelta(seconds=86400)
         delta = end_time - start_time

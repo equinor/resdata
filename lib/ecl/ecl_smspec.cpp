@@ -955,7 +955,11 @@ const ecl::smspec_node * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const
                                                                                                               ecl_smspec->key_join_string.c_str())));
 }
 
-
+//copy given node with a new index
+const ecl::smspec_node * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const ecl::smspec_node& node) {
+    int params_index = ecl_smspec->smspec_nodes.size();
+    return ecl_smspec_insert_node(ecl_smspec, std::unique_ptr<ecl::smspec_node>( new ecl::smspec_node(node, params_index)));
+}
 
 
 const ecl::smspec_node * ecl_smspec_add_node(ecl_smspec_type * ecl_smspec, const char * keyword, const char * unit, float default_value) {
