@@ -47,7 +47,7 @@ void ecl_sum_vector_free( ecl_sum_vector_type * ecl_sum_vector ){
 
 UTIL_IS_INSTANCE_FUNCTION( ecl_sum_vector , ECL_SUM_VECTOR_TYPE_ID )
 
-static void ecl_sum_vector_add_node(ecl_sum_vector_type * vector, const smspec_node_type * node, const char * key ) {
+static void ecl_sum_vector_add_node(ecl_sum_vector_type * vector, const ecl::smspec_node * node, const char * key ) {
   int params_index = smspec_node_get_params_index( node );
   bool is_rate_key = smspec_node_is_rate( node);
 
@@ -64,14 +64,14 @@ ecl_sum_vector_type * ecl_sum_vector_alloc(const ecl_sum_type * ecl_sum, bool ad
     if (add_keywords) {
       const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
       for (int i=0; i < ecl_smspec_num_nodes(smspec); i++) {
-        const smspec_node_type * node = ecl_smspec_iget_node_w_node_index( smspec , i );
-        const char * key = smspec_node_get_gen_key1(node);
+        const ecl::smspec_node& node = ecl_smspec_iget_node_w_node_index( smspec , i );
+        const char * key = smspec_node_get_gen_key1(&node);
         /*
           The TIME keyword is special case handled to not be included; that is
           to match the same special casing in the key matching function.
         */
         if (!util_string_equal(key, "TIME"))
-          ecl_sum_vector_add_node( ecl_sum_vector, node, key);
+          ecl_sum_vector_add_node( ecl_sum_vector, &node, key);
       }
     }
     return ecl_sum_vector;
@@ -113,7 +113,7 @@ ecl_sum_vector_type * ecl_sum_vector_alloc_layout_copy(const ecl_sum_vector_type
 
 bool ecl_sum_vector_add_key( ecl_sum_vector_type * ecl_sum_vector, const char * key){
   if (ecl_sum_has_general_var( ecl_sum_vector->ecl_sum , key)) {
-    const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum_vector->ecl_sum , key );
+    const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum_vector->ecl_sum , key );
     ecl_sum_vector_add_node(ecl_sum_vector, node, key);
     return true;
   } else
@@ -127,7 +127,7 @@ void ecl_sum_vector_add_keys( ecl_sum_vector_type * ecl_sum_vector, const char *
     int i;
     for(i = 0; i < num_keywords ;i++){
         const char * key = stringlist_iget(keylist, i);
-        const smspec_node_type * node = ecl_sum_get_general_var_node( ecl_sum_vector->ecl_sum , key );
+        const ecl::smspec_node * node = ecl_sum_get_general_var_node( ecl_sum_vector->ecl_sum , key );
         ecl_sum_vector_add_node(ecl_sum_vector, node, key);
     }
     stringlist_free(keylist);

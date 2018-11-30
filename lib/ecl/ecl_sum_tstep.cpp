@@ -1,4 +1,4 @@
- /*
+/*
    Copyright (C) 2012  Statoil ASA, Norway.
 
    The file 'ecl_sum_tstep.c' is part of ERT - Ensemble based Reservoir Tool.
@@ -216,7 +216,11 @@ ecl_sum_tstep_type * ecl_sum_tstep_alloc_from_file( int report_step    ,
        ecl_smspec_load_restart() function and the restart case
        discarded.
     */
-    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s and header:%s - timestep discarded.\n" , src_file , ecl_smspec_get_header_file( smspec ));
+    fprintf(stderr , "** Warning size mismatch between timestep loaded from:%s(%d) and header:%s(%d) - timestep discarded.\n" ,
+            src_file ,
+            data_size,
+            ecl_smspec_get_header_file( smspec ),
+            ecl_smspec_get_params_size( smspec ));
     return NULL;
   }
 }
@@ -315,24 +319,24 @@ void ecl_sum_tstep_ishift(ecl_sum_tstep_type * tstep, int index, float addend) {
   ecl_sum_tstep_iset(tstep, index, ecl_sum_tstep_iget(tstep, index) + addend);
 }
 
-void ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const smspec_node_type * smspec_node , float value) {
-  int data_index = smspec_node_get_params_index( smspec_node );
+void ecl_sum_tstep_set_from_node( ecl_sum_tstep_type * tstep , const ecl::smspec_node& smspec_node , float value) {
+  int data_index = smspec_node_get_params_index( &smspec_node );
   ecl_sum_tstep_iset( tstep , data_index , value);
 }
 
-double ecl_sum_tstep_get_from_node( const ecl_sum_tstep_type * tstep , const smspec_node_type * smspec_node) {
-  int data_index = smspec_node_get_params_index( smspec_node );
+double ecl_sum_tstep_get_from_node( const ecl_sum_tstep_type * tstep , const ecl::smspec_node& smspec_node) {
+  int data_index = smspec_node_get_params_index( &smspec_node );
   return ecl_sum_tstep_iget( tstep , data_index);
 }
 
 
 void ecl_sum_tstep_set_from_key( ecl_sum_tstep_type * tstep , const char * gen_key , float value) {
-  const smspec_node_type * smspec_node = ecl_smspec_get_general_var_node( tstep->smspec , gen_key );
+  const ecl::smspec_node& smspec_node = ecl_smspec_get_general_var_node( tstep->smspec , gen_key );
   ecl_sum_tstep_set_from_node( tstep , smspec_node , value);
 }
 
 double ecl_sum_tstep_get_from_key(const ecl_sum_tstep_type * tstep , const char * gen_key) {
-  const smspec_node_type * smspec_node = ecl_smspec_get_general_var_node( tstep->smspec , gen_key );
+  const ecl::smspec_node& smspec_node = ecl_smspec_get_general_var_node( tstep->smspec , gen_key );
   return ecl_sum_tstep_get_from_node(tstep , smspec_node );
 }
 

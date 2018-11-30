@@ -60,6 +60,7 @@ class SummaryResampleTest(EclTest):
         with TestAreaContext(""):
             self.case.fwrite()
 
+
             # Too few arguments
             with self.assertRaises(CallError):
                 subprocess.check_call([self.script])

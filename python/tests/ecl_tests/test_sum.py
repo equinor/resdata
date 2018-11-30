@@ -25,7 +25,7 @@ import stat
 import pandas
 from pandas.testing import assert_frame_equal
 from contextlib import contextmanager
-from unittest import skipIf, skipUnless, skipIf
+from unittest import skipIf, skipUnless
 
 from ecl import EclUnitTypeEnum
 from ecl import EclDataType
@@ -118,7 +118,7 @@ class SumTest(EclTest):
 
 
     def test_identify_var_type(self):
-        self.assertEnumIsFullyDefined( EclSumVarType , "ecl_smspec_var_type" , "lib/include/ert/ecl/smspec_node.hpp")
+        self.assertEnumIsFullyDefined( EclSumVarType , "ecl_smspec_var_type" , "lib/include/ert/ecl/smspec_node.h")
         self.assertEqual( EclSum.varType( "WWCT:OP_X") , EclSumVarType.ECL_SMSPEC_WELL_VAR )
         self.assertEqual( EclSum.varType( "RPR") , EclSumVarType.ECL_SMSPEC_REGION_VAR )
         self.assertEqual( EclSum.varType( "WNEWTON") , EclSumVarType.ECL_SMSPEC_MISC_VAR )
@@ -131,6 +131,7 @@ class SumTest(EclTest):
 
         node1 = case.smspec_node( "FOPT" )
         self.assertEqual( node1.varType( ) , EclSumVarType.ECL_SMSPEC_FIELD_VAR )
+        self.assertIsNone(node1.wgname)
 
         node2 = case.smspec_node( "AARQ:10" )
         self.assertEqual( node2.varType( ) , EclSumVarType.ECL_SMSPEC_AQUIFER_VAR )
@@ -603,15 +604,12 @@ class SumTest(EclTest):
         for time_index,value in enumerate(fopr):
             self.assertEqual(fopr[time_index], value)
 
-
-
     def test_write_not_implemented(self):
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
         case = EclSum( path, lazy_load=True )
         self.assertFalse(case.can_write())
         with self.assertRaises(NotImplementedError):
             case.fwrite( )
-
 
 
     def test_directory_conflict(self):
@@ -625,14 +623,14 @@ class SumTest(EclTest):
     def test_resample_extrapolate(self):
         """
         Test resampling of summary with extrapolate option of lower and upper boundaries enabled
-        Note: When performing resampling on cp_simple3 test case, it fails to duplicate node 251 so using mocked ecl_sum instead
-        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
-        ecl_sum = EclSum( path, lazy_load=True )
         """
         from ecl.util.util import TimeVector, CTime
 
         time_points = TimeVector()
-        ecl_sum = create_case(data_start=datetime.date(2010, 1, 1))
+
+        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3")
+        ecl_sum = EclSum( path, lazy_load=True )
+
         start_time = ecl_sum.get_data_start_time() - datetime.timedelta(seconds=86400)
         end_time = ecl_sum.get_end_time() + datetime.timedelta(seconds=86400)
         delta = end_time - start_time
