@@ -54,11 +54,6 @@ if (ZLIB_FOUND)
     list(APPEND opt_srcs util/util_zlib.cpp)
 endif ()
 
-if (ERT_BUILD_CXX)
-    list(APPEND opt_srcs ecl/FortIO.cpp
-                         ecl/EclFilename.cpp
-)
-endif ()
 
 configure_file(build_config.h.in   include/ert/util/build_config.h)
 configure_file(ert_api_config.h.in include/ert/util/ert_api_config.h)
@@ -144,6 +139,8 @@ add_library(ecl util/rng.cpp
                 ecl/well_segment_collection.cpp
                 ecl/well_branch_collection.cpp
                 ecl/well_rseg_loader.cpp
+                ecl/FortIO.cpp
+                ecl/EclFilename.cpp
 
                 geometry/geo_surface.cpp
                 geometry/geo_util.cpp
@@ -211,23 +208,10 @@ install(TARGETS ecl
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY include/
         DESTINATION include
-        PATTERN *.h
-)
-install(DIRECTORY include/
-        DESTINATION include
-        PATTERN *.hpp EXCLUDE
 )
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
         DESTINATION include
-        PATTERN *.h
 )
-
-if (ERT_BUILD_CXX)
-    install(DIRECTORY include/
-            DESTINATION include
-            PATTERN *.hpp
-)
-endif ()
 
 if (NOT BUILD_TESTS)
     return ()
@@ -428,19 +412,17 @@ foreach (name geo_util_xlines geo_polygon geo_polygon_collection)
     add_test(NAME ${name} COMMAND ${name})
 endforeach ()
 
-if (ERT_BUILD_CXX)
-    foreach (test ert_util_unique_ptr)
-        add_executable(${test} util/tests/${test}.cpp)
-        target_link_libraries(${test} ecl)
-        add_test(NAME ${test} COMMAND ${test})
-    endforeach()
+foreach (test ert_util_unique_ptr)
+    add_executable(${test} util/tests/${test}.cpp)
+    target_link_libraries(${test} ecl)
+    add_test(NAME ${test} COMMAND ${test})
+endforeach()
 
-    foreach (test eclxx_kw eclxx_fortio eclxx_filename eclxx_types)
-        add_executable(${test} ecl/tests/${test}.cpp)
-        target_link_libraries(${test} ecl)
-        add_test(NAME ${test} COMMAND ${test})
-    endforeach ()
-endif ()
+foreach (test eclxx_kw eclxx_fortio eclxx_filename eclxx_types)
+    add_executable(${test} ecl/tests/${test}.cpp)
+    target_link_libraries(${test} ecl)
+    add_test(NAME ${test} COMMAND ${test})
+endforeach ()
 
 foreach(name ecl_coarse_test
              ecl_grid_layer_contains

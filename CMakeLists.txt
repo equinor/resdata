@@ -51,7 +51,6 @@ option( ENABLE_PYTHON       "Build and install the Python wrappers"             
 option( BUILD_SHARED_LIBS   "Build shared libraries"                                  ON )
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( RST_DOC             "Build RST documentation"                                 OFF)
-option( ERT_BUILD_CXX       "Build some CXX wrappers"                                 ON)
 option( USE_RPATH           "Don't strip RPATH from libraries and binaries"           OFF)
 option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF)
 
