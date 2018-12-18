@@ -124,10 +124,16 @@ class SumTest(EclTest):
         self.assertEqual( EclSum.varType( "WNEWTON") , EclSumVarType.ECL_SMSPEC_MISC_VAR )
         self.assertEqual( EclSum.varType( "AARQ:4") , EclSumVarType.ECL_SMSPEC_AQUIFER_VAR )
 
+        self.assertEqual( EclSum.varType("RXFT"),  EclSumVarType.ECL_SMSPEC_REGION_2_REGION_VAR)
+        self.assertEqual( EclSum.varType("RxxFT"), EclSumVarType.ECL_SMSPEC_REGION_2_REGION_VAR)
+        self.assertEqual( EclSum.varType("RXFR"),  EclSumVarType.ECL_SMSPEC_REGION_2_REGION_VAR)
+        self.assertEqual( EclSum.varType("RxxFR"), EclSumVarType.ECL_SMSPEC_REGION_2_REGION_VAR)
+        self.assertEqual( EclSum.varType("RORFR"), EclSumVarType.ECL_SMSPEC_REGION_VAR)
+
         case = createEclSum("CSV" , [("FOPT", None , 0, "SM3") ,
                                      ("FOPR" , None , 0, "SM3/DAY"),
                                      ("AARQ" , None , 10, "???"),
-                                    ("RGPT" , None  ,1, "SM3")])
+                                     ("RGPT" , None  ,1, "SM3")])
 
         node1 = case.smspec_node( "FOPT" )
         self.assertEqual( node1.varType( ) , EclSumVarType.ECL_SMSPEC_FIELD_VAR )
