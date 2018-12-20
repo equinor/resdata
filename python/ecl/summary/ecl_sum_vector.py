@@ -46,7 +46,7 @@ class EclSumVector(object):
 
         self.__dates = parent.get_dates(report_only)
         self.__days = parent.get_days(report_only)
-        self.__numpy_dates = parent.get_numpy_dates(report_only)
+        self.__numpy_dates = parent.numpy_dates(report_only)
         self.__report_step = parent.get_report_step(report_only)
         self.__values = None
 
@@ -132,7 +132,7 @@ class EclSumVector(object):
         return EclSumNode(self.__report_step[index],
                           self.__days[index],
                           self.__dates[index],
-                          self.__numpy_dates[index],
+                          self.mpl_dates[index],
                           self.__values[index])
 
 
