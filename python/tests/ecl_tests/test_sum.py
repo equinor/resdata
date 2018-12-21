@@ -23,7 +23,16 @@ import shutil
 import cwrap
 import stat
 import pandas
-from pandas.testing import assert_frame_equal
+
+def assert_frame_equal(a,b):
+    if not a.equals(b):
+        raise AssertionError("Expected dataframes to be equal")
+
+try:
+    from pandas.testing import assert_frame_equal
+except ImportError:
+    pass
+
 from contextlib import contextmanager
 from unittest import skipIf, skipUnless
 
