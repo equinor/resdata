@@ -103,7 +103,7 @@ class EclSumVector(object):
         backwards-compatibility for the time-being. Usage will trigger
         a depreciation warning.
         """
-        warning.warn("The mpl_dates property has been deprecated - use numpy_dates instead",
+        warnings.warn("The mpl_dates property has been deprecated - use numpy_dates instead",
                      DeprecationWarning)
 
         return parent.get_mpl_dates(report_only)
