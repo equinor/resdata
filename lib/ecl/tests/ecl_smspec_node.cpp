@@ -93,6 +93,25 @@ static void test_identify_total_variable() {
   test_assert_false(smspec_node_identify_total("SPR", ECL_SMSPEC_SEGMENT_VAR));
 }
 
+
+void test_nums_default() {
+  ecl::smspec_node field_node( 0, "FOPT" , "UNIT" , 0);
+  ecl::smspec_node group_node( 0, "GOPR" , "G1", "UNIT" , 0, ":");
+  ecl::smspec_node well_node( 0, "WOPR" , "W1", "UNIT" , 0, ":");
+
+  int default_nums = 0;
+  /*
+    The integer constant default nums corresponds to the symbol nums_unused
+    in smspec_node.cpp. It is duplicated here to avoid exporting it - it should
+    not really be a publically available symbol.
+  */
+
+  test_assert_int_equal( field_node.get_num(), default_nums);
+  test_assert_int_equal( group_node.get_num(), default_nums);
+  test_assert_int_equal( well_node.get_num(), default_nums);
+}
+
+
 void test_cmp_types() {
   const int dims[3] = {10,10,10};
   ecl::smspec_node field_node( 0, "FOPT" , "UNIT" , 0);
@@ -168,4 +187,5 @@ int main(int argc, char ** argv) {
   test_cmp_region( );
   test_identify_rate_variable();
   test_identify_total_variable();
+  test_nums_default();
 }

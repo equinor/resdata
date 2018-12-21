@@ -71,6 +71,8 @@ static const char* special_vars[] = {"NEWTON",
                                      "WNEWTON"};
 
 
+static const int nums_unused = 0;
+
 /**
    This struct contains meta-information about one element in the smspec
    file; the content is based on the smspec vectors WGNAMES, KEYWORDS, UNIT
@@ -716,13 +718,13 @@ smspec_node::smspec_node(int param_index, const char * keyword, int num, const c
 
 smspec_node::smspec_node(int param_index, const char * keyword, const char * wgname, const char * unit, float default_value, const char * key_join_string)
   : smspec_node(param_index,
-                     keyword,
-                     wgname,
-                     0,
-                     unit,
-                     nullptr,
-                     default_value,
-                     key_join_string)
+                keyword,
+                wgname,
+                nums_unused,
+                unit,
+                nullptr,
+                default_value,
+                key_join_string)
 {
 }
 
@@ -740,13 +742,13 @@ smspec_node::smspec_node(int param_index, const char * keyword, const char * wgn
 
 smspec_node::smspec_node(int param_index, const char * keyword, const char * unit, float default_value)
   : smspec_node(param_index,
-                     keyword,
-                     nullptr,
-                     0,
-                     unit,
-                     nullptr,
-                     default_value,
-                     nullptr)
+                keyword,
+                nullptr,
+                nums_unused,
+                unit,
+                nullptr,
+                default_value,
+                nullptr)
 {
 }
 
@@ -801,6 +803,7 @@ smspec_node::smspec_node(int param_index,
   this->params_index = param_index;
   this->default_value = default_value;
   this->keyword = keyword;
+  this->num = num;
   this->unit = unit;
   this->rate_variable = smspec_node_identify_rate(this->keyword.c_str());
   this->total_variable = smspec_node_identify_total(this->keyword.c_str(), this->var_type);
