@@ -106,7 +106,7 @@ class EclSumVector(object):
         warnings.warn("The mpl_dates property has been deprecated - use numpy_dates instead",
                      DeprecationWarning)
 
-        return parent.get_mpl_dates(report_only)
+        return parent.get_mpl_dates(self.report_only)
 
     @property
     def numpy_dates(self):
