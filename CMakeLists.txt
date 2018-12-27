@@ -338,11 +338,6 @@ if (ENABLE_PYTHON)
     # fails in the python/CMakeLists.txt file the ENABLE_PYTHON
     # will be set to OFF.
     add_subdirectory( python )
-
-    if(RST_DOC)
-       add_subdirectory( docs )
-    endif()
-
 endif()
 
 if (ENABLE_PYTHON)
