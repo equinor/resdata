@@ -164,28 +164,61 @@ ecl_smspec_var_type ecl::smspec_node::identify_var_type(const char * var) {
     case('R'):
       {
         /*
-          The distinction between region-to-region variables and plain
-          region variables is less than clear: The current
-          interpretation is that the cases:
+          The distinction between regular region variables and region-to-region
+          variables is less than clear. The manual prescribes a rule based on
+          the characters at position 3 and 4 or 4 and 5.
 
-             1. Any variable matching:
+             R*FT*  => Region to region
+             R**FT* => Region to region
+             R*FR*  => Region to region
+             R**FR* => Region to region
 
-                a) Starts with 'R'
-                b) Has 'F' as the third character
+             RORFR  => exception - normal region var.
 
-             2. The variable "RNLF"
 
-          Get variable type ECL_SMSPEC_REGION_2_REGION_VAR. The rest
-          get the type ECL_SMSPEC_REGION_VAR.
+           In addition older test cases seem to imply the following extra
+           rules/exceptions:
+
+             RNLF: region to region variable
+             RxF : region to region variable
+
+           The manual does not seem to offer any backup for these extra rules.
         */
 
-        if (util_string_equal( var , "RNLF"))
+        if (strlen(var) == 3 && var[2] == 'F') {
           var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
-        else if (var[2] == 'F')
-          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
-        else
-          var_type  = ECL_SMSPEC_REGION_VAR;
+          break;
+        }
 
+        if (util_string_equal( var , "RNLF")) {
+          var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
+          break;
+        }
+
+        if (util_string_equal(var, "RORFR")) {
+          var_type = ECL_SMSPEC_REGION_VAR;
+          break;
+        }
+
+        if (strlen(var) >= 4) {
+          if (var[2] == 'F') {
+            if (var[3] == 'T' || var[3] == 'R') {
+              var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
+              break;
+            }
+          }
+        }
+
+        if (strlen(var) >= 5) {
+          if (var[3] == 'F') {
+            if (var[4] == 'T' || var[4] == 'R') {
+              var_type = ECL_SMSPEC_REGION_2_REGION_VAR;
+              break;
+            }
+          }
+        }
+
+        var_type = ECL_SMSPEC_REGION_VAR;
       }
       break;
     case('S'):
@@ -202,6 +235,7 @@ ecl_smspec_var_type ecl::smspec_node::identify_var_type(const char * var) {
       var_type = ECL_SMSPEC_MISC_VAR;
     }
   }
+
   return var_type;
 }
 
