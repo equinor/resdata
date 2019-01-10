@@ -136,8 +136,7 @@ class NPVPriceVector(object):
 
 
 class EclNPV(object):
-    sumKeyRE = re.compile("[[]([\w:,]+)[]]")
-
+    sumKeyRE = re.compile("[\[]([\w:,]+)[\]]")
 
     def __init__(self, baseCase):
         sum = EclSum(baseCase)
