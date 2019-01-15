@@ -43,7 +43,6 @@ class Deprecation_2_0_Test(EclTest):
             with openFortIO("TEST" , mode = FortIO.WRITE_MODE) as f:
                 kw.fwrite( f )
 
-            t.sync()
             f = EclFile( "TEST" )
 
 class Deprecation_1_9_Test(EclTest):

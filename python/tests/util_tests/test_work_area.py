@@ -68,13 +68,6 @@ class WorkAreaTest(EclTest):
             with self.assertRaises(IOError):
                 test_area.copy_directory( "path1/file.txt" )
 
-    def test_sync(self):
-        with TestAreaContext("test_sync") as t:
-            with open("file.txt" , "w") as f:
-                f.write("content")
-
-            t.sync()
-            self.assertTrue( os.path.isfile( "file.txt"))
 
     def test_multiple_areas(self):
         original_dir = os.getcwd()
