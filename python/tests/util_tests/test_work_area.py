@@ -23,7 +23,7 @@ try:
 except ImportError:
     from unittest import skipIf
 
-from ecl.util.test import TestAreaContext, TempAreaContext
+from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 
@@ -45,25 +45,6 @@ class WorkAreaTest(EclTest):
             full_path = test_area.getFullPath( "test_file" )
             self.assertTrue( os.path.isfile( full_path ))
             self.assertTrue( os.path.isabs( full_path ))
-
-
-    def test_temp_area(self):
-        with TestAreaContext("TestArea") as test_area:
-            cwd = os.getcwd()
-            with open("file.txt" , "w") as f:
-                f.write("File")
-
-            with TempAreaContext("TempArea") as temp_area:
-                self.assertEqual( cwd, os.getcwd())
-                self.assertEqual( cwd, temp_area.get_cwd())
-                temp_area.copy_file( "file.txt" )
-
-                self.assertTrue( os.path.isfile( os.path.join( temp_area.getPath( ) , "file.txt")))
-
-                os.mkdir("tmp")
-                os.chdir("tmp")
-
-            self.assertEqual( os.getcwd() , os.path.join( cwd , "tmp"))
 
 
     def test_IOError(self):
