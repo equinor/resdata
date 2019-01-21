@@ -101,7 +101,6 @@ struct test_work_area_struct {
   bool        store;
   char      * cwd;
   char      * original_cwd;
-  bool        change_dir;
 
   /*
     There have been issues where a test like this:
@@ -123,7 +122,7 @@ struct test_work_area_struct {
 
 
 
-static test_work_area_type * test_work_area_alloc__(const char * prefix , const char * test_path, bool change_dir) {
+static test_work_area_type * test_work_area_alloc__(const char * prefix , const char * test_path) {
   test_work_area_type * work_area = NULL;
 
   if (util_is_directory( prefix )) {
@@ -135,10 +134,8 @@ static test_work_area_type * test_work_area_alloc__(const char * prefix , const 
       UTIL_TYPE_ID_INIT( work_area , TEST_WORK_AREA_TYPE_ID );
       work_area->original_cwd = util_alloc_cwd();
       work_area->cwd = test_cwd;
-      work_area->change_dir = change_dir;
-      if (change_dir )
-        if(util_chdir( work_area->cwd ) != 0)
-            util_abort("%s: Failed to move into temporary directory: %s", __func__, test_cwd);
+      if(util_chdir( work_area->cwd ) != 0)
+        util_abort("%s: Failed to move into temporary directory: %s", __func__, test_cwd);
 
       test_work_area_set_store( work_area , DEFAULT_STORE);
 
@@ -159,18 +156,18 @@ static test_work_area_type * test_work_area_alloc__(const char * prefix , const 
 
 
 test_work_area_type * test_work_area_alloc_relative(const char * prefix , const char * test_path) {
-  return test_work_area_alloc__(prefix , test_path , true );
+  return test_work_area_alloc__(prefix , test_path);
 }
 
 
 test_work_area_type * temp_area_alloc_relative(const char * prefix , const char * test_path) {
-  return test_work_area_alloc__(prefix , test_path , false );
+  return test_work_area_alloc__(prefix , test_path);
 }
 
 
 UTIL_IS_INSTANCE_FUNCTION( test_work_area , TEST_WORK_AREA_TYPE_ID)
 
-static test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name, bool change_dir) {
+static test_work_area_type * test_work_area_alloc_with_prefix(const char * prefix , const char * test_name) {
   if (test_name) {
     unsigned int random_int;
     util_fread_dev_urandom( sizeof random_int, (char *) &random_int);
@@ -184,7 +181,7 @@ static test_work_area_type * test_work_area_alloc_with_prefix(const char * prefi
     char * user_name =  util_alloc_sprintf("ert-test-%08u" , random_int);
 #endif
     char * test_path = util_alloc_sprintf( TEST_PATH_FMT , user_name , test_name , random_int);
-    test_work_area_type * work_area = test_work_area_alloc__( prefix , test_path, change_dir);
+    test_work_area_type * work_area = test_work_area_alloc__( prefix , test_path );
     free( test_path );
     free( user_name );
     return work_area;
@@ -222,18 +219,7 @@ test_work_area_type * test_work_area_alloc(const char * test_name) {
   test_work_area_type * work_area;
   {
     char * tmp_prefix = test_work_area_alloc_prefix( );
-    work_area = test_work_area_alloc_with_prefix( tmp_prefix , test_name , true);
-    free( tmp_prefix );
-  }
-  return work_area;
-}
-
-
-test_work_area_type * temp_area_alloc(const char * path) {
-  test_work_area_type * work_area;
-  {
-    char * tmp_prefix = test_work_area_alloc_prefix( );
-    work_area = test_work_area_alloc_with_prefix( tmp_prefix , path , false );
+    work_area = test_work_area_alloc_with_prefix( tmp_prefix , test_name);
     free( tmp_prefix );
   }
   return work_area;
@@ -258,8 +244,7 @@ void test_work_area_free(test_work_area_type * work_area) {
   if (!work_area->store)
     util_clear_directory( work_area->cwd , true , true );
 
-  if (work_area->change_dir)
-    util_chdir( work_area->original_cwd );
+  util_chdir( work_area->original_cwd );
 
 #ifdef ERT_HAVE_OPENDIR
   if (work_area->dir_stream)
@@ -285,10 +270,7 @@ char * test_work_area_alloc_input_path( const test_work_area_type * work_area , 
   if (util_is_abs_path( input_path ))
     return util_alloc_string_copy( input_path );
   else {
-    if (work_area->change_dir)
-      return util_alloc_filename( work_area->original_cwd , input_path , NULL);
-    else
-      return util_alloc_string_copy( input_path );
+    return util_alloc_filename( work_area->original_cwd , input_path , NULL);
   }
 }
 
