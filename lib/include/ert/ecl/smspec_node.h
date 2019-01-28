@@ -41,6 +41,7 @@ typedef enum {ECL_SMSPEC_INVALID_VAR            =  0 ,
               ECL_SMSPEC_LOCAL_WELL_VAR         = 13 ,   /* X */
               ECL_SMSPEC_MISC_VAR               = 14     /* X */}  ecl_smspec_var_type;
 
+
 #define SMSPEC_NUMS_INVALID   -991199
 #define SMSPEC_NUMS_WELL       1
 #define SMSPEC_NUMS_GROUP      2
