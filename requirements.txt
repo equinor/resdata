@@ -1,4 +1,4 @@
 cwrap
 numpy
-pandas 0.17
+pandas==0.17
 sphinx
