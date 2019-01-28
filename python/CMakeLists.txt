@@ -2,7 +2,7 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/M
 include(init_python)
 init_python( 2.7 )
 
-    find_python_package(pandas 0.17 ${PYTHON_INSTALL_PREFIX})
+find_python_package(pandas 0.17 ${PYTHON_INSTALL_PREFIX})
 if (NOT DEFINED PY_pandas)
    message(WARNING "Pandas module not found Python wrappers not enabled. Install with: \"pip install pandas\"")
    set( ENABLE_PYTHON OFF PARENT_SCOPE )
