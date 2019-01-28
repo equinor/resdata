@@ -2,3 +2,6 @@ cwrap
 numpy
 pandas
 sphinx
+future
+six
+functools32
