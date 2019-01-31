@@ -78,6 +78,6 @@ fopt = summary.numpy_vector("FOPT")
 
 ```
 
-The installation with Python enabled is described in a [YouTube video](https://www.youtube.com/watch?v=Qqy1vA1PSk8) by Carlf Fredrik Berg.
+The installation with Python enabled is described in a [YouTube video](https://www.youtube.com/watch?v=Qqy1vA1PSk8) by Carl Fredrik Berg.
 
 [1]: The exact paths here will depend on your system and Python version. The example given is for a RedHat system with Python version 2.7.
