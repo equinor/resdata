@@ -37,7 +37,7 @@ setup(
     description='libecl',
     long_description=open("README.md", "r").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/statoil/libecl",
+    url="https://github.com/equinor/libecl",
     license="GNU General Public License, Version 3, 29 June 2007",
     packages=find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_dir={'': 'python'},
