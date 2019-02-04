@@ -30,8 +30,6 @@
 
 #define FORTIO_ID  345116
 
-extern int errno;
-
 /**
 The fortio struct is implemented to handle fortran io. The problem is
 that when a Fortran program writes unformatted data to file in a
