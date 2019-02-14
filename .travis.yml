@@ -13,6 +13,7 @@ env:
   global:
     - ERT_SHOW_BACKTRACE=1
     - MB_PYTHON_VERSION=$TRAVIS_PYTHON_VERSION
+    - VERSION=$(echo $TRAVIS_TAG | sed s/v//)
   matrix:
     - TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
     - TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
@@ -40,6 +41,7 @@ addons:
     - liblapack-dev
 
 before_install:
+  - git clone https://github.com/matthew-brett/multibuild.git
   - unset -f pushd
   - unset -f popd
   - source multibuild/common_utils.sh
@@ -68,3 +70,15 @@ script:
   - set -e; python -c "import ecl"; set +e
   - ctest --output-on-failure $TEST_SUITE
   - popd
+
+deploy:
+    - provider: pypi # source distribution (done linux python 2.7 only)
+      skip_cleanup: true
+      skip_upload_docs: true
+      user: xjules
+      distributions: sdist bdist_wheel
+      password:
+        secure: qqN8VyzV4YbdUofCoo65KWO+87+1PcOHpKp4JKHXwZ9uandFjwdvuTYiZ/XR4yk0rLa28qpa9iUfk4iWkC8zfFcKWuJ/9I45I8kbhvM6tD2UtCGfmR3AzNceEC1/9OBCpnBU8MTTrY9SNULeqanOPPQlvy8X54lAdEbXHOzlNYheAG+htE8PSUO0FTOaYrDAfR+slRBSQ8OqDuhi/MNo87az85jmX9ONbkuaOyoc13QoVlQ+Yzfw0eBQjzg+C+59JGNp18Fpoyp4NDSYyE1LRUbNMr1ud7id8AIg9tMOc1pjYk8FBIIT2hnSKh1BdQm2lLvQRQWIznsspDMrey/AXOf8knPqR1TjVxVTEbjdvDtQHibIA2vAyX6s4vYBbZfL/jelv11IWS02lgjzJCKXzvkJUsSymmVCHF//zOOjJfZoEJOIzPH2jwwd1iWuaeE4C6JIpU2QV3x8gsNPJjesJgAr7je25ciDOIlyeNfoubIl713Q3BKyAiQBk3d6bpd0o8p57rOoWegoYSe7sfPGyrM88UlbGvmM7Rj+DJHl7jMy711BIf6R51lJguwVgzRg6r+jRdAHLKEpZZ7oc33BVEo4ZowU2awywepo/IVNTFi6X2S24oZ/ZalRLKM+W3yRPRZXifgfqW2Ssk0qK+7SlBmpDYteXuThyFjpBUWilbA=
+      on:
+        condition: "$MB_PYTHON_VERSION = 2.7" AND "$TEST_SUITE = -LE SLOW"
+        tags: true
