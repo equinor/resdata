@@ -1,6 +1,6 @@
 
 /*
-   Copyright (C) 2013  Statoil ASA, Norway.
+   Copyright (C) 2013  Equinor ASA, Norway.
 
    The file 'nnc_vector.c' is part of ERT - Ensemble based Reservoir Tool.
 

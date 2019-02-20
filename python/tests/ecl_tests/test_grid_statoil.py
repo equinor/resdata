@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway.
+#  Copyright (C) 2011  Equinor ASA, Norway.
 #
 #  The file 'test_grid.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -30,21 +30,21 @@ from ecl.eclfile import EclKW, EclFile, openEclFile
 from ecl.grid import EclGrid
 from ecl.util.util import DoubleVector, IntVector
 from ecl.util.test import TestAreaContext
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
 
-@statoil_test()
+@equinor_test()
 class GridTest(EclTest):
     def egrid_file(self):
-        return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")
+        return self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.EGRID")
 
 
     def grid_file(self):
-        return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.GRID")
+        return self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.GRID")
 
 
     def grdecl_file(self):
-        return self.createTestPath("Statoil/ECLIPSE/Gurbat/include/example_grid_sim.GRDECL")
+        return self.createTestPath("Equinor/ECLIPSE/Gurbat/include/example_grid_sim.GRDECL")
 
     def test_loadFromFile(self):
         g1 = EclGrid.loadFromFile( self.egrid_file() )
@@ -277,7 +277,7 @@ class GridTest(EclTest):
 
     @skipIf(EclTest.slowTestShouldNotRun(), "Slow test of numActive large memory skipped!")
     def test_num_active_large_memory(self):
-        case = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE")
+        case = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE")
         vecList = []
         for i in range(12500):
             vec = DoubleVector()
@@ -291,7 +291,7 @@ class GridTest(EclTest):
 
 
     def test_no_mapaxes_check_for_nan(self):
-        grid_paths = ["Statoil/ECLIPSE/NoMapaxes/ECLIPSE.EGRID", "Statoil/ECLIPSE/NoMapaxes/ECLIPSE.GRID"]
+        grid_paths = ["Equinor/ECLIPSE/NoMapaxes/ECLIPSE.EGRID", "Equinor/ECLIPSE/NoMapaxes/ECLIPSE.GRID"]
 
         for grid_path in grid_paths:
             test_grid_path = self.createTestPath(grid_path)
@@ -309,7 +309,7 @@ class GridTest(EclTest):
 
 
     def test_valid_geometry(self):
-        grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/GRID_INVALID_CELL/PRED_RESEST_0_R_13_0.GRID"))
+        grid = EclGrid( self.createTestPath("Equinor/ECLIPSE/GRID_INVALID_CELL/PRED_RESEST_0_R_13_0.GRID"))
         self.assertTrue( grid.validCellGeometry( ijk = (27,0,0)) )
         self.assertFalse( grid.validCellGeometry( ijk = (0,0,0)) )
 
@@ -328,7 +328,7 @@ class GridTest(EclTest):
 
 
     def test_lgr_get(self):
-        grid = EclGrid(self.createTestPath("Statoil/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID"))
+        grid = EclGrid(self.createTestPath("Equinor/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID"))
         for (nr,name) in [ ( 104 , "LG003017"),
                            (2 , "LG006024"),
                            (  4 , "LG005025"),

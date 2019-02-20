@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2016  Statoil ASA, Norway.
+#  Copyright (C) 2016  Equinor ASA, Norway.
 #
 #  The file 'test_rft.py' is part of ERT - Ensemble based Reservoir Tool.
 #

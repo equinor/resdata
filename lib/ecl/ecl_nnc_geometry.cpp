@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017  statoil asa, norway.
+   Copyright (c) 2017  equinor asa, norway.
 
    The file 'ecl_nnc_geometry.c' is part of ert - ensemble based reservoir tool.
 

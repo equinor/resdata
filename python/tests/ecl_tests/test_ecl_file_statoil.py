@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway.
+#  Copyright (C) 2011  Equinor ASA, Norway.
 #
 #  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -22,14 +22,14 @@ from ecl import EclFileFlagEnum, EclFileEnum
 from ecl.eclfile import EclFile, FortIO, EclKW , openFortIO , openEclFile
 
 from ecl.util.test import TestAreaContext
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
 
-@statoil_test()
-class EclFileStatoilTest(EclTest):
+@equinor_test()
+class EclFileEquinorTest(EclTest):
     def setUp(self):
-        self.test_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
-        self.test_fmt_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.FUNRST")
+        self.test_file = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNRST")
+        self.test_fmt_file = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.FUNRST")
 
     def assertFileType(self , filename , expected):
         file_type , step , fmt_file = EclFile.getFileType(filename)
@@ -159,7 +159,7 @@ class EclFileStatoilTest(EclTest):
 
 
     def test_ix_case(self):
-        f = EclFile( self.createTestPath( "Statoil/ECLIPSE/ix/summary/Create_Region_Around_Well.SMSPEC"))
+        f = EclFile( self.createTestPath( "Equinor/ECLIPSE/ix/summary/Create_Region_Around_Well.SMSPEC"))
 
         # Keywords
         self.assertTrue( "KEYWORDS" in f )

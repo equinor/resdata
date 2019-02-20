@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2014  Statoil ASA, Norway.
+#  Copyright (C) 2014  Equinor ASA, Norway.
 #
 #  The file 'test_fault_blocks.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -22,17 +22,17 @@ except ImportError:
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 from ecl.grid.faults import FaultBlock, FaultBlockLayer
 
 from cwrap import open as copen
 
 
-@statoil_test()
+@equinor_test()
 class FaultBlockTest(EclTest):
     def setUp(self):
-        self.grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/Mariner/MARINER.EGRID"))
-        fileH = copen( self.createTestPath("Statoil/ECLIPSE/Mariner/faultblock.grdecl") )
+        self.grid = EclGrid( self.createTestPath("Equinor/ECLIPSE/Mariner/MARINER.EGRID"))
+        fileH = copen( self.createTestPath("Equinor/ECLIPSE/Mariner/faultblock.grdecl") )
         self.kw = EclKW.read_grdecl( fileH , "FAULTBLK" , ecl_type = EclDataType.ECL_INT )
 
 

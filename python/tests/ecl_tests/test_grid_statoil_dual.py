@@ -1,6 +1,6 @@
-#  Copyright (C) 2018  Statoil ASA, Norway.
+#  Copyright (C) 2018  Equinor ASA, Norway.
 #
-#  The file 'test_grid_statoil_dual.py' is part of ERT - Ensemble based Reservoir Tool.
+#  The file 'test_grid_equinor_dual.py' is part of ERT - Ensemble based Reservoir Tool.
 #
 #  ERT is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@ import math
 from ecl.util.test import TestAreaContext
 from ecl.grid import EclGrid
 
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
-@statoil_test()
+@equinor_test()
 class GridDualTest(EclTest):
 
     def egrid_file(self):
-        return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.EGRID")
+        return self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.EGRID")
 
     def grid_file(self):
-        return self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.GRID")
+        return self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.GRID")
 
     def test_dual(self):
         with TestAreaContext("python/grid-test/testDual"):
@@ -39,11 +39,11 @@ class GridDualTest(EclTest):
             self.assertFalse(grid.dualGrid())
             self.assertTrue(grid.getNumActiveFracture() == 0)
 
-            dgrid = EclGrid(self.createTestPath("Statoil/ECLIPSE/DualPoro/DUALPOR_MSW.EGRID"))
+            dgrid = EclGrid(self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.EGRID"))
             self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
             self.assertTrue(dgrid.getNumActive() == 46118)
 
-            dgrid2 = EclGrid(self.createTestPath("Statoil/ECLIPSE/DualPoro/DUALPOR_MSW.GRID"))
+            dgrid2 = EclGrid(self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.GRID"))
             self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
             self.assertTrue(dgrid.getNumActive() == 46118)
             self.assertTrue(dgrid.equal(dgrid2))
@@ -52,7 +52,7 @@ class GridDualTest(EclTest):
             # The DUAL_DIFF grid has been manipulated to create a
             # situation where some cells are only matrix active, and some
             # cells are only fracture active.
-            dgrid = EclGrid(self.createTestPath("Statoil/ECLIPSE/DualPoro/DUAL_DIFF.EGRID"))
+            dgrid = EclGrid(self.createTestPath("Equinor/ECLIPSE/DualPoro/DUAL_DIFF.EGRID"))
             self.assertTrue(dgrid.getNumActive() == 106)
             self.assertTrue(dgrid.getNumActiveFracture() == 105)
 

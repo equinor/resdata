@@ -1,7 +1,7 @@
 /*
-   Copyright (C) 2014  Statoil ASA, Norway.
+   Copyright (C) 2014  Equinor ASA, Norway.
 
-   The file 'ecl_layer_statoil.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ecl_layer_equinor.c' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

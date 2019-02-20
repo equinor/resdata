@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2012  Statoil ASA, Norway.
+#  Copyright (C) 2012  Equinor ASA, Norway.
 #
 #  The file 'test_region.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -17,13 +17,13 @@
 from ecl.eclfile import EclFile
 from ecl.grid import EclGrid, EclRegion
 from ecl.grid.faults import Layer
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
 
-@statoil_test()
+@equinor_test()
 class RegionTest(EclTest):
     def setUp(self):
-        case = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE")
+        case = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE")
         self.grid = EclGrid(case)
         self.rst_file = EclFile("%s.UNRST" % case)
         self.init_file = EclFile("%s.INIT" % case)
@@ -166,7 +166,7 @@ class RegionTest(EclTest):
 
 
     def test_heidrun(self):
-        root = self.createTestPath("Statoil/ECLIPSE/Heidrun")
+        root = self.createTestPath("Equinor/ECLIPSE/Heidrun")
         grid = EclGrid( "%s/FF12_2013B2_AMAP_AOP-J15_NO62_MOVEX.EGRID" % root)
 
         polygon = []

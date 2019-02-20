@@ -31,7 +31,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
-    name='statoil_libecl',
+    name='equinor_libecl',
     version='0.1.1',
     author_email='chandan.nath@gmail.com',
     description='libecl',
