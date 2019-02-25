@@ -41,8 +41,6 @@
 
   Name ..................: LG003014
   Grid nr ...............: 110
-
-  Name ..................: /private/joaho/ERT/git/ert/test-data/Equinor/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID
 */
 
 

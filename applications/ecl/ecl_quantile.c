@@ -812,7 +812,6 @@ void usage() {
   printf("All filenames in the configuration file will be interpreted relative to\n");
   printf("the location of the configuration file, i.e. irrespective of the current\n");
   printf("working directory when invoking the ecl_quantile program.\n\n");
-  printf("ecl_quantile is written by Joakim Hove / joaho@equinor.com / 92 68 57 04.\n");
   exit(0);
 }
 

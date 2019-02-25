@@ -110,10 +110,7 @@ void print_help_and_exit()  {
   printf("\n");
   printf("* If the extension corresponds to a unified file, summary.x will\n");
   printf("  only look for unified files.\n");
-  printf("\n");
-  printf("\n");
-  printf("Contact Joakim Hove / joaho@equinor.com / 92 68 57 04 for bugs\n");
-  printf("and feature requests.\n");
+  printf("\n");  
   exit(1);
 }
 
