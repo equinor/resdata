@@ -54,19 +54,19 @@ option( RST_DOC             "Build RST documentation"                           
 option( USE_RPATH           "Don't strip RPATH from libraries and binaries"           OFF)
 option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF)
 
-set(STATOIL_TESTDATA_ROOT "" CACHE PATH  "Root to Statoil internal testdata")
-if (EXISTS ${STATOIL_TESTDATA_ROOT})
-  set( LINK "${CMAKE_CURRENT_SOURCE_DIR}/test-data/Statoil" )
+set(EQUINOR_TESTDATA_ROOT "" CACHE PATH  "Root to Equinor internal testdata")
+if (EXISTS ${EQUINOR_TESTDATA_ROOT})
+  set( LINK "${CMAKE_CURRENT_SOURCE_DIR}/test-data/Equinor" )
   if (EXISTS ${LINK})
     EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E remove "${LINK}")
   endif()
 
-  EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E create_symlink "${STATOIL_TESTDATA_ROOT}" "${LINK}")
-  message(STATUS "Linking testdata: ${LINK} -> ${STATOIL_TESTDATA_ROOT}")
+  EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E create_symlink "${EQUINOR_TESTDATA_ROOT}" "${LINK}")
+  message(STATUS "Linking testdata: ${LINK} -> ${EQUINOR_TESTDATA_ROOT}")
 
-  set(_statoil_test_data ${CMAKE_SOURCE_DIR}/test-data/Statoil)
-  set(_eclpath ${_statoil_test_data}/ECLIPSE)
-  set(_geopath ${_statoil_test_data}/Geometry)
+  set(_equinor_test_data ${CMAKE_SOURCE_DIR}/test-data/Equinor)
+  set(_eclpath ${_equinor_test_data}/ECLIPSE)
+  set(_geopath ${_equinor_test_data}/Geometry)
 endif()
 
 

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2011  statoil asa, norway.
+   Copyright (c) 2011  equinor asa, norway.
 
    The file 'ecl_grid.c' is part of ert - ensemble based reservoir tool.
 

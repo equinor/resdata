@@ -1,6 +1,6 @@
-#  Copyright (C) 2018  Statoil ASA, Norway.
+#  Copyright (C) 2018  Equinor ASA, Norway.
 #
-#  The file 'test_grid_statoil_large_case.py' is part of ERT - Ensemble based Reservoir Tool.
+#  The file 'test_grid_equinor_large_case.py' is part of ERT - Ensemble based Reservoir Tool.
 #
 #  ERT is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@ import math
 from ecl.util.test import TestAreaContext
 from ecl.grid import EclGrid
 
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
 
-@statoil_test()
+@equinor_test()
 class GridLargeCaseTest(EclTest):
 
     def test_large_case(self):
-        grdecl_file = self.createTestPath("Statoil/ECLIPSE/1.6.0_issueGrdecl/test_aug2016_gridOnly.grdecl")
+        grdecl_file = self.createTestPath("Equinor/ECLIPSE/1.6.0_issueGrdecl/test_aug2016_gridOnly.grdecl")
         grid = EclGrid.loadFromGrdecl( grdecl_file )

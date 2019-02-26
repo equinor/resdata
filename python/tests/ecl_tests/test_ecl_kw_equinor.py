@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway.
+#  Copyright (C) 2011  Equinor ASA, Norway.
 #
 #  The file 'test_kw.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -20,7 +20,7 @@ from ecl import EclDataType, EclFileFlagEnum
 from ecl.eclfile import EclKW, EclFile, FortIO
 
 from ecl.util.test import TestAreaContext
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
 def copy_long():
     src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
@@ -32,10 +32,10 @@ def copy_offset():
     copy = src.sub_copy(200, 100)
 
 
-@statoil_test()
+@equinor_test()
 class KWTest(EclTest):
     def test_fortio_size( self ):
-        unrst_file_path = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
+        unrst_file_path = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNRST")
         unrst_file = EclFile(unrst_file_path)
         size = 0
         for kw in unrst_file:
@@ -48,7 +48,7 @@ class KWTest(EclTest):
 
 
     def test_sub_copy(self):
-        unrst_file_path = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
+        unrst_file_path = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNRST")
         unrst_file = EclFile(unrst_file_path)
         swat = unrst_file["SWAT"][0]
 
@@ -89,7 +89,7 @@ class KWTest(EclTest):
         self.assertFalse(kw1.equal(kw2))
         self.assertFalse(kw1.equal_numeric(kw2))
 
-        unrst_file_path = self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE.UNRST")
+        unrst_file_path = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNRST")
         unrst_file = EclFile(unrst_file_path)
         kw1 = unrst_file["PRESSURE"][0]
         kw2 = kw1.deep_copy()

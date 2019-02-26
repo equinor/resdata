@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2018  Statoil ASA, Norway.
+   Copyright (C) 2018  Equinor ASA, Norway.
 
    The file 'ert_util_mkdir_p.c' is part of ERT - Ensemble based Reservoir Tool.
 

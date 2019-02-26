@@ -430,7 +430,7 @@ foreach(name ecl_coarse_test
              ecl_restart_test
              ecl_nnc_export
              ecl_nnc_export_get_tran
-             ecl_nnc_data_statoil_root
+             ecl_nnc_data_equinor_root
              ecl_sum_case_exists
              ecl_grid_lgr_name
              ecl_region
@@ -442,19 +442,19 @@ foreach(name ecl_coarse_test
              ecl_grid_dims
              ecl_nnc_test
              ecl_lgr_test
-             ecl_layer_statoil
+             ecl_layer_equinor
              ecl_dualp
              ecl_grid_dx_dy_dz
              ecl_sum_test
              ecl_sum_report_step_equal
              ecl_sum_report_step_compatible
-             ecl_file_statoil
+             ecl_file_equinor
              ecl_fmt
              ecl_rsthead
              ecl_smspec
              ecl_rft
-             ecl_grid_copy_statoil
-             ecl_fault_block_layer_statoil
+             ecl_grid_copy_equinor
+             ecl_fault_block_layer_equinor
              well_state_load
              well_state_load_missing_RSEG
              well_segment_load
@@ -472,7 +472,7 @@ foreach(name ecl_coarse_test
 endforeach()
 
 
-if (NOT STATOIL_TESTDATA_ROOT)
+if (NOT EQUINOR_TESTDATA_ROOT)
     return ()
 endif()
 
@@ -506,7 +506,7 @@ add_test(NAME ecl_nnc_export7 COMMAND ecl_nnc_export ${_eclpath}/TYRIHANS/BASE20
 add_test(NAME ecl_nnc_export_get_tran COMMAND ecl_nnc_export_get_tran
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
 
-add_test(NAME ecl_nnc_data_statoil_root COMMAND ecl_nnc_data_statoil_root
+add_test(NAME ecl_nnc_data_equinor_root COMMAND ecl_nnc_data_equinor_root
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
     ${_eclpath}/flow-nnc/Simple4/SIMPLE_SUMMARY4
     ${_eclpath}/flow-nnc/Gullfaks/GF_ACT_NEW_TEMP)
@@ -547,7 +547,7 @@ add_test(NAME ecl_grid_simple COMMAND ecl_grid_simple ${_eclpath}/Gurbat/ECLIPSE
 add_test(NAME ecl_grid_ecl2015_2 COMMAND ecl_grid_simple
     ${_eclpath}/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_20142.EGRID)
 
-add_test(NAME ecl_grid_export_statoil
+add_test(NAME ecl_grid_export_equinor
     COMMAND ecl_grid_export ${_eclpath}/Gurbat/ECLIPSE.EGRID)
 
 add_test(NAME ecl_grid_volume1 COMMAND ecl_grid_volume ${_eclpath}/Gurbat/ECLIPSE)
@@ -575,7 +575,7 @@ add_test(NAME ecl_nnc_test3 COMMAND ecl_nnc_test ${_eclpath}/Troll/MSW_LGR/2BRAN
 add_test(NAME ecl_nnc_test4 COMMAND ecl_nnc_test ${_eclpath}/DualPoro/DUAL_DIFF.EGRID )
 add_test(NAME ecl_nnc_test5 COMMAND ecl_nnc_test ${_eclpath}/nestedLGRcase/TESTCASE_NESTEDLGR.EGRID)
 
-add_test(NAME ecl_layer_statoil COMMAND ecl_layer_statoil
+add_test(NAME ecl_layer_equinor COMMAND ecl_layer_equinor
     ${_eclpath}/Mariner/MARINER.EGRID
     ${_eclpath}/Mariner/faultblock.grdecl)
 
@@ -597,8 +597,8 @@ add_test(NAME ecl_sum_report_step_compatible4 COMMAND ecl_sum_report_step_compat
 add_test(NAME ecl_sum_report_step_compatible5 COMMAND ecl_sum_report_step_compatible ${_eclpath}/Gurbat/ECLIPSE ${_eclpath}/modGurbat/enkf/ECLIPSE TRUE)
 add_test(NAME ecl_sum_report_step_compatible6 COMMAND ecl_sum_report_step_equal      ${_eclpath}/Snorre/SNORRE  ${_eclpath}/Snorre2/SNORRE2 FALSE)
 
-add_test(NAME ecl_file_statoil
-         COMMAND ecl_file_statoil ${_eclpath}/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
+add_test(NAME ecl_file_equinor
+         COMMAND ecl_file_equinor ${_eclpath}/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
 
 add_test(NAME ecl_fmt COMMAND ecl_fmt
     ${_eclpath}/Gurbat/ECLIPSE.UNRST
@@ -620,12 +620,12 @@ add_test(NAME ecl_rft_plt    COMMAND ecl_rft ${_eclpath}/RFT/TEST1_1A.RFT PLT)
 add_test(NAME ecl_rft_mswplt COMMAND ecl_rft ${_eclpath}/RFT/RFT2.RFT MSW-PLT)
 add_test(NAME ecl_rft_alloc  COMMAND ecl_rft ${_eclpath}/RFT/NORNE_ATW2013_RFTPLT_V2.RFT SIMPLE)
 
-add_test(NAME ecl_grid_copy_statoil1 COMMAND ecl_grid_copy_statoil ${_eclpath}/Gurbat/ECLIPSE.EGRID)
-add_test(NAME ecl_grid_copy_statoil2 COMMAND ecl_grid_copy_statoil ${_eclpath}/Mariner/MARINER.EGRID)
-add_test(NAME ecl_grid_copy_statoil3 COMMAND ecl_grid_copy_statoil ${_eclpath}/LGCcase/LGC_TESTCASE2.EGRID)
-add_test(NAME ecl_grid_copy_statoil4 COMMAND ecl_grid_copy_statoil ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID)
+add_test(NAME ecl_grid_copy_equinor1 COMMAND ecl_grid_copy_equinor ${_eclpath}/Gurbat/ECLIPSE.EGRID)
+add_test(NAME ecl_grid_copy_equinor2 COMMAND ecl_grid_copy_equinor ${_eclpath}/Mariner/MARINER.EGRID)
+add_test(NAME ecl_grid_copy_equinor3 COMMAND ecl_grid_copy_equinor ${_eclpath}/LGCcase/LGC_TESTCASE2.EGRID)
+add_test(NAME ecl_grid_copy_equinor4 COMMAND ecl_grid_copy_equinor ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID)
 
-add_test(NAME ecl_fault_block_layer_statoil COMMAND ecl_fault_block_layer_statoil
+add_test(NAME ecl_fault_block_layer_equinor COMMAND ecl_fault_block_layer_equinor
     ${_eclpath}/Mariner/MARINER.EGRID
     ${_eclpath}/Mariner/faultblock.grdecl)
 

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2011  Statoil ASA, Norway.
+   Copyright (C) 2011  Equinor ASA, Norway.
    The file 'view_summary.c' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
@@ -110,10 +110,7 @@ void print_help_and_exit()  {
   printf("\n");
   printf("* If the extension corresponds to a unified file, summary.x will\n");
   printf("  only look for unified files.\n");
-  printf("\n");
-  printf("\n");
-  printf("Contact Joakim Hove / joaho@statoil.com / 92 68 57 04 for bugs\n");
-  printf("and feature requests.\n");
+  printf("\n");  
   exit(1);
 }
 

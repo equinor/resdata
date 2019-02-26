@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2014  Statoil ASA, Norway.
+#  Copyright (C) 2014  Equinor ASA, Norway.
 #
 #  The file 'test_faults.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -26,13 +26,13 @@ from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
 from ecl.grid.faults import FaultCollection, Fault, FaultLine, FaultSegment
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
 
-@statoil_test()
-class StatoilFaultTest(EclTest):
+@equinor_test()
+class EquinorFaultTest(EclTest):
     def loadGrid(self):
-        grid_file   = self.createTestPath("Statoil/ECLIPSE/Faults/grid.grdecl")
+        grid_file   = self.createTestPath("Equinor/ECLIPSE/Faults/grid.grdecl")
         fileH = copen(grid_file, "r")
         specgrid = EclKW.read_grdecl(fileH, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
         zcorn = EclKW.read_grdecl(fileH, "ZCORN")
@@ -46,7 +46,7 @@ class StatoilFaultTest(EclTest):
 
     def test_load(self):
         grid = self.loadGrid()
-        faults_file = self.createTestPath("Statoil/ECLIPSE/Faults/faults.grdecl")
+        faults_file = self.createTestPath("Equinor/ECLIPSE/Faults/faults.grdecl")
         faults = FaultCollection( grid , faults_file )
         for fault in faults:
             for layer in fault:

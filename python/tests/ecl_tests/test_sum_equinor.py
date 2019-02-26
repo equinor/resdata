@@ -1,4 +1,4 @@
-#  Copyright (C) 2011  Statoil ASA, Norway.
+#  Copyright (C) 2011  Equinor ASA, Norway.
 #
 #  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -26,11 +26,11 @@ from ecl import EclUnitTypeEnum
 from ecl.util.util import StringList, TimeVector, DoubleVector, CTime
 
 from ecl.util.test import TestAreaContext
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 import csv
 
 base = "ECLIPSE"
-path = "Statoil/ECLIPSE/Gurbat"
+path = "Equinor/ECLIPSE/Gurbat"
 case = "%s/%s" % (path, base)
 
 
@@ -42,7 +42,7 @@ def sum_get(*args):
     vec = sum[key]
 
 
-@statoil_test()
+@equinor_test()
 class SumTest(EclTest):
     def setUp(self):
         self.case = self.createTestPath(case)
@@ -110,7 +110,7 @@ class SumTest(EclTest):
 
 
     def test_LLINEAR(self):
-        sum = EclSum( self.createTestPath("Statoil/ECLIPSE/Heidrun/LGRISSUE/EM-LTAA-ISEG_CARFIN_NWPROPS"))
+        sum = EclSum( self.createTestPath("Equinor/ECLIPSE/Heidrun/LGRISSUE/EM-LTAA-ISEG_CARFIN_NWPROPS"))
         self.assertTrue( sum.has_key("LLINEARS") )
 
 
@@ -163,7 +163,7 @@ class SumTest(EclTest):
 
 
     def test_dates2( self ):
-        sum = EclSum(self.createTestPath("Statoil/ECLIPSE/FF12/FF12_2013B3_AMAP2"))
+        sum = EclSum(self.createTestPath("Equinor/ECLIPSE/FF12/FF12_2013B3_AMAP2"))
         self.assertEqual(sum.end_date , datetime.date(2045, 1, 1))
 
 
@@ -216,9 +216,9 @@ class SumTest(EclTest):
 
 
     def test_restart(self):
-        hist = EclSum(self.createTestPath("Statoil/ECLIPSE/sum-restart/history/T07-4A-W2011-18-P1"))
-        base = EclSum(self.createTestPath("Statoil/ECLIPSE/sum-restart/prediction/BASECASE"))
-        pred = EclSum(self.createTestPath("Statoil/ECLIPSE/sum-restart/prediction/BASECASE"), include_restart=False)
+        hist = EclSum(self.createTestPath("Equinor/ECLIPSE/sum-restart/history/T07-4A-W2011-18-P1"))
+        base = EclSum(self.createTestPath("Equinor/ECLIPSE/sum-restart/prediction/BASECASE"))
+        pred = EclSum(self.createTestPath("Equinor/ECLIPSE/sum-restart/prediction/BASECASE"), include_restart=False)
 
         self.assertIsNotNone(hist)
         self.assertIsNotNone(base)
@@ -311,7 +311,7 @@ class SumTest(EclTest):
 
 
     def test_segment(self):
-        sum = EclSum(self.createTestPath("Statoil/ECLIPSE/Oseberg/F8MLT/F8MLT-F4"))
+        sum = EclSum(self.createTestPath("Equinor/ECLIPSE/Oseberg/F8MLT/F8MLT-F4"))
         segment_vars = sum.keys("SOFR:F-8:*")
         self.assertIn("SOFR:F-8:1", segment_vars)
         for var in segment_vars:
@@ -365,7 +365,7 @@ class SumTest(EclTest):
 
     # Loading this dataset is a test of loading a case where one report step is missing.
     def test_Heidrun(self):
-        sum = EclSum( self.createTestPath("Statoil/ECLIPSE/Heidrun/Summary/FF12_2013B3_CLEAN_RS"))
+        sum = EclSum( self.createTestPath("Equinor/ECLIPSE/Heidrun/Summary/FF12_2013B3_CLEAN_RS"))
         self.assertEqual( 452 , len(sum))
         self.assertFloatEqual( 1.8533144e+8 , sum.last_value("FOPT"))
 
@@ -422,13 +422,13 @@ class SumTest(EclTest):
 
 
     def test_aquifer(self):
-        case = EclSum( self.createTestPath( "Statoil/ECLIPSE/Aquifer/06_PRESSURE_R009-0"))
+        case = EclSum( self.createTestPath( "Equinor/ECLIPSE/Aquifer/06_PRESSURE_R009-0"))
         self.assertTrue( "AAQR:2" in case )
 
 
     def test_restart_mapping(self):
-        history = EclSum( self.createTestPath( "Statoil/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0") )
-        total = EclSum( self.createTestPath( "Statoil/ECLIPSE/SummaryRestart/Prediction/NOR-2013A_R007_PRED-0") , include_restart = True)
+        history = EclSum( self.createTestPath( "Equinor/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0") )
+        total = EclSum( self.createTestPath( "Equinor/ECLIPSE/SummaryRestart/Prediction/NOR-2013A_R007_PRED-0") , include_restart = True)
 
         history_dates = history.get_dates( )
         total_dates = total.get_dates( )
@@ -449,7 +449,7 @@ class SumTest(EclTest):
 
     def test_write(self):
         with TestAreaContext("my_space") as area:
-            intersect_summary = EclSum( self.createTestPath( "Statoil/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0"), lazy_load=False )
+            intersect_summary = EclSum( self.createTestPath( "Equinor/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0"), lazy_load=False )
             self.assertIsNotNone(intersect_summary)
 
             write_location = os.path.join(os.getcwd(), "CASE")
@@ -459,7 +459,7 @@ class SumTest(EclTest):
             self.assertEqual(intersect_summary.keys(), reloaded_summary.keys())
 
     def test_ix_case(self):
-        intersect_summary = EclSum(self.createTestPath("Statoil/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL"))
+        intersect_summary = EclSum(self.createTestPath("Equinor/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL"))
         self.assertIsNotNone(intersect_summary)
 
         self.assertTrue(
@@ -467,7 +467,7 @@ class SumTest(EclTest):
                 [intersect_summary.smspec_node(key).wgname for key in intersect_summary.keys()]
                 )
 
-        eclipse_summary = EclSum(self.createTestPath("Statoil/ECLIPSE/ix/summary/ECL100/E100_CREATE_REGION_AROUND_WELL"))
+        eclipse_summary = EclSum(self.createTestPath("Equinor/ECLIPSE/ix/summary/ECL100/E100_CREATE_REGION_AROUND_WELL"))
         self.assertIsNotNone(eclipse_summary)
 
         hwell_padder = lambda key : key if key.split(":")[-1] != "HWELL_PR" else key + "OD"
@@ -478,8 +478,8 @@ class SumTest(EclTest):
 
     def test_ix_write(self):
         for data_set in [
-                    "Statoil/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL",
-                    "Statoil/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC"
+                    "Equinor/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL",
+                    "Equinor/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC"
                     ]:
 
             with TestAreaContext("my_space" + data_set.split("/")[-1]) as area:
@@ -496,7 +496,7 @@ class SumTest(EclTest):
                         )
 
     def test_ix_caseII(self):
-        troll_summary = EclSum( self.createTestPath("Statoil/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC"))
+        troll_summary = EclSum( self.createTestPath("Equinor/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC"))
         self.assertIsNotNone(troll_summary)
         self.assertTrue("WMCTL:Q21BH1" in list(troll_summary.keys()))
 
@@ -533,4 +533,4 @@ class SumTest(EclTest):
     # which was shut down brutally. This test verifies that we
     # can create a valid ecl_sum instance from what we find.
     def test_broken_case(self):
-        ecl_sum = EclSum( self.createTestPath("Statoil/ECLIPSE/SummaryFail3/COMBINED-AUTUMN2018_CARBSENS-0"))
+        ecl_sum = EclSum( self.createTestPath("Equinor/ECLIPSE/SummaryFail3/COMBINED-AUTUMN2018_CARBSENS-0"))

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  Copyright (C) 2011  Statoil ASA, Norway.
+#  Copyright (C) 2011  Equinor ASA, Norway.
 #
 #  The file 'sum_test.py' is part of ERT - Ensemble based Reservoir Tool.
 #
@@ -18,15 +18,15 @@
 import os
 from ecl.eclfile import EclKW, Ecl3DKW
 from ecl.grid import EclGrid
-from tests import EclTest, statoil_test
+from tests import EclTest, equinor_test
 
 from cwrap import open as copen
 
 
-@statoil_test()
-class GRDECLStatoilTest(EclTest):
+@equinor_test()
+class GRDECLEquinorTest(EclTest):
     def setUp(self):
-        self.src_file = self.createTestPath("Statoil/ECLIPSE/Gurbat/include/example_permx.GRDECL")
+        self.src_file = self.createTestPath("Equinor/ECLIPSE/Gurbat/include/example_permx.GRDECL")
         self.file_list = []
 
     def addFile(self, filename):
@@ -42,7 +42,7 @@ class GRDECLStatoilTest(EclTest):
         kw = EclKW.read_grdecl(copen(self.src_file, "r"), "PERMX")
         self.assertTrue(kw)
 
-        grid = EclGrid( self.createTestPath("Statoil/ECLIPSE/Gurbat/ECLIPSE" ))
+        grid = EclGrid( self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE" ))
         kw = Ecl3DKW.read_grdecl(grid , copen(self.src_file, "r"), "PERMX")
         self.assertTrue( isinstance( kw , Ecl3DKW ))
 
