@@ -36,7 +36,7 @@ void test_create_empty() {
 }
 
 void test_create_simple() {
-  test_work_area_type * work_area = test_work_area_alloc("nnc-INIT");
+  ecl::util::TestArea ta("nnc_geometry");
   {
     int nx = 10;
     int ny = 10;
@@ -67,7 +67,6 @@ void test_create_simple() {
     }
     ecl_grid_free( grid0 );
   }
-  test_work_area_free( work_area );
 }
 
 

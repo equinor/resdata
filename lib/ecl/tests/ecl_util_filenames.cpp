@@ -40,7 +40,7 @@ void test_filename_case() {
 
 
 void test_file_list() {
-  test_work_area_type * work_area = test_work_area_alloc("RESTART_FILES");
+  ecl::util::TestArea ta("file_list");
   stringlist_type * s = stringlist_alloc_new();
 
   for (int i = 0; i < 10; i += 2) {
@@ -109,7 +109,6 @@ void test_file_list() {
   test_assert_int_equal(stringlist_get_size(s), 10);
 
   stringlist_free(s);
-  test_work_area_free(work_area);
 }
 
 

@@ -24,8 +24,8 @@
 
 
 void test_chdir() {
-  test_work_area_type * work_area = test_work_area_alloc("test-area");
-  const char * cwd = test_work_area_get_cwd( work_area );
+  ecl::util::TestArea ta("chdir");
+  const char * cwd = ta.test_cwd().c_str();
 
   test_assert_false( util_chdir_file( "/file/does/not/exist"));
   test_assert_false( util_chdir_file( cwd ));
@@ -35,7 +35,6 @@ void test_chdir() {
   }
   test_assert_true( util_chdir_file( "path/FILE" ));
   test_assert_string_equal( util_alloc_cwd() , util_alloc_filename( cwd, "path", NULL));
-  test_work_area_free( work_area );
 }
 
 

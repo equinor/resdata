@@ -34,7 +34,7 @@
 
 
 void test_alloc_global_only(bool data_in_file) {
-   test_work_area_type * work_area = test_work_area_alloc("nnc-INIT");
+   ecl::util::TestArea ta("nnc-INIT");
    {
       int nx = 10;
       int ny = 10;
@@ -90,7 +90,6 @@ void test_alloc_global_only(bool data_in_file) {
       }
       ecl_grid_free( grid0 );
    }
-   test_work_area_free( work_area );
 }
 
 

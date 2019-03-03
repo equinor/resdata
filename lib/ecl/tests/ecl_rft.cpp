@@ -40,10 +40,9 @@ void test_rft_read_write(const char * rft_file){
     ecl_rft_node_type * old_node = ecl_rft_file_iget_node(rft, 0);
     ecl_rft_node_type * new_node = ecl_rft_node_alloc_new("DUMMY", "R", ecl_rft_node_get_date(old_node), ecl_rft_node_get_days(old_node));
     nodes[2]=new_node;
-    test_work_area_type * work_area = test_work_area_alloc("RFT_RW");
+    ecl::util::TestArea ta("rft");
 
     ecl_rft_file_update("eclipse.rft", nodes,3, ECL_METRIC_UNITS);
-    test_work_area_free(work_area);
     free(nodes);
 }
 

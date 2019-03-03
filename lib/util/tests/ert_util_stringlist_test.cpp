@@ -347,7 +347,7 @@ bool not_FILE_predicate(const char * name, const void * arg) {
 
 
 void test_predicate_matching() {
-  test_work_area_type * work_area = test_work_area_alloc("predicate_test");
+  ecl::util::TestArea ta("stringlist");
   stringlist_type * s = stringlist_alloc_new();
   stringlist_append_copy(s, "s");
   stringlist_select_files(s, "does/not/exist", NULL, NULL);
@@ -358,7 +358,7 @@ void test_predicate_matching() {
     FILE * f = util_fopen("FILE.txt", "w");
     fclose(f);
   }
-  stringlist_select_files(s , test_work_area_get_cwd(work_area), NULL, NULL);
+  stringlist_select_files(s , ta.test_cwd().c_str(), NULL, NULL);
   test_assert_int_equal(1, stringlist_get_size(s));
   {
     char * exp = util_alloc_abs_path("FILE.txt");
@@ -370,7 +370,7 @@ void test_predicate_matching() {
   test_assert_int_equal(1, stringlist_get_size(s));
   test_assert_string_equal( "FILE.txt", stringlist_iget(s, 0));
 
-  stringlist_select_files(s , test_work_area_get_cwd(work_area), FILE_predicate, NULL);
+  stringlist_select_files(s , ta.test_cwd().c_str(), FILE_predicate, NULL);
   test_assert_int_equal(1, stringlist_get_size(s));
   {
     char * exp = util_alloc_abs_path("FILE.txt");
@@ -378,11 +378,10 @@ void test_predicate_matching() {
     free(exp);
   }
 
-  stringlist_select_files(s , test_work_area_get_cwd(work_area), not_FILE_predicate, NULL);
+  stringlist_select_files(s , ta.test_cwd().c_str(), not_FILE_predicate, NULL);
   test_assert_int_equal(0, stringlist_get_size(s));
 
   stringlist_free(s);
-  test_work_area_free(work_area);
 }
 
 

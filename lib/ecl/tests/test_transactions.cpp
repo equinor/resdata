@@ -38,7 +38,7 @@
 
 void test_transaction() {
 
-  test_work_area_type * work_area = test_work_area_alloc("ecl_file_index_testing");
+  ecl::util::TestArea ta("index_testing");
   {
      const char * file_name = "data_file";
      fortio_type * fortio = fortio_open_writer(file_name, false, ECL_ENDIAN_FLIP);
@@ -101,7 +101,6 @@ void test_transaction() {
      ecl_file_close(file);
 
    }
-   test_work_area_free( work_area );
 }
 
 

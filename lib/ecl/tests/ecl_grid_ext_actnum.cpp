@@ -12,7 +12,7 @@
 
 void test_1() {
 
-  test_work_area_type * work_area = test_work_area_alloc("ext_actnum_main_grid");
+  ecl::util::TestArea ta("test1");
   {
     const char * filename = "FILE.EGRID";
 
@@ -53,9 +53,6 @@ void test_1() {
     ecl_grid_free( grid );
 
   }
-  test_work_area_free( work_area );
-  
-
 }
 
 

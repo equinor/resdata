@@ -108,10 +108,10 @@ void test_close_stream1(const char * src_file , const char * target_file ) {
 
 
 void test_writable(const char * src_file ) {
-  test_work_area_type * work_area = test_work_area_alloc("ecl_file_writable" );
+  ecl::util::TestArea ta("file_writable");
   char * fname = util_split_alloc_filename( src_file );
 
-  test_work_area_copy_file( work_area , src_file );
+  ta.copy_file(src_file);
   {
     test_flags( fname );
     ecl_file_type * ecl_file = ecl_file_open( fname , ECL_FILE_WRITABLE);
@@ -127,7 +127,6 @@ void test_writable(const char * src_file ) {
     swat = ecl_file_iget_named_kw( ecl_file , "SWAT" , 0 );
     test_assert_true( util_double_approx_equal( ecl_kw_iget_float( swat , 0 ) , 1000 ));
   }
-  test_work_area_free( work_area );
 }
 
 
@@ -138,16 +137,15 @@ int main( int argc , char ** argv) {
   const char * target_file = argv[2];
 
   {
-    test_work_area_type * work_area = test_work_area_alloc("ecl_file");
+    ecl::util::TestArea ta("file_equinor");
 
-    test_work_area_copy_file( work_area , src_file );
+    ta.copy_file( src_file );
     test_loadall(src_file , target_file );
 
     test_close_stream1( src_file , target_file);
     test_close_stream2( src_file , target_file);
     test_writable( src_file );
 
-    test_work_area_free( work_area );
   }
   exit(0);
 }

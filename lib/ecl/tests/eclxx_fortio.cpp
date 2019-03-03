@@ -28,7 +28,7 @@
 
 
 void test_open() {
-    test_work_area_type * work_area = test_work_area_alloc("FORTIO");
+    ecl::util::TestArea ta("fortioxx");
     ERT::FortIO fortio;
     fortio.open( "new_file" , std::fstream::out );
 
@@ -67,12 +67,11 @@ void test_open() {
     }
     test_assert_false( fortio.ftruncate( 0 ));
     fortio.close();
-    test_work_area_free(work_area);
 }
 
 
 void test_fortio() {
-    test_work_area_type * work_area = test_work_area_alloc("FORTIO");
+    ecl::util::TestArea ta("FORTIO");
     ERT::FortIO fortio("new_file" , std::fstream::out );
     {
         std::vector<int> data;
@@ -97,12 +96,11 @@ void test_fortio() {
     fortio.close();
 
     test_assert_throw( ERT::FortIO fortio("file/does/not/exists" , std::fstream::in) , std::invalid_argument );
-    test_work_area_free(work_area);
 }
 
 
 void test_fortio_kw() {
-    test_work_area_type * work_area = test_work_area_alloc("FORTIO");
+    ecl::util::TestArea ta("fortio_kw");
     std::vector< int > vec( 1000 );
 
     for (size_t i =0 ; i < vec.size(); i++)
@@ -128,7 +126,6 @@ void test_fortio_kw() {
         test_assert_throw( ERT::EclKW<float>::load(fortio) , std::invalid_argument );
         fortio.close();
     }
-    test_work_area_free(work_area);
 }
 
 
