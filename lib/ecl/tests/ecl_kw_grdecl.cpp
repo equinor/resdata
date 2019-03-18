@@ -32,7 +32,7 @@ int main(int argc , char ** argv) {
     ecl_kw_iset_int(ecl_kw , i , i );
 
   {
-    test_work_area_type * work_area = test_work_area_alloc("ecl_kw_grdecl");
+    ecl::util::TestArea ta("kw_grdecl");
     FILE * stream = util_fopen( "FILE.grdecl" , "w");
 
     ecl_kw_fprintf_grdecl(ecl_kw , stream );
@@ -65,7 +65,6 @@ int main(int argc , char ** argv) {
       ecl_kw_free( ecl_kw2 );
     }
     fclose( stream );
-    test_work_area_free( work_area );
   }
   ecl_kw_free( ecl_kw );
 

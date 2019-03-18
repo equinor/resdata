@@ -100,7 +100,6 @@ void test_write_read( ) {
   int num_ministep = 10;
   double ministep_length = 86400; // Seconds - numerical value chosen to avoid rounding problems when converting between seconds and days.
   {
-    //test_work_area_type * work_area = test_work_area_alloc("sum/write");
     ecl_sum_type * ecl_sum;
 
     auto seconds = write_summary( name , start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);
@@ -143,8 +142,7 @@ void test_write_read( ) {
 
 
 void test_ecl_sum_alloc_restart_writer() {
-
-   test_work_area_type * work_area = test_work_area_alloc("sum_write_restart");
+   ecl::util::TestArea ta("sum_write_restart");
    {
       const char * name1 = "CASE1";
       const char * name2 = "CASE2";
@@ -181,7 +179,6 @@ void test_ecl_sum_alloc_restart_writer() {
       ecl_file_close(restart_file);
 
    }
-   test_work_area_free( work_area );
 }
 
 
@@ -193,7 +190,7 @@ void test_long_restart_names() {
       strcat(restart_case, s);
    }
    const char * name = "THE_CASE";
-   test_work_area_type * work_area = test_work_area_alloc("sum_write_restart_long_name");
+   ecl::util::TestArea ta("suM_write_restart_long_name");
    {
        int restart_step = 77;
        time_t start_time = util_make_date_utc( 1,1,2010 );
@@ -221,9 +218,6 @@ void test_long_restart_names() {
          ecl_smspec_free( smspec);
        }
    }
-
-   test_work_area_free( work_area );
-
 }
 
 int main( int argc , char ** argv) {

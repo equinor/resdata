@@ -260,7 +260,7 @@ void verify_CASE4() {
 
 
 void write_CASE4(bool unified) {
-  test_work_area_type * work_area = test_work_area_alloc("CASE4");
+  ecl::util::TestArea ta("case4");
   write_CASE3(unified);
   {
     ecl_file_type * sum_file    = ecl_file_open("CASE3.UNSMRY", 0);
@@ -309,7 +309,6 @@ void write_CASE4(bool unified) {
     ecl_file_close(sum_file);
     verify_CASE4();
   }
-  test_work_area_free(work_area);
 }
 
 int main() {

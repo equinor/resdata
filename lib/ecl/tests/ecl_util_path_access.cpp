@@ -27,7 +27,7 @@
 
 
 void test_relative_access() {
-  test_work_area_type * work_area = test_work_area_alloc("access");
+  ecl::util::TestArea ta("ecl_access");
   test_assert_false( ecl_util_path_access("No/directory/does/not/exist"));
 
   util_make_path("path");
@@ -44,7 +44,6 @@ void test_relative_access() {
   test_assert_false( ecl_util_path_access("path/file"));
 
   test_assert_true( ecl_util_path_access("ECLIPSE_CASE"));
-  test_work_area_free( work_area );
 }
 
 

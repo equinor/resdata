@@ -31,7 +31,7 @@
 #include <ert/ecl/ecl_endian_flip.hpp>
 
 void test_writable(size_t data_size) {
-  test_work_area_type * work_area = test_work_area_alloc("ecl_file_writable");
+  ecl::util::TestArea ta("file_writable");
   const char * data_file_name = "test_file";
 
   ecl_kw_type * kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
@@ -54,11 +54,10 @@ void test_writable(size_t data_size) {
   }
 
   ecl_kw_free(kw);
-  test_work_area_free( work_area );
 }
 
 void test_truncated() {
-  test_work_area_type * work_area = test_work_area_alloc("ecl_file_truncated" );
+  ecl::util::TestArea ta("truncate_file");
   int num_kw;
   {
     ecl_grid_type * grid = ecl_grid_alloc_rectangular(20,20,20,1,1,1,NULL);
@@ -84,7 +83,6 @@ void test_truncated() {
     test_assert_true( ecl_file_get_size( ecl_file) < num_kw );
     ecl_file_close( ecl_file );
   }
-  test_work_area_free( work_area );
 }
 
 

@@ -36,7 +36,7 @@ ecl_sum_type * write_ecl_sum() {
 }
 
 void test_load() {
-  test_work_area_type * work_area = test_work_area_alloc("unsmry_loader");
+  ecl::util::TestArea ta("ecl_sum_loader");
   ecl_sum_type * ecl_sum = write_ecl_sum();
   test_assert_true( util_file_exists("CASE.SMSPEC") );
   test_assert_true( util_file_exists("CASE.UNSMRY") );
@@ -52,7 +52,6 @@ void test_load() {
 
   delete loader;
   ecl_sum_free(ecl_sum);
-  test_work_area_free(work_area);
 }
 
 int main() {
