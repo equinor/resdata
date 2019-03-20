@@ -63,7 +63,7 @@ class UtilTest(TestCase):
 
 
     def test_double_vector(self):
-        v = DoubleVector()
+        v = DoubleVector(initial_size=13)
 
         v[0] = 77.25
         v[1] = 123.25
@@ -80,6 +80,7 @@ class UtilTest(TestCase):
         self.assertEqual(len(v), 0)
 
         v.clear()
+        v = DoubleVector(initial_size = 4)
 
         v[0] = 0.1
         v[1] = 0.2
@@ -102,6 +103,7 @@ class UtilTest(TestCase):
         v.clear()
         v.setDefault(0.75)
         self.assertEqual(v.getDefault(), 0.75)
+        v = DoubleVector(initial_size = 3, default_value = 0.75)
         v[2] = 0.0
         self.assertEqual(v[1], 0.75)
 
@@ -152,23 +154,13 @@ class UtilTest(TestCase):
 
     def test_repr(self):
         primes = [2,3,5,7,11,13,17,19]
-        b = BoolVector()
+        b = BoolVector(initial_size = max(max(primes) + 1, 31))
         for i in primes:
             b[i] = True
-        pfx = 'BoolVector(size = 20, content = "00110101000101000101")'
-        self.assertEqual(pfx, repr(b)[:len(pfx)])
         b[30] = True
         pfx = 'BoolVector(size = 31, content = "001101010...00000001")'
         self.assertEqual(pfx, repr(b)[:len(pfx)])
 
-
-    def test_bool_vector(self):
-        b = BoolVector()
-        b.setDefault(True)
-
-        b[4] = False
-
-        self.assertEqual(list(b), [True, True, True, True, False])
 
     def test_activeList(self):
         active_list = IntVector.active_list("1,10,100-105")
@@ -192,7 +184,7 @@ class UtilTest(TestCase):
             self.assertEqual(v1, v2)
 
     def test_contains_int(self):
-        iv = IntVector()
+        iv = IntVector(initial_size = 4)
         iv[0] = 1
         iv[1] = 10
         iv[2] = 100
@@ -331,7 +323,7 @@ class UtilTest(TestCase):
 #---
 
     def test_div(self):
-        v = IntVector()
+        v = IntVector(initial_size = 3)
         v[0] = 100
         v[1] = 10
         v[2] = 1
@@ -339,11 +331,6 @@ class UtilTest(TestCase):
 
         self.assertEqual(list(v), [10, 1, 0])
 
-    def test_true(self):
-        iv = IntVector()
-        self.assertFalse(iv)  # Will invoke the __len__ function; could override with __nonzero__
-        iv[0] = 1
-        self.assertTrue(iv)
 
     def test_time_vector(self):
         time_vector = TimeVector()
@@ -354,7 +341,8 @@ class UtilTest(TestCase):
         time_vector.setDefault(time2)
 
         time_vector.append(time1)
-        time_vector[2] = time2
+        time_vector.append(time2)
+        time_vector.append(time2)
 
         self.assertEqual(time_vector[0], time1)
         self.assertEqual(time_vector[1], time2)
@@ -475,7 +463,7 @@ class UtilTest(TestCase):
         trange = TimeVector.createRegular(start, datetime.date(2050, 1, 1), "1Y")
 
     def test_asList(self):
-        v = IntVector()
+        v = IntVector(initial_size=3)
         v[0] = 100
         v[1] = 10
         v[2] = 1
@@ -486,22 +474,18 @@ class UtilTest(TestCase):
     def test_true_false(self):
         v = IntVector(default_value=77)
         self.assertFalse(v)
-        v[10] = 77
-        self.assertTrue(v)
 
-        v = DoubleVector(default_value=77)
-        self.assertFalse(v)
-        v[10] = 77
+        v = IntVector(initial_size = 10, default_value=77)
         self.assertTrue(v)
 
     def test_count_equal(self):
-        v = IntVector(default_value=77)
+        v = IntVector(initial_size = 21, default_value=77)
         v[0] = 1
         v[10] = 1
         v[20] = 1
         self.assertEqual(v.countEqual(1), 3)
 
-        v = DoubleVector(default_value=77)
+        v = DoubleVector(initial_size = 21, default_value=77)
         v[0] = 1
         v[10] = 1
         v[20] = 1
@@ -524,7 +508,7 @@ class UtilTest(TestCase):
             self.assertEqual(a, b)
 
     def test_range(self):
-        v = IntVector()
+        v = IntVector(initial_size = 11)
         v[10] = 99
 
         with self.assertRaises(ValueError):
@@ -567,10 +551,10 @@ class UtilTest(TestCase):
             self.assertEqual( d[i] , i*0.10)
 
     def test_equal(self):
-        v1 = IntVector()
+        v1 = IntVector(initial_size = 4)
         v1[3] = 99
 
-        v2 = IntVector()
+        v2 = IntVector(initial_size = 4)
         self.assertNotEqual( v1,v2 )
         v2[3] = 99
         self.assertEqual(v1,v2)
