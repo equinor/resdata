@@ -6735,8 +6735,8 @@ void ecl_grid_reset_actnum( ecl_grid_type * grid , const int * actnum ) {
 
 static void  ecl_grid_fwrite_self_nnc( const ecl_grid_type * grid , fortio_type * fortio ) {
   const int default_index = 1;
-  int_vector_type * g1 = int_vector_alloc(0 , default_index );
-  int_vector_type * g2 = int_vector_alloc(0 , default_index );
+  std::vector<int> g1;
+  std::vector<int> g2;
   int g;
 
   for (g=0; g < ecl_grid_get_global_size(grid); g++) {
@@ -6747,15 +6747,22 @@ static void  ecl_grid_fwrite_self_nnc( const ecl_grid_type * grid , fortio_type 
       int i;
       for (i = 0; i < nnc_vector_get_size( nnc_vector ); i++) {
         int nnc_index = nnc_vector_iget_nnc_index( nnc_vector , i );
-        int_vector_iset( g1 , nnc_index , 1 + g );
-        int_vector_iset( g2 , nnc_index , 1 + nnc_vector_iget_grid_index( nnc_vector , i ));
+
+        if (g1.size() <= static_cast<std::size_t>(nnc_index))
+          g1.resize(nnc_index + 1, default_index);
+        g1[nnc_index] = 1 + g;
+
+        if (g2.size() <= static_cast<std::size_t>(nnc_index))
+          g2.resize(nnc_index + 1, default_index);
+        g2[nnc_index] = 1 + nnc_vector_iget_grid_index(nnc_vector, i);
+
       }
     }
   }
   {
-    int num_nnc = int_vector_size( g1 );
-    ecl_kw_type * nnc1_kw = ecl_kw_alloc_new_shared( NNC1_KW , num_nnc , ECL_INT , int_vector_get_ptr( g1 ));
-    ecl_kw_type * nnc2_kw = ecl_kw_alloc_new_shared( NNC2_KW , num_nnc , ECL_INT , int_vector_get_ptr( g2 ));
+    int num_nnc = g1.size();
+    ecl_kw_type * nnc1_kw = ecl_kw_alloc_new_shared( NNC1_KW , num_nnc , ECL_INT , g1.data() );
+    ecl_kw_type * nnc2_kw = ecl_kw_alloc_new_shared( NNC2_KW , num_nnc , ECL_INT , g2.data() );
     ecl_kw_type * nnchead_kw = ecl_kw_alloc( NNCHEAD_KW , NNCHEAD_SIZE , ECL_INT);
 
     ecl_kw_scalar_set_int( nnchead_kw , 0 );
@@ -6770,9 +6777,6 @@ static void  ecl_grid_fwrite_self_nnc( const ecl_grid_type * grid , fortio_type 
     ecl_kw_free( nnc2_kw );
     ecl_kw_free( nnc1_kw );
   }
-
-  int_vector_free( g1 );
-  int_vector_free( g2 );
 }
 
 
