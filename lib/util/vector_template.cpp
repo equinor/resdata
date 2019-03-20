@@ -913,16 +913,16 @@ bool @TYPE@_vector_init_linear(@TYPE@_vector_type * vector , @TYPE@ start_value,
     return false;
 
   @TYPE@_vector_reset( vector );
-  @TYPE@_vector_iset( vector, 0 , start_value);
+  @TYPE@_vector_append( vector, start_value);
   {
     double slope = (end_value - start_value) / (num_values - 1);
 
     for (int i=1; i < num_values - 1; i++) {
       @TYPE@ value = (@TYPE@) start_value + slope*i;
-      @TYPE@_vector_iset(vector, i, value);
+      @TYPE@_vector_append(vector, value);
     }
   }
-  @TYPE@_vector_iset( vector, num_values - 1, end_value);
+  @TYPE@_vector_append( vector, end_value);
   return true;
 }
 
