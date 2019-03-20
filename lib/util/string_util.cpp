@@ -179,6 +179,9 @@ bool string_util_update_active_mask( const char * range_string , bool_vector_typ
   int i;
   int_vector_type * sscanf_active = string_util_sscanf_alloc_active_list( range_string );
   if (sscanf_active) {
+    int new_size = util_int_max( int_vector_get_max(sscanf_active) + 1, bool_vector_size( active_mask ));
+    bool_vector_resize( active_mask, new_size, false);
+
     for (i=0; i < int_vector_size( sscanf_active ); i++)
       bool_vector_iset( active_mask , int_vector_iget(sscanf_active , i) , true );
 

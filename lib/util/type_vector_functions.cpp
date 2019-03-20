@@ -53,10 +53,11 @@ int_vector_type * bool_vector_alloc_active_index_list(const bool_vector_type * m
 
 bool_vector_type * int_vector_alloc_mask( const int_vector_type * active_list ) {
   bool_vector_type * mask = bool_vector_alloc( 0 , false );
-  int i;
-  for (i=0; i < int_vector_size( active_list ); i++)
-    bool_vector_iset( mask , int_vector_iget( active_list , i) , true );
-
+  if (int_vector_size(active_list) > 0) {
+    bool_vector_resize( mask, int_vector_get_max( active_list ) + 1, false);
+    for (int i=0; i < int_vector_size( active_list ); i++)
+      bool_vector_iset( mask , int_vector_iget( active_list , i) , true );
+  }
   return mask;
 }
 
