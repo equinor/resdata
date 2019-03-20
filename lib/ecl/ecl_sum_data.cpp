@@ -899,6 +899,7 @@ void ecl_sum_data_fwrite_interp_csv_line(const ecl_sum_data_type * data, time_t 
 void ecl_sum_data_get_interp_vector( const ecl_sum_data_type * data , time_t sim_time, const ecl_sum_vector_type * keylist, double_vector_type * results){
   int num_keywords = ecl_sum_vector_get_size(keylist);
   double weight1, weight2;
+  double default_value = double_vector_get_default(results);
   int    time_index1, time_index2;
 
   ecl_sum_data_init_interp_from_sim_time(data, sim_time, &time_index1, &time_index2, &weight1, &weight2);
@@ -908,8 +909,9 @@ void ecl_sum_data_get_interp_vector( const ecl_sum_data_type * data , time_t sim
       int params_index = ecl_sum_vector_iget_param_index(keylist, i);
       bool is_rate = ecl_sum_vector_iget_is_rate(keylist, i);
       double value = ecl_sum_data_vector_iget( data, sim_time, params_index, is_rate, time_index1, time_index2, weight1, weight2);
-      double_vector_iset( results, i , value );
-    }
+      double_vector_append( results, value);
+    } else
+      double_vector_append( results, default_value);
   }
 }
 
