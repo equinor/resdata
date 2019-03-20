@@ -48,7 +48,7 @@ void test_index_list() {
 
 
 void test_mask() {
-  bool_vector_type * mask = bool_vector_alloc(0 , false);
+  bool_vector_type * mask = bool_vector_alloc(21 , false);
 
   bool_vector_iset(mask , 10, true);
   bool_vector_iset(mask , 15, true);
@@ -70,7 +70,7 @@ void test_mask() {
 
 void test_active_index_list() {
   int default_value = -1;
-  bool_vector_type * mask = bool_vector_alloc(0 , false);
+  bool_vector_type * mask = bool_vector_alloc(21 , false);
 
   bool_vector_iset(mask , 10, true);
   bool_vector_iset(mask , 15, true);
