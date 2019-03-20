@@ -631,6 +631,9 @@ void @TYPE@_vector_iset(@TYPE@_vector_type * vector , int index , @TYPE@ value) 
         for (i=vector->size; i < index; i++)
           vector->data[i] = vector->default_value;
         vector->size = index + 1;
+        /*
+          util_abort("%s: tried to grow vector from iset() \n",__func__);
+        */
       }
     }
   }
