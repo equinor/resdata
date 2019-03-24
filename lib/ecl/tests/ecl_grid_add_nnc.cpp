@@ -124,6 +124,8 @@ void list_test() {
     verify_simple_nnc( grid1 );
     ecl_grid_free( grid1 );
   }
+  int_vector_free(g1);
+  int_vector_free(g2);
   ecl_grid_free( grid0 );
 }
 
