@@ -928,7 +928,7 @@ static const ecl::smspec_node * ecl_smspec_insert_node(ecl_smspec_type * ecl_sms
   ecl_smspec_install_gen_keys( ecl_smspec, *smspec_node.get() );
   ecl_smspec_install_special_keys( ecl_smspec, *smspec_node.get() );
 
-  if (smspec_node_need_nums( &smspec_node ))
+  if (smspec_node->need_nums())
     ecl_smspec->need_nums = true;
 
   ecl_smspec->smspec_nodes.push_back(std::move(smspec_node));
