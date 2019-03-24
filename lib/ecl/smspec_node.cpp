@@ -923,6 +923,7 @@ smspec_node::smspec_node( int param_index_,
   this->total_variable = smspec_node_identify_total(this->keyword.c_str(), this->var_type);
   this->historical = (this->keyword.back() == 'H');
   this->lgr_name = lgr_;
+  this->num = nums_unused;
 
   switch (this->var_type) {
   case(ECL_SMSPEC_LOCAL_WELL_VAR):
