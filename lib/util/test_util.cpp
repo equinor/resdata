@@ -37,6 +37,7 @@ void test_error_exit( const char * fmt , ...) {
   s = util_alloc_sprintf_va(fmt , ap);
   va_end(ap);
   fprintf(stderr, "%s", s);
+  free(s);
   exit(1);
 }
 
