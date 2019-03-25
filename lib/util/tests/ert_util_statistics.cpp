@@ -32,6 +32,8 @@ void test_mean_std() {
 
   test_assert_double_equal( statistics_mean( d ) , 0.50 );
   test_assert_double_equal( statistics_std( d )  , 0.50 );
+
+  double_vector_free( d );
 }
 
 
