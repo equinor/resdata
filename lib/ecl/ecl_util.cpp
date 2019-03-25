@@ -1290,6 +1290,8 @@ static int ecl_util_get_num_slave_cpu__(basic_parser_type* parser, FILE* stream,
         const char * first_item = stringlist_iget(tokens, 0);
 
         if (first_item[0] == '/') {
+          stringlist_free(tokens);
+          free(buffer);
           break;
         }
         else{
