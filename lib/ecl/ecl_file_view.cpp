@@ -815,6 +815,8 @@ void ecl_file_view_end_transaction( ecl_file_view_type * file_view, ecl_file_tra
     ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i);
     ecl_file_kw_end_transaction(file_kw, ref_count[i]);
   }
+  free(transaction->ref_count);
+  free(transaction);
 }
 
 
