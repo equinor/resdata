@@ -996,7 +996,9 @@ char * util_alloc_normal_path( const char * input_path ) {
     return util_alloc_realpath__( input_path );
 
   char * realpath = util_alloc_realpath__(input_path);
-  return util_alloc_rel_path( NULL , realpath );
+  char * rel_path = util_alloc_rel_path( NULL , realpath );
+  free( realpath );
+  return rel_path;
 }
 
 
