@@ -121,10 +121,6 @@ void test_fortio_kw() {
         for (size_t i =0 ; i < kw.size(); i++)
             test_assert_int_equal( kw.at( i ), kw2.at( i ) );
 
-
-        fortio = ERT::FortIO("new_file" , std::fstream::in );
-        test_assert_throw( ERT::EclKW<float>::load(fortio) , std::invalid_argument );
-        fortio.close();
     }
 }
 
