@@ -165,6 +165,7 @@ void test_update_store() {
     char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
     test_work_area_free( work_area );
     test_assert_true( util_entry_exists( work_cwd ));
+    free(work_cwd);
   }
 
   {
@@ -172,6 +173,7 @@ void test_update_store() {
     char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
     test_work_area_free( work_area );
     test_assert_false( util_entry_exists( work_cwd ));
+    free(work_cwd);
   }
 
   {
@@ -179,6 +181,7 @@ void test_update_store() {
     char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
     test_work_area_free( work_area );
     test_assert_false( util_entry_exists( work_cwd ));
+    free(work_cwd);
   }
 
   {
@@ -186,6 +189,7 @@ void test_update_store() {
     char * work_cwd = util_alloc_string_copy( test_work_area_get_cwd( work_area ));
     test_work_area_free( work_area );
     test_assert_true( util_entry_exists( work_cwd ));
+    free(work_cwd);
   }
 }
 
