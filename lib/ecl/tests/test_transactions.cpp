@@ -99,7 +99,9 @@ void test_transaction() {
      test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2) );
 
      ecl_file_close(file);
-
+     ecl_kw_free(kw1);
+     ecl_kw_free(kw2);
+     ecl_kw_free(kw3);
    }
 }
 
