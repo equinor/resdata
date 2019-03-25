@@ -122,6 +122,8 @@ void test_contains_sorted() {
   test_assert_false( int_vector_contains( int_vector , 100 ));
   test_assert_true( int_vector_contains( int_vector , 89 ));
   test_assert_true( int_vector_contains( int_vector , 109 ));
+
+  int_vector_free(int_vector);
 }
 
 
@@ -136,6 +138,7 @@ void test_div() {
     for (i=0; i < int_vector_size( int_vector ); i++)
       test_assert_int_equal( 10 , int_vector_iget( int_vector , i ));
   }
+  int_vector_free(int_vector);
 }
 
 void test_memcpy_from_data() {
@@ -385,11 +388,11 @@ void test_misc() {
   test_assert_int_equal( int_vector_iget(v, 4), 123);
   test_assert_int_equal( int_vector_iget(v, 9), 0 );
   test_assert_int_equal( int_vector_iget(v, 19), 0);
+  int_vector_free(v);
 }
 
-int main(int argc , char ** argv) {
-  test_misc();
 
+void misc_int_vector_test() {
   int_vector_type * int_vector = int_vector_alloc( 0 , 99);
 
   test_abort();
@@ -443,6 +446,12 @@ int main(int argc , char ** argv) {
   test_assert_int_equal( int_vector_iget( int_vector , 3 ) , -245);
   test_assert_int_equal( int_vector_get_last( int_vector ) , -935);
 
+  int_vector_free(int_vector);
+}
+
+int main(int argc , char ** argv) {
+  test_misc();
+  misc_int_vector_test();
   {
     int_vector_type * v1 = int_vector_alloc(0,0);
     int_vector_type * v2 = int_vector_alloc(0,0);
