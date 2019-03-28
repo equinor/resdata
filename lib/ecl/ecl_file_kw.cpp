@@ -91,7 +91,7 @@ static void inv_map_assert_sort( inv_map_type * map ) {
     size_t_vector_permute( map->file_kw_ptr , perm );
     map->sorted = true;
 
-    free( perm );
+    perm_vector_free( perm );
   }
 }
 
