@@ -55,6 +55,7 @@ void test_grid() {
           }
       }
   }
+  ecl_grid_free( ecl_grid );
 }
 
 int main(int argc , char ** argv) {

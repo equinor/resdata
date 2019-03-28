@@ -114,6 +114,7 @@ void test_kw_io_charlength() {
        test_assert_double_equal(ecl_kw_iget_as_double(ecl_kw_in, 0), 0.0);
        test_assert_double_equal(ecl_kw_iget_as_double(ecl_kw_in, 4), 6.0);
 
+       ecl_kw_free(ecl_kw_in);
        fclose(file);
     }
 

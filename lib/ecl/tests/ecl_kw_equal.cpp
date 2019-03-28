@@ -55,12 +55,13 @@ int main(int argc , char ** argv) {
 
     test_assert_true( ecl_kw_content_equal( ecl_kw1 , ecl_ikw ));
     test_assert_false( ecl_kw_content_equal( ecl_kw1 , ecl_fkw ));
+
+    ecl_kw_free(ecl_ikw);
+    ecl_kw_free(ecl_fkw);
   }
 
   test_assert_true( ecl_kw_data_equal( ecl_kw1 , data ));
   data[0] = 99;
   test_assert_false( ecl_kw_data_equal( ecl_kw1 , data ));
-
-
-
+  ecl_kw_free(ecl_kw1);
 }

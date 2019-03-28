@@ -68,6 +68,7 @@ void test_buffer_strstr() {
   test_assert_true( buffer_strstr( buffer , "ABC" ));
   test_assert_true( buffer_strstr( buffer , "BC" ));
   test_assert_false( buffer_strstr( buffer , "ABC" ));
+  buffer_free(buffer);
 }
 
 

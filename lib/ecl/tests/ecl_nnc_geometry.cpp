@@ -64,6 +64,7 @@ void test_create_simple() {
         fortio_fclose( f );
         ecl_kw_free( trann_nnc );
       }
+      ecl_nnc_geometry_free(nnc_geo);
     }
     ecl_grid_free( grid0 );
   }

@@ -6214,6 +6214,8 @@ static void ecl_grid_fwrite_GRID__( const ecl_grid_type * grid , int coords_size
         }
       }
     }
+    ecl_kw_free(coords_kw);
+    ecl_kw_free(corners_kw);
   }
 }
 

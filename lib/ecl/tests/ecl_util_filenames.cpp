@@ -33,9 +33,16 @@ void test_filename_report_nr() {
 }
 
 void test_filename_case() {
-  test_assert_NULL( ecl_util_alloc_filename(NULL, "mixedBase", ECL_EGRID_FILE, false, -1));
-  test_assert_string_equal( ecl_util_alloc_filename(NULL, "UPPER", ECL_EGRID_FILE, false, -1), "UPPER.EGRID");
-  test_assert_string_equal( ecl_util_alloc_filename(NULL , "lower", ECL_EGRID_FILE, false, -1), "lower.egrid");
+  char * f1 = ecl_util_alloc_filename(NULL, "mixedBase", ECL_EGRID_FILE, false, -1);
+  char * f2 = ecl_util_alloc_filename(NULL, "UPPER", ECL_EGRID_FILE, false, -1);
+  char * f3 = ecl_util_alloc_filename(NULL , "lower", ECL_EGRID_FILE, false, -1);
+
+  test_assert_NULL( f1 );
+  test_assert_string_equal( f2 , "UPPER.EGRID");
+  test_assert_string_equal( f3 , "lower.egrid");
+
+  free(f2);
+  free(f3);
 }
 
 

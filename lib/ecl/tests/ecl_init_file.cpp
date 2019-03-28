@@ -84,6 +84,8 @@ void test_write_header() {
     ecl_init_file_fwrite_header( f , ecl_grid , NULL , ECL_METRIC_UNITS, 7 , start_time );
     fortio_fclose( f );
   }
+  ecl_grid_free( ecl_grid );
+  int_vector_free( actnum );
 }
 
 

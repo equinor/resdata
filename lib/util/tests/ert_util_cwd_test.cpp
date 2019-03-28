@@ -24,10 +24,11 @@
 
 int main(int argc , char ** argv) {
   char * cwd = argv[1];
-  printf("cwd    :%s\n",util_alloc_cwd());
+  char * cwd_alloc = util_alloc_cwd();
+  printf("cwd    :%s\n",cwd_alloc);
   printf("argv[1]:%s\n",argv[1]);
 
-  if (!util_is_cwd(cwd))
+  if (!util_is_cwd(cwd_alloc))
     test_error_exit("Hmmm did not recognize:%s as cwd\n",cwd);
 
   if (util_is_cwd("/some/path"))

@@ -34,7 +34,13 @@ void test_chdir() {
     fclose( stream );
   }
   test_assert_true( util_chdir_file( "path/FILE" ));
-  test_assert_string_equal( util_alloc_cwd() , util_alloc_filename( cwd, "path", NULL));
+  {
+    char * new_cwd = util_alloc_cwd();
+    char * fname = util_alloc_filename(cwd, "path", NULL);
+    test_assert_string_equal( new_cwd, fname );
+    free(new_cwd);
+    free(fname);
+  }
 }
 
 

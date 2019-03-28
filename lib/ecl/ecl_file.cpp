@@ -534,10 +534,13 @@ static void ecl_file_scan( ecl_file_type * ecl_file ) {
 
         if (read_status == ECL_KW_READ_OK) {
           ecl_file_kw_type * file_kw = ecl_file_kw_alloc( work_kw , current_offset);
+
           if (ecl_file_kw_fskip_data( file_kw , ecl_file->fortio ))
             ecl_file_view_add_kw( ecl_file->global_view , file_kw );
-          else
+          else {
+            ecl_file_kw_free( file_kw );
             break;
+          }
         }
       }
     }

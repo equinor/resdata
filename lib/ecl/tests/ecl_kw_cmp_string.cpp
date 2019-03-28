@@ -39,6 +39,7 @@ void test_cmp_string() {
   test_assert_false( ecl_kw_icmp_string( ecl_kw , 0 , ""));
   test_assert_false( ecl_kw_icmp_string( ecl_kw , 0 , ""));
 
+  ecl_kw_free(ecl_kw);
 }
 
 
