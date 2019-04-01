@@ -649,7 +649,10 @@ time_t well_state_get_sim_time( const well_state_type * well_state ) {
    Will return NULL if no wellhead in this grid.
 */
 const well_conn_type * well_state_iget_wellhead( const well_state_type * well_state , int grid_nr) {
-  return well_state->index_wellhead[grid_nr];
+  if (grid_nr < static_cast<int>(well_state->index_wellhead.size()))
+    return well_state->index_wellhead[grid_nr];
+  else
+    return NULL;
 }
 
 
