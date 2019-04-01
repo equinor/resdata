@@ -335,6 +335,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_grid_reset_actnum
                 ecl_grid_ext_actnum
                 ecl_nnc_export_intersect
+                ecl_sum_restart
                 ecl_sum_data_intermediate_test
                 ecl_grid_cell_contains
                 ecl_unsmry_loader_test
