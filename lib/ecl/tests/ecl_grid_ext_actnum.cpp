@@ -41,12 +41,12 @@ void test_1() {
 
     std::vector<int> ext_actnum = {0, 1, 0, 1, 1, 1};
     ecl_grid_type * grid = ecl_grid_alloc_ext_actnum(filename1, ext_actnum.data());
-    test_assert_int_equal( 2, ecl_grid_get_nactive(grid) );
-    test_assert_int_equal( 1, ecl_grid_get_nactive_fracture(grid) );
+    test_assert_int_equal( 4, ecl_grid_get_nactive(grid) );
+    test_assert_int_equal( 0, ecl_grid_get_nactive_fracture(grid) );
     test_assert_true( !ecl_grid_cell_active1(grid, 0) );
 
     test_assert_true( !ecl_grid_cell_active1(grid, 2) );
-    test_assert_true( !ecl_grid_cell_active1(grid, 3) );
+    test_assert_true(  ecl_grid_cell_active1(grid, 3) );
     test_assert_true(  ecl_grid_cell_active1(grid, 4) );
     test_assert_true(  ecl_grid_cell_active1(grid, 5) );
 
