@@ -120,6 +120,7 @@ endif()
 
 if (MSVC)
     add_definitions( "/W3 /D_CRT_SECURE_NO_WARNINGS /wd4996" )
+    add_definitions( "/wd4244 /wd4267 /wd4013 /wd4190 /wd4018 /wd4477 /wd4098 /wd4293 /wd4305 /wd4020 /wd4028 /wd4715 /wd4804 /wd4090")
 endif()
 
 
