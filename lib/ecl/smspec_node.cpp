@@ -680,8 +680,21 @@ ecl_smspec_var_type smspec_node::valid_type(const char * keyword, const char * w
       var_type == ECL_SMSPEC_LOCAL_COMPLETION_VAR) {
     if (IS_DUMMY_WELL(wgname))
       return ECL_SMSPEC_INVALID_VAR;
-    else
-      return var_type;
+
+    /*
+      In most cases the dummy well ':+:+:+:+' is used in situations where a
+      well/group name does not make sense; however we have also encountered the
+      blank string as an invalid well name; when this is trimmed we get NULL (C)
+      or "" (C++).
+    */
+
+    if (!wgname)
+      return ECL_SMSPEC_INVALID_VAR;
+
+    if (strlen(wgname) == 0)
+      return ECL_SMSPEC_INVALID_VAR;
+
+    return var_type;
   }
 
   if (var_type == ECL_SMSPEC_COMPLETION_VAR || var_type == ECL_SMSPEC_SEGMENT_VAR) {
