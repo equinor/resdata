@@ -6854,6 +6854,12 @@ static void ecl_grid_fwrite_EGRID__( ecl_grid_type * grid , fortio_type * fortio
 
 void ecl_grid_fwrite_EGRID2( ecl_grid_type * grid , const char * filename, ert_ecl_unit_enum output_unit) {
   bool fmt_file        = false;
+  {
+    bool is_fmt;
+
+    if (ecl_util_get_file_type( filename , &is_fmt, NULL ) != ECL_OTHER_FILE)
+      fmt_file = is_fmt;
+  }
   fortio_type * fortio = fortio_open_writer( filename , fmt_file , ECL_ENDIAN_FLIP );
 
   ecl_grid_fwrite_EGRID__( grid , fortio, output_unit);
