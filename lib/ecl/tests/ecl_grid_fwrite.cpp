@@ -39,10 +39,12 @@ void test_fwrite_EGRID(ecl_grid_type * grid ) {
 
 
 int main( int argc , char **argv) {
-  const char * src_file = argv[1];
-  ecl_grid_type * grid = ecl_grid_alloc( src_file );
+  if (argc > 1) {
+    const char * src_file = argv[1];
+    ecl_grid_type * grid = ecl_grid_alloc( src_file );
 
-  test_fwrite_EGRID( grid );
+    test_fwrite_EGRID( grid );
 
-  ecl_grid_free( grid );
+    ecl_grid_free( grid );
+  }
 }
