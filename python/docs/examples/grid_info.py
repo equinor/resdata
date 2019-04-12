@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-from ecl.ecl import EclGrid, EclRegion
+from ecl.grid import EclGrid, EclRegion
 
 
 def volume_min_max(grid):
