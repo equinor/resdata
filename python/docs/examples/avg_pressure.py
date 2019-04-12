@@ -3,7 +3,8 @@ import sys
 import matplotlib.pyplot as plt
 
 # Import the required symbols from the ecl.ecl package.
-from ecl.ecl import EclFile, EclGrid, EclRegion, EclRestartFile
+from ecl.eclfile import EclFile, EclRestartFile
+from ecl.grid import EclGrid, EclRegion
 
 
 # Calculate the average pressure for all the cells in the region using

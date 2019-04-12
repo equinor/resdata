@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import sys
 from operator import itemgetter
-from ecl.ecl import EclFile, EclGrid
+from ecl.eclfile import EclFile
+from ecl.grid import EclGrid
 
 
 
