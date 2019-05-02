@@ -30,7 +30,8 @@ if __name__ == "__main__":
         i1,j1,k1 = grid.get_ijk( global_index = g1 )
         i2,j2,k2 = grid.get_ijk( global_index = g2 )
 
-        print "(%02d,%02d,%02d) -> (%02d,%02d,%02d)  T:%g" % (i1,j1,k1,i2,j2,k2,T)
+        # print 1-based indices just like in eclipse PRT files
+        print "(%02d,%02d,%02d) -> (%02d,%02d,%02d)  T:%g" % (i1+1,j1+1,k1+1,i2+1,j2+1,k2+1,T)
 
 
 
