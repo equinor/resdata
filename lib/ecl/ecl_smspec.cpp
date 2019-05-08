@@ -232,6 +232,8 @@ static const char* smspec_required_keywords[] = {
 namespace {
 
 const ecl::smspec_node * ecl_smspec_get_var_node( const node_map& mp, const char * var) {
+    if (!var) return nullptr;
+
     const auto it = mp.find(var);
     if (it == mp.end())
       return nullptr;
