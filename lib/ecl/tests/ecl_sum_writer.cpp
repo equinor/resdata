@@ -99,6 +99,7 @@ void test_write_read( ) {
   int num_dates = 5;
   int num_ministep = 10;
   double ministep_length = 86400; // Seconds - numerical value chosen to avoid rounding problems when converting between seconds and days.
+  ecl::util::TestArea ta("write_read");
   {
     ecl_sum_type * ecl_sum;
 
@@ -136,7 +137,6 @@ void test_write_read( ) {
     }
 
     ecl_sum_free( ecl_sum );
-    //test_work_area_free( work_area );
   }
 }
 
