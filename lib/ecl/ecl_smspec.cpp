@@ -1287,18 +1287,28 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type * ecl_smspec) {
 
 /*****************************************************************/
 
-#define NODE_RETURN_INDEX(node_ptr)                     \
-  if (!node_ptr)                                        \
-    return -1;                                          \
-  else                                                \
-    return smspec_node_get_params_index( node_ptr );
 
 
-#define NODE_RETURN_EXISTS(node_ptr)            \
-  if (!node_ptr)                                \
-    return false;                               \
-  else                                          \
-    return true;
+
+namespace {
+
+  bool node_exists(const ecl::smspec_node * node_ptr) {
+    if (node_ptr)
+      return true;
+
+    return false;
+  }
+
+
+  int node_valid_index(const ecl::smspec_node * node_ptr) {
+    if (node_ptr)
+      return node_ptr->get_params_index();
+
+    throw std::out_of_range("Invalid lookup summary object");
+  }
+
+}
+
 
 
 
@@ -1316,13 +1326,13 @@ const ecl::smspec_node& ecl_smspec_get_well_var_node( const ecl_smspec_type * sm
 
 int ecl_smspec_get_well_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var) {
   const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->well_var_index, well, var);
-  NODE_RETURN_INDEX(node_ptr);
+  return node_valid_index(node_ptr);
 }
 
 
 bool ecl_smspec_has_well_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var) {
   const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->well_var_index, well, var);
-  NODE_RETURN_EXISTS(node_ptr);
+  return node_exists(node_ptr);
 }
 
 
@@ -1341,13 +1351,13 @@ const ecl::smspec_node& ecl_smspec_get_group_var_node( const ecl_smspec_type * s
 
 int ecl_smspec_get_group_var_params_index(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
   const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->group_var_index, group, var);
-  NODE_RETURN_INDEX(node_ptr);
+  return node_valid_index(node_ptr);
 }
 
 
 bool ecl_smspec_has_group_var(const ecl_smspec_type * ecl_smspec , const char * group , const char *var) {
   const auto node_ptr = ecl_smspec_get_str_key_var_node(ecl_smspec->group_var_index, group, var);
-  NODE_RETURN_EXISTS(node_ptr);
+  return node_exists(node_ptr);
 }
 
 
@@ -1365,7 +1375,7 @@ const ecl::smspec_node& ecl_smspec_get_field_var_node(const ecl_smspec_type * ec
 
 int ecl_smspec_get_field_var_params_index(const ecl_smspec_type * ecl_smspec , const char *var) {
   const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->field_var_index, var);
-  NODE_RETURN_INDEX(node_ptr);
+  return node_valid_index(node_ptr);
 }
 
 
@@ -1373,7 +1383,7 @@ int ecl_smspec_get_field_var_params_index(const ecl_smspec_type * ecl_smspec , c
 
 bool ecl_smspec_has_field_var(const ecl_smspec_type * ecl_smspec , const char *var) {
   const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->field_var_index, var);
-  NODE_RETURN_EXISTS(node_ptr);
+  return node_exists(node_ptr);
 }
 
 /*****************************************************************/
@@ -1404,7 +1414,7 @@ const ecl::smspec_node& ecl_smspec_get_block_var_node_ijk(const ecl_smspec_type 
 
 bool ecl_smspec_has_block_var(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
   const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->block_var_index, block_nr, block_var);
-  NODE_RETURN_EXISTS(node_ptr);
+  return node_exists(node_ptr);
 }
 
 
@@ -1415,7 +1425,7 @@ bool ecl_smspec_has_block_var_ijk(const ecl_smspec_type * ecl_smspec , const cha
 
 int ecl_smspec_get_block_var_params_index(const ecl_smspec_type * ecl_smspec , const char * block_var , int block_nr) {
   const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->block_var_index, block_nr, block_var);
-  NODE_RETURN_INDEX(node_ptr);
+  return node_valid_index(node_ptr);
 }
 
 
@@ -1443,13 +1453,13 @@ const ecl::smspec_node& ecl_smspec_get_region_var_node(const ecl_smspec_type * e
 
 bool ecl_smspec_has_region_var(const ecl_smspec_type * ecl_smspec , const char *region_var, int region_nr) {
   const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->region_var_index, region_nr, region_var);
-  NODE_RETURN_EXISTS(node_ptr);
+  return node_exists(node_ptr);
 }
 
 
 int ecl_smspec_get_region_var_params_index(const ecl_smspec_type * ecl_smspec , const char *region_var, int region_nr) {
   const auto node_ptr = ecl_smspec_get_int_key_var_node(ecl_smspec->region_var_index, region_nr, region_var);
-  NODE_RETURN_INDEX(node_ptr);
+  return node_valid_index(node_ptr);
 }
 
 /*****************************************************************/
@@ -1466,12 +1476,12 @@ const ecl::smspec_node& ecl_smspec_get_misc_var_node(const ecl_smspec_type * ecl
 
 bool ecl_smspec_has_misc_var(const ecl_smspec_type * ecl_smspec , const char *var) {
   const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->misc_var_index , var );
-  NODE_RETURN_EXISTS(node_ptr);
+  return node_exists(node_ptr);
 }
 
 int ecl_smspec_get_misc_var_params_index(const ecl_smspec_type * ecl_smspec , const char *var) {
   const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->misc_var_index , var );
-  NODE_RETURN_INDEX(node_ptr);
+  return node_valid_index(node_ptr);
 }
 
 
@@ -1499,13 +1509,13 @@ const ecl::smspec_node& ecl_smspec_get_well_completion_var_node(const ecl_smspec
 
 bool  ecl_smspec_has_well_completion_var(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
   const auto node_ptr = ecl_smspec_get_well_completion_var_node__( ecl_smspec , well , var , cell_nr );
-  NODE_RETURN_EXISTS( node_ptr );
+  return node_exists( node_ptr );
 }
 
 
 int  ecl_smspec_get_well_completion_var_params_index(const ecl_smspec_type * ecl_smspec , const char * well , const char *var, int cell_nr) {
   const auto node_ptr = ecl_smspec_get_well_completion_var_node__( ecl_smspec , well , var , cell_nr );
-  NODE_RETURN_INDEX( node_ptr );
+  return node_valid_index( node_ptr );
 }
 
 
@@ -1530,13 +1540,13 @@ const ecl::smspec_node& ecl_smspec_get_general_var_node( const ecl_smspec_type *
 
 int ecl_smspec_get_general_var_params_index(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
   const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->gen_var_index , lookup_kw );
-  NODE_RETURN_INDEX( node_ptr );
+  return node_valid_index( node_ptr );
 }
 
 
 bool ecl_smspec_has_general_var(const ecl_smspec_type * ecl_smspec , const char * lookup_kw) {
   const auto node_ptr = ecl_smspec_get_var_node(ecl_smspec->gen_var_index , lookup_kw );
-  NODE_RETURN_EXISTS( node_ptr );
+  return node_exists( node_ptr );
 }
 
 
