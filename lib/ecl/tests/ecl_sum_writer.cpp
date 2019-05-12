@@ -99,11 +99,11 @@ void test_write_read( ) {
   int num_dates = 5;
   int num_ministep = 10;
   double ministep_length = 86400; // Seconds - numerical value chosen to avoid rounding problems when converting between seconds and days.
-  ecl::util::TestArea ta("write_read");
   {
+    ecl::util::TestArea ta("write_read");
     ecl_sum_type * ecl_sum;
 
-    auto seconds = write_summary( name , start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);
+    write_summary( name , start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);
     ecl_sum = ecl_sum_fread_alloc_case( name , ":" );
     test_assert_true( ecl_sum_is_instance( ecl_sum ));
 
@@ -128,6 +128,7 @@ void test_write_read( ) {
       ecl_grid_free( grid );
     }
 
+    test_assert_throw(ecl_sum_get_general_var(ecl_sum, 1, "NO_SUCH_KEY"), std::out_of_range);
     ecl_sum_free( ecl_sum );
   }
 }
