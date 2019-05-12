@@ -107,18 +107,10 @@ void test_write_read( ) {
     ecl_sum = ecl_sum_fread_alloc_case( name , ":" );
     test_assert_true( ecl_sum_is_instance( ecl_sum ));
 
-    printf("days: %g \n", seconds / 86400.0 );
-
     /* Time direction */
     test_assert_time_t_equal( start_time , ecl_sum_get_start_time(ecl_sum));
     test_assert_time_t_equal( start_time , ecl_sum_get_data_start(ecl_sum));
     util_inplace_forward_seconds_utc(&end_time, (num_dates * num_ministep - 1) * ministep_length );
-    {
-      time_t et = ecl_sum_get_end_time(ecl_sum);
-      printf("days: %g \n", 1.0 * (et - start_time) / 86400);
-      printf("days: %g \n", 1.0 * (end_time - start_time) / 86400);
-      printf("%ld  %ld   diff:%ld   fraction:%g \n", end_time, et, end_time - et , 1.0 * et / end_time);
-    }
     test_assert_time_t_equal( end_time , ecl_sum_get_end_time(ecl_sum));
 
     /* Keys */
