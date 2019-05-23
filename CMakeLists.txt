@@ -326,6 +326,7 @@ add_subdirectory( external/catch2 )
 add_subdirectory( lib )
 add_subdirectory( applications )
 add_subdirectory( bin )
+add_subdirectory(ecl3)
 
 if (ENABLE_PYTHON AND ERT_WINDOWS)
     if ((NOT MSVC) OR (MSVC_VERSION LESS 1900))

@@ -50,6 +50,12 @@ install:
   - pip install -r requirements.txt
 
 script:
+  - mkdir build-ecl3
+  - pushd build-ecl3
+  - cmake -DCMAKE_BUILD_TYPE=Debug
+          ../ecl3
+  - make && ctest --output-on-failure
+  - popd
   - mkdir build
   - pushd build
   - cmake .. -DBUILD_TESTS=ON
