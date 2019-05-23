@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_library(ecl3 STATIC
     src/f77.cpp
+    src/keyword.cpp
 )
 add_library(ecl3::ecl3 ALIAS ecl3)
 set_property(TARGET ecl3 PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -56,6 +57,7 @@ endif ()
 add_executable(ecl3-tests
     tests/tests.cpp
     tests/f77.cpp
+    tests/keyword.cpp
 )
 target_link_libraries(ecl3-tests ecl3 endianness::endianness ecl3::catch2)
 add_test(NAME ecl3-tests COMMAND ecl3-tests)
