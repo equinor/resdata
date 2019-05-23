@@ -46,5 +46,6 @@ if (MSVC)
   set(WERROR_FLAG /WX)
 endif ()
 
+add_subdirectory(external/endianness)
 add_subdirectory(external/catch2)
 add_subdirectory(lib)
