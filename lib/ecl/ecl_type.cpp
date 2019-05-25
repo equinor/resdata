@@ -127,26 +127,32 @@ char * ecl_type_alloc_name(const ecl_data_type ecl_type) {
 }
 
 ecl_data_type ecl_type_create_from_name( const char * type_name ) {
-  if (strncmp( type_name , ECL_TYPE_NAME_FLOAT , ECL_TYPE_LENGTH) == 0)
-    return ECL_FLOAT;
-  else if (strncmp( type_name , ECL_TYPE_NAME_INT , ECL_TYPE_LENGTH) == 0)
-    return ECL_INT;
-  else if (strncmp( type_name , ECL_TYPE_NAME_DOUBLE , ECL_TYPE_LENGTH) == 0)
-    return ECL_DOUBLE;
-  else if (strncmp( type_name , ECL_TYPE_NAME_CHAR , ECL_TYPE_LENGTH) == 0)
-    return ECL_CHAR;
-  else if (is_ecl_string_name(type_name))
-    return ECL_STRING(get_ecl_string_length(type_name));
-  else if (strncmp( type_name , ECL_TYPE_NAME_MESSAGE , ECL_TYPE_LENGTH) == 0)
-    return ECL_MESS;
-  else if (strncmp( type_name , ECL_TYPE_NAME_BOOL , ECL_TYPE_LENGTH) == 0)
-    return ECL_BOOL;
-  else {
-    util_abort("%s: unrecognized type name:%s \n",__func__ , type_name);
-    return ECL_INT; /* Dummy */
-  }
-}
+    int type;
+    int err = ecl3_keyword_type(type_name, &type);
 
+    if (!err) {
+        switch (type) {
+            case ECL3_INTE: return ECL_INT;
+            case ECL3_REAL: return ECL_FLOAT;
+            case ECL3_DOUB: return ECL_DOUBLE;
+            case ECL3_CHAR: return ECL_CHAR;
+            case ECL3_MESS: return ECL_MESS;
+            case ECL3_LOGI: return ECL_BOOL;
+
+            default:
+                break;
+        }
+    }
+
+    /* C0NN */
+    if (is_ecl_string_name(type_name))
+        return ECL_STRING(get_ecl_string_length(type_name));
+
+    if (err || type == ECL3_X231) {
+        util_abort("%s: unrecognized type name:%s \n",__func__ , type_name);
+    }
+    return ECL_INT;
+}
 
 int ecl_type_get_sizeof_ctype(const ecl_data_type ecl_type) {
   return ecl_type.element_size;
