@@ -165,6 +165,7 @@ target_link_libraries(ecl PUBLIC ${m}
                                  ${blas}
                                  ${zlib}
                                  ${shlwapi}
+                                 ecl3
 )
 
 target_include_directories(ecl
