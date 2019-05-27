@@ -20,6 +20,22 @@ class StringListTest(TestCase):
 
         self.assertEqual(python_list_of_strings, ["A", "list"])
 
+
+    def test_fail_init(self):
+        with self.assertRaises(TypeError):
+            StringList(initial="a string instead of a list")
+
+        with self.assertRaises(TypeError):
+            StringList(initial=u"a unicode string instead of a list")
+
+        with self.assertRaises(TypeError):
+            StringList(initial=b"a bytearray instead of a list")
+
+        with self.assertRaises(TypeError):
+            StringList(initial=[2, 4, 5])
+
+
+
     def test_iterate(self):
         s = ["A", "list", "of", "strings"]
         s1 = StringList(initial=s)

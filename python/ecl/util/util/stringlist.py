@@ -76,11 +76,15 @@ class StringList(BaseCClass):
 
         c_ptr = self._alloc()
         super(StringList, self).__init__(c_ptr)
-        if initial:
-            self._append_all(initial)
+        if not initial:
+            return
 
-    def _append_all(self, lst):
-        for s in lst:
+        if isinstance(initial, string_types):
+            raise TypeError((
+                'Cannot initialize a StringList from "{initial}".\n'
+                'Did you mean "[{initial}]"?'
+                ).format(initial=initial))
+        for s in initial:
             if isinstance(s, bytes):
                 s.decode('ascii')
             if isinstance(s, string_types):
