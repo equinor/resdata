@@ -8,6 +8,13 @@
 #include <ecl3/f77.h>
 #include <ecl3/keyword.h>
 
+int ecl3_array_header_size() {
+    /*
+     * Described in the manual to be 16 bytes long
+     */
+    return 16;
+}
+
 int ecl3_array_header(const void* source, char* kw, char* type, int* count) {
     const auto* src = reinterpret_cast< const char* >(source);
 
