@@ -8,6 +8,39 @@ extern "C" {
 #endif //__cplusplus
 
 /*
+ * `Keywords` in ecl3 is the conceptual structure:
+ *
+ * struct {
+ *     str  name;
+ *     tag  type;
+ *     int  len;
+ *     byte data[];
+ * };
+ *
+ * Or, a more visual example, a tagged column vector:
+ *
+ * +------------+
+ * | 'KEYWORDS' |
+ * | 'CHAR'     | HEADER
+ * | 5          |
+ * +------------+
+ * | 'TIME    ' |
+ * | 'FOPR    ' |
+ * | 'GOPR    ' | BODY
+ * | 'GOPR    ' |
+ * | 'GOPR    ' |
+ * +------------+
+ *
+ * The header and body are written separately, which means they both come with
+ * the Fortran block length metadata, handled by ecl3/f77. Furthermore, large
+ * array bodies are split up into 105-element (for strings) or 1000 element
+ * chunks.
+ *
+ * This module provide the functions guide I/O and parse these structures once
+ * read from disk
+ */
+
+/*
  * Convert from in-file string representation to ecl3_keyword_types value.
  *
  * This function maps the input string, as found in the file, to the
