@@ -73,6 +73,20 @@ ECL3_API
 int ecl3_keyword_size(int type, int* size);
 
 /*
+ * Get the size of an array header
+ *
+ * The array header is the record:
+ *
+ * STRUCTURE /KEYWORD/:
+ *      CHARACTER (LEN=8) name
+ *      INTEGER           len
+ *      CHARACTER (LEN=4) type
+ *
+ */
+ECL3_API
+int ecl3_array_header_size();
+
+/*
  * Arrays in the file format are written as two records, a header and a body.
  *
  * The header contains metadata about the following array: its name/keyword,
