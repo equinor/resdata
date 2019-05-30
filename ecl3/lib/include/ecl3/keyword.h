@@ -27,6 +27,19 @@ ECL3_API
 int ecl3_keyword_type(const char* str, int* type);
 
 /*
+ * Get the size, in bytes, of a keyword type
+ *
+ * Takes a keyword type, as returned by ecl3_keyword_type, and yields the size
+ * in bytes. Returns ECL3_OK on success, and ECL3_INVALID_ARGS if the type
+ * argument is not an ecl3_keyword_type.
+ *
+ * If given a valid, but unsupported type, this function returns
+ * ECL3_UNSUPPORTED.
+ */
+ECL3_API
+int ecl3_keyword_size(int type, int* size);
+
+/*
  * Arrays in the file format are written as two records, a header and a body.
  *
  * The header contains metadata about the following array: its name/keyword,

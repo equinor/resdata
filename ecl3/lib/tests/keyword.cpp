@@ -185,3 +185,75 @@ TEST_CASE("Invalid keyword type fails") {
     const auto err = ecl3_keyword_type("FAIL", &type);
     CHECK(err == ECL3_INVALID_ARGS);
 }
+
+TEST_CASE("ecl3_keyword_size for ECL3_INTE is correct") {
+    int size;
+    const auto err = ecl3_keyword_size(ECL3_INTE, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == sizeof(std::int32_t));
+}
+
+TEST_CASE("ecl3_keyword_size for ECL3_REAL is correct") {
+    int size;
+    const auto err = ecl3_keyword_size(ECL3_REAL, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == sizeof(float));
+    static_assert(
+        sizeof(float) == 4,
+        "ecl3_keyword_size assumes sizeof(float) == 4"
+    );
+}
+
+TEST_CASE("ecl3_keyword_size for ECL3_DOUB is correct") {
+    int size;
+    const auto err = ecl3_keyword_size(ECL3_DOUB, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == sizeof(double));
+    static_assert(
+        sizeof(double) == 8,
+        "ecl3_keyword_size assumes sizeof(double) == 8"
+    );
+}
+
+TEST_CASE("ecl3_keyword_size for ECL3_CHAR is correct") {
+    int size;
+    const auto err = ecl3_keyword_size(ECL3_CHAR, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 8);
+}
+
+TEST_CASE("ecl3_keyword_size for ECL3_MESS is correct") {
+    int size;
+    const auto err = ecl3_keyword_size(ECL3_MESS, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 0);
+}
+
+TEST_CASE("ecl3_keyword_size for ECL3_LOGI is correct") {
+    int size;
+    const auto err = ecl3_keyword_size(ECL3_LOGI, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 4);
+}
+
+TEST_CASE("ecl3_keyword_size for ECL3_X231 is correct") {
+    int size;
+    const auto err = ecl3_keyword_size(ECL3_X231, &size);
+    CHECK(err == ECL3_UNSUPPORTED);
+}
+
+TEST_CASE("ecl3_keyword_size for ECL3_C0NN is correct") {
+    for (auto nn = 1; nn < 100; ++nn) {
+        int size;
+        auto C0NN = C0NNs[nn - 1];
+        const auto err = ecl3_keyword_size(C0NN, &size);
+        CHECK(err == ECL3_OK);
+        CHECK(size == nn);
+    }
+}
+
+TEST_CASE("ecl3_keyword_size detects wrong argument") {
+    int size;
+    const auto err = ecl3_keyword_size(7132, &size);
+    CHECK(err == ECL3_INVALID_ARGS);
+}
