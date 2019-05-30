@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cctype>
 #include <ciso646>
 #include <cstdint>
@@ -23,6 +24,87 @@ int ecl3_array_header(const void* source, char* kw, char* type, int* count) {
     ecl3_get_native(&tmp, src + 8, 'I', 1);
     std::memcpy(type, src + 12, 4);
     *count = tmp;
+    return ECL3_OK;
+}
+
+namespace {
+
+constexpr bool isC0NN(int type) noexcept (true) {
+    return (type & 0xFFFF0000) == (int('C') << 24 | int('0') << 16);
+}
+
+}
+
+int ecl3_block_size(int type, int* size) {
+    switch (type) {
+        case ECL3_INTE:
+        case ECL3_REAL:
+        case ECL3_DOUB:
+        case ECL3_MESS:
+        case ECL3_LOGI:
+        case ECL3_X231:
+            *size = ECL3_BLOCK_SIZE_NUMERIC;
+            return ECL3_OK;
+
+        case ECL3_CHAR:
+            *size = ECL3_BLOCK_SIZE_STRING;
+            return ECL3_OK;
+
+        default:
+            break;
+    }
+
+    if (!isC0NN(type))
+        return ECL3_INVALID_ARGS;
+
+    *size = ECL3_BLOCK_SIZE_STRING;
+    return ECL3_OK;
+
+}
+
+int ecl3_array_body(void* dst,
+                    const void* src,
+                    int type,
+                    int elems,
+                    int block_size,
+                    int* count) {
+    int size;
+    auto err = ecl3_keyword_size(type, &size);
+    if (err) return err;
+
+    switch (type) {
+        case ECL3_MESS:
+        case ECL3_X231:
+            return ECL3_UNSUPPORTED;
+
+        default:
+            break;
+    }
+
+    const int fmt = [](int type) noexcept (true) {
+        switch (type) {
+            case ECL3_INTE: return 'I';
+            case ECL3_REAL: return 'F';
+            case ECL3_DOUB: return 'D';
+            case ECL3_MESS: return 'M';
+            case ECL3_LOGI: return 'L';
+            case ECL3_X231: return 'X';
+
+            default:
+                return 'C';
+        }
+    }(type);
+
+    /*
+     * get_native is not (yet) aware of length-per-element, so multiply in size
+     * to read the right amount of data
+     */
+    elems = std::min(elems, block_size);
+    if (fmt == 'C') elems = elems * size;
+
+    ecl3_get_native(dst, src, fmt, elems);
+
+    *count = elems;
     return ECL3_OK;
 }
 

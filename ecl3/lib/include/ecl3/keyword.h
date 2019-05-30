@@ -111,6 +111,83 @@ int ecl3_array_header_size();
 ECL3_API
 int ecl3_array_header(const void* src, char* keyword, char* type, int* count);
 
+#define ECL3_BLOCK_SIZE_NUMERIC 1000
+#define ECL3_BLOCK_SIZE_STRING  105
+
+/*
+ * Get the specified block size for a given type
+ *
+ * See ecl3_array_body for rationale and description
+ */
+ECL3_API
+int ecl3_block_size(int type, int* size);
+
+/*
+ * Read chunks of array body items of type from src to dst
+ *
+ * Arrays are written in chunks, or blocked, i.e. large arrays are partitioned
+ * into consecutive smaller arrays. Different data types are blocked
+ * differently. To get the block for a type, call ecl3_block_size.
+ *
+ * Consider a keyword [WOPR, INTE, 2800]. When written it, it looks like this:
+ *
+ * | HEADER | N0000 N0001 ... | N1000 N1001 ... | N2000 ... N2799 |
+ *
+ * Every | marks a fortran write head/tail.
+ *
+ * This function helps parse the array chunks by reading them from src,
+ * typically unmodified from disk.
+ *
+ * Parameters
+ * ----------
+ *  dst:        output array
+ *  src:        input buffer
+ *  type:       array type, should be one of enum ecl3_keyword_types
+ *  block_size: number of elements read before this function pauses
+ *  elems:      remaining elements in the array.
+ *  count:      number of elements read this invocation
+ *
+ * Returns
+ * -------
+ *  ECL3_OK on success
+ *  ECL3_INVALID_ARGS if the type is unknown
+ *  ECL3_UNSUPPORTED if the type is not yet supported
+ *
+ * Notes
+ * -----
+ *  This function is designed to be called multiple times on large arrays,
+ *  until the entire keyword has been read. It is expected that the caller
+ *  updates dst/src/elems between invocations.
+ *
+ *  The chunk_size value should typically be obtained by calling
+ *  ecl3_chunk_size. The manual specifies the size of these blocks dependent on
+ *  data types (the value output by ecl3_block_size), but this function impose
+ *  no such restriction. This is to enable recovery on broken-but-similar files
+ *  with weird blocking - almost all uses should be fine with the default
+ *  values.
+ *
+ * Examples
+ * --------
+ *  The typical use should look like this:
+ *
+ *  type, remaining = parse_keyword_header();
+ *  ecl3_block_size(type, &chunk_size);
+ *  while (remaining > 0) {
+ *      nbytes = read_f77_block_head()
+ *      read(src, nbytes)
+ *      ecl3_array_body(dst, src, type, remaining, block_size, &count);
+ *      remaining -= count;
+ *      dst += count;
+ *  }
+ */
+ECL3_API
+int ecl3_array_body(void* dst,
+                    const void* src,
+                    int type,
+                    int elems,
+                    int chunk_size,
+                    int* count);
+
 /*
  * The array data types in the manual. In the file format, these are specified
  * as 4-character strings, but it's useful to have a numerical representation
