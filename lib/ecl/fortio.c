@@ -91,7 +91,7 @@ struct fortio_struct {
   */
   bool               writable;
   offset_type        read_size;
-  char opts[3];
+  int fmt;
 };
 
 
@@ -107,8 +107,7 @@ static fortio_type * fortio_alloc__(const char *filename , bool fmt_file , bool 
   fortio->stream_owner       = stream_owner;
   fortio->writable           = writable;
   fortio->read_size = 0;
-  strcpy( fortio->opts, endian_flip_header ? "c" : "ce" );
-
+  fortio->fmt                = 'I';
   return fortio;
 }
 
@@ -426,14 +425,11 @@ bool fortio_is_fortio_file(fortio_type * fortio) {
   elm_read = fread(&record_size , sizeof(record_size) , 1 , fortio->stream);
   if (elm_read == 1) {
     int trailer;
-
-    if (fortio->endian_flip_header)
-      util_endian_flip_vector(&record_size , sizeof record_size , 1);
+    ecl3_get_native(&record_size, &record_size, fortio->fmt, 1);
 
     if (fortio_fseek(fortio , (offset_type) record_size , SEEK_CUR) == 0) {
       if (fread(&trailer , sizeof(record_size) , 1 , fortio->stream) == 1) {
-        if (fortio->endian_flip_header)
-          util_endian_flip_vector(&trailer , sizeof trailer , 1);
+        ecl3_get_native(&trailer, &trailer, fortio->fmt, 1);
 
         if (trailer == record_size)
           is_fortio_file = true;
@@ -459,8 +455,7 @@ int fortio_init_read(fortio_type *fortio) {
 
   elm_read = fread(&record_size , sizeof(record_size) , 1 , fortio->stream);
   if (elm_read == 1) {
-    if (fortio->endian_flip_header)
-      util_endian_flip_vector(&record_size , sizeof record_size , 1);
+    ecl3_get_native(&record_size, &record_size, fortio->fmt, 1);
 
     return record_size;
   } else
@@ -508,8 +503,7 @@ bool fortio_complete_read(fortio_type *fortio , int record_size) {
   size_t read_count = fread(&trailer , sizeof trailer , 1 , fortio->stream );
 
   if (read_count == 1) {
-    if (fortio->endian_flip_header)
-      util_endian_flip_vector(&trailer , sizeof trailer , 1);
+    ecl3_get_native(&trailer, &trailer, fortio->fmt, 1);
 
     if (record_size == trailer)
       return true;
@@ -627,17 +621,13 @@ void fortio_copy_record(fortio_type * src_stream , fortio_type * target_stream ,
 void  fortio_init_write(fortio_type *fortio , int record_size) {
   int file_header;
   file_header = record_size;
-  if (fortio->endian_flip_header)
-    util_endian_flip_vector(&file_header , sizeof file_header , 1);
-
+  ecl3_get_native(&file_header, &file_header, fortio->fmt, 1);
   util_fwrite_int( file_header , fortio->stream );
 }
 
 void fortio_complete_write(fortio_type *fortio , int record_size) {
   int file_header = record_size;
-  if (fortio->endian_flip_header)
-    util_endian_flip_vector(&file_header , sizeof file_header , 1);
-
+  ecl3_get_native(&file_header, &file_header, fortio->fmt, 1);
   util_fwrite_int( file_header , fortio->stream );
 }
 
