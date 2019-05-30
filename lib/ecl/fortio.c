@@ -28,6 +28,8 @@
 
 #include <ecl/fortio.h>
 
+#include <ecl3/f77.h>
+
 #define FORTIO_ID  345116
 
 /**
