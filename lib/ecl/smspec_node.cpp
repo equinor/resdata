@@ -22,9 +22,11 @@
 #include <math.h>
 #include <time.h>
 
+#include <cstdlib>
 #include <string>
 #include <set>
 #include <array>
+#include <memory>
 #include <stdexcept>
 
 #include <ert/util/hash.hpp>
@@ -582,11 +584,28 @@ void smspec_node::decode_R1R2(int * r1 , int * r2) const {
 
 
 void smspec_node::set_gen_keys( const char* key_join_string_) {
+  struct deleter {
+      void operator () (char* ptr) {
+          std::free(ptr);
+      }
+  };
+
+  /*
+   * Some of these functions return a freshly-allocated char*. The implicit
+   * conversion to string works, but will leak the source string on every
+   * invocation.
+   *
+   * Instead, store the result of the smspec_alloc functions that return char*
+   * in a unique_ptr, so they're always released.
+   */
+  auto k1 = std::unique_ptr< char, deleter >(nullptr);
+  auto k2 = std::unique_ptr< char, deleter >(nullptr);
+
   switch( var_type) {
   case(ECL_SMSPEC_COMPLETION_VAR):
     // KEYWORD:WGNAME:NUM
-    gen_key1 = smspec_alloc_completion_ijk_key( key_join_string_ , keyword , wgname , ijk[0], ijk[1], ijk[2]);
-    gen_key2 = smspec_alloc_completion_num_key( key_join_string_ , keyword , wgname , num);
+    k1.reset(smspec_alloc_completion_ijk_key( key_join_string_ , keyword , wgname , ijk[0], ijk[1], ijk[2]));
+    k2.reset(smspec_alloc_completion_num_key( key_join_string_ , keyword , wgname , num));
     break;
   case(ECL_SMSPEC_FIELD_VAR):
     // KEYWORD
@@ -606,7 +625,7 @@ void smspec_node::set_gen_keys( const char* key_join_string_) {
     break;
   case (ECL_SMSPEC_SEGMENT_VAR):
     // KEYWORD:WGNAME:NUM
-    gen_key1 = smspec_alloc_segment_key( key_join_string_ , keyword , wgname , num);
+    k1.reset(smspec_alloc_segment_key( key_join_string_ , keyword , wgname , num));
     break;
   case(ECL_SMSPEC_REGION_2_REGION_VAR):
     // KEYWORDS:RXF:NUM and RXF:R1-R2
@@ -629,7 +648,7 @@ void smspec_node::set_gen_keys( const char* key_join_string_) {
     break;
   case(ECL_SMSPEC_LOCAL_WELL_VAR):
     /** KEYWORD:LGR:WGNAME */
-    gen_key1 = smspec_alloc_local_well_key( key_join_string_ , keyword , lgr_name , wgname);
+    k1.reset(smspec_alloc_local_well_key( key_join_string_ , keyword , lgr_name , wgname));
     break;
   case(ECL_SMSPEC_LOCAL_BLOCK_VAR):
     /* KEYWORD:LGR:i,j,k */
@@ -637,7 +656,7 @@ void smspec_node::set_gen_keys( const char* key_join_string_) {
     break;
   case(ECL_SMSPEC_LOCAL_COMPLETION_VAR):
     /* KEYWORD:LGR:WELL:i,j,k */
-    gen_key1 = smspec_alloc_local_completion_key( key_join_string_ , keyword , lgr_name , wgname , lgr_ijk[0], lgr_ijk[1], lgr_ijk[2]);
+    k1.reset(smspec_alloc_local_completion_key( key_join_string_ , keyword , lgr_name , wgname , lgr_ijk[0], lgr_ijk[1], lgr_ijk[2]));
 
     break;
   case(ECL_SMSPEC_AQUIFER_VAR):
@@ -646,6 +665,9 @@ void smspec_node::set_gen_keys( const char* key_join_string_) {
   default:
     util_abort("%s: internal error - should not be here? \n" , __func__);
   }
+
+  if (k1) this->gen_key1 = k1.get();
+  if (k2) this->gen_key2 = k2.get();
 }
 
 
