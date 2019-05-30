@@ -1,7 +1,11 @@
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
+#include <limits>
 
 #include <catch2/catch.hpp>
 
+#include <ecl3/f77.h>
 #include <ecl3/keyword.h>
 
 TEST_CASE("'INTE' gets correct type") {
@@ -256,4 +260,157 @@ TEST_CASE("ecl3_keyword_size detects wrong argument") {
     int size;
     const auto err = ecl3_keyword_size(7132, &size);
     CHECK(err == ECL3_INVALID_ARGS);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_INTE is correct") {
+    int size;
+    const auto err = ecl3_block_size(ECL3_INTE, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 1000);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_REAL is correct") {
+    int size;
+    const auto err = ecl3_block_size(ECL3_REAL, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 1000);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_DOUB is correct") {
+    int size;
+    const auto err = ecl3_block_size(ECL3_DOUB, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 1000);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_CHAR is correct") {
+    int size;
+    const auto err = ecl3_block_size(ECL3_CHAR, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 105);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_MESS is correct") {
+    int size;
+    const auto err = ecl3_block_size(ECL3_MESS, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 1000);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_LOGI is correct") {
+    int size;
+    const auto err = ecl3_block_size(ECL3_LOGI, &size);
+    CHECK(err == ECL3_OK);
+    CHECK(size == 1000);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_X231 is correct") {
+    int size;
+    const auto err = ecl3_block_size(ECL3_X231, &size);
+    CHECK(size == 1000);
+    CHECK(err == ECL3_OK);
+}
+
+TEST_CASE("ecl3_block_size for ECL3_C0NN is correct") {
+    for (auto nn = 1; nn < 100; ++nn) {
+        int size;
+        auto C0NN = C0NNs[nn - 1];
+        const auto err = ecl3_block_size(C0NN, &size);
+        CHECK(err == ECL3_OK);
+        CHECK(size == 105);
+    }
+}
+
+using namespace Catch::Generators;
+using namespace Catch::Matchers;
+
+namespace {
+
+template < typename T >
+struct meta {
+    static int format();
+    static int type();
+};
+
+template <> int meta< std::int32_t >::format() { return 'I'; }
+template <> int meta< float >       ::format() { return 'F'; }
+template <> int meta< double >      ::format() { return 'D'; }
+
+template <> int meta< std::int32_t >::type() { return ECL3_INTE; }
+template <> int meta< float >       ::type() { return ECL3_REAL; }
+template <> int meta< double >      ::type() { return ECL3_DOUB; }
+
+template < typename T >
+void read_blocked_numeric_array() {
+    // TODO: figure out a good way of testing C0NN and CHAR
+    static const auto minv = std::numeric_limits< T >::min();
+    static const auto maxv = std::numeric_limits< T >::max();
+    const auto chunks = 5;
+
+    const auto source = GENERATE(
+        take(10, chunk(4800, random(minv, maxv)))
+    );
+
+    // TODO: share the generate-bunch-of-vectors code with f77
+    auto buffer = std::vector< char >(source.size() * sizeof(T));
+    const auto format = meta< T >::format();
+    ecl3_put_native(buffer.data(), source.data(), format, source.size());
+
+    /*
+     * Ensure that the ecl3_array_body pauses reading enough times, and that
+     * the destination is filled completely
+     */
+    auto result = std::vector< T >(source.size());
+    auto* dst = result.data();
+    auto* src = buffer.data();
+    auto type = meta< T >::type();
+    int remaining = source.size();
+
+    int block_size;
+    const auto err = ecl3_block_size(type, &block_size);
+    REQUIRE(!err);
+
+    int iterations = 0;
+    while (remaining > 0) {
+        int read;
+        const auto err = ecl3_array_body(dst,
+                                         src,
+                                         type,
+                                         remaining,
+                                         block_size,
+                                         &read);
+        REQUIRE(err == ECL3_OK);
+
+        CHECK(((remaining >= block_size and read == block_size)
+            or (remaining <  block_size and read == remaining)
+        ));
+
+        /*
+         * Users too must manually advance the dst/src pointers, according to
+         * how they're stored. Although it's omitted here, when read from disk
+         * the chunks will be interspersed with block heads/tails.
+         */
+        remaining -= read;
+        dst += read;
+        src += read * sizeof(T);
+        ++iterations;
+    }
+
+    CHECK(remaining == 0);
+    CHECK(iterations == chunks);
+    CHECK_THAT(result, Equals(source));
+}
+
+}
+
+TEST_CASE("Read blocked array of INTE") {
+    read_blocked_numeric_array< std::int32_t >();
+}
+
+TEST_CASE("Read blocked array of REAL") {
+    read_blocked_numeric_array< float >();
+}
+
+TEST_CASE("Read blocked array of DOUB") {
+    read_blocked_numeric_array< double >();
 }
