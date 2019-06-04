@@ -88,6 +88,7 @@ extern "C" {
   void           ecl_kw_fread(ecl_kw_type * , fortio_type * );
   ecl_kw_type *  ecl_kw_fread_alloc(fortio_type *);
   ecl_kw_type *  ecl_kw_alloc_actnum(const ecl_kw_type * porv_kw, float porv_limit);
+  ecl_kw_type *  ecl_kw_alloc_actnum_bitmask(const ecl_kw_type * porv_kw, float porv_limit, int actnum_bitmask);
   void           ecl_kw_free_data(ecl_kw_type *);
   void           ecl_kw_fread_indexed_data(fortio_type * fortio, offset_type data_offset, ecl_data_type, int element_count, const int_vector_type* index_map, char* buffer);
   void           ecl_kw_free(ecl_kw_type *);

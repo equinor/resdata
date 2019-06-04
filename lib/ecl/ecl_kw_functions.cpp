@@ -136,7 +136,7 @@ ecl_kw_type * ecl_kw_alloc_actnum(const ecl_kw_type * porv_kw, float porv_limit)
     return NULL;
 
   if (!util_string_equal(PORV_KW, ecl_kw_get_header(porv_kw)))
-    return NULL;
+        return NULL;
 
   const int size = ecl_kw_get_size(porv_kw);
   ecl_kw_type * actnum_kw = ecl_kw_alloc(ACTNUM_KW, size, ECL_INT);
@@ -150,5 +150,30 @@ ecl_kw_type * ecl_kw_alloc_actnum(const ecl_kw_type * porv_kw, float porv_limit)
       actnum_values[i] = 0;
   }
 
-  return actnum_kw;
+/*
+    Allocate actnum, and assign actnum_bitmask to all cells with pore volume
+    larger than zero. The bit mask can be any combination of
+    CELL_ACTIVE_MATRIX and CELL_ACTIVE_FRACTURE.
+    See documentation in top of ecl_grid.cpp
+*/
+ecl_kw_type * ecl_kw_alloc_actnum_bitmask(const ecl_kw_type * porv_kw, float porv_limit, int actnum_bitmask) {
+    if (!ecl_type_is_float(porv_kw->data_type))
+        return NULL;
+
+    if (!util_string_equal(PORV_KW, ecl_kw_get_header(porv_kw)))
+        return NULL;
+
+    const int size = ecl_kw_get_size(porv_kw);
+    ecl_kw_type * actnum_kw = ecl_kw_alloc(ACTNUM_KW, size, ECL_INT);
+    const float * porv_values = ecl_kw_get_float_ptr(porv_kw);
+    int * actnum_values = ecl_kw_get_int_ptr(actnum_kw);
+
+    for (int i = 0; i < size; i++) {
+        if (porv_values[i] > porv_limit)
+            actnum_values[i] = actnum_bitmask;
+        else
+            actnum_values[i] = 0;
+    }
+
+    return actnum_kw;
 }
