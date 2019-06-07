@@ -5,8 +5,7 @@ set(ECL3_LIB_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_library(ecl3 STATIC
-    src/f77.cpp
+add_library(ecl3
     src/keyword.cpp
 )
 add_library(ecl3::ecl3 ALIAS ecl3)
@@ -56,7 +55,6 @@ endif ()
 
 add_executable(ecl3-tests
     tests/tests.cpp
-    tests/f77.cpp
     tests/keyword.cpp
 )
 target_link_libraries(ecl3-tests ecl3 endianness::endianness ecl3::catch2)

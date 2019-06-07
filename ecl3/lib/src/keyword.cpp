@@ -6,8 +6,96 @@
 
 #include <endianness/endianness.h>
 
-#include <ecl3/f77.h>
 #include <ecl3/keyword.h>
+
+namespace {
+
+void memcpy_bswap32(void* d, const void* s, std::size_t nmemb) noexcept (true) {
+    std::uint32_t tmp;
+    auto* dst = reinterpret_cast< char* >(d);
+    auto* src = reinterpret_cast< const char* >(s);
+    for (std::size_t i = 0; i < nmemb; ++i) {
+        std::memcpy(&tmp, src, sizeof(tmp));
+        tmp = bswap32(tmp);
+        std::memcpy(dst, &tmp, sizeof(tmp));
+        dst += sizeof(tmp);
+        src += sizeof(tmp);
+    }
+}
+
+void memcpy_bswap64(void* d, const void* s, std::size_t nmemb) noexcept (true) {
+    std::uint64_t tmp;
+    auto* dst = reinterpret_cast< char* >(d);
+    auto* src = reinterpret_cast< const char* >(s);
+    for (std::size_t i = 0; i < nmemb; ++i) {
+        std::memcpy(&tmp, src, sizeof(tmp));
+        tmp = bswap64(tmp);
+        std::memcpy(dst, &tmp, sizeof(tmp));
+        dst += sizeof(tmp);
+        src += sizeof(tmp);
+    }
+}
+
+#if defined(__BIG_ENDIAN__)
+void memcpy_msb32(void* dst, const void* src, std::size_t nmemb) noexcept (true) {
+    if (dst == src) return;
+    std::memcpy(dst, src, nmemb * sizeof(std::uint32_t));
+}
+
+void memcpy_msb64(void* dst, const void* src, std::size_t nmemb) noexcept (true) {
+    if (dst == src) return;
+    std::memcpy(dst, src, nmemb * sizeof(std::uint64_t));
+}
+
+#elif defined(__LITTLE_ENDIAN__)
+void memcpy_msb32(void* dst, const void* src, std::size_t nmemb) noexcept (true) {
+    memcpy_bswap32(dst, src, nmemb);
+}
+
+void memcpy_msb64(void* dst, const void* src, std::size_t nmemb) noexcept (true) {
+    memcpy_bswap64(dst, src, nmemb);
+}
+
+#else
+    #error "__BIG_ENDIAN__ or __LITTLE_ENDIAN__ must be set"
+#endif
+
+}
+
+int ecl3_get_native(void* dst, const void* src, int fmt, std::size_t elems) {
+    switch (fmt) {
+        case ECL3_INTE:
+        case ECL3_REAL:
+        case ECL3_LOGI:
+            memcpy_msb32(dst, src, elems);
+            return ECL3_OK;
+
+        case ECL3_DOUB:
+            memcpy_msb64(dst, src, elems);
+            return ECL3_OK;
+
+        case ECL3_MESS:
+            return ECL3_OK;
+
+        default:
+            break;
+    }
+
+    int size;
+    const int err = ecl3_keyword_size(fmt, &size);
+    if (err) return err;
+
+    std::memcpy(dst, src, elems * size);
+    return ECL3_OK;
+}
+
+int ecl3_put_native(void* dst, const void* src, int fmt, std::size_t elems) {
+    /*
+     * get/put native are currently the same, because there is no little-endian
+     * input support. They both exist for symmetry.
+     */
+    return ecl3_get_native(dst, src, fmt, elems);
+}
 
 int ecl3_array_header_size() {
     /*
@@ -68,9 +156,6 @@ int ecl3_array_body(void* dst,
                     int elems,
                     int block_size,
                     int* count) {
-    int size;
-    auto err = ecl3_keyword_size(type, &size);
-    if (err) return err;
 
     switch (type) {
         case ECL3_MESS:
@@ -81,29 +166,8 @@ int ecl3_array_body(void* dst,
             break;
     }
 
-    const int fmt = [](int type) noexcept (true) {
-        switch (type) {
-            case ECL3_INTE: return 'I';
-            case ECL3_REAL: return 'F';
-            case ECL3_DOUB: return 'D';
-            case ECL3_MESS: return 'M';
-            case ECL3_LOGI: return 'L';
-            case ECL3_X231: return 'X';
-
-            default:
-                return 'C';
-        }
-    }(type);
-
-    /*
-     * get_native is not (yet) aware of length-per-element, so multiply in size
-     * to read the right amount of data
-     */
     elems = std::min(elems, block_size);
-    if (fmt == 'C') elems = elems * size;
-
-    ecl3_get_native(dst, src, fmt, elems);
-
+    ecl3_get_native(dst, src, type, elems);
     *count = elems;
     return ECL3_OK;
 }

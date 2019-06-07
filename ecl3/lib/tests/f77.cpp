@@ -7,40 +7,7 @@
 #include <endianness/endianness.h>
 
 #include <ecl3/f77.h>
-
-TEST_CASE("elems-in-block reads correct big-endian integral", "[f77]") {
-    const char head[] = { 0x00, 0x00, 0x00, 0x10 };
-
-    std::size_t elems;
-    auto err = ecl3_elems_in_block(head, 'I', &elems);
-    CHECK(err == ECL3_OK);
-    CHECK(elems == 4);
-}
-
-TEST_CASE("elems-in-block reads correct little-endian integral", "[f77]") {
-    const char head[] = { 0x10, 0x00, 0x00, 0x00 };
-
-    std::size_t elems;
-    auto err = ecl3_elems_in_block(head, 'i', &elems);
-    CHECK(err == ECL3_OK);
-    CHECK(elems == 4);
-}
-
-TEST_CASE("elems-in-block reads correct big-endian bytes", "[f77]") {
-    const char head[] = { 0x00, 0x00, 0x00, 0x10 };
-
-    std::size_t elems;
-    auto err = ecl3_elems_in_block(head, 'C', &elems);
-    CHECK(err == ECL3_OK);
-    CHECK(elems == 16);
-}
-
-TEST_CASE("elems-in-block with wrong format returns error", "[f77]") {
-    const char head[] = { 0x00, 0x00, 0x00, 0x10 };
-    std::size_t elems;
-    auto err = ecl3_elems_in_block(head, 'a', &elems);
-    CHECK(err == ECL3_INVALID_ARGS);
-}
+#include <ecl3/keyword.h>
 
 using namespace Catch::Generators;
 using namespace Catch::Matchers;
@@ -90,36 +57,121 @@ struct type {
         std::transform(xs.begin(), xs.end(), xs.begin(), fn);
         return xs;
     }
-
-    static std::vector< T > to_le(std::vector< T > xs) {
-        auto fn = [](T x) {
-            using sized = uint_size< sizeof(T) >;
-            typename sized::type tmp;
-            std::memcpy(&tmp, &x, sizeof(tmp));
-            tmp = sized::htole(tmp);
-            std::memcpy(&x, &tmp, sizeof(tmp));
-            return x;
-        };
-
-        std::transform(xs.begin(), xs.end(), xs.begin(), fn);
-        return xs;
-    }
 };
 
-template <> int type< std::int32_t >::fmt() { return GENERATE('i', 'I'); }
-template <> int type< float >       ::fmt() { return GENERATE('f', 'F'); }
-template <> int type< double >      ::fmt() { return GENERATE('d', 'D'); }
+template <> int type< std::int32_t >::fmt() { return ECL3_INTE; }
+template <> int type< float >       ::fmt() { return ECL3_REAL; }
+template <> int type< double >      ::fmt() { return ECL3_DOUB; }
 
 bool not_valid_format(int x) {
     switch (x) {
-        case 'c':
-        case 'C':
-        case 'i':
-        case 'f':
-        case 'd':
-        case 'I':
-        case 'F':
-        case 'D':
+        case ECL3_INTE:
+        case ECL3_REAL:
+        case ECL3_DOUB:
+        case ECL3_CHAR:
+        case ECL3_MESS:
+        case ECL3_LOGI:
+        case ECL3_X231:
+
+        case ECL3_C001:
+        case ECL3_C002:
+        case ECL3_C003:
+        case ECL3_C004:
+        case ECL3_C005:
+        case ECL3_C006:
+        case ECL3_C007:
+        case ECL3_C008:
+        case ECL3_C009:
+        case ECL3_C010:
+        case ECL3_C011:
+        case ECL3_C012:
+        case ECL3_C013:
+        case ECL3_C014:
+        case ECL3_C015:
+        case ECL3_C016:
+        case ECL3_C017:
+        case ECL3_C018:
+        case ECL3_C019:
+        case ECL3_C020:
+        case ECL3_C021:
+        case ECL3_C022:
+        case ECL3_C023:
+        case ECL3_C024:
+        case ECL3_C025:
+        case ECL3_C026:
+        case ECL3_C027:
+        case ECL3_C028:
+        case ECL3_C029:
+        case ECL3_C030:
+        case ECL3_C031:
+        case ECL3_C032:
+        case ECL3_C033:
+        case ECL3_C034:
+        case ECL3_C035:
+        case ECL3_C036:
+        case ECL3_C037:
+        case ECL3_C038:
+        case ECL3_C039:
+        case ECL3_C040:
+        case ECL3_C041:
+        case ECL3_C042:
+        case ECL3_C043:
+        case ECL3_C044:
+        case ECL3_C045:
+        case ECL3_C046:
+        case ECL3_C047:
+        case ECL3_C048:
+        case ECL3_C049:
+        case ECL3_C050:
+        case ECL3_C051:
+        case ECL3_C052:
+        case ECL3_C053:
+        case ECL3_C054:
+        case ECL3_C055:
+        case ECL3_C056:
+        case ECL3_C057:
+        case ECL3_C058:
+        case ECL3_C059:
+        case ECL3_C060:
+        case ECL3_C061:
+        case ECL3_C062:
+        case ECL3_C063:
+        case ECL3_C064:
+        case ECL3_C065:
+        case ECL3_C066:
+        case ECL3_C067:
+        case ECL3_C068:
+        case ECL3_C069:
+        case ECL3_C070:
+        case ECL3_C071:
+        case ECL3_C072:
+        case ECL3_C073:
+        case ECL3_C074:
+        case ECL3_C075:
+        case ECL3_C076:
+        case ECL3_C077:
+        case ECL3_C078:
+        case ECL3_C079:
+        case ECL3_C080:
+        case ECL3_C081:
+        case ECL3_C082:
+        case ECL3_C083:
+        case ECL3_C084:
+        case ECL3_C085:
+        case ECL3_C086:
+        case ECL3_C087:
+        case ECL3_C088:
+        case ECL3_C089:
+        case ECL3_C090:
+        case ECL3_C091:
+        case ECL3_C092:
+        case ECL3_C093:
+        case ECL3_C094:
+        case ECL3_C095:
+        case ECL3_C096:
+        case ECL3_C097:
+        case ECL3_C098:
+        case ECL3_C099:
             return false;
     }
 
@@ -149,10 +201,7 @@ void read_formatted() {
         take(10, chunk(100, random(type< T >::min(), type< T >::max())))
     );
     const auto size = source.size();
-    const auto converted = std::isupper(fmt)
-                         ? type< T >::to_be(source)
-                         : type< T >::to_le(source)
-                         ;
+    const auto converted = type< T >::to_be(source);
 
     auto result = std::vector< T >(size);
     ecl3_get_native(result.data(), converted.data(), fmt, size);
