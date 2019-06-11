@@ -58,7 +58,7 @@ template <> int type< std::int32_t >::fmt() { return ECL3_INTE; }
 template <> int type< float >       ::fmt() { return ECL3_REAL; }
 template <> int type< double >      ::fmt() { return ECL3_DOUB; }
 
-const ecl3_keyword_types C0NNs[] = {
+const ecl3_typeids C0NNs[] = {
     ECL3_C001,
     ECL3_C002,
     ECL3_C003,
@@ -279,49 +279,49 @@ bool not_valid_format(int x) {
 
 TEST_CASE("'INTE' gets correct type") {
     int type;
-    const auto err = ecl3_keyword_type("INTE", &type);
+    const auto err = ecl3_typeid("INTE", &type);
     CHECK(err == ECL3_OK);
     CHECK(type == ECL3_INTE);
 }
 
 TEST_CASE("'REAL' gets correct type") {
     int type;
-    const auto err = ecl3_keyword_type("REAL", &type);
+    const auto err = ecl3_typeid("REAL", &type);
     CHECK(err == ECL3_OK);
     CHECK(type == ECL3_REAL);
 }
 
 TEST_CASE("'DOUB' gets correct type") {
     int type;
-    const auto err = ecl3_keyword_type("DOUB", &type);
+    const auto err = ecl3_typeid("DOUB", &type);
     CHECK(err == ECL3_OK);
     CHECK(type == ECL3_DOUB);
 }
 
 TEST_CASE("'CHAR' gets correct type") {
     int type;
-    const auto err = ecl3_keyword_type("CHAR", &type);
+    const auto err = ecl3_typeid("CHAR", &type);
     CHECK(err == ECL3_OK);
     CHECK(type == ECL3_CHAR);
 }
 
 TEST_CASE("'MESS' gets correct type") {
     int type;
-    const auto err = ecl3_keyword_type("MESS", &type);
+    const auto err = ecl3_typeid("MESS", &type);
     CHECK(err == ECL3_OK);
     CHECK(type == ECL3_MESS);
 }
 
 TEST_CASE("'LOGI' gets correct type") {
     int type;
-    const auto err = ecl3_keyword_type("LOGI", &type);
+    const auto err = ecl3_typeid("LOGI", &type);
     CHECK(err == ECL3_OK);
     CHECK(type == ECL3_LOGI);
 }
 
 TEST_CASE("'X231' gets correct type") {
     int type;
-    const auto err = ecl3_keyword_type("X231", &type);
+    const auto err = ecl3_typeid("X231", &type);
     CHECK(err == ECL3_OK);
     CHECK(type == ECL3_X231);
 }
@@ -331,7 +331,7 @@ using namespace Catch::Generators;
 
 TEST_CASE("'C0NN' gets correct type") {
     static_assert(
-        sizeof(C0NNs) == sizeof(ecl3_keyword_types) * 99,
+        sizeof(C0NNs) == sizeof(ecl3_typeids) * 99,
         "'C0NNs' should contain 99 elements"
     );
 
@@ -339,7 +339,7 @@ TEST_CASE("'C0NN' gets correct type") {
         int type;
         char str[5] = {};
         std::sprintf(str, "C0%.2d", nn);
-        const auto err = ecl3_keyword_type(str, &type);
+        const auto err = ecl3_typeid(str, &type);
         INFO("C0NN = " << str);
         CHECK(err == ECL3_OK);
         CHECK(type == C0NNs[nn - 1]);
@@ -348,85 +348,85 @@ TEST_CASE("'C0NN' gets correct type") {
 
 TEST_CASE("'C000' fails") {
     int type;
-    const auto err = ecl3_keyword_type("C000", &type);
+    const auto err = ecl3_typeid("C000", &type);
     CHECK(err == ECL3_INVALID_ARGS);
 }
 
 TEST_CASE("Invalid keyword type fails") {
     int type;
-    const auto err = ecl3_keyword_type("FAIL", &type);
+    const auto err = ecl3_typeid("FAIL", &type);
     CHECK(err == ECL3_INVALID_ARGS);
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_INTE is correct") {
+TEST_CASE("ecl3_type_size for ECL3_INTE is correct") {
     int size;
-    const auto err = ecl3_keyword_size(ECL3_INTE, &size);
+    const auto err = ecl3_type_size(ECL3_INTE, &size);
     CHECK(err == ECL3_OK);
     CHECK(size == sizeof(std::int32_t));
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_REAL is correct") {
+TEST_CASE("ecl3_type_size for ECL3_REAL is correct") {
     int size;
-    const auto err = ecl3_keyword_size(ECL3_REAL, &size);
+    const auto err = ecl3_type_size(ECL3_REAL, &size);
     CHECK(err == ECL3_OK);
     CHECK(size == sizeof(float));
     static_assert(
         sizeof(float) == 4,
-        "ecl3_keyword_size assumes sizeof(float) == 4"
+        "ecl3_type_size assumes sizeof(float) == 4"
     );
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_DOUB is correct") {
+TEST_CASE("ecl3_type_size for ECL3_DOUB is correct") {
     int size;
-    const auto err = ecl3_keyword_size(ECL3_DOUB, &size);
+    const auto err = ecl3_type_size(ECL3_DOUB, &size);
     CHECK(err == ECL3_OK);
     CHECK(size == sizeof(double));
     static_assert(
         sizeof(double) == 8,
-        "ecl3_keyword_size assumes sizeof(double) == 8"
+        "ecl3_type_size assumes sizeof(double) == 8"
     );
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_CHAR is correct") {
+TEST_CASE("ecl3_type_size for ECL3_CHAR is correct") {
     int size;
-    const auto err = ecl3_keyword_size(ECL3_CHAR, &size);
+    const auto err = ecl3_type_size(ECL3_CHAR, &size);
     CHECK(err == ECL3_OK);
     CHECK(size == 8);
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_MESS is correct") {
+TEST_CASE("ecl3_type_size for ECL3_MESS is correct") {
     int size;
-    const auto err = ecl3_keyword_size(ECL3_MESS, &size);
+    const auto err = ecl3_type_size(ECL3_MESS, &size);
     CHECK(err == ECL3_OK);
     CHECK(size == 0);
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_LOGI is correct") {
+TEST_CASE("ecl3_type_size for ECL3_LOGI is correct") {
     int size;
-    const auto err = ecl3_keyword_size(ECL3_LOGI, &size);
+    const auto err = ecl3_type_size(ECL3_LOGI, &size);
     CHECK(err == ECL3_OK);
     CHECK(size == 4);
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_X231 is correct") {
+TEST_CASE("ecl3_type_size for ECL3_X231 is correct") {
     int size;
-    const auto err = ecl3_keyword_size(ECL3_X231, &size);
+    const auto err = ecl3_type_size(ECL3_X231, &size);
     CHECK(err == ECL3_UNSUPPORTED);
 }
 
-TEST_CASE("ecl3_keyword_size for ECL3_C0NN is correct") {
+TEST_CASE("ecl3_type_size for ECL3_C0NN is correct") {
     for (auto nn = 1; nn < 100; ++nn) {
         int size;
         auto C0NN = C0NNs[nn - 1];
-        const auto err = ecl3_keyword_size(C0NN, &size);
+        const auto err = ecl3_type_size(C0NN, &size);
         CHECK(err == ECL3_OK);
         CHECK(size == nn);
     }
 }
 
-TEST_CASE("ecl3_keyword_size detects wrong argument") {
+TEST_CASE("ecl3_type_size detects wrong argument") {
     int size;
-    const auto err = ecl3_keyword_size(7132, &size);
+    const auto err = ecl3_type_size(7132, &size);
     CHECK(err == ECL3_INVALID_ARGS);
 }
 
@@ -501,7 +501,7 @@ void roundtrip() {
 
     ecl3_put_native(buffer.data(), source.data(), fmt, size);
     ecl3_get_native(result.data(), buffer.data(), fmt, size);
-    INFO("fmt = " << ecl3_keyword_type_name(fmt));
+    INFO("fmt = " << ecl3_type_name(fmt));
     CHECK_THAT(result, Equals(source));
 }
 
@@ -516,7 +516,7 @@ void read_formatted() {
 
     auto result = std::vector< T >(size);
     ecl3_get_native(result.data(), converted.data(), fmt, size);
-    INFO("fmt = " << ecl3_keyword_type_name(fmt));
+    INFO("fmt = " << ecl3_type_name(fmt));
     CHECK_THAT(result, Equals(source));
 }
 

@@ -88,50 +88,50 @@ int ecl3_put_native(void* dst, const void* src, int fmt, size_t elems);
  */
 
 /*
- * Convert from in-file string representation to ecl3_keyword_types value.
+ * Convert from in-file string representation to ecl3_typeids value.
  *
  * This function maps the input string, as found in the file, to the
- * corresponding enum value in ecl3_keyword_types. The enum value is a lot more
+ * corresponding enum value in ecl3_typeids. The enum value is a lot more
  * practical to work with in C programs.
  *
- * Returns ECL3_OK if str was any of the values in ecl3_keyword_types, and
+ * Returns ECL3_OK if str was any of the values in ecl3_typeids, and
  * ECL3_INVALID_ARGS otherwise.
  *
  * Examples
  * --------
  *  int type;
- *  ecl3_keyword_type("INTE", &type);
+ *  ecl3_typeid("INTE", &type);
  *  if (type == ECL3_INTE) puts("type was INTE");
  */
 ECL3_API
-int ecl3_keyword_type(const char* str, int* type);
+int ecl3_typeid(const char* str, int* type);
 
 /*
  * Get the size, in bytes, of a keyword type
  *
- * Takes a keyword type, as returned by ecl3_keyword_type, and yields the size
+ * Takes a keyword type, as returned by ecl3_typeid, and yields the size
  * in bytes. Returns ECL3_OK on success, and ECL3_INVALID_ARGS if the type
- * argument is not an ecl3_keyword_type.
+ * argument is not an ecl3_typeid.
  *
  * If given a valid, but unsupported type, this function returns
  * ECL3_UNSUPPORTED.
  */
 ECL3_API
-int ecl3_keyword_size(int type, int* size);
+int ecl3_type_size(int type, int* size);
 
 /*
  * Get a static, null-terminated string representation of type. This is the
- * inverse function of ecl3_keyword_type.
+ * inverse function of ecl3_typeid.
  *
  * In short, it holds that:
  *
  * int type;
- * ecl3_keyword_type("INTE", &type)
- * const char* name = ecl3_keyword_type_name(type);
+ * ecl3_typeid("INTE", &type)
+ * const char* name = ecl3_type_name(type);
  * assert(strncmp("INTE", name, 4) == 0)
  */
 ECL3_API
-const char* ecl3_keyword_type_name(int type);
+const char* ecl3_type_name(int type);
 
 /*
  * Get the size of an array header
@@ -167,7 +167,7 @@ int ecl3_array_header_size();
  *
  * This function faithfully outputs what's actually on disk. To obtain a more
  * practical representation for the array type, use the output type from this
- * function as input to ecl3_keyword_type.
+ * function as input to ecl3_typeid.
  */
 ECL3_API
 int ecl3_array_header(const void* src, char* keyword, char* type, int* count);
@@ -203,7 +203,7 @@ int ecl3_block_size(int type, int* size);
  * ----------
  *  dst:        output array
  *  src:        input buffer
- *  type:       array type, should be one of enum ecl3_keyword_types
+ *  type:       array type, should be one of enum ecl3_typeids
  *  block_size: number of elements read before this function pauses
  *  elems:      remaining elements in the array.
  *  count:      number of elements read this invocation
@@ -267,7 +267,7 @@ int ecl3_array_body(void* dst,
      (int)((word)[2]) << 8  | \
      (int)((word)[3]))
 
-enum ecl3_keyword_types {
+enum ecl3_typeids {
     ECL3_INTE = ECL3_MAKE_KWENUM("INTE"),
     ECL3_REAL = ECL3_MAKE_KWENUM("REAL"),
     ECL3_DOUB = ECL3_MAKE_KWENUM("DOUB"),

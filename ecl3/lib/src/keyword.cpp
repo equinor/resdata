@@ -83,7 +83,7 @@ int ecl3_get_native(void* dst, const void* src, int fmt, std::size_t elems) {
     }
 
     int size;
-    const int err = ecl3_keyword_size(fmt, &size);
+    const int err = ecl3_type_size(fmt, &size);
     if (err) return err;
 
     std::memcpy(dst, src, elems * size);
@@ -173,7 +173,7 @@ int ecl3_array_body(void* dst,
     return ECL3_OK;
 }
 
-int ecl3_keyword_type(const char* str, int* type) {
+int ecl3_typeid(const char* str, int* type) {
     static_assert(
         sizeof(int) == sizeof(std::int32_t),
         "This function relies on 4-byte int. "
@@ -308,7 +308,7 @@ int ecl3_keyword_type(const char* str, int* type) {
     }
 }
 
-int ecl3_keyword_size(int type, int* size) {
+int ecl3_type_size(int type, int* size) {
 
     switch (type) {
         case ECL3_INTE:
@@ -440,7 +440,7 @@ int ecl3_keyword_size(int type, int* size) {
     static_assert(
         '0' == 48,
         "this function assumes ASCII-compatible encoding of chars - "
-        "address the ecl3_keyword_types enum to be compatible for your charset"
+        "address the ecl3_typeids enum to be compatible for your charset"
     );
 
     /*
@@ -463,7 +463,7 @@ int ecl3_keyword_size(int type, int* size) {
     return ECL3_OK;
 }
 
-const char* ecl3_keyword_type_name(int type) {
+const char* ecl3_type_name(int type) {
     switch (type) {
         case ECL3_INTE: return "INTE";
         case ECL3_REAL: return "REAL";
