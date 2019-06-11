@@ -501,7 +501,7 @@ void roundtrip() {
 
     ecl3_put_native(buffer.data(), source.data(), fmt, size);
     ecl3_get_native(result.data(), buffer.data(), fmt, size);
-    INFO("fmt = " << fmt);
+    INFO("fmt = " << ecl3_keyword_type_name(fmt));
     CHECK_THAT(result, Equals(source));
 }
 
@@ -516,7 +516,7 @@ void read_formatted() {
 
     auto result = std::vector< T >(size);
     ecl3_get_native(result.data(), converted.data(), fmt, size);
-    INFO("fmt = " << fmt);
+    INFO("fmt = " << ecl3_keyword_type_name(fmt));
     CHECK_THAT(result, Equals(source));
 }
 

@@ -120,6 +120,20 @@ ECL3_API
 int ecl3_keyword_size(int type, int* size);
 
 /*
+ * Get a static, null-terminated string representation of type. This is the
+ * inverse function of ecl3_keyword_type.
+ *
+ * In short, it holds that:
+ *
+ * int type;
+ * ecl3_keyword_type("INTE", &type)
+ * const char* name = ecl3_keyword_type_name(type);
+ * assert(strncmp("INTE", name, 4) == 0)
+ */
+ECL3_API
+const char* ecl3_keyword_type_name(int type);
+
+/*
  * Get the size of an array header
  *
  * The array header is the record:
