@@ -22,9 +22,9 @@
 extern "C" {
 #endif
 
-#include <etr/ecl/ecl_kw.h>
-#include <etr/ecl/ecl_grid.h>
-#include <etr/ecl/ecl_file.h>
+#include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_file.h>
 
 double ecl_grav_phase_deltag( double utm_x ,
                               double utm_y ,
