@@ -53,6 +53,7 @@ If the fixed path, given by the default ../../lib64 or ERT_LIBRARY_PATH
 alternative fails, the loader will try the default load behaviour
 before giving up completely.
 """
+import os
 import os.path
 import sys
 
@@ -134,7 +135,8 @@ from .ecl_util import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclUnitTypeEnu
 from .util.util import EclVersion
 from .util.util import updateAbortSignals
 
-updateAbortSignals( )
+if not os.getenv('ECL_SKIP_SIGNAL'):
+    updateAbortSignals( )
 
 def root():
     """
