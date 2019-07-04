@@ -257,6 +257,7 @@ try_compile( HAVE_SIGBUS  ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/
 try_compile( HAVE_PID_T   ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_pid_t.c )
 try_compile( HAVE_MODE_T  ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_mode_t.c )
 try_compile( ERT_HAVE_ISFINITE ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_isfinite.c)
+try_compile( HAVE_SIGHANDLER_T ${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR}/cmake/Tests/test_have_sighandler.c)
 
 if (ERT_HAVE_READLINKAT)
   try_compile( ERT_HAVE_READLINKAT_DECLARATION

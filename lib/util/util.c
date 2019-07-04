@@ -4405,7 +4405,17 @@ char * util_realloc_sprintf(char * s , const char * fmt , ...) {
   The various signals can be found in: /usr/include/bits/signum.h
 */
 
-sighandler_t previous_abort_handler = SIG_IGN;
+/* Redefining sighandler_t in case it isn't defined (Windows).*/
+
+#ifndef HAVE_SIGHANDLER_T
+typedef void (*sighandler_t)(int);
+#endif
+
+/* When installing our abort handler, remeber if there was a previous one,
+ * so we can call that afterwards */
+
+
+static sighandler_t previous_abort_handler = SIG_IGN;
 
 void util_abort_signal(int the_signal) {
     if (previous_abort_handler == SIG_IGN) {

@@ -25,7 +25,6 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <time.h>
-#include <signal.h>
 
 
 #include <ert/util/ert_api_config.hpp>
@@ -387,13 +386,6 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   CONTAINS_HEADER(time_t);
   CONTAINS_HEADER(size_t);
 #undef CONTAINS_HEADER
-
-/* Redefining sighandler_t in case it isn't defined (Windows).
-This is harmless on other platforms. */
-typedef void (*sighandler_t)(int);
-/* When installing our abort handler, remeber if there was a previous one,
-* so we can call that afterwards */
-extern sighandler_t previous_abort_handler;
 
 #ifdef _MSC_VER
 #define util_abort(fmt , ...) util_abort__(__FILE__ , __func__ , __LINE__ , fmt , __VA_ARGS__)
