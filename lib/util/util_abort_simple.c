@@ -29,7 +29,6 @@ void util_abort__(const char * file , const char * function , int line , const c
   }
   fprintf(stderr,"-----------------------------------------------------------------\n");
 
-  signal(SIGABRT , SIG_DFL);
   fprintf(stderr , "Aborting ... \n");
   assert(0);
   abort();

@@ -248,8 +248,10 @@ static char* __abort_program_message;
 
 void util_abort__(const char * file , const char * function , int line , const char * fmt , ...) {
   util_abort_test_intercept( function );
-  pthread_mutex_lock( &__abort_mutex ); /* Abort before unlock() */
-  {
+  /* if we cannot lock, presumably we could not open a file and we are calling
+   * util_abort recursively */
+  int lock_status = pthread_mutex_trylock( &__abort_mutex );
+  if (lock_status == 0) {
     char * filename = NULL;
     FILE * abort_dump = NULL;
 
@@ -277,7 +279,7 @@ void util_abort__(const char * file , const char * function , int line , const c
       addr2line; the call is based on util_spawn() which is
       currently only available on POSIX.
     */
-    const bool include_backtrace = true;
+    const bool include_backtrace = (lock_status == 0);
     if (include_backtrace) {
       if (__abort_program_message != NULL) {
 #if !defined(__GLIBC__)
@@ -313,10 +315,17 @@ void util_abort__(const char * file , const char * function , int line , const c
     }
     chmod(filename, 00644); // -rw-r--r--
     free(filename);
+    pthread_mutex_unlock(&__abort_mutex);
+  } else {
+    /* Failure in util_abort. Print basic error message and exit. */
+    fprintf(stderr, "Error while handling error. Exiting. File: %s Function: %s, Line: %d\n", file, function, line);
+    fprintf(stderr , "Error message: ");
+    va_list ap;
+    va_start(ap , fmt);
+    vfprintf(stderr , fmt , ap);
+    va_end(ap);
   }
 
-  pthread_mutex_unlock(&__abort_mutex);
-  signal(SIGABRT, SIG_DFL);
   abort();
 }
 

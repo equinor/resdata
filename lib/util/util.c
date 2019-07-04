@@ -4405,11 +4405,16 @@ char * util_realloc_sprintf(char * s , const char * fmt , ...) {
   The various signals can be found in: /usr/include/bits/signum.h
 */
 
+sighandler_t previous_abort_handler = SIG_IGN;
 
-void util_abort_signal(int signal) {
-  util_abort("Program received signal:%d\n" , signal);
+void util_abort_signal(int the_signal) {
+    if (previous_abort_handler == SIG_IGN) {
+        signal(SIGABRT, SIG_DFL);
+    } else {
+        signal(SIGABRT, previous_abort_handler);
+    }
+    util_abort("Program received signal:%d\n" , the_signal);
 }
-
 
 void util_install_signals(void) {
 #ifdef HAVE_SIGBUS
@@ -4419,7 +4424,14 @@ void util_install_signals(void) {
   signal(SIGSEGV , util_abort_signal);    /* Segmentation violation, i.e. overwriting memory ... */
   signal(SIGTERM , util_abort_signal);    /* If killing the enkf program with SIGTERM (the default kill signal) you will get a backtrace.
                                              Killing with SIGKILL (-9) will not give a backtrace.*/
-  signal(SIGABRT , util_abort_signal);    /* Signal abort. */
+
+
+  sighandler_t previous_abort = signal(SIGABRT , util_abort_signal);    /* Signal abort. */
+  if (previous_abort != util_abort_signal) {
+      /* Let previously installed abort handler (i.e. python faulthandler) be called in the end */
+      previous_abort_handler = previous_abort;
+  }
+
   signal(SIGILL  , util_abort_signal);    /* Signal illegal instruction. */
   signal(SIGFPE  , util_abort_signal);    /* Floating point exception */
 }
@@ -4429,10 +4441,7 @@ void util_install_signals(void) {
    have not been modified from the default state.
 */
 
-static void update_signal( int signal_nr ) {
-  /* Redefining sighandler_t in case it isn't defined (Windows).
-     This is harmless on other platforms. */
-  typedef void (*sighandler_t)(int);
+static void update_signal( int signal_nr) {
 
   sighandler_t current_handler = signal(signal_nr , SIG_DFL);
   if (current_handler == SIG_DFL)
