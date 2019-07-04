@@ -26,7 +26,7 @@
 #cmakedefine HAVE_CXX_SHARED_PTR
 #cmakedefine HAVE_POSIX_UNLINK
 #cmakedefine HAVE_WINDOWS_UNLINK
-
+#cmakedefine HAVE_SIGHANDLER_T
 
 #cmakedefine HAVE_POSIX_ACCESS
 #cmakedefine HAVE_WINDOWS__ACCESS
