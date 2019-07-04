@@ -341,6 +341,7 @@ foreach (name   ecl_alloc_cpgrid
                 ecl_grid_cell_contains
                 ecl_unsmry_loader_test
                 ecl_init_file
+                ecl_kw_space_pad
                 ecl_kw_cmp_string
                 ecl_kw_equal
                 ecl_kw_fread
