@@ -134,6 +134,7 @@ int             ecl_util_get_month_nr(const char * month_name);
 int             ecl_util_fname_report_cmp(const void *f1, const void *f2);
 time_t          ecl_util_make_date(int mday , int month , int year);
 time_t          ecl_util_make_date__(int mday , int month , int year, int * year_offset);
+time_t          ecl_util_make_datetime(int sec, int min, int hour, int mday , int month , int year);
 ert_ecl_unit_enum   ecl_util_get_unit_set(const char * data_file);
 
 bool            ecl_util_valid_basename_fmt( const char * basename_fmt );
@@ -144,6 +145,7 @@ int             ecl_util_select_filelist( const char * path , const char * base 
 void            ecl_util_append_month_range( time_t_vector_type * date_list , time_t start_date , time_t end_date , bool force_append_end);
 void            ecl_util_init_month_range( time_t_vector_type * date_list , time_t start_date , time_t end_date);
 void            ecl_util_set_date_values(time_t t , int * mday , int * month , int * year);
+void            ecl_util_set_datetime_values(time_t t , int * sec, int * min, int * hour, int * mday , int * month , int * year);
 bool            ecl_util_path_access(const char * ecl_case);
 #ifdef __cplusplus
 }

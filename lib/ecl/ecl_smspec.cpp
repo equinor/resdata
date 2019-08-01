@@ -425,12 +425,15 @@ static void ecl_smspec_fwrite_DIMENS(const ecl_smspec_type * smspec, fortio_type
 
 static void ecl_smspec_fwrite_STARTDAT(const ecl_smspec_type * smspec, fortio_type * fortio) {
   ecl_kw_type * startdat_kw = ecl_kw_alloc( STARTDAT_KW , STARTDAT_SIZE , ECL_INT );
-  int day,month,year;
-  ecl_util_set_date_values( smspec->sim_start_time , &day, &month , &year);
+  int second,minute,hour,mday,month,year;
+  ecl_util_set_datetime_values(smspec->sim_start_time, &second, &minute, &hour, &mday,&month,&year);
 
-  ecl_kw_iset_int( startdat_kw , STARTDAT_DAY_INDEX   , day );
+  ecl_kw_iset_int( startdat_kw , STARTDAT_DAY_INDEX   , mday );
   ecl_kw_iset_int( startdat_kw , STARTDAT_MONTH_INDEX , month );
   ecl_kw_iset_int( startdat_kw , STARTDAT_YEAR_INDEX  , year );
+  ecl_kw_iset_int( startdat_kw , STARTDAT_HOUR_INDEX   , hour );
+  ecl_kw_iset_int( startdat_kw , STARTDAT_MINUTE_INDEX , minute );
+  ecl_kw_iset_int( startdat_kw , STARTDAT_MICRO_SECOND_INDEX , second  * 1000000);
 
   ecl_kw_fwrite( startdat_kw , fortio );
   ecl_kw_free( startdat_kw );
@@ -1118,9 +1121,19 @@ static bool ecl_smspec_fread_header(ecl_smspec_type * ecl_smspec, const char * h
 
     {
       int * date = ecl_kw_get_int_ptr(startdat);
-      ecl_smspec->sim_start_time = ecl_util_make_date(date[STARTDAT_DAY_INDEX]   ,
-          date[STARTDAT_MONTH_INDEX] ,
-          date[STARTDAT_YEAR_INDEX]);
+      int year = date[STARTDAT_YEAR_INDEX];
+      int month = date[STARTDAT_MONTH_INDEX];
+      int day = date[STARTDAT_DAY_INDEX];
+      int hour = 0;
+      int min = 0;
+      int sec = 0;
+      if (ecl_kw_get_size(startdat) == 6) {
+          hour = date[STARTDAT_HOUR_INDEX];
+          min = date[STARTDAT_MINUTE_INDEX];
+          sec = date[STARTDAT_MICRO_SECOND_INDEX] / 1000000;
+      }
+
+      ecl_smspec->sim_start_time = ecl_util_make_datetime(sec, min, hour, day, month, year);
     }
 
     ecl_smspec->grid_dims[0] = ecl_kw_iget_int(dimens , DIMENS_SMSPEC_NX_INDEX );
