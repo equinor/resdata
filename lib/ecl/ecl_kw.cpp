@@ -283,7 +283,14 @@ static char * ecl_kw_alloc_output_buffer(const ecl_kw_type * ecl_kw) {
     for (int i=0; i < ecl_kw->size; i++) {
       size_t buffer_offset = i * sizeof_iotype;
       size_t data_offset = i * sizeof_ctype;
-      memcpy(&buffer[buffer_offset], &ecl_kw->data[data_offset], sizeof_iotype);
+      size_t string_length = strlen(&ecl_kw->data[data_offset]);
+
+      for (size_t i=0; i < string_length; i++)
+        buffer[buffer_offset + i] = ecl_kw->data[data_offset + i];
+
+      // Pad with spaces
+      for (size_t i = string_length; i < sizeof_iotype; i++)
+        buffer[buffer_offset + i] = ' ';
     }
 
     return buffer;
@@ -332,7 +339,9 @@ static void ecl_kw_load_from_input_buffer(ecl_kw_type * ecl_kw, char * buffer) {
   }
 
   /*
-    Special case: insert '\0' termination at end of strings loaded from file.
+    Special case: insert '\0' termination at end of strings loaded from file;
+    when writing out again strlen() will be called on data - i.e. it is
+    paramount to add this '\0'.
   */
   if (ecl_type_is_char(ecl_kw->data_type) || ecl_type_is_string(ecl_kw->data_type)) {
     const char null_char = '\0';
