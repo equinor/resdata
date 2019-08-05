@@ -443,10 +443,13 @@ values (2e20) are denoted with '*'.
 
 
 /* Magic indices used to locate day,month,year from the STARTDAT keyword. */
-#define STARTDAT_DAY_INDEX   0
-#define STARTDAT_MONTH_INDEX 1
-#define STARTDAT_YEAR_INDEX  2
-#define STARTDAT_SIZE        3
+#define STARTDAT_DAY_INDEX          0
+#define STARTDAT_MONTH_INDEX        1
+#define STARTDAT_YEAR_INDEX         2
+#define STARTDAT_HOUR_INDEX         3
+#define STARTDAT_MINUTE_INDEX       4
+#define STARTDAT_MICRO_SECOND_INDEX 5
+#define STARTDAT_SIZE               6
 
 
 /* Magic indices uset to locate the grid dimensions from the DIMENS
