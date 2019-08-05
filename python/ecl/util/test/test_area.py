@@ -20,6 +20,9 @@ from ecl import EclPrototype
 
 
 class TestArea(BaseCClass):
+
+    __test__ = False
+
     _test_area_alloc           = EclPrototype("void* test_work_area_alloc__( char*, bool )" , bind = False)
     _free                      = EclPrototype("void test_work_area_free( test_area )")
     _install_file              = EclPrototype("void test_work_area_install_file( test_area , char* )")
@@ -113,6 +116,9 @@ class TestArea(BaseCClass):
 
 
 class TestAreaContext(object):
+
+    __test__ = False
+
     def __init__(self, test_name, store_area=False):
         self.test_name = test_name
         self.store_area = store_area
