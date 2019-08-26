@@ -25,6 +25,6 @@ class EclInitFile(Ecl3DFile):
         if file_type == EclFileEnum.ECL_INIT_FILE:
             super(EclInitFile, self).__init__(grid, filename, flags)
         else:
-            err = 'The input filename "%s" does not correspond to a restart file.'
+            err = 'The input filename "%s" does not correspond to an init file.'
             err += '  Please follow the Eclipse naming conventions.'
             raise ValueError(err % filename)
