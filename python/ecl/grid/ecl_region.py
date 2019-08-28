@@ -52,18 +52,22 @@ def select_method(select):
     Consider this example:
 
        region = EclRegion( grid , False )
-       region.select_islice(0 , 5)     # Selects all cells with i:[0:5]
-       region.select_jslice(0 , 5)     # Selects all cells with j:[0:5]
+       region.select_islice(0, 5)     # Selects all cells with i[0:5]
+       region.select_jslice(0, 5)     # Selects all cells with j[0:5]
 
     When these two calls have completed selection will contain all
     the cells which are either in i-interval [0:5] or in
     j-interval [0:5]. If we supply the @intersect argument in the
     second call the j selection will only be applied to the cells
-    in i:[0:5] interval:
+    in i[0:5] interval:
 
        region = EclRegion( grid , False )
-       region.select_islice(0 , 5)     # Selects all cells with i:[0:5]
-       region.select_jslice(0 , 5)     # Selects all cells with j:[0:5] AND i:[0:5]
+
+       # Select all cells with i[0:5]:
+       region.select_islice(0, 5)
+
+       # Select all cells with j[0:5] AND i[0:5]:
+       region.select_jslice(0, 5, intersect=True)
     """
 
     def select_wrapper(self , *args ,  **kwargs):
