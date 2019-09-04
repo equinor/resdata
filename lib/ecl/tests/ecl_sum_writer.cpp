@@ -106,6 +106,7 @@ void test_write_read( ) {
     write_summary( name , start_time , nx , ny , nz , num_dates , num_ministep , ministep_length);
     ecl_sum = ecl_sum_fread_alloc_case( name , ":" );
     test_assert_true( ecl_sum_is_instance( ecl_sum ));
+    test_assert_true( ecl_sum_get_start_time(ecl_sum) == start_time );
 
     /* Time direction */
     test_assert_time_t_equal( start_time , ecl_sum_get_start_time(ecl_sum));
