@@ -3100,7 +3100,7 @@ char * util_alloc_strip_copy(const char *src) {
 
 
 
-char ** util_alloc_stringlist_copy(const char **src, int len) {
+char ** util_alloc_stringlist_copy(char const * const * src, int len) {
   if (src != NULL) {
     int i;
     char ** copy = (char**)util_calloc(len , sizeof * copy );
