@@ -335,30 +335,18 @@ const char * ecl_util_file_type_name( ecl_file_enum file_type ) {
   return NULL;
 }
 
-static bool valid_base(const char * input_base, bool * upper_case) {
-  bool upper = false;
-  bool lower = false;
+static bool base_has_upper(const char * input_base) {
   const char * base = strrchr(input_base, UTIL_PATH_SEP_CHAR);
   if (base == NULL)
     base = input_base;
 
   for (size_t i=0; i < strlen(base); i++) {
-    unsigned char c = base[i];
-
-    if (isupper(c))
-      upper = true;
-
-    if (islower(c))
-      lower = true;
-
+    if (isupper(base[i]))
+      return true;
   }
 
-  if (upper_case)
-    *upper_case = upper;
-  return !(lower && upper);
+  return false;
 }
-
-
 
 
 
@@ -373,11 +361,6 @@ static bool valid_base(const char * input_base, bool * upper_case) {
 */
 
 static char * ecl_util_alloc_filename_static(const char * path, const char * base , ecl_file_enum file_type , bool fmt_file, int report_nr, bool must_exist) {
-  bool upper_case;
-  if (!valid_base(base, &upper_case))
-    return NULL;
-
-
   char * filename;
   char * ext;
   switch (file_type) {
@@ -454,7 +437,7 @@ static char * ecl_util_alloc_filename_static(const char * path, const char * bas
     ext        = NULL;
   }
 
-  if (!upper_case) {
+  if (!base_has_upper(base)) {
     for (size_t i=0; i < strlen(ext); i++)
       ext[i] = tolower(ext[i]);
   }
@@ -645,34 +628,29 @@ static int ecl_util_select_predicate_filelist(const char * path, const char * ba
 
 
 int ecl_util_select_filelist( const char * path , const char * base , ecl_file_enum file_type , bool fmt_file , stringlist_type * filelist) {
-  bool valid_case = true;
-  bool upper_case = true;
   stringlist_clear(filelist);
 
-  if (base)
-    valid_case = valid_base(base, &upper_case);
+  bool upper_case = base_has_upper(base);
+  if (file_type == ECL_SUMMARY_FILE || file_type == ECL_RESTART_FILE)
+    return ecl_util_select_predicate_filelist(path, base, file_type, fmt_file, upper_case, filelist);
 
-  if (valid_case) {
-    if (file_type == ECL_SUMMARY_FILE || file_type == ECL_RESTART_FILE)
-      return ecl_util_select_predicate_filelist(path, base, file_type, fmt_file, upper_case, filelist);
+  char * ext_pattern = util_alloc_string_copy(ecl_util_get_file_pattern( file_type , fmt_file ));
 
-    char * ext_pattern = util_alloc_string_copy(ecl_util_get_file_pattern( file_type , fmt_file ));
-    char * file_pattern;
-
-    if (!upper_case) {
-      for (size_t i=0; i < strlen(ext_pattern); i++)
-        ext_pattern[i] = tolower(ext_pattern[i]);
-    }
-
-    if (base)
-      file_pattern = util_alloc_filename(NULL , base, ext_pattern);
-    else
-      file_pattern = util_alloc_filename(NULL, "*", ext_pattern);
-
-    stringlist_select_matching_files( filelist , path , file_pattern );
-    free( file_pattern );
-    free( ext_pattern );
+  if (!upper_case) {
+    for (size_t i=0; i < strlen(ext_pattern); i++)
+      ext_pattern[i] = tolower(ext_pattern[i]);
   }
+
+  char * file_pattern;
+  if (base)
+    file_pattern = util_alloc_filename(NULL , base, ext_pattern);
+  else
+    file_pattern = util_alloc_filename(NULL, "*", ext_pattern);
+
+  stringlist_select_matching_files( filelist , path , file_pattern );
+  free( file_pattern );
+  free( ext_pattern );
+
   return stringlist_get_size( filelist );
 }
 
@@ -1348,35 +1326,18 @@ ert_ecl_unit_enum ecl_util_get_unit_set(const char * data_file) {
 }
 
 
-/**
-   This function checks that all the characters in the input @basename
-   are either lowercase, or uppercase. If presented with a mixed-case
-   basename the multimillion $$ program ECLIPSE will die a horrible
-   death - impressive ehh?!
-*/
-
-
-bool ecl_util_valid_basename( const char * basename ) {
-  return valid_base(basename, NULL);
-}
-
-
 bool ecl_util_valid_basename_fmt(const char * basename_fmt)
-{
-  bool valid;
-
+{  
   char * eclbasename_fmt = util_split_alloc_filename(basename_fmt);
 
+  bool valid = true;
+  
   const char * percent_ptr = strchr(eclbasename_fmt, '%');
   if (percent_ptr) {
     percent_ptr++;
     while (true)
     {
-      if (*percent_ptr == 'd')
-      {
-        char * basename_instance = util_alloc_sprintf(eclbasename_fmt, 0);
-        valid = ecl_util_valid_basename(basename_instance);
-        free(basename_instance);
+      if (*percent_ptr == 'd') {
         break;
       } else if (!isdigit(*percent_ptr)) {
         valid = false;
@@ -1384,8 +1345,7 @@ bool ecl_util_valid_basename_fmt(const char * basename_fmt)
       } else
         percent_ptr++;
     }
-  } else
-    valid = ecl_util_valid_basename(eclbasename_fmt);
+  }
 
   free(eclbasename_fmt);
 
