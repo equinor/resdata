@@ -85,10 +85,40 @@ void test_truncated() {
   }
 }
 
+void test_mixed_case() {
+  ecl::util::TestArea ta("mixed_case_file");
+  int num_kw;
+  {
+    ecl_grid_type * grid = ecl_grid_alloc_rectangular(20,20,20,1,1,1,NULL);
+    ecl_grid_fwrite_EGRID2( grid , "TESTcase.EGRID", ECL_METRIC_UNITS );
+    ecl_grid_free( grid );
+  }
+  {
+    ecl_file_type * ecl_file = ecl_file_open("TESTcase.EGRID" , 0 );
+    test_assert_true( ecl_file_is_instance( ecl_file ) );
+    num_kw = ecl_file_get_size( ecl_file );
+    test_assert_int_equal( ecl_file_get_num_distinct_kw( ecl_file ), 11);
+    ecl_file_close( ecl_file );
+  }
+
+  {
+    offset_type file_size = util_file_size( "TESTcase.EGRID");
+    FILE * stream = util_fopen("TESTcase.EGRID" , "r+");
+    util_ftruncate( stream , file_size / 2 );
+    fclose( stream );
+  }
+  {
+    ecl_file_type * ecl_file = ecl_file_open("TESTcase.EGRID" , 0 );
+    test_assert_true( ecl_file_get_size( ecl_file) < num_kw );
+    ecl_file_close( ecl_file );
+  }
+}
+
 
 int main( int argc , char ** argv) {
   test_writable(10);
   test_writable(1337);
   test_truncated();
+  test_mixed_case();
   exit(0);
 }
