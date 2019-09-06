@@ -36,13 +36,20 @@ void test_filename_case() {
   char * f1 = ecl_util_alloc_filename(NULL, "mixedBase", ECL_EGRID_FILE, false, -1);
   char * f2 = ecl_util_alloc_filename(NULL, "UPPER", ECL_EGRID_FILE, false, -1);
   char * f3 = ecl_util_alloc_filename(NULL , "lower", ECL_EGRID_FILE, false, -1);
+  char * f4 = ecl_util_alloc_filename(NULL , "lower1", ECL_EGRID_FILE, false, -1);
+  char * f5 = ecl_util_alloc_filename(NULL , "UPPER1", ECL_EGRID_FILE, false, -1);
 
-  test_assert_NULL( f1 );
+  test_assert_string_equal( f1 , "mixedBase.EGRID");
   test_assert_string_equal( f2 , "UPPER.EGRID");
   test_assert_string_equal( f3 , "lower.egrid");
+  test_assert_string_equal( f4 , "lower1.egrid");
+  test_assert_string_equal( f5 , "UPPER1.EGRID");
 
+  free(f1);
   free(f2);
   free(f3);
+  free(f4);
+  free(f5);
 }
 
 
@@ -64,6 +71,12 @@ void test_file_list() {
     free( fname);
   }
 
+  for (int i = 0; i < 10; i += 2) {
+    char * fname = util_alloc_sprintf("CaseMiXed.F%04d", i);
+    FILE * stream = util_fopen(fname, "w");
+    fclose(stream);
+    free( fname);
+  }
 
   ecl_util_select_filelist(NULL , "case" , ECL_RESTART_FILE, true, s);
   test_assert_int_equal( stringlist_get_size(s), 5);
@@ -73,8 +86,8 @@ void test_file_list() {
     free( fname);
   }
 
-  ecl_util_select_filelist(NULL , "Case" , ECL_RESTART_FILE, true, s);
-  test_assert_int_equal( stringlist_get_size(s), 0);
+  ecl_util_select_filelist(NULL , "CaseMiXed" , ECL_RESTART_FILE, true, s);
+  test_assert_int_equal( stringlist_get_size(s), 5);
 
 
   util_make_path("path");
