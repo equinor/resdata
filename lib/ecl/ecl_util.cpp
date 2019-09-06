@@ -1511,7 +1511,7 @@ void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year) 
 }
 
 void ecl_util_set_datetime_values(time_t t , int * sec, int * min, int * hour, int * mday , int * month , int * year) {
-  return util_set_date_values_utc(t,mday,month,year);
+  return util_set_datetime_values_utc(t,sec,min,hour,mday,month,year);
 }
 
 
