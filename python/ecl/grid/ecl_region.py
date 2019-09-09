@@ -25,6 +25,7 @@ combined e.g. with logical &.
 When the selection process is complete the region instance can be
 queried for the corresponding list of indices.
 """
+from functools import wraps
 import ctypes
 
 from cwrap import BaseCClass
@@ -69,7 +70,7 @@ def select_method(select):
        # Select all cells with j[0:5] AND i[0:5]:
        region.select_jslice(0, 5, intersect=True)
     """
-
+    @wraps(select)
     def select_wrapper(self , *args ,  **kwargs):
         intersect = 'intersect' in kwargs and kwargs['intersect']
         if intersect:

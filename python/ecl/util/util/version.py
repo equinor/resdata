@@ -1,7 +1,9 @@
+from functools import wraps
+
 from ecl import EclPrototype
 
-
 def cmp_method(method):
+    @wraps(method)
     def cmp_wrapper(self, other):
         if not isinstance(other, Version):
             other = Version(other[0], other[1], other[2])
