@@ -199,7 +199,8 @@ endif ()
 
 set_target_properties(ecl PROPERTIES
                           VERSION ${ECL_VERSION_MAJOR}.${ECL_VERSION_MINOR}
-                          SOVERSION ${ECL_VERSION_MAJOR})
+                          SOVERSION ${ECL_VERSION_MAJOR}
+                          POSITION_INDEPENDENT_CODE ON)
 
 install(TARGETS ecl
         EXPORT  ecl-config
