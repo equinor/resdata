@@ -1130,7 +1130,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         if report_only:
             return [ date2num(dt) for dt in self.report_dates ]
         else:
-            return [ date2num(dt) for dt in self.dates ]
+            return [date2num(dt) for dt in self.dates]
 
 
     @property

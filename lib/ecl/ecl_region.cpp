@@ -240,7 +240,7 @@ const int_vector_type * ecl_region_get_global_list( ecl_region_type * region ) {
 }
 
 /*****************************************************************/
-/* Stupid cpp compat/legacy/cruft functions. */
+/* Cpp compat/legacy/cruft functions. */
 int ecl_region_get_active_size_cpp(  ecl_region_type * region ) {
   return int_vector_size( ecl_region_get_active_list( region ));
 }
@@ -428,7 +428,7 @@ void ecl_region_deselect_in_interval( ecl_region_type * region , const ecl_kw_ty
 /*****************************************************************/
 
 /**
-   This is waaaay to fucking large:
+   This is too large:
 
    Float / Int / double *  Active / Global  *  More / Less ==> In total 12 code blocks written out ...
 */

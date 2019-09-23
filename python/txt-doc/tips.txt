@@ -135,7 +135,7 @@ happens:
      if not things will go belly up with util_abort().
 
 Potential problems with this (the strict mapping between size and
-report_step can be fucked up):
+report_step can be out of sync):
 
   1. If you have problems with your forward model and are "trying
      again" old files left lying around can create problems.
@@ -549,7 +549,7 @@ SConstruct files:
 
     bash% scons SDP_INSTALL
 
-Unfortunately it has been a major pain in the ass to get SCons to
+Unfortunately it has been hard to get SCons to
 behave according to the requirements listed above; for the more
 extensive installation procedures there are therefore simple Python
 scripts "install.py" which should be invoked after the SCons build is

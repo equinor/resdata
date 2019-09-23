@@ -1699,7 +1699,7 @@ static void ecl_kw_fwrite_data_formatted( ecl_kw_type * ecl_kw , fortio_type * f
             }
             break;
           case(ECL_MESS_TYPE):
-            util_abort("%s: internal fuckup : message type keywords should NOT have data ??\n",__func__);
+            util_abort("%s: Internal inconsistency : message type keywords should not have data\n",__func__);
             break;
           }
         }

@@ -1180,16 +1180,12 @@ int ecl_util_get_month_nr(const char * month_name) {
 
 
 /*
-  I have *intentionally* dived straight at the problem of extracting
-  the start_date; otherwise one might quite quickly end up with a
-  half-baked DATA-file parser. I think that path leads straight to an
-  asylum. But of course - not many points are awarded for pointing out
-  that this parsing is extremly ugly.
+    The parsing of the data file has room for improvement, (or should
+    be removed?).
 
     ECLIPSE100 has default date: 1. of january 1983.
     ECLIPSE300 has default date: 1. of january 1990.
 
-  They don't have much style those fuckers at Schlum ...
 */
 
 

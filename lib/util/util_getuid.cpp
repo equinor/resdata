@@ -122,7 +122,7 @@ void static util_clear_directory__( const char *path , bool strict_uid , bool un
               if ((!strict_uid) || (buffer.st_uid == uid)) {
                 int unlink_return = unlink(full_path);
                 if (unlink_return != 0) {
-                  /* Unlink failed - we don't give a shit. */
+                  /* Unlink failed */
                 }
               }
             }
@@ -137,7 +137,7 @@ void static util_clear_directory__( const char *path , bool strict_uid , bool un
     if (unlink_root) {
       int rmdir_return = rmdir(path);
       if (rmdir_return != 0) {
-        /* Unlink failed - we don't give a shit. */
+        /* Unlink failed */
       }
     }
   }

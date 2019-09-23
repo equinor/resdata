@@ -92,7 +92,7 @@ class FaultTest(EclTest):
             t = faults.splitLine("'F1'             149     29   29      1   43    'Y' /")
 
         with self.assertRaises(ValueError):
-            # Quote fuckup
+            # Quote problem
             t = faults.splitLine("'F1             149     149 29   29      1   43    'X' /")
 
 

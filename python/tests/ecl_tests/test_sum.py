@@ -451,7 +451,7 @@ class SumTest(EclTest):
 
 
     def test_restart_too_long_history_path(self):
-        with TestAreaContext("restart_test_too_fucking_long_path_for_the_eclipse_restart_keyword_1234567890123456789012345678901234567890"):
+        with TestAreaContext("restart_test_too_long_path_for_the_eclipse_restart_keyword_1234567890123456789012345678901234567890"):
             history =  create_case(case = "HISTORY")
             history.fwrite()
 

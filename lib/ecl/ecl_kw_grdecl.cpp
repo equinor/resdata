@@ -30,7 +30,7 @@
 /*
   This file is devoted to different routines for reading and writing
   GRDECL formatted files. These files are very weakly formatted; and
-  generally a pain in the ass to work with. Things to consider
+  generally hard to work with. Things to consider
   include:
 
    1. The files have no proper header; only the name of the keyword.
@@ -554,9 +554,8 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int 
    This function will read and allocate the next keyword in the
    file. This function does not take either kw or the size of the kw
    as input, and has virtually zero possibilities to check what it is
-   doing. The possibilities of failure are fucking endless, and the
-   function should only be used when you are goddamn certain that the
-   input file is well formatted.
+   doing. The function should only be used when you are certain
+   that the input file is well formatted.
 */
 
 ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl__( FILE * stream , bool strict , ecl_data_type data_type) {

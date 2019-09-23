@@ -666,7 +666,7 @@ void basic_parser_strip_buffer(const basic_parser_type * parser , char ** __buff
     }
 
     /**
-       OK -it is a god damn normal charactar - copy it straight over:
+       OK -it is a normal charactar - copy it straight over:
     */
     target[target_position] = src[src_position];
     src_position    += 1;
