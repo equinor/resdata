@@ -94,7 +94,7 @@ class KWTest(EclTest):
 
     def test_create(self):
         with self.assertRaises(ValueError):
-            EclKW("ToGodDamnLong", 100, EclDataType.ECL_CHAR)
+            EclKW("ThisIsTooLong", 100, EclDataType.ECL_CHAR)
 
     def test_sum(self):
         for ecl_type in [EclDataType.ECL_CHAR, EclDataType.ECL_STRING(42)]:

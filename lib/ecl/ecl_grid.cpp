@@ -674,9 +674,7 @@ static void point_copy_values(point_type * p , const point_type * src) {
 
 #define CELL_FLAG_VALID    1     /* In the case of GRID files not necessarily all cells geometry values set - in that case this will be left as false. */
 #define CELL_FLAG_CENTER   2     /* Has the center value been calculated - this is by default not done to speed up loading a tiny bit. */
-#define CELL_FLAG_TAINTED  4     /* lazy fucking stupid reservoir engineers make invalid grid
-                                    cells - for kicks??  must try to keep those cells out of
-                                    real-world calculations with some hysteric heuristics.*/
+#define CELL_FLAG_TAINTED  4     /* Keep invalid cells out of real-world calculations with some heuristics.*/
 #define CELL_FLAG_VOLUME 8
 
 typedef struct ecl_cell_struct           ecl_cell_type;
@@ -996,8 +994,7 @@ static double ecl_cell_max_y( const ecl_cell_type * cell ) {
 
 
 /**
-   The problem is that some extremely fucking stupid reservoir
-   engineers purpousely have made grids with invalid cells. Typically
+   The problem is that some grids have invalid cells. Typically
    the cells accomodating numerical aquifers are located at an utm
    position (0,0).
 
@@ -1474,9 +1471,9 @@ static ecl_cell_type * ecl_grid_get_cell(const ecl_grid_type * grid,
 
 
 /**
-   this function uses heuristics (ahhh - i hate it) in an attempt to
-   mark cells with fucked geometry - see further comments in the
-   function ecl_cell_taint_cell() which actually does it.
+   this function uses heuristics in an attempt to mark cells with
+   wrong geometry - see further comments in the function
+   ecl_cell_taint_cell() which actually does it.
 */
 
 static void ecl_grid_taint_cells( ecl_grid_type * ecl_grid ) {
@@ -1701,8 +1698,7 @@ static void ecl_grid_set_cell_GRID(ecl_grid_type * ecl_grid,
         an LGR - this only duplicates the information which can be
         learned from the coords[5] element, and is not used in the
         current code - however in good Schlum tradition a file with
-        4/5 element COORDS keywords and LGRs might come any day - then
-        we are fucked.
+        4/5 element COORDS keywords and LGRs might come any day.
   */
 
   {
@@ -2041,7 +2037,7 @@ static void ecl_grid_pillar_cross_planes(const point_type * p0,
 
 static void ecl_grid_init_mapaxes( ecl_grid_type * ecl_grid , bool apply_mapaxes, const float * mapaxes) {
   if (ecl_grid->global_grid != NULL)
-    util_abort("%s: hmmmm - this is a major fuck up; trying to grid transformation data from mapaxes for a subgrid(lgr)\n",__func__);
+    util_abort("%s: GridError: Trying to grid transformation data from mapaxes for a subgrid(lgr)\n",__func__);
   {
     const double unit_y[2] = {mapaxes[0] - mapaxes[2] , mapaxes[1] - mapaxes[3]};
     const double unit_x[2] = {mapaxes[4] - mapaxes[2] , mapaxes[5] - mapaxes[3]};

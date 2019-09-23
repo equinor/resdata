@@ -26,7 +26,7 @@ def dequote(s):
         if s[0] == s[-1]:
             return s[1:-1]
         else:
-            raise ValueError("Quote fuckup")
+            raise ValueError("s[0] != s[-1], s[0]={}, s[-1]={}".format(s[0], s[-1]))
     else:
         return s
 

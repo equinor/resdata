@@ -26,7 +26,7 @@ if (BUILD_APPLICATIONS)
         target_link_libraries(${app} ecl)
         list(APPEND apps ${app})
         if (ERT_LINUX)
-            # The stupid .x extension creates problems on windows
+            # The .x extension creates problems on windows
             set_target_properties(${app} PROPERTIES SUFFIX ".x")
         endif ()
     endforeach ()
@@ -36,7 +36,7 @@ if (BUILD_APPLICATIONS)
         foreach (app convert grdecl_test kw_list)
             add_executable(${app} ecl/${app}.c)
             target_link_libraries(${app} ecl)
-            # The stupid .x extension creates problems on windows
+            # The .x extension creates problems on windows
             set_target_properties(${app} PROPERTIES SUFFIX ".x")
             list(APPEND apps ${app})
         endforeach ()

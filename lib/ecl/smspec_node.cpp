@@ -53,7 +53,7 @@
 
    For instance the keyword 'NEWTON' starts with 'N' and is
    classified as a NETWORK type variable. However it should rather
-   be classified as a MISC type variable. (What a fucking mess).
+   be classified as a MISC type variable.
 
    The special_vars list is used in the functions
    ecl_smspec_identify_special_var() and ecl_smspec_identify_var_type().
@@ -86,7 +86,7 @@ static const int nums_unused = 0;
 /**
    Goes through the special_vars static table to check if @var is one
    the special variables which does not follow normal naming
-   convention. If the test eavulates to true the function will return
+   convention. If the test evaluates to true the function will return
    ECL_SMSPEC_MISC_VAR, otherwise the function will return
    ECL_SMSPEC_INVALID_VAR and the variable type will be determined
    from the var name according to standard naming conventions.

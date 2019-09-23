@@ -1693,8 +1693,8 @@ bool ecl_smspec_general_is_total( const ecl_smspec_type * smspec , const char * 
      ecl_smspec_alloc_matching_general_var_list( smspec , "WGOR:*");
 
    will give a list of WGOR for ALL the wells. The function is
-   unfortunately not as useful as one might think because ECLIPSE is
-   quite stupid; it will for instance happily give you the WOPR for a
+   unfortunately not as useful as one might think because ECLIPSE
+   will for instance happily give you the WOPR for a
    water injector or WWIR for an oil producer.
 
    The function can be called several times with different patterns,
