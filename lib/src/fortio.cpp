@@ -7,8 +7,6 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include <ecl/fortio.h>
-
 namespace {
 
 /*
