@@ -26,6 +26,7 @@
   manipulation functions which explicitly use the PATH_SEP variable.
 */
 
+#include <assert.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -3166,6 +3167,16 @@ char * util_alloc_string_copy(const char *src ) {
 
 char * util_realloc_string_copy(char * old_string , const char *src ) {
   if (src != NULL) {
+    /* Realloc can either (1) reuse or (2) allocate new memory (and free the
+     * original memory block)
+     * If old_string and src are the same, we have issues in both cases:
+     * - in case (1), strcpy receives overlapping memory areas, which
+     *   breaks one of strcpy preconditions
+     * - in case (2), the area src points to is freed, so strcpy can end up
+     *   copying garbage.
+     */
+    assert(old_string != src);
+
     char *copy = (char*)util_realloc(old_string , (strlen(src) + 1) * sizeof *copy );
     strcpy(copy , src);
     return copy;
@@ -4294,11 +4305,20 @@ void * util_alloc_copy(const void * src , size_t byte_size ) {
 void * util_realloc_copy(void * org_ptr , const void * src , size_t byte_size ) {
   if (byte_size == 0 && src == NULL)
     return util_realloc( org_ptr , 0 );
-  {
-    void * next = util_realloc(org_ptr , byte_size );
-    memcpy(next , src , byte_size);
-    return next;
-  }
+
+  /* Realloc can either (1) reuse or (2) allocate new memory (and free the
+   * original memory block)
+   * If org_ptr and src are the same, we have issues in both cases:
+   * - in case (1), memcpy receives overlapping memory areas, which
+   *   breaks one of memcpy preconditions
+   * - in case (2), the area src points to is freed, so memcpy can end up
+   *   copying garbage.
+   */
+  assert(org_ptr != src);
+
+  void * next = util_realloc(org_ptr , byte_size );
+  memcpy(next , src , byte_size);
+  return next;
 }
 
 
