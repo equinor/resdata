@@ -54,7 +54,6 @@ script:
   - pushd build
   - cmake .. -DBUILD_TESTS=ON
              -DENABLE_PYTHON=ON
-             -DINSTALL_CWRAP=OFF
              -DBUILD_APPLICATIONS=ON
              -DINSTALL_ERT_LEGACY=ON
              -DERT_USE_OPENMP=ON
