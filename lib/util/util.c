@@ -4681,32 +4681,33 @@ bool util_mkdir_p(const char *_path) {
   char *path = (char *) _path;
   int current_pos = 0;
 
-  if (!util_is_directory(path)) {
-    int i = 0;
-    active_path = (char*)util_calloc(strlen(path) + 1 , sizeof * active_path );
+  if (util_is_directory(path)) return true;
 
-    do {
-      size_t n = strcspn(path , UTIL_PATH_SEP_STRING);
-      if (n < strlen(path))
-        n += 1;
-      path += n;
-      i++;
-      strncpy(active_path , _path , n + current_pos);
-      active_path[n+current_pos] = '\0';
-      current_pos += n;
+  bool success = true;
 
-      if (!util_is_directory(active_path)) {
-        if (util_mkdir(active_path) != 0) {
-          if (errno != EEXIST)
-            break;
-        }
+  int i = 0;
+  active_path = (char*)util_calloc(strlen(path) + 1 , sizeof * active_path );
+  do {
+    size_t n = strcspn(path , UTIL_PATH_SEP_STRING);
+    if (n < strlen(path))
+      n += 1;
+    path += n;
+    i++;
+    strncpy(active_path , _path , n + current_pos);
+    active_path[n+current_pos] = '\0';
+    current_pos += n;
+
+    if (!util_is_directory(active_path)) {
+      if (util_mkdir(active_path) != 0) {
+          success = false;
+          break;
       }
+    }
 
-    } while (strlen(active_path) < strlen(_path));
+  } while (strlen(active_path) < strlen(_path));
 
-    free(active_path);
-  }
-  return util_is_directory(_path);
+  free(active_path);
+  return success;
 }
 
 
