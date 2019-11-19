@@ -67,7 +67,7 @@ std::vector<double> unsmry_loader::get_vector(int pos) const {
   int_vector_free( index_map );
 
   if (ecl_file_view_flags_set(file_view, ECL_FILE_CLOSE_STREAM))
-      ecl_file_view_fclose_stream(file_view);
+    ecl_file_view_fclose_stream(file_view);
 
   return data;
 }
