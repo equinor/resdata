@@ -1570,7 +1570,7 @@ ecl_kw_type *ecl_kw_fread_alloc(fortio_type *fortio) {
   ecl_kw_type *ecl_kw = ecl_kw_alloc_empty();
   OK = ecl_kw_fread_realloc(ecl_kw , fortio);
   if (!OK) {
-    free(ecl_kw);
+    ecl_kw_free(ecl_kw);
     ecl_kw = NULL;
   }
 
