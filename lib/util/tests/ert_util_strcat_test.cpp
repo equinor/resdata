@@ -41,7 +41,9 @@ int main(int argc , char ** argv) {
 
   {
     const char * s = "Hei";
-    test_strcat(NULL, util_alloc_string_copy(s) , s);
+    char *c = util_alloc_string_copy(s);
+    test_strcat(NULL, c, s);
+    free(c);
   }
   {
     const char * s = "Hei";
@@ -51,6 +53,7 @@ int main(int argc , char ** argv) {
     char * s1 = util_alloc_string_copy("hei");
     char * s2 = util_alloc_string_copy("-Hei");
     test_strcat(s1,s2 , "hei-Hei");
+    free(s2);
   }
 
   printf("Test OK\n");
