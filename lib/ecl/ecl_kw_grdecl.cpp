@@ -285,53 +285,45 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
         // We have read a valid input string; scan numerical input values from it.
         // The multiplier algorithm will fail hard if there are spaces on either side
         // of the '*'.
+        union {
+          int i;
+          float f;
+          double d;
+        } value;
 
         int multiplier;
-        void * value_ptr = NULL;
         bool   char_input = false;
 
         if (ecl_type_is_int(data_type)) {
-          int value;
-
-          if (sscanf(buffer , "%d*%d" , &multiplier , &value) == 2)
+          if (sscanf(buffer , "%d*%d" , &multiplier , &value.i) == 2)
             {}
-          else if (sscanf( buffer , "%d" , &value) == 1)
+          else if (sscanf( buffer , "%d" , &value.i) == 1)
             multiplier = 1;
           else {
             char_input = true;
             if (strict)
               util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
           }
-
-          value_ptr = &value;
         } else if (ecl_type_is_float(data_type)) {
-          float value;
-
-          if (sscanf(buffer , "%d*%g" , &multiplier , &value) == 2)
+          if (sscanf(buffer , "%d*%g" , &multiplier , &value.f) == 2)
             {}
-          else if (sscanf( buffer , "%g" , &value) == 1)
+          else if (sscanf( buffer , "%g" , &value.f) == 1)
             multiplier = 1;
           else {
             char_input = true;
             if (strict)
               util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
           }
-
-          value_ptr = &value;
         } else if (ecl_type_is_double(data_type)) {
-          double value;
-
-          if (sscanf(buffer , "%d*%lg" , &multiplier , &value) == 2)
+          if (sscanf(buffer , "%d*%lg" , &multiplier , &value.d) == 2)
             {}
-          else if (sscanf( buffer , "%lg" , &value) == 1)
+          else if (sscanf( buffer , "%lg" , &value.d) == 1)
             multiplier = 1;
           else {
             char_input = true;
             if (strict)
               util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
           }
-
-          value_ptr = &value;
         } else
           util_abort("%s: sorry type:%s not supported \n",__func__ , ecl_type_alloc_name(data_type));
 
@@ -361,7 +353,7 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
             }
           }
 
-          iset_range( data , data_index , sizeof_ctype , value_ptr , multiplier );
+          iset_range( data , data_index , sizeof_ctype , &value , multiplier );
           data_index += multiplier;
         }
 
