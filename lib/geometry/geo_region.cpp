@@ -88,6 +88,7 @@ void geo_region_reset( geo_region_type * region ) {
 
 void geo_region_free( geo_region_type * region ) {
   int_vector_free( region->index_list );
+  free( region->active_mask );
   free( region );
 }
 
