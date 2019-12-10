@@ -16,6 +16,7 @@
    for more details.
 */
 
+#include <cstdint>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -1533,6 +1534,14 @@ static ecl_grid_type * ecl_grid_alloc_empty(ecl_grid_type * global_grid,
                                             int nz,
                                             int lgr_nr,
                                             bool init_valid) {
+  /* Check for int overflow in a roundabout way */
+  long size = static_cast<long>(nx) * static_cast<long>(ny);
+  if (nx < 0 || ny < 0 || nz < 0 || size > INT_MAX)
+    return NULL;
+  size *= static_cast<long>(nz);
+  if (size > INT_MAX)
+    return NULL;
+
   ecl_grid_type * grid = new ecl_grid_type();
   UTIL_TYPE_ID_INIT(grid , ECL_GRID_ID);
   grid->total_active   = 0;
