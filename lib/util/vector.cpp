@@ -568,7 +568,9 @@ static vector_sort_node_type * vector_alloc_sort_data( const vector_type * vecto
   }
 
   /* Sort the temporary vector */
-  qsort(sort_data , vector->size , sizeof * sort_data ,  vector_cmp);
+  if (sort_data) {
+    qsort(sort_data , vector->size , sizeof * sort_data ,  vector_cmp);
+  }
 
   return sort_data;
 }
