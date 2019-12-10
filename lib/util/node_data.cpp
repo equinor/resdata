@@ -165,7 +165,7 @@ char * node_data_get_string(const node_data_type * node_data) {
 
 node_data_type * node_data_alloc_string(const char * value) {
   void * data_copy = util_alloc_string_copy( value );
-  return node_data_alloc__( data_copy , CTYPE_VOID_POINTER , strlen(value + 1) , NULL , free);
+  return node_data_alloc__( data_copy , CTYPE_VOID_POINTER , strlen(value) + 1 , NULL , free);
 }
 
 
