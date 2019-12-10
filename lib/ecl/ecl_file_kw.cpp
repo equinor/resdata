@@ -403,16 +403,16 @@ ecl_file_kw_type ** ecl_file_kw_fread_alloc_multiple( FILE * stream , int num) {
         buffer_offset += ECL_STRING8_LENGTH;
       }
 
-      kw_size = *((int *) &buffer[ buffer_offset ]);
+      memcpy(&kw_size, &buffer[ buffer_offset ], sizeof kw_size);
       buffer_offset += sizeof kw_size;
 
-      file_offset = *((offset_type *) &buffer[ buffer_offset ]);
+      memcpy(&file_offset, &buffer[ buffer_offset ], sizeof file_offset);
       buffer_offset += sizeof file_offset;
 
-      ecl_type = *(( ecl_type_enum *) &buffer[ buffer_offset ]);
+      memcpy(&ecl_type, &buffer[ buffer_offset ], sizeof ecl_type);
       buffer_offset += sizeof ecl_type;
 
-      type_size = *((size_t *) &buffer[ buffer_offset ]);
+      memcpy(&type_size, &buffer[ buffer_offset ], sizeof type_size);
       buffer_offset += sizeof type_size;
 
       kw_list[ikw] = ecl_file_kw_alloc0( header , ecl_type_create( ecl_type , type_size ), kw_size, file_offset );
