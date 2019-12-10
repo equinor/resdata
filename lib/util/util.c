@@ -4208,6 +4208,8 @@ FILE * util_mkdir_fopen( const char * filename , const char * mode ) {
 
 
 void util_fwrite(const void *ptr , size_t element_size , size_t items, FILE * stream , const char * caller) {
+  if (!ptr)
+    return;
   size_t items_written = fwrite(ptr , element_size , items , stream);
   if (items_written != items)
     util_abort("%s/%s: only wrote %d/%d items to disk - aborting: %s(%d) .\n",caller , __func__ , items_written , items , strerror(errno) , errno);

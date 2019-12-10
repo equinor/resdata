@@ -299,8 +299,11 @@ static char * ecl_kw_alloc_output_buffer(const ecl_kw_type * ecl_kw) {
   if (ecl_type_is_mess(ecl_kw->data_type))
     return buffer;
 
-  memcpy(buffer, ecl_kw->data, buffer_size);
-  util_endian_flip_vector(buffer, sizeof_iotype, ecl_kw->size);
+  if (ecl_kw->data) {
+      memcpy(buffer, ecl_kw->data, buffer_size);
+      util_endian_flip_vector(buffer, sizeof_iotype, ecl_kw->size);
+  }
+
   return buffer;
 }
 
@@ -1509,7 +1512,9 @@ void ecl_kw_alloc_data(ecl_kw_type *ecl_kw) {
   {
     size_t byte_size = ecl_kw->size * ecl_type_get_sizeof_ctype(ecl_kw->data_type);
     ecl_kw->data = (char*)util_realloc(ecl_kw->data , byte_size );
-    memset(ecl_kw->data , 0 , byte_size);
+    if (ecl_kw->data) {
+      memset(ecl_kw->data , 0 , byte_size);
+    }
   }
 }
 
