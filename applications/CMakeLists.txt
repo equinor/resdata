@@ -5,24 +5,24 @@ if (BUILD_APPLICATIONS)
     add_executable(make_grid   ecl/make_grid.c)
     add_executable(grdecl_grid ecl/grdecl_grid.c)
     add_executable(summary     ecl/view_summary.cpp)
+    add_executable(kw_extract  ecl/kw_extract.cpp)
     target_link_libraries(sum_write     ecl)
     target_link_libraries(make_grid     ecl)
     target_link_libraries(grdecl_grid   ecl)
     target_link_libraries(summary       ecl)
+    target_link_libraries(kw_extract    ecl)
 
+    list(APPEND apps make_grid grdecl_grid summary kw_extract)
 
-    list(APPEND apps make_grid grdecl_grid summary)
-
-    foreach (app ecl_pack.c
-                 ecl_unpack.c
-                 kw_extract.cpp
-                 grid_info.c
-                 grid_dump.c
-                 grid_dump_ascii.c
-                 select_test.c
-                 load_test.c
+    foreach (app ecl_pack
+                 ecl_unpack
+                 grid_info
+                 grid_dump
+                 grid_dump_ascii
+                 select_test
+                 load_test
             )
-        add_executable(${app} ecl/${app})
+        add_executable(${app} ecl/${app}.c)
         target_link_libraries(${app} ecl)
         list(APPEND apps ${app})
         if (ERT_LINUX)
