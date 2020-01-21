@@ -1,8 +1,9 @@
 project(libecl-ecl C CXX)
 
 
-
-if (HAVE_BACKTRACE)
+if (ENABLE_PYTHON_MODULE)
+    list(APPEND opt_srcs util/pymodule.cpp)
+elseif (HAVE_BACKTRACE)
     list(APPEND opt_srcs util/util_abort_gnu.c)
 else()
     list(APPEND opt_srcs util/util_abort_simple.c)
@@ -151,18 +152,19 @@ add_library(ecl util/rng.cpp
 )
 
 if (ERT_WINDOWS)
-    set_target_properties(ecl PROPERTIES PREFIX "lib")
-    if (MSVC)
-        set_target_properties(ecl PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  set_target_properties(ecl PROPERTIES PREFIX "lib")
+  if (MSVC)
+    set_target_properties(ecl PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
   endif()
 endif ()
 
-target_link_libraries(ecl PUBLIC ${m}
-                                 ${dl}
-                                 ${pthread}
-                                 ${blas}
-                                 ${zlib}
-                                 ${shlwapi}
+target_link_libraries(ecl
+  ${m}
+  ${dl}
+  ${pthread}
+  ${blas}
+  ${zlib}
+  ${shlwapi}
 )
 
 target_include_directories(ecl
@@ -187,6 +189,13 @@ target_compile_definitions(ecl PRIVATE
 
 target_compile_options(ecl PUBLIC ${pthreadarg})
 
+if (ENABLE_PYTHON_MODULE)
+  python_extension_module(ecl)
+  set(CMAKE_INSTALL_LIBDIR "${PYTHON_RELATIVE_SITE_PACKAGES_DIR}/ecl")
+  set(CMAKE_INSTALL_BINDIR "${PYTHON_RELATIVE_SITE_PACKAGES_DIR}/ecl/_distrib/bin")
+  set(CMAKE_INSTALL_INCDIR "${PYTHON_RELATIVE_SITE_PACKAGES_DIR}/ecl/_distrib/include")
+endif ()
+
 
 if (ERT_USE_OPENMP)
     target_compile_options(ecl PUBLIC ${OpenMP_CXX_FLAGS})
@@ -204,10 +213,10 @@ install(TARGETS ecl
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY include/
-        DESTINATION include
+  DESTINATION ${CMAKE_INSTALL_INCDIR}
 )
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
-        DESTINATION include
+  DESTINATION ${CMAKE_INSTALL_INCDIR}
 )
 
 if (NOT BUILD_TESTS)

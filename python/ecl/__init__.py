@@ -67,6 +67,12 @@ try:
 except ImportError:
     pass
 
+try:
+    import ecl.libecl
+    ECL_PYTHON_MODULE = True
+except ImportError:
+    ECL_PYTHON_MODULE = False
+
 
 required_version_hex = 0x02070000
 
@@ -114,7 +120,12 @@ if ecl_lib_path:
 if sys.hexversion < required_version_hex:
     raise Exception("ERT Python requires Python 2.7.")
 
+
 def load(name):
+    if ECL_PYTHON_MODULE:
+        import ctypes
+        return ctypes.PyDLL(ecl.libecl.__file__)
+
     try:
         return cwrapload(name, path=ecl_lib_path, so_version=ert_so_version)
     except ImportError:

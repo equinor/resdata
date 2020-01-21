@@ -52,6 +52,7 @@ option( BUILD_APPLICATIONS  "Should we build small utility applications"        
 option( BUILD_ECL_SUMMARY   "Build the commandline application ecl_summary"           OFF)
 option( BUILD_PYTHON        "Run py_compile on the python wrappers"                   OFF)
 option( ENABLE_PYTHON       "Build and install the Python wrappers"                   OFF)
+option( ENABLE_PYTHON_MODULE "Build libecl as a Python module"                        OFF)
 option( BUILD_SHARED_LIBS   "Build shared libraries"                                  ON )
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( RST_DOC             "Build RST documentation"                                 OFF)
@@ -73,6 +74,10 @@ if (EXISTS ${EQUINOR_TESTDATA_ROOT})
   set(_geopath ${_equinor_test_data}/Geometry)
 endif()
 
+if(ENABLE_PYTHON_MODULE)
+  find_package(PythonExtensions REQUIRED)
+  set(ENABLE_PYTHON OFF)
+endif()
 
 if (BUILD_PYTHON)
   set(ENABLE_PYTHON ON)
