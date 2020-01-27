@@ -1,3 +1,5 @@
+import warnings
+
 from ecl import EclFileEnum, EclFileFlagEnum, EclPhaseEnum, EclUnitTypeEnum , EclUtil
 from ecl import EclTypeEnum, EclDataType
 from ecl.summary import EclSumVarType
@@ -24,3 +26,10 @@ from ecl.summary import EclSumVector
 from ecl.summary import EclNPV , NPVPriceVector
 from ecl.summary import EclCmp
 from ecl.grid import EclGridGenerator
+
+
+warnings.warn(
+    "Importing from ert.ecl, ecl.ecl or ert is deprecated and will not be available in python3." \
+    " For eclipse functionality use \'from ecl import\', for ert workflow tooling use \'from res import\'.",
+    DeprecationWarning
+)

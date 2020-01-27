@@ -57,7 +57,12 @@ import os.path
 import sys
 
 import warnings
-warnings.simplefilter('always', DeprecationWarning) # see #1437
+
+warnings.filterwarnings(
+    action='always',
+    category=DeprecationWarning,
+    module=r'ecl|ert',
+)
 
 from cwrap import load as cwrapload
 from cwrap import Prototype
