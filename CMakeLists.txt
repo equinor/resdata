@@ -24,47 +24,55 @@ set( ECL_VERSION_MICRO "not-available" )
 execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE ECL_BUILD_TIME )
 string(STRIP "${ECL_BUILD_TIME}" ECL_BUILD_TIME)
 
-find_package(Git)
-
-if(GIT_FOUND)
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" status
-    RESULT_VARIABLE RESULT
-    OUTPUT_QUIET
-    ERROR_QUIET
-    )
-
-  if(NOT "${RESULT}" STREQUAL 0)
-    set(GIT_FOUND OFF)
-  endif()
-endif()
-
-if(GIT_FOUND)
-   execute_process(
-     COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" rev-parse HEAD
-     OUTPUT_VARIABLE GIT_COMMIT
-     OUTPUT_STRIP_TRAILING_WHITESPACE
-   )
-
-   execute_process(
-     COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" rev-parse --short HEAD
-     OUTPUT_VARIABLE GIT_COMMIT_SHORT
-     OUTPUT_STRIP_TRAILING_WHITESPACE
-   )
-
-   execute_process(
-     COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" describe --tags
-     OUTPUT_VARIABLE GIT_TAG
-     OUTPUT_STRIP_TRAILING_WHITESPACE
-   )
-
-   string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" ECL_VERSION_MAJOR "${GIT_TAG}")
-   string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" ECL_VERSION_MINOR "${GIT_TAG}")
-   string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" ECL_VERSION_MICRO "${GIT_TAG}")
+if(ECL_VERSION)
+  # Have we been provided with an explicitly-set version?
+  string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" ECL_VERSION_MAJOR "${ECL_VERSION}")
+  string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" ECL_VERSION_MINOR "${ECL_VERSION}")
+  string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" ECL_VERSION_MICRO "${ECL_VERSION}")
 else()
+  # Otherwise try to discover it via git
+  find_package(Git)
+
+  if(GIT_FOUND)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" status
+      RESULT_VARIABLE RESULT
+      OUTPUT_QUIET
+      ERROR_QUIET
+      )
+
+    if(NOT "${RESULT}" STREQUAL 0)
+      set(GIT_FOUND OFF)
+    endif()
+  endif()
+
+  if(GIT_FOUND)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" rev-parse HEAD
+      OUTPUT_VARIABLE GIT_COMMIT
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" rev-parse --short HEAD
+      OUTPUT_VARIABLE GIT_COMMIT_SHORT
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" describe --tags
+      OUTPUT_VARIABLE GIT_TAG
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+
+    string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" ECL_VERSION_MAJOR "${GIT_TAG}")
+    string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" ECL_VERSION_MINOR "${GIT_TAG}")
+    string( REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" ECL_VERSION_MICRO "${GIT_TAG}")
+  else()
     set( GIT_COMMIT "unknown (git not found!)")
     set( GIT_COMMIT_SHORT "unknown (git not found!)")
     message( WARNING "Git not found. Build will not contain correct version info." )
+  endif()
 endif()
 
 message( STATUS "libecl version: ${ECL_VERSION_MAJOR}.${ECL_VERSION_MINOR}.${ECL_VERSION_MICRO}" )
@@ -375,6 +383,9 @@ if (ENABLE_PYTHON)
    endif()
 endif()
 
-install(EXPORT ecl-config DESTINATION share/cmake/ecl)
-export(TARGETS ecl FILE eclConfig.cmake)
-export(PACKAGE ecl)
+if (NOT SKBUILD)
+    # Avoid installing when calling from python setup.py
+    install(EXPORT ecl-config DESTINATION share/cmake/ecl)
+    export(TARGETS ecl FILE eclConfig.cmake)
+    export(PACKAGE ecl)
+endif()
