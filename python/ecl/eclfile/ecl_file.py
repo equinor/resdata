@@ -688,7 +688,7 @@ class EclFile(BaseCClass):
         self._fwrite(  fortio , 0 )
 
     def write_index(self, index_file_name):
-        if not self._write_index(index_file_name):
+        if not self or not self._write_index(index_file_name):
             raise IOError("Failed to write index file:%s" % index_file_name)
 
 
