@@ -25,3 +25,9 @@ scratch.sparsebundle
 *.DS_Store
 __ecl_lib_path.py
 __ecl_lib_info.py
+
+/venv/
+/_skbuild/
+/python/ecl/version.py
+.*
+*.egg-info/
