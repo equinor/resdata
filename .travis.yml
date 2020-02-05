@@ -1,69 +1,134 @@
-language: python
-python:
-  - 2.7
-  - 3.6
-
-os:
-  - linux
-
-sudo: required
-services: docker
-
 env:
   global:
+    - TEST_DEPENDS=pytest
+    # amd64 fo' lyfe
+    - PLAT=x86_64
+    # Tell multibuild to use manylinux2010 docker image (mostly due to cmake's
+    # pypi package not having a manylinux1 wheel)
+    - MB_ML_VER=2010
+    # Show output from util_abort backtraces
     - ERT_SHOW_BACKTRACE=1
-    - MB_PYTHON_VERSION=$TRAVIS_PYTHON_VERSION
-  matrix:
-    - TEST_SUITE="-LE SLOW"  # Run all tests not labeled as slow
-    - TEST_SUITE="-L SLOW_1" # Run all tests labeled as SLOW in group 1
-    - TEST_SUITE="-L SLOW_2" # Run all tests labeled as SLOW in group 2
+    # Install via pip
+    - LEGACY_INSTALL=
+    # Put wheels where travis expects them to be
+    - WHEEL_SDIR=dist
+
+language: python
+python: 3.6
+
+services: docker
+sudo: required
+dist: xenial
 
 matrix:
   fast_finish: true
   include:
+    # Use multibuild to install via pip + deploy wheels
+    - os: linux
+      name: pip, Linux, py2.7
+      env: MB_PYTHON_VERSION=2.7
+    - os: linux
+      name: pip, Linux, py3.6
+      env: MB_PYTHON_VERSION=3.6
+    - os: linux
+      name: pip, Linux, py3.7
+      env: MB_PYTHON_VERSION=3.7
+    - os: linux
+      name: pip, Linux, py3.8
+      env: MB_PYTHON_VERSION=3.8
     - os: osx
+      name: pip, macOS, py3.6
       language: generic
+      env: MB_PYTHON_VERSION=3.6
+    - os: osx
+      name: pip, macOS, py3.7
+      language: generic
+      env: MB_PYTHON_VERSION=3.7
+    - os: osx
+      name: pip, macOS, py3.8
+      language: generic
+      env: MB_PYTHON_VERSION=3.8
+    # Use CMake to setup and install libecl
+    - os: linux
+      name: cmake, Linux, py2.7
       python: 2.7
       env:
         - MB_PYTHON_VERSION=2.7
-        - TEST_SUITE=""
-    - os: osx
-      language: generic
+        - LEGACY_INSTALL=1
+    - os: linux
+      name: cmake, Linux, py3.6
       python: 3.6
       env:
         - MB_PYTHON_VERSION=3.6
-        - TEST_SUITE=""
-
-addons:
-  apt:
-    packages:
-    - liblapack-dev
+        - LEGACY_INSTALL=1
+    - os: osx
+      name: cmake, macOS, py3.6
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.6
+        - LEGACY_INSTALL=1
 
 before_install:
-  - unset -f pushd
-  - unset -f popd
+  # Test the C stuff before we do anything in pip mode
+  - |
+    if [ -z "${LEGACY_INSTALL}" ]; then
+      mkdir build && pushd build
+      cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+      cmake --build .
+      ctest --output-on-failure
+      popd && rm -rf build
+    fi
+
+  - git clone https://github.com/matthew-brett/multibuild
   - source multibuild/common_utils.sh
   - source multibuild/travis_steps.sh
   - before_install
 
 install:
-  - pip install -r requirements.txt
+  - |
+    if [ -z "${LEGACY_INSTALL}" ]; then
+      build_wheel . $PLAT
+    else
+      pip install -r requirements.txt
+
+      mkdir build
+      pushd build
+      cmake .. -DBUILD_TESTS=ON                               \
+               -DENABLE_PYTHON=ON                             \
+               -DBUILD_APPLICATIONS=ON                        \
+               -DINSTALL_ERT_LEGACY=ON                        \
+               -DERT_USE_OPENMP=ON                            \
+               -DCMAKE_C_FLAGS='-Werror=all'                  \
+               -DCMAKE_CXX_FLAGS='-Werror -Wno-unused-result'
+      make
+      sudo make install
+      popd
+    fi
 
 script:
-  - mkdir build
-  - pushd build
-  - cmake .. -DBUILD_TESTS=ON
-             -DENABLE_PYTHON=ON
-             -DBUILD_APPLICATIONS=ON
-             -DINSTALL_ERT_LEGACY=ON
-             -DERT_USE_OPENMP=ON
-             -DCMAKE_C_FLAGS='-Werror=all'
-             -DCMAKE_CXX_FLAGS='-Werror -Wno-unused-result'
-  - make
-  - sudo make install
-  - which python
-  - export PYTHONPATH="/usr/local/lib/python$MB_PYTHON_VERSION/site-packages:/usr/local/lib/python$MB_PYTHON_VERSION/dist-packages:$PYTHONPATH"
-  - python -c "import sys; print('\n'.join(sys.path))"
-  - set -e; python -c "import ecl"; set +e
-  - ctest --output-on-failure $TEST_SUITE
-  - popd
+  - |
+    if [ -z "${LEGACY_INSTALL}" ]; then
+      install_run $PLAT
+    else
+      export PYTHONPATH="/usr/local/lib/python$MB_PYTHON_VERSION/site-packages:/usr/local/lib/python$MB_PYTHON_VERSION/dist-packages:$PYTHONPATH"
+      python -c "import sys; print('\n'.join(sys.path))"
+      set -e; python -c "import ecl"; set +e
+      pushd build; ctest --output-on-failure; popd
+    fi
+
+before_deploy:
+  # "python setup.py sdist" is called automatically by the deploy step, so
+  # replace it with an empty file so we don't ruin our hard work
+  - rm setup.py
+  - touch setup.py
+
+deploy:
+  - provider: pypi
+    skip_upload_docs: true
+    skip_cleanup: true
+    user: statoil-travis
+    password:
+      secure: "I31EvX2MenZgZukruzuJmvx0hOmMSWghxkYdtmyV4r8LoEmtviEA1IhctBuiWpVcLjOC0LxsrFESLC+PPhsTokCdIFs1R1JTr3WkotT1HZR6nYr7QZI/Pj9I6fV9oE8hYKS3oiC5DJDTZ/2/Tua5Lt9rjEapgRHTrRIuMqsD+7qRcZWNvQqwV3OWxZ8ua6Fll+yVx6ZLgJMutIyn0Av7ToratjQaYbHnrNbCpDYH/LiDOVJtralMMrHuNZpb6BzATRGP+crL4gDyJVai1tDEO8zshX9zU9ynimpebMtR86Ig0RHuF240eq0UqSMa8aOyk3PKUaxzWBn9nyyi4mOOLC6d7Dm4/8Ek4ilNZ1YqGbMiXnv78e6c5DSEwqceeE11x+kapnuSMgHlzdvA+n7HJXC4ANVIG1jdfMsvkpPDxKeYyw7Pytg9jbBWZvXs32srTjOSi+xIiKQFvh4bUehAbyfpzDd6cD7iC3cU80E8g2HmTtp1ZT59un9entJhw9vfpHrxiHtNUVRUyIJJyTUUYTmNkYsDU00NvbLv6n9mHZxDns+0Pv3pSPI22DNYzrmH5w/xxCcnc8Qlg82+AexEPl7RagETADa3wfK+UOcZ114B8g/Cms99yIk0dHGNl5MtoTceaWLD6EU/ey3KVw9iK9nrxdtTTg9PyvSO+0pm9GU="
+    on:
+      tags: true
+      condition: !!str [ -z "$LEGACY_INSTALL" ]
