@@ -102,20 +102,8 @@ class EclFileTest(EclTest):
             with self.assertRaises(IOError):
                 ecl_file.write_index("does-not-exist/INDEX")
 
-            os.mkdir("read-only")
-            os.chmod("read-only", 0o444)
-
-            with self.assertRaises(IOError):
-                ecl_file.write_index("read-only/INDEX")
-
             with self.assertRaises(IOError):
                 ecl_file_index = EclFile("TEST", 0, "index_does_not_exist")
-
-            shutil.copyfile( "INDEX_FILE" , "INDEX_perm_denied")
-            os.chmod("INDEX_perm_denied", 0o000)
-            with self.assertRaises(IOError):
-                ecl_file_index = EclFile("TEST", 0, "INDEX_perm_denied")
-
 
             os.mkdir("path")
             shutil.copyfile("TEST" , "path/TEST")

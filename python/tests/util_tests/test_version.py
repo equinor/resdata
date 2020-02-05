@@ -102,9 +102,3 @@ class VersionTest(EclTest):
     def test_root_version(self):
         cv = EclVersion( )
         self.assertEqual( ecl.__version__ , cv.versionString() )
-
-
-    def test_root_path(self):
-        self.assertTrue( os.path.isdir( os.path.join( ecl.root() , "ecl")))
-        self.assertTrue( os.path.isfile( os.path.join( ecl.root() , "ecl", "__init__.py")))
-
