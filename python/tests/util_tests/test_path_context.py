@@ -12,14 +12,7 @@ class PathContextTest(EclTest):
             with self.assertRaises(OSError):
                 with PathContext("path/1"):
                     pass
-                
-            # Test failure on non-writable path 
-            os.chmod("path/1", 0o0444)
-            with self.assertRaises(OSError):
-                with PathContext("path/1/subfolder"):
-                    pass
-            os.chmod("path/1", 0o0744)
-            
+
             # Test failure on creating PathContext with an existing file
             with open("path/1/file", "w") as f:
                 f.write("xx")
