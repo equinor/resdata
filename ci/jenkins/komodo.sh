@@ -41,5 +41,5 @@ if [[ -z "${sha1// }" ]]; then
 fi
 
 echo "running ctest"
-ctest --output-on-failure
+ctest -E tests.util_tests.test_version.VersionTest --output-on-failure
 popd
