@@ -31,14 +31,20 @@ compiler such as GNU GCC, the CMake build system and, optionally, zlib.
 
 ```bash
 $ git clone https://github.com/Equinor/libecl
-$ cmake libecl
-$ cmake --build libecl --target install
+$ mkdir libecl/build
+$ cd libecl/build
+$ cmake ..
+$ make
+$ make install
 ```
 
 To install *libecl* in a non-standard location, add
-`-DCMAKE_INSTALL_PATH=/path/to/install` to the first `cmake` command. If you
-intend to develop and change *libecl* you should build the tests by passing
-`-DBUILD_TESTS=ON` and run the tests with `ctest`.
+`-DCMAKE_INSTALL_PREFIX=/path/to/install` to the first `cmake` command. Remember
+to set `LD_LIBRARY_PATH=/path/to/install/lib64:$LD_LIBRARY_PATH` if you do use a
+non-standard location for your program to find `libecl.so`.
+
+If you intend to develop and change *libecl* you should build the tests by
+passing `-DBUILD_TESTS=ON` and run the tests with `ctest`.
 
 ### Alternative 3: C library with Python bindings ###
 It is also possible to install both the C library and Python bindings using
@@ -48,10 +54,18 @@ compiler, CMake and, optionally, zlib.
 
 ```bash
 $ git clone https://github.com/Equinor/libecl
-$ pip install -r libecl/requirements.txt
-$ cmake libecl -DENABLE_PYTHON=ON
-$ cmake --build libecl --target install
+$ mkdir libecl/build
+$ cd libecl/build
+$ pip install -r ../requirements.txt
+$ cmake .. -DENABLE_PYTHON=ON
+$ make
+$ make install
 ```
+
+You will most likely want to install *libecl* into a Python virtual environment.
+First activate the virtualenv, then add the argument
+`-DCMAKE_INSTALL_PREFIX=$(python -c "import sys; print(sys.prefix)")` to the
+`cmake` command when building.
 
 Then, you must tell Python where to find the package[1]:
 
