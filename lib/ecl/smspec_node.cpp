@@ -28,6 +28,8 @@
 #include <array>
 #include <memory>
 #include <stdexcept>
+#include <algorithm>
+#include <vector>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
@@ -439,73 +441,148 @@ char * smspec_alloc_local_completion_key( const char * join_string, const std::s
 }
 
 /*****************************************************************/
+static bool match_keyword_vector(std::size_t ipos, const std::vector<std::string> &vars, const std::string &keyword) {
+    //Validate string length    
+    if (keyword.size() < ipos){
+      return false;
+    } 
+    for (const auto &var : vars) {
+        if (keyword.substr(ipos, var.size()) == var)
+            return true;
+    }
+    return false;
+}
+
+static bool match_keyword_string(std::size_t ipos, const std::string &var, const std::string &keyword) {
+    //Validate string length    
+    if (keyword.size() < ipos){
+      return false;
+    }
+    if (keyword.substr(ipos, var.size()) == var){
+      return true;
+    }
+    return false;
+}
 
 
 bool smspec_node_identify_rate(const char * keyword) {
-  const char *rate_vars[] = {"OPR" , "GPR" , "WPR" , "LPR", "OIR", "GIR", "WIR", "LIR", "GOR" , "WCT",
-                             "OFR" , "GFR" , "WFR"};
-  int num_rate_vars = sizeof( rate_vars ) / sizeof( rate_vars[0] );
-  bool  is_rate           = false;
-  int ivar;
-  for (ivar = 0; ivar < num_rate_vars; ivar++) {
-    const char * var_substring = &keyword[1];
-    if (strncmp( rate_vars[ivar] , var_substring , strlen( rate_vars[ivar] )) == 0) {
-      is_rate = true;
-      break;
+ /*
+    Identify vectors that are likely to be rate vectors.
+    First input character is ignored (e.g. F, G, W and R for Field, Group, Well and Region)
+    Additional characters beyond the length of the listed elements are also ignored (To 
+    catch historical vectors with trailing H and completions with trailing L).
+    Therefore also not necessary to list e.g. OPRF, which is covered by OPR.
+    Some of the more obscure keywords in the manual are skipped.    
+    The listed rate variables are grouped per line as:
+      Oil rates
+      Gas rates
+      Water rates
+      Liquid + reservoir voidage rates
+      Special gas rates (like gas lift, import, export, consumption, sales ++)
+      Solvents, tracers, brines and environmental tracers
+      Production ratios (unitless, not really rates)
+    ECL_SMSPEC_SEGMENT_VAR and ECL_SMSPEC_REGION_2_REGION_VAR are handled
+    separately as they do not overlap much with the rest.
+  */
+
+  auto var_type = ecl_smspec_identify_var_type(keyword);
+  if (var_type == ECL_SMSPEC_WELL_VAR ||
+      var_type == ECL_SMSPEC_GROUP_VAR ||
+      var_type == ECL_SMSPEC_FIELD_VAR ||
+      var_type == ECL_SMSPEC_REGION_VAR ||
+      var_type == ECL_SMSPEC_COMPLETION_VAR ||
+      var_type == ECL_SMSPEC_LOCAL_WELL_VAR ||
+      var_type == ECL_SMSPEC_LOCAL_COMPLETION_VAR) {
+    static const std::vector<std::string> rate_vars {{
+      "OPR" , "OIR", "OVPR", "OVIR", "OFR", "OPP", "OPI", "OMR",
+      "GPR" , "GIR", "GVPR", "GVIR", "GFR", "GPP", "GPI", "GMR", "WGPR", "WGIR",
+      "WPR" , "WIR", "WVPR", "WVIR", "WFR", "WPP", "WPI", "WMR",
+      "LPR", "LFR", "VPR", "VIR", "VFR",
+      "GLIR", "RGR", "EGR", "EXGR", "SGR", "GSR", "FGR", "GIMR", "GCR",
+      "NPR", "NIR", "CPR", "CIR", "SIR", "SPR", "TIR", "TPR",
+      "GOR" , "WCT", "OGR", "WGR", "GLR"
+    }};
+    if (var_type == ECL_SMSPEC_LOCAL_WELL_VAR ||
+        var_type == ECL_SMSPEC_LOCAL_COMPLETION_VAR) {
+      //LOCAL var_type's are prefixed with L (that we ignore)
+      return match_keyword_vector(2, rate_vars, keyword);
     }
+    return match_keyword_vector(1, rate_vars, keyword);
   }
-  return is_rate;
+  if (var_type == ECL_SMSPEC_SEGMENT_VAR) {
+    static const std::vector<std::string> seg_rate_vars {{
+      "OFR" , "GFR" , "WFR",
+      "CFR", "SFR", "TFR", "CVPR",
+      "WCT", "GOR", "OGR", "WGR",
+    }};
+    return match_keyword_vector(1, seg_rate_vars, keyword);
+  }
+  if (var_type == ECL_SMSPEC_REGION_2_REGION_VAR) {
+    //Region to region rates are identified by R*FR or R**FR
+    if (match_keyword_string(2, "FR", keyword)){
+      return true;
+    }
+    return match_keyword_string(3, "FR", keyword);
+  }
+  return false;
 }
 
 
 bool smspec_node_identify_total(const char * keyword, ecl_smspec_var_type var_type) {
  /*
-    This code checks in a predefined list whether a certain WGNAMES
-    variable represents a total accumulated quantity. Only the last three
-    characters in the variable is considered (i.e. the leading 'W', 'G' or
-    'F' is discarded).
-
-    The list below is all the keyowrds with 'Total' in the information from
-    the tables 2.7 - 2.11 in the ECLIPSE fileformat documentation.  Have
-    skipped some of the most exotic keywords.
+    Identify vectors that are likely to be cumulative vectors.
+    First input character is ignored (e.g. F, G, W and R for Field, Group, Well and Region)
+    Additional characters beyond the length of the listed elements are also ignored (To 
+    catch historical vectors with trailing H and completions with trailing L).
+    Therefore also not necessary to list e.g. OPTF, which is covered by OPT.
+    Some of the more obscure keywords in the manual are skipped.    
+    The listed rate variables are grouped per line as:
+      Oil totals
+      Gas totals
+      Water totals
+      Liquid + reservoir voidage totals
+      Special gas totals (like import, export, consumption, sales ++)
+      Solvents, tracers, brines and environmental tracers
+    ECL_SMSPEC_SEGMENT_VAR and ECL_SMSPEC_REGION_2_REGION_VAR are handled
+    separately as they do not overlap much with the rest.
   */
-  bool is_total = false;
   if (var_type == ECL_SMSPEC_WELL_VAR ||
       var_type == ECL_SMSPEC_GROUP_VAR ||
       var_type == ECL_SMSPEC_FIELD_VAR ||
       var_type == ECL_SMSPEC_REGION_VAR ||
-      var_type == ECL_SMSPEC_COMPLETION_VAR ) {
-    const char *total_vars[] = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
-                                "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
-                                "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
-                                "CPT", "CIT"};
-
-    int num_total_vars = sizeof( total_vars ) / sizeof( total_vars[0] );
-    int ivar;
-    for (ivar = 0; ivar < num_total_vars; ivar++) {
-      const char * var_substring = &keyword[1];
-      /*
-        We want to mark both FOPT and FOPTH as total variables;
-        we use strncmp() to make certain that the trailing 'H' is
-        not included in the comparison.
-      */
-      if (strncmp( total_vars[ivar] , var_substring , strlen( total_vars[ivar] )) == 0) {
-        is_total = true;
-        break;
-      }
+      var_type == ECL_SMSPEC_COMPLETION_VAR ||
+      var_type == ECL_SMSPEC_LOCAL_WELL_VAR ||
+      var_type == ECL_SMSPEC_LOCAL_COMPLETION_VAR) {
+    static const std::vector<std::string> rate_vars {{
+      "OPT" , "OIT", "OVPT", "OVIT", "OMT",
+      "GPT" , "GIT", "GVPT", "GVIT", "GMT", "WGPT", "WGIT",
+      "WPT" , "WIT", "WVPT", "WVIT", "WMT",
+      "LPT", "VPT", "VIT",
+      "RGT", "EGT", "EXGT", "SGT", "GST", "FGT", "GIMT", "GCT",
+      "NPT", "NIT", "CPT", "CIT", "SIT", "SPT", "TIT", "TPT",
+    }};
+                             
+    if (var_type == ECL_SMSPEC_LOCAL_WELL_VAR ||
+        var_type == ECL_SMSPEC_LOCAL_COMPLETION_VAR) {
+      //LOCAL var_type's are prefixed with L (that we ignore)
+      return match_keyword_vector(2, rate_vars, keyword);
     }
+    return match_keyword_vector(1, rate_vars, keyword);
   }
-  else if (var_type == ECL_SMSPEC_SEGMENT_VAR) {
-    const char *total_vars[] = {"OFT", "GFT", "WFT"};
-    const char *var_substring = &keyword[1];
-    const size_t num_total_vars = sizeof(total_vars) / sizeof(total_vars[0]);
-    for (size_t ivar = 0; ivar < num_total_vars; ivar++)
-      if (strncmp(total_vars[ivar], var_substring, strlen(total_vars[ivar])) == 0) {
-        is_total = true;
-        break;
-      }
+  if (var_type == ECL_SMSPEC_SEGMENT_VAR) {
+    static const std::vector<std::string> seg_rate_vars {{
+      "OFT" , "GFT" , "WFT",
+    }};
+    return match_keyword_vector(1, seg_rate_vars, keyword);
   }
-  return is_total;
+  if (var_type == ECL_SMSPEC_REGION_2_REGION_VAR) {
+    //Region to region totals are identified by R*FT or R**FT
+    if (match_keyword_string(2, "FT", keyword)){
+      return true;
+    }
+    return match_keyword_string(3, "FT", keyword);
+  }
+  return false;
 }
 
 
