@@ -1,6 +1,5 @@
 pipeline {
-    agent { label "si-build" }
-    
+    agent { label "scout-ci" }
     parameters {
         string(defaultValue: "bleeding-py27", description: 'The komodo relase to be used', name: 'RELEASE_NAME')
         string(defaultValue: "/prog/res/komodo", description: 'Root folder for komodo', name: 'KOMODO_ROOT')
@@ -8,7 +7,6 @@ pipeline {
         string(defaultValue: '', description: 'commit id you want to build or refname (eg: origin/pr/9/head)', name: 'sha1')
         string(defaultValue: "/prog/sdpsoft", description: 'The komodo relase to be used', name: 'SDPSOFT')
     }
-    
     stages {
         stage("Komodo CI") {
             steps {
