@@ -82,7 +82,6 @@ message( STATUS "libecl version: ${ECL_VERSION_MAJOR}.${ECL_VERSION_MINOR}.${ECL
 option( BUILD_TESTS         "Should the tests be built"                               OFF)
 option( BUILD_APPLICATIONS  "Should we build small utility applications"              OFF)
 option( BUILD_ECL_SUMMARY   "Build the commandline application ecl_summary"           OFF)
-option( BUILD_PYTHON        "Run py_compile on the python wrappers"                   OFF)
 option( ENABLE_PYTHON       "Build and install the Python wrappers"                   OFF)
 option( BUILD_SHARED_LIBS   "Build shared libraries"                                  ON )
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
@@ -103,12 +102,6 @@ if (EXISTS ${EQUINOR_TESTDATA_ROOT})
   set(_equinor_test_data ${CMAKE_SOURCE_DIR}/test-data/Equinor)
   set(_eclpath ${_equinor_test_data}/ECLIPSE)
   set(_geopath ${_equinor_test_data}/Geometry)
-endif()
-
-
-if (BUILD_PYTHON)
-  set(ENABLE_PYTHON ON)
-  message(WARNING "The option 'BUILD_PYTHON' is deprecated - use ENABLE_PYTHON.")
 endif()
 
 # output libs to some lib/ path for testing
