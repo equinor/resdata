@@ -78,12 +78,7 @@ typedef struct stat stat_type;
 #endif
 
 
-
-/*****************************************************************/
-/*
-
-*/
-
+extern int signal_on_util_abort;
 
 /*****************************************************************/
 typedef void (walk_file_callback_ftype)   (const char * , /* The current directory */
@@ -270,6 +265,7 @@ typedef bool (walk_dir_callback_ftype)   (const char * , /* The current director
   void    util_abort_test_set_intercept_function(const char *);
   bool    util_addr2line_lookup(const void *, char **, char **, int *);
   void    util_exit(const char * fmt , ...);
+  void    util_abort_set_signal(int signal);
   void    util_install_signals(void);
   void    util_update_signals(void);
 

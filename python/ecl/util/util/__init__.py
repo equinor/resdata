@@ -36,12 +36,10 @@ The modules included in the util package are:
 
 """
 
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ecl
 from cwrap import Prototype
-
 
 
 from .version import Version, EclVersion
@@ -61,9 +59,12 @@ from .rng import RandomNumberGenerator
 from .lookup_table import LookupTable
 from .hash import Hash, StringHash, DoubleHash, IntegerHash
 from .thread_pool import ThreadPool
-from .install_abort_signals import installAbortSignals, updateAbortSignals
+from .install_abort_signals import (
+    installAbortSignals,
+    updateAbortSignals,
+    setSignalOnUtilAbort,
+)
 from .cwd_context import CWDContext
-
 
 
 ###
@@ -78,27 +79,31 @@ from .cwd_context import CWDContext
 import os
 import warnings
 
-__cc = os.environ.get('ECLWARNING', None)  # __cc in (None, 'user', 'dev', 'hard')
+__cc = os.environ.get("ECLWARNING", None)  # __cc in (None, 'user', 'dev', 'hard')
+
 
 def __silencio(msg):
     pass
 
+
 def __user_warning(msg):
-    print('User warning: ' + msg)
+    print("User warning: " + msg)
+
 
 def __dev_warning(msg):
     warnings.warn(msg, DeprecationWarning)
 
+
 def __hard_warning(msg):
-    raise UserWarning('CamelCase exception: ' + msg)
+    raise UserWarning("CamelCase exception: " + msg)
 
 
 __ecl_camel_case_warning = __silencio
-if __cc == 'user':
+if __cc == "user":
     __ecl_camel_case_warning = __user_warning
-elif __cc == 'dev':
+elif __cc == "dev":
     __ecl_camel_case_warning = __dev_warning
-elif __cc == 'hard':
+elif __cc == "hard":
     __ecl_camel_case_warning = __hard_warning
 
 
@@ -107,11 +112,16 @@ def monkey_the_camel(class_, camel, method_, method_type=None):
     to method_.  method_type should be one of (None, classmethod, staticmethod),
     and generates new methods accordingly.
     """
+
     def shift(*args):
         return args if (method_type != classmethod) else args[1:]
+
     def warned_method(*args, **kwargs):
-        __ecl_camel_case_warning('Warning, %s is deprecated, use %s' % (camel, str(method_)))
+        __ecl_camel_case_warning(
+            "Warning, %s is deprecated, use %s" % (camel, str(method_))
+        )
         return method_(*shift(*args), **kwargs)
+
     if method_type == staticmethod:
         warned_method = staticmethod(warned_method)
     elif method_type == classmethod:

@@ -4438,6 +4438,7 @@ typedef void (*sighandler_t)(int);
 
 
 static sighandler_t previous_abort_handler = SIG_IGN;
+int signal_on_util_abort = SIGABRT;
 
 void util_abort_signal(int the_signal) {
     if (previous_abort_handler == SIG_IGN) {
@@ -4503,6 +4504,10 @@ void util_exit(const char * fmt , ...) {
   vfprintf(stderr , fmt , ap);
   va_end(ap);
   exit(1);
+}
+
+void util_abort_set_signal(int signal) {
+  signal_on_util_abort = signal;
 }
 
 

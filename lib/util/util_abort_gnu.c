@@ -326,7 +326,7 @@ void util_abort__(const char * file , const char * function , int line , const c
     va_end(ap);
   }
 
-  abort();
+  raise(signal_on_util_abort);
 }
 
 
