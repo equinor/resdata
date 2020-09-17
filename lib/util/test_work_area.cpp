@@ -147,14 +147,36 @@ static bool test_work_area_copy_parent__( const TestArea * work_area , const std
   }
 }
 
-
-TestArea::TestArea(const std::string& test_name, bool store_area) :
-    store(store_area)
-{
-    char * prefix = test_work_area_alloc_prefix();
+static char *create_test_path(const std::string &test_name, const char *prefix,
+                              const char *user_name) {
+  const int MAX_TRIES = 10;
+  for (int try_count = 0; try_count < MAX_TRIES; try_count++) {
     unsigned int random_int;
-    util_fread_dev_urandom( sizeof random_int, (char *) &random_int);
+    util_fread_dev_urandom(sizeof random_int, (char *) &random_int);
     random_int = random_int % 100000000;
+
+    char *test_path = util_alloc_sprintf(
+            TEST_PATH_FMT, user_name, test_name.c_str(), random_int
+    );
+
+    char *test_cwd = util_alloc_sprintf(FULL_PATH_FMT, prefix, test_path);
+    free(test_path);
+
+    if(util_mkdir_p(test_cwd)) {
+      return test_cwd;
+    }
+    free(test_cwd);
+  }
+
+  util_abort(
+    "%s: failed to make test directory after %d tries: %s - aborting\n",
+    __func__, MAX_TRIES, test_name.c_str()
+  );
+  return NULL;
+}
+
+TestArea::TestArea(const std::string& test_name, bool store_area) : store(store_area) {
+    char * prefix = test_work_area_alloc_prefix();
 
 #ifdef ERT_HAVE_GETUID
     uid_t uid = getuid();
@@ -164,9 +186,7 @@ TestArea::TestArea(const std::string& test_name, bool store_area) :
     char * user_name =  util_alloc_sprintf("ert-test-%08u" , random_int);
 #endif
 
-    char * test_path = util_alloc_sprintf( TEST_PATH_FMT , user_name , test_name.c_str() , random_int);
-    char * test_cwd = util_alloc_sprintf(FULL_PATH_FMT , prefix , test_path );
-    util_make_path( test_cwd );
+    char *test_cwd = ecl::util::create_test_path(test_name, prefix, user_name);
 
     {
         char * cwd_tmp = util_alloc_cwd();
@@ -177,7 +197,6 @@ TestArea::TestArea(const std::string& test_name, bool store_area) :
     if (util_chdir( this->cwd.c_str() ) != 0)
         util_abort("%s: Failed to move into temporary directory: %s", __func__, this->cwd.c_str());
 
-    free( test_path );
     free( user_name );
     free( test_cwd );
     free( prefix );
