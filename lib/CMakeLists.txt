@@ -78,7 +78,6 @@ add_library(ecl util/rng.cpp
                 util/parser.cpp
                 util/stringlist.cpp
                 util/buffer.cpp
-                util/timer.cpp
                 util/string_util.cpp
                 util/type_vector_functions.cpp
                 util/ecl_version.cpp
