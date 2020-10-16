@@ -91,10 +91,13 @@ EclUnitTypeEnum.addEnum("ECL_PVT_M_UNITS", 4)
 #-----------------------------------------------------------------
 
 class EclFileFlagEnum(BaseCEnum):
-    TYPE_NAME="ecl_file_flag_enum"
+    TYPE_NAME = "ecl_file_flag_enum"
+    ECL_FILE_DEFAULT = None
     ECL_FILE_CLOSE_STREAM = None
     ECL_FILE_WRITABLE = None
 
+
+EclFileFlagEnum.addEnum("ECL_FILE_DEFAULT", 0)
 EclFileFlagEnum.addEnum("ECL_FILE_CLOSE_STREAM", 1)
 EclFileFlagEnum.addEnum("ECL_FILE_WRITABLE", 2)
 

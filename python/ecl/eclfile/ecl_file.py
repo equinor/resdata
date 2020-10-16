@@ -45,9 +45,10 @@ from cwrap import BaseCClass
 from ecl import EclPrototype
 from ecl.util.util import CTime
 from ecl.util.util import monkey_the_camel
-from ecl import EclFileFlagEnum
-from ecl import EclFileEnum
+from ecl import EclFileFlagEnum, EclFileEnum
 from ecl.eclfile import EclKW, EclFileView
+
+ECL_FILE_DEFAULT = EclFileFlagEnum.ECL_FILE_DEFAULT
 
 
 class EclFile(BaseCClass):
@@ -183,8 +184,7 @@ class EclFile(BaseCClass):
         wr = ', read/write' if self._writable() else ''
         return self._create_repr('"%s"%s' % (fn,wr))
 
-
-    def __init__( self , filename , flags = 0 , index_filename = None):
+    def __init__(self, filename, flags=ECL_FILE_DEFAULT, index_filename=None):
         """
         Loads the complete file @filename.
 
@@ -706,11 +706,12 @@ class EclFileContextManager(object):
         return False
 
 
-def openEclFile( file_name , flags = 0):
+def openEclFile(file_name, flags=ECL_FILE_DEFAULT):
     print('The function openEclFile is deprecated, use open_ecl_file.')
     return open_ecl_file(file_name, flags)
 
-def open_ecl_file(file_name, flags=0):
+
+def open_ecl_file(file_name, flags=ECL_FILE_DEFAULT):
     return EclFileContextManager(EclFile(file_name, flags))
 
 
