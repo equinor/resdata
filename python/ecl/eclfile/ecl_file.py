@@ -45,13 +45,14 @@ from cwrap import BaseCClass
 from ecl import EclPrototype
 from ecl.util.util import CTime
 from ecl.util.util import monkey_the_camel
+from ecl import EclFileFlagEnum
 from ecl import EclFileEnum
 from ecl.eclfile import EclKW, EclFileView
 
 
 class EclFile(BaseCClass):
     TYPE_NAME = "ecl_file"
-    _open                        = EclPrototype("void*       ecl_file_open( char* , int )" , bind = False)
+    _open                        = EclPrototype("void*       ecl_file_open( char* , ecl_file_flag_enum )" , bind = False)
     _get_file_type               = EclPrototype("ecl_file_enum ecl_util_get_file_type( char* , bool* , int*)" , bind = False)
     _writable                    = EclPrototype("bool        ecl_file_writable( ecl_file )")
     _save_kw                     = EclPrototype("void        ecl_file_save_kw( ecl_file , ecl_kw )")
