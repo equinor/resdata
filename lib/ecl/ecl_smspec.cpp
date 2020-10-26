@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <memory>
 
+#include <stdexcept>
+
 #include <ert/util/hash.hpp>
 #include <ert/util/util.h>
 #include <ert/util/float_vector.hpp>
