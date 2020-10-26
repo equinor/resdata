@@ -32,9 +32,17 @@ skbuild.setup(
         "pandas<=0.25.3;python_version=='2.7'",
         "six"
     ],
-    tests_require=["pytest"],
+    entry_points={
+        "console_scripts": [
+            "ecl_pack.x = ecl.bin:ecl_pack",
+            "ecl_unpack.x = ecl.bin:ecl_unpack",
+        ]
+    },
     cmake_args=[
         "-DECL_VERSION=" + version,
+        "-DBUILD_APPLICATIONS=ON",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_INSTALL_BINDIR=python/ecl/.bin",
         "-DCMAKE_INSTALL_LIBDIR=python/ecl/.libs",
         "-DCMAKE_INSTALL_INCLUDEDIR=python/ecl/.include",
         # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
