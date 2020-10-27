@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import skbuild
 import setuptools
@@ -8,16 +6,19 @@ from setuptools_scm import get_version
 
 version = get_version(relative_to=__file__, write_to="python/ecl/version.py")
 
+
 with open("README.md") as f:
     long_description = f.read()
 
+
 skbuild.setup(
-    name="libecl",
+    name="ecl",
     author="Equinor ASA",
+    author_email="fg_sib-scout@equinor.com",
     description="Package for reading and writing the result files from the ECLIPSE reservoir simulator",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/equinor/libecl",
+    url="https://github.com/equinor/ecl",
     packages=setuptools.find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_dir={"": "python"},
     license="GPL-3.0",
