@@ -1,4 +1,4 @@
-name: Libecl testing
+name: ecl testing
 
 on: [push, pull_request]
 
@@ -19,7 +19,7 @@ jobs:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
-    - name: Build libecl
+    - name: Build ecl
       run: |
         mkdir cmake-build
         cmake -S . -B cmake-build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
@@ -47,6 +47,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        # required for `git describe --tags` to work
+        fetch-depth: 0
 
     - name: Build Linux Wheel
       uses: docker://quay.io/pypa/manylinux2010_x86_64
@@ -70,7 +73,20 @@ jobs:
         name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
         path: dist/*
 
-    - name: Install libecl
+    - name: Build `libecl` migration package
+      run: |
+        pip install -U pip setuptools wheel setuptools_scm
+        python ci/github/setup.py bdist_wheel --dist-dir=dist-migration
+      if: matrix.os == 'ubuntu-latest' && matrix.python == '3.6'
+
+    - name: Upload `libecl` migration wheel as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Python libecl to ecl wheel
+        path: dist-migration/*
+      if: matrix.os == 'ubuntu-latest' && matrix.python == '3.6'
+
+    - name: Install ecl
       run: pip install dist/*
 
     - name: Run Python tests

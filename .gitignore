@@ -31,3 +31,6 @@ __ecl_lib_info.py
 /python/ecl/version.py
 .*
 *.egg-info/
+
+/dist
+/dist-*
