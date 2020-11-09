@@ -111,7 +111,7 @@ jobs:
         export ERT_SHOW_BACKTRACE=1
 
         # Run tests
-        python -m pytest python/tests
+        python -m pytest python/tests -vv
 
 
   publish:
