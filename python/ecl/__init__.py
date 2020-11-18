@@ -84,6 +84,8 @@ if not ECL_LEGACY_INSTALLED:
             path = os.path.join(path, "libecl.so")
         elif platform.system() == "Darwin":
             path = os.path.join(path, "libecl.dylib")
+        elif platform.system() == "Windows":
+            path = os.path.join(os.path.dirname(__file__), ".bin", "libecl.dll")
         else:
             raise NotImplementedError("Invalid platform")
 
