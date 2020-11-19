@@ -28,6 +28,7 @@ from ecl.grid import EclGrid
 from ecl.grid import EclGridGenerator as GridGen
 from ecl.grid.faults import Layer , FaultCollection
 from ecl.util.test import TestAreaContext
+from numpy.testing import assert_allclose
 from tests import EclTest
 
 # This dict is used to verify that corners are mapped to the correct
@@ -344,13 +345,30 @@ class GridTest(EclTest):
         self.assertEqual( dy , 3 )
         self.assertEqual( dz , 4 )
 
-    def test_numpy3D(self):
+    def test_create_3d_is_create_kw_inverse(self):
         nx = 10
         ny = 7
         nz = 5
-        grid = GridGen.createRectangular((nx,ny,nz) , (1,1,1))
-        kw = EclKW( "SWAT" , nx*ny*nz , EclDataType.ECL_FLOAT )
-        numpy_3d = grid.create3D( kw )
+        grid = GridGen.create_rectangular((nx, ny, nz), (1, 1, 1))
+        kw1 = EclKW("SWAT", nx * ny * nz, EclDataType.ECL_FLOAT)
+        for k, j, i in itertools.product(range(nz), range(ny), range(nx)):
+            kw1[i + j * nx + nx * ny * k] = i * j * k
+        numpy_3d = grid.create3D(kw1)
+        kw2 = grid.create_kw(numpy_3d, "SWAT", False)
+        self.assertEqual(kw2.name, "SWAT")
+        assert_allclose(grid.create3D(kw2), numpy_3d)
+
+    def test_create_3d_agrees_with_get_value(self):
+        nx = 5
+        ny = 3
+        nz = 2
+        grid = GridGen.createRectangular((nx, ny, nz), (1, 1, 1))
+        kw = EclKW("SWAT", nx * ny * nz, EclDataType.ECL_FLOAT)
+        for k, j, i in itertools.product(range(nz), range(ny), range(nx)):
+            kw[i + j * nx + nx * ny * k] = i * j * k
+        numpy_3d = grid.create3D(kw)
+        for k, j, i in itertools.product(range(nz), range(ny), range(nx)):
+            self.assertAlmostEqual(numpy_3d[i, j, k], grid.grid_value(kw, i, j, k))
 
     def test_len(self):
         nx = 10
