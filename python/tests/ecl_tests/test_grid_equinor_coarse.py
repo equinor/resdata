@@ -23,20 +23,22 @@ from tests import EclTest, equinor_test
 
 @equinor_test()
 class GridCoarceTest(EclTest):
+    def lgc_grid(self):
+        return EclGrid(
+            self.createTestPath("Equinor/ECLIPSE/LGCcase/LGC_TESTCASE2.EGRID")
+        )
 
-    def test_coarse(self):
-        #work_area = TestArea("python/grid-test/testCoarse")
+    def test_save_roundtrip(self):
         with TestAreaContext("python/grid-test/testCoarse"):
-            testGRID = True
-            g1 = EclGrid(self.createTestPath("Equinor/ECLIPSE/LGCcase/LGC_TESTCASE2.EGRID"))
+            g1 = self.lgc_grid()
 
             g1.save_EGRID("LGC.EGRID")
             g2 = EclGrid("LGC.EGRID")
             self.assertTrue(g1.equal(g2, verbose=True))
+            self.assertEqual(g1.coarse_groups(), g2.coarse_groups())
 
-            if testGRID:
-                g1.save_GRID("LGC.GRID")
-                g3 = EclGrid("LGC.GRID")
-                self.assertTrue(g1.equal(g3, verbose=True))
+    def test_lgc_number_of_groups(self):
+        with TestAreaContext("python/grid-test/testCoarse"):
+            g1 = self.lgc_grid()
 
             self.assertTrue(g1.coarse_groups() == 3384)
