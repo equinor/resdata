@@ -13,10 +13,12 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
+import itertools
 import math
 
-from ecl.util.test import TestAreaContext
+from ecl.eclfile import EclRestartFile
 from ecl.grid import EclGrid
+from ecl.util.test import TestAreaContext
 
 from tests import EclTest, equinor_test
 
@@ -26,6 +28,11 @@ class GridCoarceTest(EclTest):
     def lgc_grid(self):
         return EclGrid(
             self.createTestPath("Equinor/ECLIPSE/LGCcase/LGC_TESTCASE2.EGRID")
+        )
+
+    def lgc_restart(self, grid):
+        return EclRestartFile(
+            grid, self.createTestPath("Equinor/ECLIPSE/LGCcase/LGC_TESTCASE2.UNRST")
         )
 
     def test_save_roundtrip(self):
@@ -42,3 +49,19 @@ class GridCoarceTest(EclTest):
             g1 = self.lgc_grid()
 
             self.assertTrue(g1.coarse_groups() == 3384)
+
+    def test_create_3d_agrees_with_get_value_on_coarse_grid(self):
+        with TestAreaContext("python/grid-test/testCoarse"):
+            grid = self.lgc_grid()
+            kw = self.lgc_restart(grid)["SGAS"][0]
+            nx = grid.getNX()
+            ny = grid.getNY()
+            nz = grid.getNZ()
+            numpy_3d = grid.create3D(kw)
+            for k, j, i in itertools.product(range(nz), range(ny), range(nx)):
+                if grid.active(ijk=(i, j, k)):
+                    self.assertAlmostEqual(
+                        numpy_3d[i, j, k], grid.grid_value(kw, i, j, k)
+                    )
+                else:
+                    self.assertEqual(numpy_3d[i, j, k], 0.0)
