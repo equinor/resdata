@@ -91,11 +91,6 @@ class RestartTest(EclTest):
         rlist0 = [0]
         self.report_list_file_test(self.xfile0, rlist0)
 
-        f = EclFile(self.grid_file)
-        with self.assertRaises(ArgumentError): #argumentError wraps the expected TypeError
-            EclFile.file_report_list(f)
-
-
     def test_dates(self):
         f = EclFile(self.u_file)
         dates = f.dates
