@@ -77,7 +77,9 @@ class RFTTest(EclTest):
 
 
     def test_basics(self):
-        wt = WellTrajectory(self.createTestPath("Equinor/ert-equinor/spotfire/gendata_rft_zone/E-3H.txt"))
+        wt = WellTrajectory(
+            self.createTestPath("Equinor/spotfire/gendata_rft_zone/E-3H.txt")
+        )
         self.assertEqual(len(wt), 38)
         self.assertTrue(isinstance(str(wt), str))
         self.assertTrue(isinstance(repr(wt), str))
@@ -88,12 +90,22 @@ class RFTTest(EclTest):
             WellTrajectory("/does/no/exist")
 
         with self.assertRaises(UserWarning):
-            WellTrajectory(self.createTestPath("Equinor/ert-equinor/spotfire/gendata_rft_zone/invalid_float.txt"))
+            WellTrajectory(
+                self.createTestPath(
+                    "Equinor/spotfire/gendata_rft_zone/invalid_float.txt"
+                )
+            )
 
         with self.assertRaises(UserWarning):
-            WellTrajectory(self.createTestPath("Equinor/ert-equinor/spotfire/gendata_rft_zone/missing_item.txt"))
+            WellTrajectory(
+                self.createTestPath(
+                    "Equinor/spotfire/gendata_rft_zone/missing_item.txt"
+                )
+            )
 
-        wt = WellTrajectory(self.createTestPath("Equinor/ert-equinor/spotfire/gendata_rft_zone/E-3H.txt"))
+        wt = WellTrajectory(
+            self.createTestPath("Equinor/spotfire/gendata_rft_zone/E-3H.txt")
+        )
         self.assertEqual(len(wt), 38)
 
         with self.assertRaises(IndexError):
@@ -111,7 +123,9 @@ class RFTTest(EclTest):
 
 
     def test_PLT(self):
-        rft_file = EclRFTFile(self.createTestPath("Equinor/ECLIPSE/Heidrun/RFT/2C3_MR61.RFT"))
+        rft_file = EclRFTFile(
+            self.createTestPath("Equinor/ECLIPSE/Heidrun/RFT/2C3_MR61.RFT")
+        )
 
         rft0 = rft_file[0]
         rft1 = rft_file[1]
