@@ -1132,11 +1132,9 @@ class EclGrid(BaseCClass):
                 for i in range(kwa.size):
                     array[i] = kwa[i]
             else:
-                data_index = 0
                 for global_index in range(self.getGlobalSize()):
-                    if self.active(global_index=global_index):
-                        array[global_index] = kwa[data_index]
-                        data_index += 1
+                    active_index = self._get_active_index1(global_index)
+                    array[global_index] = kwa[active_index]
 
             array = array.reshape([self.getNX(), self.getNY(), self.getNZ()], order='F')
             return array
