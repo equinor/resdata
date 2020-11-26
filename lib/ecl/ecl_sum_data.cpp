@@ -365,6 +365,9 @@ bool ecl_sum_data_can_write(const ecl_sum_data_type * data) {
 }
 
 time_t ecl_sum_data_get_sim_end(const ecl_sum_data_type * data ) {
+  if (data->data_files.empty())
+    throw std::out_of_range("ecl_sum_data_get_sim_end: data_files empty");
+
   const auto& file_data = data->data_files.back();
   return file_data->get_sim_end();
 }

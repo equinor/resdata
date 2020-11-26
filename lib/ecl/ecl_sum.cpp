@@ -1040,7 +1040,11 @@ time_t ecl_sum_get_start_time( const ecl_sum_type * ecl_sum) {
 }
 
 time_t ecl_sum_get_end_time( const ecl_sum_type * ecl_sum) {
-  return ecl_sum_data_get_sim_end( ecl_sum->data );
+  try {
+    return ecl_sum_data_get_sim_end( ecl_sum->data );
+  } catch (std::out_of_range) {
+    return ecl_smspec_get_start_time( ecl_sum->smspec );
+  }
 }
 
 double ecl_sum_iget_sim_days( const ecl_sum_type * ecl_sum , int index ) {
