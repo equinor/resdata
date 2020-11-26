@@ -251,6 +251,8 @@ time_t ecl_sum_file_data::get_data_start() const {
 
 
 time_t ecl_sum_file_data::get_sim_end() const {
+  if (this->index.size() == 0)
+    throw std::out_of_range("ecl_sum_file_data::get_sim_end(): index size is 0");
   const auto& node = this->index.back();
   return node.sim_time;
 }

@@ -26,6 +26,13 @@ from ecl.summary import EclSum, EclSumKeyWordVector
 from ecl.util.test import TestAreaContext
 from tests import EclTest, equinor_test
 
+
+def test_write_repr():
+    """repr(EclSum) used to segfault when there is only a startdate"""
+    writer = EclSum.writer("TEST", datetime.date(2000, 2, 3), 10, 10, 10)
+    assert repr(writer).startswith('EclSum(name="writer", time=[2000-02-03 00:00:00, 2000-02-03 00:00:00], keys=0) at 0x')
+
+
 @equinor_test()
 class EclSumTest(EclTest):
 
