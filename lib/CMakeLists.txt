@@ -484,12 +484,12 @@ add_test(NAME ecl_grid_layer_contains2 COMMAND ecl_grid_layer_contains
 add_test(NAME ecl_restart_test COMMAND ecl_restart_test
     ${_eclpath}/Gurbat/ECLIPSE.UNRST)
 
-add_test(NAME ecl_nnc_export1 COMMAND ecl_nnc_export ${_eclpath}/Gurbat/ECLIPSE TRUE)
-add_test(NAME ecl_nnc_export2 COMMAND ecl_nnc_export ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC TRUE)
-add_test(NAME ecl_nnc_export4 COMMAND ecl_nnc_export ${_eclpath}/DualPoro/DUAL_DIFF TRUE)
-add_test(NAME ecl_nnc_export5 COMMAND ecl_nnc_export ${_eclpath}/DualPoro/DUALPORO TRUE)
-add_test(NAME ecl_nnc_export6 COMMAND ecl_nnc_export ${_eclpath}/nestedLGRcase/TESTCASE_NESTEDLGR TRUE)
-add_test(NAME ecl_nnc_export7 COMMAND ecl_nnc_export ${_eclpath}/TYRIHANS/BASE20150218_MULTFLT FALSE)
+add_test(NAME ecl_nnc_export_gurbat COMMAND ecl_nnc_export ${_eclpath}/Gurbat/ECLIPSE TRUE)
+add_test(NAME ecl_nnc_export_10kcase COMMAND ecl_nnc_export ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC TRUE)
+add_test(NAME ecl_nnc_export_dual_poro_diff COMMAND ecl_nnc_export ${_eclpath}/DualPoro/DUAL_DIFF TRUE)
+add_test(NAME ecl_nnc_export_dual_poro COMMAND ecl_nnc_export ${_eclpath}/DualPoro/DUALPORO TRUE)
+add_test(NAME ecl_nnc_export_nested_lgr_case COMMAND ecl_nnc_export ${_eclpath}/nestedLGRcase/TESTCASE_NESTEDLGR TRUE)
+add_test(NAME ecl_nnc_export_tyrihans COMMAND ecl_nnc_export ${_eclpath}/TYRIHANS/BASE20150218_MULTFLT FALSE)
 
 add_test(NAME ecl_nnc_export_get_tran COMMAND ecl_nnc_export_get_tran
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
