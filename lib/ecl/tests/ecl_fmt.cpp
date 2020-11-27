@@ -29,10 +29,20 @@ void test_content( const ecl::util::TestArea& ta , const char * src_file , bool 
   ta.copy_file(src_file);
   {
     char * base_name;
+    char * extension;
     bool fmt;
-    util_alloc_file_components( src_file , NULL , &base_name , NULL);
+
+    util_alloc_file_components( src_file , NULL , &base_name , &extension);
+    char * file_name = util_alloc_filename( NULL , base_name , extension );
+
+    util_copy_file(file_name, base_name);
+
     test_assert_true( ecl_util_fmt_file( base_name , &fmt ));
     test_assert_bool_equal( fmt , fmt_file );
+
+    free(file_name);
+    free(base_name);
+    free(extension);
   }
 }
 
