@@ -442,7 +442,6 @@ foreach(name ecl_coarse_test
              ecl_rsthead
              ecl_smspec
              ecl_rft
-             ecl_grid_copy_equinor
              ecl_fault_block_layer_equinor
              well_state_load
              well_state_load_missing_RSEG
@@ -460,26 +459,29 @@ foreach(name ecl_coarse_test
   target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 endforeach()
 
+add_test(NAME ecl_fmt COMMAND ecl_fmt
+    ${_local_eclpath}/cp_simple3/SIMPLE_SUMMARY3.UNSMRY
+    ${_local_eclpath}/cp_simple3/SIMPLE_SUMMARY3.DATA)
+
+
+foreach(name ecl_grid_layer_contains ecl_region ecl_grid_copy)
+    foreach(i RANGE 1 7 )
+        add_test(NAME ${name}_faarikaal${i} COMMAND ${name}
+            ${_local_eclpath}/faarikaal/faarikaal${i}.EGRID)
+    endforeach()
+endforeach()
 
 if (NOT EQUINOR_TESTDATA_ROOT)
     return ()
 endif()
 
-#
-# ecl
-#
-
-add_test(NAME ecl_grid_dx_dy_dz1 COMMAND ecl_grid_dx_dy_dz ${_eclpath}/Gurbat/ECLIPSE)
-add_test(NAME ecl_grid_dx_dy_dz3 COMMAND ecl_grid_dx_dy_dz ${_eclpath}/Troll/Ref2014/T07-4A-W2014-06)
+add_test(NAME ecl_grid_dx_dy_dz_gurbat COMMAND ecl_grid_dx_dy_dz
+    ${_eclpath}/Gurbat/ECLIPSE)
+add_test(NAME ecl_grid_dx_dy_dz_troll COMMAND ecl_grid_dx_dy_dz
+    ${_eclpath}/Troll/Ref2014/T07-4A-W2014-06)
 
 add_test(NAME ecl_coarse_test COMMAND ecl_coarse_test
     ${_eclpath}/LGCcase/LGC_TESTCASE2)
-
-add_test(NAME ecl_grid_layer_contains1 COMMAND ecl_grid_layer_contains
-    ${_eclpath}/Gurbat/ECLIPSE.EGRID)
-
-add_test(NAME ecl_grid_layer_contains2 COMMAND ecl_grid_layer_contains
-    ${_eclpath}/Mariner/MARINER.EGRID)
 
 add_test(NAME ecl_restart_test COMMAND ecl_restart_test
     ${_eclpath}/Gurbat/ECLIPSE.UNRST)
@@ -508,12 +510,6 @@ add_test(NAME ecl_sum_case_exists COMMAND ecl_sum_case_exists
 add_test(NAME ecl_grid_lgr_name COMMAND ecl_grid_lgr_name
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID)
 
-add_test(NAME ecl_region COMMAND ecl_region ${_eclpath}/Gurbat/ECLIPSE.EGRID)
-
-add_test(NAME ecl_grid_cell_contains2 COMMAND ecl_grid_cell_contains ${_eclpath}/Gurbat/ECLIPSE.EGRID)
-add_test(NAME ecl_grid_cell_contains3 COMMAND ecl_grid_cell_contains ${_eclpath}/FF12/FF12_2013B2.EGRID)
-add_test(NAME ecl_grid_cell_contains4 COMMAND ecl_grid_cell_contains ${_eclpath}/Brazil/R3_ICD.EGRID)
-
 add_test(NAME ecl_grid_cell_contains_wellpath1
         COMMAND ecl_grid_cell_contains_wellpath
             ${_eclpath}/CellContains/model/SMS-0.EGRID
@@ -534,9 +530,6 @@ add_test(NAME ecl_grid_simple COMMAND ecl_grid_simple ${_eclpath}/Gurbat/ECLIPSE
 
 add_test(NAME ecl_grid_ecl2015_2 COMMAND ecl_grid_simple
     ${_eclpath}/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_20142.EGRID)
-
-add_test(NAME ecl_grid_export_equinor
-    COMMAND ecl_grid_export ${_eclpath}/Gurbat/ECLIPSE.EGRID)
 
 add_test(NAME ecl_grid_volume1 COMMAND ecl_grid_volume ${_eclpath}/Gurbat/ECLIPSE)
 add_test(NAME ecl_grid_volume2 COMMAND ecl_grid_volume ${_eclpath}/VolumeTest/TEST1)
@@ -588,11 +581,6 @@ add_test(NAME ecl_sum_report_step_compatible6 COMMAND ecl_sum_report_step_equal 
 add_test(NAME ecl_file_equinor
          COMMAND ecl_file_equinor ${_eclpath}/Gurbat/ECLIPSE.UNRST ECLIPSE.UNRST)
 
-add_test(NAME ecl_fmt COMMAND ecl_fmt
-    ${_eclpath}/Gurbat/ECLIPSE.UNRST
-    ${_eclpath}/Gurbat/ECLIPSE.DATA)
-
-
 add_test(NAME ecl_rsthead COMMAND ecl_rsthead
     ${_eclpath}/Gurbat/ECLIPSE.UNRST
     ${_eclpath}/DualPoro/DUALPORO.X0005)
@@ -607,11 +595,6 @@ add_test(NAME ecl_rft_rft_rw COMMAND ecl_rft ${_eclpath}/Gurbat/ECLIPSE.RFT RFT_
 add_test(NAME ecl_rft_plt    COMMAND ecl_rft ${_eclpath}/RFT/TEST1_1A.RFT PLT)
 add_test(NAME ecl_rft_mswplt COMMAND ecl_rft ${_eclpath}/RFT/RFT2.RFT MSW-PLT)
 add_test(NAME ecl_rft_alloc  COMMAND ecl_rft ${_eclpath}/RFT/NORNE_ATW2013_RFTPLT_V2.RFT SIMPLE)
-
-add_test(NAME ecl_grid_copy_equinor1 COMMAND ecl_grid_copy_equinor ${_eclpath}/Gurbat/ECLIPSE.EGRID)
-add_test(NAME ecl_grid_copy_equinor2 COMMAND ecl_grid_copy_equinor ${_eclpath}/Mariner/MARINER.EGRID)
-add_test(NAME ecl_grid_copy_equinor3 COMMAND ecl_grid_copy_equinor ${_eclpath}/LGCcase/LGC_TESTCASE2.EGRID)
-add_test(NAME ecl_grid_copy_equinor4 COMMAND ecl_grid_copy_equinor ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID)
 
 add_test(NAME ecl_fault_block_layer_equinor COMMAND ecl_fault_block_layer_equinor
     ${_eclpath}/Mariner/MARINER.EGRID
