@@ -103,6 +103,8 @@ if (EXISTS ${EQUINOR_TESTDATA_ROOT})
   set(_eclpath ${_equinor_test_data}/ECLIPSE)
   set(_geopath ${_equinor_test_data}/Geometry)
 endif()
+set(_local_test_data "${CMAKE_CURRENT_SOURCE_DIR}/test-data/local" )
+set(_local_eclpath ${_local_test_data}/ECLIPSE )
 
 # output libs to some lib/ path for testing
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
