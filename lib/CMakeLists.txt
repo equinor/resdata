@@ -214,7 +214,7 @@ if (NOT BUILD_TESTS)
 endif ()
 
 
-add_executable(ecl_test_suite tests/testsuite.cpp)
+add_executable(ecl_test_suite tests/test_ecl_grid.cpp tests/testsuite.cpp)
 if (CMAKE_COMPILER_IS_GNUCC)
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
         target_compile_options(ecl_test_suite PRIVATE -DFS_EXPERIMENTAL)
@@ -441,7 +441,6 @@ foreach(name ecl_coarse_test
              ecl_grid_cell_contains_wellpath
              ecl_region2region
              ecl_grid_case
-             ecl_grid_simple
              ecl_grid_volume
              ecl_grid_dims
              ecl_nnc_test
@@ -473,11 +472,6 @@ foreach(name ecl_coarse_test
   target_link_libraries(${name} ecl)
   target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 endforeach()
-
-add_test(NAME ecl_fmt COMMAND ecl_fmt
-    ${_local_eclpath}/cp_simple3/SIMPLE_SUMMARY3.UNSMRY
-    ${_local_eclpath}/cp_simple3/SIMPLE_SUMMARY3.DATA)
-
 
 foreach(name ecl_grid_layer_contains ecl_region ecl_grid_copy)
     foreach(i RANGE 1 7 )
@@ -540,11 +534,6 @@ add_test(NAME ecl_grid_case COMMAND ecl_grid_case
 add_test(NAME ecl_lgr_test1 COMMAND ecl_lgr_test ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID)
 add_test(NAME ecl_lgr_test2 COMMAND ecl_lgr_test ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.GRID)
 add_test(NAME ecl_lgr_test3 COMMAND ecl_lgr_test ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID)
-
-add_test(NAME ecl_grid_simple COMMAND ecl_grid_simple ${_eclpath}/Gurbat/ECLIPSE.EGRID)
-
-add_test(NAME ecl_grid_ecl2015_2 COMMAND ecl_grid_simple
-    ${_eclpath}/Eclipse2015_NNC_BUG/FF15_2015B2_LGRM_RDI15_HIST_RDIREAL1_20142.EGRID)
 
 add_test(NAME ecl_grid_volume1 COMMAND ecl_grid_volume ${_eclpath}/Gurbat/ECLIPSE)
 add_test(NAME ecl_grid_volume2 COMMAND ecl_grid_volume ${_eclpath}/VolumeTest/TEST1)
