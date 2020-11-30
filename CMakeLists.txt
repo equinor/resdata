@@ -354,6 +354,12 @@ if (ERT_LINUX)
    add_definitions( -DHAVE_PROC )
 endif()
 
+if (BUILD_TESTS)
+    set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/Catch2)
+    add_library(Catch INTERFACE)
+    target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
+endif()
+
 add_subdirectory( lib )
 add_subdirectory( applications )
 add_subdirectory( bin )

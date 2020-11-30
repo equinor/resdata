@@ -213,6 +213,21 @@ if (NOT BUILD_TESTS)
     return ()
 endif ()
 
+
+add_executable(ecl_test_suite tests/testsuite.cpp)
+if (CMAKE_COMPILER_IS_GNUCC)
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
+        target_compile_options(ecl_test_suite PRIVATE -DFS_EXPERIMENTAL)
+    else()
+        target_compile_options(ecl_test_suite PRIVATE "--std=c++17")
+    endif()
+    target_link_libraries(ecl_test_suite ecl Catch stdc++fs)
+else()
+    target_compile_options(ecl_test_suite PRIVATE "--std=c++17")
+    target_link_libraries(ecl_test_suite ecl Catch)
+endif()
+add_test(NAME ecl_test_suite COMMAND ecl_test_suite)
+
 foreach (name   ert_util_alloc_file_components
                 ert_util_split_path
                 ert_util_approx_equal
