@@ -116,6 +116,12 @@ TEST_CASE("Test dxv_dyv_dzv grids", "[unittest]") {
                                            depth_function(x_center, y_center),
                                        1e-4));
             }
+
+            THEN("The volume should be simple multiplication") {
+                double volume = ecl_grid_get_cell_volume3(grid, i, j, k);
+                REQUIRE_THAT(volume,
+                             WithinAbs(z_width * x_width * y_width, 1e-4));
+            }
         }
 
         ecl_grid_free(grid);
