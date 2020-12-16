@@ -322,8 +322,7 @@ endif()
 # ecl
 #
 
-foreach (name   ecl_alloc_cpgrid
-                ecl_alloc_grid_dxv_dyv_dzv
+foreach (name   ecl_alloc_grid_dxv_dyv_dzv
                 ecl_fault_block_layer
                 ecl_util_path_access
                 ecl_grid_add_nnc
