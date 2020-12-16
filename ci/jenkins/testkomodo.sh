@@ -27,5 +27,5 @@ run_tests () {
     copy_test_files
     install_test_dependencies
     cd $CI_TEST_ROOT
-    pytest -vv
+    pytest -vv python/tests
 }
