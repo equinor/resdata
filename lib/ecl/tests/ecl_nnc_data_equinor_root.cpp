@@ -116,7 +116,6 @@ void test_alloc_file_flux(char * filename, int file_num) {
 
 int main(int argc , char ** argv) {
    test_alloc_file_tran(argv[1]);
-   test_alloc_file_flux(argv[2], 0);
-   test_alloc_file_flux(argv[2], 6);
+   test_alloc_file_flux(argv[1], 0);
    return 0;
 }
