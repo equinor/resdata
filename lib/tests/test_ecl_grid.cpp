@@ -4,6 +4,8 @@
 #include <ert/ecl/ecl_kw_magic.hpp>
 #include <vector>
 
+#include "tmpdir.hpp"
+
 using namespace Catch;
 using namespace Matchers;
 
@@ -256,5 +258,37 @@ TEST_CASE("Test double twistedness", "[unittest]") {
         }
 
         ecl_grid_free(grid);
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Test case loading", "[unittest]") {
+    GIVEN("A grid on disc") {
+        auto filename = dirname / "GRID.EGRID";
+        ecl_grid_type *ecl_grid =
+            ecl_grid_alloc_rectangular(5, 5, 5, 1, 1, 1, nullptr);
+        ecl_grid_fwrite_EGRID2(ecl_grid, filename.c_str(), ECL_METRIC_UNITS);
+        ecl_grid_free(ecl_grid);
+
+        THEN("Loading that grid gives a non-null grid as a case") {
+            ecl_grid_type *grid = ecl_grid_load_case(filename.c_str());
+            REQUIRE(grid != NULL);
+            ecl_grid_free(grid);
+        }
+        THEN("Loading it as without extension also gives non-null grid") {
+            auto no_ext_file_name = dirname / "GRID";
+            ecl_grid_type *grid = ecl_grid_load_case(no_ext_file_name.c_str());
+            REQUIRE(grid != NULL);
+            ecl_grid_free(grid);
+        }
+        THEN("Loadinging a non-existent grid gives NULL") {
+            auto does_not_exist = dirname / "DOES_NOT_EXIST.EGRID";
+            ecl_grid_type *grid = ecl_grid_load_case(does_not_exist.c_str());
+            REQUIRE(grid == NULL);
+        }
+        THEN("Loading non-existent grid without extension gives NULL") {
+            auto does_not_exist = dirname / "DOES_NOT_EXIST";
+            ecl_grid_type *grid = ecl_grid_load_case(does_not_exist.c_str());
+            REQUIRE(grid == NULL);
+        }
     }
 }

@@ -437,7 +437,6 @@ foreach(name ecl_coarse_test
              ecl_region
              ecl_grid_cell_contains_wellpath
              ecl_region2region
-             ecl_grid_case
              ecl_grid_volume
              ecl_grid_dims
              ecl_nnc_test
@@ -523,10 +522,6 @@ add_test(NAME ecl_grid_cell_contains_wellpath1
 
 
 add_test(NAME ecl_region2region COMMAND ecl_region2region ${_eclpath}/R2R/R2R.SMSPEC)
-
-add_test(NAME ecl_grid_case COMMAND ecl_grid_case
-    ${_eclpath}/Gurbat/ECLIPSE.EGRID
-    ${_eclpath}/Gurbat/ECLIPSE)
 
 add_test(NAME ecl_lgr_test1 COMMAND ecl_lgr_test ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.EGRID)
 add_test(NAME ecl_lgr_test2 COMMAND ecl_lgr_test ${_eclpath}/10kcase/TEST10K_FLT_LGR_NNC.GRID)
