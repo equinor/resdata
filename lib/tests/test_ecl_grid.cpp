@@ -292,3 +292,50 @@ TEST_CASE_METHOD(Tmpdir, "Test case loading", "[unittest]") {
         }
     }
 }
+
+TEST_CASE_METHOD(Tmpdir, "Test format writing grid", "[unittest]") {
+    GIVEN("A Grid") {
+        ecl_grid_type *ecl_grid =
+            ecl_grid_alloc_rectangular(5, 5, 5, 1, 1, 1, nullptr);
+
+        THEN("Writing that file as a FEGRID is a formatted file") {
+            ecl_grid_fwrite_EGRID2(ecl_grid, (dirname / "CASE.FEGRID").c_str(),
+                                   ECL_METRIC_UNITS);
+            REQUIRE(util_fmt_bit8((dirname / "CASE.FEGRID").c_str()));
+        }
+
+        THEN("Writing that file as a EGRID is an unformatted file") {
+            ecl_grid_fwrite_EGRID2(ecl_grid, (dirname / "CASE.EGRID").c_str(),
+                                   ECL_METRIC_UNITS);
+            REQUIRE(!util_fmt_bit8((dirname / "CASE.EGRID").c_str()));
+        }
+        THEN(
+            "Writing that file with unknown extension is an unformatted file") {
+            ecl_grid_fwrite_EGRID2(ecl_grid, (dirname / "CASE.UNKNOWN").c_str(),
+                                   ECL_METRIC_UNITS);
+            REQUIRE(!util_fmt_bit8((dirname / "CASE.UNKNOWN").c_str()));
+        }
+
+        ecl_grid_free(ecl_grid);
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Writing and reading grid", "[unittest]") {
+    GIVEN("A Grid") {
+        ecl_grid_type *ecl_grid =
+            ecl_grid_alloc_rectangular(5, 5, 5, 1, 1, 1, nullptr);
+
+        THEN("Writing and reading that grid gives equal grid") {
+            auto filename = (dirname / "CASE.EGRID");
+            ecl_grid_fwrite_EGRID2(ecl_grid, filename.c_str(),
+                                   ECL_METRIC_UNITS);
+            ecl_grid_type *read_grid = ecl_grid_alloc(filename.c_str());
+
+            REQUIRE(ecl_grid_compare(ecl_grid, read_grid, false, false, true));
+
+            ecl_grid_free(read_grid);
+        }
+
+        ecl_grid_free(ecl_grid);
+    }
+}

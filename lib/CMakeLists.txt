@@ -214,7 +214,7 @@ if (NOT BUILD_TESTS)
 endif ()
 
 
-add_executable(ecl_test_suite tests/test_ecl_grid.cpp tests/testsuite.cpp)
+add_executable(ecl_test_suite tests/test_ecl_grid.cpp tests/test_ecl_util.cpp tests/testsuite.cpp)
 if (CMAKE_COMPILER_IS_GNUCC)
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
         target_compile_options(ecl_test_suite PRIVATE -DFS_EXPERIMENTAL)
@@ -327,7 +327,6 @@ foreach (name   ecl_fault_block_layer
                 ecl_grid_add_nnc
                 ecl_grid_copy
                 ecl_grid_create
-                ecl_grid_fwrite
                 ecl_grid_unit_system
                 ecl_grid_export
                 ecl_grid_init_fwrite
