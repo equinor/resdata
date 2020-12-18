@@ -26,6 +26,8 @@
   manipulation functions which explicitly use the PATH_SEP variable.
 */
 
+#include <stdexcept>
+
 #include <assert.h>
 #include <string.h>
 #include <time.h>
@@ -693,21 +695,13 @@ static char * util_getcwd(char * buffer , int size) {
 
 
 char * util_alloc_cwd(void) {
-  char * result_ptr;
-  char * cwd;
-  int buffer_size = 128;
-  do {
-    cwd = (char*)util_calloc(buffer_size , sizeof * cwd );
-    result_ptr = util_getcwd(cwd , buffer_size - 1);
-    if (result_ptr == NULL) {
-      if (errno == ERANGE) {
-        buffer_size *= 2;
-        free(cwd);
-      }
-    }
-  } while ( result_ptr == NULL );
-  cwd = (char*)util_realloc(cwd , strlen(cwd) + 1 );
-  return cwd;
+  char cwd[PATH_MAX];
+  char * result_ptr = util_getcwd(cwd , sizeof(cwd));
+  if (result_ptr != NULL) {
+    return strdup(cwd);
+  } else {
+    throw std::runtime_error("Could not get cwd.");
+  }
 }
 
 
