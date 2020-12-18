@@ -439,9 +439,21 @@ class GridTest(EclTest):
 
             (xmin, xmax), (ymin, ymax), (zmin, zmax) = getMinMaxValue(wgrid)
 
-            x_space = linspace(xmin-1, xmax+1, int(xmax-xmin+2)*steps_per_unit+1)
-            y_space = linspace(ymin-1, ymax+1, int(ymax-ymin+2)*steps_per_unit+1)
-            z_space = linspace(zmin-1, zmax+1, int(zmax-zmin+2)*steps_per_unit+1)
+            x_space = linspace(
+                xmin - 1, xmax + 1, int(xmax - xmin + 2) * steps_per_unit + 1
+            )
+            y_space = linspace(
+                ymin - 1, ymax + 1, int(ymax - ymin + 2) * steps_per_unit + 1
+            )
+            z_space = linspace(
+                zmin - 1, zmax + 1, int(zmax - zmin + 2) * steps_per_unit + 1
+            )
+
+            # limit amount of points tested by
+            # only testing every 3rd point
+            x_space = x_space[0:-1:3]
+            y_space = y_space[0:-1:3]
+            z_space = z_space[0:-1:3]
 
             for x, y, z in itertools.product(x_space, y_space, z_space):
                 hits = [
