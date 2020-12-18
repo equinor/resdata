@@ -15,12 +15,10 @@
 #  for more details.
 
 from cwrap import BaseCClass
+from ecl import EclFileEnum, EclFileFlagEnum, EclPrototype
+from ecl.eclfile import Ecl3DFile, EclFile
+from ecl.util.util import CTime, monkey_the_camel
 
-from ecl import EclPrototype
-from ecl.util.util import monkey_the_camel
-from ecl.util.util import CTime
-from ecl import EclFileEnum
-from ecl.eclfile import EclFile, Ecl3DFile, Ecl3DKW
 
 class EclRestartHead(BaseCClass):
     TYPE_NAME = "ecl_rsthead"
@@ -64,11 +62,11 @@ class EclRestartHead(BaseCClass):
                 "NCWMAX" : self._get_ncwmax()}
 
 
+ECL_FILE_DEFAULT = EclFileFlagEnum.ECL_FILE_DEFAULT
 
 
 class EclRestartFile(Ecl3DFile):
-
-    def __init__(self , grid , filename , flags = 0):
+    def __init__(self, grid, filename, flags=ECL_FILE_DEFAULT):
         """Will open an Eclipse restart file.
 
         The EclRestartFile class will open an eclipse restart file, in
