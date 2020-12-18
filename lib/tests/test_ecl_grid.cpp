@@ -69,21 +69,21 @@ ecl_grid_type *generate_dxv_dyv_dzv_depthz_grid(int num_x, int num_y, int num_z,
 
 TEST_CASE("Test dxv_dyv_dzv grids", "[unittest]") {
     GIVEN("A grid constructed with dxv_dyv_dzv_depthz") {
-        int nx = 100;
-        int ny = 100;
-        int nz = 10;
+        int nx = GENERATE(take(3, random(5, 25)));
+        int ny = GENERATE(take(3, random(5, 25)));
+        int nz = GENERATE(take(3, random(5, 25)));
 
         double x_width = 1.0 / nx;
         double y_width = 1.0 / ny;
         double z_width = 3.0 / nz;
 
         ecl_grid_type *grid = generate_dxv_dyv_dzv_depthz_grid(
-            100, 100, 10, x_width, y_width, z_width);
+            nx, ny, nz, x_width, y_width, z_width);
 
         AND_GIVEN("Any cell in that grid") {
-            auto i = GENERATE(take(3, random(0, 99)));
-            auto j = GENERATE(take(3, random(0, 99)));
-            auto k = GENERATE(take(3, random(0, 9)));
+            int i = GENERATE_COPY(0, nx - 1, take(3, random(1, nx - 2)));
+            int j = GENERATE_COPY(0, ny - 1, take(3, random(1, ny - 2)));
+            int k = GENERATE_COPY(0, nz - 1, take(3, random(1, nz - 2)));
 
             THEN("get_xyz3 should return cell center in x, y plane") {
                 double xc, yc, zc;
@@ -125,30 +125,15 @@ TEST_CASE("Test dxv_dyv_dzv grids", "[unittest]") {
                              WithinAbs(z_width * x_width * y_width, 1e-4));
             }
         }
-
+        AND_GIVEN("A grid constructed in the same way") {
+            ecl_grid_type *grid2 = generate_dxv_dyv_dzv_depthz_grid(
+                nx, ny, nz, x_width, y_width, z_width);
+            THEN("Those grids are equal") {
+                REQUIRE(ecl_grid_compare(grid, grid2, false, false, true));
+            }
+            ecl_grid_free(grid2);
+        }
         ecl_grid_free(grid);
-    }
-}
-
-TEST_CASE("Test grid compare", "[unittest]") {
-    GIVEN("Any two grid constructed the same way") {
-        int nx = 100;
-        int ny = 100;
-        int nz = 10;
-
-        double x_width = 1.0 / nx;
-        double y_width = 1.0 / ny;
-        double z_width = 3.0 / nz;
-
-        ecl_grid_type *grid1 = generate_dxv_dyv_dzv_depthz_grid(
-            100, 100, 10, x_width, y_width, z_width);
-        ecl_grid_type *grid2 = generate_dxv_dyv_dzv_depthz_grid(
-            100, 100, 10, x_width, y_width, z_width);
-
-        THEN("Those grids are equal") { REQUIRE(grid1); }
-
-        ecl_grid_free(grid1);
-        ecl_grid_free(grid2);
     }
 }
 
