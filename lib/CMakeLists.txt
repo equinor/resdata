@@ -502,8 +502,7 @@ add_test(NAME ecl_nnc_export_get_tran COMMAND ecl_nnc_export_get_tran
 
 add_test(NAME ecl_nnc_data_equinor_root COMMAND ecl_nnc_data_equinor_root
     ${_eclpath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
-    ${_eclpath}/flow-nnc/Simple4/SIMPLE_SUMMARY4
-    ${_eclpath}/flow-nnc/Gullfaks/GF_ACT_NEW_TEMP)
+    ${_eclpath}/flow-nnc/Simple4/SIMPLE_SUMMARY4)
 
 add_test(NAME ecl_sum_case_exists COMMAND ecl_sum_case_exists
          ${_eclpath}/Gurbat/ECLIPSE
