@@ -70,7 +70,7 @@ add_library(ecl util/rng.cpp
                 util/hash.cpp
                 util/node_data.cpp
                 util/node_ctype.cpp
-                util/util.c
+                util/util.cpp
                 util/util_symlink.cpp
                 util/util_lfs.c
                 util/util_unlink.cpp
@@ -214,7 +214,7 @@ if (NOT BUILD_TESTS)
 endif ()
 
 
-add_executable(ecl_test_suite tests/test_ecl_grid.cpp tests/test_ecl_util.cpp tests/testsuite.cpp)
+add_executable(ecl_test_suite tests/test_ecl_grid.cpp tests/test_ecl_util.cpp tests/testsuite.cpp tests/test_util.cpp)
 if (CMAKE_COMPILER_IS_GNUCC)
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
         target_compile_options(ecl_test_suite PRIVATE -DFS_EXPERIMENTAL)
