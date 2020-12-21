@@ -10,10 +10,6 @@ if (INSTALL_ERT_LEGACY)
    add_subdirectory( ert )
 endif()
 
-if (BUILD_TESTS)
-   add_subdirectory( tests )
-endif()
-
 if(RST_DOC)
   add_subdirectory( docs )
 endif()
