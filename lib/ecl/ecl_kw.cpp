@@ -1528,20 +1528,37 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 }
 
 
+/**
+ * copies src string into dest string with leading and
+ * trailing whitespace removed.
+ */
+char * strip(char * dest, const char *src) {
+  int strip_length = 0;
+  int end_index   = strlen(src) - 1;
+  while (end_index >= 0 && src[end_index] == ' ')
+    end_index--;
+
+  if (end_index >= 0) {
+
+    int start_index = 0;
+    while (src[start_index] == ' ')
+      start_index++;
+    strip_length = end_index - start_index + 1;
+    memcpy(dest , &src[start_index] , strip_length);
+  }
+  dest[strip_length] = '\0';
+}
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
+  size_t header_len = strlen(header);
   ecl_kw->header8 = (char*)realloc(ecl_kw->header8 , ECL_STRING8_LENGTH + 1);
-  if (strlen(header) <= 8) {
-     sprintf(ecl_kw->header8 , "%-8s" , header);
+  ecl_kw->header = (char*)realloc(ecl_kw->header , header_len + 1);
 
-     /* Internalizing a header without the trailing spaces as well. */
-     free( ecl_kw->header );
-     ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
-  }
-  else {
-     ecl_kw->header = (char*)util_alloc_copy(header, strlen( header ) + 1);
-  }
+  memset(ecl_kw->header8, ' ', ECL_STRING8_LENGTH);
+  ecl_kw->header8[ECL_STRING8_LENGTH] = '\0';
+  memcpy(ecl_kw->header8, header, ECL_STRING8_LENGTH < header_len ? ECL_STRING8_LENGTH: header_len);
 
+  strip(ecl_kw->header, header);
 }
 
 
