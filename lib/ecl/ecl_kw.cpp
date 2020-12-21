@@ -1531,14 +1531,14 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
   ecl_kw->header8 = (char*)realloc(ecl_kw->header8 , ECL_STRING8_LENGTH + 1);
-  if (strlen(header) <= 8) {
-     sprintf(ecl_kw->header8 , "%-8s" , header);
+  sprintf(ecl_kw->header8 , "%-*s" , ECL_STRING8_LENGTH, header);
+  ecl_kw->header8[ECL_STRING8_LENGTH] = '\0';
 
+  if (strlen(header) <= ECL_STRING8_LENGTH) {
      /* Internalizing a header without the trailing spaces as well. */
      free( ecl_kw->header );
      ecl_kw->header = util_alloc_strip_copy( ecl_kw->header8 );
-  }
-  else {
+  } else {
      ecl_kw->header = (char*)util_alloc_copy(header, strlen( header ) + 1);
   }
 
