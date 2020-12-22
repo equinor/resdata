@@ -364,6 +364,10 @@ add_subdirectory( lib )
 add_subdirectory( applications )
 add_subdirectory( bin )
 
+if(ENABLE_PYTHON)
+    message(DEPRECATION "The ENABLE_PYTHON option is deprecated and will be removed in favour of installing via pip. Refer to the README.md")
+endif()
+
 if (ENABLE_PYTHON AND ERT_WINDOWS)
     if ((NOT MSVC) OR (MSVC_VERSION LESS 1900))
       message(FATAL_ERROR "The Python wrappers require Visual Studio 2015 or newer")
