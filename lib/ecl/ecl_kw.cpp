@@ -16,6 +16,8 @@
    for more details.
 */
 
+#include <algorithm>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -43,7 +45,7 @@ struct ecl_kw_struct {
   UTIL_TYPE_ID_DECLARATION;
   int               size;
   ecl_data_type     data_type;
-  char            * header8;              /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/
+  char              header8[9];           /* Header which is right padded with ' ' to become exactly 8 characters long. Should only be used internally.*/
   char            * header;               /* Header which is trimmed to no-space. */
   char            * data;                 /* The actual data vector. */
   bool              shared_data;          /* Whether this keyword has shared data or not. */
@@ -650,7 +652,7 @@ ecl_kw_type * ecl_kw_alloc_empty() {
 
   ecl_kw                 = (ecl_kw_type*)util_malloc(sizeof *ecl_kw );
   ecl_kw->header         = NULL;
-  ecl_kw->header8        = NULL;
+  ecl_kw->header8[8]     = '\0';
   ecl_kw->data           = NULL;
   ecl_kw->shared_data    = false;
   ecl_kw->size           = 0;
@@ -664,7 +666,6 @@ ecl_kw_type * ecl_kw_alloc_empty() {
 
 void ecl_kw_free(ecl_kw_type *ecl_kw) {
   free( ecl_kw->header );
-  free(ecl_kw->header8);
   ecl_kw_free_data(ecl_kw);
   free(ecl_kw);
 }
@@ -1528,37 +1529,12 @@ void ecl_kw_free_data(ecl_kw_type *ecl_kw) {
 }
 
 
-/**
- * copies src string into dest string with leading and
- * trailing whitespace removed.
- */
-char * strip(char * dest, const char *src) {
-  int strip_length = 0;
-  int end_index   = strlen(src) - 1;
-  while (end_index >= 0 && src[end_index] == ' ')
-    end_index--;
-
-  if (end_index >= 0) {
-
-    int start_index = 0;
-    while (src[start_index] == ' ')
-      start_index++;
-    strip_length = end_index - start_index + 1;
-    memcpy(dest , &src[start_index] , strip_length);
-  }
-  dest[strip_length] = '\0';
-}
-
 void ecl_kw_set_header_name(ecl_kw_type * ecl_kw , const char * header) {
-  size_t header_len = strlen(header);
-  ecl_kw->header8 = (char*)realloc(ecl_kw->header8 , ECL_STRING8_LENGTH + 1);
-  ecl_kw->header = (char*)realloc(ecl_kw->header , header_len + 1);
+  free(ecl_kw->header);
+  ecl_kw->header = strdup(header);
 
-  memset(ecl_kw->header8, ' ', ECL_STRING8_LENGTH);
-  ecl_kw->header8[ECL_STRING8_LENGTH] = '\0';
-  memcpy(ecl_kw->header8, header, ECL_STRING8_LENGTH < header_len ? ECL_STRING8_LENGTH: header_len);
-
-  strip(ecl_kw->header, header);
+  std::fill_n(ecl_kw->header8, 8, ' ');
+  std::copy_n(ecl_kw->header, std::min(strlen(header), static_cast<size_t>(8)), ecl_kw->header8);
 }
 
 
