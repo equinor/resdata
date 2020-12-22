@@ -10,5 +10,5 @@ scikit-build
 setuptools
 setuptools_scm
 six
-sphinx
+sphinx!=3.4.0
 wheel
