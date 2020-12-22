@@ -22,7 +22,7 @@ jobs:
     - name: Build ecl
       run: |
         mkdir cmake-build
-        cmake -S . -B cmake-build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake -S . -B cmake-build -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DRST_DOC=ON
         cmake --build cmake-build
 
     - name: Run tests
