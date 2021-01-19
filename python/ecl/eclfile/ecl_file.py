@@ -280,7 +280,7 @@ class EclFile(BaseCClass):
 
 
     def restart_view(self, seqnum_index=None, report_step=None, sim_time=None, sim_days=None):
-        return self.global_view.restartView( seqnum_index, report_step , sim_time, sim_days )
+        return self.global_view.restart_view( seqnum_index, report_step , sim_time, sim_days )
 
 
     def select_block(self, kw, kw_index):

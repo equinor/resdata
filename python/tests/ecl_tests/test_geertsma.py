@@ -77,7 +77,7 @@ class GeertsmaTest(EclTest):
             init = EclFile("TEST.INIT")
             restart_file = EclFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
+            restart_view1 = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
 
             subsidence = EclSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -89,12 +89,12 @@ class GeertsmaTest(EclTest):
             topres = 2000
             receiver = (1000, 1000, 0)
 
-            dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            dz = subsidence.eval_geertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz, 3.944214576168326e-09)
 
             receiver = (1000, 1000, topres - seabed - above)
 
-            dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            dz = subsidence.eval_geertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz, 5.8160298201497136e-08)
 
     @staticmethod
@@ -110,8 +110,8 @@ class GeertsmaTest(EclTest):
             init = EclFile("TEST.INIT")
             restart_file = EclFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
-            restart_view2 = restart_file.restartView(sim_time=datetime.date(2010, 1, 1))
+            restart_view1 = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
+            restart_view2 = restart_file.restart_view(sim_time=datetime.date(2010, 1, 1))
 
             subsidence = EclSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -122,15 +122,15 @@ class GeertsmaTest(EclTest):
             seabed = 0
             receiver = (1000, 1000, 0)
 
-            dz1 = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            dz1 = subsidence.eval_geertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz1, 8.65322541521704e-07)
 
-            dz2 = subsidence.evalGeertsma("S2", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            dz2 = subsidence.eval_geertsma("S2", None, receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz2, 2.275556615015282e-06)
 
             np.testing.assert_almost_equal(dz1-dz2, -1.4102340734935779e-06)
 
-            dz = subsidence.evalGeertsma("S1", "S2", receiver, youngs_modulus, poisson_ratio, seabed)
+            dz = subsidence.eval_geertsma("S1", "S2", receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz, dz1-dz2)
 
     @staticmethod
@@ -144,7 +144,7 @@ class GeertsmaTest(EclTest):
             init = EclFile("TEST.INIT")
             restart_file = EclFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
+            restart_view1 = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
 
             subsidence = EclSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -156,7 +156,7 @@ class GeertsmaTest(EclTest):
             topres = 2000
             receiver = (1000, 1000, topres - seabed - above)
 
-            dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            dz = subsidence.eval_geertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
 
     @staticmethod
@@ -170,7 +170,7 @@ class GeertsmaTest(EclTest):
             init = EclFile("TEST.INIT")
             restart_file = EclFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
+            restart_view1 = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
 
             subsidence = EclSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -182,7 +182,7 @@ class GeertsmaTest(EclTest):
             topres = 2000
             receiver = (1000, 1000, topres - seabed - above)
 
-            dz = subsidence.evalGeertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
+            dz = subsidence.eval_geertsma("S1", None, receiver, youngs_modulus, poisson_ratio, seabed)
             np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
 
     def test_geertsma_rporv_kernel_2_source_points_2_vintages(self):
@@ -200,8 +200,8 @@ class GeertsmaTest(EclTest):
             init = EclFile("TEST.INIT")
             restart_file = EclFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
-            restart_view2 = restart_file.restartView(sim_time=datetime.date(2010, 1, 1))
+            restart_view1 = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
+            restart_view2 = restart_file.restart_view(sim_time=datetime.date(2010, 1, 1))
 
             subsidence = EclSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)

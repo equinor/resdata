@@ -126,7 +126,7 @@ class EclUtil(object):
         """
         Will inspect an ECLIPSE filename and return an integer type flag.
         """
-        file_type, fmt, step = EclUtil.inspectExtension(filename)
+        file_type, fmt, step = EclUtil.inspect_extension(filename)
         return file_type
 
     @staticmethod

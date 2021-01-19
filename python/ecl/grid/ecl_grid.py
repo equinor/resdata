@@ -170,7 +170,7 @@ class EclGrid(BaseCClass):
         """
         Will inspect the @filename argument and create a new EclGrid instance.
         """
-        if FortIO.isFortranFile(filename):
+        if FortIO.is_fortran_file(filename):
             return EclGrid(filename)
         else:
             return EclGrid.loadFromGrdecl(filename)

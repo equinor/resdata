@@ -78,7 +78,7 @@ class EclRFT(BaseCClass):
     def __repr__(self):
         rs = []
         rs.append('completed_cells = %d' % len(self))
-        rs.append('date = %s' % self.getDate())
+        rs.append('date = %s' % self.get_date())
         if self.is_RFT():
             rs.append('RFT')
         if self.is_PLT():
@@ -277,7 +277,7 @@ class EclRFTFile(BaseCClass):
         header_list = []
         for i in (range(self._get_size( None , CTime(-1)))):
             rft = self.iget( i )
-            header_list.append( (rft.getWellName() , rft.getDate()) )
+            header_list.append( (rft.getWellName() , rft.get_date()) )
         return header_list
 
 

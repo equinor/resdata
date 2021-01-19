@@ -107,7 +107,7 @@ class EclRestartFile(Ecl3DFile):
             self.rst_headers = []
             if self.unified():
                 for index in range(self.num_named_kw("SEQNUM")):
-                    self.rst_headers.append( EclRestartHead( rst_view = self.restartView( seqnum_index = index )))
+                    self.rst_headers.append( EclRestartHead( rst_view = self.restart_view( seqnum_index = index )))
             else:
                 intehead_kw = self["INTEHEAD"][0]
                 doubhead_kw = self["DOUBHEAD"][0]
