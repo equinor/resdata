@@ -28,7 +28,6 @@ from __future__ import absolute_import
 import ctypes
 
 from cwrap import BaseCEnum
-from ecl.util.util import monkey_the_camel
 from ecl import EclPrototype
 
 class EclFileEnum(BaseCEnum):
@@ -164,6 +163,3 @@ class EclUtil(object):
 get_num_cpu = EclUtil.get_num_cpu
 get_file_type = EclUtil.get_file_type
 get_start_date = EclUtil.get_start_date
-
-monkey_the_camel(EclUtil, 'inspectExtension', EclUtil.inspect_extension, staticmethod)
-monkey_the_camel(EclUtil, 'reportStep', EclUtil.report_step, staticmethod)

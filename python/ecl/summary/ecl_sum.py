@@ -35,7 +35,6 @@ import re
 # argument. In the python code this order has been reversed.
 from cwrap import BaseCClass, CFILE
 
-from ecl.util.util import monkey_the_camel
 from ecl.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 
 from ecl.summary import EclSumTStep
@@ -1549,19 +1548,3 @@ EclSum._dump_csv_line = EclPrototype("void ecl_sum_fwrite_interp_csv_line(ecl_su
 EclSum._get_interp_vector = EclPrototype("void ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)", bind=False)
 EclSum._init_pandas_frame = EclPrototype("void ecl_sum_init_double_frame(ecl_sum, ecl_sum_vector, double*)", bind=False)
 EclSum._init_pandas_frame_interp = EclPrototype("void ecl_sum_init_double_frame_interp(ecl_sum, ecl_sum_vector, time_t_vector, double*)", bind=False)
-
-monkey_the_camel(EclSum, 'varType', EclSum.var_type, classmethod)
-monkey_the_camel(EclSum, 'addVariable', EclSum.add_variable)
-monkey_the_camel(EclSum, 'addTStep', EclSum.add_t_step)
-monkey_the_camel(EclSum, 'assertKeyValid', EclSum.assert_key_valid)
-monkey_the_camel(EclSum, 'scaleVector', EclSum.scale_vector)
-monkey_the_camel(EclSum, 'shiftVector', EclSum.shift_vector)
-monkey_the_camel(EclSum, 'timeRange', EclSum.time_range)
-monkey_the_camel(EclSum, 'blockedProduction', EclSum.blocked_production)
-monkey_the_camel(EclSum, 'getDataStartTime', EclSum.get_data_start_time)
-monkey_the_camel(EclSum, 'getStartTime', EclSum.get_start_time)
-monkey_the_camel(EclSum, 'getEndTime', EclSum.get_end_time)
-monkey_the_camel(EclSum, 'solveDates', EclSum.solve_dates)
-monkey_the_camel(EclSum, 'solveDays', EclSum.solve_days)
-monkey_the_camel(EclSum, 'dumpCSVLine', EclSum.dump_csv_line)
-monkey_the_camel(EclSum, 'exportCSV', EclSum.export_csv)

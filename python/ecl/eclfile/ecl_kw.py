@@ -47,7 +47,6 @@ import numpy
 from cwrap import CFILE, BaseCClass
 
 from ecl import EclPrototype
-from ecl.util.util import monkey_the_camel
 from ecl import EclDataType
 from ecl import EclTypeEnum, EclUtil
 
@@ -1226,22 +1225,3 @@ class EclKW(BaseCClass):
         ok = self._safe_div( divisor )
         if not ok:
             raise NotImplementedError("safe_div not implemented for this type combination")
-
-
-
-
-monkey_the_camel(EclKW, 'intKeywords', EclKW.int_keywords, classmethod)
-monkey_the_camel(EclKW, 'isNumeric', EclKW.is_numeric)
-monkey_the_camel(EclKW, 'fortIOSize', EclKW.fort_io_size)
-monkey_the_camel(EclKW, 'setName', EclKW.set_name)
-monkey_the_camel(EclKW, 'getName', EclKW.get_name)
-monkey_the_camel(EclKW, 'getMinMax', EclKW.get_min_max)
-monkey_the_camel(EclKW, 'getMax', EclKW.get_max)
-monkey_the_camel(EclKW, 'getMin', EclKW.get_min)
-monkey_the_camel(EclKW, 'typeName', EclKW.type_name)
-monkey_the_camel(EclKW, 'getEclType', EclKW.get_ecl_type)
-monkey_the_camel(EclKW, 'numpyView', EclKW.numpy_view)
-monkey_the_camel(EclKW, 'numpyCopy', EclKW.numpy_copy)
-monkey_the_camel(EclKW, 'fixUninitialized', EclKW.fix_uninitialized)
-monkey_the_camel(EclKW, 'getDataPtr', EclKW.get_data_ptr)
-monkey_the_camel(EclKW, 'firstDifferent', EclKW.first_different)

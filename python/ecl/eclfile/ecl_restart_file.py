@@ -17,7 +17,7 @@
 from cwrap import BaseCClass
 from ecl import EclFileEnum, EclFileFlagEnum, EclPrototype
 from ecl.eclfile import Ecl3DFile, EclFile
-from ecl.util.util import CTime, monkey_the_camel
+from ecl.util.util import CTime
 
 
 class EclRestartHead(BaseCClass):
@@ -148,10 +148,3 @@ class EclRestartFile(Ecl3DFile):
     def get_header(self, index):
         self.assertHeaders()
         return self.rst_headers[index]
-
-monkey_the_camel(EclRestartHead, 'getReportStep', EclRestartHead.get_report_step)
-monkey_the_camel(EclRestartHead, 'getSimDate', EclRestartHead.get_sim_date)
-monkey_the_camel(EclRestartHead, 'getSimDays', EclRestartHead.get_sim_days)
-
-monkey_the_camel(EclRestartFile, 'assertHeaders', EclRestartFile.assert_headers)
-monkey_the_camel(EclRestartFile, 'timeList', EclRestartFile.time_list)
