@@ -31,8 +31,8 @@ class KWFunctionTest(EclTest):
         actnum = IntVector( initial_size = nx*ny*nz , default_value = 1 )
         actnum[nx*ny - 1] = 0
 
-        grid = EclGrid.createRectangular( (nx,ny,nz) , (1,1,1) , actnum = actnum)
-        self.assertEqual( grid.getNumActive() , nx*ny*nz - 1 )
+        grid = EclGrid.create_rectangular( (nx,ny,nz) , (1,1,1) , actnum = actnum)
+        self.assertEqual( grid.get_num_active() , nx*ny*nz - 1 )
 
         kw = Ecl3DKW.create( "REGIONS" , grid , EclDataType.ECL_INT , global_active = True )
         kw.assign( 0 )

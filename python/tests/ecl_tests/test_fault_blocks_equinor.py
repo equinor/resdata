@@ -38,7 +38,7 @@ class FaultBlockTest(EclTest):
 
 
     def test_load(self):
-        for k in range(self.grid.getNZ()):
+        for k in range(self.grid.get_nz()):
             faultBlocks = FaultBlockLayer(self.grid , k)
             faultBlocks.scanKeyword( self.kw )
             for block in faultBlocks:

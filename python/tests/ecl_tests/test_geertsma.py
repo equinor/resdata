@@ -11,10 +11,10 @@ import numpy as np
 
 
 def create_init(grid, case):
-    poro = EclKW("PORO", grid.getNumActive(), EclDataType.ECL_FLOAT)
+    poro = EclKW("PORO", grid.get_num_active(), EclDataType.ECL_FLOAT)
     porv = poro.copy()
     porv.setName("PORV")
-    for g in range(grid.getGlobalSize()):
+    for g in range(grid.get_global_size()):
         porv[g] *= grid.cell_volume(global_index=g)
 
     with openFortIO("%s.INIT" % case, mode=FortIO.WRITE_MODE) as f:
@@ -26,7 +26,7 @@ def create_restart(grid, case, p1, p2=None, rporv1=None, rporv2=None):
     with openFortIO("%s.UNRST" % case, mode=FortIO.WRITE_MODE) as f:
         seq_hdr = EclKW("SEQNUM", 1, EclDataType.ECL_FLOAT)
         seq_hdr[0] = 10
-        p = EclKW("PRESSURE", grid.getNumActive(), EclDataType.ECL_FLOAT)
+        p = EclKW("PRESSURE", grid.get_num_active(), EclDataType.ECL_FLOAT)
         for i in range(len(p1)):
             p[i] = p1[i]
 
@@ -40,7 +40,7 @@ def create_restart(grid, case, p1, p2=None, rporv1=None, rporv2=None):
         p.fwrite(f)
 
         if rporv1:
-            rp = EclKW("RPORV", grid.getNumActive(), EclDataType.ECL_FLOAT)
+            rp = EclKW("RPORV", grid.get_num_active(), EclDataType.ECL_FLOAT)
             for idx, val in enumerate(rporv1):
                 rp[idx] = val
 
@@ -57,7 +57,7 @@ def create_restart(grid, case, p1, p2=None, rporv1=None, rporv2=None):
             p.fwrite(f)
 
         if rporv2:
-            rp = EclKW("RPORV", grid.getNumActive(), EclDataType.ECL_FLOAT)
+            rp = EclKW("RPORV", grid.get_num_active(), EclDataType.ECL_FLOAT)
             for idx, val in enumerate(rporv2):
                 rp[idx] = val
 
@@ -68,7 +68,7 @@ class GeertsmaTest(EclTest):
 
     @staticmethod
     def test_geertsma_kernel():
-        grid = EclGrid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        grid = EclGrid.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
         with TestAreaContext("Subsidence"):
             p1 = [1]
             create_restart(grid, "TEST", p1)
@@ -99,7 +99,7 @@ class GeertsmaTest(EclTest):
 
     @staticmethod
     def test_geertsma_kernel_2_source_points_2_vintages():
-        grid = EclGrid.createRectangular(dims=(2, 1, 1), dV=(100, 100, 100))
+        grid = EclGrid.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
 
         with TestAreaContext("Subsidence"):
             p1 = [1, 10]
@@ -135,7 +135,7 @@ class GeertsmaTest(EclTest):
 
     @staticmethod
     def test_geertsma_kernel_seabed():
-        grid = EclGrid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        grid = EclGrid.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
         with TestAreaContext("Subsidence"):
             p1 = [1]
             create_restart(grid, "TEST", p1)
@@ -161,7 +161,7 @@ class GeertsmaTest(EclTest):
 
     @staticmethod
     def test_geertsma_kernel_seabed():
-        grid = EclGrid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        grid = EclGrid.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
         with TestAreaContext("Subsidence"):
             p1 = [1]
             create_restart(grid, "TEST", p1)
@@ -186,7 +186,7 @@ class GeertsmaTest(EclTest):
             np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
 
     def test_geertsma_rporv_kernel_2_source_points_2_vintages(self):
-        grid = EclGrid.createRectangular(dims=(2, 1, 1), dV=(100, 100, 100))
+        grid = EclGrid.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
 
         with TestAreaContext("Subsidence"):
             p1 = [1, 10]

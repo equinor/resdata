@@ -47,28 +47,28 @@ class FaultLine(object):
         if len(self.__segment_list) > 1:
             current = self.__segment_list[0]
             for next_segment in self.__segment_list[1:]:
-                if not current.getC2() == next_segment.getC1():
-                    sys.stdout.write("Current:   %d ---- %d \n" % (current.getC1()     , current.getC2()))
-                    sys.stdout.write("Next   :   %d ---- %d \n" % (next_segment.getC1(), next_segment.getC2()))
-                    assert current.getC2() == next_segment.getC1()
+                if not current.get_c2() == next_segment.get_c1():
+                    sys.stdout.write("Current:   %d ---- %d \n" % (current.get_c1()     , current.get_c2()))
+                    sys.stdout.write("Next   :   %d ---- %d \n" % (next_segment.get_c1(), next_segment.get_c2()))
+                    assert current.get_c2() == next_segment.get_c1()
                 current = next_segment
 
 
     def try_append(self, segment):
         if len(self.__segment_list) > 0:
             tail = self.__segment_list[-1]
-            if tail.getC2() != segment.getC1():
+            if tail.get_c2() != segment.get_c1():
                 if len(self.__segment_list) == 1:
-                    if tail.getC2() == segment.getC2():
+                    if tail.get_c2() == segment.get_c2():
                         segment.swap()
                     else:
                         tail.swap()
-                        if tail.getC2() == segment.getC2():
+                        if tail.get_c2() == segment.get_c2():
                             segment.swap()
                 else:
                     segment.swap()
 
-            if not tail.getC2() == segment.getC1():
+            if not tail.get_c2() == segment.get_c1():
                 return False
 
         self.__segment_list.append(segment)
@@ -87,16 +87,16 @@ class FaultLine(object):
 
     def __init_ij_polyline(self):
         pl = []
-        nx = self.__grid.getNX()
-        ny = self.__grid.getNY()
+        nx = self.__grid.get_nx()
+        ny = self.__grid.get_ny()
         for segment in self:
-            corner = segment.getC1()
+            corner = segment.get_c1()
             i = corner % (nx + 1)
             j = corner // (nx + 1)
             pl.append((i,j))
 
         segment = self[-1]
-        corner = segment.getC2()
+        corner = segment.get_c2()
         i = corner % (nx + 1)
         j = corner // (nx + 1)
         pl.append((i,j))
@@ -129,13 +129,13 @@ class FaultLine(object):
 
     def __init_neighbor_cells(self):
         self.__neighborCells = []
-        nx = self.__grid.getNX()
-        ny = self.__grid.getNY()
+        nx = self.__grid.get_nx()
+        ny = self.__grid.get_ny()
         k  = self.__k
 
         for segment in self:
-            (j1,i1) = divmod(segment.getC1(), (nx + 1))
-            (j2,i2) = divmod(segment.getC2(), (nx + 1))
+            (j1,i1) = divmod(segment.get_c1(), (nx + 1))
+            (j2,i2) = divmod(segment.get_c2(), (nx + 1))
 
             if j1 > j2:
                 j1,j2 = j2,j1
@@ -188,13 +188,13 @@ class FaultLine(object):
         xlist = DoubleVector()
         ylist = DoubleVector()
         for segment in self:
-            C1 = segment.getC1()
-            C2 = segment.getC2()
-            (J1, I1) = divmod(C1, self.__grid.getNX() + 1)
-            (J2, I2) = divmod(C2, self.__grid.getNX() + 1)
+            C1 = segment.get_c1()
+            C2 = segment.get_c2()
+            (J1, I1) = divmod(C1, self.__grid.get_nx() + 1)
+            (J2, I2) = divmod(C2, self.__grid.get_nx() + 1)
 
-            (x1,y1,z) = self.__grid.getNodePos(I1, J1, self.__k)
-            (x2,y2,z) = self.__grid.getNodePos(I2, J2, self.__k)
+            (x1,y1,z) = self.__grid.get_node_pos(I1, J1, self.__k)
+            (x2,y2,z) = self.__grid.get_node_pos(I2, J2, self.__k)
 
             xlist.append(x1)
             xlist.append(x2)
@@ -212,8 +212,8 @@ class FaultLine(object):
         reverse_list = reversed(self.__segment_list)
         self.__segment_list = []
         for segment in reverse_list:
-            C1 = segment.getC1()
-            C2 = segment.getC2()
+            C1 = segment.get_c1()
+            C2 = segment.get_c2()
 
             rseg = FaultSegment(C2, C1)
             self.tryAppend(rseg)
@@ -230,9 +230,9 @@ class FaultLine(object):
     def dump(self):
         print('-----------------------------------------------------------------')
         for segment in self:
-            C1 = segment.getC1()
-            C2 = segment.getC2()
-            (J1, I1) = divmod(C1, self.__grid.getNX() + 1)
-            (J2, I2) = divmod(C2, self.__grid.getNX() + 1)
+            C1 = segment.get_c1()
+            C2 = segment.get_c2()
+            (J1, I1) = divmod(C1, self.__grid.get_nx() + 1)
+            (J2, I2) = divmod(C2, self.__grid.get_nx() + 1)
             print('[Corner:%5d IJ:(%3d,%d)] -> [Corner:%5d IJ:(%3d,%d)]'
                   % (C1, I1, J1, C2, I2, J2))

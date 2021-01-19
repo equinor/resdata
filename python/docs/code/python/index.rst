@@ -569,7 +569,7 @@ apply is:
 
    # Create a new satnum keyword and use the assign() method with a
    # mask parameter.
-   satnum = EclKW.create( "SATNUM" , grid.getGlobalSize() , EclTypeEnum.ECL_INT_TYPE)
+   satnum = EclKW.create( "SATNUM" , grid.get_global_size() , EclTypeEnum.ECL_INT_TYPE)
    satnum.assign( 1, mask = reg1 )
    satnum.assign( 2, mask = reg2 )
    satnum.assign( 3, mask = reg3 )

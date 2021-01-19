@@ -56,7 +56,7 @@ class LayerTest(EclTest):
         nx = 20
         ny = 10
         layer = Layer(nx,ny)
-        grid = EclGrid.createRectangular( (nx,ny,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (nx,ny,1) , (1,1,1) )
         
         with self.assertRaises(IndexError):
             layer.cellContact( (-1,0),(1,1) )
@@ -89,10 +89,10 @@ class LayerTest(EclTest):
                 
             faults = FaultCollection( grid , "faults.grdecl")
             
-        layer.addFaultBarrier( faults["FX"] , 0 )
+        layer.add_faultBarrier( faults["FX"] , 0 )
         self.assertFalse( layer.cellContact((4,0) , (5,0)) )
 
-        layer.addFaultBarrier( faults["FY"] , 0 )
+        layer.add_faultBarrier( faults["FY"] , 0 )
         self.assertFalse( layer.cellContact((0,4) , (0,5)) )
 
         self.assertFalse( layer.cellContact((9,4) , (9,5)) )
@@ -113,7 +113,7 @@ class LayerTest(EclTest):
         nx = 120
         ny = 60
         nz = 43
-        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl" , "w") as f:
                 f.write("""FAULTS
@@ -158,13 +158,13 @@ class LayerTest(EclTest):
         self.assertTrue(layer.cellContact( p1 , p2 ))
 
 
-        layer.addFaultBarrier(fault , 30 , link_segments = False)
+        layer.add_faultBarrier(fault , 30 , link_segments = False)
         for p1,p2 in fault_pairs:
             self.assertFalse(layer.cellContact( p1 , p2 ))
         p1,p2 = gap_pair
         self.assertTrue(layer.cellContact( p1 , p2 ))
 
-        layer.addFaultBarrier(fault , 30)
+        layer.add_faultBarrier(fault , 30)
         p1,p2 = gap_pair
         self.assertFalse(layer.cellContact( p1 , p2 ))
 
@@ -173,7 +173,7 @@ class LayerTest(EclTest):
         nx = 10
         ny = 10
         layer = Layer(nx,ny)
-        grid = EclGrid.createRectangular( (nx,ny,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (nx,ny,1) , (1,1,1) )
 
         # Too short
         with self.assertRaises(ValueError):
@@ -256,7 +256,7 @@ class LayerTest(EclTest):
     def test_add_polyline_barrier(self):
         d = 10
         layer = Layer(d,d)
-        grid = EclGrid.createRectangular( (d,d,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (d,d,1) , (1,1,1) )
         pl = CPolyline( init_points = [(0 , 0) , (d/2 , d/2) , (d,d)])
         layer.addPolylineBarrier( pl , grid , 0)
         for i in range(d):
@@ -273,17 +273,17 @@ class LayerTest(EclTest):
             
         self.assertTrue( layer.activeCell(1,2) )
 
-        grid = EclGrid.createRectangular( (d,d+1,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (d,d+1,1) , (1,1,1) )
         with self.assertRaises( ValueError ):
             layer.updateActive( grid , 0 )
 
-        grid = EclGrid.createRectangular( (d,d,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (d,d,1) , (1,1,1) )
         with self.assertRaises( ValueError ):
              layer.updateActive( grid , 10 )
             
         actnum = IntVector( initial_size = d*d*1 , default_value = 1)
         actnum[0] = 0
-        grid = EclGrid.createRectangular( (d,d,1) , (1,1,1) , actnum = actnum)
+        grid = EclGrid.create_rectangular( (d,d,1) , (1,1,1) , actnum = actnum)
         layer.updateActive( grid , 0 )
         self.assertTrue( layer.activeCell(1,2) )
         self.assertFalse( layer.activeCell(0,0) )

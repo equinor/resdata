@@ -266,7 +266,7 @@ class EclFile(BaseCClass):
     def block_view(self, kw, kw_index):
         if not kw in self:
             raise KeyError('No such keyword "%s".' % kw)
-        ls = self.global_view.numKeywords(kw)
+        ls = self.global_view.num_keywords(kw)
         idx = kw_index
         if idx < 0:
             idx += ls
@@ -517,7 +517,7 @@ class EclFile(BaseCClass):
         header_dict = {}
         for index in range(len(self)):
             kw = self[index]
-            header_dict[ kw.getName() ] = True
+            header_dict[ kw.get_name() ] = True
         return header_dict.keys()
 
 
@@ -587,7 +587,7 @@ class EclFile(BaseCClass):
         """
         The number of keywords with name == @kw in the current EclFile object.
         """
-        return self.global_view.numKeywords( kw )
+        return self.global_view.num_keywords( kw )
 
 
     def has_kw( self , kw , num = 0):

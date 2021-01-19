@@ -30,27 +30,27 @@ from tests import EclTest
 
 class FaultBlockTest(EclTest):
     def setUp(self):
-        self.grid = EclGrid.createRectangular( (10,10,10) , (1,1,1) )
-        self.kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_INT )
+        self.grid = EclGrid.create_rectangular( (10,10,10) , (1,1,1) )
+        self.kw = EclKW( "FAULTBLK" , self.grid.get_global_size() , EclDataType.ECL_INT )
         self.kw.assign( 1 )
 
         reg = EclRegion( self.grid , False )
 
-        for k in range(self.grid.getNZ()):
+        for k in range(self.grid.get_nz()):
             reg.clear( )
             reg.select_kslice( k , k )
             self.kw.assign( k , mask = reg )
-            self.kw[ k * self.grid.getNX() * self.grid.getNY() + 7] = 177
+            self.kw[ k * self.grid.get_nx() * self.grid.get_ny() + 7] = 177
             
 
             
     def test_fault_block(self):
-        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT )
+        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
+        kw = EclKW( "FAULTBLK" , grid.get_global_size() , EclDataType.ECL_INT )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
-                g = i + j*grid.getNX()
+                g = i + j*grid.get_nx()
                 kw[g] = 1
 
         layer = FaultBlockLayer( grid , 0 )
@@ -75,7 +75,7 @@ class FaultBlockTest(EclTest):
                 kw = EclKW.read_grdecl(
                     f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
 
-        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
         layer.loadKeyword( kw )
 
@@ -109,7 +109,7 @@ class FaultBlockTest(EclTest):
                 kw = EclKW.read_grdecl(
                     f, "FAULTBLK", ecl_type=EclDataType.ECL_INT)
 
-        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
 
         layer.loadKeyword( kw )
@@ -152,7 +152,7 @@ class FaultBlockTest(EclTest):
         nx = 8
         ny = 8
         nz = 1
-        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
         with TestAreaContext("python/FaultBlocks/neighbours"):
             with open("faultblock.grdecl","w") as fileH:
@@ -207,12 +207,12 @@ class FaultBlockTest(EclTest):
 
         
 
-        layer.addFaultBarrier( faults["FY"] )
+        layer.add_faultBarrier( faults["FY"] )
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
         self.assertFalse( b3 in nb )
         
-        layer.addFaultBarrier( faults["FX"] )
+        layer.add_faultBarrier( faults["FX"] )
         nb = b1.getNeighbours()
         self.assertEqual( len(nb) , 0 )
 
@@ -221,7 +221,7 @@ class FaultBlockTest(EclTest):
         nx = 8
         ny = 8
         nz = 1
-        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
         with TestAreaContext("python/FaultBlocks/neighbours"):
             with open("faultblock.grdecl","w") as fileH:
@@ -253,7 +253,7 @@ class FaultBlockTest(EclTest):
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
         
-        layer.addFaultBarrier( faults["FX"] , link_segments = False)
+        layer.add_faultBarrier( faults["FX"] , link_segments = False)
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
 
@@ -264,12 +264,12 @@ class FaultBlockTest(EclTest):
 
 
     def test_fault_block_edge(self):
-        grid = EclGrid.createRectangular( (5,5,1) , (1,1,1) )
-        kw = EclKW( "FAULTBLK" , grid.getGlobalSize() , EclDataType.ECL_INT )
+        grid = EclGrid.create_rectangular( (5,5,1) , (1,1,1) )
+        kw = EclKW( "FAULTBLK" , grid.get_global_size() , EclDataType.ECL_INT )
         kw.assign( 0 )
         for j in range(1,4):
             for i in range(1,4):
-                g = i + j*grid.getNX()
+                g = i + j*grid.get_nx()
                 kw[g] = 1
 
         layer = FaultBlockLayer( grid , 0 )
@@ -283,12 +283,12 @@ class FaultBlockTest(EclTest):
             layer = FaultBlockLayer( self.grid , -1 )
 
         with self.assertRaises(ValueError):
-            layer = FaultBlockLayer( self.grid , self.grid.getGlobalSize()  )
+            layer = FaultBlockLayer( self.grid , self.grid.get_global_size()  )
             
         layer = FaultBlockLayer( self.grid , 1 )
         self.assertEqual( 1 , layer.getK() )
 
-        kw = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_FLOAT )
+        kw = EclKW( "FAULTBLK" , self.grid.get_global_size() , EclDataType.ECL_FLOAT )
         with self.assertRaises(ValueError):
             layer.scanKeyword( kw )
 
@@ -370,7 +370,7 @@ class FaultBlockTest(EclTest):
 
 
     def test_add_polyline_barrier1(self):
-        grid = EclGrid.createRectangular( (4,1,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (4,1,1) , (1,1,1) )
         layer = FaultBlockLayer( self.grid , 0 )
         polyline = Polyline( init_points = [ (1.99 , 0.001) , (2.01 , 0.99)])
         
@@ -388,7 +388,7 @@ class FaultBlockTest(EclTest):
 
 
     def test_add_polyline_barrier2(self):
-        grid = EclGrid.createRectangular( (10,10,1) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (10,10,1) , (1,1,1) )
         layer = FaultBlockLayer( self.grid , 0 )
         polyline = Polyline( init_points = [ (0.1 , 0.9) , (8.9,0.9) , (8.9,8.9) ])
         
@@ -419,11 +419,11 @@ class FaultBlockTest(EclTest):
 
     def test_fault_block_layer_export(self):
         layer = FaultBlockLayer( self.grid , 1 )
-        kw1 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() + 1 , EclDataType.ECL_INT )
+        kw1 = EclKW( "FAULTBLK" , self.grid.get_global_size() + 1 , EclDataType.ECL_INT )
         with self.assertRaises(ValueError):
             layer.exportKeyword( kw1 )
 
-        kw2 = EclKW( "FAULTBLK" , self.grid.getGlobalSize() , EclDataType.ECL_FLOAT )
+        kw2 = EclKW( "FAULTBLK" , self.grid.get_global_size() , EclDataType.ECL_FLOAT )
         with self.assertRaises(TypeError):
             layer.exportKeyword(kw2)
 
@@ -432,7 +432,7 @@ class FaultBlockTest(EclTest):
         nx = 8
         ny = 8
         nz = 1
-        grid = EclGrid.createRectangular( (nx , ny , nz) , (1,1,1) )
+        grid = EclGrid.create_rectangular( (nx , ny , nz) , (1,1,1) )
         layer = FaultBlockLayer( grid , 0 )
         with TestAreaContext("python/FaultBlocks/internal_blocks"):
             with open("faultblock.grdecl","w") as fileH:
@@ -461,7 +461,7 @@ class FaultBlockTest(EclTest):
             faults = FaultCollection( grid , "faults.grdecl")
 
         layer.loadKeyword( kw )
-        layer.addFaultBarrier( faults["FX"] )
+        layer.add_faultBarrier( faults["FX"] )
         b1 = layer.getBlock( 1 )
         b2 = layer.getBlock( 2 )
         b3 = layer.getBlock( 3 )

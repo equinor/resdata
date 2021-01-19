@@ -350,9 +350,9 @@ class EclKW(BaseCClass):
 
     def __repr__(self):
         si = len(self)
-        nm = self.getName()
+        nm = self.get_name()
         mm = 'type=%s' % str(self.data_type)
-        if self.isNumeric():
+        if self.is_numeric():
             mi, ma = self.getMinMax()
             mm = 'min=%.2f, max=%.2f' % (mi,ma)
         ad = self._ad_str()
@@ -457,7 +457,7 @@ class EclKW(BaseCClass):
         """
         Returns the number of elements. Implements len()
         """
-        return self._get_size()
+        return self._get_size() if self else 0
 
 
     def __deep_copy__(self, memo):
@@ -536,7 +536,7 @@ class EclKW(BaseCClass):
 
 
     def __IMUL__(self, factor, mul=True):
-        if self.isNumeric():
+        if self.is_numeric():
             if hasattr(factor, "ecl_kw_instance"):
                 if self.assert_binary(factor):
                     if mul:
@@ -566,7 +566,7 @@ class EclKW(BaseCClass):
 
 
     def __IADD__(self, delta, add=True):
-        if self.isNumeric():
+        if self.is_numeric():
             if type(self) == type(delta):
                 if self.assert_binary(delta):
                     if add:
@@ -612,7 +612,7 @@ class EclKW(BaseCClass):
     #################################################################
 
     def __abs__(self):
-        if self.isNumeric():
+        if self.is_numeric():
             copy = self.copy()
             copy._iabs()
             return copy
@@ -689,7 +689,7 @@ class EclKW(BaseCClass):
                         sum += 1
                 return sum
             else:
-                raise ValueError('The keyword "%s" is of string type - sum is not implemented' % self.getName())
+                raise ValueError('The keyword "%s" is of string type - sum is not implemented' % self.get_name())
 
         return mask.sum_kw(self, force_active)
 
@@ -742,7 +742,7 @@ class EclKW(BaseCClass):
         keyword has nx*ny*nz elements; if the keyword has nactive
         elements the @force_active flag is not considered.
         """
-        if self.isNumeric():
+        if self.is_numeric():
             if type(value) == type(self):
                 if mask is not None:
                     mask.copy_kw(self, value, force_active)
@@ -994,7 +994,7 @@ class EclKW(BaseCClass):
 
     @property
     def header(self):
-        return (self.getName(), len(self), self.typeName())
+        return (self.get_name(), len(self), self.typeName())
 
     @property
     def array(self):
@@ -1038,7 +1038,7 @@ class EclKW(BaseCClass):
         the elements. The implementation of the builtin method
         __str__() is based on this method.
         """
-        s = "%-8s %8d %-4s\n" % (self.getName(), len(self), self.typeName())
+        s = "%-8s %8d %-4s\n" % (self.get_name(), len(self), self.typeName())
         lines = len(self) // width
         if not fmt:
             fmt = self.str_fmt + " "
@@ -1168,7 +1168,7 @@ class EclKW(BaseCClass):
         """
         Special case function for region code.
         """
-        dims = grid.getDims()
+        dims = grid.get_dims()
         actnum = grid.exportACTNUM()
         self._fix_uninitialized(dims[0], dims[1], dims[2], actnum.getDataPtr())
 

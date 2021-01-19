@@ -33,7 +33,7 @@ class FaultLayer(object):
 
 
     def add_segment(self, segment):
-        self.__segment_map.addSegment(segment)
+        self.__segment_map.add_segment(segment)
         self.__processed = False
 
     def __len__(self):
@@ -176,15 +176,15 @@ class Fault(object):
         self.__name = name
         self.__layer_map  = {}
         self.__layer_list = []
-        (self.nx, self.ny, self.nz, nactive) = grid.getDims()
+        (self.nx, self.ny, self.nz, nactive) = grid.get_dims()
 
 
     def __str__(self):
         return "Fault:%s" % self.__name
 
     def __getitem__(self, K):
-        if not self.hasLayer(K):
-            self.addLayer(K)
+        if not self.has_layer(K):
+            self.add_layer(K)
         layer = self.__layer_map[K]
         return layer
 
@@ -270,12 +270,12 @@ class Fault(object):
         #-----------------------------------------------------------------
 
         for K in range(K1,K2+1):
-            if not self.hasLayer(K):
-                self.addLayer(K)
+            if not self.has_layer(K):
+                self.add_layer(K)
             layer = self.__layer_map[K]
-            segment = self.createSegment(I1,I2,J1,J2,face)
+            segment = self.create_segment(I1,I2,J1,J2,face)
             if segment:
-                layer.addSegment(segment)
+                layer.add_segment(segment)
 
 
 
@@ -296,7 +296,7 @@ class Fault(object):
 
     def get_polyline(self, k):
         layer = self[k]
-        return layer.getPolyline(name="Polyline[%s]" % self.getName())
+        return layer.getPolyline(name="Polyline[%s]" % self.get_name())
 
 
     def get_ij_polyline(self, k):
@@ -410,7 +410,7 @@ class Fault(object):
         if extension:
             return extension
 
-        raise ValueError("The fault %s can not be extended to intersect with polyline:%s in layer:%d" % (self.getName(), polyline.getName(), k+1))
+        raise ValueError("The fault %s can not be extended to intersect with polyline:%s in layer:%d" % (self.get_name(), polyline.get_name(), k+1))
 
 
 
@@ -447,8 +447,8 @@ class Fault(object):
         intersections = GeometryTools.rayPolygonIntersections(p1, ray_dir, bbox)
         if intersections:
             p2 = intersections[0][1]
-            if self.getName():
-                name = "Extend:%s" % self.getName()
+            if self.get_name():
+                name = "Extend:%s" % self.get_name()
             else:
                 name = None
 

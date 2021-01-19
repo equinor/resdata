@@ -842,14 +842,14 @@ class EclRegion(BaseCClass):
         exactly to nx,ny of the grid.
         """
         grid = self.grid
-        if k < 0 or k >= grid.getNZ():
-            raise ValueError("Invalid k value:%d - must be in range [0,%d)" % (k , grid.getNZ()))
+        if k < 0 or k >= grid.get_nz():
+            raise ValueError("Invalid k value:%d - must be in range [0,%d)" % (k , grid.get_nz()))
 
-        if grid.getNX() != layer.getNX():
-            raise ValueError("NX dimension mismatch. Grid:%d  layer:%d" % (grid.getNX() , layer.getNX()))
+        if grid.get_nx() != layer.get_nx():
+            raise ValueError("NX dimension mismatch. Grid:%d  layer:%d" % (grid.get_nx() , layer.get_nx()))
 
-        if grid.getNY() != layer.getNY():
-            raise ValueError("NY dimension mismatch. Grid:%d  layer:%d" % (grid.getNY() , layer.getNY()))
+        if grid.get_ny() != layer.get_ny():
+            raise ValueError("NY dimension mismatch. Grid:%d  layer:%d" % (grid.get_ny() , layer.get_ny()))
 
         self._select_from_layer( layer , k , value )
 

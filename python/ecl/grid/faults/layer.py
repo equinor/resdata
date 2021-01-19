@@ -55,16 +55,16 @@ class Layer(BaseCClass):
 
     @classmethod
     def copy(cls, src):
-        layer = Layer(src.getNX(), src.getNY())
+        layer = Layer(src.get_nx(), src.get_ny())
         layer._copy(layer, src)
         return layer
 
 
     def _assert_ij(self, i,j):
-        if i < 0 or i >= self.getNX():
+        if i < 0 or i >= self.get_nx():
             raise ValueError("Invalid layer i:%d" % i)
 
-        if j < 0 or j >= self.getNY():
+        if j < 0 or j >= self.get_ny():
             raise ValueError("Invalid layer j:%d" % j)
 
 
@@ -89,14 +89,14 @@ class Layer(BaseCClass):
 
 
     def update_active(self, grid, k):
-        if grid.getNX() != self.getNX():
-            raise ValueError("NX dimension mismatch. Grid:%d  layer:%d" % (grid.getNX(), self.getNX()))
+        if grid.get_nx() != self.get_nx():
+            raise ValueError("NX dimension mismatch. Grid:%d  layer:%d" % (grid.get_nx(), self.get_nx()))
 
-        if grid.getNY() != self.getNY():
-            raise ValueError("NY dimension mismatch. Grid:%d  layer:%d" % (grid.getNY(), self.getNY()))
+        if grid.get_ny() != self.get_ny():
+            raise ValueError("NY dimension mismatch. Grid:%d  layer:%d" % (grid.get_ny(), self.get_ny()))
 
-        if k >= grid.getNZ():
-            raise ValueError("K value invalid: Grid range [0,%d)" % grid.getNZ())
+        if k >= grid.get_nz():
+            raise ValueError("K value invalid: Grid range [0,%d)" % grid.get_nz())
 
         self._update_active(grid, k)
 
@@ -134,16 +134,16 @@ class Layer(BaseCClass):
         i1,j1 = p1
         i2,j2 = p2
 
-        if not 0 <= i1 < self.getNX():
+        if not 0 <= i1 < self.get_nx():
             raise IndexError("Invalid i1:%d" % i1)
 
-        if not 0 <= i2 < self.getNX():
+        if not 0 <= i2 < self.get_nx():
             raise IndexError("Invalid i2:%d" % i2)
 
-        if not 0 <= j1 < self.getNY():
+        if not 0 <= j1 < self.get_ny():
             raise IndexError("Invalid i1:%d" % j1)
 
-        if not 0 <= j2 < self.getNY():
+        if not 0 <= j2 < self.get_ny():
             raise IndexError("Invalid i2:%d" % j2)
 
         return self._cell_contact(i1, j1, i2, j2)
@@ -170,13 +170,13 @@ class Layer(BaseCClass):
         num_lines = len(fault_layer)
         for index, fault_line in enumerate(fault_layer):
             for segment in fault_line:
-                c1, c2 = segment.getCorners()
+                c1, c2 = segment.get_corners()
                 self._add_barrier(c1, c2)
 
             if index < num_lines - 1:
                 next_line = fault_layer[index + 1]
                 next_segment = next_line[0]
-                next_c1, next_c2 = next_segment.getCorners()
+                next_c1, next_c2 = next_segment.get_corners()
 
                 if link_segments:
                     self.addInterpBarrier(c2, next_c1)
@@ -186,8 +186,8 @@ class Layer(BaseCClass):
         if len(ij_list) < 2:
             raise ValueError("Must have at least two (i,j) points")
 
-        nx = self.getNX()
-        ny = self.getNY()
+        nx = self.get_nx()
+        ny = self.get_ny()
         p1 = ij_list[0]
         i1,j1 = p1
         for p2 in ij_list[1:]:
