@@ -137,7 +137,7 @@ class SegmentMap(object):
                 end_segments.append(list(self.__segment_map[C].values())[0])
 
         start_segment = end_segments[0]
-        self.delSegment(start_segment)
+        self.del_segment(start_segment)
         return start_segment
 
     def pop_next(self, segment):
@@ -150,7 +150,7 @@ class SegmentMap(object):
             next_segment = None
 
         if next_segment:
-            self.delSegment(next_segment)
+            self.del_segment(next_segment)
         return next_segment
 
 

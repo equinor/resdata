@@ -117,7 +117,7 @@ class EquinorFaultTest(EclTest):
         f.add_record( 180,  180 ,    65  ,  65  ,     0  , 42 ,   'Y-' )
 
 
-        ij_polyline = f.getIJPolyline( 19 )
+        ij_polyline = f.get_ij_polyline( 19 )
         ij_list = [(180, 79), (180, 77), (180, 75),
                    (180, 73), (181, 73), (181, 72), (180, 72),
                    (180, 71), (181, 71), (181, 69),

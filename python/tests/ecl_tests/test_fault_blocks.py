@@ -54,7 +54,7 @@ class FaultBlockTest(EclTest):
                 kw[g] = 1
 
         layer = FaultBlockLayer( grid , 0 )
-        layer.scanKeyword( kw )
+        layer.scan_keyword( kw )
         block = layer[1]
 
         self.assertEqual( (2.50 , 2.50) , block.getCentroid() )
@@ -207,12 +207,12 @@ class FaultBlockTest(EclTest):
 
         
 
-        layer.add_faultBarrier( faults["FY"] )
+        layer.add_fault_barrier( faults["FY"] )
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
         self.assertFalse( b3 in nb )
         
-        layer.add_faultBarrier( faults["FX"] )
+        layer.add_fault_barrier( faults["FX"] )
         nb = b1.getNeighbours()
         self.assertEqual( len(nb) , 0 )
 
@@ -253,7 +253,7 @@ class FaultBlockTest(EclTest):
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
         
-        layer.add_faultBarrier( faults["FX"] , link_segments = False)
+        layer.add_fault_barrier( faults["FX"] , link_segments = False)
         nb = b1.getNeighbours()
         self.assertTrue( b2 in nb )
 
@@ -286,13 +286,13 @@ class FaultBlockTest(EclTest):
             layer = FaultBlockLayer( self.grid , self.grid.get_global_size()  )
             
         layer = FaultBlockLayer( self.grid , 1 )
-        self.assertEqual( 1 , layer.getK() )
+        self.assertEqual( 1 , layer.get_k() )
 
         kw = EclKW( "FAULTBLK" , self.grid.get_global_size() , EclDataType.ECL_FLOAT )
         with self.assertRaises(ValueError):
-            layer.scanKeyword( kw )
+            layer.scan_keyword( kw )
 
-        layer.scanKeyword( self.kw )
+        layer.scan_keyword( self.kw )
         self.assertEqual( 2 , len(layer) )
 
         with self.assertRaises(TypeError):
@@ -376,14 +376,14 @@ class FaultBlockTest(EclTest):
         
         points = [((1,0) , (2,0))]
         
-        geo_layer = layer.getGeoLayer()
+        geo_layer = layer.get_geo_layer()
         for p1,p2 in points:
-            self.assertTrue(geo_layer.cellContact( p1 , p2 ))
+            self.assertTrue(geo_layer.cell_contact( p1 , p2 ))
             
         layer.addPolylineBarrier( polyline )
         for p1,p2 in points:
             print(p1,p2)
-            self.assertFalse(geo_layer.cellContact( p1 , p2 ))
+            self.assertFalse(geo_layer.cell_contact( p1 , p2 ))
 
 
 
@@ -403,14 +403,14 @@ class FaultBlockTest(EclTest):
                   ((8,5) , (9,5)),
                   ((8,7) , (9,7))]
         
-        geo_layer = layer.getGeoLayer()
+        geo_layer = layer.get_geo_layer()
         for p1,p2 in points:
-            self.assertTrue(geo_layer.cellContact( p1 , p2 ))
+            self.assertTrue(geo_layer.cell_contact( p1 , p2 ))
             
         layer.addPolylineBarrier( polyline )
         for p1,p2 in points:
             print(p1,p2)
-            self.assertFalse(geo_layer.cellContact( p1 , p2 ))
+            self.assertFalse(geo_layer.cell_contact( p1 , p2 ))
 
 
         
@@ -461,7 +461,7 @@ class FaultBlockTest(EclTest):
             faults = FaultCollection( grid , "faults.grdecl")
 
         layer.loadKeyword( kw )
-        layer.add_faultBarrier( faults["FX"] )
+        layer.add_fault_barrier( faults["FX"] )
         b1 = layer.getBlock( 1 )
         b2 = layer.getBlock( 2 )
         b3 = layer.getBlock( 3 )

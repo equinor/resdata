@@ -114,7 +114,7 @@ class FaultCollection(object):
                     fault = Fault(grid, name)
                     self.add_fault(fault)
                 else:
-                    fault = self.getFault(name)
+                    fault = self.get_fault(name)
 
                 fault.add_record(I1, I2, J1, J2, K1, K2, face)
 

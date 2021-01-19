@@ -107,8 +107,8 @@ class FaultLine(object):
 
     def __init_polyline(self):
         pl = CPolyline()
-        for (i,j) in self.getIJPolyline():
-            x,y,z = self.__grid.getNodeXYZ(i, j, self.__k)
+        for (i,j) in self.get_ij_polyline():
+            x,y,z = self.__grid.get_node_xyz(i, j, self.__k)
             pl.addPoint(x, y)
         self.__polyline = pl
 
@@ -216,15 +216,15 @@ class FaultLine(object):
             C2 = segment.get_c2()
 
             rseg = FaultSegment(C2, C1)
-            self.tryAppend(rseg)
+            self.try_append(rseg)
 
 
     def start_point(self):
-        pl = self.getPolyline()
+        pl = self.get_polyline()
         return pl[0]
 
     def end_point(self):
-        pl = self.getPolyline()
+        pl = self.get_polyline()
         return pl[-1]
 
     def dump(self):

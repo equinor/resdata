@@ -37,15 +37,15 @@ class FaultLayer(object):
         self.__processed = False
 
     def __len__(self):
-        self.processSegments()
+        self.process_segments()
         return len(self.__fault_lines)
 
     def __iter__(self):
-        self.processSegments()
+        self.process_segments()
         return iter(self.__fault_lines)
 
     def __getitem__(self, index):
-        self.processSegments()
+        self.process_segments()
         return self.__fault_lines[index]
 
     def get_k(self):
@@ -59,13 +59,13 @@ class FaultLayer(object):
     def get_neighbor_cells(self):
         neighbor_cells = []
         for fl in self:
-            neighbor_cells += fl.getNeighborCells()
+            neighbor_cells += fl.get_neighbor_cells()
         return neighbor_cells
 
     def get_polyline(self, name=None):
         polyline = CPolyline(name=name)
         for fl in self:
-            polyline += fl.getPolyline()
+            polyline += fl.get_polyline()
         return polyline
 
 
@@ -75,7 +75,7 @@ class FaultLayer(object):
         """
         polyline = []
         for fl in self:
-            polyline += fl.getIJPolyline()
+            polyline += fl.get_ij_polyline()
         return polyline
 
 
@@ -129,8 +129,8 @@ class FaultLayer(object):
 
 
         for line in self.__fault_lines:
-            x1,y1 = line.startPoint()
-            x2,y2 = line.endPoint()
+            x1,y1 = line.start_point()
+            x2,y2 = line.end_point()
             d1 = x1 + b*(y1 - a)
             d2 = x2 + b*(y2 - a)
 
@@ -148,15 +148,15 @@ class FaultLayer(object):
             fault_line = FaultLine(self.__grid, self.__K)
             self.__fault_lines.append(fault_line)
 
-            current_segment = self.__segment_map.popStart()
+            current_segment = self.__segment_map.pop_start()
             while current_segment:
-                append = fault_line.tryAppend(current_segment)
+                append = fault_line.try_append(current_segment)
                 if not append:
                     fault_line = FaultLine(self.__grid, self.__K)
                     self.__fault_lines.append(fault_line)
-                    fault_line.tryAppend(current_segment)
+                    fault_line.try_append(current_segment)
 
-                current_segment.next_segment = self.__segment_map.popNext(current_segment)
+                current_segment.next_segment = self.__segment_map.pop_next(current_segment)
                 current_segment = current_segment.next_segment
 
         if len(self.__fault_lines) > 1:
@@ -290,23 +290,23 @@ class Fault(object):
     def get_neighbor_cells(self):
         neighbor_cells = []
         for layer in self:
-            neighbor_cells += layer.getNeighborCells()
+            neighbor_cells += layer.get_neighbor_cells()
         return neighbor_cells
 
 
     def get_polyline(self, k):
         layer = self[k]
-        return layer.getPolyline(name="Polyline[%s]" % self.get_name())
+        return layer.get_polyline(name="Polyline[%s]" % self.get_name())
 
 
     def get_ij_polyline(self, k):
         layer = self[k]
-        return layer.getIJPolyline()
+        return layer.get_ij_polyline()
 
 
     def num_lines(self, k):
         layer = self[k]
-        return layer.numLines()
+        return layer.num_lines()
 
 
     @staticmethod
@@ -328,10 +328,10 @@ class Fault(object):
     def connect_with_polyline(self, polyline, k):
         """
         """
-        if self.intersectsPolyline(polyline, k):
+        if self.intersects_polyline(polyline, k):
             return None
         else:
-            self_polyline = self.getPolyline(k)
+            self_polyline = self.get_polyline(k)
             if len(self_polyline) > 0:
                 return self_polyline.connect(polyline)
             else:
@@ -340,10 +340,10 @@ class Fault(object):
 
     def connect(self, target, k):
         if isinstance(target, Fault):
-            polyline = target.getPolyline(k)
+            polyline = target.get_polyline(k)
         else:
             polyline = target
-        return self.connectWithPolyline(polyline, k)
+        return self.connect_with_polyline(polyline, k)
 
 
 
@@ -382,10 +382,10 @@ class Fault(object):
         impossible to know which intersection is returned, without
         actually consulting the construction of the fault object.
         """
-        if self.intersectsPolyline(polyline, k):
+        if self.intersects_polyline(polyline, k):
             return None
 
-        fault_polyline = self.getPolyline(k)
+        fault_polyline = self.get_polyline(k)
         p0 = fault_polyline[-2]
         p1 = fault_polyline[-1]
         extension = self.__ray_intersect(p0, p1, polyline)
@@ -415,27 +415,27 @@ class Fault(object):
 
 
     def intersects_polyline(self, polyline, k):
-        fault_line = self.getPolyline(k)
+        fault_line = self.get_polyline(k)
         return fault_line.intersects(polyline)
 
 
     def intersects_fault(self, other_fault, k):
-        fault_line = other_fault.getPolyline(k)
-        return self.intersectsPolyline(fault_line, k)
+        fault_line = other_fault.get_polyline(k)
+        return self.intersects_polyline(fault_line, k)
 
     def extend_to_fault(self, fault, k):
-        fault_line = fault.getPolyline(k)
-        return self.extendToPolyline(fault_line, k)
+        fault_line = fault.get_polyline(k)
+        return self.extend_to_polyline(fault_line, k)
 
     def extend_to_edge(self, edge, k):
         if isinstance(edge, Fault):
-            return self.extendToFault(edge, k)
+            return self.extend_to_fault(edge, k)
         else:
-            return self.extendToPolyline(edge, k)
+            return self.extend_to_polyline(edge, k)
 
 
     def extend_to_b_box(self, bbox, k, start=True):
-        fault_polyline = self.getPolyline(k)
+        fault_polyline = self.get_polyline(k)
         if start:
             p0 = fault_polyline[1]
             p1 = fault_polyline[0]
@@ -458,10 +458,10 @@ class Fault(object):
 
 
     def end_join(self, other, k):
-        fault_polyline = self.getPolyline(k)
+        fault_polyline = self.get_polyline(k)
 
         if isinstance(other, Fault):
-            other_polyline = other.getPolyline(k)
+            other_polyline = other.get_polyline(k)
         else:
             other_polyline = other
 
@@ -470,20 +470,20 @@ class Fault(object):
 
 
     def connect_polyline_onto(self, polyline, k):
-        if self.intersectsPolyline(polyline, k):
+        if self.intersects_polyline(polyline, k):
             return None
 
-        self_polyline = self.getPolyline(k)
+        self_polyline = self.get_polyline(k)
         return polyline.connect(self_polyline)
 
 
 
     def extend_polyline_onto(self, polyline, k):
-        if self.intersectsPolyline(polyline, k):
+        if self.intersects_polyline(polyline, k):
             return None
 
         if len(polyline) > 1:
-            fault_polyline = self.getPolyline(k)
+            fault_polyline = self.get_polyline(k)
             ext1 = self.__ray_intersect(polyline[-2], polyline[-1], fault_polyline)
             ext2 = self.__ray_intersect(polyline[0] , polyline[1] , fault_polyline)
 
@@ -565,48 +565,48 @@ class Fault(object):
 
 
     def get_end_rays(self, k):
-        polyline = self.getIJPolyline(k)
+        polyline = self.get_ij_polyline(k)
 
         p0 = polyline[0]
         p1 = polyline[1]
         p2 = polyline[-2]
         p3 = polyline[-1]
 
-        return (Fault.intRay(p1,p0), Fault.intRay(p2,p3))
+        return (Fault.int_ray(p1,p0), Fault.int_ray(p2,p3))
 
 
 
 
     @staticmethod
     def join_faults(fault1, fault2, k):
-        fault1_rays = fault1.getEndRays(k)
-        fault2_rays = fault2.getEndRays(k)
+        fault1_rays = fault1.get_end_rays(k)
+        fault2_rays = fault2.get_end_rays(k)
 
-        if fault1.intersectsFault(fault2, k):
+        if fault1.intersects_fault(fault2, k):
             return None
 
         count = 0
         join = None
         try:
-            join = Fault.intersectFaultRays(fault1_rays[0], fault2_rays[0])
+            join = Fault.intersect_fault_rays(fault1_rays[0], fault2_rays[0])
             count += 1
         except ValueError:
             pass
 
         try:
-            join = Fault.intersectFaultRays(fault1_rays[0], fault2_rays[1])
+            join = Fault.intersect_fault_rays(fault1_rays[0], fault2_rays[1])
             count += 1
         except ValueError:
             pass
 
         try:
-            join = Fault.intersectFaultRays(fault1_rays[1], fault2_rays[0])
+            join = Fault.intersect_fault_rays(fault1_rays[1], fault2_rays[0])
             count += 1
         except ValueError:
             pass
 
         try:
-            join = Fault.intersectFaultRays(fault1_rays[1], fault2_rays[1])
+            join = Fault.intersect_fault_rays(fault1_rays[1], fault2_rays[1])
             count += 1
         except ValueError:
             pass
@@ -614,9 +614,9 @@ class Fault(object):
         if count == 1:
             xy_list = []
             for ij in join:
-                xyz = fault1.__grid.getNodeXYZ(ij[0], ij[1], k)
+                xyz = fault1.__grid.get_node_xyz(ij[0], ij[1], k)
                 xy_list.append((xyz[0], xyz[1]))
 
             return xy_list
         else:
-            return fault1.endJoin(fault2, k)
+            return fault1.end_join(fault2, k)

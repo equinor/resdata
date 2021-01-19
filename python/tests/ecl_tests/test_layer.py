@@ -59,26 +59,26 @@ class LayerTest(EclTest):
         grid = EclGrid.create_rectangular( (nx,ny,1) , (1,1,1) )
         
         with self.assertRaises(IndexError):
-            layer.cellContact( (-1,0),(1,1) )
+            layer.cell_contact( (-1,0),(1,1) )
 
         with self.assertRaises(IndexError):
-            layer.cellContact( (20,0),(1,1) )
+            layer.cell_contact( (20,0),(1,1) )
 
 
-        self.assertFalse( layer.cellContact((0,0) , (2,0)) )
-        self.assertFalse( layer.cellContact((1,0) , (1,0)) )
+        self.assertFalse( layer.cell_contact((0,0) , (2,0)) )
+        self.assertFalse( layer.cell_contact((1,0) , (1,0)) )
 
-        self.assertTrue( layer.cellContact((0,0) , (1,0)) )
-        self.assertTrue( layer.cellContact((1,0) , (0,0)) )
+        self.assertTrue( layer.cell_contact((0,0) , (1,0)) )
+        self.assertTrue( layer.cell_contact((1,0) , (0,0)) )
         
-        self.assertTrue( layer.cellContact((0,0) , (0,1)) )
-        self.assertTrue( layer.cellContact((0,1) , (0,0)) )
+        self.assertTrue( layer.cell_contact((0,0) , (0,1)) )
+        self.assertTrue( layer.cell_contact((0,1) , (0,0)) )
 
-        self.assertFalse( layer.cellContact((0,0) , (1,1)) )
-        self.assertFalse( layer.cellContact((1,1) , (0,0)) )
+        self.assertFalse( layer.cell_contact((0,0) , (1,1)) )
+        self.assertFalse( layer.cell_contact((1,1) , (0,0)) )
         
-        self.assertTrue( layer.cellContact((4,0) , (5,0)) )
-        self.assertTrue( layer.cellContact((0,4) , (0,5)) )
+        self.assertTrue( layer.cell_contact((4,0) , (5,0)) )
+        self.assertTrue( layer.cell_contact((0,4) , (0,5)) )
         
         with TestAreaContext("Layer/barrier"):
             with open("faults.grdecl" , "w") as f:
@@ -89,14 +89,14 @@ class LayerTest(EclTest):
                 
             faults = FaultCollection( grid , "faults.grdecl")
             
-        layer.add_faultBarrier( faults["FX"] , 0 )
-        self.assertFalse( layer.cellContact((4,0) , (5,0)) )
+        layer.add_fault_barrier( faults["FX"] , 0 )
+        self.assertFalse( layer.cell_contact((4,0) , (5,0)) )
 
-        layer.add_faultBarrier( faults["FY"] , 0 )
-        self.assertFalse( layer.cellContact((0,4) , (0,5)) )
+        layer.add_fault_barrier( faults["FY"] , 0 )
+        self.assertFalse( layer.cell_contact((0,4) , (0,5)) )
 
-        self.assertFalse( layer.cellContact((9,4) , (9,5)) )
-        self.assertTrue( layer.cellContact((10,4) , (10,5)) )
+        self.assertFalse( layer.cell_contact((9,4) , (9,5)) )
+        self.assertTrue( layer.cell_contact((10,4) , (10,5)) )
         
     def test_get_barrier(self):
         layer = Layer(10,10)
@@ -152,21 +152,21 @@ class LayerTest(EclTest):
 
 
         for p1,p2 in fault_pairs:
-            self.assertTrue(layer.cellContact( p1 , p2 ))
+            self.assertTrue(layer.cell_contact( p1 , p2 ))
 
         p1,p2 = gap_pair
-        self.assertTrue(layer.cellContact( p1 , p2 ))
+        self.assertTrue(layer.cell_contact( p1 , p2 ))
 
 
-        layer.add_faultBarrier(fault , 30 , link_segments = False)
+        layer.add_fault_barrier(fault , 30 , link_segments = False)
         for p1,p2 in fault_pairs:
-            self.assertFalse(layer.cellContact( p1 , p2 ))
+            self.assertFalse(layer.cell_contact( p1 , p2 ))
         p1,p2 = gap_pair
-        self.assertTrue(layer.cellContact( p1 , p2 ))
+        self.assertTrue(layer.cell_contact( p1 , p2 ))
 
-        layer.add_faultBarrier(fault , 30)
+        layer.add_fault_barrier(fault , 30)
         p1,p2 = gap_pair
-        self.assertFalse(layer.cellContact( p1 , p2 ))
+        self.assertFalse(layer.cell_contact( p1 , p2 ))
 
 
     def test_contact2(self):
@@ -193,9 +193,9 @@ class LayerTest(EclTest):
 
         p1 = (0 , 4)
         p2 = (0 , 5)
-        self.assertTrue(layer.cellContact( p1 , p2 ))
+        self.assertTrue(layer.cell_contact( p1 , p2 ))
         layer.addIJBarrier( [(0,5) , (nx , 5)] )
-        self.assertFalse(layer.cellContact( p1 , p2 ))
+        self.assertFalse(layer.cell_contact( p1 , p2 ))
 
 
 

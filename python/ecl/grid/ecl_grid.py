@@ -716,7 +716,7 @@ class EclGrid(BaseCClass):
 
         (j, i) = divmod(xy_corner, nx + 1)
         k = layer
-        return self.getNodeXYZ(i,j,k)
+        return self.get_node_xyz(i,j,k)
 
 
 

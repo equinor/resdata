@@ -33,7 +33,7 @@ class FaultBlockLayer(BaseCClass):
     _has_block            = EclPrototype("bool            fault_block_layer_has_block(fault_block_layer, int)")
     _scan_keyword         = EclPrototype("bool            fault_block_layer_scan_kw(fault_block_layer, ecl_kw)")
     _load_keyword         = EclPrototype("bool            fault_block_layer_load_kw(fault_block_layer, ecl_kw)")
-    _getK                 = EclPrototype("int             fault_block_layer_get_k(fault_block_layer)")
+    _get_k                 = EclPrototype("int             fault_block_layer_get_k(fault_block_layer)")
     _get_next_id          = EclPrototype("int             fault_block_layer_get_next_id(fault_block_layer)")
     _scan_layer           = EclPrototype("void            fault_block_layer_scan_layer(fault_block_layer, layer)")
     _insert_block_content = EclPrototype("void            fault_block_layer_insert_block_content(fault_block_layer, fault_block)")
@@ -77,7 +77,7 @@ class FaultBlockLayer(BaseCClass):
         elif isinstance(index,tuple):
             i,j = index
             if 0 <= i < self.grid_ref.get_nx() and 0 <= j < self.grid_ref.get_ny():
-                geo_layer = self.getGeoLayer()
+                geo_layer = self.get_geo_layer()
                 block_id = geo_layer[i,j]
                 if block_id == 0:
                     raise ValueError("No fault block defined for location (%d,%d)" % (i,j))
@@ -140,11 +140,11 @@ class FaultBlockLayer(BaseCClass):
 
 
     def get_k(self):
-        return self._getK()
+        return self._get_k()
 
     @property
     def k(self):
-        return self._getK()
+        return self._get_k()
 
     def free(self):
         self._free()
@@ -170,21 +170,21 @@ class FaultBlockLayer(BaseCClass):
 
 
     def add_fault_barrier(self, fault, link_segments=False):
-        layer = self.getGeoLayer()
-        layer.add_faultBarrier(fault, self.getK(), link_segments)
+        layer = self.get_geo_layer()
+        layer.add_fault_barrier(fault, self.get_k(), link_segments)
 
 
     def add_fault_link(self, fault1, fault2):
-        if not fault1.intersectsFault(fault2, self.getK()):
-            layer = self.getGeoLayer()
-            layer.addIJBarrier(fault1.extendToFault(fault2, self.getK()))
+        if not fault1.intersects_fault(fault2, self.get_k()):
+            layer = self.get_geo_layer()
+            layer.addIJBarrier(fault1.extend_to_fault(fault2, self.get_k()))
 
 
     def join_faults(self, fault1, fault2):
-        if not fault1.intersectsFault(fault2, self.getK()):
-            layer = self.getGeoLayer()
+        if not fault1.intersects_fault(fault2, self.get_k()):
+            layer = self.get_geo_layer()
             try:
-                layer.addIJBarrier(Fault.joinFaults(fault1, fault2, self.getK()))
+                layer.addIJBarrier(Fault.join_faults(fault1, fault2, self.get_k()))
             except ValueError:
                 err = 'Failed to join faults %s and %s'
                 names = (fault1.get_name(), fault2.get_name())
@@ -193,15 +193,15 @@ class FaultBlockLayer(BaseCClass):
 
 
     def add_polyline_barrier(self, polyline):
-        layer = self.getGeoLayer()
+        layer = self.get_geo_layer()
         p0 = polyline[0]
-        c0 = self.grid_ref.findCellCornerXY(p0[0],  p0[1], self.getK())
-        i,j = self.grid_ref.find_cell_xy(p0[0],  p0[1], self.getK())
+        c0 = self.grid_ref.findCellCornerXY(p0[0],  p0[1], self.get_k())
+        i,j = self.grid_ref.find_cell_xy(p0[0],  p0[1], self.get_k())
         print('%g,%g -> %d,%d   %d' % (p0[0], p0[1], i,j,c0))
         for index in range(1,len(polyline)):
             p1 = polyline[index]
-            c1 = self.grid_ref.findCellCornerXY(p1[0],  p1[1], self.getK())
-            i,j = self.grid_ref.find_cell_xy(p1[0],  p1[1], self.getK())
+            c1 = self.grid_ref.findCellCornerXY(p1[0],  p1[1], self.get_k())
+            i,j = self.grid_ref.find_cell_xy(p1[0],  p1[1], self.get_k())
             layer.addInterpBarrier(c0, c1)
             print('%g,%g -> %d,%d   %d' % (p1[0], p1[1], i,j,c1))
             print('Adding barrier %d -> %d' % (c0, c1))
@@ -214,5 +214,5 @@ class FaultBlockLayer(BaseCClass):
 
 
     def cell_contact(self, p1, p2):
-        layer = self.getGeoLayer()
-        return layer.cellContact(p1,p2)
+        layer = self.get_geo_layer()
+        return layer.cell_contact(p1,p2)
