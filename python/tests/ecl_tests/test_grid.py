@@ -89,7 +89,7 @@ def createContainmentTestBase():
                 )
             ]
 
-def getMinMaxValue(grid):
+def get_min_maxValue(grid):
     corners = [
                 grid.get_cell_corner(i, cell)
                     for i in range(8)
@@ -437,7 +437,7 @@ class GridTest(EclTest):
         for steps_per_unit, grid in test_base:
             wgrid = createWrapperGrid(grid)
 
-            (xmin, xmax), (ymin, ymax), (zmin, zmax) = getMinMaxValue(wgrid)
+            (xmin, xmax), (ymin, ymax), (zmin, zmax) = get_min_maxValue(wgrid)
 
             x_space = linspace(
                 xmin - 1, xmax + 1, int(xmax - xmin + 2) * steps_per_unit + 1

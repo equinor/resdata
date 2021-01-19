@@ -353,7 +353,7 @@ class EclKW(BaseCClass):
         nm = self.get_name()
         mm = 'type=%s' % str(self.data_type)
         if self.is_numeric():
-            mi, ma = self.getMinMax()
+            mi, ma = self.get_min_max()
             mm = 'min=%.2f, max=%.2f' % (mi,ma)
         ad = self._ad_str()
         fmt = 'EclKW(size=%d, name="%s", %s) %s'
@@ -957,12 +957,12 @@ class EclKW(BaseCClass):
 
 
     def get_max(self):
-        mm = self.getMinMax()
+        mm = self.get_min_max()
         return mm[1]
 
 
     def get_min(self):
-        mm = self.getMinMax()
+        mm = self.get_min_max()
         return mm[0]
 
     @property

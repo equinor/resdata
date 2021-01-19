@@ -42,5 +42,5 @@ class FaultBlockTest(EclTest):
             faultBlocks = FaultBlockLayer(self.grid , k)
             faultBlocks.scan_keyword( self.kw )
             for block in faultBlocks:
-                centroid = block.getCentroid()
+                centroid = block.get_centroid()
 

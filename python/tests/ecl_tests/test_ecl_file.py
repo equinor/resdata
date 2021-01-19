@@ -31,7 +31,7 @@ def createFile( name , kw_list ):
             kw.fwrite( f )
 
 
-def loadKeywords( name ):
+def load_keywords( name ):
     kw_list = []
     f = EclFile( name )
     for kw in f:
@@ -161,7 +161,7 @@ class EclFileTest(EclTest):
         with TestAreaContext("context") as ta:
             createFile("TEST" , kw_list )
             gc.collect()
-            kw_list2 = loadKeywords( "TEST" )
+            kw_list2 = load_keywords( "TEST" )
 
             for kw1,kw2 in zip(kw_list,kw_list2):
                 self.assertEqual( kw1, kw2 )

@@ -83,7 +83,7 @@ class FaultBlock(BaseCClass):
             raise TypeError("Index:%s wrong type - integer expected")
 
     def __str__(self):
-        return "Block ID: %d" % self.getBlockID()
+        return "Block ID: %d" % self.get_block_id()
 
 
     def __len__(self):
@@ -165,10 +165,10 @@ class FaultBlock(BaseCClass):
 
         self._get_neighbours(connected_only, polylines, neighbour_id_list)
 
-        parent_layer = self.getParentLayer()
+        parent_layer = self.get_parent_layer()
         neighbour_list = []
         for id in neighbour_id_list:
-            neighbour_list.append(parent_layer.getBlock(id))
+            neighbour_list.append(parent_layer.get_block(id))
         return neighbour_list
 
 

@@ -159,10 +159,10 @@ class Layer(BaseCClass):
                 x1,y1 = polyline[i]
                 x2,y2 = polyline[i + 1]
 
-                c1 = grid.findCellCornerXY(x1, y1, k)
-                c2 = grid.findCellCornerXY(x2, y2, k)
+                c1 = grid.find_cell_corner_xy(x1, y1, k)
+                c2 = grid.find_cell_corner_xy(x2, y2, k)
 
-                self.addInterpBarrier(c1, c2)
+                self.add_interp_barrier(c1, c2)
 
 
     def add_fault_barrier(self, fault, K, link_segments=True):
@@ -179,7 +179,7 @@ class Layer(BaseCClass):
                 next_c1, next_c2 = next_segment.get_corners()
 
                 if link_segments:
-                    self.addInterpBarrier(c2, next_c1)
+                    self.add_interp_barrier(c2, next_c1)
 
 
     def add_ij_barrier(self, ij_list):

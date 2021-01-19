@@ -55,7 +55,7 @@ class KWTest(EclTest):
 
         self.assertEqual(10, kw.getMax())
         self.assertEqual(0 , kw.getMin())
-        self.assertEqual((0,10) , kw.getMinMax())
+        self.assertEqual((0,10) , kw.get_min_max())
 
 
     def test_deprecated_datatypes(self):

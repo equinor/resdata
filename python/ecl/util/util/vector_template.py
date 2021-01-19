@@ -480,7 +480,7 @@ class VectorTemplate(BaseCClass):
     def append(self, value):
         self._append(value)
 
-    def deleteBlock(self, index, block_size):
+    def delete_block(self, index, block_size):
         """
         Remove a block of size @block_size starting at @index.
 
@@ -567,7 +567,7 @@ class VectorTemplate(BaseCClass):
         # for the TimeVector class.
         return self._get_data_ptr()
 
-    def countEqual(self , value):
+    def count_equal(self , value):
         return self._count_equal(  value )
 
 
