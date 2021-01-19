@@ -13,7 +13,7 @@ import numpy as np
 def create_init(grid, case):
     poro = EclKW("PORO", grid.get_num_active(), EclDataType.ECL_FLOAT)
     porv = poro.copy()
-    porv.setName("PORV")
+    porv.set_name("PORV")
     for g in range(grid.get_global_size()):
         porv[g] *= grid.cell_volume(global_index=g)
 

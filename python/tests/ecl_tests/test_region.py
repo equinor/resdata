@@ -30,7 +30,7 @@ class RegionTest(EclTest):
         kw_int[0:49] = 1
         region = EclRegion(grid, False)
         region.select_equal( kw_int , 1 )
-        glist = region.getGlobalList()
+        glist = region.get_global_list()
         for g in glist:
             self.assertEqual( kw_int[g] , 1 )
 

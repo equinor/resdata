@@ -430,7 +430,7 @@ class EclRegion(BaseCClass):
 
         """
         if not ecl_kw.data_type.is_int():
-            raise ValueError("The select_equal method must have an integer valued keyword - got:%s" % ecl_kw.typeName( ))
+            raise ValueError("The select_equal method must have an integer valued keyword - got:%s" % ecl_kw.type_name( ))
         self._select_equal( ecl_kw , value )
 
 
@@ -441,7 +441,7 @@ class EclRegion(BaseCClass):
         See select_equal() for further documentation.
         """
         if not ecl_kw.data_type.is_int():
-            raise ValueError("The select_equal method must have an integer valued keyword - got:%s" % ecl_kw.typeName( ))
+            raise ValueError("The select_equal method must have an integer valued keyword - got:%s" % ecl_kw.type_name( ))
         self._deselect_equal( ecl_kw , value )
 
     @select_method
@@ -1013,7 +1013,7 @@ class EclRegion(BaseCClass):
         """
         WIll return a Python list of (ij,k) tuples for the region.
         """
-        global_list = self.getGlobalList()
+        global_list = self.get_global_list()
         ijk_list = []
         for g in global_list:
             ijk_list.append( self.grid.get_ijk( global_index = g ) )

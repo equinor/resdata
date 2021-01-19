@@ -45,7 +45,7 @@ class EclCase(object):
 
 
     def start_time_equal(self, other):
-        if self.summary.getDataStartTime() == other.summary.getDataStartTime():
+        if self.summary.get_dataStartTime() == other.summary.get_dataStartTime():
             return True
         else:
             return False

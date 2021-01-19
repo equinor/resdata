@@ -45,7 +45,7 @@ def load_keywords( name ):
 class EclFileTest(EclTest):
 
     def assertFileType(self , filename , expected):
-        file_type , step , fmt_file = EclFile.getFileType(filename)
+        file_type , step , fmt_file = EclFile.get_filetype(filename)
         self.assertEqual( file_type , expected[0] )
         self.assertEqual( fmt_file , expected[1] )
         self.assertEqual( step , expected[2] )
@@ -222,19 +222,19 @@ class EclFileTest(EclTest):
             pfx = 'EclFile('
             self.assertEqual(pfx, repr(ecl_file)[:len(pfx)])
             with self.assertRaises(KeyError):
-                ecl_file.blockView("NO" , 1)
+                ecl_file.block_view("NO" , 1)
 
             with self.assertRaises(IndexError):
-                ecl_file.blockView("HEADER" , 100)
+                ecl_file.block_view("HEADER" , 100)
 
             with self.assertRaises(IndexError):
-                ecl_file.blockView("HEADER" , 1000)
+                ecl_file.block_view("HEADER" , 1000)
 
-            bv = ecl_file.blockView("HEADER" , -1)
+            bv = ecl_file.block_view("HEADER" , -1)
 
 
             for i in range(5):
-                view = ecl_file.blockView("HEADER" , i)
+                view = ecl_file.block_view("HEADER" , i)
                 self.assertEqual( len(view) , 3)
                 header = view["HEADER"][0]
                 data1 = view["DATA1"][0]
@@ -246,7 +246,7 @@ class EclFileTest(EclTest):
 
 
             for i in range(5):
-                view = ecl_file.blockView2("HEADER" , "DATA2", i )
+                view = ecl_file.block_view2("HEADER" , "DATA2", i )
                 self.assertEqual( len(view) , 2)
                 header = view["HEADER"][0]
                 data1 = view["DATA1"][0]
@@ -256,10 +256,10 @@ class EclFileTest(EclTest):
 
                 self.assertFalse( "DATA2" in view )
 
-            view = ecl_file.blockView2("HEADER" , None, 0 )
+            view = ecl_file.block_view2("HEADER" , None, 0 )
             self.assertEqual( len(view) , len(ecl_file))
 
-            view = ecl_file.blockView2(None , "DATA2", 0 )
+            view = ecl_file.block_view2(None , "DATA2", 0 )
             #self.assertEqual( len(view) , 2)
             #self.assertTrue( "HEADER" in view )
             #self.assertTrue( "DATA1" in view )

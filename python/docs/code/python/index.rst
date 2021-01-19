@@ -239,9 +239,9 @@ keywords :code:`SWAT`, :code:`SGAS` and :code:`SOIL`:
    # and check if they are in the file
    for kw in sys.argv[2:]:
        if kw in file:
-           print("Found %s in %s" % (kw , file.getFilename()))
+           print("Found %s in %s" % (kw , file.get_filename()))
        else:
-           print("Missing %s in %s" % (kw , file.getFilename()))
+           print("Missing %s in %s" % (kw , file.get_filename()))
 
 
 Special method __getitem__()

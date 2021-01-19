@@ -107,7 +107,7 @@ class FaultBlockLayer(BaseCClass):
         """
         ok = self._load_keyword(fault_block_kw)
         if not ok:
-            raise ValueError("The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d" % (fault_block_kw.typeName(), len(fault_block_kw), self.grid_ref.get_global_size()))
+            raise ValueError("The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d" % (fault_block_kw.type_name(), len(fault_block_kw), self.grid_ref.get_global_size()))
 
 
     def get_block(self, block_id):

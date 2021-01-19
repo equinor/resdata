@@ -80,7 +80,7 @@ class EclRestartFile(Ecl3DFile):
         'nactive' or 'nx*ny*nz' elements.
         """
 
-        file_type , report_step , fmt_file = EclFile.getFileType( filename )
+        file_type , report_step , fmt_file = EclFile.get_filetype( filename )
         if not file_type in [EclFileEnum.ECL_RESTART_FILE, EclFileEnum.ECL_UNIFIED_RESTART_FILE]:
             raise ValueError('The input filename "%s" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
                              % filename)

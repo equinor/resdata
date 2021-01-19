@@ -223,7 +223,7 @@ class EclGrid(BaseCClass):
 
             if not len(actnum) == dims[0] * dims[1] * dims[2]:
                 raise ValueError("ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d" % (len(actnum), dims[0] * dims[1] * dims[2]))
-            ecl_grid = cls._alloc_rectangular(dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], actnum.getDataPtr())
+            ecl_grid = cls._alloc_rectangular(dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], actnum.get_dataPtr())
 
         # If we have not succeeded in creatin the grid we *assume* the
         # error is due to a failed malloc.
@@ -1196,7 +1196,7 @@ class EclGrid(BaseCClass):
 
     def exportACTNUM(self):
         actnum = IntVector(initial_size=self.get_global_size())
-        self._init_actnum(actnum.getDataPtr())
+        self._init_actnum(actnum.get_dataPtr())
         return actnum
 
 
@@ -1224,7 +1224,7 @@ class EclGrid(BaseCClass):
 
     def export_ACTNUM_kw(self):
         actnum = EclKW("ACTNUM", self.get_global_size(), EclDataType.ECL_INT)
-        self._init_actnum(actnum.getDataPtr())
+        self._init_actnum(actnum.get_dataPtr())
         return actnum
 
 

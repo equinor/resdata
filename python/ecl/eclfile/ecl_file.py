@@ -155,7 +155,7 @@ class EclFile(BaseCClass):
             # OK - we did not have seqnum; that might be because this
             # a non-unified restart file; or because this is not a
             # restart file at all.
-            fname = self.getFilename( )
+            fname = self.get_filename( )
             matchObj = re.search("\.[XF](\d{4})$" , fname)
             if matchObj:
                 report_steps.append( int(matchObj.group(1)) )
@@ -179,7 +179,7 @@ class EclFile(BaseCClass):
 
 
     def __repr__(self):
-        fn = self.getFilename()
+        fn = self.get_filename()
         wr = ', read/write' if self._writable() else ''
         return self._create_repr('"%s"%s' % (fn,wr))
 
@@ -246,7 +246,7 @@ class EclFile(BaseCClass):
         if self._writable( ):
             self._save_kw(  kw )
         else:
-            raise IOError('save_kw: the file "%s" has been opened read only.' % self.getFilename( ))
+            raise IOError('save_kw: the file "%s" has been opened read only.' % self.get_filename( ))
 
 
     def __len__(self):
@@ -271,12 +271,12 @@ class EclFile(BaseCClass):
         if idx < 0:
             idx += ls
         if 0 <= idx < ls:
-            return self.global_view.blockView(kw, idx)
+            return self.global_view.block_view(kw, idx)
         raise IndexError('Index out of range, must be in [0, %d), was %d.' % (ls, kw_index))
 
 
     def block_view2(self, start_kw, stop_kw, start_index):
-        return self.global_view.blockView2( start_kw , stop_kw, start_index )
+        return self.global_view.block_view2( start_kw , stop_kw, start_index )
 
 
     def restart_view(self, seqnum_index=None, report_step=None, sim_time=None, sim_days=None):

@@ -40,7 +40,7 @@ class KWFunctionTest(EclTest):
         kw[5,2,0] = 0
         kw[0,9,0] = 2
 
-        kw.fixUninitialized( grid )
+        kw.fix_uninitialized( grid )
 
         # Not assigned because they are in contact with a '2'; these
         # two are problem cells.

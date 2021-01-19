@@ -91,7 +91,7 @@ class EclGridGenerator:
             ecl_grid = cls._alloc_rectangular(
                                  dims[0], dims[1], dims[2],
                                  dV[0], dV[1], dV[2],
-                                 actnum.getDataPtr()
+                                 actnum.get_dataPtr()
                                  )
 
         # If we have not succeeded in creatin the grid we *assume* the

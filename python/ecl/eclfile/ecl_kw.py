@@ -994,7 +994,7 @@ class EclKW(BaseCClass):
 
     @property
     def header(self):
-        return (self.get_name(), len(self), self.typeName())
+        return (self.get_name(), len(self), self.type_name())
 
     @property
     def array(self):
@@ -1038,7 +1038,7 @@ class EclKW(BaseCClass):
         the elements. The implementation of the builtin method
         __str__() is based on this method.
         """
-        s = "%-8s %8d %-4s\n" % (self.get_name(), len(self), self.typeName())
+        s = "%-8s %8d %-4s\n" % (self.get_name(), len(self), self.type_name())
         lines = len(self) // width
         if not fmt:
             fmt = self.str_fmt + " "
@@ -1087,10 +1087,10 @@ class EclKW(BaseCClass):
         The numpy array has a separate copy of the data, so that
         changes to either the numpy array or the EclKW will *not* be
         reflected in the other datastructure. This is in contrast to
-        the EclKW.numpyView() method where the underlying data is
+        the EclKW.numpy_view() method where the underlying data is
         shared.
         """
-        view = self.numpyView()
+        view = self.numpy_view()
         return numpy.copy(view)
 
     def fwrite(self, fortio):
@@ -1170,7 +1170,7 @@ class EclKW(BaseCClass):
         """
         dims = grid.get_dims()
         actnum = grid.exportACTNUM()
-        self._fix_uninitialized(dims[0], dims[1], dims[2], actnum.getDataPtr())
+        self._fix_uninitialized(dims[0], dims[1], dims[2], actnum.get_dataPtr())
 
 
     def get_data_ptr(self):

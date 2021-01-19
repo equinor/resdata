@@ -32,7 +32,7 @@ class EclFileEquinorTest(EclTest):
         self.test_fmt_file = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.FUNRST")
 
     def assertFileType(self , filename , expected):
-        file_type , step , fmt_file = EclFile.getFileType(filename)
+        file_type , step , fmt_file = EclFile.get_filetype(filename)
         self.assertEqual( file_type , expected[0] )
         self.assertEqual( fmt_file , expected[1] )
         self.assertEqual( step , expected[2] )
