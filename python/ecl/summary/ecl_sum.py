@@ -1070,13 +1070,13 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
     @property
     def days(self):
         """
-        Will return a numpy vector of simulations days.
+        Will return a list of simulations days.
         """
         return self.get_days(False)
 
     def get_days(self, report_only=False):
         """
-        Will return a numpy vector of simulations days.
+        Will return a list of simulations days.
 
         If the optional argument @report_only is set to True, only
         'days' values corresponding to report steps will be included.
