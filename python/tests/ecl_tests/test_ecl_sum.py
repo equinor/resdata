@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import datetime
 import os.path
+import pandas as pd
+import numpy as np
 
 from cwrap import CFILE
 from cwrap import Prototype, load, open as copen
@@ -17,6 +19,28 @@ def test_write_repr():
     assert repr(writer).startswith(
         'EclSum(name="writer", time=[2000-02-03 00:00:00, 2000-02-03 00:00:00], keys=0) at 0x'
     )
+
+
+def test_that_year2263_through_pandas_works():
+    """Date 2262-04-11 is the upper limit for nanosecond 64-bit
+    timestamps, which is what pandas<2 prefers.
+    """
+    eclsum = EclSum.from_pandas(
+        "TESTCASE",
+        pd.DataFrame(
+            [
+                {"DATE": datetime.date(2000, 1, 1), "FPR": 200},
+                {"DATE": datetime.date(2263, 1, 1), "FPR": 1},
+            ]
+        ).set_index("DATE"),
+    )
+    assert eclsum.numpy_dates[0] == np.datetime64("2000-01-01T00:00:00.000")
+
+    # (This is hit by a round-off error due to 32-bit floats):
+    assert eclsum.numpy_dates[1] == np.datetime64("2262-12-31T23:57:52.000")
+
+    # Roundtrip:
+    assert eclsum.pandas_frame().index[1] == datetime.datetime(2262, 12, 31, 23, 57, 52)
 
 
 @equinor_test()
