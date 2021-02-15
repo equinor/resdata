@@ -673,7 +673,7 @@ class EclSum(BaseCClass):
         from a well:
 
             for time_index in range(sum.length):
-                wwct = sum.iget(time_index, "WWCT:W5")
+                wwct = sum.iget("WWCT:W5", time_index)
 
         This is a quite low level function, in most cases it will be
         natural to go via e.g. an EclSumVector instance.
