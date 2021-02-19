@@ -34,3 +34,5 @@ __ecl_lib_info.py
 
 /dist
 /dist-*
+
+CMakeSettings.json
