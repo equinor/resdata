@@ -1,0 +1,26 @@
+name: Windows Compile
+
+on: [push, pull_request]
+
+jobs:
+  build-cmake:
+    name: CMake
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-latest']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # required for `git describe --tags` to work
+        fetch-depth: 0
+
+    - name: Build ecl
+      run: |
+        mkdir cmake-build
+        cmake -S . -B cmake-build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake --build cmake-build
