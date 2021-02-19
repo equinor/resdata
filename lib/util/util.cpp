@@ -79,6 +79,9 @@
 
 #ifdef HAVE_WINDOWS_GETCWD
 #include <direct.h>
+#ifndef PATH_MAX
+#define PATH_MAX _MAX_PATH
+#endif
 #endif
 
 
@@ -4657,12 +4660,12 @@ bool util_is_abs_path(const char * path) {
 }
 
 static int util_mkdir( const char * path ) {
+#ifdef HAVE_WINDOWS_MKDIR
+  return _mkdir( path );
+#else
 #ifdef HAVE_POSIX_MKDIR
   return mkdir( path , UTIL_DEFAULT_MKDIR_MODE );
 #endif
-
-#ifdef HAVE_WINDOWS_MKDIR
-  return _mkdir( path );
 #endif
 }
 
