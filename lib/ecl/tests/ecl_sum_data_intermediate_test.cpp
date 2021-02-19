@@ -243,8 +243,8 @@ void verify_CASE4() {
   d = ecl_sum_alloc_data_vector(sum, 1, false); double_vector_free(d);
   d = ecl_sum_alloc_data_vector(sum, 2, false); double_vector_free(d);
   d = ecl_sum_alloc_data_vector(sum, 4, false);
-  ieq(d, 0, -99);
-  ieq(d, 4, -99);
+  ieq(d, 0, 0);
+  ieq(d, 4, 0);
   ieq(d, 5, 10000);
   ieq(d, 8, 40000);
   double_vector_free(d);
