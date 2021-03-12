@@ -40,7 +40,7 @@ class Task(Thread):
         return self.__done
 
     def hasStarted(self):
-        return self.__started or self.isAlive()
+        return self.__started or self.is_alive()
 
     def isRunning(self):
         return self.hasStarted() and not self.__done
