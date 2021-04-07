@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl_well/well_segment_collection.hpp>
-
-

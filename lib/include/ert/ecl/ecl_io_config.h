@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/ecl_io_config.hpp>
-
-

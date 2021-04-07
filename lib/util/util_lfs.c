@@ -55,59 +55,50 @@
 
 #include <ert/util/util.h>
 
-offset_type util_ftell(FILE * stream) {
+offset_type util_ftell(FILE *stream) {
 #ifdef ERT_WINDOWS_LFS
   return _ftelli64(stream);
 #else
-  #ifdef HAVE_FSEEKO
+#ifdef HAVE_FSEEKO
   return ftello(stream);
-  #else
+#else
   return ftell(stream);
-  #endif
+#endif
 #endif
 }
 
-
-
-int util_fseek(FILE * stream, offset_type offset, int whence) {
+int util_fseek(FILE *stream, offset_type offset, int whence) {
 #ifdef ERT_WINDOWS_LFS
-  return _fseeki64(stream , offset , whence);
+  return _fseeki64(stream, offset, whence);
 #else
-  #ifdef HAVE_FSEEKO
-  return fseeko( stream , offset , whence );
-  #else
-  return fseek( stream , offset , whence );
-  #endif
+#ifdef HAVE_FSEEKO
+  return fseeko(stream, offset, whence);
+#else
+  return fseek(stream, offset, whence);
+#endif
 #endif
 }
 
-
-
-void util_rewind(FILE * stream) {
+void util_rewind(FILE *stream) {
 #ifdef ERT_WINDOWS_LFS
-  _fseeki64(stream , 0L , SEEK_SET);
+  _fseeki64(stream, 0L, SEEK_SET);
 #else
-  rewind( stream );
+  rewind(stream);
 #endif
 }
 
-
-
-
-
-int util_stat(const char * filename , stat_type * stat_info) {
+int util_stat(const char *filename, stat_type *stat_info) {
 #ifdef ERT_WINDOWS_LFS
-  return _stat64(filename , stat_info);
+  return _stat64(filename, stat_info);
 #else
-  return stat(filename , stat_info);
+  return stat(filename, stat_info);
 #endif
 }
 
-
-int util_fstat(int fileno, stat_type * stat_info) {
+int util_fstat(int fileno, stat_type *stat_info) {
 #ifdef ERT_WINDOWS_LFS
-  return _fstat64(fileno , stat_info);
+  return _fstat64(fileno, stat_info);
 #else
-  return fstat(fileno , stat_info);
+  return fstat(fileno, stat_info);
 #endif
 }

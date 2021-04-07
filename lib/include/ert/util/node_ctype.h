@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/node_ctype.hpp>
-
-

@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2012  Equinor ASA, Norway.
 
-   The file 'ecl_get_num_cpu_test.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ecl_get_num_cpu_test.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,25 +16,21 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
-#include <ert/util/test_util.hpp>
 #include <ert/ecl/ecl_util.hpp>
+#include <ert/util/test_util.hpp>
 
-
-int main(int argc , char ** argv) {
-  const char * filename1 = argv[1];
-  const char * filename2 = argv[2];
-  const char * filename3 = argv[3];
-  const char * filename4 = argv[4];
-
+int main(int argc, char **argv) {
+  const char *filename1 = argv[1];
+  const char *filename2 = argv[2];
+  const char *filename3 = argv[3];
+  const char *filename4 = argv[4];
 
   test_assert_int_equal(ecl_util_get_num_cpu(filename1), 4);
   test_assert_int_equal(ecl_util_get_num_cpu(filename2), 4);
   test_assert_int_equal(ecl_util_get_num_cpu(filename3), 15);
   test_assert_int_equal(ecl_util_get_num_cpu(filename4), 4);
   exit(0);
-
 }
-

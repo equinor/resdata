@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/nnc_info.hpp>
-
-

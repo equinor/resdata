@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/ecl_rft_cell.hpp>
-
-

@@ -7,39 +7,34 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-uid_t util_get_entry_uid( const char * file ) {
+uid_t util_get_entry_uid(const char *file) {
   stat_type buffer;
-  util_stat( file , &buffer);
+  util_stat(file, &buffer);
   return buffer.st_uid;
 }
 
-mode_t util_getmode( const char * file ) {
+mode_t util_getmode(const char *file) {
   stat_type buffer;
-  util_stat( file , &buffer);
+  util_stat(file, &buffer);
   return buffer.st_mode;
 }
 
-
-
-bool util_chmod_if_owner( const char * filename , mode_t new_mode) {
+bool util_chmod_if_owner(const char *filename, mode_t new_mode) {
   stat_type buffer;
-  uid_t  exec_uid = getuid();
-  util_stat( filename , &buffer );
+  uid_t exec_uid = getuid();
+  util_stat(filename, &buffer);
 
-  if (exec_uid == buffer.st_uid) {  /* OKAY - the current running uid is also the owner of the file. */
-    mode_t current_mode = buffer.st_mode & ( S_IRWXU + S_IRWXG + S_IRWXO );
+  if (exec_uid == buffer.st_uid) { /* OKAY - the current running uid is also the
+                                      owner of the file. */
+    mode_t current_mode = buffer.st_mode & (S_IRWXU + S_IRWXG + S_IRWXO);
     if (current_mode != new_mode) {
-      chmod( filename , new_mode); /* No error check ... */
+      chmod(filename, new_mode); /* No error check ... */
       return true;
     }
   }
 
   return false; /* No update performed. */
 }
-
-
-
-
 
 /*
   IFF the current uid is also the owner of the file the current
@@ -51,65 +46,60 @@ bool util_chmod_if_owner( const char * filename , mode_t new_mode) {
   true, otherwise it will return false.
 */
 
-
-
-bool util_addmode_if_owner( const char * filename , mode_t add_mode) {
+bool util_addmode_if_owner(const char *filename, mode_t add_mode) {
   stat_type buffer;
-  util_stat( filename , &buffer );
+  util_stat(filename, &buffer);
 
   {
-    mode_t current_mode = buffer.st_mode & ( S_IRWXU + S_IRWXG + S_IRWXO );
-    mode_t target_mode  = (current_mode | add_mode);
+    mode_t current_mode = buffer.st_mode & (S_IRWXU + S_IRWXG + S_IRWXO);
+    mode_t target_mode = (current_mode | add_mode);
 
-    return util_chmod_if_owner( filename , target_mode );
+    return util_chmod_if_owner(filename, target_mode);
   }
 }
-
-
 
 /**
    Implements shell chmod -??? behaviour.
 */
-bool util_delmode_if_owner( const char * filename , mode_t del_mode) {
+bool util_delmode_if_owner(const char *filename, mode_t del_mode) {
   stat_type buffer;
-  util_stat( filename , &buffer );
+  util_stat(filename, &buffer);
 
   {
-    mode_t current_mode = buffer.st_mode & ( S_IRWXU + S_IRWXG + S_IRWXO );
-    mode_t target_mode  = (current_mode -  (current_mode & del_mode));
+    mode_t current_mode = buffer.st_mode & (S_IRWXU + S_IRWXG + S_IRWXO);
+    mode_t target_mode = (current_mode - (current_mode & del_mode));
 
-    return util_chmod_if_owner( filename , target_mode );
+    return util_chmod_if_owner(filename, target_mode);
   }
 }
-
-
 
 /**
    Only removes the last component in path.
 */
-void static util_clear_directory__( const char *path , bool strict_uid , bool unlink_root) {
+void static util_clear_directory__(const char *path, bool strict_uid,
+                                   bool unlink_root) {
   if (util_is_directory(path)) {
-    DIR  *dirH = opendir( path );
+    DIR *dirH = opendir(path);
 
     if (dirH != NULL) {
       const uid_t uid = getuid();
       struct dirent *dentry;
 
-      while ( (dentry = readdir(dirH)) != NULL) {
+      while ((dentry = readdir(dirH)) != NULL) {
         stat_type buffer;
         mode_t mode;
-        const char * entry_name = dentry->d_name;
-        if ((strcmp(entry_name , ".") != 0) && (strcmp(entry_name , "..") != 0)) {
-          char * full_path = util_alloc_filename(path , entry_name , NULL);
+        const char *entry_name = dentry->d_name;
+        if ((strcmp(entry_name, ".") != 0) && (strcmp(entry_name, "..") != 0)) {
+          char *full_path = util_alloc_filename(path, entry_name, NULL);
 
-          if (lstat(full_path , &buffer) == 0) {
+          if (lstat(full_path, &buffer) == 0) {
             mode = buffer.st_mode;
 
             if (S_ISDIR(mode))
               /*
                 Recursively descending into sub directory.
               */
-              util_clear_directory__(full_path , strict_uid , true);
+              util_clear_directory__(full_path, strict_uid, true);
             else if (S_ISLNK(mode))
               /*
                 Symbolic links are unconditionally removed.
@@ -143,7 +133,6 @@ void static util_clear_directory__( const char *path , bool strict_uid , bool un
   }
 }
 
-
 /**
    This function will clear away all the contents (including
    subdirectories) in the directory @path.
@@ -162,7 +151,6 @@ void static util_clear_directory__( const char *path , bool strict_uid , bool un
    important elements of the function.
 */
 
-
-void util_clear_directory(const char * path , bool strict_uid , bool unlink_root) {
-  util_clear_directory__( path , strict_uid , unlink_root );
+void util_clear_directory(const char *path, bool strict_uid, bool unlink_root) {
+  util_clear_directory__(path, strict_uid, unlink_root);
 }

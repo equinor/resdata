@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2012  Equinor ASA, Norway.
 
-   The file 'ert_util_strcat_test.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ert_util_strcat_test.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,44 +16,43 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include <ert/util/vector.hpp>
-#include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
+#include <ert/util/util.h>
+#include <ert/util/vector.hpp>
 
-
-void test_strcat(char * s1 , const char *s2 , const char * expected) {
-  char * cat = util_strcat_realloc(s1 , s2 );
-  if (test_check_string_equal( cat , expected ))
-    free( cat );
+void test_strcat(char *s1, const char *s2, const char *expected) {
+  char *cat = util_strcat_realloc(s1, s2);
+  if (test_check_string_equal(cat, expected))
+    free(cat);
   else {
-    fprintf(stderr, "util_strcat_realloc(%s,%s) Got:%s  expected:%s \n",s1,s2,cat , expected);
+    fprintf(stderr, "util_strcat_realloc(%s,%s) Got:%s  expected:%s \n", s1, s2,
+            cat, expected);
     free(cat);
     exit(1);
   }
 }
 
-
-int main(int argc , char ** argv) {
-  test_strcat(NULL , NULL , NULL);
+int main(int argc, char **argv) {
+  test_strcat(NULL, NULL, NULL);
 
   {
-    const char * s = "Hei";
+    const char *s = "Hei";
     char *c = util_alloc_string_copy(s);
     test_strcat(NULL, c, s);
     free(c);
   }
   {
-    const char * s = "Hei";
-    test_strcat(util_alloc_string_copy(s) , NULL , s);
+    const char *s = "Hei";
+    test_strcat(util_alloc_string_copy(s), NULL, s);
   }
   {
-    char * s1 = util_alloc_string_copy("hei");
-    char * s2 = util_alloc_string_copy("-Hei");
-    test_strcat(s1,s2 , "hei-Hei");
+    char *s1 = util_alloc_string_copy("hei");
+    char *s2 = util_alloc_string_copy("-Hei");
+    test_strcat(s1, s2, "hei-Hei");
     free(s2);
   }
 

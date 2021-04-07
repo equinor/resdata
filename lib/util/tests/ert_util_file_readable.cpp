@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2013  Equinor ASA, Norway.
 
-   The file 'ert_util_file_readable.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ert_util_file_readable.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,41 +16,37 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <sys/types.h>
+#include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
+#include <ert/util/util.h>
 
-
-void assert_equal( bool equal ) {
+void assert_equal(bool equal) {
   if (!equal)
     exit(1);
 }
 
-
-
-
-int main(int argc , char ** argv) {
-  test_assert_true( util_file_readable( argv[0] ));
+int main(int argc, char **argv) {
+  test_assert_true(util_file_readable(argv[0]));
   {
-      char * path;
-      util_alloc_file_components( argv[0] , &path , NULL , NULL);
-      test_assert_false( util_file_readable( path ));
-      free( path );
+    char *path;
+    util_alloc_file_components(argv[0], &path, NULL, NULL);
+    test_assert_false(util_file_readable(path));
+    free(path);
   }
   {
-    const char * file = "/tmp/test_file.txt";
+    const char *file = "/tmp/test_file.txt";
     mode_t mode = 0;
-    FILE * stream = util_fopen(file , "w");
-    fclose( stream );
+    FILE *stream = util_fopen(file, "w");
+    fclose(stream);
 
-    chmod(file , mode);
-    test_assert_false( util_file_readable( file));
-    unlink( file );
+    chmod(file, mode);
+    test_assert_false(util_file_readable(file));
+    unlink(file);
   }
   exit(0);
 }

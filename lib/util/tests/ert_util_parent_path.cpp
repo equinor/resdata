@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2012  Equinor ASA, Norway.
 
-   The file 'ert_util_parent_path.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ert_util_parent_path.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,39 +17,35 @@
    for more details.
 */
 
-#include <stdlib.h>
 #include <dirent.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include <pwd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
+#include <ert/util/util.h>
 
-
-void test_path(const char * expected_parent , const char * input_path ) {
-  char * parent_path = util_alloc_parent_path( input_path );
-  test_assert_string_equal( expected_parent , parent_path);
-  free( parent_path );
+void test_path(const char *expected_parent, const char *input_path) {
+  char *parent_path = util_alloc_parent_path(input_path);
+  test_assert_string_equal(expected_parent, parent_path);
+  free(parent_path);
 }
 
+int main(int argc, char **argv) {
 
+  test_path("", "path");
+  test_path(NULL, "");
+  test_path(NULL, NULL);
 
-int main(int argc , char ** argv) {
+  test_path("path/parent", "path/parent/leaf");
+  test_path("/path/parent", "/path/parent/leaf");
+  test_path("/path/parent", "/path/parent/leaf/");
+  test_path("/path/parent", "/path/parent/leaf/../leaf");
+  test_path("/path", "/path/parent/leaf/..");
 
-  test_path("" , "path");
-  test_path(NULL , "");
-  test_path(NULL , NULL);
-
-  test_path("path/parent" , "path/parent/leaf");
-  test_path("/path/parent" , "/path/parent/leaf");
-  test_path("/path/parent" , "/path/parent/leaf/");
-  test_path("/path/parent" , "/path/parent/leaf/../leaf");
-  test_path("/path" , "/path/parent/leaf/..");
-
-  test_path("path/parent" , "path/parent/leaf/../leaf");
-  test_path("path"        , "path/parent/leaf/..");
-
+  test_path("path/parent", "path/parent/leaf/../leaf");
+  test_path("path", "path/parent/leaf/..");
 
   exit(0);
 }

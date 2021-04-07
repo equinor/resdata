@@ -5,25 +5,22 @@
  * Created on August 16, 2013, 9:41 AM
  */
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
+#include <ert/util/util.h>
+#include <stdlib.h>
+#include <unistd.h>
 
+void test_assert_util_abort(const char *function_name, void(void *), void *arg);
 
-void      test_assert_util_abort(const char * function_name , void (void *) , void * arg);
-
-
-void call_util_abort(void * arg) {
-  util_abort("%s: I am calling util_abort - should be intercepted\n",__func__ );
+void call_util_abort(void *arg) {
+  util_abort("%s: I am calling util_abort - should be intercepted\n", __func__);
 }
 
 void test_intercept() {
-  test_assert_util_abort( "call_util_abort" , call_util_abort , NULL );
+  test_assert_util_abort("call_util_abort", call_util_abort, NULL);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   test_intercept();
   exit(0);
 }
-

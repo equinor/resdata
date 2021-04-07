@@ -19,20 +19,20 @@
 #include <ert/util/ert_api_config.hpp>
 
 #ifdef ERT_HAVE_GETUID
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
 #include <paths.h>
+#include <pwd.h>
+#include <sys/types.h>
+#include <unistd.h>
 #endif
 
 #include <ert/util/ert_api_config.hpp>
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include <ert/util/util.h>
 #include <ert/util/test_work_area.hpp>
+#include <ert/util/util.h>
 
 #include "detail/util/path.hpp"
 
@@ -65,7 +65,8 @@
 
   -- Create directory /tmp/$USER/ert-test/my/funn/test and call
   -- chdir() to the newly created directory.
-  test_work_area_type * work_area = test_work_area_alloc("my/funny/test" , true);
+  test_work_area_type * work_area = test_work_area_alloc("my/funny/test" ,
+  true);
 
   -- Make files available from the test directory.
   test_work_area_install_file(work_area , "/home/user/build/test-data/file1");
@@ -86,63 +87,65 @@
   test_work_area_free( work_area );
 */
 
-#define DEFAULT_STORE  false
+#define DEFAULT_STORE false
 
-#define TEST_PATH_FMT  "%s/test/%s/%08d"         /* username/test/test_name/random-integer */
-#define FULL_PATH_FMT  "%s/%s"                   /* prefix/test-path */
+#define TEST_PATH_FMT                                                          \
+  "%s/test/%s/%08d"           /* username/test/test_name/random-integer */
+#define FULL_PATH_FMT "%s/%s" /* prefix/test-path */
 
 #define TEST_WORK_AREA_TYPE_ID 1107355
 
-static char * test_work_area_alloc_prefix( ) {
+static char *test_work_area_alloc_prefix() {
 #ifdef HAVE_WINDOWS_GET_TEMP_PATH
 
-    char tmp_path[MAX_PATH];
-    GetTempPath( MAX_PATH , tmp_path );
-    return util_alloc_string_copy( tmp_path );
+  char tmp_path[MAX_PATH];
+  GetTempPath(MAX_PATH, tmp_path);
+  return util_alloc_string_copy(tmp_path);
 
 #else
 
-    const char * prefix_path = getenv("TMPDIR");
+  const char *prefix_path = getenv("TMPDIR");
 
 #ifdef P_tmpdir
-    if (!prefix_path)
-        prefix_path = P_tmpdir;
+  if (!prefix_path)
+    prefix_path = P_tmpdir;
 #endif
 
-    if (!prefix_path)
-        prefix_path = _PATH_TMP;
+  if (!prefix_path)
+    prefix_path = _PATH_TMP;
 
-    return util_alloc_realpath(prefix_path);
+  return util_alloc_realpath(prefix_path);
 
 #endif
 }
 
-
-
 namespace ecl {
 namespace util {
 
-static bool test_work_area_copy_parent__( const TestArea * work_area , const std::string& input_path, bool copy_content) {
-  char * full_path;
+static bool test_work_area_copy_parent__(const TestArea *work_area,
+                                         const std::string &input_path,
+                                         bool copy_content) {
+  char *full_path;
 
-  if (util_is_abs_path( input_path.c_str() ))
-    full_path = util_alloc_string_copy( input_path.c_str() );
+  if (util_is_abs_path(input_path.c_str()))
+    full_path = util_alloc_string_copy(input_path.c_str());
   else
-    full_path = util_alloc_filename( work_area->original_cwd().c_str( ) , input_path.c_str() , NULL);
+    full_path = util_alloc_filename(work_area->original_cwd().c_str(),
+                                    input_path.c_str(), NULL);
 
-  if (util_entry_exists( full_path)) {
-    char * parent_path = util_alloc_parent_path( full_path );
+  if (util_entry_exists(full_path)) {
+    char *parent_path = util_alloc_parent_path(full_path);
 
     if (copy_content)
       work_area->copy_directory_content(std::string(parent_path));
     else
       work_area->copy_directory(std::string(parent_path));
 
-    free( full_path );
-    free( parent_path );
+    free(full_path);
+    free(parent_path);
     return true;
   } else {
-    free( full_path );
+    free(full_path);
     return false;
   }
 }
@@ -152,76 +155,73 @@ static char *create_test_path(const std::string &test_name, const char *prefix,
   const int MAX_TRIES = 10;
   for (int try_count = 0; try_count < MAX_TRIES; try_count++) {
     unsigned int random_int;
-    util_fread_dev_urandom(sizeof random_int, (char *) &random_int);
+    util_fread_dev_urandom(sizeof random_int, (char *)&random_int);
     random_int = random_int % 100000000;
 
-    char *test_path = util_alloc_sprintf(
-            TEST_PATH_FMT, user_name, test_name.c_str(), random_int
-    );
+    char *test_path = util_alloc_sprintf(TEST_PATH_FMT, user_name,
+                                         test_name.c_str(), random_int);
 
     char *test_cwd = util_alloc_sprintf(FULL_PATH_FMT, prefix, test_path);
     free(test_path);
 
-    if(util_mkdir_p(test_cwd)) {
+    if (util_mkdir_p(test_cwd)) {
       return test_cwd;
     }
     free(test_cwd);
   }
 
   util_abort(
-    "%s: failed to make test directory after %d tries: %s - aborting\n",
-    __func__, MAX_TRIES, test_name.c_str()
-  );
+      "%s: failed to make test directory after %d tries: %s - aborting\n",
+      __func__, MAX_TRIES, test_name.c_str());
   return NULL;
 }
 
-TestArea::TestArea(const std::string& test_name, bool store_area) : store(store_area) {
-    char * prefix = test_work_area_alloc_prefix();
+TestArea::TestArea(const std::string &test_name, bool store_area)
+    : store(store_area) {
+  char *prefix = test_work_area_alloc_prefix();
 
 #ifdef ERT_HAVE_GETUID
-    uid_t uid = getuid();
-    struct passwd * pw = getpwuid( uid );
-    char * user_name = util_alloc_string_copy( pw->pw_name );
+  uid_t uid = getuid();
+  struct passwd *pw = getpwuid(uid);
+  char *user_name = util_alloc_string_copy(pw->pw_name);
 #else
-    char * user_name =  util_alloc_sprintf("ert-test-%08u" , random_int);
+  char *user_name = util_alloc_sprintf("ert-test-%08u", random_int);
 #endif
 
-    char *test_cwd = ecl::util::create_test_path(test_name, prefix, user_name);
+  char *test_cwd = ecl::util::create_test_path(test_name, prefix, user_name);
 
-    {
-        char * cwd_tmp = util_alloc_cwd();
-        this->org_cwd = cwd_tmp;
-        free(cwd_tmp);
-    }
-    this->cwd = test_cwd;
-    if (util_chdir( this->cwd.c_str() ) != 0)
-        util_abort("%s: Failed to move into temporary directory: %s", __func__, this->cwd.c_str());
+  {
+    char *cwd_tmp = util_alloc_cwd();
+    this->org_cwd = cwd_tmp;
+    free(cwd_tmp);
+  }
+  this->cwd = test_cwd;
+  if (util_chdir(this->cwd.c_str()) != 0)
+    util_abort("%s: Failed to move into temporary directory: %s", __func__,
+               this->cwd.c_str());
 
-    free( user_name );
-    free( test_cwd );
-    free( prefix );
+  free(user_name);
+  free(test_cwd);
+  free(prefix);
 }
 
 TestArea::~TestArea() {
-    if (!this->store)
-        util_clear_directory( this->cwd.c_str() , true , true );
+  if (!this->store)
+    util_clear_directory(this->cwd.c_str(), true, true);
 
-    util_chdir( this->org_cwd.c_str() );
+  util_chdir(this->org_cwd.c_str());
 }
 
-const std::string& TestArea::test_cwd() const {
-    return this->cwd;
-}
+const std::string &TestArea::test_cwd() const { return this->cwd; }
 
-const std::string& TestArea::original_cwd() const {
-    return this->org_cwd;
-}
+const std::string &TestArea::original_cwd() const { return this->org_cwd; }
 
-std::string TestArea::original_path(const std::string& input_path) const {
-  if (util_is_abs_path( input_path.c_str() ))
+std::string TestArea::original_path(const std::string &input_path) const {
+  if (util_is_abs_path(input_path.c_str()))
     return std::string(input_path);
   else {
-    char * fname = util_alloc_filename( this->original_cwd().c_str(), input_path.c_str() , NULL);
+    char *fname = util_alloc_filename(this->original_cwd().c_str(),
+                                      input_path.c_str(), NULL);
 
     std::string return_string = std::string(fname);
     free(fname);
@@ -230,27 +230,27 @@ std::string TestArea::original_path(const std::string& input_path) const {
   }
 }
 
-
-void TestArea::copy_file(const std::string& input_src_file) const {
+void TestArea::copy_file(const std::string &input_src_file) const {
   std::string src_file = this->original_path(input_src_file);
 
-  if (util_file_exists( src_file.c_str() )) {
-    char * target_name = util_split_alloc_filename( input_src_file.c_str() );
-    char * target_file = util_alloc_filename( this->test_cwd().c_str() , target_name , NULL );
-    util_copy_file( src_file.c_str(), target_file );
-    free( target_file );
-    free( target_name );
+  if (util_file_exists(src_file.c_str())) {
+    char *target_name = util_split_alloc_filename(input_src_file.c_str());
+    char *target_file =
+        util_alloc_filename(this->test_cwd().c_str(), target_name, NULL);
+    util_copy_file(src_file.c_str(), target_file);
+    free(target_file);
+    free(target_name);
   }
 }
 
 void TestArea::copy_directory(const std::string input_directory) const {
   std::string src_directory = this->original_path(input_directory);
-  util_copy_directory(src_directory.c_str() , this->test_cwd().c_str() );
+  util_copy_directory(src_directory.c_str(), this->test_cwd().c_str());
 }
 
 void TestArea::copy_directory_content(const std::string input_directory) const {
   std::string src_directory = this->original_path(input_directory);
-  util_copy_directory_content(src_directory.c_str() , this->test_cwd().c_str() );
+  util_copy_directory_content(src_directory.c_str(), this->test_cwd().c_str());
 }
 
 bool TestArea::copy_parent(const std::string input_path) const {
@@ -261,49 +261,41 @@ bool TestArea::copy_parent_content(const std::string input_path) const {
   return test_work_area_copy_parent__(this, input_path, true);
 }
 
-}
-}
+} // namespace util
+} // namespace ecl
 
 /*****************************************************************/
 /* C API */
 
-test_work_area_type * test_work_area_alloc__(const char * test_name, bool store_area) {
+test_work_area_type *test_work_area_alloc__(const char *test_name,
+                                            bool store_area) {
   if (test_name)
     return new ecl::util::TestArea(test_name, store_area);
   else
     return NULL;
 }
 
-
-test_work_area_type * test_work_area_alloc(const char * test_name) {
+test_work_area_type *test_work_area_alloc(const char *test_name) {
   return test_work_area_alloc__(test_name, false);
 }
 
+void test_work_area_free(test_work_area_type *work_area) { delete work_area; }
 
-
-
-void test_work_area_free(test_work_area_type * work_area) {
-  delete work_area;
-}
-
-
-const char * test_work_area_get_cwd( const test_work_area_type * work_area ) {
+const char *test_work_area_get_cwd(const test_work_area_type *work_area) {
   return work_area->test_cwd().c_str();
 }
 
-
-const char * test_work_area_get_original_cwd( const test_work_area_type * work_area ) {
+const char *
+test_work_area_get_original_cwd(const test_work_area_type *work_area) {
   return work_area->original_cwd().c_str();
 }
 
-
-char * test_work_area_alloc_input_path( const test_work_area_type * work_area , const char * input_path ) {
-  std::string relocated_input_path = work_area->original_path(std::string(input_path));
+char *test_work_area_alloc_input_path(const test_work_area_type *work_area,
+                                      const char *input_path) {
+  std::string relocated_input_path =
+      work_area->original_path(std::string(input_path));
   return util_alloc_string_copy(relocated_input_path.c_str());
 }
-
-
-
 
 /**
    The point of this function is that the test code should be able to
@@ -313,46 +305,48 @@ char * test_work_area_alloc_input_path( const test_work_area_type * work_area , 
    copy @input_file from the location relative to the original cwd to
    the corresponding location relative to the test cwd.
 */
-void test_work_area_install_file( const test_work_area_type * work_area , const char * input_src_file ) {
-  if (util_is_abs_path( input_src_file))
+void test_work_area_install_file(const test_work_area_type *work_area,
+                                 const char *input_src_file) {
+  if (util_is_abs_path(input_src_file))
     return;
   else {
     std::string src_file = work_area->original_path(input_src_file);
     std::string src_path = ecl::util::path::dirname(input_src_file);
 
-    if (!util_entry_exists( src_path.c_str() ))
-      util_make_path( src_path.c_str() );
+    if (!util_entry_exists(src_path.c_str()))
+      util_make_path(src_path.c_str());
 
-    if (util_file_exists( src_file.c_str() )) {
-      char * target_file   = util_alloc_filename( work_area->test_cwd().c_str(), input_src_file, NULL );
-      util_copy_file( src_file.c_str() , target_file );
-      free( target_file );
+    if (util_file_exists(src_file.c_str())) {
+      char *target_file = util_alloc_filename(work_area->test_cwd().c_str(),
+                                              input_src_file, NULL);
+      util_copy_file(src_file.c_str(), target_file);
+      free(target_file);
     }
   }
 }
 
-
-void test_work_area_copy_file( const test_work_area_type * work_area , const char * input_file) {
+void test_work_area_copy_file(const test_work_area_type *work_area,
+                              const char *input_file) {
   if (input_file)
     work_area->copy_file(std::string(input_file));
 }
 
-
-void test_work_area_copy_directory( const test_work_area_type * work_area , const char * input_directory) {
+void test_work_area_copy_directory(const test_work_area_type *work_area,
+                                   const char *input_directory) {
   work_area->copy_directory(std::string(input_directory));
 }
 
-
-void test_work_area_copy_directory_content( const test_work_area_type * work_area , const char * input_directory) {
+void test_work_area_copy_directory_content(const test_work_area_type *work_area,
+                                           const char *input_directory) {
   work_area->copy_directory_content(std::string(input_directory));
 }
 
-
-bool test_work_area_copy_parent_directory( const test_work_area_type * work_area , const char * input_path) {
+bool test_work_area_copy_parent_directory(const test_work_area_type *work_area,
+                                          const char *input_path) {
   return work_area->copy_parent(std::string(input_path));
 }
 
-
-bool test_work_area_copy_parent_content( const test_work_area_type * work_area , const char * input_path) {
+bool test_work_area_copy_parent_content(const test_work_area_type *work_area,
+                                        const char *input_path) {
   return work_area->copy_parent_content(std::string(input_path));
 }

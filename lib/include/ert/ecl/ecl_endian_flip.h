@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/ecl_endian_flip.hpp>
-
-

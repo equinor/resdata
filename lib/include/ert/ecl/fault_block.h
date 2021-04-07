@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/fault_block.hpp>
-
-

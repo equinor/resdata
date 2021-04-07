@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2012  Equinor ASA, Norway.
 
-   The file 'ert_util_hash_test.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ert_util_hash_test.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,29 +16,30 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
-#include <ert/util/test_util.hpp>
 #include <ert/util/hash.hpp>
+#include <ert/util/test_util.hpp>
 
-int main(int argc , char ** argv) {
+int main(int argc, char **argv) {
 
-  hash_type * h = hash_alloc();
+  hash_type *h = hash_alloc();
 
-  test_assert_bool_equal( hash_add_option( h , "Key" ) , false );
-  test_assert_false( hash_add_option( h , "Key" ) );
+  test_assert_bool_equal(hash_add_option(h, "Key"), false);
+  test_assert_false(hash_add_option(h, "Key"));
 
-  test_assert_true( hash_add_option( h , "Key1:Value" ) );
-  test_assert_true( hash_add_option( h , "Key2:Value1:Value2" ) );
-  test_assert_true( hash_add_option( h , "Key3:Value1:value2:Value3" ) );
+  test_assert_true(hash_add_option(h, "Key1:Value"));
+  test_assert_true(hash_add_option(h, "Key2:Value1:Value2"));
+  test_assert_true(hash_add_option(h, "Key3:Value1:value2:Value3"));
 
-  test_assert_string_equal( (const char *) hash_get( h , "Key1" ) , "Value" );
-  test_assert_string_equal( (const char *) hash_get( h , "Key2" ) , "Value1:Value2" );
-  test_assert_string_equal( (const char *) hash_get( h , "Key3" ) , "Value1:value2:Value3" );
+  test_assert_string_equal((const char *)hash_get(h, "Key1"), "Value");
+  test_assert_string_equal((const char *)hash_get(h, "Key2"), "Value1:Value2");
+  test_assert_string_equal((const char *)hash_get(h, "Key3"),
+                           "Value1:value2:Value3");
 
-  test_assert_false( hash_has_key( h , "Key" ));
+  test_assert_false(hash_has_key(h, "Key"));
 
-  hash_free( h );
+  hash_free(h);
   exit(0);
 }

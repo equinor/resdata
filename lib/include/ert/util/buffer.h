@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/buffer.hpp>
-
-

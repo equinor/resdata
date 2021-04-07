@@ -16,20 +16,19 @@
    for more details.
 */
 
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
-#include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
+#include <ert/util/util.h>
 
 #include <ert/ecl/smspec_node.hpp>
 
-
 static void test_identify_rate_variable() {
-/*
-   NOTE: Not all of the following vectors are actual Eclipse vectors,
-   but they are patterns that are supposed to be recognized as (likely) rates.
-*/
+  /*
+     NOTE: Not all of the following vectors are actual Eclipse vectors,
+     but they are patterns that are supposed to be recognized as (likely) rates.
+  */
   test_assert_true(smspec_node_identify_rate("ROPR"));
   test_assert_true(smspec_node_identify_rate("WOIR"));
   test_assert_true(smspec_node_identify_rate("GOVPR"));
@@ -120,15 +119,17 @@ static void test_identify_rate_variable() {
 }
 
 static void test_identify_total_variable() {
-/*
-   NOTE: Not all of the following vectors are actual Eclipse vectors,
-   but they are patterns that are supposed to be recognized as (likely) totals.
-*/
+  /*
+     NOTE: Not all of the following vectors are actual Eclipse vectors,
+     but they are patterns that are supposed to be recognized as (likely)
+     totals.
+  */
   test_assert_true(smspec_node_identify_total("ROPT", ECL_SMSPEC_REGION_VAR));
   test_assert_true(smspec_node_identify_total("WOIT", ECL_SMSPEC_WELL_VAR));
   test_assert_true(smspec_node_identify_total("GOVPT", ECL_SMSPEC_GROUP_VAR));
   test_assert_true(smspec_node_identify_total("FOVIT", ECL_SMSPEC_FIELD_VAR));
-  test_assert_true(smspec_node_identify_total("COMT", ECL_SMSPEC_COMPLETION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("COMT", ECL_SMSPEC_COMPLETION_VAR));
 
   test_assert_true(smspec_node_identify_total("RGPT", ECL_SMSPEC_REGION_VAR));
   test_assert_true(smspec_node_identify_total("WGIT", ECL_SMSPEC_WELL_VAR));
@@ -151,9 +152,12 @@ static void test_identify_total_variable() {
   test_assert_true(smspec_node_identify_total("WRGT", ECL_SMSPEC_WELL_VAR));
   test_assert_true(smspec_node_identify_total("GEGT", ECL_SMSPEC_GROUP_VAR));
   test_assert_true(smspec_node_identify_total("FEXGT", ECL_SMSPEC_FIELD_VAR));
-  test_assert_true(smspec_node_identify_total("CSGT", ECL_SMSPEC_COMPLETION_VAR));
-  test_assert_true(smspec_node_identify_total("LWGST", ECL_SMSPEC_LOCAL_WELL_VAR));
-  test_assert_true(smspec_node_identify_total("LCFGT", ECL_SMSPEC_LOCAL_COMPLETION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("CSGT", ECL_SMSPEC_COMPLETION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("LWGST", ECL_SMSPEC_LOCAL_WELL_VAR));
+  test_assert_true(
+      smspec_node_identify_total("LCFGT", ECL_SMSPEC_LOCAL_COMPLETION_VAR));
   test_assert_true(smspec_node_identify_total("WGIMT", ECL_SMSPEC_WELL_VAR));
   test_assert_true(smspec_node_identify_total("GGCT", ECL_SMSPEC_GROUP_VAR));
 
@@ -161,37 +165,48 @@ static void test_identify_total_variable() {
   test_assert_true(smspec_node_identify_total("WNIT", ECL_SMSPEC_WELL_VAR));
   test_assert_true(smspec_node_identify_total("GCPT", ECL_SMSPEC_GROUP_VAR));
   test_assert_true(smspec_node_identify_total("FCIT", ECL_SMSPEC_FIELD_VAR));
-  test_assert_true(smspec_node_identify_total("CSIT", ECL_SMSPEC_COMPLETION_VAR));
-  test_assert_true(smspec_node_identify_total("LWSPT", ECL_SMSPEC_LOCAL_WELL_VAR));
-  test_assert_true(smspec_node_identify_total("LCTIT", ECL_SMSPEC_LOCAL_COMPLETION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("CSIT", ECL_SMSPEC_COMPLETION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("LWSPT", ECL_SMSPEC_LOCAL_WELL_VAR));
+  test_assert_true(
+      smspec_node_identify_total("LCTIT", ECL_SMSPEC_LOCAL_COMPLETION_VAR));
   test_assert_true(smspec_node_identify_total("WTPT", ECL_SMSPEC_WELL_VAR));
 
   test_assert_true(smspec_node_identify_total("SOFT", ECL_SMSPEC_SEGMENT_VAR));
   test_assert_true(smspec_node_identify_total("SGFT", ECL_SMSPEC_SEGMENT_VAR));
   test_assert_true(smspec_node_identify_total("SWFT", ECL_SMSPEC_SEGMENT_VAR));
 
-  test_assert_true(smspec_node_identify_total("RGFT", ECL_SMSPEC_REGION_2_REGION_VAR));
-  test_assert_true(smspec_node_identify_total("RWFT-", ECL_SMSPEC_REGION_2_REGION_VAR));
-  test_assert_true(smspec_node_identify_total("RNLFT", ECL_SMSPEC_REGION_2_REGION_VAR));
-  test_assert_true(smspec_node_identify_total("RNLFT+", ECL_SMSPEC_REGION_2_REGION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("RGFT", ECL_SMSPEC_REGION_2_REGION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("RWFT-", ECL_SMSPEC_REGION_2_REGION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("RNLFT", ECL_SMSPEC_REGION_2_REGION_VAR));
+  test_assert_true(
+      smspec_node_identify_total("RNLFT+", ECL_SMSPEC_REGION_2_REGION_VAR));
 
   test_assert_false(smspec_node_identify_total("", ECL_SMSPEC_REGION_VAR));
   test_assert_false(smspec_node_identify_total("HEI", ECL_SMSPEC_WELL_VAR));
   test_assert_false(smspec_node_identify_total("GBHP", ECL_SMSPEC_GROUP_VAR));
   test_assert_false(smspec_node_identify_total("FOPR", ECL_SMSPEC_FIELD_VAR));
-  test_assert_false(smspec_node_identify_total("CWIR", ECL_SMSPEC_COMPLETION_VAR));
-  test_assert_false(smspec_node_identify_total("LWGPR", ECL_SMSPEC_LOCAL_WELL_VAR));
-  test_assert_false(smspec_node_identify_total("CWCT", ECL_SMSPEC_LOCAL_COMPLETION_VAR));
+  test_assert_false(
+      smspec_node_identify_total("CWIR", ECL_SMSPEC_COMPLETION_VAR));
+  test_assert_false(
+      smspec_node_identify_total("LWGPR", ECL_SMSPEC_LOCAL_WELL_VAR));
+  test_assert_false(
+      smspec_node_identify_total("CWCT", ECL_SMSPEC_LOCAL_COMPLETION_VAR));
   test_assert_false(smspec_node_identify_total("SGPT", ECL_SMSPEC_SEGMENT_VAR));
-  test_assert_false(smspec_node_identify_total("RFT", ECL_SMSPEC_REGION_2_REGION_VAR));
-  test_assert_false(smspec_node_identify_total("ROFR", ECL_SMSPEC_REGION_2_REGION_VAR));
+  test_assert_false(
+      smspec_node_identify_total("RFT", ECL_SMSPEC_REGION_2_REGION_VAR));
+  test_assert_false(
+      smspec_node_identify_total("ROFR", ECL_SMSPEC_REGION_2_REGION_VAR));
 }
 
-
 void test_nums_default() {
-  ecl::smspec_node field_node( 0, "FOPT" , "UNIT" , 0);
-  ecl::smspec_node group_node( 0, "GOPR" , "G1", "UNIT" , 0, ":");
-  ecl::smspec_node well_node( 0, "WOPR" , "W1", "UNIT" , 0, ":");
+  ecl::smspec_node field_node(0, "FOPT", "UNIT", 0);
+  ecl::smspec_node group_node(0, "GOPR", "G1", "UNIT", 0, ":");
+  ecl::smspec_node well_node(0, "WOPR", "W1", "UNIT", 0, ":");
 
   int default_nums = 0;
   /*
@@ -200,85 +215,81 @@ void test_nums_default() {
     not really be a publically available symbol.
   */
 
-  test_assert_int_equal( field_node.get_num(), default_nums);
-  test_assert_int_equal( group_node.get_num(), default_nums);
-  test_assert_int_equal( well_node.get_num(), default_nums);
+  test_assert_int_equal(field_node.get_num(), default_nums);
+  test_assert_int_equal(group_node.get_num(), default_nums);
+  test_assert_int_equal(well_node.get_num(), default_nums);
 }
 
-
 void test_cmp_types() {
-  const int dims[3] = {10,10,10};
-  ecl::smspec_node field_node( 0, "FOPT" , "UNIT" , 0);
-  ecl::smspec_node region_node( 0, "RPR" , 10, "UNIT" , dims , 0 , ":");
-  ecl::smspec_node group_node( 0, "GOPR" , "G1", "UNIT" , 0, ":");
-  ecl::smspec_node well_node( 0, "WOPR" , "W1", "UNIT" , 0, ":");
-  ecl::smspec_node block_node( 0, "BPR", 10, "UNIT", dims, 0, ":");
-  ecl::smspec_node aquifer_node( 0, "AAQP" , 10, "UNIT" , dims, 0 , ":");
-  ecl::smspec_node segment_node( 0, "SGOR" , "W1" , 10, "UNIT" , dims , 0 , ":");
-  ecl::smspec_node misc_node1( 0, "TIME" , "UNIT", 0 );
-  ecl::smspec_node misc_node2( 0, "TCPU", "UNIT", 0);
+  const int dims[3] = {10, 10, 10};
+  ecl::smspec_node field_node(0, "FOPT", "UNIT", 0);
+  ecl::smspec_node region_node(0, "RPR", 10, "UNIT", dims, 0, ":");
+  ecl::smspec_node group_node(0, "GOPR", "G1", "UNIT", 0, ":");
+  ecl::smspec_node well_node(0, "WOPR", "W1", "UNIT", 0, ":");
+  ecl::smspec_node block_node(0, "BPR", 10, "UNIT", dims, 0, ":");
+  ecl::smspec_node aquifer_node(0, "AAQP", 10, "UNIT", dims, 0, ":");
+  ecl::smspec_node segment_node(0, "SGOR", "W1", 10, "UNIT", dims, 0, ":");
+  ecl::smspec_node misc_node1(0, "TIME", "UNIT", 0);
+  ecl::smspec_node misc_node2(0, "TCPU", "UNIT", 0);
 
-  test_assert_int_equal( field_node.cmp(field_node), 0);
-  test_assert_int_equal( region_node.cmp(region_node), 0);
-  test_assert_int_equal( well_node.cmp(well_node), 0);
-  test_assert_int_equal( group_node.cmp(group_node), 0);
-  test_assert_int_equal( block_node.cmp(block_node), 0);
+  test_assert_int_equal(field_node.cmp(field_node), 0);
+  test_assert_int_equal(region_node.cmp(region_node), 0);
+  test_assert_int_equal(well_node.cmp(well_node), 0);
+  test_assert_int_equal(group_node.cmp(group_node), 0);
+  test_assert_int_equal(block_node.cmp(block_node), 0);
 
-  test_assert_true( misc_node1.cmp(field_node) < 0 );
-  test_assert_true( field_node.cmp(region_node) < 0 );
-  test_assert_true( region_node.cmp(group_node) < 0 );
-  test_assert_true( group_node.cmp(well_node) < 0 );
-  test_assert_true( well_node.cmp(segment_node) < 0 );
-  test_assert_true( segment_node.cmp(block_node) < 0 );
-  test_assert_true( block_node.cmp(aquifer_node)< 0 );
-  test_assert_true( aquifer_node.cmp(misc_node2) < 0 );
+  test_assert_true(misc_node1.cmp(field_node) < 0);
+  test_assert_true(field_node.cmp(region_node) < 0);
+  test_assert_true(region_node.cmp(group_node) < 0);
+  test_assert_true(group_node.cmp(well_node) < 0);
+  test_assert_true(well_node.cmp(segment_node) < 0);
+  test_assert_true(segment_node.cmp(block_node) < 0);
+  test_assert_true(block_node.cmp(aquifer_node) < 0);
+  test_assert_true(aquifer_node.cmp(misc_node2) < 0);
 
-  test_assert_true( field_node.cmp(misc_node1) > 0 );
-  test_assert_true( misc_node2.cmp(aquifer_node) > 0 );
-  test_assert_true( misc_node1.cmp(misc_node2) < 0 );
-  test_assert_true( misc_node2.cmp(misc_node1) > 0 );
+  test_assert_true(field_node.cmp(misc_node1) > 0);
+  test_assert_true(misc_node2.cmp(aquifer_node) > 0);
+  test_assert_true(misc_node1.cmp(misc_node2) < 0);
+  test_assert_true(misc_node2.cmp(misc_node1) > 0);
 }
 
 void test_cmp_well() {
-  ecl::smspec_node well_node1_1( 0 ,  "WOPR" ,"W1" , "UNIT" , 10 ,":");
-  ecl::smspec_node well_node1_2( 0 ,  "WOPR" ,"W2" , "UNIT" , 10 ,":");
-  ecl::smspec_node well_node2_1( 0 ,  "WWCT" ,"W1" , "UNIT" , 10 ,":");
-  ecl::smspec_node well_node2_2( 0 ,  "WWWT" ,"W2" , "UNIT" , 10 ,":");
+  ecl::smspec_node well_node1_1(0, "WOPR", "W1", "UNIT", 10, ":");
+  ecl::smspec_node well_node1_2(0, "WOPR", "W2", "UNIT", 10, ":");
+  ecl::smspec_node well_node2_1(0, "WWCT", "W1", "UNIT", 10, ":");
+  ecl::smspec_node well_node2_2(0, "WWWT", "W2", "UNIT", 10, ":");
 
-  test_assert_int_equal( well_node1_1.cmp(well_node1_1), 0);
-  test_assert_int_equal( well_node2_2.cmp(well_node2_2), 0);
+  test_assert_int_equal(well_node1_1.cmp(well_node1_1), 0);
+  test_assert_int_equal(well_node2_2.cmp(well_node2_2), 0);
 
-  test_assert_true( well_node1_1.cmp(well_node1_2)< 0 );
-  test_assert_true( well_node1_1.cmp(well_node2_1)< 0 );
-  test_assert_true( well_node1_1.cmp(well_node2_2)< 0 );
+  test_assert_true(well_node1_1.cmp(well_node1_2) < 0);
+  test_assert_true(well_node1_1.cmp(well_node2_1) < 0);
+  test_assert_true(well_node1_1.cmp(well_node2_2) < 0);
 
-  test_assert_true( well_node1_2.cmp(well_node1_1)> 0 );
-  test_assert_true( well_node1_2.cmp(well_node2_1)< 0 );
+  test_assert_true(well_node1_2.cmp(well_node1_1) > 0);
+  test_assert_true(well_node1_2.cmp(well_node2_1) < 0);
 }
-
-
 
 void test_cmp_region() {
-  const int dims[3] = {10,10,10};
-  ecl::smspec_node region_node1_1( 0, "ROIP" ,  10 ,"UNIT" ,  dims , 0 , ":" );
-  ecl::smspec_node region_node1_2( 0, "ROIP" ,  11 ,"UNIT" ,  dims , 0 , ":" );
-  ecl::smspec_node region_node2_1( 0, "RPR" ,   10 ,"UNIT" ,  dims , 0 , ":" );
-  ecl::smspec_node region_node2_2( 0, "RPR" ,   12 ,"UNIT" ,  dims , 0 , ":" );
+  const int dims[3] = {10, 10, 10};
+  ecl::smspec_node region_node1_1(0, "ROIP", 10, "UNIT", dims, 0, ":");
+  ecl::smspec_node region_node1_2(0, "ROIP", 11, "UNIT", dims, 0, ":");
+  ecl::smspec_node region_node2_1(0, "RPR", 10, "UNIT", dims, 0, ":");
+  ecl::smspec_node region_node2_2(0, "RPR", 12, "UNIT", dims, 0, ":");
 
-  test_assert_true( region_node1_1.cmp(region_node1_2)< 0 );
-  test_assert_true( region_node1_1.cmp(region_node2_1)< 0 );
-  test_assert_true( region_node1_1.cmp(region_node2_2)< 0 );
+  test_assert_true(region_node1_1.cmp(region_node1_2) < 0);
+  test_assert_true(region_node1_1.cmp(region_node2_1) < 0);
+  test_assert_true(region_node1_1.cmp(region_node2_2) < 0);
 
-  test_assert_true( region_node1_2.cmp(region_node1_1)> 0 );
-  test_assert_true( region_node1_2.cmp(region_node2_1)< 0 );
+  test_assert_true(region_node1_2.cmp(region_node1_1) > 0);
+  test_assert_true(region_node1_2.cmp(region_node2_1) < 0);
 }
 
-
-int main(int argc, char ** argv) {
+int main(int argc, char **argv) {
   util_install_signals();
   test_cmp_types();
   test_cmp_well();
-  test_cmp_region( );
+  test_cmp_region();
   test_identify_rate_variable();
   test_identify_total_variable();
   test_nums_default();

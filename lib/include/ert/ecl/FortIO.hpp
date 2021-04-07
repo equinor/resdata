@@ -21,32 +21,31 @@
 #define OPM_ERT_FORTIO_KW
 
 #include <fstream>
-#include <string>
 #include <memory>
+#include <string>
 
-#include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/fortio.h>
 
 #include <ert/util/ert_unique_ptr.hpp>
 
-
-
 namespace ERT {
-    class FortIO
-    {
-    public:
-        FortIO();
-        FortIO(const std::string& filename , std::ios_base::openmode mode , bool fmt_file = false , bool endian_flip_header = ECL_ENDIAN_FLIP);
-        void open(const std::string& filename , std::ios_base::openmode mode , bool fmt_file = false , bool endian_flip_header = ECL_ENDIAN_FLIP);
-        void fflush() const;
-        bool ftruncate( offset_type new_size );
+class FortIO {
+public:
+  FortIO();
+  FortIO(const std::string &filename, std::ios_base::openmode mode,
+         bool fmt_file = false, bool endian_flip_header = ECL_ENDIAN_FLIP);
+  void open(const std::string &filename, std::ios_base::openmode mode,
+            bool fmt_file = false, bool endian_flip_header = ECL_ENDIAN_FLIP);
+  void fflush() const;
+  bool ftruncate(offset_type new_size);
 
-        fortio_type * get() const;
-        void close();
-    private:
-        ert_unique_ptr<fortio_type , fortio_fclose> m_fortio;
-    };
-}
+  fortio_type *get() const;
+  void close();
 
+private:
+  ert_unique_ptr<fortio_type, fortio_fclose> m_fortio;
+};
+} // namespace ERT
 
 #endif

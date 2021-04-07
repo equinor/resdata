@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/parser.hpp>
-
-

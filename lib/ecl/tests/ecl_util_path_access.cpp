@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2018  Equinor ASA, Norway.
 
-   The file 'ecl_util_path_access.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ecl_util_path_access.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,38 +16,34 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <unistd.h>
 
-#include <ert/util/util.h>
-#include <ert/util/test_work_area.hpp>
 #include <ert/util/test_util.hpp>
+#include <ert/util/test_work_area.hpp>
+#include <ert/util/util.h>
 
 #include <ert/ecl/ecl_util.hpp>
 
-
 void test_relative_access() {
   ecl::util::TestArea ta("ecl_access");
-  test_assert_false( ecl_util_path_access("No/directory/does/not/exist"));
+  test_assert_false(ecl_util_path_access("No/directory/does/not/exist"));
 
   util_make_path("path");
-  test_assert_true( ecl_util_path_access("path"));
-  test_assert_true( ecl_util_path_access("path/FILE_DOES_NOT_EXIST"));
+  test_assert_true(ecl_util_path_access("path"));
+  test_assert_true(ecl_util_path_access("path/FILE_DOES_NOT_EXIST"));
 
   {
-    FILE * f = util_fopen("path/file", "w");
-    fprintf(f,"Hello\n");
+    FILE *f = util_fopen("path/file", "w");
+    fprintf(f, "Hello\n");
     fclose(f);
   }
-  test_assert_true( ecl_util_path_access("path/file"));
+  test_assert_true(ecl_util_path_access("path/file"));
   chmod("path/file", 0);
-  test_assert_false( ecl_util_path_access("path/file"));
+  test_assert_false(ecl_util_path_access("path/file"));
 
-  test_assert_true( ecl_util_path_access("ECLIPSE_CASE"));
+  test_assert_true(ecl_util_path_access("ECLIPSE_CASE"));
 }
 
-
-int main(int argc, char ** argv) {
-  test_relative_access();
-}
+int main(int argc, char **argv) { test_relative_access(); }

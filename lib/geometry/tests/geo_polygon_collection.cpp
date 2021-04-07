@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2014  Equinor ASA, Norway.
 
-   The file 'geo_polygon_collection.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'geo_polygon_collection.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,9 +17,9 @@
    for more details.
 */
 
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <ert/util/test_util.hpp>
@@ -27,19 +28,14 @@
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_polygon_collection.hpp>
 
-
-
-
 void test_create() {
-  geo_polygon_collection_type * pc = geo_polygon_collection_alloc();
-  test_assert_true( geo_polygon_collection_is_instance( pc ));
-  test_assert_int_equal( 0 , geo_polygon_collection_size( pc ));
-  geo_polygon_collection_free( pc );
+  geo_polygon_collection_type *pc = geo_polygon_collection_alloc();
+  test_assert_true(geo_polygon_collection_is_instance(pc));
+  test_assert_int_equal(0, geo_polygon_collection_size(pc));
+  geo_polygon_collection_free(pc);
 }
 
-
-
-int main(int argc , char ** argv) {
+int main(int argc, char **argv) {
   test_create();
   exit(0);
 }

@@ -16,77 +16,76 @@
    for more details.
 */
 
-
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
-#include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_kw.hpp>
-#include <ert/ecl/ecl_kw_magic.hpp>
 #include <ert/ecl/ecl_file_kw.hpp>
 #include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_kw.hpp>
+#include <ert/ecl/ecl_kw_magic.hpp>
 #include <ert/ecl/ecl_rsthead.hpp>
 #include <ert/ecl/ecl_type.hpp>
-
+#include <ert/ecl/fortio.h>
 
 struct ecl_file_view_struct {
-  std::vector<ecl_file_kw_type *>   kw_list;
-  std::map<std::string,std::vector<int>> kw_index;
-  std::vector<std::string> distinct_kw;  /* A list of the keywords occuring in the file - each string occurs ONLY ONCE. */
-  fortio_type       * fortio;       /* The same fortio instance pointer as in the ecl_file styructure. */
-  bool                owner;        /* Is this map the owner of the ecl_file_kw instances; only true for the global_map. */
-  inv_map_type      * inv_map;      /* Shared reference owned by the ecl_file structure. */
+  std::vector<ecl_file_kw_type *> kw_list;
+  std::map<std::string, std::vector<int>> kw_index;
+  std::vector<std::string>
+      distinct_kw; /* A list of the keywords occuring in the file - each string
+                      occurs ONLY ONCE. */
+  fortio_type *fortio; /* The same fortio instance pointer as in the ecl_file
+                          styructure. */
+  bool owner; /* Is this map the owner of the ecl_file_kw instances; only true
+                 for the global_map. */
+  inv_map_type *inv_map; /* Shared reference owned by the ecl_file structure. */
   std::vector<ecl_file_view_type *> child_list;
-  int               * flags;
+  int *flags;
 };
 
 struct ecl_file_transaction_struct {
-  const ecl_file_view_type * file_view;
-  int * ref_count;
+  const ecl_file_view_type *file_view;
+  int *ref_count;
 };
-
 
 /*****************************************************************/
 /* Here comes the functions related to the index ecl_file_view. These
    functions are all of them static.
 */
 
-bool ecl_file_view_check_flags( int state_flags , int query_flags) {
+bool ecl_file_view_check_flags(int state_flags, int query_flags) {
   if ((state_flags & query_flags) == query_flags)
     return true;
   else
     return false;
 }
 
-
-bool ecl_file_view_flags_set( const ecl_file_view_type * file_view , int query_flags) {
-  return ecl_file_view_check_flags( *file_view->flags , query_flags );
+bool ecl_file_view_flags_set(const ecl_file_view_type *file_view,
+                             int query_flags) {
+  return ecl_file_view_check_flags(*file_view->flags, query_flags);
 }
 
-
-const char * ecl_file_view_get_src_file( const ecl_file_view_type * file_view ) {
-  return fortio_filename_ref( file_view->fortio );
+const char *ecl_file_view_get_src_file(const ecl_file_view_type *file_view) {
+  return fortio_filename_ref(file_view->fortio);
 }
 
+ecl_file_view_type *ecl_file_view_alloc(fortio_type *fortio, int *flags,
+                                        inv_map_type *inv_map, bool owner) {
+  ecl_file_view_type *ecl_file_view = new ecl_file_view_type();
 
-ecl_file_view_type * ecl_file_view_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map , bool owner ) {
-  ecl_file_view_type * ecl_file_view  = new ecl_file_view_type();
-
-  ecl_file_view->owner                = owner;
-  ecl_file_view->fortio               = fortio;
-  ecl_file_view->inv_map              = inv_map;
-  ecl_file_view->flags                = flags;
+  ecl_file_view->owner = owner;
+  ecl_file_view->fortio = fortio;
+  ecl_file_view->inv_map = inv_map;
+  ecl_file_view->flags = flags;
 
   return ecl_file_view;
 }
 
-int ecl_file_view_get_global_index( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
-  const auto& index_vector = ecl_file_view->kw_index.at(kw);
+int ecl_file_view_get_global_index(const ecl_file_view_type *ecl_file_view,
+                                   const char *kw, int ith) {
+  const auto &index_vector = ecl_file_view->kw_index.at(kw);
   return index_vector[ith];
 }
-
-
 
 /**
    This function iterates over the kw_list vector and builds the
@@ -96,91 +95,106 @@ int ecl_file_view_get_global_index( const ecl_file_view_type * ecl_file_view , c
    inconsistent state).
 */
 
-
-void ecl_file_view_make_index( ecl_file_view_type * ecl_file_view ) {
+void ecl_file_view_make_index(ecl_file_view_type *ecl_file_view) {
   ecl_file_view->distinct_kw.clear();
   ecl_file_view->kw_index.clear();
   {
     int global_index = 0;
-    for (const auto& file_kw : ecl_file_view->kw_list) {
-      const std::string&  header  = ecl_file_kw_get_header( file_kw );
+    for (const auto &file_kw : ecl_file_view->kw_list) {
+      const std::string &header = ecl_file_kw_get_header(file_kw);
       if (ecl_file_view->kw_index.find(header) == ecl_file_view->kw_index.end())
         ecl_file_view->distinct_kw.push_back(header);
 
-      auto& index_vector = ecl_file_view->kw_index[header];
+      auto &index_vector = ecl_file_view->kw_index[header];
       index_vector.push_back(global_index);
       global_index++;
     }
   }
 }
 
-bool ecl_file_view_has_kw( const ecl_file_view_type * ecl_file_view, const char * kw) {
+bool ecl_file_view_has_kw(const ecl_file_view_type *ecl_file_view,
+                          const char *kw) {
   return (ecl_file_view->kw_index.find(kw) != ecl_file_view->kw_index.end());
 }
 
-
-ecl_file_kw_type * ecl_file_view_iget_file_kw( const ecl_file_view_type * ecl_file_view , int global_index) {
+ecl_file_kw_type *
+ecl_file_view_iget_file_kw(const ecl_file_view_type *ecl_file_view,
+                           int global_index) {
   return ecl_file_view->kw_list[global_index];
 }
 
-ecl_file_kw_type * ecl_file_view_iget_named_file_kw( const ecl_file_view_type * ecl_file_view , const char * kw, int ith) {
-  int global_index = ecl_file_view_get_global_index( ecl_file_view , kw , ith);
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , global_index );
+ecl_file_kw_type *
+ecl_file_view_iget_named_file_kw(const ecl_file_view_type *ecl_file_view,
+                                 const char *kw, int ith) {
+  int global_index = ecl_file_view_get_global_index(ecl_file_view, kw, ith);
+  ecl_file_kw_type *file_kw =
+      ecl_file_view_iget_file_kw(ecl_file_view, global_index);
   return file_kw;
 }
 
-bool ecl_file_view_drop_flag( ecl_file_view_type * file_view , int flag)  {
-  bool flag_set = ecl_file_view_flags_set( file_view , flag );
+bool ecl_file_view_drop_flag(ecl_file_view_type *file_view, int flag) {
+  bool flag_set = ecl_file_view_flags_set(file_view, flag);
   if (flag_set)
     *file_view->flags -= flag;
 
   return flag_set;
 }
 
-void ecl_file_view_add_flag( ecl_file_view_type * file_view , int flag)  {
+void ecl_file_view_add_flag(ecl_file_view_type *file_view, int flag) {
   *file_view->flags |= flag;
 }
 
-static ecl_kw_type * ecl_file_view_get_kw(const ecl_file_view_type * ecl_file_view, ecl_file_kw_type * file_kw) {
-  ecl_kw_type * ecl_kw = ecl_file_kw_get_kw_ptr( file_kw );
+static ecl_kw_type *
+ecl_file_view_get_kw(const ecl_file_view_type *ecl_file_view,
+                     ecl_file_kw_type *file_kw) {
+  ecl_kw_type *ecl_kw = ecl_file_kw_get_kw_ptr(file_kw);
   if (!ecl_kw) {
-    if (fortio_assert_stream_open( ecl_file_view->fortio )) {
+    if (fortio_assert_stream_open(ecl_file_view->fortio)) {
 
-      ecl_kw = ecl_file_kw_get_kw( file_kw , ecl_file_view->fortio , ecl_file_view->inv_map);
+      ecl_kw = ecl_file_kw_get_kw(file_kw, ecl_file_view->fortio,
+                                  ecl_file_view->inv_map);
 
-      if (ecl_file_view_flags_set( ecl_file_view , ECL_FILE_CLOSE_STREAM))
-        fortio_fclose_stream( ecl_file_view->fortio );
+      if (ecl_file_view_flags_set(ecl_file_view, ECL_FILE_CLOSE_STREAM))
+        fortio_fclose_stream(ecl_file_view->fortio);
     }
   }
   return ecl_kw;
 }
 
-ecl_kw_type * ecl_file_view_iget_kw( const ecl_file_view_type * ecl_file_view , int index) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
+ecl_kw_type *ecl_file_view_iget_kw(const ecl_file_view_type *ecl_file_view,
+                                   int index) {
+  ecl_file_kw_type *file_kw = ecl_file_view_iget_file_kw(ecl_file_view, index);
   return ecl_file_view_get_kw(ecl_file_view, file_kw);
 }
 
-void ecl_file_view_index_fload_kw(const ecl_file_view_type * ecl_file_view, const char* kw, int index, const int_vector_type * index_map, char* io_buffer) {
-    ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw , index);
+void ecl_file_view_index_fload_kw(const ecl_file_view_type *ecl_file_view,
+                                  const char *kw, int index,
+                                  const int_vector_type *index_map,
+                                  char *io_buffer) {
+  ecl_file_kw_type *file_kw =
+      ecl_file_view_iget_named_file_kw(ecl_file_view, kw, index);
 
-    if (fortio_assert_stream_open( ecl_file_view->fortio )) {
-        offset_type offset = ecl_file_kw_get_offset(file_kw);
-        ecl_data_type data_type = ecl_file_kw_get_data_type(file_kw);
-        int element_count = ecl_file_kw_get_size(file_kw);
+  if (fortio_assert_stream_open(ecl_file_view->fortio)) {
+    offset_type offset = ecl_file_kw_get_offset(file_kw);
+    ecl_data_type data_type = ecl_file_kw_get_data_type(file_kw);
+    int element_count = ecl_file_kw_get_size(file_kw);
 
-        ecl_kw_fread_indexed_data(ecl_file_view->fortio, offset + ECL_KW_HEADER_FORTIO_SIZE, data_type, element_count, index_map, io_buffer);
-    }
+    ecl_kw_fread_indexed_data(ecl_file_view->fortio,
+                              offset + ECL_KW_HEADER_FORTIO_SIZE, data_type,
+                              element_count, index_map, io_buffer);
+  }
 }
 
-
-int ecl_file_view_find_kw_value( const ecl_file_view_type * ecl_file_view , const char * kw , const void * value) {
+int ecl_file_view_find_kw_value(const ecl_file_view_type *ecl_file_view,
+                                const char *kw, const void *value) {
   int global_index = -1;
-  if ( ecl_file_view_has_kw( ecl_file_view , kw)) {
-    const auto& index_list = ecl_file_view->kw_index.at(kw);
+  if (ecl_file_view_has_kw(ecl_file_view, kw)) {
+    const auto &index_list = ecl_file_view->kw_index.at(kw);
     size_t index = 0;
     while (index < index_list.size()) {
-      const ecl_kw_type * ecl_kw = ecl_file_view_iget_kw( ecl_file_view , index_list[index]);
-      if (ecl_kw_data_equal( ecl_kw , value )) {
+      const ecl_kw_type *ecl_kw =
+          ecl_file_view_iget_kw(ecl_file_view, index_list[index]);
+      if (ecl_kw_data_equal(ecl_kw, value)) {
         global_index = index_list[index];
         break;
       }
@@ -190,182 +204,196 @@ int ecl_file_view_find_kw_value( const ecl_file_view_type * ecl_file_view , cons
   return global_index;
 }
 
-const char * ecl_file_view_iget_distinct_kw( const ecl_file_view_type * ecl_file_view , int index) {
-  const std::string& string = ecl_file_view->distinct_kw[index];
+const char *
+ecl_file_view_iget_distinct_kw(const ecl_file_view_type *ecl_file_view,
+                               int index) {
+  const std::string &string = ecl_file_view->distinct_kw[index];
   return string.c_str();
 }
 
-int ecl_file_view_get_num_distinct_kw( const ecl_file_view_type * ecl_file_view ) {
+int ecl_file_view_get_num_distinct_kw(const ecl_file_view_type *ecl_file_view) {
   return ecl_file_view->distinct_kw.size();
 }
 
-int ecl_file_view_get_size( const ecl_file_view_type * ecl_file_view ) {
+int ecl_file_view_get_size(const ecl_file_view_type *ecl_file_view) {
   return ecl_file_view->kw_list.size();
 }
 
-
-ecl_data_type ecl_file_view_iget_data_type( const ecl_file_view_type * ecl_file_view , int index) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
-  return ecl_file_kw_get_data_type( file_kw );
+ecl_data_type
+ecl_file_view_iget_data_type(const ecl_file_view_type *ecl_file_view,
+                             int index) {
+  ecl_file_kw_type *file_kw = ecl_file_view_iget_file_kw(ecl_file_view, index);
+  return ecl_file_kw_get_data_type(file_kw);
 }
 
-int ecl_file_view_iget_size( const ecl_file_view_type * ecl_file_view , int index) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
-  return ecl_file_kw_get_size( file_kw );
+int ecl_file_view_iget_size(const ecl_file_view_type *ecl_file_view,
+                            int index) {
+  ecl_file_kw_type *file_kw = ecl_file_view_iget_file_kw(ecl_file_view, index);
+  return ecl_file_kw_get_size(file_kw);
 }
 
-const char * ecl_file_view_iget_header( const ecl_file_view_type * ecl_file_view , int index) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw( ecl_file_view , index );
-  return ecl_file_kw_get_header( file_kw );
+const char *ecl_file_view_iget_header(const ecl_file_view_type *ecl_file_view,
+                                      int index) {
+  ecl_file_kw_type *file_kw = ecl_file_view_iget_file_kw(ecl_file_view, index);
+  return ecl_file_kw_get_header(file_kw);
 }
 
-
-ecl_kw_type * ecl_file_view_iget_named_kw( const ecl_file_view_type * ecl_file_view , const char * kw, int ith) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw , ith);
+ecl_kw_type *
+ecl_file_view_iget_named_kw(const ecl_file_view_type *ecl_file_view,
+                            const char *kw, int ith) {
+  ecl_file_kw_type *file_kw =
+      ecl_file_view_iget_named_file_kw(ecl_file_view, kw, ith);
   return ecl_file_view_get_kw(ecl_file_view, file_kw);
 }
 
-ecl_data_type ecl_file_view_iget_named_data_type( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw, ith);
-  return ecl_file_kw_get_data_type( file_kw );
+ecl_data_type
+ecl_file_view_iget_named_data_type(const ecl_file_view_type *ecl_file_view,
+                                   const char *kw, int ith) {
+  ecl_file_kw_type *file_kw =
+      ecl_file_view_iget_named_file_kw(ecl_file_view, kw, ith);
+  return ecl_file_kw_get_data_type(file_kw);
 }
 
-int ecl_file_view_iget_named_size( const ecl_file_view_type * ecl_file_view , const char * kw , int ith) {
-  ecl_file_kw_type * file_kw = ecl_file_view_iget_named_file_kw( ecl_file_view , kw , ith );
-  return ecl_file_kw_get_size( file_kw );
+int ecl_file_view_iget_named_size(const ecl_file_view_type *ecl_file_view,
+                                  const char *kw, int ith) {
+  ecl_file_kw_type *file_kw =
+      ecl_file_view_iget_named_file_kw(ecl_file_view, kw, ith);
+  return ecl_file_kw_get_size(file_kw);
 }
 
-
-void ecl_file_view_replace_kw( ecl_file_view_type * ecl_file_view , ecl_kw_type * old_kw , ecl_kw_type * new_kw , bool insert_copy) {
-  size_t  index = 0;
-  while (index < ecl_file_view->kw_list.size() ) {
-    auto * ikw = ecl_file_view->kw_list[index];
-    if (ecl_file_kw_ptr_eq( ikw , old_kw)) {
+void ecl_file_view_replace_kw(ecl_file_view_type *ecl_file_view,
+                              ecl_kw_type *old_kw, ecl_kw_type *new_kw,
+                              bool insert_copy) {
+  size_t index = 0;
+  while (index < ecl_file_view->kw_list.size()) {
+    auto *ikw = ecl_file_view->kw_list[index];
+    if (ecl_file_kw_ptr_eq(ikw, old_kw)) {
       /*
          Found it; observe that the vector_iset() function will
          automatically invoke the destructor on the old_kw.
       */
-      ecl_kw_type * insert_kw = new_kw;
+      ecl_kw_type *insert_kw = new_kw;
 
       if (insert_copy)
-        insert_kw = ecl_kw_alloc_copy( new_kw );
-      ecl_file_kw_replace_kw( ikw , ecl_file_view->fortio , insert_kw );
+        insert_kw = ecl_kw_alloc_copy(new_kw);
+      ecl_file_kw_replace_kw(ikw, ecl_file_view->fortio, insert_kw);
 
-      ecl_file_view_make_index( ecl_file_view );
+      ecl_file_view_make_index(ecl_file_view);
       return;
     }
     index++;
   }
-  util_abort("%s: could not find ecl_kw ptr: %p \n",__func__ , old_kw);
+  util_abort("%s: could not find ecl_kw ptr: %p \n", __func__, old_kw);
 }
 
-
-bool ecl_file_view_load_all( ecl_file_view_type * ecl_file_view ) {
+bool ecl_file_view_load_all(ecl_file_view_type *ecl_file_view) {
   bool loadOK = false;
 
-  if (fortio_assert_stream_open( ecl_file_view->fortio )) {
-    for (ecl_file_kw_type * file_kw : ecl_file_view->kw_list)
-      ecl_file_kw_get_kw( file_kw, ecl_file_view->fortio , ecl_file_view->inv_map);
+  if (fortio_assert_stream_open(ecl_file_view->fortio)) {
+    for (ecl_file_kw_type *file_kw : ecl_file_view->kw_list)
+      ecl_file_kw_get_kw(file_kw, ecl_file_view->fortio,
+                         ecl_file_view->inv_map);
     loadOK = true;
   }
 
-  if (ecl_file_view_flags_set( ecl_file_view , ECL_FILE_CLOSE_STREAM))
-    fortio_fclose_stream( ecl_file_view->fortio );
+  if (ecl_file_view_flags_set(ecl_file_view, ECL_FILE_CLOSE_STREAM))
+    fortio_fclose_stream(ecl_file_view->fortio);
 
   return loadOK;
 }
 
-
 /*****************************************************************/
 
-
-
-void ecl_file_view_add_kw( ecl_file_view_type * ecl_file_view , ecl_file_kw_type * file_kw) {
-  ecl_file_view->kw_list.push_back( file_kw );
+void ecl_file_view_add_kw(ecl_file_view_type *ecl_file_view,
+                          ecl_file_kw_type *file_kw) {
+  ecl_file_view->kw_list.push_back(file_kw);
 }
 
-void ecl_file_view_free( ecl_file_view_type * ecl_file_view ) {
+void ecl_file_view_free(ecl_file_view_type *ecl_file_view) {
 
-  for (auto& child_ptr : ecl_file_view->child_list)
+  for (auto &child_ptr : ecl_file_view->child_list)
     ecl_file_view_free(child_ptr);
 
   if (ecl_file_view->owner) {
-    for (auto& kw_ptr : ecl_file_view->kw_list)
-      ecl_file_kw_free( kw_ptr );
+    for (auto &kw_ptr : ecl_file_view->kw_list)
+      ecl_file_kw_free(kw_ptr);
   }
 
   delete ecl_file_view;
 }
 
-void ecl_file_view_free__( void * arg ) {
-  ecl_file_view_type * ecl_file_view = ( ecl_file_view_type * ) arg;
-  ecl_file_view_free( ecl_file_view );
+void ecl_file_view_free__(void *arg) {
+  ecl_file_view_type *ecl_file_view = (ecl_file_view_type *)arg;
+  ecl_file_view_free(ecl_file_view);
 }
 
-
-int ecl_file_view_get_num_named_kw(const ecl_file_view_type * ecl_file_view , const char * kw) {
+int ecl_file_view_get_num_named_kw(const ecl_file_view_type *ecl_file_view,
+                                   const char *kw) {
   if (ecl_file_view_has_kw(ecl_file_view, kw)) {
-    const auto& index_vector = ecl_file_view->kw_index.at(kw);
+    const auto &index_vector = ecl_file_view->kw_index.at(kw);
     return index_vector.size();
   } else
     return 0;
 }
 
-void ecl_file_view_fwrite( const ecl_file_view_type * ecl_file_view , fortio_type * target , int offset) {
+void ecl_file_view_fwrite(const ecl_file_view_type *ecl_file_view,
+                          fortio_type *target, int offset) {
   for (size_t index = offset; index < ecl_file_view->kw_list.size(); index++) {
-    ecl_kw_type * ecl_kw = ecl_file_view_iget_kw( ecl_file_view , index );
-    ecl_kw_fwrite( ecl_kw , target );
+    ecl_kw_type *ecl_kw = ecl_file_view_iget_kw(ecl_file_view, index);
+    ecl_kw_fwrite(ecl_kw, target);
   }
 }
 
-
-
-
-int ecl_file_view_iget_occurence( const ecl_file_view_type * ecl_file_view , int global_index) {
-  const ecl_file_kw_type * file_kw = ecl_file_view->kw_list[global_index];
-  const char * header              = ecl_file_kw_get_header( file_kw );
-  const auto& index_vector         = ecl_file_view->kw_index.at(header);
+int ecl_file_view_iget_occurence(const ecl_file_view_type *ecl_file_view,
+                                 int global_index) {
+  const ecl_file_kw_type *file_kw = ecl_file_view->kw_list[global_index];
+  const char *header = ecl_file_kw_get_header(file_kw);
+  const auto &index_vector = ecl_file_view->kw_index.at(header);
 
   int occurence = -1;
   {
     /* Manual reverse lookup. */
-    for (size_t i=0; i < index_vector.size(); i++) {
+    for (size_t i = 0; i < index_vector.size(); i++) {
       if (index_vector[i] == global_index)
         occurence = i;
     }
   }
   if (occurence < 0)
-    util_abort("%s: internal error ... \n" , __func__);
+    util_abort("%s: internal error ... \n", __func__);
 
   return occurence;
 }
 
-void ecl_file_view_fprintf_kw_list(const ecl_file_view_type * ecl_file_view , FILE * stream) {
-  for (auto& file_kw : ecl_file_view->kw_list) {
-    char * type_name = ecl_type_alloc_name(ecl_file_kw_get_data_type(file_kw));
-    fprintf(stream , "%-8s %7d:%s\n",
-            ecl_file_kw_get_header( file_kw ) ,
-            ecl_file_kw_get_size( file_kw ) ,
-            type_name);
+void ecl_file_view_fprintf_kw_list(const ecl_file_view_type *ecl_file_view,
+                                   FILE *stream) {
+  for (auto &file_kw : ecl_file_view->kw_list) {
+    char *type_name = ecl_type_alloc_name(ecl_file_kw_get_data_type(file_kw));
+    fprintf(stream, "%-8s %7d:%s\n", ecl_file_kw_get_header(file_kw),
+            ecl_file_kw_get_size(file_kw), type_name);
     free(type_name);
   }
 }
 
-
-ecl_file_view_type * ecl_file_view_alloc_blockview2(const ecl_file_view_type * ecl_file_view , const char * start_kw, const char * end_kw, int occurence) {
-  if ((start_kw != NULL) && ecl_file_view_get_num_named_kw( ecl_file_view , start_kw ) <= occurence)
+ecl_file_view_type *
+ecl_file_view_alloc_blockview2(const ecl_file_view_type *ecl_file_view,
+                               const char *start_kw, const char *end_kw,
+                               int occurence) {
+  if ((start_kw != NULL) &&
+      ecl_file_view_get_num_named_kw(ecl_file_view, start_kw) <= occurence)
     return NULL;
 
-
-  ecl_file_view_type * block_map = ecl_file_view_alloc( ecl_file_view->fortio , ecl_file_view->flags , ecl_file_view->inv_map , false);
+  ecl_file_view_type *block_map =
+      ecl_file_view_alloc(ecl_file_view->fortio, ecl_file_view->flags,
+                          ecl_file_view->inv_map, false);
   size_t kw_index = 0;
   if (start_kw)
-    kw_index = ecl_file_view_get_global_index( ecl_file_view , start_kw , occurence );
+    kw_index =
+        ecl_file_view_get_global_index(ecl_file_view, start_kw, occurence);
 
   {
-    ecl_file_kw_type * file_kw = ecl_file_view->kw_list[kw_index];
+    ecl_file_kw_type *file_kw = ecl_file_view->kw_list[kw_index];
     while (true) {
-      ecl_file_view_add_kw( block_map , file_kw );
+      ecl_file_view_add_kw(block_map, file_kw);
 
       kw_index++;
       if (kw_index == ecl_file_view->kw_list.size())
@@ -373,26 +401,31 @@ ecl_file_view_type * ecl_file_view_alloc_blockview2(const ecl_file_view_type * e
       else {
         if (end_kw) {
           file_kw = ecl_file_view->kw_list[kw_index];
-          if (strcmp( end_kw , ecl_file_kw_get_header( file_kw )) == 0)
+          if (strcmp(end_kw, ecl_file_kw_get_header(file_kw)) == 0)
             break;
         }
       }
     }
   }
-  ecl_file_view_make_index( block_map );
+  ecl_file_view_make_index(block_map);
   return block_map;
 }
 
 /**
    Will return NULL if the block which is asked for is not present.
 */
-ecl_file_view_type * ecl_file_view_alloc_blockview(const ecl_file_view_type * ecl_file_view , const char * header, int occurence) {
-  return ecl_file_view_alloc_blockview2( ecl_file_view , header , header , occurence );
+ecl_file_view_type *
+ecl_file_view_alloc_blockview(const ecl_file_view_type *ecl_file_view,
+                              const char *header, int occurence) {
+  return ecl_file_view_alloc_blockview2(ecl_file_view, header, header,
+                                        occurence);
 }
 
-
-ecl_file_view_type * ecl_file_view_add_blockview(ecl_file_view_type * file_view , const char * header, int occurence) {
-  ecl_file_view_type * child  = ecl_file_view_alloc_blockview2(file_view, header, header, occurence);
+ecl_file_view_type *ecl_file_view_add_blockview(ecl_file_view_type *file_view,
+                                                const char *header,
+                                                int occurence) {
+  ecl_file_view_type *child =
+      ecl_file_view_alloc_blockview2(file_view, header, header, occurence);
 
   if (child)
     file_view->child_list.push_back(child);
@@ -400,9 +433,12 @@ ecl_file_view_type * ecl_file_view_add_blockview(ecl_file_view_type * file_view 
   return child;
 }
 
-
-ecl_file_view_type * ecl_file_view_add_blockview2(ecl_file_view_type * ecl_file_view , const char * start_kw, const char * end_kw, int occurence) {
-  ecl_file_view_type * child  = ecl_file_view_alloc_blockview2(ecl_file_view, start_kw , end_kw , occurence);
+ecl_file_view_type *
+ecl_file_view_add_blockview2(ecl_file_view_type *ecl_file_view,
+                             const char *start_kw, const char *end_kw,
+                             int occurence) {
+  ecl_file_view_type *child = ecl_file_view_alloc_blockview2(
+      ecl_file_view, start_kw, end_kw, occurence);
 
   if (child)
     ecl_file_view->child_list.push_back(child);
@@ -410,13 +446,9 @@ ecl_file_view_type * ecl_file_view_add_blockview2(ecl_file_view_type * ecl_file_
   return child;
 }
 
-
-
 /*****************************************************************/
 /*                   R E S T A R T   F I L E S                   */
 /*****************************************************************/
-
-
 
 /*
    There is no special datastructure for working with restart files,
@@ -533,54 +565,60 @@ we have introduced the following concepts:
 
 */
 
-
-bool ecl_file_view_has_report_step( const ecl_file_view_type * ecl_file_view , int report_step) {
-  int global_index = ecl_file_view_find_kw_value( ecl_file_view , SEQNUM_KW , &report_step );
+bool ecl_file_view_has_report_step(const ecl_file_view_type *ecl_file_view,
+                                   int report_step) {
+  int global_index =
+      ecl_file_view_find_kw_value(ecl_file_view, SEQNUM_KW, &report_step);
   if (global_index >= 0)
     return true;
   else
     return false;
 }
 
-
-time_t ecl_file_view_iget_restart_sim_date(const ecl_file_view_type * ecl_file_view , int seqnum_index) {
+time_t
+ecl_file_view_iget_restart_sim_date(const ecl_file_view_type *ecl_file_view,
+                                    int seqnum_index) {
   time_t sim_time = -1;
-  ecl_file_view_type * seqnum_map = ecl_file_view_alloc_blockview( ecl_file_view , SEQNUM_KW , seqnum_index);
+  ecl_file_view_type *seqnum_map =
+      ecl_file_view_alloc_blockview(ecl_file_view, SEQNUM_KW, seqnum_index);
 
   if (seqnum_map != NULL) {
-    ecl_kw_type * intehead_kw = ecl_file_view_iget_named_kw( seqnum_map , INTEHEAD_KW , 0);
-    sim_time = ecl_rsthead_date( intehead_kw );
-    ecl_file_view_free( seqnum_map );
+    ecl_kw_type *intehead_kw =
+        ecl_file_view_iget_named_kw(seqnum_map, INTEHEAD_KW, 0);
+    sim_time = ecl_rsthead_date(intehead_kw);
+    ecl_file_view_free(seqnum_map);
   }
 
   return sim_time;
 }
 
-
-double ecl_file_view_iget_restart_sim_days(const ecl_file_view_type * ecl_file_view , int seqnum_index) {
+double
+ecl_file_view_iget_restart_sim_days(const ecl_file_view_type *ecl_file_view,
+                                    int seqnum_index) {
   double sim_days = 0;
-  ecl_file_view_type * seqnum_map = ecl_file_view_alloc_blockview( ecl_file_view , SEQNUM_KW , seqnum_index);
+  ecl_file_view_type *seqnum_map =
+      ecl_file_view_alloc_blockview(ecl_file_view, SEQNUM_KW, seqnum_index);
 
   if (seqnum_map != NULL) {
-    ecl_kw_type * doubhead_kw = ecl_file_view_iget_named_kw( seqnum_map , DOUBHEAD_KW , 0);
-    sim_days = ecl_kw_iget_double( doubhead_kw , DOUBHEAD_DAYS_INDEX);
-    ecl_file_view_free( seqnum_map );
+    ecl_kw_type *doubhead_kw =
+        ecl_file_view_iget_named_kw(seqnum_map, DOUBHEAD_KW, 0);
+    sim_days = ecl_kw_iget_double(doubhead_kw, DOUBHEAD_DAYS_INDEX);
+    ecl_file_view_free(seqnum_map);
   }
 
   return sim_days;
 }
 
-
-
-
-int ecl_file_view_find_sim_time(const ecl_file_view_type * ecl_file_view , time_t sim_time) {
+int ecl_file_view_find_sim_time(const ecl_file_view_type *ecl_file_view,
+                                time_t sim_time) {
   int seqnum_index = -1;
-  if ( ecl_file_view_has_kw( ecl_file_view , INTEHEAD_KW)) {
-    const auto& intehead_index_list = ecl_file_view->kw_index.at(INTEHEAD_KW);
+  if (ecl_file_view_has_kw(ecl_file_view, INTEHEAD_KW)) {
+    const auto &intehead_index_list = ecl_file_view->kw_index.at(INTEHEAD_KW);
     size_t index = 0;
     while (index < intehead_index_list.size()) {
-      const ecl_kw_type * intehead_kw = ecl_file_view_iget_kw( ecl_file_view , intehead_index_list[index] );
-      if (ecl_rsthead_date( intehead_kw ) == sim_time) {
+      const ecl_kw_type *intehead_kw =
+          ecl_file_view_iget_kw(ecl_file_view, intehead_index_list[index]);
+      if (ecl_rsthead_date(intehead_kw) == sim_time) {
         seqnum_index = index;
         break;
       }
@@ -589,7 +627,6 @@ int ecl_file_view_find_sim_time(const ecl_file_view_type * ecl_file_view , time_
   }
   return seqnum_index;
 }
-
 
 /**
    This function will scan through the ecl_file looking for INTEHEAD
@@ -632,88 +669,95 @@ int ecl_file_view_find_sim_time(const ecl_file_view_type * ecl_file_view , time_
    calling this function.
 */
 
-
-bool ecl_file_view_has_sim_time( const ecl_file_view_type * ecl_file_view , time_t sim_time) {
-  int num_INTEHEAD = ecl_file_view_get_num_named_kw( ecl_file_view , INTEHEAD_KW );
+bool ecl_file_view_has_sim_time(const ecl_file_view_type *ecl_file_view,
+                                time_t sim_time) {
+  int num_INTEHEAD = ecl_file_view_get_num_named_kw(ecl_file_view, INTEHEAD_KW);
   if (num_INTEHEAD == 0)
-    return false;       /* We have no INTEHEAD headers - probably not a restart file at all. */
+    return false; /* We have no INTEHEAD headers - probably not a restart file
+                     at all. */
   else {
     int intehead_index = 0;
     while (true) {
-      time_t itime = ecl_file_view_iget_restart_sim_date( ecl_file_view , intehead_index );
+      time_t itime =
+          ecl_file_view_iget_restart_sim_date(ecl_file_view, intehead_index);
 
       if (itime == sim_time) /* Perfect hit. */
         return true;
 
-      if (itime > sim_time)  /* We have gone past the target_time - i.e. we do not have it. */
+      if (itime > sim_time) /* We have gone past the target_time - i.e. we do
+                               not have it. */
         return false;
 
       intehead_index++;
-      if (intehead_index == num_INTEHEAD)  /* We have iterated through the whole thing without finding sim_time. */
+      if (intehead_index == num_INTEHEAD) /* We have iterated through the whole
+                                             thing without finding sim_time. */
         return false;
     }
   }
 }
 
-
-bool ecl_file_view_has_sim_days( const ecl_file_view_type * ecl_file_view , double sim_days) {
-  int num_DOUBHEAD = ecl_file_view_get_num_named_kw( ecl_file_view , DOUBHEAD_KW );
+bool ecl_file_view_has_sim_days(const ecl_file_view_type *ecl_file_view,
+                                double sim_days) {
+  int num_DOUBHEAD = ecl_file_view_get_num_named_kw(ecl_file_view, DOUBHEAD_KW);
   if (num_DOUBHEAD == 0)
-    return false;       /* We have no DOUBHEAD headers - probably not a restart file at all. */
+    return false; /* We have no DOUBHEAD headers - probably not a restart file
+                     at all. */
   else {
     int doubhead_index = 0;
     while (true) {
-      double file_sim_days  = ecl_file_view_iget_restart_sim_days( ecl_file_view , doubhead_index );
+      double file_sim_days =
+          ecl_file_view_iget_restart_sim_days(ecl_file_view, doubhead_index);
 
       if (util_double_approx_equal(sim_days, file_sim_days)) /* Perfect hit. */
         return true;
 
-      if (file_sim_days > sim_days)  /* We have gone past the target_time - i.e. we do not have it. */
+      if (file_sim_days > sim_days) /* We have gone past the target_time - i.e.
+                                       we do not have it. */
         return false;
 
       doubhead_index++;
-      if (doubhead_index == num_DOUBHEAD)  /* We have iterated through the whole thing without finding sim_time. */
+      if (doubhead_index == num_DOUBHEAD) /* We have iterated through the whole
+                                             thing without finding sim_time. */
         return false;
     }
   }
 }
 
-
-
-
-int ecl_file_view_seqnum_index_from_sim_time( ecl_file_view_type * parent_map , time_t sim_time) {
-  int num_seqnum = ecl_file_view_get_num_named_kw( parent_map , SEQNUM_KW );
-  ecl_file_view_type * seqnum_map;
+int ecl_file_view_seqnum_index_from_sim_time(ecl_file_view_type *parent_map,
+                                             time_t sim_time) {
+  int num_seqnum = ecl_file_view_get_num_named_kw(parent_map, SEQNUM_KW);
+  ecl_file_view_type *seqnum_map;
 
   for (int s_idx = 0; s_idx < num_seqnum; s_idx++) {
-    seqnum_map = ecl_file_view_alloc_blockview( parent_map , SEQNUM_KW , s_idx );
+    seqnum_map = ecl_file_view_alloc_blockview(parent_map, SEQNUM_KW, s_idx);
 
     if (!seqnum_map)
       continue;
 
-    bool sim = ecl_file_view_has_sim_time( seqnum_map , sim_time);
-    ecl_file_view_free( seqnum_map );
+    bool sim = ecl_file_view_has_sim_time(seqnum_map, sim_time);
+    ecl_file_view_free(seqnum_map);
     if (sim)
       return s_idx;
   }
   return -1;
 }
 
-
-int ecl_file_view_seqnum_index_from_sim_days( ecl_file_view_type * file_view , double sim_days) {
-  int num_seqnum = ecl_file_view_get_num_named_kw( file_view , SEQNUM_KW );
+int ecl_file_view_seqnum_index_from_sim_days(ecl_file_view_type *file_view,
+                                             double sim_days) {
+  int num_seqnum = ecl_file_view_get_num_named_kw(file_view, SEQNUM_KW);
   int seqnum_index = 0;
-  ecl_file_view_type * seqnum_map;
+  ecl_file_view_type *seqnum_map;
 
   while (true) {
-    seqnum_map = ecl_file_view_alloc_blockview( file_view , SEQNUM_KW , seqnum_index);
+    seqnum_map =
+        ecl_file_view_alloc_blockview(file_view, SEQNUM_KW, seqnum_index);
 
     if (seqnum_map != NULL) {
-      if (ecl_file_view_has_sim_days( seqnum_map , sim_days)) {
-        ecl_file_view_free( seqnum_map );
+      if (ecl_file_view_has_sim_days(seqnum_map, sim_days)) {
+        ecl_file_view_free(seqnum_map);
         return seqnum_index;
       } else {
-        ecl_file_view_free( seqnum_map );
+        ecl_file_view_free(seqnum_map);
         seqnum_index++;
       }
     }
@@ -723,101 +767,107 @@ int ecl_file_view_seqnum_index_from_sim_days( ecl_file_view_type * file_view , d
   }
 }
 
-
-
 /*
   Will mulitplex on the four input arguments.
 */
-ecl_file_view_type * ecl_file_view_add_restart_view( ecl_file_view_type * file_view , int input_index, int report_step , time_t sim_time, double sim_days) {
-  ecl_file_view_type * child = NULL;
+ecl_file_view_type *
+ecl_file_view_add_restart_view(ecl_file_view_type *file_view, int input_index,
+                               int report_step, time_t sim_time,
+                               double sim_days) {
+  ecl_file_view_type *child = NULL;
   int seqnum_index = -1;
 
   if (input_index >= 0)
     seqnum_index = input_index;
   else if (report_step >= 0) {
-    int global_index = ecl_file_view_find_kw_value( file_view , SEQNUM_KW , &report_step);
-    if ( global_index >= 0)
-      seqnum_index = ecl_file_view_iget_occurence( file_view , global_index );
+    int global_index =
+        ecl_file_view_find_kw_value(file_view, SEQNUM_KW, &report_step);
+    if (global_index >= 0)
+      seqnum_index = ecl_file_view_iget_occurence(file_view, global_index);
   } else if (sim_time != -1)
-    seqnum_index = ecl_file_view_seqnum_index_from_sim_time( file_view , sim_time );
+    seqnum_index =
+        ecl_file_view_seqnum_index_from_sim_time(file_view, sim_time);
   else if (sim_days >= 0)
-    seqnum_index = ecl_file_view_seqnum_index_from_sim_days( file_view , sim_days );
-
+    seqnum_index =
+        ecl_file_view_seqnum_index_from_sim_days(file_view, sim_days);
 
   if (seqnum_index >= 0)
-    child = ecl_file_view_add_blockview( file_view , SEQNUM_KW , seqnum_index );
+    child = ecl_file_view_add_blockview(file_view, SEQNUM_KW, seqnum_index);
 
   return child;
 }
 
-
-
-ecl_file_view_type * ecl_file_view_add_summary_view( ecl_file_view_type * file_view , int report_step ) {
-  ecl_file_view_type * child = ecl_file_view_add_blockview( file_view , SEQHDR_KW , report_step );
+ecl_file_view_type *
+ecl_file_view_add_summary_view(ecl_file_view_type *file_view, int report_step) {
+  ecl_file_view_type *child =
+      ecl_file_view_add_blockview(file_view, SEQHDR_KW, report_step);
   return child;
 }
 
-
-void ecl_file_view_fclose_stream( ecl_file_view_type * file_view ) {
-  fortio_fclose_stream( file_view->fortio );
+void ecl_file_view_fclose_stream(ecl_file_view_type *file_view) {
+  fortio_fclose_stream(file_view->fortio);
 }
 
-void ecl_file_view_write_index(const ecl_file_view_type * file_view, FILE * ostream) {
+void ecl_file_view_write_index(const ecl_file_view_type *file_view,
+                               FILE *ostream) {
   int size = ecl_file_view_get_size(file_view);
-  util_fwrite_int( size , ostream);
+  util_fwrite_int(size, ostream);
 
-  ecl_file_kw_type * file_kw;
+  ecl_file_kw_type *file_kw;
   for (int i = 0; i < size; i++) {
-     file_kw = ecl_file_view_iget_file_kw( file_view, i );
-     ecl_file_kw_fwrite( file_kw , ostream );
+    file_kw = ecl_file_view_iget_file_kw(file_view, i);
+    ecl_file_kw_fwrite(file_kw, ostream);
   }
 }
 
-ecl_file_view_type * ecl_file_view_fread_alloc( fortio_type * fortio , int * flags , inv_map_type * inv_map, FILE * istream ) {
+ecl_file_view_type *ecl_file_view_fread_alloc(fortio_type *fortio, int *flags,
+                                              inv_map_type *inv_map,
+                                              FILE *istream) {
 
   int index_size = util_fread_int(istream);
-  ecl_file_kw_type ** file_kw_list = ecl_file_kw_fread_alloc_multiple( istream, index_size);
+  ecl_file_kw_type **file_kw_list =
+      ecl_file_kw_fread_alloc_multiple(istream, index_size);
   if (file_kw_list) {
-    ecl_file_view_type * file_view = ecl_file_view_alloc( fortio , flags , inv_map , true );
-    for (int i=0; i < index_size; i++)
-      ecl_file_view_add_kw(file_view , file_kw_list[i]);
+    ecl_file_view_type *file_view =
+        ecl_file_view_alloc(fortio, flags, inv_map, true);
+    for (int i = 0; i < index_size; i++)
+      ecl_file_view_add_kw(file_view, file_kw_list[i]);
 
     free(file_kw_list);
-    ecl_file_view_make_index( file_view );
+    ecl_file_view_make_index(file_view);
     return file_view;
-  }
-  else {
+  } else {
     fprintf(stderr, "%s: error reading ecl_file_type index file.\n", __func__);
     return NULL;
   }
 }
 
-
-ecl_file_transaction_type * ecl_file_view_start_transaction(ecl_file_view_type * file_view) {
-  ecl_file_transaction_type * t = (ecl_file_transaction_type *)util_malloc(sizeof * t);
+ecl_file_transaction_type *
+ecl_file_view_start_transaction(ecl_file_view_type *file_view) {
+  ecl_file_transaction_type *t =
+      (ecl_file_transaction_type *)util_malloc(sizeof *t);
   int size = ecl_file_view_get_size(file_view);
   t->file_view = file_view;
-  t->ref_count = (int*)util_malloc( size * sizeof * t->ref_count );
+  t->ref_count = (int *)util_malloc(size * sizeof *t->ref_count);
   for (int i = 0; i < size; i++) {
-    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i);
+    ecl_file_kw_type *file_kw = ecl_file_view_iget_file_kw(file_view, i);
     ecl_file_kw_start_transaction(file_kw, &t->ref_count[i]);
   }
 
   return t;
 }
 
-void ecl_file_view_end_transaction( ecl_file_view_type * file_view, ecl_file_transaction_type * transaction) {
+void ecl_file_view_end_transaction(ecl_file_view_type *file_view,
+                                   ecl_file_transaction_type *transaction) {
   if (transaction->file_view != file_view)
-    util_abort("%s: internal error - file_view / transaction mismatch\n",__func__);
+    util_abort("%s: internal error - file_view / transaction mismatch\n",
+               __func__);
 
-  const int * ref_count = transaction->ref_count;
+  const int *ref_count = transaction->ref_count;
   for (int i = 0; i < ecl_file_view_get_size(file_view); i++) {
-    ecl_file_kw_type * file_kw = ecl_file_view_iget_file_kw(file_view, i);
+    ecl_file_kw_type *file_kw = ecl_file_view_iget_file_kw(file_view, i);
     ecl_file_kw_end_transaction(file_kw, ref_count[i]);
   }
   free(transaction->ref_count);
   free(transaction);
 }
-
-
-

@@ -15,35 +15,31 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
-#include <stdbool.h>
-#include <signal.h>
 #include <math.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include <string>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_grid.hpp>
 #include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_grid.hpp>
 
-double err(double a, double b) {
-  return (a - b) / a;
-}
+double err(double a, double b) { return (a - b) / a; }
 
-
-
-void test_dxdydz(const std::string& grid_fname, const std::string& init_fname) {
+void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
   double eps_x = 1e-4;
   double eps_y = 1e-4;
   double eps_z = 1e-3;
-  ecl_grid_type * grid = ecl_grid_alloc( grid_fname.c_str() );
-  ecl_file_type * init_file = ecl_file_open( init_fname.c_str(), 0);
-  ecl_kw_type * dx = ecl_file_iget_named_kw( init_file, "DX", 0);
-  ecl_kw_type * dy = ecl_file_iget_named_kw( init_file, "DY", 0);
-  ecl_kw_type * dz = ecl_file_iget_named_kw( init_file, "DZ", 0);
-  for(int a=0; a < ecl_grid_get_active_size(grid); a+= 100) {
+  ecl_grid_type *grid = ecl_grid_alloc(grid_fname.c_str());
+  ecl_file_type *init_file = ecl_file_open(init_fname.c_str(), 0);
+  ecl_kw_type *dx = ecl_file_iget_named_kw(init_file, "DX", 0);
+  ecl_kw_type *dy = ecl_file_iget_named_kw(init_file, "DY", 0);
+  ecl_kw_type *dz = ecl_file_iget_named_kw(init_file, "DZ", 0);
+  for (int a = 0; a < ecl_grid_get_active_size(grid); a += 100) {
     int g = ecl_grid_get_global_index1A(grid, a);
 
     double dxg = ecl_grid_get_cell_dx1(grid, g);
@@ -58,17 +54,15 @@ void test_dxdydz(const std::string& grid_fname, const std::string& init_fname) {
     double err_y = fabs(err(dyg, dyi));
     double err_z = fabs(err(dzg, dzi));
 
-    test_assert_true( err_x < eps_x );
-    test_assert_true( err_y < eps_y );
-    test_assert_true( err_z < eps_z );
-
+    test_assert_true(err_x < eps_x);
+    test_assert_true(err_y < eps_y);
+    test_assert_true(err_z < eps_z);
   }
   ecl_file_close(init_file);
-  ecl_grid_free( grid );
+  ecl_grid_free(grid);
 }
 
-
-int main(int argc , char ** argv) {
+int main(int argc, char **argv) {
   const std::string ecl_case = argv[1];
   std::string grid_file = ecl_case + ".EGRID";
   std::string init_file = ecl_case + ".INIT";

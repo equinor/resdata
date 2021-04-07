@@ -15,56 +15,55 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
-#include <ert/util/test_util.hpp>
 #include <ert/util/stringlist.hpp>
+#include <ert/util/test_util.hpp>
 #include <ert/util/util.h>
 
-#include <ert/ecl/ecl_util.hpp>
 #include <ert/ecl/ecl_file.hpp>
-#include <ert/ecl/ecl_rsthead.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
+#include <ert/ecl/ecl_rsthead.hpp>
+#include <ert/ecl/ecl_util.hpp>
 
 #include <ert/ecl_well/well_conn.hpp>
 #include <ert/ecl_well/well_conn_collection.hpp>
 #include <ert/ecl_well/well_const.hpp>
 
-
-void well_conn_test_CF( const ecl_kw_type * iwel_kw , const ecl_kw_type * icon_kw , const ecl_kw_type * scon_kw, const ecl_kw_type * xcon_kw , const ecl_rsthead_type * rst_head , int iwell , int iconn, double CF) {
-  well_conn_type * conn = well_conn_alloc_from_kw( icon_kw , scon_kw, xcon_kw , rst_head , iwell , iconn );
-  test_assert_double_equal( CF , well_conn_get_connection_factor(conn));
-  well_conn_free( conn );
+void well_conn_test_CF(const ecl_kw_type *iwel_kw, const ecl_kw_type *icon_kw,
+                       const ecl_kw_type *scon_kw, const ecl_kw_type *xcon_kw,
+                       const ecl_rsthead_type *rst_head, int iwell, int iconn,
+                       double CF) {
+  well_conn_type *conn = well_conn_alloc_from_kw(icon_kw, scon_kw, xcon_kw,
+                                                 rst_head, iwell, iconn);
+  test_assert_double_equal(CF, well_conn_get_connection_factor(conn));
+  well_conn_free(conn);
 }
 
+int main(int argc, char **argv) {
+  const char *Xfile = argv[1];
+  ecl_file_type *rst_file = ecl_file_open(Xfile, 0);
+  ecl_rsthead_type *rst_head = ecl_rsthead_alloc(
+      ecl_file_get_global_view(rst_file), ecl_util_filename_report_nr(Xfile));
+  const ecl_kw_type *iwel_kw = ecl_file_iget_named_kw(rst_file, IWEL_KW, 0);
+  const ecl_kw_type *icon_kw = ecl_file_iget_named_kw(rst_file, ICON_KW, 0);
+  const ecl_kw_type *scon_kw = ecl_file_iget_named_kw(rst_file, SCON_KW, 0);
+  const ecl_kw_type *xcon_kw = 0;
 
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 0, 0, 32.948);
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 0, 1, 46.825);
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 0, 2, 51.867);
 
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 1, 0, 1.168);
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 1, 1, 15.071);
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 1, 2, 6.242);
 
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 2, 0, 27.412);
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 2, 1, 55.195);
+  well_conn_test_CF(iwel_kw, icon_kw, scon_kw, xcon_kw, rst_head, 2, 2, 18.032);
 
-int main(int argc , char ** argv) {
-  const char * Xfile = argv[1];
-  ecl_file_type * rst_file = ecl_file_open( Xfile , 0 );
-  ecl_rsthead_type * rst_head = ecl_rsthead_alloc( ecl_file_get_global_view( rst_file ) , ecl_util_filename_report_nr(Xfile));
-  const ecl_kw_type * iwel_kw = ecl_file_iget_named_kw( rst_file , IWEL_KW , 0 );
-  const ecl_kw_type * icon_kw = ecl_file_iget_named_kw( rst_file , ICON_KW , 0 );
-  const ecl_kw_type * scon_kw = ecl_file_iget_named_kw( rst_file , SCON_KW , 0 );
-  const ecl_kw_type * xcon_kw = 0;
-
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw, rst_head , 0 , 0 , 32.948 );
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 0 , 1 , 46.825 );
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 0 , 2 , 51.867 );
-
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 1 , 0 ,  1.168 );
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 1 , 1 , 15.071 );
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 1 , 2 ,  6.242 );
-
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 2 , 0 , 27.412 );
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 2 , 1 , 55.195 );
-  well_conn_test_CF(iwel_kw , icon_kw , scon_kw, xcon_kw , rst_head , 2 , 2 , 18.032 );
-
-  ecl_file_close( rst_file );
-  ecl_rsthead_free( rst_head );
-  exit( 0 );
+  ecl_file_close(rst_file);
+  ecl_rsthead_free(rst_head);
+  exit(0);
 }
-

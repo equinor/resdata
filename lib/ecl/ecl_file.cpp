@@ -16,27 +16,27 @@
    for more details.
 */
 
+#include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
-#include <errno.h>
 #include <time.h>
 
 #include <ert/util/hash.hpp>
-#include <ert/util/util.h>
-#include <ert/util/vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/stringlist.hpp>
+#include <ert/util/util.h>
+#include <ert/util/vector.hpp>
 
-#include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_kw.hpp>
-#include <ert/ecl/ecl_file.hpp>
-#include <ert/ecl/ecl_file_view.hpp>
 #include <ert/ecl/ecl_endian_flip.hpp>
+#include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_file_kw.hpp>
+#include <ert/ecl/ecl_file_view.hpp>
+#include <ert/ecl/ecl_kw.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
 #include <ert/ecl/ecl_rsthead.hpp>
-#include <ert/ecl/ecl_file_kw.hpp>
 #include <ert/ecl/ecl_type.hpp>
+#include <ert/ecl/fortio.h>
 
 /**
    This file implements functionality to load an ECLIPSE file in
@@ -119,27 +119,21 @@
         internalized as in e.g. ecl_sum.
 */
 
-
-
 #define ECL_FILE_ID 776107
-
-
-
-
 
 struct ecl_file_struct {
   UTIL_TYPE_ID_DECLARATION;
-  fortio_type       * fortio;       /* The source of all the keywords - must be retained
-                                       open for reading for the entire lifetime of the
-                                       ecl_file object. */
-  ecl_file_view_type * global_view;       /* The index of all the ecl_kw instances in the file. */
-  ecl_file_view_type * active_view;       /* The currently active index. */
-  bool            read_only;
-  int             flags;
-  vector_type   * map_stack;
-  inv_map_type  * inv_view;
+  fortio_type *fortio; /* The source of all the keywords - must be retained
+                          open for reading for the entire lifetime of the
+                          ecl_file object. */
+  ecl_file_view_type
+      *global_view; /* The index of all the ecl_kw instances in the file. */
+  ecl_file_view_type *active_view; /* The currently active index. */
+  bool read_only;
+  int flags;
+  vector_type *map_stack;
+  inv_map_type *inv_view;
 };
-
 
 /*
   This illustrates the indexing. The ecl_file instance contains in
@@ -159,42 +153,34 @@ struct ecl_file_struct {
    PARAMS    .....   /
    ------------------
 
-   kw_index    = {"SEQHDR": [0], "MINISTEP": [1,3,5], "PARAMS": [2,4,6]}    <== This is hash table.
-   kw_list     = [SEQHDR , MINISTEP , PARAMS , MINISTEP , PARAMS , MINISTEP , PARAMS]
-   distinct_kw = [SEQHDR , MINISTEP , PARAMS]
+   kw_index    = {"SEQHDR": [0], "MINISTEP": [1,3,5], "PARAMS": [2,4,6]}    <==
+  This is hash table. kw_list     = [SEQHDR , MINISTEP , PARAMS , MINISTEP ,
+  PARAMS , MINISTEP , PARAMS] distinct_kw = [SEQHDR , MINISTEP , PARAMS]
 
 */
-
-
-
 
 /*****************************************************************/
 /* Here comes the implementation of the ecl_file proper 'class'. */
 
+UTIL_SAFE_CAST_FUNCTION(ecl_file, ECL_FILE_ID)
+UTIL_IS_INSTANCE_FUNCTION(ecl_file, ECL_FILE_ID)
 
-UTIL_SAFE_CAST_FUNCTION( ecl_file , ECL_FILE_ID)
-UTIL_IS_INSTANCE_FUNCTION( ecl_file , ECL_FILE_ID)
-
-
-
-ecl_file_type * ecl_file_alloc_empty( int flags ) {
-  ecl_file_type * ecl_file = (ecl_file_type *)util_malloc( sizeof * ecl_file );
-  UTIL_TYPE_ID_INIT(ecl_file , ECL_FILE_ID);
+ecl_file_type *ecl_file_alloc_empty(int flags) {
+  ecl_file_type *ecl_file = (ecl_file_type *)util_malloc(sizeof *ecl_file);
+  UTIL_TYPE_ID_INIT(ecl_file, ECL_FILE_ID);
   ecl_file->map_stack = vector_alloc_new();
-  ecl_file->inv_view  = inv_map_alloc( );
-  ecl_file->flags     = flags;
+  ecl_file->inv_view = inv_map_alloc();
+  ecl_file->flags = flags;
   return ecl_file;
 }
-
 
 /*****************************************************************/
 /* fwrite functions */
 
-void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * target, int offset) {
-  ecl_file_view_fwrite( ecl_file->active_view , target , offset );
+void ecl_file_fwrite_fortio(const ecl_file_type *ecl_file, fortio_type *target,
+                            int offset) {
+  ecl_file_view_fwrite(ecl_file->active_view, target, offset);
 }
-
-
 
 /*
    Observe : if the filename is a standard filename which can be used
@@ -202,28 +188,22 @@ void ecl_file_fwrite_fortio(const ecl_file_type * ecl_file , fortio_type * targe
    is NOT consulted.
 */
 
-void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, bool fmt_file) {
+void ecl_file_fwrite(const ecl_file_type *ecl_file, const char *filename,
+                     bool fmt_file) {
   bool __fmt_file;
   ecl_file_enum file_type;
 
-  file_type = ecl_util_get_file_type( filename , &__fmt_file , NULL);
+  file_type = ecl_util_get_file_type(filename, &__fmt_file, NULL);
   if (file_type == ECL_OTHER_FILE)
     __fmt_file = fmt_file;
 
   {
-    fortio_type * target = fortio_open_writer( filename , __fmt_file , ECL_ENDIAN_FLIP);
-    ecl_file_fwrite_fortio( ecl_file , target , 0);
-    fortio_fclose( target );
+    fortio_type *target =
+        fortio_open_writer(filename, __fmt_file, ECL_ENDIAN_FLIP);
+    ecl_file_fwrite_fortio(ecl_file, target, 0);
+    fortio_fclose(target);
   }
 }
-
-
-
-
-
-
-
-
 
 /*****************************************************************/
 /**
@@ -252,7 +232,8 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
    for (ikw = 0; ikw < ecl_file_get_num_distinct_kw(ecl_file); ikw++) {
    const char * kw = ecl_file_iget_distinct_kw(ecl_file , ikw);
 
-   printf("The file contains: %d occurences of \'%s\' \n",ecl_file_get_num_named_kw( ecl_file , kw) , kw);
+   printf("The file contains: %d occurences of \'%s\'
+   \n",ecl_file_get_num_named_kw( ecl_file , kw) , kw);
    }
    ....
 
@@ -263,14 +244,6 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
    The file contains 3 occurences of 'PARAMS'
 
 */
-
-
-
-
-
-
-
-
 
 /**
    This function will iterate through the ecl_file instance and search
@@ -292,15 +265,18 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
 
    ....
    ecl_file_type * restart_file   = ecl_file_fread_alloc( "ECLIPSE.UNRST" );
-   ecl_kw_type * initial_pressure = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , 0);
-   ecl_kw_type * faked_pressure   = ecl_kw_alloc_copy( initial_pressure );
+   ecl_kw_type * initial_pressure = ecl_file_iget_named_kw( ecl_file ,
+   "PRESSURE" , 0); ecl_kw_type * faked_pressure   = ecl_kw_alloc_copy(
+   initial_pressure );
 
    ecl_kw_scale( faked_pressure , 1.25 );
-   ecl_file_replace_kw( restart_file , initial_pressure , faked_pressure , false );  <--- This call will invalidate the inital_pressure reference
+   ecl_file_replace_kw( restart_file , initial_pressure , faked_pressure , false
+   );  <--- This call will invalidate the inital_pressure reference
    ....
    ....
    // This will fail horribly:
-   printf("The initial pressure in cell(0) was:%g \n",ecl_kw_iget_double( initial_pressure , 0 ));
+   printf("The initial pressure in cell(0) was:%g \n",ecl_kw_iget_double(
+   initial_pressure , 0 ));
    /|\
    |
    +---------> Using initial_pressure => Crash and burn!
@@ -311,34 +287,24 @@ void ecl_file_fwrite(const ecl_file_type * ecl_file , const char * filename, boo
    copy of @new_kw, leaving the original reference untouched.
 */
 
-
-
-void ecl_file_replace_kw( ecl_file_type * ecl_file , ecl_kw_type * old_kw , ecl_kw_type * new_kw , bool insert_copy) {
-  ecl_file_view_replace_kw( ecl_file->active_view , old_kw , new_kw , insert_copy );
+void ecl_file_replace_kw(ecl_file_type *ecl_file, ecl_kw_type *old_kw,
+                         ecl_kw_type *new_kw, bool insert_copy) {
+  ecl_file_view_replace_kw(ecl_file->active_view, old_kw, new_kw, insert_copy);
 }
 
-
-
-
-
-ecl_kw_type * ecl_file_icopy_named_kw( const ecl_file_type * ecl_file , const char * kw, int ith) {
-  return ecl_kw_alloc_copy( ecl_file_iget_named_kw( ecl_file , kw , ith ));
+ecl_kw_type *ecl_file_icopy_named_kw(const ecl_file_type *ecl_file,
+                                     const char *kw, int ith) {
+  return ecl_kw_alloc_copy(ecl_file_iget_named_kw(ecl_file, kw, ith));
 }
-
 
 /*
   Will return the number of times a particular keyword occurs in a
   ecl_file instance. Will return 0 if the keyword can not be found.
 */
 
-int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) {
-  return ecl_file_view_get_num_named_kw( ecl_file->active_view , kw);
+int ecl_file_get_num_named_kw(const ecl_file_type *ecl_file, const char *kw) {
+  return ecl_file_view_get_num_named_kw(ecl_file->active_view, kw);
 }
-
-
-
-
-
 
 /**
    This function does the following:
@@ -359,76 +325,72 @@ int ecl_file_get_num_named_kw(const ecl_file_type * ecl_file , const char * kw) 
    The enkf layer uses this funny functionality.
 */
 
-
-int ecl_file_iget_occurence( const ecl_file_type * ecl_file , int index) {
-  return ecl_file_view_iget_occurence( ecl_file->active_view , index );
+int ecl_file_iget_occurence(const ecl_file_type *ecl_file, int index) {
+  return ecl_file_view_iget_occurence(ecl_file->active_view, index);
 }
-
 
 /**
     Returns the total number of ecl_kw instances in the ecl_file
     instance.
 */
-int ecl_file_get_size( const ecl_file_type * ecl_file ){
-  return ecl_file_view_get_size( ecl_file->active_view );
+int ecl_file_get_size(const ecl_file_type *ecl_file) {
+  return ecl_file_view_get_size(ecl_file->active_view);
 }
-
 
 /**
    Returns true if the ecl_file instance has at-least one occurence of
    ecl_kw 'kw'.
 */
-bool ecl_file_has_kw( const ecl_file_type * ecl_file , const char * kw) {
-  return ecl_file_view_has_kw( ecl_file->active_view , kw );
+bool ecl_file_has_kw(const ecl_file_type *ecl_file, const char *kw) {
+  return ecl_file_view_has_kw(ecl_file->active_view, kw);
 }
 
-
-int ecl_file_get_num_distinct_kw(const ecl_file_type * ecl_file) {
-  return ecl_file_view_get_num_distinct_kw( ecl_file->active_view );
+int ecl_file_get_num_distinct_kw(const ecl_file_type *ecl_file) {
+  return ecl_file_view_get_num_distinct_kw(ecl_file->active_view);
 }
 
-
-const char * ecl_file_iget_distinct_kw(const ecl_file_type * ecl_file, int index) {
-  return ecl_file_view_iget_distinct_kw( ecl_file->active_view , index );
+const char *ecl_file_iget_distinct_kw(const ecl_file_type *ecl_file,
+                                      int index) {
+  return ecl_file_view_iget_distinct_kw(ecl_file->active_view, index);
 }
 
-
-const char * ecl_file_get_src_file( const ecl_file_type * ecl_file ) {
-  return fortio_filename_ref( ecl_file->fortio );
+const char *ecl_file_get_src_file(const ecl_file_type *ecl_file) {
+  return fortio_filename_ref(ecl_file->fortio);
 }
 
-
-void ecl_file_fprintf_kw_list( const ecl_file_type * ecl_file , FILE * stream ) {
-  ecl_file_view_fprintf_kw_list( ecl_file->active_view , stream );
+void ecl_file_fprintf_kw_list(const ecl_file_type *ecl_file, FILE *stream) {
+  ecl_file_view_fprintf_kw_list(ecl_file->active_view, stream);
 }
-
 
 /*****************************************************************/
 
-ecl_file_kw_type * ecl_file_iget_file_kw( const ecl_file_type * file , int global_index) {
-  return ecl_file_view_iget_file_kw( file->active_view , global_index);
+ecl_file_kw_type *ecl_file_iget_file_kw(const ecl_file_type *file,
+                                        int global_index) {
+  return ecl_file_view_iget_file_kw(file->active_view, global_index);
 }
 
-ecl_file_kw_type * ecl_file_iget_named_file_kw( const ecl_file_type * file , const char * kw, int ith) {
-  return ecl_file_view_iget_named_file_kw( file->active_view , kw, ith);
+ecl_file_kw_type *ecl_file_iget_named_file_kw(const ecl_file_type *file,
+                                              const char *kw, int ith) {
+  return ecl_file_view_iget_named_file_kw(file->active_view, kw, ith);
 }
 
 /* ---- */
 
-ecl_kw_type * ecl_file_iget_kw( const ecl_file_type * file , int global_index) {
-  return ecl_file_view_iget_kw( file->active_view , global_index);
+ecl_kw_type *ecl_file_iget_kw(const ecl_file_type *file, int global_index) {
+  return ecl_file_view_iget_kw(file->active_view, global_index);
 }
 
-ecl_data_type ecl_file_iget_data_type( const ecl_file_type * file , int global_index) {
-  return ecl_file_view_iget_data_type( file->active_view , global_index);
+ecl_data_type ecl_file_iget_data_type(const ecl_file_type *file,
+                                      int global_index) {
+  return ecl_file_view_iget_data_type(file->active_view, global_index);
 }
 
-int ecl_file_iget_size( const ecl_file_type * file , int global_index) {
-  return ecl_file_view_iget_size( file->active_view , global_index);
+int ecl_file_iget_size(const ecl_file_type *file, int global_index) {
+  return ecl_file_view_iget_size(file->active_view, global_index);
 }
 
-const char * ecl_file_iget_header( const ecl_file_type * file , int global_index) {
-  return ecl_file_view_iget_header( file->active_view , global_index);
+const char *ecl_file_iget_header(const ecl_file_type *file, int global_index) {
+  return ecl_file_view_iget_header(file->active_view, global_index);
 }
 
 /* ---------- */
@@ -439,65 +401,75 @@ const char * ecl_file_iget_header( const ecl_file_type * file , int global_index
    query functions if you can not take that.
 */
 
-ecl_kw_type * ecl_file_iget_named_kw( const ecl_file_type * file , const char * kw, int ith) {
-  return ecl_file_view_iget_named_kw( file->active_view , kw , ith);
+ecl_kw_type *ecl_file_iget_named_kw(const ecl_file_type *file, const char *kw,
+                                    int ith) {
+  return ecl_file_view_iget_named_kw(file->active_view, kw, ith);
 }
 
-void ecl_file_indexed_read(const ecl_file_type * file , const char * kw, int index, const int_vector_type * index_map, char* buffer) {
-    ecl_file_view_index_fload_kw(file->active_view, kw, index, index_map, buffer);
+void ecl_file_indexed_read(const ecl_file_type *file, const char *kw, int index,
+                           const int_vector_type *index_map, char *buffer) {
+  ecl_file_view_index_fload_kw(file->active_view, kw, index, index_map, buffer);
 }
 
-ecl_data_type ecl_file_iget_named_data_type( const ecl_file_type * file , const char * kw , int ith) {
-  return ecl_file_view_iget_named_data_type( file->active_view , kw , ith );
+ecl_data_type ecl_file_iget_named_data_type(const ecl_file_type *file,
+                                            const char *kw, int ith) {
+  return ecl_file_view_iget_named_data_type(file->active_view, kw, ith);
 }
 
-int ecl_file_iget_named_size( const ecl_file_type * file , const char * kw , int ith) {
-  return ecl_file_view_iget_named_size( file->active_view , kw , ith );
+int ecl_file_iget_named_size(const ecl_file_type *file, const char *kw,
+                             int ith) {
+  return ecl_file_view_iget_named_size(file->active_view, kw, ith);
 }
-
-
 
 /*****************************************************************/
 
-ecl_file_view_type * ecl_file_get_global_view( ecl_file_type * ecl_file ) {
+ecl_file_view_type *ecl_file_get_global_view(ecl_file_type *ecl_file) {
   return ecl_file->global_view;
 }
 
 // Very deprecated ...
-ecl_file_view_type * ecl_file_get_active_view( ecl_file_type * ecl_file ) {
+ecl_file_view_type *ecl_file_get_active_view(ecl_file_type *ecl_file) {
   return ecl_file->active_view;
 }
 
-ecl_file_view_type * ecl_file_get_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_view_type * view = ecl_file_view_add_blockview( ecl_file->global_view , kw , occurence );
+ecl_file_view_type *ecl_file_get_global_blockview(ecl_file_type *ecl_file,
+                                                  const char *kw,
+                                                  int occurence) {
+  ecl_file_view_type *view =
+      ecl_file_view_add_blockview(ecl_file->global_view, kw, occurence);
   return view;
 }
 
-
-ecl_file_view_type * ecl_file_alloc_global_blockview2( ecl_file_type * ecl_file , const char * start_kw , const char * end_kw, int occurence) {
-  ecl_file_view_type * view = ecl_file_view_alloc_blockview2( ecl_file->global_view , start_kw , end_kw, occurence );
+ecl_file_view_type *ecl_file_alloc_global_blockview2(ecl_file_type *ecl_file,
+                                                     const char *start_kw,
+                                                     const char *end_kw,
+                                                     int occurence) {
+  ecl_file_view_type *view = ecl_file_view_alloc_blockview2(
+      ecl_file->global_view, start_kw, end_kw, occurence);
   return view;
 }
 
-
-ecl_file_view_type * ecl_file_alloc_global_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  return ecl_file_alloc_global_blockview2( ecl_file , kw , kw , occurence );
+ecl_file_view_type *ecl_file_alloc_global_blockview(ecl_file_type *ecl_file,
+                                                    const char *kw,
+                                                    int occurence) {
+  return ecl_file_alloc_global_blockview2(ecl_file, kw, kw, occurence);
 }
 
-
-ecl_file_view_type * ecl_file_get_restart_view( ecl_file_type * ecl_file , int input_index, int report_step , time_t sim_time, double sim_days) {
-  ecl_file_view_type * view = ecl_file_view_add_restart_view( ecl_file->global_view , input_index , report_step , sim_time , sim_days);
+ecl_file_view_type *ecl_file_get_restart_view(ecl_file_type *ecl_file,
+                                              int input_index, int report_step,
+                                              time_t sim_time,
+                                              double sim_days) {
+  ecl_file_view_type *view = ecl_file_view_add_restart_view(
+      ecl_file->global_view, input_index, report_step, sim_time, sim_days);
   return view;
 }
 
-
-ecl_file_view_type * ecl_file_get_summary_view( ecl_file_type * ecl_file , int report_step ) {
-  ecl_file_view_type * view = ecl_file_view_add_summary_view( ecl_file->global_view , report_step );
+ecl_file_view_type *ecl_file_get_summary_view(ecl_file_type *ecl_file,
+                                              int report_step) {
+  ecl_file_view_type *view =
+      ecl_file_view_add_summary_view(ecl_file->global_view, report_step);
   return view;
 }
-
-
-
 
 /*****************************************************************/
 /*
@@ -517,45 +489,44 @@ ecl_file_view_type * ecl_file_get_summary_view( ecl_file_type * ecl_file , int r
    the file, possible garbage at the end will be ignored.
 */
 
-static void ecl_file_scan( ecl_file_type * ecl_file ) {
-  fortio_fseek( ecl_file->fortio , 0 , SEEK_SET );
+static void ecl_file_scan(ecl_file_type *ecl_file) {
+  fortio_fseek(ecl_file->fortio, 0, SEEK_SET);
   {
-    ecl_kw_type * work_kw = ecl_kw_alloc_new("WORK-KW" , 0 , ECL_INT , NULL);
+    ecl_kw_type *work_kw = ecl_kw_alloc_new("WORK-KW", 0, ECL_INT, NULL);
 
     while (true) {
       if (fortio_read_at_eof(ecl_file->fortio))
         break;
 
       {
-        offset_type current_offset = fortio_ftell( ecl_file->fortio );
-        ecl_read_status_enum read_status = ecl_kw_fread_header( work_kw , ecl_file->fortio);
+        offset_type current_offset = fortio_ftell(ecl_file->fortio);
+        ecl_read_status_enum read_status =
+            ecl_kw_fread_header(work_kw, ecl_file->fortio);
         if (read_status == ECL_KW_READ_FAIL)
           break;
 
         if (read_status == ECL_KW_READ_OK) {
-          ecl_file_kw_type * file_kw = ecl_file_kw_alloc( work_kw , current_offset);
+          ecl_file_kw_type *file_kw =
+              ecl_file_kw_alloc(work_kw, current_offset);
 
-          if (ecl_file_kw_fskip_data( file_kw , ecl_file->fortio ))
-            ecl_file_view_add_kw( ecl_file->global_view , file_kw );
+          if (ecl_file_kw_fskip_data(file_kw, ecl_file->fortio))
+            ecl_file_view_add_kw(ecl_file->global_view, file_kw);
           else {
-            ecl_file_kw_free( file_kw );
+            ecl_file_kw_free(file_kw);
             break;
           }
         }
       }
     }
 
-    ecl_kw_free( work_kw );
+    ecl_kw_free(work_kw);
   }
-  ecl_file_view_make_index( ecl_file->global_view );
+  ecl_file_view_make_index(ecl_file->global_view);
 }
 
-
-void ecl_file_select_global( ecl_file_type * ecl_file ) {
+void ecl_file_select_global(ecl_file_type *ecl_file) {
   ecl_file->active_view = ecl_file->global_view;
 }
-
-
 
 /**
    The fundamental open file function; all alternative open()
@@ -568,67 +539,55 @@ void ecl_file_select_global( ecl_file_type * ecl_file ) {
    file until ecl_file_close() is called.
 */
 
+static fortio_type *ecl_file_alloc_fortio(const char *filename, int flags) {
+  fortio_type *fortio = NULL;
+  bool fmt_file;
 
-static fortio_type * ecl_file_alloc_fortio(const char * filename, int flags) {
-  fortio_type * fortio = NULL;
-  bool          fmt_file;
+  ecl_util_fmt_file(filename, &fmt_file);
 
-  ecl_util_fmt_file( filename , &fmt_file);
-
-  if (ecl_file_view_check_flags(flags , ECL_FILE_WRITABLE))
-    fortio = fortio_open_readwrite( filename , fmt_file , ECL_ENDIAN_FLIP);
+  if (ecl_file_view_check_flags(flags, ECL_FILE_WRITABLE))
+    fortio = fortio_open_readwrite(filename, fmt_file, ECL_ENDIAN_FLIP);
   else
-    fortio = fortio_open_reader( filename , fmt_file , ECL_ENDIAN_FLIP);
+    fortio = fortio_open_reader(filename, fmt_file, ECL_ENDIAN_FLIP);
 
   return fortio;
 }
 
-
-ecl_file_type * ecl_file_open( const char * filename , int flags) {
-  fortio_type * fortio = ecl_file_alloc_fortio(filename, flags);
+ecl_file_type *ecl_file_open(const char *filename, int flags) {
+  fortio_type *fortio = ecl_file_alloc_fortio(filename, flags);
 
   if (fortio) {
-    ecl_file_type * ecl_file = ecl_file_alloc_empty( flags );
+    ecl_file_type *ecl_file = ecl_file_alloc_empty(flags);
     ecl_file->fortio = fortio;
-    ecl_file->global_view = ecl_file_view_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_view , true );
+    ecl_file->global_view = ecl_file_view_alloc(
+        ecl_file->fortio, &ecl_file->flags, ecl_file->inv_view, true);
 
-    ecl_file_scan( ecl_file );
-    ecl_file_select_global( ecl_file );
+    ecl_file_scan(ecl_file);
+    ecl_file_select_global(ecl_file);
 
-    if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
-      fortio_fclose_stream( ecl_file->fortio );
+    if (ecl_file_view_check_flags(ecl_file->flags, ECL_FILE_CLOSE_STREAM))
+      fortio_fclose_stream(ecl_file->fortio);
 
     return ecl_file;
   } else
     return NULL;
-
 }
 
-
-
-
-
-int ecl_file_get_flags( const ecl_file_type * ecl_file ) {
+int ecl_file_get_flags(const ecl_file_type *ecl_file) {
   return ecl_file->flags;
 }
 
-void ecl_file_set_flags( ecl_file_type * ecl_file, int flags ) {
+void ecl_file_set_flags(ecl_file_type *ecl_file, int flags) {
   ecl_file->flags = flags;
 }
 
-bool ecl_file_flags_set( const ecl_file_type * ecl_file , int flags) {
-  return ecl_file_view_check_flags( ecl_file->flags , flags );
+bool ecl_file_flags_set(const ecl_file_type *ecl_file, int flags) {
+  return ecl_file_view_check_flags(ecl_file->flags, flags);
 }
 
-bool ecl_file_writable( const ecl_file_type * ecl_file ) {
-  return ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_WRITABLE );
+bool ecl_file_writable(const ecl_file_type *ecl_file) {
+  return ecl_file_view_check_flags(ecl_file->flags, ECL_FILE_WRITABLE);
 }
-
-
-
-
-
-
 
 /**
    The ecl_file_close() function will close the fortio instance and
@@ -636,25 +595,23 @@ bool ecl_file_writable( const ecl_file_type * ecl_file ) {
    the ecl_kw instances which have been loaded on demand.
 */
 
-void ecl_file_close(ecl_file_type * ecl_file) {
+void ecl_file_close(ecl_file_type *ecl_file) {
   if (ecl_file->fortio != NULL)
-    fortio_fclose( ecl_file->fortio  );
+    fortio_fclose(ecl_file->fortio);
 
   if (ecl_file->global_view)
-    ecl_file_view_free( ecl_file->global_view );
+    ecl_file_view_free(ecl_file->global_view);
 
-  inv_map_free( ecl_file->inv_view );
-  vector_free( ecl_file->map_stack );
-  free( ecl_file );
+  inv_map_free(ecl_file->inv_view);
+  vector_free(ecl_file->map_stack);
+  free(ecl_file);
 }
 
-
-void ecl_file_close_fortio_stream(ecl_file_type * ecl_file) {
-    if (ecl_file->fortio != NULL) {
-        fortio_fclose_stream(ecl_file->fortio);
-    }
+void ecl_file_close_fortio_stream(ecl_file_type *ecl_file) {
+  if (ecl_file->fortio != NULL) {
+    fortio_fclose_stream(ecl_file->fortio);
+  }
 }
-
 
 /**
    This function will detach the current ecl_file instance from the
@@ -665,22 +622,16 @@ void ecl_file_close_fortio_stream(ecl_file_type * ecl_file) {
    call ecl_file_load_all() prior to the detach call.
 */
 
-
-void ecl_file_fortio_detach( ecl_file_type * ecl_file ) {
-  fortio_fclose( ecl_file->fortio );
+void ecl_file_fortio_detach(ecl_file_type *ecl_file) {
+  fortio_fclose(ecl_file->fortio);
   ecl_file->fortio = NULL;
 }
 
-
-bool ecl_file_load_all( ecl_file_type * ecl_file ) {
-  return ecl_file_view_load_all( ecl_file->active_view );
+bool ecl_file_load_all(ecl_file_type *ecl_file) {
+  return ecl_file_view_load_all(ecl_file->active_view);
 }
 
-
-void ecl_file_free__(void * arg) {
-  ecl_file_close( ecl_file_safe_cast( arg ) );
-}
-
+void ecl_file_free__(void *arg) { ecl_file_close(ecl_file_safe_cast(arg)); }
 
 /****************************************************************************/
 /* Functions specialized to work with restart files.  */
@@ -692,10 +643,9 @@ void ecl_file_free__(void * arg) {
    returned, otherwise false.
 */
 
-bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
-  return ecl_file_view_has_sim_time( ecl_file->active_view , sim_time );
+bool ecl_file_has_sim_time(const ecl_file_type *ecl_file, time_t sim_time) {
+  return ecl_file_view_has_sim_time(ecl_file->active_view, sim_time);
 }
-
 
 /*
   This function will determine the restart block corresponding to the
@@ -714,7 +664,8 @@ bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
 
      int index = ecl_file_get_restart_index( ecl_file , sim_time );
      if (index >= 0) {
-        ecl_kw_type * pressure_kw = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , index );
+        ecl_kw_type * pressure_kw = ecl_file_iget_named_kw( ecl_file ,
+  "PRESSURE" , index );
         ....
      }
 
@@ -725,7 +676,8 @@ bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
      if (index >= 0) {
         ecl_file_iselect_rstblock( ecl_file , index );
         {
-           ecl_kw_type * pressure_kw = ecl_file_iget_named_kw( ecl_file , "PRESSURE" , 0 );
+           ecl_kw_type * pressure_kw = ecl_file_iget_named_kw( ecl_file ,
+  "PRESSURE" , 0 );
            ....
         }
      }
@@ -733,11 +685,11 @@ bool ecl_file_has_sim_time( const ecl_file_type * ecl_file , time_t sim_time) {
   Specially in the case of LGRs the block restriction should be used.
  */
 
-int ecl_file_get_restart_index( const ecl_file_type * ecl_file , time_t sim_time) {
-  int active_index = ecl_file_view_find_sim_time( ecl_file->active_view , sim_time );
+int ecl_file_get_restart_index(const ecl_file_type *ecl_file, time_t sim_time) {
+  int active_index =
+      ecl_file_view_find_sim_time(ecl_file->active_view, sim_time);
   return active_index;
 }
-
 
 /**
    Will look through all the SEQNUM kw instances of the current
@@ -745,10 +697,9 @@ int ecl_file_get_restart_index( const ecl_file_type * ecl_file , time_t sim_time
    returned, otherwise false.
 */
 
-bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step) {
-  return ecl_file_view_has_report_step( ecl_file->active_view , report_step );
+bool ecl_file_has_report_step(const ecl_file_type *ecl_file, int report_step) {
+  return ecl_file_view_has_report_step(ecl_file->active_view, report_step);
 }
-
 
 /**
    This function will look up the INTEHEAD keyword in a ecl_file_type
@@ -757,12 +708,14 @@ bool ecl_file_has_report_step( const ecl_file_type * ecl_file , int report_step)
    Will return -1 if the requested INTEHEAD keyword can not be found.
 */
 
-time_t ecl_file_iget_restart_sim_date( const ecl_file_type * restart_file , int index ) {
-  return ecl_file_view_iget_restart_sim_date( restart_file->active_view , index );
+time_t ecl_file_iget_restart_sim_date(const ecl_file_type *restart_file,
+                                      int index) {
+  return ecl_file_view_iget_restart_sim_date(restart_file->active_view, index);
 }
 
-double ecl_file_iget_restart_sim_days( const ecl_file_type * restart_file , int index ) {
-  return ecl_file_view_iget_restart_sim_days( restart_file->active_view , index );
+double ecl_file_iget_restart_sim_days(const ecl_file_type *restart_file,
+                                      int index) {
+  return ecl_file_view_iget_restart_sim_days(restart_file->active_view, index);
 }
 
 /*****************************************************************/
@@ -779,9 +732,9 @@ double ecl_file_iget_restart_sim_days( const ecl_file_type * restart_file , int 
   return ECLIPSE300 in both those cases.
 */
 
-ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
-  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( file , INTEHEAD_KW , 0 );
-  int int_value = ecl_kw_iget_int( intehead_kw , INTEHEAD_IPROG_INDEX );
+ecl_version_enum ecl_file_get_ecl_version(const ecl_file_type *file) {
+  ecl_kw_type *intehead_kw = ecl_file_iget_named_kw(file, INTEHEAD_KW, 0);
+  int int_value = ecl_kw_iget_int(intehead_kw, INTEHEAD_IPROG_INDEX);
 
   if (int_value == INTEHEAD_ECLIPSE100_VALUE)
     return ECLIPSE100;
@@ -798,7 +751,8 @@ ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
   if (int_value == INTEHEAD_FRONTSIM_VALUE)
     return FRONTSIM;
 
-  util_abort("%s: Simulator version value:%d not recognized \n",__func__ , int_value );
+  util_abort("%s: Simulator version value:%d not recognized \n", __func__,
+             int_value);
   return (ecl_version_enum)0;
 }
 
@@ -812,12 +766,11 @@ ecl_version_enum ecl_file_get_ecl_version( const ecl_file_type * file ) {
   7: Gas + Water + Oil
 */
 
-int ecl_file_get_phases( const ecl_file_type * init_file ) {
-  ecl_kw_type * intehead_kw = ecl_file_iget_named_kw( init_file , INTEHEAD_KW , 0 );
-  int phases = ecl_kw_iget_int( intehead_kw , INTEHEAD_PHASE_INDEX );
+int ecl_file_get_phases(const ecl_file_type *init_file) {
+  ecl_kw_type *intehead_kw = ecl_file_iget_named_kw(init_file, INTEHEAD_KW, 0);
+  int phases = ecl_kw_iget_int(intehead_kw, INTEHEAD_PHASE_INDEX);
   return phases;
 }
-
 
 /*
 bool ecl_file_writable( const ecl_file_type * ecl_file ) {
@@ -834,14 +787,14 @@ bool ecl_file_writable( const ecl_file_type * ecl_file ) {
    ecl_file_save_kw().
 */
 
-bool ecl_file_has_kw_ptr( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw) {
-  ecl_file_kw_type * file_kw = inv_map_get_file_kw( ecl_file->inv_view , ecl_kw );
+bool ecl_file_has_kw_ptr(const ecl_file_type *ecl_file,
+                         const ecl_kw_type *ecl_kw) {
+  ecl_file_kw_type *file_kw = inv_map_get_file_kw(ecl_file->inv_view, ecl_kw);
   if (file_kw == NULL)
     return false;
   else
     return true;
 }
-
 
 /*
   Will save the content of @ecl_kw to the on-disk file wrapped by the
@@ -860,45 +813,53 @@ bool ecl_file_has_kw_ptr( const ecl_file_type * ecl_file , const ecl_kw_type * e
      open functions.
 */
 
-bool ecl_file_save_kw( const ecl_file_type * ecl_file , const ecl_kw_type * ecl_kw) {
-  ecl_file_kw_type * file_kw = inv_map_get_file_kw( ecl_file->inv_view , ecl_kw );  // We just verify that the input ecl_kw points to an ecl_kw
-  if (file_kw != NULL) {                                                             // we manage; from then on we use the reference contained in
-    if (fortio_assert_stream_open( ecl_file->fortio )) {                             // the corresponding ecl_file_kw instance.
+bool ecl_file_save_kw(const ecl_file_type *ecl_file,
+                      const ecl_kw_type *ecl_kw) {
+  ecl_file_kw_type *file_kw = inv_map_get_file_kw(
+      ecl_file->inv_view,
+      ecl_kw); // We just verify that the input ecl_kw points to an ecl_kw
+  if (file_kw !=
+      NULL) { // we manage; from then on we use the reference contained in
+    if (fortio_assert_stream_open(
+            ecl_file->fortio)) { // the corresponding ecl_file_kw instance.
 
-      ecl_file_kw_inplace_fwrite( file_kw , ecl_file->fortio );
+      ecl_file_kw_inplace_fwrite(file_kw, ecl_file->fortio);
 
-      if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
-        fortio_fclose_stream( ecl_file->fortio );
+      if (ecl_file_view_check_flags(ecl_file->flags, ECL_FILE_CLOSE_STREAM))
+        fortio_fclose_stream(ecl_file->fortio);
 
       return true;
     } else
       return false;
   } else {
-    util_abort("%s: keyword pointer:%p not found in ecl_file instance. \n",__func__ , ecl_kw);
+    util_abort("%s: keyword pointer:%p not found in ecl_file instance. \n",
+               __func__, ecl_kw);
     return false;
   }
 }
 
-
 /* DEPRECATED */
-void ecl_file_push_block( ecl_file_type * ecl_file ) {
-  vector_append_ref( ecl_file->map_stack , ecl_file->active_view );
+void ecl_file_push_block(ecl_file_type *ecl_file) {
+  vector_append_ref(ecl_file->map_stack, ecl_file->active_view);
 }
 
-void ecl_file_pop_block( ecl_file_type * ecl_file ) {
-  ecl_file->active_view = (ecl_file_view_type *)vector_pop_back( ecl_file->map_stack );
+void ecl_file_pop_block(ecl_file_type *ecl_file) {
+  ecl_file->active_view =
+      (ecl_file_view_type *)vector_pop_back(ecl_file->map_stack);
 }
 
-
-static ecl_file_view_type * ecl_file_get_relative_blockview( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_view_type * view = ecl_file_view_add_blockview( ecl_file->active_view , kw , occurence );
+static ecl_file_view_type *
+ecl_file_get_relative_blockview(ecl_file_type *ecl_file, const char *kw,
+                                int occurence) {
+  ecl_file_view_type *view =
+      ecl_file_view_add_blockview(ecl_file->active_view, kw, occurence);
   return view;
 }
 
-
-
-bool ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int occurence) {
-  ecl_file_view_type * blockmap = ecl_file_get_relative_blockview( ecl_file , kw , occurence);
+bool ecl_file_subselect_block(ecl_file_type *ecl_file, const char *kw,
+                              int occurence) {
+  ecl_file_view_type *blockmap =
+      ecl_file_get_relative_blockview(ecl_file, kw, occurence);
   if (blockmap != NULL) {
     ecl_file->active_view = blockmap;
     return true;
@@ -906,177 +867,187 @@ bool ecl_file_subselect_block( ecl_file_type * ecl_file , const char * kw , int 
     return false;
 }
 
-
-bool ecl_file_select_block( ecl_file_type * ecl_file , const char * kw , int occurence ) {
-  ecl_file_view_type * blockmap = ecl_file_get_global_blockview( ecl_file , kw , occurence);
+bool ecl_file_select_block(ecl_file_type *ecl_file, const char *kw,
+                           int occurence) {
+  ecl_file_view_type *blockmap =
+      ecl_file_get_global_blockview(ecl_file, kw, occurence);
   if (blockmap != NULL) {
     ecl_file->active_view = blockmap;
     return true;
   } else
     return false;
 }
-
 
 /*
   Will select restart block nr @seqnum_index - without considering
   report_steps or simulation time.
 */
-bool ecl_file_iselect_rstblock( ecl_file_type * ecl_file , int seqnum_index ) {
-  return ecl_file_select_block( ecl_file , SEQNUM_KW , seqnum_index );
+bool ecl_file_iselect_rstblock(ecl_file_type *ecl_file, int seqnum_index) {
+  return ecl_file_select_block(ecl_file, SEQNUM_KW, seqnum_index);
 }
 
-
-bool ecl_file_select_rstblock_sim_time( ecl_file_type * ecl_file , time_t sim_time) {
-  int seqnum_index = ecl_file_view_seqnum_index_from_sim_time( ecl_file->global_view , sim_time );
+bool ecl_file_select_rstblock_sim_time(ecl_file_type *ecl_file,
+                                       time_t sim_time) {
+  int seqnum_index =
+      ecl_file_view_seqnum_index_from_sim_time(ecl_file->global_view, sim_time);
 
   if (seqnum_index >= 0)
-    return ecl_file_iselect_rstblock( ecl_file , seqnum_index);
+    return ecl_file_iselect_rstblock(ecl_file, seqnum_index);
   else
     return false;
 }
 
-
-bool ecl_file_select_rstblock_report_step( ecl_file_type * ecl_file , int report_step) {
-  int global_index = ecl_file_view_find_kw_value( ecl_file->global_view , SEQNUM_KW , &report_step);
-  if ( global_index >= 0) {
-    int seqnum_index = ecl_file_view_iget_occurence( ecl_file->global_view , global_index );
-    return ecl_file_iselect_rstblock( ecl_file ,  seqnum_index);
+bool ecl_file_select_rstblock_report_step(ecl_file_type *ecl_file,
+                                          int report_step) {
+  int global_index = ecl_file_view_find_kw_value(ecl_file->global_view,
+                                                 SEQNUM_KW, &report_step);
+  if (global_index >= 0) {
+    int seqnum_index =
+        ecl_file_view_iget_occurence(ecl_file->global_view, global_index);
+    return ecl_file_iselect_rstblock(ecl_file, seqnum_index);
   } else
     return false;
 }
 
-
 /******************************************************************/
 
-static ecl_file_type * ecl_file_open_rstblock_report_step__( const char * filename , int report_step , int flags) {
-  ecl_file_type * ecl_file = ecl_file_open( filename , flags );
+static ecl_file_type *ecl_file_open_rstblock_report_step__(const char *filename,
+                                                           int report_step,
+                                                           int flags) {
+  ecl_file_type *ecl_file = ecl_file_open(filename, flags);
   if (ecl_file) {
-    if (!ecl_file_select_rstblock_report_step( ecl_file , report_step )) {
-      ecl_file_close( ecl_file );
+    if (!ecl_file_select_rstblock_report_step(ecl_file, report_step)) {
+      ecl_file_close(ecl_file);
       ecl_file = NULL;
     }
   }
   return ecl_file;
 }
 
-ecl_file_type * ecl_file_open_rstblock_report_step( const char * filename , int report_step , int flags) {
-  return ecl_file_open_rstblock_report_step__(filename , report_step , flags );
+ecl_file_type *ecl_file_open_rstblock_report_step(const char *filename,
+                                                  int report_step, int flags) {
+  return ecl_file_open_rstblock_report_step__(filename, report_step, flags);
 }
-
 
 /******************************************************************/
 
-static ecl_file_type * ecl_file_open_rstblock_sim_time__( const char * filename , time_t sim_time, int flags ) {
-  ecl_file_type * ecl_file = ecl_file_open( filename , flags );
+static ecl_file_type *ecl_file_open_rstblock_sim_time__(const char *filename,
+                                                        time_t sim_time,
+                                                        int flags) {
+  ecl_file_type *ecl_file = ecl_file_open(filename, flags);
   if (ecl_file) {
-    if (!ecl_file_select_rstblock_sim_time( ecl_file , sim_time)) {
-      ecl_file_close( ecl_file );
+    if (!ecl_file_select_rstblock_sim_time(ecl_file, sim_time)) {
+      ecl_file_close(ecl_file);
       ecl_file = NULL;
     }
   }
   return ecl_file;
 }
 
-ecl_file_type * ecl_file_open_rstblock_sim_time( const char * filename , time_t sim_time, int flags) {
-  return ecl_file_open_rstblock_sim_time__( filename , sim_time , flags );
+ecl_file_type *ecl_file_open_rstblock_sim_time(const char *filename,
+                                               time_t sim_time, int flags) {
+  return ecl_file_open_rstblock_sim_time__(filename, sim_time, flags);
 }
 
 /******************************************************************/
 
-static ecl_file_type * ecl_file_iopen_rstblock__( const char * filename , int seqnum_index, int flags ) {
-  ecl_file_type * ecl_file = ecl_file_open( filename , flags );
+static ecl_file_type *ecl_file_iopen_rstblock__(const char *filename,
+                                                int seqnum_index, int flags) {
+  ecl_file_type *ecl_file = ecl_file_open(filename, flags);
   if (ecl_file) {
-    if (!ecl_file_iselect_rstblock( ecl_file , seqnum_index )) {
-      ecl_file_close( ecl_file );
+    if (!ecl_file_iselect_rstblock(ecl_file, seqnum_index)) {
+      ecl_file_close(ecl_file);
       ecl_file = NULL;
     }
   }
   return ecl_file;
 }
 
-
-ecl_file_type * ecl_file_iopen_rstblock( const char * filename , int seqnum_index , int flags) {
-  return ecl_file_iopen_rstblock__(filename , seqnum_index , flags );
+ecl_file_type *ecl_file_iopen_rstblock(const char *filename, int seqnum_index,
+                                       int flags) {
+  return ecl_file_iopen_rstblock__(filename, seqnum_index, flags);
 }
 
-static bool ecl_file_index_valid0(const char * file_name, const char * index_file_name) {
-  if ( !util_file_exists( file_name ))
+static bool ecl_file_index_valid0(const char *file_name,
+                                  const char *index_file_name) {
+  if (!util_file_exists(file_name))
     return false;
 
-  if (!util_file_exists (index_file_name))
+  if (!util_file_exists(index_file_name))
     return false;
 
-  if (util_file_difftime( file_name , index_file_name) > 0)
+  if (util_file_difftime(file_name, index_file_name) > 0)
     return false;
 
   return true;
 }
 
-static bool ecl_file_index_valid1(const char * file_name, FILE * stream ) {
+static bool ecl_file_index_valid1(const char *file_name, FILE *stream) {
   bool name_equal;
-  char * source_file = util_fread_alloc_string(stream);
-  char * input_name = util_split_alloc_filename( file_name );
+  char *source_file = util_fread_alloc_string(stream);
+  char *input_name = util_split_alloc_filename(file_name);
 
-  name_equal = util_string_equal( source_file , input_name );
+  name_equal = util_string_equal(source_file, input_name);
 
-  free( source_file );
-  free( input_name );
+  free(source_file);
+  free(input_name);
   return name_equal;
 }
 
-bool ecl_file_index_valid(const char * file_name, const char * index_file_name) {
-  if (!ecl_file_index_valid0( file_name , index_file_name))
+bool ecl_file_index_valid(const char *file_name, const char *index_file_name) {
+  if (!ecl_file_index_valid0(file_name, index_file_name))
     return false;
 
   bool valid = false;
-  FILE * stream = fopen(index_file_name, "rb");
+  FILE *stream = fopen(index_file_name, "rb");
   if (stream) {
-    valid = ecl_file_index_valid1( file_name , stream );
-    fclose( stream );
+    valid = ecl_file_index_valid1(file_name, stream);
+    fclose(stream);
   }
 
   return valid;
 }
 
-
-bool  ecl_file_write_index( const ecl_file_type * ecl_file , const char * index_filename) {
-  FILE * ostream = fopen(index_filename, "wb");
+bool ecl_file_write_index(const ecl_file_type *ecl_file,
+                          const char *index_filename) {
+  FILE *ostream = fopen(index_filename, "wb");
   if (!ostream)
     return false;
   {
-    char * filename = util_split_alloc_filename( fortio_filename_ref(ecl_file->fortio));
-    util_fwrite_string( filename , ostream );
-    free( filename );
+    char *filename =
+        util_split_alloc_filename(fortio_filename_ref(ecl_file->fortio));
+    util_fwrite_string(filename, ostream);
+    free(filename);
   }
-  ecl_file_view_write_index( ecl_file->global_view , ostream );
-  fclose( ostream );
+  ecl_file_view_write_index(ecl_file->global_view, ostream);
+  fclose(ostream);
   return true;
 }
 
-
-ecl_file_type * ecl_file_fast_open(const char * file_name, const char * index_file_name, int flags) {
-  if ( !ecl_file_index_valid0(file_name, index_file_name)  )
+ecl_file_type *ecl_file_fast_open(const char *file_name,
+                                  const char *index_file_name, int flags) {
+  if (!ecl_file_index_valid0(file_name, index_file_name))
     return NULL;
 
-  FILE * istream = fopen(index_file_name, "rb");
+  FILE *istream = fopen(index_file_name, "rb");
   if (!istream)
     return NULL;
 
-  ecl_file_type * ecl_file = NULL;
+  ecl_file_type *ecl_file = NULL;
 
-  if (ecl_file_index_valid1( file_name, istream))  {
-    fortio_type * fortio = ecl_file_alloc_fortio(file_name, flags);
+  if (ecl_file_index_valid1(file_name, istream)) {
+    fortio_type *fortio = ecl_file_alloc_fortio(file_name, flags);
     if (fortio) {
-      ecl_file = ecl_file_alloc_empty( flags );
+      ecl_file = ecl_file_alloc_empty(flags);
       ecl_file->fortio = fortio;
-      ecl_file->global_view = ecl_file_view_fread_alloc( ecl_file->fortio , &ecl_file->flags , ecl_file->inv_view , istream );
+      ecl_file->global_view = ecl_file_view_fread_alloc(
+          ecl_file->fortio, &ecl_file->flags, ecl_file->inv_view, istream);
       if (ecl_file->global_view) {
-        ecl_file_select_global( ecl_file );
-        if (ecl_file_view_check_flags( ecl_file->flags , ECL_FILE_CLOSE_STREAM))
-          fortio_fclose_stream( ecl_file->fortio );
-      }
-      else {
-        ecl_file_close( ecl_file );
+        ecl_file_select_global(ecl_file);
+        if (ecl_file_view_check_flags(ecl_file->flags, ECL_FILE_CLOSE_STREAM))
+          fortio_fclose_stream(ecl_file->fortio);
+      } else {
+        ecl_file_close(ecl_file);
         ecl_file = NULL;
       }
     }

@@ -16,7 +16,6 @@
    for more details.
 */
 
-
 #ifndef ERT_UTIL_ENDIAN_H
 #define ERT_UTIL_ENDIAN_H
 
@@ -24,10 +23,9 @@
 extern "C" {
 #endif
 
-  void     util_endian_flip_vector(void * data , int element_size , int elements);
+void util_endian_flip_vector(void *data, int element_size, int elements);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

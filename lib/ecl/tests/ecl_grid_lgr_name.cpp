@@ -1,7 +1,8 @@
 /*
    Copyright (C) 2013  Equinor ASA, Norway.
 
-   The file 'ecl_grid_lgr_name.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ecl_grid_lgr_name.c' is part of ERT - Ensemble based Reservoir
+   Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,11 +16,11 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
-#include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
+#include <ert/util/util.h>
 
 #include <ert/ecl/ecl_grid.hpp>
 
@@ -43,26 +44,23 @@
   Grid nr ...............: 110
 */
 
-
-void test_name(const ecl_grid_type * grid , int lgr_nr , const char * name) {
-  test_assert_string_equal( name , ecl_grid_get_lgr_name( grid , lgr_nr ));
-  test_assert_int_equal( lgr_nr , ecl_grid_get_lgr_nr_from_name( grid , name ));
+void test_name(const ecl_grid_type *grid, int lgr_nr, const char *name) {
+  test_assert_string_equal(name, ecl_grid_get_lgr_name(grid, lgr_nr));
+  test_assert_int_equal(lgr_nr, ecl_grid_get_lgr_nr_from_name(grid, name));
 }
 
+int main(int argc, char **argv) {
+  const char *grid_file = argv[1];
+  ecl_grid_type *grid = ecl_grid_alloc(grid_file);
 
-int main(int argc , char ** argv) {
-  const char * grid_file = argv[1];
-  ecl_grid_type * grid = ecl_grid_alloc( grid_file );
+  test_name(grid, 104, "LG003017");
+  test_name(grid, 2, "LG006024");
+  test_name(grid, 4, "LG005025");
+  test_name(grid, 82, "LG011029");
+  test_name(grid, 100, "LG007021");
+  test_name(grid, 110, "LG003014");
+  test_name(grid, 0, grid_file);
 
-  test_name( grid , 104 , "LG003017");
-  test_name( grid ,   2 , "LG006024");
-  test_name( grid ,   4 , "LG005025");
-  test_name( grid ,  82 , "LG011029");
-  test_name( grid , 100 , "LG007021");
-  test_name( grid , 110 , "LG003014");
-  test_name( grid ,   0 , grid_file);
-
-
-  ecl_grid_free( grid );
+  ecl_grid_free(grid);
   exit(0);
 }

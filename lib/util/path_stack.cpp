@@ -16,20 +16,19 @@
    for more details.
 */
 
-
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-#include <vector>
-#include <string>
 #include <stack>
+#include <string>
+#include <vector>
 
+#include <ert/util/path_stack.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
-#include <ert/util/path_stack.hpp>
 
 /**
    This file implements the structure path_stack which is vaguely
@@ -43,26 +42,21 @@
    process.
 */
 
-
 struct path_stack_struct {
   std::stack<std::string, std::vector<std::string>> stack;
 };
-
 
 /**
    This will create a new path_stack instance; it will push anything
    on the current stack of paths.
 */
 
-path_stack_type * path_stack_alloc() {
-  path_stack_type * path_stack = new path_stack_type();
+path_stack_type *path_stack_alloc() {
+  path_stack_type *path_stack = new path_stack_type();
   return path_stack;
 }
 
-void path_stack_free( path_stack_type * path_stack ) {
-  delete path_stack;
-}
-
+void path_stack_free(path_stack_type *path_stack) { delete path_stack; }
 
 /**
    This will push a path on to the stack. The function will start by
@@ -73,36 +67,32 @@ void path_stack_free( path_stack_type * path_stack ) {
    If path is NULL that is interpreted as cwd.
 */
 
-bool path_stack_push( path_stack_type * path_stack , const char * path ) {
+bool path_stack_push(path_stack_type *path_stack, const char *path) {
   if (path != NULL)
-    if (util_chdir( path ) != 0)
+    if (util_chdir(path) != 0)
       return false;
 
-  path_stack_push_cwd( path_stack );
+  path_stack_push_cwd(path_stack);
   return true;
 }
 
-
-void path_stack_push_cwd( path_stack_type * path_stack ) {
-  char * cwd = util_alloc_cwd();
+void path_stack_push_cwd(path_stack_type *path_stack) {
+  char *cwd = util_alloc_cwd();
   path_stack->stack.push(cwd);
   free(cwd);
 }
 
-void path_stack_pop( path_stack_type * path_stack ) {
-  const std::string& path = path_stack->stack.top();
+void path_stack_pop(path_stack_type *path_stack) {
+  const std::string &path = path_stack->stack.top();
 
-  if (util_chdir( path.c_str() ) != 0)
+  if (util_chdir(path.c_str()) != 0)
     // The directory has become inaccesible ...
-    util_abort("%s: could not pop back to directory:%s Error:%s\n", __func__ , path.c_str() , strerror( errno ));
+    util_abort("%s: could not pop back to directory:%s Error:%s\n", __func__,
+               path.c_str(), strerror(errno));
 
   path_stack->stack.pop();
 }
 
-
-int path_stack_size( const path_stack_type * path_stack ) {
+int path_stack_size(const path_stack_type *path_stack) {
   return path_stack->stack.size();
 }
-
-
-

@@ -15,28 +15,26 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.h>
 #include <ert/util/test_work_area.hpp>
+#include <ert/util/util.h>
 
-
-int main(int argc , char ** argv) {
+int main(int argc, char **argv) {
   ecl::util::TestArea ta("mkdir");
 
   // Regular use
-  test_assert_true( util_mkdir_p("some/path/with/many/levels"));
-
+  test_assert_true(util_mkdir_p("some/path/with/many/levels"));
 
   // Absolute path where the root exists.
   {
-    char * abs_path = util_alloc_abs_path("a/path/with/abs/prefix");
-    test_assert_true( util_mkdir_p(abs_path));
+    char *abs_path = util_alloc_abs_path("a/path/with/abs/prefix");
+    test_assert_true(util_mkdir_p(abs_path));
 
     // Already exists:
-    test_assert_true( util_mkdir_p(abs_path));
+    test_assert_true(util_mkdir_p(abs_path));
     free(abs_path);
   }
 

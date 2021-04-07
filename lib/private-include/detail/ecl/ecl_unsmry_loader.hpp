@@ -1,16 +1,17 @@
-#include <string>
 #include <array>
-#include <vector>
 #include <map>
+#include <string>
+#include <vector>
 
-#include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/ecl_file.hpp>
+#include <ert/ecl/ecl_smspec.hpp>
 
 namespace ecl {
 
 class unsmry_loader {
 public:
-  unsmry_loader(const ecl_smspec_type * smspec, const std::string& filename, int file_options);
+  unsmry_loader(const ecl_smspec_type *smspec, const std::string &filename,
+                int file_options);
   ~unsmry_loader();
 
   std::vector<double> get_vector(int pos) const;
@@ -24,21 +25,15 @@ public:
   double iget(int time_index, int params_index) const;
 
 private:
-  int size;           //Number of entries in the smspec index
+  int size; // Number of entries in the smspec index
   int time_index;
   int time_seconds;
   time_t sim_start;
-  int m_length;      //Number of PARAMS in the UNSMRY file
+  int m_length; // Number of PARAMS in the UNSMRY file
 
-  std::array<int,3>    date_index;
-  ecl_file_type      * file;
-  ecl_file_view_type * file_view;
+  std::array<int, 3> date_index;
+  ecl_file_type *file;
+  ecl_file_view_type *file_view;
 };
 
-
-
-
-
-
-
-}
+} // namespace ecl
