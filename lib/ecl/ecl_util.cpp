@@ -1061,10 +1061,8 @@ time_t ecl_util_get_start_date(const char *data_file) {
     FILE *stream = util_fopen(data_file, "r");
     char *buffer;
 
-    if (!basic_parser_fseek_string(parser, stream, "START", true,
-                                   true)) /* Seeks case insensitive. */
-        util_abort("%s: sorry - could not find START in DATA file %s \n",
-                   __func__, data_file);
+  if (!basic_parser_fseek_string( parser , stream , "START" , true , true))   /* Seeks case insensitive. */
+    return start_date;
 
     {
         long int start_pos = util_ftell(stream);
