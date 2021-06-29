@@ -51,7 +51,7 @@ skbuild.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/equinor/ecl",
-    packages=setuptools.find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    packages=setuptools.find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests", "ert.*", "ert"]),
     package_dir={"": "python"},
     license="GPL-3.0",
     platforms="any",
