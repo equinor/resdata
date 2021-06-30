@@ -87,7 +87,6 @@ option( BUILD_SHARED_LIBS   "Build shared libraries"                            
 option( ERT_USE_OPENMP      "Use OpenMP"                                              OFF )
 option( RST_DOC             "Build RST documentation"                                 OFF)
 option( USE_RPATH           "Don't strip RPATH from libraries and binaries"           OFF)
-option( INSTALL_ERT_LEGACY  "Add ert legacy wrappers"                                 OFF)
 
 set(EQUINOR_TESTDATA_ROOT "" CACHE PATH  "Root to Equinor internal testdata")
 if (EXISTS ${EQUINOR_TESTDATA_ROOT})
