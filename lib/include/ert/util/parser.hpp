@@ -26,7 +26,6 @@ extern "C" {
 
 typedef struct basic_parser_struct basic_parser_type;
 
-
 /**
   GENERAL OVERVIEW
 
@@ -121,48 +120,49 @@ typedef struct basic_parser_struct basic_parser_type;
 
 */
 
+basic_parser_type *basic_parser_alloc(
+    const char *whitespace, /** Set to NULL if not interessting.         */
+    const char *quoters,    /** Set to NULL if not interessting.         */
+    const char *specials,   /** Set to NULL if not interessting.         */
+    const char *delete_set,
+    const char *comment_start, /** Set to NULL if not interessting.         */
+    const char *comment_end);  /** Set to NULL if not interessting.         */
 
-basic_parser_type * basic_parser_alloc(
-  const char * whitespace,       /** Set to NULL if not interessting.         */
-  const char * quoters,          /** Set to NULL if not interessting.         */
-  const char * specials,         /** Set to NULL if not interessting.         */
-  const char * delete_set,
-  const char * comment_start,    /** Set to NULL if not interessting.         */
-  const char * comment_end);     /** Set to NULL if not interessting.         */
+void basic_parser_set_splitters(basic_parser_type *parser,
+                                const char *splitters);
+void basic_parser_set_quoters(basic_parser_type *parser, const char *quoters);
+void basic_parser_set_specials(basic_parser_type *parser, const char *specials);
+void basic_parser_set_delete_set(basic_parser_type *parser,
+                                 const char *delete_set);
+void basic_parser_set_comment_start(basic_parser_type *parser,
+                                    const char *comment_start);
+void basic_parser_set_comment_end(basic_parser_type *parser,
+                                  const char *comment_end);
 
+void basic_parser_free(basic_parser_type *parser);
 
-void       basic_parser_set_splitters( basic_parser_type * parser , const char * splitters );
-void       basic_parser_set_quoters( basic_parser_type * parser , const char * quoters );
-void       basic_parser_set_specials( basic_parser_type * parser , const char * specials );
-void       basic_parser_set_delete_set( basic_parser_type * parser , const char * delete_set );
-void       basic_parser_set_comment_start( basic_parser_type * parser , const char * comment_start );
-void       basic_parser_set_comment_end( basic_parser_type * parser , const char * comment_end );
+stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
+                                              const char *buffer,
+                                              bool strip_quote_marks);
 
-
-void basic_parser_free(
-  basic_parser_type * parser);
-
-
-stringlist_type * basic_parser_tokenize_buffer(
-  const basic_parser_type * parser,
-  const char              * buffer,
-  bool                      strip_quote_marks);
-
-
-stringlist_type * basic_parser_tokenize_file(
-  const basic_parser_type * parser,
-  const char              * filename,
-  bool                      strip_quote_marks);
-
+stringlist_type *basic_parser_tokenize_file(const basic_parser_type *parser,
+                                            const char *filename,
+                                            bool strip_quote_marks);
 
 /* Pollution by Joakim: */
 
-void   basic_parser_strip_buffer(const basic_parser_type * parser , char ** __buffer);
-bool   basic_parser_fseek_string(const basic_parser_type * parser , FILE * stream , const char * string , bool skip_string , bool case_sensitive);
-char * basic_parser_fread_alloc_file_content(const char * filename , const char * quote_set , const char * delete_set , const char * comment_start , const char * comment_end);
+void basic_parser_strip_buffer(const basic_parser_type *parser,
+                               char **__buffer);
+bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
+                               const char *string, bool skip_string,
+                               bool case_sensitive);
+char *basic_parser_fread_alloc_file_content(const char *filename,
+                                            const char *quote_set,
+                                            const char *delete_set,
+                                            const char *comment_start,
+                                            const char *comment_end);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
 #endif
-

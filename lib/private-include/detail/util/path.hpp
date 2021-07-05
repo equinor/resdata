@@ -1,12 +1,11 @@
 #ifndef PATH_UTIL
 #define PATH_UTIL
 
-
 #include <string>
 namespace ecl {
-  namespace util {
-    namespace path {
-      /*
+namespace util {
+namespace path {
+/*
         Observe that these functions are purely based on string inspection; i.e.
         the actual filesystem is *never* consulted. Furthermore the functions
         interpret the argument as a *filename* - that implies the (maybe
@@ -21,12 +20,11 @@ namespace ecl {
         library.
       */
 
-      std::string dirname(const std::string& fname);
-      std::string basename(const std::string& fname);
-      std::string extension(const std::string& fname);
-    }
-  }
-}
-
+std::string dirname(const std::string &fname);
+std::string basename(const std::string &fname);
+std::string extension(const std::string &fname);
+} // namespace path
+} // namespace util
+} // namespace ecl
 
 #endif

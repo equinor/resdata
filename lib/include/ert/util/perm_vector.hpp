@@ -27,14 +27,13 @@ extern "C" {
 
 typedef struct perm_vector_struct perm_vector_type;
 
-perm_vector_type * perm_vector_alloc( int * perm_input , int size );
-void               perm_vector_free( perm_vector_type * perm_vector );
-int                perm_vector_get_size( const perm_vector_type * perm);
-int                perm_vector_iget( const perm_vector_type * perm, int index);
+perm_vector_type *perm_vector_alloc(int *perm_input, int size);
+void perm_vector_free(perm_vector_type *perm_vector);
+int perm_vector_get_size(const perm_vector_type *perm);
+int perm_vector_iget(const perm_vector_type *perm, int index);
 
 #ifdef __cplusplus
 }
 #endif //__cplusplus
 
 #endif
-

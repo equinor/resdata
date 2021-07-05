@@ -31,84 +31,84 @@
 #include <ert/ecl/ecl_file_view.hpp>
 #include <ert/ecl/ecl_kw.hpp>
 
-
 /*
   This test is slightly awkward beacuse it tests quite internal implementation details.
 */
 
 void test_transaction() {
 
-  ecl::util::TestArea ta("index_testing");
-  {
-     const char * file_name = "data_file";
-     fortio_type * fortio = fortio_open_writer(file_name, false, ECL_ENDIAN_FLIP);
+    ecl::util::TestArea ta("index_testing");
+    {
+        const char *file_name = "data_file";
+        fortio_type *fortio =
+            fortio_open_writer(file_name, false, ECL_ENDIAN_FLIP);
 
-      //creating the data file
-     int data_size = 10;
-     ecl_kw_type * kw1 = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
-     for(int i = 0; i < data_size; ++i)
-        ecl_kw_iset_int(kw1, i, 537 + i);
-     ecl_kw_fwrite(kw1, fortio);
+        //creating the data file
+        int data_size = 10;
+        ecl_kw_type *kw1 = ecl_kw_alloc("TEST1_KW", data_size, ECL_INT);
+        for (int i = 0; i < data_size; ++i)
+            ecl_kw_iset_int(kw1, i, 537 + i);
+        ecl_kw_fwrite(kw1, fortio);
 
-     data_size = 5;
-     ecl_kw_type * kw2 = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
-     for(int i = 0; i < data_size; ++i)
-        ecl_kw_iset_float(kw2, i, 0.15 * i);
-     ecl_kw_fwrite(kw2, fortio);
+        data_size = 5;
+        ecl_kw_type *kw2 = ecl_kw_alloc("TEST2_KW", data_size, ECL_FLOAT);
+        for (int i = 0; i < data_size; ++i)
+            ecl_kw_iset_float(kw2, i, 0.15 * i);
+        ecl_kw_fwrite(kw2, fortio);
 
-     data_size = 3;
-     ecl_kw_type * kw3 = ecl_kw_alloc("TEST3_KW", data_size, ECL_FLOAT);
-     for(int i = 0; i < data_size; i++)
-        ecl_kw_iset_float(kw3, i, 0.45 * i);
-     ecl_kw_fwrite(kw3, fortio);
+        data_size = 3;
+        ecl_kw_type *kw3 = ecl_kw_alloc("TEST3_KW", data_size, ECL_FLOAT);
+        for (int i = 0; i < data_size; i++)
+            ecl_kw_iset_float(kw3, i, 0.45 * i);
+        ecl_kw_fwrite(kw3, fortio);
 
-     fortio_fclose(fortio);
-     //finished creating data file
+        fortio_fclose(fortio);
+        //finished creating data file
 
-     ecl_file_type * file = ecl_file_open(file_name, 0);
-     ecl_file_view_type * file_view = ecl_file_get_global_view(file);
-     ecl_file_kw_type * file_kw0 = ecl_file_view_iget_file_kw( file_view , 0);
-     ecl_file_kw_type * file_kw1 = ecl_file_view_iget_file_kw( file_view , 1);
-     ecl_file_kw_type * file_kw2 = ecl_file_view_iget_file_kw( file_view , 2);
+        ecl_file_type *file = ecl_file_open(file_name, 0);
+        ecl_file_view_type *file_view = ecl_file_get_global_view(file);
+        ecl_file_kw_type *file_kw0 = ecl_file_view_iget_file_kw(file_view, 0);
+        ecl_file_kw_type *file_kw1 = ecl_file_view_iget_file_kw(file_view, 1);
+        ecl_file_kw_type *file_kw2 = ecl_file_view_iget_file_kw(file_view, 2);
 
-     ecl_file_view_iget_kw( file_view, 0);
-     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0));
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1) );
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2) );
-     ecl_file_transaction_type * t1 = ecl_file_view_start_transaction( file_view );
+        ecl_file_view_iget_kw(file_view, 0);
+        test_assert_true(ecl_file_kw_get_kw_ptr(file_kw0));
+        test_assert_false(ecl_file_kw_get_kw_ptr(file_kw1));
+        test_assert_false(ecl_file_kw_get_kw_ptr(file_kw2));
+        ecl_file_transaction_type *t1 =
+            ecl_file_view_start_transaction(file_view);
 
-       ecl_file_view_iget_kw(file_view, 0);
-       ecl_file_view_iget_kw(file_view, 1);
-       ecl_file_transaction_type * t2 = ecl_file_view_start_transaction( file_view );
+        ecl_file_view_iget_kw(file_view, 0);
+        ecl_file_view_iget_kw(file_view, 1);
+        ecl_file_transaction_type *t2 =
+            ecl_file_view_start_transaction(file_view);
 
-         ecl_file_view_iget_kw(file_view, 0);
-         ecl_file_view_iget_kw(file_view, 1);
-         ecl_file_view_iget_kw(file_view, 1);
-         ecl_file_view_iget_kw(file_view, 2);
+        ecl_file_view_iget_kw(file_view, 0);
+        ecl_file_view_iget_kw(file_view, 1);
+        ecl_file_view_iget_kw(file_view, 1);
+        ecl_file_view_iget_kw(file_view, 2);
 
-       ecl_file_view_end_transaction( file_view , t2 );
+        ecl_file_view_end_transaction(file_view, t2);
 
-       test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0) );
-       test_assert_true( ecl_file_kw_get_kw_ptr(file_kw1) );
-       test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2) );
-       ecl_file_view_iget_kw(file_view, 2);
+        test_assert_true(ecl_file_kw_get_kw_ptr(file_kw0));
+        test_assert_true(ecl_file_kw_get_kw_ptr(file_kw1));
+        test_assert_false(ecl_file_kw_get_kw_ptr(file_kw2));
+        ecl_file_view_iget_kw(file_view, 2);
 
-     ecl_file_view_end_transaction(file_view, t1);
-     test_assert_true( ecl_file_kw_get_kw_ptr(file_kw0 ) );
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw1) );
-     test_assert_false( ecl_file_kw_get_kw_ptr(file_kw2) );
+        ecl_file_view_end_transaction(file_view, t1);
+        test_assert_true(ecl_file_kw_get_kw_ptr(file_kw0));
+        test_assert_false(ecl_file_kw_get_kw_ptr(file_kw1));
+        test_assert_false(ecl_file_kw_get_kw_ptr(file_kw2));
 
-     ecl_file_close(file);
-     ecl_kw_free(kw1);
-     ecl_kw_free(kw2);
-     ecl_kw_free(kw3);
-   }
+        ecl_file_close(file);
+        ecl_kw_free(kw1);
+        ecl_kw_free(kw2);
+        ecl_kw_free(kw3);
+    }
 }
 
-
-
-int main( int argc , char ** argv) {
-  util_install_signals();
-  test_transaction();
-  exit(0);
+int main(int argc, char **argv) {
+    util_install_signals();
+    test_transaction();
+    exit(0);
 }

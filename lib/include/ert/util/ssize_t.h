@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/ssize_t.hpp>
-
-

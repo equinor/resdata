@@ -27,30 +27,26 @@
 #include <ert/util/util.h>
 #include <ert/util/string_util.hpp>
 
+void test_copy_file(const char *executable) {
+    struct stat stat_buf;
+    mode_t mode0, mode1;
+    stat(executable, &stat_buf);
 
+    mode0 = stat_buf.st_mode;
+    {
+        ecl::util::TestArea ta("copy_file");
 
-void test_copy_file( const char * executable ) {
-  struct stat stat_buf;
-  mode_t mode0,mode1;
-  stat( executable , &stat_buf );
+        util_copy_file(executable, "test.x");
+        test_assert_true(util_file_exists("test.x"));
+        stat("test.x", &stat_buf);
+        mode1 = stat_buf.st_mode;
 
-  mode0 = stat_buf.st_mode;
-  {
-    ecl::util::TestArea ta("copy_file");
-
-    util_copy_file( executable , "test.x");
-    test_assert_true( util_file_exists( "test.x" ));
-    stat( "test.x" , &stat_buf );
-    mode1 = stat_buf.st_mode;
-
-    test_assert_true( mode0 == mode1 );
-  }
+        test_assert_true(mode0 == mode1);
+    }
 }
 
-
-
-int main(int argc , char ** argv) {
-   const char * executable = argv[1];
-   test_copy_file( executable );
-   exit(0);
+int main(int argc, char **argv) {
+    const char *executable = argv[1];
+    test_copy_file(executable);
+    exit(0);
 }

@@ -7,65 +7,76 @@
 #include <dirent.h>
 #include <sys/types.h>
 
-bool util_copy_file__(const char * src_file , const char * target_file, size_t buffer_size , void * buffer , bool abort_on_error);
+bool util_copy_file__(const char *src_file, const char *target_file,
+                      size_t buffer_size, void *buffer, bool abort_on_error);
 
+static DIR *util_walk_opendir__(const char *root_path) {
 
-
-static DIR * util_walk_opendir__( const char * root_path ) {
-
-  DIR * dirH = opendir( root_path );
-  if (dirH == NULL) {
-    if (errno == EACCES)
-      fprintf(stderr,"** Warning could not open directory:%s - permission denied - IGNORED.\n" , root_path);
-    else
-      util_abort("%s: failed to open directory:%s / %s \n",__func__ , root_path , strerror(errno));
-  }
-  return dirH;
+    DIR *dirH = opendir(root_path);
+    if (dirH == NULL) {
+        if (errno == EACCES)
+            fprintf(stderr,
+                    "** Warning could not open directory:%s - permission "
+                    "denied - IGNORED.\n",
+                    root_path);
+        else
+            util_abort("%s: failed to open directory:%s / %s \n", __func__,
+                       root_path, strerror(errno));
+    }
+    return dirH;
 }
 
+static void util_copy_directory__(const char *src_path, const char *target_path,
+                                  int buffer_size, void *buffer) {
+    if (!util_is_directory(src_path))
+        util_abort("%s: %s is not a directory \n", __func__, src_path);
 
-static void util_copy_directory__(const char * src_path , const char * target_path , int buffer_size , void * buffer ) {
-  if (!util_is_directory(src_path))
-    util_abort("%s: %s is not a directory \n",__func__ , src_path);
-
-  util_make_path(target_path);
-  {
-    DIR * dirH = opendir( src_path );
-    if (dirH == NULL)
-      util_abort("%s: failed to open directory:%s / %s \n",__func__ , src_path , strerror(errno));
-
+    util_make_path(target_path);
     {
-      struct dirent * dp;
-      do {
-        dp = readdir(dirH);
-        if (dp != NULL) {
-          if (dp->d_name[0] != '.') {
-            char * full_src_path    = util_alloc_filename(src_path , dp->d_name , NULL);
-            char * full_target_path = util_alloc_filename(target_path , dp->d_name , NULL);
-            if (util_is_file( full_src_path )) {
-              util_copy_file__( full_src_path , full_target_path , buffer_size , buffer , true);
-            } else {
-              if (util_is_directory( full_src_path ) && !util_is_link( full_src_path))
-                util_copy_directory__( full_src_path , full_target_path , buffer_size , buffer);
-            }
+        DIR *dirH = opendir(src_path);
+        if (dirH == NULL)
+            util_abort("%s: failed to open directory:%s / %s \n", __func__,
+                       src_path, strerror(errno));
 
-            free( full_src_path );
-            free( full_target_path );
-          }
+        {
+            struct dirent *dp;
+            do {
+                dp = readdir(dirH);
+                if (dp != NULL) {
+                    if (dp->d_name[0] != '.') {
+                        char *full_src_path =
+                            util_alloc_filename(src_path, dp->d_name, NULL);
+                        char *full_target_path =
+                            util_alloc_filename(target_path, dp->d_name, NULL);
+                        if (util_is_file(full_src_path)) {
+                            util_copy_file__(full_src_path, full_target_path,
+                                             buffer_size, buffer, true);
+                        } else {
+                            if (util_is_directory(full_src_path) &&
+                                !util_is_link(full_src_path))
+                                util_copy_directory__(full_src_path,
+                                                      full_target_path,
+                                                      buffer_size, buffer);
+                        }
+
+                        free(full_src_path);
+                        free(full_target_path);
+                    }
+                }
+            } while (dp != NULL);
         }
-      } while (dp != NULL);
+        closedir(dirH);
     }
-    closedir( dirH );
-  }
 }
 
 /*  Does not handle symlinks. */
-void util_copy_directory_content(const char * src_path , const char * target_path) {
-  int buffer_size = 16 * 1024 * 1024; /* 16 MB */
-  void * buffer   = util_malloc( buffer_size );
+void util_copy_directory_content(const char *src_path,
+                                 const char *target_path) {
+    int buffer_size = 16 * 1024 * 1024; /* 16 MB */
+    void *buffer = util_malloc(buffer_size);
 
-  util_copy_directory__( src_path , target_path , buffer_size , buffer);
-  free( buffer );
+    util_copy_directory__(src_path, target_path, buffer_size, buffer);
+    free(buffer);
 }
 
 /**
@@ -74,21 +85,20 @@ void util_copy_directory_content(const char * src_path , const char * target_pat
 
 /*  Does not handle symlinks. */
 
+void util_copy_directory(const char *src_path, const char *__target_path) {
+    int num_components;
+    char **path_parts;
+    char *path_tail;
+    char *target_path;
 
-void util_copy_directory(const char * src_path , const char * __target_path) {
-  int     num_components;
-  char ** path_parts;
-  char  * path_tail;
-  char  * target_path;
+    util_path_split(src_path, &num_components, &path_parts);
+    path_tail = path_parts[num_components - 1];
+    target_path = util_alloc_filename(__target_path, path_tail, NULL);
 
-  util_path_split(src_path , &num_components , &path_parts);
-  path_tail   = path_parts[num_components - 1];
-  target_path = util_alloc_filename(__target_path , path_tail , NULL);
+    util_copy_directory_content(src_path, target_path);
 
-  util_copy_directory_content(src_path , target_path );
-
-  free(target_path);
-  util_free_stringlist( path_parts , num_components );
+    free(target_path);
+    util_free_stringlist(path_parts, num_components);
 }
 
 /**
@@ -96,32 +106,30 @@ void util_copy_directory(const char * src_path , const char * __target_path) {
    the root_path directory.
 */
 
-static void util_walk_file_callbacks__(const char               * root_path ,
-                                       int                        current_depth  ,
-                                       walk_file_callback_ftype * file_callback ,
-                                       void                     * file_callback_arg) {
+static void util_walk_file_callbacks__(const char *root_path, int current_depth,
+                                       walk_file_callback_ftype *file_callback,
+                                       void *file_callback_arg) {
 
+    DIR *dirH = util_walk_opendir__(root_path);
+    if (dirH != NULL) {
+        struct dirent *dp;
+        do {
+            dp = readdir(dirH);
+            if (dp != NULL) {
+                if (dp->d_name[0] != '.') {
+                    char *full_path =
+                        util_alloc_filename(root_path, dp->d_name, NULL);
 
-  DIR * dirH = util_walk_opendir__( root_path );
-  if (dirH != NULL) {
-    struct dirent * dp;
-    do {
-      dp = readdir(dirH);
-      if (dp != NULL) {
-        if (dp->d_name[0] != '.') {
-          char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
+                    if (util_is_file(full_path) && file_callback != NULL)
+                        file_callback(root_path, dp->d_name, file_callback_arg);
 
-          if (util_is_file( full_path ) && file_callback != NULL)
-            file_callback( root_path , dp->d_name , file_callback_arg);
-
-          free(full_path);
-        }
-      }
-    } while (dp != NULL);
-    closedir( dirH );
-  }
+                    free(full_path);
+                }
+            }
+        } while (dp != NULL);
+        closedir(dirH);
+    }
 }
-
 
 /**
    This function will start at 'root_path' and then recursively go
@@ -176,19 +184,12 @@ static void util_walk_file_callbacks__(const char               * root_path ,
    function returns.
 */
 
-
-static void util_walk_directory__(const char               * root_path ,
-                                  bool                       depth_first ,
-                                  int                        current_depth  ,
-                                  walk_file_callback_ftype * file_callback ,
-                                  void                     * file_callback_arg ,
-                                  walk_dir_callback_ftype  * dir_callback ,
-                                  void                     * dir_callback_arg);
-
-
-
-
-
+static void util_walk_directory__(const char *root_path, bool depth_first,
+                                  int current_depth,
+                                  walk_file_callback_ftype *file_callback,
+                                  void *file_callback_arg,
+                                  walk_dir_callback_ftype *dir_callback,
+                                  void *dir_callback_arg);
 
 /**
    This function will evaluate the dir_callback for all the (sub)
@@ -202,74 +203,80 @@ static void util_walk_directory__(const char               * root_path ,
    amounts to return true.)
 */
 
+static void util_walk_descend__(const char *root_path, bool depth_first,
+                                int current_depth,
+                                walk_file_callback_ftype *file_callback,
+                                void *file_callback_arg,
+                                walk_dir_callback_ftype *dir_callback,
+                                void *dir_callback_arg) {
 
+    DIR *dirH = util_walk_opendir__(root_path);
+    if (dirH != NULL) {
+        struct dirent *dp;
+        do {
+            dp = readdir(dirH);
+            if (dp != NULL) {
+                if (dp->d_name[0] != '.') {
+                    char *full_path =
+                        util_alloc_filename(root_path, dp->d_name, NULL);
 
-static void util_walk_descend__(const char               * root_path ,
-                                bool                       depth_first ,
-                                int                        current_depth  ,
-                                walk_file_callback_ftype * file_callback ,
-                                void                     * file_callback_arg ,
-                                walk_dir_callback_ftype  * dir_callback ,
-                                void                     * dir_callback_arg) {
+                    if ((util_is_directory(full_path) &&
+                         (!util_is_link(full_path)))) {
+                        bool descend = true;
+                        if (dir_callback != NULL)
+                            descend =
+                                dir_callback(root_path, dp->d_name,
+                                             current_depth, dir_callback_arg);
 
-  DIR * dirH = util_walk_opendir__( root_path );
-  if (dirH != NULL) {
-    struct dirent * dp;
-    do {
-      dp = readdir(dirH);
-      if (dp != NULL) {
-        if (dp->d_name[0] != '.') {
-          char * full_path    = util_alloc_filename(root_path , dp->d_name , NULL);
-
-          if ((util_is_directory( full_path ) && (!util_is_link(full_path)))) {
-            bool descend = true;
-            if (dir_callback != NULL)
-              descend = dir_callback( root_path , dp->d_name , current_depth , dir_callback_arg);
-
-            if (descend && util_file_exists(full_path)) /* The callback might have removed it. */
-              util_walk_directory__( full_path , depth_first , current_depth + 1 , file_callback, file_callback_arg , dir_callback , dir_callback_arg );
-          }
-          free( full_path );
-        }
-      }
-    } while (dp != NULL);
-    closedir( dirH );
-  }
+                        if (descend &&
+                            util_file_exists(
+                                full_path)) /* The callback might have removed it. */
+                            util_walk_directory__(
+                                full_path, depth_first, current_depth + 1,
+                                file_callback, file_callback_arg, dir_callback,
+                                dir_callback_arg);
+                    }
+                    free(full_path);
+                }
+            }
+        } while (dp != NULL);
+        closedir(dirH);
+    }
 }
 
+static void util_walk_directory__(const char *root_path, bool depth_first,
+                                  int current_depth,
+                                  walk_file_callback_ftype *file_callback,
+                                  void *file_callback_arg,
+                                  walk_dir_callback_ftype *dir_callback,
+                                  void *dir_callback_arg) {
 
-
-static void util_walk_directory__(const char               * root_path ,
-                                  bool                       depth_first ,
-                                  int                        current_depth  ,
-                                  walk_file_callback_ftype * file_callback ,
-                                  void                     * file_callback_arg ,
-                                  walk_dir_callback_ftype  * dir_callback ,
-                                  void                     * dir_callback_arg) {
-
-  if (depth_first) {
-    util_walk_descend__( root_path , depth_first , current_depth , file_callback , file_callback_arg , dir_callback , dir_callback_arg );
-    util_walk_file_callbacks__( root_path , current_depth , file_callback , file_callback_arg );
-  } else {
-    util_walk_file_callbacks__( root_path , current_depth , file_callback , file_callback_arg );
-    util_walk_descend__( root_path , depth_first , current_depth , file_callback , file_callback_arg , dir_callback , dir_callback_arg);
-  }
+    if (depth_first) {
+        util_walk_descend__(root_path, depth_first, current_depth,
+                            file_callback, file_callback_arg, dir_callback,
+                            dir_callback_arg);
+        util_walk_file_callbacks__(root_path, current_depth, file_callback,
+                                   file_callback_arg);
+    } else {
+        util_walk_file_callbacks__(root_path, current_depth, file_callback,
+                                   file_callback_arg);
+        util_walk_descend__(root_path, depth_first, current_depth,
+                            file_callback, file_callback_arg, dir_callback,
+                            dir_callback_arg);
+    }
 }
 
+void util_walk_directory(const char *root_path,
+                         walk_file_callback_ftype *file_callback,
+                         void *file_callback_arg,
+                         walk_dir_callback_ftype *dir_callback,
+                         void *dir_callback_arg) {
 
+    bool depth_first = false;
 
-void util_walk_directory(const char               * root_path ,
-                         walk_file_callback_ftype * file_callback ,
-                         void                     * file_callback_arg ,
-                         walk_dir_callback_ftype  * dir_callback ,
-                         void                     * dir_callback_arg) {
-
-  bool depth_first = false;
-
-  util_walk_directory__( root_path , depth_first , 0 , file_callback , file_callback_arg , dir_callback , dir_callback_arg);
-
+    util_walk_directory__(root_path, depth_first, 0, file_callback,
+                          file_callback_arg, dir_callback, dir_callback_arg);
 }
 
 /* End of recursive walk_directory implementation.               */
 /*****************************************************************/
-

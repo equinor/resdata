@@ -23,32 +23,29 @@
 
 #include <ert/ecl/ecl_grid.h>
 
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        fprintf(stderr, "%s: filename \n", argv[0]);
+        exit(1);
+    }
 
+    {
+        const char *grid_file = argv[1];
+        char *output_file = NULL;
+        ecl_grid_type *ecl_grid;
+        FILE *stream;
 
+        if (argc == 3) {
+            output_file = argv[2];
+            stream = util_mkdir_fopen(output_file, "wb");
+        } else
+            stream = stdout;
 
-int main(int argc, char ** argv) {
-  if (argc < 2) {
-    fprintf(stderr,"%s: filename \n",argv[0]);
-    exit(1);
-  }
+        ecl_grid = ecl_grid_alloc(grid_file);
+        ecl_grid_dump(ecl_grid, stream);
 
-  {
-    const char * grid_file = argv[1];
-    char * output_file = NULL;
-    ecl_grid_type * ecl_grid;
-    FILE * stream;
-
-    if (argc == 3) {
-      output_file = argv[2];
-      stream = util_mkdir_fopen( output_file , "wb");
-    } else
-      stream = stdout;
-    
-    ecl_grid = ecl_grid_alloc(grid_file);
-    ecl_grid_dump( ecl_grid , stream );
-    
-    if (output_file != NULL)
-      fclose( stream );
-    ecl_grid_free( ecl_grid );
-  }
+        if (output_file != NULL)
+            fclose(stream);
+        ecl_grid_free(ecl_grid);
+    }
 }

@@ -16,7 +16,6 @@
    for more details.
 */
 
-
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -24,7 +23,6 @@
 
 #include <ert/ecl/ecl_io_config.hpp>
 #include <ert/ecl/ecl_util.hpp>
-
 
 /**
    This file implements a pathetically small struct which is used to
@@ -41,112 +39,99 @@
    endian ness.
 */
 
+typedef enum { UNIFIED = 0, MULTIPLE = 1, UNIF_UNDEFINED = 2 } unified_type;
 
-typedef enum {  UNIFIED        = 0,
-                MULTIPLE       = 1,
-                UNIF_UNDEFINED = 2 } unified_type;
-
-typedef enum {  FORMATTED     = 0,
-                UNFORMATTED   = 1,
-                FMT_UNDEFINED = 2 } formatted_type;
-
+typedef enum {
+    FORMATTED = 0,
+    UNFORMATTED = 1,
+    FMT_UNDEFINED = 2
+} formatted_type;
 
 struct ecl_io_config_struct {
-  formatted_type     formatted;
-  unified_type       unified_restart;
-  unified_type       unified_summary;
+    formatted_type formatted;
+    unified_type unified_restart;
+    unified_type unified_summary;
 };
-
 
 /*****************************************************************/
 
-static ecl_io_config_type * ecl_io_config_alloc__() {
-  ecl_io_config_type * ecl_io_config = (ecl_io_config_type*)util_malloc(sizeof * ecl_io_config );
+static ecl_io_config_type *ecl_io_config_alloc__() {
+    ecl_io_config_type *ecl_io_config =
+        (ecl_io_config_type *)util_malloc(sizeof *ecl_io_config);
 
-  ecl_io_config->formatted       = FMT_UNDEFINED;
-  ecl_io_config->unified_restart = UNIF_UNDEFINED;
-  ecl_io_config->unified_summary = UNIF_UNDEFINED;
+    ecl_io_config->formatted = FMT_UNDEFINED;
+    ecl_io_config->unified_restart = UNIF_UNDEFINED;
+    ecl_io_config->unified_summary = UNIF_UNDEFINED;
 
-  return ecl_io_config;
+    return ecl_io_config;
 }
 
-
-
-void ecl_io_config_set_formatted(ecl_io_config_type * io_config, bool formatted) {
-  if (formatted)
-    io_config->formatted = FORMATTED;
-  else
-    io_config->formatted = UNFORMATTED;
+void ecl_io_config_set_formatted(ecl_io_config_type *io_config,
+                                 bool formatted) {
+    if (formatted)
+        io_config->formatted = FORMATTED;
+    else
+        io_config->formatted = UNFORMATTED;
 }
 
-
-
-void ecl_io_config_set_unified_restart(ecl_io_config_type * io_config, bool unified) {
-  if (unified)
-    io_config->unified_restart = UNIFIED;
-  else
-    io_config->unified_restart = MULTIPLE;
+void ecl_io_config_set_unified_restart(ecl_io_config_type *io_config,
+                                       bool unified) {
+    if (unified)
+        io_config->unified_restart = UNIFIED;
+    else
+        io_config->unified_restart = MULTIPLE;
 }
 
-
-void ecl_io_config_set_unified_summary(ecl_io_config_type * io_config, bool unified) {
-  if (unified)
-    io_config->unified_summary = UNIFIED;
-  else
-    io_config->unified_summary = MULTIPLE;
+void ecl_io_config_set_unified_summary(ecl_io_config_type *io_config,
+                                       bool unified) {
+    if (unified)
+        io_config->unified_summary = UNIFIED;
+    else
+        io_config->unified_summary = MULTIPLE;
 }
 
-
-bool ecl_io_config_get_formatted(ecl_io_config_type * io_config) {
-  if (io_config->formatted == FORMATTED)
-    return true;
-  else if (io_config->formatted == UNFORMATTED)
-    return false;
-  else {
-    util_abort("%s: formatted_state == undefined - sorry \n",__func__);
-    return false; /* Compiler shut up */
-  }
+bool ecl_io_config_get_formatted(ecl_io_config_type *io_config) {
+    if (io_config->formatted == FORMATTED)
+        return true;
+    else if (io_config->formatted == UNFORMATTED)
+        return false;
+    else {
+        util_abort("%s: formatted_state == undefined - sorry \n", __func__);
+        return false; /* Compiler shut up */
+    }
 }
 
-
-bool ecl_io_config_get_unified_summary(ecl_io_config_type * io_config) {
-  if (io_config->unified_summary == UNIFIED)
-    return true;
-  else if (io_config->unified_summary == MULTIPLE)
-    return false;
-  else {
-    util_abort("%s: unified_state == undefined - sorry \n",__func__);
-    return false; /* Compiler shut up */
-  }
+bool ecl_io_config_get_unified_summary(ecl_io_config_type *io_config) {
+    if (io_config->unified_summary == UNIFIED)
+        return true;
+    else if (io_config->unified_summary == MULTIPLE)
+        return false;
+    else {
+        util_abort("%s: unified_state == undefined - sorry \n", __func__);
+        return false; /* Compiler shut up */
+    }
 }
 
-bool ecl_io_config_get_unified_restart(ecl_io_config_type * io_config) {
-  if (io_config->unified_restart == UNIFIED)
-    return true;
-  else if (io_config->unified_restart == MULTIPLE)
-    return false;
-  else {
-    util_abort("%s: formatted_state == undefined - sorry \n",__func__);
-    return false; /* Compiler shut up */
-  }
+bool ecl_io_config_get_unified_restart(ecl_io_config_type *io_config) {
+    if (io_config->unified_restart == UNIFIED)
+        return true;
+    else if (io_config->unified_restart == MULTIPLE)
+        return false;
+    else {
+        util_abort("%s: formatted_state == undefined - sorry \n", __func__);
+        return false; /* Compiler shut up */
+    }
 }
 
+ecl_io_config_type *ecl_io_config_alloc(bool formatted, bool unified_summary,
+                                        bool unified_restart) {
+    ecl_io_config_type *ecl_io_config = ecl_io_config_alloc__();
 
+    ecl_io_config_set_formatted(ecl_io_config, formatted);
+    ecl_io_config_set_unified_restart(ecl_io_config, unified_restart);
+    ecl_io_config_set_unified_summary(ecl_io_config, unified_summary);
 
-ecl_io_config_type * ecl_io_config_alloc(bool formatted ,  bool unified_summary , bool unified_restart) {
-  ecl_io_config_type * ecl_io_config = ecl_io_config_alloc__();
-
-  ecl_io_config_set_formatted( ecl_io_config , formatted );
-  ecl_io_config_set_unified_restart( ecl_io_config , unified_restart );
-  ecl_io_config_set_unified_summary( ecl_io_config , unified_summary );
-
-  return ecl_io_config;
+    return ecl_io_config;
 }
 
-
-
-
-void ecl_io_config_free(ecl_io_config_type * io_config) {
-  free(io_config);
-}
-
+void ecl_io_config_free(ecl_io_config_type *io_config) { free(io_config); }

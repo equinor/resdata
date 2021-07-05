@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/hash_sll.hpp>
-
-

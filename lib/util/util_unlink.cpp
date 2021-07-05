@@ -24,17 +24,13 @@
 
 #include <io.h>
 
-int util_unlink(const char * filename) {
- return _unlink(filename);
-}
+int util_unlink(const char *filename) { return _unlink(filename); }
 
 #elif defined(HAVE_POSIX_UNLINK)
 
 #include <unistd.h>
 
-int util_unlink(const char * filename) {
- return unlink(filename);
-}
+int util_unlink(const char *filename) { return unlink(filename); }
 
 #else
 

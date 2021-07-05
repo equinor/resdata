@@ -28,146 +28,154 @@
 #include <ert/util/test_work_area.hpp>
 #include <ert/ecl/ecl_rft_node.hpp>
 
-
-void test_rft_read_write(const char * rft_file){
-    ecl_rft_file_type * rft = ecl_rft_file_alloc( rft_file );
-    ecl_rft_node_type  ** nodes =(ecl_rft_node_type  **) malloc(sizeof(ecl_rft_node_type *) * 3);
+void test_rft_read_write(const char *rft_file) {
+    ecl_rft_file_type *rft = ecl_rft_file_alloc(rft_file);
+    ecl_rft_node_type **nodes =
+        (ecl_rft_node_type **)malloc(sizeof(ecl_rft_node_type *) * 3);
     int size = ecl_rft_file_get_size(rft);
-    for(int i =0;i<size;i++){
-         ecl_rft_node_type * rft_node = ecl_rft_file_iget_node(rft, i);
-        nodes[i] =rft_node;
+    for (int i = 0; i < size; i++) {
+        ecl_rft_node_type *rft_node = ecl_rft_file_iget_node(rft, i);
+        nodes[i] = rft_node;
     }
-    ecl_rft_node_type * old_node = ecl_rft_file_iget_node(rft, 0);
-    ecl_rft_node_type * new_node = ecl_rft_node_alloc_new("DUMMY", "R", ecl_rft_node_get_date(old_node), ecl_rft_node_get_days(old_node));
-    nodes[2]=new_node;
+    ecl_rft_node_type *old_node = ecl_rft_file_iget_node(rft, 0);
+    ecl_rft_node_type *new_node =
+        ecl_rft_node_alloc_new("DUMMY", "R", ecl_rft_node_get_date(old_node),
+                               ecl_rft_node_get_days(old_node));
+    nodes[2] = new_node;
     ecl::util::TestArea ta("rft");
 
-    ecl_rft_file_update("eclipse.rft", nodes,3, ECL_METRIC_UNITS);
+    ecl_rft_file_update("eclipse.rft", nodes, 3, ECL_METRIC_UNITS);
     free(nodes);
 }
 
 // Hardcoded GURBAT values
-void test_rft( const char * rft_file ) {
-  ecl_rft_file_type * rft = ecl_rft_file_alloc( rft_file );
-  ecl_rft_node_type * rft_node = ecl_rft_file_iget_node( rft , 0 );
+void test_rft(const char *rft_file) {
+    ecl_rft_file_type *rft = ecl_rft_file_alloc(rft_file);
+    ecl_rft_node_type *rft_node = ecl_rft_file_iget_node(rft, 0);
 
-  test_assert_true( ecl_rft_node_is_RFT( rft_node ));
-  test_assert_int_equal( 14 , ecl_rft_node_get_size( rft_node ));
-  test_assert_false( ecl_rft_node_is_MSW( rft_node ));
+    test_assert_true(ecl_rft_node_is_RFT(rft_node));
+    test_assert_int_equal(14, ecl_rft_node_get_size(rft_node));
+    test_assert_false(ecl_rft_node_is_MSW(rft_node));
 
-  test_assert_double_equal( 260.6111   , ecl_rft_node_iget_pressure( rft_node , 0 ));
-  test_assert_double_equal( 0.0581993  , ecl_rft_node_iget_soil( rft_node , 0 ));
-  test_assert_double_equal( 0.9405648  , ecl_rft_node_iget_swat( rft_node , 0 ));
-  test_assert_double_equal( 0.00123579  , ecl_rft_node_iget_sgas( rft_node , 0 ));
+    test_assert_double_equal(260.6111, ecl_rft_node_iget_pressure(rft_node, 0));
+    test_assert_double_equal(0.0581993, ecl_rft_node_iget_soil(rft_node, 0));
+    test_assert_double_equal(0.9405648, ecl_rft_node_iget_swat(rft_node, 0));
+    test_assert_double_equal(0.00123579, ecl_rft_node_iget_sgas(rft_node, 0));
 
-  {
-    int i,j,k;
+    {
+        int i, j, k;
 
-    ecl_rft_node_iget_ijk( rft_node , 0 , &i , &j , &k );
-    test_assert_int_equal( 32 , i );
-    test_assert_int_equal( 53 , j );
-    test_assert_int_equal( 0  , k );
+        ecl_rft_node_iget_ijk(rft_node, 0, &i, &j, &k);
+        test_assert_int_equal(32, i);
+        test_assert_int_equal(53, j);
+        test_assert_int_equal(0, k);
 
-    ecl_rft_node_iget_ijk( rft_node , 13 , &i , &j , &k );
-    test_assert_int_equal( 32 , i );
-    test_assert_int_equal( 54 , j );
-    test_assert_int_equal( 12 , k );
+        ecl_rft_node_iget_ijk(rft_node, 13, &i, &j, &k);
+        test_assert_int_equal(32, i);
+        test_assert_int_equal(54, j);
+        test_assert_int_equal(12, k);
 
-    for (i=0; i < ecl_rft_node_get_size( rft_node );  i++) {
-      const ecl_rft_cell_type * cell1 = ecl_rft_node_iget_cell( rft_node , i );
-      const ecl_rft_cell_type * cell2 = ecl_rft_node_iget_cell_sorted( rft_node , i );
+        for (i = 0; i < ecl_rft_node_get_size(rft_node); i++) {
+            const ecl_rft_cell_type *cell1 =
+                ecl_rft_node_iget_cell(rft_node, i);
+            const ecl_rft_cell_type *cell2 =
+                ecl_rft_node_iget_cell_sorted(rft_node, i);
 
-      test_assert_ptr_equal( cell1 , cell2 );
+            test_assert_ptr_equal(cell1, cell2);
+        }
     }
-  }
-  ecl_rft_file_free( rft );
+    ecl_rft_file_free(rft);
 }
 
+void test_plt_msw(const char *plt_file) {
+    ecl_rft_file_type *plt = ecl_rft_file_alloc(plt_file);
+    ecl_rft_node_type *plt_node = ecl_rft_file_iget_node(plt, 11);
 
-void test_plt_msw( const char * plt_file ) {
-  ecl_rft_file_type * plt = ecl_rft_file_alloc( plt_file );
-  ecl_rft_node_type * plt_node = ecl_rft_file_iget_node( plt , 11 );
+    test_assert_true(ecl_rft_node_is_PLT(plt_node));
+    test_assert_true(ecl_rft_node_is_MSW(plt_node));
+    test_assert_int_equal(22, ecl_rft_node_get_size(plt_node));
+    {
+        int i;
+        for (i = 1; i < ecl_rft_node_get_size(plt_node); i++) {
+            const ecl_rft_cell_type *prev_cell =
+                ecl_rft_node_iget_cell(plt_node, i - 1);
+            const ecl_rft_cell_type *this_cell =
+                ecl_rft_node_iget_cell(plt_node, i);
 
-  test_assert_true( ecl_rft_node_is_PLT( plt_node ));
-  test_assert_true( ecl_rft_node_is_MSW( plt_node ));
-  test_assert_int_equal( 22 , ecl_rft_node_get_size( plt_node ));
-  {
-    int i;
-    for (i=1; i < ecl_rft_node_get_size( plt_node ); i++) {
-      const ecl_rft_cell_type * prev_cell = ecl_rft_node_iget_cell( plt_node , i - 1);
-      const ecl_rft_cell_type * this_cell = ecl_rft_node_iget_cell( plt_node , i );
-
-      test_assert_true( ecl_rft_cell_get_connection_start( prev_cell ) < ecl_rft_cell_get_connection_start( this_cell ));
-      test_assert_true( ecl_rft_cell_get_connection_end( prev_cell ) < ecl_rft_cell_get_connection_end( this_cell ));
+            test_assert_true(ecl_rft_cell_get_connection_start(prev_cell) <
+                             ecl_rft_cell_get_connection_start(this_cell));
+            test_assert_true(ecl_rft_cell_get_connection_end(prev_cell) <
+                             ecl_rft_cell_get_connection_end(this_cell));
+        }
     }
-  }
 
-  ecl_rft_file_free( plt );
+    ecl_rft_file_free(plt);
 }
-
 
 // Hardcoded values from a test case with a PLT.
-void test_plt( const char * plt_file ) {
-  ecl_rft_file_type * plt = ecl_rft_file_alloc( plt_file );
-  ecl_rft_node_type * plt_node = ecl_rft_file_iget_node( plt , 11 );
+void test_plt(const char *plt_file) {
+    ecl_rft_file_type *plt = ecl_rft_file_alloc(plt_file);
+    ecl_rft_node_type *plt_node = ecl_rft_file_iget_node(plt, 11);
 
-  test_assert_true( ecl_rft_node_is_PLT( plt_node ));
-  test_assert_false( ecl_rft_node_is_MSW( plt_node ));
-  test_assert_int_equal( 22 , ecl_rft_node_get_size( plt_node ));
+    test_assert_true(ecl_rft_node_is_PLT(plt_node));
+    test_assert_false(ecl_rft_node_is_MSW(plt_node));
+    test_assert_int_equal(22, ecl_rft_node_get_size(plt_node));
 
-  test_assert_double_equal( 244.284  , ecl_rft_node_iget_pressure( plt_node , 0 ));
-  test_assert_double_equal( 167.473  , ecl_rft_node_iget_orat( plt_node , 0 ));
-  test_assert_double_equal( 41682.2  , ecl_rft_node_iget_grat( plt_node , 0 ));
-  test_assert_double_equal( 0.958927 , ecl_rft_node_iget_wrat( plt_node , 0 ));
+    test_assert_double_equal(244.284, ecl_rft_node_iget_pressure(plt_node, 0));
+    test_assert_double_equal(167.473, ecl_rft_node_iget_orat(plt_node, 0));
+    test_assert_double_equal(41682.2, ecl_rft_node_iget_grat(plt_node, 0));
+    test_assert_double_equal(0.958927, ecl_rft_node_iget_wrat(plt_node, 0));
 
-  {
-    int i,j,k;
+    {
+        int i, j, k;
 
-    ecl_rft_node_iget_ijk( plt_node , 0 , &i , &j , &k );
-    test_assert_int_equal( 39 , i );
-    test_assert_int_equal( 33 , j );
-    test_assert_int_equal( 16 , k );
+        ecl_rft_node_iget_ijk(plt_node, 0, &i, &j, &k);
+        test_assert_int_equal(39, i);
+        test_assert_int_equal(33, j);
+        test_assert_int_equal(16, k);
 
-    ecl_rft_node_iget_ijk( plt_node , 21 , &i , &j , &k );
-    test_assert_int_equal( 44 , i );
-    test_assert_int_equal( 34 , j );
-    test_assert_int_equal(  7 , k );
+        ecl_rft_node_iget_ijk(plt_node, 21, &i, &j, &k);
+        test_assert_int_equal(44, i);
+        test_assert_int_equal(34, j);
+        test_assert_int_equal(7, k);
 
-    for (i=0; i < ecl_rft_node_get_size( plt_node );  i++) {
-      const ecl_rft_cell_type * cell1 = ecl_rft_node_iget_cell( plt_node , i );
-      const ecl_rft_cell_type * cell2 = ecl_rft_node_iget_cell_sorted( plt_node , i );
+        for (i = 0; i < ecl_rft_node_get_size(plt_node); i++) {
+            const ecl_rft_cell_type *cell1 =
+                ecl_rft_node_iget_cell(plt_node, i);
+            const ecl_rft_cell_type *cell2 =
+                ecl_rft_node_iget_cell_sorted(plt_node, i);
 
-      test_assert_ptr_equal( cell1 , cell2 );
+            test_assert_ptr_equal(cell1, cell2);
+        }
     }
-  }
 
-  ecl_rft_file_free( plt );
+    ecl_rft_file_free(plt);
 }
 
-
-void test_simple_load_rft(const char * filename) {
-  ecl_rft_file_type * rft_file = ecl_rft_file_alloc_case(filename);
-  ecl_rft_file_free( rft_file );
+void test_simple_load_rft(const char *filename) {
+    ecl_rft_file_type *rft_file = ecl_rft_file_alloc_case(filename);
+    ecl_rft_file_free(rft_file);
 }
 
+int main(int argc, char **argv) {
+    const char *rft_file = argv[1];
+    const char *mode_string = argv[2];
+    util_install_signals();
 
-int main( int argc , char ** argv) {
-  const char * rft_file = argv[1];
-  const char * mode_string = argv[2];
-  util_install_signals();
+    if (strcmp(mode_string, "RFT") == 0)
+        test_rft(rft_file);
+    else if (strcmp(mode_string, "RFT_RW") == 0)
+        test_rft_read_write(rft_file);
+    else if (strcmp(mode_string, "PLT") == 0)
+        test_plt(rft_file);
+    else if (strcmp(mode_string, "MSW-PLT") == 0)
+        test_plt_msw(rft_file);
+    else if (strcmp(mode_string, "SIMPLE") == 0)
+        test_simple_load_rft(rft_file);
+    else
+        test_error_exit(
+            "Second argument:%s not recognized. Valid values are: RFT and PLT",
+            mode_string);
 
-  if (strcmp( mode_string , "RFT") == 0)
-    test_rft( rft_file );
-  else if (strcmp( mode_string , "RFT_RW") == 0)
-      test_rft_read_write(rft_file);
-  else if (strcmp( mode_string , "PLT") == 0)
-    test_plt( rft_file );
-  else if (strcmp( mode_string , "MSW-PLT") == 0)
-    test_plt_msw( rft_file );
-  else if (strcmp( mode_string , "SIMPLE") == 0)
-    test_simple_load_rft(rft_file);
-  else
-    test_error_exit("Second argument:%s not recognized. Valid values are: RFT and PLT" , mode_string);
-
-  exit(0);
+    exit(0);
 }

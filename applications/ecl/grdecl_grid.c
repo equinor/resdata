@@ -25,25 +25,29 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw_magic.h>
 
+int main(int argc, char **argv) {
+    FILE *stream = util_fopen(argv[1], "r");
+    ecl_kw_type *gridhead_kw = ecl_kw_fscanf_alloc_grdecl_dynamic__(
+        stream, SPECGRID_KW, false, ECL_INT);
+    ecl_kw_type *zcorn_kw =
+        ecl_kw_fscanf_alloc_grdecl_dynamic(stream, ZCORN_KW, ECL_FLOAT);
+    ecl_kw_type *coord_kw =
+        ecl_kw_fscanf_alloc_grdecl_dynamic(stream, COORD_KW, ECL_FLOAT);
+    ecl_kw_type *actnum_kw =
+        ecl_kw_fscanf_alloc_grdecl_dynamic(stream, ACTNUM_KW, ECL_INT);
 
-int main(int argc , char ** argv) {
-  FILE * stream = util_fopen( argv[1] , "r");
-  ecl_kw_type * gridhead_kw = ecl_kw_fscanf_alloc_grdecl_dynamic__( stream , SPECGRID_KW , false , ECL_INT );
-  ecl_kw_type * zcorn_kw    = ecl_kw_fscanf_alloc_grdecl_dynamic( stream , ZCORN_KW  , ECL_FLOAT );
-  ecl_kw_type * coord_kw    = ecl_kw_fscanf_alloc_grdecl_dynamic( stream , COORD_KW  , ECL_FLOAT );
-  ecl_kw_type * actnum_kw   = ecl_kw_fscanf_alloc_grdecl_dynamic( stream , ACTNUM_KW , ECL_INT );
-  
-  {
-    int nx = ecl_kw_iget_int( gridhead_kw , SPECGRID_NX_INDEX );
-    int ny = ecl_kw_iget_int( gridhead_kw , SPECGRID_NY_INDEX );
-    int nz = ecl_kw_iget_int( gridhead_kw , SPECGRID_NZ_INDEX );
-    ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_kw( nx , ny , nz, zcorn_kw, coord_kw , actnum_kw , NULL );
-    /* .... */
-    ecl_grid_free( ecl_grid );
-  }
-  ecl_kw_free( gridhead_kw );
-  ecl_kw_free( zcorn_kw );
-  ecl_kw_free( actnum_kw );
-  ecl_kw_free( coord_kw );
-  fclose( stream );
+    {
+        int nx = ecl_kw_iget_int(gridhead_kw, SPECGRID_NX_INDEX);
+        int ny = ecl_kw_iget_int(gridhead_kw, SPECGRID_NY_INDEX);
+        int nz = ecl_kw_iget_int(gridhead_kw, SPECGRID_NZ_INDEX);
+        ecl_grid_type *ecl_grid = ecl_grid_alloc_GRDECL_kw(
+            nx, ny, nz, zcorn_kw, coord_kw, actnum_kw, NULL);
+        /* .... */
+        ecl_grid_free(ecl_grid);
+    }
+    ecl_kw_free(gridhead_kw);
+    ecl_kw_free(zcorn_kw);
+    ecl_kw_free(actnum_kw);
+    ecl_kw_free(coord_kw);
+    fclose(stream);
 }

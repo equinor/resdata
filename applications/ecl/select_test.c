@@ -24,18 +24,15 @@
 
 #include <ert/ecl/ecl_kw.h>
 
+int main(int argc, char **argv) {
+    const char *path = argv[1];
+    const char *base = argv[2];
+    stringlist_type *names = stringlist_alloc_new();
 
-int main(int argc , char ** argv) {
-  const char * path = argv[1];
-  const char * base = argv[2];
-  stringlist_type * names = stringlist_alloc_new( );
-
-  ecl_util_select_filelist( path , base , ECL_OTHER_FILE , false , names );
-  {
-    int i;
-    for (i=0; i < stringlist_get_size( names ); i++) 
-      printf("list[%02d] = %s \n",i , stringlist_iget( names , i ));
-  }
-  
-    
+    ecl_util_select_filelist(path, base, ECL_OTHER_FILE, false, names);
+    {
+        int i;
+        for (i = 0; i < stringlist_get_size(names); i++)
+            printf("list[%02d] = %s \n", i, stringlist_iget(names, i));
+    }
 }

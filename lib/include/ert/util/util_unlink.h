@@ -16,19 +16,16 @@
    for more details.
 */
 
-
 #ifndef ERT_UTIL_UNLINK_H
 #define ERT_UTIL_UNLINK_H
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-  int util_unlink(const char * filename);
+int util_unlink(const char *filename);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-

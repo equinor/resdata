@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/layer.hpp>
-
-

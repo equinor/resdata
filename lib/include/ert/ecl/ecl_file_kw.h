@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/ecl_file_kw.hpp>
-
-

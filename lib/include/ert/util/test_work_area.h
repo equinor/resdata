@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/test_work_area.hpp>
-
-

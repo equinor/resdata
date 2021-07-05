@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/type_vector_functions.hpp>
-
-

@@ -5,5 +5,3 @@
 */
 
 #include <ert/geometry/geo_polygon.hpp>
-
-

@@ -16,7 +16,6 @@
    for more details.
 */
 
-
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -30,86 +29,86 @@
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_polygon_collection.hpp>
 
-
-
 #define GEO_POLYGON_COLLECTION_TYPE_ID 95721327
 
 struct geo_polygon_collection_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  vector_type * polygon_list;
-  std::map<std::string,geo_polygon_type * > polygon_map;
+    UTIL_TYPE_ID_DECLARATION;
+    vector_type *polygon_list;
+    std::map<std::string, geo_polygon_type *> polygon_map;
 };
 
+UTIL_IS_INSTANCE_FUNCTION(geo_polygon_collection,
+                          GEO_POLYGON_COLLECTION_TYPE_ID)
 
-UTIL_IS_INSTANCE_FUNCTION( geo_polygon_collection , GEO_POLYGON_COLLECTION_TYPE_ID)
-
-geo_polygon_collection_type * geo_polygon_collection_alloc( ) {
-   geo_polygon_collection_type * polygons = new geo_polygon_collection_type();
-   UTIL_TYPE_ID_INIT( polygons , GEO_POLYGON_COLLECTION_TYPE_ID );
-   polygons->polygon_list = vector_alloc_new();
-   return polygons;
+geo_polygon_collection_type *geo_polygon_collection_alloc() {
+    geo_polygon_collection_type *polygons = new geo_polygon_collection_type();
+    UTIL_TYPE_ID_INIT(polygons, GEO_POLYGON_COLLECTION_TYPE_ID);
+    polygons->polygon_list = vector_alloc_new();
+    return polygons;
 }
 
-
-int geo_polygon_collection_size( const geo_polygon_collection_type * polygons ) {
-   return vector_get_size( polygons->polygon_list );
+int geo_polygon_collection_size(const geo_polygon_collection_type *polygons) {
+    return vector_get_size(polygons->polygon_list);
 }
 
+geo_polygon_type *
+geo_polygon_collection_create_polygon(geo_polygon_collection_type *polygons,
+                                      const char *name) {
+    geo_polygon_type *polygon = NULL;
+    bool create_polygon = true;
 
-geo_polygon_type * geo_polygon_collection_create_polygon( geo_polygon_collection_type * polygons , const char * name ) {
-  geo_polygon_type * polygon = NULL;
-  bool create_polygon = true;
+    if (name && geo_polygon_collection_has_polygon(polygons, name))
+        create_polygon = false;
 
-  if (name && geo_polygon_collection_has_polygon( polygons , name ))
-    create_polygon = false;
+    if (create_polygon) {
+        polygon = geo_polygon_alloc(name);
+        geo_polygon_collection_add_polygon(polygons, polygon, true);
+    }
 
-  if (create_polygon) {
-    polygon = geo_polygon_alloc( name );
-    geo_polygon_collection_add_polygon( polygons , polygon , true );
-  }
-
-  return polygon;
+    return polygon;
 }
 
+bool geo_polygon_collection_add_polygon(geo_polygon_collection_type *polygons,
+                                        geo_polygon_type *polygon,
+                                        bool polygon_owner) {
+    const char *name = geo_polygon_get_name(polygon);
+    if (geo_polygon_collection_has_polygon(polygons, name))
+        return false;
+    else {
+        if (polygon_owner)
+            vector_append_owned_ref(polygons->polygon_list, polygon,
+                                    geo_polygon_free__);
+        else
+            vector_append_ref(polygons->polygon_list, polygon);
 
-bool geo_polygon_collection_add_polygon( geo_polygon_collection_type * polygons , geo_polygon_type * polygon , bool polygon_owner ) {
-  const char * name = geo_polygon_get_name( polygon );
-  if (geo_polygon_collection_has_polygon( polygons , name ))
-    return false;
-  else {
-    if (polygon_owner)
-      vector_append_owned_ref( polygons->polygon_list , polygon , geo_polygon_free__);
-    else
-      vector_append_ref( polygons->polygon_list , polygon );
+        if (name)
+            polygons->polygon_map[name] = polygon;
 
+        return true;
+    }
+}
+
+bool geo_polygon_collection_has_polygon(
+    const geo_polygon_collection_type *polygons, const char *name) {
     if (name)
-      polygons->polygon_map[name] = polygon;
-
-    return true;
-  }
+        return (polygons->polygon_map.count(name) > 0);
+    else
+        return false;
 }
 
-
-bool geo_polygon_collection_has_polygon( const geo_polygon_collection_type * polygons , const char * name) {
-  if (name)
-    return (polygons->polygon_map.count(name) > 0);
-  else
-    return false;
+void geo_polygon_collection_free(geo_polygon_collection_type *polygons) {
+    vector_free(polygons->polygon_list);
+    delete polygons;
 }
 
-
-void geo_polygon_collection_free( geo_polygon_collection_type * polygons ) {
-  vector_free( polygons->polygon_list );
-  delete polygons;
+geo_polygon_type *
+geo_polygon_collection_iget_polygon(const geo_polygon_collection_type *polygons,
+                                    int index) {
+    return (geo_polygon_type *)vector_iget(polygons->polygon_list, index);
 }
 
-
-
-geo_polygon_type * geo_polygon_collection_iget_polygon(const geo_polygon_collection_type * polygons , int index) {
-  return (geo_polygon_type*)vector_iget( polygons->polygon_list , index );
-}
-
-
-geo_polygon_type * geo_polygon_collection_get_polygon(const geo_polygon_collection_type * polygons , const char * polygon_name) {
-  return polygons->polygon_map.at( polygon_name );
+geo_polygon_type *
+geo_polygon_collection_get_polygon(const geo_polygon_collection_type *polygons,
+                                   const char *polygon_name) {
+    return polygons->polygon_map.at(polygon_name);
 }

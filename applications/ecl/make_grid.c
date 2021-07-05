@@ -23,47 +23,46 @@
 
 #include <ert/ecl/ecl_grid.h>
 
-
-
-
-int main(int argc, char ** argv) {
-  if (argc != 5) {
-    fprintf(stderr,"%s: basename nx ny nz \n",argv[0]);
-    exit(1);
-  }
-
-  {
-    const char    * base_input = argv[1];
-    int             nx         = atoi(argv[2]);
-    int             ny         = atoi(argv[3]);
-    int             nz         = atoi(argv[4]);
-
-    char * path , *basename;
-    ecl_grid_type * ecl_grid;
-    
-    util_alloc_file_components( base_input , &path , &basename , NULL );
-
-    ecl_grid = ecl_grid_alloc_rectangular(nx,ny,nz , 1 ,1 ,1 , NULL );
-    {
-      char * EGRID_file = util_alloc_filename( path , basename , "EGRID");
-
-      printf("Writing file: %s ...",EGRID_file); fflush(stdout);
-      ecl_grid_fwrite_EGRID2( ecl_grid , EGRID_file, ECL_METRIC_UNITS);
-      free( EGRID_file );
+int main(int argc, char **argv) {
+    if (argc != 5) {
+        fprintf(stderr, "%s: basename nx ny nz \n", argv[0]);
+        exit(1);
     }
 
     {
-      char * grdecl_file = util_alloc_filename( path , basename , "grdecl");
-      FILE * stream = util_fopen( grdecl_file , "w");
-      printf("\nWriting file: %s ...",grdecl_file); fflush(stdout);
-      ecl_grid_fprintf_grdecl( ecl_grid , stream );
-      fclose( stream );
-      free( grdecl_file );
-      printf("\n");
+        const char *base_input = argv[1];
+        int nx = atoi(argv[2]);
+        int ny = atoi(argv[3]);
+        int nz = atoi(argv[4]);
+
+        char *path, *basename;
+        ecl_grid_type *ecl_grid;
+
+        util_alloc_file_components(base_input, &path, &basename, NULL);
+
+        ecl_grid = ecl_grid_alloc_rectangular(nx, ny, nz, 1, 1, 1, NULL);
+        {
+            char *EGRID_file = util_alloc_filename(path, basename, "EGRID");
+
+            printf("Writing file: %s ...", EGRID_file);
+            fflush(stdout);
+            ecl_grid_fwrite_EGRID2(ecl_grid, EGRID_file, ECL_METRIC_UNITS);
+            free(EGRID_file);
+        }
+
+        {
+            char *grdecl_file = util_alloc_filename(path, basename, "grdecl");
+            FILE *stream = util_fopen(grdecl_file, "w");
+            printf("\nWriting file: %s ...", grdecl_file);
+            fflush(stdout);
+            ecl_grid_fprintf_grdecl(ecl_grid, stream);
+            fclose(stream);
+            free(grdecl_file);
+            printf("\n");
+        }
+
+        free(basename);
+        free(path);
+        ecl_grid_free(ecl_grid);
     }
-    
-    free( basename );
-    free( path );
-    ecl_grid_free( ecl_grid );
-  }
 }

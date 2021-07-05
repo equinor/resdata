@@ -16,7 +16,6 @@
    for more details.
 */
 
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
@@ -28,113 +27,105 @@
 #include <ert/geometry/geo_util.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 
-
-
 #define GEO_POLYGON_TYPE_ID 9951322
 
 struct geo_polygon_struct {
-  UTIL_TYPE_ID_DECLARATION;
-  double_vector_type * xcoord;
-  double_vector_type * ycoord;
-  char * name;
+    UTIL_TYPE_ID_DECLARATION;
+    double_vector_type *xcoord;
+    double_vector_type *ycoord;
+    char *name;
 };
 
+static UTIL_SAFE_CAST_FUNCTION(geo_polygon, GEO_POLYGON_TYPE_ID);
+UTIL_IS_INSTANCE_FUNCTION(geo_polygon, GEO_POLYGON_TYPE_ID);
 
-static UTIL_SAFE_CAST_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID );
-UTIL_IS_INSTANCE_FUNCTION( geo_polygon , GEO_POLYGON_TYPE_ID);
+geo_polygon_type *geo_polygon_alloc(const char *name) {
+    geo_polygon_type *polygon =
+        (geo_polygon_type *)util_malloc(sizeof *polygon);
 
-
-geo_polygon_type * geo_polygon_alloc(const char * name) {
-  geo_polygon_type * polygon = (geo_polygon_type*)util_malloc( sizeof * polygon );
-
-  UTIL_TYPE_ID_INIT( polygon , GEO_POLYGON_TYPE_ID );
-  polygon->xcoord = double_vector_alloc( 0 , 0 );
-  polygon->ycoord = double_vector_alloc( 0 , 0 );
-  polygon->name   = util_alloc_string_copy( name );
-  return polygon;
+    UTIL_TYPE_ID_INIT(polygon, GEO_POLYGON_TYPE_ID);
+    polygon->xcoord = double_vector_alloc(0, 0);
+    polygon->ycoord = double_vector_alloc(0, 0);
+    polygon->name = util_alloc_string_copy(name);
+    return polygon;
 }
 
-void geo_polygon_free( geo_polygon_type * polygon ) {
-  double_vector_free( polygon->xcoord );
-  double_vector_free( polygon->ycoord );
-  free( polygon->name );
-  free( polygon );
+void geo_polygon_free(geo_polygon_type *polygon) {
+    double_vector_free(polygon->xcoord);
+    double_vector_free(polygon->ycoord);
+    free(polygon->name);
+    free(polygon);
 }
 
-
-
-void geo_polygon_free__( void * arg ) {
-  geo_polygon_type * polygon = geo_polygon_safe_cast( arg );
-  geo_polygon_free( polygon );
+void geo_polygon_free__(void *arg) {
+    geo_polygon_type *polygon = geo_polygon_safe_cast(arg);
+    geo_polygon_free(polygon);
 }
 
-
-void geo_polygon_add_point( geo_polygon_type * polygon , double x , double y) {
-  double_vector_append( polygon->xcoord , x );
-  double_vector_append( polygon->ycoord , y );
+void geo_polygon_add_point(geo_polygon_type *polygon, double x, double y) {
+    double_vector_append(polygon->xcoord, x);
+    double_vector_append(polygon->ycoord, y);
 }
 
-void geo_polygon_add_point_front( geo_polygon_type * polygon , double x , double y) {
-  double_vector_insert( polygon->xcoord , 0 , x );
-  double_vector_insert( polygon->ycoord , 0 , y );
+void geo_polygon_add_point_front(geo_polygon_type *polygon, double x,
+                                 double y) {
+    double_vector_insert(polygon->xcoord, 0, x);
+    double_vector_insert(polygon->ycoord, 0, y);
 }
 
-
-void geo_polygon_close( geo_polygon_type * polygon) {
-  double x = double_vector_get_first( polygon->xcoord );
-  double y = double_vector_get_first( polygon->ycoord );
-  geo_polygon_add_point( polygon , x , y );
+void geo_polygon_close(geo_polygon_type *polygon) {
+    double x = double_vector_get_first(polygon->xcoord);
+    double y = double_vector_get_first(polygon->ycoord);
+    geo_polygon_add_point(polygon, x, y);
 }
 
-
-
-
-bool geo_polygon_contains_point__( const geo_polygon_type * polygon , double x , double y, bool force_edge_inside) {
-  return geo_util_inside_polygon__( double_vector_get_const_ptr( polygon->xcoord ) ,
-                                    double_vector_get_const_ptr( polygon->ycoord ) ,
-                                    double_vector_size( polygon->xcoord ) ,
-                                    x , y , force_edge_inside);
+bool geo_polygon_contains_point__(const geo_polygon_type *polygon, double x,
+                                  double y, bool force_edge_inside) {
+    return geo_util_inside_polygon__(
+        double_vector_get_const_ptr(polygon->xcoord),
+        double_vector_get_const_ptr(polygon->ycoord),
+        double_vector_size(polygon->xcoord), x, y, force_edge_inside);
 }
 
-
-bool geo_polygon_contains_point( const geo_polygon_type * polygon , double x , double y) {
-  return geo_polygon_contains_point__(polygon , x, y , false );
+bool geo_polygon_contains_point(const geo_polygon_type *polygon, double x,
+                                double y) {
+    return geo_polygon_contains_point__(polygon, x, y, false);
 }
 
+static geo_polygon_type *geo_polygon_fload_alloc_xyz(const char *filename,
+                                                     bool irap_format) {
+    bool stop_on_999 = irap_format;
+    bool skip_last_point = irap_format;
 
+    geo_polygon_type *polygon = geo_polygon_alloc(filename);
+    {
+        FILE *stream = util_fopen(filename, "r");
+        double x, y, z;
+        while (true) {
+            if (fscanf(stream, "%lg %lg %lg", &x, &y, &z) == 3) {
+                if (stop_on_999 && (x == 999) && (y == 999) && (z == 999))
+                    break;
 
-static geo_polygon_type * geo_polygon_fload_alloc_xyz( const char * filename , bool irap_format) {
-  bool stop_on_999 = irap_format;
-  bool skip_last_point = irap_format;
+                geo_polygon_add_point(polygon, x, y);
+            } else
+                break;
+        }
 
-  geo_polygon_type * polygon = geo_polygon_alloc( filename );
-  {
-    FILE * stream = util_fopen( filename , "r");
-    double x , y , z;
-    while (true) {
-      if (fscanf(stream , "%lg %lg %lg" , &x, &y , &z) == 3) {
-        if (stop_on_999 && (x == 999) && (y == 999) && (z == 999))
-          break;
+        fclose(stream);
 
-        geo_polygon_add_point( polygon , x , y );
-      } else
-        break;
+        if ((double_vector_size(polygon->xcoord) > 1) && (skip_last_point)) {
+            if ((double_vector_get_last(polygon->xcoord) ==
+                 double_vector_get_first(polygon->xcoord)) &&
+                (double_vector_get_last(polygon->ycoord) ==
+                 double_vector_get_first(polygon->ycoord))) {
+
+                double_vector_pop(polygon->xcoord);
+                double_vector_pop(polygon->ycoord);
+            }
+        }
     }
-
-    fclose( stream );
-
-    if ((double_vector_size( polygon->xcoord ) > 1) && (skip_last_point)) {
-      if ((double_vector_get_last(polygon->xcoord) == double_vector_get_first(polygon->xcoord)) &&
-          (double_vector_get_last(polygon->ycoord) == double_vector_get_first(polygon->ycoord))) {
-
-        double_vector_pop( polygon->xcoord );
-        double_vector_pop( polygon->ycoord );
-      }
-    }
-  }
-  return polygon;
+    return polygon;
 }
-
 
 /*
   The irap format is a polygon which closes on itself by construction,
@@ -149,146 +140,139 @@ static geo_polygon_type * geo_polygon_fload_alloc_xyz( const char * filename , b
       included.
 */
 
-geo_polygon_type * geo_polygon_fload_alloc_irap( const char * filename ) {
-  geo_polygon_type * polygon = geo_polygon_fload_alloc_xyz( filename , true );
-  return polygon;
+geo_polygon_type *geo_polygon_fload_alloc_irap(const char *filename) {
+    geo_polygon_type *polygon = geo_polygon_fload_alloc_xyz(filename, true);
+    return polygon;
 }
 
-
-
-void geo_polygon_reset(geo_polygon_type * polygon ) {
-  double_vector_reset( polygon->xcoord );
-  double_vector_reset( polygon->ycoord );
+void geo_polygon_reset(geo_polygon_type *polygon) {
+    double_vector_reset(polygon->xcoord);
+    double_vector_reset(polygon->ycoord);
 }
 
-
-
-void geo_polygon_shift(geo_polygon_type * polygon , double x0 , double y0) {
-  double_vector_shift( polygon->xcoord , x0 );
-  double_vector_shift( polygon->ycoord , y0 );
+void geo_polygon_shift(geo_polygon_type *polygon, double x0, double y0) {
+    double_vector_shift(polygon->xcoord, x0);
+    double_vector_shift(polygon->ycoord, y0);
 }
 
-
-int geo_polygon_get_size(const geo_polygon_type * polygon ) {
-  return double_vector_size( polygon->xcoord );
+int geo_polygon_get_size(const geo_polygon_type *polygon) {
+    return double_vector_size(polygon->xcoord);
 }
 
-
-void geo_polygon_fprintf(const geo_polygon_type * polygon , FILE * stream) {
-  int i;
-  for (i=0; i < double_vector_size( polygon->xcoord ); i++)
-    fprintf(stream , "%10.3f  %10.3f \n", double_vector_iget( polygon->xcoord , i ) , double_vector_iget( polygon->ycoord , i));
-}
-
-
-void geo_polygon_iget_xy(const geo_polygon_type * polygon , int index , double *x , double *y) {
-  *x = double_vector_iget( polygon->xcoord , index );
-  *y = double_vector_iget( polygon->ycoord , index );
-}
-
-
-bool geo_polygon_segment_intersects(const geo_polygon_type * polygon , double x1 , double y1 , double x2 , double y2) {
-  bool intersects = false;
-  double ** points = (double**)util_malloc( 4 * sizeof * points);
-  {
+void geo_polygon_fprintf(const geo_polygon_type *polygon, FILE *stream) {
     int i;
-    for (i = 0; i < 4; i++)
-      points[i] = (double*)util_malloc( 2 * sizeof * points[i]);
-  }
+    for (i = 0; i < double_vector_size(polygon->xcoord); i++)
+        fprintf(stream, "%10.3f  %10.3f \n",
+                double_vector_iget(polygon->xcoord, i),
+                double_vector_iget(polygon->ycoord, i));
+}
 
-  points[0][0] = x1;
-  points[1][0] = x2;
-  points[0][1] = y1;
-  points[1][1] = y2;
+void geo_polygon_iget_xy(const geo_polygon_type *polygon, int index, double *x,
+                         double *y) {
+    *x = double_vector_iget(polygon->xcoord, index);
+    *y = double_vector_iget(polygon->ycoord, index);
+}
 
-  {
-    int index = 0;
-    while (true) {
+bool geo_polygon_segment_intersects(const geo_polygon_type *polygon, double x1,
+                                    double y1, double x2, double y2) {
+    bool intersects = false;
+    double **points = (double **)util_malloc(4 * sizeof *points);
+    {
+        int i;
+        for (i = 0; i < 4; i++)
+            points[i] = (double *)util_malloc(2 * sizeof *points[i]);
+    }
 
-      if (index >= (geo_polygon_get_size( polygon ) - 1))
-        break;
+    points[0][0] = x1;
+    points[1][0] = x2;
+    points[0][1] = y1;
+    points[1][1] = y2;
 
-      {
-        double xc,yc;
+    {
+        int index = 0;
+        while (true) {
 
-        points[2][0] = double_vector_iget( polygon->xcoord , index );
-        points[3][0] = double_vector_iget( polygon->xcoord , index + 1);
-        points[2][1] = double_vector_iget( polygon->ycoord , index );
-        points[3][1] = double_vector_iget( polygon->ycoord , index + 1);
+            if (index >= (geo_polygon_get_size(polygon) - 1))
+                break;
 
-        {
-          geo_util_xlines_status_enum xline_status = geo_util_xsegments(( const double **) points , &xc , &yc);
-          if ((xline_status == GEO_UTIL_LINES_CROSSING) ||
-              (xline_status == GEO_UTIL_LINES_OVERLAPPING))
-            intersects = true;
+            {
+                double xc, yc;
+
+                points[2][0] = double_vector_iget(polygon->xcoord, index);
+                points[3][0] = double_vector_iget(polygon->xcoord, index + 1);
+                points[2][1] = double_vector_iget(polygon->ycoord, index);
+                points[3][1] = double_vector_iget(polygon->ycoord, index + 1);
+
+                {
+                    geo_util_xlines_status_enum xline_status =
+                        geo_util_xsegments((const double **)points, &xc, &yc);
+                    if ((xline_status == GEO_UTIL_LINES_CROSSING) ||
+                        (xline_status == GEO_UTIL_LINES_OVERLAPPING))
+                        intersects = true;
+                }
+
+                if (intersects)
+                    break;
+            }
+
+            index++;
         }
-
-        if (intersects)
-          break;
-
-      }
-
-      index++;
     }
-  }
 
-  {
-    int i;
-    for (i = 0; i < 4; i++)
-      free(points[i]);
+    {
+        int i;
+        for (i = 0; i < 4; i++)
+            free(points[i]);
 
-    free( points );
-  }
-
-  return intersects;
-}
-
-
-const char* geo_polygon_get_name( const geo_polygon_type * polygon ) {
-  return polygon->name;
-}
-
-void geo_polygon_set_name( geo_polygon_type * polygon , const char * name) {
-  polygon->name = util_realloc_string_copy( polygon->name , name );
-}
-
-
-double geo_polygon_get_length( geo_polygon_type * polygon ) {
-  if (double_vector_size( polygon->xcoord) == 1)
-    return 0;
-  else {
-    double length = 0;
-    double x0 = double_vector_iget( polygon->xcoord , 0 );
-    double y0 = double_vector_iget( polygon->ycoord , 0 );
-    int i;
-
-    for (i = 1; i < double_vector_size( polygon->xcoord ); i++) {
-      double x1 = double_vector_iget( polygon->xcoord , i );
-      double y1 = double_vector_iget( polygon->ycoord , i );
-
-      length += sqrt( (x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0));
-      x0 = x1;
-      y0 = y1;
+        free(points);
     }
-    return length;
-  }
+
+    return intersects;
 }
 
+const char *geo_polygon_get_name(const geo_polygon_type *polygon) {
+    return polygon->name;
+}
+
+void geo_polygon_set_name(geo_polygon_type *polygon, const char *name) {
+    polygon->name = util_realloc_string_copy(polygon->name, name);
+}
+
+double geo_polygon_get_length(geo_polygon_type *polygon) {
+    if (double_vector_size(polygon->xcoord) == 1)
+        return 0;
+    else {
+        double length = 0;
+        double x0 = double_vector_iget(polygon->xcoord, 0);
+        double y0 = double_vector_iget(polygon->ycoord, 0);
+        int i;
+
+        for (i = 1; i < double_vector_size(polygon->xcoord); i++) {
+            double x1 = double_vector_iget(polygon->xcoord, i);
+            double y1 = double_vector_iget(polygon->ycoord, i);
+
+            length += sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+            x0 = x1;
+            y0 = y1;
+        }
+        return length;
+    }
+}
 
 /*
   Name is ignored in the comparison.
 */
-bool geo_polygon_equal( const geo_polygon_type * polygon1 , const geo_polygon_type * polygon2 ) {
-  bool equal =
-    double_vector_equal( polygon1->xcoord , polygon2->xcoord) &&
-    double_vector_equal( polygon1->ycoord , polygon2->ycoord);
+bool geo_polygon_equal(const geo_polygon_type *polygon1,
+                       const geo_polygon_type *polygon2) {
+    bool equal = double_vector_equal(polygon1->xcoord, polygon2->xcoord) &&
+                 double_vector_equal(polygon1->ycoord, polygon2->ycoord);
 
+    if (!equal) {
+        equal = double_vector_approx_equal(polygon1->xcoord, polygon2->xcoord,
+                                           1e-8) &&
+                double_vector_approx_equal(polygon1->ycoord, polygon2->ycoord,
+                                           1e-8);
+    }
 
-  if (!equal) {
-    equal =
-      double_vector_approx_equal( polygon1->xcoord , polygon2->xcoord , 1e-8) &&
-      double_vector_approx_equal( polygon1->ycoord , polygon2->ycoord , 1e-8);
-  }
-
-  return equal;
+    return equal;
 }

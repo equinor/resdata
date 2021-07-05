@@ -16,7 +16,6 @@
    for more details.
 */
 
-
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl_well/well_state.h>
 #include <ert/ecl_well/well_info.h>
@@ -27,26 +26,26 @@
 */
 
 void usage() {
-  printf("ri_well_test CASE.EGRID  CASE.UNRST / { CASE.X1 CASE.X2  ... CASE.Xn } \n");
-  exit(1);
+    printf("ri_well_test CASE.EGRID  CASE.UNRST / { CASE.X1 CASE.X2  ... "
+           "CASE.Xn } \n");
+    exit(1);
 }
 
+int main(int argc, char **argv) {
+    if (argc < 3)
+        usage();
+    else {
+        char *grid_file = argv[1];
+        ecl_grid_type *grid = ecl_grid_alloc(grid_file);
+        well_info_type *well_info = well_info_alloc(grid);
+        int ifile;
+        for (ifile = 2; ifile < argc; ifile++) {
+            const char *rst_file = argv[ifile];
+            printf("Loading restart file: %s \n", rst_file);
+            well_info_load_rstfile(well_info, rst_file, true);
+        }
 
-int main( int argc , char ** argv ) {
-  if (argc < 3)
-    usage();
-  else {
-    char * grid_file = argv[1];
-    ecl_grid_type * grid = ecl_grid_alloc( grid_file );
-    well_info_type * well_info = well_info_alloc( grid );
-    int ifile;
-    for (ifile = 2; ifile < argc; ifile++) {
-      const char * rst_file = argv[ifile];
-      printf("Loading restart file: %s \n",rst_file);
-      well_info_load_rstfile( well_info , rst_file , true );
+        ecl_grid_free(grid);
+        well_info_free(well_info);
     }
-
-    ecl_grid_free( grid );
-    well_info_free( well_info );
-  }
 }
