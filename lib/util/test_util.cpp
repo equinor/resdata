@@ -138,8 +138,6 @@ void test_assert_bool_not_equal__(bool b1, bool b2, const char *file,
                         line, b1, b2);
 }
 
-/*****************************************************************/
-
 void test_assert_size_t_equal__(size_t s1, size_t s2, const char *file,
                                 int line) {
     if (s1 != s2)
@@ -156,8 +154,6 @@ void test_assert_size_t_not_equal__(size_t s1, size_t s2, const char *file,
             line, s1, s2);
 }
 
-/*****************************************************************/
-
 void test_assert_time_t_equal__(time_t t1, time_t t2, const char *file,
                                 int line) {
     if (t1 != t2)
@@ -172,8 +168,6 @@ void test_assert_time_t_not_equal__(time_t t1, time_t t2, const char *file,
                         file, line, t1, t2);
 }
 
-/*****************************************************************/
-
 void test_assert_true__(bool value, const char *file, int line) {
     if (!value)
         test_error_exit("%s:%d => assert( true ) failed\n", file, line);
@@ -183,8 +177,6 @@ void test_assert_false__(bool value, const char *file, int line) {
     if (value)
         test_error_exit("%s:%d => assert( false ) failed", file, line);
 }
-
-/*****************************************************************/
 
 void test_assert_ptr_equal__(const void *p1, const void *p2, const char *file,
                              int line) {
@@ -286,8 +278,6 @@ void test_assert_file_content__(const char *input_file, const char *expected,
                         input_file);
 }
 
-/*****************************************************************/
-
 void test_install_SIGNALS(void) {
     signal(
         SIGSEGV,
@@ -298,8 +288,6 @@ void test_install_SIGNALS(void) {
         util_abort_signal); /* If killing the program with SIGTERM (the default kill signal) you will get a backtrace.
                                              Killing with SIGKILL (-9) will not give a backtrace.*/
 }
-
-/*****************************************************************/
 
 #ifdef HAVE_BACKTRACE
 #include <execinfo.h>
@@ -363,8 +351,6 @@ jmp_buf *util_abort_test_jump_buffer() { return NULL; }
 void util_abort_test_set_intercept_function(const char *function) { return; }
 
 #endif
-
-/*****************************************************************/
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>

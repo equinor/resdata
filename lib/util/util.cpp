@@ -248,8 +248,6 @@ void util_endian_flip_vector_old(void *data, int element_size, int elements) {
 #define S_ISREG(m) (((m)&S_IFMT) == S_IFREG)
 #endif
 
-/*****************************************************************/
-
 static bool EOL_CHAR(char c) {
     if (c == '\r' || c == '\n')
         return true;
@@ -1775,8 +1773,6 @@ int util_count_content_file_lines(FILE *stream) {
     return lines;
 }
 
-/******************************************************************/
-
 /**
     buffer_size is _only_ for a return (by reference) of the size of
     the allocation. Can pass in NULL if that size is not interesting.
@@ -2087,7 +2083,6 @@ bool util_file_exists(const char *filename) {
 */
 
 bool util_entry_exists(const char *entry) { return util_access(entry, F_OK); }
-/*****************************************************************/
 
 /**
    The semantics for all the is_xxx functions is follows:
@@ -2878,8 +2873,6 @@ time_t util_make_pure_date_utc(time_t t) {
     return util_make_date_utc(day, month, year);
 }
 
-/*****************************************************************/
-
 /**
    The function will allocate a new copy of src where leading and
    trailing whitespace has been stripped off. If the source string is
@@ -3218,8 +3211,6 @@ char *util_alloc_string_sum(const char **string_list, int N) {
     }
     return buffer;
 }
-
-/*****************************************************************/
 
 /**
   Allocates a new string consisting of all the elements in item_list,
@@ -3654,8 +3645,6 @@ char *util_string_strip_chars_alloc(const char *buff_org, const char *chars) {
     return buff_new;
 }
 
-/*****************************************************************/
-
 void util_float_to_double(double *double_ptr, const float *float_ptr,
                           int size) {
     int i;
@@ -3669,8 +3658,6 @@ void util_double_to_float(float *float_ptr, const double *double_ptr,
     for (i = 0; i < size; i++)
         float_ptr[i] = (float)double_ptr[i];
 }
-
-/*****************************************************************/
 
 /*
    The util_fwrite_string / util_fread_string are BROKEN when it comes
@@ -3818,8 +3805,6 @@ void util_fskip_bool(FILE *stream) {
     util_fseek(stream, sizeof(bool), SEEK_CUR);
 }
 
-/*****************************************************************/
-
 time_t util_time_t_min(time_t a, time_t b) { return (a < b) ? a : b; }
 
 time_t util_time_t_max(time_t a, time_t b) { return (a > b) ? a : b; }
@@ -3923,8 +3908,6 @@ double util_double_vector_stddev(int N, const double *vector) {
     }
 }
 
-/*****************************************************************/
-
 FILE *util_fopen__(const char *filename, const char *mode) {
     return fopen(filename, mode);
 }
@@ -3992,8 +3975,6 @@ void util_fread(void *ptr, size_t element_size, size_t items, FILE *stream,
 
 #undef ABORT_READ
 #undef ABORT_WRITE
-
-/*****************************************************************/
 
 void *util_realloc(void *old_ptr, size_t new_size) {
     /* The realloc documentation as ambigous regarding realloc() with size 0 - WE return NULL. */
@@ -4081,8 +4062,6 @@ void *util_realloc_copy(void *org_ptr, const void *src, size_t byte_size) {
     memcpy(next, src, byte_size);
     return next;
 }
-
-/*****************************************************************/
 
 /**
    This function allocates a string acoording to the fmt
@@ -4271,8 +4250,6 @@ int util_get_current_linenr(FILE *stream) {
     return line_nr;
 }
 
-/*****************************************************************/
-
 /*
   Will check if the vector @data contains the element @value. The
   @data vector should be sorted in increasing order prior to calling
@@ -4316,8 +4293,6 @@ CONTAINS(time_t)
 CONTAINS(size_t)
 #undef CONTAINS
 
-/*****************************************************************/
-
 int util_fnmatch(const char *pattern, const char *string) {
 #ifdef HAVE_FNMATCH
     return fnmatch(pattern, string, 0);
@@ -4332,7 +4307,6 @@ int util_fnmatch(const char *pattern, const char *string) {
 #endif
 }
 
-/*****************************************************************/
 /* Conditional compilation; this last section includes several
    functions which are included if certain features like e.g. posix_spawn()
    are present. */

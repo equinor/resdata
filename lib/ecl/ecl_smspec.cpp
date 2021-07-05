@@ -132,7 +132,6 @@ struct ecl_smspec_struct {
     std::vector<int> index_map;
     std::map<int, int> inv_index_map;
     int params_size;
-    /*-----------------------------------------------------------------*/
 
     int time_seconds;
     int grid_dims[3]; /* Grid dimensions - in DIMENS[1,2,3] */
@@ -276,8 +275,6 @@ int ecl_smspec_num_nodes(const ecl_smspec_type *smspec) {
 int ecl_smspec_get_params_size(const ecl_smspec_type *smspec) {
     return smspec->params_size;
 }
-
-/*****************************************************************/
 
 ecl_smspec_type *ecl_smspec_alloc_empty(bool write_mode,
                                         const char *key_join_string) {
@@ -1293,7 +1290,6 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type *ecl_smspec) {
     return ecl_smspec->num_regions;
 }
 
-/******************************************************************/
 /*
    For each type of summary data (according to the types in
    ecl_smcspec_var_type there are a set accessor functions:
@@ -1316,8 +1312,6 @@ int ecl_smspec_get_num_regions(const ecl_smspec_type *ecl_smspec) {
    functions, like get_well_names() and so on.
 */
 
-/*****************************************************************/
-
 namespace {
 
 bool node_exists(const ecl::smspec_node *node_ptr) {
@@ -1335,9 +1329,6 @@ int node_valid_index(const ecl::smspec_node *node_ptr) {
 }
 
 } // namespace
-
-/******************************************************************/
-/* Well variables */
 
 const ecl::smspec_node &
 ecl_smspec_get_well_var_node(const ecl_smspec_type *smspec, const char *well,
@@ -1366,9 +1357,6 @@ bool ecl_smspec_has_well_var(const ecl_smspec_type *ecl_smspec,
     return node_exists(node_ptr);
 }
 
-/*****************************************************************/
-/* Group variables */
-
 const ecl::smspec_node &
 ecl_smspec_get_group_var_node(const ecl_smspec_type *smspec, const char *group,
                               const char *var) {
@@ -1396,9 +1384,6 @@ bool ecl_smspec_has_group_var(const ecl_smspec_type *ecl_smspec,
     return node_exists(node_ptr);
 }
 
-/*****************************************************************/
-/* Field variables */
-
 const ecl::smspec_node &
 ecl_smspec_get_field_var_node(const ecl_smspec_type *ecl_smspec,
                               const char *var) {
@@ -1424,9 +1409,6 @@ bool ecl_smspec_has_field_var(const ecl_smspec_type *ecl_smspec,
         ecl_smspec_get_var_node(ecl_smspec->field_var_index, var);
     return node_exists(node_ptr);
 }
-
-/*****************************************************************/
-/* Block variables */
 
 /**
    Observe that block_nr is represented as char literal,
@@ -1484,8 +1466,6 @@ int ecl_smspec_get_block_var_params_index_ijk(const ecl_smspec_type *ecl_smspec,
         ecl_smspec_get_global_grid_index(ecl_smspec, i, j, k));
 }
 
-/*****************************************************************/
-/* Region variables */
 /**
    region_nr: [1...num_regions] (NOT C-based indexing)
 */
@@ -1516,9 +1496,6 @@ int ecl_smspec_get_region_var_params_index(const ecl_smspec_type *ecl_smspec,
     return node_valid_index(node_ptr);
 }
 
-/*****************************************************************/
-/* Misc variables */
-
 const ecl::smspec_node &
 ecl_smspec_get_misc_var_node(const ecl_smspec_type *ecl_smspec,
                              const char *var) {
@@ -1543,9 +1520,6 @@ int ecl_smspec_get_misc_var_params_index(const ecl_smspec_type *ecl_smspec,
         ecl_smspec_get_var_node(ecl_smspec->misc_var_index, var);
     return node_valid_index(node_ptr);
 }
-
-/*****************************************************************/
-/* Well completion - not fully implemented ?? */
 
 const ecl::smspec_node *
 ecl_smspec_get_well_completion_var_node__(const ecl_smspec_type *ecl_smspec,
@@ -1587,9 +1561,6 @@ int ecl_smspec_get_well_completion_var_params_index(
     return node_valid_index(node_ptr);
 }
 
-/*****************************************************************/
-/* General variables ... */
-
 /* There is a quite wide range of error which are just returned as
    "Not found" (i.e. -1). */
 /* Completions not supported yet. */
@@ -1626,34 +1597,6 @@ const char *ecl_smspec_get_general_var_unit(const ecl_smspec_type *ecl_smspec,
         ecl_smspec_get_general_var_node(ecl_smspec, lookup_kw);
     return smspec_node_get_unit(&smspec_node);
 }
-
-/*****************************************************************/
-/*
-   Pure indexed lookup - these functions can be used after one of the
-   ecl_smspec_get_xxx_index() functions has been used first.
-*/
-
-//const char * ecl_smspec_iget_unit( const ecl_smspec_type * smspec , int node_index ) {
-//  const ecl::smspec_node * smspec_node = ecl_smspec_iget_node( smspec , node_index );
-//  return smspec_node_get_unit( smspec_node );
-//}
-//
-//int ecl_smspec_iget_num( const ecl_smspec_type * smspec , int node_index ) {
-//  const ecl::smspec_node * smspec_node = ecl_smspec_iget_node( smspec , node_index );
-//  return smspec_node_get_num( smspec_node );
-//}
-//
-//const char * ecl_smspec_iget_wgname( const ecl_smspec_type * smspec , int node_index ) {
-//  const ecl::smspec_node * smspec_node = ecl_smspec_iget_node( smspec , node_index );
-//  return smspec_node_get_wgname( smspec_node );
-//}
-//
-//const char * ecl_smspec_iget_keyword( const ecl_smspec_type * smspec , int index ) {
-//  const ecl::smspec_node * smspec_node = ecl_smspec_iget_node( smspec , index );
-//  return smspec_node_get_keyword( smspec_node );
-//}
-
-/*****************************************************************/
 
 int ecl_smspec_get_time_seconds(const ecl_smspec_type *ecl_smspec) {
     return ecl_smspec->time_seconds;
@@ -1729,8 +1672,6 @@ bool ecl_smspec_general_is_total(const ecl_smspec_type *smspec,
         ecl_smspec_get_general_var_node(smspec, gen_key);
     return smspec_node_is_total(&smspec_node);
 }
-
-/*****************************************************************/
 
 /**
    Fills a stringlist instance with all the gen_key string matching
@@ -1858,8 +1799,6 @@ stringlist_type *ecl_smspec_alloc_well_var_list(const ecl_smspec_type *smspec) {
 const int *ecl_smspec_get_grid_dims(const ecl_smspec_type *smspec) {
     return smspec->grid_dims;
 }
-
-/*****************************************************************/
 
 char *ecl_smspec_alloc_well_key(const ecl_smspec_type *smspec,
                                 const char *keyword, const char *wgname) {

@@ -48,11 +48,6 @@ struct ecl_file_transaction_struct {
     int *ref_count;
 };
 
-/*****************************************************************/
-/* Here comes the functions related to the index ecl_file_view. These
-   functions are all of them static.
-*/
-
 bool ecl_file_view_check_flags(int state_flags, int query_flags) {
     if ((state_flags & query_flags) == query_flags)
         return true;
@@ -307,8 +302,6 @@ bool ecl_file_view_load_all(ecl_file_view_type *ecl_file_view) {
     return loadOK;
 }
 
-/*****************************************************************/
-
 void ecl_file_view_add_kw(ecl_file_view_type *ecl_file_view,
                           ecl_file_kw_type *file_kw) {
     ecl_file_view->kw_list.push_back(file_kw);
@@ -452,10 +445,6 @@ ecl_file_view_add_blockview2(ecl_file_view_type *ecl_file_view,
 
     return child;
 }
-
-/*****************************************************************/
-/*                   R E S T A R T   F I L E S                   */
-/*****************************************************************/
 
 /*
    There is no special datastructure for working with restart files,

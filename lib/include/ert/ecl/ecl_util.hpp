@@ -116,7 +116,6 @@ typedef enum {
 #define ECL_COMMENT_CHAR '-' // Need to consecutive to make an ECLIPSE comment
 #define ECL_DATA_TERMINATION "/"
 
-/*****************************************************************/
 bool ecl_util_unified_file(const char *filename);
 const char *ecl_util_file_type_name(ecl_file_enum file_type);
 char *ecl_util_alloc_base_guess(const char *);

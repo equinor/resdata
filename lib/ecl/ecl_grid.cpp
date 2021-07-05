@@ -931,8 +931,6 @@ static void ecl_cell_ri_export(const ecl_cell_type *cell, double *ri_points) {
     }
 }
 
-/*****************************************************************/
-
 static double max2(double x1, double x2) { return (x1 > x2) ? x1 : x2; }
 
 static double min2(double x1, double x2) { return (x1 < x2) ? x1 : x2; }
@@ -954,8 +952,6 @@ static double min8(double x1, double x2, double x3, double x4, double x5,
                    double x6, double x7, double x8) {
     return min2(min4(x1, x2, x3, x4), min4(x5, x6, x7, x8));
 }
-
-/*****************************************************************/
 
 static double ecl_cell_min_z(const ecl_cell_type *cell) {
     return min4(cell->corner_list[0].z, cell->corner_list[1].z,
@@ -1080,8 +1076,6 @@ static int ecl_cell_get_twist(const ecl_cell_type *cell) {
     }
     return twist_count;
 }
-
-/*****************************************************************/
 
 /**
    Observe that when allocating based on a grid file not all cells are
@@ -1424,10 +1418,6 @@ static void ecl_cell_init_regular(ecl_cell_type *cell, const double *offset,
     else
         cell->active = CELL_ACTIVE;
 }
-
-/* end of cell implementation                                    */
-/*****************************************************************/
-/* starting on the ecl_grid proper implementation                */
 
 UTIL_SAFE_CAST_FUNCTION(ecl_grid, ECL_GRID_ID);
 UTIL_IS_INSTANCE_FUNCTION(ecl_grid, ECL_GRID_ID);
@@ -1945,9 +1935,6 @@ static void ecl_grid_update_index(ecl_grid_type *ecl_grid) {
     ecl_grid_realloc_index_map(ecl_grid);
 }
 
-/*****************************************************************/
-/* Coarse cells */
-
 static ecl_coarse_cell_type *
 ecl_grid_get_or_create_coarse_cell(ecl_grid_type *ecl_grid, int coarse_nr) {
     if (vector_safe_iget(ecl_grid->coarse_cells, coarse_nr) == NULL)
@@ -2012,8 +1999,6 @@ bool ecl_grid_cell_in_coarse_group3(const ecl_grid_type *main_grid, int i,
     return ecl_grid_cell_in_coarse_group1(
         main_grid, ecl_grid_get_global_index3(main_grid, i, j, k));
 }
-
-/*****************************************************************/
 
 static void ecl_grid_pillar_cross_planes(const point_type *p0, double e_x,
                                          double e_y, double e_z,
@@ -4112,8 +4097,6 @@ bool ecl_grid_compare(const ecl_grid_type *g1, const ecl_grid_type *g2,
     return equal;
 }
 
-/*****************************************************************/
-
 typedef enum {
     NOT_ON_FACE,
     BELONGS_TO_CELL,
@@ -4669,9 +4652,6 @@ int ecl_grid_get_block_count3d(const ecl_grid_type *grid, int i, int j, int k) {
     return double_vector_size(grid->values[global_index]);
 }
 
-/* End of blocking functions                                     */
-/*****************************************************************/
-
 void ecl_grid_free(ecl_grid_type *grid) {
     ecl_grid_free_cells(grid);
     free(grid->index_map);
@@ -4720,10 +4700,6 @@ void ecl_grid_get_distance(const ecl_grid_type *grid, int global_index1,
         *dz = cell1->center.z - cell2->center.z;
     }
 }
-
-/*****************************************************************/
-/* Index based query functions */
-/*****************************************************************/
 
 /**
    Only checks that i,j,k are in the required intervals:
@@ -4797,9 +4773,6 @@ int ecl_grid_get_parent_cell3(const ecl_grid_type *grid, int i, int j, int k) {
     int global_index = ecl_grid_get_global_index__(grid, i, j, k);
     return ecl_grid_get_parent_cell1(grid, global_index);
 }
-
-/*****************************************************************/
-/* Functions for converting between the different index types. */
 
 /**
    Converts: (i,j,k) -> global_index. i,j,k are zero offset.
@@ -4907,7 +4880,6 @@ void ecl_grid_get_ijk1A(const ecl_grid_type *ecl_grid, int active_index, int *i,
                    __func__, active_index, ecl_grid->total_active);
 }
 
-/******************************************************************/
 /*
   Functions to get the 'true' (i.e. UTM or whatever) position (x,y,z).
 
@@ -5232,9 +5204,6 @@ const nnc_info_type *ecl_grid_get_cell_nnc_info3(const ecl_grid_type *grid,
     return ecl_grid_get_cell_nnc_info1(grid, global_index);
 }
 
-/*****************************************************************/
-/* Functions to query whether a cell is active or not.           */
-
 /*
    Global index in [0,...,nx*ny*nz)
 */
@@ -5250,8 +5219,6 @@ bool ecl_grid_cell_active3(const ecl_grid_type *ecl_grid, int i, int j, int k) {
     int global_index = ecl_grid_get_global_index3(ecl_grid, i, j, k);
     return ecl_grid_cell_active1(ecl_grid, global_index);
 }
-
-/*****************************************************************/
 
 bool ecl_grid_cell_invalid1(const ecl_grid_type *ecl_grid, int global_index) {
     ecl_cell_type *cell = ecl_grid_get_cell(ecl_grid, global_index);
@@ -5286,9 +5253,6 @@ double ecl_grid_cell_valid1A(const ecl_grid_type *grid, int active_index) {
     const int global_index = ecl_grid_get_global_index1A(grid, active_index);
     return ecl_grid_cell_valid1(grid, global_index);
 }
-
-/*****************************************************************/
-/* Functions for LGR query/lookup/... */
 
 static void __assert_main_grid(const ecl_grid_type *ecl_grid) {
     if (ecl_grid->lgr_nr != ECL_GRID_MAINGRID_LGR_NR)
@@ -5437,8 +5401,6 @@ const ecl_grid_type *ecl_grid_get_global_grid(const ecl_grid_type *grid) {
     return grid->global_grid;
 }
 
-/*****************************************************************/
-
 /**
     Allocates a stringlist instance with the lookup names of the lgr names in this grid.
 */
@@ -5483,8 +5445,6 @@ int ecl_grid_get_lgr_nr_from_name(const ecl_grid_type *grid, const char *name) {
         return lgr->lgr_nr;
     }
 }
-
-/*****************************************************************/
 
 /**
    This function returns the lgr_nr field of the grid; for GRID files, this
@@ -5595,7 +5555,6 @@ void ecl_grid_summarize(const ecl_grid_type *ecl_grid) {
     ecl_grid_test_lgr_consistency(ecl_grid);
 }
 
-/*****************************************************************/
 /**
 
    This function is used to translate (with the help of the ecl_grid
@@ -5790,7 +5749,6 @@ void ecl_grid_get_column_property(const ecl_grid_type *ecl_grid,
                    __func__, ecl_type_alloc_name(data_type), __func__);
 }
 
-/*****************************************************************/
 /**
    This function will look up all the indices in the grid where the
    region_kw has a certain value (region_value). The ecl_kw instance
@@ -5862,8 +5820,6 @@ int ecl_grid_get_region_cells(const ecl_grid_type *ecl_grid,
     return cells_found;
 }
 
-/*****************************************************************/
-
 void ecl_grid_grdecl_fprintf_kw(const ecl_grid_type *ecl_grid,
                                 const ecl_kw_type *ecl_kw,
                                 const char *special_header, FILE *stream,
@@ -5914,8 +5870,6 @@ void ecl_grid_grdecl_fprintf_kw(const ecl_grid_type *ecl_grid,
                    "elements or nactive elements\n",
                    __func__);
 }
-
-/*****************************************************************/
 
 static bool ecl_grid_test_lgr_consistency2(const ecl_grid_type *parent,
                                            const ecl_grid_type *child) {
@@ -6040,8 +5994,6 @@ void ecl_grid_dump_ascii_cell3(ecl_grid_type *grid, int i, int j, int k,
     ecl_cell_dump_ascii(cell, i, j, k, stream, offset);
 }
 
-/*****************************************************************/
-
 /*
  'MAPUNITS'           1 'CHAR'
  'METRES  '
@@ -6140,8 +6092,6 @@ ecl_grid_check_unit_system(const ecl_kw_type *gridunit_kw) {
 
     return ECL_METRIC_UNITS;
 }
-
-/*****************************************************************/
 
 static float ecl_grid_output_scaling(const ecl_grid_type *grid,
                                      ert_ecl_unit_enum output_unit) {
@@ -6303,8 +6253,6 @@ void ecl_grid_fwrite_GRID(const ecl_grid_type *grid, const char *filename) {
     ecl_grid_fwrite_GRID2(grid, filename, ECL_METRIC_UNITS);
 }
 
-/*****************************************************************/
-
 /*
 FILEHEAD          100:INTE
 MAPUNITS            1:CHAR
@@ -6361,8 +6309,6 @@ static void ecl_grid_fwrite_gridhead_kw(int nx, int ny, int nz, int grid_nr,
     ecl_kw_fwrite(gridhead_kw, fortio);
     ecl_kw_free(gridhead_kw);
 }
-
-/*****************************************************************/
 
 /*
   Will scan the halfopen k-interval [k1,k2) to find a cell which has
@@ -6535,8 +6481,6 @@ void ecl_grid_assert_coord_kw(ecl_grid_type *grid) {
     }
 }
 
-/*****************************************************************/
-
 static void ecl_grid_init_zcorn_data__(const ecl_grid_type *grid,
                                        float *zcorn_float,
                                        double *zcorn_double) {
@@ -6625,8 +6569,6 @@ int ecl_grid_get_coord_size(const ecl_grid_type *grid) {
 int ecl_grid_get_zcorn_size(const ecl_grid_type *grid) {
     return ECL_GRID_ZCORN_SIZE(grid->nx, grid->ny, grid->nz);
 }
-
-/*****************************************************************/
 
 void ecl_grid_init_actnum_data(const ecl_grid_type *grid, int *actnum) {
     int i;
@@ -6722,8 +6664,6 @@ void ecl_grid_global_kw_copy(const ecl_grid_type *grid, ecl_kw_type *target_kw,
                    ecl_grid_get_global_size(grid), ecl_grid_get_nactive(grid));
 }
 
-/*****************************************************************/
-
 static void ecl_grid_init_hostnum_data(const ecl_grid_type *grid,
                                        int *hostnum) {
     int i;
@@ -6744,8 +6684,6 @@ ecl_kw_type *ecl_grid_alloc_hostnum_kw(const ecl_grid_type *grid) {
     ecl_grid_init_hostnum_data(grid, (int *)ecl_kw_get_void_ptr(hostnum_kw));
     return hostnum_kw;
 }
-
-/*****************************************************************/
 
 static void ecl_grid_init_corsnum_data(const ecl_grid_type *grid,
                                        int *corsnum) {
@@ -6768,8 +6706,6 @@ ecl_kw_type *ecl_grid_alloc_corsnum_kw(const ecl_grid_type *grid) {
     return corsnum_kw;
 }
 
-/*****************************************************************/
-
 ecl_kw_type *ecl_grid_alloc_gridhead_kw(int nx, int ny, int nz, int grid_nr) {
     ecl_kw_type *gridhead_kw =
         ecl_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, ECL_INT);
@@ -6783,8 +6719,6 @@ ecl_kw_type *ecl_grid_alloc_gridhead_kw(int nx, int ny, int nz, int grid_nr) {
     ecl_kw_iset_int(gridhead_kw, GRIDHEAD_LGR_INDEX, grid_nr);
     return gridhead_kw;
 }
-
-/*****************************************************************/
 
 void ecl_grid_reset_actnum(ecl_grid_type *grid, const int *actnum) {
     const int global_size = ecl_grid_get_global_size(grid);
@@ -7081,8 +7015,6 @@ void ecl_grid_fprintf_grdecl(ecl_grid_type *grid, FILE *stream) {
     ecl_grid_fprintf_grdecl2(grid, stream, ECL_METRIC_UNITS);
 }
 
-/*****************************************************************/
-
 /**
    The ri_points pointer should point to the base address of the
    points data; this function will calculate the correct offset based on
@@ -7101,8 +7033,6 @@ void ecl_grid_ri_export(const ecl_grid_type *ecl_grid, double *ri_points) {
     for (global_index = 0; global_index < ecl_grid->size; global_index++)
         ecl_grid_cell_ri_export(ecl_grid, global_index, ri_points);
 }
-
-/*****************************************************************/
 
 bool ecl_grid_dual_grid(const ecl_grid_type *ecl_grid) {
     if (ecl_grid->dualp_flag == FILEHEAD_SINGLE_POROSITY)
@@ -7252,5 +7182,3 @@ void export_corners(const ecl_grid_type *grid, int index_size,
         }
     }
 }
-
-//

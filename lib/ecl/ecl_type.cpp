@@ -23,7 +23,6 @@
 #include <ert/util/util.h>
 #include <ert/ecl/ecl_type.hpp>
 
-/*****************************************************************/
 /* The string names for the different ECLIPSE low-level
    types.
 */

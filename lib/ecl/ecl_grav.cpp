@@ -108,8 +108,6 @@ struct ecl_grav_phase_struct {
     ecl_phase_enum phase;
 };
 
-/*****************************************************************/
-
 static const char *get_den_kw(ecl_phase_enum phase,
                               ecl_version_enum ecl_version) {
     if (ecl_version == ECLIPSE100) {
@@ -319,8 +317,6 @@ static void ecl_grav_phase_free(ecl_grav_phase_type *grav_phase) {
     free(grav_phase->fluid_mass);
     delete grav_phase;
 }
-
-/*****************************************************************/
 
 static void ecl_grav_survey_add_phase(ecl_grav_survey_type *survey,
                                       ecl_phase_enum phase,
@@ -574,7 +570,6 @@ static double ecl_grav_survey_eval(const ecl_grav_survey_type *base_survey,
     return deltag;
 }
 
-/*****************************************************************/
 /**
    The grid instance is only used during the construction phase. The
    @init_file object is used by the ecl_grav_add_survey_XXX()
@@ -667,7 +662,6 @@ double ecl_grav_eval(const ecl_grav_type *grav, const char *base,
                                 utm_y, depth, phase_mask);
 }
 
-/******************************************************************/
 /* The functions ecl_grav_new_std_density() and ecl_grav_add_std_density() are
    used to "install" standard conditions densities for the various phases
    involved. These functions must be called prior to calling

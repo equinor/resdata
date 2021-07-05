@@ -350,5 +350,3 @@ void util_abort__(const char *file, const char *function, int line,
 
     abort();
 }
-
-/*****************************************************************/

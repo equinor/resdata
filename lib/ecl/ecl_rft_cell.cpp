@@ -66,8 +66,6 @@ struct plt_data_struct {
     double water_flowrate;
 };
 
-/*****************************************************************/
-
 static rft_data_type *rft_data_alloc(double swat, double sgas) {
     rft_data_type *data = (rft_data_type *)util_malloc(sizeof *data);
     UTIL_TYPE_ID_INIT(data, RFT_DATA_TYPE_ID);
@@ -84,8 +82,6 @@ static UTIL_TRY_CAST_FUNCTION_CONST(
     rft_data,
     RFT_DATA_TYPE_ID) static UTIL_IS_INSTANCE_FUNCTION(rft_data,
                                                        RFT_DATA_TYPE_ID)
-
-    /*****************************************************************/
 
     static plt_data_type *plt_data_alloc(double orat, double grat, double wrat,
                                          double connection_start,
@@ -115,8 +111,6 @@ static UTIL_TRY_CAST_FUNCTION_CONST(
     plt_data,
     PLT_DATA_TYPE_ID) static UTIL_IS_INSTANCE_FUNCTION(plt_data,
                                                        PLT_DATA_TYPE_ID)
-
-    /*****************************************************************/
 
     static UTIL_SAFE_CAST_FUNCTION(
         ecl_rft_cell,
@@ -178,8 +172,6 @@ void ecl_rft_cell_free__(void *arg) {
     ecl_rft_cell_free(cell);
 }
 
-/*****************************************************************/
-
 int ecl_rft_cell_get_i(const ecl_rft_cell_type *cell) { return cell->i; }
 
 int ecl_rft_cell_get_j(const ecl_rft_cell_type *cell) { return cell->j; }
@@ -200,8 +192,6 @@ double ecl_rft_cell_get_depth(const ecl_rft_cell_type *cell) {
 double ecl_rft_cell_get_pressure(const ecl_rft_cell_type *cell) {
     return cell->pressure;
 }
-
-/*****************************************************************/
 
 double ecl_rft_cell_get_swat(const ecl_rft_cell_type *cell) {
     const rft_data_type *data = rft_data_try_cast_const(cell->data);
@@ -226,8 +216,6 @@ double ecl_rft_cell_get_soil(const ecl_rft_cell_type *cell) {
     else
         return ECL_RFT_CELL_INVALID_VALUE;
 }
-
-/*****************************************************************/
 
 double ecl_rft_cell_get_orat(const ecl_rft_cell_type *cell) {
     const plt_data_type *data = plt_data_try_cast_const(cell->data);
@@ -300,8 +288,6 @@ double ecl_rft_cell_get_water_flowrate(const ecl_rft_cell_type *cell) {
     else
         return ECL_RFT_CELL_INVALID_VALUE;
 }
-
-/*****************************************************************/
 
 bool ecl_rft_cell_ijk_equal(const ecl_rft_cell_type *cell, int i, int j,
                             int k) {

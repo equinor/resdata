@@ -158,8 +158,6 @@ void ecl_rst_file_close(ecl_rst_file_type *rst_file) {
     free(rst_file);
 }
 
-/*****************************************************************/
-
 static void ecl_rst_file_fwrite_SEQNUM(ecl_rst_file_type *rst_file,
                                        int seqnum) {
     ecl_kw_type *seqnum_kw = ecl_kw_alloc(SEQNUM_KW, 1, ECL_INT);

@@ -88,8 +88,6 @@ struct well_ts_struct {
     std::vector<well_node_type *> ts;
 };
 
-/******************************************************************/
-
 static well_node_type *well_node_alloc(well_state_type *well_state) {
     well_node_type *node = new well_node_type();
     UTIL_TYPE_ID_INIT(node, WELL_NODE_TYPE_ID);
@@ -108,8 +106,6 @@ static bool well_node_time_lt(const well_node_type *node1,
                               const well_node_type *node2) {
     return (node1->sim_time < node2->sim_time);
 }
-
-/*****************************************************************/
 
 static well_ts_type *well_ts_alloc_empty() {
     well_ts_type *well_ts = new well_ts_type();

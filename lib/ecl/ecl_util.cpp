@@ -72,8 +72,6 @@ const char *ecl_util_get_phase_name(ecl_phase_enum phase) {
     }
 }
 
-/*****************************************************************/
-
 char *ecl_util_alloc_base_guess(const char *path) {
     char *base = NULL;
     stringlist_type *data_files = stringlist_alloc_new();
@@ -696,8 +694,6 @@ bool ecl_util_fmt_file(const char *filename, bool *__fmt_file) {
     return status;
 }
 
-/*****************************************************************/
-
 /**
  This function copies size elements from _src_data to target_data. If
  src_type == target_type the copy is a simple memcpy, otherwise the
@@ -965,118 +961,12 @@ bool ecl_util_alloc_summary_files(const char *path, const char *_base,
     return (stringlist_get_size(filelist) > 0) ? true : false;
 }
 
-//const char * ecl_util_get_extension( ecl_file_enum_type file_type , bool fmt_file) {
-//
-//}
-//
-//
-///**
-//    Based on the ordinary util_alloc_file_components function, but if
-//    file_type is used specify the type file we know what extension to
-//    expect, and an optional "." can potentially be included as part of
-//    the filename.
-//*/
-//
-//void ecl_util_alloc_file_components( const char * file, ecl_file_enum file_type , char **_path , char **_basename , char **_extension) {
-//
-//}
-
 void ecl_util_alloc_restart_files(const char *path, const char *_base,
                                   char ***_restart_files,
                                   int *num_restart_files, bool *_fmt_file,
                                   bool *_unified) {
 
     util_exit("Function:%s currently not implemented - sorry \n", __func__);
-
-    //char * base = NULL;
-    //if (_base == NULL)
-    //  base = ecl_util_alloc_base_guess(path);
-    //else
-    //  base = (char *) _base;
-    //{
-    //  int num_F_files;
-    //  int num_X_files;
-    //
-    //  char *  unrst_file  = ecl_util_alloc_filename(path , base , ECL_UNIFIED_RESTART_FILE , false , -1);
-    //  char *  funrst_file = ecl_util_alloc_filename(path , base , ECL_UNIFIED_RESTART_FILE , true  , -1);
-    //  char *  unif_file   = NULL;
-    //
-    //  char ** F_files     = ecl_util_alloc_scandir_filelist(path , base , ECL_RESTART_FILE , true  , &num_F_files);
-    //  char ** X_files     = ecl_util_alloc_scandir_filelist(path , base , ECL_RESTART_FILE , false , &num_X_files);
-    //  char *  FX_file      = NULL;
-    //  char *  final_file;
-    //
-    //  /*
-    //    Ok now we have formatted/unformatted unified and not
-    //    unified: Time to check what exists in the filesystem, and which
-    //    is the newest.
-    //  */
-    //  unif_file = util_newest_file(unrst_file , funrst_file);
-    //
-    //  if (num_F_files > 0 || num_X_files > 0) {
-    //    if (num_F_files > 0 && num_X_files > 0) {
-    //      /*
-    //         We have both a list of .Fnnnn and a list of .Xnnnn files; if
-    //         the length of lists is not equal we take the longest,
-    //         otherwise we compare the dates of the last files in the
-    //         list.
-    //      */
-    //      if (num_F_files == num_X_files) {
-    //        FX_file = util_newest_file( F_files[num_F_files - 1] , X_files[num_X_files - 1]);
-    //      } else if (num_F_files > num_X_files)
-    //        FX_file = F_files[num_F_files - 1];
-    //      else
-    //        FX_file = X_files[num_X_files - 1];
-    //    } else if (num_F_files > 0)
-    //      FX_file = F_files[num_F_files - 1];
-    //    else
-    //      FX_file = X_files[num_X_files - 1];
-    //
-    //    if (unif_file != NULL)
-    //      final_file = util_newest_file(unif_file , FX_file);
-    //    else
-    //      final_file = FX_file;
-    //  } else
-    //    final_file = unif_file;
-    //
-    //
-    //  if (final_file == NULL)
-    //    util_abort("%s: could not find any restart data in %s/%s \n",__func__ , path , base);
-    //
-    //
-    //  /*
-    //     Determine type of final_file. Thois block is where the return
-    //     values are actually set.
-    //  */
-    //  {
-    //    char ** restart_files;
-    //    bool fmt_file , unified;
-    //    ecl_file_enum file_type;
-    //
-    //    ecl_util_get_file_type( final_file , &file_type , &fmt_file , NULL);
-    //    if (file_type == ECL_UNIFIED_RESTART_FILE) {
-    //      *num_restart_files = 1;
-    //      restart_files = util_malloc(sizeof * restart_files, __func__);
-    //      restart_files[0] = util_alloc_string_copy( final_file );
-    //      unified = true;
-    //    } else {
-    //      restart_files = ecl_util_alloc_scandir_filelist( path , base , ECL_RESTART_FILE , fmt_file , num_restart_files);
-    //      unified = false;
-    //    }
-    //    *_restart_files = restart_files;
-    //
-    //    if (_fmt_file != NULL) *_fmt_file = fmt_file;
-    //    if (_unified  != NULL) *_unified  = unified;
-    //  }
-    //
-    //  util_free_stringlist(F_files , num_F_files);
-    //  util_free_stringlist(X_files , num_X_files);
-    //  free(unrst_file);
-    //  free(funrst_file);
-    //}
-    //
-    //if (_base == NULL)
-    //  free(base);
 }
 
 /**

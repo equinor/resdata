@@ -53,8 +53,6 @@ struct ecl_io_config_struct {
     unified_type unified_summary;
 };
 
-/*****************************************************************/
-
 static ecl_io_config_type *ecl_io_config_alloc__() {
     ecl_io_config_type *ecl_io_config =
         (ecl_io_config_type *)util_malloc(sizeof *ecl_io_config);

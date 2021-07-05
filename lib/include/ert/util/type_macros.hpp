@@ -7,7 +7,6 @@ extern "C" {
 
 #include <ert/util/util.h>
 
-/*****************************************************************/
 /**
 
    The four macros UTIL_IS_INSTANCE_FUNCTION, UTIL_SAFE_CAST_FUNTION,

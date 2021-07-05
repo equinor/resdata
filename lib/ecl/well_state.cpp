@@ -184,8 +184,6 @@ struct well_state_struct {
     well_segment_collection_type *segments;
     well_branch_collection_type *branches;
 
-    /*****************************************************************/
-
     std::vector<well_conn_type *>
         index_wellhead; // An well_conn_type instance representing the wellhead - indexed by grid_nr.
     std::map<std::string, well_conn_type *>
@@ -636,8 +634,6 @@ void well_state_free(well_state_type *well) {
     delete well;
 }
 
-/*****************************************************************/
-
 int well_state_get_report_nr(const well_state_type *well_state) {
     return well_state->valid_from_report;
 }
@@ -693,8 +689,6 @@ int well_state_get_well_nr(const well_state_type *well_state) {
 const char *well_state_get_name(const well_state_type *well_state) {
     return well_state->name.c_str();
 }
-
-/*****************************************************************/
 
 const well_conn_collection_type *
 well_state_get_grid_connections(const well_state_type *well_state,

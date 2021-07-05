@@ -264,9 +264,6 @@ bool TestArea::copy_parent_content(const std::string input_path) const {
 } // namespace util
 } // namespace ecl
 
-/*****************************************************************/
-/* C API */
-
 test_work_area_type *test_work_area_alloc__(const char *test_name,
                                             bool store_area) {
     if (test_name)

@@ -380,8 +380,6 @@ int well_info_get_well_size(const well_info_type *well_info,
     return well_ts_get_size(well_ts);
 }
 
-/*****************************************************************/
-
 well_state_type *well_info_get_state_from_time(const well_info_type *well_info,
                                                const char *well_name,
                                                time_t sim_time) {
@@ -407,8 +405,6 @@ well_state_type *well_info_iiget_state(const well_info_type *well_info,
     const std::string &well_name = well_info->well_names[well_index];
     return well_info_iget_state(well_info, well_name.c_str(), time_index);
 }
-
-/*****************************************************************/
 
 int well_info_get_num_wells(const well_info_type *well_info) {
     return well_info->well_names.size();

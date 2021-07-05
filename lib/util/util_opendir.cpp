@@ -277,6 +277,3 @@ void util_walk_directory(const char *root_path,
     util_walk_directory__(root_path, depth_first, 0, file_callback,
                           file_callback_arg, dir_callback, dir_callback_arg);
 }
-
-/* End of recursive walk_directory implementation.               */
-/*****************************************************************/

@@ -99,8 +99,6 @@ void stringlist_append_copy(stringlist_type *stringlist, const char *s) {
         vector_append_ref(stringlist->strings, NULL);
 }
 
-/*****************************************************************/
-
 void stringlist_iset_copy(stringlist_type *stringlist, int index,
                           const char *s) {
     vector_iset_buffer(stringlist->strings, index, s, strlen(s) + 1);
@@ -115,8 +113,6 @@ void stringlist_iset_owned_ref(stringlist_type *stringlist, int index,
                                const char *s) {
     vector_iset_owned_ref(stringlist->strings, index, s, free);
 }
-
-/*****************************************************************/
 
 void stringlist_insert_copy(stringlist_type *stringlist, int index,
                             const char *s) {
@@ -537,8 +533,6 @@ stringlist_type *stringlist_alloc_from_split(const char *input_string,
     return slist;
 }
 
-/*****************************************************************/
-
 void stringlist_fwrite(const stringlist_type *s, FILE *stream) {
     int i;
     int size = stringlist_get_size(s);
@@ -607,8 +601,6 @@ void stringlist_python_sort(stringlist_type *s, int cmp_flag) {
 void stringlist_reverse(stringlist_type *s) {
     vector_inplace_reverse(s->strings);
 }
-
-/*****************************************************************/
 
 /*
   This function uses the stdlib function glob() to select file/path

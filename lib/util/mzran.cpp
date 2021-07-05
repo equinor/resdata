@@ -23,7 +23,6 @@
 #include <ert/util/type_macros.hpp>
 #include <ert/util/mzran.hpp>
 
-/*****************************************************************/
 /*
   This file implements the mz random number generator. Historically
   the rng has been translated from Fortran code found on the internet,
@@ -52,8 +51,6 @@ struct mzran_struct {
 static UTIL_SAFE_CAST_FUNCTION(
     mzran, MZRAN_TYPE_ID) static UTIL_SAFE_CAST_FUNCTION_CONST(mzran,
                                                                MZRAN_TYPE_ID)
-
-    /*****************************************************************/
 
     /**
    This function will return and unsigned int. This is the fundamental

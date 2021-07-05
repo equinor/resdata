@@ -345,9 +345,6 @@ ecl_rft_enum ecl_rft_node_get_type(const ecl_rft_node_type *rft_node) {
     return rft_node->data_type;
 }
 
-/*****************************************************************/
-/* various functions to access properties at the cell level      */
-
 const ecl_rft_cell_type *
 ecl_rft_node_iget_cell(const ecl_rft_node_type *rft_node, int index) {
     return rft_node->cells[index];
@@ -429,8 +426,6 @@ double ecl_rft_node_iget_soil(const ecl_rft_node_type *rft_node, int index) {
         return ecl_rft_cell_get_soil(cell);
     }
 }
-
-/*****************************************************************/
 
 double ecl_rft_node_iget_orat(const ecl_rft_node_type *rft_node, int index) {
     assert_type_and_index(rft_node, PLT, index);

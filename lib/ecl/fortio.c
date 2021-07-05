@@ -209,7 +209,6 @@ fortio_type *fortio_alloc_FILE_wrapper(const char *filename,
     return fortio;
 }
 
-/*****************************************************************/
 /*
   Observe that the stream open functions accept a failure, and call
   the fopen() function driectly.
@@ -271,8 +270,6 @@ static FILE *fortio_fopen_append(const char *filename, bool fmt_file) {
     return stream;
 }
 
-/*****************************************************************/
-
 fortio_type *fortio_open_reader(const char *filename, bool fmt_file,
                                 bool endian_flip_header) {
     FILE *stream = fortio_fopen_read(filename, fmt_file);
@@ -331,8 +328,6 @@ fortio_type *fortio_open_append(const char *filename, bool fmt_file,
         return NULL;
 }
 
-/*****************************************************************/
-
 bool fortio_fclose_stream(fortio_type *fortio) {
     if (fortio->stream_owner) {
         if (fortio->stream) {
@@ -374,8 +369,6 @@ bool fortio_assert_stream_open(fortio_type *fortio) {
         return fortio_stream_is_open(fortio);
     }
 }
-
-/*****************************************************************/
 
 static void fortio_free__(fortio_type *fortio) {
     free(fortio->filename);
@@ -598,8 +591,6 @@ void fortio_copy_record(fortio_type *src_stream, fortio_type *target_stream,
         *at_eof = false;
 }
 
-/*****************************************************************/
-
 void fortio_init_write(fortio_type *fortio, int record_size) {
     int file_header;
     file_header = record_size;
@@ -806,7 +797,6 @@ void fortio_fwrite_error(fortio_type *fortio) {
         util_unlink(fortio->filename);
 }
 
-/*****************************************************************/
 void fortio_fflush(fortio_type *fortio) { fflush(fortio->stream); }
 FILE *fortio_get_FILE(const fortio_type *fortio) { return fortio->stream; }
 //bool          fortio_endian_flip(const fortio_type *fortio)   { return fortio->endian_flip_header; }

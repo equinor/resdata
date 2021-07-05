@@ -50,8 +50,6 @@ typedef struct {
     const char *value_dash;
 } ecl_sum_fmt_type;
 
-/*****************************************************************/
-/* This is a forward declaration. */
 typedef struct ecl_sum_vector_struct ecl_sum_vector_type;
 
 typedef struct ecl_sum_struct ecl_sum_type;
@@ -189,7 +187,6 @@ const char *ecl_sum_get_general_var_unit(const ecl_sum_type *ecl_sum,
                                          const char *var);
 ert_ecl_unit_enum ecl_sum_get_unit_system(const ecl_sum_type *ecl_sum);
 
-/***************/
 void ecl_sum_fprintf(const ecl_sum_type *, FILE *, const stringlist_type *,
                      bool report_only, const ecl_sum_fmt_type *fmt);
 
@@ -237,7 +234,6 @@ double ecl_sum_days_from_time(const ecl_sum_type *ecl_sum, time_t sim_time);
 double ecl_sum_get_sim_length(const ecl_sum_type *ecl_sum);
 double ecl_sum_get_first_day(const ecl_sum_type *ecl_sum);
 
-/*****************************************************************/
 stringlist_type *ecl_sum_alloc_well_list(const ecl_sum_type *ecl_sum,
                                          const char *pattern);
 stringlist_type *ecl_sum_alloc_group_list(const ecl_sum_type *ecl_sum,

@@ -211,9 +211,6 @@ void ecl_region_deselect_from_layer(ecl_region_type *region,
 void ecl_region_deselect_false(ecl_region_type *region,
                                const ecl_kw_type *ecl_kw);
 
-/*****************************************************************/
-/* Functions to manipulate ecl_kw instances . */
-
 void ecl_region_set_kw_int(ecl_region_type *ecl_region, ecl_kw_type *ecl_kw,
                            int value, bool force_active);
 void ecl_region_set_kw_float(ecl_region_type *ecl_region, ecl_kw_type *ecl_kw,
@@ -256,19 +253,13 @@ const int_vector_type *ecl_region_get_kw_index_list(ecl_region_type *ecl_region,
                                                     const ecl_kw_type *ecl_kw,
                                                     bool force_active);
 
-/*****************************************************************/
-/* set/get the name */
 void ecl_region_set_name(ecl_region_type *region, const char *name);
 const char *ecl_region_get_name(const ecl_region_type *region);
 
-/*****************************************************************/
-/* Cpp compat/legacy/cruft functions. */
 int ecl_region_get_active_size_cpp(ecl_region_type *region);
 int ecl_region_get_global_size_cpp(ecl_region_type *region);
 const int *ecl_region_get_active_list_cpp(ecl_region_type *region);
 const int *ecl_region_get_global_list_cpp(ecl_region_type *region);
-
-/*****************************************************************/
 
 double ecl_region_sum_kw_double(ecl_region_type *ecl_region,
                                 const ecl_kw_type *ecl_kw, bool force_active);

@@ -78,8 +78,6 @@ struct ecl_subsidence_survey_struct {
         *dynamic_porevolume; /* Porevolume in each grid cell at survey time */
 };
 
-/*****************************************************************/
-
 static ecl_subsidence_survey_type *
 ecl_subsidence_survey_alloc_empty(const ecl_subsidence_type *sub,
                                   const char *name) {
@@ -152,8 +150,6 @@ static void ecl_subsidence_survey_free__(void *__subsidence_survey) {
         ecl_subsidence_survey_safe_cast(__subsidence_survey);
     ecl_subsidence_survey_free(subsidence_survey);
 }
-
-/*****************************************************************/
 
 static double
 ecl_subsidence_survey_eval(const ecl_subsidence_survey_type *base_survey,
@@ -258,7 +254,6 @@ static double ecl_subsidence_survey_eval_geertsma_rporv(
         utm_y, depth, poisson_ratio, seabed);
 }
 
-/*****************************************************************/
 /**
    The grid instance is only used during the construction phase. The
    @init_file object is used by the ecl_subsidence_add_survey_XXX()

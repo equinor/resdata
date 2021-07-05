@@ -107,9 +107,6 @@ bool ecl_file_save_kw(const ecl_file_type *ecl_file, const ecl_kw_type *ecl_kw);
 bool ecl_file_has_kw_ptr(const ecl_file_type *ecl_file,
                          const ecl_kw_type *ecl_kw);
 
-/*****************************************************************/
-/*               R E S T A R T  F I L E S                        */
-
 double ecl_file_iget_restart_sim_days(const ecl_file_type *restart_file,
                                       int index);
 time_t ecl_file_iget_restart_sim_date(const ecl_file_type *restart_file,
@@ -126,9 +123,6 @@ ecl_file_view_type *ecl_file_get_restart_view(ecl_file_type *ecl_file,
                                               time_t sim_time, double sim_days);
 ecl_file_view_type *ecl_file_get_summary_view(ecl_file_type *ecl_file,
                                               int report_step);
-
-/*****************************************************************/
-/* SUMMARY FILES */
 
 UTIL_IS_INSTANCE_HEADER(ecl_file);
 

@@ -62,8 +62,6 @@ struct ecl_file_kw_struct {
     ecl_kw_type *kw;
 };
 
-/*****************************************************************/
-
 inv_map_type *inv_map_alloc() {
     inv_map_type *map = (inv_map_type *)util_malloc(sizeof *map);
     map->file_kw_ptr = size_t_vector_alloc(0, 0);
@@ -124,8 +122,6 @@ ecl_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
                                                           index);
     }
 }
-
-/*****************************************************************/
 
 static UTIL_SAFE_CAST_FUNCTION(ecl_file_kw, ECL_FILE_KW_TYPE_ID)
     UTIL_IS_INSTANCE_FUNCTION(ecl_file_kw, ECL_FILE_KW_TYPE_ID)

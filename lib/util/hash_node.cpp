@@ -72,7 +72,6 @@ uint32_t hash_node_set_table_index(hash_node_type *node, uint32_t table_size) {
     return node->table_index;
 }
 
-/*****************************************************************/
 /* The three functions below here are the only functions accessing the
    data field of the hash_node.
 */
