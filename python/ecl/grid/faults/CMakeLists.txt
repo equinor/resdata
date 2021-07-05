@@ -6,7 +6,8 @@ set(PYTHON_SOURCES
     fault.py
     fault_line.py
     fault_segments.py
-    layer.py
-)
+    layer.py)
 
-add_python_package("python.ecl.grid.faults"  ${PYTHON_INSTALL_PREFIX}/ecl/grid/faults "${PYTHON_SOURCES}" True)
+add_python_package(
+  "python.ecl.grid.faults" ${PYTHON_INSTALL_PREFIX}/ecl/grid/faults
+  "${PYTHON_SOURCES}" True)

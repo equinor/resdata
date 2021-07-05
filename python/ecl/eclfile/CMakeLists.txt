@@ -7,8 +7,7 @@ set(PYTHON_SOURCES
     ecl_restart_file.py
     ecl_kw.py
     fortio.py
-    ecl_3dkw.py
+    ecl_3dkw.py)
 
-)
-
-add_python_package("python.ecl.eclfile" ${PYTHON_INSTALL_PREFIX}/ecl/eclfile "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.eclfile" ${PYTHON_INSTALL_PREFIX}/ecl/eclfile
+                   "${PYTHON_SOURCES}" True)

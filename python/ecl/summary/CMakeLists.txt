@@ -8,7 +8,7 @@ set(PYTHON_SOURCES
     ecl_sum_tstep.py
     ecl_sum_vector.py
     ecl_cmp.py
-    ecl_sum_var_type.py
-)
+    ecl_sum_var_type.py)
 
-add_python_package("python.ecl.summary"  ${PYTHON_INSTALL_PREFIX}/ecl/summary "${PYTHON_SOURCES}" True)
+add_python_package("python.ecl.summary" ${PYTHON_INSTALL_PREFIX}/ecl/summary
+                   "${PYTHON_SOURCES}" True)

@@ -9,9 +9,10 @@ set(PYTHON_SOURCES
     path_context.py
     lint_test_case.py
     import_test_case.py
-    debug_msg.py
-)
+    debug_msg.py)
 
-add_python_package("python.ecl.util.test"  ${PYTHON_INSTALL_PREFIX}/ecl/util/test "${PYTHON_SOURCES}" True)
+add_python_package(
+  "python.ecl.util.test" ${PYTHON_INSTALL_PREFIX}/ecl/util/test
+  "${PYTHON_SOURCES}" True)
 
 add_subdirectory(ecl_mock)
