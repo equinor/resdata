@@ -24,14 +24,18 @@ from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid
 
+
 def flatten(l):
     return [elem for sublist in l for elem in sublist]
 
+
 def divide(l, size):
-    return [l[i:i+size:] for i in range(0, len(l), size)]
+    return [l[i : i + size :] for i in range(0, len(l), size)]
+
 
 def duplicate_inner(l):
     return [elem for elem in l for i in range(2)][1:-1:]
+
 
 def construct_floatKW(name, values):
     kw = EclKW(name, len(values), EclDataType.ECL_FLOAT)
@@ -39,29 +43,34 @@ def construct_floatKW(name, values):
         kw[i] = value
     return kw
 
+
 def pre_mapaxes_translation(translation, mapaxes):
     if mapaxes is None:
         return translation
 
     x, y, z = translation
 
-    unit_y = numpy.array((mapaxes[0]-mapaxes[2], mapaxes[1]-mapaxes[3]));
-    unit_y /= sqrt(numpy.sum(unit_y*unit_y))
+    unit_y = numpy.array((mapaxes[0] - mapaxes[2], mapaxes[1] - mapaxes[3]))
+    unit_y /= sqrt(numpy.sum(unit_y * unit_y))
 
-    unit_x = numpy.array((mapaxes[4]-mapaxes[2], mapaxes[5]-mapaxes[3]));
-    unit_x /= sqrt(numpy.sum(unit_x*unit_x))
+    unit_x = numpy.array((mapaxes[4] - mapaxes[2], mapaxes[5] - mapaxes[3]))
+    unit_x /= sqrt(numpy.sum(unit_x * unit_x))
 
-    det = 1.0 / (unit_x[0]*unit_y[1] - unit_x[1] * unit_y[0]);
+    det = 1.0 / (unit_x[0] * unit_y[1] - unit_x[1] * unit_y[0])
 
     return (
-                ( x*unit_y[1] - y*unit_y[0]) * det,
-                (-x*unit_x[1] + y*unit_x[0]) * det,
-                z
-           )
+        (x * unit_y[1] - y * unit_y[0]) * det,
+        (-x * unit_x[1] + y * unit_x[0]) * det,
+        z,
+    )
+
 
 class EclGridGenerator:
 
-    _alloc_rectangular = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular(int, int, int, double, double, double, int*)", bind=False)
+    _alloc_rectangular = EclPrototype(
+        "ecl_grid_obj ecl_grid_alloc_rectangular(int, int, int, double, double, double, int*)",
+        bind=False,
+    )
 
     @classmethod
     def create_rectangular(cls, dims, dV, actnum=None):
@@ -72,10 +81,8 @@ class EclGridGenerator:
         """
         if actnum is None:
             ecl_grid = cls._alloc_rectangular(
-                                     dims[0], dims[1], dims[2],
-                                     dV[0], dV[1], dV[2],
-                                     None
-                                     )
+                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], None
+            )
         else:
             if not isinstance(actnum, IntVector):
                 tmp = IntVector(initial_size=len(actnum))
@@ -83,17 +90,15 @@ class EclGridGenerator:
                     tmp[index] = value
                 actnum = tmp
 
-            if not len(actnum) == dims[0]*dims[1]*dims[2]:
+            if not len(actnum) == dims[0] * dims[1] * dims[2]:
                 raise ValueError(
-                        "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
-                        % (len(actnum), dims[0]*dims[1]*dims[2])
-                        )
+                    "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
+                    % (len(actnum), dims[0] * dims[1] * dims[2])
+                )
 
             ecl_grid = cls._alloc_rectangular(
-                                 dims[0], dims[1], dims[2],
-                                 dV[0], dV[1], dV[2],
-                                 actnum.getDataPtr()
-                                 )
+                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], actnum.getDataPtr()
+            )
 
         # If we have not succeeded in creatin the grid we *assume* the
         # error is due to a failed malloc.
@@ -112,7 +117,7 @@ class EclGridGenerator:
 
         zcorn = [corners[i][2] for i in range(8)]
 
-        coord = [(corners[i], corners[i+4]) for i in range(4)]
+        coord = [(corners[i], corners[i + 4]) for i in range(4)]
         coord = flatten(flatten(coord))
 
         def construct_floatKW(name, values):
@@ -122,78 +127,105 @@ class EclGridGenerator:
             return kw
 
         grid = EclGrid.create(
-                (1, 1, 1),
-                construct_floatKW("ZCORN", zcorn),
-                construct_floatKW("COORD", coord),
-                None
-                )
+            (1, 1, 1),
+            construct_floatKW("ZCORN", zcorn),
+            construct_floatKW("COORD", coord),
+            None,
+        )
 
         if not corners == [grid.getCellCorner(i, 0) for i in range(8)]:
-            raise AssertionError("Failed to generate single cell grid. " +
-                    "Did not end up the expected corners.")
+            raise AssertionError(
+                "Failed to generate single cell grid. "
+                + "Did not end up the expected corners."
+            )
 
         return grid
 
     @classmethod
-    def create_zcorn(cls, dims, dV, offset=1, escape_origo_shift=(1,1,0),
-            irregular_offset=False, irregular=False, concave=False,
-            faults=False):
+    def create_zcorn(
+        cls,
+        dims,
+        dV,
+        offset=1,
+        escape_origo_shift=(1, 1, 0),
+        irregular_offset=False,
+        irregular=False,
+        concave=False,
+        faults=False,
+    ):
 
-        cls.__assert_zcorn_parameters(dims, dV, offset, escape_origo_shift,
-                    irregular_offset, irregular, concave, faults)
+        cls.__assert_zcorn_parameters(
+            dims,
+            dV,
+            offset,
+            escape_origo_shift,
+            irregular_offset,
+            irregular,
+            concave,
+            faults,
+        )
 
         nx, ny, nz = dims
         dx, dy, dz = dV
 
         # Compute zcorn
         z = escape_origo_shift[2]
-        zcorn = [z]*(4*nx*ny)
-        for k in range(nz-1):
-            z = z+dz
-            local_offset = offset + (dz/2. if irregular_offset and k%2 == 0 else 0)
+        zcorn = [z] * (4 * nx * ny)
+        for k in range(nz - 1):
+            z = z + dz
+            local_offset = offset + (dz / 2.0 if irregular_offset and k % 2 == 0 else 0)
 
             layer = []
-            for i in range(ny+1):
-                shift = ((i if concave else 0) + (k/2 if irregular else 0)) % 2
-                path = [z if i%2 == shift else z+local_offset for i in range(nx+1)]
+            for i in range(ny + 1):
+                shift = ((i if concave else 0) + (k / 2 if irregular else 0)) % 2
+                path = [
+                    z if i % 2 == shift else z + local_offset for i in range(nx + 1)
+                ]
                 layer.append(duplicate_inner(path))
 
-            zcorn = zcorn + (2*flatten(duplicate_inner(layer)))
+            zcorn = zcorn + (2 * flatten(duplicate_inner(layer)))
 
-        z = z+dz
-        zcorn = zcorn + ([z]*(4*nx*ny))
+        z = z + dz
+        zcorn = zcorn + ([z] * (4 * nx * ny))
 
         if faults:
             # Ensure that drop does not align with grid structure
-            drop = (offset+dz)/2. if abs(offset-dz/2.) > 0.2 else offset + 0.4
+            drop = (offset + dz) / 2.0 if abs(offset - dz / 2.0) > 0.2 else offset + 0.4
             zcorn = cls.__create_faults(nx, ny, nz, zcorn, drop)
 
-
-        if z != escape_origo_shift[2] + nz*dz:
-            raise ValueError("%f != %f" % (z, escape_origo_shift[2] + nz*dz))
+        if z != escape_origo_shift[2] + nz * dz:
+            raise ValueError("%f != %f" % (z, escape_origo_shift[2] + nz * dz))
 
         cls.assert_zcorn(nx, ny, nz, zcorn)
         return construct_floatKW("ZCORN", zcorn)
 
     @classmethod
-    def create_coord(cls, dims, dV, escape_origo_shift=(1,1,0),
-            scale=1, translation=(0,0,0), rotate=False, misalign=False):
+    def create_coord(
+        cls,
+        dims,
+        dV,
+        escape_origo_shift=(1, 1, 0),
+        scale=1,
+        translation=(0, 0, 0),
+        rotate=False,
+        misalign=False,
+    ):
 
         nx, ny, nz = dims
         dx, dy, dz = dV
 
         # Compute coord
-        z = escape_origo_shift[2] + nz*dz
+        z = escape_origo_shift[2] + nz * dz
         coord = []
-        for j, i in itertools.product(range(ny+1), range(nx+1)):
-            x, y = i*dx+escape_origo_shift[0], j*dy+escape_origo_shift[1]
+        for j, i in itertools.product(range(ny + 1), range(nx + 1)):
+            x, y = i * dx + escape_origo_shift[0], j * dy + escape_origo_shift[1]
             coord = coord + [x, y, escape_origo_shift[2], x, y, z]
 
         # Apply transformations
         lower_center = (
-                nx*dx/2. + escape_origo_shift[0],
-                ny*dy/2. + escape_origo_shift[1]
-                )
+            nx * dx / 2.0 + escape_origo_shift[0],
+            ny * dy / 2.0 + escape_origo_shift[1],
+        )
 
         if misalign:
             coord = cls.__misalign_coord(coord, dims, dV)
@@ -209,8 +241,17 @@ class EclGridGenerator:
         return construct_floatKW("COORD", coord)
 
     @classmethod
-    def __assert_zcorn_parameters(cls, dims, dV, offset, escape_origo_shift,
-            irregular_offset, irregular, concave, faults):
+    def __assert_zcorn_parameters(
+        cls,
+        dims,
+        dV,
+        offset,
+        escape_origo_shift,
+        irregular_offset,
+        irregular,
+        concave,
+        faults,
+    ):
 
         nx, ny, nz = dims
         dx, dy, dz = dV
@@ -222,18 +263,30 @@ class EclGridGenerator:
         if offset < 0:
             raise ValueError("Expected non-negative offset")
 
-        if irregular and offset + (dz/2. if irregular_offset else 0) > dz:
-            raise AssertionError("Arguments can result in self-" +
-                    "intersecting cells. Increase dz, deactivate eiter " +
-                    "irregular or irregular_offset, or decrease offset to avoid " +
-                    "any problems")
+        if irregular and offset + (dz / 2.0 if irregular_offset else 0) > dz:
+            raise AssertionError(
+                "Arguments can result in self-"
+                + "intersecting cells. Increase dz, deactivate eiter "
+                + "irregular or irregular_offset, or decrease offset to avoid "
+                + "any problems"
+            )
 
     @classmethod
-    def create_grid(cls, dims, dV, offset=1,
-            escape_origo_shift=(1,1,0),
-            irregular_offset=False, irregular=False, concave=False,
-            faults=False, scale=1, translation=(0,0,0), rotate=False,
-            misalign=False):
+    def create_grid(
+        cls,
+        dims,
+        dV,
+        offset=1,
+        escape_origo_shift=(1, 1, 0),
+        irregular_offset=False,
+        irregular=False,
+        concave=False,
+        faults=False,
+        scale=1,
+        translation=(0, 0, 0),
+        rotate=False,
+        misalign=False,
+    ):
         """
         Will create a new grid where each cell is a parallelogram (skewed by z-value).
         The number of cells are given by @dims = (nx, ny, nz) and the dimention
@@ -281,11 +334,20 @@ class EclGridGenerator:
         @irregular_offset.
         """
 
-        zcorn = cls.create_zcorn(dims, dV, offset, escape_origo_shift,
-                                irregular_offset, irregular, concave, faults)
+        zcorn = cls.create_zcorn(
+            dims,
+            dV,
+            offset,
+            escape_origo_shift,
+            irregular_offset,
+            irregular,
+            concave,
+            faults,
+        )
 
-        coord = cls.create_coord(dims, dV, escape_origo_shift, scale,
-                                translation, rotate, misalign)
+        coord = cls.create_coord(
+            dims, dV, escape_origo_shift, scale, translation, rotate, misalign
+        )
 
         return EclGrid.create(dims, zcorn, coord, None)
 
@@ -296,19 +358,19 @@ class EclGridGenerator:
         i or j index is 1 modulo 3.
         """
 
-        plane_size = 4*nx*ny
+        plane_size = 4 * nx * ny
         for x, y, z in itertools.product(range(nx), range(ny), range(nz)):
-            if x%3 != 1 and y%3 != 1:
+            if x % 3 != 1 and y % 3 != 1:
                 continue
 
-            corner = [0]*8
-            corner[0] = 2*z*plane_size + 4*y*nx + 2*x
+            corner = [0] * 8
+            corner[0] = 2 * z * plane_size + 4 * y * nx + 2 * x
             corner[1] = corner[0] + 1
-            corner[2] = corner[0] + 2*nx
+            corner[2] = corner[0] + 2 * nx
             corner[3] = corner[2] + 1
 
             for i in range(4, 8):
-                corner[i] = corner[i-4] + plane_size
+                corner[i] = corner[i - 4] + plane_size
 
             for c in corner:
                 zcorn[c] = zcorn[c] + drop
@@ -327,64 +389,63 @@ class EclGridGenerator:
 
         """
 
-        if len(zcorn) != 8*nx*ny*nz:
+        if len(zcorn) != 8 * nx * ny * nz:
             raise AssertionError(
-                    "Expected len(zcorn) to be %d, was %d" %
-                    (8*nx*ny*nz, len(zcorn))
-                    )
+                "Expected len(zcorn) to be %d, was %d" % (8 * nx * ny * nz, len(zcorn))
+            )
 
-        plane_size = 4*nx*ny
-        for p in range(8*nx*ny*nz - plane_size):
+        plane_size = 4 * nx * ny
+        for p in range(8 * nx * ny * nz - plane_size):
             if zcorn[p] > zcorn[p + plane_size] and twisted_check:
                 raise AssertionError(
-                    "Twisted cell was created. " +
-                    "Decrease offset or increase dz to avoid this!"
-                    )
+                    "Twisted cell was created. "
+                    + "Decrease offset or increase dz to avoid this!"
+                )
 
     @classmethod
     def __scale_coord(cls, coord, scale, lower_center):
-        coord = numpy.array([
-            list(map(float, coord[i:i+6:]))
-            for i in range(0, len(coord), 6)
-            ])
-        origo = numpy.array(3*[0.] + list(lower_center) + [0])
-        scale = numpy.array(3*[1.] + 2*[scale] + [1])
-        coord = scale * (coord-origo) + origo
+        coord = numpy.array(
+            [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
+        )
+        origo = numpy.array(3 * [0.0] + list(lower_center) + [0])
+        scale = numpy.array(3 * [1.0] + 2 * [scale] + [1])
+        coord = scale * (coord - origo) + origo
         return coord.flatten().tolist()
 
     @classmethod
     def __misalign_coord(cls, coord, dims, dV):
         nx, ny, nz = dims
 
-        coord = numpy.array([
-            list(map(float, coord[i:i+6:]))
-            for i in range(0, len(coord), 6)
-            ])
+        coord = numpy.array(
+            [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
+        )
 
-        tf = lambda i, j: 1./2 if abs(i)+abs(j) <= 1 else 0.25
-        adjustment = numpy.array([
-            (0, 0, 0, i*tf(i,j)*dV[0], j*tf(i,j)*dV[1], 0) for i, j in itertools.product([-1, 0, 1], repeat=2)
-            ])
+        tf = lambda i, j: 1.0 / 2 if abs(i) + abs(j) <= 1 else 0.25
+        adjustment = numpy.array(
+            [
+                (0, 0, 0, i * tf(i, j) * dV[0], j * tf(i, j) * dV[1], 0)
+                for i, j in itertools.product([-1, 0, 1], repeat=2)
+            ]
+        )
 
         for i, c in enumerate(coord):
             # Leave the outermost coords alone
-            if i < nx+1 or i >= len(coord)-(nx+1):
+            if i < nx + 1 or i >= len(coord) - (nx + 1):
                 continue
-            if i%(nx+1) in [0, nx]:
+            if i % (nx + 1) in [0, nx]:
                 continue
 
-            c += adjustment[i%len(adjustment)]
+            c += adjustment[i % len(adjustment)]
 
         return coord.flatten().tolist()
 
     @classmethod
     def __rotate_coord(cls, coord, lower_center):
-        coord = numpy.array([
-            list(map(float, coord[i:i+6:]))
-            for i in range(0, len(coord), 6)
-            ])
+        coord = numpy.array(
+            [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
+        )
 
-        origo = numpy.array(3*[0.] + list(lower_center) + [0])
+        origo = numpy.array(3 * [0.0] + list(lower_center) + [0])
         coord -= origo
 
         for c in coord:
@@ -395,11 +456,10 @@ class EclGridGenerator:
 
     @classmethod
     def __translate_lower_coord(cls, coord, translation):
-        coord = numpy.array([
-            list(map(float, coord[i:i+6:]))
-            for i in range(0, len(coord), 6)
-            ])
-        translation = numpy.array(3*[0.] + list(translation))
+        coord = numpy.array(
+            [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
+        )
+        translation = numpy.array(3 * [0.0] + list(translation))
 
         coord = coord + translation
         return coord.flatten().tolist()
@@ -417,17 +477,19 @@ class EclGridGenerator:
 
         """
 
-        if len(coord) != 6*(nx+1)*(ny+1):
+        if len(coord) != 6 * (nx + 1) * (ny + 1):
             raise AssertionError(
-                    "Expected len(coord) to be %d, was %d" %
-                    (6*(nx+1)*(ny+1), len(coord))
-                    )
+                "Expected len(coord) to be %d, was %d"
+                % (6 * (nx + 1) * (ny + 1), len(coord))
+            )
 
         if not negative_values and min(coord) < 0:
-            raise AssertionError("Negative COORD values was generated. " +
-                    "This is likely due to a tranformation. " +
-                    "Increasing the escape_origio_shift will most likely " +
-                    "fix the problem")
+            raise AssertionError(
+                "Negative COORD values was generated. "
+                + "This is likely due to a tranformation. "
+                + "Increasing the escape_origio_shift will most likely "
+                + "fix the problem"
+            )
 
     @classmethod
     def assert_actnum(cls, nx, ny, nz, actnum):
@@ -444,37 +506,35 @@ class EclGridGenerator:
         if actnum is None:
             return
 
-        if len(actnum) != nx*ny*nz:
+        if len(actnum) != nx * ny * nz:
             raise AssertionError(
-                    "Expected the length of ACTNUM to be %d, was %s."
-                    %(nx*ny*nz, len(actnum))
-                    )
+                "Expected the length of ACTNUM to be %d, was %s."
+                % (nx * ny * nz, len(actnum))
+            )
 
-        if set(actnum)-set([0,1]):
+        if set(actnum) - set([0, 1]):
             raise AssertionError(
                 "Expected ACTNUM to consist of 0's and 1's, was %s."
                 % ", ".join(map(str, set(actnum)))
-                )
+            )
 
     @classmethod
     def extract_coord(cls, dims, coord, ijk_bounds):
         nx, ny, nz = dims
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
 
         cls.assert_coord(nx, ny, nz, coord, negative_values=True)
 
         # Format COORD
-        coord = divide(divide(coord, 6), nx+1)
+        coord = divide(divide(coord, 6), nx + 1)
 
         # Extract new COORD
-        new_coord = [coord_slice[lx:ux+2:]
-                        for coord_slice in coord[ly:uy+2]]
+        new_coord = [coord_slice[lx : ux + 2 :] for coord_slice in coord[ly : uy + 2]]
 
         # Flatten and verify
         new_coord = flatten(flatten(new_coord))
-        cls.assert_coord(new_nx, new_ny, new_nz, new_coord,
-                negative_values=True)
+        cls.assert_coord(new_nx, new_ny, new_nz, new_coord, negative_values=True)
 
         return construct_floatKW("COORD", new_coord)
 
@@ -482,19 +542,19 @@ class EclGridGenerator:
     def extract_zcorn(cls, dims, zcorn, ijk_bounds):
         nx, ny, nz = dims
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
 
         cls.assert_zcorn(nx, ny, nz, zcorn, twisted_check=False)
 
         # Format ZCORN
-        zcorn = divide(divide(zcorn, 2*nx), 2*ny)
+        zcorn = divide(divide(zcorn, 2 * nx), 2 * ny)
 
         # Extract new ZCORN
         new_zcorn = [
-                        y_slice[2*lx:2*ux+2:]
-                        for z_slice in zcorn[2*lz:2*uz+2:]
-                        for y_slice in z_slice[2*ly:2*uy+2:]
-                    ]
+            y_slice[2 * lx : 2 * ux + 2 :]
+            for z_slice in zcorn[2 * lz : 2 * uz + 2 :]
+            for y_slice in z_slice[2 * ly : 2 * uy + 2 :]
+        ]
 
         # Flatten and verify
         new_zcorn = flatten(new_zcorn)
@@ -509,17 +569,17 @@ class EclGridGenerator:
 
         nx, ny, nz = dims
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
 
         cls.assert_actnum(nx, ny, nz, actnum)
 
         actnum = divide(divide(actnum, nx), ny)
 
         new_actnum = [
-                        y_slice[lx:ux+1:]
-                        for z_slice in actnum[lz:uz+1:]
-                        for y_slice in z_slice[ly:uy+1:]
-                    ]
+            y_slice[lx : ux + 1 :]
+            for z_slice in actnum[lz : uz + 1 :]
+            for y_slice in z_slice[ly : uy + 1 :]
+        ]
 
         new_actnum = flatten(new_actnum)
         cls.assert_actnum(new_nx, new_ny, new_nz, new_actnum)
@@ -532,19 +592,18 @@ class EclGridGenerator:
 
     @classmethod
     def __translate_coord(cls, coord, translation):
-        coord = numpy.array([
-            list(map(float, coord[i:i+6:]))
-            for i in range(0, len(coord), 6)
-            ])
+        coord = numpy.array(
+            [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
+        )
         translation = numpy.array(list(translation) + list(translation))
 
         coord = coord + translation
         return construct_floatKW("COORD", coord.flatten().tolist())
 
-
     @classmethod
-    def extract_subgrid(cls, grid, ijk_bounds,
-            decomposition_change=False, translation=None):
+    def extract_subgrid(
+        cls, grid, ijk_bounds, decomposition_change=False, translation=None
+    ):
 
         """
         Extracts a subgrid from the given grid according to the specified
@@ -586,23 +645,33 @@ class EclGridGenerator:
         mapaxes = grid.export_mapaxes()
 
         sub_data = cls.extract_subgrid_data(
-                                    gdims,
-                                    coord, zcorn,
-                                    ijk_bounds=ijk_bounds,
-                                    actnum=actnum,
-                                    mapaxes=mapaxes,
-                                    decomposition_change=decomposition_change,
-                                    translation=translation
-                                    )
+            gdims,
+            coord,
+            zcorn,
+            ijk_bounds=ijk_bounds,
+            actnum=actnum,
+            mapaxes=mapaxes,
+            decomposition_change=decomposition_change,
+            translation=translation,
+        )
 
-        sdim = tuple([b-a+1 for a,b in ijk_bounds])
+        sdim = tuple([b - a + 1 for a, b in ijk_bounds])
         sub_coord, sub_zcorn, sub_actnum = sub_data
 
         return EclGrid.create(sdim, sub_zcorn, sub_coord, sub_actnum, mapaxes=mapaxes)
 
     @classmethod
-    def extract_subgrid_data(cls, dims, coord, zcorn, ijk_bounds, actnum=None,
-            mapaxes=None, decomposition_change=False, translation=None):
+    def extract_subgrid_data(
+        cls,
+        dims,
+        coord,
+        zcorn,
+        ijk_bounds,
+        actnum=None,
+        mapaxes=None,
+        decomposition_change=False,
+        translation=None,
+    ):
         """
 
         Extracts subgrid data from COORD, ZCORN and potentially ACTNUM. It
@@ -645,7 +714,7 @@ class EclGridGenerator:
 
         nx, ny, nz = dims
         (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux-lx+1, uy-ly+1, uz-lz+1
+        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
 
         new_coord = cls.extract_coord(dims, coord, ijk_bounds)
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
@@ -672,28 +741,28 @@ class EclGridGenerator:
 
         if len(ijk_bounds) != 3:
             raise ValueError(
-                    "Expected ijk_bounds to contain three intervals, " +
-                    "contained only %d" % len(ijk_bounds))
+                "Expected ijk_bounds to contain three intervals, "
+                + "contained only %d" % len(ijk_bounds)
+            )
 
         for n, bound in zip(dims, ijk_bounds):
             if len(bound) != 2:
                 raise ValueError(
-                    "Expected bound to consist of two elements, was %s",
-                    str(bound))
+                    "Expected bound to consist of two elements, was %s", str(bound)
+                )
 
             if not (isinstance(bound[0], int) and isinstance(bound[1], int)):
                 raise TypeError(
                     "Expected bound to consist of two integers, ",
-                    "was %s (%s)"
-                    %(str(bound), str((map(type,bound))))
-                    )
+                    "was %s (%s)" % (str(bound), str((map(type, bound)))),
+                )
 
             if not (0 <= bound[0] <= bound[1] < n):
                 raise ValueError(
-                    "Expected bounds to have the following format: " +
-                    "0 <= lower bound <= upper_bound < ni, "+
-                    "was %d <=? %d <=? %d <? %d."
-                    % (0, bound[0], bound[1], n))
+                    "Expected bounds to have the following format: "
+                    + "0 <= lower bound <= upper_bound < ni, "
+                    + "was %d <=? %d <=? %d <? %d." % (0, bound[0], bound[1], n)
+                )
 
         return ijk_bounds
 
@@ -701,10 +770,16 @@ class EclGridGenerator:
     def assert_decomposition_change(cls, ijk_bounds, decomposition_change):
         if sum(list(zip(*ijk_bounds))[0]) % 2 == 1 and not decomposition_change:
             raise ValueError(
-                    "The subgrid defined by %s " % str(ijk_bounds) +
-                    "will cause an unintended decomposition change. " +
-                    "Either change one of the lower bounds by 1 " +
-                    "or activate decomposition_change."
-                    )
+                "The subgrid defined by %s " % str(ijk_bounds)
+                + "will cause an unintended decomposition change. "
+                + "Either change one of the lower bounds by 1 "
+                + "or activate decomposition_change."
+            )
 
-monkey_the_camel(EclGridGenerator, 'createRectangular', EclGridGenerator.create_rectangular, classmethod)
+
+monkey_the_camel(
+    EclGridGenerator,
+    "createRectangular",
+    EclGridGenerator.create_rectangular,
+    classmethod,
+)

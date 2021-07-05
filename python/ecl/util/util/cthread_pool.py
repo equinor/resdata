@@ -25,10 +25,10 @@ import weakref
 class CThreadPool(BaseCClass):
     TYPE_NAME = "thread_pool"
 
-    _alloc   = EclPrototype("void* thread_pool_alloc(int, bool)", bind = False)
-    _free    = EclPrototype("void thread_pool_free(thread_pool)")
+    _alloc = EclPrototype("void* thread_pool_alloc(int, bool)", bind=False)
+    _free = EclPrototype("void thread_pool_free(thread_pool)")
     _add_job = EclPrototype("void thread_pool_add_job(thread_pool, void*, void*)")
-    _join    = EclPrototype("void thread_pool_join(thread_pool)")
+    _join = EclPrototype("void thread_pool_join(thread_pool)")
 
     def __init__(self, pool_size, start=True):
         c_ptr = self._alloc(pool_size, start)

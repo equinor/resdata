@@ -31,6 +31,7 @@ from cwrap import BaseCEnum
 from ecl.util.util import monkey_the_camel
 from ecl import EclPrototype
 
+
 class EclFileEnum(BaseCEnum):
     TYPE_NAME = "ecl_file_enum"
     ECL_OTHER_FILE = None
@@ -45,41 +46,45 @@ class EclFileEnum(BaseCEnum):
     ECL_DATA_FILE = None
 
 
-EclFileEnum.addEnum("ECL_OTHER_FILE",           0)
-EclFileEnum.addEnum("ECL_RESTART_FILE",         1)
+EclFileEnum.addEnum("ECL_OTHER_FILE", 0)
+EclFileEnum.addEnum("ECL_RESTART_FILE", 1)
 EclFileEnum.addEnum("ECL_UNIFIED_RESTART_FILE", 2)
-EclFileEnum.addEnum("ECL_SUMMARY_FILE",         4)
+EclFileEnum.addEnum("ECL_SUMMARY_FILE", 4)
 EclFileEnum.addEnum("ECL_UNIFIED_SUMMARY_FILE", 8)
-EclFileEnum.addEnum("ECL_SUMMARY_HEADER_FILE",  16)
-EclFileEnum.addEnum("ECL_GRID_FILE",            32)
-EclFileEnum.addEnum("ECL_EGRID_FILE",           64)
-EclFileEnum.addEnum("ECL_INIT_FILE",            128)
-EclFileEnum.addEnum("ECL_RFT_FILE",             256)
-EclFileEnum.addEnum("ECL_DATA_FILE",            512)
+EclFileEnum.addEnum("ECL_SUMMARY_HEADER_FILE", 16)
+EclFileEnum.addEnum("ECL_GRID_FILE", 32)
+EclFileEnum.addEnum("ECL_EGRID_FILE", 64)
+EclFileEnum.addEnum("ECL_INIT_FILE", 128)
+EclFileEnum.addEnum("ECL_RFT_FILE", 256)
+EclFileEnum.addEnum("ECL_DATA_FILE", 512)
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
+
 
 class EclPhaseEnum(BaseCEnum):
-    TYPE_NAME="ecl_phase_enum"
+    TYPE_NAME = "ecl_phase_enum"
     ECL_OIL_PHASE = None
     ECL_GAS_PHASE = None
     ECL_WATER_PHASE = None
+
 
 EclPhaseEnum.addEnum("ECL_OIL_PHASE", 1)
 EclPhaseEnum.addEnum("ECL_GAS_PHASE", 2)
 EclPhaseEnum.addEnum("ECL_WATER_PHASE", 4)
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
+
 
 class EclUnitTypeEnum(BaseCEnum):
     TYPE_NAME = "ecl_unit_enum"
 
     ECL_METRIC_UNITS = None
-    ECL_FIELD_UNITS  = None
-    ECL_LAB_UNITS    = None
-    ECL_PVT_M_UNITS  = None
+    ECL_FIELD_UNITS = None
+    ECL_LAB_UNITS = None
+    ECL_PVT_M_UNITS = None
+
 
 EclUnitTypeEnum.addEnum("ECL_METRIC_UNITS", 1)
 EclUnitTypeEnum.addEnum("ECL_FIELD_UNITS", 2)
@@ -87,8 +92,8 @@ EclUnitTypeEnum.addEnum("ECL_LAB_UNITS", 3)
 EclUnitTypeEnum.addEnum("ECL_PVT_M_UNITS", 4)
 
 
+# -----------------------------------------------------------------
 
-#-----------------------------------------------------------------
 
 class EclFileFlagEnum(BaseCEnum):
     TYPE_NAME = "ecl_file_flag_enum"
@@ -102,14 +107,18 @@ EclFileFlagEnum.addEnum("ECL_FILE_CLOSE_STREAM", 1)
 EclFileFlagEnum.addEnum("ECL_FILE_WRITABLE", 2)
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
+
 
 class EclUtil(object):
-    _get_num_cpu    = EclPrototype("int ecl_util_get_num_cpu(char*)", bind = False)
-    _get_file_type  = EclPrototype("ecl_file_enum ecl_util_get_file_type(char*, bool*, int*)", bind = False)
-    _get_start_date = EclPrototype("time_t ecl_util_get_start_date(char*)", bind = False)
-    _get_report_step = EclPrototype("int ecl_util_filename_report_nr(char*)", bind = False)
-
+    _get_num_cpu = EclPrototype("int ecl_util_get_num_cpu(char*)", bind=False)
+    _get_file_type = EclPrototype(
+        "ecl_file_enum ecl_util_get_file_type(char*, bool*, int*)", bind=False
+    )
+    _get_start_date = EclPrototype("time_t ecl_util_get_start_date(char*)", bind=False)
+    _get_report_step = EclPrototype(
+        "int ecl_util_filename_report_nr(char*)", bind=False
+    )
 
     @staticmethod
     def get_num_cpu(datafile):
@@ -143,7 +152,9 @@ class EclUtil(object):
         """
         fmt_file = ctypes.c_bool()
         report_step = ctypes.c_int(-1)
-        file_type = EclUtil._get_file_type(filename, ctypes.byref(fmt_file), ctypes.byref(report_step))
+        file_type = EclUtil._get_file_type(
+            filename, ctypes.byref(fmt_file), ctypes.byref(report_step)
+        )
         if report_step.value == -1:
             step = None
         else:
@@ -160,10 +171,9 @@ class EclUtil(object):
         return report_step
 
 
-
 get_num_cpu = EclUtil.get_num_cpu
 get_file_type = EclUtil.get_file_type
 get_start_date = EclUtil.get_start_date
 
-monkey_the_camel(EclUtil, 'inspectExtension', EclUtil.inspect_extension, staticmethod)
-monkey_the_camel(EclUtil, 'reportStep', EclUtil.report_step, staticmethod)
+monkey_the_camel(EclUtil, "inspectExtension", EclUtil.inspect_extension, staticmethod)
+monkey_the_camel(EclUtil, "reportStep", EclUtil.report_step, staticmethod)

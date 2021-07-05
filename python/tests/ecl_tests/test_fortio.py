@@ -18,18 +18,12 @@ import os
 import cwrap
 from random import randint
 from ecl import EclDataType
-from ecl.eclfile import FortIO, EclKW , openFortIO, EclFile
+from ecl.eclfile import FortIO, EclKW, openFortIO, EclFile
 from ecl.util.test import TestAreaContext
 from tests import EclTest
 
 
-
-
 class FortIOTest(EclTest):
-
-
-
-
     def test_open_write(self):
         with TestAreaContext("python/fortio/write"):
             f = FortIO("newfile", FortIO.WRITE_MODE)
@@ -62,7 +56,6 @@ class FortIOTest(EclTest):
             self.assertTrue(k1.equal(kw1))
             self.assertTrue(k2.equal(kw2))
 
-
     def test_truncate(self):
         kw1 = EclKW("KW1", 2, EclDataType.ECL_INT)
         kw2 = EclKW("KW2", 2, EclDataType.ECL_INT)
@@ -73,28 +66,24 @@ class FortIOTest(EclTest):
         kw2[1] = 335
 
         with TestAreaContext("python/fortio/ftruncate") as t:
-            with openFortIO("file" , mode = FortIO.WRITE_MODE) as f:
+            with openFortIO("file", mode=FortIO.WRITE_MODE) as f:
                 kw1.fwrite(f)
-                pos1 = f.getPosition( )
+                pos1 = f.getPosition()
                 kw2.fwrite(f)
 
             # Truncate file in read mode; should fail hard.
             with openFortIO("file") as f:
                 with self.assertRaises(IOError):
-                    f.truncate( )
+                    f.truncate()
 
-
-            with openFortIO("file" , mode = FortIO.READ_AND_WRITE_MODE) as f:
-                f.seek( pos1 )
-                f.truncate( )
-
+            with openFortIO("file", mode=FortIO.READ_AND_WRITE_MODE) as f:
+                f.seek(pos1)
+                f.truncate()
 
             f = EclFile("file")
-            self.assertEqual( len(f) , 1)
+            self.assertEqual(len(f), 1)
             kw1_ = f[0]
-            self.assertEqual( kw1 , kw1_)
-
-
+            self.assertEqual(kw1, kw1_)
 
     def test_fortio_creation(self):
         with TestAreaContext("python/fortio/create"):
@@ -104,36 +93,31 @@ class FortIOTest(EclTest):
             a = FortIO("test", FortIO.APPEND_MODE)
 
             w.close()
-            w.close() # should not fail
-
-
-
-
+            w.close()  # should not fail
 
     def test_context(self):
         with TestAreaContext("python/fortio/context") as t:
-            kw1 = EclKW("KW" , 2456 , EclDataType.ECL_FLOAT)
+            kw1 = EclKW("KW", 2456, EclDataType.ECL_FLOAT)
             for i in range(len(kw1)):
-                kw1[i] = randint(0,1000)
+                kw1[i] = randint(0, 1000)
 
-            with openFortIO("file" , mode = FortIO.WRITE_MODE) as f:
-                kw1.fwrite( f )
-                self.assertEqual( f.filename() , "file")
+            with openFortIO("file", mode=FortIO.WRITE_MODE) as f:
+                kw1.fwrite(f)
+                self.assertEqual(f.filename(), "file")
 
             with openFortIO("file") as f:
-                kw2 = EclKW.fread( f )
+                kw2 = EclKW.fread(f)
 
-            self.assertTrue( kw1 == kw2 )
-
+            self.assertTrue(kw1 == kw2)
 
     def test_is_fortran_file(self):
         with TestAreaContext("python/fortio/guess"):
-            kw1 = EclKW("KW" , 12345 , EclDataType.ECL_FLOAT)
-            with openFortIO("fortran_file" , mode = FortIO.WRITE_MODE) as f:
-                kw1.fwrite( f )
+            kw1 = EclKW("KW", 12345, EclDataType.ECL_FLOAT)
+            with openFortIO("fortran_file", mode=FortIO.WRITE_MODE) as f:
+                kw1.fwrite(f)
 
-            with cwrap.open("text_file" , "w") as f:
-                kw1.write_grdecl( f )
+            with cwrap.open("text_file", "w") as f:
+                kw1.write_grdecl(f)
 
-            self.assertTrue( FortIO.isFortranFile( "fortran_file" ))
-            self.assertFalse( FortIO.isFortranFile( "text_file" ))
+            self.assertTrue(FortIO.isFortranFile("fortran_file"))
+            self.assertFalse(FortIO.isFortranFile("text_file"))

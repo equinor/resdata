@@ -21,6 +21,7 @@ from .fault import Fault
 
 comment_regexp = re.compile("--.*")
 
+
 def dequote(s):
     if s[0] in ["'", '"']:
         if s[0] == s[-1]:
@@ -39,18 +40,17 @@ class FaultCollection(object):
 
         if self.__grid is not None:
             if not isinstance(self.__grid, EclGrid):
-                raise ValueError("When supplying a list of files to load - you must have a grid")
+                raise ValueError(
+                    "When supplying a list of files to load - you must have a grid"
+                )
             for file in file_list:
                 self.load(self.__grid, file)
-
 
     def __contains__(self, fault_name):
         return fault_name in self.__fault_map
 
-
     def __len__(self):
         return len(self.__fault_list)
-
 
     def __getitem__(self, index):
         if isinstance(index, str):
@@ -63,23 +63,18 @@ class FaultCollection(object):
     def __iter__(self):
         return iter(self.__fault_list)
 
-
     def get_grid(self):
         return self.__grid
-
 
     def get_fault(self, name):
         return self[name]
 
-
     def has_fault(self, fault_name):
         return fault_name in self
-
 
     def add_fault(self, fault):
         self.__fault_map[fault.getName()] = fault
         self.__fault_list.append(fault)
-
 
     def split_line(self, line):
         tmp = line.split()
@@ -98,9 +93,7 @@ class FaultCollection(object):
         K2 = int(tmp[6]) - 1
         face = dequote(tmp[7])
 
-        return (fault_name, I1,I2,J1,J2,K1,K2, face)
-
-
+        return (fault_name, I1, I2, J1, J2, K1, K2, face)
 
     def load_faults(self, grid, fileH):
         for line in fileH:
@@ -119,7 +112,6 @@ class FaultCollection(object):
 
                 fault.addRecord(I1, I2, J1, J2, K1, K2, face)
 
-
     def load(self, grid, file_name):
         with open(file_name) as fileH:
             for line in fileH:
@@ -127,9 +119,9 @@ class FaultCollection(object):
                     self.loadFaults(grid, fileH)
 
 
-monkey_the_camel(FaultCollection, 'getGrid', FaultCollection.get_grid)
-monkey_the_camel(FaultCollection, 'getFault', FaultCollection.get_fault)
-monkey_the_camel(FaultCollection, 'hasFault', FaultCollection.has_fault)
-monkey_the_camel(FaultCollection, 'addFault', FaultCollection.add_fault)
-monkey_the_camel(FaultCollection, 'splitLine', FaultCollection.split_line)
-monkey_the_camel(FaultCollection, 'loadFaults', FaultCollection.load_faults)
+monkey_the_camel(FaultCollection, "getGrid", FaultCollection.get_grid)
+monkey_the_camel(FaultCollection, "getFault", FaultCollection.get_fault)
+monkey_the_camel(FaultCollection, "hasFault", FaultCollection.has_fault)
+monkey_the_camel(FaultCollection, "addFault", FaultCollection.add_fault)
+monkey_the_camel(FaultCollection, "splitLine", FaultCollection.split_line)
+monkey_the_camel(FaultCollection, "loadFaults", FaultCollection.load_faults)

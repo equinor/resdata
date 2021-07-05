@@ -22,6 +22,7 @@ from ecl.eclfile import EclKW, EclFile, FortIO
 from ecl.util.test import TestAreaContext
 from tests import EclTest, equinor_test
 
+
 def copy_long():
     src = EclKW("NAME", 100, EclDataType.ECL_FLOAT)
     copy = src.sub_copy(0, 2000)
@@ -34,7 +35,7 @@ def copy_offset():
 
 @equinor_test()
 class KWTest(EclTest):
-    def test_fortio_size( self ):
+    def test_fortio_size(self):
         unrst_file_path = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNRST")
         unrst_file = EclFile(unrst_file_path)
         size = 0
@@ -43,9 +44,6 @@ class KWTest(EclTest):
 
         stat = os.stat(unrst_file_path)
         self.assertTrue(size == stat.st_size)
-
-
-
 
     def test_sub_copy(self):
         unrst_file_path = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNRST")
@@ -69,7 +67,6 @@ class KWTest(EclTest):
 
         self.assertRaises(IndexError, copy_long)
         self.assertRaises(IndexError, copy_offset)
-
 
     def test_equal(self):
         kw1 = EclKW("TEST", 3, EclDataType.ECL_CHAR)
@@ -110,5 +107,3 @@ class KWTest(EclTest):
         kw1[-1] += 1
         self.assertFalse(kw1.equal(kw2))
         self.assertFalse(kw1.equal_numeric(kw2))
-
-

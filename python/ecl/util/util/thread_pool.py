@@ -53,9 +53,7 @@ class Task(Thread):
             time.sleep(0.01)
 
 
-
 class ThreadPool(object):
-
     def __init__(self, size=None, verbose=False):
         super(ThreadPool, self).__init__()
 
@@ -68,7 +66,6 @@ class ThreadPool(object):
         self.__runner_thread = None
         self.__verbose = verbose
         self.__start_time = None
-
 
     def addTask(self, func, *args, **kwargs):
         if self.__start_time is None:
@@ -128,7 +125,6 @@ class ThreadPool(object):
 
         self.__pool_finished = True
 
-
     def nonBlockingStart(self):
         self.__runner_thread = Thread()
         self.__runner_thread.run = self.__start
@@ -141,7 +137,10 @@ class ThreadPool(object):
 
         if self.__verbose:
             running_time = time.time() - self.__start_time
-            print("Running time: %f using a pool size of: %d" % (running_time, self.poolSize()))
+            print(
+                "Running time: %f using a pool size of: %d"
+                % (running_time, self.poolSize())
+            )
 
     def hasFailedTasks(self):
         for task in self.__task_list:

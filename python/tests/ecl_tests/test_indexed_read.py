@@ -8,9 +8,16 @@ from ecl.util.test import TestAreaContext
 from tests import EclTest
 from ecl.util.util import IntVector
 
+
 class EclIndexedReadTest(EclTest):
-    _freadIndexedData   = EclPrototype("void ecl_kw_fread_indexed_data_python(fortio, int, ecl_data_type, int, int_vector, char*)", bind = False) # fortio, offset, type, count, index_map, buffer
-    _eclFileIndexedRead = EclPrototype("void ecl_file_indexed_read(ecl_file, char*, int, int_vector, char*)", bind = False) # ecl_file, kw, index, index_map, buffer
+    _freadIndexedData = EclPrototype(
+        "void ecl_kw_fread_indexed_data_python(fortio, int, ecl_data_type, int, int_vector, char*)",
+        bind=False,
+    )  # fortio, offset, type, count, index_map, buffer
+    _eclFileIndexedRead = EclPrototype(
+        "void ecl_file_indexed_read(ecl_file, char*, int, int_vector, char*)",
+        bind=False,
+    )  # ecl_file, kw, index, index_map, buffer
 
     def test_ecl_kw_indexed_read(self):
         with TestAreaContext("ecl_kw_indexed_read") as area:
@@ -25,7 +32,6 @@ class EclIndexedReadTest(EclTest):
             ecl_kw.fwrite(fortio)
 
             fortio.close()
-
 
             fortio = FortIO("index_test", mode=FortIO.READ_MODE)
 
@@ -54,16 +60,18 @@ class EclIndexedReadTest(EclTest):
             index_map.append(88843)
             index_map.append(99991)
 
-            char_buffer = ctypes.create_string_buffer(len(index_map) * ctypes.sizeof(ctypes.c_int))
+            char_buffer = ctypes.create_string_buffer(
+                len(index_map) * ctypes.sizeof(ctypes.c_int)
+            )
 
-            self._freadIndexedData(fortio, 24, EclDataType.ECL_INT, element_count, index_map, char_buffer)
+            self._freadIndexedData(
+                fortio, 24, EclDataType.ECL_INT, element_count, index_map, char_buffer
+            )
 
             int_buffer = ctypes.cast(char_buffer, ctypes.POINTER(ctypes.c_int))
 
             for index, index_map_value in enumerate(index_map):
                 self.assertEqual(index_map_value, int_buffer[index])
-
-
 
     def test_ecl_file_indexed_read(self):
         with TestAreaContext("ecl_file_indexed_read") as area:
@@ -104,8 +112,12 @@ class EclIndexedReadTest(EclTest):
             index_map.append(88843)
             index_map.append(99991)
 
-            char_buffer_1 = ctypes.create_string_buffer(len(index_map) * ctypes.sizeof(ctypes.c_int))
-            char_buffer_2 = ctypes.create_string_buffer(len(index_map) * ctypes.sizeof(ctypes.c_int))
+            char_buffer_1 = ctypes.create_string_buffer(
+                len(index_map) * ctypes.sizeof(ctypes.c_int)
+            )
+            char_buffer_2 = ctypes.create_string_buffer(
+                len(index_map) * ctypes.sizeof(ctypes.c_int)
+            )
 
             self._eclFileIndexedRead(ecl_file, "TEST2", 0, index_map, char_buffer_2)
             self._eclFileIndexedRead(ecl_file, "TEST1", 0, index_map, char_buffer_1)

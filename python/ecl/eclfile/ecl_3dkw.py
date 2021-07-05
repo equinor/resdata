@@ -14,11 +14,11 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from ecl.util.util import monkey_the_camel
 from .ecl_kw import EclKW
+
 
 class Ecl3DKW(EclKW):
     """
@@ -67,36 +67,34 @@ class Ecl3DKW(EclKW):
     PERMX property.
 
     """
-    def __init__(self, kw , grid , value_type , default_value = 0 , global_active = False):
+
+    def __init__(self, kw, grid, value_type, default_value=0, global_active=False):
         if global_active:
             size = grid.getGlobalSize()
         else:
-            size = grid.getNumActive( )
-        super(Ecl3DKW , self).__init__( kw , size , value_type)
+            size = grid.getNumActive()
+        super(Ecl3DKW, self).__init__(kw, size, value_type)
         self.grid = grid
         self.global_active = global_active
-        self.setDefault( default_value )
-
+        self.setDefault(default_value)
 
     @classmethod
-    def create(cls , kw , grid , value_type , default_value = 0 , global_active = False):
-        new_kw = Ecl3DKW(kw , grid , value_type , default_value , global_active)
+    def create(cls, kw, grid, value_type, default_value=0, global_active=False):
+        new_kw = Ecl3DKW(kw, grid, value_type, default_value, global_active)
         return new_kw
 
     @classmethod
-    def read_grdecl( cls , grid , fileH , kw , strict = True , ecl_type = None):
+    def read_grdecl(cls, grid, fileH, kw, strict=True, ecl_type=None):
         """
         Will load an Ecl3DKW instance from a grdecl formatted filehandle.
 
         See the base class EclKW.read_grdecl() for more documentation.
         """
-        kw = super(Ecl3DKW , cls).read_grdecl( fileH , kw , strict , ecl_type)
-        Ecl3DKW.castFromKW(kw , grid)
+        kw = super(Ecl3DKW, cls).read_grdecl(fileH, kw, strict, ecl_type)
+        Ecl3DKW.castFromKW(kw, grid)
         return kw
 
-
-
-    def __getitem__(self , index):
+    def __getitem__(self, index):
         """Will return item [g] or [i,j,k].
 
         The __getitem__() methods supports both scalar indexing like
@@ -109,23 +107,19 @@ class Ecl3DKW(EclKW):
         returned. By default the default value will be 0, but another
         value can be assigned with the setDefault() method.
         """
-        if isinstance(index , tuple):
-            global_index = self.grid.get_global_index( ijk = index )
+        if isinstance(index, tuple):
+            global_index = self.grid.get_global_index(ijk=index)
             if self.global_active:
                 index = global_index
             else:
-                if not self.grid.active( global_index = global_index):
+                if not self.grid.active(global_index=global_index):
                     return self.getDefault()
                 else:
-                    index = self.grid.get_active_index( ijk = index )
+                    index = self.grid.get_active_index(ijk=index)
 
+        return super(Ecl3DKW, self).__getitem__(index)
 
-        return super(Ecl3DKW , self).__getitem__( index )
-
-
-
-
-    def __setitem__(self , index , value):
+    def __setitem__(self, index, value):
         """Set the value of at index [g] or [i,j,k].
 
         The __setitem__() methods supports both scalar indexing like
@@ -136,19 +130,19 @@ class Ecl3DKW(EclKW):
         If you try to assign an inactive cell in a keyword with only
         nactive elements a ValueError() exception will be raised.
         """
-        if isinstance(index , tuple):
-            global_index = self.grid.get_global_index( ijk = index )
+        if isinstance(index, tuple):
+            global_index = self.grid.get_global_index(ijk=index)
             if self.global_active:
                 index = global_index
             else:
-                if not self.grid.active( global_index = global_index):
-                    raise ValueError("Tried to assign value to inactive cell: (%d,%d,%d)" % index)
+                if not self.grid.active(global_index=global_index):
+                    raise ValueError(
+                        "Tried to assign value to inactive cell: (%d,%d,%d)" % index
+                    )
                 else:
-                    index = self.grid.get_active_index( ijk = index )
+                    index = self.grid.get_active_index(ijk=index)
 
-
-        return super(Ecl3DKW , self).__setitem__( index , value )
-
+        return super(Ecl3DKW, self).__setitem__(index, value)
 
     @classmethod
     def cast_from_kw(cls, kw, grid, default_value=0):
@@ -182,8 +176,9 @@ class Ecl3DKW(EclKW):
         elif len(kw) == grid.getNumActive():
             kw.global_active = False
         else:
-            raise ValueError("Size mismatch - must have size matching global/active size of grid")
-
+            raise ValueError(
+                "Size mismatch - must have size matching global/active size of grid"
+            )
 
         kw.__class__ = cls
         kw.default_value = default_value
@@ -193,9 +188,8 @@ class Ecl3DKW(EclKW):
         else:
             kw.global_active = False
 
-        kw.setDefault( default_value )
+        kw.setDefault(default_value)
         return kw
-
 
     def compressed_copy(self):
         """Will return a EclKW copy with nactive elements.
@@ -205,8 +199,7 @@ class Ecl3DKW(EclKW):
         main purpose of this is to facilitate iteration over the
         active index, and for writing binary files.
         """
-        return self.grid.compressedKWCopy( self )
-
+        return self.grid.compressedKWCopy(self)
 
     def global_copy(self):
         """Will return a EclKW copy with nx*ny*nz elements.
@@ -216,24 +209,20 @@ class Ecl3DKW(EclKW):
         main purpose of this is to facilitate iteration over the
         global index, and for writing binary files.
         """
-        return self.grid.globalKWCopy( self , self.getDefault() )
-
-
+        return self.grid.globalKWCopy(self, self.getDefault())
 
     def dims(self):
-        return (self.grid.getNX() , self.grid.getNY() , self.grid.getNZ())
-
+        return (self.grid.getNX(), self.grid.getNY(), self.grid.getNZ())
 
     def set_default(self, default_value):
         self.default_value = default_value
-
 
     def get_default(self):
         return self.default_value
 
 
-monkey_the_camel(Ecl3DKW, 'castFromKW', Ecl3DKW.cast_from_kw, classmethod)
-monkey_the_camel(Ecl3DKW, 'compressedCopy', Ecl3DKW.compressed_copy)
-monkey_the_camel(Ecl3DKW, 'globalCopy', Ecl3DKW.global_copy)
-monkey_the_camel(Ecl3DKW, 'setDefault', Ecl3DKW.set_default)
-monkey_the_camel(Ecl3DKW, 'getDefault', Ecl3DKW.get_default)
+monkey_the_camel(Ecl3DKW, "castFromKW", Ecl3DKW.cast_from_kw, classmethod)
+monkey_the_camel(Ecl3DKW, "compressedCopy", Ecl3DKW.compressed_copy)
+monkey_the_camel(Ecl3DKW, "globalCopy", Ecl3DKW.global_copy)
+monkey_the_camel(Ecl3DKW, "setDefault", Ecl3DKW.set_default)
+monkey_the_camel(Ecl3DKW, "getDefault", Ecl3DKW.get_default)

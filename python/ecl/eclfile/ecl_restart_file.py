@@ -22,44 +22,48 @@ from ecl.util.util import CTime, monkey_the_camel
 
 class EclRestartHead(BaseCClass):
     TYPE_NAME = "ecl_rsthead"
-    _alloc           = EclPrototype("void*  ecl_rsthead_alloc(ecl_file_view , int )", bind = False)
-    _alloc_from_kw   = EclPrototype("void*  ecl_rsthead_alloc_from_kw(int , ecl_kw , ecl_kw , ecl_kw )", bind = False)
-    _free            = EclPrototype("void   ecl_rsthead_free(ecl_rsthead)")
+    _alloc = EclPrototype("void*  ecl_rsthead_alloc(ecl_file_view , int )", bind=False)
+    _alloc_from_kw = EclPrototype(
+        "void*  ecl_rsthead_alloc_from_kw(int , ecl_kw , ecl_kw , ecl_kw )", bind=False
+    )
+    _free = EclPrototype("void   ecl_rsthead_free(ecl_rsthead)")
     _get_report_step = EclPrototype("int    ecl_rsthead_get_report_step(ecl_rsthead)")
-    _get_sim_time    = EclPrototype("time_t ecl_rsthead_get_sim_time(ecl_rsthead)")
-    _get_sim_days    = EclPrototype("double ecl_rsthead_get_sim_days(ecl_rsthead)")
-    _get_nxconz      = EclPrototype("int   ecl_rsthead_get_nxconz(ecl_rsthead)")
-    _get_ncwmax      = EclPrototype("int   ecl_rsthead_get_ncwmax(ecl_rsthead)")
+    _get_sim_time = EclPrototype("time_t ecl_rsthead_get_sim_time(ecl_rsthead)")
+    _get_sim_days = EclPrototype("double ecl_rsthead_get_sim_days(ecl_rsthead)")
+    _get_nxconz = EclPrototype("int   ecl_rsthead_get_nxconz(ecl_rsthead)")
+    _get_ncwmax = EclPrototype("int   ecl_rsthead_get_ncwmax(ecl_rsthead)")
 
-    def __init__(self , kw_arg = None , rst_view = None):
+    def __init__(self, kw_arg=None, rst_view=None):
         if kw_arg is None and rst_view is None:
-            raise ValueError('Cannot construct EclRestartHead without one of kw_arg and rst_view, both were None!')
+            raise ValueError(
+                "Cannot construct EclRestartHead without one of kw_arg and rst_view, both were None!"
+            )
 
         if not kw_arg is None:
-            report_step , intehead_kw , doubhead_kw , logihead_kw = kw_arg
-            c_ptr = self._alloc_from_kw( report_step , intehead_kw , doubhead_kw , logihead_kw )
+            report_step, intehead_kw, doubhead_kw, logihead_kw = kw_arg
+            c_ptr = self._alloc_from_kw(
+                report_step, intehead_kw, doubhead_kw, logihead_kw
+            )
         else:
-            c_ptr = self._alloc( rst_view , -1 )
+            c_ptr = self._alloc(rst_view, -1)
 
         super(EclRestartHead, self).__init__(c_ptr)
 
-
     def free(self):
-        self._free( )
+        self._free()
 
     def get_report_step(self):
-        return self._get_report_step( )
+        return self._get_report_step()
 
     def get_sim_date(self):
-        ct = CTime( self._get_sim_time( ) )
-        return ct.datetime( )
+        ct = CTime(self._get_sim_time())
+        return ct.datetime()
 
     def get_sim_days(self):
-        return self._get_sim_days( )
+        return self._get_sim_days()
 
     def well_details(self):
-        return {"NXCONZ" : self._get_nxconz(),
-                "NCWMAX" : self._get_ncwmax()}
+        return {"NXCONZ": self._get_nxconz(), "NCWMAX": self._get_ncwmax()}
 
 
 ECL_FILE_DEFAULT = EclFileFlagEnum.ECL_FILE_DEFAULT
@@ -80,12 +84,17 @@ class EclRestartFile(Ecl3DFile):
         'nactive' or 'nx*ny*nz' elements.
         """
 
-        file_type , report_step , fmt_file = EclFile.getFileType( filename )
-        if not file_type in [EclFileEnum.ECL_RESTART_FILE, EclFileEnum.ECL_UNIFIED_RESTART_FILE]:
-            raise ValueError('The input filename "%s" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
-                             % filename)
+        file_type, report_step, fmt_file = EclFile.getFileType(filename)
+        if not file_type in [
+            EclFileEnum.ECL_RESTART_FILE,
+            EclFileEnum.ECL_UNIFIED_RESTART_FILE,
+        ]:
+            raise ValueError(
+                'The input filename "%s" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
+                % filename
+            )
 
-        super(EclRestartFile , self).__init__( grid, filename , flags)
+        super(EclRestartFile, self).__init__(grid, filename, flags)
         self.rst_headers = None
         if file_type == EclFileEnum.ECL_RESTART_FILE:
             self.is_unified = False
@@ -93,21 +102,20 @@ class EclRestartFile(Ecl3DFile):
         else:
             self.is_unified = True
 
-
-
     def unified(self):
         """
         Will return True if the file we have opened is unified.
         """
         return self.is_unified
 
-
     def assert_headers(self):
         if self.rst_headers is None:
             self.rst_headers = []
             if self.unified():
                 for index in range(self.num_named_kw("SEQNUM")):
-                    self.rst_headers.append( EclRestartHead( rst_view = self.restartView( seqnum_index = index )))
+                    self.rst_headers.append(
+                        EclRestartHead(rst_view=self.restartView(seqnum_index=index))
+                    )
             else:
                 intehead_kw = self["INTEHEAD"][0]
                 doubhead_kw = self["DOUBHEAD"][0]
@@ -116,8 +124,11 @@ class EclRestartFile(Ecl3DFile):
                 else:
                     logihead_kw = None
 
-                self.rst_headers.append( EclRestartHead( kw_arg = (self.report_step , intehead_kw , doubhead_kw , logihead_kw) ))
-
+                self.rst_headers.append(
+                    EclRestartHead(
+                        kw_arg=(self.report_step, intehead_kw, doubhead_kw, logihead_kw)
+                    )
+                )
 
     def time_list(self):
         """Will return a list of report_step, simulation time and days.
@@ -135,23 +146,24 @@ class EclRestartFile(Ecl3DFile):
         self.assertHeaders()
         time_list = []
         for header in self.rst_headers:
-            time_list.append( (header.getReportStep() , header.getSimDate( ) , header.getSimDays( )) )
+            time_list.append(
+                (header.getReportStep(), header.getSimDate(), header.getSimDays())
+            )
 
         return time_list
-
 
     def headers(self):
         self.assertHeaders()
         return self.rst_headers
 
-
     def get_header(self, index):
         self.assertHeaders()
         return self.rst_headers[index]
 
-monkey_the_camel(EclRestartHead, 'getReportStep', EclRestartHead.get_report_step)
-monkey_the_camel(EclRestartHead, 'getSimDate', EclRestartHead.get_sim_date)
-monkey_the_camel(EclRestartHead, 'getSimDays', EclRestartHead.get_sim_days)
 
-monkey_the_camel(EclRestartFile, 'assertHeaders', EclRestartFile.assert_headers)
-monkey_the_camel(EclRestartFile, 'timeList', EclRestartFile.time_list)
+monkey_the_camel(EclRestartHead, "getReportStep", EclRestartHead.get_report_step)
+monkey_the_camel(EclRestartHead, "getSimDate", EclRestartHead.get_sim_date)
+monkey_the_camel(EclRestartHead, "getSimDays", EclRestartHead.get_sim_days)
+
+monkey_the_camel(EclRestartFile, "assertHeaders", EclRestartFile.assert_headers)
+monkey_the_camel(EclRestartFile, "timeList", EclRestartFile.time_list)

@@ -27,7 +27,6 @@ class RFTTest(EclTest):
         self.RFT_file = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.RFT")
         self.PLT_file = self.createTestPath("Equinor/ECLIPSE/RFT/TEST1_1A.RFT")
 
-
     def test_RFT_load(self):
         rftFile = EclRFTFile(self.RFT_file)
 
@@ -57,7 +56,6 @@ class RFTTest(EclTest):
             print(h)
             self.assertIsInstance(h[1], datetime.date)
 
-
     def test_PLT_load(self):
         pltFile = EclRFTFile(self.PLT_file)
         plt = pltFile[11]
@@ -69,12 +67,10 @@ class RFTTest(EclTest):
         for cell in plt:
             self.assertIsInstance(cell, EclPLTCell)
 
-
     def test_exceptions(self):
         with self.assertRaises(IndexError):
             rftFile = EclRFTFile(self.RFT_file)
             rft = rftFile[100]
-
 
     def test_basics(self):
         wt = WellTrajectory(
@@ -83,7 +79,7 @@ class RFTTest(EclTest):
         self.assertEqual(len(wt), 38)
         self.assertTrue(isinstance(str(wt), str))
         self.assertTrue(isinstance(repr(wt), str))
-        self.assertEqual('WellTrajectory(len=38)', repr(wt))
+        self.assertEqual("WellTrajectory(len=38)", repr(wt))
 
     def test_trajectory(self):
         with self.assertRaises(IOError):
@@ -112,15 +108,13 @@ class RFTTest(EclTest):
             p = wt[38]
 
         p0 = wt[0]
-        self.assertEqual(p0.utm_x,  458920.671 )
-        self.assertEqual(p0.utm_y, 7324939.077 )
+        self.assertEqual(p0.utm_x, 458920.671)
+        self.assertEqual(p0.utm_y, 7324939.077)
         self.assertEqual(p0.measured_depth, 2707.5000)
 
         pm1 = wt[-1]
         p37 = wt[37]
         self.assertEqual(p37, pm1)
-
-
 
     def test_PLT(self):
         rft_file = EclRFTFile(
@@ -142,11 +136,11 @@ class RFTTest(EclTest):
         self.assertEqual(len(rft2), 42)
         self.assertEqual(len(rft3), 37)
 
-        self.assertFloatEqual(rft0[0].pressure,  0.22919502E+03)
-        self.assertFloatEqual(rft0[0].depth   ,  0.21383721E+04)
+        self.assertFloatEqual(rft0[0].pressure, 0.22919502e03)
+        self.assertFloatEqual(rft0[0].depth, 0.21383721e04)
 
-        self.assertFloatEqual(rft1[0].pressure,  0.22977950E+03)
-        self.assertFloatEqual(rft1[0].depth   ,  0.21384775E+04)
+        self.assertFloatEqual(rft1[0].pressure, 0.22977950e03)
+        self.assertFloatEqual(rft1[0].depth, 0.21384775e04)
 
-        self.assertFloatEqual(rft2[0].pressure,  0.19142435E+03)
-        self.assertFloatEqual(rft2[0].depth   ,  0.21383721E+04)
+        self.assertFloatEqual(rft2[0].pressure, 0.19142435e03)
+        self.assertFloatEqual(rft2[0].depth, 0.21383721e04)

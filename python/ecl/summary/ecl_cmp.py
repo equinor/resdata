@@ -17,8 +17,8 @@
 from ecl.util.util import monkey_the_camel
 from ecl.summary import EclSum
 
-class EclCase(object):
 
+class EclCase(object):
     def __init__(self, case):
         self.case = case
 
@@ -29,21 +29,17 @@ class EclCase(object):
 
         self.loadSummary()
 
-
     def __contains__(self, key):
         return key in self.summary
 
-
     def keys(self):
         return self.summary.keys()
-
 
     def wells(self):
         return self.summary.wells()
 
     def load_summary(self):
         self.summary = EclSum(self.case)
-
 
     def start_time_equal(self, other):
         if self.summary.getDataStartTime() == other.summary.getDataStartTime():
@@ -57,12 +53,13 @@ class EclCase(object):
         else:
             return False
 
-
     def cmp_summary_vector(self, other, key, sample=100):
         if key in self and key in other:
-            days_total = min(self.summary.getSimulationLength(), other.summary.getSimulationLength())
+            days_total = min(
+                self.summary.getSimulationLength(), other.summary.getSimulationLength()
+            )
             dt = days_total / (sample - 1)
-            days = [ x * dt for x in range(sample) ]
+            days = [x * dt for x in range(sample)]
 
             ref_data = self.summary.get_interp_vector(key, days_list=days)
             test_data = other.summary.get_interp_vector(key, days_list=days)
@@ -75,11 +72,7 @@ class EclCase(object):
             raise KeyError("Key:%s was not present in both cases" % key)
 
 
-
-
-
 class EclCmp(object):
-
     def __init__(self, test_case, ref_case):
         """Class to compare to simulation cases with Eclipse formatted result files.
 
@@ -96,14 +89,14 @@ class EclCmp(object):
 
         self.initCheck()
 
-
     def init_check(self):
         """A crude initial check to verify that the cases can be meaningfully
         compared.
         """
         if not self.test_case.startTimeEqual(self.ref_case):
-            raise ValueError("The two cases do not start at the same time - can not be compared")
-
+            raise ValueError(
+                "The two cases do not start at the same time - can not be compared"
+            )
 
     def has_summary_vector(self, key):
         """
@@ -111,14 +104,11 @@ class EclCmp(object):
         """
         return (key in self.test_case, key in self.ref_case)
 
-
     def end_time_equal(self):
         """
         Will check that ref_case and test_case are equally long.
         """
         return self.test_case.endTimeEqual(self.ref_case)
-
-
 
     def cmp_summary_vector(self, key, sample=100):
         """Will compare the summary vectors according to @key.
@@ -155,13 +145,11 @@ class EclCmp(object):
         """
         return self.test_case.cmpSummaryVector(self.ref_case, key, sample=sample)
 
-
     def test_keys(self):
         """
         Will return a list of summary keys in the test case.
         """
         return self.test_case.keys()
-
 
     def test_wells(self):
         """
@@ -170,15 +158,14 @@ class EclCmp(object):
         return self.test_case.wells()
 
 
+monkey_the_camel(EclCase, "loadSummary", EclCase.load_summary)
+monkey_the_camel(EclCase, "startTimeEqual", EclCase.start_time_equal)
+monkey_the_camel(EclCase, "endTimeEqual", EclCase.end_time_equal)
+monkey_the_camel(EclCase, "cmpSummaryVector", EclCase.cmp_summary_vector)
 
-monkey_the_camel(EclCase, 'loadSummary', EclCase.load_summary)
-monkey_the_camel(EclCase, 'startTimeEqual', EclCase.start_time_equal)
-monkey_the_camel(EclCase, 'endTimeEqual', EclCase.end_time_equal)
-monkey_the_camel(EclCase, 'cmpSummaryVector', EclCase.cmp_summary_vector)
-
-monkey_the_camel(EclCmp, 'initCheck', EclCmp.init_check)
-monkey_the_camel(EclCmp, 'hasSummaryVector', EclCmp.has_summary_vector)
-monkey_the_camel(EclCmp, 'endTimeEqual', EclCmp.end_time_equal)
-monkey_the_camel(EclCmp, 'cmpSummaryVector', EclCmp.cmp_summary_vector)
-monkey_the_camel(EclCmp, 'testKeys', EclCmp.test_keys)
-monkey_the_camel(EclCmp, 'testWells', EclCmp.test_wells)
+monkey_the_camel(EclCmp, "initCheck", EclCmp.init_check)
+monkey_the_camel(EclCmp, "hasSummaryVector", EclCmp.has_summary_vector)
+monkey_the_camel(EclCmp, "endTimeEqual", EclCmp.end_time_equal)
+monkey_the_camel(EclCmp, "cmpSummaryVector", EclCmp.cmp_summary_vector)
+monkey_the_camel(EclCmp, "testKeys", EclCmp.test_keys)
+monkey_the_camel(EclCmp, "testWells", EclCmp.test_wells)

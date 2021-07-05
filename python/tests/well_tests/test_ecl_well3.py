@@ -6,7 +6,14 @@ from ecl.grid import EclGrid
 from ecl.summary import EclSum
 from tests import EclTest, equinor_test
 from ecl.util.util.ctime import CTime
-from ecl.well import WellInfo, WellConnection, WellTypeEnum, WellConnectionDirectionEnum, WellSegment
+from ecl.well import (
+    WellInfo,
+    WellConnection,
+    WellTypeEnum,
+    WellConnectionDirectionEnum,
+    WellSegment,
+)
+
 
 @equinor_test()
 class EclWellTest3(EclTest):

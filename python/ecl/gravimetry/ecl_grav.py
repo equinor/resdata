@@ -28,6 +28,7 @@ from ecl.util.util import monkey_the_camel
 from ecl import EclPhaseEnum
 import ecl.eclfile
 
+
 class EclGrav(BaseCClass):
     """
     Holding ECLIPSE results for calculating gravity changes.
@@ -44,18 +45,31 @@ class EclGrav(BaseCClass):
       2. Add surveys with the add_survey_XXXX() methods.
       3. Evalute the gravitational response with the eval() method.
     """
+
     TYPE_NAME = "ecl_grav"
     _grav_alloc = EclPrototype("void* ecl_grav_alloc(ecl_grid, ecl_file)", bind=False)
     _free = EclPrototype("void ecl_grav_free(ecl_grav)")
-    _add_survey_RPORV = EclPrototype("void*  ecl_grav_add_survey_RPORV(ecl_grav, char*, ecl_file_view)")
-    _add_survey_PORMOD = EclPrototype("void*  ecl_grav_add_survey_PORMOD(ecl_grav, char*, ecl_file_view)")
-    _add_survey_FIP = EclPrototype("void*  ecl_grav_add_survey_FIP(ecl_grav, char*, ecl_file_view)")
-    _add_survey_RFIP = EclPrototype("void*  ecl_grav_add_survey_RFIP(ecl_grav, char*, ecl_file_view)")
-    _new_std_density = EclPrototype("void ecl_grav_new_std_density(ecl_grav, int, double)")
-    _add_std_density = EclPrototype("void ecl_grav_add_std_density(ecl_grav, int, int, double)")
-    _eval = EclPrototype("double ecl_grav_eval(ecl_grav, char*, char*, ecl_region, double, double, double, int)")
-
-
+    _add_survey_RPORV = EclPrototype(
+        "void*  ecl_grav_add_survey_RPORV(ecl_grav, char*, ecl_file_view)"
+    )
+    _add_survey_PORMOD = EclPrototype(
+        "void*  ecl_grav_add_survey_PORMOD(ecl_grav, char*, ecl_file_view)"
+    )
+    _add_survey_FIP = EclPrototype(
+        "void*  ecl_grav_add_survey_FIP(ecl_grav, char*, ecl_file_view)"
+    )
+    _add_survey_RFIP = EclPrototype(
+        "void*  ecl_grav_add_survey_RFIP(ecl_grav, char*, ecl_file_view)"
+    )
+    _new_std_density = EclPrototype(
+        "void ecl_grav_new_std_density(ecl_grav, int, double)"
+    )
+    _add_std_density = EclPrototype(
+        "void ecl_grav_add_std_density(ecl_grav, int, int, double)"
+    )
+    _eval = EclPrototype(
+        "double ecl_grav_eval(ecl_grav, char*, char*, ecl_region, double, double, double, int)"
+    )
 
     def __init__(self, grid, init_file):
         """
@@ -64,16 +78,17 @@ class EclGrav(BaseCClass):
         The input arguments @grid and @init_file should be instances
         of EclGrid and EclFile respectively.
         """
-        self.init_file = init_file   # Inhibit premature garbage collection of init_file
+        self.init_file = init_file  # Inhibit premature garbage collection of init_file
 
         c_ptr = self._grav_alloc(grid, init_file)
         super(EclGrav, self).__init__(c_ptr)
 
-        self.dispatch = {"FIP"    : self.add_survey_FIP,
-                         "RFIP"   : self.add_survey_RFIP,
-                         "PORMOD" : self.add_survey_PORMOD,
-                         "RPORV"  : self.add_survey_RPORV}
-
+        self.dispatch = {
+            "FIP": self.add_survey_FIP,
+            "RFIP": self.add_survey_RFIP,
+            "PORMOD": self.add_survey_PORMOD,
+            "RPORV": self.add_survey_RPORV,
+        }
 
     def add_survey_RPORV(self, survey_name, restart_view):
         """
@@ -139,11 +154,19 @@ class EclGrav(BaseCClass):
         self._add_survey_RFIP(survey_name, restart_view)
 
     def add_survey(self, name, restart_view, method):
-        method = self.dispatch[ method ]
+        method = self.dispatch[method]
         return method(name, restart_view)
 
-    def eval(self, base_survey, monitor_survey, pos, region=None,
-             phase_mask=EclPhaseEnum.ECL_OIL_PHASE + EclPhaseEnum.ECL_GAS_PHASE + EclPhaseEnum.ECL_WATER_PHASE):
+    def eval(
+        self,
+        base_survey,
+        monitor_survey,
+        pos,
+        region=None,
+        phase_mask=EclPhaseEnum.ECL_OIL_PHASE
+        + EclPhaseEnum.ECL_GAS_PHASE
+        + EclPhaseEnum.ECL_WATER_PHASE,
+    ):
         """
         Calculates the gravity change between two surveys.
 
@@ -170,8 +193,9 @@ class EclGrav(BaseCClass):
         sum of the relevant integer constants 'ECL_OIL_PHASE',
         'ECL_GAS_PHASE' and 'ECL_WATER_PHASE'.
         """
-        return self._eval(base_survey, monitor_survey, region, pos[0], pos[1], pos[2], phase_mask)
-
+        return self._eval(
+            base_survey, monitor_survey, region, pos[0], pos[1], pos[2], phase_mask
+        )
 
     def new_std_density(self, phase_enum, default_density):
         """
@@ -213,8 +237,8 @@ class EclGrav(BaseCClass):
         """
         self._add_std_density(phase_enum, pvtnum, density)
 
-
     def free(self):
         self._free()
 
-monkey_the_camel(EclGrav, 'addSurvey', EclGrav.add_survey)
+
+monkey_the_camel(EclGrav, "addSurvey", EclGrav.add_survey)

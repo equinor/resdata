@@ -1,23 +1,23 @@
-#  Copyright (C) 2015  Equinor ASA, Norway. 
-#   
+#  Copyright (C) 2015  Equinor ASA, Norway.
+#
 #  The file 'test_version.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import os.path
 
 import ecl
 from tests import EclTest
-from ecl.util.util import Version,EclVersion
+from ecl.util.util import Version, EclVersion
 
 
 class VersionTest(EclTest):
@@ -91,14 +91,12 @@ class VersionTest(EclTest):
         self.assertNotEqual(str(v1), str(v2))
         self.assertNotEqual(repr(v1), repr(v2))
 
-
     def test_current(self):
-        current = EclVersion( )
+        current = EclVersion()
         self.assertTrue(current > (0, 0, 0))
-        pfx = 'Version(major='
-        self.assertEqual(pfx, repr(current)[:len(pfx)])
-
+        pfx = "Version(major="
+        self.assertEqual(pfx, repr(current)[: len(pfx)])
 
     def test_root_version(self):
-        cv = EclVersion( )
-        self.assertEqual( ecl.__version__ , cv.versionString() )
+        cv = EclVersion()
+        self.assertEqual(ecl.__version__, cv.versionString())

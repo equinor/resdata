@@ -27,6 +27,7 @@ from ecl import EclPrototype
 from ecl.util.util import monkey_the_camel
 import ecl.grid
 
+
 class EclSubsidence(BaseCClass):
     """
     Holding ECLIPSE results for calculating subsidence changes.
@@ -43,33 +44,43 @@ class EclSubsidence(BaseCClass):
       2. Add surveys with the add_survey_XXXX() methods.
       3. Evalute the subsidence response with the eval() method.
     """
-    TYPE_NAME = "ecl_subsidence"
-    _alloc               = EclPrototype("void* ecl_subsidence_alloc( ecl_grid , ecl_file )" , bind = False)
-    _free                = EclPrototype("void ecl_subsidence_free( ecl_subsidence )")
-    _add_survey_PRESSURE = EclPrototype("void*  ecl_subsidence_add_survey_PRESSURE( ecl_subsidence , char* , ecl_file_view )")
-    _eval                = EclPrototype("double ecl_subsidence_eval( ecl_subsidence , char* , char* , ecl_region , double , double , double, double, double)")
-    _eval_geertsma       = EclPrototype("double ecl_subsidence_eval_geertsma( ecl_subsidence , char* , char* , ecl_region , double , double , double, double, double, double)")
-    _eval_geertsma_rporv = EclPrototype("double ecl_subsidence_eval_geertsma_rporv( ecl_subsidence , char* , char* , ecl_region , double , double , double, double, double, double)")
-    _has_survey          = EclPrototype("bool  ecl_subsidence_has_survey( ecl_subsidence , char*)")
 
-    def __init__( self, grid, init_file ):
+    TYPE_NAME = "ecl_subsidence"
+    _alloc = EclPrototype(
+        "void* ecl_subsidence_alloc( ecl_grid , ecl_file )", bind=False
+    )
+    _free = EclPrototype("void ecl_subsidence_free( ecl_subsidence )")
+    _add_survey_PRESSURE = EclPrototype(
+        "void*  ecl_subsidence_add_survey_PRESSURE( ecl_subsidence , char* , ecl_file_view )"
+    )
+    _eval = EclPrototype(
+        "double ecl_subsidence_eval( ecl_subsidence , char* , char* , ecl_region , double , double , double, double, double)"
+    )
+    _eval_geertsma = EclPrototype(
+        "double ecl_subsidence_eval_geertsma( ecl_subsidence , char* , char* , ecl_region , double , double , double, double, double, double)"
+    )
+    _eval_geertsma_rporv = EclPrototype(
+        "double ecl_subsidence_eval_geertsma_rporv( ecl_subsidence , char* , char* , ecl_region , double , double , double, double, double, double)"
+    )
+    _has_survey = EclPrototype(
+        "bool  ecl_subsidence_has_survey( ecl_subsidence , char*)"
+    )
+
+    def __init__(self, grid, init_file):
         """
         Creates a new EclSubsidence instance.
 
         The input arguments @grid and @init_file should be instances
         of EclGrid and EclFile respectively.
         """
-        self.init_file = init_file   # Inhibit premature garbage collection of init_file
-        c_ptr = self._alloc( grid , init_file )
-        super( EclSubsidence , self ).__init__( c_ptr )
+        self.init_file = init_file  # Inhibit premature garbage collection of init_file
+        c_ptr = self._alloc(grid, init_file)
+        super(EclSubsidence, self).__init__(c_ptr)
 
+    def __contains__(self, survey_name):
+        return self._has_survey(survey_name)
 
-    def __contains__(self , survey_name):
-        return self._has_survey( survey_name )
-
-
-
-    def add_survey_PRESSURE( self, survey_name, restart_file ):
+    def add_survey_PRESSURE(self, survey_name, restart_file):
         """
         Add new survey based on PRESSURE keyword.
 
@@ -91,10 +102,18 @@ class EclSubsidence(BaseCClass):
         The pore volume is calculated from the initial pore volume and
         the PRESSURE keyword from the restart file.
         """
-        self._add_survey_PRESSURE( survey_name, restart_file)
+        self._add_survey_PRESSURE(survey_name, restart_file)
 
-
-    def eval_geertsma(self, base_survey, monitor_survey, pos, youngs_modulus, poisson_ratio, seabed, region=None):
+    def eval_geertsma(
+        self,
+        base_survey,
+        monitor_survey,
+        pos,
+        youngs_modulus,
+        poisson_ratio,
+        seabed,
+        region=None,
+    ):
         if not base_survey in self:
             raise KeyError("No such survey: %s" % base_survey)
 
@@ -102,9 +121,28 @@ class EclSubsidence(BaseCClass):
             if not monitor_survey in self:
                 raise KeyError("No such survey: %s" % monitor_survey)
 
-        return self._eval_geertsma(base_survey, monitor_survey, region, pos[0], pos[1], pos[2], youngs_modulus, poisson_ratio, seabed)
+        return self._eval_geertsma(
+            base_survey,
+            monitor_survey,
+            region,
+            pos[0],
+            pos[1],
+            pos[2],
+            youngs_modulus,
+            poisson_ratio,
+            seabed,
+        )
 
-    def eval_geertsma_rporv(self, base_survey, monitor_survey, pos, youngs_modulus, poisson_ratio, seabed, region=None):
+    def eval_geertsma_rporv(
+        self,
+        base_survey,
+        monitor_survey,
+        pos,
+        youngs_modulus,
+        poisson_ratio,
+        seabed,
+        region=None,
+    ):
         if not base_survey in self:
             raise KeyError("No such survey: %s" % base_survey)
 
@@ -112,10 +150,27 @@ class EclSubsidence(BaseCClass):
             if not monitor_survey in self:
                 raise KeyError("No such survey: %s" % monitor_survey)
 
-        return self._eval_geertsma_rporv(base_survey, monitor_survey, region, pos[0], pos[1], pos[2], youngs_modulus, poisson_ratio, seabed)
+        return self._eval_geertsma_rporv(
+            base_survey,
+            monitor_survey,
+            region,
+            pos[0],
+            pos[1],
+            pos[2],
+            youngs_modulus,
+            poisson_ratio,
+            seabed,
+        )
 
-
-    def eval(self, base_survey, monitor_survey, pos, compressibility, poisson_ratio, region=None):
+    def eval(
+        self,
+        base_survey,
+        monitor_survey,
+        pos,
+        compressibility,
+        poisson_ratio,
+        region=None,
+    ):
         """
         Calculates the subsidence change between two surveys.
 
@@ -145,12 +200,19 @@ class EclSubsidence(BaseCClass):
         if not monitor_survey in self:
             raise KeyError("No such survey: %s" % monitor_survey)
 
-        return self._eval(base_survey, monitor_survey, region, pos[0], pos[1], pos[2], compressibility,poisson_ratio)
-
-
+        return self._eval(
+            base_survey,
+            monitor_survey,
+            region,
+            pos[0],
+            pos[1],
+            pos[2],
+            compressibility,
+            poisson_ratio,
+        )
 
     def free(self):
-        self._free( )
+        self._free()
 
 
-monkey_the_camel(EclSubsidence, 'evalGeertsma', EclSubsidence.eval_geertsma)
+monkey_the_camel(EclSubsidence, "evalGeertsma", EclSubsidence.eval_geertsma)

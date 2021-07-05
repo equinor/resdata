@@ -19,10 +19,10 @@ from ecl.grid import Cell, EclGrid
 from tests import EclTest
 from unittest import skipUnless
 
-class CellTest(EclTest):
 
+class CellTest(EclTest):
     def setUp(self):
-        fk = self.createTestPath('local/ECLIPSE/faarikaal/faarikaal1.EGRID')
+        fk = self.createTestPath("local/ECLIPSE/faarikaal/faarikaal1.EGRID")
         self.grid = EclGrid(fk)
         self.cell = self.grid[3455]
         self.actives = [c for c in self.grid if c.active]
@@ -52,14 +52,14 @@ class CellTest(EclTest):
         c = self.cell
         self.assertEqual(3455, c.global_index)
         self.assertEqual(2000, c.active_index)
-        self.assertEqual((4,1,82), c.ijk)
+        self.assertEqual((4, 1, 82), c.ijk)
         self.assertEqual(c.ijk, (c.i, c.j, c.k))
 
     def test_coordinates(self):
         c = self.cell
         corners = c.corners
         self.assertEqual(8, len(corners))
-        se0 = corners[5] # upper south east
+        se0 = corners[5]  # upper south east
         se0_act = (606900.002, 5202050.07, 5149.26)
         for i in range(3):
             self.assertFloatEqual(se0[i], se0_act[i])
@@ -75,17 +75,17 @@ class CellTest(EclTest):
 
     def test_eq(self):
         c1 = self.cell
-        c2 = self.grid[4,1,82]
-        c3 = self.grid[1,1,82]
-        self.assertEqual(c1,c2)
-        self.assertEqual(c2,c1)
-        self.assertNotEqual(c1, 'notacell')
-        self.assertNotEqual(c1,c3)
-        self.assertNotEqual(c3,c1)
+        c2 = self.grid[4, 1, 82]
+        c3 = self.grid[1, 1, 82]
+        self.assertEqual(c1, c2)
+        self.assertEqual(c2, c1)
+        self.assertNotEqual(c1, "notacell")
+        self.assertNotEqual(c1, c3)
+        self.assertNotEqual(c3, c1)
 
     def test_getitem_3(self):
         c = self.cell
-        d = self.grid[4,1,82]
+        d = self.grid[4, 1, 82]
         self.assertEqual(c, d)
 
     def test_validity(self):
@@ -95,6 +95,5 @@ class CellTest(EclTest):
     def test_repr(self):
         c = self.cell
         r = repr(c)
-        self.assertTrue(r.startswith('Cell(4, 1, 82, active, '))
-        self.assertIn('faarikaal1.EGRID', r)
-
+        self.assertTrue(r.startswith("Cell(4, 1, 82, active, "))
+        self.assertIn("faarikaal1.EGRID", r)

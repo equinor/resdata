@@ -16,35 +16,35 @@
 from cwrap import BaseCClass
 from ecl import EclPrototype
 
+
 class GeoPointset(BaseCClass):
     TYPE_NAME = "geo_pointset"
 
-    _alloc      = EclPrototype("void*   geo_pointset_alloc(bool)", bind=False)
-    _free       = EclPrototype("void    geo_pointset_free(geo_pointset)")
-    #_add_xyz    = EclPrototype("void    geo_pointset_add_xyz(geo_pointset, double, double, double)")
-    _get_size   = EclPrototype("int     geo_pointset_get_size(geo_pointset)")
-    #_iget_xy    = EclPrototype("void    geo_pointset_iget_xy(geo_pointset, int, double*, double*)")
-    #_get_zcoord = EclPrototype("double* geo_pointset_get_zcoord(geo_pointset)")
-    _equal      = EclPrototype("bool    geo_pointset_equal(geo_pointset, geo_pointset)")
-    _iget_z     = EclPrototype("double  geo_pointset_iget_z(geo_pointset, int)")
-    #_iset_z     = EclPrototype("void    geo_pointset_iset_z(geo_pointset, int, double)")
-    #_memcpy     = EclPrototype("void    geo_pointset_memcpy(geo_pointset, geo_pointset, bool)")
-    #_shift_z    = EclPrototype("void    geo_pointset_shift_z(geo_pointset, double)")
-    #_assign_z   = EclPrototype("void    geo_pointset_assign_z(geo_pointset, double)")
-    #_scale_z    = EclPrototype("void    geo_pointset_scale_z(geo_pointset, double)")
-    #_imul       = EclPrototype("void    geo_pointset_imul(geo_pointset, geo_pointset)")
-    #_iadd       = EclPrototype("void    geo_pointset_iadd(geo_pointset, geo_pointset)")
-    #_isub       = EclPrototype("void    geo_pointset_isub(geo_pointset, geo_pointset)")
-    #_isqrt      = EclPrototype("void    geo_pointset_isqrt(geo_pointset)")
-
+    _alloc = EclPrototype("void*   geo_pointset_alloc(bool)", bind=False)
+    _free = EclPrototype("void    geo_pointset_free(geo_pointset)")
+    # _add_xyz    = EclPrototype("void    geo_pointset_add_xyz(geo_pointset, double, double, double)")
+    _get_size = EclPrototype("int     geo_pointset_get_size(geo_pointset)")
+    # _iget_xy    = EclPrototype("void    geo_pointset_iget_xy(geo_pointset, int, double*, double*)")
+    # _get_zcoord = EclPrototype("double* geo_pointset_get_zcoord(geo_pointset)")
+    _equal = EclPrototype("bool    geo_pointset_equal(geo_pointset, geo_pointset)")
+    _iget_z = EclPrototype("double  geo_pointset_iget_z(geo_pointset, int)")
+    # _iset_z     = EclPrototype("void    geo_pointset_iset_z(geo_pointset, int, double)")
+    # _memcpy     = EclPrototype("void    geo_pointset_memcpy(geo_pointset, geo_pointset, bool)")
+    # _shift_z    = EclPrototype("void    geo_pointset_shift_z(geo_pointset, double)")
+    # _assign_z   = EclPrototype("void    geo_pointset_assign_z(geo_pointset, double)")
+    # _scale_z    = EclPrototype("void    geo_pointset_scale_z(geo_pointset, double)")
+    # _imul       = EclPrototype("void    geo_pointset_imul(geo_pointset, geo_pointset)")
+    # _iadd       = EclPrototype("void    geo_pointset_iadd(geo_pointset, geo_pointset)")
+    # _isub       = EclPrototype("void    geo_pointset_isub(geo_pointset, geo_pointset)")
+    # _isqrt      = EclPrototype("void    geo_pointset_isqrt(geo_pointset)")
 
     def __init__(self, external_z=False):
         c_ptr = self._alloc(external_z)
         if c_ptr:
             super(GeoPointset, self).__init__(c_ptr)
         else:
-            ext = 'external' if external_z else 'internal'
-            raise ValueError('Failed to construct GeoPointset with %s_z.' % ext)
+            ext = "external" if external_z else "internal"
+            raise ValueError("Failed to construct GeoPointset with %s_z." % ext)
 
     @staticmethod
     def fromSurface(surface):
@@ -64,16 +64,18 @@ class GeoPointset(BaseCClass):
             if 0 <= idx < size:
                 return self._iget_z(idx)
             else:
-                raise IndexError('Invalid index, must be in [0, %d), was: %d.' % (size, key))
+                raise IndexError(
+                    "Invalid index, must be in [0, %d), was: %d." % (size, key)
+                )
         else:
             # TODO implement slicing?
-            raise ValueError('Index must be int, not %s.' % type(key))
+            raise ValueError("Index must be int, not %s." % type(key))
 
     def __len__(self):
         return self._get_size()
 
     def __repr__(self):
-        return self._create_repr('len=%d' % len(self))
+        return self._create_repr("len=%d" % len(self))
 
     def free(self):
         self._free()

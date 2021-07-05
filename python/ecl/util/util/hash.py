@@ -1,17 +1,17 @@
-#  Copyright (C) 2011  Equinor ASA, Norway. 
-#   
-#  The file 'hash.py' is part of ERT - Ensemble based Reservoir Tool. 
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#  Copyright (C) 2011  Equinor ASA, Norway.
+#
+#  The file 'hash.py' is part of ERT - Ensemble based Reservoir Tool.
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from ctypes import c_void_p
 
@@ -21,12 +21,12 @@ from ecl.util.util import StringList
 
 
 class Hash(BaseCClass):
-    _alloc =      EclPrototype("void* hash_alloc()" , bind = False)
-    _free =       EclPrototype("void hash_free(hash)")
-    _size =       EclPrototype("int hash_get_size(hash)")
-    _keys =       EclPrototype("stringlist_obj hash_alloc_stringlist(hash)")
-    _has_key =    EclPrototype("bool hash_has_key(hash, char*)")
-    _get =        EclPrototype("void* hash_get(hash, char*)")
+    _alloc = EclPrototype("void* hash_alloc()", bind=False)
+    _free = EclPrototype("void hash_free(hash)")
+    _size = EclPrototype("int hash_get_size(hash)")
+    _keys = EclPrototype("stringlist_obj hash_alloc_stringlist(hash)")
+    _has_key = EclPrototype("bool hash_has_key(hash, char*)")
+    _get = EclPrototype("void* hash_get(hash, char*)")
     _insert_ref = EclPrototype("void hash_insert_ref(hash, char*, void*)")
 
     """
@@ -53,7 +53,7 @@ class Hash(BaseCClass):
             raise ValueError("Hash does not support type: %s" % value.__class__)
 
     def __contains__(self, key):
-        """ @rtype: bool """
+        """@rtype: bool"""
         return self._has_key(key)
 
     def __iter__(self):
@@ -61,7 +61,7 @@ class Hash(BaseCClass):
             yield key
 
     def keys(self):
-        """ @rtype: StringList """
+        """@rtype: StringList"""
         return self._keys()
 
     def free(self):
@@ -129,6 +129,6 @@ class DoubleHash(Hash):
 
     def __getitem__(self, key):
         if key in self:
-            return self._get_double( key)
+            return self._get_double(key)
         else:
             raise KeyError("Hash does not have key: %s" % key)

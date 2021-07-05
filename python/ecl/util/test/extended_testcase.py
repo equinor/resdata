@@ -20,17 +20,17 @@ from ecl.util.util import Version
 # when the method is complete. Convenient when debugging tests which fail hard
 # or lock up.
 
+
 def log_test(test):
     def wrapper(*args):
         sys.stderr.write("starting: %s \n" % test.__name__)
         test(*args)
         sys.stderr.write("complete: %s \n" % test.__name__)
+
     return wrapper
 
 
-
 class _AssertNotRaisesContext(object):
-
     def __init__(self, test_class):
         super(_AssertNotRaisesContext, self).__init__()
         self._test_class = test_class
@@ -44,23 +44,26 @@ class _AssertNotRaisesContext(object):
                 exc_name = exc_type.__name__
             except AttributeError:
                 exc_name = str(exc_type)
-            self._test_class.fail("Exception: %s raised\n%s" % (exc_name, traceback.print_exception(exc_type, exc_value, tb)))
+            self._test_class.fail(
+                "Exception: %s raised\n%s"
+                % (exc_name, traceback.print_exception(exc_type, exc_value, tb))
+            )
         return True
 
 
 """
 This class provides some extra functionality for testing values that are almost equal.
 """
+
+
 class ExtendedTestCase(TestCase):
     TESTDATA_ROOT = None
     SHARE_ROOT = None
     SOURCE_ROOT = None
 
-
-    def __init__(self , *args , **kwargs):
+    def __init__(self, *args, **kwargs):
         installAbortSignals()
-        super(ExtendedTestCase , self).__init__(*args , **kwargs)
-
+        super(ExtendedTestCase, self).__init__(*args, **kwargs)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:
@@ -68,12 +71,17 @@ class ExtendedTestCase(TestCase):
             diff = abs(f_first - f_second)
             scale = max(1, abs(first) + abs(second))
             if msg is None:
-                msg = "Floats not equal: |%f - %f| > %g" % (f_first, f_second, tolerance)
+                msg = "Floats not equal: |%f - %f| > %g" % (
+                    f_first,
+                    f_second,
+                    tolerance,
+                )
             self.assertTrue(diff < tolerance * scale, msg=msg)
         except TypeError:
-            self.fail("Cannot compare as floats: %s (%s) and %s (%s)" %
-                      (first, type(first), second, type(second)))
-
+            self.fail(
+                "Cannot compare as floats: %s (%s) and %s (%s)"
+                % (first, type(first), second, type(second))
+            )
 
     def assertAlmostEqualList(self, first, second, msg=None, tolerance=1e-6):
         if len(first) != len(second):
@@ -81,10 +89,8 @@ class ExtendedTestCase(TestCase):
 
         for index in range(len(first)):
             self.assertFloatEqual(
-                    first[index], second[index],
-                    msg=msg, tolerance=tolerance
-                    )
-
+                first[index], second[index], msg=msg, tolerance=tolerance
+            )
 
     def assertImportable(self, module_name):
         try:
@@ -94,13 +100,14 @@ class ExtendedTestCase(TestCase):
             self.fail("Module %s not found!\n\nTrace:\n%s" % (module_name, str(tb)))
         except Exception:
             tb = traceback.format_exc()
-            self.fail("Import of module %s caused errors!\n\nTrace:\n%s" % (module_name, str(tb)))
-
+            self.fail(
+                "Import of module %s caused errors!\n\nTrace:\n%s"
+                % (module_name, str(tb))
+            )
 
     def assertFilesAreEqual(self, first, second):
         if not self.__filesAreEqual(first, second):
             self.fail("Buffer contents of files are not identical!")
-
 
     def assertFilesAreNotEqual(self, first, second):
         if self.__filesAreEqual(first, second):
@@ -128,34 +135,47 @@ class ExtendedTestCase(TestCase):
 
         return buffer1 == buffer2
 
-    def assertEnumIsFullyDefined(self, enum_class, enum_name, source_path, verbose=False):
+    def assertEnumIsFullyDefined(
+        self, enum_class, enum_name, source_path, verbose=False
+    ):
         if self.SOURCE_ROOT is None:
             raise Exception("SOURCE_ROOT is not set.")
 
-        enum_values = SourceEnumerator.findEnumerators(enum_name, os.path.join( self.SOURCE_ROOT , source_path))
+        enum_values = SourceEnumerator.findEnumerators(
+            enum_name, os.path.join(self.SOURCE_ROOT, source_path)
+        )
 
         for identifier, value in enum_values:
             if verbose:
                 print("%s = %d" % (identifier, value))
 
-            self.assertTrue(identifier in enum_class.__dict__, "Enum does not have identifier: %s" % identifier)
+            self.assertTrue(
+                identifier in enum_class.__dict__,
+                "Enum does not have identifier: %s" % identifier,
+            )
             class_value = enum_class.__dict__[identifier]
-            self.assertEqual(class_value, value, "Enum value for identifier: %s does not match: %s != %s" % (identifier, class_value, value))
-
+            self.assertEqual(
+                class_value,
+                value,
+                "Enum value for identifier: %s does not match: %s != %s"
+                % (identifier, class_value, value),
+            )
 
     @classmethod
     def createSharePath(cls, path):
         if cls.SHARE_ROOT is None:
-            raise Exception("Trying to create directory rooted in 'SHARE_ROOT' - variable 'SHARE_ROOT' is not set.")
-        return os.path.realpath(os.path.join(cls.SHARE_ROOT , path))
-
+            raise Exception(
+                "Trying to create directory rooted in 'SHARE_ROOT' - variable 'SHARE_ROOT' is not set."
+            )
+        return os.path.realpath(os.path.join(cls.SHARE_ROOT, path))
 
     @classmethod
     def createTestPath(cls, path):
         if cls.TESTDATA_ROOT is None:
-            raise Exception("Trying to create directory rooted in 'TESTDATA_ROOT' - variable 'TESTDATA_ROOT' has not been set.")
-        return os.path.realpath(os.path.join(cls.TESTDATA_ROOT , path))
-
+            raise Exception(
+                "Trying to create directory rooted in 'TESTDATA_ROOT' - variable 'TESTDATA_ROOT' has not been set."
+            )
+        return os.path.realpath(os.path.join(cls.TESTDATA_ROOT, path))
 
     def assertNotRaises(self, func=None):
 
@@ -174,10 +194,9 @@ class ExtendedTestCase(TestCase):
 
         return os.environ.get("SKIP_SLOW_TESTS", "False") == "True"
 
-
     @staticmethod
-    def requireVersion(major , minor , micro = "git"):
-        required_version = Version(major, minor , micro)
+    def requireVersion(major, minor, micro="git"):
+        required_version = Version(major, minor, micro)
         current_version = Version.currentVersion()
 
         if required_version < current_version:

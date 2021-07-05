@@ -17,24 +17,23 @@
 from cwrap import BaseCEnum
 
 
-
 class EclSumVarType(BaseCEnum):
     TYPE_NAME = "ecl_sum_var_type"
-    ECL_SMSPEC_INVALID_VAR            = None
-    ECL_SMSPEC_FIELD_VAR              = None
-    ECL_SMSPEC_REGION_VAR             = None
-    ECL_SMSPEC_GROUP_VAR              = None
-    ECL_SMSPEC_WELL_VAR               = None
-    ECL_SMSPEC_SEGMENT_VAR            = None
-    ECL_SMSPEC_BLOCK_VAR              = None
-    ECL_SMSPEC_AQUIFER_VAR            = None
-    ECL_SMSPEC_COMPLETION_VAR         = None
-    ECL_SMSPEC_NETWORK_VAR            = None
-    ECL_SMSPEC_REGION_2_REGION_VAR    = None
-    ECL_SMSPEC_LOCAL_BLOCK_VAR        = None
-    ECL_SMSPEC_LOCAL_COMPLETION_VAR   = None
-    ECL_SMSPEC_LOCAL_WELL_VAR         = None
-    ECL_SMSPEC_MISC_VAR               = None
+    ECL_SMSPEC_INVALID_VAR = None
+    ECL_SMSPEC_FIELD_VAR = None
+    ECL_SMSPEC_REGION_VAR = None
+    ECL_SMSPEC_GROUP_VAR = None
+    ECL_SMSPEC_WELL_VAR = None
+    ECL_SMSPEC_SEGMENT_VAR = None
+    ECL_SMSPEC_BLOCK_VAR = None
+    ECL_SMSPEC_AQUIFER_VAR = None
+    ECL_SMSPEC_COMPLETION_VAR = None
+    ECL_SMSPEC_NETWORK_VAR = None
+    ECL_SMSPEC_REGION_2_REGION_VAR = None
+    ECL_SMSPEC_LOCAL_BLOCK_VAR = None
+    ECL_SMSPEC_LOCAL_COMPLETION_VAR = None
+    ECL_SMSPEC_LOCAL_WELL_VAR = None
+    ECL_SMSPEC_MISC_VAR = None
 
 
 EclSumVarType.addEnum("ECL_SMSPEC_INVALID_VAR", 0)
@@ -52,5 +51,3 @@ EclSumVarType.addEnum("ECL_SMSPEC_LOCAL_BLOCK_VAR", 11)
 EclSumVarType.addEnum("ECL_SMSPEC_LOCAL_COMPLETION_VAR", 12)
 EclSumVarType.addEnum("ECL_SMSPEC_LOCAL_WELL_VAR", 13)
 EclSumVarType.addEnum("ECL_SMSPEC_MISC_VAR", 14)
-    
-

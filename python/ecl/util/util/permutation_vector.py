@@ -8,14 +8,11 @@ class PermutationVector(BaseCClass):
     _size = EclPrototype("int    perm_vector_get_size( permutation_vector )")
     _iget = EclPrototype("int    perm_vector_iget( permutation_vector , int)")
 
-    
     def __init__(self):
         raise NotImplementedError("Can not instantiate PermutationVector directly")
 
-
     def __len__(self):
-        return self._size( )
-
+        return self._size()
 
     def __str__(self):
         s = "("
@@ -23,16 +20,14 @@ class PermutationVector(BaseCClass):
             s += " %d" % index
         return s + ")"
 
-    
     def __getitem__(self, index):
         if index < 0:
             index += len(self)
 
         if 0 <= index < len(self):
-            return self._iget( index )
+            return self._iget(index)
         else:
             raise IndexError("Invalid index:%d" % index)
 
-        
     def free(self):
-        self._free( )
+        self._free()

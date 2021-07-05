@@ -27,5 +27,5 @@ class EclInitFile(Ecl3DFile):
             super(EclInitFile, self).__init__(grid, filename, flags)
         else:
             err = 'The input filename "%s" does not correspond to an init file.'
-            err += '  Please follow the Eclipse naming conventions.'
+            err += "  Please follow the Eclipse naming conventions."
             raise ValueError(err % filename)

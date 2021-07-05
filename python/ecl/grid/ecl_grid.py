@@ -37,7 +37,7 @@ from cwrap import CFILE, BaseCClass, load, open as copen
 from ecl import EclPrototype
 from ecl.util.util import monkey_the_camel
 from ecl.util.util import IntVector
-from ecl import  EclDataType, EclUnitTypeEnum, EclTypeEnum
+from ecl import EclDataType, EclUnitTypeEnum, EclTypeEnum
 from ecl.eclfile import EclKW, FortIO
 from ecl.grid import Cell
 
@@ -48,83 +48,149 @@ class EclGrid(BaseCClass):
     """
 
     TYPE_NAME = "ecl_grid"
-    _fread_alloc                  = EclPrototype("void* ecl_grid_load_case__(char*, bool)", bind = False)
-    _grdecl_create                = EclPrototype("ecl_grid_obj ecl_grid_alloc_GRDECL_kw(int, int, int, ecl_kw, ecl_kw, ecl_kw, ecl_kw)", bind = False)
-    _alloc_rectangular            = EclPrototype("ecl_grid_obj ecl_grid_alloc_rectangular(int, int, int, double, double, double, int*)", bind = False)
-    _exists                       = EclPrototype("bool ecl_grid_exists(char*)", bind = False)
+    _fread_alloc = EclPrototype("void* ecl_grid_load_case__(char*, bool)", bind=False)
+    _grdecl_create = EclPrototype(
+        "ecl_grid_obj ecl_grid_alloc_GRDECL_kw(int, int, int, ecl_kw, ecl_kw, ecl_kw, ecl_kw)",
+        bind=False,
+    )
+    _alloc_rectangular = EclPrototype(
+        "ecl_grid_obj ecl_grid_alloc_rectangular(int, int, int, double, double, double, int*)",
+        bind=False,
+    )
+    _exists = EclPrototype("bool ecl_grid_exists(char*)", bind=False)
 
-    _get_numbered_lgr             = EclPrototype("ecl_grid_ref ecl_grid_get_lgr_from_lgr_nr(ecl_grid, int)")
-    _get_named_lgr                = EclPrototype("ecl_grid_ref ecl_grid_get_lgr(ecl_grid, char*)")
-    _get_cell_lgr                 = EclPrototype("ecl_grid_ref ecl_grid_get_cell_lgr1(ecl_grid, int)")
-    _num_coarse_groups            = EclPrototype("int  ecl_grid_get_num_coarse_groups(ecl_grid)")
-    _in_coarse_group1             = EclPrototype("bool ecl_grid_cell_in_coarse_group1(ecl_grid, int)")
-    _free                         = EclPrototype("void ecl_grid_free(ecl_grid)")
-    _get_nx                       = EclPrototype("int ecl_grid_get_nx(ecl_grid)")
-    _get_ny                       = EclPrototype("int ecl_grid_get_ny(ecl_grid)")
-    _get_nz                       = EclPrototype("int ecl_grid_get_nz(ecl_grid)")
-    _get_global_size              = EclPrototype("int ecl_grid_get_global_size(ecl_grid)")
-    _get_active                   = EclPrototype("int ecl_grid_get_active_size(ecl_grid)")
-    _get_active_fracture          = EclPrototype("int ecl_grid_get_nactive_fracture(ecl_grid)")
-    _get_name                     = EclPrototype("char* ecl_grid_get_name(ecl_grid)")
-    _ijk_valid                    = EclPrototype("bool ecl_grid_ijk_valid(ecl_grid, int, int, int)")
-    _get_active_index3            = EclPrototype("int ecl_grid_get_active_index3(ecl_grid, int, int, int)")
-    _get_global_index3            = EclPrototype("int ecl_grid_get_global_index3(ecl_grid, int, int, int)")
-    _get_active_index1            = EclPrototype("int ecl_grid_get_active_index1(ecl_grid, int)")
-    _get_active_fracture_index1   = EclPrototype("int ecl_grid_get_active_fracture_index1(ecl_grid, int)")
-    _get_global_index1A           = EclPrototype("int ecl_grid_get_global_index1A(ecl_grid, int)")
-    _get_global_index1F           = EclPrototype("int ecl_grid_get_global_index1F(ecl_grid, int)")
-    _get_ijk1                     = EclPrototype("void ecl_grid_get_ijk1(ecl_grid, int, int*, int*, int*)")
-    _get_ijk1A                    = EclPrototype("void ecl_grid_get_ijk1A(ecl_grid, int, int*, int*, int*)")
-    _get_xyz3                     = EclPrototype("void ecl_grid_get_xyz3(ecl_grid, int, int, int, double*, double*, double*)")
-    _get_xyz1                     = EclPrototype("void ecl_grid_get_xyz1(ecl_grid, int, double*, double*, double*)")
-    _get_cell_corner_xyz1         = EclPrototype("void ecl_grid_get_cell_corner_xyz1(ecl_grid, int, int, double*, double*, double*)")
-    _get_corner_xyz               = EclPrototype("void ecl_grid_get_corner_xyz(ecl_grid, int, int, int, double*, double*, double*)")
-    _get_xyz1A                    = EclPrototype("void ecl_grid_get_xyz1A(ecl_grid, int, double*, double*, double*)")
-    _get_ij_xy                    = EclPrototype("bool ecl_grid_get_ij_from_xy(ecl_grid, double, double, int, int*, int*)")
-    _get_ijk_xyz                  = EclPrototype("int  ecl_grid_get_global_index_from_xyz(ecl_grid, double, double, double, int)")
-    _cell_contains                = EclPrototype("bool ecl_grid_cell_contains_xyz1(ecl_grid, int, double, double, double)")
-    _cell_regular                 = EclPrototype("bool ecl_grid_cell_regular1(ecl_grid, int)")
-    _num_lgr                      = EclPrototype("int  ecl_grid_get_num_lgr(ecl_grid)")
-    _has_numbered_lgr             = EclPrototype("bool ecl_grid_has_lgr_nr(ecl_grid, int)")
-    _has_named_lgr                = EclPrototype("bool ecl_grid_has_lgr(ecl_grid, char*)")
-    _grid_value                   = EclPrototype("double ecl_grid_get_property(ecl_grid, ecl_kw, int, int, int)")
-    _get_cell_volume              = EclPrototype("double ecl_grid_get_cell_volume1(ecl_grid, int)")
-    _get_cell_thickness           = EclPrototype("double ecl_grid_get_cell_thickness1(ecl_grid, int)")
-    _get_cell_dx                  = EclPrototype("double ecl_grid_get_cell_dx1(ecl_grid, int)")
-    _get_cell_dy                  = EclPrototype("double ecl_grid_get_cell_dy1(ecl_grid, int)")
-    _get_depth                    = EclPrototype("double ecl_grid_get_cdepth1(ecl_grid, int)")
-    _fwrite_grdecl                = EclPrototype("void   ecl_grid_grdecl_fprintf_kw(ecl_grid, ecl_kw, char*, FILE, double)")
-    _load_column                  = EclPrototype("void   ecl_grid_get_column_property(ecl_grid, ecl_kw, int, int, double_vector)")
-    _get_top                      = EclPrototype("double ecl_grid_get_top2(ecl_grid, int, int)")
-    _get_top1A                    = EclPrototype("double ecl_grid_get_top1A(ecl_grid, int)")
-    _get_bottom                   = EclPrototype("double ecl_grid_get_bottom2(ecl_grid, int, int)")
-    _locate_depth                 = EclPrototype("int    ecl_grid_locate_depth(ecl_grid, double, int, int)")
-    _invalid_cell                 = EclPrototype("bool   ecl_grid_cell_invalid1(ecl_grid, int)")
-    _valid_cell                   = EclPrototype("bool   ecl_grid_cell_valid1(ecl_grid, int)")
-    _get_distance                 = EclPrototype("void   ecl_grid_get_distance(ecl_grid, int, int, double*, double*, double*)")
-    _fprintf_grdecl2              = EclPrototype("void   ecl_grid_fprintf_grdecl2(ecl_grid, FILE, ecl_unit_enum) ")
-    _fwrite_GRID2                 = EclPrototype("void   ecl_grid_fwrite_GRID2(ecl_grid, char*, ecl_unit_enum)")
-    _fwrite_EGRID2                = EclPrototype("void   ecl_grid_fwrite_EGRID2(ecl_grid, char*, ecl_unit_enum)")
-    _equal                        = EclPrototype("bool   ecl_grid_compare(ecl_grid, ecl_grid, bool, bool)")
-    _dual_grid                    = EclPrototype("bool   ecl_grid_dual_grid(ecl_grid)")
-    _init_actnum                  = EclPrototype("void   ecl_grid_init_actnum_data(ecl_grid, int*)")
-    _compressed_kw_copy           = EclPrototype("void   ecl_grid_compressed_kw_copy(ecl_grid, ecl_kw, ecl_kw)")
-    _global_kw_copy               = EclPrototype("void   ecl_grid_global_kw_copy(ecl_grid, ecl_kw, ecl_kw)")
-    _create_volume_keyword        = EclPrototype("ecl_kw_obj ecl_grid_alloc_volume_kw(ecl_grid, bool)")
-    _use_mapaxes                  = EclPrototype("bool ecl_grid_use_mapaxes(ecl_grid)")
-    _export_coord                 = EclPrototype("ecl_kw_obj ecl_grid_alloc_coord_kw(ecl_grid)")
-    _export_zcorn                 = EclPrototype("ecl_kw_obj ecl_grid_alloc_zcorn_kw(ecl_grid)")
-    _export_actnum                = EclPrototype("ecl_kw_obj ecl_grid_alloc_actnum_kw(ecl_grid)")
-    _export_mapaxes               = EclPrototype("ecl_kw_obj ecl_grid_alloc_mapaxes_kw(ecl_grid)")
-    _get_unit_system              = EclPrototype("ecl_unit_enum ecl_grid_get_unit_system(ecl_grid)")
-    _export_index_frame           = EclPrototype("void ecl_grid_export_index(ecl_grid, int*, int*, bool)")
-    _export_data_as_int           = EclPrototype("void ecl_grid_export_data_as_int(int, int*, ecl_kw, int*)", bind = False)
-    _export_data_as_double        = EclPrototype("void ecl_grid_export_data_as_double(int, int*, ecl_kw, double*)", bind = False)
-    _export_volume                = EclPrototype("void ecl_grid_export_volume(ecl_grid, int, int*, double*)")
-    _export_position              = EclPrototype("void ecl_grid_export_position(ecl_grid, int, int*, double*)")
-    _export_corners               = EclPrototype("void export_corners(ecl_grid, int, int*, double*)")
-
-
+    _get_numbered_lgr = EclPrototype(
+        "ecl_grid_ref ecl_grid_get_lgr_from_lgr_nr(ecl_grid, int)"
+    )
+    _get_named_lgr = EclPrototype("ecl_grid_ref ecl_grid_get_lgr(ecl_grid, char*)")
+    _get_cell_lgr = EclPrototype("ecl_grid_ref ecl_grid_get_cell_lgr1(ecl_grid, int)")
+    _num_coarse_groups = EclPrototype("int  ecl_grid_get_num_coarse_groups(ecl_grid)")
+    _in_coarse_group1 = EclPrototype(
+        "bool ecl_grid_cell_in_coarse_group1(ecl_grid, int)"
+    )
+    _free = EclPrototype("void ecl_grid_free(ecl_grid)")
+    _get_nx = EclPrototype("int ecl_grid_get_nx(ecl_grid)")
+    _get_ny = EclPrototype("int ecl_grid_get_ny(ecl_grid)")
+    _get_nz = EclPrototype("int ecl_grid_get_nz(ecl_grid)")
+    _get_global_size = EclPrototype("int ecl_grid_get_global_size(ecl_grid)")
+    _get_active = EclPrototype("int ecl_grid_get_active_size(ecl_grid)")
+    _get_active_fracture = EclPrototype("int ecl_grid_get_nactive_fracture(ecl_grid)")
+    _get_name = EclPrototype("char* ecl_grid_get_name(ecl_grid)")
+    _ijk_valid = EclPrototype("bool ecl_grid_ijk_valid(ecl_grid, int, int, int)")
+    _get_active_index3 = EclPrototype(
+        "int ecl_grid_get_active_index3(ecl_grid, int, int, int)"
+    )
+    _get_global_index3 = EclPrototype(
+        "int ecl_grid_get_global_index3(ecl_grid, int, int, int)"
+    )
+    _get_active_index1 = EclPrototype("int ecl_grid_get_active_index1(ecl_grid, int)")
+    _get_active_fracture_index1 = EclPrototype(
+        "int ecl_grid_get_active_fracture_index1(ecl_grid, int)"
+    )
+    _get_global_index1A = EclPrototype("int ecl_grid_get_global_index1A(ecl_grid, int)")
+    _get_global_index1F = EclPrototype("int ecl_grid_get_global_index1F(ecl_grid, int)")
+    _get_ijk1 = EclPrototype("void ecl_grid_get_ijk1(ecl_grid, int, int*, int*, int*)")
+    _get_ijk1A = EclPrototype(
+        "void ecl_grid_get_ijk1A(ecl_grid, int, int*, int*, int*)"
+    )
+    _get_xyz3 = EclPrototype(
+        "void ecl_grid_get_xyz3(ecl_grid, int, int, int, double*, double*, double*)"
+    )
+    _get_xyz1 = EclPrototype(
+        "void ecl_grid_get_xyz1(ecl_grid, int, double*, double*, double*)"
+    )
+    _get_cell_corner_xyz1 = EclPrototype(
+        "void ecl_grid_get_cell_corner_xyz1(ecl_grid, int, int, double*, double*, double*)"
+    )
+    _get_corner_xyz = EclPrototype(
+        "void ecl_grid_get_corner_xyz(ecl_grid, int, int, int, double*, double*, double*)"
+    )
+    _get_xyz1A = EclPrototype(
+        "void ecl_grid_get_xyz1A(ecl_grid, int, double*, double*, double*)"
+    )
+    _get_ij_xy = EclPrototype(
+        "bool ecl_grid_get_ij_from_xy(ecl_grid, double, double, int, int*, int*)"
+    )
+    _get_ijk_xyz = EclPrototype(
+        "int  ecl_grid_get_global_index_from_xyz(ecl_grid, double, double, double, int)"
+    )
+    _cell_contains = EclPrototype(
+        "bool ecl_grid_cell_contains_xyz1(ecl_grid, int, double, double, double)"
+    )
+    _cell_regular = EclPrototype("bool ecl_grid_cell_regular1(ecl_grid, int)")
+    _num_lgr = EclPrototype("int  ecl_grid_get_num_lgr(ecl_grid)")
+    _has_numbered_lgr = EclPrototype("bool ecl_grid_has_lgr_nr(ecl_grid, int)")
+    _has_named_lgr = EclPrototype("bool ecl_grid_has_lgr(ecl_grid, char*)")
+    _grid_value = EclPrototype(
+        "double ecl_grid_get_property(ecl_grid, ecl_kw, int, int, int)"
+    )
+    _get_cell_volume = EclPrototype("double ecl_grid_get_cell_volume1(ecl_grid, int)")
+    _get_cell_thickness = EclPrototype(
+        "double ecl_grid_get_cell_thickness1(ecl_grid, int)"
+    )
+    _get_cell_dx = EclPrototype("double ecl_grid_get_cell_dx1(ecl_grid, int)")
+    _get_cell_dy = EclPrototype("double ecl_grid_get_cell_dy1(ecl_grid, int)")
+    _get_depth = EclPrototype("double ecl_grid_get_cdepth1(ecl_grid, int)")
+    _fwrite_grdecl = EclPrototype(
+        "void   ecl_grid_grdecl_fprintf_kw(ecl_grid, ecl_kw, char*, FILE, double)"
+    )
+    _load_column = EclPrototype(
+        "void   ecl_grid_get_column_property(ecl_grid, ecl_kw, int, int, double_vector)"
+    )
+    _get_top = EclPrototype("double ecl_grid_get_top2(ecl_grid, int, int)")
+    _get_top1A = EclPrototype("double ecl_grid_get_top1A(ecl_grid, int)")
+    _get_bottom = EclPrototype("double ecl_grid_get_bottom2(ecl_grid, int, int)")
+    _locate_depth = EclPrototype(
+        "int    ecl_grid_locate_depth(ecl_grid, double, int, int)"
+    )
+    _invalid_cell = EclPrototype("bool   ecl_grid_cell_invalid1(ecl_grid, int)")
+    _valid_cell = EclPrototype("bool   ecl_grid_cell_valid1(ecl_grid, int)")
+    _get_distance = EclPrototype(
+        "void   ecl_grid_get_distance(ecl_grid, int, int, double*, double*, double*)"
+    )
+    _fprintf_grdecl2 = EclPrototype(
+        "void   ecl_grid_fprintf_grdecl2(ecl_grid, FILE, ecl_unit_enum) "
+    )
+    _fwrite_GRID2 = EclPrototype(
+        "void   ecl_grid_fwrite_GRID2(ecl_grid, char*, ecl_unit_enum)"
+    )
+    _fwrite_EGRID2 = EclPrototype(
+        "void   ecl_grid_fwrite_EGRID2(ecl_grid, char*, ecl_unit_enum)"
+    )
+    _equal = EclPrototype("bool   ecl_grid_compare(ecl_grid, ecl_grid, bool, bool)")
+    _dual_grid = EclPrototype("bool   ecl_grid_dual_grid(ecl_grid)")
+    _init_actnum = EclPrototype("void   ecl_grid_init_actnum_data(ecl_grid, int*)")
+    _compressed_kw_copy = EclPrototype(
+        "void   ecl_grid_compressed_kw_copy(ecl_grid, ecl_kw, ecl_kw)"
+    )
+    _global_kw_copy = EclPrototype(
+        "void   ecl_grid_global_kw_copy(ecl_grid, ecl_kw, ecl_kw)"
+    )
+    _create_volume_keyword = EclPrototype(
+        "ecl_kw_obj ecl_grid_alloc_volume_kw(ecl_grid, bool)"
+    )
+    _use_mapaxes = EclPrototype("bool ecl_grid_use_mapaxes(ecl_grid)")
+    _export_coord = EclPrototype("ecl_kw_obj ecl_grid_alloc_coord_kw(ecl_grid)")
+    _export_zcorn = EclPrototype("ecl_kw_obj ecl_grid_alloc_zcorn_kw(ecl_grid)")
+    _export_actnum = EclPrototype("ecl_kw_obj ecl_grid_alloc_actnum_kw(ecl_grid)")
+    _export_mapaxes = EclPrototype("ecl_kw_obj ecl_grid_alloc_mapaxes_kw(ecl_grid)")
+    _get_unit_system = EclPrototype("ecl_unit_enum ecl_grid_get_unit_system(ecl_grid)")
+    _export_index_frame = EclPrototype(
+        "void ecl_grid_export_index(ecl_grid, int*, int*, bool)"
+    )
+    _export_data_as_int = EclPrototype(
+        "void ecl_grid_export_data_as_int(int, int*, ecl_kw, int*)", bind=False
+    )
+    _export_data_as_double = EclPrototype(
+        "void ecl_grid_export_data_as_double(int, int*, ecl_kw, double*)", bind=False
+    )
+    _export_volume = EclPrototype(
+        "void ecl_grid_export_volume(ecl_grid, int, int*, double*)"
+    )
+    _export_position = EclPrototype(
+        "void ecl_grid_export_position(ecl_grid, int, int*, double*)"
+    )
+    _export_corners = EclPrototype("void export_corners(ecl_grid, int, int*, double*)")
 
     @classmethod
     def load_from_grdecl(cls, filename):
@@ -149,11 +215,15 @@ class EclGrid(BaseCClass):
 
         if os.path.isfile(filename):
             with copen(filename) as f:
-                specgrid = EclKW.read_grdecl(f, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False)
+                specgrid = EclKW.read_grdecl(
+                    f, "SPECGRID", ecl_type=EclDataType.ECL_INT, strict=False
+                )
                 zcorn = EclKW.read_grdecl(f, "ZCORN")
                 coord = EclKW.read_grdecl(f, "COORD")
                 try:
-                    actnum = EclKW.read_grdecl(f, "ACTNUM", ecl_type=EclDataType.ECL_INT)
+                    actnum = EclKW.read_grdecl(
+                        f, "ACTNUM", ecl_type=EclDataType.ECL_INT
+                    )
                 except ValueError:
                     actnum = None
 
@@ -175,7 +245,6 @@ class EclGrid(BaseCClass):
             return EclGrid(filename)
         else:
             return EclGrid.loadFromGrdecl(filename)
-
 
     @classmethod
     def create(cls, specgrid, zcorn, coord, actnum, mapaxes=None):
@@ -199,7 +268,9 @@ class EclGrid(BaseCClass):
 
         If you are so inclined ...
         """
-        return cls._grdecl_create(specgrid[0], specgrid[1], specgrid[2], zcorn, coord, actnum, mapaxes)
+        return cls._grdecl_create(
+            specgrid[0], specgrid[1], specgrid[2], zcorn, coord, actnum, mapaxes
+        )
 
     @classmethod
     def create_rectangular(cls, dims, dV, actnum=None):
@@ -209,12 +280,16 @@ class EclGrid(BaseCClass):
         With the default value @actnum == None all cells will be active,
         """
 
-        warnings.warn("EclGrid.createRectangular is deprecated. " +
-                "Please used the similar method in EclGridGenerator!",
-                DeprecationWarning)
+        warnings.warn(
+            "EclGrid.createRectangular is deprecated. "
+            + "Please used the similar method in EclGridGenerator!",
+            DeprecationWarning,
+        )
 
         if actnum is None:
-            ecl_grid = cls._alloc_rectangular(dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], None)
+            ecl_grid = cls._alloc_rectangular(
+                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], None
+            )
         else:
             if not isinstance(actnum, IntVector):
                 tmp = IntVector(initial_size=len(actnum))
@@ -223,8 +298,13 @@ class EclGrid(BaseCClass):
                 actnum = tmp
 
             if not len(actnum) == dims[0] * dims[1] * dims[2]:
-                raise ValueError("ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d" % (len(actnum), dims[0] * dims[1] * dims[2]))
-            ecl_grid = cls._alloc_rectangular(dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], actnum.getDataPtr())
+                raise ValueError(
+                    "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
+                    % (len(actnum), dims[0] * dims[1] * dims[2])
+                )
+            ecl_grid = cls._alloc_rectangular(
+                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], actnum.getDataPtr()
+            )
 
         # If we have not succeeded in creatin the grid we *assume* the
         # error is due to a failed malloc.
@@ -243,7 +323,6 @@ class EclGrid(BaseCClass):
         else:
             raise IOError("Loading grid from:%s failed" % filename)
 
-
     def free(self):
         self._free()
 
@@ -256,15 +335,17 @@ class EclGrid(BaseCClass):
 
     def __repr__(self):
         """Returns, e.g.:
-           EclGrid("NORNE_ATW2013.EGRID", 46x112x22, global_size=113344, active_size=44431) at 0x28c4a70
+        EclGrid("NORNE_ATW2013.EGRID", 46x112x22, global_size=113344, active_size=44431) at 0x28c4a70
         """
         name = self._nicename()
         if name:
             name = '"%s", ' % name
         g_size = self.getGlobalSize()
         a_size = self.getNumActive()
-        xyz_s  = '%dx%dx%d' % (self.getNX(),self.getNY(),self.getNZ())
-        return self._create_repr('%s%s, global_size=%d, active_size=%d' % (name, xyz_s, g_size, a_size))
+        xyz_s = "%dx%dx%d" % (self.getNX(), self.getNY(), self.getNZ())
+        return self._create_repr(
+            "%s%s, global_size=%d, active_size=%d" % (name, xyz_s, g_size, a_size)
+        )
 
     def __len__(self):
         """
@@ -280,25 +361,20 @@ class EclGrid(BaseCClass):
             raise TypeError("The other argument must be an EclGrid instance")
         return self._equal(other, include_lgr, include_nnc, verbose)
 
-
     def dual_grid(self):
         """Is this grid dual porosity model?"""
         return self._dual_grid()
 
     def get_dims(self):
         """A tuple of four elements: (nx, ny, nz, nactive)."""
-        return (self.getNX(),
-                 self.getNY(),
-                 self.getNZ(),
-                 self.getNumActive())
-
+        return (self.getNX(), self.getNY(), self.getNZ(), self.getNumActive())
 
     @property
     def nx(self):
         return self._get_nx()
 
     def get_nx(self):
-        """ The number of elements in the x direction"""
+        """The number of elements in the x direction"""
         return self._get_nx()
 
     @property
@@ -306,7 +382,7 @@ class EclGrid(BaseCClass):
         return self._get_ny()
 
     def get_ny(self):
-        """ The number of elements in the y direction"""
+        """The number of elements in the y direction"""
         return self._get_ny()
 
     @property
@@ -314,7 +390,7 @@ class EclGrid(BaseCClass):
         return self._get_nz()
 
     def get_nz(self):
-        """ The number of elements in the z direction"""
+        """The number of elements in the z direction"""
         return self._get_nz()
 
     def get_global_size(self):
@@ -325,11 +401,9 @@ class EclGrid(BaseCClass):
         """The number of active cells in the grid."""
         return self._get_active()
 
-
     def get_num_active_fracture(self):
         """The number of active cells in the grid."""
         return self._get_active_fracture()
-
 
     def get_bounding_box_2d(self, layer=0, lower_left=None, upper_right=None):
         if 0 <= layer <= self.getNZ():
@@ -341,19 +415,18 @@ class EclGrid(BaseCClass):
                 i1 = 0
                 j1 = 0
             else:
-                i1,j1 = lower_left
+                i1, j1 = lower_left
                 if not 0 < i1 < self.getNX():
                     raise ValueError("lower_left i coordinate invalid")
 
                 if not 0 < j1 < self.getNY():
                     raise ValueError("lower_left j coordinate invalid")
 
-
             if upper_right is None:
                 i2 = self.getNX()
                 j2 = self.getNY()
             else:
-                i2,j2 = upper_right
+                i2, j2 = upper_right
 
                 if not 1 < i2 <= self.getNX():
                     raise ValueError("upper_right i coordinate invalid")
@@ -367,24 +440,31 @@ class EclGrid(BaseCClass):
             if not j1 < j2:
                 raise ValueError("Must have lower_left < upper_right")
 
-
-
-            self._get_corner_xyz(i1, j1, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+            self._get_corner_xyz(
+                i1, j1, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z)
+            )
             p0 = (x.value, y.value)
 
-            self._get_corner_xyz(i2, j1, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
-            p1 = (x.value, y.value )
+            self._get_corner_xyz(
+                i2, j1, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z)
+            )
+            p1 = (x.value, y.value)
 
-            self._get_corner_xyz( i2, j2, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
-            p2 = (x.value, y.value )
+            self._get_corner_xyz(
+                i2, j2, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z)
+            )
+            p2 = (x.value, y.value)
 
-            self._get_corner_xyz(i1, j2, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
-            p3 = (x.value, y.value )
+            self._get_corner_xyz(
+                i1, j2, layer, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z)
+            )
+            p3 = (x.value, y.value)
 
-            return (p0,p1,p2,p3)
+            return (p0, p1, p2, p3)
         else:
-            raise ValueError("Invalid layer value:%d  Valid range: [0,%d]" % (layer, self.getNZ()))
-
+            raise ValueError(
+                "Invalid layer value:%d  Valid range: [0,%d]" % (layer, self.getNZ())
+            )
 
     def get_name(self):
         """
@@ -396,7 +476,7 @@ class EclGrid(BaseCClass):
         create() classmethod this can be None.
         """
         n = self._get_name()
-        return str(n) if n else ''
+        return str(n) if n else ""
 
     def cell(self, global_index=None, active_index=None, i=None, j=None, k=None):
         if global_index is not None:
@@ -404,11 +484,11 @@ class EclGrid(BaseCClass):
         if active_index is not None:
             return Cell(self, self.global_index(active_index=active_index))
         if i is not None:
-            return Cell(self, self.global_index(ijk=(i,j,k)))
+            return Cell(self, self.global_index(ijk=(i, j, k)))
 
     def __getitem__(self, global_index):
         if isinstance(global_index, tuple):
-            i,j,k = global_index
+            i, j, k = global_index
             return self.cell(i=i, j=j, k=k)
         return self.cell(global_index=global_index)
 
@@ -455,16 +535,18 @@ class EclGrid(BaseCClass):
             set_count += 1
 
         if not set_count == 1:
-            raise ValueError("Exactly one of the kewyord arguments active_index, global_index or ijk must be set")
+            raise ValueError(
+                "Exactly one of the kewyord arguments active_index, global_index or ijk must be set"
+            )
 
         if not active_index is None:
-            global_index = self._get_global_index1A( active_index)
+            global_index = self._get_global_index1A(active_index)
         elif ijk:
             nx = self.getNX()
             ny = self.getNY()
             nz = self.getNZ()
 
-            i,j,k = ijk
+            i, j, k = ijk
 
             if not 0 <= i < nx:
                 raise IndexError("Invalid value i:%d  Range: [%d,%d)" % (i, 0, nx))
@@ -475,12 +557,14 @@ class EclGrid(BaseCClass):
             if not 0 <= k < nz:
                 raise IndexError("Invalid value k:%d  Range: [%d,%d)" % (k, 0, nz))
 
-            global_index = self._get_global_index3(i,j,k)
+            global_index = self._get_global_index3(i, j, k)
         else:
             if not 0 <= global_index < self.getGlobalSize():
-                raise IndexError("Invalid value global_index:%d  Range: [%d,%d)" % (global_index, 0, self.getGlobalSize()))
+                raise IndexError(
+                    "Invalid value global_index:%d  Range: [%d,%d)"
+                    % (global_index, 0, self.getGlobalSize())
+                )
         return global_index
-
 
     def get_active_index(self, ijk=None, global_index=None):
         """
@@ -493,7 +577,6 @@ class EclGrid(BaseCClass):
         gi = self.__global_index(global_index=global_index, ijk=ijk)
         return self._get_active_index1(gi)
 
-
     def get_active_fracture_index(self, ijk=None, global_index=None):
         """
         For dual porosity - get the active fracture index.
@@ -501,13 +584,11 @@ class EclGrid(BaseCClass):
         gi = self.__global_index(global_index=global_index, ijk=ijk)
         return self._get_active_fracture_index1(gi)
 
-
     def get_global_index1F(self, active_fracture_index):
         """
         Will return the global index corresponding to active fracture index.
         """
         return self._get_global_index1F(active_fracture_index)
-
 
     def cell_invalid(self, ijk=None, global_index=None, active_index=None):
         """
@@ -521,9 +602,10 @@ class EclGrid(BaseCClass):
         and mark them as invalid. There might be other sources than
         numerical aquifers to this problem.
         """
-        gi = self.__global_index(global_index=global_index, ijk=ijk, active_index=active_index)
+        gi = self.__global_index(
+            global_index=global_index, ijk=ijk, active_index=active_index
+        )
         return self._invalid_cell(gi)
-
 
     def valid_cell_geometry(self, ijk=None, global_index=None, active_index=None):
         """Checks if the cell has valid geometry.
@@ -545,10 +627,10 @@ class EclGrid(BaseCClass):
         cell functions which calculate cell volumes, real world
         coordinates and so on - should not be used.
         """
-        gi = self.__global_index(global_index=global_index, ijk=ijk, active_index=active_index)
+        gi = self.__global_index(
+            global_index=global_index, ijk=ijk, active_index=active_index
+        )
         return self._valid_cell(gi)
-
-
 
     def active(self, ijk=None, global_index=None):
         """
@@ -564,14 +646,12 @@ class EclGrid(BaseCClass):
         else:
             return False
 
-
     def get_global_index(self, ijk=None, active_index=None):
         """
         Lookup global index based on ijk or active index.
         """
         gi = self.__global_index(active_index=active_index, ijk=ijk)
         return gi
-
 
     def get_ijk(self, active_index=None, global_index=None):
         """
@@ -587,7 +667,6 @@ class EclGrid(BaseCClass):
         self._get_ijk1(gi, ctypes.byref(i), ctypes.byref(j), ctypes.byref(k))
 
         return (i.value, j.value, k.value)
-
 
     def get_xyz(self, active_index=None, global_index=None, ijk=None):
         """
@@ -623,14 +702,15 @@ class EclGrid(BaseCClass):
         All the indices in the EclGrid() class are zero offset, this
         is in contrast to ECLIPSE which has an offset 1 interface.
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
 
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
         self._get_xyz1(gi, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
         return (x.value, y.value, z.value)
-
 
     def get_node_pos(self, i, j, k):
         """Will return the (x,y,z) for the node given by (i,j,k).
@@ -647,22 +727,29 @@ class EclGrid(BaseCClass):
 
         """
         if not 0 <= i <= self.getNX():
-            raise IndexError("Invalid I value:%d - valid range: [0,%d]" % (i, self.getNX()))
+            raise IndexError(
+                "Invalid I value:%d - valid range: [0,%d]" % (i, self.getNX())
+            )
 
         if not 0 <= j <= self.getNY():
-            raise IndexError("Invalid J value:%d - valid range: [0,%d]" % (j, self.getNY()))
+            raise IndexError(
+                "Invalid J value:%d - valid range: [0,%d]" % (j, self.getNY())
+            )
 
         if not 0 <= k <= self.getNZ():
-            raise IndexError("Invalid K value:%d - valid range: [0,%d]" % (k, self.getNZ()))
+            raise IndexError(
+                "Invalid K value:%d - valid range: [0,%d]" % (k, self.getNZ())
+            )
 
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
-        self._get_corner_xyz(i,j,k, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self._get_corner_xyz(i, j, k, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
         return (x.value, y.value, z.value)
 
-
-    def get_cell_corner(self, corner_nr, active_index=None, global_index=None, ijk=None):
+    def get_cell_corner(
+        self, corner_nr, active_index=None, global_index=None, ijk=None
+    ):
         """
         Will look up xyz of corner nr @corner_nr
 
@@ -674,14 +761,18 @@ class EclGrid(BaseCClass):
          0---1           4---5
 
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
-        self._get_cell_corner_xyz1(gi, corner_nr, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self._get_cell_corner_xyz1(
+            gi, corner_nr, ctypes.byref(x), ctypes.byref(y), ctypes.byref(z)
+        )
         return (x.value, y.value, z.value)
 
-    def get_node_xyz(self, i,j,k):
+    def get_node_xyz(self, i, j, k):
         """
         This function returns the position of Vertex (i,j,k).
 
@@ -706,28 +797,29 @@ class EclGrid(BaseCClass):
             corner += 4
 
         if self._ijk_valid(i, j, k):
-            return self.getCellCorner(corner, global_index=i + j*nx + k*nx*ny)
+            return self.getCellCorner(corner, global_index=i + j * nx + k * nx * ny)
         else:
-            raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i,j,k))
-
-
+            raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i, j, k))
 
     def get_layer_xyz(self, xy_corner, layer):
         nx = self.getNX()
 
         (j, i) = divmod(xy_corner, nx + 1)
         k = layer
-        return self.getNodeXYZ(i,j,k)
-
-
+        return self.getNodeXYZ(i, j, k)
 
     def distance(self, global_index1, global_index2):
         dx = ctypes.c_double()
         dy = ctypes.c_double()
         dz = ctypes.c_double()
-        self._get_distance(global_index1, global_index2, ctypes.byref(dx), ctypes.byref(dy), ctypes.byref(dz))
+        self._get_distance(
+            global_index1,
+            global_index2,
+            ctypes.byref(dx),
+            ctypes.byref(dy),
+            ctypes.byref(dz),
+        )
         return (dx.value, dy.value, dz.value)
-
 
     def depth(self, active_index=None, global_index=None, ijk=None):
         """
@@ -737,8 +829,10 @@ class EclGrid(BaseCClass):
         @active_index, @global_index or @ijk. See method get_xyz() for
         documentation of @active_index, @global_index and @ijk.
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
-        return self._get_depth( gi)
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
+        return self._get_depth(gi)
 
     def top(self, i, j):
         """
@@ -753,16 +847,16 @@ class EclGrid(BaseCClass):
         Raises ValueError if (i,j) column is inactive.
         """
         for k in range(self.getNZ()):
-            a_idx = self.get_active_index(ijk=(i,j,k))
+            a_idx = self.get_active_index(ijk=(i, j, k))
             if a_idx >= 0:
                 return self._get_top1A(a_idx)
-        raise ValueError('No active cell in column (%d,%d)' % (i,j))
+        raise ValueError("No active cell in column (%d,%d)" % (i, j))
 
     def bottom(self, i, j):
         """
         Bottom of the reservoir; in the column (@i, @j).
         """
-        return self._get_bottom( i, j)
+        return self._get_bottom(i, j)
 
     def locate_depth(self, depth, i, j):
         """
@@ -777,8 +871,7 @@ class EclGrid(BaseCClass):
         return -1, and if @depth is below the bottom of the reservoir
         the function will return -nz.
         """
-        return self._locate_depth( depth, i, j)
-
+        return self._locate_depth(depth, i, j)
 
     def find_cell(self, x, y, z, start_ijk=None):
         """
@@ -803,8 +896,9 @@ class EclGrid(BaseCClass):
             i = ctypes.c_int()
             j = ctypes.c_int()
             k = ctypes.c_int()
-            self._get_ijk1(global_index,
-                            ctypes.byref(i), ctypes.byref(j), ctypes.byref(k))
+            self._get_ijk1(
+                global_index, ctypes.byref(i), ctypes.byref(j), ctypes.byref(k)
+            )
             return (i.value, j.value, k.value)
         return None
 
@@ -816,9 +910,10 @@ class EclGrid(BaseCClass):
         See method get_xyz() for documentation of @active_index,
         @global_index and @ijk.
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
-        return self._cell_contains(gi, x,y,z)
-
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
+        return self._cell_contains(gi, x, y, z)
 
     def find_cell_xy(self, x, y, k):
         """Will find the i,j of cell with utm coordinates x,y.
@@ -830,11 +925,13 @@ class EclGrid(BaseCClass):
         if 0 <= k <= self.getNZ():
             i = ctypes.c_int()
             j = ctypes.c_int()
-            ok = self._get_ij_xy(x,y,k, ctypes.byref(i), ctypes.byref(j))
+            ok = self._get_ij_xy(x, y, k, ctypes.byref(i), ctypes.byref(j))
             if ok:
                 return (i.value, j.value)
             else:
-                raise ValueError("Could not find the point:(%g,%g) in layer:%d" % (x,y,k))
+                raise ValueError(
+                    "Could not find the point:(%g,%g) in layer:%d" % (x, y, k)
+                )
         else:
             raise IndexError("Invalid layer value:%d" % k)
 
@@ -845,7 +942,7 @@ class EclGrid(BaseCClass):
         values for k are [0,nz]. If the coordinates (x,y) are found to
         be outside the grid a ValueError exception is raised.
         """
-        i,j = self.findCellXY(x,y,k)
+        i, j = self.findCellXY(x, y, k)
         if k == self.getNZ():
             k -= 1
             corner_shift = 4
@@ -853,27 +950,25 @@ class EclGrid(BaseCClass):
             corner_shift = 0
 
         nx = self.getNX()
-        x0,y0,z0 = self.getCellCorner(corner_shift, ijk=(i,j,k))
-        d0 = math.sqrt((x0 - x)*(x0 - x) + (y0 - y)*(y0 - y))
-        c0 = i + j*(nx + 1)
+        x0, y0, z0 = self.getCellCorner(corner_shift, ijk=(i, j, k))
+        d0 = math.sqrt((x0 - x) * (x0 - x) + (y0 - y) * (y0 - y))
+        c0 = i + j * (nx + 1)
 
-        x1,y1,z1 = self.getCellCorner(1 + corner_shift, ijk=(i,j,k))
-        d1 = math.sqrt((x1 - x)*(x1 - x) + (y1 - y)*(y1 - y))
-        c1 = i + 1 + j*(nx + 1)
+        x1, y1, z1 = self.getCellCorner(1 + corner_shift, ijk=(i, j, k))
+        d1 = math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y))
+        c1 = i + 1 + j * (nx + 1)
 
-        x2,y2,z2 = self.getCellCorner(2 + corner_shift, ijk=(i,j,k))
-        d2 = math.sqrt((x2 - x)*(x2 - x) + (y2 - y)*(y2 - y))
-        c2 = i + (j + 1)*(nx + 1)
+        x2, y2, z2 = self.getCellCorner(2 + corner_shift, ijk=(i, j, k))
+        d2 = math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y))
+        c2 = i + (j + 1) * (nx + 1)
 
-        x3,y3,z3 = self.getCellCorner(3 + corner_shift, ijk=(i,j,k))
-        d3 = math.sqrt((x3 - x)*(x3 - x) + (y3 - y)*(y3 - y))
-        c3 = i + 1 + (j + 1)*(nx + 1)
+        x3, y3, z3 = self.getCellCorner(3 + corner_shift, ijk=(i, j, k))
+        d3 = math.sqrt((x3 - x) * (x3 - x) + (y3 - y) * (y3 - y))
+        c3 = i + 1 + (j + 1) * (nx + 1)
 
-        l = [(d0, c0), (d1,c1), (d2, c2), (d3,c3)]
+        l = [(d0, c0), (d1, c1), (d2, c2), (d3, c3)]
         l.sort(key=lambda k: k[0])
         return l[0][1]
-
-
 
     def cell_regular(self, active_index=None, global_index=None, ijk=None):
         """
@@ -884,9 +979,10 @@ class EclGrid(BaseCClass):
         own centerpoint - which is actually not as trivial as it
         sounds.
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
-        return self._cell_regular( gi)
-
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
+        return self._cell_regular(gi)
 
     def cell_volume(self, active_index=None, global_index=None, ijk=None):
         """
@@ -896,9 +992,10 @@ class EclGrid(BaseCClass):
         get_xyz() for documentation of @active_index, @global_index
         and @ijk.
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
         return self._get_cell_volume(gi)
-
 
     def cell_dz(self, active_index=None, global_index=None, ijk=None):
         """
@@ -908,9 +1005,10 @@ class EclGrid(BaseCClass):
         get_xyz() for documentation of @active_index, @global_index
         and @ijk.
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
-        return self._get_cell_thickness( gi)
-
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
+        return self._get_cell_thickness(gi)
 
     def get_cell_dims(self, active_index=None, global_index=None, ijk=None):
         """Will return a tuple (dx,dy,dz) for cell dimension.
@@ -925,13 +1023,13 @@ class EclGrid(BaseCClass):
         @global_index and @ijk.
 
         """
-        gi = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
         dx = self._get_cell_dx(gi)
         dy = self._get_cell_dy(gi)
-        dz = self._get_cell_thickness( gi)
-        return (dx,dy,dz)
-
-
+        dz = self._get_cell_thickness(gi)
+        return (dx, dy, dz)
 
     def get_num_lgr(self):
 
@@ -943,8 +1041,6 @@ class EclGrid(BaseCClass):
         """
         return self._num_lgr()
 
-
-
     def has_lgr(self, lgr_name):
         """
         Query if the grid has an LGR with name @lgr_name.
@@ -953,7 +1049,6 @@ class EclGrid(BaseCClass):
             return True
         else:
             return False
-
 
     def get_lgr(self, lgr_key):
         """Get EclGrid instance with LGR content.
@@ -982,8 +1077,6 @@ class EclGrid(BaseCClass):
         lgr.setParent(self)
         return lgr
 
-
-
     def get_cell_lgr(self, active_index=None, global_index=None, ijk=None):
         """
         Get EclGrid instance located in cell.
@@ -995,14 +1088,15 @@ class EclGrid(BaseCClass):
 
         See get_xyz() for documentation of the input parameters.
         """
-        gi  = self.__global_index(ijk=ijk, active_index=active_index, global_index=global_index)
+        gi = self.__global_index(
+            ijk=ijk, active_index=active_index, global_index=global_index
+        )
         lgr = self._get_cell_lgr(gi)
         if lgr:
             lgr.setParent(self)
             return lgr
         else:
             raise IndexError("No LGR defined for this cell")
-
 
     def grid_value(self, kw, i, j, k):
         """
@@ -1021,7 +1115,6 @@ class EclGrid(BaseCClass):
         """
         return self._grid_value(kw, i, j, k)
 
-
     def load_column(self, kw, i, j, column):
         """
         Load the values of @kw from the column specified by (@i,@j).
@@ -1036,8 +1129,7 @@ class EclGrid(BaseCClass):
         instance; in that case it is important that @column is
         initialized with a suitable default value.
         """
-        self._load_column( kw, i, j, column)
-
+        self._load_column(kw, i, j, column)
 
     def create_kw(self, array, kw_name, pack):
         """
@@ -1050,7 +1142,11 @@ class EclGrid(BaseCClass):
         """
         if array.ndim == 3:
             dims = array.shape
-            if dims[0] == self.getNX() and dims[1] == self.getNY() and dims[2] == self.getNZ():
+            if (
+                dims[0] == self.getNX()
+                and dims[1] == self.getNY()
+                and dims[2] == self.getNZ()
+            ):
                 dtype = array.dtype
                 if dtype == numpy.int32:
                     type = EclDataType.ECL_INT
@@ -1078,18 +1174,17 @@ class EclGrid(BaseCClass):
                         for i in range(self.getNX()):
                             if pack:
                                 if self.active(global_index=global_index):
-                                    kw[active_index] = array[i,j,k]
+                                    kw[active_index] = array[i, j, k]
                                     active_index += 1
                             else:
                                 if dtype == numpy.int32:
-                                    kw[global_index] = int(array[i,j,k])
+                                    kw[global_index] = int(array[i, j, k])
                                 else:
-                                    kw[global_index] = array[i,j,k]
+                                    kw[global_index] = array[i, j, k]
 
                             global_index += 1
                 return kw
         raise ValueError("Wrong size / dimension on array")
-
 
     def coarse_groups(self):
         """
@@ -1097,16 +1192,16 @@ class EclGrid(BaseCClass):
         """
         return self._num_coarse_groups()
 
-
     def in_coarse_group(self, global_index=None, ijk=None, active_index=None):
         """
         Will return True or False if the cell is part of coarse group.
         """
-        global_index = self.__global_index(active_index=active_index, ijk=ijk, global_index=global_index)
+        global_index = self.__global_index(
+            active_index=active_index, ijk=ijk, global_index=global_index
+        )
         return self._in_coarse_group1(global_index)
 
-
-    def create_3d(self, ecl_kw, default = 0):
+    def create_3d(self, ecl_kw, default=0):
         """
         Creates a 3D numpy array object with the data from  @ecl_kw.
 
@@ -1126,7 +1221,7 @@ class EclGrid(BaseCClass):
 
         """
         if len(ecl_kw) == self.getNumActive() or len(ecl_kw) == self.getGlobalSize():
-            array = numpy.ones([ self.getGlobalSize() ], dtype=ecl_kw.dtype) * default
+            array = numpy.ones([self.getGlobalSize()], dtype=ecl_kw.dtype) * default
             kwa = ecl_kw.array
             if len(ecl_kw) == self.getGlobalSize():
                 for i in range(kwa.size):
@@ -1136,12 +1231,16 @@ class EclGrid(BaseCClass):
                     active_index = self._get_active_index1(global_index)
                     array[global_index] = kwa[active_index]
 
-            array = array.reshape([self.getNX(), self.getNY(), self.getNZ()], order='F')
+            array = array.reshape([self.getNX(), self.getNY(), self.getNZ()], order="F")
             return array
         else:
             err_msg_fmt = 'Keyword "%s" has invalid size %d; must be either nactive=%d or nx*ny*nz=%d'
-            err_msg = err_msg_fmt % (ecl_kw, len(ecl_kw), self.getNumActive(),
-                                     self.getGlobalSize())
+            err_msg = err_msg_fmt % (
+                ecl_kw,
+                len(ecl_kw),
+                self.getNumActive(),
+                self.getGlobalSize(),
+            )
             raise ValueError(err_msg)
 
     def save_grdecl(self, pyfile, output_unit=EclUnitTypeEnum.ECL_METRIC_UNITS):
@@ -1154,16 +1253,15 @@ class EclGrid(BaseCClass):
         self._fprintf_grdecl2(cfile, output_unit)
 
     def save_EGRID(self, filename, output_unit=None):
-         if output_unit is None:
-             output_unit = self.unit_system
-         self._fwrite_EGRID2(filename, output_unit)
+        if output_unit is None:
+            output_unit = self.unit_system
+        self._fwrite_EGRID2(filename, output_unit)
 
     def save_GRID(self, filename, output_unit=EclUnitTypeEnum.ECL_METRIC_UNITS):
         """
         Will save the current grid as a GRID file.
         """
-        self._fwrite_GRID2( filename, output_unit)
-
+        self._fwrite_GRID2(filename, output_unit)
 
     def write_grdecl(self, ecl_kw, pyfile, special_header=None, default_value=0):
         """
@@ -1192,14 +1290,20 @@ class EclGrid(BaseCClass):
             cfile = CFILE(pyfile)
             self._fwrite_grdecl(ecl_kw, special_header, cfile, default_value)
         else:
-            raise ValueError("Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d" % (ecl_kw.getName(), len(ecl_kw), self.getNumActive(), self.getGlobalSize()))
-
+            raise ValueError(
+                "Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d"
+                % (
+                    ecl_kw.getName(),
+                    len(ecl_kw),
+                    self.getNumActive(),
+                    self.getGlobalSize(),
+                )
+            )
 
     def exportACTNUM(self):
         actnum = IntVector(initial_size=self.getGlobalSize())
         self._init_actnum(actnum.getDataPtr())
         return actnum
-
 
     def compressed_kw_copy(self, kw):
         if len(kw) == self.getNumActive():
@@ -1209,7 +1313,10 @@ class EclGrid(BaseCClass):
             self._compressed_kw_copy(kw_copy, kw)
             return kw_copy
         else:
-            raise ValueError("The input keyword must have nx*n*nz or nactive elements. Size:%d invalid" % len(kw))
+            raise ValueError(
+                "The input keyword must have nx*n*nz or nactive elements. Size:%d invalid"
+                % len(kw)
+            )
 
     def global_kw_copy(self, kw, default_value):
         if len(kw) == self.getGlobalSize():
@@ -1220,14 +1327,15 @@ class EclGrid(BaseCClass):
             self._global_kw_copy(kw_copy, kw)
             return kw_copy
         else:
-            raise ValueError("The input keyword must have nx*n*nz or nactive elements. Size:%d invalid" % len(kw))
-
+            raise ValueError(
+                "The input keyword must have nx*n*nz or nactive elements. Size:%d invalid"
+                % len(kw)
+            )
 
     def export_ACTNUM_kw(self):
         actnum = EclKW("ACTNUM", self.getGlobalSize(), EclDataType.ECL_INT)
         self._init_actnum(actnum.getDataPtr())
         return actnum
-
 
     def create_volume_keyword(self, active_size=True):
         """Will create a EclKW initialized with cell volumes.
@@ -1259,16 +1367,16 @@ class EclGrid(BaseCClass):
 
         return self._create_volume_keyword(active_size)
 
-    def export_index(self, active_only = False):
+    def export_index(self, active_only=False):
         """
         Exports a pandas dataframe containing index data of grid cells.
 
         The global_index of the cells is used as index in the pandas frame.
         columns 0, 1, 2 are i, j, k, respectively
         column 3 contains the active_index
-        if active_only == True, only active cells are listed, 
+        if active_only == True, only active cells are listed,
         otherwise all cells are listed.
-        This index frame should typically be passed to the epxport_data(), 
+        This index frame should typically be passed to the epxport_data(),
         export_volume() and export_corners() functions.
         """
         if active_only:
@@ -1277,15 +1385,19 @@ class EclGrid(BaseCClass):
             size = self.get_global_size()
         indx = numpy.zeros(size, dtype=numpy.int32)
         data = numpy.zeros([size, 4], dtype=numpy.int32)
-        self._export_index_frame( indx.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), active_only )
-        df = pandas.DataFrame(data=data, index=indx, columns=['i', 'j', 'k', 'active'])
+        self._export_index_frame(
+            indx.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+            data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+            active_only,
+        )
+        df = pandas.DataFrame(data=data, index=indx, columns=["i", "j", "k", "active"])
         return df
-        
-    def export_data(self, index_frame, kw, default = 0):
-        """
-        Exports keywoard data to a numpy vector. 
 
-        Index_fram must be a pandas dataframe with the same structure 
+    def export_data(self, index_frame, kw, default=0):
+        """
+        Exports keywoard data to a numpy vector.
+
+        Index_fram must be a pandas dataframe with the same structure
         as obtained from export_index.
         kw must have size of either global_size or num_active.
         The length of the numpy vector is the number of rows in index_frame.
@@ -1295,25 +1407,32 @@ class EclGrid(BaseCClass):
         if not isinstance(index_frame, pandas.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
         if len(kw) == self.get_global_size():
-            index = numpy.array( index_frame.index, dtype=numpy.int32 )
+            index = numpy.array(index_frame.index, dtype=numpy.int32)
         elif len(kw) == self.get_num_active():
-            index = numpy.array( index_frame["active"], dtype=numpy.int32 )
+            index = numpy.array(index_frame["active"], dtype=numpy.int32)
         else:
             raise ValueError("The keyword must have a 3D compatible length")
 
         if kw.type is EclTypeEnum.ECL_INT_TYPE:
-            data = numpy.full( len(index), default, dtype=numpy.int32 )
-            self._export_data_as_int( len(index), 
-                                       index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
-                                       kw, 
-                                       data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))   )
+            data = numpy.full(len(index), default, dtype=numpy.int32)
+            self._export_data_as_int(
+                len(index),
+                index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+                kw,
+                data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+            )
             return data
-        elif kw.type is EclTypeEnum.ECL_FLOAT_TYPE or kw.type is EclTypeEnum.ECL_DOUBLE_TYPE:
-            data = numpy.full( len(index), default, dtype=numpy.float64 )
-            self._export_data_as_double( len(index), 
-                                         index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)), 
-                                         kw, 
-                                         data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))   )            
+        elif (
+            kw.type is EclTypeEnum.ECL_FLOAT_TYPE
+            or kw.type is EclTypeEnum.ECL_DOUBLE_TYPE
+        ):
+            data = numpy.full(len(index), default, dtype=numpy.float64)
+            self._export_data_as_double(
+                len(index),
+                index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+                kw,
+                data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+            )
             return data
         else:
             raise TypeError("Keyword must be either int, float or double.")
@@ -1322,28 +1441,32 @@ class EclGrid(BaseCClass):
         """
         Exports cell volume data to a numpy vector.
 
-        Index_fram must be a pandas dataframe with the same structure 
-        as obtained from export_index.  
+        Index_fram must be a pandas dataframe with the same structure
+        as obtained from export_index.
         """
-        index = numpy.array( index_frame.index, dtype=numpy.int32 )
-        data = numpy.zeros( len(index ), dtype=numpy.float64 )
-        self._export_volume( len(index), 
-                             index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
-                             data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
+        index = numpy.array(index_frame.index, dtype=numpy.int32)
+        data = numpy.zeros(len(index), dtype=numpy.float64)
+        self._export_volume(
+            len(index),
+            index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+            data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        )
         return data
 
     def export_position(self, index_frame):
         """Exports cell position coordinates to a numpy vector (matrix), with columns
         0, 1, 2 denoting coordinates x, y, and z, respectively.
 
-        Index_fram must be a pandas dataframe with the same structure 
-        as obtained from export_index.  
+        Index_fram must be a pandas dataframe with the same structure
+        as obtained from export_index.
         """
-        index = numpy.array( index_frame.index, dtype=numpy.int32 )
-        data = numpy.zeros( [len(index), 3], dtype=numpy.float64 )
-        self._export_position( len(index), 
-                               index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
-                               data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
+        index = numpy.array(index_frame.index, dtype=numpy.int32)
+        data = numpy.zeros([len(index), 3], dtype=numpy.float64)
+        self._export_position(
+            len(index),
+            index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+            data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        )
         return data
 
     def export_corners(self, index_frame):
@@ -1362,7 +1485,7 @@ class EclGrid(BaseCClass):
 
 
                                         j
-        6---7                        /|\    
+        6---7                        /|\\
         |   |                         |
         4---5                         |
                                       |
@@ -1381,13 +1504,14 @@ class EclGrid(BaseCClass):
         increase 'towards the sky'; the safest way is probably to check this
         explicitly if it matters for the case at hand.
         """
-        index = numpy.array( index_frame.index, dtype=numpy.int32 )
-        data = numpy.zeros( [len(index), 24], dtype=numpy.float64 )
-        self._export_corners( len(index),
-                              index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
-                              data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))  )
+        index = numpy.array(index_frame.index, dtype=numpy.int32)
+        data = numpy.zeros([len(index), 24], dtype=numpy.float64)
+        self._export_corners(
+            len(index),
+            index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
+            data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+        )
         return data
-
 
     def export_coord(self):
         return self._export_coord()
@@ -1408,31 +1532,32 @@ class EclGrid(BaseCClass):
     def unit_system(self):
         return self._get_unit_system()
 
-monkey_the_camel(EclGrid, 'loadFromGrdecl', EclGrid.load_from_grdecl, classmethod)
-monkey_the_camel(EclGrid, 'loadFromFile', EclGrid.load_from_file, classmethod)
-monkey_the_camel(EclGrid, 'createRectangular', EclGrid.create_rectangular, classmethod)
-monkey_the_camel(EclGrid, 'dualGrid', EclGrid.dual_grid)
-monkey_the_camel(EclGrid, 'getDims', EclGrid.get_dims)
-monkey_the_camel(EclGrid, 'getNX', EclGrid.get_nx)
-monkey_the_camel(EclGrid, 'getNY', EclGrid.get_ny)
-monkey_the_camel(EclGrid, 'getNZ', EclGrid.get_nz)
-monkey_the_camel(EclGrid, 'getGlobalSize', EclGrid.get_global_size)
-monkey_the_camel(EclGrid, 'getNumActive', EclGrid.get_num_active)
-monkey_the_camel(EclGrid, 'getNumActiveFracture', EclGrid.get_num_active_fracture)
-monkey_the_camel(EclGrid, 'getBoundingBox2D', EclGrid.get_bounding_box_2d)
-monkey_the_camel(EclGrid, 'getName', EclGrid.get_name)
-monkey_the_camel(EclGrid, 'validCellGeometry', EclGrid.valid_cell_geometry)
-monkey_the_camel(EclGrid, 'getNodePos', EclGrid.get_node_pos)
-monkey_the_camel(EclGrid, 'getCellCorner', EclGrid.get_cell_corner)
-monkey_the_camel(EclGrid, 'getNodeXYZ', EclGrid.get_node_xyz)
-monkey_the_camel(EclGrid, 'getLayerXYZ', EclGrid.get_layer_xyz)
-monkey_the_camel(EclGrid, 'findCellXY', EclGrid.find_cell_xy)
-monkey_the_camel(EclGrid, 'findCellCornerXY', EclGrid.find_cell_corner_xy)
-monkey_the_camel(EclGrid, 'getCellDims', EclGrid.get_cell_dims)
-monkey_the_camel(EclGrid, 'getNumLGR', EclGrid.get_num_lgr)
-monkey_the_camel(EclGrid, 'createKW', EclGrid.create_kw)
-monkey_the_camel(EclGrid, 'create3D', EclGrid.create_3d)
-monkey_the_camel(EclGrid, 'compressedKWCopy', EclGrid.compressed_kw_copy)
-monkey_the_camel(EclGrid, 'globalKWCopy', EclGrid.global_kw_copy)
-monkey_the_camel(EclGrid, 'exportACTNUMKw', EclGrid.export_ACTNUM_kw)
-monkey_the_camel(EclGrid, 'createVolumeKeyword', EclGrid.create_volume_keyword)
+
+monkey_the_camel(EclGrid, "loadFromGrdecl", EclGrid.load_from_grdecl, classmethod)
+monkey_the_camel(EclGrid, "loadFromFile", EclGrid.load_from_file, classmethod)
+monkey_the_camel(EclGrid, "createRectangular", EclGrid.create_rectangular, classmethod)
+monkey_the_camel(EclGrid, "dualGrid", EclGrid.dual_grid)
+monkey_the_camel(EclGrid, "getDims", EclGrid.get_dims)
+monkey_the_camel(EclGrid, "getNX", EclGrid.get_nx)
+monkey_the_camel(EclGrid, "getNY", EclGrid.get_ny)
+monkey_the_camel(EclGrid, "getNZ", EclGrid.get_nz)
+monkey_the_camel(EclGrid, "getGlobalSize", EclGrid.get_global_size)
+monkey_the_camel(EclGrid, "getNumActive", EclGrid.get_num_active)
+monkey_the_camel(EclGrid, "getNumActiveFracture", EclGrid.get_num_active_fracture)
+monkey_the_camel(EclGrid, "getBoundingBox2D", EclGrid.get_bounding_box_2d)
+monkey_the_camel(EclGrid, "getName", EclGrid.get_name)
+monkey_the_camel(EclGrid, "validCellGeometry", EclGrid.valid_cell_geometry)
+monkey_the_camel(EclGrid, "getNodePos", EclGrid.get_node_pos)
+monkey_the_camel(EclGrid, "getCellCorner", EclGrid.get_cell_corner)
+monkey_the_camel(EclGrid, "getNodeXYZ", EclGrid.get_node_xyz)
+monkey_the_camel(EclGrid, "getLayerXYZ", EclGrid.get_layer_xyz)
+monkey_the_camel(EclGrid, "findCellXY", EclGrid.find_cell_xy)
+monkey_the_camel(EclGrid, "findCellCornerXY", EclGrid.find_cell_corner_xy)
+monkey_the_camel(EclGrid, "getCellDims", EclGrid.get_cell_dims)
+monkey_the_camel(EclGrid, "getNumLGR", EclGrid.get_num_lgr)
+monkey_the_camel(EclGrid, "createKW", EclGrid.create_kw)
+monkey_the_camel(EclGrid, "create3D", EclGrid.create_3d)
+monkey_the_camel(EclGrid, "compressedKWCopy", EclGrid.compressed_kw_copy)
+monkey_the_camel(EclGrid, "globalKWCopy", EclGrid.global_kw_copy)
+monkey_the_camel(EclGrid, "exportACTNUMKw", EclGrid.export_ACTNUM_kw)
+monkey_the_camel(EclGrid, "createVolumeKeyword", EclGrid.create_volume_keyword)

@@ -2,6 +2,7 @@ from cwrap import BaseCClass
 from ecl import EclPrototype
 from ecl.well import WellState
 
+
 class WellTimeLine(BaseCClass):
     TYPE_NAME = "well_time_line"
     _size = EclPrototype("int well_ts_get_size(well_time_line)")
@@ -15,14 +16,13 @@ class WellTimeLine(BaseCClass):
         return self._name()
 
     def __len__(self):
-        """ @rtype: int """
+        """@rtype: int"""
         return self._size()
-
 
     def __getitem__(self, index):
         """
-         @type index: int
-         @rtype: WellState
+        @type index: int
+        @rtype: WellState
         """
 
         if index < 0:
@@ -39,5 +39,5 @@ class WellTimeLine(BaseCClass):
     def __repr__(self):
         n = self.getName()
         l = len(self)
-        cnt = 'name = %s, size = %d' % (n,l)
+        cnt = "name = %s, size = %d" % (n, l)
         return self._create_repr(cnt)

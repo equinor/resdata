@@ -22,34 +22,34 @@ import unittest
 import inspect
 import imp
 
+
 class ImportTestCase(unittest.TestCase):
-
     def import_file(self, path):
-        return imp.load_source( "module", path)
+        return imp.load_source("module", path)
 
-    def import_module(self , module):
-        mod = importlib.import_module( module )
+    def import_module(self, module):
+        mod = importlib.import_module(module)
         return mod
 
     def import_package(self, package):
         if "__" in package:
             return True
-        module = self.import_module( package )
+        module = self.import_module(package)
 
-        path = os.path.dirname( inspect.getfile( module ) )
+        path = os.path.dirname(inspect.getfile(module))
 
         for entry in sorted(os.listdir(path)):
             entry_path = os.path.join(path, entry)
-            if os.path.isdir( entry_path ):
-                module = os.path.basename( entry )
-                sub_module = "%s.%s" % (package , module)
-                self.import_package( sub_module )
+            if os.path.isdir(entry_path):
+                module = os.path.basename(entry)
+                sub_module = "%s.%s" % (package, module)
+                self.import_package(sub_module)
             else:
-                module, ext = os.path.splitext( entry )
+                module, ext = os.path.splitext(entry)
                 if module == "__init__":
                     continue
 
                 if ext == "py":
-                    self.import_module("%s.%s" % (package , module))
+                    self.import_module("%s.%s" % (package, module))
 
         return True

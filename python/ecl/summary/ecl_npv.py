@@ -27,7 +27,6 @@ class NPVParseKey(object):
         self.baseCase = eclNPV.baseCase
         self.NPV = eclNPV
 
-
     def __call__(self, matchObject):
         key = matchObject.group(1)
         smspecNode = self.baseCase.smspec_node(key)
@@ -47,11 +46,11 @@ class NPVPriceVector(object):
                 if isinstance(item, tuple) and len(item) == 2:
                     self.addItem(item)
                 else:
-                    raise ValueError("Each element in list must be tuple with two elements")
+                    raise ValueError(
+                        "Each element in list must be tuple with two elements"
+                    )
         else:
             raise ValueError("Constructor argument must be list")
-
-
 
     def add_item(self, item):
         dateItem = item[0]
@@ -70,7 +69,6 @@ class NPVPriceVector(object):
                 date = datetime.date(year, month, day)
             except Exception:
                 raise ValueError("First element was invalid date item")
-
 
         if len(self.dateList):
             prevItem = self.dateList[-1]
@@ -95,8 +93,6 @@ class NPVPriceVector(object):
         except AttributeError:
             return date.date()
 
-
-
     def eval_date(self, dateItem, date):
         value = dateItem[1]
         if callable(value):
@@ -104,7 +100,6 @@ class NPVPriceVector(object):
             return value(td.days)
         else:
             return value
-
 
     def eval(self, date):
         date = self.assertDate(date)
@@ -132,12 +127,8 @@ class NPVPriceVector(object):
             raise ValueError("Input date:%s before start of vector" % date)
 
 
-
-
-
 class EclNPV(object):
     sumKeyRE = re.compile("[\[]([\w:,]+)[\]]")
-
 
     def __init__(self, baseCase):
         sum = EclSum(baseCase)
@@ -151,70 +142,70 @@ class EclNPV(object):
         self.end = None
         self.interval = "1Y"
 
-
     def eval(self):
         if self.expression is None:
             raise ValueError("Can not eval with an expression to evaluate")
         pass
 
-
     def get_expression(self):
         return self.expression
-
 
     def set_expression(self, expression):
         self.compiled_expr = self.compile(expression)
         self.expression = expression
 
-
     def get_key_list(self):
         return self.keyList.keys()
-
 
     def add_key(self, key, var):
         self.keyList[key] = var
 
-
     def parse_expression(self, expression):
         self.keyList = {}
         if expression.count("[") != expression.count("]"):
-            raise ValueError("Expression:%s invalid - not matching [ and ]" % expression)
+            raise ValueError(
+                "Expression:%s invalid - not matching [ and ]" % expression
+            )
 
         replaceKey = NPVParseKey(self)
         parsedExpression = self.sumKeyRE.sub(replaceKey, expression)
         return parsedExpression
 
-
     def compile(self, expression):
         parsedExpression = self.parseExpression(expression)
-        self.code = "trange = self.baseCase.timeRange(self.start, self.end, self.interval)\n"
-        for (key,var) in self.keyList.items():
-            self.code += "%s = self.baseCase.blockedProduction(\"%s\", trange)\n" % (var, key)
+        self.code = (
+            "trange = self.baseCase.timeRange(self.start, self.end, self.interval)\n"
+        )
+        for (key, var) in self.keyList.items():
+            self.code += '%s = self.baseCase.blockedProduction("%s", trange)\n' % (
+                var,
+                key,
+            )
 
         self.code += "npv = 0\n"
-        self.code += """
+        self.code += (
+            """
 for i in range(len(trange) - 1):
    npv += %s
 varDict[\"npv\"] = npv
-""" % parsedExpression
-
-
+"""
+            % parsedExpression
+        )
 
     def eval_npv(self):
-        byteCode = compile(self.code, "<string>", 'exec')
+        byteCode = compile(self.code, "<string>", "exec")
         varDict = {}
         eval(byteCode)
         return varDict["npv"]
 
 
+monkey_the_camel(NPVPriceVector, "addItem", NPVPriceVector.add_item)
+monkey_the_camel(NPVPriceVector, "assertDate", NPVPriceVector.assert_date, staticmethod)
+monkey_the_camel(NPVPriceVector, "evalDate", NPVPriceVector.eval_date)
 
-monkey_the_camel(NPVPriceVector, 'addItem', NPVPriceVector.add_item)
-monkey_the_camel(NPVPriceVector, 'assertDate', NPVPriceVector.assert_date, staticmethod)
-monkey_the_camel(NPVPriceVector, 'evalDate', NPVPriceVector.eval_date)
-
-monkey_the_camel(EclNPV, 'getExpression', EclNPV.get_expression)
-monkey_the_camel(EclNPV, 'setExpression', EclNPV.set_expression)
-monkey_the_camel(EclNPV, 'getKeyList', EclNPV.get_key_list)
-monkey_the_camel(EclNPV, 'addKey', EclNPV.add_key)
-monkey_the_camel(EclNPV, 'parseExpression', EclNPV.parse_expression)
-monkey_the_camel(EclNPV, 'evalNPV', EclNPV.eval_npv)
+monkey_the_camel(EclNPV, "getExpression", EclNPV.get_expression)
+monkey_the_camel(EclNPV, "setExpression", EclNPV.set_expression)
+monkey_the_camel(EclNPV, "getKeyList", EclNPV.get_key_list)
+monkey_the_camel(EclNPV, "addKey", EclNPV.add_key)
+monkey_the_camel(EclNPV, "parseExpression", EclNPV.parse_expression)
+monkey_the_camel(EclNPV, "evalNPV", EclNPV.eval_npv)
