@@ -20,7 +20,7 @@ from ecl.summary.ecl_sum_node import EclSumNode
 
 
 class EclSumVector(object):
-    def __init__(self, parent, key, report_only = False):
+    def __init__(self, parent, key, report_only=False):
         """
         A summary vector with a vector of values and time.
 
@@ -42,7 +42,10 @@ class EclSumVector(object):
         self.report_only = report_only
 
         if report_only:
-            warnings.warn("The report_only flag to the EclSumVector will be removed", DeprecationWarning)
+            warnings.warn(
+                "The report_only flag to the EclSumVector will be removed",
+                DeprecationWarning,
+            )
 
         self.__dates = parent.get_dates(report_only)
         self.__days = parent.get_days(report_only)
@@ -50,12 +53,15 @@ class EclSumVector(object):
         self.__report_step = parent.get_report_step(report_only)
         self.__values = None
 
-
     def __str__(self):
         return "<Summary vector: %s>" % self.key
 
     def __repr__(self):
-        return 'EclSumVector(key = %s, size = %d, unit = %s)' % (self.key, len(self), self.unit)
+        return "EclSumVector(key = %s, size = %d, unit = %s)" % (
+            self.key,
+            len(self),
+            self.unit,
+        )
 
     @property
     def unit(self):
@@ -69,7 +75,9 @@ class EclSumVector(object):
         This function will load and internalize all the values.
         """
         if self.__values is None:
-            self.__values = self.parent.numpy_vector(self.key, report_only = self.report_only)
+            self.__values = self.parent.numpy_vector(
+                self.key, report_only=self.report_only
+            )
 
     @property
     def values(self):
@@ -103,8 +111,10 @@ class EclSumVector(object):
         backwards-compatibility for the time-being. Usage will trigger
         a depreciation warning.
         """
-        warnings.warn("The mpl_dates property has been deprecated - use numpy_dates instead",
-                     DeprecationWarning)
+        warnings.warn(
+            "The mpl_dates property has been deprecated - use numpy_dates instead",
+            DeprecationWarning,
+        )
 
         return self.parent.get_mpl_dates(self.report_only)
 
@@ -122,26 +132,25 @@ class EclSumVector(object):
         """
         return self.__report_step
 
-
     def __iget(self, index):
         """
         Will return an EclSumNode for element @index; should be called
         through the [] operator, otherwise you can come across
         unitialized data.
         """
-        return EclSumNode(self.__report_step[index],
-                          self.__days[index],
-                          self.__dates[index],
-                          self.mpl_dates[index],
-                          self.__values[index])
-
+        return EclSumNode(
+            self.__report_step[index],
+            self.__days[index],
+            self.__dates[index],
+            self.mpl_dates[index],
+            self.__values[index],
+        )
 
     def __len__(self):
         """
         The length of the vector - used for the len() builtin.
         """
         return len(self.__days)
-
 
     def __getitem__(self, index):
         """
@@ -207,7 +216,6 @@ class EclSumVector(object):
         index = len(self.__values) - 1
         return self.__iget(index).value
 
-
     def get_interp(self, days=None, date=None):
         """
         Will lookup value interpolated to @days or @date.
@@ -225,7 +233,6 @@ class EclSumVector(object):
         """
         return self.parent.get_interp(self.key, days, date)
 
-
     def get_interp_vector(self, days_list=None, date_list=None):
         """
         Will return Python list of interpolated values.
@@ -233,7 +240,6 @@ class EclSumVector(object):
         See get_interp() for further details.
         """
         return self.parent.get_interp_vector(self.key, days_list, date_list)
-
 
     def get_from_report(self, report_step):
         """
@@ -255,7 +261,9 @@ class EclSumVector(object):
             time_index = self.parent._get_first_gt(key_index, limit)
             return time_index
         else:
-            raise Exception("Sorry - first_gt_index() can not be called for vectors with report_only=True")
+            raise Exception(
+                "Sorry - first_gt_index() can not be called for vectors with report_only=True"
+            )
 
     def first_gt(self, limit):
         """
@@ -286,7 +294,9 @@ class EclSumVector(object):
             time_index = self.parent._get_first_lt(key_index, limit)
             return time_index
         else:
-            raise Exception("Sorry - first_lt_index() can not be called for vectors with report_only=True")
+            raise Exception(
+                "Sorry - first_lt_index() can not be called for vectors with report_only=True"
+            )
 
     def first_lt(self, limit):
         """

@@ -52,21 +52,32 @@ class FortIO(BaseCClass):
     READ_AND_WRITE_MODE = 3
     APPEND_MODE = 4
 
-    _open_reader    = EclPrototype("void* fortio_open_reader(char*, bool, bool)", bind=False)
-    _open_writer    = EclPrototype("void* fortio_open_writer(char*, bool, bool)", bind=False)
-    _open_readwrite = EclPrototype("void* fortio_open_readwrite(char*, bool, bool)", bind=False)
-    _open_append    = EclPrototype("void* fortio_open_append(char*, bool, bool)", bind=False)
-    _guess_fortran  = EclPrototype("bool fortio_looks_like_fortran_file(char*, bool)", bind=False)
+    _open_reader = EclPrototype(
+        "void* fortio_open_reader(char*, bool, bool)", bind=False
+    )
+    _open_writer = EclPrototype(
+        "void* fortio_open_writer(char*, bool, bool)", bind=False
+    )
+    _open_readwrite = EclPrototype(
+        "void* fortio_open_readwrite(char*, bool, bool)", bind=False
+    )
+    _open_append = EclPrototype(
+        "void* fortio_open_append(char*, bool, bool)", bind=False
+    )
+    _guess_fortran = EclPrototype(
+        "bool fortio_looks_like_fortran_file(char*, bool)", bind=False
+    )
 
-    _write_record   = EclPrototype("void fortio_fwrite_record(fortio, char*, int)")
-    _get_position   = EclPrototype("long fortio_ftell(fortio)")
-    _seek           = EclPrototype("void fortio_fseek(fortio, long, int)")
-    _close          = EclPrototype("bool fortio_fclose(fortio)")
-    _truncate       = EclPrototype("bool fortio_ftruncate(fortio, long)")
-    _filename       = EclPrototype("char* fortio_filename_ref(fortio)")
+    _write_record = EclPrototype("void fortio_fwrite_record(fortio, char*, int)")
+    _get_position = EclPrototype("long fortio_ftell(fortio)")
+    _seek = EclPrototype("void fortio_fseek(fortio, long, int)")
+    _close = EclPrototype("bool fortio_fclose(fortio)")
+    _truncate = EclPrototype("bool fortio_ftruncate(fortio, long)")
+    _filename = EclPrototype("char* fortio_filename_ref(fortio)")
 
-
-    def __init__(self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True):
+    def __init__(
+        self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True
+    ):
         """Will open a new FortIO handle to @file_name - default for reading.
 
         The newly created FortIO handle will open the underlying FILE*
@@ -120,18 +131,14 @@ class FortIO(BaseCClass):
             raise IOError('Failed to open FortIO file "%s".' % file_name)
         super(FortIO, self).__init__(c_pointer)
 
-
-
     def close(self):
         if self:
             self._close()
             self._invalidateCPointer()
 
-
     def get_position(self):
-        """ @rtype: long """
+        """@rtype: long"""
         return self._get_position()
-
 
     def truncate(self, size=None):
         """Will truncate the file to new size.
@@ -145,17 +152,14 @@ class FortIO(BaseCClass):
         if not self._truncate(size):
             raise IOError("Truncate of fortran filehandle:%s failed" % self.filename())
 
-
     def filename(self):
         return self._filename()
-
 
     def seek(self, position, whence=0):
         # SEEK_SET = 0
         # SEEK_CUR = 1
         # SEEK_END = 2
         self._seek(position, whence)
-
 
     @classmethod
     def is_fortran_file(cls, filename, endian_flip=True):
@@ -170,13 +174,11 @@ class FortIO(BaseCClass):
         """
         return cls._guess_fortran(filename, endian_flip)
 
-
     def free(self):
         self.close()
 
 
 class FortIOContextManager(object):
-
     def __init__(self, fortio):
         self.__fortio = fortio
 
@@ -188,7 +190,9 @@ class FortIOContextManager(object):
         return exc_type is not None
 
 
-def openFortIO(file_name, mode=FortIO.READ_MODE, fmt_file=False, endian_flip_header=True):
+def openFortIO(
+    file_name, mode=FortIO.READ_MODE, fmt_file=False, endian_flip_header=True
+):
     """Will create FortIO based context manager for use with with.
 
     The with: statement and context managers is a good alternative in
@@ -204,8 +208,15 @@ def openFortIO(file_name, mode=FortIO.READ_MODE, fmt_file=False, endian_flip_hea
                  kw.write(fortio)
 
     """
-    return FortIOContextManager(FortIO(file_name, mode=mode, fmt_file=fmt_file,
-                                       endian_flip_header=endian_flip_header))
+    return FortIOContextManager(
+        FortIO(
+            file_name,
+            mode=mode,
+            fmt_file=fmt_file,
+            endian_flip_header=endian_flip_header,
+        )
+    )
 
-monkey_the_camel(FortIO, 'getPosition', FortIO.get_position)
-monkey_the_camel(FortIO, 'isFortranFile', FortIO.is_fortran_file, classmethod)
+
+monkey_the_camel(FortIO, "getPosition", FortIO.get_position)
+monkey_the_camel(FortIO, "isFortranFile", FortIO.is_fortran_file, classmethod)

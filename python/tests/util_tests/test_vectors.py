@@ -25,7 +25,15 @@ try:
 except ImportError:
     from unittest import TestCase
 
-from ecl.util.util import DoubleVector, IntVector, BoolVector, TimeVector, CTime, PermutationVector
+from ecl.util.util import (
+    DoubleVector,
+    IntVector,
+    BoolVector,
+    TimeVector,
+    CTime,
+    PermutationVector,
+)
+
 
 class UtilTest(TestCase):
     def setUp(self):
@@ -40,27 +48,25 @@ class UtilTest(TestCase):
         odds = vec[1::2]
         self.assertEqual(4, len(vec[1:8:2]))
         for i in range(4):
-            self.assertEqual(vec[2*i + 1], odds[i])
+            self.assertEqual(vec[2 * i + 1], odds[i])
 
     def test_slicing(self):
         dv = DoubleVector(initial_size=10)
         for i in range(10):
-            dv[i] = 1.0 / (1+i)
+            dv[i] = 1.0 / (1 + i)
         self.dotest_slicing(dv)
         iv = IntVector(initial_size=10)
         for i in range(10):
-            iv[i] = i**3
+            iv[i] = i ** 3
         self.dotest_slicing(iv)
         bv = BoolVector(initial_size=10)
-        for i in range(0,10,3):
+        for i in range(0, 10, 3):
             bv[i] = True
         self.dotest_slicing(bv)
         tv = TimeVector(initial_size=10)
         for i in range(10):
-            tv[i] = CTime(datetime.datetime(2016, 12, i+3, 0, 0, 0))
+            tv[i] = CTime(datetime.datetime(2016, 12, i + 3, 0, 0, 0))
         self.dotest_slicing(tv)
-
-
 
     def test_double_vector(self):
         v = DoubleVector()
@@ -74,7 +80,10 @@ class UtilTest(TestCase):
         v[12] = 12
 
         self.assertEqual(len(v), 13)
-        self.assertEqual(list(v), [v[0], v[1], v[2], v[3], v[4], v[5], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, v[12]])
+        self.assertEqual(
+            list(v),
+            [v[0], v[1], v[2], v[3], v[4], v[5], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, v[12]],
+        )
 
         v.clear()
         self.assertEqual(len(v), 0)
@@ -137,9 +146,9 @@ class UtilTest(TestCase):
             iv1 *= dv1
 
     def test_setitem_getitem(self):
-        primes = [2,3,5,7,11,13,17,19]
+        primes = [2, 3, 5, 7, 11, 13, 17, 19]
         primep = [i in primes for i in range(20)]
-        b = BoolVector(initial_size = 20)
+        b = BoolVector(initial_size=20)
         b[2] = True
         b[3:8:2] = True
         b[11::2] = True
@@ -151,16 +160,15 @@ class UtilTest(TestCase):
         self.assertEqual(list(b), primep)
 
     def test_repr(self):
-        primes = [2,3,5,7,11,13,17,19]
+        primes = [2, 3, 5, 7, 11, 13, 17, 19]
         b = BoolVector()
         for i in primes:
             b[i] = True
         pfx = 'BoolVector(size = 20, content = "00110101000101000101")'
-        self.assertEqual(pfx, repr(b)[:len(pfx)])
+        self.assertEqual(pfx, repr(b)[: len(pfx)])
         b[30] = True
         pfx = 'BoolVector(size = 31, content = "001101010...00000001")'
-        self.assertEqual(pfx, repr(b)[:len(pfx)])
-
+        self.assertEqual(pfx, repr(b)[: len(pfx)])
 
     def test_bool_vector(self):
         b = BoolVector()
@@ -259,7 +267,7 @@ class UtilTest(TestCase):
         with self.assertRaises(ValueError):
             a.pop()
 
-#----
+    # ----
 
     def test_shift(self):
         a = IntVector()
@@ -325,10 +333,10 @@ class UtilTest(TestCase):
         copy_of_a = a.copy()
         self.assertEqual(list(a), list(copy_of_a))
 
-        another_copy_of_a = copy_of_a.copy( )
+        another_copy_of_a = copy_of_a.copy()
         self.assertEqual(list(a), list(another_copy_of_a))
 
-#---
+    # ---
 
     def test_div(self):
         v = IntVector()
@@ -341,7 +349,9 @@ class UtilTest(TestCase):
 
     def test_true(self):
         iv = IntVector()
-        self.assertFalse(iv)  # Will invoke the __len__ function; could override with __nonzero__
+        self.assertFalse(
+            iv
+        )  # Will invoke the __len__ function; could override with __nonzero__
         iv[0] = 1
         self.assertTrue(iv)
 
@@ -538,39 +548,34 @@ class UtilTest(TestCase):
         self.create_range_test(v, 0, 100, 3)
         self.create_range_test(v, 0, 100, -3)
 
-
-
     def test_perm_vector(self):
-        v = IntVector.createRange( 11 , 0 , -1 )
-        perm = v.permutationSort( )
-        self.assertEqual( perm[0]  , 10 )
-        self.assertEqual( perm[5]  ,  5 )
-        self.assertEqual( perm[10] ,  0 )
-
+        v = IntVector.createRange(11, 0, -1)
+        perm = v.permutationSort()
+        self.assertEqual(perm[0], 10)
+        self.assertEqual(perm[5], 5)
+        self.assertEqual(perm[10], 0)
 
     def test_init_linear(self):
         with self.assertRaises(ValueError):
             v = IntVector.create_linear(0, 10, 1)
 
-        v = IntVector.create_linear(0,10,11)
+        v = IntVector.create_linear(0, 10, 11)
         for i in range(len(v)):
             self.assertEqual(v[i], i)
 
-
-        v = IntVector.create_linear(10,0,11)
+        v = IntVector.create_linear(10, 0, 11)
         for i in range(len(v)):
             self.assertEqual(v[i], 10 - i)
 
-
-        d = DoubleVector.create_linear(0,1,11)
+        d = DoubleVector.create_linear(0, 1, 11)
         for i in range(len(d)):
-            self.assertEqual( d[i] , i*0.10)
+            self.assertEqual(d[i], i * 0.10)
 
     def test_equal(self):
         v1 = IntVector()
         v1[3] = 99
 
         v2 = IntVector()
-        self.assertNotEqual( v1,v2 )
+        self.assertNotEqual(v1, v2)
         v2[3] = 99
-        self.assertEqual(v1,v2)
+        self.assertEqual(v1, v2)

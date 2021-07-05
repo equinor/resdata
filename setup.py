@@ -51,7 +51,10 @@ skbuild.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/equinor/ecl",
-    packages=setuptools.find_packages(where='python', exclude=["*.tests", "*.tests.*", "tests.*", "tests", "ert.*", "ert"]),
+    packages=setuptools.find_packages(
+        where="python",
+        exclude=["*.tests", "*.tests.*", "tests.*", "tests", "ert.*", "ert"],
+    ),
     package_dir={"": "python"},
     license="GPL-3.0",
     platforms="any",
@@ -63,11 +66,9 @@ skbuild.setup(
         "numpy<=1.16.6;python_version=='2.7'",
         "pandas;python_version>='3.0'",
         "pandas<=0.25.3;python_version=='2.7'",
-        "six"
+        "six",
     ],
-    entry_points={
-        "console_scripts": utility_wrappers()
-    },
+    entry_points={"console_scripts": utility_wrappers()},
     cmake_args=[
         "-DECL_VERSION=" + version,
         "-DBUILD_APPLICATIONS=" + ("ON" if sys.platform == "linux" else "OFF"),
@@ -78,7 +79,7 @@ skbuild.setup(
         # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
         # everything not OS X. We depend on C++11, which makes our minimum
         # supported OS X release 10.9
-        "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9"
+        "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9",
     ],
     # skbuild's test imples develop, which is pretty obnoxious instead, use a
     # manually integrated pytest.
@@ -97,7 +98,7 @@ skbuild.setup(
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Software Development :: Libraries",
-        "Topic :: Utilities"
+        "Topic :: Utilities",
     ],
-    version=version
+    version=version,
 )

@@ -20,9 +20,9 @@ from ecl.grid import EclGrid
 
 from tests import EclTest, equinor_test
 
+
 @equinor_test()
 class GridDualTest(EclTest):
-
     def egrid_file(self):
         return self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.EGRID")
 
@@ -39,20 +39,25 @@ class GridDualTest(EclTest):
             self.assertFalse(grid.dualGrid())
             self.assertTrue(grid.getNumActiveFracture() == 0)
 
-            dgrid = EclGrid(self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.EGRID"))
+            dgrid = EclGrid(
+                self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.EGRID")
+            )
             self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
             self.assertTrue(dgrid.getNumActive() == 46118)
 
-            dgrid2 = EclGrid(self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.GRID"))
+            dgrid2 = EclGrid(
+                self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.GRID")
+            )
             self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
             self.assertTrue(dgrid.getNumActive() == 46118)
             self.assertTrue(dgrid.equal(dgrid2))
 
-
             # The DUAL_DIFF grid has been manipulated to create a
             # situation where some cells are only matrix active, and some
             # cells are only fracture active.
-            dgrid = EclGrid(self.createTestPath("Equinor/ECLIPSE/DualPoro/DUAL_DIFF.EGRID"))
+            dgrid = EclGrid(
+                self.createTestPath("Equinor/ECLIPSE/DualPoro/DUAL_DIFF.EGRID")
+            )
             self.assertTrue(dgrid.getNumActive() == 106)
             self.assertTrue(dgrid.getNumActiveFracture() == 105)
 
@@ -68,4 +73,4 @@ class GridDualTest(EclTest):
 
             dgrid.save_EGRID("DUAL_DIFF.EGRID")
             dgrid2 = EclGrid("DUAL_DIFF.EGRID")
-            self.assertTrue(dgrid.equal(dgrid2 , verbose = True))
+            self.assertTrue(dgrid.equal(dgrid2, verbose=True))

@@ -3,8 +3,10 @@ from tests import EclTest
 
 from ecl import EclDataType, EclTypeEnum
 
+
 def get_const_size_types():
     return EclTypeEnum.enums()[:-1:]
+
 
 class EclDataTypeTest(EclTest):
 
@@ -15,27 +17,25 @@ class EclDataTypeTest(EclTest):
     CONST_SIZES = [8, 4, 8, 4, 4, 0]
 
     CONST_VERIFIERS = [
-            EclDataType.is_char,
-            EclDataType.is_float,
-            EclDataType.is_double,
-            EclDataType.is_int,
-            EclDataType.is_bool,
-            EclDataType.is_mess
-            ]
+        EclDataType.is_char,
+        EclDataType.is_float,
+        EclDataType.is_double,
+        EclDataType.is_int,
+        EclDataType.is_bool,
+        EclDataType.is_mess,
+    ]
 
     CONST_NAMES = ["CHAR", "REAL", "DOUB", "INTE", "LOGI", "MESS"]
 
     STRING_NAMES = ["C000", "C010", "C020", "C042", "C999"]
 
-    STRING_SIZES  = [0, 10, 20, 42, 999]
+    STRING_SIZES = [0, 10, 20, 42, 999]
 
-    TYPES = (get_const_size_types() +
-             len(STRING_SIZES) * [EclTypeEnum.ECL_STRING_TYPE])
+    TYPES = get_const_size_types() + len(STRING_SIZES) * [EclTypeEnum.ECL_STRING_TYPE]
 
     SIZES = CONST_SIZES + STRING_SIZES
 
     NAMES = CONST_NAMES + STRING_NAMES
-
 
     def test_alloc_from_type(self):
         types, sizes = get_const_size_types(), self.CONST_SIZES
@@ -74,12 +74,12 @@ class EclDataTypeTest(EclTest):
 
     def test_initialization_validation(self):
         invalid_args = [
-                        (None, 0, self.CONST_NAMES[0]),
-                        (1, None, self.CONST_NAMES[0]),
-                        (1, 0, self.CONST_NAMES[0]),
-                        (None, None, None),
-                        (None, 12, None)
-                    ]
+            (None, 0, self.CONST_NAMES[0]),
+            (1, None, self.CONST_NAMES[0]),
+            (1, 0, self.CONST_NAMES[0]),
+            (None, None, None),
+            (None, 12, None),
+        ]
 
         for inv_arg in invalid_args:
             with self.assertRaises(ValueError):
@@ -89,21 +89,21 @@ class EclDataTypeTest(EclTest):
         test_base = zip(self.TYPES, self.SIZES, self.NAMES)
         for (ecl_type, elem_size, type_name) in test_base:
             data_type = EclDataType.create_from_type_name(type_name)
-            self.assertEqual(ecl_type,  data_type.type)
+            self.assertEqual(ecl_type, data_type.type)
             self.assertEqual(elem_size, data_type.element_size)
             self.assertEqual(type_name, data_type.type_name)
 
     def test_is_numeric(self):
         numeric_types = [
-                    EclTypeEnum.ECL_INT_TYPE,
-                    EclTypeEnum.ECL_FLOAT_TYPE,
-                    EclTypeEnum.ECL_DOUBLE_TYPE
-                ]
+            EclTypeEnum.ECL_INT_TYPE,
+            EclTypeEnum.ECL_FLOAT_TYPE,
+            EclTypeEnum.ECL_DOUBLE_TYPE,
+        ]
 
         for ecl_type in numeric_types:
             self.assertTrue(EclDataType(ecl_type).is_numeric())
 
-        for ecl_type in set(get_const_size_types())-set(numeric_types):
+        for ecl_type in set(get_const_size_types()) - set(numeric_types):
             self.assertFalse(EclDataType(ecl_type).is_numeric())
 
         for elem_size in self.STRING_SIZES:
@@ -119,7 +119,7 @@ class EclDataTypeTest(EclTest):
             self.assertTrue(a.is_equal(b))
             self.assertEqual(a, b)
 
-            for otype, osize in set(test_base)-set([(ecl_type, elem_size)]):
+            for otype, osize in set(test_base) - set([(ecl_type, elem_size)]):
                 self.assertFalse(a.is_equal(EclDataType(otype, osize)))
                 self.assertNotEqual(a, EclDataType(otype, osize))
 
@@ -129,7 +129,7 @@ class EclDataTypeTest(EclTest):
 
         for index, (ecl_type, elem_size) in enumerate(test_base):
             all_types.add(EclDataType(ecl_type, elem_size))
-            self.assertEqual(index+1, len(all_types))
+            self.assertEqual(index + 1, len(all_types))
 
         for index, (ecl_type, elem_size) in enumerate(test_base):
             all_types.add(EclDataType(ecl_type, elem_size))

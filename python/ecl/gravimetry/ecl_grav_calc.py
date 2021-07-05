@@ -16,16 +16,26 @@
 
 from ecl import EclPrototype
 
-__arglist  = 'double, double, double, '
-__arglist += 'ecl_grid, ecl_file, '
-__arglist += 'ecl_kw, ecl_kw, ecl_kw, ecl_kw, ecl_kw, ecl_kw'
+__arglist = "double, double, double, "
+__arglist += "ecl_grid, ecl_file, "
+__arglist += "ecl_kw, ecl_kw, ecl_kw, ecl_kw, ecl_kw, ecl_kw"
 _phase_deltag = EclPrototype("double ecl_grav_phase_deltag(%s)" % __arglist)
 
+
 def phase_deltag(xyz, grid, init, sat1, rho1, porv1, sat2, rho2, porv2):
-    return _phase_deltag(xyz[0], xyz[1], xyz[2],
-                         grid.c_ptr, init.c_ptr,
-                         sat1.c_ptr, rho1.c_ptr, porv1.c_ptr,
-                         sat2.c_ptr, rho2.c_ptr, porv2.c_ptr)
+    return _phase_deltag(
+        xyz[0],
+        xyz[1],
+        xyz[2],
+        grid.c_ptr,
+        init.c_ptr,
+        sat1.c_ptr,
+        rho1.c_ptr,
+        porv1.c_ptr,
+        sat2.c_ptr,
+        rho2.c_ptr,
+        porv2.c_ptr,
+    )
 
 
 def deltag(xyz, grid, init_file, restart_file1, restart_file2):
@@ -50,8 +60,7 @@ def deltag(xyz, grid, init_file, restart_file1, restart_file2):
         soil2 = 1 - (sgas2 + swat2)
         soil1.name = "SOIL"
         soil2.name = "SOIL"
-        phase_list += [(sgas1, sgas2),
-                       (soil1, soil2)]
+        phase_list += [(sgas1, sgas2), (soil1, soil2)]
     else:
         # This is a two phase Water / xxx System. Will look for
         # OIL_DEN and GAS_DEN keywords to determine whether it is a
@@ -80,5 +89,7 @@ def deltag(xyz, grid, init_file, restart_file1, restart_file2):
         rho_name = "%s_DEN" % sat1.name[1:]
         rho1 = restart_file1.iget_named_kw(rho_name, 0)
         rho2 = restart_file2.iget_named_kw(rho_name, 0)
-        deltag += phase_deltag(xyz, grid, init_file, sat1, rho1, porv1, sat2, rho2, porv2)
+        deltag += phase_deltag(
+            xyz, grid, init_file, sat1, rho1, porv1, sat2, rho2, porv2
+        )
     return deltag

@@ -5,8 +5,6 @@ from tests import EclTest
 
 
 class ThreadPoolTest(EclTest):
-
-
     def sleepTask(self, *args, **kwargs):
         time.sleep(args[0])
 
@@ -33,7 +31,6 @@ class ThreadPoolTest(EclTest):
         self.assertEqual(pool.runningCount(), 0)
         self.assertEqual(pool.doneCount(), 0)
 
-
     def test_pool_execution(self):
         pool = ThreadPool(4)
 
@@ -50,8 +47,6 @@ class ThreadPoolTest(EclTest):
 
         self.assertFalse(pool.hasFailedTasks())
 
-
-
     def test_pool_unbound_fail(self):
         pool = ThreadPool(4)
 
@@ -62,7 +57,6 @@ class ThreadPoolTest(EclTest):
         pool.join()
 
         self.assertTrue(pool.hasFailedTasks())
-
 
     def test_fill_pool(self):
         pool = ThreadPool(4)
@@ -76,8 +70,6 @@ class ThreadPoolTest(EclTest):
         self.assertEqual(pool.runningCount(), 4)
 
         pool.join()
-
-
 
     def test_task(self):
         def sleeping():
@@ -98,4 +90,3 @@ class ThreadPoolTest(EclTest):
 
         self.assertFalse(task.isRunning())
         self.assertTrue(task.isDone())
-

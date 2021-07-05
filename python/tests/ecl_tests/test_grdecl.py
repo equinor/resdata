@@ -20,18 +20,16 @@ from ecl.util.test import TestAreaContext
 from tests import EclTest
 import cwrap
 
-class GRDECLTest(EclTest):
 
+class GRDECLTest(EclTest):
     def test_64bit_memory(self):
         with TestAreaContext("large_memory"):
-            block_size = 10**6
-            with open("test.grdecl","w") as f:
+            block_size = 10 ** 6
+            with open("test.grdecl", "w") as f:
                 f.write("COORD\n")
                 for i in range(1000):
                     f.write("%d*0.15 \n" % block_size)
                 f.write("/\n")
 
             with cwrap.open("test.grdecl") as f:
-                kw = EclKW.read_grdecl(f,"COORD")
-
-
+                kw = EclKW.read_grdecl(f, "COORD")

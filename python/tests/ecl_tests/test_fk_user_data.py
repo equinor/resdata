@@ -1,26 +1,26 @@
 #!/usr/bin/env python
-#  Copyright (C) 2017  Equinor ASA, Norway. 
-#   
+#  Copyright (C) 2017  Equinor ASA, Norway.
+#
 #  The file 'test_ecl_cell_containment.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
 from ecl.grid import EclGrid
 from ecl.util.test import TestAreaContext
 from tests import EclTest
 
-class FKTest(EclTest):
 
+class FKTest(EclTest):
     def test_cell_containment(self):
 
         grid_location = "local/ECLIPSE/faarikaal/faarikaal%d.EGRID"
@@ -43,7 +43,7 @@ class FKTest(EclTest):
             for point, exp_cell in zip(points, exp_cells):
                 reported_cell = grid.find_cell(*point)
                 self.assertEqual(
-                        exp_cell,
-                        reported_cell,
-                        msg % (str(point), str(exp_cell), str(reported_cell))
-                        )
+                    exp_cell,
+                    reported_cell,
+                    msg % (str(point), str(exp_cell), str(reported_cell)),
+                )

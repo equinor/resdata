@@ -22,8 +22,8 @@ from ecl.util.util import DoubleVector, IntVector
 from ecl import EclPrototype
 from ecl.util.geometry import Polyline, GeometryTools, CPolylineCollection
 
-class FaultBlockCell(object):
 
+class FaultBlockCell(object):
     def __init__(self, i, j, k, x, y, z):
         self.i = i
         self.j = j
@@ -33,32 +33,42 @@ class FaultBlockCell(object):
         self.y = y
         self.z = z
 
-
     def __str__(self):
         return "(%d,%d)" % (self.i, self.j)
-
 
 
 class FaultBlock(BaseCClass):
     TYPE_NAME = "fault_block"
 
-    _get_xc                = EclPrototype("double         fault_block_get_xc(fault_block)")
-    _get_yc                = EclPrototype("double         fault_block_get_yc(fault_block)")
-    _get_block_id          = EclPrototype("int            fault_block_get_id(fault_block)")
-    _get_size              = EclPrototype("int            fault_block_get_size(fault_block)")
-    _export_cell           = EclPrototype("void           fault_block_export_cell(fault_block, int, int*, int*, int*, double*, double*, double*)")
-    _assign_to_region      = EclPrototype("void           fault_block_assign_to_region(fault_block, int)")
-    _get_region_list       = EclPrototype("int_vector_ref fault_block_get_region_list(fault_block)")
-    _add_cell              = EclPrototype("void           fault_block_add_cell(fault_block,  int, int)")
-    _get_global_index_list = EclPrototype("int_vector_ref fault_block_get_global_index_list(fault_block)")
-    _trace_edge            = EclPrototype("void           fault_block_trace_edge(fault_block, double_vector, double_vector, int_vector)")
-    _get_neighbours        = EclPrototype("void           fault_block_list_neighbours(fault_block, bool, geo_polygon_collection, int_vector)")
-    _free                  = EclPrototype("void           fault_block_free__(fault_block)")
-
+    _get_xc = EclPrototype("double         fault_block_get_xc(fault_block)")
+    _get_yc = EclPrototype("double         fault_block_get_yc(fault_block)")
+    _get_block_id = EclPrototype("int            fault_block_get_id(fault_block)")
+    _get_size = EclPrototype("int            fault_block_get_size(fault_block)")
+    _export_cell = EclPrototype(
+        "void           fault_block_export_cell(fault_block, int, int*, int*, int*, double*, double*, double*)"
+    )
+    _assign_to_region = EclPrototype(
+        "void           fault_block_assign_to_region(fault_block, int)"
+    )
+    _get_region_list = EclPrototype(
+        "int_vector_ref fault_block_get_region_list(fault_block)"
+    )
+    _add_cell = EclPrototype(
+        "void           fault_block_add_cell(fault_block,  int, int)"
+    )
+    _get_global_index_list = EclPrototype(
+        "int_vector_ref fault_block_get_global_index_list(fault_block)"
+    )
+    _trace_edge = EclPrototype(
+        "void           fault_block_trace_edge(fault_block, double_vector, double_vector, int_vector)"
+    )
+    _get_neighbours = EclPrototype(
+        "void           fault_block_list_neighbours(fault_block, bool, geo_polygon_collection, int_vector)"
+    )
+    _free = EclPrototype("void           fault_block_free__(fault_block)")
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Class can not be instantiated directly!")
-
 
     def __getitem__(self, index):
         if isinstance(index, int):
@@ -74,10 +84,18 @@ class FaultBlock(BaseCClass):
                 j = ctypes.c_int()
                 k = ctypes.c_int()
 
-                self._export_cell(index,
-                                  ctypes.byref(i), ctypes.byref(j), ctypes.byref(k),
-                                  ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
-                return FaultBlockCell(i.value, j.value, k.value, x.value, y.value, z.value)
+                self._export_cell(
+                    index,
+                    ctypes.byref(i),
+                    ctypes.byref(j),
+                    ctypes.byref(k),
+                    ctypes.byref(x),
+                    ctypes.byref(y),
+                    ctypes.byref(z),
+                )
+                return FaultBlockCell(
+                    i.value, j.value, k.value, x.value, y.value, z.value
+                )
             else:
                 raise IndexError("Index:%d out of range: [0,%d)" % (index, len(self)))
         else:
@@ -85,7 +103,6 @@ class FaultBlock(BaseCClass):
 
     def __str__(self):
         return "Block ID: %d" % self.getBlockID()
-
 
     def __len__(self):
         return self._get_size()
@@ -96,8 +113,7 @@ class FaultBlock(BaseCClass):
     def get_centroid(self):
         xc = self._get_xc()
         yc = self._get_yc()
-        return (xc,yc)
-
+        return (xc, yc)
 
     def count_inside(self, polygon):
         """
@@ -110,14 +126,11 @@ class FaultBlock(BaseCClass):
 
         return inside
 
-
     def get_block_id(self):
         return self._get_block_id()
 
-
     def assign_to_region(self, region_id):
         self._assign_to_region(region_id)
-
 
     def get_region_list(self):
         regionList = self._get_region_list()
@@ -129,7 +142,6 @@ class FaultBlock(BaseCClass):
     def get_global_index_list(self):
         return self._get_global_index_list()
 
-
     def get_edge_polygon(self):
         x_list = DoubleVector()
         y_list = DoubleVector()
@@ -137,10 +149,9 @@ class FaultBlock(BaseCClass):
 
         self._trace_edge(x_list, y_list, cell_list)
         p = Polyline()
-        for (x,y) in zip(x_list, y_list):
-            p.addPoint(x,y)
+        for (x, y) in zip(x_list, y_list):
+            p.addPoint(x, y)
         return p
-
 
     def contains_polyline(self, polyline):
         """
@@ -153,7 +164,6 @@ class FaultBlock(BaseCClass):
         else:
             edge_polyline.assertClosed()
             return GeometryTools.polylinesIntersect(edge_polyline, polyline)
-
 
     def get_neighbours(self, polylines=None, connected_only=True):
         """
@@ -172,19 +182,18 @@ class FaultBlock(BaseCClass):
             neighbour_list.append(parent_layer.getBlock(id))
         return neighbour_list
 
-
     def get_parent_layer(self):
         return self.parent()
 
 
-monkey_the_camel(FaultBlock, 'getCentroid', FaultBlock.get_centroid)
-monkey_the_camel(FaultBlock, 'countInside', FaultBlock.count_inside)
-monkey_the_camel(FaultBlock, 'getBlockID', FaultBlock.get_block_id)
-monkey_the_camel(FaultBlock, 'assignToRegion', FaultBlock.assign_to_region)
-monkey_the_camel(FaultBlock, 'getRegionList', FaultBlock.get_region_list)
-monkey_the_camel(FaultBlock, 'addCell', FaultBlock.add_cell)
-monkey_the_camel(FaultBlock, 'getGlobalIndexList', FaultBlock.get_global_index_list)
-monkey_the_camel(FaultBlock, 'getEdgePolygon', FaultBlock.get_edge_polygon)
-monkey_the_camel(FaultBlock, 'containsPolyline', FaultBlock.contains_polyline)
-monkey_the_camel(FaultBlock, 'getNeighbours', FaultBlock.get_neighbours)
-monkey_the_camel(FaultBlock, 'getParentLayer', FaultBlock.get_parent_layer)
+monkey_the_camel(FaultBlock, "getCentroid", FaultBlock.get_centroid)
+monkey_the_camel(FaultBlock, "countInside", FaultBlock.count_inside)
+monkey_the_camel(FaultBlock, "getBlockID", FaultBlock.get_block_id)
+monkey_the_camel(FaultBlock, "assignToRegion", FaultBlock.assign_to_region)
+monkey_the_camel(FaultBlock, "getRegionList", FaultBlock.get_region_list)
+monkey_the_camel(FaultBlock, "addCell", FaultBlock.add_cell)
+monkey_the_camel(FaultBlock, "getGlobalIndexList", FaultBlock.get_global_index_list)
+monkey_the_camel(FaultBlock, "getEdgePolygon", FaultBlock.get_edge_polygon)
+monkey_the_camel(FaultBlock, "containsPolyline", FaultBlock.contains_polyline)
+monkey_the_camel(FaultBlock, "getNeighbours", FaultBlock.get_neighbours)
+monkey_the_camel(FaultBlock, "getParentLayer", FaultBlock.get_parent_layer)

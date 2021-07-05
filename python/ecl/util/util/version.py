@@ -2,6 +2,7 @@ from functools import wraps
 
 from ecl import EclPrototype
 
+
 def cmp_method(method):
     @wraps(method)
     def cmp_wrapper(self, other):
@@ -13,11 +14,8 @@ def cmp_method(method):
     return cmp_wrapper
 
 
-
 class Version(object):
-
-
-    def __init__(self, major, minor, micro, git_commit = None, build_time = None):
+    def __init__(self, major, minor, micro, git_commit=None, build_time=None):
         self.major = major
         self.minor = minor
         self.micro = micro
@@ -46,10 +44,10 @@ class Version(object):
         return self.versionString()
 
     def __repr__(self):
-        status = 'production'
-        git_commit = self.getGitCommit( short = True )
+        status = "production"
+        git_commit = self.getGitCommit(short=True)
         if self.is_devel:
-            status = 'development'
+            status = "development"
         fmt = 'Version(major=%d, minor=%d, micro="%s", commit="%s", status="%s")'
         return fmt % (self.major, self.minor, self.micro, git_commit, status)
 
@@ -101,20 +99,17 @@ class Version(object):
 
 
 class EclVersion(Version):
-    _build_time = EclPrototype("char* ecl_version_get_build_time()", bind = False)
-    _git_commit = EclPrototype("char* ecl_version_get_git_commit()", bind = False)
-    _major_version = EclPrototype("int ecl_version_get_major_version()", bind = False)
-    _minor_version = EclPrototype("int ecl_version_get_minor_version()", bind = False)
-    _micro_version = EclPrototype("char* ecl_version_get_micro_version()", bind = False)
-    _is_devel = EclPrototype("bool ecl_version_is_devel_version()", bind = False)
+    _build_time = EclPrototype("char* ecl_version_get_build_time()", bind=False)
+    _git_commit = EclPrototype("char* ecl_version_get_git_commit()", bind=False)
+    _major_version = EclPrototype("int ecl_version_get_major_version()", bind=False)
+    _minor_version = EclPrototype("int ecl_version_get_minor_version()", bind=False)
+    _micro_version = EclPrototype("char* ecl_version_get_micro_version()", bind=False)
+    _is_devel = EclPrototype("bool ecl_version_is_devel_version()", bind=False)
 
     def __init__(self):
-        major = self._major_version( )
-        minor = self._minor_version( )
-        micro = self._micro_version( )
-        git_commit = self._git_commit( )
-        build_time = self._build_time( )
-        super( EclVersion, self).__init__( major, minor , micro , git_commit, build_time)
-
-
-
+        major = self._major_version()
+        minor = self._minor_version()
+        micro = self._micro_version()
+        git_commit = self._git_commit()
+        build_time = self._build_time()
+        super(EclVersion, self).__init__(major, minor, micro, git_commit, build_time)

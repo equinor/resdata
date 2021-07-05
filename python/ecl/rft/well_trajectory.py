@@ -18,10 +18,11 @@ import sys
 from os.path import isfile
 from collections import namedtuple
 
-TrajectoryPoint = namedtuple('TrajectoryPoint',
-                             ['utm_x', 'utm_y',
-                              'measured_depth', 'true_vertical_depth',
-                              'zone'])
+TrajectoryPoint = namedtuple(
+    "TrajectoryPoint",
+    ["utm_x", "utm_y", "measured_depth", "true_vertical_depth", "zone"],
+)
+
 
 def _read_point(line):
     line = line.partition("--")[0]
@@ -31,11 +32,12 @@ def _read_point(line):
 
     point = line.split()
     if len(point) not in (4, 5):
-        fmt = 'utm_x utm_y md tvd [zone]'
+        fmt = "utm_x utm_y md tvd [zone]"
         err = 'Trajectory data file not on correct format: "%s".'
-        err += '  zone is optional.'
+        err += "  zone is optional."
         raise UserWarning(err % fmt)
     return point
+
 
 def _parse_point(point):
     try:
@@ -52,7 +54,6 @@ def _parse_point(point):
 
 
 class WellTrajectory:
-
     def __init__(self, filename):
         self._points = []
         if not isfile(filename):
@@ -69,16 +70,14 @@ class WellTrajectory:
     def __len__(self):
         return len(self._points)
 
-
     def __getitem__(self, index):
         if index < 0:
             index += len(self)
 
         return self._points[index]
 
-
     def __repr__(self):
-        return 'WellTrajectory(len=%d)' % len(self)
+        return "WellTrajectory(len=%d)" % len(self)
 
     def __str__(self):
-        return 'WellTrajectory(%s)' % str(self._points)
+        return "WellTrajectory(%s)" % str(self._points)

@@ -26,7 +26,9 @@ from cwrap import open as copen
 @equinor_test()
 class GRDECLEquinorTest(EclTest):
     def setUp(self):
-        self.src_file = self.createTestPath("Equinor/ECLIPSE/Gurbat/include/example_permx.GRDECL")
+        self.src_file = self.createTestPath(
+            "Equinor/ECLIPSE/Gurbat/include/example_permx.GRDECL"
+        )
         self.file_list = []
 
     def addFile(self, filename):
@@ -37,18 +39,15 @@ class GRDECLEquinorTest(EclTest):
             if os.path.exists(f):
                 os.unlink(f)
 
-
-    def test_Load( self ):
+    def test_Load(self):
         kw = EclKW.read_grdecl(copen(self.src_file, "r"), "PERMX")
         self.assertTrue(kw)
 
-        grid = EclGrid( self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE" ))
-        kw = Ecl3DKW.read_grdecl(grid , copen(self.src_file, "r"), "PERMX")
-        self.assertTrue( isinstance( kw , Ecl3DKW ))
+        grid = EclGrid(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE"))
+        kw = Ecl3DKW.read_grdecl(grid, copen(self.src_file, "r"), "PERMX")
+        self.assertTrue(isinstance(kw, Ecl3DKW))
 
-
-
-    def test_reload( self ):
+    def test_reload(self):
         kw = EclKW.read_grdecl(copen(self.src_file, "r"), "PERMX")
         tmp_file1 = "/tmp/permx1.grdecl"
         tmp_file2 = "/tmp/permx2.grdecl"
@@ -67,8 +66,7 @@ class GRDECLEquinorTest(EclTest):
 
         self.assertFilesAreEqual(tmp_file1, tmp_file2)
 
-
-    def test_fseek( self ):
+    def test_fseek(self):
         file = copen(self.src_file, "r")
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX"))
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMY"))
@@ -79,7 +77,6 @@ class GRDECLEquinorTest(EclTest):
         self.assertFalse(EclKW.fseek_grdecl(file, "PERMX"))
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX", rewind=True))
         file.close()
-
 
     def test_fseek2(self):
         test_src = self.createTestPath("local/ECLIPSE/grdecl-test/test.grdecl")
@@ -102,9 +99,10 @@ class GRDECLEquinorTest(EclTest):
         # Test multiline comments + blanks
         self.assertTrue(EclKW.fseek_grdecl(file, "LASTKW"))
 
-
     def test_fseek_dos(self):
-        test_src = self.createTestPath("local/ECLIPSE/grdecl-test/test.grdecl_dos")  # File formatted with \r\n line endings.
+        test_src = self.createTestPath(
+            "local/ECLIPSE/grdecl-test/test.grdecl_dos"
+        )  # File formatted with \r\n line endings.
         # Test kw at the the very start
         file = copen(test_src, "r")
         self.assertTrue(EclKW.fseek_grdecl(file, "PERMX"))

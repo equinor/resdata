@@ -128,4 +128,3 @@ class CTimeTest(TestCase):
         self.assertEqual(t.value(), 0)
         self.assertEqual(t.ctime(), 0)
         self.assertEqual(t.time(), time.gmtime(0))
-

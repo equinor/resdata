@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-#  Copyright (C) 2013  Equinor ASA, Norway. 
-#   
+#  Copyright (C) 2013  Equinor ASA, Norway.
+#
 #  The file 'test_rft_cell.py' is part of ERT - Ensemble based Reservoir Tool.
-#   
-#  ERT is free software: you can redistribute it and/or modify 
-#  it under the terms of the GNU General Public License as published by 
-#  the Free Software Foundation, either version 3 of the License, or 
-#  (at your option) any later version. 
-#   
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.   
-#   
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-#  for more details. 
+#
+#  ERT is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.
+#
+#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+#  for more details.
 
 
 from ecl.rft import EclRFTCell, EclPLTCell
@@ -50,7 +50,6 @@ class RFTCellTest(EclTest):
         self.assertFloatEqual(sgas, cell.sgas)
         self.assertFloatEqual(1 - (sgas + swat), cell.soil)
 
-
     def test_PLT_cell(self):
         i = 2
         j = 16
@@ -67,9 +66,22 @@ class RFTCellTest(EclTest):
         gas_flowrate = 132
         water_flowrate = 13344
 
-        cell = EclPLTCell(i, j, k, depth, pressure, orat, grat, wrat, conn_start, conn_end, flowrate,
-                          oil_flowrate, gas_flowrate, water_flowrate)
-
+        cell = EclPLTCell(
+            i,
+            j,
+            k,
+            depth,
+            pressure,
+            orat,
+            grat,
+            wrat,
+            conn_start,
+            conn_end,
+            flowrate,
+            oil_flowrate,
+            gas_flowrate,
+            water_flowrate,
+        )
 
         self.assertEqual(i, cell.get_i())
         self.assertEqual(j, cell.get_j())
@@ -87,9 +99,3 @@ class RFTCellTest(EclTest):
         self.assertFloatEqual(oil_flowrate, cell.oil_flowrate)
         self.assertFloatEqual(gas_flowrate, cell.gas_flowrate)
         self.assertFloatEqual(water_flowrate, cell.water_flowrate)
-    
-        
-
-
-
-        

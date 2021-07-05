@@ -43,12 +43,11 @@ from ecl.summary import EclSumVarType
 from ecl.summary.ecl_sum_vector import EclSumVector
 from ecl.summary.ecl_smspec_node import EclSMSPECNode
 from ecl import EclPrototype, EclUnitTypeEnum
-#, EclSumKeyWordVector
+
+# , EclSumKeyWordVector
 
 
-
-
-#import ecl.ecl_plot.sum_plot as sum_plot
+# import ecl.ecl_plot.sum_plot as sum_plot
 
 # The date2num function is a verbatim copy of the _to_ordinalf()
 # function from the matplotlib.dates module. Inserted here only to
@@ -58,10 +57,11 @@ from ecl import EclPrototype, EclUnitTypeEnum
 #   from matplotlib.dates import date2num
 
 
-HOURS_PER_DAY     = 24.0
-MINUTES_PER_DAY   = 60 * HOURS_PER_DAY
-SECONDS_PER_DAY   = 60 * MINUTES_PER_DAY
+HOURS_PER_DAY = 24.0
+MINUTES_PER_DAY = 60 * HOURS_PER_DAY
+SECONDS_PER_DAY = 60 * MINUTES_PER_DAY
 MUSECONDS_PER_DAY = 1e6 * SECONDS_PER_DAY
+
 
 def date2num(dt):
     """
@@ -73,85 +73,159 @@ def date2num(dt):
     function from the matplotlib.dates module.
     """
 
-    if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+    if hasattr(dt, "tzinfo") and dt.tzinfo is not None:
         delta = dt.tzinfo.utcoffset(dt)
         if delta is not None:
             dt -= delta
 
-    base =  float(dt.toordinal())
-    if hasattr(dt, 'hour'):
-        base += (dt.hour/HOURS_PER_DAY     +
-                 dt.minute/MINUTES_PER_DAY +
-                 dt.second/SECONDS_PER_DAY +
-                 dt.microsecond/MUSECONDS_PER_DAY)
+    base = float(dt.toordinal())
+    if hasattr(dt, "hour"):
+        base += (
+            dt.hour / HOURS_PER_DAY
+            + dt.minute / MINUTES_PER_DAY
+            + dt.second / SECONDS_PER_DAY
+            + dt.microsecond / MUSECONDS_PER_DAY
+        )
     return base
+
 
 class EclSum(BaseCClass):
     TYPE_NAME = "ecl_sum"
-    _fread_alloc_case2             = EclPrototype("void*     ecl_sum_fread_alloc_case2__(char*, char*, bool, bool, int)", bind=False)
-    _fread_alloc                   = EclPrototype("void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False)
-    _create_restart_writer         = EclPrototype("ecl_sum_obj  ecl_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
-    _create_writer                 = EclPrototype("ecl_sum_obj  ecl_sum_alloc_writer(char*, bool, bool, char*, time_t, bool, int, int, int)", bind = False)
-    _resample                      = EclPrototype("ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector, bool, bool)")
-    _iiget                         = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
-    _free                          = EclPrototype("void     ecl_sum_free(ecl_sum)")
-    _data_length                   = EclPrototype("int      ecl_sum_get_data_length(ecl_sum)")
-    _iget_sim_days                 = EclPrototype("double   ecl_sum_iget_sim_days(ecl_sum, int) ")
-    _iget_report_step              = EclPrototype("int      ecl_sum_iget_report_step(ecl_sum, int) ")
-    _iget_sim_time                 = EclPrototype("time_t   ecl_sum_iget_sim_time(ecl_sum, int) ")
-    _get_report_end                = EclPrototype("int      ecl_sum_iget_report_end(ecl_sum, int)")
-    _get_general_var               = EclPrototype("double   ecl_sum_get_general_var(ecl_sum, int, char*)")
-    _get_general_var_index         = EclPrototype("int      ecl_sum_get_general_var_params_index(ecl_sum, char*)")
-    _get_general_var_from_sim_days = EclPrototype("double   ecl_sum_get_general_var_from_sim_days(ecl_sum, double, char*)")
-    _get_general_var_from_sim_time = EclPrototype("double   ecl_sum_get_general_var_from_sim_time(ecl_sum, time_t, char*)")
-    _solve_days                    = EclPrototype("double_vector_obj  ecl_sum_alloc_days_solution(ecl_sum, char*, double, bool)")
-    _solve_dates                   = EclPrototype("time_t_vector_obj  ecl_sum_alloc_time_solution(ecl_sum, char*, double, bool)")
-    _get_first_gt                  = EclPrototype("int      ecl_sum_get_first_gt(ecl_sum, int, double)")
-    _get_first_lt                  = EclPrototype("int      ecl_sum_get_first_lt(ecl_sum, int, double)")
-    _get_start_date                = EclPrototype("time_t   ecl_sum_get_start_time(ecl_sum)")
-    _get_end_date                  = EclPrototype("time_t   ecl_sum_get_end_time(ecl_sum)")
-    _get_last_report_step          = EclPrototype("int      ecl_sum_get_last_report_step(ecl_sum)")
-    _get_first_report_step         = EclPrototype("int      ecl_sum_get_first_report_step(ecl_sum)")
-    _select_matching_keys          = EclPrototype("void     ecl_sum_select_matching_general_var_list(ecl_sum, char*, stringlist)")
-    _has_key                       = EclPrototype("bool     ecl_sum_has_general_var(ecl_sum, char*)")
-    _check_sim_time                = EclPrototype("bool     ecl_sum_check_sim_time(ecl_sum, time_t)")
-    _check_sim_days                = EclPrototype("bool     ecl_sum_check_sim_days(ecl_sum, double)")
-    _sim_length                    = EclPrototype("double   ecl_sum_get_sim_length(ecl_sum)")
-    _get_first_day                 = EclPrototype("double   ecl_sum_get_first_day(ecl_sum)")
-    _get_data_start                = EclPrototype("time_t   ecl_sum_get_data_start(ecl_sum)")
-    _get_unit                      = EclPrototype("char*    ecl_sum_get_unit(ecl_sum, char*)")
-    _get_restart_case              = EclPrototype("ecl_sum_ref ecl_sum_get_restart_case(ecl_sum)")
-    _get_restart_step              = EclPrototype("int      ecl_sum_get_restart_step(ecl_sum)")
-    _get_simcase                   = EclPrototype("char*    ecl_sum_get_case(ecl_sum)")
-    _get_unit_system               = EclPrototype("ecl_unit_enum ecl_sum_get_unit_system(ecl_sum)")
-    _get_base                      = EclPrototype("char*    ecl_sum_get_base(ecl_sum)")
-    _get_path                      = EclPrototype("char*    ecl_sum_get_path(ecl_sum)")
-    _get_abs_path                  = EclPrototype("char*    ecl_sum_get_abs_path(ecl_sum)")
-    _get_report_step_from_time     = EclPrototype("int      ecl_sum_get_report_step_from_time(ecl_sum, time_t)")
-    _get_report_step_from_days     = EclPrototype("int      ecl_sum_get_report_step_from_days(ecl_sum, double)")
-    _get_report_time               = EclPrototype("time_t   ecl_sum_get_report_time(ecl_sum, int)")
-    _fwrite_sum                    = EclPrototype("void     ecl_sum_fwrite(ecl_sum)")
-    _can_write                     = EclPrototype("bool     ecl_sum_can_write(ecl_sum)")
-    _set_case                      = EclPrototype("void     ecl_sum_set_case(ecl_sum, char*)")
-    _alloc_time_vector             = EclPrototype("time_t_vector_obj ecl_sum_alloc_time_vector(ecl_sum, bool)")
-    _alloc_data_vector             = EclPrototype("double_vector_obj ecl_sum_alloc_data_vector(ecl_sum, int, bool)")
-    _get_var_node                  = EclPrototype("smspec_node_ref ecl_sum_get_general_var_node(ecl_sum, char*)")
-    _create_well_list              = EclPrototype("stringlist_obj ecl_sum_alloc_well_list(ecl_sum, char*)")
-    _create_group_list             = EclPrototype("stringlist_obj ecl_sum_alloc_group_list(ecl_sum, char*)")
-    _add_variable                  = EclPrototype("smspec_node_ref   ecl_sum_add_var(ecl_sum, char*, char*, int, char*, double)")
-    _add_tstep                     = EclPrototype("ecl_sum_tstep_ref ecl_sum_add_tstep(ecl_sum, int, double)")
-    _export_csv                    = EclPrototype("void ecl_sum_export_csv(ecl_sum, char*, stringlist, char*, char*)")
-    _identify_var_type             = EclPrototype("ecl_sum_var_type ecl_sum_identify_var_type(char*)", bind = False)
-    _is_rate                       = EclPrototype("bool smspec_node_identify_rate(char*)", bind = False)
-    _is_total                      = EclPrototype("bool smspec_node_identify_total(char*, ecl_sum_var_type)", bind = False)
-    _get_last_value                = EclPrototype("double ecl_sum_get_last_value_gen_key(ecl_sum, char*)")
-    _get_first_value               = EclPrototype("double ecl_sum_get_first_value_gen_key(ecl_sum, char*)")
-    _init_numpy_vector             = EclPrototype("void ecl_sum_init_double_vector(ecl_sum, char*, double*)")
-    _init_numpy_vector_interp      = EclPrototype("void ecl_sum_init_double_vector_interp(ecl_sum, char*, time_t_vector, double*)")
-    _init_numpy_datetime64         = EclPrototype("void ecl_sum_init_datetime64_vector(ecl_sum, int64*, int)")
+    _fread_alloc_case2 = EclPrototype(
+        "void*     ecl_sum_fread_alloc_case2__(char*, char*, bool, bool, int)",
+        bind=False,
+    )
+    _fread_alloc = EclPrototype(
+        "void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False
+    )
+    _create_restart_writer = EclPrototype(
+        "ecl_sum_obj  ecl_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, time_t, bool, int, int, int)",
+        bind=False,
+    )
+    _create_writer = EclPrototype(
+        "ecl_sum_obj  ecl_sum_alloc_writer(char*, bool, bool, char*, time_t, bool, int, int, int)",
+        bind=False,
+    )
+    _resample = EclPrototype(
+        "ecl_sum_obj  ecl_sum_alloc_resample( ecl_sum, char*, time_t_vector, bool, bool)"
+    )
+    _iiget = EclPrototype("double   ecl_sum_iget(ecl_sum, int, int)")
+    _free = EclPrototype("void     ecl_sum_free(ecl_sum)")
+    _data_length = EclPrototype("int      ecl_sum_get_data_length(ecl_sum)")
+    _iget_sim_days = EclPrototype("double   ecl_sum_iget_sim_days(ecl_sum, int) ")
+    _iget_report_step = EclPrototype("int      ecl_sum_iget_report_step(ecl_sum, int) ")
+    _iget_sim_time = EclPrototype("time_t   ecl_sum_iget_sim_time(ecl_sum, int) ")
+    _get_report_end = EclPrototype("int      ecl_sum_iget_report_end(ecl_sum, int)")
+    _get_general_var = EclPrototype(
+        "double   ecl_sum_get_general_var(ecl_sum, int, char*)"
+    )
+    _get_general_var_index = EclPrototype(
+        "int      ecl_sum_get_general_var_params_index(ecl_sum, char*)"
+    )
+    _get_general_var_from_sim_days = EclPrototype(
+        "double   ecl_sum_get_general_var_from_sim_days(ecl_sum, double, char*)"
+    )
+    _get_general_var_from_sim_time = EclPrototype(
+        "double   ecl_sum_get_general_var_from_sim_time(ecl_sum, time_t, char*)"
+    )
+    _solve_days = EclPrototype(
+        "double_vector_obj  ecl_sum_alloc_days_solution(ecl_sum, char*, double, bool)"
+    )
+    _solve_dates = EclPrototype(
+        "time_t_vector_obj  ecl_sum_alloc_time_solution(ecl_sum, char*, double, bool)"
+    )
+    _get_first_gt = EclPrototype("int      ecl_sum_get_first_gt(ecl_sum, int, double)")
+    _get_first_lt = EclPrototype("int      ecl_sum_get_first_lt(ecl_sum, int, double)")
+    _get_start_date = EclPrototype("time_t   ecl_sum_get_start_time(ecl_sum)")
+    _get_end_date = EclPrototype("time_t   ecl_sum_get_end_time(ecl_sum)")
+    _get_last_report_step = EclPrototype(
+        "int      ecl_sum_get_last_report_step(ecl_sum)"
+    )
+    _get_first_report_step = EclPrototype(
+        "int      ecl_sum_get_first_report_step(ecl_sum)"
+    )
+    _select_matching_keys = EclPrototype(
+        "void     ecl_sum_select_matching_general_var_list(ecl_sum, char*, stringlist)"
+    )
+    _has_key = EclPrototype("bool     ecl_sum_has_general_var(ecl_sum, char*)")
+    _check_sim_time = EclPrototype("bool     ecl_sum_check_sim_time(ecl_sum, time_t)")
+    _check_sim_days = EclPrototype("bool     ecl_sum_check_sim_days(ecl_sum, double)")
+    _sim_length = EclPrototype("double   ecl_sum_get_sim_length(ecl_sum)")
+    _get_first_day = EclPrototype("double   ecl_sum_get_first_day(ecl_sum)")
+    _get_data_start = EclPrototype("time_t   ecl_sum_get_data_start(ecl_sum)")
+    _get_unit = EclPrototype("char*    ecl_sum_get_unit(ecl_sum, char*)")
+    _get_restart_case = EclPrototype("ecl_sum_ref ecl_sum_get_restart_case(ecl_sum)")
+    _get_restart_step = EclPrototype("int      ecl_sum_get_restart_step(ecl_sum)")
+    _get_simcase = EclPrototype("char*    ecl_sum_get_case(ecl_sum)")
+    _get_unit_system = EclPrototype("ecl_unit_enum ecl_sum_get_unit_system(ecl_sum)")
+    _get_base = EclPrototype("char*    ecl_sum_get_base(ecl_sum)")
+    _get_path = EclPrototype("char*    ecl_sum_get_path(ecl_sum)")
+    _get_abs_path = EclPrototype("char*    ecl_sum_get_abs_path(ecl_sum)")
+    _get_report_step_from_time = EclPrototype(
+        "int      ecl_sum_get_report_step_from_time(ecl_sum, time_t)"
+    )
+    _get_report_step_from_days = EclPrototype(
+        "int      ecl_sum_get_report_step_from_days(ecl_sum, double)"
+    )
+    _get_report_time = EclPrototype("time_t   ecl_sum_get_report_time(ecl_sum, int)")
+    _fwrite_sum = EclPrototype("void     ecl_sum_fwrite(ecl_sum)")
+    _can_write = EclPrototype("bool     ecl_sum_can_write(ecl_sum)")
+    _set_case = EclPrototype("void     ecl_sum_set_case(ecl_sum, char*)")
+    _alloc_time_vector = EclPrototype(
+        "time_t_vector_obj ecl_sum_alloc_time_vector(ecl_sum, bool)"
+    )
+    _alloc_data_vector = EclPrototype(
+        "double_vector_obj ecl_sum_alloc_data_vector(ecl_sum, int, bool)"
+    )
+    _get_var_node = EclPrototype(
+        "smspec_node_ref ecl_sum_get_general_var_node(ecl_sum, char*)"
+    )
+    _create_well_list = EclPrototype(
+        "stringlist_obj ecl_sum_alloc_well_list(ecl_sum, char*)"
+    )
+    _create_group_list = EclPrototype(
+        "stringlist_obj ecl_sum_alloc_group_list(ecl_sum, char*)"
+    )
+    _add_variable = EclPrototype(
+        "smspec_node_ref   ecl_sum_add_var(ecl_sum, char*, char*, int, char*, double)"
+    )
+    _add_tstep = EclPrototype(
+        "ecl_sum_tstep_ref ecl_sum_add_tstep(ecl_sum, int, double)"
+    )
+    _export_csv = EclPrototype(
+        "void ecl_sum_export_csv(ecl_sum, char*, stringlist, char*, char*)"
+    )
+    _identify_var_type = EclPrototype(
+        "ecl_sum_var_type ecl_sum_identify_var_type(char*)", bind=False
+    )
+    _is_rate = EclPrototype("bool smspec_node_identify_rate(char*)", bind=False)
+    _is_total = EclPrototype(
+        "bool smspec_node_identify_total(char*, ecl_sum_var_type)", bind=False
+    )
+    _get_last_value = EclPrototype(
+        "double ecl_sum_get_last_value_gen_key(ecl_sum, char*)"
+    )
+    _get_first_value = EclPrototype(
+        "double ecl_sum_get_first_value_gen_key(ecl_sum, char*)"
+    )
+    _init_numpy_vector = EclPrototype(
+        "void ecl_sum_init_double_vector(ecl_sum, char*, double*)"
+    )
+    _init_numpy_vector_interp = EclPrototype(
+        "void ecl_sum_init_double_vector_interp(ecl_sum, char*, time_t_vector, double*)"
+    )
+    _init_numpy_datetime64 = EclPrototype(
+        "void ecl_sum_init_datetime64_vector(ecl_sum, int64*, int)"
+    )
 
-
-    def __init__(self, load_case, join_string=":", include_restart=True, lazy_load=True, file_options=0):
+    def __init__(
+        self,
+        load_case,
+        join_string=":",
+        include_restart=True,
+        lazy_load=True,
+        file_options=0,
+    ):
         """Loads a new EclSum instance with summary data.
 
         Loads a new summary results from the ECLIPSE case given by
@@ -179,45 +253,47 @@ class EclSum(BaseCClass):
 
         """
         if not load_case:
-            raise ValueError('load_case must be the basename of the simulation')
-        c_pointer = self._fread_alloc_case2(load_case, join_string, include_restart, lazy_load, file_options)
+            raise ValueError("load_case must be the basename of the simulation")
+        c_pointer = self._fread_alloc_case2(
+            load_case, join_string, include_restart, lazy_load, file_options
+        )
         if c_pointer is None:
-            raise IOError("Failed to create summary instance from argument:%s" % load_case)
+            raise IOError(
+                "Failed to create summary instance from argument:%s" % load_case
+            )
 
         super(EclSum, self).__init__(c_pointer)
         self._load_case = load_case
 
-
     @classmethod
-    def load(cls, smspec_file, unsmry_file, key_join_string = ":", include_restart = True):
-        if not os.path.isfile( smspec_file ):
+    def load(cls, smspec_file, unsmry_file, key_join_string=":", include_restart=True):
+        if not os.path.isfile(smspec_file):
             raise IOError("No such file: %s" % smspec_file)
 
-        if not os.path.isfile( unsmry_file ):
-            raise IOError("No such file: %s" % unsmry_file )
+        if not os.path.isfile(unsmry_file):
+            raise IOError("No such file: %s" % unsmry_file)
 
-        data_files = StringList( )
-        data_files.append( unsmry_file )
-        c_ptr = cls._fread_alloc(smspec_file, data_files, key_join_string, include_restart)
+        data_files = StringList()
+        data_files.append(unsmry_file)
+        c_ptr = cls._fread_alloc(
+            smspec_file, data_files, key_join_string, include_restart
+        )
         if c_ptr is None:
             raise IOError("Failed to create summary instance")
 
-        ecl_sum = cls.createPythonObject( c_ptr )
+        ecl_sum = cls.createPythonObject(c_ptr)
         ecl_sum._load_case = smspec_file
         return ecl_sum
-
 
     @classmethod
     def createCReference(cls, c_pointer, parent=None):
         result = super(EclSum, cls).createCReference(c_pointer, parent)
         return result
 
-
     @classmethod
     def createPythonObject(cls, c_pointer):
         result = super(EclSum, cls).createPythonObject(c_pointer)
         return result
-
 
     @staticmethod
     def var_type(keyword):
@@ -232,13 +308,17 @@ class EclSum(BaseCClass):
         return EclSum._is_total(keyword, EclSum.var_type(keyword))
 
     @staticmethod
-    def writer(case,
-               start_time,
-               nx,ny,nz,
-               fmt_output=False,
-               unified=True,
-               time_in_days=True,
-               key_join_string=":"):
+    def writer(
+        case,
+        start_time,
+        nx,
+        ny,
+        nz,
+        fmt_output=False,
+        unified=True,
+        time_in_days=True,
+        key_join_string=":",
+    ):
         """
         The writer is not generally usable.
         @rtype: EclSum
@@ -246,29 +326,26 @@ class EclSum(BaseCClass):
 
         start = CTime(start_time)
 
-        smry = EclSum._create_writer(case,
-                                     fmt_output,
-                                     unified,
-                                     key_join_string,
-                                     start,
-                                     time_in_days,
-                                     nx,
-                                     ny,
-                                     nz)
-        smry._load_case = 'writer'
+        smry = EclSum._create_writer(
+            case, fmt_output, unified, key_join_string, start, time_in_days, nx, ny, nz
+        )
+        smry._load_case = "writer"
         return smry
 
-
     @staticmethod
-    def restart_writer(case,
-                       restart_case,
-                       restart_step,
-                       start_time,
-                       nx,ny,nz,
-                       fmt_output=False,
-                       unified=True,
-                       time_in_days=True,
-                       key_join_string=":"):
+    def restart_writer(
+        case,
+        restart_case,
+        restart_step,
+        start_time,
+        nx,
+        ny,
+        nz,
+        fmt_output=False,
+        unified=True,
+        time_in_days=True,
+        key_join_string=":",
+    ):
         """
         The writer is not generally usable.
         @rtype: EclSum
@@ -276,39 +353,40 @@ class EclSum(BaseCClass):
 
         start = CTime(start_time)
 
-        smry = EclSum._create_restart_writer(case,
-                                             restart_case,
-                                             restart_step,
-                                             fmt_output,
-                                             unified,
-                                             key_join_string,
-                                             start,
-                                             time_in_days,
-                                             nx,
-                                             ny,
-                                             nz)
-        smry._load_case = 'restart_writer'
+        smry = EclSum._create_restart_writer(
+            case,
+            restart_case,
+            restart_step,
+            fmt_output,
+            unified,
+            key_join_string,
+            start,
+            time_in_days,
+            nx,
+            ny,
+            nz,
+        )
+        smry._load_case = "restart_writer"
         return smry
 
     def add_variable(self, variable, wgname=None, num=0, unit="None", default_value=0):
-        return self._add_variable(variable, wgname, num, unit, default_value).setParent(parent=self)
-
+        return self._add_variable(variable, wgname, num, unit, default_value).setParent(
+            parent=self
+        )
 
     def add_t_step(self, report_step, sim_days):
-        """ @rtype: EclSumTStep """
+        """@rtype: EclSumTStep"""
         # report_step int
         if not isinstance(report_step, int):
-            raise TypeError('Parameter report_step should be int, was %r' % report_step)
+            raise TypeError("Parameter report_step should be int, was %r" % report_step)
         try:
             float(sim_days)
         except TypeError:
-            raise TypeError('Parameter sim_days should be float, was %r' % sim_days)
+            raise TypeError("Parameter sim_days should be float, was %r" % sim_days)
 
         sim_seconds = sim_days * 24 * 60 * 60
         tstep = self._add_tstep(report_step, sim_seconds).setParent(parent=self)
         return tstep
-
-
 
     def get_vector(self, key, report_only=False):
         """
@@ -317,27 +395,27 @@ class EclSum(BaseCClass):
         Will raise exception KeyError if the summary object does not
         have @key.
         """
-        warnings.warn("The method get_vector() has been deprecated, use numpy_vector() instead", DeprecationWarning)
+        warnings.warn(
+            "The method get_vector() has been deprecated, use numpy_vector() instead",
+            DeprecationWarning,
+        )
         self.assertKeyValid(key)
         if report_only:
             return EclSumVector(self, key, report_only=True)
         else:
             return EclSumVector(self, key)
 
-
     def report_index_list(self):
         """
         Internal function for working with report_steps.
         """
         first_report = self.first_report
-        last_report  = self.last_report
+        last_report = self.last_report
         index_list = IntVector()
         for report_step in range(first_report, last_report + 1):
             time_index = self._get_report_end(report_step)
             index_list.append(time_index)
         return index_list
-
-
 
     def wells(self, pattern=None):
         """
@@ -349,7 +427,6 @@ class EclSum(BaseCClass):
         """
         return self._create_well_list(pattern)
 
-
     def groups(self, pattern=None):
         """
         Will return a list of all the group names in case.
@@ -360,7 +437,6 @@ class EclSum(BaseCClass):
         """
         return self._create_group_list(pattern)
 
-
     def get_values(self, key, report_only=False):
         """
         Will return numpy vector of all values according to @key.
@@ -370,7 +446,10 @@ class EclSum(BaseCClass):
         also available as the 'values' property of an EclSumVector
         instance.
         """
-        warnings.warn("The method get_values() has been deprecated - use numpy_vector() instead.", DeprecationWarning)
+        warnings.warn(
+            "The method get_values() has been deprecated - use numpy_vector() instead.",
+            DeprecationWarning,
+        )
         if self.has_key(key):
             key_index = self._get_general_var_index(key)
             if report_only:
@@ -378,7 +457,7 @@ class EclSum(BaseCClass):
                 values = numpy.zeros(len(index_list))
                 for i in range(len(index_list)):
                     time_index = index_list[i]
-                    values[i]  = self._iiget(time_index, key_index)
+                    values[i] = self._iiget(time_index, key_index)
             else:
                 length = self._data_length()
                 values = numpy.zeros(length)
@@ -429,14 +508,19 @@ class EclSum(BaseCClass):
 
         if time_index is None:
             np_vector = numpy.zeros(len(self))
-            self._init_numpy_vector(key ,np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+            self._init_numpy_vector(
+                key, np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+            )
             return np_vector
         else:
-           time_vector = self._make_time_vector(time_index)
-           np_vector = numpy.zeros(len(time_vector))
-           self._init_numpy_vector_interp(key, time_vector, np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
-           return np_vector
-
+            time_vector = self._make_time_vector(time_index)
+            np_vector = numpy.zeros(len(time_vector))
+            self._init_numpy_vector_interp(
+                key,
+                time_vector,
+                np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+            )
+            return np_vector
 
     @property
     def numpy_dates(self):
@@ -444,9 +528,10 @@ class EclSum(BaseCClass):
         Will return numpy vector of numpy.datetime64() values for all the simulated timepoints.
         """
         np_dates = numpy.zeros(len(self), dtype="datetime64[ms]")
-        self._init_numpy_datetime64(np_dates.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), 1000)
+        self._init_numpy_datetime64(
+            np_dates.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), 1000
+        )
         return np_dates
-
 
     @property
     def dates(self):
@@ -456,17 +541,15 @@ class EclSum(BaseCClass):
         np_dates = self.numpy_dates
         return np_dates.tolist()
 
-
     @property
     def report_dates(self):
         dates = []
         if len(self):
-            for report in range(self.first_report,self.last_report + 1):
-                dates.append(self.get_report_time( report ))
+            for report in range(self.first_report, self.last_report + 1):
+                dates.append(self.get_report_time(report))
         return dates
 
-
-    def pandas_frame(self, time_index = None, column_keys = None):
+    def pandas_frame(self, time_index=None, column_keys=None):
         """Will create a pandas frame with summary data.
 
         By default you will get all time points in the summary case, but by
@@ -501,13 +584,13 @@ class EclSum(BaseCClass):
               ....
         """
         from ecl.summary import EclSumKeyWordVector
+
         if column_keys is None:
-            keywords = EclSumKeyWordVector(self, add_keywords = True)
+            keywords = EclSumKeyWordVector(self, add_keywords=True)
         else:
             keywords = EclSumKeyWordVector(self)
             for key in column_keys:
                 keywords.add_keywords(key)
-
 
         if len(keywords) == 0:
             raise ValueError("No valid key")
@@ -515,70 +598,81 @@ class EclSum(BaseCClass):
         if time_index is None:
             time_index = self.numpy_dates
             data = numpy.zeros([len(time_index), len(keywords)])
-            EclSum._init_pandas_frame(self, keywords,data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+            EclSum._init_pandas_frame(
+                self, keywords, data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+            )
         else:
             time_points = self._make_time_vector(time_index)
             data = numpy.zeros([len(time_points), len(keywords)])
-            EclSum._init_pandas_frame_interp(self, keywords, time_points, data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+            EclSum._init_pandas_frame_interp(
+                self,
+                keywords,
+                time_points,
+                data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
+            )
 
-        frame = pandas.DataFrame(index = time_index, columns=list(keywords), data=data)
+        frame = pandas.DataFrame(index=time_index, columns=list(keywords), data=data)
         return frame
 
     @staticmethod
     def _compile_headers_list(headers, dims):
         var_list = []
         for key in headers:
-            lst = re.split(':', key)
+            lst = re.split(":", key)
             kw = lst[0]
             wgname = None
-            num = 0;
+            num = 0
             unit = "UNIT"
             if len(lst) > 1:
                 nums = []
-                if lst[1][0].isdigit():       
-                    nums = re.split(',', lst[1])
+                if lst[1][0].isdigit():
+                    nums = re.split(",", lst[1])
                 else:
                     wgname = lst[1]
                 if len(lst) == 3:
                     nums = re.split(",", lst[2])
                 if len(nums) == 3:
-                    i = int(nums[0])-1
-                    j = int(nums[1])-1
-                    k = int(nums[2])-1
+                    i = int(nums[0]) - 1
+                    j = int(nums[1]) - 1
+                    k = int(nums[2]) - 1
                     if dims is None:
-                        raise ValueError("For key %s When using indexing i,j,k you must supply a valid value for the dims argument" % key)
-                    num = i + j * dims[0] + k * dims[0]*dims[1] + 1
+                        raise ValueError(
+                            "For key %s When using indexing i,j,k you must supply a valid value for the dims argument"
+                            % key
+                        )
+                    num = i + j * dims[0] + k * dims[0] * dims[1] + 1
                 elif len(nums) == 1:
                     num = int(nums[0])
-                      
-            var_list.append( [kw, wgname, num, unit] )     
-        return var_list   
+
+            var_list.append([kw, wgname, num, unit])
+        return var_list
 
     @classmethod
-    def from_pandas(cls, case, frame, dims = None, headers = None):
-        start_time = frame.index[0]    
-        var_list = []        
+    def from_pandas(cls, case, frame, dims=None, headers=None):
+        start_time = frame.index[0]
+        var_list = []
         if headers is None:
-             header_list = EclSum._compile_headers_list( frame.columns.values, dims )
+            header_list = EclSum._compile_headers_list(frame.columns.values, dims)
         else:
-             header_list = EclSum._compile_headers_list( headers, dims )
+            header_list = EclSum._compile_headers_list(headers, dims)
         if dims is None:
-             dims = [1,1,1];
-        ecl_sum = EclSum.writer(case,
-                                start_time.to_pydatetime(),
-                                dims[0], dims[1], dims[2])  
+            dims = [1, 1, 1]
+        ecl_sum = EclSum.writer(
+            case, start_time.to_pydatetime(), dims[0], dims[1], dims[2]
+        )
         for kw, wgname, num, unit in header_list:
-             var_list.append( ecl_sum.addVariable( kw , wgname = wgname , num = num, unit =unit).getKey1() )
+            var_list.append(
+                ecl_sum.addVariable(kw, wgname=wgname, num=num, unit=unit).getKey1()
+            )
 
         for i, time in enumerate(frame.index):
             days = (time - start_time).days
-            t_step = ecl_sum.addTStep( i+1 , days )
+            t_step = ecl_sum.addTStep(i + 1, days)
 
             for var in var_list:
                 t_step[var] = frame.iloc[i][var]
 
         return ecl_sum
-
 
     def get_key_index(self, key):
         """
@@ -605,7 +699,6 @@ class EclSum(BaseCClass):
         else:
             return None
 
-
     def last_value(self, key):
         """
         Will return the last value corresponding to @key.
@@ -623,7 +716,6 @@ class EclSum(BaseCClass):
 
         return self._get_last_value(key)
 
-
     def first_value(self, key):
         """
         Will return first value corresponding to @key.
@@ -633,8 +725,11 @@ class EclSum(BaseCClass):
 
         return self._get_first_value(key)
 
-    def get_last_value(self,key):
-        warnings.warn("The function get_last_value() is deprecated, use last_value() instead",DeprecationWarning)
+    def get_last_value(self, key):
+        warnings.warn(
+            "The function get_last_value() is deprecated, use last_value() instead",
+            DeprecationWarning,
+        )
         return self.last_value(key)
 
     def get_last(self, key):
@@ -645,7 +740,6 @@ class EclSum(BaseCClass):
         last_value() method.
         """
         return self[key].last
-
 
     def iiget(self, time_index, key_index):
         """
@@ -663,7 +757,6 @@ class EclSum(BaseCClass):
         """
         return self._iiget(time_index, key_index)
 
-
     def iget(self, key, time_index):
         """
         Lookup summary value based on @time_index and key.
@@ -680,7 +773,6 @@ class EclSum(BaseCClass):
         """
         return self._get_general_var(time_index, key)
 
-
     def __len__(self):
         """
         The number of timesteps in the dataset; the return when evaluating
@@ -688,7 +780,6 @@ class EclSum(BaseCClass):
 
         """
         return self._data_length()
-
 
     def __contains__(self, key):
         if self._has_key(key):
@@ -709,9 +800,11 @@ class EclSum(BaseCClass):
 
         The returned value will be a EclSumVector instance.
         """
-        warnings.warn("The method the [] operator will change behaviour in the future. It will then return a plain numpy vector. You are advised to change to use the numpy_vector() method right away", DeprecationWarning)
+        warnings.warn(
+            "The method the [] operator will change behaviour in the future. It will then return a plain numpy vector. You are advised to change to use the numpy_vector() method right away",
+            DeprecationWarning,
+        )
         return self.get_vector(key)
-
 
     def scale_vector(self, key, scalar):
         msg = """The function EclSum.scale_vector has been removed. As an alternative you
@@ -733,7 +826,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         raise NotImplementedError(msg)
 
-
     def check_sim_time(self, date):
         """
         Will check if the input date is in the time span [sim_start, sim_end].
@@ -742,7 +834,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             date = CTime(date)
         return self._check_sim_time(date)
 
-    def get_interp_direct(self,key, date):
+    def get_interp_direct(self, key, date):
 
         if not isinstance(date, CTime):
             date = CTime(date)
@@ -777,19 +869,22 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             if self._check_sim_days(days):
                 return self._get_general_var_from_sim_days(days, key)
             else:
-                raise ValueError("days:%s is outside range of simulation: [%g,%g]" % (days, self.first_day, self.sim_length))
+                raise ValueError(
+                    "days:%s is outside range of simulation: [%g,%g]"
+                    % (days, self.first_day, self.sim_length)
+                )
         else:
             raise ValueError("Must supply either days or date")
 
-
-    def get_interp_row(self, key_list, sim_time, invalid_value = -1):
+    def get_interp_row(self, key_list, sim_time, invalid_value=-1):
         ctime = CTime(sim_time)
-        data = DoubleVector( initial_size = len(key_list) , default_value = invalid_value)
+        data = DoubleVector(initial_size=len(key_list), default_value=invalid_value)
         EclSum._get_interp_vector(self, ctime, key_list, data)
         return data
 
-
-    def time_range(self, start=None, end=None, interval="1Y", num_timestep = None, extend_end=True):
+    def time_range(
+        self, start=None, end=None, interval="1Y", num_timestep=None, extend_end=True
+    ):
         """Will create a vector of timepoints based on the current case.
 
         By default the timepoints will be regularly sampled based on the
@@ -808,7 +903,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             if start < self.getDataStartTime():
                 start = self.getDataStartTime()
 
-
         if end is None:
             end = self.getEndTime()
         else:
@@ -820,7 +914,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
         if end < start:
             raise ValueError("Invalid time interval start after end")
-
 
         if not num_timestep is None:
             return TimeVector.create_linear(CTime(start), CTime(end), num_timestep)
@@ -835,7 +928,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             day1 = start.day
             day2 = end.day
             if extend_end:
-                if timeUnit == 'm':
+                if timeUnit == "m":
                     if day2 > 1:
                         month2 += 1
                         if month2 == 13:
@@ -850,7 +943,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             day2 = 1
 
             range_start = datetime.date(year1, month1, day1)
-            range_end =  datetime.date(year2, month2, day2)
+            range_end = datetime.date(year2, month2, day2)
 
         trange = TimeVector.createRegular(range_start, range_end, interval)
 
@@ -871,8 +964,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
         return trange
 
-
-
     def blocked_production(self, totalKey, timeRange):
         node = self.smspec_node(totalKey)
         if node.isTotal():
@@ -888,8 +979,9 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             total.pop()
             return tmp - total
         else:
-            raise TypeError("The blockedProduction method must be called with one of the TOTAL keys like e.g. FOPT or GWIT")
-
+            raise TypeError(
+                "The blockedProduction method must be called with one of the TOTAL keys like e.g. FOPT or GWIT"
+            )
 
     def get_report(self, date=None, days=None):
         """
@@ -908,13 +1000,11 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
         return step
 
-
     def get_report_time(self, report):
         """
         Will return the datetime corresponding to the report_step @report.
         """
         return CTime(self._get_report_time(report)).date()
-
 
     def get_interp_vector(self, key, days_list=None, date_list=None):
         """
@@ -937,7 +1027,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             else:
                 vector = numpy.zeros(len(days_list))
                 sim_length = self.sim_length
-                sim_start  = self.first_day
+                sim_start = self.first_day
                 index = 0
                 for days in days_list:
                     if (days >= sim_start) and (days <= sim_length):
@@ -947,21 +1037,20 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
                     index += 1
         elif date_list:
             start_time = self.data_start
-            end_time   = self.end_date
+            end_time = self.end_date
             vector = numpy.zeros(len(date_list))
             index = 0
 
             for date in date_list:
                 ct = CTime(date)
                 if start_time <= ct <= end_time:
-                    vector[index] =  self._get_general_var_from_sim_time(ct, key)
+                    vector[index] = self._get_general_var_from_sim_time(ct, key)
                 else:
                     raise ValueError("Invalid date value")
                 index += 1
         else:
             raise ValueError("Must supply either days_list or date_list")
         return vector
-
 
     def get_from_report(self, key, report_step):
         """
@@ -970,13 +1059,11 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         time_index = self._get_report_end(report_step)
         return self._get_general_var(time_index, key)
 
-
     def has_key(self, key):
         """
         Check if summary object has key @key.
         """
         return key in self
-
 
     def smspec_node(self, key):
         """
@@ -993,14 +1080,12 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         else:
             raise KeyError("Summary case does not have key:%s" % key)
 
-
     def unit(self, key):
         """
         Will return the unit of @key.
         """
         node = self.smspec_node(key)
         return node.unit
-
 
     @property
     def unit_system(self):
@@ -1016,7 +1101,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         return self._get_simcase()
 
-
     @property
     def restart_step(self):
         """
@@ -1024,14 +1108,12 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         return self._get_restart_step()
 
-
     @property
     def restart_case(self):
         restart_case = self._get_restart_case()
         if restart_case:
             restart_case.setParent(parent=self)
         return restart_case
-
 
     @property
     def path(self):
@@ -1055,7 +1137,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         return self._get_abs_path()
 
-    #-----------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Here comes functions for getting vectors of the time
     # dimension. All the get_xxx() functions have an optional boolean
     # argument @report_only. If this argument is set to True the
@@ -1085,9 +1167,9 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             dates = self.report_dates
             start_date = self.data_start
             start = datetime.date(start_date.year, start_date.month, start_date.day)
-            return [ (x - start).total_seconds( ) / 86400 for x in dates ]
+            return [(x - start).total_seconds() / 86400 for x in dates]
         else:
-            return [ self._iget_sim_days(index) for index in range(len(self)) ]
+            return [self._iget_sim_days(index) for index in range(len(self))]
 
     def get_dates(self, report_only=False):
         """
@@ -1112,9 +1194,11 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         i.e. floats - generated by the date2num() function at the top
         of this file.
         """
-        warnings.warn("The mpl_dates property has been deprecated - use numpy_dates instead", DeprecationWarning)
+        warnings.warn(
+            "The mpl_dates property has been deprecated - use numpy_dates instead",
+            DeprecationWarning,
+        )
         return self.get_mpl_dates(False)
-
 
     def get_mpl_dates(self, report_only=False):
         """
@@ -1126,12 +1210,14 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         format, i.e. floats - generated by the date2num() function at
         the top of this file.
         """
-        warnings.warn("The get_mpl_dates( ) method has been deprecated - use numpy_dates instead", DeprecationWarning)
+        warnings.warn(
+            "The get_mpl_dates( ) method has been deprecated - use numpy_dates instead",
+            DeprecationWarning,
+        )
         if report_only:
-            return [ date2num(dt) for dt in self.report_dates ]
+            return [date2num(dt) for dt in self.report_dates]
         else:
             return [date2num(dt) for dt in self.dates]
-
 
     @property
     def report_step(self):
@@ -1155,11 +1241,11 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         else:
             report_steps = []
             for index in range(len(self)):
-                report_steps.append( self._iget_report_step(index) )
+                report_steps.append(self._iget_report_step(index))
 
         return report_steps
 
-    #-----------------------------------------------------------------
+    # -----------------------------------------------------------------
 
     def iget_days(self, time_index):
         """
@@ -1175,7 +1261,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         ct = CTime(long_time)
         return ct.datetime()
 
-
     def iget_report(self, time_index):
         """
         Returns the report step corresponding to @time_index.
@@ -1183,7 +1268,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         One report step will in general contain many ministeps.
         """
         return self._iget_report_step(time_index)
-
 
     @property
     def length(self):
@@ -1221,7 +1305,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         ct = self._get_start_date()
         return CTime(ct).date()
 
-
     @property
     def end_date(self):
         """
@@ -1229,13 +1312,9 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         return CTime(self._get_end_date()).date()
 
-
-
     @property
     def data_start(self):
         return self.getDataStartTime()
-
-
 
     @property
     def end_time(self):
@@ -1244,11 +1323,9 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         return self.getEndTime()
 
-
     @property
     def start_time(self):
         return self.getStartTime()
-
 
     def get_data_start_time(self):
         """The first date we have data for.
@@ -1260,8 +1337,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         return CTime(self._get_data_start()).datetime()
 
-
-
     def get_start_time(self):
         """
         A Python datetime instance with the start time.
@@ -1269,7 +1344,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         See start_date() for further details.
         """
         return CTime(self._get_start_date()).datetime()
-
 
     def get_end_time(self):
         """
@@ -1285,8 +1359,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         irrespective of whether we have data for this or not.
         """
         return self._sim_length()
-
-
 
     @property
     def last_report(self):
@@ -1306,7 +1378,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         Returns the first index where @key is above @limit.
         """
-        key_index  = self._get_general_var_index(key)
+        key_index = self._get_general_var_index(key)
         time_index = self._get_first_gt(key_index, limit)
         return time_index
 
@@ -1314,7 +1386,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         Returns the first index where @key is below @limit.
         """
-        key_index  = self._get_general_var_index(key)
+        key_index = self._get_general_var_index(key)
         time_index = self._get_first_lt(key_index, limit)
         return time_index
 
@@ -1343,8 +1415,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         if len(self) < 2:
             raise ValueError("Must have at least two elements to start solving")
 
-        return [ x.datetime() for x in self._solve_dates(key, value, rates_clamp_lower)]
-
+        return [x.datetime() for x in self._solve_dates(key, value, rates_clamp_lower)]
 
     def solve_days(self, key, value, rates_clamp_lower=True):
         """Will solve the equation vector[@key] == value.
@@ -1437,7 +1508,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
         return self._solve_days(key, value, rates_clamp_lower)
 
-
     def keys(self, pattern=None):
         """
         Return a StringList of summary keys matching @pattern.
@@ -1454,20 +1524,19 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         self._select_matching_keys(pattern, s)
         return s
 
-
     def can_write(self):
-        return self._can_write( )
-
+        return self._can_write()
 
     def fwrite(self, ecl_case=None):
         if not self.can_write():
-            raise NotImplementedError("Write method is not implemented for this case. lazy_load=True??")
+            raise NotImplementedError(
+                "Write method is not implemented for this case. lazy_load=True??"
+            )
 
         if ecl_case:
             self._set_case(ecl_case)
 
         self._fwrite_sum()
-
 
     def alloc_time_vector(self, report_only):
         return self._alloc_time_vector(report_only)
@@ -1492,11 +1561,11 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
     def __repr__(self):
         """Returns, e.g.
-           EclSum("NORNE_ATW2013.UNSMRY", [1997-11-06 00:00:00, 2006-12-01 00:00:00], keys=3781) at 0x1609e20
+        EclSum("NORNE_ATW2013.UNSMRY", [1997-11-06 00:00:00, 2006-12-01 00:00:00], keys=3781) at 0x1609e20
         """
         name = self._nicename()
-        s_time   = self.getStartTime()
-        e_time   = self.getEndTime()
+        s_time = self.getStartTime()
+        e_time = self.getEndTime()
         num_keys = len(self.keys())
         content = 'name="%s", time=[%s, %s], keys=%d' % (name, s_time, e_time, num_keys)
         return self._create_repr(content)
@@ -1509,8 +1578,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         cfile = CFILE(pfile)
         ctime = CTime(time)
         EclSum._dump_csv_line(self, ctime, keywords, cfile)
-
-
 
     def export_csv(self, filename, keys=None, date_format="%Y-%m-%d", sep=";"):
         """Will create a CSV file with summary data.
@@ -1534,34 +1601,54 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
                 var_list |= self.keys(pattern=key)
         self._export_csv(filename, var_list, date_format, sep)
 
-
-
-    def resample(self, new_case_name, time_points, lower_extrapolation=False, upper_extrapolation=False):
-        new_case = self._resample(new_case_name, time_points, lower_extrapolation, upper_extrapolation)
+    def resample(
+        self,
+        new_case_name,
+        time_points,
+        lower_extrapolation=False,
+        upper_extrapolation=False,
+    ):
+        new_case = self._resample(
+            new_case_name, time_points, lower_extrapolation, upper_extrapolation
+        )
         if new_case is None:
-            raise ValueError("Failed to create new resampled case:{}".format(new_case_name))
+            raise ValueError(
+                "Failed to create new resampled case:{}".format(new_case_name)
+            )
 
         return new_case
 
 
 import ecl.summary.ecl_sum_keyword_vector
-EclSum._dump_csv_line = EclPrototype("void ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)", bind=False)
-EclSum._get_interp_vector = EclPrototype("void ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)", bind=False)
-EclSum._init_pandas_frame = EclPrototype("void ecl_sum_init_double_frame(ecl_sum, ecl_sum_vector, double*)", bind=False)
-EclSum._init_pandas_frame_interp = EclPrototype("void ecl_sum_init_double_frame_interp(ecl_sum, ecl_sum_vector, time_t_vector, double*)", bind=False)
 
-monkey_the_camel(EclSum, 'varType', EclSum.var_type, classmethod)
-monkey_the_camel(EclSum, 'addVariable', EclSum.add_variable)
-monkey_the_camel(EclSum, 'addTStep', EclSum.add_t_step)
-monkey_the_camel(EclSum, 'assertKeyValid', EclSum.assert_key_valid)
-monkey_the_camel(EclSum, 'scaleVector', EclSum.scale_vector)
-monkey_the_camel(EclSum, 'shiftVector', EclSum.shift_vector)
-monkey_the_camel(EclSum, 'timeRange', EclSum.time_range)
-monkey_the_camel(EclSum, 'blockedProduction', EclSum.blocked_production)
-monkey_the_camel(EclSum, 'getDataStartTime', EclSum.get_data_start_time)
-monkey_the_camel(EclSum, 'getStartTime', EclSum.get_start_time)
-monkey_the_camel(EclSum, 'getEndTime', EclSum.get_end_time)
-monkey_the_camel(EclSum, 'solveDates', EclSum.solve_dates)
-monkey_the_camel(EclSum, 'solveDays', EclSum.solve_days)
-monkey_the_camel(EclSum, 'dumpCSVLine', EclSum.dump_csv_line)
-monkey_the_camel(EclSum, 'exportCSV', EclSum.export_csv)
+EclSum._dump_csv_line = EclPrototype(
+    "void ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)",
+    bind=False,
+)
+EclSum._get_interp_vector = EclPrototype(
+    "void ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)",
+    bind=False,
+)
+EclSum._init_pandas_frame = EclPrototype(
+    "void ecl_sum_init_double_frame(ecl_sum, ecl_sum_vector, double*)", bind=False
+)
+EclSum._init_pandas_frame_interp = EclPrototype(
+    "void ecl_sum_init_double_frame_interp(ecl_sum, ecl_sum_vector, time_t_vector, double*)",
+    bind=False,
+)
+
+monkey_the_camel(EclSum, "varType", EclSum.var_type, classmethod)
+monkey_the_camel(EclSum, "addVariable", EclSum.add_variable)
+monkey_the_camel(EclSum, "addTStep", EclSum.add_t_step)
+monkey_the_camel(EclSum, "assertKeyValid", EclSum.assert_key_valid)
+monkey_the_camel(EclSum, "scaleVector", EclSum.scale_vector)
+monkey_the_camel(EclSum, "shiftVector", EclSum.shift_vector)
+monkey_the_camel(EclSum, "timeRange", EclSum.time_range)
+monkey_the_camel(EclSum, "blockedProduction", EclSum.blocked_production)
+monkey_the_camel(EclSum, "getDataStartTime", EclSum.get_data_start_time)
+monkey_the_camel(EclSum, "getStartTime", EclSum.get_start_time)
+monkey_the_camel(EclSum, "getEndTime", EclSum.get_end_time)
+monkey_the_camel(EclSum, "solveDates", EclSum.solve_dates)
+monkey_the_camel(EclSum, "solveDays", EclSum.solve_days)
+monkey_the_camel(EclSum, "dumpCSVLine", EclSum.dump_csv_line)
+monkey_the_camel(EclSum, "exportCSV", EclSum.export_csv)

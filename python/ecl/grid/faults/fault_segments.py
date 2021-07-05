@@ -20,12 +20,10 @@ from ecl.util.util import monkey_the_camel
 
 
 class FaultSegment(object):
-
     def __init__(self, C1, C2):
         self.__C1 = C1
         self.__C2 = C2
         self.__next_segment = None
-
 
     def __eq__(self, other):
         s = self.c1, self.c2
@@ -70,14 +68,11 @@ class FaultSegment(object):
         self.__C1 = self.__C2
         self.__C2 = C1
 
-
     def __repr__(self):
         return "%d -> %d" % (self.__C1, self.__C2)
 
 
-
 class SegmentMap(object):
-
     def __init__(self):
         self.__segment_map = {}
         self.__count_map = {}
@@ -93,14 +88,16 @@ class SegmentMap(object):
             if count > 0:
                 d = self.__segment_map[C]
                 if len(d) != count:
-                    print('CornerPoint:%d  count:%d  len(d):%d map:%s' % (C, count, len(d), d))
+                    print(
+                        "CornerPoint:%d  count:%d  len(d):%d map:%s"
+                        % (C, count, len(d), d)
+                    )
                 assert len(d) == count
             else:
                 assert self.__segment_map.get(C) is None
 
-
     def add_segment(self, segment):
-        (C1,C2) = segment.getCorners()
+        (C1, C2) = segment.getCorners()
         if C1 not in self.__segment_map:
             self.__segment_map[C1] = {}
             self.__count_map[C1] = 0
@@ -116,10 +113,8 @@ class SegmentMap(object):
             self.__segment_map[C2][C1] = segment
             self.__count_map[C2] += 1
 
-
-
     def del_segment(self, segment):
-        (C1,C2) = segment.getCorners()
+        (C1, C2) = segment.getCorners()
         self.__count_map[C1] -= 1
         self.__count_map[C2] -= 1
         del self.__segment_map[C1][C2]
@@ -130,7 +125,6 @@ class SegmentMap(object):
 
         if len(self.__segment_map[C2]) == 0:
             del self.__segment_map[C2]
-
 
     def pop_start(self):
         end_segments = []
@@ -143,7 +137,7 @@ class SegmentMap(object):
         return start_segment
 
     def pop_next(self, segment):
-        (C1,C2) = segment.getCorners()
+        (C1, C2) = segment.getCorners()
         if self.__count_map[C1] >= 1:
             next_segment = list(self.__segment_map[C1].values())[0]
         elif self.__count_map[C2] >= 1:
@@ -155,20 +149,18 @@ class SegmentMap(object):
             self.delSegment(next_segment)
         return next_segment
 
-
     def print_content(self):
         for d in self.__segment_map.values():
-            for (C,S) in d.iteritems():
+            for (C, S) in d.iteritems():
                 print(S)
 
 
+monkey_the_camel(FaultSegment, "getCorners", FaultSegment.get_corners)
+monkey_the_camel(FaultSegment, "getC1", FaultSegment.get_c1)
+monkey_the_camel(FaultSegment, "getC2", FaultSegment.get_c2)
 
-monkey_the_camel(FaultSegment, 'getCorners', FaultSegment.get_corners)
-monkey_the_camel(FaultSegment, 'getC1', FaultSegment.get_c1)
-monkey_the_camel(FaultSegment, 'getC2', FaultSegment.get_c2)
-
-monkey_the_camel(SegmentMap, 'addSegment', SegmentMap.add_segment)
-monkey_the_camel(SegmentMap, 'delSegment', SegmentMap.del_segment)
-monkey_the_camel(SegmentMap, 'popStart', SegmentMap.pop_start)
-monkey_the_camel(SegmentMap, 'popNext', SegmentMap.pop_next)
-monkey_the_camel(SegmentMap, 'printContent', SegmentMap.print_content)
+monkey_the_camel(SegmentMap, "addSegment", SegmentMap.add_segment)
+monkey_the_camel(SegmentMap, "delSegment", SegmentMap.del_segment)
+monkey_the_camel(SegmentMap, "popStart", SegmentMap.pop_start)
+monkey_the_camel(SegmentMap, "popNext", SegmentMap.pop_next)
+monkey_the_camel(SegmentMap, "printContent", SegmentMap.print_content)

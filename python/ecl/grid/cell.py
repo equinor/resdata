@@ -15,8 +15,8 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-class Cell(object):
 
+class Cell(object):
     def __init__(self, grid, global_index):
         self._grid = grid
         self._idx = global_index
@@ -38,12 +38,15 @@ class Cell(object):
     @property
     def ijk(self):
         return self._ijk
+
     @property
     def i(self):
         return self._ijk[0]
+
     @property
     def j(self):
         return self._ijk[1]
+
     @property
     def k(self):
         return self._ijk[2]
@@ -81,9 +84,11 @@ class Cell(object):
         coordinates (x,y,z)=coord.
         """
         if len(coord) != 3:
-            raise ValueError('Cell contains takes a triple (x,y,z), was given %s.' % coord)
-        x,y,z = coord
-        return self._grid._cell_contains(self._idx, x,y,z)
+            raise ValueError(
+                "Cell contains takes a triple (x,y,z), was given %s." % coord
+            )
+        x, y, z = coord
+        return self._grid._cell_contains(self._idx, x, y, z)
 
     def __eq__(self, other):
         if isinstance(other, Cell):
@@ -114,14 +119,19 @@ class Cell(object):
          |   |           |   |
          0---1           4---5
         """
-        cs = lambda c : self._grid.get_cell_corner(c, global_index=self._idx)
+        cs = lambda c: self._grid.get_cell_corner(c, global_index=self._idx)
         return [cs(i) for i in range(8)]
 
     def __repr__(self):
-        act = 'active' if self.active else 'inactive'
-        pos = '(%.3f, %.3f, %.3f)' % self.coordinate
-        cnt = '%d, %d, %d, %s, %s, grid=%s' % (self.i, self.j, self.k,
-                                               act, pos,
-                                               self._grid.get_name())
+        act = "active" if self.active else "inactive"
+        pos = "(%.3f, %.3f, %.3f)" % self.coordinate
+        cnt = "%d, %d, %d, %s, %s, grid=%s" % (
+            self.i,
+            self.j,
+            self.k,
+            act,
+            pos,
+            self._grid.get_name(),
+        )
 
-        return 'Cell(%s)' % cnt
+        return "Cell(%s)" % cnt

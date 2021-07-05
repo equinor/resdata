@@ -39,20 +39,20 @@ from cwrap import BaseCClass
 class StringList(BaseCClass):
     TYPE_NAME = "stringlist"
 
-    _alloc      = EclPrototype("void* stringlist_alloc_new( )", bind = False)
-    _free       = EclPrototype("void stringlist_free(stringlist )")
-    _append     = EclPrototype("void stringlist_append_copy(stringlist , char* )")
-    _iget       = EclPrototype("char* stringlist_iget(stringlist , int )")
-    _front      = EclPrototype("char* stringlist_front( stringlist )")
-    _back       = EclPrototype("char* stringlist_back( stringlist )")
-    _iget_copy  = EclPrototype("char* stringlist_iget_copy(stringlist, int)")
-    _iset       = EclPrototype("void  stringlist_iset_copy( stringlist , int , char* )")
-    _get_size   = EclPrototype("int  stringlist_get_size( stringlist )")
-    _contains   = EclPrototype("bool stringlist_contains(stringlist , char*)")
-    _equal      = EclPrototype("bool stringlist_equal(stringlist , stringlist)")
-    _sort       = EclPrototype("void stringlist_python_sort( stringlist , int)")
-    _pop        = EclPrototype("char* stringlist_pop(stringlist)")
-    _last       = EclPrototype("char* stringlist_get_last(stringlist)")
+    _alloc = EclPrototype("void* stringlist_alloc_new( )", bind=False)
+    _free = EclPrototype("void stringlist_free(stringlist )")
+    _append = EclPrototype("void stringlist_append_copy(stringlist , char* )")
+    _iget = EclPrototype("char* stringlist_iget(stringlist , int )")
+    _front = EclPrototype("char* stringlist_front( stringlist )")
+    _back = EclPrototype("char* stringlist_back( stringlist )")
+    _iget_copy = EclPrototype("char* stringlist_iget_copy(stringlist, int)")
+    _iset = EclPrototype("void  stringlist_iset_copy( stringlist , int , char* )")
+    _get_size = EclPrototype("int  stringlist_get_size( stringlist )")
+    _contains = EclPrototype("bool stringlist_contains(stringlist , char*)")
+    _equal = EclPrototype("bool stringlist_equal(stringlist , stringlist)")
+    _sort = EclPrototype("void stringlist_python_sort( stringlist , int)")
+    _pop = EclPrototype("char* stringlist_pop(stringlist)")
+    _last = EclPrototype("char* stringlist_get_last(stringlist)")
     _find_first = EclPrototype("int stringlist_find_first(stringlist, char*)")
 
     def __init__(self, initial=None):
@@ -80,33 +80,33 @@ class StringList(BaseCClass):
             return
 
         if isinstance(initial, string_types):
-            raise TypeError((
-                'Cannot initialize a StringList from "{initial}".\n'
-                'Did you mean "[{initial}]"?'
-                ).format(initial=initial))
+            raise TypeError(
+                (
+                    'Cannot initialize a StringList from "{initial}".\n'
+                    'Did you mean "[{initial}]"?'
+                ).format(initial=initial)
+            )
         for s in initial:
             if isinstance(s, bytes):
-                s.decode('ascii')
+                s.decode("ascii")
             if isinstance(s, string_types):
                 self.append(s)
             else:
                 raise TypeError('Item is not a string: "%s".' % s)
 
-
-    def __eq__(self , other):
+    def __eq__(self, other):
         if len(self) == len(other):
-            if isinstance( other , StringList):
+            if isinstance(other, StringList):
                 return self._equal(other)
             else:
                 equal = True
-                for index,s2 in enumerate(other):
+                for index, s2 in enumerate(other):
                     if self[index] != s2:
                         equal = False
                         break
                 return equal
         else:
             return False
-
 
     def __setitem__(self, index, value):
         if isinstance(index, int):
@@ -116,14 +116,15 @@ class StringList(BaseCClass):
                 index = len(self) + index
 
             if index < 0 or index >= length:
-                raise IndexError("index must be in range %d <= %d < %d" % (0, index, len(self)))
+                raise IndexError(
+                    "index must be in range %d <= %d < %d" % (0, index, len(self))
+                )
             if isinstance(value, bytes):
-                value = value.decode('ascii')
+                value = value.decode("ascii")
             if isinstance(value, string_types):
                 self._iset(index, value)
             else:
                 raise TypeError("Item: %s not string type" % value)
-
 
     def __getitem__(self, index):
         """
@@ -137,7 +138,9 @@ class StringList(BaseCClass):
             if index < 0:
                 index += length
             if index < 0 or index >= length:
-                raise IndexError("index must be in range %d <= %d < %d" % (0, index, len(self)))
+                raise IndexError(
+                    "index must be in range %d <= %d < %d" % (0, index, len(self))
+                )
             else:
                 return self._iget(index)
         else:
@@ -151,40 +154,34 @@ class StringList(BaseCClass):
         """
         return self._contains(s)
 
-
-    def __iadd__(self , other):
+    def __iadd__(self, other):
         if isinstance(other, bytes):
-            other.decode('ascii')
-        if isinstance(other , string_types):
+            other.decode("ascii")
+        if isinstance(other, string_types):
             raise TypeError("Can not add strings with + - use append()")
         for s in other:
-            self.append( s )
+            self.append(s)
         return self
 
-
-    def __add__(self , other):
-        copy = StringList( initial = self )
+    def __add__(self, other):
+        copy = StringList(initial=self)
         copy += other
         return copy
 
-
-    def __ior__(self , other):
+    def __ior__(self, other):
         if isinstance(other, bytes):
-            other.decode('ascii')
-        if isinstance(other , string_types):
+            other.decode("ascii")
+        if isinstance(other, string_types):
             raise TypeError("Can not | with string.")
         for s in other:
             if not s in self:
-                self.append( s )
+                self.append(s)
         return self
 
-
-    def __or__(self , other):
-        copy = StringList( initial = self )
+    def __or__(self, other):
+        copy = StringList(initial=self)
         copy |= other
         return copy
-
-
 
     def contains(self, s):
         """
@@ -195,13 +192,11 @@ class StringList(BaseCClass):
         """
         return s in self
 
-
     def __len__(self):
         """
         The length of the list - used to support builtin len().
         """
-        return self._get_size( )
-
+        return self._get_size()
 
     def __str__(self):
         """
@@ -211,14 +206,14 @@ class StringList(BaseCClass):
         length = len(self)
         for i in range(length):
             if i == length - 1:
-                buffer += "\'%s\'" % self[i]
+                buffer += "'%s'" % self[i]
             else:
-                buffer += "\'%s\'," % self[i]
+                buffer += "'%s'," % self[i]
         buffer += "]"
         return buffer
 
     def __repr__(self):
-        return 'StringList(size = %d) %s' % (len(self), self._ad_str())
+        return "StringList(size = %d) %s" % (len(self), self._ad_str())
 
     def empty(self):
         """Returns true if and only if list is empty."""
@@ -235,19 +230,17 @@ class StringList(BaseCClass):
         else:
             raise IndexError("List empty.  Cannot call pop().")
 
-
     def append(self, s):
         """
         Appends a new string @s to list. If the input argument is not a
         string the string representation will be appended.
         """
         if isinstance(s, bytes):
-            s.decode('ascii')
+            s.decode("ascii")
         if isinstance(s, string_types):
             self._append(s)
         else:
             self._append(str(s))
-
 
     @property
     def strings(self):
@@ -272,7 +265,6 @@ class StringList(BaseCClass):
         else:
             raise IndexError("List empty.  No such element last().")
 
-
     def sort(self, cmp_flag=0):
         """
         Will sort the list inplace.
@@ -288,25 +280,26 @@ class StringList(BaseCClass):
         self._sort(cmp_flag)
 
     def index(self, value):
-        """ @rtype: int """
+        """@rtype: int"""
         if isinstance(value, bytes):
-            value.decode('ascii')
+            value.decode("ascii")
         if isinstance(value, string_types):
             return self._find_first(value)
-        raise KeyError('Cannot index by "%s", lst.index() needs a string.' % str(type(value)))
+        raise KeyError(
+            'Cannot index by "%s", lst.index() needs a string.' % str(type(value))
+        )
 
     def free(self):
         self._free()
-
 
     def front(self):
         if not self.empty():
             return self._front()
         else:
-            raise IndexError('List empty.  No such element front().')
+            raise IndexError("List empty.  No such element front().")
 
     def back(self):
         if not self.empty():
             return self._back()
         else:
-            raise IndexError('List empty.  No such element back().')
+            raise IndexError("List empty.  No such element back().")

@@ -28,7 +28,6 @@ class RegionTest(EclTest):
         self.rst_file = EclFile("%s.UNRST" % case)
         self.init_file = EclFile("%s.INIT" % case)
 
-
     def test_kw_imul(self):
         P = self.rst_file["PRESSURE"][5]
         fipnum = self.init_file["FIPNUM"][0]
@@ -43,18 +42,17 @@ class RegionTest(EclTest):
         self.assertTrue(fipnum.equal(fipnum_copy))
 
     def test_equal(self):
-        reg1 = EclRegion(self.grid , False)
-        reg2 = EclRegion(self.grid , False)
+        reg1 = EclRegion(self.grid, False)
+        reg2 = EclRegion(self.grid, False)
 
-        self.assertTrue( reg1 == reg2 )
+        self.assertTrue(reg1 == reg2)
 
-        reg1.select_islice(4 , 6)
-        self.assertFalse( reg1 == reg2 )
-        reg2.select_islice(4,7)
-        self.assertFalse( reg1 == reg2 )
-        reg1.select_islice(7,7)
-        self.assertTrue( reg1 == reg2 )
-
+        reg1.select_islice(4, 6)
+        self.assertFalse(reg1 == reg2)
+        reg2.select_islice(4, 7)
+        self.assertFalse(reg1 == reg2)
+        reg1.select_islice(7, 7)
+        self.assertTrue(reg1 == reg2)
 
     def test_kw_idiv(self):
         P = self.rst_file["PRESSURE"][5]
@@ -68,7 +66,6 @@ class RegionTest(EclTest):
 
         fipnum.div(-1, mask=reg)
         self.assertTrue(fipnum.equal(fipnum_copy))
-
 
     def test_kw_iadd(self):
         P = self.rst_file["PRESSURE"][5]
@@ -86,7 +83,6 @@ class RegionTest(EclTest):
         fipnum.sub(1)
         self.assertTrue(fipnum.equal(fipnum_copy))
 
-
     def test_kw_isub(self):
         P = self.rst_file["PRESSURE"][5]
         fipnum = self.init_file["FIPNUM"][0]
@@ -98,7 +94,6 @@ class RegionTest(EclTest):
         self.assertFalse(fipnum.equal(fipnum_copy))
         fipnum.add(1, mask=reg)
         self.assertTrue(fipnum.equal(fipnum_copy))
-
 
     def test_slice(self):
         reg = EclRegion(self.grid, False)
@@ -113,7 +108,9 @@ class RegionTest(EclTest):
             if i > 5:
                 OK = False
         self.assertTrue(OK)
-        self.assertTrue(self.grid.getNY() * self.grid.getNZ() * 6 == len(reg.getGlobalList()))
+        self.assertTrue(
+            self.grid.getNY() * self.grid.getNZ() * 6 == len(reg.getGlobalList())
+        )
 
         reg.select_jslice(7, 8, intersect=True)
         OK = True
@@ -146,62 +143,58 @@ class RegionTest(EclTest):
         self.assertTrue(OK)
         self.assertTrue(2 * 3 * 6 == len(reg.getGlobalList()))
 
-
-
     def test_index_list(self):
         reg = EclRegion(self.grid, False)
         reg.select_islice(0, 5)
         active_list = reg.getActiveList()
         global_list = reg.getGlobalList()
 
-
-
     def test_polygon(self):
         reg = EclRegion(self.grid, False)
-        (x,y,z) = self.grid.get_xyz( ijk=(10,10,0) )
+        (x, y, z) = self.grid.get_xyz(ijk=(10, 10, 0))
         dx = 0.1
         dy = 0.1
-        reg.select_inside_polygon( [(x-dx,y-dy) , (x-dx,y+dy) , (x+dx,y+dy) , (x+dx,y-dy)] )
-        self.assertTrue( self.grid.getNZ() == len(reg.getGlobalList()))
-
+        reg.select_inside_polygon(
+            [(x - dx, y - dy), (x - dx, y + dy), (x + dx, y + dy), (x + dx, y - dy)]
+        )
+        self.assertTrue(self.grid.getNZ() == len(reg.getGlobalList()))
 
     def test_heidrun(self):
         root = self.createTestPath("Equinor/ECLIPSE/Heidrun")
-        grid = EclGrid( "%s/FF12_2013B2_AMAP_AOP-J15_NO62_MOVEX.EGRID" % root)
+        grid = EclGrid("%s/FF12_2013B2_AMAP_AOP-J15_NO62_MOVEX.EGRID" % root)
 
         polygon = []
         with open("%s/polygon.ply" % root) as fileH:
             for line in fileH.readlines():
                 tmp = line.split()
-                polygon.append( (float(tmp[0]) , float(tmp[1])))
-        self.assertEqual( len(polygon) , 11 )
+                polygon.append((float(tmp[0]), float(tmp[1])))
+        self.assertEqual(len(polygon), 11)
 
-        reg = EclRegion( grid , False )
-        reg.select_inside_polygon( polygon )
-        self.assertEqual( 0 , len(reg.getGlobalList()) % grid.getNZ())
-
+        reg = EclRegion(grid, False)
+        reg.select_inside_polygon(polygon)
+        self.assertEqual(0, len(reg.getGlobalList()) % grid.getNZ())
 
     def test_layer(self):
         region = EclRegion(self.grid, False)
-        layer = Layer( self.grid.getNX() , self.grid.getNY() + 1)
+        layer = Layer(self.grid.getNX(), self.grid.getNY() + 1)
         with self.assertRaises(ValueError):
-            region.selectFromLayer( layer , 0 , 1 )
+            region.selectFromLayer(layer, 0, 1)
 
-        layer = Layer( self.grid.getNX() , self.grid.getNY() )
-        layer[0,0] = 1
-        layer[1,1] = 1
-        layer[2,2] = 1
-
-        with self.assertRaises(ValueError):
-            region.selectFromLayer( layer , -1 , 1 )
+        layer = Layer(self.grid.getNX(), self.grid.getNY())
+        layer[0, 0] = 1
+        layer[1, 1] = 1
+        layer[2, 2] = 1
 
         with self.assertRaises(ValueError):
-            region.selectFromLayer( layer , self.grid.getNZ() , 1 )
+            region.selectFromLayer(layer, -1, 1)
 
-        region.selectFromLayer( layer , 0 , 2 )
+        with self.assertRaises(ValueError):
+            region.selectFromLayer(layer, self.grid.getNZ(), 1)
+
+        region.selectFromLayer(layer, 0, 2)
         glist = region.getGlobalList()
-        self.assertEqual(0 , len(glist))
+        self.assertEqual(0, len(glist))
 
-        region.selectFromLayer( layer , 0 , 1 )
+        region.selectFromLayer(layer, 0, 1)
         glist = region.getGlobalList()
-        self.assertEqual(3 , len(glist))
+        self.assertEqual(3, len(glist))

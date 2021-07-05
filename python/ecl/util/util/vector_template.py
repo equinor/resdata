@@ -42,14 +42,12 @@ float and size_t not currently implemented in the Python version.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import  sys
+import sys
 
 from cwrap import CFILE, BaseCClass
 
 
-
 class VectorTemplate(BaseCClass):
-
     def strided_copy(self, slice_range):
         """
         Will create a new copy according to @slice.
@@ -82,61 +80,55 @@ class VectorTemplate(BaseCClass):
             return True
 
     def __nonzero__(self):
-        return self.__bool__( )
-
+        return self.__bool__()
 
     def __eq__(self, other):
         return self._equal(other)
 
-
-    def __ne__(self,other):
+    def __ne__(self, other):
         return not self.__eq__(other)
 
-    def first_eq(self, other, offset = 0):
+    def first_eq(self, other, offset=0):
         index = self._first_eq(other, offset)
         if index <= -2:
             raise ValueError("Invalid offset")
 
         return index
 
-
-    def first_neq(self, other, offset = 0):
+    def first_neq(self, other, offset=0):
         index = self._first_neq(other, offset)
         if index <= -2:
             raise ValueError("Invalid offset")
 
         return index
 
-
     def copy(self):
         """
         Create a new copy of the current vector.
         """
-        new = self._alloc_copy( )
+        new = self._alloc_copy()
         return new
 
-    def __irshift__(self,shift):
+    def __irshift__(self, shift):
         if shift < 0:
             raise ValueError("The shift must be positive")
         self._rshift(shift)
         return self
 
-    def __ilshift__(self,shift):
+    def __ilshift__(self, shift):
         if shift < 0:
             raise ValueError("The shift must be positive")
         if shift > len(self):
             raise ValueError("The shift is too large %d > %d" % (shift, len(self)))
-        self._lshift( shift)
+        self._lshift(shift)
         return self
 
-
-    def __rshift__(self,shift):
+    def __rshift__(self, shift):
         copy = self.copy()
         copy >>= shift
         return copy
 
-
-    def __lshift__(self,shift):
+    def __lshift__(self, shift):
         copy = self.copy()
         copy <<= shift
         return copy
@@ -153,16 +145,14 @@ class VectorTemplate(BaseCClass):
         super(VectorTemplate, self).__init__(c_pointer)
         self.element_size = self._element_size()
 
-    def __contains__(self , value):
-        return self._contains(  value)
-
+    def __contains__(self, value):
+        return self._contains(value)
 
     def pop(self):
         if len(self) > 0:
             return self._pop()
         else:
             raise ValueError("Trying to pop from empty vector")
-
 
     def str_data(self, width, index1, index2, fmt):
         """
@@ -177,7 +167,6 @@ class VectorTemplate(BaseCClass):
             if index % width == (width - 1):
                 s += "\n"
         return s
-
 
     # The str() method is a verbatim copy of the implementation in
     # ecl_kw.py.
@@ -221,7 +210,6 @@ class VectorTemplate(BaseCClass):
         """
         return self.str(max_lines=10, width=5)
 
-
     def __getitem__(self, index):
         """
         Implements read [] operator - @index can be slice instance.
@@ -235,7 +223,9 @@ class VectorTemplate(BaseCClass):
             if 0 <= idx < length:
                 return self._iget(idx)
             else:
-                raise IndexError('Index must be in range %d <= %d < %d.' % (0, index, length))
+                raise IndexError(
+                    "Index must be in range %d <= %d < %d." % (0, index, length)
+                )
         elif isinstance(index, slice):
             return self.strided_copy(index)
         else:
@@ -251,7 +241,7 @@ class VectorTemplate(BaseCClass):
             if idx < 0:
                 idx += ls
             self._iset(idx, value)
-        elif isinstance( index, slice ):
+        elif isinstance(index, slice):
             for i in range(*index.indices(ls)):
                 self[i] = value
         else:
@@ -285,7 +275,10 @@ class VectorTemplate(BaseCClass):
                     delta *= -1
                 self._inplace_add(delta)
             else:
-                raise ValueError("Incompatible sizes for add self:%d  other:%d" % (len(self), len(delta)))
+                raise ValueError(
+                    "Incompatible sizes for add self:%d  other:%d"
+                    % (len(self), len(delta))
+                )
         else:
             if isinstance(delta, int) or isinstance(delta, float):
                 if not add:
@@ -296,13 +289,11 @@ class VectorTemplate(BaseCClass):
 
         return self
 
-
     def __iadd__(self, delta):
         """
         Implements inplace add. @delta can be vector or scalar.
         """
         return self.__IADD(delta, True)
-
 
     def __isub__(self, delta):
         """
@@ -310,10 +301,8 @@ class VectorTemplate(BaseCClass):
         """
         return self.__IADD(delta, False)
 
-
     def __radd__(self, delta):
         return self.__add__(delta)
-
 
     def __add__(self, delta):
         """
@@ -324,7 +313,7 @@ class VectorTemplate(BaseCClass):
            ....
            a = b + c
         """
-        copy = self._alloc_copy( )
+        copy = self._alloc_copy()
         copy += delta
         return copy
 
@@ -332,14 +321,12 @@ class VectorTemplate(BaseCClass):
         """
         Implements subtraction - creating new copy.
         """
-        copy = self._alloc_copy( )
+        copy = self._alloc_copy()
         copy -= delta
         return copy
 
-
     def __rsub__(self, delta):
         return self.__sub__(delta) * -1
-
 
     def __imul__(self, factor):
         """
@@ -360,7 +347,10 @@ class VectorTemplate(BaseCClass):
             if len(self) == len(factor):
                 self._inplace_mul(factor)
             else:
-                raise ValueError("Incompatible sizes for mul self:%d  other:%d" % (len(self), len(factor)))
+                raise ValueError(
+                    "Incompatible sizes for mul self:%d  other:%d"
+                    % (len(self), len(factor))
+                )
         else:
             if isinstance(factor, int) or isinstance(factor, float):
                 self._scale(factor)
@@ -369,9 +359,8 @@ class VectorTemplate(BaseCClass):
 
         return self
 
-
     def __mul__(self, factor):
-        copy = self._alloc_copy( )
+        copy = self._alloc_copy()
         copy *= factor
         return copy
 
@@ -430,8 +419,7 @@ class VectorTemplate(BaseCClass):
         """
         The number of elements in the vector.
         """
-        return self._size( )
-
+        return self._size()
 
     def printf(self, fmt=None, name=None, stream=sys.stdout):
         """
@@ -442,7 +430,6 @@ class VectorTemplate(BaseCClass):
         if not fmt:
             fmt = self.default_format
         self._fprintf(cfile, name, fmt)
-
 
     def max(self):
         if len(self) > 0:
@@ -455,7 +442,6 @@ class VectorTemplate(BaseCClass):
             return self._get_min()
         else:
             raise IndexError("The vector is empty!")
-
 
     def minIndex(self, reverse=False):
         """
@@ -516,12 +502,11 @@ class VectorTemplate(BaseCClass):
     def getDefault(self):
         return self._get_default()
 
-
     def free(self):
         self._free()
 
     def __repr__(self):
-        return self._create_repr('size = %d' % len(self))
+        return self._create_repr("size = %d" % len(self))
 
     def permute(self, permutation_vector):
         """
@@ -529,7 +514,7 @@ class VectorTemplate(BaseCClass):
         @type permutation_vector: PermutationVector
         """
 
-        self._permute( permutation_vector)
+        self._permute(permutation_vector)
 
     def permutationSort(self, reverse=False):
         """
@@ -545,10 +530,9 @@ class VectorTemplate(BaseCClass):
 
         return None
 
-
     def asList(self):
         l = [0] * len(self)
-        for (index,value) in enumerate(self):
+        for (index, value) in enumerate(self):
             l[index] = value
 
         return l
@@ -556,10 +540,8 @@ class VectorTemplate(BaseCClass):
     def selectUnique(self):
         self._select_unique()
 
-
     def elementSum(self):
-        return self._element_sum( )
-
+        return self._element_sum()
 
     def getDataPtr(self):
         "Low level function which returns a pointer to underlying storage"
@@ -567,11 +549,10 @@ class VectorTemplate(BaseCClass):
         # for the TimeVector class.
         return self._get_data_ptr()
 
-    def countEqual(self , value):
-        return self._count_equal(  value )
+    def countEqual(self, value):
+        return self._count_equal(value)
 
-
-    def initRange(self , min_value , max_value , delta):
+    def initRange(self, min_value, max_value, delta):
         """
         Will fill the vector with the values from min_value to
         max_value in steps of delta. The upper limit is guaranteed to
@@ -580,8 +561,7 @@ class VectorTemplate(BaseCClass):
         if delta == 0:
             raise ValueError("Invalid range")
         else:
-            self._init_range(  min_value , max_value , delta )
-
+            self._init_range(min_value, max_value, delta)
 
     @classmethod
     def create_linear(cls, start_value, end_value, num_values):
@@ -591,97 +571,137 @@ class VectorTemplate(BaseCClass):
 
         return vector
 
-
     @classmethod
-    def createRange(cls , min_value , max_value , delta):
+    def createRange(cls, min_value, max_value, delta):
         """
         Will create new vector and initialize a range.
         """
-        vector = cls( )
-        vector.initRange( min_value , max_value , delta )
+        vector = cls()
+        vector.initRange(min_value, max_value, delta)
         return vector
 
     def _strided_copy(self, *_):
         raise NotImplementedError()
+
     def _rshift(self, *_):
         raise NotImplementedError()
+
     def _lshift(self, *_):
         raise NotImplementedError()
+
     def _alloc(self, *_):
         raise NotImplementedError()
+
     def _element_size(self, *_):
         raise NotImplementedError()
+
     def _contains(self, *_):
         raise NotImplementedError()
+
     def _pop(self, *_):
         raise NotImplementedError()
+
     def default_format(self, *_):
         raise NotImplementedError()
+
     def _iget(self, *_):
         raise NotImplementedError()
+
     def _iset(self, *_):
         raise NotImplementedError()
+
     def _inplace_add(self, *_):
         raise NotImplementedError()
+
     def _shift(self, *_):
         raise NotImplementedError()
+
     def _alloc_copy(self, *_):
         raise NotImplementedError()
+
     def _inplace_mul(self, *_):
         raise NotImplementedError()
+
     def _scale(self, *_):
         raise NotImplementedError()
+
     def _memcpy(self, *_):
         raise NotImplementedError()
+
     def _assign(self, *_):
         raise NotImplementedError()
+
     def _size(self, *_):
         raise NotImplementedError()
+
     def _fprintf(self, *_):
         raise NotImplementedError()
+
     def _get_max(self, *_):
         raise NotImplementedError()
+
     def _get_min(self, *_):
         raise NotImplementedError()
+
     def _get_min_index(self, *_):
         raise NotImplementedError()
+
     def _get_max_index(self, *_):
         raise NotImplementedError()
+
     def _append(self, *_):
         raise NotImplementedError()
+
     def _idel_block(self, *_):
         raise NotImplementedError()
+
     def _sort(self, *_):
         raise NotImplementedError()
+
     def _rsort(self, *_):
         raise NotImplementedError()
+
     def _reset(self, *_):
         raise NotImplementedError()
+
     def _safe_iget(self, *_):
         raise NotImplementedError()
+
     def _set_read_only(self, *_):
         raise NotImplementedError()
+
     def _get_read_only(self, *_):
         raise NotImplementedError()
+
     def _set_default(self, *_):
         raise NotImplementedError()
+
     def _get_default(self, *_):
         raise NotImplementedError()
+
     def _free(self, *_):
         raise NotImplementedError()
+
     def _permute(self, *_):
         raise NotImplementedError()
+
     def _sort_perm(self, *_):
         raise NotImplementedError()
+
     def _rsort_perm(self, *_):
         raise NotImplementedError()
+
     def _select_unique(self, *_):
         raise NotImplementedError()
+
     def _element_sum(self, *_):
         raise NotImplementedError()
+
     def _get_data_ptr(self, *_):
         raise NotImplementedError()
+
     def _count_equal(self, *_):
         raise NotImplementedError()
+
     def _init_range(self, *_):
         raise NotImplementedError()

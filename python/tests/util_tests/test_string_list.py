@@ -10,7 +10,7 @@ from ecl.util.util import StringList
 
 class StringListTest(TestCase):
     def test_del(self):
-        s = StringList( initial = ["A", "list"] )
+        s = StringList(initial=["A", "list"])
         internal_list_of_strings = s.strings
         python_list_of_strings = list(s)
 
@@ -20,21 +20,18 @@ class StringListTest(TestCase):
 
         self.assertEqual(python_list_of_strings, ["A", "list"])
 
-
     def test_fail_init(self):
         with self.assertRaises(TypeError):
             StringList(initial="a string instead of a list")
 
         with self.assertRaises(TypeError):
-            StringList(initial=u"a unicode string instead of a list")
+            StringList(initial="a unicode string instead of a list")
 
         with self.assertRaises(TypeError):
             StringList(initial=b"a bytearray instead of a list")
 
         with self.assertRaises(TypeError):
             StringList(initial=[2, 4, 5])
-
-
 
     def test_iterate(self):
         s = ["A", "list", "of", "strings"]
@@ -51,8 +48,7 @@ class StringListTest(TestCase):
         for index in range(len(s3)):
             self.assertEqual(s[index], s3[index])
 
-
-    def test_pop( self ):
+    def test_pop(self):
         s = StringList(initial=["A", "list", "of", "strings"])
         s1 = s.pop()
         self.assertTrue(len(s) == 3)
@@ -84,7 +80,6 @@ class StringListTest(TestCase):
             s.pop()
             s.last
 
-
     def test_in_and_not_in(self):
         s = StringList(["A", "list", "of", "strings"])
 
@@ -95,21 +90,20 @@ class StringListTest(TestCase):
         s1 = StringList(["A", "B"])
         s1.append("C")
 
-        s2 = StringList(["A","B","C"])
+        s2 = StringList(["A", "B", "C"])
         self.assertEqual(s1, ["A", "B", "C"])
         self.assertEqual(s1, s2)
-        self.assertFalse(s1 == ["A","B","D"])
-        self.assertFalse(s1 == ["A","B","C" , "D"])
+        self.assertFalse(s1 == ["A", "B", "D"])
+        self.assertFalse(s1 == ["A", "B", "C", "D"])
 
-        pfx = 'StringList(size' # __repr__
-        self.assertEqual(pfx, repr(s2)[:len(pfx)])
+        pfx = "StringList(size"  # __repr__
+        self.assertEqual(pfx, repr(s2)[: len(pfx)])
 
     def test_append_not_string(self):
         s = StringList()
         s.append(10)
-        self.assertEqual( len(s) , 1)
-        self.assertEqual(s[0] , "10")
-
+        self.assertEqual(len(s), 1)
+        self.assertEqual(s[0], "10")
 
     def test_negative_index(self):
         s = StringList(["A", "B", "C"])
@@ -128,8 +122,6 @@ class StringListTest(TestCase):
         self.assertEqual(s.index("C"), 2)
         self.assertEqual(s.index("D"), -1)
 
-
-
     def test_front_back(self):
         s = StringList()
         with self.assertRaises(LookupError):
@@ -142,34 +134,31 @@ class StringListTest(TestCase):
         s.append("S2")
         s.append("S3")
 
-        self.assertEqual( "S1" , s.front() )
-        self.assertEqual( "S3" , s.back() )
-
+        self.assertEqual("S1", s.front())
+        self.assertEqual("S3", s.back())
 
     def test_iadd(self):
-        s1 = StringList( initial = ["A","B","C"])
+        s1 = StringList(initial=["A", "B", "C"])
         with self.assertRaises(TypeError):
-             s3 = s1 + 10
-        
+            s3 = s1 + 10
 
-        s2 = StringList( initial = ["A","B","C"])
+        s2 = StringList(initial=["A", "B", "C"])
         s3 = s1 + s2
-        self.assertEqual( s3 , ["A","B","C","A","B","C"])
+        self.assertEqual(s3, ["A", "B", "C", "A", "B", "C"])
 
         s1 += s2
-        self.assertEqual( s1 , ["A","B","C","A","B","C"])
+        self.assertEqual(s1, ["A", "B", "C", "A", "B", "C"])
         with self.assertRaises(TypeError):
-             s3 += "b"
-        
+            s3 += "b"
 
     def test_ior(self):
-        s1 = StringList( initial = ["A","B","C"])
-        s2 = StringList( initial = ["A","B","C"])
+        s1 = StringList(initial=["A", "B", "C"])
+        s2 = StringList(initial=["A", "B", "C"])
 
         s3 = s1 | s2
-        self.assertEqual( s3 , ["A","B","C"])
+        self.assertEqual(s3, ["A", "B", "C"])
         s1 |= s2
-        self.assertEqual( s1 , ["A","B","C"])
+        self.assertEqual(s1, ["A", "B", "C"])
 
         with self.assertRaises(TypeError):
             s1 |= 26
