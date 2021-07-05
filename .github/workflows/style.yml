@@ -1,0 +1,28 @@
+name: Code Style
+
+on: [pull_request]
+
+jobs:
+  formatting:
+    name: CMake
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo pip install cmake-format black
+
+    - name: Clang Format
+      run: ./script/clang-format --check
+
+    - name: CMake Format
+      run: |
+        find . -name 'CMakeLists.txt' -o -name '*.cmake' > cmake-src
+        xargs cmake-format --check < cmake-src
+
+    - name: Black
+      run: |
+        black --check python/ --exclude=docs
