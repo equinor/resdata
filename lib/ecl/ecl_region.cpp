@@ -105,7 +105,6 @@ struct ecl_region_struct {
 
     char *name; /* User name attached to region will typically be NULL. */
     bool preselect;
-    /******************************************************************/
     /* Grid properties */
     int grid_nx, grid_ny, grid_nz, grid_vol, grid_active;
     const ecl_grid_type *parent_grid;
@@ -174,8 +173,6 @@ void ecl_region_free__(void *__region) {
     ecl_region_free(region);
 }
 
-/*****************************************************************/
-
 static void ecl_region_assert_global_index_list(ecl_region_type *region) {
     if (!region->global_index_list_valid) {
         int global_index;
@@ -210,8 +207,6 @@ static void ecl_region_assert_active_index_list(ecl_region_type *region) {
     }
 }
 
-/*****************************************************************/
-
 const int_vector_type *ecl_region_get_active_list(ecl_region_type *region) {
     ecl_region_assert_active_index_list(region);
     return region->active_index_list;
@@ -228,7 +223,6 @@ const int_vector_type *ecl_region_get_global_list(ecl_region_type *region) {
     return region->global_index_list;
 }
 
-/*****************************************************************/
 /* Cpp compat/legacy/cruft functions. */
 int ecl_region_get_active_size_cpp(ecl_region_type *region) {
     return int_vector_size(ecl_region_get_active_list(region));
@@ -246,8 +240,6 @@ const int *ecl_region_get_global_list_cpp(ecl_region_type *region) {
     return int_vector_get_const_ptr(ecl_region_get_global_list(region));
 }
 
-/*****************************************************************/
-
 static void ecl_region_assert_kw(const ecl_region_type *region,
                                  const ecl_kw_type *ecl_kw, bool *global_kw) {
     int kw_size = ecl_kw_get_size(ecl_kw);
@@ -261,16 +253,12 @@ static void ecl_region_assert_kw(const ecl_region_type *region,
         *global_kw = false;
 }
 
-/*****************************************************************/
-
 void ecl_region_reset(ecl_region_type *ecl_region) {
     int i;
     for (i = 0; i < ecl_region->grid_vol; i++)
         ecl_region->active_mask[i] = ecl_region->preselect;
     ecl_region_invalidate_index_list(ecl_region);
 }
-
-/*****************************************************************/
 
 static void ecl_region_select_cell__(ecl_region_type *region, int i, int j,
                                      int k, bool select) {
@@ -286,8 +274,6 @@ void ecl_region_select_cell(ecl_region_type *region, int i, int j, int k) {
 void ecl_region_deselect_cell(ecl_region_type *region, int i, int j, int k) {
     ecl_region_select_cell__(region, i, j, k, false);
 }
-
-/*****************************************************************/
 
 static void ecl_region_select_equal__(ecl_region_type *region,
                                       const ecl_kw_type *ecl_kw, int value,
@@ -331,8 +317,6 @@ void ecl_region_deselect_equal(ecl_region_type *region,
                                const ecl_kw_type *ecl_kw, int value) {
     ecl_region_select_equal__(region, ecl_kw, value, false);
 }
-
-/*****************************************************************/
 
 static void ecl_region_select_bool_equal__(ecl_region_type *region,
                                            const ecl_kw_type *ecl_kw,
@@ -386,8 +370,6 @@ void ecl_region_deselect_false(ecl_region_type *region,
     ecl_region_select_bool_equal__(region, ecl_kw, false, false);
 }
 
-/*****************************************************************/
-
 static void ecl_region_select_in_interval__(ecl_region_type *region,
                                             const ecl_kw_type *ecl_kw,
                                             float min_value, float max_value,
@@ -436,8 +418,6 @@ void ecl_region_deselect_in_interval(ecl_region_type *region,
     ecl_region_select_in_interval__(region, ecl_kw, min_value, max_value,
                                     false);
 }
-
-/*****************************************************************/
 
 /**
    This is too large:
@@ -588,8 +568,6 @@ void ecl_region_deselect_larger(ecl_region_type *ecl_region,
     ecl_region_select_with_limit__(ecl_region, ecl_kw, limit, false, false);
 }
 
-/*****************************************************************/
-
 /**
     Selection based on comparing two keywords.
 */
@@ -671,8 +649,6 @@ void ecl_region_cmp_deselect_more(ecl_region_type *ecl_region,
     ecl_region_cmp_select__(ecl_region, kw1, kw2, false, false);
 }
 
-/*****************************************************************/
-
 /**
    Will select all the cells in the box. Remember that the box is
    defined as an inclusive geometry. Alternatively the functions
@@ -688,8 +664,6 @@ static void ecl_region_select_from_box__(ecl_region_type *region,
 
     ecl_region_invalidate_index_list(region);
 }
-
-/*****************************************************************/
 
 /**
    Observe that:
@@ -716,8 +690,6 @@ void ecl_region_deselect_from_ijkbox(ecl_region_type *region, int i1, int i2,
                                      int j1, int j2, int k1, int k2) {
     ecl_region_select_from_ijkbox__(region, i1, i2, j1, j2, k1, k2, false);
 }
-
-/*****************************************************************/
 
 /**
    Observe that i1 and i2 are:
@@ -754,8 +726,6 @@ void ecl_region_select_i1i2(ecl_region_type *region, int i1, int i2) {
 void ecl_region_deselect_i1i2(ecl_region_type *region, int i1, int i2) {
     ecl_region_select_i1i2__(region, i1, i2, false);
 }
-
-/*****************************************************************/
 
 /**
    Observe that j1 and j2 are:
@@ -794,8 +764,6 @@ void ecl_region_deselect_j1j2(ecl_region_type *region, int j1, int j2) {
     ecl_region_select_j1j2__(region, j1, j2, false);
 }
 
-/*****************************************************************/
-
 /**
    Observe that k1 and k2 are:
 
@@ -831,8 +799,6 @@ void ecl_region_select_k1k2(ecl_region_type *region, int k1, int k2) {
 void ecl_region_deselect_k1k2(ecl_region_type *region, int k1, int k2) {
     ecl_region_select_k1k2__(region, k1, k2, false);
 }
-
-/*****************************************************************/
 
 /**
    This function will select all the cells with depth below the input
@@ -879,8 +845,6 @@ void ecl_region_deselect_deep_cells(ecl_region_type *region,
     ecl_region_select_from_depth__(region, depth_limit, true, false);
 }
 
-/*****************************************************************/
-
 static void ecl_region_select_from_volume__(ecl_region_type *region,
                                             double volum_limit,
                                             bool select_small, bool select) {
@@ -921,8 +885,6 @@ void ecl_region_deselect_large_cells(ecl_region_type *ecl_region,
     ecl_region_select_from_volume__(ecl_region, volum_limit, false, false);
 }
 
-/*****************************************************************/
-
 static void ecl_region_select_from_dz__(ecl_region_type *region,
                                         double dz_limit, bool select_thin,
                                         bool select) {
@@ -962,7 +924,7 @@ void ecl_region_deselect_thick_cells(ecl_region_type *ecl_region,
                                      double dz_limit) {
     ecl_region_select_from_dz__(ecl_region, dz_limit, false, false);
 }
-/*****************************************************************/
+
 static void ecl_region_select_active_cells__(ecl_region_type *ecl_region,
                                              bool select_active, bool select) {
     int global_index;
@@ -997,7 +959,6 @@ void ecl_region_deselect_inactive_cells(ecl_region_type *region) {
     ecl_region_select_active_cells__(region, false, false);
 }
 
-/*****************************************************************/
 /**
    This function will select a cell based on global_index.
 */
@@ -1020,8 +981,6 @@ void ecl_region_deselect_global_index(ecl_region_type *region,
                                       int global_index) {
     ecl_region_select_global_index__(region, global_index, false);
 }
-
-/*****************************************************************/
 
 /**
    Here comes functions for selecting all the cells which are in the
@@ -1111,8 +1070,6 @@ void ecl_region_deselect_in_zcylinder(ecl_region_type *region, double x0,
                                  util_double_max(z1, z2), true, false);
 }
 
-/*****************************************************************/
-
 /**
    Select or deselect points based on their distance to the plane
    specified by normal vector @n and point @p.
@@ -1164,8 +1121,6 @@ void ecl_region_deselect_below_plane(ecl_region_type *region, const double n[3],
                                      const double p[3]) {
     ecl_region_plane_select__(region, n, p, false, false);
 }
-
-/*****************************************************************/
 
 /**
    When it comes to depth the polygon select function works as
@@ -1240,7 +1195,6 @@ void ecl_region_deselect_outside_polygon(ecl_region_type *region,
     ecl_region_polygon_select__(region, polygon, false, false);
 }
 
-/*****************************************************************/
 /**
    This function will select a cell based on active_index.
 */
@@ -1265,7 +1219,6 @@ void ecl_region_deselect_active_index(ecl_region_type *region,
                                       int active_index) {
     ecl_region_select_active_index__(region, active_index, false);
 }
-/*****************************************************************/
 
 static void ecl_region_select_from_layer__(ecl_region_type *region,
                                            const layer_type *layer, int k,
@@ -1304,8 +1257,6 @@ void ecl_region_deselect_from_layer(ecl_region_type *region,
     ecl_region_select_from_layer__(region, layer, k, layer_value, false);
 }
 
-/*****************************************************************/
-
 static void ecl_region_select_all__(ecl_region_type *region, bool select) {
     int global_index;
     for (global_index = 0; global_index < region->grid_vol; global_index++)
@@ -1320,8 +1271,6 @@ void ecl_region_select_all(ecl_region_type *region) {
 void ecl_region_deselect_all(ecl_region_type *region) {
     ecl_region_select_all__(region, false);
 }
-
-/*****************************************************************/
 
 void ecl_region_invert_selection(ecl_region_type *region) {
     int global_index;
@@ -1355,8 +1304,6 @@ bool ecl_region_contains_active(const ecl_region_type *ecl_region,
         ecl_grid_get_global_index1A(ecl_region->parent_grid, active_index);
     return ecl_region->active_mask[global_index];
 }
-
-/*****************************************************************/
 
 /**
    Will update the selection in @region to ONLY contain the elements
@@ -1443,8 +1390,6 @@ void ecl_region_xor(ecl_region_type *region,
                    __func__);
 }
 
-/*****************************************************************/
-
 const int_vector_type *ecl_region_get_kw_index_list(ecl_region_type *ecl_region,
                                                     const ecl_kw_type *ecl_kw,
                                                     bool force_active) {
@@ -1489,8 +1434,6 @@ void ecl_region_set_kw_double(ecl_region_type *ecl_region, ecl_kw_type *ecl_kw,
     ecl_kw_set_indexed_double(ecl_kw, index_set, value);
 }
 
-/*****************************************************************/
-
 void ecl_region_shift_kw_int(ecl_region_type *ecl_region, ecl_kw_type *ecl_kw,
                              int value, bool force_active) {
     const int_vector_type *index_set =
@@ -1513,8 +1456,6 @@ void ecl_region_shift_kw_double(ecl_region_type *ecl_region,
     ecl_kw_shift_indexed_double(ecl_kw, index_set, value);
 }
 
-/*****************************************************************/
-
 void ecl_region_scale_kw_int(ecl_region_type *ecl_region, ecl_kw_type *ecl_kw,
                              int value, bool force_active) {
     const int_vector_type *index_set =
@@ -1536,8 +1477,6 @@ void ecl_region_scale_kw_double(ecl_region_type *ecl_region,
         ecl_region_get_kw_index_list(ecl_region, ecl_kw, force_active);
     ecl_kw_scale_indexed_double(ecl_kw, index_set, value);
 }
-
-/*****************************************************************/
 
 void ecl_region_kw_iadd(ecl_region_type *ecl_region, ecl_kw_type *ecl_kw,
                         const ecl_kw_type *delta_kw, bool force_active) {
@@ -1574,8 +1513,6 @@ void ecl_region_kw_copy(ecl_region_type *ecl_region, ecl_kw_type *ecl_kw,
     ecl_kw_copy_indexed(ecl_kw, target_index, src_kw);
 }
 
-/*****************************************************************/
-
 void ecl_region_set_name(ecl_region_type *region, const char *name) {
     region->name = util_realloc_string_copy(region->name, name);
 }
@@ -1597,8 +1534,6 @@ bool ecl_region_equal(const ecl_region_type *region1,
     } else
         return false;
 }
-
-/*****************************************************************/
 
 int ecl_region_sum_kw_int(ecl_region_type *ecl_region,
                           const ecl_kw_type *ecl_kw, bool force_active) {

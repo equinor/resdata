@@ -46,7 +46,6 @@ typedef struct {
     int ny;
     int nz;
     int nactive;
-    /*-----------------------------------------------------------------*/
     /* All fields below the line are taken literally (apart from
        lowercasing) from the section about restart files in the
        ECLIPSE File Formats Reference Manual. The elements typically

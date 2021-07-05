@@ -472,15 +472,6 @@ static ecl_kw_type *__ecl_kw_fscanf_alloc_grdecl__(FILE *stream,
             return NULL;
     }
 }
-/*****************************************************************/
-/*
-   Here comes the exported functions for loading a grdecl formatted
-   keyword. All of these function invoke the fundamental
-   ecl_kw_fscanf_alloc_grdecl__() function, but the set of input
-   parameters varies. The function varieties with a trailing '__'
-   accepts a @strict flag from calling scope; in general you should
-   use strict == true.
-*/
 
 /**
    This function assumes that the file pointer has already been
@@ -488,8 +479,6 @@ static ecl_kw_type *__ecl_kw_fscanf_alloc_grdecl__(FILE *stream,
    start reading a header string right away; if the file pointer is
    incorrectly positioned this will most probably blow up big time.
 */
-
-/*****************************************************************/
 
 ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_data__(FILE *stream, bool strict,
                                                int size,
@@ -503,8 +492,6 @@ ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_data(FILE *stream, int size,
     bool strict = true;
     return ecl_kw_fscanf_alloc_grdecl_data__(stream, strict, size, data_type);
 }
-
-/*****************************************************************/
 
 /*
    This function will seek through the file and position the file
@@ -527,8 +514,6 @@ ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_dynamic(FILE *stream, const char *kw,
     bool strict = true;
     return ecl_kw_fscanf_alloc_grdecl_dynamic__(stream, kw, strict, data_type);
 }
-
-/*****************************************************************/
 
 /*
    This function will seek through the file and position the file
@@ -555,8 +540,6 @@ ecl_kw_type *ecl_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw, int size,
     return ecl_kw_fscanf_alloc_grdecl__(stream, kw, strict, size, data_type);
 }
 
-/*****************************************************************/
-
 /*
    This function will read and allocate the next keyword in the
    file. This function does not take either kw or the size of the kw
@@ -575,8 +558,6 @@ ecl_kw_type *ecl_kw_fscanf_alloc_current_grdecl(FILE *stream,
     bool strict = true;
     return ecl_kw_fscanf_alloc_current_grdecl__(stream, strict, data_type);
 }
-
-/*****************************************************************/
 
 /*
   This method allows to write with a different header,

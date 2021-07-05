@@ -619,8 +619,6 @@ int vector_find(const vector_type *vector, const void *ptr) {
     return location_index;
 }
 
-/*****************************************************************/
-
 /*
   If deep_copy == true - all elements in the vector MUST have
   constructor, otherwise the node_data_alloc_copy() function will fail.

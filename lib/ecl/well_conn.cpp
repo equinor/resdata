@@ -303,8 +303,6 @@ well_conn_type *well_conn_alloc_wellhead(const ecl_kw_type *iwel_kw,
         return NULL;
 }
 
-/*****************************************************************/
-
 int well_conn_get_i(const well_conn_type *conn) { return conn->i; }
 
 int well_conn_get_j(const well_conn_type *conn) { return conn->j; }

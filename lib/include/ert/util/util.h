@@ -77,12 +77,6 @@ typedef long offset_type;
 #endif
 #endif
 
-/*****************************************************************/
-/*
-
-*/
-
-/*****************************************************************/
 typedef void(walk_file_callback_ftype)(
     const char *, /* The current directory */
     const char *, /* The current file / directory */
@@ -414,7 +408,6 @@ CONTAINS_HEADER(size_t);
     util_abort__(__FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 #endif
 
-/*****************************************************************/
 /* Conditional section below here */
 
 void util_abort__(const char *file, const char *function, int line,

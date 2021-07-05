@@ -159,9 +159,6 @@ struct ecl_file_struct {
 
 */
 
-/*****************************************************************/
-/* Here comes the implementation of the ecl_file proper 'class'. */
-
 UTIL_SAFE_CAST_FUNCTION(ecl_file, ECL_FILE_ID)
 UTIL_IS_INSTANCE_FUNCTION(ecl_file, ECL_FILE_ID)
 
@@ -173,9 +170,6 @@ ecl_file_type *ecl_file_alloc_empty(int flags) {
     ecl_file->flags = flags;
     return ecl_file;
 }
-
-/*****************************************************************/
-/* fwrite functions */
 
 void ecl_file_fwrite_fortio(const ecl_file_type *ecl_file, fortio_type *target,
                             int offset) {
@@ -205,7 +199,6 @@ void ecl_file_fwrite(const ecl_file_type *ecl_file, const char *filename,
     }
 }
 
-/*****************************************************************/
 /**
    Here comes several functions for querying the ecl_file instance, and
    getting pointers to the ecl_kw content of the ecl_file. For getting
@@ -359,8 +352,6 @@ void ecl_file_fprintf_kw_list(const ecl_file_type *ecl_file, FILE *stream) {
     ecl_file_view_fprintf_kw_list(ecl_file->active_view, stream);
 }
 
-/*****************************************************************/
-
 ecl_file_kw_type *ecl_file_iget_file_kw(const ecl_file_type *file,
                                         int global_index) {
     return ecl_file_view_iget_file_kw(file->active_view, global_index);
@@ -370,8 +361,6 @@ ecl_file_kw_type *ecl_file_iget_named_file_kw(const ecl_file_type *file,
                                               const char *kw, int ith) {
     return ecl_file_view_iget_named_file_kw(file->active_view, kw, ith);
 }
-
-/* ---- */
 
 ecl_kw_type *ecl_file_iget_kw(const ecl_file_type *file, int global_index) {
     return ecl_file_view_iget_kw(file->active_view, global_index);
@@ -389,8 +378,6 @@ int ecl_file_iget_size(const ecl_file_type *file, int global_index) {
 const char *ecl_file_iget_header(const ecl_file_type *file, int global_index) {
     return ecl_file_view_iget_header(file->active_view, global_index);
 }
-
-/* ---------- */
 
 /*
    This function will return the ith occurence of 'kw' in
@@ -418,8 +405,6 @@ int ecl_file_iget_named_size(const ecl_file_type *file, const char *kw,
                              int ith) {
     return ecl_file_view_iget_named_size(file->active_view, kw, ith);
 }
-
-/*****************************************************************/
 
 ecl_file_view_type *ecl_file_get_global_view(ecl_file_type *ecl_file) {
     return ecl_file->global_view;
@@ -469,7 +454,6 @@ ecl_file_view_type *ecl_file_get_summary_view(ecl_file_type *ecl_file,
     return view;
 }
 
-/*****************************************************************/
 /*
   Different functions to open and close a file.
 */
@@ -631,7 +615,6 @@ bool ecl_file_load_all(ecl_file_type *ecl_file) {
 
 void ecl_file_free__(void *arg) { ecl_file_close(ecl_file_safe_cast(arg)); }
 
-/****************************************************************************/
 /* Functions specialized to work with restart files.  */
 
 /* Query functions. */
@@ -715,10 +698,6 @@ double ecl_file_iget_restart_sim_days(const ecl_file_type *restart_file,
     return ecl_file_view_iget_restart_sim_days(restart_file->active_view,
                                                index);
 }
-
-/*****************************************************************/
-/* Two small lookup functions which consider the INTEHEAD keyword,
-   work equally well for both restart and INIT files. */
 
 /*
   The input @file must be either an INIT file or a restart file. Will
@@ -909,8 +888,6 @@ bool ecl_file_select_rstblock_report_step(ecl_file_type *ecl_file,
         return false;
 }
 
-/******************************************************************/
-
 static ecl_file_type *ecl_file_open_rstblock_report_step__(const char *filename,
                                                            int report_step,
                                                            int flags) {
@@ -929,8 +906,6 @@ ecl_file_type *ecl_file_open_rstblock_report_step(const char *filename,
     return ecl_file_open_rstblock_report_step__(filename, report_step, flags);
 }
 
-/******************************************************************/
-
 static ecl_file_type *ecl_file_open_rstblock_sim_time__(const char *filename,
                                                         time_t sim_time,
                                                         int flags) {
@@ -948,8 +923,6 @@ ecl_file_type *ecl_file_open_rstblock_sim_time(const char *filename,
                                                time_t sim_time, int flags) {
     return ecl_file_open_rstblock_sim_time__(filename, sim_time, flags);
 }
-
-/******************************************************************/
 
 static ecl_file_type *ecl_file_iopen_rstblock__(const char *filename,
                                                 int seqnum_index, int flags) {

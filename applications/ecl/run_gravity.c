@@ -49,8 +49,6 @@ typedef struct {
     double std_gdiff; /* Uncertainty in the observed g difference. */
 } grav_station_type;
 
-/*****************************************************************/
-
 static void truncate_saturation(float *value) {
     util_apply_float_limits(value, 0.0, 1.0);
 }
@@ -69,8 +67,6 @@ static const float *safe_get_float_ptr(const ecl_kw_type *ecl_kw,
     else
         return alternative;
 }
-
-/*****************************************************************/
 
 void print_usage(int line) {
     printf("LINE: %d \n", line);
@@ -931,10 +927,6 @@ void install_SIGNALS(void) {
                                              Killing with SIGKILL (-9) will not give a backtrace.*/
 }
 
-/*****************************************************************/
-/* Main program                                                  */
-/*****************************************************************/
-
 int main(int argc, char **argv) {
     install_SIGNALS();
 
@@ -988,7 +980,6 @@ int main(int argc, char **argv) {
                     (grid_filename == NULL)) /* Means we could not find them. */
                     util_exit("Could not find INIT or GRID|EGRID file \n");
             } else {
-                /* */
                 if ((input_length - input_offset) > 1) {
                     init_filename = util_alloc_string_copy(input[input_offset]);
                     grid_filename =

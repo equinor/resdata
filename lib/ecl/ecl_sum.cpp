@@ -89,8 +89,6 @@
 
 #define ECL_SUM_ID 89067
 
-/*****************************************************************/
-
 struct ecl_sum_struct {
     UTIL_TYPE_ID_DECLARATION;
     ecl_smspec_type *smspec; /* Internalized version of the SMSPEC file. */
@@ -285,8 +283,6 @@ ecl_sum_type *ecl_sum_fread_alloc(const char *header_file,
     return ecl_sum;
 }
 
-/*****************************************************************/
-
 void ecl_sum_set_unified(ecl_sum_type *ecl_sum, bool unified) {
     ecl_sum->unified = unified;
 }
@@ -405,8 +401,6 @@ void ecl_sum_fwrite_smspec(const ecl_sum_type *ecl_sum) {
     ecl_smspec_fwrite(ecl_sum->smspec, ecl_sum->ecl_case, ecl_sum->fmt_case);
 }
 
-/*****************************************************************/
-
 /**
    This function frees the data from the ecl_sum instance and sets the
    data pointer to NULL. The SMSPEC data is still valid, and can be
@@ -522,8 +516,6 @@ bool ecl_sum_case_exists(const char *input_file) {
     return case_exists;
 }
 
-/*****************************************************************/
-
 double ecl_sum_get_from_sim_time(const ecl_sum_type *ecl_sum, time_t sim_time,
                                  const ecl::smspec_node *node) {
     return ecl_sum_data_get_from_sim_time(ecl_sum->data, sim_time, *node);
@@ -537,25 +529,6 @@ double ecl_sum_get_from_sim_days(const ecl_sum_type *ecl_sum, double sim_days,
 double ecl_sum_time2days(const ecl_sum_type *ecl_sum, time_t sim_time) {
     return ecl_sum_data_time2days(ecl_sum->data, sim_time);
 }
-
-/*****************************************************************/
-/*
-   Here comes lots of access functions - these are mostly thin
-   wrapppers around ecl_smspec functions. See more 'extensive'
-   documentation in ecl_smspec.c
-
-   The functions returning an actual value,
-   i.e. ecl_sum_get_well_var() will trustingly call ecl_sum_data_get()
-   with whatever indices it gets. If the indices are invalid -
-   ecl_sum_data_get() will abort. The abort is the 'correct'
-   behaviour, but it is possible to abort in this scope as well, in
-   that case more informative error message can be supplied (i.e. the
-   well/variable B-33T2/WOPR does not exist, instead of just "invalid
-   index" which is the best ecl_sum_data_get() can manage.).
-*/
-
-/*****************************************************************/
-/* Well variables */
 
 bool ecl_sum_has_well_var(const ecl_sum_type *ecl_sum, const char *well,
                           const char *var) {
@@ -585,9 +558,6 @@ double ecl_sum_get_well_var_from_sim_days(const ecl_sum_type *ecl_sum,
     return ecl_sum_get_from_sim_days(ecl_sum, sim_days, &node);
 }
 
-/*****************************************************************/
-/* Group variables */
-
 bool ecl_sum_has_group_var(const ecl_sum_type *ecl_sum, const char *group,
                            const char *var) {
     return ecl_smspec_has_group_var(ecl_sum->smspec, group, var);
@@ -616,8 +586,6 @@ double ecl_sum_get_group_var_from_sim_days(const ecl_sum_type *ecl_sum,
     return ecl_sum_get_from_sim_days(ecl_sum, sim_days, &node);
 }
 
-/*****************************************************************/
-/* Field variables */
 bool ecl_sum_has_field_var(const ecl_sum_type *ecl_sum, const char *var) {
     return ecl_smspec_has_field_var(ecl_sum->smspec, var);
 }
@@ -642,9 +610,6 @@ double ecl_sum_get_field_var_from_sim_days(const ecl_sum_type *ecl_sum,
         ecl_smspec_get_field_var_node(ecl_sum->smspec, var);
     return ecl_sum_get_from_sim_days(ecl_sum, sim_days, &node);
 }
-
-/*****************************************************************/
-/* Block variables */
 
 bool ecl_sum_has_block_var(const ecl_sum_type *ecl_sum, const char *block_var,
                            int block_nr) {
@@ -694,8 +659,6 @@ double ecl_sum_get_block_var_ijk_from_sim_days(const ecl_sum_type *ecl_sum,
     return ecl_sum_get_from_sim_days(ecl_sum, sim_days, &node);
 }
 
-/*****************************************************************/
-/* Region variables */
 /**
    region_nr: [1...num_regions] (NOT C-based indexing)
 */
@@ -728,9 +691,6 @@ double ecl_sum_get_region_var_from_sim_days(const ecl_sum_type *ecl_sum,
     return ecl_sum_get_from_sim_days(ecl_sum, sim_days, &node);
 }
 
-/*****************************************************************/
-/* Misc variables */
-
 int ecl_sum_get_misc_var_index(const ecl_sum_type *ecl_sum, const char *var) {
     return ecl_smspec_get_misc_var_params_index(ecl_sum->smspec, var);
 }
@@ -744,9 +704,6 @@ double ecl_sum_get_misc_var(const ecl_sum_type *ecl_sum, int time_index,
     int index = ecl_sum_get_misc_var_index(ecl_sum, var);
     return ecl_sum_data_iget(ecl_sum->data, time_index, index);
 }
-
-/*****************************************************************/
-/* Well completion - not fully implemented ?? */
 
 int ecl_sum_get_well_completion_var_index(const ecl_sum_type *ecl_sum,
                                           const char *well, const char *var,
@@ -769,9 +726,6 @@ double ecl_sum_get_well_completion_var(const ecl_sum_type *ecl_sum,
         ecl_sum_get_well_completion_var_index(ecl_sum, well, var, cell_nr);
     return ecl_sum_data_iget(ecl_sum->data, time_index, index);
 }
-
-/*****************************************************************/
-/* General variables - this means WWCT:OP_1 - i.e. composite variables*/
 
 const ecl::smspec_node *
 ecl_sum_get_general_var_node(const ecl_sum_type *ecl_sum,
@@ -836,8 +790,6 @@ const char *ecl_sum_get_general_var_unit(const ecl_sum_type *ecl_sum,
     const ecl::smspec_node *node = ecl_sum_get_general_var_node(ecl_sum, var);
     return smspec_node_get_unit(node);
 }
-
-/*****************************************************************/
 
 ecl_sum_type *ecl_sum_alloc_resample(const ecl_sum_type *ecl_sum,
                                      const char *ecl_case,
@@ -946,9 +898,6 @@ double ecl_sum_iget(const ecl_sum_type *ecl_sum, int time_index,
     return ecl_sum_data_iget(ecl_sum->data, time_index, param_index);
 }
 
-/*****************************************************************/
-/* Simple get functions which take a general var key as input    */
-
 bool ecl_sum_var_is_rate(const ecl_sum_type *ecl_sum, const char *gen_key) {
     const ecl::smspec_node *node =
         ecl_sum_get_general_var_node(ecl_sum, gen_key);
@@ -997,13 +946,6 @@ const char *ecl_sum_get_keyword(const ecl_sum_type *ecl_sum,
         ecl_sum_get_general_var_node(ecl_sum, gen_key);
     return smspec_node_get_keyword(node);
 }
-
-/*****************************************************************/
-/*
-   Here comes a couple of functions relating to the time
-   dimension. The functions here in this file are just thin wrappers
-   of 'real' functions located in ecl_sum_data.c.
-*/
 
 bool ecl_sum_has_report_step(const ecl_sum_type *ecl_sum, int report_step) {
     return ecl_sum_data_has_report_step(ecl_sum->data, report_step);
@@ -1159,9 +1101,6 @@ time_t ecl_sum_get_end_time(const ecl_sum_type *ecl_sum) {
 double ecl_sum_iget_sim_days(const ecl_sum_type *ecl_sum, int index) {
     return ecl_sum_data_iget_sim_days(ecl_sum->data, index);
 }
-
-/*****************************************************************/
-/* This is essentially the summary.x program. */
 
 void ecl_sum_fmt_init_summary_x(const ecl_sum_type *ecl_sum,
                                 ecl_sum_fmt_type *fmt) {
@@ -1407,8 +1346,6 @@ bool ecl_sum_same_case(const ecl_sum_type *ecl_sum, const char *input_file) {
     return same_case;
 }
 
-/*****************************************************************/
-
 stringlist_type *
 ecl_sum_alloc_matching_general_var_list(const ecl_sum_type *ecl_sum,
                                         const char *pattern) {
@@ -1434,8 +1371,6 @@ stringlist_type *ecl_sum_alloc_group_list(const ecl_sum_type *ecl_sum,
 stringlist_type *ecl_sum_alloc_well_var_list(const ecl_sum_type *ecl_sum) {
     return ecl_smspec_alloc_well_var_list(ecl_sum->smspec);
 }
-
-/*****************************************************************/
 
 void ecl_sum_resample_from_sim_time(const ecl_sum_type *ecl_sum,
                                     const time_t_vector_type *sim_time,
@@ -1517,13 +1452,9 @@ int ecl_sum_get_report_step_from_days(const ecl_sum_type *sum,
     return ecl_sum_data_get_report_step_from_days(sum->data, sim_days);
 }
 
-/*****************************************************************/
-
 ecl_smspec_type *ecl_sum_get_smspec(const ecl_sum_type *ecl_sum) {
     return ecl_sum->smspec;
 }
-
-/*****************************************************************/
 
 /*
    The functions below are extremly simple functions which only serve

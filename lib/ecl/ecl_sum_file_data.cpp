@@ -26,7 +26,6 @@
   steps.
 */
 
-/*****************************************************************/
 /*
    About ministeps and report steps.
    ---------------------------------
@@ -430,8 +429,6 @@ bool ecl_sum_file_data::has_report(int report_step) const {
     return this->index.has_report(report_step);
 }
 
-// ******************** Start writing ***************************************************
-
 std::pair<int, int> ecl_sum_file_data::report_range(int report_step) const {
     return this->index.report_range(report_step);
 }
@@ -499,10 +496,6 @@ double ecl_sum_file_data::get_days_start() const {
     const auto &node = this->index[0];
     return node.sim_seconds * 86400;
 }
-
-// ***************************** End writing *************************************
-
-// **************************** Start Reading ************************************
 
 bool ecl_sum_file_data::check_file(ecl_file_type *ecl_file) {
     return ecl_file_has_kw(ecl_file, PARAMS_KW) &&
@@ -675,8 +668,6 @@ bool ecl_sum_file_data::report_step_equal(const ecl_sum_file_data &other,
     }
     return true;
 }
-
-// ***************************** End reading *************************************
 
 int ecl_sum_file_data::report_step_from_days(double sim_days) const {
     int report_step = this->first_report();

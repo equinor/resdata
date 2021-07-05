@@ -507,9 +507,6 @@ void @TYPE@_vector_imul(@TYPE@_vector_type * vector, int index, @TYPE@ factor) {
 }
 
 
-/*****************************************************************/
-/* Mathematical operations operating on the whole vector .*/
-
 /* Vector * scalar */
 void @TYPE@_vector_scale(@TYPE@_vector_type * vector, @TYPE@ factor) {
   int i;
@@ -578,11 +575,6 @@ void @TYPE@_vector_inplace_div( @TYPE@_vector_type * vector , const @TYPE@_vecto
       vector->data[i] /= inv_factor->data[i];
   }
 }
-
-/*****************************************************************/
-
-
-
 
 /* Will return default value if index > size. Will fail HARD on negative indices (not that safe) ....*/
 
@@ -1135,9 +1127,6 @@ int @TYPE@_vector_index_sorted(const @TYPE@_vector_type * vector , @TYPE@ value)
     return -1;
 }
 
-/*****************************************************************/
-/* Functions for sorting a vector instance. */
-
 static int @TYPE@_vector_cmp(const void *_a, const void *_b) {
   @TYPE@ a = *((@TYPE@ *) _a);
   @TYPE@ b = *((@TYPE@ *) _b);
@@ -1325,9 +1314,6 @@ bool @TYPE@_vector_is_sorted( const @TYPE@_vector_type * vector , bool reverse) 
   }
 }
 
-/*****************************************************************/
-
-
 /**
    This function can be used to implement lookup tables of various
    types. The input vector @limits is supposed to contain container
@@ -1404,11 +1390,6 @@ int @TYPE@_vector_lookup_bin__( const @TYPE@_vector_type * limits , @TYPE@ value
   }
 }
 
-
-
-/*****************************************************************/
-
-
 void @TYPE@_vector_fprintf(const @TYPE@_vector_type * vector , FILE * stream , const char * name , const char * fmt) {
   int i;
   if (name != NULL)
@@ -1479,11 +1460,6 @@ void @TYPE@_vector_fread( @TYPE@_vector_type * vector , FILE * stream ) {
   @TYPE@_vector_fread( vector , stream );
   return vector;
 }
-
-
-
-
-/*****************************************************************/
 
 bool @TYPE@_vector_equal(const @TYPE@_vector_type * vector1 , const @TYPE@_vector_type * vector2) {
   if (vector1->size == vector2->size) {

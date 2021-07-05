@@ -238,8 +238,6 @@ static void ecl_sum_data_build_index(ecl_sum_data_type *self);
 static double ecl_sum_data_iget_sim_seconds(const ecl_sum_data_type *data,
                                             int internal_index);
 
-/*****************************************************************/
-
 void ecl_sum_data_free(ecl_sum_data_type *data) {
     if (!data)
         throw std::invalid_argument(__func__ + std::string(": invalid delete"));
@@ -719,7 +717,6 @@ ecl_sum_data_type *ecl_sum_data_fread_alloc(ecl_smspec_type *smspec,
     ecl_sum_data_type *data = ecl_sum_data_alloc(smspec);
     ecl_sum_data_fread(data, filelist, lazy_load, file_options);
 
-    /*****************************************************************/
     /* OK - now we have loaded all the data. Must sort the internal
      storage vector, and build up various internal indexing vectors;
      this is done in a sepearate function.
@@ -753,8 +750,6 @@ void ecl_sum_data_summarize(const ecl_sum_data_type *data, FILE *stream) {
         stream,
         "---------------------------------------------------------------\n");
 }
-
-/*****************************************************************/
 
 bool ecl_sum_data_has_report_step(const ecl_sum_data_type *data,
                                   int report_step) {
@@ -1032,9 +1027,6 @@ int ecl_sum_data_get_last_report_step(const ecl_sum_data_type *data) {
     const auto &data_file = data->data_files.back();
     return data_file->last_report();
 }
-
-/*****************************************************************/
-/* High level vector routines */
 
 static void ecl_sum_data_init_time_vector__(const ecl_sum_data_type *data,
                                             time_t *output_data,

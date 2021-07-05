@@ -47,7 +47,6 @@ struct ecl_kw_struct {
 
 UTIL_IS_INSTANCE_FUNCTION(ecl_kw, ECL_KW_TYPE_ID)
 
-/*****************************************************************/
 /* For some peculiar reason the keyword data is written in blocks, all
    numeric data is in blocks of 1000 elements, and character data is
    in blocks of 105 elements.
@@ -56,7 +55,6 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw, ECL_KW_TYPE_ID)
 #define BLOCKSIZE_NUMERIC 1000
 #define BLOCKSIZE_CHAR 105
 
-/*****************************************************************/
 /* When writing formatted data, the data comes in columns, with a
    certain number of elements in each row, i.e. four columns for float
    data:
@@ -76,11 +74,9 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw, ECL_KW_TYPE_ID)
 #define COLUMNS_MESSAGE 1
 #define COLUMNS_BOOL 25
 
-/*****************************************************************/
 /* Format string used when writing a formatted header. */
 #define WRITE_HEADER_FMT " '%-8s' %11d '%-4s'\n"
 
-/*****************************************************************/
 /* Format string used when reading and writing formatted
    files. Observe the following about these format strings:
 
@@ -113,7 +109,6 @@ UTIL_IS_INSTANCE_FUNCTION(ecl_kw, ECL_KW_TYPE_ID)
 #define WRITE_FMT_MESS "%s"
 #define WRITE_FMT_BOOL "  %c"
 
-/*****************************************************************/
 /* The boolean type is not a native type which can be uniquely
    identified between Fortran (ECLIPSE), C, formatted and unformatted
    files:
@@ -226,8 +221,6 @@ static int get_columns(const ecl_data_type data_type) {
         return -1;
     }
 }
-
-/******************************************************************/
 
 static void ecl_kw_assert_index(const ecl_kw_type *ecl_kw, int index,
                                 const char *caller) {
@@ -1048,9 +1041,6 @@ ECL_KW_SCALE_INDEXED(float, ECL_FLOAT_TYPE);
 ECL_KW_SCALE_INDEXED(int, ECL_INT_TYPE);
 #undef ECL_KW_SCALE_INDEXED
 
-/*****************************************************************/
-/* Various ways to get pointers to the underlying data. */
-
 #define ECL_KW_GET_TYPED_PTR(ctype, ECL_TYPE)                                  \
     ctype *ecl_kw_get_##ctype##_ptr(const ecl_kw_type *ecl_kw) {               \
         if (ecl_kw_get_type(ecl_kw) != ECL_TYPE)                               \
@@ -1066,8 +1056,6 @@ ECL_KW_GET_TYPED_PTR(bool, ECL_BOOL_TYPE);
 #undef ECL_KW_GET_TYPED_PTR
 
 void *ecl_kw_get_void_ptr(const ecl_kw_type *ecl_kw) { return ecl_kw->data; }
-
-/*****************************************************************/
 
 void *ecl_kw_iget_ptr(const ecl_kw_type *ecl_kw, int i) {
     return ecl_kw_iget_ptr_static(ecl_kw, i);
@@ -1758,8 +1746,6 @@ ecl_data_type ecl_kw_get_data_type(const ecl_kw_type *ecl_kw) {
     return ecl_kw->data_type;
 }
 
-/******************************************************************/
-
 ecl_kw_type *ecl_kw_buffer_alloc(buffer_type *buffer) {
     const char *header = buffer_fread_string(buffer);
     int size = buffer_fread_int(buffer);
@@ -1970,8 +1956,6 @@ void ecl_kw_summarize(const ecl_kw_type *ecl_kw) {
     free(type_name);
 }
 
-/*****************************************************************/
-
 #define ECL_KW_SCALAR_SET_TYPED(ctype, ECL_TYPE)                               \
     void ecl_kw_scalar_set_##ctype(ecl_kw_type *ecl_kw, ctype value) {         \
         if (ecl_kw_get_type(ecl_kw) == ECL_TYPE) {                             \
@@ -2009,8 +1993,6 @@ void ecl_kw_scalar_set__(ecl_kw_type *ecl_kw, const void *value) {
         memcpy(&ecl_kw->data[i * sizeof_ctype], value, sizeof_ctype);
 }
 
-/*****************************************************************/
-
 void ecl_kw_alloc_double_data(ecl_kw_type *ecl_kw, double *values) {
     ecl_kw_alloc_data(ecl_kw);
     memcpy(ecl_kw->data, values,
@@ -2022,9 +2004,6 @@ void ecl_kw_alloc_float_data(ecl_kw_type *ecl_kw, float *values) {
     memcpy(ecl_kw->data, values,
            ecl_kw->size * ecl_type_get_sizeof_ctype(ecl_kw->data_type));
 }
-
-/*****************************************************************/
-/* Macros for typed mathematical functions.                      */
 
 #define ECL_KW_SCALE_TYPED(ctype, ECL_TYPE)                                    \
     void ecl_kw_scale_##ctype(ecl_kw_type *ecl_kw, ctype scale_factor) {       \
@@ -2329,8 +2308,6 @@ void ecl_kw_inplace_sub_indexed(ecl_kw_type *target_kw,
     }
 }
 
-/*****************************************************************/
-
 #define ECL_KW_TYPED_INPLACE_ABS(ctype, abs_func)                              \
     void ecl_kw_inplace_abs_##ctype(ecl_kw_type *kw) {                         \
         ctype *data = (ctype *)ecl_kw_get_data_ref(kw);                        \
@@ -2362,7 +2339,6 @@ void ecl_kw_inplace_abs(ecl_kw_type *kw) {
     }
 }
 
-/*****************************************************************/
 static int sqrti(int x) { return round(sqrt(x)); }
 
 #define ECL_KW_TYPED_INPLACE_SQRT(ctype, sqrt_func)                            \
@@ -2395,8 +2371,6 @@ void ecl_kw_inplace_sqrt(ecl_kw_type *kw) {
                    ecl_type_alloc_name(ecl_kw_get_data_type(kw)));
     }
 }
-
-/*****************************************************************/
 
 #define ECL_KW_TYPED_INPLACE_MUL(ctype)                                        \
     void ecl_kw_inplace_mul_##ctype(ecl_kw_type *target_kw,                    \
@@ -2479,8 +2453,6 @@ void ecl_kw_inplace_mul_indexed(ecl_kw_type *target_kw,
                    ecl_type_alloc_name(ecl_kw_get_data_type(target_kw)));
     }
 }
-
-/*****************************************************************/
 
 #define ECL_KW_TYPED_INPLACE_DIV(ctype)                                        \
     void ecl_kw_inplace_div_##ctype(ecl_kw_type *target_kw,                    \
@@ -2582,8 +2554,6 @@ bool ecl_kw_inplace_safe_div(ecl_kw_type *target_kw,
     return true;
 }
 
-/*****************************************************************/
-
 void ecl_kw_inplace_inv(ecl_kw_type *my_kw) {
     int size = ecl_kw_get_size(my_kw);
     ecl_type_enum type = ecl_kw_get_type(my_kw);
@@ -2640,8 +2610,6 @@ void ecl_kw_inplace_update_file(const ecl_kw_type *ecl_kw, const char *filename,
         }
     }
 }
-
-/******************************************************************/
 
 bool ecl_kw_is_kw_file(fortio_type *fortio) {
     const long int init_pos = fortio_ftell(fortio);
@@ -2825,8 +2793,6 @@ int ecl_kw_element_sum_int(const ecl_kw_type *ecl_kw) {
 
     return int_sum;
 }
-
-/*****************************************************************/
 
 #define ECL_KW_FPRINTF_DATA(ctype)                                             \
     static void ecl_kw_fprintf_data_##ctype(const ecl_kw_type *ecl_kw,         \

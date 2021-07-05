@@ -93,8 +93,6 @@ void geo_region_free__(void *arg) {
     geo_region_free(region);
 }
 
-/*****************************************************************/
-
 static void geo_region_polygon_select__(geo_region_type *region,
                                         const geo_polygon_type *polygon,
                                         bool select_inside, bool select) {
@@ -132,8 +130,6 @@ void geo_region_deselect_outside_polygon(geo_region_type *region,
                                          const geo_polygon_type *polygon) {
     geo_region_polygon_select__(region, polygon, false, false);
 }
-
-/*****************************************************************/
 
 static void geo_region_select_line__(geo_region_type *region,
                                      const double xcoords[2],
@@ -203,8 +199,6 @@ void geo_region_deselect_below_line(geo_region_type *region,
                                     const double ycoords[2]) {
     geo_region_select_line__(region, xcoords, ycoords, false, false);
 }
-
-/*****************************************************************/
 
 const int_vector_type *geo_region_get_index_list(geo_region_type *region) {
     geo_region_assert_index_list(region);

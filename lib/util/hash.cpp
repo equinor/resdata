@@ -69,10 +69,6 @@ typedef struct hash_sort_node {
     int cmp_value;
 } hash_sort_type;
 
-/*****************************************************************/
-/*                    Low level access functions                 */
-/*****************************************************************/
-
 static void *__hash_get_node(const hash_type *__hash, const char *key,
                              bool abort_on_error) {
     hash_type *hash =
@@ -238,13 +234,6 @@ static char **hash_alloc_keylist__(const hash_type *hash) {
     return keylist;
 }
 
-/*****************************************************************/
-/**
-   The fundamental functions above relate the hash_node
-   structure. Here comes a list of functions for inserting managed
-   copies of various types.
-*/
-
 void hash_insert_string(hash_type *hash, const char *key, const char *value) {
     node_data_type *node_data = node_data_alloc_string(value);
     hash_node_type *hash_node =
@@ -314,8 +303,6 @@ double hash_get_double(const hash_type *hash, const char *key) {
     return node_data_get_double(node_data);
 }
 
-/*****************************************************************/
-
 void hash_del(hash_type *hash, const char *key) { hash_del__(hash, key); }
 
 /**
@@ -379,10 +366,6 @@ void *hash_pop(hash_type *hash, const char *key) {
     return value;
 }
 
-/******************************************************************/
-/*                     Allocators                                 */
-/******************************************************************/
-
 static hash_type *__hash_alloc(int size, double resize_fill,
                                hashf_type *hashf) {
     hash_type *hash;
@@ -431,7 +414,6 @@ stringlist_type *hash_alloc_stringlist(const hash_type *hash) {
     return stringlist;
 }
 
-/*****************************************************************/
 /**
     The standard functions for inserting an entry in the hash table:
 
@@ -510,12 +492,6 @@ bool hash_has_key(const hash_type *hash, const char *key) {
 }
 
 int hash_get_size(const hash_type *hash) { return hash->elements; }
-
-/******************************************************************/
-/**
-   Here comes a list of functions for allocating keylists which have
-   been sorted in various ways.
-*/
 
 static hash_sort_type *hash_alloc_sort_list(const hash_type *hash,
                                             const char **keylist) {
@@ -640,7 +616,6 @@ bool hash_key_list_compare(const hash_type *hash1, const hash_type *hash2) {
     return has_equal_keylist;
 }
 
-/*****************************************************************/
 /**
    This function will take a list of strings of type:
 
@@ -694,8 +669,6 @@ bool hash_add_option(hash_type *hash, const char *key_value) {
     }
     return addOK;
 }
-
-/*****************************************************************/
 
 /**
   This is a **VERY** simple iteration object.
@@ -764,8 +737,6 @@ void *hash_iter_get_next_value(hash_iter_type *iter) {
     else
         return NULL;
 }
-
-/*****************************************************************/
 
 /**
    This function will iterate through the hash table, and call the

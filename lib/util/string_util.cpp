@@ -27,8 +27,6 @@
 #include <ert/util/string_util.hpp>
 #include <ert/util/type_vector_functions.hpp>
 
-/*****************************************************************/
-
 /*
    This functions parses an input string 'range_string' of the type:
 
@@ -120,8 +118,6 @@ string_util_sscanf_alloc_active_list(const char *range_string) {
     return active_list;
 }
 
-/*****************************************************************/
-
 bool string_util_update_active_list(const char *range_string,
                                     int_vector_type *active_list) {
     int_vector_sort(active_list);
@@ -158,8 +154,6 @@ int_vector_type *string_util_alloc_active_list(const char *range_string) {
     return active_list;
 }
 
-/*****************************************************************/
-
 /*
   This is the only function which actually invokes the low level
   string parsing in util_sscanf_alloc_active_list().
@@ -192,8 +186,6 @@ bool_vector_type *string_util_alloc_active_mask(const char *range_string) {
     string_util_init_active_mask(range_string, mask);
     return mask;
 }
-
-/*****************************************************************/
 
 bool string_util_update_value_list(const char *range_string,
                                    int_vector_type *value_list) {

@@ -231,7 +231,6 @@ ecl_smspec_var_type ecl::smspec_node::identify_var_type(const char *var) {
     return var_type;
 }
 
-/*****************************************************************/
 /*
   The key formats for the combined keys like e.g. 'WWCT:OP_5' should
   have the keyword, i.e. 'WWCT', as the first part of the string. That
@@ -408,7 +407,6 @@ char *smspec_alloc_local_completion_key(const char *join_string,
         return NULL;
 }
 
-/*****************************************************************/
 static bool match_keyword_vector(std::size_t ipos,
                                  const std::vector<std::string> &vars,
                                  const std::string &keyword) {
@@ -992,8 +990,6 @@ smspec_node::smspec_node(int param_index_, const char *keyword_,
 
     set_gen_keys(key_join_string_);
 }
-
-/*****************************************************************/
 
 int smspec_node::get_params_index() const { return this->params_index; }
 

@@ -58,8 +58,6 @@ struct buffer_struct {
     size_t pos;       /* The current byte position in the buffer.*/
 };
 
-/*****************************************************************/
-
 UTIL_IS_INSTANCE_FUNCTION(buffer, BUFFER_TYPE_ID)
 UTIL_SAFE_CAST_FUNCTION(buffer, BUFFER_TYPE_ID)
 
@@ -195,8 +193,6 @@ size_t buffer_fread(buffer_type *buffer, void *target_ptr, size_t item_size,
     return items;
 }
 
-/*****************************************************************/
-
 size_t buffer_fwrite(buffer_type *buffer, const void *src_ptr, size_t item_size,
                      size_t items) {
     size_t remaining_size = buffer->alloc_size - buffer->pos;
@@ -220,9 +216,6 @@ size_t buffer_fwrite(buffer_type *buffer, const void *src_ptr, size_t item_size,
     buffer->content_size = util_size_t_max(buffer->content_size, buffer->pos);
     return write_items;
 }
-
-/*****************************************************************/
-/* Various (slighly) higher level functions                      */
 
 void buffer_rewind(buffer_type *buffer) { buffer_fseek(buffer, 0, SEEK_SET); }
 
@@ -371,9 +364,6 @@ double buffer_fread_double(buffer_type *buffer) {
 void buffer_fwrite_double(buffer_type *buffer, double value) {
     buffer_fwrite(buffer, &value, sizeof value, 1);
 }
-
-/*****************************************************************/
-/*****************************************************************/
 
 size_t buffer_get_offset(const buffer_type *buffer) { return buffer->pos; }
 
@@ -599,15 +589,6 @@ void buffer_summarize(const buffer_type *buffer, const char *header) {
     printf(
         "-----------------------------------------------------------------\n");
 }
-
-/*****************************************************************/
-/*****************************************************************/
-/*
-  Here comes a couple of functions for loading/storing a buffer
-  instance to a stream. Observe that when the buffer is stored to file
-  it does not store any metadata (i.e. not even size) - only the raw
-  buffer content.
-*/
 
 /**
    This is the lowest level: 'read buffer content from file'

@@ -90,8 +90,6 @@ typedef struct {
 #define HEADER_STRING "HEADER"
 #define PLAIN_STRING "PLAIN"
 
-/*****************************************************************/
-
 static quant_key_type *quant_key_alloc(const char *sum_key, double quantile) {
     quant_key_type *qkey = util_malloc(sizeof *qkey);
     qkey->sum_key = util_alloc_string_copy(sum_key);
@@ -107,8 +105,6 @@ static void quant_key_free(quant_key_type *qkey) {
 static void quant_key_free__(void *qkey) {
     quant_key_free((quant_key_type *)qkey);
 }
-
-/*****************************************************************/
 
 sum_case_type *sum_case_fread_alloc(const char *data_file,
                                     const time_t_vector_type *interp_time) {
@@ -131,8 +127,6 @@ void sum_case_free(sum_case_type *sum_case) {
 void sum_case_free__(void *sum_case) {
     sum_case_free((sum_case_type *)sum_case);
 }
-
-/*****************************************************************/
 
 void ensemble_add_case(ensemble_type *ensemble, const char *data_file) {
     sum_case_type *sum_case =
@@ -257,8 +251,6 @@ void ensemble_free(ensemble_type *ensemble) {
     free(ensemble);
 }
 
-/*****************************************************************/
-
 static output_type *output_alloc(const char *file, const char *format_string) {
     output_type *output = util_malloc(sizeof *output);
     output->keys = vector_alloc_new();
@@ -342,8 +334,6 @@ static void output_add_key(const ecl_sum_type *refcase, output_type *output,
 
     util_free_stringlist(tmp, tokens);
 }
-
-/*****************************************************************/
 
 /**
    Each output line should be of the format:
@@ -726,8 +716,6 @@ void output_table_run(hash_type *output_table, ensemble_type *ensemble) {
     }
 }
 
-/*****************************************************************/
-
 void config_init(config_parser_type *config) {
 
     config_add_schema_item(config, "CASE_LIST", true);
@@ -742,8 +730,6 @@ void config_init(config_parser_type *config) {
             (const char *[3]){S3GRAPH_STRING, HEADER_STRING, PLAIN_STRING});
     }
 }
-
-/*****************************************************************/
 
 void usage() {
     fprintf(stderr, "\nUse:\n\n    ecl_quantile config_file\n\n");

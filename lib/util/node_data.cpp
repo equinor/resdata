@@ -154,8 +154,6 @@ void *node_data_get_ptr(const node_data_type *node_data) {
     return node_data->data;
 }
 
-/*****************************************************************/
-
 char *node_data_get_string(const node_data_type *node_data) {
     if (node_data->ctype == CTYPE_VOID_POINTER)
         return (char *)node_data->data;

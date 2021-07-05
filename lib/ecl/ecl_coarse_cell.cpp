@@ -27,7 +27,6 @@
 #include <ert/ecl/ecl_kw_magic.hpp>
 #include <ert/ecl/ecl_coarse_cell.hpp>
 
-/******************************************************************/
 /*
 
   +---------+---------+---------+---------+---------+---------+
@@ -219,8 +218,6 @@ void ecl_coarse_cell_free__(void *arg) {
     ecl_coarse_cell_free(coarse_cell);
 }
 
-/*****************************************************************/
-
 static void ecl_coarse_cell_sort(ecl_coarse_cell_type *coarse_cell) {
     if (!coarse_cell->__cell_list_sorted) {
         int_vector_sort(coarse_cell->cell_list);
@@ -248,8 +245,6 @@ ecl_coarse_cell_get_index_vector(ecl_coarse_cell_type *coarse_cell) {
     ecl_coarse_cell_sort(coarse_cell);
     return coarse_cell->cell_list;
 }
-
-/*****************************************************************/
 
 int ecl_coarse_cell_get_i1(const ecl_coarse_cell_type *coarse_cell) {
     return coarse_cell->ijk[0];
@@ -280,7 +275,6 @@ ecl_coarse_cell_get_box_ptr(const ecl_coarse_cell_type *coarse_cell) {
     return coarse_cell->ijk;
 }
 
-/*****************************************************************/
 void ecl_coarse_cell_reset_active_index(ecl_coarse_cell_type *coarse_cell) {
     coarse_cell->active_index = -1;
     coarse_cell->active_fracture_index = -1;
@@ -343,8 +337,6 @@ int ecl_coarse_cell_iget_active_value(const ecl_coarse_cell_type *coarse_cell,
 int ecl_coarse_cell_get_num_active(const ecl_coarse_cell_type *coarse_cell) {
     return int_vector_size(coarse_cell->active_cells);
 }
-
-/*****************************************************************/
 
 void ecl_coarse_cell_fprintf(const ecl_coarse_cell_type *coarse_cell,
                              FILE *stream) {

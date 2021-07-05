@@ -464,12 +464,6 @@ stringlist_type *basic_parser_tokenize_file(const basic_parser_type *parser,
     return tokens;
 }
 
-/*****************************************************************/
-/* Below are some functions which do not actually tokenize, but use
-   the comment/quote handling of the parser implementation for
-   related tasks.
-*/
-
 static bool fseek_quote_end(char quoter, FILE *stream) {
     int c;
     do {
@@ -581,8 +575,6 @@ bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
                 }
             }
 
-            /*****************************************************************/
-
             /* Now c is a regular character - and we can start looking for our string. */
             if (c ==
                 string
@@ -682,7 +674,6 @@ void basic_parser_strip_buffer(const basic_parser_type *parser,
     *__buffer = target;
 }
 
-/*****************************************************************/
 /**
    This file reads file content into a buffer, and then strips the
    buffer with parser_strip_buffer() and returns the 'cleaned up'
