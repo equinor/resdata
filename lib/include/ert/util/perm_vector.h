@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/perm_vector.hpp>
-
-

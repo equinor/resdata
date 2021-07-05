@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/string_util.hpp>
-
-

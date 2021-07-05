@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/ecl_smspec.hpp>
-
-

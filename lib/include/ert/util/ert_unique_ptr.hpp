@@ -5,19 +5,13 @@
 
 namespace ERT {
 
-    template <typename T , void (*F)(T*)>
-    struct deleter
-    {
-        void operator() (T * arg) const {
-            F( arg );
-        }
-    };
+template <typename T, void (*F)(T *)> struct deleter {
+    void operator()(T *arg) const { F(arg); }
+};
 
-    template <typename T , void (*F)(T*)>
-    using ert_unique_ptr = std::unique_ptr<T, deleter<T,F> >;
+template <typename T, void (*F)(T *)>
+using ert_unique_ptr = std::unique_ptr<T, deleter<T, F>>;
 
-}
+} // namespace ERT
 
 #endif
-
-

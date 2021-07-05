@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl_well/well_conn_collection.hpp>
-
-

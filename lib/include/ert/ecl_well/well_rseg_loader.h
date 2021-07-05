@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl_well/well_rseg_loader.hpp>
-
-

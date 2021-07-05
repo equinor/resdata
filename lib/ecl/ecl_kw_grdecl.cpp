@@ -56,7 +56,6 @@
   such keywords.
 */
 
-
 /*
   Will seek from the current position to the next keyword. If a valid
   next keyword is found the function will position the file reader at
@@ -71,72 +70,69 @@
   are ignored.
 */
 
+bool ecl_kw_grdecl_fseek_next_kw(FILE *stream) {
+    long start_pos = util_ftell(stream);
+    long current_pos;
+    char next_kw[MAX_GRDECL_HEADER_SIZE];
 
-bool ecl_kw_grdecl_fseek_next_kw( FILE * stream ) {
-  long start_pos = util_ftell( stream );
-  long current_pos;
-  char next_kw[MAX_GRDECL_HEADER_SIZE];
-
-  /*
+    /*
     Determine if the current position of the file pointer is at the
     beginning of the line; if not skip the rest of the line; this is
     applies even though the tokens leading up this are not comments.
   */
-  {
-    while (true) {
-      char c;
-      if (util_ftell(stream) == 0)
-        /*
+    {
+        while (true) {
+            char c;
+            if (util_ftell(stream) == 0)
+                /*
           We are at the very beginning of the file. Can just jump out of
           the loop.
         */
-        break;
+                break;
 
-      util_fseek( stream , -1 , SEEK_CUR );
-      c = fgetc( stream );
-      if (c == '\n') {
-        /*
+            util_fseek(stream, -1, SEEK_CUR);
+            c = fgetc(stream);
+            if (c == '\n') {
+                /*
            We have walked backwards reaching the start of the line. We
            have not reached any !isspace() characters on the way and
            can go back to start_pos and read from there.
         */
-        util_fseek( stream , start_pos , SEEK_SET );
-        break;
-      }
+                util_fseek(stream, start_pos, SEEK_SET);
+                break;
+            }
 
-      if (!isspace( c )) {
-        /*
+            if (!isspace(c)) {
+                /*
            We hit a non-whitespace character; this means that start_pos
            was not at the start of the line. We skip the rest of this
            line, and then start reading on the next line.
         */
-        util_fskip_lines( stream , 1 );
-        break;
-      }
-      util_fseek( stream , -2 , SEEK_CUR );
+                util_fskip_lines(stream, 1);
+                break;
+            }
+            util_fseek(stream, -2, SEEK_CUR);
+        }
     }
-  }
 
-
-  while (true) {
-    current_pos = util_ftell( stream );
-    if (fscanf(stream , "%s" , next_kw) == 1) {
-      if ((next_kw[0] == next_kw[1]) && (next_kw[0] == ECL_COMMENT_CHAR))
-        // This is a comment line - skip it.
-        util_fskip_lines( stream , 1 );
-      else {
-        // This is a valid keyword i.e. a non-commented out string; return true.
-        util_fseek( stream , current_pos , SEEK_SET );
-        return true;
-      }
-    } else {
-      // EOF reached - return False.
-      util_fseek( stream , start_pos , SEEK_SET );
-      return false;
+    while (true) {
+        current_pos = util_ftell(stream);
+        if (fscanf(stream, "%s", next_kw) == 1) {
+            if ((next_kw[0] == next_kw[1]) && (next_kw[0] == ECL_COMMENT_CHAR))
+                // This is a comment line - skip it.
+                util_fskip_lines(stream, 1);
+            else {
+                // This is a valid keyword i.e. a non-commented out string; return true.
+                util_fseek(stream, current_pos, SEEK_SET);
+                return true;
+            }
+        } else {
+            // EOF reached - return False.
+            util_fseek(stream, start_pos, SEEK_SET);
+            return false;
+        }
     }
-  }
 }
-
 
 /**
    Will use the ecl_kw_grdecl_fseek_next_header() to seek out the next
@@ -145,15 +141,14 @@ bool ecl_kw_grdecl_fseek_next_kw( FILE * stream ) {
    this function must be free'd by the calling scope.
 */
 
-char * ecl_kw_grdecl_alloc_next_header( FILE * stream ) {
-  if (ecl_kw_grdecl_fseek_next_kw( stream )) {
-    char next_kw[MAX_GRDECL_HEADER_SIZE];
-    fscanf( stream , "%s" , next_kw);
-    return util_alloc_string_copy( next_kw );
-  } else
-    return NULL;
+char *ecl_kw_grdecl_alloc_next_header(FILE *stream) {
+    if (ecl_kw_grdecl_fseek_next_kw(stream)) {
+        char next_kw[MAX_GRDECL_HEADER_SIZE];
+        fscanf(stream, "%s", next_kw);
+        return util_alloc_string_copy(next_kw);
+    } else
+        return NULL;
 }
-
 
 /**
   This function will search through a GRDECL file to look for the
@@ -168,62 +163,59 @@ char * ecl_kw_grdecl_alloc_next_header( FILE * stream ) {
   If the kw is not found the file pointer is repositioned.
 */
 
-static bool ecl_kw_grdecl_fseek_kw__(const char * kw , FILE * stream) {
-  long init_pos = util_ftell( stream );
-  while (true) {
-    if (ecl_kw_grdecl_fseek_next_kw( stream )) {
-      char next_kw[256];
-      fscanf( stream , "%s" , next_kw);
-      if (strcmp( kw , next_kw ) == 0) {
-        offset_type offset = (offset_type) strlen(next_kw);
-        util_fseek( stream , -offset , SEEK_CUR);
-        return true;
-      }
-    } else {
-      util_fseek( stream , init_pos , SEEK_SET);
-      return false;
+static bool ecl_kw_grdecl_fseek_kw__(const char *kw, FILE *stream) {
+    long init_pos = util_ftell(stream);
+    while (true) {
+        if (ecl_kw_grdecl_fseek_next_kw(stream)) {
+            char next_kw[256];
+            fscanf(stream, "%s", next_kw);
+            if (strcmp(kw, next_kw) == 0) {
+                offset_type offset = (offset_type)strlen(next_kw);
+                util_fseek(stream, -offset, SEEK_CUR);
+                return true;
+            }
+        } else {
+            util_fseek(stream, init_pos, SEEK_SET);
+            return false;
+        }
     }
-  }
 }
 
+bool ecl_kw_grdecl_fseek_kw(const char *kw, bool rewind, FILE *stream) {
+    if (ecl_kw_grdecl_fseek_kw__(kw, stream))
+        return true; /* OK - we found the kw between current file pos and EOF. */
+    else if (rewind) {
+        long int init_pos = util_ftell(stream);
 
+        util_fseek(stream, 0L, SEEK_SET);
+        if (ecl_kw_grdecl_fseek_kw__(
+                kw, stream)) /* Try again from the beginning of the file. */
+            return true;
+        else
+            util_fseek(
+                stream, init_pos,
+                SEEK_SET); /* Could not find it - reposition to initial position. */
+    }
 
-
-
-
-bool ecl_kw_grdecl_fseek_kw(const char * kw , bool rewind , FILE * stream) {
-  if (ecl_kw_grdecl_fseek_kw__(kw , stream))
-    return true;       /* OK - we found the kw between current file pos and EOF. */
-  else if (rewind) {
-    long int init_pos = util_ftell(stream);
-
-    util_fseek(stream , 0L , SEEK_SET);
-    if (ecl_kw_grdecl_fseek_kw__( kw , stream )) /* Try again from the beginning of the file. */
-      return true;
-    else
-      util_fseek(stream , init_pos , SEEK_SET);       /* Could not find it - reposition to initial position. */
-  }
-
-  /* OK: If we are here - that means that we failed to find the kw. */
-  return false;
+    /* OK: If we are here - that means that we failed to find the kw. */
+    return false;
 }
-
-
 
 /**
    Observe that this function does not preserve the '*' structure
    which (might) have been used in the input.
 */
 
-static void iset_range( char * data , int data_index, int sizeof_ctype , void * value_ptr , int multiplier) {
-  size_t byte_offset;
-  for (int index =0; index < multiplier; index++) {
-    byte_offset = static_cast<size_t>(data_index) + static_cast<size_t>(index);
-    byte_offset *= sizeof_ctype;
-    memcpy( &data[ byte_offset ] , value_ptr , sizeof_ctype);
-  }
+static void iset_range(char *data, int data_index, int sizeof_ctype,
+                       void *value_ptr, int multiplier) {
+    size_t byte_offset;
+    for (int index = 0; index < multiplier; index++) {
+        byte_offset =
+            static_cast<size_t>(data_index) + static_cast<size_t>(index);
+        byte_offset *= sizeof_ctype;
+        memcpy(&data[byte_offset], value_ptr, sizeof_ctype);
+    }
 }
-
 
 /**
    The @strict flag is used to indicate whether the loader will accept
@@ -254,119 +246,126 @@ static void iset_range( char * data , int data_index, int sizeof_ctype , void * 
    Observe that no-spaces-are-allowed-around-the-*
 */
 
-static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_data_type data_type , int * kw_size , FILE * stream ) {
-  char newline        = '\n';
-  bool atEOF          = false;
-  size_t init_size       = 32;
-  size_t buffer_size     = 64;
-  size_t data_index      = 0;
-  int sizeof_ctype    = ecl_type_get_sizeof_ctype( data_type );
-  size_t data_size    = init_size;
-  char * buffer       = (char*)util_calloc( (buffer_size + 1) , sizeof * buffer      );
-  char * data         = (char*)util_calloc( sizeof_ctype * data_size , sizeof * data );
+static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
+                                      ecl_data_type data_type, int *kw_size,
+                                      FILE *stream) {
+    char newline = '\n';
+    bool atEOF = false;
+    size_t init_size = 32;
+    size_t buffer_size = 64;
+    size_t data_index = 0;
+    int sizeof_ctype = ecl_type_get_sizeof_ctype(data_type);
+    size_t data_size = init_size;
+    char *buffer = (char *)util_calloc((buffer_size + 1), sizeof *buffer);
+    char *data = (char *)util_calloc(sizeof_ctype * data_size, sizeof *data);
 
-  while (true) {
-    if (fscanf(stream , "%32s" , buffer) == 1) {
-      if (strcmp(buffer , ECL_COMMENT_STRING) == 0) {
-        // We have read a comment marker - just read up to the end of line.
-        char c;
-        while (true) {
-          c = fgetc( stream );
-          if (c == newline)
-            break;
-          if (c == EOF) {
-            atEOF = true;
-            break;
-          }
-        }
-      } else if (strcmp(buffer , ECL_DATA_TERMINATION) == 0)
-        break;
-      else {
-        // We have read a valid input string; scan numerical input values from it.
-        // The multiplier algorithm will fail hard if there are spaces on either side
-        // of the '*'.
-        union {
-          int i;
-          float f;
-          double d;
-        } value;
+    while (true) {
+        if (fscanf(stream, "%32s", buffer) == 1) {
+            if (strcmp(buffer, ECL_COMMENT_STRING) == 0) {
+                // We have read a comment marker - just read up to the end of line.
+                char c;
+                while (true) {
+                    c = fgetc(stream);
+                    if (c == newline)
+                        break;
+                    if (c == EOF) {
+                        atEOF = true;
+                        break;
+                    }
+                }
+            } else if (strcmp(buffer, ECL_DATA_TERMINATION) == 0)
+                break;
+            else {
+                // We have read a valid input string; scan numerical input values from it.
+                // The multiplier algorithm will fail hard if there are spaces on either side
+                // of the '*'.
+                union {
+                    int i;
+                    float f;
+                    double d;
+                } value;
 
-        int multiplier;
-        bool   char_input = false;
+                int multiplier;
+                bool char_input = false;
 
-        if (ecl_type_is_int(data_type)) {
-          if (sscanf(buffer , "%d*%d" , &multiplier , &value.i) == 2)
-            {}
-          else if (sscanf( buffer , "%d" , &value.i) == 1)
-            multiplier = 1;
-          else {
-            char_input = true;
-            if (strict)
-              util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
-          }
-        } else if (ecl_type_is_float(data_type)) {
-          if (sscanf(buffer , "%d*%g" , &multiplier , &value.f) == 2)
-            {}
-          else if (sscanf( buffer , "%g" , &value.f) == 1)
-            multiplier = 1;
-          else {
-            char_input = true;
-            if (strict)
-              util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
-          }
-        } else if (ecl_type_is_double(data_type)) {
-          if (sscanf(buffer , "%d*%lg" , &multiplier , &value.d) == 2)
-            {}
-          else if (sscanf( buffer , "%lg" , &value.d) == 1)
-            multiplier = 1;
-          else {
-            char_input = true;
-            if (strict)
-              util_abort("%s: Malformed content:\"%s\" when reading keyword:%s \n",__func__ , buffer , header);
-          }
-        } else
-          util_abort("%s: sorry type:%s not supported \n",__func__ , ecl_type_alloc_name(data_type));
+                if (ecl_type_is_int(data_type)) {
+                    if (sscanf(buffer, "%d*%d", &multiplier, &value.i) == 2) {
+                    } else if (sscanf(buffer, "%d", &value.i) == 1)
+                        multiplier = 1;
+                    else {
+                        char_input = true;
+                        if (strict)
+                            util_abort("%s: Malformed content:\"%s\" when "
+                                       "reading keyword:%s \n",
+                                       __func__, buffer, header);
+                    }
+                } else if (ecl_type_is_float(data_type)) {
+                    if (sscanf(buffer, "%d*%g", &multiplier, &value.f) == 2) {
+                    } else if (sscanf(buffer, "%g", &value.f) == 1)
+                        multiplier = 1;
+                    else {
+                        char_input = true;
+                        if (strict)
+                            util_abort("%s: Malformed content:\"%s\" when "
+                                       "reading keyword:%s \n",
+                                       __func__, buffer, header);
+                    }
+                } else if (ecl_type_is_double(data_type)) {
+                    if (sscanf(buffer, "%d*%lg", &multiplier, &value.d) == 2) {
+                    } else if (sscanf(buffer, "%lg", &value.d) == 1)
+                        multiplier = 1;
+                    else {
+                        char_input = true;
+                        if (strict)
+                            util_abort("%s: Malformed content:\"%s\" when "
+                                       "reading keyword:%s \n",
+                                       __func__, buffer, header);
+                    }
+                } else
+                    util_abort("%s: sorry type:%s not supported \n", __func__,
+                               ecl_type_alloc_name(data_type));
 
-        /*
+                /*
           Removing this warning on user request:
           if (char_input)
           fprintf(stderr,"Warning: character string: \'%s\' ignored when reading keyword:%s \n",buffer , header);
         */
-        if (!char_input) {
-          size_t min_size = data_index + multiplier;
-          if (min_size >= data_size) {
-            if (min_size <= ECL_KW_MAX_SIZE) {
-              size_t byte_size = sizeof_ctype * sizeof * data;
+                if (!char_input) {
+                    size_t min_size = data_index + multiplier;
+                    if (min_size >= data_size) {
+                        if (min_size <= ECL_KW_MAX_SIZE) {
+                            size_t byte_size = sizeof_ctype * sizeof *data;
 
-              data_size  = util_size_t_min( ECL_KW_MAX_SIZE , 2*(data_index + multiplier));
-              byte_size *= data_size;
+                            data_size = util_size_t_min(
+                                ECL_KW_MAX_SIZE, 2 * (data_index + multiplier));
+                            byte_size *= data_size;
 
-              data = (char*) util_realloc( data , byte_size );
-            } else {
-              /*
+                            data = (char *)util_realloc(data, byte_size);
+                        } else {
+                            /*
                 We are asking for more elements than can possible be adressed in
                 an integer. Return NULL - and data size == 0; let calling scope
                 try to handle it.
               */
-              data_index = 0;
-              break;
+                            data_index = 0;
+                            break;
+                        }
+                    }
+
+                    iset_range(data, data_index, sizeof_ctype, &value,
+                               multiplier);
+                    data_index += multiplier;
+                }
             }
-          }
-
-          iset_range( data , data_index , sizeof_ctype , &value , multiplier );
-          data_index += multiplier;
-        }
-
-      }
-      if (atEOF)
-        break;
-    } else
-      break;
-  }
-  free( buffer );
-  *kw_size = data_index;
-  data = (char*)util_realloc( data , sizeof_ctype * data_index * sizeof * data );
-  return data;
+            if (atEOF)
+                break;
+        } else
+            break;
+    }
+    free(buffer);
+    *kw_size = data_index;
+    data = (char *)util_realloc(data, sizeof_ctype * data_index * sizeof *data);
+    return data;
 }
 
 /*
@@ -428,41 +427,50 @@ static char * fscanf_alloc_grdecl_data( const char * header , bool strict , ecl_
    if there is something wrong it can be difficult to detect.
 */
 
-static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char * header , bool strict , int size , ecl_data_type data_type) {
-  if (header && strlen(header) >MAX_GRDECL_HEADER_SIZE)
-    util_abort("%s cannot read KW of more than %d bytes. strlen(header) == %d\n", __func__, MAX_GRDECL_HEADER_SIZE, strlen(header) );
+static ecl_kw_type *__ecl_kw_fscanf_alloc_grdecl__(FILE *stream,
+                                                   const char *header,
+                                                   bool strict, int size,
+                                                   ecl_data_type data_type) {
+    if (header && strlen(header) > MAX_GRDECL_HEADER_SIZE)
+        util_abort(
+            "%s cannot read KW of more than %d bytes. strlen(header) == %d\n",
+            __func__, MAX_GRDECL_HEADER_SIZE, strlen(header));
 
-  if (!ecl_type_is_numeric(data_type))
-    util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",__func__);
+    if (!ecl_type_is_numeric(data_type))
+        util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",
+                   __func__);
 
-  if (header != NULL)
-    if (!ecl_kw_grdecl_fseek_kw( header , true , stream ))
-      return NULL;  /* Could not find it. */
+    if (header != NULL)
+        if (!ecl_kw_grdecl_fseek_kw(header, true, stream))
+            return NULL; /* Could not find it. */
 
-  {
-    char file_header[MAX_GRDECL_HEADER_SIZE];
-    if (fscanf(stream , "%s" , file_header) == 1) {
-      int kw_size;
-      char * data = fscanf_alloc_grdecl_data( file_header , strict , data_type , &kw_size , stream );
+    {
+        char file_header[MAX_GRDECL_HEADER_SIZE];
+        if (fscanf(stream, "%s", file_header) == 1) {
+            int kw_size;
+            char *data = fscanf_alloc_grdecl_data(file_header, strict,
+                                                  data_type, &kw_size, stream);
 
-      // Verify size
-      if (size > 0)
-        if (size != kw_size) {
-          free( data );
-          util_abort("%s: size mismatch when loading:%s. File:%d elements. Requested:%d elements \n",
-                     __func__ , file_header , kw_size , size);
-        }
+            // Verify size
+            if (size > 0)
+                if (size != kw_size) {
+                    free(data);
+                    util_abort("%s: size mismatch when loading:%s. File:%d "
+                               "elements. Requested:%d elements \n",
+                               __func__, file_header, kw_size, size);
+                }
 
-      {
-        ecl_kw_type * ecl_kw = ecl_kw_alloc_new( file_header , kw_size , data_type , NULL );
-        ecl_kw_set_data_ptr( ecl_kw , data );
-        return ecl_kw;
-      }
+            {
+                ecl_kw_type *ecl_kw =
+                    ecl_kw_alloc_new(file_header, kw_size, data_type, NULL);
+                ecl_kw_set_data_ptr(ecl_kw, data);
+                return ecl_kw;
+            }
 
-    } else
-      /** No header read - probably at EOF */
-      return NULL;
-  }
+        } else
+            /** No header read - probably at EOF */
+            return NULL;
+    }
 }
 /*****************************************************************/
 /*
@@ -474,7 +482,6 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
    use strict == true.
 */
 
-
 /**
    This function assumes that the file pointer has already been
    positioned at the beginning of a keyword header, and will just
@@ -484,14 +491,17 @@ static ecl_kw_type * __ecl_kw_fscanf_alloc_grdecl__(FILE * stream , const char *
 
 /*****************************************************************/
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data__(FILE * stream , bool strict , int size ,  ecl_data_type data_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , size , data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_data__(FILE *stream, bool strict,
+                                               int size,
+                                               ecl_data_type data_type) {
+    return __ecl_kw_fscanf_alloc_grdecl__(stream, NULL, strict, size,
+                                          data_type);
 }
 
-
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_data_type data_type) {
- bool strict = true;
- return ecl_kw_fscanf_alloc_grdecl_data__( stream , strict , size , data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_data(FILE *stream, int size,
+                                             ecl_data_type data_type) {
+    bool strict = true;
+    return ecl_kw_fscanf_alloc_grdecl_data__(stream, strict, size, data_type);
 }
 
 /*****************************************************************/
@@ -506,13 +516,16 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_data(FILE * stream , int size , ecl_dat
    the whole keyword is loaded, and then return.
 */
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic__( FILE * stream , const char * kw , bool strict , ecl_data_type data_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , 0 , data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_dynamic__(FILE *stream, const char *kw,
+                                                  bool strict,
+                                                  ecl_data_type data_type) {
+    return __ecl_kw_fscanf_alloc_grdecl__(stream, kw, strict, 0, data_type);
 }
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * kw , ecl_data_type data_type) {
-  bool strict = true;
-  return ecl_kw_fscanf_alloc_grdecl_dynamic__( stream , kw , strict , data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_grdecl_dynamic(FILE *stream, const char *kw,
+                                                ecl_data_type data_type) {
+    bool strict = true;
+    return ecl_kw_fscanf_alloc_grdecl_dynamic__(stream, kw, strict, data_type);
 }
 
 /*****************************************************************/
@@ -530,14 +543,16 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl_dynamic( FILE * stream , const char * k
    size == 0.
 */
 
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl__( FILE * stream , const char * kw , bool strict , int size , ecl_data_type data_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_grdecl__(FILE *stream, const char *kw,
+                                          bool strict, int size,
+                                          ecl_data_type data_type) {
+    return __ecl_kw_fscanf_alloc_grdecl__(stream, kw, strict, size, data_type);
 }
 
-
-ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int size , ecl_data_type data_type) {
-  bool strict = true;
-  return ecl_kw_fscanf_alloc_grdecl__( stream , kw , strict , size , data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw, int size,
+                                        ecl_data_type data_type) {
+    bool strict = true;
+    return ecl_kw_fscanf_alloc_grdecl__(stream, kw, strict, size, data_type);
 }
 
 /*****************************************************************/
@@ -550,21 +565,18 @@ ecl_kw_type * ecl_kw_fscanf_alloc_grdecl( FILE * stream , const char * kw , int 
    that the input file is well formatted.
 */
 
-ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl__( FILE * stream , bool strict , ecl_data_type data_type) {
-  return __ecl_kw_fscanf_alloc_grdecl__( stream , NULL , strict , 0 , data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_current_grdecl__(FILE *stream, bool strict,
+                                                  ecl_data_type data_type) {
+    return __ecl_kw_fscanf_alloc_grdecl__(stream, NULL, strict, 0, data_type);
 }
 
-
-ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl( FILE * stream , ecl_data_type data_type) {
-  bool strict = true;
-  return ecl_kw_fscanf_alloc_current_grdecl__( stream , strict ,  data_type );
+ecl_kw_type *ecl_kw_fscanf_alloc_current_grdecl(FILE *stream,
+                                                ecl_data_type data_type) {
+    bool strict = true;
+    return ecl_kw_fscanf_alloc_current_grdecl__(stream, strict, data_type);
 }
-
-
 
 /*****************************************************************/
-
-
 
 /*
   This method allows to write with a different header,
@@ -572,21 +584,23 @@ ecl_kw_type * ecl_kw_fscanf_alloc_current_grdecl( FILE * stream , ecl_data_type 
   length limit; i.e. loading it back naively will fail.
 */
 
-void ecl_kw_fprintf_grdecl__(const ecl_kw_type * ecl_kw , const char * special_header , FILE * stream) {
-  if (special_header)
-    fprintf(stream,"%s\n" , special_header);
-  else
-    fprintf(stream,"%s\n" , ecl_kw_get_header(ecl_kw));
+void ecl_kw_fprintf_grdecl__(const ecl_kw_type *ecl_kw,
+                             const char *special_header, FILE *stream) {
+    if (special_header)
+        fprintf(stream, "%s\n", special_header);
+    else
+        fprintf(stream, "%s\n", ecl_kw_get_header(ecl_kw));
 
-  {
-    fortio_type * fortio = fortio_alloc_FILE_wrapper(NULL , false , true , true , stream);   /* Endian flip should *NOT* be used */
-    ecl_kw_fwrite_data(ecl_kw , fortio);
-    fortio_free_FILE_wrapper( fortio );
-  }
-  fprintf(stream,"/\n");
+    {
+        fortio_type *fortio = fortio_alloc_FILE_wrapper(
+            NULL, false, true, true,
+            stream); /* Endian flip should *NOT* be used */
+        ecl_kw_fwrite_data(ecl_kw, fortio);
+        fortio_free_FILE_wrapper(fortio);
+    }
+    fprintf(stream, "/\n");
 }
 
-
-void ecl_kw_fprintf_grdecl(const ecl_kw_type * ecl_kw , FILE * stream) {
-  ecl_kw_fprintf_grdecl__(ecl_kw , NULL , stream );
+void ecl_kw_fprintf_grdecl(const ecl_kw_type *ecl_kw, FILE *stream) {
+    ecl_kw_fprintf_grdecl__(ecl_kw, NULL, stream);
 }

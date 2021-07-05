@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/vector.hpp>
-
-

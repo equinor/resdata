@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/lookup_table.hpp>
-
-

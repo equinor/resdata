@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 #endif
 
 class Tmpdir {
-   public:
+public:
     static bool delete_temporary_files;
     fs::path dirname;
     Tmpdir() {

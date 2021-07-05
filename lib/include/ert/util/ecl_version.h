@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/ecl_version.hpp>
-
-

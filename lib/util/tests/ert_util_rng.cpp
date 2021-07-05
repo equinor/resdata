@@ -23,49 +23,48 @@
 #include <ert/util/rng.hpp>
 #include <ert/util/mzran.hpp>
 
-
 #define MAX_INT 666661
 
-int main(int argc , char ** argv) {
-  rng_type * rng = rng_alloc( MZRAN , INIT_DEFAULT );
-  {
-    int val1 = rng_get_int( rng , MAX_INT);
-    int val2 = rng_get_int( rng , MAX_INT);
+int main(int argc, char **argv) {
+    rng_type *rng = rng_alloc(MZRAN, INIT_DEFAULT);
+    {
+        int val1 = rng_get_int(rng, MAX_INT);
+        int val2 = rng_get_int(rng, MAX_INT);
 
-    test_assert_int_not_equal( val1 , val2 );
+        test_assert_int_not_equal(val1, val2);
 
-    rng_init( rng , INIT_DEFAULT );
-    val2 = rng_get_int( rng , MAX_INT );
-    test_assert_int_equal( val1 , val2 );
-  }
-  {
-    int val2 , val1;
-    int state_size = rng_state_size( rng );
-    char * buffer1 = (char *) util_calloc( state_size , sizeof * buffer1 );
-    char * buffer2 = (char *) util_calloc( state_size , sizeof * buffer2 );
-    test_assert_int_not_equal( state_size , 0 );
-    test_assert_int_equal( state_size , MZRAN_STATE_SIZE );
+        rng_init(rng, INIT_DEFAULT);
+        val2 = rng_get_int(rng, MAX_INT);
+        test_assert_int_equal(val1, val2);
+    }
+    {
+        int val2, val1;
+        int state_size = rng_state_size(rng);
+        char *buffer1 = (char *)util_calloc(state_size, sizeof *buffer1);
+        char *buffer2 = (char *)util_calloc(state_size, sizeof *buffer2);
+        test_assert_int_not_equal(state_size, 0);
+        test_assert_int_equal(state_size, MZRAN_STATE_SIZE);
 
-    rng_init( rng , INIT_DEFAULT );
-    rng_get_state( rng , buffer1 );
-    val1 = rng_get_int( rng , MAX_INT);
-    val2 = rng_get_int( rng , MAX_INT);
+        rng_init(rng, INIT_DEFAULT);
+        rng_get_state(rng, buffer1);
+        val1 = rng_get_int(rng, MAX_INT);
+        val2 = rng_get_int(rng, MAX_INT);
 
-    test_assert_int_not_equal( val1 , val2 );
-    rng_set_state( rng , buffer1 );
-    val2 = rng_get_int( rng , MAX_INT);
-    test_assert_int_equal( val1 , val2 );
+        test_assert_int_not_equal(val1, val2);
+        rng_set_state(rng, buffer1);
+        val2 = rng_get_int(rng, MAX_INT);
+        test_assert_int_equal(val1, val2);
 
-    rng_init( rng , INIT_DEFAULT );
-    rng_get_state( rng , buffer2 );
-    test_assert_mem_equal( buffer1 , buffer2 , state_size );
-    val2 = rng_get_int( rng , MAX_INT);
-    rng_get_state( rng , buffer2 );
-    test_assert_mem_not_equal( buffer1 , buffer2 , state_size );
+        rng_init(rng, INIT_DEFAULT);
+        rng_get_state(rng, buffer2);
+        test_assert_mem_equal(buffer1, buffer2, state_size);
+        val2 = rng_get_int(rng, MAX_INT);
+        rng_get_state(rng, buffer2);
+        test_assert_mem_not_equal(buffer1, buffer2, state_size);
 
-    free( buffer1 );
-    free( buffer2 );
-  }
-  rng_free( rng );
-  exit(0);
+        free(buffer1);
+        free(buffer2);
+    }
+    rng_free(rng);
+    exit(0);
 }

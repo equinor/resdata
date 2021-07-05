@@ -5,5 +5,3 @@
 */
 
 #include <ert/util/type_macros.hpp>
-
-

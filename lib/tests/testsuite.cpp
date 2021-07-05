@@ -5,7 +5,7 @@
 
 bool Tmpdir::delete_temporary_files = true;
 
-int main(int argc, char* const argv[]) {
+int main(int argc, char *const argv[]) {
     Catch::Session session;
 
     using namespace Catch::clara;
@@ -17,7 +17,8 @@ int main(int argc, char* const argv[]) {
     session.cli(cli);
     int result = session.applyCommandLine(argc, argv);
 
-    if (result != 0) return result;
+    if (result != 0)
+        return result;
 
     result = session.run();
 

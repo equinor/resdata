@@ -31,94 +31,95 @@
 #include <ert/ecl/ecl_endian_flip.hpp>
 
 void test_writable(size_t data_size) {
-  ecl::util::TestArea ta("file_writable");
-  const char * data_file_name = "test_file";
+    ecl::util::TestArea ta("file_writable");
+    const char *data_file_name = "test_file";
 
-  ecl_kw_type * kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
-  for(size_t i = 0; i < data_size; ++i)
-    ecl_kw_iset_int(kw, i, ((i*37)+11)%data_size);
+    ecl_kw_type *kw = ecl_kw_alloc("TEST_KW", data_size, ECL_INT);
+    for (size_t i = 0; i < data_size; ++i)
+        ecl_kw_iset_int(kw, i, ((i * 37) + 11) % data_size);
 
-  fortio_type * fortio = fortio_open_writer(data_file_name, false, true);
-  ecl_kw_fwrite(kw, fortio);
-  fortio_fclose(fortio);
+    fortio_type *fortio = fortio_open_writer(data_file_name, false, true);
+    ecl_kw_fwrite(kw, fortio);
+    fortio_fclose(fortio);
 
-  for(int i = 0; i < 4; ++i) {
-    ecl_file_type * ecl_file = ecl_file_open(data_file_name, ECL_FILE_WRITABLE);
-    ecl_kw_type * loaded_kw = ecl_file_view_iget_kw(
-                                  ecl_file_get_global_view(ecl_file),
-                                  0);
-    test_assert_true(ecl_kw_equal(kw, loaded_kw));
+    for (int i = 0; i < 4; ++i) {
+        ecl_file_type *ecl_file =
+            ecl_file_open(data_file_name, ECL_FILE_WRITABLE);
+        ecl_kw_type *loaded_kw =
+            ecl_file_view_iget_kw(ecl_file_get_global_view(ecl_file), 0);
+        test_assert_true(ecl_kw_equal(kw, loaded_kw));
 
-    ecl_file_save_kw(ecl_file, loaded_kw);
-    ecl_file_close(ecl_file);
-  }
+        ecl_file_save_kw(ecl_file, loaded_kw);
+        ecl_file_close(ecl_file);
+    }
 
-  ecl_kw_free(kw);
+    ecl_kw_free(kw);
 }
 
 void test_truncated() {
-  ecl::util::TestArea ta("truncate_file");
-  int num_kw;
-  {
-    ecl_grid_type * grid = ecl_grid_alloc_rectangular(20,20,20,1,1,1,NULL);
-    ecl_grid_fwrite_EGRID2( grid , "TEST.EGRID", ECL_METRIC_UNITS );
-    ecl_grid_free( grid );
-  }
-  {
-    ecl_file_type * ecl_file = ecl_file_open("TEST.EGRID" , 0 );
-    test_assert_true( ecl_file_is_instance( ecl_file ) );
-    num_kw = ecl_file_get_size( ecl_file );
-    test_assert_int_equal( ecl_file_get_num_distinct_kw( ecl_file ), 11);
-    ecl_file_close( ecl_file );
-  }
+    ecl::util::TestArea ta("truncate_file");
+    int num_kw;
+    {
+        ecl_grid_type *grid =
+            ecl_grid_alloc_rectangular(20, 20, 20, 1, 1, 1, NULL);
+        ecl_grid_fwrite_EGRID2(grid, "TEST.EGRID", ECL_METRIC_UNITS);
+        ecl_grid_free(grid);
+    }
+    {
+        ecl_file_type *ecl_file = ecl_file_open("TEST.EGRID", 0);
+        test_assert_true(ecl_file_is_instance(ecl_file));
+        num_kw = ecl_file_get_size(ecl_file);
+        test_assert_int_equal(ecl_file_get_num_distinct_kw(ecl_file), 11);
+        ecl_file_close(ecl_file);
+    }
 
-  {
-    offset_type file_size = util_file_size( "TEST.EGRID");
-    FILE * stream = util_fopen("TEST.EGRID" , "r+");
-    util_ftruncate( stream , file_size / 2 );
-    fclose( stream );
-  }
-  {
-    ecl_file_type * ecl_file = ecl_file_open("TEST.EGRID" , 0 );
-    test_assert_true( ecl_file_get_size( ecl_file) < num_kw );
-    ecl_file_close( ecl_file );
-  }
+    {
+        offset_type file_size = util_file_size("TEST.EGRID");
+        FILE *stream = util_fopen("TEST.EGRID", "r+");
+        util_ftruncate(stream, file_size / 2);
+        fclose(stream);
+    }
+    {
+        ecl_file_type *ecl_file = ecl_file_open("TEST.EGRID", 0);
+        test_assert_true(ecl_file_get_size(ecl_file) < num_kw);
+        ecl_file_close(ecl_file);
+    }
 }
 
 void test_mixed_case() {
-  ecl::util::TestArea ta("mixed_case_file");
-  int num_kw;
-  {
-    ecl_grid_type * grid = ecl_grid_alloc_rectangular(20,20,20,1,1,1,NULL);
-    ecl_grid_fwrite_EGRID2( grid , "TESTcase.EGRID", ECL_METRIC_UNITS );
-    ecl_grid_free( grid );
-  }
-  {
-    ecl_file_type * ecl_file = ecl_file_open("TESTcase.EGRID" , 0 );
-    test_assert_true( ecl_file_is_instance( ecl_file ) );
-    num_kw = ecl_file_get_size( ecl_file );
-    test_assert_int_equal( ecl_file_get_num_distinct_kw( ecl_file ), 11);
-    ecl_file_close( ecl_file );
-  }
+    ecl::util::TestArea ta("mixed_case_file");
+    int num_kw;
+    {
+        ecl_grid_type *grid =
+            ecl_grid_alloc_rectangular(20, 20, 20, 1, 1, 1, NULL);
+        ecl_grid_fwrite_EGRID2(grid, "TESTcase.EGRID", ECL_METRIC_UNITS);
+        ecl_grid_free(grid);
+    }
+    {
+        ecl_file_type *ecl_file = ecl_file_open("TESTcase.EGRID", 0);
+        test_assert_true(ecl_file_is_instance(ecl_file));
+        num_kw = ecl_file_get_size(ecl_file);
+        test_assert_int_equal(ecl_file_get_num_distinct_kw(ecl_file), 11);
+        ecl_file_close(ecl_file);
+    }
 
-  {
-    offset_type file_size = util_file_size( "TESTcase.EGRID");
-    FILE * stream = util_fopen("TESTcase.EGRID" , "r+");
-    util_ftruncate( stream , file_size / 2 );
-    fclose( stream );
-  }
-  {
-    ecl_file_type * ecl_file = ecl_file_open("TESTcase.EGRID" , 0 );
-    test_assert_true( ecl_file_get_size( ecl_file) < num_kw );
-    ecl_file_close( ecl_file );
-  }
+    {
+        offset_type file_size = util_file_size("TESTcase.EGRID");
+        FILE *stream = util_fopen("TESTcase.EGRID", "r+");
+        util_ftruncate(stream, file_size / 2);
+        fclose(stream);
+    }
+    {
+        ecl_file_type *ecl_file = ecl_file_open("TESTcase.EGRID", 0);
+        test_assert_true(ecl_file_get_size(ecl_file) < num_kw);
+        ecl_file_close(ecl_file);
+    }
 }
 
-
-int main( int argc , char ** argv) {
-  test_writable(10);
-  test_writable(1337);
-  test_truncated();
-  test_mixed_case();
-  exit(0);
+int main(int argc, char **argv) {
+    test_writable(10);
+    test_writable(1337);
+    test_truncated();
+    test_mixed_case();
+    exit(0);
 }

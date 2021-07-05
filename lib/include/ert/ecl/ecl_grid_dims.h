@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/ecl_grid_dims.hpp>
-
-

@@ -35,24 +35,23 @@ extern "C" {
    to get the endianness correct (for ECLIPSE usage that is).
 */
 
-#define ECLIPSE_BYTE_ORDER  __BIG_ENDIAN   // Alternatively: __LITTLE_ENDIAN
+#define ECLIPSE_BYTE_ORDER __BIG_ENDIAN // Alternatively: __LITTLE_ENDIAN
 
 #ifdef BYTE_ORDER
-  #if  BYTE_ORDER == ECLIPSE_BYTE_ORDER
-    #define ECL_ENDIAN_FLIP false
-  #else
-    #define ECL_ENDIAN_FLIP true
-  #endif
+#if BYTE_ORDER == ECLIPSE_BYTE_ORDER
+#define ECL_ENDIAN_FLIP false
 #else
-  #ifdef WIN32
-    #define ECL_ENDIAN_FLIP true    // Unconditional byte flip on Windows.
-  #else
-    #error: The macro BYTE_ORDER is not defined?
-  #endif
+#define ECL_ENDIAN_FLIP true
+#endif
+#else
+#ifdef WIN32
+#define ECL_ENDIAN_FLIP true // Unconditional byte flip on Windows.
+#else
+#error : The macro BYTE_ORDER is not defined?
+#endif
 #endif
 
 #undef ECLIPSE_BYTE_ORDER
-
 
 #ifdef __cplusplus
 }

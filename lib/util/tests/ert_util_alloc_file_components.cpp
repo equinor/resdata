@@ -7,11 +7,11 @@
 #include <ert/util/util.h>
 #include <ert/util/test_util.hpp>
 
-
-void checkPath(const char * path, const char * directory, const char * base_name, const char * extension) {
-    char * dir;
-    char * base;
-    char * ext;
+void checkPath(const char *path, const char *directory, const char *base_name,
+               const char *extension) {
+    char *dir;
+    char *base;
+    char *ext;
 
     util_alloc_file_components(path, &dir, &base, &ext);
 
@@ -22,14 +22,14 @@ void checkPath(const char * path, const char * directory, const char * base_name
     free(dir);
     free(base);
     free(ext);
-
 }
 
-int main(int argc , char ** argv) {
+int main(int argc, char **argv) {
 
     checkPath("/dir/filename.ext", "/dir", "filename", "ext");
     checkPath("/dir/subdir/filename.ext", "/dir/subdir", "filename", "ext");
-    checkPath("/dir/subdir/filename.name.ext", "/dir/subdir", "filename.name", "ext");
+    checkPath("/dir/subdir/filename.name.ext", "/dir/subdir", "filename.name",
+              "ext");
     checkPath("/dir/subdir/filename", "/dir/subdir", "filename", NULL);
     checkPath("filename.ext", NULL, "filename", "ext");
     checkPath("filename", NULL, "filename", NULL);

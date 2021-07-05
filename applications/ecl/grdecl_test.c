@@ -22,26 +22,25 @@
 #include <ert/util/util.h>
 #include <ert/ecl/ecl_kw.h>
 
+int main(int argc, char **argv) {
+    FILE *stream = util_fopen(argv[1], "r");
+    {
+        while (true) {
+            ecl_kw_type *grdecl_kw;
+            clock_t begin = clock();
+            grdecl_kw = ecl_kw_fscanf_alloc_current_grdecl(stream, ECL_FLOAT);
+            clock_t end = clock();
+            double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-int main(int argc , char ** argv) {
-  FILE * stream = util_fopen( argv[1] , "r");
-  {
-    while (true) {
-      ecl_kw_type * grdecl_kw;
-      clock_t begin = clock();
-      grdecl_kw = ecl_kw_fscanf_alloc_current_grdecl( stream ,  ECL_FLOAT );
-      clock_t end = clock();
-      double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-
-      if (grdecl_kw != NULL) {
-        printf("Loaded %s - %d elements : %g \n", ecl_kw_get_header( grdecl_kw ),
-               ecl_kw_get_size( grdecl_kw ), time_spent);
-        ecl_kw_free( grdecl_kw );
-      } else
-        break;
-
+            if (grdecl_kw != NULL) {
+                printf("Loaded %s - %d elements : %g \n",
+                       ecl_kw_get_header(grdecl_kw), ecl_kw_get_size(grdecl_kw),
+                       time_spent);
+                ecl_kw_free(grdecl_kw);
+            } else
+                break;
+        }
     }
-  }
 
-  fclose( stream );
+    fclose(stream);
 }

@@ -25,7 +25,6 @@
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/smspec_node.h>
 
-
 /*
   The ECLIPSE summary data is stored in two different files:
 
@@ -154,16 +153,13 @@
    interchanged, that will lead to crash and burn.
 */
 
+int main(int argc, char **argv) {
+    time_t start_time = util_make_date_utc(1, 1, 2010);
+    int nx = 10;
+    int ny = 10;
+    int nz = 10;
 
-
-int main( int argc , char ** argv) {
-  time_t start_time = util_make_date_utc( 1,1,2010 );
-  int nx = 10;
-  int ny = 10;
-  int nz = 10;
-
-
-  /*
+    /*
     We create a new summary case which will be used for writing. The
     arguments are:
 
@@ -186,11 +182,11 @@ int main( int argc , char ** argv) {
 
       6-8: Grid dimensions.
   */
-  bool time_in_days = true;
-  ecl_sum_type * ecl_sum = ecl_sum_alloc_writer( "/tmp/CASE" , false , true , ":" , start_time , time_in_days , nx , ny , nz );
+    bool time_in_days = true;
+    ecl_sum_type *ecl_sum = ecl_sum_alloc_writer(
+        "/tmp/CASE", false, true, ":", start_time, time_in_days, nx, ny, nz);
 
-
-  /*
+    /*
     We add the variables we wish to measure. Due to the rather
     inflexible nature of the format we must add all the variables we
     are interested in before we start adding data.
@@ -215,13 +211,12 @@ int main( int argc , char ** argv) {
       6. A defualt value for this variable.
 
   */
-  ecl_sum_add_var( ecl_sum , "FOPT" , NULL   , 0   , "Barrels" , 99.0 );
-  ecl_sum_add_var( ecl_sum , "BPR"  , NULL   , 567 , "BARS"    , 0.0  );
-  ecl_sum_add_var( ecl_sum , "WWCT" , "OP-1" , 0   , "(1)"     , 0.0  );
-  ecl_sum_add_var( ecl_sum , "WOPR" , "OP-1" , 0   , "Barrels" , 0.0  );
+    ecl_sum_add_var(ecl_sum, "FOPT", NULL, 0, "Barrels", 99.0);
+    ecl_sum_add_var(ecl_sum, "BPR", NULL, 567, "BARS", 0.0);
+    ecl_sum_add_var(ecl_sum, "WWCT", "OP-1", 0, "(1)", 0.0);
+    ecl_sum_add_var(ecl_sum, "WOPR", "OP-1", 0, "Barrels", 0.0);
 
-
-  /*
+    /*
     The return value from the ecl_sum_add_var() function is an
     ecl::smspec_node instance (implemented in file smspec_node.c);
     which is essentially a struct holding header information about
@@ -243,23 +238,24 @@ int main( int argc , char ** argv) {
 
   */
 
-  const ecl::smspec_node * wwct_wellx = ecl_sum_add_var( ecl_sum , "WWCT" , NULL , 0 , "(1)"     , 0.0);
-  const ecl::smspec_node * wopr_wellx = ecl_sum_add_var( ecl_sum , "WOPR" , NULL , 0 , "Barrels" , 0.0);
+    const ecl::smspec_node *wwct_wellx =
+        ecl_sum_add_var(ecl_sum, "WWCT", NULL, 0, "(1)", 0.0);
+    const ecl::smspec_node *wopr_wellx =
+        ecl_sum_add_var(ecl_sum, "WOPR", NULL, 0, "Barrels", 0.0);
 
+    {
+        int num_dates = 10;
+        int num_step = 10;
+        double sim_days = 0;
+        int report_step;
+        int step;
+        for (report_step = 0; report_step < num_dates; report_step++) {
+            for (step = 0; step < num_step; step++) {
+                /* Simulate .... */
 
-  {
-    int num_dates = 10;
-    int num_step = 10;
-    double sim_days = 0;
-    int report_step;
-    int step;
-    for (report_step = 0; report_step < num_dates; report_step++) {
-      for (step = 0; step < num_step; step++) {
-        /* Simulate .... */
-
-        sim_days += 10;
-        {
-          /*
+                sim_days += 10;
+                {
+                    /*
              Here we add a new timestep. The report steps are not
              added explicitly; the ecl_sum layer will just see if this
              is a new report step. Observe that report_step == 1 is
@@ -276,35 +272,38 @@ int main( int argc , char ** argv) {
              elements which are not set explicitly will have the
              default value given in the ecl_sum_add_var() call.
           */
-          ecl_sum_tstep_type * tstep = ecl_sum_add_tstep( ecl_sum , report_step + 1 , sim_days );
+                    ecl_sum_tstep_type *tstep =
+                        ecl_sum_add_tstep(ecl_sum, report_step + 1, sim_days);
 
-
-          /*
+                    /*
             We can just set a value by it's index using the
             ecl_sum_tstep_iset() function. The index value should come
             from the smspec_get_params_index() function.
           */
-          ecl_sum_tstep_iset( tstep , 3 , 0.98);
+                    ecl_sum_tstep_iset(tstep, 3, 0.98);
 
-          /*
+                    /*
             We can use the gen_key value to set the numerical
             values. The gen_key value should could from the
             smpec_get_gen_key1() function:
           */
-          ecl_sum_tstep_set_from_key( tstep  , "WWCT:OP-1" , sim_days / 10);
-          if (report_step >= 5) {
-            /*
+                    ecl_sum_tstep_set_from_key(tstep, "WWCT:OP-1",
+                                               sim_days / 10);
+                    if (report_step >= 5) {
+                        /*
               We can use the smspec_node value from the
               ecl_sum_add_var() function directly:
             */
-            ecl_sum_tstep_set_from_node( tstep , *wwct_wellx , sim_days );
-            ecl_sum_tstep_set_from_node( tstep, *wopr_wellx, sim_days * 100);
-          }
+                        ecl_sum_tstep_set_from_node(tstep, *wwct_wellx,
+                                                    sim_days);
+                        ecl_sum_tstep_set_from_node(tstep, *wopr_wellx,
+                                                    sim_days * 100);
+                    }
+                }
+            }
         }
-      }
     }
-  }
 
-  ecl_sum_fwrite( ecl_sum );
-  ecl_sum_free( ecl_sum );
+    ecl_sum_fwrite(ecl_sum);
+    ecl_sum_free(ecl_sum);
 }

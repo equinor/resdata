@@ -5,5 +5,3 @@
 */
 
 #include <ert/ecl/ecl_sum_data.hpp>
-
-

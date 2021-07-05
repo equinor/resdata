@@ -23,52 +23,52 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_file.h>
 
+void test_case(const char *base, bool load_all) {
+    char *grid_file =
+        ecl_util_alloc_filename(NULL, base, ECL_EGRID_FILE, false, 0);
+    char *init_file =
+        ecl_util_alloc_filename(NULL, base, ECL_INIT_FILE, false, 0);
+    char *restart_file =
+        ecl_util_alloc_filename(NULL, base, ECL_UNIFIED_RESTART_FILE, false, 0);
 
-void test_case( const char * base , bool load_all) {
-  char *grid_file = ecl_util_alloc_filename(NULL, base, ECL_EGRID_FILE, false, 0);
-  char *init_file = ecl_util_alloc_filename(NULL, base, ECL_INIT_FILE, false, 0);
-  char *restart_file = ecl_util_alloc_filename(NULL, base, ECL_UNIFIED_RESTART_FILE,
-                                                 false, 0);
+    ecl_grid_type *grid;
+    ecl_file_type *restart;
+    ecl_file_type *init;
 
-  ecl_grid_type * grid;
-  ecl_file_type * restart;
-  ecl_file_type * init;
+    clock_t begin = clock();
+    grid = ecl_grid_alloc(grid_file);
+    clock_t end = clock();
+    double grid_time = (double)(end - begin) / CLOCKS_PER_SEC;
 
-  clock_t begin = clock();
-  grid = ecl_grid_alloc(grid_file );
-  clock_t end = clock();
-  double grid_time = (double)(end - begin) / CLOCKS_PER_SEC;
+    begin = clock();
+    init = ecl_file_open(init_file, 0);
+    if (load_all)
+        ecl_file_load_all(init);
 
-  begin = clock();
-  init = ecl_file_open( init_file , 0);
-  if (load_all)
-    ecl_file_load_all( init );
+    end = clock();
+    double init_time = (double)(end - begin) / CLOCKS_PER_SEC;
 
-  end = clock();
-  double init_time = (double)(end - begin) / CLOCKS_PER_SEC;
+    begin = clock();
+    restart = ecl_file_open(restart_file, 0);
+    if (load_all)
+        ecl_file_load_all(restart);
+    end = clock();
+    double restarts_time = (double)(end - begin) / CLOCKS_PER_SEC;
 
-  begin = clock();
-  restart = ecl_file_open( restart_file , 0);
-  if (load_all)
-    ecl_file_load_all( restart );
-  end = clock();
-  double restarts_time = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("%-64s  Restart:%8.4f    Grid:%8.4f     Init:%8.4f \n", base,
+           restarts_time, grid_time, init_time);
 
-  printf("%-64s  Restart:%8.4f    Grid:%8.4f     Init:%8.4f \n",
-         base, restarts_time, grid_time, init_time);
-
-  ecl_file_close( init );
-  ecl_file_close( restart );
-  ecl_grid_free( grid );
-  free( grid_file );
-  free( init_file );
-  free( restart_file );
+    ecl_file_close(init);
+    ecl_file_close(restart);
+    ecl_grid_free(grid);
+    free(grid_file);
+    free(init_file);
+    free(restart_file);
 }
 
-
-int main(int argc, char ** argv) {
-  bool load_all = true;
-  int i;
-  for (i=1; i < argc; i++)
-    test_case( argv[i] , load_all);
+int main(int argc, char **argv) {
+    bool load_all = true;
+    int i;
+    for (i = 1; i < argc; i++)
+        test_case(argv[i], load_all);
 }
