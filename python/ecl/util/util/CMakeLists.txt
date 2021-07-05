@@ -9,15 +9,15 @@ set(PYTHON_SOURCES
     lookup_table.py
     rng.py
     stringlist.py
-    #substitution_list.py
+    # substitution_list.py
     thread_pool.py
     time_vector.py
     util_func.py
     vector_template.py
     permutation_vector.py
     version.py
-    cwd_context.py
-)
+    cwd_context.py)
 
-add_python_package("python.ecl.util.util"  ${PYTHON_INSTALL_PREFIX}/ecl/util/util "${PYTHON_SOURCES}" True)
-
+add_python_package(
+  "python.ecl.util.util" ${PYTHON_INSTALL_PREFIX}/ecl/util/util
+  "${PYTHON_SOURCES}" True)

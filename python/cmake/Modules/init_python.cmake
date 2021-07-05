@@ -1,44 +1,38 @@
-# This macro will initialize the current cmake session for Python. The
-# macro starts by looking for the Python interpreter of correct
-# version. When a Python interepreter of the correct version has been
-# located the macro will continue to set variables, load other cmake
-# modules and generate scripts to be used in the remaining part of the
-# cmake process. 
+# This macro will initialize the current cmake session for Python. The macro
+# starts by looking for the Python interpreter of correct version. When a Python
+# interepreter of the correct version has been located the macro will continue
+# to set variables, load other cmake modules and generate scripts to be used in
+# the remaining part of the cmake process.
 #
 # Variables which will be set:
 # ----------------------------
 #
 # PYTHON_INSTALL_PREFIX: All python packages will be located in
-#        ${GLOBAL_PREFIX}/${PYTHON_INSTALL_PREFIX} - this applies both
-#        when searching for dependencies and when installing.
+# ${GLOBAL_PREFIX}/${PYTHON_INSTALL_PREFIX} - this applies both when searching
+# for dependencies and when installing.
 #
-# CTEST_PYTHONPATH: Normal ':' separated path variables which is
-#        passed to the test runner. Should contain the PYTHONPATH to
-#        all third party packages which are not in the default search
-#        path. The CTEST_PYTHONPATH variable will be updated by the
-#        python_package( ) function when searching for third party
-#        packages.
-#
+# CTEST_PYTHONPATH: Normal ':' separated path variables which is passed to the
+# test runner. Should contain the PYTHONPATH to all third party packages which
+# are not in the default search path. The CTEST_PYTHONPATH variable will be
+# updated by the python_package( ) function when searching for third party
+# packages.
 #
 # New functions/macros which will be available:
 # ---------------------------------------------
 #
-# add_python_package( ): This function will copy python source files
-#        to the build directory, 'compile' them and set up installation.
+# add_python_package( ): This function will copy python source files to the
+# build directory, 'compile' them and set up installation.
 #
-#
-# add_python_test( ): Set up a test based on invoking a Python test
-#        class with a small python executable front end.
+# add_python_test( ): Set up a test based on invoking a Python test class with a
+# small python executable front end.
 #
 # find_python_package( ): Will search for a python package.
-#
 #
 # New scripts generated:
 # ----------------------
 #
-#
-# cmake_pyc: Small script which will run in-place Python compilation
-#        of a directory tree recursively.
+# cmake_pyc: Small script which will run in-place Python compilation of a
+# directory tree recursively.
 #
 # cmake_pyc_file: Small script which will compile one python file.
 #
@@ -46,46 +40,47 @@
 #
 # All the generated scripts will be located in ${PROJECT_BINARY_DIR}/bin.
 #
-#
 # Downstream projects should use this as:
 #
-# include( init_python )
-# init_python()
-# ...
+# include( init_python ) init_python() ...
 
 macro(init_python)
 
-   FIND_PACKAGE(PythonInterp)
-   if (NOT DEFINED PYTHON_EXECUTABLE)
-      message(WARNING "Python interpreter not found - Python wrappers not enabled")
-      set( ENABLE_PYTHON OFF PARENT_SCOPE )
-      return()
-   endif()
+  find_package(PythonInterp)
+  if(NOT DEFINED PYTHON_EXECUTABLE)
+    message(
+      WARNING "Python interpreter not found - Python wrappers not enabled")
+    set(ENABLE_PYTHON
+        OFF
+        PARENT_SCOPE)
+    return()
+  endif()
 
-   if (EXISTS "/etc/debian_version")
-      set( PYTHON_PACKAGE_PATH "dist-packages")
-   else()
-      set( PYTHON_PACKAGE_PATH "site-packages")
-   endif()
+  if(EXISTS "/etc/debian_version")
+    set(PYTHON_PACKAGE_PATH "dist-packages")
+  else()
+    set(PYTHON_PACKAGE_PATH "site-packages")
+  endif()
 
-   set(PYTHON_INSTALL_PREFIX  "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}"  CACHE STRING "Subdirectory to install Python modules in")
-   set(CTEST_PYTHONPATH ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX})
-   configure_python_env( )
-   include(add_python_test)
-   include(add_python_package)
+  set(PYTHON_INSTALL_PREFIX
+      "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}"
+      CACHE STRING "Subdirectory to install Python modules in")
+  set(CTEST_PYTHONPATH ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX})
+  configure_python_env()
+  include(add_python_test)
+  include(add_python_package)
 endmacro()
 
+# The function configure_python_env( ) will generate three small Python scripts
+# which will be located in ${PROJECT_BINARY_DIR}/bin and will be used when
+# 'compiling' and testing Python code. The function will be called from the
+# init_python() macro.
 
+function(configure_python_env)
 
-# The function configure_python_env( ) will generate three small
-# Python scripts which will be located in ${PROJECT_BINARY_DIR}/bin
-# and will be used when 'compiling' and testing Python code. The
-# function will be called from the init_python() macro.
-
-function( configure_python_env )
-
-FILE(WRITE "${PROJECT_BINARY_DIR}/bin/ctest_run_python"
-"import sys
+  file(
+    WRITE "${PROJECT_BINARY_DIR}/bin/ctest_run_python"
+    "import sys
 import os
 from unittest import TextTestRunner
 
@@ -110,9 +105,9 @@ def update_path():
         ctest_pythonpath = os.environ['CTEST_PYTHONPATH']
         for path in ctest_pythonpath.split(':'):
             path_list.append( path )
-   
+
      for path in reversed(path_list):
-         sys.path.insert(0 , path)     
+         sys.path.insert(0 , path)
 
      if 'PYTHONPATH' in os.environ:
         pythonpath = os.environ['PYTHONPATH']
@@ -122,21 +117,22 @@ def update_path():
      os.environ['PYTHONPATH'] = ':'.join( path_list )
 
 
-    
+
 if __name__ == '__main__':
     update_path( )
     from ecl.util.test import ErtTestRunner
     for test_class in sys.argv[1:]:
         tests = ErtTestRunner.getTestsFromTestClass(test_class)
-        
+
         # Set verbosity to 2 to see which test method in a class that fails.
         runTestCase(tests, verbosity=0)
-")    
+")
 
-#-----------------------------------------------------------------
+  # -----------------------------------------------------------------
 
-FILE(WRITE "${PROJECT_BINARY_DIR}/bin/cmake_pyc"
-"
+  file(
+    WRITE "${PROJECT_BINARY_DIR}/bin/cmake_pyc"
+    "
 import py_compile
 import os
 import os.path
@@ -164,16 +160,17 @@ except Exception as error:
     sys.exit('py_compile(%s) failed:%s' % (target_file , error))
 ")
 
-#-----------------------------------------------------------------
+  # -----------------------------------------------------------------
 
-FILE(WRITE "${PROJECT_BINARY_DIR}/bin/cmake_pyc_file"
-"
+  file(
+    WRITE "${PROJECT_BINARY_DIR}/bin/cmake_pyc_file"
+    "
 import py_compile
 import os
 import sys
 import os.path
 
-# Small 'python compiler' used in the build system for ert. 
+# Small 'python compiler' used in the build system for ert.
 
 for file in sys.argv[1:]:
     try:
@@ -181,7 +178,5 @@ for file in sys.argv[1:]:
     except Exception as error:
         sys.exit('py_compile(%s) failed:%s' % (file , error))
 ")
-        
-
 
 endfunction()

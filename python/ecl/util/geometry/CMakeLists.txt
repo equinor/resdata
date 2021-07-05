@@ -7,7 +7,8 @@ set(PYTHON_SOURCES
     geo_region.py
     polyline.py
     xyz_io.py
-    surface.py
-)
+    surface.py)
 
-add_python_package("python.ecl.util.geometry"  ${PYTHON_INSTALL_PREFIX}/ecl/util/geometry "${PYTHON_SOURCES}" True)
+add_python_package(
+  "python.ecl.util.geometry" ${PYTHON_INSTALL_PREFIX}/ecl/util/geometry
+  "${PYTHON_SOURCES}" True)
