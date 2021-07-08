@@ -1045,63 +1045,6 @@ int ecl_util_get_month_nr(const char *month_name) {
     return month_nr;
 }
 
-/*
-    The parsing of the data file has room for improvement, (or should
-    be removed?).
-
-    ECLIPSE100 has default date: 1. of january 1983.
-    ECLIPSE300 has default date: 1. of january 1990.
-
-*/
-
-time_t ecl_util_get_start_date(const char *data_file) {
-    basic_parser_type *parser =
-        basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n");
-    time_t start_date = -1;
-    FILE *stream = util_fopen(data_file, "r");
-    char *buffer;
-
-  if (!basic_parser_fseek_string( parser , stream , "START" , true , true))   /* Seeks case insensitive. */
-    return start_date;
-
-    {
-        long int start_pos = util_ftell(stream);
-        int buffer_size;
-
-        /* Look for terminating '/' */
-        if (!basic_parser_fseek_string(parser, stream, "/", false, true))
-            util_abort("%s: sorry - could not find \"/\" termination of START "
-                       "keyword in data_file: \n",
-                       __func__, data_file);
-
-        buffer_size = (util_ftell(stream) - start_pos);
-        buffer = (char *)util_calloc(buffer_size + 1, sizeof *buffer);
-        util_fseek(stream, start_pos, SEEK_SET);
-        util_fread(buffer, sizeof *buffer, buffer_size, stream, __func__);
-        buffer[buffer_size] = '\0';
-    }
-
-    {
-        stringlist_type *tokens =
-            basic_parser_tokenize_buffer(parser, buffer, true);
-        int day, year, month_nr;
-        if (util_sscanf_int(stringlist_iget(tokens, 0), &day) &&
-            util_sscanf_int(stringlist_iget(tokens, 2), &year)) {
-            month_nr = ecl_util_get_month_nr(stringlist_iget(tokens, 1));
-            start_date = ecl_util_make_date(day, month_nr, year);
-        } else
-            util_abort("%s: failed to parse DAY MONTH YEAR from : \"%s\" \n",
-                       __func__, buffer);
-        stringlist_free(tokens);
-    }
-
-    free(buffer);
-    basic_parser_free(parser);
-    fclose(stream);
-
-    return start_date;
-}
-
 static int ecl_util_get_num_parallel_cpu__(basic_parser_type *parser,
                                            FILE *stream,
                                            const char *data_file) {

@@ -115,7 +115,6 @@ class EclUtil(object):
     _get_file_type = EclPrototype(
         "ecl_file_enum ecl_util_get_file_type(char*, bool*, int*)", bind=False
     )
-    _get_start_date = EclPrototype("time_t ecl_util_get_start_date(char*)", bind=False)
     _get_report_step = EclPrototype(
         "int ecl_util_filename_report_nr(char*)", bind=False
     )
@@ -173,7 +172,6 @@ class EclUtil(object):
 
 get_num_cpu = EclUtil.get_num_cpu
 get_file_type = EclUtil.get_file_type
-get_start_date = EclUtil.get_start_date
 
 monkey_the_camel(EclUtil, "inspectExtension", EclUtil.inspect_extension, staticmethod)
 monkey_the_camel(EclUtil, "reportStep", EclUtil.report_step, staticmethod)
