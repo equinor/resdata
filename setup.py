@@ -100,5 +100,5 @@ skbuild.setup(
         "Topic :: Software Development :: Libraries",
         "Topic :: Utilities",
     ],
-    version=version,
+    version=setuptools.sic(version),
 )

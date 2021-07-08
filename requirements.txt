@@ -7,7 +7,7 @@ numpy<=1.16.6;python_version=='2.7'
 pandas;python_version>='3.0'
 pandas<=0.25.3;python_version=='2.7'
 scikit-build
-setuptools
+setuptools>=46.1
 setuptools_scm
 six
 sphinx!=3.4.0
