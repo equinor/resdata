@@ -45,9 +45,9 @@ void test_load() {
     ecl::unsmry_loader *loader =
         new ecl::unsmry_loader(ecl_sum_get_smspec(ecl_sum), "CASE.UNSMRY", 0);
 
-    const std::vector<double> FOPT_value = loader->get_vector(1);
-    const std::vector<double> BPR_value = loader->get_vector(2);
-    const std::vector<double> WWCT_value = loader->get_vector(3);
+    const std::vector<float> FOPT_value = loader->get_vector(1);
+    const std::vector<float> BPR_value = loader->get_vector(2);
+    const std::vector<float> WWCT_value = loader->get_vector(3);
     test_assert_int_equal(FOPT_value.size(), 4);
     test_assert_double_equal(FOPT_value[3], 6.0);
     test_assert_double_equal(BPR_value[2], 10.0);

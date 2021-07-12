@@ -7,6 +7,7 @@
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_endian_flip.h>
+#include <ert/util/vector.hpp>
 
 #include "detail/ecl/ecl_sum_file_data.hpp"
 #include "detail/ecl/ecl_unsmry_loader.hpp"
@@ -356,7 +357,7 @@ void ecl_sum_file_data::build_index() {
         int offset = ecl_smspec_get_first_step(this->ecl_smspec) - 1;
         std::vector<int> report_steps = this->loader->report_steps(offset);
         std::vector<time_t> sim_time = this->loader->sim_time();
-        std::vector<double> sim_seconds = this->loader->sim_seconds();
+        std::vector<float> sim_seconds = this->loader->sim_seconds();
 
         for (int i = 0; i < this->loader->length(); i++) {
             this->index.add(sim_time[i], sim_seconds[i], report_steps[i]);
@@ -395,10 +396,10 @@ int ecl_sum_file_data::get_time_report(int end_index, time_t *data) {
     return offset;
 }
 
-void ecl_sum_file_data::get_data(int params_index, int length, double *data) {
+void ecl_sum_file_data::get_data(int params_index, int length, float *data) {
     if (this->loader) {
         const auto tmp_data = loader->get_vector(params_index);
-        memcpy(data, tmp_data.data(), length * sizeof data);
+        std::copy_n(tmp_data.cbegin(), length, data);
     } else {
         for (int time_index = 0; time_index < length; time_index++)
             data[time_index] = this->iget(time_index, params_index);
@@ -406,7 +407,7 @@ void ecl_sum_file_data::get_data(int params_index, int length, double *data) {
 }
 
 int ecl_sum_file_data::get_data_report(int params_index, int end_index,
-                                       double *data, double default_value) {
+                                       float *data, float default_value) {
     int offset = 0;
 
     for (int report_step = this->first_report();

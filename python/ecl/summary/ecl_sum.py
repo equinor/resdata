@@ -21,6 +21,8 @@ in the C source files ecl_sum.c, ecl_smspec.c and ecl_sum_data in the
 libecl/src directory.
 """
 
+from typing import List, Optional
+import sys
 import warnings
 import numpy
 import datetime
@@ -43,6 +45,7 @@ from ecl.summary import EclSumVarType
 from ecl.summary.ecl_sum_vector import EclSumVector
 from ecl.summary.ecl_smspec_node import EclSMSPECNode
 from ecl import EclPrototype, EclUnitTypeEnum
+from ecl._native import summary as _native
 
 # , EclSumKeyWordVector
 
@@ -91,12 +94,14 @@ def date2num(dt):
 
 class EclSum(BaseCClass):
     TYPE_NAME = "ecl_sum"
+
     _fread_alloc_case2 = EclPrototype(
         "void*     ecl_sum_fread_alloc_case2__(char*, char*, bool, bool, int)",
         bind=False,
     )
     _fread_alloc = EclPrototype(
-        "void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False
+        "void*     ecl_sum_fread_alloc(char*, stringlist, char*, bool, bool, int)",
+        bind=False,
     )
     _create_restart_writer = EclPrototype(
         "ecl_sum_obj  ecl_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, time_t, bool, int, int, int)",
@@ -276,7 +281,7 @@ class EclSum(BaseCClass):
         data_files = StringList()
         data_files.append(unsmry_file)
         c_ptr = cls._fread_alloc(
-            smspec_file, data_files, key_join_string, include_restart
+            smspec_file, data_files, key_join_string, include_restart, False, 0
         )
         if c_ptr is None:
             raise IOError("Failed to create summary instance")
@@ -474,6 +479,17 @@ class EclSum(BaseCClass):
             time_points.append(t)
         return time_points
 
+    def to_numpy(
+        self,
+        keyword: str,
+        time_index: Optional[List[datetime.datetime]] = None,
+        report_only: bool = False,
+    ) -> numpy.ndarray:
+        if report_only:
+            return _native.report_to_numpy(self, keyword)
+        else:
+            return _native.to_numpy(self, [keyword], time_index)
+
     def numpy_vector(self, key, time_index=None, report_only=False):
         """Will return numpy vector of all the values corresponding to @key.
 
@@ -497,30 +513,10 @@ class EclSum(BaseCClass):
         ValueError exception.
 
         """
-        if key not in self:
-            raise KeyError("No such key:%s" % key)
+        if time_index is not None and report_only is True:
+            raise ValueError
 
-        if report_only:
-            if time_index is None:
-                time_index = self.report_dates
-            else:
-                raise ValueError("Can not suuply both time_index and report_only=True")
-
-        if time_index is None:
-            np_vector = numpy.zeros(len(self))
-            self._init_numpy_vector(
-                key, np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            )
-            return np_vector
-        else:
-            time_vector = self._make_time_vector(time_index)
-            np_vector = numpy.zeros(len(time_vector))
-            self._init_numpy_vector_interp(
-                key,
-                time_vector,
-                np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            )
-            return np_vector
+        return self.to_numpy(key, time_index, report_only).astype(numpy.float64)
 
     @property
     def numpy_dates(self):
@@ -583,35 +579,26 @@ class EclSum(BaseCClass):
               2010-04-01    672.7      620.4     78.7
               ....
         """
-        from ecl.summary import EclSumKeyWordVector
-
         if column_keys is None:
-            keywords = EclSumKeyWordVector(self, add_keywords=True)
-        else:
-            keywords = EclSumKeyWordVector(self)
-            for key in column_keys:
-                keywords.add_keywords(key)
+            column_keys = self.keys()
 
-        if len(keywords) == 0:
+        if len(column_keys) == 0:
             raise ValueError("No valid key")
 
-        if time_index is None:
-            time_index = self.numpy_dates
-            data = numpy.zeros([len(time_index), len(keywords)])
-            EclSum._init_pandas_frame(
-                self, keywords, data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            )
-        else:
-            time_points = self._make_time_vector(time_index)
-            data = numpy.zeros([len(time_points), len(keywords)])
-            EclSum._init_pandas_frame_interp(
-                self,
-                keywords,
-                time_points,
-                data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
-            )
+        try:
+            if time_index is None:
+                time_index = self.numpy_dates
+                data = _native.to_numpy(self, column_keys, None)
+            else:
+                data = _native.to_numpy(self, column_keys, time_index)
+        except KeyError as exc:
+            # For backwards-compatibility reasons, rethrow the KeyError as a
+            # ValueError
+            raise ValueError from exc
 
-        frame = pandas.DataFrame(index=time_index, columns=list(keywords), data=data)
+        frame = pandas.DataFrame(
+            index=time_index, columns=column_keys or self.keys(), data=data
+        )
         return frame
 
     @staticmethod
