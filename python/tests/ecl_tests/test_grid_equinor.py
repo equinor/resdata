@@ -207,9 +207,9 @@ class GridTest(EclTest):
         self.assertTrue(g1.equal(g2))
 
     def test_time(self):
-        t0 = time.clock()
+        t0 = time.perf_counter()
         g1 = EclGrid(self.egrid_file())
-        t1 = time.clock()
+        t1 = time.perf_counter()
         t = t1 - t0
         self.assertTrue(t < 1.0)
 
