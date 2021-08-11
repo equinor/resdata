@@ -516,7 +516,7 @@ class EclSum(BaseCClass):
         if time_index is not None and report_only is True:
             raise ValueError
 
-        return self.to_numpy(key, time_index, report_only).astype(numpy.float64)
+        return self.to_numpy(key, time_index, report_only)  # .astype(numpy.float64)
 
     @property
     def numpy_dates(self):
