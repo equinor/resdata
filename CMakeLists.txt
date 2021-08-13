@@ -1,10 +1,10 @@
-cmake_minimum_required(
-  VERSION 2.8.12) # If you are creating Python wrappers for Windows, the actual
-                  # version requirement is 3.4
+cmake_minimum_required(VERSION 3.12)
 project(ecl C CXX)
 
 include(GNUInstallDirs)
 include(TestBigEndian)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT DEFINED CMAKE_MACOSX_RPATH)
   # There is some weirdness around this variable, the default value is different
@@ -161,20 +161,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                                                "MinSizeRel" "RelWithDebInfo")
 endif()
 
-# Treat warnings as errors if not on Windows
-if(NOT ERT_WINDOWS)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wno-unknown-pragmas ")
-  set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -Wfatal-errors -Wall -Wno-unknown-pragmas -Wno-unused-result -Wno-unused-parameter"
-  )
-endif()
-
 if(MSVC)
   add_definitions("/W3 /D_CRT_SECURE_NO_WARNINGS /wd4996")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-find_package(CXX11Features)
 
 # -----------------------------------------------------------------
 
