@@ -167,8 +167,7 @@ void int_vector_iget_invalid(void *arg) {
 
 void test_abort() {
     int_vector_type *ivec = int_vector_alloc(0, 0);
-    test_assert_util_abort("int_vector_assert_index", int_vector_iget_invalid,
-                           ivec);
+    test_assert_util_abort("assert_index", int_vector_iget_invalid, ivec);
     int_vector_free(ivec);
 }
 
@@ -379,6 +378,7 @@ void misc_int_vector_test() {
     test_assert_int_equal(-1, int_vector_index(int_vector, 100));
     test_assert_int_equal(-1, int_vector_index_sorted(int_vector, 100));
 
+    printf("GLL: %p\n", int_vector);
     test_assert_true(int_vector_is_instance(int_vector));
     test_assert_false(double_vector_is_instance(int_vector));
     int_vector_resize(int_vector, 3, 99);
