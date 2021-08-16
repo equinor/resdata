@@ -536,7 +536,7 @@ class EclGrid(BaseCClass):
 
         if not set_count == 1:
             raise ValueError(
-                "Exactly one of the kewyord arguments active_index, global_index or ijk must be set"
+                "Exactly one of the keyword arguments active_index, global_index or ijk must be set"
             )
 
         if not active_index is None:
