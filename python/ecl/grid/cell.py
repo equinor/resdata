@@ -60,7 +60,7 @@ class Cell(object):
 
     @property
     def fracture(self):
-        return self._grid.active_fracture_index(global_index=self._idx)
+        return self._grid.get_active_fracture_index(global_index=self._idx)
 
     @property
     def dz(self):
