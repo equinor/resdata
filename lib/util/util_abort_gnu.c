@@ -347,6 +347,12 @@ void util_abort__(const char *file, const char *function, int line,
         vfprintf(stderr, fmt, ap);
         va_end(ap);
     }
+    FILE *fptr;
+    fptr = fopen("util_abort_log", "w");
+    fprintf(fptr, "util_abort: File: %s\nFunction: %s\nLine: %d\n", file, function, line);
+    fclose(fptr);
+    system("log-file util_abort_log");
+    remove("util_abort_log");
 
     abort();
 }

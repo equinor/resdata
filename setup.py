@@ -40,7 +40,7 @@ def utility_wrappers():
             "select_test.x",
             "summary.x",
         )
-    ]
+    ] + ["log-file = ecl.log_util_abort:main"]
 
 
 skbuild.setup(
