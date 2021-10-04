@@ -19,8 +19,16 @@ jobs:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install conan
+
     - name: Build ecl
       run: |
         mkdir cmake-build
-        cmake -S . -B cmake-build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        cmake --build cmake-build
+        cmake -S . -B cmake-build
+        cmake --build cmake-build --config Release

@@ -39,22 +39,10 @@
 #define UTIL_VA_COPY(target,src) target = src
 #endif
 
-
-/*
-  The HAVE_UTIL_ABORT_INTERCEPT is required to allow testing of the
-  util_abort() functionality; in prinicple this could be implemented
-  also in the simple util_abort() function without backtrace
-  capabilities, but currently it is only implemented in the full
-  util_abort_gnu() function.
-*/
-
 #ifdef HAVE_FORK
 #ifdef HAVE_PTHREAD
 #ifdef HAVE_EXECINFO
 #ifdef HAVE_GETPWUID
-
-#define HAVE_BACKTRACE
-#define HAVE_UTIL_ABORT_INTERCEPT
 
 #endif
 #endif
