@@ -289,29 +289,6 @@ void test_install_SIGNALS(void) {
                                              Killing with SIGKILL (-9) will not give a backtrace.*/
 }
 
-#ifdef HAVE_BACKTRACE
-#include <execinfo.h>
-
-void test_util_addr2line() {
-    const char *file = __FILE__;
-    const char *func = __func__;
-    int line;
-    const int max_bt = 50;
-    void *bt_addr[max_bt];
-    int size;
-    char *func_name, *file_name;
-    int line_nr;
-
-    line = __LINE__ + 2;
-    size = backtrace(bt_addr, max_bt);
-    test_assert_int_equal(size, 4);
-    test_assert_true(
-        util_addr2line_lookup(bt_addr[0], &func_name, &file_name, &line_nr));
-    test_assert_string_equal(func_name, func);
-    test_assert_int_equal(line, line_nr);
-    test_assert_string_equal(file_name, file);
-}
-
 void test_assert_util_abort(const char *function_name, void call_func(void *),
                             void *arg) {
     bool util_abort_intercepted = false;
@@ -334,23 +311,6 @@ void test_assert_util_abort(const char *function_name, void call_func(void *),
         test_assert_true(util_abort_intercepted);
     }
 }
-
-#else
-
-/*
-  These are non-functional stubs.
-*/
-
-bool util_addr2line_lookup(const void *bt_addr, char **func_name,
-                           char **file_name, int *line_nr) {
-    return false;
-}
-
-jmp_buf *util_abort_test_jump_buffer() { return NULL; }
-
-void util_abort_test_set_intercept_function(const char *function) { return; }
-
-#endif
 
 #ifdef HAVE_PTHREAD
 #include <pthread.h>

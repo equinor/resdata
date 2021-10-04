@@ -1,11 +1,5 @@
 project(libecl-ecl C CXX)
 
-if(HAVE_BACKTRACE)
-  list(APPEND opt_srcs util/util_abort_gnu.c)
-else()
-  list(APPEND opt_srcs util/util_abort_simple.c)
-endif()
-
 if(ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
   list(APPEND opt_srcs util/test_work_area.cpp util/util_getuid.cpp)
 endif()
@@ -70,6 +64,7 @@ add_library(
   util/node_data.cpp
   util/node_ctype.cpp
   util/util.cpp
+  util/util_abort.cpp
   util/util_symlink.cpp
   util/util_lfs.c
   util/util_unlink.cpp
@@ -152,8 +147,16 @@ if(ERT_WINDOWS)
   endif()
 endif()
 
-target_link_libraries(ecl PUBLIC ${m} ${dl} ${pthread} ${blas} ${zlib}
-                                 ${shlwapi})
+target_link_libraries(
+  ecl
+  PUBLIC ${m}
+         ${dl}
+         ${pthread}
+         ${blas}
+         ${zlib}
+         ${shlwapi}
+         CONAN_PKG::backward-cpp
+         CONAN_PKG::fmt)
 
 target_include_directories(
   ecl
@@ -285,23 +288,14 @@ add_test(NAME ert_util_path_stack_test
          COMMAND ert_util_path_stack_test ${CMAKE_CURRENT_BINARY_DIR}
                  ${CMAKE_CURRENT_SOURCE_DIR})
 
-if(HAVE_BACKTRACE)
-  add_executable(ert_util_abort_gnu_tests
-                 util/tests/ert_util_abort_gnu_tests.cpp)
-  target_link_libraries(ert_util_abort_gnu_tests ecl)
-  add_test(NAME ert_util_abort_gnu_tests COMMAND ert_util_abort_gnu_tests)
+add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.cpp)
+target_link_libraries(ert_util_abort_gnu_tests ecl)
+add_test(NAME ert_util_abort_gnu_tests COMMAND ert_util_abort_gnu_tests)
 
-  add_executable(ert_util_addr2line util/tests/ert_util_addr2line.cpp)
-  target_link_libraries(ert_util_addr2line ecl)
-  add_test(NAME ert_util_addr2line COMMAND ert_util_addr2line)
-endif()
-
-if(HAVE_UTIL_ABORT_INTERCEPT)
-  add_executable(ert_util_type_vector_test
-                 util/tests/ert_util_type_vector_test.cpp)
-  target_link_libraries(ert_util_type_vector_test ecl)
-  add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
-endif()
+add_executable(ert_util_type_vector_test
+               util/tests/ert_util_type_vector_test.cpp)
+target_link_libraries(ert_util_type_vector_test ecl)
+add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
 
 if(ERT_HAVE_SPAWN)
   add_executable(ert_util_spawn util/tests/ert_util_spawn.cpp)

@@ -19,6 +19,11 @@ jobs:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
+    - name: Install dependencies
+      run: |
+        python3 -m pip install conan
+
+
     - name: Build ecl
       run: |
         mkdir cmake-build
