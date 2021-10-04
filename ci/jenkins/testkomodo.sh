@@ -1,4 +1,5 @@
 build_and_run_ctest () {
+    pip install conan
     pushd $CI_TEST_ROOT
     cmake $CI_SOURCE_ROOT  -DBUILD_TESTS=ON -DEQUINOR_TESTDATA_ROOT=$EQUINOR_TESTDATA_ROOT/ecl
     cmake --build .

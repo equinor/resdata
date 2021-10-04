@@ -1,18 +1,57 @@
-cmake_minimum_required(
-  VERSION 2.8.12) # If you are creating Python wrappers for Windows, the actual
-                  # version requirement is 3.4
+cmake_minimum_required(VERSION 3.16)
 project(ecl C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
 include(TestBigEndian)
 
-if(NOT DEFINED CMAKE_MACOSX_RPATH)
-  # There is some weirdness around this variable, the default value is different
-  # depending on the cmake version, see policy CMP0042. A more explicit way to
-  # treat this would be `cmake_policy(SET CMP0042 NEW)` but that would fail on
-  # CMake 2.8.12 (the variable exists but the policy doesn't)
-  set(CMAKE_MACOSX_RPATH ON)
+# -----------------------------------------------------------------
+# Conan: C++ package manager
+# https://docs.conan.io/en/latest/howtos/cmake_launch.html
+# -----------------------------------------------------------------
+
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+  message(
+    STATUS
+      "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+  file(
+    DOWNLOAD
+    "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
+    "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
+
+include(${CMAKE_BINARY_DIR}/conan.cmake)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  # set(conan_opts ...)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(conan_opts backward-cpp:stack_details=backtrace_symbol)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  # set(conan_opts ...)
+else()
+  message(
+    WARNING "Unknown platform. Conan packages may not be configures correctly.")
+endif()
+
+conan_cmake_run(
+  # Packages
+  REQUIRES
+  backward-cpp/1.6
+  fmt/8.0.1
+  # Options
+  OPTIONS
+  ${conan_opts}
+  # Force cppstd to be the same as this CMakeLists.txt's
+  SETTINGS
+  compiler.cppstd=${CMAKE_CXX_STANDARD}
+  # Build from source if there are no pre-compiled binaries
+  BUILD
+  missing
+  # CMAKE_TARGETS gives us CMake 3 style CONAN_PKG:: dependencies
+  BASIC_SETUP
+  CMAKE_TARGETS)
 
 # -----------------------------------------------------------------
 
@@ -321,14 +360,6 @@ try_compile(HAVE_CXX_SHARED_PTR ${CMAKE_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_shared_ptr.cpp)
 if(NOT HAVE_CXX_SHARED_PTR)
   set(BUILD_CXX OFF)
-endif()
-
-if(HAVE_FORK
-   AND HAVE_PTHREAD
-   AND HAVE_EXECINFO
-   AND HAVE_GETPWUID)
-  set(HAVE_UTIL_ABORT_INTERCEPT ON)
-  set(HAVE_BACKTRACE ON)
 endif()
 
 if(ERT_WINDOWS)
