@@ -399,6 +399,11 @@ CONTAINS_HEADER(time_t);
 CONTAINS_HEADER(size_t);
 #undef CONTAINS_HEADER
 
+typedef void util_abort_handler_t(const char *filename, int lineno,
+                                  const char *function, const char *message,
+                                  const char *backtrace);
+void util_set_abort_handler(util_abort_handler_t *);
+
 #ifdef _MSC_VER
 #define util_abort(fmt, ...)                                                   \
     util_abort__(__FILE__, __func__, __LINE__, fmt, __VA_ARGS__)

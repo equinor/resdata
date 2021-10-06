@@ -12,10 +12,14 @@
 #include <fmt/format.h>
 #include <backward.hpp>
 
+#include <ert/util/util.h>
+
 using fmt::format;
 using fmt::print;
 
 namespace {
+
+util_abort_handler_t *abort_handler;
 
 /* Used in tests */
 jmp_buf test_jmp_buf{};
@@ -40,7 +44,7 @@ std::string make_dump_path() {
 
 } // namespace
 
-extern "C" void set_abort_handler(abort_handler_t *handler) {
+extern "C" void util_set_abort_handler(util_abort_handler_t *handler) {
     abort_handler = handler;
 }
 
@@ -53,8 +57,8 @@ extern "C" void util_abort_test_set_intercept_function(const char *function) {
 extern "C" void util_abort__(const char *file, const char *function, int line,
                              const char *fmt, ...) {
     /* Make sure that util_abort__ is entered exactly once */
-    static std::atomic_flag abort_flag;
-    if (abort_flag.test_and_set())
+    static std::atomic_bool abort_flag;
+    if (abort_flag.exchange(true))
         std::abort();
 
     /* Get trace */
@@ -76,9 +80,15 @@ extern "C" void util_abort__(const char *file, const char *function, int line,
     vsnprintf(message, sizeof(message), fmt, ap);
     va_end(ap);
 
+    /* User-defined abort handler */
+    if (abort_handler)
+        abort_handler(file, line, function, message, trace.c_str());
+
     /* Exit out of util_abort without aborting. Used in tests. */
-    if (test_intercept_function == function)
+    if (test_intercept_function == function) {
+        abort_flag = false; // reset abort condition
         longjmp(test_jmp_buf, 0);
+    }
 
     FILE *abort_dump = stderr;
 #ifndef WIN32
