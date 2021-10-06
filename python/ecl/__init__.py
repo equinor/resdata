@@ -55,6 +55,7 @@ before giving up completely.
 """
 import os.path
 import sys
+import ctypes as ct
 
 import warnings
 
@@ -90,6 +91,32 @@ if not ECL_LEGACY_INSTALLED:
             raise NotImplementedError("Invalid platform")
 
         return ctypes.CDLL(path, ctypes.RTLD_GLOBAL)
+
+    # Need to keep the function as a global variable so that we don't give C a
+    # dangling pointer
+    _abort_handler = None
+
+    @ct.CFUNCTYPE(None, ct.c_char_p, ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_char_p)
+    def _c_abort_handler(filename, lineno, function, message, backtrace):
+        global _abort_handler
+        if not _abort_handler:
+            return
+        _abort_handler(
+            filename.decode(),
+            lineno,
+            function.decode(),
+            message.decode(),
+            backtrace.decode(),
+        )
+
+    def set_abort_handler(function):
+        """
+        Set callback function for util_abort, which is called prior to std::abort()
+        """
+        global _abort_handler
+        _abort_handler = function
+
+        EclPrototype.lib.util_set_abort_handler(_c_abort_handler)
 
     class EclPrototype(Prototype):
         lib = dlopen_libecl()

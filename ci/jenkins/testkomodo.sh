@@ -1,7 +1,9 @@
 build_and_run_ctest () {
-    pip install conan
     pushd $CI_TEST_ROOT
-    cmake $CI_SOURCE_ROOT  -DBUILD_TESTS=ON -DEQUINOR_TESTDATA_ROOT=$EQUINOR_TESTDATA_ROOT/ecl
+    cmake $CI_SOURCE_ROOT                                  \
+        -DCMAKE_BUILD_TYPE=Release                         \
+        -DBUILD_TESTS=ON                                   \
+        -DEQUINOR_TESTDATA_ROOT=$EQUINOR_TESTDATA_ROOT/ecl
     cmake --build .
     ctest --output-on-failure
     popd
@@ -19,6 +21,7 @@ copy_test_files () {
     popd
 }
 run_tests () {
+    ci_install_conan
     if [[ ! -z "${CI_PR_RUN:-}" ]]
     then
         pip install .
