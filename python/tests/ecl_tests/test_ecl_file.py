@@ -188,7 +188,7 @@ class EclFileTest(EclTest):
 
             file_size = os.path.getsize("FILE")
             with open("FILE", "a+") as f:
-                f.truncate(file_size * 0.75)
+                f.truncate(int(file_size * 0.75))
 
             f = EclFile("FILE")
             self.assertEqual(len(f), 1)
