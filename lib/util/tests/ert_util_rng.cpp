@@ -15,6 +15,12 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
+
+#include <set>
+#include <iostream>
+#include <fstream>
+#include <array>
+
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -36,6 +42,26 @@ int main(int argc, char **argv) {
         rng_init(rng, INIT_DEFAULT);
         val2 = rng_get_int(rng, MAX_INT);
         test_assert_int_equal(val1, val2);
+    }
+    {
+        // Checking that no duplicates exist in the first 200 draws from the random number generator.
+        // There is nothing special about the number 200, it was chosen by trial and error.
+        // The rng is initialized with seed set to `INIT_DEFAULT`,
+        // which makes it deterministic so this test should not fail.
+
+        std::array<int, 200> random_array = {0};
+
+        for (int &elem : random_array) {
+            elem = rng_get_int(rng, MAX_INT);
+        }
+
+        // Constructing set to eliminate duplicates.
+        std::set<int> random_set(random_array.begin(), random_array.end());
+
+        int set_size = random_set.size();
+        int array_size = random_array.size();
+
+        test_assert_int_equal(set_size, array_size);
     }
     {
         int val2, val1;

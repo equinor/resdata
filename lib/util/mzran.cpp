@@ -24,12 +24,15 @@
 #include <ert/util/mzran.hpp>
 
 /*
-  This file implements the mz random number generator. Historically
-  the rng has been translated from Fortran code found on the internet,
-  used in the context of SSE QMC simulations by Anders Sandvik.
+  This file implements the `mzran` random number generator,
+  defined here:
+
+  https://aip.scitation.org/doi/pdf/10.1063/1.168514
 
   The state of the random number generator is based on 4 unsigned
   integers.
+
+  Historically, it was used in the context of SSE QMX simulations by Anders Sandvik.
 */
 
 #define MZRAN_TYPE_ID 77156432
