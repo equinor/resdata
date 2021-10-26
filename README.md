@@ -15,6 +15,22 @@ Tool](http://github.com/Equinor/ert), other applications using
 *ecl* are the reservoir simulator flow and Resinsight from the [OPM
 project](http://github.com/OPM/).
 
+### Dependencies
+
+Regardless of how you build *ecl*, it will depend on the following system-level
+components.
+
+| Software                                           | Debian / Ubuntu | RHEL / Fedora | macOS                |
+|----------------------------------------------------|-----------------|---------------|----------------------|
+| `libz`                                             | `zlib1g-dev`    | `zlib-devel`  | _builtin_            |
+| [Conan](https://conan.io)                          | N/A             | N/A           | `conan` _(Homebrew)_ |
+| [pipx](https://pypi.org/project/pipx) _(Optional)_ | `pipx`          | `pipx`        | `pipx` _(Homebrew)_  |
+
+Note: The Conan package manager is not available for most Linux systems. Conan
+recommends installing it via `pip`. If using `pipx`, simply `pipx install conan`
+and it'll be availabe for your user regardless if you're using a virtualenv or
+not.
+
 ### Alternative 1: Python only ###
 For small interactive scripts, such as forward models, the recommended way to
 use *ecl* is by installing it from PyPI. This method doesn't require setting

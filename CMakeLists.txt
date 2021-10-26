@@ -8,6 +8,29 @@ include(GNUInstallDirs)
 include(TestBigEndian)
 
 # -----------------------------------------------------------------
+# Set default CMAKE_BUILD_TYPE
+# -----------------------------------------------------------------
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE
+      "RelWithDebInfo"
+      CACHE STRING "CMake build type" FORCE)
+  message(
+    STATUS
+      "Setting CMake build type to ${CMAKE_BUILD_TYPE} as none was specified")
+
+  # Set possible values for use in cmake-gui
+  set(CACHE
+      CMAKE_BUILD_TYPE
+      PROPERTY
+      STRINGS
+      "Debug"
+      "Release"
+      "MinSizeRel"
+      "RelWithDebInfo")
+endif()
+
+# -----------------------------------------------------------------
 # Conan: C++ package manager
 # https://docs.conan.io/en/latest/howtos/cmake_launch.html
 # -----------------------------------------------------------------
