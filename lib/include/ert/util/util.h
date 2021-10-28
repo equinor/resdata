@@ -330,7 +330,6 @@ int util_type_get_id(const void *data);
 
 bool util_sscanf_bytesize(const char *, size_t *);
 int util_get_current_linenr(FILE *stream);
-const char *util_update_path_var(const char *, const char *, bool);
 
 void util_fskip_int(FILE *stream);
 void util_fskip_long(FILE *stream);
