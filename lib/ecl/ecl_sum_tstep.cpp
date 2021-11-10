@@ -170,7 +170,7 @@ static void ecl_sum_tstep_set_time_info(ecl_sum_tstep_type *tstep,
     time_t sim_start = ecl_smspec_get_start_time(smspec);
 
     if (sim_time_index >= 0) {
-        float sim_time = tstep->data[sim_time_index];
+        double sim_time = tstep->data[sim_time_index];
         double sim_seconds = sim_time * ecl_smspec_get_time_seconds(smspec);
         ecl_sum_tstep_set_time_info_from_seconds(tstep, sim_start, sim_seconds);
     } else if (date_day_index >= 0) {
