@@ -148,7 +148,7 @@ endif()
 target_link_libraries(
   ecl
   PUBLIC ${m} ${dl} ${pthread} ${blas} ${zlib} ${shlwapi}
-  PRIVATE CONAN_PKG::backward-cpp CONAN_PKG::fmt)
+  PRIVATE Backward::Backward fmt::fmt)
 
 target_include_directories(
   ecl

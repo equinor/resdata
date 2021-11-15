@@ -3,6 +3,7 @@ project(ecl C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules" "${CMAKE_CURRENT_BINARY_DIR}")
 
 include(GNUInstallDirs)
 include(TestBigEndian)
@@ -72,9 +73,8 @@ conan_cmake_run(
   # Build from source if there are no pre-compiled binaries
   BUILD
   missing
-  # CMAKE_TARGETS gives us CMake 3 style CONAN_PKG:: dependencies
-  BASIC_SETUP
-  CMAKE_TARGETS)
+  GENERATORS
+  cmake_find_package)
 
 # -----------------------------------------------------------------
 
@@ -235,12 +235,14 @@ if(MSVC)
   add_definitions("/W3 /D_CRT_SECURE_NO_WARNINGS /wd4996")
 endif()
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 find_package(CXX11Features)
 
 # -----------------------------------------------------------------
 
 # create targets for (required and optional) dependencies to link to
+
+find_package(Backward REQUIRED)
+find_package(fmt REQUIRED)
 
 find_package(OpenMP)
 if(NOT OPENMP_FOUND)
