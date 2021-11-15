@@ -90,7 +90,7 @@ extern "C" void util_abort__(const char *file, const char *function, int line,
         longjmp(test_jmp_buf, 0);
     }
 
-    FILE *abort_dump = stderr;
+    FILE *abort_dump = nullptr;
 #ifndef WIN32
     std::string abort_dump_path;
     if (!getenv("ERT_SHOW_BACKTRACE")) {
@@ -98,6 +98,8 @@ extern "C" void util_abort__(const char *file, const char *function, int line,
         abort_dump = fopen(abort_dump_path.c_str(), "w");
     }
 #endif
+    if (abort_dump == nullptr)
+        abort_dump = stderr;
 
     print(abort_dump,
           "\n\nAbort called from: {} ({}:{})\n\nError message: {}\n\n",
