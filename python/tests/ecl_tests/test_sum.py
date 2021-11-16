@@ -670,6 +670,15 @@ class SumTest(EclTest):
         for time_index, value in enumerate(fopr):
             self.assertEqual(fopr[time_index], value)
 
+    def test_load_case_lazy_and_eager(self):
+        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SHORT.UNSMRY")
+        lazy_dates = EclSum(path, lazy_load=True).numpy_dates
+        eager_dates = EclSum(path, lazy_load=False).numpy_dates
+        self.assertEqual(len(lazy_dates), 107)
+        self.assertEqual(len(eager_dates), 107)
+        for l, e in zip(lazy_dates, eager_dates):
+            self.assertEqual(l, e)
+
     def test_write_not_implemented(self):
         path = os.path.join(
             self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SIMPLE_SUMMARY3"
