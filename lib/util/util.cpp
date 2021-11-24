@@ -568,14 +568,14 @@ static char *util_fscanf_alloc_line__(FILE *stream, bool *at_eof, char *line) {
     int init_pos = util_ftell(stream);
     char *new_line;
     int len;
-    char end_char;
+    int end_char;
     bool cont;
     bool dos_newline;
 
     len = 0;
     cont = true;
     {
-        char c;
+        int c;
         do {
             c = fgetc(stream);
             if (c == EOF)
