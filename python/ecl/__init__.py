@@ -124,7 +124,6 @@ if not ECL_LEGACY_INSTALLED:
         def __init__(self, prototype, bind=True):
             super(EclPrototype, self).__init__(EclPrototype.lib, prototype, bind=bind)
 
-
 else:
     #
     # If installed via CMake directly (legacy)
