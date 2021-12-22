@@ -13,23 +13,24 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
-
-import os
-from ecl.eclfile import EclKW
-from ecl.util.test import TestAreaContext
-from tests import EclTest
 import cwrap
+from ecl.eclfile import EclKW
+from numpy.testing import assert_allclose
 
 
-class GRDECLTest(EclTest):
-    def test_64bit_memory(self):
-        with TestAreaContext("large_memory"):
-            block_size = 10 ** 6
-            with open("test.grdecl", "w") as f:
-                f.write("COORD\n")
-                for i in range(1000):
-                    f.write("%d*0.15 \n" % block_size)
-                f.write("/\n")
+def test_64bit_memory(tmp_path):
+    block_size = 10 ** 6
+    num_blocks = 1000
+    value = 0.15
+    with open(tmp_path / "test.grdecl", "w") as f:
+        f.write("COORD\n")
+        for _ in range(num_blocks):
+            f.write(f"{block_size}*{value} \n")
+        f.write("/\n")
 
-            with cwrap.open("test.grdecl") as f:
-                kw = EclKW.read_grdecl(f, "COORD")
+    with cwrap.open(str(tmp_path / "test.grdecl")) as f:
+        kw = EclKW.read_grdecl(f, "COORD")
+
+    assert kw.get_name() == "COORD"
+    assert len(kw.numpy_view()) == block_size * num_blocks
+    assert_allclose(kw.numpy_view(), value)
