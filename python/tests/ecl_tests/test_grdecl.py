@@ -18,9 +18,9 @@ from ecl.eclfile import EclKW
 from numpy.testing import assert_allclose
 
 
-def test_64bit_memory(tmp_path):
-    block_size = 10 ** 6
-    num_blocks = 1000
+def test_eclkw_read_grdecl(tmp_path):
+    block_size = 10
+    num_blocks = 5
     value = 0.15
     with open(tmp_path / "test.grdecl", "w") as f:
         f.write("COORD\n")
