@@ -309,6 +309,7 @@ void test_sscanf_isodate() {
     test_assert_false(util_sscanf_isodate("2017.10.07", NULL));
     test_assert_false(util_sscanf_isodate("2017-10.7", NULL));
     test_assert_false(util_sscanf_isodate("2017/10/07", NULL));
+    test_assert_false(util_sscanf_isodate("07/10/2017", NULL));
 
     /* Invalid numeric values */
     test_assert_false(util_sscanf_isodate("2017-15-07", NULL));
@@ -327,6 +328,15 @@ void test_sscanf_date_utc() {
     value = util_make_date_utc(10, 11, 2011);
     test_assert_false(util_sscanf_date_utc(NULL, &value));
     test_assert_time_t_equal(value, -1);
+
+    /*
+      ISO dates will be parsed, but with unexpected results, 1997-07-06
+      will be parsed as "day 1997" in July, year 6, which wraps to Dec 11
+      in year 18:
+    */
+    test_assert_true(util_sscanf_date_utc("1997-07-06", &value));
+    test_assert_time_t_equal(value, util_make_date_utc(1997, 7, 6));
+    test_assert_time_t_equal(value, util_make_date_utc(18, 12, 11));
 
     test_assert_false(util_sscanf_date_utc(NULL, NULL));
 }

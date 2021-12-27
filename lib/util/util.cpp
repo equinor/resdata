@@ -2809,7 +2809,7 @@ char *util_get_timezone() {
 /*
   The underlying timegm() function will happily accept dates like
   December 33.th 2012 - which is wrapped around to 2.nd of January
-  2013. Such wrap-araounds are not accepted by this function, which
+  2013. Such wrap-arounds are not accepted by this function, which
   will return false in that case.
 
   The time_t output is by reference, and will be set to the return
