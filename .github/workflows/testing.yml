@@ -3,41 +3,41 @@ name: ecl testing
 on: [push, pull_request]
 
 jobs:
-  build-test-cmake:
-    name: CMake
+  # build-test-cmake:
+  #   name: CMake
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ['ubuntu-latest', 'macos-latest']
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: ['ubuntu-latest', 'macos-latest']
 
-    runs-on: ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
 
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        # required for `git describe --tags` to work
-        fetch-depth: 0
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       # required for `git describe --tags` to work
+  #       fetch-depth: 0
 
-    - name: Install dependencies
-      run: |
-        python3 -m pip install conan
+  #   - name: Install dependencies
+  #     run: |
+  #       python3 -m pip install conan
 
 
-    - name: Build ecl
-      run: |
-        mkdir cmake-build
-        cmake -S . -B cmake-build -DBUILD_TESTS=ON -DRST_DOC=ON
-        cmake --build cmake-build
+  #   - name: Build ecl
+  #     run: |
+  #       mkdir cmake-build
+  #       cmake -S . -B cmake-build -DBUILD_TESTS=ON -DRST_DOC=ON
+  #       cmake --build cmake-build
 
-    - name: Run tests
-      run: |
-        cd cmake-build
-        export DYLD_LIBRARY_PATH=$PWD/lib
-        ctest --output-on-failure
-      env:
-        ECL_SKIP_SIGNAL: absolutely
-        ERT_SHOW_BACKTRACE: yes please!
+  #   - name: Run tests
+  #     run: |
+  #       cd cmake-build
+  #       export DYLD_LIBRARY_PATH=$PWD/lib
+  #       ctest --output-on-failure
+  #     env:
+  #       ECL_SKIP_SIGNAL: absolutely
+  #       ERT_SHOW_BACKTRACE: yes please!
 
 
   build-test-wheel:
@@ -71,12 +71,19 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
-    - name: Build macOS/Windows Wheel
-      run: |
+    - name: Build Windows Wheel
+      uses: egor-tensin/vs-shell@v2
+      with:
+        arch: x64
+      run: 
         cl.exe
-        vcvars64.bat
         pip wheel . --no-deps -w dist
-      if: matrix.os != 'ubuntu-latest'
+      if: matrix.os == 'windows-latest'
+
+    - name: Build macOS Wheel
+      run:
+        pip wheel . --no-deps -w dist
+      if: matrix.os == 'macos-latest'
 
     # - name: Upload wheel as artifact
     #   uses: actions/upload-artifact@v2
