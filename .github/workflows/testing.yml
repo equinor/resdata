@@ -71,10 +71,13 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
-    - name: Build Windows Wheel
+    - name: Setup VS-devshell
       uses: egor-tensin/vs-shell@v2
       with:
         arch: x64
+      if: matrix.os == 'windows-latest'
+
+    - name: Build Windows Wheel
       run: 
         cl.exe
         pip wheel . --no-deps -w dist
