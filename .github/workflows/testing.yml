@@ -77,9 +77,13 @@ jobs:
         arch: x64
       if: matrix.os == 'windows-latest'
 
-    - name: Build Windows Wheel
-      run: 
+    - name: Check CL
+      run:
         cl.exe
+      if: matrix.os == 'windows-latest'
+
+    - name: Build Windows Wheel
+      run:
         pip wheel . --no-deps -w dist
       if: matrix.os == 'windows-latest'
 
