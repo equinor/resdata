@@ -30,6 +30,7 @@ __ecl_lib_info.py
 /_skbuild/
 /python/ecl/version.py
 .*
+!.github
 *.egg-info/
 
 /dist

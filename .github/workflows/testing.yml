@@ -74,6 +74,7 @@ jobs:
     - name: Build macOS/Windows Wheel
       run: |
         cl.exe
+        vcvars64.bat
         pip wheel . --no-deps -w dist
       if: matrix.os != 'ubuntu-latest'
 
