@@ -77,26 +77,16 @@ jobs:
         arch: x64
       if: matrix.os == 'windows-latest'
 
-    - name: Check CL
-      run:
-        cl.exe
-      if: matrix.os == 'windows-latest'
-
-    - name: Build Windows Wheel
+    - name: Build macOS/Windows Wheel
       run:
         pip wheel . --no-deps -w dist
-      if: matrix.os == 'windows-latest'
+      if: matrix.os != 'ubuntu-latest'
 
-    - name: Build macOS Wheel
-      run:
-        pip wheel . --no-deps -w dist
-      if: matrix.os == 'macos-latest'
-
-    # - name: Upload wheel as artifact
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
-    #     path: dist/*
+    - name: Upload wheel as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
+        path: dist/*
 
     - name: Build `libecl` migration package
       run: |
