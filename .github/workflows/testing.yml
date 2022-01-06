@@ -103,11 +103,11 @@ jobs:
 
     - name: Install ecl Ubuntu/Macosx
       run: pip install dist/*
-      if: matrix.os != "windows-latest"
+      if: matrix.os != 'windows-latest'
 
     - name: Install ecl Windows
       run: pip install (dir dist/*)
-      if: matrix.os == "windows-latest"
+      if: matrix.os == 'windows-latest'
 
     - name: Run Python tests
       run: |
