@@ -15,21 +15,14 @@
 #  for more details.
 
 import importlib
-import os
-import sys
-import traceback
-import unittest
 import inspect
-import imp
+import os
+import unittest
 
 
 class ImportTestCase(unittest.TestCase):
-    def import_file(self, path):
-        return imp.load_source("module", path)
-
     def import_module(self, module):
-        mod = importlib.import_module(module)
-        return mod
+        return importlib.import_module(module)
 
     def import_package(self, package):
         if "__" in package:
@@ -42,7 +35,7 @@ class ImportTestCase(unittest.TestCase):
             entry_path = os.path.join(path, entry)
             if os.path.isdir(entry_path):
                 module = os.path.basename(entry)
-                sub_module = "%s.%s" % (package, module)
+                sub_module = f"{package}.{module}"
                 self.import_package(sub_module)
             else:
                 module, ext = os.path.splitext(entry)
@@ -50,6 +43,6 @@ class ImportTestCase(unittest.TestCase):
                     continue
 
                 if ext == "py":
-                    self.import_module("%s.%s" % (package, module))
+                    self.import_module(f"{package}.{module}")
 
         return True
