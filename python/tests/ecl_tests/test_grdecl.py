@@ -13,9 +13,10 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
+from numpy import allclose
+
 import cwrap
 from ecl.eclfile import EclKW
-from numpy.testing import assert_allclose
 
 
 def test_eclkw_read_grdecl(tmp_path):
@@ -33,4 +34,4 @@ def test_eclkw_read_grdecl(tmp_path):
 
     assert kw.get_name() == "COORD"
     assert len(kw.numpy_view()) == block_size * num_blocks
-    assert_allclose(kw.numpy_view(), value)
+    assert allclose(kw.numpy_view(), value)
