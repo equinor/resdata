@@ -13,7 +13,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo pip install cmake-format black
+        sudo pip install cmake-format black==21.12b0
 
     - name: Clang Format
       run: ./script/clang-format --check
