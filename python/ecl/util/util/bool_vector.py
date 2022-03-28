@@ -26,7 +26,7 @@ class BoolVector(VectorTemplate):
         "bool_vector_obj string_util_alloc_active_mask( char* )", bind=False
     )
     _active_list = EclPrototype(
-        "int_vector_obj bool_vector_alloc_active_list(bool_vector)", bind=False
+        "int_vector_obj bool_vector_alloc_active_list(bool_vector)"
     )
     _alloc_copy = EclPrototype("bool_vector_obj bool_vector_alloc_copy( bool_vector )")
     _update_active_mask = EclPrototype(
@@ -110,7 +110,7 @@ class BoolVector(VectorTemplate):
 
     def count(self, value=True):
         """@rtype: int"""
-        return self._count_equal(self, value)
+        return self._count_equal(value)
 
     @classmethod
     def createActiveMask(cls, range_string):
@@ -155,7 +155,7 @@ class BoolVector(VectorTemplate):
 
     def createActiveList(self):
         """@rtype: ecl.util.IntVector"""
-        return self._active_list(self)
+        return self._active_list()
 
     def _tostr(self, arr=None):
         if arr is None:

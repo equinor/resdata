@@ -57,7 +57,7 @@ class UtilTest(TestCase):
         self.dotest_slicing(dv)
         iv = IntVector(initial_size=10)
         for i in range(10):
-            iv[i] = i ** 3
+            iv[i] = i**3
         self.dotest_slicing(iv)
         bv = BoolVector(initial_size=10)
         for i in range(0, 10, 3):
@@ -177,6 +177,8 @@ class UtilTest(TestCase):
         b[4] = False
 
         self.assertEqual(list(b), [True, True, True, True, False])
+        self.assertEqual(b.count(True), 4)
+        self.assertEqual(b.count(False), 1)
 
     def test_activeList(self):
         active_list = IntVector.active_list("1,10,100-105")
@@ -579,3 +581,15 @@ class UtilTest(TestCase):
         self.assertNotEqual(v1, v2)
         v2[3] = 99
         self.assertEqual(v1, v2)
+
+    def test_create_active_list(self):
+        vec = BoolVector(False, 10)
+        vec[0] = True
+        vec[3] = True
+        vec[7] = True
+
+        idxs = vec.createActiveList()
+        self.assertTrue(len(idxs) == 3, "Should get 3 indices")
+        self.assertEqual(idxs[0], 0)
+        self.assertEqual(idxs[1], 3)
+        self.assertEqual(idxs[2], 7)
