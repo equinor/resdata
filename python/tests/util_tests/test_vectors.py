@@ -57,7 +57,7 @@ class UtilTest(TestCase):
         self.dotest_slicing(dv)
         iv = IntVector(initial_size=10)
         for i in range(10):
-            iv[i] = i ** 3
+            iv[i] = i**3
         self.dotest_slicing(iv)
         bv = BoolVector(initial_size=10)
         for i in range(0, 10, 3):
