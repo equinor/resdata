@@ -552,7 +552,7 @@ class GridTest(EclTest):
 
         for x, y, z in itertools.product(range(0, n * d + 1, d), repeat=3):
             self.assertEqual(
-                1, [grid.cell_contains(x, y, z, i) for i in range(n ** 3)].count(True)
+                1, [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
             )
 
     def test_cell_corner_containment_compatability(self):
@@ -575,7 +575,7 @@ class GridTest(EclTest):
                 self.assertEqual(
                     1,
                     [
-                        grid.cell_contains(p[0], p[1], p[2], i) for i in range(n ** 3)
+                        grid.cell_contains(p[0], p[1], p[2], i) for i in range(n**3)
                     ].count(True),
                 )
 
