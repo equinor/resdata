@@ -1,0 +1,18 @@
+----------------------------------------------------------------------
+-- A very simple test case for the shared memory parallel option.
+-- --------------------------------------------------------------
+
+TITLE
+foo
+
+TITLE
+PARALLEL BENCHMARK
+
+TITLE
+foo
+
+PARALLEL
+-- TITLE
+-- foo
+  4  DISTRIBUTED /
+

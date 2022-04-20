@@ -375,7 +375,8 @@ add_test(
     ecl_get_num_cpu ${CMAKE_CURRENT_SOURCE_DIR}/ecl/tests/data/num_cpu1
     ${CMAKE_CURRENT_SOURCE_DIR}/ecl/tests/data/num_cpu2
     ${CMAKE_CURRENT_SOURCE_DIR}/ecl/tests/data/num_cpu3
-    ${CMAKE_CURRENT_SOURCE_DIR}/ecl/tests/data/num_cpu4)
+    ${CMAKE_CURRENT_SOURCE_DIR}/ecl/tests/data/num_cpu4
+    ${CMAKE_CURRENT_SOURCE_DIR}/ecl/tests/data/num_cpu5)
 
 # The ecl_win64 application is not built as a proper test integrated into the
 # CTEST system. Should be invoked manually on Windows.

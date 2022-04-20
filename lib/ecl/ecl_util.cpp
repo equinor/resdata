@@ -1197,22 +1197,82 @@ static int ecl_util_get_num_slave_cpu__(basic_parser_type *parser, FILE *stream,
     return num_cpu;
 }
 
+/* Finding keywords requires skipping comments, which is done by the basic
+   parsers and skipping titles, which it does not. This function searches for
+   the first occurence of a keyword outside of titles and comments. This code is
+   somewhat complicated since it seems that the spec allows for multiple titles
+   and (possibly) blank lines between the title keyword and the title. */
+static bool ecl_util_find_keyword__(basic_parser_type *parser, FILE *stream,
+                                    const char *keyword) {
+    long int title_pos = -1;
+
+    /* Find the first occurenced of TITLE, if any. */
+    if (basic_parser_fseek_string(parser, stream, "TITLE", false, true)) {
+        title_pos = util_ftell(stream);
+        util_rewind(stream);
+    }
+
+    /* Find all keyword occurences, returning the first that is valid. */
+    while (basic_parser_fseek_string(parser, stream, keyword, false, true)) {
+        long int keyword_pos = util_ftell(stream);
+
+        /* Starting with last title found, find all titles that start before
+           this keyword occurence, to see if they contain the keyword: */
+        while (title_pos >= 0 && keyword_pos > title_pos) {
+            /* Find the end of this title. */
+            int lines_to_skip = 2; /* Two non-blank lines to skip in a title. */
+            bool blank_line = true;
+
+            util_fseek(stream, title_pos, SEEK_SET);
+            while (lines_to_skip > 0) {
+                int c = fgetc(stream);
+                if (c == EOF)
+                    return false;
+                if (!blank_line && c == '\n') {
+                    --lines_to_skip;
+                    blank_line = true;
+                } else {
+                    blank_line = blank_line && isblank(c);
+                }
+            }
+
+            /* If within this title: break, this keyword fails. */
+            if (keyword_pos < util_ftell(stream))
+                break;
+
+            /* Find the next occurence of TITLE, if any. */
+            if (basic_parser_fseek_string(parser, stream, "TITLE", false, true))
+                title_pos = util_ftell(stream);
+            else
+                title_pos = -1;
+        }
+
+        /* Position to the end of the keyword, we either are succesful, or we
+           need to continue looking for the next keyword. */
+        util_fseek(stream, keyword_pos + strlen(keyword), SEEK_SET);
+
+        /* If we are not within a title: success. */
+        if (title_pos < 0 || keyword_pos < title_pos)
+            return true;
+    }
+
+    return false;
+}
+
 int ecl_util_get_num_cpu(const char *data_file) {
     int num_cpu = 1;
     basic_parser_type *parser =
         basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n");
     FILE *stream = util_fopen(data_file, "r");
 
-    if (basic_parser_fseek_string(parser, stream, "PARALLEL", true,
-                                  true)) { /* Seeks case insensitive. */
+    if (ecl_util_find_keyword__(parser, stream, "PARALLEL")) {
         num_cpu = ecl_util_get_num_parallel_cpu__(parser, stream, data_file);
-    } else if (basic_parser_fseek_string(parser, stream, "SLAVES", true,
-                                         true)) { /* Seeks case insensitive. */
+    } else if (ecl_util_find_keyword__(parser, stream, "SLAVES")) {
         num_cpu = ecl_util_get_num_slave_cpu__(parser, stream, data_file) + 1;
-        fprintf(
-            stderr,
-            "Information: \"SLAVES\" option found, returning %d number of CPUs",
-            num_cpu);
+        fprintf(stderr,
+                "Information: \"SLAVES\" option found, returning %d number "
+                "of CPUs",
+                num_cpu);
     }
 
     basic_parser_free(parser);
