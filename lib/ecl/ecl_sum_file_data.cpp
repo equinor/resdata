@@ -19,10 +19,10 @@
 
   This file has no information about how to index into the PARAMS
   vector, i.e. at which location can the WWCT for well P6 be found,
-  that is responsability of the ecl_smspec_type.
+  that is the responsibility of the ecl_smspec_type.
 
   The time direction in this system is implemented in terms of
-  ministeps. There are some query / convert functons based on report
+  ministeps. There are some query / convert functions based on report
   steps.
 */
 
@@ -100,7 +100,7 @@
           M1     M2           M3                 M4                      M5                     M6
 
    The first reportstep consist of four ministeps, the second
-   reportstep consits of only two ministeps. As a user you have no
+   reportstep consists of only two ministeps. As a user you have no
    control over the length/number of ministeps apart from:
 
       1. Indirectly through the TUNING keywords.
@@ -118,7 +118,7 @@
    that
 
      [rates]: The ministep value is NOT actually an instantaneous
-        value, it is the total production during the ministepd period
+        value, it is the total production during the ministep period
         - divided by the length of the ministep. I.e. it is an average
         value. (I.e. the differential time element dt is actually quite
         looong).
