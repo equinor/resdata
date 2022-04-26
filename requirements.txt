@@ -1,11 +1,8 @@
 cwrap
-functools32;python_version=='2.7'
 future
 ninja
-numpy;python_version>='3.0'
-numpy<=1.16.6;python_version=='2.7'
-pandas;python_version>='3.0'
-pandas<=0.25.3;python_version=='2.7'
+numpy
+pandas
 scikit-build
 setuptools
 setuptools_scm

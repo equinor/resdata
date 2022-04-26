@@ -1014,6 +1014,13 @@ time_t ecl_sum_data_get_report_time(const ecl_sum_data_type *data,
         return ecl_smspec_get_start_time(data->smspec);
     else {
         int internal_index = ecl_sum_data_iget_report_end(data, report_step);
+        if (internal_index == -1)
+            throw std::out_of_range(
+                "Tried to look up step nr: " + std::to_string(report_step) +
+                " from the restart file in summary file, but it does not "
+                "exist. \n" +
+                "The step entries in summary file must cover all entries "
+                "in the restart file.");
         return ecl_sum_data_iget_sim_time(data, internal_index);
     }
 }

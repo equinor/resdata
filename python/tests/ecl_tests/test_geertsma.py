@@ -209,8 +209,8 @@ class GeertsmaTest(EclTest):
                 "TEST",
                 p1,
                 p2,
-                rporv1=[10 ** 5, 10 ** 5],
-                rporv2=[9 * 10 ** 4, 9 * 10 ** 4],
+                rporv1=[10**5, 10**5],
+                rporv2=[9 * 10**4, 9 * 10**4],
             )
             create_init(grid, "TEST")
 

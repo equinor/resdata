@@ -15,20 +15,18 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 import os.path
-import six
-from unittest import skipIf, skip
-import time
+from unittest import skip
 import itertools
-from numpy import linspace
+
+import six
+from numpy import linspace, allclose
 
 from ecl.util.util import IntVector
 from ecl import EclDataType, EclUnitTypeEnum
 from ecl.eclfile import EclKW, EclFile
 from ecl.grid import EclGrid
 from ecl.grid import EclGridGenerator as GridGen
-from ecl.grid.faults import Layer, FaultCollection
 from ecl.util.test import TestAreaContext
-from numpy.testing import assert_allclose
 from tests import EclTest
 
 # This dict is used to verify that corners are mapped to the correct
@@ -433,7 +431,7 @@ class GridTest(EclTest):
         numpy_3d = grid.create3D(kw1)
         kw2 = grid.create_kw(numpy_3d, "SWAT", False)
         self.assertEqual(kw2.name, "SWAT")
-        assert_allclose(grid.create3D(kw2), numpy_3d)
+        assert allclose(grid.create3D(kw2), numpy_3d)
 
     def test_create_3d_agrees_with_get_value(self):
         nx = 5
@@ -554,7 +552,7 @@ class GridTest(EclTest):
 
         for x, y, z in itertools.product(range(0, n * d + 1, d), repeat=3):
             self.assertEqual(
-                1, [grid.cell_contains(x, y, z, i) for i in range(n ** 3)].count(True)
+                1, [grid.cell_contains(x, y, z, i) for i in range(n**3)].count(True)
             )
 
     def test_cell_corner_containment_compatability(self):
@@ -577,7 +575,7 @@ class GridTest(EclTest):
                 self.assertEqual(
                     1,
                     [
-                        grid.cell_contains(p[0], p[1], p[2], i) for i in range(n ** 3)
+                        grid.cell_contains(p[0], p[1], p[2], i) for i in range(n**3)
                     ].count(True),
                 )
 
