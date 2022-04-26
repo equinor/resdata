@@ -28,6 +28,7 @@
 #include <map>
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 
 #include <stdexcept>
 

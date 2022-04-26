@@ -1,6 +1,7 @@
 #include <vector>
 #include <memory>
 #include <array>
+#include <limits>
 
 #include <ert/util/vector.hpp>
 
