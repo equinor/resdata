@@ -16,6 +16,8 @@ esac
 # Install dependencies
 yum install -y zlib-devel
 
+git config --global --add safe.directory /github/workspace
+
 # Build wheel
 cd /github/workspace
 /opt/python/$pyver/bin/pip wheel . --no-deps -w wheelhouse
