@@ -28,6 +28,10 @@
 #include <ert/ecl/ecl_rsthead.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 struct ecl_file_view_struct {
     std::vector<ecl_file_kw_type *> kw_list;
     std::map<std::string, std::vector<int>> kw_index;

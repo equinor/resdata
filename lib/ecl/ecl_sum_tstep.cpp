@@ -30,6 +30,10 @@
 #include <ert/ecl/ecl_kw_magic.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #define ECL_SUM_TSTEP_ID 88631
 
 /*

@@ -28,6 +28,11 @@
 #include <ert/util/type_macros.hpp>
 #include <ert/util/buffer.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+using fmt::fprintf;
+
 /**
    This function implements a small buffer type. The whole point of
    this type is that it should work (more-or-less) as a drop in

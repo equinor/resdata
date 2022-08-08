@@ -37,6 +37,10 @@
 #include <ert/ecl/ecl_rft_cell.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 /**
     The RFT's from several wells, and possibly also several timesteps
     are lumped togeheter in one .RFT file. The ecl_rft_node

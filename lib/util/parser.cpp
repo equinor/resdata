@@ -24,6 +24,10 @@
 #include <ert/util/parser.hpp>
 #include <ert/util/buffer.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #define PARSER_ESCAPE_CHAR '\\'
 
 struct basic_parser_struct {

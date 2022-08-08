@@ -25,6 +25,10 @@
 #include <ert/ecl/ecl_type.hpp>
 #include <ert/ecl/ecl_util.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #define MAX_GRDECL_HEADER_SIZE 512
 
 /*

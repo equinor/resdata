@@ -44,6 +44,10 @@
 
 #include "detail/ecl/ecl_sum_file_data.hpp"
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 /*
   This file implements the sruct ecl_sum_data which manages the actual simulated
   values from a summary file, including all time-related information. In the

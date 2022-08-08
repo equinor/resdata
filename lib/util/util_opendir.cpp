@@ -7,6 +7,10 @@
 #include <dirent.h>
 #include <sys/types.h>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 bool util_copy_file__(const char *src_file, const char *target_file,
                       size_t buffer_size, void *buffer, bool abort_on_error);
 

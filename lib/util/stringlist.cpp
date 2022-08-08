@@ -36,6 +36,10 @@
 #include <ert/util/stringlist.hpp>
 #include <ert/util/vector.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #define STRINGLIST_TYPE_ID 671855
 
 /**

@@ -26,6 +26,10 @@
 #include <ert/geometry/geo_pointset.hpp>
 #include <ert/geometry/geo_surface.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #define __PI 3.14159265
 #define GEO_SURFACE_TYPE_ID 111743
 

@@ -38,6 +38,10 @@
 #include <ert/ecl/ecl_file_kw.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+
 /**
    This file implements functionality to load an ECLIPSE file in
    ecl_kw format. The implementation works by first searching through

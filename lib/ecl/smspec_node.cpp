@@ -47,6 +47,10 @@
 
 #include "detail/util/string_util.hpp"
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 /**
    The special_vars list is used to associate keywords with special
    types, when the kewyord name is in conflict with the default vector

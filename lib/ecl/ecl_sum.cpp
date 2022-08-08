@@ -43,6 +43,10 @@
 
 #include "detail/util/path.hpp"
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 /**
    The ECLIPSE summary data is organised in a header file (.SMSPEC)
    and the actual summary data. This file implements a data structure

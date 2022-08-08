@@ -23,6 +23,10 @@
 #include <ert/util/type_macros.hpp>
 #include <ert/util/mzran.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 /*
   This file implements the `mzran` random number generator,
   defined here:

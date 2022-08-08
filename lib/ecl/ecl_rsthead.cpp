@@ -25,6 +25,10 @@
 #include <ert/ecl/ecl_rsthead.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 static time_t rsthead_date(int day, int month, int year) {
     return ecl_util_make_date(day, month, year);
 }

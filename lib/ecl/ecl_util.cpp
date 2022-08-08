@@ -32,6 +32,10 @@
 #include <ert/ecl/ecl_util.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #define ECL_PHASE_NAME_OIL                                                     \
     "SOIL" // SHould match the keywords found in restart file
 #define ECL_PHASE_NAME_WATER "SWAT"

@@ -102,6 +102,10 @@
 #include <ert/util/util.h>
 #include <ert/util/@TYPE@_vector.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

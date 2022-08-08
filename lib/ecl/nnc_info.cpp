@@ -31,6 +31,11 @@
 #include <ert/ecl/nnc_vector.hpp>
 #include <ert/ecl/ecl_kw_magic.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+using fmt::fprintf;
+
 #define NNC_INFO_TYPE_ID 675415078
 
 struct nnc_info_struct {

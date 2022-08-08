@@ -32,6 +32,11 @@
 #include <ert/ecl/ecl_endian_flip.hpp>
 #include <ert/ecl/ecl_type.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+using fmt::fprintf;
+
 #define ECL_KW_TYPE_ID 6111098
 
 struct ecl_kw_struct {

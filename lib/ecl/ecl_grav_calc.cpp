@@ -27,6 +27,10 @@
 #include <ert/ecl/ecl_grid.hpp>
 #include <ert/ecl/ecl_grav.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 /**
    This file contains one function, ecl_grav_phase_deltag() which
    calculates the change in local gravitational strength (in units of

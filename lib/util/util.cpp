@@ -95,6 +95,11 @@
 #include <ert/util/util.h>
 #include <ert/util/buffer.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+using fmt::fprintf;
+
 /*
    Macros for endian flipping. The macros create a new endian-flipped
    value, and should be used as:

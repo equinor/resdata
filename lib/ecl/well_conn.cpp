@@ -28,6 +28,11 @@
 #include <ert/ecl_well/well_const.hpp>
 #include <ert/ecl_well/well_conn.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+using fmt::fprintf;
+
 #define WELL_CONN_NORMAL_WELL_SEGMENT_ID -999
 //#define ECLIPSE_NORMAL_WELL_SEGMENT_ID     -1
 

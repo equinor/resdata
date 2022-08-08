@@ -37,6 +37,10 @@
 
 #include "detail/ecl/ecl_grid_cache.hpp"
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 /**
    This file contains datastructures for calculating changes in
    gravitational response in reservoirs. The main datastructure is the

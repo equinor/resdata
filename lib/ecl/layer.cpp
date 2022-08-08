@@ -25,6 +25,10 @@
 
 #include <ert/ecl/layer.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #define LAYER_TYPE_ID 55185409
 
 typedef struct {

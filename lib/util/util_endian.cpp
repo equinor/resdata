@@ -18,6 +18,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 #if UINTPTR_MAX == 0xFFFFFFFF
 #define ARCH32
 #elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF

@@ -50,6 +50,10 @@
 #include <ert/ecl_well/well_branch_collection.hpp>
 #include <ert/ecl_well/well_rseg_loader.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+
 /*
 
 Connections, segments and branches

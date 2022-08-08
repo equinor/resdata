@@ -32,6 +32,10 @@
 #include <ert/ecl/ecl_util.hpp>
 #include <ert/ecl/ecl_region.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+
 /**
    This file implements a type called ecl_region which is a way to
    select and keep track of designated cells in an ECLIPSE reservoir

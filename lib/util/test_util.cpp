@@ -28,6 +28,10 @@
 #include <ert/util/stringlist.hpp>
 #include <ert/util/util.h>
 
+#include <fmt/printf.h>
+
+using fmt::fprintf;
+
 void test_error_exit(const char *fmt, ...) {
     char *s;
     va_list ap;

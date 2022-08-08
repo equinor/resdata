@@ -5,7 +5,12 @@
 
 #include <zlib.h>
 
+#include <fmt/printf.h>
+
 #include <ert/util/util.h>
+
+using fmt::printf;
+using fmt::fprintf;
 
 /**
   This function reads data from the input pointer data, and writes a

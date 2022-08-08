@@ -47,6 +47,11 @@
 #include <ert/ecl/grid_dims.hpp>
 #include <ert/ecl/nnc_info.hpp>
 
+#include <fmt/printf.h>
+
+using fmt::printf;
+using fmt::fprintf;
+
 /**
   this function implements functionality to load eclispe grid files,
   both .egrid and .grid files - in a transparent fashion.
