@@ -29,6 +29,7 @@ class RandomNumberGenerator(BaseCClass):
     _free = EclPrototype("void rng_free(rng)")
     _get_double = EclPrototype("double rng_get_double(rng)")
     _get_int = EclPrototype("int rng_get_int(rng, int)")
+    _forward = EclPrototype("uint rng_forward(rng)")
     _get_max_int = EclPrototype("uint rng_get_max_int(rng)")
     _state_size = EclPrototype("int rng_state_size(rng)")
     _set_state = EclPrototype("void rng_set_state(rng , char*)")
@@ -65,6 +66,9 @@ class RandomNumberGenerator(BaseCClass):
             max = self._get_max_int()
 
         return self._get_int(max)
+
+    def forward(self):
+        return self._forward()
 
     def free(self):
         self._free()
