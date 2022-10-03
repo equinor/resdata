@@ -126,7 +126,7 @@ else()
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" describe
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" describe
               --tags
       OUTPUT_VARIABLE GIT_TAG
       OUTPUT_STRIP_TRAILING_WHITESPACE)
