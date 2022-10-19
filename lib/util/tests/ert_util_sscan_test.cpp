@@ -306,12 +306,22 @@ void test_sscanf_isodate() {
     time_t expected = util_make_date_utc(10, 11, 2011);
     check_iso_date(expected, "2011-11-10", true);
 
+    /* Valid dates, but incorrectly formatted */
     test_assert_false(util_sscanf_isodate("2017.10.07", NULL));
+    test_assert_false(util_sscanf_isodate("07.10.2017", NULL));
+    test_assert_false(util_sscanf_isodate("7.10.2017", NULL));
+    test_assert_false(util_sscanf_isodate("17.1.2017", NULL));
+    test_assert_false(util_sscanf_isodate("17-01-2017", NULL));
     test_assert_false(util_sscanf_isodate("2017-10.7", NULL));
     test_assert_false(util_sscanf_isodate("2017/10/07", NULL));
     test_assert_false(util_sscanf_isodate("07/10/2017", NULL));
 
-    /* Invalid numeric values */
+    test_assert_false(util_sscanf_isodate("217-07-10", NULL)); // year 217
+
+    /* ISO8601 does not support year 10000 */
+    test_assert_false(util_sscanf_isodate("10000-01-01", NULL));
+
+    /* Invalid dates, correctly formatted */
     test_assert_false(util_sscanf_isodate("2017-15-07", NULL));
     test_assert_false(util_sscanf_isodate("2017-10-47", NULL));
 
