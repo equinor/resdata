@@ -266,7 +266,7 @@ class EclGrid(BaseCClass):
 
         warnings.warn(
             "EclGrid.createRectangular is deprecated. "
-            + "Please used the similar method in EclGridGenerator!",
+            + "Please use the similar method: EclGridGenerator.createRectangular.",
             DeprecationWarning,
         )
 
