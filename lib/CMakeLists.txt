@@ -148,7 +148,7 @@ endif()
 target_link_libraries(
   ecl
   PUBLIC ${m} ${dl} ${pthread} ${blas} ${zlib} ${shlwapi}
-  PRIVATE CONAN_PKG::backward-cpp CONAN_PKG::fmt)
+  PRIVATE Backward::Backward fmt::fmt)
 
 target_include_directories(
   ecl
@@ -205,10 +205,10 @@ if(CMAKE_COMPILER_IS_GNUCC)
   else()
     target_compile_options(ecl_test_suite PRIVATE "--std=c++17")
   endif()
-  target_link_libraries(ecl_test_suite ecl Catch stdc++fs)
+  target_link_libraries(ecl_test_suite ecl Catch2::Catch2WithMain stdc++fs)
 else()
   target_compile_options(ecl_test_suite PRIVATE "--std=c++17")
-  target_link_libraries(ecl_test_suite ecl Catch)
+  target_link_libraries(ecl_test_suite ecl Catch2::Catch2WithMain)
 endif()
 add_test(NAME ecl_test_suite COMMAND ecl_test_suite)
 
