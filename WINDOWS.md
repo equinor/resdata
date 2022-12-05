@@ -22,6 +22,6 @@
     cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX=%INSTALLPATH% -DBUILD_SHARED_LIBS="ON"  -DENABLE_PYTHON="ON"    -DCMAKE_BUILD_TYPE="Release" %SOURCEPATH%
     cmake --build %BUILDPATH% --config Release --target install
 ~~~~
-6. For **_libecl_** to be accessible in Python the `%INSTALLPATH%\lib\pythonX.Y\site-package` and Python subdirectories must be added to the `PATH` and `PYTHONPATH` variables. Where `pythonx.y` is the current Python version _e.g._ (`python2.7`, `python3.6` _etc._) .
+6. For **_libecl_** to be accessible in Python the `%INSTALLPATH%\lib\pythonX.Y\site-package` and Python subdirectories must be added to the `PATH` and `PYTHONPATH` variables. Where `pythonx.y` is the current Python version _e.g._ (`python3.9`, `python3.10` _etc._) .
 
 8. Open a Python interactive session and run `import ecl` to check that the install and paths are now set.
