@@ -47,7 +47,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-latest', 'macos-latest']
-        python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        python: ['3.8', '3.9', '3.10', '3.11']
 
     runs-on: ${{ matrix.os }}
 
@@ -78,19 +78,6 @@ jobs:
       with:
         name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
         path: dist/*
-
-    - name: Build `libecl` migration package
-      run: |
-        pip install -U pip setuptools wheel setuptools_scm
-        python ci/github/setup.py bdist_wheel --dist-dir=dist-migration
-      if: matrix.os == 'ubuntu-latest' && matrix.python == '3.6'
-
-    - name: Upload `libecl` migration wheel as artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: Python libecl to ecl wheel
-        path: dist-migration/*
-      if: matrix.os == 'ubuntu-latest' && matrix.python == '3.6'
 
     - name: Install ecl
       run: pip install dist/*
