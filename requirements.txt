@@ -1,11 +1,9 @@
 cwrap
-future
 ninja
 numpy
 pandas
 scikit-build
 setuptools
 setuptools_scm
-six
 sphinx!=3.4.0
 wheel

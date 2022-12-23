@@ -38,8 +38,6 @@ The ecl_kw.py implementation wraps the ecl_kw.c implementation from
 the libecl library.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import ctypes
 import warnings
 import numpy

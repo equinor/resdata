@@ -14,7 +14,6 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from __future__ import print_function
 import sys
 
 from ecl.util.util import monkey_the_camel
