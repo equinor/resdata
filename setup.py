@@ -72,13 +72,8 @@ skbuild.setup(
     platforms="any",
     install_requires=[
         "cwrap",
-        "functools32;python_version=='2.7'",
-        "future",
-        "numpy;python_version>='3.0'",
-        "numpy<=1.16.6;python_version=='2.7'",
-        "pandas;python_version>='3.0'",
-        "pandas<=0.25.3;python_version=='2.7'",
-        "six",
+        "numpy",
+        "pandas",
     ],
     entry_points={"console_scripts": utility_wrappers()},
     cmake_args=[

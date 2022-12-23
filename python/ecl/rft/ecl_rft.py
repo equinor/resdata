@@ -17,8 +17,6 @@
 Module for loading ECLIPSE RFT files.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from cwrap import BaseCClass
 
 from ecl import EclPrototype

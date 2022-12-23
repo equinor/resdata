@@ -1,6 +1,6 @@
 from math import sqrt
+import functools
 import sys
-import six
 
 
 class GeometryTools(object):
@@ -111,9 +111,9 @@ class GeometryTools(object):
 
             return hull
 
-        l = six.functools.reduce(keepLeft, points, [])
-        u = six.functools.reduce(keepLeft, reversed(points), [])
-        l.extend([u[i] for i in six.moves.xrange(1, len(u) - 1)])
+        l = functools.reduce(keepLeft, points, [])
+        u = functools.reduce(keepLeft, reversed(points), [])
+        l.extend([u[i] for i in range(1, len(u) - 1)])
 
         return l
 

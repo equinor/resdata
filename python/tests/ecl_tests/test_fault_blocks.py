@@ -14,15 +14,13 @@
 #
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
-from __future__ import print_function
 from unittest import skipIf
-import warnings
 import cwrap
 
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid, EclRegion
-from ecl.grid.faults import FaultBlock, FaultBlockLayer, FaultBlockCell, FaultCollection
+from ecl.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection
 from ecl.util.geometry import Polyline, CPolylineCollection
 from ecl.util.test import TestAreaContext
 from tests import EclTest
