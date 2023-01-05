@@ -1,21 +1,3 @@
-/*
-   Copyright (c) 2011  equinor asa, norway.
-
-   The file 'ecl_grid.c' is part of ert - ensemble based reservoir tool.
-
-   ERT is free software: you can redistribute it and/or modify
-   it under the terms of the gnu general public license as published by
-   the free software foundation, either version 3 of the license, or
-   (at your option) any later version.
-
-   ERT is distributed in the hope that it will be useful, but without any
-   warranty; without even the implied warranty of merchantability or
-   fitness for a particular purpose.
-
-   See the gnu general public license at <http://www.gnu.org/licenses/gpl.html>
-   for more details.
-*/
-
 #include <cstdint>
 #include <stdlib.h>
 #include <string.h>
