@@ -1,21 +1,3 @@
-/*
-   Copyright (C) 2014  Equinor ASA, Norway.
-
-   The file 'ert_util_sscan_test.c' is part of ERT - Ensemble based Reservoir Tool.
-
-   ERT is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE.
-
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
-   for more details.
-*/
-
 #include <float.h>
 #include <limits.h>
 #include <math.h>
@@ -306,12 +288,22 @@ void test_sscanf_isodate() {
     time_t expected = util_make_date_utc(10, 11, 2011);
     check_iso_date(expected, "2011-11-10", true);
 
+    /* Valid dates, but incorrectly formatted */
     test_assert_false(util_sscanf_isodate("2017.10.07", NULL));
+    test_assert_false(util_sscanf_isodate("07.10.2017", NULL));
+    test_assert_false(util_sscanf_isodate("7.10.2017", NULL));
+    test_assert_false(util_sscanf_isodate("17.1.2017", NULL));
+    test_assert_false(util_sscanf_isodate("17-01-2017", NULL));
     test_assert_false(util_sscanf_isodate("2017-10.7", NULL));
     test_assert_false(util_sscanf_isodate("2017/10/07", NULL));
     test_assert_false(util_sscanf_isodate("07/10/2017", NULL));
 
-    /* Invalid numeric values */
+    test_assert_false(util_sscanf_isodate("217-07-10", NULL)); // year 217
+
+    /* ISO8601 does not support year 10000 */
+    test_assert_false(util_sscanf_isodate("10000-01-01", NULL));
+
+    /* Invalid dates, correctly formatted */
     test_assert_false(util_sscanf_isodate("2017-15-07", NULL));
     test_assert_false(util_sscanf_isodate("2017-10-47", NULL));
 

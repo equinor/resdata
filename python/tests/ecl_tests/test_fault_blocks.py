@@ -1,28 +1,11 @@
 #!/usr/bin/env python
-#  Copyright (C) 2014  Equinor ASA, Norway.
-#
-#  The file 'test_fault_blocks.py' is part of ERT - Ensemble based Reservoir Tool.
-#
-#  ERT is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#  FITNESS FOR A PARTICULAR PURPOSE.
-#
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
-#  for more details.
-from __future__ import print_function
 from unittest import skipIf
-import warnings
 import cwrap
 
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 from ecl.grid import EclGrid, EclRegion
-from ecl.grid.faults import FaultBlock, FaultBlockLayer, FaultBlockCell, FaultCollection
+from ecl.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection
 from ecl.util.geometry import Polyline, CPolylineCollection
 from ecl.util.test import TestAreaContext
 from tests import EclTest

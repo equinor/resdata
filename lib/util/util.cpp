@@ -1,21 +1,3 @@
-/*
-   Copyright (C) 2011  Equinor ASA, Norway.
-
-   The file 'util.c' is part of ERT - Ensemble based Reservoir Tool.
-
-   ERT is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE.
-
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
-   for more details.
-*/
-
 /**
   This file contains a large number of utility functions for memory
   handling, string handling and file handling. Observe that all these
@@ -2652,8 +2634,12 @@ bool util_is_first_day_in_month_utc(time_t t) {
 
 bool util_sscanf_isodate(const char *date_token, time_t *t) {
     int day, month, year;
+    int year_digit1, year_digit2, year_digit3, year_digit4;
 
-    if (date_token && sscanf(date_token, "%d-%d-%d", &year, &month, &day) == 3)
+    if (date_token &&
+        sscanf(date_token, "%1d%1d%1d%1d-%d-%d", &year_digit1, &year_digit2,
+               &year_digit3, &year_digit4, &month, &day) == 6 &&
+        sscanf(date_token, "%d-%d-%d", &year, &month, &day) == 3)
         return util_make_datetime_utc__(0, 0, 0, day, month, year, false, t);
 
     if (t)

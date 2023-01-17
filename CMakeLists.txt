@@ -62,9 +62,11 @@ conan_cmake_run(
   # Packages
   REQUIRES
   backward-cpp/1.6
+  catch2/2.13.9
   fmt/8.0.1
   # Options
   OPTIONS
+  catch2:with_main=True
   ${conan_opts}
   # Force cppstd to be the same as this CMakeLists.txt's
   SETTINGS
@@ -72,9 +74,8 @@ conan_cmake_run(
   # Build from source if there are no pre-compiled binaries
   BUILD
   missing
-  # CMAKE_TARGETS gives us CMake 3 style CONAN_PKG:: dependencies
-  BASIC_SETUP
-  CMAKE_TARGETS)
+  GENERATORS
+  cmake_find_package)
 
 # -----------------------------------------------------------------
 
@@ -235,10 +236,14 @@ if(MSVC)
   add_definitions("/W3 /D_CRT_SECURE_NO_WARNINGS /wd4996")
 endif()
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules
+     "${CMAKE_CURRENT_BINARY_DIR}")
 find_package(CXX11Features)
 
 # -----------------------------------------------------------------
+
+find_package(Backward REQUIRED)
+find_package(fmt REQUIRED)
 
 # create targets for (required and optional) dependencies to link to
 
@@ -272,7 +277,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads)
 if(CMAKE_USE_PTHREADS_INIT)
   set(HAVE_PTHREAD TRUE)
-  set(ERT_HAVE_THREAD_POOL ON)
 
   set(pthread "${CMAKE_THREAD_LIBS_INIT}")
 
@@ -433,9 +437,7 @@ if(ERT_LINUX)
 endif()
 
 if(BUILD_TESTS)
-  set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/Catch2)
-  add_library(Catch INTERFACE)
-  target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
+  find_package(Catch2 REQUIRED)
 endif()
 
 add_subdirectory(lib)

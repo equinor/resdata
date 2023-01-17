@@ -9,11 +9,11 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Install dependencies
       run: |
-        sudo pip install cmake-format black==22.1.0 'click<8;python_version<="3.6"' 'click==8.0.2;python_version >"3.6"'
+        sudo pip install cmake-format black
 
     - name: Clang Format
       run: ./script/clang-format --check
@@ -25,4 +25,4 @@ jobs:
 
     - name: Black
       run: |
-        black --check python/ --exclude=docs
+        black --check .

@@ -1,18 +1,3 @@
-#  Copyright (C) 2011  Equinor ASA, Norway.
-#
-#  The file 'stringlist.py' is part of ERT - Ensemble based Reservoir Tool.
-#
-#  ERT is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#  FITNESS FOR A PARTICULAR PURPOSE.
-#
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
-#  for more details.
 """
 Simple wrapping of stringlist 'class' from C library.
 
@@ -30,8 +15,6 @@ be an iterable consisting of strings, and the strings property will
 return a normal python list of string objects, used in this way you
 hardly need to notice that the StringList class is at play.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
-from six import string_types
 from ecl import EclPrototype
 from cwrap import BaseCClass
 
@@ -79,7 +62,7 @@ class StringList(BaseCClass):
         if not initial:
             return
 
-        if isinstance(initial, string_types):
+        if isinstance(initial, str):
             raise TypeError(
                 (
                     'Cannot initialize a StringList from "{initial}".\n'
@@ -89,7 +72,7 @@ class StringList(BaseCClass):
         for s in initial:
             if isinstance(s, bytes):
                 s.decode("ascii")
-            if isinstance(s, string_types):
+            if isinstance(s, str):
                 self.append(s)
             else:
                 raise TypeError('Item is not a string: "%s".' % s)
@@ -121,7 +104,7 @@ class StringList(BaseCClass):
                 )
             if isinstance(value, bytes):
                 value = value.decode("ascii")
-            if isinstance(value, string_types):
+            if isinstance(value, str):
                 self._iset(index, value)
             else:
                 raise TypeError("Item: %s not string type" % value)
@@ -157,7 +140,7 @@ class StringList(BaseCClass):
     def __iadd__(self, other):
         if isinstance(other, bytes):
             other.decode("ascii")
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             raise TypeError("Can not add strings with + - use append()")
         for s in other:
             self.append(s)
@@ -171,7 +154,7 @@ class StringList(BaseCClass):
     def __ior__(self, other):
         if isinstance(other, bytes):
             other.decode("ascii")
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             raise TypeError("Can not | with string.")
         for s in other:
             if not s in self:
@@ -237,7 +220,7 @@ class StringList(BaseCClass):
         """
         if isinstance(s, bytes):
             s.decode("ascii")
-        if isinstance(s, string_types):
+        if isinstance(s, str):
             self._append(s)
         else:
             self._append(str(s))
@@ -283,7 +266,7 @@ class StringList(BaseCClass):
         """@rtype: int"""
         if isinstance(value, bytes):
             value.decode("ascii")
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             return self._find_first(value)
         raise KeyError(
             'Cannot index by "%s", lst.index() needs a string.' % str(type(value))

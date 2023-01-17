@@ -3,7 +3,6 @@
 #cmakedefine ERT_HAVE_GETOPT
 #cmakedefine ERT_HAVE_UNISTD
 #cmakedefine ERT_HAVE_SPAWN
-#cmakedefine ERT_HAVE_THREAD_POOL
 #cmakedefine ERT_HAVE_OPENDIR
 #cmakedefine ERT_HAVE_SYMLINK
 #cmakedefine ERT_HAVE_READLINKAT
@@ -16,5 +15,3 @@
 #cmakedefine ERT_WINDOWS_LFS
 #cmakedefine ERT_HAVE_PING
 #cmakedefine PING_CMD "@PING_PATH@"
-
-

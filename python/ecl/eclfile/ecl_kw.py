@@ -1,18 +1,3 @@
-#  Copyright (C) 2011  Equinor ASA, Norway.
-#
-#  The file 'ecl_kw.py' is part of ERT - Ensemble based Reservoir Tool.
-#
-#  ERT is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  ERT is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#  FITNESS FOR A PARTICULAR PURPOSE.
-#
-#  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
-#  for more details.
 """
 Support for working with one keyword from ECLIPSE file.
 
@@ -37,8 +22,6 @@ files. This module also has (some) support for working with GRDECL
 The ecl_kw.py implementation wraps the ecl_kw.c implementation from
 the libecl library.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ctypes
 import warnings
