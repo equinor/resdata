@@ -104,7 +104,7 @@ else()
 
   if(GIT_FOUND)
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" status
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" status
       RESULT_VARIABLE RESULT
       OUTPUT_QUIET ERROR_QUIET)
 
@@ -115,13 +115,13 @@ else()
 
   if(GIT_FOUND)
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" rev-parse
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse
               HEAD
       OUTPUT_VARIABLE GIT_COMMIT
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_SOURCE_DIR}/.git" rev-parse
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse
               --short HEAD
       OUTPUT_VARIABLE GIT_COMMIT_SHORT
       OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -175,7 +175,7 @@ if(EXISTS ${EQUINOR_TESTDATA_ROOT})
                           "${EQUINOR_TESTDATA_ROOT}" "${LINK}")
   message(STATUS "Linking testdata: ${LINK} -> ${EQUINOR_TESTDATA_ROOT}")
 
-  set(_equinor_test_data ${CMAKE_SOURCE_DIR}/test-data/Equinor)
+  set(_equinor_test_data ${CMAKE_CURRENT_SOURCE_DIR}/test-data/Equinor)
   set(_eclpath ${_equinor_test_data}/ECLIPSE)
   set(_geopath ${_equinor_test_data}/Geometry)
 endif()
@@ -399,13 +399,13 @@ find_package(Git)
 if(GIT_FOUND)
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE GIT_COMMIT
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE GIT_COMMIT_SHORT
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
