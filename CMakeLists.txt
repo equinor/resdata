@@ -35,17 +35,17 @@ endif()
 # https://docs.conan.io/en/latest/howtos/cmake_launch.html
 # -----------------------------------------------------------------
 
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conan.cmake")
   message(
     STATUS
       "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
   file(
     DOWNLOAD
     "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
-    "${CMAKE_BINARY_DIR}/conan.cmake")
+    "${CMAKE_CURRENT_BINARY_DIR}/conan.cmake")
 endif()
 
-include(${CMAKE_BINARY_DIR}/conan.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/conan.cmake)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   # set(conan_opts ...)
@@ -355,7 +355,7 @@ test_big_endian(BIG_ENDIAN)
 
 check_type_size(time_t SIZE_OF_TIME_T)
 if(${SIZE_OF_TIME_T} EQUAL 8)
-  try_run(RUN_RESULT COMPILE_RESULT ${CMAKE_BINARY_DIR}
+  try_run(RUN_RESULT COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}
           ${PROJECT_SOURCE_DIR}/cmake/Tests/test_mktime_before1970.c)
   if(${COMPILE_RESULT})
     if(${RUN_RESULT} EQUAL 0)
@@ -364,26 +364,26 @@ if(${SIZE_OF_TIME_T} EQUAL 8)
   endif()
 endif()
 
-try_compile(HAVE_VA_COPY ${CMAKE_BINARY_DIR}
+try_compile(HAVE_VA_COPY ${CMAKE_CURRENT_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_va_copy.c)
-try_compile(HAVE_SIGBUS ${CMAKE_BINARY_DIR}
+try_compile(HAVE_SIGBUS ${CMAKE_CURRENT_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_have_sigbus.c)
-try_compile(HAVE_PID_T ${CMAKE_BINARY_DIR}
+try_compile(HAVE_PID_T ${CMAKE_CURRENT_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_pid_t.c)
-try_compile(HAVE_MODE_T ${CMAKE_BINARY_DIR}
+try_compile(HAVE_MODE_T ${CMAKE_CURRENT_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_mode_t.c)
-try_compile(ERT_HAVE_ISFINITE ${CMAKE_BINARY_DIR}
+try_compile(ERT_HAVE_ISFINITE ${CMAKE_CURRENT_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_isfinite.c)
 try_compile(HAVE_SIGHANDLER_T ${PROJECT_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_have_sighandler.c)
 
 if(ERT_HAVE_READLINKAT)
-  try_compile(ERT_HAVE_READLINKAT_DECLARATION ${CMAKE_BINARY_DIR}
+  try_compile(ERT_HAVE_READLINKAT_DECLARATION ${CMAKE_CURRENT_BINARY_DIR}
               ${PROJECT_SOURCE_DIR}/cmake/Tests/test_have_readlinkat_decl.c)
 endif()
 
 set(BUILD_CXX ON)
-try_compile(HAVE_CXX_SHARED_PTR ${CMAKE_BINARY_DIR}
+try_compile(HAVE_CXX_SHARED_PTR ${CMAKE_CURRENT_BINARY_DIR}
             ${PROJECT_SOURCE_DIR}/cmake/Tests/test_shared_ptr.cpp)
 if(NOT HAVE_CXX_SHARED_PTR)
   set(BUILD_CXX OFF)
