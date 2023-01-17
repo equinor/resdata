@@ -104,7 +104,8 @@ else()
 
   if(GIT_FOUND)
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" status
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git"
+              status
       RESULT_VARIABLE RESULT
       OUTPUT_QUIET ERROR_QUIET)
 
@@ -115,20 +116,20 @@ else()
 
   if(GIT_FOUND)
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse
-              HEAD
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git"
+              rev-parse HEAD
       OUTPUT_VARIABLE GIT_COMMIT
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" rev-parse
-              --short HEAD
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git"
+              rev-parse --short HEAD
       OUTPUT_VARIABLE GIT_COMMIT_SHORT
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git" describe
-              --tags
+      COMMAND ${GIT_EXECUTABLE} "--git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git"
+              describe --tags
       OUTPUT_VARIABLE GIT_TAG
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
