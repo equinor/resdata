@@ -25,7 +25,7 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: pip install conan
+      run: pip install "conan<2"
 
     - name: Build ecl
       run: |
