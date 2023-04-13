@@ -19,7 +19,9 @@ extern "C" {
 #define HASH_TYPE_ID 771065
 
 /**
-   This is **THE** hash function - which actually does the hashing.
+   Implements the jenkins one-at-a-time hash function
+
+   see  https://en.wikipedia.org/wiki/Jenkins_hash_function
 */
 
 static uint32_t hash_index(const char *key, size_t len) {
