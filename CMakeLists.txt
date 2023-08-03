@@ -66,7 +66,7 @@ conan_cmake_run(
   fmt/8.0.1
   # Options
   OPTIONS
-  catch2:with_main=True
+  catch2/*:with_main=True
   ${conan_opts}
   # Force cppstd to be the same as this CMakeLists.txt's
   SETTINGS
