@@ -232,7 +232,6 @@ class EclGrid(BaseCClass):
 
     @classmethod
     def create(cls, specgrid, zcorn, coord, actnum, mapaxes=None):
-
         """
         Create a new grid instance from existing keywords.
 
@@ -277,7 +276,7 @@ class EclGrid(BaseCClass):
         else:
             if not isinstance(actnum, IntVector):
                 tmp = IntVector(initial_size=len(actnum))
-                for (index, value) in enumerate(actnum):
+                for index, value in enumerate(actnum):
                     tmp[index] = value
                 actnum = tmp
 
@@ -1016,7 +1015,6 @@ class EclGrid(BaseCClass):
         return (dx, dy, dz)
 
     def get_num_lgr(self):
-
         """
         How many LGRs are attached to this main grid?
 

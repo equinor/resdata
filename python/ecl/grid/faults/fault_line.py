@@ -89,7 +89,7 @@ class FaultLine(object):
 
     def __init_polyline(self):
         pl = CPolyline()
-        for (i, j) in self.getIJPolyline():
+        for i, j in self.getIJPolyline():
             x, y, z = self.__grid.getNodeXYZ(i, j, self.__k)
             pl.addPoint(x, y)
         self.__polyline = pl

@@ -148,7 +148,6 @@ class FortIO(BaseCClass):
 
     @classmethod
     def is_fortran_file(cls, filename, endian_flip=True):
-
         """@rtype: bool
         @type filename: str
 

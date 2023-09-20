@@ -517,7 +517,7 @@ class VectorTemplate(BaseCClass):
 
     def asList(self):
         l = [0] * len(self)
-        for (index, value) in enumerate(self):
+        for index, value in enumerate(self):
             l[index] = value
 
         return l

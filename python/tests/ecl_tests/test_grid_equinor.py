@@ -173,7 +173,6 @@ class GridTest(EclTest):
 
             with openEclFile("G.EGRID") as f:
                 with copen("grid.grdecl", "a") as f2:
-
                     coord_kw = f["COORD"][0]
                     coord_kw.write_grdecl(f2)
 
@@ -309,7 +308,7 @@ class GridTest(EclTest):
                 "Equinor/ECLIPSE/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3.EGRID"
             )
         )
-        for (nr, name) in [
+        for nr, name in [
             (104, "LG003017"),
             (2, "LG006024"),
             (4, "LG005025"),

@@ -6,7 +6,6 @@ from tests import EclTest
 
 class FKTest(EclTest):
     def test_cell_containment(self):
-
         grid_location = "local/ECLIPSE/faarikaal/faarikaal%d.EGRID"
         well_location = "local/ECLIPSE/faarikaal/faarikaal%d.txt"
 

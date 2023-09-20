@@ -100,7 +100,7 @@ class FaultLayer(object):
         perm_list.sort(key=lambda x: x[1])
 
         fault_lines = []
-        for (index, d) in perm_list:
+        for index, d in perm_list:
             fault_lines.append(self.__fault_lines[index])
         self.__fault_lines = fault_lines
 

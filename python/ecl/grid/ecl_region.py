@@ -987,7 +987,6 @@ class EclRegion(BaseCClass):
     #################################################################
 
     def scalar_apply_kw(self, target_kw, scalar, func_dict, force_active=False):
-
         """
         Helper function to apply a function with one scalar arg on target_kw.
         """

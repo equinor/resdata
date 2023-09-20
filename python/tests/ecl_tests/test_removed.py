@@ -9,7 +9,6 @@ from ecl.eclfile import EclFile, EclKW, openFortIO, FortIO
 
 class Removed_2_1_Test(EclTest):
     def test_ecl_file_block(self):
-
         with TestAreaContext("name") as t:
             kw = EclKW("TEST", 3, EclDataType.ECL_INT)
             with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:

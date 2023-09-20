@@ -72,7 +72,6 @@ class FaultBlockTest(EclTest):
             layer[5, 5]
 
     def test_neighbours(self):
-
         with TestAreaContext("python/fault_block_layer/neighbour") as work_area:
             with open("kw.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")

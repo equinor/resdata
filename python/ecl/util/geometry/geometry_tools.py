@@ -394,17 +394,13 @@ class GeometryTools(object):
         p0 = polyline[-1]
         p1 = polyline[-2]
         ray = GeometryTools.lineToRay(p1, p0)
-        for (index, p) in GeometryTools.rayPolygonIntersections(
-            p0, ray, target_polyline
-        ):
+        for index, p in GeometryTools.rayPolygonIntersections(p0, ray, target_polyline):
             d_list.append((GeometryTools.distance(p0, p), [p0, p]))
 
         p0 = polyline[0]
         p1 = polyline[1]
         ray = GeometryTools.lineToRay(p1, p0)
-        for (index, p) in GeometryTools.rayPolygonIntersections(
-            p0, ray, target_polyline
-        ):
+        for index, p in GeometryTools.rayPolygonIntersections(p0, ray, target_polyline):
             d_list.append((GeometryTools.distance(p0, p), [p0, p]))
 
         if len(d_list) == 0:

@@ -4,7 +4,6 @@ from tests import EclTest
 
 class IntersectionTest(EclTest):
     def test_intersection(self):
-
         p1 = (0.0, 0.0)
         p2 = (10.0, 0.0)
         p3 = (5.0, -5.0)

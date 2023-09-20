@@ -40,7 +40,7 @@ class Polyline(object):
         if len(self) != len(other):
             return False
 
-        for (p1, p2) in zip(self, other):
+        for p1, p2 in zip(self, other):
             if p1 != p2:
                 return False
 
