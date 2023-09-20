@@ -825,7 +825,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         return self._check_sim_time(date)
 
     def get_interp_direct(self, key, date):
-
         if not isinstance(date, CTime):
             date = CTime(date)
         return self._get_general_var_from_sim_time(date, key)
@@ -853,7 +852,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             if self.check_sim_time(t):
                 return self._get_general_var_from_sim_time(t, key)
             else:
-
                 raise ValueError("date:%s is outside range of simulation data" % date)
         elif date is None:
             if self._check_sim_days(days):

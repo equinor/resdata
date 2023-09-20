@@ -50,7 +50,6 @@ def pre_mapaxes_translation(translation, mapaxes):
 
 
 class EclGridGenerator:
-
     _alloc_rectangular = EclPrototype(
         "ecl_grid_obj ecl_grid_alloc_rectangular(int, int, int, double, double, double, int*)",
         bind=False,
@@ -70,7 +69,7 @@ class EclGridGenerator:
         else:
             if not isinstance(actnum, IntVector):
                 tmp = IntVector(initial_size=len(actnum))
-                for (index, value) in enumerate(actnum):
+                for index, value in enumerate(actnum):
                     tmp[index] = value
                 actnum = tmp
 
@@ -137,7 +136,6 @@ class EclGridGenerator:
         concave=False,
         faults=False,
     ):
-
         cls.__assert_zcorn_parameters(
             dims,
             dV,
@@ -194,7 +192,6 @@ class EclGridGenerator:
         rotate=False,
         misalign=False,
     ):
-
         nx, ny, nz = dims
         dx, dy, dz = dV
 
@@ -236,7 +233,6 @@ class EclGridGenerator:
         concave,
         faults,
     ):
-
         nx, ny, nz = dims
         dx, dy, dz = dV
 
@@ -588,7 +584,6 @@ class EclGridGenerator:
     def extract_subgrid(
         cls, grid, ijk_bounds, decomposition_change=False, translation=None
     ):
-
         """
         Extracts a subgrid from the given grid according to the specified
         bounds.

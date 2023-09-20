@@ -97,7 +97,6 @@ class SurfaceTest(EclTest):
 
     def test_write(self):
         with TestAreaContext("surface/write"):
-
             s0 = Surface(self.surface_valid)
             s0.write("new_surface.irap")
 

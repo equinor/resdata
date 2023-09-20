@@ -61,7 +61,7 @@ class KWTest(EclTest):
         name1 = "file1.txt"
         name2 = "file2.txt"
         kw = EclKW("TEST", len(data), data_type)
-        for (i, d) in enumerate(data):
+        for i, d in enumerate(data):
             kw[i] = d
 
         file1 = cwrap.open(name1, "w")
@@ -138,7 +138,6 @@ class KWTest(EclTest):
 
     def test_kw_write(self):
         with TestAreaContext("python/ecl_kw/writing"):
-
             data = [random.random() for i in range(10000)]
 
             kw = EclKW("TEST", len(data), EclDataType.ECL_DOUBLE)
@@ -194,7 +193,7 @@ class KWTest(EclTest):
                 for elm in tmp:
                     data.append(int(elm))
 
-            for (v1, v2) in zip(data, kw):
+            for v1, v2 in zip(data, kw):
                 self.assertEqual(v1, v2)
 
     def test_sliced_set(self):
@@ -424,7 +423,6 @@ class KWTest(EclTest):
     def test_string_write_read_unformatted(self):
         for str_len in range(1000):
             with TestAreaContext("my_space"):
-
                 kw = EclKW("TEST_KW", 10, EclDataType.ECL_STRING(str_len))
                 for i in range(10):
                     kw[i] = str(i) * str_len
@@ -442,7 +440,6 @@ class KWTest(EclTest):
     def test_string_write_read_formatted(self):
         for str_len in range(1000):
             with TestAreaContext("my_space"):
-
                 kw = EclKW("TEST_KW", 10, EclDataType.ECL_STRING(str_len))
                 for i in range(10):
                     kw[i] = str(i) * str_len

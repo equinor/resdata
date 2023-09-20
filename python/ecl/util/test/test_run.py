@@ -126,7 +126,7 @@ class TestRun(object):
 
                 status_list = [status]
                 if status[0]:
-                    for (check_func, arg) in self.check_list:
+                    for check_func, arg in self.check_list:
                         status = check_func(arg)
                         status_list.append(status)
                         if not status[0]:

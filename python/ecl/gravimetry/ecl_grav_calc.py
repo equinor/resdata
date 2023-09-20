@@ -69,7 +69,7 @@ def deltag(xyz, grid, init_file, restart_file1, restart_file2):
     porv2 = restart_file2.iget_named_kw("RPORV", 0)
 
     deltag = 0
-    for (sat1, sat2) in phase_list:
+    for sat1, sat2 in phase_list:
         rho_name = "%s_DEN" % sat1.name[1:]
         rho1 = restart_file1.iget_named_kw(rho_name, 0)
         rho2 = restart_file2.iget_named_kw(rho_name, 0)

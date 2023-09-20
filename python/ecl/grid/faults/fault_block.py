@@ -133,7 +133,7 @@ class FaultBlock(BaseCClass):
 
         self._trace_edge(x_list, y_list, cell_list)
         p = Polyline()
-        for (x, y) in zip(x_list, y_list):
+        for x, y in zip(x_list, y_list):
             p.addPoint(x, y)
         return p
 

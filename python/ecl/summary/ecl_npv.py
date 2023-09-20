@@ -160,7 +160,7 @@ class EclNPV(object):
         self.code = (
             "trange = self.baseCase.timeRange(self.start, self.end, self.interval)\n"
         )
-        for (key, var) in self.keyList.items():
+        for key, var in self.keyList.items():
             self.code += '%s = self.baseCase.blockedProduction("%s", trange)\n' % (
                 var,
                 key,

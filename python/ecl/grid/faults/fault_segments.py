@@ -68,7 +68,7 @@ class SegmentMap(object):
         return self.__segment_map.__str__()
 
     def verify(self):
-        for (C, count) in self.__count_map.iteritems():
+        for C, count in self.__count_map.iteritems():
             if count > 0:
                 d = self.__segment_map[C]
                 if len(d) != count:
@@ -112,7 +112,7 @@ class SegmentMap(object):
 
     def pop_start(self):
         end_segments = []
-        for (C, count) in self.__count_map.items():
+        for C, count in self.__count_map.items():
             if count == 1:
                 end_segments.append(list(self.__segment_map[C].values())[0])
 
@@ -135,7 +135,7 @@ class SegmentMap(object):
 
     def print_content(self):
         for d in self.__segment_map.values():
-            for (C, S) in d.iteritems():
+            for C, S in d.iteritems():
                 print(S)
 
 
