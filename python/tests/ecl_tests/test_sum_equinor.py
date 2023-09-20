@@ -403,7 +403,7 @@ class SumTest(EclTest):
         fprod = sum.blockedProduction("FOPT", trange)
         gprod = sum.blockedProduction("GOPT:OP", trange)
         wprod = wprod1 + wprod2 + wprod3 + wprod4 + wprod5
-        for (w, f, g) in zip(wprod, fprod, gprod):
+        for w, f, g in zip(wprod, fprod, gprod):
             self.assertFloatEqual(w, f)
             self.assertFloatEqual(w, g)
 
@@ -499,7 +499,6 @@ class SumTest(EclTest):
             "Equinor/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL",
             "Equinor/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC",
         ]:
-
             with TestAreaContext("my_space" + data_set.split("/")[-1]) as area:
                 intersect_summary = EclSum(
                     self.createTestPath(data_set), lazy_load=False

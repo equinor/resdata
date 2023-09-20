@@ -357,14 +357,13 @@ class SumTest(EclTest):
                 case1.get_interp("FOPT", date=t),
             ],
         ):
-
             self.assertFloatEqual(d1, d2)
 
         tmp = []
         for key in kw_list:
             tmp.append(key)
 
-        for (k1, k2) in zip(kw_list, tmp):
+        for k1, k2 in zip(kw_list, tmp):
             self.assertEqual(k1, k2)
 
         kw_list2 = kw_list.copy(case2)

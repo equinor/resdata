@@ -25,7 +25,6 @@ EclTypeEnum.addEnum("ECL_STRING_TYPE", 7)
 
 
 class EclDataType(BaseCClass):
-
     TYPE_NAME = "ecl_data_type"
 
     _alloc = EclPrototype(

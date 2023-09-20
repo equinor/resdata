@@ -178,7 +178,6 @@ class ExtendedTestCase(TestCase):
         return os.path.realpath(os.path.join(cls.TESTDATA_ROOT, path))
 
     def assertNotRaises(self, func=None):
-
         context = _AssertNotRaisesContext(self)
         if func is None:
             return context

@@ -241,7 +241,7 @@ class Layer(BaseCClass):
         j_list = IntVector()
         self._cells_equal(value, i_list, j_list)
         ij_list = []
-        for (i, j) in zip(i_list, j_list):
+        for i, j in zip(i_list, j_list):
             ij_list.append((i, j))
         return ij_list
 

@@ -5,7 +5,6 @@ from ecl import EclPrototype
 
 
 class TestArea(BaseCClass):
-
     __test__ = False
 
     _test_area_alloc = EclPrototype(
@@ -34,7 +33,6 @@ class TestArea(BaseCClass):
     )
 
     def __init__(self, test_name, store_area=False, c_ptr=None):
-
         if c_ptr is None:
             c_ptr = self._test_area_alloc(test_name, store_area)
 
@@ -107,7 +105,6 @@ class TestArea(BaseCClass):
 
 
 class TestAreaContext(object):
-
     __test__ = False
 
     def __init__(self, test_name, store_area=False):

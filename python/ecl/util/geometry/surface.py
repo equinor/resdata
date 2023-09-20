@@ -177,7 +177,6 @@ class Surface(BaseCClass):
         return self._copy(copy_data)
 
     def write(self, filename):
-
         """
         Will write the surface as an ascii formatted file to @filename.
         """

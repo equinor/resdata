@@ -20,7 +20,7 @@ if __name__ == "__main__":
         nnc_list.append((g1, g2, t))
 
     nnc_list = sorted(nnc_list, key=itemgetter(0))
-    for (g1, g2, T) in nnc_list:
+    for g1, g2, T in nnc_list:
         # grid_ijk assumes 0-based indexing, g1/g2 are 1-based (FORTRAN)
         # Convert them to zero based ones.
         g1 = g1 - 1

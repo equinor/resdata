@@ -9,7 +9,6 @@ def get_const_size_types():
 
 
 class EclDataTypeTest(EclTest):
-
     # All of the below should list their elements in the same order as
     # EclTypeEnum!
     # [char, float, double, int, bool, mess]
@@ -39,7 +38,7 @@ class EclDataTypeTest(EclTest):
 
     def test_alloc_from_type(self):
         types, sizes = get_const_size_types(), self.CONST_SIZES
-        for (ecl_type, element_size) in zip(types, sizes):
+        for ecl_type, element_size in zip(types, sizes):
             data_type = EclDataType(ecl_type)
             self.assertEqual(ecl_type, data_type.type)
             self.assertEqual(element_size, data_type.element_size)
@@ -55,20 +54,20 @@ class EclDataTypeTest(EclTest):
             data_type = EclDataType(EclTypeEnum.ECL_STRING_TYPE, 1000)
 
     def test_alloc(self):
-        for (ecl_type, element_size) in zip(self.TYPES, self.SIZES):
+        for ecl_type, element_size in zip(self.TYPES, self.SIZES):
             data_type = EclDataType(ecl_type, element_size)
             self.assertEqual(ecl_type, data_type.type)
             self.assertEqual(element_size, data_type.element_size)
 
     def test_type_verifiers(self):
         test_base = zip(self.TYPES, self.SIZES, self.CONST_VERIFIERS)
-        for (ecl_type, elem_size, verifier) in test_base:
+        for ecl_type, elem_size, verifier in test_base:
             data_type = EclDataType(ecl_type, elem_size)
             self.assertTrue(verifier(data_type))
 
     def test_get_type_name(self):
         test_base = zip(self.TYPES, self.SIZES, self.NAMES)
-        for (ecl_type, elem_size, type_name) in test_base:
+        for ecl_type, elem_size, type_name in test_base:
             data_type = EclDataType(ecl_type, elem_size)
             self.assertEqual(type_name, data_type.type_name)
 
@@ -87,7 +86,7 @@ class EclDataTypeTest(EclTest):
 
     def test_create_from_type_name(self):
         test_base = zip(self.TYPES, self.SIZES, self.NAMES)
-        for (ecl_type, elem_size, type_name) in test_base:
+        for ecl_type, elem_size, type_name in test_base:
             data_type = EclDataType.create_from_type_name(type_name)
             self.assertEqual(ecl_type, data_type.type)
             self.assertEqual(elem_size, data_type.element_size)
