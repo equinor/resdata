@@ -50,7 +50,7 @@ class CTime(BaseCValue):
         return datetime.date(*self.time()[0:3])
 
     def datetime(self):
-        return datetime.datetime(*self.time()[0:6])
+        return datetime.datetime.utcfromtimestamp(self.ctime())
 
     def __str__(self):
         return self.datetime().strftime("%Y-%m-%d %H:%M:%S%z")
