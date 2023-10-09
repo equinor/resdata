@@ -75,6 +75,7 @@ skbuild.setup(
         "numpy",
         "pandas",
     ],
+    setup_requires = ["conan<2"],
     entry_points={"console_scripts": utility_wrappers()},
     cmake_args=[
         "-DECL_VERSION=" + version,
