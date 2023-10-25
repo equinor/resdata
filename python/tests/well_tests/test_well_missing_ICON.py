@@ -1,18 +1,18 @@
 import datetime
-from tests import EclTest
-from ecl.grid import EclGridGenerator
-from ecl.well import (
+from tests import ResdataTest
+from resdata.grid import GridGenerator
+from resdata.well import (
     WellInfo,
     WellConnection,
-    WellTypeEnum,
-    WellConnectionDirectionEnum,
+    WellType,
+    WellConnectionDirection,
     WellSegment,
 )
 
 
-class EclWellICONTest(EclTest):
+class ResdataWellICONTest(ResdataTest):
     def setUp(self):
-        self.grid = EclGridGenerator.create_rectangular((46, 112, 22), (1, 1, 1))
+        self.grid = GridGenerator.create_rectangular((46, 112, 22), (1, 1, 1))
         self.rst_file_ICON0 = self.createTestPath(
             "local/ECLIPSE/well/missing-ICON/ICON0.X0027"
         )

@@ -1,10 +1,10 @@
-from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
-from ecl.util.util import RandomNumberGenerator
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
+from resdata.util.util import RandomNumberGenerator
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class RngTest(EclTest):
+class RngTest(ResdataTest):
     def test_enums(self):
         self.assertEnumIsFullyDefined(
             RngAlgTypeEnum, "rng_alg_type", "lib/include/ert/util/rng.hpp"

@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace ecl {
+namespace rd {
 namespace util {
 
 class TestArea {
@@ -28,9 +28,9 @@ private:
 };
 
 } // namespace util
-} // namespace ecl
+} // namespace rd
 
-typedef ecl::util::TestArea test_work_area_type;
+typedef rd::util::TestArea test_work_area_type;
 
 #ifdef __cplusplus
 extern "C" {

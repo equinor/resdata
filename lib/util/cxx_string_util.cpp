@@ -1,7 +1,7 @@
 #include <string>
 #include <stdarg.h>
 
-namespace ecl {
+namespace rd {
 namespace util {
 
 std::string string_format(const char *fmt, ...) {
@@ -23,4 +23,4 @@ std::string string_format(const char *fmt, ...) {
     return s;
 }
 } // namespace util
-} // namespace ecl
+} // namespace rd

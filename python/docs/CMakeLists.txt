@@ -1,6 +1,6 @@
 find_package(Sphinx REQUIRED)
 
-set(DOC_INSTALL_PREFIX "share/libecl/docs")
+set(DOC_INSTALL_PREFIX "share/resdata/docs")
 set(doc_build "${PROJECT_BINARY_DIR}/doc_build")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/code" DESTINATION ${doc_build})
 
@@ -12,7 +12,7 @@ add_custom_target(
   COMMAND sphinx-apidoc -e -o "${doc_build}/api"
           ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX} tests
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}
-  DEPENDS ecl)
+  DEPENDS resdata)
 
 add_custom_target(
   html-doc ALL
@@ -58,11 +58,11 @@ if(PDFLATEX_COMPILER)
   # correctly.
   add_custom_target(
     pdf-doc ALL
-    COMMAND ${PDFLATEX_COMPILER} "libecl.tex"
-    COMMAND ${PDFLATEX_COMPILER} "libecl.tex"
+    COMMAND ${PDFLATEX_COMPILER} "resdata.tex"
+    COMMAND ${PDFLATEX_COMPILER} "resdata.tex"
     DEPENDS latex-doc
     WORKING_DIRECTORY ${latex_workdir})
 
-  install(FILES ${latex_workdir}/libecl.pdf
+  install(FILES ${latex_workdir}/resdata.pdf
           DESTINATION ${CMAKE_INSTALL_PREFIX}/${DOC_INSTALL_PREFIX}/pdf)
 endif()

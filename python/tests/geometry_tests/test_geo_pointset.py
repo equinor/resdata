@@ -1,9 +1,9 @@
-from ecl.util.geometry import GeoPointset, Surface
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.geometry import GeoPointset, Surface
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class GeoPointsetTest(EclTest):
+class GeoPointsetTest(ResdataTest):
     def test_init(self):
         gp = GeoPointset()
         self.assertEqual(0, len(gp))

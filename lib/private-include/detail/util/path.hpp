@@ -2,7 +2,7 @@
 #define PATH_UTIL
 
 #include <string>
-namespace ecl {
+namespace rd {
 namespace util {
 namespace path {
 /*
@@ -25,6 +25,6 @@ std::string basename(const std::string &fname);
 std::string extension(const std::string &fname);
 } // namespace path
 } // namespace util
-} // namespace ecl
+} // namespace rd
 
 #endif

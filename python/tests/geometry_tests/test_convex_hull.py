@@ -1,8 +1,8 @@
-from ecl.util.geometry.geometry_tools import GeometryTools
-from tests import EclTest
+from resdata.geometry.geometry_tools import GeometryTools
+from tests import ResdataTest
 
 
-class ConvexHullTest(EclTest):
+class ConvexHullTest(ResdataTest):
     def test_ccw(self):
         p1 = (0, 0)
         p2 = (1, 0)

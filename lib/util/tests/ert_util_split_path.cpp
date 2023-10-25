@@ -2,7 +2,7 @@
 
 #include "detail/util/path.hpp"
 
-using namespace ecl::util;
+using namespace rd::util;
 
 int main(int argc, char **argv) {
 

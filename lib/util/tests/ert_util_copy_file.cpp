@@ -17,7 +17,7 @@ void test_copy_file(const char *executable) {
 
     mode0 = stat_buf.st_mode;
     {
-        ecl::util::TestArea ta("copy_file");
+        rd::util::TestArea ta("copy_file");
 
         util_copy_file(executable, "test.x");
         test_assert_true(util_file_exists("test.x"));

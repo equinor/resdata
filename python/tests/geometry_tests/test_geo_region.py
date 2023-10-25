@@ -1,9 +1,9 @@
-from ecl.util.geometry import GeoRegion, GeoPointset, CPolyline, Surface
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.geometry import GeoRegion, GeoPointset, CPolyline, Surface
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class GeoRegionTest(EclTest):
+class GeoRegionTest(ResdataTest):
     def test_init(self):
         pointset = GeoPointset()
         georegion = GeoRegion(pointset)

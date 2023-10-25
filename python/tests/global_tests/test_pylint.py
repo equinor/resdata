@@ -1,20 +1,20 @@
-from ecl.util.test import LintTestCase
+from resdata.util.test import LintTestCase
 
 
 class LintErt(LintTestCase):
     """Tests that no file in ert needs linting"""
 
     def test_lint_ecl(self):
-        # white = ['ecl_kw.py', 'ecl_type.py', 'ecl_sum.py', 'ecl_grid.py', 'ecl_npv.py']  # TODO fix issues and remove
-        # self.assertLinted('ecl/ecl', whitelist=white)
+        # white = ['rd_kw.py', 'rd_type.py', 'rd_sum.py', 'rd_grid.py', 'rd_npv.py']  # TODO fix issues and remove
+        # self.assertLinted('resdata/ecl', whitelist=white)
         pass  # temporarily disable linting due to monkey patching
 
     def test_lint_geo(self):
-        self.assertLinted("ecl/geo")
+        self.assertLinted("resdata/geo")
 
     def test_lint_util(self):
         self.assertLinted(
-            "ecl/util",
+            "resdata/util",
             whitelist=[
                 "vector_template.py",
                 "test_area.py",
@@ -30,4 +30,4 @@ class LintErt(LintTestCase):
         )
 
     def test_lint_well(self):
-        self.assertLinted("ecl/well")
+        self.assertLinted("resdata/well")

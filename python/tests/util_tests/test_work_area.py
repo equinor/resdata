@@ -7,11 +7,11 @@ try:
 except ImportError:
     from unittest import skipIf
 
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class WorkAreaTest(EclTest):
+class WorkAreaTest(ResdataTest):
     def test_full_path(self):
         with TestAreaContext("TestArea") as test_area:
             with open("test_file", "w") as fileH:

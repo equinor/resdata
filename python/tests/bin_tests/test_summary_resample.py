@@ -2,11 +2,11 @@ import os.path
 import subprocess
 from subprocess import CalledProcessError as CallError
 
-from ecl.grid import Cell, EclGrid
-from ecl.summary import EclSum
-from tests import EclTest
-from ecl.util.test.ecl_mock import createEclSum
-from ecl.util.test import TestAreaContext
+from resdata.grid import Cell, Grid
+from resdata.summary import Summary
+from resdata.util.test import TestAreaContext
+from resdata.util.test.mock import createSummary
+from tests import ResdataTest
 
 
 def fopr(days):
@@ -26,7 +26,7 @@ def fgpt(days):
 
 def create_case(num_mini_step=10, case="CSV"):
     length = 100
-    return createEclSum(
+    return createSummary(
         case,
         [
             ("FOPT", None, 0, "SM3"),
@@ -40,7 +40,7 @@ def create_case(num_mini_step=10, case="CSV"):
     )
 
 
-class SummaryResampleTest(EclTest):
+class SummaryResampleTest(ResdataTest):
     @classmethod
     def setUpClass(cls):
         cls.script = os.path.join(cls.SOURCE_ROOT, "bin/summary_resample")
@@ -64,7 +64,7 @@ class SummaryResampleTest(EclTest):
 
             # Should run OK:
             subprocess.check_call([self.script, "CSV", "OUTPUT"])
-            output_case = EclSum("OUTPUT")
+            output_case = Summary("OUTPUT")
             self.assertEqual(
                 output_case.get_data_start_time(), self.case.get_data_start_time()
             )
@@ -78,7 +78,7 @@ class SummaryResampleTest(EclTest):
             refcase = create_case(num_mini_step=7, case="REFCASE")
             refcase.fwrite()
             subprocess.check_call([self.script, "CSV", "OUTPUT", "--refcase=REFCASE"])
-            output_case = EclSum("OUTPUT")
+            output_case = Summary("OUTPUT")
             self.assertEqual(
                 output_case.get_data_start_time(), refcase.get_data_start_time()
             )

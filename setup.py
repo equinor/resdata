@@ -1,11 +1,11 @@
 import os
 import sys
-import skbuild
+
 import setuptools
+import skbuild
 from setuptools_scm import get_version
 
-
-version = get_version(relative_to=__file__, write_to="python/ecl/version.py")
+version = get_version(relative_to=__file__, write_to="python/resdata/version.py")
 
 
 # Corporate networks tend to be behind a proxy server with their own non-public
@@ -25,19 +25,19 @@ with open("README.md") as f:
 
 def utility_wrappers():
     """
-    Wrappers around ecl's "application" utilities. These are only supported on
+    Wrappers around resdata's "application" utilities. These are only supported on
     Linux at this time so only create the wrapper when on Linux.
     """
     if sys.platform != "linux":
         return []
 
     return [
-        name + " = ecl.bin:main"
+        name + " = resdata.bin:main"
         for name in (
             "CF_dump",
             "convert.x",
-            "ecl_pack.x",
-            "ecl_unpack.x",
+            "rd_pack.x",
+            "rd_unpack.x",
             "grdecl_grid",
             "grdecl_test.x",
             "grid_dump.x",
@@ -56,13 +56,13 @@ def utility_wrappers():
 
 
 skbuild.setup(
-    name="ecl",
+    name="resdata",
     author="Equinor ASA",
     author_email="fg_sib-scout@equinor.com",
-    description="Package for reading and writing the result files from the ECLIPSE reservoir simulator",
+    description="Package for reading and writing the fortran result files from reservoir simulators",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/equinor/ecl",
+    url="https://github.com/equinor/resdata",
     packages=setuptools.find_packages(
         where="python",
         exclude=["*.tests", "*.tests.*", "tests.*", "tests", "ert.*", "ert"],
@@ -77,12 +77,12 @@ skbuild.setup(
     ],
     entry_points={"console_scripts": utility_wrappers()},
     cmake_args=[
-        "-DECL_VERSION=" + version,
+        "-DRD_VERSION=" + version,
         "-DBUILD_APPLICATIONS=" + ("ON" if sys.platform == "linux" else "OFF"),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-        "-DCMAKE_INSTALL_BINDIR=python/ecl/.bin",
-        "-DCMAKE_INSTALL_LIBDIR=python/ecl/.libs",
-        "-DCMAKE_INSTALL_INCLUDEDIR=python/ecl/.include",
+        "-DCMAKE_INSTALL_BINDIR=python/resdata/.bin",
+        "-DCMAKE_INSTALL_LIBDIR=python/resdata/.libs",
+        "-DCMAKE_INSTALL_INCLUDEDIR=python/resdata/.include",
         # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
         # everything not OS X. We depend on C++11, which makes our minimum
         # supported OS X release 10.9

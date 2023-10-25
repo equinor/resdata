@@ -12,7 +12,7 @@ void test_path(const char *input_path, const char *expected_path) {
 }
 
 void test_relative() {
-    ecl::util::TestArea ta("relative_path");
+    rd::util::TestArea ta("relative_path");
     util_make_path("level0/level1/level2");
 
     test_path("level0/level1/../", "level0");
@@ -32,7 +32,7 @@ void test_relative() {
 }
 
 void test_beyond_root() {
-    ecl::util::TestArea("beyond_root");
+    rd::util::TestArea("beyond_root");
     char *cwd = util_alloc_cwd();
     char *backref_cwd1 =
         util_alloc_sprintf("../../../../../../../../../../../%s", cwd);

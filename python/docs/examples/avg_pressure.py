@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import sys
-import matplotlib.pyplot as plt
 
-# Import the required symbols from the ecl.ecl package.
-from ecl.eclfile import EclFile, EclRestartFile
-from ecl.grid import EclGrid, EclRegion
+import matplotlib.pyplot as plt
+from resdata.grid import Grid, ResdataRegion
+from resdata.resfile import ResdataFile, ResdataRestartFile
 
 
 # Calculate the average pressure for all the cells in the region using
@@ -46,9 +45,9 @@ def avg_pressure(p, sw, pv, region, region_id, result):
 
 if __name__ == "__main__":
     case = sys.argv[1]
-    grid = EclGrid("%s.EGRID" % case)
-    rst_file = EclRestartFile(grid, "%s.UNRST" % case)
-    init_file = EclFile("%s.INIT" % case)
+    grid = Grid("%s.EGRID" % case)
+    rst_file = ResdataRestartFile(grid, "%s.UNRST" % case)
+    init_file = ResdataFile("%s.INIT" % case)
 
     # Create PORV keyword where all the inactive cells have been removed.
     pv = grid.compressed_kw_copy(init_file["PORV"][0])
@@ -65,11 +64,11 @@ if __name__ == "__main__":
         sw = rst_block["SWAT"][0]
 
         for region_id in range(region_kw.get_max() + 1):
-            region = EclRegion(grid, False)
+            region = ResdataRegion(grid, False)
             region.select_equal(region_kw, region_id)
             avg_pressure(p, sw, pv, region, region_id, result)
 
-        avg_pressure(p, sw, pv, EclRegion(grid, True), "field", result)
+        avg_pressure(p, sw, pv, ResdataRegion(grid, True), "field", result)
         sim_days.append(header.get_sim_days())
 
     for key in result.keys():

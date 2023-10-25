@@ -2,16 +2,16 @@ import os
 import stat
 import sys
 
-import ecl
-from ecl import EclPrototype
-from tests import EclTest
-from ecl.util.test.test_area import TestAreaContext
+import resdata
+from resdata import ResdataPrototype
+from tests import ResdataTest
+from resdata.util.test.test_area import TestAreaContext
 
 from cwrap import Prototype
 
 
 class _TestSpawnPrototype(Prototype):
-    lib = EclPrototype.lib
+    lib = ResdataPrototype.lib
 
     def __init__(self, prototype, bind=True):
         super(_TestSpawnPrototype, self).__init__(
@@ -19,7 +19,7 @@ class _TestSpawnPrototype(Prototype):
         )
 
 
-class SpawnTest(EclTest):
+class SpawnTest(ResdataTest):
     _spawn = _TestSpawnPrototype(
         "int util_spawn_blocking(char*, int, void*, char*, char*)", bind=False
     )

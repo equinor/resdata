@@ -1,12 +1,12 @@
 import math
 
-from ecl.util.geometry import CPolyline, Polyline
-from ecl.util.geometry.xyz_io import XYZIo
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.geometry import CPolyline, Polyline
+from resdata.geometry.xyz_io import XYZIo
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class CPolylineTest(EclTest):
+class CPolylineTest(ResdataTest):
     def setUp(self):
         self.polyline1 = self.createTestPath("local/geometry/pol11.xyz")
         self.polyline2 = self.createTestPath("local/geometry/pol8.xyz")

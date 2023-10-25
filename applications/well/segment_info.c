@@ -22,37 +22,37 @@
 #include <ert/util/stringlist.h>
 #include <ert/util/test_util.h>
 
-#include <ert/ecl/ecl_util.h>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_rsthead.h>
-#include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_grid.h>
+#include <resdata/rd_util.h>
+#include <resdata/rd_file.h>
+#include <resdata/rd_rsthead.h>
+#include <resdata/rd_kw_magic.h>
+#include <resdata/rd_grid.h>
 
-#include <ert/ecl_well/well_conn_collection.h>
-#include <ert/ecl_well/well_segment.h>
-#include <ert/ecl_well/well_const.h>
-#include <ert/ecl_well/well_segment_collection.h>
+#include <resdata/well/well_conn_collection.h>
+#include <resdata/well/well_segment.h>
+#include <resdata/well/well_const.h>
+#include <resdata/well/well_segment_collection.h>
 
 int main(int argc, char **argv) {
     const char *Xfile = argv[1];
-    ecl_file_type *rst_file = ecl_file_open(Xfile, 0);
-    ecl_rsthead_type *rst_head = ecl_rsthead_alloc(
-        ecl_file_get_global_view(rst_file), ecl_util_filename_report_nr(Xfile));
-    const ecl_kw_type *iwel_kw = ecl_file_iget_named_kw(rst_file, IWEL_KW, 0);
-    const ecl_kw_type *iseg_kw = ecl_file_iget_named_kw(rst_file, ISEG_KW, 0);
+    rd_file_type *rst_file = rd_file_open(Xfile, 0);
+    rd_rsthead_type *rst_head = rd_rsthead_alloc(
+        rd_file_get_global_view(rst_file), rd_filename_report_nr(Xfile));
+    const rd_kw_type *iwel_kw = rd_file_iget_named_kw(rst_file, IWEL_KW, 0);
+    const rd_kw_type *iseg_kw = rd_file_iget_named_kw(rst_file, ISEG_KW, 0);
     well_rseg_loader_type *rseg_loader =
-        well_rseg_loader_alloc(ecl_file_get_global_view(rst_file));
-    const ecl_kw_type *icon_kw = ecl_file_iget_named_kw(rst_file, ICON_KW, 0);
-    const ecl_kw_type *scon_kw = ecl_file_iget_named_kw(rst_file, SCON_KW, 0);
-    const ecl_kw_type *xcon_kw = ecl_file_iget_named_kw(rst_file, XCON_KW, 0);
-    const ecl_kw_type *zwel_kw = ecl_file_iget_named_kw(rst_file, ZWEL_KW, 0);
+        well_rseg_loader_alloc(rd_file_get_global_view(rst_file));
+    const rd_kw_type *icon_kw = rd_file_iget_named_kw(rst_file, ICON_KW, 0);
+    const rd_kw_type *scon_kw = rd_file_iget_named_kw(rst_file, SCON_KW, 0);
+    const rd_kw_type *xcon_kw = rd_file_iget_named_kw(rst_file, XCON_KW, 0);
+    const rd_kw_type *zwel_kw = rd_file_iget_named_kw(rst_file, ZWEL_KW, 0);
 
     {
         int well_nr;
         for (well_nr = 0; well_nr < rst_head->nwells; well_nr++) {
             const int zwel_offset = rst_head->nzwelz * well_nr;
             char *well_name =
-                util_alloc_strip_copy(ecl_kw_iget_ptr(zwel_kw, zwel_offset));
+                util_alloc_strip_copy(rd_kw_iget_ptr(zwel_kw, zwel_offset));
 
             printf("==========================================================="
                    "======\n");
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
                     well_segment_collection_link(segments);
                     well_segment_collection_add_branches(segments, branches);
                     well_segment_collection_add_connections(
-                        segments, ECL_GRID_GLOBAL_GRID, connections);
+                        segments, RD_GRID_GLOBAL_GRID, connections);
 
                     printf("\n");
                     printf("Segments:\n");
@@ -131,6 +131,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    ecl_file_close(rst_file);
-    ecl_rsthead_free(rst_head);
+    rd_file_close(rst_file);
+    rd_rsthead_free(rst_head);
 }

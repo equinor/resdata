@@ -1,12 +1,12 @@
 import math
 
-from ecl.util.geometry import Polyline, GeometryTools, CPolyline
-from ecl.util.geometry.xyz_io import XYZIo
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.geometry import Polyline, GeometryTools, CPolyline
+from resdata.geometry.xyz_io import XYZIo
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class GeometryToolsTest(EclTest):
+class GeometryToolsTest(ResdataTest):
     def test_distance(self):
         p1 = (1, 1)
         p2 = (1, 2, 3)

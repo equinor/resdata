@@ -1,6 +1,6 @@
 # Contributing
 
-The following is a set of guidelines for contributing to ecl.
+The following is a set of guidelines for contributing to resdata.
 
 ## Ground Rules
 

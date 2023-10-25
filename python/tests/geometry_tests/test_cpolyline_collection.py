@@ -1,13 +1,13 @@
 import gc
 
-from ecl.util.geometry import CPolylineCollection, CPolyline
-from ecl.util.geometry.xyz_io import XYZIo
-from ecl.util.test import TestAreaContext
-from tests import EclTest
-from ecl.util.util import DoubleVector
+from resdata.geometry import CPolylineCollection, CPolyline
+from resdata.geometry.xyz_io import XYZIo
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
+from resdata.util.util import DoubleVector
 
 
-class CPolylineCollectionTest(EclTest):
+class CPolylineCollectionTest(ResdataTest):
     def test_construction(self):
         pc = CPolylineCollection()
         self.assertEqual(len(pc), 0)

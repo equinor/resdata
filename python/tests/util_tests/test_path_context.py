@@ -1,9 +1,9 @@
 import os
-from ecl.util.test import PathContext, TestAreaContext
-from tests import EclTest
+from resdata.util.test import PathContext, TestAreaContext
+from tests import ResdataTest
 
 
-class PathContextTest(EclTest):
+class PathContextTest(ResdataTest):
     def test_error(self):
         with TestAreaContext("pathcontext"):
             # Test failure on creating PathContext with an existing path

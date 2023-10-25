@@ -6,7 +6,7 @@
 
 #include "detail/util/path.hpp"
 
-namespace ecl {
+namespace rd {
 
 namespace util {
 
@@ -72,4 +72,4 @@ std::string extension(const std::string &fname) {
 
 } // namespace path
 } // namespace util
-} // namespace ecl
+} // namespace rd

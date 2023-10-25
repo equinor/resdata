@@ -1,0 +1,9 @@
+
+
+class ResdataInfo(object):
+  lib_path = "${LIBRARY_OUTPUT_PATH}"
+  so_version = "${RD_BINARY_POSTFIX}"
+  __version__ = "${RD_VERSION_MAJOR}.${RD_VERSION_MINOR}.${RD_VERSION_MICRO}"
+
+  def __init__(self):
+    pass

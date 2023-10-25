@@ -1,0 +1,10 @@
+set(resdata_INCLUDE_DIRS @CMAKE_INSTALL_PREFIX@/include)
+set(resdata_LIBRARIES -lrd_well -lresdata -lert_geometry -lert_util)
+
+set( CMAKE_MODULE_PATH @CMAKE_INSTALL_PREFIX@/share/cmake/Modules ${CMAKE_MODULE_PATH})
+link_directories( @CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@ )
+include_directories( @CMAKE_INSTALL_PREFIX@/include )
+
+if (@ENABLE_PYTHON@)
+   set(resdata_PYTHONPATH @CMAKE_INSTALL_PREFIX@/@PYTHON_INSTALL_PREFIX@ )
+endif()

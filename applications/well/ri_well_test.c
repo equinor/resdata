@@ -16,9 +16,9 @@
    for more details.
 */
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl_well/well_state.h>
-#include <ert/ecl_well/well_info.h>
+#include <resdata/rd_grid.h>
+#include <resdata/well/well_state.h>
+#include <resdata/well/well_info.h>
 
 /*
   This is a small test program which will load the well information in
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         usage();
     else {
         char *grid_file = argv[1];
-        ecl_grid_type *grid = ecl_grid_alloc(grid_file);
+        rd_grid_type *grid = rd_grid_alloc(grid_file);
         well_info_type *well_info = well_info_alloc(grid);
         int ifile;
         for (ifile = 2; ifile < argc; ifile++) {
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
             well_info_load_rstfile(well_info, rst_file, true);
         }
 
-        ecl_grid_free(grid);
+        rd_grid_free(grid);
         well_info_free(well_info);
     }
 }

@@ -6,7 +6,7 @@
 #include <ert/util/test_work_area.hpp>
 
 void test_chdir() {
-    ecl::util::TestArea ta("chdir");
+    rd::util::TestArea ta("chdir");
     const char *cwd = ta.test_cwd().c_str();
 
     test_assert_false(util_chdir_file("/file/does/not/exist"));

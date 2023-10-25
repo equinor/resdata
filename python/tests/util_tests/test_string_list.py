@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ecl.util.util import StringList
+from resdata.util.util import StringList
 
 
 class StringListTest(TestCase):

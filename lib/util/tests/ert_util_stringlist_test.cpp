@@ -337,7 +337,7 @@ bool not_FILE_predicate(const char *name, const void *arg) {
 }
 
 void test_predicate_matching() {
-    ecl::util::TestArea ta("stringlist");
+    rd::util::TestArea ta("stringlist");
     stringlist_type *s = stringlist_alloc_new();
     stringlist_append_copy(s, "s");
     stringlist_select_files(s, "does/not/exist", NULL, NULL);
