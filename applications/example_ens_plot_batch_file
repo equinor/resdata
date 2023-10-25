@@ -38,7 +38,7 @@ RFT:WI_1:2/9/2000
 prior
 post
 _set_range_
-XMIN 300 XMAX 400	
+XMIN 300 XMAX 400
 _meas_points_
 rft 15 28 1  340.0 345.2
 rft 15 28 10 345  350

@@ -1,6 +1,6 @@
 """
 The eclfile package contains several classes for working directly with ECLIPSE
-files. 
+files.
 
   fortio/FortIO: This is functionality to read and write binary
      fortran files.

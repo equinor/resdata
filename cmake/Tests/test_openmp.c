@@ -6,6 +6,6 @@ int main(int argc, char ** argv) {
 #pragma omp parallel for
   for (int i=0; i < 100; i++)
     sum += i;
-  
+
 }
 

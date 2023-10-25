@@ -1,7 +1,7 @@
 #include <signal.h>
 
 void sigbus_handler(int signal) {
-  
+
 }
 
 

@@ -36,7 +36,7 @@ quite good system for transparently mapping between Python types and C
 types. More extensive documentation of ctypes is available at:
 http://www.python.org/org/library/ctypes.html
 
-2.1 Loading the shared library 
+2.1 Loading the shared library
 
 In the ert Python wrapping loading the shared library is handled by
 the ert.util.clib function load(). When the shared library has been
@@ -48,8 +48,8 @@ of shared libraries is through the ctypes.CDLL() call like:
 
 however in the ert py library this is wrapped by the function load()
 in the ert.util.clib module:
- 
-    import ert.util.clib as clib   
+
+    import ert.util.clib as clib
     lib_handle = clib.load("name1" , "name2" , "name3")
 
 The clib.load() function will only load one library, but it can take
@@ -65,7 +65,7 @@ will be available as python function attributes of the library
 handle. I.e. if loading the standard library like:
 
     clib_handle = clib.load( "libc" )
-    
+
 The attribute clib_handle.getenv will be a pointer to a Python
 function object which wraps the standard library getenv()
 function. Before this is really usable we have to "tell" the function
@@ -75,7 +75,7 @@ object, more details of the prototype process can be found in section
 4.2
 
 
-2.2 Type mappings 
+2.2 Type mappings
 
 The ctypes library automagically handles conversion between common
 C-types and Python types, so for the example above we would be able to
@@ -93,28 +93,28 @@ maintained in the CWrapper class in ert.cwrap.cwrap.py. During
 initialization of the ert Python code there are many calls
 associating the name of a C type you whish to use in the prototype
 process (as a string) and the corresponding Python type:
-   
+
    CWrapper.registerType( "int"    , ctypes.c_int )
-   CWrapper.registerType( "double" , ctypes.c_double ) 
-   CWrapper.registerType( "char*"  , ctypes.c_char_p )                          
+   CWrapper.registerType( "double" , ctypes.c_double )
+   CWrapper.registerType( "char*"  , ctypes.c_char_p )
    CWrapper.registerType( "int*"   , ctypes.POINTER( ctypes.c_int ))
-   
+
 
 
 
 2.2.1 Fundamental types
 
 All the fundamental C types are known to the ctypes library, and
-transparently converted <-> the correct Python type. 
+transparently converted <-> the correct Python type.
 
-  C type                    ctypes             Python type 
+  C type                    ctypes             Python type
   --------------------------------------------------------
   int                       c_int              int
   float                     c_float            float
-  double                    c_double           double      
+  double                    c_double           double
   .....
   char * (NULL terminated)  c_char_p           string
-  --------------------------------------------------------   
+  --------------------------------------------------------
 
 All these types can be created by calling them with an optional
 initializer of the correct type and value:
@@ -152,7 +152,7 @@ return value:
     | The mapping of types generally works quite well, however |
     | observe that the return type of C functions which return |
     | an instance pointer is NOT the current class, but        |
-    | c_void_p, that is because this return value is           | 
+    | c_void_p, that is because this return value is           |
     | internalized in the c_ptr attribute of the object.       |
     \----------------------------------------------------------/
 
@@ -202,8 +202,8 @@ to complete) follow roughly the same structure:
        2.2. Create the Python class - based on the prototype functions
             from 2.1 above.
 
-     }     
-     
+     }
+
 The following excerpt from ecl_kw.y illustrates this:
 
     ------------------------------------------------------------
@@ -213,18 +213,18 @@ The following excerpt from ecl_kw.y illustrates this:
     Class EclKW:                                     <-------------�
           # Pure Python code to implement the EclKW class,         |
           # based on the functions prototyped below.               |   Step 3
-          ....                                       <-------------� 
-    
+          ....                                       <-------------�
+
     # Create a wrapper instance which wraps the libecl library. <--------�
     cwrapper = CWrapper( libecl.lib )                                    |
-                                                                         | 
+                                                                         |
     # Register the type mapping "ecl_kw" <-> EclKW                       | Step 2
     cwrapper.registerType( "ecl_kw" , EclKW )                            |
                                                                          |
     # Prototype the functions needed to implement the Python class       |
     cfunc.alloc_new = cwrapper.prototype("long ecl_kw_alloc( char* , int , int )")
-    cfunc.free      = cwrapper.prototype("void ecl_kw_free( ecl_kw )")   |                 
-    ....                                                        <--------� 
+    cfunc.free      = cwrapper.prototype("void ecl_kw_free( ecl_kw )")   |
+    ....                                                        <--------�
     ------------------------------------------------------------
 
 These three steps are described in more detail in 4.1 - 4.3 below.
@@ -255,14 +255,14 @@ which takes one (char *) input and returns a (char *) pointer this
 would be:
 
     clib_handle.getenv.restype  =   ctypes.c_char_p
-    clib_handle.getenv.argtypes = [ ctypes.c_char_p ] 
-    
+    clib_handle.getenv.argtypes = [ ctypes.c_char_p ]
+
 In the ert python code this is achieved with the helper class CWrapper
 implemented in the module ert.cwrap.cwrap:
 
     from ert.cwrap.cwrap import CWrapper
 
-    lib = clib.load( "libc" ) 
+    lib = clib.load( "libc" )
     wrapper = CWRapper( lib )
     getenv = wrapper.prototype("char*  getenv( char* )")
 
@@ -275,7 +275,7 @@ All the calls to the prototype() method are typically assembled in the
 bottom of the file implementing a class defintion. E.g. the bottom of
 the ecl_kw.py file looks like this:
 
-  # 1: Load the shared library  
+  # 1: Load the shared library
   cwrapper = CWrapper( libecl.lib )
 
   # 2: Register type mapping ecl_kw <--> EclKW
@@ -333,7 +333,7 @@ roughly the same structure:
   * The __del__ function is called when the Python object is garbage
     collected, then the corresponding C free function should be
     called, e.g. ecl_grid_free().
-  
+
 
 
 
@@ -356,16 +356,16 @@ indeed be called.
 The EclKW class illustrates this quite well. Broadly speaking you can
 instantiate an EclKW instance in two ways:
 
-  * Through the EclwKW.new() function 
+  * Through the EclwKW.new() function
   * As a reference to an existing ecl_kw through an EclFile instance.
 
 In the first case the c_ptr of the EclKW instance will point to fresh
 storage dedicated to this EclKW, and when the EclKW instance goes out
 of scope the memory should be freed with a call to the C function
-ecl_kw_free(). 
+ecl_kw_free().
 
-   EclKW (Python)       ecl_kw (C) 
-      c_ptr               
+   EclKW (Python)       ecl_kw (C)
+      c_ptr
        |                ---------
        \--------------->| PORO  |
                         | REAL  |
@@ -373,7 +373,7 @@ ecl_kw_free().
                         |-------|
                         | 0.15  |
                         | 0.19  |
-                        | ...   |   
+                        | ...   |
                         ---------
 
 
@@ -383,11 +383,11 @@ containing many ecl_kw instances. We can then query the EclFile
 instance to get reference to the various ecl_kw keywords, i.e. for a
 small restart file:
 
-                        
-EclFile (Python)      ecl_file (C)             EclKW (Python)  
+
+EclFile (Python)      ecl_file (C)             EclKW (Python)
    c_ptr                                          c_ptr
     |                 ------------                  |
-    \---------------->| PRESSURE |                  |   
+    \---------------->| PRESSURE |                  |
                       | SGAS <---+------------------/
                       | SWAT     |
                       | ....     |
