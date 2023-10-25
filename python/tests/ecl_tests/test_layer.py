@@ -95,7 +95,7 @@ class LayerTest(EclTest):
             with open("faults.grdecl", "w") as f:
                 f.write(
                     """FAULTS
-\'F\'              105  107     50   50      1   43    \'Y\'    / 
+\'F\'              105  107     50   50      1   43    \'Y\'    /
 \'F\'              108  108     50   50      1   43    \'X\'    /
 \'F\'              108  108     50   50     22   43    \'Y\'    /
 \'F\'              109  109     49   49      1   43    \'Y\'    /

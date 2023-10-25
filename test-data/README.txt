@@ -1,6 +1,6 @@
 This directory is meant as a holding place for test data for the ERT
 project. The local/ directory should contain test-data which is
-checked in an distributed as part of the solution. 
+checked in an distributed as part of the solution.
 
 In addition many of the tests expect to find a Equinor/ subdirectory
 in the current directory. This directory should link to Equinor

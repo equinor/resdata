@@ -1452,17 +1452,17 @@ class EclGrid(BaseCClass):
         return data
 
     def export_corners(self, index_frame):
-        """Exports cell corner position coordinates to a numpy vector (matrix). 
-     
-        Index_fram must be a pandas dataframe with the same structure 
-        as obtained from export_index. 
+        """Exports cell corner position coordinates to a numpy vector (matrix).
+
+        Index_fram must be a pandas dataframe with the same structure
+        as obtained from export_index.
         Example of a row of the output matrix:
         0   1   2  ....   21   22   23
         x1  y1  z1 ....   x8   y8   z8
 
         In total there are eight 8 corners. They are described as follows:
         The corners in a cell are numbered 0 - 7, where corners 0-3 constitute
-        one layer and the corners 4-7 consitute the other layer. Observe 
+        one layer and the corners 4-7 consitute the other layer. Observe
         that the numbering does not follow a consistent rotation around the face:
 
 

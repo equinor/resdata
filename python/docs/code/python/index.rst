@@ -3,7 +3,7 @@ The ert.ecl package
 
 .. contents::
    :depth: 2
-   :local: 
+   :local:
 
 The :code:`ert.ecl` package for working with Eclipse files is quite
 extensive. There is some quite limited support for reading
@@ -162,7 +162,7 @@ the permeability:
    from ert.ecl import EclFile, EclTypeEnum
 
    initfile_pattern = "/path/to/files/real*/CASE-*.INIT"
-   
+
    kw_list = []
    for init_file in glob.glob(initfile_pattern):
        ecl_file = EclFile(init_file)
@@ -171,19 +171,19 @@ the permeability:
    mean = EclKW.create("AVG-PERMX" , len(kw_list[0]) , EclTypeEnum.ECL_FLOAT_TYPE)
    std  = EclKW.create("STD-PERMX" , len(kw_list[0]) , EclTypeEnum.ECL_FLOAT_TYPE)
 
-   # Here we do normal arithmetic calculations with the EclKW instances   
+   # Here we do normal arithmetic calculations with the EclKW instances
    for kw in kw_list:
        mean += kw
        std += kw * kw
 
    mean /= len(kw_list)
    std /= len(kw_list)
-   std -= mean * mean 
+   std -= mean * mean
 
    # The sqrt() function can not be implemented in the object, so here
    # we must do it more explicitly.
-   std.apply( math.sqrt ) 
-	
+   std.apply( math.sqrt )
+
 Observe that for the arithmetic operations you can also call the
 inplace methods (*without* leading 'i') :code:`add()`, :code:`mul()`,
 :code:`sub` and :code:`div()` directly - in this form the methods also
@@ -328,7 +328,7 @@ cell is active(1) or inactive(0) [4]_. When working with the
 a specific cell - these are:
 
  1. A triplet of :code:`(i,j,k)` values - in the example above
-    indicated with the :code:`(i,j)`. 
+    indicated with the :code:`(i,j)`.
 
  2. A *global index* in the range :code:`[0..nx*ny*nz)` which uniquely
     identifies a cell. This is indicated as the number with a trailing
@@ -361,7 +361,7 @@ and then we print the (i,j,k) values for all the cells with
    init = EclFile( "CASE.INIT" )
 
    permx_kw = init["PERMX"][0]
-   
+
    for ai in range(len(permx_kw)):
        if permx_kw[ai] < permx_limit:
           ijk = grid.get_ijk( active_index = ai)
@@ -385,12 +385,12 @@ associated to it. The purpose of this is to be able to use
 :code:`(i,j,k)` as index when looking up values. When :code:`(i,j,k)`
 is used to identify the cell the, :code:`Ecl3DKW` class can
 transparently handle the active/inactive cells issue - returning a
-default value in the case of undefined inactive cells. 
+default value in the case of undefined inactive cells.
 
 When the :code:`[]` argument is a single integer the :code:`Ecl3DKW`
 class can not know whether the index supplied is an active or a global
 index, and it will be a simple index lookup - which properties are
-determined by the length of the underlying data. 
+determined by the length of the underlying data.
 
 The :code:`Ecl3DKW` class is mainly convenience compared to the pure
 :code:`EclKW` class - for performance reasons it should probably not
@@ -405,11 +405,11 @@ grid properties:
 
   1. Many different methods for working with cell data like position,
      depth, size and location of cell corners.
-  
+
   2. Methods doing the reverse mapping :code:`(x,y,z) -> (i,j,k)`.
 
   3. *Some* functionality for working with LGRs, coarse groups and
-     fractured grid. 
+     fractured grid.
 
   4. Methods for exporting a :code:`EclKW` defined over
      :code:`nactive` elements to a :code:`grdecl` formatted file with
@@ -446,14 +446,14 @@ the :code:`(i,j,k) -> active_index` transformation:
 
    permx_kw = init["PERMX"][0]
    for ijk in cell_list:
-       print("permx : %g" % permx_kw[ijk])       
-   
+       print("permx : %g" % permx_kw[ijk])
+
 
 Time queries in EclRestartFile
 ..............................
 
 The :code:`EclRestartFile` class has many methods for queries on the
-temporal content of a restart file [5]_. 
+temporal content of a restart file [5]_.
 
 Classmethods
 ,,,,,,,,,,,,
@@ -477,9 +477,9 @@ file.
 
    report_list = EclRestartFile.file_report_list("ECLIPSE.UNRST")
 
-   print("The file: %s contains the following report steps: ") 
+   print("The file: %s contains the following report steps: ")
    print( ", ".join(report_list))
- 
+
 
 EclRestartFile.contains_report_step
 ***********************************
@@ -487,7 +487,7 @@ EclRestartFile.contains_report_step
 The classmethod :code:`contains_report_step` will check if the file
 *filename* contains the report_step *report_step*:
 
-   
+
    if EclRestartFile.contains_report_step( "ECLIPSE.UNRST" , 100):
        print("The file has a section for report step=100")
    else:
@@ -504,7 +504,7 @@ be given as a normal Python :code:`datetime`:
 .. code:: python
 
    from ert.ecl import EclRestartFile
-   import datetime   
+   import datetime
 
    sim_time = datetime.datetime( 2010 , 6 , 15 )
    if EclRestartFile.contains_sim_time( "ECLIPSE.UNRST" , sim_time ):
@@ -539,7 +539,7 @@ apply is:
    from ert.ecl import EclGrid, EclRegion, EclKW, EclTypeEnum
 
    grid = EclGrid( "CASE.EGRID" )
-   
+
    with open("poro.grdecl") as f:
        poro = EclKW.read_grdecl( f , "PORO")
 
@@ -582,7 +582,7 @@ EclRegion - selectors
 .....................
 
 A region can be constructed in many different ways:
-  
+
  1. Based on slices of :code:`i,j,k` values.
  2. Inside or outside a polygon; or alternatively "above" or "below" a
     line.
@@ -617,7 +617,7 @@ form the union and intersection of regions.
    # Region reg3 will be the union reg1 and reg2, i.e. the cells
    # selected in reg3 is the set of all cells selected in either reg1
    # or reg2.
-   reg3 = reg1 | reg2 
+   reg3 = reg1 | reg2
    reg3 = reg1 + reg2
 
    # Region reg3 will be set of cells which are *only* selected in reg1.
@@ -626,7 +626,7 @@ form the union and intersection of regions.
    # Region reg3 will be the set of cells which are selected in *both*
    # reg1 and reg2.
    reg3 = reg1 & reg2
- 
+
 For further details, specially of the various select methods, please
 type :code:`pydoc ert.ecl.EclRegion` or browse the API documentation
 at :ref:`python_documentation`.
@@ -641,20 +641,20 @@ files will generally contain results for several wells, and several
 times, the :code:`EclRFTFile` class will load them all - and then
 supplies an interface to query for individual RFT results based on
 wellname and/or date; the individual RFT results will be in the form
-of :code:`EclRFT` instances. 
+of :code:`EclRFT` instances.
 
 .. code:: python
-  
+
    from ert.ecl import EclRFTFile
 
    # Load the RFT file
    rft_file = EclRFTFile("ECLIPSE.RFT")
-   
-   # Extract the RFT results for well 'OP-X' at date 2010-01-15; 
+
+   # Extract the RFT results for well 'OP-X' at date 2010-01-15;
    # will return None if no such RFT exists - should probably raise an
    # exception.
    rft = rft_file.get("OP-X" , datetime.date(2010,1,15))
-   
+
 In addition to the main method: :code:`EclRFTFile.get()` the
 :code:`EclRFTFile` class has utility methods to list all the well and
 date values present in the RFT file, the number of wells and so on.
@@ -665,10 +665,10 @@ EclRFT
 From the :code:`EclRFTFile.get()` method we get a :code:`EclRFT`
 instance. Observe that one RFT file can contain a lump of different
 data RFT types:
-   
+
    RFT: This is old-fashioned RFT which contains measurements of
         saturations for each of the completed cells.
-   
+
    PLT: This contains production and flow rates for each phase in
         each cell.
 
@@ -684,7 +684,7 @@ will loop identify an RFT from a file and then loop through all the
 cells for that RFT.
 
 .. code:: python
-  
+
    from ert.ecl import EclRFTFile
    rft_file = EclRFTFile("ECLIPSE.RFT")
    rft = rft_file.get("OP-X" , datetime.date(2010,1,15))
@@ -708,7 +708,7 @@ Summary files are loaded with the :code:`EclSum` class. The
 :code:`EclSum` class is a quite complete implementation for working
 with Eclipse summary data, but it should also be said the
 :code:`EclSum` class is one of the oldest classes in the
-:code:`ert.ecl` package and the api could have been cleaner. 
+:code:`ert.ecl` package and the api could have been cleaner.
 
 
 Creating a :code:`EclSum` instance
@@ -731,11 +731,11 @@ instance from this is as simple as:
    from ert.ecl import EclSum
 
    ecl_sum = EclSum("ECLIPSE")
-  
+
 As is clear from the example the :code:`EclSum` instance is created
 based only on the basename of the simulation, you can optionally have
 an extension like :code:`ecl_sum = EclSum("ECLIPSE.UNSMRY")` - but
-that is *mostly* [7]_ ignored. 
+that is *mostly* [7]_ ignored.
 
 If your case is restarted from an another case the :code:`EclSum`
 cconstructor will by default try to locate the historical case, and
@@ -752,7 +752,7 @@ message if:
     simulations.
 
 
-About summary keys 
+About summary keys
 ..................
 
 The header file :code:`CASE.SMSPEC` has all the information *about*
@@ -764,23 +764,23 @@ which contains names of groups and wells, and :code:`NUMS` which
 contain extra numbers to characterize the variables. A small
 :code:`SMSPEC` file could look like this:
 
-.. code:: 
+.. code::
 
-  KEYWORDS       WGNAMES        NUMS              |   PARAM index   Corresponding ERT key              
+  KEYWORDS       WGNAMES        NUMS              |   PARAM index   Corresponding ERT key
   ------------------------------------------------+--------------------------------------------------
-  WGOR           OP_1           0                 |        0        WGOR:OP_1                          
-  FOPT           +-+-+-+-       0                 |        1        FOPT                               
-  WWCT           OP_1           0                 |        2        WWCT:OP_1                          
-  WIR            OP_1           0                 |        3        WIR:OP_1                           
-  WGOR           WI_1           0                 |        4        WWCT:OP_1                          
-  WWCT           W1_1           0                 |        5        WWCT:WI_1                          
-  BPR            +-+-+-         12675             |        6        BPR:12675, BPR:i,j,k              
-  RPR            +-+-+-         1                 |        7        RPR:1                              
-  FOPT           +-+-+-         0                 |        8        FOPT                               
-  GGPR           NORTH          0                 |        9        GGPR:NORTH                         
-  COPR           OP_1           5628              |       10        COPR:OP_1:56286, COPR:OP_1:i,j,k   
-  RXF            +-+-+-         32768*R1(R2 + 10) |       11        RXF:2-3                                 
-  SOFX           OP_1           12675             |       12        SOFX:OP_1:12675, SOFX:OP_1:i,j,jk 
+  WGOR           OP_1           0                 |        0        WGOR:OP_1
+  FOPT           +-+-+-+-       0                 |        1        FOPT
+  WWCT           OP_1           0                 |        2        WWCT:OP_1
+  WIR            OP_1           0                 |        3        WIR:OP_1
+  WGOR           WI_1           0                 |        4        WWCT:OP_1
+  WWCT           W1_1           0                 |        5        WWCT:WI_1
+  BPR            +-+-+-         12675             |        6        BPR:12675, BPR:i,j,k
+  RPR            +-+-+-         1                 |        7        RPR:1
+  FOPT           +-+-+-         0                 |        8        FOPT
+  GGPR           NORTH          0                 |        9        GGPR:NORTH
+  COPR           OP_1           5628              |       10        COPR:OP_1:56286, COPR:OP_1:i,j,k
+  RXF            +-+-+-         32768*R1(R2 + 10) |       11        RXF:2-3
+  SOFX           OP_1           12675             |       12        SOFX:OP_1:12675, SOFX:OP_1:i,j,jk
   ------------------------------------------------+--------------------------------------------------
 
 As indicated above the ERT library combines elements from the
@@ -821,7 +821,7 @@ following about the smspec index:
 
 
 
-About the time direction 
+About the time direction
 ........................
 
 As we can see from the table in "About summary keys" section the
@@ -836,12 +836,12 @@ performance, in ECLIPSE parlance these are called ministeps. When the
 :code:`EclSum` class loads a summary all the ECLIPSE ministeps are
 stacked together in one long vector, observe that e.g. when the
 keyword RPTONLY is used in the ECLIPSE data file there can be "holes"
-in the ministep sequence. 
+in the ministep sequence.
 
 The ert.ecl summary implementation works with four different concepts
 of time:
 
-time_index 
+time_index
 ,,,,,,,,,,,
 
 This is a plain index in the range :code:`[0,..num_timestep)`. Observe
@@ -862,23 +862,23 @@ restarted simulation the first ministeps might be missing completely,
 and there can also be holes in the series. Each block of summary data
 is tagged with a MINISTEP number by ECLIPSE. The ministep indices are
 arbitrary properties of the simulation, and are not exported by the
-:code:`ert.ecl` API.  
+:code:`ert.ecl` API.
 
 
-report_step 
+report_step
 ,,,,,,,,,,,,
 
 This is the ECLIPSE report step, there are functions to convert
 between report step and index, and you can use report step as time
-value when querying for values.  
+value when querying for values.
 
 
-True time 
+True time
 ,,,,,,,,,,
 
 It is possible to query the summary object for values interpolated to
 "true" time; the true time can eiether be specified in days since
-simulation start, or as python datetime.date() instance.  
+simulation start, or as python datetime.date() instance.
 
 Some methods
 .............
@@ -891,7 +891,7 @@ The :code:`__contains__` method implements :code:`in` support. If you
 are uncertain whether the summary contains a key or not, you should
 use this function to check. In the example below a list of keys is
 read from the commandline, and we check whether they are in the
-summary or not: 
+summary or not:
 
 .. code:: python
 
@@ -921,7 +921,7 @@ variables for the group "NORTH" we can use the :code:`keys()` function as:
    from ert.ecl import EclSum
    sum = ecl.EclSum("ECLIPSE")
 
-   matching = sum.keys( "BPR:*" ) + sum.keys( "G*H:NORTH" ) 
+   matching = sum.keys( "BPR:*" ) + sum.keys( "G*H:NORTH" )
 
 
 iget_report( index )
@@ -936,13 +936,13 @@ following keywords:
 
    SEQHDR    <--------.
    MINISTEP 0         |
-   PARAMS             |  
+   PARAMS             |
    MINISTEP 1         |   Report step 1
    PARAMS             |
    MINISTEP 2         |
    PARAMS             |
    SEQHDR   <---------+
-   MINISTEP 3         |      
+   MINISTEP 3         |
    PARAMS             |   Report step 2
    MINISTEP 4         |
    PARAMS             |
@@ -1014,13 +1014,13 @@ every 6 months:
    date = sum.start_date
    date_list = []
    while date < sum.end_date:
-       date_list.append( date )   
+       date_list.append( date )
        if date.month < 7:
           date = datetime.date( date.year , 7 , 1)
        else:
           date = datetime.date( date.year + 1 , 1 , 1)
 
-    # Get the values 
+    # Get the values
     FOPT_vector = sum.get_interp_vector( "FOPT" , date_list = date_list )
 
     # Print the results
@@ -1066,7 +1066,7 @@ end_date = sum.end_date
 
 print "Simulation started.............: %s" % start_date
 print "Simulation ended...............: %s" % end_date
-print "The simulation spans %s days...: %s" % (end_date - start_date).days 
+print "The simulation spans %s days...: %s" % (end_date - start_date).days
 
 start_time / end_time
 ,,,,,,,,,,,,,,,,,,,,,
@@ -1093,7 +1093,7 @@ call to an EclSum method, it will fail hard.
    gt_index = sum.first_gt( "WWCT:OP_3" , 0.30)
    if gt_index < 0:
       print "The water cut in well OP_3 never exceeds 0.30"
-   else: 
+   else:
       print "WWCT:OP_3 exceeds 0.30 after %g days." % sum.iget_days( gt_index )
 
    lt_index = sum.first_lt("RPR:2" , 210)
@@ -1109,7 +1109,7 @@ This method will return a numpy vector with all the values for the key
 key. The numpy vector type can then be used e.g. to plot or do other
 manipulations.
 
-      
+
 numpy_days
 ,,,,,,,,,,
 
@@ -1117,7 +1117,7 @@ This property will return a numpy vector with the number of simulation
 days.  mpl_dates This property is a numpy vector of "time-values" in
 matplotlib format. Suitable when plotting with matplotlib. In the
 example below we fetch two vectors, and the simulation days from a
-summary, and then print it all to the screen: 
+summary, and then print it all to the screen:
 
 .. code:: python
    from ert.ecl import EclSum
@@ -1206,7 +1206,7 @@ following fields:
   mini_step   : The ministep
   days        : Days since simulation start
   date        : The simulation date
-  mpl_date    : A date format suitable for matplotlib 
+  mpl_date    : A date format suitable for matplotlib
 
 When iterating over a EclSumVector the return values will be in the
 form EclSumNode instances. The EclSumNode instances are created on

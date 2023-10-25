@@ -15,7 +15,7 @@ int main(int argc, char ** argv) {
   ts.tm_isdst  = -1;
   {
     time_t t = mktime( &ts );
-    if (t == -1) 
+    if (t == -1)
       exit(1);
     else
       exit(0);

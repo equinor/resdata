@@ -6,7 +6,7 @@ importing in general, and the conventions used in ert python in special.
 
 Example module (file: example.py)
 --------------
-   
+
    def example_sum(a,b):
        return a+b
 
@@ -15,7 +15,7 @@ Example module (file: example.py)
    class ExampleClass:
        def  __init__(self , **kwargs):
            ....
-       
+
        def method( self , arg1 , arg2 )
            ....
 
@@ -35,7 +35,7 @@ namespace prefix:
 
    import example
 
-   var = example.example_variable    
+   var = example.example_variable
    sum = example.example_sum( 100 , 100)
    instance = example.ExampleClass()
 
@@ -77,7 +77,7 @@ import:
 
 Here we have imported the example_variable symbol from the 'example'
 module and renamed it to 'EXAMPLE_VARIABLE' in the calling scope.
-  
+
 
 
 2. Packages
@@ -139,7 +139,7 @@ instance we have to go through the following hoops:
    ....
    ....
    grid = ert.ecl.ecl_grid.EclGrid( "ECLIPSE.EGRID" )
-           |   |     |        | 
+           |   |     |        |
            |   |     |        |
   Package--/   |     |        \-------- Symbol (Class definition)
                |     |
@@ -151,8 +151,8 @@ simplify this using the from <module> import <symbol_list> as:
   from ert.ecl.ecl_grid import EclGrid    <-- Explicitly import symbol
   ....                                        into current namespace.
   ....
-  grid = EclGrid( "ECLIPSE.EGRID" )  
-   
+  grid = EclGrid( "ECLIPSE.EGRID" )
+
 By convention the ert python distribution offers some limited
 simplifications of this procedure.
 
@@ -204,7 +204,7 @@ they can of course be changed:
         grid = EclGrid("ECLIPSE.EGRID")
 
      To get all the symbols from the ecl package directly into the
-     current namespace, or alternatively you can use 
+     current namespace, or alternatively you can use
 
         import ert.ecl.ecl as ecl
         ....
@@ -214,14 +214,14 @@ they can of course be changed:
      common 'ecl' prefix. The functionality of the xxx module in the
      xxx package could have been achieved with the __init__.py - but
      then you would get it unconditionally.
-     
+
   3. The ert python distribution is organized with one subpackage per
      library in the ERT C distribution. In each subpackage there is a
      module with the same name as the library which this package
      wraps, i.e. the ecl package, which wraps the libecl library,
      contains a module libecl.py. This module again contains the
      ctypes trickery to actually load the libecl.so shared library.
-     
+
 
 [1]: The big disclaimer here is that you can use the '__init__.py' to
      perform additional action when importing the 'ert' package. In

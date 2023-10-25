@@ -67,7 +67,7 @@ ert-python:
        ImportError: No module named ert
 
      The ert/ directory is not located in the right place, or the
-     PYTHONPATH variable has not been updated correctly. 
+     PYTHONPATH variable has not been updated correctly.
 
   2. The runtime linker can not find one of the shared libraries:
 
@@ -84,5 +84,5 @@ ert-python:
             raise ImportError( error_msg )
         ImportError: Sorry - failed to load shared library:libg2c.so.0
 
-        Tried in: 
+        Tried in:
         You might need to update your LD_LIBRARY_PATH variable

@@ -6,7 +6,7 @@ int func(int arg1 , ...) {
   va_list copy;
   va_start(ap , arg1);
   va_copy( copy , ap );
-  
+
   va_end(ap);
   return 1;
 }

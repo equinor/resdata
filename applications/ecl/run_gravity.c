@@ -1,19 +1,19 @@
 /*
-   Copyright (C) 2011  Equinor ASA, Norway. 
-    
-   The file 'run_gravity.c' is part of ERT - Ensemble based Reservoir Tool. 
-    
-   ERT is free software: you can redistribute it and/or modify 
-   it under the terms of the GNU General Public License as published by 
-   the Free Software Foundation, either version 3 of the License, or 
-   (at your option) any later version. 
-    
-   ERT is distributed in the hope that it will be useful, but WITHOUT ANY 
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-   FITNESS FOR A PARTICULAR PURPOSE.   
-    
-   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html> 
-   for more details. 
+   Copyright (C) 2011  Equinor ASA, Norway.
+
+   The file 'run_gravity.c' is part of ERT - Ensemble based Reservoir Tool.
+
+   ERT is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   ERT is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.
+
+   See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
+   for more details.
 */
 
 #include <util.h>
@@ -228,7 +228,7 @@ static void grav_station_add_obs(grav_station_type *g, double obs, double std) {
     2. For each station we have four items:
 -----
          name   utm_x  utm_y   depth
-   
+
        name is an arbitrary string - without spaces.
 */
 
@@ -283,7 +283,7 @@ static void load_stations(vector_type *grav_stations, const char *filename) {
    restart information from the two relevant times. The input to this
    function is a (char **) pointer, taken directly from the argv input
    pointer.
-   
+
    The function will start by calling ecl_util_get_file_type(input[0]), and
    depending on the return value from this call it will follow three
    different code-paths:
@@ -298,7 +298,7 @@ static void load_stations(vector_type *grav_stations, const char *filename) {
          2. Non unified restart files - unformatted.
          3. Unified restart file - formatted.
          4. Non unified restart files - formatted.
-        
+
         The search will stop at the first success, if no restart
         information is found the function will exit. The remaining
         arguments in input[] will not be considered, but observe that the
@@ -306,11 +306,11 @@ static void load_stations(vector_type *grav_stations, const char *filename) {
         reference), and the calling scope will look for GRID file and INIT
         file also based on the ECLBASE found input[0]; formatted /
         unformatted will be as returned from the four-way switch above.
- 
+
         Example:
-        
+
         bash% run_gravity  ECLIPSE   10  128   xxxx
-        
+
 
 
      ECL_RESTART_FILE: This means that input[0] is a non unified eclipse
@@ -321,9 +321,9 @@ static void load_stations(vector_type *grav_stations, const char *filename) {
         Example:
 
         bash% run_gravity ECLIPSE.X0010  ECLIPSE.X0128   xxx
-        
 
-     
+
+
      ECL_UNIFIED_RESTART_FILE: This means that input[1] and input[2] are
         interpreted as integers (i.e. report steps), and those two report
         steps will be loaded from the unified restart file pointed to by
@@ -333,7 +333,7 @@ static void load_stations(vector_type *grav_stations, const char *filename) {
 
         bash% run_gravity ECLIPSE.UNRST  10 128 xxx
 
- 
+
 
     Observe that in all the examples above 'xxx' signifies argv arguments
     which this function does not care about. The return the *arg_offset
@@ -342,7 +342,7 @@ static void load_stations(vector_type *grav_stations, const char *filename) {
     char ** input = argv[1];
     int     input_offset;
     ecl_restart_file_type ** restart_info = load_restart_info(input , &input_offset, ...);
-    
+
     Then the next argument is: input[input_offset];
 */
 
@@ -398,7 +398,7 @@ ecl_file_type **load_restart_info(
                   util_sscanf_int(input[2], &report2)))
                 print_usage(__LINE__);
             else {
-                /* 
+                /*
            input[0] is interpreted as an eclbase string, and not as the name of
            an existing file. Go through various combinations of
            unified/non-unified formatted/unformatted to find data.
@@ -492,12 +492,12 @@ ecl_file_type **load_restart_info(
 /*
   This function calculates the gravimetric response for the
   gravitation station given as input parameter grav_station.
-  
+
   For code cleanliness the code is written in a way where this
   function is called for every position we are interested in,
   performance-wise it would be smarter to loop over the interesting
   locations as the inner loop.
-  
+
   This function does NOT check whether the restart_file / init_file
   contains the necessary keywords - and will fail HARD if a required
   keyword is not present. That the the input is well-formed should be
@@ -598,7 +598,7 @@ static double gravity_response(const ecl_grid_type *ecl_grid,
         int *int_zero = util_calloc(
             nactive,
             sizeof *int_zero); /* Fake vector of zeros used for AQUIFER when the init file does not supply data. */
-        /* 
+        /*
        Observe that the fake vectors are only a coding simplification,
        they should not be really used.
     */
@@ -675,7 +675,7 @@ static double gravity_response(const ecl_grid_type *ecl_grid,
                             truncate_saturation(&soil2);
                         }
 
-                        /* 
+                        /*
                We have found all the info we need for one cell.
             */
 
@@ -743,7 +743,7 @@ static void *gravity_response_mt(void *arg) {
     return NULL;
 }
 
-/* 
+/*
    Validate input:
    ---------------
    This function tries to verify that the restart_files contain all
@@ -754,7 +754,7 @@ static void *gravity_response_mt(void *arg) {
 
     2. The init file must contain the PORV keyword - this is only used
        to check for the ECLIPSE_2008 bug in RPORV calculations.
-       
+
 
 
    Determine phases:
@@ -763,7 +763,7 @@ static void *gravity_response_mt(void *arg) {
    present. The restart files generally only contain (n - 1) phases,
    i.e. for a WATER-OIL-GAS system the restart files will contain SGAS
    and SWAT, but not SOIL.
-   
+
    We must determine which phases are in the model, that is determined
    by looking for the densities OIL_DEN, WAT_DEN and GAS_DEN. This is
    stored in the variable model_phases. In addition we must determine
@@ -774,7 +774,7 @@ static void *gravity_response_mt(void *arg) {
 
    If the input is valid, the function will return zero, otherwise it
    will return a non-zero error code: (ehhh - it will exit currently).
-   
+
 */
 
 static int gravity_check_input(const ecl_grid_type *ecl_grid,
@@ -821,12 +821,12 @@ static int gravity_check_input(const ecl_grid_type *ecl_grid,
         {
             /**
          The following assumptions are made:
-         
-         1. All restart files should have water, i.e. the SWAT keyword. 
-         2. All phases present in the restart file should also be present as densities, 
-            in addition the model must contain one additional phase. 
+
+         1. All restart files should have water, i.e. the SWAT keyword.
+         2. All phases present in the restart file should also be present as densities,
+            in addition the model must contain one additional phase.
          3. The restart files can never contain oil saturation.
-         
+
       */
             if (!has_phase(file_phases, WATER))
                 util_exit("Could not locate SWAT keyword in restart files\n");
@@ -923,7 +923,7 @@ void install_SIGNALS(void) {
     signal(SIGINT, util_abort_signal); /* Control C */
     signal(
         SIGTERM,
-        util_abort_signal); /* If killing the program with SIGTERM (the default kill signal) you will get a backtrace. 
+        util_abort_signal); /* If killing the program with SIGTERM (the default kill signal) you will get a backtrace.
                                              Killing with SIGKILL (-9) will not give a backtrace.*/
 }
 
@@ -964,7 +964,7 @@ int main(int argc, char **argv) {
             char *grid_filename = NULL;
             char *init_filename = NULL;
             if (use_eclbase) {
-                /* 
+                /*
            The first command line argument is interpreted as ECLBASE, and we
            search for grid and init files in cwd.
         */
@@ -1005,14 +1005,14 @@ int main(int argc, char **argv) {
         } else
             print_usage(__LINE__);
 
-        /** 
+        /**
         OK - now everything is loaded - check that all required
         keywords+++ are present.
     */
         gravity_check_input(ecl_grid, init_file, restart_files[0],
                             restart_files[1], &model_phases, &file_phases);
 
-        /* 
+        /*
        OK - now it seems the provided files have all the information
        we need. Let us start using it. The main loop is run in
        parallell on four threads - most people have four cores these

@@ -419,10 +419,10 @@ bool smspec_node_identify_rate(const char *keyword) {
     /*
     Identify vectors that are likely to be rate vectors.
     First input character is ignored (e.g. F, G, W and R for Field, Group, Well and Region)
-    Additional characters beyond the length of the listed elements are also ignored (To 
+    Additional characters beyond the length of the listed elements are also ignored (To
     catch historical vectors with trailing H and completions with trailing L).
     Therefore also not necessary to list e.g. OPRF, which is covered by OPR.
-    Some of the more obscure keywords in the manual are skipped.    
+    Some of the more obscure keywords in the manual are skipped.
     The listed rate variables are grouped per line as:
       Oil rates
       Gas rates
@@ -487,10 +487,10 @@ bool smspec_node_identify_total(const char *keyword,
     /*
     Identify vectors that are likely to be cumulative vectors.
     First input character is ignored (e.g. F, G, W and R for Field, Group, Well and Region)
-    Additional characters beyond the length of the listed elements are also ignored (To 
+    Additional characters beyond the length of the listed elements are also ignored (To
     catch historical vectors with trailing H and completions with trailing L).
     Therefore also not necessary to list e.g. OPTF, which is covered by OPT.
-    Some of the more obscure keywords in the manual are skipped.    
+    Some of the more obscure keywords in the manual are skipped.
     The listed rate variables are grouped per line as:
       Oil totals
       Gas totals
