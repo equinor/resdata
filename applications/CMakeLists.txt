@@ -51,19 +51,6 @@ if(BUILD_APPLICATIONS)
     set_target_properties(summary PROPERTIES SUFFIX ".x")
   endif()
 
-  # This minor eclipse application depends on the config parser library and
-  # should be moved to the libres repository - it can not be built here.
-  if(BUILD_ERT)
-    add_executable(ecl_quantile ecl/ecl_quantile.c)
-    target_link_libraries(ecl_quantile config)
-    list(APPEND apps ecl_quantile)
-  endif()
-  if(PTHREAD_LIBRARY)
-    add_executable(bls block_fs/bls.c)
-    target_link_libecl(bls)
-    list(APPEND apps bls)
-  endif()
-
   add_executable(segment_info well/segment_info.c)
   add_executable(CF_dump well/well_CF_dump.c)
   add_executable(ri_well_test well/ri_well_test.c)
