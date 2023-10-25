@@ -3,7 +3,7 @@ try:
 except ImportError:
     from unittest import TestCase
 
-from ecl.util.util import LookupTable
+from resdata.util.util import LookupTable
 
 
 class LookupTableTest(TestCase):

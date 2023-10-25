@@ -16,14 +16,14 @@
    for more details.
 */
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl_well/well_state.h>
-#include <ert/ecl_well/well_info.h>
+#include <resdata/rd_grid.h>
+#include <resdata/well/well_state.h>
+#include <resdata/well/well_info.h>
 
 int main(int argc, char **argv) {
     char *grid_file = argv[1];
     char *rst_file = argv[2];
-    ecl_grid_type *grid = ecl_grid_alloc(grid_file);
+    rd_grid_type *grid = rd_grid_alloc(grid_file);
     well_info_type *well_info = well_info_alloc(grid);
 
     well_info_load_rstfile(well_info, rst_file, true);
@@ -51,5 +51,5 @@ int main(int argc, char **argv) {
     }
 
     well_info_free(well_info);
-    ecl_grid_free(grid);
+    rd_grid_free(grid);
 }

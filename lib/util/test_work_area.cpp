@@ -100,7 +100,7 @@ static char *test_work_area_alloc_prefix() {
 #endif
 }
 
-namespace ecl {
+namespace rd {
 namespace util {
 
 static bool test_work_area_copy_parent__(const TestArea *work_area,
@@ -169,7 +169,7 @@ TestArea::TestArea(const std::string &test_name, bool store_area)
     char *user_name = util_alloc_sprintf("ert-test-%08u", random_int);
 #endif
 
-    char *test_cwd = ecl::util::create_test_path(test_name, prefix, user_name);
+    char *test_cwd = rd::util::create_test_path(test_name, prefix, user_name);
 
     {
         char *cwd_tmp = util_alloc_cwd();
@@ -244,12 +244,12 @@ bool TestArea::copy_parent_content(const std::string input_path) const {
 }
 
 } // namespace util
-} // namespace ecl
+} // namespace rd
 
 test_work_area_type *test_work_area_alloc__(const char *test_name,
                                             bool store_area) {
     if (test_name)
-        return new ecl::util::TestArea(test_name, store_area);
+        return new rd::util::TestArea(test_name, store_area);
     else
         return NULL;
 }
@@ -290,7 +290,7 @@ void test_work_area_install_file(const test_work_area_type *work_area,
         return;
     else {
         std::string src_file = work_area->original_path(input_src_file);
-        std::string src_path = ecl::util::path::dirname(input_src_file);
+        std::string src_path = rd::util::path::dirname(input_src_file);
 
         if (!util_entry_exists(src_path.c_str()))
             util_make_path(src_path.c_str());

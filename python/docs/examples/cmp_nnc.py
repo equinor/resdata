@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import sys
 from operator import itemgetter
-from ecl.eclfile import EclFile
-from ecl.grid import EclGrid
+from resdata.resfile import ResdataFile
+from resdata.grid import Grid
 
 
 if __name__ == "__main__":
     case = sys.argv[1]
-    grid_file = EclFile(f"{case}.EGRID")
-    init_file = EclFile(f"{case}.INIT")
-    grid = EclGrid(f"{case}.EGRID")
+    grid_file = ResdataFile(f"{case}.EGRID")
+    init_file = ResdataFile(f"{case}.INIT")
+    grid = Grid(f"{case}.EGRID")
 
     nnc1 = grid_file["NNC1"][0]
     nnc2 = grid_file["NNC2"][0]

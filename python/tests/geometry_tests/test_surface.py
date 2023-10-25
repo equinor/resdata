@@ -1,10 +1,10 @@
 import random
-from ecl.util.geometry import Surface
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.geometry import Surface
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class SurfaceTest(EclTest):
+class SurfaceTest(ResdataTest):
     def setUp(self):
         self.surface_valid = self.createTestPath(
             "local/geometry/surface/valid_ascii.irap"

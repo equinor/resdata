@@ -6,9 +6,9 @@ version = get_version()
 
 
 setup(
-    name="libecl",
+    name="resdata",
     author="Equinor ASA",
     author_email="fg_sib-scout@equinor.com",
     version=version,
-    install_requires=["ecl==" + version],
+    install_requires=["resdata==" + version],
 )

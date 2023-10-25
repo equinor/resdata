@@ -1,9 +1,9 @@
 from math import sqrt
-from ecl.util.geometry.geometry_tools import GeometryTools
-from tests import EclTest
+from resdata.geometry.geometry_tools import GeometryTools
+from tests import ResdataTest
 
 
-class PolygonSlicingTest(EclTest):
+class PolygonSlicingTest(ResdataTest):
     def test_slicing_internal_hull(self):
         polygon = [(2, 2), (2, 1), (1, 1), (1, 5), (5, 5), (5, 4), (4, 4)]
         edge = [(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]

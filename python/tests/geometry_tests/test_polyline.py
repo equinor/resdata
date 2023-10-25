@@ -1,10 +1,10 @@
-from ecl.util.geometry import Polyline, GeometryTools
-from ecl.util.geometry.xyz_io import XYZIo
-from ecl.util.test import TestAreaContext
-from tests import EclTest
+from resdata.geometry import Polyline, GeometryTools
+from resdata.geometry.xyz_io import XYZIo
+from resdata.util.test import TestAreaContext
+from tests import ResdataTest
 
 
-class PolylineTest(EclTest):
+class PolylineTest(ResdataTest):
     def setUp(self):
         self.polyline = self.createTestPath("local/geometry/pol11.xyz")
         self.closed_polyline = self.createTestPath("local/geometry/pol8.xyz")

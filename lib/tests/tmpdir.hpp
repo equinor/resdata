@@ -17,7 +17,7 @@ public:
     static bool delete_temporary_files;
     fs::path dirname;
     Tmpdir() {
-        auto parentdir = fs::temp_directory_path() / "ecl_test";
+        auto parentdir = fs::temp_directory_path() / "rd_test";
 
         do {
             dirname = parentdir / std::to_string(rand());

@@ -1,6 +1,6 @@
 import os.path
 import types
-from ecl.util.test import ExtendedTestCase
+from resdata.util.test import ExtendedTestCase
 from functools import wraps
 from functools import partial
 import unittest
@@ -29,7 +29,7 @@ def source_root():
 #
 # Ideally the equinor_test() implementation should just be a suitable wrapper of:
 #
-#       skipUnless(EclTest.EQUINOR_DATA, "Missing Equinor testdata")
+#       skipUnless(ResdataTest.EQUINOR_DATA, "Missing Equinor testdata")
 #
 # but that has been surprisingly difficult to achieve. The current
 # implemenation is based on the skip() function from the unittest/case.py
@@ -44,12 +44,12 @@ def source_root():
 #
 #
 #     @equinor_test()
-#     class EquinorTest(EclTest):
+#     class EquinorTest(ResdataTest):
 #     # This test class will be skipped entirely if we do not have access to
 #     # Equinor testdata.
 #
 #
-#     class XTest(EclTest):
+#     class XTest(ResdataTest):
 #
 #         @equinor_test
 #         def test_method(self):
@@ -62,7 +62,7 @@ def equinor_test():
 
     def decorator(test_item):
         if not isinstance(test_item, type):
-            if not EclTest.EQUINOR_DATA:
+            if not ResdataTest.EQUINOR_DATA:
 
                 @functools.wraps(test_item)
                 def skip_wrapper(*args, **kwargs):
@@ -70,7 +70,7 @@ def equinor_test():
 
                 test_item = skip_wrapper
 
-        if not EclTest.EQUINOR_DATA:
+        if not ResdataTest.EQUINOR_DATA:
             test_item.__unittest_skip__ = True
             test_item.__unittest_skip_why__ = "Missing Equinor testdata"
         return test_item
@@ -78,7 +78,7 @@ def equinor_test():
     return decorator
 
 
-class EclTest(ExtendedTestCase):
+class ResdataTest(ExtendedTestCase):
     SOURCE_ROOT = source_root()
     TESTDATA_ROOT = os.path.join(SOURCE_ROOT, "test-data")
     EQUINOR_DATA = os.path.islink(os.path.join(TESTDATA_ROOT, "Equinor"))

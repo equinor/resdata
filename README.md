@@ -1,23 +1,23 @@
-# ecl [![Build Status](https://github.com/equinor/libecl/workflows/ecl%20testing/badge.svg)](https://github.com/equinor/libecl/actions)
+# resdata [![Build Status](https://github.com/equinor/resdata/workflows/resdata%20testing/badge.svg)](https://github.com/equinor/resdata/actions)
 
 
-*ecl* is a package for reading and writing the result files from
-the Eclipse reservoir simulator. The file types covered are the
+*resdata* is a package for reading and writing the result files from
+the reservoir simulators. The file types covered are the
 restart, init, rft, summary and grid files. Both unified and
 non-unified and formatted and unformatted files are supported.
 
-*ecl* is mainly developed on *Linux* and *macOS*, in addition there
+*resdata* is mainly developed on *Linux* and *macOS*, in addition there
 is a portability layer which ensures that most of the functionality is
 available on *Windows*. The main functionality is written in C/C++, and
-should typically be linked in in other compiled programs. *ecl* was
+should typically be linked in in other compiled programs. *resdata* was
 initially developed as part of the [Ensemble Reservoir
 Tool](http://github.com/Equinor/ert), other applications using
-*ecl* are the reservoir simulator flow and Resinsight from the [OPM
+*resdata* are the reservoir simulator flow and Resinsight from the [OPM
 project](http://github.com/OPM/).
 
 ### Dependencies
 
-Regardless of how you build *ecl*, it will depend on the following system-level
+Regardless of how you build *resdata*, it will depend on the following system-level
 components.
 
 | Software                                           | Debian / Ubuntu | RHEL / Fedora | macOS                |
@@ -33,52 +33,52 @@ not.
 
 ### Alternative 1: Python only ###
 For small interactive scripts, such as forward models, the recommended way to
-use *ecl* is by installing it from PyPI. This method doesn't require setting
+use *resdata* is by installing it from PyPI. This method doesn't require setting
 `PYTHONPATH` or `LD_LIBRARY_PATH` environment variables:
 
 ```
-$ pip install ecl
+$ pip install resdata
 ```
 
 ### Alternative 2: C library only ###
-This is for when you need to link directly with the *ecl* C library, but
-don't need the Python bindings. *ecl* requires a conforming C++11 or later
+This is for when you need to link directly with the *resdata* C library, but
+don't need the Python bindings. *resdata* requires a conforming C++11 or later
 compiler such as GNU GCC, the CMake build system and, optionally, zlib.
 
 ```bash
-$ git clone https://github.com/Equinor/ecl
-$ mkdir ecl/build
-$ cd ecl/build
+$ git clone https://github.com/Equinor/resdata
+$ mkdir resdata/build
+$ cd resdata/build
 $ cmake ..
 $ make
 $ make install
 ```
 
-To install *ecl* in a non-standard location, add
+To install *resdata* in a non-standard location, add
 `-DCMAKE_INSTALL_PREFIX=/path/to/install` to the first `cmake` command. Remember
 to set `LD_LIBRARY_PATH=/path/to/install/lib64:$LD_LIBRARY_PATH` if you do use a
-non-standard location for your program to find `libecl.so`.
+non-standard location for your program to find `resdata.so`.
 
-If you intend to develop and change *ecl* you should build the tests by
+If you intend to develop and change *resdata* you should build the tests by
 passing `-DBUILD_TESTS=ON` and run the tests with `ctest`.
 
 ### Alternative 3: C library with Python bindings ###
 It is also possible to install both the C library and Python bindings using
-CMake. Note that this alternative is incompatible with *ecl* installed from
+CMake. Note that this alternative is incompatible with *resdata* installed from
 PyPI (_Alternative 1_). As before, we require a conforming C++11 or later
 compiler, CMake and, optionally, zlib.
 
 ```bash
-$ git clone https://github.com/Equinor/ecl
-$ mkdir ecl/build
-$ cd ecl/build
+$ git clone https://github.com/Equinor/resdata
+$ mkdir resdata/build
+$ cd resdata/build
 $ pip install -r ../requirements.txt
 $ cmake .. -DENABLE_PYTHON=ON
 $ make
 $ make install
 ```
 
-You will most likely want to install *ecl* into a Python virtual environment.
+You will most likely want to install *resdata* into a Python virtual environment.
 First activate the virtualenv, then add the argument
 `-DCMAKE_INSTALL_PREFIX=$(python -c "import sys; print(sys.prefix)")` to the
 `cmake` command when building.
@@ -92,10 +92,10 @@ $ export LD_LIBRARY_PATH=/path/to/install/lib64:$LD_LIBRARY_PATH
 
 Then you can fire up your Python interpreter and try it out:
 ```python
->>> from ecl.summary import EclSum
+>>> from resdata.summary import Summary
 >>> import sys
 
->>> summary = EclSum(sys.argv[1])
+>>> summary = Summary(sys.argv[1])
 >>> fopt = summary.numpy_vector("FOPT")
 ```
 

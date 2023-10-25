@@ -1,11 +1,11 @@
-#ifndef ECL_STRING_UTIL
-#define ECL_STRING_UTIL
+#ifndef RD_STRING_UTIL
+#define RD_STRING_UTIL
 
 #include <string>
-namespace ecl {
+namespace rd {
 namespace util {
 std::string string_format(const char *fmt, ...);
 }
-} // namespace ecl
+} // namespace rd
 
 #endif

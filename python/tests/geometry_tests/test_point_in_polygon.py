@@ -1,9 +1,9 @@
-from ecl.util.geometry.geometry_tools import GeometryTools
-from ecl.util.geometry.polyline import Polyline
-from tests import EclTest
+from resdata.geometry.geometry_tools import GeometryTools
+from resdata.geometry.polyline import Polyline
+from tests import ResdataTest
 
 
-class PointInPolygonTest(EclTest):
+class PointInPolygonTest(ResdataTest):
     def test_point_in_polygon(self):
         p1 = (0.5, 0.5)
         p2 = (2, 2)

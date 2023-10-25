@@ -8,7 +8,7 @@ try:
 except ImportError:
     from unittest import TestCase
 
-from ecl.util.util import (
+from resdata.util.util import (
     DoubleVector,
     IntVector,
     BoolVector,

@@ -1,4 +1,4 @@
-name: ecl testing
+name: testing
 
 on: [push, pull_request]
 
@@ -19,12 +19,18 @@ jobs:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
     - name: Install dependencies
       run: |
         python3 -m pip install "conan<2"
 
 
-    - name: Build ecl
+    - name: Build
       run: |
         python3 -m pip install -r requirements.txt
         mkdir cmake-build
@@ -37,7 +43,7 @@ jobs:
         export DYLD_LIBRARY_PATH=$PWD/lib
         ctest --output-on-failure
       env:
-        ECL_SKIP_SIGNAL: absolutely
+        RD_SKIP_SIGNAL: absolutely
         ERT_SHOW_BACKTRACE: yes please!
 
 
@@ -80,7 +86,7 @@ jobs:
         name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
         path: dist/*
 
-    - name: Install ecl
+    - name: Install
       run: pip install dist/*
 
     - name: Run Python tests
@@ -89,8 +95,8 @@ jobs:
         python -m pip install pytest
 
         # pytest adds every directory up-to and including python/ into sys.path,
-        # meaning that "import ecl" will import python/ecl and not the installed
-        # one. This doesn't work because the libecl.so library only exists in
+        # meaning that "import resdata" will import python/resdata and not the installed
+        # one. This doesn't work because the resdata.so library only exists in
         # site-packages, so we copy directories required by the tests out into its
         # own temporary directory.
         mkdir test-run; cd test-run
@@ -101,7 +107,7 @@ jobs:
         cp -R {..,$PWD}/python/tests
 
         # Env vars
-        export ECL_SKIP_SIGNAL=1
+        export RD_SKIP_SIGNAL=1
         export ERT_SHOW_BACKTRACE=1
 
         # Run tests

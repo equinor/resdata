@@ -1,11 +1,9 @@
-import os.path
-
-import ecl
-from tests import EclTest
-from ecl.util.util import Version, EclVersion
+import resdata
+from resdata.util.util import ResdataVersion, Version
+from tests import ResdataTest
 
 
-class VersionTest(EclTest):
+class VersionTest(ResdataTest):
     def setUp(self):
         pass
 
@@ -77,11 +75,11 @@ class VersionTest(EclTest):
         self.assertNotEqual(repr(v1), repr(v2))
 
     def test_current(self):
-        current = EclVersion()
+        current = ResdataVersion()
         self.assertTrue(current > (0, 0, 0))
         pfx = "Version(major="
         self.assertEqual(pfx, repr(current)[: len(pfx)])
 
     def test_root_version(self):
-        cv = EclVersion()
-        self.assertEqual(ecl.__version__, cv.versionString())
+        cv = ResdataVersion()
+        self.assertEqual(resdata.__version__, cv.versionString())

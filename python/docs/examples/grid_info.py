@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-from ecl.grid import EclRegion, EclGrid
+from resdata.grid import ResdataRegion, Grid
 
 
 def volume_min_max(grid):
@@ -12,7 +12,7 @@ def main(grid):
     vmin, vmax = volume_min_max(grid)
 
     dz_limit = 0.3
-    region = EclRegion(grid, False)
+    region = ResdataRegion(grid, False)
     region.select_thin(dz_limit)
 
     print(f"Smallest cell     : {vmin}")
@@ -28,5 +28,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         exit("usage: grid_info.py path/to/file.EGRID")
     case = sys.argv[1]
-    grid = EclGrid(case)
+    grid = Grid(case)
     main(grid)

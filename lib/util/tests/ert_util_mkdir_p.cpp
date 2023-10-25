@@ -6,7 +6,7 @@
 #include <ert/util/test_work_area.hpp>
 
 int main(int argc, char **argv) {
-    ecl::util::TestArea ta("mkdir");
+    rd::util::TestArea ta("mkdir");
 
     // Regular use
     test_assert_true(util_mkdir_p("some/path/with/many/levels"));

@@ -40,7 +40,7 @@ bool check_script(const char *script) {
 }
 
 void test_spawn_no_redirect() {
-    ecl::util::TestArea ta("spawn1");
+    rd::util::TestArea ta("spawn1");
     {
         int status;
         make_script("script", stdout_msg, stderr_msg);
@@ -116,7 +116,7 @@ void *test_spawn_redirect__(const char *path) {
 }
 
 void test_spawn_redirect() {
-    ecl::util::TestArea ta("test_redirect");
+    rd::util::TestArea ta("test_redirect");
     {
         make_script("script", stdout_msg, stderr_msg);
         util_addmode_if_owner("script", S_IRUSR + S_IWUSR + S_IXUSR + S_IRGRP +
@@ -132,7 +132,7 @@ void test_spawn_redirect_threaded() {
     const int num = 128;
 
     // Generate the scripts on disk first
-    ecl::util::TestArea("spawn1_threaded");
+    rd::util::TestArea("spawn1_threaded");
     int *path_codes = (int *)util_calloc(num, sizeof *path_codes);
     stringlist_type *script_fullpaths = stringlist_alloc_new();
     for (int i = 0; i < num; i++) {

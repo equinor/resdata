@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(ecl C CXX)
+project(resdata C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -79,25 +79,24 @@ conan_cmake_run(
 
 # -----------------------------------------------------------------
 
-set(ECL_VERSION_MAJOR 0)
-set(ECL_VERSION_MINOR 0)
-set(ECL_VERSION_MICRO "not-available")
+set(RD_VERSION_MAJOR 0)
+set(RD_VERSION_MINOR 0)
+set(RD_VERSION_MICRO "not-available")
 
 # If the micro version is not integer, that should be interpreted as a
 # development version leading towards version MAJOR.MINOR.0
 
-execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S"
-                OUTPUT_VARIABLE ECL_BUILD_TIME)
-string(STRIP "${ECL_BUILD_TIME}" ECL_BUILD_TIME)
+execute_process(COMMAND date "+%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE RD_BUILD_TIME)
+string(STRIP "${RD_BUILD_TIME}" RD_BUILD_TIME)
 
-if(ECL_VERSION)
+if(RD_VERSION)
   # Have we been provided with an explicitly-set version?
-  string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" ECL_VERSION_MAJOR
-                       "${ECL_VERSION}")
-  string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" ECL_VERSION_MINOR
-                       "${ECL_VERSION}")
-  string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" ECL_VERSION_MICRO
-                       "${ECL_VERSION}")
+  string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" RD_VERSION_MAJOR
+                       "${RD_VERSION}")
+  string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" RD_VERSION_MINOR
+                       "${RD_VERSION}")
+  string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" RD_VERSION_MICRO
+                       "${RD_VERSION}")
 else()
   # Otherwise try to discover it via git
   find_package(Git)
@@ -132,11 +131,11 @@ else()
       OUTPUT_VARIABLE GIT_TAG
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" ECL_VERSION_MAJOR
+    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" RD_VERSION_MAJOR
                          "${GIT_TAG}")
-    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" ECL_VERSION_MINOR
+    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" RD_VERSION_MINOR
                          "${GIT_TAG}")
-    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" ECL_VERSION_MICRO
+    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" RD_VERSION_MICRO
                          "${GIT_TAG}")
   else()
     set(GIT_COMMIT "unknown (git not found!)")
@@ -148,14 +147,14 @@ endif()
 
 message(
   STATUS
-    "libecl version: ${ECL_VERSION_MAJOR}.${ECL_VERSION_MINOR}.${ECL_VERSION_MICRO}"
+    "resdata version: ${RD_VERSION_MAJOR}.${RD_VERSION_MINOR}.${RD_VERSION_MICRO}"
 )
 
 # -----------------------------------------------------------------
 
 option(BUILD_TESTS "Should the tests be built" OFF)
 option(BUILD_APPLICATIONS "Should we build small utility applications" OFF)
-option(BUILD_ECL_SUMMARY "Build the commandline application ecl_summary" OFF)
+option(BUILD_RD_SUMMARY "Build the commandline application rd_summary" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(ERT_USE_OPENMP "Use OpenMP" OFF)
 option(RST_DOC "Build RST documentation" OFF)
@@ -175,11 +174,11 @@ if(EXISTS ${EQUINOR_TESTDATA_ROOT})
   message(STATUS "Linking testdata: ${LINK} -> ${EQUINOR_TESTDATA_ROOT}")
 
   set(_equinor_test_data ${CMAKE_SOURCE_DIR}/test-data/Equinor)
-  set(_eclpath ${_equinor_test_data}/ECLIPSE)
+  set(_resdatapath ${_equinor_test_data}/ECLIPSE)
   set(_geopath ${_equinor_test_data}/Geometry)
 endif()
 set(_local_test_data "${CMAKE_CURRENT_SOURCE_DIR}/test-data/local")
-set(_local_eclpath ${_local_test_data}/ECLIPSE)
+set(_local_resdatapath ${_local_test_data}/ECLIPSE)
 
 # output libs to some lib/ path for testing
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -449,7 +448,7 @@ endif()
 
 if(NOT SKBUILD)
   # Avoid installing when calling from python setup.py
-  install(EXPORT ecl-config DESTINATION share/cmake/ecl)
-  export(TARGETS ecl FILE eclConfig.cmake)
-  export(PACKAGE ecl)
+  install(EXPORT resdata-config DESTINATION share/cmake/resdata)
+  export(TARGETS resdata FILE resdataConfig.cmake)
+  export(PACKAGE resdata)
 endif()

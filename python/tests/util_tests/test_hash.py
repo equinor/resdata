@@ -1,10 +1,10 @@
 from ctypes import c_void_p
 
-from tests import EclTest
-from ecl.util.util import Hash, StringHash, DoubleHash, IntegerHash
+from tests import ResdataTest
+from resdata.util.util import Hash, StringHash, DoubleHash, IntegerHash
 
 
-class HashTest(EclTest):
+class HashTest(ResdataTest):
     def test_string_hash(self):
         hash = StringHash()
 

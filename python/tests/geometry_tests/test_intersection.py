@@ -1,8 +1,8 @@
-from ecl.util.geometry import GeometryTools
-from tests import EclTest
+from resdata.geometry import GeometryTools
+from tests import ResdataTest
 
 
-class IntersectionTest(EclTest):
+class IntersectionTest(ResdataTest):
     def test_intersection(self):
         p1 = (0.0, 0.0)
         p2 = (10.0, 0.0)
