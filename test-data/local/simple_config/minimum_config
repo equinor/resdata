@@ -1,8 +1,0 @@
-JOBNAME  Job%d
-RUNPATH /tmp/simulations/run%d
-NUM_REALIZATIONS 1
-
-JOB_SCRIPT script.sh
-
--- This is not strictly necessary, a sensible default will be used if not given.
-ENSPATH  Ensemble
