@@ -156,7 +156,6 @@ message(
 option(BUILD_TESTS "Should the tests be built" OFF)
 option(BUILD_APPLICATIONS "Should we build small utility applications" OFF)
 option(BUILD_ECL_SUMMARY "Build the commandline application ecl_summary" OFF)
-option(ENABLE_PYTHON "Build and install the Python wrappers" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(ERT_USE_OPENMP "Use OpenMP" OFF)
 option(RST_DOC "Build RST documentation" OFF)
@@ -443,32 +442,6 @@ endif()
 add_subdirectory(lib)
 add_subdirectory(applications)
 add_subdirectory(bin)
-
-if(ENABLE_PYTHON)
-  message(
-    DEPRECATION
-      "The ENABLE_PYTHON option is deprecated and will be removed in favour of installing via pip. Refer to the README.md"
-  )
-endif()
-
-if(ENABLE_PYTHON AND ERT_WINDOWS)
-  if((NOT MSVC) OR (MSVC_VERSION LESS 1900))
-    message(
-      FATAL_ERROR "The Python wrappers require Visual Studio 2015 or newer")
-  endif()
-endif()
-
-if(ENABLE_PYTHON)
-  # If finding the Python interpreter and required packages fails in the
-  # python/CMakeLists.txt file the ENABLE_PYTHON will be set to OFF.
-  add_subdirectory(python)
-endif()
-
-if(ENABLE_PYTHON)
-  if(NOT ${BUILD_SHARED_LIBS})
-    message(FATAL_ERROR "The Python wrappers require shared libraries")
-  endif()
-endif()
 
 if(NOT SKBUILD)
   # Avoid installing when calling from python setup.py
