@@ -87,7 +87,6 @@ add_library(
   ecl/ecl_file_kw.cpp
   ecl/ecl_file_view.cpp
   ecl/ecl_grav.cpp
-  ecl/ecl_grav_calc.cpp
   ecl/ecl_smspec.cpp
   ecl/ecl_unsmry_loader.cpp
   ecl/ecl_sum_data.cpp
