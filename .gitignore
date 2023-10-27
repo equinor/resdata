@@ -8,13 +8,9 @@
 *.user.*
 .idea
 python/lib64
-/libenkf/src/.faultlist
-/develbranch/libenkf/src/.faultlist
 /build
 /temp-build
-/libert_util/tests/data/latex_OK.pdf
 /test-data/Equinor
-/python/python/ert/ecl/ecl_local.py
 /GPATH
 /GRTAGS
 /GTAGS
@@ -23,8 +19,6 @@ python/lib64
 scratch.sparsebundle
 *.iml
 *.DS_Store
-__ecl_lib_path.py
-__ecl_lib_info.py
 
 /venv/
 /_skbuild/
