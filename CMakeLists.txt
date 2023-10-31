@@ -443,6 +443,10 @@ add_subdirectory(lib)
 add_subdirectory(applications)
 add_subdirectory(bin)
 
+if(RST_DOC)
+  add_subdirectory(python/docs)
+endif()
+
 if(NOT SKBUILD)
   # Avoid installing when calling from python setup.py
   install(EXPORT ecl-config DESTINATION share/cmake/ecl)
