@@ -6,12 +6,15 @@ results and calculate the change in gravitational strength between the
 different surveys. The implementation is a thin wrapper around the
 ecl_grav.c implementation in the libecl library.
 """
+from typing import Optional
+
 from cwrap import BaseCClass
 
 from ecl import EclPrototype
+from ecl.grid import EclGrid, EclRegion
+from ecl.eclfile import EclFileView, EclFile
 from ecl.util.util import monkey_the_camel
 from ecl import EclPhaseEnum
-import ecl.eclfile
 
 
 class EclGrav(BaseCClass):
@@ -56,12 +59,9 @@ class EclGrav(BaseCClass):
         "double ecl_grav_eval(ecl_grav, char*, char*, ecl_region, double, double, double, int)"
     )
 
-    def __init__(self, grid, init_file):
+    def __init__(self, grid: EclGrid, init_file: EclFile):
         """
         Creates a new EclGrav instance.
-
-        The input arguments @grid and @init_file should be instances
-        of EclGrid and EclFile respectively.
         """
         self.init_file = init_file  # Inhibit premature garbage collection of init_file
 
@@ -75,7 +75,7 @@ class EclGrav(BaseCClass):
             "RPORV": self.add_survey_RPORV,
         }
 
-    def add_survey_RPORV(self, survey_name, restart_view):
+    def add_survey_RPORV(self, survey_name: str, restart_view: EclFileView):
         """
         Add new survey based on RPORV keyword.
 
@@ -87,11 +87,11 @@ class EclGrav(BaseCClass):
         to load the @restart_view argument is:
 
            import datetime
-           from ecl.ecl import EclRestartFile
+           from ecl.eclfile import EclFile
            ...
            ...
            date = datetime.datetime(year, month, day)
-           rst_file = EclRestartFile("ECLIPSE.UNRST")
+           rst_file = EclFile("ECLIPSE.UNRST")
            restart_view1 = rst_file.restartView(sim_time=date)
            restart_view2 = rst_file.restartView(report_step=67)
 
@@ -102,7 +102,7 @@ class EclGrav(BaseCClass):
         """
         self._add_survey_RPORV(survey_name, restart_view)
 
-    def add_survey_PORMOD(self, survey_name, restart_view):
+    def add_survey_PORMOD(self, survey_name: str, restart_view: EclFileView):
         """
         Add new survey based on PORMOD keyword.
 
@@ -112,7 +112,7 @@ class EclGrav(BaseCClass):
         """
         self._add_survey_PORMOD(survey_name, restart_view)
 
-    def add_survey_FIP(self, survey_name, restart_view):
+    def add_survey_FIP(self, survey_name: str, restart_view: EclFileView):
         """
         Add new survey based on FIP keywords.
 
@@ -127,7 +127,7 @@ class EclGrav(BaseCClass):
         """
         self._add_survey_FIP(survey_name, restart_view)
 
-    def add_survey_RFIP(self, survey_name, restart_view):
+    def add_survey_RFIP(self, survey_name: str, restart_view: EclFileView):
         """
         Add new survey based on RFIP keywords.
 
@@ -138,7 +138,7 @@ class EclGrav(BaseCClass):
         """
         self._add_survey_RFIP(survey_name, restart_view)
 
-    def add_survey(self, name, restart_view, method):
+    def add_survey(self, name: str, restart_view: EclFileView, method):
         method = self.dispatch[method]
         return method(name, restart_view)
 
@@ -147,7 +147,7 @@ class EclGrav(BaseCClass):
         base_survey,
         monitor_survey,
         pos,
-        region=None,
+        region: Optional[EclRegion] = None,
         phase_mask=EclPhaseEnum.ECL_OIL_PHASE
         + EclPhaseEnum.ECL_GAS_PHASE
         + EclPhaseEnum.ECL_WATER_PHASE,
