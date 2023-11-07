@@ -19,6 +19,11 @@ jobs:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
     - name: Install dependencies
       run: |
         python3 -m pip install "conan<2"
