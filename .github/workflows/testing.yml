@@ -137,4 +137,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.3.1
         with:
           user: statoil-travis
-          password: ${{ secrets.pypi_password }}
+          password: ${{ secrets.pypi_token_resdata }}
