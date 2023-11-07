@@ -1,4 +1,4 @@
-# resdata [![Build Status](https://github.com/equinor/resdata/workflows/resdata%20testing/badge.svg)](https://github.com/equinor/resdata/actions)
+# resdata [![testing](https://github.com/equinor/resdata/actions/workflows/testing.yml/badge.svg)](https://github.com/equinor/resdata/actions/workflows/testing.yml)
 
 
 *resdata* is a package for reading and writing the result files from
