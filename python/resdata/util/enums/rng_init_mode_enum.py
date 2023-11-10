@@ -2,7 +2,7 @@ from cwrap import BaseCEnum
 
 
 class RngInitModeEnum(BaseCEnum):
-    TYPE_NAME = "rng_init_mode_enum"
+    TYPE_NAME = "rd_rng_init_mode"
     INIT_DEFAULT = None
     INIT_CLOCK = None
     INIT_DEV_RANDOM = None

@@ -20,23 +20,25 @@ from cwrap import BaseCClass
 
 
 class StringList(BaseCClass):
-    TYPE_NAME = "stringlist"
+    TYPE_NAME = "rd_stringlist"
 
     _alloc = ResdataPrototype("void* stringlist_alloc_new( )", bind=False)
-    _free = ResdataPrototype("void stringlist_free(stringlist )")
-    _append = ResdataPrototype("void stringlist_append_copy(stringlist , char* )")
-    _iget = ResdataPrototype("char* stringlist_iget(stringlist , int )")
-    _front = ResdataPrototype("char* stringlist_front( stringlist )")
-    _back = ResdataPrototype("char* stringlist_back( stringlist )")
-    _iget_copy = ResdataPrototype("char* stringlist_iget_copy(stringlist, int)")
-    _iset = ResdataPrototype("void  stringlist_iset_copy( stringlist , int , char* )")
-    _get_size = ResdataPrototype("int  stringlist_get_size( stringlist )")
-    _contains = ResdataPrototype("bool stringlist_contains(stringlist , char*)")
-    _equal = ResdataPrototype("bool stringlist_equal(stringlist , stringlist)")
-    _sort = ResdataPrototype("void stringlist_python_sort( stringlist , int)")
-    _pop = ResdataPrototype("char* stringlist_pop(stringlist)")
-    _last = ResdataPrototype("char* stringlist_get_last(stringlist)")
-    _find_first = ResdataPrototype("int stringlist_find_first(stringlist, char*)")
+    _free = ResdataPrototype("void stringlist_free(rd_stringlist )")
+    _append = ResdataPrototype("void stringlist_append_copy(rd_stringlist , char* )")
+    _iget = ResdataPrototype("char* stringlist_iget(rd_stringlist , int )")
+    _front = ResdataPrototype("char* stringlist_front( rd_stringlist )")
+    _back = ResdataPrototype("char* stringlist_back( rd_stringlist )")
+    _iget_copy = ResdataPrototype("char* stringlist_iget_copy(rd_stringlist, int)")
+    _iset = ResdataPrototype(
+        "void  stringlist_iset_copy( rd_stringlist , int , char* )"
+    )
+    _get_size = ResdataPrototype("int  stringlist_get_size( rd_stringlist )")
+    _contains = ResdataPrototype("bool stringlist_contains(rd_stringlist , char*)")
+    _equal = ResdataPrototype("bool stringlist_equal(rd_stringlist , rd_stringlist)")
+    _sort = ResdataPrototype("void stringlist_python_sort( rd_stringlist , int)")
+    _pop = ResdataPrototype("char* stringlist_pop(rd_stringlist)")
+    _last = ResdataPrototype("char* stringlist_get_last(rd_stringlist)")
+    _find_first = ResdataPrototype("int stringlist_find_first(rd_stringlist, char*)")
 
     def __init__(self, initial=None):
         """

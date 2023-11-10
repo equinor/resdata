@@ -9,31 +9,29 @@ from resdata.geometry import CPolyline
 
 
 class CPolylineCollection(BaseCClass):
-    TYPE_NAME = "geo_polygon_collection"
+    TYPE_NAME = "rd_geo_polygon_collection"
 
-    _alloc_new = ResdataPrototype(
-        "void*            geo_polygon_collection_alloc(  )", bind=False
-    )
+    _alloc_new = ResdataPrototype("void* geo_polygon_collection_alloc(  )", bind=False)
     _free = ResdataPrototype(
-        "void             geo_polygon_collection_free( geo_polygon_collection )"
+        "void geo_polygon_collection_free(rd_geo_polygon_collection)"
     )
     _size = ResdataPrototype(
-        "int              geo_polygon_collection_size( geo_polygon_collection)"
+        "int geo_polygon_collection_size(rd_geo_polygon_collection)"
     )
     _create_polyline = ResdataPrototype(
-        "geo_polygon_ref  geo_polygon_collection_create_polygon(geo_polygon_collection , char*)"
+        "rd_geo_polygon_ref geo_polygon_collection_create_polygon(rd_geo_polygon_collection, char*)"
     )
     _has_polyline = ResdataPrototype(
-        "bool             geo_polygon_collection_has_polygon(geo_polygon_collection , char*)"
+        "bool geo_polygon_collection_has_polygon(rd_geo_polygon_collection, char*)"
     )
     _iget = ResdataPrototype(
-        "geo_polygon_ref  geo_polygon_collection_iget_polygon(geo_polygon_collection , int)"
+        "rd_geo_polygon_ref geo_polygon_collection_iget_polygon(rd_geo_polygon_collection, int)"
     )
     _get = ResdataPrototype(
-        "geo_polygon_ref  geo_polygon_collection_get_polygon(geo_polygon_collection , char*)"
+        "rd_geo_polygon_ref geo_polygon_collection_get_polygon(rd_geo_polygon_collection, char*)"
     )
     _add_polyline = ResdataPrototype(
-        "void             geo_polygon_collection_add_polygon(geo_polygon_collection , geo_polygon , bool)"
+        "void geo_polygon_collection_add_polygon(rd_geo_polygon_collection, rd_geo_polygon, bool)"
     )
 
     def __init__(self):

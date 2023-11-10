@@ -6,110 +6,112 @@ from resdata.util.util import VectorTemplate, CTime
 
 
 class TimeVector(VectorTemplate):
-    TYPE_NAME = "time_t_vector"
+    TYPE_NAME = "rd_time_t_vector"
     default_format = "%d"
 
-    _alloc = ResdataPrototype("void*   time_t_vector_alloc(int, time_t )", bind=False)
+    _alloc = ResdataPrototype("void*   time_t_vector_alloc(int, rd_time_t)", bind=False)
     _alloc_copy = ResdataPrototype(
-        "time_t_vector_obj time_t_vector_alloc_copy(time_t_vector )"
+        "rd_time_t_vector_obj time_t_vector_alloc_copy(rd_time_t_vector)"
     )
     _strided_copy = ResdataPrototype(
-        "time_t_vector_obj time_t_vector_alloc_strided_copy(time_t_vector , int , int , int)"
+        "rd_time_t_vector_obj time_t_vector_alloc_strided_copy(rd_time_t_vector, int, int, int)"
     )
-    _free = ResdataPrototype("void   time_t_vector_free( time_t_vector )")
-    _iget = ResdataPrototype("time_t   time_t_vector_iget( time_t_vector , int )")
+    _free = ResdataPrototype("void   time_t_vector_free(rd_time_t_vector)")
+    _iget = ResdataPrototype("rd_time_t time_t_vector_iget(rd_time_t_vector, int)")
     _safe_iget = ResdataPrototype(
-        "time_t   time_t_vector_safe_iget( time_t_vector , int )"
+        "rd_time_t time_t_vector_safe_iget(rd_time_t_vector, int)"
     )
     _iset = ResdataPrototype(
-        "time_t   time_t_vector_iset( time_t_vector , int , time_t)"
+        "rd_time_t time_t_vector_iset(rd_time_t_vector, int, rd_time_t)"
     )
-    _size = ResdataPrototype("int      time_t_vector_size( time_t_vector )")
-    _append = ResdataPrototype(
-        "void     time_t_vector_append( time_t_vector , time_t )"
-    )
+    _size = ResdataPrototype("int time_t_vector_size(rd_time_t_vector)")
+    _append = ResdataPrototype("void time_t_vector_append(rd_time_t_vector, rd_time_t)")
     _idel_block = ResdataPrototype(
-        "void     time_t_vector_idel_block( time_t_vector , int , int )"
+        "void time_t_vector_idel_block(rd_time_t_vector, int, int)"
     )
-    _idel = ResdataPrototype("void     time_t_vector_idel( time_t_vector , int )")
-    _pop = ResdataPrototype("time_t   time_t_vector_pop( time_t_vector )")
-    _lshift = ResdataPrototype("void     time_t_vector_lshift( time_t_vector , int )")
-    _rshift = ResdataPrototype("void     time_t_vector_rshift( time_t_vector , int )")
+    _idel = ResdataPrototype("void time_t_vector_idel(rd_time_t_vector, int)")
+    _pop = ResdataPrototype("rd_time_t time_t_vector_pop(rd_time_t_vector)")
+    _lshift = ResdataPrototype("void time_t_vector_lshift(rd_time_t_vector, int)")
+    _rshift = ResdataPrototype("void time_t_vector_rshift(rd_time_t_vector, int)")
     _insert = ResdataPrototype(
-        "void     time_t_vector_insert( time_t_vector , int , time_t)"
+        "void time_t_vector_insert(rd_time_t_vector, int, rd_time_t)"
     )
     _fprintf = ResdataPrototype(
-        "void     time_t_vector_fprintf( time_t_vector , FILE , char* , char*)"
+        "void time_t_vector_fprintf(rd_time_t_vector, FILE, char*, char*)"
     )
-    _sort = ResdataPrototype("void     time_t_vector_sort( time_t_vector )")
-    _rsort = ResdataPrototype("void     time_t_vector_rsort( time_t_vector )")
-    _reset = ResdataPrototype("void     time_t_vector_reset( time_t_vector )")
+    _sort = ResdataPrototype("void time_t_vector_sort(rd_time_t_vector)")
+    _rsort = ResdataPrototype("void time_t_vector_rsort(rd_time_t_vector)")
+    _reset = ResdataPrototype("void time_t_vector_reset(rd_time_t_vector)")
     _set_read_only = ResdataPrototype(
-        "void     time_t_vector_set_read_only( time_t_vector , bool )"
+        "void time_t_vector_set_read_only(rd_time_t_vector, bool)"
     )
     _get_read_only = ResdataPrototype(
-        "bool     time_t_vector_get_read_only( time_t_vector )"
+        "bool time_t_vector_get_read_only(rd_time_t_vector)"
     )
-    _get_max = ResdataPrototype("time_t   time_t_vector_get_max( time_t_vector )")
-    _get_min = ResdataPrototype("time_t   time_t_vector_get_min( time_t_vector )")
+    _get_max = ResdataPrototype("rd_time_t time_t_vector_get_max(rd_time_t_vector)")
+    _get_min = ResdataPrototype("rd_time_t time_t_vector_get_min(rd_time_t_vector)")
     _get_max_index = ResdataPrototype(
-        "int      time_t_vector_get_max_index( time_t_vector , bool)"
+        "int time_t_vector_get_max_index(rd_time_t_vector, bool)"
     )
     _get_min_index = ResdataPrototype(
-        "int      time_t_vector_get_min_index( time_t_vector , bool)"
+        "int time_t_vector_get_min_index(rd_time_t_vector, bool)"
     )
-    _shift = ResdataPrototype("void     time_t_vector_shift( time_t_vector , time_t )")
-    _scale = ResdataPrototype("void     time_t_vector_scale( time_t_vector , time_t )")
-    _div = ResdataPrototype("void     time_t_vector_div( time_t_vector , time_t )")
+    _shift = ResdataPrototype("void time_t_vector_shift(rd_time_t_vector, rd_time_t)")
+    _scale = ResdataPrototype("void time_t_vector_scale(rd_time_t_vector, rd_time_t)")
+    _div = ResdataPrototype("void time_t_vector_div(rd_time_t_vector, rd_time_t)")
     _inplace_add = ResdataPrototype(
-        "void     time_t_vector_inplace_add( time_t_vector , time_t_vector )"
+        "void time_t_vector_inplace_add(rd_time_t_vector, rd_time_t_vector)"
     )
     _inplace_mul = ResdataPrototype(
-        "void     time_t_vector_inplace_mul( time_t_vector , time_t_vector )"
+        "void time_t_vector_inplace_mul(rd_time_t_vector, rd_time_t_vector)"
     )
     _assign = ResdataPrototype(
-        "void     time_t_vector_set_all( time_t_vector , time_t)"
+        "void time_t_vector_set_all(rd_time_t_vector, rd_time_t)"
     )
     _memcpy = ResdataPrototype(
-        "void     time_t_vector_memcpy(time_t_vector , time_t_vector )"
+        "void time_t_vector_memcpy(rd_time_t_vector, rd_time_t_vector)"
     )
     _set_default = ResdataPrototype(
-        "void     time_t_vector_set_default( time_t_vector , time_t)"
+        "void time_t_vector_set_default(rd_time_t_vector, rd_time_t)"
     )
     _get_default = ResdataPrototype(
-        "time_t   time_t_vector_get_default( time_t_vector )"
+        "rd_time_t time_t_vector_get_default(rd_time_t_vector)"
     )
-    _element_size = ResdataPrototype(
-        "int      time_t_vector_element_size( time_t_vector )"
-    )
+    _element_size = ResdataPrototype("int time_t_vector_element_size(rd_time_t_vector)")
 
     _permute = ResdataPrototype(
-        "void time_t_vector_permute(time_t_vector, permutation_vector)"
+        "void time_t_vector_permute(rd_time_t_vector, rd_permutation_vector)"
     )
     _sort_perm = ResdataPrototype(
-        "permutation_vector_obj time_t_vector_alloc_sort_perm(time_t_vector)"
+        "rd_permutation_vector_obj time_t_vector_alloc_sort_perm(rd_time_t_vector)"
     )
     _rsort_perm = ResdataPrototype(
-        "permutation_vector_obj time_t_vector_alloc_rsort_perm(time_t_vector)"
+        "rd_permutation_vector_obj time_t_vector_alloc_rsort_perm(rd_time_t_vector)"
     )
-    _contains = ResdataPrototype("bool time_t_vector_contains(time_t_vector, time_t)")
-    _select_unique = ResdataPrototype("void time_t_vector_select_unique(time_t_vector)")
-    _element_sum = ResdataPrototype("time_t time_t_vector_sum(time_t_vector)")
+    _contains = ResdataPrototype(
+        "bool time_t_vector_contains(rd_time_t_vector, rd_time_t)"
+    )
+    _select_unique = ResdataPrototype(
+        "void time_t_vector_select_unique(rd_time_t_vector)"
+    )
+    _element_sum = ResdataPrototype("rd_time_t time_t_vector_sum(rd_time_t_vector)")
     _count_equal = ResdataPrototype(
-        "int time_t_vector_count_equal(time_t_vector, time_t)"
+        "int time_t_vector_count_equal(rd_time_t_vector, rd_time_t)"
     )
     _init_range = ResdataPrototype(
-        "void time_t_vector_init_range(time_t_vector, time_t , time_t , time_t)"
+        "void time_t_vector_init_range(rd_time_t_vector, rd_time_t, rd_time_t, rd_time_t)"
     )
     _init_linear = ResdataPrototype(
-        "bool time_t_vector_init_linear(time_t_vector, time_t, time_t, int)"
+        "bool time_t_vector_init_linear(rd_time_t_vector, rd_time_t, rd_time_t, int)"
     )
-    _equal = ResdataPrototype("bool time_t_vector_equal(time_t_vector, time_t_vector)")
+    _equal = ResdataPrototype(
+        "bool time_t_vector_equal(rd_time_t_vector, rd_time_t_vector)"
+    )
     _first_eq = ResdataPrototype(
-        "int time_t_vector_first_equal(time_t_vector, time_t_vector, int)"
+        "int time_t_vector_first_equal(rd_time_t_vector, rd_time_t_vector, int)"
     )
     _first_neq = ResdataPrototype(
-        "int time_t_vector_first_not_equal(time_t_vector, time_t_vector, int)"
+        "int time_t_vector_first_not_equal(rd_time_t_vector, rd_time_t_vector, int)"
     )
 
     def __init__(self, default_value=None, initial_size=0):

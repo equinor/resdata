@@ -7,12 +7,14 @@ import weakref
 
 
 class CThreadPool(BaseCClass):
-    TYPE_NAME = "thread_pool"
+    TYPE_NAME = "rd_thread_pool"
 
     _alloc = ResdataPrototype("void* thread_pool_alloc(int, bool)", bind=False)
-    _free = ResdataPrototype("void thread_pool_free(thread_pool)")
-    _add_job = ResdataPrototype("void thread_pool_add_job(thread_pool, void*, void*)")
-    _join = ResdataPrototype("void thread_pool_join(thread_pool)")
+    _free = ResdataPrototype("void thread_pool_free(rd_thread_pool)")
+    _add_job = ResdataPrototype(
+        "void thread_pool_add_job(rd_thread_pool, void*, void*)"
+    )
+    _join = ResdataPrototype("void thread_pool_join(rd_thread_pool)")
 
     def __init__(self, pool_size, start=True):
         c_ptr = self._alloc(pool_size, start)

@@ -14,7 +14,7 @@ class ResdataRestartHead(BaseCClass):
     )
     _free = ResdataPrototype("void   rd_rsthead_free(rd_rsthead)")
     _get_report_step = ResdataPrototype("int    rd_rsthead_get_report_step(rd_rsthead)")
-    _get_sim_time = ResdataPrototype("time_t rd_rsthead_get_sim_time(rd_rsthead)")
+    _get_sim_time = ResdataPrototype("rd_time_t rd_rsthead_get_sim_time(rd_rsthead)")
     _get_sim_days = ResdataPrototype("double rd_rsthead_get_sim_days(rd_rsthead)")
     _get_nxconz = ResdataPrototype("int   rd_rsthead_get_nxconz(rd_rsthead)")
     _get_ncwmax = ResdataPrototype("int   rd_rsthead_get_ncwmax(rd_rsthead)")

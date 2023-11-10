@@ -11,11 +11,11 @@ from resdata.util.util import IntVector
 
 class ResdataIndexedReadTest(ResdataTest):
     _freadIndexedData = ResdataPrototype(
-        "void rd_kw_fread_indexed_data_python(fortio, int, rd_data_type, int, int_vector, char*)",
+        "void rd_kw_fread_indexed_data_python(rd_fortio, int, rd_data_type, int, rd_int_vector, char*)",
         bind=False,
     )  # fortio, offset, type, count, index_map, buffer
     _resFileIndexedRead = ResdataPrototype(
-        "void rd_file_indexed_read(rd_file, char*, int, int_vector, char*)",
+        "void rd_file_indexed_read(rd_file, char*, int, rd_int_vector, char*)",
         bind=False,
     )  # rd_file, kw, index, index_map, buffer
 

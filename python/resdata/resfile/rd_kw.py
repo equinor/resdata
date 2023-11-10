@@ -99,7 +99,9 @@ class ResdataKW(BaseCClass):
     _alloc_new = ResdataPrototype(
         "void* rd_kw_alloc_python(char*, int, rd_data_type)", bind=False
     )
-    _fread_alloc = ResdataPrototype("rd_kw_obj rd_kw_fread_alloc(fortio)", bind=False)
+    _fread_alloc = ResdataPrototype(
+        "rd_kw_obj rd_kw_fread_alloc(rd_fortio)", bind=False
+    )
     _load_grdecl = ResdataPrototype(
         "rd_kw_obj rd_kw_fscanf_alloc_grdecl_dynamic_python(FILE, char*, bool, rd_data_type)",
         bind=False,
@@ -137,7 +139,7 @@ class ResdataKW(BaseCClass):
     _int_ptr = ResdataPrototype("int*     rd_kw_get_int_ptr(rd_kw)")
     _double_ptr = ResdataPrototype("double*  rd_kw_get_double_ptr(rd_kw)")
     _free = ResdataPrototype("void     rd_kw_free(rd_kw)")
-    _fwrite = ResdataPrototype("void     rd_kw_fwrite(rd_kw, fortio)")
+    _fwrite = ResdataPrototype("void     rd_kw_fwrite(rd_kw, rd_fortio)")
     _get_header = ResdataPrototype("char*    rd_kw_get_header (rd_kw)")
     _set_header = ResdataPrototype("void     rd_kw_set_header_name (rd_kw, char*)")
     _get_data_type = ResdataPrototype(

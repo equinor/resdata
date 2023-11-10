@@ -173,16 +173,16 @@ class ResdataRegion(BaseCClass):
     _subtract = ResdataPrototype("void rd_region_subtract( rd_region , rd_region )")
     _xor = ResdataPrototype("void rd_region_xor( rd_region , rd_region )")
     _get_kw_index_list = ResdataPrototype(
-        "int_vector_ref rd_region_get_kw_index_list( rd_region , rd_kw , bool )"
+        "rd_int_vector_ref rd_region_get_kw_index_list( rd_region , rd_kw , bool )"
     )
     _get_active_list = ResdataPrototype(
-        "int_vector_ref rd_region_get_active_list( rd_region )"
+        "rd_int_vector_ref rd_region_get_active_list( rd_region )"
     )
     _get_global_list = ResdataPrototype(
-        "int_vector_ref rd_region_get_global_list( rd_region )"
+        "rd_int_vector_ref rd_region_get_global_list( rd_region )"
     )
     _get_active_global = ResdataPrototype(
-        "int_vector_ref rd_region_get_global_active_list( rd_region )"
+        "rd_int_vector_ref rd_region_get_global_active_list( rd_region )"
     )
     _select_cmp_less = ResdataPrototype(
         "void rd_region_cmp_select_less( rd_region , rd_kw , rd_kw)"
@@ -273,16 +273,16 @@ class ResdataRegion(BaseCClass):
         "void rd_region_deselect_below_plane( rd_region, double* , double* )"
     )
     _select_inside_polygon = ResdataPrototype(
-        "void rd_region_select_inside_polygon( rd_region , geo_polygon)"
+        "void rd_region_select_inside_polygon( rd_region , rd_geo_polygon)"
     )
     _select_outside_polygon = ResdataPrototype(
-        "void rd_region_select_outside_polygon( rd_region , geo_polygon)"
+        "void rd_region_select_outside_polygon( rd_region , rd_geo_polygon)"
     )
     _deselect_inside_polygon = ResdataPrototype(
-        "void rd_region_deselect_inside_polygon( rd_region , geo_polygon)"
+        "void rd_region_deselect_inside_polygon( rd_region , rd_geo_polygon)"
     )
     _deselect_outside_polygon = ResdataPrototype(
-        "void rd_region_deselect_outside_polygon( rd_region , geo_polygon)"
+        "void rd_region_deselect_outside_polygon( rd_region , rd_geo_polygon)"
     )
     _set_name = ResdataPrototype("void rd_region_set_name( rd_region , char*)")
     _get_name = ResdataPrototype("char* rd_region_get_name( rd_region )")
@@ -305,10 +305,10 @@ class ResdataRegion(BaseCClass):
         "void rd_region_deselect_false( rd_region , rd_kw)"
     )
     _select_from_layer = ResdataPrototype(
-        "void rd_region_select_from_layer( rd_region , layer , int , int)"
+        "void rd_region_select_from_layer( rd_region , rd_layer , int , int)"
     )
     _deselect_from_layer = ResdataPrototype(
-        "void rd_region_deselect_from_layer( rd_region , layer , int , int)"
+        "void rd_region_deselect_from_layer( rd_region , rd_layer , int , int)"
     )
 
     def __init__(self, grid, preselect):

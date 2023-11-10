@@ -6,13 +6,14 @@ from resdata.util.util import StringList
 
 
 class Hash(BaseCClass):
+    TYPE_NAME = "rd_hash"
     _alloc = ResdataPrototype("void* hash_alloc()", bind=False)
-    _free = ResdataPrototype("void hash_free(hash)")
-    _size = ResdataPrototype("int hash_get_size(hash)")
-    _keys = ResdataPrototype("stringlist_obj hash_alloc_stringlist(hash)")
-    _has_key = ResdataPrototype("bool hash_has_key(hash, char*)")
-    _get = ResdataPrototype("void* hash_get(hash, char*)")
-    _insert_ref = ResdataPrototype("void hash_insert_ref(hash, char*, void*)")
+    _free = ResdataPrototype("void hash_free(rd_hash)")
+    _size = ResdataPrototype("int hash_get_size(rd_hash)")
+    _keys = ResdataPrototype("rd_stringlist_obj hash_alloc_stringlist(rd_hash)")
+    _has_key = ResdataPrototype("bool hash_has_key(rd_hash, char*)")
+    _get = ResdataPrototype("void* hash_get(rd_hash, char*)")
+    _insert_ref = ResdataPrototype("void hash_insert_ref(rd_hash, char*, void*)")
 
     """
     Base hash class that supports string:void* values
@@ -57,8 +58,9 @@ class Hash(BaseCClass):
 
 
 class StringHash(Hash):
-    _get_string = ResdataPrototype("char* hash_get_string(hash, char*)")
-    _insert_string = ResdataPrototype("void hash_insert_string(hash, char*, char*)")
+    TYPE_NAME = "rd_string_hash"
+    _get_string = ResdataPrototype("char* hash_get_string(rd_hash, char*)")
+    _insert_string = ResdataPrototype("void hash_insert_string(rd_hash, char*, char*)")
 
     def __init__(self):
         super(StringHash, self).__init__()
@@ -77,8 +79,9 @@ class StringHash(Hash):
 
 
 class IntegerHash(Hash):
-    _get_int = ResdataPrototype("int hash_get_int(hash, char*)")
-    _insert_int = ResdataPrototype("void hash_insert_int(hash, char*, int)")
+    TYPE_NAME = "rd_int_hash"
+    _get_int = ResdataPrototype("int hash_get_int(rd_hash, char*)")
+    _insert_int = ResdataPrototype("void hash_insert_int(rd_hash, char*, int)")
 
     def __init__(self):
         super(IntegerHash, self).__init__()
@@ -97,8 +100,9 @@ class IntegerHash(Hash):
 
 
 class DoubleHash(Hash):
-    _get_double = ResdataPrototype("double hash_get_double(hash, char*)")
-    _insert_double = ResdataPrototype("void hash_insert_double(hash, char*, double)")
+    TYPE_NAME = "rd_double_hash"
+    _get_double = ResdataPrototype("double hash_get_double(rd_hash, char*)")
+    _insert_double = ResdataPrototype("void hash_insert_double(rd_hash, char*, double)")
 
     def __init__(self):
         super(DoubleHash, self).__init__()

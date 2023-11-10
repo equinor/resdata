@@ -31,7 +31,7 @@ class ResdataFileView(BaseCClass):
         "rd_file_view_ref rd_file_view_add_blockview2( rd_file_view , char*, char*, int )"
     )
     _restart_view = ResdataPrototype(
-        "rd_file_view_ref rd_file_view_add_restart_view( rd_file_view , int, int, time_t, double )"
+        "rd_file_view_ref rd_file_view_add_restart_view( rd_file_view , int, int, rd_time_t, double )"
     )
 
     def __init__(self):

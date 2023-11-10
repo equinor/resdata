@@ -3,26 +3,29 @@ from resdata import ResdataPrototype
 
 
 class LookupTable(BaseCClass):
+    TYPE_NAME = "rd_lookup_table"
     _alloc = ResdataPrototype("void* lookup_table_alloc_empty()", bind=False)
-    _max = ResdataPrototype("double lookup_table_get_max_value( lookup_table )")
-    _min = ResdataPrototype("double lookup_table_get_min_value( lookup_table )")
-    _arg_max = ResdataPrototype("double lookup_table_get_max_arg( lookup_table )")
-    _arg_min = ResdataPrototype("double lookup_table_get_min_arg( lookup_table )")
+    _max = ResdataPrototype("double lookup_table_get_max_value(rd_lookup_table)")
+    _min = ResdataPrototype("double lookup_table_get_min_value(rd_lookup_table)")
+    _arg_max = ResdataPrototype("double lookup_table_get_max_arg(rd_lookup_table)")
+    _arg_min = ResdataPrototype("double lookup_table_get_min_arg(rd_lookup_table)")
     _append = ResdataPrototype(
-        "void lookup_table_append( lookup_table , double , double )"
+        "void lookup_table_append(rd_lookup_table, double, double)"
     )
-    _size = ResdataPrototype("int lookup_table_get_size( lookup_table )")
-    _interp = ResdataPrototype("double lookup_table_interp( lookup_table , double)")
-    _free = ResdataPrototype("void lookup_table_free( lookup_table )")
+    _size = ResdataPrototype("int lookup_table_get_size(rd_lookup_table)")
+    _interp = ResdataPrototype("double lookup_table_interp(rd_lookup_table, double)")
+    _free = ResdataPrototype("void lookup_table_free(rd_lookup_table)")
     _set_low_limit = ResdataPrototype(
-        "void lookup_table_set_low_limit( lookup_table , double)"
+        "void lookup_table_set_low_limit(rd_lookup_table, double)"
     )
     _set_high_limit = ResdataPrototype(
-        "void lookup_table_set_high_limit( lookup_table , double)"
+        "void lookup_table_set_high_limit(rd_lookup_table, double)"
     )
-    _has_low_limit = ResdataPrototype("bool lookup_table_has_low_limit( lookup_table)")
+    _has_low_limit = ResdataPrototype(
+        "bool lookup_table_has_low_limit(rd_lookup_table)"
+    )
     _has_high_limit = ResdataPrototype(
-        "bool lookup_table_has_high_limit( lookup_table)"
+        "bool lookup_table_has_high_limit(rd_lookup_table)"
     )
 
     def __init__(self, lower_limit=None, upper_limit=None):

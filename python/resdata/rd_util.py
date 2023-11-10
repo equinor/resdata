@@ -102,7 +102,7 @@ class ResdataUtil(object):
     _get_file_type = ResdataPrototype(
         "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False
     )
-    _get_start_date = ResdataPrototype("time_t rd_get_start_date(char*)", bind=False)
+    _get_start_date = ResdataPrototype("rd_time_t rd_get_start_date(char*)", bind=False)
     _get_report_step = ResdataPrototype("int rd_filename_report_nr(char*)", bind=False)
 
     @staticmethod

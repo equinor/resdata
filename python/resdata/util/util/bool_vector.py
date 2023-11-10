@@ -3,96 +3,99 @@ from resdata.util.util import VectorTemplate
 
 
 class BoolVector(VectorTemplate):
+    TYPE_NAME = "rd_bool_vector"
     default_format = "%8d"
 
-    _alloc = ResdataPrototype("void*  bool_vector_alloc( int , bool )", bind=False)
+    _alloc = ResdataPrototype("void* bool_vector_alloc(int, bool)", bind=False)
     _create_active_mask = ResdataPrototype(
-        "bool_vector_obj string_util_alloc_active_mask( char* )", bind=False
+        "rd_bool_vector_obj string_util_alloc_active_mask(char*)", bind=False
     )
     _active_list = ResdataPrototype(
-        "int_vector_obj bool_vector_alloc_active_list(bool_vector)"
+        "rd_int_vector_obj bool_vector_alloc_active_list(rd_bool_vector)"
     )
     _alloc_copy = ResdataPrototype(
-        "bool_vector_obj bool_vector_alloc_copy( bool_vector )"
+        "rd_bool_vector_obj bool_vector_alloc_copy(rd_bool_vector)"
     )
     _update_active_mask = ResdataPrototype(
-        "bool string_util_update_active_mask(char*, bool_vector)", bind=False
+        "bool string_util_update_active_mask(char*, rd_bool_vector)", bind=False
     )
 
     _strided_copy = ResdataPrototype(
-        "bool_vector_obj bool_vector_alloc_strided_copy( bool_vector , int , int , int)"
+        "rd_bool_vector_obj bool_vector_alloc_strided_copy(rd_bool_vector, int, int, int)"
     )
-    _free = ResdataPrototype("void   bool_vector_free( bool_vector )")
-    _iget = ResdataPrototype("bool   bool_vector_iget( bool_vector , int )")
-    _safe_iget = ResdataPrototype("bool   bool_vector_safe_iget( bool_vector , int )")
-    _iset = ResdataPrototype("void   bool_vector_iset( bool_vector , int , bool)")
-    _size = ResdataPrototype("int    bool_vector_size( bool_vector )")
-    _append = ResdataPrototype("void   bool_vector_append( bool_vector , bool )")
+    _free = ResdataPrototype("void bool_vector_free(rd_bool_vector)")
+    _iget = ResdataPrototype("bool bool_vector_iget(rd_bool_vector, int)")
+    _safe_iget = ResdataPrototype("bool bool_vector_safe_iget(rd_bool_vector, int)")
+    _iset = ResdataPrototype("void bool_vector_iset(rd_bool_vector, int, bool)")
+    _size = ResdataPrototype("int bool_vector_size(rd_bool_vector)")
+    _append = ResdataPrototype("void bool_vector_append(rd_bool_vector, bool)")
     _idel_block = ResdataPrototype(
-        "void   bool_vector_idel_block( bool_vector , bool , bool )"
+        "void bool_vector_idel_block(rd_bool_vector, bool, bool)"
     )
-    _idel = ResdataPrototype("void   bool_vector_idel( bool_vector , int )")
-    _pop = ResdataPrototype("bool   bool_vector_pop( bool_vector )")
-    _lshift = ResdataPrototype("void   bool_vector_lshift( bool_vector , int )")
-    _rshift = ResdataPrototype("void   bool_vector_rshift( bool_vector , int )")
-    _insert = ResdataPrototype("void   bool_vector_insert( bool_vector , int , bool)")
+    _idel = ResdataPrototype("void bool_vector_idel(rd_bool_vector, int)")
+    _pop = ResdataPrototype("bool bool_vector_pop(rd_bool_vector)")
+    _lshift = ResdataPrototype("void bool_vector_lshift(rd_bool_vector, int)")
+    _rshift = ResdataPrototype("void bool_vector_rshift(rd_bool_vector, int)")
+    _insert = ResdataPrototype("void bool_vector_insert(rd_bool_vector, int, bool)")
     _fprintf = ResdataPrototype(
-        "void   bool_vector_fprintf( bool_vector , FILE , char* , char*)"
+        "void bool_vector_fprintf(rd_bool_vector, FILE, char*, char*)"
     )
-    _sort = ResdataPrototype("void   bool_vector_sort( bool_vector )")
-    _rsort = ResdataPrototype("void   bool_vector_rsort( bool_vector )")
-    _reset = ResdataPrototype("void   bool_vector_reset( bool_vector )")
+    _sort = ResdataPrototype("void bool_vector_sort(rd_bool_vector)")
+    _rsort = ResdataPrototype("void bool_vector_rsort(rd_bool_vector)")
+    _reset = ResdataPrototype("void bool_vector_reset(rd_bool_vector)")
     _set_read_only = ResdataPrototype(
-        "void   bool_vector_set_read_only( bool_vector , bool )"
+        "void bool_vector_set_read_only(rd_bool_vector, bool)"
     )
-    _get_read_only = ResdataPrototype("bool   bool_vector_get_read_only( bool_vector )")
-    _get_max = ResdataPrototype("bool   bool_vector_get_max( bool_vector )")
-    _get_min = ResdataPrototype("bool   bool_vector_get_min( bool_vector )")
+    _get_read_only = ResdataPrototype("bool bool_vector_get_read_only(rd_bool_vector)")
+    _get_max = ResdataPrototype("bool bool_vector_get_max(rd_bool_vector)")
+    _get_min = ResdataPrototype("bool bool_vector_get_min(rd_bool_vector)")
     _get_max_index = ResdataPrototype(
-        "int    bool_vector_get_max_index( bool_vector , bool)"
+        "int bool_vector_get_max_index(rd_bool_vector, bool)"
     )
     _get_min_index = ResdataPrototype(
-        "int    bool_vector_get_min_index( bool_vector , bool)"
+        "int bool_vector_get_min_index(rd_bool_vector, bool)"
     )
-    _shift = ResdataPrototype("void   bool_vector_shift( bool_vector , bool )")
-    _scale = ResdataPrototype("void   bool_vector_scale( bool_vector , bool )")
-    _div = ResdataPrototype("void   bool_vector_div( bool_vector , bool )")
+    _shift = ResdataPrototype("void bool_vector_shift(rd_bool_vector, bool)")
+    _scale = ResdataPrototype("void bool_vector_scale(rd_bool_vector, bool)")
+    _div = ResdataPrototype("void bool_vector_div(rd_bool_vector, bool)")
     _inplace_add = ResdataPrototype(
-        "void   bool_vector_inplace_add( bool_vector , bool_vector )"
+        "void bool_vector_inplace_add(rd_bool_vector, rd_bool_vector)"
     )
     _inplace_mul = ResdataPrototype(
-        "void   bool_vector_inplace_mul( bool_vector , bool_vector )"
+        "void bool_vector_inplace_mul(rd_bool_vector, rd_bool_vector)"
     )
-    _assign = ResdataPrototype("void   bool_vector_set_all( bool_vector , bool)")
-    _memcpy = ResdataPrototype("void   bool_vector_memcpy(bool_vector , bool_vector )")
+    _assign = ResdataPrototype("void bool_vector_set_all(rd_bool_vector, bool)")
+    _memcpy = ResdataPrototype(
+        "void bool_vector_memcpy(rd_bool_vector, rd_bool_vector)"
+    )
     _set_default = ResdataPrototype(
-        "void   bool_vector_set_default( bool_vector , bool)"
+        "void bool_vector_set_default(rd_bool_vector, bool)"
     )
-    _get_default = ResdataPrototype("bool   bool_vector_get_default( bool_vector )")
-    _element_size = ResdataPrototype("int    bool_vector_element_size( bool_vector )")
+    _get_default = ResdataPrototype("bool bool_vector_get_default(rd_bool_vector)")
+    _element_size = ResdataPrototype("int bool_vector_element_size(rd_bool_vector)")
 
     _permute = ResdataPrototype(
-        "void bool_vector_permute(bool_vector, permutation_vector)"
+        "void bool_vector_permute(rd_bool_vector, rd_permutation_vector)"
     )
     _sort_perm = ResdataPrototype(
-        "permutation_vector_obj bool_vector_alloc_sort_perm(bool_vector)"
+        "rd_permutation_vector_obj bool_vector_alloc_sort_perm(rd_bool_vector)"
     )
     _rsort_perm = ResdataPrototype(
-        "permutation_vector_obj bool_vector_alloc_rsort_perm(bool_vector)"
+        "rd_permutation_vector_obj bool_vector_alloc_rsort_perm(rd_bool_vector)"
     )
 
-    _contains = ResdataPrototype("bool bool_vector_contains(bool_vector, bool)")
-    _select_unique = ResdataPrototype("void bool_vector_select_unique(bool_vector)")
-    _element_sum = ResdataPrototype("bool bool_vector_sum(bool_vector)")
-    _get_data_ptr = ResdataPrototype("bool* bool_vector_get_ptr(bool_vector)")
-    _count_equal = ResdataPrototype("int bool_vector_count_equal(bool_vector, bool)")
+    _contains = ResdataPrototype("bool bool_vector_contains(rd_bool_vector, bool)")
+    _select_unique = ResdataPrototype("void bool_vector_select_unique(rd_bool_vector)")
+    _element_sum = ResdataPrototype("bool bool_vector_sum(rd_bool_vector)")
+    _get_data_ptr = ResdataPrototype("bool* bool_vector_get_ptr(rd_bool_vector)")
+    _count_equal = ResdataPrototype("int bool_vector_count_equal(rd_bool_vector, bool)")
     _init_linear = None
-    _equal = ResdataPrototype("bool bool_vector_equal(bool_vector, bool_vector)")
+    _equal = ResdataPrototype("bool bool_vector_equal(rd_bool_vector, rd_bool_vector)")
     _first_eq = ResdataPrototype(
-        "int bool_vector_first_equal(bool_vector, bool_vector, int)"
+        "int bool_vector_first_equal(rd_bool_vector, rd_bool_vector, int)"
     )
     _first_neq = ResdataPrototype(
-        "int bool_vector_first_not_equal(bool_vector, bool_vector, int)"
+        "int bool_vector_first_not_equal(rd_bool_vector, rd_bool_vector, int)"
     )
 
     def __init__(self, default_value=False, initial_size=0):

@@ -3,25 +3,13 @@ from resdata import ResdataPrototype
 
 
 class GeoPointset(BaseCClass):
-    TYPE_NAME = "geo_pointset"
+    TYPE_NAME = "rd_geo_points"
 
-    _alloc = ResdataPrototype("void*   geo_pointset_alloc(bool)", bind=False)
-    _free = ResdataPrototype("void    geo_pointset_free(geo_pointset)")
-    # _add_xyz    = ResdataPrototype("void    geo_pointset_add_xyz(geo_pointset, double, double, double)")
-    _get_size = ResdataPrototype("int     geo_pointset_get_size(geo_pointset)")
-    # _iget_xy    = ResdataPrototype("void    geo_pointset_iget_xy(geo_pointset, int, double*, double*)")
-    # _get_zcoord = ResdataPrototype("double* geo_pointset_get_zcoord(geo_pointset)")
-    _equal = ResdataPrototype("bool    geo_pointset_equal(geo_pointset, geo_pointset)")
-    _iget_z = ResdataPrototype("double  geo_pointset_iget_z(geo_pointset, int)")
-    # _iset_z     = ResdataPrototype("void    geo_pointset_iset_z(geo_pointset, int, double)")
-    # _memcpy     = ResdataPrototype("void    geo_pointset_memcpy(geo_pointset, geo_pointset, bool)")
-    # _shift_z    = ResdataPrototype("void    geo_pointset_shift_z(geo_pointset, double)")
-    # _assign_z   = ResdataPrototype("void    geo_pointset_assign_z(geo_pointset, double)")
-    # _scale_z    = ResdataPrototype("void    geo_pointset_scale_z(geo_pointset, double)")
-    # _imul       = ResdataPrototype("void    geo_pointset_imul(geo_pointset, geo_pointset)")
-    # _iadd       = ResdataPrototype("void    geo_pointset_iadd(geo_pointset, geo_pointset)")
-    # _isub       = ResdataPrototype("void    geo_pointset_isub(geo_pointset, geo_pointset)")
-    # _isqrt      = ResdataPrototype("void    geo_pointset_isqrt(geo_pointset)")
+    _alloc = ResdataPrototype("void* geo_pointset_alloc(bool)", bind=False)
+    _free = ResdataPrototype("void geo_pointset_free(rd_geo_points)")
+    _get_size = ResdataPrototype("int geo_pointset_get_size(rd_geo_points)")
+    _equal = ResdataPrototype("bool geo_pointset_equal(rd_geo_points, rd_geo_points)")
+    _iget_z = ResdataPrototype("double geo_pointset_iget_z(rd_geo_points, int)")
 
     def __init__(self, external_z=False):
         c_ptr = self._alloc(external_z)

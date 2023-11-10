@@ -12,7 +12,9 @@ class SummaryTStep(BaseCClass):
     )
     _free = ResdataPrototype("void rd_sum_tstep_free(rd_sum_tstep)")
     _get_sim_days = ResdataPrototype("double rd_sum_tstep_get_sim_days(rd_sum_tstep)")
-    _get_sim_time = ResdataPrototype("time_t rd_sum_tstep_get_sim_time(rd_sum_tstep)")
+    _get_sim_time = ResdataPrototype(
+        "rd_time_t rd_sum_tstep_get_sim_time(rd_sum_tstep)"
+    )
     _get_report = ResdataPrototype("int rd_sum_tstep_get_report(rd_sum_tstep)")
     _get_ministep = ResdataPrototype("int rd_sum_tstep_get_ministep(rd_sum_tstep)")
     _set_from_key = ResdataPrototype(

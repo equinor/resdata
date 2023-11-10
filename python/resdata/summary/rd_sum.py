@@ -81,18 +81,18 @@ class Summary(BaseCClass):
         bind=False,
     )
     _fread_alloc = ResdataPrototype(
-        "void*     rd_sum_fread_alloc(char*, stringlist, char*, bool)", bind=False
+        "void*     rd_sum_fread_alloc(char*, rd_stringlist, char*, bool)", bind=False
     )
     _create_restart_writer = ResdataPrototype(
-        "rd_sum_obj  rd_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, time_t, bool, int, int, int)",
+        "rd_sum_obj  rd_sum_alloc_restart_writer2(char*, char*, int, bool, bool, char*, rd_time_t, bool, int, int, int)",
         bind=False,
     )
     _create_writer = ResdataPrototype(
-        "rd_sum_obj  rd_sum_alloc_writer(char*, bool, bool, char*, time_t, bool, int, int, int)",
+        "rd_sum_obj  rd_sum_alloc_writer(char*, bool, bool, char*, rd_time_t, bool, int, int, int)",
         bind=False,
     )
     _resample = ResdataPrototype(
-        "rd_sum_obj  rd_sum_alloc_resample( rd_sum, char*, time_t_vector, bool, bool)"
+        "rd_sum_obj  rd_sum_alloc_resample( rd_sum, char*, rd_time_t_vector, bool, bool)"
     )
     _iiget = ResdataPrototype("double   rd_sum_iget(rd_sum, int, int)")
     _free = ResdataPrototype("void     rd_sum_free(rd_sum)")
@@ -101,7 +101,7 @@ class Summary(BaseCClass):
     _iget_report_step = ResdataPrototype(
         "int      rd_sum_iget_report_step(rd_sum, int) "
     )
-    _iget_sim_time = ResdataPrototype("time_t   rd_sum_iget_sim_time(rd_sum, int) ")
+    _iget_sim_time = ResdataPrototype("rd_time_t   rd_sum_iget_sim_time(rd_sum, int) ")
     _get_report_end = ResdataPrototype("int      rd_sum_iget_report_end(rd_sum, int)")
     _get_general_var = ResdataPrototype(
         "double   rd_sum_get_general_var(rd_sum, int, char*)"
@@ -113,13 +113,13 @@ class Summary(BaseCClass):
         "double   rd_sum_get_general_var_from_sim_days(rd_sum, double, char*)"
     )
     _get_general_var_from_sim_time = ResdataPrototype(
-        "double   rd_sum_get_general_var_from_sim_time(rd_sum, time_t, char*)"
+        "double   rd_sum_get_general_var_from_sim_time(rd_sum, rd_time_t, char*)"
     )
     _solve_days = ResdataPrototype(
-        "double_vector_obj  rd_sum_alloc_days_solution(rd_sum, char*, double, bool)"
+        "rd_double_vector_obj  rd_sum_alloc_days_solution(rd_sum, char*, double, bool)"
     )
     _solve_dates = ResdataPrototype(
-        "time_t_vector_obj  rd_sum_alloc_time_solution(rd_sum, char*, double, bool)"
+        "rd_time_t_vector_obj  rd_sum_alloc_time_solution(rd_sum, char*, double, bool)"
     )
     _get_first_gt = ResdataPrototype(
         "int      rd_sum_get_first_gt(rd_sum, int, double)"
@@ -127,8 +127,8 @@ class Summary(BaseCClass):
     _get_first_lt = ResdataPrototype(
         "int      rd_sum_get_first_lt(rd_sum, int, double)"
     )
-    _get_start_date = ResdataPrototype("time_t   rd_sum_get_start_time(rd_sum)")
-    _get_end_date = ResdataPrototype("time_t   rd_sum_get_end_time(rd_sum)")
+    _get_start_date = ResdataPrototype("rd_time_t   rd_sum_get_start_time(rd_sum)")
+    _get_end_date = ResdataPrototype("rd_time_t   rd_sum_get_end_time(rd_sum)")
     _get_last_report_step = ResdataPrototype(
         "int      rd_sum_get_last_report_step(rd_sum)"
     )
@@ -136,14 +136,14 @@ class Summary(BaseCClass):
         "int      rd_sum_get_first_report_step(rd_sum)"
     )
     _select_matching_keys = ResdataPrototype(
-        "void     rd_sum_select_matching_general_var_list(rd_sum, char*, stringlist)"
+        "void     rd_sum_select_matching_general_var_list(rd_sum, char*, rd_stringlist)"
     )
     _has_key = ResdataPrototype("bool     rd_sum_has_general_var(rd_sum, char*)")
-    _check_sim_time = ResdataPrototype("bool     rd_sum_check_sim_time(rd_sum, time_t)")
+    _check_sim_time = ResdataPrototype("bool rd_sum_check_sim_time(rd_sum, rd_time_t)")
     _check_sim_days = ResdataPrototype("bool     rd_sum_check_sim_days(rd_sum, double)")
     _sim_length = ResdataPrototype("double   rd_sum_get_sim_length(rd_sum)")
     _get_first_day = ResdataPrototype("double   rd_sum_get_first_day(rd_sum)")
-    _get_data_start = ResdataPrototype("time_t   rd_sum_get_data_start(rd_sum)")
+    _get_data_start = ResdataPrototype("rd_time_t   rd_sum_get_data_start(rd_sum)")
     _get_unit = ResdataPrototype("char*    rd_sum_get_unit(rd_sum, char*)")
     _get_restart_case = ResdataPrototype("rd_sum_ref rd_sum_get_restart_case(rd_sum)")
     _get_restart_step = ResdataPrototype("int      rd_sum_get_restart_step(rd_sum)")
@@ -153,38 +153,38 @@ class Summary(BaseCClass):
     _get_path = ResdataPrototype("char*    rd_sum_get_path(rd_sum)")
     _get_abs_path = ResdataPrototype("char*    rd_sum_get_abs_path(rd_sum)")
     _get_report_step_from_time = ResdataPrototype(
-        "int      rd_sum_get_report_step_from_time(rd_sum, time_t)"
+        "int rd_sum_get_report_step_from_time(rd_sum, rd_time_t)"
     )
     _get_report_step_from_days = ResdataPrototype(
-        "int      rd_sum_get_report_step_from_days(rd_sum, double)"
+        "int rd_sum_get_report_step_from_days(rd_sum, double)"
     )
-    _get_report_time = ResdataPrototype("time_t   rd_sum_get_report_time(rd_sum, int)")
-    _fwrite_sum = ResdataPrototype("void     rd_sum_fwrite(rd_sum)")
-    _can_write = ResdataPrototype("bool     rd_sum_can_write(rd_sum)")
-    _set_case = ResdataPrototype("void     rd_sum_set_case(rd_sum, char*)")
+    _get_report_time = ResdataPrototype("rd_time_t rd_sum_get_report_time(rd_sum, int)")
+    _fwrite_sum = ResdataPrototype("void rd_sum_fwrite(rd_sum)")
+    _can_write = ResdataPrototype("bool rd_sum_can_write(rd_sum)")
+    _set_case = ResdataPrototype("void rd_sum_set_case(rd_sum, char*)")
     _alloc_time_vector = ResdataPrototype(
-        "time_t_vector_obj rd_sum_alloc_time_vector(rd_sum, bool)"
+        "rd_time_t_vector_obj rd_sum_alloc_time_vector(rd_sum, bool)"
     )
     _alloc_data_vector = ResdataPrototype(
-        "double_vector_obj rd_sum_alloc_data_vector(rd_sum, int, bool)"
+        "rd_double_vector_obj rd_sum_alloc_data_vector(rd_sum, int, bool)"
     )
     _get_var_node = ResdataPrototype(
-        "smspec_node_ref rd_sum_get_general_var_node(rd_sum, char*)"
+        "rd_smspec_node_ref rd_sum_get_general_var_node(rd_sum, char*)"
     )
     _create_well_list = ResdataPrototype(
-        "stringlist_obj rd_sum_alloc_well_list(rd_sum, char*)"
+        "rd_stringlist_obj rd_sum_alloc_well_list(rd_sum, char*)"
     )
     _create_group_list = ResdataPrototype(
-        "stringlist_obj rd_sum_alloc_group_list(rd_sum, char*)"
+        "rd_stringlist_obj rd_sum_alloc_group_list(rd_sum, char*)"
     )
     _add_variable = ResdataPrototype(
-        "smspec_node_ref   rd_sum_add_var(rd_sum, char*, char*, int, char*, double)"
+        "rd_smspec_node_ref   rd_sum_add_var(rd_sum, char*, char*, int, char*, double)"
     )
     _add_tstep = ResdataPrototype(
         "rd_sum_tstep_ref rd_sum_add_tstep(rd_sum, int, double)"
     )
     _export_csv = ResdataPrototype(
-        "void rd_sum_export_csv(rd_sum, char*, stringlist, char*, char*)"
+        "void rd_sum_export_csv(rd_sum, char*, rd_stringlist, char*, char*)"
     )
     _identify_var_type = ResdataPrototype(
         "rd_sum_var_type rd_sum_identify_var_type(char*)", bind=False
@@ -203,7 +203,7 @@ class Summary(BaseCClass):
         "void rd_sum_init_double_vector(rd_sum, char*, double*)"
     )
     _init_numpy_vector_interp = ResdataPrototype(
-        "void rd_sum_init_double_vector_interp(rd_sum, char*, time_t_vector, double*)"
+        "void rd_sum_init_double_vector_interp(rd_sum, char*, rd_time_t_vector, double*)"
     )
     _init_numpy_datetime64 = ResdataPrototype(
         "void rd_sum_init_datetime64_vector(rd_sum, int64*, int)"
@@ -1616,18 +1616,18 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 import resdata.summary.rd_sum_keyword_vector
 
 Summary._dump_csv_line = ResdataPrototype(
-    "void rd_sum_fwrite_interp_csv_line(rd_sum, time_t, rd_sum_vector, FILE)",
+    "void rd_sum_fwrite_interp_csv_line(rd_sum, rd_time_t, rd_sum_vector, FILE)",
     bind=False,
 )
 Summary._get_interp_vector = ResdataPrototype(
-    "void rd_sum_get_interp_vector(rd_sum, time_t, rd_sum_vector, double_vector)",
+    "void rd_sum_get_interp_vector(rd_sum, rd_time_t, rd_sum_vector, rd_double_vector)",
     bind=False,
 )
 Summary._init_pandas_frame = ResdataPrototype(
     "void rd_sum_init_double_frame(rd_sum, rd_sum_vector, double*)", bind=False
 )
 Summary._init_pandas_frame_interp = ResdataPrototype(
-    "void rd_sum_init_double_frame_interp(rd_sum, rd_sum_vector, time_t_vector, double*)",
+    "void rd_sum_init_double_frame_interp(rd_sum, rd_sum_vector, rd_time_t_vector, double*)",
     bind=False,
 )
 
