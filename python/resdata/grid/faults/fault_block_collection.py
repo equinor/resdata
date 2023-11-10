@@ -5,19 +5,19 @@ from resdata import ResdataPrototype
 
 
 class FaultBlockCollection(BaseCClass):
-    TYPE_NAME = "fault_block_collection"
+    TYPE_NAME = "rd_fault_block_collection"
     _alloc = ResdataPrototype("void* fault_block_collection_alloc(rd_grid)", bind=False)
     _free = ResdataPrototype(
-        "void  fault_block_collection_free(fault_block_collection)"
+        "void  fault_block_collection_free(rd_fault_block_collection)"
     )
     _num_layers = ResdataPrototype(
-        "int   fault_block_collection_num_layers(fault_block_collection)"
+        "int   fault_block_collection_num_layers(rd_fault_block_collection)"
     )
     _scan_keyword = ResdataPrototype(
-        "bool  fault_block_collection_scan_kw(fault_block_collection, rd_kw)"
+        "bool  fault_block_collection_scan_kw(rd_fault_block_collection, rd_kw)"
     )
     _get_layer = ResdataPrototype(
-        "fault_block_layer_ref  fault_block_collection_get_layer(fault_block_collection, int)"
+        "rd_fault_block_layer_ref  fault_block_collection_get_layer(rd_fault_block_collection, int)"
     )
 
     def __init__(self, grid):

@@ -127,7 +127,7 @@ class Grid(BaseCClass):
         "void   rd_grid_grdecl_fprintf_kw(rd_grid, rd_kw, char*, FILE, double)"
     )
     _load_column = ResdataPrototype(
-        "void   rd_grid_get_column_property(rd_grid, rd_kw, int, int, double_vector)"
+        "void   rd_grid_get_column_property(rd_grid, rd_kw, int, int, rd_double_vector)"
     )
     _get_top = ResdataPrototype("double rd_grid_get_top2(rd_grid, int, int)")
     _get_top1A = ResdataPrototype("double rd_grid_get_top1A(rd_grid, int)")

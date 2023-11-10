@@ -16,13 +16,15 @@ class RFTCell(BaseCClass):
     coordinate values.
     """
 
-    TYPE_NAME = "rft_cell"
-    _free = ResdataPrototype("void rd_rft_cell_free(rft_cell)")
-    _get_pressure = ResdataPrototype("double rd_rft_cell_get_pressure(rft_cell)")
-    _get_depth = ResdataPrototype("double rd_rft_cell_get_depth(rft_cell)")
-    _get_i = ResdataPrototype("int rd_rft_cell_get_i(rft_cell)")
-    _get_j = ResdataPrototype("int rd_rft_cell_get_j(rft_cell)")
-    _get_k = ResdataPrototype("int rd_rft_cell_get_k(rft_cell)")
+    TYPE_NAME = "rd_rft_cell_base"
+    _free = ResdataPrototype("void rd_rft_cell_free(rd_rft_cell_base)")
+    _get_pressure = ResdataPrototype(
+        "double rd_rft_cell_get_pressure(rd_rft_cell_base)"
+    )
+    _get_depth = ResdataPrototype("double rd_rft_cell_get_depth(rd_rft_cell_base)")
+    _get_i = ResdataPrototype("int rd_rft_cell_get_i(rd_rft_cell_base)")
+    _get_j = ResdataPrototype("int rd_rft_cell_get_j(rd_rft_cell_base)")
+    _get_k = ResdataPrototype("int rd_rft_cell_get_k(rd_rft_cell_base)")
 
     def free(self):
         self._free()

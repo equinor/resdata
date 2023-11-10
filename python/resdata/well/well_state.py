@@ -6,53 +6,57 @@ from resdata.util.util import CTime
 
 
 class WellState(BaseCClass):
-    TYPE_NAME = "well_state"
+    TYPE_NAME = "rd_well_state"
 
     _global_connections_size = ResdataPrototype(
         "int well_conn_collection_get_size(void*)", bind=False
     )
     _global_connections_iget = ResdataPrototype(
-        "well_connection_ref well_conn_collection_iget(void*, int)", bind=False
+        "rd_well_connect_ref well_conn_collection_iget(void*, int)", bind=False
     )
     _segment_collection_size = ResdataPrototype(
         "int well_segment_collection_get_size(void*)", bind=False
     )
     _segment_collection_iget = ResdataPrototype(
-        "well_segment_ref well_segment_collection_iget(void*, int)", bind=False
+        "rd_well_segment_ref well_segment_collection_iget(void*, int)", bind=False
     )
     _has_global_connections = ResdataPrototype(
-        "bool  well_state_has_global_connections(well_state)"
+        "bool well_state_has_global_connections(rd_well_state)"
     )
     _get_global_connections = ResdataPrototype(
-        "void* well_state_get_global_connections(well_state)"
+        "void* well_state_get_global_connections(rd_well_state)"
     )
     _get_segment_collection = ResdataPrototype(
-        "void* well_state_get_segments(well_state)"
+        "void* well_state_get_segments(rd_well_state)"
     )
-    _branches = ResdataPrototype("void* well_state_get_branches(well_state)")
-    _segments = ResdataPrototype("void* well_state_get_segments(well_state)")
-    _get_name = ResdataPrototype("char* well_state_get_name(well_state)")
-    _is_open = ResdataPrototype("bool  well_state_is_open(well_state)")
-    _is_msw = ResdataPrototype("bool  well_state_is_MSW(well_state)")
-    _well_number = ResdataPrototype("int   well_state_get_well_nr(well_state)")
-    _report_number = ResdataPrototype("int   well_state_get_report_nr(well_state)")
+    _branches = ResdataPrototype("void* well_state_get_branches(rd_well_state)")
+    _segments = ResdataPrototype("void* well_state_get_segments(rd_well_state)")
+    _get_name = ResdataPrototype("char* well_state_get_name(rd_well_state)")
+    _is_open = ResdataPrototype("bool  well_state_is_open(rd_well_state)")
+    _is_msw = ResdataPrototype("bool  well_state_is_MSW(rd_well_state)")
+    _well_number = ResdataPrototype("int well_state_get_well_nr(rd_well_state)")
+    _report_number = ResdataPrototype("int well_state_get_report_nr(rd_well_state)")
     _has_segment_data = ResdataPrototype(
-        "bool  well_state_has_segment_data(well_state)"
+        "bool well_state_has_segment_data(rd_well_state)"
     )
-    _sim_time = ResdataPrototype("time_t well_state_get_sim_time(well_state)")
-    _well_type = ResdataPrototype("well_type_enum well_state_get_type(well_state)")
-    _oil_rate = ResdataPrototype("double well_state_get_oil_rate(well_state)")
-    _gas_rate = ResdataPrototype("double well_state_get_gas_rate(well_state)")
-    _water_rate = ResdataPrototype("double well_state_get_water_rate(well_state)")
-    _volume_rate = ResdataPrototype("double well_state_get_volume_rate(well_state)")
-    _oil_rate_si = ResdataPrototype("double well_state_get_oil_rate_si(well_state)")
-    _gas_rate_si = ResdataPrototype("double well_state_get_gas_rate_si(well_state)")
-    _water_rate_si = ResdataPrototype("double well_state_get_water_rate_si(well_state)")
+    _sim_time = ResdataPrototype("rd_time_t well_state_get_sim_time(rd_well_state)")
+    _well_type = ResdataPrototype(
+        "rd_well_type_enum well_state_get_type(rd_well_state)"
+    )
+    _oil_rate = ResdataPrototype("double well_state_get_oil_rate(rd_well_state)")
+    _gas_rate = ResdataPrototype("double well_state_get_gas_rate(rd_well_state)")
+    _water_rate = ResdataPrototype("double well_state_get_water_rate(rd_well_state)")
+    _volume_rate = ResdataPrototype("double well_state_get_volume_rate(rd_well_state)")
+    _oil_rate_si = ResdataPrototype("double well_state_get_oil_rate_si(rd_well_state)")
+    _gas_rate_si = ResdataPrototype("double well_state_get_gas_rate_si(rd_well_state)")
+    _water_rate_si = ResdataPrototype(
+        "double well_state_get_water_rate_si(rd_well_state)"
+    )
     _volume_rate_si = ResdataPrototype(
-        "double well_state_get_volume_rate_si(well_state)"
+        "double well_state_get_volume_rate_si(rd_well_state)"
     )
     _get_global_well_head = ResdataPrototype(
-        "well_connection_ref well_state_get_global_wellhead(well_state)"
+        "rd_well_connect_ref well_state_get_global_wellhead(rd_well_state)"
     )
 
     def __init__(self):

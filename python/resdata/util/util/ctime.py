@@ -7,7 +7,7 @@ from resdata import ResdataPrototype
 
 
 class CTime(BaseCValue):
-    TYPE_NAME = "time_t"
+    TYPE_NAME = "rd_time_t"
     DATA_TYPE = ctypes.c_long
     _timezone = ResdataPrototype("char* util_get_timezone()", bind=False)
     _timegm = ResdataPrototype(

@@ -10,34 +10,30 @@ from .geometry_tools import GeometryTools
 
 
 class CPolyline(BaseCClass):
-    TYPE_NAME = "geo_polygon"
+    TYPE_NAME = "rd_geo_polygon"
 
-    _alloc_new = ResdataPrototype(
-        "void*           geo_polygon_alloc( char* )", bind=False
-    )
+    _alloc_new = ResdataPrototype("void* geo_polygon_alloc(char*)", bind=False)
     _fread_alloc_irap = ResdataPrototype(
-        "geo_polygon_obj geo_polygon_fload_alloc_irap( char* )", bind=False
+        "rd_geo_polygon_obj geo_polygon_fload_alloc_irap(char*)", bind=False
     )
     _add_point = ResdataPrototype(
-        "void     geo_polygon_add_point( geo_polygon , double , double )"
+        "void geo_polygon_add_point(rd_geo_polygon, double, double)"
     )
     _add_point_front = ResdataPrototype(
-        "void     geo_polygon_add_point_front( geo_polygon , double , double )"
+        "void geo_polygon_add_point_front(rd_geo_polygon, double, double)"
     )
-    _free = ResdataPrototype("void     geo_polygon_free( geo_polygon )")
-    _size = ResdataPrototype("int      geo_polygon_get_size( geo_polygon )")
+    _free = ResdataPrototype("void geo_polygon_free(rd_geo_polygon)")
+    _size = ResdataPrototype("int geo_polygon_get_size(rd_geo_polygon)")
     _iget_xy = ResdataPrototype(
-        "void     geo_polygon_iget_xy( geo_polygon , int , double* , double* )"
+        "void geo_polygon_iget_xy(rd_geo_polygon, int, double*, double*)"
     )
     _segment_intersects = ResdataPrototype(
-        "bool     geo_polygon_segment_intersects( geo_polygon , double , double, double , double)"
+        "bool geo_polygon_segment_intersects(rd_geo_polygon, double, double, double, double)"
     )
-    _get_name = ResdataPrototype("char*    geo_polygon_get_name( geo_polygon  )")
-    _set_name = ResdataPrototype(
-        "void     geo_polygon_set_name( geo_polygon , char*  )"
-    )
-    _segment_length = ResdataPrototype("double   geo_polygon_get_length( geo_polygon)")
-    _equal = ResdataPrototype("bool     geo_polygon_equal( geo_polygon , geo_polygon )")
+    _get_name = ResdataPrototype("char* geo_polygon_get_name(rd_geo_polygon)")
+    _set_name = ResdataPrototype("void geo_polygon_set_name(rd_geo_polygon, char*)")
+    _segment_length = ResdataPrototype("double geo_polygon_get_length(rd_geo_polygon)")
+    _equal = ResdataPrototype("bool geo_polygon_equal(rd_geo_polygon, rd_geo_polygon)")
 
     def __init__(self, name=None, init_points=()):
         c_ptr = self._alloc_new(name)

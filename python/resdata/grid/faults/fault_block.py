@@ -22,34 +22,32 @@ class FaultBlockCell(object):
 
 
 class FaultBlock(BaseCClass):
-    TYPE_NAME = "fault_block"
+    TYPE_NAME = "rd_fault_block"
 
-    _get_xc = ResdataPrototype("double         fault_block_get_xc(fault_block)")
-    _get_yc = ResdataPrototype("double         fault_block_get_yc(fault_block)")
-    _get_block_id = ResdataPrototype("int            fault_block_get_id(fault_block)")
-    _get_size = ResdataPrototype("int            fault_block_get_size(fault_block)")
+    _get_xc = ResdataPrototype("double fault_block_get_xc(rd_fault_block)")
+    _get_yc = ResdataPrototype("double fault_block_get_yc(rd_fault_block)")
+    _get_block_id = ResdataPrototype("int fault_block_get_id(rd_fault_block)")
+    _get_size = ResdataPrototype("int fault_block_get_size(rd_fault_block)")
     _export_cell = ResdataPrototype(
-        "void           fault_block_export_cell(fault_block, int, int*, int*, int*, double*, double*, double*)"
+        "void fault_block_export_cell(rd_fault_block, int, int*, int*, int*, double*, double*, double*)"
     )
     _assign_to_region = ResdataPrototype(
-        "void           fault_block_assign_to_region(fault_block, int)"
+        "void fault_block_assign_to_region(rd_fault_block, int)"
     )
     _get_region_list = ResdataPrototype(
-        "int_vector_ref fault_block_get_region_list(fault_block)"
+        "rd_int_vector_ref fault_block_get_region_list(rd_fault_block)"
     )
-    _add_cell = ResdataPrototype(
-        "void           fault_block_add_cell(fault_block,  int, int)"
-    )
+    _add_cell = ResdataPrototype("void fault_block_add_cell(rd_fault_block,  int, int)")
     _get_global_index_list = ResdataPrototype(
-        "int_vector_ref fault_block_get_global_index_list(fault_block)"
+        "rd_int_vector_ref fault_block_get_global_index_list(rd_fault_block)"
     )
     _trace_edge = ResdataPrototype(
-        "void           fault_block_trace_edge(fault_block, double_vector, double_vector, int_vector)"
+        "void fault_block_trace_edge(rd_fault_block, rd_double_vector, rd_double_vector, rd_int_vector)"
     )
     _get_neighbours = ResdataPrototype(
-        "void           fault_block_list_neighbours(fault_block, bool, geo_polygon_collection, int_vector)"
+        "void fault_block_list_neighbours(rd_fault_block, bool, rd_geo_polygon_collection, rd_int_vector)"
     )
-    _free = ResdataPrototype("void           fault_block_free__(fault_block)")
+    _free = ResdataPrototype("void fault_block_free__(rd_fault_block)")
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Class can not be instantiated directly!")

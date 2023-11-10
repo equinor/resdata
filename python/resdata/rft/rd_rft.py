@@ -30,12 +30,12 @@ class ResdataRFT(BaseCClass):
 
     TYPE_NAME = "rd_rft"
     _alloc = ResdataPrototype(
-        "void* rd_rft_node_alloc_new( char* , char* , time_t , double)", bind=False
+        "void* rd_rft_node_alloc_new( char* , char* , rd_time_t , double)", bind=False
     )
     _free = ResdataPrototype("void  rd_rft_node_free( rd_rft )")
     _get_type = ResdataPrototype("int    rd_rft_node_get_type( rd_rft )")
     _get_well = ResdataPrototype("char*  rd_rft_node_get_well_name( rd_rft )")
-    _get_date = ResdataPrototype("time_t rd_rft_node_get_date( rd_rft )")
+    _get_date = ResdataPrototype("rd_time_t rd_rft_node_get_date( rd_rft )")
     _get_size = ResdataPrototype("int rd_rft_node_get_size( rd_rft )")
     _iget_cell = ResdataPrototype("void* rd_rft_node_iget_cell( rd_rft )")
     _iget_depth = ResdataPrototype("double rd_rft_node_iget_depth( rd_rft )")
@@ -179,12 +179,12 @@ class ResdataRFTFile(BaseCClass):
     _load = ResdataPrototype("void* rd_rft_file_alloc_case( char* )", bind=False)
     _iget = ResdataPrototype("rd_rft_ref rd_rft_file_iget_node( rd_rft_file , int )")
     _get_rft = ResdataPrototype(
-        "rd_rft_ref rd_rft_file_get_well_time_rft( rd_rft_file , char* , time_t)"
+        "rd_rft_ref rd_rft_file_get_well_time_rft( rd_rft_file , char* , rd_time_t)"
     )
     _has_rft = ResdataPrototype("bool rd_rft_file_case_has_rft( char* )", bind=False)
     _free = ResdataPrototype("void rd_rft_file_free( rd_rft_file )")
     _get_size = ResdataPrototype(
-        "int rd_rft_file_get_size__( rd_rft_file , char* , time_t)"
+        "int rd_rft_file_get_size__( rd_rft_file , char* , rd_time_t)"
     )
     _get_num_wells = ResdataPrototype("int  rd_rft_file_get_num_wells( rd_rft_file )")
 

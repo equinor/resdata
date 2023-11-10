@@ -12,40 +12,40 @@ from resdata.geometry import GeoPointset
 
 
 class Surface(BaseCClass):
-    TYPE_NAME = "surface"
+    TYPE_NAME = "rd_surface"
 
     _alloc = ResdataPrototype(
-        "void*  geo_surface_fload_alloc_irap( char* , bool )", bind=False
+        "void* geo_surface_fload_alloc_irap(char*, bool)", bind=False
     )
-    _free = ResdataPrototype("void   geo_surface_free( surface )")
+    _free = ResdataPrototype("void geo_surface_free(rd_surface)")
     _new = ResdataPrototype(
-        "void*  geo_surface_alloc_new( int, int, double, double, double, double, double )",
+        "void* geo_surface_alloc_new(int, int, double, double, double, double, double)",
         bind=False,
     )
-    _get_nx = ResdataPrototype("int    geo_surface_get_nx( surface )")
-    _get_ny = ResdataPrototype("int    geo_surface_get_ny( surface )")
-    _iget_zvalue = ResdataPrototype("double geo_surface_iget_zvalue( surface , int)")
+    _get_nx = ResdataPrototype("int geo_surface_get_nx(rd_surface)")
+    _get_ny = ResdataPrototype("int geo_surface_get_ny(rd_surface)")
+    _iget_zvalue = ResdataPrototype("double geo_surface_iget_zvalue(rd_surface, int)")
     _iset_zvalue = ResdataPrototype(
-        "void   geo_surface_iset_zvalue( surface , int , double)"
+        "void geo_surface_iset_zvalue(rd_surface, int, double)"
     )
-    _write = ResdataPrototype("void   geo_surface_fprintf_irap( surface , char* )")
-    _equal = ResdataPrototype("bool   geo_surface_equal( surface , surface )")
+    _write = ResdataPrototype("void geo_surface_fprintf_irap(rd_surface, char*)")
+    _equal = ResdataPrototype("bool   geo_surface_equal(rd_surface, rd_surface)")
     _header_equal = ResdataPrototype(
-        "bool   geo_surface_equal_header( surface , surface )"
+        "bool geo_surface_equal_header(rd_surface, rd_surface)"
     )
-    _copy = ResdataPrototype("surface_obj geo_surface_alloc_copy( surface , bool )")
-    _assign = ResdataPrototype("void   geo_surface_assign_value( surface , double )")
-    _scale = ResdataPrototype("void   geo_surface_scale( surface , double )")
-    _shift = ResdataPrototype("void   geo_surface_shift( surface , double )")
-    _iadd = ResdataPrototype("void   geo_surface_iadd( surface , surface )")
-    _imul = ResdataPrototype("void   geo_surface_imul( surface , surface )")
-    _isub = ResdataPrototype("void   geo_surface_isub( surface , surface )")
-    _isqrt = ResdataPrototype("void   geo_surface_isqrt( surface )")
+    _copy = ResdataPrototype("rd_surface_obj geo_surface_alloc_copy(rd_surface, bool)")
+    _assign = ResdataPrototype("void geo_surface_assign_value(rd_surface, double)")
+    _scale = ResdataPrototype("void geo_surface_scale(rd_surface, double)")
+    _shift = ResdataPrototype("void geo_surface_shift(rd_surface, double)")
+    _iadd = ResdataPrototype("void geo_surface_iadd(rd_surface, rd_surface)")
+    _imul = ResdataPrototype("void geo_surface_imul(rd_surface, rd_surface)")
+    _isub = ResdataPrototype("void geo_surface_isub(rd_surface, rd_surface)")
+    _isqrt = ResdataPrototype("void geo_surface_isqrt(rd_surface)")
     _iget_xy = ResdataPrototype(
-        "void   geo_surface_iget_xy(surface, int, double*, double*)"
+        "void geo_surface_iget_xy(rd_surface, int, double*, double*)"
     )
     _get_pointset = ResdataPrototype(
-        "geo_pointset_ref geo_surface_get_pointset(surface)"
+        "rd_geo_points_ref geo_surface_get_pointset(rd_surface)"
     )
 
     def __init__(

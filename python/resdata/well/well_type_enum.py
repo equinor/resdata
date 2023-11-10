@@ -2,7 +2,7 @@ from cwrap import BaseCEnum
 
 
 class WellType(BaseCEnum):
-    TYPE_NAME = "well_type_enum"
+    TYPE_NAME = "rd_well_type_enum"
     ZERO = None
     PRODUCER = None
     WATER_INJECTOR = None

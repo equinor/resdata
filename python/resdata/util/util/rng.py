@@ -6,20 +6,20 @@ from resdata.util.enums import RngInitModeEnum, RngAlgTypeEnum
 
 
 class RandomNumberGenerator(BaseCClass):
-    TYPE_NAME = "rng"
+    TYPE_NAME = "rd_rng"
 
     _rng_alloc = ResdataPrototype(
-        "void* rng_alloc(rng_alg_type_enum, rng_init_mode_enum)", bind=False
+        "void* rng_alloc(rd_rng_alg_type_enum, rd_rng_init_mode)", bind=False
     )
-    _free = ResdataPrototype("void rng_free(rng)")
-    _get_double = ResdataPrototype("double rng_get_double(rng)")
-    _get_int = ResdataPrototype("int rng_get_int(rng, int)")
-    _forward = ResdataPrototype("uint rng_forward(rng)")
-    _get_max_int = ResdataPrototype("uint rng_get_max_int(rng)")
-    _state_size = ResdataPrototype("int rng_state_size(rng)")
-    _set_state = ResdataPrototype("void rng_set_state(rng , char*)")
-    _load_state = ResdataPrototype("void rng_load_state(rng , char*)")
-    _save_state = ResdataPrototype("void rng_save_state(rng , char*)")
+    _free = ResdataPrototype("void rng_free(rd_rng)")
+    _get_double = ResdataPrototype("double rng_get_double(rd_rng)")
+    _get_int = ResdataPrototype("int rng_get_int(rd_rng, int)")
+    _forward = ResdataPrototype("uint rng_forward(rd_rng)")
+    _get_max_int = ResdataPrototype("uint rng_get_max_int(rd_rng)")
+    _state_size = ResdataPrototype("int rng_state_size(rd_rng)")
+    _set_state = ResdataPrototype("void rng_set_state(rd_rng , char*)")
+    _load_state = ResdataPrototype("void rng_load_state(rd_rng , char*)")
+    _save_state = ResdataPrototype("void rng_save_state(rd_rng , char*)")
 
     def __init__(
         self, alg_type=RngAlgTypeEnum.MZRAN, init_mode=RngInitModeEnum.INIT_CLOCK

@@ -14,24 +14,24 @@ class ResdataSMSPECNode(BaseCClass):
     structure.
     """
 
-    TYPE_NAME = "smspec_node"
-    _node_is_total = ResdataPrototype("bool smspec_node_is_total( smspec_node )")
+    TYPE_NAME = "rd_smspec_node"
+    _node_is_total = ResdataPrototype("bool smspec_node_is_total( rd_smspec_node )")
     _node_is_historical = ResdataPrototype(
-        "bool smspec_node_is_historical( smspec_node )"
+        "bool smspec_node_is_historical( rd_smspec_node )"
     )
-    _node_is_rate = ResdataPrototype("bool smspec_node_is_rate( smspec_node )")
-    _node_unit = ResdataPrototype("char* smspec_node_get_unit( smspec_node )")
-    _node_wgname = ResdataPrototype("char* smspec_node_get_wgname( smspec_node )")
-    _node_keyword = ResdataPrototype("char* smspec_node_get_keyword( smspec_node )")
-    _node_num = ResdataPrototype("int   smspec_node_get_num( smspec_node )")
-    _node_need_num = ResdataPrototype("bool  smspec_node_need_nums( smspec_node )")
-    _gen_key1 = ResdataPrototype("char* smspec_node_get_gen_key1( smspec_node )")
-    _gen_key2 = ResdataPrototype("char* smspec_node_get_gen_key2( smspec_node )")
+    _node_is_rate = ResdataPrototype("bool smspec_node_is_rate( rd_smspec_node )")
+    _node_unit = ResdataPrototype("char* smspec_node_get_unit( rd_smspec_node )")
+    _node_wgname = ResdataPrototype("char* smspec_node_get_wgname( rd_smspec_node )")
+    _node_keyword = ResdataPrototype("char* smspec_node_get_keyword( rd_smspec_node )")
+    _node_num = ResdataPrototype("int   smspec_node_get_num( rd_smspec_node )")
+    _node_need_num = ResdataPrototype("bool  smspec_node_need_nums( rd_smspec_node )")
+    _gen_key1 = ResdataPrototype("char* smspec_node_get_gen_key1( rd_smspec_node )")
+    _gen_key2 = ResdataPrototype("char* smspec_node_get_gen_key2( rd_smspec_node )")
     _var_type = ResdataPrototype(
-        "rd_sum_var_type smspec_node_get_var_type( smspec_node )"
+        "rd_sum_var_type smspec_node_get_var_type( rd_smspec_node )"
     )
-    _cmp = ResdataPrototype("int smspec_node_cmp( smspec_node , smspec_node)")
-    _get_default = ResdataPrototype("float smspec_node_get_default(smspec_node)")
+    _cmp = ResdataPrototype("int smspec_node_cmp( rd_smspec_node , rd_smspec_node)")
+    _get_default = ResdataPrototype("float smspec_node_get_default(rd_smspec_node)")
 
     def __init__(self):
         super(ResdataSMSPECNode, self).__init__(0)  # null pointer

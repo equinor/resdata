@@ -8,37 +8,37 @@ cpair = c_double * 2  # this is a function that maps two doubles to a double*
 
 
 class GeoRegion(BaseCClass):
-    TYPE_NAME = "geo_region"
+    TYPE_NAME = "rd_geo_region"
 
-    _alloc = ResdataPrototype("void* geo_region_alloc(geo_pointset, bool)", bind=False)
-    _free = ResdataPrototype("void  geo_region_free(geo_region)")
-    _reset = ResdataPrototype("void  geo_region_reset(geo_region)")
+    _alloc = ResdataPrototype("void* geo_region_alloc(rd_geo_points, bool)", bind=False)
+    _free = ResdataPrototype("void  geo_region_free(rd_geo_region)")
+    _reset = ResdataPrototype("void  geo_region_reset(rd_geo_region)")
     _get_index_list = ResdataPrototype(
-        "int_vector_ref geo_region_get_index_list(geo_region)"
+        "rd_int_vector_ref geo_region_get_index_list(rd_geo_region)"
     )
     _select_inside_polygon = ResdataPrototype(
-        "void geo_region_select_inside_polygon(geo_region, geo_polygon)"
+        "void geo_region_select_inside_polygon(rd_geo_region, rd_geo_polygon)"
     )
     _select_outside_polygon = ResdataPrototype(
-        "void geo_region_select_outside_polygon(geo_region, geo_polygon)"
+        "void geo_region_select_outside_polygon(rd_geo_region, rd_geo_polygon)"
     )
     _deselect_inside_polygon = ResdataPrototype(
-        "void geo_region_deselect_inside_polygon(geo_region, geo_polygon)"
+        "void geo_region_deselect_inside_polygon(rd_geo_region, rd_geo_polygon)"
     )
     _deselect_outside_polygon = ResdataPrototype(
-        "void geo_region_deselect_outside_polygon(geo_region, geo_polygon)"
+        "void geo_region_deselect_outside_polygon(rd_geo_region, rd_geo_polygon)"
     )
     _select_above_line = ResdataPrototype(
-        "void geo_region_select_above_line(geo_region, double*, double*)"
+        "void geo_region_select_above_line(rd_geo_region, double*, double*)"
     )
     _select_below_line = ResdataPrototype(
-        "void geo_region_select_below_line(geo_region, double*, double*)"
+        "void geo_region_select_below_line(rd_geo_region, double*, double*)"
     )
     _deselect_above_line = ResdataPrototype(
-        "void geo_region_deselect_above_line(geo_region, double*, double*)"
+        "void geo_region_deselect_above_line(rd_geo_region, double*, double*)"
     )
     _deselect_below_line = ResdataPrototype(
-        "void geo_region_deselect_below_line(geo_region, double*, double*)"
+        "void geo_region_deselect_below_line(rd_geo_region, double*, double*)"
     )
 
     def __init__(self, pointset, preselect=False):

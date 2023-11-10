@@ -352,11 +352,6 @@ class ResdataWellTest(ResdataTest):
             well_info, well_count=8, report_step_count=[4, 4, 4, 4, 4, 3, 3, 3]
         )
 
-    def test_well_type_enum(self):
-        source_file_path = "lib/include/resdata/well/well_conn.hpp"
-        # The header file has duplicated symbols, so the simple test fails.
-        # self.assertEnumIsFullyDefined(WellType, "well_type_enum", source_file_path)
-
     def test_well_connection_direction_enum(self):
         source_file_path = "lib/include/resdata/well/well_conn.hpp"
         self.assertEnumIsFullyDefined(

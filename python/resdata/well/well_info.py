@@ -7,20 +7,24 @@ from resdata import ResdataPrototype
 
 
 class WellInfo(BaseCClass):
-    TYPE_NAME = "well_info"
+    TYPE_NAME = "rd_well_info"
 
     _alloc = ResdataPrototype("void* well_info_alloc(rd_grid)", bind=False)
-    _free = ResdataPrototype("void  well_info_free(well_info)")
+    _free = ResdataPrototype("void well_info_free(rd_well_info)")
     _load_rstfile = ResdataPrototype(
-        "void  well_info_load_rstfile(well_info, char*, bool)"
+        "void well_info_load_rstfile(rd_well_info, char*, bool)"
     )
     _load_rst_resfile = ResdataPrototype(
-        "void  well_info_load_rst_resfile(well_info, rd_file, bool)"
+        "void well_info_load_rst_resfile(rd_well_info, rd_file, bool)"
     )
-    _get_well_count = ResdataPrototype("int   well_info_get_num_wells(well_info)")
-    _iget_well_name = ResdataPrototype("char* well_info_iget_well_name(well_info, int)")
-    _has_well = ResdataPrototype("bool  well_info_has_well(well_info, char*)")
-    _get_ts = ResdataPrototype("well_time_line_ref well_info_get_ts(well_info, char*)")
+    _get_well_count = ResdataPrototype("int well_info_get_num_wells(rd_well_info)")
+    _iget_well_name = ResdataPrototype(
+        "char* well_info_iget_well_name(rd_well_info, int)"
+    )
+    _has_well = ResdataPrototype("bool well_info_has_well(rd_well_info, char*)")
+    _get_ts = ResdataPrototype(
+        "rd_well_time_line_ref well_info_get_ts(rd_well_info, char*)"
+    )
 
     def __init__(self, grid, rst_file=None, load_segment_information=True):
         """

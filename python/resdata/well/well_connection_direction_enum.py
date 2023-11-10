@@ -2,7 +2,7 @@ from cwrap import BaseCEnum
 
 
 class WellConnectionDirection(BaseCEnum):
-    TYPE_NAME = "well_connection_dir_enum"
+    TYPE_NAME = "rd_well_connection_dir"
     well_conn_dirX = None
     well_conn_dirY = None
     well_conn_dirZ = None

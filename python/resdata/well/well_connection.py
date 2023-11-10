@@ -4,39 +4,39 @@ from resdata.well import WellConnectionDirection
 
 
 class WellConnection(BaseCClass):
-    TYPE_NAME = "well_connection"
+    TYPE_NAME = "rd_well_connect"
 
-    _i = ResdataPrototype("int    well_conn_get_i(well_connection)")
-    _j = ResdataPrototype("int    well_conn_get_j(well_connection)")
-    _k = ResdataPrototype("int    well_conn_get_k(well_connection)")
-    _segment_id = ResdataPrototype("int    well_conn_get_segment_id(well_connection)")
-    _is_open = ResdataPrototype("bool   well_conn_open(well_connection)")
-    _is_msw = ResdataPrototype("bool   well_conn_MSW(well_connection)")
+    _i = ResdataPrototype("int well_conn_get_i(rd_well_connect)")
+    _j = ResdataPrototype("int well_conn_get_j(rd_well_connect)")
+    _k = ResdataPrototype("int well_conn_get_k(rd_well_connect)")
+    _segment_id = ResdataPrototype("int well_conn_get_segment_id(rd_well_connect)")
+    _is_open = ResdataPrototype("bool well_conn_open(rd_well_connect)")
+    _is_msw = ResdataPrototype("bool well_conn_MSW(rd_well_connect)")
     _fracture_connection = ResdataPrototype(
-        "bool   well_conn_fracture_connection(well_connection)"
+        "bool well_conn_fracture_connection(rd_well_connect)"
     )
     _matrix_connection = ResdataPrototype(
-        "bool   well_conn_matrix_connection(well_connection)"
+        "bool well_conn_matrix_connection(rd_well_connect)"
     )
     _connection_factor = ResdataPrototype(
-        "double well_conn_get_connection_factor(well_connection)"
+        "double well_conn_get_connection_factor(rd_well_connect)"
     )
-    _equal = ResdataPrototype(
-        "bool   well_conn_equal(well_connection, well_connection)"
+    _equal = ResdataPrototype("bool well_conn_equal(rd_well_connect, rd_well_connect)")
+    _get_dir = ResdataPrototype(
+        "rd_well_connection_dir well_conn_get_dir(rd_well_connect)"
     )
-    _get_dir = ResdataPrototype("void*  well_conn_get_dir(well_connection)")
-    _oil_rate = ResdataPrototype("double well_conn_get_oil_rate(well_connection)")
-    _gas_rate = ResdataPrototype("double well_conn_get_gas_rate(well_connection)")
-    _water_rate = ResdataPrototype("double well_conn_get_water_rate(well_connection)")
-    _volume_rate = ResdataPrototype("double well_conn_get_volume_rate(well_connection)")
+    _oil_rate = ResdataPrototype("double well_conn_get_oil_rate(rd_well_connect)")
+    _gas_rate = ResdataPrototype("double well_conn_get_gas_rate(rd_well_connect)")
+    _water_rate = ResdataPrototype("double well_conn_get_water_rate(rd_well_connect)")
+    _volume_rate = ResdataPrototype("double well_conn_get_volume_rate(rd_well_connect)")
 
-    _oil_rate_si = ResdataPrototype("double well_conn_get_oil_rate_si(well_connection)")
-    _gas_rate_si = ResdataPrototype("double well_conn_get_gas_rate_si(well_connection)")
+    _oil_rate_si = ResdataPrototype("double well_conn_get_oil_rate_si(rd_well_connect)")
+    _gas_rate_si = ResdataPrototype("double well_conn_get_gas_rate_si(rd_well_connect)")
     _water_rate_si = ResdataPrototype(
-        "double well_conn_get_water_rate_si(well_connection)"
+        "double well_conn_get_water_rate_si(rd_well_connect)"
     )
     _volume_rate_si = ResdataPrototype(
-        "double well_conn_get_volume_rate_si(well_connection)"
+        "double well_conn_get_volume_rate_si(rd_well_connect)"
     )
 
     def __init__(self):

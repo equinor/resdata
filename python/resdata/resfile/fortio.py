@@ -30,7 +30,7 @@ from resdata import ResdataPrototype
 
 
 class FortIO(BaseCClass):
-    TYPE_NAME = "fortio"
+    TYPE_NAME = "rd_fortio"
 
     READ_MODE = 1
     WRITE_MODE = 2
@@ -53,12 +53,12 @@ class FortIO(BaseCClass):
         "bool fortio_looks_like_fortran_file(char*, bool)", bind=False
     )
 
-    _write_record = ResdataPrototype("void fortio_fwrite_record(fortio, char*, int)")
-    _get_position = ResdataPrototype("long fortio_ftell(fortio)")
-    _seek = ResdataPrototype("void fortio_fseek(fortio, long, int)")
-    _close = ResdataPrototype("bool fortio_fclose(fortio)")
-    _truncate = ResdataPrototype("bool fortio_ftruncate(fortio, long)")
-    _filename = ResdataPrototype("char* fortio_filename_ref(fortio)")
+    _write_record = ResdataPrototype("void fortio_fwrite_record(rd_fortio, char*, int)")
+    _get_position = ResdataPrototype("long fortio_ftell(rd_fortio)")
+    _seek = ResdataPrototype("void fortio_fseek(rd_fortio, long, int)")
+    _close = ResdataPrototype("bool fortio_fclose(rd_fortio)")
+    _truncate = ResdataPrototype("bool fortio_ftruncate(rd_fortio, long)")
+    _filename = ResdataPrototype("char* fortio_filename_ref(rd_fortio)")
 
     def __init__(
         self, file_name, mode=READ_MODE, fmt_file=False, endian_flip_header=True

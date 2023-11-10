@@ -33,6 +33,8 @@ from cwrap import CFILE, BaseCClass
 
 
 class VectorTemplate(BaseCClass):
+    TYPE_NAME = "rd_vector_template"
+
     def strided_copy(self, slice_range):
         """
         Will create a new copy according to @slice.

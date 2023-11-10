@@ -3,10 +3,10 @@ from resdata import ResdataPrototype
 
 
 class PermutationVector(BaseCClass):
-    TYPE_NAME = "permutation_vector"
-    _free = ResdataPrototype("void   perm_vector_free( permutation_vector )")
-    _size = ResdataPrototype("int    perm_vector_get_size( permutation_vector )")
-    _iget = ResdataPrototype("int    perm_vector_iget( permutation_vector , int)")
+    TYPE_NAME = "rd_permutation_vector"
+    _free = ResdataPrototype("void   perm_vector_free( rd_permutation_vector )")
+    _size = ResdataPrototype("int    perm_vector_get_size( rd_permutation_vector )")
+    _iget = ResdataPrototype("int    perm_vector_iget( rd_permutation_vector , int)")
 
     def __init__(self):
         raise NotImplementedError("Can not instantiate PermutationVector directly")

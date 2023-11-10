@@ -8,54 +8,48 @@ from resdata.grid.faults import Fault
 
 
 class FaultBlockLayer(BaseCClass):
-    TYPE_NAME = "fault_block_layer"
+    TYPE_NAME = "rd_fault_block_layer"
     _alloc = ResdataPrototype(
-        "void*           fault_block_layer_alloc(rd_grid,  int)", bind=False
+        "void* fault_block_layer_alloc(rd_grid,  int)", bind=False
     )
-    _free = ResdataPrototype(
-        "void            fault_block_layer_free(fault_block_layer)"
-    )
-    _size = ResdataPrototype(
-        "int             fault_block_layer_get_size(fault_block_layer)"
-    )
+    _free = ResdataPrototype("void fault_block_layer_free(rd_fault_block_layer)")
+    _size = ResdataPrototype("int fault_block_layer_get_size(rd_fault_block_layer)")
     _iget_block = ResdataPrototype(
-        "fault_block_ref fault_block_layer_iget_block(fault_block_layer, int)"
+        "rd_fault_block_ref fault_block_layer_iget_block(rd_fault_block_layer, int)"
     )
     _add_block = ResdataPrototype(
-        "fault_block_ref fault_block_layer_add_block(fault_block_layer, int)"
+        "rd_fault_block_ref fault_block_layer_add_block(rd_fault_block_layer, int)"
     )
     _get_block = ResdataPrototype(
-        "fault_block_ref fault_block_layer_get_block(fault_block_layer, int)"
+        "rd_fault_block_ref fault_block_layer_get_block(rd_fault_block_layer, int)"
     )
     _del_block = ResdataPrototype(
-        "void            fault_block_layer_del_block(fault_block_layer, int)"
+        "void fault_block_layer_del_block(rd_fault_block_layer, int)"
     )
     _has_block = ResdataPrototype(
-        "bool            fault_block_layer_has_block(fault_block_layer, int)"
+        "bool fault_block_layer_has_block(rd_fault_block_layer, int)"
     )
     _scan_keyword = ResdataPrototype(
-        "bool            fault_block_layer_scan_kw(fault_block_layer, rd_kw)"
+        "bool fault_block_layer_scan_kw(rd_fault_block_layer, rd_kw)"
     )
     _load_keyword = ResdataPrototype(
-        "bool            fault_block_layer_load_kw(fault_block_layer, rd_kw)"
+        "bool fault_block_layer_load_kw(rd_fault_block_layer, rd_kw)"
     )
-    _getK = ResdataPrototype(
-        "int             fault_block_layer_get_k(fault_block_layer)"
-    )
+    _getK = ResdataPrototype("int fault_block_layer_get_k(rd_fault_block_layer)")
     _get_next_id = ResdataPrototype(
-        "int             fault_block_layer_get_next_id(fault_block_layer)"
+        "int fault_block_layer_get_next_id(rd_fault_block_layer)"
     )
     _scan_layer = ResdataPrototype(
-        "void            fault_block_layer_scan_layer(fault_block_layer, layer)"
+        "void fault_block_layer_scan_layer(rd_fault_block_layer, rd_layer)"
     )
     _insert_block_content = ResdataPrototype(
-        "void            fault_block_layer_insert_block_content(fault_block_layer, fault_block)"
+        "void fault_block_layer_insert_block_content(rd_fault_block_layer, rd_fault_block)"
     )
     _export_kw = ResdataPrototype(
-        "bool            fault_block_layer_export(fault_block_layer, rd_kw)"
+        "bool fault_block_layer_export(rd_fault_block_layer, rd_kw)"
     )
     _get_layer = ResdataPrototype(
-        "layer_ref       fault_block_layer_get_layer(fault_block_layer)"
+        "rd_layer_ref fault_block_layer_get_layer(rd_fault_block_layer)"
     )
 
     def __init__(self, grid, k):

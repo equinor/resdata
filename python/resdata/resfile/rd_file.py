@@ -33,43 +33,35 @@ from resdata.util.util import CTime, monkey_the_camel
 
 class ResdataFile(BaseCClass):
     TYPE_NAME = "rd_file"
-    _open = ResdataPrototype(
-        "void*       rd_file_open( char* , rd_file_flag_enum )", bind=False
-    )
+    _open = ResdataPrototype("void* rd_file_open(char*, rd_file_flag_enum)", bind=False)
     _get_file_type = ResdataPrototype(
-        "rd_file_enum rd_get_file_type( char* , bool* , int*)", bind=False
+        "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False
     )
-    _writable = ResdataPrototype("bool        rd_file_writable( rd_file )")
-    _save_kw = ResdataPrototype("void        rd_file_save_kw( rd_file , rd_kw )")
-    _close = ResdataPrototype("void        rd_file_close( rd_file )")
+    _writable = ResdataPrototype("bool rd_file_writable(rd_file)")
+    _save_kw = ResdataPrototype("void rd_file_save_kw(rd_file, rd_kw)")
+    _close = ResdataPrototype("void rd_file_close(rd_file)")
     _iget_restart_time = ResdataPrototype(
-        "time_t      rd_file_iget_restart_sim_date( rd_file , int )"
+        "rd_time_t rd_file_iget_restart_sim_date(rd_file, int)"
     )
     _iget_restart_days = ResdataPrototype(
-        "double      rd_file_iget_restart_sim_days( rd_file , int )"
+        "double rd_file_iget_restart_sim_days(rd_file, int)"
     )
     _get_restart_index = ResdataPrototype(
-        "int         rd_file_get_restart_index( rd_file , time_t)"
+        "int rd_file_get_restart_index(rd_file, rd_time_t)"
     )
-    _get_src_file = ResdataPrototype("char*       rd_file_get_src_file( rd_file )")
+    _get_src_file = ResdataPrototype("char* rd_file_get_src_file(rd_file)")
     _replace_kw = ResdataPrototype(
-        "void        rd_file_replace_kw( rd_file , rd_kw , rd_kw , bool)"
+        "void rd_file_replace_kw(rd_file, rd_kw, rd_kw, bool)"
     )
-    _fwrite = ResdataPrototype(
-        "void        rd_file_fwrite_fortio( rd_file , fortio , int)"
-    )
-    _has_report_step = ResdataPrototype(
-        "bool        rd_file_has_report_step( rd_file , int)"
-    )
-    _has_sim_time = ResdataPrototype(
-        "bool        rd_file_has_sim_time( rd_file , time_t )"
-    )
+    _fwrite = ResdataPrototype("void rd_file_fwrite_fortio(rd_file, rd_fortio, int)")
+    _has_report_step = ResdataPrototype("bool rd_file_has_report_step(rd_file, int)")
+    _has_sim_time = ResdataPrototype("bool rd_file_has_sim_time(rd_file, rd_time_t)")
     _get_global_view = ResdataPrototype(
-        "rd_file_view_ref rd_file_get_global_view( rd_file )"
+        "rd_file_view_ref rd_file_get_global_view(rd_file)"
     )
-    _write_index = ResdataPrototype("bool        rd_file_write_index( rd_file , char*)")
+    _write_index = ResdataPrototype("bool rd_file_write_index(rd_file, char*)")
     _fast_open = ResdataPrototype(
-        "void*       rd_file_fast_open( char* , char* , int )", bind=False
+        "void* rd_file_fast_open(char*, char*, int)", bind=False
     )
 
     @staticmethod

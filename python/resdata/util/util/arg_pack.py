@@ -3,15 +3,17 @@ from resdata import ResdataPrototype
 
 
 class ArgPack(BaseCClass):
-    TYPE_NAME = "arg_pack"
+    TYPE_NAME = "rd_arg_pack"
 
     _alloc = ResdataPrototype("void* arg_pack_alloc()", bind=False)
-    _append_int = ResdataPrototype("void arg_pack_append_int(arg_pack, int)")
-    _append_double = ResdataPrototype("void arg_pack_append_double(arg_pack, double)")
-    _append_ptr = ResdataPrototype("void arg_pack_append_ptr(arg_pack, void*)")
+    _append_int = ResdataPrototype("void arg_pack_append_int(rd_arg_pack, int)")
+    _append_double = ResdataPrototype(
+        "void arg_pack_append_double(rd_arg_pack, double)"
+    )
+    _append_ptr = ResdataPrototype("void arg_pack_append_ptr(rd_arg_pack, void*)")
 
-    _size = ResdataPrototype("int arg_pack_size(arg_pack)")
-    _free = ResdataPrototype("void arg_pack_free(arg_pack)")
+    _size = ResdataPrototype("int arg_pack_size(rd_arg_pack)")
+    _free = ResdataPrototype("void arg_pack_free(rd_arg_pack)")
 
     def __init__(self, *args):
         c_ptr = self._alloc()

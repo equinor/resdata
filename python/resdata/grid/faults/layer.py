@@ -8,42 +8,44 @@ from resdata import ResdataPrototype
 
 
 class Layer(BaseCClass):
-    TYPE_NAME = "layer"
+    TYPE_NAME = "rd_layer"
     _alloc = ResdataPrototype("void* layer_alloc(int,  int)", bind=False)
-    _copy = ResdataPrototype("void  layer_memcpy(layer, layer)")
-    _free = ResdataPrototype("void  layer_free(layer)")
-    _get_nx = ResdataPrototype("int   layer_get_nx(layer)")
-    _get_ny = ResdataPrototype("int   layer_get_ny(layer)")
-    _set_cell = ResdataPrototype("void  layer_iset_cell_value(layer, int, int, int)")
-    _get_cell = ResdataPrototype("int   layer_iget_cell_value(layer, int, int)")
+    _copy = ResdataPrototype("void layer_memcpy(rd_layer, rd_layer)")
+    _free = ResdataPrototype("void layer_free(rd_layer)")
+    _get_nx = ResdataPrototype("int layer_get_nx(rd_layer)")
+    _get_ny = ResdataPrototype("int layer_get_ny(rd_layer)")
+    _set_cell = ResdataPrototype("void layer_iset_cell_value(rd_layer, int, int, int)")
+    _get_cell = ResdataPrototype("int layer_iget_cell_value(rd_layer, int, int)")
     _get_bottom_barrier = ResdataPrototype(
-        "bool  layer_iget_bottom_barrier(layer, int, int)"
+        "bool layer_iget_bottom_barrier(rd_layer, int, int)"
     )
     _get_left_barrier = ResdataPrototype(
-        "bool  layer_iget_left_barrier(layer, int, int)"
+        "bool layer_iget_left_barrier(rd_layer, int, int)"
     )
     _cell_contact = ResdataPrototype(
-        "bool  layer_cell_contact(layer, int, int, int, int)"
+        "bool layer_cell_contact(rd_layer, int, int, int, int)"
     )
-    _add_barrier = ResdataPrototype("void  layer_add_barrier(layer, int, int)")
+    _add_barrier = ResdataPrototype("void layer_add_barrier(rd_layer, int, int)")
     _add_ijbarrier = ResdataPrototype(
-        "void  layer_add_ijbarrier(layer, int, int, int, int)"
+        "void layer_add_ijbarrier(rd_layer, int, int, int, int)"
     )
     _add_interp_barrier = ResdataPrototype(
-        "void  layer_add_interp_barrier(layer, int, int)"
+        "void layer_add_interp_barrier(rd_layer, int, int)"
     )
-    _clear_cells = ResdataPrototype("void  layer_clear_cells(layer)")
-    _assign = ResdataPrototype("void  layer_assign(layer, int)")
-    _cell_sum = ResdataPrototype("int   layer_get_cell_sum(layer)")
+    _clear_cells = ResdataPrototype("void layer_clear_cells(rd_layer)")
+    _assign = ResdataPrototype("void layer_assign(rd_layer, int)")
+    _cell_sum = ResdataPrototype("int layer_get_cell_sum(rd_layer)")
     _update_connected = ResdataPrototype(
-        "void  layer_update_connected_cells(layer,int,int,int,int)"
+        "void layer_update_connected_cells(rd_layer,int,int,int,int)"
     )
     _cells_equal = ResdataPrototype(
-        "void  layer_cells_equal(layer, int,int_vector,int_vector)"
+        "void layer_cells_equal(rd_layer, int,rd_int_vector,rd_int_vector)"
     )
-    _count_equal = ResdataPrototype("int   layer_count_equal(layer, int)")
-    _active_cell = ResdataPrototype("bool  layer_iget_active(layer, int,int)")
-    _update_active = ResdataPrototype("bool  layer_update_active(layer, rd_grid, int)")
+    _count_equal = ResdataPrototype("int layer_count_equal(rd_layer, int)")
+    _active_cell = ResdataPrototype("bool layer_iget_active(rd_layer, int,int)")
+    _update_active = ResdataPrototype(
+        "bool layer_update_active(rd_layer, rd_grid, int)"
+    )
 
     def __init__(self, nx, ny):
         c_ptr = self._alloc(nx, ny)

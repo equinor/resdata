@@ -3,23 +3,23 @@ from resdata import ResdataPrototype
 
 
 class WellSegment(BaseCClass):
-    TYPE_NAME = "well_segment"
+    TYPE_NAME = "rd_well_segment"
 
-    _active = ResdataPrototype("bool well_segment_active(well_segment)")
-    _main_stem = ResdataPrototype("bool well_segment_main_stem(well_segment)")
+    _active = ResdataPrototype("bool well_segment_active(rd_well_segment)")
+    _main_stem = ResdataPrototype("bool well_segment_main_stem(rd_well_segment)")
     _nearest_wellhead = ResdataPrototype(
-        "bool well_segment_nearest_wellhead(well_segment)"
+        "bool well_segment_nearest_wellhead(rd_well_segment)"
     )
-    _id = ResdataPrototype("int well_segment_get_id(well_segment)")
-    _link_count = ResdataPrototype("int well_segment_get_link_count(well_segment)")
-    _branch_id = ResdataPrototype("int well_segment_get_branch_id(well_segment)")
-    _outlet_id = ResdataPrototype("int well_segment_get_outlet_id(well_segment)")
-    _depth = ResdataPrototype("double well_segment_get_depth(well_segment)")
-    _length = ResdataPrototype("double well_segment_get_length(well_segment)")
+    _id = ResdataPrototype("int well_segment_get_id(rd_well_segment)")
+    _link_count = ResdataPrototype("int well_segment_get_link_count(rd_well_segment)")
+    _branch_id = ResdataPrototype("int well_segment_get_branch_id(rd_well_segment)")
+    _outlet_id = ResdataPrototype("int well_segment_get_outlet_id(rd_well_segment)")
+    _depth = ResdataPrototype("double well_segment_get_depth(rd_well_segment)")
+    _length = ResdataPrototype("double well_segment_get_length(rd_well_segment)")
     _total_length = ResdataPrototype(
-        "double well_segment_get_total_length(well_segment)"
+        "double well_segment_get_total_length(rd_well_segment)"
     )
-    _diameter = ResdataPrototype("double well_segment_get_diameter(well_segment)")
+    _diameter = ResdataPrototype("double well_segment_get_diameter(rd_well_segment)")
 
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
