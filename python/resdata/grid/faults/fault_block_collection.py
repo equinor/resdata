@@ -1,7 +1,8 @@
 from cwrap import BaseCClass
-
-from resdata.util.util import monkey_the_camel
 from resdata import ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
+from resdata.grid import Grid
+from resdata.resfile import ResdataKW
 
 
 class FaultBlockCollection(BaseCClass):
@@ -20,7 +21,7 @@ class FaultBlockCollection(BaseCClass):
         "fault_block_layer_ref  fault_block_collection_get_layer(fault_block_collection, int)"
     )
 
-    def __init__(self, grid):
+    def __init__(self, grid: Grid):
         c_ptr = self._alloc(grid)
         if c_ptr:
             super(FaultBlockCollection, self).__init__(c_ptr)
@@ -60,7 +61,7 @@ class FaultBlockCollection(BaseCClass):
     def free(self):
         self._free()
 
-    def scan_keyword(self, fault_block_kw):
+    def scan_keyword(self, fault_block_kw: ResdataKW):
         ok = self._scan_keyword(fault_block_kw)
         if not ok:
             raise ValueError("The fault block keyword had wrong type/size")

@@ -1,10 +1,8 @@
-import ctypes
-
-from resdata.grid import Grid
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
 from resdata import ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
+from resdata.grid import Grid
+from resdata.util.util import IntVector
 
 
 class Layer(BaseCClass):
@@ -85,7 +83,7 @@ class Layer(BaseCClass):
         self._assert_ij(i, j)
         return self._active_cell(i, j)
 
-    def update_active(self, grid, k):
+    def update_active(self, grid: Grid, k):
         if grid.getNX() != self.getNX():
             raise ValueError(
                 "NX dimension mismatch. Grid:%d  layer:%d"

@@ -1,14 +1,13 @@
-import numpy
-import datetime
-
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
 from resdata import ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
+
+from .rd_sum import Summary
 
 
 class SummaryKeyWordVector(BaseCClass):
@@ -25,7 +24,7 @@ class SummaryKeyWordVector(BaseCClass):
     _get_size = ResdataPrototype("int rd_sum_vector_get_size(rd_sum_vector)")
     _iget_key = ResdataPrototype("char* rd_sum_vector_iget_key(rd_sum_vector, int)")
 
-    def __init__(self, rd_sum, add_keywords=False):
+    def __init__(self, rd_sum: Summary, add_keywords=False):
         c_pointer = self._alloc(rd_sum, add_keywords)
         super(SummaryKeyWordVector, self).__init__(c_pointer)
 
@@ -55,7 +54,7 @@ class SummaryKeyWordVector(BaseCClass):
     def __repr__(self):
         return self._create_repr("len=%d" % len(self))
 
-    def copy(self, rd_sum):
+    def copy(self, rd_sum: Summary):
         return self._alloc_copy(rd_sum)
 
 

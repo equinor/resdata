@@ -30,6 +30,7 @@ alternative fails, the loader will try the default load behaviour
 before giving up completely.
 """
 import ctypes as ct
+import os
 import os.path
 import sys
 import warnings
@@ -178,19 +179,24 @@ else:
             )
 
 
-#
-# Common
-#
+def installAbortSignals():
+    if sys.version_info.major < 3 and not os.getenv("RD_SKIP_SIGNAL"):
+        install_signals = ResdataPrototype("void util_install_signals()")
+        install_signals()
 
+
+def updateAbortSignals():
+    """
+    Will install the util_abort_signal for all UNMODIFIED signals.
+    """
+    if sys.version_info.major < 3 and not os.getenv("RD_SKIP_SIGNAL"):
+        update_signals = ResdataPrototype("void util_update_signals()")
+        update_signals()
+
+
+from ._version import ResdataVersion
 from .rd_type import ResDataType, ResdataTypeEnum
-from .rd_util import (
-    FileType,
-    FileMode,
-    Phase,
-    UnitSystem,
-    ResdataUtil,
-)
-from .util.util import ResdataVersion, updateAbortSignals
+from .rd_util import FileMode, FileType, Phase, ResdataUtil, UnitSystem
 
 updateAbortSignals()
 
@@ -200,3 +206,16 @@ def root():
     Will print the filesystem root of the current ert package.
     """
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+
+
+__all__ = [
+    "ResDataType",
+    "ResdataTypeEnum",
+    "FileMode",
+    "FileType",
+    "Phase",
+    "ResdataUtil",
+    "UnitSystem",
+    "ResdataVersion",
+    "updateAbortSignals",
+]

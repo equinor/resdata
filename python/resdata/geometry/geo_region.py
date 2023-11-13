@@ -1,8 +1,10 @@
-from cwrap import BaseCClass
-from resdata.util.util import IntVector
-from resdata import ResdataPrototype
-from .cpolyline import CPolyline
 from ctypes import c_double
+
+from cwrap import BaseCClass
+from resdata import ResdataPrototype
+from resdata.util.util import IntVector
+
+from .cpolyline import CPolyline
 
 cpair = c_double * 2  # this is a function that maps two doubles to a double*
 
@@ -51,7 +53,7 @@ class GeoRegion(BaseCClass):
                 "Could not construct GeoRegion from pointset %s." % pointset
             )
 
-    def getActiveList(self):
+    def getActiveList(self) -> IntVector:
         return self._get_index_list()
 
     def _assert_polygon(self, polygon):

@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-import sys
 import fnmatch
 import os
+import sys
 import unittest
 
 try:

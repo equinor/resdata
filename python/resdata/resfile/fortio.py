@@ -21,12 +21,11 @@ python module is a minimal wrapping of this datastructure; mainly to
 support passing of FortIO handles to the underlying C functions. A
 more extensive wrapping of the fortio implementation would be easy.
 """
-import ctypes
 import os
 
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
 from resdata import ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
 
 
 class FortIO(BaseCClass):

@@ -15,7 +15,7 @@ import ctypes
 
 from cwrap import BaseCEnum
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
+from resdata._monkey_the_camel import monkey_the_camel
 
 
 class FileType(BaseCEnum):

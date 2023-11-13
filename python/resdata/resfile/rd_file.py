@@ -23,12 +23,15 @@ implementation from the resdata library.
 import ctypes
 import datetime
 import re
-import types
 
 from cwrap import BaseCClass
 from resdata import FileMode, FileType, ResdataPrototype
-from resdata.resfile import ResdataFileView, ResdataKW
-from resdata.util.util import CTime, monkey_the_camel
+from resdata._monkey_the_camel import monkey_the_camel
+from resdata.util.util import CTime
+
+from .fortio import FortIO
+from .rd_file_view import ResdataFileView
+from .rd_kw import ResdataKW
 
 
 class ResdataFile(BaseCClass):
@@ -201,10 +204,10 @@ class ResdataFile(BaseCClass):
             raise IOError('Failed to open file "%s"' % filename)
         else:
             super(ResdataFile, self).__init__(c_ptr)
-            self.global_view = self._get_global_view()
+            self.global_view: ResdataFileView = self._get_global_view()
             self.global_view.setParent(self)
 
-    def save_kw(self, kw):
+    def save_kw(self, kw: ResdataKW):
         """
         Will write the @kw back to file.
 
@@ -442,7 +445,7 @@ class ResdataFile(BaseCClass):
                 'Does not have keyword "%s" at time:%s.' % (kw_name, dtime)
             )
 
-    def replace_kw(self, old_kw, new_kw):
+    def replace_kw(self, old_kw: ResdataKW, new_kw: ResdataKW):
         """
         Will replace @old_kw with @new_kw in current ResdataFile instance.
 
@@ -640,7 +643,7 @@ class ResdataFile(BaseCClass):
         fn = self._get_src_file()
         return str(fn) if fn else ""
 
-    def fwrite(self, fortio):
+    def fwrite(self, fortio: FortIO):
         """
         Will write current ResdataFile instance to fortio stream.
 

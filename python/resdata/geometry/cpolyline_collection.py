@@ -5,7 +5,8 @@ import ctypes
 
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
-from resdata.geometry import CPolyline
+
+from .cpolyline import CPolyline
 
 
 class CPolylineCollection(BaseCClass):
@@ -54,7 +55,7 @@ class CPolylineCollection(BaseCClass):
             yield self[index]
             index += 1
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> CPolyline:
         if isinstance(index, int):
             if index < 0:
                 index += len(self)
@@ -102,7 +103,7 @@ class CPolylineCollection(BaseCClass):
             polyline.convertToCReference(self)
             self._add_polyline(polyline, True)
 
-    def createPolyline(self, name=None):
+    def createPolyline(self, name=None) -> CPolyline:
         if name and name in self:
             raise KeyError("The polyline collection already has an object:%s" % name)
 

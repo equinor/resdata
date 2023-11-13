@@ -31,6 +31,8 @@ import sys
 
 from cwrap import CFILE, BaseCClass
 
+from .permutation_vector import PermutationVector
+
 
 class VectorTemplate(BaseCClass):
     def strided_copy(self, slice_range):
@@ -493,19 +495,17 @@ class VectorTemplate(BaseCClass):
     def __repr__(self):
         return self._create_repr("size = %d" % len(self))
 
-    def permute(self, permutation_vector):
+    def permute(self, permutation_vector: PermutationVector):
         """
         Reorders this vector based on the indexes in permutation_vector.
-        @type permutation_vector: PermutationVector
         """
 
         self._permute(permutation_vector)
 
-    def permutationSort(self, reverse=False):
+    def permutationSort(self, reverse=False) -> PermutationVector:
         """
         Returns the permutation vector for sorting of this vector. Vector is not sorted.
          @type reverse: bool
-         @@rtype: PermutationVector
         """
         if len(self) > 0:
             if not reverse:

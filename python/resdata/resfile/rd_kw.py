@@ -25,11 +25,12 @@ the resdata library.
 
 import ctypes
 import warnings
+from typing import Optional
 
 import numpy
 from cwrap import CFILE, BaseCClass
-from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum, ResdataUtil
-from resdata.util.util import monkey_the_camel
+from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
+from resdata._monkey_the_camel import monkey_the_camel
 
 from .fortio import FortIO
 
@@ -239,7 +240,7 @@ class ResdataKW(BaseCClass):
         return self._copyc()
 
     @classmethod
-    def read_grdecl(cls, fileH, kw, strict=True, rd_type=None):
+    def read_grdecl(cls, fileH, kw, strict=True, rd_type: Optional[ResDataType] = None):
         """
         Function to load an ResdataKW instance from a grdecl formatted filehandle.
 
@@ -365,7 +366,7 @@ class ResdataKW(BaseCClass):
         return cls._fseek_grdecl(kw, rewind, cfile)
 
     @classmethod
-    def fread(cls, fortio):
+    def fread(cls, fortio: FortIO):
         """
         Will read a new ResdataKW instance from the open FortIO file.
         """
@@ -385,7 +386,7 @@ class ResdataKW(BaseCClass):
         fmt = 'ResdataKW(size=%d, name="%s", %s) %s'
         return fmt % (si, nm, mm, ad)
 
-    def __init__(self, name, size, data_type):
+    def __init__(self, name, size, data_type: ResDataType):
         """Creates a brand new ResdataKW instance.
 
         This method will create a grand spanking new ResdataKW
@@ -979,12 +980,12 @@ class ResdataKW(BaseCClass):
         return mm[0]
 
     @property
-    def type(self):
+    def type(self) -> ResdataTypeEnum:
         warnings.warn("rd_kw.type is deprecated, use .data_type", DeprecationWarning)
         return self._get_type()
 
     @property
-    def data_type(self):
+    def data_type(self) -> ResDataType:
         return self._get_data_type()
 
     @property

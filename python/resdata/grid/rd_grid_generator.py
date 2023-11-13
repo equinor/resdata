@@ -1,12 +1,13 @@
-import itertools, numpy
+import itertools
 from math import sqrt
 
-from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
-from resdata import ResDataType
+import numpy
+from resdata import ResdataPrototype, ResDataType
+from resdata._monkey_the_camel import monkey_the_camel
 from resdata.resfile import ResdataKW
-from resdata.grid import Grid
+from resdata.util.util import IntVector
+
+from .rd_grid import Grid
 
 
 def flatten(l):
@@ -56,7 +57,7 @@ class GridGenerator:
     )
 
     @classmethod
-    def create_rectangular(cls, dims, dV, actnum=None):
+    def create_rectangular(cls, dims, dV, actnum=None) -> Grid:
         """
         Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
 

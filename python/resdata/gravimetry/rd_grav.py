@@ -11,9 +11,9 @@ from typing import Optional
 
 from cwrap import BaseCClass
 from resdata import Phase, ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView
-from resdata.util.util import monkey_the_camel
 
 
 class ResdataGrav(BaseCClass):

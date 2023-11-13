@@ -1,10 +1,12 @@
 from __future__ import print_function
-from cwrap import BaseCClass
 
-from resdata.util.util import monkey_the_camel
-from resdata import ResDataType
+from cwrap import BaseCClass
 from resdata import ResdataPrototype
-from resdata.grid.faults import Fault
+from resdata._monkey_the_camel import monkey_the_camel
+
+from .fault import Fault
+from .fault_block import FaultBlock
+from .layer import Layer
 
 
 class FaultBlockLayer(BaseCClass):
@@ -175,10 +177,10 @@ class FaultBlockLayer(BaseCClass):
     def free(self):
         self._free()
 
-    def scan_layer(self, layer):
+    def scan_layer(self, layer: Layer):
         self._scan_layer(layer)
 
-    def insert_block_content(self, block):
+    def insert_block_content(self, block: FaultBlock):
         self._insert_block_content(block)
 
     def export_keyword(self, kw):

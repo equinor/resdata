@@ -45,8 +45,7 @@ class Hash(BaseCClass):
         for key in self.keys():
             yield key
 
-    def keys(self):
-        """@rtype: StringList"""
+    def keys(self) -> StringList:
         return self._keys()
 
     def free(self):
