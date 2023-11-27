@@ -483,7 +483,7 @@ class SumTest(ResdataTest):
 
         eclipse_summary = Summary(
             self.createTestPath(
-                "Equinor/ECLIPSE/ix/summary/RD100/E100_CREATE_REGION_AROUND_WELL"
+                "Equinor/ECLIPSE/ix/summary/ECL100/E100_CREATE_REGION_AROUND_WELL"
             )
         )
         self.assertIsNotNone(eclipse_summary)
