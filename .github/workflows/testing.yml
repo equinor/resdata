@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest']
+        os: ['ubuntu-latest', 'macos-latest', 'macos-latest-xlarge']
 
     runs-on: ${{ matrix.os }}
 
@@ -53,8 +53,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest']
+        os: ['ubuntu-latest', 'macos-latest', 'macos-latest-xlarge']
         python: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        exclude:
+          - os: macos-latest-xlarge
+            python: '3.8'
+          - os: macos-latest-xlarge
+            python: '3.9'
 
     runs-on: ${{ matrix.os }}
 
