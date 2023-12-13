@@ -142,3 +142,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.3.1
         with:
           password: ${{ secrets.PYPI_TOKEN_RESDATA }}
+          skip-existing: true
