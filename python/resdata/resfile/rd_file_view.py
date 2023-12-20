@@ -1,9 +1,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
-from six import string_types
+
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import CTime
 from resdata import ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
+from resdata.util.util import CTime
+from six import string_types
 
 
 class ResdataFileView(BaseCClass):

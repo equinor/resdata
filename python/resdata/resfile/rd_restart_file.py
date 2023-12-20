@@ -1,7 +1,12 @@
+from typing import Optional, Tuple
+
 from cwrap import BaseCClass
 from resdata import FileMode, FileType, ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
 from resdata.resfile import Resdata3DFile, ResdataFile
-from resdata.util.util import CTime, monkey_the_camel
+from resdata.util.util import CTime
+
+from .rd_kw import ResdataKW
 
 
 class ResdataRestartHead(BaseCClass):
@@ -19,7 +24,11 @@ class ResdataRestartHead(BaseCClass):
     _get_nxconz = ResdataPrototype("int   rd_rsthead_get_nxconz(rd_rsthead)")
     _get_ncwmax = ResdataPrototype("int   rd_rsthead_get_ncwmax(rd_rsthead)")
 
-    def __init__(self, kw_arg=None, rst_view=None):
+    def __init__(
+        self,
+        kw_arg: Optional[Tuple[int, ResdataKW, ResdataKW, ResdataKW]] = None,
+        rst_view=None,
+    ):
         if kw_arg is None and rst_view is None:
             raise ValueError(
                 "Cannot construct ResdataRestartHead without one of kw_arg and rst_view, both were None!"

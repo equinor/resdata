@@ -8,22 +8,20 @@ implemented in the Grid class. The rd_grid module is a thin
 wrapper around the rd_grid.c implementation from the resdata library.
 """
 import ctypes
-
+import math
+import os.path
+import sys
 import warnings
+
 import numpy
 import pandas
-import sys
-import os.path
-import math
-import itertools
-from cwrap import CFILE, BaseCClass, load, open as copen
-
-from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
-from resdata import ResDataType, UnitSystem, ResdataTypeEnum
-from resdata.resfile import ResdataKW, FortIO
+from cwrap import CFILE, BaseCClass
+from cwrap import open as copen
+from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum, UnitSystem
+from resdata._monkey_the_camel import monkey_the_camel
 from resdata.grid import Cell
+from resdata.resfile import FortIO, ResdataKW
+from resdata.util.util import DoubleVector, IntVector
 
 
 class Grid(BaseCClass):
@@ -1107,7 +1105,7 @@ class Grid(BaseCClass):
         """
         return self._grid_value(kw, i, j, k)
 
-    def load_column(self, kw, i, j, column):
+    def load_column(self, kw, i, j, column: DoubleVector):
         """
         Load the values of @kw from the column specified by (@i,@j).
 

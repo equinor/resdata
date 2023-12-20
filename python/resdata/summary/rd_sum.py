@@ -6,28 +6,28 @@ in the C source files rd_sum.c, rd_smspec.c and rd_sum_data in the
 resdata/src directory.
 """
 
-import warnings
-import numpy
+import ctypes
 import datetime
 import os.path
-import ctypes
-import pandas
 import re
+import warnings
+
+import numpy
+import pandas
 
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
-from cwrap import BaseCClass, CFILE
+from cwrap import CFILE, BaseCClass
+from resdata import ResdataPrototype, UnitSystem
+from resdata._monkey_the_camel import monkey_the_camel
+from resdata.util.util import CTime, DoubleVector, IntVector, StringList, TimeVector
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector
-
+from .rd_smspec_node import ResdataSMSPECNode
 from .rd_sum_tstep import SummaryTStep
 from .rd_sum_var_type import SummaryVarType
 from .rd_sum_vector import SummaryVector
-from .rd_smspec_node import ResdataSMSPECNode
-from resdata import ResdataPrototype, UnitSystem
 
 # , SummaryKeyWordVector
 
@@ -287,7 +287,7 @@ class Summary(BaseCClass):
         return result
 
     @staticmethod
-    def var_type(keyword):
+    def var_type(keyword) -> SummaryVarType:
         return Summary._identify_var_type(keyword)
 
     @staticmethod
@@ -360,13 +360,14 @@ class Summary(BaseCClass):
         smry._load_case = "restart_writer"
         return smry
 
-    def add_variable(self, variable, wgname=None, num=0, unit="None", default_value=0):
+    def add_variable(
+        self, variable, wgname=None, num=0, unit="None", default_value=0
+    ) -> ResdataSMSPECNode:
         return self._add_variable(variable, wgname, num, unit, default_value).setParent(
             parent=self
         )
 
-    def add_t_step(self, report_step, sim_days):
-        """@rtype: SummaryTStep"""
+    def add_t_step(self, report_step, sim_days) -> SummaryTStep:
         # report_step int
         if not isinstance(report_step, int):
             raise TypeError("Parameter report_step should be int, was %r" % report_step)
@@ -1059,7 +1060,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         """
         return key in self
 
-    def smspec_node(self, key):
+    def smspec_node(self, key: ResdataSMSPECNode):
         """
         Will return a ResdataSMSPECNode instance corresponding to @key.
 
@@ -1082,7 +1083,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         return node.unit
 
     @property
-    def unit_system(self):
+    def unit_system(self) -> UnitSystem:
         """
         Will return the unit system in use for this case.
         """

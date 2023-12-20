@@ -1,10 +1,8 @@
 import os.path
-import types
-from resdata.util.test import ExtendedTestCase
 from functools import wraps
-from functools import partial
-import unittest
 from unittest import SkipTest
+
+from resdata.util.test import ExtendedTestCase
 
 
 def source_root():
@@ -64,7 +62,7 @@ def equinor_test():
         if not isinstance(test_item, type):
             if not ResdataTest.EQUINOR_DATA:
 
-                @functools.wraps(test_item)
+                @wraps(test_item)
                 def skip_wrapper(*args, **kwargs):
                     raise SkipTest("Missing Equinor testdata")
 

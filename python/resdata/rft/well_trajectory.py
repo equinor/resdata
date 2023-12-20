@@ -1,6 +1,5 @@
-import sys
-from os.path import isfile
 from collections import namedtuple
+from os.path import isfile
 
 TrajectoryPoint = namedtuple(
     "TrajectoryPoint",

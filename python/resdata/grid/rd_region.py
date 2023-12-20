@@ -10,20 +10,17 @@ combined e.g. with logical &.
 When the selection process is complete the region instance can be
 queried for the corresponding list of indices.
 """
-from functools import wraps
 import ctypes
+from functools import wraps
 
 from cwrap import BaseCClass
-
-import resdata
-from resdata.util.util import monkey_the_camel
+from resdata import ResdataPrototype, ResDataType
+from resdata._monkey_the_camel import monkey_the_camel
+from resdata.geometry import CPolyline
+from resdata.resfile import ResdataKW
 from resdata.util.util import IntVector
 
-from resdata import ResdataPrototype
-from resdata.grid.faults import Layer
-from resdata import ResDataType
-from resdata.resfile import ResdataKW
-from resdata.geometry import CPolyline
+from .faults import Layer
 
 
 def select_method(select):
@@ -959,7 +956,7 @@ class ResdataRegion(BaseCClass):
         self._select_false(rd_kw)
 
     @select_method
-    def select_from_layer(self, layer, k, value, intersect=False):
+    def select_from_layer(self, layer: Layer, k, value, intersect=False):
         """Will select all the cells in in @layer with value @value - at
         vertical coordinate @k.
 

@@ -4,8 +4,9 @@ Module for loading RFT files.
 
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
 from resdata.rft import ResdataPLTCell, ResdataRFTCell
-from resdata.util.util import CTime, monkey_the_camel
+from resdata.util.util import CTime
 
 
 class ResdataRFT(BaseCClass):

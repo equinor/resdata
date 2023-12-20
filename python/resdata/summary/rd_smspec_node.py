@@ -1,6 +1,8 @@
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
 from resdata import ResdataPrototype
+from resdata._monkey_the_camel import monkey_the_camel
+
+from .rd_sum_var_type import SummaryVarType
 
 
 class ResdataSMSPECNode(BaseCClass):
@@ -123,7 +125,7 @@ class ResdataSMSPECNode(BaseCClass):
         """
         return self._gen_key2()
 
-    def var_type(self):
+    def var_type(self) -> SummaryVarType:
         return self._var_type()
 
     def get_num(self):

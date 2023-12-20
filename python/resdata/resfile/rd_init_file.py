@@ -1,5 +1,7 @@
 from resdata import FileMode, FileType
-from resdata.resfile import Resdata3DFile, ResdataFile
+
+from .rd_3d_file import Resdata3DFile
+from .rd_file import ResdataFile
 
 
 class ResdataInitFile(Resdata3DFile):

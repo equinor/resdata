@@ -10,10 +10,14 @@
     grids.
 """
 
-import resdata.util.util
-import resdata.geometry
-
 from .cell import Cell
 from .rd_grid import Grid
 from .rd_grid_generator import GridGenerator
 from .rd_region import ResdataRegion
+
+__all__ = [
+    "Cell",
+    "Grid",
+    "GridGenerator",
+    "ResdataRegion",
+]

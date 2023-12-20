@@ -3,12 +3,13 @@ from __future__ import division
 """
 Create a polygon
 """
-import os.path
 import ctypes
+import os.path
 
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
-from resdata.geometry import GeoPointset
+
+from .geo_pointset import GeoPointset
 
 
 class Surface(BaseCClass):
@@ -246,7 +247,7 @@ class Surface(BaseCClass):
     def getNY(self):
         return self._get_ny()
 
-    def getPointset(self):
+    def getPointset(self) -> GeoPointset:
         return self._get_pointset()
 
     def _assert_idx_or_i_and_j(self, idx, i, j):

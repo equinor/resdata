@@ -1,5 +1,6 @@
 import resdata
-from resdata.util.util import ResdataVersion, Version
+from resdata import ResdataVersion
+from resdata._version import Version
 from tests import ResdataTest
 
 

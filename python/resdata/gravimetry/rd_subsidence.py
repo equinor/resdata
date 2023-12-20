@@ -6,10 +6,13 @@ results and calculate the change in seafloor subsidence between the
 different surveys. The implementation is a thin wrapper around the
 rd_subsidence.c implementation in the resdata library.
 """
+from typing import Optional
+
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
-import resdata.grid
+from resdata._monkey_the_camel import monkey_the_camel
+from resdata.grid import Grid, ResdataRegion
+from resdata.resfile import ResdataFile, ResdataFileView
 
 
 class ResdataSubsidence(BaseCClass):
@@ -50,7 +53,7 @@ class ResdataSubsidence(BaseCClass):
         "bool  rd_subsidence_has_survey( rd_subsidence , char*)"
     )
 
-    def __init__(self, grid, init_file):
+    def __init__(self, grid: Grid, init_file: ResdataFile):
         """
         Creates a new ResdataSubsidence instance.
 
@@ -64,7 +67,7 @@ class ResdataSubsidence(BaseCClass):
     def __contains__(self, survey_name):
         return self._has_survey(survey_name)
 
-    def add_survey_PRESSURE(self, survey_name, restart_file):
+    def add_survey_PRESSURE(self, survey_name, restart_file: ResdataFileView):
         """
         Add new survey based on PRESSURE keyword.
 
@@ -92,7 +95,7 @@ class ResdataSubsidence(BaseCClass):
         youngs_modulus,
         poisson_ratio,
         seabed,
-        region=None,
+        region: Optional[ResdataRegion] = None,
     ):
         if not base_survey in self:
             raise KeyError("No such survey: %s" % base_survey)
@@ -121,7 +124,7 @@ class ResdataSubsidence(BaseCClass):
         youngs_modulus,
         poisson_ratio,
         seabed,
-        region=None,
+        region: Optional[ResdataRegion] = None,
     ):
         if not base_survey in self:
             raise KeyError("No such survey: %s" % base_survey)
@@ -149,7 +152,7 @@ class ResdataSubsidence(BaseCClass):
         pos,
         compressibility,
         poisson_ratio,
-        region=None,
+        region: Optional[ResdataRegion] = None,
     ):
         """
         Calculates the subsidence change between two surveys.

@@ -16,14 +16,24 @@ format files.
      loaded. Internally it consists of a collection of ResdataKW
      instances.
 """
-
-import resdata.util.util
-
 from .fortio import FortIO, openFortIO
-from .rd_kw import ResdataKW
-from .rd_file_view import ResdataFileView
-from .rd_file import ResdataFile, openResdataFile
-from .rd_3dkw import Resdata3DKW
 from .rd_3d_file import Resdata3DFile
+from .rd_3dkw import Resdata3DKW
+from .rd_file import ResdataFile, openResdataFile
+from .rd_file_view import ResdataFileView
 from .rd_init_file import ResdataInitFile
+from .rd_kw import ResdataKW
 from .rd_restart_file import ResdataRestartFile
+
+__all__ = [
+    "FortIO",
+    "openFortIO",
+    "ResdataKW",
+    "ResdataFileView",
+    "ResdataFile",
+    "openResdataFile",
+    "Resdata3DKW",
+    "Resdata3DFile",
+    "ResdataInitFile",
+    "ResdataRestartFile",
+]
