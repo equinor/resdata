@@ -85,7 +85,7 @@ class SummaryTest(ResdataTest):
 
             file_size = os.path.getsize("ECLIPSE.SMSPEC")
             with open("ECLIPSE.SMSPEC", "r+") as f:
-                f.truncate(file_size / 2)
+                f.truncate(file_size // 2)
 
             with self.assertRaises(IOError):
                 Summary("ECLIPSE")
@@ -97,7 +97,7 @@ class SummaryTest(ResdataTest):
 
             file_size = os.path.getsize("ECLIPSE.UNSMRY")
             with open("ECLIPSE.UNSMRY", "r+") as f:
-                f.truncate(file_size / 2)
+                f.truncate(file_size // 2)
 
             with self.assertRaises(IOError):
                 Summary("ECLIPSE")

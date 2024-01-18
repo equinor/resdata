@@ -312,7 +312,7 @@ class GridTest(ResdataTest):
 
             size = os.path.getsize("TEST.EGRID")
             with open("TEST.EGRID", "r+") as f:
-                f.truncate(size / 2)
+                f.truncate(size // 2)
 
             with self.assertRaises(IOError):
                 Grid("TEST.EGRID")
