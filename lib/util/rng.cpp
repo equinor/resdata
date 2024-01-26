@@ -114,28 +114,6 @@ void rng_init(rng_type *rng, rng_init_mode init_mode) {
     }
 }
 
-void rng_rng_init(rng_type *rng, rng_type *seed_src) {
-    {
-        int byte_size = rng->state_size;
-        int int_size = rng->state_size / 4;
-        unsigned int *seed_buffer;
-
-        if (int_size * 4 < byte_size)
-            int_size += 1;
-
-        seed_buffer =
-            (unsigned int *)util_calloc(int_size, sizeof *seed_buffer);
-        {
-            int i;
-            for (i = 0; i < int_size; i++)
-                seed_buffer[i] = rng_forward(seed_src);
-        }
-        rng->set_state(rng->state, (char *)seed_buffer);
-
-        free(seed_buffer);
-    }
-}
-
 rng_type *rng_alloc(rng_alg_type type, rng_init_mode init_mode) {
     rng_type *rng;
     switch (type) {
@@ -169,16 +147,11 @@ void rng_free(rng_type *rng) {
     free(rng);
 }
 
-void rng_free__(void *arg) {
-    rng_type *rng = rng_safe_cast(arg);
-    rng_free(rng);
-}
-
-void rng_fprintf_state(rng_type *rng, FILE *stream) {
+static void rng_fprintf_state(rng_type *rng, FILE *stream) {
     rng->fprintf_state(rng->state, stream);
 }
 
-void rng_fscanf_state(rng_type *rng, FILE *stream) {
+static void rng_fscanf_state(rng_type *rng, FILE *stream) {
     rng->fscanf_state(rng->state, stream);
 }
 
@@ -205,8 +178,6 @@ int rng_get_int(rng_type *rng, int max_value) {
     return rng->forward(rng->state) % max_value;
 }
 
-rng_alg_type rng_get_type(const rng_type *rng) { return rng->type; }
-
 unsigned int rng_get_max_int(const rng_type *rng) {
     unsigned int MAX = -1;
     if (rng->max_value < MAX) {
@@ -214,35 +185,6 @@ unsigned int rng_get_max_int(const rng_type *rng) {
     } else {
         return MAX;
     }
-}
-
-void rng_shuffle(rng_type *rng, char *data, size_t element_size,
-                 size_t num_elements) {
-    void *tmp = util_malloc(element_size);
-    size_t index1;
-    for (index1 = 0; index1 < num_elements; index1++) {
-        int index2 = rng_get_int(rng, num_elements);
-
-        size_t offset1 = index1 * element_size;
-        size_t offset2 = index2 * element_size;
-
-        memcpy(tmp, &data[offset1], element_size);
-        memcpy(&data[offset1], &data[offset2], element_size);
-        memcpy(&data[offset2], tmp, element_size);
-    }
-    free(tmp);
-}
-
-void rng_shuffle_int(rng_type *rng, int *data, size_t num_elements) {
-    rng_shuffle(rng, (char *)data, sizeof *data, num_elements);
-}
-
-double rng_std_normal(rng_type *rng) {
-    const double pi = 3.141592653589;
-    double R1 = rng_get_double(rng);
-    double R2 = rng_get_double(rng);
-
-    return sqrt(-2.0 * log(R1)) * cos(2.0 * pi * R2);
 }
 
 #ifdef __cplusplus
