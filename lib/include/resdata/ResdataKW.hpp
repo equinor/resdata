@@ -2,6 +2,7 @@
 #define OPM_ERT_RD_KW
 
 #include <string>
+#include <cstring>
 #include <memory>
 #include <vector>
 #include <stdexcept>

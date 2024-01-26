@@ -1,3 +1,4 @@
+#include <cstring>
 #include <stdlib.h>
 #include <math.h>
 

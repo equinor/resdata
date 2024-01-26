@@ -75,7 +75,6 @@
 #endif
 
 #include <ert/util/util.h>
-#include <ert/util/buffer.hpp>
 
 /*
    Macros for endian flipping. The macros create a new endian-flipped
