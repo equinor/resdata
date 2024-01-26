@@ -7,6 +7,7 @@ alone create a grid with rd_grid module. The functionality is
 implemented in the Grid class. The rd_grid module is a thin
 wrapper around the rd_grid.c implementation from the resdata library.
 """
+
 import ctypes
 
 import warnings
