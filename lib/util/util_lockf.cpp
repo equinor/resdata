@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <fcntl.h>
 #include <unistd.h>

@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/stringlist.h>
 
 #include <resdata/rd_kw.h>

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include <ert/util/vector.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 
 void test_strcat(char *s1, const char *s2, const char *expected) {

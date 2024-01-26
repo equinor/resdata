@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/test_util.hpp>
 

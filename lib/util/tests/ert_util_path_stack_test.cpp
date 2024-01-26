@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/path_stack.hpp>
 #include <ert/util/test_util.hpp>

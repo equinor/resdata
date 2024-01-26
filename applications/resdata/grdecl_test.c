@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <resdata/rd_kw.h>
 
 int main(int argc, char **argv) {

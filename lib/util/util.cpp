@@ -21,7 +21,7 @@
 #include <limits.h>
 
 #include <ert/util/ert_api_config.hpp>
-#include "ert/util/build_config.h"
+#include "ert/util/build_config.hpp"
 
 #include <errno.h>
 
@@ -74,7 +74,7 @@
 #error "Could not determine if this is a 32 bit or 64 bit computer?"
 #endif
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 /*
    Macros for endian flipping. The macros create a new endian-flipped

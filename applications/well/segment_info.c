@@ -20,9 +20,9 @@
 #include <math.h>
 
 #include <ert/util/stringlist.h>
-#include <ert/util/test_util.h>
+#include <ert/util/test_util.hpp>
 
-#include <resdata/rd_util.h>
+#include <resdata/rd_util.hpp>
 #include <resdata/rd_file.h>
 #include <resdata/rd_rsthead.h>
 #include <resdata/rd_kw_magic.h>
