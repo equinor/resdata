@@ -215,7 +215,6 @@ foreach(
   ert_util_clamp
   ert_util_chdir
   ert_util_filename
-  ert_util_hash_test
   ert_util_parent_path
   ert_util_realpath
   ert_util_relpath_test
