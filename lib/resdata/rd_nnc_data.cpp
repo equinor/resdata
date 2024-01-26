@@ -1,4 +1,5 @@
 #define RD_NNC_DATA_TYPE_ID 83756236
+#include <cstring>
 
 #include <resdata/rd_nnc_data.hpp>
 #include <resdata/rd_nnc_geometry.hpp>

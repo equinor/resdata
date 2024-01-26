@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <cstring>
 
 #include <ert/util/bool_vector.hpp>
 #include <ert/util/test_util.hpp>

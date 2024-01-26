@@ -8,7 +8,6 @@ extern "C" {
 #include <stdio.h>
 #include <limits.h>
 
-#include <ert/util/buffer.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/fortio.h>
@@ -146,9 +145,6 @@ void rd_kw_element_sum_indexed(const rd_kw_type *rd_kw,
                                const int_vector_type *index_list, void *_sum);
 void rd_kw_max_min(const rd_kw_type *, void *, void *);
 void *rd_kw_get_void_ptr(const rd_kw_type *rd_kw);
-
-rd_kw_type *rd_kw_buffer_alloc(buffer_type *buffer);
-void rd_kw_buffer_store(const rd_kw_type *rd_kw, buffer_type *buffer);
 
 void rd_kw_fprintf_data(const rd_kw_type *rd_kw, const char *fmt, FILE *stream);
 void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src);
