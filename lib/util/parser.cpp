@@ -27,39 +27,40 @@ static void __verify_string_length(const char *s) {
                    __func__);
 }
 
-void basic_parser_set_splitters(basic_parser_type *parser,
-                                const char *splitters) {
+static void basic_parser_set_splitters(basic_parser_type *parser,
+                                       const char *splitters) {
     __verify_string_length(splitters);
     parser->splitters = util_realloc_string_copy(parser->splitters, splitters);
 }
 
-void basic_parser_set_quoters(basic_parser_type *parser, const char *quoters) {
+static void basic_parser_set_quoters(basic_parser_type *parser,
+                                     const char *quoters) {
     __verify_string_length(quoters);
     parser->quoters = util_realloc_string_copy(parser->quoters, quoters);
 }
 
-void basic_parser_set_specials(basic_parser_type *parser,
-                               const char *specials) {
+static void basic_parser_set_specials(basic_parser_type *parser,
+                                      const char *specials) {
     __verify_string_length(specials);
     parser->specials = util_realloc_string_copy(parser->specials, specials);
 }
 
-void basic_parser_set_delete_set(basic_parser_type *parser,
-                                 const char *delete_set) {
+static void basic_parser_set_delete_set(basic_parser_type *parser,
+                                        const char *delete_set) {
     __verify_string_length(delete_set);
     parser->delete_set =
         util_realloc_string_copy(parser->delete_set, delete_set);
 }
 
-void basic_parser_set_comment_start(basic_parser_type *parser,
-                                    const char *comment_start) {
+static void basic_parser_set_comment_start(basic_parser_type *parser,
+                                           const char *comment_start) {
     __verify_string_length(comment_start);
     parser->comment_start =
         util_realloc_string_copy(parser->comment_start, comment_start);
 }
 
-void basic_parser_set_comment_end(basic_parser_type *parser,
-                                  const char *comment_end) {
+static void basic_parser_set_comment_end(basic_parser_type *parser,
+                                         const char *comment_end) {
     __verify_string_length(comment_end);
     parser->comment_end =
         util_realloc_string_copy(parser->comment_end, comment_end);
@@ -436,16 +437,6 @@ stringlist_type *basic_parser_tokenize_buffer(const basic_parser_type *parser,
     return tokens;
 }
 
-stringlist_type *basic_parser_tokenize_file(const basic_parser_type *parser,
-                                            const char *filename,
-                                            bool strip_quote_marks) {
-    stringlist_type *tokens;
-    char *buffer = util_fread_alloc_file_content(filename, NULL);
-    tokens = basic_parser_tokenize_buffer(parser, buffer, strip_quote_marks);
-    free(buffer);
-    return tokens;
-}
-
 static bool fseek_quote_end(char quoter, FILE *stream) {
     int c;
     do {
@@ -599,8 +590,8 @@ bool basic_parser_fseek_string(const basic_parser_type *parser, FILE *stream,
 
 */
 
-void basic_parser_strip_buffer(const basic_parser_type *parser,
-                               char **__buffer) {
+static void basic_parser_strip_buffer(const basic_parser_type *parser,
+                                      char **__buffer) {
     char *src = *__buffer;
     char *target = (char *)util_calloc((strlen(*__buffer) + 1), sizeof *target);
 
