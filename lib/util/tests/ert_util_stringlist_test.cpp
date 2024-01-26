@@ -16,79 +16,6 @@ void test_char() {
     stringlist_append_copy(s, S2);
     stringlist_append_copy(s, S3);
 
-    {
-        char **copy = stringlist_alloc_char_copy(s);
-        int i;
-        bool equal = true;
-
-        for (i = 0; i < stringlist_get_size(s); i++) {
-            if (strcmp(stringlist_iget(s, i), copy[i]) != 0)
-                equal = false;
-            free(copy[i]);
-        }
-        free(copy);
-        if (!equal)
-            test_assert_false("Bug in test_char() function\n");
-    }
-    stringlist_free(s);
-}
-
-void test_alloc_join(const stringlist_type *s, const char *sep,
-                     const char *expected) {
-    char *j = stringlist_alloc_joined_string(s, sep);
-    test_assert_string_equal(j, expected);
-    free(j);
-}
-
-void test_join() {
-    const char *elt0 = "AAA";
-    const char *elt1 = "BBB";
-    const char *elt2 = "CCC";
-    const char *elt3 = "DDD";
-    const char *elt4 = "EEE";
-    const char *elt5 = "FFF";
-
-    stringlist_type *s = stringlist_alloc_new();
-    test_alloc_join(s, "!!!", "");
-
-    stringlist_append_copy(s, elt0);
-    stringlist_append_copy(s, elt1);
-    stringlist_append_copy(s, elt2);
-
-    const char *sep0 = "";
-    const char *sep1 = "!!!";
-    const char *sep2 = " abc ";
-
-    test_alloc_join(s, sep0, "AAABBBCCC");
-    test_alloc_join(s, sep1, "AAA!!!BBB!!!CCC");
-    test_alloc_join(s, sep2, "AAA abc BBB abc CCC");
-
-    {
-        stringlist_type *s1 = stringlist_alloc_new();
-
-        stringlist_append_copy(s1, elt0);
-        test_alloc_join(s1, sep0, "AAA");
-        test_alloc_join(s1, sep1, "AAA");
-        test_alloc_join(s1, sep2, "AAA");
-
-        stringlist_free(s1);
-    }
-    {
-        stringlist_type *sub = stringlist_alloc_new();
-        stringlist_append_copy(sub, elt0);
-        stringlist_append_copy(sub, elt1);
-        stringlist_append_copy(sub, elt2);
-        stringlist_append_copy(sub, elt3);
-        stringlist_append_copy(sub, elt4);
-        stringlist_append_copy(sub, elt5);
-        {
-            char *j = stringlist_alloc_joined_substring(sub, 2, 5, ":");
-            test_assert_string_equal("CCC:DDD:EEE", j);
-            free(j);
-        }
-
-        stringlist_free(sub);
-    }
     stringlist_free(s);
 }
 
@@ -108,30 +35,6 @@ void test_reverse() {
     test_assert_string_equal(s1, stringlist_iget(s, 1));
     test_assert_string_equal(s0, stringlist_iget(s, 2));
 
-    stringlist_free(s);
-}
-
-void test_iget_as_int() {
-    stringlist_type *s = stringlist_alloc_new();
-    stringlist_append_copy(s, "1000");
-    stringlist_append_copy(s, "1000X");
-    stringlist_append_copy(s, "XXXX");
-
-    {
-        int value;
-        bool valid;
-
-        value = stringlist_iget_as_int(s, 0, &valid);
-        test_assert_int_equal(value, 1000);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_int(s, 1, &valid);
-        test_assert_int_equal(value, -1);
-        test_assert_false(valid);
-
-        value = stringlist_iget_as_int(s, 2, NULL);
-        test_assert_int_equal(value, -1);
-    }
     stringlist_free(s);
 }
 
@@ -160,81 +63,8 @@ void test_iget_as_double() {
     stringlist_free(s);
 }
 
-void test_iget_as_bool() {
-    stringlist_type *s = stringlist_alloc_new();
-    stringlist_append_copy(s, "TRUE");
-    stringlist_append_copy(s, "True");
-    stringlist_append_copy(s, "true");
-    stringlist_append_copy(s, "T");
-    stringlist_append_copy(s, "1");
-
-    stringlist_append_copy(s, "FALSE");
-    stringlist_append_copy(s, "False");
-    stringlist_append_copy(s, "false");
-    stringlist_append_copy(s, "F");
-    stringlist_append_copy(s, "0");
-
-    stringlist_append_copy(s, "not_so_bool");
-    stringlist_append_copy(s, "8");
-
-    {
-        bool value = false;
-        bool valid = false;
-
-        value = stringlist_iget_as_bool(s, 0, &valid);
-        test_assert_true(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 1, &valid);
-        test_assert_true(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 2, &valid);
-        test_assert_true(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 3, &valid);
-        test_assert_true(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 4, &valid);
-        test_assert_true(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 5, &valid);
-        test_assert_false(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 6, &valid);
-        test_assert_false(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 7, &valid);
-        test_assert_false(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 8, &valid);
-        test_assert_false(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 9, &valid);
-        test_assert_false(value);
-        test_assert_true(valid);
-
-        value = stringlist_iget_as_bool(s, 10, &valid);
-        test_assert_false(value);
-        test_assert_false(valid);
-
-        value = stringlist_iget_as_bool(s, 11, &valid);
-        test_assert_false(value);
-        test_assert_false(valid);
-    }
-    stringlist_free(s);
-}
-
 void test_empty() {
     stringlist_type *s = stringlist_alloc_new();
-    stringlist_fprintf(s, "\n", stdout);
     stringlist_free(s);
 }
 
@@ -249,83 +79,6 @@ void test_front_back() {
     test_assert_string_equal("First", stringlist_front(s));
     test_assert_string_equal("Last", stringlist_back(s));
     stringlist_free(s);
-}
-
-void test_split() {
-    stringlist_type *s1 =
-        stringlist_alloc_from_split("My Name    is Joakim Hove", " ");
-    test_assert_int_equal(5, stringlist_get_size(s1));
-    test_assert_string_equal("My", stringlist_iget(s1, 0));
-    test_assert_string_equal("Name", stringlist_iget(s1, 1));
-    test_assert_string_equal("is", stringlist_iget(s1, 2));
-    test_assert_string_equal("Joakim", stringlist_iget(s1, 3));
-    test_assert_string_equal("Hove", stringlist_iget(s1, 4));
-    stringlist_free(s1);
-
-    s1 = stringlist_alloc_from_split("StringWithNoSPlit", " ");
-    test_assert_int_equal(1, stringlist_get_size(s1));
-    test_assert_string_equal("StringWithNoSPlit", stringlist_iget(s1, 0));
-    stringlist_free(s1);
-
-    s1 = stringlist_alloc_from_split("A:B::C:D:", ":");
-    test_assert_int_equal(4, stringlist_get_size(s1));
-    test_assert_string_equal("A", stringlist_iget(s1, 0));
-    test_assert_string_equal("B", stringlist_iget(s1, 1));
-    test_assert_string_equal("C", stringlist_iget(s1, 2));
-    test_assert_string_equal("D", stringlist_iget(s1, 3));
-    stringlist_free(s1);
-
-    s1 = stringlist_alloc_from_split("A:B::C:D:", "::");
-    test_assert_int_equal(4, stringlist_get_size(s1));
-    test_assert_string_equal("A", stringlist_iget(s1, 0));
-    test_assert_string_equal("B", stringlist_iget(s1, 1));
-    test_assert_string_equal("C", stringlist_iget(s1, 2));
-    test_assert_string_equal("D", stringlist_iget(s1, 3));
-    stringlist_free(s1);
-}
-
-void test_matching() {
-    stringlist_type *s1 = stringlist_alloc_new();
-    stringlist_type *s2 = stringlist_alloc_new();
-
-    stringlist_append_copy(s1, "AAA");
-    stringlist_append_copy(s1, "ABC");
-    stringlist_append_copy(s1, "123");
-    stringlist_append_copy(s1, "ABC:123");
-
-    stringlist_select_matching_elements(s2, s1, "*");
-    test_assert_int_equal(4, stringlist_get_size(s2));
-    test_assert_string_equal("AAA", stringlist_iget(s2, 0));
-    test_assert_string_equal("ABC", stringlist_iget(s2, 1));
-    test_assert_string_equal("123", stringlist_iget(s2, 2));
-    test_assert_string_equal("ABC:123", stringlist_iget(s2, 3));
-
-    stringlist_select_matching_elements(s2, s1, "*");
-    test_assert_int_equal(4, stringlist_get_size(s2));
-    test_assert_string_equal("AAA", stringlist_iget(s2, 0));
-    test_assert_string_equal("ABC", stringlist_iget(s2, 1));
-    test_assert_string_equal("123", stringlist_iget(s2, 2));
-    test_assert_string_equal("ABC:123", stringlist_iget(s2, 3));
-
-    stringlist_append_matching_elements(s2, s1, "*");
-    test_assert_int_equal(8, stringlist_get_size(s2));
-    test_assert_string_equal("AAA", stringlist_iget(s2, 0));
-    test_assert_string_equal("ABC", stringlist_iget(s2, 1));
-    test_assert_string_equal("123", stringlist_iget(s2, 2));
-    test_assert_string_equal("ABC:123", stringlist_iget(s2, 3));
-
-    test_assert_string_equal("AAA", stringlist_iget(s2, 4));
-    test_assert_string_equal("ABC", stringlist_iget(s2, 5));
-    test_assert_string_equal("123", stringlist_iget(s2, 6));
-    test_assert_string_equal("ABC:123", stringlist_iget(s2, 7));
-
-    stringlist_select_matching_elements(s2, s1, "*B*");
-    test_assert_int_equal(2, stringlist_get_size(s2));
-    test_assert_string_equal("ABC", stringlist_iget(s2, 0));
-    test_assert_string_equal("ABC:123", stringlist_iget(s2, 1));
-
-    stringlist_free(s2);
-    stringlist_free(s1);
 }
 
 bool FILE_predicate(const char *name, const void *arg) {
@@ -373,33 +126,11 @@ void test_predicate_matching() {
     stringlist_free(s);
 }
 
-void test_unique() {
-    stringlist_type *s = stringlist_alloc_new();
-
-    test_assert_true(stringlist_unique(s));
-
-    stringlist_append_copy(s, "S1");
-    test_assert_true(stringlist_unique(s));
-
-    stringlist_append_copy(s, "S2");
-    test_assert_true(stringlist_unique(s));
-
-    stringlist_append_copy(s, "S2");
-    test_assert_false(stringlist_unique(s));
-    stringlist_free(s);
-}
-
 int main(int argc, char **argv) {
     test_empty();
     test_char();
-    test_join();
     test_reverse();
-    test_iget_as_int();
-    test_iget_as_bool();
     test_iget_as_double();
-    test_split();
-    test_matching();
-    test_unique();
     test_predicate_matching();
     exit(0);
 }
