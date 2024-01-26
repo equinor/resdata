@@ -6,13 +6,26 @@
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>
-#include <ert/util/vector_util.hpp>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/nnc_info.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_kw_magic.hpp>
+
+#include <vector>
+#include <algorithm>
+
+template <class T> int vector_util_index(const std::vector<T> &vec, T value) {
+
+    int index;
+    auto iter = find(vec.begin(), vec.end(), value);
+    if (iter == vec.end())
+        index = -1;
+    else
+        index = iter - vec.begin();
+    return index;
+}
 
 void test_scan(const char *grid_filename) {
     rd_grid_type *rd_grid = rd_grid_alloc(grid_filename);
