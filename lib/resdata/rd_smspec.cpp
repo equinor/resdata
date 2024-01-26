@@ -856,15 +856,16 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
     if (rd_file_has_kw(header, RESTART_KW)) {
         const rd_kw_type *restart_kw =
             rd_file_iget_named_kw(header, RESTART_KW, 0);
-        char tmp_base
-            [73]; /* To accomodate a maximum of 9 items which consist of 8 characters each. */
-        char *restart_base;
-        int i;
-        tmp_base[0] = '\0';
-        for (i = 0; i < rd_kw_get_size(restart_kw); i++)
-            strcat(tmp_base, (const char *)rd_kw_iget_ptr(restart_kw, i));
+        int num_blocks = rd_kw_get_size(restart_kw);
+        num_blocks = 0 ? num_blocks < 0 : num_blocks;
+        char *tmp_base = (char *)calloc(8 * num_blocks + 1, sizeof(char));
+        for (int i = 0; i < num_blocks; i++) {
+            const char *part = (const char *)rd_kw_iget_ptr(restart_kw, i);
+            strncat(tmp_base, part, 8);
+        }
 
-        restart_base = util_alloc_strip_copy(tmp_base);
+        char *restart_base = util_alloc_strip_copy(tmp_base);
+        free(tmp_base);
         if (strlen(restart_base)) { /* We ignore the empty ones. */
             char *smspec_header;
 
@@ -1198,14 +1199,7 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 rd_smspec_type *rd_smspec_fread_alloc(const char *header_file,
                                       const char *key_join_string,
                                       bool include_restart) {
-    rd_smspec_type *rd_smspec;
-
-    {
-        char *path;
-        util_alloc_file_components(header_file, &path, NULL, NULL);
-        rd_smspec = rd_smspec_alloc_empty(false, key_join_string);
-        free(path);
-    }
+    rd_smspec_type *rd_smspec = rd_smspec_alloc_empty(false, key_join_string);
 
     if (rd_smspec_fread_header(rd_smspec, header_file, include_restart)) {
 
@@ -1226,20 +1220,21 @@ rd_smspec_type *rd_smspec_fread_alloc(const char *header_file,
 
         const rd::smspec_node *day_node =
             rd_smspec_get_var_node(rd_smspec->misc_var_index, "DAY");
-        if (day_node != NULL) {
-            rd_smspec->day_index = smspec_node_get_params_index(day_node);
-            rd_smspec->month_index = smspec_node_get_params_index(
-                &rd_smspec->misc_var_index["MONTH"]);
-            rd_smspec->year_index = smspec_node_get_params_index(
-                &rd_smspec->misc_var_index["YEAR"]);
+        const rd::smspec_node *month_node =
+            rd_smspec_get_var_node(rd_smspec->misc_var_index, "MONTH");
+        const rd::smspec_node *year_node =
+            rd_smspec_get_var_node(rd_smspec->misc_var_index, "YEAR");
+
+        if (day_node != NULL && month_node != NULL && year_node != NULL) {
+            rd_smspec->day_index = day_node->get_params_index();
+            rd_smspec->month_index = month_node->get_params_index();
+            rd_smspec->year_index = year_node->get_params_index();
         }
 
         if ((rd_smspec->time_index == -1) && (rd_smspec->day_index == -1)) {
-            /* Unusable configuration.
-
-         Seems the restart file can also have time specified with
-         'YEARS' as basic time unit; that mode is not supported.
-      */
+            // Unusable configuration.
+            // Seems the restart file can also have time specified with
+            // 'YEARS' as basic time unit; that mode is not supported.
 
             util_abort("%s: Sorry the SMSPEC file seems to lack all time "
                        "information, need either TIME, or DAY/MONTH/YEAR "
