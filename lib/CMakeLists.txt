@@ -49,7 +49,6 @@ add_library(
   resdata
   util/rng.cpp
   util/lookup_table.cpp
-  util/statistics.cpp
   util/mzran.cpp
   util/hash_node.cpp
   util/hash_sll.cpp
@@ -221,7 +220,6 @@ foreach(
   ert_util_relpath_test
   ert_util_rng
   ert_util_sscan_test
-  ert_util_statistics
   ert_util_strcat_test
   ert_util_stringlist_test
   ert_util_string_util
