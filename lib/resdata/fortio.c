@@ -22,8 +22,8 @@
 #include <string.h>
 #include <errno.h>
 
-#include <ert/util/util.h>
-#include <ert/util/type_macros.h>
+#include <ert/util/util.hpp>
+#include <ert/util/type_macros.hpp>
 #include <resdata/fortio.h>
 
 #define FORTIO_ID 345116

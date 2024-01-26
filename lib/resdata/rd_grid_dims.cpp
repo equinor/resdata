@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 
 #include <resdata/rd_grid_dims.hpp>

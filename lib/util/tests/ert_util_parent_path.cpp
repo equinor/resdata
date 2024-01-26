@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 
 void test_path(const char *expected_parent, const char *input_path) {

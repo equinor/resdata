@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <dirent.h>
 #include <sys/types.h>

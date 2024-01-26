@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/perm_vector.hpp>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/lookup_table.hpp>

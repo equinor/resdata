@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 void test_split(const char *test_string, bool split_on_first, const char *true1,
                 const char *true2) {

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include <ert/util/int_vector.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <ert/geometry/geo_util.hpp>
 #include <ert/geometry/geo_polygon.hpp>

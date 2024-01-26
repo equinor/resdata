@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/rng.hpp>
 #include <ert/util/mzran.hpp>
 

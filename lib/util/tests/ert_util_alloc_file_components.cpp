@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 
 void checkPath(const char *path, const char *directory, const char *base_name,

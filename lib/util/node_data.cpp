@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/node_data.hpp>
 #include <ert/util/node_ctype.hpp>
 

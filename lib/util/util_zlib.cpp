@@ -5,7 +5,7 @@
 
 #include <zlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 /**
   This function reads data from the input pointer data, and writes a

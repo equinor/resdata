@@ -18,13 +18,13 @@
 
 #include <stdlib.h>
 
-#include <ert/util/util.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/util.hpp>
+#include <ert/util/stringlist.hpp>
 
-#include <resdata/rd_file.h>
-#include <resdata/rd_util.h>
-#include <resdata/rd_endian_flip.h>
-#include <resdata/rd_type.h>
+#include <resdata/rd_file.hpp>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_endian_flip.hpp>
+#include <resdata/rd_type.hpp>
 
 int main(int argc, char **argv) {
     int num_files = argc - 1;

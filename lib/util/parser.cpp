@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/parser.hpp>
 
 #define PARSER_ESCAPE_CHAR '\\'
