@@ -21,8 +21,8 @@ typedef struct rd_kw_struct rd_kw_type;
 typedef enum { RD_KW_READ_OK = 0, RD_KW_READ_FAIL = 1 } rd_read_status_enum;
 
 /*
-  The size of an rd_kw instance is denoted with an integer. The
-  choice of int to store the size obviously limits the maximum size to
+  The size of an rd_kw instance is denoted with an integer. The choice of int
+  to store the size obviously limits the maximum size to
   INT_MAX elements. This choice is an historical mistake - it should
   probably have been size_t; however the rd_kw datastructure is
   tightly bound to the on-disk binary format supplied by Eclipse, and

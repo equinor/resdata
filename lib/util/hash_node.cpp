@@ -35,10 +35,6 @@ uint32_t hash_node_get_table_index(const hash_node_type *node) {
     return node->table_index;
 }
 
-uint32_t hash_node_get_global_index(const hash_node_type *node) {
-    return node->global_index;
-}
-
 const char *hash_node_get_key(const hash_node_type *node) { return node->key; }
 
 hash_node_type *hash_node_get_next(const hash_node_type *node) {
