@@ -5,7 +5,6 @@
 #include <math.h>
 
 #include <ert/util/util.h>
-#include <ert/util/buffer.hpp>
 #include <ert/util/int_vector.hpp>
 
 #include <resdata/rd_kw_magic.hpp>
@@ -1709,30 +1708,6 @@ rd_type_enum rd_kw_get_type(const rd_kw_type *rd_kw) {
 
 rd_data_type rd_kw_get_data_type(const rd_kw_type *rd_kw) {
     return rd_kw->data_type;
-}
-
-rd_kw_type *rd_kw_buffer_alloc(buffer_type *buffer) {
-    const char *header = buffer_fread_string(buffer);
-    int size = buffer_fread_int(buffer);
-    rd_type_enum rd_type = (rd_type_enum)buffer_fread_int(buffer);
-    size_t element_size = buffer_fread_int(buffer);
-
-    rd_data_type data_type = rd_type_create(rd_type, element_size);
-    rd_kw_type *rd_kw = rd_kw_alloc_empty();
-    rd_kw_initialize(rd_kw, header, size, data_type);
-    rd_kw_alloc_data(rd_kw);
-    buffer_fread(buffer, rd_kw->data,
-                 rd_type_get_sizeof_ctype(rd_kw->data_type), rd_kw->size);
-    return rd_kw;
-}
-
-void rd_kw_buffer_store(const rd_kw_type *rd_kw, buffer_type *buffer) {
-    buffer_fwrite_string(buffer, rd_kw->header8);
-    buffer_fwrite_int(buffer, rd_kw->size);
-    buffer_fwrite_int(buffer, rd_type_get_type(rd_kw->data_type));
-    buffer_fwrite_int(buffer, rd_type_get_sizeof_ctype(rd_kw->data_type));
-    buffer_fwrite(buffer, rd_kw->data,
-                  rd_type_get_sizeof_ctype(rd_kw->data_type), rd_kw->size);
 }
 
 void rd_kw_fwrite_param_fortio(fortio_type *fortio, const char *header,

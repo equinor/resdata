@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <ert/util/size_t_vector.hpp>
 #include <ert/util/util.h>

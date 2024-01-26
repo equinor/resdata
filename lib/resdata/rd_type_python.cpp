@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include <resdata/rd_type.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_grdecl.hpp>

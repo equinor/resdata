@@ -69,7 +69,6 @@ add_library(
   util/vector.cpp
   util/parser.cpp
   util/stringlist.cpp
-  util/buffer.cpp
   util/string_util.cpp
   util/type_vector_functions.cpp
   util/rd_version.cpp
@@ -218,7 +217,6 @@ foreach(
   ert_util_approx_equal
   ert_util_before_after
   ert_util_binary_split
-  ert_util_buffer
   ert_util_clamp
   ert_util_chdir
   ert_util_filename

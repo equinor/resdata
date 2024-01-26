@@ -2,6 +2,7 @@
 #include <limits>
 #include <algorithm>
 #include <memory>
+#include <cstring>
 
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_kw.h>
