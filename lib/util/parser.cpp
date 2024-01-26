@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #include <ert/util/util.h>
 #include <ert/util/parser.hpp>
-#include <ert/util/buffer.hpp>
 
 #define PARSER_ESCAPE_CHAR '\\'
 
