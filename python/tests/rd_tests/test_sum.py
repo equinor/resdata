@@ -142,6 +142,8 @@ class SumTest(ResdataTest):
         )
         self.assertEqual(Summary.varType("RPR"), SummaryVarType.RD_SMSPEC_REGION_VAR)
         self.assertEqual(Summary.varType("WNEWTON"), SummaryVarType.RD_SMSPEC_MISC_VAR)
+        self.assertEqual(Summary.varType("YEAR"), SummaryVarType.RD_SMSPEC_MISC_VAR)
+        self.assertEqual(Summary.varType("MONTH"), SummaryVarType.RD_SMSPEC_MISC_VAR)
         self.assertEqual(
             Summary.varType("AARQ:4"), SummaryVarType.RD_SMSPEC_AQUIFER_VAR
         )
