@@ -19,13 +19,10 @@ typedef enum {
 
 bool hash_node_key_eq(const hash_node_type *, uint32_t, const char *);
 hash_node_type *hash_node_get_next(const hash_node_type *);
-uint32_t hash_node_get_insert_nr(const hash_node_type *);
 void hash_node_set_next(hash_node_type *, const hash_node_type *);
 hash_node_type *hash_node_alloc_new(const char *, node_data_type *,
                                     hashf_type *, uint32_t);
-void hash_node_set_insert_nr(hash_node_type *, uint32_t);
 uint32_t hash_node_get_table_index(const hash_node_type *);
-uint32_t hash_node_get_global_index(const hash_node_type *);
 const char *hash_node_get_key(const hash_node_type *);
 node_data_type *hash_node_get_data(const hash_node_type *);
 void hash_node_free(hash_node_type *);
