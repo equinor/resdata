@@ -9,8 +9,6 @@ extern "C" {
 
 typedef struct lookup_table_struct lookup_table_type;
 
-void lookup_table_set_data(lookup_table_type *lt, double_vector_type *x,
-                           double_vector_type *y, bool data_owner);
 lookup_table_type *lookup_table_alloc(double_vector_type *x,
                                       double_vector_type *y, bool data_owner);
 lookup_table_type *lookup_table_alloc_empty();
