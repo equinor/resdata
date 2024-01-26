@@ -2,6 +2,7 @@
 Simple package for working with 2D geometry.
 
 """
+
 import resdata
 from cwrap import Prototype
 

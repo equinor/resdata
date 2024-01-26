@@ -10,6 +10,7 @@ combined e.g. with logical &.
 When the selection process is complete the region instance can be
 queried for the corresponding list of indices.
 """
+
 from functools import wraps
 import ctypes
 

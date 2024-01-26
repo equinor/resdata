@@ -1,6 +1,7 @@
 """
 Create a polygon
 """
+
 import ctypes
 
 from cwrap import BaseCClass

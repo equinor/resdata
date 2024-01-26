@@ -20,6 +20,7 @@ implementation from the resdata library.
 [1]: In particular for restart files, which do not have a special
      RestartFile class, there is some specialized functionality.
 """
+
 import ctypes
 import datetime
 import re

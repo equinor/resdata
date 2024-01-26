@@ -9,6 +9,7 @@ BaseCEnum class from cwrap.
 In addition to the enum definitions there are a few stateless
 functions from rd_util.c which are not bound to any class type.
 """
+
 from __future__ import absolute_import
 
 import ctypes

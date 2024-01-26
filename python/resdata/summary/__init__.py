@@ -4,7 +4,6 @@
      used as basis for queries on summary vectors.
 """
 
-
 import resdata.util.util
 import resdata.geometry
 

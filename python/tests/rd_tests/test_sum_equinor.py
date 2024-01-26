@@ -488,8 +488,8 @@ class SumTest(ResdataTest):
         )
         self.assertIsNotNone(eclipse_summary)
 
-        hwell_padder = (
-            lambda key: key if key.split(":")[-1] != "HWELL_PR" else key + "OD"
+        hwell_padder = lambda key: (
+            key if key.split(":")[-1] != "HWELL_PR" else key + "OD"
         )
         self.assertEqual(
             intersect_summary.keys("WWCT*"),
