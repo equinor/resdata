@@ -106,14 +106,6 @@ node_data_type *node_data_alloc_copy(const node_data_type *node,
     return node_data_copyc(node, deep_copy);
 }
 
-node_data_type *node_data_alloc_deep_copy(const node_data_type *node) {
-    return node_data_copyc(node, true);
-}
-
-node_data_type *node_data_alloc_shallow_copy(const node_data_type *node) {
-    return node_data_copyc(node, false);
-}
-
 /**
    This function does NOT call the destructor on the data. That means
    that calling scope is responsible for freeing the data; used by the
@@ -126,10 +118,6 @@ void node_data_free(node_data_type *node_data) {
         node_data->del((void *)node_data->data);
 
     node_data_free_container(node_data);
-}
-
-const void *node_data_get_const_ptr(const node_data_type *node_data) {
-    return node_data->data;
 }
 
 void *node_data_get_ptr(const node_data_type *node_data) {
@@ -155,17 +143,6 @@ int node_data_get_int(const node_data_type *node_data) {
     if (node_data->ctype == CTYPE_INT_VALUE)
         return *((int *)node_data->data);
     else {
-        util_abort("%s: wrong type \n", __func__);
-        return 0;
-    }
-}
-
-int node_data_fetch_and_inc_int(node_data_type *node_data) {
-    if (node_data->ctype == CTYPE_INT_VALUE) {
-        int *data = (int *)node_data->data;
-        (*data) += 1;
-        return *data;
-    } else {
         util_abort("%s: wrong type \n", __func__);
         return 0;
     }
