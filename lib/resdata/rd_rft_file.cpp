@@ -12,7 +12,7 @@
 #include <map>
 #include <string>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_rft_file.hpp>
 #include <resdata/rd_rft_node.hpp>

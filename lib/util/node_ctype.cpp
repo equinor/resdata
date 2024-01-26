@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/node_ctype.hpp>
 
 const char *node_ctype_name(node_ctype ctype) {

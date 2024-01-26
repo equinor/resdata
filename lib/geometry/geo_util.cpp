@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <ert/geometry/geo_util.hpp>
 

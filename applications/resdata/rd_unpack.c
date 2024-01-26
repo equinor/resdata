@@ -18,13 +18,13 @@
 
 #include <stdbool.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <resdata/rd_file.h>
-#include <resdata/rd_util.h>
-#include <resdata/rd_kw.h>
-#include <resdata/rd_endian_flip.h>
-#include <resdata/rd_kw_magic.h>
+#include <resdata/rd_file.hpp>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_kw.hpp>
+#include <resdata/rd_endian_flip.hpp>
+#include <resdata/rd_kw_magic.hpp>
 
 void unpack_file(const char *filename) {
     rd_file_enum target_type = RD_OTHER_FILE;

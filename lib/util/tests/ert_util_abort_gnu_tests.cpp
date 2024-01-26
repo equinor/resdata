@@ -7,7 +7,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 
 void test_assert_util_abort(const char *function_name, void(void *), void *arg);

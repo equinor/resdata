@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_util.hpp>

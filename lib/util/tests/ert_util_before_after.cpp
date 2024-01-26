@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 int main(int argc, char **argv) {
     time_t t1 = util_make_date_utc(1, 1, 2000);

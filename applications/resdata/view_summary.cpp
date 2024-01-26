@@ -2,13 +2,13 @@
 #include <string.h>
 #include <signal.h>
 
-#include <ert/util/ert_api_config.h>
+#include <ert/util/ert_api_config.hpp>
 
 #ifdef ERT_HAVE_GETOPT
 #include <getopt.h>
 #endif
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/stringlist.hpp>
 
 #include <resdata/rd_kw.hpp>

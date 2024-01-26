@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
 #include <ert/util/vector_util.hpp>

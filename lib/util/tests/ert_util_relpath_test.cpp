@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include <ert/util/vector.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 
 void test_path(int nr, const char *root, const char *path,

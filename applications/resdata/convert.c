@@ -21,12 +21,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <resdata/rd_kw.h>
+#include <resdata/rd_kw.hpp>
 #include <resdata/fortio.h>
-#include <resdata/rd_util.h>
-#include <resdata/rd_endian_flip.h>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_endian_flip.hpp>
 
 void file_convert(const char *src_file, const char *target_file,
                   rd_file_enum file_type, bool fmt_src) {

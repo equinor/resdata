@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/node_data.hpp>
 #include <ert/util/hash_node.hpp>
 

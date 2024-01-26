@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include "detail/util/path.hpp"
 

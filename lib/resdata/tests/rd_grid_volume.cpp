@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_file.hpp>

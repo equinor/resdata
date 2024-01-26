@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
 
 #include "detail/util/path.hpp"

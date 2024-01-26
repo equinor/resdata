@@ -1,6 +1,6 @@
 #include <stdexcept>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/FortIO.hpp>
 

@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 /**
 

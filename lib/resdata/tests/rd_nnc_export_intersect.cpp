@@ -5,7 +5,7 @@
 #include <ert/util/test_util.hpp>
 
 #include <resdata/rd_nnc_export.hpp>
-#include <resdata/rd_endian_flip.h>
+#include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_nnc_data.hpp>
 #include <resdata/rd_grid.hpp>

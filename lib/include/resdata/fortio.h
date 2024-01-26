@@ -26,7 +26,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
 
 typedef enum {
