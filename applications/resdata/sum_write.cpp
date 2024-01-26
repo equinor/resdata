@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <ert/util/util.h>
-#include <ert/util/vector.h>
+#include <ert/util/util.hpp>
+#include <ert/util/vector.hpp>
 
-#include <resdata/rd_kw.h>
-#include <resdata/rd_sum.h>
-#include <resdata/smspec_node.h>
+#include <resdata/rd_kw.hpp>
+#include <resdata/rd_sum.hpp>
+#include <resdata/smspec_node.hpp>
 
 /*
   The summary data is stored in two different files:

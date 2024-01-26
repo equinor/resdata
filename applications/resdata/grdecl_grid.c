@@ -19,11 +19,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <resdata/rd_kw.h>
-#include <resdata/rd_grid.h>
-#include <resdata/rd_kw_magic.h>
+#include <resdata/rd_kw.hpp>
+#include <resdata/rd_grid.hpp>
+#include <resdata/rd_kw_magic.hpp>
 
 int main(int argc, char **argv) {
     FILE *stream = util_fopen(argv[1], "r");

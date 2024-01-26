@@ -19,8 +19,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
-#include <resdata/rd_kw.h>
+#include <ert/util/util.hpp>
+#include <resdata/rd_kw.hpp>
 
 int main(int argc, char **argv) {
     FILE *stream = util_fopen(argv[1], "r");

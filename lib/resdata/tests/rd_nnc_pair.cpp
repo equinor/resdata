@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_nnc_geometry.hpp>
 

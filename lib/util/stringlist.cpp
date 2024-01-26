@@ -14,7 +14,7 @@
 #include <Windows.h>
 #endif
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/stringlist.hpp>
 #include <ert/util/vector.hpp>
 

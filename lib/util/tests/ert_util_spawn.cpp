@@ -6,7 +6,7 @@
 
 #include <ert/util/stringlist.hpp>
 #include <ert/util/test_util.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
 
 static const char *stdout_msg = "stdout_xxx";

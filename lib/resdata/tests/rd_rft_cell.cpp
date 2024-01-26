@@ -3,7 +3,7 @@
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/time_t_vector.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_rft_node.hpp>
 #include <resdata/rd_rft_cell.hpp>

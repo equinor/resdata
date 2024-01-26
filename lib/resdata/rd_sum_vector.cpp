@@ -7,7 +7,7 @@
 #include <resdata/rd_sum.hpp>
 #include <resdata/rd_smspec.hpp>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 #include <ert/util/type_macros.hpp>
 

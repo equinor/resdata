@@ -3,7 +3,7 @@
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/test_work_area.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 void test_path(const char *input_path, const char *expected_path) {
     char *normal_path = util_alloc_normal_path(input_path);

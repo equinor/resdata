@@ -3,7 +3,7 @@
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/stringlist.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 int main(int argc, char **argv) {
     test_install_SIGNALS();

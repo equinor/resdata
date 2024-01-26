@@ -19,9 +19,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
-#include <resdata/rd_grid.h>
+#include <resdata/rd_grid.hpp>
 
 int main(int argc, char **argv) {
     if (argc != 5) {

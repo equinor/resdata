@@ -19,19 +19,19 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <ert/util/stringlist.h>
-#include <ert/util/test_util.h>
+#include <ert/util/stringlist.hpp>
+#include <ert/util/test_util.hpp>
 
-#include <resdata/rd_util.h>
-#include <resdata/rd_file.h>
-#include <resdata/rd_rsthead.h>
-#include <resdata/rd_kw_magic.h>
-#include <resdata/rd_grid.h>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_file.hpp>
+#include <resdata/rd_rsthead.hpp>
+#include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_grid.hpp>
 
-#include <resdata/well/well_conn_collection.h>
-#include <resdata/well/well_segment.h>
-#include <resdata/well/well_const.h>
-#include <resdata/well/well_segment_collection.h>
+#include <resdata/well/well_conn_collection.hpp>
+#include <resdata/well/well_segment.hpp>
+#include <resdata/well/well_const.hpp>
+#include <resdata/well/well_segment_collection.hpp>
 
 int main(int argc, char **argv) {
     const char *Xfile = argv[1];

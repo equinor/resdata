@@ -21,10 +21,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <resdata/rd_kw.h>
+#include <resdata/rd_kw.hpp>
 #include <resdata/fortio.h>
-#include <resdata/rd_util.h>
-#include <resdata/rd_endian_flip.h>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_endian_flip.hpp>
 
 void kw_list(const char *filename) {
     fortio_type *fortio;

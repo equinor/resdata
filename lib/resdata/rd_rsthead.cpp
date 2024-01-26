@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>

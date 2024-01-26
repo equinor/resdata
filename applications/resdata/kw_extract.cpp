@@ -2,16 +2,16 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <ert/util/util.h>
-#include <ert/util/hash.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/util.hpp>
+#include <ert/util/hash.hpp>
+#include <ert/util/stringlist.hpp>
 
-#include <resdata/rd_kw.h>
+#include <resdata/rd_kw.hpp>
 #include <resdata/fortio.h>
-#include <resdata/rd_util.h>
-#include <resdata/rd_sum.h>
-#include <resdata/rd_grid.h>
-#include <resdata/rd_endian_flip.h>
+#include <resdata/rd_util.hpp>
+#include <resdata/rd_sum.hpp>
+#include <resdata/rd_grid.hpp>
+#include <resdata/rd_endian_flip.hpp>
 
 /**
    This file will extract all occurences of kw1,kw2,...,kwn from the

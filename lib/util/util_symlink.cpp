@@ -4,7 +4,7 @@
 
 #include "ert/util/build_config.hpp"
 #include <ert/util/ert_api_config.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #ifndef ERT_HAVE_SYMLINK
 
