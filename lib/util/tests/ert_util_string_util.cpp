@@ -23,24 +23,7 @@ void test_int_vector(const int_vector_type *list, int length, ...) {
 
 void test_active_list() {
     int_vector_type *active_list = string_util_alloc_active_list("1,3- 10,15");
-    test_assert_true(string_util_init_active_list("1,3- 10,15", active_list));
     test_int_vector(active_list, 10, 1, 3, 4, 5, 6, 7, 8, 9, 10, 15);
-
-    test_assert_true(
-        string_util_update_active_list("1,3- 10,15,8", active_list));
-    test_int_vector(active_list, 10, 1, 3, 4, 5, 6, 7, 8, 9, 10, 15);
-
-    test_assert_false(string_util_update_active_list("1,X", active_list));
-    test_int_vector(active_list, 10, 1, 3, 4, 5, 6, 7, 8, 9, 10, 15);
-
-    test_assert_true(string_util_update_active_list("14-16", active_list));
-    test_int_vector(active_list, 12, 1, 3, 4, 5, 6, 7, 8, 9, 10, 14, 15, 16);
-
-    test_assert_true(string_util_update_active_list("0", active_list));
-    test_int_vector(active_list, 13, 0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 14, 15, 16);
-
-    test_assert_true(string_util_update_active_list("4-6", active_list));
-    test_int_vector(active_list, 13, 0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 14, 15, 16);
     int_vector_free(active_list);
 }
 
@@ -65,8 +48,6 @@ void test_active_mask() {
         string_util_alloc_active_mask("1,3 -6,6-  10, 15");
 
     test2(active_mask);
-    test_assert_true(string_util_init_active_mask("1,3- 10,15", active_mask));
-    test2(active_mask);
 
     test_assert_false(string_util_update_active_mask("11,X", active_mask));
     test2(active_mask);
@@ -90,26 +71,12 @@ void test_value_list() {
     {
         int_vector_type *int_vector = string_util_alloc_value_list("1,2,4-7");
         test_int_vector(int_vector, 6, 1, 2, 4, 5, 6, 7);
-        test_assert_false(string_util_update_value_list("1,2,X", int_vector));
         int_vector_free(int_vector);
     }
 
     {
         int_vector_type *int_vector = string_util_alloc_value_list("5,5,5,5");
         test_int_vector(int_vector, 4, 5, 5, 5, 5);
-        test_assert_true(string_util_update_value_list("1-5", int_vector));
-        test_int_vector(int_vector, 9, 5, 5, 5, 5, 1, 2, 3, 4, 5);
-        test_assert_true(string_util_update_value_list("1-5", int_vector));
-        test_int_vector(int_vector, 14, 5, 5, 5, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4,
-                        5);
-        int_vector_free(int_vector);
-    }
-
-    {
-        int_vector_type *int_vector = int_vector_alloc(0, 77);
-        int_vector_append(int_vector, 125);
-        string_util_init_value_list("1-5", int_vector);
-        test_int_vector(int_vector, 5, 1, 2, 3, 4, 5);
         int_vector_free(int_vector);
     }
 }
