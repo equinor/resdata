@@ -746,6 +746,8 @@ static void rd_smspec_install_special_keys(rd_smspec_type *rd_smspec,
         break;
     case (RD_SMSPEC_AQUIFER_VAR):
         break;
+    case (RD_SMSPEC_NETWORK_VAR):
+        break;
     default:
         throw std::invalid_argument("Internal error - should not be here \n");
     }
