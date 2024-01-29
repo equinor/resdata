@@ -439,7 +439,8 @@ bool smspec_node_identify_rate(const char *keyword) {
         var_type == RD_SMSPEC_FIELD_VAR || var_type == RD_SMSPEC_REGION_VAR ||
         var_type == RD_SMSPEC_COMPLETION_VAR ||
         var_type == RD_SMSPEC_LOCAL_WELL_VAR ||
-        var_type == RD_SMSPEC_LOCAL_COMPLETION_VAR) {
+        var_type == RD_SMSPEC_LOCAL_COMPLETION_VAR ||
+        var_type == RD_SMSPEC_NETWORK_VAR) {
         static const std::vector<std::string> rate_vars{
             {"OPR",  "OIR",  "OVPR", "OVIR", "OFR",  "OPP",  "OPI",  "OMR",
              "GPR",  "GIR",  "GVPR", "GVIR", "GFR",  "GPP",  "GPI",  "GMR",
@@ -449,8 +450,10 @@ bool smspec_node_identify_rate(const char *keyword) {
              "NPR",  "NIR",  "CPR",  "CIR",  "SIR",  "SPR",  "TIR",  "TPR",
              "GOR",  "WCT",  "OGR",  "WGR",  "GLR"}};
         if (var_type == RD_SMSPEC_LOCAL_WELL_VAR ||
-            var_type == RD_SMSPEC_LOCAL_COMPLETION_VAR) {
+            var_type == RD_SMSPEC_LOCAL_COMPLETION_VAR ||
+            var_type == RD_SMSPEC_NETWORK_VAR) {
             //LOCAL var_type's are prefixed with L (that we ignore)
+            //NETWORK (junction or pipe) var_type's are prefixed with J or P
             return match_keyword_vector(2, rate_vars, keyword);
         }
         return match_keyword_vector(1, rate_vars, keyword);
@@ -564,7 +567,8 @@ void smspec_node::set_wgname(const char *wgname) {
         this->var_type == RD_SMSPEC_GROUP_VAR ||
         this->var_type == RD_SMSPEC_COMPLETION_VAR ||
         this->var_type == RD_SMSPEC_SEGMENT_VAR ||
-        this->var_type == RD_SMSPEC_LOCAL_WELL_VAR)
+        this->var_type == RD_SMSPEC_LOCAL_WELL_VAR ||
+        this->var_type == RD_SMSPEC_NETWORK_VAR)
         this->wgname = wgname;
 }
 
@@ -635,6 +639,10 @@ void smspec_node::set_gen_keys(const char *key_join_string_) {
     case (RD_SMSPEC_FIELD_VAR):
         // KEYWORD
         gen_key1 = keyword;
+        break;
+    case (RD_SMSPEC_NETWORK_VAR):
+        // KEYWORD:WGNAME
+        gen_key1 = smspec_alloc_wgname_key(key_join_string_, keyword, wgname);
         break;
     case (RD_SMSPEC_GROUP_VAR):
         // KEYWORD:WGNAME
@@ -774,6 +782,9 @@ rd_smspec_var_type smspec_node::valid_type(const char *keyword,
 
         return var_type;
     }
+
+    if (var_type == RD_SMSPEC_NETWORK_VAR)
+        return var_type;
 
     return RD_SMSPEC_INVALID_VAR;
 }
@@ -926,6 +937,8 @@ smspec_node::smspec_node(int param_index, const char *keyword,
     case (RD_SMSPEC_AQUIFER_VAR):
         set_num(grid_dims, num);
         break;
+    case (RD_SMSPEC_NETWORK_VAR):
+        break;
     default:
         throw std::invalid_argument("Should not be here ... ");
         break;
@@ -963,6 +976,8 @@ smspec_node::smspec_node(int param_index_, const char *keyword_,
         break;
     case (RD_SMSPEC_LOCAL_COMPLETION_VAR):
         set_lgr_ijk(lgr_i, lgr_j, lgr_k);
+        break;
+    case (RD_SMSPEC_NETWORK_VAR):
         break;
     default:
         throw std::invalid_argument("Should not be here .... ");
@@ -1265,7 +1280,7 @@ int smspec_node::cmp(const smspec_node &node1, const smspec_node &node2) {
         return cmp_KEYWORD_WGNAME_NUM(node1, node2);
 
     case (RD_SMSPEC_NETWORK_VAR):
-        return cmp_key1(node1, node2);
+        return cmp_KEYWORD_WGNAME(node1, node2);
 
     case (RD_SMSPEC_LOCAL_BLOCK_VAR):
         return cmp_KEYWORD_LGR_LGRIJK(node1, node2);

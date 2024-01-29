@@ -88,6 +88,12 @@ static void test_identify_rate_variable() {
     test_assert_true(smspec_node_identify_rate("RNLFR"));
     test_assert_true(smspec_node_identify_rate("RNLFR+"));
 
+    test_assert_true(smspec_node_identify_rate("NJOPR"));
+    test_assert_true(smspec_node_identify_rate("NJWPR"));
+    test_assert_true(smspec_node_identify_rate("NJGFR"));
+    test_assert_true(smspec_node_identify_rate("NPGFR"));
+    test_assert_true(smspec_node_identify_rate("NPOFR"));
+
     test_assert_false(smspec_node_identify_rate(""));
     test_assert_false(smspec_node_identify_rate("HEI"));
     test_assert_false(smspec_node_identify_rate("GBHP"));
