@@ -29,6 +29,7 @@ If the fixed path, given by the default ../../lib64 or RESDATA_LIBRARY_PATH
 alternative fails, the loader will try the default load behaviour
 before giving up completely.
 """
+
 import ctypes as ct
 import os.path
 import sys
