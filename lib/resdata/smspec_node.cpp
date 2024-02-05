@@ -44,8 +44,11 @@
 */
 
 static const char *special_vars[] = {
-    "NEWTON", "NAIMFRAC", "NLINEARS", "NLINSMIN", "NLINSMAX", "ELAPSED",
-    "MAXDPR", "MAXDSO",   "MAXDSG",   "MAXDSW",   "STEPTYPE", "WNEWTON"};
+    "NAIMFRAC", "NBAKFL",   "NBYTOT",   "NCPRLINS", "NEWTFL",   "NEWTON",
+    "NLINEARP", "NLINEARS", "NLINSMAX", "NLINSMIN", "NLRESMAX", "NLRESSUM",
+    "NMESSAGE", "NNUMFL",   "NNUMST",   "NTS",      "NTSECL",   "NTSMCL",
+    "NTSPCL",   "ELAPSED",  "MAXDPR",   "MAXDSO",   "MAXDSG",   "MAXDSW",
+    "STEPTYPE", "WNEWTON"};
 
 static const int nums_unused = 0;
 
