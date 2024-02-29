@@ -90,34 +90,18 @@ typedef bool(walk_dir_callback_ftype)(
 
 char *util_get_timezone(void);
 time_t util_make_datetime_utc(int, int, int, int, int, int);
-bool util_make_datetime_utc_validated(int sec, int min, int hour, int mday,
-                                      int month, int year, time_t *t);
 time_t util_make_date_utc(int, int, int);
 time_t util_make_pure_date_utc(time_t t);
 void util_inplace_forward_seconds_utc(time_t *t, double seconds);
 void util_inplace_forward_days_utc(time_t *t, double days);
 
-time_t util_file_mtime(const char *file);
 double util_difftime(time_t, time_t, int *, int *, int *, int *);
 double util_difftime_days(time_t, time_t);
 double util_difftime_seconds(time_t start_time, time_t end_time);
-bool util_after(time_t t, time_t limit);
-bool util_before(time_t t, time_t limit);
-bool util_file_newer(const char *file, time_t t0);
-bool util_file_older(const char *file, time_t t0);
 
-char *util_alloc_date_string_utc(time_t t);
-char *util_alloc_date_stamp_utc(void);
-
-double util_pow10(double x);
-bool util_char_in(char c, int, const char *);
 char *util_alloc_sprintf_va(const char *fmt, va_list ap);
 char *util_alloc_sprintf(const char *, ...);
-char *util_realloc_sprintf(char *, const char *, ...);
-bool util_fscanf_date_utc(FILE *, time_t *);
-bool util_sscanf_date_utc(const char *, time_t *);
 bool util_sscanf_isodate(const char *, time_t *);
-bool util_sscanf_percent(const char *string, double *value);
 bool util_is_executable(const char *);
 bool util_entry_exists(const char *entry);
 bool util_file_exists(const char *);
@@ -125,26 +109,15 @@ bool util_is_abs_path(const char *);
 char *util_alloc_abs_path(const char *path);
 char *util_alloc_rel_path(const char *__root_path, const char *path);
 bool util_fmt_bit8(const char *);
-bool util_fmt_bit8_stream(FILE *);
-char *util_strstr_int_format(const char *string);
-int util_int_format_count(const char *string);
-bool util_mkdir_p(const char *path);
+bool util_mkdir_p(const char *);
 void util_make_path(const char *);
-char *util_newest_file(const char *, const char *);
 double util_file_difftime(const char *, const char *);
-bool util_file_update_required(const char *, const char *);
 size_t util_file_size(const char *);
 size_t util_fd_size(int fd);
 void util_clear_directory(const char *path, bool strict_uid, bool unlink_root);
-void util_unlink_existing(const char *filename);
 void util_strupr(char *);
 bool util_string_equal(const char *s1, const char *s2);
 char *util_alloc_strupr_copy(const char *);
-void util_string_tr(char *, char, char);
-bool util_copy_stream(FILE *, FILE *, size_t, void *, bool abort_on_error);
-void util_move_file(const char *src_file, const char *target_file);
-void util_move_file4(const char *src_name, const char *target_name,
-                     const char *src_path, const char *target_path);
 bool util_copy_file(const char *, const char *);
 bool util_copy_file__(const char *src_file, const char *target_file,
                       size_t buffer_size, void *buffer, bool abort_on_error);
@@ -153,14 +126,10 @@ bool util_is_cwd(const char *path);
 char *util_alloc_normal_path(const char *input_path);
 char *util_alloc_realpath(const char *);
 char *util_alloc_realpath__(const char *input_path);
-bool util_string_match(const char *string, const char *pattern);
 bool util_string_has_wildcard(const char *s);
 bool util_file_readable(const char *file);
 bool util_entry_readable(const char *entry);
-bool util_entry_writable(const char *entry);
 bool util_ftruncate(FILE *stream, long size);
-
-void util_usleep(unsigned long micro_seconds);
 
 int util_roundf(float x);
 int util_round(double x);
@@ -192,82 +161,41 @@ bool util_chmod_if_owner(const char *filename, mode_t new_mode);
 int util_forward_line(FILE *, bool *);
 void util_rewind_line(FILE *);
 
-int util_count_content_file_lines(FILE *);
 FILE *util_mkdir_fopen(const char *filename, const char *mode);
-int util_fmove(FILE *stream, long offset, long shift);
 FILE *util_fopen(const char *, const char *);
 FILE *util_fopen__(const char *filename, const char *mode);
 bool util_fopen_test(const char *, const char *);
-char *util_split_alloc_dirname(const char *input_path);
 char *util_split_alloc_filename(const char *input_path);
 void util_alloc_file_components(const char *, char **, char **, char **);
-//char           * util_realloc_full_path(char * , const char *, const char *);
 char *util_alloc_tmp_file(const char *, const char *, bool);
 char *util_fscanf_alloc_line(FILE *, bool *);
-char *util_fscanf_alloc_token(FILE *);
-void util_fskip_token(FILE *);
-void util_fskip_space(FILE *, bool *);
-void util_fskip_chars(FILE *, const char *, bool *);
-void util_fskip_cchars(FILE *, const char *, bool *);
-bool util_fscanf_int(FILE *, int *);
-bool util_fscanf_bool(FILE *stream, bool *value);
 bool util_sscanf_bool(const char *, bool *);
-bool util_sscanf_octal_int(const char *buffer, int *value);
 int util_strcmp_int(const char *s1, const char *s2);
 int util_strcmp_float(const char *s1, const char *s2);
 bool util_sscanf_int(const char *, int *);
-const char *util_parse_int(const char *, int *, bool *);
-const char *util_skip_sep(const char *, const char *, bool *);
 bool util_sscanf_double(const char *, double *);
-//char   * util_alloc_full_path(const char *, const char *);
 char *util_alloc_filename(const char *, const char *, const char *);
-char *util_realloc_filename(char *, const char *, const char *, const char *);
 char *util_alloc_strip_copy(const char *);
-char *util_alloc_string_sum(const char **, int);
 char *util_strcat_realloc(char *, const char *);
 char *util_alloc_string_copy(const char *);
-char **util_stringlist_append_copy(char **, int, const char *);
-char **util_stringlist_append_ref(char **, int, const char *);
-char **util_alloc_stringlist_copy(char const *const *, int);
-void util_split_string(const char *, const char *, int *, char ***);
-void util_path_split(const char *, int *, char ***);
+void util_path_split(const char *line, int *_tokens, char ***_token_list);
 char *util_alloc_parent_path(const char *path);
 void util_binary_split_string(const char *, const char *, bool, char **,
                               char **);
-void util_binary_split_string_from_max_length(const char *, const char *, int,
-                                              char **, char **);
-char *util_alloc_joined_string(const char **, int, const char *);
-char *util_alloc_multiline_string(const char **, int);
-char *util_string_replace_alloc(const char *, const char *, const char *);
-char *util_string_replacen_alloc(const char *, int, const char **,
-                                 const char **);
 int util_string_replace_inplace(char **, const char *, const char *);
-char *util_string_strip_chars_alloc(const char *, const char *);
 char *util_realloc_string_copy(char *, const char *);
-char *util_realloc_substring_copy(char *, const char *, int N);
-char *util_realloc_dequoted_string(char *);
-char *util_alloc_dequoted_copy(const char *s);
 void util_free_stringlist(char **, int);
-void util_free_NULL_terminated_stringlist(char **string_list);
 char *util_alloc_substring_copy(const char *, int offset, int N);
 bool util_is_directory(const char *);
 bool util_is_file(const char *);
-
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
 void util_set_date_values_utc(time_t, int *, int *, int *);
-
 bool util_is_first_day_in_month_utc(time_t t);
-
-unsigned int util_dev_urandom_seed();
 unsigned int util_clock_seed(void);
 void util_fread_dev_random(int, char *);
 void util_fread_dev_urandom(int, char *);
-bool util_string_isspace(const char *s);
-
-char *util_alloc_dump_filename(void);
 void util_abort_test_set_intercept_function(const char *);
-bool util_addr2line_lookup(const void *, char **, char **, int *);
 void util_exit(const char *fmt, ...);
 void util_install_signals(void);
 void util_update_signals(void);
@@ -279,65 +207,35 @@ void *util_realloc_copy(void *org_ptr, const void *src, size_t byte_size);
 void *util_alloc_copy(const void *, size_t);
 void util_double_to_float(float *, const double *, int);
 void util_float_to_double(double *, const float *, int);
-
-int util_get_month_nr(const char *);
-
 char *util_fread_alloc_file_content(const char *, int *);
 void util_fwrite_string(const char *, FILE *);
-char *util_fread_realloc_string(char *, FILE *);
 char *util_fread_alloc_string(FILE *);
-void util_fskip_string(FILE *stream);
 void util_endian_flip_vector(void *data, int element_size, int elements);
 
-void util_clamp_double(double *value, double limit1, double limit2);
-double util_double_vector_mean(int, const double *);
-double util_double_vector_stddev(int, const double *);
 void util_double_vector_max_min(int, const double *, double *, double *);
 void util_update_double_max_min(double, double *, double *);
 void util_update_float_max_min(float, float *, float *);
 void util_update_int_max_min(int, int *, int *);
-float util_float_max(float, float);
-long int util_long_max(long int a, long int b);
 int util_int_max(int, int);
 double util_double_max(double, double);
-float util_float_min(float, float);
 int util_int_min(int, int);
 size_t util_size_t_min(size_t a, size_t b);
 size_t util_size_t_max(size_t a, size_t b);
-time_t util_time_t_min(time_t a, time_t b);
-time_t util_time_t_max(time_t a, time_t b);
 double util_double_min(double, double);
 void util_fskip_lines(FILE *, int);
 bool util_same_file(const char *, const char *);
 void util_fread(void *, size_t, size_t, FILE *, const char *);
 void util_fwrite(const void *, size_t, size_t, FILE *, const char *);
-time_t util_fread_time_t(FILE *stream);
 int util_fread_int(FILE *);
-long util_fread_long(FILE *);
-bool util_fread_bool(FILE *);
-double util_fread_double(FILE *stream);
 void util_fwrite_offset(offset_type, FILE *);
 void util_fwrite_size_t(size_t, FILE *);
 void util_fwrite_int(int, FILE *);
 void util_fwrite_long(long, FILE *);
-void util_fwrite_bool(bool, FILE *);
-void util_fwrite_time_t(time_t, FILE *);
 void util_fwrite_double(double, FILE *);
 void util_fwrite_int_vector(const int *, int, FILE *, const char *);
-void util_fwrite_double_vector(const double *, int, FILE *, const char *);
-void util_fread_char_vector(char *, int, FILE *, const char *);
-int util_type_get_id(const void *data);
-
-bool util_sscanf_bytesize(const char *, size_t *);
 int util_get_current_linenr(FILE *stream);
-
-void util_fskip_int(FILE *stream);
-void util_fskip_long(FILE *stream);
-void util_fskip_bool(FILE *stream);
 bool util_fseek_string(FILE *stream, const char *string, bool skip_string,
                        bool case_sensitive);
-char *util_fscanf_alloc_upto(FILE *stream, const char *stop_string,
-                             bool include_stop_string);
 bool util_files_equal(const char *file1, const char *file2);
 double util_kahan_sum(const double *data, size_t N);
 bool util_double_approx_equal(double d1, double d2);
@@ -350,7 +248,6 @@ void util_time_utc(time_t *t, struct tm *ts);
 
 bool util_is_link(const char *); // Will always return false on windows
 int util_chdir(const char *path);
-bool util_chdir_file(const char *filename);
 
 #ifdef ERT_HAVE_UNISTD
 #include <unistd.h>
