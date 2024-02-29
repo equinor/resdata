@@ -7,23 +7,6 @@
 #include <ert/util/test_util.hpp>
 #include <ert/util/test_work_area.hpp>
 
-void test_dirname() {
-    const char *src_file1 = "/some/very/long/path/file.txt";
-    const char *src_file2 = "relative/path/file.txt";
-    const char *src_file3 = "file.txt";
-
-    char *path1 = util_split_alloc_dirname(src_file1);
-    char *path2 = util_split_alloc_dirname(src_file2);
-    char *path3 = util_split_alloc_dirname(src_file3);
-
-    test_assert_string_equal("/some/very/long/path", path1);
-    test_assert_string_equal("relative/path", path2);
-    test_assert_NULL(path3);
-
-    free(path1);
-    free(path2);
-}
-
 void test_filename() {
     const char *src_file1 = "/some/very/long/path/file1.txt";
     const char *src_file2 = "relative/path/file2";
@@ -52,7 +35,6 @@ void test_alloc_filename_empty_strings() {
 
 int main(int argc, char **argv) {
 
-    test_dirname();
     test_filename();
     test_alloc_filename_empty_strings();
     exit(0);

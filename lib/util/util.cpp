@@ -231,12 +231,6 @@ void util_fread_dev_urandom(int buffer_size_, char *buffer) {
     fclose(stream);
 }
 
-unsigned int util_dev_urandom_seed() {
-    unsigned int seed;
-    util_fread_dev_urandom(sizeof seed, (char *)&seed);
-    return seed;
-}
-
 unsigned int util_clock_seed() {
     int sec, min, hour;
     int mday, year, month;
@@ -326,6 +320,16 @@ bool util_double_approx_equal(double d1, double d2) {
     return util_double_approx_equal__(d1, d2, epsilon, 0.0);
 }
 
+char *util_alloc_string_copy(const char *src) {
+    if (src != NULL) {
+        int byte_size = (strlen(src) + 1) * sizeof *src;
+        char *copy = (char *)util_calloc(byte_size, sizeof *copy);
+        memcpy(copy, src, byte_size);
+        return copy;
+    } else
+        return NULL;
+}
+
 char *util_alloc_substring_copy(const char *src, int offset, int N_) {
     size_t N = N_;
     char *copy;
@@ -336,51 +340,6 @@ char *util_alloc_substring_copy(const char *src, int offset, int N_) {
     } else
         copy = util_alloc_string_copy(&src[offset]);
     return copy;
-}
-
-char *util_alloc_dequoted_copy(const char *s) {
-    char first_char = s[0];
-    char last_char = s[strlen(s) - 1];
-    char *next;
-    int offset, len;
-
-    if ((first_char == '\'') || (first_char == '\"'))
-        offset = 1;
-    else
-        offset = 0;
-
-    if ((last_char == '\'') || (last_char == '\"'))
-        len = strlen(s) - offset - 1;
-    else
-        len = strlen(s) - offset;
-
-    next = util_alloc_substring_copy(s, offset, len);
-    return next;
-}
-
-/**
-   The input string is freed, and a new storage
-   without quotes is returned.
-*/
-char *util_realloc_dequoted_string(char *s) {
-    char first_char = s[0];
-    char last_char = s[strlen(s) - 1];
-    char *next;
-    int offset, len;
-
-    if ((first_char == '\'') || (first_char == '\"'))
-        offset = 1;
-    else
-        offset = 0;
-
-    if ((last_char == '\'') || (last_char == '\"'))
-        len = strlen(s) - offset - 1;
-    else
-        len = strlen(s) - offset;
-
-    next = util_alloc_substring_copy(s, offset, len);
-    free(s);
-    return next;
 }
 
 void util_strupr(char *s) {
@@ -398,7 +357,7 @@ char *util_alloc_strupr_copy(const char *s) {
 /**
     Replaces all occurences of c1 in s with c2.
 */
-void util_string_tr(char *s, char c1, char c2) {
+static void util_string_tr(char *s, char c1, char c2) {
     size_t i;
     for (i = 0; i < strlen(s); i++)
         if (s[i] == c1)
@@ -479,36 +438,6 @@ bool util_fseek_string(FILE *stream, const char *__string, bool skip_string,
     return string_found;
 }
 
-/**
-  This function will allocate a character buffer, and read file
-  content all the way up to 'stop_string'. If the stop_string is not
-  found, the function will return NULL, and the file pointer will be
-  unchanged.
-
-  If include_stop_string is true the returned string will end with
-  stop_string, and the file pointer will be positioned right AFTER
-  stop_string, otherwise the file_pointer will be positioned right
-  before stop_string.
-*/
-
-char *util_fscanf_alloc_upto(FILE *stream, const char *stop_string,
-                             bool include_stop_string) {
-    long int start_pos = util_ftell(stream);
-    if (util_fseek_string(stream, stop_string, include_stop_string,
-                          true)) { /* Default case sensitive. */
-        long int end_pos = util_ftell(stream);
-        int len = end_pos - start_pos;
-        char *buffer = (char *)util_calloc((len + 1), sizeof *buffer);
-
-        util_fseek(stream, start_pos, SEEK_SET);
-        util_fread(buffer, 1, len, stream, __func__);
-        buffer[len] = '\0';
-
-        return buffer;
-    } else
-        return NULL; /* stop_string not found */
-}
-
 static char *util_fscanf_alloc_line__(FILE *stream, bool *at_eof, char *line) {
     int init_pos = util_ftell(stream);
     char *new_line;
@@ -573,25 +502,6 @@ static char *util_fscanf_alloc_line__(FILE *stream, bool *at_eof, char *line) {
 
 char *util_fscanf_alloc_line(FILE *stream, bool *at_eof) {
     return util_fscanf_alloc_line__(stream, at_eof, NULL);
-}
-
-/**
-   WIndows does not have the usleep() function, on the other hand
-   Sleep() function in windows has millisecond resolution, instead of
-   seconds as in linux.
-*/
-
-void util_usleep(unsigned long micro_seconds) {
-#ifdef HAVE__USLEEP
-    usleep(micro_seconds);
-#else
-#ifdef ERT_WINDOWS
-    {
-        int milli_seconds = micro_seconds / 1000;
-        Sleep(milli_seconds);
-    }
-#endif
-#endif
 }
 
 static char *util_getcwd(char *buffer, int size) {
@@ -935,36 +845,6 @@ void util_fskip_lines(FILE *stream, int lines) {
     } while (cont);
 }
 
-bool util_char_in(char c, int set_size, const char *set) {
-    int i;
-    bool in = false;
-    for (i = 0; i < set_size; i++)
-        if (set[i] == c)
-            in = true;
-
-    return in;
-}
-
-/**
-    Returns true if ALL the characters in 's' return true from
-    isspace().
-*/
-bool util_string_isspace(const char *s) {
-    size_t index = 0;
-    while (index < strlen(s)) {
-        if (!isspace(s[index]))
-            return false;
-        index++;
-    }
-    return true;
-}
-
-void util_fskip_token(FILE *stream) {
-    char *tmp = util_fscanf_alloc_token(stream);
-    if (tmp != NULL)
-        free(tmp);
-}
-
 static void util_fskip_chars__(FILE *stream, const char *skip_set,
                                bool complimentary_set, bool *at_eof) {
     bool cont = true;
@@ -991,145 +871,6 @@ static void util_fskip_chars__(FILE *stream, const char *skip_set,
 
 void util_fskip_chars(FILE *stream, const char *skip_set, bool *at_eof) {
     util_fskip_chars__(stream, skip_set, false, at_eof);
-}
-
-void util_fskip_cchars(FILE *stream, const char *skip_set, bool *at_eof) {
-    util_fskip_chars__(stream, skip_set, true, at_eof);
-}
-
-static void util_fskip_space__(FILE *stream, bool complimentary_set,
-                               bool *at_eof) {
-    bool cont = true;
-    do {
-        int c = fgetc(stream);
-        if (c == EOF) {
-            *at_eof = true;
-            cont = false;
-        } else {
-            if (!isspace(c)) {
-                /* c is not in space set. */
-                if (!complimentary_set)
-                    cont = false;
-            } else {
-                /* c is in skip_set */
-                if (complimentary_set)
-                    cont = false;
-            }
-        }
-    } while (cont);
-    if (!*at_eof)
-        util_fseek(stream, -1, SEEK_CUR);
-}
-
-void util_fskip_space(FILE *stream, bool *at_eof) {
-    util_fskip_space__(stream, false, at_eof);
-}
-
-/**
-    This functions reads a token[1] from stream, allocates storage for
-    the it, and returns the newly allocated storage. Observe that the
-    function does *NOT* read past end of line. If no token can be the
-    function will return NULL.
-
-    Example:
-    --------
-
-    File:
-     ________________
-    /
-    | This is a file
-    | Line2
-    | Line3
-    \________________
-
-
-   bool at_eof = 0;
-   char * token;
-   while (!at_eof) {
-      token = util_fscanf_alloc_token(stream);
-      if (token != NULL) {
-         printf("Have read token:%s \n",token);
-         free(token);
-      } else {
-         printf("Have reached EOL/EOF \n");
-         util_forward_line(stream , &at_eof);
-      }
-   }
-
-   This will produce the output:
-   Have read token: This
-   Have read token: is
-   Have read token: a
-   Have read token: file
-   Have reached EOL/EOF
-   Have read token: Line2
-   Have reached EOL/EOF
-   Have read token: Line3
-   Have reached EOL/EOF
-
-
-   [1]: A token is defined as a sequence of characters separated by
-    white-space or tab.
-*/
-
-char *util_fscanf_alloc_token(FILE *stream) {
-    const char *space_set = " \t";
-    bool cont;
-    char *token = NULL;
-    char c;
-
-    cont = true;
-
-    /* Skipping initial whitespace */
-    do {
-        int pos = util_ftell(stream);
-        c = fgetc(stream);
-        if (EOL_CHAR(c)) {
-            /* Going back to position at newline */
-            util_fseek(stream, pos, SEEK_SET);
-            cont = false;
-        } else if (c == EOF)
-            cont = false;
-        else if (!util_char_in(c, 2, space_set)) {
-            util_fseek(stream, pos, SEEK_SET);
-            cont = false;
-        }
-    } while (cont);
-    if (EOL_CHAR(c))
-        return NULL;
-    if (c == EOF)
-        return NULL;
-
-    /* At this point we are guranteed to return something != NULL */
-    cont = true;
-    {
-        int length = 0;
-        long int token_start = util_ftell(stream);
-
-        do {
-            c = fgetc(stream);
-            if (c == EOF)
-                cont = false;
-            else if (EOL_CHAR(c))
-                cont = false;
-            else if (util_char_in(c, 2, space_set))
-                cont = false;
-            else
-                length++;
-        } while (cont);
-        if (EOL_CHAR(c))
-            util_fseek(stream, -1, SEEK_CUR);
-
-        token = (char *)util_calloc(length + 1, sizeof *token);
-        util_fseek(stream, token_start, SEEK_SET);
-        {
-            int i;
-            for (i = 0; i < length; i++)
-                token[i] = fgetc(stream);
-            token[length] = '\0';
-        }
-    }
-    return token;
 }
 
 /**
@@ -1174,34 +915,6 @@ bool util_sscanf_double(const char *buffer, double *value) {
 }
 
 /**
-   Base 8
-*/
-
-bool util_sscanf_octal_int(const char *buffer, int *value) {
-    if (!buffer)
-        return false;
-
-    bool value_OK = false;
-    char *error_ptr;
-
-    int tmp_value = strtol(buffer, &error_ptr, 8);
-
-    /*
-    Skip trailing white-space
-  */
-
-    while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
-        error_ptr++;
-
-    if (error_ptr[0] == '\0') {
-        value_OK = true;
-        if (value != NULL)
-            *value = tmp_value;
-    }
-    return value_OK;
-}
-
-/**
    Takes a char buffer as input, and parses it as an integer. Returns
    true if the parsing succeeded, and false otherwise. If parsing
    succeeded, the integer value is returned by reference.
@@ -1233,7 +946,6 @@ bool util_sscanf_int(const char *buffer, int *value) {
   If any (or both) s1 or s2 is equal to NULL - the function will
   return false.
 */
-
 bool util_string_equal(const char *s1, const char *s2) {
     if (s1 == NULL || s2 == NULL)
         return false;
@@ -1246,149 +958,8 @@ bool util_string_equal(const char *s1, const char *s2) {
 }
 
 /**
-   This function parses the string 's' for an integer. The return
-   value is a pointer to the first character which is not an integer
-   literal, or NULL if the whole string is read.
-
-   The actual integer value is returned by reference. In addition a
-   bool 'OK' is returned by reference, observe that that the bool OK
-   is checked on function entry, and must point to true then.
-
-   The somewhat contrived interface is to facilitate repeated calls on
-   the same string to get out all the integers, typically to be used
-   together with util_skip_sep().
-
-   Example
-   -------
-
-   s = "1, 10, 78, 67";
-         |   |   |   NULL
-         1   2   3   3
-
-   The vertical bars indicate the return values.
-
-*/
-
-const char *util_parse_int(const char *s, int *value, bool *OK) {
-    if (*OK) {
-        char *error_ptr;
-        *value = strtol(s, &error_ptr, 10);
-        if (error_ptr == s)
-            *OK = false;
-        return error_ptr;
-    } else
-        return NULL;
-}
-
-/**
-   This function will skip the characters in s which are in the string
-   'sep_set' and return a pointer to the first character NOT in
-   'sep_set'; this is basically strspn() functionality. But it will
-   update a reference bool OK if no characters are skipped -
-   i.e. there should be some characters to skip. Typically used
-   together with util_parse_int():
-
-
-   Example
-   -------
-
-   const char * s = "1, 6 , 79 , 89 , 782";
-   const char * current_ptr = s;
-   bool OK = true;
-   while (OK) {
-      int value;
-      current_ptr = util_parse_int(current_ptr , &value , &OK);
-      if (OK)
-         printf("Found:%d \n",value);
-      current_ptr = util_skip_sep(current_ptr , " ," , &OK);
-   }
-
-
-*/
-
-const char *util_skip_sep(const char *s, const char *sep_set, bool *OK) {
-    if (*OK) {
-        int sep_length = strspn(s, sep_set);
-        if (sep_length == 0)
-            *OK = false;
-        return &s[sep_length];
-    } else
-        return NULL;
-}
-
-/**
-   This function will parse string containing an integer, and an
-   optional suffix. The valid suffixes are KB,MB and GB (any case is
-   allowed); if no suffix is appended the buffer is assumed to contain
-   a memory size already specified in bytes.
-
-
-   Observe that __this_function__ allows an arbitrary number of spaces
-   between between the integer literal and the suffix string; however
-   this might be tricky when parsing. It is probably best to disallow
-   these spaces?
-
-   "1GB", "1 GB", "1    gB"
-
-   are all legitimate. The universal factor used is 1024:
-
-      KB => *= 1024
-      MB => *= 1024 * 1024;
-      GB => *= 1024 * 1024 * 1024;
-
-   Observe that if the functions fails to parse/interpret the string
-   it will return false, and set the reference value to 0. However it
-   will not fail with an abort. Overflows are *NOT* checked for.
-*/
-
-bool util_sscanf_bytesize(const char *buffer, size_t *size) {
-    if (!buffer) {
-        if (size)
-            *size = 0;
-        return false;
-    }
-
-    size_t value;
-    char *suffix_ptr;
-    size_t KB_factor = 1024;
-    size_t MB_factor = 1024 * 1024;
-    size_t GB_factor = 1024 * 1024 * 1024;
-    size_t factor = 1;
-    bool parse_OK = true;
-
-    value = strtol(buffer, &suffix_ptr, 10);
-    if (suffix_ptr[0] != '\0') {
-        while (isspace(suffix_ptr[0]))
-            suffix_ptr++;
-        {
-            char *upper = util_alloc_strupr_copy(suffix_ptr);
-            if (strcmp(upper, "KB") == 0)
-                factor = KB_factor;
-            else if (strcmp(upper, "MB") == 0)
-                factor = MB_factor;
-            else if (strcmp(upper, "GB") == 0)
-                factor = GB_factor;
-            else
-                parse_OK = false;
-            /* else - failed to parse - returning false. */
-            free(upper);
-        }
-    }
-
-    if (size != NULL) {
-        if (parse_OK)
-            *size = value * factor;
-        else
-            *size = 0;
-    }
-
-    return parse_OK;
-}
-
-/**
    Checks if c is in the character class: [-0-9], and optionally "."
 */
-
 static int isnumeric(int c, bool float_mode) {
     if (isdigit(c))
         return true;
@@ -1643,79 +1214,6 @@ bool util_sscanf_bool(const char *buffer, bool *_value) {
     return parse_OK;
 }
 
-bool util_fscanf_bool(FILE *stream, bool *value) {
-    char buffer[256];
-    if (fscanf(stream, "%s", buffer) == 1)
-        return util_sscanf_bool(buffer, value);
-
-    return false;
-}
-
-/**
-   Takes a stream as input. Reads one string token from the stream,
-   and tries to interpret the token as an integer with the function
-   util_sscanf_int(). Returns true if the parsing succeeded, and false
-   otherwise. If parsing succeded, the integer value is returned by
-   reference.
-
-   If the parsing fails the stream is repositioned at the location it
-   had on entry to the function.
-*/
-
-bool util_fscanf_int(FILE *stream, int *value) {
-    long int start_pos = util_ftell(stream);
-    char *token = util_fscanf_alloc_token(stream);
-
-    bool value_OK = false;
-    if (token != NULL) {
-        value_OK = util_sscanf_int(token, value);
-        if (!value_OK)
-            util_fseek(stream, start_pos, SEEK_SET);
-        free(token);
-    }
-    return value_OK;
-}
-
-int util_count_content_file_lines(FILE *stream) {
-    int lines = 0;
-    int empty_lines = 0;
-    int col = 0;
-    char c;
-
-    do {
-        c = fgetc(stream);
-        if (EOL_CHAR(c)) {
-            if (col == 0)
-                empty_lines++;
-            else {
-                lines += empty_lines + 1;
-                empty_lines = 0;
-            }
-            col = 0;
-            c = fgetc(stream);
-            if (!feof(stream)) {
-                if (!EOL_CHAR(c)) {
-                    util_fseek(stream, -1, SEEK_CUR);
-                }
-            } else if (c == EOF) {
-                lines++;
-            }
-
-        } else if (c == EOF) {
-            lines++;
-        } else {
-            if (c != ' ')
-                col++;
-        }
-    } while (!feof(stream));
-    if (col == 0)
-        /*
-      Not counting empty last line.
-    */
-        lines--;
-    return lines;
-}
-
 /**
     buffer_size is _only_ for a return (by reference) of the size of
     the allocation. Can pass in NULL if that size is not interesting.
@@ -1831,40 +1329,6 @@ bool util_copy_file(const char *src_file, const char *target_file) {
     }
 }
 
-void util_move_file(const char *src_file, const char *target_file) {
-    if (util_file_exists(src_file)) {
-        if (util_copy_file(src_file, target_file))
-            remove(src_file);
-    }
-}
-
-void util_move_file4(const char *src_name, const char *target_name,
-                     const char *src_path, const char *target_path) {
-    char *src;
-    char *target;
-
-    if (src_path != NULL)
-        src = util_alloc_filename(src_path, src_name, NULL);
-    else
-        src = util_alloc_string_copy(src_name);
-
-    if (target_name == NULL)
-        target_name = src_name;
-
-    if (target_path == NULL)
-        target_path = src_path;
-
-    if (target_path != NULL)
-        target = util_alloc_filename(target_path, target_name, NULL);
-    else
-        target = util_alloc_string_copy(target_name);
-
-    util_move_file(src, target);
-
-    free(target);
-    free(src);
-}
-
 /**
    Only the file _content_ is considered - file metadata is ignored.
 */
@@ -1902,91 +1366,6 @@ bool util_files_equal(const char *file1, const char *file2) {
     free(buffer1);
     free(buffer2);
     return equal;
-}
-
-static void util_fclear_region(FILE *stream, long offset, long region_size) {
-    util_fseek(stream, offset, SEEK_SET);
-    {
-        int i;
-        for (i = 0; i < region_size; i++)
-            fputc(0, stream);
-    }
-}
-
-static void util_fmove_block(FILE *stream, long offset, long shift,
-                             char *buffer, int buffer_size) {
-    util_fseek(stream, offset, SEEK_SET);
-    {
-        int bytes_read = fread(buffer, sizeof *buffer, buffer_size, stream);
-        util_fseek(stream, offset + shift, SEEK_SET);
-        fwrite(buffer, sizeof *buffer, bytes_read, stream);
-    }
-}
-
-/**
-   This function will modify a file in place by moving the part from
-   @offset and to the end of the file @shift bytes. If @shift is
-   positive a 'hole' will be created in the file, if @shift is
-   negative a part of the file will be overwritten:
-
-     Original        : "ABCDEFGHIJKILMNOPQ"
-     fmove( 10 , 5 ) : "ABCDEFGHIJ     KILMNOPQ"
-     fmove( 10 , -5) : "ABCDEKILMNOPQ"
-
-  If offset is positioned at the end of the file a section initialized
-  to zero will be appended to the file. If @offset is beyond the end
-  of the file the function will return EINVAL.
-
-  For this function to work the file must be opened in read-write mode
-  (i.e. r+).
-*/
-
-int util_fmove(FILE *stream, long offset, long shift) {
-    long file_size;
-    // Determine size of file.
-    {
-        long init_pos = util_ftell(stream);
-        util_fseek(stream, 0, SEEK_END);
-        file_size = util_ftell(stream);
-        util_fseek(stream, init_pos, SEEK_SET);
-    }
-
-    // Validate offset and shift input values.
-    if ((offset > file_size) || (offset < 0))
-        return EINVAL;
-
-    if (offset + shift < 0)
-        return EINVAL;
-
-    if (shift != 0) {
-        int buffer_size = 1024 * 1024 * 4; /* 4MB buffer size. */
-        char *buffer = (char *)util_calloc(buffer_size, sizeof *buffer);
-
-        /* Shift > 0: We are opening up a hole in the file. */
-        if (shift > 0) {
-            long pos = offset;
-            while ((pos + buffer_size) < file_size)
-                pos += buffer_size;
-
-            while (pos >= offset) {
-                util_fmove_block(stream, pos, shift, buffer, buffer_size);
-                pos -= buffer_size;
-            }
-            util_fclear_region(stream, offset, shift);
-        } else {
-            /* Shift < 0: We are overwriting a part of the file internally. */
-            long pos = offset;
-            while (pos <= file_size) {
-                util_fmove_block(stream, pos, shift, buffer, buffer_size);
-                pos += buffer_size;
-            }
-
-            // Make sure the file actually shrinks.
-            util_ftruncate(stream, file_size + shift);
-        }
-        free(buffer);
-    }
-    return 0;
 }
 
 /*
@@ -2105,14 +1484,6 @@ bool util_file_readable(const char *file) {
         return false;
 }
 
-bool util_entry_writable(const char *entry) {
-    stat_type buffer;
-    if (util_stat(entry, &buffer) == 0)
-        return buffer.st_mode & S_IWUSR;
-    else
-        return false; /* If stat failed - typically not existing entry - we return false. */
-}
-
 #else
 // Windows: executable status based purely on extension ....
 
@@ -2128,15 +1499,6 @@ bool util_is_executable(const char *path) {
 
 /* If it exists on windows it is readable ... */
 bool util_entry_readable(const char *entry) {
-    stat_type buffer;
-    if (util_stat(entry, &buffer) == 0)
-        return true;
-    else
-        return false; /* If stat failed - typically not existing entry - we return false. */
-}
-
-/* If it exists on windows it is readable ... */
-bool util_entry_writable(const char *entry) {
     stat_type buffer;
     if (util_stat(entry, &buffer) == 0)
         return true;
@@ -2367,11 +1729,6 @@ bool util_same_file(const char *file1, const char *file2) {
 #endif
 }
 
-void util_unlink_existing(const char *filename) {
-    if (util_file_exists(filename))
-        remove(filename);
-}
-
 bool util_fmt_bit8_stream(FILE *stream) {
     const int min_read = 256; /* Critically small */
     const double bit8set_limit = 0.00001;
@@ -2450,89 +1807,6 @@ double util_file_difftime(const char *file1, const char *file2) {
     return difftime(t1, t2);
 }
 
-time_t util_file_mtime(const char *file) {
-    time_t mtime = -1;
-    int fd = open(file, O_RDONLY);
-    if (fd != -1) {
-        stat_type f_stat;
-        util_fstat(fd, &f_stat);
-        mtime = f_stat.st_mtime;
-        close(fd);
-    }
-    return mtime;
-}
-
-/**
-   Will check if the st_mtime (i.e. last modification) of the file is
-   after the time given by @t0.
-*/
-
-bool util_file_newer(const char *file, time_t t0) {
-    time_t mtime = util_file_mtime(file);
-    if (difftime(mtime, t0) > 0)
-        return true;
-    else
-        return false;
-}
-
-/**
-   Will check if the st_mtime (i.e. last modification) of the file is
-   before the time given by @t0.
-*/
-
-bool util_file_older(const char *file, time_t t0) {
-    time_t mtime = util_file_mtime(file);
-    if (difftime(mtime, t0) < 0)
-        return true;
-    else
-        return false;
-}
-
-bool util_before(time_t t, time_t limit) {
-    if (difftime(limit, t) > 0)
-        return true;
-    else
-        return false;
-}
-
-bool util_after(time_t t, time_t limit) {
-    if (difftime(limit, t) < 0)
-        return true;
-    else
-        return false;
-}
-
-/**
-    This function will return a pointer to the newest of the two
-    files. If one of the files does not exist - the other is
-    returned. If none of the files exist - NULL is returned.
-*/
-
-char *util_newest_file(const char *file1, const char *file2) {
-    if (util_file_exists(file1)) {
-        if (util_file_exists(file2)) {
-            /* Actual comparison of two existing files. */
-            if (util_file_difftime(file1, file2) < 0)
-                return (char *)file1;
-            else
-                return (char *)file2;
-        } else
-            return (char *)file1; /* Only file1 exists. */
-    } else {
-        if (util_file_exists(file2))
-            return (char *)file2; /* Only file2 exists. */
-        else
-            return NULL; /* None of the files exist. */
-    }
-}
-
-bool util_file_update_required(const char *src_file, const char *target_file) {
-    if (util_file_difftime(src_file, target_file) < 0)
-        return true;
-    else
-        return false;
-}
-
 static void __util_set_timevalues_utc(time_t t, int *sec, int *min, int *hour,
                                       int *mday, int *month, int *year) {
     struct tm ts;
@@ -2590,68 +1864,6 @@ bool util_is_first_day_in_month_utc(time_t t) {
 }
 
 /*
-  Expects date in the order YYYY-MM-DD.
-*/
-
-bool util_sscanf_isodate(const char *date_token, time_t *t) {
-    int day, month, year;
-    int year_digit1, year_digit2, year_digit3, year_digit4;
-
-    if (date_token &&
-        sscanf(date_token, "%1d%1d%1d%1d-%d-%d", &year_digit1, &year_digit2,
-               &year_digit3, &year_digit4, &month, &day) == 6 &&
-        sscanf(date_token, "%d-%d-%d", &year, &month, &day) == 3)
-        return util_make_datetime_utc__(0, 0, 0, day, month, year, false, t);
-
-    if (t)
-        *t = -1;
-    return false;
-}
-
-/**
-   If the parsing fails the time_t pointer is set to -1;
-*/
-bool util_sscanf_date_utc(const char *date_token, time_t *t) {
-    int day, month, year;
-    char sep1, sep2;
-
-    if (date_token && sscanf(date_token, "%d%c%d%c%d", &day, &sep1, &month,
-                             &sep2, &year) == 5) {
-        if (t)
-            *t = util_make_date_utc(day, month, year);
-        return true;
-    } else {
-        if (t)
-            *t = -1;
-        return false;
-    }
-}
-
-bool util_sscanf_percent(const char *percent_token, double *value) {
-    if (!percent_token)
-        return false;
-
-    char *percent_ptr;
-    double double_val = strtod(percent_token, &percent_ptr);
-
-    if (0 == strcmp(percent_ptr, "%")) {
-        *value = double_val;
-        return true;
-    } else
-        return false;
-}
-
-bool util_fscanf_date_utc(FILE *stream, time_t *t) {
-    int init_pos = util_ftell(stream);
-    char *date_token = util_fscanf_alloc_token(stream);
-    bool return_value = util_sscanf_date_utc(date_token, t);
-    if (!return_value)
-        util_fseek(stream, init_pos, SEEK_SET);
-    free(date_token);
-    return return_value;
-}
-
-/*
    The date format is HARD assumed to be
 
    dd/mm/yyyy
@@ -2660,18 +1872,6 @@ bool util_fscanf_date_utc(FILE *stream, time_t *t) {
    yyyy ~2000
 
 */
-
-char *util_alloc_date_string_utc(time_t t) {
-    int mday, year, month;
-
-    util_set_datetime_values_utc(t, NULL, NULL, NULL, &mday, &month, &year);
-    return util_alloc_sprintf("%02d/%02d/%4d", mday, month, year);
-}
-
-char *util_alloc_date_stamp_utc() {
-    time_t now = time(NULL);
-    return util_alloc_date_string_utc(now);
-}
 
 void util_inplace_forward_seconds_utc(time_t *t, double seconds) {
     (*t) += seconds;
@@ -2797,12 +1997,6 @@ static bool util_make_datetime_utc__(int sec, int min, int hour, int mday,
     return valid;
 }
 
-bool util_make_datetime_utc_validated(int sec, int min, int hour, int mday,
-                                      int month, int year, time_t *t) {
-    return util_make_datetime_utc__(sec, min, hour, mday, month, year, false,
-                                    t);
-}
-
 time_t util_make_datetime_utc(int sec, int min, int hour, int mday, int month,
                               int year) {
     time_t t;
@@ -2854,15 +2048,18 @@ char *util_alloc_strip_copy(const char *src) {
     return target;
 }
 
-char **util_alloc_stringlist_copy(char const *const *src, int len) {
-    if (src != NULL) {
-        int i;
-        char **copy = (char **)util_calloc(len, sizeof *copy);
-        for (i = 0; i < len; i++)
-            copy[i] = util_alloc_string_copy(src[i]);
-        return copy;
-    } else
-        return NULL;
+/**
+   This is nearly the same as util_stringlist_append_copy(), but for
+   this case only a refernce to the new string is appended.
+
+   Slightly more dangerous to use ...
+*/
+static char **util_stringlist_append_ref(char **string_list, int size,
+                                         const char *append_string) {
+    string_list =
+        (char **)util_realloc(string_list, (size + 1) * sizeof *string_list);
+    string_list[size] = (char *)append_string;
+    return string_list;
 }
 
 /**
@@ -2888,31 +2085,6 @@ char **util_stringlist_append_copy(char **string_list, int size,
                                       util_alloc_string_copy(append_string));
 }
 
-/**
-   This is nearly the same as util_stringlist_append_copy(), but for
-   this case only a refernce to the new string is appended.
-
-   Slightly more dangerous to use ...
-*/
-
-char **util_stringlist_append_ref(char **string_list, int size,
-                                  const char *append_string) {
-    string_list =
-        (char **)util_realloc(string_list, (size + 1) * sizeof *string_list);
-    string_list[size] = (char *)append_string;
-    return string_list;
-}
-
-char *util_alloc_string_copy(const char *src) {
-    if (src != NULL) {
-        int byte_size = (strlen(src) + 1) * sizeof *src;
-        char *copy = (char *)util_calloc(byte_size, sizeof *copy);
-        memcpy(copy, src, byte_size);
-        return copy;
-    } else
-        return NULL;
-}
-
 char *util_realloc_string_copy(char *old_string, const char *src) {
     if (src != NULL) {
         /* Realloc can either (1) reuse or (2) allocate new memory (and free the
@@ -2936,291 +2108,12 @@ char *util_realloc_string_copy(char *old_string, const char *src) {
     }
 }
 
-char *util_realloc_substring_copy(char *old_string, const char *src, int len_) {
-    size_t len = len_;
-    if (src != NULL) {
-        size_t str_len;
-        char *copy;
-        if (strlen(src) < len)
-            str_len = strlen(src);
-        else
-            str_len = len;
-
-        copy = (char *)realloc(old_string, (str_len + 1) * sizeof *copy);
-        strncpy(copy, src, str_len);
-        copy[str_len] = '\0';
-
-        return copy;
-    } else
-        return NULL;
-}
-
-/**
-   This function checks whether a string matches a pattern with
-   wildcard(s). The pattern can consist of plain string parts (which
-   must match verbatim), and an arbitrary number of '*' which will
-   match an arbitrary number (including zero) of arbitrary characters.
-
-   Examples:
-   ---------
-
-   util_string_match("Bjarne" , "Bjarne")    ==> True
-
-   util_string_match("Bjarne" , "jarn")      ==> False
-
-   util_string_match("Bjarne" , "*jarn*")    ==> True
-
-   util_string_match("Bjarne" , "B*e")       ==> True
-
-   util_string_match("Bjarne" , "B*n")       ==> False
-
-   util_string_match("Bjarne" , "*")         ==> True
-
-   util_string_match("Bjarne" , "B***jarne") ==> True
-
-   util_string_match("Bjarne" , "B*r*e")     ==> True
-
-*/
-
-bool util_string_match(const char *string, const char *pattern) {
-    const char wildcard = '*';
-    const char *wildcard_st = "*";
-
-    if (strcmp(wildcard_st, pattern) == 0)
-        return true;
-    else {
-        bool match = true;
-        char **sub_pattern;
-        int num_patterns;
-        const char *string_ptr;
-        util_split_string(pattern, wildcard_st, &num_patterns, &sub_pattern);
-
-        if (pattern[0] == '*')
-            string_ptr = strstr(string, sub_pattern[0]);
-        else
-            string_ptr =
-                (strncmp(string, sub_pattern[0], strlen(sub_pattern[0])) == 0)
-                    ? (char *)string
-                    : NULL;
-
-        if (string_ptr != NULL) {
-            /* Inital part matched */
-            int i;
-            string_ptr += strlen(sub_pattern[0]);
-            for (i = 1; i < num_patterns; i++) {
-                const char *match_ptr = strstr(string_ptr, sub_pattern[i]);
-                if (match_ptr != NULL)
-                    string_ptr = match_ptr + strlen(sub_pattern[i]);
-                else {
-                    match = false;
-                    break;
-                }
-            }
-
-            /*
-         We have exhausted the complete pattern - matching all the way.
-         Does it match at the end?
-      */
-            if (match) {
-                if (strlen(string_ptr) > 0) {
-                    /*
-             There is more left at the end of the string; if the pattern
-             ends with '*' that is OK, otherwise the match result is
-             FALSE.
-          */
-                    if (pattern[(strlen(pattern) - 1)] != wildcard)
-                        match = false;
-                }
-            }
-
-        } else
-            match = false;
-
-        util_free_stringlist(sub_pattern, num_patterns);
-        return match;
-    }
-}
-
-/**
-   Will check the input string 's' and return true if it contains
-   wildcard characters (i.e. '*'), and false otherwise.
-*/
-
-bool util_string_has_wildcard(const char *s) {
-    const char wildcard = '*';
-    if (strchr(s, wildcard) != NULL)
-        return true;
-    else
-        return false;
-}
-
-void util_free_stringlist(char **list, int N) {
-    int i;
-    if (list != NULL) {
-        for (i = 0; i < N; i++) {
-            free(list[i]);
-        }
-        free(list);
-    }
-}
-
-char *util_strstr_int_format(const char *string) {
-    // the function itself is essentially removing the const from *string
-    // so do it explicitly here to make C++ happy
-    char *percent_ptr = strchr((char *)string, '%');
-
-    if (percent_ptr) {
-
-        percent_ptr++;
-        if (percent_ptr[0] == 'd')
-            return percent_ptr++;
-        else {
-            if (percent_ptr[0] == '0') {
-
-                while (isdigit(percent_ptr[0]))
-                    percent_ptr++;
-
-                if (percent_ptr[0] == 'd')
-                    return percent_ptr++;
-                else
-                    return NULL;
-            }
-            return NULL;
-        }
-    }
-    return percent_ptr;
-}
-
-int util_int_format_count(const char *string) {
-    int count = 0;
-    const char *str = util_strstr_int_format(string);
-    while (str) {
-        count++;
-        str = util_strstr_int_format(str);
-    }
-    return count;
-}
-
-/**
-   Will free a list of strings where the last element is NULL. Will
-   go completely canacas if the list is not NULL terminated.
-*/
-
-void util_free_NULL_terminated_stringlist(char **string_list) {
-    if (string_list != NULL) {
-        int i = 0;
-        while (true) {
-            if (string_list[i] == NULL)
-                break;
-            else
-                free(string_list[i]);
-            i++;
-        }
-        free(string_list);
-    }
-}
-
-/**
-   This function will reallocate the string s1 to become the sum of s1
-   and s2. If s1 == NULL it will just return a copy of s2.
-
-   Observe that due to the use realloc() the s1 input argument MUST BE
-   the return value from a malloc() call; this is not intuitive and
-   the function should be discontinued.
-*/
-
-char *util_strcat_realloc(char *s1, const char *s2) {
-    if (s1 == NULL)
-        s1 = util_alloc_string_copy(s2);
-    else {
-        if (s2 != NULL) {
-            int new_length = strlen(s1) + strlen(s2) + 1;
-            s1 = (char *)util_realloc(s1, new_length);
-            strcat(s1, s2);
-        }
-    }
-    return s1;
-}
-
-char *util_alloc_string_sum(const char **string_list, int N) {
-    int i, len;
-    char *buffer;
-    len = 0;
-    for (i = 0; i < N; i++) {
-        if (string_list[i] != NULL)
-            len += strlen(string_list[i]);
-    }
-    buffer = (char *)util_calloc(len + 1, sizeof *buffer);
-    buffer[0] = '\0';
-    for (i = 0; i < N; i++) {
-        if (string_list[i] != NULL)
-            strcat(buffer, string_list[i]);
-    }
-    return buffer;
-}
-
-/**
-  Allocates a new string consisting of all the elements in item_list,
-  joined together with sep as separator. Elements in item_list can be
-  NULL, this will be replaced with the empty string.
-*/
-
-char *util_alloc_joined_string(const char **item_list, int len,
-                               const char *sep) {
-    if (len <= 0)
-        return NULL;
-    else {
-        char *joined_string;
-        int sep_length = strlen(sep);
-        int total_length = 0;
-        int eff_len = 0;
-        int i;
-        for (i = 0; i < len; i++)
-            if (item_list[i] != NULL) {
-                total_length += strlen(item_list[i]);
-                eff_len++;
-            }
-
-        if (eff_len > 0) {
-            total_length += (eff_len - 1) * sep_length + 1;
-            joined_string =
-                (char *)util_calloc(total_length, sizeof *joined_string);
-            joined_string[0] = '\0';
-            for (i = 0; i < len; i++) {
-                if (item_list[i] != NULL) {
-                    if (i > 0)
-                        strcat(joined_string, sep);
-                    strcat(joined_string, item_list[i]);
-                }
-            }
-            return joined_string;
-        } else
-            return NULL;
-    }
-}
-
-/**
-  New string is allocated by joining the elements in item_list, with
-  "\n" character as separator; an extra "\n" is also added at the end
-  of the list.
-*/
-char *util_alloc_multiline_string(const char **item_list, int len) {
-    char *multiline_string =
-        util_alloc_joined_string(item_list, len, UTIL_NEWLINE_STRING);
-    multiline_string = (char *)util_realloc(
-        multiline_string,
-        (strlen(multiline_string) + strlen(UTIL_NEWLINE_STRING) + 1) *
-            sizeof *multiline_string);
-    strcat(multiline_string, UTIL_NEWLINE_STRING);
-    return multiline_string;
-}
-
 /**
    sep_set = string with various characters, i.e. " \t" to split on.
 */
 
-void util_split_string(const char *line, const char *sep_set, int *_tokens,
-                       char ***_token_list) {
+static void util_split_string(const char *line, const char *sep_set,
+                              int *_tokens, char ***_token_list) {
     int offset;
     int tokens, token, token_length;
     char **token_list;
@@ -3262,6 +2155,51 @@ void util_split_string(const char *line, const char *sep_set, int *_tokens,
 
     *_tokens = tokens;
     *_token_list = token_list;
+}
+
+/**
+   Will check the input string 's' and return true if it contains
+   wildcard characters (i.e. '*'), and false otherwise.
+*/
+
+bool util_string_has_wildcard(const char *s) {
+    const char wildcard = '*';
+    if (strchr(s, wildcard) != NULL)
+        return true;
+    else
+        return false;
+}
+
+void util_free_stringlist(char **list, int N) {
+    int i;
+    if (list != NULL) {
+        for (i = 0; i < N; i++) {
+            free(list[i]);
+        }
+        free(list);
+    }
+}
+
+/**
+   This function will reallocate the string s1 to become the sum of s1
+   and s2. If s1 == NULL it will just return a copy of s2.
+
+   Observe that due to the use realloc() the s1 input argument MUST BE
+   the return value from a malloc() call; this is not intuitive and
+   the function should be discontinued.
+*/
+
+char *util_strcat_realloc(char *s1, const char *s2) {
+    if (s1 == NULL)
+        s1 = util_alloc_string_copy(s2);
+    else {
+        if (s2 != NULL) {
+            int new_length = strlen(s1) + strlen(s2) + 1;
+            s1 = (char *)util_realloc(s1, new_length);
+            strcat(s1, s2);
+        }
+    }
+    return s1;
 }
 
 /**
@@ -3386,81 +2324,6 @@ void util_binary_split_string(const char *__src, const char *sep_set,
     *__second_part = second_part;
 }
 
-void util_binary_split_string_from_max_length(const char *__src,
-                                              const char *sep_set,
-                                              int max_length,
-                                              char **__first_part,
-                                              char **__second_part) {
-    char *first_part = NULL;
-    char *second_part = NULL;
-    if (__src != NULL) {
-        char *src;
-        size_t pos;
-        /* Removing leading separators. */
-        pos = 0;
-        while ((pos < strlen(__src)) && (strchr(sep_set, __src[pos]) != NULL))
-            pos += 1;
-        if (pos == strlen(__src)) /* The string consisted ONLY of separators. */
-            src = NULL;
-        else
-            src = util_alloc_string_copy(&__src[pos]);
-
-        /*Remove trailing separators. */
-        pos = strlen(__src) - 1;
-        while ((pos >= 0) && (strchr(sep_set, __src[pos]) != NULL))
-            pos -= 1;
-        if (pos < 0)
-            src = NULL;
-        else
-            src = util_alloc_substring_copy(__src, 0, pos + 1);
-
-        /*
-       OK - we have removed all leading (or trailing) separators, and we have
-       a valid string which we can continue with.
-    */
-        if (src != NULL) {
-            int pos;
-            int start_pos, delta, end_pos;
-            start_pos = max_length;
-            delta = -1;
-            end_pos = -1;
-            pos = start_pos;
-            while ((pos != end_pos) && (strchr(sep_set, src[pos]) == NULL))
-                pos += delta;
-            /*
-         OK - now we have either iterated through the whole string - or
-         we hav found a character in the sep_set.
-      */
-            if (pos == end_pos) {
-                /* There was no split. */
-                first_part = util_alloc_string_copy(src);
-                second_part = NULL;
-            } else {
-                int sep_start = 0;
-                int sep_end = 0;
-                sep_end = pos;
-                /* Iterate through the separation string - can be e.g. many " " */
-                while ((pos != end_pos) && (strchr(sep_set, src[pos]) != NULL))
-                    pos += delta;
-
-                sep_start = pos;
-                if (sep_start == end_pos) {
-                    // ":String" => (NULL , "String")
-                    first_part = NULL;
-                    second_part = util_alloc_string_copy(&src[sep_end + 1]);
-                } else {
-                    first_part =
-                        util_alloc_substring_copy(src, 0, sep_start + 1);
-                    second_part = util_alloc_string_copy(&src[sep_end + 1]);
-                }
-            }
-            free(src);
-        }
-    }
-    *__first_part = first_part;
-    *__second_part = second_part;
-}
-
 /**
    The function will, in-place, update all occurencese: expr->subs.
    The return value is the number of substitutions which have been
@@ -3520,78 +2383,6 @@ int util_string_replace_inplace(char **_buffer, const char *expr,
     return util_string_replace_inplace__(_buffer, expr, subs);
 }
 
-/**
-  This allocates a copy of buff_org where occurences of the string expr are replaced with subs.
-*/
-char *util_string_replace_alloc(const char *buff_org, const char *expr,
-                                const char *subs) {
-    int buffer_size = strlen(buff_org) * 2;
-    char *new_buffer = (char *)util_calloc(buffer_size, sizeof *new_buffer);
-    memcpy(new_buffer, buff_org, strlen(buff_org) + 1);
-    util_string_replace_inplace__(&new_buffer, expr, subs);
-
-    {
-        int size = strlen(new_buffer);
-        new_buffer =
-            (char *)util_realloc(new_buffer, (size + 1) * sizeof *new_buffer);
-    }
-
-    return new_buffer;
-}
-
-/**
-   This allocates a copy of buff_org where occurences of expr[i] are replaced with subs[i] for i=1,..,num_expr.
-*/
-char *util_string_replacen_alloc(const char *buff_org, int num_expr,
-                                 const char **expr, const char **subs) {
-    int buffer_size = strlen(buff_org) * 2;
-    char *new_buffer = (char *)util_calloc(buffer_size, sizeof *new_buffer);
-    memcpy(new_buffer, buff_org, strlen(buff_org) + 1);
-    {
-        int i;
-        for (i = 0; i < num_expr; i++)
-            util_string_replace_inplace__(&new_buffer, expr[i], subs[i]);
-    }
-
-    {
-        int size = strlen(new_buffer);
-        new_buffer =
-            (char *)util_realloc(new_buffer, (size + 1) * sizeof *new_buffer);
-    }
-
-    return new_buffer;
-}
-
-/**
-  This will alloc a copy of buff_org were char's in the last strings are removed.
-*/
-char *util_string_strip_chars_alloc(const char *buff_org, const char *chars) {
-    int len_org = strlen(buff_org);
-    int pos_org = 0;
-    int pos_new = 0;
-
-    char *buff_new = (char *)util_calloc((len_org + 1), sizeof *buff_new);
-
-    while (pos_org < len_org) {
-        int pos_off = strcspn(buff_org + pos_org, chars);
-        if (pos_off > 0) {
-            memmove(buff_new + pos_new, buff_org + pos_org,
-                    pos_off * sizeof *buff_new);
-            pos_org += pos_off;
-            pos_new += pos_off;
-        }
-
-        pos_off = strspn(buff_org + pos_org, chars);
-        if (pos_off > 0) {
-            pos_org += pos_off;
-        }
-    }
-    buff_new[pos_new + 1] = '\0';
-    buff_new = (char *)util_realloc(buff_new, (pos_new + 1) * sizeof buff_new);
-
-    return buff_new;
-}
-
 void util_float_to_double(double *double_ptr, const float *float_ptr,
                           int size) {
     int i;
@@ -3645,43 +2436,10 @@ char *util_fread_alloc_string(FILE *stream) {
     return s;
 }
 
-char *util_fread_realloc_string(char *old_s, FILE *stream) {
-    int len;
-    char *s = NULL;
-    util_fread(&len, sizeof len, 1, stream, __func__);
-    if (len > 0) {
-        s = (char *)util_realloc(old_s, len + 1);
-        util_fread(s, 1, len + 1, stream, __func__);
-    } else if (len == -1) /* Magic length for "" */ {
-        s = (char *)util_realloc(s, 1);
-        util_fread(s, 1, 1, stream, __func__);
-    }
-    return s;
-}
-
-void util_fskip_string(FILE *stream) {
-    int len;
-    util_fread(&len, sizeof len, 1, stream, __func__);
-    if (len == 0)
-        return; /* The user has written NULL with util_fwrite_string(). */
-    else if (len == -1)
-        util_fseek(stream, 1,
-                   SEEK_CUR); /* Magic length for "" - skip the '\0' */
-    else
-        util_fseek(stream, len + 1,
-                   SEEK_CUR); /* Skip the data in a normal string. */
-}
-
 void util_fwrite_offset(offset_type value, FILE *stream) {
     UTIL_FWRITE_SCALAR(value, stream);
 }
-void util_fwrite_bool(bool value, FILE *stream) {
-    UTIL_FWRITE_SCALAR(value, stream);
-}
 void util_fwrite_int(int value, FILE *stream) {
-    UTIL_FWRITE_SCALAR(value, stream);
-}
-void util_fwrite_time_t(time_t value, FILE *stream) {
     UTIL_FWRITE_SCALAR(value, stream);
 }
 void util_fwrite_size_t(size_t value, FILE *stream) {
@@ -3698,24 +2456,9 @@ void util_fwrite_int_vector(const int *value, int size, FILE *stream,
                             const char *caller) {
     util_fwrite(value, sizeof *value, size, stream, caller);
 }
-void util_fwrite_double_vector(const double *value, int size, FILE *stream,
-                               const char *caller) {
-    util_fwrite(value, sizeof *value, size, stream, caller);
-}
 void util_fwrite_char_vector(const char *value, int size, FILE *stream,
                              const char *caller) {
     util_fwrite(value, sizeof *value, size, stream, caller);
-}
-
-void util_fread_char_vector(char *ptr, int size, FILE *stream,
-                            const char *caller) {
-    util_fread(ptr, sizeof *ptr, size, stream, caller);
-}
-
-double util_fread_double(FILE *stream) {
-    double file_value;
-    UTIL_FREAD_SCALAR(file_value, stream);
-    return file_value;
 }
 
 int util_fread_int(FILE *stream) {
@@ -3723,38 +2466,6 @@ int util_fread_int(FILE *stream) {
     UTIL_FREAD_SCALAR(file_value, stream);
     return file_value;
 }
-
-time_t util_fread_time_t(FILE *stream) {
-    time_t file_value;
-    UTIL_FREAD_SCALAR(file_value, stream);
-    return file_value;
-}
-
-long util_fread_long(FILE *stream) {
-    long file_value;
-    UTIL_FREAD_SCALAR(file_value, stream);
-    return file_value;
-}
-
-bool util_fread_bool(FILE *stream) {
-    bool file_value;
-    UTIL_FREAD_SCALAR(file_value, stream);
-    return file_value;
-}
-
-void util_fskip_int(FILE *stream) { util_fseek(stream, sizeof(int), SEEK_CUR); }
-
-void util_fskip_long(FILE *stream) {
-    util_fseek(stream, sizeof(long), SEEK_CUR);
-}
-
-void util_fskip_bool(FILE *stream) {
-    util_fseek(stream, sizeof(bool), SEEK_CUR);
-}
-
-time_t util_time_t_min(time_t a, time_t b) { return (a < b) ? a : b; }
-
-time_t util_time_t_max(time_t a, time_t b) { return (a > b) ? a : b; }
 
 size_t util_size_t_min(size_t a, size_t b) { return (a < b) ? a : b; }
 
@@ -3798,61 +2509,6 @@ void util_clamp_double(double *value, double limit1, double limit2) {
 
     *value = util_double_max(*value, min);
     *value = util_double_min(*value, max);
-}
-
-/**
-   Scans through a vector of doubles, and finds min and max
-   values. They are returned by reference.
-*/
-
-void util_double_vector_max_min(int N, const double *vector, double *_max,
-                                double *_min) {
-    double min = 1e100; /* How should this be done ??? */
-    double max = -1e100;
-    int i;
-    for (i = 0; i < N; i++) {
-        if (vector[i] > max)
-            max = vector[i];
-
-        /* Can not have else here - because same item might succed on both tests. */
-
-        if (vector[i] < min)
-            min = vector[i];
-    }
-    *_max = max;
-    *_min = min;
-}
-
-double util_double_vector_mean(int N, const double *vector) {
-    double mean = 0.0;
-    int i;
-    for (i = 0; i < N; i++)
-        mean = mean + vector[i];
-
-    return mean / N;
-}
-
-double util_double_vector_stddev(int N, const double *vector) {
-    if (N <= 1)
-        return 0.0;
-    {
-        double stddev = 0.0;
-        double mean = util_double_vector_mean(N, vector);
-        double *vector_shifted =
-            (double *)util_calloc(N, sizeof *vector_shifted);
-
-        {
-            int i;
-            for (i = 0; i < N; i++)
-                vector_shifted[i] = vector[i] - mean;
-
-            for (i = 0; i < N; i++)
-                stddev = stddev + vector_shifted[i] * vector_shifted[i];
-        }
-        free(vector_shifted);
-
-        return sqrt(stddev / (N - 1));
-    }
 }
 
 FILE *util_fopen__(const char *filename, const char *mode) {
@@ -4046,37 +2702,6 @@ char *util_alloc_sprintf(const char *fmt, ...) {
     s = util_alloc_sprintf_va(fmt, ap);
     va_end(ap);
     return s;
-}
-
-/*
-char * util_realloc_sprintf(char * s , const char * fmt , ...) {
-  va_list ap;
-  va_start(ap , fmt);
-  printf("1: %s  s:%s / p:%p \n",__func__ , s , s );
-  {
-    int length;
-    va_list tmp_va;
-    va_copy(tmp_va , ap);
-    length = vsnprintf(s , 0 , fmt , tmp_va);
-    s = util_realloc(s , length + 1 , __func__);
-    printf("2: %s  s:%s / p:%p  length:%d\n",__func__ , s , s );
-  }
-  vsprintf(s , fmt , ap);
-  va_end(ap);
-  return s;
-}
-*/
-
-char *util_realloc_sprintf(char *s, const char *fmt, ...) {
-    char *new_s;
-    va_list ap;
-    va_start(ap, fmt);
-
-    new_s = util_alloc_sprintf_va(fmt, ap);
-    free(s);
-
-    va_end(ap);
-    return new_s;
 }
 
 /**
@@ -4448,18 +3073,6 @@ char *util_alloc_filename(const char *path, const char *basename,
     return file;
 }
 
-char *util_realloc_filename(char *filename, const char *path,
-                            const char *basename, const char *extension) {
-    free(filename);
-    return util_alloc_filename(path, basename, extension);
-}
-
-char *util_split_alloc_dirname(const char *input_path) {
-    char *path;
-    util_alloc_file_components(input_path, &path, NULL, NULL);
-    return path;
-}
-
 char *util_split_alloc_filename(const char *input_path) {
     char *filename = NULL;
     {
@@ -4545,20 +3158,3 @@ int util_chdir(const char *path) { return chdir(path); }
 int util_chdir(const char *path) { return _chdir(path); }
 
 #endif
-
-bool util_chdir_file(const char *filename) {
-    if (!util_is_file(filename))
-        return false;
-
-    bool chdir_OK = false;
-    char *path;
-    char *abs_path;
-    util_alloc_file_components(filename, &path, NULL, NULL);
-    abs_path = util_alloc_abs_path(path);
-    if (util_is_directory(abs_path))
-        chdir_OK = (0 == util_chdir(abs_path));
-
-    free(abs_path);
-    free(path);
-    return chdir_OK;
-}
