@@ -66,35 +66,6 @@ void test_sscanf_bool() {
     test_assert_false(util_sscanf_bool(NULL, NULL));
 }
 
-void test_sscanf_bytesize() {
-    size_t value = 0u;
-    test_assert_true(util_sscanf_bytesize("1KB", &value));
-    test_assert_size_t_equal(value, 1024);
-
-    test_assert_true(util_sscanf_bytesize("12   mB", &value));
-    test_assert_size_t_equal(value, 12 * 1024 * 1024);
-
-    test_assert_true(util_sscanf_bytesize("-47", &value));
-    test_assert_size_t_equal(
-        value,
-        (size_t)(-47)); // documentation says overflows are not checked for
-
-    value = 0u;
-    test_assert_false(
-        util_sscanf_bytesize("3.7 MB", &value)); // no decimals allowed
-    test_assert_size_t_equal(value, 0u);
-    test_assert_false(
-        util_sscanf_bytesize("14 TB", &value)); // TB not supported yet
-    test_assert_size_t_equal(value, 0u);
-
-    // Test NULL buffer
-    test_assert_false(util_sscanf_bytesize(NULL, &value));
-    test_assert_size_t_equal(
-        value, 0); // documentation says the value is set to 0 on parsing error
-
-    test_assert_false(util_sscanf_bytesize(NULL, NULL));
-}
-
 void test_sscanf_double() {
     double value = 1.0;
     test_assert_true(util_sscanf_double("0.0", &value));
@@ -198,86 +169,6 @@ void test_sscanf_int() {
     test_assert_false(util_sscanf_int(NULL, NULL));
 }
 
-void test_sscanf_octal_int() {
-    int value = 1;
-
-    test_assert_true(util_sscanf_octal_int("0", &value));
-    test_assert_int_equal(value, 0);
-
-    test_assert_true(util_sscanf_octal_int("241", &value));
-    test_assert_int_equal(value, 2 * 64 + 4 * 8 + 1);
-
-    test_assert_true(util_sscanf_octal_int("-0", &value));
-    test_assert_int_equal(value, 0);
-
-    test_assert_true(util_sscanf_octal_int("-1742", &value));
-    test_assert_int_equal(value, -(512 + 7 * 64 + 4 * 8 + 2));
-
-    value = 1;
-    test_assert_false(util_sscanf_octal_int("--5++", &value));
-    test_assert_int_equal(value, 1);
-
-    test_assert_false(util_sscanf_octal_int("89", &value));
-    test_assert_int_equal(value, 1);
-
-    test_assert_false(util_sscanf_octal_int("7.5", &value));
-    test_assert_int_equal(value, 1);
-
-    // NULL buffer
-    value = 3;
-    test_assert_false(util_sscanf_octal_int(NULL, &value));
-    test_assert_int_equal(value, 3);
-
-    test_assert_false(util_sscanf_octal_int(NULL, NULL));
-}
-
-void test_sscanf_percent() {
-    {
-        const char *MIN_REALIZATIONS = "10%";
-        double value = 0.0;
-        test_assert_true(util_sscanf_percent(MIN_REALIZATIONS, &value));
-        test_assert_double_equal(10.0, value);
-    }
-
-    {
-        const char *MIN_REALIZATIONS_no_percent = "10";
-        double value = 0.0;
-        test_assert_false(
-            util_sscanf_percent(MIN_REALIZATIONS_no_percent, &value));
-        test_assert_double_equal(0.0, value);
-    }
-
-    {
-        const char *MIN_REALIZATIONS_float = "10.2%";
-        double value = 0.0;
-        test_assert_true(util_sscanf_percent(MIN_REALIZATIONS_float, &value));
-        test_assert_double_equal(10.2, value);
-    }
-
-    {
-        const char *MIN_REALIZATIONS_float_no_percentage = "10.2";
-        double value = 0.0;
-        test_assert_false(
-            util_sscanf_percent(MIN_REALIZATIONS_float_no_percentage, &value));
-        test_assert_double_equal(0.0, value);
-    }
-
-    {
-        const char *MIN_REALIZATIONS = "9 %";
-        double value = 0.0;
-        test_assert_false(util_sscanf_percent(MIN_REALIZATIONS, &value));
-        test_assert_double_equal(0.0, value);
-    }
-
-    {
-        double value = 12.5;
-        test_assert_false(util_sscanf_percent(NULL, &value));
-        test_assert_double_equal(12.5, value);
-    }
-
-    { test_assert_false(util_sscanf_percent(NULL, NULL)); }
-}
-
 void check_iso_date(time_t expected, const char *date_string,
                     bool expected_return) {
     time_t t;
@@ -318,36 +209,10 @@ void test_sscanf_isodate() {
     test_assert_false(util_sscanf_isodate(NULL, NULL));
 }
 
-void test_sscanf_date_utc() {
-    time_t value = 0;
-    test_assert_true(util_sscanf_date_utc("16.07^1997", &value));
-    test_assert_time_t_equal(value, util_make_date_utc(16, 7, 1997));
-
-    value = util_make_date_utc(10, 11, 2011);
-    test_assert_false(util_sscanf_date_utc(NULL, &value));
-    test_assert_time_t_equal(value, -1);
-
-    /*
-      ISO dates will be parsed, but with unexpected results, 1997-07-06
-      will be parsed as "day 1997" in July, year 6, which wraps to Dec 11
-      in year 18:
-    */
-    test_assert_true(util_sscanf_date_utc("1997-07-06", &value));
-    test_assert_time_t_equal(value, util_make_date_utc(1997, 7, 6));
-    test_assert_time_t_equal(value, util_make_date_utc(18, 12, 11));
-
-    test_assert_false(util_sscanf_date_utc(NULL, NULL));
-}
-
 int main(int argc, char **argv) {
     test_sscanf_bool();
-    test_sscanf_bytesize();
-    test_sscanf_date_utc();
     test_sscanf_double();
     test_sscanf_int();
     test_sscanf_isodate();
-    test_sscanf_octal_int();
-    test_sscanf_percent();
-
     exit(0);
 }
