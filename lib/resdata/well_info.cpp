@@ -6,7 +6,7 @@
 #include <map>
 #include <algorithm>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_rsthead.hpp>
 #include <resdata/rd_file.hpp>

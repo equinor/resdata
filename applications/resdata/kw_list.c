@@ -23,7 +23,7 @@
 
 #include <resdata/rd_kw.h>
 #include <resdata/fortio.h>
-#include <resdata/rd_util.h>
+#include <resdata/rd_util.hpp>
 #include <resdata/rd_endian_flip.h>
 
 void kw_list(const char *filename) {

@@ -2,11 +2,12 @@
 #include <limits>
 #include <algorithm>
 #include <memory>
+#include <cstring>
 
 #include <resdata/rd_sum_tstep.hpp>
-#include <resdata/rd_kw.h>
-#include <resdata/rd_kw_magic.h>
-#include <resdata/rd_endian_flip.h>
+#include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_magic.hpp>
+#include <resdata/rd_endian_flip.hpp>
 
 #include "detail/resdata/rd_sum_file_data.hpp"
 #include "detail/resdata/rd_unsmry_loader.hpp"

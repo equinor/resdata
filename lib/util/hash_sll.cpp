@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/hash_node.hpp>
 #include <ert/util/hash_sll.hpp>
 
@@ -96,14 +96,6 @@ hash_node_type *hash_sll_get(const hash_sll_type *hash_sll,
         node = hash_node_get_next(node);
 
     return node;
-}
-
-bool hash_sll_has_key(const hash_sll_type *hash_sll, uint32_t global_index,
-                      const char *key) {
-    if (hash_sll_get(hash_sll, global_index, key))
-        return true;
-    else
-        return false;
 }
 
 #ifdef __cplusplus

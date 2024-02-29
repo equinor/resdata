@@ -1,9 +1,9 @@
 #include <vector>
 
-#include <ert/util/test_work_area.h>
+#include <ert/util/test_work_area.hpp>
 #include <ert/util/test_util.hpp>
-#include <ert/util/double_vector.h>
-#include <ert/util/vector.h>
+#include <ert/util/double_vector.hpp>
+#include <ert/util/vector.hpp>
 
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_type.hpp>

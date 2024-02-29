@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_file.hpp>
 

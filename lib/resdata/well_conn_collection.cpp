@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_kw.hpp>

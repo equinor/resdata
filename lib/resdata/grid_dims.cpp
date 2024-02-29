@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/grid_dims.hpp>
 

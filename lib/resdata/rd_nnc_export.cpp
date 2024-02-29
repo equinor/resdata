@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include <vector>
+#include <cstring>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_grid.hpp>

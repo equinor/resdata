@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <cstring>
 
 #include <resdata/fortio.h>
 #include <resdata/rd_kw.hpp>

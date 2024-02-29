@@ -1,4 +1,4 @@
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/rd_version.hpp>
 
 #define xstr(s) #s

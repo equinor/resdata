@@ -25,7 +25,6 @@ endif()
 foreach(type int double long time_t float)
   set(TYPE ${type})
   set(SIGNED_TYPE true)
-  configure_file(vector_template.h.in include/ert/util/${type}_vector.h)
   configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)
   configure_file(util/vector_template.cpp.in ${type}_vector.cpp)
   list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
@@ -34,7 +33,6 @@ endforeach()
 foreach(type bool size_t)
   set(TYPE ${type})
   set(SIGNED_TYPE false)
-  configure_file(vector_template.h.in include/ert/util/${type}_vector.h)
   configure_file(vector_template.hpp.in include/ert/util/${type}_vector.hpp)
   configure_file(util/vector_template.cpp.in ${type}_vector.cpp)
   list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
@@ -44,8 +42,6 @@ if(ZLIB_FOUND)
   list(APPEND opt_srcs util/util_zlib.cpp)
 endif()
 
-configure_file(build_config.h.in include/ert/util/build_config.h)
-configure_file(ert_api_config.h.in include/ert/util/ert_api_config.h)
 configure_file(build_config.hpp.in include/ert/util/build_config.hpp)
 configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
@@ -53,7 +49,6 @@ add_library(
   resdata
   util/rng.cpp
   util/lookup_table.cpp
-  util/statistics.cpp
   util/mzran.cpp
   util/hash_node.cpp
   util/hash_sll.cpp
@@ -69,7 +64,6 @@ add_library(
   util/vector.cpp
   util/parser.cpp
   util/stringlist.cpp
-  util/buffer.cpp
   util/string_util.cpp
   util/type_vector_functions.cpp
   util/rd_version.cpp
@@ -216,28 +210,18 @@ foreach(
   ert_util_alloc_file_components
   ert_util_split_path
   ert_util_approx_equal
-  ert_util_before_after
   ert_util_binary_split
-  ert_util_buffer
-  ert_util_clamp
-  ert_util_chdir
   ert_util_filename
-  ert_util_hash_test
   ert_util_parent_path
   ert_util_realpath
   ert_util_relpath_test
   ert_util_rng
-  ert_util_sscan_test
-  ert_util_statistics
   ert_util_strcat_test
   ert_util_stringlist_test
   ert_util_string_util
-  ert_util_strstr_int_format
   ert_util_type_vector_functions
   ert_util_vector_test
-  ert_util_datetime
   ert_util_normal_path
-  ert_util_mkdir_p
   test_area)
 
   add_executable(${name} util/tests/${name}.cpp)

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>

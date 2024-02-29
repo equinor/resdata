@@ -12,7 +12,7 @@
   certainly not be used to query for e.g. relperm properties.
 */
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/fortio.h>
 #include <resdata/rd_kw_magic.hpp>

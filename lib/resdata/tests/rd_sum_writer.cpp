@@ -1,10 +1,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdexcept>
+#include <cstring>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/time_t_vector.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
 
 #include <resdata/rd_sum.hpp>

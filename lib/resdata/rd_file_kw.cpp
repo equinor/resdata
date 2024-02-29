@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <ert/util/size_t_vector.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_kw.hpp>
