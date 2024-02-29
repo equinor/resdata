@@ -189,42 +189,6 @@ void util_endian_flip_vector(void *data, int element_size, int elements) {
     }
 }
 
-void util_endian_flip_vector_old(void *data, int element_size, int elements) {
-    int i;
-    switch (element_size) {
-    case (1):
-        break;
-    case (2): {
-        uint16_t *tmp_int = (uint16_t *)data;
-
-        for (i = 0; i < elements; i++)
-            tmp_int[i] = FLIP16(tmp_int[i]);
-        break;
-    }
-    case (4): {
-        uint32_t *tmp_int = (uint32_t *)data;
-
-        for (i = 0; i < elements; i++)
-            tmp_int[i] = FLIP32(tmp_int[i]);
-
-        break;
-    }
-    case (8): {
-        uint64_t *tmp_int = (uint64_t *)data;
-
-        for (i = 0; i < elements; i++)
-            tmp_int[i] = FLIP64(tmp_int[i]);
-        break;
-    }
-    default:
-        fprintf(stderr, "%s: current element size: %d \n", __func__,
-                element_size);
-        util_abort(
-            "%s: can only endian flip 1/2/4/8 byte variables - aborting \n",
-            __func__);
-    }
-}
-
 #ifndef S_ISDIR
 #define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
 #define S_ISREG(m) (((m)&S_IFMT) == S_IFREG)
