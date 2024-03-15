@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(GNUInstallDirs)
 include(TestBigEndian)
 
+option(USE_CONAN "Use conan package manager to obtain C dependencies" ON)
+
 # -----------------------------------------------------------------
 # Set default CMAKE_BUILD_TYPE
 # -----------------------------------------------------------------
@@ -35,15 +37,16 @@ endif()
 # https://docs.conan.io/en/latest/howtos/cmake_launch.html
 # -----------------------------------------------------------------
 
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-  message(
-    STATUS
+if(USE_CONAN)
+  if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+    message(
+      STATUS
       "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-  file(
-    DOWNLOAD
-    "https://raw.githubusercontent.com/conan-io/cmake-conan/0.18.1/conan.cmake"
-    "${CMAKE_BINARY_DIR}/conan.cmake")
-endif()
+    file(
+      DOWNLOAD
+      "https://raw.githubusercontent.com/conan-io/cmake-conan/0.18.1/conan.cmake"
+      "${CMAKE_BINARY_DIR}/conan.cmake")
+  endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
@@ -76,6 +79,8 @@ conan_cmake_run(
   missing
   GENERATORS
   cmake_find_package)
+
+endif(USE_CONAN)
 
 # -----------------------------------------------------------------
 
