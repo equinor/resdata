@@ -48,6 +48,10 @@ def createSummary(
 
             for var in var_list:
                 key = var.getKey1()
+                key2 = var.getKey2()
+                if key and key2:
+                    assert var.keyword in key
+                    assert var.keyword in key2
 
                 if key in func_table:
                     func = func_table[key]

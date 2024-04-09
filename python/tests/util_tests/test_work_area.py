@@ -93,3 +93,49 @@ class WorkAreaTest(ResdataTest):
                     i, loop_dir
                 ),
             )
+
+
+def test_make_files(tmp_path):
+    file = tmp_path / "file"
+    dir = tmp_path / "dir"
+    dir2 = tmp_path / "dir2"
+    dir3 = tmp_path / "dir3"
+    dir4 = tmp_path / "dir4"
+    dir_file = dir2 / "file2"
+    dir_file2 = dir3 / "file3"
+    dir_file3 = dir4 / "file4"
+    dir.mkdir()
+    dir2.mkdir()
+    dir3.mkdir()
+    dir4.mkdir()
+    file.write_text("text")
+    dir_file.write_text("text2")
+    dir_file2.write_text("text3")
+    dir_file3.write_text("text4")
+
+    abs_file = file.absolute()
+    abs_dir_file = dir_file.absolute()
+    abs_dir = dir.absolute()
+    abs_dir2 = dir2.absolute()
+    abs_dir_file2 = dir_file2.absolute()
+    abs_dir_file3 = dir_file3.absolute()
+
+    with TestAreaContext("TestArea") as test_area:
+        test_area.copy_file(str(abs_file))
+        assert os.path.exists(test_area.get_cwd() / file)
+
+        test_area.install_file(str(abs_dir_file))
+        assert os.path.exists(test_area.get_cwd() / dir_file)
+
+        test_area.copy_directory(str(abs_dir))
+        assert os.path.exists(test_area.get_cwd() / dir)
+        assert os.path.isdir(test_area.get_cwd() / dir)
+
+        test_area.copy_directory_content(str(abs_dir2))
+        assert os.path.exists(os.path.join(test_area.get_cwd(), "file2"))
+
+        test_area.copy_parent_content(str(abs_dir_file2))
+        assert os.path.exists(os.path.join(test_area.get_cwd(), "file3"))
+
+        test_area.copy_parent_directory(str(abs_dir_file3))
+        assert os.path.exists(os.path.join(test_area.get_cwd(), "dir4", "file4"))

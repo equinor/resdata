@@ -352,11 +352,28 @@ class KWTest(ResdataTest):
         for v in kw4:
             self.assertEqual(v, 12)
 
+        kw2 *= 2
+        for v in kw2:
+            self.assertEqual(v, 4)
+
+    def test_div(self):
+        kw1 = ResdataKW("Name1", 10, ResDataType.RD_DOUBLE)
+        kw1.assign(4.0)
+        kw2 = ResdataKW("Name1", 10, ResDataType.RD_DOUBLE)
+        kw2.assign(kw1)
+
+        kw1.__idiv__(kw1)
+        for v in kw1:
+            self.assertEqual(v, 1.0)
+        self.assertNotEqual(kw1, kw2)
+
     def test_numpy(self):
         kw1 = ResdataKW("DOUBLE", 10, ResDataType.RD_DOUBLE)
 
         view = kw1.numpyView()
         copy = kw1.numpyCopy()
+        kw2 = kw1.sub_copy(1, 3)
+        self.assertEqual(len(kw2), 3)
 
         self.assertTrue(copy[0] == kw1[0])
         self.assertTrue(view[0] == kw1[0])
@@ -591,3 +608,22 @@ class KWTest(ResdataTest):
             std_poro.safe_div(count)
             std_poro -= mean_poro * mean_poro
             std_poro.isqrt()
+
+
+def test_iadd():
+    kw1 = ResdataKW("KW1", 10, ResDataType.RD_INT)
+    kw2 = ResdataKW("KW2", 10, ResDataType.RD_INT)
+    for i in range(len(kw2)):
+        kw2[i] = 1
+
+    assert hash(kw1) != hash(kw2)
+
+    kw1 += kw2
+
+    assert list(kw1) == list(kw2)
+
+
+def test_get_ptr_data():
+    assert ResdataKW("KW1", 10, ResDataType.RD_INT).get_data_ptr()
+    assert ResdataKW("KW1", 10, ResDataType.RD_FLOAT).get_data_ptr()
+    assert ResdataKW("KW1", 10, ResDataType.RD_DOUBLE).get_data_ptr()

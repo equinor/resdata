@@ -3,10 +3,11 @@ import os.path
 from unittest import skip
 import itertools
 
-import six
+import functools
 from numpy import linspace, allclose
+import cwrap
 
-from resdata.util.util import IntVector
+from resdata.util.util import IntVector, DoubleVector
 from resdata import ResDataType, UnitSystem
 from resdata.resfile import ResdataKW, ResdataFile
 from resdata.grid import Grid
@@ -177,9 +178,7 @@ def createWrapperGrid(grid):
 
 
 def average(points):
-    p = six.functools.reduce(
-        lambda a, b: (a[0] + b[0], a[1] + b[1], a[2] + b[2]), points
-    )
+    p = functools.reduce(lambda a, b: (a[0] + b[0], a[1] + b[1], a[2] + b[2]), points)
     return [elem / float(len(points)) for elem in p]
 
 
@@ -223,12 +222,51 @@ class GridTest(ResdataTest):
     def test_dims(self):
         grid = GridGen.createRectangular((10, 20, 30), (1, 1, 1))
         self.assertEqual(grid.get_global_index1F(0), None)
+        self.assertTrue(grid.equal(grid))
+        self.assertFalse(grid.dual_grid())
+        self.assertEqual(grid.get_num_active_fracture(), 0)
+        self.assertEqual(grid.get_active_fracture_index(global_index=0), -1)
+        self.assertEqual(
+            grid.get_bounding_box_2d(),
+            ((0.0, 0.0), (10.0, 0.0), (10.0, 20.0), (0.0, 20.0)),
+        )
+        self.assertEqual(grid.depth(ijk=(0, 0, 0)), 0.5)
+        self.assertEqual(grid.top(0, 0), 0.0)
+        self.assertEqual(grid.top_active(0, 0), 0.0)
+        self.assertEqual(grid.bottom(0, 0), 30.0)
+        self.assertEqual(grid.locate_depth(1.0, 0, 0), 1)
+        self.assertEqual(grid.find_cell(1.1, 0.0, 0.0), (1, 0, 0))
+        self.assertTrue(grid.cell_regular(ijk=(1, 0, 0)))
+        self.assertEqual(grid.get_layer_xyz(1, 0), (1.0, 0.0, 0.0))
+        self.assertEqual(grid.distance(0, 1), (-1.0, 0.0, 0.0))
+        self.assertEqual(grid.get_num_lgr(), 0)
+        self.assertFalse(grid.has_lgr("lgr"))
+        self.assertEqual(grid.coarse_groups(), 0)
+        self.assertFalse(grid.in_coarse_group(ijk=(0, 0, 0)))
+
+        with self.assertRaises(KeyError):
+            grid.get_lgr("lgr")
+        with self.assertRaises(KeyError):
+            grid.get_lgr(0)
+        with self.assertRaises(IndexError):
+            grid.get_cell_lgr(ijk=(0, 0, 0))
         self.assertEqual(grid.getNX(), 10)
         self.assertEqual(grid.getNY(), 20)
         self.assertEqual(grid.getNZ(), 30)
+        self.assertEqual(grid.nx, 10)
+        self.assertEqual(grid.ny, 20)
+        self.assertEqual(grid.nz, 30)
         self.assertEqual(grid.getGlobalSize(), 30 * 10 * 20)
 
         self.assertEqual(grid.getDims(), (10, 20, 30, 6000))
+
+    def test_load_column(self):
+        column = DoubleVector(2 * 3 * 4)
+        grid = GridGen.createRectangular((2, 3, 4), (1, 1, 1))
+        kw = ResdataKW("KW", 2 * 3 * 4, ResDataType.RD_DOUBLE)
+        kw[0] = 1.0
+        grid.load_column(kw, 0, 0, column)
+        assert list(column) == [1.0, 0.0, 0.0, 0.0]
 
     def test_create(self):
         with self.assertRaises(ValueError):
@@ -684,3 +722,37 @@ class GridTest(ResdataTest):
         middle_point[2] = 30
         for p in points[4:8:]:
             assertNotPoint(average(20 * [p] + [middle_point]))
+
+
+def test_save_grdecl(tmpdir):
+    grid = GridGen.createRectangular((2, 3, 4), (1, 1, 1))
+    with tmpdir.as_cwd():
+        with cwrap.open("grid.grdecl", "w") as f:
+            grid.save_grdecl(f)
+        assert grid.equal(Grid.load_from_grdecl("grid.grdecl"))
+        assert grid.equal(Grid.load_from_file("grid.grdecl"))
+
+
+def test_save_grid(tmpdir):
+    grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
+    with tmpdir.as_cwd():
+        grid.save_GRID("grid.GRID")
+        assert grid.equal(Grid("grid.GRID"))
+
+
+def test_write_grdecl(tmpdir):
+    kw = ResdataKW("KW", 2 * 3 * 4, ResDataType.RD_DOUBLE)
+    grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
+
+    with tmpdir.as_cwd():
+        with cwrap.open("kw.grdecl", "w") as f:
+            grid.write_grdecl(kw, f)
+        with cwrap.open("kw.grdecl", "r") as f:
+            kw2 = ResdataKW.read_grdecl(f, "KW")
+
+        assert list(kw) == list(kw2)
+
+
+def test_create_volume_keyword():
+    grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
+    assert list(grid.create_volume_keyword()) == [1.0] * (2 * 3 * 4)

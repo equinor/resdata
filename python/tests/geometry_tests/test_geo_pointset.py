@@ -25,3 +25,10 @@ class GeoPointsetTest(ResdataTest):
         gp = GeoPointset.fromSurface(srf)
         for i in (561, 1105, 1729, 2465, 2821):
             self.assertEqual(gp[i], srf[i])
+
+    def test_equal(self):
+        srf_path = self.createTestPath("local/geometry/surface/valid_ascii.irap")
+        srf = Surface(srf_path)
+        gp = GeoPointset.fromSurface(srf)
+        gp2 = GeoPointset.fromSurface(srf)
+        self.assertEqual(gp, gp2)

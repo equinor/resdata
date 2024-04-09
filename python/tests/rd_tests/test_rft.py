@@ -15,6 +15,7 @@ class RFTTest(ResdataTest):
     def test_create(self):
         rft = ResdataRFT("WELL", "RFT", datetime.date(2015, 10, 1), 100)
         self.assertEqual(len(rft), 0)
+        self.assertEqual(rft.get_well_name(), "WELL")
 
         with self.assertRaises(IndexError):
             cell = rft[5]

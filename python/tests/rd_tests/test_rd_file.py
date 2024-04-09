@@ -2,13 +2,14 @@ import shutil
 import datetime
 import os.path
 import gc
-from unittest import skipIf
 
 from resdata import FileMode, ResDataType, FileType
 from resdata.resfile import ResdataFile, FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.util.util import CWDContext
-from resdata.util.test import TestAreaContext, PathContext
+from resdata.util.test import TestAreaContext
+from resdata.grid import Grid
 from tests import ResdataTest
+from tests.rd_tests.create_restart import create_restart
 
 
 def createFile(name, kw_list):
@@ -53,11 +54,20 @@ class ResdataFileTest(ResdataTest):
                 kw1.fwrite(f)
                 kw2.fwrite(f)
 
+            self.assertFalse(ResdataFile.contains_report_step("TEST", 99))
+            self.assertFalse(
+                ResdataFile.contains_sim_time("TEST", datetime.datetime(2024, 4, 4))
+            )
             with openResdataFile("TEST") as rd_file:
+                assert rd_file.iget_named_kw("KW1", 0).name == "KW1"
                 self.assertEqual(len(rd_file), 2)
                 self.assertTrue(rd_file.has_kw("KW1"))
                 self.assertTrue(rd_file.has_kw("KW2"))
+                self.assertFalse(rd_file.has_report_step(99))
+                self.assertFalse(rd_file.has_sim_time(datetime.datetime(2024, 4, 4)))
                 self.assertEqual(rd_file[1], rd_file[-1])
+
+                self.assertEqual(rd_file.iget_kw(0).name, "KW1")
 
     def test_rd_index(self):
         with TestAreaContext("python/rd_file/context"):
@@ -209,7 +219,9 @@ class ResdataFileTest(ResdataTest):
 
             for i in range(5):
                 view = rd_file.blockView("HEADER", i)
+                self.assertEqual(view.unique_size(), 3)
                 self.assertEqual(len(view), 3)
+                self.assertEqual(view.unique_kw(), ["HEADER", "DATA1", "DATA2"])
                 header = view["HEADER"][0]
                 data1 = view["DATA1"][0]
                 data2 = view["DATA2"][0]
@@ -233,7 +245,21 @@ class ResdataFileTest(ResdataTest):
             self.assertEqual(len(view), len(rd_file))
 
             view = rd_file.blockView2(None, "DATA2", 0)
-            # self.assertEqual( len(view) , 2)
-            # self.assertTrue( "HEADER" in view )
-            # self.assertTrue( "DATA1" in view )
-            # self.assertFalse( "DATA2" in view )
+
+
+def test_report_list(tmpdir):
+    with tmpdir.as_cwd():
+        grid = Grid.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        create_restart(grid, "TEST", [1.0])
+        assert ResdataFile.file_report_list("TEST.UNRST") == [10.0]
+
+        with openResdataFile("TEST.UNRST") as rd_file:
+            assert rd_file.report_list == [10.0]
+            assert (
+                rd_file.restart_get_kw("SEQNUM", datetime.datetime(2000, 1, 1)).name
+                == "SEQNUM"
+            )
+            assert rd_file.iget_restart_sim_time(0) == datetime.datetime(2000, 1, 1)
+            assert rd_file.iget_restart_sim_days(1) == 0.0
+            with openFortIO("TEST2.UNRST", FortIO.WRITE_MODE) as fortio:
+                rd_file.fwrite(fortio)

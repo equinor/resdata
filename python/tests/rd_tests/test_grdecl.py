@@ -16,6 +16,7 @@ def test_eclkw_read_grdecl(tmp_path):
 
     with cwrap.open(str(tmp_path / "test.grdecl")) as f:
         kw = ResdataKW.read_grdecl(f, "COORD")
+        assert ResdataKW.fseek_grdecl(f, "COORD", True)
 
     assert kw.get_name() == "COORD"
     assert len(kw.numpy_view()) == block_size * num_blocks

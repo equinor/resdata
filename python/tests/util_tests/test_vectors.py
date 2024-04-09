@@ -51,6 +51,10 @@ class UtilTest(TestCase):
             tv[i] = CTime(datetime.datetime(2016, 12, i + 3, 0, 0, 0))
         self.dotest_slicing(tv)
 
+    def test_to_from_list(self):
+        v = BoolVector.createFromList(2, [0])
+        self.assertEqual(list(v), [True, False])
+
     def test_double_vector(self):
         v = DoubleVector()
 
@@ -321,6 +325,12 @@ class UtilTest(TestCase):
         another_copy_of_a = copy_of_a.copy()
         self.assertEqual(list(a), list(another_copy_of_a))
 
+        a.sort()
+        self.assertEqual(list(a), [2, 3, 4, 5, 5])
+        self.assertEqual(a.safeGetByIndex(0), 2)
+        a.setReadOnly(False)
+        self.assertFalse(a.getReadOnly())
+
     # ---
 
     def test_div(self):
@@ -368,6 +378,8 @@ class UtilTest(TestCase):
             vector.append(i)
 
         permutation_vector = vector.permutationSort()
+        perm_list = list(permutation_vector)
+        self.assertEqual(perm_list[::-1], list(vector.permutationSort(reverse=True)))
 
         for index, value in enumerate(range(5, 0, -1)):
             self.assertEqual(vector[index], value)
@@ -407,6 +419,10 @@ class UtilTest(TestCase):
         self.assertEqual(iv[1], 1)
         self.assertEqual(iv[2], 2)
         self.assertEqual(iv[3], 3)
+        self.assertEqual(iv.first_eq(iv), 0)
+
+        iv *= 2
+        self.assertEqual(list(iv), [0, 2, 4, 6])
 
     def test_element_sum(self):
         dv = DoubleVector()

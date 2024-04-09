@@ -434,12 +434,6 @@ def test_iadd_kw_empty(empty_region, poro):
 
 def test_iadd_kw_full(full_region, poro):
     poro_copy = poro.copy()
-    poro.add(poro, mask=full_region)
-    assert poro == poro_copy * 2
-
-
-def test_iadd_kw_full(full_region, poro):
-    poro_copy = poro.copy()
     poro.add(2.0, mask=full_region)
     assert poro == poro_copy + 2
 
@@ -476,7 +470,7 @@ def test_mul_kw_full(full_region, poro):
     assert list(poro) == [4.0] * len(poro)
 
 
-def test_copy_kw(full_region, empty_region, poro, grid):
+def test_copy_kw(full_region, poro, grid):
     poro_copy = grid.create_kw(
         np.zeros((grid.nx, grid.ny, grid.nz), dtype=np.float32), "PORO", True
     )
@@ -496,11 +490,11 @@ def test_contains_global(full_region):
     assert full_region.contains_global(0)
 
 
-def test_contains_global(full_region):
-    assert full_region.contains_active(0)
-
-
 def test_get_set_name(full_region):
     full_region.set_name("full")
     assert full_region.get_name() == full_region.name
     assert full_region.get_name() == "full"
+
+
+def test_contains_active(full_region):
+    assert full_region.contains_active(0)

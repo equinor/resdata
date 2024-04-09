@@ -144,6 +144,9 @@ class CPolylineTest(ResdataTest):
         p2 = CPolyline(name="Poly2")
         self.assertEqual(p2.getName(), "Poly2")
 
+        p1 = CPolyline.createFromXYZFile(self.polyline1, name="poly")
+        self.assertEqual(p1.getName(), "poly")
+
     def test_unzip(self):
         pl = CPolyline(init_points=[(0, 3), (1, 4), (2, 5)])
         x, y = pl.unzip()

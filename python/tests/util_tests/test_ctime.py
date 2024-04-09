@@ -101,6 +101,7 @@ class CTimeTest(TestCase):
         d2 = date(2001, 1, 1)
         dt2 = datetime(2001, 1, 1, 0, 0, 0)
         c2 = CTime(d2)
+        c2.timezone()
 
         self.assertTrue(d0 <= c1 < dt2)
         self.assertTrue(c0 <= c1 < d2)

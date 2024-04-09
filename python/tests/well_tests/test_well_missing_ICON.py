@@ -32,7 +32,6 @@ class ResdataWellICONTest(ResdataTest):
         self.assertEqual(well_state.wellType(), WellType.PRODUCER)
         self.assertEqual(well_state.name(), "B-2H")
         self.assertTrue(well_state.isOpen())
-        self.assertEqual(well_state.wellHead().ijk(), (14, 30, 8))
         self.assertEqual(well_state.wellNumber(), 1)
         self.assertEqual(well_state.reportNumber(), 27)
         self.assertEqual(
@@ -52,6 +51,27 @@ class ResdataWellICONTest(ResdataTest):
         self.assertEqual(well_state.oilRateSI(), 0)
         self.assertEqual(well_state.waterRateSI(), 0)
         self.assertEqual(well_state.volumeRateSI(), 0)
+
+        well_connection = well_state.wellHead()
+        self.assertEqual(well_connection.ijk(), (14, 30, 8))
+        self.assertTrue(well_connection.isOpen())
+        self.assertFalse(well_connection.isMultiSegmentWell())
+        self.assertEqual(
+            well_connection.direction(), WellConnectionDirection.well_conn_dirX
+        )
+        self.assertEqual(well_connection.segmentId(), -999)
+        self.assertEqual(well_connection.connectionFactor(), -1.0)
+        self.assertFalse(well_connection.isFractureConnection())
+        self.assertTrue(well_connection.isMatrixConnection())
+        self.assertEqual(well_connection, well_connection)
+        self.assertEqual(well_connection.gasRate(), 0)
+        self.assertEqual(well_connection.waterRate(), 0)
+        self.assertEqual(well_connection.oilRate(), 0)
+        self.assertEqual(well_connection.volumeRate(), 0)
+        self.assertEqual(well_connection.gasRateSI(), 0)
+        self.assertEqual(well_connection.oilRateSI(), 0)
+        self.assertEqual(well_connection.waterRateSI(), 0)
+        self.assertEqual(well_connection.volumeRateSI(), 0)
 
     def test_missing_icon(self):
         well_info_ICON0 = WellInfo(self.grid, self.rst_file_ICON0)
