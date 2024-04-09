@@ -31,6 +31,8 @@ class RngTest(ResdataTest):
         self.assertEqual(rng.getInt(), val1)
         self.assertEqual(rng.getInt(), val2)
 
+        rng.forward()
+
     def test_load_save(self):
         rng = RandomNumberGenerator()
         with self.assertRaises(IOError):

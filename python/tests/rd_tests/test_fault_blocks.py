@@ -265,8 +265,11 @@ class FaultBlockTest(ResdataTest):
         l0 = layer[0]
         l1 = layer[1]
         self.assertTrue(isinstance(l1, FaultBlock))
+        assert l1[0].i == 7
+        assert l1[0].j == 0
         l0.getCentroid()
         l1.getBlockID()
+        assert list(l1.get_region_list()) == []
 
         with self.assertRaises(IndexError):
             l2 = layer[2]
@@ -278,6 +281,10 @@ class FaultBlockTest(ResdataTest):
 
         l1 = layer.getBlock(1)
         self.assertTrue(isinstance(l1, FaultBlock))
+        l1.add_cell(9, 9)
+        assert len(l1.get_global_index_list()) == len(l1)
+        polyline = Polyline(init_points=[(1.0, 0.0), (2.0, 1.0)])
+        assert l1.contains_polyline(polyline)
 
         with self.assertRaises(KeyError):
             l = layer.getBlock(66)

@@ -3,7 +3,7 @@ from itertools import product as prod
 import operator
 import random
 import numpy
-import six
+import functools
 
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
@@ -21,7 +21,7 @@ def generate_ijk_bounds(dims):
 
 
 def decomposition_preserving(ijk_bound):
-    return sum(list(zip(*ijk_bound))[0]) % 2 is 0
+    return sum(list(zip(*ijk_bound))[0]) % 2 == 0
 
 
 class GridGeneratorTest(ResdataTest):
@@ -141,7 +141,7 @@ class GridGeneratorTest(ResdataTest):
         zcorn = GridGen.create_zcorn(dims, (1, 1, 1), offset=0)
 
         actnum = ResdataKW(
-            "ACTNUM", six.functools.reduce(operator.mul, dims), ResDataType.RD_INT
+            "ACTNUM", functools.reduce(operator.mul, dims), ResDataType.RD_INT
         )
         random.seed(1337)
         for i in range(len(actnum)):

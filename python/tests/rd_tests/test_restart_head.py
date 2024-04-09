@@ -1,7 +1,8 @@
 import datetime
+import os.path
 
-from tests import ResdataTest, equinor_test
-from resdata import FileMode
+from tests import ResdataTest, equinor_test, source_root
+from resdata import FileMode, ResDataType
 from resdata.resfile import (
     Resdata3DKW,
     ResdataKW,
@@ -9,6 +10,7 @@ from resdata.resfile import (
     ResdataFile,
     FortIO,
 )
+from resdata.resfile.rd_restart_file import ResdataRestartHead
 from resdata.grid import Grid
 
 
@@ -33,3 +35,27 @@ class RestartHeadTest(ResdataTest):
         details = header.well_details()
         self.assertTrue("NXCONZ" in details)
         self.assertTrue("NCWMAX" in details)
+
+
+def test_restart_headers():
+    case_path = os.path.join(
+        source_root(), "test-data", "local", "ECLIPSE", "simple", "SIMPLE"
+    )
+    g = Grid(case_path + ".EGRID")
+    f = ResdataRestartFile(g, case_path + ".UNRST")
+
+    headers = f.headers()
+    assert len(headers) == 4
+    header = headers[0]
+    assert header.get_report_step() == 1
+    assert header.get_sim_date() == datetime.datetime(2017, 1, 16, 0, 0)
+    assert header.get_sim_days() == 15.0
+    assert header.well_details() == {"NCWMAX": 0, "NXCONZ": 58}
+
+
+def test_restart_headers_from_kw():
+    intehead = ResdataKW("INTEHEAD", 100, ResDataType.RD_INT)
+    doubhead = ResdataKW("DOUBHEAD", 100, ResDataType.RD_DOUBLE)
+    logihead = ResdataKW("DOUBHEAD", 100, ResDataType.RD_BOOL)
+    header = ResdataRestartHead(kw_arg=(1, intehead, doubhead, logihead))
+    assert header.get_report_step() == 1

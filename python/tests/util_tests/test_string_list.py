@@ -109,6 +109,14 @@ class StringListTest(TestCase):
         with self.assertRaises(LookupError):
             s = s[-4]
 
+        s[-1] = "D"
+        self.assertEqual(s[-1], "D")
+
+    def test_sort(self):
+        s = StringList(["C", "B", "A"])
+        s.sort()
+        self.assertEqual(list(s), ["A", "B", "C"])
+
     def test_find_first(self):
         s = StringList(["A", "B", "C"])
 

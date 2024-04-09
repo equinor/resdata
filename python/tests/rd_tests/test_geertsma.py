@@ -1,4 +1,5 @@
 import datetime
+import pytest
 from resdata import ResDataType
 from resdata.resfile import ResdataKW, openFortIO, FortIO, ResdataFile
 from resdata.grid import Grid
@@ -6,6 +7,7 @@ from resdata.gravimetry import ResdataSubsidence
 
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.rd_tests.create_restart import create_restart
 
 import numpy as np
 
@@ -20,48 +22,6 @@ def create_init(grid, case):
     with openFortIO("%s.INIT" % case, mode=FortIO.WRITE_MODE) as f:
         poro.fwrite(f)
         porv.fwrite(f)
-
-
-def create_restart(grid, case, p1, p2=None, rporv1=None, rporv2=None):
-    with openFortIO("%s.UNRST" % case, mode=FortIO.WRITE_MODE) as f:
-        seq_hdr = ResdataKW("SEQNUM", 1, ResDataType.RD_INT)
-        seq_hdr[0] = 10
-        p = ResdataKW("PRESSURE", grid.getNumActive(), ResDataType.RD_FLOAT)
-        for i in range(len(p1)):
-            p[i] = p1[i]
-
-        header = ResdataKW("INTEHEAD", 67, ResDataType.RD_INT)
-        header[64] = 1
-        header[65] = 1
-        header[66] = 2000
-
-        seq_hdr.fwrite(f)
-        header.fwrite(f)
-        p.fwrite(f)
-
-        if rporv1:
-            rp = ResdataKW("RPORV", grid.getNumActive(), ResDataType.RD_FLOAT)
-            for idx, val in enumerate(rporv1):
-                rp[idx] = val
-
-            rp.fwrite(f)
-
-        if p2:
-            seq_hdr[0] = 20
-            header[66] = 2010
-            for i in range(len(p2)):
-                p[i] = p2[i]
-
-            seq_hdr.fwrite(f)
-            header.fwrite(f)
-            p.fwrite(f)
-
-        if rporv2:
-            rp = ResdataKW("RPORV", grid.getNumActive(), ResDataType.RD_FLOAT)
-            for idx, val in enumerate(rporv2):
-                rp[idx] = val
-
-            rp.fwrite(f)
 
 
 class GeertsmaTest(ResdataTest):
@@ -80,6 +40,7 @@ class GeertsmaTest(ResdataTest):
 
             subsidence = ResdataSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
+            subsidence.add_survey_PRESSURE("S2", restart_view1)
 
             youngs_modulus = 5e8
             poisson_ratio = 0.3
@@ -99,6 +60,10 @@ class GeertsmaTest(ResdataTest):
                 "S1", None, receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz, 5.8160298201497136e-08)
+
+            assert subsidence.eval(
+                "S1", "S2", receiver, youngs_modulus, poisson_ratio
+            ) == pytest.approx(0.0)
 
     @staticmethod
     def test_geertsma_kernel_2_source_points_2_vintages():
