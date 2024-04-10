@@ -10,7 +10,6 @@ from resdata import ResdataPrototype
 class Layer(BaseCClass):
     TYPE_NAME = "rd_layer"
     _alloc = ResdataPrototype("void* layer_alloc(int,  int)", bind=False)
-    _copy = ResdataPrototype("void layer_memcpy(rd_layer, rd_layer)")
     _free = ResdataPrototype("void layer_free(rd_layer)")
     _get_nx = ResdataPrototype("int layer_get_nx(rd_layer)")
     _get_ny = ResdataPrototype("int layer_get_ny(rd_layer)")
@@ -53,12 +52,6 @@ class Layer(BaseCClass):
             super(Layer, self).__init__(c_ptr)
         else:
             raise ValueError("Invalid input - no Layer object created")
-
-    @classmethod
-    def copy(cls, src):
-        layer = Layer(src.getNX(), src.getNY())
-        layer._copy(src)
-        return layer
 
     def _assert_ij(self, i, j):
         if i < 0 or i >= self.getNX():
