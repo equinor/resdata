@@ -57,7 +57,7 @@ class Layer(BaseCClass):
     @classmethod
     def copy(cls, src):
         layer = Layer(src.getNX(), src.getNY())
-        layer._copy(layer, src)
+        layer._copy(src)
         return layer
 
     def _assert_ij(self, i, j):
