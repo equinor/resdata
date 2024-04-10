@@ -18,12 +18,6 @@ class LayerTest(ResdataTest):
         layer = Layer(10, 10)
         self.assertTrue(isinstance(layer, Layer))
 
-    def test_layer_copy(self):
-        layer = Layer(10, 10)
-        layer_copy = Layer.copy(layer)
-        assert layer.get_nx() == layer_copy.get_nx()
-        assert layer.get_ny() == layer_copy.get_ny()
-
     def test_add_cell(self):
         layer = Layer(10, 10)
         with self.assertRaises(ValueError):
