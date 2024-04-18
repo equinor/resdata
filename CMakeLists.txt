@@ -7,6 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(GNUInstallDirs)
 include(TestBigEndian)
 
+option(BUILD_TESTS "Should the tests be built" ON)
+option(BUILD_APPLICATIONS "Should we build small utility applications" OFF)
+option(BUILD_RD_SUMMARY "Build the commandline application rd_summary" OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(ERT_USE_OPENMP "Use OpenMP" OFF)
+option(RST_DOC "Build RST documentation" OFF)
+option(USE_RPATH "Don't strip RPATH from libraries and binaries" OFF)
+option(USE_CONAN "Use Conan (https://conan.io) for package management" ON)
+
 # -----------------------------------------------------------------
 # Set default CMAKE_BUILD_TYPE
 # -----------------------------------------------------------------
@@ -35,47 +44,50 @@ endif()
 # https://docs.conan.io/en/latest/howtos/cmake_launch.html
 # -----------------------------------------------------------------
 
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-  message(
-    STATUS
-      "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-  file(
-    DOWNLOAD
-    "https://raw.githubusercontent.com/conan-io/cmake-conan/0.18.1/conan.cmake"
-    "${CMAKE_BINARY_DIR}/conan.cmake")
-endif()
+if(USE_CONAN)
+  if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+    message(
+      STATUS
+        "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+    file(
+      DOWNLOAD
+      "https://raw.githubusercontent.com/conan-io/cmake-conan/0.18.1/conan.cmake"
+      "${CMAKE_BINARY_DIR}/conan.cmake")
+  endif()
 
-include(${CMAKE_BINARY_DIR}/conan.cmake)
+  include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  # set(conan_opts ...)
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  set(conan_opts backward-cpp:stack_details=backtrace_symbol)
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  # set(conan_opts ...)
-else()
-  message(
-    WARNING "Unknown platform. Conan packages may not be configures correctly.")
-endif()
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    # set(conan_opts ...)
+  elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(conan_opts backward-cpp:stack_details=backtrace_symbol)
+  elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    # set(conan_opts ...)
+  else()
+    message(
+      WARNING
+        "Unknown platform. Conan packages may not be configures correctly.")
+  endif()
 
-conan_cmake_run(
-  # Packages
-  REQUIRES
-  backward-cpp/1.6
-  catch2/2.13.9
-  fmt/8.0.1
-  # Options
-  OPTIONS
-  catch2:with_main=True
-  ${conan_opts}
-  # Force cppstd to be the same as this CMakeLists.txt's
-  SETTINGS
-  compiler.cppstd=${CMAKE_CXX_STANDARD}
-  # Build from source if there are no pre-compiled binaries
-  BUILD
-  missing
-  GENERATORS
-  cmake_find_package)
+  conan_cmake_run(
+    # Packages
+    REQUIRES
+    backward-cpp/1.6
+    catch2/2.13.9
+    fmt/8.0.1
+    # Options
+    OPTIONS
+    catch2:with_main=True
+    ${conan_opts}
+    # Force cppstd to be the same as this CMakeLists.txt's
+    SETTINGS
+    compiler.cppstd=${CMAKE_CXX_STANDARD}
+    # Build from source if there are no pre-compiled binaries
+    BUILD
+    missing
+    GENERATORS
+    cmake_find_package)
+endif(USE_CONAN)
 
 # -----------------------------------------------------------------
 
@@ -151,14 +163,6 @@ message(
 )
 
 # -----------------------------------------------------------------
-
-option(BUILD_TESTS "Should the tests be built" OFF)
-option(BUILD_APPLICATIONS "Should we build small utility applications" OFF)
-option(BUILD_RD_SUMMARY "Build the commandline application rd_summary" OFF)
-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
-option(ERT_USE_OPENMP "Use OpenMP" OFF)
-option(RST_DOC "Build RST documentation" OFF)
-option(USE_RPATH "Don't strip RPATH from libraries and binaries" OFF)
 
 set(EQUINOR_TESTDATA_ROOT
     ""
@@ -240,8 +244,12 @@ find_package(CXX11Features)
 
 # -----------------------------------------------------------------
 
-find_package(Backward REQUIRED)
 find_package(fmt REQUIRED)
+if(USE_CONAN)
+  find_package(Backward REQUIRED)
+else()
+  find_path(Backward_INCLUDES backward.hpp REQUIRED)
+endif(USE_CONAN)
 
 # create targets for (required and optional) dependencies to link to
 
