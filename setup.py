@@ -80,6 +80,7 @@ skbuild.setup(
     cmake_args=[
         "-DRD_VERSION=" + version,
         "-DBUILD_APPLICATIONS=" + ("ON" if sys.platform == "linux" else "OFF"),
+        "-DBUILD_TESTS=OFF",
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
         "-DCMAKE_INSTALL_BINDIR=python/resdata/.bin",
         "-DCMAKE_INSTALL_LIBDIR=python/resdata/.libs",

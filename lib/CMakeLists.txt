@@ -147,13 +147,13 @@ endif()
 target_link_libraries(
   resdata
   PUBLIC ${m} ${dl} ${pthread} ${blas} ${zlib} ${shlwapi}
-  PRIVATE Backward::Backward fmt::fmt)
+  PRIVATE fmt::fmt)
 
 target_include_directories(
   resdata
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-         $<INSTALL_INTERFACE:include>
+         $<INSTALL_INTERFACE:include> ${Backward_INCLUDES}
   PRIVATE ${ZLIB_INCLUDE_DIRS} util include
           ${CMAKE_CURRENT_SOURCE_DIR}/private-include
           ${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -204,10 +204,10 @@ if(CMAKE_COMPILER_IS_GNUCC)
   else()
     target_compile_options(rd_test_suite PRIVATE "--std=c++17")
   endif()
-  target_link_libraries(rd_test_suite resdata Catch2::Catch2WithMain stdc++fs)
+  target_link_libraries(rd_test_suite resdata Catch2::Catch2 stdc++fs)
 else()
   target_compile_options(rd_test_suite PRIVATE "--std=c++17")
-  target_link_libraries(rd_test_suite resdata Catch2::Catch2WithMain)
+  target_link_libraries(rd_test_suite resdata Catch2::Catch2)
 endif()
 add_test(NAME rd_test_suite COMMAND rd_test_suite)
 
