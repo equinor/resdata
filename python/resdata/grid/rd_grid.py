@@ -581,8 +581,13 @@ class Grid(BaseCClass):
     def get_global_index1F(self, active_fracture_index):
         """
         Will return the global index corresponding to active fracture index.
+
+        Returns None if there is no active_fracture with that index
         """
-        return self._get_global_index1F(active_fracture_index)
+        result = self._get_global_index1F(active_fracture_index)
+        if result == -1:
+            return None
+        return result
 
     def cell_invalid(self, ijk=None, global_index=None, active_index=None):
         """

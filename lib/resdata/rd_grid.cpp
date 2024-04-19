@@ -4752,6 +4752,9 @@ int rd_grid_get_global_index1A(const rd_grid_type *rd_grid, int active_index) {
 
 int rd_grid_get_global_index1F(const rd_grid_type *rd_grid,
                                int active_fracture_index) {
+    if (rd_grid->inv_fracture_index_map == NULL ||
+        active_fracture_index >= rd_grid->total_active_fracture)
+        return -1;
     return rd_grid->inv_fracture_index_map[active_fracture_index];
 }
 
