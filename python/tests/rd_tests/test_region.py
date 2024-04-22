@@ -5,6 +5,7 @@ from resdata.resfile import ResdataKW
 from resdata.grid import Grid, ResdataRegion
 from resdata.util.util import IntVector
 from tests import ResdataTest
+from resdata.grid.faults import Layer
 
 
 class RegionTest(ResdataTest):
@@ -417,3 +418,89 @@ def test_select_false(empty_region, all_true_kw):
     false_region = empty_region.copy()
     false_region.select_false(all_true_kw)
     assert empty_region == false_region
+
+
+def test_select_layer(empty_region, full_region):
+    layer = Layer(10, 10)
+    empty_region.select_from_layer(layer, 0, 0)
+    assert empty_region == full_region
+
+
+def test_iadd_kw_empty(empty_region, poro):
+    poro_copy = poro.copy()
+    poro.add(poro, mask=empty_region)
+    assert poro == poro_copy
+
+
+def test_iadd_kw_full(full_region, poro):
+    poro_copy = poro.copy()
+    poro.add(poro, mask=full_region)
+    assert poro == poro_copy * 2
+
+
+def test_iadd_kw_full(full_region, poro):
+    poro_copy = poro.copy()
+    poro.add(2.0, mask=full_region)
+    assert poro == poro_copy + 2
+
+
+def test_isub_kw_full(full_region, poro):
+    poro_copy = poro.copy()
+    poro.sub(2.0, mask=full_region)
+    assert poro == poro_copy - 2
+
+
+def test_imul_kw_full(full_region, poro):
+    poro_copy = poro.copy()
+    poro += 1.0
+    poro.mul(2.0, mask=full_region)
+    assert poro == (poro_copy + 1.0) * 2.0
+
+
+def test_idiv_kw_full_scalar(full_region, poro):
+    poro_copy = poro.copy()
+    poro += 1.0
+    poro.div(2.0, mask=full_region)
+    assert poro == (poro_copy + 1.0) * 0.5
+
+
+def test_idiv_kw_full(full_region, poro):
+    poro += 1.0
+    poro.div(poro, mask=full_region)
+    assert list(poro) == [1.0] * len(poro)
+
+
+def test_mul_kw_full(full_region, poro):
+    poro += 1.0
+    poro.mul(poro, mask=full_region)
+    assert list(poro) == [4.0] * len(poro)
+
+
+def test_copy_kw(full_region, empty_region, poro, grid):
+    poro_copy = grid.create_kw(
+        np.zeros((grid.nx, grid.ny, grid.nz), dtype=np.float32), "PORO", True
+    )
+    full_region.copy_kw(poro_copy, poro)
+    assert poro_copy == poro
+
+
+def test_get_active_list(full_region, active_region):
+    assert full_region.get_active_list() == active_region.get_active_list()
+
+
+def test_contains_ijk(full_region):
+    assert full_region.contains_ijk(0, 0, 0)
+
+
+def test_contains_global(full_region):
+    assert full_region.contains_global(0)
+
+
+def test_contains_global(full_region):
+    assert full_region.contains_active(0)
+
+
+def test_get_set_name(full_region):
+    full_region.set_name("full")
+    assert full_region.get_name() == full_region.name
+    assert full_region.get_name() == "full"

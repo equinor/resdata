@@ -288,13 +288,13 @@ class ResdataRegion(BaseCClass):
     _set_name = ResdataPrototype("void rd_region_set_name( rd_region , char*)")
     _get_name = ResdataPrototype("char* rd_region_get_name( rd_region )")
     _contains_ijk = ResdataPrototype(
-        "void rd_region_contains_ijk( rd_region , int , int , int)"
+        "bool rd_region_contains_ijk( rd_region , int , int , int)"
     )
     _contains_global = ResdataPrototype(
-        "void rd_region_contains_global( rd_region, int )"
+        "bool rd_region_contains_global( rd_region, int )"
     )
     _contains_active = ResdataPrototype(
-        "void rd_region_contains_active( rd_region , int )"
+        "bool rd_region_contains_active( rd_region , int )"
     )
     _equal = ResdataPrototype("bool rd_region_equal( rd_region , rd_region )")
     _select_true = ResdataPrototype("void rd_region_select_true( rd_region , rd_kw)")
@@ -1054,7 +1054,7 @@ class ResdataRegion(BaseCClass):
     def imul_kw(self, target_kw, other, force_active=False):
         if isinstance(other, ResdataKW):
             if target_kw.assert_binary(other):
-                self._imul_kw(target_kw, other)
+                self._imul_kw(target_kw, other, force_active)
             else:
                 raise TypeError("Type mismatch")
         else:
@@ -1063,7 +1063,7 @@ class ResdataRegion(BaseCClass):
     def idiv_kw(self, target_kw, other, force_active=False):
         if isinstance(other, ResdataKW):
             if target_kw.assert_binary(other):
-                self._idiv_kw(target_kw, other)
+                self._idiv_kw(target_kw, other, force_active)
             else:
                 raise TypeError("Type mismatch")
         else:

@@ -2458,7 +2458,7 @@ void rd_kw_inplace_div(rd_kw_type *target_kw, const rd_kw_type *div_kw) {
             int i;                                                             \
             for (i = 0; i < set_size; i++) {                                   \
                 int index = index_data[i];                                     \
-                target_data[index] *= div_data[index];                         \
+                target_data[index] /= div_data[index];                         \
             }                                                                  \
         }                                                                      \
     }
