@@ -219,13 +219,13 @@ class ResdataRegion(BaseCClass):
         "void rd_region_select_deep_cells( rd_region , double )"
     )
     _deselect_deep_cells = ResdataPrototype(
-        "void rd_region_select_deep_cells( rd_region , double )"
+        "void rd_region_deselect_deep_cells( rd_region , double )"
     )
     _select_shallow_cells = ResdataPrototype(
         "void rd_region_select_shallow_cells( rd_region , double )"
     )
     _deselect_shallow_cells = ResdataPrototype(
-        "void rd_region_select_shallow_cells( rd_region , double )"
+        "void rd_region_deselect_shallow_cells( rd_region , double )"
     )
     _select_small = ResdataPrototype(
         "void rd_region_select_small_cells( rd_region , double )"
@@ -299,17 +299,8 @@ class ResdataRegion(BaseCClass):
     _equal = ResdataPrototype("bool rd_region_equal( rd_region , rd_region )")
     _select_true = ResdataPrototype("void rd_region_select_true( rd_region , rd_kw)")
     _select_false = ResdataPrototype("void rd_region_select_false( rd_region , rd_kw)")
-    _deselect_true = ResdataPrototype(
-        "void rd_region_deselect_true( rd_region , rd_kw)"
-    )
-    _deselect_false = ResdataPrototype(
-        "void rd_region_deselect_false( rd_region , rd_kw)"
-    )
     _select_from_layer = ResdataPrototype(
         "void rd_region_select_from_layer( rd_region , rd_layer , int , int)"
-    )
-    _deselect_from_layer = ResdataPrototype(
-        "void rd_region_deselect_from_layer( rd_region , rd_layer , int , int)"
     )
 
     def __init__(self, grid, preselect):
