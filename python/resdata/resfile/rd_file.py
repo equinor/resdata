@@ -51,9 +51,6 @@ class ResdataFile(BaseCClass):
         "int rd_file_get_restart_index(rd_file, rd_time_t)"
     )
     _get_src_file = ResdataPrototype("char* rd_file_get_src_file(rd_file)")
-    _replace_kw = ResdataPrototype(
-        "void rd_file_replace_kw(rd_file, rd_kw, rd_kw, bool)"
-    )
     _fwrite = ResdataPrototype("void rd_file_fwrite_fortio(rd_file, rd_fortio, int)")
     _has_report_step = ResdataPrototype("bool rd_file_has_report_step(rd_file, int)")
     _has_sim_time = ResdataPrototype("bool rd_file_has_sim_time(rd_file, rd_time_t)")
@@ -434,40 +431,6 @@ class ResdataFile(BaseCClass):
             raise IndexError(
                 'Does not have keyword "%s" at time:%s.' % (kw_name, dtime)
             )
-
-    def replace_kw(self, old_kw, new_kw):
-        """
-        Will replace @old_kw with @new_kw in current ResdataFile instance.
-
-        This method can be used to replace one of the ResdataKW instances
-        in the current ResdataFile. The @old_kw reference must be to the
-        actual ResdataKW instance in the current ResdataFile instance (the
-        final comparison is based on C pointer equality!), i.e. it
-        must be a reference (not a copy) from one of the ??get_kw??
-        methods of the ResdataFile class. In the example below we replace
-        the SWAT keyword from a restart file:
-
-           swat = file.iget_named_kw( "SWAT" , 0 )
-           new_swat = swat * 0.25
-           file.replace_kw( swat , new_swat )
-
-
-        The C-level rd_file_type structure takes full ownership of
-        all installed rd_kw instances; mixing the garbage collector
-        into it means that this is quite low level - and potentially
-        dangerous!
-        """
-
-        # We ensure that this scope owns the new_kw instance; the
-        # new_kw will be handed over to the rd_file instance, and we
-        # can not give away something we do not alreeady own.
-        if not new_kw.data_owner:
-            new_kw = ResdataKW.copy(new_kw)
-
-        # The rd_file instance will take responsability for freeing
-        # this rd_kw instance.
-        new_kw.data_owner = False
-        self._replace_kw(old_kw, new_kw, False)
 
     @property
     def size(self):
