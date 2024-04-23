@@ -24,11 +24,10 @@ implementation from the resdata library.
 import ctypes
 import datetime
 import re
-import types
 
 from cwrap import BaseCClass
 from resdata import FileMode, FileType, ResdataPrototype
-from resdata.resfile import ResdataFileView, ResdataKW
+from resdata.resfile import ResdataKW
 from resdata.util.util import CTime, monkey_the_camel
 
 
@@ -84,12 +83,6 @@ class ResdataFile(BaseCClass):
             fmt_file = fmt_file.value
 
         return (file_type, report_step, fmt_file)
-
-    @classmethod
-    def restart_block(cls, filename, dtime=None, report_step=None):
-        raise NotImplementedError(
-            "The restart_block implementation has been removed - open file normally and use ResdataFileView."
-        )
 
     @classmethod
     def contains_report_step(cls, filename, report_step):
@@ -257,55 +250,6 @@ class ResdataFile(BaseCClass):
         return self.global_view.restartView(
             seqnum_index, report_step, sim_time, sim_days
         )
-
-    def select_block(self, kw, kw_index):
-        raise NotImplementedError(
-            "The select_block implementation has been removed - use ResdataFileView"
-        )
-
-    def select_global(self):
-        raise NotImplementedError(
-            "The select_global implementation has been removed - use ResdataFileView"
-        )
-
-    def select_restart_section(self, index=None, report_step=None, sim_time=None):
-        raise NotImplementedError(
-            "The select_restart_section implementation has been removed - use ResdataFileView"
-        )
-        """
-        Will select a restart section as the active section.
-
-        You must specify a report step with the @report_step argument,
-        a true time with the @sim_time argument or a plain index to
-        select restart block. If none of arguments are given exception
-        TypeError will be raised. If present the @sim_time argument
-        should be a datetime instance.
-
-        If the restart section you ask for can not be found the method
-        will raise a ValueError exeception. To protect against this
-        you can query first with the has_report_step(),
-        has_sim_time() or num_report_steps() methods.
-
-        This method should be used when you have already loaded the
-        complete file; if you only want to load a section from the
-        file you can use the classmethod restart_block().
-
-        The method will return 'self' which can be used to aid
-        readability.
-        """
-
-    def select_last_restart(self):
-        raise NotImplementedError(
-            "The select_restart_section implementation has been removed - use ResdataFileView"
-        )
-        """
-        Will select the last SEQNUM block in restart file.
-
-        Works by searching for the last SEQNUM keyword; the SEQNUM
-        Keywords are only present in unified restart files. If this
-        is a non-unified restart file (or not a restart file at all),
-        the method will do nothing and return False.
-        """
 
     def __getitem__(self, index):
         """
