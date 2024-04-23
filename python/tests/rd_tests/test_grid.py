@@ -222,6 +222,7 @@ class GridTest(ResdataTest):
 
     def test_dims(self):
         grid = GridGen.createRectangular((10, 20, 30), (1, 1, 1))
+        self.assertEqual(grid.get_global_index1F(0), None)
         self.assertEqual(grid.getNX(), 10)
         self.assertEqual(grid.getNY(), 20)
         self.assertEqual(grid.getNZ(), 30)
