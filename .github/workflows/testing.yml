@@ -1,6 +1,12 @@
 name: testing
 
-on: [push, pull_request]
+on:
+ push:
+   branches:
+     - main
+     - 'version-**'
+   tags: "*"
+ pull_request:
 
 jobs:
   build-test-cmake:
@@ -9,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'macos-latest-xlarge']
+        os: ['ubuntu-latest', 'macos-13', 'macos-latest']
 
     runs-on: ${{ matrix.os }}
 
@@ -53,12 +59,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'macos-latest-xlarge']
+        os: ['ubuntu-latest', 'macos-13', 'macos-latest']
         python: ['3.8', '3.9', '3.10', '3.11', '3.12']
         exclude:
-          - os: macos-latest-xlarge
+          - os: macos-latest
             python: '3.8'
-          - os: macos-latest-xlarge
+          - os: macos-latest
             python: '3.9'
 
     runs-on: ${{ matrix.os }}
