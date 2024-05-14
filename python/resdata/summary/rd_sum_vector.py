@@ -149,11 +149,11 @@ class SummaryVector(object):
             not be a proper SummaryVector instance, but rather a normal
             Python list of SummaryNode instances.
         """
-        self.assert_values()
-        length = len(self.values)
+        vals = self.values
+        length = len(vals)
         if isinstance(index, int):
             if index < 0:
-                index += len(self.__values)
+                index += len(vals)
             if index < 0 or index > length:
                 raise KeyError("Invalid index:%d out of range [0:%d)" % (index, length))
             else:
@@ -185,9 +185,7 @@ class SummaryVector(object):
         """
         Will return the last SummaryNode in this vector.
         """
-        self.assert_values()
-
-        index = len(self.__values) - 1
+        index = len(self.values) - 1
         return self.__iget(index)
 
     @property
@@ -195,9 +193,7 @@ class SummaryVector(object):
         """
         Will return the last value in this vector.
         """
-        self.assert_values()
-
-        index = len(self.__values) - 1
+        index = len(self.values) - 1
         return self.__iget(index).value
 
     def get_interp(self, days=None, date=None):
@@ -261,7 +257,7 @@ class SummaryVector(object):
         vectors with report_only = True.
         """
         time_index = self.first_gt_index(limit)
-        print(time_index)
+        self.assert_values()
         if time_index >= 0:
             return self.__iget(time_index)
         else:
@@ -289,6 +285,7 @@ class SummaryVector(object):
         See first_gt() for further details.
         """
         time_index = self.first_lt_index(limit)
+        self.assert_values()
         if time_index >= 0:
             return self.__iget(time_index)
         else:

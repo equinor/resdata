@@ -1,13 +1,12 @@
 import csv
 import datetime
-import inspect
 import os
 import os.path
 import shutil
 import stat
+import datetime
 
 import cwrap
-import pandas
 
 
 def assert_frame_equal(a, b):
@@ -21,7 +20,6 @@ except ImportError:
     pass
 
 from contextlib import contextmanager
-from unittest import skipIf, skipUnless
 
 from resdata import ResDataType, UnitSystem
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
@@ -179,11 +177,16 @@ class SumTest(ResdataTest):
         node2 = case.smspec_node("AARQ:10")
         self.assertEqual(node2.varType(), SummaryVarType.RD_SMSPEC_AQUIFER_VAR)
         self.assertEqual(node2.getNum(), 10)
+        self.assertFalse(node2.isRate())
 
         node3 = case.smspec_node("RGPT:1")
         self.assertEqual(node3.varType(), SummaryVarType.RD_SMSPEC_REGION_VAR)
         self.assertEqual(node3.getNum(), 1)
+        self.assertEqual(node3.default, 0)
         self.assertTrue(node3.isTotal())
+        self.assertFalse(node3.isHistorical())
+
+        self.assertEqual(node3.keyword, "RGPT")
 
         self.assertLess(node1, node3)
         self.assertGreater(node2, node3)
@@ -347,6 +350,7 @@ class SumTest(ResdataTest):
             num_mini_step=10,
             func_table={"FOPT": fopt, "FOPR": fopr, "FWPT": fgpt},
         )
+        self.assertEqual(case2.get_key_index("FOPR"), 1)
 
         kw_list = SummaryKeyWordVector(case1)
         kw_list.add_keyword("FOPT")
@@ -587,6 +591,11 @@ class SumTest(ResdataTest):
         s1 = sum([x.value for x in v1])
         s2 = sum([x.value for x in v2])
 
+    def test_wells_and_groups(self):
+        case = create_case()
+        self.assertEqual(case.wells(), [])
+        self.assertEqual(case.groups(), [])
+
     def test_pandas(self):
         case = create_case()
         dates = (
@@ -752,3 +761,52 @@ class SumTest(ResdataTest):
                     resampled.iget(key_rate, time_index),
                     rd_sum.get_interp_direct(key_rate, t),
                 )
+
+
+def test_t_step():
+    sum = createSummary(
+        "CASE",
+        [
+            ("FOPT", None, 0, "SM3"),
+            ("FOPR", None, 0, "SM3/DAY"),
+            ("FGPT", None, 0, "SM3"),
+        ],
+        sim_length_days=100,
+        num_report_step=10,
+        num_mini_step=10,
+        sim_start=datetime.date(2010, 1, 1),
+        func_table={"FOPT": fopt, "FOPR": fopr, "FGPT": fgpt},
+    )
+    assert sum.path is None
+
+    t_step = sum.add_t_step(11, 101)
+    assert t_step.get_report() == 11
+    assert t_step.get_sim_days() == 101
+    assert t_step.get_mini_step() == 10 * 10
+    assert sum.iget_days(100) == 101
+    assert "FOPT" in t_step
+    assert t_step["FOPT"] == 0.0
+    t_step["FOPT"] = 100.0
+    assert t_step["FOPT"] == 100.0
+    assert t_step.get_sim_time().datetime() == datetime.datetime(2010, 4, 12, 0, 0)
+
+    node = sum.get_last("FOPT")
+    assert node.days == 101
+    assert sum.get_report(days=101) == 11
+
+    assert list(sum.get_interp_vector("FOPT", days_list=[1, 10, 20, 30, 101])) == [
+        1.0,
+        10.0,
+        20.0,
+        30.0,
+        100.0,
+    ]
+
+    assert sum.get_from_report("FOPT", 11) == 100.0
+    assert sum.first_gt("FOPT", 10).days == 11
+    assert sum.first_lt("FOPT", 10).days == 0
+    assert sum.first_gt_index("FOPT", 10) == 11
+    assert sum.first_lt_index("FOPT", 10) == 0
+
+    assert sum.get_last("FOPT").days == 101.0
+    assert sum["FOPT"].first.days == 0
