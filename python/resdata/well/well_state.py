@@ -101,6 +101,8 @@ class WellState(BaseCClass):
     def globalConnections(self):
         """@rtype: list of WellConnection"""
         global_connections = self._get_global_connections()
+        if global_connections is None:
+            return []
         count = self._global_connections_size(global_connections)
 
         values = []
