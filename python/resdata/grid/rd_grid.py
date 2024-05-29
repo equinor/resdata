@@ -150,7 +150,9 @@ class Grid(BaseCClass):
     _fwrite_EGRID2 = ResdataPrototype(
         "void   rd_grid_fwrite_EGRID2(rd_grid, char*, rd_unit_enum)"
     )
-    _equal = ResdataPrototype("bool   rd_grid_compare(rd_grid, rd_grid, bool, bool)")
+    _equal = ResdataPrototype(
+        "bool   rd_grid_compare(rd_grid, rd_grid, bool, bool, bool)"
+    )
     _dual_grid = ResdataPrototype("bool   rd_grid_dual_grid(rd_grid)")
     _init_actnum = ResdataPrototype("void   rd_grid_init_actnum_data(rd_grid, int*)")
     _compressed_kw_copy = ResdataPrototype(
