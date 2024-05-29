@@ -74,7 +74,7 @@ class ResdataGravTest(ResdataTest):
 
             # The init file created here only contains a PORO field. More
             # properties must be added to this before it can be used for
-            # any usefull gravity calculations.
+            # any useful gravity calculations.
             header = ResdataKW("INTEHEAD", 95, ResDataType.RD_INT)
             header[14] = 1  # sets phase to oil
             header[94] = 100  # E100
