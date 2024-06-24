@@ -90,9 +90,6 @@ skbuild.setup(
         # supported OS X release 10.9
         "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9",
     ],
-    # skbuild's test imples develop, which is pretty obnoxious instead, use a
-    # manually integrated pytest.
-    cmdclass={"test": setuptools.command.test.test},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Other Environment",
