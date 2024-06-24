@@ -20,14 +20,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -70,7 +70,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         # required for `git describe --tags` to work
         fetch-depth: 0
@@ -83,7 +83,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python }}
 
@@ -92,7 +92,7 @@ jobs:
       if: matrix.os != 'ubuntu-latest'
 
     - name: Upload wheel as artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
         path: dist/*
@@ -135,7 +135,7 @@ jobs:
 
     steps:
       - name: Get wheels
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -145,7 +145,7 @@ jobs:
           find artifacts -name "*.whl" -exec mv '{}' dist/ \;
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.10
+        uses: pypa/gh-action-pypi-publish@v1.9.0
         with:
           password: ${{ secrets.PYPI_TOKEN_RESDATA }}
           skip-existing: true
