@@ -12,7 +12,7 @@
 #include <fmt/format.h>
 #include <backward.hpp>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 using fmt::format;
 using fmt::print;

@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <cstring>
 
 #include <ert/util/test_util.hpp>
 #include <ert/util/time_t_vector.hpp>
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 
 #include <resdata/rd_rft_file.hpp>
 #include <ert/util/vector.hpp>

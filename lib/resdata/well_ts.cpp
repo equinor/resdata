@@ -46,7 +46,7 @@
 #include <vector>
 #include <algorithm>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
 
 #include <resdata/well/well_ts.hpp>

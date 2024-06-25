@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <resdata/rd_grid.h>
-#include <resdata/rd_file.h>
+#include <resdata/rd_grid.hpp>
+#include <resdata/rd_file.hpp>
 
 void test_case(const char *base, bool load_all) {
     char *grid_file = rd_alloc_filename(NULL, base, RD_EGRID_FILE, false, 0);

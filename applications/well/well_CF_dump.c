@@ -16,9 +16,9 @@
    for more details.
 */
 
-#include <resdata/rd_grid.h>
-#include <resdata/well/well_state.h>
-#include <resdata/well/well_info.h>
+#include <resdata/rd_grid.hpp>
+#include <resdata/well/well_state.hpp>
+#include <resdata/well/well_info.hpp>
 
 int main(int argc, char **argv) {
     char *grid_file = argv[1];

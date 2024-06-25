@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <cstring>
 
 #include <ert/util/test_util.hpp>
 #include <resdata/rd_kw.hpp>

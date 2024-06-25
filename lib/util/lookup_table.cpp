@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <ert/util/util.h>
+#include <ert/util/util.hpp>
 #include <ert/util/perm_vector.hpp>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/lookup_table.hpp>
@@ -55,9 +55,8 @@ static void lookup_table_sort_data(lookup_table_type *lt) {
    IFF the @read_only flag is set to true; the x vector MUST be
    sorted.
 */
-
-void lookup_table_set_data(lookup_table_type *lt, double_vector_type *x,
-                           double_vector_type *y, bool data_owner) {
+static void lookup_table_set_data(lookup_table_type *lt, double_vector_type *x,
+                                  double_vector_type *y, bool data_owner) {
 
     if (lt->data_owner) {
         double_vector_free(lt->x_vector);

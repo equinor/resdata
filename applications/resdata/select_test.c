@@ -19,10 +19,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ert/util/util.h>
-#include <ert/util/stringlist.h>
+#include <ert/util/util.hpp>
+#include <ert/util/stringlist.hpp>
 
-#include <resdata/rd_kw.h>
+#include <resdata/rd_kw.hpp>
 
 int main(int argc, char **argv) {
     const char *path = argv[1];

@@ -1,7 +1,7 @@
 #include <rd_rft_file.h>
 #include <rd_rft_node.h>
 #include <stringlist.h>
-#include <util.h>
+#include <util.hpp>
 
 int main(int argc, char **argv) {
     if (argc != 2)

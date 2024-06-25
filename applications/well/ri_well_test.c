@@ -16,9 +16,9 @@
    for more details.
 */
 
-#include <resdata/rd_grid.h>
-#include <resdata/well/well_state.h>
-#include <resdata/well/well_info.h>
+#include <resdata/rd_grid.hpp>
+#include <resdata/well/well_state.hpp>
+#include <resdata/well/well_info.hpp>
 
 /*
   This is a small test program which will load the well information in
