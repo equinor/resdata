@@ -1,6 +1,6 @@
 cwrap
 ninja
-numpy
+numpy<2
 pandas
 scikit-build
 setuptools
