@@ -24,14 +24,14 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -63,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-13', 'macos-latest']
+        os: ['ubuntu-latest', 'macos-13', 'macos-latest', 'windows-2019']
         python: ['3.8', '3.9', '3.10', '3.11', '3.12']
         exclude:
           - os: macos-latest
@@ -74,37 +74,50 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         # required for `git describe --tags` to work
         fetch-depth: 0
 
     - name: Build Linux Wheel
+      if: matrix.os == 'ubuntu-latest'
       uses: docker://quay.io/pypa/manylinux2014_x86_64
       with:
         entrypoint: /github/workspace/ci/github/build_linux_wheel.sh
         args: ${{ matrix.python }}
-      if: matrix.os == 'ubuntu-latest'
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python }}
 
-    - name: Build macOS/Windows Wheel
+    - name: Build macOS Wheel
+      if: runner.os == 'macOS'
       run: pip wheel . --no-deps -w dist
-      if: matrix.os != 'ubuntu-latest'
+
+    - name: Build Windows Wheel
+      if: runner.os == 'windows'
+      run: |
+        python.exe -m pip wheel . --no-deps -w dist
 
     - name: Upload wheel as artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
         path: dist/*
 
-    - name: Install
+    - name: Install for non Windows
+      if: runner.os != 'windows'
       run: pip install dist/*
 
-    - name: Run Python tests
+    - name: Install for Windows
+      if: runner.os == 'windows'
+      run: |
+        pip install (get-item .\dist\*)
+        python -c "import resdata"
+
+    - name: Run Python tests non Windows
+      if: runner.os != 'windows'
       run: |
         # Runs tests on installed distribution from an empty directory
         python -m pip install pytest
@@ -139,7 +152,7 @@ jobs:
 
     steps:
       - name: Get wheels
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 

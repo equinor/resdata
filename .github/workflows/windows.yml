@@ -36,12 +36,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -U pip
-        pip install "conan<2"
+        python.exe -m pip install --upgrade pip
+        python.exe -m pip install "conan<2"
 
     - name: Build ResData
       run: |
-        python3 -m pip install -r requirements.txt
+        python.exe -m pip install -r requirements.txt
         mkdir cmake-build
-        cmake -S . -B cmake-build -G "Visual Studio 16 2019" -DBUILD_SHARED_LIBS="ON" -DBUILD_TESTING=OFF
+        cmake -S . -B cmake-build -G "Visual Studio 16 2019"
         cmake --build cmake-build
