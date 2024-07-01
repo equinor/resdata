@@ -1,0 +1,47 @@
+name: Windows Compile
+
+on:
+ push:
+   branches:
+     - main
+     - 'version-**'
+   tags: "*"
+ pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build-cmake:
+    name: CMake
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-2019']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # required for `git describe --tags` to work
+        fetch-depth: 0
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python.exe -m pip install --upgrade pip
+        python.exe -m pip install "conan<2"
+
+    - name: Build ResData
+      run: |
+        python.exe -m pip install -r requirements.txt
+        mkdir cmake-build
+        cmake -S . -B cmake-build -G "Visual Studio 16 2019"
+        cmake --build cmake-build

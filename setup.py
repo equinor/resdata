@@ -72,7 +72,7 @@ skbuild.setup(
     platforms="any",
     install_requires=[
         "cwrap",
-        "numpy",
+        "numpy<2",
         "pandas",
     ],
     setup_requires=["conan<2"],
