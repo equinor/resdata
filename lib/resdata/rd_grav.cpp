@@ -90,6 +90,21 @@ struct rd_grav_phase_struct {
     rd_phase_enum phase;
 };
 
+static void rd_grav_phase_free(rd_grav_phase_type *grav_phase) {
+    free(grav_phase->work);
+    free(grav_phase->fluid_mass);
+    delete grav_phase;
+}
+
+static void rd_grav_survey_free(rd_grav_survey_type *grav_survey) {
+    free(grav_survey->name);
+    free(grav_survey->porv);
+    for (auto *phase : grav_survey->phase_list)
+        rd_grav_phase_free(phase);
+
+    delete grav_survey;
+}
+
 static const char *get_den_kw(rd_phase_enum phase, rd_version_enum rd_version) {
     if (rd_version == ECLIPSE100) {
         switch (phase) {
@@ -203,6 +218,7 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
                 rd_file_iget_named_kw(init_file, PVTNUM_KW, 0);
             const std::vector<double> std_density =
                 rd_grav->std_density[std::string(rd_get_phase_name(phase))];
+
             rd_kw_type *fip_kw;
 
             if (phase == RD_OIL_PHASE)
@@ -212,13 +228,14 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
             else
                 fip_kw = rd_file_view_iget_named_kw(restart_file, FIPWAT_KW, 0);
 
-            {
-                int iactive;
-                for (iactive = 0; iactive < size; iactive++) {
-                    double fip = rd_kw_iget_as_double(fip_kw, iactive);
-                    int pvtnum = rd_kw_iget_int(pvtnum_kw, iactive);
-                    grav_phase->fluid_mass[iactive] = fip * std_density[pvtnum];
+            for (int iactive = 0; iactive < size; iactive++) {
+                double fip = rd_kw_iget_as_double(fip_kw, iactive);
+                int pvtnum = rd_kw_iget_int(pvtnum_kw, iactive);
+                if (std_density.size() <= pvtnum) {
+                    rd_grav_phase_free(grav_phase);
+                    return NULL;
                 }
+                grav_phase->fluid_mass[iactive] = fip * std_density[pvtnum];
             }
         } else {
             rd_version_enum rd_version = rd_file_get_rd_version(init_file);
@@ -288,12 +305,6 @@ rd_grav_phase_alloc(rd_grav_type *rd_grav, rd_grav_survey_type *survey,
     }
 }
 
-static void rd_grav_phase_free(rd_grav_phase_type *grav_phase) {
-    free(grav_phase->work);
-    free(grav_phase->fluid_mass);
-    delete grav_phase;
-}
-
 static void rd_grav_survey_add_phase(rd_grav_survey_type *survey,
                                      rd_phase_enum phase,
                                      rd_grav_phase_type *grav_phase) {
@@ -301,7 +312,7 @@ static void rd_grav_survey_add_phase(rd_grav_survey_type *survey,
     survey->phase_map[std::string(rd_get_phase_name(phase))] = grav_phase;
 }
 
-static void rd_grav_survey_add_phases(rd_grav_type *rd_grav,
+static bool rd_grav_survey_add_phases(rd_grav_type *rd_grav,
                                       rd_grav_survey_type *survey,
                                       const rd_file_view_type *restart_file,
                                       grav_calc_type calc_type) {
@@ -309,20 +320,27 @@ static void rd_grav_survey_add_phases(rd_grav_type *rd_grav,
     if (phases & RD_OIL_PHASE) {
         rd_grav_phase_type *oil_phase = rd_grav_phase_alloc(
             rd_grav, survey, RD_OIL_PHASE, restart_file, calc_type);
+        if (oil_phase == NULL)
+            return false;
         rd_grav_survey_add_phase(survey, RD_OIL_PHASE, oil_phase);
     }
 
     if (phases & RD_GAS_PHASE) {
         rd_grav_phase_type *gas_phase = rd_grav_phase_alloc(
             rd_grav, survey, RD_GAS_PHASE, restart_file, calc_type);
+        if (gas_phase == NULL)
+            return false;
         rd_grav_survey_add_phase(survey, RD_GAS_PHASE, gas_phase);
     }
 
     if (phases & RD_WATER_PHASE) {
         rd_grav_phase_type *water_phase = rd_grav_phase_alloc(
             rd_grav, survey, RD_WATER_PHASE, restart_file, calc_type);
+        if (water_phase == NULL)
+            return false;
         rd_grav_survey_add_phase(survey, RD_WATER_PHASE, water_phase);
     }
+    return true;
 }
 
 static rd_grav_survey_type *
@@ -440,6 +458,7 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
                            const char *name) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RPORV);
+
     if (rd_file_view_has_kw(restart_file, RPORV_KW)) {
         rd_kw_type *rporv_kw =
             rd_file_view_iget_named_kw(restart_file, RPORV_KW, 0);
@@ -453,8 +472,11 @@ rd_grav_survey_alloc_RPORV(rd_grav_type *rd_grav,
     {
         const rd_file_type *init_file = rd_grav->init_file;
         rd_grav_survey_assert_RPORV(survey, init_file);
-        rd_grav_survey_add_phases(rd_grav, survey, restart_file,
-                                  GRAV_CALC_RPORV);
+        if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
+                                       GRAV_CALC_RPORV)) {
+            rd_grav_survey_free(survey);
+            return NULL;
+        }
     }
     return survey;
 }
@@ -466,6 +488,7 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
     rd::rd_grid_cache &grid_cache = *(rd_grav->grid_cache);
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_PORMOD);
+
     rd_kw_type *init_porv_kw = rd_file_iget_named_kw(
         rd_grav->init_file, PORV_KW, 0); /* Global indexing */
     rd_kw_type *pormod_kw = rd_file_view_iget_named_kw(restart_file, PORMOD_KW,
@@ -479,7 +502,11 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
             rd_kw_iget_float(pormod_kw, active_index) *
             rd_kw_iget_float(init_porv_kw, global_index[active_index]);
 
-    rd_grav_survey_add_phases(rd_grav, survey, restart_file, GRAV_CALC_PORMOD);
+    if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
+                                   GRAV_CALC_PORMOD)) {
+        rd_grav_survey_free(survey);
+        return NULL;
+    }
 
     return survey;
 }
@@ -497,7 +524,12 @@ rd_grav_survey_alloc_FIP(rd_grav_type *rd_grav,
 
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_FIP);
-    rd_grav_survey_add_phases(rd_grav, survey, restart_file, GRAV_CALC_FIP);
+
+    if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
+                                   GRAV_CALC_FIP)) {
+        rd_grav_survey_free(survey);
+        return NULL;
+    }
 
     return survey;
 }
@@ -509,18 +541,14 @@ rd_grav_survey_alloc_RFIP(rd_grav_type *rd_grav,
 
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_empty(rd_grav, name, GRAV_CALC_RFIP);
-    rd_grav_survey_add_phases(rd_grav, survey, restart_file, GRAV_CALC_RFIP);
+
+    if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,
+                                   GRAV_CALC_RFIP)) {
+        rd_grav_survey_free(survey);
+        return NULL;
+    }
 
     return survey;
-}
-
-static void rd_grav_survey_free(rd_grav_survey_type *grav_survey) {
-    free(grav_survey->name);
-    free(grav_survey->porv);
-    for (auto *phase : grav_survey->phase_list)
-        rd_grav_phase_free(phase);
-
-    delete grav_survey;
 }
 
 static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
@@ -574,6 +602,8 @@ rd_grav_add_survey_RPORV(rd_grav_type *grav, const char *name,
                          const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_RPORV(grav, restart_file, name);
+    if (survey == NULL)
+        return NULL;
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
@@ -583,6 +613,8 @@ rd_grav_add_survey_FIP(rd_grav_type *grav, const char *name,
                        const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_FIP(grav, restart_file, name);
+    if (survey == NULL)
+        return NULL;
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
@@ -592,6 +624,8 @@ rd_grav_add_survey_RFIP(rd_grav_type *grav, const char *name,
                         const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_RFIP(grav, restart_file, name);
+    if (survey == NULL)
+        return NULL;
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
@@ -601,6 +635,8 @@ rd_grav_add_survey_PORMOD(rd_grav_type *grav, const char *name,
                           const rd_file_view_type *restart_file) {
     rd_grav_survey_type *survey =
         rd_grav_survey_alloc_PORMOD(grav, restart_file, name);
+    if (survey == NULL)
+        return NULL;
     rd_grav_add_survey__(grav, name, survey);
     return survey;
 }
