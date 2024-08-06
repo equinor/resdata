@@ -1,4 +1,5 @@
 import shutil
+import pytest
 import datetime
 import os.path
 import gc
@@ -263,3 +264,8 @@ def test_report_list(tmpdir):
             assert rd_file.iget_restart_sim_days(1) == 0.0
             with openFortIO("TEST2.UNRST", FortIO.WRITE_MODE) as fortio:
                 rd_file.fwrite(fortio)
+
+
+def test_opening_non_existing_file_throws(tmpdir):
+    with pytest.raises(OSError):
+        ResdataFile("non_existing_file")
