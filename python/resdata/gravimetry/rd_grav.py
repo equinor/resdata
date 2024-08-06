@@ -127,7 +127,9 @@ class ResdataGrav(BaseCClass):
         the new_std_density() (and possibly also add_std_density())
         method before calling the add_survey_FIP() method.
         """
-        self._add_survey_FIP(survey_name, restart_view)
+        void_ptr = self._add_survey_FIP(survey_name, restart_view)
+        if void_ptr is None:
+            raise ValueError("Could not add FIP survey due to missing std_density")
 
     def add_survey_RFIP(self, survey_name: str, restart_view: ResdataFileView):
         """

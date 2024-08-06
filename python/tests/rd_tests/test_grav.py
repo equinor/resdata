@@ -98,3 +98,8 @@ class ResdataGravTest(ResdataTest):
             grav.add_survey_RFIP("fip", restart_view)
 
             grav.eval("rporv", "pormod", (0, 0, 0), phase_mask=1)
+
+            # Test that missing std_density raises
+            grav = ResdataGrav(self.grid, self.init)
+            with self.assertRaises(ValueError):
+                grav.add_survey_FIP("fip", restart_view)
