@@ -174,6 +174,12 @@ void test_sscanf_int() {
     test_assert_false(util_sscanf_int("7.5", &value));
     test_assert_int_equal(value, 1);
 
+    test_assert_false(util_sscanf_int("abc1", &value));
+    test_assert_int_equal(value, 1);
+
+    test_assert_false(util_sscanf_int("", &value));
+    test_assert_int_equal(value, 1);
+
     // max and min
     char buffer[30];
     snprintf(buffer, 30, "-%d", INT_MAX);
