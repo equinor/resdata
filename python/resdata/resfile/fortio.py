@@ -83,14 +83,14 @@ class FortIO(BaseCClass):
         all the pressure keywords to another file:
 
            import sys
-           from resdata.ecl import FortIO, ResdataFile
+           from resdata.resfile import FortIO, ResdataFile
 
            rst_file = ResdataFile(sys.argv[1])
            fortio = FortIO("PRESSURE", mode=FortIO.WRITE_MODE)
 
            for kw in rst_file:
                if kw.name() == "PRESSURE":
-                  kw.write(fortio)
+                  kw.fwrite(fortio)
 
            fortio.close()
 
@@ -184,13 +184,13 @@ def openFortIO(
     the situation where you need to ensure resource cleanup.
 
        import sys
-       from resdata.ecl import FortIO, ResdataFile
+       from resdata.resfile import FortIO, openFortIO, ResdataFile
 
        rst_file = ResdataFile(sys.argv[1])
        with openFortIO("PRESSURE", mode=FortIO.WRITE_MODE) as fortio:
           for kw in rst_file:
               if kw.name() == "PRESSURE":
-                 kw.write(fortio)
+                 kw.fwrite(fortio)
 
     """
     return FortIOContextManager(
