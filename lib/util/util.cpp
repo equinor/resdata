@@ -1207,29 +1207,27 @@ bool util_sscanf_octal_int(const char *buffer, int *value) {
    true if the parsing succeeded, and false otherwise. If parsing
    succeeded, the integer value is returned by reference.
 */
-
 bool util_sscanf_int(const char *buffer, int *value) {
     if (!buffer)
         return false;
 
-    bool value_OK = false;
     char *error_ptr;
 
     int tmp_value = strtol(buffer, &error_ptr, 10);
 
-    /*
-    Skip trailing white-space
-  */
+    if (error_ptr == buffer)
+        return false;
 
+    // Skip trailing white-space
     while (error_ptr[0] != '\0' && isspace(error_ptr[0]))
         error_ptr++;
 
-    if (error_ptr[0] == '\0') {
-        value_OK = true;
-        if (value != NULL)
-            *value = tmp_value;
-    }
-    return value_OK;
+    if (error_ptr[0] != '\0')
+        return false;
+
+    if (value != NULL)
+        *value = tmp_value;
+    return true;
 }
 
 /*
