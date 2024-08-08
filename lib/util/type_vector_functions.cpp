@@ -17,22 +17,6 @@ int_vector_type *bool_vector_alloc_active_list(const bool_vector_type *mask) {
     return active_list;
 }
 
-int_vector_type *
-bool_vector_alloc_active_index_list(const bool_vector_type *mask,
-                                    int default_value) {
-    int_vector_type *index_list =
-        int_vector_alloc(bool_vector_size(mask), default_value);
-    int active_index = 0;
-    int i;
-    for (i = 0; i < bool_vector_size(mask); i++) {
-        if (bool_vector_iget(mask, i)) {
-            int_vector_iset(index_list, i, active_index);
-            active_index++;
-        }
-    }
-    return index_list;
-}
-
 bool_vector_type *int_vector_alloc_mask(const int_vector_type *active_list) {
     bool_vector_type *mask = bool_vector_alloc(0, false);
     int i;
