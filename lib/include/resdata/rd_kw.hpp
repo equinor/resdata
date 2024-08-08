@@ -64,8 +64,6 @@ bool rd_kw_fread_realloc(rd_kw_type *, fortio_type *);
 void rd_kw_fread(rd_kw_type *, fortio_type *);
 rd_kw_type *rd_kw_fread_alloc(fortio_type *);
 rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit);
-rd_kw_type *rd_kw_alloc_actnum_bitmask(const rd_kw_type *porv_kw,
-                                       float porv_limit, int actnum_bitmask);
 void rd_kw_free_data(rd_kw_type *);
 void rd_kw_fread_indexed_data(fortio_type *fortio, offset_type data_offset,
                               rd_data_type, int element_count,
