@@ -26,7 +26,6 @@
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_grid.hpp>
-#include <resdata/grid_dims.hpp>
 #include <resdata/nnc_info.hpp>
 
 /**
@@ -4694,23 +4693,6 @@ int rd_grid_get_nx(const rd_grid_type *grid) { return grid->nx; }
 int rd_grid_get_ny(const rd_grid_type *grid) { return grid->ny; }
 
 int rd_grid_get_nactive(const rd_grid_type *grid) { return grid->total_active; }
-
-grid_dims_type rd_grid_iget_dims(const rd_grid_type *grid, int grid_nr) {
-    grid_dims_type dims;
-    const rd_grid_type *lgr;
-
-    if (grid_nr == 0)
-        lgr = grid;
-    else
-        lgr = rd_grid_iget_lgr(grid, grid_nr - 1);
-
-    dims.nx = lgr->nx;
-    dims.ny = lgr->ny;
-    dims.nz = lgr->nz;
-    dims.nactive = lgr->total_active;
-
-    return dims;
-}
 
 int rd_grid_get_nactive_fracture(const rd_grid_type *grid) {
     return grid->total_active_fracture;
