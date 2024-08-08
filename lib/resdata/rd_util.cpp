@@ -54,7 +54,7 @@ const char *rd_get_phase_name(rd_phase_enum phase) {
     }
 }
 
-char *rd_alloc_base_guess(const char *path) {
+static char *rd_alloc_base_guess(const char *path) {
     char *base = NULL;
     stringlist_type *data_files = stringlist_alloc_new();
     stringlist_type *DATA_files = stringlist_alloc_new();
@@ -88,8 +88,8 @@ int rd_filename_report_nr(const char *filename) {
 /*
  We accept mixed lowercase/uppercase Eclipse file extensions even if Eclipse itself does not accept them.
 */
-rd_file_enum rd_inspect_extension(const char *ext, bool *_fmt_file,
-                                  int *_report_nr) {
+static rd_file_enum rd_inspect_extension(const char *ext, bool *_fmt_file,
+                                         int *_report_nr) {
     rd_file_enum file_type = RD_OTHER_FILE;
     bool fmt_file = true;
     int report_nr = -1;
@@ -437,32 +437,6 @@ char *rd_alloc_exfilename(const char *path, const char *base,
 }
 
 /**
-   This function will first try if the 'fmt_file' file exists, and
-   then subsequently the !fmt_file version. If neither can be found it
-   will return NULL.
-*/
-
-char *rd_alloc_exfilename_anyfmt(const char *path, const char *base,
-                                 rd_file_enum file_type, bool fmt_file_first,
-                                 int report_nr) {
-
-    char *filename =
-        rd_alloc_filename(path, base, file_type, fmt_file_first, report_nr);
-    if (!util_file_exists(filename)) {
-        free(filename);
-        filename = rd_alloc_filename(path, base, file_type, !fmt_file_first,
-                                     report_nr);
-    }
-
-    if (!util_file_exists(filename)) {
-        free(filename);
-        filename = NULL;
-    }
-
-    return filename;
-}
-
-/**
    This function assumes that:
 
     o Both files are of the same type (i.e. both summary files) (this
@@ -673,73 +647,13 @@ bool rd_fmt_file(const char *filename, bool *__fmt_file) {
 }
 
 /**
- This function copies size elements from _src_data to target_data. If
- src_type == target_type the copy is a simple memcpy, otherwise the
- appropriate numerical conversion is applied.
-*/
-
-void rd_memcpy_typed_data(void *_target_data, const void *_src_data,
-                          rd_data_type target_type, rd_data_type src_type,
-                          int size) {
-    int i;
-
-    if (rd_type_is_equal(target_type, src_type))
-        memcpy(_target_data, _src_data,
-               size * rd_type_get_sizeof_ctype(src_type));
-    else {
-        switch (rd_type_get_type(target_type)) {
-        case (RD_DOUBLE_TYPE): {
-            double *target_data = (double *)_target_data;
-            switch (rd_type_get_type(src_type)) {
-            case (RD_FLOAT_TYPE):
-                util_float_to_double(target_data, (const float *)_src_data,
-                                     size);
-                break;
-            case (RD_INT_TYPE):
-                for (i = 0; i < size; i++)
-                    target_data[i] = ((int *)_src_data)[i];
-                break;
-            default:
-                util_abort("%s: double type can only load from "
-                           "int/float/double - aborting \n",
-                           __func__);
-            }
-            break;
-        }
-        case (RD_FLOAT_TYPE): {
-            float *target_data = (float *)_target_data;
-            switch (rd_type_get_type(src_type)) {
-            case (RD_FLOAT_TYPE):
-                util_double_to_float(target_data, (const double *)_src_data,
-                                     size);
-                break;
-            case (RD_INT_TYPE):
-                for (i = 0; i < size; i++)
-                    target_data[i] = ((int *)_src_data)[i];
-                break;
-            default:
-                util_abort("%s: float type can only load from int/float/double "
-                           "- aborting \n",
-                           __func__);
-            }
-            break;
-        }
-        default:
-            util_abort("%s con not convert %s -> %s \n", __func__,
-                       rd_type_alloc_name(src_type),
-                       rd_type_alloc_name(target_type));
-        }
-    }
-}
-
-/*
   The stringlist will be cleared before the actual matching process
   starts. Observe that in addition to the @path input parameter the
   @base input can contain an embedded path component.
 */
-
-void rd_alloc_summary_data_files(const char *path, const char *base,
-                                 bool fmt_file, stringlist_type *filelist) {
+static void rd_alloc_summary_data_files(const char *path, const char *base,
+                                        bool fmt_file,
+                                        stringlist_type *filelist) {
     char *unif_data_file =
         rd_alloc_exfilename(path, base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1);
     int files =
@@ -937,35 +851,6 @@ bool rd_alloc_summary_files(const char *path, const char *_base,
     return (stringlist_get_size(filelist) > 0) ? true : false;
 }
 
-void rd_alloc_restart_files(const char *path, const char *_base,
-                            char ***_restart_files, int *num_restart_files,
-                            bool *_fmt_file, bool *_unified) {
-
-    util_exit("Function:%s currently not implemented - sorry \n", __func__);
-}
-
-/**
-This little function escapes eclipse keyword names so that they can be
-safely used as filenames, i.e for instance the substitution:
-
-   1/FVFGAS -> 1-FVFGAS
-
-The escape process is done 'in-place' memory-wise.
-*/
-void rd_escape_kw(char *kw) {
-    size_t index;
-    for (index = 0; index < strlen(kw); index++) {
-        switch (kw[index]) {
-        case ('/'):
-            kw[index] = '-';
-            break;
-        case ('\\'):
-            kw[index] = '-';
-            break;
-        }
-    }
-}
-
 /**
    Will return -1 for an unrecognized month name.
 */
@@ -1011,7 +896,7 @@ static int rd_get_month_nr__(const char *_month_name) {
     return month_nr;
 }
 
-int rd_get_month_nr(const char *month_name) {
+static int rd_get_month_nr(const char *month_name) {
     int month_nr = rd_get_month_nr__(month_name);
     if (month_nr < 0)
         util_abort("%s: %s not a valid month name - aborting \n", __func__,
@@ -1252,111 +1137,6 @@ int rd_get_num_cpu(const char *data_file) {
     basic_parser_free(parser);
     fclose(stream);
     return num_cpu;
-}
-
-ert_rd_unit_enum rd_get_unit_set(const char *data_file) {
-    ert_rd_unit_enum units = RD_METRIC_UNITS;
-    basic_parser_type *parser =
-        basic_parser_alloc(" \t\r\n", "\"\'", NULL, NULL, "--", "\n");
-    FILE *stream = util_fopen(data_file, "r");
-
-    if (basic_parser_fseek_string(parser, stream, "FIELD", true,
-                                  true)) { /* Seeks case insensitive. */
-        units = RD_FIELD_UNITS;
-    } else if (basic_parser_fseek_string(parser, stream, "LAB", true,
-                                         true)) { /* Seeks case insensitive. */
-        units = RD_LAB_UNITS;
-    }
-
-    basic_parser_free(parser);
-    fclose(stream);
-    return units;
-}
-
-bool rd_valid_basename_fmt(const char *basename_fmt) {
-    char *eclbasename_fmt = util_split_alloc_filename(basename_fmt);
-
-    bool valid = true;
-
-    const char *percent_ptr = strchr(eclbasename_fmt, '%');
-    if (percent_ptr) {
-        percent_ptr++;
-        while (true) {
-            if (*percent_ptr == 'd') {
-                break;
-            } else if (!isdigit(*percent_ptr)) {
-                valid = false;
-                break;
-            } else
-                percent_ptr++;
-        }
-    }
-
-    free(eclbasename_fmt);
-
-    return valid;
-}
-
-/*
-  Will append time_t values corresponding to the first day in every
-  month in the open interval (start_date , end_date). Iff start_date
-  corresponds to the first date in a month the list will start with
-  start_date, otherwise the list will start with the first day in the
-  month following after start_date.
-
-  If end_date corresponds to the first day of the month the list will
-  end with end_date, otherwise it will ende with the first day in the
-  month prior to end_date:
-
-     (1,1,2000)  , (10,3,2000) => {(1,1,2000) , (1,2,2000) , (1,3,2000) }
-     (10,1,2000) , (1,4,2000)  => {(1,2,2000) , (1,3,2000) , (1,4,2000) }
-
-  All time_t values added to the date list will be pure dates,
-  i.e. the time part will be 00:00:00; that also applies to start_date
-  and end_date where possible time parts will be normalized away prior
-  to insertion.
-*/
-
-void rd_append_month_range(time_t_vector_type *date_list, time_t start_date,
-                           time_t end_date, bool force_append_end) {
-    start_date = util_make_pure_date_utc(start_date);
-    end_date = util_make_pure_date_utc(end_date);
-
-    if (util_is_first_day_in_month_utc(start_date))
-        time_t_vector_append(date_list, start_date);
-
-    {
-        time_t current_date = start_date;
-        while (true) {
-            int month, year;
-            util_set_date_values_utc(current_date, NULL, &month, &year);
-            if (month == 12) {
-                month = 1;
-                year += 1;
-            } else
-                month += 1;
-
-            current_date = rd_make_date(1, month, year);
-            if (current_date < end_date)
-                time_t_vector_append(date_list, current_date);
-            else {
-                if (current_date == end_date)
-                    time_t_vector_append(date_list, current_date);
-                else if (force_append_end)
-                    time_t_vector_append(date_list, end_date);
-                break;
-            }
-        }
-    }
-}
-
-void rd_init_month_range(time_t_vector_type *date_list, time_t start_date,
-                         time_t end_date) {
-    time_t_vector_reset(date_list);
-    if (!util_is_first_day_in_month_utc(start_date))
-        time_t_vector_append(date_list, util_make_pure_date_utc(start_date));
-
-    rd_append_month_range(date_list, start_date, end_date, true);
 }
 
 static time_t rd_make_datetime__(int sec, int min, int hour, int mday,
