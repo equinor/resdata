@@ -61,7 +61,6 @@ add_library(
   resdata/rd_rsthead.cpp
   resdata/rd_sum_tstep.cpp
   resdata/rd_rst_file.cpp
-  resdata/rd_init_file.cpp
   resdata/rd_grid_cache.cpp
   resdata/smspec_node.cpp
   resdata/rd_kw_grdecl.cpp
@@ -269,7 +268,6 @@ foreach(
   rd_sum_data_intermediate_test
   rd_grid_cell_contains
   rd_unsmry_loader_test
-  rd_init_file
   rd_kw_space_pad
   rd_kw_cmp_string
   rd_kw_equal
