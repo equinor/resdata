@@ -1308,12 +1308,6 @@ int smspec_node::cmp(const smspec_node &node2) const {
 
 /**************************************  OLD API functions ***********************''''' */
 
-void smspec_node_free(void *index) {
-    delete static_cast<rd::smspec_node *>(index);
-}
-
-void smspec_node_free__(void *arg) { smspec_node_free(arg); }
-
 float smspec_node_get_default(const void *smspec_node) {
     return static_cast<const rd::smspec_node *>(smspec_node)->get_default();
 }
@@ -1322,10 +1316,6 @@ int smspec_node_get_params_index(const void *smspec_node) {
     return static_cast<const rd::smspec_node *>(smspec_node)
         ->get_params_index();
 }
-
-// void smspec_node_set_params_index( void * smspec_node , int params_index) {
-// static_cast<rd::smspec_node*>(smspec_node)->set_params_index( params_index );
-// }
 
 const char *smspec_node_get_gen_key1(const void *smspec_node) {
     return static_cast<const rd::smspec_node *>(smspec_node)->get_gen_key1();
@@ -1367,46 +1357,13 @@ const char *smspec_node_get_unit(const void *smspec_node) {
     return static_cast<const rd::smspec_node *>(smspec_node)->get_unit();
 }
 
-// Will be garbage for smspec_nodes which do not have i,j,k
-const int *smspec_node_get_ijk(const void *smspec_node) {
-    return static_cast<const rd::smspec_node *>(smspec_node)->get_ijk().data();
-}
-
-// Will be NULL for smspec_nodes which are not related to an LGR.
-const char *smspec_node_get_lgr_name(const void *smspec_node) {
-    return static_cast<const rd::smspec_node *>(smspec_node)->get_lgr_name();
-}
-
-// Will be garbage for smspec_nodes which are not related to an LGR.
-const int *smspec_node_get_lgr_ijk(const void *smspec_node) {
-    return static_cast<const rd::smspec_node *>(smspec_node)
-        ->get_lgr_ijk()
-        .data();
-}
-
-int smspec_node_get_R1(const void *smspec_node) {
-    return static_cast<const rd::smspec_node *>(smspec_node)->get_R1();
-}
-
-int smspec_node_get_R2(const void *smspec_node) {
-    return static_cast<const rd::smspec_node *>(smspec_node)->get_R2();
-}
-
 bool smspec_node_need_nums(const void *smspec_node) {
     return static_cast<const rd::smspec_node *>(smspec_node)->need_nums();
-}
-
-void smspec_node_fprintf(const void *smspec_node, FILE *stream) {
-    static_cast<const rd::smspec_node *>(smspec_node)->fprintf__(stream);
 }
 
 int smspec_node_cmp(const void *node1, const void *node2) {
     return rd::smspec_node::cmp(static_cast<const rd::smspec_node *>(node1),
                                 static_cast<const rd::smspec_node *>(node2));
-}
-
-int smspec_node_cmp__(const void *node1, const void *node2) {
-    return smspec_node_cmp(node1, node2);
 }
 
 void *smspec_node_alloc(int param_index, const char *keyword,
@@ -1422,28 +1379,6 @@ void *smspec_node_alloc(int param_index, const char *keyword,
         node = NULL;
     }
     return node;
-}
-
-void *smspec_node_alloc_lgr(rd_smspec_var_type var_type, const char *wgname,
-                            const char *keyword, const char *unit,
-                            const char *lgr, const char *key_join_string,
-                            int lgr_i, int lgr_j, int lgr_k, int param_index,
-                            float default_value) {
-
-    return new rd::smspec_node(param_index, keyword, wgname, unit, lgr, lgr_i,
-                               lgr_j, lgr_k, default_value, key_join_string);
-}
-
-bool smspec_node_equal(const void *node1, const void *node2) {
-    return rd::smspec_node::cmp(static_cast<const rd::smspec_node *>(node1),
-                                static_cast<const rd::smspec_node *>(node2)) ==
-           0;
-}
-
-bool smspec_node_gt(const void *node1, const void *node2) {
-    return rd::smspec_node::cmp(static_cast<const rd::smspec_node *>(node1),
-                                static_cast<const rd::smspec_node *>(node2)) >
-           0;
 }
 
 bool smspec_node_lt(const void *node1, const void *node2) {
