@@ -1449,65 +1449,6 @@ bool util_is_file(const char *path) {
     }
 }
 
-/**
-   Will return false if the path does not exist.
-*/
-
-#ifdef ERT_HAVE_SPAWN
-bool util_is_executable(const char *path) {
-    if (util_file_exists(path)) {
-        stat_type stat_buffer;
-        util_stat(path, &stat_buffer);
-        if (S_ISREG(stat_buffer.st_mode))
-            return (stat_buffer.st_mode & S_IXUSR);
-        else
-            return false; /* It is not a file. */
-    } else                /* Entry does not exist - return false. */
-        return false;
-}
-
-/*
-   Will not differtiate between files and directories.
-*/
-bool util_entry_readable(const char *entry) {
-    stat_type buffer;
-    if (util_stat(entry, &buffer) == 0)
-        return buffer.st_mode & S_IRUSR;
-    else
-        return false; /* If stat failed - typically not existing entry - we return false. */
-}
-
-bool util_file_readable(const char *file) {
-    if (util_entry_readable(file) && util_is_file(file))
-        return true;
-    else
-        return false;
-}
-
-#else
-// Windows: executable status based purely on extension ....
-
-bool util_is_executable(const char *path) {
-    char *ext;
-    util_alloc_file_components(path, NULL, NULL, &ext);
-    if (ext != NULL)
-        if (strcmp(ext, "exe") == 0)
-            return true;
-
-    return false;
-}
-
-/* If it exists on windows it is readable ... */
-bool util_entry_readable(const char *entry) {
-    stat_type buffer;
-    if (util_stat(entry, &buffer) == 0)
-        return true;
-    else
-        return false; /* If stat failed - typically not existing entry - we return false. */
-}
-
-#endif
-
 static size_t util_get_path_length(const char *file) {
     if (util_is_directory(file))
         return strlen(file);

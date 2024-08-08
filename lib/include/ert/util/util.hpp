@@ -102,7 +102,6 @@ double util_difftime_seconds(time_t start_time, time_t end_time);
 char *util_alloc_sprintf_va(const char *fmt, va_list ap);
 char *util_alloc_sprintf(const char *, ...);
 bool util_sscanf_isodate(const char *, time_t *);
-bool util_is_executable(const char *);
 bool util_entry_exists(const char *entry);
 bool util_file_exists(const char *);
 bool util_is_abs_path(const char *);
@@ -127,8 +126,6 @@ char *util_alloc_normal_path(const char *input_path);
 char *util_alloc_realpath(const char *);
 char *util_alloc_realpath__(const char *input_path);
 bool util_string_has_wildcard(const char *s);
-bool util_file_readable(const char *file);
-bool util_entry_readable(const char *entry);
 bool util_ftruncate(FILE *stream, long size);
 
 int util_roundf(float x);
@@ -316,13 +313,6 @@ char *util_alloc_link_target(const char *link);
 #ifdef ERT_HAVE_READLINKAT
 char *util_alloc_atlink_target(const char *path, const char *link);
 #endif
-#endif
-
-#ifdef ERT_HAVE_SPAWN
-pid_t util_spawn(const char *executable, int argc, const char **argv,
-                 const char *stdout_file, const char *stderr_file);
-int util_spawn_blocking(const char *executable, int argc, const char **argv,
-                        const char *stdout_file, const char *stderr_file);
 #endif
 
 #include "util_unlink.hpp"
