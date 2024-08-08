@@ -9,7 +9,6 @@
 
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_kw.hpp>
-#include <resdata/grid_dims.hpp>
 #include <resdata/nnc_info.hpp>
 
 #ifdef __cplusplus
@@ -166,7 +165,6 @@ char *rd_grid_alloc_case_filename(const char *case_input);
 
 void rd_grid_free(rd_grid_type *);
 void rd_grid_free__(void *arg);
-grid_dims_type rd_grid_iget_dims(const rd_grid_type *grid, int grid_nr);
 void rd_grid_get_dims(const rd_grid_type *, int *, int *, int *, int *);
 int rd_grid_get_nz(const rd_grid_type *grid);
 int rd_grid_get_nx(const rd_grid_type *grid);
