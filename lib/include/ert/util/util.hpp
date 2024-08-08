@@ -325,11 +325,6 @@ int util_spawn_blocking(const char *executable, int argc, const char **argv,
                         const char *stdout_file, const char *stderr_file);
 #endif
 
-#ifdef ERT_HAVE_LOCKF
-FILE *util_fopen_lockf(const char *, const char *);
-bool util_try_lockf(const char *, mode_t, int *);
-#endif
-
 #include "util_unlink.hpp"
 
 #ifdef __cplusplus
