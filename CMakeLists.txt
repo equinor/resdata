@@ -303,11 +303,6 @@ if(M_LIBRARY)
 endif()
 
 find_package(ZLIB)
-if(ZLIB_FOUND)
-  set(ERT_HAVE_ZLIB ON)
-  set(zlib "${ZLIB_LIBRARIES}")
-endif()
-
 find_library(SHLWAPI_LIBRARY NAMES Shlwapi)
 if(SHLWAPI_LIBRARY)
   set(shlwapi ${SHLWAPI_LIBRARY})

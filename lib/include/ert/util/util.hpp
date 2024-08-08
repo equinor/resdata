@@ -310,14 +310,6 @@ void util_abort__(const char *file, const char *function, int line,
                   const char *fmt, ...);
 void util_abort_signal(int);
 
-#ifdef ERT_HAVE_ZLIB
-void util_compress_buffer(const void *, int, void *, unsigned long *);
-int util_fread_sizeof_compressed(FILE *stream);
-void util_fread_compressed(void *, FILE *);
-void *util_fread_alloc_compressed(FILE *);
-void util_fwrite_compressed(const void *, int, FILE *);
-#endif
-
 #ifdef ERT_HAVE_SYMLINK
 void util_make_slink(const char *, const char *);
 char *util_alloc_link_target(const char *link);
