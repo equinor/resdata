@@ -1795,15 +1795,6 @@ void util_set_date_values_utc(time_t t, int *mday, int *month, int *year) {
     __util_set_timevalues_utc(t, NULL, NULL, NULL, mday, month, year);
 }
 
-bool util_is_first_day_in_month_utc(time_t t) {
-    int mday;
-    __util_set_timevalues_utc(t, NULL, NULL, NULL, &mday, NULL, NULL);
-    if (mday == 1)
-        return true;
-    else
-        return false;
-}
-
 /*
    The date format is HARD assumed to be
 
@@ -1947,12 +1938,6 @@ time_t util_make_datetime_utc(int sec, int min, int hour, int mday, int month,
 
 time_t util_make_date_utc(int mday, int month, int year) {
     return util_make_datetime_utc(0, 0, 0, mday, month, year);
-}
-
-time_t util_make_pure_date_utc(time_t t) {
-    int day, month, year;
-    util_set_date_values_utc(t, &day, &month, &year);
-    return util_make_date_utc(day, month, year);
 }
 
 /**

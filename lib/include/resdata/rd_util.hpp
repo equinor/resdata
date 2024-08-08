@@ -100,50 +100,29 @@ typedef enum {
 
 bool rd_unified_file(const char *filename);
 const char *rd_file_type_name(rd_file_enum file_type);
-char *rd_alloc_base_guess(const char *);
 int rd_filename_report_nr(const char *);
-rd_file_enum rd_inspect_extension(const char *ext, bool *_fmt_file,
-                                  int *_report_nr);
 rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
                               int *report_nr);
 char *rd_alloc_filename(const char * /* path */, const char * /* base */,
                         rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
 char *rd_alloc_exfilename(const char * /* path */, const char * /* base */,
                           rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
-void rd_memcpy_typed_data(void *, const void *, rd_data_type, rd_data_type,
-                          int);
-void rd_escape_kw(char *kw);
 bool rd_alloc_summary_files(const char *, const char *, const char *, char **,
                             stringlist_type *);
-void rd_alloc_summary_data_files(const char *path, const char *base,
-                                 bool fmt_file, stringlist_type *filelist);
-void rd_alloc_restart_files(const char *, const char *, char ***, int *, bool *,
-                            bool *);
 time_t rd_get_start_date(const char *);
 int rd_get_num_cpu(const char *data_file);
 bool rd_fmt_file(const char *filename, bool *__fmt_file);
-char *rd_alloc_exfilename_anyfmt(const char *path, const char *base,
-                                 rd_file_enum file_type, bool start_fmt,
-                                 int report_nr);
-int rd_get_month_nr(const char *month_name);
 int rd_fname_report_cmp(const void *f1, const void *f2);
 time_t rd_make_date(int mday, int month, int year);
 time_t rd_make_date__(int mday, int month, int year, int *year_offset);
 time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
                         int year);
-ert_rd_unit_enum rd_get_unit_set(const char *data_file);
 
-bool rd_valid_basename_fmt(const char *basename_fmt);
-bool rd_valid_basename(const char *basename);
 const char *rd_get_phase_name(rd_phase_enum phase);
 
 int rd_select_filelist(const char *path, const char *base,
                        rd_file_enum file_type, bool fmt_file,
                        stringlist_type *filelist);
-void rd_append_month_range(time_t_vector_type *date_list, time_t start_date,
-                           time_t end_date, bool force_append_end);
-void rd_init_month_range(time_t_vector_type *date_list, time_t start_date,
-                         time_t end_date);
 void rd_set_date_values(time_t t, int *mday, int *month, int *year);
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year);

@@ -91,7 +91,6 @@ typedef bool(walk_dir_callback_ftype)(
 char *util_get_timezone(void);
 time_t util_make_datetime_utc(int, int, int, int, int, int);
 time_t util_make_date_utc(int, int, int);
-time_t util_make_pure_date_utc(time_t t);
 void util_inplace_forward_seconds_utc(time_t *t, double seconds);
 void util_inplace_forward_days_utc(time_t *t, double days);
 
@@ -175,7 +174,6 @@ bool util_is_file(const char *);
 void util_set_datetime_values_utc(time_t, int *, int *, int *, int *, int *,
                                   int *);
 void util_set_date_values_utc(time_t, int *, int *, int *);
-bool util_is_first_day_in_month_utc(time_t t);
 unsigned int util_clock_seed(void);
 void util_fread_dev_random(int, char *);
 void util_fread_dev_urandom(int, char *);

@@ -292,8 +292,6 @@ foreach(
   rd_filenames
   rd_make_date_no_shift
   rd_make_date_shift
-  rd_month_range
-  rd_valid_basename
   test_rd_nnc_data
   rd_nnc_pair
   well_conn_collection
