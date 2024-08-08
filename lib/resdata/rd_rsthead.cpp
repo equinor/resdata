@@ -106,47 +106,6 @@ rd_rsthead_type *rd_rsthead_alloc(const rd_file_view_type *rst_view,
                                     logihead_kw);
 }
 
-rd_rsthead_type *rd_rsthead_alloc_empty() {
-    rd_rsthead_type *rsthead = (rd_rsthead_type *)util_malloc(sizeof *rsthead);
-
-    rsthead->day = 0;
-    rsthead->month = 0;
-    rsthead->year = 0;
-    rsthead->version = 0;
-    rsthead->phase_sum = 0;
-
-    rsthead->nx = 0;
-    rsthead->ny = 0;
-    rsthead->nz = 0;
-    rsthead->nactive = 0;
-
-    rsthead->nwells = 0;
-    rsthead->niwelz = 0;
-    rsthead->nzwelz = 0;
-
-    rsthead->nsconz = 0;
-    rsthead->niconz = 0;
-    rsthead->ncwmax = 0;
-
-    rsthead->nisegz = 0;
-    rsthead->nsegmx = 0;
-    rsthead->nswlmx = 0;
-    rsthead->nrsegz = 0;
-
-    rsthead->sim_time = 0;
-
-    rsthead->dualp = false;
-    rsthead->sim_days = 0.0;
-
-    return rsthead;
-}
-
-void rd_rsthead_fprintf(const rd_rsthead_type *header, FILE *stream) {
-    fprintf(stream, "nx      %d \n", header->nx);
-    fprintf(stream, "nwells  %d \n", header->nwells);
-    fprintf(stream, "niwelz  %d \n\n", header->niwelz);
-}
-
 bool rd_rsthead_equal(const rd_rsthead_type *header1,
                       const rd_rsthead_type *header2) {
     bool equal = true;
@@ -176,31 +135,6 @@ bool rd_rsthead_equal(const rd_rsthead_type *header1,
         equal && util_double_approx_equal(header1->sim_days, header2->sim_days);
 
     return equal;
-}
-
-void rd_rsthead_fprintf_struct(const rd_rsthead_type *header, FILE *stream) {
-    fprintf(stream, "{.day = %d,\n", header->day);
-    fprintf(stream, ".year = %d,\n", header->year);
-    fprintf(stream, ".month = %d,\n", header->month);
-    fprintf(stream, ".sim_time = %ld,\n", header->sim_time);
-    fprintf(stream, ".version = %d,\n", header->version);
-    fprintf(stream, ".phase_sum = %d,\n", header->phase_sum);
-    fprintf(stream, ".nx = %d,\n", header->nx);
-    fprintf(stream, ".ny = %d,\n", header->ny);
-    fprintf(stream, ".nz = %d,\n", header->nz);
-    fprintf(stream, ".nactive = %d,\n", header->nactive);
-    fprintf(stream, ".nwells = %d,\n", header->nwells);
-    fprintf(stream, ".niwelz = %d,\n", header->niwelz);
-    fprintf(stream, ".nzwelz = %d,\n", header->nzwelz);
-    fprintf(stream, ".niconz = %d,\n", header->niconz);
-    fprintf(stream, ".ncwmax = %d,\n", header->ncwmax);
-    fprintf(stream, ".nisegz = %d,\n", header->nisegz);
-    fprintf(stream, ".nsegmx = %d,\n", header->nsegmx);
-    fprintf(stream, ".nswlmx = %d,\n", header->nswlmx);
-    fprintf(stream, ".nlbrmx = %d,\n", header->nlbrmx);
-    fprintf(stream, ".nilbrz = %d,\n", header->nilbrz);
-    fprintf(stream, ".dualp  = %d,\n", header->dualp);
-    fprintf(stream, ".sim_days  = %g};\n", header->sim_days);
 }
 
 void rd_rsthead_free(rd_rsthead_type *rsthead) { free(rsthead); }
