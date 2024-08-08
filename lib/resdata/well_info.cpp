@@ -149,10 +149,8 @@
      well_info_get_ts() to get the full timeseries for one named well;
      or one of the functions:
 
-      - well_info_get_state_from_time()
       - well_info_get_state_from_report()
       - well_info_iget_state()
-      - well_info_iiget_state()
 
   4. well_info_free() before you go home.
 
@@ -256,9 +254,9 @@ static void well_info_add_state(well_info_type *well_info,
    determine the number of wells.
  */
 
-void well_info_add_wells2(well_info_type *well_info,
-                          rd_file_view_type *rst_view, int report_nr,
-                          bool load_segment_information) {
+static void well_info_add_wells2(well_info_type *well_info,
+                                 rd_file_view_type *rst_view, int report_nr,
+                                 bool load_segment_information) {
     bool close_stream = rd_file_view_drop_flag(rst_view, RD_FILE_CLOSE_STREAM);
     rd_rsthead_type *global_header = rd_rsthead_alloc(rst_view, report_nr);
     int well_nr;
@@ -274,8 +272,9 @@ void well_info_add_wells2(well_info_type *well_info,
         rd_file_view_add_flag(rst_view, RD_FILE_CLOSE_STREAM);
 }
 
-void well_info_add_wells(well_info_type *well_info, rd_file_type *rst_file,
-                         int report_nr, bool load_segment_information) {
+static void well_info_add_wells(well_info_type *well_info,
+                                rd_file_type *rst_file, int report_nr,
+                                bool load_segment_information) {
     well_info_add_wells2(well_info, rd_file_get_active_view(rst_file),
                          report_nr, load_segment_information);
 }
@@ -286,9 +285,9 @@ void well_info_add_wells(well_info_type *well_info, rd_file_type *rst_file,
    not have the SEQNUM keyword.
 */
 
-void well_info_add_UNRST_wells2(well_info_type *well_info,
-                                rd_file_view_type *rst_view,
-                                bool load_segment_information) {
+static void well_info_add_UNRST_wells2(well_info_type *well_info,
+                                       rd_file_view_type *rst_view,
+                                       bool load_segment_information) {
     int num_blocks = rd_file_view_get_num_named_kw(rst_view, SEQNUM_KW);
     int block_nr;
     for (block_nr = 0; block_nr < num_blocks; block_nr++) {
@@ -306,9 +305,9 @@ void well_info_add_UNRST_wells2(well_info_type *well_info,
     }
 }
 
-void well_info_add_UNRST_wells(well_info_type *well_info,
-                               rd_file_type *rst_file,
-                               bool load_segment_information) {
+static void well_info_add_UNRST_wells(well_info_type *well_info,
+                                      rd_file_type *rst_file,
+                                      bool load_segment_information) {
     well_info_add_UNRST_wells2(well_info, rd_file_get_global_view(rst_file),
                                load_segment_information);
 }
@@ -353,19 +352,6 @@ void well_info_free(well_info_type *well_info) {
     delete well_info;
 }
 
-int well_info_get_well_size(const well_info_type *well_info,
-                            const char *well_name) {
-    well_ts_type *well_ts = well_info_get_ts(well_info, well_name);
-    return well_ts_get_size(well_ts);
-}
-
-well_state_type *well_info_get_state_from_time(const well_info_type *well_info,
-                                               const char *well_name,
-                                               time_t sim_time) {
-    well_ts_type *well_ts = well_info_get_ts(well_info, well_name);
-    return well_ts_get_state_from_sim_time(well_ts, sim_time);
-}
-
 well_state_type *
 well_info_get_state_from_report(const well_info_type *well_info,
                                 const char *well_name, int report_step) {
@@ -373,16 +359,11 @@ well_info_get_state_from_report(const well_info_type *well_info,
     return well_ts_get_state_from_report(well_ts, report_step);
 }
 
-well_state_type *well_info_iget_state(const well_info_type *well_info,
-                                      const char *well_name, int time_index) {
+static well_state_type *well_info_iget_state(const well_info_type *well_info,
+                                             const char *well_name,
+                                             int time_index) {
     well_ts_type *well_ts = well_info_get_ts(well_info, well_name);
     return well_ts_iget_state(well_ts, time_index);
-}
-
-well_state_type *well_info_iiget_state(const well_info_type *well_info,
-                                       int well_index, int time_index) {
-    const std::string &well_name = well_info->well_names[well_index];
-    return well_info_iget_state(well_info, well_name.c_str(), time_index);
 }
 
 int well_info_get_num_wells(const well_info_type *well_info) {

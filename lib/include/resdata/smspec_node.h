@@ -49,66 +49,11 @@ typedef enum {
 
 #define SMSPEC_TYPE_ID 61550451
 
-char *smspec_alloc_block_ijk_key(const char *join_string, const char *keyword,
-                                 int i, int j, int k);
-char *smspec_alloc_completion_ijk_key(const char *join_string,
-                                      const char *keyword, const char *wgname,
-                                      int i, int j, int k);
-char *smspec_alloc_completion_num_key(const char *join_string,
-                                      const char *keyword, const char *wgname,
-                                      int num);
-char *smspec_alloc_group_key(const char *join_string, const char *keyword,
-                             const char *wgname);
 char *smspec_alloc_well_key(const char *join_string, const char *keyword,
                             const char *wgname);
-char *smspec_alloc_region_key(const char *join_string, const char *keyword,
-                              int num);
-char *smspec_alloc_region_2_region_r1r2_key(const char *join_string,
-                                            const char *keyword, int r1,
-                                            int r2);
-char *smspec_alloc_region_2_region_num_key(const char *join_string,
-                                           const char *keyword, int num);
-char *smspec_alloc_segment_key(const char *join_string, const char *keyword,
-                               const char *wgname, int num);
-char *smspec_alloc_block_num_key(const char *join_string, const char *keyword,
-                                 int num);
-char *smspec_alloc_local_well_key(const char *join_string, const char *keyword,
-                                  const char *lgr_name, const char *wgname);
-char *smspec_alloc_local_block_key(const char *join_string, const char *keyword,
-                                   const char *lgr_name, int i, int j, int k);
-char *smspec_alloc_local_completion_key(const char *join_string,
-                                        const char *keyword,
-                                        const char *lgr_name,
-                                        const char *wgname, int i, int j,
-                                        int k);
-
 bool smspec_node_identify_total(const char *keyword,
                                 rd_smspec_var_type var_type);
 bool smspec_node_identify_rate(const char *keyword);
-
-bool smspec_node_equal(const void *node1, const void *node2);
-
-void smspec_node_init(void *smspec_node, rd_smspec_var_type var_type,
-                      const char *wgname, const char *keyword, const char *unit,
-                      const char *key_join_string, const int grid_dims[3],
-                      int num);
-
-void *smspec_node_alloc(int param_index, const char *keyword,
-                        const char *wgname, int num, const char *unit,
-                        const int grid_dims[3], float default_value,
-                        const char *key_join_string);
-
-void *smspec_node_alloc_lgr(rd_smspec_var_type var_type, const char *wgname,
-                            const char *keyword, const char *unit,
-                            const char *lgr, const char *key_join_string,
-                            int lgr_i, int lgr_j, int lgr_k, int param_index,
-                            float default_value);
-
-void *smspec_node_alloc_copy(const void *);
-
-void smspec_node_free(void *index);
-void smspec_node_free__(void *arg);
-void smspec_node_set_params_index(void *smspec_node, int params_index);
 int smspec_node_get_params_index(const void *smspec_node);
 const char *smspec_node_get_gen_key1(const void *smspec_node);
 const char *smspec_node_get_gen_key2(const void *smspec_node);
@@ -121,21 +66,10 @@ bool smspec_node_is_rate(const void *smspec_node);
 bool smspec_node_is_total(const void *smspec_node);
 bool smspec_node_is_historical(const void *smspec_node);
 bool smspec_node_need_nums(const void *smspec_node);
-void smspec_node_fprintf(const void *smspec_node, FILE *stream);
-
 float smspec_node_get_default(const void *smspec_node);
 
-const int *smspec_node_get_ijk(const void *smpsec_node);
-const char *smspec_node_get_lgr_name(const void *smpsec_node);
-const int *smspec_node_get_lgr_ijk(const void *smpsec_node);
-
-int smspec_node_get_R1(const void *smpsec_node);
-int smspec_node_get_R2(const void *smpsec_node);
-
 bool smspec_node_lt(const void *node1, const void *node2);
-bool smspec_node_gt(const void *node1, const void *node2);
 int smspec_node_cmp(const void *node1, const void *node2);
-int smspec_node_cmp__(const void *node1, const void *node2);
 
 #ifdef __cplusplus
 }

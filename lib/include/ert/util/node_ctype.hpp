@@ -25,7 +25,6 @@ typedef enum {
     CTYPE_INVALID = 100
 } node_ctype;
 
-const char *node_ctype_name(node_ctype);
 #ifdef __cplusplus
 }
 #endif

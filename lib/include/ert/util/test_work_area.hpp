@@ -38,8 +38,6 @@ extern "C" {
 
 #include <stdbool.h>
 
-char *test_work_area_alloc_input_path(const test_work_area_type *work_area,
-                                      const char *input_path);
 test_work_area_type *test_work_area_alloc(const char *test_name);
 test_work_area_type *test_work_area_alloc__(const char *test_name,
                                             bool store_area);

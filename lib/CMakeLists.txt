@@ -6,14 +6,6 @@ if(ERT_HAVE_OPENDIR)
   list(APPEND opt_srcs util/util_opendir.cpp)
 endif()
 
-if(ERT_HAVE_SPAWN)
-  list(APPEND opt_srcs util/util_spawn.cpp)
-endif()
-
-if(ERT_HAVE_LOCKF)
-  list(APPEND opt_srcs util/util_lockf.cpp)
-endif()
-
 if(ERT_HAVE_UNISTD)
   list(APPEND opt_srcs util/path_stack.cpp)
 endif()
@@ -38,10 +30,6 @@ foreach(type bool size_t)
   list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
 endforeach()
 
-if(ZLIB_FOUND)
-  list(APPEND opt_srcs util/util_zlib.cpp)
-endif()
-
 configure_file(build_config.hpp.in include/ert/util/build_config.hpp)
 configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
@@ -55,7 +43,6 @@ add_library(
   util/path.cpp
   util/hash.cpp
   util/node_data.cpp
-  util/node_ctype.cpp
   util/util.cpp
   util/util_abort.cpp
   util/util_symlink.cpp
@@ -74,7 +61,7 @@ add_library(
   resdata/rd_rsthead.cpp
   resdata/rd_sum_tstep.cpp
   resdata/rd_rst_file.cpp
-  resdata/rd_init_file.cpp
+  resdata/
   resdata/rd_grid_cache.cpp
   resdata/smspec_node.cpp
   resdata/rd_kw_grdecl.cpp
@@ -96,12 +83,9 @@ add_library(
   resdata/rd_grid.cpp
   resdata/rd_coarse_cell.cpp
   resdata/rd_box.cpp
-  resdata/rd_io_config.cpp
   resdata/rd_file.cpp
   resdata/rd_region.cpp
   resdata/rd_subsidence.cpp
-  resdata/rd_grid_dims.cpp
-  resdata/grid_dims.cpp
   resdata/nnc_info.cpp
   resdata/rd_grav_common.cpp
   resdata/nnc_vector.cpp
@@ -210,25 +194,18 @@ foreach(
   ert_util_alloc_file_components
   ert_util_split_path
   ert_util_approx_equal
-  ert_util_before_after
   ert_util_binary_split
-  ert_util_clamp
-  ert_util_chdir
   ert_util_filename
   ert_util_parent_path
   ert_util_realpath
   ert_util_relpath_test
   ert_util_rng
-  ert_util_sscan_test
   ert_util_strcat_test
   ert_util_stringlist_test
   ert_util_string_util
-  ert_util_strstr_int_format
   ert_util_type_vector_functions
   ert_util_vector_test
-  ert_util_datetime
   ert_util_normal_path
-  ert_util_mkdir_p
   test_area)
 
   add_executable(${name} util/tests/${name}.cpp)
@@ -260,10 +237,6 @@ target_link_libraries(ert_util_copy_file resdata)
 add_test(NAME ert_util_copy_file COMMAND ert_util_copy_file
                                          $<TARGET_FILE:ert_util_copy_file>)
 
-add_executable(ert_util_file_readable util/tests/ert_util_file_readable.cpp)
-target_link_libraries(ert_util_file_readable resdata)
-add_test(NAME ert_util_file_readable COMMAND ert_util_file_readable)
-
 add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.cpp)
 target_link_libraries(ert_util_path_stack_test resdata)
 add_test(NAME ert_util_path_stack_test
@@ -278,12 +251,6 @@ add_executable(ert_util_type_vector_test
                util/tests/ert_util_type_vector_test.cpp)
 target_link_libraries(ert_util_type_vector_test resdata)
 add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
-
-if(ERT_HAVE_SPAWN)
-  add_executable(ert_util_spawn util/tests/ert_util_spawn.cpp)
-  target_link_libraries(ert_util_spawn resdata)
-  add_test(NAME ert_util_spawn COMMAND ert_util_spawn)
-endif()
 
 foreach(
   name
@@ -302,7 +269,6 @@ foreach(
   rd_sum_data_intermediate_test
   rd_grid_cell_contains
   rd_unsmry_loader_test
-  rd_init_file
   rd_kw_space_pad
   rd_kw_cmp_string
   rd_kw_equal
@@ -322,8 +288,6 @@ foreach(
   rd_filenames
   rd_make_date_no_shift
   rd_make_date_shift
-  rd_month_range
-  rd_valid_basename
   test_rd_nnc_data
   rd_nnc_pair
   well_conn_collection
@@ -407,7 +371,6 @@ foreach(
   rd_grid_cell_contains_wellpath
   rd_region2region
   rd_grid_volume
-  rd_grid_dims
   rd_nnc_test
   rd_lgr_test
   rd_layer_equinor
@@ -541,21 +504,6 @@ add_test(
 # reports ~10^9 for the same cell. add_test( rd_grid_volume5
 # ${EXECUTABLE_OUTPUT_PATH}/rd_grid_volume
 # ${_resdatapath}/Heidrun/Summary/FF12_2013B3_CLEAN_RS)
-
-add_test(NAME rd_grid_dims0 COMMAND rd_grid_dims)
-add_test(NAME rd_grid_dims1
-         COMMAND rd_grid_dims ${_resdatapath}/Gurbat/ECLIPSE.EGRID
-                 ${_resdatapath}/Gurbat/ECLIPSE.INIT)
-add_test(NAME rd_grid_dims2
-         COMMAND rd_grid_dims ${_resdatapath}/Gurbat/ECLIPSE.GRID
-                 ${_resdatapath}/Gurbat/ECLIPSE.INIT)
-add_test(NAME rd_grid_dims3 COMMAND rd_grid_dims
-                                    ${_resdatapath}/Gurbat/ECLIPSE.EGRID)
-add_test(NAME rd_grid_dims4 COMMAND rd_grid_dims
-                                    ${_resdatapath}/Gurbat/ECLIPSE.GRID)
-add_test(NAME rd_grid_dims5
-         COMMAND rd_grid_dims
-                 ${_resdatapath}/AmalgLGRcase/TESTCASE_AMALG_LGR.EGRID)
 
 add_test(NAME rd_nnc_test1 COMMAND rd_nnc_test
                                    ${_resdatapath}/Gurbat/ECLIPSE.EGRID)

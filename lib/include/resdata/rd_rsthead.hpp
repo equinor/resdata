@@ -68,10 +68,7 @@ rd_rsthead_type *rd_rsthead_alloc_from_kw(int report_step,
                                           const rd_kw_type *logihead_kw);
 rd_rsthead_type *rd_rsthead_alloc(const rd_file_view_type *rst_file,
                                   int report_step);
-rd_rsthead_type *rd_rsthead_alloc_empty(void);
 time_t rd_rsthead_date(const rd_kw_type *intehead_kw);
-void rd_rsthead_fprintf(const rd_rsthead_type *header, FILE *stream);
-void rd_rsthead_fprintf_struct(const rd_rsthead_type *header, FILE *stream);
 bool rd_rsthead_equal(const rd_rsthead_type *header1,
                       const rd_rsthead_type *header2);
 double rd_rsthead_get_sim_days(const rd_rsthead_type *header);
