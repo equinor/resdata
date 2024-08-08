@@ -86,8 +86,6 @@ add_library(
   resdata/rd_file.cpp
   resdata/rd_region.cpp
   resdata/rd_subsidence.cpp
-  resdata/rd_grid_dims.cpp
-  resdata/grid_dims.cpp
   resdata/nnc_info.cpp
   resdata/rd_grav_common.cpp
   resdata/nnc_vector.cpp
@@ -374,7 +372,6 @@ foreach(
   rd_grid_cell_contains_wellpath
   rd_region2region
   rd_grid_volume
-  rd_grid_dims
   rd_nnc_test
   rd_lgr_test
   rd_layer_equinor
@@ -508,21 +505,6 @@ add_test(
 # reports ~10^9 for the same cell. add_test( rd_grid_volume5
 # ${EXECUTABLE_OUTPUT_PATH}/rd_grid_volume
 # ${_resdatapath}/Heidrun/Summary/FF12_2013B3_CLEAN_RS)
-
-add_test(NAME rd_grid_dims0 COMMAND rd_grid_dims)
-add_test(NAME rd_grid_dims1
-         COMMAND rd_grid_dims ${_resdatapath}/Gurbat/ECLIPSE.EGRID
-                 ${_resdatapath}/Gurbat/ECLIPSE.INIT)
-add_test(NAME rd_grid_dims2
-         COMMAND rd_grid_dims ${_resdatapath}/Gurbat/ECLIPSE.GRID
-                 ${_resdatapath}/Gurbat/ECLIPSE.INIT)
-add_test(NAME rd_grid_dims3 COMMAND rd_grid_dims
-                                    ${_resdatapath}/Gurbat/ECLIPSE.EGRID)
-add_test(NAME rd_grid_dims4 COMMAND rd_grid_dims
-                                    ${_resdatapath}/Gurbat/ECLIPSE.GRID)
-add_test(NAME rd_grid_dims5
-         COMMAND rd_grid_dims
-                 ${_resdatapath}/AmalgLGRcase/TESTCASE_AMALG_LGR.EGRID)
 
 add_test(NAME rd_nnc_test1 COMMAND rd_nnc_test
                                    ${_resdatapath}/Gurbat/ECLIPSE.EGRID)
