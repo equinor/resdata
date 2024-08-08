@@ -142,14 +142,6 @@ void util_copy_directory_content(const char *src_path, const char *target_path);
 void util_copy_directory(const char *, const char *);
 #endif
 
-#ifdef ERT_HAVE_GETUID
-uid_t util_get_entry_uid(const char *file);
-mode_t util_getmode(const char *filename);
-bool util_addmode_if_owner(const char *filename, mode_t add_mode);
-bool util_delmode_if_owner(const char *filename, mode_t del_mode);
-bool util_chmod_if_owner(const char *filename, mode_t new_mode);
-#endif
-
 int util_forward_line(FILE *, bool *);
 void util_rewind_line(FILE *);
 
