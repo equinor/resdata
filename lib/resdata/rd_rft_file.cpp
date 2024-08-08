@@ -103,8 +103,7 @@ rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
    for the new name.
 
 */
-
-char *rd_rft_file_alloc_case_filename(const char *case_input) {
+static char *rd_rft_file_alloc_case_filename(const char *case_input) {
     rd_file_enum file_type;
     bool fmt_file;
     file_type = rd_get_file_type(case_input, &fmt_file, NULL);
@@ -173,10 +172,6 @@ void rd_rft_file_free(rd_rft_file_type *rft_vector) {
     delete rft_vector;
 }
 
-void rd_rft_file_free__(void *arg) {
-    rd_rft_file_free(rd_rft_file_safe_cast(arg));
-}
-
 /**
     Will return the number of RFT nodes in the file. If @well != NULL
     only wells matching @well be included. The @well variable can
@@ -190,7 +185,6 @@ void rd_rft_file_free__(void *arg) {
     If recording_time >= only rft_nodes with recording time ==
     @recording_time are included.
 */
-
 int rd_rft_file_get_size__(const rd_rft_file_type *rft_file,
                            const char *well_pattern, time_t recording_time) {
     if ((well_pattern == NULL) && (recording_time < 0))
@@ -221,13 +215,8 @@ int rd_rft_file_get_size__(const rd_rft_file_type *rft_file,
    Returns the total number of rft nodes in the file, not caring if
    the same well occurse many times and so on.
 */
-
 int rd_rft_file_get_size(const rd_rft_file_type *rft_file) {
     return rd_rft_file_get_size__(rft_file, NULL, -1);
-}
-
-const char *rd_rft_file_get_filename(const rd_rft_file_type *rft_file) {
-    return rft_file->filename.c_str();
 }
 
 /**
@@ -238,7 +227,6 @@ const char *rd_rft_file_get_filename(const rd_rft_file_type *rft_file) {
    go up in flames - use rd_file_get_size() first if you can not
    handle that.
 */
-
 rd_rft_node_type *rd_rft_file_iget_node(const rd_rft_file_type *rft_file,
                                         int index) {
     return rft_file->data[index];
@@ -264,7 +252,7 @@ rd_rft_node_type *rd_rft_file_iget_node(const rd_rft_file_type *rft_file,
 
    If the rft_file does not have the well, or that occurence, the
    function will go down in flames with util_abort(). Use
-   rd_rft_file_has_well() and rd_rft_file_get_well_occurences()
+   rd_rft_file_get_well_occurences()
    first if you can not take util_abort().
 */
 
@@ -320,14 +308,9 @@ rd_rft_file_get_well_time_rft(const rd_rft_file_type *rft_file,
     }
 }
 
-bool rd_rft_file_has_well(const rd_rft_file_type *rft_file, const char *well) {
-    return (rft_file->well_index.find(well) != rft_file->well_index.end());
-}
-
 /**
    Returns the number of occurences of 'well' in rft_file.
 */
-
 int rd_rft_file_get_well_occurences(const rd_rft_file_type *rft_file,
                                     const char *well) {
     const auto &pair_iter = rft_file->well_index.find(well);
