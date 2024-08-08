@@ -12,11 +12,6 @@ extern "C" {
 
 typedef struct rd_sum_tstep_struct rd_sum_tstep_type;
 
-rd_sum_tstep_type *
-rd_sum_tstep_alloc_remap_copy(const rd_sum_tstep_type *src,
-                              const rd_smspec_type *new_smspec,
-                              float default_value, const int *params_map);
-rd_sum_tstep_type *rd_sum_tstep_alloc_copy(const rd_sum_tstep_type *src);
 void rd_sum_tstep_free(rd_sum_tstep_type *ministep);
 void rd_sum_tstep_free__(void *__ministep);
 rd_sum_tstep_type *rd_sum_tstep_alloc_from_file(int report_step,
@@ -48,20 +43,11 @@ void rd_sum_tstep_fwrite(const rd_sum_tstep_type *ministep,
                          fortio_type *fortio);
 void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value);
 
-/// scales with value; equivalent to iset( iget() * scalar)
-void rd_sum_tstep_iscale(rd_sum_tstep_type *tstep, int index, float scalar);
-
-/// adds addend to tstep[index]; equivalent to iset( iget() + addend)
-void rd_sum_tstep_ishift(rd_sum_tstep_type *tstep, int index, float addend);
-
 void rd_sum_tstep_set_from_key(rd_sum_tstep_type *tstep, const char *gen_key,
                                float value);
 double rd_sum_tstep_get_from_key(const rd_sum_tstep_type *tstep,
                                  const char *gen_key);
 bool rd_sum_tstep_has_key(const rd_sum_tstep_type *tstep, const char *gen_key);
-
-bool rd_sum_tstep_sim_time_equal(const rd_sum_tstep_type *tstep1,
-                                 const rd_sum_tstep_type *tstep2);
 
 UTIL_SAFE_CAST_HEADER(rd_sum_tstep);
 UTIL_SAFE_CAST_HEADER_CONST(rd_sum_tstep);
