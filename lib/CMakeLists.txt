@@ -6,10 +6,6 @@ if(ERT_HAVE_OPENDIR)
   list(APPEND opt_srcs util/util_opendir.cpp)
 endif()
 
-if(ERT_HAVE_SPAWN)
-  list(APPEND opt_srcs util/util_spawn.cpp)
-endif()
-
 if(ERT_HAVE_UNISTD)
   list(APPEND opt_srcs util/path_stack.cpp)
 endif()
@@ -244,10 +240,6 @@ target_link_libraries(ert_util_copy_file resdata)
 add_test(NAME ert_util_copy_file COMMAND ert_util_copy_file
                                          $<TARGET_FILE:ert_util_copy_file>)
 
-add_executable(ert_util_file_readable util/tests/ert_util_file_readable.cpp)
-target_link_libraries(ert_util_file_readable resdata)
-add_test(NAME ert_util_file_readable COMMAND ert_util_file_readable)
-
 add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.cpp)
 target_link_libraries(ert_util_path_stack_test resdata)
 add_test(NAME ert_util_path_stack_test
@@ -262,12 +254,6 @@ add_executable(ert_util_type_vector_test
                util/tests/ert_util_type_vector_test.cpp)
 target_link_libraries(ert_util_type_vector_test resdata)
 add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
-
-if(ERT_HAVE_SPAWN)
-  add_executable(ert_util_spawn util/tests/ert_util_spawn.cpp)
-  target_link_libraries(ert_util_spawn resdata)
-  add_test(NAME ert_util_spawn COMMAND ert_util_spawn)
-endif()
 
 foreach(
   name
