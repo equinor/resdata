@@ -38,10 +38,6 @@ foreach(type bool size_t)
   list(APPEND opt_srcs ${CMAKE_CURRENT_BINARY_DIR}/${type}_vector.cpp)
 endforeach()
 
-if(ZLIB_FOUND)
-  list(APPEND opt_srcs util/util_zlib.cpp)
-endif()
-
 configure_file(build_config.hpp.in include/ert/util/build_config.hpp)
 configure_file(ert_api_config.hpp.in include/ert/util/ert_api_config.hpp)
 
