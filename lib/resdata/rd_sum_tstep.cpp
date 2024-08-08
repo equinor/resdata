@@ -53,38 +53,6 @@ struct rd_sum_tstep_struct {
         smspec; /* The smespec header information for this tstep - must be compatible. */
 };
 
-rd_sum_tstep_type *
-rd_sum_tstep_alloc_remap_copy(const rd_sum_tstep_type *src,
-                              const rd_smspec_type *new_smspec,
-                              float default_value, const int *params_map) {
-    int params_size = rd_smspec_get_params_size(new_smspec);
-    rd_sum_tstep_type *target = new rd_sum_tstep_type();
-    UTIL_TYPE_ID_INIT(target, RD_SUM_TSTEP_ID);
-    target->report_step = src->report_step;
-    target->ministep = src->ministep;
-
-    target->smspec = new_smspec;
-    target->data.resize(params_size);
-    for (int i = 0; i < params_size; i++) {
-
-        if (params_map[i] >= 0)
-            target->data[i] = src->data[params_map[i]];
-        else
-            target->data[i] = default_value;
-    }
-    return target;
-}
-
-rd_sum_tstep_type *rd_sum_tstep_alloc_copy(const rd_sum_tstep_type *src) {
-    rd_sum_tstep_type *target = new rd_sum_tstep_type();
-    UTIL_TYPE_ID_INIT(target, RD_SUM_TSTEP_ID);
-    target->smspec = src->smspec;
-    target->report_step = src->report_step;
-    target->ministep = src->ministep;
-    target->data = src->data;
-    return target;
-}
-
 static rd_sum_tstep_type *rd_sum_tstep_alloc(int report_step, int ministep_nr,
                                              const rd_smspec_type *smspec) {
     rd_sum_tstep_type *tstep = new rd_sum_tstep_type();
@@ -285,14 +253,6 @@ void rd_sum_tstep_iset(rd_sum_tstep_type *tstep, int index, float value) {
                    index, tstep->data.size());
 }
 
-void rd_sum_tstep_iscale(rd_sum_tstep_type *tstep, int index, float scalar) {
-    rd_sum_tstep_iset(tstep, index, rd_sum_tstep_iget(tstep, index) * scalar);
-}
-
-void rd_sum_tstep_ishift(rd_sum_tstep_type *tstep, int index, float addend) {
-    rd_sum_tstep_iset(tstep, index, rd_sum_tstep_iget(tstep, index) + addend);
-}
-
 void rd_sum_tstep_set_from_node(rd_sum_tstep_type *tstep,
                                 const rd::smspec_node &smspec_node,
                                 float value) {
@@ -322,12 +282,4 @@ double rd_sum_tstep_get_from_key(const rd_sum_tstep_type *tstep,
 
 bool rd_sum_tstep_has_key(const rd_sum_tstep_type *tstep, const char *gen_key) {
     return rd_smspec_has_general_var(tstep->smspec, gen_key);
-}
-
-bool rd_sum_tstep_sim_time_equal(const rd_sum_tstep_type *tstep1,
-                                 const rd_sum_tstep_type *tstep2) {
-    if (tstep1->sim_time == tstep2->sim_time)
-        return true;
-    else
-        return false;
 }
