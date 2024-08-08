@@ -260,10 +260,10 @@ double well_state_get_volume_rate_si(const well_state_type *well_state) {
     return well_state->volume_rate;
 }
 
-void well_state_add_wellhead(well_state_type *well_state,
-                             const rd_rsthead_type *header,
-                             const rd_kw_type *iwel_kw, int well_nr,
-                             const char *grid_name, int grid_nr) {
+static void well_state_add_wellhead(well_state_type *well_state,
+                                    const rd_rsthead_type *header,
+                                    const rd_kw_type *iwel_kw, int well_nr,
+                                    const char *grid_name, int grid_nr) {
     well_conn_type *wellhead =
         well_conn_alloc_wellhead(iwel_kw, header, well_nr);
 
@@ -623,27 +623,9 @@ time_t well_state_get_sim_time(const well_state_type *well_state) {
     return well_state->valid_from_time;
 }
 
-/**
-   Will return NULL if no wellhead in this grid.
-*/
-const well_conn_type *
-well_state_iget_wellhead(const well_state_type *well_state, int grid_nr) {
-    if (grid_nr < static_cast<int>(well_state->index_wellhead.size()))
-        return well_state->index_wellhead[grid_nr];
-    else
-        return NULL;
-}
-
-bool well_state_has_named_well_conn(const well_state_type *well_state,
-                                    const char *grid_name) {
-    const auto it = well_state->name_wellhead.find(grid_name);
-    if (it == well_state->name_wellhead.end())
-        return false;
-    return true;
-}
-
-const well_conn_type *well_state_get_wellhead(const well_state_type *well_state,
-                                              const char *grid_name) {
+static const well_conn_type *
+well_state_get_wellhead(const well_state_type *well_state,
+                        const char *grid_name) {
     const auto it = well_state->name_wellhead.find(grid_name);
     if (it != well_state->name_wellhead.end())
         return it->second;
