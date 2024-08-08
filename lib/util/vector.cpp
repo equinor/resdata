@@ -54,21 +54,10 @@ vector_type *vector_alloc_new() {
     return vector;
 }
 
-void vector_grow_NULL(vector_type *vector, int new_size) {
+static void vector_grow_NULL(vector_type *vector, int new_size) {
     int i;
     for (i = vector->size; i < new_size; i++)
         vector_append_ref(vector, NULL);
-}
-
-/**
-   This functon will allocate a vector 'size' elements. Each of these
-   elements is initialized with NULL pointers.
-*/
-
-vector_type *vector_alloc_NULL_initialized(int size) {
-    vector_type *vector = vector_alloc_new();
-    vector_grow_NULL(vector, size);
-    return vector;
 }
 
 static int vector_append_node(vector_type *vector, node_data_type *node);
@@ -169,24 +158,9 @@ int vector_append_ref(vector_type *vector, const void *data) {
     return vector_append_node(vector, node);
 }
 
-void vector_push_front_ref(vector_type *vector, const void *data) {
-    node_data_type *node = node_data_alloc_ptr(data, NULL, NULL);
-    vector_push_node(vector, node);
-}
-
 void vector_iset_ref(vector_type *vector, int index, const void *data) {
     node_data_type *node = node_data_alloc_ptr(data, NULL, NULL);
     vector_iset__(vector, index, node);
-}
-
-void vector_safe_iset_ref(vector_type *vector, int index, const void *data) {
-    vector_assert_size(vector, index + 1);
-    vector_iset_ref(vector, index, data);
-}
-
-void vector_insert_ref(vector_type *vector, int index, const void *data) {
-    node_data_type *node = node_data_alloc_ptr(data, NULL, NULL);
-    vector_insert__(vector, index, node);
 }
 
 /**
@@ -202,65 +176,10 @@ int vector_append_owned_ref(vector_type *vector, const void *data,
     return vector_append_node(vector, node);
 }
 
-void vector_push_front_owned_ref(vector_type *vector, const void *data,
-                                 free_ftype *del) {
-    node_data_type *node = node_data_alloc_ptr(data, NULL, del);
-    vector_push_node(vector, node);
-}
-
 void vector_iset_owned_ref(vector_type *vector, int index, const void *data,
                            free_ftype *del) {
     node_data_type *node = node_data_alloc_ptr(data, NULL, del);
     vector_iset__(vector, index, node);
-}
-
-void vector_safe_iset_owned_ref(vector_type *vector, int index,
-                                const void *data, free_ftype *del) {
-    vector_assert_size(vector, index + 1);
-    vector_iset_owned_ref(vector, index, data, del);
-}
-
-void vector_insert_owned_ref(vector_type *vector, int index, const void *data,
-                             free_ftype *del) {
-    node_data_type *node = node_data_alloc_ptr(data, NULL, del);
-    vector_insert__(vector, index, node);
-}
-
-/**
-  This function appends a COPY of user object. This implies that the
-  calling scope is still responsible for the instance declared and
-  used in that scope, whereas the vector takes responsability of
-  freeing it's own copy.
-*/
-
-int vector_append_copy(vector_type *vector, const void *data,
-                       copyc_ftype *copyc, free_ftype *del) {
-    node_data_type *node = node_data_alloc_ptr(data, copyc, del);
-    return vector_append_node(vector, node);
-}
-
-void vector_push_copy(vector_type *vector, const void *data, copyc_ftype *copyc,
-                      free_ftype *del) {
-    node_data_type *node = node_data_alloc_ptr(data, copyc, del);
-    vector_push_node(vector, node);
-}
-
-void vector_iset_copy(vector_type *vector, int index, const void *data,
-                      copyc_ftype *copyc, free_ftype *del) {
-    node_data_type *node = node_data_alloc_ptr(data, copyc, del);
-    vector_iset__(vector, index, node);
-}
-
-void vector_safe_iset_copy(vector_type *vector, int index, const void *data,
-                           copyc_ftype *copyc, free_ftype *del) {
-    vector_assert_size(vector, index + 1);
-    vector_iset_copy(vector, index, data, copyc, del);
-}
-
-void vector_insert_copy(vector_type *vector, int index, const void *data,
-                        copyc_ftype *copyc, free_ftype *del) {
-    node_data_type *node = node_data_alloc_ptr(data, copyc, del);
-    vector_insert__(vector, index, node);
 }
 
 /**
@@ -279,18 +198,6 @@ void vector_iset_buffer(vector_type *vector, int index, const void *buffer,
                         int buffer_size) {
     node_data_type *node = node_data_alloc_buffer(buffer, buffer_size);
     vector_iset__(vector, index, node);
-}
-
-void vector_insert_buffer(vector_type *vector, int index, const void *buffer,
-                          int buffer_size) {
-    node_data_type *node = node_data_alloc_buffer(buffer, buffer_size);
-    vector_insert__(vector, index, node);
-}
-
-void vector_push_buffer(vector_type *vector, const void *buffer,
-                        int buffer_size) {
-    node_data_type *node = node_data_alloc_buffer(buffer, buffer_size);
-    vector_push_node(vector, node);
 }
 
 const void *vector_iget_const(const vector_type *vector, int index) {
@@ -313,19 +220,6 @@ void *vector_iget(const vector_type *vector, int index) {
                    index, vector->size);
         return NULL;
     }
-}
-
-/**
-   The safe_iget() functions will return NULL if index is greater than
-   the length of the vector.
-*/
-
-const void *vector_safe_iget_const(const vector_type *vector, int index) {
-    if ((index >= 0) && (index < vector->size)) {
-        const node_data_type *node = vector->data[index];
-        return node_data_get_ptr(node);
-    } else
-        return NULL;
 }
 
 void *vector_safe_iget(const vector_type *vector, int index) {
@@ -394,20 +288,6 @@ void *vector_get_last(const vector_type *vector) {
 }
 
 /**
-    Will abort if the vector is empty.
-*/
-const void *vector_get_last_const(const vector_type *vector) {
-    if (vector->size == 0)
-        util_abort("%s: asking to get the last element in an empty vector - "
-                   "impossible ... \n",
-                   __func__);
-    {
-        const node_data_type *node = vector->data[vector->size - 1];
-        return node_data_get_ptr(node);
-    }
-}
-
-/**
    This function removes the last element from the vector and returns
    it to the calling scope. Irrespective of whether the element _was_
    inserted with a destructor: when calling vector_pop() the calling
@@ -426,33 +306,6 @@ void *vector_pop_back(vector_type *vector) {
 
         node_data_free_container(node); /* Free the container holding data. */
         vector->data[vector->size - 1] = NULL;
-        vector->size--; /* Shrink the vector */
-        return data;
-    }
-}
-
-/*
-   Removes the first element from the vector and returns it - similar
-   to vector_pop():
-*/
-
-void *vector_pop_front(vector_type *vector) {
-    if (vector->size == 0)
-        util_abort("%s: asking to get the last element in an empty vector - "
-                   "impossible ... \n",
-                   __func__);
-    {
-        node_data_type *node = vector->data[0];
-        void *data = node_data_get_ptr(node);
-
-        node_data_free_container(node); /* Free the container holding data. */
-        {
-            int bytes =
-                (vector->size - 1) *
-                sizeof *vector
-                    ->data; /* Move the storage one element to  the left (could als be implemented with an offset??). */
-            memmove(vector->data, &vector->data[1], bytes);
-        }
         vector->size--; /* Shrink the vector */
         return data;
     }
@@ -580,25 +433,6 @@ void vector_inplace_reverse(vector_type *vector) {
         free(vector->data);
         vector->data = new_data;
     }
-}
-
-int vector_find(const vector_type *vector, const void *ptr) {
-    int location_index = -1;
-    int index = 0;
-
-    while (true) {
-        if (index < vector_get_size(vector)) {
-            const void *element = vector_iget(vector, index);
-            if (element == ptr) {
-                location_index = index;
-                break;
-            } else
-                index++;
-        } else
-            break;
-    }
-
-    return location_index;
 }
 
 /*

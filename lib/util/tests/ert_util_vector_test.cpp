@@ -98,29 +98,9 @@ void test_sort() {
     vector_free(v2);
 }
 
-void test_find() {
-    vector_type *vector = vector_alloc_new();
-    const char *p1 = "AAA";
-    const char *p2 = "BBB";
-    const char *p3 = "CCC";
-
-    test_assert_int_equal(-1, vector_find(vector, NULL));
-    test_assert_int_equal(-1, vector_find(vector, vector));
-
-    vector_append_ref(vector, p1);
-    vector_append_ref(vector, p2);
-
-    test_assert_int_equal(0, vector_find(vector, p1));
-    test_assert_int_equal(1, vector_find(vector, p2));
-    test_assert_int_equal(-1, vector_find(vector, p3));
-
-    vector_free(vector);
-}
-
 int main(int argc, char **argv) {
     test_iset();
     test_reverse();
     test_sort();
-    test_find();
     exit(0);
 }
