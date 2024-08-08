@@ -83,7 +83,6 @@ add_library(
   resdata/rd_grid.cpp
   resdata/rd_coarse_cell.cpp
   resdata/rd_box.cpp
-  resdata/rd_io_config.cpp
   resdata/rd_file.cpp
   resdata/rd_region.cpp
   resdata/rd_subsidence.cpp
