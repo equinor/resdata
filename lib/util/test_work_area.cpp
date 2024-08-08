@@ -269,13 +269,6 @@ test_work_area_get_original_cwd(const test_work_area_type *work_area) {
     return work_area->original_cwd().c_str();
 }
 
-char *test_work_area_alloc_input_path(const test_work_area_type *work_area,
-                                      const char *input_path) {
-    std::string relocated_input_path =
-        work_area->original_path(std::string(input_path));
-    return util_alloc_string_copy(relocated_input_path.c_str());
-}
-
 /**
    The point of this function is that the test code should be able to
    access the file @input_file independent of the fact that it has
