@@ -10,10 +10,6 @@ if(ERT_HAVE_SPAWN)
   list(APPEND opt_srcs util/util_spawn.cpp)
 endif()
 
-if(ERT_HAVE_LOCKF)
-  list(APPEND opt_srcs util/util_lockf.cpp)
-endif()
-
 if(ERT_HAVE_UNISTD)
   list(APPEND opt_srcs util/path_stack.cpp)
 endif()
