@@ -55,7 +55,6 @@ add_library(
   util/path.cpp
   util/hash.cpp
   util/node_data.cpp
-  util/node_ctype.cpp
   util/util.cpp
   util/util_abort.cpp
   util/util_symlink.cpp
