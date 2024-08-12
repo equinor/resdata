@@ -641,7 +641,7 @@ class SumTest(ResdataTest):
             "PANDAS",
             frame,
             dims=[20, 10, 5],
-            headers=["BPR:10", "RPR:3,1,1", "COPR:OPX:1,2,3"],
+            headers=["BPR:10", "RPR:3", "COPR:OPX:1,2,3"],
         )
         del frame["WOPT:OPX"]
         del frame["FOPR"]

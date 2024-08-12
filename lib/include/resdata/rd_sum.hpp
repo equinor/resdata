@@ -253,6 +253,12 @@ const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
 const rd::smspec_node *rd_sum_add_var(rd_sum_type *rd_sum, const char *keyword,
                                       const char *wgname, int num,
                                       const char *unit, float default_value);
+const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
+                                            const char *keyword,
+                                            const char *wgname, int num,
+                                            const char *unit, const char *lgr,
+                                            int lgr_i, int lgr_j, int lgr_k,
+                                            float default_value);
 rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
                                     double sim_seconds);
 
