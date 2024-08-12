@@ -1,0 +1,5 @@
+pytest
+hypothesis
+resfo
+pydantic
+typing_extensions
