@@ -1,16 +1,17 @@
-#!/usr/bin/env python
 import datetime
 import os.path
-import pandas as pd
+
 import numpy as np
-
-from cwrap import CFILE
-from cwrap import Prototype, load, open as copen
-
-from resdata.resfile import ResdataFile, FortIO, openFortIO, openResdataFile, ResdataKW
+import pandas as pd
+import pytest
+from cwrap import open as copen
+from hypothesis import assume, given
+from pandas.testing import assert_frame_equal
+from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.summary import Summary, SummaryKeyWordVector
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest, equinor_test
+from tests.summary_generator import summaries
 
 
 def test_write_repr():
@@ -154,3 +155,35 @@ class SummaryTest(ResdataTest):
         self.assertEqual(sum.getStartTime(), datetime.datetime(2013, 1, 1, 0, 0, 0))
         self.assertEqual(sum.getEndTime(), datetime.datetime(2013, 1, 1, 19, 30, 0))
         self.assertFloatEqual(sum.getSimulationLength(), 19.50)
+
+
+@pytest.fixture
+def use_tmpdir(tmpdir):
+    with tmpdir.as_wcd():
+        yield
+
+
+@given(summaries())
+@pytest.mark.use_fixtures("use_tmpdir")
+def test_to_from_pandas(summary):
+    smspec, unsmry = summary
+    assume(len(smspec.keywords) == len(set(smspec.keywords)))
+    smspec.to_file("TEST.SMSPEC")
+    unsmry.to_file("TEST.UNSMRY")
+    sum = Summary("TEST", lazy_load=False)
+
+    baseline = sum.pandas_frame()
+    roundtrip = Summary.from_pandas(
+        "TEST", baseline, dims=(smspec.nx, smspec.ny, smspec.nz)
+    ).pandas_frame()
+
+    # round to hours
+    roundtrip.index = roundtrip.index.round(freq="H")
+    baseline.index = baseline.index.round(freq="H")
+
+    assert_frame_equal(
+        roundtrip,
+        baseline,
+        check_exact=False,
+        atol=17,
+    )

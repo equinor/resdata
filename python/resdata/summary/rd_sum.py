@@ -13,6 +13,7 @@ import os.path
 import ctypes
 import pandas
 import re
+from typing import Sequence, List, Tuple, Optional
 
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
@@ -179,6 +180,9 @@ class Summary(BaseCClass):
     )
     _add_variable = ResdataPrototype(
         "rd_smspec_node_ref   rd_sum_add_var(rd_sum, char*, char*, int, char*, double)"
+    )
+    _add_local_variable = ResdataPrototype(
+        "rd_smspec_node_ref   rd_sum_add_local_var(rd_sum, char*, char*, int, char*, char*, int, int, int, double)"
     )
     _add_tstep = ResdataPrototype(
         "rd_sum_tstep_ref rd_sum_add_tstep(rd_sum, int, double)"
@@ -360,7 +364,21 @@ class Summary(BaseCClass):
         smry._load_case = "restart_writer"
         return smry
 
-    def add_variable(self, variable, wgname=None, num=0, unit="None", default_value=0):
+    def add_variable(
+        self,
+        variable,
+        wgname=None,
+        num=0,
+        unit="None",
+        default_value=0,
+        lgr=None,
+        lgr_ijk=None,
+    ):
+        if lgr is not None:
+            return self._add_local_variable(
+                variable, wgname, num, unit, lgr, *lgr_ijk, default_value
+            ).setParent(parent=self)
+
         return self._add_variable(variable, wgname, num, unit, default_value).setParent(
             parent=self
         )
@@ -606,36 +624,94 @@ class Summary(BaseCClass):
         return frame
 
     @staticmethod
-    def _compile_headers_list(headers, dims):
+    def _compile_headers_list(
+        headers: Sequence[str], dims: Optional[List[int]]
+    ) -> List[Tuple[str, str, int, str, Optional[str], Optional[Tuple[int, int, int]]]]:
+        """
+        Converts column names generated with `Summary.pandas_frame()` so
+        that `Summary.from_pandas(sum.pandas_frame()) == sum`.
+
+        The column names are specified by `smspec_node::gen_key1` see
+        `smspec_node::gen_key1`, but could also be `smspec_node::gen_key2`.
+        """
         var_list = []
         for key in headers:
             lst = re.split(":", key)
             kw = lst[0]
             wgname = None
-            num = 0
+            lgr = None
+            nums = None
+            num = None
             unit = "UNIT"
-            if len(lst) > 1:
-                nums = []
-                if lst[1][0].isdigit():
-                    nums = re.split(",", lst[1])
+            var_type = Summary.var_type(kw)
+            if var_type == SummaryVarType.RD_SMSPEC_INVALID_VAR:
+                raise ValueError(f"Invalid var type: {kw}")
+            elif var_type == SummaryVarType.RD_SMSPEC_FIELD_VAR:
+                pass
+            elif var_type == SummaryVarType.RD_SMSPEC_REGION_VAR:
+                num = int(lst[1])
+            elif var_type == SummaryVarType.RD_SMSPEC_GROUP_VAR:
+                wgname = lst[1]
+            elif var_type == SummaryVarType.RD_SMSPEC_WELL_VAR:
+                wgname = lst[1]
+            elif var_type == SummaryVarType.RD_SMSPEC_SEGMENT_VAR:
+                kw, wgname, num = lst
+                num = int(num)
+            elif var_type == SummaryVarType.RD_SMSPEC_BLOCK_VAR:
+                kw, loc = lst
+                if loc.count(",") == 2:
+                    nums = tuple(int(i) for i in loc.split(","))
                 else:
-                    wgname = lst[1]
-                if len(lst) == 3:
-                    nums = re.split(",", lst[2])
-                if len(nums) == 3:
-                    i = int(nums[0]) - 1
-                    j = int(nums[1]) - 1
-                    k = int(nums[2]) - 1
-                    if dims is None:
-                        raise ValueError(
-                            "For key %s When using indexing i,j,k you must supply a valid value for the dims argument"
-                            % key
-                        )
-                    num = i + j * dims[0] + k * dims[0] * dims[1] + 1
-                elif len(nums) == 1:
-                    num = int(nums[0])
+                    num = int(loc)
+            elif var_type == SummaryVarType.RD_SMSPEC_AQUIFER_VAR:
+                kw, num = lst
+                num = int(num)
+            elif var_type == SummaryVarType.RD_SMSPEC_COMPLETION_VAR:
+                kw, wgname, loc = lst
+                if loc.count(",") == 2:
+                    nums = tuple(int(i) for i in loc.split(","))
+                else:
+                    num = int(loc)
+            elif var_type == SummaryVarType.RD_SMSPEC_NETWORK_VAR:
+                kw, wgname = lst
+            elif var_type == SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR:
+                kw, r1r2 = lst
+                if "-" in r1r2:
+                    r1, r2 = tuple(int(i) for i in r1r2.split("-", 1))
+                    num = (r2 + 10) * 32768 + r1
+                else:
+                    num = int(r1r2)
+            elif var_type == SummaryVarType.RD_SMSPEC_LOCAL_BLOCK_VAR:
+                kw, lgr, nums = lst
+                nums = tuple(int(i) for i in nums.split(","))
+            elif var_type == SummaryVarType.RD_SMSPEC_LOCAL_COMPLETION_VAR:
+                kw, lgr, wgname, nums = lst
+                nums = tuple(int(i) for i in nums.split(","))
+            elif var_type == SummaryVarType.RD_SMSPEC_LOCAL_WELL_VAR:
+                kw, lgr, wgname = lst
+                nums = (0, 0, 0)  # We don't know from the list so use dummy
+            elif var_type == SummaryVarType.RD_SMSPEC_MISC_VAR:
+                pass
+            else:
+                raise ValueError(f"Unknown SummaryVarType {var_type}")
 
-            var_list.append([kw, wgname, num, unit])
+            if nums and num is None:
+                i = int(nums[0]) - 1
+                j = int(nums[1]) - 1
+                k = int(nums[2]) - 1
+                if dims is None:
+                    raise ValueError(
+                        "For key %s When using indexing i,j,k you must supply a valid value for the dims argument"
+                        % key
+                    )
+                num = i + j * dims[0] + k * dims[0] * dims[1] + 1
+
+            if num is None:
+                num = 0
+            if wgname is None:
+                wgname = ""
+
+            var_list.append((kw, wgname, num, unit, lgr, nums))
         return var_list
 
     @classmethod
@@ -656,18 +732,21 @@ class Summary(BaseCClass):
         if dims is None:
             dims = [1, 1, 1]
         rd_sum = Summary.writer(case, start_time, dims[0], dims[1], dims[2])
-        for kw, wgname, num, unit in header_list:
+        for kw, wgname, num, unit, lgr, lgr_ijk in header_list:
             var_list.append(
-                rd_sum.addVariable(kw, wgname=wgname, num=num, unit=unit).getKey1()
+                rd_sum.add_variable(
+                    kw, wgname=wgname, num=num, unit=unit, lgr=lgr, lgr_ijk=lgr_ijk
+                ).getKey1()
             )
 
         for i, time in enumerate(frame.index):
-            days = (time - start_time).days
+            days = (time - start_time).total_seconds() / 86400
             t_step = rd_sum.addTStep(i + 1, days)
 
             for var in var_list:
                 t_step[var] = frame.iloc[i][var]
 
+        rd_sum._load_case = case
         return rd_sum
 
     def get_key_index(self, key):

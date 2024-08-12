@@ -282,6 +282,22 @@ const rd::smspec_node *rd_sum_add_var(rd_sum_type *rd_sum, const char *keyword,
                               default_value);
 }
 
+const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
+                                            const char *keyword,
+                                            const char *wgname, int num,
+                                            const char *unit, const char *lgr,
+                                            int lgr_i, int lgr_j, int lgr_k,
+                                            float default_value) {
+    if (rd_sum_data_get_length(rd_sum->data) > 0)
+        throw std::invalid_argument(
+            "Can not interchange variable adding and timesteps.\n");
+
+    int params_index = rd_smspec_num_nodes(rd_sum->smspec);
+    return rd_smspec_add_node(rd_sum->smspec, params_index, keyword, wgname,
+                              num, unit, lgr, lgr_i, lgr_j, lgr_k,
+                              default_value);
+}
+
 const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
                                               const rd::smspec_node *node) {
     return rd_smspec_add_node(rd_sum->smspec, *node);
