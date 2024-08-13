@@ -576,9 +576,7 @@ class Summary(BaseCClass):
         but this can be controlled by using the column_keys argument. The
         column_keys should be a list of strings, and each summary vector
         matching one of the elements in the @column_keys will get a column in
-        the frame, you can use wildcards like "WWCT:*" and "*:OP". If you
-        supply a column_keys argument which does not resolve to any valid
-        summary keys you will get a ValueError exception.
+        the frame, you can use wildcards like "WWCT:*" and "*:OP".
 
 
           sum = Summary(case)
@@ -600,9 +598,6 @@ class Summary(BaseCClass):
             keywords = SummaryKeyWordVector(self)
             for key in column_keys:
                 keywords.add_keywords(key)
-
-        if len(keywords) == 0:
-            raise ValueError("No valid key")
 
         if time_index is None:
             time_index = self.dates
