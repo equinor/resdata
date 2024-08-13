@@ -615,12 +615,6 @@ class SumTest(ResdataTest):
         self.assertEqual(fopt[0], case.first_value("FOPT"))
         self.assertEqual(fopt[-1], case.last_value("FOPT"))
 
-        with self.assertRaises(ValueError):
-            frame = case.pandas_frame(column_keys=[])
-
-        with self.assertRaises(ValueError):
-            frame = case.pandas_frame(column_keys=["NO_KEY"])
-
         frame = case.pandas_frame()
         rows, columns = frame.shape
         self.assertEqual(len(case.keys()), columns)

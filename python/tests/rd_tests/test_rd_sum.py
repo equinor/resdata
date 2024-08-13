@@ -187,3 +187,18 @@ def test_to_from_pandas(summary):
         check_exact=False,
         atol=17,
     )
+
+
+@given(summaries())
+@pytest.mark.use_fixtures("use_tmpdir")
+def test_that_non_matching_dataframe_gives_empty_columns(summary):
+    smspec, unsmry = summary
+    assume("BOGUS" not in (smspec.keywords))
+    smspec.to_file("TEST.SMSPEC")
+    unsmry.to_file("TEST.UNSMRY")
+
+    assert (
+        Summary("TEST", lazy_load=False)
+        .pandas_frame(column_keys=["BOGUS"])
+        .columns.empty
+    )
