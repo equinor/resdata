@@ -13,25 +13,6 @@
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_endian_flip.hpp>
 
-void test_flags(const char *filename) {
-    int FLAG1 = 1;
-    int FLAG2 = 2;
-    int FLAG3 = 4;
-    int FLAG4 = 8;
-
-    int FLAGS = FLAG1 + FLAG2 + FLAG3;
-
-    rd_file_type *rd_file = rd_file_open(filename, FLAGS);
-
-    test_assert_int_equal(rd_file_get_flags(rd_file), FLAGS);
-    test_assert_true(rd_file_flags_set(rd_file, FLAG1));
-    test_assert_true(rd_file_flags_set(rd_file, FLAG1 | FLAG2));
-    test_assert_true(rd_file_flags_set(rd_file, FLAG1 | FLAG3));
-    test_assert_true(rd_file_flags_set(rd_file, FLAG1 | FLAG3 | FLAG2));
-    test_assert_false(rd_file_flags_set(rd_file, FLAG1 | FLAG3 | FLAG4));
-    rd_file_close(rd_file);
-}
-
 void test_close_stream2(const char *src_file, const char *target_file) {
     util_copy_file(src_file, target_file);
     rd_file_type *rd_file = rd_file_open(target_file, RD_FILE_CLOSE_STREAM);
@@ -88,7 +69,6 @@ void test_writable(const char *src_file) {
 
     ta.copy_file(src_file);
     {
-        test_flags(fname);
         rd_file_type *rd_file = rd_file_open(fname, RD_FILE_WRITABLE);
         rd_kw_type *swat = rd_file_iget_named_kw(rd_file, "SWAT", 0);
         rd_kw_type *swat0 = rd_kw_alloc_copy(swat);

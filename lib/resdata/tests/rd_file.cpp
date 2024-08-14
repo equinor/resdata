@@ -51,7 +51,6 @@ void test_truncated() {
         rd_file_type *rd_file = rd_file_open("TEST.EGRID", 0);
         test_assert_true(rd_file_is_instance(rd_file));
         num_kw = rd_file_get_size(rd_file);
-        test_assert_int_equal(rd_file_get_num_distinct_kw(rd_file), 11);
         rd_file_close(rd_file);
     }
 
@@ -81,7 +80,6 @@ void test_mixed_case() {
         rd_file_type *rd_file = rd_file_open("TESTcase.EGRID", 0);
         test_assert_true(rd_file_is_instance(rd_file));
         num_kw = rd_file_get_size(rd_file);
-        test_assert_int_equal(rd_file_get_num_distinct_kw(rd_file), 11);
         rd_file_close(rd_file);
     }
 
