@@ -33,13 +33,10 @@ typedef enum {
 
 typedef struct rd_region_struct rd_region_type;
 
-void rd_region_unlock(rd_region_type *region);
-void rd_region_lock(rd_region_type *region);
 void rd_region_reset(rd_region_type *rd_region);
 rd_region_type *rd_region_alloc_copy(const rd_region_type *rd_region);
 rd_region_type *rd_region_alloc(const rd_grid_type *rd_grid, bool preselect);
 void rd_region_free(rd_region_type *region);
-void rd_region_free__(void *__region);
 
 const int_vector_type *rd_region_get_active_list(rd_region_type *region);
 const int_vector_type *rd_region_get_global_list(rd_region_type *region);
@@ -57,7 +54,6 @@ void rd_region_select_true(rd_region_type *region, const rd_kw_type *rd_kw);
 void rd_region_invert_selection(rd_region_type *region);
 void rd_region_select_all(rd_region_type *region);
 void rd_region_deselect_all(rd_region_type *region);
-void rd_region_deselect_true(rd_region_type *region, const rd_kw_type *rd_kw);
 void rd_region_select_false(rd_region_type *region, const rd_kw_type *rd_kw);
 
 void rd_region_select_in_interval(rd_region_type *region,
@@ -109,14 +105,6 @@ void rd_region_select_large_cells(rd_region_type *rd_region,
 void rd_region_deselect_large_cells(rd_region_type *rd_region,
                                     double volum_limit);
 
-void rd_region_select_global_index(rd_region_type *rd_region, int global_index);
-void rd_region_deselect_global_index(rd_region_type *rd_region,
-                                     int global_index);
-
-void rd_region_select_active_index(rd_region_type *rd_region, int active_index);
-void rd_region_deselect_active_index(rd_region_type *rd_region,
-                                     int active_index);
-
 void rd_region_intersection(rd_region_type *region,
                             const rd_region_type *new_region);
 void rd_region_union(rd_region_type *region, const rd_region_type *new_region);
@@ -142,15 +130,6 @@ void rd_region_cmp_select_more(rd_region_type *rd_region, const rd_kw_type *kw1,
 void rd_region_cmp_deselect_more(rd_region_type *rd_region,
                                  const rd_kw_type *kw1, const rd_kw_type *kw2);
 
-void rd_region_select_in_cylinder(rd_region_type *region, double x0, double y0,
-                                  double R);
-void rd_region_deselect_in_cylinder(rd_region_type *region, double x0,
-                                    double y0, double R);
-void rd_region_select_in_zcylinder(rd_region_type *region, double x0, double y0,
-                                   double R, double z1, double z2);
-void rd_region_deselect_in_zcylinder(rd_region_type *region, double x0,
-                                     double y0, double R, double z1, double z2);
-
 void rd_region_select_above_plane(rd_region_type *region, const double n[3],
                                   const double p[3]);
 void rd_region_select_below_plane(rd_region_type *region, const double n[3],
@@ -172,10 +151,6 @@ void rd_region_deselect_outside_polygon(rd_region_type *region,
 void rd_region_select_from_layer(rd_region_type *region,
                                  const layer_type *layer, int k,
                                  int layer_value);
-void rd_region_deselect_from_layer(rd_region_type *region,
-                                   const layer_type *layer, int k,
-                                   int layer_value);
-void rd_region_deselect_false(rd_region_type *region, const rd_kw_type *rd_kw);
 
 void rd_region_set_kw_int(rd_region_type *rd_region, rd_kw_type *rd_kw,
                           int value, bool force_active);
@@ -185,8 +160,6 @@ void rd_region_set_kw_double(rd_region_type *rd_region, rd_kw_type *rd_kw,
                              double value, bool force_active);
 void rd_region_kw_copy(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *src_kw, bool force_active);
-int rd_region_get_kw_size(rd_region_type *rd_region, const rd_kw_type *rd_kw,
-                          bool force_active);
 
 void rd_region_kw_iadd(rd_region_type *rd_region, rd_kw_type *rd_kw,
                        const rd_kw_type *delta_kw, bool force_active);
@@ -220,19 +193,12 @@ const int_vector_type *rd_region_get_kw_index_list(rd_region_type *rd_region,
 void rd_region_set_name(rd_region_type *region, const char *name);
 const char *rd_region_get_name(const rd_region_type *region);
 
-int rd_region_get_active_size_cpp(rd_region_type *region);
-int rd_region_get_global_size_cpp(rd_region_type *region);
-const int *rd_region_get_active_list_cpp(rd_region_type *region);
-const int *rd_region_get_global_list_cpp(rd_region_type *region);
-
 double rd_region_sum_kw_double(rd_region_type *rd_region,
                                const rd_kw_type *rd_kw, bool force_active);
 int rd_region_sum_kw_int(rd_region_type *rd_region, const rd_kw_type *rd_kw,
                          bool force_active);
 float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
                              bool force_active);
-int rd_region_sum_kw_bool(rd_region_type *rd_region, const rd_kw_type *rd_kw,
-                          bool force_active);
 
 UTIL_IS_INSTANCE_HEADER(rd_region);
 UTIL_SAFE_CAST_HEADER(rd_region);

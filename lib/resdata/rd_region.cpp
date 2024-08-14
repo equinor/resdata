@@ -100,18 +100,6 @@ static void rd_region_invalidate_index_list(rd_region_type *region) {
     region->active_index_list_valid = false;
 }
 
-void rd_region_lock(rd_region_type *region) {
-    int_vector_set_read_only(region->global_index_list, true);
-    int_vector_set_read_only(region->active_index_list, true);
-    int_vector_set_read_only(region->global_active_list, true);
-}
-
-void rd_region_unlock(rd_region_type *region) {
-    int_vector_set_read_only(region->global_index_list, false);
-    int_vector_set_read_only(region->active_index_list, false);
-    int_vector_set_read_only(region->global_active_list, false);
-}
-
 rd_region_type *rd_region_alloc(const rd_grid_type *rd_grid, bool preselect) {
     rd_region_type *region = (rd_region_type *)util_malloc(sizeof *region);
     UTIL_TYPE_ID_INIT(region, RD_REGION_TYPE_ID);
@@ -147,11 +135,6 @@ void rd_region_free(rd_region_type *region) {
     int_vector_free(region->global_active_list);
     free(region->name);
     free(region);
-}
-
-void rd_region_free__(void *__region) {
-    rd_region_type *region = rd_region_safe_cast(__region);
-    rd_region_free(region);
 }
 
 static void rd_region_assert_global_index_list(rd_region_type *region) {
@@ -202,23 +185,6 @@ rd_region_get_global_active_list(rd_region_type *region) {
 const int_vector_type *rd_region_get_global_list(rd_region_type *region) {
     rd_region_assert_global_index_list(region);
     return region->global_index_list;
-}
-
-/* Cpp compat/legacy/cruft functions. */
-int rd_region_get_active_size_cpp(rd_region_type *region) {
-    return int_vector_size(rd_region_get_active_list(region));
-}
-
-int rd_region_get_global_size_cpp(rd_region_type *region) {
-    return int_vector_size(rd_region_get_global_list(region));
-}
-
-const int *rd_region_get_active_list_cpp(rd_region_type *region) {
-    return int_vector_get_const_ptr(rd_region_get_active_list(region));
-}
-
-const int *rd_region_get_global_list_cpp(rd_region_type *region) {
-    return int_vector_get_const_ptr(rd_region_get_global_list(region));
 }
 
 static void rd_region_assert_kw(const rd_region_type *region,
@@ -335,16 +301,8 @@ void rd_region_select_true(rd_region_type *region, const rd_kw_type *rd_kw) {
     rd_region_select_bool_equal__(region, rd_kw, true, true);
 }
 
-void rd_region_deselect_true(rd_region_type *region, const rd_kw_type *rd_kw) {
-    rd_region_select_bool_equal__(region, rd_kw, true, false);
-}
-
 void rd_region_select_false(rd_region_type *region, const rd_kw_type *rd_kw) {
     rd_region_select_bool_equal__(region, rd_kw, false, true);
-}
-
-void rd_region_deselect_false(rd_region_type *region, const rd_kw_type *rd_kw) {
-    rd_region_select_bool_equal__(region, rd_kw, false, false);
 }
 
 static void rd_region_select_in_interval__(rd_region_type *region,
@@ -923,28 +881,6 @@ void rd_region_deselect_inactive_cells(rd_region_type *region) {
 }
 
 /**
-   This function will select a cell based on global_index.
-*/
-
-static void rd_region_select_global_index__(rd_region_type *region,
-                                            int global_index, bool select) {
-    if ((global_index >= 0) && (global_index < region->grid_vol))
-        region->active_mask[global_index] = select;
-    else
-        util_abort("%s: global_index:%d invalid - legal interval: [0,%d) \n",
-                   __func__, global_index, region->grid_vol);
-    rd_region_invalidate_index_list(region);
-}
-
-void rd_region_select_global_index(rd_region_type *region, int global_index) {
-    rd_region_select_global_index__(region, global_index, true);
-}
-
-void rd_region_deselect_global_index(rd_region_type *region, int global_index) {
-    rd_region_select_global_index__(region, global_index, false);
-}
-
-/**
    Here comes functions for selecting all the cells which are in the
    vertical cylinder located at (x0,y0) with radius R. The functions
    with name 'zcylinder' operate on a finite cylinder in the z
@@ -1007,29 +943,6 @@ static void rd_region_cylinder_select__(rd_region_type *region, double x0,
         }
     }
     rd_region_invalidate_index_list(region);
-}
-
-void rd_region_select_in_cylinder(rd_region_type *region, double x0, double y0,
-                                  double R) {
-    rd_region_cylinder_select__(region, x0, y0, R, 1, 0, true, true);
-}
-
-void rd_region_deselect_in_cylinder(rd_region_type *region, double x0,
-                                    double y0, double R) {
-    rd_region_cylinder_select__(region, x0, y0, R, 1, 0, true, false);
-}
-
-void rd_region_select_in_zcylinder(rd_region_type *region, double x0, double y0,
-                                   double R, double z1, double z2) {
-    rd_region_cylinder_select__(region, x0, y0, R, util_double_min(z1, z2),
-                                util_double_max(z1, z2), true, true);
-}
-
-void rd_region_deselect_in_zcylinder(rd_region_type *region, double x0,
-                                     double y0, double R, double z1,
-                                     double z2) {
-    rd_region_cylinder_select__(region, x0, y0, R, util_double_min(z1, z2),
-                                util_double_max(z1, z2), true, false);
 }
 
 /**
@@ -1156,30 +1069,6 @@ void rd_region_deselect_outside_polygon(rd_region_type *region,
     rd_region_polygon_select__(region, polygon, false, false);
 }
 
-/**
-   This function will select a cell based on active_index.
-*/
-
-static void rd_region_select_active_index__(rd_region_type *region,
-                                            int active_index, bool select) {
-    if ((active_index >= 0) && (active_index < region->grid_active)) {
-        int global_index =
-            rd_grid_get_global_index1A(region->parent_grid, active_index);
-        region->active_mask[global_index] = select;
-    } else
-        util_abort("%s: active_index:%d invalid - legal interval: [0,%d) \n",
-                   __func__, active_index, region->grid_vol);
-    rd_region_invalidate_index_list(region);
-}
-
-void rd_region_select_active_index(rd_region_type *region, int active_index) {
-    rd_region_select_active_index__(region, active_index, true);
-}
-
-void rd_region_deselect_active_index(rd_region_type *region, int active_index) {
-    rd_region_select_active_index__(region, active_index, false);
-}
-
 static void rd_region_select_from_layer__(rd_region_type *region,
                                           const layer_type *layer, int k,
                                           int layer_value, bool select) {
@@ -1209,12 +1098,6 @@ void rd_region_select_from_layer(rd_region_type *region,
                                  const layer_type *layer, int k,
                                  int layer_value) {
     rd_region_select_from_layer__(region, layer, k, layer_value, true);
-}
-
-void rd_region_deselect_from_layer(rd_region_type *region,
-                                   const layer_type *layer, int k,
-                                   int layer_value) {
-    rd_region_select_from_layer__(region, layer, k, layer_value, false);
 }
 
 static void rd_region_select_all__(rd_region_type *region, bool select) {
@@ -1512,15 +1395,6 @@ float rd_region_sum_kw_float(rd_region_type *rd_region, const rd_kw_type *rd_kw,
 double rd_region_sum_kw_double(rd_region_type *rd_region,
                                const rd_kw_type *rd_kw, bool force_active) {
     double sum;
-    const int_vector_type *index_set =
-        rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
-    rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
-    return sum;
-}
-
-int rd_region_sum_kw_bool(rd_region_type *rd_region, const rd_kw_type *rd_kw,
-                          bool force_active) {
-    int sum;
     const int_vector_type *index_set =
         rd_region_get_kw_index_list(rd_region, rd_kw, force_active);
     rd_kw_element_sum_indexed(rd_kw, index_set, &sum);
