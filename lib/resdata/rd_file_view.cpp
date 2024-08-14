@@ -59,8 +59,8 @@ rd_file_view_type *rd_file_view_alloc(fortio_type *fortio, int *flags,
     return rd_file_view;
 }
 
-int rd_file_view_get_global_index(const rd_file_view_type *rd_file_view,
-                                  const char *kw, int ith) {
+static int rd_file_view_get_global_index(const rd_file_view_type *rd_file_view,
+                                         const char *kw, int ith) {
     const auto &index_vector = rd_file_view->kw_index.at(kw);
     return index_vector[ith];
 }
@@ -102,7 +102,7 @@ rd_file_view_iget_file_kw(const rd_file_view_type *rd_file_view,
     return rd_file_view->kw_list[global_index];
 }
 
-rd_file_kw_type *
+static rd_file_kw_type *
 rd_file_view_iget_named_file_kw(const rd_file_view_type *rd_file_view,
                                 const char *kw, int ith) {
     int global_index = rd_file_view_get_global_index(rd_file_view, kw, ith);
@@ -196,68 +196,11 @@ int rd_file_view_get_size(const rd_file_view_type *rd_file_view) {
     return rd_file_view->kw_list.size();
 }
 
-rd_data_type rd_file_view_iget_data_type(const rd_file_view_type *rd_file_view,
-                                         int index) {
-    rd_file_kw_type *file_kw = rd_file_view_iget_file_kw(rd_file_view, index);
-    return rd_file_kw_get_data_type(file_kw);
-}
-
-int rd_file_view_iget_size(const rd_file_view_type *rd_file_view, int index) {
-    rd_file_kw_type *file_kw = rd_file_view_iget_file_kw(rd_file_view, index);
-    return rd_file_kw_get_size(file_kw);
-}
-
-const char *rd_file_view_iget_header(const rd_file_view_type *rd_file_view,
-                                     int index) {
-    rd_file_kw_type *file_kw = rd_file_view_iget_file_kw(rd_file_view, index);
-    return rd_file_kw_get_header(file_kw);
-}
-
 rd_kw_type *rd_file_view_iget_named_kw(const rd_file_view_type *rd_file_view,
                                        const char *kw, int ith) {
     rd_file_kw_type *file_kw =
         rd_file_view_iget_named_file_kw(rd_file_view, kw, ith);
     return rd_file_view_get_kw(rd_file_view, file_kw);
-}
-
-rd_data_type
-rd_file_view_iget_named_data_type(const rd_file_view_type *rd_file_view,
-                                  const char *kw, int ith) {
-    rd_file_kw_type *file_kw =
-        rd_file_view_iget_named_file_kw(rd_file_view, kw, ith);
-    return rd_file_kw_get_data_type(file_kw);
-}
-
-int rd_file_view_iget_named_size(const rd_file_view_type *rd_file_view,
-                                 const char *kw, int ith) {
-    rd_file_kw_type *file_kw =
-        rd_file_view_iget_named_file_kw(rd_file_view, kw, ith);
-    return rd_file_kw_get_size(file_kw);
-}
-
-void rd_file_view_replace_kw(rd_file_view_type *rd_file_view,
-                             rd_kw_type *old_kw, rd_kw_type *new_kw,
-                             bool insert_copy) {
-    size_t index = 0;
-    while (index < rd_file_view->kw_list.size()) {
-        auto *ikw = rd_file_view->kw_list[index];
-        if (rd_file_kw_ptr_eq(ikw, old_kw)) {
-            /*
-         Found it; observe that the vector_iset() function will
-         automatically invoke the destructor on the old_kw.
-      */
-            rd_kw_type *insert_kw = new_kw;
-
-            if (insert_copy)
-                insert_kw = rd_kw_alloc_copy(new_kw);
-            rd_file_kw_replace_kw(ikw, rd_file_view->fortio, insert_kw);
-
-            rd_file_view_make_index(rd_file_view);
-            return;
-        }
-        index++;
-    }
-    util_abort("%s: could not find rd_kw ptr: %p \n", __func__, old_kw);
 }
 
 bool rd_file_view_load_all(rd_file_view_type *rd_file_view) {
@@ -292,11 +235,6 @@ void rd_file_view_free(rd_file_view_type *rd_file_view) {
     }
 
     delete rd_file_view;
-}
-
-void rd_file_view_free__(void *arg) {
-    rd_file_view_type *rd_file_view = (rd_file_view_type *)arg;
-    rd_file_view_free(rd_file_view);
 }
 
 int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
@@ -662,8 +600,8 @@ bool rd_file_view_has_sim_time(const rd_file_view_type *rd_file_view,
     }
 }
 
-bool rd_file_view_has_sim_days(const rd_file_view_type *rd_file_view,
-                               double sim_days) {
+static bool rd_file_view_has_sim_days(const rd_file_view_type *rd_file_view,
+                                      double sim_days) {
     int num_DOUBHEAD = rd_file_view_get_num_named_kw(rd_file_view, DOUBHEAD_KW);
     if (num_DOUBHEAD == 0)
         return false; /* We have no DOUBHEAD headers - probably not a restart file at all. */
@@ -708,8 +646,8 @@ int rd_file_view_seqnum_index_from_sim_time(rd_file_view_type *parent_map,
     return -1;
 }
 
-int rd_file_view_seqnum_index_from_sim_days(rd_file_view_type *file_view,
-                                            double sim_days) {
+static int rd_file_view_seqnum_index_from_sim_days(rd_file_view_type *file_view,
+                                                   double sim_days) {
     int num_seqnum = rd_file_view_get_num_named_kw(file_view, SEQNUM_KW);
     int seqnum_index = 0;
     rd_file_view_type *seqnum_map;
