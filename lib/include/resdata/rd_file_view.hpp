@@ -34,16 +34,11 @@ bool rd_file_view_check_flags(int state_flags, int query_flags);
 
 rd_file_view_type *rd_file_view_alloc(fortio_type *fortio, int *flags,
                                       inv_map_type *inv_map, bool owner);
-int rd_file_view_get_global_index(const rd_file_view_type *rd_file_view,
-                                  const char *kw, int ith);
 void rd_file_view_make_index(rd_file_view_type *rd_file_view);
 bool rd_file_view_has_kw(const rd_file_view_type *rd_file_view, const char *kw);
 rd_file_kw_type *
 rd_file_view_iget_file_kw(const rd_file_view_type *rd_file_view,
                           int global_index);
-rd_file_kw_type *
-rd_file_view_iget_named_file_kw(const rd_file_view_type *rd_file_view,
-                                const char *kw, int ith);
 rd_kw_type *rd_file_view_iget_kw(const rd_file_view_type *rd_file_view,
                                  int index);
 void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
@@ -56,34 +51,18 @@ const char *rd_file_view_iget_distinct_kw(const rd_file_view_type *rd_file_view,
                                           int index);
 int rd_file_view_get_num_distinct_kw(const rd_file_view_type *rd_file_view);
 int rd_file_view_get_size(const rd_file_view_type *rd_file_view);
-rd_data_type rd_file_view_iget_data_type(const rd_file_view_type *rd_file_view,
-                                         int index);
-int rd_file_view_iget_size(const rd_file_view_type *rd_file_view, int index);
-const char *rd_file_view_iget_header(const rd_file_view_type *rd_file_view,
-                                     int index);
 rd_kw_type *rd_file_view_iget_named_kw(const rd_file_view_type *rd_file_view,
                                        const char *kw, int ith);
-rd_data_type
-rd_file_view_iget_named_data_type(const rd_file_view_type *rd_file_view,
-                                  const char *kw, int ith);
-int rd_file_view_iget_named_size(const rd_file_view_type *rd_file_view,
-                                 const char *kw, int ith);
-void rd_file_view_replace_kw(rd_file_view_type *rd_file_view,
-                             rd_kw_type *old_kw, rd_kw_type *new_kw,
-                             bool insert_copy);
 bool rd_file_view_load_all(rd_file_view_type *rd_file_view);
 void rd_file_view_add_kw(rd_file_view_type *rd_file_view,
                          rd_file_kw_type *file_kw);
 void rd_file_view_free(rd_file_view_type *rd_file_view);
-void rd_file_view_free__(void *arg);
 int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
                                   const char *kw);
 void rd_file_view_fwrite(const rd_file_view_type *rd_file_view,
                          fortio_type *target, int offset);
 int rd_file_view_iget_occurence(const rd_file_view_type *rd_file_view,
                                 int global_index);
-void rd_file_view_fprintf_kw_list(const rd_file_view_type *rd_file_view,
-                                  FILE *stream);
 rd_file_view_type *rd_file_view_add_blockview(rd_file_view_type *rd_file_view,
                                               const char *header,
                                               int occurence);
@@ -104,8 +83,6 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
                               const char *start_kw, const char *end_kw,
                               int occurence);
 
-void rd_file_view_add_child(rd_file_view_type *parent,
-                            rd_file_view_type *child);
 bool rd_file_view_drop_flag(rd_file_view_type *file_view, int flag);
 void rd_file_view_add_flag(rd_file_view_type *file_view, int flag);
 
