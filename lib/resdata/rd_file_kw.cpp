@@ -143,14 +143,6 @@ rd_file_kw_type *rd_file_kw_alloc(const rd_kw_type *rd_kw, offset_type offset) {
                              offset);
 }
 
-/**
-    Does NOT copy the kw pointer which must be reloaded.
-*/
-rd_file_kw_type *rd_file_kw_alloc_copy(const rd_file_kw_type *src) {
-    return rd_file_kw_alloc0(src->header, rd_file_kw_get_data_type(src),
-                             src->kw_size, src->file_offset);
-}
-
 void rd_file_kw_free(rd_file_kw_type *file_kw) {
     if (file_kw->kw != NULL) {
         rd_kw_free(file_kw->kw);
@@ -158,11 +150,6 @@ void rd_file_kw_free(rd_file_kw_type *file_kw) {
     }
     free(file_kw->header);
     free(file_kw);
-}
-
-void rd_file_kw_free__(void *arg) {
-    rd_file_kw_type *file_kw = rd_file_kw_safe_cast(arg);
-    rd_file_kw_free(file_kw);
 }
 
 bool rd_file_kw_equal(const rd_file_kw_type *kw1, const rd_file_kw_type *kw2) {
@@ -254,34 +241,6 @@ rd_kw_type *rd_file_kw_get_kw(rd_file_kw_type *file_kw, fortio_type *fortio,
         file_kw->ref_count++;
 
     return file_kw->kw;
-}
-
-bool rd_file_kw_ptr_eq(const rd_file_kw_type *file_kw,
-                       const rd_kw_type *rd_kw) {
-    if (file_kw->kw == rd_kw)
-        return true;
-    else
-        return false;
-}
-
-void rd_file_kw_replace_kw(rd_file_kw_type *file_kw, fortio_type *target,
-                           rd_kw_type *new_kw) {
-    if (!rd_type_is_equal(rd_file_kw_get_data_type(file_kw),
-                          rd_kw_get_data_type(new_kw)))
-        util_abort("%s: sorry type mismatch between in-file keyword and new "
-                   "keyword \n",
-                   __func__);
-    if (file_kw->kw_size != rd_kw_get_size(new_kw))
-        util_abort("%s: sorry size mismatch between in-file keyword and new "
-                   "keyword \n",
-                   __func__);
-
-    if (file_kw->kw != NULL)
-        rd_kw_free(file_kw->kw);
-
-    file_kw->kw = new_kw;
-    fortio_fseek(target, file_kw->file_offset, SEEK_SET);
-    rd_kw_fwrite(file_kw->kw, target);
 }
 
 const char *rd_file_kw_get_header(const rd_file_kw_type *file_kw) {
