@@ -149,11 +149,6 @@ void rd_rft_cell_free(rd_rft_cell_type *cell) {
     free(cell);
 }
 
-void rd_rft_cell_free__(void *arg) {
-    rd_rft_cell_type *cell = rd_rft_cell_safe_cast(arg);
-    rd_rft_cell_free(cell);
-}
-
 int rd_rft_cell_get_i(const rd_rft_cell_type *cell) { return cell->i; }
 
 int rd_rft_cell_get_j(const rd_rft_cell_type *cell) { return cell->j; }
@@ -277,8 +272,8 @@ bool rd_rft_cell_ijk_equal(const rd_rft_cell_type *cell, int i, int j, int k) {
 /*
   Currently only comparison based on connection length along PLT is supported.
 */
-int rd_rft_cell_cmp(const rd_rft_cell_type *cell1,
-                    const rd_rft_cell_type *cell2) {
+static int rd_rft_cell_cmp(const rd_rft_cell_type *cell1,
+                           const rd_rft_cell_type *cell2) {
     double val1 = rd_rft_cell_get_connection_start(cell1);
     double val2 = rd_rft_cell_get_connection_start(cell2);
 
@@ -288,12 +283,6 @@ int rd_rft_cell_cmp(const rd_rft_cell_type *cell1,
         return 0;
     else
         return 1;
-}
-
-int rd_rft_cell_cmp__(const void *arg1, const void *arg2) {
-    const rd_rft_cell_type *cell1 = rd_rft_cell_safe_cast_const(arg1);
-    const rd_rft_cell_type *cell2 = rd_rft_cell_safe_cast_const(arg2);
-    return rd_rft_cell_cmp(cell1, cell2);
 }
 
 bool rd_rft_cell_lt(const rd_rft_cell_type *cell1,

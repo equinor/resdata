@@ -66,7 +66,7 @@ void test_rft_cell() {
         test_assert_true(rd_rft_cell_ijk_equal(cell, i, j, k));
         test_assert_false(rd_rft_cell_ijk_equal(cell, i, j, k + 1));
 
-        rd_rft_cell_free__(cell);
+        rd_rft_cell_free(cell);
     }
 }
 

@@ -23,7 +23,6 @@ rd_rft_cell_type *rd_rft_cell_alloc_RFT(int i, int j, int k, double depth,
                                         double pressure, double swat,
                                         double sgas);
 void rd_rft_cell_free(rd_rft_cell_type *cell);
-void rd_rft_cell_free__(void *arg);
 
 bool rd_rft_cell_ijk_equal(const rd_rft_cell_type *cell, int i, int j, int k);
 void rd_rft_cell_get_ijk(const rd_rft_cell_type *cell, int *i, int *j, int *k);
@@ -47,9 +46,6 @@ double rd_rft_cell_get_oil_flowrate(const rd_rft_cell_type *cell);
 double rd_rft_cell_get_gas_flowrate(const rd_rft_cell_type *cell);
 double rd_rft_cell_get_water_flowrate(const rd_rft_cell_type *cell);
 
-int rd_rft_cell_cmp__(const void *arg1, const void *arg2);
-int rd_rft_cell_cmp(const rd_rft_cell_type *cell1,
-                    const rd_rft_cell_type *cell2);
 bool rd_rft_cell_lt(const rd_rft_cell_type *cell1,
                     const rd_rft_cell_type *cell2);
 #ifdef __cplusplus
