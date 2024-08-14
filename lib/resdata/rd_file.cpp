@@ -137,7 +137,6 @@ struct rd_file_struct {
 
    kw_index    = {"SEQHDR": [0], "MINISTEP": [1,3,5], "PARAMS": [2,4,6]}    <== This is hash table.
    kw_list     = [SEQHDR , MINISTEP , PARAMS , MINISTEP , PARAMS , MINISTEP , PARAMS]
-   distinct_kw = [SEQHDR , MINISTEP , PARAMS]
 
 */
 
@@ -194,79 +193,7 @@ void rd_file_fwrite(const rd_file_type *rd_file, const char *filename,
    input, and returns the corresponding rd_kw instance - without
    considering which keyword it is.
 
-   -------
-
-   In addition the functions rd_file_get_num_distinct_kw() and
-   rd_file_iget_distinct_kw() will return the number of distinct
-   keywords, and distinct keyword keyword nr i (as a const char *).
-
-
-   Possible usage pattern:
-
-   ....
-   for (ikw = 0; ikw < rd_file_get_num_distinct_kw(rd_file); ikw++) {
-   const char * kw = rd_file_iget_distinct_kw(rd_file , ikw);
-
-   printf("The file contains: %d occurences of \'%s\' \n",rd_file_get_num_named_kw( rd_file , kw) , kw);
-   }
-   ....
-
-   For the summary file showed in the top this code will produce:
-
-   The file contains 1 occurences of 'SEQHDR'
-   The file contains 3 occurences of 'MINISTEP'
-   The file contains 3 occurences of 'PARAMS'
-
 */
-
-/**
-   This function will iterate through the rd_file instance and search
-   for the rd_kw instance @old_kw - the search is based on pointer
-   equality, i.e. the actual rd_kw instance, and not on content
-   equality.
-
-   When @old_kw is found that keyword instance will be discarded with
-   rd_kw_free() and the new keyword @new_kw will be inserted. If
-   @old_kw can not be found the function will fail hard - to verify
-   that @new_kw is indeed in the rd_file instance you should use
-   rd_file_has_kw_ptr() first.
-
-   The rd_file function typically gives out references to the
-   internal rd_kw instances via the rd_file_iget_kw() function. Use
-   of rd_file_replace_kw() might lead to invalidating rd_kw
-   instances held by the calling scope:
-
-
-   ....
-   rd_file_type * restart_file   = rd_file_fread_alloc( "CASE.UNRST" );
-   rd_kw_type * initial_pressure = rd_file_iget_named_kw( rd_file , "PRESSURE" , 0);
-   rd_kw_type * faked_pressure   = rd_kw_alloc_copy( initial_pressure );
-
-   rd_kw_scale( faked_pressure , 1.25 );
-   rd_file_replace_kw( restart_file , initial_pressure , faked_pressure , false );  <--- This call will invalidate the inital_pressure reference
-   ....
-   ....
-   // This will fail horribly:
-   printf("The initial pressure in cell(0) was:%g \n",rd_kw_iget_double( initial_pressure , 0 ));
-   /|\
-   |
-   +---------> Using initial_pressure => Crash and burn!
-
-   The rd_file structure takes ownership of all the keywords, and
-   will also take ownership of the newly instered @new_kw instance; if
-   the boolean @insert_copy is set to true the function will insert a
-   copy of @new_kw, leaving the original reference untouched.
-*/
-
-void rd_file_replace_kw(rd_file_type *rd_file, rd_kw_type *old_kw,
-                        rd_kw_type *new_kw, bool insert_copy) {
-    rd_file_view_replace_kw(rd_file->active_view, old_kw, new_kw, insert_copy);
-}
-
-rd_kw_type *rd_file_icopy_named_kw(const rd_file_type *rd_file, const char *kw,
-                                   int ith) {
-    return rd_kw_alloc_copy(rd_file_iget_named_kw(rd_file, kw, ith));
-}
 
 /*
   Will return the number of times a particular keyword occurs in a
@@ -275,29 +202,6 @@ rd_kw_type *rd_file_icopy_named_kw(const rd_file_type *rd_file, const char *kw,
 
 int rd_file_get_num_named_kw(const rd_file_type *rd_file, const char *kw) {
     return rd_file_view_get_num_named_kw(rd_file->active_view, kw);
-}
-
-/**
-   This function does the following:
-
-   1. Takes an input index which goes in to the global kw_list vector.
-   2. Looks up the corresponding keyword.
-   3. Return the number of this particular keyword instance, among
-   the other instance with the same header.
-
-   With the example above we get:
-
-   rd_file_iget_occurence(rd_file , 2) -> 0; Global index 2 will
-   look up the first occurence of PARAMS.
-
-   rd_file_iget_occurence(rd_file , 5) -> 2; Global index 5 will
-   look up th third occurence of MINISTEP.
-
-   The enkf layer uses this funny functionality.
-*/
-
-int rd_file_iget_occurence(const rd_file_type *rd_file, int index) {
-    return rd_file_view_iget_occurence(rd_file->active_view, index);
 }
 
 /**
@@ -316,47 +220,12 @@ bool rd_file_has_kw(const rd_file_type *rd_file, const char *kw) {
     return rd_file_view_has_kw(rd_file->active_view, kw);
 }
 
-int rd_file_get_num_distinct_kw(const rd_file_type *rd_file) {
-    return rd_file_view_get_num_distinct_kw(rd_file->active_view);
-}
-
-const char *rd_file_iget_distinct_kw(const rd_file_type *rd_file, int index) {
-    return rd_file_view_iget_distinct_kw(rd_file->active_view, index);
-}
-
 const char *rd_file_get_src_file(const rd_file_type *rd_file) {
     return fortio_filename_ref(rd_file->fortio);
 }
 
-void rd_file_fprintf_kw_list(const rd_file_type *rd_file, FILE *stream) {
-    rd_file_view_fprintf_kw_list(rd_file->active_view, stream);
-}
-
-rd_file_kw_type *rd_file_iget_file_kw(const rd_file_type *file,
-                                      int global_index) {
-    return rd_file_view_iget_file_kw(file->active_view, global_index);
-}
-
-rd_file_kw_type *rd_file_iget_named_file_kw(const rd_file_type *file,
-                                            const char *kw, int ith) {
-    return rd_file_view_iget_named_file_kw(file->active_view, kw, ith);
-}
-
 rd_kw_type *rd_file_iget_kw(const rd_file_type *file, int global_index) {
     return rd_file_view_iget_kw(file->active_view, global_index);
-}
-
-rd_data_type rd_file_iget_data_type(const rd_file_type *file,
-                                    int global_index) {
-    return rd_file_view_iget_data_type(file->active_view, global_index);
-}
-
-int rd_file_iget_size(const rd_file_type *file, int global_index) {
-    return rd_file_view_iget_size(file->active_view, global_index);
-}
-
-const char *rd_file_iget_header(const rd_file_type *file, int global_index) {
-    return rd_file_view_iget_header(file->active_view, global_index);
 }
 
 /*
@@ -368,21 +237,6 @@ const char *rd_file_iget_header(const rd_file_type *file, int global_index) {
 rd_kw_type *rd_file_iget_named_kw(const rd_file_type *file, const char *kw,
                                   int ith) {
     return rd_file_view_iget_named_kw(file->active_view, kw, ith);
-}
-
-void rd_file_indexed_read(const rd_file_type *file, const char *kw, int index,
-                          const int_vector_type *index_map, char *buffer) {
-    rd_file_view_index_fload_kw(file->active_view, kw, index, index_map,
-                                buffer);
-}
-
-rd_data_type rd_file_iget_named_data_type(const rd_file_type *file,
-                                          const char *kw, int ith) {
-    return rd_file_view_iget_named_data_type(file->active_view, kw, ith);
-}
-
-int rd_file_iget_named_size(const rd_file_type *file, const char *kw, int ith) {
-    return rd_file_view_iget_named_size(file->active_view, kw, ith);
 }
 
 rd_file_view_type *rd_file_get_global_view(rd_file_type *rd_file) {
@@ -401,10 +255,10 @@ rd_file_view_type *rd_file_get_global_blockview(rd_file_type *rd_file,
     return view;
 }
 
-rd_file_view_type *rd_file_alloc_global_blockview2(rd_file_type *rd_file,
-                                                   const char *start_kw,
-                                                   const char *end_kw,
-                                                   int occurence) {
+static rd_file_view_type *rd_file_alloc_global_blockview2(rd_file_type *rd_file,
+                                                          const char *start_kw,
+                                                          const char *end_kw,
+                                                          int occurence) {
     rd_file_view_type *view = rd_file_view_alloc_blockview2(
         rd_file->global_view, start_kw, end_kw, occurence);
     return view;
@@ -483,7 +337,7 @@ static void rd_file_scan(rd_file_type *rd_file) {
     rd_file_view_make_index(rd_file->global_view);
 }
 
-void rd_file_select_global(rd_file_type *rd_file) {
+static void rd_file_select_global(rd_file_type *rd_file) {
     rd_file->active_view = rd_file->global_view;
 }
 
@@ -532,16 +386,6 @@ rd_file_type *rd_file_open(const char *filename, int flags) {
         return NULL;
 }
 
-int rd_file_get_flags(const rd_file_type *rd_file) { return rd_file->flags; }
-
-void rd_file_set_flags(rd_file_type *rd_file, int flags) {
-    rd_file->flags = flags;
-}
-
-bool rd_file_flags_set(const rd_file_type *rd_file, int flags) {
-    return rd_file_view_check_flags(rd_file->flags, flags);
-}
-
 bool rd_file_writable(const rd_file_type *rd_file) {
     return rd_file_view_check_flags(rd_file->flags, RD_FILE_WRITABLE);
 }
@@ -564,31 +408,9 @@ void rd_file_close(rd_file_type *rd_file) {
     free(rd_file);
 }
 
-void rd_file_close_fortio_stream(rd_file_type *rd_file) {
-    if (rd_file->fortio != NULL) {
-        fortio_fclose_stream(rd_file->fortio);
-    }
-}
-
-/**
-   This function will detach the current rd_file instance from the
-   underlying fortio instance. The rd_file instance can be used
-   further to access the rd_kw instances which have been loaded
-   already, but if you try on-demand loading of a keyword you will get
-   crash-and-burn. To ensure that all keywords are in memory you can
-   call rd_file_load_all() prior to the detach call.
-*/
-
-void rd_file_fortio_detach(rd_file_type *rd_file) {
-    fortio_fclose(rd_file->fortio);
-    rd_file->fortio = NULL;
-}
-
 bool rd_file_load_all(rd_file_type *rd_file) {
     return rd_file_view_load_all(rd_file->active_view);
 }
-
-void rd_file_free__(void *arg) { rd_file_close(rd_file_safe_cast(arg)); }
 
 /* Functions specialized to work with restart files.  */
 
@@ -728,31 +550,13 @@ bool rd_file_writable( const rd_file_type * rd_file ) {
 }
 */
 
-/**
-   Checks if the rd_file contains rd_kw; this check is based on
-   pointer equality - i.e. we check if the rd_file contains exactly
-   this keyword - not an arbitrary equivalent keyword.
-
-   This function can be called as a safeguard before calling
-   rd_file_save_kw().
-*/
-
-bool rd_file_has_kw_ptr(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
-    rd_file_kw_type *file_kw = inv_map_get_file_kw(rd_file->inv_view, rd_kw);
-    if (file_kw == NULL)
-        return false;
-    else
-        return true;
-}
-
 /*
   Will save the content of @rd_kw to the on-disk file wrapped by the
   rd_file instance. This function is quite strict:
 
   1. The actual keyword which should be updated is identified using
      pointer comparison; i.e. the rd_kw argument must be the actual
-     return value from an earlier rd_file_get_kw() operation. To
-     check this you can call rd_file_has_kw_ptr().
+     return value from an earlier rd_file_get_kw() operation.
 
   2. The header data of the rd_kw must be unmodified; this is checked
      by the rd_file_kw_inplace_fwrite() function and crash-and-burn
@@ -786,16 +590,6 @@ bool rd_file_save_kw(const rd_file_type *rd_file, const rd_kw_type *rd_kw) {
     }
 }
 
-/* DEPRECATED */
-void rd_file_push_block(rd_file_type *rd_file) {
-    vector_append_ref(rd_file->map_stack, rd_file->active_view);
-}
-
-void rd_file_pop_block(rd_file_type *rd_file) {
-    rd_file->active_view =
-        (rd_file_view_type *)vector_pop_back(rd_file->map_stack);
-}
-
 static rd_file_view_type *rd_file_get_relative_blockview(rd_file_type *rd_file,
                                                          const char *kw,
                                                          int occurence) {
@@ -815,8 +609,8 @@ bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
         return false;
 }
 
-bool rd_file_select_block(rd_file_type *rd_file, const char *kw,
-                          int occurence) {
+static bool rd_file_select_block(rd_file_type *rd_file, const char *kw,
+                                 int occurence) {
     rd_file_view_type *blockmap =
         rd_file_get_global_blockview(rd_file, kw, occurence);
     if (blockmap != NULL) {
@@ -830,11 +624,12 @@ bool rd_file_select_block(rd_file_type *rd_file, const char *kw,
   Will select restart block nr @seqnum_index - without considering
   report_steps or simulation time.
 */
-bool rd_file_iselect_rstblock(rd_file_type *rd_file, int seqnum_index) {
+static bool rd_file_iselect_rstblock(rd_file_type *rd_file, int seqnum_index) {
     return rd_file_select_block(rd_file, SEQNUM_KW, seqnum_index);
 }
 
-bool rd_file_select_rstblock_sim_time(rd_file_type *rd_file, time_t sim_time) {
+static bool rd_file_select_rstblock_sim_time(rd_file_type *rd_file,
+                                             time_t sim_time) {
     int seqnum_index =
         rd_file_view_seqnum_index_from_sim_time(rd_file->global_view, sim_time);
 
@@ -844,8 +639,8 @@ bool rd_file_select_rstblock_sim_time(rd_file_type *rd_file, time_t sim_time) {
         return false;
 }
 
-bool rd_file_select_rstblock_report_step(rd_file_type *rd_file,
-                                         int report_step) {
+static bool rd_file_select_rstblock_report_step(rd_file_type *rd_file,
+                                                int report_step) {
     int global_index = rd_file_view_find_kw_value(rd_file->global_view,
                                                   SEQNUM_KW, &report_step);
     if (global_index >= 0) {
@@ -854,59 +649,6 @@ bool rd_file_select_rstblock_report_step(rd_file_type *rd_file,
         return rd_file_iselect_rstblock(rd_file, seqnum_index);
     } else
         return false;
-}
-
-static rd_file_type *rd_file_open_rstblock_report_step__(const char *filename,
-                                                         int report_step,
-                                                         int flags) {
-    rd_file_type *rd_file = rd_file_open(filename, flags);
-    if (rd_file) {
-        if (!rd_file_select_rstblock_report_step(rd_file, report_step)) {
-            rd_file_close(rd_file);
-            rd_file = NULL;
-        }
-    }
-    return rd_file;
-}
-
-rd_file_type *rd_file_open_rstblock_report_step(const char *filename,
-                                                int report_step, int flags) {
-    return rd_file_open_rstblock_report_step__(filename, report_step, flags);
-}
-
-static rd_file_type *rd_file_open_rstblock_sim_time__(const char *filename,
-                                                      time_t sim_time,
-                                                      int flags) {
-    rd_file_type *rd_file = rd_file_open(filename, flags);
-    if (rd_file) {
-        if (!rd_file_select_rstblock_sim_time(rd_file, sim_time)) {
-            rd_file_close(rd_file);
-            rd_file = NULL;
-        }
-    }
-    return rd_file;
-}
-
-rd_file_type *rd_file_open_rstblock_sim_time(const char *filename,
-                                             time_t sim_time, int flags) {
-    return rd_file_open_rstblock_sim_time__(filename, sim_time, flags);
-}
-
-static rd_file_type *rd_file_iopen_rstblock__(const char *filename,
-                                              int seqnum_index, int flags) {
-    rd_file_type *rd_file = rd_file_open(filename, flags);
-    if (rd_file) {
-        if (!rd_file_iselect_rstblock(rd_file, seqnum_index)) {
-            rd_file_close(rd_file);
-            rd_file = NULL;
-        }
-    }
-    return rd_file;
-}
-
-rd_file_type *rd_file_iopen_rstblock(const char *filename, int seqnum_index,
-                                     int flags) {
-    return rd_file_iopen_rstblock__(filename, seqnum_index, flags);
 }
 
 static bool rd_file_index_valid0(const char *file_name,
