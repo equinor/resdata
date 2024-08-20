@@ -65,70 +65,6 @@ void export_zcorn(const rd_grid_type *grid, rd_file_type *rd_file) {
     }
 }
 
-void copy_processed(const rd_grid_type *src) {
-    {
-        rd_grid_type *copy = rd_grid_alloc_processed_copy(src, NULL, NULL);
-        test_assert_true(rd_grid_compare(src, copy, true, true, false));
-        rd_grid_free(copy);
-    }
-
-    {
-        int *actnum =
-            (int *)util_malloc(rd_grid_get_global_size(src) * sizeof *actnum);
-        int index = 0;
-        rd_grid_init_actnum_data(src, actnum);
-
-        while (true) {
-            if (actnum[index] == 1) {
-                actnum[index] = 0;
-                break;
-            }
-            index++;
-        }
-
-        {
-            rd_grid_type *copy =
-                rd_grid_alloc_processed_copy(src, NULL, actnum);
-            test_assert_int_equal(1, rd_grid_get_active_size(src) -
-                                         rd_grid_get_active_size(copy));
-            rd_grid_free(copy);
-        }
-        free(actnum);
-    }
-
-    {
-        double *zcorn_double = (double *)util_malloc(
-            rd_grid_get_zcorn_size(src) * sizeof *zcorn_double);
-        int i = 0;
-        int j = 0;
-        int k = 0;
-
-        rd_grid_init_zcorn_data_double(src, zcorn_double);
-        {
-            rd_grid_type *copy =
-                rd_grid_alloc_processed_copy(src, zcorn_double, NULL);
-            test_assert_double_equal(rd_grid_get_cell_volume3(src, i, j, k),
-                                     rd_grid_get_cell_volume3(copy, i, j, k));
-            rd_grid_free(copy);
-        }
-
-        for (int c = 0; c < 4; c++) {
-            double dz = zcorn_double[rd_grid_zcorn_index(src, i, j, k, c + 4)] -
-                        zcorn_double[rd_grid_zcorn_index(src, i, j, k, c)];
-            zcorn_double[rd_grid_zcorn_index(src, i, j, k, c + 4)] += dz;
-        }
-        {
-            rd_grid_type *copy =
-                rd_grid_alloc_processed_copy(src, zcorn_double, NULL);
-            test_assert_double_equal(rd_grid_get_cell_volume3(src, i, j, k) * 2,
-                                     rd_grid_get_cell_volume3(copy, i, j, k));
-            rd_grid_free(copy);
-        }
-
-        free(zcorn_double);
-    }
-}
-
 void export_mapaxes(const rd_grid_type *grid, rd_file_type *rd_file) {
     if (rd_file_has_kw(rd_file, "MAPAXES")) {
         rd_kw_type *mapaxes_kw = rd_file_iget_named_kw(rd_file, "MAPAXES", 0);
@@ -168,7 +104,6 @@ int main(int argc, char **argv) {
             export_coord(rd_grid, rd_file);
             export_zcorn(rd_grid, rd_file);
             export_mapaxes(rd_grid, rd_file);
-            copy_processed(rd_grid);
             rd_file_close(rd_file);
             rd_grid_free(rd_grid);
         }

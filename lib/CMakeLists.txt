@@ -256,16 +256,13 @@ foreach(
   rd_path_access
   rd_grid_add_nnc
   rd_grid_copy
-  rd_grid_create
   rd_grid_unit_system
   rd_grid_export
   rd_grid_init_fwrite
   rd_grid_reset_actnum
-  rd_grid_ext_actnum
   rd_nnc_export_intersect
   rd_sum_restart
   rd_sum_data_intermediate_test
-  rd_grid_cell_contains
   rd_unsmry_loader_test
   rd_kw_space_pad
   rd_kw_cmp_string

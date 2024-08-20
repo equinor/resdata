@@ -47,15 +47,6 @@ int main(int argc, char **argv) {
             }
             rd_grid_free(grid2);
         }
-        /*
-    printf("----\n");
-    {
-      double * ri_points = util_calloc( rd_grid_get_global_size( rd_grid ) * 24 , sizeof * ri_points );
-      rd_grid_ri_export( rd_grid , ri_points );
-      free( ri_points );
-    }
-    printf("----\n");
-    */
         rd_grid_free(rd_grid);
     }
 }

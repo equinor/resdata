@@ -11,6 +11,21 @@
 #include <resdata/fortio.h>
 #include <resdata/rd_endian_flip.hpp>
 
+static void rd_grid_fwrite_depth(const rd_grid_type *grid,
+                                 fortio_type *init_file,
+                                 ert_rd_unit_enum output_unit) {
+    rd_kw_type *depth_kw =
+        rd_kw_alloc("DEPTH", rd_grid_get_nactive(grid), RD_FLOAT);
+    {
+        float *depth_ptr = (float *)rd_kw_get_ptr(depth_kw);
+        for (int i = 0; i < rd_grid_get_nactive(grid); i++)
+            depth_ptr[i] = rd_grid_get_cdepth1A(grid, i);
+    }
+    rd_kw_scale_float(depth_kw, rd_grid_output_scaling(grid, output_unit));
+    rd_kw_fwrite(depth_kw, init_file);
+    rd_kw_free(depth_kw);
+}
+
 void test_write_depth(const rd_grid_type *grid) {
     rd::util::TestArea ta("write_depth");
     {
@@ -30,6 +45,40 @@ void test_write_depth(const rd_grid_type *grid) {
 
         rd_file_close(init_file);
     }
+}
+
+static void rd_grid_fwrite_dims(const rd_grid_type *grid,
+                                fortio_type *init_file,
+                                ert_rd_unit_enum output_unit) {
+    rd_kw_type *dx = rd_kw_alloc("DX", rd_grid_get_nactive(grid), RD_FLOAT);
+    rd_kw_type *dy = rd_kw_alloc("DY", rd_grid_get_nactive(grid), RD_FLOAT);
+    rd_kw_type *dz = rd_kw_alloc("DZ", rd_grid_get_nactive(grid), RD_FLOAT);
+    {
+        {
+            float *dx_ptr = (float *)rd_kw_get_ptr(dx);
+            float *dy_ptr = (float *)rd_kw_get_ptr(dy);
+            float *dz_ptr = (float *)rd_kw_get_ptr(dz);
+
+            for (int i = 0; i < rd_grid_get_nactive(grid); i++) {
+                dx_ptr[i] = rd_grid_get_cell_dx1A(grid, i);
+                dy_ptr[i] = rd_grid_get_cell_dy1A(grid, i);
+                dz_ptr[i] = rd_grid_get_cell_dz1A(grid, i);
+            }
+        }
+
+        {
+            float scale_factor = rd_grid_output_scaling(grid, output_unit);
+            rd_kw_scale_float(dx, scale_factor);
+            rd_kw_scale_float(dy, scale_factor);
+            rd_kw_scale_float(dz, scale_factor);
+        }
+    }
+    rd_kw_fwrite(dx, init_file);
+    rd_kw_fwrite(dy, init_file);
+    rd_kw_fwrite(dz, init_file);
+    rd_kw_free(dx);
+    rd_kw_free(dy);
+    rd_kw_free(dz);
 }
 
 void test_write_dims(const rd_grid_type *grid) {

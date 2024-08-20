@@ -93,8 +93,9 @@ void list_test() {
     int_vector_append(g1, 8);
     int_vector_append(g2, 9);
 
-    rd_grid_add_self_nnc_list(grid0, int_vector_get_ptr(g1),
-                              int_vector_get_ptr(g2), int_vector_size(g1));
+    for (int i = 0; i < int_vector_size(g1); i++)
+        rd_grid_add_self_nnc(grid0, int_vector_iget(g1, i),
+                             int_vector_iget(g2, i), i);
 
     verify_simple_nnc(grid0);
     {
