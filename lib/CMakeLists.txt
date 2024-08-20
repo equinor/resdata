@@ -60,7 +60,6 @@ add_library(
   ${opt_srcs}
   resdata/rd_rsthead.cpp
   resdata/rd_sum_tstep.cpp
-  resdata/rd_rst_file.cpp
   resdata/rd_grid_cache.cpp
   resdata/smspec_node.cpp
   resdata/rd_kw_grdecl.cpp
@@ -282,7 +281,6 @@ foreach(
   rd_file_view
   test_rd_file_index
   test_transactions
-  rd_rst_file
   rd_sum_writer
   rd_filenames
   rd_make_date_no_shift
