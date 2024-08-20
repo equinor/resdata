@@ -268,7 +268,6 @@
     - int rd_grid_get_num_coarse_groups( const rd_grid_type * main_grid )
     - bool rd_grid_have_coarse_cells( const rd_grid_type * main_grid )
     - rd_coarse_cell_type * rd_grid_iget_coarse_group( const rd_grid_type * rd_grid , int coarse_nr );
-    - rd_coarse_cell_type * rd_grid_get_cell_coarse_group1( const rd_grid_type * rd_grid , int global_index);
 
   In addition to the API presented by the rd_coarse_cell.c implementation.
 */
@@ -1942,21 +1941,6 @@ rd_coarse_cell_type *rd_grid_iget_coarse_group(const rd_grid_type *rd_grid,
     return (rd_coarse_cell_type *)vector_iget(rd_grid->coarse_cells, coarse_nr);
 }
 
-rd_coarse_cell_type *rd_grid_get_cell_coarse_group1(const rd_grid_type *rd_grid,
-                                                    int global_index) {
-    rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-    if (cell->coarse_group == COARSE_GROUP_NONE)
-        return NULL;
-    else
-        return rd_grid_iget_coarse_group(rd_grid, cell->coarse_group);
-}
-
-rd_coarse_cell_type *rd_grid_get_cell_coarse_group3(const rd_grid_type *rd_grid,
-                                                    int i, int j, int k) {
-    int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
-    return rd_grid_get_cell_coarse_group1(rd_grid, global_index);
-}
-
 bool rd_grid_cell_in_coarse_group1(const rd_grid_type *main_grid,
                                    int global_index) {
     rd_cell_type *cell = rd_grid_get_cell(main_grid, global_index);
@@ -1964,12 +1948,6 @@ bool rd_grid_cell_in_coarse_group1(const rd_grid_type *main_grid,
         return false;
     else
         return true;
-}
-
-bool rd_grid_cell_in_coarse_group3(const rd_grid_type *main_grid, int i, int j,
-                                   int k) {
-    return rd_grid_cell_in_coarse_group1(
-        main_grid, rd_grid_get_global_index3(main_grid, i, j, k));
 }
 
 static void rd_grid_pillar_cross_planes(const point_type *p0, double e_x,
@@ -2543,79 +2521,8 @@ rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid) {
     return copy_grid;
 }
 
-/*
-  Does not handle LGR
-*/
-rd_grid_type *rd_grid_alloc_processed_copy(const rd_grid_type *src_grid,
-                                           const double *zcorn,
-                                           const int *actnum) {
-    rd_grid_type *grid;
-
-    if (zcorn == NULL) {
-        grid = rd_grid_alloc_copy__(src_grid, NULL);
-        if (actnum)
-            rd_grid_reset_actnum(grid, actnum);
-    } else {
-        int nx, ny, nz, na;
-        int zcorn_size = rd_grid_get_zcorn_size(src_grid);
-        float *zcorn_float =
-            (float *)util_malloc(zcorn_size * sizeof *zcorn_float);
-        float *coord = rd_grid_alloc_coord_data(src_grid);
-        float *mapaxes = NULL;
-
-        if (rd_grid_get_mapaxes(src_grid)) {
-            mapaxes = (float *)util_malloc(6 * sizeof *mapaxes);
-            rd_grid_init_mapaxes_data_float(src_grid, mapaxes);
-        }
-        rd_grid_get_dims(src_grid, &nx, &ny, &nz, &na);
-        for (int i = 0; i < zcorn_size; i++)
-            zcorn_float[i] = zcorn[i];
-
-        grid = rd_grid_alloc_GRDECL_data(nx, ny, nz, zcorn_float, coord, actnum,
-                                         src_grid->use_mapaxes, mapaxes);
-
-        free(mapaxes);
-        free(coord);
-        free(zcorn_float);
-    }
-
-    return grid;
-}
-
-/*
-  If you create/load data for the various fields, this function can be
-  used to create a GRID instance, without going through a GRID/EGRID
-  file - currently the implementation does not support the creation of
-  a lgr hierarchy - or cell coarsening.
-*/
-
-rd_grid_type *rd_grid_alloc_GRDECL_data(int nx, int ny, int nz,
-                                        const float *zcorn, const float *coord,
-                                        const int *actnum, bool apply_mapaxes,
-                                        const float *mapaxes) {
-
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
-    return rd_grid_alloc_GRDECL_data__(
-        NULL, unit_system, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, nx, ny, nz,
-        zcorn, coord, actnum, mapaxes, NULL, 0);
-}
-
-namespace rd {
-
-rd_grid_type *rd_grid_alloc_GRDECL_data(int nx, int ny, int nz,
-                                        const double *zcorn,
-                                        const double *coord, const int *actnum,
-                                        bool apply_mapaxes,
-                                        const float *mapaxes) {
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
-    return rd_grid_alloc_GRDECL_data__(
-        NULL, unit_system, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, nx, ny, nz,
-        zcorn, coord, actnum, mapaxes, NULL, 0);
-}
-
-} // namespace rd
-
-const float *rd_grid_get_mapaxes_from_kw__(const rd_kw_type *mapaxes_kw) {
+static const float *
+rd_grid_get_mapaxes_from_kw__(const rd_kw_type *mapaxes_kw) {
     const float *mapaxes_data = rd_kw_get_float_ptr(mapaxes_kw);
 
     float x1 = mapaxes_data[2];
@@ -2679,6 +2586,20 @@ static rd_grid_type *rd_grid_alloc_GRDECL_kw__(
             rd_kw_get_float_ptr(zcorn_kw), rd_kw_get_float_ptr(coord_kw),
             actnum_data, mapaxes_data, corsnum_data, lgr_nr);
     }
+}
+
+static rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
+                                             int grid_nr) {
+    rd_kw_type *gridhead_kw = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+    rd_kw_scalar_set_int(gridhead_kw, 0);
+    rd_kw_iset_int(gridhead_kw, GRIDHEAD_TYPE_INDEX,
+                   GRIDHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NX_INDEX, nx);
+    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NY_INDEX, ny);
+    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NZ_INDEX, nz);
+    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NUMRES_INDEX, 1);
+    rd_kw_iset_int(gridhead_kw, GRIDHEAD_LGR_INDEX, grid_nr);
+    return gridhead_kw;
 }
 
 /**
@@ -2764,19 +2685,6 @@ void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
     rd_cell_type *grid_cell = rd_grid_get_cell(grid, cell_index1);
     rd_grid_init_cell_nnc_info(grid, cell_index1);
     nnc_info_add_nnc(grid_cell->nnc_info, grid->lgr_nr, cell_index2, nnc_index);
-}
-
-/*
-  This function will add all the nnc connections given by the g1_list
-  and g2_list arrays. The ncc connections will be added with
-  consecutively running nnc_index = [0,num_nnc).
-*/
-
-void rd_grid_add_self_nnc_list(rd_grid_type *grid, const int *g1_list,
-                               const int *g2_list, int num_nnc) {
-    int i;
-    for (i = 0; i < num_nnc; i++)
-        rd_grid_add_self_nnc(grid, g1_list[i], g2_list[i], i);
 }
 
 /*
@@ -2996,11 +2904,6 @@ static rd_grid_type *rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
     }
 }
 
-static rd_grid_type *rd_grid_alloc_GRID_all_grids(const char *filename) {
-    util_abort("%s .GRID files - %s - not supported \n", __func__, filename);
-    return NULL;
-}
-
 static rd_grid_type *rd_grid_alloc_EGRID_all_grids(const char *grid_file,
                                                    bool apply_mapaxes,
                                                    const int *ext_actnum) {
@@ -3049,7 +2952,8 @@ static rd_grid_type *rd_grid_alloc_EGRID_all_grids(const char *grid_file,
     }
 }
 
-rd_grid_type *rd_grid_alloc_EGRID(const char *grid_file, bool apply_mapaxes) {
+static rd_grid_type *rd_grid_alloc_EGRID(const char *grid_file,
+                                         bool apply_mapaxes) {
     return rd_grid_alloc_EGRID_all_grids(grid_file, apply_mapaxes, NULL);
 }
 
@@ -3079,22 +2983,6 @@ static rd_grid_type *rd_grid_alloc_GRID_data__(
         }
         return grid;
     }
-}
-
-/*
-  coords[num_coords][coords_size]
-  corners[num_coords][24]
-*/
-
-rd_grid_type *rd_grid_alloc_GRID_data(int num_coords, int nx, int ny, int nz,
-                                      int coords_size, int **coords,
-                                      float **corners, bool apply_mapaxes,
-                                      const float *mapaxes) {
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
-    return rd_grid_alloc_GRID_data__(
-        NULL, num_coords, unit_system,
-        FILEHEAD_SINGLE_POROSITY, /* Does currently not support to determine dualp_flag from inspection. */
-        apply_mapaxes, nx, ny, nz, 0, coords_size, coords, corners, mapaxes);
 }
 
 static int rd_grid_dual_porosity_GRID_check(rd_file_type *rd_file) {
@@ -3257,7 +3145,8 @@ static rd_grid_type *rd_grid_alloc_GRID__(rd_grid_type *global_grid,
     return grid;
 }
 
-rd_grid_type *rd_grid_alloc_GRID(const char *grid_file, bool apply_mapaxes) {
+static rd_grid_type *rd_grid_alloc_GRID(const char *grid_file,
+                                        bool apply_mapaxes) {
 
     rd_file_enum file_type;
     file_type = rd_get_file_type(grid_file, NULL, NULL);
@@ -3311,9 +3200,11 @@ rd_grid_type *rd_grid_alloc_GRID(const char *grid_file, bool apply_mapaxes) {
    cells and 0 for inactive cells. The actnum array can be NULL, in
    which case all cells will be active.
 */
-rd_grid_type *rd_grid_alloc_regular(int nx, int ny, int nz, const double *ivec,
-                                    const double *jvec, const double *kvec,
-                                    const int *actnum) {
+static rd_grid_type *rd_grid_alloc_regular(int nx, int ny, int nz,
+                                           const double *ivec,
+                                           const double *jvec,
+                                           const double *kvec,
+                                           const int *actnum) {
     ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
     rd_grid_type *grid = rd_grid_alloc_empty(
         NULL, unit_system, FILEHEAD_SINGLE_POROSITY, nx, ny, nz, 0, true);
@@ -3366,213 +3257,6 @@ rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
 }
 
 /**
-   This function will allocate a new grid with logical dimensions nx x
-   ny x nz. The cells in the grid are spanned by the dxv, dyv and dzv
-   vectors which are of size nx, ny and nz and specify the thickness
-   of a cell in x, y, and in z direction.
-
-   The actnum argument is a pointer to an integer array of length
-   nx*ny*nz where actnum[i + j*nx + k*nx*ny] == 1 for active cells and
-   0 for inactive cells. The actnum array can be NULL, in which case
-   all cells will be active.  */
-rd_grid_type *rd_grid_alloc_dxv_dyv_dzv(int nx, int ny, int nz,
-                                        const double *dxv, const double *dyv,
-                                        const double *dzv, const int *actnum) {
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
-    rd_grid_type *grid = rd_grid_alloc_empty(
-        NULL, unit_system, FILEHEAD_SINGLE_POROSITY, nx, ny, nz,
-        /*lgr_nr=*/0, /*init_valid=*/true);
-    if (grid) {
-        double ivec[3] = {0, 0, 0};
-        double jvec[3] = {0, 0, 0};
-        double kvec[3] = {0, 0, 0};
-
-        const double grid_offset[3] = {0, 0, 0};
-        double offset[3];
-        int i, j, k;
-        offset[2] = grid_offset[2];
-        for (k = 0; k < nz; k++) {
-            kvec[2] = dzv[k];
-            offset[1] = grid_offset[1];
-            for (j = 0; j < ny; j++) {
-                jvec[1] = dyv[j];
-                offset[0] = grid_offset[0];
-                for (i = 0; i < nx; i++) {
-                    int global_index = i + j * nx + k * nx * ny;
-                    rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-                    ivec[0] = dxv[i];
-
-                    rd_cell_init_regular(cell, offset, i, j, k, global_index,
-                                         ivec, jvec, kvec, actnum);
-                    offset[0] += dxv[i];
-                }
-                offset[1] += dyv[j];
-            }
-            offset[2] += dzv[k];
-        }
-        rd_grid_update_index(grid);
-    }
-
-    return grid;
-}
-
-rd_grid_type *
-rd_grid_alloc_dxv_dyv_dzv_depthz(int nx, int ny, int nz, const double *dxv,
-                                 const double *dyv, const double *dzv,
-                                 const double *depthz, const int *actnum) {
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
-    rd_grid_type *grid = rd_grid_alloc_empty(
-        NULL, unit_system, FILEHEAD_SINGLE_POROSITY, nx, ny, nz,
-        /*lgr_nr=*/0, /*init_valid=*/true);
-
-    /* First layer - where the DEPTHZ keyword applies. */
-    if (grid) {
-        int i, j;
-        int k = 0;
-        double y0 = 0;
-        for (j = 0; j < ny; j++) {
-            double x0 = 0;
-            for (i = 0; i < nx; i++) {
-                int global_index = i + j * nx + k * nx * ny;
-                rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-                double z0 = depthz[i + j * (nx + 1)];
-                double z1 = depthz[i + 1 + j * (nx + 1)];
-                double z2 = depthz[i + (j + 1) * (nx + 1)];
-                double z3 = depthz[i + 1 + (j + 1) * (nx + 1)];
-
-                point_set(&cell->corner_list[0], x0, y0, z0);
-                point_set(&cell->corner_list[1], x0 + dxv[i], y0, z1);
-                point_set(&cell->corner_list[2], x0, y0 + dyv[j], z2);
-                point_set(&cell->corner_list[3], x0 + dxv[i], y0 + dyv[j], z3);
-                {
-                    int c;
-                    for (c = 0; c < 4; c++) {
-                        cell->corner_list[c + 4] = cell->corner_list[c];
-                        point_shift(&cell->corner_list[c + 4], 0, 0, dzv[0]);
-                    }
-                }
-                x0 += dxv[i];
-            }
-            y0 += dyv[j];
-        }
-    }
-
-    /* Remaining layers */
-    if (grid) {
-        int i, j, k;
-        for (k = 1; k < nz; k++) {
-            for (j = 0; j < ny; j++) {
-                for (i = 0; i < nx; i++) {
-                    int g2 = i + j * nx + k * nx * ny;
-                    int g1 = i + j * nx + (k - 1) * nx * ny;
-                    rd_cell_type *cell2 = rd_grid_get_cell(grid, g2);
-                    rd_cell_type *cell1 = rd_grid_get_cell(grid, g1);
-                    int c;
-
-                    for (c = 0; c < 4; c++) {
-                        cell2->corner_list[c] = cell1->corner_list[c + 4];
-                        cell2->corner_list[c + 4] = cell1->corner_list[c + 4];
-                        point_shift(&cell2->corner_list[c + 4], 0, 0, dzv[k]);
-                    }
-                }
-            }
-        }
-    }
-
-    if (grid) {
-        int i, j, k;
-        for (k = 0; k < nz; k++) {
-            for (j = 0; j < ny; j++) {
-                for (i = 0; i < nx; i++) {
-                    int global_index = i + j * nx + k * nx * ny;
-                    rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-
-                    if (actnum)
-                        cell->active = actnum[global_index];
-                    else
-                        cell->active = CELL_ACTIVE;
-                }
-            }
-        }
-    }
-
-    if (grid)
-        rd_grid_update_index(grid);
-
-    return grid;
-}
-
-/**
-   This is a really broken function which is here only to support
-   creating rectangualar grids from OPM. The vectors dx,dy,dz and tops
-   are all of length nx*ny*nz. In principle all values of these four
-   arrays are independent - but taking that all out will create some
-   really weird looking grids. For physical correctness there should
-   be many constraints among the different values.
-
-   The x and y position of a cell is found by adding the increments
-   from dx and dy, whereas the vertical position is read dircetly out
-   of the tops array.
-
-   The ECLIPSE input format only requires size(dz) >= nx*ny and the
-   same for tops. The remaining layers will then be extrapolated; such
-   trickery must be performed before calling this function.
-*/
-
-rd_grid_type *rd_grid_alloc_dx_dy_dz_tops(int nx, int ny, int nz,
-                                          const double *dx, const double *dy,
-                                          const double *dz, const double *tops,
-                                          const int *actnum) {
-    ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
-    rd_grid_type *grid = rd_grid_alloc_empty(
-        NULL, unit_system, FILEHEAD_SINGLE_POROSITY, nx, ny, nz, 0, true);
-    if (grid) {
-        int i, j, k;
-        double *y0 = (double *)util_calloc(nx, sizeof *y0);
-
-        for (k = 0; k < nz; k++) {
-            for (i = 0; i < nx; i++) {
-                y0[i] = 0;
-            }
-            for (j = 0; j < ny; j++) {
-                double x0 = 0;
-                for (i = 0; i < nx; i++) {
-                    int g = i + j * nx + k * nx * ny;
-                    rd_cell_type *cell = rd_grid_get_cell(grid, g);
-                    double z0 = tops[g];
-
-                    point_set(&cell->corner_list[0], x0, y0[i], z0);
-                    point_set(&cell->corner_list[1], x0 + dx[g], y0[i], z0);
-                    point_set(&cell->corner_list[2], x0, y0[i] + dy[g], z0);
-                    point_set(&cell->corner_list[3], x0 + dx[g], y0[i] + dy[g],
-                              z0);
-
-                    point_set(&cell->corner_list[4], x0, y0[i], z0 + dz[g]);
-                    point_set(&cell->corner_list[5], x0 + dx[g], y0[i],
-                              z0 + dz[g]);
-                    point_set(&cell->corner_list[6], x0, y0[i] + dy[g],
-                              z0 + dz[g]);
-                    point_set(&cell->corner_list[7], x0 + dx[g], y0[i] + dy[g],
-                              z0 + dz[g]);
-
-                    x0 += dx[g];
-                    y0[i] += dy[g];
-
-                    if (actnum != NULL)
-                        cell->active = actnum[g];
-                    else
-                        cell->active = CELL_ACTIVE;
-                }
-            }
-        }
-        free(y0);
-
-        rd_grid_update_index(grid);
-    }
-    return grid;
-}
-
-/**
    This function will allocate a rd_grid instance. As input it takes
    a filename, which can be both a GRID file and an EGRID file (both
    formatted and unformatted).
@@ -3583,7 +3267,8 @@ rd_grid_type *rd_grid_alloc_dx_dy_dz_tops(int nx, int ny, int nz,
    with these keywords.
 */
 
-rd_grid_type *rd_grid_alloc__(const char *grid_file, bool apply_mapaxes) {
+static rd_grid_type *rd_grid_alloc__(const char *grid_file,
+                                     bool apply_mapaxes) {
     rd_file_enum file_type;
     rd_grid_type *rd_grid = NULL;
 
@@ -3602,129 +3287,6 @@ rd_grid_type *rd_grid_alloc__(const char *grid_file, bool apply_mapaxes) {
 rd_grid_type *rd_grid_alloc(const char *grid_file) {
     bool apply_mapaxes = true;
     return rd_grid_alloc__(grid_file, apply_mapaxes);
-}
-
-// This function is used to override use of the keyword ACTNUM from the EGRID file.
-// ext_actnum must have size equal to the number of cells in the main grid
-// if ext_actnum = NULL, actnum is taken from file, otherwise ext_actnums
-// determines which cells are active.
-rd_grid_type *rd_grid_alloc_ext_actnum(const char *grid_file,
-                                       const int *ext_actnum) {
-    rd_file_enum file_type = rd_get_file_type(grid_file, NULL, NULL);
-    if (file_type == RD_EGRID_FILE)
-        return rd_grid_alloc_EGRID_all_grids(grid_file, true, ext_actnum);
-    else if (file_type == RD_GRID_FILE)
-        rd_grid_alloc_GRID_all_grids(grid_file);
-    else
-        util_abort("%s must have .EGRID file - %s not recognized \n", __func__,
-                   grid_file);
-
-    return NULL;
-}
-
-static void rd_grid_file_nactive_dims(fortio_type *data_fortio, int *dims) {
-    if (data_fortio) {
-        if (rd_kw_fseek_kw(INTEHEAD_KW, false, false, data_fortio)) {
-            rd_kw_type *intehead_kw = rd_kw_fread_alloc(data_fortio);
-            dims[3] = rd_kw_iget_int(intehead_kw, INTEHEAD_NACTIVE_INDEX);
-            rd_kw_free(intehead_kw);
-        }
-    }
-}
-
-static bool rd_grid_file_EGRID_dims(fortio_type *grid_fortio,
-                                    fortio_type *data_fortio, int *dims) {
-
-    if (rd_kw_fseek_kw(GRIDHEAD_KW, false, false, grid_fortio)) {
-        {
-            rd_kw_type *gridhead_kw = rd_kw_fread_alloc(grid_fortio);
-            dims[0] = rd_kw_iget_int(gridhead_kw, GRIDHEAD_NX_INDEX);
-            dims[1] = rd_kw_iget_int(gridhead_kw, GRIDHEAD_NY_INDEX);
-            dims[2] = rd_kw_iget_int(gridhead_kw, GRIDHEAD_NZ_INDEX);
-
-            rd_kw_free(gridhead_kw);
-        }
-        rd_grid_file_nactive_dims(data_fortio, dims);
-        return true;
-    } else
-        return false;
-}
-
-static bool rd_grid_file_GRID_dims(fortio_type *grid_fortio,
-                                   fortio_type *data_fortio, int *dims) {
-
-    if (rd_kw_fseek_kw(DIMENS_KW, false, false, grid_fortio)) {
-        {
-            rd_kw_type *dimens_kw = rd_kw_fread_alloc(grid_fortio);
-            dims[0] = rd_kw_iget_int(dimens_kw, DIMENS_NX_INDEX);
-            dims[1] = rd_kw_iget_int(dimens_kw, DIMENS_NY_INDEX);
-            dims[2] = rd_kw_iget_int(dimens_kw, DIMENS_NZ_INDEX);
-
-            rd_kw_free(dimens_kw);
-        }
-
-        rd_grid_file_nactive_dims(data_fortio, dims);
-        return true;
-    } else
-        return false;
-}
-
-/**
-   Will check the grid dimensions from the input grid file
-   @grid_filename; the input file must be a GRID/EGRID file. On exit
-   the dims array will be filled as:
-
-          dims[0] = nx;
-          dims[1] = ny;
-          dims[2] = nz;
-
-   Optionally you can in addition supply the name of a restart or INIT
-   file in the second file argument - if-and-only-if, that filename
-   points to an existing file the fourth element in the dims array
-   will be set as:
-
-          dims[3] = nactive;
-
-   The function as a whole will return true if the grid dimensions
-   (nx,ny,nz) are successfully set. If the dimensions are not set the
-   dims vector is not touched.
-*/
-
-bool rd_grid_file_dims(const char *grid_filename,
-                       const char *init_restart_filename, int *dims) {
-    bool input_file_OK = false;
-    bool grid_fmt_file;
-    rd_file_enum grid_file_type =
-        rd_get_file_type(grid_filename, &grid_fmt_file, NULL);
-
-    if ((grid_file_type == RD_GRID_FILE) || (grid_file_type == RD_EGRID_FILE)) {
-        fortio_type *grid_fortio =
-            fortio_open_reader(grid_filename, grid_fmt_file, RD_ENDIAN_FLIP);
-        if (grid_fortio) {
-            fortio_type *data_fortio = NULL;
-            bool data_fmt_file;
-
-            if (init_restart_filename) {
-                rd_get_file_type(init_restart_filename, &data_fmt_file, NULL);
-                data_fortio = fortio_open_reader(init_restart_filename,
-                                                 data_fmt_file, RD_ENDIAN_FLIP);
-            }
-
-            if (grid_file_type == RD_GRID_FILE)
-                input_file_OK =
-                    rd_grid_file_GRID_dims(grid_fortio, data_fortio, dims);
-            else
-                input_file_OK =
-                    rd_grid_file_EGRID_dims(grid_fortio, data_fortio, dims);
-
-            if (data_fortio)
-                fortio_fclose(data_fortio);
-
-            fortio_fclose(grid_fortio);
-        }
-    }
-
-    return input_file_OK;
 }
 
 /**
@@ -3751,7 +3313,7 @@ bool rd_grid_file_dims(const char *grid_filename,
    files can be found.
 */
 
-char *rd_grid_alloc_case_filename(const char *case_input) {
+static char *rd_grid_alloc_case_filename(const char *case_input) {
     rd_file_enum file_type;
     bool fmt_file;
     file_type = rd_get_file_type(case_input, &fmt_file, NULL);
@@ -4246,8 +3808,9 @@ static bool concave_cell_contains(const rd_cell_type *cell, int method,
   - See the documentation of rd_grid_on_cell_face for caveats regarding
     containtment of points of cell faces.
 */
-bool rd_grid_cell_contains_xyz3(const rd_grid_type *rd_grid, int i, int j,
-                                int k, double x, double y, double z) {
+static bool rd_grid_cell_contains_xyz3(const rd_grid_type *rd_grid, int i,
+                                       int j, int k, double x, double y,
+                                       double z) {
     point_type p;
     rd_cell_type *cell =
         rd_grid_get_cell(rd_grid, rd_grid_get_global_index3(rd_grid, i, j, k));
@@ -4312,17 +3875,6 @@ int rd_grid_get_global_index_from_xy(const rd_grid_type *rd_grid, int k,
                 return global_index;
         }
     return -1; /* Did not find x,y */
-}
-
-int rd_grid_get_global_index_from_xy_top(const rd_grid_type *rd_grid, double x,
-                                         double y) {
-    return rd_grid_get_global_index_from_xy(rd_grid, rd_grid->nz - 1, false, x,
-                                            y);
-}
-
-int rd_grid_get_global_index_from_xy_bottom(const rd_grid_type *rd_grid,
-                                            double x, double y) {
-    return rd_grid_get_global_index_from_xy(rd_grid, 0, true, x, y);
 }
 
 static void rd_grid_clear_visited(rd_grid_type *grid) {
@@ -4447,16 +3999,6 @@ int rd_grid_get_global_index_from_xyz(rd_grid_type *grid, double x, double y,
     return -1;
 }
 
-bool rd_grid_get_ijk_from_xyz(rd_grid_type *grid, double x, double y, double z,
-                              int start_index, int *i, int *j, int *k) {
-    int g = rd_grid_get_global_index_from_xyz(grid, x, y, z, start_index);
-    if (g < 0)
-        return false;
-
-    rd_grid_get_ijk1(grid, g, i, j, k);
-    return true;
-}
-
 static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
                                             double y, int k, int i1, int i2,
                                             int j1, int j2,
@@ -4554,57 +4096,6 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
     return inside;
 }
 
-void rd_grid_alloc_blocking_variables(rd_grid_type *grid, int block_dim) {
-    int index;
-    grid->block_dim = block_dim;
-    if (block_dim == 2)
-        grid->block_size = grid->nx * grid->ny; // Not supported
-    else if (block_dim == 3)
-        grid->block_size = grid->size;
-    else
-        util_abort("%: valid values are two and three. Value:%d invaid \n",
-                   __func__, block_dim);
-
-    grid->values = (double_vector_type **)util_calloc(grid->block_size,
-                                                      sizeof *grid->values);
-    for (index = 0; index < grid->block_size; index++)
-        grid->values[index] = double_vector_alloc(0, 0.0);
-}
-
-void rd_grid_init_blocking(rd_grid_type *grid) {
-    int index;
-    for (index = 0; index < grid->block_size; index++)
-        double_vector_reset(grid->values[index]);
-    grid->last_block_index = 0;
-}
-
-bool rd_grid_block_value_3d(rd_grid_type *grid, double x, double y, double z,
-                            double value) {
-    if (grid->block_dim != 3)
-        util_abort("%s: Wrong blocking dimension \n", __func__);
-    {
-        int global_index = rd_grid_get_global_index_from_xyz(
-            grid, x, y, z, grid->last_block_index);
-        if (global_index >= 0) {
-            double_vector_append(grid->values[global_index], value);
-            grid->last_block_index = global_index;
-            return true;
-        } else
-            return false;
-    }
-}
-
-double rd_grid_block_eval3d(rd_grid_type *grid, int i, int j, int k,
-                            block_function_ftype *blockf) {
-    int global_index = rd_grid_get_global_index3(grid, i, j, k);
-    return blockf(grid->values[global_index]);
-}
-
-int rd_grid_get_block_count3d(const rd_grid_type *grid, int i, int j, int k) {
-    int global_index = rd_grid_get_global_index3(grid, i, j, k);
-    return double_vector_size(grid->values[global_index]);
-}
-
 void rd_grid_free(rd_grid_type *grid) {
     rd_grid_free_cells(grid);
     free(grid->index_map);
@@ -4698,14 +4189,10 @@ int rd_grid_get_nactive_fracture(const rd_grid_type *grid) {
     return grid->total_active_fracture;
 }
 
-int rd_grid_get_parent_cell1(const rd_grid_type *grid, int global_index) {
+static int rd_grid_get_parent_cell1(const rd_grid_type *grid,
+                                    int global_index) {
     const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
     return cell->host_cell;
-}
-
-int rd_grid_get_parent_cell3(const rd_grid_type *grid, int i, int j, int k) {
-    int global_index = rd_grid_get_global_index__(grid, i, j, k);
-    return rd_grid_get_parent_cell1(grid, global_index);
 }
 
 /**
@@ -4762,13 +4249,6 @@ int rd_grid_get_active_index3(const rd_grid_type *rd_grid, int i, int j,
 
 int rd_grid_get_active_index1(const rd_grid_type *rd_grid, int global_index) {
     return rd_grid->index_map[global_index];
-}
-
-int rd_grid_get_active_fracture_index3(const rd_grid_type *rd_grid, int i,
-                                       int j, int k) {
-    int global_index = rd_grid_get_global_index3(
-        rd_grid, i, j, k); /* In range: [0,nx*ny*nz) */
-    return rd_grid_get_active_fracture_index1(rd_grid, global_index);
 }
 
 /**
@@ -4871,9 +4351,9 @@ void rd_grid_export_cell_corners1(const rd_grid_type *grid, int global_index,
     }
 }
 
-void rd_grid_get_cell_corner_xyz3(const rd_grid_type *grid, int i, int j, int k,
-                                  int corner_nr, double *xpos, double *ypos,
-                                  double *zpos) {
+static void rd_grid_get_cell_corner_xyz3(const rd_grid_type *grid, int i, int j,
+                                         int k, int corner_nr, double *xpos,
+                                         double *ypos, double *zpos) {
     const int global_index = rd_grid_get_global_index__(grid, i, j, k);
     rd_grid_get_cell_corner_xyz1(grid, global_index, corner_nr, xpos, ypos,
                                  zpos);
@@ -4925,11 +4405,6 @@ double rd_grid_get_cdepth1(const rd_grid_type *grid, int global_index) {
     rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
     rd_cell_assert_center(cell);
     return cell->center.z;
-}
-
-double rd_grid_get_cdepth3(const rd_grid_type *grid, int i, int j, int k) {
-    const int global_index = rd_grid_get_global_index__(grid, i, j, k);
-    return rd_grid_get_cdepth1(grid, global_index);
 }
 
 double rd_grid_get_cdepth1A(const rd_grid_type *grid, int active_index) {
@@ -5017,11 +4492,6 @@ double rd_grid_get_bottom3(const rd_grid_type *grid, int i, int j, int k) {
     return rd_grid_get_bottom1(grid, global_index);
 }
 
-double rd_grid_get_bottom1A(const rd_grid_type *grid, int active_index) {
-    const int global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_get_bottom1(grid, global_index);
-}
-
 double rd_grid_get_cell_dz1(const rd_grid_type *grid, int global_index) {
     const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
     double dz = 0;
@@ -5033,11 +4503,6 @@ double rd_grid_get_cell_dz1(const rd_grid_type *grid, int global_index) {
     return dz * 0.25;
 }
 
-double rd_grid_get_cell_dz3(const rd_grid_type *grid, int i, int j, int k) {
-    const int global_index = rd_grid_get_global_index3(grid, i, j, k);
-    return rd_grid_get_cell_dz1(grid, global_index);
-}
-
 double rd_grid_get_cell_dz1A(const rd_grid_type *grid, int active_index) {
     const int global_index = rd_grid_get_global_index1A(grid, active_index);
     return rd_grid_get_cell_dz1(grid, global_index);
@@ -5045,16 +4510,6 @@ double rd_grid_get_cell_dz1A(const rd_grid_type *grid, int active_index) {
 
 double rd_grid_get_cell_thickness1(const rd_grid_type *grid, int global_index) {
     return rd_grid_get_cell_dz1(grid, global_index);
-}
-
-double rd_grid_get_cell_thickness3(const rd_grid_type *grid, int i, int j,
-                                   int k) {
-    return rd_grid_get_cell_dz3(grid, i, j, k);
-}
-
-double rd_grid_get_cell_thickness1A(const rd_grid_type *grid,
-                                    int active_index) {
-    return rd_grid_get_cell_dz1A(grid, active_index);
 }
 
 double rd_grid_get_cell_dx1(const rd_grid_type *grid, int global_index) {
@@ -5071,11 +4526,6 @@ double rd_grid_get_cell_dx1(const rd_grid_type *grid, int global_index) {
     dy *= 0.25;
 
     return sqrt(dx * dx + dy * dy);
-}
-
-double rd_grid_get_cell_dx3(const rd_grid_type *grid, int i, int j, int k) {
-    const int global_index = rd_grid_get_global_index3(grid, i, j, k);
-    return rd_grid_get_cell_dx1(grid, global_index);
 }
 
 double rd_grid_get_cell_dx1A(const rd_grid_type *grid, int active_index) {
@@ -5115,11 +4565,6 @@ double rd_grid_get_cell_dy1(const rd_grid_type *grid, int global_index) {
     return sqrt(dx * dx + dy * dy);
 }
 
-double rd_grid_get_cell_dy3(const rd_grid_type *grid, int i, int j, int k) {
-    const int global_index = rd_grid_get_global_index3(grid, i, j, k);
-    return rd_grid_get_cell_dy1(grid, global_index);
-}
-
 double rd_grid_get_cell_dy1A(const rd_grid_type *grid, int active_index) {
     const int global_index = rd_grid_get_global_index1A(grid, active_index);
     return rd_grid_get_cell_dy1(grid, global_index);
@@ -5129,12 +4574,6 @@ const nnc_info_type *rd_grid_get_cell_nnc_info1(const rd_grid_type *grid,
                                                 int global_index) {
     const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
     return cell->nnc_info;
-}
-
-const nnc_info_type *rd_grid_get_cell_nnc_info3(const rd_grid_type *grid, int i,
-                                                int j, int k) {
-    const int global_index = rd_grid_get_global_index3(grid, i, j, k);
-    return rd_grid_get_cell_nnc_info1(grid, global_index);
 }
 
 /*
@@ -5158,32 +4597,12 @@ bool rd_grid_cell_invalid1(const rd_grid_type *rd_grid, int global_index) {
     return GET_CELL_FLAG(cell, CELL_FLAG_TAINTED);
 }
 
-bool rd_grid_cell_invalid3(const rd_grid_type *rd_grid, int i, int j, int k) {
-    int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
-    return rd_grid_cell_invalid1(rd_grid, global_index);
-}
-
-double rd_grid_cell_invalid1A(const rd_grid_type *grid, int active_index) {
-    const int global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_cell_invalid1(grid, global_index);
-}
-
 bool rd_grid_cell_valid1(const rd_grid_type *rd_grid, int global_index) {
     rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
     if (GET_CELL_FLAG(cell, CELL_FLAG_TAINTED))
         return false;
     else
         return (GET_CELL_FLAG(cell, CELL_FLAG_VALID));
-}
-
-bool rd_grid_cell_valid3(const rd_grid_type *rd_grid, int i, int j, int k) {
-    int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
-    return rd_grid_cell_valid1(rd_grid, global_index);
-}
-
-double rd_grid_cell_valid1A(const rd_grid_type *grid, int active_index) {
-    const int global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_cell_valid1(grid, global_index);
 }
 
 static void __assert_main_grid(const rd_grid_type *rd_grid) {
@@ -5312,38 +4731,12 @@ const rd_grid_type *rd_grid_get_cell_lgr1(const rd_grid_type *grid,
     return cell->lgr;
 }
 
-const rd_grid_type *rd_grid_get_cell_lgr3(const rd_grid_type *grid, int i,
-                                          int j, int k) {
-    const int global_index = rd_grid_get_global_index__(grid, i, j, k);
-    return rd_grid_get_cell_lgr1(grid, global_index);
-}
-
-const rd_grid_type *rd_grid_get_cell_lgr1A(const rd_grid_type *grid,
-                                           int active_index) {
-    const int global_index = rd_grid_get_global_index1A(grid, active_index);
-    return rd_grid_get_cell_lgr1(grid, global_index);
-}
-
 /**
    Will return the global grid for a lgr. If the input grid is indeed
    a global grid itself the function will return NULL.
 */
 const rd_grid_type *rd_grid_get_global_grid(const rd_grid_type *grid) {
     return grid->global_grid;
-}
-
-/**
-    Allocates a stringlist instance with the lookup names of the lgr names in this grid.
-*/
-
-stringlist_type *rd_grid_alloc_lgr_name_list(const rd_grid_type *rd_grid) {
-    __assert_main_grid(rd_grid);
-    {
-        stringlist_type *s = stringlist_alloc_new();
-        for (const auto &lgr_pair : rd_grid->LGR_hash)
-            stringlist_append_copy(s, lgr_pair.first.c_str());
-        return s;
-    }
 }
 
 const char *rd_grid_iget_lgr_name(const rd_grid_type *rd_grid, int lgr_index) {
@@ -5404,36 +4797,6 @@ bool rd_grid_cell_regular1(const rd_grid_type *rd_grid, int global_index) {
     return rd_grid_cell_contains_xyz1(rd_grid, global_index, x, y, z);
 }
 
-bool rd_grid_cell_regular3(const rd_grid_type *rd_grid, int i, int j, int k) {
-    int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
-    return rd_grid_cell_regular1(rd_grid, global_index);
-}
-
-/*
-  The function rd_grid_get_cell_twist() is an attempt to measure how
-  twisted or deformed a cell is. For a 'normal' cell the corners
-  [0..3] will z value <= the corners [4..7]. This function will count
-  the number of times the z value from the [4..7] is lower than the
-  corresponding z value from the [0..3] layer.
-
-  The purpose of the function is to detect twisted cells before
-  embarking on cell contains calculation. The current
-  rd_cell_contains_xyz( ) implementation will fail badly for twisted
-  cells.
-
-  If the function return 4 you probably have an inverted z-axis!
-*/
-
-int rd_grid_get_cell_twist1(const rd_grid_type *rd_grid, int global_index) {
-    rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-    return rd_cell_get_twist(cell);
-}
-
-int rd_grid_get_cell_twist3(const rd_grid_type *rd_grid, int i, int j, int k) {
-    int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
-    return rd_grid_get_cell_twist1(rd_grid, global_index);
-}
-
 double rd_grid_get_cell_volume1(const rd_grid_type *rd_grid, int global_index) {
     rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
     int i, j, k;
@@ -5444,12 +4807,6 @@ double rd_grid_get_cell_volume1(const rd_grid_type *rd_grid, int global_index) {
 double rd_grid_get_cell_volume1A(const rd_grid_type *rd_grid,
                                  int active_index) {
     int global_index = rd_grid_get_global_index1A(rd_grid, active_index);
-    return rd_grid_get_cell_volume1(rd_grid, global_index);
-}
-
-double rd_grid_get_cell_volume3(const rd_grid_type *rd_grid, int i, int j,
-                                int k) {
-    int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
     return rd_grid_get_cell_volume1(rd_grid, global_index);
 }
 
@@ -5529,77 +4886,6 @@ static int rd_grid_get_property_index__(const rd_grid_type *rd_grid,
     return lookup_index;
 }
 
-static bool rd_grid_get_property__(const rd_grid_type *rd_grid,
-                                   const rd_kw_type *rd_kw, int i, int j, int k,
-                                   void *value) {
-    rd_data_type data_type = rd_kw_get_data_type(rd_kw);
-    if (rd_type_is_numeric(data_type)) {
-        int lookup_index =
-            rd_grid_get_property_index__(rd_grid, rd_kw, i, j, k);
-
-        if (lookup_index >= 0) {
-            rd_kw_iget(rd_kw, lookup_index, value);
-            return true;
-        } else
-            return false;
-
-    } else {
-        util_abort("%s: sorry - can not lookup type:%s with %s.\n", __func__,
-                   rd_type_alloc_name(data_type), __func__);
-        return false;
-    }
-}
-
-double rd_grid_get_double_property(const rd_grid_type *rd_grid,
-                                   const rd_kw_type *rd_kw, int i, int j,
-                                   int k) {
-    rd_data_type data_type = rd_kw_get_data_type(rd_kw);
-    if (rd_type_is_double(data_type)) {
-        double value;
-        if (rd_grid_get_property__(rd_grid, rd_kw, i, j, k, &value))
-            return value;
-        else
-            return -1; // (i,j,k) Points to an inactive cell.
-    } else {
-        util_abort("%s: Wrong type \n", __func__);
-        return -1;
-    }
-}
-
-int rd_grid_get_int_property(const rd_grid_type *rd_grid,
-                             const rd_kw_type *rd_kw, int i, int j, int k) {
-    rd_data_type data_type = rd_kw_get_data_type(rd_kw);
-    if (rd_type_is_int(data_type)) {
-        int value;
-
-        if (rd_grid_get_property__(rd_grid, rd_kw, i, j, k, &value))
-            return value;
-        else
-            return -1; // (i,j,k) Points to an inactive cell.
-
-    } else {
-        util_abort("%s: Wrong type \n", __func__);
-        return -1;
-    }
-}
-
-float rd_grid_get_float_property(const rd_grid_type *rd_grid,
-                                 const rd_kw_type *rd_kw, int i, int j, int k) {
-    rd_data_type data_type = rd_kw_get_data_type(rd_kw);
-    if (rd_type_is_float(data_type)) {
-        float value;
-
-        if (rd_grid_get_property__(rd_grid, rd_kw, i, j, k, &value))
-            return value;
-        else
-            return -1; // (i,j,k) Points to an inactive cell.
-
-    } else {
-        util_abort("%s: Wrong type \n", __func__);
-        return -1;
-    }
-}
-
 double rd_grid_get_property(const rd_grid_type *rd_grid,
                             const rd_kw_type *rd_kw, int i, int j, int k) {
     rd_data_type data_type = rd_kw_get_data_type(rd_kw);
@@ -5671,77 +4957,6 @@ void rd_grid_get_column_property(const rd_grid_type *rd_grid,
     } else
         util_abort("%s: sorry - can not lookup type:%s with %s.\n", __func__,
                    rd_type_alloc_name(data_type), __func__);
-}
-
-/**
-   This function will look up all the indices in the grid where the
-   region_kw has a certain value (region_value). The rd_kw instance
-   must be loaded beforehand, typically with the functions
-   rd_kw_grdecl_fseek_kw / rd_kw_fscanf_alloc_grdecl_data.
-
-   The two boolean flags active_only and export_active_index determine
-   how active/inactive indieces should be handled:
-
-     active_only: Means that only cells which match the required
-        region_value AND are also active are stored. If active_only is
-        set to false, ALL cells matching region value are stored in
-        index_list.
-
-     export_active_index: if this value is true the the index of the
-        cell is in the space of active cells, otherwise it is in terms
-        of the global indexing.
-
-   Observe the following about the rd_kw instance wth region data:
-
-    * It must be of type integer - otherwise we blow up hard.  The
-    * size must be the total number of cells (should handle boxes and
-      so on ...)
-
-   Observe that there is no way to get ijk from this function, then
-   you must call rd_grid_get_ijk() afterwards. the return value is
-   the number of cells found.
-*/
-
-int rd_grid_get_region_cells(const rd_grid_type *rd_grid,
-                             const rd_kw_type *region_kw, int region_value,
-                             bool active_only, bool export_active_index,
-                             int_vector_type *index_list) {
-    int cells_found = 0;
-    if (rd_kw_get_size(region_kw) == rd_grid->size) {
-        if (rd_type_is_int(rd_kw_get_data_type(region_kw))) {
-            const int *region_ptr = (const int *)rd_kw_iget_ptr(region_kw, 0);
-            int_vector_reset(index_list);
-
-            {
-                int global_index;
-                for (global_index = 0; global_index < rd_grid->size;
-                     global_index++) {
-                    if (region_ptr[global_index] == region_value) {
-                        if (!active_only ||
-                            (rd_grid->index_map[global_index] >= 0)) {
-                            /* Okay - this index should be included */
-                            if (export_active_index)
-                                int_vector_iset(
-                                    index_list, cells_found,
-                                    rd_grid->index_map[global_index]);
-                            else
-                                int_vector_iset(index_list, cells_found,
-                                                global_index);
-                            cells_found++;
-                        }
-                    }
-                }
-            }
-        } else
-            util_abort(
-                "%s: type mismatch - regions_kw must be of type integer \n",
-                __func__);
-
-    } else
-        util_abort(
-            "%s: size mismatch grid has %d cells - region specifier:%d \n",
-            __func__, rd_grid->size, rd_kw_get_size(region_kw));
-    return cells_found;
 }
 
 void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
@@ -5901,21 +5116,6 @@ void rd_grid_dump_ascii(rd_grid_type *grid, bool active_only, FILE *stream) {
     }
 }
 
-void rd_grid_dump_ascii_cell1(rd_grid_type *grid, int global_index,
-                              FILE *stream, const double *offset) {
-    rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-    int i, j, k;
-    rd_grid_get_ijk1(grid, global_index, &i, &j, &k);
-    rd_cell_dump_ascii(cell, i, j, k, stream, offset);
-}
-
-void rd_grid_dump_ascii_cell3(rd_grid_type *grid, int i, int j, int k,
-                              FILE *stream, const double *offset) {
-    int global_index = rd_grid_get_global_index3(grid, i, j, k);
-    rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-    rd_cell_dump_ascii(cell, i, j, k, stream, offset);
-}
-
 /*
  'MAPUNITS'           1 'CHAR'
  'METRES  '
@@ -6013,8 +5213,8 @@ rd_grid_check_unit_system(const rd_kw_type *gridunit_kw) {
     return RD_METRIC_UNITS;
 }
 
-static float rd_grid_output_scaling(const rd_grid_type *grid,
-                                    ert_rd_unit_enum output_unit) {
+float rd_grid_output_scaling(const rd_grid_type *grid,
+                             ert_rd_unit_enum output_unit) {
     if (grid->unit_system == output_unit)
         return 1.0;
     else {
@@ -6388,7 +5588,7 @@ float *rd_grid_alloc_coord_data(const rd_grid_type *grid) {
     return coord;
 }
 
-void rd_grid_assert_coord_kw(rd_grid_type *grid) {
+static void rd_grid_assert_coord_kw(rd_grid_type *grid) {
     if (grid->coord_kw == NULL) {
         grid->coord_kw =
             rd_kw_alloc(COORD_KW, rd_grid_get_coord_size(grid), RD_FLOAT);
@@ -6451,12 +5651,6 @@ void rd_grid_init_zcorn_data(const rd_grid_type *grid, float *zcorn) {
 
 void rd_grid_init_zcorn_data_double(const rd_grid_type *grid, double *zcorn) {
     rd_grid_init_zcorn_data__(grid, NULL, zcorn);
-}
-
-float *rd_grid_alloc_zcorn_data(const rd_grid_type *grid) {
-    float *zcorn = (float *)util_calloc(8 * grid->size, sizeof *zcorn);
-    rd_grid_init_zcorn_data(grid, zcorn);
-    return zcorn;
 }
 
 rd_kw_type *rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
@@ -6526,12 +5720,6 @@ void rd_grid_init_actnum_data(const rd_grid_type *grid, int *actnum) {
     }
 }
 
-int *rd_grid_alloc_actnum_data(const rd_grid_type *grid) {
-    int *actnum = (int *)util_calloc(grid->size, sizeof *actnum);
-    rd_grid_init_actnum_data(grid, actnum);
-    return actnum;
-}
-
 rd_kw_type *rd_grid_alloc_actnum_kw(const rd_grid_type *grid) {
     rd_kw_type *actnum_kw = rd_kw_alloc(ACTNUM_KW, grid->size, RD_INT);
     rd_grid_init_actnum_data(grid, (int *)rd_kw_get_void_ptr(actnum_kw));
@@ -6586,13 +5774,7 @@ static void rd_grid_init_hostnum_data(const rd_grid_type *grid, int *hostnum) {
     }
 }
 
-int *rd_grid_alloc_hostnum_data(const rd_grid_type *grid) {
-    int *hostnum = (int *)util_calloc(grid->size, sizeof *hostnum);
-    rd_grid_init_hostnum_data(grid, hostnum);
-    return hostnum;
-}
-
-rd_kw_type *rd_grid_alloc_hostnum_kw(const rd_grid_type *grid) {
+static rd_kw_type *rd_grid_alloc_hostnum_kw(const rd_grid_type *grid) {
     rd_kw_type *hostnum_kw = rd_kw_alloc(HOSTNUM_KW, grid->size, RD_INT);
     rd_grid_init_hostnum_data(grid, (int *)rd_kw_get_void_ptr(hostnum_kw));
     return hostnum_kw;
@@ -6606,29 +5788,10 @@ static void rd_grid_init_corsnum_data(const rd_grid_type *grid, int *corsnum) {
     }
 }
 
-int *rd_grid_alloc_corsnum_data(const rd_grid_type *grid) {
-    int *corsnum = (int *)util_calloc(grid->size, sizeof *corsnum);
-    rd_grid_init_corsnum_data(grid, corsnum);
-    return corsnum;
-}
-
-rd_kw_type *rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
+static rd_kw_type *rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
     rd_kw_type *corsnum_kw = rd_kw_alloc(CORSNUM_KW, grid->size, RD_INT);
     rd_grid_init_corsnum_data(grid, (int *)rd_kw_get_void_ptr(corsnum_kw));
     return corsnum_kw;
-}
-
-rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz, int grid_nr) {
-    rd_kw_type *gridhead_kw = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
-    rd_kw_scalar_set_int(gridhead_kw, 0);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_TYPE_INDEX,
-                   GRIDHEAD_GRIDTYPE_CORNERPOINT);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NX_INDEX, nx);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NY_INDEX, ny);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NZ_INDEX, nz);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_NUMRES_INDEX, 1);
-    rd_kw_iset_int(gridhead_kw, GRIDHEAD_LGR_INDEX, grid_nr);
-    return gridhead_kw;
 }
 
 void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum) {
@@ -6811,53 +5974,6 @@ void rd_grid_fwrite_EGRID(rd_grid_type *grid, const char *filename,
     rd_grid_fwrite_EGRID2(grid, filename, output_unit);
 }
 
-void rd_grid_fwrite_depth(const rd_grid_type *grid, fortio_type *init_file,
-                          ert_rd_unit_enum output_unit) {
-    rd_kw_type *depth_kw =
-        rd_kw_alloc("DEPTH", rd_grid_get_nactive(grid), RD_FLOAT);
-    {
-        float *depth_ptr = (float *)rd_kw_get_ptr(depth_kw);
-        for (int i = 0; i < rd_grid_get_nactive(grid); i++)
-            depth_ptr[i] = rd_grid_get_cdepth1A(grid, i);
-    }
-    rd_kw_scale_float(depth_kw, rd_grid_output_scaling(grid, output_unit));
-    rd_kw_fwrite(depth_kw, init_file);
-    rd_kw_free(depth_kw);
-}
-
-void rd_grid_fwrite_dims(const rd_grid_type *grid, fortio_type *init_file,
-                         ert_rd_unit_enum output_unit) {
-    rd_kw_type *dx = rd_kw_alloc("DX", rd_grid_get_nactive(grid), RD_FLOAT);
-    rd_kw_type *dy = rd_kw_alloc("DY", rd_grid_get_nactive(grid), RD_FLOAT);
-    rd_kw_type *dz = rd_kw_alloc("DZ", rd_grid_get_nactive(grid), RD_FLOAT);
-    {
-        {
-            float *dx_ptr = (float *)rd_kw_get_ptr(dx);
-            float *dy_ptr = (float *)rd_kw_get_ptr(dy);
-            float *dz_ptr = (float *)rd_kw_get_ptr(dz);
-
-            for (int i = 0; i < rd_grid_get_nactive(grid); i++) {
-                dx_ptr[i] = rd_grid_get_cell_dx1A(grid, i);
-                dy_ptr[i] = rd_grid_get_cell_dy1A(grid, i);
-                dz_ptr[i] = rd_grid_get_cell_dz1A(grid, i);
-            }
-        }
-
-        {
-            float scale_factor = rd_grid_output_scaling(grid, output_unit);
-            rd_kw_scale_float(dx, scale_factor);
-            rd_kw_scale_float(dy, scale_factor);
-            rd_kw_scale_float(dz, scale_factor);
-        }
-    }
-    rd_kw_fwrite(dx, init_file);
-    rd_kw_fwrite(dy, init_file);
-    rd_kw_fwrite(dz, init_file);
-    rd_kw_free(dx);
-    rd_kw_free(dy);
-    rd_kw_free(dz);
-}
-
 /**
    Writes the current grid as grdecl keywords. This function will only write the main grid and not
    possible LGRs which are attached.
@@ -6920,25 +6036,6 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
 
 void rd_grid_fprintf_grdecl(rd_grid_type *grid, FILE *stream) {
     rd_grid_fprintf_grdecl2(grid, stream, RD_METRIC_UNITS);
-}
-
-/**
-   The ri_points pointer should point to the base address of the
-   points data; this function will calculate the correct offset based on
-   global_index.
-*/
-
-void rd_grid_cell_ri_export(const rd_grid_type *rd_grid, int global_index,
-                            double *ri_points) {
-    const rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-    int offset = global_index * 8 * 3;
-    rd_cell_ri_export(cell, &ri_points[offset]);
-}
-
-void rd_grid_ri_export(const rd_grid_type *rd_grid, double *ri_points) {
-    int global_index;
-    for (global_index = 0; global_index < rd_grid->size; global_index++)
-        rd_grid_cell_ri_export(rd_grid, global_index, ri_points);
 }
 
 bool rd_grid_dual_grid(const rd_grid_type *rd_grid) {
