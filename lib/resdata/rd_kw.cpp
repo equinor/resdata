@@ -320,7 +320,7 @@ static void rd_kw_load_from_input_buffer(rd_kw_type *rd_kw, char *buffer) {
     memcpy(rd_kw->data, buffer, buffer_size);
 }
 
-const char *rd_kw_get_header8(const rd_kw_type *rd_kw) {
+static const char *rd_kw_get_header8(const rd_kw_type *rd_kw) {
     return rd_kw->header8;
 }
 
@@ -329,35 +329,9 @@ const char *rd_kw_get_header8(const rd_kw_type *rd_kw) {
 */
 const char *rd_kw_get_header(const rd_kw_type *rd_kw) { return rd_kw->header; }
 
-bool rd_kw_name_equal(const rd_kw_type *rd_kw, const char *name) {
-    return (strcmp(rd_kw->header, name) == 0);
-}
-
 void rd_kw_get_memcpy_data(const rd_kw_type *rd_kw, void *target) {
     memcpy(target, rd_kw->data,
            rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
-}
-
-void rd_kw_get_memcpy_int_data(const rd_kw_type *rd_kw, int *target) {
-    if (rd_type_is_int(rd_kw->data_type))
-        rd_kw_get_memcpy_data(rd_kw, target);
-}
-
-void rd_kw_get_memcpy_float_data(const rd_kw_type *rd_kw, float *target) {
-    if (rd_type_is_float(rd_kw->data_type))
-        rd_kw_get_memcpy_data(rd_kw, target);
-}
-
-void rd_kw_get_memcpy_double_data(const rd_kw_type *rd_kw, double *target) {
-    if (rd_type_is_double(rd_kw->data_type))
-        rd_kw_get_memcpy_data(rd_kw, target);
-}
-
-/** Allocates a untyped buffer with exactly the same content as the rd_kw instances data. */
-void *rd_kw_alloc_data_copy(const rd_kw_type *rd_kw) {
-    void *buffer = util_alloc_copy(
-        rd_kw->data, rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
-    return buffer;
 }
 
 void rd_kw_set_memcpy_data(rd_kw_type *rd_kw, const void *src) {
@@ -389,19 +363,14 @@ static bool rd_kw_string_eq(const char *s1, const char *s2) {
     return eq;
 }
 
-bool rd_kw_ichar_eq(const rd_kw_type *rd_kw, int i, const char *value) {
-    char s1[RD_STRING8_LENGTH + 1];
-    rd_kw_iget(rd_kw, i, s1);
-    return rd_kw_string_eq(s1, value);
-}
-
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,
                                const rd_kw_type *rd_kw2) {
     return (rd_kw1->size == rd_kw2->size &&
             rd_type_is_equal(rd_kw1->data_type, rd_kw2->data_type));
 }
 
-bool rd_kw_header_eq(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2) {
+static bool rd_kw_header_eq(const rd_kw_type *rd_kw1,
+                            const rd_kw_type *rd_kw2) {
     bool equal = true;
 
     if (strcmp(rd_kw1->header8, rd_kw2->header8) != 0)
@@ -492,17 +461,6 @@ bool rd_kw_numeric_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
         return rd_kw_data_equal(rd_kw1, rd_kw2->data);
 }
 
-bool rd_kw_block_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2,
-                       int cmp_elements) {
-    if (rd_kw_header_eq(rd_kw1, rd_kw2)) {
-        if (cmp_elements == 0)
-            cmp_elements = rd_kw1->size;
-
-        return rd_kw_data_equal__(rd_kw1, rd_kw2->data, cmp_elements);
-    } else
-        return false;
-}
-
 static void rd_kw_set_shared_ref(rd_kw_type *rd_kw, void *data_ptr) {
     if (!rd_kw->shared_data) {
         if (rd_kw->data != NULL)
@@ -541,6 +499,25 @@ size_t rd_kw_fortio_size(const rd_kw_type *rd_kw) {
     size_t size = RD_KW_HEADER_FORTIO_SIZE;
     size += rd_kw_fortio_data_size(rd_kw);
     return size;
+}
+
+/**
+   This is where the storage buffer of the rd_kw is allocated.
+*/
+static void rd_kw_alloc_data(rd_kw_type *rd_kw) {
+    if (rd_kw->shared_data)
+        util_abort("%s: trying to allocate data for rd_kw object which has "
+                   "been declared with shared storage - aborting \n",
+                   __func__);
+
+    {
+        size_t byte_size =
+            rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type);
+        rd_kw->data = (char *)util_realloc(rd_kw->data, byte_size);
+        if (rd_kw->data) {
+            memset(rd_kw->data, 0, byte_size);
+        }
+    }
 }
 
 /**
@@ -592,14 +569,19 @@ rd_kw_type *rd_kw_alloc_empty() {
     return rd_kw;
 }
 
+static void rd_kw_free_data(rd_kw_type *rd_kw) {
+    if (!rd_kw->shared_data)
+        free(rd_kw->data);
+
+    rd_kw->data = NULL;
+}
+
 void rd_kw_free(rd_kw_type *rd_kw) {
     free(rd_kw->header);
     free(rd_kw->header8);
     rd_kw_free_data(rd_kw);
     free(rd_kw);
 }
-
-void rd_kw_free__(void *void_rd_kw) { rd_kw_free((rd_kw_type *)void_rd_kw); }
 
 void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
     if (!rd_kw_size_and_type_equal(target, src))
@@ -734,10 +716,6 @@ rd_kw_type *rd_kw_alloc_sub_copy(const rd_kw_type *src, const char *new_kw,
         void *src_data = rd_kw_iget_ptr(src, offset);
         return rd_kw_alloc_new(new_kw, count, src->data_type, src_data);
     }
-}
-
-const void *rd_kw_copyc__(const void *void_kw) {
-    return rd_kw_alloc_copy((const rd_kw_type *)void_kw);
 }
 
 static void *rd_kw_iget_ptr_static(const rd_kw_type *rd_kw, int i) {
@@ -1095,7 +1073,7 @@ static double __fscanf_RD_double(FILE *stream, const char *fmt) {
     return value;
 }
 
-bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
+static bool rd_kw_fread_data(rd_kw_type *rd_kw, fortio_type *fortio) {
     bool fmt_file = fortio_fmt_file(fortio);
     if (rd_kw->size > 0) {
         const int blocksize = get_blocksize(rd_kw->data_type);
@@ -1407,62 +1385,10 @@ bool rd_kw_ifseek_kw(const char *kw, fortio_type *fortio, int index) {
     return true;
 }
 
-bool rd_kw_fseek_last_kw(const char *kw, bool abort_on_error,
-                         fortio_type *fortio) {
-    long int init_pos = fortio_ftell(fortio);
-    bool kw_found = false;
-
-    fortio_fseek(fortio, 0L, SEEK_SET);
-    kw_found = rd_kw_fseek_kw(kw, false, false, fortio);
-    if (kw_found) {
-        bool cont = true;
-        do {
-            long int current_pos = fortio_ftell(fortio);
-            rd_kw_fskip(fortio);
-            cont = rd_kw_fseek_kw(kw, false, false, fortio);
-            if (!cont)
-                fortio_fseek(fortio, current_pos, SEEK_SET);
-        } while (cont);
-    } else {
-        if (abort_on_error)
-            util_abort("%s: could not locate keyword:%s - aborting \n",
-                       __func__, kw);
-        else
-            fortio_fseek(fortio, init_pos, SEEK_SET);
-    }
-    return kw_found;
-}
-
 void rd_kw_set_data_ptr(rd_kw_type *rd_kw, void *data) {
     if (!rd_kw->shared_data)
         free(rd_kw->data);
     rd_kw->data = (char *)data;
-}
-
-/**
-   This is where the storage buffer of the rd_kw is allocated.
-*/
-void rd_kw_alloc_data(rd_kw_type *rd_kw) {
-    if (rd_kw->shared_data)
-        util_abort("%s: trying to allocate data for rd_kw object which has "
-                   "been declared with shared storage - aborting \n",
-                   __func__);
-
-    {
-        size_t byte_size =
-            rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type);
-        rd_kw->data = (char *)util_realloc(rd_kw->data, byte_size);
-        if (rd_kw->data) {
-            memset(rd_kw->data, 0, byte_size);
-        }
-    }
-}
-
-void rd_kw_free_data(rd_kw_type *rd_kw) {
-    if (!rd_kw->shared_data)
-        free(rd_kw->data);
-
-    rd_kw->data = NULL;
 }
 
 void rd_kw_set_header_name(rd_kw_type *rd_kw, const char *header) {
@@ -1710,67 +1636,14 @@ rd_data_type rd_kw_get_data_type(const rd_kw_type *rd_kw) {
     return rd_kw->data_type;
 }
 
-void rd_kw_fwrite_param_fortio(fortio_type *fortio, const char *header,
-                               rd_data_type data_type, int size, void *data) {
-    rd_kw_type *rd_kw = rd_kw_alloc_new_shared(header, size, data_type, data);
-    rd_kw_fwrite(rd_kw, fortio);
-    rd_kw_free(rd_kw);
-}
-
-void rd_kw_fwrite_param(const char *filename, bool fmt_file, const char *header,
-                        rd_data_type data_type, int size, void *data) {
-    fortio_type *fortio =
-        fortio_open_writer(filename, fmt_file, RD_ENDIAN_FLIP);
-    rd_kw_fwrite_param_fortio(fortio, header, data_type, size, data);
-    fortio_fclose(fortio);
-}
-
-void rd_kw_get_data_as_double(const rd_kw_type *rd_kw, double *double_data) {
-
-    if (rd_type_is_double(rd_kw->data_type))
-        // Direct memcpy - no conversion
-        rd_kw_get_memcpy_data(rd_kw, double_data);
-    else {
-        if (rd_type_is_float(rd_kw->data_type)) {
-            const float *float_data = (const float *)rd_kw->data;
-            util_float_to_double(double_data, float_data, rd_kw->size);
-        } else if (rd_type_is_int(rd_kw->data_type)) {
-            const int *int_data = (const int *)rd_kw->data;
-            int i;
-            for (i = 0; i < rd_kw->size; i++)
-                double_data[i] = int_data[i];
-        } else {
-            fprintf(stderr,
-                    "%s: type can not be converted to double - aborting \n",
-                    __func__);
-            rd_kw_summarize(rd_kw);
-            util_abort("%s: Aborting \n", __func__);
-        }
-    }
-}
-
-void rd_kw_get_data_as_float(const rd_kw_type *rd_kw, float *float_data) {
-
-    if (rd_type_is_float(rd_kw->data_type))
-        // Direct memcpy - no conversion
-        rd_kw_get_memcpy_data(rd_kw, float_data);
-    else {
-        if (rd_type_is_double(rd_kw->data_type)) {
-            const double *double_data = (const double *)rd_kw->data;
-            util_double_to_float(float_data, double_data, rd_kw->size);
-        } else if (rd_type_is_int(rd_kw->data_type)) {
-            const int *int_data = (const int *)rd_kw->data;
-            int i;
-            for (i = 0; i < rd_kw->size; i++)
-                float_data[i] = (float)int_data[i];
-        } else {
-            fprintf(stderr,
-                    "%s: type can not be converted to float - aborting \n",
-                    __func__);
-            rd_kw_summarize(rd_kw);
-            util_abort("%s: Aborting \n", __func__);
-        }
-    }
+/*
+  Untyped - low level alternative.
+*/
+static void rd_kw_scalar_set__(rd_kw_type *rd_kw, const void *value) {
+    int sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
+    int i;
+    for (i = 0; i < rd_kw->size; i++)
+        memcpy(&rd_kw->data[i * sizeof_ctype], value, sizeof_ctype);
 }
 
 /**
@@ -1870,22 +1743,6 @@ rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
     return global_copy;
 }
 
-void rd_kw_fread_double_param(const char *filename, bool fmt_file,
-                              double *double_data) {
-    fortio_type *fortio =
-        fortio_open_reader(filename, fmt_file, RD_ENDIAN_FLIP);
-    rd_kw_type *rd_kw = rd_kw_fread_alloc(fortio);
-    fortio_fclose(fortio);
-
-    if (rd_kw == NULL)
-        util_abort(
-            "%s: fatal error: loading parameter from: %s failed - aborting \n",
-            __func__, filename);
-
-    rd_kw_get_data_as_double(rd_kw, double_data);
-    rd_kw_free(rd_kw);
-}
-
 void rd_kw_summarize(const rd_kw_type *rd_kw) {
     char *type_name = rd_type_alloc_name(rd_kw->data_type);
     printf("%8s   %10d:%4s \n", rd_kw_get_header8(rd_kw), rd_kw_get_size(rd_kw),
@@ -1918,28 +1775,6 @@ void rd_kw_scalar_set_float_or_double(rd_kw_type *rd_kw, double value) {
         rd_kw_scalar_set_double(rd_kw, value);
     else
         util_abort("%s: wrong type \n", __func__);
-}
-
-/*
-  Untyped - low level alternative.
-*/
-void rd_kw_scalar_set__(rd_kw_type *rd_kw, const void *value) {
-    int sizeof_ctype = rd_type_get_sizeof_ctype(rd_kw->data_type);
-    int i;
-    for (i = 0; i < rd_kw->size; i++)
-        memcpy(&rd_kw->data[i * sizeof_ctype], value, sizeof_ctype);
-}
-
-void rd_kw_alloc_double_data(rd_kw_type *rd_kw, double *values) {
-    rd_kw_alloc_data(rd_kw);
-    memcpy(rd_kw->data, values,
-           rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
-}
-
-void rd_kw_alloc_float_data(rd_kw_type *rd_kw, float *values) {
-    rd_kw_alloc_data(rd_kw);
-    memcpy(rd_kw->data, values,
-           rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
 #define RD_KW_SCALE_TYPED(ctype, RD_TYPE)                                      \
@@ -2478,87 +2313,6 @@ bool rd_kw_inplace_safe_div(rd_kw_type *target_kw, const rd_kw_type *divisor) {
     }
 
     return true;
-}
-
-void rd_kw_inplace_inv(rd_kw_type *my_kw) {
-    int size = rd_kw_get_size(my_kw);
-    rd_type_enum type = rd_kw_get_type(my_kw);
-    {
-        int i;
-        void *my_data = rd_kw_get_data_ref(my_kw);
-
-        switch (type) {
-        case (RD_DOUBLE_TYPE): {
-            double *my_double = (double *)my_data;
-            for (i = 0; i < size; i++)
-                my_double[i] = 1.0 / my_double[i];
-            break;
-        }
-        case (RD_FLOAT_TYPE): {
-            float *my_float = (float *)my_data;
-            for (i = 0; i < size; i++)
-                my_float[i] = 1.0f / my_float[i];
-            break;
-        }
-        default:
-            util_abort("%s: can only be called on RD_FLOAT_TYPE and "
-                       "RD_DOUBLE_TYPE - aborting \n",
-                       __func__);
-        }
-    }
-}
-
-void rd_kw_inplace_update_file(const rd_kw_type *rd_kw, const char *filename,
-                               int index) {
-    if (util_file_exists(filename)) {
-        bool fmt_file = util_fmt_bit8(filename);
-
-        {
-            fortio_type *fortio =
-                fortio_open_readwrite(filename, fmt_file, RD_ENDIAN_FLIP);
-            rd_kw_ifseek_kw(rd_kw_get_header8(rd_kw), fortio, index);
-            {
-                rd_kw_type *file_kw = rd_kw_alloc_empty();
-                long int current_pos = fortio_ftell(fortio);
-                rd_kw_fread_header(file_kw, fortio);
-                fortio_fseek(fortio, current_pos, SEEK_SET);
-
-                if (!rd_kw_size_and_type_equal(rd_kw, file_kw))
-                    util_abort(
-                        "%s: header mismatch when trying to update:%s in %s \n",
-                        __func__, rd_kw_get_header8(rd_kw), filename);
-                rd_kw_free(file_kw);
-            }
-
-            fortio_fflush(fortio);
-            rd_kw_fwrite(rd_kw, fortio);
-            fortio_fclose(fortio);
-        }
-    }
-}
-
-bool rd_kw_is_kw_file(fortio_type *fortio) {
-    const long int init_pos = fortio_ftell(fortio);
-    bool kw_file;
-
-    {
-        rd_kw_type *rd_kw = rd_kw_alloc_empty();
-
-        if (fortio_fmt_file(fortio))
-            kw_file = (rd_kw_fread_header(rd_kw, fortio) != RD_KW_READ_FAIL);
-        else {
-            if (fortio_is_fortio_file(fortio))
-                kw_file =
-                    (rd_kw_fread_header(rd_kw, fortio) != RD_KW_READ_FAIL);
-            else
-                kw_file = false;
-        }
-
-        rd_kw_free(rd_kw);
-    }
-
-    fortio_fseek(fortio, init_pos, SEEK_SET);
-    return kw_file;
 }
 
 #define KW_MAX_MIN(type)                                                       \
