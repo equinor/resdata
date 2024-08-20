@@ -208,24 +208,3 @@ int nnc_info_get_total_size(const nnc_info_type *nnc_info) {
     }
     return num_nnc;
 }
-
-void nnc_info_fprintf(const nnc_info_type *nnc_info, FILE *stream) {
-    fprintf(stream, "LGR_NR:%d \n", nnc_info->lgr_nr);
-    {
-        int lgr_nr;
-        for (lgr_nr = 0; lgr_nr < int_vector_size(nnc_info->lgr_index_map);
-             lgr_nr++) {
-            int lgr_index = int_vector_iget(nnc_info->lgr_index_map, lgr_nr);
-            if (lgr_index >= 0) {
-                printf("   %02d -> %02d  => ", lgr_nr, lgr_index);
-                {
-                    const std::vector<int> &index_list =
-                        nnc_info_iget_grid_index_list(nnc_info, lgr_index);
-                    vector_util_fprintf<int>(index_list, stream, " ", "%d");
-                    printf("\n");
-                }
-            }
-        }
-    }
-    fprintf(stream, "\n");
-}
