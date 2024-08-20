@@ -13,8 +13,6 @@ typedef struct nnc_info_struct nnc_info_type;
 const std::vector<int> &
 nnc_info_get_grid_index_list(const nnc_info_type *nnc_info, int lgr_nr);
 const std::vector<int> &
-nnc_info_iget_grid_index_list(const nnc_info_type *nnc_info, int lgr_index);
-const std::vector<int> &
 nnc_info_get_self_grid_index_list(const nnc_info_type *nnc_info);
 #endif
 
@@ -39,8 +37,6 @@ nnc_vector_type *nnc_info_get_self_vector(const nnc_info_type *nnc_info);
 int nnc_info_get_lgr_nr(const nnc_info_type *nnc_info);
 int nnc_info_get_size(const nnc_info_type *nnc_info);
 int nnc_info_get_total_size(const nnc_info_type *nnc_info);
-void nnc_info_fprintf(const nnc_info_type *nnc_info, FILE *stream);
-
 bool nnc_info_equal(const nnc_info_type *nnc_info1,
                     const nnc_info_type *nnc_info2);
 nnc_info_type *nnc_info_alloc_copy(const nnc_info_type *src_info);
