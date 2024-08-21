@@ -359,7 +359,6 @@ foreach(
   rd_nnc_export
   rd_nnc_export_get_tran
   rd_nnc_data_equinor_root
-  rd_sum_case_exists
   rd_grid_lgr_name
   rd_region
   rd_grid_cell_contains_wellpath
@@ -371,8 +370,6 @@ foreach(
   rd_dualp
   rd_grid_dx_dy_dz
   rd_sum_test
-  rd_sum_report_step_equal
-  rd_sum_report_step_compatible
   rd_file_equinor
   rd_fmt
   rd_rsthead
@@ -445,13 +442,6 @@ add_test(
     rd_nnc_data_equinor_root
     ${_resdatapath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
     ${_resdatapath}/flow-nnc/Simple4/SIMPLE_SUMMARY4)
-
-add_test(
-  NAME rd_sum_case_exists
-  COMMAND
-    rd_sum_case_exists ${_resdatapath}/Gurbat/ECLIPSE
-    ${_resdatapath}/GurbatSummary/missingHeader/ECLIPSE
-    ${_resdatapath}/GurbatSummary/missingData/ECLIPSE)
 
 add_test(
   NAME rd_grid_lgr_name
@@ -538,25 +528,6 @@ add_test(NAME rd_sum_report_step_equal5
          COMMAND rd_sum_report_step_equal ${_resdatapath}/Gurbat/ECLIPSE
                  ${_resdatapath}/modGurbat/enkf/ECLIPSE FALSE)
 add_test(NAME rd_sum_report_step_equal6
-         COMMAND rd_sum_report_step_equal ${_resdatapath}/Snorre/SNORRE
-                 ${_resdatapath}/Snorre2/SNORRE2 FALSE)
-
-add_test(NAME rd_sum_report_step_compatible1
-         COMMAND rd_sum_report_step_compatible ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/Snorre/SNORRE FALSE)
-add_test(NAME rd_sum_report_step_compatible2
-         COMMAND rd_sum_report_step_compatible ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/Gurbat/ECLIPSE TRUE)
-add_test(NAME rd_sum_report_step_compatible3
-         COMMAND rd_sum_report_step_compatible ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/modGurbat/extraMinistep/ECLIPSE TRUE)
-add_test(NAME rd_sum_report_step_compatible4
-         COMMAND rd_sum_report_step_compatible ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/modGurbat/short/ECLIPSE TRUE)
-add_test(NAME rd_sum_report_step_compatible5
-         COMMAND rd_sum_report_step_compatible ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/modGurbat/enkf/ECLIPSE TRUE)
-add_test(NAME rd_sum_report_step_compatible6
          COMMAND rd_sum_report_step_equal ${_resdatapath}/Snorre/SNORRE
                  ${_resdatapath}/Snorre2/SNORRE2 FALSE)
 
