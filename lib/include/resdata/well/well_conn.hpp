@@ -22,7 +22,6 @@ typedef enum {
 typedef struct well_conn_struct well_conn_type;
 
 void well_conn_free(well_conn_type *conn);
-void well_conn_free__(void *arg);
 
 well_conn_type *well_conn_alloc(int i, int j, int k, double connection_factor,
                                 well_conn_dir_enum dir, bool open);

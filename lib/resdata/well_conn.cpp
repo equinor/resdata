@@ -243,11 +243,6 @@ well_conn_type *well_conn_alloc_from_kw(const rd_kw_type *icon_kw,
 
 void well_conn_free(well_conn_type *conn) { delete conn; }
 
-void well_conn_free__(void *arg) {
-    well_conn_type *conn = well_conn_safe_cast(arg);
-    well_conn_free(conn);
-}
-
 well_conn_type *well_conn_alloc_wellhead(const rd_kw_type *iwel_kw,
                                          const rd_rsthead_type *header,
                                          int well_nr) {
