@@ -58,11 +58,6 @@ void well_conn_collection_free(well_conn_collection_type *wellcc) {
     delete wellcc;
 }
 
-void well_conn_collection_free__(void *arg) {
-    well_conn_collection_type *wellcc = well_conn_collection_safe_cast(arg);
-    well_conn_collection_free(wellcc);
-}
-
 int well_conn_collection_get_size(const well_conn_collection_type *wellcc) {
     return wellcc->connection_list.size();
 }
