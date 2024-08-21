@@ -157,8 +157,7 @@ int main(int argc, char **argv) {
          standard.
 
       4: Should the data be output as a unified file, or as a
-         collection of files - one for each report step. Can be
-         modified with rd_sum_set_unified_output().
+         collection of files - one for each report step.
 
       5: The real-world start time of this simulation, as a unix
          time_t value.

@@ -31,12 +31,6 @@ void test_days(const rd_sum_type *rd_sum) {
     test_assert_double_equal(days3, 1);
 }
 
-void test_is_oil_producer(const rd_sum_type *rd_sum) {
-    test_assert_true(rd_sum_is_oil_producer(rd_sum, "OP_1"));
-    test_assert_false(rd_sum_is_oil_producer(rd_sum, "WI_1"));
-    test_assert_false(rd_sum_is_oil_producer(rd_sum, "DoesNotExist"));
-}
-
 int main(int argc, char **argv) {
     const char *case1 = argv[1];
 
@@ -45,7 +39,6 @@ int main(int argc, char **argv) {
     test_assert_true(rd_sum_is_instance(rd_sum1));
     test_time_range(rd_sum1);
     test_days(rd_sum1);
-    test_is_oil_producer(rd_sum1);
     rd_sum_free(rd_sum1);
     exit(0);
 }
