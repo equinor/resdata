@@ -87,9 +87,6 @@ add_library(
   resdata/nnc_info.cpp
   resdata/rd_grav_common.cpp
   resdata/nnc_vector.cpp
-  resdata/rd_nnc_export.cpp
-  resdata/rd_nnc_data.cpp
-  resdata/rd_nnc_geometry.cpp
   resdata/layer.cpp
   resdata/fault_block.cpp
   resdata/fault_block_layer.cpp
@@ -259,7 +256,6 @@ foreach(
   rd_grid_export
   rd_grid_init_fwrite
   rd_grid_reset_actnum
-  rd_nnc_export_intersect
   rd_sum_restart
   rd_sum_data_intermediate_test
   rd_unsmry_loader_test
@@ -269,7 +265,6 @@ foreach(
   rd_kw_fread
   rd_kw_grdecl
   rd_kw_init
-  rd_nnc_geometry
   rd_nnc_info_test
   rd_nnc_vector
   rd_rft_cell
@@ -281,8 +276,6 @@ foreach(
   rd_filenames
   rd_make_date_no_shift
   rd_make_date_shift
-  test_rd_nnc_data
-  rd_nnc_pair
   well_conn_collection
   well_branch_collection
   well_conn
@@ -355,9 +348,6 @@ foreach(
   rd_coarse_test
   rd_grid_layer_contains
   rd_restart_test
-  rd_nnc_export
-  rd_nnc_export_get_tran
-  rd_nnc_data_equinor_root
   rd_grid_lgr_name
   rd_region
   rd_grid_cell_contains_wellpath
@@ -414,33 +404,6 @@ add_test(NAME rd_coarse_test COMMAND rd_coarse_test
 
 add_test(NAME rd_restart_test COMMAND rd_restart_test
                                       ${_resdatapath}/Gurbat/ECLIPSE.UNRST)
-
-add_test(NAME rd_nnc_export_gurbat COMMAND rd_nnc_export
-                                           ${_resdatapath}/Gurbat/ECLIPSE TRUE)
-add_test(NAME rd_nnc_export_10kcase
-         COMMAND rd_nnc_export ${_resdatapath}/10kcase/TEST10K_FLT_LGR_NNC TRUE)
-add_test(NAME rd_nnc_export_dual_poro_diff
-         COMMAND rd_nnc_export ${_resdatapath}/DualPoro/DUAL_DIFF TRUE)
-add_test(NAME rd_nnc_export_dual_poro
-         COMMAND rd_nnc_export ${_resdatapath}/DualPoro/DUALPORO TRUE)
-add_test(NAME rd_nnc_export_nested_lgr_case
-         COMMAND rd_nnc_export ${_resdatapath}/nestedLGRcase/TESTCASE_NESTEDLGR
-                 TRUE)
-add_test(NAME rd_nnc_export_tyrihans
-         COMMAND rd_nnc_export ${_resdatapath}/TYRIHANS/BASE20150218_MULTFLT
-                 FALSE)
-
-add_test(
-  NAME rd_nnc_export_get_tran
-  COMMAND rd_nnc_export_get_tran
-          ${_resdatapath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3)
-
-add_test(
-  NAME rd_nnc_data_equinor_root
-  COMMAND
-    rd_nnc_data_equinor_root
-    ${_resdatapath}/Troll/MSW_LGR/2BRANCHES-CCEWELLPATH-NEW-SCH-TUNED-AR3
-    ${_resdatapath}/flow-nnc/Simple4/SIMPLE_SUMMARY4)
 
 add_test(
   NAME rd_grid_lgr_name
