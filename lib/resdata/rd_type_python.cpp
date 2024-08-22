@@ -49,10 +49,6 @@ int rd_type_get_sizeof_iotype_python(const rd_data_type *rd_type) {
     return rd_type_get_sizeof_iotype(*rd_type);
 }
 
-int rd_type_get_sizeof_ctype_python(const rd_data_type *rd_type) {
-    return rd_type_get_sizeof_ctype(*rd_type);
-}
-
 bool rd_type_is_numeric_python(const rd_data_type *rd_type) {
     return rd_type_is_numeric(*rd_type);
 }
@@ -108,13 +104,6 @@ rd_kw_type *rd_kw_alloc_python(const char *header, int size,
 rd_data_type *rd_kw_get_data_type_python(const rd_kw_type *rd_kw) {
     rd_data_type data_type = rd_kw_get_data_type(rd_kw);
     return rd_type_alloc_copy_python(&data_type);
-}
-
-void rd_kw_fread_indexed_data_python(
-    fortio_type *fortio, offset_type data_offset, const rd_data_type *data_type,
-    int element_count, const int_vector_type *index_map, char *buffer) {
-    return rd_kw_fread_indexed_data(fortio, data_offset, *data_type,
-                                    element_count, index_map, buffer);
 }
 }
 #endif
