@@ -52,7 +52,7 @@
   are ignored.
 */
 
-bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
+static bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
     long start_pos = util_ftell(stream);
     long current_pos;
     char next_kw[MAX_GRDECL_HEADER_SIZE];
@@ -114,22 +114,6 @@ bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
             return false;
         }
     }
-}
-
-/**
-   Will use the rd_kw_grdecl_fseek_next_header() to seek out the next
-   header string, and read and return that string. If no more headers
-   are found the function will return NULL. The storage allocated by
-   this function must be free'd by the calling scope.
-*/
-
-char *rd_kw_grdecl_alloc_next_header(FILE *stream) {
-    if (rd_kw_grdecl_fseek_next_kw(stream)) {
-        char next_kw[MAX_GRDECL_HEADER_SIZE];
-        fscanf(stream, "%s", next_kw);
-        return util_alloc_string_copy(next_kw);
-    } else
-        return NULL;
 }
 
 /**
@@ -455,24 +439,6 @@ static rd_kw_type *__rd_kw_fscanf_alloc_grdecl__(FILE *stream,
     }
 }
 
-/**
-   This function assumes that the file pointer has already been
-   positioned at the beginning of a keyword header, and will just
-   start reading a header string right away; if the file pointer is
-   incorrectly positioned this will most probably blow up big time.
-*/
-
-rd_kw_type *rd_kw_fscanf_alloc_grdecl_data__(FILE *stream, bool strict,
-                                             int size, rd_data_type data_type) {
-    return __rd_kw_fscanf_alloc_grdecl__(stream, NULL, strict, size, data_type);
-}
-
-rd_kw_type *rd_kw_fscanf_alloc_grdecl_data(FILE *stream, int size,
-                                           rd_data_type data_type) {
-    bool strict = true;
-    return rd_kw_fscanf_alloc_grdecl_data__(stream, strict, size, data_type);
-}
-
 /*
    This function will seek through the file and position the file
    pointer at the beginning of @kw before starting to load (this
@@ -508,9 +474,9 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl_dynamic(FILE *stream, const char *kw,
    size == 0.
 */
 
-rd_kw_type *rd_kw_fscanf_alloc_grdecl__(FILE *stream, const char *kw,
-                                        bool strict, int size,
-                                        rd_data_type data_type) {
+static rd_kw_type *rd_kw_fscanf_alloc_grdecl__(FILE *stream, const char *kw,
+                                               bool strict, int size,
+                                               rd_data_type data_type) {
     return __rd_kw_fscanf_alloc_grdecl__(stream, kw, strict, size, data_type);
 }
 
@@ -528,8 +494,9 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw, int size,
    that the input file is well formatted.
 */
 
-rd_kw_type *rd_kw_fscanf_alloc_current_grdecl__(FILE *stream, bool strict,
-                                                rd_data_type data_type) {
+static rd_kw_type *rd_kw_fscanf_alloc_current_grdecl__(FILE *stream,
+                                                       bool strict,
+                                                       rd_data_type data_type) {
     return __rd_kw_fscanf_alloc_grdecl__(stream, NULL, strict, 0, data_type);
 }
 
