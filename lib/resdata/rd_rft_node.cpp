@@ -123,8 +123,8 @@ static rd_rft_node_type *rd_rft_node_alloc_empty(const char *data_type_string) {
 UTIL_SAFE_CAST_FUNCTION(rd_rft_node, RD_RFT_NODE_ID);
 UTIL_IS_INSTANCE_FUNCTION(rd_rft_node, RD_RFT_NODE_ID);
 
-void rd_rft_node_append_cell(rd_rft_node_type *rft_node,
-                             rd_rft_cell_type *cell) {
+static void rd_rft_node_append_cell(rd_rft_node_type *rft_node,
+                                    rd_rft_cell_type *cell) {
     if (rft_node->MSW) {
         auto pos_iter =
             std::upper_bound(rft_node->cells.begin(), rft_node->cells.end(),
@@ -307,10 +307,6 @@ void rd_rft_node_free(rd_rft_node_type *rft_node) {
         rd_rft_cell_free(cell_ptr);
 
     delete rft_node;
-}
-
-void rd_rft_node_free__(void *void_node) {
-    rd_rft_node_free(rd_rft_node_safe_cast(void_node));
 }
 
 int rd_rft_node_get_size(const rd_rft_node_type *rft_node) {
@@ -591,7 +587,8 @@ void rd_rft_node_fwrite(const rd_rft_node_type *rft_node, fortio_type *fortio,
     }
 }
 
-int rd_rft_node_cmp(const rd_rft_node_type *n1, const rd_rft_node_type *n2) {
+static int rd_rft_node_cmp(const rd_rft_node_type *n1,
+                           const rd_rft_node_type *n2) {
     time_t val1 = rd_rft_node_get_date(n1);
     time_t val2 = rd_rft_node_get_date(n2);
 
