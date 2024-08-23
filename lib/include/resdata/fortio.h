@@ -41,11 +41,7 @@ typedef enum {
 
 typedef struct fortio_struct fortio_type;
 
-fortio_status_type fortio_check_buffer(FILE *stream, bool endian_flip,
-                                       size_t buffer_size);
-fortio_status_type fortio_check_file(const char *filename, bool endian_flip);
 bool fortio_looks_like_fortran_file(const char *, bool);
-void fortio_copy_record(fortio_type *, fortio_type *, int, void *, bool *);
 fortio_type *fortio_open_reader(const char *, bool fmt_file,
                                 bool endian_flip_header);
 fortio_type *fortio_open_writer(const char *, bool fmt_file,
@@ -61,14 +57,11 @@ int fortio_init_read(fortio_type *);
 bool fortio_complete_read(fortio_type *, int record_size);
 void fortio_init_write(fortio_type *, int);
 void fortio_complete_write(fortio_type *, int record_size);
-void fortio_fskip_buffer(fortio_type *, int);
 int fortio_fskip_record(fortio_type *);
 bool fortio_fread_buffer(fortio_type *, char *buffer, int buffer_size);
 void fortio_fwrite_record(fortio_type *, const char *buffer, int buffer_size);
 FILE *fortio_get_FILE(const fortio_type *);
 void fortio_fflush(fortio_type *);
-bool fortio_ftruncate_current(fortio_type *fortio);
-bool fortio_is_fortio_file(fortio_type *);
 void fortio_rewind(const fortio_type *fortio);
 const char *fortio_filename_ref(const fortio_type *);
 bool fortio_fmt_file(const fortio_type *);

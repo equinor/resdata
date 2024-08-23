@@ -386,33 +386,6 @@ void fortio_fclose(fortio_type *fortio) {
     fortio_free__(fortio);
 }
 
-bool fortio_is_fortio_file(fortio_type *fortio) {
-    offset_type init_pos = fortio_ftell(fortio);
-    int elm_read;
-    bool is_fortio_file = false;
-    int record_size;
-    elm_read = fread(&record_size, sizeof(record_size), 1, fortio->stream);
-    if (elm_read == 1) {
-        int trailer;
-
-        if (fortio->endian_flip_header)
-            util_endian_flip_vector(&record_size, sizeof record_size, 1);
-
-        if (fortio_fseek(fortio, (offset_type)record_size, SEEK_CUR) == 0) {
-            if (fread(&trailer, sizeof(record_size), 1, fortio->stream) == 1) {
-                if (fortio->endian_flip_header)
-                    util_endian_flip_vector(&trailer, sizeof trailer, 1);
-
-                if (trailer == record_size)
-                    is_fortio_file = true;
-            }
-        }
-    }
-
-    fortio_fseek(fortio, init_pos, SEEK_SET);
-    return is_fortio_file;
-}
-
 /**
   This function reads the header (i.e. the number of bytes in the
   following record), stores that internally in the fortio struct, and
@@ -551,46 +524,6 @@ int fortio_fskip_record(fortio_type *fortio) {
     return record_size;
 }
 
-void fortio_fskip_buffer(fortio_type *fortio, int buffer_size) {
-    int bytes_skipped = 0;
-    while (bytes_skipped < buffer_size)
-        bytes_skipped += fortio_fskip_record(fortio);
-
-    if (bytes_skipped > buffer_size)
-        util_abort("%s: hmmmm - something is broken. The individual records in "
-                   "%s did not sum up to the expected buffer size \n",
-                   __func__, fortio->filename);
-}
-
-void fortio_copy_record(fortio_type *src_stream, fortio_type *target_stream,
-                        int buffer_size, void *buffer, bool *at_eof) {
-    int bytes_read;
-    int record_size = fortio_init_read(src_stream);
-    fortio_init_write(target_stream, record_size);
-
-    bytes_read = 0;
-    while (bytes_read < record_size) {
-        int bytes;
-        if (record_size > buffer_size)
-            bytes = buffer_size;
-        else
-            bytes = record_size - bytes_read;
-
-        util_fread(buffer, 1, bytes, src_stream->stream, __func__);
-        util_fwrite(buffer, 1, bytes, target_stream->stream, __func__);
-
-        bytes_read += bytes;
-    }
-
-    fortio_complete_read(src_stream, record_size);
-    fortio_complete_write(target_stream, record_size);
-
-    if (feof(src_stream->stream))
-        *at_eof = true;
-    else
-        *at_eof = false;
-}
-
 void fortio_init_write(fortio_type *fortio, int record_size) {
     int file_header;
     file_header = record_size;
@@ -662,52 +595,6 @@ static fortio_status_type fortio_check_record(FILE *stream, bool endian_flip,
     return status;
 }
 
-fortio_status_type fortio_check_buffer(FILE *stream, bool endian_flip,
-                                       size_t buffer_size) {
-    size_t current_size = 0;
-    fortio_status_type record_status;
-    while (true) {
-        int record_size;
-        record_status = fortio_check_record(stream, endian_flip, &record_size);
-        current_size += record_size;
-        if (record_status != FORTIO_OK)
-            break;
-    }
-    if (record_status == FORTIO_EOF) {
-        /* We are at the end of file - see if we have read in enough data. */
-        if (buffer_size == current_size)
-            return FORTIO_OK;
-        else
-            return FORTIO_EOF;
-    } else
-        return record_status;
-}
-
-fortio_status_type fortio_check_file(const char *filename, bool endian_flip) {
-    if (util_file_exists(filename)) {
-        size_t file_size = util_file_size(filename);
-        if (file_size == 0)
-            return FORTIO_EOF;
-        else {
-            fortio_status_type record_status;
-            {
-                FILE *stream = util_fopen(filename, "r");
-                do {
-                    int record_size;
-                    record_status =
-                        fortio_check_record(stream, endian_flip, &record_size);
-                } while (record_status == FORTIO_OK);
-                fclose(stream);
-            }
-            if (record_status == FORTIO_EOF) /* Normal exit from loop at EOF */
-                return FORTIO_OK;
-            else
-                return record_status;
-        }
-    } else
-        return FORTIO_NOENTRY; /* This is an application error. */
-}
-
 offset_type fortio_ftell(const fortio_type *fortio) {
     return util_ftell(fortio->stream);
 }
@@ -762,11 +649,6 @@ bool fortio_fseek(fortio_type *fortio, offset_type offset, int whence) {
 
 bool fortio_ftruncate(fortio_type *fortio, offset_type size) {
     fortio_fseek(fortio, size, SEEK_SET);
-    return util_ftruncate(fortio->stream, size);
-}
-
-bool fortio_ftruncate_current(fortio_type *fortio) {
-    offset_type size = fortio_ftell(fortio);
     return util_ftruncate(fortio->stream, size);
 }
 
