@@ -236,10 +236,6 @@ rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
     return data;
 }
 
-void rd_sum_data_reset_self_map(rd_sum_data_type *data) {
-    rd_sum_data_build_index(data);
-}
-
 static void rd_sum_data_append_file_data(rd_sum_data_type *sum_data,
                                          rd::rd_sum_file_data *file_data) {
     sum_data->data_files.push_back(file_data);
@@ -464,13 +460,6 @@ static int rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
                                                                   : high_index;
 }
 
-int rd_sum_data_get_index_from_sim_days(const rd_sum_data_type *data,
-                                        double sim_days) {
-    time_t sim_time = rd_smspec_get_start_time(data->smspec);
-    util_inplace_forward_days_utc(&sim_time, sim_days);
-    return rd_sum_data_get_index_from_sim_time(data, sim_time);
-}
-
 /**
    This function will take a true time 'sim_time' as input. The
    ministep indices bracketing this sim_time are identified, and the
@@ -496,10 +485,10 @@ int rd_sum_data_get_index_from_sim_days(const rd_sum_data_type *data,
    file.
 */
 
-void rd_sum_data_init_interp_from_sim_time(const rd_sum_data_type *data,
-                                           time_t sim_time, int *index1,
-                                           int *index2, double *weight1,
-                                           double *weight2) {
+static void rd_sum_data_init_interp_from_sim_time(const rd_sum_data_type *data,
+                                                  time_t sim_time, int *index1,
+                                                  int *index2, double *weight1,
+                                                  double *weight2) {
     int idx = rd_sum_data_get_index_from_sim_time(data, sim_time);
 
     // if sim_time is first date, idx=0 and then we cannot interpolate, so we give
@@ -525,16 +514,6 @@ void rd_sum_data_init_interp_from_sim_time(const rd_sum_data_type *data,
 
     *weight1 = time_dist2 / time_diff;
     *weight2 = time_dist1 / time_diff;
-}
-
-void rd_sum_data_init_interp_from_sim_days(const rd_sum_data_type *data,
-                                           double sim_days, int *step1,
-                                           int *step2, double *weight1,
-                                           double *weight2) {
-    time_t sim_time = rd_smspec_get_start_time(data->smspec);
-    util_inplace_forward_days_utc(&sim_time, sim_days);
-    rd_sum_data_init_interp_from_sim_time(data, sim_time, step1, step2, weight1,
-                                          weight2);
 }
 
 double_vector_type *
@@ -638,19 +617,6 @@ rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
     return tstep;
 }
 
-int *rd_sum_data_alloc_param_mapping(int *current_param_mapping,
-                                     int *old_param_mapping, size_t size) {
-    int *new_param_mapping =
-        (int *)util_malloc(size * sizeof *new_param_mapping);
-    for (size_t i = 0; i < size; i++) {
-        if (current_param_mapping[i] >= 0)
-            new_param_mapping[i] = old_param_mapping[current_param_mapping[i]];
-        else
-            new_param_mapping[i] = -1;
-    }
-    return new_param_mapping;
-}
-
 void rd_sum_data_add_case(rd_sum_data_type *self,
                           const rd_sum_data_type *other) {
     for (auto other_file : other->data_files)
@@ -677,55 +643,6 @@ bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
         return true;
     }
     return false;
-}
-
-/**
-   If the variable @include_restart is true the function will query
-   the smspec object for restart information, and load summary
-   information from case(s) which this case was restarted from (this
-   only really applies to predictions where the basename has been
-   (manually) changed from the historical part.
-*/
-
-rd_sum_data_type *rd_sum_data_fread_alloc(rd_smspec_type *smspec,
-                                          const stringlist_type *filelist,
-                                          bool include_restart, bool lazy_load,
-                                          int file_options) {
-    rd_sum_data_type *data = rd_sum_data_alloc(smspec);
-    rd_sum_data_fread(data, filelist, lazy_load, file_options);
-
-    /* OK - now we have loaded all the data. Must sort the internal
-     storage vector, and build up various internal indexing vectors;
-     this is done in a sepearate function.
-  */
-    rd_sum_data_build_index(data);
-    return data;
-}
-
-void rd_sum_data_summarize(const rd_sum_data_type *data, FILE *stream) {
-    fprintf(stream,
-            "REPORT         INDEX              DATE                 DAYS\n");
-    fprintf(
-        stream,
-        "---------------------------------------------------------------\n");
-    {
-        int index;
-        for (index = 0; index < rd_sum_data_get_length(data); index++) {
-            time_t sim_time = rd_sum_data_iget_sim_time(data, index);
-            int report_step = rd_sum_data_iget_report_step(data, index);
-            double days = rd_sum_data_iget_sim_days(data, index);
-
-            int day, month, year;
-            rd_set_date_values(sim_time, &day, &month, &year);
-            fprintf(stream,
-                    "%04d          %6d               %02d/%02d/%4d           "
-                    "%7.2f \n",
-                    report_step, index, day, month, year, days);
-        }
-    }
-    fprintf(
-        stream,
-        "---------------------------------------------------------------\n");
 }
 
 bool rd_sum_data_has_report_step(const rd_sum_data_type *data,
@@ -1028,11 +945,6 @@ static void rd_sum_data_init_time_vector__(const rd_sum_data_type *data,
     }
 }
 
-void rd_sum_data_init_time_vector(const rd_sum_data_type *data,
-                                  time_t *output_data) {
-    rd_sum_data_init_time_vector__(data, output_data, false);
-}
-
 time_t_vector_type *rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
                                                   bool report_only) {
     std::vector<time_t> output_data;
@@ -1270,11 +1182,6 @@ static bool rd_sum_data_report_step_equal__(const rd_sum_data_type *data1,
     return true;
 }
 
-bool rd_sum_data_report_step_compatible(const rd_sum_data_type *data1,
-                                        const rd_sum_data_type *data2) {
-    return rd_sum_data_report_step_equal__(data1, data2, false);
-}
-
 bool rd_sum_data_report_step_equal(const rd_sum_data_type *data1,
                                    const rd_sum_data_type *data2) {
     return rd_sum_data_report_step_equal__(data1, data2, true);
@@ -1284,11 +1191,6 @@ double rd_sum_data_iget_last_value(const rd_sum_data_type *data,
                                    int param_index) {
     return rd_sum_data_iget(data, rd_sum_data_get_length(data) - 1,
                             param_index);
-}
-
-double rd_sum_data_get_last_value(const rd_sum_data_type *data,
-                                  int param_index) {
-    return rd_sum_data_iget_last_value(data, param_index);
 }
 
 double rd_sum_data_iget_first_value(const rd_sum_data_type *data,

@@ -19,11 +19,8 @@ extern "C" {
 
 typedef struct rd_sum_data_struct rd_sum_data_type;
 
-void rd_sum_data_reset_self_map(rd_sum_data_type *data);
 void rd_sum_data_add_case(rd_sum_data_type *self,
                           const rd_sum_data_type *other);
-void rd_sum_data_fwrite_step(const rd_sum_data_type *data, const char *rd_case,
-                             bool fmt_case, bool unified, int report_step);
 void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
                         bool fmt_case, bool unified);
 bool rd_sum_data_can_write(const rd_sum_data_type *data);
@@ -38,23 +35,17 @@ int rd_sum_data_get_report_step_from_days(const rd_sum_data_type *data,
                                           double days);
 bool rd_sum_data_check_sim_time(const rd_sum_data_type *data, time_t sim_time);
 bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days);
-int rd_sum_data_get_num_ministep(const rd_sum_data_type *data);
 double_vector_type *rd_sum_data_alloc_data_vector(const rd_sum_data_type *data,
                                                   int data_index,
                                                   bool report_only);
-void rd_sum_data_init_time_vector(const rd_sum_data_type *data,
-                                  time_t_vector_type *time_vector,
-                                  bool report_only);
 time_t_vector_type *rd_sum_data_alloc_time_vector(const rd_sum_data_type *data,
                                                   bool report_only);
 time_t rd_sum_data_get_data_start(const rd_sum_data_type *data);
 time_t rd_sum_data_get_report_time(const rd_sum_data_type *data,
                                    int report_step);
 double rd_sum_data_get_first_day(const rd_sum_data_type *data);
-time_t rd_sum_data_get_sim_start(const rd_sum_data_type *data);
 time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data);
 double rd_sum_data_get_sim_length(const rd_sum_data_type *data);
-void rd_sum_data_summarize(const rd_sum_data_type *data, FILE *stream);
 double rd_sum_data_iget(const rd_sum_data_type *data, int internal_index,
                         int params_index);
 
@@ -67,9 +58,6 @@ void rd_sum_data_get_interp_vector(const rd_sum_data_type *data,
 
 bool rd_sum_data_has_report_step(const rd_sum_data_type *, int);
 
-rd_sum_data_type *rd_sum_data_fread_alloc(rd_smspec_type *,
-                                          const stringlist_type *filelist,
-                                          bool include_restart, bool lazy_load);
 void rd_sum_data_free(rd_sum_data_type *);
 int rd_sum_data_get_last_report_step(const rd_sum_data_type *data);
 int rd_sum_data_get_first_report_step(const rd_sum_data_type *data);
@@ -90,14 +78,10 @@ rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
                                              double sim_seconds);
 bool rd_sum_data_report_step_equal(const rd_sum_data_type *data1,
                                    const rd_sum_data_type *data2);
-bool rd_sum_data_report_step_compatible(const rd_sum_data_type *data1,
-                                        const rd_sum_data_type *data2);
 void rd_sum_data_fwrite_interp_csv_line(const rd_sum_data_type *data,
                                         time_t sim_time,
                                         const rd_sum_vector_type *keylist,
                                         FILE *fp);
-double rd_sum_data_get_last_value(const rd_sum_data_type *data,
-                                  int param_index);
 double rd_sum_data_iget_last_value(const rd_sum_data_type *data,
                                    int param_index);
 double rd_sum_data_iget_first_value(const rd_sum_data_type *data,
