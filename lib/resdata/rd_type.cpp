@@ -177,8 +177,3 @@ bool rd_type_is_bool(const rd_data_type rd_type) {
 bool rd_type_is_string(const rd_data_type rd_type) {
     return (rd_type.type == RD_STRING_TYPE);
 }
-
-// Temporary fixup for OPM.
-char *rd_type_get_name(const rd_data_type rd_type) {
-    return rd_type_alloc_name(rd_type);
-}
