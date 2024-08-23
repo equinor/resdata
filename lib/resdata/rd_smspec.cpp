@@ -259,8 +259,8 @@ int rd_smspec_get_params_size(const rd_smspec_type *smspec) {
     return smspec->params_size;
 }
 
-rd_smspec_type *rd_smspec_alloc_empty(bool write_mode,
-                                      const char *key_join_string) {
+static rd_smspec_type *rd_smspec_alloc_empty(bool write_mode,
+                                             const char *key_join_string) {
     rd_smspec_type *rd_smspec = new rd_smspec_type();
     UTIL_TYPE_ID_INIT(rd_smspec, RD_SMSPEC_ID);
 
@@ -593,76 +593,6 @@ static bool rd_smspec_lgr_var_type(rd_smspec_var_type var_type) {
 }
 
 /**
-   Takes a rd_smspec_var_type variable as input, and return a string
-   representation of this var_type. Suitable for debug messages +++
-*/
-
-const char *rd_smspec_get_var_type_name(rd_smspec_var_type var_type) {
-    switch (var_type) {
-    case (RD_SMSPEC_INVALID_VAR):
-        return "INVALID_VAR";
-        break;
-    case (RD_SMSPEC_AQUIFER_VAR):
-        return "AQUIFER_VAR";
-        break;
-    case (RD_SMSPEC_WELL_VAR):
-        return "WELL_VAR";
-        break;
-    case (RD_SMSPEC_REGION_VAR):
-        return "REGION_VAR";
-        break;
-    case (RD_SMSPEC_FIELD_VAR):
-        return "FIELD_VAR";
-        break;
-    case (RD_SMSPEC_GROUP_VAR):
-        return "GROUP_VAR";
-        break;
-    case (RD_SMSPEC_BLOCK_VAR):
-        return "BLOCK_VAR";
-        break;
-    case (RD_SMSPEC_COMPLETION_VAR):
-        return "COMPLETION_VAR";
-        break;
-    case (RD_SMSPEC_LOCAL_BLOCK_VAR):
-        return "LOCAL_BLOCK_VAR";
-        break;
-    case (RD_SMSPEC_LOCAL_COMPLETION_VAR):
-        return "LOCAL_COMPLETION_VAR";
-        break;
-    case (RD_SMSPEC_LOCAL_WELL_VAR):
-        return "LOCAL_WELL_VAR";
-        break;
-    case (RD_SMSPEC_NETWORK_VAR):
-        return "NETWORK_VAR";
-        break;
-    case (RD_SMSPEC_REGION_2_REGION_VAR):
-        return "REGION_2_REGION_VAR";
-        break;
-    case (RD_SMSPEC_SEGMENT_VAR):
-        return "SEGMENT_VAR";
-        break;
-    case (RD_SMSPEC_MISC_VAR):
-        return "MISC_VAR";
-        break;
-    default:
-        util_abort("%s: Unrecognized variable type:%d \n", __func__, var_type);
-        return NULL;
-    }
-}
-
-/**
-  Input i,j,k are assumed to be in the interval [1..nx] , [1..ny],
-  [1..nz], return value is a global index which can be used in the
-  xxx_block_xxx routines.
-*/
-
-static int rd_smspec_get_global_grid_index(const rd_smspec_type *smspec, int i,
-                                           int j, int k) {
-    return i + (j - 1) * smspec->grid_dims[0] +
-           (k - 1) * smspec->grid_dims[0] * smspec->grid_dims[1];
-}
-
-/**
    This function takes a fully initialized smspec_node instance, generates the
    corresponding key and inserts smspec_node instance in the main hash table
    smspec->gen_var_index.
@@ -751,91 +681,6 @@ static void rd_smspec_install_special_keys(rd_smspec_type *rd_smspec,
     default:
         throw std::invalid_argument("Internal error - should not be here \n");
     }
-}
-
-/**
-   The usage of this functon breaks down completely if LGR's are involved.
-*/
-
-bool rd_smspec_needs_wgname(rd_smspec_var_type var_type) {
-    switch (var_type) {
-    case (RD_SMSPEC_COMPLETION_VAR):
-        return true;
-        break;
-    case (RD_SMSPEC_FIELD_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_GROUP_VAR):
-        return true;
-        break;
-    case (RD_SMSPEC_WELL_VAR):
-        return true;
-        break;
-    case (RD_SMSPEC_REGION_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_REGION_2_REGION_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_MISC_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_BLOCK_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_AQUIFER_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_SEGMENT_VAR):
-        return true;
-        break;
-    default:
-        util_exit("Sorry: support for variables of type:%s is not implemented "
-                  "in %s.\n",
-                  rd_smspec_get_var_type_name(var_type), __FILE__);
-    }
-    /* Really should not be here. */
-    return false;
-}
-
-/**
-   The usage of this functon breaks down completely if LGR's are involved.
-*/
-bool rd_smspec_needs_num(rd_smspec_var_type var_type) {
-    switch (var_type) {
-    case (RD_SMSPEC_COMPLETION_VAR):
-        return true;
-        break;
-    case (RD_SMSPEC_AQUIFER_VAR):
-        return true;
-        break;
-    case (RD_SMSPEC_FIELD_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_GROUP_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_WELL_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_REGION_VAR):
-        return true;
-        break;
-    case (RD_SMSPEC_REGION_2_REGION_VAR):
-        return true;
-        break;
-    case (RD_SMSPEC_MISC_VAR):
-        return false;
-        break;
-    case (RD_SMSPEC_BLOCK_VAR):
-        return true;
-        break;
-    default:
-        util_exit("Sorry: support for variables of type:%s is not implemented "
-                  "in %s.\n",
-                  rd_smspec_get_var_type_name(var_type), __FILE__);
-    }
-    return false;
 }
 
 bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other) {
@@ -1262,18 +1107,6 @@ rd_smspec_type *rd_smspec_fread_alloc(const char *header_file,
     }
 }
 
-int rd_smspec_get_num_groups(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->group_var_index.size();
-}
-
-/*char ** rd_smspec_alloc_group_names(const rd_smspec_type * rd_smspec) {
-  return hash_alloc_keylist(rd_smspec->group_var_index);
-}*/
-
-int rd_smspec_get_num_regions(const rd_smspec_type *rd_smspec) {
-    return rd_smspec->num_regions;
-}
-
 /*
    For each type of summary data (according to the types in
    rd_smcspec_var_type there are a set accessor functions:
@@ -1314,19 +1147,6 @@ int node_valid_index(const rd::smspec_node *node_ptr) {
 
 } // namespace
 
-const rd::smspec_node &rd_smspec_get_well_var_node(const rd_smspec_type *smspec,
-                                                   const char *well,
-                                                   const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_str_key_var_node(smspec->well_var_index, well, var);
-    if (!node_ptr)
-        throw std::out_of_range("The well: " + std::string(well) +
-                                " variable: " + std::string(var) +
-                                " combination does not exist.");
-
-    return *node_ptr;
-}
-
 int rd_smspec_get_well_var_params_index(const rd_smspec_type *rd_smspec,
                                         const char *well, const char *var) {
     const auto node_ptr =
@@ -1334,174 +1154,7 @@ int rd_smspec_get_well_var_params_index(const rd_smspec_type *rd_smspec,
     return node_valid_index(node_ptr);
 }
 
-bool rd_smspec_has_well_var(const rd_smspec_type *rd_smspec, const char *well,
-                            const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_str_key_var_node(rd_smspec->well_var_index, well, var);
-    return node_exists(node_ptr);
-}
-
-const rd::smspec_node &
-rd_smspec_get_group_var_node(const rd_smspec_type *smspec, const char *group,
-                             const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_str_key_var_node(smspec->group_var_index, group, var);
-    if (!node_ptr)
-        throw std::out_of_range("The group: " + std::string(group) +
-                                " variable: " + std::string(var) +
-                                " combination does not exist.");
-
-    return *node_ptr;
-}
-
-int rd_smspec_get_group_var_params_index(const rd_smspec_type *rd_smspec,
-                                         const char *group, const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_str_key_var_node(rd_smspec->group_var_index, group, var);
-    return node_valid_index(node_ptr);
-}
-
-bool rd_smspec_has_group_var(const rd_smspec_type *rd_smspec, const char *group,
-                             const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_str_key_var_node(rd_smspec->group_var_index, group, var);
-    return node_exists(node_ptr);
-}
-
-const rd::smspec_node &
-rd_smspec_get_field_var_node(const rd_smspec_type *rd_smspec, const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(rd_smspec->field_var_index, var);
-    if (!node_ptr)
-        throw std::out_of_range("The field variable: " + std::string(var) +
-                                " does not exist.");
-
-    return *node_ptr;
-}
-
-int rd_smspec_get_field_var_params_index(const rd_smspec_type *rd_smspec,
-                                         const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(rd_smspec->field_var_index, var);
-    return node_valid_index(node_ptr);
-}
-
-bool rd_smspec_has_field_var(const rd_smspec_type *rd_smspec, const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(rd_smspec->field_var_index, var);
-    return node_exists(node_ptr);
-}
-
-/**
-   Observe that block_nr is represented as char literal,
-   i.e. "2345". This is because it will be used as a hash key.
-
-   This is the final low level function which actually consults the
-   hash tables.
-*/
-
-const rd::smspec_node &
-rd_smspec_get_block_var_node(const rd_smspec_type *rd_smspec,
-                             const char *block_var, int block_nr) {
-    const auto node_ptr = rd_smspec_get_int_key_var_node(
-        rd_smspec->block_var_index, block_nr, block_var);
-    if (!node_ptr)
-        throw std::out_of_range("No such block variable");
-
-    return *node_ptr;
-}
-
-const rd::smspec_node &
-rd_smspec_get_block_var_node_ijk(const rd_smspec_type *rd_smspec,
-                                 const char *block_var, int i, int j, int k) {
-    return rd_smspec_get_block_var_node(
-        rd_smspec, block_var,
-        rd_smspec_get_global_grid_index(rd_smspec, i, j, k));
-}
-
-bool rd_smspec_has_block_var(const rd_smspec_type *rd_smspec,
-                             const char *block_var, int block_nr) {
-    const auto node_ptr = rd_smspec_get_int_key_var_node(
-        rd_smspec->block_var_index, block_nr, block_var);
-    return node_exists(node_ptr);
-}
-
-bool rd_smspec_has_block_var_ijk(const rd_smspec_type *rd_smspec,
-                                 const char *block_var, int i, int j, int k) {
-    return rd_smspec_has_block_var(
-        rd_smspec, block_var,
-        rd_smspec_get_global_grid_index(rd_smspec, i, j, k));
-}
-
-int rd_smspec_get_block_var_params_index(const rd_smspec_type *rd_smspec,
-                                         const char *block_var, int block_nr) {
-    const auto node_ptr = rd_smspec_get_int_key_var_node(
-        rd_smspec->block_var_index, block_nr, block_var);
-    return node_valid_index(node_ptr);
-}
-
-int rd_smspec_get_block_var_params_index_ijk(const rd_smspec_type *rd_smspec,
-                                             const char *block_var, int i,
-                                             int j, int k) {
-    return rd_smspec_get_block_var_params_index(
-        rd_smspec, block_var,
-        rd_smspec_get_global_grid_index(rd_smspec, i, j, k));
-}
-
-/**
-   region_nr: [1...num_regions] (NOT C-based indexing)
-*/
-
-const rd::smspec_node &
-rd_smspec_get_region_var_node(const rd_smspec_type *rd_smspec,
-                              const char *region_var, int region_nr) {
-    const auto node_ptr = rd_smspec_get_int_key_var_node(
-        rd_smspec->region_var_index, region_nr, region_var);
-    if (!node_ptr)
-        throw std::out_of_range("No such block variable");
-
-    return *node_ptr;
-}
-
-bool rd_smspec_has_region_var(const rd_smspec_type *rd_smspec,
-                              const char *region_var, int region_nr) {
-    const auto node_ptr = rd_smspec_get_int_key_var_node(
-        rd_smspec->region_var_index, region_nr, region_var);
-    return node_exists(node_ptr);
-}
-
-int rd_smspec_get_region_var_params_index(const rd_smspec_type *rd_smspec,
-                                          const char *region_var,
-                                          int region_nr) {
-    const auto node_ptr = rd_smspec_get_int_key_var_node(
-        rd_smspec->region_var_index, region_nr, region_var);
-    return node_valid_index(node_ptr);
-}
-
-const rd::smspec_node &
-rd_smspec_get_misc_var_node(const rd_smspec_type *rd_smspec, const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(rd_smspec->misc_var_index, var);
-    if (!node_ptr)
-        throw std::out_of_range("No such misc variable");
-
-    return *node_ptr;
-}
-
-bool rd_smspec_has_misc_var(const rd_smspec_type *rd_smspec, const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(rd_smspec->misc_var_index, var);
-    return node_exists(node_ptr);
-}
-
-int rd_smspec_get_misc_var_params_index(const rd_smspec_type *rd_smspec,
-                                        const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_var_node(rd_smspec->misc_var_index, var);
-    return node_valid_index(node_ptr);
-}
-
-const rd::smspec_node *
+static const rd::smspec_node *
 rd_smspec_get_well_completion_var_node__(const rd_smspec_type *rd_smspec,
                                          const char *well, const char *var,
                                          int cell_nr) {
@@ -1511,26 +1164,6 @@ rd_smspec_get_well_completion_var_node__(const rd_smspec_type *rd_smspec,
 
     const auto &num_map = well_iter->second;
     return rd_smspec_get_int_key_var_node(num_map, cell_nr, var);
-}
-
-const rd::smspec_node &
-rd_smspec_get_well_completion_var_node(const rd_smspec_type *rd_smspec,
-                                       const char *well, const char *var,
-                                       int cell_nr) {
-    const auto node_ptr =
-        rd_smspec_get_well_completion_var_node__(rd_smspec, well, var, cell_nr);
-    if (!node_ptr)
-        throw std::out_of_range("No such well/var/completion");
-
-    return *node_ptr;
-}
-
-bool rd_smspec_has_well_completion_var(const rd_smspec_type *rd_smspec,
-                                       const char *well, const char *var,
-                                       int cell_nr) {
-    const auto node_ptr =
-        rd_smspec_get_well_completion_var_node__(rd_smspec, well, var, cell_nr);
-    return node_exists(node_ptr);
 }
 
 int rd_smspec_get_well_completion_var_params_index(
@@ -1568,14 +1201,6 @@ bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,
     const auto node_ptr =
         rd_smspec_get_var_node(rd_smspec->gen_var_index, lookup_kw);
     return node_exists(node_ptr);
-}
-
-/** DIES if the lookup_kw is not present. */
-const char *rd_smspec_get_general_var_unit(const rd_smspec_type *rd_smspec,
-                                           const char *lookup_kw) {
-    const auto smspec_node =
-        rd_smspec_get_general_var_node(rd_smspec, lookup_kw);
-    return smspec_node_get_unit(&smspec_node);
 }
 
 int rd_smspec_get_time_seconds(const rd_smspec_type *rd_smspec) {
@@ -1623,11 +1248,6 @@ rd_smspec_get_params_default(const rd_smspec_type *rd_smspec) {
 
 void rd_smspec_free(rd_smspec_type *rd_smspec) { delete rd_smspec; }
 
-void rd_smspec_free__(void *__rd_smspec) {
-    rd_smspec_type *rd_smspec = rd_smspec_safe_cast(__rd_smspec);
-    rd_smspec_free(rd_smspec);
-}
-
 int rd_smspec_get_date_day_index(const rd_smspec_type *smspec) {
     return smspec->day_index;
 }
@@ -1638,19 +1258,6 @@ int rd_smspec_get_date_month_index(const rd_smspec_type *smspec) {
 
 int rd_smspec_get_date_year_index(const rd_smspec_type *smspec) {
     return smspec->year_index;
-}
-
-/**
-   This function checks whether an input general key (i.e. FWPR or
-   GGPT:NORTH) represents an accumulated total. If the variable is not
-   internalized the function will fail hard.
-*/
-
-bool rd_smspec_general_is_total(const rd_smspec_type *smspec,
-                                const char *gen_key) {
-    const rd::smspec_node &smspec_node =
-        rd_smspec_get_general_var_node(smspec, gen_key);
-    return smspec_node_is_total(&smspec_node);
 }
 
 /**
@@ -1713,10 +1320,6 @@ rd_smspec_alloc_matching_general_var_list(const rd_smspec_type *smspec,
     return keys;
 }
 
-const char *rd_smspec_get_join_string(const rd_smspec_type *smspec) {
-    return smspec->key_join_string.c_str();
-}
-
 /**
     Returns a stringlist instance with all the (valid) well names. It
     is the responsability of the calling scope to free the stringlist
@@ -1762,39 +1365,9 @@ stringlist_type *rd_smspec_alloc_group_list(const rd_smspec_type *smspec,
     return rd_smspec_alloc_map_list(smspec->group_var_index, pattern);
 }
 
-/**
-    Returns a stringlist instance with all the well variables.  It is
-    the responsability of the calling scope to free the stringlist
-    with stringlist_free();
-*/
-
-stringlist_type *rd_smspec_alloc_well_var_list(const rd_smspec_type *smspec) {
-    stringlist_type *stringlist = stringlist_alloc_new();
-    for (const auto &pair : smspec->well_var_index)
-        stringlist_append_copy(stringlist, pair.first.c_str());
-
-    return stringlist;
-}
-
 const int *rd_smspec_get_grid_dims(const rd_smspec_type *smspec) {
     return smspec->grid_dims;
 }
-
-char *rd_smspec_alloc_well_key(const rd_smspec_type *smspec,
-                               const char *keyword, const char *wgname) {
-    return smspec_alloc_well_key(smspec->key_join_string.c_str(), keyword,
-                                 wgname);
-}
-
-/*void rd_smspec_sort( rd_smspec_type * smspec ) {
-  std::sort(smspec->smspec_nodes.begin(), smspec->smspec_nodes.end(), smspec_node_lt);
-
-  for (int i=0; i < static_cast<int>(smspec->smspec_nodes.size()); i++) {
-    rd::smspec_node& node = *smspec->smspec_nodes[i].get();
-    smspec_node_set_params_index( &node , i );
-  }
-}
-*/
 
 ert_rd_unit_enum rd_smspec_get_unit_system(const rd_smspec_type *smspec) {
     return smspec->unit_system;
