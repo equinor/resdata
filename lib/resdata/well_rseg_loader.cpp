@@ -40,11 +40,6 @@ well_rseg_loader_type *well_rseg_loader_alloc(rd_file_view_type *rst_view) {
     return loader;
 }
 
-int well_rseg_loader_element_count(
-    const well_rseg_loader_type *well_rseg_loader) {
-    return int_vector_size(well_rseg_loader->relative_index_map);
-}
-
 void well_rseg_loader_free(well_rseg_loader_type *loader) {
 
     if (rd_file_view_flags_set(loader->rst_view, RD_FILE_CLOSE_STREAM))
