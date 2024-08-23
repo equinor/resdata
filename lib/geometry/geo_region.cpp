@@ -70,11 +70,6 @@ void geo_region_free(geo_region_type *region) {
     free(region);
 }
 
-void geo_region_free__(void *arg) {
-    geo_region_type *region = geo_region_safe_cast(arg);
-    geo_region_free(region);
-}
-
 static void geo_region_polygon_select__(geo_region_type *region,
                                         const geo_polygon_type *polygon,
                                         bool select_inside, bool select) {
