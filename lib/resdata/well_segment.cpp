@@ -98,30 +98,11 @@ well_segment_alloc_from_kw(const rd_kw_type *iseg_kw,
     }
 }
 
-/*
-    if (iseg_kw != NULL) {
-      if (conn->segment != WELL_CONN_NORMAL_WELL_SEGMENT_ID) {
-
-      } else {
-        conn->branch = 0;
-        conn->outlet_segment = 0;
-      }
-    } else {
-      conn->branch = 0;
-      conn->outlet_segment = 0;
-    }
-    */
-
 void well_segment_free(well_segment_type *segment) {
     for (auto &pair : segment->connections)
         well_conn_collection_free(pair.second);
 
     delete segment;
-}
-
-void well_segment_free__(void *arg) {
-    well_segment_type *segment = well_segment_safe_cast(arg);
-    well_segment_free(segment);
 }
 
 bool well_segment_active(const well_segment_type *segment) {
