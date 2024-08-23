@@ -144,11 +144,11 @@ void fault_block_export_cell(const fault_block_type *fault_block, int index,
     rd_grid_get_xyz3(fault_block->grid, *i, *j, *k, x, y, z);
 }
 
-int fault_block_iget_i(const fault_block_type *fault_block, int index) {
+static int fault_block_iget_i(const fault_block_type *fault_block, int index) {
     return int_vector_iget(fault_block->i_list, index);
 }
 
-int fault_block_iget_j(const fault_block_type *fault_block, int index) {
+static int fault_block_iget_j(const fault_block_type *fault_block, int index) {
     return int_vector_iget(fault_block->j_list, index);
 }
 

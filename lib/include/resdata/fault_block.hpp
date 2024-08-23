@@ -27,8 +27,6 @@ void fault_block_export_cell(const fault_block_type *fault_block, int index,
 void fault_block_assign_to_region(fault_block_type *fault_block, int region_id);
 const int_vector_type *
 fault_block_get_region_list(const fault_block_type *fault_block);
-int fault_block_iget_j(const fault_block_type *fault_block, int index);
-int fault_block_iget_i(const fault_block_type *fault_block, int index);
 void fault_block_add_cell(fault_block_type *fault_block, int i, int j);
 bool fault_block_trace_edge(const fault_block_type *block,
                             double_vector_type *x_list,
