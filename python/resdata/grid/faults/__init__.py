@@ -1,7 +1,9 @@
-from .layer import Layer
-from .fault_collection import FaultCollection
-from .fault import Fault
-from .fault_line import FaultLine
-from .fault_segments import FaultSegment, SegmentMap
-from .fault_block import FaultBlock, FaultBlockCell
-from .fault_block_layer import FaultBlockLayer
+from .fault import Fault as Fault
+from .fault_block import FaultBlock as FaultBlock
+from .fault_block import FaultBlockCell as FaultBlockCell
+from .fault_block_layer import FaultBlockLayer as FaultBlockLayer
+from .fault_collection import FaultCollection as FaultCollection
+from .fault_line import FaultLine as FaultLine
+from .fault_segments import FaultSegment as FaultSegment
+from .fault_segments import SegmentMap as SegmentMap
+from .layer import Layer as Layer

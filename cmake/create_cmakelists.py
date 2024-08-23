@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from os import listdir
-from os.path import isfile, join, isdir, islink
 import sys
+from os import listdir
+from os.path import isdir, isfile, islink, join
 
 
 def findFilesAndDirectories(directory):
@@ -11,7 +11,7 @@ def findFilesAndDirectories(directory):
     directories = []
     for f in all_files:
         path = join(directory, f)
-        if isfile(path) and not f == "CMakeLists.txt" and not islink(path):
+        if isfile(path) and f != "CMakeLists.txt" and not islink(path):
             files.append(f)
         if isdir(path):
             directories.append(f)

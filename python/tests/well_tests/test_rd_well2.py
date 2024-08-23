@@ -1,18 +1,11 @@
-import datetime
 import os.path
 
-from resdata import FileMode
-from resdata.resfile import ResdataFile
 from resdata.grid import Grid
-from tests import ResdataTest, equinor_test
-from resdata.util.util.ctime import CTime
 from resdata.well import (
     WellInfo,
-    WellConnection,
-    WellType,
-    WellConnectionDirection,
-    WellSegment,
 )
+
+from tests import ResdataTest, equinor_test
 
 
 @equinor_test()

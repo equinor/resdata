@@ -1,7 +1,8 @@
-import sys
-import pytest
-import subprocess
 import signal
+import subprocess
+import sys
+
+import pytest
 
 
 @pytest.mark.skipif(
@@ -30,6 +31,6 @@ import signal
     ],
 )
 def test_exec(name: str, returncode: int, stderr: str) -> None:
-    status = subprocess.run([name], stderr=subprocess.PIPE)
+    status = subprocess.run([name], stderr=subprocess.PIPE, check=False)
     assert status.returncode == returncode
     assert stderr in status.stderr

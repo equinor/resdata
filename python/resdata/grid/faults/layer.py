@@ -1,10 +1,7 @@
-import ctypes
-
-from resdata.grid import Grid
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
+
 from resdata import ResdataPrototype
+from resdata.util.util import IntVector, monkey_the_camel
 
 
 class Layer(BaseCClass):
@@ -63,10 +60,10 @@ class Layer(BaseCClass):
     def __unpack_index(self, index):
         try:
             (i, j) = index
-        except TypeError:
+        except TypeError as err:
             raise ValueError(
                 "Index:%s is invalid - must have two integers" % str(index)
-            )
+            ) from err
 
         self._assert_ij(i, j)
 

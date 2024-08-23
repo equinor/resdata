@@ -1,22 +1,24 @@
 #!/usr/bin/env python
 import os
-import cwrap
 from random import randint
+
+import cwrap
 from resdata import ResDataType
-from resdata.resfile import FortIO, ResdataKW, openFortIO, ResdataFile
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
 
 
 class FortIOTest(ResdataTest):
     def test_open_write(self):
         with TestAreaContext("python/fortio/write"):
-            f = FortIO("newfile", FortIO.WRITE_MODE)
+            _f = FortIO("newfile", FortIO.WRITE_MODE)
             self.assertTrue(os.path.exists("newfile"))
 
     def test_noex(self):
         with self.assertRaises(IOError):
-            f = FortIO("odes_not_exist", FortIO.READ_MODE)
+            _f = FortIO("odes_not_exist", FortIO.READ_MODE)
 
     def test_kw(self):
         kw1 = ResdataKW("KW1", 2, ResDataType.RD_INT)
@@ -50,16 +52,15 @@ class FortIOTest(ResdataTest):
         kw2[0] = 113
         kw2[1] = 335
 
-        with TestAreaContext("python/fortio/ftruncate") as t:
+        with TestAreaContext("python/fortio/ftruncate"):
             with openFortIO("file", mode=FortIO.WRITE_MODE) as f:
                 kw1.fwrite(f)
                 pos1 = f.getPosition()
                 kw2.fwrite(f)
 
             # Truncate file in read mode; should fail hard.
-            with openFortIO("file") as f:
-                with self.assertRaises(IOError):
-                    f.truncate()
+            with openFortIO("file") as f, self.assertRaises(IOError):
+                f.truncate()
 
             with openFortIO("file", mode=FortIO.READ_AND_WRITE_MODE) as f:
                 f.seek(pos1)
@@ -73,15 +74,15 @@ class FortIOTest(ResdataTest):
     def test_fortio_creation(self):
         with TestAreaContext("python/fortio/create"):
             w = FortIO("test", FortIO.WRITE_MODE)
-            rw = FortIO("test", FortIO.READ_AND_WRITE_MODE)
-            r = FortIO("test", FortIO.READ_MODE)
-            a = FortIO("test", FortIO.APPEND_MODE)
+            _rw = FortIO("test", FortIO.READ_AND_WRITE_MODE)
+            _r = FortIO("test", FortIO.READ_MODE)
+            _a = FortIO("test", FortIO.APPEND_MODE)
 
             w.close()
             w.close()  # should not fail
 
     def test_context(self):
-        with TestAreaContext("python/fortio/context") as t:
+        with TestAreaContext("python/fortio/context"):
             kw1 = ResdataKW("KW", 2456, ResDataType.RD_FLOAT)
             for i in range(len(kw1)):
                 kw1[i] = randint(0, 1000)

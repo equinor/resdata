@@ -23,9 +23,8 @@ class PathContext(object):
                     break
 
             os.makedirs(path)
-        else:
-            if not self.store:
-                raise OSError("Entry %s already exists" % path)
+        elif not self.store:
+            raise OSError("Entry %s already exists" % path)
         os.chdir(path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):

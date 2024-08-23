@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import copy
 import datetime
+
 import six
 
 try:
@@ -9,12 +9,11 @@ except ImportError:
     from unittest import TestCase
 
 from resdata.util.util import (
+    BoolVector,
+    CTime,
     DoubleVector,
     IntVector,
-    BoolVector,
     TimeVector,
-    CTime,
-    PermutationVector,
 )
 
 
@@ -118,11 +117,11 @@ class UtilTest(TestCase):
 
         # Size mismatch
         with self.assertRaises(ValueError):
-            iv3 = iv1 + iv2
+            _iv3 = iv1 + iv2
 
         # Size mismatch
         with self.assertRaises(ValueError):
-            iv3 = iv1 * iv2
+            _iv3 = iv1 * iv2
 
         # Type mismatch
         with self.assertRaises(TypeError):
@@ -317,7 +316,7 @@ class UtilTest(TestCase):
         self.assertEqual(list(sliced), [5, 4, 3])
 
         with self.assertRaises(IndexError):
-            item = a[6]
+            _item = a[6]
 
         copy_of_a = a.copy()
         self.assertEqual(list(a), list(copy_of_a))
@@ -523,16 +522,16 @@ class UtilTest(TestCase):
         r = range(a, b, d)
 
         self.assertEqual(len(v), len(r))
-        for a, b in zip(v, r):
-            self.assertEqual(a, b)
+        for val1, val2 in zip(v, r):
+            self.assertEqual(val1, val2)
 
     def create_range_test(self, v, a, b, d):
-        v = IntVector.createRange(a, b, d)
-        r = range(a, b, d)
+        vec = IntVector.createRange(a, b, d)
+        ran = range(a, b, d)
 
-        self.assertEqual(len(v), len(r))
-        for a, b in zip(v, r):
-            self.assertEqual(a, b)
+        self.assertEqual(len(vec), len(ran))
+        for val1, val2 in zip(vec, ran):
+            self.assertEqual(val1, val2)
 
     def test_range(self):
         v = IntVector()

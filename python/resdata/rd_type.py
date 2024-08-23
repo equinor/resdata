@@ -1,4 +1,5 @@
 from cwrap import BaseCClass, BaseCEnum
+
 from resdata import ResdataPrototype
 
 

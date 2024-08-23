@@ -1,12 +1,11 @@
 #!/usr/bin/env python
-from unittest import skipIf
-import time
 
-from resdata.util.util import IntVector
-from resdata.grid import Grid
 from resdata.geometry import CPolyline
-from resdata.grid.faults import Layer, FaultCollection
+from resdata.grid import Grid
+from resdata.grid.faults import FaultCollection, Layer
 from resdata.util.test import TestAreaContext
+from resdata.util.util import IntVector
+
 from tests import ResdataTest
 
 
@@ -60,7 +59,7 @@ class LayerTest(ResdataTest):
         self.assertTrue(layer.cellContact((0, 4), (0, 5)))
 
         with TestAreaContext("Layer/barrier"):
-            with open("faults.grdecl", "w") as f:
+            with open("faults.grdecl", "w", encoding="utf-8") as f:
                 f.write("FAULTS\n")
                 f.write("'FX'   5   5   1   10   1   1  'X'  /\n")
                 f.write("'FY'   1   10   5   5   1   1  'Y'  /\n")
@@ -92,7 +91,7 @@ class LayerTest(ResdataTest):
         nz = 43
         grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
         with TestAreaContext("python/faults/line_order"):
-            with open("faults.grdecl", "w") as f:
+            with open("faults.grdecl", "w", encoding="utf-8") as f:
                 f.write(
                     """FAULTS
 \'F\'              105  107     50   50      1   43    \'Y\'    /
@@ -104,7 +103,7 @@ class LayerTest(ResdataTest):
 /
 """
                 )
-            with open("faults.grdecl") as f:
+            with open("faults.grdecl", encoding="utf-8") as f:
                 faults = FaultCollection(grid, "faults.grdecl")
 
         # Fault layout:
@@ -149,7 +148,7 @@ class LayerTest(ResdataTest):
         nx = 10
         ny = 10
         layer = Layer(nx, ny)
-        grid = Grid.createRectangular((nx, ny, 1), (1, 1, 1))
+        _grid = Grid.createRectangular((nx, ny, 1), (1, 1, 1))
 
         # Too short
         with self.assertRaises(ValueError):

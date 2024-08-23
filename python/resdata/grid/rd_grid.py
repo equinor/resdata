@@ -9,22 +9,20 @@ wrapper around the rd_grid.c implementation from the resdata library.
 """
 
 import ctypes
-
+import math
+import os.path
+import sys
 import warnings
+
 import numpy
 import pandas
-import sys
-import os.path
-import math
-import itertools
-from cwrap import CFILE, BaseCClass, load, open as copen
+from cwrap import CFILE, BaseCClass
+from cwrap import open as copen
 
-from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
-from resdata import ResDataType, UnitSystem, ResdataTypeEnum
-from resdata.resfile import ResdataKW, FortIO
+from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum, UnitSystem
 from resdata.grid import Cell
+from resdata.resfile import FortIO, ResdataKW
+from resdata.util.util import IntVector, monkey_the_camel
 
 
 class Grid(BaseCClass):
@@ -280,6 +278,7 @@ class Grid(BaseCClass):
             "Grid.createRectangular is deprecated. "
             + "Please use the similar method: GridGenerator.createRectangular.",
             DeprecationWarning,
+            stacklevel=1,
         )
 
         if actnum is None:
@@ -554,12 +553,11 @@ class Grid(BaseCClass):
                 raise IndexError("Invalid value k:%d  Range: [%d,%d)" % (k, 0, nz))
 
             global_index = self._get_global_index3(i, j, k)
-        else:
-            if not 0 <= global_index < self.getGlobalSize():
-                raise IndexError(
-                    "Invalid value global_index:%d  Range: [%d,%d)"
-                    % (global_index, 0, self.getGlobalSize())
-                )
+        elif not 0 <= global_index < self.getGlobalSize():
+            raise IndexError(
+                "Invalid value global_index:%d  Range: [%d,%d)"
+                % (global_index, 0, self.getGlobalSize())
+            )
         return global_index
 
     def get_active_index(self, ijk=None, global_index=None):
@@ -642,10 +640,7 @@ class Grid(BaseCClass):
         """
         gi = self.__global_index(global_index=global_index, ijk=ijk)
         active_index = self._get_active_index1(gi)
-        if active_index >= 0:
-            return True
-        else:
-            return False
+        return active_index >= 0
 
     def get_global_index(self, ijk=None, active_index=None):
         """
@@ -1045,10 +1040,7 @@ class Grid(BaseCClass):
         """
         Query if the grid has an LGR with name @lgr_name.
         """
-        if self._has_named_lgr(lgr_name):
-            return True
-        else:
-            return False
+        return self._has_named_lgr(lgr_name)
 
     def get_lgr(self, lgr_key):
         """Get Grid instance with LGR content.
@@ -1067,9 +1059,8 @@ class Grid(BaseCClass):
         if isinstance(lgr_key, int):
             if self._has_numbered_lgr(lgr_key):
                 lgr = self._get_numbered_lgr(lgr_key)
-        else:
-            if self._has_named_lgr(lgr_key):
-                lgr = self._get_named_lgr(lgr_key)
+        elif self._has_named_lgr(lgr_key):
+            lgr = self._get_named_lgr(lgr_key)
 
         if lgr is None:
             raise KeyError("No such LGR: %s" % lgr_key)
@@ -1157,10 +1148,7 @@ class Grid(BaseCClass):
                 else:
                     sys.exit("Do not know how to create rd_kw from type:%s" % dtype)
 
-                if pack:
-                    size = self.getNumActive()
-                else:
-                    size = self.getGlobalSize()
+                size = self.getNumActive() if pack else self.getGlobalSize()
 
                 if len(kw_name) > 8:
                     # Silently truncate to length 8
@@ -1176,11 +1164,10 @@ class Grid(BaseCClass):
                                 if self.active(global_index=global_index):
                                     kw[active_index] = array[i, j, k]
                                     active_index += 1
+                            elif dtype == numpy.int32:
+                                kw[global_index] = int(array[i, j, k])
                             else:
-                                if dtype == numpy.int32:
-                                    kw[global_index] = int(array[i, j, k])
-                                else:
-                                    kw[global_index] = array[i, j, k]
+                                kw[global_index] = array[i, j, k]
 
                             global_index += 1
                 return kw
@@ -1379,10 +1366,7 @@ class Grid(BaseCClass):
         This index frame should typically be passed to the epxport_data(),
         export_volume() and export_corners() functions.
         """
-        if active_only:
-            size = self.get_num_active()
-        else:
-            size = self.get_global_size()
+        size = self.get_num_active() if active_only else self.get_global_size()
         indx = numpy.zeros(size, dtype=numpy.int32)
         data = numpy.zeros([size, 4], dtype=numpy.int32)
         self._export_index_frame(

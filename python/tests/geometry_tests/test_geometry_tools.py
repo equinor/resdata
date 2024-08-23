@@ -1,8 +1,7 @@
 import math
 
-from resdata.geometry import Polyline, GeometryTools, CPolyline
-from resdata.geometry.xyz_io import XYZIo
-from resdata.util.test import TestAreaContext
+from resdata.geometry import CPolyline, GeometryTools, Polyline
+
 from tests import ResdataTest
 
 
@@ -26,7 +25,7 @@ class GeometryToolsTest(ResdataTest):
     def test_join__polylines(self):
         l1 = Polyline(init_points=[(0, 1), (1, 1)])
         l2 = CPolyline(init_points=[(2, -1), (2, 0)])
-        l3 = CPolyline(init_points=[(2, 2), (2, 3)])
+        _l3 = CPolyline(init_points=[(2, 2), (2, 3)])
         l4 = Polyline()
         l5 = CPolyline(init_points=[(0.5, 0), (0.5, 2)])
 

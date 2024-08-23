@@ -61,10 +61,7 @@ class VectorTemplate(BaseCClass):
         """
         Will evaluate to False for empty vector.
         """
-        if len(self) == 0:
-            return False
-        else:
-            return True
+        return len(self) == 0
 
     def __nonzero__(self):
         return self.__bool__()
@@ -266,13 +263,12 @@ class VectorTemplate(BaseCClass):
                     "Incompatible sizes for add self:%d  other:%d"
                     % (len(self), len(delta))
                 )
+        elif isinstance(delta, (int, float)):
+            if not add:
+                delta *= -1
+            self._shift(delta)
         else:
-            if isinstance(delta, int) or isinstance(delta, float):
-                if not add:
-                    delta *= -1
-                self._shift(delta)
-            else:
-                raise TypeError("delta has wrong type:%s " % type(delta))
+            raise TypeError("delta has wrong type:%s " % type(delta))
 
         return self
 
@@ -338,11 +334,10 @@ class VectorTemplate(BaseCClass):
                     "Incompatible sizes for mul self:%d  other:%d"
                     % (len(self), len(factor))
                 )
+        elif isinstance(factor, (int, float)):
+            self._scale(factor)
         else:
-            if isinstance(factor, int) or isinstance(factor, float):
-                self._scale(factor)
-            else:
-                raise TypeError("factor has wrong type:%s " % type(factor))
+            raise TypeError("factor has wrong type:%s " % type(factor))
 
         return self
 
@@ -355,7 +350,7 @@ class VectorTemplate(BaseCClass):
         return self.__mul__(factor)
 
     def __div__(self, divisor):
-        if isinstance(divisor, int) or isinstance(divisor, float):
+        if isinstance(divisor, (int, float)):
             copy = self._alloc_copy()
             copy._div(divisor)
             return copy
@@ -396,11 +391,10 @@ class VectorTemplate(BaseCClass):
         if type(self) == type(value):
             # This is a copy operation
             self._memcpy(value)
+        elif isinstance(value, (int, float)):
+            self._assign(value)
         else:
-            if isinstance(value, int) or isinstance(value, float):
-                self._assign(value)
-            else:
-                raise TypeError("Value has wrong type")
+            raise TypeError("Value has wrong type")
 
     def __len__(self):
         """

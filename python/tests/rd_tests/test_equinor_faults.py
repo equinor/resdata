@@ -1,16 +1,12 @@
 #!/usr/bin/env python
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
+
 
 from cwrap import open as copen
-
-import time
 from resdata import ResDataType
-from resdata.resfile import ResdataKW
 from resdata.grid import Grid
-from resdata.grid.faults import FaultCollection, Fault, FaultLine, FaultSegment
+from resdata.grid.faults import Fault, FaultCollection
+from resdata.resfile import ResdataKW
+
 from tests import ResdataTest, equinor_test
 
 

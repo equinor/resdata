@@ -2,7 +2,7 @@ import datetime
 import re
 
 from resdata import ResdataPrototype
-from resdata.util.util import VectorTemplate, CTime
+from resdata.util.util import CTime, VectorTemplate
 
 
 class TimeVector(VectorTemplate):
@@ -120,16 +120,16 @@ class TimeVector(VectorTemplate):
         else:
             try:
                 default = CTime(default_value)
-            except:
+            except Exception as err:
                 raise ValueError(
                     "default value invalid - must be type ctime() or date/datetime"
-                )
+                ) from err
 
             super(TimeVector, self).__init__(default, initial_size)
 
     @classmethod
     def parseTimeUnit(cls, deltaString):
-        deltaRegexp = re.compile("(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE)
+        deltaRegexp = re.compile(r"(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE)
         matchObj = deltaRegexp.match(deltaString)
         if matchObj:
             try:

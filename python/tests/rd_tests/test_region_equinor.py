@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-from resdata.resfile import ResdataFile
 from resdata.grid import Grid, ResdataRegion
 from resdata.grid.faults import Layer
+from resdata.resfile import ResdataFile
+
 from tests import ResdataTest, equinor_test
 
 
@@ -126,17 +127,17 @@ class RegionTest(ResdataTest):
                 OK = False
 
         self.assertTrue(OK)
-        self.assertTrue(2 * 3 * 6 == len(reg.getGlobalList()))
+        self.assertTrue(len(reg.getGlobalList()) == 2 * 3 * 6)
 
     def test_index_list(self):
         reg = ResdataRegion(self.grid, False)
         reg.select_islice(0, 5)
-        active_list = reg.getActiveList()
-        global_list = reg.getGlobalList()
+        _active_list = reg.getActiveList()
+        _global_list = reg.getGlobalList()
 
     def test_polygon(self):
         reg = ResdataRegion(self.grid, False)
-        (x, y, z) = self.grid.get_xyz(ijk=(10, 10, 0))
+        (x, y, _z) = self.grid.get_xyz(ijk=(10, 10, 0))
         dx = 0.1
         dy = 0.1
         reg.select_inside_polygon(
@@ -149,7 +150,7 @@ class RegionTest(ResdataTest):
         grid = Grid("%s/FF12_2013B2_AMAP_AOP-J15_NO62_MOVEX.EGRID" % root)
 
         polygon = []
-        with open("%s/polygon.ply" % root) as fileH:
+        with open("%s/polygon.ply" % root, encoding="utf-8") as fileH:
             for line in fileH.readlines():
                 tmp = line.split()
                 polygon.append((float(tmp[0]), float(tmp[1])))

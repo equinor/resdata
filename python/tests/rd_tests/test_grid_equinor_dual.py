@@ -1,7 +1,5 @@
-import math
-
-from resdata.util.test import TestAreaContext
 from resdata.grid import Grid
+from resdata.util.test import TestAreaContext
 
 from tests import ResdataTest, equinor_test
 
@@ -20,7 +18,7 @@ class GridDualTest(ResdataTest):
             self.assertFalse(grid.dualGrid())
             self.assertTrue(grid.getNumActiveFracture() == 0)
 
-            grid2 = Grid(self.grid_file())
+            _grid2 = Grid(self.grid_file())
             self.assertFalse(grid.dualGrid())
             self.assertTrue(grid.getNumActiveFracture() == 0)
 

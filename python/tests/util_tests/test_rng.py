@@ -1,6 +1,7 @@
 from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
-from resdata.util.util import RandomNumberGenerator
 from resdata.util.test import TestAreaContext
+from resdata.util.util import RandomNumberGenerator
+
 from tests import ResdataTest
 
 
@@ -38,7 +39,7 @@ class RngTest(ResdataTest):
         with self.assertRaises(IOError):
             rng.loadState("does/not/exist")
 
-        with TestAreaContext("rng_state") as t:
+        with TestAreaContext("rng_state"):
             rng.saveState("rng.txt")
             val1 = rng.getInt()
             val2 = rng.getInt()

@@ -81,7 +81,7 @@ class Cell(object):
 
     def __neq__(self, other):
         if isinstance(other, Cell):
-            return not self == other
+            return self != other
         return NotImplemented
 
     def hash(self):

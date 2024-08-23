@@ -1,15 +1,13 @@
 import datetime
 
-from tests import ResdataTest, equinor_test
-from resdata import FileMode
+from resdata.grid import Grid
 from resdata.resfile import (
     Resdata3DKW,
     ResdataKW,
     ResdataRestartFile,
-    ResdataFile,
-    FortIO,
 )
-from resdata.grid import Grid
+
+from tests import ResdataTest, equinor_test
 
 
 @equinor_test()
@@ -37,7 +35,7 @@ class RestartFileTest(ResdataTest):
     def test_type(self):
         g = Grid(self.grid_file)
         with self.assertRaises(ValueError):
-            f = ResdataRestartFile(g, "NOT_A_RESTART_FILE")
+            _f = ResdataRestartFile(g, "NOT_A_RESTART_FILE")
 
     def test_unified(self):
         g = Grid(self.grid_file)

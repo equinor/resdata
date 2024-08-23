@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import sys
 from operator import itemgetter
-from resdata.resfile import ResdataFile
-from resdata.grid import Grid
 
+from resdata.grid import Grid
+from resdata.resfile import ResdataFile
 
 if __name__ == "__main__":
     case = sys.argv[1]

@@ -28,16 +28,16 @@ import warnings
 
 import numpy
 from cwrap import CFILE, BaseCClass
-from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum, ResdataUtil
-from resdata.util.util import monkey_the_camel
 
-from .fortio import FortIO
+from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
+from resdata.util.util import monkey_the_camel
 
 
 def dump_type_deprecation_warning():
     warnings.warn(
         "ResdataTypeEnum is deprecated. You should instead provide an ResDataType",
         DeprecationWarning,
+        stacklevel=1,
     )
 
 
@@ -82,18 +82,16 @@ class ResdataKW(BaseCClass):
     limit the operation to a part of the ResdataKW.
     """
 
-    int_kw_set = set(
-        [
-            "PVTNUM",
-            "FIPNUM",
-            "EQLNUM",
-            "FLUXNUM",
-            "MULTNUM",
-            "ACTNUM",
-            "SPECGRID",
-            "REGIONS",
-        ]
-    )
+    int_kw_set = {
+        "PVTNUM",
+        "FIPNUM",
+        "EQLNUM",
+        "FLUXNUM",
+        "MULTNUM",
+        "ACTNUM",
+        "SPECGRID",
+        "REGIONS",
+    }
 
     TYPE_NAME = "rd_kw"
     _alloc_new = ResdataPrototype(
@@ -312,12 +310,10 @@ class ResdataKW(BaseCClass):
         """
 
         cfile = CFILE(fileH)
-        if kw:
-            if len(kw) > 8:
-                raise TypeError(
-                    "Sorry keyword:%s is too long, must be eight characters or less."
-                    % kw
-                )
+        if kw and len(kw) > 8:
+            raise TypeError(
+                "Sorry keyword:%s is too long, must be eight characters or less." % kw
+            )
 
         if rd_type is None:
             if cls.int_kw_set.__contains__(kw):
@@ -502,18 +498,16 @@ class ResdataKW(BaseCClass):
 
             if index < 0 or index >= length:
                 raise IndexError
+            elif self.data_ptr:
+                return self.data_ptr[index]
+            elif self.data_type.is_bool():
+                return self._iget_bool(index)
+            elif self.data_type.is_char():
+                return self._iget_char_ptr(index)
+            elif self.data_type.is_string():
+                return self._iget_string_ptr(index)
             else:
-                if self.data_ptr:
-                    return self.data_ptr[index]
-                else:
-                    if self.data_type.is_bool():
-                        return self._iget_bool(index)
-                    elif self.data_type.is_char():
-                        return self._iget_char_ptr(index)
-                    elif self.data_type.is_string():
-                        return self._iget_string_ptr(index)
-                    else:
-                        raise TypeError("Internal implementation error ...")
+                raise TypeError("Internal implementation error ...")
         elif isinstance(index, slice):
             return self.slice_copy(index)
         else:
@@ -531,18 +525,16 @@ class ResdataKW(BaseCClass):
 
             if index < 0 or index >= length:
                 raise IndexError
+            elif self.data_ptr:
+                self.data_ptr[index] = value
+            elif self.data_type.is_bool():
+                self._iset_bool(index, value)
+            elif self.data_type.is_char():
+                return self._iset_char_ptr(index, value)
+            elif self.data_type.is_string():
+                return self._iset_string_ptr(index, value)
             else:
-                if self.data_ptr:
-                    self.data_ptr[index] = value
-                else:
-                    if self.data_type.is_bool():
-                        self._iset_bool(index, value)
-                    elif self.data_type.is_char():
-                        return self._iset_char_ptr(index, value)
-                    elif self.data_type.is_string():
-                        return self._iset_string_ptr(index, value)
-                    else:
-                        raise SystemError("Internal implementation error ...")
+                raise SystemError("Internal implementation error ...")
         elif isinstance(index, slice):
             (start, stop, step) = index.indices(len(self))
             index = start
@@ -573,11 +565,10 @@ class ResdataKW(BaseCClass):
                         self._scale_int(factor)
                     else:
                         raise TypeError("Type mismatch")
+                elif isinstance(factor, (int, float)):
+                    self._scale_float(factor)
                 else:
-                    if isinstance(factor, int) or isinstance(factor, float):
-                        self._scale_float(factor)
-                    else:
-                        raise TypeError("Only muliplication with scalar supported")
+                    raise TypeError("Only muliplication with scalar supported")
         else:
             raise TypeError("Not numeric type")
 
@@ -594,23 +585,19 @@ class ResdataKW(BaseCClass):
                 else:
                     raise TypeError("Type / size mismatch")
             else:
-                if add:
-                    sign = 1
-                else:
-                    sign = -1
+                sign = 1 if add else -1
 
                 if self.data_type.is_int():
                     if isinstance(delta, int):
                         self._shift_int(delta * sign)
                     else:
                         raise TypeError("Type mismatch")
+                elif isinstance(delta, (int, float)):
+                    self._shift_float(
+                        delta * sign
+                    )  # Will call the _float() or _double() function in the C layer.
                 else:
-                    if isinstance(delta, int) or isinstance(delta, float):
-                        self._shift_float(
-                            delta * sign
-                        )  # Will call the _float() or _double() function in the C layer.
-                    else:
-                        raise TypeError("Type mismatch")
+                    raise TypeError("Type mismatch")
         else:
             raise TypeError("Type / size mismatch")
 
@@ -696,9 +683,7 @@ class ResdataKW(BaseCClass):
         if mask is None:
             if self.data_type.is_int():
                 return self._int_sum()
-            elif self.data_type.is_float():
-                return self._float_sum()
-            elif self.data_type.is_double():
+            elif self.data_type.is_float() or self.data_type.is_double():
                 return self._float_sum()
             elif self.data_type.is_bool():
                 sum = 0
@@ -765,25 +750,21 @@ class ResdataKW(BaseCClass):
             if type(value) == type(self):
                 if mask is not None:
                     mask.copy_kw(self, value, force_active)
+                elif self.assert_binary(value):
+                    self._copy_data(value)
                 else:
-                    if self.assert_binary(value):
-                        self._copy_data(value)
-                    else:
-                        raise TypeError("Type / size mismatch")
+                    raise TypeError("Type / size mismatch")
+            elif mask is not None:
+                mask.set_kw(self, value, force_active)
+            elif self.data_type.is_int():
+                if isinstance(value, int):
+                    self._set_int(value)
+                else:
+                    raise TypeError("Type mismatch")
+            elif isinstance(value, (int, float)):
+                self._set_float(value)
             else:
-                if mask is not None:
-                    mask.set_kw(self, value, force_active)
-                else:
-                    if self.data_type.is_int():
-                        if isinstance(value, int):
-                            self._set_int(value)
-                        else:
-                            raise TypeError("Type mismatch")
-                    else:
-                        if isinstance(value, int) or isinstance(value, float):
-                            self._set_float(value)
-                        else:
-                            raise TypeError("Only muliplication with scalar supported")
+                raise TypeError("Only muliplication with scalar supported")
 
     def add(self, other, mask=None, force_active=False):
         """
@@ -856,13 +837,12 @@ class ResdataKW(BaseCClass):
             else:
                 for index in active_list:
                     self.data_ptr[index] = func(self.data_ptr[index])
+        elif arg:
+            for i in range(len(self)):
+                self.data_ptr[i] = func(self.data_ptr[i], arg)
         else:
-            if arg:
-                for i in range(len(self)):
-                    self.data_ptr[i] = func(self.data_ptr[i], arg)
-            else:
-                for i in range(len(self)):
-                    self.data_ptr[i] = func(self.data_ptr[i])
+            for i in range(len(self)):
+                self.data_ptr[i] = func(self.data_ptr[i])
 
     def equal(self, other):
         """
@@ -982,7 +962,11 @@ class ResdataKW(BaseCClass):
 
     @property
     def type(self):
-        warnings.warn("rd_kw.type is deprecated, use .data_type", DeprecationWarning)
+        warnings.warn(
+            "rd_kw.type is deprecated, use .data_type",
+            DeprecationWarning,
+            stacklevel=1,
+        )
         return self._get_type()
 
     @property
@@ -993,14 +977,12 @@ class ResdataKW(BaseCClass):
     def type_name(self):
         return self.data_type.type_name
 
-    def type_name(self):
-        return self.data_type.type_name
-
     def get_rd_type(self):
         warnings.warn(
             "ResdataTypeEnum is deprecated. "
             + "You should instead provide an ResDataType",
             DeprecationWarning,
+            stacklevel=1,
         )
 
         return self._get_type()
@@ -1012,7 +994,7 @@ class ResdataKW(BaseCClass):
     @property
     def array(self):
         a = self.data_ptr
-        if not a == None:
+        if a != None:
             a.size = len(self)
             a.__parent__ = self  # Inhibit GC
         return a

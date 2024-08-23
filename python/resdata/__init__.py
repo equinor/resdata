@@ -42,7 +42,7 @@ warnings.filterwarnings(
 
 from cwrap import Prototype
 
-from .version import version as __version__
+from .version import version as __version__  # noqa: F401
 
 
 def _dlopen_resdata():
@@ -69,7 +69,7 @@ _abort_handler = None
 
 @ct.CFUNCTYPE(None, ct.c_char_p, ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_char_p)
 def _c_abort_handler(filename, lineno, function, message, backtrace):
-    global _abort_handler
+    global _abort_handler  # noqa: PLW0602
     if not _abort_handler:
         return
     _abort_handler(
@@ -85,7 +85,7 @@ def set_abort_handler(function):
     """
     Set callback function for util_abort, which is called prior to std::abort()
     """
-    global _abort_handler
+    global _abort_handler  # noqa: PLW0603
     _abort_handler = function
 
     ResdataPrototype.lib.util_set_abort_handler(_c_abort_handler)
@@ -100,15 +100,25 @@ class ResdataPrototype(Prototype):
         )
 
 
-from .rd_type import ResDataType, ResdataTypeEnum
+from .rd_type import ResDataType as ResDataType
+from .rd_type import ResdataTypeEnum as ResdataTypeEnum
 from .rd_util import (
-    FileType,
-    FileMode,
-    Phase,
-    UnitSystem,
-    ResdataUtil,
+    FileMode as FileMode,
 )
-from .util.util import ResdataVersion, updateAbortSignals
+from .rd_util import (
+    FileType as FileType,
+)
+from .rd_util import (
+    Phase as Phase,
+)
+from .rd_util import (
+    ResdataUtil as ResdataUtil,
+)
+from .rd_util import (
+    UnitSystem as UnitSystem,
+)
+from .util.util import ResdataVersion as ResdataVersion
+from .util.util import updateAbortSignals
 
 updateAbortSignals()
 

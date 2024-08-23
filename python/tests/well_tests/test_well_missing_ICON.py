@@ -1,14 +1,14 @@
 import datetime
-from tests import ResdataTest
+
 from resdata.grid import GridGenerator
 from resdata.resfile import ResdataFile
 from resdata.well import (
-    WellInfo,
-    WellConnection,
-    WellType,
     WellConnectionDirection,
-    WellSegment,
+    WellInfo,
+    WellType,
 )
+
+from tests import ResdataTest
 
 
 class ResdataWellICONTest(ResdataTest):

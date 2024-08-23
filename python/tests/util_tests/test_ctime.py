@@ -1,8 +1,7 @@
 import time
-from datetime import datetime, date
+from datetime import date, datetime
 
 from resdata.util.util import CTime
-
 
 try:
     from unittest2 import TestCase
@@ -24,7 +23,6 @@ class CTimeTest(TestCase):
             CTime("string")
 
     def test_c_time(self):
-        delta = 0
         c_time = CTime(0)
         py_time = datetime(1970, 1, 1)
 
@@ -59,27 +57,27 @@ class CTimeTest(TestCase):
         self.assertTrue(t0 == t1)
         self.assertFalse(t0 != t1)
         with self.assertRaises(TypeError):
-            t0 != 0.5
+            t0 != 0.5  # noqa: B015
 
         self.assertFalse(t0 < t1)
         self.assertTrue(t0 < t2)
         with self.assertRaises(TypeError):
-            t0 < 0.5
+            t0 < 0.5  # noqa: B015
 
         self.assertTrue(t0 <= t1)
         self.assertTrue(t0 <= t2)
         with self.assertRaises(TypeError):
-            t0 <= 0.5
+            t0 <= 0.5  # noqa: B015
 
         self.assertFalse(t0 > t1)
         self.assertFalse(t0 > t2)
         with self.assertRaises(TypeError):
-            t0 > 0.5
+            t0 > 0.5  # noqa: B015
 
         self.assertTrue(t0 >= t1)
         self.assertFalse(t0 >= t2)
         with self.assertRaises(TypeError):
-            t0 >= 0.5
+            t0 >= 0.5  # noqa: B015
 
         t3 = CTime(date(2050, 1, 1))
         t4 = CTime(date(2060, 1, 1))
@@ -112,16 +110,16 @@ class CTimeTest(TestCase):
         self.assertFalse(dt1 <= c0 < c2)
 
         self.assertTrue(d0 <= c0 < dt2)
-        self.assertTrue(c0 <= c0 < d2)
+        self.assertTrue(c0 <= c0 < d2)  # noqa: PLR0124
         self.assertTrue(dt0 <= c0 < c2)
 
         self.assertFalse(d0 <= c2 < dt2)
         self.assertFalse(c0 <= c2 < d2)
-        self.assertFalse(dt0 <= c2 < c2)
+        self.assertFalse(dt0 <= c2 < c2)  # noqa: PLR0124
 
         self.assertTrue(d0 <= c2 <= dt2)
         self.assertTrue(c0 <= c2 <= d2)
-        self.assertTrue(dt0 <= c2 <= c2)
+        self.assertTrue(dt0 <= c2 <= c2)  # noqa: PLR0124
 
     def test_conversion(self):
         t = CTime(0)

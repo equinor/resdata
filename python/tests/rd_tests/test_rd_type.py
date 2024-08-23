@@ -1,7 +1,6 @@
-from resdata.util.test import TestAreaContext
-from tests import ResdataTest
-
 from resdata import ResDataType, ResdataTypeEnum
+
+from tests import ResdataTest
 
 
 def get_const_size_types():
@@ -47,13 +46,13 @@ class ResDataTypeTest(ResdataTest):
 
     def test_invalid_string_alloc(self):
         with self.assertRaises(ValueError):
-            data_type = ResDataType(ResdataTypeEnum.RD_STRING_TYPE)
+            _data_type = ResDataType(ResdataTypeEnum.RD_STRING_TYPE)
 
         with self.assertRaises(ValueError):
-            data_type = ResDataType(ResdataTypeEnum.RD_STRING_TYPE, -1)
+            _data_type = ResDataType(ResdataTypeEnum.RD_STRING_TYPE, -1)
 
         with self.assertRaises(ValueError):
-            data_type = ResDataType(ResdataTypeEnum.RD_STRING_TYPE, 1000)
+            _data_type = ResDataType(ResdataTypeEnum.RD_STRING_TYPE, 1000)
 
     def test_alloc(self):
         for rd_type, element_size in zip(self.TYPES, self.SIZES):
@@ -120,7 +119,7 @@ class ResDataTypeTest(ResdataTest):
             self.assertTrue(a.is_equal(b))
             self.assertEqual(a, b)
 
-            for otype, osize in set(test_base) - set([(rd_type, elem_size)]):
+            for otype, osize in set(test_base) - set(rd_type, elem_size):
                 self.assertFalse(a.is_equal(ResDataType(otype, osize)))
                 self.assertNotEqual(a, ResDataType(otype, osize))
 
@@ -132,10 +131,10 @@ class ResDataTypeTest(ResdataTest):
             all_types.add(ResDataType(rd_type, elem_size))
             self.assertEqual(index + 1, len(all_types))
 
-        for index, (rd_type, elem_size) in enumerate(test_base):
+        for _index, (rd_type, elem_size) in enumerate(test_base):
             all_types.add(ResDataType(rd_type, elem_size))
 
-        for index, rd_type in enumerate(get_const_size_types()):
+        for _index, rd_type in enumerate(get_const_size_types()):
             all_types.add(ResDataType(rd_type))
 
         self.assertEqual(len(test_base), len(all_types))

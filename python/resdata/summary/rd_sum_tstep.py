@@ -1,8 +1,7 @@
 from cwrap import BaseCClass
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import CTime
 from resdata import ResdataPrototype
+from resdata.util.util import monkey_the_camel
 
 
 class SummaryTStep(BaseCClass):

@@ -10,6 +10,7 @@ from pandas.testing import assert_frame_equal
 from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.summary import Summary, SummaryKeyWordVector
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest, equinor_test
 from tests.summary_generator import summaries
 
@@ -85,7 +86,7 @@ class SummaryTest(ResdataTest):
             ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
 
             file_size = os.path.getsize("ECLIPSE.SMSPEC")
-            with open("ECLIPSE.SMSPEC", "r+") as f:
+            with open("ECLIPSE.SMSPEC", "r+", encoding="utf-8") as f:
                 f.truncate(file_size // 2)
 
             with self.assertRaises(IOError):
@@ -97,7 +98,7 @@ class SummaryTest(ResdataTest):
             ta.copy_file(self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE.UNSMRY"))
 
             file_size = os.path.getsize("ECLIPSE.UNSMRY")
-            with open("ECLIPSE.UNSMRY", "r+") as f:
+            with open("ECLIPSE.UNSMRY", "r+", encoding="utf-8") as f:
                 f.truncate(file_size // 2)
 
             with self.assertRaises(IOError):
@@ -135,9 +136,8 @@ class SummaryTest(ResdataTest):
             with openFortIO("ECLIPSE.UNSMRY", mode=FortIO.WRITE_MODE) as f:
                 c = 0
                 for kw in kw_list:
-                    if kw.getName() == "PARAMS":
-                        if c % 5 == 0:
-                            continue
+                    if kw.getName() == "PARAMS" and c % 5 == 0:
+                        continue
                     c += 1
                     kw.fwrite(f)
 

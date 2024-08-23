@@ -1,10 +1,10 @@
 from __future__ import print_function
+
 from cwrap import BaseCClass
 
-from resdata.util.util import monkey_the_camel
-from resdata import ResDataType
 from resdata import ResdataPrototype
 from resdata.grid.faults import Fault
+from resdata.util.util import monkey_the_camel
 
 
 class FaultBlockLayer(BaseCClass):
@@ -206,7 +206,7 @@ class FaultBlockLayer(BaseCClass):
                 err = "Failed to join faults %s and %s"
                 names = (fault1.getName(), fault2.getName())
                 print(err % names)
-                raise ValueError(err % names)
+                raise ValueError(err % names) from err
 
     def add_polyline_barrier(self, polyline):
         layer = self.getGeoLayer()

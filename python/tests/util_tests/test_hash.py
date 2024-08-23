@@ -1,7 +1,8 @@
 from ctypes import c_void_p
 
+from resdata.util.util import DoubleHash, Hash, IntegerHash, StringHash
+
 from tests import ResdataTest
-from resdata.util.util import Hash, StringHash, DoubleHash, IntegerHash
 
 
 class HashTest(ResdataTest):
@@ -18,7 +19,7 @@ class HashTest(ResdataTest):
             hash["hopp"] = 55
 
         with self.assertRaises(KeyError):
-            hopp = hash["hopp"]
+            _hopp = hash["hopp"]
 
         self.assertTrue("hipp" in hash)
 

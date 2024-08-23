@@ -1,4 +1,5 @@
 from resdata.util.test import debug_msg
+
 from tests import ResdataTest
 
 

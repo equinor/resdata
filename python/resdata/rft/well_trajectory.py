@@ -1,6 +1,5 @@
-import sys
-from os.path import isfile
 from collections import namedtuple
+from os.path import isfile
 
 TrajectoryPoint = namedtuple(
     "TrajectoryPoint",
@@ -29,8 +28,10 @@ def _parse_point(point):
         utm_y = float(point[1])
         md = float(point[2])
         tvd = float(point[3])
-    except ValueError:
-        raise UserWarning("Error: Failed to extract data from line %s\n" % str(point))
+    except ValueError as err:
+        raise UserWarning(
+            "Error: Failed to extract data from line %s\n" % str(point)
+        ) from err
     zone = None
     if len(point) > 4:
         zone = point[4]

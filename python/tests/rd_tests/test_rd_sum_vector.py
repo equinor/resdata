@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
 
 import warnings
 
-from resdata.summary import SummaryVector, Summary
+from resdata.summary import Summary, SummaryVector
+
 from tests import ResdataTest, equinor_test
 
 
@@ -20,7 +17,7 @@ class SummaryVectorTest(ResdataTest):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
 
-            vector = SummaryVector(self.rd_sum, "FOPT", True)
+            _vector = SummaryVector(self.rd_sum, "FOPT", True)
             self.assertEqual(len(w), 1)
             assert issubclass(w[-1].category, DeprecationWarning)
 

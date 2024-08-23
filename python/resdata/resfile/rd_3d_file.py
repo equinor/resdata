@@ -1,4 +1,4 @@
-from resdata.resfile import ResdataFile, Resdata3DKW
+from resdata.resfile import Resdata3DKW, ResdataFile
 
 
 class Resdata3DFile(ResdataFile):
@@ -8,14 +8,11 @@ class Resdata3DFile(ResdataFile):
 
     def __getitem__(self, index):
         return_arg = super(Resdata3DFile, self).__getitem__(index)
-        if isinstance(return_arg, list):
-            kw_list = return_arg
-        else:
-            kw_list = [return_arg]
+        kw_list = return_arg if isinstance(return_arg, list) else [return_arg]
 
         # Go through all the keywords and try inplace promotion to Resdata3DKW
         for kw in kw_list:
-            try:
+            try:  # noqa: SIM105
                 Resdata3DKW.castFromKW(kw, self.grid)
             except ValueError:
                 pass

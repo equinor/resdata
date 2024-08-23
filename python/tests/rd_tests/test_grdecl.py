@@ -1,6 +1,5 @@
-from numpy import allclose
-
 import cwrap
+from numpy import allclose
 from resdata.resfile import ResdataKW
 
 

@@ -1,18 +1,18 @@
 #!/usr/bin/env python
+import functools
+import itertools
 import os.path
 from unittest import skip
-import itertools
 
-import functools
-from numpy import linspace, allclose
 import cwrap
-
-from resdata.util.util import IntVector, DoubleVector
+from numpy import allclose, linspace
 from resdata import ResDataType, UnitSystem
-from resdata.resfile import ResdataKW, ResdataFile
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
+from resdata.resfile import ResdataFile, ResdataKW
 from resdata.util.test import TestAreaContext
+from resdata.util.util import DoubleVector, IntVector
+
 from tests import ResdataTest
 
 # This dict is used to verify that corners are mapped to the correct
@@ -192,7 +192,7 @@ class GridTest(ResdataTest):
         nz = 2000
 
         with self.assertRaises(MemoryError):
-            grid = GridGen.createRectangular((nx, ny, nz), (1, 1, 1))
+            _grid = GridGen.createRectangular((nx, ny, nz), (1, 1, 1))
 
     def test_posXYEdge(self):
         nx = 10
@@ -306,7 +306,7 @@ class GridTest(ResdataTest):
             self.assertTrue(c.active)
         self.assertEqual(cnt, 4160)
 
-        cnt = len([c for c in grid.cells()])
+        cnt = len(list(grid.cells()))
         self.assertEqual(cnt, len(grid))
 
     def test_repr_and_name(self):
@@ -431,7 +431,7 @@ class GridTest(ResdataTest):
         grid = GridGen.createRectangular((nx, ny, nz), (1, 1, 1))
         kw1 = ResdataKW("KW", 1001, ResDataType.RD_INT)
         with self.assertRaises(ValueError):
-            cp = grid.compressedKWCopy(kw1)
+            _cp = grid.compressedKWCopy(kw1)
 
     def test_dxdydz(self):
         nx = 10

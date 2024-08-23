@@ -1,5 +1,5 @@
 from resdata.geometry import GeoPointset, Surface
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
 
 

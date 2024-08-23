@@ -23,31 +23,6 @@ The modules included in the util package are:
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import resdata
-from cwrap import Prototype
-
-
-from .version import Version, ResdataVersion
-
-from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
-
-from .ctime import CTime
-
-from .permutation_vector import PermutationVector
-from .vector_template import VectorTemplate
-from .double_vector import DoubleVector
-from .int_vector import IntVector
-from .bool_vector import BoolVector
-from .time_vector import TimeVector
-from .stringlist import StringList
-from .rng import RandomNumberGenerator
-from .lookup_table import LookupTable
-from .hash import Hash, StringHash, DoubleHash, IntegerHash
-from .thread_pool import ThreadPool
-from .install_abort_signals import installAbortSignals, updateAbortSignals
-from .cwd_context import CWDContext
-
-
 ###
 ###  monkey_the_camel is a function temporarily added to resdata while we are in
 ###  the process of changing camelCase function names to snake_case function
@@ -56,9 +31,35 @@ from .cwd_context import CWDContext
 ###  See https://github.com/Equinor/resdata/issues/142 for a discussion and for
 ###  usage.
 ###
-
 import os
 import warnings
+
+from cwrap import Prototype as Prototype
+
+import resdata as resdata
+from resdata.util.enums import RngAlgTypeEnum as RngAlgTypeEnum
+from resdata.util.enums import RngInitModeEnum as RngInitModeEnum
+
+from .bool_vector import BoolVector as BoolVector
+from .ctime import CTime as CTime
+from .cwd_context import CWDContext as CWDContext
+from .double_vector import DoubleVector as DoubleVector
+from .hash import DoubleHash as DoubleHash
+from .hash import Hash as Hash
+from .hash import IntegerHash as IntegerHash
+from .hash import StringHash as StringHash
+from .install_abort_signals import installAbortSignals as installAbortSignals
+from .install_abort_signals import updateAbortSignals as updateAbortSignals
+from .int_vector import IntVector as IntVector
+from .lookup_table import LookupTable as LookupTable
+from .permutation_vector import PermutationVector as PermutationVector
+from .rng import RandomNumberGenerator as RandomNumberGenerator
+from .stringlist import StringList as StringList
+from .thread_pool import ThreadPool as ThreadPool
+from .time_vector import TimeVector as TimeVector
+from .vector_template import VectorTemplate as VectorTemplate
+from .version import ResdataVersion as ResdataVersion
+from .version import Version as Version
 
 __cc = os.environ.get("RDWARNING", None)  # __cc in (None, 'user', 'dev', 'hard')
 
@@ -72,7 +73,7 @@ def __user_warning(msg):
 
 
 def __dev_warning(msg):
-    warnings.warn(msg, DeprecationWarning)
+    warnings.warn(msg, DeprecationWarning, stacklevel=1)
 
 
 def __hard_warning(msg):

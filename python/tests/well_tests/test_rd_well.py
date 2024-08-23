@@ -1,16 +1,18 @@
 import datetime
+
 from resdata import FileMode
-from resdata.resfile import ResdataFile
 from resdata.grid import Grid
-from tests import ResdataTest, equinor_test
+from resdata.resfile import ResdataFile
 from resdata.util.util.ctime import CTime
 from resdata.well import (
-    WellInfo,
     WellConnection,
     WellConnectionDirection,
+    WellInfo,
     WellSegment,
     WellType,
 )
+
+from tests import ResdataTest, equinor_test
 
 
 @equinor_test()
@@ -376,14 +378,14 @@ class ResdataWellTest(ResdataTest):
 
         self.assertNotEqual(well_info[0], well_info[1])
 
-        well_time_lines = [wtl for wtl in well_info]
+        well_time_lines = list(well_info)
         self.assertEqual(len(well_time_lines), len(well_info))
 
         with self.assertRaises(IndexError):
-            err = well_info[222]
+            _err = well_info[222]
 
         with self.assertRaises(KeyError):
-            err = well_info["Well"]
+            _err = well_info["Well"]
 
     def test_well_time_line(self):
         well_info = self.getWellInfo()
@@ -397,7 +399,7 @@ class ResdataWellTest(ResdataTest):
             well_states.add(well_time_line[0])
 
             with self.assertRaises(IndexError):
-                err = well_time_line[1]
+                _err = well_time_line[1]
 
         self.assertEqual(len(well_states), len(ResdataWellTest.ALL_WELLS))
 
@@ -432,8 +434,6 @@ class ResdataWellTest(ResdataTest):
             WellType.WATER_INJECTOR: 0,
         }
 
-        segments = set()
-        branches = set()
         connections = set()
         connections_count = 0
 
@@ -457,9 +457,6 @@ class ResdataWellTest(ResdataTest):
             global_connections = well_state.globalConnections()
             connections_count += len(global_connections)
             connections.update(global_connections)
-
-            # branches.add(well_state.branches())
-            # segments.add(well_state.segments())
 
         self.assertEqual(open_states[True], 53)
         self.assertEqual(open_states[False], 169)
@@ -1365,4 +1362,4 @@ class ResdataWellTest(ResdataTest):
             "Equinor/ECLIPSE/icon-invalid-value/R6_HM2016B_FFP_BASE.UNRST"
         )
         grid = Grid(grid_path)
-        well_info = WellInfo(grid, rst_path)
+        _well_info = WellInfo(grid, rst_path)

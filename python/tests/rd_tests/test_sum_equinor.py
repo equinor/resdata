@@ -1,17 +1,12 @@
-import os
 import datetime
+import os
 
-from unittest import skipIf, skipUnless, skipIf
-
-from resdata.resfile import ResdataFile
-from resdata.summary import Summary
 from resdata import UnitSystem
-
-from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
-
+from resdata.summary import Summary
 from resdata.util.test import TestAreaContext
+from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
+
 from tests import ResdataTest, equinor_test
-import csv
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"
@@ -21,7 +16,7 @@ case = "%s/%s" % (path, base)
 def sum_get(*args):
     sum = args[0]
     key = args[1]
-    vec = sum[key]
+    _vec = sum[key]
 
 
 @equinor_test()
@@ -37,18 +32,18 @@ class SumTest(ResdataTest):
 
     def test_invalid(self):
         with self.assertRaises(IOError):
-            sum = Summary("Does/not/exist")
+            _sum = Summary("Does/not/exist")
 
     def test_KeyError(self):
         sum = self.rd_sum
         with self.assertRaises(KeyError):
-            v = sum.numpy_vector("KeyMissing")
+            _v = sum.numpy_vector("KeyMissing")
 
         with self.assertRaises(KeyError):
-            v = sum.get_interp("Missing", days=750)
+            _v = sum.get_interp("Missing", days=750)
 
         with self.assertRaises(KeyError):
-            v = sum.get_interp_vector("Missing", days_list=[750])
+            _v = sum.get_interp_vector("Missing", days_list=[750])
 
     def test_contains(self):
         self.assertTrue("FOPT" in self.rd_sum)
@@ -109,17 +104,17 @@ class SumTest(ResdataTest):
         wells = self.rd_sum.wells()
         wells.sort()
         self.assertListEqual(
-            [well for well in wells],
+            list(wells),
             ["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"],
         )
 
         wells = self.rd_sum.wells(pattern="*_3")
         wells.sort()
-        self.assertListEqual([well for well in wells], ["OP_3", "WI_3"])
+        self.assertListEqual(list(wells), ["OP_3", "WI_3"])
 
         groups = self.rd_sum.groups()
         groups.sort()
-        self.assertListEqual([group for group in groups], ["GMWIN", "OP", "WI"])
+        self.assertListEqual(list(groups), ["GMWIN", "OP", "WI"])
 
     def test_last(self):
         last = self.rd_sum.get_last("FOPT")
@@ -188,7 +183,7 @@ class SumTest(ResdataTest):
 
     def test_fwrite(self):
         rd_sum = Summary(self.case, lazy_load=False)
-        with TestAreaContext("python/sum-test/fwrite") as work_area:
+        with TestAreaContext("python/sum-test/fwrite"):
             rd_sum.fwrite(rd_case="CASE")
             self.assertTrue(True)
 
@@ -283,7 +278,7 @@ class SumTest(ResdataTest):
         sum = Summary(self.case)
         wells = sum.wells()
         self.assertListEqual(
-            [well for well in wells],
+            list(wells),
             ["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"],
         )
         self.assertIsInstance(wells, StringList)
@@ -328,8 +323,6 @@ class SumTest(ResdataTest):
                 start=datetime.datetime(2000, 1, 1), end=datetime.datetime(1999, 1, 1)
             )
 
-        sim_start = datetime.datetime(2000, 1, 1, 0, 0, 0)
-        sim_end = datetime.datetime(2004, 12, 31, 0, 0, 0)
         trange = sum.timeRange(interval="1Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[1] == datetime.date(2001, 1, 1))
@@ -379,11 +372,11 @@ class SumTest(ResdataTest):
         sum = Summary(self.case)
         with self.assertRaises(TypeError):
             trange = TimeVector.createRegular(sum.start_time, sum.end_time, "1M")
-            prod = sum.blockedProduction("FOPR", trange)
+            _prod = sum.blockedProduction("FOPR", trange)
 
         with self.assertRaises(KeyError):
             trange = TimeVector.createRegular(sum.start_time, sum.end_time, "1M")
-            prod = sum.blockedProduction("NoNotThis", trange)
+            _prod = sum.blockedProduction("NoNotThis", trange)
 
         trange = sum.timeRange(interval="2Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
@@ -452,7 +445,7 @@ class SumTest(ResdataTest):
         self.assertEqual(total.iget("WGPR:NOT_21_D", 5), node.default)
 
     def test_write(self):
-        with TestAreaContext("my_space") as area:
+        with TestAreaContext("my_space"):
             intersect_summary = Summary(
                 self.createTestPath(
                     "Equinor/ECLIPSE/SummaryRestart/iter-1/NOR-2013A_R007-0"
@@ -475,10 +468,7 @@ class SumTest(ResdataTest):
 
         self.assertTrue(
             "HWELL_PROD"
-            in [
-                intersect_summary.smspec_node(key).wgname
-                for key in intersect_summary.keys()
-            ]
+            in [intersect_summary.smspec_node(key).wgname for key in intersect_summary]
         )
 
         eclipse_summary = Summary(
@@ -501,7 +491,7 @@ class SumTest(ResdataTest):
             "Equinor/ECLIPSE/ix/summary/CREATE_REGION_AROUND_WELL",
             "Equinor/ECLIPSE/ix/troll/IX_NOPH3_R04_75X75X1_GRID2.SMSPEC",
         ]:
-            with TestAreaContext("my_space" + data_set.split("/")[-1]) as area:
+            with TestAreaContext("my_space" + data_set.split("/")[-1]):
                 intersect_summary = Summary(
                     self.createTestPath(data_set), lazy_load=False
                 )
@@ -538,7 +528,7 @@ class SumTest(ResdataTest):
         time_points.append(CTime(end_time))
         resampled = self.rd_sum.resample("OUTPUT_CASE", time_points)
 
-        for key in self.rd_sum.keys():
+        for key in self.rd_sum:
             self.assertIn(key, resampled)
 
         self.assertEqual(
@@ -562,7 +552,7 @@ class SumTest(ResdataTest):
     # which was shut down brutally. This test verifies that we
     # can create a valid rd_sum instance from what we find.
     def test_broken_case(self):
-        rd_sum = Summary(
+        _rd_sum = Summary(
             self.createTestPath(
                 "Equinor/ECLIPSE/SummaryFail3/COMBINED-AUTUMN2018_CARBSENS-0"
             )

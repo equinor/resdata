@@ -1,20 +1,18 @@
 #!/usr/bin/env python
-from unittest import skipIf
-import time
-from resdata import util
 
 from resdata import ResDataType
-from resdata.resfile import ResdataKW
+from resdata.geometry import CPolyline, Polyline
 from resdata.grid import Grid
 from resdata.grid.faults import (
-    FaultCollection,
     Fault,
+    FaultBlockLayer,
+    FaultCollection,
     FaultLine,
     FaultSegment,
-    FaultBlockLayer,
 )
+from resdata.resfile import ResdataKW
 from resdata.util.test import TestAreaContext
-from resdata.geometry import Polyline, CPolyline
+
 from tests import ResdataTest
 
 
@@ -47,46 +45,46 @@ class FaultTest(ResdataTest):
         self.assertFalse(faults.hasFault("FX"))
 
         with self.assertRaises(TypeError):
-            f = faults[[]]
+            _f = faults[[]]
 
         with self.assertRaises(KeyError):
-            f = faults["FX"]
+            _f = faults["FX"]
 
         with self.assertRaises(IndexError):
-            f = faults[0]
+            _f = faults[0]
 
         self.assertFalse("NAME" in faults)
 
     def test_collection_invalid_arg(self):
         with self.assertRaises(ValueError):
-            faults = FaultCollection(self.faults1)
+            _faults = FaultCollection(self.faults1)
 
         with self.assertRaises(ValueError):
-            faults = FaultCollection(self.faults1, self.faults2)
+            _faults = FaultCollection(self.faults1, self.faults2)
 
     def test_splitLine(self):
         faults = FaultCollection(self.grid)
         with self.assertRaises(ValueError):
             # Not slash terminated
-            t = faults.splitLine(
+            _t = faults.splitLine(
                 "'F1'             149  149     29   29      1   43    'Y'"
             )
 
         with self.assertRaises(ValueError):
             # Not integer
-            t = faults.splitLine(
+            _t = faults.splitLine(
                 "'F1'             149  149     29   29      1   43X    'Y' /"
             )
 
         with self.assertRaises(ValueError):
             # Missing item
-            t = faults.splitLine(
+            _t = faults.splitLine(
                 "'F1'             149     29   29      1   43    'Y' /"
             )
 
         with self.assertRaises(ValueError):
             # Quote problem
-            t = faults.splitLine(
+            _t = faults.splitLine(
                 "'F1             149     149 29   29      1   43    'X' /"
             )
 
@@ -94,8 +92,8 @@ class FaultTest(ResdataTest):
         f = Fault(self.grid, "NAME")
         self.assertEqual("NAME", f.getName())
 
-        with self.assertRaises(Exception):
-            g = f["Key"]
+        with self.assertRaises(Exception):  # noqa: B017
+            _g = f["Key"]
 
     def test_empty_faultLine(self):
         fl = FaultLine(self.grid, 10)
@@ -103,10 +101,10 @@ class FaultTest(ResdataTest):
         self.assertEqual(0, len(fl))
 
         with self.assertRaises(TypeError):
-            f = fl["Test"]
+            _f = fl["Test"]
 
         with self.assertRaises(IndexError):
-            f = fl[0]
+            _f = fl[0]
 
     def test_faultLine_center(self):
         nx = 10
@@ -409,7 +407,7 @@ class FaultTest(ResdataTest):
         faults = FaultCollection(self.grid, self.faults1, self.faults2)
         self.assertEqual(7, len(faults))
         c = 0
-        for f in faults:
+        for _f in faults:
             c += 1
         self.assertEqual(c, len(faults))
 

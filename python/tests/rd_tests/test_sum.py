@@ -4,7 +4,6 @@ import os
 import os.path
 import shutil
 import stat
-import datetime
 
 import cwrap
 
@@ -14,19 +13,18 @@ def assert_frame_equal(a, b):
         raise AssertionError("Expected dataframes to be equal")
 
 
-try:
-    from pandas.testing import assert_frame_equal
-except ImportError:
-    pass
-
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 
 from resdata import ResDataType, UnitSystem
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.summary import Summary, SummaryKeyWordVector, SummaryVarType
 from resdata.util.test import TestAreaContext
 from resdata.util.test.mock import createSummary
+
 from tests import ResdataTest
+
+with suppress(ImportError):
+    from pandas.testing import assert_frame_equal
 
 
 @contextmanager
@@ -194,7 +192,7 @@ class SumTest(ResdataTest):
         self.assertNotEqual(node1, node2)
 
         with self.assertRaises(TypeError):
-            a = node1 < 1
+            _a = node1 < 1
 
     def test_csv_export(self):
         case = createSummary(
@@ -204,7 +202,10 @@ class SumTest(ResdataTest):
         with TestAreaContext("resdata/csv"):
             case.exportCSV("file.csv", sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
-            input_file = csv.DictReader(open("file.csv"), delimiter=sep)
+            input_file = csv.DictReader(
+                open("file.csv", encoding="utf-8"),  # noqa: SIM115
+                delimiter=sep,
+            )
             for row in input_file:
                 self.assertIn("DAYS", row)
                 self.assertIn("DATE", row)
@@ -218,7 +219,10 @@ class SumTest(ResdataTest):
         with TestAreaContext("resdata/csv"):
             case.exportCSV("file.csv", keys=["FOPT"], sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
-            input_file = csv.DictReader(open("file.csv"), delimiter=sep)
+            input_file = csv.DictReader(
+                open("file.csv", encoding="utf-8"),  # noqa: SIM115
+                delimiter=sep,
+            )
             for row in input_file:
                 self.assertIn("DAYS", row)
                 self.assertIn("DATE", row)
@@ -231,7 +235,7 @@ class SumTest(ResdataTest):
             sep = ","
             case.exportCSV("file.csv", keys=["F*"], sep=sep, date_format=date_format)
             self.assertTrue(os.path.isfile("file.csv"))
-            with open("file.csv") as f:
+            with open("file.csv", encoding="utf-8") as f:
                 time_index = -1
                 for line in f.readlines():
                     tmp = line.split(sep)
@@ -244,7 +248,6 @@ class SumTest(ResdataTest):
                     time_index += 1
 
     def test_solve(self):
-        length = 100
         case = create_case()
         self.assert_solve(case)
 
@@ -314,14 +317,14 @@ class SumTest(ResdataTest):
         case = create_case()
         with TestAreaContext("sum_invalid"):
             case.fwrite()
-            with open("CASE.txt", "w") as f:
+            with open("CASE.txt", "w", encoding="utf-8") as f:
                 f.write("No - this is not ResdataKW file ....")
 
             with self.assertRaises(IOError):
-                case2 = Summary.load("CSV.SMSPEC", "CASE.txt")
+                _case2 = Summary.load("CSV.SMSPEC", "CASE.txt")
 
             with self.assertRaises(IOError):
-                case2 = Summary.load("CASE.txt", "CSV.UNSMRY")
+                _case2 = Summary.load("CASE.txt", "CSV.UNSMRY")
 
             kw1 = ResdataKW("TEST1", 30, ResDataType.RD_INT)
             kw2 = ResdataKW("TEST2", 30, ResDataType.RD_INT)
@@ -331,10 +334,10 @@ class SumTest(ResdataTest):
                 kw2.fwrite(f)
 
             with self.assertRaises(IOError):
-                case2 = Summary.load("CSV.SMSPEC", "CASE.KW")
+                _case2 = Summary.load("CSV.SMSPEC", "CASE.KW")
 
             with self.assertRaises(IOError):
-                case2 = Summary.load("CASE.KW", "CSV.UNSMRY")
+                _case2 = Summary.load("CASE.KW", "CSV.UNSMRY")
 
     def test_kw_vector(self):
         case1 = create_case()
@@ -393,10 +396,10 @@ class SumTest(ResdataTest):
             with cwrap.open("f2.txt", "w") as f:
                 case2.dumpCSVLine(t, kw_list2, f)
 
-            with open("f1.txt") as f:
+            with open("f1.txt", encoding="utf-8") as f:
                 d1 = f.readline().split(",")
 
-            with open("f2.txt") as f:
+            with open("f2.txt", encoding="utf-8") as f:
                 d2 = f.readline().split(",")
 
             self.assertEqual(d1[0], d2[0])
@@ -440,7 +443,7 @@ class SumTest(ResdataTest):
         time_vector = case.alloc_time_vector(False)
         case2 = case.resample("RS", time_vector)
         time_vector_resample = case2.alloc_time_vector(False)
-        first_diff = time_vector_resample.first_neq(time_vector)
+        _first_diff = time_vector_resample.first_neq(time_vector)
         self.assertEqual(time_vector_resample, time_vector)
 
     # The purpose of this test is to reproduce a slightly contrived error situation.
@@ -476,7 +479,7 @@ class SumTest(ResdataTest):
                 )
                 self.assertEqual(pred.restart_step, history.last_report)
 
-                length = pred.sim_length
+                _length = pred.sim_length
                 pred_times = pred.alloc_time_vector(False)
                 hist_times = history.alloc_time_vector(False)
 
@@ -513,7 +516,7 @@ class SumTest(ResdataTest):
 
             # This just tests that we can create a summary instance even if we do not
             # have access to load the history case.
-            pred = Summary("PREDICTION")
+            _pred = Summary("PREDICTION")
 
             os.chmod("history", stat.S_IRWXU)
 
@@ -527,7 +530,7 @@ class SumTest(ResdataTest):
         with TestAreaContext("unit_test"):
             case = create_case("UNITS")
             case.fwrite()
-            case2 = Summary("UNITS")
+            _case2 = Summary("UNITS")
 
             kw_list = []
             f = ResdataFile("UNITS.SMSPEC")
@@ -588,8 +591,8 @@ class SumTest(ResdataTest):
         # The get_vector method is extremely deprecated.
         v1 = case.get_vector("FOPT")
         v2 = case.get_vector("FOPT", report_only=True)
-        s1 = sum([x.value for x in v1])
-        s2 = sum([x.value for x in v2])
+        _s1 = sum(x.value for x in v1)
+        _s2 = sum(x.value for x in v2)
 
     def test_wells_and_groups(self):
         case = create_case()
@@ -659,8 +662,8 @@ class SumTest(ResdataTest):
         self.assertFloatEqual(case.sim_length, 545.0)
 
         fopr = case.numpy_vector("FOPR")
-        for time_index, value in enumerate(fopr):
-            self.assertEqual(fopr[time_index], value)
+        for _time_index, value in enumerate(fopr):
+            self.assertEqual(value, value)
 
     def test_load_case_lazy_and_eager(self):
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SHORT.UNSMRY")
@@ -685,13 +688,13 @@ class SumTest(ResdataTest):
             case = create_case("UNITS")
             case.fwrite()
             os.mkdir("UNITS")
-            case2 = Summary("./UNITS")
+            _case2 = Summary("./UNITS")
 
     def test_resample_extrapolate(self):
         """
         Test resampling of summary with extrapolate option of lower and upper boundaries enabled
         """
-        from resdata.util.util import CTime, TimeVector
+        from resdata.util.util import CTime, TimeVector  # noqa: PLC0415
 
         time_points = TimeVector()
 
@@ -718,7 +721,7 @@ class SumTest(ResdataTest):
             upper_extrapolation=True,
         )
 
-        for key in rd_sum.keys():
+        for key in rd_sum:
             self.assertIn(key, resampled)
 
         self.assertEqual(
@@ -746,9 +749,7 @@ class SumTest(ResdataTest):
 
         key_rate = "FOPR"
         for time_index, t in enumerate(time_points):
-            if t < rd_sum.get_data_start_time():
-                self.assertFloatEqual(resampled.iget(key_rate, time_index), 0)
-            elif t > rd_sum.get_end_time():
+            if t < rd_sum.get_data_start_time() or t > rd_sum.get_end_time():
                 self.assertFloatEqual(resampled.iget(key_rate, time_index), 0)
             else:
                 self.assertFloatEqual(

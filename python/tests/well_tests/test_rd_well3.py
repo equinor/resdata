@@ -1,18 +1,10 @@
-import datetime
-import os.path
-
-from resdata.resfile import ResdataFile
 from resdata.grid import Grid
 from resdata.summary import Summary
-from tests import ResdataTest, equinor_test
-from resdata.util.util.ctime import CTime
 from resdata.well import (
     WellInfo,
-    WellConnection,
-    WellType,
-    WellConnectionDirection,
-    WellSegment,
 )
+
+from tests import ResdataTest, equinor_test
 
 
 @equinor_test()
@@ -26,7 +18,7 @@ class ResdataWellTest3(ResdataTest):
 
         grid = Grid(grid_path)
         well_info = WellInfo(grid, rst_path)
-        sum = Summary(sum_path)
+        _sum = Summary(sum_path)
 
         for wtl in well_info:
             for well_state in wtl:

@@ -1,6 +1,8 @@
 import time
+
 from resdata.util.util import ThreadPool
 from resdata.util.util.thread_pool import Task
+
 from tests import ResdataTest
 
 
@@ -61,7 +63,7 @@ class ThreadPoolTest(ResdataTest):
     def test_fill_pool(self):
         pool = ThreadPool(4)
 
-        for index in range(10):
+        for _index in range(10):
             pool.addTask(self.sleepTask, 2)
 
         pool.nonBlockingStart()

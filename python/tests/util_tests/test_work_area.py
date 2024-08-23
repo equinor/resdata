@@ -1,20 +1,16 @@
 #!/usr/bin/env python
-import os.path
 import os
-
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
+import os.path
 
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
 
 
 class WorkAreaTest(ResdataTest):
     def test_full_path(self):
         with TestAreaContext("TestArea") as test_area:
-            with open("test_file", "w") as fileH:
+            with open("test_file", "w", encoding="utf-8") as fileH:
                 fileH.write("Something")
 
                 self.assertTrue(os.path.isfile("test_file"))
@@ -44,7 +40,7 @@ class WorkAreaTest(ResdataTest):
                 test_area.copy_parent_directory("Does/not/exist")
 
             os.makedirs("path1/path2")
-            with open("path1/file.txt", "w") as f:
+            with open("path1/file.txt", "w", encoding="utf-8") as f:
                 f.write("File ...")
 
             with self.assertRaises(IOError):

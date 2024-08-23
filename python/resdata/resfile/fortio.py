@@ -22,12 +22,12 @@ support passing of FortIO handles to the underlying C functions. A
 more extensive wrapping of the fortio implementation would be easy.
 """
 
-import ctypes
 import os
 
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
+
 from resdata import ResdataPrototype
+from resdata.util.util import monkey_the_camel
 
 
 class FortIO(BaseCClass):

@@ -1,8 +1,9 @@
 import itertools
 
-from resdata.resfile import ResdataRestartFile
 from resdata.grid import Grid
+from resdata.resfile import ResdataRestartFile
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest, equinor_test
 
 

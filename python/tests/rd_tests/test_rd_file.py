@@ -1,14 +1,15 @@
-import shutil
-import pytest
 import datetime
-import os.path
 import gc
+import os.path
+import shutil
 
-from resdata import FileMode, ResDataType, FileType
-from resdata.resfile import ResdataFile, FortIO, ResdataKW, openFortIO, openResdataFile
-from resdata.util.util import CWDContext
-from resdata.util.test import TestAreaContext
+import pytest
+from resdata import FileMode, FileType, ResDataType
 from resdata.grid import Grid
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO, openResdataFile
+from resdata.util.test import TestAreaContext
+from resdata.util.util import CWDContext
+
 from tests import ResdataTest
 from tests.rd_tests.create_restart import create_restart
 
@@ -148,7 +149,7 @@ class ResdataFileTest(ResdataTest):
 
         kw_list = [kw1, kw2, kw2]
 
-        with TestAreaContext("context") as ta:
+        with TestAreaContext("context"):
             createFile("TEST", kw_list)
             gc.collect()
             kw_list2 = loadKeywords("TEST")
@@ -158,7 +159,7 @@ class ResdataFileTest(ResdataTest):
 
     def test_broken_file(self):
         with TestAreaContext("test_broken_file"):
-            with open("CASE.FINIT", "w") as f:
+            with open("CASE.FINIT", "w", encoding="utf-8") as f:
                 f.write(
                     "This - is not a RDISPE file\nsdlcblhcdbjlwhc\naschscbasjhcasc\nascasck c s s aiasic asc"
                 )
@@ -170,7 +171,7 @@ class ResdataFileTest(ResdataTest):
                 kw.fwrite(f)
                 kw.fwrite(f)
 
-            with open("FILE", "a+") as f:
+            with open("FILE", "a+", encoding="utf-8") as f:
                 f.write("Seom random gibberish")
 
             f = ResdataFile("FILE")
@@ -181,7 +182,7 @@ class ResdataFileTest(ResdataTest):
                 kw.fwrite(f)
 
             file_size = os.path.getsize("FILE")
-            with open("FILE", "a+") as f:
+            with open("FILE", "a+", encoding="utf-8") as f:
                 f.truncate(int(file_size * 0.75))
 
             f = ResdataFile("FILE")
@@ -216,7 +217,7 @@ class ResdataFileTest(ResdataTest):
             with self.assertRaises(IndexError):
                 rd_file.blockView("HEADER", 1000)
 
-            bv = rd_file.blockView("HEADER", -1)
+            _bv = rd_file.blockView("HEADER", -1)
 
             for i in range(5):
                 view = rd_file.blockView("HEADER", i)

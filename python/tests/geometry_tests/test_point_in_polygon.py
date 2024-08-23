@@ -1,5 +1,6 @@
 from resdata.geometry.geometry_tools import GeometryTools
 from resdata.geometry.polyline import Polyline
+
 from tests import ResdataTest
 
 

@@ -1,5 +1,5 @@
 from resdata import ResDataType
-from resdata.resfile import ResdataKW, openFortIO, FortIO
+from resdata.resfile import FortIO, ResdataKW, openFortIO
 
 
 def create_restart(grid, case, p1, p2=None, rporv1=None, rporv2=None):

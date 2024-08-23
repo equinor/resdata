@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-from unittest import skipIf
 import cwrap
-
 from resdata import ResDataType
-from resdata.resfile import ResdataKW
+from resdata.geometry import CPolylineCollection, Polyline
 from resdata.grid import Grid, ResdataRegion
 from resdata.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection
-from resdata.geometry import Polyline, CPolylineCollection
+from resdata.resfile import ResdataKW
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
 
 
@@ -43,7 +42,7 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual(layer, block.getParentLayer())
 
     def test_get_ijk(self):
-        with TestAreaContext("python/fault_block_layer/neighbour") as work_area:
+        with TestAreaContext("python/fault_block_layer/neighbour"):
             with open("kw.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")
                 fileH.write("1 1 1 0 0\n")
@@ -72,7 +71,7 @@ class FaultBlockTest(ResdataTest):
             layer[5, 5]
 
     def test_neighbours(self):
-        with TestAreaContext("python/fault_block_layer/neighbour") as work_area:
+        with TestAreaContext("python/fault_block_layer/neighbour"):
             with open("kw.grdecl", "w") as fileH:
                 fileH.write("FAULTBLK \n")
                 fileH.write("1 1 1 0 0\n")
@@ -233,7 +232,7 @@ class FaultBlockTest(ResdataTest):
                 g = i + j * grid.getNX()
                 kw[g] = 1
 
-        layer = FaultBlockLayer(grid, 0)
+        _layer = FaultBlockLayer(grid, 0)
         # with self.assertRaises:
         #    layer.getEdgePolygon( )
 
@@ -255,7 +254,7 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual(2, len(layer))
 
         with self.assertRaises(TypeError):
-            ls = layer["JJ"]
+            _ls = layer["JJ"]
 
         l = []
         for blk in layer:
@@ -272,7 +271,7 @@ class FaultBlockTest(ResdataTest):
         assert list(l1.get_region_list()) == []
 
         with self.assertRaises(IndexError):
-            l2 = layer[2]
+            _l2 = layer[2]
 
         self.assertEqual(True, 1 in layer)
         self.assertEqual(True, 2 in layer)
@@ -303,7 +302,7 @@ class FaultBlockTest(ResdataTest):
         blk2 = layer.addBlock(2)
         self.assertEqual(len(layer), 2)
 
-        blk3 = layer.addBlock()
+        _blk3 = layer.addBlock()
         self.assertEqual(len(layer), 3)
 
         layer.addBlock(100)
@@ -333,7 +332,7 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual([1, 2, 3], list(fault_block.getRegionList()))
 
     def test_add_polyline_barrier1(self):
-        grid = Grid.createRectangular((4, 1, 1), (1, 1, 1))
+        _grid = Grid.createRectangular((4, 1, 1), (1, 1, 1))
         layer = FaultBlockLayer(self.grid, 0)
         polyline = Polyline(init_points=[(1.99, 0.001), (2.01, 0.99)])
 
@@ -349,7 +348,7 @@ class FaultBlockTest(ResdataTest):
             self.assertFalse(geo_layer.cellContact(p1, p2))
 
     def test_add_polyline_barrier2(self):
-        grid = Grid.createRectangular((10, 10, 1), (1, 1, 1))
+        _grid = Grid.createRectangular((10, 10, 1), (1, 1, 1))
         layer = FaultBlockLayer(self.grid, 0)
         polyline = Polyline(init_points=[(0.1, 0.9), (8.9, 0.9), (8.9, 8.9)])
 
@@ -359,7 +358,6 @@ class FaultBlockTest(ResdataTest):
             ((4, 0), (4, 1)),
             ((6, 0), (6, 1)),
             ((8, 0), (8, 1)),
-            #
             ((8, 1), (9, 1)),
             ((8, 3), (9, 3)),
             ((8, 5), (9, 5)),

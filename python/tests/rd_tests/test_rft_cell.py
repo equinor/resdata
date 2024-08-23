@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from resdata.rft import ResdataPLTCell, ResdataRFTCell
+
 from tests import ResdataTest
 
 

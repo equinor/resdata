@@ -2,9 +2,8 @@
 Create a polygon
 """
 
-import ctypes
-
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
 from resdata.geometry import CPolyline
 
@@ -85,11 +84,10 @@ class CPolylineCollection(BaseCClass):
     def addPolyline(self, polyline, name=None):
         if not isinstance(polyline, CPolyline):
             polyline = CPolyline(init_points=polyline, name=name)
-        else:
-            if not name is None:
-                raise ValueError(
-                    "The name keyword argument can only be supplied when add not CPOlyline object"
-                )
+        elif not name is None:
+            raise ValueError(
+                "The name keyword argument can only be supplied when add not CPOlyline object"
+            )
 
         name = polyline.getName()
         if name and name in self:

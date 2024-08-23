@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-import os
-import random
 
-from resdata.util.util import IntVector
-from resdata import ResDataType, FileMode
-from resdata.resfile import Resdata3DKW, ResdataKW, ResdataFile, FortIO
+from resdata import ResDataType
 from resdata.grid import Grid
-from resdata.util.test import TestAreaContext
+from resdata.resfile import Resdata3DKW, ResdataKW
+from resdata.util.util import IntVector
+
 from tests import ResdataTest
 
 

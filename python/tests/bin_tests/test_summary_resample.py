@@ -2,10 +2,10 @@ import os.path
 import subprocess
 from subprocess import CalledProcessError as CallError
 
-from resdata.grid import Cell, Grid
 from resdata.summary import Summary
 from resdata.util.test import TestAreaContext
 from resdata.util.test.mock import createSummary
+
 from tests import ResdataTest
 
 
@@ -83,7 +83,7 @@ class SummaryResampleTest(ResdataTest):
                 output_case.get_data_start_time(), refcase.get_data_start_time()
             )
             self.assertEqual(output_case.get_end_time(), refcase.get_end_time())
-            time_points = output_case.alloc_time_vector(False)
+            _time_points = output_case.alloc_time_vector(False)
             t1 = output_case.alloc_time_vector(False)
             t2 = refcase.alloc_time_vector(False)
             self.assertEqual(t1, t2)

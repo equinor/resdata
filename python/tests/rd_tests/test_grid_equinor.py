@@ -6,15 +6,15 @@ try:
 except ImportError:
     from unittest import skipIf
 
-from cwrap import Prototype
-from cwrap import open as copen
-
 import time
-from resdata import ResDataType, UnitSystem
-from resdata.resfile import ResdataKW, ResdataFile, openResdataFile
+
+from cwrap import open as copen
+from resdata import ResDataType
 from resdata.grid import Grid
-from resdata.util.util import DoubleVector, IntVector
+from resdata.resfile import ResdataKW, openResdataFile
 from resdata.util.test import TestAreaContext
+from resdata.util.util import DoubleVector, IntVector
+
 from tests import ResdataTest, equinor_test
 
 
@@ -152,14 +152,14 @@ class GridTest(ResdataTest):
 
     def test_grdecl_load(self):
         with self.assertRaises(IOError):
-            grid = Grid.loadFromGrdecl("/file/does/not/exists")
+            _grid = Grid.loadFromGrdecl("/file/does/not/exists")
 
         with TestAreaContext("python/grid-test/grdeclLoad"):
             with open("grid.grdecl", "w") as f:
                 f.write("Hei ...")
 
             with self.assertRaises(ValueError):
-                grid = Grid.loadFromGrdecl("grid.grdecl")
+                _grid = Grid.loadFromGrdecl("grid.grdecl")
 
             actnum = IntVector(default_value=1, initial_size=1000)
             actnum[0] = 0
@@ -171,16 +171,15 @@ class GridTest(ResdataTest):
                 f2.write("SPECGRID\n")
                 f2.write("  10  10  10  'F' /\n")
 
-            with openResdataFile("G.EGRID") as f:
-                with copen("grid.grdecl", "a") as f2:
-                    coord_kw = f["COORD"][0]
-                    coord_kw.write_grdecl(f2)
+            with openResdataFile("G.EGRID") as f, copen("grid.grdecl", "a") as f2:
+                coord_kw = f["COORD"][0]
+                coord_kw.write_grdecl(f2)
 
-                    zcorn_kw = f["ZCORN"][0]
-                    zcorn_kw.write_grdecl(f2)
+                zcorn_kw = f["ZCORN"][0]
+                zcorn_kw.write_grdecl(f2)
 
-                    actnum_kw = f["ACTNUM"][0]
-                    actnum_kw.write_grdecl(f2)
+                actnum_kw = f["ACTNUM"][0]
+                actnum_kw.write_grdecl(f2)
 
             g2 = Grid.loadFromGrdecl("grid.grdecl")
             self.assertTrue(g1.equal(g2))
@@ -192,7 +191,7 @@ class GridTest(ResdataTest):
 
     def test_time(self):
         t0 = time.perf_counter()
-        g1 = Grid(self.egrid_file())
+        _g1 = Grid(self.egrid_file())
         t1 = time.perf_counter()
         t = t1 - t0
         self.assertTrue(t < 1.0)
@@ -217,7 +216,7 @@ class GridTest(ResdataTest):
 
     def test_raise_IO_error(self):
         with self.assertRaises(IOError):
-            g = Grid("/does/not/exist.EGRID")
+            _g = Grid("/does/not/exist.EGRID")
 
     def test_boundingBox(self):
         grid = Grid.createRectangular((10, 10, 10), (1, 1, 1))
@@ -252,7 +251,7 @@ class GridTest(ResdataTest):
     def test_num_active_large_memory(self):
         case = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE")
         vecList = []
-        for i in range(12500):
+        for _i in range(12500):
             vec = DoubleVector()
             vec[81920] = 0
             vecList.append(vec)

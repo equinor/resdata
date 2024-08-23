@@ -1,6 +1,8 @@
 import random
+
 from resdata.geometry import Surface
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
 
 
@@ -55,8 +57,8 @@ class SurfaceTest(ResdataTest):
 
         self.assertNotEqual(s, small)
         idx = 0
-        for i in range(nx):
-            for j in range(ny):
+        for _i in range(nx):
+            for _j in range(ny):
                 s[idx] = small[idx]
                 idx += 1
         self.assertEqual(s, small)
@@ -78,10 +80,10 @@ class SurfaceTest(ResdataTest):
         self.assertEqual(len(s), 49 * 79)
 
         with self.assertRaises(IndexError):
-            v = s[49 * 79]
+            _v = s[49 * 79]
 
         with self.assertRaises(TypeError):
-            v = s["KEY"]
+            _v = s["KEY"]
 
         self.assertEqual(s[0], 0.0051)
         self.assertEqual(s[-1], -0.0014)
@@ -151,7 +153,7 @@ class SurfaceTest(ResdataTest):
 
         s2 = Surface(self.surface_valid2)
         with self.assertRaises(ValueError):
-            s3 = s1 + s2
+            _s3 = s1 + s2
 
         s4 = s1 + s0
         for v in s4:
@@ -164,7 +166,7 @@ class SurfaceTest(ResdataTest):
     def test_ops2(self):
         s0 = Surface(self.surface_small)
         surface_list = []
-        for i in range(10):
+        for _i in range(10):
             s = s0.copy()
             for j in range(len(s)):
                 s[j] = random.random()

@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 import os
-import random
-from resdata import ResDataType, FileMode
-from resdata.resfile import ResdataKW, ResdataFile, FortIO
 
-from resdata.util.test import TestAreaContext
+from resdata import ResDataType
+from resdata.resfile import ResdataFile, ResdataKW
+
 from tests import ResdataTest, equinor_test
 
 
 def copy_long():
     src = ResdataKW("NAME", 100, ResDataType.RD_FLOAT)
-    copy = src.sub_copy(0, 2000)
+    _copy = src.sub_copy(0, 2000)
 
 
 def copy_offset():
     src = ResdataKW("NAME", 100, ResDataType.RD_FLOAT)
-    copy = src.sub_copy(200, 100)
+    _copy = src.sub_copy(200, 100)
 
 
 @equinor_test()

@@ -1,15 +1,11 @@
 #!/usr/bin/env python
-import datetime
-import time
 import warnings
 
 from resdata import ResDataType
-from resdata.grid import Grid, GridGenerator, ResdataRegion
+from resdata.grid import GridGenerator, ResdataRegion
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
-from resdata.rft import ResdataRFT
 from resdata.util.test import TestAreaContext
-from resdata.util.test.mock import createSummary
-from resdata.util.util import BoolVector
+
 from tests import ResdataTest
 
 # The class Deprecation_1_9_Test contains methods which will be marked
@@ -24,7 +20,7 @@ class Deprecation_2_1_Test(ResdataTest):
 
 class Deprecation_2_0_Test(ResdataTest):
     def test_ResdataFile_name_property(self):
-        with TestAreaContext("name") as t:
+        with TestAreaContext("name"):
             kw = ResdataKW("TEST", 3, ResDataType.RD_INT)
             with openFortIO("TEST", mode=FortIO.WRITE_MODE) as f:
                 kw.fwrite(f)
@@ -35,4 +31,4 @@ class Deprecation_2_0_Test(ResdataTest):
 class Deprecation_1_9_Test(ResdataTest):
     def test_ResdataRegion_properties(self):
         grid = GridGenerator.createRectangular((10, 10, 10), (1, 1, 1))
-        region = ResdataRegion(grid, False)
+        _region = ResdataRegion(grid, False)

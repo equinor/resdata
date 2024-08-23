@@ -1,12 +1,12 @@
-import itertools, numpy
+import itertools
 from math import sqrt
 
-from resdata import ResdataPrototype
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
-from resdata import ResDataType
-from resdata.resfile import ResdataKW
+import numpy
+
+from resdata import ResdataPrototype, ResDataType
 from resdata.grid import Grid
+from resdata.resfile import ResdataKW
+from resdata.util.util import IntVector, monkey_the_camel
 
 
 def flatten(l):
@@ -492,7 +492,7 @@ class GridGenerator:
                 % (nx * ny * nz, len(actnum))
             )
 
-        if set(actnum) - set([0, 1]):
+        if set(actnum) - {0, 1}:
             raise AssertionError(
                 "Expected ACTNUM to consist of 0's and 1's, was %s."
                 % ", ".join(map(str, set(actnum)))
@@ -690,10 +690,6 @@ class GridGenerator:
 
         ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
         cls.assert_decomposition_change(ijk_bounds, decomposition_change)
-
-        nx, ny, nz = dims
-        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
 
         new_coord = cls.extract_coord(dims, coord, ijk_bounds)
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)

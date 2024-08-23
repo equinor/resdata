@@ -1,4 +1,5 @@
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
 from resdata.well import WellConnectionDirection
 

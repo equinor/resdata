@@ -1,8 +1,10 @@
-from cwrap import BaseCClass
-from resdata.util.util import IntVector
-from resdata import ResdataPrototype
-from .cpolyline import CPolyline
 from ctypes import c_double
+
+from cwrap import BaseCClass
+
+from resdata import ResdataPrototype
+
+from .cpolyline import CPolyline
 
 cpair = c_double * 2  # this is a function that maps two doubles to a double*
 
@@ -42,7 +44,7 @@ class GeoRegion(BaseCClass):
     )
 
     def __init__(self, pointset, preselect=False):
-        self._preselect = True if preselect else False
+        self._preselect = bool(preselect)
         c_ptr = self._alloc(pointset, self._preselect)
         if c_ptr:
             super(GeoRegion, self).__init__(c_ptr)
@@ -68,7 +70,7 @@ class GeoRegion(BaseCClass):
             x2, y2 = map(float, p2)
         except Exception as err:
             err_msg = "Select with pair ((x1,y1), (x2,y2)), not %s (%s)."
-            raise ValueError(err_msg % (line, err))
+            raise ValueError(err_msg % (line, err)) from err
         x1x2_ptr = cpair(x1, x2)
         y1y2_ptr = cpair(y1, y2)
         return x1x2_ptr, y1y2_ptr

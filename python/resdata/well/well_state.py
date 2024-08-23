@@ -1,8 +1,6 @@
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.well import WellType, WellConnection
-from resdata.util.util import CTime
 
 
 class WellState(BaseCClass):
@@ -163,10 +161,7 @@ class WellState(BaseCClass):
 
     def __repr__(self):
         name = self.name()
-        if name:
-            name = "%s" % name
-        else:
-            name = "[no name]"
+        name = "%s" % name if name else "[no name]"
         msw = " (multi segment)" if self.isMultiSegmentWell() else ""
         wn = str(self.wellNumber())
         type_ = self.wellType()

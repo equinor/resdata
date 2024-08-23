@@ -1,17 +1,15 @@
 import datetime
 import os.path
 
-from tests import ResdataTest, equinor_test, source_root
-from resdata import FileMode, ResDataType
+from resdata import ResDataType
+from resdata.grid import Grid
 from resdata.resfile import (
-    Resdata3DKW,
     ResdataKW,
     ResdataRestartFile,
-    ResdataFile,
-    FortIO,
 )
 from resdata.resfile.rd_restart_file import ResdataRestartHead
-from resdata.grid import Grid
+
+from tests import ResdataTest, equinor_test, source_root
 
 
 @equinor_test()

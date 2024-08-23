@@ -1,7 +1,7 @@
-from tests import ResdataTest, equinor_test
-from resdata import FileMode
-from resdata.resfile import Resdata3DKW, ResdataKW, ResdataInitFile, ResdataFile, FortIO
 from resdata.grid import Grid
+from resdata.resfile import Resdata3DKW, ResdataInitFile, ResdataKW
+
+from tests import ResdataTest, equinor_test
 
 
 @equinor_test()
@@ -13,7 +13,7 @@ class InitFileTest(ResdataTest):
     def test_wrong_type(self):
         g = Grid(self.grid_file)
         with self.assertRaises(ValueError):
-            f = ResdataInitFile(g, self.grid_file)
+            _f = ResdataInitFile(g, self.grid_file)
 
     def test_load(self):
         g = Grid(self.grid_file)

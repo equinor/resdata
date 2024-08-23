@@ -1,4 +1,5 @@
 from resdata.geometry import GeometryTools
+
 from tests import ResdataTest
 
 

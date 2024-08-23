@@ -1,6 +1,7 @@
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
+
 from resdata import ResdataPrototype
+from resdata.util.util import monkey_the_camel
 
 
 class ResdataSMSPECNode(BaseCClass):
@@ -52,7 +53,7 @@ class ResdataSMSPECNode(BaseCClass):
     def __eq__(self, other):
         return self.cmp(other) == 0
 
-    def __hash__(self, other):
+    def __hash__(self):
         return hash(self._gen_key1())
 
     @property

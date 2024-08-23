@@ -1,11 +1,12 @@
 import datetime
+
 from resdata import ResDataType
-from resdata.resfile import ResdataKW, ResdataFile, openFortIO, FortIO
-from resdata.grid import Grid
 from resdata.gravimetry import ResdataGrav
+from resdata.grid import Grid
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
-from resdata.rd_util import Phase
 
 
 class ResdataGravTest(ResdataTest):

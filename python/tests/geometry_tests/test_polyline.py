@@ -1,6 +1,7 @@
-from resdata.geometry import Polyline, GeometryTools
+from resdata.geometry import GeometryTools, Polyline
 from resdata.geometry.xyz_io import XYZIo
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
 
 
@@ -101,7 +102,7 @@ class PolylineTest(ResdataTest):
         self.assertTrue(pl.isClosed())
 
     def test_save(self):
-        with TestAreaContext("polyline/fwrite") as work_area:
+        with TestAreaContext("polyline/fwrite"):
             p1 = Polyline(init_points=[(1, 0), (1, 1), (1, 2)])
             p2 = Polyline(init_points=[(1, 0), (1, 1), (1, 2)])
             self.assertTrue(p1 == p2)

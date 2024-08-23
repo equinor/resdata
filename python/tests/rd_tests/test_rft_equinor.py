@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
 import datetime
-from resdata.rft import ResdataRFTFile, ResdataRFTCell, ResdataPLTCell, WellTrajectory
+
+from resdata.rft import ResdataPLTCell, ResdataRFTCell, ResdataRFTFile, WellTrajectory
+
 from tests import ResdataTest, equinor_test
 
 
@@ -54,7 +57,7 @@ class RFTTest(ResdataTest):
     def test_exceptions(self):
         with self.assertRaises(IndexError):
             rftFile = ResdataRFTFile(self.RFT_file)
-            rft = rftFile[100]
+            _rft = rftFile[100]
 
     def test_basics(self):
         wt = WellTrajectory(
@@ -89,7 +92,7 @@ class RFTTest(ResdataTest):
         self.assertEqual(len(wt), 38)
 
         with self.assertRaises(IndexError):
-            p = wt[38]
+            _p = wt[38]
 
         p0 = wt[0]
         self.assertEqual(p0.utm_x, 458920.671)

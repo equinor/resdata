@@ -1,25 +1,23 @@
 #!/usr/bin/env python
 import random
 import warnings
+
 import cwrap
-import random
-
-from resdata import ResDataType, ResdataTypeEnum, FileMode
-from resdata.resfile import ResdataKW, ResdataFile, FortIO, openFortIO
-
-
+from resdata import FileMode, ResDataType, ResdataTypeEnum
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
 
 
 def copy_long():
     src = ResdataKW("NAME", 100, ResDataType.RD_FLOAT)
-    copy = src.sub_copy(0, 2000)
+    _copy = src.sub_copy(0, 2000)
 
 
 def copy_offset():
     src = ResdataKW("NAME", 100, ResDataType.RD_FLOAT)
-    copy = src.sub_copy(200, 100)
+    _copy = src.sub_copy(200, 100)
 
 
 class KWTest(ResdataTest):
@@ -68,10 +66,9 @@ class KWTest(ResdataTest):
         kw.fprintf_data(file1, fmt)
         file1.close()
 
-        file2 = open(name2, "w")
-        for d in data:
-            file2.write(fmt % d)
-        file2.close()
+        with open(name2, "w", encoding="utf-8") as file2:
+            for d in data:
+                file2.write(fmt % d)
         self.assertFilesAreEqual(name1, name2)
         self.assertEqual(kw.data_type, data_type)
 
@@ -141,10 +138,8 @@ class KWTest(ResdataTest):
             data = [random.random() for i in range(10000)]
 
             kw = ResdataKW("TEST", len(data), ResDataType.RD_DOUBLE)
-            i = 0
-            for d in data:
+            for i, d in enumerate(data):
                 kw[i] = d
-                i += 1
 
             pfx = "ResdataKW("
             self.assertEqual(pfx, repr(kw)[: len(pfx)])
@@ -186,12 +181,12 @@ class KWTest(ResdataTest):
             kw.fprintf_data(fileH)
             fileH.close()
 
-            fileH = open("test", "r")
-            data = []
-            for line in fileH.readlines():
-                tmp = line.split()
-                for elm in tmp:
-                    data.append(int(elm))
+            with open("test", "r", encoding="utf-8") as fileH:
+                data = []
+                for line in fileH.readlines():
+                    tmp = line.split()
+                    for elm in tmp:
+                        data.append(int(elm))
 
             for v1, v2 in zip(data, kw):
                 self.assertEqual(v1, v2)
@@ -239,7 +234,7 @@ class KWTest(ResdataTest):
             kw1[i] = i + 1
             kw2[i] = len(kw1) - kw1[i]
 
-        with TestAreaContext("rd_kw/fmt") as ta:
+        with TestAreaContext("rd_kw/fmt"):
             with openFortIO("TEST.FINIT", FortIO.WRITE_MODE, fmt_file=True) as f:
                 kw1.fwrite(f)
                 kw2.fwrite(f)

@@ -1,14 +1,12 @@
-import numpy
-import datetime
-
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
 
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
+
 from resdata import ResdataPrototype
+from resdata.util.util import monkey_the_camel
 
 
 class SummaryKeyWordVector(BaseCClass):

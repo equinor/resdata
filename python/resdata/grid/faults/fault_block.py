@@ -1,10 +1,10 @@
 import ctypes
+
 from cwrap import BaseCClass
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import DoubleVector, IntVector
 from resdata import ResdataPrototype
-from resdata.geometry import Polyline, GeometryTools, CPolylineCollection
+from resdata.geometry import CPolylineCollection, GeometryTools, Polyline
+from resdata.util.util import DoubleVector, IntVector, monkey_the_camel
 
 
 class FaultBlockCell(object):
@@ -143,9 +143,8 @@ class FaultBlock(BaseCClass):
         for p in polyline:
             if GeometryTools.pointInPolygon(p, edge_polyline):
                 return True
-        else:
-            edge_polyline.assertClosed()
-            return GeometryTools.polylinesIntersect(edge_polyline, polyline)
+        edge_polyline.assertClosed()
+        return GeometryTools.polylinesIntersect(edge_polyline, polyline)
 
     def get_neighbours(self, polylines=None, connected_only=True):
         """

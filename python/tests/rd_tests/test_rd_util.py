@@ -1,8 +1,8 @@
-import pytest
 import datetime
 from textwrap import dedent
 
 from resdata import FileType, ResdataTypeEnum, ResdataUtil
+
 from tests import ResdataTest
 
 
@@ -12,7 +12,7 @@ class ResdataUtilTest(ResdataTest):
         self.assertEnumIsFullyDefined(ResdataTypeEnum, "rd_type_enum", source_file_path)
 
     def test_file_type(self):
-        file_type, fmt, report = ResdataUtil.inspectExtension("CASE.X0078")
+        file_type, _fmt, _report = ResdataUtil.inspectExtension("CASE.X0078")
         self.assertEqual(file_type, FileType.RESTART)
 
     def test_file_report_nr(self):
@@ -41,7 +41,7 @@ def test_get_start_date_reads_from_start_kw_in_data_file(tmp_path):
     data_file = tmp_path / "dfile"
     data_file.write_text(
         dedent(
-            f"""\
+            """\
             START
             4 Apr 2024 /
             """

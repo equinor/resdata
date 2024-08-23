@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-from _ctypes import ArgumentError
-import os
 import datetime
+import os
+
 from resdata.resfile import ResdataFile
+
 from tests import ResdataTest, equinor_test
 
 
@@ -103,4 +104,4 @@ class RestartTest(ResdataTest):
         self.assertTrue(kw1.equal(kw3))
 
         with self.assertRaises(IndexError):
-            kw4 = f.restart_get_kw("SWAT", datetime.datetime(2009, 3, 17))
+            _kw4 = f.restart_get_kw("SWAT", datetime.datetime(2009, 3, 17))

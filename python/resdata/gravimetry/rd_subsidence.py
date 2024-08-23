@@ -8,9 +8,9 @@ rd_subsidence.c implementation in the resdata library.
 """
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
-import resdata.grid
 
 
 class ResdataSubsidence(BaseCClass):
@@ -98,9 +98,8 @@ class ResdataSubsidence(BaseCClass):
         if not base_survey in self:
             raise KeyError("No such survey: %s" % base_survey)
 
-        if monitor_survey is not None:
-            if not monitor_survey in self:
-                raise KeyError("No such survey: %s" % monitor_survey)
+        if monitor_survey is not None and not monitor_survey in self:
+            raise KeyError("No such survey: %s" % monitor_survey)
 
         return self._eval_geertsma(
             base_survey,
@@ -127,9 +126,8 @@ class ResdataSubsidence(BaseCClass):
         if not base_survey in self:
             raise KeyError("No such survey: %s" % base_survey)
 
-        if monitor_survey is not None:
-            if not monitor_survey in self:
-                raise KeyError("No such survey: %s" % monitor_survey)
+        if monitor_survey is not None and not monitor_survey in self:
+            raise KeyError("No such survey: %s" % monitor_survey)
 
         return self._eval_geertsma_rporv(
             base_survey,
