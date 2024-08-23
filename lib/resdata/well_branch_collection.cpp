@@ -46,12 +46,6 @@ void well_branch_collection_free(well_branch_collection_type *branches) {
     delete branches;
 }
 
-void well_branch_collection_free__(void *arg) {
-    well_branch_collection_type *branches =
-        well_branch_collection_safe_cast(arg);
-    well_branch_collection_free(branches);
-}
-
 int well_branch_collection_get_size(
     const well_branch_collection_type *branches) {
     return branches->__start_segments.size();
