@@ -10,10 +10,9 @@ rd_grid_generator/GridGenerator: This can be used to generate various
   grids.
 """
 
-import resdata.geometry  # noqa: F401
-import resdata.util.util  # noqa: F401
+from .cell import Cell
+from .rd_grid import Grid
+from .rd_grid_generator import GridGenerator
+from .rd_region import ResdataRegion
 
-from .cell import Cell as Cell
-from .rd_grid import Grid as Grid
-from .rd_grid_generator import GridGenerator as GridGenerator
-from .rd_region import ResdataRegion as ResdataRegion
+__all__ = ["Cell", "Grid", "GridGenerator", "ResdataRegion"]

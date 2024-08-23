@@ -7,5 +7,7 @@ rd_subsidence/ResdataSubsidence: Small class used to evaluate simulated
    functionality.
 """
 
-from .rd_grav import ResdataGrav as ResdataGrav
-from .rd_subsidence import ResdataSubsidence as ResdataSubsidence
+from .rd_grav import ResdataGrav
+from .rd_subsidence import ResdataSubsidence
+
+__all__ = ["ResdataGrav", "ResdataSubsidence"]

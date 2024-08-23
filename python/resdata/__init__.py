@@ -42,7 +42,7 @@ warnings.filterwarnings(
 
 from cwrap import Prototype
 
-from .version import version as __version__  # noqa: F401
+from .version import version as __version__
 
 
 def _dlopen_resdata():
@@ -100,25 +100,9 @@ class ResdataPrototype(Prototype):
         )
 
 
-from .rd_type import ResDataType as ResDataType
-from .rd_type import ResdataTypeEnum as ResdataTypeEnum
-from .rd_util import (
-    FileMode as FileMode,
-)
-from .rd_util import (
-    FileType as FileType,
-)
-from .rd_util import (
-    Phase as Phase,
-)
-from .rd_util import (
-    ResdataUtil as ResdataUtil,
-)
-from .rd_util import (
-    UnitSystem as UnitSystem,
-)
-from .util.util import ResdataVersion as ResdataVersion
-from .util.util import updateAbortSignals
+from .rd_type import ResDataType, ResdataTypeEnum
+from .rd_util import FileMode, FileType, Phase, UnitSystem
+from .util.util import ResdataVersion, updateAbortSignals
 
 updateAbortSignals()
 
@@ -128,3 +112,17 @@ def root():
     Will print the filesystem root of the current ert package.
     """
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+
+
+__all__ = [
+    "__version__",
+    "ResdataPrototype",
+    "ResDataType",
+    "ResdataTypeEnum",
+    "FileMode",
+    "FileType",
+    "Phase",
+    "ResdataUtil",
+    "UnitSystem",
+    "ResdataVersion",
+]

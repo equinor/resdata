@@ -17,15 +17,24 @@ format files.
      instances.
 """
 
-import resdata.util.util  # noqa: F401
+from .fortio import FortIO, openFortIO
+from .rd_3d_file import Resdata3DFile
+from .rd_3dkw import Resdata3DKW
+from .rd_file import ResdataFile, openResdataFile
+from .rd_file_view import ResdataFileView
+from .rd_init_file import ResdataInitFile
+from .rd_kw import ResdataKW
+from .rd_restart_file import ResdataRestartFile
 
-from .fortio import FortIO as FortIO
-from .fortio import openFortIO as openFortIO
-from .rd_3d_file import Resdata3DFile as Resdata3DFile
-from .rd_3dkw import Resdata3DKW as Resdata3DKW
-from .rd_file import ResdataFile as ResdataFile
-from .rd_file import openResdataFile as openResdataFile
-from .rd_file_view import ResdataFileView as ResdataFileView
-from .rd_init_file import ResdataInitFile as ResdataInitFile
-from .rd_kw import ResdataKW as ResdataKW
-from .rd_restart_file import ResdataRestartFile as ResdataRestartFile
+__all__ = [
+    "FortIO",
+    "openFortIO",
+    "Resdata3DFile",
+    "Resdata3DKW",
+    "ResdataFile",
+    "openResdataFile",
+    "ResdataFileView",
+    "ResdataInitFile",
+    "ResdataKW",
+    "ResdataRestartFile",
+]
