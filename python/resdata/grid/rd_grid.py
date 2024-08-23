@@ -1407,9 +1407,9 @@ class Grid(BaseCClass):
         if not isinstance(index_frame, pandas.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
         if len(kw) == self.get_global_size():
-            index = numpy.array(index_frame.index, dtype=numpy.int32)
+            index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
         elif len(kw) == self.get_num_active():
-            index = numpy.array(index_frame["active"], dtype=numpy.int32)
+            index = index_frame["active"].to_numpy(dtype=numpy.int32, copy=True)
         else:
             raise ValueError("The keyword must have a 3D compatible length")
 
@@ -1444,7 +1444,9 @@ class Grid(BaseCClass):
         Index_fram must be a pandas dataframe with the same structure
         as obtained from export_index.
         """
-        index = numpy.array(index_frame.index, dtype=numpy.int32)
+        if not isinstance(index_frame, pandas.DataFrame):
+            raise TypeError("index_frame must be pandas.DataFrame")
+        index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
         data = numpy.zeros(len(index), dtype=numpy.float64)
         self._export_volume(
             len(index),
@@ -1460,7 +1462,9 @@ class Grid(BaseCClass):
         Index_fram must be a pandas dataframe with the same structure
         as obtained from export_index.
         """
-        index = numpy.array(index_frame.index, dtype=numpy.int32)
+        if not isinstance(index_frame, pandas.DataFrame):
+            raise TypeError("index_frame must be pandas.DataFrame")
+        index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
         data = numpy.zeros([len(index), 3], dtype=numpy.float64)
         self._export_position(
             len(index),
@@ -1504,7 +1508,9 @@ class Grid(BaseCClass):
         increase 'towards the sky'; the safest way is probably to check this
         explicitly if it matters for the case at hand.
         """
-        index = numpy.array(index_frame.index, dtype=numpy.int32)
+        if not isinstance(index_frame, pandas.DataFrame):
+            raise TypeError("index_frame must be pandas.DataFrame")
+        index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
         data = numpy.zeros([len(index), 24], dtype=numpy.float64)
         self._export_corners(
             len(index),
