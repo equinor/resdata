@@ -24,7 +24,6 @@ well_segment_alloc_from_kw(const rd_kw_type *iseg_kw,
 well_segment_type *well_segment_alloc(int segment_id, int outlet_segment_id,
                                       int branch_id, const double *rseg_data);
 void well_segment_free(well_segment_type *segment);
-void well_segment_free__(void *arg);
 
 bool well_segment_active(const well_segment_type *segment);
 bool well_segment_main_stem(const well_segment_type *segment);
