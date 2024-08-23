@@ -18,7 +18,6 @@ typedef struct fault_block_layer_struct fault_block_layer_type;
 fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
                                                 int k);
 void fault_block_layer_free(fault_block_layer_type *layer);
-void fault_block_layer_free__(void *arg);
 bool fault_block_layer_has_block(const fault_block_layer_type *layer,
                                  int block_id);
 void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id);

@@ -270,11 +270,6 @@ void fault_block_layer_free(fault_block_layer_type *layer) {
     free(layer);
 }
 
-void fault_block_layer_free__(void *arg) {
-    fault_block_layer_type *layer = fault_block_layer_safe_cast(arg);
-    fault_block_layer_free(layer);
-}
-
 void fault_block_layer_insert_block_content(fault_block_layer_type *layer,
                                             const fault_block_type *src_block) {
     int next_block_id = fault_block_layer_get_next_id(layer);
