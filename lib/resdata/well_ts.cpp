@@ -244,16 +244,7 @@ void well_ts_free(well_ts_type *well_ts) {
     delete well_ts;
 }
 
-void well_ts_free__(void *arg) {
-    well_ts_type *well_ts = well_ts_safe_cast(arg);
-    well_ts_free(well_ts);
-}
-
 int well_ts_get_size(const well_ts_type *well_ts) { return well_ts->ts.size(); }
-
-well_state_type *well_ts_get_first_state(const well_ts_type *well_ts) {
-    return well_ts_iget_state(well_ts, 0);
-}
 
 well_state_type *well_ts_get_last_state(const well_ts_type *well_ts) {
     return well_ts_iget_state(well_ts, well_ts->ts.size() - 1);
@@ -268,15 +259,6 @@ well_state_type *well_ts_iget_state(const well_ts_type *well_ts, int index) {
 well_state_type *well_ts_get_state_from_report(const well_ts_type *well_ts,
                                                int report_step) {
     int index = well_ts_get_index(well_ts, report_step, -1, true);
-    if (index < 0)
-        return NULL;
-    else
-        return well_ts_iget_state(well_ts, index);
-}
-
-well_state_type *well_ts_get_state_from_sim_time(const well_ts_type *well_ts,
-                                                 time_t sim_time) {
-    int index = well_ts_get_index(well_ts, -1, sim_time, false);
     if (index < 0)
         return NULL;
     else
