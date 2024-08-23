@@ -1,3 +1,5 @@
+from cwrap import Prototype  # noqa: F401
+
 from .well_connection import WellConnection
 from .well_connection_direction_enum import WellConnectionDirection
 from .well_info import WellInfo

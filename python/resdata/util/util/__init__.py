@@ -34,6 +34,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import warnings
 
+from cwrap import Prototype  # noqa: F401
+
 from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
 from .bool_vector import BoolVector

@@ -3,6 +3,8 @@ Simple package for working with 2D geometry.
 
 """
 
+from cwrap import Prototype  # noqa: F401
+
 from .cpolyline import CPolyline
 from .cpolyline_collection import CPolylineCollection
 from .geo_pointset import GeoPointset
