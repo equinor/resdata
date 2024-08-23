@@ -98,18 +98,7 @@ struct rd_coarse_cell_struct {
     int_vector_type *active_values;
 };
 
-static UTIL_SAFE_CAST_FUNCTION(rd_coarse_cell, RD_COARSE_CELL_TYPE_ID)
-
-    void rd_coarse_cell_assert(rd_coarse_cell_type *coarse_cell) {
-    int box_size = (1 + coarse_cell->ijk[1] - coarse_cell->ijk[0]) *
-                   (1 + coarse_cell->ijk[2] - coarse_cell->ijk[3]) *
-                   (1 + coarse_cell->ijk[4] - coarse_cell->ijk[5]);
-
-    if (box_size != int_vector_size(coarse_cell->cell_list))
-        util_abort("%s: using invalid coarse cell. Box size:%d cells. "
-                   "cell_list:%d cells \n",
-                   __func__, box_size, int_vector_size(coarse_cell->cell_list));
-}
+static UTIL_SAFE_CAST_FUNCTION(rd_coarse_cell, RD_COARSE_CELL_TYPE_ID);
 
 rd_coarse_cell_type *rd_coarse_cell_alloc() {
     const int LARGE = 1 << 30;
@@ -132,6 +121,22 @@ rd_coarse_cell_type *rd_coarse_cell_alloc() {
     coarse_cell->active_cells = int_vector_alloc(0, 0);
     coarse_cell->active_values = int_vector_alloc(0, 0);
     return coarse_cell;
+}
+
+static void rd_coarse_cell_fprintf(const rd_coarse_cell_type *coarse_cell,
+                                   FILE *stream) {
+    fprintf(stream, "Coarse box: \n");
+    fprintf(stream, "   i             : %3d - %3d\n", coarse_cell->ijk[0],
+            coarse_cell->ijk[1]);
+    fprintf(stream, "   j             : %3d - %3d\n", coarse_cell->ijk[2],
+            coarse_cell->ijk[3]);
+    fprintf(stream, "   k             : %3d - %3d\n", coarse_cell->ijk[4],
+            coarse_cell->ijk[5]);
+    fprintf(stream, "   active_cells  : ");
+    int_vector_fprintf(coarse_cell->active_cells, stream, "", "%5d ");
+    fprintf(stream, "   active_values : ");
+    int_vector_fprintf(coarse_cell->active_values, stream, "", "%5d ");
+    //fprintf(stream,"   Cells         : " ); int_vector_fprintf( coarse_cell->cell_list , stream , "" , "%5d ");
 }
 
 bool rd_coarse_cell_equal(const rd_coarse_cell_type *coarse_cell1,
@@ -211,12 +216,6 @@ int rd_coarse_cell_get_size(const rd_coarse_cell_type *coarse_cell) {
     return int_vector_size(coarse_cell->cell_list);
 }
 
-int rd_coarse_cell_iget_cell_index(rd_coarse_cell_type *coarse_cell,
-                                   int group_index) {
-    rd_coarse_cell_sort(coarse_cell);
-    return int_vector_iget(coarse_cell->cell_list, group_index);
-}
-
 const int *rd_coarse_cell_get_index_ptr(rd_coarse_cell_type *coarse_cell) {
     rd_coarse_cell_sort(coarse_cell);
     return int_vector_get_const_ptr(coarse_cell->cell_list);
@@ -226,30 +225,6 @@ const int_vector_type *
 rd_coarse_cell_get_index_vector(rd_coarse_cell_type *coarse_cell) {
     rd_coarse_cell_sort(coarse_cell);
     return coarse_cell->cell_list;
-}
-
-int rd_coarse_cell_get_i1(const rd_coarse_cell_type *coarse_cell) {
-    return coarse_cell->ijk[0];
-}
-
-int rd_coarse_cell_get_i2(const rd_coarse_cell_type *coarse_cell) {
-    return coarse_cell->ijk[1];
-}
-
-int rd_coarse_cell_get_j1(const rd_coarse_cell_type *coarse_cell) {
-    return coarse_cell->ijk[2];
-}
-
-int rd_coarse_cell_get_j2(const rd_coarse_cell_type *coarse_cell) {
-    return coarse_cell->ijk[3];
-}
-
-int rd_coarse_cell_get_k1(const rd_coarse_cell_type *coarse_cell) {
-    return coarse_cell->ijk[4];
-}
-
-int rd_coarse_cell_get_k2(const rd_coarse_cell_type *coarse_cell) {
-    return coarse_cell->ijk[5];
 }
 
 const int *rd_coarse_cell_get_box_ptr(const rd_coarse_cell_type *coarse_cell) {
@@ -316,20 +291,4 @@ int rd_coarse_cell_iget_active_value(const rd_coarse_cell_type *coarse_cell,
 
 int rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell) {
     return int_vector_size(coarse_cell->active_cells);
-}
-
-void rd_coarse_cell_fprintf(const rd_coarse_cell_type *coarse_cell,
-                            FILE *stream) {
-    fprintf(stream, "Coarse box: \n");
-    fprintf(stream, "   i             : %3d - %3d\n", coarse_cell->ijk[0],
-            coarse_cell->ijk[1]);
-    fprintf(stream, "   j             : %3d - %3d\n", coarse_cell->ijk[2],
-            coarse_cell->ijk[3]);
-    fprintf(stream, "   k             : %3d - %3d\n", coarse_cell->ijk[4],
-            coarse_cell->ijk[5]);
-    fprintf(stream, "   active_cells  : ");
-    int_vector_fprintf(coarse_cell->active_cells, stream, "", "%5d ");
-    fprintf(stream, "   active_values : ");
-    int_vector_fprintf(coarse_cell->active_values, stream, "", "%5d ");
-    //fprintf(stream,"   Cells         : " ); int_vector_fprintf( coarse_cell->cell_list , stream , "" , "%5d ");
 }
