@@ -33,10 +33,7 @@ bool layer_iget_left_barrier(const layer_type *layer, int i, int j);
 bool layer_iget_bottom_barrier(const layer_type *layer, int i, int j);
 int layer_get_nx(const layer_type *layer);
 int layer_get_ny(const layer_type *layer);
-void layer_fprintf_cell(const layer_type *layer, int i, int j, FILE *stream);
 void layer_fprintf(const layer_type *layer, FILE *stream);
-void layer_fprintf_box(const layer_type *layer, FILE *stream, int i1, int i2,
-                       int j1, int j2);
 layer_type *layer_alloc(int nx, int ny);
 void layer_free(layer_type *layer);
 int layer_replace_cell_values(layer_type *layer, int old_value, int new_value);
