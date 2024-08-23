@@ -124,9 +124,6 @@ bool rd_type_is_mess(const rd_data_type);
 bool rd_type_is_bool(const rd_data_type);
 bool rd_type_is_string(const rd_data_type);
 
-// Temporary fixup for OPM.
-char *rd_type_get_name(const rd_data_type);
-
 #ifdef __cplusplus
 }
 #endif
