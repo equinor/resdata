@@ -12,8 +12,6 @@ typedef struct well_rseg_loader_struct well_rseg_loader_type;
 well_rseg_loader_type *well_rseg_loader_alloc(rd_file_view_type *rst_view);
 void well_rseg_loader_free(well_rseg_loader_type *well_rseg_loader);
 
-int well_rseg_loader_element_count(
-    const well_rseg_loader_type *well_rseg_loader);
 double *
 well_rseg_loader_load_values(const well_rseg_loader_type *well_rseg_loader,
                              int rseg_offset);
