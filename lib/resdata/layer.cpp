@@ -374,8 +374,8 @@ static void layer_fprintf_header(const layer_type *layer, FILE *stream, int i1,
     fprintf(stream, "\n");
 }
 
-void layer_fprintf_box(const layer_type *layer, FILE *stream, int i1, int i2,
-                       int j1, int j2) {
+static void layer_fprintf_box(const layer_type *layer, FILE *stream, int i1,
+                              int i2, int j1, int j2) {
     int i, j;
     layer_fprintf_header(layer, stream, i1, i2);
     layer_fprintf_dash(layer, stream, i1, i2);
@@ -396,19 +396,6 @@ void layer_fprintf_box(const layer_type *layer, FILE *stream, int i1, int i2,
 
 void layer_fprintf(const layer_type *layer, FILE *stream) {
     layer_fprintf_box(layer, stream, 0, layer->nx - 1, 0, layer->ny - 1);
-}
-
-void layer_fprintf_cell(const layer_type *layer, int i, int j, FILE *stream) {
-    int g = layer_get_global_cell_index(layer, i, j);
-    cell_type *cell = &layer->data[g];
-
-    fprintf(stream, " i:%d   j:%d  \n", i, j);
-    fprintf(stream, "       *--- %4d ---* \n", cell->edges[TOP_EDGE]);
-    fprintf(stream, "       |            | \n");
-    fprintf(stream, "     %4d   %4d %4d\n", cell->edges[LEFT_EDGE],
-            cell->cell_value, cell->edges[RIGHT_EDGE]);
-    fprintf(stream, "       |            | \n");
-    fprintf(stream, "       *--- %4d ---* \n", cell->edges[BOTTOM_EDGE]);
 }
 
 static bool layer_find_edge(const layer_type *layer, int *i, int *j,
