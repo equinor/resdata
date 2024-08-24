@@ -1,3 +1,4 @@
+import resdata  # noqa
 from cwrap import Prototype  # noqa: F401
 
 from .well_connection import WellConnection

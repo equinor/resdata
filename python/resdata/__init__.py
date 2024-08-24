@@ -101,7 +101,7 @@ class ResdataPrototype(Prototype):
 
 
 from .rd_type import ResDataType, ResdataTypeEnum
-from .rd_util import FileMode, FileType, Phase, UnitSystem
+from .rd_util import FileMode, FileTFype, Phase, ResdataUtil, UnitSystem
 from .util.util import ResdataVersion, updateAbortSignals
 
 updateAbortSignals()
