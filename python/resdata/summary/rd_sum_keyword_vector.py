@@ -1,6 +1,3 @@
-import numpy
-import datetime
-
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second

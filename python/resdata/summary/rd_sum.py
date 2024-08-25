@@ -7,11 +7,11 @@ resdata/src directory.
 """
 
 import warnings
-import numpy
+import numpy as np
 import datetime
 import os.path
 import ctypes
-import pandas
+import pandas as pd
 import re
 from typing import Sequence, List, Tuple, Optional
 
@@ -463,13 +463,13 @@ class Summary(BaseCClass):
             key_index = self._get_general_var_index(key)
             if report_only:
                 index_list = self.report_index_list()
-                values = numpy.zeros(len(index_list))
+                values = np.zeros(len(index_list))
                 for i in range(len(index_list)):
                     time_index = index_list[i]
                     values[i] = self._iiget(time_index, key_index)
             else:
                 length = self._data_length()
-                values = numpy.zeros(length)
+                values = np.zeros(length)
                 for i in range(length):
                     values[i] = self._iiget(i, key_index)
 
@@ -516,14 +516,14 @@ class Summary(BaseCClass):
                 raise ValueError("Can not suuply both time_index and report_only=True")
 
         if time_index is None:
-            np_vector = numpy.zeros(len(self))
+            np_vector = np.zeros(len(self))
             self._init_numpy_vector(
                 key, np_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
             )
             return np_vector
         else:
             time_vector = self._make_time_vector(time_index)
-            np_vector = numpy.zeros(len(time_vector))
+            np_vector = np.zeros(len(time_vector))
             self._init_numpy_vector_interp(
                 key,
                 time_vector,
@@ -536,7 +536,7 @@ class Summary(BaseCClass):
         """
         Will return numpy vector of numpy.datetime64() values for all the simulated timepoints.
         """
-        np_dates = numpy.zeros(len(self), dtype="datetime64[ms]")
+        np_dates = np.zeros(len(self), dtype="datetime64[ms]")
         self._init_numpy_datetime64(
             np_dates.ctypes.data_as(ctypes.POINTER(ctypes.c_int64)), 1000
         )
@@ -601,13 +601,13 @@ class Summary(BaseCClass):
 
         if time_index is None:
             time_index = self.dates
-            data = numpy.zeros([len(time_index), len(keywords)])
+            data = np.zeros([len(time_index), len(keywords)])
             Summary._init_pandas_frame(
                 self, keywords, data.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
             )
         else:
             time_points = self._make_time_vector(time_index)
-            data = numpy.zeros([len(time_points), len(keywords)])
+            data = np.zeros([len(time_points), len(keywords)])
             Summary._init_pandas_frame_interp(
                 self,
                 keywords,
@@ -615,7 +615,7 @@ class Summary(BaseCClass):
                 data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             )
 
-        frame = pandas.DataFrame(index=time_index, columns=list(keywords), data=data)
+        frame = pd.DataFrame(index=time_index, columns=list(keywords), data=data)
         return frame
 
     @staticmethod
@@ -716,7 +716,7 @@ class Summary(BaseCClass):
         # Avoid Pandas or numpy timestamps, to avoid Pandas attempting to create
         # timestamp64[ns] indices (which can't go beyond year 2262)
         # https://github.com/pandas-dev/pandas/issues/39727
-        if isinstance(start_time, pandas.Timestamp):
+        if isinstance(start_time, pd.Timestamp):
             start_time = start_time.to_pydatetime()
 
         var_list = []
@@ -1093,7 +1093,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             if date_list:
                 raise ValueError("Must supply either days_list or date_list")
             else:
-                vector = numpy.zeros(len(days_list))
+                vector = np.zeros(len(days_list))
                 sim_length = self.sim_length
                 sim_start = self.first_day
                 index = 0
@@ -1106,7 +1106,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         elif date_list:
             start_time = self.data_start
             end_time = self.end_date
-            vector = numpy.zeros(len(date_list))
+            vector = np.zeros(len(date_list))
             index = 0
 
             for date in date_list:
