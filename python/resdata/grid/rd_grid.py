@@ -11,8 +11,8 @@ wrapper around the rd_grid.c implementation from the resdata library.
 import ctypes
 
 import warnings
-import numpy
-import pandas
+import numpy as np
+import pandas as pd
 import sys
 import os.path
 import math
@@ -1148,11 +1148,11 @@ class Grid(BaseCClass):
                 and dims[2] == self.getNZ()
             ):
                 dtype = array.dtype
-                if dtype == numpy.int32:
+                if dtype == np.int32:
                     type = ResDataType.RD_INT
-                elif dtype == numpy.float32:
+                elif dtype == np.float32:
                     type = ResDataType.RD_FLOAT
-                elif dtype == numpy.float64:
+                elif dtype == np.float64:
                     type = ResDataType.RD_DOUBLE
                 else:
                     sys.exit("Do not know how to create rd_kw from type:%s" % dtype)
@@ -1177,7 +1177,7 @@ class Grid(BaseCClass):
                                     kw[active_index] = array[i, j, k]
                                     active_index += 1
                             else:
-                                if dtype == numpy.int32:
+                                if dtype == np.int32:
                                     kw[global_index] = int(array[i, j, k])
                                 else:
                                     kw[global_index] = array[i, j, k]
@@ -1221,7 +1221,7 @@ class Grid(BaseCClass):
 
         """
         if len(rd_kw) == self.getNumActive() or len(rd_kw) == self.getGlobalSize():
-            array = numpy.ones([self.getGlobalSize()], dtype=rd_kw.dtype) * default
+            array = np.ones([self.getGlobalSize()], dtype=rd_kw.dtype) * default
             kwa = rd_kw.array
             if len(rd_kw) == self.getGlobalSize():
                 for i in range(kwa.size):
@@ -1383,14 +1383,14 @@ class Grid(BaseCClass):
             size = self.get_num_active()
         else:
             size = self.get_global_size()
-        indx = numpy.zeros(size, dtype=numpy.int32)
-        data = numpy.zeros([size, 4], dtype=numpy.int32)
+        indx = np.zeros(size, dtype=np.int32)
+        data = np.zeros([size, 4], dtype=np.int32)
         self._export_index_frame(
             indx.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
             data.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
             active_only,
         )
-        df = pandas.DataFrame(data=data, index=indx, columns=["i", "j", "k", "active"])
+        df = pd.DataFrame(data=data, index=indx, columns=["i", "j", "k", "active"])
         return df
 
     def export_data(self, index_frame, kw, default=0):
@@ -1404,17 +1404,17 @@ class Grid(BaseCClass):
         If kw is of length num_active, values in the output vector
         corresponding to inactive cells are set to default.
         """
-        if not isinstance(index_frame, pandas.DataFrame):
+        if not isinstance(index_frame, pd.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
         if len(kw) == self.get_global_size():
-            index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
+            index = index_frame.index.to_numpy(dtype=np.int32, copy=True)
         elif len(kw) == self.get_num_active():
-            index = index_frame["active"].to_numpy(dtype=numpy.int32, copy=True)
+            index = index_frame["active"].to_numpy(dtype=np.int32, copy=True)
         else:
             raise ValueError("The keyword must have a 3D compatible length")
 
         if kw.type is ResdataTypeEnum.RD_INT_TYPE:
-            data = numpy.full(len(index), default, dtype=numpy.int32)
+            data = np.full(len(index), default, dtype=np.int32)
             self._export_data_as_int(
                 len(index),
                 index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
@@ -1426,7 +1426,7 @@ class Grid(BaseCClass):
             kw.type is ResdataTypeEnum.RD_FLOAT_TYPE
             or kw.type is ResdataTypeEnum.RD_DOUBLE_TYPE
         ):
-            data = numpy.full(len(index), default, dtype=numpy.float64)
+            data = np.full(len(index), default, dtype=np.float64)
             self._export_data_as_double(
                 len(index),
                 index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
@@ -1444,10 +1444,10 @@ class Grid(BaseCClass):
         Index_fram must be a pandas dataframe with the same structure
         as obtained from export_index.
         """
-        if not isinstance(index_frame, pandas.DataFrame):
+        if not isinstance(index_frame, pd.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
-        index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
-        data = numpy.zeros(len(index), dtype=numpy.float64)
+        index = index_frame.index.to_numpy(dtype=np.int32, copy=True)
+        data = np.zeros(len(index), dtype=np.float64)
         self._export_volume(
             len(index),
             index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
@@ -1462,10 +1462,10 @@ class Grid(BaseCClass):
         Index_fram must be a pandas dataframe with the same structure
         as obtained from export_index.
         """
-        if not isinstance(index_frame, pandas.DataFrame):
+        if not isinstance(index_frame, pd.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
-        index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
-        data = numpy.zeros([len(index), 3], dtype=numpy.float64)
+        index = index_frame.index.to_numpy(dtype=np.int32, copy=True)
+        data = np.zeros([len(index), 3], dtype=np.float64)
         self._export_position(
             len(index),
             index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),
@@ -1508,10 +1508,10 @@ class Grid(BaseCClass):
         increase 'towards the sky'; the safest way is probably to check this
         explicitly if it matters for the case at hand.
         """
-        if not isinstance(index_frame, pandas.DataFrame):
+        if not isinstance(index_frame, pd.DataFrame):
             raise TypeError("index_frame must be pandas.DataFrame")
-        index = index_frame.index.to_numpy(dtype=numpy.int32, copy=True)
-        data = numpy.zeros([len(index), 24], dtype=numpy.float64)
+        index = index_frame.index.to_numpy(dtype=np.int32, copy=True)
+        data = np.zeros([len(index), 24], dtype=np.float64)
         self._export_corners(
             len(index),
             index.ctypes.data_as(ctypes.POINTER(ctypes.c_int32)),

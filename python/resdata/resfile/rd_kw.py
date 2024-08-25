@@ -26,7 +26,7 @@ the resdata library.
 import ctypes
 import warnings
 
-import numpy
+import numpy as np
 from cwrap import CFILE, BaseCClass
 from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum, ResdataUtil
 from resdata.util.util import monkey_the_camel
@@ -415,15 +415,15 @@ class ResdataKW(BaseCClass):
 
         if self.data_type.is_int():
             self.data_ptr = self._int_ptr()
-            self.dtype = numpy.int32
+            self.dtype = np.int32
             self.str_fmt = "%8d"
         elif self.data_type.is_float():
             self.data_ptr = self._float_ptr()
-            self.dtype = numpy.float32
+            self.dtype = np.float32
             self.str_fmt = "%13.4f"
         elif self.data_type.is_double():
             self.data_ptr = self._double_ptr()
-            self.dtype = numpy.float64
+            self.dtype = np.float64
             self.str_fmt = "%13.4f"
         else:
             # Iteration not supported for CHAR / BOOL
@@ -1078,11 +1078,11 @@ class ResdataKW(BaseCClass):
         other.
         """
 
-        if self.dtype is numpy.float64:
+        if self.dtype is np.float64:
             ct = ctypes.c_double
-        elif self.dtype is numpy.float32:
+        elif self.dtype is np.float32:
             ct = ctypes.c_float
-        elif self.dtype is numpy.int32:
+        elif self.dtype is np.int32:
             ct = ctypes.c_int
         else:
             raise ValueError(
@@ -1090,7 +1090,7 @@ class ResdataKW(BaseCClass):
             )
 
         ap = ctypes.cast(self.data_ptr, ctypes.POINTER(ct * len(self)))
-        return numpy.frombuffer(ap.contents, dtype=self.dtype)
+        return np.frombuffer(ap.contents, dtype=self.dtype)
 
     def numpy_copy(self):
         """Will return a numpy array which contains a copy of the ResdataKW data.
@@ -1102,7 +1102,7 @@ class ResdataKW(BaseCClass):
         shared.
         """
         view = self.numpyView()
-        return numpy.copy(view)
+        return np.copy(view)
 
     def fwrite(self, fortio):
         self._fwrite(fortio)

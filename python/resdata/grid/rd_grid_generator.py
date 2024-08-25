@@ -1,4 +1,5 @@
-import itertools, numpy
+import itertools
+import numpy as np
 from math import sqrt
 
 from resdata import ResdataPrototype
@@ -34,11 +35,11 @@ def pre_mapaxes_translation(translation, mapaxes):
 
     x, y, z = translation
 
-    unit_y = numpy.array((mapaxes[0] - mapaxes[2], mapaxes[1] - mapaxes[3]))
-    unit_y /= sqrt(numpy.sum(unit_y * unit_y))
+    unit_y = np.array((mapaxes[0] - mapaxes[2], mapaxes[1] - mapaxes[3]))
+    unit_y /= sqrt(np.sum(unit_y * unit_y))
 
-    unit_x = numpy.array((mapaxes[4] - mapaxes[2], mapaxes[5] - mapaxes[3]))
-    unit_x /= sqrt(numpy.sum(unit_x * unit_x))
+    unit_x = np.array((mapaxes[4] - mapaxes[2], mapaxes[5] - mapaxes[3]))
+    unit_x /= sqrt(np.sum(unit_x * unit_x))
 
     det = 1.0 / (unit_x[0] * unit_y[1] - unit_x[1] * unit_y[0])
 
@@ -384,11 +385,11 @@ class GridGenerator:
 
     @classmethod
     def __scale_coord(cls, coord, scale, lower_center):
-        coord = numpy.array(
+        coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
         )
-        origo = numpy.array(3 * [0.0] + list(lower_center) + [0])
-        scale = numpy.array(3 * [1.0] + 2 * [scale] + [1])
+        origo = np.array(3 * [0.0] + list(lower_center) + [0])
+        scale = np.array(3 * [1.0] + 2 * [scale] + [1])
         coord = scale * (coord - origo) + origo
         return coord.flatten().tolist()
 
@@ -396,12 +397,12 @@ class GridGenerator:
     def __misalign_coord(cls, coord, dims, dV):
         nx, ny, nz = dims
 
-        coord = numpy.array(
+        coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
         )
 
         tf = lambda i, j: 1.0 / 2 if abs(i) + abs(j) <= 1 else 0.25
-        adjustment = numpy.array(
+        adjustment = np.array(
             [
                 (0, 0, 0, i * tf(i, j) * dV[0], j * tf(i, j) * dV[1], 0)
                 for i, j in itertools.product([-1, 0, 1], repeat=2)
@@ -421,11 +422,11 @@ class GridGenerator:
 
     @classmethod
     def __rotate_coord(cls, coord, lower_center):
-        coord = numpy.array(
+        coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
         )
 
-        origo = numpy.array(3 * [0.0] + list(lower_center) + [0])
+        origo = np.array(3 * [0.0] + list(lower_center) + [0])
         coord -= origo
 
         for c in coord:
@@ -436,10 +437,10 @@ class GridGenerator:
 
     @classmethod
     def __translate_lower_coord(cls, coord, translation):
-        coord = numpy.array(
+        coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
         )
-        translation = numpy.array(3 * [0.0] + list(translation))
+        translation = np.array(3 * [0.0] + list(translation))
 
         coord = coord + translation
         return coord.flatten().tolist()
@@ -572,10 +573,10 @@ class GridGenerator:
 
     @classmethod
     def __translate_coord(cls, coord, translation):
-        coord = numpy.array(
+        coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
         )
-        translation = numpy.array(list(translation) + list(translation))
+        translation = np.array(list(translation) + list(translation))
 
         coord = coord + translation
         return construct_floatKW("COORD", coord.flatten().tolist())

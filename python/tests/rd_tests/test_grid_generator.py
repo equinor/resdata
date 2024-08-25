@@ -2,7 +2,7 @@
 from itertools import product as prod
 import operator
 import random
-import numpy
+import numpy as np
 import functools
 
 from resdata import ResDataType
@@ -181,9 +181,9 @@ class GridGeneratorTest(ResdataTest):
         self.assertEqual(grid.getGlobalSize(), tgrid.getGlobalSize())
 
         for gi in range(grid.getGlobalSize()):
-            translation = numpy.array(translation)
+            translation = np.array(translation)
             corners = [grid.getCellCorner(i, gi) for i in range(8)]
-            corners = [tuple(numpy.array(c) + translation) for c in corners]
+            corners = [tuple(np.array(c) + translation) for c in corners]
 
             tcorners = [tgrid.getCellCorner(i, gi) for i in range(8)]
 
@@ -234,7 +234,7 @@ class GridGeneratorTest(ResdataTest):
 
             self.assertEqual(grid.getDims(), subgrid.getDims())
 
-            translation = numpy.array(translation)
+            translation = np.array(translation)
             for gindex in range(grid.getGlobalSize()):
                 grid_corners = [
                     grid.getCellCorner(i, global_index=gindex) for i in range(8)
@@ -245,8 +245,7 @@ class GridGeneratorTest(ResdataTest):
                 ]
 
                 subgrid_corners = [
-                    list(numpy.array(corner) - translation)
-                    for corner in subgrid_corners
+                    list(np.array(corner) - translation) for corner in subgrid_corners
                 ]
 
                 for gc, sc in zip(grid_corners, subgrid_corners):
