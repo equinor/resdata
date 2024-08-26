@@ -22,8 +22,6 @@ bool geo_polygon_contains_point(const geo_polygon_type *polygon, double x,
 bool geo_polygon_contains_point__(const geo_polygon_type *polygon, double x,
                                   double y, bool force_edge_inside);
 void geo_polygon_reset(geo_polygon_type *polygon);
-void geo_polygon_fprintf(const geo_polygon_type *polygon, FILE *stream);
-void geo_polygon_shift(geo_polygon_type *polygon, double x0, double y0);
 void geo_polygon_close(geo_polygon_type *polygoon);
 int geo_polygon_get_size(const geo_polygon_type *polygon);
 void geo_polygon_iget_xy(const geo_polygon_type *polygon, int index, double *x,
