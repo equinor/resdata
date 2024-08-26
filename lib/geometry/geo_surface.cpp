@@ -142,12 +142,6 @@ void geo_surface_fprintf_irap(const geo_surface_type *surface,
     geo_surface_fprintf_irap__(surface, filename, zcoord);
 }
 
-void geo_surface_fprintf_irap_external_zcoord(const geo_surface_type *surface,
-                                              const char *filename,
-                                              const double *zcoord) {
-    geo_surface_fprintf_irap__(surface, filename, zcoord);
-}
-
 geo_surface_type *geo_surface_alloc_new(int nx, int ny, double xinc,
                                         double yinc, double xstart,
                                         double ystart, double angle) {
@@ -310,11 +304,6 @@ geo_surface_type *geo_surface_alloc_copy(const geo_surface_type *src,
 void geo_surface_free(geo_surface_type *surface) {
     geo_pointset_free(surface->pointset);
     free(surface);
-}
-
-void geo_surface_free__(void *arg) {
-    geo_surface_type *surface = geo_surface_safe_cast(arg);
-    geo_surface_free(surface);
 }
 
 geo_pointset_type *geo_surface_get_pointset(const geo_surface_type *surface) {
