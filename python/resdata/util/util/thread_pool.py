@@ -1,7 +1,7 @@
 import multiprocessing
-from threading import Thread
 import time
 import traceback
+from threading import Thread
 
 
 class Task(Thread):
@@ -82,11 +82,7 @@ class ThreadPool(object):
         return len(self.__task_list)
 
     def __allTasksFinished(self):
-        for task in self.__task_list:
-            if not task.isDone():
-                return False
-
-        return True
+        return all(task.isDone() for task in self.__task_list)
 
     def runningCount(self):
         count = 0
@@ -143,8 +139,4 @@ class ThreadPool(object):
             )
 
     def hasFailedTasks(self):
-        for task in self.__task_list:
-            if task.hasFailed():
-                return True
-
-        return False
+        return any(task.hasFailed() for task in self.__task_list)

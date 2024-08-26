@@ -1,4 +1,5 @@
 import collections
+
 from .geometry_tools import GeometryTools
 
 
@@ -40,20 +41,13 @@ class Polyline(object):
         if len(self) != len(other):
             return False
 
-        for p1, p2 in zip(self, other):
-            if p1 != p2:
-                return False
-
-        return True
+        return all(p1 == p2 for p1, p2 in zip(self, other))
 
     def __len__(self):
         return len(self.__points)
 
     def addPoint(self, x, y, z=None):
-        if z is None:
-            p = (x, y)
-        else:
-            p = (x, y, z)
+        p = (x, y) if z is None else (x, y, z)
         self.__points.append(p)
 
     def __getitem__(self, index):

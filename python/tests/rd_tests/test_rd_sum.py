@@ -7,6 +7,7 @@ import pytest
 from cwrap import open as copen
 from hypothesis import assume, given
 from pandas.testing import assert_frame_equal
+
 from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.summary import Summary, SummaryKeyWordVector
 from resdata.util.test import TestAreaContext
@@ -135,9 +136,8 @@ class SummaryTest(ResdataTest):
             with openFortIO("ECLIPSE.UNSMRY", mode=FortIO.WRITE_MODE) as f:
                 c = 0
                 for kw in kw_list:
-                    if kw.getName() == "PARAMS":
-                        if c % 5 == 0:
-                            continue
+                    if kw.getName() == "PARAMS" and c % 5 == 0:
+                        continue
                     c += 1
                     kw.fwrite(f)
 

@@ -552,7 +552,7 @@ class ResdataRegion(BaseCClass):
         if not rd_kw.data_type.is_int():
             raise ValueError(
                 "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.typeName()
+                % rd_kw.type_name
             )
         self._select_equal(rd_kw, value)
 
@@ -565,7 +565,7 @@ class ResdataRegion(BaseCClass):
         if not rd_kw.data_type.is_int():
             raise ValueError(
                 "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.typeName()
+                % rd_kw.type_name
             )
         self._deselect_equal(rd_kw, value)
 
@@ -1067,10 +1067,7 @@ class ResdataRegion(BaseCClass):
             else:
                 raise TypeError("Type mismatch")
         else:
-            if target_kw.data_type.is_int():
-                scale = 1 // other
-            else:
-                scale = 1.0 / other
+            scale = 1 // other if target_kw.data_type.is_int() else 1.0 / other
             self.scale_kw(target_kw, scale, force_active)
 
     def copy_kw(self, target_kw, src_kw, force_active=False):

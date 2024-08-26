@@ -1,5 +1,7 @@
 from __future__ import print_function
+
 import warnings
+
 from .rd_sum_node import SummaryNode
 
 
@@ -29,6 +31,7 @@ class SummaryVector(object):
             warnings.warn(
                 "The report_only flag to the SummaryVector will be removed",
                 DeprecationWarning,
+                stacklevel=1,
             )
 
         self.__dates = parent.get_dates(report_only)
@@ -98,6 +101,7 @@ class SummaryVector(object):
         warnings.warn(
             "The mpl_dates property has been deprecated - use numpy_dates instead",
             DeprecationWarning,
+            stacklevel=1,
         )
 
         return self.parent.get_mpl_dates(self.report_only)

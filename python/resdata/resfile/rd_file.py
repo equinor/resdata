@@ -26,6 +26,7 @@ import datetime
 import re
 
 from cwrap import BaseCClass
+
 from resdata import FileMode, FileType, ResdataPrototype
 from resdata.resfile import ResdataKW
 from resdata.util.util import CTime, monkey_the_camel
@@ -121,19 +122,19 @@ class ResdataFile(BaseCClass):
             seqnum_list = self["SEQNUM"]
             for s in seqnum_list:
                 report_steps.append(s[0])
-        except KeyError:
+        except KeyError as err:
             # OK - we did not have seqnum; that might be because this
             # a non-unified restart file; or because this is not a
             # restart file at all.
             fname = self.getFilename()
-            matchObj = re.search("\.[XF](\d{4})$", fname)
+            matchObj = re.search(r"\.[XF](\d{4})$", fname)
             if matchObj:
                 report_steps.append(int(matchObj.group(1)))
             else:
                 raise TypeError(
                     'Tried get list of report steps from file "%s" - which is not a restart file'
                     % fname
-                )
+                ) from err
 
         return report_steps
 
@@ -364,13 +365,12 @@ class ResdataFile(BaseCClass):
                     return ResdataKW.copy(kw)
                 else:
                     return kw
+            elif self.has_kw(kw_name):
+                raise IndexError(
+                    'Does not have keyword "%s" at time:%s.' % (kw_name, dtime)
+                )
             else:
-                if self.has_kw(kw_name):
-                    raise IndexError(
-                        'Does not have keyword "%s" at time:%s.' % (kw_name, dtime)
-                    )
-                else:
-                    raise KeyError('Keyword "%s" not recognized.' % kw_name)
+                raise KeyError('Keyword "%s" not recognized.' % kw_name)
         else:
             raise IndexError(
                 'Does not have keyword "%s" at time:%s.' % (kw_name, dtime)

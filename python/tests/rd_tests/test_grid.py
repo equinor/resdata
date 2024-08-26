@@ -306,7 +306,7 @@ class GridTest(ResdataTest):
             self.assertTrue(c.active)
         self.assertEqual(cnt, 4160)
 
-        cnt = len([c for c in grid.cells()])
+        cnt = len(list(grid.cells()))
         self.assertEqual(cnt, len(grid))
 
     def test_repr_and_name(self):

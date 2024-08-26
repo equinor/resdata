@@ -57,9 +57,8 @@ class FortIOTest(ResdataTest):
                 kw2.fwrite(f)
 
             # Truncate file in read mode; should fail hard.
-            with openFortIO("file") as f:
-                with self.assertRaises(IOError):
-                    f.truncate()
+            with openFortIO("file") as f, self.assertRaises(IOError):
+                f.truncate()
 
             with openFortIO("file", mode=FortIO.READ_AND_WRITE_MODE) as f:
                 f.seek(pos1)

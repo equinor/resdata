@@ -91,11 +91,10 @@ class Version(object):
     def getGitCommit(self, short=False):
         if self.git_commit is None:
             return "???????"
+        elif short:
+            return self.git_commit[0:8]
         else:
-            if short:
-                return self.git_commit[0:8]
-            else:
-                return self.git_commit
+            return self.git_commit
 
 
 class ResdataVersion(Version):

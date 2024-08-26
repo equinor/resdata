@@ -17,7 +17,7 @@ class TestRun(object):
     default_ert_version = "stable"
     default_path_prefix = None
 
-    def __init__(self, config_file, args=[], name=None):
+    def __init__(self, config_file, args=[], name=None):  # noqa: B006
         if os.path.exists(config_file) and os.path.isfile(config_file):
             self.parseArgs(args)
             self.__ert_cmd = TestRun.default_ert_cmd

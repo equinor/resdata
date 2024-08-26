@@ -126,7 +126,7 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError(
                 "The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d"
                 % (
-                    fault_block_kw.typeName(),
+                    fault_block_kw.type_name,
                     len(fault_block_kw),
                     self.grid_ref.getGlobalSize(),
                 )
@@ -202,11 +202,11 @@ class FaultBlockLayer(BaseCClass):
             layer = self.getGeoLayer()
             try:
                 layer.addIJBarrier(Fault.joinFaults(fault1, fault2, self.getK()))
-            except ValueError:
+            except ValueError as err:
                 err = "Failed to join faults %s and %s"
                 names = (fault1.getName(), fault2.getName())
                 print(err % names)
-                raise ValueError(err % names)
+                raise ValueError(err % names) from err
 
     def add_polyline_barrier(self, polyline):
         layer = self.getGeoLayer()

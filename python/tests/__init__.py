@@ -61,14 +61,13 @@ def equinor_test():
     """
 
     def decorator(test_item):
-        if not isinstance(test_item, type):
-            if not ResdataTest.EQUINOR_DATA:
+        if not isinstance(test_item, type) and not ResdataTest.EQUINOR_DATA:
 
-                @functools.wraps(test_item)
-                def skip_wrapper(*args, **kwargs):
-                    raise SkipTest("Missing Equinor testdata")
+            @wraps(test_item)
+            def skip_wrapper(*args, **kwargs):
+                raise SkipTest("Missing Equinor testdata")
 
-                test_item = skip_wrapper
+            test_item = skip_wrapper
 
         if not ResdataTest.EQUINOR_DATA:
             test_item.__unittest_skip__ = True
