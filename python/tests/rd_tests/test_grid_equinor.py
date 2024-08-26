@@ -171,16 +171,15 @@ class GridTest(ResdataTest):
                 f2.write("SPECGRID\n")
                 f2.write("  10  10  10  'F' /\n")
 
-            with openResdataFile("G.EGRID") as f:
-                with copen("grid.grdecl", "a") as f2:
-                    coord_kw = f["COORD"][0]
-                    coord_kw.write_grdecl(f2)
+            with openResdataFile("G.EGRID") as f, copen("grid.grdecl", "a") as f2:
+                coord_kw = f["COORD"][0]
+                coord_kw.write_grdecl(f2)
 
-                    zcorn_kw = f["ZCORN"][0]
-                    zcorn_kw.write_grdecl(f2)
+                zcorn_kw = f["ZCORN"][0]
+                zcorn_kw.write_grdecl(f2)
 
-                    actnum_kw = f["ACTNUM"][0]
-                    actnum_kw.write_grdecl(f2)
+                actnum_kw = f["ACTNUM"][0]
+                actnum_kw.write_grdecl(f2)
 
             g2 = Grid.loadFromGrdecl("grid.grdecl")
             self.assertTrue(g1.equal(g2))
@@ -252,7 +251,7 @@ class GridTest(ResdataTest):
     def test_num_active_large_memory(self):
         case = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE")
         vecList = []
-        for i in range(12500):
+        for _i in range(12500):
             vec = DoubleVector()
             vec[81920] = 0
             vecList.append(vec)

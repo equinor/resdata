@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
-from resdata.grid import ResdataRegion, Grid
+
+from resdata.grid import Grid, ResdataRegion
 
 
 def volume_min_max(grid):
@@ -26,7 +27,7 @@ def main(grid):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        exit("usage: grid_info.py path/to/file.EGRID")
+        sys.exit("usage: grid_info.py path/to/file.EGRID")
     case = sys.argv[1]
     grid = Grid(case)
     main(grid)

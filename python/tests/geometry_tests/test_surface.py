@@ -55,8 +55,8 @@ class SurfaceTest(ResdataTest):
 
         self.assertNotEqual(s, small)
         idx = 0
-        for i in range(nx):
-            for j in range(ny):
+        for _i in range(nx):
+            for _j in range(ny):
                 s[idx] = small[idx]
                 idx += 1
         self.assertEqual(s, small)
@@ -164,7 +164,7 @@ class SurfaceTest(ResdataTest):
     def test_ops2(self):
         s0 = Surface(self.surface_small)
         surface_list = []
-        for i in range(10):
+        for _i in range(10):
             s = s0.copy()
             for j in range(len(s)):
                 s[j] = random.random()

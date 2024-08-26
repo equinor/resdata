@@ -73,7 +73,7 @@ class StringListTest(TestCase):
             s.pop()
             s.pop()
             s.pop()
-            s.last
+            _ = s.last
 
     def test_in_and_not_in(self):
         s = StringList(["A", "list", "of", "strings"])

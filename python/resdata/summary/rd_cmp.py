@@ -1,4 +1,5 @@
 from resdata.util.util import monkey_the_camel
+
 from .rd_sum import Summary
 
 
@@ -26,16 +27,10 @@ class ResdataCase(object):
         self.summary = Summary(self.case)
 
     def start_time_equal(self, other):
-        if self.summary.getDataStartTime() == other.summary.getDataStartTime():
-            return True
-        else:
-            return False
+        return self.summary.getDataStartTime() == other.summary.getDataStartTime()
 
     def end_time_equal(self, other):
-        if self.summary.getEndTime() == other.summary.getEndTime():
-            return True
-        else:
-            return False
+        return self.summary.getEndTime() == other.summary.getEndTime()
 
     def cmp_summary_vector(self, other, key, sample=100):
         if key in self and key in other:
@@ -95,7 +90,7 @@ class ResdataCmp(object):
         return self.test_case.endTimeEqual(self.ref_case)
 
     def cmp_summary_vector(self, key, sample=100):
-        """Will compare the summary vectors according to @key.
+        r"""Will compare the summary vectors according to @key.
 
         The comparison is based on evaluating the integrals:
 

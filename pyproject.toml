@@ -1,2 +1,45 @@
 [build-system]
 requires = ["setuptools", "setuptools_scm", "wheel", "scikit-build", "cmake", "conan<2", "ninja"]
+
+[tool.ruff]
+src = ["python"]
+line-length = 88
+target-version = "py38"
+extend-exclude = ["python/resdata/util/util/version.py"]
+
+[tool.ruff.lint]
+select = [
+  "W",  # pycodestyle
+  # "I",  # isort ( Issues with circular imports and cwrap)
+  "B",  # flake-8-bugbear
+  "SIM",  # flake-8-simplify
+  "F",  # pyflakes
+  "PL",  # pylint
+  "NPY",  # numpy specific rules
+  "C4",  # flake8-comprehensions
+  "PD",  # pandas-vet
+]
+ignore = ["PLW2901",  # redefined-loop-name
+          "PLR2004",  # magic-value-comparison
+          "PLR0915",  # too-many-statements
+          "PLR0912",  # too-many-branches
+          "PLR0911",  # too-many-return-statements
+          "PLC2701",  # import-private-name
+          "PLR6201",  # literal-membership
+          "PLR0914",  # too-many-locals
+          "PLR6301",  # no-self-use
+          "PLW1641",  # eq-without-hash
+          "PLR0904",  # too-many-public-methods
+          "PLR1702",  # too-many-nested-blocks
+          "PLW3201",  # bad-dunder-method-name
+          "PD901",  #  pandas-df-variable-name
+          "C409",  # unnecessary-literal-within-tuple-call
+          "PLC0414",  # useless-import-alias
+          "F401",  # unused-import
+          "F841",  # unused-variable
+]
+[tool.ruff.lint.extend-per-file-ignores]
+"python/tests/util_tests/test_ctime.py" = ["PLR0124", "B015"]
+
+[tool.ruff.lint.pylint]
+max-args = 15

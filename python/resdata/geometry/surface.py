@@ -255,11 +255,10 @@ class Surface(BaseCClass):
                 raise ValueError(
                     "idx is None, i and j must be ints, was %s and %s." % (i, j)
                 )
-        else:
-            if i is not None or j is not None:
-                raise ValueError(
-                    "idx is set, i and j must be None, was %s and %s." % (i, j)
-                )
+        elif i is not None or j is not None:
+            raise ValueError(
+                "idx is set, i and j must be None, was %s and %s." % (i, j)
+            )
 
     def getXYZ(self, idx=None, i=None, j=None):
         """Returns a tuple of 3 floats, (x,y,z) for given global index, or i and j."""

@@ -41,7 +41,7 @@ def test_get_start_date_reads_from_start_kw_in_data_file(tmp_path):
     data_file = tmp_path / "dfile"
     data_file.write_text(
         dedent(
-            f"""\
+            """\
             START
             4 Apr 2024 /
             """

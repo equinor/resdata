@@ -115,10 +115,7 @@ class ResdataFileView(BaseCClass):
         return self._get_size()
 
     def __contains__(self, kw):
-        if self.numKeywords(kw) > 0:
-            return True
-        else:
-            return False
+        return self.numKeywords(kw) > 0
 
     def num_keywords(self, kw):
         return self._get_num_named_kw(kw)
@@ -143,9 +140,8 @@ class ResdataFileView(BaseCClass):
                     "Index must be in [0, %d), was: %d." % (ls, start_index)
                 )
 
-        if stop_kw:
-            if not stop_kw in self:
-                raise KeyError("The keyword:%s is not in file" % stop_kw)
+        if stop_kw and not stop_kw in self:
+            raise KeyError("The keyword:%s is not in file" % stop_kw)
 
         view = self._create_block_view2(start_kw, stop_kw, idx)
         view.setParent(parent=self)

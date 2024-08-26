@@ -4,22 +4,10 @@ import os
 import os.path
 import shutil
 import stat
-import datetime
+from contextlib import contextmanager
 
 import cwrap
-
-
-def assert_frame_equal(a, b):
-    if not a.equals(b):
-        raise AssertionError("Expected dataframes to be equal")
-
-
-try:
-    from pandas.testing import assert_frame_equal
-except ImportError:
-    pass
-
-from contextlib import contextmanager
+from pandas.testing import assert_frame_equal
 
 from resdata import ResDataType, UnitSystem
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
@@ -204,7 +192,7 @@ class SumTest(ResdataTest):
         with TestAreaContext("resdata/csv"):
             case.exportCSV("file.csv", sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
-            input_file = csv.DictReader(open("file.csv"), delimiter=sep)
+            input_file = csv.DictReader(open("file.csv"), delimiter=sep)  # noqa: SIM115
             for row in input_file:
                 self.assertIn("DAYS", row)
                 self.assertIn("DATE", row)
@@ -218,7 +206,7 @@ class SumTest(ResdataTest):
         with TestAreaContext("resdata/csv"):
             case.exportCSV("file.csv", keys=["FOPT"], sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
-            input_file = csv.DictReader(open("file.csv"), delimiter=sep)
+            input_file = csv.DictReader(open("file.csv"), delimiter=sep)  # noqa: SIM115
             for row in input_file:
                 self.assertIn("DAYS", row)
                 self.assertIn("DATE", row)
@@ -660,7 +648,7 @@ class SumTest(ResdataTest):
 
         fopr = case.numpy_vector("FOPR")
         for time_index, value in enumerate(fopr):
-            self.assertEqual(fopr[time_index], value)
+            self.assertEqual(fopr[time_index], value)  # noqa: PLR1736
 
     def test_load_case_lazy_and_eager(self):
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SHORT.UNSMRY")
@@ -718,7 +706,7 @@ class SumTest(ResdataTest):
             upper_extrapolation=True,
         )
 
-        for key in rd_sum.keys():
+        for key in rd_sum:
             self.assertIn(key, resampled)
 
         self.assertEqual(
@@ -746,9 +734,7 @@ class SumTest(ResdataTest):
 
         key_rate = "FOPR"
         for time_index, t in enumerate(time_points):
-            if t < rd_sum.get_data_start_time():
-                self.assertFloatEqual(resampled.iget(key_rate, time_index), 0)
-            elif t > rd_sum.get_end_time():
+            if t < rd_sum.get_data_start_time() or t > rd_sum.get_end_time():
                 self.assertFloatEqual(resampled.iget(key_rate, time_index), 0)
             else:
                 self.assertFloatEqual(

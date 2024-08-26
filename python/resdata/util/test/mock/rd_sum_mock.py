@@ -1,4 +1,5 @@
 import datetime
+
 from resdata.summary import Summary
 
 
@@ -15,7 +16,7 @@ def createSummary(
     num_report_step=5,
     num_mini_step=10,
     dims=(20, 10, 5),
-    func_table={},
+    func_table={},  # noqa: B006
     restart_case=None,
     restart_step=-1,
 ):

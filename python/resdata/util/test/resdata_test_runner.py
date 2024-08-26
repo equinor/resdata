@@ -19,7 +19,7 @@ class ResdataTestRunner(object):
         loader = TestLoader()
         test_suite = loader.discover(path, pattern=pattern)
 
-        for root, dirnames, filenames in os.walk(path):
+        for root, dirnames, _filenames in os.walk(path):
             for directory in dirnames:
                 test_suite.addTests(
                     ResdataTestRunner.findTestsInDirectory(

@@ -1,8 +1,9 @@
-import re
 import datetime
 import numbers
+import re
 
 from resdata.util.util import monkey_the_camel
+
 from .rd_sum import Summary
 
 
@@ -51,8 +52,8 @@ class NPVPriceVector(object):
                 year = int(tmp[2])
 
                 date = datetime.date(year, month, day)
-            except Exception:
-                raise ValueError("First element was invalid date item")
+            except Exception as err:
+                raise ValueError("First element was invalid date item") from err
 
         if len(self.dateList):
             prevItem = self.dateList[-1]
@@ -112,14 +113,14 @@ class NPVPriceVector(object):
 
 
 class ResdataNPV(object):
-    sumKeyRE = re.compile("[\[]([\w:,]+)[\]]")
+    sumKeyRE = re.compile(r"[\[]([\w:,]+)[\]]")
 
     def __init__(self, baseCase):
         sum = Summary(baseCase)
         if sum:
             self.baseCase = sum
         else:
-            raise Error("Failed to open summary case:%s" % baseCase)
+            raise OSError("Failed to open summary case:%s" % baseCase)
         self.expression = None
         self.keyList = {}
         self.start = None

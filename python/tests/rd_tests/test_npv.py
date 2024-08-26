@@ -3,11 +3,6 @@ import os
 import datetime
 import math
 
-try:
-    from unittest2 import skipIf, skipUnless, skipIf
-except ImportError:
-    from unittest import skipIf, skipUnless, skipIf
-
 from resdata.summary import Summary
 from resdata.summary import ResdataNPV, NPVPriceVector
 
@@ -39,7 +34,7 @@ class NPVTest(ResdataTest):
         self.case = self.createTestPath(case)
 
     def test_create(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(OSError):
             npv = ResdataNPV("/does/not/exist")
 
         npv = ResdataNPV(self.case)

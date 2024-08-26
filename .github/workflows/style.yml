@@ -13,7 +13,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo pip install cmake-format black
+        sudo pip install cmake-format
 
     - name: Clang Format
       run: ./script/clang-format --check
@@ -23,6 +23,13 @@ jobs:
         find . -name 'CMakeLists.txt' -o -name '*.cmake' > cmake-src
         xargs cmake-format --check < cmake-src
 
-    - name: Black
+    - name: Setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ["3.12"]
+
+    - name: Run ruff
       run: |
-        black --check .
+        pip install ruff
+        ruff check
+        ruff format --check

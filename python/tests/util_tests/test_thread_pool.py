@@ -61,7 +61,7 @@ class ThreadPoolTest(ResdataTest):
     def test_fill_pool(self):
         pool = ThreadPool(4)
 
-        for index in range(10):
+        for _index in range(10):
             pool.addTask(self.sleepTask, 2)
 
         pool.nonBlockingStart()
