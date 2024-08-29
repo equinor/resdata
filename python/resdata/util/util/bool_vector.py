@@ -99,7 +99,7 @@ class BoolVector(VectorTemplate):
     )
 
     def __init__(self, default_value=False, initial_size=0):
-        super(BoolVector, self).__init__(default_value, initial_size)
+        super().__init__(default_value, initial_size)
 
     def count(self, value=True):
         """@rtype: int"""

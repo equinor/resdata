@@ -3,9 +3,9 @@ import collections
 from .geometry_tools import GeometryTools
 
 
-class Polyline(object):
+class Polyline:
     def __init__(self, name=None, init_points=None):
-        super(Polyline, self).__init__()
+        super().__init__()
         self.__name = name
         self.__points = []
         if init_points:
@@ -14,7 +14,7 @@ class Polyline(object):
     def __str__(self):
         s = "Polyline:[ "
         for p in self:
-            s += "(%s,%s) " % (p[0], p[1])
+            s += f"({p[0]},{p[1]}) "
         s += "]"
         return s
 

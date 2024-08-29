@@ -196,7 +196,7 @@ class ResdataKW(BaseCClass):
 
     @classmethod
     def createCReference(cls, c_ptr, parent=None):
-        rd_kw = super(ResdataKW, cls).createCReference(c_ptr, parent=parent)
+        rd_kw = super().createCReference(c_ptr, parent=parent)
         if rd_kw is None:
             raise ValueError("Failed to create ResdataKW instance")
 
@@ -205,7 +205,7 @@ class ResdataKW(BaseCClass):
 
     @classmethod
     def createPythonObject(cls, c_ptr):
-        rd_kw = super(ResdataKW, cls).createPythonObject(c_ptr)
+        rd_kw = super().createPythonObject(c_ptr)
         if rd_kw is None:
             raise ValueError("Failed to create ResdataKW instance")
 
@@ -314,7 +314,7 @@ class ResdataKW(BaseCClass):
         cfile = CFILE(fileH)
         if kw and len(kw) > 8:
             raise TypeError(
-                "Sorry keyword:%s is too long, must be eight characters or less." % kw
+                f"Sorry keyword:{kw} is too long, must be eight characters or less."
             )
 
         if rd_type is None:
@@ -326,12 +326,11 @@ class ResdataKW(BaseCClass):
         rd_type = warn_and_cast_data_type(rd_type)
 
         if not isinstance(rd_type, ResDataType):
-            raise TypeError("Expected ResDataType, was: %s" % type(rd_type))
+            raise TypeError(f"Expected ResDataType, was: {type(rd_type)}")
 
         if not rd_type in [ResDataType.RD_FLOAT, ResDataType.RD_INT]:
             raise ValueError(
-                "The type:%s is invalid when loading keyword:%s"
-                % (rd_type.type_name, kw)
+                f"The type:{rd_type.type_name} is invalid when loading keyword:{kw}"
             )
 
         return cls._load_grdecl(cfile, kw, strict, rd_type)
@@ -377,10 +376,10 @@ class ResdataKW(BaseCClass):
     def __repr__(self):
         si = len(self)
         nm = self.getName()
-        mm = "type=%s" % str(self.data_type)
+        mm = f"type={str(self.data_type)}"
         if self.isNumeric():
             mi, ma = self.getMinMax()
-            mm = "min=%.2f, max=%.2f" % (mi, ma)
+            mm = f"min={mi:.2f}, max={ma:.2f}"
         ad = self._ad_str()
         fmt = 'ResdataKW(size=%d, name="%s", %s) %s'
         return fmt % (si, nm, mm, ad)
@@ -402,10 +401,10 @@ class ResdataKW(BaseCClass):
         data_type = warn_and_cast_data_type(data_type)
 
         if not isinstance(data_type, ResDataType):
-            raise TypeError("Expected an ResDataType, received: %s" % type(data_type))
+            raise TypeError(f"Expected an ResDataType, received: {type(data_type)}")
 
         c_ptr = self._alloc_new(name, size, data_type)
-        super(ResdataKW, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         self.__private_init()
 
     def __private_init(self):
@@ -436,7 +435,7 @@ class ResdataKW(BaseCClass):
             elif self.data_type.is_string():
                 self.str_fmt = "%" + str(self.data_type.element_size) + "s"
             else:
-                raise ValueError("Unknown ResDataType (%s)!" % self.data_type.type_name)
+                raise ValueError(f"Unknown ResDataType ({self.data_type.type_name})!")
 
     def sub_copy(self, offset, count, new_header=None):
         """
@@ -695,8 +694,7 @@ class ResdataKW(BaseCClass):
                 return sum
             else:
                 raise ValueError(
-                    'The keyword "%s" is of string type - sum is not implemented'
-                    % self.getName()
+                    f'The keyword "{self.getName()}" is of string type - sum is not implemented'
                 )
 
         return mask.sum_kw(self, force_active)
@@ -950,7 +948,7 @@ class ResdataKW(BaseCClass):
             self._max_min_int(ctypes.byref(max_), ctypes.byref(min_))
         else:
             raise TypeError(
-                "min_max property not defined for keywords of type: %s" % self.type
+                f"min_max property not defined for keywords of type: {self.type}"
             )
         return (min_.value, max_.value)
 
@@ -1201,9 +1199,7 @@ class ResdataKW(BaseCClass):
 
     def safe_div(self, divisor):
         if not len(self) == len(divisor):
-            raise ValueError(
-                "Length mismatch between %s and %s" % (self.name, divisor.name)
-            )
+            raise ValueError(f"Length mismatch between {self.name} and {divisor.name}")
 
         if not self.is_numeric():
             raise TypeError("The self keyword must be of numeric type")

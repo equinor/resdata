@@ -13,7 +13,7 @@ import csv
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"
-case = "%s/%s" % (path, base)
+case = f"{path}/{base}"
 
 
 def sum_get(*args):

@@ -28,7 +28,7 @@ class WellSegment(BaseCClass):
         pass
 
     def __repr__(self):
-        return "WellSegment(%s) at 0x%x" % (str(self), self._address())
+        return f"WellSegment({str(self)}) at 0x{self._address():x}"
 
     def __str__(self):
         return "{Segment ID:%d   BranchID:%d  Length:%g}" % (

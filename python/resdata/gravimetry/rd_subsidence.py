@@ -60,7 +60,7 @@ class ResdataSubsidence(BaseCClass):
         """
         self.init_file = init_file  # Inhibit premature garbage collection of init_file
         c_ptr = self._alloc(grid, init_file)
-        super(ResdataSubsidence, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def __contains__(self, survey_name):
         return self._has_survey(survey_name)
@@ -96,10 +96,10 @@ class ResdataSubsidence(BaseCClass):
         region=None,
     ):
         if not base_survey in self:
-            raise KeyError("No such survey: %s" % base_survey)
+            raise KeyError(f"No such survey: {base_survey}")
 
         if monitor_survey is not None and not monitor_survey in self:
-            raise KeyError("No such survey: %s" % monitor_survey)
+            raise KeyError(f"No such survey: {monitor_survey}")
 
         return self._eval_geertsma(
             base_survey,
@@ -124,10 +124,10 @@ class ResdataSubsidence(BaseCClass):
         region=None,
     ):
         if not base_survey in self:
-            raise KeyError("No such survey: %s" % base_survey)
+            raise KeyError(f"No such survey: {base_survey}")
 
         if monitor_survey is not None and not monitor_survey in self:
-            raise KeyError("No such survey: %s" % monitor_survey)
+            raise KeyError(f"No such survey: {monitor_survey}")
 
         return self._eval_geertsma_rporv(
             base_survey,
@@ -174,10 +174,10 @@ class ResdataSubsidence(BaseCClass):
         The argument @compressibility is the total reservoir compressibility.
         """
         if not base_survey in self:
-            raise KeyError("No such survey: %s" % base_survey)
+            raise KeyError(f"No such survey: {base_survey}")
 
         if not monitor_survey in self:
-            raise KeyError("No such survey: %s" % monitor_survey)
+            raise KeyError(f"No such survey: {monitor_survey}")
 
         return self._eval(
             base_survey,

@@ -231,7 +231,7 @@ class Grid(BaseCClass):
 
             return Grid.create(specgrid, zcorn, coord, actnum, mapaxes)
         else:
-            raise IOError("No such file:%s" % filename)
+            raise OSError(f"No such file:{filename}")
 
     @classmethod
     def load_from_file(cls, filename):
@@ -316,9 +316,9 @@ class Grid(BaseCClass):
         """
         c_ptr = self._fread_alloc(filename, apply_mapaxes)
         if c_ptr:
-            super(Grid, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
-            raise IOError("Loading grid from:%s failed" % filename)
+            raise OSError(f"Loading grid from:{filename} failed")
 
     def free(self):
         self._free()
@@ -336,7 +336,7 @@ class Grid(BaseCClass):
         """
         name = self._nicename()
         if name:
-            name = '"%s", ' % name
+            name = f'"{name}", '
         g_size = self.getGlobalSize()
         a_size = self.getNumActive()
         xyz_s = "%dx%dx%d" % (self.getNX(), self.getNY(), self.getNZ())
@@ -496,8 +496,7 @@ class Grid(BaseCClass):
     def cells(self, active=False):
         """Iterator over all the (active) cells"""
         if not active:
-            for c in self:
-                yield c
+            yield from self
         else:
             for i in range(self.get_num_active()):
                 yield self.cell(active_index=i)
@@ -1065,7 +1064,7 @@ class Grid(BaseCClass):
             lgr = self._get_named_lgr(lgr_key)
 
         if lgr is None:
-            raise KeyError("No such LGR: %s" % lgr_key)
+            raise KeyError(f"No such LGR: {lgr_key}")
 
         lgr.setParent(self)
         return lgr
@@ -1148,7 +1147,7 @@ class Grid(BaseCClass):
                 elif dtype == np.float64:
                     type = ResDataType.RD_DOUBLE
                 else:
-                    sys.exit("Do not know how to create rd_kw from type:%s" % dtype)
+                    sys.exit(f"Do not know how to create rd_kw from type:{dtype}")
 
                 size = self.getNumActive() if pack else self.getGlobalSize()
 

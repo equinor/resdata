@@ -13,7 +13,7 @@ from tests import ResdataTest, equinor_test
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"
-case = "%s/%s" % (path, base)
+case = f"{path}/{base}"
 
 
 def callable(x):

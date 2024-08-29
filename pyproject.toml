@@ -17,6 +17,7 @@ select = [
   "NPY",  # numpy specific rules
   "C4",  # flake8-comprehensions
   "PD",  # pandas-vet
+  "UP",  # pyupgrade
 ]
 ignore = ["PLW2901",  # redefined-loop-name
           "PLR2004",  # magic-value-comparison

@@ -253,20 +253,20 @@ class Summary(BaseCClass):
             load_case, join_string, include_restart, lazy_load, file_options
         )
         if c_pointer is None:
-            raise IOError(
-                "Failed to create summary instance from argument:%s" % load_case
+            raise OSError(
+                f"Failed to create summary instance from argument:{load_case}"
             )
 
-        super(Summary, self).__init__(c_pointer)
+        super().__init__(c_pointer)
         self._load_case = load_case
 
     @classmethod
     def load(cls, smspec_file, unsmry_file, key_join_string=":", include_restart=True):
         if not os.path.isfile(smspec_file):
-            raise IOError("No such file: %s" % smspec_file)
+            raise OSError(f"No such file: {smspec_file}")
 
         if not os.path.isfile(unsmry_file):
-            raise IOError("No such file: %s" % unsmry_file)
+            raise OSError(f"No such file: {unsmry_file}")
 
         data_files = StringList()
         data_files.append(unsmry_file)
@@ -274,7 +274,7 @@ class Summary(BaseCClass):
             smspec_file, data_files, key_join_string, include_restart
         )
         if c_ptr is None:
-            raise IOError("Failed to create summary instance")
+            raise OSError("Failed to create summary instance")
 
         rd_sum = cls.createPythonObject(c_ptr)
         rd_sum._load_case = smspec_file
@@ -282,12 +282,12 @@ class Summary(BaseCClass):
 
     @classmethod
     def createCReference(cls, c_pointer, parent=None):
-        result = super(Summary, cls).createCReference(c_pointer, parent)
+        result = super().createCReference(c_pointer, parent)
         return result
 
     @classmethod
     def createPythonObject(cls, c_pointer):
-        result = super(Summary, cls).createPythonObject(c_pointer)
+        result = super().createPythonObject(c_pointer)
         return result
 
     @staticmethod
@@ -387,12 +387,12 @@ class Summary(BaseCClass):
         """@rtype: SummaryTStep"""
         # report_step int
         if not isinstance(report_step, int):
-            raise TypeError("Parameter report_step should be int, was %r" % report_step)
+            raise TypeError(f"Parameter report_step should be int, was {report_step!r}")
         try:
             float(sim_days)
         except TypeError as err:
             raise TypeError(
-                "Parameter sim_days should be float, was %r" % sim_days
+                f"Parameter sim_days should be float, was {sim_days!r}"
             ) from err
 
         sim_seconds = sim_days * 24 * 60 * 60
@@ -479,7 +479,7 @@ class Summary(BaseCClass):
 
             return values
         else:
-            raise KeyError("Summary object does not have key:%s" % key)
+            raise KeyError(f"Summary object does not have key:{key}")
 
     def _make_time_vector(self, time_index):
         time_points = TimeVector()
@@ -511,7 +511,7 @@ class Summary(BaseCClass):
 
         """
         if key not in self:
-            raise KeyError("No such key:%s" % key)
+            raise KeyError(f"No such key:{key}")
 
         if report_only:
             if time_index is None:
@@ -701,8 +701,7 @@ class Summary(BaseCClass):
                 k = int(nums[2]) - 1
                 if dims is None:
                     raise ValueError(
-                        "For key %s When using indexing i,j,k you must supply a valid value for the dims argument"
-                        % key
+                        f"For key {key} When using indexing i,j,k you must supply a valid value for the dims argument"
                     )
                 num = i + j * dims[0] + k * dims[0] * dims[1] + 1
 
@@ -787,7 +786,7 @@ class Summary(BaseCClass):
         instance with some extra time related information.
         """
         if not key in self:
-            raise KeyError("No such key:%s" % key)
+            raise KeyError(f"No such key:{key}")
 
         return self._get_last_value(key)
 
@@ -796,7 +795,7 @@ class Summary(BaseCClass):
         Will return first value corresponding to @key.
         """
         if not key in self:
-            raise KeyError("No such key:%s" % key)
+            raise KeyError(f"No such key:{key}")
 
         return self._get_first_value(key)
 
@@ -862,7 +861,7 @@ class Summary(BaseCClass):
 
     def assert_key_valid(self, key):
         if not key in self:
-            raise KeyError("The summary key:%s was not recognized" % key)
+            raise KeyError(f"The summary key:{key} was not recognized")
 
     def __iter__(self):
         return iter(self.keys())
@@ -936,14 +935,13 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             if self.check_sim_time(t):
                 return self._get_general_var_from_sim_time(t, key)
             else:
-                raise ValueError("date:%s is outside range of simulation data" % date)
+                raise ValueError(f"date:{date} is outside range of simulation data")
         elif date is None:
             if self._check_sim_days(days):
                 return self._get_general_var_from_sim_days(days, key)
             else:
                 raise ValueError(
-                    "days:%s is outside range of simulation: [%g,%g]"
-                    % (days, self.first_day, self.sim_length)
+                    f"days:{days} is outside range of simulation: [{self.first_day:g},{self.sim_length:g}]"
                 )
         else:
             raise ValueError("Must supply either days or date")
@@ -1146,7 +1144,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             node = self._get_var_node(key).setParent(self)
             return node
         else:
-            raise KeyError("Summary case does not have key:%s" % key)
+            raise KeyError(f"Summary case does not have key:{key}")
 
     def unit(self, key):
         """
@@ -1480,7 +1478,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         See solveDays() for further details.
         """
         if not key in self:
-            raise KeyError("Unrecognized key:%s" % key)
+            raise KeyError(f"Unrecognized key:{key}")
 
         if len(self) < 2:
             raise ValueError("Must have at least two elements to start solving")
@@ -1571,7 +1569,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
         """
         if not key in self:
-            raise KeyError("Unrecognized key:%s" % key)
+            raise KeyError(f"Unrecognized key:{key}")
 
         if len(self) < 2:
             raise ValueError("Must have at least two elements to start solving")
@@ -1682,9 +1680,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             new_case_name, time_points, lower_extrapolation, upper_extrapolation
         )
         if new_case is None:
-            raise ValueError(
-                "Failed to create new resampled case:{}".format(new_case_name)
-            )
+            raise ValueError(f"Failed to create new resampled case:{new_case_name}")
 
         return new_case
 

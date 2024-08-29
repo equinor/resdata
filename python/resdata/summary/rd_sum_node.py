@@ -1,4 +1,4 @@
-class SummaryNode(object):
+class SummaryNode:
     def __init__(self, report_step, days, date, mpl_date, value):
         """
         SummaryNode is a 'struct' with a summary value and time.

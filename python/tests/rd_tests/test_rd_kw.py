@@ -182,7 +182,7 @@ class KWTest(ResdataTest):
             kw.fprintf_data(fileH)
             fileH.close()
 
-            with open("test", "r") as fileH:
+            with open("test") as fileH:
                 data = []
                 for line in fileH.readlines():
                     tmp = line.split()

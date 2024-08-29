@@ -16,7 +16,7 @@ class FKTest(ResdataTest):
             grid = Grid(grid_file)
 
             # Load well data
-            with open(well_file, "r") as f:
+            with open(well_file) as f:
                 lines = [line.split() for line in f.readlines()]
 
             points = [map(float, line[:3:]) for line in lines]

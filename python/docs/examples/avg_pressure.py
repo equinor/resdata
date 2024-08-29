@@ -40,9 +40,9 @@ def avg_pressure(p, sw, pv, region, region_id, result):
 
 if __name__ == "__main__":
     case = sys.argv[1]
-    grid = Grid("%s.EGRID" % case)
-    rst_file = ResdataRestartFile(grid, "%s.UNRST" % case)
-    init_file = ResdataFile("%s.INIT" % case)
+    grid = Grid(f"{case}.EGRID")
+    rst_file = ResdataRestartFile(grid, f"{case}.UNRST")
+    init_file = ResdataFile(f"{case}.INIT")
 
     # Create PORV keyword where all the inactive cells have been removed.
     pv = grid.compressed_kw_copy(init_file["PORV"][0])

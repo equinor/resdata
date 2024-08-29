@@ -59,7 +59,7 @@ class ResdataRFT(BaseCClass):
 
     def __init__(self, name, type_string, date, days):
         c_ptr = self._alloc(name, type_string, CTime(date), days)
-        super(ResdataRFT, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def free(self):
         self._free()
@@ -67,7 +67,7 @@ class ResdataRFT(BaseCClass):
     def __repr__(self):
         rs = []
         rs.append("completed_cells = %d" % len(self))
-        rs.append("date = %s" % self.getDate())
+        rs.append(f"date = {self.getDate()}")
         if self.is_RFT():
             rs.append("RFT")
         if self.is_PLT():
@@ -205,7 +205,7 @@ class ResdataRFTFile(BaseCClass):
 
     def __init__(self, case):
         c_ptr = self._load(case)
-        super(ResdataRFTFile, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def __len__(self):
         return self._get_size(None, CTime(-1))
@@ -272,7 +272,7 @@ class ResdataRFTFile(BaseCClass):
         Raise Exception if not found.
         """
         if self.size(well=well_name, date=date) == 0:
-            raise KeyError("No RFT for well:%s at %s" % (well_name, date))
+            raise KeyError(f"No RFT for well:{well_name} at {date}")
 
         rft = self._get_rft(well_name, CTime(date))
         rft.setParent(self)

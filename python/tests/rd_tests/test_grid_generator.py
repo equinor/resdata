@@ -253,6 +253,6 @@ class GridGeneratorTest(ResdataTest):
                         gc,
                         sc,
                         msg="Failed to translate corners correctly."
-                        + "Expected %s, was %s." % (gc, sc),
+                        + f"Expected {gc}, was {sc}.",
                         tolerance=10e-10,
                     )

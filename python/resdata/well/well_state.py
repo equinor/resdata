@@ -163,18 +163,12 @@ class WellState(BaseCClass):
 
     def __repr__(self):
         name = self.name()
-        name = "%s" % name if name else "[no name]"
+        name = f"{name}" if name else "[no name]"
         msw = " (multi segment)" if self.isMultiSegmentWell() else ""
         wn = str(self.wellNumber())
         type_ = self.wellType()
         open_ = "open" if self.isOpen() else "shut"
-        cnt = '%s%s, number = %s, type = "%s", state = %s' % (
-            name,
-            msw,
-            wn,
-            type_,
-            open_,
-        )
+        cnt = f'{name}{msw}, number = {wn}, type = "{type_}", state = {open_}'
         return self._create_repr(cnt)
 
     def gasRate(self):

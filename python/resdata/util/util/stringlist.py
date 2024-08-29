@@ -61,16 +61,14 @@ class StringList(BaseCClass):
         """
 
         c_ptr = self._alloc()
-        super(StringList, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         if not initial:
             return
 
         if isinstance(initial, str):
             raise TypeError(
-                (
-                    'Cannot initialize a StringList from "{initial}".\n'
-                    'Did you mean "[{initial}]"?'
-                ).format(initial=initial)
+                f'Cannot initialize a StringList from "{initial}".\n'
+                f'Did you mean "[{initial}]"?'
             )
         for s in initial:
             if isinstance(s, bytes):
@@ -78,7 +76,7 @@ class StringList(BaseCClass):
             if isinstance(s, str):
                 self.append(s)
             else:
-                raise TypeError('Item is not a string: "%s".' % s)
+                raise TypeError(f'Item is not a string: "{s}".')
 
     def __eq__(self, other):
         if len(self) == len(other):
@@ -110,7 +108,7 @@ class StringList(BaseCClass):
             if isinstance(value, str):
                 self._iset(index, value)
             else:
-                raise TypeError("Item: %s not string type" % value)
+                raise TypeError(f"Item: {value} not string type")
 
     def __getitem__(self, index):
         """
@@ -192,9 +190,9 @@ class StringList(BaseCClass):
         length = len(self)
         for i in range(length):
             if i == length - 1:
-                buffer += "'%s'" % self[i]
+                buffer += f"'{self[i]}'"
             else:
-                buffer += "'%s'," % self[i]
+                buffer += f"'{self[i]}',"
         buffer += "]"
         return buffer
 
@@ -272,7 +270,7 @@ class StringList(BaseCClass):
         if isinstance(value, str):
             return self._find_first(value)
         raise KeyError(
-            'Cannot index by "%s", lst.index() needs a string.' % str(type(value))
+            f'Cannot index by "{str(type(value))}", lst.index() needs a string.'
         )
 
     def free(self):

@@ -3,7 +3,7 @@ from resdata.util.util import monkey_the_camel
 from .rd_sum import Summary
 
 
-class ResdataCase(object):
+class ResdataCase:
     def __init__(self, case):
         self.case = case
 
@@ -48,10 +48,10 @@ class ResdataCase(object):
             diff_sum = sum(abs(diff_data))
             return (diff_sum, ref_sum)
         else:
-            raise KeyError("Key:%s was not present in both cases" % key)
+            raise KeyError(f"Key:{key} was not present in both cases")
 
 
-class ResdataCmp(object):
+class ResdataCmp:
     def __init__(self, test_case, ref_case):
         """Class to compare to simulation cases with Eclipse formatted result files.
 

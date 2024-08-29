@@ -30,7 +30,7 @@ class LookupTable(BaseCClass):
     )
 
     def __init__(self, lower_limit=None, upper_limit=None):
-        super(LookupTable, self).__init__(self._alloc())
+        super().__init__(self._alloc())
 
         if not lower_limit is None:
             self.setLowerLimit(lower_limit)
@@ -99,13 +99,11 @@ class LookupTable(BaseCClass):
         if x < self.getMinArg():
             if not self.hasLowerLimit():
                 raise ValueError(
-                    "Interpolate argument:%g is outside valid interval: [%g,%g]"
-                    % (x, self.getMinArg(), self.getMaxArg())
+                    f"Interpolate argument:{x:g} is outside valid interval: [{self.getMinArg():g},{self.getMaxArg():g}]"
                 )
         elif x > self.getMaxArg() and not self.hasUpperLimit():
             raise ValueError(
-                "Interpolate argument:%g is outside valid interval: [%g,%g]"
-                % (x, self.getMinArg(), self.getMaxArg())
+                f"Interpolate argument:{x:g} is outside valid interval: [{self.getMinArg():g},{self.getMaxArg():g}]"
             )
 
         return self._interp(x)

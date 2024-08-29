@@ -316,15 +316,15 @@ class GridTest(ResdataTest):
         pfx = "Grid("
         rep = repr(grid)
         self.assertEqual(pfx, rep[: len(pfx)])
-        self.assertEqual(type(rep), type(""))
-        self.assertEqual(type(grid.getName()), type(""))
+        self.assertEqual(type(rep), str)
+        self.assertEqual(type(grid.getName()), str)
         with TestAreaContext("python/rd_grid/repr"):
             grid.save_EGRID("CASE.EGRID")
             g2 = Grid("CASE.EGRID")
             r2 = repr(g2)
             self.assertEqual(pfx, r2[: len(pfx)])
-            self.assertEqual(type(r2), type(""))
-            self.assertEqual(type(g2.getName()), type(""))
+            self.assertEqual(type(r2), str)
+            self.assertEqual(type(g2.getName()), str)
 
     def test_node_pos(self):
         grid = GridGen.createRectangular((10, 20, 30), (1, 1, 1))

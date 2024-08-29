@@ -34,7 +34,7 @@ class ResdataRestartHead(BaseCClass):
         else:
             c_ptr = self._alloc(rst_view, -1)
 
-        super(ResdataRestartHead, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def free(self):
         self._free()
@@ -74,11 +74,10 @@ class ResdataRestartFile(Resdata3DFile):
             FileType.UNIFIED_RESTART,
         ]:
             raise ValueError(
-                'The input filename "%s" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
-                % filename
+                f'The input filename "{filename}" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
             )
 
-        super(ResdataRestartFile, self).__init__(grid, filename, flags)
+        super().__init__(grid, filename, flags)
         self.rst_headers = None
         if file_type == FileType.RESTART:
             self.is_unified = False

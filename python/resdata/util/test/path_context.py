@@ -2,7 +2,7 @@ import os
 import shutil
 
 
-class PathContext(object):
+class PathContext:
     def __init__(self, path, store=False):
         self.path = path
         self.cwd = os.getcwd()
@@ -24,7 +24,7 @@ class PathContext(object):
 
             os.makedirs(path)
         elif not self.store:
-            raise OSError("Entry %s already exists" % path)
+            raise OSError(f"Entry {path} already exists")
         os.chdir(path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):

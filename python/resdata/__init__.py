@@ -95,9 +95,7 @@ class ResdataPrototype(Prototype):
     lib = _dlopen_resdata()
 
     def __init__(self, prototype, bind=True):
-        super(ResdataPrototype, self).__init__(
-            ResdataPrototype.lib, prototype, bind=bind
-        )
+        super().__init__(ResdataPrototype.lib, prototype, bind=bind)
 
 
 from .rd_type import ResDataType, ResdataTypeEnum

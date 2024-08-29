@@ -14,7 +14,7 @@ def cmp_method(method):
     return cmp_wrapper
 
 
-class Version(object):
+class Version:
     def __init__(self, major, minor, micro, git_commit=None, build_time=None):
         self.major = major
         self.minor = minor
@@ -113,6 +113,4 @@ class ResdataVersion(Version):
         micro = self._micro_version()
         git_commit = self._git_commit()
         build_time = self._build_time()
-        super(ResdataVersion, self).__init__(
-            major, minor, micro, git_commit, build_time
-        )
+        super().__init__(major, minor, micro, git_commit, build_time)

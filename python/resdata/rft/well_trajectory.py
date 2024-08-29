@@ -31,7 +31,7 @@ def _parse_point(point):
         tvd = float(point[3])
     except ValueError as err:
         raise UserWarning(
-            "Error: Failed to extract data from line %s\n" % str(point)
+            f"Error: Failed to extract data from line {str(point)}\n"
         ) from err
     zone = None
     if len(point) > 4:
@@ -43,7 +43,7 @@ class WellTrajectory:
     def __init__(self, filename):
         self._points = []
         if not isfile(filename):
-            raise IOError('No such file "%s"' % filename)
+            raise OSError(f'No such file "{filename}"')
 
         with open(filename) as fileH:
             for line in fileH.readlines():
@@ -66,4 +66,4 @@ class WellTrajectory:
         return "WellTrajectory(len=%d)" % len(self)
 
     def __str__(self):
-        return "WellTrajectory(%s)" % str(self._points)
+        return f"WellTrajectory({str(self._points)})"

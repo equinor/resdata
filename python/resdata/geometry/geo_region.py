@@ -45,18 +45,16 @@ class GeoRegion(BaseCClass):
         self._preselect = bool(preselect)
         c_ptr = self._alloc(pointset, self._preselect)
         if c_ptr:
-            super(GeoRegion, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
-            raise ValueError(
-                "Could not construct GeoRegion from pointset %s." % pointset
-            )
+            raise ValueError(f"Could not construct GeoRegion from pointset {pointset}.")
 
     def getActiveList(self):
         return self._get_index_list()
 
     def _assert_polygon(self, polygon):
         if not isinstance(polygon, CPolyline):
-            raise ValueError("Need to select with a CPolyline, not %s." % type(polygon))
+            raise ValueError(f"Need to select with a CPolyline, not {type(polygon)}.")
 
     def _construct_cline(self, line):
         """Takes a line ((x1,y1), (x2,y2)) and returns two double[2]* but

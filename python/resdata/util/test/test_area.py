@@ -36,7 +36,7 @@ class TestArea(BaseCClass):
         if c_ptr is None:
             c_ptr = self._test_area_alloc(test_name, store_area)
 
-        super(TestArea, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def get_original_cwd(self):
         return self._get_original_cwd()
@@ -59,52 +59,52 @@ class TestArea(BaseCClass):
         if os.path.isfile(self.orgPath(filename)):
             self._install_file(filename)
         else:
-            raise IOError("No such file:%s" % filename)
+            raise OSError(f"No such file:{filename}")
 
     def copy_directory(self, directory):
         if os.path.isdir(self.orgPath(directory)):
             self._copy_directory(directory)
         else:
-            raise IOError("No such directory: %s" % directory)
+            raise OSError(f"No such directory: {directory}")
 
     def copy_parent_directory(self, path):
         if os.path.exists(self.orgPath(path)):
             self._copy_parent_directory(path)
         else:
-            raise IOError("No such file or directory: %s" % path)
+            raise OSError(f"No such file or directory: {path}")
 
     def copy_parent_content(self, path):
         if os.path.exists(self.orgPath(path)):
             self._copy_parent_content(path)
         else:
-            raise IOError("No such file or directory: %s" % path)
+            raise OSError(f"No such file or directory: {path}")
 
     def copy_directory_content(self, directory):
         if os.path.isdir(self.orgPath(directory)):
             self._copy_directory_content(directory)
         else:
-            raise IOError("No such directory: %s" % directory)
+            raise OSError(f"No such directory: {directory}")
 
     def copy_file(self, filename):
         if os.path.isfile(self.orgPath(filename)):
             self._copy_file(filename)
         else:
-            raise IOError("No such file:%s" % filename)
+            raise OSError(f"No such file:{filename}")
 
     def free(self):
         self._free()
 
     def getFullPath(self, path):
         if not os.path.exists(path):
-            raise IOError("Path not found:%s" % path)
+            raise OSError(f"Path not found:{path}")
 
         if os.path.isabs(path):
-            raise IOError("Path:%s is already absolute" % path)
+            raise OSError(f"Path:{path} is already absolute")
 
         return os.path.join(self.get_cwd(), path)
 
 
-class TestAreaContext(object):
+class TestAreaContext:
     __test__ = False
 
     def __init__(self, test_name, store_area=False):

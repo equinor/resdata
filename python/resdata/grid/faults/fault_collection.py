@@ -12,12 +12,12 @@ def dequote(s):
         if s[0] == s[-1]:
             return s[1:-1]
         else:
-            raise ValueError("s[0] != s[-1], s[0]={}, s[-1]={}".format(s[0], s[-1]))
+            raise ValueError(f"s[0] != s[-1], s[0]={s[0]}, s[-1]={s[-1]}")
     else:
         return s
 
 
-class FaultCollection(object):
+class FaultCollection:
     def __init__(self, grid=None, *file_list):
         self.__fault_list = []
         self.__fault_map = {}
@@ -64,10 +64,10 @@ class FaultCollection(object):
     def split_line(self, line):
         tmp = line.split()
         if not tmp[-1] == "/":
-            raise ValueError("Line:%s does not end with /" % line)
+            raise ValueError(f"Line:{line} does not end with /")
 
         if len(tmp) != 9:
-            raise ValueError("Line:%s not correct number of items" % line)
+            raise ValueError(f"Line:{line} not correct number of items")
 
         fault_name = dequote(tmp[0])
         I1 = int(tmp[1]) - 1

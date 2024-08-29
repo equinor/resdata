@@ -20,16 +20,16 @@ from resdata.util.util import Version
 
 def log_test(test):
     def wrapper(*args):
-        sys.stderr.write("starting: %s \n" % test.__name__)
+        sys.stderr.write(f"starting: {test.__name__} \n")
         test(*args)
-        sys.stderr.write("complete: %s \n" % test.__name__)
+        sys.stderr.write(f"complete: {test.__name__} \n")
 
     return wrapper
 
 
-class _AssertNotRaisesContext(object):
+class _AssertNotRaisesContext:
     def __init__(self, test_class):
-        super(_AssertNotRaisesContext, self).__init__()
+        super().__init__()
         self._test_class = test_class
 
     def __enter__(self):
@@ -42,8 +42,7 @@ class _AssertNotRaisesContext(object):
             except AttributeError:
                 exc_name = str(exc_type)
             self._test_class.fail(
-                "Exception: %s raised\n%s"
-                % (exc_name, traceback.print_exception(exc_type, exc_value, tb))
+                f"Exception: {exc_name} raised\n{traceback.print_exception(exc_type, exc_value, tb)}"
             )
         return True
 
@@ -60,7 +59,7 @@ class ExtendedTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
         installAbortSignals()
-        super(ExtendedTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:
@@ -68,16 +67,11 @@ class ExtendedTestCase(TestCase):
             diff = abs(f_first - f_second)
             scale = max(1, abs(first) + abs(second))
             if msg is None:
-                msg = "Floats not equal: |%f - %f| > %g" % (
-                    f_first,
-                    f_second,
-                    tolerance,
-                )
+                msg = f"Floats not equal: |{f_first:f} - {f_second:f}| > {tolerance:g}"
             self.assertTrue(diff < tolerance * scale, msg=msg)
         except TypeError:
             self.fail(
-                "Cannot compare as floats: %s (%s) and %s (%s)"
-                % (first, type(first), second, type(second))
+                f"Cannot compare as floats: {first} ({type(first)}) and {second} ({type(second)})"
             )
 
     def assertAlmostEqualList(self, first, second, msg=None, tolerance=1e-6):
@@ -94,12 +88,11 @@ class ExtendedTestCase(TestCase):
             __import__(module_name)
         except ImportError:
             tb = traceback.format_exc()
-            self.fail("Module %s not found!\n\nTrace:\n%s" % (module_name, str(tb)))
+            self.fail(f"Module {module_name} not found!\n\nTrace:\n{str(tb)}")
         except Exception:
             tb = traceback.format_exc()
             self.fail(
-                "Import of module %s caused errors!\n\nTrace:\n%s"
-                % (module_name, str(tb))
+                f"Import of module {module_name} caused errors!\n\nTrace:\n{str(tb)}"
             )
 
     def assertFilesAreEqual(self, first, second):
@@ -112,19 +105,19 @@ class ExtendedTestCase(TestCase):
 
     def assertFileExists(self, path):
         if not os.path.exists(path) or not os.path.isfile(path):
-            self.fail("The file: %s does not exist!" % path)
+            self.fail(f"The file: {path} does not exist!")
 
     def assertDirectoryExists(self, path):
         if not os.path.exists(path) or not os.path.isdir(path):
-            self.fail("The directory: %s does not exist!" % path)
+            self.fail(f"The directory: {path} does not exist!")
 
     def assertFileDoesNotExist(self, path):
         if os.path.exists(path) and os.path.isfile(path):
-            self.fail("The file: %s exists!" % path)
+            self.fail(f"The file: {path} exists!")
 
     def assertDirectoryDoesNotExist(self, path):
         if os.path.exists(path) and os.path.isdir(path):
-            self.fail("The directory: %s exists!" % path)
+            self.fail(f"The directory: {path} exists!")
 
     def __filesAreEqual(self, first, second):
         buffer1 = open(first, "rb").read()  # noqa: SIM115
@@ -148,14 +141,13 @@ class ExtendedTestCase(TestCase):
 
             self.assertTrue(
                 identifier in enum_class.__dict__,
-                "Enum does not have identifier: %s" % identifier,
+                f"Enum does not have identifier: {identifier}",
             )
             class_value = enum_class.__dict__[identifier]
             self.assertEqual(
                 class_value,
                 value,
-                "Enum value for identifier: %s does not match: %s != %s"
-                % (identifier, class_value, value),
+                f"Enum value for identifier: {identifier} does not match: {class_value} != {value}",
             )
 
     @classmethod

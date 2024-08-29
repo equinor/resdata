@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-class Cell(object):
+class Cell:
     def __init__(self, grid, global_index):
         self._grid = grid
         self._idx = global_index
@@ -68,7 +68,7 @@ class Cell(object):
         """
         if len(coord) != 3:
             raise ValueError(
-                "Cell contains takes a triple (x,y,z), was given %s." % coord
+                f"Cell contains takes a triple (x,y,z), was given {coord}."
             )
         x, y, z = coord
         return self._grid._cell_contains(self._idx, x, y, z)
@@ -102,7 +102,7 @@ class Cell(object):
 
     def __repr__(self):
         act = "active" if self.active else "inactive"
-        pos = "(%.3f, %.3f, %.3f)" % self.coordinate
+        pos = "({:.3f}, {:.3f}, {:.3f})".format(*self.coordinate)
         cnt = "%d, %d, %d, %s, %s, grid=%s" % (
             self.i,
             self.j,
@@ -112,4 +112,4 @@ class Cell(object):
             self._grid.get_name(),
         )
 
-        return "Cell(%s)" % cnt
+        return f"Cell({cnt})"

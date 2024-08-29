@@ -65,7 +65,7 @@ class ResdataRFTCell(RFTCell):
 
     def __init__(self, i, j, k, depth, pressure, swat, sgas):
         c_ptr = self._alloc_RFT(i, j, k, depth, pressure, swat, sgas)
-        super(ResdataRFTCell, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     @property
     def swat(self):
@@ -144,7 +144,7 @@ class ResdataPLTCell(RFTCell):
             gas_flowrate,
             water_flowrate,
         )
-        super(ResdataPLTCell, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     @property
     def orat(self):

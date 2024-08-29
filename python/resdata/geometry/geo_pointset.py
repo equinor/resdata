@@ -14,10 +14,10 @@ class GeoPointset(BaseCClass):
     def __init__(self, external_z=False):
         c_ptr = self._alloc(external_z)
         if c_ptr:
-            super(GeoPointset, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
             ext = "external" if external_z else "internal"
-            raise ValueError("Failed to construct GeoPointset with %s_z." % ext)
+            raise ValueError(f"Failed to construct GeoPointset with {ext}_z.")
 
     @staticmethod
     def fromSurface(surface):
@@ -42,7 +42,7 @@ class GeoPointset(BaseCClass):
                 )
         else:
             # TODO implement slicing?
-            raise ValueError("Index must be int, not %s." % type(key))
+            raise ValueError(f"Index must be int, not {type(key)}.")
 
     def __len__(self):
         return self._get_size()

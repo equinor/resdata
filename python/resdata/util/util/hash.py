@@ -21,7 +21,7 @@ class Hash(BaseCClass):
 
     def __init__(self):
         c_ptr = self._alloc()
-        super(Hash, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def __len__(self):
         return self._size()
@@ -30,21 +30,20 @@ class Hash(BaseCClass):
         if self._has_key(key):
             return self._get(key)
         else:
-            raise KeyError("Hash does not have key: %s" % key)
+            raise KeyError(f"Hash does not have key: {key}")
 
     def __setitem__(self, key, value):
         if isinstance(value, c_void_p):
             self._insert_ref(key, value)
         else:
-            raise ValueError("Hash does not support type: %s" % value.__class__)
+            raise ValueError(f"Hash does not support type: {value.__class__}")
 
     def __contains__(self, key):
         """@rtype: bool"""
         return self._has_key(key)
 
     def __iter__(self):
-        for key in self.keys():
-            yield key
+        yield from self.keys()
 
     def keys(self):
         """@rtype: StringList"""
@@ -54,7 +53,7 @@ class Hash(BaseCClass):
         self._free()
 
     def __str__(self):
-        return str(["%s: %s" % (key, self[key]) for key in self.keys()])
+        return str([f"{key}: {self[key]}" for key in self.keys()])
 
 
 class StringHash(Hash):
@@ -63,19 +62,19 @@ class StringHash(Hash):
     _insert_string = ResdataPrototype("void hash_insert_string(rd_hash, char*, char*)")
 
     def __init__(self):
-        super(StringHash, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, str):
             self._insert_string(key, value)
         else:
-            raise ValueError("StringHash does not support type: %s" % value.__class__)
+            raise ValueError(f"StringHash does not support type: {value.__class__}")
 
     def __getitem__(self, key):
         if key in self:
             return self._get_string(key)
         else:
-            raise KeyError("Hash does not have key: %s" % key)
+            raise KeyError(f"Hash does not have key: {key}")
 
 
 class IntegerHash(Hash):
@@ -84,19 +83,19 @@ class IntegerHash(Hash):
     _insert_int = ResdataPrototype("void hash_insert_int(rd_hash, char*, int)")
 
     def __init__(self):
-        super(IntegerHash, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, int):
             self._insert_int(key, value)
         else:
-            raise ValueError("IntegerHash does not support type: %s" % value.__class__)
+            raise ValueError(f"IntegerHash does not support type: {value.__class__}")
 
     def __getitem__(self, key):
         if key in self:
             return self._get_int(key)
         else:
-            raise KeyError("Hash does not have key: %s" % key)
+            raise KeyError(f"Hash does not have key: {key}")
 
 
 class DoubleHash(Hash):
@@ -105,7 +104,7 @@ class DoubleHash(Hash):
     _insert_double = ResdataPrototype("void hash_insert_double(rd_hash, char*, double)")
 
     def __init__(self):
-        super(DoubleHash, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, int):
@@ -114,10 +113,10 @@ class DoubleHash(Hash):
         if isinstance(value, float):
             self._insert_double(key, value)
         else:
-            raise ValueError("DoubleHash does not support type: %s" % value.__class__)
+            raise ValueError(f"DoubleHash does not support type: {value.__class__}")
 
     def __getitem__(self, key):
         if key in self:
             return self._get_double(key)
         else:
-            raise KeyError("Hash does not have key: %s" % key)
+            raise KeyError(f"Hash does not have key: {key}")

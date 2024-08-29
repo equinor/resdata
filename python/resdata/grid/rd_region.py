@@ -317,7 +317,7 @@ class ResdataRegion(BaseCClass):
         self.grid = grid
         self.active_index = False
         c_ptr = self._alloc(grid, preselect)
-        super(ResdataRegion, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def free(self):
         self._free()
@@ -551,8 +551,7 @@ class ResdataRegion(BaseCClass):
         """
         if not rd_kw.data_type.is_int():
             raise ValueError(
-                "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.type_name()
+                f"The select_equal method must have an integer valued keyword - got:{rd_kw.type_name()}"
             )
         self._select_equal(rd_kw, value)
 
@@ -564,8 +563,7 @@ class ResdataRegion(BaseCClass):
         """
         if not rd_kw.data_type.is_int():
             raise ValueError(
-                "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.type_name()
+                f"The select_equal method must have an integer valued keyword - got:{rd_kw.type_name()}"
             )
         self._deselect_equal(rd_kw, value)
 

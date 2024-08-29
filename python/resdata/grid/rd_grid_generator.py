@@ -177,7 +177,7 @@ class GridGenerator:
             zcorn = cls.__create_faults(nx, ny, nz, zcorn, drop)
 
         if z != escape_origo_shift[2] + nz * dz:
-            raise ValueError("%f != %f" % (z, escape_origo_shift[2] + nz * dz))
+            raise ValueError(f"{z:f} != {escape_origo_shift[2] + nz * dz:f}")
 
         cls.assert_zcorn(nx, ny, nz, zcorn)
         return construct_floatKW("ZCORN", zcorn)
@@ -495,8 +495,9 @@ class GridGenerator:
 
         if set(actnum) - {0, 1}:
             raise AssertionError(
-                "Expected ACTNUM to consist of 0's and 1's, was %s."
-                % ", ".join(map(str, set(actnum)))
+                "Expected ACTNUM to consist of 0's and 1's, was {}.".format(
+                    ", ".join(map(str, set(actnum)))
+                )
             )
 
     @classmethod
@@ -734,7 +735,7 @@ class GridGenerator:
             if not (isinstance(bound[0], int) and isinstance(bound[1], int)):
                 raise TypeError(
                     "Expected bound to consist of two integers, ",
-                    "was %s (%s)" % (str(bound), str((map(type, bound)))),
+                    f"was {str(bound)} ({str(map(type, bound))})",
                 )
 
             if not (0 <= bound[0] <= bound[1] < n):
@@ -750,7 +751,7 @@ class GridGenerator:
     def assert_decomposition_change(cls, ijk_bounds, decomposition_change):
         if sum(list(zip(*ijk_bounds))[0]) % 2 == 1 and not decomposition_change:
             raise ValueError(
-                "The subgrid defined by %s " % str(ijk_bounds)
+                f"The subgrid defined by {str(ijk_bounds)} "
                 + "will cause an unintended decomposition change. "
                 + "Either change one of the lower bounds by 1 "
                 + "or activate decomposition_change."

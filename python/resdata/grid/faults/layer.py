@@ -49,7 +49,7 @@ class Layer(BaseCClass):
     def __init__(self, nx, ny):
         c_ptr = self._alloc(nx, ny)
         if c_ptr:
-            super(Layer, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
             raise ValueError("Invalid input - no Layer object created")
 
@@ -65,7 +65,7 @@ class Layer(BaseCClass):
             (i, j) = index
         except TypeError as err:
             raise ValueError(
-                "Index:%s is invalid - must have two integers" % str(index)
+                f"Index:{str(index)} is invalid - must have two integers"
             ) from err
 
         self._assert_ij(i, j)

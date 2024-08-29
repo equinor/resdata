@@ -2,7 +2,7 @@ import os
 import re
 
 
-class SourceEnumerator(object):
+class SourceEnumerator:
     @classmethod
     def removeComments(cls, code_string):
         code_string = re.sub(
@@ -15,7 +15,7 @@ class SourceEnumerator(object):
 
     @classmethod
     def findEnum(cls, enum_name, full_source_file_path):
-        with open(full_source_file_path, "r") as f:
+        with open(full_source_file_path) as f:
             text = f.read()
 
         text = SourceEnumerator.removeComments(text)
@@ -26,7 +26,7 @@ class SourceEnumerator(object):
             if enum[1] == enum_name:
                 return enum[0]
 
-        raise ValueError("Enum with name: '%s' not found!" % enum_name)
+        raise ValueError(f"Enum with name: '{enum_name}' not found!")
 
     @classmethod
     def findEnumerators(cls, enum_name, source_file):

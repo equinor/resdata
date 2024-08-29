@@ -1,8 +1,7 @@
-from __future__ import division
-
 """
 Create a polygon
 """
+
 import os.path
 import ctypes
 
@@ -67,18 +66,17 @@ class Surface(BaseCClass):
             filename = str(filename)
             if os.path.isfile(filename):
                 c_ptr = self._alloc(filename, True)
-                super(Surface, self).__init__(c_ptr)
+                super().__init__(c_ptr)
             else:
-                raise IOError('No such file "%s".' % filename)
+                raise OSError(f'No such file "{filename}".')
         else:
             s_args = [nx, ny, xinc, yinc, xstart, ystart, angle]
             if None in s_args:
                 raise ValueError(
-                    "Missing argument for creating surface, all values must be set, was: %s"
-                    % str(s_args)
+                    f"Missing argument for creating surface, all values must be set, was: {str(s_args)}"
                 )
             c_ptr = self._new(*s_args)
-            super(Surface, self).__init__(c_ptr)
+            super().__init__(c_ptr)
 
     def __eq__(self, other):
         """
@@ -203,7 +201,7 @@ class Surface(BaseCClass):
 
             self._iset_zvalue(index, value)
         else:
-            raise TypeError("Invalid index type:%s - must be integer" % index)
+            raise TypeError(f"Invalid index type:{index} - must be integer")
 
     def __getitem__(self, index):
         if isinstance(index, int):
@@ -218,7 +216,7 @@ class Surface(BaseCClass):
                     "Invalid index:%d - valid range [0,%d)" % (index, len(self))
                 )
         else:
-            raise TypeError("Invalid index type:%s - must be integer" % index)
+            raise TypeError(f"Invalid index type:{index} - must be integer")
 
     def getXY(self, index):
         """Gets the index'th (x,y) coordinate"""
@@ -232,7 +230,7 @@ class Surface(BaseCClass):
                 )
             index = idx
         else:
-            raise TypeError("Invalid index type:%s - must be integer" % index)
+            raise TypeError(f"Invalid index type:{index} - must be integer")
 
         x = ctypes.c_double()
         y = ctypes.c_double()
@@ -252,13 +250,9 @@ class Surface(BaseCClass):
     def _assert_idx_or_i_and_j(self, idx, i, j):
         if idx is None:
             if i is None or j is None:
-                raise ValueError(
-                    "idx is None, i and j must be ints, was %s and %s." % (i, j)
-                )
+                raise ValueError(f"idx is None, i and j must be ints, was {i} and {j}.")
         elif i is not None or j is not None:
-            raise ValueError(
-                "idx is set, i and j must be None, was %s and %s." % (i, j)
-            )
+            raise ValueError(f"idx is set, i and j must be None, was {i} and {j}.")
 
     def getXYZ(self, idx=None, i=None, j=None):
         """Returns a tuple of 3 floats, (x,y,z) for given global index, or i and j."""

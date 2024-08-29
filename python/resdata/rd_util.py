@@ -10,8 +10,6 @@ In addition to the enum definitions there are a few stateless
 functions from rd_util.c which are not bound to any class type.
 """
 
-from __future__ import absolute_import
-
 import ctypes
 
 from cwrap import BaseCEnum
@@ -99,7 +97,7 @@ FileMode.addEnum("WRITABLE", 2)
 # -----------------------------------------------------------------
 
 
-class ResdataUtil(object):
+class ResdataUtil:
     _get_num_cpu = ResdataPrototype("int rd_get_num_cpu(char*)", bind=False)
     _get_file_type = ResdataPrototype(
         "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False
@@ -149,7 +147,7 @@ class ResdataUtil(object):
     def report_step(filename):
         report_step = ResdataUtil._get_report_step(filename)
         if report_step < 0:
-            raise ValueError("Could not infer report step from: %s" % filename)
+            raise ValueError(f"Could not infer report step from: {filename}")
 
         return report_step
 

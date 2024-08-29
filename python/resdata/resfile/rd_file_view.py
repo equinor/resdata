@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
 from six import string_types
 from cwrap import BaseCClass
 from resdata.util.util import monkey_the_camel
@@ -45,7 +44,7 @@ class ResdataFileView(BaseCClass):
 
     def iget_named_kw(self, kw_name, index):
         if not kw_name in self:
-            raise KeyError("No such keyword: %s" % kw_name)
+            raise KeyError(f"No such keyword: {kw_name}")
 
         if index >= self.numKeywords(kw_name):
             raise IndexError("Too large index: %d" % index)
@@ -107,7 +106,7 @@ class ResdataFileView(BaseCClass):
                         kw_list.append(self.iget_named_kw(kw_index, index))
                     return kw_list
                 else:
-                    raise KeyError("Unrecognized keyword:'%s'" % index)
+                    raise KeyError(f"Unrecognized keyword:'{index}'")
             else:
                 raise TypeError("Index must be integer or string (keyword)")
 
@@ -130,7 +129,7 @@ class ResdataFileView(BaseCClass):
         idx = start_index
         if start_kw:
             if not start_kw in self:
-                raise KeyError("The keyword:%s is not in file" % start_kw)
+                raise KeyError(f"The keyword:{start_kw} is not in file")
 
             ls = self.numKeywords(start_kw)
             if idx < 0:
@@ -141,7 +140,7 @@ class ResdataFileView(BaseCClass):
                 )
 
         if stop_kw and not stop_kw in self:
-            raise KeyError("The keyword:%s is not in file" % stop_kw)
+            raise KeyError(f"The keyword:{stop_kw} is not in file")
 
         view = self._create_block_view2(start_kw, stop_kw, idx)
         view.setParent(parent=self)
@@ -151,7 +150,7 @@ class ResdataFileView(BaseCClass):
         num = self.numKeywords(kw)
 
         if num == 0:
-            raise KeyError("Unknown keyword: %s" % kw)
+            raise KeyError(f"Unknown keyword: {kw}")
 
         idx = kw_index
         if idx < 0:

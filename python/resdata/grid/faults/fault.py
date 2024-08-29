@@ -7,7 +7,7 @@ from .fault_line import FaultLine
 from .fault_segments import FaultSegment, SegmentMap
 
 
-class FaultLayer(object):
+class FaultLayer:
     def __init__(self, grid, K):
         assert isinstance(K, int)
         self.__grid = grid
@@ -143,7 +143,7 @@ class FaultLayer(object):
 #################################################################
 
 
-class Fault(object):
+class Fault:
     allowed_faces = ["X", "Y", "Z", "I", "J", "K", "X-", "Y-", "Z-", "I-", "J-", "K-"]
 
     def __init__(self, grid, name):
@@ -154,7 +154,7 @@ class Fault(object):
         (self.nx, self.ny, self.nz, nactive) = grid.getDims()
 
     def __str__(self):
-        return "Fault:%s" % self.__name
+        return f"Fault:{self.__name}"
 
     def __getitem__(self, K):
         if not self.hasLayer(K):
@@ -166,8 +166,7 @@ class Fault(object):
         return len(self.__layer_map)
 
     def __iter__(self):
-        for layer in self.__layer_list:
-            yield layer
+        yield from self.__layer_list
 
     def has_layer(self, K):
         return K in self.__layer_map
@@ -197,7 +196,7 @@ class Fault(object):
 
     def add_record(self, I1, I2, J1, J2, K1, K2, face):
         if not face in Fault.allowed_faces:
-            raise ValueError("Invalid face:%s" % face)
+            raise ValueError(f"Invalid face:{face}")
 
         if I1 > I2:
             raise ValueError("Invalid I1 I2 indices")
@@ -224,13 +223,13 @@ class Fault(object):
             raise ValueError("Invalid K2:%d" % K2)
 
         if face in ["X", "I"] and I1 != I2:
-            raise ValueError("For face:%s we must have I1 == I2" % face)
+            raise ValueError(f"For face:{face} we must have I1 == I2")
 
         if face in ["Y", "J"] and J1 != J2:
-            raise ValueError("For face:%s we must have J1 == J2" % face)
+            raise ValueError(f"For face:{face} we must have J1 == J2")
 
         if face in ["Z", "K"] and K1 != K2:
-            raise ValueError("For face:%s we must have K1 == K2" % face)
+            raise ValueError(f"For face:{face} we must have K1 == K2")
 
         # -----------------------------------------------------------------
 
@@ -257,7 +256,7 @@ class Fault(object):
 
     def get_polyline(self, k):
         layer = self[k]
-        return layer.getPolyline(name="Polyline[%s]" % self.getName())
+        return layer.getPolyline(name=f"Polyline[{self.getName()}]")
 
     def get_ij_polyline(self, k):
         layer = self[k]
@@ -396,7 +395,7 @@ class Fault(object):
         intersections = GeometryTools.rayPolygonIntersections(p1, ray_dir, bbox)
         if intersections:
             p2 = intersections[0][1]
-            name = "Extend:%s" % self.getName() if self.getName() else None
+            name = f"Extend:{self.getName()}" if self.getName() else None
 
             return CPolyline(name=name, init_points=[(p1[0], p1[1]), p2])
         else:

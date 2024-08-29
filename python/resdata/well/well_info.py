@@ -32,9 +32,9 @@ class WellInfo(BaseCClass):
         @type rst_file: str or ResdataFile or list of str or list of ResdataFile
         """
         c_ptr = self._alloc(grid)
-        super(WellInfo, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         if not c_ptr:
-            raise ValueError("Unable to construct WellInfo from grid %s." % str(grid))
+            raise ValueError(f"Unable to construct WellInfo from grid {str(grid)}.")
 
         if rst_file is not None:
             if isinstance(rst_file, list):
@@ -58,7 +58,7 @@ class WellInfo(BaseCClass):
 
         if isinstance(item, str):
             if not item in self:
-                raise KeyError("The well '%s' is not in this set." % item)
+                raise KeyError(f"The well '{item}' is not in this set.")
             well_name = item
 
         elif isinstance(item, int):
@@ -91,7 +91,7 @@ class WellInfo(BaseCClass):
 
     def _assert_file_exists(self, rst_file):
         if not isfile(rst_file):
-            raise IOError("No such file %s" % rst_file)
+            raise OSError(f"No such file {rst_file}")
 
     def addWellFile(self, rst_file, load_segment_information):
         """@type rstfile: str or ResdataFile"""

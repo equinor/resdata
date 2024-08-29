@@ -64,7 +64,7 @@ class ResDataType(BaseCClass):
         else:
             c_ptr = self._alloc(type_enum, element_size)
 
-        super(ResDataType, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def _assert_valid_arguments(self, type_enum, element_size, type_name):
         if type_name is not None:
@@ -148,7 +148,7 @@ class ResDataType(BaseCClass):
         return ResDataType(type_name=name)
 
     # Enables one to fetch a type as ResDataType.RD_XXXX
-    class classproperty(object):
+    class classproperty:
         def __init__(self, fget):
             self.fget = fget
 

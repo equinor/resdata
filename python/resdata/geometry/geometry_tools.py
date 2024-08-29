@@ -3,7 +3,7 @@ import sys
 from math import sqrt
 
 
-class GeometryTools(object):
+class GeometryTools:
     EPSILON = 0.000001
 
     @staticmethod
@@ -400,8 +400,7 @@ class GeometryTools(object):
 
         if len(d_list) == 0:
             raise ValueError(
-                "Polyline %s can not be extended to %s"
-                % (polyline.getName(), target_polyline.getName())
+                f"Polyline {polyline.getName()} can not be extended to {target_polyline.getName()}"
             )
 
         d_list.sort(key=lambda x: x[0])

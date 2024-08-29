@@ -1,13 +1,13 @@
 import os
 
 
-class CWDContext(object):
+class CWDContext:
     def __init__(self, path):
         self.cwd = os.getcwd()
         if os.path.isdir(path):
             os.chdir(path)
         else:
-            raise IOError("Path:%s does not exist" % path)
+            raise OSError(f"Path:{path} does not exist")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.cwd)

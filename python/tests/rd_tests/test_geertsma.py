@@ -19,7 +19,7 @@ def create_init(grid, case):
     for g in range(grid.getGlobalSize()):
         porv[g] *= grid.cell_volume(global_index=g)
 
-    with openFortIO("%s.INIT" % case, mode=FortIO.WRITE_MODE) as f:
+    with openFortIO(f"{case}.INIT", mode=FortIO.WRITE_MODE) as f:
         poro.fwrite(f)
         porv.fwrite(f)
 

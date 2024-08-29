@@ -1,11 +1,9 @@
-from __future__ import print_function
-
 import warnings
 
 from .rd_sum_node import SummaryNode
 
 
-class SummaryVector(object):
+class SummaryVector:
     def __init__(self, parent, key, report_only=False):
         """
         A summary vector with a vector of values and time.
@@ -41,7 +39,7 @@ class SummaryVector(object):
         self.__values = None
 
     def __str__(self):
-        return "<Summary vector: %s>" % self.key
+        return f"<Summary vector: {self.key}>"
 
     def __repr__(self):
         return "SummaryVector(key = %s, size = %d, unit = %s)" % (
@@ -174,7 +172,7 @@ class SummaryVector(object):
                 index += step
             return sub_vector
 
-        raise KeyError("Invalid index:%s - must have integer or slice." % index)
+        raise KeyError(f"Invalid index:{index} - must have integer or slice.")
 
     @property
     def first(self):

@@ -25,8 +25,6 @@ The C-level has implementations for several fundamental types like
 float and size_t not currently implemented in the Python version.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import sys
 
 from cwrap import CFILE, BaseCClass
@@ -126,7 +124,7 @@ class VectorTemplate(BaseCClass):
         Creates a new TVector instance.
         """
         c_pointer = self._alloc(initial_size, default_value)
-        super(VectorTemplate, self).__init__(c_pointer)
+        super().__init__(c_pointer)
         self.element_size = self._element_size()
 
     def __contains__(self, value):
@@ -268,7 +266,7 @@ class VectorTemplate(BaseCClass):
                 delta *= -1
             self._shift(delta)
         else:
-            raise TypeError("delta has wrong type:%s " % type(delta))
+            raise TypeError(f"delta has wrong type:{type(delta)} ")
 
         return self
 
@@ -337,7 +335,7 @@ class VectorTemplate(BaseCClass):
         elif isinstance(factor, (int, float)):
             self._scale(factor)
         else:
-            raise TypeError("factor has wrong type:%s " % type(factor))
+            raise TypeError(f"factor has wrong type:{type(factor)} ")
 
         return self
 
@@ -355,7 +353,7 @@ class VectorTemplate(BaseCClass):
             copy._div(divisor)
             return copy
         else:
-            raise TypeError("Divisor has wrong type:%s" % type(divisor))
+            raise TypeError(f"Divisor has wrong type:{type(divisor)}")
 
     def __truediv__(self, divisor):
         return self.__div__(divisor)

@@ -37,7 +37,7 @@ class CPolylineCollection(BaseCClass):
 
     def __init__(self):
         c_ptr = self._alloc_new()
-        super(CPolylineCollection, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         self.parent_ref = None
 
     def __contains__(self, name):
@@ -68,7 +68,7 @@ class CPolylineCollection(BaseCClass):
             if index in self:
                 return self._get(index)
             else:
-                raise KeyError("No polyline named:%s" % index)
+                raise KeyError(f"No polyline named:{index}")
         else:
             raise TypeError("The index argument must be string or integer")
 
@@ -92,7 +92,7 @@ class CPolylineCollection(BaseCClass):
 
         name = polyline.getName()
         if name and name in self:
-            raise KeyError("The polyline collection already has an object:%s" % name)
+            raise KeyError(f"The polyline collection already has an object:{name}")
 
         if polyline.isReference():
             self._add_polyline(polyline, False)
@@ -102,7 +102,7 @@ class CPolylineCollection(BaseCClass):
 
     def createPolyline(self, name=None):
         if name and name in self:
-            raise KeyError("The polyline collection already has an object:%s" % name)
+            raise KeyError(f"The polyline collection already has an object:{name}")
 
         polyline = self._create_polyline(name)
         polyline.setParent(parent=self)

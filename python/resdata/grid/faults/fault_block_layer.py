@@ -1,4 +1,3 @@
-from __future__ import print_function
 from cwrap import BaseCClass
 
 from resdata.util.util import monkey_the_camel
@@ -55,7 +54,7 @@ class FaultBlockLayer(BaseCClass):
     def __init__(self, grid, k):
         c_ptr = self._alloc(grid, k)
         if c_ptr:
-            super(FaultBlockLayer, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
             raise ValueError("Invalid input - failed to create FaultBlockLayer")
 
@@ -152,7 +151,7 @@ class FaultBlockLayer(BaseCClass):
             block_id = self.getNextID()
 
         if block_id in self:
-            raise KeyError("Layer already contains block with ID:%s" % block_id)
+            raise KeyError(f"Layer already contains block with ID:{block_id}")
         else:
             return self._add_block(block_id).setParent(self)
 

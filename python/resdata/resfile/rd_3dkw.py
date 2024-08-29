@@ -53,7 +53,7 @@ class Resdata3DKW(ResdataKW):
 
     def __init__(self, kw, grid, value_type, default_value=0, global_active=False):
         size = grid.getGlobalSize() if global_active else grid.getNumActive()
-        super(Resdata3DKW, self).__init__(kw, size, value_type)
+        super().__init__(kw, size, value_type)
         self.grid = grid
         self.global_active = global_active
         self.setDefault(default_value)
@@ -70,7 +70,7 @@ class Resdata3DKW(ResdataKW):
 
         See the base class ResdataKW.read_grdecl() for more documentation.
         """
-        kw = super(Resdata3DKW, cls).read_grdecl(fileH, kw, strict, rd_type)
+        kw = super().read_grdecl(fileH, kw, strict, rd_type)
         Resdata3DKW.castFromKW(kw, grid)
         return kw
 
@@ -96,7 +96,7 @@ class Resdata3DKW(ResdataKW):
             else:
                 index = self.grid.get_active_index(ijk=index)
 
-        return super(Resdata3DKW, self).__getitem__(index)
+        return super().__getitem__(index)
 
     def __setitem__(self, index, value):
         """Set the value of at index [g] or [i,j,k].
@@ -120,7 +120,7 @@ class Resdata3DKW(ResdataKW):
             else:
                 index = self.grid.get_active_index(ijk=index)
 
-        return super(Resdata3DKW, self).__setitem__(index, value)
+        return super().__setitem__(index, value)
 
     @classmethod
     def cast_from_kw(cls, kw, grid, default_value=0):
