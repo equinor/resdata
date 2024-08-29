@@ -424,7 +424,7 @@ class FaultBlockTest(ResdataTest):
 
         nb = b1.getNeighbours()
         for b in nb:
-            print("Block:%d" % b.getBlockID())
+            print(f"Block:{b.getBlockID()}")
 
         self.assertTrue(len(nb) == 2)
         self.assertTrue(b3 in nb)

@@ -66,7 +66,7 @@ class ResdataRFT(BaseCClass):
 
     def __repr__(self):
         rs = []
-        rs.append("completed_cells = %d" % len(self))
+        rs.append(f"completed_cells = {len(self)}")
         rs.append(f"date = {self.getDate()}")
         if self.is_RFT():
             rs.append("RFT")
@@ -218,7 +218,7 @@ class ResdataRFTFile(BaseCClass):
                 return rft
             else:
                 raise IndexError(
-                    "Index '%d' must be in range: [0, %d]" % (index, len(self) - 1)
+                    f"Index '{index}' must be in range: [0, {len(self) - 1}]"
                 )
         else:
             raise TypeError("Index must be integer type")
@@ -282,8 +282,7 @@ class ResdataRFTFile(BaseCClass):
         self._free()
 
     def __repr__(self):
-        w = len(self)
-        return self._create_repr("wells = %d" % w)
+        return self._create_repr(f"wells = {len(self)}")
 
 
 monkey_the_camel(ResdataRFT, "getWellName", ResdataRFT.get_well_name)

@@ -109,7 +109,7 @@ class FortIO(BaseCClass):
         elif mode == FortIO.APPEND_MODE:
             c_pointer = self._open_append(file_name, fmt_file, endian_flip_header)
         else:
-            raise UserWarning("Unknown mode: %d" % mode)
+            raise UserWarning(f"Unknown mode: {mode}")
 
         self.__mode = mode
         if not c_pointer:

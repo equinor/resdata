@@ -1633,7 +1633,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         s_time = self.getStartTime()
         e_time = self.getEndTime()
         num_keys = len(self.keys())
-        content = 'name="%s", time=[%s, %s], keys=%d' % (name, s_time, e_time, num_keys)
+        content = f'name="{name}", time=[{s_time}, {e_time}], keys={num_keys}'
         return self._create_repr(content)
 
     def dump_csv_line(self, time, keywords, pfile):

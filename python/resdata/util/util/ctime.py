@@ -128,7 +128,7 @@ class CTime(BaseCValue):
         pass
 
     def __repr__(self):
-        return "time_t value: %d [%s]" % (self.value(), str(self))
+        return f"time_t value: {self.value()} [{self}]"
 
     @property
     def stripped(self):

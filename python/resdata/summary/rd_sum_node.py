@@ -22,4 +22,4 @@ class SummaryNode:
         self.mpl_date = mpl_date
 
     def __repr__(self):
-        return "SummaryNode(days=%d, value=%g)" % (self.days, self.value)
+        return f"SummaryNode(days={self.days}, value={self.value :g})"

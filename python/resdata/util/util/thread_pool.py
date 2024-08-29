@@ -134,8 +134,7 @@ class ThreadPool:
         if self.__verbose:
             running_time = time.time() - self.__start_time
             print(
-                "Running time: %f using a pool size of: %d"
-                % (running_time, self.poolSize())
+                f"Running time: {running_time :f} using a pool size of: {self.poolSize()}"
             )
 
     def hasFailedTasks(self):

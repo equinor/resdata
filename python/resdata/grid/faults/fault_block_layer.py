@@ -67,7 +67,7 @@ class FaultBlockLayer(BaseCClass):
         return self._size()
 
     def __repr__(self):
-        return self._create_repr("size=%d, k=%d" % (len(self), self.get_k()))
+        return self._create_repr(f"size={len(self)}, k={self.get_k()}")
 
     def __getitem__(self, index):
         """
@@ -80,20 +80,18 @@ class FaultBlockLayer(BaseCClass):
             if 0 <= index < len(self):
                 return self._iget_block(index).setParent(self)
             else:
-                raise IndexError("Index:%d out of range: [0,%d)" % (index, len(self)))
+                raise IndexError(f"Index:{index} out of range: [0,{len(self)})")
         elif isinstance(index, tuple):
             i, j = index
-            if 0 <= i < self.grid_ref.getNX() and 0 <= j < self.grid_ref.getNY():
+            if 0 <= i < self.grid_ref.get_nx() and 0 <= j < self.grid_ref.get_ny():
                 geo_layer = self.getGeoLayer()
                 block_id = geo_layer[i, j]
                 if block_id == 0:
-                    raise ValueError(
-                        "No fault block defined for location (%d,%d)" % (i, j)
-                    )
+                    raise ValueError(f"No fault block defined for location ({i},{j})")
                 else:
                     return self.getBlock(block_id)
             else:
-                raise IndexError("Invalid i,j : (%d,%d)" % (i, j))
+                raise IndexError(f"Invalid i,j : ({i},{j})")
         else:
             raise TypeError("Index should be integer type")
 
@@ -107,12 +105,10 @@ class FaultBlockLayer(BaseCClass):
         ok = self._scan_keyword(fault_block_kw)
         if not ok:
             raise ValueError(
-                "The fault block keyword had wrong type/size: type:%s  size:%d  grid_size:%d"
-                % (
-                    fault_block_kw.type_name(),
-                    len(fault_block_kw),
-                    self.grid_ref.getGlobalSize(),
-                )
+                "The fault block keyword had wrong type/size:"
+                f"  type:{fault_block_kw.type_name()}"
+                f"  size:{len(fault_block_kw)}"
+                f"  grid_size:{self.grid_ref.get_global_size()}"
             )
 
     def load_keyword(self, fault_block_kw):
@@ -122,12 +118,10 @@ class FaultBlockLayer(BaseCClass):
         ok = self._load_keyword(fault_block_kw)
         if not ok:
             raise ValueError(
-                "The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d"
-                % (
-                    fault_block_kw.type_name(),
-                    len(fault_block_kw),
-                    self.grid_ref.getGlobalSize(),
-                )
+                "The fault block keyword had wrong type/size:"
+                f"  type:{fault_block_kw.type_name()}"
+                f"  size:{len(fault_block_kw)}"
+                f"  grid_size:{self.grid_ref.get_global_size()}"
             )
 
     def get_block(self, block_id):
@@ -137,13 +131,13 @@ class FaultBlockLayer(BaseCClass):
         if block_id in self:
             return self._get_block(block_id).setParent(self)
         else:
-            raise KeyError("No blocks with ID:%d in this layer" % block_id)
+            raise KeyError(f"No blocks with ID:{block_id} in this layer")
 
     def delete_block(self, block_id):
         if block_id in self:
             self._del_block(block_id)
         else:
-            raise KeyError("No blocks with ID:%d in this layer" % block_id)
+            raise KeyError(f"No blocks with ID:{block_id} in this layer")
 
     def add_block(self, block_id=None):
         if block_id is None:
@@ -209,14 +203,14 @@ class FaultBlockLayer(BaseCClass):
         p0 = polyline[0]
         c0 = self.grid_ref.findCellCornerXY(p0[0], p0[1], self.getK())
         i, j = self.grid_ref.findCellXY(p0[0], p0[1], self.getK())
-        print("%g,%g -> %d,%d   %d" % (p0[0], p0[1], i, j, c0))
+        print(f"{p0[0]:g},{p0[1]:g} -> {i},{j}   {c0}")
         for index in range(1, len(polyline)):
             p1 = polyline[index]
             c1 = self.grid_ref.findCellCornerXY(p1[0], p1[1], self.getK())
             i, j = self.grid_ref.findCellXY(p1[0], p1[1], self.getK())
             layer.addInterpBarrier(c0, c1)
-            print("%g,%g -> %d,%d   %d" % (p1[0], p1[1], i, j, c1))
-            print("Adding barrier %d -> %d" % (c0, c1))
+            print(f"{p1[0]:g},{p1[1]:g} -> {i},{j}   {c1}")
+            print(f"Adding barrier {c0} -> {c1}")
             c0 = c1
 
     def get_geo_layer(self):

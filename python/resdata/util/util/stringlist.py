@@ -100,9 +100,7 @@ class StringList(BaseCClass):
                 index = len(self) + index
 
             if index < 0 or index >= length:
-                raise IndexError(
-                    "index must be in range %d <= %d < %d" % (0, index, len(self))
-                )
+                raise IndexError(f"index must be in range 0 <= {index} < {len(self)}")
             if isinstance(value, bytes):
                 value = value.decode("ascii")
             if isinstance(value, str):
@@ -122,9 +120,7 @@ class StringList(BaseCClass):
             if index < 0:
                 index += length
             if index < 0 or index >= length:
-                raise IndexError(
-                    "index must be in range %d <= %d < %d" % (0, index, len(self))
-                )
+                raise IndexError(f"index must be in range 0 <= {index} < {len(self)}")
             else:
                 return self._iget(index)
         else:
@@ -197,7 +193,7 @@ class StringList(BaseCClass):
         return buffer
 
     def __repr__(self):
-        return "StringList(size = %d) %s" % (len(self), self._ad_str())
+        return f"StringList(size = {len(self)}) {self._ad_str()}"
 
     def empty(self):
         """Returns true if and only if list is empty."""

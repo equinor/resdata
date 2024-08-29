@@ -103,13 +103,8 @@ class Cell:
     def __repr__(self):
         act = "active" if self.active else "inactive"
         pos = "({:.3f}, {:.3f}, {:.3f})".format(*self.coordinate)
-        cnt = "%d, %d, %d, %s, %s, grid=%s" % (
-            self.i,
-            self.j,
-            self.k,
-            act,
-            pos,
-            self._grid.get_name(),
+        cnt = (
+            f"{self.i}, {self.j}, {self.k}, {act}, {pos}, grid={self._grid.get_name()}"
         )
 
         return f"Cell({cnt})"

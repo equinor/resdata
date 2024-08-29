@@ -168,7 +168,7 @@ class BoolVector(VectorTemplate):
             cnt = self._tostr(a)
             cnt += "..."
             cnt += self._tostr(b)
-        return 'BoolVector(size = %d, content = "%s") %s' % (ls, cnt, self._ad_str())
+        return f'BoolVector(size = {ls}, content = "{cnt}") {self._ad_str()}'
 
     @classmethod
     def create_linear(cls, start_value, end_value, num_values):

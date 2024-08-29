@@ -69,6 +69,6 @@ if __name__ == "__main__":
     for key, value in result.items():
         plt.figure(1)
         for index, p in enumerate(value):
-            plt.plot(sim_days, p, label="Region:%s  P%d" % (key, index + 1))
+            plt.plot(sim_days, p, label=f"Region:{key}  P{index + 1}")
         plt.legend()
         plt.show()

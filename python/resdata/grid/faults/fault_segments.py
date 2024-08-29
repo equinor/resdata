@@ -48,7 +48,7 @@ class FaultSegment:
         self.__C2 = C1
 
     def __repr__(self):
-        return "%d -> %d" % (self.__C1, self.__C2)
+        return f"{self.__C1} -> {self.__C2}"
 
 
 class SegmentMap:
@@ -67,10 +67,7 @@ class SegmentMap:
             if count > 0:
                 d = self.__segment_map[C]
                 if len(d) != count:
-                    print(
-                        "CornerPoint:%d  count:%d  len(d):%d map:%s"
-                        % (C, count, len(d), d)
-                    )
+                    print(f"CornerPoint:{C}  count:{count}  len(d):{len(d)} map:{d}")
                 assert len(d) == count
             else:
                 assert self.__segment_map.get(C) is None

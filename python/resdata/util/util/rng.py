@@ -37,7 +37,7 @@ class RandomNumberGenerator(BaseCClass):
         state_size = self.stateSize()
         if len(seed_string) < state_size:
             raise ValueError(
-                "The seed string must be at least %d characters long" % self.stateSize()
+                f"The seed string must be at least {self.stateSize()} characters long"
             )
         self._set_state(seed_string)
 

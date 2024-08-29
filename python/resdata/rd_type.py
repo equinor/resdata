@@ -87,7 +87,7 @@ class ResDataType(BaseCClass):
             if not (0 <= element_size <= 999):
                 raise ValueError(
                     "Expected element_size to be in the range "
-                    + "[0, 999], was: %d" % element_size
+                    + f"[0, 999], was: {element_size}"
                 )
 
     @property

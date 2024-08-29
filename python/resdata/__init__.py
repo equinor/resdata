@@ -46,8 +46,8 @@ from .version import version as __version__
 
 
 def _dlopen_resdata():
-    import ctypes
-    import platform
+    import ctypes  # noqa: PLC0415
+    import platform  # noqa: PLC0415
 
     path = os.path.join(os.path.dirname(__file__), ".libs")
     if platform.system() == "Linux":

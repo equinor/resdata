@@ -31,11 +31,7 @@ class WellSegment(BaseCClass):
         return f"WellSegment({str(self)}) at 0x{self._address():x}"
 
     def __str__(self):
-        return "{Segment ID:%d   BranchID:%d  Length:%g}" % (
-            self.id(),
-            self.branchId(),
-            self.length(),
-        )
+        return f"Segment ID:{self.id()}   BranchID:{self.branchId()}  Length:{self.length() :g}"
 
     def id(self):
         """@rtype: int"""

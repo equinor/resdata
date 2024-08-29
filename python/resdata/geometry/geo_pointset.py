@@ -37,9 +37,7 @@ class GeoPointset(BaseCClass):
             if 0 <= idx < size:
                 return self._iget_z(idx)
             else:
-                raise IndexError(
-                    "Invalid index, must be in [0, %d), was: %d." % (size, key)
-                )
+                raise IndexError(f"Invalid index, must be in [0, {size}), was: {key}.")
         else:
             # TODO implement slicing?
             raise ValueError(f"Index must be int, not {type(key)}.")
@@ -48,7 +46,7 @@ class GeoPointset(BaseCClass):
         return self._get_size()
 
     def __repr__(self):
-        return self._create_repr("len=%d" % len(self))
+        return self._create_repr(f"len={len(self)}")
 
     def free(self):
         self._free()

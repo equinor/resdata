@@ -42,7 +42,7 @@ class WellInfo(BaseCClass):
                 self.addWellFile(rst_file, load_segment_information)
 
     def __repr__(self):
-        return "WellInfo(well_count = %d) at 0x%x" % (len(self), self._address())
+        return f"WellInfo(well_count = {len(self)}) at 0x{self._address() :x}"
 
     def __len__(self):
         """@rtype: int"""
@@ -61,9 +61,7 @@ class WellInfo(BaseCClass):
 
         elif isinstance(item, int):
             if not 0 <= item < len(self):
-                raise IndexError(
-                    "Index must be in range 0 <= %d < %d" % (item, len(self))
-                )
+                raise IndexError(f"Index must be in range 0 <= {item} < {len(self)}")
             well_name = self._iget_well_name(item)
 
         return self._get_ts(well_name).setParent(self)

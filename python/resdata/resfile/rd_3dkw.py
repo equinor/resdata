@@ -114,9 +114,7 @@ class Resdata3DKW(ResdataKW):
             if self.global_active:
                 index = global_index
             elif not self.grid.active(global_index=global_index):
-                raise ValueError(
-                    "Tried to assign value to inactive cell: (%d,%d,%d)" % index
-                )
+                raise ValueError(f"Tried to assign value to inactive cell: {index}")
             else:
                 index = self.grid.get_active_index(ijk=index)
 

@@ -108,10 +108,9 @@ class GeoRegion(BaseCClass):
         return len(self._get_index_list())
 
     def __repr__(self):
-        ls = len(self)
         il = repr(self.getActiveList())
         pres = "preselected" if self._preselect else "not preselected"
-        return self._create_repr("size=%d, active_list=<%s>, %s" % (ls, il, pres))
+        return self._create_repr(f"size={len(self)}, active_list=<{il}>, {pres}")
 
     def free(self):
         self._free()

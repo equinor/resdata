@@ -85,9 +85,7 @@ class CPolyline(BaseCClass):
 
             return (x.value, y.value)
         else:
-            raise IndexError(
-                "Invalid index:%d valid range: [0,%d)" % (index, len(self))
-            )
+            raise IndexError(f"Invalid index:{index} valid range: [0,{len(self)})")
 
     def segmentIntersects(self, p1, p2):
         return self._segment_intersects(p1[0], p1[1], p2[0], p2[1])

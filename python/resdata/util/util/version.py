@@ -32,7 +32,7 @@ class Version:
         return self.is_devel
 
     def versionString(self):
-        return "%d.%d.%s" % (self.major, self.minor, self.micro)
+        return f"{self.major}.{self.minor}.{self.micro}"
 
     def versionTuple(self):
         return self.major, self.minor, self.micro

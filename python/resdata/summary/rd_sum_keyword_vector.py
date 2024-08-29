@@ -50,7 +50,7 @@ class SummaryKeyWordVector(BaseCClass):
         self._add_multiple(keyword_pattern)
 
     def __repr__(self):
-        return self._create_repr("len=%d" % len(self))
+        return self._create_repr(f"len={len(self)}")
 
     def copy(self, rd_sum):
         return self._alloc_copy(rd_sum)

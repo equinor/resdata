@@ -295,8 +295,7 @@ class Grid(BaseCClass):
 
             if not len(actnum) == dims[0] * dims[1] * dims[2]:
                 raise ValueError(
-                    "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
-                    % (len(actnum), dims[0] * dims[1] * dims[2])
+                    f"ACTNUM size mismatch: len(ACTNUM):{len(actnum)}  Expected:{dims[0] * dims[1] * dims[2]}"
                 )
             rd_grid = cls._alloc_rectangular(
                 dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], actnum.getDataPtr()
@@ -336,11 +335,11 @@ class Grid(BaseCClass):
         name = self._nicename()
         if name:
             name = f'"{name}", '
-        g_size = self.getGlobalSize()
-        a_size = self.getNumActive()
-        xyz_s = "%dx%dx%d" % (self.getNX(), self.getNY(), self.getNZ())
+        g_size = self.get_global_size()
+        a_size = self.get_num_active()
+        xyz_s = f"{self.get_nx()}x{self.get_ny()}x{self.get_nz()}"
         return self._create_repr(
-            "%s%s, global_size=%d, active_size=%d" % (name, xyz_s, g_size, a_size)
+            f"{name}{xyz_s}, global_size={g_size}, active_size={a_size}"
         )
 
     def __len__(self):
@@ -459,7 +458,7 @@ class Grid(BaseCClass):
             return (p0, p1, p2, p3)
         else:
             raise ValueError(
-                "Invalid layer value:%d  Valid range: [0,%d]" % (layer, self.getNZ())
+                f"Invalid layer value:{layer}  Valid range: [0,{self.get_nz()}]"
             )
 
     def get_name(self):
@@ -544,19 +543,18 @@ class Grid(BaseCClass):
             i, j, k = ijk
 
             if not 0 <= i < nx:
-                raise IndexError("Invalid value i:%d  Range: [%d,%d)" % (i, 0, nx))
+                raise IndexError(f"Invalid value i:{i}  Range: [0,{nx})")
 
             if not 0 <= j < ny:
-                raise IndexError("Invalid value j:%d  Range: [%d,%d)" % (j, 0, ny))
+                raise IndexError(f"Invalid value j:{j}  Range: [0,{ny})")
 
             if not 0 <= k < nz:
-                raise IndexError("Invalid value k:%d  Range: [%d,%d)" % (k, 0, nz))
+                raise IndexError(f"Invalid value k:{k}  Range: [0,{nz})")
 
             global_index = self._get_global_index3(i, j, k)
         elif not 0 <= global_index < self.get_global_size():
             raise IndexError(
-                "Invalid value global_index:%d  Range: [%d,%d)"
-                % (global_index, 0, self.getGlobalSize())
+                f"Invalid value global_index:{global_index}  Range: [0,{self.get_global_size()})"
             )
         return global_index
 
@@ -722,20 +720,14 @@ class Grid(BaseCClass):
            p3 = grid.getNodePos(grid.get_nx(), grid.get_ny(), 0)
 
         """
-        if not 0 <= i <= self.getNX():
-            raise IndexError(
-                "Invalid I value:%d - valid range: [0,%d]" % (i, self.getNX())
-            )
+        if not 0 <= i <= self.get_nx():
+            raise IndexError(f"Invalid I value:{i} - valid range: [0,{self.get_nx()}]")
 
-        if not 0 <= j <= self.getNY():
-            raise IndexError(
-                "Invalid J value:%d - valid range: [0,%d]" % (j, self.getNY())
-            )
+        if not 0 <= j <= self.get_ny():
+            raise IndexError(f"Invalid J value:{j} - valid range: [0,{self.get_ny()}]")
 
-        if not 0 <= k <= self.getNZ():
-            raise IndexError(
-                "Invalid K value:%d - valid range: [0,%d]" % (k, self.getNZ())
-            )
+        if not 0 <= k <= self.get_nz():
+            raise IndexError(f"Invalid K value:{k} - valid range: [0,{self.get_nz()}]")
 
         x = ctypes.c_double()
         y = ctypes.c_double()
@@ -793,9 +785,9 @@ class Grid(BaseCClass):
             corner += 4
 
         if self._ijk_valid(i, j, k):
-            return self.getCellCorner(corner, global_index=i + j * nx + k * nx * ny)
+            return self.get_cell_corner(corner, global_index=i + j * nx + k * nx * ny)
         else:
-            raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i, j, k))
+            raise IndexError(f"Invalid coordinates: ({i}, {j}, {k}) ")
 
     def get_layer_xyz(self, xy_corner, layer):
         nx = self.getNX()
@@ -846,7 +838,7 @@ class Grid(BaseCClass):
             a_idx = self.get_active_index(ijk=(i, j, k))
             if a_idx >= 0:
                 return self._get_top1A(a_idx)
-        raise ValueError("No active cell in column (%d,%d)" % (i, j))
+        raise ValueError(f"No active cell in column ({i}, {j})")
 
     def bottom(self, i, j):
         """
@@ -926,10 +918,10 @@ class Grid(BaseCClass):
                 return (i.value, j.value)
             else:
                 raise ValueError(
-                    "Could not find the point:(%g,%g) in layer:%d" % (x, y, k)
+                    f"Could not find the point:({x :g}, {y :g}) in layer:{k}"
                 )
         else:
-            raise IndexError("Invalid layer value:%d" % k)
+            raise IndexError(f"Invalid layer value:{k}")
 
     def find_cell_corner_xy(self, x, y, k):
         """Will find the corner nr of corner closest to utm coordinates x,y.
@@ -1278,13 +1270,7 @@ class Grid(BaseCClass):
             self._fwrite_grdecl(rd_kw, special_header, cfile, default_value)
         else:
             raise ValueError(
-                "Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d"
-                % (
-                    rd_kw.getName(),
-                    len(rd_kw),
-                    self.getNumActive(),
-                    self.getGlobalSize(),
-                )
+                f"Keyword: {rd_kw.get_name()} has invalid size({len(rd_kw)}), must be either nactive:{self.get_num_active()}  or nx*ny*nz:{self.get_global_size()}"
             )
 
     def exportACTNUM(self):
@@ -1301,8 +1287,7 @@ class Grid(BaseCClass):
             return kw_copy
         else:
             raise ValueError(
-                "The input keyword must have nx*n*nz or nactive elements. Size:%d invalid"
-                % len(kw)
+                f"The input keyword must have nx*n*nz or nactive elements. Size:{len(kw)} invalid"
             )
 
     def global_kw_copy(self, kw, default_value):
@@ -1315,8 +1300,7 @@ class Grid(BaseCClass):
             return kw_copy
         else:
             raise ValueError(
-                "The input keyword must have nx*n*nz or nactive elements. Size:%d invalid"
-                % len(kw)
+                f"The input keyword must have nx*n*nz or nactive elements. Size:{len(kw)} invalid"
             )
 
     def export_ACTNUM_kw(self):

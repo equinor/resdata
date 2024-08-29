@@ -566,7 +566,7 @@ class GridTest(ResdataTest):
                 self.assertEqual(
                     expected,
                     hits,
-                    "Expected %d for (%g,%g,%g), got %d" % (expected, x, y, z, hits),
+                    f"Expected {expected} for ({x :g},{y :g},{z :g}), got {hits}",
                 )
 
     def test_cell_corner_containment(self):

@@ -101,7 +101,7 @@ class VectorTemplate(BaseCClass):
         if shift < 0:
             raise ValueError("The shift must be positive")
         if shift > len(self):
-            raise ValueError("The shift is too large %d > %d" % (shift, len(self)))
+            raise ValueError(f"The shift is too large {len(self)} < {shift}")
         self._lshift(shift)
         return self
 
@@ -205,9 +205,7 @@ class VectorTemplate(BaseCClass):
             if 0 <= idx < length:
                 return self._iget(idx)
             else:
-                raise IndexError(
-                    "Index must be in range %d <= %d < %d." % (0, index, length)
-                )
+                raise IndexError(f"Index must be in range 0 <= {index} < {length}.")
         elif isinstance(index, slice):
             return self.strided_copy(index)
         else:
@@ -258,8 +256,7 @@ class VectorTemplate(BaseCClass):
                 self._inplace_add(delta)
             else:
                 raise ValueError(
-                    "Incompatible sizes for add self:%d  other:%d"
-                    % (len(self), len(delta))
+                    f"Incompatible sizes for add self:{len(self)}  other:{len(delta)}"
                 )
         elif isinstance(delta, (int, float)):
             if not add:
@@ -329,8 +326,7 @@ class VectorTemplate(BaseCClass):
                 self._inplace_mul(factor)
             else:
                 raise ValueError(
-                    "Incompatible sizes for mul self:%d  other:%d"
-                    % (len(self), len(factor))
+                    f"Incompatible sizes for mul self:{len(self)}  other:{len(factor)}"
                 )
         elif isinstance(factor, (int, float)):
             self._scale(factor)
@@ -485,7 +481,7 @@ class VectorTemplate(BaseCClass):
         self._free()
 
     def __repr__(self):
-        return self._create_repr("size = %d" % len(self))
+        return self._create_repr(f"size = {len(self)}")
 
     def permute(self, permutation_vector):
         """

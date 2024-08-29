@@ -76,8 +76,7 @@ class GridGenerator:
 
             if not len(actnum) == dims[0] * dims[1] * dims[2]:
                 raise ValueError(
-                    "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
-                    % (len(actnum), dims[0] * dims[1] * dims[2])
+                    f"ACTNUM size mismatch: len(ACTNUM):{len(actnum)}  Expected:{dims[0] * dims[1] * dims[2]}"
                 )
 
             rd_grid = cls._alloc_rectangular(
@@ -371,7 +370,7 @@ class GridGenerator:
 
         if len(zcorn) != 8 * nx * ny * nz:
             raise AssertionError(
-                "Expected len(zcorn) to be %d, was %d" % (8 * nx * ny * nz, len(zcorn))
+                f"Expected len(zcorn) to be {8 * nx * ny * nz}, was {len(zcorn)}"
             )
 
         plane_size = 4 * nx * ny
@@ -459,8 +458,7 @@ class GridGenerator:
 
         if len(coord) != 6 * (nx + 1) * (ny + 1):
             raise AssertionError(
-                "Expected len(coord) to be %d, was %d"
-                % (6 * (nx + 1) * (ny + 1), len(coord))
+                f"Expected len(coord) to be {6 * (nx + 1) * (ny + 1)}, was {len(coord)}"
             )
 
         if not negative_values and min(coord) < 0:
@@ -488,8 +486,7 @@ class GridGenerator:
 
         if len(actnum) != nx * ny * nz:
             raise AssertionError(
-                "Expected the length of ACTNUM to be %d, was %s."
-                % (nx * ny * nz, len(actnum))
+                f"Expected the length of ACTNUM to be {nx * ny* nz}, was {len(actnum)}."
             )
 
         if set(actnum) - {0, 1}:
@@ -718,7 +715,7 @@ class GridGenerator:
         if len(ijk_bounds) != 3:
             raise ValueError(
                 "Expected ijk_bounds to contain three intervals, "
-                + "contained only %d" % len(ijk_bounds)
+                + f"contained only {len(ijk_bounds)}"
             )
 
         for n, bound in zip(dims, ijk_bounds):
@@ -737,7 +734,8 @@ class GridGenerator:
                 raise ValueError(
                     "Expected bounds to have the following format: "
                     + "0 <= lower bound <= upper_bound < ni, "
-                    + "was %d <=? %d <=? %d <? %d." % (0, bound[0], bound[1], n)
+                    + f"was 0 <=? {bound[0]} <=? {bound[1]} <? {n}."
+                    % (0, bound[0], bound[1], n)
                 )
 
         return ijk_bounds

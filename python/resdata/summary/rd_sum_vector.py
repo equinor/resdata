@@ -42,10 +42,8 @@ class SummaryVector:
         return f"<Summary vector: {self.key}>"
 
     def __repr__(self):
-        return "SummaryVector(key = %s, size = %d, unit = %s)" % (
-            self.key,
-            len(self),
-            self.unit,
+        return (
+            f"SummaryVector(key = {self.key}, size = {len(self)}, unit = {self.unit})"
         )
 
     @property
@@ -157,7 +155,7 @@ class SummaryVector:
             if index < 0:
                 index += len(vals)
             if index < 0 or index > length:
-                raise KeyError("Invalid index:%d out of range [0:%d)" % (index, length))
+                raise KeyError(f"Invalid index:{index} out of range [0:{length})")
             else:
                 return self.__iget(index)
         elif isinstance(index, slice):

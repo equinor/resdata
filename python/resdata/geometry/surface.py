@@ -192,9 +192,7 @@ class Surface(BaseCClass):
     def __setitem__(self, index, value):
         if isinstance(index, int):
             if index >= len(self):
-                raise IndexError(
-                    "Invalid index:%d - valid range [0,%d)" % (index, len(self))
-                )
+                raise IndexError(f"Invalid index:{index} - valid range [0,{len(self)})")
             if index < 0:
                 index += len(self)
 
@@ -211,9 +209,7 @@ class Surface(BaseCClass):
             if 0 <= idx < ls:
                 return self._iget_zvalue(idx)
             else:
-                raise IndexError(
-                    "Invalid index:%d - valid range [0,%d)" % (index, len(self))
-                )
+                raise IndexError(f"Invalid index:{index} - valid range [0,{len(self)})")
         else:
             raise TypeError(f"Invalid index type:{index} - must be integer")
 
@@ -224,9 +220,7 @@ class Surface(BaseCClass):
             if idx < 0:
                 idx += len(self)
             if not 0 <= idx < len(self):
-                raise IndexError(
-                    "Invalid index:%d - valid range [0,%d)" % (index, len(self))
-                )
+                raise IndexError(f"Invalid index:{index} - valid range [0,{len(self)})")
             index = idx
         else:
             raise TypeError(f"Invalid index type:{index} - must be integer")
@@ -276,5 +270,5 @@ class Surface(BaseCClass):
         self._free()
 
     def __repr__(self):
-        cnt = "nx=%d, ny=%d" % (self.getNX(), self.getNY())
+        cnt = f"nx={self.getNX()}, ny={self.getNY()}"
         return self._create_repr(cnt)

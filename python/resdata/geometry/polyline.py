@@ -1,4 +1,3 @@
-
 from .geometry_tools import GeometryTools
 
 
@@ -56,7 +55,7 @@ class Polyline:
 
         if not 0 <= index < len(self):
             raise IndexError(
-                "Index:%d invalid must be in range: [0, %d]" % (index, (len(self) - 1))
+                f"Index:{index} invalid must be in range: [0, {len(self) - 1}]"
             )
         return self.__points[index]
 

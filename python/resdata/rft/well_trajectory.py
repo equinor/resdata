@@ -62,7 +62,7 @@ class WellTrajectory:
         return self._points[index]
 
     def __repr__(self):
-        return "WellTrajectory(len=%d)" % len(self)
+        return f"WellTrajectory(len={len(self)})"
 
     def __str__(self):
         return f"WellTrajectory({str(self._points)})"

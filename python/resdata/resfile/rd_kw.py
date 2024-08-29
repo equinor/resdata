@@ -454,12 +454,10 @@ class ResdataKW(BaseCClass):
         method will raise IndexError.
         """
         if offset < 0 or offset >= len(self):
-            raise IndexError(
-                "Offset:%d invalid - valid range:[0,%d)" % (offset, len(self))
-            )
+            raise IndexError(f"Offset:{offset} invalid - valid range:[0,{len(self)})")
 
         if offset + count > len(self):
-            raise IndexError("Invalid value of (offset + count):%d" % (offset + count))
+            raise IndexError(f"Invalid value of (offset + count):{offset + count}")
 
         return self._sub_copy(new_header, offset, count)
 
@@ -1031,7 +1029,7 @@ class ResdataKW(BaseCClass):
         the elements. The implementation of the builtin method
         __str__() is based on this method.
         """
-        s = "%-8s %8d %-4s\n" % (self.get_name(), len(self), self.type_name())
+        s = f"{self.get_name():-8s} {len(self):8d} {self.type_name():-4s}\n"
         lines = len(self) // width
         if not fmt:
             fmt = self.str_fmt + " "
@@ -1179,7 +1177,7 @@ class ResdataKW(BaseCClass):
             raise ValueError("Keywords must have equal size")
 
         if offset >= len(self):
-            raise IndexError("Offset:%d invalid - size:%d" % (offset, len(self)))
+            raise IndexError(f"Offset:{offset} invalid - size:{len(self)}")
 
         if self.data_type != other.data_type:
             raise TypeError("The two keywords have different type")

@@ -237,9 +237,7 @@ class ResdataFile(BaseCClass):
             idx += ls
         if 0 <= idx < ls:
             return self.global_view.blockView(kw, idx)
-        raise IndexError(
-            "Index out of range, must be in [0, %d), was %d." % (ls, kw_index)
-        )
+        raise IndexError(f"Index out of range, must be in [0, {ls}), was {kw_index}.")
 
     def block_view2(self, start_kw, stop_kw, start_index):
         return self.global_view.blockView2(start_kw, stop_kw, start_index)
@@ -286,7 +284,7 @@ class ResdataFile(BaseCClass):
             if 0 <= idx < ls:
                 return self.global_view[idx]
             else:
-                raise IndexError("Index must be in [0, %d), was: %d." % (ls, index))
+                raise IndexError(f"Index must be in [0, {ls}), was: {index}.")
         return self.global_view[index]
 
     def iget_kw(self, index, copy=False):

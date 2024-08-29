@@ -35,7 +35,7 @@ class TestRun:
                         self.name = self.name[1:]
                     else:
                         break
-            self.name += "/%08d" % random.randint(0, 100000000)
+            self.name += f"/{random.randint(0, 100000000):08d}"
         else:
             raise OSError(f"No such config file: {config_file}")
 

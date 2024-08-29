@@ -136,7 +136,7 @@ class ExtendedTestCase(TestCase):
 
         for identifier, value in enum_values:
             if verbose:
-                print("%s = %d" % (identifier, value))
+                print(f"{identifier} = {value}")
 
             self.assertTrue(
                 identifier in enum_class.__dict__,

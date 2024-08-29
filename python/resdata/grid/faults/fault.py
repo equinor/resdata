@@ -208,19 +208,19 @@ class Fault:
             raise ValueError("Invalid K1 K2 indices")
 
         if I1 < 0 or self.nx <= I1:
-            raise ValueError("Invalid I1:%d" % I1)
+            raise ValueError(f"Invalid I1:{I1}")
         if I2 < 0 or self.nx <= I2:
-            raise ValueError("Invalid I2:%d" % I2)
+            raise ValueError(f"Invalid I2:{I2}")
 
         if J1 < 0 or self.ny <= J1:
-            raise ValueError("Invalid J1:%d" % J1)
+            raise ValueError(f"Invalid J1:{J1}")
         if J2 < 0 or self.ny <= J2:
-            raise ValueError("Invalid J2:%d" % J2)
+            raise ValueError(f"Invalid J2:{J2}")
 
         if K1 < 0 or self.nz <= K1:
-            raise ValueError("Invalid K1:%d" % K1)
+            raise ValueError(f"Invalid K1:{K1}")
         if K2 < 0 or self.nz <= K2:
-            raise ValueError("Invalid K2:%d" % K2)
+            raise ValueError(f"Invalid K2:{K2}")
 
         if face in ["X", "I"] and I1 != I2:
             raise ValueError(f"For face:{face} we must have I1 == I2")
@@ -360,8 +360,8 @@ class Fault:
             return extension
 
         raise ValueError(
-            "The fault %s can not be extended to intersect with polyline:%s in layer:%d"
-            % (self.getName(), polyline.getName(), k + 1)
+            f"The fault {self.get_name()} can not be extended to intersect with "
+            f"polyline:{polyline.get_name()} in layer:{k+1}"
         )
 
     def intersects_polyline(self, polyline, k):

@@ -18,7 +18,7 @@ class FaultBlockCell:
         self.z = z
 
     def __str__(self):
-        return "(%d,%d)" % (self.i, self.j)
+        return f"({self.i}, {self.j})"
 
 
 class FaultBlock(BaseCClass):
@@ -79,12 +79,12 @@ class FaultBlock(BaseCClass):
                     i.value, j.value, k.value, x.value, y.value, z.value
                 )
             else:
-                raise IndexError("Index:%d out of range: [0,%d)" % (index, len(self)))
+                raise IndexError(f"Index:{index} out of range: [0,{len(self)})")
         else:
-            raise TypeError("Index:%s wrong type - integer expected")
+            raise TypeError(f"Index:{index !s} wrong type - integer expected")
 
     def __str__(self):
-        return "Block ID: %d" % self.getBlockID()
+        return f"Block ID: {self.get_block_id()}"
 
     def __len__(self):
         return self._get_size()

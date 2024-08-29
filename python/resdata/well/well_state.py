@@ -142,9 +142,7 @@ class WellState(BaseCClass):
             seg_idx += len(self)
 
         if not 0 <= seg_idx < self.numSegments():
-            raise IndexError(
-                "Invalid index:%d - valid range [0,%d)" % (seg_idx, len(self))
-            )
+            raise IndexError(f"Invalid index:{seg_idx} - valid range [0,{len(self)})")
 
         segment_collection = self._get_segment_collection()
         return self._segment_collection_iget(segment_collection, seg_idx).setParent(

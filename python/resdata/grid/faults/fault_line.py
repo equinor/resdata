@@ -31,11 +31,10 @@ class FaultLine:
             for next_segment in self.__segment_list[1:]:
                 if current.getC2() != next_segment.getC1():
                     sys.stdout.write(
-                        "Current:   %d ---- %d \n" % (current.getC1(), current.getC2())
+                        f"Current:   {current.getC1()} ---- {current.getC2()} \n"
                     )
                     sys.stdout.write(
-                        "Next   :   %d ---- %d \n"
-                        % (next_segment.getC1(), next_segment.getC2())
+                        f"Next   :   {next_segment.getC1()} ---- {next_segment.getC2()} \n"
                     )
                     assert current.getC2() == next_segment.getC1()
                 current = next_segment
@@ -200,8 +199,7 @@ class FaultLine:
             (J1, I1) = divmod(C1, self.__grid.get_nx() + 1)
             (J2, I2) = divmod(C2, self.__grid.get_nx() + 1)
             print(
-                "[Corner:%5d IJ:(%3d,%d)] -> [Corner:%5d IJ:(%3d,%d)]"
-                % (C1, I1, J1, C2, I2, J2)
+                f"[Corner:{C1:5d} IJ:({I1:3d},{J1:d})] -> [Corner:{C2:5d} IJ:({I2:3d},{J2:d})]"
             )
 
 

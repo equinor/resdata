@@ -565,7 +565,7 @@ class KWTest(ResdataTest):
                 permx.assign(random.random())
                 poro.assign(random.random())
 
-                with openFortIO("TEST%d.INIT" % i, FortIO.WRITE_MODE) as f:
+                with openFortIO(f"TEST{i}.INIT", FortIO.WRITE_MODE) as f:
                     permx.fwrite(f)
                     poro.fwrite(f)
                     porv.fwrite(f)
@@ -577,7 +577,7 @@ class KWTest(ResdataTest):
 
             count = ResdataKW("COUNT", global_size, ResDataType.RD_INT)
             for i in range(N):
-                f = ResdataFile("TEST%d.INIT" % i)
+                f = ResdataFile(f"TEST{i}.INIT")
 
                 porv = f["PORV"][0]
                 permx = f["PERMX"][0]

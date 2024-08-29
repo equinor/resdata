@@ -30,7 +30,7 @@ class WellTimeLine(BaseCClass):
             index += len(self)
 
         if not 0 <= index < len(self):
-            raise IndexError("Index must be in range 0 <= %d < %d" % (index, len(self)))
+            raise IndexError(f"Index must be in range 0 <= {index} < {len(self)}")
 
         return self._iget(index).setParent(self)
 
@@ -38,7 +38,5 @@ class WellTimeLine(BaseCClass):
         pass
 
     def __repr__(self):
-        n = self.getName()
-        l = len(self)
-        cnt = "name = %s, size = %d" % (n, l)
+        cnt = f"name = {self.getName()}, size = {len(self)}"
         return self._create_repr(cnt)

@@ -2,7 +2,6 @@
 Create a polygon
 """
 
-
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
 from resdata.geometry import CPolyline
@@ -61,7 +60,7 @@ class CPolylineCollection(BaseCClass):
                 return self._iget(index).setParent(self)
             else:
                 raise IndexError(
-                    "Invalid index:%d - valid range: [0,%d)" % (index, len(self))
+                    f"Invalid index:{index} - valid range: [0,{len(self)})"
                 )
         elif isinstance(index, str):
             if index in self:

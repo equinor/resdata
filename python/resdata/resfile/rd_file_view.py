@@ -40,14 +40,14 @@ class ResdataFileView(BaseCClass):
         return self._iget_kw(index).setParent(parent=self)
 
     def __repr__(self):
-        return "ResdataFileView(size=%d) %s" % (len(self), self._ad_str())
+        return f"ResdataFileView(size={len(self)}) {self._ad_str()}"
 
     def iget_named_kw(self, kw_name, index):
         if not kw_name in self:
             raise KeyError(f"No such keyword: {kw_name}")
 
         if index >= self.numKeywords(kw_name):
-            raise IndexError("Too large index: %d" % index)
+            raise IndexError(f"Too large index: {index}")
 
         return self._iget_named_kw(kw_name, index).setParent(parent=self)
 
@@ -87,7 +87,7 @@ class ResdataFileView(BaseCClass):
             if 0 <= idx < ls:
                 return self.__iget(idx)
             else:
-                raise IndexError("Index must be in [0, %d), was: %d." % (ls, index))
+                raise IndexError(f"Index must be in [0, {ls}), was: {index}.")
 
         if isinstance(index, slice):
             indices = index.indices(len(self))
@@ -135,9 +135,7 @@ class ResdataFileView(BaseCClass):
             if idx < 0:
                 idx += ls
             if not (0 <= idx < ls):
-                raise IndexError(
-                    "Index must be in [0, %d), was: %d." % (ls, start_index)
-                )
+                raise IndexError(f"Index must be in [0, {ls}), was: {start_index}.")
 
         if stop_kw and not stop_kw in self:
             raise KeyError(f"The keyword:{stop_kw} is not in file")
@@ -157,7 +155,7 @@ class ResdataFileView(BaseCClass):
             idx += num
 
         if not (0 <= idx < num):
-            raise IndexError("Index must be in [0, %d), was: %d." % (num, kw_index))
+            raise IndexError(f"Index must be in [0, {num}), was: {kw_index}.")
 
         view = self._create_block_view(kw, kw_index)
         view.setParent(parent=self)
