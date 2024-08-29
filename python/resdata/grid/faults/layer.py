@@ -1,4 +1,3 @@
-
 from cwrap import BaseCClass
 from resdata.util.util import monkey_the_camel
 from resdata.util.util import IntVector
@@ -52,11 +51,11 @@ class Layer(BaseCClass):
             raise ValueError("Invalid input - no Layer object created")
 
     def _assert_ij(self, i, j):
-        if i < 0 or i >= self.getNX():
-            raise ValueError("Invalid layer i:%d" % i)
+        if i < 0 or i >= self.get_nx():
+            raise ValueError(f"Invalid layer i:{i}")
 
-        if j < 0 or j >= self.getNY():
-            raise ValueError("Invalid layer j:%d" % j)
+        if j < 0 or j >= self.get_ny():
+            raise ValueError(f"Invalid layer j:{j}")
 
     def __unpack_index(self, index):
         try:
@@ -168,7 +167,7 @@ class Layer(BaseCClass):
             if index < num_lines - 1:
                 next_line = fault_layer[index + 1]
                 next_segment = next_line[0]
-                next_c1, next_c2 = next_segment.getCorners()
+                next_c1, _ = next_segment.getCorners()
 
                 if link_segments:
                     self.addInterpBarrier(c2, next_c1)
@@ -177,8 +176,8 @@ class Layer(BaseCClass):
         if len(ij_list) < 2:
             raise ValueError("Must have at least two (i,j) points")
 
-        nx = self.getNX()
-        ny = self.getNY()
+        nx = self.get_nx()
+        ny = self.get_ny()
         p1 = ij_list[0]
         i1, j1 = p1
         for p2 in ij_list[1:]:

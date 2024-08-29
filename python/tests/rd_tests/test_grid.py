@@ -595,7 +595,7 @@ class GridTest(ResdataTest):
         for x, y, z in itertools.product(range(d // 2, n * d, d), repeat=3):
             for axis, direction in itertools.product(range(3), [-1, 1]):
                 p = [x, y, z]
-                p[axis] = p[axis] + direction * d / 2
+                p[axis] += direction * d / 2
                 self.assertEqual(
                     1,
                     [

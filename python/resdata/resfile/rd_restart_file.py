@@ -68,7 +68,7 @@ class ResdataRestartFile(Resdata3DFile):
         'nactive' or 'nx*ny*nz' elements.
         """
 
-        file_type, report_step, fmt_file = ResdataFile.getFileType(filename)
+        file_type, report_step, _ = ResdataFile.getFileType(filename)
         if not file_type in [
             FileType.RESTART,
             FileType.UNIFIED_RESTART,

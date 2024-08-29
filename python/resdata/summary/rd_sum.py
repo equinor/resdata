@@ -592,7 +592,7 @@ class Summary(BaseCClass):
               2010-04-01    672.7      620.4     78.7
               ....
         """
-        from resdata.summary import SummaryKeyWordVector
+        from resdata.summary import SummaryKeyWordVector  # noqa: PLC0415
 
         if column_keys is None:
             keywords = SummaryKeyWordVector(self, add_keywords=True)
@@ -1681,7 +1681,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             raise ValueError(f"Failed to create new resampled case:{new_case_name}")
 
         return new_case
-
 
 
 Summary._dump_csv_line = ResdataPrototype(

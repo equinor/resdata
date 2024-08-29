@@ -66,9 +66,9 @@ if __name__ == "__main__":
         avg_pressure(p, sw, pv, ResdataRegion(grid, True), "field", result)
         sim_days.append(header.get_sim_days())
 
-    for key in result:
+    for key, value in result.items():
         plt.figure(1)
-        for index, p in enumerate(result[key]):
+        for index, p in enumerate(value):
             plt.plot(sim_days, p, label="Region:%s  P%d" % (key, index + 1))
         plt.legend()
         plt.show()

@@ -4,7 +4,7 @@ from resdata.resfile import Resdata3DFile, ResdataFile
 
 class ResdataInitFile(Resdata3DFile):
     def __init__(self, grid, filename, flags=FileMode.DEFAULT):
-        file_type, report_step, fmt_file = ResdataFile.getFileType(filename)
+        file_type, _, _ = ResdataFile.getFileType(filename)
         if file_type == FileType.INIT:
             super().__init__(grid, filename, flags)
         else:

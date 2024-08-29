@@ -121,7 +121,7 @@ class ResdataUtil:
         """
         Will inspect an ECLIPSE filename and return an integer type flag.
         """
-        file_type, fmt, step = ResdataUtil.inspectExtension(filename)
+        file_type, _, _ = ResdataUtil.inspectExtension(filename)
         return file_type
 
     @staticmethod

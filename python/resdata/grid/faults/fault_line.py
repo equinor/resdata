@@ -71,7 +71,7 @@ class FaultLine:
 
     def __init_ij_polyline(self):
         pl = []
-        nx = self.__grid.getNX()
+        nx = self.__grid.get_nx()
         for segment in self:
             corner = segment.getC1()
             i = corner % (nx + 1)
@@ -88,8 +88,8 @@ class FaultLine:
 
     def __init_polyline(self):
         pl = CPolyline()
-        for i, j in self.getIJPolyline():
-            x, y, z = self.__grid.getNodeXYZ(i, j, self.__k)
+        for i, j in self.get_ij_polyline():
+            x, y, _ = self.__grid.getNodeXYZ(i, j, self.__k)
             pl.addPoint(x, y)
         self.__polyline = pl
 
@@ -162,8 +162,8 @@ class FaultLine:
             (J1, I1) = divmod(C1, self.__grid.getNX() + 1)
             (J2, I2) = divmod(C2, self.__grid.getNX() + 1)
 
-            (x1, y1, z) = self.__grid.getNodePos(I1, J1, self.__k)
-            (x2, y2, z) = self.__grid.getNodePos(I2, J2, self.__k)
+            (x1, y1, _) = self.__grid.getNodePos(I1, J1, self.__k)
+            (x2, y2, _) = self.__grid.getNodePos(I2, J2, self.__k)
 
             xlist.append(x1)
             xlist.append(x2)
@@ -197,8 +197,8 @@ class FaultLine:
         for segment in self:
             C1 = segment.getC1()
             C2 = segment.getC2()
-            (J1, I1) = divmod(C1, self.__grid.getNX() + 1)
-            (J2, I2) = divmod(C2, self.__grid.getNX() + 1)
+            (J1, I1) = divmod(C1, self.__grid.get_nx() + 1)
+            (J2, I2) = divmod(C2, self.__grid.get_nx() + 1)
             print(
                 "[Corner:%5d IJ:(%3d,%d)] -> [Corner:%5d IJ:(%3d,%d)]"
                 % (C1, I1, J1, C2, I2, J2)

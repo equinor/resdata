@@ -33,7 +33,6 @@ from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
 from resdata.util.util import monkey_the_camel
 
 
-
 def dump_type_deprecation_warning():
     warnings.warn(
         "ResdataTypeEnum is deprecated. You should instead provide an ResDataType",
@@ -317,7 +316,7 @@ class ResdataKW(BaseCClass):
             )
 
         if rd_type is None:
-            if cls.int_kw_set.__contains__(kw):
+            if kw in cls.int_kw_set:
                 rd_type = ResDataType.RD_INT
             else:
                 rd_type = ResDataType.RD_FLOAT
@@ -773,7 +772,8 @@ class ResdataKW(BaseCClass):
         if mask is not None:
             mask.iadd_kw(self, other, force_active)
         else:
-            return self.__iadd__(other)
+            self += other
+        return self
 
     def sub(self, other, mask=None, force_active=False):
         """
@@ -783,7 +783,8 @@ class ResdataKW(BaseCClass):
         if mask is not None:
             mask.isub_kw(self, other, force_active)
         else:
-            return self.__isub__(other)
+            self -= other
+        return self
 
     def mul(self, other, mask=None, force_active=False):
         """
@@ -793,7 +794,8 @@ class ResdataKW(BaseCClass):
         if mask is not None:
             mask.imul_kw(self, other, force_active)
         else:
-            return self.__imul__(other)
+            self *= other
+        return self
 
     def div(self, other, mask=None, force_active=False):
         """

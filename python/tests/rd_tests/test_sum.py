@@ -679,7 +679,7 @@ class SumTest(ResdataTest):
         """
         Test resampling of summary with extrapolate option of lower and upper boundaries enabled
         """
-        from resdata.util.util import CTime, TimeVector
+        from resdata.util.util import CTime, TimeVector  # noqa: PLC0415
 
         time_points = TimeVector()
 

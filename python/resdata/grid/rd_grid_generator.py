@@ -149,13 +149,13 @@ class GridGenerator:
         )
 
         nx, ny, nz = dims
-        dx, dy, dz = dV
+        _, _, dz = dV
 
         # Compute zcorn
         z = escape_origo_shift[2]
         zcorn = [z] * (4 * nx * ny)
         for k in range(nz - 1):
-            z = z + dz
+            z += dz
             local_offset = offset + (dz / 2.0 if irregular_offset and k % 2 == 0 else 0)
 
             layer = []
@@ -166,10 +166,10 @@ class GridGenerator:
                 ]
                 layer.append(duplicate_inner(path))
 
-            zcorn = zcorn + (2 * flatten(duplicate_inner(layer)))
+            zcorn += 2 * flatten(duplicate_inner(layer))
 
-        z = z + dz
-        zcorn = zcorn + ([z] * (4 * nx * ny))
+        z += dz
+        zcorn += [z] * (4 * nx * ny)
 
         if faults:
             # Ensure that drop does not align with grid structure
@@ -201,7 +201,7 @@ class GridGenerator:
         coord = []
         for j, i in itertools.product(range(ny + 1), range(nx + 1)):
             x, y = i * dx + escape_origo_shift[0], j * dy + escape_origo_shift[1]
-            coord = coord + [x, y, escape_origo_shift[2], x, y, z]
+            coord += [x, y, escape_origo_shift[2], x, y, z]
 
         # Apply transformations
         lower_center = (
@@ -234,8 +234,7 @@ class GridGenerator:
         concave,
         faults,
     ):
-        nx, ny, nz = dims
-        dx, dy, dz = dV
+        _, _, dz = dV
 
         # Validate arguments
         if min(dims + dV) <= 0:
@@ -354,7 +353,7 @@ class GridGenerator:
                 corner[i] = corner[i - 4] + plane_size
 
             for c in corner:
-                zcorn[c] = zcorn[c] + drop
+                zcorn[c] += drop
 
         return zcorn
 
@@ -395,7 +394,7 @@ class GridGenerator:
 
     @classmethod
     def __misalign_coord(cls, coord, dims, dV):
-        nx, ny, nz = dims
+        nx, _, _ = dims
 
         coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
@@ -442,7 +441,7 @@ class GridGenerator:
         )
         translation = np.array(3 * [0.0] + list(translation))
 
-        coord = coord + translation
+        coord += translation
         return coord.flatten().tolist()
 
     @classmethod
@@ -579,7 +578,7 @@ class GridGenerator:
         )
         translation = np.array(list(translation) + list(translation))
 
-        coord = coord + translation
+        coord += translation
         return construct_floatKW("COORD", coord.flatten().tolist())
 
     @classmethod

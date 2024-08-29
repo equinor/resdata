@@ -453,7 +453,8 @@ class ResdataRegion(BaseCClass):
 
         See doscumentation of __ior__().
         """
-        return self.__ior__(other)
+        self |= other
+        return self
 
     def intersect_with(self, other):
         """
@@ -461,7 +462,8 @@ class ResdataRegion(BaseCClass):
 
         See doscumentation of __iand__().
         """
-        return self.__iand__(other)
+        self &= other
+        return self
 
     def copy(self):
         return self.__deep_copy__({})

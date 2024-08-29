@@ -402,7 +402,7 @@ class Grid(BaseCClass):
         return self._get_active_fracture()
 
     def get_bounding_box_2d(self, layer=0, lower_left=None, upper_right=None):
-        if 0 <= layer <= self.getNZ():
+        if 0 <= layer <= self.get_nz():
             x = ctypes.c_double()
             y = ctypes.c_double()
             z = ctypes.c_double()
@@ -412,22 +412,22 @@ class Grid(BaseCClass):
                 j1 = 0
             else:
                 i1, j1 = lower_left
-                if not 0 < i1 < self.getNX():
+                if not 0 < i1 < self.get_nx():
                     raise ValueError("lower_left i coordinate invalid")
 
-                if not 0 < j1 < self.getNY():
+                if not 0 < j1 < self.get_ny():
                     raise ValueError("lower_left j coordinate invalid")
 
             if upper_right is None:
-                i2 = self.getNX()
-                j2 = self.getNY()
+                i2 = self.get_nx()
+                j2 = self.get_ny()
             else:
                 i2, j2 = upper_right
 
-                if not 1 < i2 <= self.getNX():
+                if not 1 < i2 <= self.get_nx():
                     raise ValueError("upper_right i coordinate invalid")
 
-                if not 1 < j2 <= self.getNY():
+                if not 1 < j2 <= self.get_ny():
                     raise ValueError("upper_right j coordinate invalid")
 
             if not i1 < i2:
@@ -537,9 +537,9 @@ class Grid(BaseCClass):
         if not active_index is None:
             global_index = self._get_global_index1A(active_index)
         elif ijk:
-            nx = self.getNX()
-            ny = self.getNY()
-            nz = self.getNZ()
+            nx = self.get_nx()
+            ny = self.get_ny()
+            nz = self.get_nz()
 
             i, j, k = ijk
 
@@ -553,7 +553,7 @@ class Grid(BaseCClass):
                 raise IndexError("Invalid value k:%d  Range: [%d,%d)" % (k, 0, nz))
 
             global_index = self._get_global_index3(i, j, k)
-        elif not 0 <= global_index < self.getGlobalSize():
+        elif not 0 <= global_index < self.get_global_size():
             raise IndexError(
                 "Invalid value global_index:%d  Range: [%d,%d)"
                 % (global_index, 0, self.getGlobalSize())
@@ -717,9 +717,9 @@ class Grid(BaseCClass):
         bounding points of the lower layer of the grid:
 
            p0 = grid.getNodePos(0, 0, 0)
-           p1 = grid.getNodePos(grid.getNX(), 0, 0)
-           p2 = grid.getNodePos(0, grid.getNY(), 0)
-           p3 = grid.getNodePos(grid.getNX(), grid.getNY(), 0)
+           p1 = grid.getNodePos(grid.get_nx(), 0, 0)
+           p2 = grid.getNodePos(0, grid.get_ny(), 0)
+           p3 = grid.getNodePos(grid.get_nx(), grid.get_ny(), 0)
 
         """
         if not 0 <= i <= self.getNX():
@@ -946,19 +946,19 @@ class Grid(BaseCClass):
             corner_shift = 0
 
         nx = self.getNX()
-        x0, y0, z0 = self.getCellCorner(corner_shift, ijk=(i, j, k))
+        x0, y0, _ = self.getCellCorner(corner_shift, ijk=(i, j, k))
         d0 = math.sqrt((x0 - x) * (x0 - x) + (y0 - y) * (y0 - y))
         c0 = i + j * (nx + 1)
 
-        x1, y1, z1 = self.getCellCorner(1 + corner_shift, ijk=(i, j, k))
+        x1, y1, _ = self.getCellCorner(1 + corner_shift, ijk=(i, j, k))
         d1 = math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y))
         c1 = i + 1 + j * (nx + 1)
 
-        x2, y2, z2 = self.getCellCorner(2 + corner_shift, ijk=(i, j, k))
+        x2, y2, _ = self.getCellCorner(2 + corner_shift, ijk=(i, j, k))
         d2 = math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y))
         c2 = i + (j + 1) * (nx + 1)
 
-        x3, y3, z3 = self.getCellCorner(3 + corner_shift, ijk=(i, j, k))
+        x3, y3, _ = self.getCellCorner(3 + corner_shift, ijk=(i, j, k))
         d3 = math.sqrt((x3 - x) * (x3 - x) + (y3 - y) * (y3 - y))
         c3 = i + 1 + (j + 1) * (nx + 1)
 

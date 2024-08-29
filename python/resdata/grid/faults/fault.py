@@ -151,7 +151,7 @@ class Fault:
         self.__name = name
         self.__layer_map = {}
         self.__layer_list = []
-        (self.nx, self.ny, self.nz, nactive) = grid.getDims()
+        (self.nx, self.ny, self.nz, _) = grid.getDims()
 
     def __str__(self):
         return f"Fault:{self.__name}"

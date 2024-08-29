@@ -35,6 +35,8 @@ ignore = ["PLW2901",  # redefined-loop-name
           "PD901",  #  pandas-df-variable-name
           "C409",  # unnecessary-literal-within-tuple-call
           "PLC0414",  # useless-import-alias
+          "PLW1514",
+          "C419",
 ]
 [tool.ruff.lint.extend-per-file-ignores]
 "python/tests/util_tests/test_ctime.py" = ["PLR0124", "B015"]

@@ -132,7 +132,7 @@ class ResdataRFT(BaseCClass):
 
     def assert_cell_index(self, index):
         if isinstance(index, int):
-            length = self.__len__()
+            length = len(self)
             if index < 0 or index >= length:
                 raise IndexError
         else:

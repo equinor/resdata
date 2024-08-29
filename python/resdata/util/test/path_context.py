@@ -13,7 +13,7 @@ class PathContext:
             work_path = path
 
             while True:
-                work_path, base = os.path.split(work_path)
+                work_path, _ = os.path.split(work_path)
                 if work_path:
                     if os.path.isdir(work_path):
                         break
