@@ -975,7 +975,6 @@ class ResdataKW(BaseCClass):
     def data_type(self):
         return self._get_data_type()
 
-    @property
     def type_name(self):
         return self.data_type.type_name
 
@@ -991,7 +990,7 @@ class ResdataKW(BaseCClass):
 
     @property
     def header(self):
-        return (self.get_name(), len(self), self.type_name)
+        return (self.get_name(), len(self), self.type_name())
 
     @property
     def array(self):
@@ -1033,7 +1032,7 @@ class ResdataKW(BaseCClass):
         the elements. The implementation of the builtin method
         __str__() is based on this method.
         """
-        s = "%-8s %8d %-4s\n" % (self.get_name(), len(self), self.type_name)
+        s = "%-8s %8d %-4s\n" % (self.get_name(), len(self), self.type_name())
         lines = len(self) // width
         if not fmt:
             fmt = self.str_fmt + " "

@@ -111,7 +111,7 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError(
                 "The fault block keyword had wrong type/size: type:%s  size:%d  grid_size:%d"
                 % (
-                    fault_block_kw.type_name,
+                    fault_block_kw.type_name(),
                     len(fault_block_kw),
                     self.grid_ref.getGlobalSize(),
                 )
@@ -126,7 +126,7 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError(
                 "The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d"
                 % (
-                    fault_block_kw.type_name,
+                    fault_block_kw.type_name(),
                     len(fault_block_kw),
                     self.grid_ref.getGlobalSize(),
                 )
