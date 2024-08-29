@@ -72,7 +72,6 @@ class FaultLine:
     def __init_ij_polyline(self):
         pl = []
         nx = self.__grid.getNX()
-        ny = self.__grid.getNY()
         for segment in self:
             corner = segment.getC1()
             i = corner % (nx + 1)

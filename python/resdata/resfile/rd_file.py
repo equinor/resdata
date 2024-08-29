@@ -417,7 +417,6 @@ class ResdataFile(BaseCClass):
         keywords and the method will simply return an empty list.
         """
         steps = []
-        seqnum_list = self["SEQNUM"]
         for kw in self["SEQNUM"]:
             steps.append(kw[0])
         return steps

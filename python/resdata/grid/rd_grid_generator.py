@@ -693,10 +693,6 @@ class GridGenerator:
         ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
         cls.assert_decomposition_change(ijk_bounds, decomposition_change)
 
-        nx, ny, nz = dims
-        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
-
         new_coord = cls.extract_coord(dims, coord, ijk_bounds)
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
         new_actnum = cls.extract_actnum(dims, actnum, ijk_bounds)

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "setuptools_scm", "wheel", "scikit-build", "cmake", "conan<2", "ninja"]
+requires = ["setuptools", "setuptools_scm", "scikit-build", "cmake", "conan<2", "ninja"]
 
 [tool.ruff]
 src = ["python"]
@@ -35,11 +35,11 @@ ignore = ["PLW2901",  # redefined-loop-name
           "PD901",  #  pandas-df-variable-name
           "C409",  # unnecessary-literal-within-tuple-call
           "PLC0414",  # useless-import-alias
-          "F401",  # unused-import
-          "F841",  # unused-variable
 ]
 [tool.ruff.lint.extend-per-file-ignores]
 "python/tests/util_tests/test_ctime.py" = ["PLR0124", "B015"]
+"python/*tests/*" = ["F841"]
+"python/*/__init__.py" = ["F401"]
 
 [tool.ruff.lint.pylint]
 max-args = 15

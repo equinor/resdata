@@ -188,7 +188,6 @@ class GeometryTools:
 
         p1 = poly_line[0]
         ray1 = GeometryTools.lineToRay(poly_line[1], poly_line[0])
-        tmp = GeometryTools.rayPolygonIntersections(p1, ray1, bounding_polygon)
         intersection1 = GeometryTools.rayPolygonIntersections(
             p1, ray1, bounding_polygon
         )[0]  # assume convex
@@ -385,17 +384,13 @@ class GeometryTools:
         p0 = polyline[-1]
         p1 = polyline[-2]
         ray = GeometryTools.lineToRay(p1, p0)
-        for _, p in GeometryTools.rayPolygonIntersections(
-            p0, ray, target_polyline
-        ):
+        for _, p in GeometryTools.rayPolygonIntersections(p0, ray, target_polyline):
             d_list.append((GeometryTools.distance(p0, p), [p0, p]))
 
         p0 = polyline[0]
         p1 = polyline[1]
         ray = GeometryTools.lineToRay(p1, p0)
-        for _, p in GeometryTools.rayPolygonIntersections(
-            p0, ray, target_polyline
-        ):
+        for _, p in GeometryTools.rayPolygonIntersections(p0, ray, target_polyline):
             d_list.append((GeometryTools.distance(p0, p), [p0, p]))
 
         if len(d_list) == 0:

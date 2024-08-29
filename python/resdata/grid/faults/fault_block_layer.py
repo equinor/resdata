@@ -202,10 +202,8 @@ class FaultBlockLayer(BaseCClass):
             try:
                 layer.addIJBarrier(Fault.joinFaults(fault1, fault2, self.getK()))
             except ValueError as err:
-                err = "Failed to join faults %s and %s"
-                names = (fault1.getName(), fault2.getName())
-                print(err % names)
-                raise ValueError(err % names) from err
+                msg = f"Failed to join faults {fault1.getName()} and {fault2.getName()}"
+                raise ValueError(msg) from err
 
     def add_polyline_barrier(self, polyline):
         layer = self.getGeoLayer()
