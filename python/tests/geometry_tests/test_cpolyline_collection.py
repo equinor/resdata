@@ -1,4 +1,3 @@
-
 from resdata.geometry import CPolylineCollection, CPolyline
 from tests import ResdataTest
 from resdata.util.util import DoubleVector

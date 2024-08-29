@@ -1,4 +1,3 @@
-
 from resdata.grid import Grid
 from resdata.summary import Summary
 from tests import ResdataTest, equinor_test

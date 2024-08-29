@@ -1,4 +1,3 @@
-
 import pytest
 from resdata.grid import Grid
 

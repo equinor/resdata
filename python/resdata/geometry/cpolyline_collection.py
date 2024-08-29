@@ -41,7 +41,7 @@ class CPolylineCollection(BaseCClass):
     def __contains__(self, name):
         return self._has_polyline(name)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._size()
 
     def __iter__(self):

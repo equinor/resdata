@@ -25,6 +25,11 @@ from resdata import ResDataType, UnitSystem, ResdataTypeEnum
 from resdata.resfile import ResdataKW, FortIO
 from resdata.grid import Cell
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from resdata.util.util import DoubleVector
+
 
 class Grid(BaseCClass):
     """
@@ -342,7 +347,7 @@ class Grid(BaseCClass):
             f"{name}{xyz_s}, global_size={g_size}, active_size={a_size}"
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         len(grid) wil return the total number of cells.
         """
@@ -356,47 +361,47 @@ class Grid(BaseCClass):
             raise TypeError("The other argument must be an Grid instance")
         return self._equal(other, include_lgr, include_nnc, verbose)
 
-    def dual_grid(self):
+    def dual_grid(self) -> bool:
         """Is this grid dual porosity model?"""
         return self._dual_grid()
 
     def get_dims(self):
         """A tuple of four elements: (nx, ny, nz, nactive)."""
-        return (self.getNX(), self.getNY(), self.getNZ(), self.getNumActive())
+        return (self.get_nx(), self.get_ny(), self.get_nz(), self.get_num_active())
 
     @property
-    def nx(self):
+    def nx(self) -> int:
         return self._get_nx()
 
-    def get_nx(self):
+    def get_nx(self) -> int:
         """The number of elements in the x direction"""
         return self._get_nx()
 
     @property
-    def ny(self):
+    def ny(self) -> int:
         return self._get_ny()
 
-    def get_ny(self):
+    def get_ny(self) -> int:
         """The number of elements in the y direction"""
         return self._get_ny()
 
     @property
-    def nz(self):
+    def nz(self) -> int:
         return self._get_nz()
 
-    def get_nz(self):
+    def get_nz(self) -> int:
         """The number of elements in the z direction"""
         return self._get_nz()
 
-    def get_global_size(self):
+    def get_global_size(self) -> int:
         """Returns the total number of cells in this grid"""
         return self._get_global_size()
 
-    def get_num_active(self):
+    def get_num_active(self) -> int:
         """The number of active cells in the grid."""
         return self._get_active()
 
-    def get_num_active_fracture(self):
+    def get_num_active_fracture(self) -> int:
         """The number of active cells in the grid."""
         return self._get_active_fracture()
 
@@ -461,7 +466,7 @@ class Grid(BaseCClass):
                 f"Invalid layer value:{layer}  Valid range: [0,{self.get_nz()}]"
             )
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Name of the current grid, returns a string.
 
@@ -473,7 +478,9 @@ class Grid(BaseCClass):
         n = self._get_name()
         return str(n) if n else ""
 
-    def cell(self, global_index=None, active_index=None, i=None, j=None, k=None):
+    def cell(
+        self, global_index=None, active_index=None, i=None, j=None, k=None
+    ) -> Cell:
         if global_index is not None:
             return Cell(self, global_index)
         if active_index is not None:
@@ -481,7 +488,7 @@ class Grid(BaseCClass):
         if i is not None:
             return Cell(self, self.global_index(ijk=(i, j, k)))
 
-    def __getitem__(self, global_index):
+    def __getitem__(self, global_index) -> Cell:
         if isinstance(global_index, tuple):
             i, j, k = global_index
             return self.cell(i=i, j=j, k=k)
@@ -505,7 +512,7 @@ class Grid(BaseCClass):
         """
         return self.__global_index(active_index=active_index, ijk=ijk)
 
-    def __global_index(self, active_index=None, global_index=None, ijk=None):
+    def __global_index(self, active_index=None, global_index=None, ijk=None) -> int:
         """
         Will convert @active_index or @ijk to global_index.
 
@@ -576,7 +583,7 @@ class Grid(BaseCClass):
         gi = self.__global_index(global_index=global_index, ijk=ijk)
         return self._get_active_fracture_index1(gi)
 
-    def get_global_index1F(self, active_fracture_index):
+    def get_global_index1F(self, active_fracture_index) -> int:
         """
         Will return the global index corresponding to active fracture index.
 
@@ -587,7 +594,7 @@ class Grid(BaseCClass):
             return None
         return result
 
-    def cell_invalid(self, ijk=None, global_index=None, active_index=None):
+    def cell_invalid(self, ijk=None, global_index=None, active_index=None) -> bool:
         """
         Tries to check if a cell is invalid.
 
@@ -604,7 +611,9 @@ class Grid(BaseCClass):
         )
         return self._invalid_cell(gi)
 
-    def valid_cell_geometry(self, ijk=None, global_index=None, active_index=None):
+    def valid_cell_geometry(
+        self, ijk=None, global_index=None, active_index=None
+    ) -> bool:
         """Checks if the cell has valid geometry.
 
         There are at least two reasons why a cell might have invalid
@@ -629,7 +638,7 @@ class Grid(BaseCClass):
         )
         return self._valid_cell(gi)
 
-    def active(self, ijk=None, global_index=None):
+    def active(self, ijk=None, global_index=None) -> bool:
         """
         Is the cell active?
 
@@ -822,31 +831,31 @@ class Grid(BaseCClass):
         )
         return self._get_depth(gi)
 
-    def top(self, i, j):
+    def top(self, i, j) -> float:
         """
         Top of the reservoir; in the column (@i, @j).
         Returns average depth of the four top corners.
         """
         return self._get_top(i, j)
 
-    def top_active(self, i, j):
+    def top_active(self, i, j) -> float:
         """
         Top of the active part of the reservoir; in the column (@i, @j).
         Raises ValueError if (i,j) column is inactive.
         """
-        for k in range(self.getNZ()):
+        for k in range(self.get_nz()):
             a_idx = self.get_active_index(ijk=(i, j, k))
             if a_idx >= 0:
                 return self._get_top1A(a_idx)
         raise ValueError(f"No active cell in column ({i}, {j})")
 
-    def bottom(self, i, j):
+    def bottom(self, i: int, j: int) -> float:
         """
         Bottom of the reservoir; in the column (@i, @j).
         """
         return self._get_bottom(i, j)
 
-    def locate_depth(self, depth, i, j):
+    def locate_depth(self, depth: float, i: int, j: int) -> int:
         """
         Will locate the k value of cell containing specified depth.
 
@@ -910,7 +919,7 @@ class Grid(BaseCClass):
         values for k are [0,nz]. If the coordinates (x,y) are found to
         be outside the grid a ValueError exception is raised.
         """
-        if 0 <= k <= self.getNZ():
+        if 0 <= k <= self.get_nz():
             i = ctypes.c_int()
             j = ctypes.c_int()
             ok = self._get_ij_xy(x, y, k, ctypes.byref(i), ctypes.byref(j))
@@ -931,26 +940,26 @@ class Grid(BaseCClass):
         be outside the grid a ValueError exception is raised.
         """
         i, j = self.findCellXY(x, y, k)
-        if k == self.getNZ():
+        if k == self.get_nz():
             k -= 1
             corner_shift = 4
         else:
             corner_shift = 0
 
-        nx = self.getNX()
-        x0, y0, _ = self.getCellCorner(corner_shift, ijk=(i, j, k))
+        nx = self.get_nx()
+        x0, y0, _ = self.get_cell_corner(corner_shift, ijk=(i, j, k))
         d0 = math.sqrt((x0 - x) * (x0 - x) + (y0 - y) * (y0 - y))
         c0 = i + j * (nx + 1)
 
-        x1, y1, _ = self.getCellCorner(1 + corner_shift, ijk=(i, j, k))
+        x1, y1, _ = self.get_cell_corner(1 + corner_shift, ijk=(i, j, k))
         d1 = math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y))
         c1 = i + 1 + j * (nx + 1)
 
-        x2, y2, _ = self.getCellCorner(2 + corner_shift, ijk=(i, j, k))
+        x2, y2, _ = self.get_cell_corner(2 + corner_shift, ijk=(i, j, k))
         d2 = math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y))
         c2 = i + (j + 1) * (nx + 1)
 
-        x3, y3, _ = self.getCellCorner(3 + corner_shift, ijk=(i, j, k))
+        x3, y3, _ = self.get_cell_corner(3 + corner_shift, ijk=(i, j, k))
         d3 = math.sqrt((x3 - x) * (x3 - x) + (y3 - y) * (y3 - y))
         c3 = i + 1 + (j + 1) * (nx + 1)
 
@@ -958,7 +967,7 @@ class Grid(BaseCClass):
         l.sort(key=lambda k: k[0])
         return l[0][1]
 
-    def cell_regular(self, active_index=None, global_index=None, ijk=None):
+    def cell_regular(self, active_index=None, global_index=None, ijk=None) -> bool:
         """
         The grid models often contain various degenerate cells,
         which are twisted, have overlapping corners or what not. This
@@ -972,7 +981,7 @@ class Grid(BaseCClass):
         )
         return self._cell_regular(gi)
 
-    def cell_volume(self, active_index=None, global_index=None, ijk=None):
+    def cell_volume(self, active_index=None, global_index=None, ijk=None) -> float:
         """
         Calculate the volume of a cell.
 
@@ -985,7 +994,7 @@ class Grid(BaseCClass):
         )
         return self._get_cell_volume(gi)
 
-    def cell_dz(self, active_index=None, global_index=None, ijk=None):
+    def cell_dz(self, active_index=None, global_index=None, ijk=None) -> float:
         """
         The thickness of a cell.
 
@@ -1019,7 +1028,7 @@ class Grid(BaseCClass):
         dz = self._get_cell_thickness(gi)
         return (dx, dy, dz)
 
-    def get_num_lgr(self):
+    def get_num_lgr(self) -> int:
         """
         How many LGRs are attached to this main grid?
 
@@ -1028,7 +1037,7 @@ class Grid(BaseCClass):
         """
         return self._num_lgr()
 
-    def has_lgr(self, lgr_name):
+    def has_lgr(self, lgr_name: str) -> bool:
         """
         Query if the grid has an LGR with name @lgr_name.
         """
@@ -1081,7 +1090,7 @@ class Grid(BaseCClass):
         else:
             raise IndexError("No LGR defined for this cell")
 
-    def grid_value(self, kw, i, j, k):
+    def grid_value(self, kw: ResdataKW, i: int, j: int, k: int) -> float:
         """
         Will evalute @kw in location (@i,@j,@k).
 
@@ -1098,7 +1107,9 @@ class Grid(BaseCClass):
         """
         return self._grid_value(kw, i, j, k)
 
-    def load_column(self, kw, i, j, column):
+    def load_column(
+        self, kw: ResdataKW, i: int, j: int, column: "DoubleVector"
+    ) -> None:
         """
         Load the values of @kw from the column specified by (@i,@j).
 
@@ -1114,7 +1125,7 @@ class Grid(BaseCClass):
         """
         self._load_column(kw, i, j, column)
 
-    def create_kw(self, array, kw_name, pack):
+    def create_kw(self, array, kw_name, pack) -> ResdataKW:
         """
         Creates an ResdataKW instance based on existing 3D numpy object.
 
@@ -1126,9 +1137,9 @@ class Grid(BaseCClass):
         if array.ndim == 3:
             dims = array.shape
             if (
-                dims[0] == self.getNX()
-                and dims[1] == self.getNY()
-                and dims[2] == self.getNZ()
+                dims[0] == self.get_nx()
+                and dims[1] == self.get_ny()
+                and dims[2] == self.get_nz()
             ):
                 dtype = array.dtype
                 if dtype == np.int32:
@@ -1140,7 +1151,7 @@ class Grid(BaseCClass):
                 else:
                     sys.exit(f"Do not know how to create rd_kw from type:{dtype}")
 
-                size = self.getNumActive() if pack else self.getGlobalSize()
+                size = self.get_num_active() if pack else self.get_global_size()
 
                 if len(kw_name) > 8:
                     # Silently truncate to length 8
@@ -1165,13 +1176,13 @@ class Grid(BaseCClass):
                 return kw
         raise ValueError("Wrong size / dimension on array")
 
-    def coarse_groups(self):
+    def coarse_groups(self) -> int:
         """
         Will return the number of coarse groups in this grid.
         """
         return self._num_coarse_groups()
 
-    def in_coarse_group(self, global_index=None, ijk=None, active_index=None):
+    def in_coarse_group(self, global_index=None, ijk=None, active_index=None) -> bool:
         """
         Will return True or False if the cell is part of coarse group.
         """
@@ -1180,7 +1191,7 @@ class Grid(BaseCClass):
         )
         return self._in_coarse_group1(global_index)
 
-    def create_3d(self, rd_kw, default=0):
+    def create_3d(self, rd_kw: ResdataKW, default=0):
         """
         Creates a 3D numpy array object with the data from  @rd_kw.
 
@@ -1199,30 +1210,32 @@ class Grid(BaseCClass):
            value = grid.grid_value(rd_kw, i, j, k)
 
         """
-        if len(rd_kw) == self.getNumActive() or len(rd_kw) == self.getGlobalSize():
-            array = np.ones([self.getGlobalSize()], dtype=rd_kw.dtype) * default
+        if len(rd_kw) == self.get_num_active() or len(rd_kw) == self.get_global_size():
+            array = np.ones([self.get_global_size()], dtype=rd_kw.dtype) * default
             kwa = rd_kw.array
-            if len(rd_kw) == self.getGlobalSize():
+            if len(rd_kw) == self.get_global_size():
                 for i in range(kwa.size):
                     array[i] = kwa[i]
             else:
-                for global_index in range(self.getGlobalSize()):
+                for global_index in range(self.get_global_size()):
                     active_index = self._get_active_index1(global_index)
                     array[global_index] = kwa[active_index]
 
-            array = array.reshape([self.getNX(), self.getNY(), self.getNZ()], order="F")
+            array = array.reshape(
+                [self.get_nx(), self.get_ny(), self.get_nz()], order="F"
+            )
             return array
         else:
             err_msg_fmt = 'Keyword "%s" has invalid size %d; must be either nactive=%d or nx*ny*nz=%d'
             err_msg = err_msg_fmt % (
                 rd_kw,
                 len(rd_kw),
-                self.getNumActive(),
-                self.getGlobalSize(),
+                self.get_num_active(),
+                self.get_global_size(),
             )
             raise ValueError(err_msg)
 
-    def save_grdecl(self, pyfile, output_unit=UnitSystem.METRIC):
+    def save_grdecl(self, pyfile, output_unit=UnitSystem.METRIC) -> None:
         """
         Will write the the grid content as grdecl formatted keywords.
 
@@ -1242,7 +1255,9 @@ class Grid(BaseCClass):
         """
         self._fwrite_GRID2(filename, output_unit)
 
-    def write_grdecl(self, rd_kw, pyfile, special_header=None, default_value=0):
+    def write_grdecl(
+        self, rd_kw: ResdataKW, pyfile, special_header=None, default_value=0
+    ):
         """
         Writes an ResdataKW instance as an ECLIPSE grdecl formatted file.
 
@@ -1265,7 +1280,7 @@ class Grid(BaseCClass):
 
         """
 
-        if len(rd_kw) == self.getNumActive() or len(rd_kw) == self.getGlobalSize():
+        if len(rd_kw) == self.get_num_active() or len(rd_kw) == self.get_global_size():
             cfile = CFILE(pyfile)
             self._fwrite_grdecl(rd_kw, special_header, cfile, default_value)
         else:
@@ -1278,11 +1293,11 @@ class Grid(BaseCClass):
         self._init_actnum(actnum.getDataPtr())
         return actnum
 
-    def compressed_kw_copy(self, kw):
-        if len(kw) == self.getNumActive():
+    def compressed_kw_copy(self, kw: ResdataKW) -> ResdataKW:
+        if len(kw) == self.get_num_active():
             return kw.copy()
-        elif len(kw) == self.getGlobalSize():
-            kw_copy = ResdataKW(kw.getName(), self.getNumActive(), kw.data_type)
+        elif len(kw) == self.get_global_size():
+            kw_copy = ResdataKW(kw.get_name(), self.get_num_active(), kw.data_type)
             self._compressed_kw_copy(kw_copy, kw)
             return kw_copy
         else:
@@ -1290,11 +1305,11 @@ class Grid(BaseCClass):
                 f"The input keyword must have nx*n*nz or nactive elements. Size:{len(kw)} invalid"
             )
 
-    def global_kw_copy(self, kw, default_value):
-        if len(kw) == self.getGlobalSize():
+    def global_kw_copy(self, kw, default_value) -> ResdataKW:
+        if len(kw) == self.get_global_size():
             return kw.copy()
-        elif len(kw) == self.getNumActive():
-            kw_copy = ResdataKW(kw.getName(), self.getGlobalSize(), kw.data_type)
+        elif len(kw) == self.get_num_active():
+            kw_copy = ResdataKW(kw.get_name(), self.get_global_size(), kw.data_type)
             kw_copy.assign(default_value)
             self._global_kw_copy(kw_copy, kw)
             return kw_copy
@@ -1303,12 +1318,12 @@ class Grid(BaseCClass):
                 f"The input keyword must have nx*n*nz or nactive elements. Size:{len(kw)} invalid"
             )
 
-    def export_ACTNUM_kw(self):
-        actnum = ResdataKW("ACTNUM", self.getGlobalSize(), ResDataType.RD_INT)
-        self._init_actnum(actnum.getDataPtr())
+    def export_ACTNUM_kw(self) -> ResdataKW:
+        actnum = ResdataKW("ACTNUM", self.get_global_size(), ResDataType.RD_INT)
+        self._init_actnum(actnum.get_data_ptr())
         return actnum
 
-    def create_volume_keyword(self, active_size=True):
+    def create_volume_keyword(self, active_size: bool = True) -> ResdataKW:
         """Will create a ResdataKW initialized with cell volumes.
 
         The purpose of this method is to create a ResdataKW instance which
@@ -1338,7 +1353,7 @@ class Grid(BaseCClass):
 
         return self._create_volume_keyword(active_size)
 
-    def export_index(self, active_only=False):
+    def export_index(self, active_only=False) -> pd.DataFrame:
         """
         Exports a pandas dataframe containing index data of grid cells.
 
@@ -1361,7 +1376,7 @@ class Grid(BaseCClass):
         df = pd.DataFrame(data=data, index=indx, columns=["i", "j", "k", "active"])
         return df
 
-    def export_data(self, index_frame, kw, default=0):
+    def export_data(self, index_frame: pd.DataFrame, kw: ResdataKW, default=0):
         """
         Exports keywoard data to a numpy vector.
 

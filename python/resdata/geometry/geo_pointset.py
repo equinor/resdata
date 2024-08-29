@@ -42,7 +42,7 @@ class GeoPointset(BaseCClass):
             # TODO implement slicing?
             raise ValueError(f"Index must be int, not {type(key)}.")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._get_size()
 
     def __repr__(self):

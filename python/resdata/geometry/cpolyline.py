@@ -54,7 +54,7 @@ class CPolyline(BaseCClass):
             polyline._set_name(name)
         return polyline
 
-    def __str__(self):
+    def __str__(self) -> str:
         name = self.getName()
         str = f"{name} [" if name else "["
 
@@ -65,10 +65,10 @@ class CPolyline(BaseCClass):
         str += "]"
         return str
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._size()
 
     def __getitem__(self, index):
