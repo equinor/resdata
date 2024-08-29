@@ -79,11 +79,6 @@ class Cell(object):
             return idx_eq and self._grid == other._grid
         return NotImplemented
 
-    def __neq__(self, other):
-        if isinstance(other, Cell):
-            return self != other
-        return NotImplemented
-
     def hash(self):
         return hash((self._idx, self._aidx, self.ijk))
 
