@@ -409,7 +409,7 @@ class FaultTest(ResdataTest):
         faults = FaultCollection(self.grid, self.faults1, self.faults2)
         self.assertEqual(7, len(faults))
         c = 0
-        for _f in faults:
+        for _ in faults:
             c += 1
         self.assertEqual(c, len(faults))
 

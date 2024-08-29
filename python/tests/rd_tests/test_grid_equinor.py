@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 import math
 
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
+from unittest import skipIf
 
 from cwrap import Prototype
 from cwrap import open as copen
@@ -251,7 +248,7 @@ class GridTest(ResdataTest):
     def test_num_active_large_memory(self):
         case = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE")
         vecList = []
-        for _i in range(12500):
+        for _ in range(12500):
             vec = DoubleVector()
             vec[81920] = 0
             vecList.append(vec)

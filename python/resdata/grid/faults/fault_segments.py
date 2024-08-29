@@ -132,7 +132,7 @@ class SegmentMap(object):
 
     def print_content(self):
         for d in self.__segment_map.values():
-            for _C, S in d.iteritems():
+            for _, S in d.iteritems():
                 print(S)
 
 

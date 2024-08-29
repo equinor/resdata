@@ -132,10 +132,10 @@ class ResDataTypeTest(ResdataTest):
             all_types.add(ResDataType(rd_type, elem_size))
             self.assertEqual(index + 1, len(all_types))
 
-        for _index, (rd_type, elem_size) in enumerate(test_base):
+        for _, (rd_type, elem_size) in enumerate(test_base):
             all_types.add(ResDataType(rd_type, elem_size))
 
-        for _index, rd_type in enumerate(get_const_size_types()):
+        for _, rd_type in enumerate(get_const_size_types()):
             all_types.add(ResDataType(rd_type))
 
         self.assertEqual(len(test_base), len(all_types))

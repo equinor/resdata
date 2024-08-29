@@ -3,11 +3,7 @@ from datetime import datetime, date
 
 from resdata.util.util import CTime
 
-
-try:
-    from unittest2 import TestCase
-except ImportError:
-    from unittest import TestCase
+from unittest import TestCase
 
 
 class CTimeTest(TestCase):
