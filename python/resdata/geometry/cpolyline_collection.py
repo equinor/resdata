@@ -2,7 +2,6 @@
 Create a polygon
 """
 
-import ctypes
 
 from cwrap import BaseCClass
 from resdata import ResdataPrototype

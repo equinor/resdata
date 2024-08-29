@@ -1,13 +1,10 @@
 import datetime
 
 from tests import ResdataTest, equinor_test
-from resdata import FileMode
 from resdata.resfile import (
     Resdata3DKW,
     ResdataKW,
     ResdataRestartFile,
-    ResdataFile,
-    FortIO,
 )
 from resdata.grid import Grid
 

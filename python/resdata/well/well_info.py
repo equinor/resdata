@@ -1,8 +1,6 @@
 from os.path import isfile
 from cwrap import BaseCClass
-from resdata.grid import Grid
 from resdata.resfile.rd_file import ResdataFile
-from resdata.well import WellTimeLine
 from resdata import ResdataPrototype
 
 

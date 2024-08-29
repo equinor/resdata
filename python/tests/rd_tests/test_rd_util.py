@@ -1,4 +1,3 @@
-import pytest
 import datetime
 from textwrap import dedent
 

@@ -22,7 +22,6 @@ support passing of FortIO handles to the underlying C functions. A
 more extensive wrapping of the fortio implementation would be easy.
 """
 
-import ctypes
 import os
 
 from cwrap import BaseCClass

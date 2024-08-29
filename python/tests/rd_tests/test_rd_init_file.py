@@ -1,6 +1,5 @@
 from tests import ResdataTest, equinor_test
-from resdata import FileMode
-from resdata.resfile import Resdata3DKW, ResdataKW, ResdataInitFile, ResdataFile, FortIO
+from resdata.resfile import Resdata3DKW, ResdataKW, ResdataInitFile
 from resdata.grid import Grid
 
 

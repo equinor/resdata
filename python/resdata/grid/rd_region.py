@@ -16,12 +16,10 @@ import ctypes
 
 from cwrap import BaseCClass
 
-import resdata
 from resdata.util.util import monkey_the_camel
 from resdata.util.util import IntVector
 
 from resdata import ResdataPrototype
-from resdata.grid.faults import Layer
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.geometry import CPolyline

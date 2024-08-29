@@ -1,7 +1,6 @@
 from cwrap import BaseCClass
 
 from resdata.util.util import monkey_the_camel
-from resdata import ResDataType
 from resdata import ResdataPrototype
 from resdata.grid.faults import Fault
 

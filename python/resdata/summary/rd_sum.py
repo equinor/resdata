@@ -24,11 +24,9 @@ from cwrap import BaseCClass, CFILE
 from resdata.util.util import monkey_the_camel
 from resdata.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 
-from .rd_sum_tstep import SummaryTStep
 from .rd_sum_var_type import SummaryVarType
 from .rd_sum_vector import SummaryVector
-from .rd_smspec_node import ResdataSMSPECNode
-from resdata import ResdataPrototype, UnitSystem
+from resdata import ResdataPrototype
 
 # , SummaryKeyWordVector
 
@@ -1685,7 +1683,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         return new_case
 
 
-import resdata.summary.rd_sum_keyword_vector
 
 Summary._dump_csv_line = ResdataPrototype(
     "void rd_sum_fwrite_interp_csv_line(rd_sum, rd_time_t, rd_sum_vector, FILE)",

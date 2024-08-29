@@ -1,4 +1,3 @@
-import math
 
 from resdata.util.test import TestAreaContext
 from resdata.grid import Grid

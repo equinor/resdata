@@ -1,5 +1,4 @@
 from cwrap import BaseCClass
-from resdata.util.util import IntVector
 from resdata import ResdataPrototype
 from .cpolyline import CPolyline
 from ctypes import c_double

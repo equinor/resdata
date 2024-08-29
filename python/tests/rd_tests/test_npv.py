@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-import os
 import datetime
-import math
 
 from resdata.summary import Summary
 from resdata.summary import ResdataNPV, NPVPriceVector
 
-from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
-from resdata.util.test import TestAreaContext
+from resdata.util.util import CTime
 from tests import ResdataTest, equinor_test
 
 

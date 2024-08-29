@@ -1,15 +1,10 @@
 #!/usr/bin/env python
-import datetime
-import time
 import warnings
 
 from resdata import ResDataType
-from resdata.grid import Grid, GridGenerator, ResdataRegion
+from resdata.grid import GridGenerator, ResdataRegion
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
-from resdata.rft import ResdataRFT
 from resdata.util.test import TestAreaContext
-from resdata.util.test.mock import createSummary
-from resdata.util.util import BoolVector
 from tests import ResdataTest
 
 # The class Deprecation_1_9_Test contains methods which will be marked

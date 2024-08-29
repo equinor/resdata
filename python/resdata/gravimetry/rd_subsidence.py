@@ -10,7 +10,6 @@ rd_subsidence.c implementation in the resdata library.
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
-import resdata.grid
 
 
 class ResdataSubsidence(BaseCClass):

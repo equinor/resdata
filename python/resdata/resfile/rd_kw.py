@@ -29,10 +29,9 @@ import warnings
 import numpy as np
 from cwrap import CFILE, BaseCClass
 
-from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum, ResdataUtil
+from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
 from resdata.util.util import monkey_the_camel
 
-from .fortio import FortIO
 
 
 def dump_type_deprecation_warning():

@@ -5,7 +5,6 @@ from resdata.grid import Grid
 from resdata.gravimetry import ResdataGrav
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest
-from resdata.rd_util import Phase
 
 
 class ResdataGravTest(ResdataTest):

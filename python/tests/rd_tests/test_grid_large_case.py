@@ -1,4 +1,3 @@
-import itertools
 
 import pytest
 from resdata.grid import Grid

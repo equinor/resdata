@@ -2,7 +2,6 @@
 import os.path
 import os
 
-from unittest import skipIf
 
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from unittest import skipIf
 import cwrap
 
 from resdata import ResDataType

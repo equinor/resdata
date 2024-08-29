@@ -7,7 +7,6 @@ import ctypes
 
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
-from resdata.geometry import GeoPointset
 
 
 class Surface(BaseCClass):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import copy
 import datetime
 
 import six
@@ -11,7 +10,6 @@ from resdata.util.util import (
     BoolVector,
     TimeVector,
     CTime,
-    PermutationVector,
 )
 
 

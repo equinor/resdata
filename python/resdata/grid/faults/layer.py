@@ -1,6 +1,4 @@
-import ctypes
 
-from resdata.grid import Grid
 from cwrap import BaseCClass
 from resdata.util.util import monkey_the_camel
 from resdata.util.util import IntVector

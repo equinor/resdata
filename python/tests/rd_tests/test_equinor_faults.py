@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-from unittest import skipIf
 
 from cwrap import open as copen
 
-import time
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.grid import Grid
-from resdata.grid.faults import FaultCollection, Fault, FaultLine, FaultSegment
+from resdata.grid.faults import FaultCollection, Fault
 from tests import ResdataTest, equinor_test
 
 

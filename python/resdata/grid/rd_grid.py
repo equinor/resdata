@@ -16,8 +16,7 @@ import pandas as pd
 import sys
 import os.path
 import math
-import itertools
-from cwrap import CFILE, BaseCClass, load, open as copen
+from cwrap import CFILE, BaseCClass, open as copen
 
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel

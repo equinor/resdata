@@ -1,4 +1,3 @@
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
 
 from resdata import ResDataType, ResdataTypeEnum

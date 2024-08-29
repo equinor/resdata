@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from unittest import skipIf
-import time
 
 from resdata.util.util import IntVector
 from resdata.grid import Grid

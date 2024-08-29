@@ -1,7 +1,7 @@
 import numpy as np
 
 from resdata.util.util import monkey_the_camel
-from resdata.geometry import Polyline, CPolyline, GeometryTools
+from resdata.geometry import CPolyline, GeometryTools
 
 from .fault_line import FaultLine
 from .fault_segments import FaultSegment, SegmentMap

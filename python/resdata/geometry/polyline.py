@@ -1,4 +1,3 @@
-import collections
 
 from .geometry_tools import GeometryTools
 

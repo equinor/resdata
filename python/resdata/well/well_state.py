@@ -1,8 +1,6 @@
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.well import WellType, WellConnection
-from resdata.util.util import CTime
 
 
 class WellState(BaseCClass):

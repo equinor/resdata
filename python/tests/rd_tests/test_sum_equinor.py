@@ -1,7 +1,6 @@
 import os
 import datetime
 
-from resdata.resfile import ResdataFile
 from resdata.summary import Summary
 from resdata import UnitSystem
 
@@ -9,7 +8,6 @@ from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
 
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest, equinor_test
-import csv
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"

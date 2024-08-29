@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from resdata.grid import Grid
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
 
 

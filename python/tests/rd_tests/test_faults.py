@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-from unittest import skipIf
-import time
-from resdata import util
 
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
