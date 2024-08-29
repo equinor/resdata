@@ -422,7 +422,7 @@ class KWTest(ResdataTest):
     def test_typename(self):
         kw = ResdataKW("KW", 100, ResDataType.RD_INT)
 
-        self.assertEqual(kw.type_name, "INTE")
+        self.assertEqual(kw.type_name(), "INTE")
 
     def test_string_alloc(self):
         kw = ResdataKW("KW", 10, ResDataType.RD_STRING(30))
