@@ -493,7 +493,7 @@ class GridGenerator:
                 % (nx * ny * nz, len(actnum))
             )
 
-        if set(actnum) - set([0, 1]):
+        if set(actnum) - {0, 1}:
             raise AssertionError(
                 "Expected ACTNUM to consist of 0's and 1's, was %s."
                 % ", ".join(map(str, set(actnum)))

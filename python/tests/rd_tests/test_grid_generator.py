@@ -64,15 +64,15 @@ class GridGeneratorTest(ResdataTest):
         coord = list(GridGen.create_coord(dims, (1, 1, 1)))
 
         ijk_bounds = generate_ijk_bounds(dims)
-        for ijk_bounds in ijk_bounds:
-            if decomposition_preserving(ijk_bounds):
-                GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bounds)
+        for ijk_bound in ijk_bounds:
+            if decomposition_preserving(ijk_bound):
+                GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bound)
             else:
                 with self.assertRaises(ValueError):
-                    GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bounds)
+                    GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bound)
 
             GridGen.extract_subgrid_data(
-                dims, coord, zcorn, ijk_bounds, decomposition_change=True
+                dims, coord, zcorn, ijk_bound, decomposition_change=True
             )
 
     def test_extract_grid_invalid_bounds(self):

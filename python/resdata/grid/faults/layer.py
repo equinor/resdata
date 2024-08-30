@@ -63,10 +63,10 @@ class Layer(BaseCClass):
     def __unpack_index(self, index):
         try:
             (i, j) = index
-        except TypeError:
+        except TypeError as err:
             raise ValueError(
                 "Index:%s is invalid - must have two integers" % str(index)
-            )
+            ) from err
 
         self._assert_ij(i, j)
 

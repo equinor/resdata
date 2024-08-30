@@ -2,10 +2,7 @@
 import os.path
 import os
 
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
+from unittest import skipIf
 
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest

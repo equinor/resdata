@@ -13,7 +13,7 @@ class FaultSegment(object):
         s = self.c1, self.c2
         o = other.c1, other.c2
         o_flipped = other.c2, other.c1
-        return s == o or s == o_flipped
+        return s in (o, o_flipped)
 
     def __hash__(self):
         return hash(hash(self.__C1) + hash(self.__C2) + hash(self.__next_segment))
@@ -28,10 +28,7 @@ class FaultSegment(object):
             return True
         if self.__C2 == other.__C1:
             return True
-        if self.__C2 == other.__C2:
-            return True
-
-        return False
+        return self.__C2 == other.__C2
 
     def get_c1(self):
         return self.__C1
@@ -135,7 +132,7 @@ class SegmentMap(object):
 
     def print_content(self):
         for d in self.__segment_map.values():
-            for C, S in d.iteritems():
+            for _, S in d.iteritems():
                 print(S)
 
 

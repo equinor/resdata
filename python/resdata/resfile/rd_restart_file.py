@@ -1,4 +1,5 @@
 from cwrap import BaseCClass
+
 from resdata import FileMode, FileType, ResdataPrototype
 from resdata.resfile import Resdata3DFile, ResdataFile
 from resdata.util.util import CTime, monkey_the_camel
@@ -104,10 +105,7 @@ class ResdataRestartFile(Resdata3DFile):
             else:
                 intehead_kw = self["INTEHEAD"][0]
                 doubhead_kw = self["DOUBHEAD"][0]
-                if "LOGIHEAD" in self:
-                    logihead_kw = self["LOGIHEAD"][0]
-                else:
-                    logihead_kw = None
+                logihead_kw = self["LOGIHEAD"][0] if "LOGIHEAD" in self else None
 
                 self.rst_headers.append(
                     ResdataRestartHead(

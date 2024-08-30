@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 import copy
 import datetime
-import six
 
-try:
-    from unittest2 import TestCase
-except ImportError:
-    from unittest import TestCase
+import six
+from unittest import TestCase
 
 from resdata.util.util import (
     DoubleVector,
@@ -523,16 +520,16 @@ class UtilTest(TestCase):
         r = range(a, b, d)
 
         self.assertEqual(len(v), len(r))
-        for a, b in zip(v, r):
-            self.assertEqual(a, b)
+        for val1, val2 in zip(v, r):
+            self.assertEqual(val1, val2)
 
     def create_range_test(self, v, a, b, d):
         v = IntVector.createRange(a, b, d)
         r = range(a, b, d)
 
         self.assertEqual(len(v), len(r))
-        for a, b in zip(v, r):
-            self.assertEqual(a, b)
+        for val1, val2 in zip(v, r):
+            self.assertEqual(val1, val2)
 
     def test_range(self):
         v = IntVector()

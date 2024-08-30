@@ -6,7 +6,9 @@ import ctypes
 import os.path
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
+
 from .geometry_tools import GeometryTools
 
 
@@ -54,10 +56,7 @@ class CPolyline(BaseCClass):
 
     def __str__(self):
         name = self.getName()
-        if name:
-            str = "%s [" % name
-        else:
-            str = "["
+        str = "%s [" % name if name else "["
 
         for index, p in enumerate(self):
             str += "(%g,%g)" % p
@@ -143,10 +142,7 @@ class CPolyline(BaseCClass):
         intersections = GeometryTools.rayPolygonIntersections(p1, ray_dir, bbox)
         if intersections:
             p2 = intersections[0][1]
-            if self.getName():
-                name = "Extend:%s" % self.getName()
-            else:
-                name = None
+            name = "Extend:%s" % self.getName() if self.getName() else None
 
             return CPolyline(name=name, init_points=[(p1[0], p1[1]), p2])
         else:

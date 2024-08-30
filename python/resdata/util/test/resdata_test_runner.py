@@ -1,9 +1,6 @@
 import os
 
-try:
-    from unittest2 import TestLoader, TextTestRunner
-except ImportError:
-    from unittest import TestLoader, TextTestRunner
+from unittest import TestLoader, TextTestRunner
 
 
 class ResdataTestRunner(object):
@@ -19,7 +16,7 @@ class ResdataTestRunner(object):
         loader = TestLoader()
         test_suite = loader.discover(path, pattern=pattern)
 
-        for root, dirnames, filenames in os.walk(path):
+        for root, dirnames, _ in os.walk(path):
             for directory in dirnames:
                 test_suite.addTests(
                     ResdataTestRunner.findTestsInDirectory(

@@ -72,7 +72,7 @@ def __user_warning(msg):
 
 
 def __dev_warning(msg):
-    warnings.warn(msg, DeprecationWarning)
+    warnings.warn(msg, DeprecationWarning, stacklevel=1)
 
 
 def __hard_warning(msg):

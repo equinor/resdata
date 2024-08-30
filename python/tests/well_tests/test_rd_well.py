@@ -376,7 +376,7 @@ class ResdataWellTest(ResdataTest):
 
         self.assertNotEqual(well_info[0], well_info[1])
 
-        well_time_lines = [wtl for wtl in well_info]
+        well_time_lines = list(well_info)
         self.assertEqual(len(well_time_lines), len(well_info))
 
         with self.assertRaises(IndexError):

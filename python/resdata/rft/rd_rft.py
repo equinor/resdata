@@ -3,6 +3,7 @@ Module for loading RFT files.
 """
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
 from resdata.rft import ResdataPLTCell, ResdataRFTCell
 from resdata.util.util import CTime, monkey_the_camel
@@ -238,10 +239,7 @@ class ResdataRFTFile(BaseCClass):
            >>> print "RFTs at 01/01/2010   : %d" % rftFile.size( date = datetime.date( 2010 , 1 , 1 ))
 
         """
-        if date:
-            cdate = CTime(date)
-        else:
-            cdate = CTime(-1)
+        cdate = CTime(date) if date else CTime(-1)
 
         return self._get_size(well, cdate)
 

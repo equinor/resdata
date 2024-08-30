@@ -1,4 +1,5 @@
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
 
 
@@ -101,12 +102,11 @@ class LookupTable(BaseCClass):
                     "Interpolate argument:%g is outside valid interval: [%g,%g]"
                     % (x, self.getMinArg(), self.getMaxArg())
                 )
-        elif x > self.getMaxArg():
-            if not self.hasUpperLimit():
-                raise ValueError(
-                    "Interpolate argument:%g is outside valid interval: [%g,%g]"
-                    % (x, self.getMinArg(), self.getMaxArg())
-                )
+        elif x > self.getMaxArg() and not self.hasUpperLimit():
+            raise ValueError(
+                "Interpolate argument:%g is outside valid interval: [%g,%g]"
+                % (x, self.getMinArg(), self.getMaxArg())
+            )
 
         return self._interp(x)
 

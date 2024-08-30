@@ -3,6 +3,7 @@ import datetime
 import time
 
 from cwrap import BaseCValue
+
 from resdata import ResdataPrototype
 
 
@@ -16,7 +17,7 @@ class CTime(BaseCValue):
 
     def __init__(self, value):
         if isinstance(value, int):
-            value = value
+            pass
         elif isinstance(value, CTime):
             value = value.value()
         elif isinstance(value, datetime.datetime):

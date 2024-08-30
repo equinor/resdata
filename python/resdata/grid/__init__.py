@@ -1,13 +1,13 @@
 """
-  rd_grid/Grid: This will load a GRID or EGRID file, and
-     can then subsequently be used for queries about the grid.
+rd_grid/Grid: This will load a GRID or EGRID file, and
+   can then subsequently be used for queries about the grid.
 
-  rd_region/ResdataRegion: Convenience class to support selecting cells
-     in a grid based on a wide range of criteria. Can be used as a
-     mask in operations on ResdataKW instances.
+rd_region/ResdataRegion: Convenience class to support selecting cells
+   in a grid based on a wide range of criteria. Can be used as a
+   mask in operations on ResdataKW instances.
 
-  rd_grid_generator/GridGenerator: This can be used to generate various
-    grids.
+rd_grid_generator/GridGenerator: This can be used to generate various
+  grids.
 """
 
 import resdata.util.util

@@ -4,10 +4,7 @@ import os.path
 import traceback
 import sys
 
-try:
-    from unittest2 import TestCase
-except ImportError:
-    from unittest import TestCase
+from unittest import TestCase
 
 from .source_enumerator import SourceEnumerator
 from resdata.util.util import installAbortSignals
@@ -130,8 +127,8 @@ class ExtendedTestCase(TestCase):
             self.fail("The directory: %s exists!" % path)
 
     def __filesAreEqual(self, first, second):
-        buffer1 = open(first, "rb").read()
-        buffer2 = open(second, "rb").read()
+        buffer1 = open(first, "rb").read()  # noqa: SIM115
+        buffer2 = open(second, "rb").read()  # noqa: SIM115
 
         return buffer1 == buffer2
 
@@ -198,7 +195,4 @@ class ExtendedTestCase(TestCase):
         required_version = Version(major, minor, micro)
         current_version = Version.currentVersion()
 
-        if required_version < current_version:
-            return True
-        else:
-            return False
+        return required_version < current_version

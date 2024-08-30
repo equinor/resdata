@@ -126,7 +126,7 @@ class RegionTest(ResdataTest):
                 OK = False
 
         self.assertTrue(OK)
-        self.assertTrue(2 * 3 * 6 == len(reg.getGlobalList()))
+        self.assertTrue(len(reg.getGlobalList()) == 2 * 3 * 6)
 
     def test_index_list(self):
         reg = ResdataRegion(self.grid, False)

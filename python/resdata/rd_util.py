@@ -15,6 +15,7 @@ from __future__ import absolute_import
 import ctypes
 
 from cwrap import BaseCEnum
+
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
 
@@ -140,10 +141,7 @@ class ResdataUtil(object):
         file_type = ResdataUtil._get_file_type(
             filename, ctypes.byref(fmt_file), ctypes.byref(report_step)
         )
-        if report_step.value == -1:
-            step = None
-        else:
-            step = report_step.value
+        step = None if report_step.value == -1 else report_step.value
 
         return (file_type, fmt_file.value, step)
 
