@@ -99,7 +99,7 @@ class BoolVector(VectorTemplate):
     )
 
     def __init__(self, default_value=False, initial_size=0):
-        super(BoolVector, self).__init__(default_value, initial_size)
+        super().__init__(default_value, initial_size)
 
     def count(self, value=True):
         """@rtype: int"""
@@ -168,7 +168,7 @@ class BoolVector(VectorTemplate):
             cnt = self._tostr(a)
             cnt += "..."
             cnt += self._tostr(b)
-        return 'BoolVector(size = %d, content = "%s") %s' % (ls, cnt, self._ad_str())
+        return f'BoolVector(size = {ls}, content = "{cnt}") {self._ad_str()}'
 
     @classmethod
     def create_linear(cls, start_value, end_value, num_values):

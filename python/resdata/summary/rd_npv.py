@@ -1,12 +1,13 @@
-import re
 import datetime
 import numbers
+import re
 
 from resdata.util.util import monkey_the_camel
+
 from .rd_sum import Summary
 
 
-class NPVParseKey(object):
+class NPVParseKey:
     def __init__(self, eclNPV):
         self.baseCase = eclNPV.baseCase
         self.NPV = eclNPV
@@ -19,10 +20,10 @@ class NPVParseKey(object):
             self.NPV.addKey(key, var)
             return var + "[i]"
         else:
-            raise ValueError("Sorry - the key: %s is not a total key - aborting" % key)
+            raise ValueError(f"Sorry - the key: {key} is not a total key - aborting")
 
 
-class NPVPriceVector(object):
+class NPVPriceVector:
     def __init__(self, argList):
         self.dateList = []
         if isinstance(argList, list):
@@ -51,8 +52,8 @@ class NPVPriceVector(object):
                 year = int(tmp[2])
 
                 date = datetime.date(year, month, day)
-            except Exception:
-                raise ValueError("First element was invalid date item")
+            except Exception as err:
+                raise ValueError("First element was invalid date item") from err
 
         if len(self.dateList):
             prevItem = self.dateList[-1]
@@ -108,18 +109,18 @@ class NPVPriceVector(object):
                         index2 = index
                 return self.evalDate(self.dateList[index], date)
         else:
-            raise ValueError("Input date:%s before start of vector" % date)
+            raise ValueError(f"Input date:{date} before start of vector")
 
 
-class ResdataNPV(object):
-    sumKeyRE = re.compile("[\[]([\w:,]+)[\]]")
+class ResdataNPV:
+    sumKeyRE = re.compile(r"[\[]([\w:,]+)[\]]")
 
     def __init__(self, baseCase):
         sum = Summary(baseCase)
         if sum:
             self.baseCase = sum
         else:
-            raise Error("Failed to open summary case:%s" % baseCase)
+            raise OSError(f"Failed to open summary case:{baseCase}")
         self.expression = None
         self.keyList = {}
         self.start = None
@@ -147,9 +148,7 @@ class ResdataNPV(object):
     def parse_expression(self, expression):
         self.keyList = {}
         if expression.count("[") != expression.count("]"):
-            raise ValueError(
-                "Expression:%s invalid - not matching [ and ]" % expression
-            )
+            raise ValueError(f"Expression:{expression} invalid - not matching [ and ]")
 
         replaceKey = NPVParseKey(self)
         parsedExpression = self.sumKeyRE.sub(replaceKey, expression)
@@ -161,20 +160,14 @@ class ResdataNPV(object):
             "trange = self.baseCase.timeRange(self.start, self.end, self.interval)\n"
         )
         for key, var in self.keyList.items():
-            self.code += '%s = self.baseCase.blockedProduction("%s", trange)\n' % (
-                var,
-                key,
-            )
+            self.code += f'{var} = self.baseCase.blockedProduction("{key}", trange)\n'
 
         self.code += "npv = 0\n"
-        self.code += (
-            """
+        self.code += f"""
 for i in range(len(trange) - 1):
-   npv += %s
+   npv += {parsedExpression}
 varDict[\"npv\"] = npv
 """
-            % parsedExpression
-        )
 
     def eval_npv(self):
         byteCode = compile(self.code, "<string>", "exec")

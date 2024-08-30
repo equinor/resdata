@@ -1,8 +1,6 @@
 from os.path import isfile
 from cwrap import BaseCClass
-from resdata.grid import Grid
 from resdata.resfile.rd_file import ResdataFile
-from resdata.well import WellTimeLine
 from resdata import ResdataPrototype
 
 
@@ -32,9 +30,9 @@ class WellInfo(BaseCClass):
         @type rst_file: str or ResdataFile or list of str or list of ResdataFile
         """
         c_ptr = self._alloc(grid)
-        super(WellInfo, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         if not c_ptr:
-            raise ValueError("Unable to construct WellInfo from grid %s." % str(grid))
+            raise ValueError(f"Unable to construct WellInfo from grid {str(grid)}.")
 
         if rst_file is not None:
             if isinstance(rst_file, list):
@@ -44,7 +42,7 @@ class WellInfo(BaseCClass):
                 self.addWellFile(rst_file, load_segment_information)
 
     def __repr__(self):
-        return "WellInfo(well_count = %d) at 0x%x" % (len(self), self._address())
+        return f"WellInfo(well_count = {len(self)}) at 0x{self._address() :x}"
 
     def __len__(self):
         """@rtype: int"""
@@ -58,14 +56,12 @@ class WellInfo(BaseCClass):
 
         if isinstance(item, str):
             if not item in self:
-                raise KeyError("The well '%s' is not in this set." % item)
+                raise KeyError(f"The well '{item}' is not in this set.")
             well_name = item
 
         elif isinstance(item, int):
             if not 0 <= item < len(self):
-                raise IndexError(
-                    "Index must be in range 0 <= %d < %d" % (item, len(self))
-                )
+                raise IndexError(f"Index must be in range 0 <= {item} < {len(self)}")
             well_name = self._iget_well_name(item)
 
         return self._get_ts(well_name).setParent(self)
@@ -91,7 +87,7 @@ class WellInfo(BaseCClass):
 
     def _assert_file_exists(self, rst_file):
         if not isfile(rst_file):
-            raise IOError("No such file %s" % rst_file)
+            raise OSError(f"No such file {rst_file}")
 
     def addWellFile(self, rst_file, load_segment_information):
         """@type rstfile: str or ResdataFile"""

@@ -2,19 +2,19 @@ import os
 from .polyline import Polyline
 
 
-class XYZIo(object):
+class XYZIo:
     @staticmethod
     def readXYZFile(path):
         """@rtype: Polyline"""
 
         if not os.path.exists(path):
-            raise IOError("Path does not exist '%s'!" % path)
+            raise OSError(f"Path does not exist '{path}'!")
 
         name = os.path.basename(path)
 
         polyline = Polyline(name=name)
 
-        with open(path, "r") as f:
+        with open(path) as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -34,13 +34,13 @@ class XYZIo(object):
         """@rtype: Polyline"""
 
         if not os.path.exists(path):
-            raise IOError("Path does not exist '%s'!" % path)
+            raise OSError(f"Path does not exist '{path}'!")
 
         name = os.path.basename(path)
 
         polyline = Polyline(name=name)
 
-        with open(path, "r") as f:
+        with open(path) as f:
             for line in f:
                 x, y = map(float, line.split())
                 polyline.addPoint(x, y)
@@ -54,4 +54,4 @@ class XYZIo(object):
         """
         with open(filename, "w") as fileH:
             for p in polyline:
-                fileH.write("%g %g\n" % (p[0], p[1]))
+                fileH.write(f"{p[0]:g} {p[1]:g}\n")

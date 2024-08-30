@@ -26,6 +26,7 @@ import datetime
 import re
 
 from cwrap import BaseCClass
+
 from resdata import FileMode, FileType, ResdataPrototype
 from resdata.resfile import ResdataKW
 from resdata.util.util import CTime, monkey_the_camel
@@ -121,19 +122,18 @@ class ResdataFile(BaseCClass):
             seqnum_list = self["SEQNUM"]
             for s in seqnum_list:
                 report_steps.append(s[0])
-        except KeyError:
+        except KeyError as err:
             # OK - we did not have seqnum; that might be because this
             # a non-unified restart file; or because this is not a
             # restart file at all.
             fname = self.getFilename()
-            matchObj = re.search("\.[XF](\d{4})$", fname)
+            matchObj = re.search(r"\.[XF](\d{4})$", fname)
             if matchObj:
                 report_steps.append(int(matchObj.group(1)))
             else:
                 raise TypeError(
-                    'Tried get list of report steps from file "%s" - which is not a restart file'
-                    % fname
-                )
+                    f'Tried get list of report steps from file "{fname}" - which is not a restart file'
+                ) from err
 
         return report_steps
 
@@ -149,7 +149,7 @@ class ResdataFile(BaseCClass):
     def __repr__(self):
         fn = self.getFilename()
         wr = ", read/write" if self._writable() else ""
-        return self._create_repr('"%s"%s' % (fn, wr))
+        return self._create_repr(f'"{fn}"{wr}')
 
     def __init__(self, filename, flags=FileMode.DEFAULT, index_filename=None):
         """
@@ -181,9 +181,9 @@ class ResdataFile(BaseCClass):
             c_ptr = self._fast_open(filename, index_filename, flags)
 
         if c_ptr is None:
-            raise IOError('Failed to open file "%s"' % filename)
+            raise OSError(f'Failed to open file "{filename}"')
         else:
-            super(ResdataFile, self).__init__(c_ptr)
+            super().__init__(c_ptr)
             self.global_view = self._get_global_view()
             self.global_view.setParent(self)
 
@@ -213,8 +213,8 @@ class ResdataFile(BaseCClass):
         if self._writable():
             self._save_kw(kw)
         else:
-            raise IOError(
-                'save_kw: the file "%s" has been opened read only.' % self.getFilename()
+            raise OSError(
+                f'save_kw: the file "{self.getFilename()}" has been opened read only.'
             )
 
     def __len__(self):
@@ -230,16 +230,14 @@ class ResdataFile(BaseCClass):
 
     def block_view(self, kw, kw_index):
         if not kw in self:
-            raise KeyError('No such keyword "%s".' % kw)
+            raise KeyError(f'No such keyword "{kw}".')
         ls = self.global_view.numKeywords(kw)
         idx = kw_index
         if idx < 0:
             idx += ls
         if 0 <= idx < ls:
             return self.global_view.blockView(kw, idx)
-        raise IndexError(
-            "Index out of range, must be in [0, %d), was %d." % (ls, kw_index)
-        )
+        raise IndexError(f"Index out of range, must be in [0, {ls}), was {kw_index}.")
 
     def block_view2(self, start_kw, stop_kw, start_index):
         return self.global_view.blockView2(start_kw, stop_kw, start_index)
@@ -286,7 +284,7 @@ class ResdataFile(BaseCClass):
             if 0 <= idx < ls:
                 return self.global_view[idx]
             else:
-                raise IndexError("Index must be in [0, %d), was: %d." % (ls, index))
+                raise IndexError(f"Index must be in [0, {ls}), was: {index}.")
         return self.global_view[index]
 
     def iget_kw(self, index, copy=False):
@@ -364,17 +362,12 @@ class ResdataFile(BaseCClass):
                     return ResdataKW.copy(kw)
                 else:
                     return kw
+            elif self.has_kw(kw_name):
+                raise IndexError(f'Does not have keyword "{kw_name}" at time:{dtime}.')
             else:
-                if self.has_kw(kw_name):
-                    raise IndexError(
-                        'Does not have keyword "%s" at time:%s.' % (kw_name, dtime)
-                    )
-                else:
-                    raise KeyError('Keyword "%s" not recognized.' % kw_name)
+                raise KeyError(f'Keyword "{kw_name}" not recognized.')
         else:
-            raise IndexError(
-                'Does not have keyword "%s" at time:%s.' % (kw_name, dtime)
-            )
+            raise IndexError(f'Does not have keyword "{kw_name}" at time:{dtime}.')
 
     @property
     def size(self):
@@ -422,7 +415,6 @@ class ResdataFile(BaseCClass):
         keywords and the method will simply return an empty list.
         """
         steps = []
-        seqnum_list = self["SEQNUM"]
         for kw in self["SEQNUM"]:
             steps.append(kw[0])
         return steps
@@ -560,10 +552,10 @@ class ResdataFile(BaseCClass):
 
     def write_index(self, index_file_name):
         if not self or not self._write_index(index_file_name):
-            raise IOError("Failed to write index file:%s" % index_file_name)
+            raise OSError(f"Failed to write index file:{index_file_name}")
 
 
-class ResdataFileContextManager(object):
+class ResdataFileContextManager:
     def __init__(self, rd_file):
         self.__rd_file = rd_file
 

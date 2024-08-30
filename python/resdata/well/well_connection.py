@@ -96,20 +96,7 @@ class WellConnection(BaseCClass):
         msw = " (multi segment)" if self.isMultiSegmentWell() else ""
         dir = WellConnectionDirection(self.direction())
         addr = self._address()
-        return (
-            "WellConnection(%s %s%s%s, rates = (O:%s,G:%s,W:%s), direction = %s) at 0x%x"
-            % (
-                ijk,
-                frac,
-                open_,
-                msw,
-                self.oilRate(),
-                self.gasRate(),
-                self.waterRate(),
-                dir,
-                addr,
-            )
-        )
+        return f"WellConnection({ijk} {frac}{open_}{msw}, rates = (O:{self.oilRate()},G:{self.gasRate()},W:{self.waterRate()}), direction = {dir}) at 0x{addr:x}"
 
     def gasRate(self):
         return self._gas_rate()

@@ -2,10 +2,6 @@
 import os.path
 import os
 
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
 
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest
@@ -58,9 +54,7 @@ class WorkAreaTest(ResdataTest):
             self.assertEqual(
                 loop_dir,
                 original_dir,
-                "Wrong folder before creating TestAreaContext. Loop: {} -- CWD: {} ".format(
-                    i, loop_dir
-                ),
+                f"Wrong folder before creating TestAreaContext. Loop: {i} -- CWD: {loop_dir} ",
             )
 
             with TestAreaContext("test_multiple_areas") as t:
@@ -69,9 +63,7 @@ class WorkAreaTest(ResdataTest):
                 self.assertNotIn(
                     t_dir,
                     context_dirs,
-                    "Multiple TestAreaContext objects in the same folder. Loop {} -- CWD: {}".format(
-                        i, loop_dir
-                    ),
+                    f"Multiple TestAreaContext objects in the same folder. Loop {i} -- CWD: {loop_dir}",
                 )
                 context_dirs.append(t_dir)
 
@@ -80,18 +72,14 @@ class WorkAreaTest(ResdataTest):
                 self.assertNotEqual(
                     t_dir,
                     original_dir,
-                    "TestAreaContext in the current working directory. Loop: {} -- CWD: {}".format(
-                        i, loop_dir
-                    ),
+                    f"TestAreaContext in the current working directory. Loop: {i} -- CWD: {loop_dir}",
                 )
 
             loop_dir = os.getcwd()
             self.assertEqual(
                 loop_dir,
                 original_dir,
-                "Wrong folder after creating TestAreaContext. Loop: {} -- CWD: {} ".format(
-                    i, loop_dir
-                ),
+                f"Wrong folder after creating TestAreaContext. Loop: {i} -- CWD: {loop_dir} ",
             )
 
 

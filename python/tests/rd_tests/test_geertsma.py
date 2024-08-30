@@ -19,7 +19,7 @@ def create_init(grid, case):
     for g in range(grid.getGlobalSize()):
         porv[g] *= grid.cell_volume(global_index=g)
 
-    with openFortIO("%s.INIT" % case, mode=FortIO.WRITE_MODE) as f:
+    with openFortIO(f"{case}.INIT", mode=FortIO.WRITE_MODE) as f:
         poro.fwrite(f)
         porv.fwrite(f)
 
@@ -106,34 +106,6 @@ class GeertsmaTest(ResdataTest):
                 "S1", "S2", receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz, dz1 - dz2)
-
-    @staticmethod
-    def test_geertsma_kernel_seabed():
-        grid = Grid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
-        with TestAreaContext("Subsidence"):
-            p1 = [1]
-            create_restart(grid, "TEST", p1)
-            create_init(grid, "TEST")
-
-            init = ResdataFile("TEST.INIT")
-            restart_file = ResdataFile("TEST.UNRST")
-
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
-
-            subsidence = ResdataSubsidence(grid, init)
-            subsidence.add_survey_PRESSURE("S1", restart_view1)
-
-            youngs_modulus = 5e8
-            poisson_ratio = 0.3
-            seabed = 300
-            above = 100
-            topres = 2000
-            receiver = (1000, 1000, topres - seabed - above)
-
-            dz = subsidence.evalGeertsma(
-                "S1", None, receiver, youngs_modulus, poisson_ratio, seabed
-            )
-            np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
 
     @staticmethod
     def test_geertsma_kernel_seabed():

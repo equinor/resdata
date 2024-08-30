@@ -7,7 +7,7 @@ from resdata import ResdataPrototype
 from resdata.geometry import Polyline, GeometryTools, CPolylineCollection
 
 
-class FaultBlockCell(object):
+class FaultBlockCell:
     def __init__(self, i, j, k, x, y, z):
         self.i = i
         self.j = j
@@ -18,7 +18,7 @@ class FaultBlockCell(object):
         self.z = z
 
     def __str__(self):
-        return "(%d,%d)" % (self.i, self.j)
+        return f"({self.i}, {self.j})"
 
 
 class FaultBlock(BaseCClass):
@@ -79,12 +79,12 @@ class FaultBlock(BaseCClass):
                     i.value, j.value, k.value, x.value, y.value, z.value
                 )
             else:
-                raise IndexError("Index:%d out of range: [0,%d)" % (index, len(self)))
+                raise IndexError(f"Index:{index} out of range: [0,{len(self)})")
         else:
-            raise TypeError("Index:%s wrong type - integer expected")
+            raise TypeError(f"Index:{index !s} wrong type - integer expected")
 
     def __str__(self):
-        return "Block ID: %d" % self.getBlockID()
+        return f"Block ID: {self.get_block_id()}"
 
     def __len__(self):
         return self._get_size()
@@ -143,9 +143,8 @@ class FaultBlock(BaseCClass):
         for p in polyline:
             if GeometryTools.pointInPolygon(p, edge_polyline):
                 return True
-        else:
-            edge_polyline.assertClosed()
-            return GeometryTools.polylinesIntersect(edge_polyline, polyline)
+        edge_polyline.assertClosed()
+        return GeometryTools.polylinesIntersect(edge_polyline, polyline)
 
     def get_neighbours(self, polylines=None, connected_only=True):
         """

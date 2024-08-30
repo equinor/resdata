@@ -2,8 +2,6 @@
 Create a polygon
 """
 
-import ctypes
-
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
 from resdata.geometry import CPolyline
@@ -37,13 +35,13 @@ class CPolylineCollection(BaseCClass):
 
     def __init__(self):
         c_ptr = self._alloc_new()
-        super(CPolylineCollection, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         self.parent_ref = None
 
     def __contains__(self, name):
         return self._has_polyline(name)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._size()
 
     def __iter__(self):
@@ -62,13 +60,13 @@ class CPolylineCollection(BaseCClass):
                 return self._iget(index).setParent(self)
             else:
                 raise IndexError(
-                    "Invalid index:%d - valid range: [0,%d)" % (index, len(self))
+                    f"Invalid index:{index} - valid range: [0,{len(self)})"
                 )
         elif isinstance(index, str):
             if index in self:
                 return self._get(index)
             else:
-                raise KeyError("No polyline named:%s" % index)
+                raise KeyError(f"No polyline named:{index}")
         else:
             raise TypeError("The index argument must be string or integer")
 
@@ -85,15 +83,14 @@ class CPolylineCollection(BaseCClass):
     def addPolyline(self, polyline, name=None):
         if not isinstance(polyline, CPolyline):
             polyline = CPolyline(init_points=polyline, name=name)
-        else:
-            if not name is None:
-                raise ValueError(
-                    "The name keyword argument can only be supplied when add not CPOlyline object"
-                )
+        elif not name is None:
+            raise ValueError(
+                "The name keyword argument can only be supplied when add not CPOlyline object"
+            )
 
         name = polyline.getName()
         if name and name in self:
-            raise KeyError("The polyline collection already has an object:%s" % name)
+            raise KeyError(f"The polyline collection already has an object:{name}")
 
         if polyline.isReference():
             self._add_polyline(polyline, False)
@@ -103,7 +100,7 @@ class CPolylineCollection(BaseCClass):
 
     def createPolyline(self, name=None):
         if name and name in self:
-            raise KeyError("The polyline collection already has an object:%s" % name)
+            raise KeyError(f"The polyline collection already has an object:{name}")
 
         polyline = self._create_polyline(name)
         polyline.setParent(parent=self)

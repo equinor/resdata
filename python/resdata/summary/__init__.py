@@ -1,7 +1,7 @@
 """
-  rd_sum/Summary: This will load summary results;
-     both data file(s) and the SMSPEC file. The RdSum object can be
-     used as basis for queries on summary vectors.
+rd_sum/Summary: This will load summary results;
+   both data file(s) and the SMSPEC file. The RdSum object can be
+   used as basis for queries on summary vectors.
 """
 
 import resdata.util.util

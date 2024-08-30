@@ -10,11 +10,10 @@ In addition to the enum definitions there are a few stateless
 functions from rd_util.c which are not bound to any class type.
 """
 
-from __future__ import absolute_import
-
 import ctypes
 
 from cwrap import BaseCEnum
+
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
 
@@ -98,7 +97,7 @@ FileMode.addEnum("WRITABLE", 2)
 # -----------------------------------------------------------------
 
 
-class ResdataUtil(object):
+class ResdataUtil:
     _get_num_cpu = ResdataPrototype("int rd_get_num_cpu(char*)", bind=False)
     _get_file_type = ResdataPrototype(
         "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False
@@ -122,7 +121,7 @@ class ResdataUtil(object):
         """
         Will inspect an ECLIPSE filename and return an integer type flag.
         """
-        file_type, fmt, step = ResdataUtil.inspectExtension(filename)
+        file_type, _, _ = ResdataUtil.inspectExtension(filename)
         return file_type
 
     @staticmethod
@@ -140,10 +139,7 @@ class ResdataUtil(object):
         file_type = ResdataUtil._get_file_type(
             filename, ctypes.byref(fmt_file), ctypes.byref(report_step)
         )
-        if report_step.value == -1:
-            step = None
-        else:
-            step = report_step.value
+        step = None if report_step.value == -1 else report_step.value
 
         return (file_type, fmt_file.value, step)
 
@@ -151,7 +147,7 @@ class ResdataUtil(object):
     def report_step(filename):
         report_step = ResdataUtil._get_report_step(filename)
         if report_step < 0:
-            raise ValueError("Could not infer report step from: %s" % filename)
+            raise ValueError(f"Could not infer report step from: {filename}")
 
         return report_step
 

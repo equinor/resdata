@@ -21,8 +21,6 @@ The modules included in the util package are:
 
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import resdata
 from cwrap import Prototype
 
@@ -72,7 +70,7 @@ def __user_warning(msg):
 
 
 def __dev_warning(msg):
-    warnings.warn(msg, DeprecationWarning)
+    warnings.warn(msg, DeprecationWarning, stacklevel=1)
 
 
 def __hard_warning(msg):
@@ -98,9 +96,7 @@ def monkey_the_camel(class_, camel, method_, method_type=None):
         return args if (method_type != classmethod) else args[1:]
 
     def warned_method(*args, **kwargs):
-        __rd_camel_case_warning(
-            "Warning, %s is deprecated, use %s" % (camel, str(method_))
-        )
+        __rd_camel_case_warning(f"Warning, {camel} is deprecated, use {str(method_)}")
         return method_(*shift(*args), **kwargs)
 
     if method_type == staticmethod:

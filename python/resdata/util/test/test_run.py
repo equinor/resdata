@@ -7,17 +7,17 @@ from .test_area import TestAreaContext
 
 def path_exists(path):
     if os.path.exists(path):
-        return (True, "Path:%s exists" % path)
+        return (True, f"Path:{path} exists")
     else:
-        return (False, "ERROR: Path:%s does not exist" % path)
+        return (False, f"ERROR: Path:{path} does not exist")
 
 
-class TestRun(object):
+class TestRun:
     default_ert_cmd = "ert"
     default_ert_version = "stable"
     default_path_prefix = None
 
-    def __init__(self, config_file, args=[], name=None):
+    def __init__(self, config_file, args=[], name=None):  # noqa: B006
         if os.path.exists(config_file) and os.path.isfile(config_file):
             self.parseArgs(args)
             self.__ert_cmd = TestRun.default_ert_cmd
@@ -35,9 +35,9 @@ class TestRun(object):
                         self.name = self.name[1:]
                     else:
                         break
-            self.name += "/%08d" % random.randint(0, 100000000)
+            self.name += f"/{random.randint(0, 100000000):08d}"
         else:
-            raise IOError("No such config file: %s" % config_file)
+            raise OSError(f"No such config file: {config_file}")
 
     def parseArgs(self, args):
         parser = argparse.ArgumentParser()
@@ -95,7 +95,7 @@ class TestRun(object):
         if callable(check_func):
             self.check_list.append((check_func, arg))
         else:
-            raise Exception("The checker:%s is not callable" % check_func)
+            raise Exception(f"The checker:{check_func} is not callable")
 
     # -----------------------------------------------------------------
 
@@ -112,7 +112,7 @@ class TestRun(object):
         if status == 0:
             return (True, "ert has run successfully")
         else:
-            return (False, "ERROR:: ert exited with status code:%s" % status)
+            return (False, f"ERROR:: ert exited with status code:{status}")
 
     def run(self):
         if len(self.workflows):

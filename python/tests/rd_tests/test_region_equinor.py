@@ -10,8 +10,8 @@ class RegionTest(ResdataTest):
     def setUp(self):
         case = self.createTestPath("Equinor/ECLIPSE/Gurbat/ECLIPSE")
         self.grid = Grid(case)
-        self.rst_file = ResdataFile("%s.UNRST" % case)
-        self.init_file = ResdataFile("%s.INIT" % case)
+        self.rst_file = ResdataFile(f"{case}.UNRST")
+        self.init_file = ResdataFile(f"{case}.INIT")
 
     def test_kw_imul(self):
         P = self.rst_file["PRESSURE"][5]
@@ -126,7 +126,7 @@ class RegionTest(ResdataTest):
                 OK = False
 
         self.assertTrue(OK)
-        self.assertTrue(2 * 3 * 6 == len(reg.getGlobalList()))
+        self.assertTrue(len(reg.getGlobalList()) == 2 * 3 * 6)
 
     def test_index_list(self):
         reg = ResdataRegion(self.grid, False)
@@ -146,10 +146,10 @@ class RegionTest(ResdataTest):
 
     def test_heidrun(self):
         root = self.createTestPath("Equinor/ECLIPSE/Heidrun")
-        grid = Grid("%s/FF12_2013B2_AMAP_AOP-J15_NO62_MOVEX.EGRID" % root)
+        grid = Grid(f"{root}/FF12_2013B2_AMAP_AOP-J15_NO62_MOVEX.EGRID")
 
         polygon = []
-        with open("%s/polygon.ply" % root) as fileH:
+        with open(f"{root}/polygon.ply") as fileH:
             for line in fileH.readlines():
                 tmp = line.split()
                 polygon.append((float(tmp[0]), float(tmp[1])))

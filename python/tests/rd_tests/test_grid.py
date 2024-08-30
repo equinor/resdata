@@ -306,7 +306,7 @@ class GridTest(ResdataTest):
             self.assertTrue(c.active)
         self.assertEqual(cnt, 4160)
 
-        cnt = len([c for c in grid.cells()])
+        cnt = len(list(grid.cells()))
         self.assertEqual(cnt, len(grid))
 
     def test_repr_and_name(self):
@@ -316,15 +316,15 @@ class GridTest(ResdataTest):
         pfx = "Grid("
         rep = repr(grid)
         self.assertEqual(pfx, rep[: len(pfx)])
-        self.assertEqual(type(rep), type(""))
-        self.assertEqual(type(grid.getName()), type(""))
+        self.assertEqual(type(rep), str)
+        self.assertEqual(type(grid.getName()), str)
         with TestAreaContext("python/rd_grid/repr"):
             grid.save_EGRID("CASE.EGRID")
             g2 = Grid("CASE.EGRID")
             r2 = repr(g2)
             self.assertEqual(pfx, r2[: len(pfx)])
-            self.assertEqual(type(r2), type(""))
-            self.assertEqual(type(g2.getName()), type(""))
+            self.assertEqual(type(r2), str)
+            self.assertEqual(type(g2.getName()), str)
 
     def test_node_pos(self):
         grid = GridGen.createRectangular((10, 20, 30), (1, 1, 1))
@@ -566,7 +566,7 @@ class GridTest(ResdataTest):
                 self.assertEqual(
                     expected,
                     hits,
-                    "Expected %d for (%g,%g,%g), got %d" % (expected, x, y, z, hits),
+                    f"Expected {expected} for ({x :g},{y :g},{z :g}), got {hits}",
                 )
 
     def test_cell_corner_containment(self):
@@ -595,7 +595,7 @@ class GridTest(ResdataTest):
         for x, y, z in itertools.product(range(d // 2, n * d, d), repeat=3):
             for axis, direction in itertools.product(range(3), [-1, 1]):
                 p = [x, y, z]
-                p[axis] = p[axis] + direction * d / 2
+                p[axis] += direction * d / 2
                 self.assertEqual(
                     1,
                     [

@@ -17,7 +17,7 @@ class PermutationVector(BaseCClass):
     def __str__(self):
         s = "("
         for index in self:
-            s += " %d" % index
+            s += f" {index}"
         return s + ")"
 
     def __getitem__(self, index):
@@ -27,7 +27,7 @@ class PermutationVector(BaseCClass):
         if 0 <= index < len(self):
             return self._iget(index)
         else:
-            raise IndexError("Invalid index:%d" % index)
+            raise IndexError(f"Invalid index:{index}")
 
     def free(self):
         self._free()

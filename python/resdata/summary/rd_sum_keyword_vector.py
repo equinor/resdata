@@ -24,7 +24,7 @@ class SummaryKeyWordVector(BaseCClass):
 
     def __init__(self, rd_sum, add_keywords=False):
         c_pointer = self._alloc(rd_sum, add_keywords)
-        super(SummaryKeyWordVector, self).__init__(c_pointer)
+        super().__init__(c_pointer)
 
     def __getitem__(self, index):
         if index < 0:
@@ -50,7 +50,7 @@ class SummaryKeyWordVector(BaseCClass):
         self._add_multiple(keyword_pattern)
 
     def __repr__(self):
-        return self._create_repr("len=%d" % len(self))
+        return self._create_repr(f"len={len(self)}")
 
     def copy(self, rd_sum):
         return self._alloc_copy(rd_sum)

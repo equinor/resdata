@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from unittest import skipIf
 import cwrap
 
 from resdata import ResDataType
@@ -359,7 +358,6 @@ class FaultBlockTest(ResdataTest):
             ((4, 0), (4, 1)),
             ((6, 0), (6, 1)),
             ((8, 0), (8, 1)),
-            #
             ((8, 1), (9, 1)),
             ((8, 3), (9, 3)),
             ((8, 5), (9, 5)),
@@ -426,7 +424,7 @@ class FaultBlockTest(ResdataTest):
 
         nb = b1.getNeighbours()
         for b in nb:
-            print("Block:%d" % b.getBlockID())
+            print(f"Block:{b.getBlockID()}")
 
         self.assertTrue(len(nb) == 2)
         self.assertTrue(b3 in nb)

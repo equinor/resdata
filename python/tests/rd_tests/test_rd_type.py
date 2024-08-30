@@ -1,4 +1,3 @@
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
 
 from resdata import ResDataType, ResdataTypeEnum
@@ -120,7 +119,7 @@ class ResDataTypeTest(ResdataTest):
             self.assertTrue(a.is_equal(b))
             self.assertEqual(a, b)
 
-            for otype, osize in set(test_base) - set([(rd_type, elem_size)]):
+            for otype, osize in set(test_base) - {rd_type, elem_size}:
                 self.assertFalse(a.is_equal(ResDataType(otype, osize)))
                 self.assertNotEqual(a, ResDataType(otype, osize))
 
@@ -132,10 +131,10 @@ class ResDataTypeTest(ResdataTest):
             all_types.add(ResDataType(rd_type, elem_size))
             self.assertEqual(index + 1, len(all_types))
 
-        for index, (rd_type, elem_size) in enumerate(test_base):
+        for _, (rd_type, elem_size) in enumerate(test_base):
             all_types.add(ResDataType(rd_type, elem_size))
 
-        for index, rd_type in enumerate(get_const_size_types()):
+        for _, rd_type in enumerate(get_const_size_types()):
             all_types.add(ResDataType(rd_type))
 
         self.assertEqual(len(test_base), len(all_types))

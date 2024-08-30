@@ -25,8 +25,6 @@ The C-level has implementations for several fundamental types like
 float and size_t not currently implemented in the Python version.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import sys
 
 from cwrap import CFILE, BaseCClass
@@ -61,10 +59,7 @@ class VectorTemplate(BaseCClass):
         """
         Will evaluate to False for empty vector.
         """
-        if len(self) == 0:
-            return False
-        else:
-            return True
+        return len(self) != 0
 
     def __nonzero__(self):
         return self.__bool__()
@@ -106,7 +101,7 @@ class VectorTemplate(BaseCClass):
         if shift < 0:
             raise ValueError("The shift must be positive")
         if shift > len(self):
-            raise ValueError("The shift is too large %d > %d" % (shift, len(self)))
+            raise ValueError(f"The shift is too large {len(self)} < {shift}")
         self._lshift(shift)
         return self
 
@@ -129,7 +124,7 @@ class VectorTemplate(BaseCClass):
         Creates a new TVector instance.
         """
         c_pointer = self._alloc(initial_size, default_value)
-        super(VectorTemplate, self).__init__(c_pointer)
+        super().__init__(c_pointer)
         self.element_size = self._element_size()
 
     def __contains__(self, value):
@@ -210,9 +205,7 @@ class VectorTemplate(BaseCClass):
             if 0 <= idx < length:
                 return self._iget(idx)
             else:
-                raise IndexError(
-                    "Index must be in range %d <= %d < %d." % (0, index, length)
-                )
+                raise IndexError(f"Index must be in range 0 <= {index} < {length}.")
         elif isinstance(index, slice):
             return self.strided_copy(index)
         else:
@@ -263,16 +256,14 @@ class VectorTemplate(BaseCClass):
                 self._inplace_add(delta)
             else:
                 raise ValueError(
-                    "Incompatible sizes for add self:%d  other:%d"
-                    % (len(self), len(delta))
+                    f"Incompatible sizes for add self:{len(self)}  other:{len(delta)}"
                 )
+        elif isinstance(delta, (int, float)):
+            if not add:
+                delta *= -1
+            self._shift(delta)
         else:
-            if isinstance(delta, int) or isinstance(delta, float):
-                if not add:
-                    delta *= -1
-                self._shift(delta)
-            else:
-                raise TypeError("delta has wrong type:%s " % type(delta))
+            raise TypeError(f"delta has wrong type:{type(delta)} ")
 
         return self
 
@@ -335,14 +326,12 @@ class VectorTemplate(BaseCClass):
                 self._inplace_mul(factor)
             else:
                 raise ValueError(
-                    "Incompatible sizes for mul self:%d  other:%d"
-                    % (len(self), len(factor))
+                    f"Incompatible sizes for mul self:{len(self)}  other:{len(factor)}"
                 )
+        elif isinstance(factor, (int, float)):
+            self._scale(factor)
         else:
-            if isinstance(factor, int) or isinstance(factor, float):
-                self._scale(factor)
-            else:
-                raise TypeError("factor has wrong type:%s " % type(factor))
+            raise TypeError(f"factor has wrong type:{type(factor)} ")
 
         return self
 
@@ -355,12 +344,12 @@ class VectorTemplate(BaseCClass):
         return self.__mul__(factor)
 
     def __div__(self, divisor):
-        if isinstance(divisor, int) or isinstance(divisor, float):
+        if isinstance(divisor, (int, float)):
             copy = self._alloc_copy()
             copy._div(divisor)
             return copy
         else:
-            raise TypeError("Divisor has wrong type:%s" % type(divisor))
+            raise TypeError(f"Divisor has wrong type:{type(divisor)}")
 
     def __truediv__(self, divisor):
         return self.__div__(divisor)
@@ -396,11 +385,10 @@ class VectorTemplate(BaseCClass):
         if type(self) == type(value):
             # This is a copy operation
             self._memcpy(value)
+        elif isinstance(value, (int, float)):
+            self._assign(value)
         else:
-            if isinstance(value, int) or isinstance(value, float):
-                self._assign(value)
-            else:
-                raise TypeError("Value has wrong type")
+            raise TypeError("Value has wrong type")
 
     def __len__(self):
         """
@@ -493,7 +481,7 @@ class VectorTemplate(BaseCClass):
         self._free()
 
     def __repr__(self):
-        return self._create_repr("size = %d" % len(self))
+        return self._create_repr(f"size = {len(self)}")
 
     def permute(self, permutation_vector):
         """

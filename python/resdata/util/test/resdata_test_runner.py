@@ -1,12 +1,9 @@
 import os
 
-try:
-    from unittest2 import TestLoader, TextTestRunner
-except ImportError:
-    from unittest import TestLoader, TextTestRunner
+from unittest import TestLoader, TextTestRunner
 
 
-class ResdataTestRunner(object):
+class ResdataTestRunner:
     @staticmethod
     def runTestSuite(tests, test_verbosity=3):
         test_runner = TextTestRunner(verbosity=test_verbosity)
@@ -19,7 +16,7 @@ class ResdataTestRunner(object):
         loader = TestLoader()
         test_suite = loader.discover(path, pattern=pattern)
 
-        for root, dirnames, filenames in os.walk(path):
+        for root, dirnames, _ in os.walk(path):
             for directory in dirnames:
                 test_suite.addTests(
                     ResdataTestRunner.findTestsInDirectory(
@@ -50,7 +47,7 @@ class ResdataTestRunner(object):
             m = __import__(classpath[0:dot], globals(), locals(), [class_name])
             return getattr(m, class_name)
         except ImportError:
-            print("Failed to import: %s" % classpath)
+            print(f"Failed to import: {classpath}")
             raise
 
     @staticmethod

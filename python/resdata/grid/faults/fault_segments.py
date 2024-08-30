@@ -1,9 +1,7 @@
-from __future__ import print_function
-
 from resdata.util.util import monkey_the_camel
 
 
-class FaultSegment(object):
+class FaultSegment:
     def __init__(self, C1, C2):
         self.__C1 = C1
         self.__C2 = C2
@@ -13,7 +11,7 @@ class FaultSegment(object):
         s = self.c1, self.c2
         o = other.c1, other.c2
         o_flipped = other.c2, other.c1
-        return s == o or s == o_flipped
+        return s in (o, o_flipped)
 
     def __hash__(self):
         return hash(hash(self.__C1) + hash(self.__C2) + hash(self.__next_segment))
@@ -28,10 +26,7 @@ class FaultSegment(object):
             return True
         if self.__C2 == other.__C1:
             return True
-        if self.__C2 == other.__C2:
-            return True
-
-        return False
+        return self.__C2 == other.__C2
 
     def get_c1(self):
         return self.__C1
@@ -53,10 +48,10 @@ class FaultSegment(object):
         self.__C2 = C1
 
     def __repr__(self):
-        return "%d -> %d" % (self.__C1, self.__C2)
+        return f"{self.__C1} -> {self.__C2}"
 
 
-class SegmentMap(object):
+class SegmentMap:
     def __init__(self):
         self.__segment_map = {}
         self.__count_map = {}
@@ -72,10 +67,7 @@ class SegmentMap(object):
             if count > 0:
                 d = self.__segment_map[C]
                 if len(d) != count:
-                    print(
-                        "CornerPoint:%d  count:%d  len(d):%d map:%s"
-                        % (C, count, len(d), d)
-                    )
+                    print(f"CornerPoint:{C}  count:{count}  len(d):{len(d)} map:{d}")
                 assert len(d) == count
             else:
                 assert self.__segment_map.get(C) is None
@@ -135,7 +127,7 @@ class SegmentMap(object):
 
     def print_content(self):
         for d in self.__segment_map.values():
-            for C, S in d.iteritems():
+            for _, S in d.iteritems():
                 print(S)
 
 

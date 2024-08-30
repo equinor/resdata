@@ -46,8 +46,8 @@ from .version import version as __version__
 
 
 def _dlopen_resdata():
-    import ctypes
-    import platform
+    import ctypes  # noqa: PLC0415
+    import platform  # noqa: PLC0415
 
     path = os.path.join(os.path.dirname(__file__), ".libs")
     if platform.system() == "Linux":
@@ -69,7 +69,7 @@ _abort_handler = None
 
 @ct.CFUNCTYPE(None, ct.c_char_p, ct.c_int, ct.c_char_p, ct.c_char_p, ct.c_char_p)
 def _c_abort_handler(filename, lineno, function, message, backtrace):
-    global _abort_handler
+    global _abort_handler  # noqa: PLW0602
     if not _abort_handler:
         return
     _abort_handler(
@@ -85,7 +85,7 @@ def set_abort_handler(function):
     """
     Set callback function for util_abort, which is called prior to std::abort()
     """
-    global _abort_handler
+    global _abort_handler  # noqa: PLW0603
     _abort_handler = function
 
     ResdataPrototype.lib.util_set_abort_handler(_c_abort_handler)
@@ -95,18 +95,16 @@ class ResdataPrototype(Prototype):
     lib = _dlopen_resdata()
 
     def __init__(self, prototype, bind=True):
-        super(ResdataPrototype, self).__init__(
-            ResdataPrototype.lib, prototype, bind=bind
-        )
+        super().__init__(ResdataPrototype.lib, prototype, bind=bind)
 
 
 from .rd_type import ResDataType, ResdataTypeEnum
 from .rd_util import (
-    FileType,
     FileMode,
+    FileType,
     Phase,
-    UnitSystem,
     ResdataUtil,
+    UnitSystem,
 )
 from .util.util import ResdataVersion, updateAbortSignals
 

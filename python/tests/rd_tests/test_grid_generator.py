@@ -9,7 +9,6 @@ from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
 
 
@@ -64,15 +63,15 @@ class GridGeneratorTest(ResdataTest):
         coord = list(GridGen.create_coord(dims, (1, 1, 1)))
 
         ijk_bounds = generate_ijk_bounds(dims)
-        for ijk_bounds in ijk_bounds:
-            if decomposition_preserving(ijk_bounds):
-                GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bounds)
+        for ijk_bound in ijk_bounds:
+            if decomposition_preserving(ijk_bound):
+                GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bound)
             else:
                 with self.assertRaises(ValueError):
-                    GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bounds)
+                    GridGen.extract_subgrid_data(dims, coord, zcorn, ijk_bound)
 
             GridGen.extract_subgrid_data(
-                dims, coord, zcorn, ijk_bounds, decomposition_change=True
+                dims, coord, zcorn, ijk_bound, decomposition_change=True
             )
 
     def test_extract_grid_invalid_bounds(self):
@@ -253,6 +252,6 @@ class GridGeneratorTest(ResdataTest):
                         gc,
                         sc,
                         msg="Failed to translate corners correctly."
-                        + "Expected %s, was %s." % (gc, sc),
+                        + f"Expected {gc}, was {sc}.",
                         tolerance=10e-10,
                     )

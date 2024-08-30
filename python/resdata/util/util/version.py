@@ -14,7 +14,7 @@ def cmp_method(method):
     return cmp_wrapper
 
 
-class Version(object):
+class Version:
     def __init__(self, major, minor, micro, git_commit=None, build_time=None):
         self.major = major
         self.minor = minor
@@ -32,7 +32,7 @@ class Version(object):
         return self.is_devel
 
     def versionString(self):
-        return "%d.%d.%s" % (self.major, self.minor, self.micro)
+        return f"{self.major}.{self.minor}.{self.micro}"
 
     def versionTuple(self):
         return self.major, self.minor, self.micro
@@ -91,11 +91,10 @@ class Version(object):
     def getGitCommit(self, short=False):
         if self.git_commit is None:
             return "???????"
+        elif short:
+            return self.git_commit[0:8]
         else:
-            if short:
-                return self.git_commit[0:8]
-            else:
-                return self.git_commit
+            return self.git_commit
 
 
 class ResdataVersion(Version):
@@ -114,6 +113,4 @@ class ResdataVersion(Version):
         micro = self._micro_version()
         git_commit = self._git_commit()
         build_time = self._build_time()
-        super(ResdataVersion, self).__init__(
-            major, minor, micro, git_commit, build_time
-        )
+        super().__init__(major, minor, micro, git_commit, build_time)

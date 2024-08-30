@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-from unittest import skipIf
-import time
-from resdata import util
 
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
@@ -94,7 +91,7 @@ class FaultTest(ResdataTest):
         f = Fault(self.grid, "NAME")
         self.assertEqual("NAME", f.getName())
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception):  # noqa: B017
             g = f["Key"]
 
     def test_empty_faultLine(self):
@@ -409,7 +406,7 @@ class FaultTest(ResdataTest):
         faults = FaultCollection(self.grid, self.faults1, self.faults2)
         self.assertEqual(7, len(faults))
         c = 0
-        for f in faults:
+        for _ in faults:
             c += 1
         self.assertEqual(c, len(faults))
 

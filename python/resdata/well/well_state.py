@@ -1,8 +1,6 @@
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.well import WellType, WellConnection
-from resdata.util.util import CTime
 
 
 class WellState(BaseCClass):
@@ -144,9 +142,7 @@ class WellState(BaseCClass):
             seg_idx += len(self)
 
         if not 0 <= seg_idx < self.numSegments():
-            raise IndexError(
-                "Invalid index:%d - valid range [0,%d)" % (seg_idx, len(self))
-            )
+            raise IndexError(f"Invalid index:{seg_idx} - valid range [0,{len(self)})")
 
         segment_collection = self._get_segment_collection()
         return self._segment_collection_iget(segment_collection, seg_idx).setParent(
@@ -163,21 +159,12 @@ class WellState(BaseCClass):
 
     def __repr__(self):
         name = self.name()
-        if name:
-            name = "%s" % name
-        else:
-            name = "[no name]"
+        name = f"{name}" if name else "[no name]"
         msw = " (multi segment)" if self.isMultiSegmentWell() else ""
         wn = str(self.wellNumber())
         type_ = self.wellType()
         open_ = "open" if self.isOpen() else "shut"
-        cnt = '%s%s, number = %s, type = "%s", state = %s' % (
-            name,
-            msw,
-            wn,
-            type_,
-            open_,
-        )
+        cnt = f'{name}{msw}, number = {wn}, type = "{type_}", state = {open_}'
         return self._create_repr(cnt)
 
     def gasRate(self):

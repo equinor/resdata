@@ -1,9 +1,9 @@
-from __future__ import print_function
 import warnings
+
 from .rd_sum_node import SummaryNode
 
 
-class SummaryVector(object):
+class SummaryVector:
     def __init__(self, parent, key, report_only=False):
         """
         A summary vector with a vector of values and time.
@@ -29,6 +29,7 @@ class SummaryVector(object):
             warnings.warn(
                 "The report_only flag to the SummaryVector will be removed",
                 DeprecationWarning,
+                stacklevel=1,
             )
 
         self.__dates = parent.get_dates(report_only)
@@ -38,13 +39,11 @@ class SummaryVector(object):
         self.__values = None
 
     def __str__(self):
-        return "<Summary vector: %s>" % self.key
+        return f"<Summary vector: {self.key}>"
 
     def __repr__(self):
-        return "SummaryVector(key = %s, size = %d, unit = %s)" % (
-            self.key,
-            len(self),
-            self.unit,
+        return (
+            f"SummaryVector(key = {self.key}, size = {len(self)}, unit = {self.unit})"
         )
 
     @property
@@ -98,6 +97,7 @@ class SummaryVector(object):
         warnings.warn(
             "The mpl_dates property has been deprecated - use numpy_dates instead",
             DeprecationWarning,
+            stacklevel=1,
         )
 
         return self.parent.get_mpl_dates(self.report_only)
@@ -155,7 +155,7 @@ class SummaryVector(object):
             if index < 0:
                 index += len(vals)
             if index < 0 or index > length:
-                raise KeyError("Invalid index:%d out of range [0:%d)" % (index, length))
+                raise KeyError(f"Invalid index:{index} out of range [0:{length})")
             else:
                 return self.__iget(index)
         elif isinstance(index, slice):
@@ -170,7 +170,7 @@ class SummaryVector(object):
                 index += step
             return sub_vector
 
-        raise KeyError("Invalid index:%s - must have integer or slice." % index)
+        raise KeyError(f"Invalid index:{index} - must have integer or slice.")
 
     @property
     def first(self):

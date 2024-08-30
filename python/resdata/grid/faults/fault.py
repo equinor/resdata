@@ -1,13 +1,13 @@
 import numpy as np
 
 from resdata.util.util import monkey_the_camel
-from resdata.geometry import Polyline, CPolyline, GeometryTools
+from resdata.geometry import CPolyline, GeometryTools
 
 from .fault_line import FaultLine
 from .fault_segments import FaultSegment, SegmentMap
 
 
-class FaultLayer(object):
+class FaultLayer:
     def __init__(self, grid, K):
         assert isinstance(K, int)
         self.__grid = grid
@@ -100,7 +100,7 @@ class FaultLayer(object):
         perm_list.sort(key=lambda x: x[1])
 
         fault_lines = []
-        for index, d in perm_list:
+        for index, _ in perm_list:
             fault_lines.append(self.__fault_lines[index])
         self.__fault_lines = fault_lines
 
@@ -143,7 +143,7 @@ class FaultLayer(object):
 #################################################################
 
 
-class Fault(object):
+class Fault:
     allowed_faces = ["X", "Y", "Z", "I", "J", "K", "X-", "Y-", "Z-", "I-", "J-", "K-"]
 
     def __init__(self, grid, name):
@@ -151,10 +151,10 @@ class Fault(object):
         self.__name = name
         self.__layer_map = {}
         self.__layer_list = []
-        (self.nx, self.ny, self.nz, nactive) = grid.getDims()
+        (self.nx, self.ny, self.nz, _) = grid.getDims()
 
     def __str__(self):
-        return "Fault:%s" % self.__name
+        return f"Fault:{self.__name}"
 
     def __getitem__(self, K):
         if not self.hasLayer(K):
@@ -166,8 +166,7 @@ class Fault(object):
         return len(self.__layer_map)
 
     def __iter__(self):
-        for layer in self.__layer_list:
-            yield layer
+        yield from self.__layer_list
 
     def has_layer(self, K):
         return K in self.__layer_map
@@ -197,7 +196,7 @@ class Fault(object):
 
     def add_record(self, I1, I2, J1, J2, K1, K2, face):
         if not face in Fault.allowed_faces:
-            raise ValueError("Invalid face:%s" % face)
+            raise ValueError(f"Invalid face:{face}")
 
         if I1 > I2:
             raise ValueError("Invalid I1 I2 indices")
@@ -208,32 +207,29 @@ class Fault(object):
         if K1 > K2:
             raise ValueError("Invalid K1 K2 indices")
 
-        if I1 < 0 or I1 >= self.nx:
-            raise ValueError("Invalid I1:%d" % I1)
-        if I2 < 0 or I2 >= self.nx:
-            raise ValueError("Invalid I2:%d" % I2)
+        if I1 < 0 or self.nx <= I1:
+            raise ValueError(f"Invalid I1:{I1}")
+        if I2 < 0 or self.nx <= I2:
+            raise ValueError(f"Invalid I2:{I2}")
 
-        if J1 < 0 or J1 >= self.ny:
-            raise ValueError("Invalid J1:%d" % J1)
-        if J2 < 0 or J2 >= self.ny:
-            raise ValueError("Invalid J2:%d" % J2)
+        if J1 < 0 or self.ny <= J1:
+            raise ValueError(f"Invalid J1:{J1}")
+        if J2 < 0 or self.ny <= J2:
+            raise ValueError(f"Invalid J2:{J2}")
 
-        if K1 < 0 or K1 >= self.nz:
-            raise ValueError("Invalid K1:%d" % K1)
-        if K2 < 0 or K2 >= self.nz:
-            raise ValueError("Invalid K2:%d" % K2)
+        if K1 < 0 or self.nz <= K1:
+            raise ValueError(f"Invalid K1:{K1}")
+        if K2 < 0 or self.nz <= K2:
+            raise ValueError(f"Invalid K2:{K2}")
 
-        if face in ["X", "I"]:
-            if I1 != I2:
-                raise ValueError("For face:%s we must have I1 == I2" % face)
+        if face in ["X", "I"] and I1 != I2:
+            raise ValueError(f"For face:{face} we must have I1 == I2")
 
-        if face in ["Y", "J"]:
-            if J1 != J2:
-                raise ValueError("For face:%s we must have J1 == J2" % face)
+        if face in ["Y", "J"] and J1 != J2:
+            raise ValueError(f"For face:{face} we must have J1 == J2")
 
-        if face in ["Z", "K"]:
-            if K1 != K2:
-                raise ValueError("For face:%s we must have K1 == K2" % face)
+        if face in ["Z", "K"] and K1 != K2:
+            raise ValueError(f"For face:{face} we must have K1 == K2")
 
         # -----------------------------------------------------------------
 
@@ -260,7 +256,7 @@ class Fault(object):
 
     def get_polyline(self, k):
         layer = self[k]
-        return layer.getPolyline(name="Polyline[%s]" % self.getName())
+        return layer.getPolyline(name=f"Polyline[{self.getName()}]")
 
     def get_ij_polyline(self, k):
         layer = self[k]
@@ -297,10 +293,7 @@ class Fault(object):
                 return None
 
     def connect(self, target, k):
-        if isinstance(target, Fault):
-            polyline = target.getPolyline(k)
-        else:
-            polyline = target
+        polyline = target.getPolyline(k) if isinstance(target, Fault) else target
         return self.connectWithPolyline(polyline, k)
 
     def extend_to_polyline(self, polyline, k):
@@ -367,8 +360,8 @@ class Fault(object):
             return extension
 
         raise ValueError(
-            "The fault %s can not be extended to intersect with polyline:%s in layer:%d"
-            % (self.getName(), polyline.getName(), k + 1)
+            f"The fault {self.get_name()} can not be extended to intersect with "
+            f"polyline:{polyline.get_name()} in layer:{k+1}"
         )
 
     def intersects_polyline(self, polyline, k):
@@ -402,10 +395,7 @@ class Fault(object):
         intersections = GeometryTools.rayPolygonIntersections(p1, ray_dir, bbox)
         if intersections:
             p2 = intersections[0][1]
-            if self.getName():
-                name = "Extend:%s" % self.getName()
-            else:
-                name = None
+            name = f"Extend:{self.getName()}" if self.getName() else None
 
             return CPolyline(name=name, init_points=[(p1[0], p1[1]), p2])
         else:
@@ -414,10 +404,7 @@ class Fault(object):
     def end_join(self, other, k):
         fault_polyline = self.getPolyline(k)
 
-        if isinstance(other, Fault):
-            other_polyline = other.getPolyline(k)
-        else:
-            other_polyline = other
+        other_polyline = other.getPolyline(k) if isinstance(other, Fault) else other
 
         return GeometryTools.joinPolylines(fault_polyline, other_polyline)
 
@@ -462,13 +449,11 @@ class Fault(object):
 
         dx = p2[0] - p1[0]
         dy = p2[1] - p1[1]
-        if dx != 0:
-            if dir1[0] * dx <= 0 and dir2[0] * dx >= 0:
-                raise ValueError("Rays will never intersect")
+        if dx != 0 and dir1[0] * dx <= 0 and dir2[0] * dx >= 0:
+            raise ValueError("Rays will never intersect")
 
-        if dy != 0:
-            if dir1[1] * dy <= 0 and dir2[1] * dy >= 0:
-                raise ValueError("Rays will never intersect")
+        if dy != 0 and dir1[1] * dy <= 0 and dir2[1] * dy >= 0:
+            raise ValueError("Rays will never intersect")
 
         if dx * dy != 0:
             if dir1[0] != 0:
@@ -502,10 +487,7 @@ class Fault(object):
                 raise Exception("Invalid direction")
 
             dy = 0
-            if p2[0] > p1[0]:
-                dx = 1
-            else:
-                dx = -1
+            dx = 1 if p2[0] > p1[0] else -1
 
         return [p2, (dx, dy)]
 

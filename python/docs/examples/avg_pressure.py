@@ -2,6 +2,7 @@
 import sys
 
 import matplotlib.pyplot as plt
+
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataRestartFile
 
@@ -19,15 +20,9 @@ def avg_pressure(p, sw, pv, region, region_id, result):
 
         p1 = p.sum(mask=region) / region.active_size()
 
-        if total_pv > 0:
-            p2 = p_pv.sum(mask=region) / total_pv
-        else:
-            p2 = None
+        p2 = p_pv.sum(mask=region) / total_pv if total_pv > 0 else None
 
-        if total_hc_pv > 0:
-            p3 = p_hc_pv.sum(mask=region) / total_hc_pv
-        else:
-            p3 = None
+        p3 = p_hc_pv.sum(mask=region) / total_hc_pv if total_hc_pv > 0 else None
     else:
         p1 = None
         p2 = None
@@ -45,9 +40,9 @@ def avg_pressure(p, sw, pv, region, region_id, result):
 
 if __name__ == "__main__":
     case = sys.argv[1]
-    grid = Grid("%s.EGRID" % case)
-    rst_file = ResdataRestartFile(grid, "%s.UNRST" % case)
-    init_file = ResdataFile("%s.INIT" % case)
+    grid = Grid(f"{case}.EGRID")
+    rst_file = ResdataRestartFile(grid, f"{case}.UNRST")
+    init_file = ResdataFile(f"{case}.INIT")
 
     # Create PORV keyword where all the inactive cells have been removed.
     pv = grid.compressed_kw_copy(init_file["PORV"][0])
@@ -71,9 +66,9 @@ if __name__ == "__main__":
         avg_pressure(p, sw, pv, ResdataRegion(grid, True), "field", result)
         sim_days.append(header.get_sim_days())
 
-    for key in result.keys():
+    for key, value in result.items():
         plt.figure(1)
-        for index, p in enumerate(result[key]):
-            plt.plot(sim_days, p, label="Region:%s  P%d" % (key, index + 1))
+        for index, p in enumerate(value):
+            plt.plot(sim_days, p, label=f"Region:{key}  P{index + 1}")
         plt.legend()
         plt.show()

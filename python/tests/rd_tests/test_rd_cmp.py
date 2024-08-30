@@ -1,6 +1,4 @@
 from resdata.summary import ResdataCmp
-from resdata.util.test import TestAreaContext
-from resdata.util.test.mock import createSummary
 from tests import ResdataTest, equinor_test
 
 
@@ -43,7 +41,7 @@ class ResdataCmpTest(ResdataTest):
         rd_cmp = ResdataCmp(self.root1, self.root1)
         wells = rd_cmp.testWells()
 
-        well_set = set(["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"])
+        well_set = {"OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"}
         self.assertEqual(len(wells), len(well_set))
         for well in wells:
             self.assertTrue(well in well_set)

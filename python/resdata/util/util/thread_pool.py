@@ -1,12 +1,12 @@
 import multiprocessing
-from threading import Thread
 import time
 import traceback
+from threading import Thread
 
 
 class Task(Thread):
     def __init__(self, func, *args, **kwargs):
-        super(Task, self).__init__()
+        super().__init__()
         self.__func = func
         self.__args = args
         self.__kwargs = kwargs
@@ -34,7 +34,7 @@ class Task(Thread):
 
         if self.__verbose:
             running_time = time.time() - self.__start_time
-            print("Running time of task: %f" % running_time)
+            print(f"Running time of task: {running_time:f}")
 
     def isDone(self):
         return self.__done
@@ -53,9 +53,9 @@ class Task(Thread):
             time.sleep(0.01)
 
 
-class ThreadPool(object):
+class ThreadPool:
     def __init__(self, size=None, verbose=False):
-        super(ThreadPool, self).__init__()
+        super().__init__()
 
         if size is None:
             size = multiprocessing.cpu_count()
@@ -82,11 +82,7 @@ class ThreadPool(object):
         return len(self.__task_list)
 
     def __allTasksFinished(self):
-        for task in self.__task_list:
-            if not task.isDone():
-                return False
-
-        return True
+        return all(task.isDone() for task in self.__task_list)
 
     def runningCount(self):
         count = 0
@@ -138,13 +134,8 @@ class ThreadPool(object):
         if self.__verbose:
             running_time = time.time() - self.__start_time
             print(
-                "Running time: %f using a pool size of: %d"
-                % (running_time, self.poolSize())
+                f"Running time: {running_time :f} using a pool size of: {self.poolSize()}"
             )
 
     def hasFailedTasks(self):
-        for task in self.__task_list:
-            if task.hasFailed():
-                return True
-
-        return False
+        return any(task.hasFailed() for task in self.__task_list)

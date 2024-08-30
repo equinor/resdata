@@ -4,10 +4,8 @@ from resdata.grid import GridGenerator
 from resdata.resfile import ResdataFile
 from resdata.well import (
     WellInfo,
-    WellConnection,
     WellType,
     WellConnectionDirection,
-    WellSegment,
 )
 
 

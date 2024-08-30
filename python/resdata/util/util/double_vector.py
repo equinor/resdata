@@ -109,4 +109,4 @@ class DoubleVector(VectorTemplate):
     )
 
     def __init__(self, default_value=0, initial_size=0):
-        super(DoubleVector, self).__init__(default_value, initial_size)
+        super().__init__(default_value, initial_size)

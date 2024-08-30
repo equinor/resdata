@@ -28,7 +28,7 @@ class RandomNumberGenerator(BaseCClass):
         assert isinstance(init_mode, RngInitModeEnum)
 
         c_ptr = self._rng_alloc(alg_type, init_mode)
-        super(RandomNumberGenerator, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def stateSize(self):
         return self._state_size()
@@ -37,7 +37,7 @@ class RandomNumberGenerator(BaseCClass):
         state_size = self.stateSize()
         if len(seed_string) < state_size:
             raise ValueError(
-                "The seed string must be at least %d characters long" % self.stateSize()
+                f"The seed string must be at least {self.stateSize()} characters long"
             )
         self._set_state(seed_string)
 
@@ -65,7 +65,7 @@ class RandomNumberGenerator(BaseCClass):
         if os.path.isfile(seed_file):
             self._load_state(seed_file)
         else:
-            raise IOError("No such file: %s" % seed_file)
+            raise OSError(f"No such file: {seed_file}")
 
     def saveState(self, seed_file):
         """

@@ -3,6 +3,7 @@ import datetime
 import time
 
 from cwrap import BaseCValue
+
 from resdata import ResdataPrototype
 
 
@@ -16,7 +17,7 @@ class CTime(BaseCValue):
 
     def __init__(self, value):
         if isinstance(value, int):
-            value = value
+            pass
         elif isinstance(value, CTime):
             value = value.value()
         elif isinstance(value, datetime.datetime):
@@ -32,10 +33,10 @@ class CTime(BaseCValue):
             value = CTime._timegm(0, 0, 0, value.day, value.month, value.year)
         else:
             raise NotImplementedError(
-                "Can not convert class %s to CTime" % value.__class__
+                f"Can not convert class {value.__class__} to CTime"
             )
 
-        super(CTime, self).__init__(value)
+        super().__init__(value)
 
     def ctime(self):
         """@rtype: int"""
@@ -67,7 +68,7 @@ class CTime(BaseCValue):
         elif isinstance(other, (int, datetime.datetime, datetime.date)):
             return self > CTime(other)
         else:
-            raise TypeError("CTime does not support type: %s" % other.__class__)
+            raise TypeError(f"CTime does not support type: {other.__class__}")
 
     def __lt__(self, other):
         if isinstance(other, CTime):
@@ -75,7 +76,7 @@ class CTime(BaseCValue):
         elif isinstance(other, (int, datetime.datetime, datetime.date)):
             return self < CTime(other)
         else:
-            raise TypeError("CTime does not support type: %s" % other.__class__)
+            raise TypeError(f"CTime does not support type: {other.__class__}")
 
     def __ne__(self, other):
         return not self == other
@@ -88,7 +89,7 @@ class CTime(BaseCValue):
         elif isinstance(other, type(None)):
             return False
         else:
-            raise TypeError("CTime does not support type: %s" % other.__class__)
+            raise TypeError(f"CTime does not support type: {other.__class__}")
 
     def __imul__(self, other):
         value = int(self.value() * other)
@@ -127,7 +128,7 @@ class CTime(BaseCValue):
         pass
 
     def __repr__(self):
-        return "time_t value: %d [%s]" % (self.value(), str(self))
+        return f"time_t value: {self.value()} [{self}]"
 
     @property
     def stripped(self):

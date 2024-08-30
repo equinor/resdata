@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from _ctypes import ArgumentError
 import os
 import datetime
 from resdata.resfile import ResdataFile

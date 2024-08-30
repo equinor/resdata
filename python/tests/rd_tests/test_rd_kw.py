@@ -2,7 +2,6 @@
 import random
 import warnings
 import cwrap
-import random
 
 from resdata import ResDataType, ResdataTypeEnum, FileMode
 from resdata.resfile import ResdataKW, ResdataFile, FortIO, openFortIO
@@ -68,10 +67,9 @@ class KWTest(ResdataTest):
         kw.fprintf_data(file1, fmt)
         file1.close()
 
-        file2 = open(name2, "w")
-        for d in data:
-            file2.write(fmt % d)
-        file2.close()
+        with open(name2, "w") as file2:
+            for d in data:
+                file2.write(fmt % d)
         self.assertFilesAreEqual(name1, name2)
         self.assertEqual(kw.data_type, data_type)
 
@@ -141,10 +139,8 @@ class KWTest(ResdataTest):
             data = [random.random() for i in range(10000)]
 
             kw = ResdataKW("TEST", len(data), ResDataType.RD_DOUBLE)
-            i = 0
-            for d in data:
+            for i, d in enumerate(data):
                 kw[i] = d
-                i += 1
 
             pfx = "ResdataKW("
             self.assertEqual(pfx, repr(kw)[: len(pfx)])
@@ -186,12 +182,12 @@ class KWTest(ResdataTest):
             kw.fprintf_data(fileH)
             fileH.close()
 
-            fileH = open("test", "r")
-            data = []
-            for line in fileH.readlines():
-                tmp = line.split()
-                for elm in tmp:
-                    data.append(int(elm))
+            with open("test") as fileH:
+                data = []
+                for line in fileH.readlines():
+                    tmp = line.split()
+                    for elm in tmp:
+                        data.append(int(elm))
 
             for v1, v2 in zip(data, kw):
                 self.assertEqual(v1, v2)
@@ -426,7 +422,7 @@ class KWTest(ResdataTest):
     def test_typename(self):
         kw = ResdataKW("KW", 100, ResDataType.RD_INT)
 
-        self.assertEqual(kw.typeName(), "INTE")
+        self.assertEqual(kw.type_name(), "INTE")
 
     def test_string_alloc(self):
         kw = ResdataKW("KW", 10, ResDataType.RD_STRING(30))
@@ -569,7 +565,7 @@ class KWTest(ResdataTest):
                 permx.assign(random.random())
                 poro.assign(random.random())
 
-                with openFortIO("TEST%d.INIT" % i, FortIO.WRITE_MODE) as f:
+                with openFortIO(f"TEST{i}.INIT", FortIO.WRITE_MODE) as f:
                     permx.fwrite(f)
                     poro.fwrite(f)
                     porv.fwrite(f)
@@ -581,7 +577,7 @@ class KWTest(ResdataTest):
 
             count = ResdataKW("COUNT", global_size, ResDataType.RD_INT)
             for i in range(N):
-                f = ResdataFile("TEST%d.INIT" % i)
+                f = ResdataFile(f"TEST{i}.INIT")
 
                 porv = f["PORV"][0]
                 permx = f["PERMX"][0]

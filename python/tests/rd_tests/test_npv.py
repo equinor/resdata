@@ -1,24 +1,16 @@
 #!/usr/bin/env python
-import os
 import datetime
-import math
-
-try:
-    from unittest2 import skipIf, skipUnless, skipIf
-except ImportError:
-    from unittest import skipIf, skipUnless, skipIf
 
 from resdata.summary import Summary
 from resdata.summary import ResdataNPV, NPVPriceVector
 
-from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
-from resdata.util.test import TestAreaContext
+from resdata.util.util import CTime
 from tests import ResdataTest, equinor_test
 
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"
-case = "%s/%s" % (path, base)
+case = f"{path}/{base}"
 
 
 def callable(x):
@@ -39,7 +31,7 @@ class NPVTest(ResdataTest):
         self.case = self.createTestPath(case)
 
     def test_create(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(OSError):
             npv = ResdataNPV("/does/not/exist")
 
         npv = ResdataNPV(self.case)

@@ -76,8 +76,7 @@ class GridGenerator:
 
             if not len(actnum) == dims[0] * dims[1] * dims[2]:
                 raise ValueError(
-                    "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
-                    % (len(actnum), dims[0] * dims[1] * dims[2])
+                    f"ACTNUM size mismatch: len(ACTNUM):{len(actnum)}  Expected:{dims[0] * dims[1] * dims[2]}"
                 )
 
             rd_grid = cls._alloc_rectangular(
@@ -149,13 +148,13 @@ class GridGenerator:
         )
 
         nx, ny, nz = dims
-        dx, dy, dz = dV
+        _, _, dz = dV
 
         # Compute zcorn
         z = escape_origo_shift[2]
         zcorn = [z] * (4 * nx * ny)
         for k in range(nz - 1):
-            z = z + dz
+            z += dz
             local_offset = offset + (dz / 2.0 if irregular_offset and k % 2 == 0 else 0)
 
             layer = []
@@ -166,10 +165,10 @@ class GridGenerator:
                 ]
                 layer.append(duplicate_inner(path))
 
-            zcorn = zcorn + (2 * flatten(duplicate_inner(layer)))
+            zcorn += 2 * flatten(duplicate_inner(layer))
 
-        z = z + dz
-        zcorn = zcorn + ([z] * (4 * nx * ny))
+        z += dz
+        zcorn += [z] * (4 * nx * ny)
 
         if faults:
             # Ensure that drop does not align with grid structure
@@ -177,7 +176,7 @@ class GridGenerator:
             zcorn = cls.__create_faults(nx, ny, nz, zcorn, drop)
 
         if z != escape_origo_shift[2] + nz * dz:
-            raise ValueError("%f != %f" % (z, escape_origo_shift[2] + nz * dz))
+            raise ValueError(f"{z:f} != {escape_origo_shift[2] + nz * dz:f}")
 
         cls.assert_zcorn(nx, ny, nz, zcorn)
         return construct_floatKW("ZCORN", zcorn)
@@ -201,7 +200,7 @@ class GridGenerator:
         coord = []
         for j, i in itertools.product(range(ny + 1), range(nx + 1)):
             x, y = i * dx + escape_origo_shift[0], j * dy + escape_origo_shift[1]
-            coord = coord + [x, y, escape_origo_shift[2], x, y, z]
+            coord += [x, y, escape_origo_shift[2], x, y, z]
 
         # Apply transformations
         lower_center = (
@@ -234,8 +233,7 @@ class GridGenerator:
         concave,
         faults,
     ):
-        nx, ny, nz = dims
-        dx, dy, dz = dV
+        _, _, dz = dV
 
         # Validate arguments
         if min(dims + dV) <= 0:
@@ -354,7 +352,7 @@ class GridGenerator:
                 corner[i] = corner[i - 4] + plane_size
 
             for c in corner:
-                zcorn[c] = zcorn[c] + drop
+                zcorn[c] += drop
 
         return zcorn
 
@@ -372,7 +370,7 @@ class GridGenerator:
 
         if len(zcorn) != 8 * nx * ny * nz:
             raise AssertionError(
-                "Expected len(zcorn) to be %d, was %d" % (8 * nx * ny * nz, len(zcorn))
+                f"Expected len(zcorn) to be {8 * nx * ny * nz}, was {len(zcorn)}"
             )
 
         plane_size = 4 * nx * ny
@@ -395,7 +393,7 @@ class GridGenerator:
 
     @classmethod
     def __misalign_coord(cls, coord, dims, dV):
-        nx, ny, nz = dims
+        nx, _, _ = dims
 
         coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
@@ -442,7 +440,7 @@ class GridGenerator:
         )
         translation = np.array(3 * [0.0] + list(translation))
 
-        coord = coord + translation
+        coord += translation
         return coord.flatten().tolist()
 
     @classmethod
@@ -460,8 +458,7 @@ class GridGenerator:
 
         if len(coord) != 6 * (nx + 1) * (ny + 1):
             raise AssertionError(
-                "Expected len(coord) to be %d, was %d"
-                % (6 * (nx + 1) * (ny + 1), len(coord))
+                f"Expected len(coord) to be {6 * (nx + 1) * (ny + 1)}, was {len(coord)}"
             )
 
         if not negative_values and min(coord) < 0:
@@ -489,14 +486,14 @@ class GridGenerator:
 
         if len(actnum) != nx * ny * nz:
             raise AssertionError(
-                "Expected the length of ACTNUM to be %d, was %s."
-                % (nx * ny * nz, len(actnum))
+                f"Expected the length of ACTNUM to be {nx * ny* nz}, was {len(actnum)}."
             )
 
-        if set(actnum) - set([0, 1]):
+        if set(actnum) - {0, 1}:
             raise AssertionError(
-                "Expected ACTNUM to consist of 0's and 1's, was %s."
-                % ", ".join(map(str, set(actnum)))
+                "Expected ACTNUM to consist of 0's and 1's, was {}.".format(
+                    ", ".join(map(str, set(actnum)))
+                )
             )
 
     @classmethod
@@ -578,7 +575,7 @@ class GridGenerator:
         )
         translation = np.array(list(translation) + list(translation))
 
-        coord = coord + translation
+        coord += translation
         return construct_floatKW("COORD", coord.flatten().tolist())
 
     @classmethod
@@ -692,10 +689,6 @@ class GridGenerator:
         ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
         cls.assert_decomposition_change(ijk_bounds, decomposition_change)
 
-        nx, ny, nz = dims
-        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
-
         new_coord = cls.extract_coord(dims, coord, ijk_bounds)
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)
         new_actnum = cls.extract_actnum(dims, actnum, ijk_bounds)
@@ -722,7 +715,7 @@ class GridGenerator:
         if len(ijk_bounds) != 3:
             raise ValueError(
                 "Expected ijk_bounds to contain three intervals, "
-                + "contained only %d" % len(ijk_bounds)
+                + f"contained only {len(ijk_bounds)}"
             )
 
         for n, bound in zip(dims, ijk_bounds):
@@ -734,14 +727,15 @@ class GridGenerator:
             if not (isinstance(bound[0], int) and isinstance(bound[1], int)):
                 raise TypeError(
                     "Expected bound to consist of two integers, ",
-                    "was %s (%s)" % (str(bound), str((map(type, bound)))),
+                    f"was {str(bound)} ({str(map(type, bound))})",
                 )
 
             if not (0 <= bound[0] <= bound[1] < n):
                 raise ValueError(
                     "Expected bounds to have the following format: "
                     + "0 <= lower bound <= upper_bound < ni, "
-                    + "was %d <=? %d <=? %d <? %d." % (0, bound[0], bound[1], n)
+                    + f"was 0 <=? {bound[0]} <=? {bound[1]} <? {n}."
+                    % (0, bound[0], bound[1], n)
                 )
 
         return ijk_bounds
@@ -750,7 +744,7 @@ class GridGenerator:
     def assert_decomposition_change(cls, ijk_bounds, decomposition_change):
         if sum(list(zip(*ijk_bounds))[0]) % 2 == 1 and not decomposition_change:
             raise ValueError(
-                "The subgrid defined by %s " % str(ijk_bounds)
+                f"The subgrid defined by {str(ijk_bounds)} "
                 + "will cause an unintended decomposition change. "
                 + "Either change one of the lower bounds by 1 "
                 + "or activate decomposition_change."

@@ -1,4 +1,5 @@
 from cwrap import BaseCClass
+
 from resdata import FileMode, FileType, ResdataPrototype
 from resdata.resfile import Resdata3DFile, ResdataFile
 from resdata.util.util import CTime, monkey_the_camel
@@ -33,7 +34,7 @@ class ResdataRestartHead(BaseCClass):
         else:
             c_ptr = self._alloc(rst_view, -1)
 
-        super(ResdataRestartHead, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def free(self):
         self._free()
@@ -67,17 +68,16 @@ class ResdataRestartFile(Resdata3DFile):
         'nactive' or 'nx*ny*nz' elements.
         """
 
-        file_type, report_step, fmt_file = ResdataFile.getFileType(filename)
+        file_type, report_step, _ = ResdataFile.getFileType(filename)
         if not file_type in [
             FileType.RESTART,
             FileType.UNIFIED_RESTART,
         ]:
             raise ValueError(
-                'The input filename "%s" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
-                % filename
+                f'The input filename "{filename}" does not correspond to a restart file.  Please follow the Eclipse naming conventions'
             )
 
-        super(ResdataRestartFile, self).__init__(grid, filename, flags)
+        super().__init__(grid, filename, flags)
         self.rst_headers = None
         if file_type == FileType.RESTART:
             self.is_unified = False
@@ -104,10 +104,7 @@ class ResdataRestartFile(Resdata3DFile):
             else:
                 intehead_kw = self["INTEHEAD"][0]
                 doubhead_kw = self["DOUBHEAD"][0]
-                if "LOGIHEAD" in self:
-                    logihead_kw = self["LOGIHEAD"][0]
-                else:
-                    logihead_kw = None
+                logihead_kw = self["LOGIHEAD"][0] if "LOGIHEAD" in self else None
 
                 self.rst_headers.append(
                     ResdataRestartHead(

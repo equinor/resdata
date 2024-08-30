@@ -16,12 +16,10 @@ import ctypes
 
 from cwrap import BaseCClass
 
-import resdata
 from resdata.util.util import monkey_the_camel
 from resdata.util.util import IntVector
 
 from resdata import ResdataPrototype
-from resdata.grid.faults import Layer
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.geometry import CPolyline
@@ -317,7 +315,7 @@ class ResdataRegion(BaseCClass):
         self.grid = grid
         self.active_index = False
         c_ptr = self._alloc(grid, preselect)
-        super(ResdataRegion, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def free(self):
         self._free()
@@ -455,7 +453,8 @@ class ResdataRegion(BaseCClass):
 
         See doscumentation of __ior__().
         """
-        return self.__ior__(other)
+        self |= other
+        return self
 
     def intersect_with(self, other):
         """
@@ -463,7 +462,8 @@ class ResdataRegion(BaseCClass):
 
         See doscumentation of __iand__().
         """
-        return self.__iand__(other)
+        self &= other
+        return self
 
     def copy(self):
         return self.__deep_copy__({})
@@ -551,8 +551,7 @@ class ResdataRegion(BaseCClass):
         """
         if not rd_kw.data_type.is_int():
             raise ValueError(
-                "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.typeName()
+                f"The select_equal method must have an integer valued keyword - got:{rd_kw.type_name()}"
             )
         self._select_equal(rd_kw, value)
 
@@ -564,8 +563,7 @@ class ResdataRegion(BaseCClass):
         """
         if not rd_kw.data_type.is_int():
             raise ValueError(
-                "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.typeName()
+                f"The select_equal method must have an integer valued keyword - got:{rd_kw.type_name()}"
             )
         self._deselect_equal(rd_kw, value)
 
@@ -961,21 +959,19 @@ class ResdataRegion(BaseCClass):
         exactly to nx,ny of the grid.
         """
         grid = self.grid
-        if k < 0 or k >= grid.getNZ():
+        if k < 0 or k >= grid.get_nz():
             raise ValueError(
-                "Invalid k value:%d - must be in range [0,%d)" % (k, grid.getNZ())
+                f"Invalid k value:{k} - must be in range [0,{grid.get_nz()})"
             )
 
-        if grid.getNX() != layer.getNX():
+        if grid.get_nx() != layer.get_nx():
             raise ValueError(
-                "NX dimension mismatch. Grid:%d  layer:%d"
-                % (grid.getNX(), layer.getNX())
+                f"NX dimension mismatch. Grid:{grid.get_nx()}  layer:{layer.get_nx()}"
             )
 
-        if grid.getNY() != layer.getNY():
+        if grid.get_ny() != layer.get_ny():
             raise ValueError(
-                "NY dimension mismatch. Grid:%d  layer:%d"
-                % (grid.getNY(), layer.getNY())
+                f"NY dimension mismatch. Grid:{grid.get_ny()}  layer:{layer.get_ny()}"
             )
 
         self._select_from_layer(layer, k, value)
@@ -1067,10 +1063,7 @@ class ResdataRegion(BaseCClass):
             else:
                 raise TypeError("Type mismatch")
         else:
-            if target_kw.data_type.is_int():
-                scale = 1 // other
-            else:
-                scale = 1.0 / other
+            scale = 1 // other if target_kw.data_type.is_int() else 1.0 / other
             self.scale_kw(target_kw, scale, force_active)
 
     def copy_kw(self, target_kw, src_kw, force_active=False):

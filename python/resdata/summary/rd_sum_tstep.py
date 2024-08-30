@@ -1,7 +1,6 @@
 from cwrap import BaseCClass
 
 from resdata.util.util import monkey_the_camel
-from resdata.util.util import CTime
 from resdata import ResdataPrototype
 
 
@@ -28,7 +27,7 @@ class SummaryTStep(BaseCClass):
     def __init__(self, report_step, mini_step, sim_days, smspec):
         sim_seconds = sim_days * 24 * 60 * 60
         c_pointer = self._alloc(report_step, mini_step, sim_seconds, smspec)
-        super(SummaryTStep, self).__init__(c_pointer)
+        super().__init__(c_pointer)
 
     def get_sim_days(self):
         """@rtype: double"""
@@ -49,13 +48,13 @@ class SummaryTStep(BaseCClass):
     def __getitem__(self, key):
         """@rtype: double"""
         if not key in self:
-            raise KeyError("Key '%s' is not available." % key)
+            raise KeyError(f"Key '{key}' is not available.")
 
         return self._get_from_key(key)
 
     def __setitem__(self, key, value):
         if not key in self:
-            raise KeyError("Key '%s' is not available." % key)
+            raise KeyError(f"Key '{key}' is not available.")
 
         self._set_from_key(key, value)
 

@@ -22,7 +22,6 @@ support passing of FortIO handles to the underlying C functions. A
 more extensive wrapping of the fortio implementation would be easy.
 """
 
-import ctypes
 import os
 
 from cwrap import BaseCClass
@@ -100,7 +99,7 @@ class FortIO(BaseCClass):
         """
         read_modes = (FortIO.READ_MODE, FortIO.APPEND_MODE, FortIO.READ_AND_WRITE_MODE)
         if mode in read_modes and not os.path.exists(file_name):
-            raise IOError('No such file "%s".' % file_name)
+            raise OSError(f'No such file "{file_name}".')
         if mode == FortIO.READ_MODE:
             c_pointer = self._open_reader(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.WRITE_MODE:
@@ -110,12 +109,12 @@ class FortIO(BaseCClass):
         elif mode == FortIO.APPEND_MODE:
             c_pointer = self._open_append(file_name, fmt_file, endian_flip_header)
         else:
-            raise UserWarning("Unknown mode: %d" % mode)
+            raise UserWarning(f"Unknown mode: {mode}")
 
         self.__mode = mode
         if not c_pointer:
-            raise IOError('Failed to open FortIO file "%s".' % file_name)
-        super(FortIO, self).__init__(c_pointer)
+            raise OSError(f'Failed to open FortIO file "{file_name}".')
+        super().__init__(c_pointer)
 
     def close(self):
         if self:
@@ -136,7 +135,7 @@ class FortIO(BaseCClass):
             size = self.getPosition()
 
         if not self._truncate(size):
-            raise IOError("Truncate of fortran filehandle:%s failed" % self.filename())
+            raise OSError(f"Truncate of fortran filehandle:{self.filename()} failed")
 
     def filename(self):
         return self._filename()
@@ -163,7 +162,7 @@ class FortIO(BaseCClass):
         self.close()
 
 
-class FortIOContextManager(object):
+class FortIOContextManager:
     def __init__(self, fortio):
         self.__fortio = fortio
 

@@ -43,5 +43,5 @@ class LintTestCase(unittest.TestCase):
         files = self._get_lintable_files(paths, whitelist=whitelist)
         for f in files:
             self.assertEqual(
-                0, lint.lint(f, self.LINT_ARGS), "Linting required for %s" % f
+                0, lint.lint(f, self.LINT_ARGS), f"Linting required for {f}"
             )

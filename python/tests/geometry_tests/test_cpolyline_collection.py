@@ -1,8 +1,4 @@
-import gc
-
 from resdata.geometry import CPolylineCollection, CPolyline
-from resdata.geometry.xyz_io import XYZIo
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
 from resdata.util.util import DoubleVector
 

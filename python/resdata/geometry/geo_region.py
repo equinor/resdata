@@ -1,5 +1,4 @@
 from cwrap import BaseCClass
-from resdata.util.util import IntVector
 from resdata import ResdataPrototype
 from .cpolyline import CPolyline
 from ctypes import c_double
@@ -42,21 +41,19 @@ class GeoRegion(BaseCClass):
     )
 
     def __init__(self, pointset, preselect=False):
-        self._preselect = True if preselect else False
+        self._preselect = bool(preselect)
         c_ptr = self._alloc(pointset, self._preselect)
         if c_ptr:
-            super(GeoRegion, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
-            raise ValueError(
-                "Could not construct GeoRegion from pointset %s." % pointset
-            )
+            raise ValueError(f"Could not construct GeoRegion from pointset {pointset}.")
 
     def getActiveList(self):
         return self._get_index_list()
 
     def _assert_polygon(self, polygon):
         if not isinstance(polygon, CPolyline):
-            raise ValueError("Need to select with a CPolyline, not %s." % type(polygon))
+            raise ValueError(f"Need to select with a CPolyline, not {type(polygon)}.")
 
     def _construct_cline(self, line):
         """Takes a line ((x1,y1), (x2,y2)) and returns two double[2]* but
@@ -68,7 +65,7 @@ class GeoRegion(BaseCClass):
             x2, y2 = map(float, p2)
         except Exception as err:
             err_msg = "Select with pair ((x1,y1), (x2,y2)), not %s (%s)."
-            raise ValueError(err_msg % (line, err))
+            raise ValueError(err_msg % (line, err)) from err
         x1x2_ptr = cpair(x1, x2)
         y1y2_ptr = cpair(y1, y2)
         return x1x2_ptr, y1y2_ptr
@@ -111,10 +108,9 @@ class GeoRegion(BaseCClass):
         return len(self._get_index_list())
 
     def __repr__(self):
-        ls = len(self)
         il = repr(self.getActiveList())
         pres = "preselected" if self._preselect else "not preselected"
-        return self._create_repr("size=%d, active_list=<%s>, %s" % (ls, il, pres))
+        return self._create_repr(f"size={len(self)}, active_list=<{il}>, {pres}")
 
     def free(self):
         self._free()

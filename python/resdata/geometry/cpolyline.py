@@ -6,7 +6,9 @@ import ctypes
 import os.path
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
+
 from .geometry_tools import GeometryTools
 
 
@@ -38,43 +40,40 @@ class CPolyline(BaseCClass):
 
     def __init__(self, name=None, init_points=()):
         c_ptr = self._alloc_new(name)
-        super(CPolyline, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         for xc, yc in init_points:
             self.addPoint(xc, yc)
 
     @classmethod
     def createFromXYZFile(cls, filename, name=None):
         if not os.path.isfile(filename):
-            raise IOError("No such file:%s" % filename)
+            raise OSError(f"No such file:{filename}")
 
         polyline = cls._fread_alloc_irap(filename)
         if not name is None:
             polyline._set_name(name)
         return polyline
 
-    def __str__(self):
+    def __str__(self) -> str:
         name = self.getName()
-        if name:
-            str = "%s [" % name
-        else:
-            str = "["
+        str = f"{name} [" if name else "["
 
         for index, p in enumerate(self):
-            str += "(%g,%g)" % p
+            str += "({:g},{:g})".format(*p)
             if index < len(self) - 1:
                 str += ","
         str += "]"
         return str
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._size()
 
     def __getitem__(self, index):
         if not isinstance(index, int):
-            raise TypeError("Index argument must be integer. Index:%s invalid" % index)
+            raise TypeError(f"Index argument must be integer. Index:{index} invalid")
 
         if index < 0:
             index += len(self)
@@ -86,9 +85,7 @@ class CPolyline(BaseCClass):
 
             return (x.value, y.value)
         else:
-            raise IndexError(
-                "Invalid index:%d valid range: [0,%d)" % (index, len(self))
-            )
+            raise IndexError(f"Invalid index:{index} valid range: [0,{len(self)})")
 
     def segmentIntersects(self, p1, p2):
         return self._segment_intersects(p1[0], p1[1], p2[0], p2[1])
@@ -120,7 +117,7 @@ class CPolyline(BaseCClass):
         return copy
 
     def __eq__(self, other):
-        if super(CPolyline, self).__eq__(other):
+        if super().__eq__(other):
             return True
         else:
             return self._equal(other)
@@ -143,10 +140,7 @@ class CPolyline(BaseCClass):
         intersections = GeometryTools.rayPolygonIntersections(p1, ray_dir, bbox)
         if intersections:
             p2 = intersections[0][1]
-            if self.getName():
-                name = "Extend:%s" % self.getName()
-            else:
-                name = None
+            name = f"Extend:{self.getName()}" if self.getName() else None
 
             return CPolyline(name=name, init_points=[(p1[0], p1[1]), p2])
         else:

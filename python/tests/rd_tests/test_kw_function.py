@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import os
-import random
 from resdata import ResDataType
 from resdata.resfile import ResdataKW, Resdata3DKW
 from resdata.grid import Grid

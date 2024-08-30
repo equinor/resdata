@@ -1,9 +1,6 @@
 import os
 import datetime
 
-from unittest import skipIf, skipUnless, skipIf
-
-from resdata.resfile import ResdataFile
 from resdata.summary import Summary
 from resdata import UnitSystem
 
@@ -11,11 +8,10 @@ from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
 
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest, equinor_test
-import csv
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"
-case = "%s/%s" % (path, base)
+case = f"{path}/{base}"
 
 
 def sum_get(*args):
@@ -109,17 +105,17 @@ class SumTest(ResdataTest):
         wells = self.rd_sum.wells()
         wells.sort()
         self.assertListEqual(
-            [well for well in wells],
+            list(wells),
             ["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"],
         )
 
         wells = self.rd_sum.wells(pattern="*_3")
         wells.sort()
-        self.assertListEqual([well for well in wells], ["OP_3", "WI_3"])
+        self.assertListEqual(list(wells), ["OP_3", "WI_3"])
 
         groups = self.rd_sum.groups()
         groups.sort()
-        self.assertListEqual([group for group in groups], ["GMWIN", "OP", "WI"])
+        self.assertListEqual(list(groups), ["GMWIN", "OP", "WI"])
 
     def test_last(self):
         last = self.rd_sum.get_last("FOPT")
@@ -283,7 +279,7 @@ class SumTest(ResdataTest):
         sum = Summary(self.case)
         wells = sum.wells()
         self.assertListEqual(
-            [well for well in wells],
+            list(wells),
             ["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"],
         )
         self.assertIsInstance(wells, StringList)
@@ -475,10 +471,7 @@ class SumTest(ResdataTest):
 
         self.assertTrue(
             "HWELL_PROD"
-            in [
-                intersect_summary.smspec_node(key).wgname
-                for key in intersect_summary.keys()
-            ]
+            in [intersect_summary.smspec_node(key).wgname for key in intersect_summary]
         )
 
         eclipse_summary = Summary(
@@ -538,7 +531,7 @@ class SumTest(ResdataTest):
         time_points.append(CTime(end_time))
         resampled = self.rd_sum.resample("OUTPUT_CASE", time_points)
 
-        for key in self.rd_sum.keys():
+        for key in self.rd_sum:
             self.assertIn(key, resampled)
 
         self.assertEqual(
