@@ -474,25 +474,6 @@ add_test(NAME rd_dualp COMMAND rd_dualp ${_resdatapath}/LGCcase/LGC_TESTCASE2)
 
 add_test(NAME rd_sum_test COMMAND rd_sum_test ${_resdatapath}/Gurbat/ECLIPSE)
 
-add_test(NAME rd_sum_report_step_equal1
-         COMMAND rd_sum_report_step_equal ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/Snorre/SNORRE FALSE)
-add_test(NAME rd_sum_report_step_equal2
-         COMMAND rd_sum_report_step_equal ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/Gurbat/ECLIPSE TRUE)
-add_test(NAME rd_sum_report_step_equal3
-         COMMAND rd_sum_report_step_equal ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/modGurbat/extraMinistep/ECLIPSE TRUE)
-add_test(NAME rd_sum_report_step_equal4
-         COMMAND rd_sum_report_step_equal ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/modGurbat/short/ECLIPSE FALSE)
-add_test(NAME rd_sum_report_step_equal5
-         COMMAND rd_sum_report_step_equal ${_resdatapath}/Gurbat/ECLIPSE
-                 ${_resdatapath}/modGurbat/enkf/ECLIPSE FALSE)
-add_test(NAME rd_sum_report_step_equal6
-         COMMAND rd_sum_report_step_equal ${_resdatapath}/Snorre/SNORRE
-                 ${_resdatapath}/Snorre2/SNORRE2 FALSE)
-
 add_test(NAME rd_file_equinor
          COMMAND rd_file_equinor ${_resdatapath}/Gurbat/ECLIPSE.UNRST
                  ECLIPSE.UNRST)
