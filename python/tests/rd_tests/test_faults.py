@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from unittest import skipIf
-import time
+import pytest
+
 from resdata import util
 
 from resdata import ResDataType
@@ -33,11 +33,11 @@ class FaultTest(ResdataTest):
         nz = 10
         grid = GridGenerator.create_rectangular((nx, ny, nz), (0.1, 0.1, 0.1))
         f = Fault(grid, "F")
-        f.addRecord(0, 1, 0, 0, 0, 0, "Y-")
-        f.addRecord(2, 2, 0, 1, 0, 0, "X-")
-        f.addRecord(2, 2, 1, 1, 0, 0, "Y")
+        f.add_record(0, 1, 0, 0, 0, 0, "Y-")
+        f.add_record(2, 2, 0, 1, 0, 0, "X-")
+        f.add_record(2, 2, 1, 1, 0, 0, "Y")
 
-        pl = f.getIJPolyline(0)
+        pl = f.get_ij_polyline(0)
         self.assertEqual(pl, [(0, 0), (2, 0), (2, 2), (3, 2)])
 
     def test_empty_collection(self):
@@ -47,13 +47,13 @@ class FaultTest(ResdataTest):
         self.assertFalse(faults.hasFault("FX"))
 
         with self.assertRaises(TypeError):
-            f = faults[[]]
+            _ = faults[[]]
 
         with self.assertRaises(KeyError):
-            f = faults["FX"]
+            _ = faults["FX"]
 
         with self.assertRaises(IndexError):
-            f = faults[0]
+            _ = faults[0]
 
         self.assertFalse("NAME" in faults)
 
@@ -209,10 +209,10 @@ class FaultTest(ResdataTest):
         fault3 = Fault(grid, "Fault3")
         fault4 = Fault(grid, "Fault4")
 
-        fault1.addRecord(1, 1, 10, grid.getNY() - 1, 0, 0, "X")
-        fault2.addRecord(5, 10, 15, 15, 0, 0, "Y")
-        fault3.addRecord(5, 10, 5, 5, 0, 0, "Y")
-        fault4.addRecord(20, 20, 10, grid.getNY() - 1, 0, 0, "X")
+        fault1.add_record(1, 1, 10, grid.get_ny() - 1, 0, 0, "X")
+        fault2.add_record(5, 10, 15, 15, 0, 0, "Y")
+        fault3.add_record(5, 10, 5, 5, 0, 0, "Y")
+        fault4.add_record(20, 20, 10, grid.get_ny() - 1, 0, 0, "X")
 
         for other_fault in [fault2, fault3, fault4]:
             with self.assertRaises(ValueError):
@@ -360,10 +360,10 @@ class FaultTest(ResdataTest):
         fault3 = Fault(grid, "Fault3")
         fault4 = Fault(grid, "Fault4")
 
-        fault1.addRecord(1, 1, 10, grid.getNY() - 1, 0, 0, "X")
-        fault2.addRecord(5, 10, 15, 15, 0, 0, "Y")
-        fault3.addRecord(5, 10, 5, 5, 0, 0, "Y")
-        fault4.addRecord(20, 20, 10, grid.getNY() - 1, 0, 0, "X")
+        fault1.add_record(1, 1, 10, grid.get_ny() - 1, 0, 0, "X")
+        fault2.add_record(5, 10, 15, 15, 0, 0, "Y")
+        fault3.add_record(5, 10, 5, 5, 0, 0, "Y")
+        fault4.add_record(20, 20, 10, grid.get_ny() - 1, 0, 0, "X")
 
         rays = fault1.getEndRays(0)
         self.assertEqual(rays[0], [(2, 10), (0, -1)])
@@ -391,10 +391,10 @@ class FaultTest(ResdataTest):
         fault3 = Fault(grid, "Fault3")
         fault4 = Fault(grid, "Fault4")
 
-        fault1.addRecord(1, 1, 10, grid.getNY() - 1, 0, 0, "X")
-        fault2.addRecord(5, 30, 15, 15, 0, 0, "Y")
-        fault3.addRecord(2, 10, 9, 9, 0, 0, "Y")
-        fault4.addRecord(20, 20, 10, grid.getNY() - 1, 0, 0, "X")
+        fault1.add_record(1, 1, 10, grid.get_ny() - 1, 0, 0, "X")
+        fault2.add_record(5, 30, 15, 15, 0, 0, "Y")
+        fault3.add_record(2, 10, 9, 9, 0, 0, "Y")
+        fault4.add_record(20, 20, 10, grid.get_ny() - 1, 0, 0, "X")
 
         # self.assertFalse( fault1.intersectsFault(fault2 , 0) )
         # self.assertFalse( fault2.intersectsFault(fault1 , 0) )
@@ -421,35 +421,63 @@ class FaultTest(ResdataTest):
     def test_fault(self):
         f = Fault(self.grid, "NAME")
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Invalid face:F"):
             # Invalid face
-            f.addRecord(10, 10, 11, 11, 1, 43, "F")
+            f.add_record(10, 10, 11, 11, 1, 43, "F")
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Invalid I1:-1"):
             # Invalid coordinates
-            f.addRecord(-1, 10, 11, 11, 1, 43, "X")
+            f.add_record(-1, 10, 11, 11, 1, 43, "X")
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Invalid I1:10000"):
             # Invalid coordinates
-            f.addRecord(10000, 10, 11, 11, 1, 43, "X")
+            f.add_record(10000, 100000, 11, 11, 1, 43, "X")
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Invalid I2:10002"):
             # Invalid coordinates
-            f.addRecord(10, 9, 11, 11, 1, 43, "X")
+            f.add_record(10, 10002, 11, 11, 1, 43, "X")
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Invalid J1:-11"):
             # Invalid coordinates
-            f.addRecord(10, 9, 11, 11, 1, 43, "X")
+            f.add_record(10, 10, -11, 11, 1, 43, "X")
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="Invalid J2:11110"):
+            # Invalid coordinates
+            f.add_record(10, 10, 11, 11110, 1, 43, "X")
+
+        with pytest.raises(ValueError, match="Invalid K1:-11"):
+            # Invalid coordinates
+            f.add_record(10, 10, 11, 11, -11, 43, "X")
+
+        with pytest.raises(ValueError, match="Invalid K2:43000"):
+            # Invalid coordinates
+            f.add_record(10, 10, 11, 11, 1, 43000, "X")
+
+        with pytest.raises(ValueError, match="Invalid I1 I2 indices"):
+            # Invalid coordinates
+            f.add_record(10, 9, 11, 11, 1, 43, "X")
+
+        with pytest.raises(ValueError, match="Invalid J1 J2 indices"):
+            # Invalid coordinates
+            f.add_record(8, 9, 12, 11, 1, 43, "X")
+
+        with pytest.raises(ValueError, match="Invalid K1 K2 indices"):
+            # Invalid coordinates
+            f.add_record(8, 9, 11, 11, 100, 43, "X")
+
+        with pytest.raises(ValueError, match="For face:X we must have I1 == I2"):
             # Invalid coordinates/face combination
-            f.addRecord(10, 11, 11, 11, 1, 43, "X")
+            f.add_record(10, 11, 11, 11, 1, 43, "X")
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError, match="For face:Y we must have J1 == J2"):
             # Invalid coordinates/face combination
-            f.addRecord(10, 11, 11, 12, 1, 43, "Y")
+            f.add_record(10, 11, 11, 12, 1, 43, "Y")
 
-        f.addRecord(10, 10, 0, 10, 1, 10, "X")
+        with pytest.raises(ValueError, match="For face:K we must have K1 == K2"):
+            # Invalid coordinates/face combination
+            f.add_record(10, 11, 11, 12, 1, 43, "K")
+
+        f.add_record(10, 10, 0, 10, 1, 10, "X")
 
     def test_segment(self):
         s0 = FaultSegment(0, 10)
@@ -588,10 +616,10 @@ class FaultTest(ResdataTest):
         fault3 = Fault(grid, "Fault3")
         fault4 = Fault(grid, "Fault4")
 
-        fault1.addRecord(1, 1, 10, grid.getNY() - 1, 0, 0, "X")
-        fault2.addRecord(5, 10, 15, 15, 0, 0, "Y")
-        fault3.addRecord(5, 10, 5, 5, 0, 0, "Y")
-        fault4.addRecord(20, 20, 10, grid.getNY() - 1, 0, 0, "X")
+        fault1.add_record(1, 1, 10, grid.get_ny() - 1, 0, 0, "X")
+        fault2.add_record(5, 10, 15, 15, 0, 0, "Y")
+        fault3.add_record(5, 10, 5, 5, 0, 0, "Y")
+        fault4.add_record(20, 20, 10, grid.get_ny() - 1, 0, 0, "X")
 
         polyline = Polyline(init_points=[(4, 4), (8, 4)])
         self.assertTrue(fault4.intersectsPolyline(polyline, 0))
@@ -640,8 +668,8 @@ class FaultTest(ResdataTest):
 
         fault1 = Fault(grid, "Fault")
 
-        fault1.addRecord(0, 0, 0, 0, 0, 0, "X-")
-        fault1.addRecord(0, 0, 0, 0, 0, 0, "Y")
+        fault1.add_record(0, 0, 0, 0, 0, 0, "X-")
+        fault1.add_record(0, 0, 0, 0, 0, 0, "Y")
 
         polyline = CPolyline(init_points=[(0, 2), (3, 2)])
         points = fault1.extendToPolyline(polyline, 0)
@@ -666,7 +694,7 @@ class FaultTest(ResdataTest):
         #  o   o   o   o
 
         fault1 = Fault(grid, "Fault")
-        fault1.addRecord(0, 2, 0, 0, 0, 0, "Y")
+        fault1.add_record(0, 2, 0, 0, 0, 0, "Y")
 
         polyline0 = CPolyline(init_points=[(0, 2)])
         polyline1 = CPolyline(init_points=[(0, 2), (3, 2)])
@@ -692,7 +720,7 @@ class FaultTest(ResdataTest):
         f.addRecord(2, 2, 0, 0, 1, 1, "Z")
         f.addRecord(1, 1, 0, 0, 2, 3, "X")
 
-        block_kw = ResdataKW("FAULTBLK", grid.getGlobalSize(), ResDataType.RD_INT)
+        block_kw = ResdataKW("FAULTBLK", grid.get_global_size(), ResDataType.RD_INT)
         block_kw.assign(1)
         block_kw[5] = 2
         block_kw[11] = 2
