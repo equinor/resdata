@@ -13,10 +13,10 @@ import numpy as np
 
 
 def create_init(grid, case):
-    poro = ResdataKW("PORO", grid.getNumActive(), ResDataType.RD_FLOAT)
+    poro = ResdataKW("PORO", grid.get_num_active(), ResDataType.RD_FLOAT)
     porv = poro.copy()
-    porv.setName("PORV")
-    for g in range(grid.getGlobalSize()):
+    porv.set_name("PORV")
+    for g in range(grid.get_global_size()):
         porv[g] *= grid.cell_volume(global_index=g)
 
     with openFortIO("%s.INIT" % case, mode=FortIO.WRITE_MODE) as f:
@@ -36,7 +36,9 @@ class GeertsmaTest(ResdataTest):
             init = ResdataFile("TEST.INIT")
             restart_file = ResdataFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
+            restart_view1 = restart_file.restart_view(
+                sim_time=datetime.date(2000, 1, 1)
+            )
 
             subsidence = ResdataSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -49,14 +51,14 @@ class GeertsmaTest(ResdataTest):
             topres = 2000
             receiver = (1000, 1000, 0)
 
-            dz = subsidence.evalGeertsma(
+            dz = subsidence.eval_geertsma(
                 "S1", None, receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz, 3.944214576168326e-09)
 
             receiver = (1000, 1000, topres - seabed - above)
 
-            dz = subsidence.evalGeertsma(
+            dz = subsidence.eval_geertsma(
                 "S1", None, receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz, 5.8160298201497136e-08)
@@ -78,8 +80,12 @@ class GeertsmaTest(ResdataTest):
             init = ResdataFile("TEST.INIT")
             restart_file = ResdataFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
-            restart_view2 = restart_file.restartView(sim_time=datetime.date(2010, 1, 1))
+            restart_view1 = restart_file.restart_view(
+                sim_time=datetime.date(2000, 1, 1)
+            )
+            restart_view2 = restart_file.restart_view(
+                sim_time=datetime.date(2010, 1, 1)
+            )
 
             subsidence = ResdataSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -90,19 +96,19 @@ class GeertsmaTest(ResdataTest):
             seabed = 0
             receiver = (1000, 1000, 0)
 
-            dz1 = subsidence.evalGeertsma(
+            dz1 = subsidence.eval_geertsma(
                 "S1", None, receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz1, 8.65322541521704e-07)
 
-            dz2 = subsidence.evalGeertsma(
+            dz2 = subsidence.eval_geertsma(
                 "S2", None, receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz2, 2.275556615015282e-06)
 
             np.testing.assert_almost_equal(dz1 - dz2, -1.4102340734935779e-06)
 
-            dz = subsidence.evalGeertsma(
+            dz = subsidence.eval_geertsma(
                 "S1", "S2", receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz, dz1 - dz2)
@@ -118,35 +124,9 @@ class GeertsmaTest(ResdataTest):
             init = ResdataFile("TEST.INIT")
             restart_file = ResdataFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
-
-            subsidence = ResdataSubsidence(grid, init)
-            subsidence.add_survey_PRESSURE("S1", restart_view1)
-
-            youngs_modulus = 5e8
-            poisson_ratio = 0.3
-            seabed = 300
-            above = 100
-            topres = 2000
-            receiver = (1000, 1000, topres - seabed - above)
-
-            dz = subsidence.evalGeertsma(
-                "S1", None, receiver, youngs_modulus, poisson_ratio, seabed
+            restart_view1 = restart_file.restart_view(
+                sim_time=datetime.date(2000, 1, 1)
             )
-            np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
-
-    @staticmethod
-    def test_geertsma_kernel_seabed():
-        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
-        with TestAreaContext("Subsidence"):
-            p1 = [1]
-            create_restart(grid, "TEST", p1)
-            create_init(grid, "TEST")
-
-            init = ResdataFile("TEST.INIT")
-            restart_file = ResdataFile("TEST.UNRST")
-
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
 
             subsidence = ResdataSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -158,7 +138,7 @@ class GeertsmaTest(ResdataTest):
             topres = 2000
             receiver = (1000, 1000, topres - seabed - above)
 
-            dz = subsidence.evalGeertsma(
+            dz = subsidence.eval_geertsma(
                 "S1", None, receiver, youngs_modulus, poisson_ratio, seabed
             )
             np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
@@ -182,8 +162,12 @@ class GeertsmaTest(ResdataTest):
             init = ResdataFile("TEST.INIT")
             restart_file = ResdataFile("TEST.UNRST")
 
-            restart_view1 = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
-            restart_view2 = restart_file.restartView(sim_time=datetime.date(2010, 1, 1))
+            restart_view1 = restart_file.restart_view(
+                sim_time=datetime.date(2000, 1, 1)
+            )
+            restart_view2 = restart_file.restart_view(
+                sim_time=datetime.date(2010, 1, 1)
+            )
 
             subsidence = ResdataSubsidence(grid, init)
             subsidence.add_survey_PRESSURE("S1", restart_view1)
@@ -206,3 +190,71 @@ class GeertsmaTest(ResdataTest):
 
             np.testing.assert_almost_equal(dz, dz1 - dz2)
             self.assertTrue(dz > 0)
+
+    def test_validation_of_surveys(self):
+        grid = GridGenerator.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
+
+        with TestAreaContext("Subsidence"):
+            p1 = [1, 10]
+            p2 = [10, 20]
+            create_restart(
+                grid,
+                "TEST",
+                p1,
+                p2,
+                rporv1=[10**5, 10**5],
+                rporv2=[9 * 10**4, 9 * 10**4],
+            )
+            create_init(grid, "TEST")
+
+            init = ResdataFile("TEST.INIT")
+            restart_file = ResdataFile("TEST.UNRST")
+
+            restart_view1 = restart_file.restart_view(
+                sim_time=datetime.date(2000, 1, 1)
+            )
+
+            subsidence = ResdataSubsidence(grid, init)
+            youngs_modulus = 5e8
+            compressibility = 1000
+            poisson_ratio = 0.3
+            seabed = 0
+            receiver = (1000, 1000, 0)
+            with pytest.raises(KeyError, match="No such survey: dummy_survey"):
+                subsidence.eval_geertsma_rporv(
+                    "dummy_survey",
+                    None,
+                    receiver,
+                    youngs_modulus,
+                    poisson_ratio,
+                    seabed,
+                )
+            with pytest.raises(KeyError, match="No such survey: dummy_survey"):
+                subsidence.eval(
+                    "dummy_survey",
+                    None,
+                    receiver,
+                    compressibility,
+                    poisson_ratio,
+                )
+
+            subsidence.add_survey_PRESSURE("S1", restart_view1)
+
+            with pytest.raises(KeyError, match="No such survey: dummy_survey"):
+                subsidence.eval_geertsma_rporv(
+                    "S1",
+                    "dummy_survey",
+                    receiver,
+                    youngs_modulus,
+                    poisson_ratio,
+                    seabed,
+                )
+
+            with pytest.raises(KeyError, match="No such survey: dummy_survey"):
+                subsidence.eval(
+                    "S1",
+                    "dummy_survey",
+                    receiver,
+                    compressibility,
+                    poisson_ratio,
+                )
