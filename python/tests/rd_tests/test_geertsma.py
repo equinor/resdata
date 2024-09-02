@@ -2,7 +2,7 @@ import datetime
 import pytest
 from resdata import ResDataType
 from resdata.resfile import ResdataKW, openFortIO, FortIO, ResdataFile
-from resdata.grid import Grid
+from resdata.grid import GridGenerator
 from resdata.gravimetry import ResdataSubsidence
 
 from resdata.util.test import TestAreaContext
@@ -27,7 +27,7 @@ def create_init(grid, case):
 class GeertsmaTest(ResdataTest):
     @staticmethod
     def test_geertsma_kernel():
-        grid = Grid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
         with TestAreaContext("Subsidence"):
             p1 = [1]
             create_restart(grid, "TEST", p1)
@@ -67,7 +67,7 @@ class GeertsmaTest(ResdataTest):
 
     @staticmethod
     def test_geertsma_kernel_2_source_points_2_vintages():
-        grid = Grid.createRectangular(dims=(2, 1, 1), dV=(100, 100, 100))
+        grid = GridGenerator.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
 
         with TestAreaContext("Subsidence"):
             p1 = [1, 10]
@@ -109,7 +109,7 @@ class GeertsmaTest(ResdataTest):
 
     @staticmethod
     def test_geertsma_kernel_seabed():
-        grid = Grid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
         with TestAreaContext("Subsidence"):
             p1 = [1]
             create_restart(grid, "TEST", p1)
@@ -137,7 +137,7 @@ class GeertsmaTest(ResdataTest):
 
     @staticmethod
     def test_geertsma_kernel_seabed():
-        grid = Grid.createRectangular(dims=(1, 1, 1), dV=(50, 50, 50))
+        grid = GridGenerator.create_rectangular(dims=(1, 1, 1), dV=(50, 50, 50))
         with TestAreaContext("Subsidence"):
             p1 = [1]
             create_restart(grid, "TEST", p1)
@@ -164,7 +164,7 @@ class GeertsmaTest(ResdataTest):
             np.testing.assert_almost_equal(dz, 5.819790154474284e-08)
 
     def test_geertsma_rporv_kernel_2_source_points_2_vintages(self):
-        grid = Grid.createRectangular(dims=(2, 1, 1), dV=(100, 100, 100))
+        grid = GridGenerator.create_rectangular(dims=(2, 1, 1), dV=(100, 100, 100))
 
         with TestAreaContext("Subsidence"):
             p1 = [1, 10]

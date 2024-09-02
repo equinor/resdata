@@ -6,14 +6,16 @@ from resdata import ResdataTypeEnum
 
 from resdata.resfile import ResdataKW
 
-from resdata.grid import Grid
+from resdata.grid import Grid, GridGenerator
 
 from tests import ResdataTest
 
 
 class GridPandasTest(ResdataTest):
     def test_dataframe_actnum(self):
-        grid = Grid.create_rectangular((2, 3, 1), (1, 1, 1), actnum=[1, 1, 0, 0, 1, 1])
+        grid = GridGenerator.create_rectangular(
+            (2, 3, 1), (1, 1, 1), actnum=[1, 1, 0, 0, 1, 1]
+        )
         df = grid.export_index(True)
         index_matrix = np.array(
             [[0, 0, 0, 0], [1, 0, 0, 1], [0, 2, 0, 2], [1, 2, 0, 3]]
@@ -70,7 +72,9 @@ class GridPandasTest(ResdataTest):
         assert np.array_equal(data, np.array([10.5, 9.25, 2222.0, 2222.0, 2.0, 1.625]))
 
     def test_dataframe_grid_data(self):
-        grid = Grid.create_rectangular((2, 3, 1), (1, 1, 1), actnum=[1, 1, 0, 0, 1, 1])
+        grid = GridGenerator.create_rectangular(
+            (2, 3, 1), (1, 1, 1), actnum=[1, 1, 0, 0, 1, 1]
+        )
         index_frame = grid.export_index()
         volume_data = grid.export_volume(index_frame)
         assert len(volume_data) == 6

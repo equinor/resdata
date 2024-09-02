@@ -5,7 +5,7 @@ from resdata import util
 
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
-from resdata.grid import Grid
+from resdata.grid import Grid, GridGenerator
 from resdata.grid.faults import (
     FaultCollection,
     Fault,
@@ -21,7 +21,7 @@ from tests import ResdataTest
 class FaultTest(ResdataTest):
     @classmethod
     def setUpClass(cls):
-        cls.grid = Grid.createRectangular((151, 100, 50), (1, 1, 1))
+        cls.grid = GridGenerator.create_rectangular((151, 100, 50), (1, 1, 1))
 
     def setUp(self):
         self.faults1 = self.createTestPath("local/ECLIPSE/FAULTS/fault1.grdecl")
@@ -31,7 +31,7 @@ class FaultTest(ResdataTest):
         nx = 10
         ny = 10
         nz = 10
-        grid = Grid.createRectangular((nx, ny, nz), (0.1, 0.1, 0.1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (0.1, 0.1, 0.1))
         f = Fault(grid, "F")
         f.addRecord(0, 1, 0, 0, 0, 0, "Y-")
         f.addRecord(2, 2, 0, 1, 0, 0, "X-")
@@ -112,7 +112,7 @@ class FaultTest(ResdataTest):
         nx = 10
         ny = 10
         nz = 2
-        grid = Grid.createRectangular((nx, ny, nz), (0.1, 0.1, 0.1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (0.1, 0.1, 0.1))
         fl = FaultLine(grid, 0)
         C1 = (nx + 1) * 5 + 3
         C2 = C1 + 2
@@ -191,7 +191,7 @@ class FaultTest(ResdataTest):
             faults.load(self.grid, "No/this/does/not/exist")
 
     def test_connect_faults(self):
-        grid = Grid.createRectangular((100, 100, 10), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((100, 100, 10), (1, 1, 1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -342,7 +342,7 @@ class FaultTest(ResdataTest):
         self.assertEqual(join, [p1, p2])
 
     def test_join_faults(self):
-        grid = Grid.createRectangular((100, 100, 10), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((100, 100, 10), (1, 1, 1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -373,7 +373,7 @@ class FaultTest(ResdataTest):
         self.assertEqual(extra, [(2, 10), (2, 6), (5, 6)])
 
     def test_contact(self):
-        grid = Grid.createRectangular((100, 100, 10), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((100, 100, 10), (1, 1, 1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -471,7 +471,7 @@ class FaultTest(ResdataTest):
         nx = 120
         ny = 60
         nz = 43
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl", "w") as f:
                 f.write(
@@ -509,7 +509,7 @@ class FaultTest(ResdataTest):
         nx = 10
         ny = 8
         nz = 7
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         faults_file = self.createTestPath("local/ECLIPSE/FAULTS/faults_nb.grdecl")
         faults = FaultCollection(grid, faults_file)
 
@@ -570,7 +570,7 @@ class FaultTest(ResdataTest):
         self.assertListEqual(nb_cells1, true_nb_cells1)
 
     def test_polyline_intersection(self):
-        grid = Grid.createRectangular((100, 100, 10), (0.25, 0.25, 1))
+        grid = GridGenerator.create_rectangular((100, 100, 10), (0.25, 0.25, 1))
 
         #    Fault1                    Fault4
         #      |                         |
@@ -609,7 +609,7 @@ class FaultTest(ResdataTest):
         nx = 10
         ny = 10
         nz = 1
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl", "w") as f:
                 f.write(
@@ -628,7 +628,7 @@ class FaultTest(ResdataTest):
             self.assertEqual(1, f2.numLines(0))
 
     def test_extend_to_polyline(self):
-        grid = Grid.createRectangular((3, 3, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
 
         #  o   o   o   o
         #
@@ -655,7 +655,7 @@ class FaultTest(ResdataTest):
         self.assertIsNone(end_join)
 
     def test_extend_polyline_on(self):
-        grid = Grid.createRectangular((3, 3, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
 
         #  o   o   o   o
         #
@@ -686,7 +686,7 @@ class FaultTest(ResdataTest):
         self.assertIsNone(points)
 
     def test_stepped(self):
-        grid = Grid.createRectangular((6, 1, 4), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((6, 1, 4), (1, 1, 1))
         f = Fault(grid, "F")
         f.addRecord(4, 4, 0, 0, 0, 1, "X")
         f.addRecord(2, 2, 0, 0, 1, 1, "Z")
@@ -725,7 +725,7 @@ class FaultTest(ResdataTest):
         self.assertFalse(layer3.cellContact((1, 0), (2, 0)))
 
     def test_connectWithPolyline(self):
-        grid = Grid.createRectangular((4, 4, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((4, 4, 1), (1, 1, 1))
 
         #  o   o   o   o   o
         #

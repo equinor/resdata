@@ -2,7 +2,7 @@ from resdata import ResDataType
 import numpy as np
 import pytest
 from resdata.resfile import ResdataKW
-from resdata.grid import Grid, ResdataRegion
+from resdata.grid import Grid, ResdataRegion, GridGenerator
 from resdata.util.util import IntVector
 from tests import ResdataTest
 from resdata.grid.faults import Layer
@@ -10,7 +10,7 @@ from resdata.grid.faults import Layer
 
 class RegionTest(ResdataTest):
     def test_equal(self):
-        grid = Grid.createRectangular((10, 10, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
         kw_int = ResdataKW("INT", grid.getGlobalSize(), ResDataType.RD_INT)
         kw_float = ResdataKW("FLOAT", grid.getGlobalSize(), ResDataType.RD_FLOAT)
 
@@ -25,7 +25,7 @@ class RegionTest(ResdataTest):
             region.select_equal(kw_float, 1)
 
     def test_sum(self):
-        grid = Grid.createRectangular((10, 10, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
         kw_mask = ResdataKW("INT", grid.getGlobalSize(), ResDataType.RD_INT)
         int_value = ResdataKW("INT", grid.getGlobalSize(), ResDataType.RD_INT)
         float_value = ResdataKW("FLOAT", grid.getGlobalSize(), ResDataType.RD_FLOAT)

@@ -1,7 +1,7 @@
 import datetime
 from resdata import ResDataType
 from resdata.resfile import ResdataKW, ResdataFile, openFortIO, FortIO
-from resdata.grid import Grid
+from resdata.grid import GridGenerator
 from resdata.gravimetry import ResdataGrav
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest
@@ -10,7 +10,7 @@ from resdata.rd_util import Phase
 
 class ResdataGravTest(ResdataTest):
     def setUp(self):
-        self.grid = Grid.createRectangular((10, 10, 10), (1, 1, 1))
+        self.grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
 
     def test_create(self):
         kws = [
