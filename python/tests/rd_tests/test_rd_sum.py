@@ -159,12 +159,12 @@ class SummaryTest(ResdataTest):
 
 @pytest.fixture
 def use_tmpdir(tmpdir):
-    with tmpdir.as_wcd():
+    with tmpdir.as_cwd():
         yield
 
 
 @given(summaries())
-@pytest.mark.use_fixtures("use_tmpdir")
+@pytest.mark.usefixtures("use_tmpdir")
 def test_to_from_pandas(summary):
     smspec, unsmry = summary
     assume(len(smspec.keywords) == len(set(smspec.keywords)))
@@ -193,7 +193,7 @@ def test_to_from_pandas(summary):
 
 
 @given(summaries())
-@pytest.mark.use_fixtures("use_tmpdir")
+@pytest.mark.usefixtures("use_tmpdir")
 def test_that_non_matching_dataframe_gives_empty_columns(summary):
     smspec, unsmry = summary
     assume("BOGUS" not in (smspec.keywords))
