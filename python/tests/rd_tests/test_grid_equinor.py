@@ -119,7 +119,7 @@ class GridTest(ResdataTest):
             a1 = 1.0
             a2 = 2.0
             a3 = 3.0
-            grid = Grid.createRectangular((9, 9, 9), (a1, a2, a3))
+            grid = GridGenerator.create_rectangular((9, 9, 9), (a1, a2, a3))
             grid.save_EGRID("rect.EGRID")
             grid2 = Grid("rect.EGRID")
             self.assertTrue(grid)
@@ -163,7 +163,9 @@ class GridTest(ResdataTest):
 
             actnum = IntVector(default_value=1, initial_size=1000)
             actnum[0] = 0
-            g1 = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+            g1 = GridGenerator.create_rectangular(
+                (10, 10, 10), (1, 1, 1), actnum=actnum
+            )
             self.assertEqual(g1.getNumActive(), actnum.elementSum())
             g1.save_EGRID("G.EGRID")
 
@@ -220,7 +222,7 @@ class GridTest(ResdataTest):
             g = Grid("/does/not/exist.EGRID")
 
     def test_boundingBox(self):
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
         with self.assertRaises(ValueError):
             bbox = grid.getBoundingBox2D(layer=-1)
 

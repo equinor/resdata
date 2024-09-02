@@ -5,7 +5,7 @@ import random
 from resdata.util.util import IntVector
 from resdata import ResDataType, FileMode
 from resdata.resfile import Resdata3DKW, ResdataKW, ResdataFile, FortIO
-from resdata.grid import Grid
+from resdata.grid import GridGenerator
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest
 
@@ -16,7 +16,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(100):
             actnum[i] = 0
 
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT)
         self.assertEqual(len(kw), grid.getNumActive())
 
@@ -27,7 +27,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(100):
             actnum[i] = 0
 
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT, global_active=True)
         self.assertEqual(len(kw), grid.getGlobalSize())
 
@@ -41,7 +41,7 @@ class Resdata3DKWTest(ResdataTest):
         nx = 10
         ny = 11
         nz = 12
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         kw = Resdata3DKW("REGIONS", grid, ResDataType.RD_INT, global_active=True)
         kw.assign(3)
         self.assertEqual(3 * nx * ny * nz, sum(kw))
@@ -59,7 +59,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(100):
             actnum[i] = 0
 
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT, default_value=77)
 
         with self.assertRaises(IndexError):
@@ -84,7 +84,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(100):
             actnum[i] = 0
 
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT, default_value=77)
 
         with self.assertRaises(IndexError):
@@ -114,7 +114,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(100):
             actnum[i] = 0
 
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw_wrong_size = ResdataKW("KW", 27, ResDataType.RD_FLOAT)
         kw_global_size = ResdataKW("KW", grid.getGlobalSize(), ResDataType.RD_FLOAT)
         kw_active_size = ResdataKW("KW", grid.getNumActive(), ResDataType.RD_FLOAT)
@@ -133,7 +133,7 @@ class Resdata3DKWTest(ResdataTest):
             kw_active_size[0, 0, 0] = 88
 
     def test_default(self):
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT)
         kw.setDefault(55)
         self.assertTrue(55, kw.getDefault())
@@ -143,7 +143,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(500):
             actnum[2 * i + 1] = 0
 
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_INT, global_active=True)
         for i in range(len(kw)):
             kw[i] = i
@@ -160,7 +160,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(500):
             actnum[2 * i + 1] = 0
 
-        grid = Grid.createRectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_INT, global_active=False)
         for i in range(len(kw)):
             kw[i] = i

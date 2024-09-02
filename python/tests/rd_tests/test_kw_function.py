@@ -3,7 +3,7 @@ import os
 import random
 from resdata import ResDataType
 from resdata.resfile import ResdataKW, Resdata3DKW
-from resdata.grid import Grid
+from resdata.grid import GridGenerator
 from resdata.util.util import IntVector
 from tests import ResdataTest
 
@@ -16,7 +16,7 @@ class KWFunctionTest(ResdataTest):
         actnum = IntVector(initial_size=nx * ny * nz, default_value=1)
         actnum[nx * ny - 1] = 0
 
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1), actnum=actnum)
         self.assertEqual(grid.getNumActive(), nx * ny * nz - 1)
 
         kw = Resdata3DKW.create("REGIONS", grid, ResDataType.RD_INT, global_active=True)

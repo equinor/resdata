@@ -4,7 +4,7 @@ import cwrap
 
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
-from resdata.grid import Grid, ResdataRegion
+from resdata.grid import Grid, ResdataRegion, GridGenerator
 from resdata.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection
 from resdata.geometry import Polyline, CPolylineCollection
 from resdata.util.test import TestAreaContext
@@ -13,7 +13,7 @@ from tests import ResdataTest
 
 class FaultBlockTest(ResdataTest):
     def setUp(self):
-        self.grid = Grid.createRectangular((10, 10, 10), (1, 1, 1))
+        self.grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
         self.kw = ResdataKW("FAULTBLK", self.grid.getGlobalSize(), ResDataType.RD_INT)
         self.kw.assign(1)
 
@@ -26,7 +26,7 @@ class FaultBlockTest(ResdataTest):
             self.kw[k * self.grid.getNX() * self.grid.getNY() + 7] = 177
 
     def test_fault_block(self):
-        grid = Grid.createRectangular((5, 5, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
         kw = ResdataKW("FAULTBLK", grid.getGlobalSize(), ResDataType.RD_INT)
         kw.assign(0)
         for j in range(1, 4):
@@ -55,7 +55,7 @@ class FaultBlockTest(ResdataTest):
             with cwrap.open("kw.grdecl") as f:
                 kw = ResdataKW.read_grdecl(f, "FAULTBLK", rd_type=ResDataType.RD_INT)
 
-        grid = Grid.createRectangular((5, 5, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
         layer.loadKeyword(kw)
 
@@ -85,7 +85,7 @@ class FaultBlockTest(ResdataTest):
             with cwrap.open("kw.grdecl") as f:
                 kw = ResdataKW.read_grdecl(f, "FAULTBLK", rd_type=ResDataType.RD_INT)
 
-        grid = Grid.createRectangular((5, 5, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
 
         layer.loadKeyword(kw)
@@ -125,7 +125,7 @@ class FaultBlockTest(ResdataTest):
         nx = 8
         ny = 8
         nz = 1
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
         with TestAreaContext("python/FaultBlocks/neighbours"):
             with open("faultblock.grdecl", "w") as fileH:
@@ -189,7 +189,7 @@ class FaultBlockTest(ResdataTest):
         nx = 8
         ny = 8
         nz = 1
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
         with TestAreaContext("python/FaultBlocks/neighbours"):
             with open("faultblock.grdecl", "w") as fileH:
@@ -225,7 +225,7 @@ class FaultBlockTest(ResdataTest):
         self.assertTrue(b2 in nb)
 
     def test_fault_block_edge(self):
-        grid = Grid.createRectangular((5, 5, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((5, 5, 1), (1, 1, 1))
         kw = ResdataKW("FAULTBLK", grid.getGlobalSize(), ResDataType.RD_INT)
         kw.assign(0)
         for j in range(1, 4):
@@ -333,7 +333,7 @@ class FaultBlockTest(ResdataTest):
         self.assertEqual([1, 2, 3], list(fault_block.getRegionList()))
 
     def test_add_polyline_barrier1(self):
-        grid = Grid.createRectangular((4, 1, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((4, 1, 1), (1, 1, 1))
         layer = FaultBlockLayer(self.grid, 0)
         polyline = Polyline(init_points=[(1.99, 0.001), (2.01, 0.99)])
 
@@ -349,7 +349,7 @@ class FaultBlockTest(ResdataTest):
             self.assertFalse(geo_layer.cellContact(p1, p2))
 
     def test_add_polyline_barrier2(self):
-        grid = Grid.createRectangular((10, 10, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
         layer = FaultBlockLayer(self.grid, 0)
         polyline = Polyline(init_points=[(0.1, 0.9), (8.9, 0.9), (8.9, 8.9)])
 
@@ -389,7 +389,7 @@ class FaultBlockTest(ResdataTest):
         nx = 8
         ny = 8
         nz = 1
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         layer = FaultBlockLayer(grid, 0)
         with TestAreaContext("python/FaultBlocks/internal_blocks"):
             with open("faultblock.grdecl", "w") as fileH:

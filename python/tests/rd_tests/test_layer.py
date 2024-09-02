@@ -3,7 +3,7 @@ from unittest import skipIf
 import time
 
 from resdata.util.util import IntVector
-from resdata.grid import Grid
+from resdata.grid import GridGenerator
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer, FaultCollection
 from resdata.util.test import TestAreaContext
@@ -36,7 +36,7 @@ class LayerTest(ResdataTest):
         nx = 20
         ny = 10
         layer = Layer(nx, ny)
-        grid = Grid.createRectangular((nx, ny, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, 1), (1, 1, 1))
 
         with self.assertRaises(IndexError):
             layer.cellContact((-1, 0), (1, 1))
@@ -90,7 +90,7 @@ class LayerTest(ResdataTest):
         nx = 120
         ny = 60
         nz = 43
-        grid = Grid.createRectangular((nx, ny, nz), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl", "w") as f:
                 f.write(
@@ -149,7 +149,7 @@ class LayerTest(ResdataTest):
         nx = 10
         ny = 10
         layer = Layer(nx, ny)
-        grid = Grid.createRectangular((nx, ny, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((nx, ny, 1), (1, 1, 1))
 
         # Too short
         with self.assertRaises(ValueError):
@@ -228,7 +228,7 @@ class LayerTest(ResdataTest):
     def test_add_polyline_barrier(self):
         d = 10
         layer = Layer(d, d)
-        grid = Grid.createRectangular((d, d, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((d, d, 1), (1, 1, 1))
         pl = CPolyline(init_points=[(0, 0), (d / 2, d / 2), (d, d)])
         layer.addPolylineBarrier(pl, grid, 0)
         for i in range(d):
@@ -244,17 +244,17 @@ class LayerTest(ResdataTest):
 
         self.assertTrue(layer.activeCell(1, 2))
 
-        grid = Grid.createRectangular((d, d + 1, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((d, d + 1, 1), (1, 1, 1))
         with self.assertRaises(ValueError):
             layer.updateActive(grid, 0)
 
-        grid = Grid.createRectangular((d, d, 1), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((d, d, 1), (1, 1, 1))
         with self.assertRaises(ValueError):
             layer.updateActive(grid, 10)
 
         actnum = IntVector(initial_size=d * d * 1, default_value=1)
         actnum[0] = 0
-        grid = Grid.createRectangular((d, d, 1), (1, 1, 1), actnum=actnum)
+        grid = GridGenerator.create_rectangular((d, d, 1), (1, 1, 1), actnum=actnum)
         layer.updateActive(grid, 0)
         self.assertTrue(layer.activeCell(1, 2))
         self.assertFalse(layer.activeCell(0, 0))
