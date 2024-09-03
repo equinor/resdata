@@ -260,7 +260,7 @@ class Fault(object):
 
     def get_polyline(self, k):
         layer = self[k]
-        return layer.getPolyline(name="Polyline[%s]" % self.getName())
+        return layer.getPolyline(name="Polyline[%s]" % self.get_name())
 
     def get_ij_polyline(self, k):
         layer = self[k]
@@ -390,7 +390,7 @@ class Fault(object):
             return self.extendToPolyline(edge, k)
 
     def extend_to_b_box(self, bbox, k, start=True):
-        fault_polyline = self.getPolyline(k)
+        fault_polyline = self.get_polyline(k)
         if start:
             p0 = fault_polyline[1]
             p1 = fault_polyline[0]
@@ -402,8 +402,8 @@ class Fault(object):
         intersections = GeometryTools.rayPolygonIntersections(p1, ray_dir, bbox)
         if intersections:
             p2 = intersections[0][1]
-            if self.getName():
-                name = "Extend:%s" % self.getName()
+            if self.get_name():
+                name = "Extend:%s" % self.get_name()
             else:
                 name = None
 

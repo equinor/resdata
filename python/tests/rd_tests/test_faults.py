@@ -787,3 +787,24 @@ class FaultTest(ResdataTest):
 
         self.assertEqual(p1, (2, 1))
         self.assertEqual(p2, (2, 2))
+
+    def test_extend_to_bbox(self):
+        bbox = [(0, 0), (10, 0), (10, 10), (0, 10)]
+        grid = GridGenerator.create_rectangular((4, 4, 1), (1, 1, 1))
+        fault1 = Fault(grid, "Fault1")
+        fault2 = Fault(grid, "Fault2")
+        fault1.add_record(0, 3, 1, 1, 0, 0, "Y")
+        fault2.add_record(1, 1, 0, 1, 0, 0, "X")
+
+        with pytest.raises(
+            Exception, match="Logical error - must intersect with bounding box"
+        ):
+            fault1.extend_to_b_box(bbox, 0, start=True)
+
+        line1 = fault1.extend_to_b_box(bbox, 0, start=False)
+        assert line1.getName() == "Extend:Fault1"
+        assert line1 == CPolyline(init_points=[(4, 2), (10, 2)])
+
+        line2 = fault2.extend_to_b_box(bbox, 0, start=True)
+        assert line2.getName() == "Extend:Fault2"
+        assert line2 == CPolyline(init_points=[(2, 0), (2, 0)])
