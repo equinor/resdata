@@ -667,20 +667,26 @@ class FaultTest(ResdataTest):
         #  o   o   o   o
 
         fault1 = Fault(grid, "Fault")
+        fault2 = Fault(grid, "Fault2")
 
         fault1.add_record(0, 0, 0, 0, 0, 0, "X-")
         fault1.add_record(0, 0, 0, 0, 0, 0, "Y")
 
-        polyline = CPolyline(init_points=[(0, 2), (3, 2)])
-        points = fault1.extendToPolyline(polyline, 0)
-        self.assertEqual(points, [(1, 1), (2, 2)])
+        fault2.add_record(0, 2, 1, 1, 0, 0, "Y")
 
-        end_join = fault1.endJoin(polyline, 0)
-        self.assertEqual(end_join, [(1, 1), (0, 2)])
+        polyline = CPolyline(init_points=[(0, 2), (3, 2)])
+
+        points = fault1.extend_to_polyline(polyline, 0)
+        assert points == [(1, 1), (2, 2)]
+
+        end_join = fault1.end_join(polyline, 0)
+        end_join2 = fault1.end_join(fault2, 0)
+        assert end_join == [(1, 1), (0, 2)]
+        assert end_join2 == [(1, 1), (0, 2)]
 
         polyline2 = CPolyline(init_points=[(0.8, 2), (0.8, 0.8)])
-        end_join = fault1.endJoin(polyline2, 0)
-        self.assertIsNone(end_join)
+        end_join = fault1.end_join(polyline2, 0)
+        assert not end_join
 
     def test_extend_polyline_on(self):
         grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
