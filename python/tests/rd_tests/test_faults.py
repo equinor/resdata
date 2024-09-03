@@ -775,9 +775,13 @@ class FaultTest(ResdataTest):
         fault3.addRecord(1, 1, 0, 2, 0, 0, "X")
 
         self.assertIsNone(fault3.connect(fault1, 0))
+        self.assertIsNone(fault3.connect(fault1.getPolyline(0), 0))
+        self.assertIsNone(fault3.connect(Polyline(init_points=[(4, 4), (1, 2)]), 0))
 
         intersect = fault2.connect(fault1, 0)
+        intersect2 = fault2.connect(Polyline(init_points=[(0, 0), (1, 2)]), 0)
         self.assertEqual(len(intersect), 2)
+        self.assertEqual(len(intersect2), 2)
         p1 = intersect[0]
         p2 = intersect[1]
 
