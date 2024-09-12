@@ -63,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-13', 'macos-latest']
+        os: ['ubuntu-latest', 'macos-13', 'macos-latest', 'windows-2019']
         python: ['3.8', '3.9', '3.10', '3.11', '3.12']
         exclude:
           - os: macos-latest
@@ -95,16 +95,28 @@ jobs:
       if: runner.os == 'macOS'
       run: pip wheel . --no-deps -w dist
 
+    - name: Build Windows Wheel
+      if: runner.os == 'windows'
+      run: |
+        python.exe -m pip install -U build
+        python.exe -m build --wheel
+
     - name: Upload wheel as artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
         path: dist/*
 
-    - name: Install
+    - name: Install non-windows
+      if: runner.os != 'windows'
       run: pip install dist/*
 
-    - name: Run Python tests
+    - name: Install windows
+      if: runner.os == 'windows'
+      run: Get-ChildItem dist\* | ForEach-Object { python.exe -m pip install $_.FullName }
+
+    - name: Run Python tests non-windows
+      if: runner.os != 'windows'
       run: |
         # Runs tests on installed distribution from an empty directory
         python -m pip install -r test_requirements.txt
@@ -128,6 +140,11 @@ jobs:
         # Run tests
         python -m pytest python/tests
 
+    - name: Run Python tests windows
+      if: runner.os == 'windows'
+      run: |
+        python.exe -c "import resdata; print(resdata.__version__)"
+
 
   publish:
     name: Publish to PyPI
@@ -149,7 +166,7 @@ jobs:
           find artifacts -name "*.whl" -exec mv '{}' dist/ \;
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.10
+        uses: pypa/gh-action-pypi-publish@v1.12.2
         with:
           password: ${{ secrets.PYPI_TOKEN_RESDATA }}
           skip-existing: true
