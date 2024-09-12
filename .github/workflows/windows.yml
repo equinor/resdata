@@ -45,3 +45,43 @@ jobs:
         mkdir cmake-build
         cmake -S . -B cmake-build -G "Visual Studio 16 2019"
         cmake --build cmake-build
+
+  build-test-wheel:
+    name: Python
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-2019']
+        python: ['3.10', '3.11', '3.12']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # required for `git describe --tags` to work
+        fetch-depth: 0
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Build Windows Wheel
+      run: |
+        python.exe -m pip install -U build
+        python.exe -m build --wheel
+
+    - name: Upload wheel as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
+        path: dist/*
+
+    - name: Install
+      run: Get-ChildItem dist\* | ForEach-Object { python.exe -m pip install $_.FullName }
+
+    - name: Run Python tests
+      run: |
+        python.exe -c "import resdata; print(resdata.__version__)"
