@@ -13,7 +13,7 @@ import os.path
 import ctypes
 import pandas as pd
 import re
-from typing import Sequence, List, Tuple, Optional
+from typing import Sequence, List, Tuple, Optional, Union
 
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
@@ -477,7 +477,9 @@ class Summary(BaseCClass):
         else:
             raise KeyError("Summary object does not have key:%s" % key)
 
-    def _make_time_vector(self, time_index):
+    def _make_time_vector(
+        self, time_index: Sequence[Union[CTime, datetime.datetime, int, datetime.date]]
+    ) -> TimeVector:
         time_points = TimeVector()
         for t in time_index:
             time_points.append(t)
@@ -558,7 +560,11 @@ class Summary(BaseCClass):
                 dates.append(self.get_report_time(report))
         return dates
 
-    def pandas_frame(self, time_index=None, column_keys=None):
+    def pandas_frame(
+        self,
+        time_index: Optional[Sequence[datetime.datetime]] = None,
+        column_keys: Optional[Sequence[str]] = None,
+    ) -> pd.DataFrame:
         """Will create a pandas frame with summary data.
 
         By default you will get all time points in the summary case, but by
@@ -615,8 +621,7 @@ class Summary(BaseCClass):
                 data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             )
 
-        frame = pd.DataFrame(index=list(time_index), columns=list(keywords), data=data)
-        return frame
+        return pd.DataFrame(index=list(time_index), columns=list(keywords), data=data)
 
     @staticmethod
     def _compile_headers_list(
