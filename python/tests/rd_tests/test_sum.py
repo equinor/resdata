@@ -740,10 +740,11 @@ class SumTest(ResdataTest):
         path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SHORT.UNSMRY")
         smry = Summary(path)
         try:
-            smry.pandas_frame(time_index=smry.time_range(interval="1Y"), column_keys=["WELL:NAME"])
+            smry.pandas_frame(
+                time_index=smry.time_range(interval="1Y"), column_keys=["WELL:NAME"]
+            )
         except TypeError as err:
             pytest.fail(repr(err))
-
 
 
 def create_time_vector(lst):
