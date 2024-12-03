@@ -1,4 +1,5 @@
 import csv
+import pytest
 import datetime
 import os
 import os.path
@@ -26,6 +27,7 @@ from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.summary import Summary, SummaryKeyWordVector, SummaryVarType
 from resdata.util.test import TestAreaContext
 from resdata.util.test.mock import createSummary
+from resdata.util.util import CTime, TimeVector
 from tests import ResdataTest
 
 
@@ -596,30 +598,6 @@ class SumTest(ResdataTest):
         self.assertEqual(case.wells(), [])
         self.assertEqual(case.groups(), [])
 
-    def test_pandas(self):
-        case = create_case()
-        dates = (
-            [datetime.datetime(2000, 1, 1)]
-            + case.dates
-            + [datetime.datetime(2020, 1, 1)]
-        )
-        frame = case.pandas_frame(column_keys=["FOPT", "FOPR"], time_index=dates)
-
-        fopr = frame["FOPR"]
-        fopt = frame["FOPT"]
-
-        self.assertEqual(fopr[0], 0)
-        self.assertEqual(fopr[-1], 0)
-
-        self.assertEqual(fopt[0], 0)
-        self.assertEqual(fopt[0], case.first_value("FOPT"))
-        self.assertEqual(fopt[-1], case.last_value("FOPT"))
-
-        frame = case.pandas_frame()
-        rows, columns = frame.shape
-        self.assertEqual(len(case.keys()), columns)
-        self.assertEqual(len(case), rows)
-
     def test_csv_load(self):
         case = create_case2()
         frame = case.pandas_frame()
@@ -691,7 +669,6 @@ class SumTest(ResdataTest):
         """
         Test resampling of summary with extrapolate option of lower and upper boundaries enabled
         """
-        from resdata.util.util import CTime, TimeVector
 
         time_points = TimeVector()
 
@@ -755,6 +732,37 @@ class SumTest(ResdataTest):
                     resampled.iget(key_rate, time_index),
                     rd_sum.get_interp_direct(key_rate, t),
                 )
+
+
+def create_time_vector(lst):
+    vec = TimeVector()
+    for l in lst:
+        vec.append(l)
+    return vec
+
+
+@pytest.mark.parametrize("time_index_type", [list, create_time_vector, tuple])
+def test_pandas(time_index_type):
+    case = create_case()
+    dates = time_index_type(
+        [datetime.datetime(2000, 1, 1)] + case.dates + [datetime.datetime(2020, 1, 1)]
+    )
+    frame = case.pandas_frame(column_keys=["FOPT", "FOPR"], time_index=dates)
+
+    fopr = frame["FOPR"]
+    fopt = frame["FOPT"]
+
+    assert fopr[0] == 0
+    assert fopr[-1] == 0
+
+    assert fopt[0] == 0
+    assert fopt[0] == case.first_value("FOPT")
+    assert fopt[-1] == case.last_value("FOPT")
+
+    frame = case.pandas_frame()
+    rows, columns = frame.shape
+    assert len(case.keys()) == columns
+    assert len(case) == rows
 
 
 def test_t_step():
