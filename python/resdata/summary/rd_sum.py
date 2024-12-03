@@ -615,7 +615,7 @@ class Summary(BaseCClass):
                 data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),
             )
 
-        frame = pd.DataFrame(index=time_index, columns=list(keywords), data=data)
+        frame = pd.DataFrame(index=list(time_index), columns=list(keywords), data=data)
         return frame
 
     @staticmethod
