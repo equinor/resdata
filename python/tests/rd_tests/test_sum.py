@@ -1,5 +1,4 @@
 import csv
-import pytest
 import datetime
 import os
 import os.path
