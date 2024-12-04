@@ -754,7 +754,7 @@ def create_time_vector(lst):
 
 
 @pytest.mark.parametrize("time_index_type", [list, create_time_vector, tuple])
-def test_pandas(time_index_type):
+def test_summary_to_pandas_frame(time_index_type):
     case = create_case()
     dates = time_index_type(
         [datetime.datetime(2000, 1, 1)] + case.dates + [datetime.datetime(2020, 1, 1)]
