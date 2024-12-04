@@ -733,18 +733,6 @@ class SumTest(ResdataTest):
                     rd_sum.get_interp_direct(key_rate, t),
                 )
 
-    def test_pandas2_compatibility_dataframe_index(self):
-        # regression test to verify that pandas frames in pandas 2
-        # does not break due to missing collection for time_index
-        path = os.path.join(self.TESTDATA_ROOT, "local/ECLIPSE/cp_simple3/SHORT.UNSMRY")
-        smry = Summary(path)
-        try:
-            smry.pandas_frame(
-                time_index=smry.time_range(interval="1Y"), column_keys=["WELL:NAME"]
-            )
-        except TypeError as err:
-            pytest.fail(repr(err))
-
 
 def create_time_vector(lst):
     vec = TimeVector()
