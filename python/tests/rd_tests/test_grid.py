@@ -2,9 +2,10 @@
 import os.path
 from unittest import skip
 import itertools
+import pytest
 
 import functools
-from numpy import linspace, allclose
+import numpy as np
 import cwrap
 
 from resdata.util.util import IntVector, DoubleVector
@@ -260,6 +261,13 @@ class GridTest(ResdataTest):
 
         self.assertEqual(grid.getDims(), (10, 20, 30, 6000))
 
+    def test_global_index(self):
+        grid = GridGen.createRectangular((10, 20, 30), (1, 1, 1))
+        with pytest.raises(
+            IndexError, match=r"Invalid value global_index:7000  Range: \[0,6000\)"
+        ):
+            grid.get_active_index(global_index=7000)
+
     def test_load_column(self):
         column = DoubleVector(2 * 3 * 4)
         grid = GridGen.createRectangular((2, 3, 4), (1, 1, 1))
@@ -455,7 +463,18 @@ class GridTest(ResdataTest):
         numpy_3d = grid.create3D(kw1)
         kw2 = grid.create_kw(numpy_3d, "SWAT", False)
         self.assertEqual(kw2.name, "SWAT")
-        assert allclose(grid.create3D(kw2), numpy_3d)
+        assert np.allclose(grid.create3D(kw2), numpy_3d)
+
+    def test_create_kw(self):
+        rng = np.random.default_rng()
+        nx = 10
+        ny = 7
+        nz = 5
+        grid = GridGen.create_rectangular((nx, ny, nz), (1, 1, 1))
+        array1 = rng.integers(0, 100, size=(nx, ny, nz), dtype=np.int32)
+        array2 = rng.normal(10, 2, size=(nx, ny, nz))
+        _ = grid.create_kw(array1, "SWAT1", False)
+        _ = grid.create_kw(array2, "SWAT2", False)
 
     def test_create_3d_agrees_with_get_value(self):
         nx = 5
@@ -539,13 +558,13 @@ class GridTest(ResdataTest):
 
             (xmin, xmax), (ymin, ymax), (zmin, zmax) = getMinMaxValue(wgrid)
 
-            x_space = linspace(
+            x_space = np.linspace(
                 xmin - 1, xmax + 1, int(xmax - xmin + 2) * steps_per_unit + 1
             )
-            y_space = linspace(
+            y_space = np.linspace(
                 ymin - 1, ymax + 1, int(ymax - ymin + 2) * steps_per_unit + 1
             )
-            z_space = linspace(
+            z_space = np.linspace(
                 zmin - 1, zmax + 1, int(zmax - zmin + 2) * steps_per_unit + 1
             )
 

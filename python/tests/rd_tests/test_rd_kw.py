@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+import pytest
+
 import random
 import warnings
 import cwrap
@@ -621,6 +624,25 @@ def test_iadd():
     kw1 += kw2
 
     assert list(kw1) == list(kw2)
+
+    with pytest.raises(TypeError, match="Type mismatch"):
+        kw1 += "a"
+
+
+def test_imul():
+    kw1 = ResdataKW("KW1", 5, ResDataType.RD_INT)
+    for i in range(len(kw1)):
+        kw1[i] = 1
+    kw1 *= 10
+
+    assert list(kw1) == [10] * 5
+
+    with pytest.raises(TypeError, match="Type mismatch"):
+        kw1 *= 3.2
+
+    kw2 = ResdataKW("KW2", 5, ResDataType.RD_FLOAT)
+    with pytest.raises(TypeError, match="Only muliplication with scalar supported"):
+        kw2 *= "a"
 
 
 def test_get_ptr_data():

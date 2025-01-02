@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from unittest import skipIf
 import cwrap
+import pytest
 
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
@@ -147,6 +147,7 @@ class FaultBlockTest(ResdataTest):
                 f.write("FAULTS\n")
                 f.write("'FY'   1   4   4   4   1   1  'Y'  /\n")
                 f.write("'FX'   4   4   1   8   1   1  'X'  /\n")
+                f.write("'FXX'   6   6   1   8   1   1  'X'  /\n")
                 f.write("/")
 
             faults = FaultCollection(grid, "faults.grdecl")
@@ -184,6 +185,10 @@ class FaultBlockTest(ResdataTest):
         layer.addFaultBarrier(faults["FX"])
         nb = b1.getNeighbours()
         self.assertEqual(len(nb), 0)
+
+        layer.join_faults(faults["FX"], faults["FY"])
+        with pytest.raises(ValueError, match="Failed to join faults FXX and FY"):
+            layer.join_faults(faults["FXX"], faults["FY"])
 
     def test_neighbours3(self):
         nx = 8
@@ -285,6 +290,9 @@ class FaultBlockTest(ResdataTest):
         assert len(l1.get_global_index_list()) == len(l1)
         polyline = Polyline(init_points=[(1.0, 0.0), (2.0, 1.0)])
         assert l1.contains_polyline(polyline)
+
+        polyline2 = Polyline(init_points=[(10.5, 1.0), (11, 5)])
+        assert not l1.contains_polyline(polyline2)
 
         with self.assertRaises(KeyError):
             l = layer.getBlock(66)
@@ -417,6 +425,11 @@ class FaultBlockTest(ResdataTest):
             faults = FaultCollection(grid, "faults.grdecl")
 
         layer.loadKeyword(kw)
+        faulty_kw = ResdataKW("SOIL", 10000, ResDataType.RD_INT)
+        with pytest.raises(
+            ValueError, match="The fault block keyword had wrong type/size"
+        ):
+            layer.load_keyword(faulty_kw)
         layer.addFaultBarrier(faults["FX"])
         b1 = layer.getBlock(1)
         b2 = layer.getBlock(2)

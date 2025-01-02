@@ -1,10 +1,12 @@
+import pytest
+
 from numpy import allclose
 
 import cwrap
 from resdata.resfile import ResdataKW
 
 
-def test_eclkw_read_grdecl(tmp_path):
+def test_resdatakw_read_grdecl(tmp_path):
     block_size = 10
     num_blocks = 5
     value = 0.15
@@ -17,6 +19,8 @@ def test_eclkw_read_grdecl(tmp_path):
     with cwrap.open(str(tmp_path / "test.grdecl")) as f:
         kw = ResdataKW.read_grdecl(f, "COORD")
         assert ResdataKW.fseek_grdecl(f, "COORD", True)
+        with pytest.raises(TypeError, match="Sorry keyword:TOOLONGAKW"):
+            ResdataKW.read_grdecl(f, "TOOLONGAKW")
 
     assert kw.get_name() == "COORD"
     assert len(kw.numpy_view()) == block_size * num_blocks

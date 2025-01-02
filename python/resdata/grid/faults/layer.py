@@ -179,8 +179,8 @@ class Layer(BaseCClass):
         if len(ij_list) < 2:
             raise ValueError("Must have at least two (i,j) points")
 
-        nx = self.getNX()
-        ny = self.getNY()
+        nx = self.get_nx()
+        ny = self.get_ny()
         p1 = ij_list[0]
         i1, j1 = p1
         for p2 in ij_list[1:]:

@@ -139,7 +139,7 @@ class FaultBlock(BaseCClass):
         """
         Will return true if at least one point from the polyline is inside the block.
         """
-        edge_polyline = self.getEdgePolygon()
+        edge_polyline = self.get_edge_polygon()
         for p in polyline:
             if GeometryTools.pointInPolygon(p, edge_polyline):
                 return True

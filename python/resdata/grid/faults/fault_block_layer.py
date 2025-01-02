@@ -199,7 +199,7 @@ class FaultBlockLayer(BaseCClass):
 
     def join_faults(self, fault1, fault2):
         if not fault1.intersectsFault(fault2, self.getK()):
-            layer = self.getGeoLayer()
+            layer = self.get_geo_layer()
             try:
                 layer.addIJBarrier(Fault.joinFaults(fault1, fault2, self.getK()))
             except ValueError:
