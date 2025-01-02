@@ -12,6 +12,7 @@ from resdata.grid.faults import (
     FaultLine,
     FaultSegment,
     FaultBlockLayer,
+    SegmentMap,
 )
 from resdata.util.test import TestAreaContext
 from resdata.geometry import Polyline, CPolyline
@@ -126,6 +127,36 @@ class FaultTest(ResdataTest):
 
         self.assertEqual(len(fl), 2)
         self.assertEqual(fl.center(), (0.50, 0.50))
+
+    def test_fault_segments(self):
+        S1 = FaultSegment(0, 10)
+        S2 = FaultSegment(10, 20)
+        S3 = FaultSegment(0, 10)
+        S4 = FaultSegment(10, 0)
+        S5 = FaultSegment(30, 40)
+        S6 = FaultSegment(50, 40)
+        assert S1 != S2
+        assert S1 == S3
+        assert S3 == S4
+        assert S1.joins(S2)
+        assert S2.joins(S4)
+        assert S1.joins(S4)
+        assert not S2.joins(S5)
+        assert not S5.joins(S2)
+        assert S6.joins(S5)
+
+    def test_segment_map(self):
+        S1 = FaultSegment(0, 10)
+        S2 = FaultSegment(10, 20)
+        S5 = FaultSegment(30, 40)
+        SM = SegmentMap()
+        SM.add_segment(S1)
+        SM.add_segment(S2)
+        assert len(SM) == 3
+        SM.verify()
+        SM.add_segment(S5)
+        assert len(SM) == 5
+        SM.print_content()
 
     def test_faultLine(self):
         fl = FaultLine(self.grid, 10)

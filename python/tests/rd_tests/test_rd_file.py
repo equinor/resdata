@@ -247,6 +247,9 @@ class ResdataFileTest(ResdataTest):
 
             view = rd_file.blockView2(None, "DATA2", 0)
 
+            with pytest.raises(KeyError, match="The keyword:FAULTY is not in file"):
+                rd_file.block_view2("HEADER", "FAULTY", 0)
+
 
 def test_report_list(tmpdir):
     with tmpdir.as_cwd():

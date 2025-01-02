@@ -24,6 +24,12 @@ class RegionTest(ResdataTest):
         with self.assertRaises(ValueError):
             region.select_equal(kw_float, 1)
 
+        with pytest.raises(
+            ValueError,
+            match="The select_equal method must have an integer valued keyword",
+        ):
+            region.deselect_equal(kw_float, 2)
+
     def test_sum(self):
         grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
         kw_mask = ResdataKW("INT", grid.getGlobalSize(), ResDataType.RD_INT)
@@ -217,6 +223,13 @@ def test_deselect_equal_actnum_is_inactive_region(
 def poro(grid):
     return grid.create_kw(
         np.ones((grid.nx, grid.ny, grid.nz), dtype=np.float32), "PORO", True
+    )
+
+
+@pytest.fixture
+def poro_int(grid):
+    return grid.create_kw(
+        np.ones((grid.nx, grid.ny, grid.nz), dtype=np.int32), "PORO", True
     )
 
 
@@ -462,6 +475,12 @@ def test_idiv_kw_full(full_region, poro):
     poro += 1.0
     poro.div(poro, mask=full_region)
     assert list(poro) == [1.0] * len(poro)
+
+
+def test_idiv_kw_int(full_region, poro_int):
+    poro_int += 1
+    full_region.idiv_kw(poro_int, 10)
+    assert list(poro_int) == [0] * len(poro_int)  # ???
 
 
 def test_mul_kw_full(full_region, poro):
