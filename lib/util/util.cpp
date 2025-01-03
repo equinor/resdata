@@ -189,8 +189,8 @@ void util_endian_flip_vector(void *data, int element_size, int elements) {
 }
 
 #ifndef S_ISDIR
-#define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
-#define S_ISREG(m) (((m)&S_IFMT) == S_IFREG)
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 #endif
 
 static bool EOL_CHAR(char c) {

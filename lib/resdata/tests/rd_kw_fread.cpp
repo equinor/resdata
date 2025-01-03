@@ -76,7 +76,9 @@ void test_kw_io_charlength() {
             fortio_fclose(f);
         }
 
-        { test_assert_false(util_file_exists("TEST1")); }
+        {
+            test_assert_false(util_file_exists("TEST1"));
+        }
 
         {
             FILE *file = util_fopen("TEST2", "w");

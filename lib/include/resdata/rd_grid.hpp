@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 #define RD_GRID_COORD_SIZE(nx, ny) (((nx) + 1) * ((ny) + 1) * 6)
-#define RD_GRID_ZCORN_SIZE(nx, ny, nz) (((nx) * (ny) * (nz)*8))
+#define RD_GRID_ZCORN_SIZE(nx, ny, nz) (((nx) * (ny) * (nz) * 8))
 
 #define RD_GRID_GLOBAL_GRID "Global" // used as key in hash tables over grids.
 #define RD_GRID_MAINGRID_LGR_NR 0
