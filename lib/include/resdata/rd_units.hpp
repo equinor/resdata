@@ -6,8 +6,8 @@ extern "C" {
 #endif
 
 #define RD_UNITS_CUBIC(x) ((x) * (x) * (x))
-#define RD_UNITS_MILLI(x) ((x)*0.001)
-#define RD_UNITS_MEGA(x) ((x)*1000000)
+#define RD_UNITS_MILLI(x) ((x) * 0.001)
+#define RD_UNITS_MEGA(x) ((x) * 1000000)
 
 #define RD_UNITS_LENGTH_INCH 0.0254
 #define RD_UNITS_LENGTH_FEET 12 * RD_UNITS_LENGTH_INCH

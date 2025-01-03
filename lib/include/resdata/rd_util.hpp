@@ -77,9 +77,8 @@ typedef enum {
 
 #define RD_PHASE_ENUM_DEFS                                                     \
     {.value = 1, .name = "RD_OIL_PHASE"},                                      \
-        {.value = 2, .name = "RD_GAS_PHASE"}, {                                \
-        .value = 4, .name = "RD_WATER_PHASE"                                   \
-    }
+        {.value = 2, .name = "RD_GAS_PHASE"},                                  \
+        {.value = 4, .name = "RD_WATER_PHASE"}
 #define RD_PHASE_ENUM_SIZE 3
 
 typedef enum {

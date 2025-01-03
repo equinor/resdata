@@ -39,9 +39,8 @@ typedef enum {
         {.value = 2, .name = "RD_DOUBLE_TYPE"},                                \
         {.value = 3, .name = "RD_INT_TYPE"},                                   \
         {.value = 4, .name = "RD_BOOL_TYPE"},                                  \
-        {.value = 5, .name = "RD_MESS_TYPE"}, {                                \
-        .value = 7, .name = "RD_STRING_TYPE"                                   \
-    }
+        {.value = 5, .name = "RD_MESS_TYPE"},                                  \
+        {.value = 7, .name = "RD_STRING_TYPE"}
 
 /*
   Character data in restart format files comes as an array of fixed-length
@@ -67,20 +66,15 @@ struct rd_type_struct {
     rd_data_type { RD_DOUBLE_TYPE, sizeof(double) }
 #define RD_BOOL                                                                \
     rd_data_type { RD_BOOL_TYPE, sizeof(bool) }
-#define RD_CHAR                                                                \
-    rd_data_type { RD_CHAR_TYPE, RD_STRING8_LENGTH + 1 }
-#define RD_MESS                                                                \
-    rd_data_type { RD_MESS_TYPE, 0 }
-#define RD_STRING(size)                                                        \
-    rd_data_type { RD_STRING_TYPE, (size) + 1 }
+#define RD_CHAR rd_data_type{RD_CHAR_TYPE, RD_STRING8_LENGTH + 1}
+#define RD_MESS rd_data_type{RD_MESS_TYPE, 0}
+#define RD_STRING(size) rd_data_type{RD_STRING_TYPE, (size) + 1}
 }
 
 #else
 
 #define RD_CHAR                                                                \
-    (rd_data_type) {                                                           \
-        .type = RD_CHAR_TYPE, .element_size = RD_STRING8_LENGTH + 1            \
-    }
+    (rd_data_type){.type = RD_CHAR_TYPE, .element_size = RD_STRING8_LENGTH + 1}
 #define RD_INT                                                                 \
     (rd_data_type) { .type = RD_INT_TYPE, .element_size = sizeof(int) }
 #define RD_FLOAT                                                               \
@@ -89,10 +83,9 @@ struct rd_type_struct {
     (rd_data_type) { .type = RD_DOUBLE_TYPE, .element_size = sizeof(double) }
 #define RD_BOOL                                                                \
     (rd_data_type) { .type = RD_BOOL_TYPE, .element_size = sizeof(bool) }
-#define RD_MESS                                                                \
-    (rd_data_type) { .type = RD_MESS_TYPE, .element_size = 0 }
+#define RD_MESS (rd_data_type){.type = RD_MESS_TYPE, .element_size = 0}
 #define RD_STRING(size)                                                        \
-    (rd_data_type) { .type = RD_STRING_TYPE, .element_size = (size) + 1 }
+    (rd_data_type){.type = RD_STRING_TYPE, .element_size = (size) + 1}
 
 #endif
 

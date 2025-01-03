@@ -16,9 +16,8 @@ extern "C" {
 #include <resdata/rd_type.hpp>
 
 #define RD_FILE_FLAGS_ENUM_DEFS                                                \
-    {.value = 1, .name = "RD_FILE_CLOSE_STREAM"}, {                            \
-        .value = 2, .name = "RD_FILE_WRITABLE"                                 \
-    }
+    {.value = 1, .name = "RD_FILE_CLOSE_STREAM"},                              \
+        {.value = 2, .name = "RD_FILE_WRITABLE"}
 #define RD_FILE_FLAGS_ENUM_SIZE 2
 
 typedef struct rd_file_struct rd_file_type;
