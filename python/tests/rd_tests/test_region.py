@@ -517,3 +517,10 @@ def test_get_set_name(full_region):
 
 def test_contains_active(full_region):
     assert full_region.contains_active(0)
+
+
+def test_kw_index_list(grid, full_region):
+    kw_int = ResdataKW("INT", grid.get_global_size(), ResDataType.RD_INT)
+    kw_float = ResdataKW("FLOAT", grid.get_global_size(), ResDataType.RD_FLOAT)
+    full_region.kw_index_list(kw_int, False)
+    full_region.kw_index_list(kw_float, True)

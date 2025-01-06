@@ -1173,9 +1173,7 @@ class ResdataRegion(BaseCClass):
         return self._contains_active(active_index)
 
     def kw_index_list(self, rd_kw, force_active):
-        c_ptr = self._get_kw_index_list(rd_kw, force_active)
-        index_list = IntVector.createCReference(c_ptr, self)
-        return index_list
+        return self._get_kw_index_list(rd_kw, force_active)
 
     @property
     def name(self):
