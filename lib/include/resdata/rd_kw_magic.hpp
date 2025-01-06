@@ -17,7 +17,6 @@ extern "C" {
 /*****************************************************************/
 
 #define PORO_KW "PORO"
-#define PORV_KW "PORV"
 #define AQUIFER_KW "AQUIFERN"
 #define INTEHEAD_KW "INTEHEAD"
 #define LOGIHEAD_KW "LOGIHEAD"
