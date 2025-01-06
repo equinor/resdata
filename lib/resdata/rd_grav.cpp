@@ -373,7 +373,7 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
     int active_size = grid_cache.size();
     const rd_kw_type *init_porv_kw =
         rd_file_iget_named_kw(init_file, PORV_KW, 0);
-    int check_points = 100;
+    int check_points = std::min(100, active_size);
     int check_nr = 0;
     const std::vector<int> &global_index = grid_cache.global_index();
 
@@ -388,8 +388,8 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
             double log_pormod = log10(rporv / init_porv);
 
             if (fabs(log_pormod) > 1) {
-                /* Detected as error if the effective pore volume multiplier
-           is greater than 10 or less than 0.10. */
+                // Detected as error if the effective pore volume multiplier
+                // is greater than 10 or less than 0.10.
                 fprintf(stderr, "----------------------------------------------"
                                 "-------------------\n");
                 fprintf(stderr, "INIT PORV : %g \n", init_porv);
@@ -406,8 +406,8 @@ static void rd_grav_survey_assert_RPORV(const rd_grav_survey_type *survey,
                                 "-------------------\n");
                 exit(1);
             }
-            check_nr++;
         }
+        check_nr++;
     }
 }
 
