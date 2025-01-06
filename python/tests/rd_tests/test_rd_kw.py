@@ -8,6 +8,7 @@ import cwrap
 import random
 
 from resdata import ResDataType, ResdataTypeEnum, FileMode
+from resdata.grid import ResdataRegion, GridGenerator
 from resdata.resfile import ResdataKW, ResdataFile, FortIO, openFortIO
 
 
@@ -643,6 +644,39 @@ def test_imul():
     kw2 = ResdataKW("KW2", 5, ResDataType.RD_FLOAT)
     with pytest.raises(TypeError, match="Only muliplication with scalar supported"):
         kw2 *= "a"
+
+
+def test_assign():
+    kw1 = ResdataKW("KW1", 5, ResDataType.RD_INT)
+    kw2 = ResdataKW("KW2", 6, ResDataType.RD_INT)
+    kw3 = ResdataKW("KW3", 5, ResDataType.RD_FLOAT)
+    for i in range(len(kw1)):
+        kw1[i] = 1
+    with pytest.raises(TypeError, match="Type / size mismatch"):
+        kw2.assign(kw1)
+    with pytest.raises(TypeError, match="Type / size mismatch"):
+        kw3.assign(kw1)
+    with pytest.raises(TypeError, match="Type mismatch"):
+        kw2.assign("a")
+    with pytest.raises(TypeError, match="Only muliplication with scalar supported"):
+        kw3.assign("a")
+
+
+def test_apply():
+    kw1 = ResdataKW("KW1", 5, ResDataType.RD_INT)
+    kw2 = ResdataKW("KW2", 6, ResDataType.RD_INT)
+    kw3 = ResdataKW("KW3", 5, ResDataType.RD_FLOAT)
+    kw1.assign(1)
+    kw1.apply(lambda x: x + 1)
+    assert list(kw1) == [2] * 5
+    kw2.assign(5)
+    kw2.apply(lambda x, y: x + y, arg=5)
+    assert list(kw2) == [10] * 6
+    grid = GridGenerator.create_rectangular(dims=(5, 1, 1), dV=(1, 1, 1))
+    region = ResdataRegion(grid, True)
+    kw3.assign(3.0)
+    kw3.apply(lambda x: x + 1.0, mask=region)
+    assert list(kw3) == [4.0] * 5
 
 
 def test_get_ptr_data():
