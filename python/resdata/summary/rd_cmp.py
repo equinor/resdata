@@ -99,9 +99,9 @@ class ResdataCmp(object):
 
         The comparison is based on evaluating the integrals:
 
-           I0 = \int R(t) dt
+           I0 = \\int R(t) dt
 
-           delta = \int | R(t) - T(t)| dt
+           delta = \\int | R(t) - T(t)| dt
 
         numericall. R(t) is the reference solution and T(t) is
         testcase solution. The return value is a tuple:

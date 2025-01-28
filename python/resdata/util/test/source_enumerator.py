@@ -6,7 +6,7 @@ class SourceEnumerator(object):
     @classmethod
     def removeComments(cls, code_string):
         code_string = re.sub(
-            re.compile("/\*.*?\*/", re.DOTALL), "", code_string
+            re.compile(r"/\*.*?\*/", re.DOTALL), "", code_string
         )  # remove all occurance streamed comments (/*COMMENT */) from string
         code_string = re.sub(
             re.compile("//.*?\n"), "", code_string
@@ -20,7 +20,7 @@ class SourceEnumerator(object):
 
         text = SourceEnumerator.removeComments(text)
 
-        enum_pattern = re.compile("typedef\s+enum\s+\{(.*?)\}\s*(\w+?);", re.DOTALL)
+        enum_pattern = re.compile(r"typedef\s+enum\s+\{(.*?)\}\s*(\w+?);", re.DOTALL)
 
         for enum in enum_pattern.findall(text):
             if enum[1] == enum_name:
@@ -32,7 +32,7 @@ class SourceEnumerator(object):
     def findEnumerators(cls, enum_name, source_file):
         enum_text = SourceEnumerator.findEnum(enum_name, source_file)
 
-        enumerator_pattern = re.compile("(\w+?)\s*?=\s*?(\d+)")
+        enumerator_pattern = re.compile(r"(\w+?)\s*?=\s*?(\d+)")
 
         enumerators = []
         for enumerator in enumerator_pattern.findall(enum_text):

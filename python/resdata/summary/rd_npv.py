@@ -112,7 +112,7 @@ class NPVPriceVector(object):
 
 
 class ResdataNPV(object):
-    sumKeyRE = re.compile("[\[]([\w:,]+)[\]]")
+    sumKeyRE = re.compile(r"[\[]([\w:,]+)[\]]")
 
     def __init__(self, baseCase):
         sum = Summary(baseCase)

@@ -129,7 +129,7 @@ class TimeVector(VectorTemplate):
 
     @classmethod
     def parseTimeUnit(cls, deltaString):
-        deltaRegexp = re.compile("(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE)
+        deltaRegexp = re.compile(r"(?P<num>\d*)(?P<unit>[dmy])", re.IGNORECASE)
         matchObj = deltaRegexp.match(deltaString)
         if matchObj:
             try:
