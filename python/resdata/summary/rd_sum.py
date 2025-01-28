@@ -1533,8 +1533,8 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
 
                                     A            B
                                     |            |
-           /|\ OPR                  |            |
-            |                      \|/          \|/
+            ^ OPR                   |            |
+            |                       v            v
             |
             |                       +============X
             |                       |            |
