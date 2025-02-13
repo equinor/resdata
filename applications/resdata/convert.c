@@ -67,6 +67,7 @@ void file_convert(const char *src_file, const char *target_file,
 }
 
 int main(int argc, char **argv) {
+    fprintf(stderr, "** Warning: convert.x is deprecated. Use resfo instead\n");
     if (argc == 1) {
         fprintf(stderr,
                 "Usage: convert.x <filename1> <filename2> <filename3> ...\n");

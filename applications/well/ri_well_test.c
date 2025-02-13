@@ -32,6 +32,8 @@ void usage() {
 }
 
 int main(int argc, char **argv) {
+    fprintf(stderr,
+            "** Warning: ri_well_test is deprecated and will be removed\n");
     if (argc < 3)
         usage();
     else {

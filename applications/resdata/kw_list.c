@@ -51,6 +51,8 @@ void kw_list(const char *filename) {
 }
 
 int main(int argc, char **argv) {
+    fprintf(stderr,
+            "** Warning: kw_list.x deprecated. Use resfo in python instead\n");
     int i;
     for (i = 1; i < argc; i++)
         kw_list(argv[i]);

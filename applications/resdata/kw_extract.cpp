@@ -21,6 +21,7 @@
 */
 
 int main(int argc, char **argv) {
+    fprintf(stderr, "** Warning: kw_extract is deprecated\n");
     if (argc < 4) {
         fprintf(stderr, "%s  src_file target_file kw1 kw2 kw3 \n", argv[0]);
         exit(0);

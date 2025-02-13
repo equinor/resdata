@@ -25,6 +25,8 @@
 #include <resdata/rd_kw.hpp>
 
 int main(int argc, char **argv) {
+    fprintf(stderr,
+            "** Warning: select_test.x is deprecated. Use res2df instead\n");
     const char *path = argv[1];
     const char *base = argv[2];
     stringlist_type *names = stringlist_alloc_new();
