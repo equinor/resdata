@@ -34,6 +34,9 @@
 #include <resdata/well/well_segment_collection.hpp>
 
 int main(int argc, char **argv) {
+    fprintf(
+        stderr,
+        "** Warning: segment_info is deprecated. Use res2df rft instead.\n");
     const char *Xfile = argv[1];
     rd_file_type *rst_file = rd_file_open(Xfile, 0);
     rd_rsthead_type *rst_head = rd_rsthead_alloc(

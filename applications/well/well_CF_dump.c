@@ -16,11 +16,14 @@
    for more details.
 */
 
+#include <stdio.h>
 #include <resdata/rd_grid.hpp>
 #include <resdata/well/well_state.hpp>
 #include <resdata/well/well_info.hpp>
 
 int main(int argc, char **argv) {
+    fprintf(stderr,
+            "** Warning: CF_dump is deprecated. Use res2df rft instead\n");
     char *grid_file = argv[1];
     char *rst_file = argv[2];
     rd_grid_type *grid = rd_grid_alloc(grid_file);

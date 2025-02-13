@@ -26,6 +26,8 @@
 #include <resdata/rd_kw_magic.hpp>
 
 int main(int argc, char **argv) {
+    fprintf(stderr, "** Warning: grdecl_grid is deprecated. Use OPM to parse "
+                    "the deck instead\n");
     FILE *stream = util_fopen(argv[1], "r");
     rd_kw_type *gridhead_kw =
         rd_kw_fscanf_alloc_grdecl_dynamic__(stream, SPECGRID_KW, false, RD_INT);

@@ -24,6 +24,7 @@
 #include <resdata/rd_grid.hpp>
 
 int main(int argc, char **argv) {
+    fprintf(stderr, "** Warning: grid_dump.x is deprecated\n");
     if (argc < 2) {
         fprintf(stderr, "%s: filename \n", argv[0]);
         exit(1);

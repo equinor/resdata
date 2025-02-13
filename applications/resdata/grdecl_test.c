@@ -23,6 +23,8 @@
 #include <resdata/rd_kw.hpp>
 
 int main(int argc, char **argv) {
+    fprintf(stderr,
+            "** Warning: grdecl_test.x is deprecated. Use res2df instead\n");
     FILE *stream = util_fopen(argv[1], "r");
     {
         while (true) {

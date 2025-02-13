@@ -65,6 +65,7 @@ void test_case(const char *base, bool load_all) {
 }
 
 int main(int argc, char **argv) {
+    fprintf(stderr, "** Warning: load_test.x is deprecated\n");
     bool load_all = true;
     int i;
     for (i = 1; i < argc; i++)

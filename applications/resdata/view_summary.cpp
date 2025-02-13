@@ -133,6 +133,9 @@ static void build_key_list(const rd_sum_type *rd_sum, stringlist_type *key_list,
 }
 
 int main(int argc, char **argv) {
+    fprintf(
+        stderr,
+        "** Warning: summary.x is deprecated. Use res2df summary instead\n");
     install_SIGNALS();
     {
         bool report_only = false;

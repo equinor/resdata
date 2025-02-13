@@ -34,23 +34,23 @@ def utility_wrappers():
     return [
         name + " = resdata.bin:main"
         for name in (
-            "CF_dump",
-            "convert.x",
+            "CF_dump",  # deprecated
+            "convert.x",  # deprecated
             "rd_pack.x",
             "rd_unpack.x",
-            "grdecl_grid",
-            "grdecl_test.x",
-            "grid_dump.x",
-            "grid_dump_ascii.x",
-            "grid_info.x",
-            "kw_extract",
-            "kw_list.x",
-            "load_test.x",
-            "make_grid",
-            "ri_well_test",
-            "segment_info",
-            "select_test.x",
-            "summary.x",
+            "grdecl_grid",  # deprecated
+            "grdecl_test.x",  # deprecated
+            "grid_dump.x",  # deprecated
+            "grid_dump_ascii.x",  # deprecated
+            "grid_info.x",  # deprecated
+            "kw_extract",  # deprecated
+            "kw_list.x",  # deprecated
+            "load_test.x",  # deprecated
+            "make_grid",  # deprecated
+            "ri_well_test",  # deprecated
+            "segment_info",  # deprecated
+            "select_test.x",  # deprecated
+            "summary.x",  # deprecated
         )
     ]
 

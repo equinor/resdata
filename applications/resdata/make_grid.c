@@ -24,6 +24,8 @@
 #include <resdata/rd_grid.hpp>
 
 int main(int argc, char **argv) {
+    fprintf(stderr,
+            "** Warning: make_grid is deprecated. Use python instead\n");
     if (argc != 5) {
         fprintf(stderr, "%s: basename nx ny nz \n", argv[0]);
         exit(1);
