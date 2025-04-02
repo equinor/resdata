@@ -1,13 +1,11 @@
 # clang-format
 ---
-Language: Cpp
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
 IndentWidth: 4
 
 # Our includes are not order-agnostic
-SortIncludes: false
+SortIncludes: Never
 
 # Some of our comments include insightful insight
 ReflowComments: false
-...
