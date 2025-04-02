@@ -1,3 +1,4 @@
+cmake<4
 cwrap
 ninja
 numpy
