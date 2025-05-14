@@ -126,7 +126,7 @@ class ResdataFile(BaseCClass):
             # a non-unified restart file; or because this is not a
             # restart file at all.
             fname = self.getFilename()
-            matchObj = re.search("\.[XF](\d{4})$", fname)
+            matchObj = re.search(r"\.[XF](\d{4})$", fname)
             if matchObj:
                 report_steps.append(int(matchObj.group(1)))
             else:
