@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
@@ -273,6 +276,48 @@ void test_cmp_region() {
     test_assert_true(region_node1_2.cmp(region_node2_1) < 0);
 }
 
+void test_history_vectors() {
+    const int dims[3] = {10, 10, 10};
+
+    std::vector<std::tuple<bool, const char *, const char *, int, const int *,
+                           const char *>>
+        allVectors = {// historical vectors
+                      {true, "FOPTH", "", 0, nullptr, nullptr},
+                      {true, "GOPTH", "G1", 0, nullptr, ":"},
+                      {true, "WOPTH", "W1", 0, nullptr, ":"},
+                      {true, "FGPTH", "", 0, nullptr, nullptr},
+                      {true, "GGPTH", "G1", 0, nullptr, ":"},
+                      {true, "WGPTH", "W1", 0, nullptr, ":"},
+                      {true, "FWIRH", "", 0, nullptr, nullptr},
+                      {true, "GWIRH", "G1", 0, nullptr, ":"},
+                      {true, "WWIRH", "W1", 0, nullptr, ":"},
+                      {true, "FWPRH", "", 0, nullptr, nullptr},
+                      {true, "GWPRH", "G1", 0, nullptr, ":"},
+                      {true, "WWPRH", "W1", 0, nullptr, ":"},
+                      // correct type, but not history vectors
+                      {false, "FOPT", "", 0, nullptr, nullptr},
+                      {false, "GOPT", "G1", 0, nullptr, ":"},
+                      {false, "WOPT", "W1", 0, nullptr, ":"},
+                      // not historical vectors
+                      {false, "AAQENTH", "", 10, dims, ":"},
+                      {false, "BKRWOH", "", 10, dims, ":"},
+                      {false, "BSOWNH", "", 10, dims, ":"},
+                      {false, "CRREXCH", "C1", 10, dims, ":"},
+                      {false, "MONTH", "", 0, nullptr, nullptr},
+                      {false, "RPRH", "", 10, dims, ":"},
+                      {false, "SPRDH", "W1", 10, dims, ":"},
+                      {false, "TCPUH", "", 0, nullptr, nullptr},
+                      {false, "TCPUTSH", "", 0, nullptr, nullptr}};
+
+    for (const auto &args : allVectors) {
+        rd::smspec_node node = rd::smspec_node(
+            0, std::get<1>(args), std::get<2>(args), std::get<3>(args), "UNIT",
+            std::get<4>(args), 0, std::get<5>(args));
+
+        test_assert_true(node.is_historical() == std::get<0>(args));
+    }
+}
+
 int main(int argc, char **argv) {
     util_install_signals();
     test_cmp_types();
@@ -281,4 +326,5 @@ int main(int argc, char **argv) {
     test_identify_rate_variable();
     test_identify_total_variable();
     test_nums_default();
+    test_history_vectors();
 }

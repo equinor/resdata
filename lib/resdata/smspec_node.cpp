@@ -887,7 +887,10 @@ smspec_node::smspec_node(int param_index, const char *keyword,
     this->rate_variable = smspec_node_identify_rate(this->keyword.c_str());
     this->total_variable =
         smspec_node_identify_total(this->keyword.c_str(), this->var_type);
-    this->historical = (this->keyword.back() == 'H');
+    this->historical = (this->keyword.back() == 'H') &&
+                       ((this->var_type == RD_SMSPEC_WELL_VAR) ||
+                        (this->var_type == RD_SMSPEC_GROUP_VAR) ||
+                        (this->var_type == RD_SMSPEC_FIELD_VAR));
     this->set_wgname(wgname);
 
     switch (this->var_type) {
@@ -967,7 +970,10 @@ smspec_node::smspec_node(int param_index_, const char *keyword_,
     this->rate_variable = smspec_node_identify_rate(this->keyword.c_str());
     this->total_variable =
         smspec_node_identify_total(this->keyword.c_str(), this->var_type);
-    this->historical = (this->keyword.back() == 'H');
+    this->historical = (this->keyword.back() == 'H') &&
+                       ((this->var_type == RD_SMSPEC_WELL_VAR) ||
+                        (this->var_type == RD_SMSPEC_GROUP_VAR) ||
+                        (this->var_type == RD_SMSPEC_FIELD_VAR));
     this->lgr_name = lgr_;
     this->num = nums_unused;
 
