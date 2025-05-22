@@ -14,99 +14,29 @@ static void test_identify_rate_variable() {
    NOTE: Not all of the following vectors are actual Eclipse vectors,
    but they are patterns that are supposed to be recognized as (likely) rates.
 */
-    test_assert_true(smspec_node_identify_rate("ROPR"));
-    test_assert_true(smspec_node_identify_rate("WOIR"));
-    test_assert_true(smspec_node_identify_rate("GOVPR"));
-    test_assert_true(smspec_node_identify_rate("FOVIR"));
-    test_assert_true(smspec_node_identify_rate("COFRL"));
-    test_assert_true(smspec_node_identify_rate("LWOPP"));
-    test_assert_true(smspec_node_identify_rate("LCOPI"));
-    test_assert_true(smspec_node_identify_rate("WOMR"));
+    std::vector<const char *> rateIdentifiers = {
+        "ROPR",  "WOIR",  "GOVPR", "FOVIR",  "COFRL", "LWOPP", "LCOPI", "WOMR",
+        "RGPR",  "WGIR",  "GGVPR", "FGVIR",  "CGFRL", "LWGPP", "LCGPI", "WGMR",
+        "GWGPR", "FWGPR", "RWPR",  "WWIR",   "GWVPR", "FWVIR", "CWFRL", "LWWPP",
+        "LCWPI", "WWMR",  "RLPR",  "WLFR",   "GVPR",  "FVIR",  "CVFR",  "RGLIR",
+        "WRGR",  "GEGR",  "FEXGR", "CSGR",   "LWGSR", "LCFGR", "WGIMR", "GGCR",
+        "RNPR",  "WNIR",  "GCPR",  "FCIR",   "CSIR",  "LWSPR", "LCTIR", "WTPR",
+        "RGOR",  "WWCT",  "GOGR",  "FWGR",   "CGLRL", "SOFR",  "SGFR",  "SWFR",
+        "SCFR",  "SSFR",  "STFR",  "SCVPR",  "SWCT",  "SGOR",  "SOGR",  "SWGR",
+        "ROFR",  "RGFR-", "RNLFR", "RNLFR+", "NJOPR", "NJWPR", "NJGFR", "NPGFR",
+        "NPOFR"};
 
-    test_assert_true(smspec_node_identify_rate("RGPR"));
-    test_assert_true(smspec_node_identify_rate("WGIR"));
-    test_assert_true(smspec_node_identify_rate("GGVPR"));
-    test_assert_true(smspec_node_identify_rate("FGVIR"));
-    test_assert_true(smspec_node_identify_rate("CGFRL"));
-    test_assert_true(smspec_node_identify_rate("LWGPP"));
-    test_assert_true(smspec_node_identify_rate("LCGPI"));
-    test_assert_true(smspec_node_identify_rate("WGMR"));
-    test_assert_true(smspec_node_identify_rate("GWGPR"));
-    test_assert_true(smspec_node_identify_rate("FWGPR"));
+    for (const auto &identifier : rateIdentifiers) {
+        test_assert_true(smspec_node_identify_rate(identifier));
+    }
 
-    test_assert_true(smspec_node_identify_rate("RWPR"));
-    test_assert_true(smspec_node_identify_rate("WWIR"));
-    test_assert_true(smspec_node_identify_rate("GWVPR"));
-    test_assert_true(smspec_node_identify_rate("FWVIR"));
-    test_assert_true(smspec_node_identify_rate("CWFRL"));
-    test_assert_true(smspec_node_identify_rate("LWWPP"));
-    test_assert_true(smspec_node_identify_rate("LCWPI"));
-    test_assert_true(smspec_node_identify_rate("WWMR"));
+    std::vector<const char *> invalidRateIdentifiers = {
+        "",      "HEI",      "GBHP", "FOPT", "CWIT",
+        "LWGPT", "HELICOPR", "SOPT", "RFR",  "ROFT"};
 
-    test_assert_true(smspec_node_identify_rate("RLPR"));
-    test_assert_true(smspec_node_identify_rate("WLFR"));
-    test_assert_true(smspec_node_identify_rate("GVPR"));
-    test_assert_true(smspec_node_identify_rate("FVIR"));
-    test_assert_true(smspec_node_identify_rate("CVFR"));
-
-    test_assert_true(smspec_node_identify_rate("RGLIR"));
-    test_assert_true(smspec_node_identify_rate("WRGR"));
-    test_assert_true(smspec_node_identify_rate("GEGR"));
-    test_assert_true(smspec_node_identify_rate("FEXGR"));
-    test_assert_true(smspec_node_identify_rate("CSGR"));
-    test_assert_true(smspec_node_identify_rate("LWGSR"));
-    test_assert_true(smspec_node_identify_rate("LCFGR"));
-    test_assert_true(smspec_node_identify_rate("WGIMR"));
-    test_assert_true(smspec_node_identify_rate("GGCR"));
-
-    test_assert_true(smspec_node_identify_rate("RNPR"));
-    test_assert_true(smspec_node_identify_rate("WNIR"));
-    test_assert_true(smspec_node_identify_rate("GCPR"));
-    test_assert_true(smspec_node_identify_rate("FCIR"));
-    test_assert_true(smspec_node_identify_rate("CSIR"));
-    test_assert_true(smspec_node_identify_rate("LWSPR"));
-    test_assert_true(smspec_node_identify_rate("LCTIR"));
-    test_assert_true(smspec_node_identify_rate("WTPR"));
-
-    test_assert_true(smspec_node_identify_rate("RGOR"));
-    test_assert_true(smspec_node_identify_rate("WWCT"));
-    test_assert_true(smspec_node_identify_rate("GOGR"));
-    test_assert_true(smspec_node_identify_rate("FWGR"));
-    test_assert_true(smspec_node_identify_rate("CGLRL"));
-
-    test_assert_true(smspec_node_identify_rate("SOFR"));
-    test_assert_true(smspec_node_identify_rate("SGFR"));
-    test_assert_true(smspec_node_identify_rate("SWFR"));
-    test_assert_true(smspec_node_identify_rate("SCFR"));
-    test_assert_true(smspec_node_identify_rate("SSFR"));
-    test_assert_true(smspec_node_identify_rate("STFR"));
-    test_assert_true(smspec_node_identify_rate("SCVPR"));
-    test_assert_true(smspec_node_identify_rate("SWCT"));
-    test_assert_true(smspec_node_identify_rate("SGOR"));
-    test_assert_true(smspec_node_identify_rate("SOGR"));
-    test_assert_true(smspec_node_identify_rate("SWGR"));
-
-    test_assert_true(smspec_node_identify_rate("ROFR"));
-    test_assert_true(smspec_node_identify_rate("RGFR-"));
-    test_assert_true(smspec_node_identify_rate("RNLFR"));
-    test_assert_true(smspec_node_identify_rate("RNLFR+"));
-
-    test_assert_true(smspec_node_identify_rate("NJOPR"));
-    test_assert_true(smspec_node_identify_rate("NJWPR"));
-    test_assert_true(smspec_node_identify_rate("NJGFR"));
-    test_assert_true(smspec_node_identify_rate("NPGFR"));
-    test_assert_true(smspec_node_identify_rate("NPOFR"));
-
-    test_assert_false(smspec_node_identify_rate(""));
-    test_assert_false(smspec_node_identify_rate("HEI"));
-    test_assert_false(smspec_node_identify_rate("GBHP"));
-    test_assert_false(smspec_node_identify_rate("FOPT"));
-    test_assert_false(smspec_node_identify_rate("CWIT"));
-    test_assert_false(smspec_node_identify_rate("LWGPT"));
-    test_assert_false(smspec_node_identify_rate("HELICOPR"));
-    test_assert_false(smspec_node_identify_rate("SOPT"));
-    test_assert_false(smspec_node_identify_rate("RFR"));
-    test_assert_false(smspec_node_identify_rate("ROFT"));
+    for (const auto &identifier : invalidRateIdentifiers) {
+        test_assert_false(smspec_node_identify_rate(identifier));
+    }
 }
 
 static void test_identify_total_variable() {
@@ -114,84 +44,67 @@ static void test_identify_total_variable() {
    NOTE: Not all of the following vectors are actual Eclipse vectors,
    but they are patterns that are supposed to be recognized as (likely) totals.
 */
-    test_assert_true(smspec_node_identify_total("ROPT", RD_SMSPEC_REGION_VAR));
-    test_assert_true(smspec_node_identify_total("WOIT", RD_SMSPEC_WELL_VAR));
-    test_assert_true(smspec_node_identify_total("GOVPT", RD_SMSPEC_GROUP_VAR));
-    test_assert_true(smspec_node_identify_total("FOVIT", RD_SMSPEC_FIELD_VAR));
-    test_assert_true(
-        smspec_node_identify_total("COMT", RD_SMSPEC_COMPLETION_VAR));
+    std::vector<std::tuple<bool, const char *, rd_smspec_var_type>>
+        totalIdentifiers = {{true, "ROPT", RD_SMSPEC_REGION_VAR},
+                            {true, "WOIT", RD_SMSPEC_WELL_VAR},
+                            {true, "GOVPT", RD_SMSPEC_GROUP_VAR},
+                            {true, "FOVIT", RD_SMSPEC_FIELD_VAR},
+                            {true, "COMT", RD_SMSPEC_COMPLETION_VAR},
+                            {true, "RGPT", RD_SMSPEC_REGION_VAR},
+                            {true, "WGIT", RD_SMSPEC_WELL_VAR},
+                            {true, "GGVPT", RD_SMSPEC_GROUP_VAR},
+                            {true, "FGVIT", RD_SMSPEC_FIELD_VAR},
+                            {true, "WGMT", RD_SMSPEC_WELL_VAR},
+                            {true, "GWGPT", RD_SMSPEC_GROUP_VAR},
+                            {true, "FWGPT", RD_SMSPEC_FIELD_VAR},
+                            {true, "RWPT", RD_SMSPEC_REGION_VAR},
+                            {true, "WWIT", RD_SMSPEC_WELL_VAR},
+                            {true, "GWVPT", RD_SMSPEC_GROUP_VAR},
+                            {true, "FWVIT", RD_SMSPEC_FIELD_VAR},
+                            {true, "WWMT", RD_SMSPEC_WELL_VAR},
+                            {true, "RLPT", RD_SMSPEC_REGION_VAR},
+                            {true, "GVPT", RD_SMSPEC_GROUP_VAR},
+                            {true, "FVIT", RD_SMSPEC_FIELD_VAR},
+                            {true, "WRGT", RD_SMSPEC_WELL_VAR},
+                            {true, "GEGT", RD_SMSPEC_GROUP_VAR},
+                            {true, "FEXGT", RD_SMSPEC_FIELD_VAR},
+                            {true, "CSGT", RD_SMSPEC_COMPLETION_VAR},
+                            {true, "LWGST", RD_SMSPEC_LOCAL_WELL_VAR},
+                            {true, "LCFGT", RD_SMSPEC_LOCAL_COMPLETION_VAR},
+                            {true, "WGIMT", RD_SMSPEC_WELL_VAR},
+                            {true, "GGCT", RD_SMSPEC_GROUP_VAR},
+                            {true, "RNPT", RD_SMSPEC_REGION_VAR},
+                            {true, "WNIT", RD_SMSPEC_WELL_VAR},
+                            {true, "GCPT", RD_SMSPEC_GROUP_VAR},
+                            {true, "FCIT", RD_SMSPEC_FIELD_VAR},
+                            {true, "CSIT", RD_SMSPEC_COMPLETION_VAR},
+                            {true, "LWSPT", RD_SMSPEC_LOCAL_WELL_VAR},
+                            {true, "LCTIT", RD_SMSPEC_LOCAL_COMPLETION_VAR},
+                            {true, "WTPT", RD_SMSPEC_WELL_VAR},
+                            {true, "SOFT", RD_SMSPEC_SEGMENT_VAR},
+                            {true, "SGFT", RD_SMSPEC_SEGMENT_VAR},
+                            {true, "SWFT", RD_SMSPEC_SEGMENT_VAR},
+                            {true, "RGFT", RD_SMSPEC_REGION_2_REGION_VAR},
+                            {true, "RWFT-", RD_SMSPEC_REGION_2_REGION_VAR},
+                            {true, "RNLFT", RD_SMSPEC_REGION_2_REGION_VAR},
+                            {true, "RNLFT+", RD_SMSPEC_REGION_2_REGION_VAR},
+                            {false, "", RD_SMSPEC_REGION_VAR},
+                            {false, "HEI", RD_SMSPEC_WELL_VAR},
+                            {false, "GBHP", RD_SMSPEC_GROUP_VAR},
+                            {false, "FOPR", RD_SMSPEC_FIELD_VAR},
+                            {false, "CWIR", RD_SMSPEC_COMPLETION_VAR},
+                            {false, "LWGPR", RD_SMSPEC_LOCAL_WELL_VAR},
+                            {false, "CWCT", RD_SMSPEC_LOCAL_COMPLETION_VAR},
+                            {false, "SGPT", RD_SMSPEC_SEGMENT_VAR},
+                            {false, "RFT", RD_SMSPEC_REGION_2_REGION_VAR},
+                            {false, "ROFR", RD_SMSPEC_REGION_2_REGION_VAR}};
 
-    test_assert_true(smspec_node_identify_total("RGPT", RD_SMSPEC_REGION_VAR));
-    test_assert_true(smspec_node_identify_total("WGIT", RD_SMSPEC_WELL_VAR));
-    test_assert_true(smspec_node_identify_total("GGVPT", RD_SMSPEC_GROUP_VAR));
-    test_assert_true(smspec_node_identify_total("FGVIT", RD_SMSPEC_FIELD_VAR));
-    test_assert_true(smspec_node_identify_total("WGMT", RD_SMSPEC_WELL_VAR));
-    test_assert_true(smspec_node_identify_total("GWGPT", RD_SMSPEC_GROUP_VAR));
-    test_assert_true(smspec_node_identify_total("FWGPT", RD_SMSPEC_FIELD_VAR));
-
-    test_assert_true(smspec_node_identify_total("RWPT", RD_SMSPEC_REGION_VAR));
-    test_assert_true(smspec_node_identify_total("WWIT", RD_SMSPEC_WELL_VAR));
-    test_assert_true(smspec_node_identify_total("GWVPT", RD_SMSPEC_GROUP_VAR));
-    test_assert_true(smspec_node_identify_total("FWVIT", RD_SMSPEC_FIELD_VAR));
-    test_assert_true(smspec_node_identify_total("WWMT", RD_SMSPEC_WELL_VAR));
-
-    test_assert_true(smspec_node_identify_total("RLPT", RD_SMSPEC_REGION_VAR));
-    test_assert_true(smspec_node_identify_total("GVPT", RD_SMSPEC_GROUP_VAR));
-    test_assert_true(smspec_node_identify_total("FVIT", RD_SMSPEC_FIELD_VAR));
-
-    test_assert_true(smspec_node_identify_total("WRGT", RD_SMSPEC_WELL_VAR));
-    test_assert_true(smspec_node_identify_total("GEGT", RD_SMSPEC_GROUP_VAR));
-    test_assert_true(smspec_node_identify_total("FEXGT", RD_SMSPEC_FIELD_VAR));
-    test_assert_true(
-        smspec_node_identify_total("CSGT", RD_SMSPEC_COMPLETION_VAR));
-    test_assert_true(
-        smspec_node_identify_total("LWGST", RD_SMSPEC_LOCAL_WELL_VAR));
-    test_assert_true(
-        smspec_node_identify_total("LCFGT", RD_SMSPEC_LOCAL_COMPLETION_VAR));
-    test_assert_true(smspec_node_identify_total("WGIMT", RD_SMSPEC_WELL_VAR));
-    test_assert_true(smspec_node_identify_total("GGCT", RD_SMSPEC_GROUP_VAR));
-
-    test_assert_true(smspec_node_identify_total("RNPT", RD_SMSPEC_REGION_VAR));
-    test_assert_true(smspec_node_identify_total("WNIT", RD_SMSPEC_WELL_VAR));
-    test_assert_true(smspec_node_identify_total("GCPT", RD_SMSPEC_GROUP_VAR));
-    test_assert_true(smspec_node_identify_total("FCIT", RD_SMSPEC_FIELD_VAR));
-    test_assert_true(
-        smspec_node_identify_total("CSIT", RD_SMSPEC_COMPLETION_VAR));
-    test_assert_true(
-        smspec_node_identify_total("LWSPT", RD_SMSPEC_LOCAL_WELL_VAR));
-    test_assert_true(
-        smspec_node_identify_total("LCTIT", RD_SMSPEC_LOCAL_COMPLETION_VAR));
-    test_assert_true(smspec_node_identify_total("WTPT", RD_SMSPEC_WELL_VAR));
-
-    test_assert_true(smspec_node_identify_total("SOFT", RD_SMSPEC_SEGMENT_VAR));
-    test_assert_true(smspec_node_identify_total("SGFT", RD_SMSPEC_SEGMENT_VAR));
-    test_assert_true(smspec_node_identify_total("SWFT", RD_SMSPEC_SEGMENT_VAR));
-
-    test_assert_true(
-        smspec_node_identify_total("RGFT", RD_SMSPEC_REGION_2_REGION_VAR));
-    test_assert_true(
-        smspec_node_identify_total("RWFT-", RD_SMSPEC_REGION_2_REGION_VAR));
-    test_assert_true(
-        smspec_node_identify_total("RNLFT", RD_SMSPEC_REGION_2_REGION_VAR));
-    test_assert_true(
-        smspec_node_identify_total("RNLFT+", RD_SMSPEC_REGION_2_REGION_VAR));
-
-    test_assert_false(smspec_node_identify_total("", RD_SMSPEC_REGION_VAR));
-    test_assert_false(smspec_node_identify_total("HEI", RD_SMSPEC_WELL_VAR));
-    test_assert_false(smspec_node_identify_total("GBHP", RD_SMSPEC_GROUP_VAR));
-    test_assert_false(smspec_node_identify_total("FOPR", RD_SMSPEC_FIELD_VAR));
-    test_assert_false(
-        smspec_node_identify_total("CWIR", RD_SMSPEC_COMPLETION_VAR));
-    test_assert_false(
-        smspec_node_identify_total("LWGPR", RD_SMSPEC_LOCAL_WELL_VAR));
-    test_assert_false(
-        smspec_node_identify_total("CWCT", RD_SMSPEC_LOCAL_COMPLETION_VAR));
-    test_assert_false(
-        smspec_node_identify_total("SGPT", RD_SMSPEC_SEGMENT_VAR));
-    test_assert_false(
-        smspec_node_identify_total("RFT", RD_SMSPEC_REGION_2_REGION_VAR));
-    test_assert_false(
-        smspec_node_identify_total("ROFR", RD_SMSPEC_REGION_2_REGION_VAR));
+    for (const auto &identifier : totalIdentifiers) {
+        bool expected = std::get<0>(identifier);
+        const char *keyword = std::get<1>(identifier);
+        rd_smspec_var_type type = std::get<2>(identifier);
+        test_assert_true(smspec_node_identify_total(keyword, type) == expected);
+    }
 }
 
 void test_nums_default() {
