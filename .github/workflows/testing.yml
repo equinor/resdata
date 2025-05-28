@@ -80,7 +80,7 @@ jobs:
         fetch-depth: 0
 
     - name: Build Linux Wheel
-      uses: docker://quay.io/pypa/manylinux2014_x86_64
+      uses: docker://quay.io/pypa/manylinux_2_28_x86_64
       with:
         entrypoint: /github/workspace/ci/github/build_linux_wheel.sh
         args: ${{ matrix.python }}
