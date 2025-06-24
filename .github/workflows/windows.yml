@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['windows-2019']
+        os: ['windows-2022']
 
     runs-on: ${{ matrix.os }}
 
@@ -43,5 +43,5 @@ jobs:
       run: |
         python.exe -m pip install -r requirements.txt
         mkdir cmake-build
-        cmake -S . -B cmake-build -G "Visual Studio 16 2019"
+        cmake -S . -B cmake-build -G "Visual Studio 17 2022"
         cmake --build cmake-build

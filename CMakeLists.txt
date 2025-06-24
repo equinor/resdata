@@ -57,6 +57,20 @@ if(USE_CONAN)
       DOWNLOAD
       "https://raw.githubusercontent.com/conan-io/cmake-conan/0.18.1/conan.cmake"
       "${CMAKE_BINARY_DIR}/conan.cmake")
+
+    # Patch the downloaded conan.cmake to support MSVC 1944 (VS 2022)
+    message(STATUS "Patching conan.cmake for MSVC 1944 support")
+    file(READ "${CMAKE_BINARY_DIR}/conan.cmake" CONAN_CMAKE_CONTENT)
+
+    string(
+      REPLACE
+        "elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1940)"
+        "elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1950)"
+        CONAN_CMAKE_CONTENT
+        "${CONAN_CMAKE_CONTENT}")
+
+    file(WRITE "${CMAKE_BINARY_DIR}/conan.cmake" "${CONAN_CMAKE_CONTENT}")
+    message(STATUS "conan.cmake patched successfully for MSVC 1944 support")
   endif()
 
   include(${CMAKE_BINARY_DIR}/conan.cmake)
