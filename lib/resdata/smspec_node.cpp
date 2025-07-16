@@ -512,11 +512,11 @@ bool smspec_node_identify_total(const char *keyword,
         var_type == RD_SMSPEC_LOCAL_WELL_VAR ||
         var_type == RD_SMSPEC_LOCAL_COMPLETION_VAR) {
         static const std::vector<std::string> rate_vars{{
-            "OPT",  "OIT", "OVPT", "OVIT", "OMT", "GPT", "GIT",  "GVPT",
-            "GVIT", "GMT", "WGPT", "WGIT", "WPT", "WIT", "WVPT", "WVIT",
-            "WMT",  "LPT", "VPT",  "VIT",  "RGT", "EGT", "EXGT", "SGT",
-            "GST",  "FGT", "GIMT", "GCT",  "NPT", "NIT", "CPT",  "CIT",
-            "SIT",  "SPT", "TIT",  "TPT",
+            "OPT",  "OIT", "OVPT", "OVIT", "OMT",  "GPT", "GIT",  "GVPT",
+            "GVIT", "GMT", "WGPT", "WGIT", "WPT",  "WIT", "WVPT", "WVIT",
+            "WMT",  "LPT", "VPT",  "VIT",  "RGT",  "EGT", "EXGT", "SGT",
+            "GST",  "FGT", "GIMT", "GCT",  "NPT",  "NIT", "CPT",  "CIT",
+            "SIT",  "SPT", "TIT",  "TPT",  "GMIT",
         }};
 
         if (var_type == RD_SMSPEC_LOCAL_WELL_VAR ||
