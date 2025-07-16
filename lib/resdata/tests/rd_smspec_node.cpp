@@ -52,6 +52,7 @@ static void test_identify_total_variable() {
                             {true, "COMT", RD_SMSPEC_COMPLETION_VAR},
                             {true, "RGPT", RD_SMSPEC_REGION_VAR},
                             {true, "WGIT", RD_SMSPEC_WELL_VAR},
+                            {true, "FGMIT", RD_SMSPEC_FIELD_VAR},
                             {true, "GGVPT", RD_SMSPEC_GROUP_VAR},
                             {true, "FGVIT", RD_SMSPEC_FIELD_VAR},
                             {true, "WGMT", RD_SMSPEC_WELL_VAR},
