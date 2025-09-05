@@ -52,12 +52,10 @@ if(BUILD_APPLICATIONS)
   endif()
 
   add_executable(segment_info well/segment_info.c)
-  add_executable(ri_well_test well/ri_well_test.c)
 
   target_link_resdata(segment_info)
-  target_link_resdata(ri_well_test)
 
-  list(APPEND apps segment_info ri_well_test)
+  list(APPEND apps segment_info)
 endif()
 
 if(BUILD_RD_SUMMARY)

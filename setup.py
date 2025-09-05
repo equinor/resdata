@@ -46,7 +46,6 @@ def utility_wrappers():
             "kw_list.x",  # deprecated
             "load_test.x",  # deprecated
             "make_grid",  # deprecated
-            "ri_well_test",  # deprecated
             "segment_info",  # deprecated
             "select_test.x",  # deprecated
             "summary.x",  # deprecated

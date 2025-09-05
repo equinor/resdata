@@ -22,7 +22,6 @@ import signal
         ("kw_list.x", 0, b""),
         ("load_test.x", 0, b""),
         ("make_grid", 1, b"make_grid: basename nx ny nz"),
-        ("ri_well_test", 1, b""),
         ("segment_info", -signal.SIGSEGV, b""),
         ("select_test.x", 0, b""),
         ("summary.x", 1, b""),
