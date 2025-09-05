@@ -34,7 +34,6 @@ def utility_wrappers():
     return [
         name + " = resdata.bin:main"
         for name in (
-            "CF_dump",  # deprecated
             "convert.x",  # deprecated
             "rd_pack.x",
             "rd_unpack.x",
