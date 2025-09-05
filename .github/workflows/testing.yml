@@ -39,6 +39,10 @@ jobs:
       run: |
         python3 -m pip install "conan<2"
 
+    - uses: ./.github/actions/setup_conan_mac
+      with:
+        os: ${{ matrix.os }}
+
 
     - name: Build
       run: |
@@ -90,6 +94,10 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python }}
+
+    - uses: ./.github/actions/setup_conan_mac
+      with:
+        os: ${{ matrix.os }}
 
     - name: Build macOS Wheel
       if: runner.os == 'macOS'
