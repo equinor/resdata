@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2013  Equinor ASA, Norway.
 
-   The file 'well_CF_dump.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'ri_well_text.c' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

@@ -10,7 +10,6 @@ import signal
 @pytest.mark.parametrize(
     "name,returncode,stderr",
     [
-        ("CF_dump", -signal.SIGSEGV, b""),
         ("convert.x", 1, b"Usage: convert.x"),
         ("rd_pack.x", 0, b""),
         ("rd_unpack.x", 1, b"rd_unpack UNIFIED_FILE1"),
