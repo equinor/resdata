@@ -38,7 +38,6 @@ def utility_wrappers():
             "rd_pack.x",
             "rd_unpack.x",
             "grdecl_test.x",  # deprecated
-            "grid_info.x",  # deprecated
             "kw_extract",  # deprecated
             "kw_list.x",  # deprecated
             "load_test.x",  # deprecated
