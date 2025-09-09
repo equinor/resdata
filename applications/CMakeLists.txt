@@ -19,7 +19,7 @@ if(BUILD_APPLICATIONS)
 
   list(APPEND apps make_grid summary kw_extract)
 
-  foreach(app rd_pack rd_unpack grid_info select_test load_test)
+  foreach(app rd_pack rd_unpack select_test load_test)
     add_executable(${app} resdata/${app}.c)
     target_link_resdata(${app})
     list(APPEND apps ${app})

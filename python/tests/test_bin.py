@@ -14,7 +14,6 @@ import signal
         ("rd_pack.x", 0, b""),
         ("rd_unpack.x", 1, b"rd_unpack UNIFIED_FILE1"),
         ("grdecl_test.x", -signal.SIGABRT, b"util_fopen: failed to open:(null)"),
-        ("grid_info.x", 1, b"grid_info.x: filename"),
         ("kw_extract", 0, b"src_file target_file kw1 kw2 kw3"),
         ("kw_list.x", 0, b""),
         ("load_test.x", 0, b""),
