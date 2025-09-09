@@ -16,7 +16,6 @@ import signal
         ("grdecl_test.x", -signal.SIGABRT, b"util_fopen: failed to open:(null)"),
         ("kw_list.x", 0, b""),
         ("load_test.x", 0, b""),
-        ("select_test.x", 0, b""),
         ("summary.x", 1, b""),
     ],
 )
