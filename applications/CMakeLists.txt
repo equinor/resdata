@@ -10,16 +10,14 @@ endfunction()
 if(BUILD_APPLICATIONS)
   add_executable(sum_write resdata/sum_write.cpp)
   add_executable(make_grid resdata/make_grid.c)
-  add_executable(grdecl_grid resdata/grdecl_grid.c)
   add_executable(summary resdata/view_summary.cpp)
   add_executable(kw_extract resdata/kw_extract.cpp)
   target_link_resdata(sum_write)
   target_link_resdata(make_grid)
-  target_link_resdata(grdecl_grid)
   target_link_resdata(summary)
   target_link_resdata(kw_extract)
 
-  list(APPEND apps make_grid grdecl_grid summary kw_extract)
+  list(APPEND apps make_grid summary kw_extract)
 
   foreach(
     app
