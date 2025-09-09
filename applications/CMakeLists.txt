@@ -36,12 +36,6 @@ if(BUILD_APPLICATIONS)
 
     set_target_properties(summary PROPERTIES SUFFIX ".x")
   endif()
-
-  add_executable(segment_info well/segment_info.c)
-
-  target_link_resdata(segment_info)
-
-  list(APPEND apps segment_info)
 endif()
 
 if(BUILD_RD_SUMMARY)
