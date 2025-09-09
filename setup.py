@@ -40,7 +40,6 @@ def utility_wrappers():
             "grdecl_test.x",  # deprecated
             "kw_list.x",  # deprecated
             "load_test.x",  # deprecated
-            "select_test.x",  # deprecated
             "summary.x",  # deprecated
         )
     ]

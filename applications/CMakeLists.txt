@@ -15,7 +15,7 @@ if(BUILD_APPLICATIONS)
 
   list(APPEND apps summary)
 
-  foreach(app rd_pack rd_unpack select_test load_test)
+  foreach(app rd_pack rd_unpack load_test)
     add_executable(${app} resdata/${app}.c)
     target_link_resdata(${app})
     list(APPEND apps ${app})
