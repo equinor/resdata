@@ -13,7 +13,6 @@ import signal
         ("convert.x", 1, b"Usage: convert.x"),
         ("rd_pack.x", 0, b""),
         ("rd_unpack.x", 1, b"rd_unpack UNIFIED_FILE1"),
-        ("grdecl_grid", -signal.SIGABRT, b"util_fopen: failed to open:(null)"),
         ("grdecl_test.x", -signal.SIGABRT, b"util_fopen: failed to open:(null)"),
         ("grid_dump.x", 1, b"grid_dump.x: filename"),
         ("grid_dump_ascii.x", 1, b"grid_dump_ascii.x: filename"),

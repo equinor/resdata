@@ -37,7 +37,6 @@ def utility_wrappers():
             "convert.x",  # deprecated
             "rd_pack.x",
             "rd_unpack.x",
-            "grdecl_grid",  # deprecated
             "grdecl_test.x",  # deprecated
             "grid_dump.x",  # deprecated
             "grid_dump_ascii.x",  # deprecated
