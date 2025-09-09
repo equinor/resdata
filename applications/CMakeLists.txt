@@ -9,13 +9,11 @@ endfunction()
 
 if(BUILD_APPLICATIONS)
   add_executable(sum_write resdata/sum_write.cpp)
-  add_executable(make_grid resdata/make_grid.c)
   add_executable(summary resdata/view_summary.cpp)
   target_link_resdata(sum_write)
-  target_link_resdata(make_grid)
   target_link_resdata(summary)
 
-  list(APPEND apps make_grid summary)
+  list(APPEND apps summary)
 
   foreach(app rd_pack rd_unpack select_test load_test)
     add_executable(${app} resdata/${app}.c)
