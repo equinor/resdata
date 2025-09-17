@@ -97,8 +97,6 @@ typedef enum {
 #define RD_COMMENT_CHAR '-' // Need to consecutive to make an ECLIPSE comment
 #define RD_DATA_TERMINATION "/"
 
-bool rd_unified_file(const char *filename);
-const char *rd_file_type_name(rd_file_enum file_type);
 int rd_filename_report_nr(const char *);
 rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
                               int *report_nr);

@@ -758,22 +758,6 @@ double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int index) {
     }
 }
 
-/**
-   Will return a float value for underlying data types of double and float.
-*/
-
-float rd_kw_iget_as_float(const rd_kw_type *rd_kw, int i) {
-    if (rd_type_is_float(rd_kw->data_type))
-        return rd_kw_iget_float(rd_kw, i);
-    else if (rd_type_is_double(rd_kw->data_type))
-        return (float)rd_kw_iget_double(rd_kw, i);
-    else {
-        util_abort("%s: can not be converted to float - no data for you! \n",
-                   __func__);
-        return -1;
-    }
-}
-
 #define RD_KW_IGET_TYPED(ctype, RD_TYPE)                                       \
     ctype rd_kw_iget_##ctype(const rd_kw_type *rd_kw, int i) {                 \
         ctype value;                                                           \
@@ -1413,18 +1397,6 @@ bool rd_kw_fread_realloc(rd_kw_type *rd_kw, fortio_type *fortio) {
         return rd_kw_fread_realloc_data(rd_kw, fortio);
     else
         return false;
-}
-
-void rd_kw_fread(rd_kw_type *rd_kw, fortio_type *fortio) {
-    int current_size = rd_kw->size;
-    if (rd_kw_fread_header(rd_kw, fortio) != RD_KW_READ_OK)
-        util_abort("%s: failed to read header for rd_kw - aborting \n",
-                   __func__);
-
-    if (rd_kw->size == current_size)
-        rd_kw_fread_data(rd_kw, fortio);
-    else
-        util_abort("%s: size mismatch - aborting \n", __func__);
 }
 
 rd_kw_type *rd_kw_fread_alloc(fortio_type *fortio) {

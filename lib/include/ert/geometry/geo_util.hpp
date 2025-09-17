@@ -17,8 +17,6 @@ typedef enum {
 bool geo_util_inside_polygon__(const double *xlist, const double *ylist,
                                int num_points, double x0, double y0,
                                bool force_edge_inside);
-bool geo_util_inside_polygon(const double *xlist, const double *ylist,
-                             int num_points, double x0, double y0);
 geo_util_xlines_status_enum geo_util_xlines(const double **points, double *x0,
                                             double *y0);
 geo_util_xlines_status_enum geo_util_xsegments(const double **points,

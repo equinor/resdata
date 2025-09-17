@@ -283,10 +283,6 @@ void hash_free(hash_type *hash) {
     free(hash);
 }
 
-char **hash_alloc_keylist(const hash_type *hash) {
-    return hash_alloc_keylist__(hash);
-}
-
 stringlist_type *hash_alloc_stringlist(const hash_type *hash) {
     stringlist_type *stringlist = stringlist_alloc_new();
     char **keylist = hash_alloc_keylist__(hash);

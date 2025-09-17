@@ -255,52 +255,6 @@ static const char *rd_get_file_pattern(rd_file_enum file_type, bool fmt_file) {
     }
 }
 
-/**
-   Takes an rd_file_enum variable and returns string with a
-   descriptive name of this file type.
-*/
-const char *rd_file_type_name(rd_file_enum file_type) {
-    switch (file_type) {
-    case (RD_OTHER_FILE):
-        return "RD_OTHER_FILE";
-        break;
-    case (RD_RESTART_FILE):
-        return "RD_RESTART_FILE";
-        break;
-    case (RD_UNIFIED_RESTART_FILE):
-        return "RD_UNIFIED_RESTART_FILE";
-        break;
-    case (RD_SUMMARY_FILE):
-        return "RD_SUMMARY_FILE";
-        break;
-    case (RD_UNIFIED_SUMMARY_FILE):
-        return "RD_UNIFIED_SUMMARY_FILE";
-        break;
-    case (RD_SUMMARY_HEADER_FILE):
-        return "RD_SUMMARY_HEADER_FILE";
-        break;
-    case (RD_GRID_FILE):
-        return "RD_GRID_FILE";
-        break;
-    case (RD_EGRID_FILE):
-        return "RD_EGRID_FILE";
-        break;
-    case (RD_INIT_FILE):
-        return "RD_INIT_FILE";
-        break;
-    case (RD_RFT_FILE):
-        return "RD_RFT_FILE";
-        break;
-    case (RD_DATA_FILE):
-        return "RD_DATA_FILE";
-        break;
-    default:
-        util_abort("%s: internal error type.%d not recognizxed \n", __func__,
-                   file_type);
-    }
-    return NULL;
-}
-
 static bool base_has_upper(const char *input_base) {
     const char *base = strrchr(input_base, UTIL_PATH_SEP_CHAR);
     if (base == NULL)
@@ -604,19 +558,6 @@ int rd_select_filelist(const char *path, const char *base,
     free(ext_pattern);
 
     return stringlist_get_size(filelist);
-}
-
-bool rd_unified_file(const char *filename) {
-    int report_nr;
-    rd_file_enum file_type;
-    bool fmt_file;
-    file_type = rd_get_file_type(filename, &fmt_file, &report_nr);
-
-    if ((file_type == RD_UNIFIED_RESTART_FILE) ||
-        (file_type == RD_UNIFIED_SUMMARY_FILE))
-        return true;
-    else
-        return false;
 }
 
 bool rd_fmt_file(const char *filename, bool *__fmt_file) {

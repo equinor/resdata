@@ -24,7 +24,6 @@ bool hash_has_key(const hash_type *, const char *);
 void *hash_get(const hash_type *, const char *);
 char *hash_get_string(const hash_type *, const char *);
 int hash_get_size(const hash_type *);
-char **hash_alloc_keylist(const hash_type *);
 stringlist_type *hash_alloc_stringlist(const hash_type *);
 void hash_insert_hash_owned_ref(hash_type *, const char *, const void *,
                                 free_ftype *);

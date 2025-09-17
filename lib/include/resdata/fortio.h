@@ -72,7 +72,6 @@ bool fortio_data_fskip(fortio_type *fortio, const int element_size,
 void fortio_data_fseek(fortio_type *fortio, offset_type data_offset,
                        size_t data_element, const int element_size,
                        const int element_count, const int block_size);
-int fortio_fileno(fortio_type *fortio);
 bool fortio_ftruncate(fortio_type *fortio, offset_type size);
 int fortio_fclean(fortio_type *fortio);
 

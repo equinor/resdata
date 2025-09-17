@@ -46,13 +46,12 @@ struct rng_struct {
 UTIL_SAFE_CAST_FUNCTION(rng, RNG_TYPE_ID)
 UTIL_IS_INSTANCE_FUNCTION(rng, RNG_TYPE_ID)
 
-rng_type *rng_alloc__(rng_alloc_ftype *alloc_state, rng_free_ftype *free_state,
-                      rng_forward_ftype *forward,
-                      rng_set_state_ftype *set_state,
-                      rng_get_state_ftype *get_state,
-                      rng_fscanf_ftype *fscanf_state,
-                      rng_fprintf_ftype *fprintf_state, rng_alg_type type,
-                      int state_size, uint64_t max_value) {
+static rng_type *
+rng_alloc__(rng_alloc_ftype *alloc_state, rng_free_ftype *free_state,
+            rng_forward_ftype *forward, rng_set_state_ftype *set_state,
+            rng_get_state_ftype *get_state, rng_fscanf_ftype *fscanf_state,
+            rng_fprintf_ftype *fprintf_state, rng_alg_type type, int state_size,
+            uint64_t max_value) {
 
     rng_type *rng = (rng_type *)util_malloc(sizeof *rng);
     UTIL_TYPE_ID_INIT(rng, RNG_TYPE_ID);

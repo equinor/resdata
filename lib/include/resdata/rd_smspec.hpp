@@ -28,8 +28,6 @@ rd_smspec_iget_node_w_node_index(const rd_smspec_type *smspec, int node_index);
 const rd::smspec_node &
 rd_smspec_iget_node_w_params_index(const rd_smspec_type *smspec,
                                    int params_index);
-const rd::smspec_node &rd_smspec_iget_node(const rd_smspec_type *smspec,
-                                           int index);
 #endif
 
 #ifdef __cplusplus
@@ -69,11 +67,6 @@ int rd_smspec_get_date_day_index(const rd_smspec_type *smspec);
 int rd_smspec_get_date_month_index(const rd_smspec_type *smspec);
 int rd_smspec_get_date_year_index(const rd_smspec_type *smspec);
 
-int rd_smspec_get_well_var_params_index(const rd_smspec_type *rd_smspec,
-                                        const char *well, const char *var);
-int rd_smspec_get_well_completion_var_params_index(
-    const rd_smspec_type *rd_smspec, const char *well, const char *var,
-    int cell_nr);
 int rd_smspec_get_general_var_params_index(const rd_smspec_type *rd_smspec,
                                            const char *lookup_kw);
 bool rd_smspec_has_general_var(const rd_smspec_type *rd_smspec,

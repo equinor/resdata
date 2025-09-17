@@ -102,11 +102,6 @@ bool geo_util_inside_polygon__(const double *xlist, const double *ylist,
     return inside;
 }
 
-bool geo_util_inside_polygon(const double *xlist, const double *ylist,
-                             int num_points, double x0, double y0) {
-    return geo_util_inside_polygon__(xlist, ylist, num_points, x0, y0, false);
-}
-
 /*
   This function will cross to infinitely long lines which go through
   the points given by the points pointer; this function does not

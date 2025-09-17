@@ -163,8 +163,8 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
     }
 }
 
-int rd_file_view_find_kw_value(const rd_file_view_type *rd_file_view,
-                               const char *kw, const void *value) {
+static int rd_file_view_find_kw_value(const rd_file_view_type *rd_file_view,
+                                      const char *kw, const void *value) {
     int global_index = -1;
     if (rd_file_view_has_kw(rd_file_view, kw)) {
         const auto &index_list = rd_file_view->kw_index.at(kw);
@@ -254,8 +254,8 @@ void rd_file_view_fwrite(const rd_file_view_type *rd_file_view,
     }
 }
 
-int rd_file_view_iget_occurence(const rd_file_view_type *rd_file_view,
-                                int global_index) {
+static int rd_file_view_iget_occurence(const rd_file_view_type *rd_file_view,
+                                       int global_index) {
     const rd_file_kw_type *file_kw = rd_file_view->kw_list[global_index];
     const char *header = rd_file_kw_get_header(file_kw);
     const auto &index_vector = rd_file_view->kw_index.at(header);
@@ -272,16 +272,6 @@ int rd_file_view_iget_occurence(const rd_file_view_type *rd_file_view,
         util_abort("%s: internal error ... \n", __func__);
 
     return occurence;
-}
-
-void rd_file_view_fprintf_kw_list(const rd_file_view_type *rd_file_view,
-                                  FILE *stream) {
-    for (auto &file_kw : rd_file_view->kw_list) {
-        char *type_name = rd_type_alloc_name(rd_file_kw_get_data_type(file_kw));
-        fprintf(stream, "%-8s %7d:%s\n", rd_file_kw_get_header(file_kw),
-                rd_file_kw_get_size(file_kw), type_name);
-        free(type_name);
-    }
 }
 
 rd_file_view_type *
@@ -324,7 +314,7 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
 /**
    Will return NULL if the block which is asked for is not present.
 */
-rd_file_view_type *
+static rd_file_view_type *
 rd_file_view_alloc_blockview(const rd_file_view_type *rd_file_view,
                              const char *header, int occurence) {
     return rd_file_view_alloc_blockview2(rd_file_view, header, header,
@@ -627,8 +617,9 @@ static bool rd_file_view_has_sim_days(const rd_file_view_type *rd_file_view,
     }
 }
 
-int rd_file_view_seqnum_index_from_sim_time(rd_file_view_type *parent_map,
-                                            time_t sim_time) {
+static int
+rd_file_view_seqnum_index_from_sim_time(rd_file_view_type *parent_map,
+                                        time_t sim_time) {
     int num_seqnum = rd_file_view_get_num_named_kw(parent_map, SEQNUM_KW);
     rd_file_view_type *seqnum_map;
 

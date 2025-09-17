@@ -50,7 +50,6 @@ const char *rd_sum_get_unit(const rd_sum_type *sum, const char *gen_key);
 double rd_sum_iget(const rd_sum_type *rd_sum, int time_index, int param_index);
 int rd_sum_get_data_length(const rd_sum_type *rd_sum);
 
-void rd_sum_free_data(rd_sum_type *);
 void rd_sum_free(rd_sum_type *);
 rd_sum_type *rd_sum_fread_alloc(const char *, const stringlist_type *data_files,
                                 const char *key_join_string,
@@ -66,10 +65,6 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
                                    const time_t_vector_type *times,
                                    bool lower_extrapolation,
                                    bool upper_extrapolation);
-
-double rd_sum_get_well_completion_var(const rd_sum_type *rd_sum, int time_index,
-                                      const char *well, const char *var,
-                                      int cell_nr);
 
 double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
                               const char *lookup_kw);
