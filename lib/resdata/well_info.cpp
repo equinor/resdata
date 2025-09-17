@@ -146,11 +146,8 @@
 
   3. Query the well_info instance for information about the wells at
      different times; either through the indirect function
-     well_info_get_ts() to get the full timeseries for one named well;
-     or one of the functions:
-
-      - well_info_get_state_from_report()
-      - well_info_iget_state()
+     well_info_get_ts() to get the full timeseries for one named well.
+     
 
   4. well_info_free() before you go home.
 
@@ -350,20 +347,6 @@ void well_info_free(well_info_type *well_info) {
         well_ts_free(pair.second);
 
     delete well_info;
-}
-
-well_state_type *
-well_info_get_state_from_report(const well_info_type *well_info,
-                                const char *well_name, int report_step) {
-    well_ts_type *well_ts = well_info_get_ts(well_info, well_name);
-    return well_ts_get_state_from_report(well_ts, report_step);
-}
-
-static well_state_type *well_info_iget_state(const well_info_type *well_info,
-                                             const char *well_name,
-                                             int time_index) {
-    well_ts_type *well_ts = well_info_get_ts(well_info, well_name);
-    return well_ts_iget_state(well_ts, time_index);
 }
 
 int well_info_get_num_wells(const well_info_type *well_info) {

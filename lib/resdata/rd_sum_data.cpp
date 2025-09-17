@@ -1165,28 +1165,6 @@ int rd_sum_data_get_length(const rd_sum_data_type *data) {
     return data->index.length();
 }
 
-static bool rd_sum_data_report_step_equal__(const rd_sum_data_type *data1,
-                                            const rd_sum_data_type *data2,
-                                            bool strict) {
-    if (data1->data_files.size() != data2->data_files.size())
-        return false;
-
-    for (size_t i = 0; i < data1->data_files.size(); i++) {
-        const auto &data_file1 = data1->data_files[i];
-        const auto &data_file2 = data2->data_files[i];
-
-        if (!data_file1->report_step_equal(*data_file2, strict))
-            return false;
-    }
-
-    return true;
-}
-
-bool rd_sum_data_report_step_equal(const rd_sum_data_type *data1,
-                                   const rd_sum_data_type *data2) {
-    return rd_sum_data_report_step_equal__(data1, data2, true);
-}
-
 double rd_sum_data_iget_last_value(const rd_sum_data_type *data,
                                    int param_index) {
     return rd_sum_data_iget(data, rd_sum_data_get_length(data) - 1,

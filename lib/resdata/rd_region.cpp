@@ -207,21 +207,6 @@ void rd_region_reset(rd_region_type *rd_region) {
     rd_region_invalidate_index_list(rd_region);
 }
 
-static void rd_region_select_cell__(rd_region_type *region, int i, int j, int k,
-                                    bool select) {
-    int global_index = rd_grid_get_global_index3(region->parent_grid, i, j, k);
-    region->active_mask[global_index] = select;
-    rd_region_invalidate_index_list(region);
-}
-
-void rd_region_select_cell(rd_region_type *region, int i, int j, int k) {
-    rd_region_select_cell__(region, i, j, k, true);
-}
-
-void rd_region_deselect_cell(rd_region_type *region, int i, int j, int k) {
-    rd_region_select_cell__(region, i, j, k, false);
-}
-
 static void rd_region_select_equal__(rd_region_type *region,
                                      const rd_kw_type *rd_kw, int value,
                                      bool select) {
@@ -878,71 +863,6 @@ void rd_region_select_inactive_cells(rd_region_type *region) {
 
 void rd_region_deselect_inactive_cells(rd_region_type *region) {
     rd_region_select_active_cells__(region, false, false);
-}
-
-/**
-   Here comes functions for selecting all the cells which are in the
-   vertical cylinder located at (x0,y0) with radius R. The functions
-   with name 'zcylinder' operate on a finite cylinder in the z
-   direction, specified with the additional arguments z1 and z2; the
-   functions without z1 and z2 arguments operate on an infinite
-   cylinder piercing the complete reservoir.
-
-   Currently all user-exported functions call the
-   rd_region_clyinder_select__() with select_inside == true.
-*/
-
-static void rd_region_cylinder_select__(rd_region_type *region, double x0,
-                                        double y0, double R, double z1,
-                                        double z2, bool select_inside,
-                                        bool select) {
-    double R2 = R * R;
-
-    if (z1 < z2) {
-        int global_index;
-        for (global_index = 0; global_index < region->grid_vol;
-             global_index++) {
-            double x, y, z;
-            rd_grid_get_xyz1(region->parent_grid, global_index, &x, &y, &z);
-            if ((z >= z1) && (z <= z2)) {
-                double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
-                if ((pointR2 < R2) && (select_inside))
-                    region->active_mask[global_index] = select;
-                else if ((pointR2 > R2) && (!select_inside))
-                    region->active_mask[global_index] = select;
-            }
-        }
-    } else {
-        const int nx = region->grid_nx;
-        const int ny = region->grid_ny;
-        const int nz = region->grid_nz;
-        int i, j;
-        for (i = 0; i < nx; i++) {
-            for (j = 0; j < ny; j++) {
-                double x, y, z;
-                rd_grid_get_xyz3(region->parent_grid, i, j, 0, &x, &y, &z);
-                {
-                    double pointR2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
-                    bool select_column = false;
-
-                    if ((pointR2 < R2) && (select_inside))
-                        select_column = true;
-                    else if ((pointR2 > R2) && (!select_inside))
-                        select_column = true;
-
-                    if (select_column) {
-                        int k;
-                        for (k = 0; k < nz; k++) {
-                            int global_index = rd_grid_get_global_index3(
-                                region->parent_grid, i, j, k);
-                            region->active_mask[global_index] = select;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    rd_region_invalidate_index_list(region);
 }
 
 /**

@@ -150,7 +150,6 @@ FILE *util_fopen__(const char *filename, const char *mode);
 bool util_fopen_test(const char *, const char *);
 char *util_split_alloc_filename(const char *input_path);
 void util_alloc_file_components(const char *, char **, char **, char **);
-char *util_alloc_tmp_file(const char *, const char *, bool);
 char *util_fscanf_alloc_line(FILE *, bool *);
 bool util_sscanf_bool(const char *, bool *);
 int util_strcmp_int(const char *s1, const char *s2);
@@ -187,8 +186,6 @@ void *util_malloc(size_t);
 void *util_calloc(size_t elements, size_t element_size);
 void *util_realloc_copy(void *org_ptr, const void *src, size_t byte_size);
 void *util_alloc_copy(const void *, size_t);
-void util_double_to_float(float *, const double *, int);
-void util_float_to_double(double *, const float *, int);
 char *util_fread_alloc_file_content(const char *, int *);
 void util_fwrite_string(const char *, FILE *);
 char *util_fread_alloc_string(FILE *);
@@ -200,10 +197,12 @@ void util_update_float_max_min(float, float *, float *);
 void util_update_int_max_min(int, int *, int *);
 int util_int_max(int, int);
 double util_double_max(double, double);
+float util_float_max(float, float);
 int util_int_min(int, int);
 size_t util_size_t_min(size_t a, size_t b);
 size_t util_size_t_max(size_t a, size_t b);
 double util_double_min(double, double);
+float util_float_min(float, float);
 void util_fskip_lines(FILE *, int);
 bool util_same_file(const char *, const char *);
 void util_fread(void *, size_t, size_t, FILE *, const char *);
@@ -212,9 +211,6 @@ int util_fread_int(FILE *);
 void util_fwrite_offset(offset_type, FILE *);
 void util_fwrite_size_t(size_t, FILE *);
 void util_fwrite_int(int, FILE *);
-void util_fwrite_long(long, FILE *);
-void util_fwrite_double(double, FILE *);
-void util_fwrite_int_vector(const int *, int, FILE *, const char *);
 int util_get_current_linenr(FILE *stream);
 bool util_fseek_string(FILE *stream, const char *string, bool skip_string,
                        bool case_sensitive);
@@ -296,14 +292,6 @@ void util_set_abort_handler(util_abort_handler_t *);
 void util_abort__(const char *file, const char *function, int line,
                   const char *fmt, ...);
 void util_abort_signal(int);
-
-#ifdef ERT_HAVE_SYMLINK
-void util_make_slink(const char *, const char *);
-char *util_alloc_link_target(const char *link);
-#ifdef ERT_HAVE_READLINKAT
-char *util_alloc_atlink_target(const char *path, const char *link);
-#endif
-#endif
 
 #include "util_unlink.hpp"
 

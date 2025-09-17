@@ -36,7 +36,6 @@ const char *stringlist_front(const stringlist_type *stringlist);
 const char *stringlist_back(const stringlist_type *stringlist);
 
 void stringlist_iset_copy(stringlist_type *, int index, const char *);
-void stringlist_iset_owned_ref(stringlist_type *, int index, const char *);
 
 int stringlist_get_size(const stringlist_type *);
 
@@ -44,15 +43,11 @@ stringlist_type *stringlist_alloc_argv_copy(const char **, int);
 
 bool stringlist_equal(const stringlist_type *, const stringlist_type *);
 bool stringlist_contains(const stringlist_type *, const char *);
-int_vector_type *stringlist_find(const stringlist_type *, const char *);
 int stringlist_find_first(const stringlist_type *, const char *);
 void stringlist_sort(stringlist_type *, string_cmp_ftype *string_cmp);
 void stringlist_reverse(stringlist_type *s);
 void stringlist_python_sort(stringlist_type *s, int cmp_flag);
 
-#ifdef ERT_HAVE_GLOB
-int stringlist_select_matching(stringlist_type *names, const char *pattern);
-#endif
 int stringlist_select_matching_files(stringlist_type *names, const char *path,
                                      const char *file_pattern);
 UTIL_IS_INSTANCE_HEADER(stringlist);

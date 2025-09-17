@@ -83,17 +83,6 @@
    (i.e. simulation time or report step) to the occurence number (see
    rd_rstfile for more details).
 
-   To select a subindex as the active index you use the
-   rd_file_select_block() function, or alternatively you can use
-   rd_file_open_block() to directly select the relevant block
-   immediately after the open() statement. Observe that when using a
-   sub index thorugh rd_file_select_block() function the global_map
-   will still be present in the rd_file instance, and subsequent
-   calls to create a new sub index will also use the global_map index
-   - i.e. the indexing is not recursive, a sub index is always created
-   based on the global_map, and not on the currently active map.
-
-
    [1]: This is not entirely true - in the file rd_rstfile.c; which
         is included from this file are several specialized function
         for working with restart files. However the restart files are
@@ -143,7 +132,7 @@ struct rd_file_struct {
 UTIL_SAFE_CAST_FUNCTION(rd_file, RD_FILE_ID)
 UTIL_IS_INSTANCE_FUNCTION(rd_file, RD_FILE_ID)
 
-rd_file_type *rd_file_alloc_empty(int flags) {
+static rd_file_type *rd_file_alloc_empty(int flags) {
     rd_file_type *rd_file = (rd_file_type *)util_malloc(sizeof *rd_file);
     UTIL_TYPE_ID_INIT(rd_file, RD_FILE_ID);
     rd_file->map_stack = vector_alloc_new();
@@ -155,29 +144,6 @@ rd_file_type *rd_file_alloc_empty(int flags) {
 void rd_file_fwrite_fortio(const rd_file_type *rd_file, fortio_type *target,
                            int offset) {
     rd_file_view_fwrite(rd_file->active_view, target, offset);
-}
-
-/*
-   Observe : if the filename is a standard filename which can be used
-   to infer formatted/unformatted automagically the fmt_file variable
-   is NOT consulted.
-*/
-
-void rd_file_fwrite(const rd_file_type *rd_file, const char *filename,
-                    bool fmt_file) {
-    bool __fmt_file;
-    rd_file_enum file_type;
-
-    file_type = rd_get_file_type(filename, &__fmt_file, NULL);
-    if (file_type == RD_OTHER_FILE)
-        __fmt_file = fmt_file;
-
-    {
-        fortio_type *target =
-            fortio_open_writer(filename, __fmt_file, RD_ENDIAN_FLIP);
-        rd_file_fwrite_fortio(rd_file, target, 0);
-        fortio_fclose(target);
-    }
 }
 
 /**
@@ -447,17 +413,6 @@ bool rd_file_has_sim_time(const rd_file_type *rd_file, time_t sim_time) {
      }
 
 
-  Using block restriction:
-
-     int index = rd_file_get_restart_index( rd_file , sim_time );
-     if (index >= 0) {
-        rd_file_iselect_rstblock( rd_file , index );
-        {
-           rd_kw_type * pressure_kw = rd_file_iget_named_kw( rd_file , "PRESSURE" , 0 );
-           ....
-        }
-     }
-
   Specially in the case of LGRs the block restriction should be used.
  */
 
@@ -605,48 +560,6 @@ bool rd_file_subselect_block(rd_file_type *rd_file, const char *kw,
     if (blockmap != NULL) {
         rd_file->active_view = blockmap;
         return true;
-    } else
-        return false;
-}
-
-static bool rd_file_select_block(rd_file_type *rd_file, const char *kw,
-                                 int occurence) {
-    rd_file_view_type *blockmap =
-        rd_file_get_global_blockview(rd_file, kw, occurence);
-    if (blockmap != NULL) {
-        rd_file->active_view = blockmap;
-        return true;
-    } else
-        return false;
-}
-
-/*
-  Will select restart block nr @seqnum_index - without considering
-  report_steps or simulation time.
-*/
-static bool rd_file_iselect_rstblock(rd_file_type *rd_file, int seqnum_index) {
-    return rd_file_select_block(rd_file, SEQNUM_KW, seqnum_index);
-}
-
-static bool rd_file_select_rstblock_sim_time(rd_file_type *rd_file,
-                                             time_t sim_time) {
-    int seqnum_index =
-        rd_file_view_seqnum_index_from_sim_time(rd_file->global_view, sim_time);
-
-    if (seqnum_index >= 0)
-        return rd_file_iselect_rstblock(rd_file, seqnum_index);
-    else
-        return false;
-}
-
-static bool rd_file_select_rstblock_report_step(rd_file_type *rd_file,
-                                                int report_step) {
-    int global_index = rd_file_view_find_kw_value(rd_file->global_view,
-                                                  SEQNUM_KW, &report_step);
-    if (global_index >= 0) {
-        int seqnum_index =
-            rd_file_view_iget_occurence(rd_file->global_view, global_index);
-        return rd_file_iselect_rstblock(rd_file, seqnum_index);
     } else
         return false;
 }

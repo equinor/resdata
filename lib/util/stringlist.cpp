@@ -53,11 +53,6 @@ void stringlist_iset_copy(stringlist_type *stringlist, int index,
     vector_iset_buffer(stringlist->strings, index, s, strlen(s) + 1);
 }
 
-void stringlist_iset_owned_ref(stringlist_type *stringlist, int index,
-                               const char *s) {
-    vector_iset_owned_ref(stringlist->strings, index, s, free);
-}
-
 static stringlist_type *stringlist_alloc_empty(bool alloc_vector) {
     stringlist_type *stringlist =
         (stringlist_type *)util_malloc(sizeof *stringlist);
@@ -80,13 +75,6 @@ stringlist_type *stringlist_alloc_argv_copy(const char **argv, int argc) {
         stringlist_append_copy(stringlist, argv[iarg]);
 
     return stringlist;
-}
-
-void stringlist_append_stringlist_copy(stringlist_type *stringlist,
-                                       const stringlist_type *src) {
-    int i;
-    for (i = 0; i < stringlist_get_size(src); i++)
-        stringlist_append_copy(stringlist, stringlist_iget(src, i));
 }
 
 /**
@@ -170,25 +158,6 @@ bool stringlist_contains(const stringlist_type *stringlist, const char *s) {
     }
 
     return contains;
-}
-
-/**
-  Finds the indicies of the entries matching 's'.
-*/
-int_vector_type *stringlist_find(const stringlist_type *stringlist,
-                                 const char *s) {
-    int_vector_type *indicies = int_vector_alloc(0, -1);
-    int size = stringlist_get_size(stringlist);
-    int index = 0;
-
-    while (index < size) {
-        const char *istring = stringlist_iget(stringlist, index);
-        if (istring != NULL)
-            if (strcmp(istring, s) == 0)
-                int_vector_append(indicies, index);
-        index++;
-    }
-    return indicies;
 }
 
 /**
@@ -279,7 +248,8 @@ void stringlist_reverse(stringlist_type *s) {
 */
 
 #ifdef ERT_HAVE_GLOB
-int stringlist_select_matching(stringlist_type *names, const char *pattern) {
+static int stringlist_select_matching(stringlist_type *names,
+                                      const char *pattern) {
     int match_count = 0;
     stringlist_clear(names);
 

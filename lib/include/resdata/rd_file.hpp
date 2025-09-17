@@ -37,7 +37,6 @@ const char *rd_file_get_src_file(const rd_file_type *rd_file);
 rd_version_enum rd_file_get_rd_version(const rd_file_type *file);
 void rd_file_fwrite_fortio(const rd_file_type *ec_file, fortio_type *fortio,
                            int offset);
-void rd_file_fwrite(const rd_file_type *rd_file, const char *, bool fmt_file);
 
 int rd_file_get_phases(const rd_file_type *init_file);
 

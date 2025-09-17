@@ -13,7 +13,7 @@
 #ifdef __cplusplus
 extern "C" {
 
-rd_data_type *rd_type_alloc_copy_python(const rd_data_type *src_type) {
+static rd_data_type *rd_type_alloc_copy_python(const rd_data_type *src_type) {
     rd_data_type *data_type = (rd_data_type *)util_malloc(sizeof *src_type);
     memcpy(data_type, src_type, sizeof *data_type);
     return data_type;

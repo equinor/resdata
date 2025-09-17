@@ -55,7 +55,6 @@ void rd_kw_set_header_name(rd_kw_type *, const char *);
 bool rd_kw_fseek_kw(const char *, bool, bool, fortio_type *);
 void rd_kw_fskip(fortio_type *);
 bool rd_kw_fread_realloc(rd_kw_type *, fortio_type *);
-void rd_kw_fread(rd_kw_type *, fortio_type *);
 rd_kw_type *rd_kw_fread_alloc(fortio_type *);
 rd_kw_type *rd_kw_alloc_actnum(const rd_kw_type *porv_kw, float porv_limit);
 void rd_kw_fread_indexed_data(fortio_type *fortio, offset_type data_offset,
@@ -87,7 +86,6 @@ rd_kw_type *rd_kw_alloc_new_shared(const char *, int, rd_data_type, void *);
 rd_kw_type *rd_kw_alloc_global_copy(const rd_kw_type *src,
                                     const rd_kw_type *actnum);
 void rd_kw_summarize(const rd_kw_type *rd_kw);
-float rd_kw_iget_as_float(const rd_kw_type *rd_kw, int i);
 double rd_kw_iget_as_double(const rd_kw_type *rd_kw, int i);
 bool rd_kw_equal(const rd_kw_type *rd_kw1, const rd_kw_type *rd_kw2);
 bool rd_kw_size_and_type_equal(const rd_kw_type *rd_kw1,

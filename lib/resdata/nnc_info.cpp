@@ -178,14 +178,6 @@ nnc_info_get_grid_index_list(const nnc_info_type *nnc_info, int lgr_nr) {
 }
 
 const std::vector<int> &
-nnc_info_iget_grid_index_list(const nnc_info_type *nnc_info, int lgr_index) {
-    nnc_vector_type *nnc_vector = nnc_info_iget_vector(nnc_info, lgr_index);
-    if (!nnc_vector)
-        throw std::invalid_argument(std::string(__func__));
-    return nnc_vector_get_grid_index_list(nnc_vector);
-}
-
-const std::vector<int> &
 nnc_info_get_self_grid_index_list(const nnc_info_type *nnc_info) {
     return nnc_info_get_grid_index_list(nnc_info, nnc_info->lgr_nr);
 }

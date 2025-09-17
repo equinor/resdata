@@ -196,6 +196,8 @@ bool fortio_looks_like_fortran_file(const char *filename, bool endian_flip) {
     return is_fortran_stream;
 }
 
+static int fortio_fileno(fortio_type *fortio) { return fileno(fortio->stream); }
+
 static void fortio_init_size(fortio_type *fortio) {
     fortio->read_size = util_fd_size(fortio_fileno(fortio));
 }
@@ -548,53 +550,6 @@ void fortio_fwrite_record(fortio_type *fortio, const char *buffer,
     fortio_complete_write(fortio, record_size);
 }
 
-void *fortio_fread_alloc_record(fortio_type *fortio) {
-    void *buffer;
-    int record_size = fortio_init_read(fortio);
-    buffer = util_malloc(record_size);
-    util_fread(buffer, 1, record_size, fortio->stream, __func__);
-    fortio_complete_read(fortio, record_size);
-    return buffer;
-}
-
-static fortio_status_type fortio_check_record(FILE *stream, bool endian_flip,
-                                              int *record_size) {
-    int read_count;
-    int header, tail;
-    fortio_status_type status;
-
-    read_count = fread(&header, sizeof header, 1, stream);
-    if (read_count == 0)
-        status = FORTIO_EOF;
-    else {
-        if (endian_flip)
-            util_endian_flip_vector(&header, sizeof header, 1);
-
-        if (util_fseek(stream, (offset_type)header, SEEK_CUR) != 0)
-            /* The fseek() failed - i.e. the data section was not sufficiently long. */
-            status = FORTIO_MISSING_DATA;
-        else {
-            read_count = fread(&tail, sizeof tail, 1, stream);
-            if (read_count == 1) {
-                if (endian_flip)
-                    util_endian_flip_vector(&tail, sizeof tail, 1);
-
-                if (tail == header)
-                    /* All OK */
-                    status = FORTIO_OK;
-                else
-                    /* The numerical value of the tail did not agree with the header. */
-                    status = FORTIO_HEADER_MISMATCH;
-            } else
-                /* The file ended before we could read the tail mark. */
-                status = FORTIO_MISSING_TAIL;
-        }
-    }
-
-    *record_size = header;
-    return status;
-}
-
 offset_type fortio_ftell(const fortio_type *fortio) {
     return util_ftell(fortio->stream);
 }
@@ -651,8 +606,6 @@ bool fortio_ftruncate(fortio_type *fortio, offset_type size) {
     fortio_fseek(fortio, size, SEEK_SET);
     return util_ftruncate(fortio->stream, size);
 }
-
-int fortio_fileno(fortio_type *fortio) { return fileno(fortio->stream); }
 
 /*
   It is massively undefined behaviour to call this function for a file

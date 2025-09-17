@@ -241,13 +241,6 @@ void test_assert_float_equal__(float d1, float d2, const char *file, int line) {
             line, d1, d2);
 }
 
-void test_assert_float_not_equal__(float d1, float d2, const char *file,
-                                   int line) {
-    if (test_check_float_equal(d1, d2))
-        test_error_exit("%s:%d => float values:%15.12g %15.12g are equal.\n",
-                        file, line, d1, d2);
-}
-
 void test_assert_file_content__(const char *input_file, const char *expected,
                                 const char *src_file, int line) {
     if (util_file_exists(input_file)) {

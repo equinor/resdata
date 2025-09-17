@@ -220,28 +220,6 @@ const rd::smspec_node *rd_smspec_get_var_node(const node_map &mp,
     return it->second;
 }
 
-const rd::smspec_node *
-rd_smspec_get_str_key_var_node(const std::map<std::string, node_map> &mp,
-                               const char *key, const char *var) {
-    const auto key_it = mp.find(key);
-    if (key_it == mp.end())
-        return nullptr;
-
-    const node_map &var_map = key_it->second;
-    return rd_smspec_get_var_node(var_map, var);
-}
-
-const rd::smspec_node *
-rd_smspec_get_int_key_var_node(const std::map<int, node_map> &mp, int key,
-                               const char *var) {
-    const auto key_it = mp.find(key);
-    if (key_it == mp.end())
-        return nullptr;
-
-    const auto &var_map = key_it->second;
-    return rd_smspec_get_var_node(var_map, var);
-}
-
 } //end namespace
 
 int rd_smspec_num_nodes(const rd_smspec_type *smspec) {
@@ -323,16 +301,6 @@ const rd::smspec_node &
 rd_smspec_iget_node_w_node_index(const rd_smspec_type *smspec, int node_index) {
     const auto &node = smspec->smspec_nodes[node_index];
     return *node.get();
-}
-
-/*
-  The rd_smspec_iget_node() function is only retained for compatibility; should be
-  replaced with calls to the more explicit: rd_smspec_iget_node_w_node_index().
-*/
-
-const rd::smspec_node &rd_smspec_iget_node(const rd_smspec_type *smspec,
-                                           int index) {
-    return rd_smspec_iget_node_w_node_index(smspec, index);
 }
 
 const rd::smspec_node &
@@ -1146,33 +1114,6 @@ int node_valid_index(const rd::smspec_node *node_ptr) {
 }
 
 } // namespace
-
-int rd_smspec_get_well_var_params_index(const rd_smspec_type *rd_smspec,
-                                        const char *well, const char *var) {
-    const auto node_ptr =
-        rd_smspec_get_str_key_var_node(rd_smspec->well_var_index, well, var);
-    return node_valid_index(node_ptr);
-}
-
-static const rd::smspec_node *
-rd_smspec_get_well_completion_var_node__(const rd_smspec_type *rd_smspec,
-                                         const char *well, const char *var,
-                                         int cell_nr) {
-    const auto well_iter = rd_smspec->well_completion_var_index.find(well);
-    if (well_iter == rd_smspec->well_completion_var_index.end())
-        return nullptr;
-
-    const auto &num_map = well_iter->second;
-    return rd_smspec_get_int_key_var_node(num_map, cell_nr, var);
-}
-
-int rd_smspec_get_well_completion_var_params_index(
-    const rd_smspec_type *rd_smspec, const char *well, const char *var,
-    int cell_nr) {
-    const auto node_ptr =
-        rd_smspec_get_well_completion_var_node__(rd_smspec, well, var, cell_nr);
-    return node_valid_index(node_ptr);
-}
 
 /* There is a quite wide range of error which are just returned as
    "Not found" (i.e. -1). */
