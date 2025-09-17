@@ -55,7 +55,6 @@ add_library(
   util/type_vector_functions.cpp
   util/rd_version.cpp
   util/perm_vector.cpp
-  util/test_util.cpp
   util/cxx_string_util.cpp
   ${opt_srcs}
   resdata/rd_rsthead.cpp
@@ -202,18 +201,20 @@ foreach(
   ert_util_normal_path
   test_area)
 
-  add_executable(${name} util/tests/${name}.cpp)
+  add_executable(${name} util/tests/${name}.cpp util/test_util.cpp)
   target_include_directories(
     ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
   target_link_libraries(${name} resdata)
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
-add_executable(rd_smspec_node resdata/tests/rd_smspec_node.cpp)
+add_executable(rd_smspec_node resdata/tests/rd_smspec_node.cpp
+                              util/test_util.cpp)
 target_link_libraries(rd_smspec_node resdata)
 add_test(NAME rd_smspec_node COMMAND rd_smspec_node)
 
-add_executable(ert_util_work_area util/tests/ert_util_work_area.cpp)
+add_executable(ert_util_work_area util/tests/ert_util_work_area.cpp
+                                  util/test_util.cpp)
 target_link_libraries(ert_util_work_area resdata)
 add_test(
   NAME ert_util_work_area
@@ -221,28 +222,32 @@ add_test(
           ${CMAKE_CURRENT_SOURCE_DIR}/util/tests/data2/file2 data2
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/util/tests)
 
-add_executable(ert_util_cwd_test util/tests/ert_util_cwd_test.cpp)
+add_executable(ert_util_cwd_test util/tests/ert_util_cwd_test.cpp
+                                 util/test_util.cpp)
 target_link_libraries(ert_util_cwd_test resdata)
 add_test(NAME ert_util_cwd_test COMMAND ert_util_cwd_test
                                         ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(ert_util_copy_file util/tests/ert_util_copy_file.cpp)
+add_executable(ert_util_copy_file util/tests/ert_util_copy_file.cpp
+                                  util/test_util.cpp)
 target_link_libraries(ert_util_copy_file resdata)
 add_test(NAME ert_util_copy_file COMMAND ert_util_copy_file
                                          $<TARGET_FILE:ert_util_copy_file>)
 
-add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.cpp)
+add_executable(ert_util_path_stack_test util/tests/ert_util_path_stack_test.cpp
+                                        util/test_util.cpp)
 target_link_libraries(ert_util_path_stack_test resdata)
 add_test(NAME ert_util_path_stack_test
          COMMAND ert_util_path_stack_test ${CMAKE_CURRENT_BINARY_DIR}
                  ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.cpp)
+add_executable(ert_util_abort_gnu_tests util/tests/ert_util_abort_gnu_tests.cpp
+                                        util/test_util.cpp)
 target_link_libraries(ert_util_abort_gnu_tests resdata)
 add_test(NAME ert_util_abort_gnu_tests COMMAND ert_util_abort_gnu_tests)
 
 add_executable(ert_util_type_vector_test
-               util/tests/ert_util_type_vector_test.cpp)
+               util/tests/ert_util_type_vector_test.cpp util/test_util.cpp)
 target_link_libraries(ert_util_type_vector_test resdata)
 add_test(NAME ert_util_type_vector_test COMMAND ert_util_type_vector_test)
 
@@ -284,7 +289,7 @@ foreach(
   well_segment_conn
   well_segment_collection
   rd_file)
-  add_executable(${name} resdata/tests/${name}.cpp)
+  add_executable(${name} resdata/tests/${name}.cpp util/test_util.cpp)
   target_link_libraries(${name} resdata)
   target_include_directories(
     ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
@@ -292,18 +297,20 @@ foreach(
 endforeach()
 
 if(HAVE_UTIL_ABORT_INTERCEPT)
-  add_executable(rd_grid_corner resdata/tests/rd_grid_corner.cpp)
+  add_executable(rd_grid_corner resdata/tests/rd_grid_corner.cpp
+                                util/test_util.cpp)
   target_link_libraries(rd_grid_corner resdata)
   add_test(NAME rd_grid_corner COMMAND rd_grid_corner)
 
-  add_executable(rd_layer resdata/tests/rd_layer.cpp)
+  add_executable(rd_layer resdata/tests/rd_layer.cpp util/test_util.cpp)
   target_link_libraries(rd_layer resdata)
   target_include_directories(
     rd_layer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
   add_test(NAME rd_layer COMMAND rd_layer)
 endif()
 
-add_executable(rd_get_num_cpu resdata/tests/rd_get_num_cpu_test.cpp)
+add_executable(rd_get_num_cpu resdata/tests/rd_get_num_cpu_test.cpp
+                              util/test_util.cpp)
 target_link_libraries(rd_get_num_cpu resdata)
 add_test(
   NAME rd_get_num_cpu
@@ -317,7 +324,7 @@ add_test(
 # The rd_win64 application is not built as a proper test integrated into the
 # CTEST system. Should be invoked manually on Windows.
 if(ERT_WINDOWS)
-  add_executable(rd_lfs resdata/tests/rd_lfs.cpp)
+  add_executable(rd_lfs resdata/tests/rd_lfs.cpp util/test_util.cpp)
   target_link_libraries(rd_lfs resdata)
 endif()
 
@@ -326,19 +333,19 @@ endif()
 #
 
 foreach(name geo_util_xlines geo_polygon geo_polygon_collection)
-  add_executable(${name} geometry/tests/${name}.cpp)
+  add_executable(${name} geometry/tests/${name}.cpp util/test_util.cpp)
   target_link_libraries(${name} resdata)
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
 foreach(test ert_util_unique_ptr)
-  add_executable(${test} util/tests/${test}.cpp)
+  add_executable(${test} util/tests/${test}.cpp util/test_util.cpp)
   target_link_libraries(${test} resdata)
   add_test(NAME ${test} COMMAND ${test})
 endforeach()
 
 foreach(test rdxx_kw rdxx_fortio rdxx_types)
-  add_executable(${test} resdata/tests/${test}.cpp)
+  add_executable(${test} resdata/tests/${test}.cpp util/test_util.cpp)
   target_link_libraries(${test} resdata)
   add_test(NAME ${test} COMMAND ${test})
 endforeach()
@@ -376,7 +383,7 @@ foreach(
   well_dualp
   well_lgr_load)
 
-  add_executable(${name} resdata/tests/${name}.cpp)
+  add_executable(${name} resdata/tests/${name}.cpp util/test_util.cpp)
   target_link_libraries(${name} resdata)
   target_include_directories(
     ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
@@ -500,7 +507,7 @@ add_test(
           ${_resdatapath}/Mariner/faultblock.grdecl)
 
 if(HAVE_UTIL_ABORT_INTERCEPT)
-  add_executable(rd_fortio resdata/tests/rd_fortio.cpp)
+  add_executable(rd_fortio resdata/tests/rd_fortio.cpp util/test_util.cpp)
   target_link_libraries(rd_fortio resdata)
   add_test(NAME rd_fortio COMMAND rd_fortio
                                   ${_resdatapath}/Gurbat/ECLIPSE.UNRST)
@@ -585,7 +592,7 @@ add_test(
 #
 # geometry
 #
-add_executable(geo_surface geometry/tests/geo_surface.cpp)
+add_executable(geo_surface geometry/tests/geo_surface.cpp util/test_util.cpp)
 target_link_libraries(geo_surface resdata)
 add_test(NAME geo_surface COMMAND geo_surface ${_geopath}/Surface.irap
                                   ${_geopath}/Surface_incompatible.irap)
