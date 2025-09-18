@@ -49,8 +49,6 @@ typedef enum {
 
 #define SMSPEC_TYPE_ID 61550451
 
-char *smspec_alloc_well_key(const char *join_string, const char *keyword,
-                            const char *wgname);
 bool smspec_node_identify_total(const char *keyword,
                                 rd_smspec_var_type var_type);
 bool smspec_node_identify_rate(const char *keyword);
@@ -68,7 +66,6 @@ bool smspec_node_is_historical(const void *smspec_node);
 bool smspec_node_need_nums(const void *smspec_node);
 float smspec_node_get_default(const void *smspec_node);
 
-bool smspec_node_lt(const void *node1, const void *node2);
 int smspec_node_cmp(const void *node1, const void *node2);
 
 #ifdef __cplusplus

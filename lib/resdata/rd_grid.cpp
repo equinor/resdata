@@ -601,12 +601,6 @@ static void point_compare(const point_type *p1, const point_type *p2,
         *equal = false;
 }
 
-static void point_dump(const point_type *p, FILE *stream) {
-    util_fwrite_double(p->x, stream);
-    util_fwrite_double(p->y, stream);
-    util_fwrite_double(p->z, stream);
-}
-
 static void point_dump_ascii(const point_type *p, FILE *stream,
                              const double *offset) {
     if (offset)
@@ -676,9 +670,6 @@ struct rd_cell_struct {
 
 static ert_rd_unit_enum
 rd_grid_check_unit_system(const rd_kw_type *gridunit_kw);
-static void rd_grid_init_mapaxes_data_float(const rd_grid_type *grid,
-                                            float *mapaxes);
-float *rd_grid_alloc_coord_data(const rd_grid_type *grid);
 static const float *rd_grid_get_mapaxes(const rd_grid_type *grid);
 
 #define RD_GRID_ID 991010
@@ -788,12 +779,6 @@ static void rd_cell_compare(const rd_cell_type *c1, const rd_cell_type *c2,
     }
 }
 
-static void rd_cell_dump(const rd_cell_type *cell, FILE *stream) {
-    int i;
-    for (i = 0; i < 8; i++)
-        point_dump(&cell->corner_list[i], stream);
-}
-
 static void rd_cell_assert_center(rd_cell_type *cell);
 
 static void rd_cell_dump_ascii(rd_cell_type *cell, int i, int j, int k,
@@ -862,53 +847,6 @@ static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
         }
     }
     rd_kw_fwrite(corners_kw, fortio);
-}
-
-//static const size_t cellMappingRDRi[8] = { 0, 1, 3, 2, 4, 5, 7, 6 };
-static void rd_cell_ri_export(const rd_cell_type *cell, double *ri_points) {
-    int rd_offset = 4;
-    int ri_offset = rd_offset * 3;
-    {
-        int point_nr;
-        // Handling the points 0,1 & 4,5 which map directly between ECLIPSE and RI
-        for (point_nr = 0; point_nr < 2; point_nr++) {
-            // Points 0 & 1
-            ri_points[point_nr * 3] = cell->corner_list[point_nr].x;
-            ri_points[point_nr * 3 + 1] = cell->corner_list[point_nr].y;
-            ri_points[point_nr * 3 + 2] = -cell->corner_list[point_nr].z;
-
-            // Points 4 & 5
-            ri_points[ri_offset + point_nr * 3] =
-                cell->corner_list[rd_offset + point_nr].x;
-            ri_points[ri_offset + point_nr * 3 + 1] =
-                cell->corner_list[rd_offset + point_nr].y;
-            ri_points[ri_offset + point_nr * 3 + 2] =
-                -cell->corner_list[rd_offset + point_nr].z;
-        }
-    }
-
-    {
-        int rd_point;
-        /*
-      Handling the points 2,3 & 6,7 which are flipped when (2,3) ->
-      (3,2) and (6,7) -> (7,6) when going between ECLIPSE and ResInsight.
-    */
-        for (rd_point = 2; rd_point < 4; rd_point++) {
-            int ri_point = 5 - rd_point;
-            // Points 2 & 3
-            ri_points[ri_point * 3] = cell->corner_list[rd_point].x;
-            ri_points[ri_point * 3 + 1] = cell->corner_list[rd_point].y;
-            ri_points[ri_point * 3 + 2] = -cell->corner_list[rd_point].z;
-
-            // Points 6 & 7
-            ri_points[ri_offset + ri_point * 3] =
-                cell->corner_list[rd_offset + rd_point].x;
-            ri_points[ri_offset + ri_point * 3 + 1] =
-                cell->corner_list[rd_offset + rd_point].y;
-            ri_points[ri_offset + ri_point * 3 + 2] =
-                -cell->corner_list[rd_offset + rd_point].z;
-        }
-    }
 }
 
 static double max2(double x1, double x2) { return (x1 > x2) ? x1 : x2; }
@@ -1252,34 +1190,6 @@ static bool tetrahedron_contains(tetrahedron_type tet, const point_type p) {
     return (fabs(tetra_volume - decomposition_volume) < epsilon);
 }
 
-static double triangle_area(double x1, double y1, double x2, double y2,
-                            double x3, double y3) {
-    return fabs(x1 * y2 + x2 * y3 + x3 * y1 - x1 * y3 - x3 * y2 - x2 * y1) *
-           0.5;
-}
-
-static bool triangle_contains(const point_type *p0, const point_type *p1,
-                              const point_type *p2, double x, double y) {
-    double epsilon = 1e-10;
-
-    double vt = triangle_area(p0->x, p0->y, p1->x, p1->y, p2->x, p2->y);
-
-    if (vt < epsilon) /* zero size cells do not contain anything. */
-        return false;
-    {
-        double v1 = triangle_area(p0->x, p0->y, p1->x, p1->y, x, y);
-
-        double v2 = triangle_area(p0->x, p0->y, x, y, p2->x, p2->y);
-
-        double v3 = triangle_area(x, y, p1->x, p1->y, p2->x, p2->y);
-
-        if (fabs(vt - (v1 + v2 + v3)) < epsilon)
-            return true;
-        else
-            return false;
-    }
-}
-
 static double parallelogram_area3d(const point_type *p0, const point_type *p1,
                                    const point_type *p2) {
     point_type a = *p1;
@@ -1324,42 +1234,6 @@ static bool triangle_contains3d(const point_type *p0, const point_type *p1,
     }
 
     return (fabs(vt - (v1 + v2 + v3)) < epsilon);
-}
-
-/*
-   if the layer defined by the cell corners 0-1-2-3 (lower == true) or
-   4-5-6-7 (lower == false) contain the point (x,y) the function will
-   return true - otehrwise false.
-
-   the function works by dividing the cell face into two triangles,
-   which are checked one at a time with the function
-   triangle_contains().
-*/
-
-static bool rd_cell_layer_contains_xy(const rd_cell_type *cell,
-                                      bool lower_layer, double x, double y) {
-    if (GET_CELL_FLAG(cell, CELL_FLAG_TAINTED))
-        return false;
-    {
-        const point_type *p0, *p1, *p2, *p3;
-        {
-            int corner_offset;
-            if (lower_layer)
-                corner_offset = 0;
-            else
-                corner_offset = 4;
-
-            p0 = &cell->corner_list[corner_offset + 0];
-            p1 = &cell->corner_list[corner_offset + 1];
-            p2 = &cell->corner_list[corner_offset + 2];
-            p3 = &cell->corner_list[corner_offset + 3];
-        }
-
-        if (triangle_contains(p0, p1, p2, x, y))
-            return true;
-        else
-            return triangle_contains(p1, p2, p3, x, y);
-    }
 }
 
 /**
@@ -2011,6 +1885,11 @@ static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
     }
 }
 
+static void rd_grid_free__(void *arg) {
+    rd_grid_type *rd_grid = rd_grid_safe_cast(arg);
+    rd_grid_free(rd_grid);
+}
+
 /**
    this function will add a rd_grid instance as a lgr to the main
    grid. the lgr grid as added to two different structures of the main
@@ -2179,89 +2058,6 @@ int rd_grid_zcorn_index__(int nx, int ny, int i, int j, int k, int c) {
     return zcorn_index;
 }
 
-int rd_grid_zcorn_index(const rd_grid_type *grid, int i, int j, int k, int c) {
-    return rd_grid_zcorn_index__(grid->nx, grid->ny, i, j, k, c);
-}
-static void rd_grid_init_GRDECL_data_jslice(rd_grid_type *rd_grid,
-                                            const double *zcorn,
-                                            const double *coord,
-                                            const int *actnum,
-                                            const int *corsnum, int j) {
-    const int nx = rd_grid->nx;
-    const int ny = rd_grid->ny;
-    const int nz = rd_grid->nz;
-    int i;
-
-    for (i = 0; i < nx; i++) {
-        point_type pillars[4][2];
-        int pillar_index[4];
-        pillar_index[0] = 6 * (j * (nx + 1) + i);
-        pillar_index[1] = 6 * (j * (nx + 1) + i + 1);
-        pillar_index[2] = 6 * ((j + 1) * (nx + 1) + i);
-        pillar_index[3] = 6 * ((j + 1) * (nx + 1) + i + 1);
-
-        {
-            int ip;
-            for (ip = 0; ip < 4; ip++) {
-                int index = pillar_index[ip];
-                point_set(&pillars[ip][0], coord[index], coord[index + 1],
-                          coord[index + 2]);
-
-                index += 3;
-                point_set(&pillars[ip][1], coord[index], coord[index + 1],
-                          coord[index + 2]);
-            }
-        }
-
-        {
-            double ex[4];
-            double ey[4];
-            double ez[4];
-            int k;
-
-            {
-                int ip;
-                for (ip = 0; ip < 4; ip++) {
-                    ex[ip] = pillars[ip][1].x - pillars[ip][0].x;
-                    ey[ip] = pillars[ip][1].y - pillars[ip][0].y;
-                    ez[ip] = pillars[ip][1].z - pillars[ip][0].z;
-                }
-            }
-
-            for (k = 0; k < nz; k++) {
-                double x[4][2];
-                double y[4][2];
-                double z[4][2];
-
-                {
-                    int c;
-                    for (c = 0; c < 2; c++) {
-                        z[0][c] = zcorn[k * 8 * nx * ny + j * 4 * nx + 2 * i +
-                                        c * 4 * nx * ny];
-                        z[1][c] = zcorn[k * 8 * nx * ny + j * 4 * nx + 2 * i +
-                                        1 + c * 4 * nx * ny];
-                        z[2][c] = zcorn[k * 8 * nx * ny + j * 4 * nx + 2 * nx +
-                                        2 * i + c * 4 * nx * ny];
-                        z[3][c] = zcorn[k * 8 * nx * ny + j * 4 * nx + 2 * nx +
-                                        2 * i + 1 + c * 4 * nx * ny];
-                    }
-                }
-
-                {
-                    int ip;
-                    for (ip = 0; ip < 4; ip++)
-                        rd_grid_pillar_cross_planes(&pillars[ip][0], ex[ip],
-                                                    ey[ip], ez[ip], z[ip],
-                                                    x[ip], y[ip]);
-                }
-
-                rd_grid_set_cell_EGRID(rd_grid, i, j, k, x, y, z, actnum,
-                                       corsnum);
-            }
-        }
-    }
-}
-
 static void rd_grid_init_GRDECL_data_jslice(rd_grid_type *rd_grid,
                                             const float *zcorn,
                                             const float *coord,
@@ -2342,20 +2138,9 @@ static void rd_grid_init_GRDECL_data_jslice(rd_grid_type *rd_grid,
     }
 }
 
-void rd_grid_init_GRDECL_data(rd_grid_type *rd_grid, const double *zcorn,
-                              const double *coord, const int *actnum,
-                              const int *corsnum) {
-    const int ny = rd_grid->ny;
-    int j;
-#pragma omp parallel for
-    for (j = 0; j < ny; j++)
-        rd_grid_init_GRDECL_data_jslice(rd_grid, zcorn, coord, actnum, corsnum,
-                                        j);
-}
-
-void rd_grid_init_GRDECL_data(rd_grid_type *rd_grid, const float *zcorn,
-                              const float *coord, const int *actnum,
-                              const int *corsnum) {
+static void rd_grid_init_GRDECL_data(rd_grid_type *rd_grid, const float *zcorn,
+                                     const float *coord, const int *actnum,
+                                     const int *corsnum) {
     const int ny = rd_grid->ny;
     int j;
 #pragma omp parallel for
@@ -2369,37 +2154,6 @@ void rd_grid_init_GRDECL_data(rd_grid_type *rd_grid, const float *zcorn,
   |   |
   0---1
 */
-
-static rd_grid_type *rd_grid_alloc_GRDECL_data__(
-    rd_grid_type *global_grid, ert_rd_unit_enum unit_system, int dualp_flag,
-    bool apply_mapaxes, int nx, int ny, int nz, const double *zcorn,
-    const double *coord, const int *actnum, const float *mapaxes,
-    const int *corsnum, int lgr_nr) {
-
-    rd_grid_type *rd_grid = rd_grid_alloc_empty(
-        global_grid, unit_system, dualp_flag, nx, ny, nz, lgr_nr, true);
-    if (rd_grid) {
-        if (mapaxes != NULL)
-            rd_grid_init_mapaxes(rd_grid, apply_mapaxes, mapaxes);
-
-        if (corsnum != NULL)
-            rd_grid->coarsening_active = true;
-
-        rd_grid->coord_kw =
-            rd_kw_alloc("COORD", 6 * (nx + 1) * (ny + 1), RD_FLOAT);
-        {
-            float *coord_float = (float *)rd_kw_get_ptr(rd_grid->coord_kw);
-            for (int i = 0; i < rd_kw_get_size(rd_grid->coord_kw); i++)
-                coord_float[i] = coord[i];
-        }
-        rd_grid_init_GRDECL_data(rd_grid, zcorn, coord, actnum, corsnum);
-
-        rd_grid_init_coarse_cells(rd_grid);
-        rd_grid_update_index(rd_grid);
-        rd_grid_taint_cells(rd_grid);
-    }
-    return rd_grid;
-}
 
 static rd_grid_type *rd_grid_alloc_GRDECL_data__(
     rd_grid_type *global_grid, ert_rd_unit_enum unit_system, int dualp_flag,
@@ -3857,26 +3611,6 @@ bool rd_grid_cell_contains_xyz1(const rd_grid_type *rd_grid, int global_index,
     return rd_grid_cell_contains_xyz3(rd_grid, i, j, k, x, y, z);
 }
 
-/**
-   This function returns the global index for the cell (in layer 'k')
-   which contains the point x,y. Observe that if you are looking for
-   (i,j) you must call the function rd_grid_get_ijk1() on the return value.
-*/
-
-int rd_grid_get_global_index_from_xy(const rd_grid_type *rd_grid, int k,
-                                     bool lower_layer, double x, double y) {
-
-    int i, j;
-    for (j = 0; j < rd_grid->ny; j++)
-        for (i = 0; i < rd_grid->nx; i++) {
-            int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
-            if (rd_cell_layer_contains_xy(
-                    rd_grid_get_cell(rd_grid, global_index), lower_layer, x, y))
-                return global_index;
-        }
-    return -1; /* Did not find x,y */
-}
-
 static void rd_grid_clear_visited(rd_grid_type *grid) {
     if (grid->visited == NULL)
         grid->visited = (bool *)util_calloc(grid->size, sizeof *grid->visited);
@@ -4123,11 +3857,6 @@ void rd_grid_free(rd_grid_type *grid) {
     free(grid->visited);
     free(grid->name);
     delete grid;
-}
-
-void rd_grid_free__(void *arg) {
-    rd_grid_type *rd_grid = rd_grid_safe_cast(arg);
-    rd_grid_free(rd_grid);
 }
 
 void rd_grid_get_distance(const rd_grid_type *grid, int global_index1,
@@ -4412,6 +4141,47 @@ double rd_grid_get_cdepth1A(const rd_grid_type *grid, int active_index) {
     return rd_grid_get_cdepth1(grid, global_index);
 }
 
+/**
+   Returns the depth of the top surface of the cell.
+*/
+
+static double rd_grid_get_top1(const rd_grid_type *grid, int global_index) {
+    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    double depth = 0;
+    int ij;
+
+    for (ij = 0; ij < 4; ij++)
+        depth += cell->corner_list[ij].z;
+
+    return depth * 0.25;
+}
+
+static double rd_grid_get_top3(const rd_grid_type *grid, int i, int j, int k) {
+    const int global_index = rd_grid_get_global_index__(grid, i, j, k);
+    return rd_grid_get_top1(grid, global_index);
+}
+
+/**
+   Returns the depth of the bottom surface of the cell.
+*/
+
+static double rd_grid_get_bottom1(const rd_grid_type *grid, int global_index) {
+    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    double depth = 0;
+    int ij;
+
+    for (ij = 0; ij < 4; ij++)
+        depth += cell->corner_list[ij + 4].z;
+
+    return depth * 0.25;
+}
+
+static double rd_grid_get_bottom3(const rd_grid_type *grid, int i, int j,
+                                  int k) {
+    const int global_index = rd_grid_get_global_index__(grid, i, j, k);
+    return rd_grid_get_bottom1(grid, global_index);
+}
+
 int rd_grid_locate_depth(const rd_grid_type *grid, double depth, int i, int j) {
     if (depth < rd_grid_get_top2(grid, i, j))
         return -1;
@@ -4436,26 +4206,6 @@ int rd_grid_locate_depth(const rd_grid_type *grid, double depth, int i, int j) {
     }
 }
 
-/**
-   Returns the depth of the top surface of the cell.
-*/
-
-double rd_grid_get_top1(const rd_grid_type *grid, int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-    double depth = 0;
-    int ij;
-
-    for (ij = 0; ij < 4; ij++)
-        depth += cell->corner_list[ij].z;
-
-    return depth * 0.25;
-}
-
-double rd_grid_get_top3(const rd_grid_type *grid, int i, int j, int k) {
-    const int global_index = rd_grid_get_global_index__(grid, i, j, k);
-    return rd_grid_get_top1(grid, global_index);
-}
-
 double rd_grid_get_top2(const rd_grid_type *grid, int i, int j) {
     const int global_index = rd_grid_get_global_index__(grid, i, j, 0);
     return rd_grid_get_top1(grid, global_index);
@@ -4470,26 +4220,6 @@ double rd_grid_get_bottom2(const rd_grid_type *grid, int i, int j) {
 double rd_grid_get_top1A(const rd_grid_type *grid, int active_index) {
     const int global_index = rd_grid_get_global_index1A(grid, active_index);
     return rd_grid_get_top1(grid, global_index);
-}
-
-/**
-   Returns the depth of the bottom surface of the cell.
-*/
-
-double rd_grid_get_bottom1(const rd_grid_type *grid, int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-    double depth = 0;
-    int ij;
-
-    for (ij = 0; ij < 4; ij++)
-        depth += cell->corner_list[ij + 4].z;
-
-    return depth * 0.25;
-}
-
-double rd_grid_get_bottom3(const rd_grid_type *grid, int i, int j, int k) {
-    const int global_index = rd_grid_get_global_index__(grid, i, j, k);
-    return rd_grid_get_bottom1(grid, global_index);
 }
 
 double rd_grid_get_cell_dz1(const rd_grid_type *grid, int global_index) {
@@ -4731,14 +4461,6 @@ const rd_grid_type *rd_grid_get_cell_lgr1(const rd_grid_type *grid,
     return cell->lgr;
 }
 
-/**
-   Will return the global grid for a lgr. If the input grid is indeed
-   a global grid itself the function will return NULL.
-*/
-const rd_grid_type *rd_grid_get_global_grid(const rd_grid_type *grid) {
-    return grid->global_grid;
-}
-
 const char *rd_grid_iget_lgr_name(const rd_grid_type *rd_grid, int lgr_index) {
     __assert_main_grid(rd_grid);
     if (lgr_index < (vector_get_size(rd_grid->LGR_list))) {
@@ -4808,33 +4530,6 @@ double rd_grid_get_cell_volume1A(const rd_grid_type *rd_grid,
                                  int active_index) {
     int global_index = rd_grid_get_global_index1A(rd_grid, active_index);
     return rd_grid_get_cell_volume1(rd_grid, global_index);
-}
-
-void rd_grid_summarize(const rd_grid_type *rd_grid) {
-    int active_cells, nx, ny, nz;
-    rd_grid_get_dims(rd_grid, &nx, &ny, &nz, &active_cells);
-    printf("      Name ..................: %s  \n", rd_grid->name);
-    printf("      Grid nr ...............: %d  \n", rd_grid->lgr_nr);
-    printf("      Active cells ..........: %d \n", active_cells);
-    printf("      Active fracture cells..: %d \n",
-           rd_grid_get_nactive_fracture(rd_grid));
-    printf("      nx ....................: %d \n", nx);
-    printf("      ny ....................: %d \n", ny);
-    printf("      nz ....................: %d \n", nz);
-    printf("      Volume ................: %d \n", nx * ny * nz);
-    printf("      Origo X................: %10.2f \n", rd_grid->origo[0]);
-    printf("      Origo Y................: %10.2f \n", rd_grid->origo[1]);
-
-    if (RD_GRID_MAINGRID_LGR_NR == rd_grid->lgr_nr) {
-        int grid_nr;
-        for (grid_nr = 1; grid_nr < vector_get_size(rd_grid->LGR_list);
-             grid_nr++) {
-            printf("\n");
-            rd_grid_summarize((const rd_grid_type *)vector_iget_const(
-                rd_grid->LGR_list, grid_nr));
-        }
-    }
-    rd_grid_test_lgr_consistency(rd_grid);
 }
 
 /**
@@ -5043,79 +4738,6 @@ bool rd_grid_test_lgr_consistency(const rd_grid_type *rd_grid) {
     return consistent;
 }
 
-static void rd_grid_dump__(const rd_grid_type *grid, FILE *stream) {
-    util_fwrite_int(grid->lgr_nr, stream);
-    util_fwrite_string(grid->name, stream);
-    util_fwrite_int(grid->nx, stream);
-    util_fwrite_int(grid->nz, stream);
-    util_fwrite_int(grid->ny, stream);
-    util_fwrite_int(grid->size, stream);
-    util_fwrite_int(grid->total_active, stream);
-    util_fwrite_int_vector(grid->index_map, grid->size, stream, __func__);
-    util_fwrite_int_vector(grid->inv_index_map, grid->total_active, stream,
-                           __func__);
-
-    {
-        int i;
-        for (i = 0; i < grid->size; i++) {
-            const rd_cell_type *cell = rd_grid_get_cell(grid, i);
-            rd_cell_dump(cell, stream);
-        }
-    }
-}
-
-static void rd_grid_dump_ascii__(rd_grid_type *grid, bool active_only,
-                                 FILE *stream) {
-    fprintf(stream, "Grid nr           : %d\n", grid->lgr_nr);
-    fprintf(stream, "Grid name         : %s\n", grid->name);
-    fprintf(stream, "nx                : %6d\n", grid->nx);
-    fprintf(stream, "ny                : %6d\n", grid->ny);
-    fprintf(stream, "nz                : %6d\n", grid->nz);
-    fprintf(stream, "nactive           : %6d\n", grid->total_active);
-    fprintf(stream, "nactive fracture  : %6d\n", grid->total_active_fracture);
-
-    {
-        int l;
-        for (l = 0; l < grid->size; l++) {
-            rd_cell_type *cell = rd_grid_get_cell(grid, l);
-            if (cell->active_index[MATRIX_INDEX] >= 0 || !active_only) {
-                int i, j, k;
-                rd_grid_get_ijk1(grid, l, &i, &j, &k);
-                rd_cell_dump_ascii(cell, i, j, k, stream, NULL);
-            }
-        }
-    }
-}
-
-/**
-   The dump function will dump a binary image of the internal grid
-   representation. The purpose of these dumps is to be able to test
-   the internal representation of the grid. No metadata is dumped, and
-   apart from byte-by-byte comparisons, the dump files are *not* meant
-   to be read.
-*/
-
-void rd_grid_dump(const rd_grid_type *grid, FILE *stream) {
-    rd_grid_dump__(grid, stream);
-    {
-        int i;
-        for (i = 0; i < vector_get_size(grid->LGR_list); i++)
-            rd_grid_dump__(
-                (const rd_grid_type *)vector_iget_const(grid->LGR_list, i),
-                stream);
-    }
-}
-
-void rd_grid_dump_ascii(rd_grid_type *grid, bool active_only, FILE *stream) {
-    rd_grid_dump_ascii__(grid, active_only, stream);
-    {
-        int i;
-        for (i = 0; i < vector_get_size(grid->LGR_list); i++)
-            rd_grid_dump_ascii__((rd_grid_type *)vector_iget(grid->LGR_list, i),
-                                 active_only, stream);
-    }
-}
-
 /*
  'MAPUNITS'           1 'CHAR'
  'METRES  '
@@ -5149,13 +4771,6 @@ bool rd_grid_use_mapaxes(const rd_grid_type *grid) { return grid->use_mapaxes; }
 
 void rd_grid_init_mapaxes_data_double(const rd_grid_type *grid,
                                       double *mapaxes) {
-    int i;
-    for (i = 0; i < 6; i++)
-        mapaxes[i] = grid->mapaxes[i];
-}
-
-static void rd_grid_init_mapaxes_data_float(const rd_grid_type *grid,
-                                            float *mapaxes) {
     int i;
     for (i = 0; i < 6; i++)
         mapaxes[i] = grid->mapaxes[i];
@@ -5368,10 +4983,6 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
     fortio_fclose(fortio);
 }
 
-void rd_grid_fwrite_GRID(const rd_grid_type *grid, const char *filename) {
-    rd_grid_fwrite_GRID2(grid, filename, RD_METRIC_UNITS);
-}
-
 /*
 FILEHEAD          100:INTE
 MAPUNITS            1:CHAR
@@ -5579,13 +5190,6 @@ void rd_grid_init_coord_data_double(const rd_grid_type *grid, double *coord) {
         for (i = 0; i <= grid->nx; i++)
             rd_grid_init_coord_section(grid, i, j, NULL, coord);
     }
-}
-
-float *rd_grid_alloc_coord_data(const rd_grid_type *grid) {
-    float *coord =
-        (float *)util_calloc(rd_grid_get_coord_size(grid), sizeof *coord);
-    rd_grid_init_coord_data(grid, coord);
-    return coord;
 }
 
 static void rd_grid_assert_coord_kw(rd_grid_type *grid) {
@@ -6034,40 +5638,11 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
     }
 }
 
-void rd_grid_fprintf_grdecl(rd_grid_type *grid, FILE *stream) {
-    rd_grid_fprintf_grdecl2(grid, stream, RD_METRIC_UNITS);
-}
-
 bool rd_grid_dual_grid(const rd_grid_type *rd_grid) {
     if (rd_grid->dualp_flag == FILEHEAD_SINGLE_POROSITY)
         return false;
     else
         return true;
-}
-
-static int rd_grid_get_num_nnc__(const rd_grid_type *grid) {
-    int g;
-    int num_nnc = 0;
-    for (g = 0; g < grid->size; g++) {
-        const nnc_info_type *nnc_info = rd_grid_get_cell_nnc_info1(grid, g);
-        if (nnc_info)
-            num_nnc += nnc_info_get_total_size(nnc_info);
-    }
-    return num_nnc;
-}
-
-int rd_grid_get_num_nnc(const rd_grid_type *grid) {
-    int num_nnc = rd_grid_get_num_nnc__(grid);
-    {
-        int grid_nr;
-        for (grid_nr = 0; grid_nr < vector_get_size(grid->LGR_list);
-             grid_nr++) {
-            rd_grid_type *igrid =
-                (rd_grid_type *)vector_iget(grid->LGR_list, grid_nr);
-            num_nnc += rd_grid_get_num_nnc__(igrid);
-        }
-    }
-    return num_nnc;
 }
 
 static rd_kw_type *rd_grid_alloc_volume_kw_active(const rd_grid_type *grid) {

@@ -355,16 +355,6 @@ char *util_alloc_strupr_copy(const char *s) {
 }
 
 /**
-    Replaces all occurences of c1 in s with c2.
-*/
-static void util_string_tr(char *s, char c1, char c2) {
-    size_t i;
-    for (i = 0; i < strlen(s); i++)
-        if (s[i] == c1)
-            s[i] = c2;
-}
-
-/**
    This function will reposition the stream pointer at the the first
    occurence of 'string'. If 'string' is found the function will
    return true, otherwise the function will return false, and stream
@@ -845,34 +835,6 @@ void util_fskip_lines(FILE *stream, int lines) {
     } while (cont);
 }
 
-static void util_fskip_chars__(FILE *stream, const char *skip_set,
-                               bool complimentary_set, bool *at_eof) {
-    bool cont = true;
-    do {
-        int c = fgetc(stream);
-        if (c == EOF) {
-            *at_eof = true;
-            cont = false;
-        } else {
-            if (strchr(skip_set, c) == NULL) {
-                /* c is not in skip_set */
-                if (!complimentary_set)
-                    cont = false;
-            } else {
-                /* c is in skip_set */
-                if (complimentary_set)
-                    cont = false;
-            }
-        }
-    } while (cont);
-    if (!*at_eof)
-        util_fseek(stream, -1, SEEK_CUR);
-}
-
-void util_fskip_chars(FILE *stream, const char *skip_set, bool *at_eof) {
-    util_fskip_chars__(stream, skip_set, false, at_eof);
-}
-
 /**
   This function parses a string literal (hopfully) containing a
   represantation of a double. The return value is true|false depending
@@ -1242,8 +1204,9 @@ char *util_fread_alloc_file_content(const char *filename, int *buffer_size) {
    thing.
 */
 
-bool util_copy_stream(FILE *src_stream, FILE *target_stream, size_t buffer_size,
-                      void *buffer, bool abort_on_error) {
+static bool util_copy_stream(FILE *src_stream, FILE *target_stream,
+                             size_t buffer_size, void *buffer,
+                             bool abort_on_error) {
     while (!feof(src_stream)) {
         size_t bytes_read;
         size_t bytes_written;
@@ -1670,7 +1633,7 @@ bool util_same_file(const char *file1, const char *file2) {
 #endif
 }
 
-bool util_fmt_bit8_stream(FILE *stream) {
+static bool util_fmt_bit8_stream(FILE *stream) {
     const int min_read = 256; /* Critically small */
     const double bit8set_limit = 0.00001;
     const int buffer_size = 131072;
@@ -1813,49 +1776,6 @@ void util_inplace_forward_days_utc(time_t *t, double days) {
     util_inplace_forward_seconds_utc(t, days * 3600 * 24);
 }
 
-/**
-   This function computes the difference in time between times time1
-   and time0: time1 - time0. The return value is the difference in
-   seconds (straight difftime output). Observe that the ordering of
-   time_t arguments is switched with respect to the difftime
-   arguments.
-
-   In addition the difference can be broken down in days, hours,
-   minutes and seconds if the appropriate pointers are passed in.
-*/
-
-double util_difftime(time_t start_time, time_t end_time, int *_days,
-                     int *_hours, int *_minutes, int *_seconds) {
-    int sec_min = 60;
-    int sec_hour = 3600;
-    int sec_day = 24 * 3600;
-    double dt = difftime(end_time, start_time);
-    double dt0 = dt;
-    int days, hours, minutes, seconds;
-
-    days = (int)floor(dt / sec_day);
-    dt -= days * sec_day;
-
-    hours = (int)floor(dt / sec_hour);
-    dt -= hours * sec_hour;
-
-    minutes = (int)floor(dt / sec_min);
-    dt -= minutes * sec_min;
-
-    seconds = (int)dt;
-
-    if (_seconds != NULL)
-        *_seconds = seconds;
-    if (_minutes != NULL)
-        *_minutes = minutes;
-    if (_hours != NULL)
-        *_hours = hours;
-    if (_days != NULL)
-        *_days = days;
-
-    return dt0;
-}
-
 /* Is this dst safe ??? */
 double util_difftime_days(time_t start_time, time_t end_time) {
     double dt = difftime(end_time, start_time);
@@ -1972,43 +1892,6 @@ char *util_alloc_strip_copy(const char *src) {
 
     target[strip_length] = '\0';
     return target;
-}
-
-/**
-   This is nearly the same as util_stringlist_append_copy(), but for
-   this case only a refernce to the new string is appended.
-
-   Slightly more dangerous to use ...
-*/
-static char **util_stringlist_append_ref(char **string_list, int size,
-                                         const char *append_string) {
-    string_list =
-        (char **)util_realloc(string_list, (size + 1) * sizeof *string_list);
-    string_list[size] = (char *)append_string;
-    return string_list;
-}
-
-/**
-   This function reallocates the stringlist pointer, making room for
-   one more char *, this newly allocated slot is then set to point to
-   (a copy of) the new string. The newly reallocated char ** instance
-   is the return value from this function.
-
-   Example:
-   --------
-   char ** stringlist  = (char *[2]) {"One" , "Two"};
-   char  * three_string = "Three";
-
-   stringlist = util_stringlist_append_copy(stringlist , 2 , three_string);
-
-   This function does allocate memory - but does not have *alloc* in
-   the name - hmmmm....??
-*/
-
-char **util_stringlist_append_copy(char **string_list, int size,
-                                   const char *append_string) {
-    return util_stringlist_append_ref(string_list, size,
-                                      util_alloc_string_copy(append_string));
 }
 
 char *util_realloc_string_copy(char *old_string, const char *src) {
@@ -2309,20 +2192,6 @@ int util_string_replace_inplace(char **_buffer, const char *expr,
     return util_string_replace_inplace__(_buffer, expr, subs);
 }
 
-void util_float_to_double(double *double_ptr, const float *float_ptr,
-                          int size) {
-    int i;
-    for (i = 0; i < size; i++)
-        double_ptr[i] = float_ptr[i];
-}
-
-void util_double_to_float(float *float_ptr, const double *double_ptr,
-                          int size) {
-    int i;
-    for (i = 0; i < size; i++)
-        float_ptr[i] = (float)double_ptr[i];
-}
-
 /*
    The util_fwrite_string / util_fread_string are BROKEN when it comes
    to NULL / versus an empty string "":
@@ -2371,22 +2240,6 @@ void util_fwrite_int(int value, FILE *stream) {
 void util_fwrite_size_t(size_t value, FILE *stream) {
     UTIL_FWRITE_SCALAR(value, stream);
 }
-void util_fwrite_long(long value, FILE *stream) {
-    UTIL_FWRITE_SCALAR(value, stream);
-}
-void util_fwrite_double(double value, FILE *stream) {
-    UTIL_FWRITE_SCALAR(value, stream);
-}
-
-void util_fwrite_int_vector(const int *value, int size, FILE *stream,
-                            const char *caller) {
-    util_fwrite(value, sizeof *value, size, stream, caller);
-}
-void util_fwrite_char_vector(const char *value, int size, FILE *stream,
-                             const char *caller) {
-    util_fwrite(value, sizeof *value, size, stream, caller);
-}
-
 int util_fread_int(FILE *stream) {
     int file_value;
     UTIL_FREAD_SCALAR(file_value, stream);
@@ -2405,14 +2258,7 @@ float util_float_min(float a, float b) { return (a < b) ? a : b; }
 
 int util_int_max(int a, int b) { return (a > b) ? a : b; }
 
-long int util_long_max(long int a, long int b) { return (a > b) ? a : b; }
-
 double util_double_max(double a, double b) { return (a > b) ? a : b; }
-
-float util_float_max(float a, float b) {
-    ;
-    return (a > b) ? a : b;
-}
 
 void util_update_int_max_min(int value, int *max, int *min) {
     *min = util_int_min(value, *min);
@@ -2429,13 +2275,7 @@ void util_update_double_max_min(double value, double *max, double *min) {
     *max = util_double_max(value, *max);
 }
 
-void util_clamp_double(double *value, double limit1, double limit2) {
-    double min = util_double_min(limit1, limit2);
-    double max = util_double_max(limit1, limit2);
-
-    *value = util_double_max(*value, min);
-    *value = util_double_min(*value, max);
-}
+float util_float_max(float a, float b) { return (a > b) ? a : b; }
 
 FILE *util_fopen__(const char *filename, const char *mode) {
     return fopen(filename, mode);
@@ -2904,62 +2744,6 @@ void util_make_path(const char *path) {
     if (!mkdir_ok)
         util_abort("%s: failed to make directory:%s - aborting\n: %s(%d) \n",
                    __func__, path, strerror(errno), errno);
-}
-
-/**
-   This function will allocate a unique filename with a random part in
-   it. If the the path corresponding to the first argument does not
-   exist it is created.
-
-   If the value include_pid is true, the pid of the calling process is
-   included in the filename, the resulting filename will be:
-
-      path/prefix-pid-RANDOM
-
-   if include_pid is false the resulting file will be:
-
-      path/prefix-RANDOM
-
-   Observe that IFF the prefix contains any path separator character
-   they are translated to "_".
-*/
-
-char *util_alloc_tmp_file(const char *path, const char *prefix,
-                          bool include_pid) {
-    // Should be reimplemented to use mkstemp()
-    const int pid_digits = 6;
-    const int random_digits = 6;
-    const int random_max = 1000000;
-
-#ifdef HAVE_PID_T
-    const int pid_max = 1000000;
-    pid_t pid = getpid() % pid_max;
-#else
-    int pid = 0;
-#endif
-
-    char *file = (char *)util_calloc(strlen(path) + 1 + strlen(prefix) + 1 +
-                                         pid_digits + 1 + random_digits + 1,
-                                     sizeof *file);
-    char *tmp_prefix = util_alloc_string_copy(prefix);
-
-    if (!util_is_directory(path))
-        util_make_path(path);
-    util_string_tr(tmp_prefix, UTIL_PATH_SEP_CHAR,
-                   '_'); /* removing path seps. */
-
-    do {
-        long int rand_int = rand() % random_max;
-        if (include_pid)
-            sprintf(file, "%s%c%s-%d-%ld", path, UTIL_PATH_SEP_CHAR, tmp_prefix,
-                    pid, rand_int);
-        else
-            sprintf(file, "%s%c%s-%ld", path, UTIL_PATH_SEP_CHAR, tmp_prefix,
-                    rand_int);
-    } while (util_file_exists(file));
-
-    free(tmp_prefix);
-    return file;
 }
 
 /**

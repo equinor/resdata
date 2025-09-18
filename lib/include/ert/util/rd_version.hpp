@@ -8,7 +8,6 @@ extern "C" {
 #endif
 
 const char *rd_version_get_git_commit();
-const char *rd_version_get_git_commit_short();
 const char *rd_version_get_build_time();
 int rd_version_get_major_version();
 int rd_version_get_minor_version();

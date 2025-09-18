@@ -145,7 +145,6 @@ void test_assert_file_content__(const char *input_file, const char *expected,
 void test_install_SIGNALS(void);
 
 jmp_buf *util_abort_test_jump_buffer();
-void test_util_addr2line();
 void test_assert_util_abort(const char *function_name, void call_func(void *),
                             void *arg);
 

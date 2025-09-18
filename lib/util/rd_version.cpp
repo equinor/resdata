@@ -12,14 +12,6 @@ const char *rd_version_get_git_commit() {
 #endif
 }
 
-const char *rd_version_get_git_commit_short() {
-#ifdef GIT_COMMIT_SHORT
-    return str(GIT_COMMIT_SHORT);
-#else
-    return "Unknown git short commit hash";
-#endif
-}
-
 const char *rd_version_get_build_time() {
 #ifdef COMPILE_TIME_STAMP
     return COMPILE_TIME_STAMP;

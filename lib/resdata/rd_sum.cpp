@@ -158,6 +158,17 @@ static rd_sum_type *rd_sum_alloc__(const char *input_arg,
     return rd_sum;
 }
 
+/**
+   This function frees the data from the rd_sum instance and sets the
+   data pointer to NULL. The SMSPEC data is still valid, and can be
+   reused with calls to rd_sum_fread_realloc_data().
+*/
+
+static void rd_sum_free_data(rd_sum_type *rd_sum) {
+    rd_sum_data_free(rd_sum->data);
+    rd_sum->data = NULL;
+}
+
 static bool rd_sum_fread_data(rd_sum_type *rd_sum,
                               const stringlist_type *data_files,
                               bool include_restart, bool lazy_load,
@@ -384,17 +395,6 @@ bool rd_sum_can_write(const rd_sum_type *rd_sum) {
     return rd_sum_data_can_write(rd_sum->data);
 }
 
-/**
-   This function frees the data from the rd_sum instance and sets the
-   data pointer to NULL. The SMSPEC data is still valid, and can be
-   reused with calls to rd_sum_fread_realloc_data().
-*/
-
-void rd_sum_free_data(rd_sum_type *rd_sum) {
-    rd_sum_data_free(rd_sum->data);
-    rd_sum->data = NULL;
-}
-
 void rd_sum_free(rd_sum_type *rd_sum) {
     if (rd_sum->restart_case)
         rd_sum_free(rd_sum->restart_case);
@@ -471,32 +471,6 @@ double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
 
 double rd_sum_time2days(const rd_sum_type *rd_sum, time_t sim_time) {
     return rd_sum_data_time2days(rd_sum->data, sim_time);
-}
-
-static double rd_sum_get_well_var(const rd_sum_type *rd_sum, int time_index,
-                                  const char *well, const char *var) {
-    int params_index =
-        rd_smspec_get_well_var_params_index(rd_sum->smspec, well, var);
-    return rd_sum_data_iget(rd_sum->data, time_index, params_index);
-}
-
-/**
-   region_nr: [1...num_regions] (NOT C-based indexing)
-*/
-
-static int rd_sum_get_well_completion_var_index(const rd_sum_type *rd_sum,
-                                                const char *well,
-                                                const char *var, int cell_nr) {
-    return rd_smspec_get_well_completion_var_params_index(rd_sum->smspec, well,
-                                                          var, cell_nr);
-}
-
-double rd_sum_get_well_completion_var(const rd_sum_type *rd_sum, int time_index,
-                                      const char *well, const char *var,
-                                      int cell_nr) {
-    int index =
-        rd_sum_get_well_completion_var_index(rd_sum, well, var, cell_nr);
-    return rd_sum_data_iget(rd_sum->data, time_index, index);
 }
 
 const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
@@ -737,13 +711,7 @@ double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
 
       rd_sum_get_XXXX_index()
 
-   functions. I.e. the following code will give the first index where
-   the water wut in well PX exceeds 0.25:
-
-   {
-      int smspec_index   = rd_sum_get_well_var( rd_sum , "PX" , "WWCT" );
-      int first_index    = rd_sum_get_first_gt( rd_sum , smspec_index , 0.25);
-   }
+   functions.
 
 */
 

@@ -45,8 +45,6 @@ void rd_file_view_index_fload_kw(const rd_file_view_type *rd_file_view,
                                  const char *kw, int index,
                                  const int_vector_type *index_map,
                                  char *buffer);
-int rd_file_view_find_kw_value(const rd_file_view_type *rd_file_view,
-                               const char *kw, const void *value);
 const char *rd_file_view_iget_distinct_kw(const rd_file_view_type *rd_file_view,
                                           int index);
 int rd_file_view_get_num_distinct_kw(const rd_file_view_type *rd_file_view);
@@ -61,8 +59,6 @@ int rd_file_view_get_num_named_kw(const rd_file_view_type *rd_file_view,
                                   const char *kw);
 void rd_file_view_fwrite(const rd_file_view_type *rd_file_view,
                          fortio_type *target, int offset);
-int rd_file_view_iget_occurence(const rd_file_view_type *rd_file_view,
-                                int global_index);
 rd_file_view_type *rd_file_view_add_blockview(rd_file_view_type *rd_file_view,
                                               const char *header,
                                               int occurence);
@@ -76,9 +72,6 @@ rd_file_view_type *rd_file_view_add_restart_view(rd_file_view_type *file_view,
                                                  time_t sim_time,
                                                  double sim_days);
 rd_file_view_type *
-rd_file_view_alloc_blockview(const rd_file_view_type *rd_file_view,
-                             const char *header, int occurence);
-rd_file_view_type *
 rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
                               const char *start_kw, const char *end_kw,
                               int occurence);
@@ -86,8 +79,6 @@ rd_file_view_alloc_blockview2(const rd_file_view_type *rd_file_view,
 bool rd_file_view_drop_flag(rd_file_view_type *file_view, int flag);
 void rd_file_view_add_flag(rd_file_view_type *file_view, int flag);
 
-int rd_file_view_seqnum_index_from_sim_time(rd_file_view_type *parent_map,
-                                            time_t sim_time);
 bool rd_file_view_has_sim_time(const rd_file_view_type *rd_file_view,
                                time_t sim_time);
 int rd_file_view_find_sim_time(const rd_file_view_type *rd_file_view,

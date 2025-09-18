@@ -239,51 +239,53 @@ rd_smspec_var_type rd::smspec_node::identify_var_type(const char *var) {
 #define RD_SUM_KEYFMT_SEGMENT "%s%s%s%s%d"
 #define RD_SUM_KEYFMT_LOCAL_WELL "%s%s%s%s%s"
 
-std::string smspec_alloc_block_num_key(const char *join_string,
-                                       const std::string &keyword, int num) {
+static std::string smspec_alloc_block_num_key(const char *join_string,
+                                              const std::string &keyword,
+                                              int num) {
     return rd::util::string_format(RD_SUM_KEYFMT_BLOCK_NUM, keyword.c_str(),
                                    join_string, num);
 }
 
-std::string smspec_alloc_aquifer_key(const char *join_string,
-                                     const std::string &keyword, int num) {
+static std::string smspec_alloc_aquifer_key(const char *join_string,
+                                            const std::string &keyword,
+                                            int num) {
     return rd::util::string_format(RD_SUM_KEYFMT_AQUIFER, keyword.c_str(),
                                    join_string, num);
 }
 
-std::string smspec_alloc_local_block_key(const char *join_string,
-                                         const std::string &keyword,
-                                         const std::string &lgr_name, int i,
-                                         int j, int k) {
+static std::string smspec_alloc_local_block_key(const char *join_string,
+                                                const std::string &keyword,
+                                                const std::string &lgr_name,
+                                                int i, int j, int k) {
     return rd::util::string_format(RD_SUM_KEYFMT_LOCAL_BLOCK, keyword.c_str(),
                                    join_string, lgr_name.c_str(), join_string,
                                    i, j, k);
 }
 
-std::string smspec_alloc_region_key(const char *join_string,
-                                    const std::string &keyword, int num) {
+static std::string smspec_alloc_region_key(const char *join_string,
+                                           const std::string &keyword,
+                                           int num) {
     return rd::util::string_format(RD_SUM_KEYFMT_REGION, keyword.c_str(),
                                    join_string, num);
 }
 
-std::string smspec_alloc_region_2_region_r1r2_key(const char *join_string,
-                                                  const std::string &keyword,
-                                                  int r1, int r2) {
+static std::string smspec_alloc_region_2_region_r1r2_key(
+    const char *join_string, const std::string &keyword, int r1, int r2) {
     return rd::util::string_format(RD_SUM_KEYFMT_REGION_2_REGION_R1R2,
                                    keyword.c_str(), join_string, r1, r2);
 }
 
-std::string smspec_alloc_region_2_region_num_key(const char *join_string,
-                                                 const std::string &keyword,
-                                                 int num) {
+static std::string
+smspec_alloc_region_2_region_num_key(const char *join_string,
+                                     const std::string &keyword, int num) {
     return rd::util::string_format(RD_SUM_KEYFMT_REGION_2_REGION_NUM,
                                    keyword.c_str(), join_string, num);
 }
 
-char *smspec_alloc_completion_ijk_key(const char *join_string,
-                                      const std::string &keyword,
-                                      const std::string &wgname, int i, int j,
-                                      int k) {
+static char *smspec_alloc_completion_ijk_key(const char *join_string,
+                                             const std::string &keyword,
+                                             const std::string &wgname, int i,
+                                             int j, int k) {
     if (wgname.size() > 0)
         return util_alloc_sprintf(RD_SUM_KEYFMT_COMPLETION_IJK, keyword.c_str(),
                                   join_string, wgname.c_str(), join_string, i,
@@ -292,9 +294,10 @@ char *smspec_alloc_completion_ijk_key(const char *join_string,
         return NULL;
 }
 
-char *smspec_alloc_completion_num_key(const char *join_string,
-                                      const std::string &keyword,
-                                      const std::string &wgname, int num) {
+static char *smspec_alloc_completion_num_key(const char *join_string,
+                                             const std::string &keyword,
+                                             const std::string &wgname,
+                                             int num) {
     if (wgname.size() > 0)
         return util_alloc_sprintf(RD_SUM_KEYFMT_COMPLETION_NUM, keyword.c_str(),
                                   join_string, wgname.c_str(), join_string,
@@ -320,43 +323,28 @@ static std::string smspec_alloc_wgname_key(const char *join_string,
         return "";
 }
 
-std::string smspec_alloc_group_key(const char *join_string,
-                                   const std::string &keyword,
-                                   const std::string &wgname) {
+static std::string smspec_alloc_group_key(const char *join_string,
+                                          const std::string &keyword,
+                                          const std::string &wgname) {
     return smspec_alloc_wgname_key(join_string, keyword, wgname);
 }
 
-std::string smspec_alloc_well_key(const char *join_string,
-                                  const std::string &keyword,
-                                  const std::string &wgname) {
+static std::string smspec_alloc_well_key(const char *join_string,
+                                         const std::string &keyword,
+                                         const std::string &wgname) {
     return smspec_alloc_wgname_key(join_string, keyword, wgname);
 }
 
-/*
-  The smspec_alloc_well_key and smspec_alloc_block_ijk_key() require C linkage due to external use.
-*/
-
-char *smspec_alloc_well_key(const char *join_string, const char *keyword,
-                            const char *wgname) {
-    return util_alloc_sprintf(RD_SUM_KEYFMT_WELL, keyword, join_string, wgname);
-}
-
-char *smspec_alloc_block_ijk_key(const char *join_string, const char *keyword,
-                                 int i, int j, int k) {
-    return util_alloc_sprintf(RD_SUM_KEYFMT_BLOCK_IJK, keyword, join_string, i,
-                              j, k);
-}
-
-std::string smspec_alloc_block_ijk_key(const char *join_string,
-                                       const std::string &keyword, int i, int j,
-                                       int k) {
+static std::string smspec_alloc_block_ijk_key(const char *join_string,
+                                              const std::string &keyword, int i,
+                                              int j, int k) {
     return rd::util::string_format(RD_SUM_KEYFMT_BLOCK_IJK, keyword.c_str(),
                                    join_string, i, j, k);
 }
 
-char *smspec_alloc_segment_key(const char *join_string,
-                               const std::string &keyword,
-                               const std::string &wgname, int num) {
+static char *smspec_alloc_segment_key(const char *join_string,
+                                      const std::string &keyword,
+                                      const std::string &wgname, int num) {
     if (wgname.size() > 0)
         return util_alloc_sprintf(RD_SUM_KEYFMT_SEGMENT, keyword.c_str(),
                                   join_string, wgname.c_str(), join_string,
@@ -365,10 +353,10 @@ char *smspec_alloc_segment_key(const char *join_string,
         return NULL;
 }
 
-char *smspec_alloc_local_well_key(const char *join_string,
-                                  const std::string &keyword,
-                                  const std::string &lgr_name,
-                                  const std::string &wgname) {
+static char *smspec_alloc_local_well_key(const char *join_string,
+                                         const std::string &keyword,
+                                         const std::string &lgr_name,
+                                         const std::string &wgname) {
     if (wgname.size() > 0)
         return util_alloc_sprintf(RD_SUM_KEYFMT_LOCAL_WELL, keyword.c_str(),
                                   join_string, lgr_name.c_str(), join_string,
@@ -377,11 +365,11 @@ char *smspec_alloc_local_well_key(const char *join_string,
         return NULL;
 }
 
-char *smspec_alloc_local_completion_key(const char *join_string,
-                                        const std::string &keyword,
-                                        const std::string &lgr_name,
-                                        const std::string &wgname, int i, int j,
-                                        int k) {
+static char *smspec_alloc_local_completion_key(const char *join_string,
+                                               const std::string &keyword,
+                                               const std::string &lgr_name,
+                                               const std::string &wgname, int i,
+                                               int j, int k) {
     if (wgname.size() > 0)
         return util_alloc_sprintf(RD_SUM_KEYFMT_LOCAL_COMPLETION,
                                   keyword.c_str(), join_string,
@@ -1385,10 +1373,4 @@ void *smspec_node_alloc(int param_index, const char *keyword,
         node = NULL;
     }
     return node;
-}
-
-bool smspec_node_lt(const void *node1, const void *node2) {
-    return rd::smspec_node::cmp(static_cast<const rd::smspec_node *>(node1),
-                                static_cast<const rd::smspec_node *>(node2)) <
-           0;
 }

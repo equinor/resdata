@@ -76,8 +76,6 @@ int rd_sum_data_iget_report_end(const rd_sum_data_type *data, int report_step);
 rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
                                              int report_step,
                                              double sim_seconds);
-bool rd_sum_data_report_step_equal(const rd_sum_data_type *data1,
-                                   const rd_sum_data_type *data2);
 void rd_sum_data_fwrite_interp_csv_line(const rd_sum_data_type *data,
                                         time_t sim_time,
                                         const rd_sum_vector_type *keylist,

@@ -448,29 +448,12 @@ static void well_state_add_LGR_connections(well_state_type *well_state,
     }
 }
 
-void well_state_add_connections(
-    well_state_type *well_state, const rd_grid_type *grid,
-    rd_file_type *
-        rst_file, // Either an open .Xnnnn file or UNRST file restricted to one report step
-    int well_nr) {
-
-    well_state_add_connections2(well_state, grid,
-                                rd_file_get_active_view(rst_file), well_nr);
-}
-
 void well_state_add_connections2(well_state_type *well_state,
                                  const rd_grid_type *grid,
                                  rd_file_view_type *rst_view, int well_nr) {
 
     well_state_add_global_connections(well_state, rst_view, well_nr);
     well_state_add_LGR_connections(well_state, grid, rst_view);
-}
-
-bool well_state_add_MSW(well_state_type *well_state, rd_file_type *rst_file,
-                        int well_nr, bool load_segment_information) {
-
-    return well_state_add_MSW2(well_state, rd_file_get_active_view(rst_file),
-                               well_nr, load_segment_information);
 }
 
 bool well_state_add_MSW2(well_state_type *well_state,

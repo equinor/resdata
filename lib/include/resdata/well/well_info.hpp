@@ -26,10 +26,6 @@ int well_info_get_num_wells(const well_info_type *well_info);
 const char *well_info_iget_well_name(const well_info_type *well_info,
                                      int well_index);
 bool well_info_has_well(well_info_type *well_info, const char *well_name);
-
-well_state_type *
-well_info_get_state_from_report(const well_info_type *well_info,
-                                const char *well_name, int report_step);
 #ifdef __cplusplus
 }
 #endif
