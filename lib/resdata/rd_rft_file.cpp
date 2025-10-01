@@ -285,15 +285,6 @@ int rd_rft_file_get_num_wells(const rd_rft_file_type *rft_file) {
     return rft_file->well_index.size();
 }
 
-stringlist_type *rd_rft_file_alloc_well_list(const rd_rft_file_type *rft_file) {
-    stringlist_type *well_list = stringlist_alloc_new();
-
-    for (const auto &pair : rft_file->well_index)
-        stringlist_append_copy(well_list, pair.first.c_str());
-
-    return well_list;
-}
-
 void rd_rft_file_update(const char *rft_file_name, rd_rft_node_type **nodes,
                         int num_nodes, ert_rd_unit_enum unit_set) {
     rd_rft_file_type *rft_file;
