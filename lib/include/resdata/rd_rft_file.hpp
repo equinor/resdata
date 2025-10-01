@@ -25,7 +25,6 @@ rd_rft_file_get_well_time_rft(const rd_rft_file_type *rft_file,
                               const char *well, time_t recording_time);
 rd_rft_node_type *rd_rft_file_iget_node(const rd_rft_file_type *rft_file,
                                         int index);
-stringlist_type *rd_rft_file_alloc_well_list(const rd_rft_file_type *rft_file);
 int rd_rft_file_get_num_wells(const rd_rft_file_type *rft_file);
 void rd_rft_file_update(const char *rft_file_name, rd_rft_node_type **nodes,
                         int num_nodes, ert_rd_unit_enum unit_set);
