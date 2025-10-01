@@ -26,8 +26,6 @@ rd_rft_file_get_well_time_rft(const rd_rft_file_type *rft_file,
 rd_rft_node_type *rd_rft_file_iget_node(const rd_rft_file_type *rft_file,
                                         int index);
 int rd_rft_file_get_num_wells(const rd_rft_file_type *rft_file);
-void rd_rft_file_update(const char *rft_file_name, rd_rft_node_type **nodes,
-                        int num_nodes, ert_rd_unit_enum unit_set);
 
 #ifdef __cplusplus
 }

@@ -28,7 +28,6 @@ void test_rft_read_write(const char *rft_file) {
     nodes[2] = new_node;
     rd::util::TestArea ta("rft");
 
-    rd_rft_file_update("eclipse.rft", nodes, 3, RD_METRIC_UNITS);
     free(nodes);
 }
 
