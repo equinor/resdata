@@ -213,7 +213,7 @@ int rd_rft_file_get_size__(const rd_rft_file_type *rft_file,
 
 /**
    Returns the total number of rft nodes in the file, not caring if
-   the same well occurse many times and so on.
+   the same well occurs many times and so on.
 */
 int rd_rft_file_get_size(const rd_rft_file_type *rft_file) {
     return rd_rft_file_get_size__(rft_file, NULL, -1);
@@ -250,7 +250,7 @@ rd_rft_node_type *rd_rft_file_iget_node(const rd_rft_file_type *rft_file,
    will return the rft node indicated by the arrow (i.e. the second
    occurence of well "P2" in the file.)
 
-   If the rft_file does not have the well, or that occurence, the
+   If the rft_file does not have the well, or that occurrence, the
    function will go down in flames with util_abort(). Use
    rd_rft_file_get_well_occurences()
    first if you can not take util_abort().
@@ -309,7 +309,7 @@ rd_rft_file_get_well_time_rft(const rd_rft_file_type *rft_file,
 }
 
 /**
-   Returns the number of occurences of 'well' in rft_file.
+   Returns the number of occurrences of 'well' in rft_file.
 */
 int rd_rft_file_get_well_occurences(const rd_rft_file_type *rft_file,
                                     const char *well) {

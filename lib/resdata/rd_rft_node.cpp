@@ -21,7 +21,7 @@
 
 /**
     The RFT's from several wells, and possibly also several timesteps
-    are lumped togeheter in one .RFT file. The rd_rft_node
+    are lumped together in one .RFT file. The rd_rft_node
     implemented in this file contains the information for one
     well/report step.
 */
@@ -39,7 +39,7 @@ struct rd_rft_node_struct {
 
     rd_rft_enum data_type; /* What type of data: RFT|PLT|SEGMENT */
     time_t recording_date; /* When was the RFT recorded - date.*/
-    double days; /* When was the RFT recorded - days after simulaton start. */
+    double days; /* When was the RFT recorded - days after simulation start. */
     bool MSW;
 
     std::vector<rd_rft_cell_type *> cells;
