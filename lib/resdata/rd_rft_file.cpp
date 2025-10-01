@@ -279,18 +279,6 @@ rd_rft_file_get_well_time_rft(const rd_rft_file_type *rft_file,
 }
 
 /**
-   Returns the number of occurrences of 'well' in rft_file.
-*/
-int rd_rft_file_get_well_occurences(const rd_rft_file_type *rft_file,
-                                    const char *well) {
-    const auto &pair_iter = rft_file->well_index.find(well);
-    if (pair_iter == rft_file->well_index.end())
-        return 0;
-    else
-        return pair_iter->second.size();
-}
-
-/**
    Returns the number of distinct wells in RFT file.
 */
 int rd_rft_file_get_num_wells(const rd_rft_file_type *rft_file) {
