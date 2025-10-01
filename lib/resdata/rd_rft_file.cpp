@@ -232,36 +232,6 @@ rd_rft_node_type *rd_rft_file_iget_node(const rd_rft_file_type *rft_file,
     return rft_file->data[index];
 }
 
-/**
-   This function will return rd_rft_node nr index - for well
-   'well'. I.e. for an RFT file which looks like this:
-
-   RFT - Well P1: 01/01/2000
-   RFT - Well P2: 01/01/2000
-   RFT - WEll P1: 01/01/2001
-   RFT - Well P2: 01/01/2001   <--
-   RFT - Well P1: 01/01/2002
-   RFT - Well P2: 01/01/2002
-
-   The function call:
-
-      rd_rft_iget_well_rft(rft_file , "P2" , 1)
-
-   will return the rft node indicated by the arrow (i.e. the second
-   occurence of well "P2" in the file.)
-
-   If the rft_file does not have the well, or that occurrence, the
-   function will go down in flames with util_abort(). Use
-   rd_rft_file_get_well_occurences()
-   first if you can not take util_abort().
-*/
-
-rd_rft_node_type *rd_rft_file_iget_well_rft(const rd_rft_file_type *rft_file,
-                                            const char *well, int index) {
-    const auto &index_vector = rft_file->well_index.at(well);
-    return rd_rft_file_iget_node(rft_file, index_vector[index]);
-}
-
 static int rd_rft_file_get_node_index_time_rft(const rd_rft_file_type *rft_file,
                                                const char *well,
                                                time_t recording_time) {
