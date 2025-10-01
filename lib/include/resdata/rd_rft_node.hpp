@@ -46,7 +46,6 @@ double rd_rft_node_iget_swat(const rd_rft_node_type *rft_node, int index);
 double rd_rft_node_iget_sgas(const rd_rft_node_type *rft_node, int index);
 double rd_rft_node_iget_soil(const rd_rft_node_type *rft_node, int index);
 double rd_rft_node_get_days(const rd_rft_node_type *rft_node);
-bool rd_rft_node_lt(const rd_rft_node_type *n1, const rd_rft_node_type *n2);
 
 rd_rft_node_type *rd_rft_node_alloc_new(const char *well_name,
                                         const char *data_type_string,

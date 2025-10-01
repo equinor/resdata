@@ -505,7 +505,3 @@ static int rd_rft_node_cmp(const rd_rft_node_type *n1,
     else
         return 1;
 }
-
-bool rd_rft_node_lt(const rd_rft_node_type *n1, const rd_rft_node_type *n2) {
-    return (rd_rft_node_cmp(n1, n2) < 0);
-}
