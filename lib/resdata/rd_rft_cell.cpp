@@ -60,17 +60,14 @@ static rft_data_type *rft_data_alloc(double swat, double sgas) {
 
 static void rft_data_free(rft_data_type *data) { free(data); }
 
-static UTIL_TRY_CAST_FUNCTION_CONST(
-    rft_data,
-    RFT_DATA_TYPE_ID) static UTIL_IS_INSTANCE_FUNCTION(rft_data,
-                                                       RFT_DATA_TYPE_ID)
+static UTIL_TRY_CAST_FUNCTION_CONST(rft_data, RFT_DATA_TYPE_ID);
+static UTIL_IS_INSTANCE_FUNCTION(rft_data, RFT_DATA_TYPE_ID);
 
-    static plt_data_type *plt_data_alloc(double orat, double grat, double wrat,
-                                         double connection_start,
-                                         double connection_end, double flowrate,
-                                         double oil_flowrate,
-                                         double gas_flowrate,
-                                         double water_flowrate) {
+static plt_data_type *plt_data_alloc(double orat, double grat, double wrat,
+                                     double connection_start,
+                                     double connection_end, double flowrate,
+                                     double oil_flowrate, double gas_flowrate,
+                                     double water_flowrate) {
     plt_data_type *data = (plt_data_type *)util_malloc(sizeof *data);
     UTIL_TYPE_ID_INIT(data, PLT_DATA_TYPE_ID);
 
@@ -89,21 +86,15 @@ static UTIL_TRY_CAST_FUNCTION_CONST(
 
 static void plt_data_free(plt_data_type *data) { free(data); }
 
-static UTIL_TRY_CAST_FUNCTION_CONST(
-    plt_data,
-    PLT_DATA_TYPE_ID) static UTIL_IS_INSTANCE_FUNCTION(plt_data,
-                                                       PLT_DATA_TYPE_ID)
+static UTIL_TRY_CAST_FUNCTION_CONST(plt_data, PLT_DATA_TYPE_ID);
+static UTIL_IS_INSTANCE_FUNCTION(plt_data, PLT_DATA_TYPE_ID);
 
-    static UTIL_SAFE_CAST_FUNCTION(
-        rd_rft_cell,
-        RD_RFT_CELL_TYPE_ID) static UTIL_SAFE_CAST_FUNCTION_CONST(rd_rft_cell,
-                                                                  RD_RFT_CELL_TYPE_ID)
-        UTIL_IS_INSTANCE_FUNCTION(rd_rft_cell, RD_RFT_CELL_TYPE_ID)
+static UTIL_SAFE_CAST_FUNCTION(rd_rft_cell, RD_RFT_CELL_TYPE_ID);
+static UTIL_SAFE_CAST_FUNCTION_CONST(rd_rft_cell, RD_RFT_CELL_TYPE_ID);
+UTIL_IS_INSTANCE_FUNCTION(rd_rft_cell, RD_RFT_CELL_TYPE_ID);
 
-            static rd_rft_cell_type *rd_rft_cell_alloc_common(int i, int j,
-                                                              int k,
-                                                              double depth,
-                                                              double pressure) {
+static rd_rft_cell_type *
+rd_rft_cell_alloc_common(int i, int j, int k, double depth, double pressure) {
     rd_rft_cell_type *cell = (rd_rft_cell_type *)util_malloc(sizeof *cell);
     UTIL_TYPE_ID_INIT(cell, RD_RFT_CELL_TYPE_ID);
 
