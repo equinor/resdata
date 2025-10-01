@@ -6,7 +6,7 @@ class RFTCell(BaseCClass):
     """The RFTCell is a base class for the cells which are part of an RFT/PLT.
 
     The RFTCell class contains the elements which are common to both
-    RFT and PLT. The list of common elements include the corrdinates
+    RFT and PLT. The list of common elements include the coordinates
     (i,j,k) the pressure and the depth of the cell. Actual user access
     should be based on the derived classes ResdataRFTCell and ResdataPLTCell.
 
