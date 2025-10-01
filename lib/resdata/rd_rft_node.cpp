@@ -179,14 +179,11 @@ static void rd_rft_node_init_RFT_cells(rd_rft_node_type *rft_node,
     const int *j = rd_kw_get_int_ptr(conjpos);
     const int *k = rd_kw_get_int_ptr(conkpos);
 
-    {
-        int c;
-        for (c = 0; c < rd_kw_get_size(conipos); c++) {
-            /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
-            rd_rft_cell_type *cell = rd_rft_cell_alloc_RFT(
-                i[c] - 1, j[c] - 1, k[c] - 1, depth[c], P[c], SW[c], SG[c]);
-            rd_rft_node_append_cell(rft_node, cell);
-        }
+    for (int c = 0; c < rd_kw_get_size(conipos); c++) {
+        /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
+        rd_rft_cell_type *cell = rd_rft_cell_alloc_RFT(
+            i[c] - 1, j[c] - 1, k[c] - 1, depth[c], P[c], SW[c], SG[c]);
+        rd_rft_node_append_cell(rft_node, cell);
     }
 }
 
@@ -234,26 +231,23 @@ static void rd_rft_node_init_PLT_cells(rd_rft_node_type *rft_node,
         connection_end = rd_kw_get_float_ptr(
             rd_file_view_iget_named_kw(rft_view, CONLENEN_KW, 0));
 
-    {
-        int c;
-        for (c = 0; c < rd_kw_get_size(conipos); c++) {
-            rd_rft_cell_type *cell;
-            double cs = 0;
-            double ce = 0;
+    for (int c = 0; c < rd_kw_get_size(conipos); c++) {
+        rd_rft_cell_type *cell;
+        double cs = 0;
+        double ce = 0;
 
-            if (connection_start)
-                cs = connection_start[c];
+        if (connection_start)
+            cs = connection_start[c];
 
-            if (connection_end)
-                ce = connection_end[c];
+        if (connection_end)
+            ce = connection_end[c];
 
-            /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
-            cell = rd_rft_cell_alloc_PLT(i[c] - 1, j[c] - 1, k[c] - 1, depth[c],
-                                         P[c], OR[c], GR[c], WR[c], cs, ce,
-                                         flowrate[c], oil_flowrate[c],
-                                         gas_flowrate[c], water_flowrate[c]);
-            rd_rft_node_append_cell(rft_node, cell);
-        }
+        /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
+        cell = rd_rft_cell_alloc_PLT(i[c] - 1, j[c] - 1, k[c] - 1, depth[c],
+                                     P[c], OR[c], GR[c], WR[c], cs, ce,
+                                     flowrate[c], oil_flowrate[c],
+                                     gas_flowrate[c], water_flowrate[c]);
+        rd_rft_node_append_cell(rft_node, cell);
     }
 }
 

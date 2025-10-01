@@ -341,9 +341,8 @@ void rd_rft_file_update(const char *rft_file_name, rd_rft_node_type **nodes,
     rd_rft_file_type *rft_file;
 
     if (util_file_exists(rft_file_name)) {
-        int node_index;
         rft_file = rd_rft_file_alloc(rft_file_name);
-        for (node_index = 0; node_index < num_nodes; node_index++) {
+        for (int node_index = 0; node_index < num_nodes; node_index++) {
             rd_rft_node_type *new_node = nodes[node_index];
             int storage_index = rd_rft_file_get_node_index_time_rft(
                 rft_file, rd_rft_node_get_well_name(new_node),
@@ -356,9 +355,8 @@ void rd_rft_file_update(const char *rft_file_name, rd_rft_node_type **nodes,
             }
         }
     } else {
-        int node_index;
         rft_file = rd_rft_file_alloc_empty(rft_file_name);
-        for (node_index = 0; node_index < num_nodes; node_index++) {
+        for (int node_index = 0; node_index < num_nodes; node_index++) {
             rd_rft_file_add_node(rft_file, nodes[node_index]);
         }
     }
