@@ -45,8 +45,6 @@ double rd_rft_node_iget_orat(const rd_rft_node_type *rft_node, int index);
 double rd_rft_node_iget_swat(const rd_rft_node_type *rft_node, int index);
 double rd_rft_node_iget_sgas(const rd_rft_node_type *rft_node, int index);
 double rd_rft_node_iget_soil(const rd_rft_node_type *rft_node, int index);
-void rd_rft_node_fwrite(const rd_rft_node_type *rft_node, fortio_type *fortio,
-                        ert_rd_unit_enum unit_set);
 double rd_rft_node_get_days(const rd_rft_node_type *rft_node);
 bool rd_rft_node_lt(const rd_rft_node_type *n1, const rd_rft_node_type *n2);
 
