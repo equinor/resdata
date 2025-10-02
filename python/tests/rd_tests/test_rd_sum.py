@@ -157,12 +157,6 @@ class SummaryTest(ResdataTest):
         self.assertFloatEqual(sum.getSimulationLength(), 19.50)
 
 
-@pytest.fixture
-def use_tmpdir(tmpdir):
-    with tmpdir.as_cwd():
-        yield
-
-
 @given(summaries())
 @pytest.mark.usefixtures("use_tmpdir")
 def test_to_from_pandas(summary):

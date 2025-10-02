@@ -16,7 +16,7 @@ import signal
         ("grdecl_test.x", -signal.SIGABRT, b"util_fopen: failed to open:(null)"),
         ("kw_list.x", 0, b""),
         ("load_test.x", 0, b""),
-        ("summary.x", 1, b""),
+        ("summary.x", 2, b"the following arguments are required: CASE"),
     ],
 )
 def test_exec(name: str, returncode: int, stderr: str) -> None:

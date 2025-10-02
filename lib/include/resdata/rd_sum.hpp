@@ -36,7 +36,6 @@ typedef struct rd_sum_vector_struct rd_sum_vector_type;
 
 typedef struct rd_sum_struct rd_sum_type;
 
-void rd_sum_fmt_init_summary_x(const rd_sum_type *rd_sum, rd_sum_fmt_type *fmt);
 double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
                                 const rd::smspec_node *node);
 double rd_sum_time2days(const rd_sum_type *rd_sum, time_t sim_time);
@@ -79,9 +78,6 @@ double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
 double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
                                             time_t sim_time, const char *var);
 ert_rd_unit_enum rd_sum_get_unit_system(const rd_sum_type *rd_sum);
-
-void rd_sum_fprintf(const rd_sum_type *, FILE *, const stringlist_type *,
-                    bool report_only, const rd_sum_fmt_type *fmt);
 
 int rd_sum_get_restart_step(const rd_sum_type *rd_sum);
 int rd_sum_get_first_gt(const rd_sum_type *rd_sum, int param_index,
