@@ -357,23 +357,21 @@ def read(
         result["dd/mm/yyyy"].append(date)
         already_added = set()
         for i, kw in enumerate(spec.matched_keywords):
-            if kw in already_added:
-                continue
-            result[kw].append(values[i])
-            already_added.add(kw)
+            if kw not in already_added:
+                result[kw].append(values[i])
+                already_added.add(kw)
     df = pd.DataFrame(result)
     if restart_df is not None:
         df = pd.concat([restart_df, df]).fillna(-99)
     all_matched = spec.matched_keywords.copy()
+    already_in = set(all_matched)
     if restart_keys:
-        already_in = set(all_matched)
         for kw in restart_keys:
-            if kw in already_in:
-                continue
-            all_matched.append(kw)
-        if spec.time_unit.value not in already_in:
-            all_matched.append(spec.time_unit.value)
-    return (spec.matched_keywords + [spec.time_unit.value], df)
+            if kw not in already_in:
+                all_matched.append(kw)
+    if spec.time_unit.value not in already_in:
+        all_matched.append(spec.time_unit.value)
+    return (all_matched, df)
 
 
 def run(argv: list[str]) -> int:

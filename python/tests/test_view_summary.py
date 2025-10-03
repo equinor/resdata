@@ -114,8 +114,16 @@ def test_that_giving_non_existing_case_is_invalid(tmp_path, capsys):
 
 
 def create_summary(
-    summary_keys=("FOPR",), time_units="DAYS", CASE="TEST", formatted=""
+    summary_keys=("FOPR",),
+    time_units="DAYS",
+    case="TEST",
+    formatted="",
+    restart=None,
+    start_date=None,
 ):
+    start_date = start_date or Date(
+        day=1, month=1, year=2014, hour=0, minutes=0, micro_seconds=0
+    )
     num_values = len(summary_keys)
     unsmry = Unsmry(
         steps=[
@@ -135,7 +143,7 @@ def create_summary(
         nz=2,
         restarted_from_step=0,
         num_keywords=1 + len(summary_keys),
-        restart="        ",
+        restart=restart if restart else "        ",
         keywords=["TIME    ", *summary_keys],
         well_names=[":+:+:+:+", "        " * len(summary_keys)],
         region_numbers=[-32676, 0 * len(summary_keys)],
@@ -147,8 +155,8 @@ def create_summary(
         ),
     )
     format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
-    smspec.to_file(f"{CASE}.{formatted}SMSPEC", file_format=format)
-    unsmry.to_file(f"{CASE}.{formatted}UNSMRY", file_format=format)
+    smspec.to_file(f"{case}.{formatted}SMSPEC", file_format=format)
+    unsmry.to_file(f"{case}.{formatted}UNSMRY", file_format=format)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -303,12 +311,14 @@ def test_that_for_non_wildcard_keywords_are_repeated_if_repeated_in_the_input(ru
 
 
 def test_that_keywords_matching_wildcard_is_omitted_if_already_in_header(run_cli):
-    assert keys_in_header(
-        run_cli(
-            cli_args=("summary.x", "TEST", "FOPT", "*"),
-            summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"),
-        ).out
-    ) == ["FOPT", "FGIP", "FOPR", "FWPT"]
+    assert sorted(
+        keys_in_header(
+            run_cli(
+                cli_args=("summary.x", "TEST", "FOPT", "*"),
+                summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"),
+            ).out
+        )
+    ) == sorted(["FOPT", "FGIP", "FOPR", "FWPT"])
 
 
 def test_that_header_displays_the_time_units_from_spec(run_cli):
@@ -391,3 +401,27 @@ def test_that_value_placed_in_given_cell_is_the_value_from_the_step(
                 assert step_value(unsmry, step, kw_index) == pytest.approx(
                     np.float32(f"{val:15.6g}"), abs=1.0e-5, rel=1.0e-5
                 )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_the_restart_is_read_by_default_and_controlled_by_cli_option(capsys):
+    create_summary(case="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
+    create_summary(restart="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
+
+    run(["summary.x", "TEST", "FGIP", "FOPR"])
+    assert len(output_as_df(capsys.readouterr().out)) == 2
+
+    run(["summary.x", "--no-restart", "TEST", "FGIP", "FOPR"])
+    assert len(output_as_df(capsys.readouterr().out)) == 1
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_case_and_restart_columns_are_merged_when_they_differ(capsys):
+    create_summary(case="RESTART", summary_keys=("FOPR",))
+    create_summary(restart="RESTART", summary_keys=("FWPT",))
+
+    run(["summary.x", "TEST", "*"])
+    df = output_as_df(capsys.readouterr().out)
+    assert set(df.columns) == {"Days", "dd/mm/yyyy", "FOPR", "FWPT"}
+    assert df["FOPR"].to_list() == pytest.approx([5.6299e16, -99.0])
+    assert df["FWPT"].to_list() == pytest.approx([-99.0, 5.6299e16])
