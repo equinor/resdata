@@ -344,12 +344,17 @@ def read(
 ) -> tuple[list[str], pd.DataFrame]:
     spec = read_spec(smspec, keys)
     spec.order_keys_by(keys)
+    restart_keys, restart_df = None, None
     if spec.restart and fetch_restart:
-        restart_keys, restart_df = read(
-            *ExistingCase()(spec.restart), keys, report_only, fetch_restart
-        )
-    else:
-        restart_keys, restart_df = None, None
+        restart_case = ExistingCase(
+            warn_message=(
+                lambda case_name: f"** Warning: could not find restart case: '{case_name}'"
+            ),
+        )(spec.restart)
+        if restart_case is not None:
+            restart_keys, restart_df = read(
+                *restart_case, keys, report_only, fetch_restart
+            )
     result = defaultdict(list)
     for date_val, values in read_unsmry(unsmry, spec, report_only):
         date = spec.start_date + spec.time_unit.make_delta(float(date_val))
@@ -506,7 +511,10 @@ def get_summary_filenames(
 
 
 class ExistingCase:
-    def __call__(self, case_name: str) -> tuple[str, str]:
+    def __init__(self, warn_message: Callable[[str], str] | None = None) -> None:
+        self.warn_message = warn_message
+
+    def __call__(self, case_name: str) -> tuple[str, str] | None:
         specified_formatting = None
         file_name = case_name
         if has_extension(case_name, ["unsmry", "smspec", "funsmry", "fsmspec"]):
@@ -515,9 +523,17 @@ class ExistingCase:
         try:
             summary, spec = get_summary_filenames(case_name, specified_formatting)
         except FileNotFoundError as err:
-            raise argparse.ArgumentTypeError(
-                f"No summary data found for case: {file_name}'"
-            ) from err
+            if self.warn_message is None:
+                raise argparse.ArgumentTypeError(
+                    f"No summary data found for case: {file_name}'"
+                ) from err
+            else:
+                # self.error = False is only used for restart cases
+                print(
+                    self.warn_message(case_name),
+                    file=sys.stderr,
+                )
+                return None
         return spec, summary
 
 

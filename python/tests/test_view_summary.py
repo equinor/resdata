@@ -427,3 +427,15 @@ def test_that_case_and_restart_columns_are_merged_when_they_differ(capsys):
     assert set(df.columns) == {"Days", "dd/mm/yyyy", "FOPR", "FWPT"}
     assert df["FOPR"].to_list() == pytest.approx([5.6299e16, -99.0])
     assert df["FWPT"].to_list() == pytest.approx([-99.0, 5.6299e16])
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_missing_restart_warns(capsys):
+    create_summary(restart="RESTART", summary_keys=("FWPT",))
+
+    run(["summary.x", "TEST", "*"])
+    capture = capsys.readouterr()
+    df = output_as_df(capture.out)
+    assert set(df.columns) == {"Days", "dd/mm/yyyy", "FWPT"}
+
+    assert "could not find restart case: 'RESTART'" in capture.err
