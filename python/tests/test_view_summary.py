@@ -2,7 +2,17 @@ from view_summary.__main__ import parse_arguments, run
 import resfo
 import pytest
 from hypothesis import given
-from tests.summary_generator import summaries, simple_unsmry, simple_smspec
+from tests.summary_generator import (
+    summaries,
+    Unsmry,
+    SummaryMiniStep,
+    SummaryStep,
+    Smspec,
+    Date,
+    SmspecIntehead,
+    Simulator,
+    UnitSystem,
+)
 
 
 def test_help_string(capsys):
@@ -96,11 +106,48 @@ def test_that_giving_non_existing_case_is_invalid(tmp_path, capsys):
     )
 
 
+def create_summary(
+    summary_keys=("FOPR",), time_units="DAYS", CASE="TEST", formatted=""
+):
+    num_values = len(summary_keys)
+    unsmry = Unsmry(
+        steps=[
+            SummaryStep(
+                seqnum=0,
+                ministeps=[
+                    SummaryMiniStep(
+                        mini_step=0, params=[0.0] + [5.629901e16] * num_values
+                    ),
+                ],
+            )
+        ]
+    )
+    smspec = Smspec(
+        nx=2,
+        ny=2,
+        nz=2,
+        restarted_from_step=0,
+        num_keywords=1 + len(summary_keys),
+        restart="        ",
+        keywords=["TIME    ", *summary_keys],
+        well_names=[":+:+:+:+", "        " * len(summary_keys)],
+        region_numbers=[-32676, 0 * len(summary_keys)],
+        units=[time_units.ljust(8), "SM3" * len(summary_keys)],
+        start_date=Date(day=1, month=1, year=2014, hour=0, minutes=0, micro_seconds=0),
+        intehead=SmspecIntehead(
+            unit=UnitSystem.METRIC,
+            simulator=Simulator.ECLIPSE_100,
+        ),
+    )
+    format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
+    smspec.to_file(f"{CASE}.{formatted}SMSPEC", file_format=format)
+    unsmry.to_file(f"{CASE}.{formatted}UNSMRY", file_format=format)
+
+
 @pytest.mark.usefixtures("use_tmpdir")
 @pytest.mark.parametrize("formatted", ["", "F"])
 def test_that_giving_basename_of_existing_summary_files_is_valid(tmp_path, formatted):
-    simple_smspec().to_file(f"TEST.{formatted}SMSPEC")
-    simple_unsmry().to_file(f"TEST.{formatted}UNSMRY")
+    create_summary(formatted=formatted)
     parse_arguments(["summary.x", str(tmp_path / "TEST")])
 
 
@@ -109,8 +156,7 @@ def test_that_giving_basename_of_existing_summary_files_is_valid(tmp_path, forma
 def test_that_giving_file_name_with_extension_of_existing_summary_files_is_valid(
     tmp_path, formatted
 ):
-    simple_smspec().to_file(f"TEST.{formatted}SMSPEC")
-    simple_unsmry().to_file(f"TEST.{formatted}UNSMRY")
+    create_summary(formatted=formatted)
     parse_arguments(["summary.x", str(tmp_path / f"TEST.{formatted}SMSPEC")])
     parse_arguments(["summary.x", str(tmp_path / f"TEST.{formatted}UNSMRY")])
 
@@ -119,9 +165,8 @@ def test_that_giving_file_name_with_extension_of_existing_summary_files_is_valid
 def test_that_case_name_with_formatted_extension_does_not_match_unformatted_summaries(
     tmp_path, capsys
 ):
+    create_summary()
     try:
-        simple_smspec().to_file(f"TEST.SMSPEC")
-        simple_unsmry().to_file(f"TEST.UNSMRY")
         parse_arguments(["summary.x", str(tmp_path / f"TEST.FSMSPEC")])
     except BaseException:
         # will produce exit code 2
@@ -137,8 +182,9 @@ def test_that_case_name_with_unformatted_extension_does_not_match_formatted_summ
     tmp_path, capsys
 ):
     try:
-        simple_smspec().to_file(f"TEST.FSMSPEC", file_format=resfo.Format.FORMATTED)
-        simple_unsmry().to_file(f"TEST.FUNSMRY", file_format=resfo.Format.FORMATTED)
+        create_summary(
+            formatted="F"  # creates file named "TEST.FSMSPEC", not "TEST.SMSPEC"
+        )
         parse_arguments(["summary.x", str(tmp_path / f"TEST.SMSPEC")])
     except BaseException:
         # will produce exit code 2
@@ -152,10 +198,8 @@ def test_that_case_name_with_unformatted_extension_does_not_match_formatted_summ
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_ambiguous_references_to_summary_files_is_invalid(tmp_path, capsys):
     try:
-        simple_smspec().to_file(f"TEST.FSMSPEC", file_format=resfo.Format.FORMATTED)
-        simple_unsmry().to_file(f"TEST.FUNSMRY", file_format=resfo.Format.FORMATTED)
-        simple_smspec().to_file(f"TEST.SMSPEC")
-        simple_unsmry().to_file(f"TEST.UNSMRY")
+        create_summary()
+        create_summary(formatted="F")
         parse_arguments(["summary.x", str(tmp_path / f"TEST")])
     except BaseException:
         # will produce exit code 2
@@ -163,74 +207,68 @@ def test_that_ambiguous_references_to_summary_files_is_invalid(tmp_path, capsys)
     assert f"could be any of: TEST.FUNSMRY, TEST.UNSMRY" in capsys.readouterr().err
 
 
+@pytest.fixture
+def run_cli(capsys):
+    def inner(cli_args, *args, **kwargs):
+        create_summary(*args, **kwargs)
+        capsys.readouterr()
+        run(["summary.x", kwargs.get("CASE", "TEST"), *cli_args])
+        return capsys.readouterr()
+
+    return inner
+
+
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_by_default_a_header_is_written(capsys):
-    simple_smspec(summary_keys=("FGIP",)).to_file(f"TEST.SMSPEC")
-    simple_unsmry().to_file(f"TEST.UNSMRY")
-
-    run(["summary.x", "TEST", "FGIP"])
-    captured = capsys.readouterr()
-    assert captured.out.startswith("-- Days   dd/mm/yyyy               FGIP\n")
+def test_that_by_default_a_header_is_written(run_cli):
+    run_cli(cli_args=("FGIP",), summary_keys=("FGIP",)).out.startswith(
+        "-- Days   dd/mm/yyyy               FGIP\n"
+    )
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_header_can_be_emitted_by_cli_option(capsys):
-    simple_smspec(summary_keys=("FGIP",)).to_file(f"TEST.SMSPEC")
-    simple_unsmry().to_file(f"TEST.UNSMRY")
-
-    run(["summary.x", "--no-header", "TEST", "FGIP"])
-    captured = capsys.readouterr()
+def test_that_header_can_be_omitted_by_cli_option(run_cli):
+    captured = run_cli(cli_args=("FGIP", "--no-header"), summary_keys=("FGIP",))
     assert "-- Days   dd/mm/yyyy               FGIP\n" not in captured.out
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_header_includes_all_matching_keys_from_input(capsys):
-    simple_smspec(summary_keys=("FGIP", "FOPR", "FWPT", "FOPT")).to_file(f"TEST.SMSPEC")
-    simple_unsmry(num_values=4).to_file(f"TEST.UNSMRY")
+def test_that_header_includes_all_matching_keys_from_input_with_correct_indent(capsys):
+    create_summary(summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
 
     run(["summary.x", "TEST", "FGIP", "FOPR"])
-    captured = capsys.readouterr()
-    assert captured.out.startswith(
+    assert capsys.readouterr().out.startswith(
         "-- Days   dd/mm/yyyy               FGIP             FOPR\n"
     )
 
     run(["summary.x", "TEST", "FGIP", "FOPR", "FWPT"])
-    captured = capsys.readouterr()
-    assert captured.out.startswith(
+    assert capsys.readouterr().out.startswith(
         "-- Days   dd/mm/yyyy               FGIP             FOPR             FWPT"
     )
 
     run(["summary.x", "TEST", "FGIP", "FOPR", "*"])
-    captured = capsys.readouterr()
-    assert captured.out.startswith(
+    assert capsys.readouterr().out.startswith(
         "-- Days   dd/mm/yyyy               FGIP             FOPR"
         "             FOPT             FWPT"
     )
 
 
+def keys_in_header(output):
+    return output.splitlines()[0].split()[3:]
+
+
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_for_non_wildcard_keywords_the_order_of_columns_is_as_in_the_input(capsys):
-    simple_smspec(summary_keys=("FGIP", "FOPR", "FWPT", "FOPT")).to_file(f"TEST.SMSPEC")
-    simple_unsmry(num_values=4).to_file(f"TEST.UNSMRY")
+    create_summary(summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
 
     run(["summary.x", "TEST", "FGIP", "FOPR"])
-    captured = capsys.readouterr()
-    assert captured.out.startswith(
-        "-- Days   dd/mm/yyyy               FGIP             FOPR\n"
-    )
+    assert keys_in_header(capsys.readouterr().out) == ["FGIP", "FOPR"]
 
     run(["summary.x", "TEST", "FOPR", "FGIP"])
-    captured = capsys.readouterr()
-    assert captured.out.startswith(
-        "-- Days   dd/mm/yyyy               FOPR             FGIP\n"
-    )
+    assert keys_in_header(capsys.readouterr().out) == ["FOPR", "FGIP"]
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_header_displays_the_time_units_from_spec(capsys):
-    simple_smspec(summary_keys=("FGIP",), time_units="HOURS").to_file(f"TEST.SMSPEC")
-    simple_unsmry(num_values=1).to_file(f"TEST.UNSMRY")
-
-    run(["summary.x", "TEST", "FGIP"])
-    captured = capsys.readouterr()
-    assert captured.out.startswith("-- Hours   dd/mm/yyyy               FGIP\n")
+def test_that_header_displays_the_time_units_from_spec(run_cli):
+    run_cli(cli_args="FGIP", summary_keys=("FGIP",), time_units="HOURS").out.startswith(
+        "-- Hours   dd/mm/yyyy"
+    )
