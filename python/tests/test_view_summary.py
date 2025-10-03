@@ -1,7 +1,10 @@
-from view_summary.__main__ import parse_arguments, run
+from view_summary.__main__ import parse_arguments, run, make_summary_key
 import resfo
+from collections import defaultdict
 import pytest
-from hypothesis import given
+from hypothesis import given, settings, HealthCheck
+import hypothesis.strategies as st
+from io import StringIO
 from tests.summary_generator import (
     summaries,
     Unsmry,
@@ -12,7 +15,11 @@ from tests.summary_generator import (
     SmspecIntehead,
     Simulator,
     UnitSystem,
+    summary_keys,
 )
+import pandas as pd
+from itertools import zip_longest
+import numpy as np
 
 
 def test_help_string(capsys):
@@ -208,10 +215,10 @@ def test_that_ambiguous_references_to_summary_files_is_invalid(tmp_path, capsys)
 
 
 @pytest.fixture
-def run_cli(capsys):
+def run_cli(capsys, use_tmpdir):
     def inner(cli_args, *args, **kwargs):
         create_summary(*args, **kwargs)
-        capsys.readouterr()
+        capsys.readouterr()  # Ensure that captured output is empty at the start
         run(["summary.x", kwargs.get("CASE", "TEST"), *cli_args])
         return capsys.readouterr()
 
@@ -237,7 +244,7 @@ def test_that_header_includes_all_matching_keys_from_input_with_correct_indent(c
 
     run(["summary.x", "TEST", "FGIP", "FOPR"])
     assert capsys.readouterr().out.startswith(
-        "-- Days   dd/mm/yyyy               FGIP             FOPR\n"
+        "-- Days   dd/mm/yyyy               FGIP             FOPR "
     )
 
     run(["summary.x", "TEST", "FGIP", "FOPR", "FWPT"])
@@ -256,7 +263,6 @@ def keys_in_header(output):
     return output.splitlines()[0].split()[3:]
 
 
-@pytest.mark.usefixtures("use_tmpdir")
 def test_that_for_non_wildcard_keywords_the_order_of_columns_is_as_in_the_input(capsys):
     create_summary(summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
 
@@ -267,8 +273,100 @@ def test_that_for_non_wildcard_keywords_the_order_of_columns_is_as_in_the_input(
     assert keys_in_header(capsys.readouterr().out) == ["FOPR", "FGIP"]
 
 
-@pytest.mark.usefixtures("use_tmpdir")
+def test_that_for_non_wildcard_keywords_are_repeated_if_repeated_in_the_input(run_cli):
+    assert keys_in_header(
+        run_cli(
+            cli_args=("summary.x", "TEST", "FGIP", "FGIP"),
+            summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"),
+        ).out
+    ) == ["FGIP", "FGIP"]
+
+
+def test_that_keywords_matching_wildcard_is_omitted_if_already_in_header(run_cli):
+    assert keys_in_header(
+        run_cli(
+            cli_args=("summary.x", "TEST", "FOPT", "*"),
+            summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"),
+        ).out
+    ) == ["FOPT", "FGIP", "FOPR", "FWPT"]
+
+
 def test_that_header_displays_the_time_units_from_spec(run_cli):
     run_cli(cli_args="FGIP", summary_keys=("FGIP",), time_units="HOURS").out.startswith(
         "-- Hours   dd/mm/yyyy"
     )
+
+
+def test_that_a_warning_is_displayed_for_unmatched_patterns(run_cli):
+    assert (
+        "could not find variable: 'UNK'"
+        in run_cli(cli_args=("UNK",), summary_keys=("FGIP", "FOPR", "FWPT", "FOPT")).err
+    )
+
+
+patterns = st.one_of(summary_keys, st.just("*"))
+
+
+def smspec_summary_keys(smspec):
+    def optional(maybe_list):
+        if maybe_list is None:
+            return []
+        else:
+            return maybe_list
+
+    keywords = [
+        make_summary_key(var, num, name, smspec.nx, smspec.ny, lgr, lx, ly, lz)
+        for var, num, name, lgr, lx, ly, lz in zip_longest(
+            smspec.keywords,
+            smspec.region_numbers,
+            smspec.well_names,
+            optional(smspec.lgrs),
+            optional(smspec.numlx),
+            optional(smspec.numly),
+            optional(smspec.numlz),
+        )
+    ]
+    # Corner case: If the keywords are ambiguous (should never happen)
+    # then the one with the largest index is chosen
+    already_in = set()
+    for kw_index, kw in list(enumerate(keywords))[::-1]:
+        if kw in already_in:
+            continue
+        yield kw_index, kw
+        already_in.add(kw)
+
+
+def report_step_value(unsmry: Unsmry, report_step: int, kw_index: int):
+    return unsmry.steps[report_step].ministeps[-1].params[kw_index]
+
+
+def output_as_df(output: str):
+    lines = output.splitlines()
+    del lines[1]  # Remove separator between header and cells
+    lines[0] = lines[0][3:]  # Remove initial "-- "
+    lines = [l.strip() for l in lines]  # remove initial and trailing whitespace
+
+    dtypes = defaultdict(lambda: "Float64")
+    dtypes["dd/mm/yyyy"] = "str"
+    return pd.read_csv(StringIO("\n".join(lines)), sep=r"\s+", dtype=dtypes)  # type: ignore
+
+
+@given(summary=summaries(), patterns=st.lists(patterns))
+@pytest.mark.usefixtures("use_tmpdir")
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_that_value_placed_in_given_cell_is_the_value_from_the_summary_report_steps(
+    summary, patterns, capsys
+):
+    capsys.readouterr()  # Ensure that captured output is empty at the start
+    smspec, unsmry = summary
+    smspec.to_file("TEST.SMSPEC")
+    unsmry.to_file("TEST.UNSMRY")
+    run(["summary.x", "--report-only", "TEST", *patterns])
+    df = output_as_df(capsys.readouterr().out)
+
+    for kw_index, keyword in enumerate(smspec_summary_keys(smspec)):
+        if keyword in df.columns:
+            for report_step, val in enumerate(df[keyword]):
+                assert report_step_value(
+                    unsmry, report_step, kw_index
+                ) == pytest.approx(np.float32(f"{val:15.6g}"), abs=1.0e-5, rel=1.0e-5)

@@ -81,38 +81,36 @@ class Spec:
     keyword_indecies: npt.NDArray[np.int64]  # The index of matched keywords
 
     def order_keys_by(self, patterns: list[str]) -> None:
-        matched_keywords: list[str | None] = list(self.matched_keywords)
-        new_indecies = np.zeros(
-            shape=self.keyword_indecies.shape, dtype=self.keyword_indecies.dtype
-        )
-        j = 0
+        # The order of columns is implemented in this way
+        # to preserve backwards-compatibility
+        already_matched = set()
+        new_indecies = []
         new_matched_keywords = []
         for pat in patterns:
             if "*" in pat:
-                for i in range(len(matched_keywords)):
-                    kw = matched_keywords[i]
-                    if kw is None:
+                for i in range(len(self.matched_keywords)):
+                    kw = self.matched_keywords[i]
+                    if kw in already_matched:
                         continue
                     if fnmatch.fnmatch(kw, pat):
                         new_matched_keywords.append(kw)
-                        new_indecies[j] = self.keyword_indecies[i]
-                        j += 1
-                        matched_keywords[i] = None
+                        new_indecies.append(self.keyword_indecies[i])
+                        already_matched.add(kw)
 
             else:
                 try:
-                    i = matched_keywords.index(pat)
-                    new_matched_keywords.append(matched_keywords[i])
-                    matched_keywords[i] = None
-                    new_indecies[j] = self.keyword_indecies[i]
-                    j += 1
+                    i = self.matched_keywords.index(pat)
+                    kw = self.matched_keywords[i]
+                    new_matched_keywords.append(kw)
+                    new_indecies.append(self.keyword_indecies[i])
+                    already_matched.add(kw)
                 except ValueError:
                     print(
                         f"** Warning: could not find variable: '{pat}' in summary file",
                         file=sys.stderr,
                     )
         self.matched_keywords = new_matched_keywords
-        self.keyword_indecies = new_indecies
+        self.keyword_indecies = np.array(new_indecies, dtype=np.int64)
 
 
 def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
@@ -198,7 +196,8 @@ def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
     index_mapping: dict[str, int] = {}
     date_index = None
 
-    should_load_key = fetch_keys_to_matcher(fetch_keys)
+    def should_load_key(kw):
+        return kw != "TIME" and fetch_keys_to_matcher(fetch_keys)
 
     def optional_get(arr: npt.NDArray[Any] | None, idx: int) -> Any:
         if arr is None:
@@ -298,9 +297,12 @@ def read_unsmry(
 
 
 def print_header(keys: list[str], time_unit: TimeUnit) -> None:
-    header = f"-- {time_unit.value}   dd/mm/yyyy  " + "".join(k.rjust(17) for k in keys)
+    header = f"-- {time_unit.value}   dd/mm/yyyy   " + "".join(
+        f" {k.rjust(15)} "  # trailing whitespace for backwards-compatability
+        for k in keys
+    )
     print(header)
-    print("-" * (len(header) + 1))
+    print("-" * len(header))
 
 
 def run(argv: list[str]) -> int:
@@ -309,16 +311,17 @@ def run(argv: list[str]) -> int:
     spec = read_spec(smspec, args.keys)
     spec.order_keys_by(args.keys)
     if args.header:
-        header_keys = spec.matched_keywords.copy()
-        if "TIME" in header_keys:
-            header_keys.remove("TIME")
-        print_header(header_keys, spec.time_unit)
+        print_header(spec.matched_keywords, spec.time_unit)
     for date_val, values in zip(*read_unsmry(unsmry, spec)):
         date = spec.start_date + spec.time_unit.make_delta(float(date_val))
-        # TODO figure out consistent spacing for date_val
-        print(f"  {date_val:2.4f}   {date.strftime('%d/%m/%Y')}", end="")
+        if spec.time_unit == TimeUnit.DAYS:
+            print(f"{date_val:7.2f}   {date.strftime('%d/%m/%Y')}   ", end="")
+        else:
+            print(f"{date_val:7.4f}   {date.strftime('%d/%m/%Y')}   ", end="")
+
         for v in values:
-            print(f"{v:g}".rjust(17), end="")
+            # will have trailing whitespace for backwards-compatibility
+            print(f" {v:15.6g} ", end="")
         print()
     return 0
 
