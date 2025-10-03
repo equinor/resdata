@@ -16,6 +16,8 @@ from hypothesis import assume
 from hypothesis.extra.numpy import from_dtype
 from pydantic import PositiveInt, conint
 from typing_extensions import Self
+from itertools import zip_longest
+from view_summary.summary_key_type import make_summary_key
 
 from .egrid_generator import GrdeclKeyword
 
@@ -262,6 +264,24 @@ class Smspec:
     numlz: Optional[List[PositiveInt]] = None
     use_names: bool = False  # whether to use the alias NAMES for WGNAMES
 
+    def summary_keys(self):
+        def optional(maybe_list):
+            if maybe_list is None:
+                return []
+            else:
+                return maybe_list
+
+        for var, num, name, lgr, lx, ly, lz in zip_longest(
+            self.keywords,
+            self.region_numbers,
+            self.well_names,
+            optional(self.lgrs),
+            optional(self.numlx),
+            optional(self.numly),
+            optional(self.numlz),
+        ):
+            yield make_summary_key(var, num, name, self.nx, self.ny, lgr, lx, ly, lz)  # type: ignore
+
     def to_ecl(self) -> List[Tuple[str, Any]]:
         # The restart field contains 9 strings of length 8 which
         # should contain the name of the file restarted from.
@@ -462,10 +482,9 @@ def summaries(
             use_days=st.just(days),
         )
     )
-    assume(
-        len(set(zip(smspec.keywords, smspec.region_numbers, smspec.well_names)))
-        == len(smspec.keywords)
-    )
+    # The smspec should be unique up to summary_keys.
+    # This just mimics the behavior of simulators.
+    assume(len(set(smspec.summary_keys())) == len(smspec.keywords))
     dates = [0.0] + draw(time_deltas)
     try:
         if days:

@@ -18,7 +18,6 @@ from tests.summary_generator import (
     summary_keys,
 )
 import pandas as pd
-from itertools import zip_longest
 import numpy as np
 
 
@@ -307,35 +306,6 @@ def test_that_a_warning_is_displayed_for_unmatched_patterns(run_cli):
 patterns = st.one_of(summary_keys, st.just("*"))
 
 
-def smspec_summary_keys(smspec):
-    def optional(maybe_list):
-        if maybe_list is None:
-            return []
-        else:
-            return maybe_list
-
-    keywords = [
-        make_summary_key(var, num, name, smspec.nx, smspec.ny, lgr, lx, ly, lz)
-        for var, num, name, lgr, lx, ly, lz in zip_longest(
-            smspec.keywords,
-            smspec.region_numbers,
-            smspec.well_names,
-            optional(smspec.lgrs),
-            optional(smspec.numlx),
-            optional(smspec.numly),
-            optional(smspec.numlz),
-        )
-    ]
-    # Corner case: If the keywords are ambiguous (should never happen)
-    # then the one with the largest index is chosen
-    already_in = set()
-    for kw_index, kw in list(enumerate(keywords))[::-1]:
-        if kw in already_in:
-            continue
-        yield kw_index, kw
-        already_in.add(kw)
-
-
 def report_step_value(unsmry: Unsmry, report_step: int, kw_index: int):
     return unsmry.steps[report_step].ministeps[-1].params[kw_index]
 
@@ -364,9 +334,38 @@ def test_that_value_placed_in_given_cell_is_the_value_from_the_summary_report_st
     run(["summary.x", "--report-only", "TEST", *patterns])
     df = output_as_df(capsys.readouterr().out)
 
-    for kw_index, keyword in enumerate(smspec_summary_keys(smspec)):
+    for kw_index, keyword in enumerate(smspec.summary_keys()):
         if keyword in df.columns:
             for report_step, val in enumerate(df[keyword]):
                 assert report_step_value(
                     unsmry, report_step, kw_index
                 ) == pytest.approx(np.float32(f"{val:15.6g}"), abs=1.0e-5, rel=1.0e-5)
+
+
+def step_value(unsmry: Unsmry, index: int, kw_index: int):
+    while index >= 0:
+        for step in unsmry.steps:
+            if index < len(step.ministeps):
+                return step.ministeps[index].params[kw_index]
+            index -= len(step.ministeps)
+
+
+@given(summary=summaries(), patterns=st.lists(patterns))
+@pytest.mark.usefixtures("use_tmpdir")
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_that_value_placed_in_given_cell_is_the_value_from_the_step(
+    summary, patterns, capsys
+):
+    smspec, unsmry = summary
+    smspec.to_file("TEST.SMSPEC")
+    unsmry.to_file("TEST.UNSMRY")
+    capsys.readouterr()  # Ensure that captured output is empty at the start
+    run(["summary.x", "TEST", *patterns])
+    df = output_as_df(capsys.readouterr().out)
+
+    for kw_index, keyword in enumerate(smspec.summary_keys()):
+        if keyword in df.columns:
+            for step, val in enumerate(df[keyword]):
+                assert step_value(unsmry, step, kw_index) == pytest.approx(
+                    np.float32(f"{val:15.6g}"), abs=1.0e-5, rel=1.0e-5
+                )

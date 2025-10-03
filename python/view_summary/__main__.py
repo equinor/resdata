@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import sys
 from textwrap import dedent
 import os
-from typing import Callable, Sequence, Any
+from typing import Callable, Sequence, Any, Iterator
 import resfo
 import numpy as np
 import numpy.typing as npt
@@ -12,6 +12,10 @@ from enum import StrEnum
 import fnmatch
 import re
 from .summary_key_type import make_summary_key
+
+
+class CliError(ValueError):
+    pass
 
 
 class TimeUnit(StrEnum):
@@ -23,14 +27,14 @@ class TimeUnit(StrEnum):
             return timedelta(hours=val)
         if self == TimeUnit.DAYS:
             return timedelta(days=val)
-        raise ValueError(f"Unknown date unit {val}")
+        raise CliError(f"Unknown date unit {val}")
 
 
 def check_vals(
     kw: str, spec: str, vals: npt.NDArray[Any] | resfo.MESS
 ) -> npt.NDArray[Any]:
     if vals is resfo.MESS or isinstance(vals, resfo.MESS):
-        raise ValueError(f"{kw.strip()} in {spec} has incorrect type MESS")
+        raise CliError(f"{kw.strip()} in {spec} has incorrect type MESS")
     return vals
 
 
@@ -174,7 +178,7 @@ def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
                         microsecond=microsecond % 10**6,
                     )
                 except Exception as err:
-                    raise ValueError(
+                    raise CliError(
                         f"SMSPEC {spec} contains invalid STARTDAT: {err}"
                     ) from err
     keywords = arrays["KEYWORDS"]
@@ -185,9 +189,9 @@ def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
     lgr_names = arrays["LGRS    "]
 
     if date is None:
-        raise ValueError(f"Keyword startdat missing in {spec}")
+        raise CliError(f"Keyword startdat missing in {spec}")
     if keywords is None:
-        raise ValueError(f"Keywords missing in {spec}")
+        raise CliError(f"Keywords missing in {spec}")
     if n is None:
         n = len(keywords)
 
@@ -242,17 +246,17 @@ def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
 
     units = arrays["UNITS   "]
     if units is None:
-        raise ValueError(f"Keyword units missing in {spec}")
+        raise CliError(f"Keyword units missing in {spec}")
     if date_index is None:
-        raise ValueError(f"KEYWORDS did not contain TIME in {spec}")
+        raise CliError(f"KEYWORDS did not contain TIME in {spec}")
     if date_index >= len(units):
-        raise ValueError(f"Unit missing for TIME in {spec}")
+        raise CliError(f"Unit missing for TIME in {spec}")
 
     unit_key = key2str(units[date_index])
     try:
         date_unit = TimeUnit[unit_key]
     except KeyError:
-        raise ValueError(f"Unknown date unit in {spec}: {unit_key}") from None
+        raise CliError(f"Unknown date unit in {spec}: {unit_key}") from None
 
     return Spec(
         date_index,
@@ -264,8 +268,8 @@ def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
 
 
 def read_unsmry(
-    summary: str, spec: Spec
-) -> tuple[list[float], npt.NDArray[np.float32]]:
+    summary: str, spec: Spec, report_step_only: bool
+) -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
     if summary.lower().endswith("funsmry"):
         mode = "rt"
         assumed_format = resfo.Format.FORMATTED
@@ -274,26 +278,24 @@ def read_unsmry(
         assumed_format = resfo.Format.UNFORMATTED
 
     last_params = None
-    values: list[npt.NDArray[np.float32]] = []
-    date_val: list[float] = []
 
-    def read_params() -> None:
-        nonlocal last_params, values
+    def read_params() -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
+        nonlocal last_params
         if last_params is not None:
             vals = check_vals("PARAMS", summary, last_params.read_array())
-            values.append(vals[spec.keyword_indecies])
-            date_val.append(vals[spec.time_index])
             last_params = None
+            yield vals[spec.time_index], vals[spec.keyword_indecies]
 
     with open(summary, mode) as fp:
         for entry in resfo.lazy_read(fp, assumed_format):
             kw = entry.read_keyword()
+            if last_params and not report_step_only:
+                yield from read_params()
             if kw == "PARAMS  ":
                 last_params = entry
-            if kw == "SEQHDR  ":
-                read_params()
-        read_params()
-    return date_val, np.array(values, dtype=np.float32)
+            if report_step_only and kw == "SEQHDR  ":
+                yield from read_params()
+        yield from read_params()
 
 
 def print_header(keys: list[str], time_unit: TimeUnit) -> None:
@@ -308,22 +310,29 @@ def print_header(keys: list[str], time_unit: TimeUnit) -> None:
 def run(argv: list[str]) -> int:
     args = parse_arguments(argv)
     unsmry, smspec = args.CASE
-    spec = read_spec(smspec, args.keys)
-    spec.order_keys_by(args.keys)
-    if args.header:
-        print_header(spec.matched_keywords, spec.time_unit)
-    for date_val, values in zip(*read_unsmry(unsmry, spec)):
-        date = spec.start_date + spec.time_unit.make_delta(float(date_val))
-        if spec.time_unit == TimeUnit.DAYS:
-            print(f"{date_val:7.2f}   {date.strftime('%d/%m/%Y')}   ", end="")
-        else:
-            print(f"{date_val:7.4f}   {date.strftime('%d/%m/%Y')}   ", end="")
+    try:
+        spec = read_spec(smspec, args.keys)
+        spec.order_keys_by(args.keys)
+        if args.header:
+            print_header(spec.matched_keywords, spec.time_unit)
+        for date_val, values in read_unsmry(unsmry, spec, args.report_only):
+            date = spec.start_date + spec.time_unit.make_delta(float(date_val))
+            if spec.time_unit == TimeUnit.DAYS:
+                print(f"{date_val:7.2f}   {date.strftime('%d/%m/%Y')}   ", end="")
+            else:
+                print(f"{date_val:7.4f}   {date.strftime('%d/%m/%Y')}   ", end="")
 
-        for v in values:
-            # will have trailing whitespace for backwards-compatibility
-            print(f" {v:15.6g} ", end="")
-        print()
-    return 0
+            for v in values:
+                # will have trailing whitespace for backwards-compatibility
+                print(f" {v:15.6g} ", end="")
+            print()
+        return 0
+    except resfo.ResfoParsingError as err:
+        print(f"Could not read case files {args.CASE}: {err.args[0]}", file=sys.stderr)
+        return -1
+    except CliError as err:
+        print(err.args[0], file=sys.stderr)
+        return -1
 
 
 def has_extension(path: str, exts: list[str]) -> bool:
