@@ -270,7 +270,7 @@ def test_that_the_list_option_prints_matched_keys(run_cli):
             "FGIP",
             "FGIP",
             "FGIT",
-            " FGOR",
+            "FGOR",
             "FGPR",
             "FGPT",
             "FOIP",
@@ -352,8 +352,9 @@ def test_that_value_placed_in_given_cell_is_the_value_from_the_summary_report_st
     smspec, unsmry = summary
     smspec.to_file("TEST.SMSPEC")
     unsmry.to_file("TEST.UNSMRY")
-    run(["summary.x", "--report-only", "TEST", *patterns])
-    df = output_as_df(capsys.readouterr().out)
+    run(["summary.x", "--no-restart", "--report-only", "TEST", *patterns])
+    output = capsys.readouterr().out
+    df = output_as_df(output)
 
     for kw_index, keyword in enumerate(smspec.summary_keys()):
         if keyword in df.columns:
@@ -381,7 +382,7 @@ def test_that_value_placed_in_given_cell_is_the_value_from_the_step(
     smspec.to_file("TEST.SMSPEC")
     unsmry.to_file("TEST.UNSMRY")
     capsys.readouterr()  # Ensure that captured output is empty at the start
-    run(["summary.x", "TEST", *patterns])
+    run(["summary.x", "--no-restart", "TEST", *patterns])
     df = output_as_df(capsys.readouterr().out)
 
     for kw_index, keyword in enumerate(smspec.summary_keys()):

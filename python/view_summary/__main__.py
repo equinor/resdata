@@ -1,5 +1,7 @@
 import argparse
+import pandas as pd
 from dataclasses import dataclass
+from collections import defaultdict
 import sys
 from textwrap import dedent
 import os
@@ -38,10 +40,12 @@ def check_vals(
     return vals
 
 
+def decode_if_byte(key: bytes | str) -> str:
+    return key.decode() if isinstance(key, bytes) else key
+
+
 def key2str(key: bytes | str) -> str:
-    ret = key.decode() if isinstance(key, bytes) else key
-    assert isinstance(ret, str)
-    return ret.strip()
+    return decode_if_byte(key).strip()
 
 
 def fetch_keys_to_matcher(fetch_keys: Sequence[str]) -> Callable[[str], bool]:
@@ -83,6 +87,7 @@ class Spec:
     time_unit: TimeUnit  # The unit of the time index (DAYS or HOURS)
     matched_keywords: list[str]  # The name of matched keywords
     keyword_indecies: npt.NDArray[np.int64]  # The index of matched keywords
+    restart: str | None
 
     def order_keys_by(self, patterns: list[str]) -> None:
         # The order of columns is implemented in this way
@@ -133,6 +138,7 @@ def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
             "NUMLZ   ",
             "LGRS    ",
             "UNITS   ",
+            "RESTART ",
         ],
         None,
     )
@@ -258,12 +264,16 @@ def read_spec(spec: str, fetch_keys: Sequence[str]) -> Spec:
     except KeyError:
         raise CliError(f"Unknown date unit in {spec}: {unit_key}") from None
 
+    restart = arrays["RESTART "]
+    restart = [""] if restart is None else restart
+
     return Spec(
         date_index,
         date,
         date_unit,
         list(keys_array),
         indices_array,
+        restart="".join(decode_if_byte(s) for s in restart).strip(),
     )
 
 
@@ -298,10 +308,14 @@ def read_unsmry(
         yield from read_params()
 
 
-def print_header(keys: list[str], time_unit: TimeUnit) -> None:
-    header = f"-- {time_unit.value}   dd/mm/yyyy   " + "".join(
-        f" {k.rjust(15)} "  # trailing whitespace for backwards-compatability
-        for k in keys
+def print_header(keys: list[str]) -> None:
+    header = (
+        f"--{' Hours' if 'Hours' in keys else ''}{' Days' if 'Days' in keys else ''}   dd/mm/yyyy   "
+        + "".join(
+            f" {k.rjust(15)} "  # trailing whitespace for backwards-compatability
+            for k in keys
+            if k not in {"Hours", "Days", "dd/mm/yyyy"}
+        )
     )
     print(header)
     print("-" * len(header))
@@ -325,26 +339,66 @@ def list_mode(smspec: str, keys: list[str]) -> int:
         return -1
 
 
+def read(
+    smspec: str, unsmry: str, keys: list[str], report_only: bool, fetch_restart: bool
+) -> tuple[list[str], pd.DataFrame]:
+    spec = read_spec(smspec, keys)
+    spec.order_keys_by(keys)
+    if spec.restart and fetch_restart:
+        restart_keys, restart_df = read(
+            *ExistingCase()(spec.restart), keys, report_only, fetch_restart
+        )
+    else:
+        restart_keys, restart_df = None, None
+    result = defaultdict(list)
+    for date_val, values in read_unsmry(unsmry, spec, report_only):
+        date = spec.start_date + spec.time_unit.make_delta(float(date_val))
+        result[spec.time_unit.value].append(date_val)
+        result["dd/mm/yyyy"].append(date)
+        already_added = set()
+        for i, kw in enumerate(spec.matched_keywords):
+            if kw in already_added:
+                continue
+            result[kw].append(values[i])
+            already_added.add(kw)
+    df = pd.DataFrame(result)
+    if restart_df is not None:
+        df = pd.concat([restart_df, df]).fillna(-99)
+    all_matched = spec.matched_keywords.copy()
+    if restart_keys:
+        already_in = set(all_matched)
+        for kw in restart_keys:
+            if kw in already_in:
+                continue
+            all_matched.append(kw)
+        if spec.time_unit.value not in already_in:
+            all_matched.append(spec.time_unit.value)
+    return (spec.matched_keywords + [spec.time_unit.value], df)
+
+
 def run(argv: list[str]) -> int:
     args = parse_arguments(argv)
-    unsmry, smspec = args.CASE
+    smspec, unsmry = args.CASE
     if args.list:
         return list_mode(smspec, args.keys)
     try:
-        spec = read_spec(smspec, args.keys)
-        spec.order_keys_by(args.keys)
+        column_list, df = read(
+            smspec, unsmry, args.keys, args.report_only, args.restart
+        )
         if args.header:
-            print_header(spec.matched_keywords, spec.time_unit)
-        for date_val, values in read_unsmry(unsmry, spec, args.report_only):
-            date = spec.start_date + spec.time_unit.make_delta(float(date_val))
-            if spec.time_unit == TimeUnit.DAYS:
-                print(f"{date_val:7.2f}   {date.strftime('%d/%m/%Y')}   ", end="")
-            else:
-                print(f"{date_val:7.4f}   {date.strftime('%d/%m/%Y')}   ", end="")
+            print_header(column_list)
+        for _, row in df.iterrows():
+            if "Hours" in column_list:
+                print(f"{row['Hours']:7.4f}   ", end="")
+            if "Days" in column_list:
+                print(f"{row['Days']:7.2f}   ", end="")
+            print(f"{row['dd/mm/yyyy'].strftime('%d/%m/%Y')}   ", end="")
 
-            for v in values:
+            for c in column_list:
+                if c in {"Hours", "Days", "dd/mm/yyyy"}:
+                    continue
                 # will have trailing whitespace for backwards-compatibility
-                print(f" {v:15.6g} ", end="")
+                print(f" {row[c]:15.6g} ", end="")
             print()
         return 0
     except resfo.ResfoParsingError as err:
@@ -466,7 +520,7 @@ class ExistingCase:
             raise argparse.ArgumentTypeError(
                 f"No summary data found for case: {file_name}'"
             ) from err
-        return summary, spec
+        return spec, summary
 
 
 def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
