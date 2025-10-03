@@ -307,9 +307,29 @@ def print_header(keys: list[str], time_unit: TimeUnit) -> None:
     print("-" * len(header))
 
 
+def list_mode(smspec: str, keys: list[str]) -> int:
+    if not keys:
+        keys = ["*"]
+    try:
+        spec = read_spec(smspec, keys)
+        spec.order_keys_by(keys)
+        for i, key in enumerate(spec.matched_keywords):
+            print(f"{key:24s} ", end=None if i % 5 == 4 else "")
+        print()
+        return 0
+    except resfo.ResfoParsingError as err:
+        print(f"Could not read smspec {smspec}: {err.args[0]}", file=sys.stderr)
+        return -1
+    except CliError as err:
+        print(err.args[0], file=sys.stderr)
+        return -1
+
+
 def run(argv: list[str]) -> int:
     args = parse_arguments(argv)
     unsmry, smspec = args.CASE
+    if args.list:
+        return list_mode(smspec, args.keys)
     try:
         spec = read_spec(smspec, args.keys)
         spec.order_keys_by(args.keys)

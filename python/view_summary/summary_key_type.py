@@ -38,8 +38,7 @@ SPECIAL_KEYWORDS = [
 class SummaryKeyType(Enum):
     """Summary keys are divided into types based on summary variable name.
 
-    see :ref:`SUMMARY  <summary>` for in keywords.rst for details on summary
-    variables and keys.
+    This is a reimplmentation of rd::smspec_node::identify_var_type
 
     """
 
@@ -115,8 +114,7 @@ def make_summary_key(
 ) -> str:
     """Converts values found in the smspec file to the summary_key format.
 
-    Ert and some other applications use a colon separated format to specify
-    summary parameters. For instance:
+    This is a reimplementation of smspec_node::set_gen_keys
 
     >>> make_summary_key(keyword="WOPR", name="WELL1")
     'WOPR:WELL1'

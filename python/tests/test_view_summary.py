@@ -1,6 +1,7 @@
 from view_summary.__main__ import parse_arguments, run, make_summary_key
 import resfo
 from collections import defaultdict
+from textwrap import dedent
 import pytest
 from hypothesis import given, settings, HealthCheck
 import hypothesis.strategies as st
@@ -260,6 +261,26 @@ def test_that_header_includes_all_matching_keys_from_input_with_correct_indent(c
 
 def keys_in_header(output):
     return output.splitlines()[0].split()[3:]
+
+
+def test_that_the_list_option_prints_matched_keys(run_cli):
+    assert run_cli(
+        cli_args=("--list",),
+        summary_keys=(
+            "FGIP",
+            "FGIP",
+            "FGIT",
+            " FGOR",
+            "FGPR",
+            "FGPT",
+            "FOIP",
+            "FOIPG",
+            "FOIPL",
+        ),
+    ).out == dedent("""\
+            FGIP                     FGIT                     FGOR                     FGPR                     FGPT                     
+            FOIP                     FOIPG                    FOIPL                    
+            """)
 
 
 def test_that_for_non_wildcard_keywords_the_order_of_columns_is_as_in_the_input(capsys):
