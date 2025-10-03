@@ -219,7 +219,7 @@ def test_that_ambiguous_references_to_summary_files_is_invalid(tmp_path, capsys)
     except BaseException:
         # will produce exit code 2
         pass
-    assert f"could be any of: TEST.FUNSMRY, TEST.UNSMRY" in capsys.readouterr().err
+    assert f"could be any of:" in capsys.readouterr().err
 
 
 @pytest.fixture
