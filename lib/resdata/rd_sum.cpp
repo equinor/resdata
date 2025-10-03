@@ -846,18 +846,25 @@ static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
                                   const bool_vector_type *has_var, FILE *stream,
                                   const rd_sum_fmt_type *fmt) {
     fprintf(stream, "%s", fmt->date_header);
-    for (int i = 0; i < stringlist_get_size(key_list); i++)
-        if (bool_vector_iget(has_var, i)) {
-            fprintf(stream, "%s", fmt->sep);
-            fprintf(stream, fmt->header_fmt, stringlist_iget(key_list, i));
-        }
+    {
+        int i;
+        for (i = 0; i < stringlist_get_size(key_list); i++)
+            if (bool_vector_iget(has_var, i)) {
+                fprintf(stream, "%s", fmt->sep);
+                fprintf(stream, fmt->header_fmt, stringlist_iget(key_list, i));
+            }
+    }
 
     fprintf(stream, "%s", fmt->newline);
     if (fmt->print_dash) {
         fprintf(stream, "%s", fmt->date_dash);
-        for (int i = 0; i < stringlist_get_size(key_list); i++)
-            if (bool_vector_iget(has_var, i))
-                fprintf(stream, "%s", fmt->value_dash);
+
+        {
+            int i;
+            for (i = 0; i < stringlist_get_size(key_list); i++)
+                if (bool_vector_iget(has_var, i))
+                    fprintf(stream, "%s", fmt->value_dash);
+        }
         fprintf(stream, "%s", fmt->newline);
     }
 }
