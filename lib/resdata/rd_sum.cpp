@@ -776,8 +776,8 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
     return rd_sum_data_iget_sim_days(rd_sum->data, index);
 }
 
-void rd_sum_fmt_init_summary_x(const rd_sum_type *rd_sum,
-                               rd_sum_fmt_type *fmt) {
+static void rd_sum_fmt_init_summary_x(const rd_sum_type *rd_sum,
+                                      rd_sum_fmt_type *fmt) {
     fmt->locale = NULL;
     fmt->sep = "";
     fmt->date_fmt = "%d/%m/%Y   ";
@@ -846,32 +846,25 @@ static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
                                   const bool_vector_type *has_var, FILE *stream,
                                   const rd_sum_fmt_type *fmt) {
     fprintf(stream, "%s", fmt->date_header);
-    {
-        int i;
-        for (i = 0; i < stringlist_get_size(key_list); i++)
-            if (bool_vector_iget(has_var, i)) {
-                fprintf(stream, "%s", fmt->sep);
-                fprintf(stream, fmt->header_fmt, stringlist_iget(key_list, i));
-            }
-    }
+    for (int i = 0; i < stringlist_get_size(key_list); i++)
+        if (bool_vector_iget(has_var, i)) {
+            fprintf(stream, "%s", fmt->sep);
+            fprintf(stream, fmt->header_fmt, stringlist_iget(key_list, i));
+        }
 
     fprintf(stream, "%s", fmt->newline);
     if (fmt->print_dash) {
         fprintf(stream, "%s", fmt->date_dash);
-
-        {
-            int i;
-            for (i = 0; i < stringlist_get_size(key_list); i++)
-                if (bool_vector_iget(has_var, i))
-                    fprintf(stream, "%s", fmt->value_dash);
-        }
+        for (int i = 0; i < stringlist_get_size(key_list); i++)
+            if (bool_vector_iget(has_var, i))
+                fprintf(stream, "%s", fmt->value_dash);
         fprintf(stream, "%s", fmt->newline);
     }
 }
 
-void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
-                    const stringlist_type *var_list, bool report_only,
-                    const rd_sum_fmt_type *fmt) {
+static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
+                           const stringlist_type *var_list, bool report_only,
+                           const rd_sum_fmt_type *fmt) {
     bool_vector_type *has_var =
         bool_vector_alloc(stringlist_get_size(var_list), false);
     int_vector_type *var_index =

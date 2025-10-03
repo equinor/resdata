@@ -285,10 +285,12 @@ def test_that_the_list_option_prints_matched_keys(run_cli):
             "FOIPG",
             "FOIPL",
         ),
-    ).out == dedent("""\
+    ).out == dedent(
+        """\
             FGIP                     FGIT                     FGOR                     FGPR                     FGPT                     
             FOIP                     FOIPG                    FOIPL                    
-            """)
+            """
+    )
 
 
 def test_that_for_non_wildcard_keywords_the_order_of_columns_is_as_in_the_input(capsys):

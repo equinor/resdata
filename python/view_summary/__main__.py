@@ -524,7 +524,8 @@ class ExistingCase:
 def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog=prog,
-        description=dedent("""
+        description=dedent(
+            """
         The summary.x program is used to quickly extract summary vectors
         from summary files. The program is invoked as:
 
@@ -543,9 +544,11 @@ def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
            SPR:F-12:18        - The segment pressure in well F-12, segment 18.
            BPR:10,10,10       - The block pressure in cell 10,10,10.
            LBPR:LGR3:10,10,10 - The block pressure in cell 10,10,10 - in LGR3
-        """),
+        """
+        ),
         formatter_class=argparse.RawTextHelpFormatter,
-        epilog=dedent("""\
+        epilog=dedent(
+            """\
         The options should come before the basename.
 
         Example1:
@@ -572,7 +575,8 @@ def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
           will only look for unformatted files.
 
         * If the extension corresponds to a unified file, summary.x will
-          only look for unified files."""),
+          only look for unified files."""
+        ),
     )
     ap.add_argument(
         "CASE",
@@ -588,19 +592,23 @@ def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
         "--restart",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help=dedent("""\
+        help=dedent(
+            """\
            If the simulation in question is a restart, i.e a prediction
            which starts at the end of the historical period, the summary.x
            program will by default also load historical data. If the --no-restart
-           option is used the program will not look for old results."""),
+           option is used the program will not look for old results."""
+        ),
     )
     ap.add_argument(
         "--header",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help=dedent("""\
+        help=dedent(
+            """\
            By default summary.x will print a header line at the top, with the
-           option --no-header this will be suppressed."""),
+           option --no-header this will be suppressed."""
+        ),
     )
     ap.add_argument(
         "--report-only",
