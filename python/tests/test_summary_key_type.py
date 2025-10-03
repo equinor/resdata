@@ -238,9 +238,3 @@ def test_local_well_summary_format_have_cell_index_and_name(keyword, name, lgr_n
         make_summary_key(keyword, name=name, lgr_name=lgr_name)
         == f"{keyword}:{lgr_name}:{name}"
     )
-
-
-def nonempty_string_without_whitespace():
-    return st.text(
-        st.characters(whitelist_categories=("Lu", "Ll", "Nd", "P")), min_size=1
-    )
