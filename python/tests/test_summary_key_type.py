@@ -1,9 +1,9 @@
 import hypothesis.strategies as st
 import pytest
-from hypothesis import given
+from hypothesis import given, assume
 from resdata.summary import Summary, SummaryVarType
 
-from view_summary.summary_key_type import SummaryKeyType, make_summary_key
+from view_summary.summary_key_type import SummaryKeyType, make_summary_key, _DUMMY_NAME
 from tests.summary_generator import (
     inter_region_summary_variables,
     summary_variables,
@@ -124,7 +124,11 @@ def test_that_identify_var_type_is_same_as_resdata(variable):
     assert Summary.var_type(variable) == to_ecl(SummaryKeyType.from_variable(variable))
 
 
-@given(st.integers(), st.text(), st.integers(), st.integers())
+positives = st.integers(min_value=0)
+valid_names = st.text(min_size=1).filter(lambda name: name != _DUMMY_NAME)
+
+
+@given(st.integers(), valid_names, positives, positives)
 @pytest.mark.parametrize("keyword", ["FOPR", "NEWTON"])
 def test_summary_key_format_of_field_and_misc_is_identity(
     keyword, number, name, nx, ny
@@ -132,29 +136,37 @@ def test_summary_key_format_of_field_and_misc_is_identity(
     assert make_summary_key(keyword, number, name, nx, ny) == keyword
 
 
-@given(st.integers(), st.text(), st.integers(), st.integers())
+@given(st.integers(), valid_names, positives, positives)
 def test_network_variable_keys_has_keyword_as_summary_key(number, name, nx, ny):
+    assume(name != _DUMMY_NAME)
     assert make_summary_key("NOPR", number, name, nx, ny) == f"NOPR:{name}"
 
 
-@given(st.integers(), st.text(), st.integers(), st.integers())
+@given(
+    positives,
+    valid_names,
+    positives,
+    positives,
+)
 @pytest.mark.parametrize("keyword", ["GOPR", "WOPR"])
 def test_group_and_well_have_named_format(keyword, number, name, nx, ny):
+    assume(name != _DUMMY_NAME)
     assert make_summary_key(keyword, number, name, nx, ny) == f"{keyword}:{name}"
 
 
 @given(
     st.sampled_from(inter_region_summary_variables),
-    st.text(),
-    st.integers(),
-    st.integers(),
+    valid_names,
+    positives,
+    positives,
 )
 def test_inter_region_summary_format_contains_in_and_out_regions(keyword, name, nx, ny):
     number = 3014660
+    assume(name != _DUMMY_NAME)
     assert make_summary_key(keyword, number, name, nx, ny) == f"{keyword}:4-82"
 
 
-@given(name=st.text())
+@given(name=valid_names)
 @pytest.mark.parametrize("keyword", ["BOPR", "BOSAT"])
 @pytest.mark.parametrize(
     "nx,ny,number,indices",
@@ -170,7 +182,7 @@ def test_block_summary_format_have_cell_index(keyword, number, indices, name, nx
     assert make_summary_key(keyword, number, name, nx, ny) == f"{keyword}:{indices}"
 
 
-@given(name=st.text())
+@given(name=valid_names)
 @pytest.mark.parametrize("keyword", ["COPR"])
 @pytest.mark.parametrize(
     "nx,ny,number,indices",
@@ -210,7 +222,7 @@ def test_local_block_summary_format_have_cell_index_and_name(
     )
 
 
-@given(name=st.text(), lgr_name=st.text())
+@given(name=valid_names, lgr_name=st.text())
 @pytest.mark.parametrize("keyword", ["LCOPR"])
 @pytest.mark.parametrize(
     "li,lj,lk,indices",
@@ -231,7 +243,7 @@ def test_local_completion_summary_format_have_cell_index_and_name(
     )
 
 
-@given(name=st.text(), lgr_name=st.text())
+@given(name=valid_names, lgr_name=st.text())
 @pytest.mark.parametrize("keyword", ["LWWPR"])
 def test_local_well_summary_format_have_cell_index_and_name(keyword, name, lgr_name):
     assert (

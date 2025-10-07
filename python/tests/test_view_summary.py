@@ -1,6 +1,7 @@
 from view_summary.__main__ import parse_arguments, run
 from contextlib import suppress
 import resfo
+import logging
 from collections import defaultdict
 from textwrap import dedent
 import pytest
@@ -33,7 +34,7 @@ def test_help_string(capsys):
         captured.out
         == """\
 usage: summary.x [-h] [--list] [--restart | --no-restart]
-                 [--header | --no-header] [--report-only]
+                 [--header | --no-header] [--report-only] [-v]
                  CASE [keys ...]
 
 The summary.x program is used to quickly extract summary vectors
@@ -71,6 +72,7 @@ options:
                         By default summary.x will print a header line at the top, with the
                         option --no-header this will be suppressed.
   --report-only         Will only report results at report times (i.e. DATES).
+  -v, --verbose         Increase output verbosity (e.g., -v, -vv, -vvv)
 
 The options should come before the basename.
 
@@ -120,6 +122,8 @@ def create_summary(
     time_units="DAYS",
     case="TEST",
     formatted="",
+    names=None,
+    numbers=None,
     restart=None,
     start_date=None,
 ):
@@ -147,8 +151,14 @@ def create_summary(
         num_keywords=1 + len(summary_keys),
         restart=restart if restart else "        ",
         keywords=["TIME    ", *summary_keys],
-        well_names=[":+:+:+:+", "        " * len(summary_keys)],
-        region_numbers=[-32676, 0 * len(summary_keys)],
+        well_names=(
+            [":+:+:+:+", *(["A_NAME  "] * len(summary_keys))]
+            if names is None
+            else names
+        ),
+        region_numbers=(
+            [-32676, *([0] * len(summary_keys))] if numbers is None else numbers
+        ),
         units=[time_units.ljust(8), "SM3" * len(summary_keys)],
         start_date=start_date,
         intehead=SmspecIntehead(
@@ -370,11 +380,9 @@ def test_that_header_displays_the_time_units_from_spec(run_cli):
     )
 
 
-def test_that_a_warning_is_displayed_for_unmatched_patterns(run_cli):
-    assert (
-        "could not find variable: 'UNK'"
-        in run_cli(cli_args=("UNK",), summary_keys=("FGIP", "FOPR", "FWPT", "FOPT")).err
-    )
+def test_that_a_warning_is_displayed_for_unmatched_patterns(run_cli, caplog):
+    run_cli(cli_args=("UNK",), summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
+    assert any("could not find variable: 'UNK'" in r.message for r in caplog.records)
 
 
 patterns = st.one_of(summary_keys, st.just("*"))
@@ -471,7 +479,7 @@ def test_that_case_and_restart_columns_are_merged_when_they_differ(capsys):
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_missing_restart_warns(capsys):
+def test_that_missing_restart_warns(capsys, caplog):
     create_summary(restart="RESTART", summary_keys=("FWPT",))
 
     run(["summary.x", "TEST", "*"])
@@ -479,11 +487,13 @@ def test_that_missing_restart_warns(capsys):
     df = output_as_df(capture.out)
     assert set(df.columns) == {"Days", "dd/mm/yyyy", "FWPT"}
 
-    assert "could not open restart case: 'RESTART'" in capture.err
+    assert any(
+        "could not open restart case: 'RESTART'" in r.message for r in caplog.records
+    )
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_unopenable_restart_warns(capsys):
+def test_that_unopenable_restart_warns(capsys, caplog):
     try:
         create_summary(case="RESTART", summary_keys=("FOPR",))
         Path("RESTART.UNSMRY").chmod(0x000)
@@ -495,38 +505,44 @@ def test_that_unopenable_restart_warns(capsys):
         df = output_as_df(capture.out)
         assert set(df.columns) == {"Days", "dd/mm/yyyy", "FWPT"}
 
-        assert "could not open restart case: 'RESTART'" in capture.err
+        assert any(
+            "could not open restart case: 'RESTART'" in r.message
+            for r in caplog.records
+        )
     finally:
         with suppress(FileNotFoundError):
             Path("RESTART.UNSMRY").chmod(0x777)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_unknown_time_unit_gives_informative_error_message(capsys):
+def test_that_unknown_time_unit_gives_informative_error_message(caplog):
     create_summary(time_units="YEARS")
     run(["summary.x", "--no-restart", "TEST", "*"])
-    assert "Unknown date unit in TEST.SMSPEC: YEARS" in capsys.readouterr().err
+    assert any(
+        "Unknown date unit in TEST.SMSPEC: YEARS" in r.message for r in caplog.records
+    )
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 @given(summary=summaries())
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 def test_that_missing_time_keyword_in_smspec_gives_informative_error_message(
-    capsys, summary
+    caplog, summary
 ):
-    capsys.readouterr()  # Ensure that captured output is empty at the start
+    caplog.clear()  # Ensure that captured output is empty at the start
     smspec, unsmry = summary
     smspec.keywords = smspec.keywords[1:]  # remove TIME
     smspec.to_file("TEST.SMSPEC")
     unsmry.to_file("TEST.UNSMRY")
     run(["summary.x", "TEST", "*"])
-    err = capsys.readouterr().err
-    assert "** Warning: number of keywords given in DIMENS " in err
-    assert "did not contain TIME" in err
+    assert any(
+        "number of keywords given in DIMENS " in r.message for r in caplog.records
+    )
+    assert any("did not contain TIME" in r.message for r in caplog.records)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_invalid_start_date_is_reported(capsys):
+def test_that_invalid_start_date_is_reported(caplog):
     create_summary(
         start_date=Date(
             day=32,  # impossible date
@@ -538,4 +554,78 @@ def test_that_invalid_start_date_is_reported(capsys):
         )
     )
     run(["summary.x", "TEST", "*"])
-    assert "contains invalid STARTDAT" in capsys.readouterr().err
+    assert any("contains invalid STARTDAT" in r.message for r in caplog.records)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_invalid_variables_are_ignored(capsys, caplog):
+    caplog.set_level(logging.INFO)
+    create_summary(summary_keys=("FOPR", "WOPR"), names=[":+:+:+:+"])
+    run(["summary.x", "TEST", "*"])
+    capture = capsys.readouterr()
+
+    assert keys_in_header(capture.out) == ["FOPR"]
+    assert any(
+        "TEST.SMSPEC contains invalid keyword 'WOPR': well keyword without name"
+        in r.message
+        for r in caplog.records
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("invalid_name", (":+:+:+:+", "        "))
+@pytest.mark.parametrize(
+    "named_keyword,keyword_type",
+    [
+        ("WOPR", "well"),
+        ("GGLR", "group"),
+        ("LWOPR", "local well"),
+        ("LCOPR", "local completion"),
+        ("COPT", "completion"),
+        ("SOFR", "segment"),
+    ],
+)
+def test_that_named_keywords_with_invalid_name_is_invalid(
+    capsys, caplog, named_keyword, keyword_type, invalid_name
+):
+    caplog.set_level(logging.INFO)
+    create_summary(summary_keys=("FOPR", named_keyword), names=[invalid_name] * 3)
+    run(["summary.x", "-v", "TEST", "*"])
+    capture = capsys.readouterr()
+
+    assert keys_in_header(capture.out) == ["FOPR"]
+    assert any(
+        f"TEST.SMSPEC contains invalid keyword '{named_keyword}': "
+        f"{keyword_type} keyword given invalid name '{invalid_name.strip()}'"
+        in r.message
+        for r in caplog.records
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize(
+    "numbered_keyword,keyword_type",
+    [
+        ("COPT", "completion"),
+        ("SOFR", "segment"),
+        ("ROPV", "region"),
+        ("RGFR", "inter region"),
+        ("BOPR", "block"),
+        ("AAQR", "aquifer"),
+    ],
+)
+def test_that_numbered_keywords_with_negative_number_is_invalid(
+    capsys, caplog, numbered_keyword, keyword_type
+):
+    caplog.set_level(logging.INFO)
+    create_summary(summary_keys=("FOPR", numbered_keyword), numbers=[-1] * 3)
+    run(["summary.x", "-v", "TEST", "*"])
+    capture = capsys.readouterr()
+
+    assert keys_in_header(capture.out) == ["FOPR"]
+    print(caplog.records)
+    assert any(
+        f"TEST.SMSPEC contains invalid keyword '{numbered_keyword}': "
+        f"{keyword_type} keyword given negative number -1" in r.message
+        for r in caplog.records
+    )

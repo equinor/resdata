@@ -102,6 +102,10 @@ class SummaryKeyType(Enum):
         return cls.OTHER
 
 
+class InvalidSummaryKey(ValueError):
+    pass
+
+
 def make_summary_key(
     keyword: str,
     number: int | None = None,
@@ -135,34 +139,56 @@ def make_summary_key(
         lk: Local k-index for local block/completion.
 
     Raises:
-        ValueError: If required qualifiers are missing for a given key type.
+        InvalidSummaryKey: If the key is invalid
     """
     match SummaryKeyType.from_variable(keyword):
         case SummaryKeyType.FIELD | SummaryKeyType.OTHER:
             return keyword
-        case SummaryKeyType.REGION | SummaryKeyType.AQUIFER:
+        case SummaryKeyType.REGION:
+            (number,) = _check_if_missing("region", "nums", number)
+            _check_is_positive_number("region", number)
+            return f"{keyword}:{number}"
+        case SummaryKeyType.AQUIFER:
+            (number,) = _check_if_missing("aquifer", "nums", number)
+            _check_is_positive_number("aquifer", number)
             return f"{keyword}:{number}"
         case SummaryKeyType.BLOCK:
             nx, ny = _check_if_missing("block", "dimens", nx, ny)
             (number,) = _check_if_missing("block", "nums", number)
+            _check_is_positive_number("block", number)
             i, j, k = _cell_index(number - 1, nx, ny)
             return f"{keyword}:{i},{j},{k}"
-        case SummaryKeyType.GROUP | SummaryKeyType.WELL:
+        case SummaryKeyType.WELL:
+            (name,) = _check_if_missing("well", "name", name)
+            _check_if_valid_name("well", name)
+            return f"{keyword}:{name}"
+        case SummaryKeyType.GROUP:
+            (name,) = _check_if_missing("group", "name", name)
+            _check_if_valid_name("group", name)
             return f"{keyword}:{name}"
         case SummaryKeyType.SEGMENT:
+            (name,) = _check_if_missing("segment", "name", name)
+            _check_if_valid_name("segment", name)
+            (number,) = _check_if_missing("segment", "nums", number)
+            _check_is_positive_number("segment", number)
             return f"{keyword}:{name}:{number}"
         case SummaryKeyType.COMPLETION:
             nx, ny = _check_if_missing("completion", "dimens", nx, ny)
             (number,) = _check_if_missing("completion", "nums", number)
+            _check_is_positive_number("completion", number)
+            (name,) = _check_if_missing("completion", "name", name)
+            _check_if_valid_name("completion", name)
             i, j, k = _cell_index(number - 1, nx, ny)
             return f"{keyword}:{name}:{i},{j},{k}"
         case SummaryKeyType.INTER_REGION:
             (number,) = _check_if_missing("inter region", "nums", number)
+            _check_is_positive_number("inter region", number)
             r1 = number % 32768
             r2 = ((number - r1) // 32768) - 10
             return f"{keyword}:{r1}-{r2}"
         case SummaryKeyType.LOCAL_WELL:
             (name,) = _check_if_missing("local well", "WGNAMES", name)
+            _check_if_valid_name("local well", name)
             (lgr_name,) = _check_if_missing("local well", "LGRS", lgr_name)
             return f"{keyword}:{lgr_name}:{name}"
         case SummaryKeyType.LOCAL_BLOCK:
@@ -170,8 +196,9 @@ def make_summary_key(
             (lgr_name,) = _check_if_missing("local block", "LGRS", lgr_name)
             return f"{keyword}:{lgr_name}:{li},{lj},{lk}"
         case SummaryKeyType.LOCAL_COMPLETION:
-            li, lj, lk = _check_if_missing("local completion", "NUMLX", li, lj, lk)
             (name,) = _check_if_missing("local completion", "WGNAMES", name)
+            _check_if_valid_name("local completion", name)
+            li, lj, lk = _check_if_missing("local completion", "NUMLX", li, lj, lk)
             (lgr_name,) = _check_if_missing("local completion", "LGRS", lgr_name)
             return f"{keyword}:{lgr_name}:{name}:{li},{lj},{lk}"
         case SummaryKeyType.NETWORK:
@@ -187,40 +214,39 @@ T = TypeVar("T")
 def _check_if_missing(
     keyword_name: str, missing_key: str, *test_vars: T | None
 ) -> list[T]:
-    """Ensure required values are present.
-
-    Args:
-        keyword_name: Human‑readable context for the error (e.g. "block").
-        missing_key: Name of the missing keyword/array in the source file.
-        *test_vars: Values that must be non-``None``.
-
-    Returns:
-        The input values cast to a ``list`` if all are present.
-
-    Raises:
-        ValueError: If any of ``test_vars`` is ``None``.
-    """
     if any(v is None for v in test_vars):
-        raise ValueError(
-            f"Found {keyword_name} keyword in summary "
-            f"specification without {missing_key} keyword"
-        )
+        raise InvalidSummaryKey(f"{keyword_name} keyword without {missing_key}")
     return test_vars  # type: ignore
+
+
+_DUMMY_NAME = ":+:+:+:+"
+
+
+def _check_if_valid_name(keyword_name: str, name: str) -> None:
+    if not name or name == _DUMMY_NAME:
+        raise InvalidSummaryKey(f"{keyword_name} keyword given invalid name '{name}'")
+
+
+def _check_is_positive_number(keyword_name: str, number: int) -> None:
+    if number < 0:
+        raise InvalidSummaryKey(
+            f"{keyword_name} keyword given negative number {number}"
+        )
 
 
 def _cell_index(
     array_index: int, nx: PositiveInt, ny: PositiveInt
 ) -> tuple[int, int, int]:
-    """Convert a flat (0‑based) index to 1‑based (i, j, k) grid indices.
+    """Convert a flat (0-based) index to 1-based (i, j, k) grid indices.
 
     Args:
-        array_index: Zero‑based flat index into a grid laid
+        array_index: Zero-based flat index into a grid laid
             out as ``k`` layers of ``ny*nx``.
-        nx: Number of cells in the x‑direction (strictly positive).
-        ny: Number of cells in the y‑direction (strictly positive).
+        nx: Number of cells in the x-direction (strictly positive).
+        ny: Number of cells in the y-direction (strictly positive).
 
     Returns:
-        A tuple ``(i, j, k)`` where each component is **1‑based**.
+        A tuple ``(i, j, k)`` where each component is **1-based**.
     """
     k = array_index // (nx * ny)
     array_index -= k * (nx * ny)

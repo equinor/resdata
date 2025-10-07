@@ -1,5 +1,6 @@
 import argparse
 import fnmatch
+import logging
 import os
 import re
 import sys
@@ -17,7 +18,9 @@ import numpy.typing as npt
 import pandas as pd
 import resfo
 
-from .summary_key_type import make_summary_key
+from .summary_key_type import InvalidSummaryKey, make_summary_key
+
+logger = logging.getLogger(__name__)
 
 
 def stream_name(stream: IO[Any]) -> str:
@@ -73,7 +76,7 @@ def validate_array(
 
 
 def decode_if_byte(key: bytes | str) -> str:
-    """Decode a value that may be ``bytes`` into a UTF‑8 string.
+    """Decode a value that may be ``bytes`` into a UTF-8 string.
     Args:
         key: Bytes or string value.
     Returns:
@@ -184,9 +187,8 @@ class Spec:
                     new_indices.append(self.keyword_indices[i])
                     already_matched.add(kw)
                 except ValueError:
-                    print(
-                        f"** Warning: could not find variable: '{pat}' in summary file",
-                        file=sys.stderr,
+                    logger.warning(
+                        f"could not find variable: '{pat}' in summary file",
                     )
         self.matched_keywords = new_matched_keywords
         self.keyword_indices = np.array(new_indices, dtype=np.int64)
@@ -278,10 +280,9 @@ def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:
     if n is None:
         n = len(keywords)
     elif n > len(keywords):
-        print(
+        logger.warning(
             f"** Warning: number of keywords given in DIMENS {n} is larger than the "
             f"length of KEYWORDS {len(keywords)}, truncating size to match",
-            file=sys.stderr,
         )
         n = len(keywords)
 
@@ -318,7 +319,14 @@ def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:
         lj = optional_get(numly, i)
         lk = optional_get(numlz, i)
 
-        key = make_summary_key(keyword, num, name, nx, ny, lgr_name, li, lj, lk)
+        try:
+            key = make_summary_key(keyword, num, name, nx, ny, lgr_name, li, lj, lk)
+        except InvalidSummaryKey as err:
+            logger.info(
+                f"{spec_name} contains invalid keyword '{keyword}': {err.args[0]}"
+            )
+            continue
+
         if should_load_key(key):
             if key in index_mapping:
                 # only keep the index of the last occurrence of a key
@@ -435,7 +443,7 @@ def fetch_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> lis
     if spec.restart and fetch_restart:
         restart_case = ExistingCase(
             warn_message=(
-                lambda case_name: f"** Warning: could not open restart case: '{case_name}'"
+                lambda case_name: f"could not open restart case: '{case_name}'"
             ),
         )(spec.restart)
         if restart_case is not None:
@@ -466,13 +474,14 @@ def list_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> int:
         for i, key in enumerate(matched_keywords):
             print(f"{key:24s} ", end=None if i % 5 == 4 else "")
         print()
-        return 0
     except resfo.ResfoParsingError as err:
-        print(f"Could not read smspec {smspec}: {err.args[0]}", file=sys.stderr)
+        logger.error(f"Could not read smspec {smspec}: {err.args[0]}")
         return -1
     except CliError as err:
-        print(err.args[0], file=sys.stderr)
+        logger.error(err.args[0])
         return -1
+    else:
+        return 0
 
 
 def read_case(
@@ -502,7 +511,7 @@ def read_case(
     if spec.restart and fetch_restart:
         restart_case = ExistingCase(
             warn_message=(
-                lambda case_name: f"** Warning: could not open restart case: '{case_name}'"
+                lambda case_name: f"could not open restart case: '{case_name}'"
             ),
         )(spec.restart)
         if restart_case is not None:
@@ -546,6 +555,7 @@ def run(argv: list[str]) -> int:
         ``0`` on success, ``-1`` on user/parse errors.
     """
     args = parse_arguments(argv)
+    setup_logging(args.verbose)
     smspec, unsmry = args.CASE
     if args.list or not args.keys:
         return list_keys(smspec, args.keys, args.restart)
@@ -568,13 +578,14 @@ def run(argv: list[str]) -> int:
                 # will have trailing whitespace for backwards-compatibility
                 print(f" {row[c]:15.6g} ", end="")
             print()
-        return 0
     except resfo.ResfoParsingError as err:
-        print(f"Could not read case files {args.CASE}: {err.args[0]}", file=sys.stderr)
+        logger.error(f"Could not read case files {args.CASE}: {err.args[0]}")
         return -1
     except CliError as err:
-        print(err.args[0], file=sys.stderr)
+        logger.error(err.args[0])
         return -1
+    else:
+        return 0
 
 
 def has_extension(path: str, exts: list[str]) -> bool:
@@ -644,7 +655,7 @@ def find_file_matching(
     """Find the single file in ``case``'s directory that matches ``predicate``.
 
     Args:
-        kind: Human‑readable description used in error messages.
+        kind: Human-readable description used in error messages.
         case: Basename or path to the case (may include directories).
         predicate: Function that returns ``True`` for files that match.
 
@@ -733,10 +744,7 @@ class ExistingCase:
                     f"No summary data found for case: {file_name}'"
                 ) from err
             else:
-                print(
-                    self.warn_message(case_name) + ": " + err.args[0],
-                    file=sys.stderr,
-                )
+                logger.warning(f"{self.warn_message(case_name)}: {err.args[0]}")
                 return None
         mode = "rt" if spec.lower().endswith("fsmspec") else "rb"
 
@@ -751,12 +759,24 @@ class ExistingCase:
                     else ""
                 ) from err
             else:
-                print(
-                    self.warn_message(case_name)
-                    + (": " + err.strerror if err.strerror else ""),
-                    file=sys.stderr,
-                )
+                logger.warning(f"{self.warn_message(case_name)}: {err.strerror or ''}")
                 return None
+
+
+def setup_logging(verbosity: int):
+    # Map verbosity count to logging levels
+    if verbosity >= 2:
+        level = logging.DEBUG
+    elif verbosity == 1:
+        level = logging.INFO
+    else:
+        level = logging.WARNING
+
+    logging.basicConfig(
+        level=level,
+        format="** %(levelname)s: %(message)s",
+        handlers=[logging.StreamHandler(sys.stderr)],
+    )
 
 
 def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
@@ -852,6 +872,13 @@ def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
         "--report-only",
         action="store_true",
         help="Will only report results at report times (i.e. DATES).",
+    )
+    ap.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Increase output verbosity (e.g., -v, -vv, -vvv)",
     )
     ap.add_argument("keys", nargs="*", help="list of summary keys to extract.")
     return ap
