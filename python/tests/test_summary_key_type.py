@@ -1,6 +1,6 @@
 import hypothesis.strategies as st
 import pytest
-from hypothesis import given, assume
+from hypothesis import given
 from resdata.summary import Summary, SummaryVarType
 
 from view_summary.summary_key_type import SummaryKeyType, make_summary_key, _DUMMY_NAME
@@ -138,7 +138,6 @@ def test_summary_key_format_of_field_and_misc_is_identity(
 
 @given(st.integers(), valid_names, positives, positives)
 def test_network_variable_keys_has_keyword_as_summary_key(number, name, nx, ny):
-    assume(name != _DUMMY_NAME)
     assert make_summary_key("NOPR", number, name, nx, ny) == f"NOPR:{name}"
 
 
@@ -150,7 +149,6 @@ def test_network_variable_keys_has_keyword_as_summary_key(number, name, nx, ny):
 )
 @pytest.mark.parametrize("keyword", ["GOPR", "WOPR"])
 def test_group_and_well_have_named_format(keyword, number, name, nx, ny):
-    assume(name != _DUMMY_NAME)
     assert make_summary_key(keyword, number, name, nx, ny) == f"{keyword}:{name}"
 
 
@@ -162,7 +160,6 @@ def test_group_and_well_have_named_format(keyword, number, name, nx, ny):
 )
 def test_inter_region_summary_format_contains_in_and_out_regions(keyword, name, nx, ny):
     number = 3014660
-    assume(name != _DUMMY_NAME)
     assert make_summary_key(keyword, number, name, nx, ny) == f"{keyword}:4-82"
 
 

@@ -585,7 +585,7 @@ def test_that_invalid_variables_are_ignored(capsys, caplog):
         ("SOFR", "segment"),
     ],
 )
-def test_that_named_keywords_with_invalid_name_is_invalid(
+def test_that_named_keywords_with_invalid_name_are_invalid(
     capsys, caplog, named_keyword, keyword_type, invalid_name
 ):
     caplog.set_level(logging.INFO)
@@ -614,7 +614,7 @@ def test_that_named_keywords_with_invalid_name_is_invalid(
         ("AAQR", "aquifer"),
     ],
 )
-def test_that_numbered_keywords_with_negative_number_is_invalid(
+def test_that_numbered_keywords_with_negative_number_are_invalid(
     capsys, caplog, numbered_keyword, keyword_type
 ):
     caplog.set_level(logging.INFO)
