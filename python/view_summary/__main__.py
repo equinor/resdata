@@ -166,7 +166,6 @@ class Spec:
         # The order of columns is implemented in this way
         # to preserve backwards-compatibility
         already_matched = set()
-        new_indices = []
         new_matched_keywords = []
         for pat in patterns:
             if "*" in pat:
@@ -175,23 +174,24 @@ class Spec:
                     if kw in already_matched:
                         continue
                     if fnmatch.fnmatch(kw, pat):
-                        new_matched_keywords.append(kw)
-                        new_indices.append(self.keyword_indices[i])
+                        new_matched_keywords.append((kw, self.keyword_indices[i]))
                         already_matched.add(kw)
+                        new_matched_keywords.sort(key=lambda v: v[0])
 
             else:
                 try:
                     i = self.matched_keywords.index(pat)
                     kw = self.matched_keywords[i]
-                    new_matched_keywords.append(kw)
-                    new_indices.append(self.keyword_indices[i])
+                    new_matched_keywords.append((kw, self.keyword_indices[i]))
                     already_matched.add(kw)
                 except ValueError:
                     logger.warning(
                         f"could not find variable: '{pat}' in summary file",
                     )
-        self.matched_keywords = new_matched_keywords
-        self.keyword_indices = np.array(new_indices, dtype=np.int64)
+        self.matched_keywords = [k for k, _ in new_matched_keywords]
+        self.keyword_indices = np.array(
+            [i for _, i in new_matched_keywords], dtype=np.int64
+        )
 
 
 def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:

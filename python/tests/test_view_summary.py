@@ -374,6 +374,28 @@ def test_that_keywords_matching_wildcard_is_omitted_if_already_in_header(run_cli
     ) == sorted(["FOPT", "FGIP", "FOPR", "FWPT"])
 
 
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_using_wildcard_keys_causes_preceding_headers_to_be_sorted(capsys):
+    create_summary(
+        summary_keys=["FOPR"] + ["WWIR"] * 5 + ["WBHP"] * 5,
+        names=["", ""] + [f"AQ_{i}" for i in range(1, 6)] * 2,
+    )
+    run(["summary.x", "-v", "TEST", "WWIR:AQ*", "WBHP:AQ*", "FOPR"])
+    assert keys_in_header(capsys.readouterr().out) == [
+        "WBHP:AQ_1",
+        "WBHP:AQ_2",
+        "WBHP:AQ_3",
+        "WBHP:AQ_4",
+        "WBHP:AQ_5",
+        "WWIR:AQ_1",
+        "WWIR:AQ_2",
+        "WWIR:AQ_3",
+        "WWIR:AQ_4",
+        "WWIR:AQ_5",
+        "FOPR",  # Not sorted because FOPR comes after wildcards
+    ]
+
+
 def test_that_header_displays_the_time_units_from_spec(run_cli):
     run_cli(cli_args="FGIP", summary_keys=("FGIP",), time_units="HOURS").out.startswith(
         "-- Hours   dd/mm/yyyy"
