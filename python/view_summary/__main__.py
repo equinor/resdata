@@ -559,7 +559,8 @@ def read_case(
                 already_added.add(kw)
     df = pd.DataFrame(result)
     if restart_df is not None:
-        df = pd.concat([restart_df, df]).fillna(-99)
+        df = restart_df.merge(df, how="outer").fillna(-99)
+
     all_matched = spec.matched_keywords.copy()
     already_in = set(all_matched)
     if restart_keys:

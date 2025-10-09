@@ -126,6 +126,7 @@ def create_summary(
     numbers=None,
     restart=None,
     start_date=None,
+    times=(0.0,),
 ):
     start_date = start_date or Date(
         day=1, month=1, year=2014, hour=0, minutes=0, micro_seconds=0
@@ -134,13 +135,14 @@ def create_summary(
     unsmry = Unsmry(
         steps=[
             SummaryStep(
-                seqnum=0,
+                seqnum=i,
                 ministeps=[
                     SummaryMiniStep(
-                        mini_step=0, params=[0.0] + [5.629901e16] * num_values
+                        mini_step=0, params=[time] + [5.629901e16] * num_values
                     ),
                 ],
             )
+            for i, time in enumerate(times)
         ]
     )
     smspec = Smspec(
@@ -673,7 +675,7 @@ def test_that_numbered_keywords_with_negative_number_are_invalid(
     )
 
 
-def create_split_case(summary_keys=("FOPR",), formatted=""):
+def create_split_case(case="TEST", summary_keys=("FOPR",), formatted=""):
     smspec = Smspec(
         nx=2,
         ny=2,
@@ -692,7 +694,7 @@ def create_split_case(summary_keys=("FOPR",), formatted=""):
         ),
     )
     format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
-    smspec.to_file(f"TEST.{formatted}SMSPEC", file_format=format)
+    smspec.to_file(f"{case}.{formatted}SMSPEC", file_format=format)
     for i in range(1, 5):
         smry = Unsmry(
             steps=[
@@ -707,7 +709,7 @@ def create_split_case(summary_keys=("FOPR",), formatted=""):
                 )
             ]
         )
-        smry.to_file(f"TEST.{'A' if formatted else 'S'}{i:04d}", file_format=format)
+        smry.to_file(f"{case}.{'A' if formatted else 'S'}{i:04d}", file_format=format)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -826,3 +828,21 @@ def test_that_relative_path_restart_is_relative_to_base_case(monkeypatch, capsys
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", str(dir / "TEST"), "*"])
     assert keys_in_header(capsys.readouterr().out) == ["FGIP", "FOPR", "FOPT"]
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_restart_and_base_times_are_merged(capsys):
+    create_split_case(case="RESTART", summary_keys=("FOPT",))
+    create_summary(
+        restart="RESTART", summary_keys=("FOPR", "FGIP"), times=[2.0, 3.0, 4.0]
+    )
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", "TEST", "*"])
+    assert output_as_df(capsys.readouterr().out).to_csv() == dedent("""\
+        ,Days,dd/mm/yyyy,FGIP,FOPR,FOPT
+        0,1.0,02/01/2014,-99.0,-99.0,4.0
+        1,2.0,03/01/2014,5.6299e+16,5.6299e+16,4.0
+        2,3.0,04/01/2014,5.6299e+16,5.6299e+16,4.0
+        3,4.0,05/01/2014,5.6299e+16,5.6299e+16,4.0
+        """)
