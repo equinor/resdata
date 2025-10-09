@@ -17,10 +17,13 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import resfo
+from natsort import natsorted
 
 from .summary_key_type import InvalidSummaryKey, make_summary_key
 
 logger = logging.getLogger(__name__)
+
+FileOpener = Callable[[], IO[Any]]
 
 
 def stream_name(stream: IO[Any]) -> str:
@@ -95,7 +98,7 @@ def key2str(key: bytes | str) -> str:
     return decode_if_byte(key).strip()
 
 
-def fetch_keys_to_matcher(fetch_keys: Sequence[str]) -> Callable[[str], bool]:
+def patterns_to_matcher(patterns: Sequence[str]) -> Callable[[str], bool]:
     """
     Transform the list of keys (with * used as repeated wildcard) into
     a matcher.
@@ -125,15 +128,15 @@ def fetch_keys_to_matcher(fetch_keys: Sequence[str]) -> Callable[[str], bool]:
 
 
     Args:
-        fetch_keys: Patterns (globs) to match against summary keys.
+        patterns: Patterns (globs) to match against summary keys.
 
 
     Returns:
         A function that returns ``True`` if a given key matches any pattern.
     """
-    if not fetch_keys:
+    if not patterns:
         return lambda _: False
-    regex = re.compile("|".join(fnmatch.translate(key) for key in fetch_keys))
+    regex = re.compile("|".join(fnmatch.translate(key) for key in patterns))
     return lambda s: regex.fullmatch(s) is not None
 
 
@@ -157,7 +160,7 @@ class Spec:
     keyword_indices: npt.NDArray[np.int64]
     restart: str | None
 
-    def order_keys_by(self, patterns: list[str]) -> None:
+    def order_keys_by(self, patterns: list[str], nat_sort=True) -> None:
         """Reorder ``matched_keywords`` and ``keyword_indices`` by patterns.
 
         Args:
@@ -176,7 +179,12 @@ class Spec:
                     if fnmatch.fnmatch(kw, pat):
                         new_matched_keywords.append((kw, self.keyword_indices[i]))
                         already_matched.add(kw)
-                        new_matched_keywords.sort(key=lambda v: v[0])
+                        if nat_sort:
+                            new_matched_keywords = natsorted(
+                                new_matched_keywords, key=lambda v: v[0]
+                            )
+                        else:
+                            new_matched_keywords.sort(key=lambda v: v[0])
 
             else:
                 try:
@@ -194,16 +202,16 @@ class Spec:
         )
 
 
-def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:
+def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
     """Read an SMSPEC file and return a :class:`Spec` describing it.
 
     This function performs minimal validation, determines the index of the
     TIME vector and the unit, discovers all available keys, and filters them
-    according to ``fetch_keys``.
+    according to ``key_patterns``.
 
     Args:
         spec: Open file-like object for the SMSPEC (binary or text depending on format).
-        fetch_keys: Patterns identifying which keys to keep.
+        key_patterns: Patterns identifying which keys to keep.
 
     Raises:
         CliError: On malformed content (e.g., missing UNITS, STARTDAT, etc.).
@@ -214,58 +222,66 @@ def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:
     nx = None
     ny = None
     wgnames = None
-    spec_name = stream_name(spec)
+    spec_name = ""
+    try:
+        with spec_opener() as spec:
+            spec_name = stream_name(spec)
 
-    arrays: dict[str, npt.NDArray[Any] | None] = dict.fromkeys(
-        [
-            "NUMS    ",
-            "KEYWORDS",
-            "NUMLX   ",
-            "NUMLY   ",
-            "NUMLZ   ",
-            "LGRS    ",
-            "UNITS   ",
-            "RESTART ",
-        ],
-        None,
-    )
-    for entry in resfo.lazy_read(spec):
-        if all(p is not None for p in [date, n, nx, ny, *arrays.values()]):
-            break
-        kw = entry.read_keyword()
-        if kw in arrays:
-            arrays[kw] = validate_array(kw, spec_name, entry.read_array())
-        if kw in {"WGNAMES ", "NAMES   "}:
-            wgnames = validate_array(kw, spec_name, entry.read_array())
-        if kw == "DIMENS  ":
-            vals = validate_array(kw, spec_name, entry.read_array())
-            size = len(vals)
-            n = vals[0] if size > 0 else None
-            nx = vals[1] if size > 1 else None
-            ny = vals[2] if size > 2 else None
-        if kw == "STARTDAT":
-            vals = validate_array(kw, spec_name, entry.read_array())
-            size = len(vals)
-            day = vals[0] if size > 0 else 0
-            month = vals[1] if size > 1 else 0
-            year = vals[2] if size > 2 else 0
-            hour = vals[3] if size > 3 else 0
-            minute = vals[4] if size > 4 else 0
-            microsecond = vals[5] if size > 5 else 0
-            try:
-                date = datetime(
-                    day=day,
-                    month=month,
-                    year=year,
-                    hour=hour,
-                    minute=minute,
-                    second=microsecond // 10**6,
-                    microsecond=microsecond % 10**6,
-                )
-            except Exception as err:
-                raise CliError(
-                    f"SMSPEC {spec} contains invalid STARTDAT: {err}"
-                ) from err
+            arrays: dict[str, npt.NDArray[Any] | None] = dict.fromkeys(
+                [
+                    "NUMS    ",
+                    "KEYWORDS",
+                    "NUMLX   ",
+                    "NUMLY   ",
+                    "NUMLZ   ",
+                    "LGRS    ",
+                    "UNITS   ",
+                    "RESTART ",
+                ],
+                None,
+            )
+            for entry in resfo.lazy_read(spec):
+                if all(p is not None for p in [date, n, nx, ny, *arrays.values()]):
+                    break
+                kw = entry.read_keyword()
+                if kw in arrays:
+                    arrays[kw] = validate_array(kw, spec_name, entry.read_array())
+                if kw in {"WGNAMES ", "NAMES   "}:
+                    wgnames = validate_array(kw, spec_name, entry.read_array())
+                if kw == "DIMENS  ":
+                    vals = validate_array(kw, spec_name, entry.read_array())
+                    size = len(vals)
+                    n = vals[0] if size > 0 else None
+                    nx = vals[1] if size > 1 else None
+                    ny = vals[2] if size > 2 else None
+                if kw == "STARTDAT":
+                    vals = validate_array(kw, spec_name, entry.read_array())
+                    size = len(vals)
+                    day = vals[0] if size > 0 else 0
+                    month = vals[1] if size > 1 else 0
+                    year = vals[2] if size > 2 else 0
+                    hour = vals[3] if size > 3 else 0
+                    minute = vals[4] if size > 4 else 0
+                    microsecond = vals[5] if size > 5 else 0
+                    try:
+                        date = datetime(
+                            day=day,
+                            month=month,
+                            year=year,
+                            hour=hour,
+                            minute=minute,
+                            second=microsecond // 10**6,
+                            microsecond=microsecond % 10**6,
+                        )
+                    except Exception as err:
+                        raise CliError(
+                            f"SMSPEC {spec} contains invalid STARTDAT: {err}"
+                        ) from err
+    except OSError as err:
+        raise CliError(
+            f"Could not read from summary spec {err.filename}: {err.strerror}"
+        )
+
     keywords = arrays["KEYWORDS"]
     nums = arrays["NUMS    "]
     numlx = arrays["NUMLX   "]
@@ -291,7 +307,7 @@ def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:
     index_mapping: dict[str, int] = {}
     date_index = None
 
-    matcher = fetch_keys_to_matcher(fetch_keys)
+    matcher = patterns_to_matcher(key_patterns)
 
     def should_load_key(kw):
         return kw != "TIME" and matcher(kw)
@@ -373,8 +389,8 @@ def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:
     )
 
 
-def read_unsmry(
-    summaries: list[IO[Any]], spec: Spec, report_step_only: bool
+def read_smry(
+    summaries: list[FileOpener], spec: Spec, report_step_only: bool
 ) -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
     """Iterate (time, values) tuples from a unified summary file.
     Args:
@@ -388,25 +404,33 @@ def read_unsmry(
     """
 
     last_params = None
-    for smry in summaries:
-        summary_name = stream_name(smry)
+    try:
+        for smry_opener in summaries:
+            with smry_opener() as smry:
+                summary_name = stream_name(smry)
 
-        def read_params() -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
-            nonlocal last_params
-            if last_params is not None:
-                vals = validate_array("PARAMS", summary_name, last_params.read_array())
-                last_params = None
-                yield vals[spec.time_index], vals[spec.keyword_indices]
+                def read_params() -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
+                    nonlocal last_params
+                    if last_params is not None:
+                        vals = validate_array(
+                            "PARAMS", summary_name, last_params.read_array()
+                        )
+                        last_params = None
+                        yield vals[spec.time_index], vals[spec.keyword_indices]
 
-        for entry in resfo.lazy_read(smry):
-            kw = entry.read_keyword()
-            if last_params and not report_step_only:
+                for entry in resfo.lazy_read(smry):
+                    kw = entry.read_keyword()
+                    if last_params and not report_step_only:
+                        yield from read_params()
+                    if kw == "PARAMS  ":
+                        last_params = entry
+                    if report_step_only and kw == "SEQHDR  ":
+                        yield from read_params()
                 yield from read_params()
-            if kw == "PARAMS  ":
-                last_params = entry
-            if report_step_only and kw == "SEQHDR  ":
-                yield from read_params()
-        yield from read_params()
+    except OSError as err:
+        raise CliError(
+            f"Could not read from summary file {err.filename}: {err.strerror}"
+        )
 
 
 def print_header(keys: list[str]) -> None:
@@ -427,8 +451,10 @@ def print_header(keys: list[str]) -> None:
     print("-" * len(header))
 
 
-def fetch_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> list[str]:
-    """List all keys in the case that matches the given patterns.
+def fetch_keys(
+    smspec: FileOpener, patterns: list[str], fetch_restart: bool
+) -> list[str]:
+    """Get all keys in the case that matches the given patterns.
 
     Args:
         smspec: Open SMSPEC file.
@@ -438,7 +464,7 @@ def fetch_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> lis
         A list of all matched key names in display order.
     """
     spec = read_spec(smspec, patterns)
-    spec.order_keys_by(patterns)
+    spec.order_keys_by(patterns, nat_sort=False)
     matched_keywords = spec.matched_keywords
     restart_keys = []
     if spec.restart and fetch_restart:
@@ -457,7 +483,7 @@ def fetch_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> lis
     return matched_keywords
 
 
-def list_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> int:
+def list_keys(smspec: FileOpener, patterns: list[str], fetch_restart: bool) -> int:
     """List all keys in smspec that match the given patterns.
 
     Args:
@@ -486,8 +512,8 @@ def list_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> int:
 
 
 def read_case(
-    smspec: IO[Any],
-    summaries: list[IO[Any]],
+    smspec: FileOpener,
+    summaries: list[FileOpener],
     patterns: list[str],
     report_only: bool,
     fetch_restart: bool,
@@ -520,7 +546,7 @@ def read_case(
                 *restart_case, patterns, report_only, fetch_restart
             )
     result = defaultdict(list)
-    for date_val, values in read_unsmry(summaries, spec, report_only):
+    for date_val, values in read_smry(summaries, spec, report_only):
         date = spec.start_date + spec.time_unit.make_delta(float(date_val))
         result[spec.time_unit.value].append(date_val)
         result["dd/mm/yyyy"].append(date)
@@ -734,8 +760,7 @@ def get_summary_filenames(
         case default:
             assert_never(default)
 
-    summary = find_all_files_matching(filepath, matcher["smry"])
-    summary.sort(key=lambda x: int(x[-4:]))
+    summary = natsorted(find_all_files_matching(filepath, matcher["smry"]))
     if not summary:
         logger.debug(
             f"Did not find any {formatted} non-unified summary files matching {filepath}"
@@ -753,9 +778,9 @@ class ExistingCase:
     """Argparse type/validator for existing reservoir simulation cases.
 
 
-    Instances are callable and return open file handles to the SMSPEC and
-    summary files for a given case name, or ``None`` if validation is
-    configured to warn instead of raising.
+    Instances are callable and return a function that returns open file
+    handles to the SMSPEC and summary files for a given case name, or
+    ``None`` if validation is configured to warn instead of raising.
     """
 
     def __init__(self, warn_message: Callable[[str], str] | None = None) -> None:
@@ -775,7 +800,7 @@ class ExistingCase:
         """
         self.warn_message = warn_message
 
-    def __call__(self, case_name: str) -> tuple[IO[Any], list[IO[Any]]] | None:
+    def __call__(self, case_name: str) -> tuple[FileOpener, list[FileOpener]] | None:
         specified_formatting = None
         file_name = case_name
         if has_extension(
@@ -797,8 +822,21 @@ class ExistingCase:
                 return None
         mode = "rt" if spec.lower().endswith("fsmspec") else "rb"
 
+        def opener(s):
+            def inner():
+                return open(s, mode)
+
+            return inner
+
+        result = (opener(spec), [opener(s) for s in summaries])
         try:
-            return open(spec, mode), [open(s, mode) for s in summaries]
+            # We open at this point to make sure files are
+            # openable. We might still get an error later
+            # that is due to the file changing which must
+            # be handled separately
+            result[0]().close()
+            for r in result[1]:
+                r().close()
         except OSError as err:
             if self.warn_message is None:
                 raise argparse.ArgumentTypeError(
@@ -810,6 +848,8 @@ class ExistingCase:
             else:
                 logger.warning(f"{self.warn_message(case_name)}: {err.strerror or ''}")
                 return None
+        else:
+            return result
 
 
 def setup_logging(verbosity: int):
