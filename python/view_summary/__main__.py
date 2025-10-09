@@ -674,25 +674,31 @@ ANY_SUMMARY_EXTENSION = r"unsmry|smspec|funsmry|fsmspec|s\d\d\d\d|a\d\d\d\d"
 
 def get_summary_filenames(
     filepath: str,
-    specified_formatted: bool,
-    specified_unformatted: bool,
-    specified_unified: bool | None,
-    specified_split: bool | None,
 ) -> tuple[list[str], str]:
-    directory, base = os.path.split(filepath)
+    directory, file_name = os.path.split(filepath)
+    if "." in file_name:
+        case_name = ".".join(file_name.split(".")[:-1])
+    else:
+        case_name = file_name
+    specified_formatted = has_extension(file_name, r"funsmry|fsmspec|a\d\d\d\d")
+    specified_unformatted = has_extension(file_name, r"unsmry|smspec|s\d\d\d\d")
+    specified_unified = has_extension(file_name, "funsmry")
+    specified_split = has_extension(file_name, r"x\d\d\d\d|a\d\d\d\d")
     spec_candidates, smry_candidates = tee(
-        filter(
-            lambda x: is_base_with_extension(
-                path=x, base=base, ext=ANY_SUMMARY_EXTENSION
+        map(
+            lambda x: os.path.join(directory, x),
+            filter(
+                lambda x: is_base_with_extension(
+                    path=x, base=case_name, ext=ANY_SUMMARY_EXTENSION
+                ),
+                os.listdir(directory or "."),
             ),
-            os.listdir(directory or "."),
         )
     )
 
     def filter_extension(ext: str, lst: Iterable[str]) -> Iterator[str]:
         return filter(partial(has_extension, ext=ext), lst)
 
-    spec_candidates = filter_extension("smspec|fsmspec", spec_candidates)
     smry_candidates = filter_extension(
         r"unsmry|funsmry|s\d\d\d\d|a\d\d\d\d", smry_candidates
     )
@@ -702,7 +708,6 @@ def get_summary_filenames(
         smry_candidates = filter_extension("unsmry|funsmry", smry_candidates)
     if specified_formatted:
         smry_candidates = filter_extension("funsmry", smry_candidates)
-        spec_candidates = filter_extension("fsmspec", spec_candidates)
     if specified_unformatted:
         smry_candidates = filter_extension("unsmry", smry_candidates)
     all_summary = natsorted(list(smry_candidates))
@@ -713,22 +718,22 @@ def get_summary_filenames(
         if summary:
             break
 
+    if len(summary) != len(all_summary):
+        logger.warning(f"More than one type of summary file, found {all_summary}")
+    if not summary:
+        raise argparse.ArgumentTypeError(
+            f"Could not find any summary files matching {filepath}"
+        )
+
     if pat in ("unsmry", r"s\d\d\d\d"):
         spec_candidates = filter_extension("smspec", spec_candidates)
     else:
         spec_candidates = filter_extension("fsmspec", spec_candidates)
 
-    if len(summary) != len(all_summary):
-        logger.warning(f"More than one type of summary file, found {all_summary}")
-
     spec = list(spec_candidates)
     if len(spec) > 1:
         logger.warning(f"More than one type of summary spec file, found {spec}")
 
-    if not summary:
-        raise argparse.ArgumentTypeError(
-            f"Could not find any summary files matching {filepath}"
-        )
     if not spec:
         raise argparse.ArgumentTypeError(
             f"Could not find any summary spec matching {filepath}"
@@ -763,22 +768,8 @@ class ExistingCase:
         self.warn_message = warn_message
 
     def __call__(self, case_name: str) -> tuple[FileOpener, list[FileOpener]] | None:
-        file_name = case_name
-        if has_extension(case_name, ANY_SUMMARY_EXTENSION):
-            case_name = ".".join(case_name.split(".")[:-1])
-
         try:
-            summaries, spec = get_summary_filenames(
-                case_name,
-                specified_formatted=has_extension(
-                    file_name, r"funsmry|fsmspec|a\d\d\d\d"
-                ),
-                specified_unformatted=has_extension(
-                    file_name, r"unsmry|smspec|s\d\d\d\d"
-                ),
-                specified_unified=has_extension(file_name, "funsmry"),
-                specified_split=has_extension(file_name, r"x\d\d\d\d|a\d\d\d\d"),
-            )
+            summaries, spec = get_summary_filenames(case_name)
         except argparse.ArgumentTypeError as err:
             if self.warn_message is None:
                 raise
@@ -788,7 +779,7 @@ class ExistingCase:
         except Exception as err:
             if self.warn_message is None:
                 raise argparse.ArgumentTypeError(
-                    f"No summary data found for case: {file_name}'" + str(err)
+                    f"No summary data found for case: {case_name}'" + str(err)
                 ) from err
             else:
                 logger.warning(f"{self.warn_message(case_name)}: {err.args[0]}")

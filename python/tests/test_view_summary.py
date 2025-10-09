@@ -730,7 +730,7 @@ def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_unified_is_chosen_over_split(capsys):
+def test_that_unformatted_unified_is_chosen_over_unformatted_split(capsys):
     create_summary(summary_keys=("FOPR",))
     create_split_case(summary_keys=("FOPR",))
 
@@ -746,8 +746,8 @@ def test_that_unified_is_chosen_over_split(capsys):
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_unformatted_is_chosen_over_formatted(capsys):
-    create_summary(summary_keys=("FGIT", "FOPR"), formatted="F")
+def test_that_split_unformatted_is_chosen_over_unified_formatted(capsys):
+    create_summary(summary_keys=("WOPR"), formatted="F")
     create_split_case(summary_keys=("FGIT", "FOPR"))
 
     capsys.readouterr()  # Ensure empty capture
@@ -760,5 +760,55 @@ def test_that_unformatted_is_chosen_over_formatted(capsys):
             1,2.0,03/01/2014,4.0,4.0
             2,3.0,04/01/2014,4.0,4.0
             3,4.0,05/01/2014,4.0,4.0
+            """
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_formatted_unified_is_chosen_over_unformatted_split(capsys):
+    create_summary(summary_keys=("FOPR",), formatted="F")
+    create_split_case(summary_keys=("FOPR",), formatted="F")
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", "TEST", "*"])
+    df = output_as_df(capsys.readouterr().out)
+    assert df.to_csv() == dedent(
+        """\
+            ,Days,dd/mm/yyyy,FOPR
+            0,0.0,01/01/2014,5.6299e+16
+            """
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_files_can_be_in_a_different_directory(monkeypatch, capsys):
+    dir = Path("subdir")
+    dir.mkdir()
+    monkeypatch.chdir(dir)
+    create_summary(summary_keys=("FOPR",))
+    monkeypatch.chdir("..")
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", str(dir / "TEST"), "*"])
+    df = output_as_df(capsys.readouterr().out)
+    assert df.to_csv() == dedent(
+        """\
+            ,Days,dd/mm/yyyy,FOPR
+            0,0.0,01/01/2014,5.6299e+16
+            """
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_empty_extension_is_ignored(capsys):
+    create_summary(summary_keys=("FOPR",))
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", "TEST.", "*"])
+    df = output_as_df(capsys.readouterr().out)
+    assert df.to_csv() == dedent(
+        """\
+            ,Days,dd/mm/yyyy,FOPR
+            0,0.0,01/01/2014,5.6299e+16
             """
     )
