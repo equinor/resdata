@@ -159,7 +159,7 @@ def create_summary(
         region_numbers=(
             [-32676, *([0] * len(summary_keys))] if numbers is None else numbers
         ),
-        units=[time_units.ljust(8), "SM3" * len(summary_keys)],
+        units=[time_units.ljust(8), *(["SM3"] * len(summary_keys))],
         start_date=start_date,
         intehead=SmspecIntehead(
             unit=UnitSystem.METRIC,
@@ -651,3 +651,54 @@ def test_that_numbered_keywords_with_negative_number_are_invalid(
         f"{keyword_type} keyword given negative number -1" in r.message
         for r in caplog.records
     )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("formatted", ("F", ""))
+def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
+    summary_keys = ["FOPR", "FGIT"]
+    smspec = Smspec(
+        nx=2,
+        ny=2,
+        nz=2,
+        restarted_from_step=0,
+        num_keywords=1 + len(summary_keys),
+        restart="        ",
+        keywords=["TIME    ", *summary_keys],
+        well_names=([":+:+:+:+", *(["A_NAME  "] * len(summary_keys))]),
+        region_numbers=([-32676, *([0] * len(summary_keys))]),
+        units=["DAYS    ", *(["SM3"] * len(summary_keys))],
+        start_date=Date(day=1, month=1, year=2014, hour=0, minutes=0, micro_seconds=0),
+        intehead=SmspecIntehead(
+            unit=UnitSystem.METRIC,
+            simulator=Simulator.ECLIPSE_100,
+        ),
+    )
+    format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
+    smspec.to_file(f"TEST.{formatted}SMSPEC", file_format=format)
+    for i in range(1, 5):
+        smry = Unsmry(
+            steps=[
+                SummaryStep(
+                    seqnum=i,
+                    ministeps=[
+                        SummaryMiniStep(
+                            mini_step=0,
+                            params=[float(i)] + [5.629901e16] * len(summary_keys),
+                        ),
+                    ],
+                )
+            ]
+        )
+        smry.to_file(f"TEST.{'S' if formatted else 'A'}{i:04d}", file_format=format)
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", "TEST", "*"])
+    df = output_as_df(capsys.readouterr().out)
+    assert df.to_csv() == dedent("""\
+            ,Days,dd/mm/yyyy,FGIT,FOPR
+            0,1.0,02/01/2014,5.6299e+16,5.6299e+16
+            1,2.0,03/01/2014,5.6299e+16,5.6299e+16
+            2,3.0,04/01/2014,5.6299e+16,5.6299e+16
+            3,4.0,05/01/2014,5.6299e+16,5.6299e+16
+            """)

@@ -374,7 +374,7 @@ def read_spec(spec: IO[Any], fetch_keys: Sequence[str]) -> Spec:
 
 
 def read_unsmry(
-    summary: IO[Any], spec: Spec, report_step_only: bool
+    summaries: list[IO[Any]], spec: Spec, report_step_only: bool
 ) -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
     """Iterate (time, values) tuples from a unified summary file.
     Args:
@@ -388,24 +388,25 @@ def read_unsmry(
     """
 
     last_params = None
-    summary_name = stream_name(summary)
+    for smry in summaries:
+        summary_name = stream_name(smry)
 
-    def read_params() -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
-        nonlocal last_params
-        if last_params is not None:
-            vals = validate_array("PARAMS", summary_name, last_params.read_array())
-            last_params = None
-            yield vals[spec.time_index], vals[spec.keyword_indices]
+        def read_params() -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
+            nonlocal last_params
+            if last_params is not None:
+                vals = validate_array("PARAMS", summary_name, last_params.read_array())
+                last_params = None
+                yield vals[spec.time_index], vals[spec.keyword_indices]
 
-    for entry in resfo.lazy_read(summary):
-        kw = entry.read_keyword()
-        if last_params and not report_step_only:
-            yield from read_params()
-        if kw == "PARAMS  ":
-            last_params = entry
-        if report_step_only and kw == "SEQHDR  ":
-            yield from read_params()
-    yield from read_params()
+        for entry in resfo.lazy_read(smry):
+            kw = entry.read_keyword()
+            if last_params and not report_step_only:
+                yield from read_params()
+            if kw == "PARAMS  ":
+                last_params = entry
+            if report_step_only and kw == "SEQHDR  ":
+                yield from read_params()
+        yield from read_params()
 
 
 def print_header(keys: list[str]) -> None:
@@ -486,7 +487,7 @@ def list_keys(smspec: IO[Any], patterns: list[str], fetch_restart: bool) -> int:
 
 def read_case(
     smspec: IO[Any],
-    unsmry: IO[Any],
+    summaries: list[IO[Any]],
     patterns: list[str],
     report_only: bool,
     fetch_restart: bool,
@@ -519,7 +520,7 @@ def read_case(
                 *restart_case, patterns, report_only, fetch_restart
             )
     result = defaultdict(list)
-    for date_val, values in read_unsmry(unsmry, spec, report_only):
+    for date_val, values in read_unsmry(summaries, spec, report_only):
         date = spec.start_date + spec.time_unit.make_delta(float(date_val))
         result[spec.time_unit.value].append(date_val)
         result["dd/mm/yyyy"].append(date)
@@ -588,22 +589,22 @@ def run(argv: list[str]) -> int:
         return 0
 
 
-def has_extension(path: str, exts: list[str]) -> bool:
+def has_extension(path: str, ext: str) -> bool:
     """
-    >>> has_extension("ECLBASE.SMSPEC", ["smspec"])
+    >>> has_extension("ECLBASE.SMSPEC", "smspec")
     True
-    >>> has_extension("BASE.SMSPEC", ["smspec"])
+    >>> has_extension("BASE.SMSPEC", "smspec")
     False
-    >>> has_extension("BASE.FUNSMRY", ["smspec"])
+    >>> has_extension("BASE.FUNSMRY", "smspec")
     False
-    >>> has_extension("ECLBASE.smspec", ["smspec"])
+    >>> has_extension("ECLBASE.smspec", "smspec")
     True
-    >>> has_extension("ECLBASE.tar.gz.smspec", ["smspec"])
+    >>> has_extension("ECLBASE.tar.gz.smspec", "smspec")
     True
 
     Args:
         path: File name to check.
-        exts: Allowed extensions (lower-case, without dots).
+        ext: Allowed extension regex.
 
     Returns:
         ``True`` if the file has any of the extensions in ``exts``.
@@ -611,10 +612,10 @@ def has_extension(path: str, exts: list[str]) -> bool:
     if "." not in path:
         return False
     splitted = path.split(".")
-    return splitted[-1].lower() in exts
+    return re.fullmatch(ext, splitted[-1].lower()) is not None
 
 
-def is_base_with_extension(base: str, path: str, exts: list[str]) -> bool:
+def is_base_with_extension(base: str, path: str, ext: str) -> bool:
     """
     >>> is_base_with_extension("ECLBASE", "ECLBASE.SMSPEC", ["smspec"])
     True
@@ -630,7 +631,7 @@ def is_base_with_extension(base: str, path: str, exts: list[str]) -> bool:
     Args:
         base: Basename without extension.
         path: Candidate path.
-        exts: Allowed extensions.
+        exts: Allowed extension regex pattern.
 
     Returns:
         ``True`` if ``path`` is ``base`` with one of ``exts``.
@@ -638,15 +639,40 @@ def is_base_with_extension(base: str, path: str, exts: list[str]) -> bool:
     if "." not in path:
         return False
     splitted = path.split(".")
-    return ".".join(splitted[0:-1]) == base and splitted[-1].lower() in exts
+    return (
+        ".".join(splitted[0:-1]) == base
+        and re.fullmatch(ext, splitted[-1].lower()) is not None
+    )
 
 
-is_funsmry = partial(is_base_with_extension, exts=["funsmry"])
-is_fsmspec = partial(is_base_with_extension, exts=["fsmspec"])
-is_unsmry = partial(is_base_with_extension, exts=["unsmry"])
-is_smspec = partial(is_base_with_extension, exts=["smspec"])
-is_any_unsmry = partial(is_base_with_extension, exts=["unsmry", "funsmry"])
-is_any_smspec = partial(is_base_with_extension, exts=["smspec", "fsmspec"])
+is_funsmry = partial(is_base_with_extension, ext="funsmry")
+is_fsmspec = partial(is_base_with_extension, ext="fsmspec")
+is_unsmry = partial(is_base_with_extension, ext="unsmry")
+is_smspec = partial(is_base_with_extension, ext="smspec")
+is_any_unsmry = partial(is_base_with_extension, ext="unsmry|funsmry")
+is_any_smspec = partial(is_base_with_extension, ext="smspec|fsmspec")
+is_formatted_smry = partial(is_base_with_extension, ext=r"s\d\d\d\d")
+is_smry = partial(is_base_with_extension, ext=r"a\d\d\d\d")
+is_any_smry = partial(is_base_with_extension, ext=r"[sa]\d\d\d\d")
+
+
+def find_all_files_matching(
+    case: str, predicate: Callable[[str, str], bool]
+) -> list[str]:
+    """Find all files in ``case``'s directory that matches ``predicate``.
+
+    Args:
+        case: Basename or path to the case (may include directories).
+        predicate: Function that returns ``True`` for files that match.
+
+    Returns:
+        The full path to all matching files.
+    """
+    directory, base = os.path.split(case)
+    candidates = list(
+        filter(lambda x: predicate(base, x), os.listdir(directory or "."))
+    )
+    return [os.path.join(directory, c) for c in candidates]
 
 
 def find_file_matching(
@@ -659,10 +685,8 @@ def find_file_matching(
         case: Basename or path to the case (may include directories).
         predicate: Function that returns ``True`` for files that match.
 
-
     Returns:
         The full path to the unique matching file.
-
 
     Raises:
         FileNotFoundError: If none match.
@@ -684,24 +708,45 @@ def find_file_matching(
 
 def get_summary_filenames(
     filepath: str, specified_formatting: bool | None
-) -> tuple[str, str]:
+) -> tuple[list[str], str]:
     match specified_formatting:
         case None:
-            summary = find_file_matching(
-                "unified summary file", filepath, is_any_unsmry
-            )
-            spec = find_file_matching("smspec file", filepath, is_any_smspec)
-            return summary, spec
+            formatted = ""
+            matcher = {
+                "spec": is_any_smspec,
+                "smry": is_any_smry,
+                "unsmry": is_any_unsmry,
+            }
         case True:
-            summary = find_file_matching("unified summary file", filepath, is_funsmry)
-            spec = find_file_matching("smspec file", filepath, is_fsmspec)
-            return summary, spec
+            formatted = "formatted"
+            matcher = {
+                "spec": is_fsmspec,
+                "smry": is_formatted_smry,
+                "unsmry": is_funsmry,
+            }
         case False:
-            summary = find_file_matching("unified summary file", filepath, is_unsmry)
-            spec = find_file_matching("smspec file", filepath, is_smspec)
-            return summary, spec
+            formatted = ""
+            matcher = {
+                "spec": is_smspec,
+                "smry": is_smry,
+                "unsmry": is_unsmry,
+            }
         case default:
             assert_never(default)
+
+    summary = find_all_files_matching(filepath, matcher["smry"])
+    summary.sort(key=lambda x: int(x[-4:]))
+    if not summary:
+        logger.debug(
+            f"Did not find any {formatted} non-unified summary files matching {filepath}"
+        )
+        summary = [
+            find_file_matching(
+                f"{formatted} unified summary file", filepath, matcher["unsmry"]
+            )
+        ]
+    spec = find_file_matching(f"{formatted} smspec file", filepath, matcher["spec"])
+    return summary, spec
 
 
 class ExistingCase:
@@ -709,7 +754,7 @@ class ExistingCase:
 
 
     Instances are callable and return open file handles to the SMSPEC and
-    UNSMRY/FUNSMRY files for a given case name, or ``None`` if validation is
+    summary files for a given case name, or ``None`` if validation is
     configured to warn instead of raising.
     """
 
@@ -730,14 +775,18 @@ class ExistingCase:
         """
         self.warn_message = warn_message
 
-    def __call__(self, case_name: str) -> tuple[IO[Any], IO[Any]] | None:
+    def __call__(self, case_name: str) -> tuple[IO[Any], list[IO[Any]]] | None:
         specified_formatting = None
         file_name = case_name
-        if has_extension(case_name, ["unsmry", "smspec", "funsmry", "fsmspec"]):
-            specified_formatting = has_extension(case_name, ["funsmry", "fsmspec"])
+        if has_extension(
+            case_name, r"unsmry|smspec|funsmry|fsmspec|x\d\d\d\d|a\d\d\d\d"
+        ):
+            specified_formatting = has_extension(
+                case_name, r"funsmry|fsmspec|a\d\d\d\d"
+            )
             case_name = ".".join(case_name.split(".")[:-1])
         try:
-            summary, spec = get_summary_filenames(case_name, specified_formatting)
+            summaries, spec = get_summary_filenames(case_name, specified_formatting)
         except FileNotFoundError as err:
             if self.warn_message is None:
                 raise argparse.ArgumentTypeError(
@@ -749,7 +798,7 @@ class ExistingCase:
         mode = "rt" if spec.lower().endswith("fsmspec") else "rb"
 
         try:
-            return open(spec, mode), open(summary, mode)
+            return open(spec, mode), [open(s, mode) for s in summaries]
         except OSError as err:
             if self.warn_message is None:
                 raise argparse.ArgumentTypeError(
