@@ -5,6 +5,7 @@ case "$1" in
     3.11) pyver=cp311-cp311 ;;
     3.12) pyver=cp312-cp312 ;;
     3.13) pyver=cp313-cp313 ;;
+    3.14) pyver=cp314-cp314 ;;
     *)
         echo "Unknown Python version $1"
         exit 1
