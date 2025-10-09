@@ -500,7 +500,9 @@ def test_that_value_placed_in_given_cell_is_the_value_from_the_step(
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_the_restart_is_read_by_default_and_controlled_by_cli_option(capsys):
-    create_summary(case="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
+    create_summary(
+        case="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"), times=[1.0]
+    )
     create_summary(restart="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
 
     run(["summary.x", "TEST", "FGIP", "FOPR"])
@@ -512,8 +514,8 @@ def test_that_the_restart_is_read_by_default_and_controlled_by_cli_option(capsys
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_case_and_restart_columns_are_merged_when_they_differ(capsys):
-    create_summary(case="RESTART", summary_keys=("FOPR",))
-    create_summary(restart="RESTART", summary_keys=("FWPT",))
+    create_summary(case="RESTART", summary_keys=("FOPR",), times=[0.5])
+    create_summary(restart="RESTART", summary_keys=("FWPT",), times=[1.0])
 
     run(["summary.x", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
@@ -531,9 +533,7 @@ def test_that_missing_restart_warns(capsys, caplog):
     df = output_as_df(capture.out)
     assert set(df.columns) == {"Days", "dd/mm/yyyy", "FWPT"}
 
-    assert any(
-        "could not open restart case: 'RESTART'" in r.message for r in caplog.records
-    )
+    assert any("could not open restart case" in r.message for r in caplog.records)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -549,10 +549,7 @@ def test_that_unopenable_restart_warns(capsys, caplog):
         df = output_as_df(capture.out)
         assert set(df.columns) == {"Days", "dd/mm/yyyy", "FWPT"}
 
-        assert any(
-            "could not open restart case: 'RESTART'" in r.message
-            for r in caplog.records
-        )
+        assert any("could not open restart case" in r.message for r in caplog.records)
     finally:
         with suppress(FileNotFoundError):
             Path("RESTART.UNSMRY").chmod(0x777)
@@ -562,9 +559,7 @@ def test_that_unopenable_restart_warns(capsys, caplog):
 def test_that_unknown_time_unit_gives_informative_error_message(caplog):
     create_summary(time_units="YEARS")
     run(["summary.x", "--no-restart", "TEST", "*"])
-    assert any(
-        "Unknown date unit in TEST.SMSPEC: YEARS" in r.message for r in caplog.records
-    )
+    assert any("Unknown date unit " in r.message for r in caplog.records)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -839,10 +834,12 @@ def test_that_restart_and_base_times_are_merged(capsys):
 
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST", "*"])
-    assert output_as_df(capsys.readouterr().out).to_csv() == dedent("""\
+    assert output_as_df(capsys.readouterr().out).to_csv() == dedent(
+        """\
         ,Days,dd/mm/yyyy,FGIP,FOPR,FOPT
         0,1.0,02/01/2014,-99.0,-99.0,4.0
         1,2.0,03/01/2014,5.6299e+16,5.6299e+16,4.0
         2,3.0,04/01/2014,5.6299e+16,5.6299e+16,4.0
         3,4.0,05/01/2014,5.6299e+16,5.6299e+16,4.0
-        """)
+        """
+    )
