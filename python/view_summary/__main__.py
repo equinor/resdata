@@ -5,13 +5,14 @@ import os
 import re
 import sys
 from collections import defaultdict
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Sequence, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 from functools import partial
 from textwrap import dedent
 from typing import IO, Any, Callable, assert_never
+from itertools import tee
 
 import numpy as np
 import numpy.typing as npt
@@ -668,70 +669,62 @@ def is_base_with_extension(base: str, path: str, ext: str) -> bool:
     )
 
 
-is_funsmry = partial(is_base_with_extension, ext="funsmry")
-is_fsmspec = partial(is_base_with_extension, ext="fsmspec")
-is_unsmry = partial(is_base_with_extension, ext="unsmry")
-is_smspec = partial(is_base_with_extension, ext="smspec")
-is_any_unsmry = partial(is_base_with_extension, ext="unsmry|funsmry")
-is_any_smspec = partial(is_base_with_extension, ext="smspec|fsmspec")
-is_formatted_smry = partial(is_base_with_extension, ext=r"s\d\d\d\d")
-is_smry = partial(is_base_with_extension, ext=r"a\d\d\d\d")
-is_any_smry = partial(is_base_with_extension, ext=r"[sa]\d\d\d\d")
-
-
-def find_all_files_matching(
-    case: str, predicate: Callable[[str, str], bool]
-) -> list[str]:
-    """Find all files in ``case``'s directory that matches ``predicate``.
-
-    Args:
-        case: Basename or path to the case (may include directories).
-        predicate: Function that returns ``True`` for files that match.
-
-    Returns:
-        The full path to all matching files.
-    """
-    directory, base = os.path.split(case)
-    candidates = list(
-        filter(lambda x: predicate(base, x), os.listdir(directory or "."))
-    )
-    return [os.path.join(directory, c) for c in candidates]
+ANY_SUMMARY_EXTENSION = r"unsmry|smspec|funsmry|fsmspec|s\d\d\d\d|a\d\d\d\d"
 
 
 def get_summary_filenames(
     filepath: str,
-    specified_formatting: bool | None,
+    specified_formatted: bool,
+    specified_unformatted: bool,
     specified_unified: bool | None,
     specified_split: bool | None,
 ) -> tuple[list[str], str]:
-    match specified_formatting:
-        case None:
-            matcher = {
-                "spec": is_any_smspec,
-                "smry": is_any_smry,
-                "unsmry": is_any_unsmry,
-            }
-        case True:
-            matcher = {
-                "spec": is_fsmspec,
-                "smry": is_formatted_smry,
-                "unsmry": is_funsmry,
-            }
-        case False:
-            matcher = {
-                "spec": is_smspec,
-                "smry": is_smry,
-                "unsmry": is_unsmry,
-            }
-        case default:
-            assert_never(default)
+    directory, base = os.path.split(filepath)
+    spec_candidates, smry_candidates = tee(
+        filter(
+            lambda x: is_base_with_extension(
+                path=x, base=base, ext=ANY_SUMMARY_EXTENSION
+            ),
+            os.listdir(directory or "."),
+        )
+    )
 
+    def filter_extension(ext: str, lst: Iterable[str]) -> Iterator[str]:
+        return filter(partial(has_extension, ext=ext), lst)
+
+    spec_candidates = filter_extension("smspec|fsmspec", spec_candidates)
+    smry_candidates = filter_extension(
+        r"unsmry|funsmry|s\d\d\d\d|a\d\d\d\d", smry_candidates
+    )
+    if specified_split:
+        smry_candidates = filter_extension(r"s\d\d\d\d|a\d\d\d\d", smry_candidates)
+    if specified_unified:
+        smry_candidates = filter_extension("unsmry|funsmry", smry_candidates)
+    if specified_formatted:
+        smry_candidates = filter_extension("funsmry", smry_candidates)
+        spec_candidates = filter_extension("fsmspec", spec_candidates)
+    if specified_unformatted:
+        smry_candidates = filter_extension("unsmry", smry_candidates)
+    all_summary = natsorted(list(smry_candidates))
     summary = []
-    if not specified_split:
-        summary = find_all_files_matching(filepath, matcher["unsmry"])
-    if not summary and not specified_unified:
-        summary = natsorted(find_all_files_matching(filepath, matcher["smry"]))
-    spec = find_all_files_matching(filepath, matcher["spec"])
+    pat = None
+    for pat in ("unsmry", r"s\d\d\d\d", "funsmry", r"a\d\d\d\d"):
+        summary = list(filter_extension(pat, all_summary))
+        if summary:
+            break
+
+    if pat in ("unsmry", r"s\d\d\d\d"):
+        spec_candidates = filter_extension("smspec", spec_candidates)
+    else:
+        spec_candidates = filter_extension("fsmspec", spec_candidates)
+
+    if len(summary) != len(all_summary):
+        logger.warning(f"More than one type of summary file, found {all_summary}")
+
+    spec = list(spec_candidates)
+    if len(spec) > 1:
+        logger.warning(f"More than one type of summary spec file, found {spec}")
+
     if not summary:
         raise argparse.ArgumentTypeError(
             f"Could not find any summary files matching {filepath}"
@@ -740,7 +733,7 @@ def get_summary_filenames(
         raise argparse.ArgumentTypeError(
             f"Could not find any summary spec matching {filepath}"
         )
-    return summary, spec[0]
+    return summary, spec[-1]
 
 
 class ExistingCase:
@@ -770,27 +763,32 @@ class ExistingCase:
         self.warn_message = warn_message
 
     def __call__(self, case_name: str) -> tuple[FileOpener, list[FileOpener]] | None:
-        specified_formatting = None
-        specified_unified = None
-        specified_split = None
         file_name = case_name
-        if has_extension(
-            case_name, r"unsmry|smspec|funsmry|fsmspec|x\d\d\d\d|a\d\d\d\d"
-        ):
-            specified_formatting = has_extension(
-                case_name, r"funsmry|fsmspec|a\d\d\d\d"
-            )
+        if has_extension(case_name, ANY_SUMMARY_EXTENSION):
             case_name = ".".join(case_name.split(".")[:-1])
-            specified_unified = has_extension(case_name, r"funsmry")
-            specified_split = has_extension(case_name, r"x\d\d\d\d|a\d\d\d\d")
+
         try:
             summaries, spec = get_summary_filenames(
-                case_name, specified_formatting, specified_unified, specified_split
+                case_name,
+                specified_formatted=has_extension(
+                    file_name, r"funsmry|fsmspec|a\d\d\d\d"
+                ),
+                specified_unformatted=has_extension(
+                    file_name, r"unsmry|smspec|s\d\d\d\d"
+                ),
+                specified_unified=has_extension(file_name, "funsmry"),
+                specified_split=has_extension(file_name, r"x\d\d\d\d|a\d\d\d\d"),
             )
+        except argparse.ArgumentTypeError as err:
+            if self.warn_message is None:
+                raise
+            else:
+                logger.warning(f"{self.warn_message(case_name)}: {err}")
+                return None
         except Exception as err:
             if self.warn_message is None:
                 raise argparse.ArgumentTypeError(
-                    f"No summary data found for case: {file_name}'"
+                    f"No summary data found for case: {file_name}'" + str(err)
                 ) from err
             else:
                 logger.warning(f"{self.warn_message(case_name)}: {err.args[0]}")
@@ -890,7 +888,7 @@ def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
 
         The summary.x program will look for and load both unified and
         non-unified and formatted and non-formatted files. The default
-        search order is: UNSMRY, FUNSMRY, Snnnn, Annnn, however you can
+        search order is: UNSMRY, Snnnn, FUNSMRY, Annnn, however you can
         manipulate this with the extension to the basename:
 
         * If the extension corresponds to an unformatted file, summary.x

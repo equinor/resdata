@@ -93,7 +93,7 @@ Example2:
 
 The summary.x program will look for and load both unified and
 non-unified and formatted and non-formatted files. The default
-search order is: UNSMRY, FUNSMRY, Snnnn, Annnn, however you can
+search order is: UNSMRY, Snnnn, FUNSMRY, Annnn, however you can
 manipulate this with the extension to the basename:
 
 * If the extension corresponds to an unformatted file, summary.x
@@ -112,7 +112,7 @@ def test_that_giving_non_existing_case_is_invalid(tmp_path, capsys):
         # will produce exit code 2
         pass
     assert (
-        f"No summary data found for case: {tmp_path / 'DOES_NOT_EXIST'}"
+        f"Could not find any summary files matching {tmp_path / 'DOES_NOT_EXIST'}"
         in capsys.readouterr().err
     )
 
@@ -198,10 +198,7 @@ def test_that_case_name_with_formatted_extension_does_not_match_unformatted_summ
     except BaseException:
         # will produce exit code 2
         pass
-    assert (
-        f"No summary data found for case: {tmp_path / 'TEST.FSMSPEC'}"
-        in capsys.readouterr().err
-    )
+    assert f"Could not find any summary files matching" in capsys.readouterr().err
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -216,10 +213,7 @@ def test_that_case_name_with_unformatted_extension_does_not_match_formatted_summ
     except BaseException:
         # will produce exit code 2
         pass
-    assert (
-        f"No summary data found for case: {tmp_path / 'TEST.SMSPEC'}"
-        in capsys.readouterr().err
-    )
+    assert f"Could not find any summary files matching" in capsys.readouterr().err
 
 
 @pytest.fixture
@@ -679,10 +673,7 @@ def test_that_numbered_keywords_with_negative_number_are_invalid(
     )
 
 
-@pytest.mark.usefixtures("use_tmpdir")
-@pytest.mark.parametrize("formatted", ("F", ""))
-def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
-    summary_keys = ["FOPR", "FGIT"]
+def create_split_case(summary_keys=("FOPR",), formatted=""):
     smspec = Smspec(
         nx=2,
         ny=2,
@@ -710,13 +701,19 @@ def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
                     ministeps=[
                         SummaryMiniStep(
                             mini_step=0,
-                            params=[float(i)] + [5.629901e16] * len(summary_keys),
+                            params=[float(i)] + [4.0] * len(summary_keys),
                         ),
                     ],
                 )
             ]
         )
-        smry.to_file(f"TEST.{'S' if formatted else 'A'}{i:04d}", file_format=format)
+        smry.to_file(f"TEST.{'A' if formatted else 'S'}{i:04d}", file_format=format)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.parametrize("formatted", ("F", ""))
+def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
+    create_split_case(summary_keys=("FOPR", "FGIT"), formatted=formatted)
 
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST", "*"])
@@ -724,9 +721,44 @@ def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
     assert df.to_csv() == dedent(
         """\
             ,Days,dd/mm/yyyy,FGIT,FOPR
-            0,1.0,02/01/2014,5.6299e+16,5.6299e+16
-            1,2.0,03/01/2014,5.6299e+16,5.6299e+16
-            2,3.0,04/01/2014,5.6299e+16,5.6299e+16
-            3,4.0,05/01/2014,5.6299e+16,5.6299e+16
+            0,1.0,02/01/2014,4.0,4.0
+            1,2.0,03/01/2014,4.0,4.0
+            2,3.0,04/01/2014,4.0,4.0
+            3,4.0,05/01/2014,4.0,4.0
+            """
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_unified_is_chosen_over_split(capsys):
+    create_summary(summary_keys=("FOPR",))
+    create_split_case(summary_keys=("FOPR",))
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", "TEST", "*"])
+    df = output_as_df(capsys.readouterr().out)
+    assert df.to_csv() == dedent(
+        """\
+            ,Days,dd/mm/yyyy,FOPR
+            0,0.0,01/01/2014,5.6299e+16
+            """
+    )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_unformatted_is_chosen_over_formatted(capsys):
+    create_summary(summary_keys=("FGIT", "FOPR"), formatted="F")
+    create_split_case(summary_keys=("FGIT", "FOPR"))
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", "TEST", "*"])
+    df = output_as_df(capsys.readouterr().out)
+    assert df.to_csv() == dedent(
+        """\
+            ,Days,dd/mm/yyyy,FGIT,FOPR
+            0,1.0,02/01/2014,4.0,4.0
+            1,2.0,03/01/2014,4.0,4.0
+            2,3.0,04/01/2014,4.0,4.0
+            3,4.0,05/01/2014,4.0,4.0
             """
     )
