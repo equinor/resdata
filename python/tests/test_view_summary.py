@@ -93,7 +93,7 @@ Example2:
 
 The summary.x program will look for and load both unified and
 non-unified and formatted and non-formatted files. The default
-search order is: UNSMRY, Snnnn, FUNSMRY, Annnn, however you can
+search order is: UNSMRY, FUNSMRY, Snnnn, Annnn, however you can
 manipulate this with the extension to the basename:
 
 * If the extension corresponds to an unformatted file, summary.x
@@ -220,18 +220,6 @@ def test_that_case_name_with_unformatted_extension_does_not_match_formatted_summ
         f"No summary data found for case: {tmp_path / 'TEST.SMSPEC'}"
         in capsys.readouterr().err
     )
-
-
-@pytest.mark.usefixtures("use_tmpdir")
-def test_that_ambiguous_references_to_summary_files_is_invalid(tmp_path, capsys):
-    try:
-        create_summary()
-        create_summary(formatted="F")
-        parse_arguments(["summary.x", str(tmp_path / "TEST")])
-    except BaseException:
-        # will produce exit code 2
-        pass
-    assert "could be any of:" in capsys.readouterr().err
 
 
 @pytest.fixture
@@ -733,10 +721,12 @@ def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent("""\
+    assert df.to_csv() == dedent(
+        """\
             ,Days,dd/mm/yyyy,FGIT,FOPR
             0,1.0,02/01/2014,5.6299e+16,5.6299e+16
             1,2.0,03/01/2014,5.6299e+16,5.6299e+16
             2,3.0,04/01/2014,5.6299e+16,5.6299e+16
             3,4.0,05/01/2014,5.6299e+16,5.6299e+16
-            """)
+            """
+    )

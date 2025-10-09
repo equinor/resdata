@@ -698,57 +698,26 @@ def find_all_files_matching(
     return [os.path.join(directory, c) for c in candidates]
 
 
-def find_file_matching(
-    kind: str, case: str, predicate: Callable[[str, str], bool]
-) -> str:
-    """Find the single file in ``case``'s directory that matches ``predicate``.
-
-    Args:
-        kind: Human-readable description used in error messages.
-        case: Basename or path to the case (may include directories).
-        predicate: Function that returns ``True`` for files that match.
-
-    Returns:
-        The full path to the unique matching file.
-
-    Raises:
-        FileNotFoundError: If none match.
-        argparse.ArgumentTypeError: If multiple files match.
-    """
-    directory, base = os.path.split(case)
-    candidates = list(
-        filter(lambda x: predicate(base, x), os.listdir(directory or "."))
-    )
-    if not candidates:
-        raise FileNotFoundError(f"Could not find any {kind} matching case path {case}")
-    if len(candidates) > 1:
-        raise argparse.ArgumentTypeError(
-            f"Ambiguous reference to {kind} in {case},"
-            f" could be any of: {', '.join(candidates)}"
-        )
-    return os.path.join(directory, candidates[0])
-
-
 def get_summary_filenames(
-    filepath: str, specified_formatting: bool | None
+    filepath: str,
+    specified_formatting: bool | None,
+    specified_unified: bool | None,
+    specified_split: bool | None,
 ) -> tuple[list[str], str]:
     match specified_formatting:
         case None:
-            formatted = ""
             matcher = {
                 "spec": is_any_smspec,
                 "smry": is_any_smry,
                 "unsmry": is_any_unsmry,
             }
         case True:
-            formatted = "formatted"
             matcher = {
                 "spec": is_fsmspec,
                 "smry": is_formatted_smry,
                 "unsmry": is_funsmry,
             }
         case False:
-            formatted = ""
             matcher = {
                 "spec": is_smspec,
                 "smry": is_smry,
@@ -757,18 +726,21 @@ def get_summary_filenames(
         case default:
             assert_never(default)
 
-    summary = natsorted(find_all_files_matching(filepath, matcher["smry"]))
+    summary = []
+    if not specified_split:
+        summary = find_all_files_matching(filepath, matcher["unsmry"])
+    if not summary and not specified_unified:
+        summary = natsorted(find_all_files_matching(filepath, matcher["smry"]))
+    spec = find_all_files_matching(filepath, matcher["spec"])
     if not summary:
-        logger.debug(
-            f"Did not find any {formatted} non-unified summary files matching {filepath}"
+        raise argparse.ArgumentTypeError(
+            f"Could not find any summary files matching {filepath}"
         )
-        summary = [
-            find_file_matching(
-                f"{formatted} unified summary file", filepath, matcher["unsmry"]
-            )
-        ]
-    spec = find_file_matching(f"{formatted} smspec file", filepath, matcher["spec"])
-    return summary, spec
+    if not spec:
+        raise argparse.ArgumentTypeError(
+            f"Could not find any summary spec matching {filepath}"
+        )
+    return summary, spec[0]
 
 
 class ExistingCase:
@@ -799,6 +771,8 @@ class ExistingCase:
 
     def __call__(self, case_name: str) -> tuple[FileOpener, list[FileOpener]] | None:
         specified_formatting = None
+        specified_unified = None
+        specified_split = None
         file_name = case_name
         if has_extension(
             case_name, r"unsmry|smspec|funsmry|fsmspec|x\d\d\d\d|a\d\d\d\d"
@@ -807,9 +781,13 @@ class ExistingCase:
                 case_name, r"funsmry|fsmspec|a\d\d\d\d"
             )
             case_name = ".".join(case_name.split(".")[:-1])
+            specified_unified = has_extension(case_name, r"funsmry")
+            specified_split = has_extension(case_name, r"x\d\d\d\d|a\d\d\d\d")
         try:
-            summaries, spec = get_summary_filenames(case_name, specified_formatting)
-        except FileNotFoundError as err:
+            summaries, spec = get_summary_filenames(
+                case_name, specified_formatting, specified_unified, specified_split
+            )
+        except Exception as err:
             if self.warn_message is None:
                 raise argparse.ArgumentTypeError(
                     f"No summary data found for case: {file_name}'"
@@ -912,7 +890,7 @@ def make_parser(prog: str = "summary.x") -> argparse.ArgumentParser:
 
         The summary.x program will look for and load both unified and
         non-unified and formatted and non-formatted files. The default
-        search order is: UNSMRY, Snnnn, FUNSMRY, Annnn, however you can
+        search order is: UNSMRY, FUNSMRY, Snnnn, Annnn, however you can
         manipulate this with the extension to the basename:
 
         * If the extension corresponds to an unformatted file, summary.x
