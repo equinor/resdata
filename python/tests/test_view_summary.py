@@ -503,7 +503,9 @@ def test_that_the_restart_is_read_by_default_and_controlled_by_cli_option(capsys
     create_summary(
         case="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"), times=[1.0]
     )
-    create_summary(restart="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"))
+    create_summary(
+        restart="RESTART", summary_keys=("FGIP", "FOPR", "FWPT", "FOPT"), times=[2.0]
+    )
 
     run(["summary.x", "TEST", "FGIP", "FOPR"])
     assert len(output_as_df(capsys.readouterr().out)) == 2
@@ -670,7 +672,9 @@ def test_that_numbered_keywords_with_negative_number_are_invalid(
     )
 
 
-def create_split_case(case="TEST", summary_keys=("FOPR",), formatted=""):
+def create_split_case(
+    case="TEST", summary_keys=("FOPR",), formatted="", times=(1, 2, 3, 4)
+):
     smspec = Smspec(
         nx=2,
         ny=2,
@@ -690,7 +694,7 @@ def create_split_case(case="TEST", summary_keys=("FOPR",), formatted=""):
     )
     format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
     smspec.to_file(f"{case}.{formatted}SMSPEC", file_format=format)
-    for i in range(1, 5):
+    for i, t in enumerate(times):
         smry = Unsmry(
             steps=[
                 SummaryStep(
@@ -698,7 +702,7 @@ def create_split_case(case="TEST", summary_keys=("FOPR",), formatted=""):
                     ministeps=[
                         SummaryMiniStep(
                             mini_step=0,
-                            params=[float(i)] + [4.0] * len(summary_keys),
+                            params=[float(t)] + [4.0] * len(summary_keys),
                         ),
                     ],
                 )
@@ -826,10 +830,12 @@ def test_that_relative_path_restart_is_relative_to_base_case(monkeypatch, capsys
 
 
 @pytest.mark.usefixtures("use_tmpdir")
-def test_that_restart_and_base_times_are_merged(capsys):
-    create_split_case(case="RESTART", summary_keys=("FOPT",))
+def test_that_restart_and_base_times_are_concated(capsys):
+    create_split_case(
+        case="RESTART", summary_keys=("FOPT",), times=[1.0, 2.0, 3.0, 4.0]
+    )
     create_summary(
-        restart="RESTART", summary_keys=("FOPR", "FGIP"), times=[2.0, 3.0, 4.0]
+        restart="RESTART", summary_keys=("FOPR", "FGIP"), times=[2.0, 3.0, 4.0, 5.0]
     )
 
     capsys.readouterr()  # Ensure empty capture
@@ -838,8 +844,9 @@ def test_that_restart_and_base_times_are_merged(capsys):
         """\
         ,Days,dd/mm/yyyy,FGIP,FOPR,FOPT
         0,1.0,02/01/2014,-99.0,-99.0,4.0
-        1,2.0,03/01/2014,5.6299e+16,5.6299e+16,4.0
-        2,3.0,04/01/2014,5.6299e+16,5.6299e+16,4.0
-        3,4.0,05/01/2014,5.6299e+16,5.6299e+16,4.0
+        1,2.0,03/01/2014,5.6299e+16,5.6299e+16,-99.0
+        2,3.0,04/01/2014,5.6299e+16,5.6299e+16,-99.0
+        3,4.0,05/01/2014,5.6299e+16,5.6299e+16,-99.0
+        4,5.0,06/01/2014,5.6299e+16,5.6299e+16,-99.0
         """
     )
