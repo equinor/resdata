@@ -375,7 +375,11 @@ def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
         ) from None
 
     restart = arrays["RESTART "]
-    restart = [""] if restart is None else restart
+    if restart is None:
+        restart = [""]
+    restart = "".join(decode_if_byte(s) for s in restart).strip()
+    if not os.path.isabs(restart):
+        restart = os.path.join(os.path.dirname(spec_name), restart)
 
     return Spec(
         date_index,
@@ -383,7 +387,7 @@ def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
         date_unit,
         list(keys_array),
         indices_array,
-        restart="".join(decode_if_byte(s) for s in restart).strip(),
+        restart=restart,
     )
 
 
@@ -788,7 +792,7 @@ class ExistingCase:
 
         def opener(s):
             def inner():
-                return open(s, mode)
+                return open(os.path.abspath(s), mode)
 
             return inner
 

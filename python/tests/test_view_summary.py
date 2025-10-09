@@ -812,3 +812,17 @@ def test_that_empty_extension_is_ignored(capsys):
             0,0.0,01/01/2014,5.6299e+16
             """
     )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_that_relative_path_restart_is_relative_to_base_case(monkeypatch, capsys):
+    dir = Path("subdir")
+    dir.mkdir()
+    monkeypatch.chdir(dir)
+    create_summary(case="RESTART", summary_keys=("FOPT",))
+    create_summary(restart="RESTART", summary_keys=("FOPR", "FGIP"))
+    monkeypatch.chdir("..")
+
+    capsys.readouterr()  # Ensure empty capture
+    run(["summary.x", "-v", str(dir / "TEST"), "*"])
+    assert keys_in_header(capsys.readouterr().out) == ["FGIP", "FOPR", "FOPT"]
