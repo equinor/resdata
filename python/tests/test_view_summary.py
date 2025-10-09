@@ -434,44 +434,6 @@ def test_that_sorting_columns_is_done_numerically(capsys):
     ]
 
 
-@pytest.mark.usefixtures("use_tmpdir")
-def test_that_sorting_list_is_done_lexiographically(capsys):
-    create_summary(
-        summary_keys=[
-            "WWIR",
-            "WWIR",
-            "WWIR",
-            "WWIR",
-            "WWIR",
-            "WWIR",
-            "WOPT",
-            "WOPT",
-        ],
-        names=[
-            "",
-            "I-3",
-            "I-2",
-            "I-10",
-            "I-9",
-            "I-10B",
-            "I-11",
-            "P-9",
-            "P-10",
-        ],
-    )
-    run(["summary.x", "TEST"])
-    assert capsys.readouterr().out.split() == [
-        "WOPT:P-10",
-        "WOPT:P-9",
-        "WWIR:I-10",
-        "WWIR:I-10B",
-        "WWIR:I-11",
-        "WWIR:I-2",
-        "WWIR:I-3",
-        "WWIR:I-9",
-    ]
-
-
 def test_that_header_displays_the_time_units_from_spec(run_cli):
     run_cli(cli_args="FGIP", summary_keys=("FGIP",), time_units="HOURS").out.startswith(
         "-- Hours   dd/mm/yyyy"

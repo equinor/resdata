@@ -160,7 +160,7 @@ class Spec:
     keyword_indices: npt.NDArray[np.int64]
     restart: str | None
 
-    def order_keys_by(self, patterns: list[str], nat_sort=True) -> None:
+    def order_keys_by(self, patterns: list[str]) -> None:
         """Reorder ``matched_keywords`` and ``keyword_indices`` by patterns.
 
         Args:
@@ -179,12 +179,9 @@ class Spec:
                     if fnmatch.fnmatch(kw, pat):
                         new_matched_keywords.append((kw, self.keyword_indices[i]))
                         already_matched.add(kw)
-                        if nat_sort:
-                            new_matched_keywords = natsorted(
-                                new_matched_keywords, key=lambda v: v[0]
-                            )
-                        else:
-                            new_matched_keywords.sort(key=lambda v: v[0])
+                        new_matched_keywords = natsorted(
+                            new_matched_keywords, key=lambda v: v[0]
+                        )
 
             else:
                 try:
@@ -464,7 +461,7 @@ def fetch_keys(
         A list of all matched key names in display order.
     """
     spec = read_spec(smspec, patterns)
-    spec.order_keys_by(patterns, nat_sort=False)
+    spec.order_keys_by(patterns)
     matched_keywords = spec.matched_keywords
     restart_keys = []
     if spec.restart and fetch_restart:
