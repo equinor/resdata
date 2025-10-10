@@ -121,6 +121,8 @@ def make_summary_key(
 
     This is a reimplementation of smspec_node::set_gen_keys
 
+    See :ref:`about_summary_keys`.
+
     >>> make_summary_key(keyword="WOPR", name="WELL1")
     'WOPR:WELL1'
     >>> make_summary_key(keyword="BOPR", number=4, nx=2, ny=2)

@@ -81,7 +81,13 @@ Example1:
   computer> summary.x  CASE1_XXX WWCT:F-36   FOPT   FWPT
 
   This example will load results from case 'CASE1_XXX' and print the
-  results for keys 'WWCT:F-36', 'FOPT' and 'FWPT' on standard out.
+  results for keys 'WWCT:F-36', 'FOPT' and 'FWPT' on standard out:
+
+    -- Days   dd/mm/yyyy          WWCT:F-36             FOPT             FWPT
+    -------------------------------------------------------------------------
+       1.00   02/01/2014         5.6299e+16       5.6299e+16       5.6299e+16
+       2.00   03/01/2014         5.6299e+16       5.6299e+16       5.6299e+16
+       3.00   04/01/2014         5.6299e+16       5.6299e+16       5.6299e+16
 
 Example2:
 
