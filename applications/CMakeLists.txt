@@ -9,11 +9,7 @@ endfunction()
 
 if(BUILD_APPLICATIONS)
   add_executable(sum_write resdata/sum_write.cpp)
-  add_executable(summary resdata/view_summary.cpp)
   target_link_resdata(sum_write)
-  target_link_resdata(summary)
-
-  list(APPEND apps summary)
 
   foreach(app rd_pack rd_unpack load_test)
     add_executable(${app} resdata/${app}.c)
@@ -34,17 +30,7 @@ if(BUILD_APPLICATIONS)
       list(APPEND apps ${app})
     endforeach()
 
-    set_target_properties(summary PROPERTIES SUFFIX ".x")
   endif()
-endif()
-
-if(BUILD_RD_SUMMARY)
-  add_executable(rd_summary resdata/view_summary.cpp)
-  target_link_resdata(rd_summary)
-  list(APPEND apps rd_summary)
-
-  install(FILES ${PROJECT_SOURCE_DIR}/man/man1/rd_summary.1
-          DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endif()
 
 if(apps)

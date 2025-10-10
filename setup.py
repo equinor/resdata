@@ -40,9 +40,8 @@ def utility_wrappers():
             "grdecl_test.x",  # deprecated
             "kw_list.x",  # deprecated
             "load_test.x",  # deprecated
-            "summary.x",
         )
-    ]
+    ] + ["summary.x = view_summary.__main__:main"]
 
 
 skbuild.setup(
@@ -64,6 +63,8 @@ skbuild.setup(
         "cwrap",
         "numpy",
         "pandas",
+        "resfo",
+        "natsort",
     ],
     setup_requires=["conan<2"],
     entry_points={"console_scripts": utility_wrappers()},

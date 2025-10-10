@@ -140,6 +140,7 @@ jobs:
         ln -s {..,$PWD}/lib
         ln -s {..,$PWD}/test-data
         cp -R {..,$PWD}/python/tests
+        cp -R {..,$PWD}/python/view_summary
 
         # Env vars
         export RD_SKIP_SIGNAL=1
@@ -147,6 +148,7 @@ jobs:
 
         # Run tests
         python -m pytest python/tests
+        python -m pytest --doctest-modules python/view_summary
 
     - name: Run Python tests windows
       if: runner.os == 'windows'

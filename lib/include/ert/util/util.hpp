@@ -124,7 +124,6 @@ bool util_is_cwd(const char *path);
 char *util_alloc_normal_path(const char *input_path);
 char *util_alloc_realpath(const char *);
 char *util_alloc_realpath__(const char *input_path);
-bool util_string_has_wildcard(const char *s);
 bool util_ftruncate(FILE *stream, long size);
 
 int util_roundf(float x);

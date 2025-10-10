@@ -1966,19 +1966,6 @@ static void util_split_string(const char *line, const char *sep_set,
     *_token_list = token_list;
 }
 
-/**
-   Will check the input string 's' and return true if it contains
-   wildcard characters (i.e. '*'), and false otherwise.
-*/
-
-bool util_string_has_wildcard(const char *s) {
-    const char wildcard = '*';
-    if (strchr(s, wildcard) != NULL)
-        return true;
-    else
-        return false;
-}
-
 void util_free_stringlist(char **list, int N) {
     int i;
     if (list != NULL) {

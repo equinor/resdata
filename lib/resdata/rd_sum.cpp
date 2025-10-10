@@ -776,8 +776,8 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
     return rd_sum_data_iget_sim_days(rd_sum->data, index);
 }
 
-void rd_sum_fmt_init_summary_x(const rd_sum_type *rd_sum,
-                               rd_sum_fmt_type *fmt) {
+static void rd_sum_fmt_init_summary_x(const rd_sum_type *rd_sum,
+                                      rd_sum_fmt_type *fmt) {
     fmt->locale = NULL;
     fmt->sep = "";
     fmt->date_fmt = "%d/%m/%Y   ";
@@ -869,9 +869,9 @@ static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
     }
 }
 
-void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
-                    const stringlist_type *var_list, bool report_only,
-                    const rd_sum_fmt_type *fmt) {
+static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
+                           const stringlist_type *var_list, bool report_only,
+                           const rd_sum_fmt_type *fmt) {
     bool_vector_type *has_var =
         bool_vector_alloc(stringlist_get_size(var_list), false);
     int_vector_type *var_index =
