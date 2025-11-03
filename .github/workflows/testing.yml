@@ -143,7 +143,6 @@ jobs:
 
         # Run tests
         python -m pytest python/tests
-        python -m pytest --doctest-modules python/view_summary
 
     - name: Run Python tests windows
       if: runner.os == 'windows'

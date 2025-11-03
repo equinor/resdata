@@ -9,7 +9,7 @@ from pathlib import Path
 from hypothesis import given, settings, HealthCheck
 import hypothesis.strategies as st
 from io import StringIO
-from tests.summary_generator import (
+from resfo_utilities.testing import (
     summaries,
     Unsmry,
     SummaryMiniStep,
@@ -19,7 +19,7 @@ from tests.summary_generator import (
     SmspecIntehead,
     Simulator,
     UnitSystem,
-    summary_keys,
+    summary_variables,
 )
 import pandas as pd
 import numpy as np
@@ -435,7 +435,7 @@ def test_that_a_warning_is_displayed_for_unmatched_patterns(run_cli, caplog):
     assert any("could not find variable: 'UNK'" in r.message for r in caplog.records)
 
 
-patterns = st.one_of(summary_keys, st.just("*"))
+patterns = st.one_of(st.lists(summary_variables(), min_size=1), st.just("*"))
 
 
 def report_step_value(unsmry: Unsmry, report_step: int, kw_index: int):
@@ -557,7 +557,9 @@ def test_that_unopenable_restart_warns(capsys, caplog):
         df = output_as_df(capture.out)
         assert set(df.columns) == {"Days", "dd/mm/yyyy", "FWPT"}
 
-        assert any("could not open restart case" in r.message for r in caplog.records)
+        assert any(
+            "Error while reading restart case" in r.message for r in caplog.records
+        )
     finally:
         with suppress(FileNotFoundError):
             Path("RESTART.UNSMRY").chmod(0x777)
@@ -581,10 +583,8 @@ def test_that_missing_time_keyword_in_smspec_gives_informative_error_message(
     smspec.keywords = smspec.keywords[1:]  # remove TIME
     smspec.to_file("TEST.SMSPEC")
     unsmry.to_file("TEST.UNSMRY")
-    run(["summary.x", "TEST", "*"])
-    assert any(
-        "number of keywords given in DIMENS " in r.message for r in caplog.records
-    )
+    with pytest.warns(match="number of keywords given in DIMENS"):
+        run(["summary.x", "TEST", "*"])
     assert any("did not contain TIME" in r.message for r in caplog.records)
 
 
@@ -742,7 +742,8 @@ def test_that_unformatted_unified_is_chosen_over_unformatted_split(capsys):
     create_split_case(summary_keys=("FOPR",))
 
     capsys.readouterr()  # Ensure empty capture
-    run(["summary.x", "-v", "TEST", "*"])
+    with pytest.warns(match="More than one type of summary file"):
+        run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
     assert df.to_csv() == dedent(
         """\
@@ -758,7 +759,8 @@ def test_that_split_unformatted_is_chosen_over_unified_formatted(capsys):
     create_split_case(summary_keys=("FGIT", "FOPR"))
 
     capsys.readouterr()  # Ensure empty capture
-    run(["summary.x", "-v", "TEST", "*"])
+    with pytest.warns(match="More than one type of summary file"):
+        run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
     assert df.to_csv() == dedent(
         """\
@@ -777,7 +779,8 @@ def test_that_formatted_unified_is_chosen_over_unformatted_split(capsys):
     create_split_case(summary_keys=("FOPR",), formatted="F")
 
     capsys.readouterr()  # Ensure empty capture
-    run(["summary.x", "-v", "TEST", "*"])
+    with pytest.warns(match="More than one type of summary file"):
+        run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
     assert df.to_csv() == dedent(
         """\

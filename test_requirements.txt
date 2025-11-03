@@ -2,3 +2,4 @@ pytest
 hypothesis
 pydantic
 typing_extensions
+resfo-utilities[testing]>=0.2.0

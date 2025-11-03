@@ -11,7 +11,7 @@ from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.summary import Summary, SummaryKeyWordVector
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest, equinor_test
-from tests.summary_generator import summaries
+from resfo_utilities.testing import summaries
 
 
 def test_write_repr():
