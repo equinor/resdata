@@ -11,26 +11,29 @@ for specification of the summary file format.
 import argparse
 import fnmatch
 import logging
+import warnings
 import os
 import re
 import sys
 from collections import defaultdict
-from collections.abc import Iterator, Sequence, Iterable
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
-from functools import partial
 from textwrap import dedent
-from typing import IO, Any, Callable, assert_never
-from itertools import tee
+from typing import Callable, assert_never
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import resfo
+from resfo_utilities import (
+    SummaryReader,
+    InvalidSummaryError,
+    InvalidSummaryKeyError,
+    make_summary_key,
+)
 from natsort import natsorted
 
-from .summary_key_type import InvalidSummaryKey, make_summary_key
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +155,13 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def main() -> None:
+
+    logging.captureWarnings(True)
+
+    def custom_formatwarning(message, category, filename, lineno, line=None, file=None):
+        return message
+
+    warnings.formatwarning = custom_formatwarning
     sys.exit(run(sys.argv))
 
 
@@ -169,16 +179,15 @@ def run(argv: list[str]) -> int:
     """
     args = parse_arguments(argv)
     setup_logging(args.verbose)
-    smspec, summaries = args.CASE
     if args.list or not args.keys:
-        return list_keys(smspec, args.keys, args.restart)
+        return list_keys(args.CASE, args.keys, args.restart)
     try:
         column_list, df = read_case(
-            smspec, summaries, args.keys, args.report_only, args.restart
+            args.CASE, args.keys, args.report_only, args.restart
         )
         print_table(column_list, df, args.header)
-    except resfo.ResfoParsingError as err:
-        logger.error(f"Could not read case files {args.CASE}: {err.args[0]}")
+    except InvalidSummaryError as err:
+        logger.error(f"Could not read case files {args.CASE.case_path}: {err.args[0]}")
         return -1
     except CliError as err:
         logger.error(err.args[0])
@@ -239,10 +248,7 @@ def print_header(keys: list[str]) -> None:
     print("-" * len(header))
 
 
-FileOpener = Callable[[], IO[Any]]
-
-
-def list_keys(smspec: FileOpener, patterns: list[str], fetch_restart: bool) -> int:
+def list_keys(summary: SummaryReader, patterns: list[str], fetch_restart: bool) -> int:
     """List all keys in smspec that match the given patterns.
 
     Args:
@@ -256,12 +262,12 @@ def list_keys(smspec: FileOpener, patterns: list[str], fetch_restart: bool) -> i
     if not patterns:
         patterns = ["*"]
     try:
-        matched_keywords = fetch_keys(smspec, patterns, fetch_restart)
+        matched_keywords = fetch_keys(summary, patterns, fetch_restart)
         for i, key in enumerate(matched_keywords):
             print(f"{key:24s} ", end=None if i % 5 == 4 else "")
         print()
-    except resfo.ResfoParsingError as err:
-        logger.error(f"Could not read smspec {smspec}: {err.args[0]}")
+    except InvalidSummaryError as err:
+        logger.error(f"Could not read smspec {summary.smspec_filename}: {err.args[0]}")
         return -1
     except CliError as err:
         logger.error(err.args[0])
@@ -271,40 +277,41 @@ def list_keys(smspec: FileOpener, patterns: list[str], fetch_restart: bool) -> i
 
 
 def fetch_keys(
-    smspec: FileOpener, patterns: list[str], fetch_restart: bool
+    summary: SummaryReader, patterns: list[str], fetch_restart: bool
 ) -> list[str]:
     """Get all keys in the case that matches the given patterns.
 
     Args:
-        smspec: Open SMSPEC file.
         patterns: User-provided key patterns, will only fetch those that matches.
         fetch_restart: Whether to traverse and include keys from a restart case.
     Returns:
         A list of all matched key names in display order.
     """
-    spec = read_spec(smspec, patterns)
+    spec = read_spec(summary, patterns)
     spec.order_keys_by(patterns)
     matched_keywords = spec.matched_keywords
     restart_keys = []
     if spec.restart and fetch_restart:
-        restart_case = ExistingCase(
-            warn_message=(
-                lambda case_name: f"could not open restart case: '{case_name}'"
-            ),
-        )(spec.restart)
-        if restart_case is not None:
-            restart_keys = fetch_keys(restart_case[0], patterns, fetch_restart)
-            already_in = set(matched_keywords)
-            for rk in restart_keys:
-                if rk not in already_in:
-                    matched_keywords.append(rk)
-                    already_in.add(rk)
+        try:
+            restart_case = ExistingCase(
+                warn_message=(
+                    lambda case_name: f"could not open restart case: '{case_name}'"
+                ),
+            )(spec.restart)
+            if restart_case is not None:
+                restart_keys = fetch_keys(restart_case, patterns, fetch_restart)
+                already_in = set(matched_keywords)
+                for rk in restart_keys:
+                    if rk not in already_in:
+                        matched_keywords.append(rk)
+                        already_in.add(rk)
+        except Exception as err:
+            logger.error(f"Error while reading restart case: {err}")
     return matched_keywords
 
 
 def read_case(
-    smspec: FileOpener,
-    summaries: list[FileOpener],
+    summary: SummaryReader,
     patterns: list[str],
     report_only: bool,
     fetch_restart: bool,
@@ -312,8 +319,6 @@ def read_case(
     """Read a case and return selected keys as a DataFrame.
 
     Args:
-        smspec: Open SMSPEC file.
-        unsmry: Open unified summary file.
         patterns: Key patterns to select and order columns.
         report_only: If ``True``, restrict to report steps.
         fetch_restart: Whether to prepend data from a restart case, if present.
@@ -323,21 +328,24 @@ def read_case(
         of all selected key names with duplicates, and ``df`` is the corresponding
         time series data.
     """
-    spec = read_spec(smspec, patterns)
+    spec = read_spec(summary, patterns)
     spec.order_keys_by(patterns)
     restart_keys, restart_df = None, None
     if spec.restart and fetch_restart:
-        restart_case = ExistingCase(
-            warn_message=(
-                lambda case_name: f"could not open restart case: '{case_name}'"
-            ),
-        )(spec.restart)
-        if restart_case is not None:
-            restart_keys, restart_df = read_case(
-                *restart_case, patterns, report_only, fetch_restart
-            )
+        try:
+            restart_case = ExistingCase(
+                warn_message=(
+                    lambda case_name: f"could not open restart case: '{case_name}'"
+                ),
+            )(spec.restart)
+            if restart_case:
+                restart_keys, restart_df = read_case(
+                    restart_case, patterns, report_only, fetch_restart
+                )
+        except Exception as err:
+            logger.error(f"Error while reading restart case: {err}")
     result = defaultdict(list)
-    for date_val, values in read_smry(summaries, spec, report_only):
+    for date_val, values in read_smry(summary, spec, report_only):
         date = spec.start_date + spec.time_unit.make_delta(float(date_val))
         result[spec.time_unit.value].append(date_val)
         result["dd/mm/yyyy"].append(date)
@@ -448,7 +456,7 @@ class Spec:
         )
 
 
-def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
+def read_spec(summary: SummaryReader, key_patterns: Sequence[str]) -> Spec:
     """Read an SMSPEC file and return a :class:`Spec` describing it.
 
     This function performs validation, determines the index of the
@@ -462,108 +470,23 @@ def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
 
     Raises:
         CliError: On malformed content (e.g., missing UNITS, STARTDAT, etc.).
-        resfo.ResfoParsingError: If ``resfo`` fails to parse the file.
+        InvalidSummaryError: If the smspec file contains invalid contents.
     """
-    date = None
-    num_keywords = None
-    nx = None
-    ny = None
-    wgnames = None
-    spec_name = ""
-    try:
-        with spec_opener() as spec:
-            spec_name = stream_name(spec)
-
-            arrays: dict[str, npt.NDArray[Any] | None] = dict.fromkeys(
-                [
-                    "NUMS    ",
-                    "KEYWORDS",
-                    "NUMLX   ",
-                    "NUMLY   ",
-                    "NUMLZ   ",
-                    "LGRS    ",
-                    "UNITS   ",
-                    "RESTART ",
-                ],
-                None,
-            )
-            for entry in resfo.lazy_read(spec):
-                # If we have found all values we are looking for
-                # we stop reading
-                if all(
-                    p is not None
-                    for p in [date, num_keywords, nx, ny, *arrays.values()]
-                ):
-                    break
-                kw = entry.read_keyword()
-                if kw in arrays:
-                    arrays[kw] = validate_array(kw, spec_name, entry.read_array())
-                # "NAMES   " is an alias for "WGNAMES "
-                # if kw is one of either, we set wgnames
-                if kw in {"WGNAMES ", "NAMES   "}:
-                    wgnames = validate_array(kw, spec_name, entry.read_array())
-                if kw == "DIMENS  ":
-                    vals = validate_array(kw, spec_name, entry.read_array())
-                    size = len(vals)
-                    num_keywords = vals[0] if size > 0 else None
-                    nx = vals[1] if size > 1 else None
-                    ny = vals[2] if size > 2 else None
-                if kw == "STARTDAT":
-                    vals = validate_array(kw, spec_name, entry.read_array())
-                    size = len(vals)
-                    day = vals[0] if size > 0 else 0
-                    month = vals[1] if size > 1 else 0
-                    year = vals[2] if size > 2 else 0
-                    hour = vals[3] if size > 3 else 0
-                    minute = vals[4] if size > 4 else 0
-                    microsecond = vals[5] if size > 5 else 0
-                    try:
-                        date = datetime(
-                            day=day,
-                            month=month,
-                            year=year,
-                            hour=hour,
-                            minute=minute,
-                            second=microsecond // 10**6,
-                            microsecond=microsecond % 10**6,
-                        )
-                    except Exception as err:
-                        raise CliError(
-                            f"SMSPEC {spec_name} contains invalid STARTDAT: {err}"
-                        ) from err
-    except OSError as err:
-        raise CliError(
-            f"Could not read from summary spec {err.filename}: {err.strerror}"
-        ) from err
-
-    keywords = arrays["KEYWORDS"]
-    nums = arrays["NUMS    "]
-    numlx = arrays["NUMLX   "]
-    numly = arrays["NUMLY   "]
-    numlz = arrays["NUMLZ   "]
-    lgr_names = arrays["LGRS    "]
+    date = summary.start_date
+    dims = summary.dimensions
+    if dims is None:
+        raise CliError(f"Keyword startdat missing in {summary.smspec_filename}")
+    nx, ny = dims[0:2]
+    keywords = summary.summary_keywords
 
     if date is None:
-        raise CliError(f"Keyword startdat missing in {spec_name}")
-    if keywords is None:
-        raise CliError(f"Keywords missing in {spec_name}")
-    if num_keywords is None:
-        num_keywords = len(keywords)
-        logger.info(
-            "SMSPEC did not contain num_keywords in DIMENS."
-            f" Using length of KEYWORDS: {num_keywords}."
-        )
-    elif num_keywords > len(keywords):
-        logger.warning(
-            f"number of keywords given in DIMENS {num_keywords} is larger than the "
-            f"length of KEYWORDS {len(keywords)}, truncating size to match.",
-        )
-        num_keywords = len(keywords)
+        raise CliError(f"Keyword startdat missing in {summary.smspec_filename}")
 
     indices: list[int] = []
     keys: list[str] = []
     index_mapping: dict[str, int] = {}
     date_index = None
+    date_unit_str = None
 
     def patterns_to_matcher(patterns: Sequence[str]) -> Callable[[str], bool]:
         """
@@ -603,52 +526,26 @@ def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
     def should_load_key(kw):
         return kw != "TIME" and matcher(kw)
 
-    def optional_get(arr: npt.NDArray[Any] | None, idx: int) -> Any:
-        if arr is None:
-            return None
-        if len(arr) <= idx:
-            return None
-        return arr[idx]
-
-    def decode_if_byte(key: bytes | str) -> str:
-        """Decode a value that may be ``bytes`` into a UTF-8 string.
-        Args:
-            key: Bytes or string value.
-        Returns:
-            Decoded string.
-        """
-        return key.decode() if isinstance(key, bytes) else key
-
-    def key2str(key: bytes | str) -> str:
-        """Normalize summary keyword values to a stripped string.
-        Args:
-            key: Bytes or string value.
-        Returns:
-            The input as a string with leading/trailing whitespace removed.
-        """
-        return decode_if_byte(key).strip()
-
-    for i in range(num_keywords):
-        keyword = key2str(keywords[i])
-        if keyword == "TIME":
-            date_index = i
-
-        name = optional_get(wgnames, i)
-        if name is not None:
-            name = key2str(name)
-        num = optional_get(nums, i)
-        lgr_name = optional_get(lgr_names, i)
-        if lgr_name is not None:
-            lgr_name = key2str(lgr_name)
-        li = optional_get(numlx, i)
-        lj = optional_get(numly, i)
-        lk = optional_get(numlz, i)
-
+    for i, kw in enumerate(keywords):
         try:
-            key = make_summary_key(keyword, num, name, nx, ny, lgr_name, li, lj, lk)
-        except InvalidSummaryKey as err:
+            key = make_summary_key(
+                kw.summary_variable,
+                kw.number,
+                kw.name,
+                nx,
+                ny,
+                kw.lgr_name,
+                kw.li,
+                kw.lj,
+                kw.lk,
+            )
+            if kw.summary_variable == "TIME":
+                date_index = i
+                date_unit_str = kw.unit
+        except InvalidSummaryKeyError as err:
             logger.info(
-                f"{spec_name} contains invalid keyword '{keyword}': {err.args[0]}"
+                f"{summary.smspec_filename} contains invalid"
+                f" keyword '{kw.summary_variable}': {err.args[0]}"
             )
             continue
 
@@ -669,26 +566,21 @@ def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
 
     indices_array = np.array(indices, dtype=np.int64)[rearranged]
 
-    units = arrays["UNITS   "]
-    if units is None:
-        raise CliError(f"Keyword units missing in {spec_name}")
     if date_index is None:
-        raise CliError(f"KEYWORDS did not contain TIME in {spec_name}")
-    if date_index >= len(units):
-        raise CliError(f"Unit missing for TIME in {spec_name}")
+        raise CliError(f"KEYWORDS did not contain TIME in {summary.smspec_filename}")
+    if date_unit_str is None:
+        raise CliError(f"Unit missing for TIME in {summary.smspec_filename}")
 
-    unit_key = key2str(units[date_index])
     try:
-        date_unit = TimeUnit[unit_key]
+        date_unit = TimeUnit[date_unit_str]
     except KeyError:
-        raise CliError(f"Unknown date unit in {spec_name}: {unit_key}") from None
+        raise CliError(
+            f"Unknown date unit in {summary.smspec_filename}: {date_unit_str}"
+        ) from None
 
-    restart = arrays["RESTART "]
-    if restart is None:
-        restart = [""]
-    restart = "".join(decode_if_byte(s) for s in restart).strip()
+    restart = summary.restart
     if restart and not os.path.isabs(restart):
-        restart = os.path.join(os.path.dirname(spec_name), restart)
+        restart = os.path.join(os.path.dirname(summary.smspec_filename), restart)
 
     return Spec(
         date_index,
@@ -701,88 +593,28 @@ def read_spec(spec_opener: FileOpener, key_patterns: Sequence[str]) -> Spec:
 
 
 def read_smry(
-    summaries: list[FileOpener], spec: Spec, report_step_only: bool
+    summary: SummaryReader, spec: Spec, report_step_only: bool
 ) -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
     """Iterate (time, values) tuples from a unified summary file.
     Args:
-        summary: Open unified summary file (UNSMRY/FUNSMRY).
-        spec: The :class:`Spec` produced by :func:`read_spec`.
         report_step_only: If ``True``, yield only at report steps (``DATES``).
     Yields:
         Tuples ``(time_value, values)`` where ``time_value`` is a float (days or hours)
         and ``values`` is an array of the selected keyword values in the order given by
         ``spec.keyword_indices`` at that step.
-    """
-
-    last_params = None
-    try:
-        for smry_opener in summaries:
-            with smry_opener() as smry:
-                summary_name = stream_name(smry)
-
-                def read_params() -> Iterator[tuple[float, npt.NDArray[np.float32]]]:
-                    nonlocal last_params
-                    if last_params is not None:
-                        vals = validate_array(
-                            "PARAMS", summary_name, last_params.read_array()
-                        )
-                        last_params = None
-                        yield vals[spec.time_index], vals[spec.keyword_indices]
-
-                for entry in resfo.lazy_read(smry):
-                    kw = entry.read_keyword()
-                    if last_params and not report_step_only:
-                        yield from read_params()
-                    if kw == "PARAMS  ":
-                        last_params = entry
-                    if report_step_only and kw == "SEQHDR  ":
-                        yield from read_params()
-                yield from read_params()
-    except OSError as err:
-        raise CliError(
-            f"Could not read from summary file {err.filename}: {err.strerror}"
-        ) from err
-
-
-def validate_array(
-    kw: str, spec: str, vals: npt.NDArray[Any] | resfo.MESS
-) -> npt.NDArray[Any]:
-    """Validate that a RESFO entry value is a NumPy array.
-
-    In the file format, some values may not be arrays but
-    instead a special value of type 'MESS'. This function
-    raises a CliError if the array is of that type.
-
-    Args:
-        kw: Keyword being read (for error messages).
-        spec: Name of the source file/stream.
-        vals: Value returned by ``resfo`` for ``kw``.
-    Returns:
-        ``vals`` if it is a NumPy array.
     Raises:
-        CliError: If ``vals`` is of type ``resfo.MESS``.
+        InvalidSummaryError: If the smspec file contains invalid contents.
     """
-    if vals is resfo.MESS or isinstance(vals, resfo.MESS):
-        raise CliError(f"{kw.strip()} in {spec} has incorrect type MESS")
-    return vals
 
-
-def stream_name(stream: IO[Any]) -> str:
-    """
-    Returns:
-        The filename for an IO stream or 'unknown stream' if there is no filename
-        attached to the stream (which is the case for eg. `StringIO` and `BytesIO`).
-    """
-    return getattr(stream, "name", "unknown stream")
+    for v in summary.values(report_step_only):
+        yield v[spec.time_index], v[spec.keyword_indices]
 
 
 class ExistingCase:
     """Argparse type/validator for existing reservoir simulation cases.
 
 
-    Instances are callable and return a function that returns open file
-    handles to the SMSPEC and summary files for a given case name, or
-    ``None`` if validation is configured to warn instead of raising.
+    Instances are callable and return a SummaryReader
     """
 
     def __init__(self, warn_message: Callable[[str], str] | None = None) -> None:
@@ -802,13 +634,14 @@ class ExistingCase:
         """
         self.warn_message = warn_message
 
-    def __call__(self, case_name: str) -> tuple[FileOpener, list[FileOpener]] | None:
+    def __call__(self, case_name: str) -> SummaryReader | None:
         try:
-            summaries, spec = get_summary_filenames(case_name)
-            logger.info(f"Found summary files {summaries, spec}")
-        except argparse.ArgumentTypeError as err:
+            summary = SummaryReader(case_path=case_name)
+            logger.info(f"Found summary files for {case_name}")
+            return summary
+        except InvalidSummaryError as err:
             if self.warn_message is None:
-                raise
+                raise argparse.ArgumentTypeError(err) from err
             else:
                 logger.warning(f"{self.warn_message(case_name)}: {err}")
                 return None
@@ -820,164 +653,6 @@ class ExistingCase:
             else:
                 logger.warning(f"{self.warn_message(case_name)}: {err.args[0]}")
                 return None
-        mode = "rt" if spec.lower().endswith("fsmspec") else "rb"
-
-        def opener(s):
-            def inner():
-                return open(os.path.abspath(s), mode)
-
-            return inner
-
-        result = (opener(spec), [opener(s) for s in summaries])
-        try:
-            # We open at this point to make sure files are
-            # openable. We might still get an error later
-            # that is due to the file changing which must
-            # be handled separately
-            result[0]().close()
-            for r in result[1]:
-                r().close()
-        except OSError as err:
-            if self.warn_message is None:
-                raise argparse.ArgumentTypeError(
-                    f"Could not open file {err.filename} for case {case_name}: "
-                    + err.strerror
-                    if err.strerror
-                    else ""
-                ) from err
-            else:
-                logger.warning(f"{self.warn_message(case_name)}: {err.strerror or ''}")
-                return None
-        else:
-            return result
-
-
-def has_extension(path: str, ext: str) -> bool:
-    """
-    >>> has_extension("ECLBASE.SMSPEC", "smspec")
-    True
-    >>> has_extension("BASE.SMSPEC", "smspec")
-    False
-    >>> has_extension("BASE.FUNSMRY", "smspec")
-    False
-    >>> has_extension("ECLBASE.smspec", "smspec")
-    True
-    >>> has_extension("ECLBASE.tar.gz.smspec", "smspec")
-    True
-
-    Args:
-        path: File name to check.
-        ext: Allowed extension regex.
-
-    Returns:
-        ``True`` if the file has any of the extensions in ``exts``.
-    """
-    if "." not in path:
-        return False
-    splitted = path.split(".")
-    return re.fullmatch(ext, splitted[-1].lower()) is not None
-
-
-def is_base_with_extension(base: str, path: str, ext: str) -> bool:
-    """
-    >>> is_base_with_extension("ECLBASE", "ECLBASE.SMSPEC", ["smspec"])
-    True
-    >>> is_base_with_extension("ECLBASE", "BASE.SMSPEC", ["smspec"])
-    False
-    >>> is_base_with_extension("ECLBASE", "BASE.FUNSMRY", ["smspec"])
-    False
-    >>> is_base_with_extension("ECLBASE", "ECLBASE.smspec", ["smspec"])
-    True
-    >>> is_base_with_extension("ECLBASE.tar.gz", "ECLBASE.tar.gz.smspec", ["smspec"])
-    True
-
-    Args:
-        base: Basename without extension.
-        path: Candidate path.
-        exts: Allowed extension regex pattern.
-
-    Returns:
-        ``True`` if ``path`` is ``base`` with one of ``exts``.
-    """
-    if "." not in path:
-        return False
-    splitted = path.split(".")
-    return (
-        ".".join(splitted[0:-1]) == base
-        and re.fullmatch(ext, splitted[-1].lower()) is not None
-    )
-
-
-ANY_SUMMARY_EXTENSION = r"unsmry|smspec|funsmry|fsmspec|s\d\d\d\d|a\d\d\d\d"
-
-
-def get_summary_filenames(
-    filepath: str,
-) -> tuple[list[str], str]:
-    directory, file_name = os.path.split(filepath)
-    if "." in file_name:
-        case_name = ".".join(file_name.split(".")[:-1])
-    else:
-        case_name = file_name
-    specified_formatted = has_extension(file_name, r"funsmry|fsmspec|a\d\d\d\d")
-    specified_unformatted = has_extension(file_name, r"unsmry|smspec|s\d\d\d\d")
-    specified_unified = has_extension(file_name, "funsmry")
-    specified_split = has_extension(file_name, r"x\d\d\d\d|a\d\d\d\d")
-    spec_candidates, smry_candidates = tee(
-        map(
-            lambda x: os.path.join(directory, x),
-            filter(
-                lambda x: is_base_with_extension(
-                    path=x, base=case_name, ext=ANY_SUMMARY_EXTENSION
-                ),
-                os.listdir(directory or "."),
-            ),
-        )
-    )
-
-    def filter_extension(ext: str, lst: Iterable[str]) -> Iterator[str]:
-        return filter(partial(has_extension, ext=ext), lst)
-
-    smry_candidates = filter_extension(
-        r"unsmry|funsmry|s\d\d\d\d|a\d\d\d\d", smry_candidates
-    )
-    if specified_split:
-        smry_candidates = filter_extension(r"s\d\d\d\d|a\d\d\d\d", smry_candidates)
-    if specified_unified:
-        smry_candidates = filter_extension("unsmry|funsmry", smry_candidates)
-    if specified_formatted:
-        smry_candidates = filter_extension("funsmry", smry_candidates)
-    if specified_unformatted:
-        smry_candidates = filter_extension("unsmry", smry_candidates)
-    all_summary = natsorted(list(smry_candidates))
-    summary = []
-    pat = None
-    for pat in ("unsmry", r"s\d\d\d\d", "funsmry", r"a\d\d\d\d"):
-        summary = list(filter_extension(pat, all_summary))
-        if summary:
-            break
-
-    if len(summary) != len(all_summary):
-        logger.warning(f"More than one type of summary file, found {all_summary}")
-    if not summary:
-        raise argparse.ArgumentTypeError(
-            f"Could not find any summary files matching {filepath}"
-        )
-
-    if pat in ("unsmry", r"s\d\d\d\d"):
-        spec_candidates = filter_extension("smspec", spec_candidates)
-    else:
-        spec_candidates = filter_extension("fsmspec", spec_candidates)
-
-    spec = list(spec_candidates)
-    if len(spec) > 1:
-        logger.warning(f"More than one type of summary spec file, found {spec}")
-
-    if not spec:
-        raise argparse.ArgumentTypeError(
-            f"Could not find any summary spec matching {filepath}"
-        )
-    return summary, spec[-1]
 
 
 if __name__ == "__main__":
