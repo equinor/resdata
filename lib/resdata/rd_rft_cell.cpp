@@ -89,8 +89,6 @@ static void plt_data_free(plt_data_type *data) { free(data); }
 static UTIL_TRY_CAST_FUNCTION_CONST(plt_data, PLT_DATA_TYPE_ID);
 static UTIL_IS_INSTANCE_FUNCTION(plt_data, PLT_DATA_TYPE_ID);
 
-static UTIL_SAFE_CAST_FUNCTION(rd_rft_cell, RD_RFT_CELL_TYPE_ID);
-static UTIL_SAFE_CAST_FUNCTION_CONST(rd_rft_cell, RD_RFT_CELL_TYPE_ID);
 UTIL_IS_INSTANCE_FUNCTION(rd_rft_cell, RD_RFT_CELL_TYPE_ID);
 
 static rd_rft_cell_type *

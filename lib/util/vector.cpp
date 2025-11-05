@@ -83,26 +83,6 @@ static void vector_iset__(vector_type *vector, int index,
 }
 
 /**
-   This is the low level function opposite to the vector_idel()
-   function. A new value (node) is inserted at index, and the rest of
-   the vector is shifted to the right.
-*/
-
-static void vector_insert__(vector_type *vector, int index,
-                            node_data_type *node) {
-    if (vector->size == vector->alloc_size)
-        vector_resize__(vector, 2 * (vector->alloc_size + 1));
-    {
-        int bytes_to_move = (vector->size - index) * sizeof *vector->data;
-        memmove(&vector->data[index + 1], &vector->data[index], bytes_to_move);
-        vector->data[index] =
-            NULL; /* Otherwise the destructor might try to pick up on it in the vector_iset__() call below */
-    }
-    vector->size++;
-    vector_iset__(vector, index, node);
-}
-
-/**
    This is the low-level append node function which actually "does
    it", the node has been allocated in one of the front-end
    functions. The return value is the index of the node (which can
@@ -115,36 +95,6 @@ static int vector_append_node(vector_type *vector, node_data_type *node) {
     vector->size++;
     vector_iset__(vector, vector->size - 1, node);
     return vector->size - 1;
-}
-
-/*
-  This is like the vector_append_node() function, but the node is
-  pushed in at the front.
-*/
-
-static void vector_push_node(vector_type *vector, node_data_type *node) {
-    if (vector->size == vector->alloc_size)
-        vector_resize__(vector, 2 * (vector->alloc_size + 1));
-    {
-        int bytes = vector->size * sizeof *vector->data;
-        if (bytes > 0) {
-            memmove(&vector->data[1], vector->data, bytes);
-            vector->data[0] =
-                NULL; /* Otherwise the destructor might try to pick up on it in the vector_iset__() call below */
-        }
-    }
-    vector->size++;
-    vector_iset__(vector, 0, node);
-}
-
-/**
-   Will append NULL pointers until the vectors length is equal to
-   @min_size.
-*/
-
-static void vector_assert_size(vector_type *vector, int min_size) {
-    while (vector->size < min_size)
-        vector_append_ref(vector, NULL);
 }
 
 /**

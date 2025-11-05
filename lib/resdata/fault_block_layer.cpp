@@ -40,7 +40,6 @@ struct fault_block_layer_struct {
 };
 
 UTIL_IS_INSTANCE_FUNCTION(fault_block_layer, FAULT_BLOCK_LAYER_ID);
-static UTIL_SAFE_CAST_FUNCTION(fault_block_layer, FAULT_BLOCK_LAYER_ID);
 
 fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
                                               int block_id) {

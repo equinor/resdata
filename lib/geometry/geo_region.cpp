@@ -23,10 +23,8 @@ struct geo_region_struct {
     int pointset_size;
 };
 
-static UTIL_SAFE_CAST_FUNCTION(geo_region, GEO_REGION_TYPE_ID)
-
-    geo_region_type *geo_region_alloc(const geo_pointset_type *pointset,
-                                      bool preselect) {
+geo_region_type *geo_region_alloc(const geo_pointset_type *pointset,
+                                  bool preselect) {
     geo_region_type *region = (geo_region_type *)util_malloc(sizeof *region);
     UTIL_TYPE_ID_INIT(region, GEO_REGION_TYPE_ID);
 

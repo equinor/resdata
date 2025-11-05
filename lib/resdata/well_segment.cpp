@@ -35,11 +35,9 @@ struct well_segment_struct {
 };
 
 UTIL_IS_INSTANCE_FUNCTION(well_segment, WELL_SEGMENT_TYPE_ID)
-static UTIL_SAFE_CAST_FUNCTION(well_segment, WELL_SEGMENT_TYPE_ID)
 
-    well_segment_type *well_segment_alloc(int segment_id, int outlet_segment_id,
-                                          int branch_id,
-                                          const double *rseg_data) {
+well_segment_type *well_segment_alloc(int segment_id, int outlet_segment_id,
+                                      int branch_id, const double *rseg_data) {
     well_segment_type *segment = new well_segment_type();
     UTIL_TYPE_ID_INIT(segment, WELL_SEGMENT_TYPE_ID);
 

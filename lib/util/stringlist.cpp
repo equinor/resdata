@@ -90,7 +90,6 @@ void stringlist_free(stringlist_type *stringlist) {
     free(stringlist);
 }
 
-static UTIL_SAFE_CAST_FUNCTION(stringlist, STRINGLIST_TYPE_ID);
 UTIL_IS_INSTANCE_FUNCTION(stringlist, STRINGLIST_TYPE_ID)
 
 char *stringlist_pop(stringlist_type *stringlist) {

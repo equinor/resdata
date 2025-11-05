@@ -96,9 +96,7 @@ static well_ts_type *well_ts_alloc_empty() {
     return well_ts;
 }
 
-static UTIL_SAFE_CAST_FUNCTION(well_ts, WELL_TS_TYPE_ID)
-
-    well_ts_type *well_ts_alloc(const char *well_name) {
+well_ts_type *well_ts_alloc(const char *well_name) {
     well_ts_type *well_ts = well_ts_alloc_empty();
     well_ts->well_name = well_name;
     return well_ts;
