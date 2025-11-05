@@ -33,17 +33,16 @@ struct mzran_struct {
 #define DEFAULT_S2 13
 #define DEFAULT_S3 77
 
-static UTIL_SAFE_CAST_FUNCTION(
-    mzran, MZRAN_TYPE_ID) static UTIL_SAFE_CAST_FUNCTION_CONST(mzran,
-                                                               MZRAN_TYPE_ID)
+static UTIL_SAFE_CAST_FUNCTION(mzran, MZRAN_TYPE_ID);
+static UTIL_SAFE_CAST_FUNCTION_CONST(mzran, MZRAN_TYPE_ID);
 
-    /**
+/**
    This function will return and unsigned int. This is the fundamental
    low level function which drives the random number generator state
    forward. The returned value will be in the interval [0,MZRAN_MAX).
 */
 
-    unsigned int mzran_forward(void *__rng) {
+unsigned int mzran_forward(void *__rng) {
     mzran_type *rng = (mzran_type *)__rng;
     {
         unsigned int s;
