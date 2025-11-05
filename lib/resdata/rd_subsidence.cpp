@@ -78,11 +78,12 @@ rd_subsidence_survey_alloc_empty(const rd_subsidence_type *sub,
     return survey;
 }
 
-static UTIL_SAFE_CAST_FUNCTION(rd_subsidence_survey, RD_SUBSIDENCE_SURVEY_ID)
+static UTIL_SAFE_CAST_FUNCTION(rd_subsidence_survey, RD_SUBSIDENCE_SURVEY_ID);
 
-    static rd_subsidence_survey_type *rd_subsidence_survey_alloc_PRESSURE(
-        rd_subsidence_type *rd_subsidence,
-        const rd_file_view_type *restart_view, const char *name) {
+static rd_subsidence_survey_type *
+rd_subsidence_survey_alloc_PRESSURE(rd_subsidence_type *rd_subsidence,
+                                    const rd_file_view_type *restart_view,
+                                    const char *name) {
 
     rd_subsidence_survey_type *survey =
         rd_subsidence_survey_alloc_empty(rd_subsidence, name);

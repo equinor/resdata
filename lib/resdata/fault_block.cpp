@@ -31,11 +31,11 @@ struct fault_block_struct {
     bool valid_center;
 };
 
-UTIL_IS_INSTANCE_FUNCTION(fault_block, FAULT_BLOCK_ID)
-static UTIL_SAFE_CAST_FUNCTION(fault_block, FAULT_BLOCK_ID)
+UTIL_IS_INSTANCE_FUNCTION(fault_block, FAULT_BLOCK_ID);
+static UTIL_SAFE_CAST_FUNCTION(fault_block, FAULT_BLOCK_ID);
 
-    fault_block_type *fault_block_alloc(
-        const fault_block_layer_type *parent_layer, int block_id) {
+fault_block_type *fault_block_alloc(const fault_block_layer_type *parent_layer,
+                                    int block_id) {
     fault_block_type *block = (fault_block_type *)util_malloc(sizeof *block);
     UTIL_TYPE_ID_INIT(block, FAULT_BLOCK_ID);
     block->parent_layer = parent_layer;
