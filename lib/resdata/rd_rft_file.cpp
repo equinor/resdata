@@ -35,8 +35,7 @@
 struct rd_rft_file_struct {
     UTIL_TYPE_ID_DECLARATION;
     std::string filename;
-    std::vector<rd_rft_node_type *>
-        data; /* This vector just contains all the rft nodes in one long vector. */
+    std::vector<rd_rft_node_type *> rft_nodes;
     std::map<std::string, std::vector<int>> well_index;
 };
 
@@ -61,7 +60,7 @@ UTIL_IS_INSTANCE_FUNCTION(rd_rft_file, RD_RFT_FILE_ID);
 
 static void rd_rft_file_add_node(rd_rft_file_type *rft_vector,
                                  rd_rft_node_type *rft_node) {
-    rft_vector->data.push_back(rft_node);
+    rft_vector->rft_nodes.push_back(rft_node);
 }
 
 rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
@@ -164,7 +163,7 @@ bool rd_rft_file_case_has_rft(const char *case_input) {
 }
 
 void rd_rft_file_free(rd_rft_file_type *rft_vector) {
-    for (auto node_ptr : rft_vector->data)
+    for (auto node_ptr : rft_vector->rft_nodes)
         rd_rft_node_free(node_ptr);
 
     delete rft_vector;
@@ -186,10 +185,10 @@ void rd_rft_file_free(rd_rft_file_type *rft_vector) {
 int rd_rft_file_get_size__(const rd_rft_file_type *rft_file,
                            const char *well_pattern, time_t recording_time) {
     if ((well_pattern == nullptr) && (recording_time < 0))
-        return rft_file->data.size();
+        return rft_file->rft_nodes.size();
     else {
         int match_count = 0;
-        for (auto rft : rft_file->data) {
+        for (auto rft : rft_file->rft_nodes) {
             if (well_pattern) {
                 if (util_fnmatch(well_pattern,
                                  rd_rft_node_get_well_name(rft)) != 0)
@@ -225,7 +224,7 @@ int rd_rft_file_get_size(const rd_rft_file_type *rft_file) {
 */
 rd_rft_node_type *rd_rft_file_iget_node(const rd_rft_file_type *rft_file,
                                         int index) {
-    return rft_file->data[index];
+    return rft_file->rft_nodes[index];
 }
 
 static int rd_rft_file_get_node_index_time_rft(const rd_rft_file_type *rft_file,
