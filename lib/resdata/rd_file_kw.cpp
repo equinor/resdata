@@ -106,12 +106,10 @@ rd_file_kw_type *inv_map_get_file_kw(inv_map_type *inv_map,
     }
 }
 
-static UTIL_SAFE_CAST_FUNCTION(rd_file_kw, RD_FILE_KW_TYPE_ID)
-    UTIL_IS_INSTANCE_FUNCTION(rd_file_kw, RD_FILE_KW_TYPE_ID)
+UTIL_IS_INSTANCE_FUNCTION(rd_file_kw, RD_FILE_KW_TYPE_ID);
 
-        rd_file_kw_type *rd_file_kw_alloc0(const char *header,
-                                           rd_data_type data_type, int size,
-                                           offset_type offset) {
+rd_file_kw_type *rd_file_kw_alloc0(const char *header, rd_data_type data_type,
+                                   int size, offset_type offset) {
     rd_file_kw_type *file_kw = (rd_file_kw_type *)util_malloc(sizeof *file_kw);
     UTIL_TYPE_ID_INIT(file_kw, RD_FILE_KW_TYPE_ID);
 

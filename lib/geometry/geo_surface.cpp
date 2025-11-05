@@ -48,10 +48,8 @@ static geo_surface_type *geo_surface_alloc_empty(bool internal_z) {
     return surface;
 }
 
-static UTIL_SAFE_CAST_FUNCTION(geo_surface, GEO_SURFACE_TYPE_ID)
-
-    static void geo_surface_init_regular(geo_surface_type *surface,
-                                         const double *zcoord) {
+static void geo_surface_init_regular(geo_surface_type *surface,
+                                     const double *zcoord) {
     int zstride_nx = 1;
     int zstride_ny = surface->nx;
 

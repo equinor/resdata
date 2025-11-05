@@ -776,28 +776,6 @@ double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
     return rd_sum_data_iget_sim_days(rd_sum->data, index);
 }
 
-static void rd_sum_fmt_init_summary_x(const rd_sum_type *rd_sum,
-                                      rd_sum_fmt_type *fmt) {
-    fmt->locale = NULL;
-    fmt->sep = "";
-    fmt->date_fmt = "%d/%m/%Y   ";
-    fmt->value_fmt = " %15.6g ";
-
-    if (util_string_equal(rd_sum_get_unit(rd_sum, "TIME"), "DAYS"))
-        fmt->days_fmt = "%7.2f   ";
-    else
-        fmt->days_fmt = "%7.4f   ";
-
-    fmt->header_fmt = " %15s ";
-
-    fmt->newline = "\n";
-    fmt->print_header = true;
-    fmt->print_dash = true;
-    fmt->date_dash = "-----------------------";
-    fmt->value_dash = "-----------------";
-    fmt->date_header = "-- Days   dd/mm/yyyy   ";
-}
-
 /*#define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
 #define FLOAT_FORMAT        " %15.6g "
 #define HEADER_FORMAT       " %15s "

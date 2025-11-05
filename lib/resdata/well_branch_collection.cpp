@@ -20,10 +20,8 @@ struct well_branch_collection_struct {
 
 UTIL_IS_INSTANCE_FUNCTION(well_branch_collection,
                           WELL_BRANCH_COLLECTION_TYPE_ID)
-static UTIL_SAFE_CAST_FUNCTION(well_branch_collection,
-                               WELL_BRANCH_COLLECTION_TYPE_ID)
 
-    well_branch_collection_type *well_branch_collection_alloc() {
+well_branch_collection_type *well_branch_collection_alloc() {
     well_branch_collection_type *branch_collection =
         new well_branch_collection_type();
     UTIL_TYPE_ID_INIT(branch_collection, WELL_BRANCH_COLLECTION_TYPE_ID);
