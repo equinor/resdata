@@ -1,7 +1,6 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
 
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
@@ -97,7 +96,7 @@ rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
 
 /**
    Will look for .RFT / .FRFT files very similar to the
-   rd_grid_load_case(). Will return NULL if no RFT file can be found,
+   rd_grid_load_case(). Will return nullptr if no RFT file can be found,
    and the name of RFT file if it is found. New storage is allocated
    for the new name.
 
@@ -105,14 +104,14 @@ rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
 static char *rd_rft_file_alloc_case_filename(const char *case_input) {
     rd_file_enum file_type;
     bool fmt_file;
-    file_type = rd_get_file_type(case_input, &fmt_file, NULL);
+    file_type = rd_get_file_type(case_input, &fmt_file, nullptr);
     if (file_type == RD_RFT_FILE)
         return util_alloc_string_copy(case_input);
     else {
-        char *return_file = NULL;
+        char *return_file = nullptr;
         char *path;
         char *basename;
-        util_alloc_file_components(case_input, &path, &basename, NULL);
+        util_alloc_file_components(case_input, &path, &basename, nullptr);
         if ((file_type == RD_OTHER_FILE) ||
             (file_type ==
              RD_DATA_FILE)) { /* Impossible to infer formatted/unformatted from the case_input */
@@ -142,10 +141,10 @@ static char *rd_rft_file_alloc_case_filename(const char *case_input) {
 }
 
 rd_rft_file_type *rd_rft_file_alloc_case(const char *case_input) {
-    rd_rft_file_type *rd_rft_file = NULL;
+    rd_rft_file_type *rd_rft_file = nullptr;
     char *file_name = rd_rft_file_alloc_case_filename(case_input);
 
-    if (file_name != NULL) {
+    if (file_name != nullptr) {
         rd_rft_file = rd_rft_file_alloc(file_name);
         free(file_name);
     }
@@ -156,7 +155,7 @@ bool rd_rft_file_case_has_rft(const char *case_input) {
     bool has_rft = false;
     char *file_name = rd_rft_file_alloc_case_filename(case_input);
 
-    if (file_name != NULL) {
+    if (file_name != nullptr) {
         has_rft = true;
         free(file_name);
     }
@@ -172,7 +171,7 @@ void rd_rft_file_free(rd_rft_file_type *rft_vector) {
 }
 
 /**
-    Will return the number of RFT nodes in the file. If @well != NULL
+    Will return the number of RFT nodes in the file. If @well != nullptr
     only wells matching @well be included. The @well variable can
     contain '*', so the function call
 
@@ -186,13 +185,11 @@ void rd_rft_file_free(rd_rft_file_type *rft_vector) {
 */
 int rd_rft_file_get_size__(const rd_rft_file_type *rft_file,
                            const char *well_pattern, time_t recording_time) {
-    if ((well_pattern == NULL) && (recording_time < 0))
+    if ((well_pattern == nullptr) && (recording_time < 0))
         return rft_file->data.size();
     else {
         int match_count = 0;
-        for (size_t i = 0; i < rft_file->data.size(); i++) {
-            const rd_rft_node_type *rft = rft_file->data[i];
-
+        for (auto rft : rft_file->data) {
             if (well_pattern) {
                 if (util_fnmatch(well_pattern,
                                  rd_rft_node_get_well_name(rft)) != 0)
@@ -215,7 +212,7 @@ int rd_rft_file_get_size__(const rd_rft_file_type *rft_file,
    the same well occurs many times and so on.
 */
 int rd_rft_file_get_size(const rd_rft_file_type *rft_file) {
-    return rd_rft_file_get_size__(rft_file, NULL, -1);
+    return rd_rft_file_get_size__(rft_file, nullptr, -1);
 }
 
 /**
@@ -245,13 +242,11 @@ static int rd_rft_file_get_node_index_time_rft(const rd_rft_file_type *rft_file,
         if (well_index == index_vector.size())
             break;
 
-        {
-            const rd_rft_node_type *node =
-                rd_rft_file_iget_node(rft_file, index_vector[well_index]);
-            if (rd_rft_node_get_date(node) == recording_time) {
-                global_index = index_vector[well_index];
-                break;
-            }
+        const rd_rft_node_type *node =
+            rd_rft_file_iget_node(rft_file, index_vector[well_index]);
+        if (rd_rft_node_get_date(node) == recording_time) {
+            global_index = index_vector[well_index];
+            break;
         }
 
         well_index++;
@@ -262,9 +257,8 @@ static int rd_rft_file_get_node_index_time_rft(const rd_rft_file_type *rft_file,
 /**
    Returns an rft_node for well 'well' and time 'recording_time'. If
    the rft can not be found, either due to "wrong" well name, or "wrong"
-   time; the function will return NULL.
+   time; the function will return nullptr.
 */
-
 rd_rft_node_type *
 rd_rft_file_get_well_time_rft(const rd_rft_file_type *rft_file,
                               const char *well, time_t recording_time) {
@@ -273,7 +267,7 @@ rd_rft_file_get_well_time_rft(const rd_rft_file_type *rft_file,
     if (index != -1) {
         return rd_rft_file_iget_node(rft_file, index);
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
