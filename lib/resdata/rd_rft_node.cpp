@@ -61,8 +61,7 @@ struct rd_rft_node_struct {
    Will return nullptr if the data_type_string is equal to "SEGMENT" -
    that is not (yet) supported.
 */
-static rd_rft_enum
-translate_from_sting_to_rd_rft_enum(const char *data_type_string) {
+static rd_rft_enum string_to_enum(const char *data_type_string) {
     rd_rft_enum data_type = SEGMENT;
     /* According to the ECLIPSE documentation. */
     if (strchr(data_type_string, 'P') != nullptr)
@@ -83,8 +82,7 @@ rd_rft_node_type *rd_rft_node_alloc_new(const char *well_name,
                                         const char *data_type_string,
                                         const time_t recording_date,
                                         const double days) {
-    rd_rft_enum data_type =
-        translate_from_sting_to_rd_rft_enum(data_type_string);
+    rd_rft_enum data_type = string_to_enum(data_type_string);
     rd_rft_node_type *rft_node = new rd_rft_node_type();
 
     UTIL_TYPE_ID_INIT(rft_node, RD_RFT_NODE_ID);
@@ -97,8 +95,7 @@ rd_rft_node_type *rd_rft_node_alloc_new(const char *well_name,
 }
 
 static rd_rft_node_type *rd_rft_node_alloc_empty(const char *data_type_string) {
-    rd_rft_enum data_type =
-        translate_from_sting_to_rd_rft_enum(data_type_string);
+    rd_rft_enum data_type = string_to_enum(data_type_string);
 
     /* Can return nullptr */
     if (data_type == SEGMENT) {
