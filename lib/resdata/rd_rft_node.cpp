@@ -1,9 +1,8 @@
-#include <math.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include <cmath>
+#include <ctime>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
 
 #include <vector>
 #include <algorithm>
