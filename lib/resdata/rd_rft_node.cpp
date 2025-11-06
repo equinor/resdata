@@ -414,22 +414,13 @@ bool rd_rft_node_is_MSW(const rd_rft_node_type *rft_node) {
 }
 
 bool rd_rft_node_is_PLT(const rd_rft_node_type *rft_node) {
-    if (rft_node->data_type == PLT)
-        return true;
-    else
-        return false;
+    return rft_node->data_type == PLT;
 }
 
 bool rd_rft_node_is_SEGMENT(const rd_rft_node_type *rft_node) {
-    if (rft_node->data_type == SEGMENT)
-        return true;
-    else
-        return false;
+    return rft_node->data_type == SEGMENT;
 }
 
 bool rd_rft_node_is_RFT(const rd_rft_node_type *rft_node) {
-    if (rft_node->data_type == RFT)
-        return true;
-    else
-        return false;
+    return rft_node->data_type == RFT;
 }
