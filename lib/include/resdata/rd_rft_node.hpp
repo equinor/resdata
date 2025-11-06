@@ -17,8 +17,6 @@ typedef enum {
 
 typedef struct rd_rft_node_struct rd_rft_node_type;
 
-const rd_rft_cell_type *rd_rft_node_iget_cell_sorted(rd_rft_node_type *rft_node,
-                                                     int index);
 const rd_rft_cell_type *rd_rft_node_iget_cell(const rd_rft_node_type *rft_node,
                                               int index);
 const rd_rft_cell_type *rd_rft_node_lookup_ijk(const rd_rft_node_type *rft_node,

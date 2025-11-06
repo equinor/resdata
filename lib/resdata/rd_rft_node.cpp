@@ -306,11 +306,6 @@ const rd_rft_cell_type *rd_rft_node_iget_cell(const rd_rft_node_type *rft_node,
     return rft_node->cells[index];
 }
 
-const rd_rft_cell_type *rd_rft_node_iget_cell_sorted(rd_rft_node_type *rft_node,
-                                                     int index) {
-    return rft_node->cells[index];
-}
-
 double rd_rft_node_iget_depth(const rd_rft_node_type *rft_node, int index) {
     const rd_rft_cell_type *cell = rd_rft_node_iget_cell(rft_node, index);
     return rd_rft_cell_get_depth(cell);
