@@ -1,9 +1,5 @@
-#include <math.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdlib>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
