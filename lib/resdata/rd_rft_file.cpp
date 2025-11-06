@@ -58,11 +58,6 @@ static rd_rft_file_type *rd_rft_file_alloc_empty(const char *filename) {
 UTIL_SAFE_CAST_FUNCTION(rd_rft_file, RD_RFT_FILE_ID);
 UTIL_IS_INSTANCE_FUNCTION(rd_rft_file, RD_RFT_FILE_ID);
 
-static void rd_rft_file_add_node(rd_rft_file_type *rft_vector,
-                                 rd_rft_node_type *rft_node) {
-    rft_vector->rft_nodes.push_back(rft_node);
-}
-
 rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
     rd_rft_file_type *rft_vector = rd_rft_file_alloc_empty(filename);
     rd_file_type *rd_file = rd_file_open(filename, 0);
@@ -77,7 +72,7 @@ rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
             rd_rft_node_type *rft_node = rd_rft_node_alloc(rft_view);
             if (rft_node) {
                 const char *well_name = rd_rft_node_get_well_name(rft_node);
-                rd_rft_file_add_node(rft_vector, rft_node);
+                rft_vector->rft_nodes.push_back(rft_node);
 
                 auto &index_vector = rft_vector->well_index[well_name];
                 index_vector.push_back(global_index);
