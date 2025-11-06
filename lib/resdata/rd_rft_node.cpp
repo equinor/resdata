@@ -359,18 +359,12 @@ static void assert_type_and_index(const rd_rft_node_type *rft_node,
 
 double rd_rft_node_iget_sgas(const rd_rft_node_type *rft_node, int index) {
     assert_type_and_index(rft_node, RFT, index);
-    {
-        const rd_rft_cell_type *cell = rd_rft_node_iget_cell(rft_node, index);
-        return rd_rft_cell_get_sgas(cell);
-    }
+    return rd_rft_cell_get_sgas(rft_node->cells[index]);
 }
 
 double rd_rft_node_iget_swat(const rd_rft_node_type *rft_node, int index) {
     assert_type_and_index(rft_node, RFT, index);
-    {
-        const rd_rft_cell_type *cell = rft_node->cells[index];
-        return rd_rft_cell_get_swat(cell);
-    }
+    return rd_rft_cell_get_swat(rft_node->cells[index]);
 }
 
 double rd_rft_node_get_days(const rd_rft_node_type *rft_node) {
@@ -379,34 +373,22 @@ double rd_rft_node_get_days(const rd_rft_node_type *rft_node) {
 
 double rd_rft_node_iget_soil(const rd_rft_node_type *rft_node, int index) {
     assert_type_and_index(rft_node, RFT, index);
-    {
-        const rd_rft_cell_type *cell = rft_node->cells[index];
-        return rd_rft_cell_get_soil(cell);
-    }
+    return rd_rft_cell_get_soil(rft_node->cells[index]);
 }
 
 double rd_rft_node_iget_orat(const rd_rft_node_type *rft_node, int index) {
     assert_type_and_index(rft_node, PLT, index);
-    {
-        const rd_rft_cell_type *cell = rft_node->cells[index];
-        return rd_rft_cell_get_orat(cell);
-    }
+    return rd_rft_cell_get_orat(rft_node->cells[index]);
 }
 
 double rd_rft_node_iget_wrat(const rd_rft_node_type *rft_node, int index) {
     assert_type_and_index(rft_node, PLT, index);
-    {
-        const rd_rft_cell_type *cell = rft_node->cells[index];
-        return rd_rft_cell_get_wrat(cell);
-    }
+    return rd_rft_cell_get_wrat(rft_node->cells[index]);
 }
 
 double rd_rft_node_iget_grat(const rd_rft_node_type *rft_node, int index) {
     assert_type_and_index(rft_node, PLT, index);
-    {
-        const rd_rft_cell_type *cell = rft_node->cells[index];
-        return rd_rft_cell_get_grat(cell);
-    }
+    return rd_rft_cell_get_grat(rft_node->cells[index]);
 }
 
 bool rd_rft_node_is_MSW(const rd_rft_node_type *rft_node) {
