@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdlib>
+#include <variant>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
@@ -9,30 +10,12 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_rft_cell.hpp>
 
-#define RD_RFT_CELL_TYPE_ID 99164012
-#define RFT_DATA_TYPE_ID 66787166
-#define PLT_DATA_TYPE_ID 87166667
-
-struct rd_rft_cell_struct {
-    UTIL_TYPE_ID_DECLARATION;
-    int i, j, k;
-    double pressure;
-    double depth;
-
-    void *data;
-};
-
-typedef struct plt_data_struct plt_data_type;
-typedef struct rft_data_struct rft_data_type;
-
 struct rft_data_struct {
-    UTIL_TYPE_ID_DECLARATION;
     double swat;
     double sgas;
 };
 
 struct plt_data_struct {
-    UTIL_TYPE_ID_DECLARATION;
     double orat;
     double wrat;
     double grat;
@@ -44,53 +27,17 @@ struct plt_data_struct {
     double water_flowrate;
 };
 
-static rft_data_type *rft_data_alloc(double swat, double sgas) {
-    rft_data_type *data = (rft_data_type *)util_malloc(sizeof *data);
-    UTIL_TYPE_ID_INIT(data, RFT_DATA_TYPE_ID);
+struct rd_rft_cell_struct {
+    int i, j, k;
+    double pressure;
+    double depth;
 
-    data->swat = swat;
-    data->sgas = sgas;
-
-    return data;
-}
-
-static void rft_data_free(rft_data_type *data) { free(data); }
-
-static UTIL_TRY_CAST_FUNCTION_CONST(rft_data, RFT_DATA_TYPE_ID);
-static UTIL_IS_INSTANCE_FUNCTION(rft_data, RFT_DATA_TYPE_ID);
-
-static plt_data_type *plt_data_alloc(double orat, double grat, double wrat,
-                                     double connection_start,
-                                     double connection_end, double flowrate,
-                                     double oil_flowrate, double gas_flowrate,
-                                     double water_flowrate) {
-    plt_data_type *data = (plt_data_type *)util_malloc(sizeof *data);
-    UTIL_TYPE_ID_INIT(data, PLT_DATA_TYPE_ID);
-
-    data->orat = orat;
-    data->grat = grat;
-    data->wrat = wrat;
-    data->connection_start = connection_start;
-    data->connection_end = connection_end;
-    data->flowrate = flowrate;
-    data->oil_flowrate = oil_flowrate;
-    data->gas_flowrate = gas_flowrate;
-    data->water_flowrate = water_flowrate;
-
-    return data;
-}
-
-static void plt_data_free(plt_data_type *data) { free(data); }
-
-static UTIL_TRY_CAST_FUNCTION_CONST(plt_data, PLT_DATA_TYPE_ID);
-static UTIL_IS_INSTANCE_FUNCTION(plt_data, PLT_DATA_TYPE_ID);
-
-UTIL_IS_INSTANCE_FUNCTION(rd_rft_cell, RD_RFT_CELL_TYPE_ID);
+    std::variant<rft_data_struct, plt_data_struct> data;
+};
 
 static rd_rft_cell_type *
 rd_rft_cell_alloc_common(int i, int j, int k, double depth, double pressure) {
-    rd_rft_cell_type *cell = (rd_rft_cell_type *)util_malloc(sizeof *cell);
-    UTIL_TYPE_ID_INIT(cell, RD_RFT_CELL_TYPE_ID);
+    auto cell = new rd_rft_cell_type;
 
     cell->i = i;
     cell->j = j;
@@ -106,7 +53,7 @@ rd_rft_cell_type *rd_rft_cell_alloc_RFT(int i, int j, int k, double depth,
                                         double sgas) {
     rd_rft_cell_type *cell = rd_rft_cell_alloc_common(i, j, k, depth, pressure);
 
-    cell->data = rft_data_alloc(swat, sgas);
+    cell->data = rft_data_struct{.swat = swat, .sgas = sgas};
     return cell;
 }
 
@@ -119,20 +66,21 @@ rd_rft_cell_alloc_PLT(int i, int j, int k, double depth, double pressure,
 
     rd_rft_cell_type *cell = rd_rft_cell_alloc_common(i, j, k, depth, pressure);
 
-    cell->data =
-        plt_data_alloc(orat, grat, wrat, connection_start, connection_end,
-                       flowrate, oil_flowrate, gas_flowrate, water_flowrate);
+    cell->data = plt_data_struct{
+        .orat = orat,
+        .wrat = wrat,
+        .grat = grat,
+        .connection_start = connection_start,
+        .connection_end = connection_end,
+        .flowrate = flowrate,
+        .oil_flowrate = oil_flowrate,
+        .gas_flowrate = gas_flowrate,
+        .water_flowrate = water_flowrate,
+    };
     return cell;
 }
 
-void rd_rft_cell_free(rd_rft_cell_type *cell) {
-    if (rft_data_is_instance(cell->data))
-        rft_data_free((rft_data_type *)cell->data);
-    else if (plt_data_is_instance(cell->data))
-        plt_data_free((plt_data_type *)cell->data);
-
-    free(cell);
-}
+void rd_rft_cell_free(rd_rft_cell_type *cell) { delete cell; }
 
 int rd_rft_cell_get_i(const rd_rft_cell_type *cell) { return cell->i; }
 
@@ -155,97 +103,86 @@ double rd_rft_cell_get_pressure(const rd_rft_cell_type *cell) {
 }
 
 double rd_rft_cell_get_swat(const rd_rft_cell_type *cell) {
-    const rft_data_type *data = rft_data_try_cast_const(cell->data);
-    if (data)
-        return data->swat;
+    if (std::holds_alternative<rft_data_struct>(cell->data))
+        return std::get<rft_data_struct>(cell->data).swat;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_sgas(const rd_rft_cell_type *cell) {
-    const rft_data_type *data = rft_data_try_cast_const(cell->data);
-    if (data)
-        return data->sgas;
+    if (std::holds_alternative<rft_data_struct>(cell->data))
+        return std::get<rft_data_struct>(cell->data).sgas;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_soil(const rd_rft_cell_type *cell) {
-    const rft_data_type *data = rft_data_try_cast_const(cell->data);
-    if (data)
-        return 1 - (data->swat + data->sgas);
-    else
+    if (std::holds_alternative<rft_data_struct>(cell->data)) {
+        auto d = std::get<rft_data_struct>(cell->data);
+        return 1 - (d.swat + d.sgas);
+    } else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_orat(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->orat;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).orat;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_grat(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->grat;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).grat;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_wrat(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->wrat;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).wrat;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_connection_start(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->connection_start;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).connection_start;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_connection_end(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->connection_end;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).connection_end;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_flowrate(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->flowrate;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).flowrate;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_oil_flowrate(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->oil_flowrate;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).oil_flowrate;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_gas_flowrate(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->gas_flowrate;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).gas_flowrate;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
 
 double rd_rft_cell_get_water_flowrate(const rd_rft_cell_type *cell) {
-    const plt_data_type *data = plt_data_try_cast_const(cell->data);
-    if (data)
-        return data->water_flowrate;
+    if (std::holds_alternative<plt_data_struct>(cell->data))
+        return std::get<plt_data_struct>(cell->data).water_flowrate;
     else
         return RD_RFT_CELL_INVALID_VALUE;
 }
