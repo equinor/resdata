@@ -62,11 +62,10 @@ rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
     rd_rft_file_type *rft_vector = rd_rft_file_alloc_empty(filename);
     rd_file_type *rd_file = rd_file_open(filename, 0);
     int global_index = 0;
-    int block_nr = 0;
 
-    while (true) {
+    for (int i = 0;; i++) {
         rd_file_view_type *rft_view =
-            rd_file_alloc_global_blockview(rd_file, TIME_KW, block_nr);
+            rd_file_alloc_global_blockview(rd_file, TIME_KW, i);
 
         if (rft_view) {
             rd_rft_node_type *rft_node = rd_rft_node_alloc(rft_view);
@@ -81,7 +80,6 @@ rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
         } else
             break;
 
-        block_nr++;
         rd_file_view_free(rft_view);
     }
     rd_file_close(rd_file);
