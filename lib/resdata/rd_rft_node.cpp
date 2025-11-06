@@ -101,14 +101,12 @@ static rd_rft_node_type *rd_rft_node_alloc_empty(const char *data_type_string) {
         return nullptr;
     }
 
-    {
-        rd_rft_node_type *rft_node = new rd_rft_node_type();
+    auto rft_node = new rd_rft_node_type();
 
-        UTIL_TYPE_ID_INIT(rft_node, RD_RFT_NODE_ID);
-        rft_node->data_type = data_type;
+    UTIL_TYPE_ID_INIT(rft_node, RD_RFT_NODE_ID);
+    rft_node->data_type = data_type;
 
-        return rft_node;
-    }
+    return rft_node;
 }
 
 UTIL_SAFE_CAST_FUNCTION(rd_rft_node, RD_RFT_NODE_ID);
