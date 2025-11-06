@@ -341,18 +341,11 @@ void rd_rft_node_iget_ijk(const rd_rft_node_type *rft_node, int index, int *i,
 
 const rd_rft_cell_type *rd_rft_node_lookup_ijk(const rd_rft_node_type *rft_node,
                                                int i, int j, int k) {
-    int index = 0;
-    int size = rd_rft_node_get_size(rft_node);
-    while (true) {
-        const rd_rft_cell_type *cell = rd_rft_node_iget_cell(rft_node, index);
-
+    for (const auto cell : rft_node->cells) {
         if (rd_rft_cell_ijk_equal(cell, i, j, k))
             return cell;
-
-        index++;
-        if (index == size) /* Could not find it. */
-            return nullptr;
     }
+    return nullptr;
 }
 
 static void assert_type_and_index(const rd_rft_node_type *rft_node,
