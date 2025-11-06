@@ -56,11 +56,6 @@ struct rd_rft_node_struct {
     "P"  => Section contains only PLT data.
     "RP" => Section contains *BOTH* RFT data and PLT data.
 */
-
-/**
-   Will return nullptr if the data_type_string is equal to "SEGMENT" -
-   that is not (yet) supported.
-*/
 static rd_rft_enum string_to_enum(const char *data_type_string) {
     rd_rft_enum data_type = SEGMENT;
     /* According to the ECLIPSE documentation. */
@@ -94,10 +89,13 @@ rd_rft_node_type *rd_rft_node_alloc_new(const char *well_name,
     return rft_node;
 }
 
+/**
+   Will return nullptr if the data_type_string is equal to "SEGMENT" -
+   that is not (yet) supported.
+*/
 static rd_rft_node_type *rd_rft_node_alloc_empty(const char *data_type_string) {
     rd_rft_enum data_type = string_to_enum(data_type_string);
 
-    /* Can return nullptr */
     if (data_type == SEGMENT) {
         fprintf(stderr, "%s: SEGMENT PLT/RFT is not supported.\n", __func__);
         return nullptr;
