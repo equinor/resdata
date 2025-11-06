@@ -60,8 +60,7 @@ void test_rft(const char *rft_file) {
 
         for (i = 0; i < rd_rft_node_get_size(rft_node); i++) {
             const rd_rft_cell_type *cell1 = rd_rft_node_iget_cell(rft_node, i);
-            const rd_rft_cell_type *cell2 =
-                rd_rft_node_iget_cell_sorted(rft_node, i);
+            const rd_rft_cell_type *cell2 = rd_rft_node_iget_cell(rft_node, i);
 
             test_assert_ptr_equal(cell1, cell2);
         }
@@ -123,8 +122,7 @@ void test_plt(const char *plt_file) {
 
         for (i = 0; i < rd_rft_node_get_size(plt_node); i++) {
             const rd_rft_cell_type *cell1 = rd_rft_node_iget_cell(plt_node, i);
-            const rd_rft_cell_type *cell2 =
-                rd_rft_node_iget_cell_sorted(plt_node, i);
+            const rd_rft_cell_type *cell2 = rd_rft_node_iget_cell(plt_node, i);
 
             test_assert_ptr_equal(cell1, cell2);
         }
