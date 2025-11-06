@@ -99,10 +99,7 @@ static rd_rft_node_type *rd_rft_node_alloc_empty(const char *data_type_string) {
 
     /* Can return nullptr */
     if (data_type == SEGMENT) {
-        fprintf(
-            stderr,
-            "%s: sorry SEGMENT PLT/RFT is not supported - file a complaint. \n",
-            __func__);
+        fprintf(stderr, "%s: SEGMENT PLT/RFT is not supported.\n", __func__);
         return nullptr;
     }
 
