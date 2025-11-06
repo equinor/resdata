@@ -58,18 +58,18 @@ struct rd_rft_node_struct {
 */
 
 /**
-   Will return NULL if the data_type_string is equal to "SEGMENT" -
+   Will return nullptr if the data_type_string is equal to "SEGMENT" -
    that is not (yet) supported.
 */
 static rd_rft_enum
 translate_from_sting_to_rd_rft_enum(const char *data_type_string) {
     rd_rft_enum data_type = SEGMENT;
     /* According to the ECLIPSE documentation. */
-    if (strchr(data_type_string, 'P') != NULL)
+    if (strchr(data_type_string, 'P') != nullptr)
         data_type = PLT;
-    else if (strchr(data_type_string, 'R') != NULL)
+    else if (strchr(data_type_string, 'R') != nullptr)
         data_type = RFT;
-    else if (strchr(data_type_string, 'S') != NULL)
+    else if (strchr(data_type_string, 'S') != nullptr)
         data_type = SEGMENT;
     else
         util_abort(
@@ -100,13 +100,13 @@ static rd_rft_node_type *rd_rft_node_alloc_empty(const char *data_type_string) {
     rd_rft_enum data_type =
         translate_from_sting_to_rd_rft_enum(data_type_string);
 
-    /* Can return NULL */
+    /* Can return nullptr */
     if (data_type == SEGMENT) {
         fprintf(
             stderr,
             "%s: sorry SEGMENT PLT/RFT is not supported - file a complaint. \n",
             __func__);
-        return NULL;
+        return nullptr;
     }
 
     {
@@ -218,8 +218,8 @@ static void rd_rft_node_init_PLT_cells(rd_rft_node_type *rft_node,
         rd_file_view_iget_named_kw(rft_view, CONGTUB_KW, 0));
     const float *water_flowrate = rd_kw_get_float_ptr(
         rd_file_view_iget_named_kw(rft_view, CONWTUB_KW, 0));
-    const float *connection_start = NULL;
-    const float *connection_end = NULL;
+    const float *connection_start = nullptr;
+    const float *connection_end = nullptr;
 
     /* The keywords CONLENST_KW and CONLENEN_KW are ONLY present if we are dealing with a MSW well. */
     if (rd_file_view_has_kw(rft_view, CONLENST_KW))
@@ -264,7 +264,7 @@ rd_rft_node_type *rd_rft_node_alloc(const rd_file_view_type *rft_view) {
     rd_rft_node_type *rft_node = rd_rft_node_alloc_empty(
         (const char *)rd_kw_iget_ptr(welletc, WELLETC_TYPE_INDEX));
 
-    if (rft_node != NULL) {
+    if (rft_node != nullptr) {
         rd_kw_type *date_kw = rd_file_view_iget_named_kw(rft_view, DATE_KW, 0);
         {
             char *tmp = util_alloc_strip_copy(
@@ -351,7 +351,7 @@ const rd_rft_cell_type *rd_rft_node_lookup_ijk(const rd_rft_node_type *rft_node,
 
         index++;
         if (index == size) /* Could not find it. */
-            return NULL;
+            return nullptr;
     }
 }
 
