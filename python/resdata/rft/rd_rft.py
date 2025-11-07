@@ -181,7 +181,6 @@ class ResdataRFTFile(BaseCClass):
     _get_rft = ResdataPrototype(
         "rd_rft_ref rd_rft_file_get_well_time_rft( rd_rft_file , char* , rd_time_t)"
     )
-    _has_rft = ResdataPrototype("bool rd_rft_file_case_has_rft( char* )", bind=False)
     _free = ResdataPrototype("void rd_rft_file_free( rd_rft_file )")
     _get_size = ResdataPrototype(
         "int rd_rft_file_get_size__( rd_rft_file , char* , rd_time_t)"

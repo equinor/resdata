@@ -9,7 +9,6 @@
 typedef struct rd_rft_file_struct rd_rft_file_type;
 
 extern "C" rd_rft_file_type *rd_rft_file_alloc_case(const char *case_input);
-extern "C" bool rd_rft_file_case_has_rft(const char *case_input);
 rd_rft_file_type *rd_rft_file_alloc(const char *);
 extern "C" void rd_rft_file_free(rd_rft_file_type *);
 extern "C" int rd_rft_file_get_size__(const rd_rft_file_type *rft_file,
