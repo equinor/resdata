@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 #include <unistd.h>
 
 #include <ert/util/util.hpp>

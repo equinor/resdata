@@ -1,8 +1,7 @@
 #ifndef ERT_RD_FILE_H
 #define ERT_RD_FILE_H
 
-#include <stdbool.h>
-#include <time.h>
+#include <ctime>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>

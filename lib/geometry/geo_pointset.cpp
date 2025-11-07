@@ -1,7 +1,6 @@
-#include <math.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 
 #include <ert/util/util.hpp>
 

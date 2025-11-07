@@ -1,8 +1,6 @@
 #ifndef ERT_WELL_CONN_H
 #define ERT_WELL_CONN_H
 
-#include <stdbool.h>
-
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_rsthead.hpp>

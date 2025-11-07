@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <errno.h>
-#include <time.h>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <cerrno>
+#include <ctime>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>

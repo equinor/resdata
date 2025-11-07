@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #include <utime.h>
 
 #include <ert/util/test_util.hpp>

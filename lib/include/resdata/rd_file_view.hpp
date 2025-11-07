@@ -1,8 +1,7 @@
 #ifndef ERT_RD_FILE_VIEW_H
 #define ERT_RD_FILE_VIEW_H
 
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>

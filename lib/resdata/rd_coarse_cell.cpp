@@ -1,6 +1,5 @@
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>

@@ -1,8 +1,6 @@
 #ifndef ERT_RD_GRAV_COMMON_H
 #define ERT_RD_GRAV_COMMON_H
 
-#include <stdbool.h>
-
 #include <resdata/rd_file.hpp>
 #include "detail/resdata/rd_grid_cache.hpp"
 

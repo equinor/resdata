@@ -1,6 +1,5 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdarg>
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/bool_vector.hpp>

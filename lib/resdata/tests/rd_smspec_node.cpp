@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 #include <string>
 #include <tuple>
 #include <vector>

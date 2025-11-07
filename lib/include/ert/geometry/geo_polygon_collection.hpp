@@ -1,8 +1,6 @@
 #ifndef ERT_GEO_POLYGON_COLLECTION_H
 #define ERT_GEO_POLYGON_COLLECTION_H
 
-#include <stdbool.h>
-
 #include <ert/util/type_macros.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>

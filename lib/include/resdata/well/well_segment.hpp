@@ -1,8 +1,6 @@
 #ifndef ERT_WELL_SEGMENT_H
 #define ERT_WELL_SEGMENT_H
 
-#include <stdbool.h>
-
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_rsthead.hpp>
 

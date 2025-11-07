@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/types.h>

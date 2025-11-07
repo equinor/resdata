@@ -1,7 +1,7 @@
 #ifndef ERT_WELL_STATE_H
 #define ERT_WELL_STATE_H
 
-#include <time.h>
+#include <ctime>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_grid.hpp>

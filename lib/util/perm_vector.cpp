@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <ert/util/type_macros.hpp>
 #include <ert/util/util.hpp>

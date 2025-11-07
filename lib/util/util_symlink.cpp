@@ -1,6 +1,6 @@
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 
 #include "ert/util/build_config.hpp"
 #include <ert/util/ert_api_config.hpp>

@@ -10,25 +10,25 @@
 
 #include <stdexcept>
 
-#include <assert.h>
-#include <string.h>
-#include <time.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <cassert>
+#include <cstring>
+#include <ctime>
+#include <cmath>
+#include <cstdarg>
+#include <cstdio>
 
 #include <fcntl.h>
-#include <limits.h>
+#include <climits>
 
 #include <ert/util/ert_api_config.hpp>
 #include "ert/util/build_config.hpp"
 
-#include <errno.h>
+#include <cerrno>
 
-#include <stdint.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <signal.h>
+#include <cstdint>
+#include <cctype>
+#include <cstdlib>
+#include <csignal>
 #include <sys/stat.h>
 
 #ifdef HAVE_FNMATCH
@@ -65,7 +65,7 @@
 #endif
 #endif
 
-#include <stdint.h>
+#include <cstdint>
 #if UINTPTR_MAX == 0xFFFFFFFF
 #define ARCH32
 #elif UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
@@ -2463,7 +2463,7 @@ char *util_alloc_sprintf(const char *fmt, ...) {
 
   To install the signal handler:
 
-  #include <signal.h>
+  #include <csignal>
   ....
   ....
   signal(SIGSEGV , util_abort_signal);

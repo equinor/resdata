@@ -3,8 +3,7 @@
    well for one particular point in time.
 */
 
-#include <time.h>
-#include <stdbool.h>
+#include <ctime>
 
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>

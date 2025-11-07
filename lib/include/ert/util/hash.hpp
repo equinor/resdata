@@ -1,7 +1,7 @@
 #ifndef ERT_HASH_H
 #define ERT_HASH_H
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <ert/util/stringlist.hpp>
 #include <ert/util/type_macros.hpp>

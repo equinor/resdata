@@ -39,8 +39,7 @@
    simulation time - your choice.
 */
 
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 
 #include <string>
 #include <vector>

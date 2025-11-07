@@ -1,8 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cstdint>
+#include <cerrno>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/hash_sll.hpp>

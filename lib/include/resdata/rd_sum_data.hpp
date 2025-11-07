@@ -1,9 +1,9 @@
 #ifndef ERT_RD_SUM_DATA_H
 #define ERT_RD_SUM_DATA_H
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <time.h>
+#include <cstdlib>
+#include <cstdint>
+#include <ctime>
 
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/double_vector.hpp>

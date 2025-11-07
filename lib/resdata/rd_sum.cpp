@@ -1,9 +1,8 @@
 #include <stdexcept>
 
-#include <string.h>
-#include <stdbool.h>
-#include <math.h>
-#include <time.h>
+#include <cstring>
+#include <cmath>
+#include <ctime>
 #include <locale.h>
 
 #include <ert/util/hash.hpp>

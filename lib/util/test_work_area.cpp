@@ -9,9 +9,9 @@
 
 #include <ert/util/ert_api_config.hpp>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>

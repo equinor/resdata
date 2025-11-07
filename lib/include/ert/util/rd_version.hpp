@@ -1,8 +1,6 @@
 #ifndef RD_VERSION
 #define RD_VERSION
 
-#include <stdbool.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

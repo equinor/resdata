@@ -1,8 +1,7 @@
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <string.h>
-#include <signal.h>
+#include <cstdlib>
+#include <cstdarg>
+#include <cstring>
+#include <csignal>
 
 #include "ert/util/build_config.hpp"
 #include <ert/util/util.hpp>

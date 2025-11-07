@@ -1,8 +1,7 @@
-#include <string.h>
-#include <stdbool.h>
-#include <math.h>
-#include <time.h>
-#include <errno.h>
+#include <cstring>
+#include <cmath>
+#include <ctime>
+#include <cerrno>
 
 #include <string>
 #include <vector>

@@ -1,8 +1,6 @@
 #ifndef ERT_RD_GRID_H
 #define ERT_RD_GRID_H
 
-#include <stdbool.h>
-
 #include <ert/util/double_vector.hpp>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/stringlist.hpp>

@@ -1,6 +1,6 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
 
 #include <ert/util/ert_api_config.hpp>
 #ifdef ERT_HAVE_OPENDIR

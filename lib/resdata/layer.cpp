@@ -1,6 +1,6 @@
 #include <cstring>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 
 #include <vector>
 

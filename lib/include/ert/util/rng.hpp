@@ -1,7 +1,7 @@
 #ifndef ERT_RNG_H
 #define ERT_RNG_H
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <ert/util/type_macros.hpp>
 

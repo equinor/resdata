@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file.hpp>

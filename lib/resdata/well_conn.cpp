@@ -1,5 +1,4 @@
-#include <stdbool.h>
-#include <string.h>
+#include <cstring>
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>

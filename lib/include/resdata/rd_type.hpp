@@ -1,8 +1,7 @@
 #ifndef ERT_RD_TYPE_H
 #define ERT_RD_TYPE_H
 
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 
 #ifdef __cplusplus
 extern "C" {

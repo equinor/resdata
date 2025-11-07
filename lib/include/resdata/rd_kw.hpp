@@ -1,9 +1,8 @@
 #ifndef ERT_RD_KW_H
 #define ERT_RD_KW_H
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
+#include <cstdlib>
+#include <cstdio>
+#include <climits>
 
 #include <ert/util/type_macros.hpp>
 

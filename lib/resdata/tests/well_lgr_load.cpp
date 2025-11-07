@@ -1,6 +1,5 @@
-#include <time.h>
-#include <stdbool.h>
-#include <signal.h>
+#include <ctime>
+#include <csignal>
 
 #include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>
