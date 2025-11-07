@@ -382,7 +382,7 @@ foreach(
   well_lgr_load)
 
   add_executable(${name} resdata/tests/${name}.cpp util/test_util.cpp)
-  target_link_libraries(${name} resdata)
+  target_link_libraries(${name} resdata stdc++fs)
   target_include_directories(
     ${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private-include)
 endforeach()
