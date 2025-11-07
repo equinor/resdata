@@ -28,8 +28,12 @@ def createSummary(
 
     # This is a bug! This should not be integer division, but tests are written
     # around that assumption.
-    report_step_length = float(sim_length_days // num_report_step)
-    mini_step_length = float(report_step_length // num_mini_step)
+    report_step_length = (
+        0.0 if num_report_step == 0 else float(sim_length_days // num_report_step)
+    )
+    mini_step_length = (
+        0.0 if num_mini_step == 0 else float(report_step_length // num_mini_step)
+    )
 
     if data_start is None:
         time_offset = 0

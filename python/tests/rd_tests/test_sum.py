@@ -780,6 +780,7 @@ def test_t_step():
         func_table={"FOPT": fopt, "FOPR": fopr, "FGPT": fgpt},
     )
     assert sum.path is None
+    assert sum.end_time.date() == sum.end_date
 
     t_step = sum.add_t_step(11, 101)
     assert t_step.get_report() == 11
@@ -812,3 +813,16 @@ def test_t_step():
 
     assert sum.get_last("FOPT").days == 101.0
     assert sum["FOPT"].first.days == 0
+
+
+def test_that_end_time_is_sim_start_when_there_are_no_steps():
+    sum = createSummary(
+        "CASE",
+        [],
+        sim_length_days=100,
+        num_report_step=0,
+        num_mini_step=0,
+        sim_start=datetime.date(2010, 1, 1),
+        func_table={},
+    )
+    assert sum.end_date == sum.start_date
