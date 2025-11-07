@@ -45,7 +45,7 @@ extern "C" double rd_rft_node_iget_sgas(const rd_rft_node_type *rft_node,
                                         int index);
 extern "C" double rd_rft_node_iget_soil(const rd_rft_node_type *rft_node,
                                         int index);
-extern "C" double rd_rft_node_get_days(const rd_rft_node_type *rft_node);
+double rd_rft_node_get_days(const rd_rft_node_type *rft_node);
 
 extern "C" rd_rft_node_type *rd_rft_node_alloc_new(const char *well_name,
                                                    const char *data_type_string,
