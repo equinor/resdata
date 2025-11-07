@@ -12,7 +12,7 @@ if(BUILD_APPLICATIONS)
   target_link_resdata(sum_write)
 
   foreach(app rd_pack rd_unpack load_test)
-    add_executable(${app} resdata/${app}.c)
+    add_executable(${app} resdata/${app}.cpp)
     target_link_resdata(${app})
     list(APPEND apps ${app})
     if(ERT_LINUX)
@@ -23,7 +23,7 @@ if(BUILD_APPLICATIONS)
 
   if(ERT_LINUX)
     foreach(app convert grdecl_test kw_list)
-      add_executable(${app} resdata/${app}.c)
+      add_executable(${app} resdata/${app}.cpp)
       target_link_resdata(${app})
       # The .x extension creates problems on windows
       set_target_properties(${app} PROPERTIES SUFFIX ".x")
@@ -36,11 +36,11 @@ endif()
 if(apps)
   if(ERT_USE_OPENMP)
     foreach(app ${apps})
-      target_compile_options(${app} PUBLIC ${OpenMP_C_FLAGS})
+      target_compile_options(${app} PUBLIC ${OpenMP_CXX_FLAGS})
       set_property(
         TARGET ${app}
         APPEND
-        PROPERTY LINK_FLAGS ${OpenMP_C_FLAGS})
+        PROPERTY LINK_FLAGS ${OpenMP_CXX_FLAGS})
     endforeach()
   endif()
   install(

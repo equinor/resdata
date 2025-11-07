@@ -24,7 +24,7 @@
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_endian_flip.hpp>
 

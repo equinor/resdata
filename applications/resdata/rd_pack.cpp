@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Equinor ASA, Norway.
 
-   The file 'rd_pack.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'rd_pack.cpp' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
    for more details.
 */
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <ert/util/util.hpp>
 #include <ert/util/stringlist.hpp>
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
         else {
             util_exit("The rd_pack program can only be used with "
                       "restart files or summary files.\n");
-            target_type = -1;
+            target_type = RD_OTHER_FILE;
         }
         util_alloc_file_components(argv[1], &path, &rd_base, NULL);
 

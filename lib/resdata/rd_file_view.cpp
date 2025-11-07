@@ -3,7 +3,7 @@
 #include <map>
 #include <cstring>
 
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_file_kw.hpp>

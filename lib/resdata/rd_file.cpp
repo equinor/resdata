@@ -10,7 +10,7 @@
 #include <ert/util/int_vector.hpp>
 #include <ert/util/stringlist.hpp>
 
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>

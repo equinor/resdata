@@ -6,7 +6,7 @@
 #include <ert/util/vector.hpp>
 #include <ert/util/test_work_area.hpp>
 
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 
 void test_existing_read(const char *filename) {

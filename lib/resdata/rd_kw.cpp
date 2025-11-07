@@ -9,7 +9,7 @@
 
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/rd_kw.hpp>
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_type.hpp>
 

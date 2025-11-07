@@ -135,7 +135,7 @@ class SumTest(ResdataTest):
 
     def test_identify_var_type(self):
         self.assertEnumIsFullyDefined(
-            SummaryVarType, "rd_smspec_var_type", "lib/include/resdata/smspec_node.h"
+            SummaryVarType, "rd_smspec_var_type", "lib/include/resdata/smspec_node.hpp"
         )
         self.assertEqual(
             Summary.varType("WWCT:OP_X"), SummaryVarType.RD_SMSPEC_WELL_VAR
