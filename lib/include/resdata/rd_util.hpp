@@ -1,5 +1,4 @@
-#ifndef ERT_RD_UTIL_H
-#define ERT_RD_UTIL_H
+#pragma once
 #include <ctime>
 
 #include <ert/util/stringlist.hpp>
@@ -97,17 +96,21 @@ typedef enum {
 #define RD_COMMENT_CHAR '-' // Need to consecutive to make an ECLIPSE comment
 #define RD_DATA_TERMINATION "/"
 
-int rd_filename_report_nr(const char *);
-rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
-                              int *report_nr);
+#ifdef __cplusplus
+}
+#endif
+
+extern "C" int rd_filename_report_nr(const char *);
+extern "C" rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
+                                         int *report_nr);
 char *rd_alloc_filename(const char * /* path */, const char * /* base */,
                         rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
 char *rd_alloc_exfilename(const char * /* path */, const char * /* base */,
                           rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
 bool rd_alloc_summary_files(const char *, const char *, const char *, char **,
                             stringlist_type *);
-time_t rd_get_start_date(const char *);
-int rd_get_num_cpu(const char *data_file);
+extern "C" time_t rd_get_start_date(const char *);
+extern "C" int rd_get_num_cpu(const char *data_file);
 bool rd_fmt_file(const char *filename, bool *__fmt_file);
 int rd_fname_report_cmp(const void *f1, const void *f2);
 time_t rd_make_date(int mday, int month, int year);
@@ -123,7 +126,3 @@ int rd_select_filelist(const char *path, const char *base,
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year);
 bool rd_path_access(const char *rd_case);
-#ifdef __cplusplus
-}
-#endif
-#endif
