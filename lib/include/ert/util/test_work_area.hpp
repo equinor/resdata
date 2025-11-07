@@ -32,11 +32,11 @@ private:
 
 typedef rd::util::TestArea test_work_area_type;
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdbool.h>
 
 test_work_area_type *test_work_area_alloc(const char *test_name);
 test_work_area_type *test_work_area_alloc__(const char *test_name,

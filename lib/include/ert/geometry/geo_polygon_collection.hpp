@@ -1,15 +1,15 @@
 #ifndef ERT_GEO_POLYGON_COLLECTION_H
 #define ERT_GEO_POLYGON_COLLECTION_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 
 #include <ert/util/type_macros.hpp>
 
 #include <ert/geometry/geo_polygon.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct geo_polygon_collection_struct geo_polygon_collection_type;
 

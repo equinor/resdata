@@ -1,15 +1,15 @@
 #ifndef ERT_FAULT_BLOCK_LAYER_H
 #define ERT_FAULT_BLOCK_LAYER_H
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/fault_block.hpp>
 #include <resdata/layer.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 UTIL_IS_INSTANCE_HEADER(fault_block_layer);
 

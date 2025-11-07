@@ -1,11 +1,11 @@
 #ifndef ERT_WELL_RSEG_LOADER_H
 #define ERT_WELL_RSEG_LOADER_H
 
+#include <resdata/rd_file_view.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <resdata/rd_file_view.hpp>
 
 typedef struct well_rseg_loader_struct well_rseg_loader_type;
 

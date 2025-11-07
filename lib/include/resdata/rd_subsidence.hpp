@@ -1,13 +1,14 @@
 #ifndef ERT_RD_SUBSIDENCE_H
 #define ERT_RD_SUBSIDENCE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_region.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct rd_subsidence_struct rd_subsidence_type;
 typedef struct rd_subsidence_survey_struct rd_subsidence_survey_type;

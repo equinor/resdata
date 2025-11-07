@@ -1,16 +1,16 @@
 #ifndef ERT_RD_FILE_KW_H
 #define ERT_RD_FILE_KW_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/fortio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct rd_file_kw_struct rd_file_kw_type;
 typedef struct inv_map_struct inv_map_type;

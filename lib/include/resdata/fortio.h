@@ -18,9 +18,6 @@
 
 #ifndef ERT_FORTIO_H
 #define ERT_FORTIO_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,6 +25,10 @@ extern "C" {
 
 #include <ert/util/util.hpp>
 #include <ert/util/type_macros.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     FORTIO_NOENTRY = 0, /* File does not exists at all - application error. */

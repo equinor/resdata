@@ -1,12 +1,13 @@
 #ifndef ERT_RNG_H
 #define ERT_RNG_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdio.h>
 
 #include <ert/util/type_macros.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     INIT_DEFAULT = 0, /* The rng is initialized with the default seed values. */

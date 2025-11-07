@@ -1,11 +1,11 @@
 #ifndef ERT_TYPE_MACROS_H
 #define ERT_TYPE_MACROS_H
 
+#include <ert/util/util.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <ert/util/util.hpp>
 
 /**
 

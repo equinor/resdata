@@ -1,14 +1,15 @@
 #ifndef ERT_HASH_H
 #define ERT_HASH_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdlib.h>
 
 #include <ert/util/stringlist.hpp>
 #include <ert/util/type_macros.hpp>
 #include <ert/util/node_data.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct hash_struct hash_type;
 typedef struct hash_iter_struct hash_iter_type;

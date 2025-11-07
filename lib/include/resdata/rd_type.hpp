@@ -1,12 +1,12 @@
 #ifndef ERT_RD_TYPE_H
 #define ERT_RD_TYPE_H
 
+#include <stdlib.h>
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdlib.h>
-#include <stdbool.h>
 
 /*
   The type of an eclipse keyword is carried by a struct

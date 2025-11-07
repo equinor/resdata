@@ -1,11 +1,11 @@
 #ifndef ERT_GEO_SURFACE_H
 #define ERT_GEO_SURFACE_H
 
+#include <ert/geometry/geo_pointset.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <ert/geometry/geo_pointset.hpp>
 
 typedef struct geo_surface_struct geo_surface_type;
 
