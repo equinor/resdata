@@ -1,8 +1,5 @@
 #ifndef ERT_RD_KW_H
 #define ERT_RD_KW_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,6 +10,10 @@ extern "C" {
 #include <resdata/fortio.h>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 UTIL_IS_INSTANCE_HEADER(rd_kw);
 

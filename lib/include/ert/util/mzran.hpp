@@ -1,11 +1,11 @@
 #ifndef ERT_MZRAN_H
 #define ERT_MZRAN_H
+#include <stdlib.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 
 typedef struct mzran_struct mzran_type;
 

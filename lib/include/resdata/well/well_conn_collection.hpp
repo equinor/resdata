@@ -1,15 +1,15 @@
 #ifndef ERT_WELL_CONN_COLLECTION_H
 #define ERT_WELL_CONN_COLLECTION_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_kw.hpp>
 
 #include <resdata/well/well_conn.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct well_conn_collection_struct well_conn_collection_type;
 

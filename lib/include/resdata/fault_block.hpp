@@ -1,8 +1,5 @@
 #ifndef ERT_FAULT_BLOCK_H
 #define ERT_FAULT_BLOCK_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/double_vector.hpp>
@@ -12,6 +9,10 @@ extern "C" {
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct fault_block_struct fault_block_type;
 

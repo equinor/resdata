@@ -1,12 +1,13 @@
 #ifndef ERT_HASH_NODE_H
 #define ERT_HASH_NODE_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdbool.h>
 #include <stdint.h>
 
 #include <ert/util/node_data.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct hash_node_struct hash_node_type;
 typedef uint32_t(hashf_type)(const char *key, size_t len);

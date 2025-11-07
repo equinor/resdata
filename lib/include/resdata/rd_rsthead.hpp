@@ -1,15 +1,15 @@
 #ifndef ERT_RD_RSTHEAD_H
 #define ERT_RD_RSTHEAD_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <time.h>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>
 #include <resdata/rd_kw.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct {
     // The report step is from the SEQNUM keyword for unified files,

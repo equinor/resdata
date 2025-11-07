@@ -1,10 +1,11 @@
 #ifndef ERT_HASH_SLL_H
 #define ERT_HASH_SLL_H
+
+#include <ert/util/hash_node.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <ert/util/hash_node.hpp>
 
 typedef struct hash_sll_struct hash_sll_type;
 

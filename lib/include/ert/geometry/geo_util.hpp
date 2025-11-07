@@ -1,10 +1,11 @@
 #ifndef ERT_GEO_UTIL_H
 #define ERT_GEO_UTIL_H
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stdbool.h>
 
 typedef enum {
     GEO_UTIL_LINES_CROSSING = 0,

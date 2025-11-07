@@ -1,10 +1,6 @@
 #ifndef ERT_RD_FILE_H
 #define ERT_RD_FILE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 #include <time.h>
 
@@ -14,6 +10,10 @@ extern "C" {
 #include <resdata/fortio.h>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_type.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define RD_FILE_FLAGS_ENUM_DEFS                                                \
     {.value = 1, .name = "RD_FILE_CLOSE_STREAM"},                              \

@@ -1,10 +1,6 @@
 #ifndef ERT_WELL_SEGMENT_COLLECTION_H
 #define ERT_WELL_SEGMENT_COLLECTION_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 
 #include <resdata/rd_kw.hpp>
@@ -13,6 +9,10 @@ extern "C" {
 #include <resdata/well/well_conn_collection.hpp>
 #include <resdata/well/well_branch_collection.hpp>
 #include <resdata/well/well_rseg_loader.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct well_segment_collection_struct well_segment_collection_type;
 

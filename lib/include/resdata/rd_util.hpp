@@ -1,8 +1,5 @@
 #ifndef ERT_RD_UTIL_H
 #define ERT_RD_UTIL_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdbool.h>
 #include <time.h>
 
@@ -10,6 +7,10 @@ extern "C" {
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/parser.hpp>
 #include <resdata/rd_type.hpp>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     RD_OTHER_FILE = 0,

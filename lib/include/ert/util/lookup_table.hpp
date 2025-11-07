@@ -1,11 +1,11 @@
 #ifndef ERT_LOOKUP_TABLE_H
 #define ERT_LOOKUP_TABLE_H
 
+#include <ert/util/double_vector.hpp>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <ert/util/double_vector.hpp>
 
 typedef struct lookup_table_struct lookup_table_type;
 
