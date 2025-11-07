@@ -120,7 +120,6 @@ const char *rd_get_phase_name(rd_phase_enum phase);
 int rd_select_filelist(const char *path, const char *base,
                        rd_file_enum file_type, bool fmt_file,
                        stringlist_type *filelist);
-void rd_set_date_values(time_t t, int *mday, int *month, int *year);
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year);
 bool rd_path_access(const char *rd_case);

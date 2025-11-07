@@ -1124,10 +1124,6 @@ time_t rd_make_datetime(int sec, int min, int hour, int mday, int month,
     return rd_make_datetime__(sec, min, hour, mday, month, year, &year_offset);
 }
 
-void rd_set_date_values(time_t t, int *mday, int *month, int *year) {
-    return util_set_date_values_utc(t, mday, month, year);
-}
-
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year) {
     return util_set_datetime_values_utc(t, sec, min, hour, mday, month, year);
