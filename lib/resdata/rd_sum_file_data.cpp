@@ -231,6 +231,8 @@ int rd_sum_file_data::last_report() const {
 }
 
 time_t rd_sum_file_data::get_data_start() const {
+    if (this->index.size() == 0)
+        throw std::out_of_range("rd_sum_data_get_sim_end: index empty");
     const auto &node = this->index[0];
     return node.sim_time;
 }

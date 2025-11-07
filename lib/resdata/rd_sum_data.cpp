@@ -330,6 +330,8 @@ time_t rd_sum_data_get_sim_end(const rd_sum_data_type *data) {
 }
 
 time_t rd_sum_data_get_data_start(const rd_sum_data_type *data) {
+    if (data->data_files.empty())
+        throw std::out_of_range("rd_sum_data_get_data_start: data_files empty");
     const auto &file_data = data->data_files[0];
     return file_data->get_data_start();
 }
