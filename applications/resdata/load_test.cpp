@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Equinor ASA, Norway.
 
-   The file 'load_test.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'load_test.cpp' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,9 +16,8 @@
    for more details.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_file.hpp>

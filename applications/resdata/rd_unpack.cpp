@@ -1,7 +1,7 @@
 /*
    Copyright (C) 2011  Equinor ASA, Norway.
 
-   The file 'rd_unpack.c' is part of ERT - Ensemble based Reservoir Tool.
+   The file 'rd_unpack.cpp' is part of ERT - Ensemble based Reservoir Tool.
 
    ERT is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
    See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
    for more details.
 */
-
-#include <stdbool.h>
 
 #include <ert/util/util.hpp>
 

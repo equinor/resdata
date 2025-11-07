@@ -8,7 +8,7 @@
 #include <ert/util/test_work_area.hpp>
 
 #include <resdata/rd_util.hpp>
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>

@@ -46,7 +46,7 @@ add_library(
   util/util.cpp
   util/util_abort.cpp
   util/util_symlink.cpp
-  util/util_lfs.c
+  util/util_lfs.cpp
   util/util_unlink.cpp
   util/vector.cpp
   util/parser.cpp
@@ -73,7 +73,6 @@ add_library(
   resdata/rd_kw.cpp
   resdata/rd_sum.cpp
   resdata/rd_sum_vector.cpp
-  resdata/fortio.c
   resdata/rd_rft_file.cpp
   resdata/rd_rft_node.cpp
   resdata/rd_rft_cell.cpp

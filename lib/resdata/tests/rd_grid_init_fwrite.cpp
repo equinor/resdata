@@ -8,7 +8,7 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_grid.hpp>
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 
 static void rd_grid_fwrite_depth(const rd_grid_type *grid,

@@ -9,7 +9,7 @@
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_file_kw.hpp>
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 
 /*
   This file implements the datatype rd_file_kw which is used to hold

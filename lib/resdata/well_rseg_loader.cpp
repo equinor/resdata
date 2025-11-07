@@ -10,7 +10,7 @@
 #include <resdata/well/well_const.hpp>
 #include <resdata/well/well_rseg_loader.hpp>
 
-#include <resdata/fortio.h>
+#include <resdata/FortIO.hpp>
 
 struct well_rseg_loader_struct {
     rd_file_view_type *rst_view;
