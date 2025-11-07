@@ -28,9 +28,7 @@
 
 #include <ert/util/ert_api_config.hpp>
 
-#ifdef ERT_HAVE_GETUID
 #include <sys/stat.h>
-#endif
 
 #ifdef ERT_WINDOWS
 #define UTIL_PATH_SEP_STRING                                                   \
