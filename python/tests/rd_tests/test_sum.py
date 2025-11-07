@@ -826,3 +826,5 @@ def test_that_end_time_is_sim_start_when_there_are_no_steps():
         func_table={},
     )
     assert sum.end_date == sum.start_date
+    # Note that in this situation
+    # sum.data_start will raise
