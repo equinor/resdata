@@ -136,10 +136,6 @@ rd_rft_file_type *rd_rft_file_alloc_case(const char *case_input) {
     return nullptr;
 }
 
-bool rd_rft_file_case_has_rft(const char *case_input) {
-    return find_rft_file(case_input).has_value();
-}
-
 void rd_rft_file_free(rd_rft_file_type *rft_vector) {
     for (auto node_ptr : rft_vector->rft_nodes)
         rd_rft_node_free(node_ptr);
