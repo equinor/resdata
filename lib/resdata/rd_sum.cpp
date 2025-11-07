@@ -766,7 +766,7 @@ time_t rd_sum_get_start_time(const rd_sum_type *rd_sum) {
 time_t rd_sum_get_end_time(const rd_sum_type *rd_sum) {
     try {
         return rd_sum_data_get_sim_end(rd_sum->data);
-    } catch (std::out_of_range) {
+    } catch (std::out_of_range const &) {
         return rd_smspec_get_start_time(rd_sum->smspec);
     }
 }
