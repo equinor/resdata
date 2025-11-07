@@ -2,18 +2,32 @@ import datetime
 from resdata.rft import ResdataRFTFile, ResdataRFTCell
 from tests import source_root
 import pytest
-import os
+import shutil
+from pathlib import Path
 
 
 @pytest.fixture
-def spe1_rft_file():
-    return os.path.join(
-        source_root(), "test-data", "local", "ECLIPSE", "rft", "SPE1.RFT"
+def spe1_rft_file(tmp_path):
+    destination = tmp_path / "SPE1.RFT"
+    shutil.copyfile(
+        Path(source_root()) / "test-data" / "local" / "ECLIPSE" / "rft" / "SPE1.RFT",
+        destination,
     )
+    return destination
+
+
+@pytest.fixture
+def spe1_frft_file(tmp_path):
+    destination = tmp_path / "SPE1.FRFT"
+    shutil.copyfile(
+        Path(source_root()) / "test-data" / "local" / "ECLIPSE" / "rft" / "SPE1.FRFT",
+        destination,
+    )
+    return destination
 
 
 def test_RFT_load(spe1_rft_file):
-    rft_file = ResdataRFTFile(spe1_rft_file)
+    rft_file = ResdataRFTFile(str(spe1_rft_file))
 
     assert rft_file.size() == 218
     assert rft_file.size(well="*") == 218
@@ -39,7 +53,43 @@ def test_RFT_load(spe1_rft_file):
         assert isinstance(h[1], datetime.date)
 
 
+def test_that_rft_file_will_find_rft_file_by_data_file_name(spe1_rft_file):
+    rft_file = ResdataRFTFile(
+        str(spe1_rft_file.parent / (str(spe1_rft_file.stem) + ".DATA"))
+    )
+    assert rft_file.size(well="PROD") == 109
+
+
+def test_that_rft_file_will_find_frft_file_by_data_file_name(spe1_frft_file):
+    rft_file = ResdataRFTFile(
+        str(spe1_frft_file.parent / (str(spe1_frft_file.stem) + ".DATA"))
+    )
+    assert rft_file.size(well="FPROD") == 109
+
+
+def test_that_rft_file_will_find_rft_file_by_basename(spe1_rft_file):
+    rft_file = ResdataRFTFile(str(spe1_rft_file.parent / spe1_rft_file.stem))
+    assert rft_file.size(well="PROD") == 109
+
+
+def test_that_rft_file_will_find_frft_file_by_basename(spe1_frft_file):
+    rft_file = ResdataRFTFile(str(spe1_frft_file.parent / spe1_frft_file.stem))
+    assert rft_file.size(well="FPROD") == 109
+
+
+def test_that_finding_by_case_name_chooses_unformatted_first(
+    spe1_rft_file, spe1_frft_file
+):
+    rft_file = ResdataRFTFile(str(spe1_rft_file.parent / spe1_rft_file.stem))
+    assert rft_file.size(well="PROD") == 109
+
+
+def test_that_non_existent_rft_file_raises_valueerror(tmp_path):
+    with pytest.raises(ValueError):
+        ResdataRFTFile(str(tmp_path / "DOES_NOT_EXIST"))
+
+
 def test_exceptions(spe1_rft_file):
-    rftFile = ResdataRFTFile(spe1_rft_file)
+    rftFile = ResdataRFTFile(str(spe1_rft_file))
     with pytest.raises(IndexError):
         _ = rftFile[len(rftFile)]

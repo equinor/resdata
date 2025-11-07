@@ -35,6 +35,8 @@
 #define RD_INIT_UFMT_PATTERN "INIT"
 #define RD_RFT_UFMT_PATTERN "RFT"
 
+namespace fs = std::filesystem;
+
 const char *rd_get_phase_name(rd_phase_enum phase) {
     switch (phase) {
     case (RD_OIL_PHASE):
@@ -380,6 +382,17 @@ char *rd_alloc_filename(const char *path, const char *base,
                         rd_file_enum file_type, bool fmt_file, int report_nr) {
     return rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr,
                                     false);
+}
+
+fs::path rd_alloc_filename(fs::path path, rd_file_enum file_type,
+                           bool fmt_file) {
+    std::string directory = path.parent_path().string();
+    std::string basename = path.stem().string();
+    char *tmp = rd_alloc_filename_static(directory.c_str(), basename.c_str(),
+                                         file_type, fmt_file, -1, false);
+    fs::path result = tmp;
+    free(tmp);
+    return result;
 }
 
 char *rd_alloc_exfilename(const char *path, const char *base,

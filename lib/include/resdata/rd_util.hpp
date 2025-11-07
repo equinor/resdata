@@ -5,6 +5,7 @@
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/parser.hpp>
 #include <resdata/rd_type.hpp>
+#include <filesystem>
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,6 +106,9 @@ extern "C" rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
                                          int *report_nr);
 char *rd_alloc_filename(const char * /* path */, const char * /* base */,
                         rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
+
+std::filesystem::path rd_alloc_filename(std::filesystem::path path,
+                                        rd_file_enum, bool /* fmt_file */);
 char *rd_alloc_exfilename(const char * /* path */, const char * /* base */,
                           rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
 bool rd_alloc_summary_files(const char *, const char *, const char *, char **,
