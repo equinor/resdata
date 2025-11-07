@@ -1,8 +1,7 @@
 #ifndef ERT_RD_SMSPEC
 #define ERT_RD_SMSPEC
 
-#include <time.h>
-#include <stdbool.h>
+#include <ctime>
 
 #include <ert/util/float_vector.hpp>
 #include <ert/util/stringlist.hpp>

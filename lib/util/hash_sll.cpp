@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include <ert/util/util.hpp>
 #include <ert/util/hash_node.hpp>

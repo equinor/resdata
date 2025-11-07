@@ -1,7 +1,7 @@
-#include <math.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 
 #include <ert/util/util.hpp>
 #include <ert/util/rng.hpp>

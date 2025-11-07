@@ -1,6 +1,5 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 
 #include <ert/util/util.hpp>
 

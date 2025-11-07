@@ -1,7 +1,6 @@
 #ifndef ERT_HASH_NODE_H
 #define ERT_HASH_NODE_H
-#include <stdbool.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include <ert/util/node_data.hpp>
 

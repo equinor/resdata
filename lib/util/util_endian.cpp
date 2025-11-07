@@ -1,5 +1,5 @@
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 
 #if UINTPTR_MAX == 0xFFFFFFFF
 #define ARCH32

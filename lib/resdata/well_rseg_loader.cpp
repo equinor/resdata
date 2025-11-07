@@ -1,4 +1,3 @@
-#include <stdbool.h>
 
 #include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>

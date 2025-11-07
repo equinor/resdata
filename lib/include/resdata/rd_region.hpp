@@ -1,6 +1,5 @@
 #ifndef ERT_RD_REGION_H
 #define ERT_RD_REGION_H
-#include <stdbool.h>
 
 #include <ert/util/int_vector.hpp>
 

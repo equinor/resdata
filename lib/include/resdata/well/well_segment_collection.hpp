@@ -1,8 +1,6 @@
 #ifndef ERT_WELL_SEGMENT_COLLECTION_H
 #define ERT_WELL_SEGMENT_COLLECTION_H
 
-#include <stdbool.h>
-
 #include <resdata/rd_kw.hpp>
 
 #include <resdata/well/well_segment.hpp>

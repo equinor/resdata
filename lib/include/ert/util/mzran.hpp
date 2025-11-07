@@ -1,7 +1,7 @@
 #ifndef ERT_MZRAN_H
 #define ERT_MZRAN_H
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,8 +1,6 @@
 #ifndef ERT_RD_ENDIAN_FLIP_H
 #define ERT_RD_ENDIAN_FLIP_H
 
-#include <stdbool.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

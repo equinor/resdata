@@ -19,12 +19,11 @@
    for more details.
 */
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdint>
+#include <cstdarg>
 #include <sys/types.h>
-#include <time.h>
+#include <ctime>
 
 #include <ert/util/ert_api_config.hpp>
 

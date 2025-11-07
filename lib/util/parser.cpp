@@ -1,7 +1,7 @@
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstring>
+#include <cctype>
+#include <cstdlib>
 
 #include <ert/util/util.hpp>
 #include <ert/util/parser.hpp>

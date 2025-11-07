@@ -1,14 +1,13 @@
 #ifndef ERT_TEST_UTIL_H
 #define ERT_TEST_UTIL_H
 
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 #include <setjmp.h>
 #include <ert/util/ert_api_config.hpp>
 
 #if defined(__APPLE__)
 #include <wchar.h>
-#include <time.h>
+#include <ctime>
 #endif
 
 #ifdef __cplusplus

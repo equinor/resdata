@@ -1,7 +1,5 @@
-#include <stdlib.h>
-#define _USE_MATH_DEFINES // for C WINDOWS
-#include <math.h>
-#include <stdbool.h>
+#include <cstdlib>
+#include <cmath>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>

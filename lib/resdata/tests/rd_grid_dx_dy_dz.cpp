@@ -1,7 +1,6 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <signal.h>
-#include <math.h>
+#include <cstdlib>
+#include <csignal>
+#include <cmath>
 
 #include <string>
 #include <filesystem>

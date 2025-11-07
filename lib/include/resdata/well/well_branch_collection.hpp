@@ -1,8 +1,6 @@
 #ifndef ERT_WELL_BRANCH_COLLECTION_H
 #define ERT_WELL_BRANCH_COLLECTION_H
 
-#include <stdbool.h>
-
 #include <ert/util/type_macros.hpp>
 
 #include <resdata/well/well_segment.hpp>

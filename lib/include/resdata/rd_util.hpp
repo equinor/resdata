@@ -1,7 +1,6 @@
 #ifndef ERT_RD_UTIL_H
 #define ERT_RD_UTIL_H
-#include <stdbool.h>
-#include <time.h>
+#include <ctime>
 
 #include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>

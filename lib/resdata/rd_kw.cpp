@@ -1,8 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <math.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
 
 #include <ert/util/util.hpp>
 #include <ert/util/int_vector.hpp>

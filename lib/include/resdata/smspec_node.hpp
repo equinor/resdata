@@ -1,8 +1,7 @@
 #ifndef ERT_SMSPEC_NODE_HPP
 #define ERT_SMSPEC_NODE_HPP
 
-#include <stdbool.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include <string>
 #include <array>

@@ -6,7 +6,7 @@
  */
 
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <ert/util/util.hpp>
 #include <ert/util/test_util.hpp>
 

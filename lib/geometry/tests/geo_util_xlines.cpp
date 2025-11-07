@@ -1,6 +1,5 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <unistd.h>
 
 #include <ert/util/test_util.hpp>

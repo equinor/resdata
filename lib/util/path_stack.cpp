@@ -1,8 +1,7 @@
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 #include <unistd.h>
-#include <errno.h>
+#include <cerrno>
 
 #include <vector>
 #include <string>

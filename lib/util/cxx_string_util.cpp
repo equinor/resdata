@@ -1,5 +1,5 @@
 #include <string>
-#include <stdarg.h>
+#include <cstdarg>
 
 namespace rd {
 namespace util {

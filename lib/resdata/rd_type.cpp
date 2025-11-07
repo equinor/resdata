@@ -1,6 +1,6 @@
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 
 #include <ert/util/util.hpp>
 #include <resdata/rd_type.hpp>

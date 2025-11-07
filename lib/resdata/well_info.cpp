@@ -1,5 +1,4 @@
-#include <time.h>
-#include <stdbool.h>
+#include <ctime>
 
 #include <string>
 #include <vector>

@@ -1,8 +1,6 @@
 #ifndef ERT_RD_FILE_KW_H
 #define ERT_RD_FILE_KW_H
 
-#include <stdbool.h>
-
 #include <ert/util/util.hpp>
 
 #include <resdata/rd_kw.hpp>

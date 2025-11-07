@@ -1,5 +1,4 @@
-#include <stdbool.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <ert/util/util.hpp>
 #include <ert/util/perm_vector.hpp>

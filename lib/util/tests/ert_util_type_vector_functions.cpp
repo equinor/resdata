@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <stdbool.h>
+#include <cstdlib>
 
 #include <ert/util/int_vector.hpp>
 #include <ert/util/bool_vector.hpp>

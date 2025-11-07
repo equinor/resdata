@@ -1,7 +1,7 @@
 #ifndef ERT_RD_RSTHEAD_H
 #define ERT_RD_RSTHEAD_H
 
-#include <time.h>
+#include <ctime>
 
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>

@@ -1,4 +1,3 @@
-#include <stdbool.h>
 
 #include <map>
 #include <string>

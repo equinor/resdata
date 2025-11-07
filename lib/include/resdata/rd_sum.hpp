@@ -1,9 +1,8 @@
 #ifndef ERT_RD_SUM_H
 #define ERT_RD_SUM_H
 
-#include <stdlib.h>
-#include <stdbool.h>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
 
 #include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>

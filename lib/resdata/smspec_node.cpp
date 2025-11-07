@@ -1,8 +1,7 @@
-#include <string.h>
-#include <stdbool.h>
+#include <cstring>
 #include <stddef.h>
-#include <math.h>
-#include <time.h>
+#include <cmath>
+#include <ctime>
 
 #include <cstdlib>
 #include <string>

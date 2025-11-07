@@ -1,8 +1,6 @@
 #ifndef ERT_GEO_UTIL_H
 #define ERT_GEO_UTIL_H
 
-#include <stdbool.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

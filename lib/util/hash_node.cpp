@@ -1,8 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdint.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cstdint>
 
 #include <ert/util/util.hpp>
 #include <ert/util/node_data.hpp>

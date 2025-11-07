@@ -1,8 +1,6 @@
 #ifndef ERT_GEO_POLYGON_H
 #define ERT_GEO_POLYGON_H
 
-#include <stdbool.h>
-
 #include <ert/util/type_macros.hpp>
 
 #ifdef __cplusplus

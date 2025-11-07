@@ -10,9 +10,8 @@ if(ERT_HAVE_UNISTD)
   list(APPEND opt_srcs util/path_stack.cpp)
 endif()
 
-if(MSVC)
-  configure_file(include/ert/util/msvc_stdbool.h ert/util/stdbool.h)
-endif()
+# Make cmath have defines like M_PI
+add_compile_definitions(_USE_MATH_DEFINES)
 
 foreach(type int double long time_t float)
   set(TYPE ${type})
