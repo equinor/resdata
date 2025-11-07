@@ -42,6 +42,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
       "RelWithDebInfo")
 endif()
 
+# For std::filesystem::path
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
+
 # -----------------------------------------------------------------
 # Conan: C++ package manager
 # https://docs.conan.io/en/latest/howtos/cmake_launch.html

@@ -1,0 +1,5232 @@
+ 'TIME    '           1 'REAL'
+   0.00000000E+00
+ 'DATE    '           3 'INTE'
+           1           1        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.40846755E+04   0.40914138E+04   0.41021963E+04
+ 'SWAT    '           3 'REAL'
+   0.12000000E+00   0.12000000E+00   0.12000000E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.00000000E+00
+ 'DATE    '           3 'INTE'
+           1           1        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.40846755E+04
+ 'SWAT    '           1 'REAL'
+   0.12000000E+00
+ 'SGAS    '           1 'REAL'
+   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.31000000E+02
+ 'DATE    '           3 'INTE'
+           1           2        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.36653428E+04   0.36721309E+04   0.36825986E+04
+ 'SWAT    '           3 'REAL'
+   0.12031339E+00   0.12031335E+00   0.12031358E+00
+ 'SGAS    '           3 'REAL'
+   0.64416699E-01   0.48954122E-01   0.41509081E-01
+ 'TIME    '           1 'REAL'
+   0.31000000E+02
+ 'DATE    '           3 'INTE'
+           1           2        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.50797085E+04
+ 'SWAT    '           1 'REAL'
+   0.11925963E+00
+ 'SGAS    '           1 'REAL'
+   0.22466826E+00
+ 'TIME    '           1 'REAL'
+   0.59000000E+02
+ 'DATE    '           3 'INTE'
+           1           3        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.34978955E+04   0.35041809E+04   0.35144177E+04
+ 'SWAT    '           3 'REAL'
+   0.12043876E+00   0.12043910E+00   0.12043951E+00
+ 'SGAS    '           3 'REAL'
+   0.10204885E+00   0.63483238E-01   0.50708205E-01
+ 'TIME    '           1 'REAL'
+   0.59000000E+02
+ 'DATE    '           3 'INTE'
+           1           3        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.52243730E+04
+ 'SWAT    '           1 'REAL'
+   0.11915237E+00
+ 'SGAS    '           1 'REAL'
+   0.28413704E+00
+ 'TIME    '           1 'REAL'
+   0.90000000E+02
+ 'DATE    '           3 'INTE'
+           1           4        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.33561162E+04   0.33621472E+04   0.33723608E+04
+ 'SWAT    '           3 'REAL'
+   0.12054501E+00   0.12054554E+00   0.12054597E+00
+ 'SGAS    '           3 'REAL'
+   0.12733634E+00   0.70041463E-01   0.52993525E-01
+ 'TIME    '           1 'REAL'
+   0.90000000E+02
+ 'DATE    '           3 'INTE'
+           1           4        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53120464E+04
+ 'SWAT    '           1 'REAL'
+   0.11908742E+00
+ 'SGAS    '           1 'REAL'
+   0.32090744E+00
+ 'TIME    '           1 'REAL'
+   0.12000000E+03
+ 'DATE    '           3 'INTE'
+           1           5        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.32419614E+04   0.32479868E+04   0.32583604E+04
+ 'SWAT    '           3 'REAL'
+   0.12063064E+00   0.12063117E+00   0.12063148E+00
+ 'SGAS    '           3 'REAL'
+   0.14087138E+00   0.71454741E-01   0.52802041E-01
+ 'TIME    '           1 'REAL'
+   0.12000000E+03
+ 'DATE    '           3 'INTE'
+           1           5        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53506392E+04
+ 'SWAT    '           1 'REAL'
+   0.11905884E+00
+ 'SGAS    '           1 'REAL'
+   0.34743503E+00
+ 'TIME    '           1 'REAL'
+   0.15100000E+03
+ 'DATE    '           3 'INTE'
+           1           6        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.31523447E+04   0.31584233E+04   0.31689646E+04
+ 'SWAT    '           3 'REAL'
+   0.12069789E+00   0.12069838E+00   0.12069857E+00
+ 'SGAS    '           3 'REAL'
+   0.14839205E+00   0.68852492E-01   0.50963510E-01
+ 'TIME    '           1 'REAL'
+   0.15100000E+03
+ 'DATE    '           3 'INTE'
+           1           6        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53630884E+04
+ 'SWAT    '           1 'REAL'
+   0.11904962E+00
+ 'SGAS    '           1 'REAL'
+   0.36806926E+00
+ 'TIME    '           1 'REAL'
+   0.18100000E+03
+ 'DATE    '           3 'INTE'
+           1           7        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30888176E+04   0.30949917E+04   0.31056609E+04
+ 'SWAT    '           3 'REAL'
+   0.12074559E+00   0.12074602E+00   0.12074611E+00
+ 'SGAS    '           3 'REAL'
+   0.15189496E+00   0.64495280E-01   0.48113000E-01
+ 'TIME    '           1 'REAL'
+   0.18100000E+03
+ 'DATE    '           3 'INTE'
+           1           7        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53754409E+04
+ 'SWAT    '           1 'REAL'
+   0.11904047E+00
+ 'SGAS    '           1 'REAL'
+   0.38287127E+00
+ 'TIME    '           1 'REAL'
+   0.21200000E+03
+ 'DATE    '           3 'INTE'
+           1           8        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30435688E+04   0.30498667E+04   0.30606404E+04
+ 'SWAT    '           3 'REAL'
+   0.12077958E+00   0.12077991E+00   0.12077992E+00
+ 'SGAS    '           3 'REAL'
+   0.15275641E+00   0.59405997E-01   0.44417292E-01
+ 'TIME    '           1 'REAL'
+   0.21200000E+03
+ 'DATE    '           3 'INTE'
+           1           8        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53793999E+04
+ 'SWAT    '           1 'REAL'
+   0.11903755E+00
+ 'SGAS    '           1 'REAL'
+   0.39449131E+00
+ 'TIME    '           1 'REAL'
+   0.24300000E+03
+ 'DATE    '           3 'INTE'
+           1           9        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30167493E+04   0.30231501E+04   0.30339937E+04
+ 'SWAT    '           3 'REAL'
+   0.12079973E+00   0.12079998E+00   0.12079994E+00
+ 'SGAS    '           3 'REAL'
+   0.15173395E+00   0.54172549E-01   0.40386166E-01
+ 'TIME    '           1 'REAL'
+   0.24300000E+03
+ 'DATE    '           3 'INTE'
+           1           9        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53699595E+04
+ 'SWAT    '           1 'REAL'
+   0.11904453E+00
+ 'SGAS    '           1 'REAL'
+   0.40422982E+00
+ 'TIME    '           1 'REAL'
+   0.27300000E+03
+ 'DATE    '           3 'INTE'
+           1          10        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30044504E+04   0.30109736E+04   0.30218933E+04
+ 'SWAT    '           3 'REAL'
+   0.12080897E+00   0.12080913E+00   0.12080903E+00
+ 'SGAS    '           3 'REAL'
+   0.14804626E+00   0.49153376E-01   0.36606986E-01
+ 'TIME    '           1 'REAL'
+   0.27300000E+03
+ 'DATE    '           3 'INTE'
+           1          10        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53644736E+04
+ 'SWAT    '           1 'REAL'
+   0.11904860E+00
+ 'SGAS    '           1 'REAL'
+   0.41256225E+00
+ 'TIME    '           1 'REAL'
+   0.30400000E+03
+ 'DATE    '           3 'INTE'
+           1          11        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30043684E+04   0.30109839E+04   0.30219719E+04
+ 'SWAT    '           3 'REAL'
+   0.12080903E+00   0.12080912E+00   0.12080897E+00
+ 'SGAS    '           3 'REAL'
+   0.14206110E+00   0.42958800E-01   0.32942101E-01
+ 'TIME    '           1 'REAL'
+   0.30400000E+03
+ 'DATE    '           3 'INTE'
+           1          11        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53606968E+04
+ 'SWAT    '           1 'REAL'
+   0.11905140E+00
+ 'SGAS    '           1 'REAL'
+   0.42023122E+00
+ 'TIME    '           1 'REAL'
+   0.33400000E+03
+ 'DATE    '           3 'INTE'
+           1          12        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30171311E+04   0.30238030E+04   0.30348179E+04
+ 'SWAT    '           3 'REAL'
+   0.12079944E+00   0.12079950E+00   0.12079932E+00
+ 'SGAS    '           3 'REAL'
+   0.13488352E+00   0.36483098E-01   0.29372832E-01
+ 'TIME    '           1 'REAL'
+   0.33400000E+03
+ 'DATE    '           3 'INTE'
+           1          12        2015
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53533042E+04
+ 'SWAT    '           1 'REAL'
+   0.11905687E+00
+ 'SGAS    '           1 'REAL'
+   0.42705530E+00
+ 'TIME    '           1 'REAL'
+   0.36500000E+03
+ 'DATE    '           3 'INTE'
+           1           1        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30419253E+04   0.30486487E+04   0.30596768E+04
+ 'SWAT    '           3 'REAL'
+   0.12078082E+00   0.12078083E+00   0.12078064E+00
+ 'SGAS    '           3 'REAL'
+   0.12588891E+00   0.29867437E-01   0.25862698E-01
+ 'TIME    '           1 'REAL'
+   0.36500000E+03
+ 'DATE    '           3 'INTE'
+           1           1        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53488208E+04
+ 'SWAT    '           1 'REAL'
+   0.11906019E+00
+ 'SGAS    '           1 'REAL'
+   0.43332216E+00
+ 'TIME    '           1 'REAL'
+   0.39600000E+03
+ 'DATE    '           3 'INTE'
+           1           2        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.30745664E+04   0.30813687E+04   0.30924226E+04
+ 'SWAT    '           3 'REAL'
+   0.12075630E+00   0.12075625E+00   0.12075604E+00
+ 'SGAS    '           3 'REAL'
+   0.11365549E+00   0.24041343E-01   0.22845568E-01
+ 'TIME    '           1 'REAL'
+   0.39600000E+03
+ 'DATE    '           3 'INTE'
+           1           2        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53478809E+04
+ 'SWAT    '           1 'REAL'
+   0.11906088E+00
+ 'SGAS    '           1 'REAL'
+   0.43888217E+00
+ 'TIME    '           1 'REAL'
+   0.42400000E+03
+ 'DATE    '           3 'INTE'
+          29           2        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.31075693E+04   0.31144658E+04   0.31255684E+04
+ 'SWAT    '           3 'REAL'
+   0.12073151E+00   0.12073139E+00   0.12073115E+00
+ 'SGAS    '           3 'REAL'
+   0.99229440E-01   0.19783542E-01   0.20817339E-01
+ 'TIME    '           1 'REAL'
+   0.42400000E+03
+ 'DATE    '           3 'INTE'
+          29           2        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53487583E+04
+ 'SWAT    '           1 'REAL'
+   0.11906023E+00
+ 'SGAS    '           1 'REAL'
+   0.44342145E+00
+ 'TIME    '           1 'REAL'
+   0.45500000E+03
+ 'DATE    '           3 'INTE'
+          31           3        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.31456726E+04   0.31525469E+04   0.31636533E+04
+ 'SWAT    '           3 'REAL'
+   0.12070290E+00   0.12070280E+00   0.12070256E+00
+ 'SGAS    '           3 'REAL'
+   0.86035408E-01   0.13802628E-01   0.18832369E-01
+ 'TIME    '           1 'REAL'
+   0.45500000E+03
+ 'DATE    '           3 'INTE'
+          31           3        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53535298E+04
+ 'SWAT    '           1 'REAL'
+   0.11905670E+00
+ 'SGAS    '           1 'REAL'
+   0.44786692E+00
+ 'TIME    '           1 'REAL'
+   0.48500000E+03
+ 'DATE    '           3 'INTE'
+          30           4        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.31827473E+04   0.31896052E+04   0.32006865E+04
+ 'SWAT    '           3 'REAL'
+   0.12067507E+00   0.12067498E+00   0.12067476E+00
+ 'SGAS    '           3 'REAL'
+   0.75586706E-01   0.80153700E-02   0.16689215E-01
+ 'TIME    '           1 'REAL'
+   0.48500000E+03
+ 'DATE    '           3 'INTE'
+          30           4        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53551333E+04
+ 'SWAT    '           1 'REAL'
+   0.11905552E+00
+ 'SGAS    '           1 'REAL'
+   0.45190892E+00
+ 'TIME    '           1 'REAL'
+   0.51600000E+03
+ 'DATE    '           3 'INTE'
+          31           5        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.32214563E+04   0.32283003E+04   0.32393589E+04
+ 'SWAT    '           3 'REAL'
+   0.12064602E+00   0.12064594E+00   0.12064573E+00
+ 'SGAS    '           3 'REAL'
+   0.66693597E-01   0.20161283E-02   0.14256964E-01
+ 'TIME    '           1 'REAL'
+   0.51600000E+03
+ 'DATE    '           3 'INTE'
+          31           5        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53564595E+04
+ 'SWAT    '           1 'REAL'
+   0.11905453E+00
+ 'SGAS    '           1 'REAL'
+   0.45578182E+00
+ 'TIME    '           1 'REAL'
+   0.54600000E+03
+ 'DATE    '           3 'INTE'
+          30           6        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.32617224E+04   0.32685808E+04   0.32795962E+04
+ 'SWAT    '           3 'REAL'
+   0.12061581E+00   0.12061572E+00   0.12061554E+00
+ 'SGAS    '           3 'REAL'
+   0.59502065E-01   0.00000000E+00   0.11249200E-01
+ 'TIME    '           1 'REAL'
+   0.54600000E+03
+ 'DATE    '           3 'INTE'
+          30           6        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53584658E+04
+ 'SWAT    '           1 'REAL'
+   0.11905304E+00
+ 'SGAS    '           1 'REAL'
+   0.45923632E+00
+ 'TIME    '           1 'REAL'
+   0.57700000E+03
+ 'DATE    '           3 'INTE'
+          31           7        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.33054497E+04   0.33123250E+04   0.33233218E+04
+ 'SWAT    '           3 'REAL'
+   0.12058301E+00   0.12058291E+00   0.12058274E+00
+ 'SGAS    '           3 'REAL'
+   0.53491559E-01   0.00000000E+00   0.76562352E-02
+ 'TIME    '           1 'REAL'
+   0.57700000E+03
+ 'DATE    '           3 'INTE'
+          31           7        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53600674E+04
+ 'SWAT    '           1 'REAL'
+   0.11905186E+00
+ 'SGAS    '           1 'REAL'
+   0.46255425E+00
+ 'TIME    '           1 'REAL'
+   0.60800000E+03
+ 'DATE    '           3 'INTE'
+          31           8        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.33588308E+04   0.33656877E+04   0.33766523E+04
+ 'SWAT    '           3 'REAL'
+   0.12054298E+00   0.12054289E+00   0.12054275E+00
+ 'SGAS    '           3 'REAL'
+   0.46446271E-01   0.00000000E+00   0.18920845E-02
+ 'TIME    '           1 'REAL'
+   0.60800000E+03
+ 'DATE    '           3 'INTE'
+          31           8        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53606694E+04
+ 'SWAT    '           1 'REAL'
+   0.11905141E+00
+ 'SGAS    '           1 'REAL'
+   0.46565548E+00
+ 'TIME    '           1 'REAL'
+   0.63800000E+03
+ 'DATE    '           3 'INTE'
+          30           9        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.34159243E+04   0.34228025E+04   0.34338115E+04
+ 'SWAT    '           3 'REAL'
+   0.12050018E+00   0.12050007E+00   0.12049991E+00
+ 'SGAS    '           3 'REAL'
+   0.38877923E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.63800000E+03
+ 'DATE    '           3 'INTE'
+          30           9        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53632603E+04
+ 'SWAT    '           1 'REAL'
+   0.11904950E+00
+ 'SGAS    '           1 'REAL'
+   0.46838289E+00
+ 'TIME    '           1 'REAL'
+   0.66900000E+03
+ 'DATE    '           3 'INTE'
+          31          10        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.34731143E+04   0.34799993E+04   0.34910315E+04
+ 'SWAT    '           3 'REAL'
+   0.12045732E+00   0.12045722E+00   0.12045703E+00
+ 'SGAS    '           3 'REAL'
+   0.32447282E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.66900000E+03
+ 'DATE    '           3 'INTE'
+          31          10        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53689883E+04
+ 'SWAT    '           1 'REAL'
+   0.11904526E+00
+ 'SGAS    '           1 'REAL'
+   0.47090569E+00
+ 'TIME    '           1 'REAL'
+   0.69900000E+03
+ 'DATE    '           3 'INTE'
+          30          11        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.35216008E+04   0.35284661E+04   0.35394785E+04
+ 'SWAT    '           3 'REAL'
+   0.12042100E+00   0.12042091E+00   0.12042074E+00
+ 'SGAS    '           3 'REAL'
+   0.29135743E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.69900000E+03
+ 'DATE    '           3 'INTE'
+          30          11        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53759536E+04
+ 'SWAT    '           1 'REAL'
+   0.11904009E+00
+ 'SGAS    '           1 'REAL'
+   0.47313267E+00
+ 'TIME    '           1 'REAL'
+   0.73000000E+03
+ 'DATE    '           3 'INTE'
+          31          12        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.35666870E+04   0.35735393E+04   0.35845393E+04
+ 'SWAT    '           3 'REAL'
+   0.12038724E+00   0.12038715E+00   0.12038699E+00
+ 'SGAS    '           3 'REAL'
+   0.27453611E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.73000000E+03
+ 'DATE    '           3 'INTE'
+          31          12        2016
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53843921E+04
+ 'SWAT    '           1 'REAL'
+   0.11903385E+00
+ 'SGAS    '           1 'REAL'
+   0.47523037E+00
+ 'TIME    '           1 'REAL'
+   0.76100000E+03
+ 'DATE    '           3 'INTE'
+          31           1        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.36070005E+04   0.36138440E+04   0.36248359E+04
+ 'SWAT    '           3 'REAL'
+   0.12035706E+00   0.12035698E+00   0.12035682E+00
+ 'SGAS    '           3 'REAL'
+   0.26871933E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.76100000E+03
+ 'DATE    '           3 'INTE'
+          31           1        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.53943286E+04
+ 'SWAT    '           1 'REAL'
+   0.11902650E+00
+ 'SGAS    '           1 'REAL'
+   0.47713265E+00
+ 'TIME    '           1 'REAL'
+   0.78900000E+03
+ 'DATE    '           3 'INTE'
+          28           2        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.36397036E+04   0.36465415E+04   0.36575283E+04
+ 'SWAT    '           3 'REAL'
+   0.12033258E+00   0.12033250E+00   0.12033235E+00
+ 'SGAS    '           3 'REAL'
+   0.26929554E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.78900000E+03
+ 'DATE    '           3 'INTE'
+          28           2        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.54044580E+04
+ 'SWAT    '           1 'REAL'
+   0.11901899E+00
+ 'SGAS    '           1 'REAL'
+   0.47870448E+00
+ 'TIME    '           1 'REAL'
+   0.82000000E+03
+ 'DATE    '           3 'INTE'
+          31           3        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.36740850E+04   0.36809233E+04   0.36919136E+04
+ 'SWAT    '           3 'REAL'
+   0.12030685E+00   0.12030677E+00   0.12030662E+00
+ 'SGAS    '           3 'REAL'
+   0.26842320E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.82000000E+03
+ 'DATE    '           3 'INTE'
+          31           3        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.54172739E+04
+ 'SWAT    '           1 'REAL'
+   0.11900951E+00
+ 'SGAS    '           1 'REAL'
+   0.48027310E+00
+ 'TIME    '           1 'REAL'
+   0.85000000E+03
+ 'DATE    '           3 'INTE'
+          30           4        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.37054229E+04   0.37122637E+04   0.37232598E+04
+ 'SWAT    '           3 'REAL'
+   0.12028340E+00   0.12028332E+00   0.12028316E+00
+ 'SGAS    '           3 'REAL'
+   0.26539858E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.85000000E+03
+ 'DATE    '           3 'INTE'
+          30           4        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.54306553E+04
+ 'SWAT    '           1 'REAL'
+   0.11899961E+00
+ 'SGAS    '           1 'REAL'
+   0.48165694E+00
+ 'TIME    '           1 'REAL'
+   0.88100000E+03
+ 'DATE    '           3 'INTE'
+          31           5        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.37353564E+04   0.37421995E+04   0.37532002E+04
+ 'SWAT    '           3 'REAL'
+   0.12026101E+00   0.12026093E+00   0.12026077E+00
+ 'SGAS    '           3 'REAL'
+   0.26147563E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.88100000E+03
+ 'DATE    '           3 'INTE'
+          31           5        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.54450981E+04
+ 'SWAT    '           1 'REAL'
+   0.11898892E+00
+ 'SGAS    '           1 'REAL'
+   0.48296613E+00
+ 'TIME    '           1 'REAL'
+   0.91100000E+03
+ 'DATE    '           3 'INTE'
+          30           6        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.37628232E+04   0.37696677E+04   0.37806726E+04
+ 'SWAT    '           3 'REAL'
+   0.12024046E+00   0.12024038E+00   0.12024022E+00
+ 'SGAS    '           3 'REAL'
+   0.25653725E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.91100000E+03
+ 'DATE    '           3 'INTE'
+          30           6        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.54597090E+04
+ 'SWAT    '           1 'REAL'
+   0.11897811E+00
+ 'SGAS    '           1 'REAL'
+   0.48412648E+00
+ 'TIME    '           1 'REAL'
+   0.94200000E+03
+ 'DATE    '           3 'INTE'
+          31           7        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.37901929E+04   0.37970386E+04   0.38080474E+04
+ 'SWAT    '           3 'REAL'
+   0.12022000E+00   0.12021992E+00   0.12021974E+00
+ 'SGAS    '           3 'REAL'
+   0.25012653E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.94200000E+03
+ 'DATE    '           3 'INTE'
+          31           7        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.54754365E+04
+ 'SWAT    '           1 'REAL'
+   0.11896647E+00
+ 'SGAS    '           1 'REAL'
+   0.48522124E+00
+ 'TIME    '           1 'REAL'
+   0.97300000E+03
+ 'DATE    '           3 'INTE'
+          31           8        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.38168860E+04   0.38237324E+04   0.38347451E+04
+ 'SWAT    '           3 'REAL'
+   0.12020004E+00   0.12019996E+00   0.12019978E+00
+ 'SGAS    '           3 'REAL'
+   0.24257096E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.97300000E+03
+ 'DATE    '           3 'INTE'
+          31           8        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.54914551E+04
+ 'SWAT    '           1 'REAL'
+   0.11895461E+00
+ 'SGAS    '           1 'REAL'
+   0.48622879E+00
+ 'TIME    '           1 'REAL'
+   0.10030000E+04
+ 'DATE    '           3 'INTE'
+          30           9        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.38424309E+04   0.38492778E+04   0.38602939E+04
+ 'SWAT    '           3 'REAL'
+   0.12018094E+00   0.12018086E+00   0.12018069E+00
+ 'SGAS    '           3 'REAL'
+   0.23418870E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.10030000E+04
+ 'DATE    '           3 'INTE'
+          30           9        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.55076348E+04
+ 'SWAT    '           1 'REAL'
+   0.11894264E+00
+ 'SGAS    '           1 'REAL'
+   0.48711661E+00
+ 'TIME    '           1 'REAL'
+   0.10340000E+04
+ 'DATE    '           3 'INTE'
+          31          10        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.38687568E+04   0.38756050E+04   0.38866245E+04
+ 'SWAT    '           3 'REAL'
+   0.12016127E+00   0.12016118E+00   0.12016100E+00
+ 'SGAS    '           3 'REAL'
+   0.22436155E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.10340000E+04
+ 'DATE    '           3 'INTE'
+          31          10        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.55250884E+04
+ 'SWAT    '           1 'REAL'
+   0.11892973E+00
+ 'SGAS    '           1 'REAL'
+   0.48794720E+00
+ 'TIME    '           1 'REAL'
+   0.10640000E+04
+ 'DATE    '           3 'INTE'
+          30          11        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.38940110E+04   0.39008596E+04   0.39118828E+04
+ 'SWAT    '           3 'REAL'
+   0.12014239E+00   0.12014231E+00   0.12014213E+00
+ 'SGAS    '           3 'REAL'
+   0.21428652E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.10640000E+04
+ 'DATE    '           3 'INTE'
+          30          11        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.55422236E+04
+ 'SWAT    '           1 'REAL'
+   0.11891706E+00
+ 'SGAS    '           1 'REAL'
+   0.48868775E+00
+ 'TIME    '           1 'REAL'
+   0.10950000E+04
+ 'DATE    '           3 'INTE'
+          31          12        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.39198105E+04   0.39266599E+04   0.39376863E+04
+ 'SWAT    '           3 'REAL'
+   0.12012311E+00   0.12012303E+00   0.12012285E+00
+ 'SGAS    '           3 'REAL'
+   0.20354120E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.10950000E+04
+ 'DATE    '           3 'INTE'
+          31          12        2017
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.55600176E+04
+ 'SWAT    '           1 'REAL'
+   0.11890390E+00
+ 'SGAS    '           1 'REAL'
+   0.48939517E+00
+ 'TIME    '           1 'REAL'
+   0.11260000E+04
+ 'DATE    '           3 'INTE'
+          31           1        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.39447300E+04   0.39515823E+04   0.39626143E+04
+ 'SWAT    '           3 'REAL'
+   0.12010450E+00   0.12010441E+00   0.12010422E+00
+ 'SGAS    '           3 'REAL'
+   0.18976927E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.11260000E+04
+ 'DATE    '           3 'INTE'
+          31           1        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.55754609E+04
+ 'SWAT    '           1 'REAL'
+   0.11889248E+00
+ 'SGAS    '           1 'REAL'
+   0.49011701E+00
+ 'TIME    '           1 'REAL'
+   0.11540000E+04
+ 'DATE    '           3 'INTE'
+          28           2        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.39665513E+04   0.39734070E+04   0.39844451E+04
+ 'SWAT    '           3 'REAL'
+   0.12008820E+00   0.12008811E+00   0.12008792E+00
+ 'SGAS    '           3 'REAL'
+   0.17345442E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.11540000E+04
+ 'DATE    '           3 'INTE'
+          28           2        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.55940786E+04
+ 'SWAT    '           1 'REAL'
+   0.11887871E+00
+ 'SGAS    '           1 'REAL'
+   0.49059504E+00
+ 'TIME    '           1 'REAL'
+   0.11850000E+04
+ 'DATE    '           3 'INTE'
+          31           3        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.39901409E+04   0.39970007E+04   0.40080457E+04
+ 'SWAT    '           3 'REAL'
+   0.12007058E+00   0.12007049E+00   0.12007029E+00
+ 'SGAS    '           3 'REAL'
+   0.15032423E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.11850000E+04
+ 'DATE    '           3 'INTE'
+          31           3        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.56133491E+04
+ 'SWAT    '           1 'REAL'
+   0.11886446E+00
+ 'SGAS    '           1 'REAL'
+   0.49112293E+00
+ 'TIME    '           1 'REAL'
+   0.12150000E+04
+ 'DATE    '           3 'INTE'
+          30           4        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.40125449E+04   0.40194087E+04   0.40304602E+04
+ 'SWAT    '           3 'REAL'
+   0.12005385E+00   0.12005375E+00   0.12005355E+00
+ 'SGAS    '           3 'REAL'
+   0.12312607E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.12150000E+04
+ 'DATE    '           3 'INTE'
+          30           4        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.56312612E+04
+ 'SWAT    '           1 'REAL'
+   0.11885122E+00
+ 'SGAS    '           1 'REAL'
+   0.49161825E+00
+ 'TIME    '           1 'REAL'
+   0.12460000E+04
+ 'DATE    '           3 'INTE'
+          31           5        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.40351050E+04   0.40419753E+04   0.40530356E+04
+ 'SWAT    '           3 'REAL'
+   0.12003700E+00   0.12003691E+00   0.12003670E+00
+ 'SGAS    '           3 'REAL'
+   0.89270184E-02   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.12460000E+04
+ 'DATE    '           3 'INTE'
+          31           5        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.56494551E+04
+ 'SWAT    '           1 'REAL'
+   0.11883777E+00
+ 'SGAS    '           1 'REAL'
+   0.49210155E+00
+ 'TIME    '           1 'REAL'
+   0.12760000E+04
+ 'DATE    '           3 'INTE'
+          30           6        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.40570349E+04   0.40639102E+04   0.40749773E+04
+ 'SWAT    '           3 'REAL'
+   0.12002064E+00   0.12002053E+00   0.12002032E+00
+ 'SGAS    '           3 'REAL'
+   0.50803968E-02   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.12760000E+04
+ 'DATE    '           3 'INTE'
+          30           6        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.56668345E+04
+ 'SWAT    '           1 'REAL'
+   0.11882493E+00
+ 'SGAS    '           1 'REAL'
+   0.49254259E+00
+ 'TIME    '           1 'REAL'
+   0.13070000E+04
+ 'DATE    '           3 'INTE'
+          31           7        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.40798557E+04   0.40867358E+04   0.40978105E+04
+ 'SWAT    '           3 'REAL'
+   0.12000360E+00   0.12000349E+00   0.12000328E+00
+ 'SGAS    '           3 'REAL'
+   0.49171108E-03   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.13070000E+04
+ 'DATE    '           3 'INTE'
+          31           7        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.56848599E+04
+ 'SWAT    '           1 'REAL'
+   0.11881161E+00
+ 'SGAS    '           1 'REAL'
+   0.49296317E+00
+ 'TIME    '           1 'REAL'
+   0.13380000E+04
+ 'DATE    '           3 'INTE'
+          31           8        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.41072085E+04   0.41140757E+04   0.41251348E+04
+ 'SWAT    '           3 'REAL'
+   0.11998318E+00   0.11998308E+00   0.11998288E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.13380000E+04
+ 'DATE    '           3 'INTE'
+          31           8        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.57029565E+04
+ 'SWAT    '           1 'REAL'
+   0.11879824E+00
+ 'SGAS    '           1 'REAL'
+   0.49335095E+00
+ 'TIME    '           1 'REAL'
+   0.13680000E+04
+ 'DATE    '           3 'INTE'
+          30           9        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.41321973E+04   0.41390625E+04   0.41501167E+04
+ 'SWAT    '           3 'REAL'
+   0.11996454E+00   0.11996444E+00   0.11996424E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.13680000E+04
+ 'DATE    '           3 'INTE'
+          30           9        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.57204507E+04
+ 'SWAT    '           1 'REAL'
+   0.11878531E+00
+ 'SGAS    '           1 'REAL'
+   0.49370012E+00
+ 'TIME    '           1 'REAL'
+   0.13990000E+04
+ 'DATE    '           3 'INTE'
+          31          10        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.41566196E+04   0.41634858E+04   0.41745381E+04
+ 'SWAT    '           3 'REAL'
+   0.11994632E+00   0.11994622E+00   0.11994602E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.13990000E+04
+ 'DATE    '           3 'INTE'
+          31          10        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.57383779E+04
+ 'SWAT    '           1 'REAL'
+   0.11877207E+00
+ 'SGAS    '           1 'REAL'
+   0.49403855E+00
+ 'TIME    '           1 'REAL'
+   0.14290000E+04
+ 'DATE    '           3 'INTE'
+          30          11        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.41795972E+04   0.41864639E+04   0.41975146E+04
+ 'SWAT    '           3 'REAL'
+   0.11992917E+00   0.11992908E+00   0.11992888E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.14290000E+04
+ 'DATE    '           3 'INTE'
+          30          11        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.57554980E+04
+ 'SWAT    '           1 'REAL'
+   0.11875942E+00
+ 'SGAS    '           1 'REAL'
+   0.49434909E+00
+ 'TIME    '           1 'REAL'
+   0.14600000E+04
+ 'DATE    '           3 'INTE'
+          31          12        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.42029805E+04   0.42098472E+04   0.42208970E+04
+ 'SWAT    '           3 'REAL'
+   0.11991173E+00   0.11991163E+00   0.11991144E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.14600000E+04
+ 'DATE    '           3 'INTE'
+          31          12        2018
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.57728618E+04
+ 'SWAT    '           1 'REAL'
+   0.11874660E+00
+ 'SGAS    '           1 'REAL'
+   0.49465552E+00
+ 'TIME    '           1 'REAL'
+   0.14910000E+04
+ 'DATE    '           3 'INTE'
+          31           1        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.42263892E+04   0.42332563E+04   0.42443052E+04
+ 'SWAT    '           3 'REAL'
+   0.11989427E+00   0.11989418E+00   0.11989398E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.14910000E+04
+ 'DATE    '           3 'INTE'
+          31           1        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.57901240E+04
+ 'SWAT    '           1 'REAL'
+   0.11873385E+00
+ 'SGAS    '           1 'REAL'
+   0.49494219E+00
+ 'TIME    '           1 'REAL'
+   0.15190000E+04
+ 'DATE    '           3 'INTE'
+          28           2        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.42479399E+04   0.42548076E+04   0.42658555E+04
+ 'SWAT    '           3 'REAL'
+   0.11987820E+00   0.11987811E+00   0.11987791E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.15190000E+04
+ 'DATE    '           3 'INTE'
+          28           2        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.58058916E+04
+ 'SWAT    '           1 'REAL'
+   0.11872221E+00
+ 'SGAS    '           1 'REAL'
+   0.49517876E+00
+ 'TIME    '           1 'REAL'
+   0.15500000E+04
+ 'DATE    '           3 'INTE'
+          31           3        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.42717271E+04   0.42785952E+04   0.42896426E+04
+ 'SWAT    '           3 'REAL'
+   0.11986047E+00   0.11986037E+00   0.11986018E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.15500000E+04
+ 'DATE    '           3 'INTE'
+          31           3        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.58235166E+04
+ 'SWAT    '           1 'REAL'
+   0.11870919E+00
+ 'SGAS    '           1 'REAL'
+   0.49541646E+00
+ 'TIME    '           1 'REAL'
+   0.15800000E+04
+ 'DATE    '           3 'INTE'
+          30           4        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.42942324E+04   0.43011016E+04   0.43121489E+04
+ 'SWAT    '           3 'REAL'
+   0.11984369E+00   0.11984359E+00   0.11984340E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.15800000E+04
+ 'DATE    '           3 'INTE'
+          30           4        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.58406025E+04
+ 'SWAT    '           1 'REAL'
+   0.11869658E+00
+ 'SGAS    '           1 'REAL'
+   0.49562895E+00
+ 'TIME    '           1 'REAL'
+   0.16110000E+04
+ 'DATE    '           3 'INTE'
+          31           5        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.43169175E+04   0.43237876E+04   0.43348345E+04
+ 'SWAT    '           3 'REAL'
+   0.11982679E+00   0.11982669E+00   0.11982649E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.16110000E+04
+ 'DATE    '           3 'INTE'
+          31           5        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.58581543E+04
+ 'SWAT    '           1 'REAL'
+   0.11868362E+00
+ 'SGAS    '           1 'REAL'
+   0.49583495E+00
+ 'TIME    '           1 'REAL'
+   0.16410000E+04
+ 'DATE    '           3 'INTE'
+          30           6        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.43384907E+04   0.43453613E+04   0.43564082E+04
+ 'SWAT    '           3 'REAL'
+   0.11981071E+00   0.11981061E+00   0.11981041E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.16410000E+04
+ 'DATE    '           3 'INTE'
+          30           6        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.58748945E+04
+ 'SWAT    '           1 'REAL'
+   0.11867127E+00
+ 'SGAS    '           1 'REAL'
+   0.49602664E+00
+ 'TIME    '           1 'REAL'
+   0.16720000E+04
+ 'DATE    '           3 'INTE'
+          31           7        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.43607485E+04   0.43676201E+04   0.43786670E+04
+ 'SWAT    '           3 'REAL'
+   0.11979412E+00   0.11979403E+00   0.11979382E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.16720000E+04
+ 'DATE    '           3 'INTE'
+          31           7        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.58921035E+04
+ 'SWAT    '           1 'REAL'
+   0.11865856E+00
+ 'SGAS    '           1 'REAL'
+   0.49621227E+00
+ 'TIME    '           1 'REAL'
+   0.17030000E+04
+ 'DATE    '           3 'INTE'
+          31           8        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.43832002E+04   0.43900732E+04   0.44011196E+04
+ 'SWAT    '           3 'REAL'
+   0.11977740E+00   0.11977730E+00   0.11977710E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.17030000E+04
+ 'DATE    '           3 'INTE'
+          31           8        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.59092886E+04
+ 'SWAT    '           1 'REAL'
+   0.11864588E+00
+ 'SGAS    '           1 'REAL'
+   0.49638453E+00
+ 'TIME    '           1 'REAL'
+   0.17330000E+04
+ 'DATE    '           3 'INTE'
+          30           9        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.44051167E+04   0.44119902E+04   0.44230371E+04
+ 'SWAT    '           3 'REAL'
+   0.11976107E+00   0.11976097E+00   0.11976077E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.17330000E+04
+ 'DATE    '           3 'INTE'
+          30           9        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.59258970E+04
+ 'SWAT    '           1 'REAL'
+   0.11863363E+00
+ 'SGAS    '           1 'REAL'
+   0.49653953E+00
+ 'TIME    '           1 'REAL'
+   0.17640000E+04
+ 'DATE    '           3 'INTE'
+          31          10        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.44277676E+04   0.44346421E+04   0.44456895E+04
+ 'SWAT    '           3 'REAL'
+   0.11974420E+00   0.11974410E+00   0.11974390E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.17640000E+04
+ 'DATE    '           3 'INTE'
+          31          10        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.59431211E+04
+ 'SWAT    '           1 'REAL'
+   0.11862092E+00
+ 'SGAS    '           1 'REAL'
+   0.49668565E+00
+ 'TIME    '           1 'REAL'
+   0.17940000E+04
+ 'DATE    '           3 'INTE'
+          30          11        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.44494233E+04   0.44562988E+04   0.44673467E+04
+ 'SWAT    '           3 'REAL'
+   0.11972807E+00   0.11972797E+00   0.11972777E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.17940000E+04
+ 'DATE    '           3 'INTE'
+          30          11        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.59598101E+04
+ 'SWAT    '           1 'REAL'
+   0.11860861E+00
+ 'SGAS    '           1 'REAL'
+   0.49681583E+00
+ 'TIME    '           1 'REAL'
+   0.18250000E+04
+ 'DATE    '           3 'INTE'
+          31          12        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.44714062E+04   0.44782827E+04   0.44893311E+04
+ 'SWAT    '           3 'REAL'
+   0.11971170E+00   0.11971160E+00   0.11971140E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.18250000E+04
+ 'DATE    '           3 'INTE'
+          31          12        2019
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.59770288E+04
+ 'SWAT    '           1 'REAL'
+   0.11859591E+00
+ 'SGAS    '           1 'REAL'
+   0.49694061E+00
+ 'TIME    '           1 'REAL'
+   0.18560000E+04
+ 'DATE    '           3 'INTE'
+          31           1        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.44936567E+04   0.45005347E+04   0.45115835E+04
+ 'SWAT    '           3 'REAL'
+   0.11969513E+00   0.11969503E+00   0.11969484E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.18560000E+04
+ 'DATE    '           3 'INTE'
+          31           1        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.59942402E+04
+ 'SWAT    '           1 'REAL'
+   0.11858322E+00
+ 'SGAS    '           1 'REAL'
+   0.49705577E+00
+ 'TIME    '           1 'REAL'
+   0.18840000E+04
+ 'DATE    '           3 'INTE'
+          28           2        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.45137007E+04   0.45205791E+04   0.45316284E+04
+ 'SWAT    '           3 'REAL'
+   0.11968022E+00   0.11968011E+00   0.11967991E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.18840000E+04
+ 'DATE    '           3 'INTE'
+          28           2        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.60098154E+04
+ 'SWAT    '           1 'REAL'
+   0.11857173E+00
+ 'SGAS    '           1 'REAL'
+   0.49715140E+00
+ 'TIME    '           1 'REAL'
+   0.19150000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.45355161E+04   0.45423960E+04   0.45534463E+04
+ 'SWAT    '           3 'REAL'
+   0.11966398E+00   0.11966387E+00   0.11966367E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.19150000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.60270669E+04
+ 'SWAT    '           1 'REAL'
+   0.11855900E+00
+ 'SGAS    '           1 'REAL'
+   0.49724856E+00
+ 'TIME    '           1 'REAL'
+   0.19450000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.45563481E+04   0.45632290E+04   0.45742793E+04
+ 'SWAT    '           3 'REAL'
+   0.11964847E+00   0.11964837E+00   0.11964817E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.19450000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.60436440E+04
+ 'SWAT    '           1 'REAL'
+   0.11854678E+00
+ 'SGAS    '           1 'REAL'
+   0.49733853E+00
+ 'TIME    '           1 'REAL'
+   0.19760000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.45779907E+04   0.45848726E+04   0.45959238E+04
+ 'SWAT    '           3 'REAL'
+   0.11963237E+00   0.11963226E+00   0.11963207E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.19760000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.60607827E+04
+ 'SWAT    '           1 'REAL'
+   0.11853415E+00
+ 'SGAS    '           1 'REAL'
+   0.49742362E+00
+ 'TIME    '           1 'REAL'
+   0.20060000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.45993589E+04   0.46062422E+04   0.46172939E+04
+ 'SWAT    '           3 'REAL'
+   0.11961647E+00   0.11961636E+00   0.11961616E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.20060000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.60774321E+04
+ 'SWAT    '           1 'REAL'
+   0.11852188E+00
+ 'SGAS    '           1 'REAL'
+   0.49749753E+00
+ 'TIME    '           1 'REAL'
+   0.20370000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.46221436E+04   0.46290273E+04   0.46400801E+04
+ 'SWAT    '           3 'REAL'
+   0.11959952E+00   0.11959941E+00   0.11959921E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.20370000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.60946973E+04
+ 'SWAT    '           1 'REAL'
+   0.11850915E+00
+ 'SGAS    '           1 'REAL'
+   0.49756566E+00
+ 'TIME    '           1 'REAL'
+   0.20680000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.46442686E+04   0.46511538E+04   0.46622075E+04
+ 'SWAT    '           3 'REAL'
+   0.11958306E+00   0.11958295E+00   0.11958275E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.20680000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.61121489E+04
+ 'SWAT    '           1 'REAL'
+   0.11849628E+00
+ 'SGAS    '           1 'REAL'
+   0.49762252E+00
+ 'TIME    '           1 'REAL'
+   0.20980000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.46650254E+04   0.46719121E+04   0.46829668E+04
+ 'SWAT    '           3 'REAL'
+   0.11956763E+00   0.11956751E+00   0.11956731E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.20980000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.61291880E+04
+ 'SWAT    '           1 'REAL'
+   0.11848373E+00
+ 'SGAS    '           1 'REAL'
+   0.49766836E+00
+ 'TIME    '           1 'REAL'
+   0.21290000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.46862100E+04   0.46930972E+04   0.47041523E+04
+ 'SWAT    '           3 'REAL'
+   0.11955187E+00   0.11955176E+00   0.11955156E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.21290000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.61467568E+04
+ 'SWAT    '           1 'REAL'
+   0.11847078E+00
+ 'SGAS    '           1 'REAL'
+   0.49771228E+00
+ 'TIME    '           1 'REAL'
+   0.21590000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.47070762E+04   0.47139644E+04   0.47250205E+04
+ 'SWAT    '           3 'REAL'
+   0.11953636E+00   0.11953624E+00   0.11953604E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.21590000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.61637007E+04
+ 'SWAT    '           1 'REAL'
+   0.11845830E+00
+ 'SGAS    '           1 'REAL'
+   0.49775243E+00
+ 'TIME    '           1 'REAL'
+   0.21900000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.47295215E+04   0.47364106E+04   0.47474678E+04
+ 'SWAT    '           3 'REAL'
+   0.11951967E+00   0.11951956E+00   0.11951935E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.21900000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2020
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.61812866E+04
+ 'SWAT    '           1 'REAL'
+   0.11844534E+00
+ 'SGAS    '           1 'REAL'
+   0.49778756E+00
+ 'TIME    '           1 'REAL'
+   0.22210000E+04
+ 'DATE    '           3 'INTE'
+          30           1        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.47526421E+04   0.47595317E+04   0.47705898E+04
+ 'SWAT    '           3 'REAL'
+   0.11950248E+00   0.11950237E+00   0.11950216E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.22210000E+04
+ 'DATE    '           3 'INTE'
+          30           1        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.61990537E+04
+ 'SWAT    '           1 'REAL'
+   0.11843225E+00
+ 'SGAS    '           1 'REAL'
+   0.49781373E+00
+ 'TIME    '           1 'REAL'
+   0.22490000E+04
+ 'DATE    '           3 'INTE'
+          27           2        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.47733398E+04   0.47802305E+04   0.47912896E+04
+ 'SWAT    '           3 'REAL'
+   0.11948710E+00   0.11948699E+00   0.11948679E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.22490000E+04
+ 'DATE    '           3 'INTE'
+          27           2        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.62151260E+04
+ 'SWAT    '           1 'REAL'
+   0.11842041E+00
+ 'SGAS    '           1 'REAL'
+   0.49783409E+00
+ 'TIME    '           1 'REAL'
+   0.22800000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.47958838E+04   0.48027754E+04   0.48138354E+04
+ 'SWAT    '           3 'REAL'
+   0.11947035E+00   0.11947024E+00   0.11947003E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.22800000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.62330713E+04
+ 'SWAT    '           1 'REAL'
+   0.11840720E+00
+ 'SGAS    '           1 'REAL'
+   0.49784938E+00
+ 'TIME    '           1 'REAL'
+   0.23100000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.48180562E+04   0.48249478E+04   0.48360083E+04
+ 'SWAT    '           3 'REAL'
+   0.11945388E+00   0.11945376E+00   0.11945356E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.23100000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.62505933E+04
+ 'SWAT    '           1 'REAL'
+   0.11839430E+00
+ 'SGAS    '           1 'REAL'
+   0.49785733E+00
+ 'TIME    '           1 'REAL'
+   0.23410000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.48408911E+04   0.48477832E+04   0.48588442E+04
+ 'SWAT    '           3 'REAL'
+   0.11943691E+00   0.11943679E+00   0.11943659E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.23410000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.62650435E+04
+ 'SWAT    '           1 'REAL'
+   0.11838366E+00
+ 'SGAS    '           1 'REAL'
+   0.49797016E+00
+ 'TIME    '           1 'REAL'
+   0.23710000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.48636182E+04   0.48705098E+04   0.48815713E+04
+ 'SWAT    '           3 'REAL'
+   0.11942003E+00   0.11941992E+00   0.11941971E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.23710000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.62797305E+04
+ 'SWAT    '           1 'REAL'
+   0.11837284E+00
+ 'SGAS    '           1 'REAL'
+   0.49805066E+00
+ 'TIME    '           1 'REAL'
+   0.24020000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.48879180E+04   0.48948091E+04   0.49058706E+04
+ 'SWAT    '           3 'REAL'
+   0.11940198E+00   0.11940186E+00   0.11940166E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.24020000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.62982476E+04
+ 'SWAT    '           1 'REAL'
+   0.11835922E+00
+ 'SGAS    '           1 'REAL'
+   0.49802953E+00
+ 'TIME    '           1 'REAL'
+   0.24330000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.49123989E+04   0.49192896E+04   0.49303506E+04
+ 'SWAT    '           3 'REAL'
+   0.11938380E+00   0.11938369E+00   0.11938348E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.24330000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.63162119E+04
+ 'SWAT    '           1 'REAL'
+   0.11834599E+00
+ 'SGAS    '           1 'REAL'
+   0.49802452E+00
+ 'TIME    '           1 'REAL'
+   0.24630000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.49350103E+04   0.49418994E+04   0.49529604E+04
+ 'SWAT    '           3 'REAL'
+   0.11936701E+00   0.11936690E+00   0.11936670E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.24630000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.63330620E+04
+ 'SWAT    '           1 'REAL'
+   0.11833359E+00
+ 'SGAS    '           1 'REAL'
+   0.49803436E+00
+ 'TIME    '           1 'REAL'
+   0.24940000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.49599727E+04   0.49668594E+04   0.49779189E+04
+ 'SWAT    '           3 'REAL'
+   0.11934848E+00   0.11934837E+00   0.11934817E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.24940000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.63501841E+04
+ 'SWAT    '           1 'REAL'
+   0.11832099E+00
+ 'SGAS    '           1 'REAL'
+   0.49805102E+00
+ 'TIME    '           1 'REAL'
+   0.25240000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.49819546E+04   0.49888394E+04   0.49998970E+04
+ 'SWAT    '           3 'REAL'
+   0.11933216E+00   0.11933206E+00   0.11933185E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.25240000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.63666074E+04
+ 'SWAT    '           1 'REAL'
+   0.11830890E+00
+ 'SGAS    '           1 'REAL'
+   0.49806917E+00
+ 'TIME    '           1 'REAL'
+   0.25550000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50034810E+04   0.50103613E+04   0.50214150E+04
+ 'SWAT    '           3 'REAL'
+   0.11931619E+00   0.11931609E+00   0.11931589E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.25550000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2021
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.63834229E+04
+ 'SWAT    '           1 'REAL'
+   0.11829653E+00
+ 'SGAS    '           1 'REAL'
+   0.49808991E+00
+ 'TIME    '           1 'REAL'
+   0.25860000E+04
+ 'DATE    '           3 'INTE'
+          30           1        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50255078E+04   0.50323823E+04   0.50434302E+04
+ 'SWAT    '           3 'REAL'
+   0.11929984E+00   0.11929975E+00   0.11929955E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.25860000E+04
+ 'DATE    '           3 'INTE'
+          30           1        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.64000581E+04
+ 'SWAT    '           1 'REAL'
+   0.11828429E+00
+ 'SGAS    '           1 'REAL'
+   0.49811327E+00
+ 'TIME    '           1 'REAL'
+   0.26140000E+04
+ 'DATE    '           3 'INTE'
+          27           2        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50475366E+04   0.50544023E+04   0.50654443E+04
+ 'SWAT    '           3 'REAL'
+   0.11928350E+00   0.11928341E+00   0.11928321E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.26140000E+04
+ 'DATE    '           3 'INTE'
+          27           2        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.64106997E+04
+ 'SWAT    '           1 'REAL'
+   0.11827646E+00
+ 'SGAS    '           1 'REAL'
+   0.49826238E+00
+ 'TIME    '           1 'REAL'
+   0.26450000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50724346E+04   0.50792900E+04   0.50903228E+04
+ 'SWAT    '           3 'REAL'
+   0.11926503E+00   0.11926495E+00   0.11926476E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.26450000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.64272148E+04
+ 'SWAT    '           1 'REAL'
+   0.11826432E+00
+ 'SGAS    '           1 'REAL'
+   0.49827555E+00
+ 'TIME    '           1 'REAL'
+   0.26750000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50960039E+04   0.51028442E+04   0.51138618E+04
+ 'SWAT    '           3 'REAL'
+   0.11924755E+00   0.11924747E+00   0.11924729E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.26750000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.64426719E+04
+ 'SWAT    '           1 'REAL'
+   0.11825295E+00
+ 'SGAS    '           1 'REAL'
+   0.49830186E+00
+ 'TIME    '           1 'REAL'
+   0.27060000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.51191460E+04   0.51259639E+04   0.51369609E+04
+ 'SWAT    '           3 'REAL'
+   0.11923038E+00   0.11923033E+00   0.11923017E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.27060000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.64580649E+04
+ 'SWAT    '           1 'REAL'
+   0.11824163E+00
+ 'SGAS    '           1 'REAL'
+   0.49834320E+00
+ 'TIME    '           1 'REAL'
+   0.27360000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.51432051E+04   0.51499932E+04   0.51609624E+04
+ 'SWAT    '           3 'REAL'
+   0.11921255E+00   0.11921251E+00   0.11921237E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.27360000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.64725562E+04
+ 'SWAT    '           1 'REAL'
+   0.11823097E+00
+ 'SGAS    '           1 'REAL'
+   0.49839157E+00
+ 'TIME    '           1 'REAL'
+   0.27670000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.51707480E+04   0.51774985E+04   0.51884331E+04
+ 'SWAT    '           3 'REAL'
+   0.11919212E+00   0.11919212E+00   0.11919200E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.27670000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.64871602E+04
+ 'SWAT    '           1 'REAL'
+   0.11822023E+00
+ 'SGAS    '           1 'REAL'
+   0.49844810E+00
+ 'TIME    '           1 'REAL'
+   0.27980000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52006426E+04   0.52073511E+04   0.52182485E+04
+ 'SWAT    '           3 'REAL'
+   0.11916997E+00   0.11916999E+00   0.11916991E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.27980000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65014702E+04
+ 'SWAT    '           1 'REAL'
+   0.11820971E+00
+ 'SGAS    '           1 'REAL'
+   0.49850851E+00
+ 'TIME    '           1 'REAL'
+   0.28280000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52281230E+04   0.52347910E+04   0.52456553E+04
+ 'SWAT    '           3 'REAL'
+   0.11914960E+00   0.11914965E+00   0.11914959E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.28280000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65150933E+04
+ 'SWAT    '           1 'REAL'
+   0.11819970E+00
+ 'SGAS    '           1 'REAL'
+   0.49856895E+00
+ 'TIME    '           1 'REAL'
+   0.28590000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52558687E+04   0.52625234E+04   0.52734028E+04
+ 'SWAT    '           3 'REAL'
+   0.11912904E+00   0.11912910E+00   0.11912903E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.28590000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65290186E+04
+ 'SWAT    '           1 'REAL'
+   0.11818946E+00
+ 'SGAS    '           1 'REAL'
+   0.49863070E+00
+ 'TIME    '           1 'REAL'
+   0.28890000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52724287E+04   0.52790889E+04   0.52900322E+04
+ 'SWAT    '           3 'REAL'
+   0.11911677E+00   0.11911683E+00   0.11911671E+00
+ 'SGAS    '           3 'REAL'
+   0.00000000E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.28890000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65424009E+04
+ 'SWAT    '           1 'REAL'
+   0.11817963E+00
+ 'SGAS    '           1 'REAL'
+   0.49868846E+00
+ 'TIME    '           1 'REAL'
+   0.29200000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52908384E+04   0.52975068E+04   0.53084785E+04
+ 'SWAT    '           3 'REAL'
+   0.11910313E+00   0.11910319E+00   0.11910304E+00
+ 'SGAS    '           3 'REAL'
+   0.30471392E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.29200000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2022
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65561650E+04
+ 'SWAT    '           1 'REAL'
+   0.11816951E+00
+ 'SGAS    '           1 'REAL'
+   0.49874508E+00
+ 'TIME    '           1 'REAL'
+   0.29510000E+04
+ 'DATE    '           3 'INTE'
+          30           1        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52839897E+04   0.52906753E+04   0.53016724E+04
+ 'SWAT    '           3 'REAL'
+   0.11910821E+00   0.11910824E+00   0.11910809E+00
+ 'SGAS    '           3 'REAL'
+   0.67010276E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.29510000E+04
+ 'DATE    '           3 'INTE'
+          30           1        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65697168E+04
+ 'SWAT    '           1 'REAL'
+   0.11815955E+00
+ 'SGAS    '           1 'REAL'
+   0.49880329E+00
+ 'TIME    '           1 'REAL'
+   0.29790000E+04
+ 'DATE    '           3 'INTE'
+          27           2        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52635088E+04   0.52701494E+04   0.52810869E+04
+ 'SWAT    '           3 'REAL'
+   0.11912338E+00   0.11912345E+00   0.11912334E+00
+ 'SGAS    '           3 'REAL'
+   0.98315515E-01   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.29790000E+04
+ 'DATE    '           3 'INTE'
+          27           2        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65815073E+04
+ 'SWAT    '           1 'REAL'
+   0.11815088E+00
+ 'SGAS    '           1 'REAL'
+   0.49886546E+00
+ 'TIME    '           1 'REAL'
+   0.30100000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.52264102E+04   0.52329805E+04   0.52438477E+04
+ 'SWAT    '           3 'REAL'
+   0.11915087E+00   0.11915099E+00   0.11915093E+00
+ 'SGAS    '           3 'REAL'
+   0.12892655E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.30100000E+04
+ 'DATE    '           3 'INTE'
+          30           3        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.65934526E+04
+ 'SWAT    '           1 'REAL'
+   0.11814211E+00
+ 'SGAS    '           1 'REAL'
+   0.49896204E+00
+ 'TIME    '           1 'REAL'
+   0.30400000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.51725083E+04   0.51790962E+04   0.51899863E+04
+ 'SWAT    '           3 'REAL'
+   0.11919082E+00   0.11919093E+00   0.11919085E+00
+ 'SGAS    '           3 'REAL'
+   0.14933564E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.30400000E+04
+ 'DATE    '           3 'INTE'
+          29           4        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66034136E+04
+ 'SWAT    '           1 'REAL'
+   0.11813479E+00
+ 'SGAS    '           1 'REAL'
+   0.49909684E+00
+ 'TIME    '           1 'REAL'
+   0.30710000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.51213364E+04   0.51279233E+04   0.51388193E+04
+ 'SWAT    '           3 'REAL'
+   0.11922876E+00   0.11922887E+00   0.11922879E+00
+ 'SGAS    '           3 'REAL'
+   0.16455474E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.30710000E+04
+ 'DATE    '           3 'INTE'
+          30           5        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66114380E+04
+ 'SWAT    '           1 'REAL'
+   0.11812890E+00
+ 'SGAS    '           1 'REAL'
+   0.49929425E+00
+ 'TIME    '           1 'REAL'
+   0.31010000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50799575E+04   0.50865327E+04   0.50974258E+04
+ 'SWAT    '           3 'REAL'
+   0.11925945E+00   0.11925957E+00   0.11925949E+00
+ 'SGAS    '           3 'REAL'
+   0.17622411E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.31010000E+04
+ 'DATE    '           3 'INTE'
+          29           6        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66169907E+04
+ 'SWAT    '           1 'REAL'
+   0.11812481E+00
+ 'SGAS    '           1 'REAL'
+   0.49953905E+00
+ 'TIME    '           1 'REAL'
+   0.31320000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50409873E+04   0.50475449E+04   0.50584302E+04
+ 'SWAT    '           3 'REAL'
+   0.11928836E+00   0.11928850E+00   0.11928841E+00
+ 'SGAS    '           3 'REAL'
+   0.18675382E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.31320000E+04
+ 'DATE    '           3 'INTE'
+          30           7        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66202646E+04
+ 'SWAT    '           1 'REAL'
+   0.11812241E+00
+ 'SGAS    '           1 'REAL'
+   0.49984860E+00
+ 'TIME    '           1 'REAL'
+   0.31630000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.50054067E+04   0.50119385E+04   0.50228135E+04
+ 'SWAT    '           3 'REAL'
+   0.11931476E+00   0.11931492E+00   0.11931484E+00
+ 'SGAS    '           3 'REAL'
+   0.19615348E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.31630000E+04
+ 'DATE    '           3 'INTE'
+          30           8        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66212285E+04
+ 'SWAT    '           1 'REAL'
+   0.11812170E+00
+ 'SGAS    '           1 'REAL'
+   0.50022060E+00
+ 'TIME    '           1 'REAL'
+   0.31930000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.49719580E+04   0.49784731E+04   0.49893408E+04
+ 'SWAT    '           3 'REAL'
+   0.11933959E+00   0.11933975E+00   0.11933969E+00
+ 'SGAS    '           3 'REAL'
+   0.20417666E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.31930000E+04
+ 'DATE    '           3 'INTE'
+          29           9        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66201968E+04
+ 'SWAT    '           1 'REAL'
+   0.11812246E+00
+ 'SGAS    '           1 'REAL'
+   0.50064218E+00
+ 'TIME    '           1 'REAL'
+   0.32240000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.49377358E+04   0.49442476E+04   0.49551128E+04
+ 'SWAT    '           3 'REAL'
+   0.11936499E+00   0.11936516E+00   0.11936510E+00
+ 'SGAS    '           3 'REAL'
+   0.21127325E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.32240000E+04
+ 'DATE    '           3 'INTE'
+          30          10        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66170981E+04
+ 'SWAT    '           1 'REAL'
+   0.11812474E+00
+ 'SGAS    '           1 'REAL'
+   0.50114107E+00
+ 'TIME    '           1 'REAL'
+   0.32540000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.49058525E+04   0.49123555E+04   0.49232158E+04
+ 'SWAT    '           3 'REAL'
+   0.11938866E+00   0.11938883E+00   0.11938878E+00
+ 'SGAS    '           3 'REAL'
+   0.21735555E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.32540000E+04
+ 'DATE    '           3 'INTE'
+          29          11        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66122695E+04
+ 'SWAT    '           1 'REAL'
+   0.11812828E+00
+ 'SGAS    '           1 'REAL'
+   0.50168043E+00
+ 'TIME    '           1 'REAL'
+   0.32850000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FPROD   ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           3 'INTE'
+          10          10          10
+ 'CONJPOS '           3 'INTE'
+          10          10          10
+ 'CONKPOS '           3 'INTE'
+           1           2           3
+ 'HOSTGRID'           3 'CHAR'
+ '        ' '        ' '        '
+ 'DEPTH   '           3 'REAL'
+   0.83350000E+04   0.83600000E+04   0.84000000E+04
+ 'PRESSURE'           3 'REAL'
+   0.48741250E+04   0.48806138E+04   0.48914678E+04
+ 'SWAT    '           3 'REAL'
+   0.11941222E+00   0.11941241E+00   0.11941236E+00
+ 'SGAS    '           3 'REAL'
+   0.22310621E+00   0.00000000E+00   0.00000000E+00
+ 'TIME    '           1 'REAL'
+   0.32850000E+04
+ 'DATE    '           3 'INTE'
+          30          12        2023
+ 'WELLETC '          16 'CHAR'
+ '  DAYS  ' 'FINJ    ' '        ' '  FEET  ' '  PSIA  ' 'R       ' 'STANDARD'
+ ' STB/DAY' 'MSCF/DAY' ' RB/DAY ' ' FT/SEC ' '        ' '   CP   ' ' LB/STB '
+ ' LB/DAY ' '  LB/LB '
+ 'CONIPOS '           1 'INTE'
+           1
+ 'CONJPOS '           1 'INTE'
+           1
+ 'CONKPOS '           1 'INTE'
+           1
+ 'HOSTGRID'           1 'CHAR'
+ '        '
+ 'DEPTH   '           1 'REAL'
+   0.83350000E+04
+ 'PRESSURE'           1 'REAL'
+   0.66054517E+04
+ 'SWAT    '           1 'REAL'
+   0.11813329E+00
+ 'SGAS    '           1 'REAL'
+   0.50229365E+00

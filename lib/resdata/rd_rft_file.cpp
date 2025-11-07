@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <optional>
 
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
@@ -9,6 +10,8 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <string>
+#include <filesystem>
 
 #include <ert/util/util.hpp>
 
@@ -17,6 +20,7 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw_magic.hpp>
+namespace fs = std::filesystem;
 
 /**
    This data structure is for loading one eclipse RFT file. One RFT
@@ -93,66 +97,47 @@ rd_rft_file_type *rd_rft_file_alloc(const char *filename) {
    for the new name.
 
 */
-static char *rd_rft_file_alloc_case_filename(const char *case_input) {
-    rd_file_enum file_type;
+static std::optional<fs::path> find_rft_file(fs::path case_input) {
     bool fmt_file;
-    file_type = rd_get_file_type(case_input, &fmt_file, nullptr);
+    rd_file_enum file_type =
+        rd_get_file_type(case_input.string().c_str(), &fmt_file, nullptr);
     if (file_type == RD_RFT_FILE)
-        return util_alloc_string_copy(case_input);
+        return case_input;
     else {
-        char *return_file = nullptr;
-        char *path;
-        char *basename;
-        util_alloc_file_components(case_input, &path, &basename, nullptr);
-        if ((file_type == RD_OTHER_FILE) ||
-            (file_type ==
-             RD_DATA_FILE)) { /* Impossible to infer formatted/unformatted from the case_input */
-            char *RFT_file =
-                rd_alloc_filename(path, basename, RD_RFT_FILE, false, -1);
-            char *FRFT_file =
-                rd_alloc_filename(path, basename, RD_RFT_FILE, true, -1);
+        std::optional<std::filesystem::path> return_file = std::nullopt;
+        if ((file_type == RD_OTHER_FILE) || (file_type == RD_DATA_FILE)) {
+            /* Impossible to infer formatted/unformatted from the case_input */
+            fs::path RFT_file =
+                rd_alloc_filename(case_input, RD_RFT_FILE, false);
+            fs::path FRFT_file =
+                rd_alloc_filename(case_input, RD_RFT_FILE, true);
 
-            if (util_file_exists(RFT_file))
-                return_file = util_alloc_string_copy(RFT_file);
-            else if (util_file_exists(FRFT_file))
-                return_file = util_alloc_string_copy(FRFT_file);
-
-            free(RFT_file);
-            free(FRFT_file);
+            if (std::filesystem::exists(RFT_file))
+                return_file = RFT_file;
+            else if (std::filesystem::exists(FRFT_file))
+                return_file = FRFT_file;
         } else {
-            char *RFT_file =
-                rd_alloc_filename(path, basename, RD_RFT_FILE, fmt_file, -1);
+            fs::path RFT_file =
+                rd_alloc_filename(case_input, RD_RFT_FILE, fmt_file);
 
-            if (util_file_exists(RFT_file))
-                return_file = util_alloc_string_copy(RFT_file);
-
-            free(RFT_file);
+            if (std::filesystem::exists(RFT_file))
+                return_file = RFT_file;
         }
         return return_file;
     }
 }
 
 rd_rft_file_type *rd_rft_file_alloc_case(const char *case_input) {
-    rd_rft_file_type *rd_rft_file = nullptr;
-    char *file_name = rd_rft_file_alloc_case_filename(case_input);
-
-    if (file_name != nullptr) {
-        rd_rft_file = rd_rft_file_alloc(file_name);
-        free(file_name);
+    std::optional<fs::path> file_name = find_rft_file(case_input);
+    if (file_name.has_value()) {
+        std::string file_string = file_name.value().string();
+        return rd_rft_file_alloc(file_string.c_str());
     }
-    return rd_rft_file;
+    return nullptr;
 }
 
 bool rd_rft_file_case_has_rft(const char *case_input) {
-    bool has_rft = false;
-    char *file_name = rd_rft_file_alloc_case_filename(case_input);
-
-    if (file_name != nullptr) {
-        has_rft = true;
-        free(file_name);
-    }
-
-    return has_rft;
+    return find_rft_file(case_input).has_value();
 }
 
 void rd_rft_file_free(rd_rft_file_type *rft_vector) {
