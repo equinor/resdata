@@ -167,17 +167,8 @@ endif()
 
 add_executable(rd_test_suite tests/test_rd_grid.cpp tests/test_rd_util.cpp
                              tests/testsuite.cpp tests/test_util.cpp)
-if(CMAKE_COMPILER_IS_GNUCC)
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
-    target_compile_options(rd_test_suite PRIVATE -DFS_EXPERIMENTAL)
-  else()
-    target_compile_options(rd_test_suite PRIVATE "--std=c++17")
-  endif()
-  target_link_libraries(rd_test_suite resdata Catch2::Catch2 stdc++fs)
-else()
-  target_compile_options(rd_test_suite PRIVATE "--std=c++17")
-  target_link_libraries(rd_test_suite resdata Catch2::Catch2)
-endif()
+target_compile_features(rd_test_suite PUBLIC cxx_std_17)
+target_link_libraries(rd_test_suite resdata Catch2::Catch2)
 add_test(NAME rd_test_suite COMMAND rd_test_suite)
 
 foreach(
