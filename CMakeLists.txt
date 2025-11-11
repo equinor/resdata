@@ -260,7 +260,6 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules
      "${CMAKE_CURRENT_BINARY_DIR}")
-find_package(CXX11Features)
 
 # -----------------------------------------------------------------
 
