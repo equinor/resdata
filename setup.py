@@ -64,7 +64,7 @@ skbuild.setup(
         "numpy",
         "pandas",
         "natsort",
-        "resfo-utilities>=0.3.0b0",
+        "resfo-utilities>=0.4.0",
     ],
     setup_requires=["conan<2"],
     entry_points={"console_scripts": utility_wrappers()},

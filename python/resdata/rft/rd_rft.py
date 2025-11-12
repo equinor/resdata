@@ -1,72 +1,125 @@
-"""
-Module for loading RFT files.
-"""
+"""Module for loading RFT files."""
 
-from cwrap import BaseCClass
-from resdata import ResdataPrototype
 from resdata.rft import ResdataPLTCell, ResdataRFTCell
-from resdata.util.util import CTime, monkey_the_camel
+from resdata.util.util import monkey_the_camel
+from os import PathLike
+from typing import Any
+from collections.abc import Mapping
+import datetime
+import numpy.typing as npt
+import numpy as np
+from resfo_utilities import RFTReader
+import fnmatch
+import warnings
 
 
-class ResdataRFT(BaseCClass):
-    """The ResdataRFT class contains the information for *one* RFT.
+class ResdataRFT:
+    """Contains the information for *one* RFT.
 
-    The RFT file can contain three different types of RFT like
-    objects which are lumped together; the ResdataRFTClass is a container
-    for such objects. The three different object types which can be
-    found in an RFT file are:
+    The RFT file can contain three different types of RFT data. ResdataRFT
+    is a container of these. The types are:
 
-       RFT: This is old-fashioned RFT which contains measurements of
-            saturations for each of the completed cells.
+       RFT: Contains measurements of saturations for each of the completed cells.
 
-       PLT: This contains production and flow rates for each phase in
-            each cell.
+       PLT: This contains production and flow rates for each phase in each cell.
 
        SEGMENT: Not implemented.
 
-    In addition to the measurements specific for RFT and PLT each cell
+    In addition to the measurements specific for RFT, PLT and SEGMENT each cell
     has coordinates, pressure and depth.
     """
 
-    TYPE_NAME = "rd_rft"
-    _alloc = ResdataPrototype(
-        "void* rd_rft_node_alloc_new( char* , char* , rd_time_t , double)", bind=False
-    )
-    _free = ResdataPrototype("void  rd_rft_node_free( rd_rft )")
-    _get_type = ResdataPrototype("int    rd_rft_node_get_type( rd_rft )")
-    _get_well = ResdataPrototype("char*  rd_rft_node_get_well_name( rd_rft )")
-    _get_date = ResdataPrototype("rd_time_t rd_rft_node_get_date( rd_rft )")
-    _get_size = ResdataPrototype("int rd_rft_node_get_size( rd_rft )")
-    _iget_cell = ResdataPrototype("void* rd_rft_node_iget_cell( rd_rft, int)")
-    _iget_depth = ResdataPrototype("double rd_rft_node_iget_depth( rd_rft )")
-    _iget_pressure = ResdataPrototype("double rd_rft_node_iget_pressure(rd_rft)")
-    _iget_ijk = ResdataPrototype(
-        "void rd_rft_node_iget_ijk( rd_rft , int , int*, int*, int*)"
-    )
-    _iget_swat = ResdataPrototype("double rd_rft_node_iget_swat(rd_rft)")
-    _iget_sgas = ResdataPrototype("double rd_rft_node_iget_sgas(rd_rft)")
-    _iget_orat = ResdataPrototype("double rd_rft_node_iget_orat(rd_rft)")
-    _iget_wrat = ResdataPrototype("double rd_rft_node_iget_wrat(rd_rft)")
-    _iget_grat = ResdataPrototype("double rd_rft_node_iget_grat(rd_rft)")
-    _lookup_ijk = ResdataPrototype(
-        "void* rd_rft_node_lookup_ijk( rd_rft , int , int , int)"
-    )
-    _is_RFT = ResdataPrototype("bool   rd_rft_node_is_RFT( rd_rft )")
-    _is_PLT = ResdataPrototype("bool   rd_rft_node_is_PLT( rd_rft )")
-    _is_SEGMENT = ResdataPrototype("bool   rd_rft_node_is_SEGMENT( rd_rft )")
-    _is_MSW = ResdataPrototype("bool   rd_rft_node_is_MSW( rd_rft )")
+    def __init__(
+        self,
+        name: str,
+        type_string: str,
+        date: datetime.date,
+        days: float,
+        connections: np.ndarray[tuple[int, int], np.dtype[np.int32]] | None = None,
+        values: Mapping[str, npt.NDArray[np.float32]] | None = None,
+        is_msw: bool = False,
+    ) -> None:
+        self._name = name
+        self._type_string = type_string
+        self._date = date
+        self._days = days
+        self._is_msw = is_msw
+        connections_ = connections if connections is not None else []
+        empty_values = [None] * len(connections_)
+        zeros = np.zeros(len(connections_), np.float32)
+        values_ = values or {}
+        self._cells = []
+        match type_string:
+            case "RFT":
+                depth = values_.get("DEPTH", empty_values)
+                pressure = values_.get("PRESSURE", empty_values)
+                swat = values_.get("SWAT", empty_values)
+                sgas = values_.get("SGAS", empty_values)
+                for index, grid_index in (
+                    enumerate(connections) if connections is not None else []
+                ):
+                    i, j, k = grid_index - 1
+                    self._cells.append(
+                        ResdataRFTCell(
+                            i,
+                            j,
+                            k,
+                            depth[index],
+                            pressure[index],
+                            swat[index],
+                            sgas[index],
+                        )
+                    )
+            case "PLT":
+                condepth = values_.get("CONDEPTH", empty_values)
+                conpres = values_.get("CONPRES", zeros)
+                if sum(conpres) <= 0:
+                    warnings.warn("Got all-zero CONPRES.")
+                    if "PRESSURE" in values_:
+                        conpres = values_["PRESSURE"]
+                    else:
+                        warnings.warn("No PRESSURE values to replace all-zero CONPRES.")
+                else:
+                    conpres = values_["CONPRES"]
+                orat = values_.get("CONORAT", empty_values)
+                grat = values_.get("CONGRAT", empty_values)
+                wrat = values_.get("CONWRAT", empty_values)
+                # conn is 0 when missing for backwards compatibility
+                conn_start = values_.get("CONLENST", zeros)
+                conn_end = values_.get("CONLENEN", zeros)
+                flowrate = values_.get("CONVTUB", empty_values)
+                oil_flowrate = values_.get("CONOTUB", empty_values)
+                gas_flowrate = values_.get("CONGTUB", empty_values)
+                water_flowrate = values_.get("CONWTUB", empty_values)
+                for index, grid_index in enumerate(connections_):
+                    i, j, k = grid_index - 1
+                    self._cells.append(
+                        ResdataPLTCell(
+                            i,
+                            j,
+                            k,
+                            condepth[index],
+                            conpres[index],
+                            orat[index],
+                            grat[index],
+                            wrat[index],
+                            conn_start[index],
+                            conn_end[index],
+                            flowrate[index],
+                            oil_flowrate[index],
+                            gas_flowrate[index],
+                            water_flowrate[index],
+                        )
+                    )
+                if self._is_msw:
+                    self._cells.sort(key=lambda x: x.conn_start)
+            case default:
+                warnings.warn(f"Encountered unimplemented RFT data type {default}")
 
-    def __init__(self, name, type_string, date, days):
-        c_ptr = self._alloc(name, type_string, CTime(date), days)
-        super(ResdataRFT, self).__init__(c_ptr)
-
-    def free(self):
-        self._free()
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         rs = []
         rs.append("completed_cells = %d" % len(self))
-        rs.append("date = %s" % self.getDate())
+        rs.append("date = %s" % self.get_date())
         if self.is_RFT():
             rs.append("RFT")
         if self.is_PLT():
@@ -76,144 +129,122 @@ class ResdataRFT(BaseCClass):
         if self.is_MSW():
             rs.append("MSW")
         rstr = ", ".join(rs)
-        return self._create_repr(rstr)
+        return f"{self.__class__.__name__}({rstr}) {id(self)}"
 
-    def __len__(self):
-        """
-        The number of completed cells in this RFT.
-        """
-        return self._get_size()
+    def __len__(self) -> int:
+        """The number of cells in this RFT."""
+        return len(self._cells)
 
-    def is_RFT(self):
-        """
-        Is instance an RFT; in that case all the cells will be ResdataRFTCell instances.
-        """
-        return self._is_RFT()
+    def is_RFT(self) -> bool:
+        """Whether the cells will be ResdataRFTCell instances."""
+        return self._type_string == "RFT"
 
-    def is_PLT(self):
-        """
-        Is instance a PLT; in that case all the cells will be ResdataPLTCell instances.
-        """
-        return self._is_PLT()
+    def is_PLT(self) -> bool:
+        """Whether the cells will be ResdataPLTCell instances."""
+        return self._type_string == "PLT"
 
-    def is_SEGMENT(self):
-        """
-        Is this a SEGMENT - not implemented.
-        """
-        return self._is_SEGMENT()
+    def is_SEGMENT(self) -> bool:
+        """Is this a SEGMENT - not implemented."""
+        return self._type_string == "SEGMENT"
 
-    def is_MSW(self):
-        """
-        Is this well a MSW well. Observe that the test ONLY applies to PLTs.
-        """
-        return self._is_MSW()
+    def is_MSW(self) -> bool:
+        """Is this well a multi-segment well."""
+        return self._is_msw
 
-    def get_well_name(self):
-        """
-        The name of the well we are considering.
-        """
-        return self._get_well()
+    def get_well_name(self) -> str:
+        """The name of the well we are considering."""
+        return self._name
 
-    def get_date(self):
-        """
-        The date when this RFT/PLT/... was recorded.
-        """
-        ct = CTime(self._get_date())
-        return ct.date()
+    def get_date(self) -> datetime.date:
+        """The date when this RFT/PLT/... was recorded."""
+        return self._date
 
-    def __cell_ref(self, cell_ptr):
-        if self.is_RFT():
-            return ResdataRFTCell.createCReference(cell_ptr, self)
-        elif self.is_PLT():
-            return ResdataPLTCell.createCReference(cell_ptr, self)
-        else:
-            raise NotImplementedError("Only RFT and PLT cells are implemented")
-
-    def assert_cell_index(self, index):
+    def assert_cell_index(self, index: Any) -> None:
         if isinstance(index, int):
             length = self.__len__()
             if index < 0 or index >= length:
-                raise IndexError
+                raise IndexError()
         else:
             raise TypeError("Index should be integer type")
 
-    def __getitem__(self, index):
-        """Implements the [] operator to return the cells.
-
-        To get the object related to cell nr 5:
-
-           cell = rft[4]
-
-        The return value from the __getitem__() method is either an
-        ResdataRFTCell instance or a ResdataPLTCell instance, depending on the
-        type of this particular RFT object.
-
+    def __getitem__(self, index: int) -> ResdataRFTCell | ResdataPLTCell:
+        """
         For MSW wells the cells will come in sorted order along the wellpath,
         for other well types the cells will come sorted in input order.
         """
-        self.assert_cell_index(index)
-        cell_ptr = self._iget_cell(index)
-        return self.__cell_ref(cell_ptr)
+        return self._cells[index]
 
     def iget(self, index):
         return self[index]
 
-    # ijk are zero offset
-    def ijkget(self, ijk):
-        """
-        Will look up the cell based on (i,j,k).
+    def ijkget(
+        self, ijk: tuple[int, int, int]
+    ) -> ResdataRFTCell | ResdataPLTCell | None:
+        """Look up the cell based on (i,j,k).
 
         If the cell (i,j,k) is not part of this RFT/PLT None will be
         returned. The (i,j,k) input values should be zero offset,
-        i.e. you must subtract 1 from the (i,j,k) values given in the ECLIPSE input.
+        i.e. you must subtract 1 from the (i,j,k) values given in the RFT file.
         """
-        cell_ptr = self._lookup_ijk(ijk[0], ijk[1], ijk[2])
-        if cell_ptr:
-            return self.__cell_ref(cell_ptr)
-        else:
-            return None
+        for c in self._cells:
+            if c.get_ijk() == ijk:
+                return c
+        return None
 
 
-class ResdataRFTFile(BaseCClass):
-    TYPE_NAME = "rd_rft_file"
-    _load = ResdataPrototype("void* rd_rft_file_alloc_case( char* )", bind=False)
-    _iget = ResdataPrototype("rd_rft_ref rd_rft_file_iget_node( rd_rft_file , int )")
-    _get_rft = ResdataPrototype(
-        "rd_rft_ref rd_rft_file_get_well_time_rft( rd_rft_file , char* , rd_time_t)"
-    )
-    _free = ResdataPrototype("void rd_rft_file_free( rd_rft_file )")
-    _get_size = ResdataPrototype(
-        "int rd_rft_file_get_size__( rd_rft_file , char* , rd_time_t)"
-    )
-    _get_num_wells = ResdataPrototype("int  rd_rft_file_get_num_wells( rd_rft_file )")
+def category_to_type_str(s: str) -> str | None:
+    if "P" in s:
+        return "PLT"
+    if "R" in s:
+        return "RFT"
+    warnings.warn(f"Unsupported rft type {s}")
+    return None
 
-    """
-    The ResdataRFTFile class is used to load an RFT file.
 
-    The ResdataRFTFile serves as a container which can load and hold the
-    content of an RFT file. The RFT files will in general
-    contain data for several wells and several times in one large
-    container. The ResdataRFTClass class contains methods get the the RFT
-    results for a specific time and/or well.
+class ResdataRFTFile:
+    """Used to load an RFT file.
 
-    The ResdataRFTFile class can in general contain a mix of RFT and PLT
-    measurements. The class does not really differentiate between
-    these.
+    The ResdataRFTFile is a container which can load and hold the
+    content of an RFT file. The RFT files will in general contain data for
+    several wells and several times. A ResdataRFT has methods to get the
+    RFT results for a specific time and well.
+
+    A ResdataRFTFile can contain a mix of RFT and PLT measurements.
     """
 
-    def __init__(self, case):
-        c_ptr = self._load(case)
-        super(ResdataRFTFile, self).__init__(c_ptr)
+    def __init__(self, case: str | PathLike[str]) -> None:
+        warnings.warn(
+            "ResdataRFTFile is deprecated, see "
+            "resfo-utilities.readthedocs.io/en/latest/user_guide.html"
+            "#module-resfo_utilities._rft_reader to migrate to resfo-utilities.",
+            DeprecationWarning,
+        )
+        try:
+            with RFTReader.open(case) as rft:
+                self._entries = [
+                    ResdataRFT(
+                        e.well,
+                        category_to_type_str(e.types_of_data),
+                        e.date,
+                        e.time_since_start.total_seconds() / (60 * 60 * 24),
+                        e.connections,
+                        e,
+                        "CONLENST" in e,  # done for backwards compatibility
+                        # the check e.type_of_well == "MULTSEG" would be more correct
+                    )
+                    for e in rft
+                    if "P" in e.types_of_data or "R" in e.types_of_data
+                ]
+        except FileNotFoundError as err:
+            raise ValueError(str(err)) from err  # For backwards compatibility
 
-    def __len__(self):
-        return self._get_size(None, CTime(-1))
+    def __len__(self) -> int:
+        return len(self._entries)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> ResdataRFT:
         if isinstance(index, int):
             if 0 <= index < len(self):
-                rft = self._iget(index)
-                rft.setParent(self)
-                return rft
+                return self._entries[index]
             else:
                 raise IndexError(
                     "Index '%d' must be in range: [0, %d]" % (index, len(self) - 1)
@@ -221,9 +252,8 @@ class ResdataRFTFile(BaseCClass):
         else:
             raise TypeError("Index must be integer type")
 
-    def size(self, well=None, date=None):
-        """
-        The number of elements in ResdataRFTFile container.
+    def size(self, well: str | None = None, date: datetime.date | None = None) -> int:
+        """The number of elements matching the given well pattern and date.
 
         By default the size() method will return the total number of
         RFTs/PLTs in the container, but by specifying the optional
@@ -231,60 +261,42 @@ class ResdataRFTFile(BaseCClass):
         number of well measurements matching that time or well
         name. The well argument can contain wildcards.
 
-           >>> rftFile = resdata.ResdataRFTFile( "CASE.RFT" )
-           >>> print "Total number of RFTs : %d" % rftFile.size( )
-           >>> print "RFTs matching OP*    : %d" % rftFile.size( well = "OP*" )
-           >>> print "RFTs at 01/01/2010   : %d" % rftFile.size( date = datetime.date( 2010 , 1 , 1 ))
+        >>> rftFile = resdata.ResdataRFTFile("CASE.RFT")
+        >>> print(f"Total number of RFTs: {rftFile.size()}")
+        >>> print(f"RFTs matching OP*: {rftFile.size(well="OP*")}")
+        >>> print(f"RFTs at 01/01/2010: {rftFile.size(date=datetime.date(2010, 1, 1))}")
+        """
+        return sum(
+            1
+            for e in self._entries
+            if (well is None or fnmatch.fnmatch(e.get_well_name(), well))
+            and (date is None or e.get_date() == date)
+        )
 
-        """
-        if date:
-            cdate = CTime(date)
-        else:
-            cdate = CTime(-1)
+    def get_num_wells(self) -> int:
+        """The total number of distinct wells in the RFT file."""
+        return len(set(e.get_well_name() for e in self._entries))
 
-        return self._get_size(well, cdate)
+    def get_headers(self) -> list[tuple[str, datetime.date]]:
+        """List of two tuples (well_name , date) for the whole file."""
+        return [(rft.get_well_name(), rft.get_date()) for rft in self._entries]
 
-    def get_num_wells(self):
-        """
-        Returns the total number of distinct wells in the RFT file.
-        """
-        return self._get_num_wells()
-
-    def get_headers(self):
-        """
-        Returns a list of two tuples (well_name , date) for the whole file.
-        """
-        header_list = []
-        for i in range(self._get_size(None, CTime(-1))):
-            rft = self.iget(i)
-            header_list.append((rft.getWellName(), rft.getDate()))
-        return header_list
-
-    def iget(self, index):
-        """
-        Will lookup RFT @index - equivalent to [@index].
-        """
+    def iget(self, index: int) -> ResdataRFT:
+        """equivalent to __getitem__."""
         return self[index]
 
-    def get(self, well_name, date):
+    def get(self, well_name: str, date: datetime.date) -> ResdataRFT:
+        """look up the RFT corresponding to well and date.
+
+        Raises KeyError if not found.
         """
-        Will look up the RFT object corresponding to @well and @date.
+        for rft in self._entries:
+            if rft.get_date() == date and rft.get_well_name() == well_name:
+                return rft
+        raise KeyError("No RFT for well:%s at %s" % (well_name, date))
 
-        Raise Exception if not found.
-        """
-        if self.size(well=well_name, date=date) == 0:
-            raise KeyError("No RFT for well:%s at %s" % (well_name, date))
-
-        rft = self._get_rft(well_name, CTime(date))
-        rft.setParent(self)
-        return rft
-
-    def free(self):
-        self._free()
-
-    def __repr__(self):
-        w = len(self)
-        return self._create_repr("wells = %d" % w)
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(wells = {len(self)}) {id(self)}"
 
 
 monkey_the_camel(ResdataRFT, "getWellName", ResdataRFT.get_well_name)

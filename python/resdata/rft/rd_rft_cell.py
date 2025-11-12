@@ -1,199 +1,156 @@
-from cwrap import BaseCClass
-from resdata import ResdataPrototype
-
-
-class RFTCell(BaseCClass):
+class RFTCell:
     """The RFTCell is a base class for the cells which are part of an RFT/PLT.
 
     The RFTCell class contains the elements which are common to both
     RFT and PLT. The list of common elements include the coordinates
     (i,j,k) the pressure and the depth of the cell. Actual user access
     should be based on the derived classes ResdataRFTCell and ResdataPLTCell.
-
-    Observe that from june 2013 the properties i,j and k which return
-    offset 1 coordinate values are deprecated, and you should rather
-    use the methods get_i(), get_j() and get_k() which return offset 0
-    coordinate values.
     """
-
-    TYPE_NAME = "rd_rft_cell_base"
-    _free = ResdataPrototype("void rd_rft_cell_free(rd_rft_cell_base)")
-    _get_pressure = ResdataPrototype(
-        "double rd_rft_cell_get_pressure(rd_rft_cell_base)"
-    )
-    _get_depth = ResdataPrototype("double rd_rft_cell_get_depth(rd_rft_cell_base)")
-    _get_i = ResdataPrototype("int rd_rft_cell_get_i(rd_rft_cell_base)")
-    _get_j = ResdataPrototype("int rd_rft_cell_get_j(rd_rft_cell_base)")
-    _get_k = ResdataPrototype("int rd_rft_cell_get_k(rd_rft_cell_base)")
-
-    def free(self):
-        self._free()
-
-    def get_i(self):
-        return self._get_i()
-
-    def get_j(self):
-        return self._get_j()
-
-    def get_k(self):
-        return self._get_k()
-
-    def get_ijk(self):
-        return (self.get_i(), self.get_j(), self.get_k())
-
-    @property
-    def pressure(self):
-        return self._get_pressure()
-
-    @property
-    def depth(self):
-        return self._get_depth()
-
-
-#################################################################
-
-
-class ResdataRFTCell(RFTCell):
-    TYPE_NAME = "rd_rft_cell"
-    _alloc_RFT = ResdataPrototype(
-        "void* rd_rft_cell_alloc_RFT(int, int, int, double, double, double, double)",
-        bind=False,
-    )
-    _get_swat = ResdataPrototype("double rd_rft_cell_get_swat(rd_rft_cell)")
-    _get_soil = ResdataPrototype("double rd_rft_cell_get_soil(rd_rft_cell)")
-    _get_sgas = ResdataPrototype("double rd_rft_cell_get_sgas(rd_rft_cell)")
-
-    def __init__(self, i, j, k, depth, pressure, swat, sgas):
-        c_ptr = self._alloc_RFT(i, j, k, depth, pressure, swat, sgas)
-        super(ResdataRFTCell, self).__init__(c_ptr)
-
-    @property
-    def swat(self):
-        return self._get_swat()
-
-    @property
-    def sgas(self):
-        return self._get_sgas()
-
-    @property
-    def soil(self):
-        return 1 - (self._get_sgas() + self._get_swat())
-
-
-#################################################################
-
-
-class ResdataPLTCell(RFTCell):
-    TYPE_NAME = "rd_plt_cell"
-    _alloc_PLT = ResdataPrototype(
-        "void* rd_rft_cell_alloc_PLT(int, int, int, double, double, double, double, double, double, double, double, double, double, double)",
-        bind=False,
-    )
-    _get_orat = ResdataPrototype("double rd_rft_cell_get_orat(rd_plt_cell)")
-    _get_grat = ResdataPrototype("double rd_rft_cell_get_grat(rd_plt_cell)")
-    _get_wrat = ResdataPrototype("double rd_rft_cell_get_wrat(rd_plt_cell)")
-
-    _get_flowrate = ResdataPrototype("double rd_rft_cell_get_flowrate(rd_plt_cell)")
-    _get_oil_flowrate = ResdataPrototype(
-        "double rd_rft_cell_get_oil_flowrate(rd_plt_cell)"
-    )
-    _get_gas_flowrate = ResdataPrototype(
-        "double rd_rft_cell_get_gas_flowrate(rd_plt_cell)"
-    )
-    _get_water_flowrate = ResdataPrototype(
-        "double rd_rft_cell_get_water_flowrate(rd_plt_cell)"
-    )
-
-    _get_conn_start = ResdataPrototype(
-        "double rd_rft_cell_get_connection_start(rd_plt_cell)"
-    )
-    _get_conn_end = ResdataPrototype(
-        "double rd_rft_cell_get_connection_end(rd_plt_cell)"
-    )
 
     def __init__(
         self,
-        i,
-        j,
-        k,
-        depth,
-        pressure,
-        orat,
-        grat,
-        wrat,
-        conn_start,
-        conn_end,
-        flowrate,
-        oil_flowrate,
-        gas_flowrate,
-        water_flowrate,
-    ):
-        c_ptr = self._alloc_PLT(
-            i,
-            j,
-            k,
-            depth,
-            pressure,
-            orat,
-            grat,
-            wrat,
-            conn_start,
-            conn_end,
-            flowrate,
-            oil_flowrate,
-            gas_flowrate,
-            water_flowrate,
-        )
-        super(ResdataPLTCell, self).__init__(c_ptr)
+        i: int,
+        j: int,
+        k: int,
+        pressure: float | None,
+        depth: float | None,
+    ) -> None:
+        self._i = i
+        self._j = j
+        self._k = k
+        self._pressure = pressure
+        self._depth = depth
+
+    def get_i(self) -> int:
+        return self._i
+
+    def get_j(self) -> int:
+        return self._j
+
+    def get_k(self) -> int:
+        return self._k
+
+    def get_ijk(self) -> tuple[int, int, int]:
+        return (self.get_i(), self.get_j(), self.get_k())
 
     @property
-    def orat(self):
-        return self._get_orat()
+    def pressure(self) -> float | None:
+        return self._pressure
 
     @property
-    def grat(self):
-        return self._get_grat()
+    def depth(self) -> float | None:
+        return self._depth
+
+
+class ResdataRFTCell(RFTCell):
+    def __init__(
+        self,
+        i: int,
+        j: int,
+        k: int,
+        depth: float | None,
+        pressure: float | None,
+        swat: float | None,
+        sgas: float | None,
+    ) -> None:
+        super().__init__(i, j, k, pressure, depth)
+        self._swat = swat
+        self._sgas = sgas
 
     @property
-    def wrat(self):
-        return self._get_wrat()
+    def swat(self) -> float | None:
+        return self._swat
 
     @property
-    def conn_start(self):
+    def sgas(self) -> float | None:
+        return self._sgas
+
+    @property
+    def soil(self) -> float | None:
+        sgas = self.sgas
+        swat = self.swat
+        if sgas is None:
+            return None
+        if swat is None:
+            return None
+        return 1 - (sgas + swat)
+
+
+class ResdataPLTCell(RFTCell):
+    def __init__(
+        self,
+        i: int,
+        j: int,
+        k: int,
+        depth: float | None,
+        pressure: float | None,
+        orat: float | None,
+        grat: float | None,
+        wrat: float | None,
+        conn_start: float,
+        conn_end: float,
+        flowrate: float | None,
+        oil_flowrate: float | None,
+        gas_flowrate: float | None,
+        water_flowrate: float | None,
+    ) -> None:
+        super().__init__(i, j, k, pressure, depth)
+        self._orat = orat
+        self._grat = grat
+        self._wrat = wrat
+        self._conn_start = conn_start
+        self._conn_end = conn_end
+        self._flowrate = flowrate
+        self._oil_flowrate = oil_flowrate
+        self._gas_flowrate = gas_flowrate
+        self._water_flowrate = water_flowrate
+
+    @property
+    def orat(self) -> float | None:
+        return self._orat
+
+    @property
+    def grat(self) -> float | None:
+        return self._grat
+
+    @property
+    def wrat(self) -> float | None:
+        return self._wrat
+
+    @property
+    def conn_start(self) -> float:
         """Will return the length from wellhead(?) to connection.
 
-        For MSW wells this property will return the distance from a
+        For multi-segment wells (MSW) this property will return the distance from a
         fixed point (wellhead) to the current connection. This value
         will be used to sort the completed cells along the well
-        path. In the case of non MSW wells this will just return a
-        fixed default value.
+        path. In the case of non MSW wells this will just return 0.
         """
-        return self._get_conn_start()
+        return self._conn_start
 
     @property
-    def conn_end(self):
+    def conn_end(self) -> float:
         """Will return the length from wellhead(?) to connection end.
 
-        For MSW wells this property will return the distance from a
+        For multi-segment wells (MSW) this property will return the distance from a
         fixed point (wellhead) to the current connection end. This value
         will be used to sort the completed cells along the well
-        path. In the case of non MSW wells this will just return a
-        fixed default value.
+        path. In the case of non MSW wells this will just return 0.
         """
-        return self._get_conn_end()
+        return self._conn_end
 
     @property
-    def flowrate(self):
-        return self._get_flowrate()
+    def flowrate(self) -> float | None:
+        return self._flowrate
 
     @property
-    def oil_flowrate(self):
-        return self._get_oil_flowrate()
+    def oil_flowrate(self) -> float | None:
+        return self._oil_flowrate
 
     @property
-    def gas_flowrate(self):
-        return self._get_gas_flowrate()
+    def gas_flowrate(self) -> float | None:
+        return self._gas_flowrate
 
     @property
-    def water_flowrate(self):
-        return self._get_water_flowrate()
+    def water_flowrate(self) -> float | None:
+        return self._water_flowrate
