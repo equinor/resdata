@@ -23,6 +23,8 @@ scratch.sparsebundle
 /.hypothesis
 /python/resdata/.libs
 
+/.vscode
+
 /venv/
 /_skbuild/
 /python/resdata/version.py
