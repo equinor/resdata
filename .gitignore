@@ -20,6 +20,8 @@ scratch.sparsebundle
 *.iml
 *.DS_Store
 
+/.hypothesis
+
 /venv/
 /_skbuild/
 /python/resdata/version.py
