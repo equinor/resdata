@@ -21,6 +21,7 @@ scratch.sparsebundle
 *.DS_Store
 
 /.hypothesis
+/python/resdata/.libs
 
 /venv/
 /_skbuild/
