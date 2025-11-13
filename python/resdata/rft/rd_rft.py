@@ -37,7 +37,7 @@ class ResdataRFT(BaseCClass):
     _get_well = ResdataPrototype("char*  rd_rft_node_get_well_name( rd_rft )")
     _get_date = ResdataPrototype("rd_time_t rd_rft_node_get_date( rd_rft )")
     _get_size = ResdataPrototype("int rd_rft_node_get_size( rd_rft )")
-    _iget_cell = ResdataPrototype("void* rd_rft_node_iget_cell( rd_rft )")
+    _iget_cell = ResdataPrototype("void* rd_rft_node_iget_cell( rd_rft, int)")
     _iget_depth = ResdataPrototype("double rd_rft_node_iget_depth( rd_rft )")
     _iget_pressure = ResdataPrototype("double rd_rft_node_iget_pressure(rd_rft)")
     _iget_ijk = ResdataPrototype(
