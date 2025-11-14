@@ -72,9 +72,6 @@ add_library(
   resdata/rd_kw.cpp
   resdata/rd_sum.cpp
   resdata/rd_sum_vector.cpp
-  resdata/rd_rft_file.cpp
-  resdata/rd_rft_node.cpp
-  resdata/rd_rft_cell.cpp
   resdata/rd_grid.cpp
   resdata/rd_coarse_cell.cpp
   resdata/rd_box.cpp
@@ -261,7 +258,6 @@ foreach(
   rd_kw_init
   rd_nnc_info_test
   rd_nnc_vector
-  rd_rft_cell
   rd_sum_alloc_resampled_test
   rd_file_view
   test_rd_file_index
@@ -359,7 +355,6 @@ foreach(
   rd_fmt
   rd_rsthead
   rd_smspec
-  rd_rft
   rd_fault_block_layer_equinor
   well_state_load
   well_state_load_missing_RSEG
@@ -481,14 +476,6 @@ add_test(NAME rd_rsthead
 add_test(NAME rd_smspec
          COMMAND rd_smspec ${_resdatapath}/Gurbat/ECLIPSE.SMSPEC
                  ${_resdatapath}/Heidrun/Summary/FF12_2013B3_CLEAN_RS.SMSPEC)
-
-add_test(NAME rd_rft_rft COMMAND rd_rft ${_resdatapath}/Gurbat/ECLIPSE.RFT RFT)
-add_test(NAME rd_rft_rft_rw COMMAND rd_rft ${_resdatapath}/Gurbat/ECLIPSE.RFT
-                                    RFT_RW)
-add_test(NAME rd_rft_plt COMMAND rd_rft ${_resdatapath}/RFT/TEST1_1A.RFT PLT)
-add_test(NAME rd_rft_mswplt COMMAND rd_rft ${_resdatapath}/RFT/RFT2.RFT MSW-PLT)
-add_test(NAME rd_rft_alloc
-         COMMAND rd_rft ${_resdatapath}/RFT/NORNE_ATW2013_RFTPLT_V2.RFT SIMPLE)
 
 add_test(
   NAME rd_fault_block_layer_equinor
