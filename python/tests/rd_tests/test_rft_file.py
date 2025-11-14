@@ -145,6 +145,20 @@ def cell_start(date=(1, 1, 2000), *args, **kwargs):
     ]
 
 
+def plt_fields():
+    return [
+        ("CONWRAT ", float_arr([2.0, 3.0])),
+        ("CONGRAT ", float_arr([2.0, 3.0])),
+        ("CONORAT ", float_arr([2.0, 3.0])),
+        ("CONDEPTH", float_arr([2.0, 3.0])),
+        ("CONVTUB ", float_arr([2.0, 3.0])),
+        ("CONOTUB ", float_arr([2.0, 3.0])),
+        ("CONGTUB ", float_arr([2.0, 3.0])),
+        ("CONWTUB ", float_arr([2.0, 3.0])),
+        ("CONPRES ", float_arr([0.0, 0.0])),
+    ]
+
+
 def make_rft_file(tmp_path, contents):
     file = tmp_path / "CASE.RFT"
     resfo.write(
@@ -289,15 +303,7 @@ def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):
         [
             *cell_start(data_category=b"RP      "),
             ("PRESSURE", float_arr([100.0, 200.0])),
-            ("CONWRAT ", float_arr([2.0, 3.0])),
-            ("CONGRAT ", float_arr([2.0, 3.0])),
-            ("CONORAT ", float_arr([2.0, 3.0])),
-            ("CONDEPTH", float_arr([2.0, 3.0])),
-            ("CONVTUB ", float_arr([2.0, 3.0])),
-            ("CONOTUB ", float_arr([2.0, 3.0])),
-            ("CONGTUB ", float_arr([2.0, 3.0])),
-            ("CONWTUB ", float_arr([2.0, 3.0])),
-            ("CONPRES ", float_arr([0.0, 0.0])),
+            *plt_fields(),
         ],
     )
     node = rft_file[0]
@@ -312,15 +318,7 @@ def test_that_reading_a_plt_cell_with_zero_sum_conpres_and_no_pressure_uses_zero
         tmp_path,
         [
             *cell_start(data_category=b"P      "),
-            ("CONWRAT ", float_arr([2.0, 3.0])),
-            ("CONGRAT ", float_arr([2.0, 3.0])),
-            ("CONORAT ", float_arr([2.0, 3.0])),
-            ("CONDEPTH", float_arr([2.0, 3.0])),
-            ("CONVTUB ", float_arr([2.0, 3.0])),
-            ("CONOTUB ", float_arr([2.0, 3.0])),
-            ("CONGTUB ", float_arr([2.0, 3.0])),
-            ("CONWTUB ", float_arr([2.0, 3.0])),
-            ("CONPRES ", float_arr([0.0, 0.0])),
+            *plt_fields(),
         ],
     )
     node = rft_file[0]
@@ -335,15 +333,7 @@ def test_that_rft_node_is_msw_is_based_on_conlenst_kw(tmp_path):
             *cell_start(data_category=b"P"),
             ("CONLENST", float_arr([33.0, 34.0])),
             ("CONLENEN", float_arr([35.0, 36.0])),
-            ("CONWRAT ", float_arr([2.0, 3.0])),
-            ("CONGRAT ", float_arr([2.0, 3.0])),
-            ("CONORAT ", float_arr([2.0, 3.0])),
-            ("CONDEPTH", float_arr([2.0, 3.0])),
-            ("CONVTUB ", float_arr([2.0, 3.0])),
-            ("CONOTUB ", float_arr([2.0, 3.0])),
-            ("CONGTUB ", float_arr([2.0, 3.0])),
-            ("CONWTUB ", float_arr([2.0, 3.0])),
-            ("CONPRES ", float_arr([0.0, 0.0])),
+            *plt_fields(),
             *cell_start(),
             ("PRESSURE", float_arr([101.0, 201.0])),
             ("SWAT    ", float_arr([199.0, 2198.0])),
@@ -365,15 +355,7 @@ def test_that_conlen_defaults_to_zero(tmp_path):
         tmp_path,
         [
             *cell_start(data_category=b"P"),
-            ("CONWRAT ", float_arr([2.0, 3.0])),
-            ("CONGRAT ", float_arr([2.0, 3.0])),
-            ("CONORAT ", float_arr([2.0, 3.0])),
-            ("CONDEPTH", float_arr([2.0, 3.0])),
-            ("CONVTUB ", float_arr([2.0, 3.0])),
-            ("CONOTUB ", float_arr([2.0, 3.0])),
-            ("CONGTUB ", float_arr([2.0, 3.0])),
-            ("CONWTUB ", float_arr([2.0, 3.0])),
-            ("CONPRES ", float_arr([0.0, 0.0])),
+            *plt_fields(),
         ],
     )
 
@@ -388,25 +370,9 @@ def test_that_msw_cells_are_sorted_by_connection_start(tmp_path):
             # first conn is start is after second
             ("CONLENST", float_arr([3.0, 1.0])),
             ("CONLENEN", float_arr([4.0, 2.0])),
-            ("CONWRAT ", float_arr([2.0, 3.0])),
-            ("CONGRAT ", float_arr([2.0, 3.0])),
-            ("CONORAT ", float_arr([2.0, 3.0])),
-            ("CONDEPTH", float_arr([2.0, 3.0])),
-            ("CONVTUB ", float_arr([2.0, 3.0])),
-            ("CONOTUB ", float_arr([2.0, 3.0])),
-            ("CONGTUB ", float_arr([2.0, 3.0])),
-            ("CONWTUB ", float_arr([2.0, 3.0])),
-            ("CONPRES ", float_arr([0.0, 0.0])),
+            *plt_fields(),
             *cell_start(data_category=b"P"),
-            ("CONWRAT ", float_arr([2.0, 3.0])),
-            ("CONGRAT ", float_arr([2.0, 3.0])),
-            ("CONORAT ", float_arr([2.0, 3.0])),
-            ("CONDEPTH", float_arr([2.0, 3.0])),
-            ("CONVTUB ", float_arr([2.0, 3.0])),
-            ("CONOTUB ", float_arr([2.0, 3.0])),
-            ("CONGTUB ", float_arr([2.0, 3.0])),
-            ("CONWTUB ", float_arr([2.0, 3.0])),
-            ("CONPRES ", float_arr([0.0, 0.0])),
+            *plt_fields(),
         ],
     )
 
