@@ -381,4 +381,50 @@ def test_that_conlen_defaults_to_zero(tmp_path):
     rft_file = ResdataRFTFile(str(file))
 
     assert rft_file[0][0].conn_start == 0.0
-    assert rft_file[0][0].conn_end == 0.0
+
+
+def test_that_msw_cells_are_sorted_by_connection_start(tmp_path):
+    file = tmp_path / "CASE.RFT"
+    resfo.write(
+        file,
+        [
+            *cell_start(data_category=b"P"),
+            # first conn is start is after second
+            ("CONLENST", float_arr([3.0, 1.0])),
+            ("CONLENEN", float_arr([4.0, 2.0])),
+            ("CONWRAT ", float_arr([2.0, 3.0])),
+            ("CONGRAT ", float_arr([2.0, 3.0])),
+            ("CONORAT ", float_arr([2.0, 3.0])),
+            ("CONDEPTH", float_arr([2.0, 3.0])),
+            ("CONVTUB ", float_arr([2.0, 3.0])),
+            ("CONOTUB ", float_arr([2.0, 3.0])),
+            ("CONGTUB ", float_arr([2.0, 3.0])),
+            ("CONWTUB ", float_arr([2.0, 3.0])),
+            ("CONPRES ", float_arr([0.0, 0.0])),
+            *cell_start(data_category=b"P"),
+            ("CONWRAT ", float_arr([2.0, 3.0])),
+            ("CONGRAT ", float_arr([2.0, 3.0])),
+            ("CONORAT ", float_arr([2.0, 3.0])),
+            ("CONDEPTH", float_arr([2.0, 3.0])),
+            ("CONVTUB ", float_arr([2.0, 3.0])),
+            ("CONOTUB ", float_arr([2.0, 3.0])),
+            ("CONGTUB ", float_arr([2.0, 3.0])),
+            ("CONWTUB ", float_arr([2.0, 3.0])),
+            ("CONPRES ", float_arr([0.0, 0.0])),
+        ],
+    )
+    rft_file = ResdataRFTFile(str(file))
+
+    # MSW cell gets sorted by conn_start
+    assert rft_file[0].is_MSW()
+    assert rft_file[0][0].conn_start == 1.0
+    assert rft_file[0][0].conn_end == 2.0
+    assert rft_file[0][0].wrat == 3.0
+    assert rft_file[0][1].conn_start == 3.0
+    assert rft_file[0][1].conn_end == 4.0
+    assert rft_file[0][1].wrat == 2.0
+
+    # MSW cell order is same as in file
+    assert not rft_file[1].is_MSW()
+    assert rft_file[1][0].wrat == 2.0
+    assert rft_file[1][1].wrat == 3.0
