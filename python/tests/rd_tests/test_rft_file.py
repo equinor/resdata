@@ -145,10 +145,18 @@ def cell_start(date=(1, 1, 2000), *args, **kwargs):
     ]
 
 
-def test_that_reading_an_rft_cell_results_in_the_expected_values(tmp_path):
+def make_rft_file(tmp_path, contents):
     file = tmp_path / "CASE.RFT"
     resfo.write(
         file,
+        contents,
+    )
+    return ResdataRFTFile(str(file))
+
+
+def test_that_reading_an_rft_cell_results_in_the_expected_values(tmp_path):
+    rft_file = make_rft_file(
+        tmp_path,
         [
             *cell_start(),
             ("PRESSURE", float_arr([100.0, 200.0])),
@@ -162,7 +170,6 @@ def test_that_reading_an_rft_cell_results_in_the_expected_values(tmp_path):
             ("DEPTH   ", float_arr([21.0, 31.0])),
         ],
     )
-    rft_file = ResdataRFTFile(str(file))
 
     assert len(rft_file) == 2
     assert rft_file.size() == 2
@@ -227,9 +234,8 @@ def test_that_size_counts_matching_cells(tmp_path):
 
 
 def test_that_reading_a_plt_cell_results_in_the_expected_values(tmp_path):
-    file = tmp_path / "CASE.RFT"
-    resfo.write(
-        file,
+    rft_file = make_rft_file(
+        tmp_path,
         [
             *cell_start(data_category=b"P"),
             ("CONWRAT ", float_arr([2.0, 3.0])),
@@ -243,7 +249,6 @@ def test_that_reading_a_plt_cell_results_in_the_expected_values(tmp_path):
             ("CONPRES ", float_arr([20.0, 30.0])),
         ],
     )
-    rft_file = ResdataRFTFile(str(file))
     node = rft_file[0]
     assert repr(node) == repr(rft_file.iget(0))
     assert repr(node) == repr(rft_file.get("WELL1", datetime.date(2000, 1, 1)))
@@ -279,9 +284,8 @@ def test_that_reading_a_plt_cell_results_in_the_expected_values(tmp_path):
 
 
 def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):
-    file = tmp_path / "CASE.RFT"
-    resfo.write(
-        file,
+    rft_file = make_rft_file(
+        tmp_path,
         [
             *cell_start(data_category=b"RP      "),
             ("PRESSURE", float_arr([100.0, 200.0])),
@@ -296,7 +300,6 @@ def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):
             ("CONPRES ", float_arr([0.0, 0.0])),
         ],
     )
-    rft_file = ResdataRFTFile(str(file))
     node = rft_file[0]
     assert node[0].pressure == 100.0
     assert node[1].pressure == 200.0
@@ -305,9 +308,8 @@ def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):
 def test_that_reading_a_plt_cell_with_zero_sum_conpres_and_no_pressure_uses_zero(
     tmp_path,
 ):
-    file = tmp_path / "CASE.RFT"
-    resfo.write(
-        file,
+    rft_file = make_rft_file(
+        tmp_path,
         [
             *cell_start(data_category=b"P      "),
             ("CONWRAT ", float_arr([2.0, 3.0])),
@@ -321,16 +323,14 @@ def test_that_reading_a_plt_cell_with_zero_sum_conpres_and_no_pressure_uses_zero
             ("CONPRES ", float_arr([0.0, 0.0])),
         ],
     )
-    rft_file = ResdataRFTFile(str(file))
     node = rft_file[0]
     assert node[0].pressure == 0.0
     assert node[1].pressure == 0.0
 
 
 def test_that_rft_node_is_msw_is_based_on_conlenst_kw(tmp_path):
-    file = tmp_path / "CASE.RFT"
-    resfo.write(
-        file,
+    rft_file = make_rft_file(
+        tmp_path,
         [
             *cell_start(data_category=b"P"),
             ("CONLENST", float_arr([33.0, 34.0])),
@@ -351,7 +351,6 @@ def test_that_rft_node_is_msw_is_based_on_conlenst_kw(tmp_path):
             ("DEPTH   ", float_arr([21.0, 31.0])),
         ],
     )
-    rft_file = ResdataRFTFile(str(file))
 
     # is_MSW() returns True if CONLENST keyword is in
     # the cell for backwards compatibility
@@ -362,9 +361,8 @@ def test_that_rft_node_is_msw_is_based_on_conlenst_kw(tmp_path):
 
 
 def test_that_conlen_defaults_to_zero(tmp_path):
-    file = tmp_path / "CASE.RFT"
-    resfo.write(
-        file,
+    rft_file = make_rft_file(
+        tmp_path,
         [
             *cell_start(data_category=b"P"),
             ("CONWRAT ", float_arr([2.0, 3.0])),
@@ -378,15 +376,13 @@ def test_that_conlen_defaults_to_zero(tmp_path):
             ("CONPRES ", float_arr([0.0, 0.0])),
         ],
     )
-    rft_file = ResdataRFTFile(str(file))
 
     assert rft_file[0][0].conn_start == 0.0
 
 
 def test_that_msw_cells_are_sorted_by_connection_start(tmp_path):
-    file = tmp_path / "CASE.RFT"
-    resfo.write(
-        file,
+    rft_file = make_rft_file(
+        tmp_path,
         [
             *cell_start(data_category=b"P"),
             # first conn is start is after second
@@ -413,7 +409,6 @@ def test_that_msw_cells_are_sorted_by_connection_start(tmp_path):
             ("CONPRES ", float_arr([0.0, 0.0])),
         ],
     )
-    rft_file = ResdataRFTFile(str(file))
 
     # MSW cell gets sorted by conn_start
     assert rft_file[0].is_MSW()
