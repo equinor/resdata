@@ -484,6 +484,45 @@ def test_that_plt_with_single_cell_works_correctly(tmp_path):
     assert rft_file[0][0].orat == 7.0
 
 
+def test_that_plt_with_missing_optional_fields_handles_none(tmp_path):
+    rft_file = make_rft_file(
+        tmp_path,
+        [
+            ("TIME    ", float_arr([24.0])),
+            ("DATE    ", int_arr([1, 1, 2000])),
+            ("WELLETC ", well_etc(data_category=b"P")),
+            ("CONIPOS ", int_arr([1, 2])),
+            ("CONJPOS ", int_arr([1, 1])),
+            ("CONKPOS ", int_arr([1, 2])),
+            ("CONWRAT ", float_arr([2.0, 3.0])),
+            ("CONGRAT ", float_arr([2.0, 3.0])),
+            ("CONORAT ", float_arr([2.0, 3.0])),
+            ("CONDEPTH", float_arr([2.0, 3.0])),
+            ("CONPRES ", float_arr([20.0, 30.0])),
+        ],
+    )
+    node = rft_file[0]
+    assert node[0].flowrate is None
+    assert node[0].oil_flowrate is None
+    assert node[0].gas_flowrate is None
+    assert node[0].water_flowrate is None
+
+
+def test_that_rft_with_missing_swat_or_sgas_returns_none_for_soil(tmp_path):
+    rft_file = make_rft_file(
+        tmp_path,
+        [
+            *cell_start(),
+            ("PRESSURE", float_arr([100.0, 200.0])),
+            ("DEPTH   ", float_arr([20.0, 30.0])),
+        ],
+    )
+    node = rft_file[0]
+    assert node[0].swat is None
+    assert node[0].sgas is None
+    assert node[0].soil is None
+
+
 def test_that_empty_rft_file_has_zero_size(tmp_path):
     file = tmp_path / "EMPTY.RFT"
     resfo.write(file, [])
