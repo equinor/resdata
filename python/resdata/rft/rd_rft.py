@@ -61,13 +61,13 @@ class ResdataRFT:
                     i, j, k = grid_index - 1
                     self._cells.append(
                         ResdataRFTCell(
-                            i,
-                            j,
-                            k,
-                            depth[index],
-                            pressure[index],
-                            swat[index],
-                            sgas[index],
+                            int(i),
+                            int(j),
+                            int(k),
+                            _maybe_float(depth[index]),
+                            _maybe_float(pressure[index]),
+                            _maybe_float(swat[index]),
+                            _maybe_float(sgas[index]),
                         )
                     )
             case "PLT":
@@ -95,20 +95,20 @@ class ResdataRFT:
                     i, j, k = grid_index - 1
                     self._cells.append(
                         ResdataPLTCell(
-                            i,
-                            j,
-                            k,
-                            condepth[index],
-                            conpres[index],
-                            orat[index],
-                            grat[index],
-                            wrat[index],
-                            conn_start[index],
-                            conn_end[index],
-                            flowrate[index],
-                            oil_flowrate[index],
-                            gas_flowrate[index],
-                            water_flowrate[index],
+                            int(i),
+                            int(j),
+                            int(k),
+                            _maybe_float(condepth[index]),
+                            _maybe_float(conpres[index]),
+                            _maybe_float(orat[index]),
+                            _maybe_float(grat[index]),
+                            _maybe_float(wrat[index]),
+                            float(conn_start[index]),
+                            float(conn_end[index]),
+                            _maybe_float(flowrate[index]),
+                            _maybe_float(oil_flowrate[index]),
+                            _maybe_float(gas_flowrate[index]),
+                            _maybe_float(water_flowrate[index]),
                         )
                     )
                 if self._is_msw:
@@ -298,6 +298,10 @@ class ResdataRFTFile:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(wells = {len(self)}) {id(self)}"
 
+def _maybe_float(f : Any | None) -> float | None:
+    if f is None:
+        return f
+    return float(f)
 
 monkey_the_camel(ResdataRFT, "getWellName", ResdataRFT.get_well_name)
 monkey_the_camel(ResdataRFT, "getDate", ResdataRFT.get_date)

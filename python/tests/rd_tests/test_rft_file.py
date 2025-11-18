@@ -205,6 +205,9 @@ def test_that_reading_an_rft_cell_results_in_the_expected_values(tmp_path):
     assert node[1].soil == pytest.approx(0.4)
     assert node[0].get_ijk() == (0, 0, 0)
     assert node[1].get_ijk() == (1, 0, 1)
+    assert type(node[0].get_i()) == int
+    assert type(node[0].get_j()) == int
+    assert type(node[0].get_i()) == int
     assert node[0].depth == 20.0
     assert node[1].depth == 30.0
 
@@ -295,6 +298,7 @@ def test_that_reading_a_plt_cell_results_in_the_expected_values(tmp_path):
     assert node[1].get_ijk() == (1, 0, 1)
     assert node[0].depth == 2000.0
     assert node[1].depth == 3000.0
+    assert type(node[0].depth) == float
 
 
 def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):
