@@ -168,7 +168,7 @@ def make_rft_file(tmp_path, contents):
     return ResdataRFTFile(str(file))
 
 
-def test_that_reading_an_rft_cell_results_in_the_expected_values(tmp_path):
+def test_that_reading_an_rft_cell_results_in_the_expected_values_and_types(tmp_path):
     rft_file = make_rft_file(
         tmp_path,
         [
@@ -207,6 +207,15 @@ def test_that_reading_an_rft_cell_results_in_the_expected_values(tmp_path):
     assert node[1].get_ijk() == (1, 0, 1)
     assert node[0].depth == 20.0
     assert node[1].depth == 30.0
+
+    assert isinstance(node[0].pressure, float)
+    assert isinstance(node[0].swat, float)
+    assert isinstance(node[0].sgas, float)
+    assert isinstance(node[0].soil, float)
+    assert isinstance(node[0].get_i(), int)
+    assert isinstance(node[0].get_j(), int)
+    assert isinstance(node[0].get_k(), int)
+    assert isinstance(node[0].depth, float)
 
 
 def test_that_size_counts_matching_cells(tmp_path):
@@ -247,7 +256,7 @@ def test_that_size_counts_matching_cells(tmp_path):
     ]
 
 
-def test_that_reading_a_plt_cell_results_in_the_expected_values(tmp_path):
+def test_that_reading_a_plt_cell_results_in_the_expected_values_and_types(tmp_path):
     rft_file = make_rft_file(
         tmp_path,
         [
@@ -295,6 +304,19 @@ def test_that_reading_a_plt_cell_results_in_the_expected_values(tmp_path):
     assert node[1].get_ijk() == (1, 0, 1)
     assert node[0].depth == 2000.0
     assert node[1].depth == 3000.0
+
+    assert isinstance(node[0].pressure, float)
+    assert isinstance(node[0].wrat, float)
+    assert isinstance(node[0].grat, float)
+    assert isinstance(node[0].orat, float)
+    assert isinstance(node[0].flowrate, float)
+    assert isinstance(node[0].oil_flowrate, float)
+    assert isinstance(node[0].gas_flowrate, float)
+    assert isinstance(node[0].water_flowrate, float)
+    assert isinstance(node[0].get_i(), int)
+    assert isinstance(node[0].get_j(), int)
+    assert isinstance(node[0].get_k(), int)
+    assert isinstance(node[0].depth, float)
 
 
 def test_that_reading_a_plt_cell_with_zero_sum_conpres_uses_pressure(tmp_path):

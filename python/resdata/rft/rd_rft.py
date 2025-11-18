@@ -13,6 +13,10 @@ import fnmatch
 import warnings
 
 
+def to_float_or_none(value: np.float32 | None) -> float | None:
+    return float(value) if value is not None else None
+
+
 class ResdataRFT:
     """Contains the information for *one* RFT.
 
@@ -48,7 +52,7 @@ class ResdataRFT:
         empty_values = [None] * len(connections_)
         zeros = np.zeros(len(connections_), np.float32)
         values_ = values or {}
-        self._cells = []
+        self._cells: list[ResdataRFTCell | ResdataPLTCell] = []
         match type_string:
             case "RFT":
                 depth = values_.get("DEPTH", empty_values)
@@ -59,15 +63,16 @@ class ResdataRFT:
                     enumerate(connections) if connections is not None else []
                 ):
                     i, j, k = grid_index - 1
+                    # Type cast cell properties for backwards compatibility
                     self._cells.append(
                         ResdataRFTCell(
-                            i,
-                            j,
-                            k,
-                            depth[index],
-                            pressure[index],
-                            swat[index],
-                            sgas[index],
+                            int(i),
+                            int(j),
+                            int(k),
+                            to_float_or_none(depth[index]),
+                            to_float_or_none(pressure[index]),
+                            to_float_or_none(swat[index]),
+                            to_float_or_none(sgas[index]),
                         )
                     )
             case "PLT":
@@ -93,22 +98,23 @@ class ResdataRFT:
                 water_flowrate = values_.get("CONWTUB", empty_values)
                 for index, grid_index in enumerate(connections_):
                     i, j, k = grid_index - 1
+                    # Type cast cell properties for backwards compatibility
                     self._cells.append(
                         ResdataPLTCell(
-                            i,
-                            j,
-                            k,
-                            condepth[index],
-                            conpres[index],
-                            orat[index],
-                            grat[index],
-                            wrat[index],
-                            conn_start[index],
-                            conn_end[index],
-                            flowrate[index],
-                            oil_flowrate[index],
-                            gas_flowrate[index],
-                            water_flowrate[index],
+                            int(i),
+                            int(j),
+                            int(k),
+                            to_float_or_none(condepth[index]),
+                            to_float_or_none(conpres[index]),
+                            to_float_or_none(orat[index]),
+                            to_float_or_none(grat[index]),
+                            to_float_or_none(wrat[index]),
+                            float(conn_start[index]),
+                            float(conn_end[index]),
+                            to_float_or_none(flowrate[index]),
+                            to_float_or_none(oil_flowrate[index]),
+                            to_float_or_none(gas_flowrate[index]),
+                            to_float_or_none(water_flowrate[index]),
                         )
                     )
                 if self._is_msw:
