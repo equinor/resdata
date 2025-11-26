@@ -492,6 +492,7 @@ ResdataRestartFile.contains_report_step
 The classmethod :code:`contains_report_step` will check if the file
 *filename* contains the report_step *report_step*:
 
+.. code:: python
 
    if ResdataRestartFile.contains_report_step( "CASE.UNRST" , 100):
        print("The file has a section for report step=100")
@@ -1075,9 +1076,11 @@ ending date of the simulation respectively. The return value is an
 instance of Python datetime.date(): ...  start_date = sum.start_date
 end_date = sum.end_date
 
-print "Simulation started.............: %s" % start_date
-print "Simulation ended...............: %s" % end_date
-print "The simulation spans %s days...: %s" % (end_date - start_date).days
+.. code:: python
+
+   print "Simulation started.............: %s" % start_date
+   print "Simulation ended...............: %s" % end_date
+   print "The simulation spans %s days...: %s" % (end_date - start_date).days
 
 start_time / end_time
 ,,,,,,,,,,,,,,,,,,,,,
