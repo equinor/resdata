@@ -105,7 +105,7 @@ jobs:
         python.exe -m build --wheel
 
     - name: Upload wheel as artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.os }} Python ${{ matrix.python }} wheel
         path: dist/*
