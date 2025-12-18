@@ -185,7 +185,7 @@ class ResdataFileView(BaseCClass):
 
         view = self._restart_view(seqnum_index, report_step, CTime(sim_time), sim_days)
         if view is None:
-            raise ValueError("No such restart block could be identiefied")
+            raise ValueError("No such restart block could be identified")
 
         view.setParent(parent=self)
         return view
