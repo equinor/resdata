@@ -752,12 +752,12 @@ def test_summary_to_pandas_frame(time_index_type):
     fopr = frame["FOPR"]
     fopt = frame["FOPT"]
 
-    assert fopr[0] == 0
-    assert fopr[-1] == 0
+    assert fopr.iloc[0] == 0
+    assert fopr.iloc[-1] == 0
 
-    assert fopt[0] == 0
-    assert fopt[0] == case.first_value("FOPT")
-    assert fopt[-1] == case.last_value("FOPT")
+    assert fopt.iloc[0] == 0
+    assert fopt.iloc[0] == case.first_value("FOPT")
+    assert fopt.iloc[-1] == case.last_value("FOPT")
 
     frame = case.pandas_frame()
     rows, columns = frame.shape
