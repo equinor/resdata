@@ -1,4 +1,6 @@
 pytest
+pytest-benchmark
+pytest-timeout
 hypothesis
 pydantic
 typing_extensions
