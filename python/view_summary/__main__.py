@@ -427,6 +427,7 @@ class Spec:
         # to preserve backwards-compatibility
         already_matched = set()
         new_matched_keywords = []
+        sort_until = None
         for pat in patterns:
             if "*" in pat:
                 for i in range(len(self.matched_keywords)):
@@ -436,9 +437,7 @@ class Spec:
                     if fnmatch.fnmatch(kw, pat):
                         new_matched_keywords.append((kw, self.keyword_indices[i]))
                         already_matched.add(kw)
-                        new_matched_keywords = natsorted(
-                            new_matched_keywords, key=lambda v: v[0]
-                        )
+                        sort_until = len(new_matched_keywords)
 
             else:
                 try:
@@ -450,6 +449,11 @@ class Spec:
                     logger.warning(
                         f"could not find variable: '{pat}' in summary file",
                     )
+        if sort_until is not None:
+            new_matched_keywords = (
+                natsorted(new_matched_keywords[:sort_until], key=lambda v: v[0])
+                + new_matched_keywords[sort_until:]
+            )
         self.matched_keywords = [k for k, _ in new_matched_keywords]
         self.keyword_indices = np.array(
             [i for _, i in new_matched_keywords], dtype=np.int64

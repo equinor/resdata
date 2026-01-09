@@ -859,3 +859,18 @@ def test_that_restart_and_base_times_are_concated(capsys):
         4,5.0,06/01/2014,5.6299e+16,5.6299e+16,-99.0
         """
     )
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+@pytest.mark.timeout(10)
+def test_performance_with_many_keys(monkeypatch, benchmark):
+    dir = Path("subdir")
+    dir.mkdir()
+    monkeypatch.chdir(dir)
+    create_summary(case="TEST", summary_keys=[f"WWIT:N-{i}" for i in range(5000)])
+    monkeypatch.chdir("..")
+
+    def bench():
+        run(["summary.x", "-v", str(dir / "TEST"), "*"])
+
+    benchmark(bench)
