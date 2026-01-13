@@ -3935,7 +3935,6 @@ int rd_grid_get_global_index3(const rd_grid_type *rd_grid, int i, int j,
         util_abort("%s: i,j,k = (%d,%d,%d) is invalid:\n\n  nx: [0,%d>\n  ny: "
                    "[0,%d>\n  nz: [0,%d>\n",
                    __func__, i, j, k, rd_grid->nx, rd_grid->ny, rd_grid->nz);
-        return -1; /* Compiler shut up. */
     }
 }
 

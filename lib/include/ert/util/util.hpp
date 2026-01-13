@@ -285,9 +285,10 @@ void util_set_abort_handler(util_abort_handler_t *);
 
 /* Conditional section below here */
 
-void util_abort__(const char *file, const char *function, int line,
-                  const char *fmt, ...);
-void util_abort_signal(int);
+extern "C" [[noreturn]] void util_abort__(const char *file,
+                                          const char *function, int line,
+                                          const char *fmt, ...);
+[[noreturn]] void util_abort_signal(int);
 
 #include "util_unlink.hpp"
 

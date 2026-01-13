@@ -54,8 +54,9 @@ extern "C" void util_abort_test_set_intercept_function(const char *function) {
     test_intercept_function = function == nullptr ? "" : function;
 }
 
-extern "C" void util_abort__(const char *file, const char *function, int line,
-                             const char *fmt, ...) {
+extern "C" [[noreturn]] void util_abort__(const char *file,
+                                          const char *function, int line,
+                                          const char *fmt, ...) {
     /* Make sure that util_abort__ is entered exactly once */
     static std::atomic_bool abort_flag;
     if (abort_flag.exchange(true))
