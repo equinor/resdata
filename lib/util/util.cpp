@@ -1143,7 +1143,7 @@ bool util_sscanf_bool(const char *buffer, bool *_value) {
     }
 
     bool parse_OK = false;
-    bool value = false; /* Compiler shut up */
+    bool value = false;
 
     if (strcmp(buffer, "1") == 0) {
         parse_OK = true;
@@ -1393,7 +1393,6 @@ bool util_is_directory(const char *path) {
     else {
         util_abort("%s: stat(%s) failed: %s \n", __func__, path,
                    strerror(errno));
-        return false; /* Dummy to shut the compiler warning */
     }
 }
 
@@ -1408,7 +1407,6 @@ bool util_is_file(const char *path) {
     else {
         util_abort("%s: stat(%s) failed: %s \n", __func__, path,
                    strerror(errno));
-        return false; /* Dummy to shut the compiler warning */
     }
 }
 
@@ -2483,7 +2481,7 @@ typedef void (*sighandler_t)(int);
 
 static sighandler_t previous_abort_handler = SIG_IGN;
 
-void util_abort_signal(int the_signal) {
+[[noreturn]] void util_abort_signal(int the_signal) {
     if (previous_abort_handler == SIG_IGN) {
         signal(SIGABRT, SIG_DFL);
     } else {

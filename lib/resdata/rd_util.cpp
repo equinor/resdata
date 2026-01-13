@@ -356,8 +356,6 @@ static char *rd_alloc_filename_static(const char *path, const char *base,
         util_abort("%s: Invalid input file_type to rd_alloc_filename - "
                    "aborting \n",
                    __func__);
-        /* Dummy to shut up compiler */
-        ext = NULL;
     }
 
     if (!base_has_upper(base)) {

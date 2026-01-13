@@ -790,7 +790,6 @@ int @TYPE@_vector_size(const @TYPE@_vector_type * vector) {
       return value;
     } else {
       util_abort("%s: trying to pop from empty vector \n",__func__);
-      return -1;   /* Compiler shut up. */
     }
   }
 }
