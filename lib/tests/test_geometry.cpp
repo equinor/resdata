@@ -175,3 +175,38 @@ TEST_CASE("geo_region index list management", "[geometry]") {
         geo_pointset_free(pointset);
     }
 }
+
+TEST_CASE("geo_region polygon selection", "[geometry]") {
+    GIVEN("A pointset with points inside and outside a polygon") {
+        geo_pointset_type *pointset = geo_pointset_alloc(true);
+        // Points inside square (0,0) to (10,10)
+        geo_pointset_add_xyz(pointset, 5.0, 5.0, 0.0);
+        geo_pointset_add_xyz(pointset, 2.0, 3.0, 0.0);
+        // Points outside square
+        geo_pointset_add_xyz(pointset, 15.0, 15.0, 0.0);
+        geo_pointset_add_xyz(pointset, -5.0, 5.0, 0.0);
+
+        geo_polygon_type *polygon = geo_polygon_alloc("square");
+        geo_polygon_add_point(polygon, 0.0, 0.0);
+        geo_polygon_add_point(polygon, 10.0, 0.0);
+        geo_polygon_add_point(polygon, 10.0, 10.0);
+        geo_polygon_add_point(polygon, 0.0, 10.0);
+        geo_polygon_close(polygon);
+
+        WHEN("Selecting inside polygon") {
+            geo_region_type *region = geo_region_alloc(pointset, false);
+            geo_region_select_inside_polygon(region, polygon);
+            const int_vector_type *index_list =
+                geo_region_get_index_list(region);
+
+            THEN("Only inside points are selected") {
+                REQUIRE(int_vector_size(index_list) == 2);
+            }
+
+            geo_region_free(region);
+        }
+
+        geo_polygon_free(polygon);
+        geo_pointset_free(pointset);
+    }
+}

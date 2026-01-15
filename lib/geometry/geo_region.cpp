@@ -69,16 +69,15 @@ static void geo_region_polygon_select__(geo_region_type *region,
                                         const geo_polygon_type *polygon,
                                         bool select_inside, bool select) {
 
-    int index;
-    for (index = 0; index < region->pointset_size; index++) {
+    for (int i = 0; i < region->pointset_size; i++) {
 
         double x, y;
         bool is_inside;
-        geo_pointset_iget_xy(region->pointset, index, &x, &y);
+        geo_pointset_iget_xy(region->pointset, i, &x, &y);
 
         is_inside = geo_polygon_contains_point(polygon, x, y);
         if (is_inside == select_inside)
-            region->active_mask[index] = select;
+            region->active_mask[i] = select;
     }
     geo_region_invalidate_index_list(region);
 }
