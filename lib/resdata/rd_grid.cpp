@@ -3077,8 +3077,8 @@ static char *rd_grid_alloc_case_filename(const char *case_input) {
         return util_alloc_string_copy(case_input); /* Case 1 */
     else {
         char *grid_file = NULL;
-        char *path;
-        char *basename;
+        char *path = NULL;
+        char *basename = NULL;
         util_alloc_file_components(case_input, &path, &basename, NULL);
         if ((file_type == RD_OTHER_FILE) ||
             (file_type ==
@@ -3122,6 +3122,8 @@ static char *rd_grid_alloc_case_filename(const char *case_input) {
             free(EGRID);
             free(GRID);
         }
+        free(path);
+        free(basename);
         return grid_file;
     }
 }
