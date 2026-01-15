@@ -63,8 +63,7 @@ void geo_pointset_memcpy(const geo_pointset_type *src,
                        "shared z\n",
                        __func__);
     } else if (target->internal_z) {
-        int i;
-        for (i = 0; i < target->size; i++)
+        for (int i = 0; i < target->size; i++)
             target->zcoord[i] = 0;
     }
 }
