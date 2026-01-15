@@ -156,9 +156,8 @@ void geo_pointset_assign_z(geo_pointset_type *pointset, double value) {
 }
 
 void geo_pointset_shift_z(geo_pointset_type *pointset, double value) {
-    int index;
-    for (index = 0; index < pointset->size; index++)
-        pointset->zcoord[index] += value;
+    for (int i = 0; i < pointset->size; i++)
+        pointset->zcoord[i] += value;
 }
 
 void geo_pointset_scale_z(geo_pointset_type *pointset, double value) {

@@ -49,7 +49,7 @@ TEST_CASE("geo_pointset_memcpy zeros internal z when not copying zdata",
     }
 }
 
-TEST_CASE("geo_pointset_assign_z sets all z coordinates", "[geometry]") {
+TEST_CASE("Pointset can be acted on", "[geometry]") {
     GIVEN("A pointset with internal z") {
         geo_pointset_type *pointset = geo_pointset_alloc(true);
 
@@ -65,6 +65,16 @@ TEST_CASE("geo_pointset_assign_z sets all z coordinates", "[geometry]") {
                 REQUIRE(geo_pointset_iget_z(pointset, 0) == 42.0);
                 REQUIRE(geo_pointset_iget_z(pointset, 1) == 42.0);
                 REQUIRE(geo_pointset_iget_z(pointset, 2) == 42.0);
+            }
+        }
+
+        WHEN("Shifting z by a value") {
+            geo_pointset_shift_z(pointset, 10.0);
+
+            THEN("All z coordinates are shifted by the value") {
+                REQUIRE(geo_pointset_iget_z(pointset, 0) == 13.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 1) == 16.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 2) == 19.0);
             }
         }
 
