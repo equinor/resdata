@@ -196,7 +196,6 @@ void geo_pointset_imul(geo_pointset_type *self,
 }
 
 void geo_pointset_isqrt(geo_pointset_type *pointset) {
-    int index;
-    for (index = 0; index < pointset->size; index++)
-        pointset->zcoord[index] = sqrt(pointset->zcoord[index]);
+    for (int i = 0; i < pointset->size; i++)
+        pointset->zcoord[i] = sqrt(pointset->zcoord[i]);
 }
