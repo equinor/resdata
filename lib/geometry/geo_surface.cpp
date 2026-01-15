@@ -227,18 +227,15 @@ bool geo_surface_equal_header(const geo_surface_type *surface1,
     equal = equal && (util_double_approx_equal(surface1->rot_angle,
                                                surface2->rot_angle));
 
-    {
-        int i;
-        for (i = 0; i < 2; i++) {
-            equal = equal && (util_double_approx_equal(surface1->origo[i],
-                                                       surface2->origo[i]));
-            equal = equal && (util_double_approx_equal(surface1->cell_size[i],
-                                                       surface2->cell_size[i]));
-            equal = equal && (util_double_approx_equal(surface1->vec1[i],
-                                                       surface2->vec1[i]));
-            equal = equal && (util_double_approx_equal(surface1->vec2[i],
-                                                       surface2->vec2[i]));
-        }
+    for (int i = 0; i < 2; i++) {
+        equal = equal && (util_double_approx_equal(surface1->origo[i],
+                                                   surface2->origo[i]));
+        equal = equal && (util_double_approx_equal(surface1->cell_size[i],
+                                                   surface2->cell_size[i]));
+        equal = equal && (util_double_approx_equal(surface1->vec1[i],
+                                                   surface2->vec1[i]));
+        equal = equal && (util_double_approx_equal(surface1->vec2[i],
+                                                   surface2->vec2[i]));
     }
 
     return equal;
