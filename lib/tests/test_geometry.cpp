@@ -1,3 +1,4 @@
+#include <ert/geometry/geo_region.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_pointset.hpp>
 
@@ -136,5 +137,41 @@ TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
         }
 
         geo_polygon_free(polygon);
+    }
+}
+
+TEST_CASE("geo_region index list management", "[geometry]") {
+    GIVEN("A pointset with 5 points") {
+        geo_pointset_type *pointset = geo_pointset_alloc(true);
+        for (int i = 0; i < 5; i++) {
+            geo_pointset_add_xyz(pointset, i * 1.0, i * 2.0, i * 3.0);
+        }
+
+        WHEN("Creating a region with preselect=true") {
+            geo_region_type *region = geo_region_alloc(pointset, true);
+            const int_vector_type *index_list =
+                geo_region_get_index_list(region);
+
+            THEN("All points are initially selected") {
+                REQUIRE(int_vector_size(index_list) == 5);
+            }
+
+            geo_region_free(region);
+        }
+
+        WHEN("Creating a region with preselect=false and resetting") {
+            geo_region_type *region = geo_region_alloc(pointset, false);
+            geo_region_reset(region);
+            const int_vector_type *index_list =
+                geo_region_get_index_list(region);
+
+            THEN("No points are selected after reset") {
+                REQUIRE(int_vector_size(index_list) == 0);
+            }
+
+            geo_region_free(region);
+        }
+
+        geo_pointset_free(pointset);
     }
 }

@@ -44,9 +44,8 @@ static void geo_region_invalidate_index_list(geo_region_type *region) {
 
 static void geo_region_assert_index_list(geo_region_type *region) {
     if (!region->index_valid) {
-        int i;
         int_vector_reset(region->index_list);
-        for (i = 0; i < region->pointset_size; i++)
+        for (int i = 0; i < region->pointset_size; i++)
             if (region->active_mask[i])
                 int_vector_append(region->index_list, i);
 
