@@ -93,9 +93,12 @@
 
 */
 
+#include <algorithm>
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <functional>
+#include <numeric>
 
 #include <ert/util/type_macros.hpp>
 #include <ert/util/util.hpp>
@@ -1125,26 +1128,6 @@ int @TYPE@_vector_index_sorted(const @TYPE@_vector_type * vector , @TYPE@ value)
     return -1;
 }
 
-static int @TYPE@_vector_cmp(const void *_a, const void *_b) {
-  @TYPE@ a = *((@TYPE@ *) _a);
-  @TYPE@ b = *((@TYPE@ *) _b);
-
-  if (a > b)
-    return 1;
-
-  if (a < b)
-    return -1;
-
-  return 0;
-}
-
-/* Reverse compare function. */
-
-static int @TYPE@_vector_rcmp(const void *a, const void *b) {
-  return @TYPE@_vector_cmp( b , a );
-}
-
-
 /**
    The input vector will be altered in place, so that the vector only
    contains every numerical value __once__. On exit the values will be
@@ -1181,34 +1164,14 @@ void @TYPE@_vector_select_unique(@TYPE@_vector_type * vector) {
 void @TYPE@_vector_sort(@TYPE@_vector_type * vector) {
   @TYPE@_vector_assert_writable( vector );
   if (vector->data)
-      qsort(vector->data , vector->size , sizeof * vector->data ,  @TYPE@_vector_cmp);
+    std::sort(vector->data , vector->data + vector->size ,  std::less<>());
 }
 
 
 void @TYPE@_vector_rsort(@TYPE@_vector_type * vector) {
   @TYPE@_vector_assert_writable( vector );
   if (vector->data)
-      qsort(vector->data , vector->size , sizeof * vector->data ,  @TYPE@_vector_rcmp);
-}
-
-
-
-static int @TYPE@_vector_cmp_node(const void *_a, const void *_b) {
-  sort_node_type a = *((sort_node_type *) _a);
-  sort_node_type b = *((sort_node_type *) _b);
-
-  if (a.value < b.value)
-    return -1;
-
-  if (a.value > b.value)
-    return 1;
-
-  return 0;
-}
-
-
-static int @TYPE@_vector_rcmp_node(const void *a, const void *b) {
-  return @TYPE@_vector_cmp_node( b , a );
+    std::sort(vector->data , vector->data + vector->size , std::greater<>());
 }
 
 /**
@@ -1238,21 +1201,12 @@ static int @TYPE@_vector_rcmp_node(const void *a, const void *b) {
 
 static perm_vector_type * @TYPE@_vector_alloc_sort_perm__(const @TYPE@_vector_type * vector, bool reverse) {
   int * perm = (int*)util_calloc( vector->size , sizeof * perm ); // The perm_vector return value will take ownership of this array.
-  sort_node_type * sort_nodes = (sort_node_type*)util_calloc( vector->size , sizeof * sort_nodes );
-  int i;
-  for (i=0; i < vector->size; i++) {
-    sort_nodes[i].index = i;
-    sort_nodes[i].value = vector->data[i];
-  }
+  std::iota(perm, perm + vector->size, 0);
   if (reverse)
-    qsort(sort_nodes , vector->size , sizeof * sort_nodes ,  @TYPE@_vector_rcmp_node);
+    std::sort(perm , perm + vector->size ,  [&vector](int lhs, int rhs){return *(vector->data + rhs) < *(vector->data + lhs);});
   else
-    qsort(sort_nodes , vector->size , sizeof * sort_nodes ,  @TYPE@_vector_cmp_node);
+    std::sort(perm , perm + vector->size ,  [&vector](int lhs, int rhs){return *(vector->data + lhs) < *(vector->data + rhs);});
 
-  for (i=0; i < vector->size; i++)
-    perm[i] = sort_nodes[i].index;
-
-  free( sort_nodes );
   return perm_vector_alloc( perm , vector->size );
 }
 
