@@ -185,13 +185,10 @@ bool geo_polygon_segment_intersects(const geo_polygon_type *polygon, double x1,
         }
     }
 
-    {
-        int i;
-        for (i = 0; i < 4; i++)
-            free(points[i]);
+    for (int i = 0; i < 4; i++)
+        free(points[i]);
 
-        free(points);
-    }
+    free(points);
 
     return intersects;
 }
