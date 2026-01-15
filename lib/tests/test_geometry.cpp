@@ -78,6 +78,16 @@ TEST_CASE("Pointset can be acted on", "[geometry]") {
             }
         }
 
+        WHEN("Scaling z by a factor") {
+            geo_pointset_scale_z(pointset, 2.0);
+
+            THEN("All z coordinates are scaled by the factor") {
+                REQUIRE(geo_pointset_iget_z(pointset, 0) == 6.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 1) == 12.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 2) == 18.0);
+            }
+        }
+
         geo_pointset_free(pointset);
     }
 }
