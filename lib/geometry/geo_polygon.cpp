@@ -208,9 +208,8 @@ double geo_polygon_get_length(geo_polygon_type *polygon) {
         double length = 0;
         double x0 = double_vector_iget(polygon->xcoord, 0);
         double y0 = double_vector_iget(polygon->ycoord, 0);
-        int i;
 
-        for (i = 1; i < double_vector_size(polygon->xcoord); i++) {
+        for (int i = 1; i < double_vector_size(polygon->xcoord); i++) {
             double x1 = double_vector_iget(polygon->xcoord, i);
             double y1 = double_vector_iget(polygon->ycoord, i);
 
