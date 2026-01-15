@@ -1180,13 +1180,15 @@ void @TYPE@_vector_select_unique(@TYPE@_vector_type * vector) {
 */
 void @TYPE@_vector_sort(@TYPE@_vector_type * vector) {
   @TYPE@_vector_assert_writable( vector );
-  qsort(vector->data , vector->size , sizeof * vector->data ,  @TYPE@_vector_cmp);
+  if (vector->data)
+      qsort(vector->data , vector->size , sizeof * vector->data ,  @TYPE@_vector_cmp);
 }
 
 
 void @TYPE@_vector_rsort(@TYPE@_vector_type * vector) {
   @TYPE@_vector_assert_writable( vector );
-  qsort(vector->data , vector->size , sizeof * vector->data ,  @TYPE@_vector_rcmp);
+  if (vector->data)
+      qsort(vector->data , vector->size , sizeof * vector->data ,  @TYPE@_vector_rcmp);
 }
 
 
