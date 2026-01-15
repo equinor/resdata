@@ -50,9 +50,8 @@ static void geo_surface_init_regular(geo_surface_type *surface,
     int zstride_nx = 1;
     int zstride_ny = surface->nx;
 
-    int ix, iy;
-    for (iy = 0; iy < surface->ny; iy++) {
-        for (ix = 0; ix < surface->nx; ix++) {
+    for (int iy = 0; iy < surface->ny; iy++) {
+        for (int ix = 0; ix < surface->nx; ix++) {
             double x = surface->origo[0] + ix * surface->vec1[0] +
                        iy * surface->vec2[0];
             double y = surface->origo[1] + ix * surface->vec1[1] +

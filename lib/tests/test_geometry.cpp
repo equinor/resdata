@@ -245,3 +245,24 @@ TEST_CASE("geo_surface header equality", "[geometry]") {
         geo_surface_free(surface2);
     }
 }
+
+TEST_CASE("geo_surface initialization", "[geometry]") {
+    GIVEN("A new surface with dimensions") {
+        int nx = 3, ny = 4;
+        geo_surface_type *surface =
+            geo_surface_alloc_new(nx, ny, 1.0, 2.0, 0.0, 0.0, 0.0);
+
+        WHEN("Checking surface size") {
+            int size = geo_surface_get_size(surface);
+
+            THEN("Size equals nx * ny") { REQUIRE(size == nx * ny); }
+
+            THEN("Dimensions are correct") {
+                REQUIRE(geo_surface_get_nx(surface) == nx);
+                REQUIRE(geo_surface_get_ny(surface) == ny);
+            }
+        }
+
+        geo_surface_free(surface);
+    }
+}
