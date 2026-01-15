@@ -1,5 +1,7 @@
-#include <catch2/catch.hpp>
+#include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_pointset.hpp>
+
+#include <catch2/catch.hpp>
 
 using namespace Catch;
 
@@ -99,5 +101,34 @@ TEST_CASE("Pointset can be acted on", "[geometry]") {
         }
 
         geo_pointset_free(pointset);
+    }
+}
+
+TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
+    GIVEN("A square polygon") {
+        geo_polygon_type *polygon = geo_polygon_alloc("square");
+        geo_polygon_add_point(polygon, 0.0, 0.0);
+        geo_polygon_add_point(polygon, 10.0, 0.0);
+        geo_polygon_add_point(polygon, 10.0, 10.0);
+        geo_polygon_add_point(polygon, 0.0, 10.0);
+        geo_polygon_close(polygon);
+
+        WHEN("Checking a segment that crosses the polygon edge") {
+            bool intersects =
+                geo_polygon_segment_intersects(polygon, -5.0, 5.0, 5.0, 5.0);
+
+            THEN("Intersection is detected") { REQUIRE(intersects == true); }
+        }
+
+        WHEN("Checking a segment that doesn't cross the polygon") {
+            bool intersects =
+                geo_polygon_segment_intersects(polygon, -5.0, 5.0, -2.0, 5.0);
+
+            THEN("No intersection is detected") {
+                REQUIRE(intersects == false);
+            }
+        }
+
+        geo_polygon_free(polygon);
     }
 }
