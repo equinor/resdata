@@ -18,6 +18,8 @@ option(ERT_USE_OPENMP "Use OpenMP" OFF)
 option(RST_DOC "Build RST documentation" OFF)
 option(USE_RPATH "Don't strip RPATH from libraries and binaries" OFF)
 option(USE_CONAN "Use Conan (https://conan.io) for package management" ON)
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+option(ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 
 # -----------------------------------------------------------------
 # Set default CMAKE_BUILD_TYPE
@@ -256,6 +258,30 @@ endif()
 
 if(MSVC)
   add_definitions("/W3 /D_CRT_SECURE_NO_WARNINGS /wd4996")
+endif()
+
+# AddressSanitizer and UndefinedBehaviorSanitizer
+if(ENABLE_ASAN OR ENABLE_UBSAN)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(
+      WARNING "Sanitizers are only supported with GCC and Clang compilers")
+  else()
+    set(SANITIZER_FLAGS "")
+    if(ENABLE_ASAN)
+      message(STATUS "AddressSanitizer enabled")
+      set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fsanitize=address")
+    endif()
+    if(ENABLE_UBSAN)
+      message(STATUS "UndefinedBehaviorSanitizer enabled")
+      set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fsanitize=undefined")
+    endif()
+    set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fno-omit-frame-pointer -g")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS
+        "${CMAKE_SHARED_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+  endif()
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules

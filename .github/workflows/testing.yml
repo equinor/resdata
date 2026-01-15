@@ -48,7 +48,7 @@ jobs:
       run: |
         python3 -m pip install -r requirements.txt
         mkdir cmake-build
-        cmake -S . -B cmake-build -DBUILD_TESTS=ON -DRST_DOC=ON
+        cmake -S . -B cmake-build -DBUILD_TESTS=ON -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DRST_DOC=ON
         cmake --build cmake-build
 
     - name: Run tests
