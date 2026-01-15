@@ -48,3 +48,26 @@ TEST_CASE("geo_pointset_memcpy zeros internal z when not copying zdata",
         geo_pointset_free(target);
     }
 }
+
+TEST_CASE("geo_pointset_assign_z sets all z coordinates", "[geometry]") {
+    GIVEN("A pointset with internal z") {
+        geo_pointset_type *pointset = geo_pointset_alloc(true);
+
+        // Add some points with different z values
+        geo_pointset_add_xyz(pointset, 1.0, 2.0, 3.0);
+        geo_pointset_add_xyz(pointset, 4.0, 5.0, 6.0);
+        geo_pointset_add_xyz(pointset, 7.0, 8.0, 9.0);
+
+        WHEN("Assigning a uniform z value") {
+            geo_pointset_assign_z(pointset, 42.0);
+
+            THEN("All z coordinates are set to the value") {
+                REQUIRE(geo_pointset_iget_z(pointset, 0) == 42.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 1) == 42.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 2) == 42.0);
+            }
+        }
+
+        geo_pointset_free(pointset);
+    }
+}
