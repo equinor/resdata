@@ -1,8 +1,11 @@
+#include <algorithm>
 #include <cstdlib>
 
+#include <cstring>
 #include <ert/util/int_vector.hpp>
 #include <ert/util/double_vector.hpp>
 #include <ert/util/test_util.hpp>
+#include <vector>
 
 void assert_equal(bool equal) {
     if (!equal)
@@ -102,6 +105,68 @@ void test_contains_sorted() {
     test_assert_true(int_vector_contains(int_vector, 109));
 
     int_vector_free(int_vector);
+}
+
+void test_vector_sort() {
+    int_vector_type *int_vector = int_vector_alloc(0, 100);
+
+    int_vector_append(int_vector, 99);
+    int_vector_append(int_vector, 89);
+    int_vector_append(int_vector, 79);
+    int_vector_append(int_vector, 109);
+
+    int_vector_sort(int_vector);
+
+    std::vector<int> vec = {99, 89, 79, 109};
+    std::sort(vec.begin(), vec.end(), std::less<>());
+
+    test_assert_true(std::memcmp(int_vector_get_ptr(int_vector), vec.data(),
+                                 vec.size()) == 0);
+    int_vector_free(int_vector);
+}
+
+void test_vector_rsort() {
+    int_vector_type *int_vector = int_vector_alloc(0, 100);
+
+    int_vector_append(int_vector, 99);
+    int_vector_append(int_vector, 89);
+    int_vector_append(int_vector, 79);
+    int_vector_append(int_vector, 109);
+
+    int_vector_rsort(int_vector);
+
+    std::vector<int> vec = {99, 89, 79, 109};
+    std::sort(vec.begin(), vec.end(), std::greater<>());
+
+    test_assert_true(std::memcmp(int_vector_get_ptr(int_vector), vec.data(),
+                                 vec.size()) == 0);
+    int_vector_free(int_vector);
+}
+
+void test_vector_alloc_sort_perm() {
+    int_vector_type *int_vector = int_vector_alloc(0, 100);
+    int_vector_resize(int_vector, 11, 100);
+    int_vector_iset(int_vector, 10, 100);
+    int_vector_div(int_vector, 10);
+
+    auto sorted = int_vector_alloc_sort_perm(int_vector);
+    auto rsorted = int_vector_alloc_rsort_perm(int_vector);
+
+    std::vector<int> vec = {99, 89, 79, 109};
+
+    std::sort(vec.begin(), vec.end(), std::less<>());
+    for (size_t i = 0; i < vec.size(); i++) {
+        test_assert_int_equal(perm_vector_iget(sorted, i), vec[i]);
+    }
+
+    std::sort(vec.begin(), vec.end(), std::greater<>());
+    for (size_t i = 0; i < vec.size(); i++) {
+        test_assert_int_equal(perm_vector_iget(rsorted, i), vec[i]);
+    }
+
+    int_vector_free(int_vector);
+    perm_vector_free(sorted);
+    perm_vector_free(rsorted);
 }
 
 void test_div() {
@@ -439,6 +504,8 @@ int main(int argc, char **argv) {
     }
     test_contains();
     test_contains_sorted();
+    test_vector_sort();
+    test_vector_rsort();
     test_shift();
     test_alloc();
     test_div();
