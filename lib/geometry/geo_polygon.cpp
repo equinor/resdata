@@ -145,11 +145,9 @@ bool geo_polygon_segment_intersects(const geo_polygon_type *polygon, double x1,
                                     double y1, double x2, double y2) {
     bool intersects = false;
     double **points = (double **)util_malloc(4 * sizeof *points);
-    {
-        int i;
-        for (i = 0; i < 4; i++)
-            points[i] = (double *)util_malloc(2 * sizeof *points[i]);
-    }
+
+    for (int i = 0; i < 4; i++)
+        points[i] = (double *)util_malloc(2 * sizeof *points[i]);
 
     points[0][0] = x1;
     points[1][0] = x2;
