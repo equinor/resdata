@@ -61,14 +61,13 @@ bool geo_util_inside_polygon__(const double *xlist, const double *ylist,
                                int num_points, double x0, double y0,
                                bool force_edge_inside) {
     bool inside = false;
-    int point_num;
     double y = y0;
     double xc = 0;
 
-    for (point_num = 0; point_num < num_points; point_num++) {
-        int next_point = ((point_num + 1) % num_points);
-        double x1 = xlist[point_num];
-        double y1 = ylist[point_num];
+    for (int i = 0; i < num_points; i++) {
+        int next_point = ((i + 1) % num_points);
+        double x1 = xlist[i];
+        double y1 = ylist[i];
         double x2 = xlist[next_point];
         double y2 = ylist[next_point];
 
