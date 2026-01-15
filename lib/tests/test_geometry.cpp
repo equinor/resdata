@@ -129,6 +129,12 @@ TEST_CASE("geo_polygon segments on a square polygon", "[geometry]") {
             }
         }
 
+        WHEN("Getting the length") {
+            double length = geo_polygon_get_length(polygon);
+
+            THEN("it calculates the perimeter") { REQUIRE(length == 40.0); }
+        }
+
         geo_polygon_free(polygon);
     }
 }
