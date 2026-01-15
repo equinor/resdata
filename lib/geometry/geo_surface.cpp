@@ -110,8 +110,7 @@ static void geo_surface_fprintf_zcoord(const geo_surface_type *surface,
                                        FILE *stream, const double *zcoord) {
     int num_columns = 6;
     const char *fmt = "%12.4f  ";
-    int i;
-    for (i = 0; i < geo_surface_get_size(surface); i++) {
+    for (int i = 0; i < geo_surface_get_size(surface); i++) {
         fprintf(stream, fmt, zcoord[i]);
 
         if (((i + 1) % num_columns) == 0)
