@@ -1,3 +1,4 @@
+#include <ert/geometry/geo_surface.hpp>
 #include <ert/geometry/geo_region.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_pointset.hpp>
@@ -208,5 +209,39 @@ TEST_CASE("geo_region polygon selection", "[geometry]") {
 
         geo_polygon_free(polygon);
         geo_pointset_free(pointset);
+    }
+}
+
+TEST_CASE("geo_surface header equality", "[geometry]") {
+    GIVEN("Two surfaces with same dimensions") {
+        geo_surface_type *surface1 =
+            geo_surface_alloc_new(10, 20, 1.0, 2.0, 0.0, 0.0, 0.0);
+        geo_surface_type *surface2 =
+            geo_surface_alloc_new(10, 20, 1.0, 2.0, 0.0, 0.0, 0.0);
+
+        WHEN("Comparing headers") {
+            bool equal = geo_surface_equal_header(surface1, surface2);
+
+            THEN("Headers are equal") { REQUIRE(equal == true); }
+        }
+
+        geo_surface_free(surface1);
+        geo_surface_free(surface2);
+    }
+
+    GIVEN("Two surfaces with different dimensions") {
+        geo_surface_type *surface1 =
+            geo_surface_alloc_new(10, 20, 1.0, 2.0, 0.0, 0.0, 0.0);
+        geo_surface_type *surface2 =
+            geo_surface_alloc_new(15, 20, 1.0, 2.0, 0.0, 0.0, 0.0);
+
+        WHEN("Comparing headers") {
+            bool equal = geo_surface_equal_header(surface1, surface2);
+
+            THEN("Headers are not equal") { REQUIRE(equal == false); }
+        }
+
+        geo_surface_free(surface1);
+        geo_surface_free(surface2);
     }
 }

@@ -28,14 +28,12 @@ static void geo_surface_copy_header(const geo_surface_type *src,
     target->nx = src->nx;
     target->ny = src->ny;
     target->rot_angle = src->rot_angle;
-    {
-        int i;
-        for (i = 0; i < 2; i++) {
-            target->origo[i] = src->origo[i];
-            target->cell_size[i] = src->cell_size[i];
-            target->vec1[i] = src->vec1[i];
-            target->vec2[i] = src->vec2[i];
-        }
+
+    for (int i = 0; i < 2; i++) {
+        target->origo[i] = src->origo[i];
+        target->cell_size[i] = src->cell_size[i];
+        target->vec1[i] = src->vec1[i];
+        target->vec2[i] = src->vec2[i];
     }
 }
 
