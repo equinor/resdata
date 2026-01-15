@@ -54,9 +54,9 @@ TEST_CASE("Pointset can be acted on", "[geometry]") {
         geo_pointset_type *pointset = geo_pointset_alloc(true);
 
         // Add some points with different z values
-        geo_pointset_add_xyz(pointset, 1.0, 2.0, 3.0);
-        geo_pointset_add_xyz(pointset, 4.0, 5.0, 6.0);
-        geo_pointset_add_xyz(pointset, 7.0, 8.0, 9.0);
+        geo_pointset_add_xyz(pointset, 1.0, 2.0, 4.0);
+        geo_pointset_add_xyz(pointset, 4.0, 5.0, 9.0);
+        geo_pointset_add_xyz(pointset, 7.0, 8.0, 16.0);
 
         WHEN("Assigning a uniform z value") {
             geo_pointset_assign_z(pointset, 42.0);
@@ -72,9 +72,9 @@ TEST_CASE("Pointset can be acted on", "[geometry]") {
             geo_pointset_shift_z(pointset, 10.0);
 
             THEN("All z coordinates are shifted by the value") {
-                REQUIRE(geo_pointset_iget_z(pointset, 0) == 13.0);
-                REQUIRE(geo_pointset_iget_z(pointset, 1) == 16.0);
-                REQUIRE(geo_pointset_iget_z(pointset, 2) == 19.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 0) == 14.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 1) == 19.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 2) == 26.0);
             }
         }
 
@@ -82,9 +82,19 @@ TEST_CASE("Pointset can be acted on", "[geometry]") {
             geo_pointset_scale_z(pointset, 2.0);
 
             THEN("All z coordinates are scaled by the factor") {
-                REQUIRE(geo_pointset_iget_z(pointset, 0) == 6.0);
-                REQUIRE(geo_pointset_iget_z(pointset, 1) == 12.0);
-                REQUIRE(geo_pointset_iget_z(pointset, 2) == 18.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 0) == 8.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 1) == 18.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 2) == 32.0);
+            }
+        }
+
+        WHEN("Taking square root of z coordinates") {
+            geo_pointset_isqrt(pointset);
+
+            THEN("All z coordinates are square rooted") {
+                REQUIRE(geo_pointset_iget_z(pointset, 0) == 2.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 1) == 3.0);
+                REQUIRE(geo_pointset_iget_z(pointset, 2) == 4.0);
             }
         }
 
