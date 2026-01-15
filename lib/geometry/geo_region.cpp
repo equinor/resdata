@@ -54,8 +54,7 @@ static void geo_region_assert_index_list(geo_region_type *region) {
 }
 
 void geo_region_reset(geo_region_type *region) {
-    int i;
-    for (i = 0; i < region->pointset_size; i++)
+    for (int i = 0; i < region->pointset_size; i++)
         region->active_mask[i] = region->preselect;
     geo_region_invalidate_index_list(region);
 }
