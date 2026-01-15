@@ -108,14 +108,13 @@ static void geo_region_select_line__(geo_region_type *region,
                                      bool select) {
     double vx = xcoords[1] - xcoords[0]; // Vector from point 1 to point 2
     double vy = ycoords[1] - ycoords[0];
-    int index;
 
-    for (index = 0; index < region->pointset_size; index++) {
+    for (int i = 0; i < region->pointset_size; i++) {
         bool above;
         double x, y;
         double px, py;
 
-        geo_pointset_iget_xy(region->pointset, index, &x, &y);
+        geo_pointset_iget_xy(region->pointset, i, &x, &y);
         px = x - xcoords[0]; // Vector from point on line to (x,y)
         py = y - ycoords[0];
 
@@ -130,7 +129,7 @@ static void geo_region_select_line__(geo_region_type *region,
         }
 
         if (above == select_above)
-            region->active_mask[index] = select;
+            region->active_mask[i] = select;
     }
     geo_region_invalidate_index_list(region);
 }
