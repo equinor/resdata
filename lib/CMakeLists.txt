@@ -163,8 +163,9 @@ if(NOT BUILD_TESTS)
 endif()
 
 add_executable(
-  rd_test_suite tests/test_rd_grid.cpp tests/test_rd_util.cpp
-                tests/test_geometry.cpp tests/testsuite.cpp tests/test_util.cpp)
+  rd_test_suite
+  tests/test_rd_grid.cpp tests/test_rd_util.cpp tests/test_geometry.cpp
+  tests/testsuite.cpp tests/test_util.cpp tests/test_rd_region.cpp)
 target_compile_features(rd_test_suite PUBLIC cxx_std_17)
 target_link_libraries(rd_test_suite resdata Catch2::Catch2)
 add_test(NAME rd_test_suite COMMAND rd_test_suite)
