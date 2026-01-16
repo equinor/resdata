@@ -138,10 +138,9 @@ void rd_region_free(rd_region_type *region) {
 
 static void rd_region_assert_global_index_list(rd_region_type *region) {
     if (!region->global_index_list_valid) {
-        int global_index;
-
         int_vector_reset(region->global_index_list);
-        for (global_index = 0; global_index < region->grid_vol; global_index++)
+        for (int global_index = 0; global_index < region->grid_vol;
+             global_index++)
             if (region->active_mask[global_index])
                 int_vector_append(region->global_index_list, global_index);
 
@@ -151,11 +150,9 @@ static void rd_region_assert_global_index_list(rd_region_type *region) {
 
 static void rd_region_assert_active_index_list(rd_region_type *region) {
     if (!region->active_index_list_valid) {
-        int global_index;
-
         int_vector_reset(region->active_index_list);
         int_vector_reset(region->global_active_list);
-        for (global_index = 0; global_index < region->grid_vol;
+        for (int global_index = 0; global_index < region->grid_vol;
              global_index++) {
             if (region->active_mask[global_index]) {
                 int active_index = rd_grid_get_active_index1(
@@ -200,8 +197,7 @@ static void rd_region_assert_kw(const rd_region_type *region,
 }
 
 void rd_region_reset(rd_region_type *rd_region) {
-    int i;
-    for (i = 0; i < rd_region->grid_vol; i++)
+    for (int i = 0; i < rd_region->grid_vol; i++)
         rd_region->active_mask[i] = rd_region->preselect;
     rd_region_invalidate_index_list(rd_region);
 }
@@ -215,24 +211,20 @@ static void rd_region_select_equal__(rd_region_type *region,
         util_abort("%s: sorry - select by equality is only supported for "
                    "integer keywords \n",
                    __func__);
-    {
-        const int *kw_data = rd_kw_get_int_ptr(rd_kw);
-        if (global_kw) {
-            int global_index;
-            for (global_index = 0; global_index < region->grid_vol;
-                 global_index++) {
-                if (kw_data[global_index] == value)
-                    region->active_mask[global_index] = select;
-            }
-        } else {
-            int active_index;
-            for (active_index = 0; active_index < region->grid_active;
-                 active_index++) {
-                if (kw_data[active_index] == value) {
-                    int global_index = rd_grid_get_global_index1A(
-                        region->parent_grid, active_index);
-                    region->active_mask[global_index] = select;
-                }
+    const int *kw_data = rd_kw_get_int_ptr(rd_kw);
+    if (global_kw) {
+        for (int global_index = 0; global_index < region->grid_vol;
+             global_index++) {
+            if (kw_data[global_index] == value)
+                region->active_mask[global_index] = select;
+        }
+    } else {
+        for (int active_index = 0; active_index < region->grid_active;
+             active_index++) {
+            if (kw_data[active_index] == value) {
+                int global_index = rd_grid_get_global_index1A(
+                    region->parent_grid, active_index);
+                region->active_mask[global_index] = select;
             }
         }
     }
@@ -258,23 +250,19 @@ static void rd_region_select_bool_equal__(rd_region_type *region,
         util_abort("%s: sorry - select by equality is only supported for "
                    "boolean keywords \n",
                    __func__);
-    {
-        if (global_kw) {
-            int global_index;
-            for (global_index = 0; global_index < region->grid_vol;
-                 global_index++) {
-                if (rd_kw_iget_bool(rd_kw, global_index) == value)
-                    region->active_mask[global_index] = select;
-            }
-        } else {
-            int active_index;
-            for (active_index = 0; active_index < region->grid_active;
-                 active_index++) {
-                if (rd_kw_iget_bool(rd_kw, active_index) == value) {
-                    int global_index = rd_grid_get_global_index1A(
-                        region->parent_grid, active_index);
-                    region->active_mask[global_index] = select;
-                }
+    if (global_kw) {
+        for (int global_index = 0; global_index < region->grid_vol;
+             global_index++) {
+            if (rd_kw_iget_bool(rd_kw, global_index) == value)
+                region->active_mask[global_index] = select;
+        }
+    } else {
+        for (int active_index = 0; active_index < region->grid_active;
+             active_index++) {
+            if (rd_kw_iget_bool(rd_kw, active_index) == value) {
+                int global_index = rd_grid_get_global_index1A(
+                    region->parent_grid, active_index);
+                region->active_mask[global_index] = select;
             }
         }
     }
@@ -302,16 +290,14 @@ static void rd_region_select_in_interval__(rd_region_type *region,
     {
         const float *kw_data = rd_kw_get_float_ptr(rd_kw);
         if (global_kw) {
-            int global_index;
-            for (global_index = 0; global_index < region->grid_vol;
+            for (int global_index = 0; global_index < region->grid_vol;
                  global_index++) {
                 if (kw_data[global_index] >= min_value &&
                     kw_data[global_index] < max_value)
                     region->active_mask[global_index] = select;
             }
         } else {
-            int active_index;
-            for (active_index = 0; active_index < region->grid_active;
+            for (int active_index = 0; active_index < region->grid_active;
                  active_index++) {
                 if (kw_data[active_index] >= min_value &&
                     kw_data[active_index] < max_value) {
@@ -357,106 +343,98 @@ static void rd_region_select_with_limit__(rd_region_type *region,
                    "float and integer keywords \n",
                    __func__);
 
-    {
-        if (rd_type_is_float(data_type)) {
-            const float *kw_data = rd_kw_get_float_ptr(rd_kw);
-            float float_limit = limit;
-            if (global_kw) {
-                int global_index;
-                for (global_index = 0; global_index < region->grid_vol;
-                     global_index++) {
-                    if (select_less) {
-                        if (kw_data[global_index] < float_limit)
-                            region->active_mask[global_index] = select;
-                    } else {
-                        if (kw_data[global_index] >= float_limit)
-                            region->active_mask[global_index] = select;
-                    }
+    if (rd_type_is_float(data_type)) {
+        const float *kw_data = rd_kw_get_float_ptr(rd_kw);
+        float float_limit = limit;
+        if (global_kw) {
+            for (int global_index = 0; global_index < region->grid_vol;
+                 global_index++) {
+                if (select_less) {
+                    if (kw_data[global_index] < float_limit)
+                        region->active_mask[global_index] = select;
+                } else {
+                    if (kw_data[global_index] >= float_limit)
+                        region->active_mask[global_index] = select;
                 }
-            } else {
-                int active_index;
-                for (active_index = 0; active_index < region->grid_active;
-                     active_index++) {
-                    if (select_less) {
-                        if (kw_data[active_index] < float_limit) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
-                    } else {
-                        if (kw_data[active_index] >= float_limit) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
+            }
+        } else {
+            for (int active_index = 0; active_index < region->grid_active;
+                 active_index++) {
+                if (select_less) {
+                    if (kw_data[active_index] < float_limit) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
+                    }
+                } else {
+                    if (kw_data[active_index] >= float_limit) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
                     }
                 }
             }
-        } else if (rd_type_is_int(data_type)) {
-            const int *kw_data = rd_kw_get_int_ptr(rd_kw);
-            int int_limit = (int)limit;
-            if (global_kw) {
-                int global_index;
-                for (global_index = 0; global_index < region->grid_vol;
-                     global_index++) {
-                    if (select_less) {
-                        if (kw_data[global_index] < int_limit)
-                            region->active_mask[global_index] = select;
-                    } else {
-                        if (kw_data[global_index] > int_limit)
-                            region->active_mask[global_index] = select;
-                    }
+        }
+    } else if (rd_type_is_int(data_type)) {
+        const int *kw_data = rd_kw_get_int_ptr(rd_kw);
+        int int_limit = (int)limit;
+        if (global_kw) {
+            for (int global_index = 0; global_index < region->grid_vol;
+                 global_index++) {
+                if (select_less) {
+                    if (kw_data[global_index] < int_limit)
+                        region->active_mask[global_index] = select;
+                } else {
+                    if (kw_data[global_index] > int_limit)
+                        region->active_mask[global_index] = select;
                 }
-            } else {
-                int active_index;
-                for (active_index = 0; active_index < region->grid_active;
-                     active_index++) {
-                    if (select_less) {
-                        if (kw_data[active_index] < int_limit) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
-                    } else {
-                        if (kw_data[active_index] > int_limit) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
+            }
+        } else {
+            for (int active_index = 0; active_index < region->grid_active;
+                 active_index++) {
+                if (select_less) {
+                    if (kw_data[active_index] < int_limit) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
+                    }
+                } else {
+                    if (kw_data[active_index] > int_limit) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
                     }
                 }
             }
-        } else if (rd_type_is_double(data_type)) {
-            const double *kw_data = rd_kw_get_double_ptr(rd_kw);
-            double double_limit = (double)limit;
-            if (global_kw) {
-                int global_index;
-                for (global_index = 0; global_index < region->grid_vol;
-                     global_index++) {
-                    if (select_less) {
-                        if (kw_data[global_index] < double_limit)
-                            region->active_mask[global_index] = select;
-                    } else {
-                        if (kw_data[global_index] >= double_limit)
-                            region->active_mask[global_index] = select;
-                    }
+        }
+    } else if (rd_type_is_double(data_type)) {
+        const double *kw_data = rd_kw_get_double_ptr(rd_kw);
+        double double_limit = (double)limit;
+        if (global_kw) {
+            for (int global_index = 0; global_index < region->grid_vol;
+                 global_index++) {
+                if (select_less) {
+                    if (kw_data[global_index] < double_limit)
+                        region->active_mask[global_index] = select;
+                } else {
+                    if (kw_data[global_index] >= double_limit)
+                        region->active_mask[global_index] = select;
                 }
-            } else {
-                int active_index;
-                for (active_index = 0; active_index < region->grid_active;
-                     active_index++) {
-                    if (select_less) {
-                        if (kw_data[active_index] < double_limit) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
-                    } else {
-                        if (kw_data[active_index] >= double_limit) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
+            }
+        } else {
+            for (int active_index = 0; active_index < region->grid_active;
+                 active_index++) {
+                if (select_less) {
+                    if (kw_data[active_index] < double_limit) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
+                    }
+                } else {
+                    if (kw_data[active_index] >= double_limit) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
                     }
                 }
             }
@@ -498,46 +476,42 @@ static void rd_region_cmp_select__(rd_region_type *region,
         util_abort("%s: sorry - select by cmp() is only supported for float "
                    "keywords \n",
                    __func__);
-    {
-        if (rd_kw_size_and_type_equal(kw1, kw2)) {
+    if (rd_kw_size_and_type_equal(kw1, kw2)) {
 
-            const float *kw1_data = rd_kw_get_float_ptr(kw1);
-            const float *kw2_data = rd_kw_get_float_ptr(kw2);
+        const float *kw1_data = rd_kw_get_float_ptr(kw1);
+        const float *kw2_data = rd_kw_get_float_ptr(kw2);
 
-            if (global_kw) {
-                int global_index;
-                for (global_index = 0; global_index < region->grid_vol;
-                     global_index++) {
-                    if (select_less) {
-                        if (kw1_data[global_index] < kw2_data[global_index])
-                            region->active_mask[global_index] = select;
-                    } else {
-                        if (kw1_data[global_index] >= kw2_data[global_index])
-                            region->active_mask[global_index] = select;
-                    }
+        if (global_kw) {
+            for (int global_index = 0; global_index < region->grid_vol;
+                 global_index++) {
+                if (select_less) {
+                    if (kw1_data[global_index] < kw2_data[global_index])
+                        region->active_mask[global_index] = select;
+                } else {
+                    if (kw1_data[global_index] >= kw2_data[global_index])
+                        region->active_mask[global_index] = select;
                 }
-            } else {
-                int active_index;
-                for (active_index = 0; active_index < region->grid_active;
-                     active_index++) {
-                    if (select_less) {
-                        if (kw1_data[active_index] < kw2_data[active_index]) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
-                    } else {
-                        if (kw1_data[active_index] >= kw2_data[active_index]) {
-                            int global_index = rd_grid_get_global_index1A(
-                                region->parent_grid, active_index);
-                            region->active_mask[global_index] = select;
-                        }
+            }
+        } else {
+            for (int active_index = 0; active_index < region->grid_active;
+                 active_index++) {
+                if (select_less) {
+                    if (kw1_data[active_index] < kw2_data[active_index]) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
+                    }
+                } else {
+                    if (kw1_data[active_index] >= kw2_data[active_index]) {
+                        int global_index = rd_grid_get_global_index1A(
+                            region->parent_grid, active_index);
+                        region->active_mask[global_index] = select;
                     }
                 }
             }
-        } else
-            util_abort("%s: type/size mismatch between keywords. \n", __func__);
-    }
+        }
+    } else
+        util_abort("%s: type/size mismatch between keywords. \n", __func__);
     rd_region_invalidate_index_list(region);
 }
 
@@ -617,16 +591,13 @@ static void rd_region_select_i1i2__(rd_region_type *region, int i1, int i2,
         util_abort("%s: i1 > i2 - this is illogical ... \n", __func__);
     i1 = util_int_max(0, i1);
     i2 = util_int_min(region->grid_nx - 1, i2);
-    {
-        int i, j, k;
-        for (k = 0; k < region->grid_nz; k++)
-            for (j = 0; j < region->grid_ny; j++)
-                for (i = i1; i <= i2; i++) {
-                    int global_index =
-                        rd_grid_get_global_index3(region->parent_grid, i, j, k);
-                    region->active_mask[global_index] = select;
-                }
-    }
+    for (int k = 0; k < region->grid_nz; k++)
+        for (int j = 0; j < region->grid_ny; j++)
+            for (int i = i1; i <= i2; i++) {
+                int global_index =
+                    rd_grid_get_global_index3(region->parent_grid, i, j, k);
+                region->active_mask[global_index] = select;
+            }
     rd_region_invalidate_index_list(region);
 }
 
@@ -654,16 +625,13 @@ static void rd_region_select_j1j2__(rd_region_type *region, int j1, int j2,
 
     j1 = util_int_max(0, j1);
     j2 = util_int_min(region->grid_ny - 1, j2);
-    {
-        int i, j, k;
-        for (k = 0; k < region->grid_nz; k++)
-            for (j = j1; j <= j2; j++)
-                for (i = 0; i < region->grid_nx; i++) {
-                    int global_index =
-                        rd_grid_get_global_index3(region->parent_grid, i, j, k);
-                    region->active_mask[global_index] = select;
-                }
-    }
+    for (int k = 0; k < region->grid_nz; k++)
+        for (int j = j1; j <= j2; j++)
+            for (int i = 0; i < region->grid_nx; i++) {
+                int global_index =
+                    rd_grid_get_global_index3(region->parent_grid, i, j, k);
+                region->active_mask[global_index] = select;
+            }
     rd_region_invalidate_index_list(region);
 }
 
@@ -690,16 +658,13 @@ static void rd_region_select_k1k2__(rd_region_type *region, int k1, int k2,
         util_abort("%s: i1 > i2 - this is illogical ... \n", __func__);
     k1 = util_int_max(0, k1);
     k2 = util_int_min(region->grid_nz - 1, k2);
-    {
-        int i, j, k;
-        for (k = k1; k <= k2; k++)
-            for (j = 0; j < region->grid_ny; j++)
-                for (i = 0; i < region->grid_nx; i++) {
-                    int global_index =
-                        rd_grid_get_global_index3(region->parent_grid, i, j, k);
-                    region->active_mask[global_index] = select;
-                }
-    }
+    for (int k = k1; k <= k2; k++)
+        for (int j = 0; j < region->grid_ny; j++)
+            for (int i = 0; i < region->grid_nx; i++) {
+                int global_index =
+                    rd_grid_get_global_index3(region->parent_grid, i, j, k);
+                region->active_mask[global_index] = select;
+            }
     rd_region_invalidate_index_list(region);
 }
 
@@ -720,8 +685,8 @@ void rd_region_deselect_k1k2(rd_region_type *region, int k1, int k2) {
 static void rd_region_select_from_depth__(rd_region_type *region,
                                           double depth_limit, bool select_deep,
                                           bool select) {
-    int global_index;
-    for (global_index = 0; global_index < region->grid_vol; global_index++) {
+    for (int global_index = 0; global_index < region->grid_vol;
+         global_index++) {
         double cell_depth =
             rd_grid_get_cdepth1(region->parent_grid, global_index);
         if (select_deep) {
@@ -758,8 +723,8 @@ void rd_region_deselect_deep_cells(rd_region_type *region, double depth_limit) {
 static void rd_region_select_from_volume__(rd_region_type *region,
                                            double volum_limit,
                                            bool select_small, bool select) {
-    int global_index;
-    for (global_index = 0; global_index < region->grid_vol; global_index++) {
+    for (int global_index = 0; global_index < region->grid_vol;
+         global_index++) {
         double cell_size =
             rd_grid_get_cell_volume1(region->parent_grid, global_index);
         if (select_small) {
@@ -797,8 +762,8 @@ void rd_region_deselect_large_cells(rd_region_type *rd_region,
 
 static void rd_region_select_from_dz__(rd_region_type *region, double dz_limit,
                                        bool select_thin, bool select) {
-    int global_index;
-    for (global_index = 0; global_index < region->grid_vol; global_index++) {
+    for (int global_index = 0; global_index < region->grid_vol;
+         global_index++) {
         double cell_dz =
             rd_grid_get_cell_thickness1(region->parent_grid, global_index);
         if (select_thin) {
@@ -833,8 +798,8 @@ void rd_region_deselect_thick_cells(rd_region_type *rd_region,
 
 static void rd_region_select_active_cells__(rd_region_type *rd_region,
                                             bool select_active, bool select) {
-    int global_index;
-    for (global_index = 0; global_index < rd_region->grid_vol; global_index++) {
+    for (int global_index = 0; global_index < rd_region->grid_vol;
+         global_index++) {
         if (select_active) {
             if (rd_grid_get_active_index1(rd_region->parent_grid,
                                           global_index) >= 0)
@@ -879,19 +844,16 @@ static void rd_region_plane_select__(rd_region_type *region, const double n[3],
     /**
      Plane: ax + by + cz + d = 0
   */
-    {
-        int global_index;
-        for (global_index = 0; global_index < region->grid_vol;
-             global_index++) {
-            double x, y, z;
-            double D;
-            rd_grid_get_xyz1(region->parent_grid, global_index, &x, &y, &z);
-            D = a * x + b * y + c * z + d;
-            if ((D >= 0) && (select_above))
-                region->active_mask[global_index] = select;
-            else if ((D < 0) && (!select_above))
-                region->active_mask[global_index] = select;
-        }
+    for (int global_index = 0; global_index < region->grid_vol;
+         global_index++) {
+        double x, y, z;
+        double D;
+        rd_grid_get_xyz1(region->parent_grid, global_index, &x, &y, &z);
+        D = a * x + b * y + c * z + d;
+        if ((D >= 0) && (select_above))
+            region->active_mask[global_index] = select;
+        else if ((D < 0) && (!select_above))
+            region->active_mask[global_index] = select;
     }
     rd_region_invalidate_index_list(region);
 }
@@ -943,25 +905,21 @@ static void rd_region_polygon_select__(rd_region_type *region,
     const int k1 = 0;       // Selection range in k
     const int k2 = region->grid_nz;
 
-    {
-        int i, j;
-        for (i = 0; i < region->grid_nx; i++) {
-            for (j = 0; j < region->grid_ny; j++) {
-                double x, y, z;
-                bool inside;
-                int global_index = rd_grid_get_global_index3(
-                    region->parent_grid, i, j, define_k);
+    for (int i = 0; i < region->grid_nx; i++) {
+        for (int j = 0; j < region->grid_ny; j++) {
+            double x, y, z;
+            bool inside;
+            int global_index =
+                rd_grid_get_global_index3(region->parent_grid, i, j, define_k);
 
-                rd_grid_get_xyz1(region->parent_grid, global_index, &x, &y, &z);
-                inside = geo_polygon_contains_point(polygon, x, y);
+            rd_grid_get_xyz1(region->parent_grid, global_index, &x, &y, &z);
+            inside = geo_polygon_contains_point(polygon, x, y);
 
-                if (select_inside == inside) {
-                    int k;
-                    for (k = k1; k < k2; k++) {
-                        global_index = rd_grid_get_global_index3(
-                            region->parent_grid, i, j, k);
-                        region->active_mask[global_index] = select;
-                    }
+            if (select_inside == inside) {
+                for (int k = k1; k < k2; k++) {
+                    global_index =
+                        rd_grid_get_global_index3(region->parent_grid, i, j, k);
+                    region->active_mask[global_index] = select;
                 }
             }
         }
@@ -999,8 +957,7 @@ static void rd_region_select_from_layer__(rd_region_type *region,
         const int *i = int_vector_get_ptr(i_list);
         const int *j = int_vector_get_ptr(j_list);
 
-        int index;
-        for (index = 0; index < int_vector_size(i_list); index++) {
+        for (int index = 0; index < int_vector_size(i_list); index++) {
             int global_index = rd_grid_get_global_index3(region->parent_grid,
                                                          i[index], j[index], k);
             region->active_mask[global_index] = select;
@@ -1020,8 +977,7 @@ void rd_region_select_from_layer(rd_region_type *region,
 }
 
 static void rd_region_select_all__(rd_region_type *region, bool select) {
-    int global_index;
-    for (global_index = 0; global_index < region->grid_vol; global_index++)
+    for (int global_index = 0; global_index < region->grid_vol; global_index++)
         region->active_mask[global_index] = select;
     rd_region_invalidate_index_list(region);
 }
@@ -1035,8 +991,7 @@ void rd_region_deselect_all(rd_region_type *region) {
 }
 
 void rd_region_invert_selection(rd_region_type *region) {
-    int global_index;
-    for (global_index = 0; global_index < region->grid_vol; global_index++)
+    for (int global_index = 0; global_index < region->grid_vol; global_index++)
         region->active_mask[global_index] = !region->active_mask[global_index];
     rd_region_invalidate_index_list(region);
 }
@@ -1079,8 +1034,8 @@ bool rd_region_contains_active(const rd_region_type *rd_region,
 void rd_region_intersection(rd_region_type *region,
                             const rd_region_type *new_region) {
     if (region->parent_grid == new_region->parent_grid) {
-        int global_index;
-        for (global_index = 0; global_index < region->grid_vol; global_index++)
+        for (int global_index = 0; global_index < region->grid_vol;
+             global_index++)
             region->active_mask[global_index] =
                 (region->active_mask[global_index] &&
                  new_region->active_mask[global_index]);
@@ -1099,8 +1054,8 @@ void rd_region_intersection(rd_region_type *region,
 */
 void rd_region_union(rd_region_type *region, const rd_region_type *new_region) {
     if (region->parent_grid == new_region->parent_grid) {
-        int global_index;
-        for (global_index = 0; global_index < region->grid_vol; global_index++)
+        for (int global_index = 0; global_index < region->grid_vol;
+             global_index++)
             region->active_mask[global_index] =
                 (region->active_mask[global_index] ||
                  new_region->active_mask[global_index]);
@@ -1120,8 +1075,8 @@ void rd_region_union(rd_region_type *region, const rd_region_type *new_region) {
 void rd_region_subtract(rd_region_type *region,
                         const rd_region_type *new_region) {
     if (region->parent_grid == new_region->parent_grid) {
-        int global_index;
-        for (global_index = 0; global_index < region->grid_vol; global_index++)
+        for (int global_index = 0; global_index < region->grid_vol;
+             global_index++)
             region->active_mask[global_index] &=
                 !new_region->active_mask[global_index];
 
@@ -1139,8 +1094,8 @@ void rd_region_subtract(rd_region_type *region,
 */
 void rd_region_xor(rd_region_type *region, const rd_region_type *new_region) {
     if (region->parent_grid == new_region->parent_grid) {
-        int global_index;
-        for (global_index = 0; global_index < region->grid_vol; global_index++)
+        for (int global_index = 0; global_index < region->grid_vol;
+             global_index++)
             region->active_mask[global_index] ^=
                 !new_region->active_mask[global_index];
 
