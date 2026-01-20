@@ -44,32 +44,32 @@ class GridTest(ResdataTest):
         ny = grid.getNY()
         nz = grid.getNZ()
 
-        (x1, y1, z1) = grid.getCellCorner(0, ijk=(0, 0, 0))
-        (x2, y2, z2) = grid.getLayerXYZ(0, 0)
+        x1, y1, z1 = grid.getCellCorner(0, ijk=(0, 0, 0))
+        x2, y2, z2 = grid.getLayerXYZ(0, 0)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        (x1, y1, z1) = grid.getCellCorner(0, ijk=(0, 1, 0))
-        (x2, y2, z2) = grid.getLayerXYZ((nx + 1), 0)
+        x1, y1, z1 = grid.getCellCorner(0, ijk=(0, 1, 0))
+        x2, y2, z2 = grid.getLayerXYZ((nx + 1), 0)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        (x1, y1, z1) = grid.getCellCorner(1, ijk=(nx - 1, 0, 0))
-        (x2, y2, z2) = grid.getLayerXYZ(nx, 0)
+        x1, y1, z1 = grid.getCellCorner(1, ijk=(nx - 1, 0, 0))
+        x2, y2, z2 = grid.getLayerXYZ(nx, 0)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        (x1, y1, z1) = grid.getCellCorner(4, ijk=(0, 0, nz - 1))
-        (x2, y2, z2) = grid.getLayerXYZ(0, nz)
+        x1, y1, z1 = grid.getCellCorner(4, ijk=(0, 0, nz - 1))
+        x2, y2, z2 = grid.getLayerXYZ(0, nz)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        (x1, y1, z1) = grid.getCellCorner(7, ijk=(nx - 1, ny - 1, nz - 1))
-        (x2, y2, z2) = grid.getLayerXYZ((nx + 1) * (ny + 1) - 1, nz)
+        x1, y1, z1 = grid.getCellCorner(7, ijk=(nx - 1, ny - 1, nz - 1))
+        x2, y2, z2 = grid.getLayerXYZ((nx + 1) * (ny + 1) - 1, nz)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
@@ -125,7 +125,7 @@ class GridTest(ResdataTest):
             self.assertTrue(grid)
             self.assertTrue(grid2)
 
-            (x, y, z) = grid.get_xyz(ijk=(4, 4, 4))
+            x, y, z = grid.get_xyz(ijk=(4, 4, 4))
             self.assertAlmostEqualList([x, y, z], [4.5 * a1, 4.5 * a2, 4.5 * a3])
 
             v = grid.cell_volume(ijk=(4, 4, 4))
@@ -136,7 +136,7 @@ class GridTest(ResdataTest):
 
             g1 = grid.global_index(ijk=(2, 2, 2))
             g2 = grid.global_index(ijk=(4, 4, 4))
-            (dx, dy, dz) = grid.distance(g2, g1)
+            dx, dy, dz = grid.distance(g2, g1)
             self.assertAlmostEqualList([dx, dy, dz], [2 * a1, 2 * a2, 2 * a3])
 
             self.assertTrue(

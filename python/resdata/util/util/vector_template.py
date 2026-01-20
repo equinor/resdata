@@ -51,7 +51,7 @@ class VectorTemplate(BaseCClass):
         Now 'c' will be a Intvector() instance containing every tenth
         element from 'v'.
         """
-        (start, stop, step) = slice_range.indices(len(self))
+        start, stop, step = slice_range.indices(len(self))
         if stop > start:
             return self._strided_copy(start, stop, step)
         else:

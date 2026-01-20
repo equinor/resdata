@@ -965,7 +965,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         of timesteps can be specified, if the @num_timestep option is specified
         that will take presedence.
         """
-        (num, timeUnit) = TimeVector.parseTimeUnit(interval)
+        num, timeUnit = TimeVector.parseTimeUnit(interval)
 
         if start is None:
             start = self.getDataStartTime()

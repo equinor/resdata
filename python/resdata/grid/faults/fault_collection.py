@@ -88,7 +88,7 @@ class FaultCollection(object):
                 break
 
             if line:
-                (name, I1, I2, J1, J2, K1, K2, face) = self.splitLine(line)
+                name, I1, I2, J1, J2, K1, K2, face = self.splitLine(line)
                 if not self.hasFault(name):
                     fault = Fault(grid, name)
                     self.addFault(fault)

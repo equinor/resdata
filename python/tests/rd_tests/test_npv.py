@@ -15,7 +15,6 @@ from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest, equinor_test
 
-
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"
 case = "%s/%s" % (path, base)

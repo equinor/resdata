@@ -89,7 +89,7 @@ class RegionTest(ResdataTest):
         self.assertEqual(global_list.parent(), reg)
 
         for gi in global_list:
-            (i, j, k) = self.grid.get_ijk(global_index=gi)
+            i, j, k = self.grid.get_ijk(global_index=gi)
             if i > 5:
                 OK = False
         self.assertTrue(OK)
@@ -100,7 +100,7 @@ class RegionTest(ResdataTest):
         reg.select_jslice(7, 8, intersect=True)
         OK = True
         for gi in reg.getGlobalList():
-            (i, j, k) = self.grid.get_ijk(global_index=gi)
+            i, j, k = self.grid.get_ijk(global_index=gi)
             if i > 5:
                 OK = False
 
@@ -115,7 +115,7 @@ class RegionTest(ResdataTest):
         reg &= reg2
         OK = True
         for gi in reg.getGlobalList():
-            (i, j, k) = self.grid.get_ijk(global_index=gi)
+            i, j, k = self.grid.get_ijk(global_index=gi)
             if i > 5:
                 OK = False
 
@@ -136,7 +136,7 @@ class RegionTest(ResdataTest):
 
     def test_polygon(self):
         reg = ResdataRegion(self.grid, False)
-        (x, y, z) = self.grid.get_xyz(ijk=(10, 10, 0))
+        x, y, z = self.grid.get_xyz(ijk=(10, 10, 0))
         dx = 0.1
         dy = 0.1
         reg.select_inside_polygon(

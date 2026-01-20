@@ -805,7 +805,7 @@ class Grid(BaseCClass):
     def get_layer_xyz(self, xy_corner, layer):
         nx = self.getNX()
 
-        (j, i) = divmod(xy_corner, nx + 1)
+        j, i = divmod(xy_corner, nx + 1)
         k = layer
         return self.getNodeXYZ(i, j, k)
 

@@ -167,14 +167,11 @@ class ResdataNPV(object):
             )
 
         self.code += "npv = 0\n"
-        self.code += (
-            """
+        self.code += """
 for i in range(len(trange) - 1):
    npv += %s
 varDict[\"npv\"] = npv
-"""
-            % parsedExpression
-        )
+""" % parsedExpression
 
     def eval_npv(self):
         byteCode = compile(self.code, "<string>", "exec")

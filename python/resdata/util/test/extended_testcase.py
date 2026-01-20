@@ -13,7 +13,6 @@ from .source_enumerator import SourceEnumerator
 from resdata.util.util import installAbortSignals
 from resdata.util.util import Version
 
-
 # Function wrapper which can be used to add decorator @log_test to test
 # methods. When a test has been decorated with @log_test it will print
 # "starting: <test_name>" when a method is complete and "complete: <test_name>"

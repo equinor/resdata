@@ -162,7 +162,7 @@ class SummaryVector(object):
             # Observe that the slice based lookup does __not__ return
             # a proper SummaryVector instance; it will merely return
             # a simple Python list with SummaryNode instances.
-            (start, stop, step) = index.indices(length)
+            start, stop, step = index.indices(length)
             index = start
             sub_vector = []
             while index < stop:

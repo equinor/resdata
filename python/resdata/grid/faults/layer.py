@@ -62,7 +62,7 @@ class Layer(BaseCClass):
 
     def __unpack_index(self, index):
         try:
-            (i, j) = index
+            i, j = index
         except TypeError:
             raise ValueError(
                 "Index:%s is invalid - must have two integers" % str(index)
@@ -73,7 +73,7 @@ class Layer(BaseCClass):
         return (i, j)
 
     def __setitem__(self, index, value):
-        (i, j) = self.__unpack_index(index)
+        i, j = self.__unpack_index(index)
         self._set_cell(i, j, value)
 
     def active_cell(self, i, j):
@@ -99,7 +99,7 @@ class Layer(BaseCClass):
         self._update_active(grid, k)
 
     def __getitem__(self, index):
-        (i, j) = self.__unpack_index(index)
+        i, j = self.__unpack_index(index)
         return self._get_cell(i, j)
 
     def bottom_barrier(self, i, j):
