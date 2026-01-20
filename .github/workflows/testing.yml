@@ -37,25 +37,22 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python3 -m pip install "conan<2"
+        python3 -m pip install conan
 
-    - uses: ./.github/actions/setup_conan_mac
-      with:
-        os: ${{ matrix.os }}
-
+    - name: Setup Conan profile
+      run: conan profile detect --force
 
     - name: Build
       run: |
         python3 -m pip install -r requirements.txt
         mkdir cmake-build
-        cmake -S . -B cmake-build -DBUILD_TESTS=ON -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DRST_DOC=ON
-        cmake --build cmake-build
+        conan install . --output-folder=cmake-build --build=missing
+        cmake --preset conan-release -DBUILD_TESTS=ON -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DRST_DOC=ON
+        cmake --build --preset conan-release
 
     - name: Run tests
       run: |
-        cd cmake-build
-        export DYLD_LIBRARY_PATH=$PWD/lib
-        ctest --output-on-failure
+        ctest --preset conan-release
       env:
         RD_SKIP_SIGNAL: absolutely
         ERT_SHOW_BACKTRACE: yes please!
@@ -90,9 +87,11 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
-    - uses: ./.github/actions/setup_conan_mac
-      with:
-        os: ${{ matrix.os }}
+    - name: Setup Conan (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        python3 -m pip install conan
+        conan profile detect --force
 
     - name: Build macOS Wheel
       if: runner.os == 'macOS'

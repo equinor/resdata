@@ -1,5 +1,5 @@
 name: setup_conan_for_mac
-description: Add newest mac compilers to conan settings
+description: Setup Conan macOS
 
 inputs:
   os:
@@ -8,16 +8,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Modify conan settings
+    - name: Setup Conan
       if: inputs.os == 'macos-latest'
       run: |
-        python3 -m pip install "conan<2"
-        conan profile new default --detect --force
-        conan config init --force
-        if ! grep -q '"17.0"' ~/.conan/settings.yml; then
-          sed -i '' '/"16.0"\]/s/\]/\, "17", "17.0"\]/' ~/.conan/settings.yml
-          echo "Added Apple Clang 17.0 support to Conan settings"
-        else
-          echo "Apple Clang 17.0 already in Conan settings"
-        fi
+        python3 -m pip install conan
+        conan profile detect --force
       shell: bash

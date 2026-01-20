@@ -5,7 +5,7 @@ requires = [
   "wheel",
   "scikit-build",
   "cmake<4",
-  "conan<2",
+  "conan>=2",
   "ninja",
 ]
 

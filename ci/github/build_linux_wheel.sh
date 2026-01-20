@@ -17,6 +17,10 @@ yum install -y zlib-devel
 
 git config --global --add safe.directory /github/workspace
 
+# Install conan for dependency management
+/opt/python/$pyver/bin/pip install conan
+/opt/python/$pyver/bin/conan profile detect --force
+
 # Build wheel
 cd /github/workspace
 /opt/python/$pyver/bin/pip wheel . --no-deps -w wheelhouse
