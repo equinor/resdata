@@ -1,4 +1,6 @@
+import json
 import os
+import subprocess
 import sys
 
 import setuptools
@@ -17,6 +19,103 @@ if "CONAN_CACERT_PATH" not in os.environ:
             continue
         os.environ["CONAN_CACERT_PATH"] = file_
         break
+
+
+def get_skbuild_dir():
+    """Get the scikit-build cmake build directory path."""
+    import platform as plat
+
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    return os.path.abspath(
+        os.path.join(
+            "_skbuild",
+            f"{plat.system().lower()}-{plat.machine()}-{python_version}",
+            "cmake-build",
+        )
+    )
+
+
+def run_conan_install():
+    """Run conan install to generate CMake presets and toolchain file for Conan 2."""
+    import shutil
+
+    # Find the conan executable
+    conan_exe = shutil.which("conan")
+    if conan_exe is None:
+        raise RuntimeError(
+            "conan executable not found. Please install conan: pip install conan"
+        )
+
+    # Detect conan profile if not already done
+    subprocess.run(
+        [conan_exe, "profile", "detect", "--force"],
+        check=False,  # Ignore if profile already exists
+    )
+
+    # Get the scikit-build cmake build directory
+    skbuild_dir = get_skbuild_dir()
+    os.makedirs(skbuild_dir, exist_ok=True)
+
+    # Run conan install
+    subprocess.run(
+        [
+            conan_exe,
+            "install",
+            ".",
+            f"--output-folder={skbuild_dir}",
+            "--build=missing",
+        ],
+        check=True,
+    )
+
+    return skbuild_dir
+
+
+def get_cmake_args_from_preset(skbuild_dir):
+    """Extract CMake arguments from Conan-generated CMakePresets.json."""
+    presets_file = os.path.join(skbuild_dir, "CMakePresets.json")
+    cmake_args = []
+
+    if os.path.exists(presets_file):
+        with open(presets_file) as f:
+            presets = json.load(f)
+
+        if presets.get("configurePresets"):
+            preset = presets["configurePresets"][0]
+
+            # Add toolchain file
+            if "toolchainFile" in preset:
+                toolchain = preset["toolchainFile"]
+                # Make path absolute if relative
+                if not os.path.isabs(toolchain):
+                    toolchain = os.path.join(skbuild_dir, toolchain)
+                cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain}")
+
+            # Add cache variables
+            for key, value in preset.get("cacheVariables", {}).items():
+                if isinstance(value, dict):
+                    value = value.get("value", "")
+                cmake_args.append(f"-D{key}={value}")
+
+            # Set environment variables
+            for key, value in preset.get("environment", {}).items():
+                # Expand $penv{VAR} references
+                if "$penv{" in value:
+                    import re
+
+                    value = re.sub(
+                        r"\$penv\{(\w+)\}",
+                        lambda m: os.environ.get(m.group(1), ""),
+                        value,
+                    )
+                os.environ[key] = value
+
+    return cmake_args
+
+
+# Run conan install before scikit-build runs CMake
+skbuild_dir = run_conan_install()
+CMAKE_ARGS_FROM_PRESET = get_cmake_args_from_preset(skbuild_dir)
 
 
 with open("README.md") as f:
@@ -66,9 +165,10 @@ skbuild.setup(
         "natsort",
         "resfo-utilities>=0.4.0",
     ],
-    setup_requires=["conan<2"],
+    setup_requires=["conan>=2"],
     entry_points={"console_scripts": utility_wrappers()},
-    cmake_args=[
+    cmake_args=CMAKE_ARGS_FROM_PRESET
+    + [
         "-DRD_VERSION=" + version,
         "-DBUILD_APPLICATIONS=" + ("ON" if sys.platform == "linux" else "OFF"),
         "-DBUILD_TESTS=OFF",
@@ -76,10 +176,6 @@ skbuild.setup(
         "-DCMAKE_INSTALL_BINDIR=python/resdata/.bin",
         "-DCMAKE_INSTALL_LIBDIR=python/resdata/.libs",
         "-DCMAKE_INSTALL_INCLUDEDIR=python/resdata/.include",
-        # we can safely pass OSX_DEPLOYMENT_TARGET as it's ignored on
-        # everything not OS X. We depend on C++11, which makes our minimum
-        # supported OS X release 10.9
-        "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.9",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

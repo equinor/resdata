@@ -113,13 +113,13 @@ endif()
 target_link_libraries(
   resdata
   PUBLIC ${m} ${dl} ${pthread} ${blas} ${zlib} ${shlwapi}
-  PRIVATE fmt::fmt)
+  PRIVATE fmt::fmt Backward::Backward)
 
 target_include_directories(
   resdata
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-         $<INSTALL_INTERFACE:include> ${Backward_INCLUDES}
+         $<INSTALL_INTERFACE:include>
   PRIVATE ${ZLIB_INCLUDE_DIRS} util include
           ${CMAKE_CURRENT_SOURCE_DIR}/private-include
           ${CMAKE_CURRENT_BINARY_DIR}/include)

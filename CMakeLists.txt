@@ -5,6 +5,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
+
+# When building with scikit-build, the install directories are passed on the
+# command line. GNUInstallDirs sets them as cache variables, which prevents the
+# command-line values from taking effect. Override them here for SKBUILD.
+if(SKBUILD)
+  # These paths match what's passed from setup.py cmake_args
+  set(CMAKE_INSTALL_LIBDIR
+      "python/resdata/.libs"
+      CACHE PATH "Library install dir" FORCE)
+  set(CMAKE_INSTALL_BINDIR
+      "python/resdata/.bin"
+      CACHE PATH "Binary install dir" FORCE)
+  set(CMAKE_INSTALL_INCLUDEDIR
+      "python/resdata/.include"
+      CACHE PATH "Include install dir" FORCE)
+endif()
 include(TestBigEndian)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -17,7 +33,6 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(ERT_USE_OPENMP "Use OpenMP" OFF)
 option(RST_DOC "Build RST documentation" OFF)
 option(USE_RPATH "Don't strip RPATH from libraries and binaries" OFF)
-option(USE_CONAN "Use Conan (https://conan.io) for package management" ON)
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 
@@ -46,72 +61,6 @@ endif()
 
 # For std::filesystem::path
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
-
-# -----------------------------------------------------------------
-# Conan: C++ package manager
-# https://docs.conan.io/en/latest/howtos/cmake_launch.html
-# -----------------------------------------------------------------
-
-if(USE_CONAN)
-  if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-    message(
-      STATUS
-        "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(
-      DOWNLOAD
-      "https://raw.githubusercontent.com/conan-io/cmake-conan/0.18.1/conan.cmake"
-      "${CMAKE_BINARY_DIR}/conan.cmake")
-
-    # Patch the downloaded conan.cmake to support MSVC 1944 (VS 2022)
-    message(STATUS "Patching conan.cmake for MSVC 1944 support")
-    file(READ "${CMAKE_BINARY_DIR}/conan.cmake" CONAN_CMAKE_CONTENT)
-
-    string(
-      REPLACE
-        "elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1940)"
-        "elseif(NOT MSVC_VERSION VERSION_LESS 1930 AND MSVC_VERSION VERSION_LESS 1950)"
-        CONAN_CMAKE_CONTENT
-        "${CONAN_CMAKE_CONTENT}")
-
-    file(WRITE "${CMAKE_BINARY_DIR}/conan.cmake" "${CONAN_CMAKE_CONTENT}")
-    message(STATUS "conan.cmake patched successfully for MSVC 1944 support")
-  endif()
-
-  include(${CMAKE_BINARY_DIR}/conan.cmake)
-
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    # set(conan_opts ...)
-  elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(conan_opts backward-cpp:stack_details=backtrace_symbol)
-  elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    # set(conan_opts ...)
-  else()
-    message(
-      WARNING
-        "Unknown platform. Conan packages may not be configures correctly.")
-  endif()
-
-  conan_cmake_run(
-    # Packages
-    REQUIRES
-    backward-cpp/1.6
-    catch2/2.13.9
-    fmt/8.0.1
-    # Options
-    OPTIONS
-    catch2:with_main=True
-    ${conan_opts}
-    # Force cppstd to be the same as this CMakeLists.txt's
-    SETTINGS
-    compiler.cppstd=${CMAKE_CXX_STANDARD}
-    # Build from source if there are no pre-compiled binaries
-    BUILD
-    missing
-    GENERATORS
-    cmake_find_package)
-endif(USE_CONAN)
-
-# -----------------------------------------------------------------
 
 set(RD_VERSION_MAJOR 0)
 set(RD_VERSION_MINOR 0)
@@ -290,11 +239,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules
 # -----------------------------------------------------------------
 
 find_package(fmt REQUIRED)
-if(USE_CONAN)
-  find_package(Backward REQUIRED)
-else()
-  find_path(Backward_INCLUDES backward.hpp REQUIRED)
-endif(USE_CONAN)
+find_package(Backward REQUIRED)
 
 # create targets for (required and optional) dependencies to link to
 
