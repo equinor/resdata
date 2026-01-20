@@ -47,7 +47,6 @@ from .thread_pool import ThreadPool
 from .install_abort_signals import installAbortSignals, updateAbortSignals
 from .cwd_context import CWDContext
 
-
 ###
 ###  monkey_the_camel is a function temporarily added to resdata while we are in
 ###  the process of changing camelCase function names to snake_case function

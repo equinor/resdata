@@ -30,9 +30,7 @@ def test_help_string(capsys):
         parse_arguments(["summary.x", "-h"])
     assert sysexit.value.code == 0
     captured = capsys.readouterr()
-    assert (
-        captured.out
-        == """\
+    assert captured.out == """\
 usage: summary.x [-h] [--list] [--restart | --no-restart]
                  [--header | --no-header] [--report-only] [-v]
                  CASE [keys ...]
@@ -108,7 +106,6 @@ manipulate this with the extension to the basename:
 * If the extension corresponds to a unified file, summary.x will
   only look for unified files.
 """
-    )
 
 
 def test_that_giving_non_existing_case_is_invalid(tmp_path, capsys):
@@ -725,15 +722,13 @@ def test_that_case_name_can_refer_to_a_non_unified_summary(capsys, formatted):
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent(
-        """\
+    assert df.to_csv() == dedent("""\
             ,Days,dd/mm/yyyy,FGIT,FOPR
             0,1.0,02/01/2014,4.0,4.0
             1,2.0,03/01/2014,4.0,4.0
             2,3.0,04/01/2014,4.0,4.0
             3,4.0,05/01/2014,4.0,4.0
-            """
-    )
+            """)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -745,12 +740,10 @@ def test_that_unformatted_unified_is_chosen_over_unformatted_split(capsys):
     with pytest.warns(match="More than one type of summary file"):
         run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent(
-        """\
+    assert df.to_csv() == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
-            """
-    )
+            """)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -762,15 +755,13 @@ def test_that_split_unformatted_is_chosen_over_unified_formatted(capsys):
     with pytest.warns(match="More than one type of summary file"):
         run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent(
-        """\
+    assert df.to_csv() == dedent("""\
             ,Days,dd/mm/yyyy,FGIT,FOPR
             0,1.0,02/01/2014,4.0,4.0
             1,2.0,03/01/2014,4.0,4.0
             2,3.0,04/01/2014,4.0,4.0
             3,4.0,05/01/2014,4.0,4.0
-            """
-    )
+            """)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -782,12 +773,10 @@ def test_that_formatted_unified_is_chosen_over_unformatted_split(capsys):
     with pytest.warns(match="More than one type of summary file"):
         run(["summary.x", "-v", "TEST", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent(
-        """\
+    assert df.to_csv() == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
-            """
-    )
+            """)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -801,12 +790,10 @@ def test_that_files_can_be_in_a_different_directory(monkeypatch, capsys):
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", str(dir / "TEST"), "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent(
-        """\
+    assert df.to_csv() == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
-            """
-    )
+            """)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -816,12 +803,10 @@ def test_that_empty_extension_is_ignored(capsys):
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST.", "*"])
     df = output_as_df(capsys.readouterr().out)
-    assert df.to_csv() == dedent(
-        """\
+    assert df.to_csv() == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
             0,0.0,01/01/2014,5.6299e+16
-            """
-    )
+            """)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -849,16 +834,14 @@ def test_that_restart_and_base_times_are_concated(capsys):
 
     capsys.readouterr()  # Ensure empty capture
     run(["summary.x", "-v", "TEST", "*"])
-    assert output_as_df(capsys.readouterr().out).to_csv() == dedent(
-        """\
+    assert output_as_df(capsys.readouterr().out).to_csv() == dedent("""\
         ,Days,dd/mm/yyyy,FGIP,FOPR,FOPT
         0,1.0,02/01/2014,-99.0,-99.0,4.0
         1,2.0,03/01/2014,5.6299e+16,5.6299e+16,-99.0
         2,3.0,04/01/2014,5.6299e+16,5.6299e+16,-99.0
         3,4.0,05/01/2014,5.6299e+16,5.6299e+16,-99.0
         4,5.0,06/01/2014,5.6299e+16,5.6299e+16,-99.0
-        """
-    )
+        """)
 
 
 @pytest.mark.usefixtures("use_tmpdir")

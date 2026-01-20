@@ -4,7 +4,6 @@ from operator import itemgetter
 from resdata.resfile import ResdataFile
 from resdata.grid import Grid
 
-
 if __name__ == "__main__":
     case = sys.argv[1]
     grid_file = ResdataFile(f"{case}.EGRID")

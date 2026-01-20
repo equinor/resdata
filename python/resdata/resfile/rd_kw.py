@@ -228,7 +228,7 @@ class ResdataKW(BaseCClass):
         return cls.int_kw_set
 
     def slice_copy(self, slice_range):
-        (start, stop, step) = slice_range.indices(len(self))
+        start, stop, step = slice_range.indices(len(self))
         if stop > start:
             return self._slice_copyc(start, stop, step)
         else:
@@ -544,7 +544,7 @@ class ResdataKW(BaseCClass):
                     else:
                         raise SystemError("Internal implementation error ...")
         elif isinstance(index, slice):
-            (start, stop, step) = index.indices(len(self))
+            start, stop, step = index.indices(len(self))
             index = start
             while index < stop:
                 self[index] = value

@@ -533,8 +533,7 @@ class FaultTest(ResdataTest):
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl", "w") as f:
-                f.write(
-                    """FAULTS
+                f.write("""FAULTS
 \'F\'              105  107     50   50      1   43    \'Y\'    /
 \'F\'              108  108     50   50      1   43    \'X\'    /
 \'F\'              108  108     50   50     22   43    \'Y\'    /
@@ -542,8 +541,7 @@ class FaultTest(ResdataTest):
 \'F\'              110  110     49   49      1   43    \'X\'    /
 \'F\'              111  111     48   48      1   43    \'Y\'    /
 /
-"""
-                )
+""")
             faults = FaultCollection(grid, "faults.grdecl")
 
         fault = faults["F"]
@@ -671,14 +669,12 @@ class FaultTest(ResdataTest):
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl", "w") as f:
-                f.write(
-                    """FAULTS
+                f.write("""FAULTS
 \'F1\'              1    4       2    2       1    1    \'Y\'    /
 \'F1\'              6    8       2    2       1    1    \'Y\'    /
 \'F2\'              1    8       2    2       1    1    \'Y\'    /
 /
-"""
-                )
+""")
             faults = FaultCollection(grid, "faults.grdecl")
 
             f1 = faults["F1"]

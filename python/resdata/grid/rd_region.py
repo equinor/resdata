@@ -858,7 +858,7 @@ class ResdataRegion(BaseCClass):
         plain; correspondingly 'below' means that the cell center has
         a negative disatnce to the plane.
         """
-        (n_vec, p_vec) = self.__init_plane_select(n, p)
+        n_vec, p_vec = self.__init_plane_select(n, p)
         self._select_above_plane(n_vec, p_vec)
 
     @select_method
@@ -868,7 +868,7 @@ class ResdataRegion(BaseCClass):
 
         See method 'select_above_plane' for further documentation.
         """
-        (n_vec, p_vec) = self.__init_plane_select(n, p)
+        n_vec, p_vec = self.__init_plane_select(n, p)
         self._select_below_plane(n_vec, p_vec)
 
     def deselect_above_plane(self, n, p):
@@ -877,7 +877,7 @@ class ResdataRegion(BaseCClass):
 
         See method 'select_above_plane' for further documentation.
         """
-        (n_vec, p_vec) = self.__init_plane_select(n, p)
+        n_vec, p_vec = self.__init_plane_select(n, p)
         self._deselect_above_plane(n_vec, p_vec)
 
     def deselect_below_plane(self, n, p):
@@ -886,7 +886,7 @@ class ResdataRegion(BaseCClass):
 
         See method 'select_above_plane' for further documentation.
         """
-        (n_vec, p_vec) = self.__init_plane_select(n, p)
+        n_vec, p_vec = self.__init_plane_select(n, p)
         self._deselect_below_plane(n_vec, p_vec)
 
     @select_method

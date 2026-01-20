@@ -3,7 +3,6 @@ from datetime import datetime, date
 
 from resdata.util.util import CTime
 
-
 try:
     from unittest2 import TestCase
 except ImportError:

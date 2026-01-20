@@ -369,11 +369,11 @@ class GridTest(ResdataTest):
         ny = 1
         nz = 1
         grid = GridGen.createRectangular((nx, ny, nz), (1, 1, 1))
-        (i, j) = grid.findCellXY(0.5, 0.5, 0)
+        i, j = grid.findCellXY(0.5, 0.5, 0)
         self.assertEqual(i, 0)
         self.assertEqual(j, 0)
 
-        (i, j) = grid.findCellXY(3.5, 0.5, 0)
+        i, j = grid.findCellXY(3.5, 0.5, 0)
         self.assertEqual(i, 3)
         self.assertEqual(j, 0)
 
@@ -447,7 +447,7 @@ class GridTest(ResdataTest):
         nz = 10
         grid = GridGen.createRectangular((nx, ny, nz), (2, 3, 4))
 
-        (dx, dy, dz) = grid.getCellDims(active_index=0)
+        dx, dy, dz = grid.getCellDims(active_index=0)
         self.assertEqual(dx, 2)
         self.assertEqual(dy, 3)
         self.assertEqual(dz, 4)

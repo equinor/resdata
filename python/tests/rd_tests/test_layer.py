@@ -93,8 +93,7 @@ class LayerTest(ResdataTest):
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
         with TestAreaContext("python/faults/line_order"):
             with open("faults.grdecl", "w") as f:
-                f.write(
-                    """FAULTS
+                f.write("""FAULTS
 \'F\'              105  107     50   50      1   43    \'Y\'    /
 \'F\'              108  108     50   50      1   43    \'X\'    /
 \'F\'              108  108     50   50     22   43    \'Y\'    /
@@ -102,8 +101,7 @@ class LayerTest(ResdataTest):
 \'F\'              110  110     49   49      1   43    \'X\'    /
 \'F\'              111  111     48   48      1   43    \'Y\'    /
 /
-"""
-                )
+""")
             with open("faults.grdecl") as f:
                 faults = FaultCollection(grid, "faults.grdecl")
 

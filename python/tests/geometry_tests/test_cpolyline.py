@@ -88,17 +88,17 @@ class CPolylineTest(ResdataTest):
         self.assertEqual(len(polyline), 1)
 
         with self.assertRaises(TypeError):
-            (x, y) = polyline["KEY"]
+            x, y = polyline["KEY"]
 
         with self.assertRaises(IndexError):
-            (x, y) = polyline[10]
+            x, y = polyline[10]
 
-        (x, y) = polyline[0]
+        x, y = polyline[0]
         self.assertEqual(x, 10)
         self.assertEqual(y, 20)
 
         polyline.addPoint(20, 20)
-        (x, y) = polyline[-1]
+        x, y = polyline[-1]
         self.assertEqual(x, 20)
         self.assertEqual(y, 20)
 

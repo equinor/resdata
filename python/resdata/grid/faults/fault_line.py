@@ -111,8 +111,8 @@ class FaultLine(object):
         k = self.__k
 
         for segment in self:
-            (j1, i1) = divmod(segment.getC1(), (nx + 1))
-            (j2, i2) = divmod(segment.getC2(), (nx + 1))
+            j1, i1 = divmod(segment.getC1(), (nx + 1))
+            j2, i2 = divmod(segment.getC2(), (nx + 1))
 
             if j1 > j2:
                 j1, j2 = j2, j1
@@ -166,11 +166,11 @@ class FaultLine(object):
         for segment in self:
             C1 = segment.getC1()
             C2 = segment.getC2()
-            (J1, I1) = divmod(C1, self.__grid.getNX() + 1)
-            (J2, I2) = divmod(C2, self.__grid.getNX() + 1)
+            J1, I1 = divmod(C1, self.__grid.getNX() + 1)
+            J2, I2 = divmod(C2, self.__grid.getNX() + 1)
 
-            (x1, y1, z) = self.__grid.getNodePos(I1, J1, self.__k)
-            (x2, y2, z) = self.__grid.getNodePos(I2, J2, self.__k)
+            x1, y1, z = self.__grid.getNodePos(I1, J1, self.__k)
+            x2, y2, z = self.__grid.getNodePos(I2, J2, self.__k)
 
             xlist.append(x1)
             xlist.append(x2)
@@ -204,8 +204,8 @@ class FaultLine(object):
         for segment in self:
             C1 = segment.getC1()
             C2 = segment.getC2()
-            (J1, I1) = divmod(C1, self.__grid.getNX() + 1)
-            (J2, I2) = divmod(C2, self.__grid.getNX() + 1)
+            J1, I1 = divmod(C1, self.__grid.getNX() + 1)
+            J2, I2 = divmod(C2, self.__grid.getNX() + 1)
             print(
                 "[Corner:%5d IJ:(%3d,%d)] -> [Corner:%5d IJ:(%3d,%d)]"
                 % (C1, I1, J1, C2, I2, J2)

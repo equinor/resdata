@@ -178,7 +178,7 @@ class TimeVector(VectorTemplate):
                 year += num
             else:
                 month += num - 1
-                (deltaYear, newMonth) = divmod(month, 12)
+                deltaYear, newMonth = divmod(month, 12)
                 month = newMonth + 1
                 year += deltaYear
             currentTime = datetime.datetime(year, month, day, hour, minute, second)
@@ -205,7 +205,7 @@ class TimeVector(VectorTemplate):
         if start > end:
             raise ValueError("The time interval is invalid start is after end")
 
-        (num, timeUnit) = cls.parseTimeUnit(deltaString)
+        num, timeUnit = cls.parseTimeUnit(deltaString)
 
         timeVector = TimeVector()
         currentTime = start
