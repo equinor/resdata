@@ -3,7 +3,7 @@
 from resdata.rft import ResdataPLTCell, ResdataRFTCell
 from resdata.util.util import monkey_the_camel
 from os import PathLike
-from typing import Any
+from typing import Any, cast
 from collections.abc import Mapping
 import datetime
 import numpy.typing as npt
@@ -48,7 +48,9 @@ class ResdataRFT:
         self._date = date
         self._days = days
         self._is_msw = is_msw
-        connections_ = connections if connections is not None else []
+        connections_: np.ndarray[tuple[int, int], np.dtype[np.int32]] | list[Any] = (
+            connections if connections is not None else []
+        )
         empty_values = [None] * len(connections_)
         zeros = np.zeros(len(connections_), np.float32)
         values_ = values or {}
@@ -118,7 +120,9 @@ class ResdataRFT:
                         )
                     )
                 if self._is_msw:
-                    self._cells.sort(key=lambda x: x.conn_start)
+                    cast(list[ResdataPLTCell], self._cells).sort(
+                        key=lambda x: x.conn_start
+                    )
             case default:
                 warnings.warn(f"Encountered unimplemented RFT data type {default}")
 
@@ -230,7 +234,7 @@ class ResdataRFTFile:
                 self._entries = [
                     ResdataRFT(
                         e.well,
-                        category_to_type_str(e.types_of_data),
+                        category_to_type_str(e.types_of_data),  # type: ignore
                         e.date,
                         e.time_since_start.total_seconds() / (60 * 60 * 24),
                         e.connections,

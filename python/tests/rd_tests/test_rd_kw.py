@@ -90,6 +90,7 @@ class KWTest(ResdataTest):
                 kw_string.sum()
 
         kw_int = ResdataKW("INT", 4, ResDataType.RD_INT)
+        self.assertEqual(kw_int.type_name(), "INTE")
         kw_int[0] = 1
         kw_int[1] = 2
         kw_int[2] = 3
@@ -97,6 +98,7 @@ class KWTest(ResdataTest):
         self.assertEqual(kw_int.sum(), 10)
 
         kw_d = ResdataKW("D", 4, ResDataType.RD_DOUBLE)
+        self.assertEqual(kw_d.type_name(), "DOUB")
         kw_d[0] = 1
         kw_d[1] = 2
         kw_d[2] = 3
@@ -104,6 +106,7 @@ class KWTest(ResdataTest):
         self.assertEqual(kw_d.sum(), 10)
 
         kw_f = ResdataKW("F", 4, ResDataType.RD_FLOAT)
+        self.assertEqual(kw_f.type_name(), "REAL")
         kw_f[0] = 1
         kw_f[1] = 2
         kw_f[2] = 3
@@ -111,6 +114,7 @@ class KWTest(ResdataTest):
         self.assertEqual(kw_f.sum(), 10)
 
         kw_b = ResdataKW("F", 4, ResDataType.RD_BOOL)
+        self.assertEqual(kw_b.type_name(), "LOGI")
         kw_b[0] = False
         kw_b[1] = True
         kw_b[2] = False

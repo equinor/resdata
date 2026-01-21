@@ -588,9 +588,6 @@ class VectorTemplate(BaseCClass):
     def _pop(self, *_):
         raise NotImplementedError()
 
-    def default_format(self, *_):
-        raise NotImplementedError()
-
     def _iget(self, *_):
         raise NotImplementedError()
 

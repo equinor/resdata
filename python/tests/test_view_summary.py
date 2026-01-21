@@ -447,7 +447,7 @@ def output_as_df(output: str):
 
     dtypes = defaultdict(lambda: "Float64")
     dtypes["dd/mm/yyyy"] = "str"
-    return pd.read_csv(StringIO("\n".join(lines)), sep=r"\s+", dtype=dtypes)  # type: ignore
+    return pd.read_csv(StringIO("\n".join(lines)), sep=r"\s+", dtype=dtypes)
 
 
 @given(summary=summaries(), patterns=st.lists(patterns, min_size=1))

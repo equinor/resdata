@@ -16,7 +16,7 @@ def assert_frame_equal(a, b):
 
 
 try:
-    from pandas.testing import assert_frame_equal
+    from pandas.testing import assert_frame_equal  # type: ignore
 except ImportError:
     pass
 

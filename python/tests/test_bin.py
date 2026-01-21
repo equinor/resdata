@@ -19,7 +19,7 @@ import signal
         ("summary.x", 2, b"the following arguments are required: CASE"),
     ],
 )
-def test_exec(name: str, returncode: int, stderr: str) -> None:
+def test_exec(name: str, returncode: int, stderr: bytes) -> None:
     status = subprocess.run([name], stderr=subprocess.PIPE)
     assert status.returncode == returncode
     assert stderr in status.stderr

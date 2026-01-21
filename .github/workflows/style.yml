@@ -18,6 +18,10 @@ jobs:
     - name: Install dependencies
       run: |
         pip install cmake-format clang-format black
+        pip install -r types_requirements.txt
+
+    - name: Check types
+      run: mypy python
 
     - name: Clang Format
       run: ./script/clang-format --check
