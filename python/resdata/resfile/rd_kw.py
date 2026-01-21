@@ -989,10 +989,6 @@ class ResdataKW(BaseCClass):
     def data_type(self):
         return self._get_data_type()
 
-    @property
-    def type_name(self):
-        return self.data_type.type_name
-
     def type_name(self):
         return self.data_type.type_name
 

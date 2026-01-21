@@ -638,10 +638,10 @@ class Summary(BaseCClass):
         for key in headers:
             lst = re.split(":", key)
             kw = lst[0]
-            wgname = None
-            lgr = None
-            nums = None
-            num = None
+            wgname: str | None = None
+            lgr: str | None = None
+            nums: tuple[int, int, int] | None = None
+            num: int | None = None
             unit = "UNIT"
             var_type = Summary.var_type(kw)
             if var_type == SummaryVarType.RD_SMSPEC_INVALID_VAR:
@@ -655,21 +655,21 @@ class Summary(BaseCClass):
             elif var_type == SummaryVarType.RD_SMSPEC_WELL_VAR:
                 wgname = lst[1]
             elif var_type == SummaryVarType.RD_SMSPEC_SEGMENT_VAR:
-                kw, wgname, num = lst
-                num = int(num)
+                kw, wgname, tmpnum = lst
+                num = int(tmpnum)
             elif var_type == SummaryVarType.RD_SMSPEC_BLOCK_VAR:
                 kw, loc = lst
                 if loc.count(",") == 2:
-                    nums = tuple(int(i) for i in loc.split(","))
+                    nums = tuple(int(i) for i in loc.split(","))  # type: ignore
                 else:
                     num = int(loc)
             elif var_type == SummaryVarType.RD_SMSPEC_AQUIFER_VAR:
-                kw, num = lst
-                num = int(num)
+                kw, tmpnum = lst
+                num = int(tmpnum)
             elif var_type == SummaryVarType.RD_SMSPEC_COMPLETION_VAR:
                 kw, wgname, loc = lst
                 if loc.count(",") == 2:
-                    nums = tuple(int(i) for i in loc.split(","))
+                    nums = tuple(int(i) for i in loc.split(","))  # type: ignore
                 else:
                     num = int(loc)
             elif var_type == SummaryVarType.RD_SMSPEC_NETWORK_VAR:
@@ -682,11 +682,11 @@ class Summary(BaseCClass):
                 else:
                     num = int(r1r2)
             elif var_type == SummaryVarType.RD_SMSPEC_LOCAL_BLOCK_VAR:
-                kw, lgr, nums = lst
-                nums = tuple(int(i) for i in nums.split(","))
+                kw, lgr, tmpnums = lst
+                nums = tuple(int(i) for i in tmpnums.split(","))  # type: ignore
             elif var_type == SummaryVarType.RD_SMSPEC_LOCAL_COMPLETION_VAR:
-                kw, lgr, wgname, nums = lst
-                nums = tuple(int(i) for i in nums.split(","))
+                kw, lgr, wgname, tmpnums = lst
+                nums = tuple(int(i) for i in tmpnums.split(","))  # type: ignore
             elif var_type == SummaryVarType.RD_SMSPEC_LOCAL_WELL_VAR:
                 kw, lgr, wgname = lst
                 nums = (0, 0, 0)  # We don't know from the list so use dummy

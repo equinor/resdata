@@ -146,7 +146,6 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def main() -> None:
-
     logging.captureWarnings(True)
 
     def custom_formatwarning(message, category, filename, lineno, line=None, file=None):
@@ -187,7 +186,7 @@ def run(argv: list[str]) -> int:
         return 0
 
 
-def setup_logging(verbosity: int):
+def setup_logging(verbosity: int) -> None:
     """Map verbosity count to logging levels"""
     if verbosity >= 2:
         level = logging.DEBUG
@@ -335,7 +334,7 @@ def read_case(
                 )
         except Exception as err:
             logger.error(f"Error while reading restart case: {err}")
-    result = defaultdict(list)
+    result: dict[str, list[datetime | float]] = defaultdict(list)
     for date_val, values in read_smry(summary, spec, report_only):
         date = spec.start_date + spec.time_unit.make_delta(float(date_val))
         result[spec.time_unit.value].append(date_val)

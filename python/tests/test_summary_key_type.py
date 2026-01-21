@@ -7,7 +7,7 @@ from resfo_utilities.testing import summary_variables
 DUMMY_NAME = ":+:+:+:+"
 
 
-def to_ecl(st: SummaryKeyType) -> SummaryVarType:
+def to_ecl(st: SummaryKeyType) -> SummaryVarType | None:
     if st == SummaryKeyType.AQUIFER:
         return SummaryVarType.RD_SMSPEC_AQUIFER_VAR
     if st == SummaryKeyType.BLOCK:
@@ -36,6 +36,7 @@ def to_ecl(st: SummaryKeyType) -> SummaryVarType:
         return SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
     if st == SummaryKeyType.OTHER:
         return SummaryVarType.RD_SMSPEC_MISC_VAR
+    assert False
 
 
 @given(summary_variables())

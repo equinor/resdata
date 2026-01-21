@@ -77,7 +77,7 @@ class ResdataGrav(BaseCClass):
             "RPORV": self.add_survey_RPORV,
         }
 
-    def add_survey_RPORV(self, survey_name: str, restart_view: ResdataFileView):
+    def add_survey_RPORV(self, survey_name: str, restart_view: ResdataFileView) -> None:
         """
         Add new survey based on RPORV keyword.
 
@@ -104,7 +104,9 @@ class ResdataGrav(BaseCClass):
         """
         self._add_survey_RPORV(survey_name, restart_view)
 
-    def add_survey_PORMOD(self, survey_name: str, restart_view: ResdataFileView):
+    def add_survey_PORMOD(
+        self, survey_name: str, restart_view: ResdataFileView
+    ) -> None:
         """
         Add new survey based on PORMOD keyword.
 
@@ -114,7 +116,7 @@ class ResdataGrav(BaseCClass):
         """
         self._add_survey_PORMOD(survey_name, restart_view)
 
-    def add_survey_FIP(self, survey_name: str, restart_view: ResdataFileView):
+    def add_survey_FIP(self, survey_name: str, restart_view: ResdataFileView) -> None:
         """
         Add new survey based on FIP keywords.
 
@@ -131,7 +133,7 @@ class ResdataGrav(BaseCClass):
         if void_ptr is None:
             raise ValueError("Could not add FIP survey due to missing std_density")
 
-    def add_survey_RFIP(self, survey_name: str, restart_view: ResdataFileView):
+    def add_survey_RFIP(self, survey_name: str, restart_view: ResdataFileView) -> None:
         """
         Add new survey based on RFIP keywords.
 
@@ -142,18 +144,18 @@ class ResdataGrav(BaseCClass):
         """
         self._add_survey_RFIP(survey_name, restart_view)
 
-    def add_survey(self, name: str, restart_view: ResdataFileView, method):
-        method = self.dispatch[method]
-        return method(name, restart_view)
+    def add_survey(self, name: str, restart_view: ResdataFileView, method: str) -> None:
+        method_callable = self.dispatch[method]
+        return method_callable(name, restart_view)
 
     def eval(
         self,
         base_survey,
         monitor_survey,
-        pos,
+        pos: tuple[float, float, float],
         region: Optional[ResdataRegion] = None,
-        phase_mask=Phase.OIL + Phase.GAS + Phase.WATER,
-    ):
+        phase_mask=Phase.OIL + Phase.GAS + Phase.WATER,  # type: ignore
+    ) -> float:
         """
         Calculates the gravity change between two surveys.
 

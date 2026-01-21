@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# type: ignore
 import sys
 
 import matplotlib.pyplot as plt
