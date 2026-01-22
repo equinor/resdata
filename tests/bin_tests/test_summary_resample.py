@@ -6,6 +6,7 @@ from resdata.grid import Cell, Grid
 from resdata.summary import Summary
 from resdata.util.test import TestAreaContext
 from resdata.util.test.mock import createSummary
+
 from tests import ResdataTest
 
 

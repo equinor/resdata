@@ -7,7 +7,7 @@ from resdata.gravimetry import ResdataSubsidence
 
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest
-from tests.rd_tests.create_restart import create_restart
+from .create_restart import create_restart
 
 import numpy as np
 
