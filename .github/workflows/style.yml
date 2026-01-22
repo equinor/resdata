@@ -17,8 +17,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install cmake-format clang-format black
-        pip install -r types_requirements.txt
+        pip install --group format --group types
 
     - name: Check types
       run: mypy python

@@ -549,10 +549,9 @@ def test_that_unopenable_restart_warns(capsys, caplog):
         create_summary(case="RESTART", summary_keys=("FOPR",))
         sum_file = Path("RESTART.UNSMRY")
         sum_file.chmod(0x000)
-        # Disable the test for cibuildwheel where permissions do not seem to work
         with suppress(PermissionError):
             with open(sum_file):
-                pytest.skip()
+                pytest.skip("Skip test for cibuildwheel due to permission problems")
 
         create_summary(restart="RESTART", summary_keys=("FWPT",))
 
