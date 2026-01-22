@@ -10,7 +10,7 @@ from resdata.util.util import CWDContext
 from resdata.util.test import TestAreaContext
 from resdata.grid import Grid
 from tests import ResdataTest
-from tests.rd_tests.create_restart import create_restart
+from .create_restart import create_restart
 
 
 def createFile(name, kw_list):

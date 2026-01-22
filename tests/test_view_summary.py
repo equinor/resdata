@@ -1,3 +1,5 @@
+import os
+import stat
 from view_summary.__main__ import parse_arguments, run
 from contextlib import suppress
 import resfo
@@ -545,7 +547,12 @@ def test_that_missing_restart_warns(capsys, caplog):
 def test_that_unopenable_restart_warns(capsys, caplog):
     try:
         create_summary(case="RESTART", summary_keys=("FOPR",))
-        Path("RESTART.UNSMRY").chmod(0x000)
+        sum_file = Path("RESTART.UNSMRY")
+        sum_file.chmod(0x000)
+        # Disable the test for cibuildwheel where permissions do not seem to work
+        with suppress(PermissionError):
+            with open(sum_file):
+                pytest.skip()
 
         create_summary(restart="RESTART", summary_keys=("FWPT",))
 
