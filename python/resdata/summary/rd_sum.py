@@ -692,7 +692,7 @@ class Summary(BaseCClass):
 
         for i, time in enumerate(frame.index):
             days = (time - start_time).total_seconds() / 86400
-            t_step = rd_sum.addTStep(i + 1, days)
+            t_step = rd_sum.add_t_step(i + 1, days)
 
             for var in var_list:
                 t_step[var] = frame.iloc[i][var]
@@ -840,7 +840,7 @@ class Summary(BaseCClass):
         Also available as method get_interp() on the SummaryVector
         class.
         """
-        self.assertKeyValid(key)
+        self.assert_key_valid(key)
         if days is None and date is None:
             raise ValueError("Must supply either days or date")
 
@@ -880,22 +880,22 @@ class Summary(BaseCClass):
         num, timeUnit = TimeVector.parseTimeUnit(interval)
 
         if start is None:
-            start = self.getDataStartTime()
+            start = self.get_data_start_time()
         else:
             if isinstance(start, datetime.date):
                 start = datetime.datetime(start.year, start.month, start.day, 0, 0, 0)
 
-            if start < self.getDataStartTime():
-                start = self.getDataStartTime()
+            if start < self.get_data_start_time():
+                start = self.get_data_start_time()
 
         if end is None:
-            end = self.getEndTime()
+            end = self.get_end_time()
         else:
             if isinstance(end, datetime.date):
                 end = datetime.datetime(end.year, end.month, end.day, 0, 0, 0)
 
-            if end > self.getEndTime():
-                end = self.getEndTime()
+            if end > self.get_end_time():
+                end = self.get_end_time()
 
         if end < start:
             raise ValueError("Invalid time interval start after end")
@@ -943,7 +943,7 @@ class Summary(BaseCClass):
             else:
                 trange.append(end)
 
-        data_start = self.getDataStartTime()
+        data_start = self.get_data_start_time()
         if trange[0] < data_start:
             trange[0] = CTime(data_start)
 
@@ -1005,7 +1005,7 @@ class Summary(BaseCClass):
         Also available as method get_interp_vector() on the
         SummaryVector class.
         """
-        self.assertKeyValid(key)
+        self.assert_key_valid(key)
         if days_list:
             if date_list:
                 raise ValueError("Must supply either days_list or date_list")
@@ -1265,23 +1265,23 @@ class Summary(BaseCClass):
 
     @property
     def data_start(self):
-        return self.getDataStartTime()
+        return self.get_data_start_time()
 
     @property
     def end_time(self):
         """
         The time of the last (loaded) time step.
         """
-        return self.getEndTime()
+        return self.get_end_time()
 
     @property
     def start_time(self):
-        return self.getStartTime()
+        return self.get_start_time()
 
     def get_data_start_time(self):
         """The first date we have data for.
 
-        Thiw will mostly be equal to getStartTime(), but in the case
+        Thiw will mostly be equal to get_start_time(), but in the case
         of restarts, where the case we have restarted from is not
         found, this time will be later than the true start of the
         field.
@@ -1358,7 +1358,7 @@ class Summary(BaseCClass):
     def solve_dates(self, key, value, rates_clamp_lower=True):
         """Will solve the equation vector[@key] == value for dates.
 
-        See solveDays() for further details.
+        See solve_days() for further details.
         """
         if not key in self:
             raise KeyError("Unrecognized key:%s" % key)
@@ -1376,7 +1376,7 @@ class Summary(BaseCClass):
         a list of values, which can have zero, one or multiple values:
 
           case = Summary("CASE")
-          days = case.solveDays("RPR:2", 200)
+          days = case.solve_days("RPR:2", 200)
 
           if len(days) == 0:
              print("Pressure was never equal to 200 BARSA")
@@ -1515,8 +1515,8 @@ class Summary(BaseCClass):
         Summary("NORNE_ATW2013.UNSMRY", [1997-11-06 00:00:00, 2006-12-01 00:00:00], keys=3781) at 0x1609e20
         """
         name = self._nicename()
-        s_time = self.getStartTime()
-        e_time = self.getEndTime()
+        s_time = self.get_start_time()
+        e_time = self.get_end_time()
         num_keys = len(self.keys())
         content = 'name="%s", time=[%s, %s], keys=%d' % (name, s_time, e_time, num_keys)
         return self._create_repr(content)
@@ -1538,7 +1538,7 @@ class Summary(BaseCClass):
         limit the keys which are exported:
 
           rd_sum = Summary("CASE")
-          rd_sum.exportCSV("case.csv", keys=["W*:OP1", "W*:OP2", "F*T"])
+          rd_sum.export_csv("case.csv", keys=["W*:OP1", "W*:OP2", "F*T"])
 
         Will export all well related variables for wells 'OP1' and
         'OP2' and all total field vectors.
@@ -1587,19 +1587,3 @@ Summary._init_pandas_frame_interp = ResdataPrototype(
     "void rd_sum_init_double_frame_interp(rd_sum, rd_sum_vector, rd_time_t_vector, double*)",
     bind=False,
 )
-
-monkey_the_camel(Summary, "varType", Summary.var_type, classmethod)
-monkey_the_camel(Summary, "addVariable", Summary.add_variable)
-monkey_the_camel(Summary, "addTStep", Summary.add_t_step)
-monkey_the_camel(Summary, "assertKeyValid", Summary.assert_key_valid)
-monkey_the_camel(Summary, "scaleVector", Summary.scale_vector)
-monkey_the_camel(Summary, "shiftVector", Summary.shift_vector)
-monkey_the_camel(Summary, "timeRange", Summary.time_range)
-monkey_the_camel(Summary, "blockedProduction", Summary.blocked_production)
-monkey_the_camel(Summary, "getDataStartTime", Summary.get_data_start_time)
-monkey_the_camel(Summary, "getStartTime", Summary.get_start_time)
-monkey_the_camel(Summary, "getEndTime", Summary.get_end_time)
-monkey_the_camel(Summary, "solveDates", Summary.solve_dates)
-monkey_the_camel(Summary, "solveDays", Summary.solve_days)
-monkey_the_camel(Summary, "dumpCSVLine", Summary.dump_csv_line)
-monkey_the_camel(Summary, "exportCSV", Summary.export_csv)
