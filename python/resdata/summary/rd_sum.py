@@ -145,7 +145,6 @@ class Summary(BaseCClass):
     _sim_length = ResdataPrototype("double   rd_sum_get_sim_length(rd_sum)")
     _get_first_day = ResdataPrototype("double   rd_sum_get_first_day(rd_sum)")
     _get_data_start = ResdataPrototype("rd_time_t   rd_sum_get_data_start(rd_sum)")
-    _get_unit = ResdataPrototype("char*    rd_sum_get_unit(rd_sum, char*)")
     _get_restart_case = ResdataPrototype("rd_sum_ref rd_sum_get_restart_case(rd_sum)")
     _get_restart_step = ResdataPrototype("int      rd_sum_get_restart_step(rd_sum)")
     _get_simcase = ResdataPrototype("char*    rd_sum_get_case(rd_sum)")
@@ -397,23 +396,6 @@ class Summary(BaseCClass):
         tstep = self._add_tstep(report_step, sim_seconds).setParent(parent=self)
         return tstep
 
-    def get_vector(self, key, report_only=False):
-        """
-        Will return SummaryVector according to @key.
-
-        Will raise exception KeyError if the summary object does not
-        have @key.
-        """
-        warnings.warn(
-            "The method get_vector() has been deprecated, use numpy_vector() instead",
-            DeprecationWarning,
-        )
-        self.assertKeyValid(key)
-        if report_only:
-            return SummaryVector(self, key, report_only=True)
-        else:
-            return SummaryVector(self, key)
-
     def report_index_list(self):
         """
         Internal function for working with report_steps.
@@ -445,37 +427,6 @@ class Summary(BaseCClass):
         on fnmatch(), i.e. shell style wildcards.
         """
         return self._create_group_list(pattern)
-
-    def get_values(self, key, report_only=False):
-        """
-        Will return numpy vector of all values according to @key.
-
-        If the optional argument report_only is true only the values
-        corresponding to report steps are included.  The method is
-        also available as the 'values' property of an SummaryVector
-        instance.
-        """
-        warnings.warn(
-            "The method get_values() has been deprecated - use numpy_vector() instead.",
-            DeprecationWarning,
-        )
-        if self.has_key(key):
-            key_index = self._get_general_var_index(key)
-            if report_only:
-                index_list = self.report_index_list()
-                values = np.zeros(len(index_list))
-                for i in range(len(index_list)):
-                    time_index = index_list[i]
-                    values[i] = self._iiget(time_index, key_index)
-            else:
-                length = self._data_length()
-                values = np.zeros(length)
-                for i in range(length):
-                    values[i] = self._iiget(i, key_index)
-
-            return values
-        else:
-            raise KeyError("Summary object does not have key:%s" % key)
 
     def _make_time_vector(
         self, time_index: Sequence[Union[CTime, datetime.datetime, int, datetime.date]]
@@ -800,13 +751,6 @@ class Summary(BaseCClass):
 
         return self._get_first_value(key)
 
-    def get_last_value(self, key):
-        warnings.warn(
-            "The function get_last_value() is deprecated, use last_value() instead",
-            DeprecationWarning,
-        )
-        return self.last_value(key)
-
     def get_last(self, key):
         """
         Will return the last SummaryNode corresponding to @key.
@@ -868,38 +812,6 @@ class Summary(BaseCClass):
 
     def __iter__(self):
         return iter(self.keys())
-
-    def __getitem__(self, key):
-        """
-        Implements [] operator - @key should be a summary key.
-
-        The returned value will be a SummaryVector instance.
-        """
-        warnings.warn(
-            "The method the [] operator will change behaviour in the future. It will then return a plain numpy vector. You are advised to change to use the numpy_vector() method right away",
-            DeprecationWarning,
-        )
-        return self.get_vector(key)
-
-    def scale_vector(self, key, scalar):
-        msg = """The function Summary.scale_vector has been removed. As an alternative you
-are advised to fetch vector as a numpy vector and then scale that yourself:
-
-    vec = rd_sum.numpy_vector(key)
-    vec *= scalar
-
-        """
-        raise NotImplementedError(msg)
-
-    def shift_vector(self, key, addend):
-        msg = """The function Summary.shift_vector has been removed. As an alternative you
-are advised to fetch vector as a numpy vector and then scale that yourself:
-
-    vec = rd_sum.numpy_vector(key)
-    vec += scalar
-
-        """
-        raise NotImplementedError(msg)
 
     def check_sim_time(self, date):
         """
@@ -1257,40 +1169,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             return self.report_dates
         else:
             return self.dates
-
-    @property
-    def mpl_dates(self):
-        """
-        Will return a numpy vector of dates ready for matplotlib
-
-        The content of the vector are dates in matplotlib format,
-        i.e. floats - generated by the date2num() function at the top
-        of this file.
-        """
-        warnings.warn(
-            "The mpl_dates property has been deprecated - use numpy_dates instead",
-            DeprecationWarning,
-        )
-        return self.get_mpl_dates(False)
-
-    def get_mpl_dates(self, report_only=False):
-        """
-        Will return a numpy vector of dates ready for matplotlib
-
-        If the optional argument @report_only is set to True, only
-        dates values corresponding to report steps will be
-        included. The content of the vector are dates in matplotlib
-        format, i.e. floats - generated by the date2num() function at
-        the top of this file.
-        """
-        warnings.warn(
-            "The get_mpl_dates( ) method has been deprecated - use numpy_dates instead",
-            DeprecationWarning,
-        )
-        if report_only:
-            return [date2num(dt) for dt in self.report_dates]
-        else:
-            return [date2num(dt) for dt in self.dates]
 
     @property
     def report_step(self):
