@@ -31,8 +31,9 @@ before giving up completely.
 """
 
 import ctypes as ct
-import os.path
 import warnings
+import pathlib
+from importlib.util import find_spec
 
 warnings.filterwarnings(
     action="always",
@@ -49,13 +50,13 @@ def _dlopen_resdata():
     import ctypes
     import platform
 
-    path = os.path.join(os.path.dirname(__file__), ".libs")
+    path = pathlib.Path(find_spec("resdata").origin).parent
     if platform.system() == "Linux":
-        path = os.path.join(path, "libresdata.so")
+        path /= ".libs/libresdata.so"
     elif platform.system() == "Darwin":
-        path = os.path.join(path, "libresdata.dylib")
+        path /= ".libs/libresdata.dylib"
     elif platform.system() == "Windows":
-        path = os.path.join(os.path.dirname(__file__), ".bin", "libresdata.dll")
+        path /= ".bin/libresdata.dll"
     else:
         raise NotImplementedError("Invalid platform")
 

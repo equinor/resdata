@@ -39,24 +39,15 @@ def run_conan_install():
     """Run conan install to generate CMake presets and toolchain file for Conan 2."""
     import shutil
 
-    # Find the conan executable
     conan_exe = shutil.which("conan")
-    if conan_exe is None:
-        raise RuntimeError(
-            "conan executable not found. Please install conan: pip install conan"
-        )
-
-    # Detect conan profile if not already done
     subprocess.run(
         [conan_exe, "profile", "detect", "--force"],
         check=False,  # Ignore if profile already exists
     )
 
-    # Get the scikit-build cmake build directory
     skbuild_dir = get_skbuild_dir()
     os.makedirs(skbuild_dir, exist_ok=True)
 
-    # Run conan install
     subprocess.run(
         [
             conan_exe,
@@ -83,23 +74,18 @@ def get_cmake_args_from_preset(skbuild_dir):
         if presets.get("configurePresets"):
             preset = presets["configurePresets"][0]
 
-            # Add toolchain file
             if "toolchainFile" in preset:
                 toolchain = preset["toolchainFile"]
-                # Make path absolute if relative
                 if not os.path.isabs(toolchain):
                     toolchain = os.path.join(skbuild_dir, toolchain)
-                cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain}")
+                cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE='{toolchain}'")
 
-            # Add cache variables
             for key, value in preset.get("cacheVariables", {}).items():
                 if isinstance(value, dict):
                     value = value.get("value", "")
                 cmake_args.append(f"-D{key}={value}")
 
-            # Set environment variables
             for key, value in preset.get("environment", {}).items():
-                # Expand $penv{VAR} references
                 if "$penv{" in value:
                     import re
 
@@ -113,7 +99,6 @@ def get_cmake_args_from_preset(skbuild_dir):
     return cmake_args
 
 
-# Run conan install before scikit-build runs CMake
 skbuild_dir = run_conan_install()
 CMAKE_ARGS_FROM_PRESET = get_cmake_args_from_preset(skbuild_dir)
 
@@ -164,6 +149,7 @@ skbuild.setup(
         "pandas",
         "natsort",
         "resfo-utilities>=0.4.0",
+        "cibuildwheel",
     ],
     setup_requires=["conan>=2"],
     entry_points={"console_scripts": utility_wrappers()},

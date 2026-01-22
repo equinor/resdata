@@ -1,13 +1,45 @@
 [build-system]
 requires = [
-  "setuptools",
-  "setuptools_scm",
-  "wheel",
-  "scikit-build",
   "cmake<4",
   "conan>=2",
   "ninja",
+  "scikit-build",
+  "setuptools",
+  "setuptools_scm",
+  "wheel",
 ]
+
+[dependency-groups]
+test = [
+  "pytest",
+  "pytest-benchmark",
+  "pytest-timeout",
+  "hypothesis",
+  "pydantic",
+  "typing_extensions",
+  "resfo-utilities[testing]>=0.4.0",
+  "numpy",
+  "pandas",
+]
+types = ["mypy", "types-six"]
+format = ["cmake-format", "clang-format", "black"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
+
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
+build = "cp311-* cp312-* cp313-* cp314-*"
+skip = "*-musllinux_*"
+
+[tool.cibuildwheel.linux]
+before-all = "yum install -y zlib-devel"
+before-build = "rm -rf {package}/_skbuild"
+test-groups = ["test"]
+test-command = "pytest {package}/tests"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install zlib"
+before-build = "rm -rf {package}/_skbuild"
+test-groups = ["test"]
+test-command = "pytest {package}/tests"
