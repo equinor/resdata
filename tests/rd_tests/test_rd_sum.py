@@ -185,19 +185,10 @@ def test_to_from_pandas(summary):
         "TEST", baseline, dims=(smspec.nx, smspec.ny, smspec.nz)
     ).pandas_frame()
 
-    # Round to days because of precision loss due
-    # to file storing time as float32 days or hours since
-    # start date which is converted to float64 seconds internally
-    # and then to datetime64 in pandas
-    roundtrip.index = roundtrip.index.round(freq="D")
-    baseline.index = baseline.index.round(freq="D")
+    roundtrip.index = roundtrip.index.values.astype(np.int64)
+    baseline.index = baseline.index.values.astype(np.int64)
 
-    assert_frame_equal(
-        roundtrip,
-        baseline,
-        check_exact=False,
-        atol=17,
-    )
+    assert_frame_equal(roundtrip, baseline, check_exact=False, atol=0, rtol=1e-6)
 
 
 @given(summaries())
