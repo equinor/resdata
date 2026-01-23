@@ -26,7 +26,7 @@ format = ["cmake-format", "clang-format", "black"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
-testpaths = ["tests/python"]
+testpaths = ["tests"]
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"

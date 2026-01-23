@@ -149,7 +149,6 @@ skbuild.setup(
         "pandas",
         "natsort",
         "resfo-utilities>=0.4.0",
-        "cibuildwheel",
     ],
     setup_requires=["conan>=2"],
     entry_points={"console_scripts": utility_wrappers()},
