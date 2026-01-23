@@ -1,3 +1,4 @@
+cibuildwheel
 cmake<4
 cwrap
 ninja
