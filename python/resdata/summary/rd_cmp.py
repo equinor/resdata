@@ -26,13 +26,13 @@ class ResdataCase(object):
         self.summary = Summary(self.case)
 
     def start_time_equal(self, other):
-        if self.summary.getDataStartTime() == other.summary.getDataStartTime():
+        if self.summary.get_data_start_time() == other.summary.get_data_start_time():
             return True
         else:
             return False
 
     def end_time_equal(self, other):
-        if self.summary.getEndTime() == other.summary.getEndTime():
+        if self.summary.get_end_time() == other.summary.get_end_time():
             return True
         else:
             return False

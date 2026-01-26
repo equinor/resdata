@@ -24,7 +24,7 @@ def createSummary(
     )
     var_list = []
     for kw, wgname, num, unit in keys:
-        var_list.append(rd_sum.addVariable(kw, wgname=wgname, num=num, unit=unit))
+        var_list.append(rd_sum.add_variable(kw, wgname=wgname, num=num, unit=unit))
 
     # This is a bug! This should not be integer division, but tests are written
     # around that assumption.
@@ -48,7 +48,7 @@ def createSummary(
                 + report_step * report_step_length
                 + mini_step * mini_step_length
             )
-            t_step = rd_sum.addTStep(report_step + 1, sim_days=days)
+            t_step = rd_sum.add_t_step(report_step + 1, sim_days=days)
 
             for var in var_list:
                 key = var.getKey1()
