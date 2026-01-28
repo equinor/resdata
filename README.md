@@ -45,15 +45,18 @@ pytest python/tests
 ### C++ tests
 ResData uses a homegrown testing suite as well as [Catch2, 2.x](https://github.com/catchorg/Catch2) which is compiled via CMake and ran using `ctest`.
 
-Ensure that `cmake` and `conan` version 1 is installed.
+Ensure that `cmake` and `conan` version 2 is installed.
 
 ```sh
-# Generate CMake build files into `build/`
-cmake -B build .
+#set up conan
+conan profile detect
+conan install -of build --build=missing .
+cmake --preset=conan-release -DENABLE_ASAN=ON -DENABLE_UBSAN=ON
+
 
 # Build project
-cmake --build build
+cmake --build --preset=conan-release -j 8
 
 # Run all tests
-ctest --test-dir build
+ctest --preset conan-release
 ```
