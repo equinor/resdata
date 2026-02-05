@@ -158,10 +158,10 @@ class ResdataNPV(object):
     def compile(self, expression):
         parsedExpression = self.parseExpression(expression)
         self.code = (
-            "trange = self.baseCase.timeRange(self.start, self.end, self.interval)\n"
+            "trange = self.baseCase.time_range(self.start, self.end, self.interval)\n"
         )
         for key, var in self.keyList.items():
-            self.code += '%s = self.baseCase.blockedProduction("%s", trange)\n' % (
+            self.code += '%s = self.baseCase.blocked_production("%s", trange)\n' % (
                 var,
                 key,
             )

@@ -318,19 +318,19 @@ class SumTest(ResdataTest):
     def test_timeRange(self):
         sum = Summary(self.case)
         with self.assertRaises(TypeError):
-            trange = sum.timeRange(interval="1")
-            trange = sum.timeRange(interval="1X")
-            trange = sum.timeRange(interval="YY")
-            trange = sum.timeRange(interval="MY")
+            trange = sum.time_range(interval="1")
+            trange = sum.time_range(interval="1X")
+            trange = sum.time_range(interval="YY")
+            trange = sum.time_range(interval="MY")
 
         with self.assertRaises(ValueError):
-            trange = sum.timeRange(
+            trange = sum.time_range(
                 start=datetime.datetime(2000, 1, 1), end=datetime.datetime(1999, 1, 1)
             )
 
         sim_start = datetime.datetime(2000, 1, 1, 0, 0, 0)
         sim_end = datetime.datetime(2004, 12, 31, 0, 0, 0)
-        trange = sum.timeRange(interval="1Y")
+        trange = sum.time_range(interval="1Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[1] == datetime.date(2001, 1, 1))
         self.assertTrue(trange[2] == datetime.date(2002, 1, 1))
@@ -338,15 +338,15 @@ class SumTest(ResdataTest):
         self.assertTrue(trange[4] == datetime.date(2004, 1, 1))
         self.assertTrue(trange[5] == datetime.date(2005, 1, 1))
 
-        trange = sum.timeRange(interval="1M")
+        trange = sum.time_range(interval="1M")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2005, 1, 1))
 
-        trange = sum.timeRange(start=datetime.date(2002, 1, 15), interval="1M")
+        trange = sum.time_range(start=datetime.date(2002, 1, 15), interval="1M")
         self.assertTrue(trange[0] == datetime.date(2002, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2005, 1, 1))
 
-        trange = sum.timeRange(
+        trange = sum.time_range(
             start=datetime.date(2002, 1, 15),
             end=datetime.date(2003, 1, 15),
             interval="1M",
@@ -354,7 +354,7 @@ class SumTest(ResdataTest):
         self.assertTrue(trange[0] == datetime.date(2002, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2003, 2, 1))
 
-        trange = sum.timeRange(
+        trange = sum.time_range(
             start=datetime.date(2002, 1, 15),
             end=datetime.datetime(2003, 1, 15, 0, 0, 0),
             interval="1M",
@@ -370,7 +370,7 @@ class SumTest(ResdataTest):
         self.assertEqual(452, len(sum))
         self.assertFloatEqual(1.8533144e8, sum.last_value("FOPT"))
 
-        trange = sum.timeRange(start=datetime.date(2015, 1, 1), interval="1M")
+        trange = sum.time_range(start=datetime.date(2015, 1, 1), interval="1M")
         self.assertTrue(trange[0] == datetime.date(2016, 2, 1))
         for t in trange:
             sum.get_interp("FOPT", date=t)
@@ -379,29 +379,29 @@ class SumTest(ResdataTest):
         sum = Summary(self.case)
         with self.assertRaises(TypeError):
             trange = TimeVector.createRegular(sum.start_time, sum.end_time, "1M")
-            prod = sum.blockedProduction("FOPR", trange)
+            prod = sum.blocked_production("FOPR", trange)
 
         with self.assertRaises(KeyError):
             trange = TimeVector.createRegular(sum.start_time, sum.end_time, "1M")
-            prod = sum.blockedProduction("NoNotThis", trange)
+            prod = sum.blocked_production("NoNotThis", trange)
 
-        trange = sum.timeRange(interval="2Y")
+        trange = sum.time_range(interval="2Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2006, 1, 1))
 
-        trange = sum.timeRange(interval="5Y")
+        trange = sum.time_range(interval="5Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2005, 1, 1))
 
-        trange = sum.timeRange(interval="6M")
-        wprod1 = sum.blockedProduction("WOPT:OP_1", trange)
-        wprod2 = sum.blockedProduction("WOPT:OP_2", trange)
-        wprod3 = sum.blockedProduction("WOPT:OP_3", trange)
-        wprod4 = sum.blockedProduction("WOPT:OP_4", trange)
-        wprod5 = sum.blockedProduction("WOPT:OP_5", trange)
+        trange = sum.time_range(interval="6M")
+        wprod1 = sum.blocked_production("WOPT:OP_1", trange)
+        wprod2 = sum.blocked_production("WOPT:OP_2", trange)
+        wprod3 = sum.blocked_production("WOPT:OP_3", trange)
+        wprod4 = sum.blocked_production("WOPT:OP_4", trange)
+        wprod5 = sum.blocked_production("WOPT:OP_5", trange)
 
-        fprod = sum.blockedProduction("FOPT", trange)
-        gprod = sum.blockedProduction("GOPT:OP", trange)
+        fprod = sum.blocked_production("FOPT", trange)
+        gprod = sum.blocked_production("GOPT:OP", trange)
         wprod = wprod1 + wprod2 + wprod3 + wprod4 + wprod5
         for w, f, g in zip(wprod, fprod, gprod):
             self.assertFloatEqual(w, f)
@@ -411,10 +411,10 @@ class SumTest(ResdataTest):
         writer = Summary.writer("CASE", datetime.date(2000, 1, 1), 10, 10, 5)
         self.assertIsInstance(self.rd_sum, Summary)
 
-        writer.addVariable("FOPT")
+        writer.add_variable("FOPT")
         self.assertTrue(writer.has_key("FOPT"))
 
-        writer.addTStep(1, 100)
+        writer.add_t_step(1, 100)
 
     def test_aquifer(self):
         case = Summary(
