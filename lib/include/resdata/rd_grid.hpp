@@ -55,8 +55,6 @@ bool rd_grid_cell_contains_xyz1(const rd_grid_type *rd_grid, int global_index,
                                 double x, double y, double z);
 double rd_grid_get_cell_volume1(const rd_grid_type *rd_grid, int global_index);
 double rd_grid_get_cell_volume1A(const rd_grid_type *rd_grid, int active_index);
-bool rd_grid_cell_contains1(const rd_grid_type *grid, int global_index,
-                            double x, double y, double z);
 int rd_grid_get_global_index_from_xyz(rd_grid_type *grid, double x, double y,
                                       double z, int start_index);
 bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
@@ -101,7 +99,6 @@ int rd_grid_get_nx(const rd_grid_type *grid);
 int rd_grid_get_ny(const rd_grid_type *grid);
 int rd_grid_get_nactive(const rd_grid_type *grid);
 int rd_grid_get_nactive_fracture(const rd_grid_type *grid);
-int rd_grid_get_active_index(const rd_grid_type *, int, int, int);
 void rd_grid_get_ijk1(const rd_grid_type *, int global_index, int *, int *,
                       int *);
 void rd_grid_get_ijk1A(const rd_grid_type *, int active_index, int *, int *,
