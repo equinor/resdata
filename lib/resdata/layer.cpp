@@ -63,7 +63,7 @@ void layer_free(layer_type *layer) {
     free(layer);
 }
 
-static int layer_get_global_cell_index(const layer_type *layer, int i, int j) {
+static int global_interior_index(const layer_type *layer, int i, int j) {
     if ((i < 0) || (i >= layer->nx))
         util_abort("%s: invalid i value:%d Valid range: [0,%d) \n", __func__, i,
                    layer->nx);
@@ -89,7 +89,7 @@ static int layer_get_global_cell_index__(const layer_type *layer, int i,
 }
 
 static cell_type *layer_iget_cell(const layer_type *layer, int i, int j) {
-    int g = layer_get_global_cell_index(layer, i, j);
+    int g = global_interior_index(layer, i, j);
     return &layer->data[g];
 }
 
@@ -113,12 +113,12 @@ bool layer_iget_bottom_barrier(const layer_type *layer, int i, int j) {
 }
 
 int layer_iget_cell_value(const layer_type *layer, int i, int j) {
-    int g = layer_get_global_cell_index(layer, i, j);
+    int g = global_interior_index(layer, i, j);
     return layer->data[g].cell_value;
 }
 
 bool layer_iget_active(const layer_type *layer, int i, int j) {
-    int g = layer_get_global_cell_index(layer, i, j);
+    int g = global_interior_index(layer, i, j);
     return layer->data[g].active;
 }
 
@@ -126,7 +126,7 @@ int layer_get_cell_sum(const layer_type *layer) { return layer->cell_sum; }
 
 static void layer_cancel_edge(layer_type *layer, int i, int j,
                               edge_dir_enum dir) {
-    int g = layer_get_global_cell_index(layer, i, j);
+    int g = global_interior_index(layer, i, j);
     cell_type *cell = &layer->data[g];
     cell->edges[dir] = 0;
 }
@@ -136,7 +136,7 @@ int layer_get_nx(const layer_type *layer) { return layer->nx; }
 int layer_get_ny(const layer_type *layer) { return layer->ny; }
 
 void layer_iset_cell_value(layer_type *layer, int i, int j, int value) {
-    int g = layer_get_global_cell_index(layer, i, j);
+    int g = global_interior_index(layer, i, j);
     cell_type *cell = &layer->data[g];
 
     layer->cell_sum += (value - cell->cell_value);
@@ -218,7 +218,7 @@ int layer_iget_edge_value(const layer_type *layer, int i, int j,
 }
 
 bool layer_cell_on_edge(const layer_type *layer, int i, int j) {
-    int g = layer_get_global_cell_index(layer, i, j);
+    int g = global_interior_index(layer, i, j);
     cell_type *cell = &layer->data[g];
 
     if (cell->cell_value == cell->edges[LEFT_EDGE])
@@ -358,7 +358,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
 
 static bool layer_find_edge(const layer_type *layer, int *i, int *j,
                             int value) {
-    int g = layer_get_global_cell_index(layer, *i, *j);
+    int g = global_interior_index(layer, *i, *j);
     cell_type *cell = &layer->data[g];
     if (cell->cell_value == value) {
 
@@ -374,7 +374,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             int value,
                             std::vector<int_point2d_type> &corner_list,
                             int_vector_type *cell_list) {
-    int g = layer_get_global_cell_index(layer, start_i, start_j);
+    int g = global_interior_index(layer, start_i, start_j);
     cell_type *cell = &layer->data[g];
     if (cell->cell_value == value) {
         int i = start_i;
@@ -383,7 +383,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
         if (layer_find_edge(layer, &i, &j, value)) {
             int_point2d_type start_corner;
 
-            g = layer_get_global_cell_index(layer, i, j);
+            g = global_interior_index(layer, i, j);
             cell = &layer->data[g];
 
             start_corner.i = i;
@@ -422,7 +422,7 @@ static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
                                         int j, int value, bool *visited,
                                         int_vector_type *i_list,
                                         int_vector_type *j_list) {
-    int g = layer_get_global_cell_index(layer, i, j);
+    int g = global_interior_index(layer, i, j);
     cell_type *cell = &layer->data[g];
     if (cell->cell_value != value || visited[g])
         return;
@@ -466,7 +466,7 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int start_j, int value, int_vector_type *i_list,
                                int_vector_type *j_list) {
     bool start_tracing = false;
-    int g = layer_get_global_cell_index(layer, start_i, start_j);
+    int g = global_interior_index(layer, start_i, start_j);
     cell_type *cell = &layer->data[g];
 
     if ((value == 0) && (cell->cell_value != 0))
