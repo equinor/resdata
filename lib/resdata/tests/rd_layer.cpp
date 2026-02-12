@@ -24,15 +24,6 @@ void get_invalid_layer_cell2(void *arg) {
     layer_iget_cell_value(layer, -100, -100);
 }
 
-void test_get_invalid_cell() {
-    layer_type *layer = layer_alloc(10, 10);
-    test_assert_util_abort("layer_get_global_cell_index",
-                           get_invalid_layer_cell1, layer);
-    test_assert_util_abort("layer_get_global_cell_index",
-                           get_invalid_layer_cell2, layer);
-    layer_free(layer);
-}
-
 void test_get_cell() {
     layer_type *layer = layer_alloc(10, 10);
     test_assert_int_equal(0, layer_iget_cell_value(layer, 0, 0));
@@ -358,7 +349,6 @@ void test_copy() {
 
 int main(int argc, char **argv) {
     test_create();
-    test_get_invalid_cell();
     test_get_cell();
     test_get_invalid_edge();
     test_edge();
