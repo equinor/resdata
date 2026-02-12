@@ -82,21 +82,18 @@ bool layer_iget_bottom_barrier(const layer_type *layer, int i, int j) {
 }
 
 int layer_iget_cell_value(const layer_type *layer, int i, int j) {
-    int g = global_interior_index(layer, i, j);
-    return layer->cells[g].value;
+    return layer->cells[global_interior_index(layer, i, j)].value;
 }
 
 bool layer_iget_active(const layer_type *layer, int i, int j) {
-    int g = global_interior_index(layer, i, j);
-    return layer->cells[g].active;
+    return layer->cells[global_interior_index(layer, i, j)].active;
 }
 
 int layer_get_cell_sum(const layer_type *layer) { return layer->cell_sum; }
 
 static void layer_cancel_edge(layer_type *layer, int i, int j,
                               edge_dir_enum dir) {
-    int g = global_interior_index(layer, i, j);
-    layer->cells[g].edges[dir] = 0;
+    layer->cells[global_interior_index(layer, i, j)].edges[dir] = 0;
 }
 
 int layer_get_nx(const layer_type *layer) { return layer->nx; }
@@ -104,8 +101,7 @@ int layer_get_nx(const layer_type *layer) { return layer->nx; }
 int layer_get_ny(const layer_type *layer) { return layer->ny; }
 
 void layer_iset_cell_value(layer_type *layer, int i, int j, int value) {
-    int g = global_interior_index(layer, i, j);
-    cell_type &cell = layer->cells[g];
+    cell_type &cell = layer->cells[global_interior_index(layer, i, j)];
 
     layer->cell_sum += (value - cell.value);
     cell.value = value;
@@ -180,13 +176,12 @@ static int layer_get_global_edge_index(const layer_type *layer, int i, int j,
 
 int layer_iget_edge_value(const layer_type *layer, int i, int j,
                           edge_dir_enum dir) {
-    int g = layer_get_global_edge_index(layer, i, j, dir);
-    return layer->cells[g].edges[dir];
+    return layer->cells[layer_get_global_edge_index(layer, i, j, dir)]
+        .edges[dir];
 }
 
 bool layer_cell_on_edge(const layer_type *layer, int i, int j) {
-    int g = global_interior_index(layer, i, j);
-    cell_type cell = layer->cells[g];
+    cell_type cell = layer->cells[global_interior_index(layer, i, j)];
 
     if (cell.value == cell.edges[LEFT_EDGE])
         return true;
@@ -325,8 +320,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
 
 static bool layer_find_edge(const layer_type *layer, int *i, int *j,
                             int value) {
-    int g = global_interior_index(layer, *i, *j);
-    cell_type cell = layer->cells[g];
+    cell_type cell = layer->cells[global_interior_index(layer, *i, *j)];
     if (cell.value == value) {
 
         while (!layer_cell_on_edge(layer, *i, *j))
@@ -341,8 +335,8 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             int value,
                             std::vector<int_point2d_type> &corner_list,
                             int_vector_type *cell_list) {
-    int g = global_interior_index(layer, start_i, start_j);
-    const cell_type &cell = layer->cells[g];
+    const cell_type &cell =
+        layer->cells[global_interior_index(layer, start_i, start_j)];
     if (cell.value == value) {
         int i = start_i;
         int j = start_j;
@@ -350,8 +344,8 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
         if (layer_find_edge(layer, &i, &j, value)) {
             int_point2d_type start_corner;
 
-            g = global_interior_index(layer, i, j);
-            const cell_type &next_cell = layer->cells[g];
+            const cell_type &next_cell =
+                layer->cells[global_interior_index(layer, i, j)];
 
             start_corner.i = i;
             start_corner.j = j;
@@ -430,8 +424,8 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int start_j, int value, int_vector_type *i_list,
                                int_vector_type *j_list) {
     bool start_tracing = false;
-    int g = global_interior_index(layer, start_i, start_j);
-    const cell_type &cell = layer->cells[g];
+    const cell_type &cell =
+        layer->cells[global_interior_index(layer, start_i, start_j)];
 
     if ((value == 0) && (cell.value != 0))
         start_tracing = true;
