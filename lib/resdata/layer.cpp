@@ -12,7 +12,7 @@
 #define LAYER_TYPE_ID 55185409
 
 typedef struct {
-    int cell_value;
+    int value;
     int edges[4];
     bool bottom_barrier;
     bool left_barrier;
@@ -43,7 +43,7 @@ layer_type *layer_alloc(int nx, int ny) {
             int g;
             for (g = 0; g < data_size; g++) {
                 cell_type *cell = &layer->cells[g];
-                cell->cell_value = 0;
+                cell->value = 0;
                 cell->edges[RIGHT_EDGE] = 0;
                 cell->edges[LEFT_EDGE] = 0;
                 cell->edges[TOP_EDGE] = 0;
@@ -114,7 +114,7 @@ bool layer_iget_bottom_barrier(const layer_type *layer, int i, int j) {
 
 int layer_iget_cell_value(const layer_type *layer, int i, int j) {
     int g = global_interior_index(layer, i, j);
-    return layer->cells[g].cell_value;
+    return layer->cells[g].value;
 }
 
 bool layer_iget_active(const layer_type *layer, int i, int j) {
@@ -139,8 +139,8 @@ void layer_iset_cell_value(layer_type *layer, int i, int j, int value) {
     int g = global_interior_index(layer, i, j);
     cell_type *cell = &layer->cells[g];
 
-    layer->cell_sum += (value - cell->cell_value);
-    cell->cell_value = value;
+    layer->cell_sum += (value - cell->value);
+    cell->value = value;
 
     if (i > 0) {
         int neighbour_value = layer_iget_cell_value(layer, i - 1, j);
@@ -221,13 +221,13 @@ bool layer_cell_on_edge(const layer_type *layer, int i, int j) {
     int g = global_interior_index(layer, i, j);
     cell_type *cell = &layer->cells[g];
 
-    if (cell->cell_value == cell->edges[LEFT_EDGE])
+    if (cell->value == cell->edges[LEFT_EDGE])
         return true;
-    if (cell->cell_value == cell->edges[RIGHT_EDGE])
+    if (cell->value == cell->edges[RIGHT_EDGE])
         return true;
-    if (cell->cell_value == cell->edges[BOTTOM_EDGE])
+    if (cell->value == cell->edges[BOTTOM_EDGE])
         return true;
-    if (cell->cell_value == cell->edges[TOP_EDGE])
+    if (cell->value == cell->edges[TOP_EDGE])
         return true;
 
     return false;
@@ -360,7 +360,7 @@ static bool layer_find_edge(const layer_type *layer, int *i, int *j,
                             int value) {
     int g = global_interior_index(layer, *i, *j);
     cell_type *cell = &layer->cells[g];
-    if (cell->cell_value == value) {
+    if (cell->value == value) {
 
         while (!layer_cell_on_edge(layer, *i, *j))
             (*i) += 1;
@@ -376,7 +376,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             int_vector_type *cell_list) {
     int g = global_interior_index(layer, start_i, start_j);
     cell_type *cell = &layer->cells[g];
-    if (cell->cell_value == value) {
+    if (cell->value == value) {
         int i = start_i;
         int j = start_j;
 
@@ -424,7 +424,7 @@ static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
                                         int_vector_type *j_list) {
     int g = global_interior_index(layer, i, j);
     cell_type *cell = &layer->cells[g];
-    if (cell->cell_value != value || visited[g])
+    if (cell->value != value || visited[g])
         return;
     {
         visited[g] = true;
@@ -469,15 +469,15 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
     int g = global_interior_index(layer, start_i, start_j);
     cell_type *cell = &layer->cells[g];
 
-    if ((value == 0) && (cell->cell_value != 0))
+    if ((value == 0) && (cell->value != 0))
         start_tracing = true;
-    else if ((cell->cell_value == value) && (cell->cell_value != 0))
+    else if ((cell->value == value) && (cell->value != 0))
         start_tracing = true;
 
     if (start_tracing) {
         bool *visited = layer_alloc_visited_mask(layer);
 
-        value = cell->cell_value;
+        value = cell->value;
         int_vector_reset(i_list);
         int_vector_reset(j_list);
         layer_trace_block_content__(layer, erase, start_i, start_j, value,
@@ -637,7 +637,7 @@ static void layer_assign__(layer_type *layer, int value) {
     for (j = 0; j < layer->ny; j++) {
         for (i = 0; i < layer->nx; i++) {
             cell_type *cell = layer_iget_cell(layer, i, j);
-            cell->cell_value = value;
+            cell->value = value;
             {
                 int e;
                 for (e = 0; e < 4; e++)
@@ -687,7 +687,7 @@ void layer_cells_equal(const layer_type *layer, int value,
     for (j = 0; j < layer->ny; j++) {
         for (i = 0; i < layer->nx; i++) {
             cell_type *cell = layer_iget_cell(layer, i, j);
-            if (cell->cell_value == value) {
+            if (cell->value == value) {
                 int_vector_append(i_list, i);
                 int_vector_append(j_list, j);
             }
@@ -701,7 +701,7 @@ int layer_count_equal(const layer_type *layer, int value) {
     for (j = 0; j < layer->ny; j++) {
         for (i = 0; i < layer->nx; i++) {
             cell_type *cell = layer_iget_cell(layer, i, j);
-            if (cell->cell_value == value)
+            if (cell->value == value)
                 num_equal++;
         }
     }
