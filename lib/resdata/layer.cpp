@@ -93,15 +93,6 @@ static cell_type *layer_iget_cell(const layer_type *layer, int i, int j) {
     return &layer->cells[g];
 }
 
-/*
-  To be able to update barriers on the edge we need access to the i =
-  nx and j = ny cells.
-*/
-static cell_type *layer_iget_cell__(const layer_type *layer, int i, int j) {
-    int g = global_cell_index(layer, i, j);
-    return &layer->cells[g];
-}
-
 bool layer_iget_left_barrier(const layer_type *layer, int i, int j) {
     cell_type *cell = layer_iget_cell(layer, i, j);
     return cell->left_barrier;
@@ -545,7 +536,8 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int jmax = util_int_max(j1, j2);
 
             for (j = jmin; j < jmax; j++) {
-                cell_type *cell = layer_iget_cell__(layer, i1, j);
+                cell_type *cell =
+                    &layer->cells[global_cell_index(layer, i1, j)];
                 cell->left_barrier = true;
             }
         } else {
@@ -554,7 +546,8 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int imax = util_int_max(i1, i2);
 
             for (i = imin; i < imax; i++) {
-                cell_type *cell = layer_iget_cell__(layer, i, j1);
+                cell_type *cell =
+                    &layer->cells[global_cell_index(layer, i, j1)];
                 cell->bottom_barrier = true;
             }
         }
