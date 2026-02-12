@@ -36,6 +36,14 @@ struct layer_struct {
 
         return i + j * (this->nx + 1);
     }
+
+    [[nodiscard]] const cell_type &interior_cell(int i, int j) const {
+        return this->cells[this->interior_index(i, j)];
+    }
+
+    [[nodiscard]] cell_type &interior_cell(int i, int j) {
+        return this->cells[this->interior_index(i, j)];
+    }
 };
 
 UTIL_IS_INSTANCE_FUNCTION(layer, LAYER_TYPE_ID)
@@ -74,26 +82,26 @@ static int global_cell_index(const layer_type *layer, int i, int j) {
 }
 
 bool layer_iget_left_barrier(const layer_type *layer, int i, int j) {
-    return layer->cells[layer->interior_index(i, j)].left_barrier;
+    return layer->interior_cell(i, j).left_barrier;
 }
 
 bool layer_iget_bottom_barrier(const layer_type *layer, int i, int j) {
-    return layer->cells[layer->interior_index(i, j)].bottom_barrier;
+    return layer->interior_cell(i, j).bottom_barrier;
 }
 
 int layer_iget_cell_value(const layer_type *layer, int i, int j) {
-    return layer->cells[layer->interior_index(i, j)].value;
+    return layer->interior_cell(i, j).value;
 }
 
 bool layer_iget_active(const layer_type *layer, int i, int j) {
-    return layer->cells[layer->interior_index(i, j)].active;
+    return layer->interior_cell(i, j).active;
 }
 
 int layer_get_cell_sum(const layer_type *layer) { return layer->cell_sum; }
 
 static void layer_cancel_edge(layer_type *layer, int i, int j,
                               edge_dir_enum dir) {
-    layer->cells[layer->interior_index(i, j)].edges[dir] = 0;
+    layer->interior_cell(i, j).edges[dir] = 0;
 }
 
 int layer_get_nx(const layer_type *layer) { return layer->nx; }
@@ -101,7 +109,7 @@ int layer_get_nx(const layer_type *layer) { return layer->nx; }
 int layer_get_ny(const layer_type *layer) { return layer->ny; }
 
 void layer_iset_cell_value(layer_type *layer, int i, int j, int value) {
-    cell_type &cell = layer->cells[layer->interior_index(i, j)];
+    cell_type &cell = layer->interior_cell(i, j);
 
     layer->cell_sum += (value - cell.value);
     cell.value = value;
@@ -181,7 +189,7 @@ int layer_iget_edge_value(const layer_type *layer, int i, int j,
 }
 
 bool layer_cell_on_edge(const layer_type *layer, int i, int j) {
-    cell_type cell = layer->cells[layer->interior_index(i, j)];
+    const cell_type &cell = layer->interior_cell(i, j);
 
     if (cell.value == cell.edges[LEFT_EDGE])
         return true;
@@ -320,7 +328,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
 
 static bool layer_find_edge(const layer_type *layer, int *i, int *j,
                             int value) {
-    cell_type cell = layer->cells[layer->interior_index(*i, *j)];
+    const cell_type &cell = layer->interior_cell(*i, *j);
     if (cell.value == value) {
 
         while (!layer_cell_on_edge(layer, *i, *j))
@@ -335,8 +343,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             int value,
                             std::vector<int_point2d_type> &corner_list,
                             int_vector_type *cell_list) {
-    const cell_type &cell =
-        layer->cells[layer->interior_index(start_i, start_j)];
+    const cell_type &cell = layer->interior_cell(start_i, start_j);
     if (cell.value == value) {
         int i = start_i;
         int j = start_j;
@@ -344,8 +351,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
         if (layer_find_edge(layer, &i, &j, value)) {
             int_point2d_type start_corner;
 
-            const cell_type &next_cell =
-                layer->cells[layer->interior_index(i, j)];
+            const cell_type &next_cell = layer->interior_cell(i, j);
 
             start_corner.i = i;
             start_corner.j = j;
@@ -424,8 +430,7 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int start_j, int value, int_vector_type *i_list,
                                int_vector_type *j_list) {
     bool start_tracing = false;
-    const cell_type &cell =
-        layer->cells[layer->interior_index(start_i, start_j)];
+    const cell_type &cell = layer->interior_cell(start_i, start_j);
 
     if ((value == 0) && (cell.value != 0))
         start_tracing = true;
@@ -478,14 +483,12 @@ bool layer_cell_contact(const layer_type *layer, int i1, int j1, int i2,
     layer_assert_cell_index(layer, i2, j2);
     if ((abs(i1 - i2) == 1) && (j1 == j2)) {
         int i = util_int_max(i1, i2);
-        const cell_type &cell = layer->cells[layer->interior_index(i, j1)];
-        return !cell.left_barrier;
+        return !layer->interior_cell(i, j1).left_barrier;
     }
 
     if ((i1 == i2) && (abs(j1 - j2) == 1)) {
         int j = util_int_max(j1, j2);
-        const cell_type &cell = layer->cells[layer->interior_index(i1, j)];
-        return !cell.bottom_barrier;
+        return !layer->interior_cell(i1, j).bottom_barrier;
     }
 
     return false;
@@ -586,7 +589,7 @@ void layer_memcpy(layer_type *target_layer, const layer_type *src_layer) {
 static void layer_assign__(layer_type *layer, int value) {
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
-            cell_type &cell = layer->cells[layer->interior_index(i, j)];
+            cell_type &cell = layer->interior_cell(i, j);
             cell.value = value;
 
             for (int e = 0; e < 4; e++)
@@ -633,7 +636,7 @@ void layer_cells_equal(const layer_type *layer, int value,
                        int_vector_type *i_list, int_vector_type *j_list) {
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
-            const cell_type &cell = layer->cells[layer->interior_index(i, j)];
+            const cell_type &cell = layer->interior_cell(i, j);
             if (cell.value == value) {
                 int_vector_append(i_list, i);
                 int_vector_append(j_list, j);
@@ -646,7 +649,7 @@ int layer_count_equal(const layer_type *layer, int value) {
     int num_equal = 0;
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
-            const cell_type &cell = layer->cells[layer->interior_index(i, j)];
+            const cell_type &cell = layer->interior_cell(i, j);
             if (cell.value == value)
                 num_equal++;
         }
@@ -657,7 +660,7 @@ int layer_count_equal(const layer_type *layer, int value) {
 void layer_update_active(layer_type *layer, const rd_grid_type *grid, int k) {
     for (int j = 0; j < rd_grid_get_ny(grid); j++) {
         for (int i = 0; i < rd_grid_get_nx(grid); i++) {
-            cell_type &cell = layer->cells[layer->interior_index(i, j)];
+            cell_type &cell = layer->interior_cell(i, j);
             cell.active = rd_grid_cell_active3(grid, i, j, k);
         }
     }
