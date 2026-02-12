@@ -393,37 +393,34 @@ static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
     const cell_type &cell = layer->cells[g];
     if (cell.value != value || visited[g])
         return;
-    {
-        visited[g] = true;
-        if (erase)
-            layer_iset_cell_value(layer, i, j, 0);
+    visited[g] = true;
+    if (erase)
+        layer_iset_cell_value(layer, i, j, 0);
 
-        int_vector_append(i_list, i);
-        int_vector_append(j_list, j);
+    int_vector_append(i_list, i);
+    int_vector_append(j_list, j);
 
-        if (i > 0)
-            layer_trace_block_content__(layer, erase, i - 1, j, value, visited,
-                                        i_list, j_list);
+    if (i > 0)
+        layer_trace_block_content__(layer, erase, i - 1, j, value, visited,
+                                    i_list, j_list);
 
-        if (i < (layer->nx - 1))
-            layer_trace_block_content__(layer, erase, i + 1, j, value, visited,
-                                        i_list, j_list);
+    if (i < (layer->nx - 1))
+        layer_trace_block_content__(layer, erase, i + 1, j, value, visited,
+                                    i_list, j_list);
 
-        if (j > 0)
-            layer_trace_block_content__(layer, erase, i, j - 1, value, visited,
-                                        i_list, j_list);
+    if (j > 0)
+        layer_trace_block_content__(layer, erase, i, j - 1, value, visited,
+                                    i_list, j_list);
 
-        if (j < (layer->ny - 1))
-            layer_trace_block_content__(layer, erase, i, j + 1, value, visited,
-                                        i_list, j_list);
-    }
+    if (j < (layer->ny - 1))
+        layer_trace_block_content__(layer, erase, i, j + 1, value, visited,
+                                    i_list, j_list);
 }
 
 static bool *layer_alloc_visited_mask(const layer_type *layer) {
     int total_size = (layer->nx + 1) * (layer->ny + 1);
     bool *visited = (bool *)util_malloc(total_size * sizeof *visited);
-    int g;
-    for (g = 0; g < total_size; g++)
+    for (int g = 0; g < total_size; g++)
         visited[g] = false;
 
     return visited;
@@ -457,11 +454,10 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
 }
 
 int layer_replace_cell_values(layer_type *layer, int old_value, int new_value) {
-    int i, j;
     int replace_count = 0;
 
-    for (j = 0; j < layer->ny; j++) {
-        for (i = 0; i < layer->nx; i++) {
+    for (int j = 0; j < layer->ny; j++) {
+        for (int i = 0; i < layer->nx; i++) {
             if (layer_iget_cell_value(layer, i, j) == old_value) {
                 layer_iset_cell_value(layer, i, j, new_value);
                 replace_count++;
@@ -486,43 +482,38 @@ bool layer_cell_contact(const layer_type *layer, int i1, int j1, int i2,
                         int j2) {
     layer_assert_cell_index(layer, i1, j1);
     layer_assert_cell_index(layer, i2, j2);
-    {
-
-        if ((abs(i1 - i2) == 1) && (j1 == j2)) {
-            int i = util_int_max(i1, i2);
-            const cell_type &cell =
-                layer->cells[global_interior_index(layer, i, j1)];
-            return !cell.left_barrier;
-        }
-
-        if ((i1 == i2) && (abs(j1 - j2) == 1)) {
-            int j = util_int_max(j1, j2);
-            const cell_type &cell =
-                layer->cells[global_interior_index(layer, i1, j)];
-            return !cell.bottom_barrier;
-        }
-
-        return false;
+    if ((abs(i1 - i2) == 1) && (j1 == j2)) {
+        int i = util_int_max(i1, i2);
+        const cell_type &cell =
+            layer->cells[global_interior_index(layer, i, j1)];
+        return !cell.left_barrier;
     }
+
+    if ((i1 == i2) && (abs(j1 - j2) == 1)) {
+        int j = util_int_max(j1, j2);
+        const cell_type &cell =
+            layer->cells[global_interior_index(layer, i1, j)];
+        return !cell.bottom_barrier;
+    }
+
+    return false;
 }
 
 void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
     if ((j1 == j2) || (i1 == i2)) {
         if (i1 == i2) {
-            int j;
             int jmin = util_int_min(j1, j2);
             int jmax = util_int_max(j1, j2);
 
-            for (j = jmin; j < jmax; j++) {
+            for (int j = jmin; j < jmax; j++) {
                 cell_type &cell = layer->cells[global_cell_index(layer, i1, j)];
                 cell.left_barrier = true;
             }
         } else {
-            int i;
             int imin = util_int_min(i1, i2);
             int imax = util_int_max(i1, i2);
 
-            for (i = imin; i < imax; i++) {
+            for (int i = imin; i < imax; i++) {
                 cell_type &cell = layer->cells[global_cell_index(layer, i, j1)];
                 cell.bottom_barrier = true;
             }
@@ -601,16 +592,12 @@ void layer_memcpy(layer_type *target_layer, const layer_type *src_layer) {
 }
 
 static void layer_assign__(layer_type *layer, int value) {
-    int i, j;
-    for (j = 0; j < layer->ny; j++) {
-        for (i = 0; i < layer->nx; i++) {
+    for (int j = 0; j < layer->ny; j++) {
+        for (int i = 0; i < layer->nx; i++) {
             cell_type &cell = layer->cells[global_interior_index(layer, i, j)];
             cell.value = value;
-            {
-                int e;
-                for (e = 0; e < 4; e++)
-                    cell.edges[e] = 0;
-            }
+            for (int e = 0; e < 4; e++)
+                cell.edges[e] = 0;
         }
     }
     layer->cell_sum = value * layer->nx * layer->ny;
@@ -651,9 +638,8 @@ void layer_update_connected_cells(layer_type *layer, int i, int j,
 
 void layer_cells_equal(const layer_type *layer, int value,
                        int_vector_type *i_list, int_vector_type *j_list) {
-    int i, j;
-    for (j = 0; j < layer->ny; j++) {
-        for (i = 0; i < layer->nx; i++) {
+    for (int j = 0; j < layer->ny; j++) {
+        for (int i = 0; i < layer->nx; i++) {
             const cell_type &cell =
                 layer->cells[global_interior_index(layer, i, j)];
             if (cell.value == value) {
@@ -666,9 +652,8 @@ void layer_cells_equal(const layer_type *layer, int value,
 
 int layer_count_equal(const layer_type *layer, int value) {
     int num_equal = 0;
-    int i, j;
-    for (j = 0; j < layer->ny; j++) {
-        for (i = 0; i < layer->nx; i++) {
+    for (int j = 0; j < layer->ny; j++) {
+        for (int i = 0; i < layer->nx; i++) {
             const cell_type &cell =
                 layer->cells[global_interior_index(layer, i, j)];
             if (cell.value == value)
@@ -679,9 +664,8 @@ int layer_count_equal(const layer_type *layer, int value) {
 }
 
 void layer_update_active(layer_type *layer, const rd_grid_type *grid, int k) {
-    int i, j;
-    for (j = 0; j < rd_grid_get_ny(grid); j++) {
-        for (i = 0; i < rd_grid_get_nx(grid); i++) {
+    for (int j = 0; j < rd_grid_get_ny(grid); j++) {
+        for (int i = 0; i < rd_grid_get_nx(grid); i++) {
             cell_type &cell = layer->cells[global_interior_index(layer, i, j)];
             cell.active = rd_grid_cell_active3(grid, i, j, k);
         }
