@@ -75,8 +75,7 @@ static int global_interior_index(const layer_type *layer, int i, int j) {
     return i + j * (layer->nx + 1);
 }
 
-static int layer_get_global_cell_index__(const layer_type *layer, int i,
-                                         int j) {
+static int global_cell_index(const layer_type *layer, int i, int j) {
     if ((i < 0) || (i > layer->nx))
         util_abort("%s: invalid i value:%d Valid range: [0,%d] \n", __func__, i,
                    layer->nx);
@@ -98,7 +97,7 @@ static cell_type *layer_iget_cell(const layer_type *layer, int i, int j) {
   nx and j = ny cells.
 */
 static cell_type *layer_iget_cell__(const layer_type *layer, int i, int j) {
-    int g = layer_get_global_cell_index__(layer, i, j);
+    int g = global_cell_index(layer, i, j);
     return &layer->data[g];
 }
 
