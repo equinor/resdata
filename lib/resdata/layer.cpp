@@ -22,7 +22,7 @@ typedef struct {
 struct layer_struct {
     UTIL_TYPE_ID_DECLARATION;
     int nx, ny;
-    cell_type *data;
+    cell_type *cells;
     int cell_sum;
 };
 
@@ -37,11 +37,12 @@ layer_type *layer_alloc(int nx, int ny) {
     layer->cell_sum = 0;
     {
         int data_size = (layer->nx + 1) * (layer->ny + 1);
-        layer->data = (cell_type *)util_malloc(data_size * sizeof *layer->data);
+        layer->cells =
+            (cell_type *)util_malloc(data_size * sizeof *layer->cells);
         {
             int g;
             for (g = 0; g < data_size; g++) {
-                cell_type *cell = &layer->data[g];
+                cell_type *cell = &layer->cells[g];
                 cell->cell_value = 0;
                 cell->edges[RIGHT_EDGE] = 0;
                 cell->edges[LEFT_EDGE] = 0;
@@ -59,7 +60,7 @@ layer_type *layer_alloc(int nx, int ny) {
 }
 
 void layer_free(layer_type *layer) {
-    free(layer->data);
+    free(layer->cells);
     free(layer);
 }
 
@@ -89,7 +90,7 @@ static int global_cell_index(const layer_type *layer, int i, int j) {
 
 static cell_type *layer_iget_cell(const layer_type *layer, int i, int j) {
     int g = global_interior_index(layer, i, j);
-    return &layer->data[g];
+    return &layer->cells[g];
 }
 
 /*
@@ -98,7 +99,7 @@ static cell_type *layer_iget_cell(const layer_type *layer, int i, int j) {
 */
 static cell_type *layer_iget_cell__(const layer_type *layer, int i, int j) {
     int g = global_cell_index(layer, i, j);
-    return &layer->data[g];
+    return &layer->cells[g];
 }
 
 bool layer_iget_left_barrier(const layer_type *layer, int i, int j) {
@@ -113,12 +114,12 @@ bool layer_iget_bottom_barrier(const layer_type *layer, int i, int j) {
 
 int layer_iget_cell_value(const layer_type *layer, int i, int j) {
     int g = global_interior_index(layer, i, j);
-    return layer->data[g].cell_value;
+    return layer->cells[g].cell_value;
 }
 
 bool layer_iget_active(const layer_type *layer, int i, int j) {
     int g = global_interior_index(layer, i, j);
-    return layer->data[g].active;
+    return layer->cells[g].active;
 }
 
 int layer_get_cell_sum(const layer_type *layer) { return layer->cell_sum; }
@@ -126,7 +127,7 @@ int layer_get_cell_sum(const layer_type *layer) { return layer->cell_sum; }
 static void layer_cancel_edge(layer_type *layer, int i, int j,
                               edge_dir_enum dir) {
     int g = global_interior_index(layer, i, j);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
     cell->edges[dir] = 0;
 }
 
@@ -136,7 +137,7 @@ int layer_get_ny(const layer_type *layer) { return layer->ny; }
 
 void layer_iset_cell_value(layer_type *layer, int i, int j, int value) {
     int g = global_interior_index(layer, i, j);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
 
     layer->cell_sum += (value - cell->cell_value);
     cell->cell_value = value;
@@ -212,13 +213,13 @@ static int layer_get_global_edge_index(const layer_type *layer, int i, int j,
 int layer_iget_edge_value(const layer_type *layer, int i, int j,
                           edge_dir_enum dir) {
     int g = layer_get_global_edge_index(layer, i, j, dir);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
     return cell->edges[dir];
 }
 
 bool layer_cell_on_edge(const layer_type *layer, int i, int j) {
     int g = global_interior_index(layer, i, j);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
 
     if (cell->cell_value == cell->edges[LEFT_EDGE])
         return true;
@@ -358,7 +359,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
 static bool layer_find_edge(const layer_type *layer, int *i, int *j,
                             int value) {
     int g = global_interior_index(layer, *i, *j);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
     if (cell->cell_value == value) {
 
         while (!layer_cell_on_edge(layer, *i, *j))
@@ -374,7 +375,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             std::vector<int_point2d_type> &corner_list,
                             int_vector_type *cell_list) {
     int g = global_interior_index(layer, start_i, start_j);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
     if (cell->cell_value == value) {
         int i = start_i;
         int j = start_j;
@@ -383,7 +384,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
             int_point2d_type start_corner;
 
             g = global_interior_index(layer, i, j);
-            cell = &layer->data[g];
+            cell = &layer->cells[g];
 
             start_corner.i = i;
             start_corner.j = j;
@@ -422,7 +423,7 @@ static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
                                         int_vector_type *i_list,
                                         int_vector_type *j_list) {
     int g = global_interior_index(layer, i, j);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
     if (cell->cell_value != value || visited[g])
         return;
     {
@@ -466,7 +467,7 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int_vector_type *j_list) {
     bool start_tracing = false;
     int g = global_interior_index(layer, start_i, start_j);
-    cell_type *cell = &layer->data[g];
+    cell_type *cell = &layer->cells[g];
 
     if ((value == 0) && (cell->cell_value != 0))
         start_tracing = true;
@@ -623,7 +624,7 @@ void layer_memcpy(layer_type *target_layer, const layer_type *src_layer) {
         (target_layer->ny == src_layer->ny)) {
         size_t data_size =
             target_layer->nx * target_layer->ny * sizeof(cell_type);
-        memcpy(target_layer->data, src_layer->data, data_size);
+        memcpy(target_layer->cells, src_layer->cells, data_size);
         target_layer->cell_sum = src_layer->cell_sum;
     } else
         util_abort("%s: fatal error - tried to copy elements between layers of "
