@@ -586,7 +586,7 @@ void layer_memcpy(layer_type *target_layer, const layer_type *src_layer) {
                    __func__);
 }
 
-static void layer_assign__(layer_type *layer, int value) {
+void layer_assign(layer_type *layer, int value) {
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
             cell_type &cell = layer->interior_cell(i, j);
@@ -598,11 +598,7 @@ static void layer_assign__(layer_type *layer, int value) {
     layer->cell_sum = value * layer->nx * layer->ny;
 }
 
-void layer_clear_cells(layer_type *layer) { layer_assign__(layer, 0); }
-
-void layer_assign(layer_type *layer, int value) {
-    layer_assign__(layer, value);
-}
+void layer_clear_cells(layer_type *layer) { layer_assign(layer, 0); }
 
 void layer_update_connected_cells(layer_type *layer, int i, int j,
                                   int org_value, int new_value) {
