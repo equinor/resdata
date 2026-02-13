@@ -384,13 +384,20 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
     return false;
 }
 
-struct BlockTracer {
+class BlockTracer {
     layer_type *layer;
     bool erase;
     int value;
-    std::vector<bool> &visited;
+    std::vector<bool> visited;
     int_vector_type *i_list;
     int_vector_type *j_list;
+
+public:
+    BlockTracer(layer_type *layer, bool erase, int value,
+                int_vector_type *i_list, int_vector_type *j_list)
+        : layer(layer), erase(erase), value(value),
+          visited((layer->nx + 1) * (layer->ny + 1), false), i_list(i_list),
+          j_list(j_list) {}
 
     void operator()(int i, int j) {
         int g = layer->interior_index(i, j);
@@ -430,13 +437,10 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
         start_tracing = true;
 
     if (start_tracing) {
-        std::vector<bool> visited((layer->nx + 1) * (layer->ny + 1), false);
-
         value = cell.value;
         int_vector_reset(i_list);
         int_vector_reset(j_list);
-        BlockTracer{layer, erase, value, visited, i_list, j_list}(start_i,
-                                                                  start_j);
+        BlockTracer{layer, erase, value, i_list, j_list}(start_i, start_j);
         return true;
     } else
         return false;
