@@ -384,38 +384,39 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
     return false;
 }
 
-static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
-                                        int j, int value,
-                                        std::vector<bool> &visited,
-                                        int_vector_type *i_list,
-                                        int_vector_type *j_list) {
-    int g = layer->interior_index(i, j);
-    const Cell &cell = layer->cells[g];
-    if (cell.value != value || visited[g])
-        return;
-    visited[g] = true;
-    if (erase)
-        layer_iset_cell_value(layer, i, j, 0);
+struct BlockTracer {
+    layer_type *layer;
+    bool erase;
+    int value;
+    std::vector<bool> &visited;
+    int_vector_type *i_list;
+    int_vector_type *j_list;
 
-    int_vector_append(i_list, i);
-    int_vector_append(j_list, j);
+    void operator()(int i, int j) {
+        int g = layer->interior_index(i, j);
+        const Cell &cell = layer->cells[g];
+        if (cell.value != value || visited[g])
+            return;
+        visited[g] = true;
+        if (erase)
+            layer_iset_cell_value(layer, i, j, 0);
 
-    if (i > 0)
-        layer_trace_block_content__(layer, erase, i - 1, j, value, visited,
-                                    i_list, j_list);
+        int_vector_append(i_list, i);
+        int_vector_append(j_list, j);
 
-    if (i < (layer->nx - 1))
-        layer_trace_block_content__(layer, erase, i + 1, j, value, visited,
-                                    i_list, j_list);
+        if (i > 0)
+            (*this)(i - 1, j);
 
-    if (j > 0)
-        layer_trace_block_content__(layer, erase, i, j - 1, value, visited,
-                                    i_list, j_list);
+        if (i < (layer->nx - 1))
+            (*this)(i + 1, j);
 
-    if (j < (layer->ny - 1))
-        layer_trace_block_content__(layer, erase, i, j + 1, value, visited,
-                                    i_list, j_list);
-}
+        if (j > 0)
+            (*this)(i, j - 1);
+
+        if (j < (layer->ny - 1))
+            (*this)(i, j + 1);
+    }
+};
 
 bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int start_j, int value, int_vector_type *i_list,
@@ -434,8 +435,8 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
         value = cell.value;
         int_vector_reset(i_list);
         int_vector_reset(j_list);
-        layer_trace_block_content__(layer, erase, start_i, start_j, value,
-                                    visited, i_list, j_list);
+        BlockTracer{layer, erase, value, visited, i_list, j_list}(start_i,
+                                                                  start_j);
         return true;
     } else
         return false;
