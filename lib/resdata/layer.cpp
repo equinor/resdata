@@ -591,9 +591,8 @@ static void layer_assign__(layer_type *layer, int value) {
         for (int i = 0; i < layer->nx; i++) {
             cell_type &cell = layer->interior_cell(i, j);
             cell.value = value;
-
-            for (int e = 0; e < 4; e++)
-                cell.edges[e] = 0;
+            for (int &edge : cell.edges)
+                edge = 0;
         }
     }
     layer->cell_sum = value * layer->nx * layer->ny;
