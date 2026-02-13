@@ -370,26 +370,26 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
             int_point2d_type start_corner;
 
             g = global_interior_index(layer, i, j);
-            cell = &layer->cells[g];
+            cell_type *next_cell = &layer->cells[g];
 
             start_corner.i = i;
             start_corner.j = j;
             corner_list.clear();
             int_vector_reset(cell_list);
 
-            if (cell->edges[BOTTOM_EDGE] == value) {
+            if (next_cell->edges[BOTTOM_EDGE] == value) {
                 point_shift(&start_corner, 0, 0);
                 layer_trace_block_edge__(layer, start_corner, i, j, value,
                                          BOTTOM_EDGE, corner_list, cell_list);
-            } else if (cell->edges[RIGHT_EDGE] == value) {
+            } else if (next_cell->edges[RIGHT_EDGE] == value) {
                 point_shift(&start_corner, 1, 0);
                 layer_trace_block_edge__(layer, start_corner, i, j, value,
                                          RIGHT_EDGE, corner_list, cell_list);
-            } else if (cell->edges[TOP_EDGE] == -value) {
+            } else if (next_cell->edges[TOP_EDGE] == -value) {
                 point_shift(&start_corner, 1, 1);
                 layer_trace_block_edge__(layer, start_corner, i, j, value,
                                          TOP_EDGE, corner_list, cell_list);
-            } else if (cell->edges[LEFT_EDGE] == -value) {
+            } else if (next_cell->edges[LEFT_EDGE] == -value) {
                 point_shift(&start_corner, 0, 1);
                 layer_trace_block_edge__(layer, start_corner, i, j, value,
                                          LEFT_EDGE, corner_list, cell_list);
