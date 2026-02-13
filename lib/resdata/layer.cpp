@@ -11,7 +11,7 @@
 
 #define LAYER_TYPE_ID 55185409
 
-struct cell_type {
+struct Cell {
     int value;
     int edges[4];
     bool bottom_barrier;
@@ -22,7 +22,7 @@ struct cell_type {
 struct layer_struct {
     UTIL_TYPE_ID_DECLARATION;
     int nx, ny;
-    std::vector<cell_type> cells;
+    std::vector<Cell> cells;
     int cell_sum;
 
     [[nodiscard]] int interior_index(int i, int j) const {
@@ -37,11 +37,11 @@ struct layer_struct {
         return i + j * (this->nx + 1);
     }
 
-    [[nodiscard]] const cell_type &interior_cell(int i, int j) const {
+    [[nodiscard]] const Cell &interior_cell(int i, int j) const {
         return this->cells[this->interior_index(i, j)];
     }
 
-    [[nodiscard]] cell_type &interior_cell(int i, int j) {
+    [[nodiscard]] Cell &interior_cell(int i, int j) {
         return this->cells[this->interior_index(i, j)];
     }
 };
@@ -55,15 +55,14 @@ layer_type *layer_alloc(int nx, int ny) {
     layer->nx = nx;
     layer->ny = ny;
     layer->cell_sum = 0;
-    layer->cells = std::vector<cell_type>((layer->nx + 1) * (layer->ny + 1),
-                                          {
-                                              0,
-                                              {0, 0, 0, 0},
-                                              false,
-                                              false,
-                                              true,
-                                          });
-
+    layer->cells =
+        std::vector<Cell>((layer->nx + 1) * (layer->ny + 1), {
+                                                                 0,
+                                                                 {0, 0, 0, 0},
+                                                                 false,
+                                                                 false,
+                                                                 true,
+                                                             });
     return layer;
 }
 
@@ -109,7 +108,7 @@ int layer_get_nx(const layer_type *layer) { return layer->nx; }
 int layer_get_ny(const layer_type *layer) { return layer->ny; }
 
 void layer_iset_cell_value(layer_type *layer, int i, int j, int value) {
-    cell_type &cell = layer->interior_cell(i, j);
+    Cell &cell = layer->interior_cell(i, j);
 
     layer->cell_sum += (value - cell.value);
     cell.value = value;
@@ -189,7 +188,7 @@ int layer_iget_edge_value(const layer_type *layer, int i, int j,
 }
 
 bool layer_cell_on_edge(const layer_type *layer, int i, int j) {
-    const cell_type &cell = layer->interior_cell(i, j);
+    const Cell &cell = layer->interior_cell(i, j);
 
     if (cell.value == cell.edges[LEFT_EDGE])
         return true;
@@ -328,7 +327,7 @@ static void layer_trace_block_edge__(const layer_type *layer,
 
 static bool layer_find_edge(const layer_type *layer, int *i, int *j,
                             int value) {
-    const cell_type &cell = layer->interior_cell(*i, *j);
+    const Cell &cell = layer->interior_cell(*i, *j);
     if (cell.value == value) {
 
         while (!layer_cell_on_edge(layer, *i, *j))
@@ -343,7 +342,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
                             int value,
                             std::vector<int_point2d_type> &corner_list,
                             int_vector_type *cell_list) {
-    const cell_type &cell = layer->interior_cell(start_i, start_j);
+    const Cell &cell = layer->interior_cell(start_i, start_j);
     if (cell.value == value) {
         int i = start_i;
         int j = start_j;
@@ -351,7 +350,7 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
         if (layer_find_edge(layer, &i, &j, value)) {
             int_point2d_type start_corner;
 
-            const cell_type &next_cell = layer->interior_cell(i, j);
+            const Cell &next_cell = layer->interior_cell(i, j);
 
             start_corner.i = i;
             start_corner.j = j;
@@ -390,7 +389,7 @@ static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
                                         int_vector_type *i_list,
                                         int_vector_type *j_list) {
     int g = layer->interior_index(i, j);
-    const cell_type &cell = layer->cells[g];
+    const Cell &cell = layer->cells[g];
     if (cell.value != value || visited[g])
         return;
     visited[g] = true;
@@ -430,7 +429,7 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int start_j, int value, int_vector_type *i_list,
                                int_vector_type *j_list) {
     bool start_tracing = false;
-    const cell_type &cell = layer->interior_cell(start_i, start_j);
+    const Cell &cell = layer->interior_cell(start_i, start_j);
 
     if ((value == 0) && (cell.value != 0))
         start_tracing = true;
@@ -501,7 +500,7 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int jmax = util_int_max(j1, j2);
 
             for (int j = jmin; j < jmax; j++) {
-                cell_type &cell = layer->cells[global_cell_index(layer, i1, j)];
+                Cell &cell = layer->cells[global_cell_index(layer, i1, j)];
                 cell.left_barrier = true;
             }
         } else {
@@ -509,7 +508,7 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int imax = util_int_max(i1, i2);
 
             for (int i = imin; i < imax; i++) {
-                cell_type &cell = layer->cells[global_cell_index(layer, i, j1)];
+                Cell &cell = layer->cells[global_cell_index(layer, i, j1)];
                 cell.bottom_barrier = true;
             }
         }
@@ -589,7 +588,7 @@ void layer_memcpy(layer_type *target_layer, const layer_type *src_layer) {
 void layer_assign(layer_type *layer, int value) {
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
-            cell_type &cell = layer->interior_cell(i, j);
+            Cell &cell = layer->interior_cell(i, j);
             cell.value = value;
             for (int &edge : cell.edges)
                 edge = 0;
@@ -631,7 +630,7 @@ void layer_cells_equal(const layer_type *layer, int value,
                        int_vector_type *i_list, int_vector_type *j_list) {
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
-            const cell_type &cell = layer->interior_cell(i, j);
+            const Cell &cell = layer->interior_cell(i, j);
             if (cell.value == value) {
                 int_vector_append(i_list, i);
                 int_vector_append(j_list, j);
@@ -644,7 +643,7 @@ int layer_count_equal(const layer_type *layer, int value) {
     int num_equal = 0;
     for (int j = 0; j < layer->ny; j++) {
         for (int i = 0; i < layer->nx; i++) {
-            const cell_type &cell = layer->interior_cell(i, j);
+            const Cell &cell = layer->interior_cell(i, j);
             if (cell.value == value)
                 num_equal++;
         }
@@ -655,7 +654,7 @@ int layer_count_equal(const layer_type *layer, int value) {
 void layer_update_active(layer_type *layer, const rd_grid_type *grid, int k) {
     for (int j = 0; j < rd_grid_get_ny(grid); j++) {
         for (int i = 0; i < rd_grid_get_nx(grid); i++) {
-            cell_type &cell = layer->interior_cell(i, j);
+            Cell &cell = layer->interior_cell(i, j);
             cell.active = rd_grid_cell_active3(grid, i, j, k);
         }
     }
