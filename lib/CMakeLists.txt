@@ -1,5 +1,5 @@
 if(ERT_HAVE_GETUID AND ERT_HAVE_OPENDIR)
-  list(APPEND opt_srcs util/test_work_area.cpp util/util_getuid.cpp)
+  list(APPEND opt_srcs util/test_work_area.cpp)
 endif()
 
 if(ERT_HAVE_OPENDIR)
