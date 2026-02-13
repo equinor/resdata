@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include <vector>
+#include <algorithm>
 
 #include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
@@ -476,12 +477,12 @@ bool layer_cell_contact(const layer_type *layer, int i1, int j1, int i2,
     layer_assert_cell_index(layer, i1, j1);
     layer_assert_cell_index(layer, i2, j2);
     if ((abs(i1 - i2) == 1) && (j1 == j2)) {
-        int i = util_int_max(i1, i2);
+        int i = std::max(i1, i2);
         return !layer->interior_cell(i, j1).left_barrier;
     }
 
     if ((i1 == i2) && (abs(j1 - j2) == 1)) {
-        int j = util_int_max(j1, j2);
+        int j = std::max(j1, j2);
         return !layer->interior_cell(i1, j).bottom_barrier;
     }
 
@@ -491,16 +492,16 @@ bool layer_cell_contact(const layer_type *layer, int i1, int j1, int i2,
 void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
     if ((j1 == j2) || (i1 == i2)) {
         if (i1 == i2) {
-            int jmin = util_int_min(j1, j2);
-            int jmax = util_int_max(j1, j2);
+            int jmin = std::min(j1, j2);
+            int jmax = std::max(j1, j2);
 
             for (int j = jmin; j < jmax; j++) {
                 Cell &cell = layer->cells[global_cell_index(layer, i1, j)];
                 cell.left_barrier = true;
             }
         } else {
-            int imin = util_int_min(i1, i2);
-            int imax = util_int_max(i1, i2);
+            int imin = std::min(i1, i2);
+            int imax = std::max(i1, i2);
 
             for (int i = imin; i < imax; i++) {
                 Cell &cell = layer->cells[global_cell_index(layer, i, j1)];
