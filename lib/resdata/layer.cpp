@@ -11,13 +11,13 @@
 
 #define LAYER_TYPE_ID 55185409
 
-typedef struct {
+struct cell_type {
     int value;
     int edges[4];
     bool bottom_barrier;
     bool left_barrier;
     bool active;
-} cell_type;
+};
 
 struct layer_struct {
     UTIL_TYPE_ID_DECLARATION;
