@@ -385,7 +385,8 @@ bool layer_trace_block_edge(const layer_type *layer, int start_i, int start_j,
 }
 
 static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
-                                        int j, int value, bool *visited,
+                                        int j, int value,
+                                        std::vector<bool> &visited,
                                         int_vector_type *i_list,
                                         int_vector_type *j_list) {
     int g = layer->interior_index(i, j);
@@ -416,15 +417,6 @@ static void layer_trace_block_content__(layer_type *layer, bool erase, int i,
                                     i_list, j_list);
 }
 
-static bool *layer_alloc_visited_mask(const layer_type *layer) {
-    int total_size = (layer->nx + 1) * (layer->ny + 1);
-    bool *visited = (bool *)util_malloc(total_size * sizeof *visited);
-    for (int g = 0; g < total_size; g++)
-        visited[g] = false;
-
-    return visited;
-}
-
 bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
                                int start_j, int value, int_vector_type *i_list,
                                int_vector_type *j_list) {
@@ -437,15 +429,13 @@ bool layer_trace_block_content(layer_type *layer, bool erase, int start_i,
         start_tracing = true;
 
     if (start_tracing) {
-        bool *visited = layer_alloc_visited_mask(layer);
+        std::vector<bool> visited((layer->nx + 1) * (layer->ny + 1), false);
 
         value = cell.value;
         int_vector_reset(i_list);
         int_vector_reset(j_list);
         layer_trace_block_content__(layer, erase, start_i, start_j, value,
                                     visited, i_list, j_list);
-
-        free(visited);
         return true;
     } else
         return false;
