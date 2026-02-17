@@ -60,3 +60,5 @@ cmake --build --preset=conan-release -j 8
 # Run all tests
 ctest --preset conan-release
 ```
+
+Debug ci build failure
