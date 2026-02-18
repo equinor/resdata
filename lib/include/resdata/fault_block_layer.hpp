@@ -46,7 +46,7 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
                               rd_kw_type *faultblock_kw);
 const rd_grid_type *
 fault_block_layer_get_grid(const fault_block_layer_type *layer);
-layer_type *fault_block_layer_get_layer(const fault_block_layer_type *layer);
+std::shared_ptr<layer_type> fault_block_layer_get_layer(const fault_block_layer_type *layer);
 
 #ifdef __cplusplus
 }

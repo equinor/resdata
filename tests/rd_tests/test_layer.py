@@ -17,6 +17,10 @@ class LayerTest(ResdataTest):
     def test_create_layer(self):
         layer = Layer(10, 10)
         self.assertTrue(isinstance(layer, Layer))
+        self.assertEqual(10, layer.getNX())
+        self.assertEqual(10, layer.getNY())
+        self.assertEqual(10, layer.nx)
+        self.assertEqual(10, layer.ny)
 
     def test_add_cell(self):
         layer = Layer(10, 10)

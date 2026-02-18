@@ -9,6 +9,7 @@ class ResdataConan(ConanFile):
         self.requires("backward-cpp/1.6")
         self.requires("catch2/2.13.9")
         self.requires("fmt/8.0.1")
+        self.requires("pybind11/2.13.6")
 
     def configure(self):
         self.options["catch2"].with_main = True

@@ -300,7 +300,7 @@ class ResdataRegion(BaseCClass):
     _select_true = ResdataPrototype("void rd_region_select_true( rd_region , rd_kw)")
     _select_false = ResdataPrototype("void rd_region_select_false( rd_region , rd_kw)")
     _select_from_layer = ResdataPrototype(
-        "void rd_region_select_from_layer( rd_region , rd_layer , int , int)"
+        "void rd_region_select_from_layer( rd_region , void* , int , int)"
     )
 
     def __init__(self, grid, preselect):
@@ -978,7 +978,7 @@ class ResdataRegion(BaseCClass):
                 % (grid.getNY(), layer.getNY())
             )
 
-        self._select_from_layer(layer, k, value)
+        self._select_from_layer(layer._address(), k, value)
 
     #################################################################
 

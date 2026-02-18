@@ -80,7 +80,7 @@ void fault_block_add_cell(fault_block_type *fault_block, int i, int j) {
         rd_grid_get_global_index3(fault_block->grid, i, j, fault_block->k));
     fault_block->valid_center = false;
     layer_iset_cell_value(
-        fault_block_layer_get_layer(fault_block->parent_layer), i, j,
+        fault_block_layer_get_layer(fault_block->parent_layer).get(), i, j,
         fault_block->block_id);
 }
 
@@ -168,7 +168,7 @@ bool fault_block_trace_edge(const fault_block_type *block,
             int start_j = fault_block_iget_j(block, 0);
 
             layer_trace_block_edge(
-                fault_block_layer_get_layer(block->parent_layer), start_i,
+                fault_block_layer_get_layer(block->parent_layer).get(), start_i,
                 start_j, block->block_id, corner_list, cell_list);
         }
 
@@ -230,11 +230,11 @@ static bool
 fault_block_connected_neighbour(const fault_block_type *block, int i1, int j1,
                                 int i2, int j2, bool connected_only,
                                 const geo_polygon_collection_type *polylines) {
-    const layer_type *layer = fault_block_layer_get_layer(block->parent_layer);
-    if ((i2 < 0) || (i2 >= layer_get_nx(layer)))
+    auto layer = fault_block_layer_get_layer(block->parent_layer);
+    if ((i2 < 0) || (i2 >= layer_get_nx(layer.get())))
         return false;
 
-    if ((j2 < 0) || (j2 >= layer_get_ny(layer)))
+    if ((j2 < 0) || (j2 >= layer_get_ny(layer.get())))
         return false;
 
     /*
@@ -245,8 +245,8 @@ fault_block_connected_neighbour(const fault_block_type *block, int i1, int j1,
         return false;
 
     {
-        int cell_id = layer_iget_cell_value(layer, i1, j1);
-        int neighbour_id = layer_iget_cell_value(layer, i2, j2);
+        int cell_id = layer_iget_cell_value(layer.get(), i1, j1);
+        int neighbour_id = layer_iget_cell_value(layer.get(), i2, j2);
         if (cell_id == neighbour_id)
             return false;
 
@@ -254,7 +254,7 @@ fault_block_connected_neighbour(const fault_block_type *block, int i1, int j1,
             return true;
 
         return (
-            layer_cell_contact(layer, i1, j1, i2, j2) &&
+            layer_cell_contact(layer.get(), i1, j1, i2, j2) &&
             !fault_block_neighbour_xpolyline(block, i1, j1, i2, j2, polylines));
     }
 }
@@ -266,7 +266,7 @@ void fault_block_list_neighbours(const fault_block_type *block,
     int_vector_reset(neighbour_list);
     {
         int c;
-        layer_type *layer = fault_block_layer_get_layer(block->parent_layer);
+        auto layer = fault_block_layer_get_layer(block->parent_layer);
         for (c = 0; c < int_vector_size(block->i_list); c++) {
             int i = int_vector_iget(block->i_list, c);
             int j = int_vector_iget(block->j_list, c);
@@ -274,22 +274,22 @@ void fault_block_list_neighbours(const fault_block_type *block,
             if (fault_block_connected_neighbour(block, i, j, i - 1, j,
                                                 connected_only, polylines))
                 int_vector_append(neighbour_list,
-                                  layer_iget_cell_value(layer, i - 1, j));
+                                  layer_iget_cell_value(layer.get(), i - 1, j));
 
             if (fault_block_connected_neighbour(block, i, j, i + 1, j,
                                                 connected_only, polylines))
                 int_vector_append(neighbour_list,
-                                  layer_iget_cell_value(layer, i + 1, j));
+                                  layer_iget_cell_value(layer.get(), i + 1, j));
 
             if (fault_block_connected_neighbour(block, i, j, i, j - 1,
                                                 connected_only, polylines))
                 int_vector_append(neighbour_list,
-                                  layer_iget_cell_value(layer, i, j - 1));
+                                  layer_iget_cell_value(layer.get(), i, j - 1));
 
             if (fault_block_connected_neighbour(block, i, j, i, j + 1,
                                                 connected_only, polylines))
                 int_vector_append(neighbour_list,
-                                  layer_iget_cell_value(layer, i, j + 1));
+                                  layer_iget_cell_value(layer.get(), i, j + 1));
         }
     }
     int_vector_select_unique(neighbour_list);

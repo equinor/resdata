@@ -158,6 +158,20 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+add_library(_layer MODULE resdata/py_layer.cpp)
+set_target_properties(_layer PROPERTIES PREFIX "")
+target_compile_definitions(_layer PRIVATE PYBIND_MODULE)
+target_link_libraries(_layer PRIVATE resdata pybind11::module)
+
+add_library(_fault_block_layer MODULE resdata/py_fault_block_layer.cpp)
+set_target_properties(_fault_block_layer PROPERTIES PREFIX "")
+target_compile_definitions(_fault_block_layer PRIVATE PYBIND_MODULE)
+target_link_libraries(_fault_block_layer PRIVATE resdata pybind11::module)
+install(
+  TARGETS _fault_block_layer
+  LIBRARY DESTINATION python/resdata/grid/faults
+  RUNTIME DESTINATION python/resdata/grid/faults)
+
 if(NOT BUILD_TESTS)
   return()
 endif()

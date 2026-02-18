@@ -34,7 +34,7 @@ struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
     const rd_grid_type *grid;
     int_vector_type *block_map;
-    layer_type *layer;
+    std::shared_ptr<layer_type> layer;
     int k;
     vector_type *blocks;
 };
@@ -177,14 +177,13 @@ fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
     if ((k < 0) || (k >= rd_grid_get_nz(grid)))
         return NULL;
     else {
-        fault_block_layer_type *layer =
-            (fault_block_layer_type *)util_malloc(sizeof *layer);
+        auto layer = new fault_block_layer_type;
         UTIL_TYPE_ID_INIT(layer, FAULT_BLOCK_LAYER_ID);
         layer->grid = grid;
         layer->k = k;
         layer->block_map = int_vector_alloc(0, -1);
         layer->blocks = vector_alloc_new();
-        layer->layer = layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid));
+        layer->layer = std::shared_ptr<layer_type>(layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid)), layer_free);
 
         return layer;
     }
@@ -265,8 +264,7 @@ int fault_block_layer_get_k(const fault_block_layer_type *layer) {
 void fault_block_layer_free(fault_block_layer_type *layer) {
     int_vector_free(layer->block_map);
     vector_free(layer->blocks);
-    layer_free(layer->layer);
-    free(layer);
+    delete layer;
 }
 
 void fault_block_layer_insert_block_content(fault_block_layer_type *layer,
@@ -287,7 +285,7 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
         for (j = 0; j < rd_grid_get_ny(layer->grid); j++) {
             for (i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
-                int cell_value = layer_iget_cell_value(layer->layer, i, j);
+                int cell_value = layer_iget_cell_value(layer->layer.get(), i, j);
                 rd_kw_iset_int(faultblock_kw, g, cell_value);
             }
         }
@@ -301,6 +299,7 @@ fault_block_layer_get_grid(const fault_block_layer_type *layer) {
     return layer->grid;
 }
 
-layer_type *fault_block_layer_get_layer(const fault_block_layer_type *layer) {
+std::shared_ptr<layer_type> fault_block_layer_get_layer(const fault_block_layer_type *layer) {
     return layer->layer;
 }
+

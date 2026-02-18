@@ -240,6 +240,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules
 
 find_package(fmt REQUIRED)
 find_package(Backward REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
 
 # create targets for (required and optional) dependencies to link to
 

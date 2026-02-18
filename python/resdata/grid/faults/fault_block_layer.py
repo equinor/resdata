@@ -6,6 +6,10 @@ from resdata import ResDataType
 from resdata import ResdataPrototype
 from resdata.grid.faults import Fault
 
+from ._fault_block_layer import fault_block_get_layer
+from .fault_block import FaultBlock
+from .layer import Layer
+
 
 class FaultBlockLayer(BaseCClass):
     TYPE_NAME = "rd_fault_block_layer"
@@ -40,16 +44,13 @@ class FaultBlockLayer(BaseCClass):
         "int fault_block_layer_get_next_id(rd_fault_block_layer)"
     )
     _scan_layer = ResdataPrototype(
-        "void fault_block_layer_scan_layer(rd_fault_block_layer, rd_layer)"
+        "void fault_block_layer_scan_layer(rd_fault_block_layer, void*)"
     )
     _insert_block_content = ResdataPrototype(
         "void fault_block_layer_insert_block_content(rd_fault_block_layer, rd_fault_block)"
     )
     _export_kw = ResdataPrototype(
         "bool fault_block_layer_export(rd_fault_block_layer, rd_kw)"
-    )
-    _get_layer = ResdataPrototype(
-        "rd_layer_ref fault_block_layer_get_layer(rd_fault_block_layer)"
     )
 
     def __init__(self, grid, k):
@@ -169,8 +170,8 @@ class FaultBlockLayer(BaseCClass):
     def free(self):
         self._free()
 
-    def scan_layer(self, layer):
-        self._scan_layer(layer)
+    def scan_layer(self, layer: Layer) -> None:
+        self._scan_layer(layer._address())
 
     def insert_block_content(self, block):
         self._insert_block_content(block)
@@ -223,9 +224,9 @@ class FaultBlockLayer(BaseCClass):
             print("Adding barrier %d -> %d" % (c0, c1))
             c0 = c1
 
-    def get_geo_layer(self):
+    def get_geo_layer(self) -> Layer:
         """Returns the underlying geometric layer."""
-        return self._get_layer()
+        return fault_block_get_layer(self)
 
     def cell_contact(self, p1, p2):
         layer = self.getGeoLayer()
