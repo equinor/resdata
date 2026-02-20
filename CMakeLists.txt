@@ -114,12 +114,20 @@ else()
       OUTPUT_VARIABLE GIT_TAG
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" RD_VERSION_MAJOR
-                         "${GIT_TAG}")
-    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" RD_VERSION_MINOR
-                         "${GIT_TAG}")
-    string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" RD_VERSION_MICRO
-                         "${GIT_TAG}")
+    if(GIT_TAG MATCHES "^([^.]+)\\.([^.]+)\\.(.+)$")
+      string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\1" RD_VERSION_MAJOR
+                           "${GIT_TAG}")
+      string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\2" RD_VERSION_MINOR
+                           "${GIT_TAG}")
+      string(REGEX REPLACE "^([^.]+)\\.([^.]+)\\.(.+)$" "\\3" RD_VERSION_MICRO
+                           "${GIT_TAG}")
+    else()
+      message(STATUS "No semantic version tag found. Falling back to 0.0.0")
+      set(GIT_TAG "0.0.0")
+      set(RD_VERSION_MAJOR "0")
+      set(RD_VERSION_MINOR "0")
+      set(RD_VERSION_MICRO "0")
+    endif()
   else()
     set(GIT_COMMIT "unknown (git not found!)")
     set(GIT_COMMIT_SHORT "unknown (git not found!)")
