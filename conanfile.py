@@ -10,6 +10,10 @@ class ResdataConan(ConanFile):
         self.requires("catch2/2.13.9")
         self.requires("fmt/8.0.1")
 
+
+    def build_requirements(self):
+        self.tool_requires("m4/1.4.20")
+
     def configure(self):
         self.options["catch2"].with_main = True
         if self.settings.os == "Macos":
