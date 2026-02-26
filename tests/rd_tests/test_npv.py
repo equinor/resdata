@@ -93,8 +93,8 @@ class NPVTest(ResdataTest):
 
         npv2 = 0
         sum = Summary(self.case)
-        trange = sum.timeRange()
-        fopr = sum.blockedProduction("FOPT", trange)
+        trange = sum.time_range()
+        fopr = sum.blocked_production("FOPT", trange)
         for v in fopr:
             npv2 += v
         self.assertAlmostEqual(npv1, npv2)

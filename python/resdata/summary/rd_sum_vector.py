@@ -4,15 +4,13 @@ from .rd_sum_node import SummaryNode
 
 
 class SummaryVector(object):
-    def __init__(self, parent, key, report_only=False):
+    def __init__(self, parent, key):
         """
         A summary vector with a vector of values and time.
 
         A summary vector contains the the full time history of one
         key, along with the corresponding time vectors in several
-        different time formats. Depending on the report_only argument
-        the data vectors in the SummaryVector can either contain all
-        the time values, or only those corresponding to report_steps.
+        different time formats.
 
         The SummaryVector contains a reference to the parent Summary
         structure and this is used to implement several of the
@@ -23,18 +21,11 @@ class SummaryVector(object):
         """
         self.parent = parent
         self.key = key
-        self.report_only = report_only
 
-        if report_only:
-            warnings.warn(
-                "The report_only flag to the SummaryVector will be removed",
-                DeprecationWarning,
-            )
-
-        self.__dates = parent.get_dates(report_only)
-        self.__days = parent.get_days(report_only)
+        self.__dates = parent.get_dates(False)
+        self.__days = parent.get_days(False)
         self.__numpy_dates = parent.numpy_dates
-        self.__report_step = parent.get_report_step(report_only)
+        self.__report_step = parent.get_report_step(False)
         self.__values = None
 
     def __str__(self):
@@ -59,9 +50,7 @@ class SummaryVector(object):
         This function will load and internalize all the values.
         """
         if self.__values is None:
-            self.__values = self.parent.numpy_vector(
-                self.key, report_only=self.report_only
-            )
+            self.__values = self.parent.numpy_vector(self.key, report_only=False)
 
     @property
     def values(self):
@@ -86,21 +75,6 @@ class SummaryVector(object):
         In the case of lab unit this will be hours.
         """
         return self.__days
-
-    @property
-    def mpl_dates(self):
-        """
-        All the dates as numpy vector of dates in matplotlib format.
-        This property will be replaced by numpy_dates, but is kept for
-        backwards-compatibility for the time-being. Usage will trigger
-        a depreciation warning.
-        """
-        warnings.warn(
-            "The mpl_dates property has been deprecated - use numpy_dates instead",
-            DeprecationWarning,
-        )
-
-        return self.parent.get_mpl_dates(self.report_only)
 
     @property
     def numpy_dates(self):
@@ -226,67 +200,3 @@ class SummaryVector(object):
         Will lookup the value based on @report_step.
         """
         return self.parent.get_from_report(self.key, report_step)
-
-    #################################################################
-
-    def first_gt_index(self, limit):
-        """
-        Locates first index where the value is above @limit.
-
-        Observe that this method will raise an exception if it is
-        called from a vector instance with report_only = True.
-        """
-        if not self.report_only:
-            key_index = self.parent._get_general_var_index(self.key)
-            time_index = self.parent._get_first_gt(key_index, limit)
-            return time_index
-        else:
-            raise Exception(
-                "Sorry - first_gt_index() can not be called for vectors with report_only=True"
-            )
-
-    def first_gt(self, limit):
-        """
-        Locate the first SummaryNode where value is above @limit.
-
-           vec = sum["WWCT:A-3"]
-           w = vec.first_gt(0.50)
-           print('Water cut above 0.50 in well A-3 at: %s' % w.date)
-
-        Uses first_gt_index() internally and can not be called for
-        vectors with report_only = True.
-        """
-        time_index = self.first_gt_index(limit)
-        self.assert_values()
-        if time_index >= 0:
-            return self.__iget(time_index)
-        else:
-            return None
-
-    def first_lt_index(self, limit):
-        """
-        Locates first index where the value is below @limit.
-
-        See first_gt_index() for further details.
-        """
-        if not self.report_only:
-            key_index = self.parent._get_general_var_index(self.key)
-            time_index = self.parent._get_first_lt(key_index, limit)
-            return time_index
-        else:
-            raise Exception(
-                "Sorry - first_lt_index() can not be called for vectors with report_only=True"
-            )
-
-    def first_lt(self, limit):
-        """
-        Locates first element where the value is below @limit.
-
-        See first_gt() for further details.
-        """
-        time_index = self.first_lt_index(limit)
-        self.assert_values()
-        if time_index >= 0:
-            return self.__iget(time_index)
-        else:
-            return None

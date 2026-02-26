@@ -138,29 +138,29 @@ class SumTest(ResdataTest):
             SummaryVarType, "rd_smspec_var_type", "lib/include/resdata/smspec_node.hpp"
         )
         self.assertEqual(
-            Summary.varType("WWCT:OP_X"), SummaryVarType.RD_SMSPEC_WELL_VAR
+            Summary.var_type("WWCT:OP_X"), SummaryVarType.RD_SMSPEC_WELL_VAR
         )
-        self.assertEqual(Summary.varType("RPR"), SummaryVarType.RD_SMSPEC_REGION_VAR)
-        self.assertEqual(Summary.varType("WNEWTON"), SummaryVarType.RD_SMSPEC_MISC_VAR)
-        self.assertEqual(Summary.varType("YEAR"), SummaryVarType.RD_SMSPEC_MISC_VAR)
-        self.assertEqual(Summary.varType("MONTH"), SummaryVarType.RD_SMSPEC_MISC_VAR)
+        self.assertEqual(Summary.var_type("RPR"), SummaryVarType.RD_SMSPEC_REGION_VAR)
+        self.assertEqual(Summary.var_type("WNEWTON"), SummaryVarType.RD_SMSPEC_MISC_VAR)
+        self.assertEqual(Summary.var_type("YEAR"), SummaryVarType.RD_SMSPEC_MISC_VAR)
+        self.assertEqual(Summary.var_type("MONTH"), SummaryVarType.RD_SMSPEC_MISC_VAR)
         self.assertEqual(
-            Summary.varType("AARQ:4"), SummaryVarType.RD_SMSPEC_AQUIFER_VAR
+            Summary.var_type("AARQ:4"), SummaryVarType.RD_SMSPEC_AQUIFER_VAR
         )
 
         self.assertEqual(
-            Summary.varType("RXFT"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
+            Summary.var_type("RXFT"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
         )
         self.assertEqual(
-            Summary.varType("RxxFT"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
+            Summary.var_type("RxxFT"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
         )
         self.assertEqual(
-            Summary.varType("RXFR"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
+            Summary.var_type("RXFR"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
         )
         self.assertEqual(
-            Summary.varType("RxxFR"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
+            Summary.var_type("RxxFR"), SummaryVarType.RD_SMSPEC_REGION_2_REGION_VAR
         )
-        self.assertEqual(Summary.varType("RORFR"), SummaryVarType.RD_SMSPEC_REGION_VAR)
+        self.assertEqual(Summary.var_type("RORFR"), SummaryVarType.RD_SMSPEC_REGION_VAR)
 
         case = createSummary(
             "CSV",
@@ -204,7 +204,7 @@ class SumTest(ResdataTest):
         )
         sep = ";"
         with TestAreaContext("resdata/csv"):
-            case.exportCSV("file.csv", sep=sep)
+            case.export_csv("file.csv", sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
             input_file = csv.DictReader(open("file.csv"), delimiter=sep)
             for row in input_file:
@@ -218,7 +218,7 @@ class SumTest(ResdataTest):
             self.assertEqual(case.unit("FOPT"), "SM3")
 
         with TestAreaContext("resdata/csv"):
-            case.exportCSV("file.csv", keys=["FOPT"], sep=sep)
+            case.export_csv("file.csv", keys=["FOPT"], sep=sep)
             self.assertTrue(os.path.isfile("file.csv"))
             input_file = csv.DictReader(open("file.csv"), delimiter=sep)
             for row in input_file:
@@ -231,7 +231,7 @@ class SumTest(ResdataTest):
         with TestAreaContext("resdata/csv"):
             date_format = "%y-%m-%d"
             sep = ","
-            case.exportCSV("file.csv", keys=["F*"], sep=sep, date_format=date_format)
+            case.export_csv("file.csv", keys=["F*"], sep=sep, date_format=date_format)
             self.assertTrue(os.path.isfile("file.csv"))
             with open("file.csv") as f:
                 time_index = -1
@@ -252,46 +252,46 @@ class SumTest(ResdataTest):
 
     def assert_solve(self, case):
         with self.assertRaises(KeyError):
-            case.solveDays("MISSING:KEY", 0.56)
+            case.solve_days("MISSING:KEY", 0.56)
 
-        sol = case.solveDays("FOPT", 150)
+        sol = case.solve_days("FOPT", 150)
         self.assertEqual(len(sol), 0)
 
-        sol = case.solveDays("FOPT", -10)
+        sol = case.solve_days("FOPT", -10)
         self.assertEqual(len(sol), 0)
 
-        sol = case.solveDays("FOPT", 50)
+        sol = case.solve_days("FOPT", 50)
         self.assertEqual(len(sol), 1)
         self.assertFloatEqual(sol[0], 50)
 
-        sol = case.solveDays("FOPT", 50.50)
+        sol = case.solve_days("FOPT", 50.50)
         self.assertEqual(len(sol), 1)
         self.assertFloatEqual(sol[0], 50.50)
 
-        sol = case.solveDays("FOPR", 50.90)
+        sol = case.solve_days("FOPR", 50.90)
         self.assertEqual(len(sol), 1)
         self.assertFloatEqual(sol[0], 50.00 + 1.0 / 86400)
 
-        sol = case.solveDates("FOPR", 50.90)
+        sol = case.solve_dates("FOPR", 50.90)
         t = (
-            case.getDataStartTime()
+            case.get_data_start_time()
             + datetime.timedelta(days=50)
             + datetime.timedelta(seconds=1)
         )
         self.assertEqual(sol[0], t)
 
-        sol = case.solveDays("FOPR", 50.90, rates_clamp_lower=False)
+        sol = case.solve_days("FOPR", 50.90, rates_clamp_lower=False)
         self.assertEqual(len(sol), 1)
         self.assertFloatEqual(sol[0], 51.00)
 
-        sol = case.solveDays("FGPT", 25.0)
+        sol = case.solve_days("FGPT", 25.0)
         self.assertEqual(len(sol), 2)
         self.assertFloatEqual(sol[0], 25.00)
         self.assertFloatEqual(sol[1], 75.00)
 
-        sol = case.solveDates("FGPT", 25)
+        sol = case.solve_dates("FGPT", 25)
         self.assertEqual(len(sol), 2)
-        t0 = case.getDataStartTime()
+        t0 = case.get_data_start_time()
         t1 = t0 + datetime.timedelta(days=25)
         t2 = t0 + datetime.timedelta(days=75)
         self.assertEqual(sol[0], t1)
@@ -359,7 +359,7 @@ class SumTest(ResdataTest):
         kw_list.add_keyword("FGPT")
         kw_list.add_keyword("FOPR")
 
-        t = case1.getDataStartTime() + datetime.timedelta(days=43)
+        t = case1.get_data_start_time() + datetime.timedelta(days=43)
         data = case1.get_interp_row(kw_list, t)
         for d1, d2 in zip(
             data,
@@ -390,10 +390,10 @@ class SumTest(ResdataTest):
 
         with TestAreaContext("sum_vector"):
             with cwrap.open("f1.txt", "w") as f:
-                case1.dumpCSVLine(t, kw_list, f)
+                case1.dump_csv_line(t, kw_list, f)
 
             with cwrap.open("f2.txt", "w") as f:
-                case2.dumpCSVLine(t, kw_list2, f)
+                case2.dump_csv_line(t, kw_list2, f)
 
             with open("f1.txt") as f:
                 d1 = f.readline().split(",")
@@ -555,12 +555,12 @@ class SumTest(ResdataTest):
         numpy_vector = case.numpy_vector("FOPT")
         self.assertEqual(len(numpy_vector), len(case))
         numpy_dates = case.numpy_dates
-        self.assertEqual(numpy_dates[0].tolist(), case.getDataStartTime())
-        self.assertEqual(numpy_dates[-1].tolist(), case.getEndTime())
+        self.assertEqual(numpy_dates[0].tolist(), case.get_data_start_time())
+        self.assertEqual(numpy_dates[-1].tolist(), case.get_end_time())
 
         dates = case.dates
-        self.assertEqual(dates[0], case.getDataStartTime())
-        self.assertEqual(dates[-1], case.getEndTime())
+        self.assertEqual(dates[0], case.get_data_start_time())
+        self.assertEqual(dates[-1], case.get_end_time())
 
         dates = (
             [datetime.datetime(2000, 1, 1)]
