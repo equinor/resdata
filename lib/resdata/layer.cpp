@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <array>
 
 #include <ert/util/type_macros.hpp>
 #include <ert/util/int_vector.hpp>
@@ -14,7 +15,7 @@
 
 struct Cell {
     int value;
-    int edges[4];
+    std::array<int, 4> edges;
     bool bottom_barrier;
     bool left_barrier;
     bool active;
