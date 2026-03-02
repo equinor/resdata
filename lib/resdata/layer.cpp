@@ -209,10 +209,7 @@ static void point_shift(int_point2d_type *point, int di, int dj) {
 }
 
 static bool point_equal(int_point2d_type *p1, int_point2d_type *p2) {
-    if ((p1->i == p2->i) && (p1->j == p2->j))
-        return true;
-    else
-        return false;
+    return ((p1->i == p2->i) && (p1->j == p2->j));
 }
 
 /*
