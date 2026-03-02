@@ -595,8 +595,7 @@ void layer_assign(layer_type *layer, int value) {
         for (int i = 0; i < layer->nx; i++) {
             Cell &cell = layer->interior_cell(i, j);
             cell.value = value;
-            for (int &edge : cell.edges)
-                edge = 0;
+            std::fill(std::begin(cell.edges), std::end(cell.edges), 0);
         }
     }
     layer->cell_sum = value * layer->nx * layer->ny;
