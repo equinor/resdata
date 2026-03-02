@@ -14,19 +14,13 @@ class WellTimeLine(BaseCClass):
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
-    def getName(self):
+    def getName(self) -> str:
         return self._name()
 
-    def __len__(self):
-        """@rtype: int"""
+    def __len__(self) -> int:
         return self._size()
 
-    def __getitem__(self, index):
-        """
-        @type index: int
-        @rtype: WellState
-        """
-
+    def __getitem__(self, index: int) -> WellState:
         if index < 0:
             index += len(self)
 
@@ -35,10 +29,10 @@ class WellTimeLine(BaseCClass):
 
         return self._iget(index).setParent(self)
 
-    def free(self):
+    def free(self) -> None:
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         n = self.getName()
         l = len(self)
         cnt = "name = %s, size = %d" % (n, l)
