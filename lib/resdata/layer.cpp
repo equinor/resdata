@@ -57,6 +57,14 @@ struct layer_struct {
     [[nodiscard]] Cell &interior_cell(int i, int j) {
         return this->cells[this->interior_index(i, j)];
     }
+
+    [[nodiscard]] const Cell &global_cell(int i, int j) const {
+        return this->cells[this->global_index(i, j)];
+    }
+
+    [[nodiscard]] Cell &global_cell(int i, int j) {
+        return this->cells[this->global_index(i, j)];
+    }
 };
 
 UTIL_IS_INSTANCE_FUNCTION(layer, LAYER_TYPE_ID)
@@ -496,7 +504,7 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int jmax = std::max(j1, j2);
 
             for (int j = jmin; j < jmax; j++) {
-                Cell &cell = layer->cells[layer->global_index(i1, j)];
+                Cell &cell = layer->global_cell(i1, j);
                 cell.left_barrier = true;
             }
         } else {
@@ -504,7 +512,7 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int imax = std::max(i1, i2);
 
             for (int i = imin; i < imax; i++) {
-                Cell &cell = layer->cells[layer->global_index(i, j1)];
+                Cell &cell = layer->global_cell(i, j1);
                 cell.bottom_barrier = true;
             }
         }
