@@ -199,17 +199,8 @@ int layer_iget_edge_value(const layer_type *layer, int i, int j,
 
 bool layer_cell_on_edge(const layer_type *layer, int i, int j) {
     const Cell &cell = layer->interior_cell(i, j);
-
-    if (cell.value == cell.edges[LEFT_EDGE])
-        return true;
-    if (cell.value == cell.edges[RIGHT_EDGE])
-        return true;
-    if (cell.value == cell.edges[BOTTOM_EDGE])
-        return true;
-    if (cell.value == cell.edges[TOP_EDGE])
-        return true;
-
-    return false;
+    return std::any_of(std::begin(cell.edges), std::end(cell.edges),
+                       [&](int edge) { return cell.value == edge; });
 }
 
 static void point_shift(int_point2d_type *point, int di, int dj) {
