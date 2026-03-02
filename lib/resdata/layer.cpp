@@ -38,6 +38,18 @@ struct layer_struct {
         return i + j * (this->nx + 1);
     }
 
+    [[nodiscard]] int global_index(int i, int j) const {
+        if ((i < 0) || (i > this->nx))
+            util_abort("%s: invalid i value:%d Valid range: [0,%d] \n",
+                       __func__, i, this->nx);
+
+        if ((j < 0) || (j > this->ny))
+            util_abort("%s: invalid j value:%d Valid range: [0,%d] \n",
+                       __func__, j, this->ny);
+
+        return i + j * (this->nx + 1);
+    }
+
     [[nodiscard]] const Cell &interior_cell(int i, int j) const {
         return this->cells[this->interior_index(i, j)];
     }
@@ -68,18 +80,6 @@ layer_type *layer_alloc(int nx, int ny) {
 }
 
 void layer_free(layer_type *layer) { delete layer; }
-
-static int global_cell_index(const layer_type *layer, int i, int j) {
-    if ((i < 0) || (i > layer->nx))
-        util_abort("%s: invalid i value:%d Valid range: [0,%d] \n", __func__, i,
-                   layer->nx);
-
-    if ((j < 0) || (j > layer->ny))
-        util_abort("%s: invalid j value:%d Valid range: [0,%d] \n", __func__, j,
-                   layer->ny);
-
-    return i + j * (layer->nx + 1);
-}
 
 bool layer_iget_left_barrier(const layer_type *layer, int i, int j) {
     return layer->interior_cell(i, j).left_barrier;
@@ -496,7 +496,7 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int jmax = std::max(j1, j2);
 
             for (int j = jmin; j < jmax; j++) {
-                Cell &cell = layer->cells[global_cell_index(layer, i1, j)];
+                Cell &cell = layer->cells[layer->global_index(i1, j)];
                 cell.left_barrier = true;
             }
         } else {
@@ -504,7 +504,7 @@ void layer_add_ijbarrier(layer_type *layer, int i1, int j1, int i2, int j2) {
             int imax = std::max(i1, i2);
 
             for (int i = imin; i < imax; i++) {
-                Cell &cell = layer->cells[global_cell_index(layer, i, j1)];
+                Cell &cell = layer->cells[layer->global_index(i, j1)];
                 cell.bottom_barrier = true;
             }
         }
