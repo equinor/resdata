@@ -42,54 +42,46 @@ class WellConnection(BaseCClass):
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
-    def isOpen(self):
-        """@rtype: bool"""
+    def isOpen(self) -> bool:
         return self._is_open()
 
-    def ijk(self):
-        """@rtype: tuple of (int, int, int)"""
+    def ijk(self) -> tuple[int, int, int]:
         i = self._i()
         j = self._j()
         k = self._k()
         return i, j, k
 
-    def direction(self):
-        """@rtype: WellConnectionDirection"""
+    def direction(self) -> WellConnectionDirection:
         return self._get_dir()
 
-    def segmentId(self):
-        """@rtype: int"""
+    def segmentId(self) -> int:
         return self._segment_id()
 
-    def isFractureConnection(self):
-        """@rtype: bool"""
+    def isFractureConnection(self) -> bool:
         return self._fracture_connection()
 
-    def isMatrixConnection(self):
-        """@rtype: bool"""
+    def isMatrixConnection(self) -> bool:
         return self._matrix_connection()
 
-    def connectionFactor(self):
-        """@rtype: float"""
+    def connectionFactor(self) -> float:
         return self._connection_factor()
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self._equal(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self == other
 
     def free(self):
         pass
 
-    def isMultiSegmentWell(self):
-        """@rtype: bool"""
+    def isMultiSegmentWell(self) -> bool:
         return self._is_msw()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         ijk = str(self.ijk())
         frac = "fracture " if self.isFractureConnection() else ""
         open_ = "open " if self.isOpen() else "shut "
@@ -111,26 +103,26 @@ class WellConnection(BaseCClass):
             )
         )
 
-    def gasRate(self):
+    def gasRate(self) -> float:
         return self._gas_rate()
 
-    def waterRate(self):
+    def waterRate(self) -> float:
         return self._water_rate()
 
-    def oilRate(self):
+    def oilRate(self) -> float:
         return self._oil_rate()
 
-    def volumeRate(self):
+    def volumeRate(self) -> float:
         return self._volume_rate()
 
-    def gasRateSI(self):
+    def gasRateSI(self) -> float:
         return self._gas_rate_si()
 
-    def waterRateSI(self):
+    def waterRateSI(self) -> float:
         return self._water_rate_si()
 
-    def oilRateSI(self):
+    def oilRateSI(self) -> float:
         return self._oil_rate_si()
 
-    def volumeRateSI(self):
+    def volumeRateSI(self) -> float:
         return self._volume_rate_si()

@@ -1,7 +1,7 @@
 from cwrap import BaseCClass
 
 from resdata import ResdataPrototype
-from resdata.well import WellType, WellConnection
+from resdata.well import WellType, WellConnection, WellSegment
 from resdata.util.util import CTime
 
 
@@ -62,44 +62,36 @@ class WellState(BaseCClass):
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
-    def name(self):
-        """@rtype: str"""
+    def name(self) -> str:
         return self._get_name()
 
-    def isOpen(self):
-        """@rtype: bool"""
+    def isOpen(self) -> bool:
         return self._is_open()
 
-    def free(self):
+    def free(self) -> None:
         pass
 
-    def wellHead(self):
+    def wellHead(self) -> WellConnection:
         well_head = self._get_global_well_head()
         well_head.setParent(self)
         return well_head
 
-    def wellNumber(self):
-        """@rtype: int"""
+    def wellNumber(self) -> int:
         return self._well_number()
 
-    def reportNumber(self):
-        """@rtype: int"""
+    def reportNumber(self) -> int:
         return self._report_number()
 
-    def simulationTime(self):
-        """@rtype: CTime"""
+    def simulationTime(self) -> CTime:
         return self._sim_time()
 
-    def wellType(self):
-        """@rtype: WellType"""
+    def wellType(self) -> WellType:
         return self._well_type()
 
-    def hasGlobalConnections(self):
-        """@rtype: bool"""
+    def hasGlobalConnections(self) -> bool:
         return self._has_global_connections()
 
-    def globalConnections(self):
-        """@rtype: list of WellConnection"""
+    def globalConnections(self) -> list[WellConnection]:
         global_connections = self._get_global_connections()
         if global_connections is None:
             return []
@@ -113,20 +105,18 @@ class WellState(BaseCClass):
             values.append(value)
         return values
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.numSegments()
 
     def __getitem__(self, idx):
         return self.igetSegment(idx)
 
-    def numSegments(self):
-        """@rtype: int"""
+    def numSegments(self) -> int:
         segment_collection = self._get_segment_collection()
         count = self._segment_collection_size(segment_collection)
         return count
 
-    def segments(self):
-        """@rtype: list of WellSegment"""
+    def segments(self) -> list[WellSegment]:
         segment_collection = self._get_segment_collection()
 
         values = []
@@ -138,8 +128,7 @@ class WellState(BaseCClass):
 
         return values
 
-    def igetSegment(self, seg_idx):
-        """@rtype: WellSegment"""
+    def igetSegment(self, seg_idx) -> WellSegment:
         if seg_idx < 0:
             seg_idx += len(self)
 
@@ -153,15 +142,13 @@ class WellState(BaseCClass):
             self
         )
 
-    def isMultiSegmentWell(self):
-        """@rtype: bool"""
+    def isMultiSegmentWell(self) -> bool:
         return self._is_msw()
 
-    def hasSegmentData(self):
-        """@rtype: bool"""
+    def hasSegmentData(self) -> bool:
         return self._has_segment_data()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         name = self.name()
         if name:
             name = "%s" % name
@@ -180,26 +167,26 @@ class WellState(BaseCClass):
         )
         return self._create_repr(cnt)
 
-    def gasRate(self):
+    def gasRate(self) -> float:
         return self._gas_rate()
 
-    def waterRate(self):
+    def waterRate(self) -> float:
         return self._water_rate()
 
-    def oilRate(self):
+    def oilRate(self) -> float:
         return self._oil_rate()
 
-    def volumeRate(self):
+    def volumeRate(self) -> float:
         return self._volume_rate()
 
-    def gasRateSI(self):
+    def gasRateSI(self) -> float:
         return self._gas_rate_si()
 
-    def waterRateSI(self):
+    def waterRateSI(self) -> float:
         return self._water_rate_si()
 
-    def oilRateSI(self):
+    def oilRateSI(self) -> float:
         return self._oil_rate_si()
 
-    def volumeRateSI(self):
+    def volumeRateSI(self) -> float:
         return self._volume_rate_si()
