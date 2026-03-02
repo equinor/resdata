@@ -1,4 +1,6 @@
 from os.path import isfile
+from collections.abc import Iterator
+
 from cwrap import BaseCClass
 from resdata.grid import Grid
 from resdata.resfile.rd_file import ResdataFile
@@ -26,11 +28,12 @@ class WellInfo(BaseCClass):
         "rd_well_time_line_ref well_info_get_ts(rd_well_info, char*)"
     )
 
-    def __init__(self, grid, rst_file=None, load_segment_information=True):
-        """
-        @type grid: Grid
-        @type rst_file: str or ResdataFile or list of str or list of ResdataFile
-        """
+    def __init__(
+        self,
+        grid: Grid,
+        rst_file: None | list[str | ResdataFile] | str | ResdataFile = None,
+        load_segment_information: bool = True,
+    ):
         c_ptr = self._alloc(grid)
         super(WellInfo, self).__init__(c_ptr)
         if not c_ptr:
@@ -43,19 +46,13 @@ class WellInfo(BaseCClass):
             else:
                 self.addWellFile(rst_file, load_segment_information)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "WellInfo(well_count = %d) at 0x%x" % (len(self), self._address())
 
-    def __len__(self):
-        """@rtype: int"""
+    def __len__(self) -> int:
         return self._get_well_count()
 
-    def __getitem__(self, item):
-        """
-        @type item: int or str
-        @rtype: WellTimeLine
-        """
-
+    def __getitem__(self, item: int | str) -> WellTimeLine:
         if isinstance(item, str):
             if not item in self:
                 raise KeyError("The well '%s' is not in this set." % item)
@@ -70,31 +67,26 @@ class WellInfo(BaseCClass):
 
         return self._get_ts(well_name).setParent(self)
 
-    def __iter__(self):
-        """@rtype: iterator of WellTimeLine"""
+    def __iter__(self) -> Iterator[WellTimeLine]:
         index = 0
 
         while index < len(self):
             yield self[index]
             index += 1
 
-    def allWellNames(self):
-        """@rtype: list of str"""
+    def allWellNames(self) -> list[str]:
         return [self._iget_well_name(index) for index in range(0, len(self))]
 
-    def __contains__(self, item):
-        """
-        @type item: str
-        @rtype: bool
-        """
+    def __contains__(self, item: str) -> bool:
         return self._has_well(item)
 
     def _assert_file_exists(self, rst_file):
         if not isfile(rst_file):
             raise IOError("No such file %s" % rst_file)
 
-    def addWellFile(self, rst_file, load_segment_information):
-        """@type rstfile: str or ResdataFile"""
+    def addWellFile(
+        self, rst_file: str | ResdataFile, load_segment_information: bool
+    ) -> None:
         if isinstance(rst_file, str):
             self._assert_file_exists(rst_file)
             self._load_rstfile(rst_file, load_segment_information)

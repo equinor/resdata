@@ -24,62 +24,51 @@ class WellSegment(BaseCClass):
     def __init__(self):
         raise NotImplementedError("Class can not be instantiated directly")
 
-    def free(self):
+    def free(self) -> None:
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "WellSegment(%s) at 0x%x" % (str(self), self._address())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "{Segment ID:%d   BranchID:%d  Length:%g}" % (
             self.id(),
             self.branchId(),
             self.length(),
         )
 
-    def id(self):
-        """@rtype: int"""
+    def id(self) -> int:
         return self._id()
 
-    def linkCount(self):
-        """@rtype: int"""
+    def linkCount(self) -> int:
         return self._link_count()
 
-    def branchId(self):
-        """@rtype: int"""
+    def branchId(self) -> int:
         return self._branch_id()
 
-    def outletId(self):
-        """@rtype: int"""
+    def outletId(self) -> int:
         return self._outlet_id()
 
-    def isActive(self):
-        """@rtype: bool"""
+    def isActive(self) -> bool:
         return self._active()
 
-    def isMainStem(self):
-        """@rtype: bool"""
+    def isMainStem(self) -> bool:
         return self._main_stem()
 
-    def isNearestWellHead(self):
-        """@rtype: bool"""
+    def isNearestWellHead(self) -> bool:
         return self._nearest_wellhead()
 
-    def depth(self):
-        """@rtype: float"""
+    def depth(self) -> float:
         return self._depth()
 
     def __len__(self):
         return self.length()
 
-    def length(self):
-        """@rtype: float"""
+    def length(self) -> float:
         return self._length()
 
-    def totalLength(self):
-        """@rtype: float"""
+    def totalLength(self) -> float:
         return self._total_length()
 
-    def diameter(self):
-        """@rtype: float"""
+    def diameter(self) -> float:
         return self._diameter()
