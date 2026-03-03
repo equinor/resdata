@@ -111,8 +111,10 @@ bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
         return false;
     else {
         int max_block_id = 0;
-        layer_type *work_layer = layer_alloc(rd_grid_get_nx(layer->grid),
-                                             rd_grid_get_ny(layer->grid));
+        std::unique_ptr<layer_type, decltype(&layer_free)> work_layer(
+            layer_alloc(rd_grid_get_nx(layer->grid),
+                        rd_grid_get_ny(layer->grid)),
+            layer_free);
 
         for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
             for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
@@ -120,17 +122,16 @@ bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
                 int block_id = rd_kw_iget_int(fault_block_kw, g);
 
                 if (block_id > 0) {
-                    layer_iset_cell_value(work_layer, i, j, block_id);
+                    layer_iset_cell_value(work_layer.get(), i, j, block_id);
                     max_block_id = util_int_max(block_id, max_block_id);
                 }
             }
         }
 
         if (assign_zero)
-            layer_replace_cell_values(work_layer, 0, max_block_id + 1);
+            layer_replace_cell_values(work_layer.get(), 0, max_block_id + 1);
 
-        fault_block_layer_scan_layer(layer, work_layer);
-        layer_free(work_layer);
+        fault_block_layer_scan_layer(layer, work_layer.get());
         return true;
     }
 }
