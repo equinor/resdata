@@ -59,30 +59,27 @@ fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
 
 void fault_block_layer_scan_layer(fault_block_layer_type *fault_layer,
                                   layer_type *layer) {
-    int_vector_type *i_list = int_vector_alloc(0, 0);
-    int_vector_type *j_list = int_vector_alloc(0, 0);
+    auto i_list = make_int_vector(0, 0);
+    auto j_list = make_int_vector(0, 0);
 
     for (int j = 0; j < layer_get_ny(layer); j++) {
         for (int i = 0; i < layer_get_nx(layer); i++) {
             int cell_value = layer_iget_cell_value(layer, i, j);
             if (cell_value != 0) {
-                layer_trace_block_content(layer, true, i, j, cell_value, i_list,
-                                          j_list);
+                layer_trace_block_content(layer, true, i, j, cell_value,
+                                          i_list.get(), j_list.get());
                 {
                     int block_id = fault_block_layer_get_next_id(fault_layer);
                     fault_block_type *fault_block =
                         fault_block_layer_add_block(fault_layer, block_id);
-                    for (int c = 0; c < int_vector_size(i_list); c++)
+                    for (int c = 0; c < int_vector_size(i_list.get()); c++)
                         fault_block_add_cell(fault_block,
-                                             int_vector_iget(i_list, c),
-                                             int_vector_iget(j_list, c));
+                                             int_vector_iget(i_list.get(), c),
+                                             int_vector_iget(j_list.get(), c));
                 }
             }
         }
     }
-
-    int_vector_free(i_list);
-    int_vector_free(j_list);
 }
 
 /*
