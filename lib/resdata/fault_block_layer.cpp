@@ -13,6 +13,12 @@
 
 #define FAULT_BLOCK_LAYER_ID 2297476
 
+template <typename T> void remove(std::vector<T> &vec, std::size_t pos) {
+    typename std::vector<T>::iterator it = vec.begin();
+    std::advance(it, pos);
+    vec.erase(it);
+}
+
 /*
    The fault_block object is implemented as a separate object type in
    the fault_block.c file; however the fault blocks should be closely
@@ -31,7 +37,8 @@
 fault_block_type *fault_block_alloc(const fault_block_layer_type *parent_layer,
                                     int block_id);
 void fault_block_free(fault_block_type *block);
-
+using block_ptr =
+    std::unique_ptr<fault_block_type, decltype(&fault_block_free)>;
 
 struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
@@ -39,7 +46,7 @@ struct fault_block_layer_struct {
     std::vector<int> block_map;
     layer_type *layer;
     int k;
-    vector_type *blocks;
+    std::vector<block_ptr> blocks;
 
     [[nodiscard]] int get_block(int index) const {
         if (index >= static_cast<int>(block_map.size()))
@@ -62,12 +69,12 @@ fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
                                               int block_id) {
     if (layer->get_block(block_id) < 0) {
         fault_block_type *block = fault_block_alloc(layer, block_id);
-        int storage_index = vector_get_size(layer->blocks);
+        int storage_index = layer->blocks.size();
 
         if (block_id >= static_cast<int>(layer->block_map.size()))
             layer->block_map.resize(block_id + 1, -1);
         layer->block_map[block_id] = storage_index;
-        vector_append_owned_ref(layer->blocks, block, fault_block_free__);
+        layer->blocks.emplace_back(block, &fault_block_free);
 
         return block;
     } else
@@ -190,7 +197,7 @@ fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
         layer->grid = grid;
         layer->k = k;
         layer->block_map = std::vector<int>(0);
-        layer->blocks = vector_alloc_new();
+        layer->blocks = std::vector<block_ptr>();
         layer->layer = layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid));
 
         return layer;
@@ -200,7 +207,7 @@ fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
 fault_block_type *
 fault_block_layer_iget_block(const fault_block_layer_type *layer,
                              int storage_index) {
-    return (fault_block_type *)vector_iget(layer->blocks, storage_index);
+    return layer->blocks.at(storage_index).get();
 }
 
 fault_block_type *
@@ -209,7 +216,7 @@ fault_block_layer_get_block(const fault_block_layer_type *layer, int block_id) {
     if (storage_index < 0)
         return NULL;
     else
-        return (fault_block_type *)vector_iget(layer->blocks, storage_index);
+        return layer->blocks.at(storage_index).get();
 }
 
 fault_block_type *
@@ -218,7 +225,7 @@ fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id) {
     if (storage_index < 0)
         return fault_block_layer_add_block(layer, block_id);
     else
-        return (fault_block_type *)vector_iget(layer->blocks, storage_index);
+        return layer->blocks.at(storage_index).get();
 }
 
 void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
@@ -226,7 +233,7 @@ void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
     if (storage_index >= 0) {
 
         layer->block_map.at(block_id) = -1;
-        vector_idel(layer->blocks, storage_index);
+        remove(layer->blocks, storage_index);
         for (int index = 0; index < layer->block_map.size(); index++) {
             int current_storage_index = layer->block_map.at(index);
             if (current_storage_index > storage_index)
@@ -255,7 +262,7 @@ int fault_block_layer_get_next_id(const fault_block_layer_type *layer) {
 }
 
 int fault_block_layer_get_size(const fault_block_layer_type *layer) {
-    return vector_get_size(layer->blocks);
+    return layer->blocks.size();
 }
 
 int fault_block_layer_get_k(const fault_block_layer_type *layer) {
@@ -263,7 +270,6 @@ int fault_block_layer_get_k(const fault_block_layer_type *layer) {
 }
 
 void fault_block_layer_free(fault_block_layer_type *layer) {
-    vector_free(layer->blocks);
     layer_free(layer->layer);
     delete layer;
 }
