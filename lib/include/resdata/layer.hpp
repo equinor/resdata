@@ -7,6 +7,7 @@
 #include <resdata/rd_grid.hpp>
 
 #ifdef __cplusplus
+#include <memory>
 extern "C" {
 #endif
 
@@ -70,4 +71,5 @@ UTIL_SAFE_CAST_HEADER(layer);
 #ifdef __cplusplus
 }
 #endif
+std::unique_ptr<layer_type, decltype(&layer_free)> make_layer(int, int);
 #endif

@@ -86,8 +86,7 @@ TEST_CASE("Layer getters and setters", "[layer]") {
     GIVEN("A layer") {
         int nx = 10;
         int ny = 8;
-        std::unique_ptr<layer_type, decltype(&layer_free)> layer(
-            layer_alloc(nx, ny), layer_free);
+        auto layer = make_layer(nx, ny);
 
         WHEN("Getting dimensions") {
             int result_nx = layer_get_nx(layer.get());
@@ -270,8 +269,7 @@ TEST_CASE("Layer getters and setters", "[layer]") {
             }
         }
         AND_GIVEN("A layer of the same size") {
-            std::unique_ptr<layer_type, decltype(&layer_free)> dst(
-                layer_alloc(nx, ny), layer_free);
+            auto dst = make_layer(nx, ny);
 
             WHEN("Source layer has some values set") {
                 layer_iset_cell_value(layer.get(), 1, 1, 10);

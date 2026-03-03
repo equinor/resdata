@@ -651,3 +651,7 @@ void layer_update_active(layer_type *layer, const rd_grid_type *grid, int k) {
         }
     }
 }
+
+std::unique_ptr<layer_type, decltype(&layer_free)> make_layer(int nx, int ny) {
+    return {layer_alloc(nx, ny), layer_free};
+}
