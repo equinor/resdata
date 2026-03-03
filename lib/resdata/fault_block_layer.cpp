@@ -59,22 +59,20 @@ fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
 
 void fault_block_layer_scan_layer(fault_block_layer_type *fault_layer,
                                   layer_type *layer) {
-    int i, j;
     int_vector_type *i_list = int_vector_alloc(0, 0);
     int_vector_type *j_list = int_vector_alloc(0, 0);
 
-    for (j = 0; j < layer_get_ny(layer); j++) {
-        for (i = 0; i < layer_get_nx(layer); i++) {
+    for (int j = 0; j < layer_get_ny(layer); j++) {
+        for (int i = 0; i < layer_get_nx(layer); i++) {
             int cell_value = layer_iget_cell_value(layer, i, j);
             if (cell_value != 0) {
                 layer_trace_block_content(layer, true, i, j, cell_value, i_list,
                                           j_list);
                 {
-                    int c;
                     int block_id = fault_block_layer_get_next_id(fault_layer);
                     fault_block_type *fault_block =
                         fault_block_layer_add_block(fault_layer, block_id);
-                    for (c = 0; c < int_vector_size(i_list); c++)
+                    for (int c = 0; c < int_vector_size(i_list); c++)
                         fault_block_add_cell(fault_block,
                                              int_vector_iget(i_list, c),
                                              int_vector_iget(j_list, c));
@@ -112,13 +110,12 @@ bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
     else if (!rd_type_is_int(rd_kw_get_data_type(fault_block_kw)))
         return false;
     else {
-        int i, j;
         int max_block_id = 0;
         layer_type *work_layer = layer_alloc(rd_grid_get_nx(layer->grid),
                                              rd_grid_get_ny(layer->grid));
 
-        for (j = 0; j < rd_grid_get_ny(layer->grid); j++) {
-            for (i = 0; i < rd_grid_get_nx(layer->grid); i++) {
+        for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
+            for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
                 int block_id = rd_kw_iget_int(fault_block_kw, g);
 
@@ -151,10 +148,8 @@ bool fault_block_layer_load_kw(fault_block_layer_type *layer,
     else if (!rd_type_is_int(rd_kw_get_data_type(fault_block_kw)))
         return false;
     else {
-        int i, j;
-
-        for (j = 0; j < rd_grid_get_ny(layer->grid); j++) {
-            for (i = 0; i < rd_grid_get_nx(layer->grid); i++) {
+        for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
+            for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
                 int block_id = rd_kw_iget_int(fault_block_kw, g);
                 if (block_id > 0) {
@@ -220,17 +215,13 @@ void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
 
         int_vector_iset(layer->block_map, block_id, -1);
         vector_idel(layer->blocks, storage_index);
-        {
-            int index;
-
-            for (index = 0; index < int_vector_size(layer->block_map);
-                 index++) {
-                int current_storage_index =
-                    int_vector_iget(layer->block_map, index);
-                if (current_storage_index > storage_index)
-                    int_vector_iset(layer->block_map, index,
-                                    current_storage_index - 1);
-            }
+        for (int index = 0; index < int_vector_size(layer->block_map);
+             index++) {
+            int current_storage_index =
+                int_vector_iget(layer->block_map, index);
+            if (current_storage_index > storage_index)
+                int_vector_iset(layer->block_map, index,
+                                current_storage_index - 1);
         }
     }
 }
@@ -282,10 +273,8 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
     if (rd_type_is_int(rd_kw_get_data_type(faultblock_kw)) &&
         (rd_kw_get_size(faultblock_kw) ==
          rd_grid_get_global_size(layer->grid))) {
-        int i, j;
-
-        for (j = 0; j < rd_grid_get_ny(layer->grid); j++) {
-            for (i = 0; i < rd_grid_get_nx(layer->grid); i++) {
+        for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
+            for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
                 int cell_value = layer_iget_cell_value(layer->layer, i, j);
                 rd_kw_iset_int(faultblock_kw, g, cell_value);
