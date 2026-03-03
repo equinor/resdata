@@ -10,6 +10,7 @@
 #include <resdata/layer.hpp>
 
 #include <memory>
+#include <vector>
 
 #define FAULT_BLOCK_LAYER_ID 2297476
 
@@ -35,17 +36,17 @@ void fault_block_free(fault_block_type *block, int block_id);
 struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
     const rd_grid_type *grid;
-    int_vector_type *block_map;
+    std::vector<int> block_map;
     layer_type *layer;
     int k;
     vector_type *blocks;
 
     [[nodiscard]] int get_block(int index) const {
-        if (index >= int_vector_size(block_map))
-            return int_vector_get_default(block_map);
+        if (index >= static_cast<int>(block_map.size()))
+            return -1;
         else {
             if (index >= 0)
-                return int_vector_iget(block_map, index);
+                return block_map[index];
             else {
                 util_abort("%s: index:%d is invalid - only accepts positive "
                            "indices.\n",
@@ -63,9 +64,9 @@ fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
         fault_block_type *block = fault_block_alloc(layer, block_id);
         int storage_index = vector_get_size(layer->blocks);
 
-        if (block_id >= int_vector_size(layer->block_map))
-            int_vector_resize(layer->block_map, block_id + 1, -1);
-        int_vector_iset(layer->block_map, block_id, storage_index);
+        if (block_id >= static_cast<int>(layer->block_map.size()))
+            layer->block_map.resize(block_id + 1, -1);
+        layer->block_map[block_id] = storage_index;
         vector_append_owned_ref(layer->blocks, block, fault_block_free__);
 
         return block;
@@ -184,12 +185,11 @@ fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
     if ((k < 0) || (k >= rd_grid_get_nz(grid)))
         return NULL;
     else {
-        fault_block_layer_type *layer =
-            (fault_block_layer_type *)util_malloc(sizeof *layer);
+        auto layer = new fault_block_layer_type;
         UTIL_TYPE_ID_INIT(layer, FAULT_BLOCK_LAYER_ID);
         layer->grid = grid;
         layer->k = k;
-        layer->block_map = int_vector_alloc(0, -1);
+        layer->block_map = std::vector<int>(0);
         layer->blocks = vector_alloc_new();
         layer->layer = layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid));
 
@@ -225,15 +225,12 @@ void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
     int storage_index = layer->get_block(block_id);
     if (storage_index >= 0) {
 
-        int_vector_iset(layer->block_map, block_id, -1);
+        layer->block_map.at(block_id) = -1;
         vector_idel(layer->blocks, storage_index);
-        for (int index = 0; index < int_vector_size(layer->block_map);
-             index++) {
-            int current_storage_index =
-                int_vector_iget(layer->block_map, index);
+        for (int index = 0; index < layer->block_map.size(); index++) {
+            int current_storage_index = layer->block_map.at(index);
             if (current_storage_index > storage_index)
-                int_vector_iset(layer->block_map, index,
-                                current_storage_index - 1);
+                layer->block_map.at(index) = current_storage_index - 1;
         }
     }
 }
@@ -247,14 +244,14 @@ bool fault_block_layer_has_block(const fault_block_layer_type *layer,
 }
 
 int fault_block_layer_get_max_id(const fault_block_layer_type *layer) {
-    return layer->block_map.size() - 1;
+    return static_cast<int>(layer->block_map.size()) - 1;
 }
 
 int fault_block_layer_get_next_id(const fault_block_layer_type *layer) {
     if (layer->block_map.size() == 0)
         return 1;
     else
-        return int_vector_size(layer->block_map);
+        return static_cast<int>(layer->block_map.size());
 }
 
 int fault_block_layer_get_size(const fault_block_layer_type *layer) {
@@ -266,10 +263,9 @@ int fault_block_layer_get_k(const fault_block_layer_type *layer) {
 }
 
 void fault_block_layer_free(fault_block_layer_type *layer) {
-    int_vector_free(layer->block_map);
     vector_free(layer->blocks);
     layer_free(layer->layer);
-    free(layer);
+    delete layer;
 }
 
 void fault_block_layer_insert_block_content(fault_block_layer_type *layer,
