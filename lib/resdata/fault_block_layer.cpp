@@ -37,13 +37,27 @@ struct fault_block_layer_struct {
     layer_type *layer;
     int k;
     vector_type *blocks;
+
+    [[nodiscard]] int get_block(int index) const {
+        if (index >= int_vector_size(block_map))
+            return int_vector_get_default(block_map);
+        else {
+            if (index >= 0)
+                return int_vector_iget(block_map, index);
+            else {
+                util_abort("%s: index:%d is invalid - only accepts positive "
+                           "indices.\n",
+                           __func__, index);
+            }
+        }
+    }
 };
 
 UTIL_IS_INSTANCE_FUNCTION(fault_block_layer, FAULT_BLOCK_LAYER_ID);
 
 fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
                                               int block_id) {
-    if (int_vector_safe_iget(layer->block_map, block_id) < 0) {
+    if (layer->get_block(block_id) < 0) {
         fault_block_type *block = fault_block_alloc(layer, block_id);
         int storage_index = vector_get_size(layer->blocks);
 
@@ -189,7 +203,7 @@ fault_block_layer_iget_block(const fault_block_layer_type *layer,
 
 fault_block_type *
 fault_block_layer_get_block(const fault_block_layer_type *layer, int block_id) {
-    int storage_index = int_vector_safe_iget(layer->block_map, block_id);
+    int storage_index = layer->get_block(block_id);
     if (storage_index < 0)
         return NULL;
     else
@@ -198,7 +212,7 @@ fault_block_layer_get_block(const fault_block_layer_type *layer, int block_id) {
 
 fault_block_type *
 fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id) {
-    int storage_index = int_vector_safe_iget(layer->block_map, block_id);
+    int storage_index = layer->get_block(block_id);
     if (storage_index < 0)
         return fault_block_layer_add_block(layer, block_id);
     else
@@ -206,7 +220,7 @@ fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id) {
 }
 
 void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
-    int storage_index = int_vector_safe_iget(layer->block_map, block_id);
+    int storage_index = layer->get_block(block_id);
     if (storage_index >= 0) {
 
         int_vector_iset(layer->block_map, block_id, -1);
@@ -224,18 +238,18 @@ void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
 
 bool fault_block_layer_has_block(const fault_block_layer_type *layer,
                                  int block_id) {
-    if (int_vector_safe_iget(layer->block_map, block_id) >= 0)
+    if (layer->get_block(block_id) >= 0)
         return true;
     else
         return false;
 }
 
 int fault_block_layer_get_max_id(const fault_block_layer_type *layer) {
-    return int_vector_size(layer->block_map) - 1;
+    return layer->block_map.size() - 1;
 }
 
 int fault_block_layer_get_next_id(const fault_block_layer_type *layer) {
-    if (int_vector_size(layer->block_map) == 0)
+    if (layer->block_map.size() == 0)
         return 1;
     else
         return int_vector_size(layer->block_map);
