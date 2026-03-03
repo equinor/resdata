@@ -111,10 +111,8 @@ bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
         return false;
     else {
         int max_block_id = 0;
-        std::unique_ptr<layer_type, decltype(&layer_free)> work_layer(
-            layer_alloc(rd_grid_get_nx(layer->grid),
-                        rd_grid_get_ny(layer->grid)),
-            layer_free);
+        auto work_layer = make_layer(rd_grid_get_nx(layer->grid),
+                                     rd_grid_get_ny(layer->grid));
 
         for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
             for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
