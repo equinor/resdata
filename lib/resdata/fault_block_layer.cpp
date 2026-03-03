@@ -30,7 +30,8 @@
 
 fault_block_type *fault_block_alloc(const fault_block_layer_type *parent_layer,
                                     int block_id);
-void fault_block_free(fault_block_type *block, int block_id);
+void fault_block_free(fault_block_type *block);
+
 
 struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
