@@ -225,7 +225,7 @@ class FaultBlockLayer(BaseCClass):
 
     def get_geo_layer(self):
         """Returns the underlying geometric layer."""
-        return self._get_layer()
+        return self._get_layer().setParent(self)
 
     def cell_contact(self, p1, p2):
         layer = self.getGeoLayer()

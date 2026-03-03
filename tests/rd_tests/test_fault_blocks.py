@@ -10,6 +10,8 @@ from resdata.geometry import Polyline, CPolylineCollection
 from resdata.util.test import TestAreaContext
 from tests import ResdataTest
 
+import gc
+
 
 class FaultBlockTest(ResdataTest):
     def setUp(self):
@@ -448,3 +450,20 @@ class FaultBlockTest(ResdataTest):
         nb = b2.getNeighbours()
         self.assertTrue(len(nb) == 1)
         self.assertTrue(b5 in nb)
+
+
+def test_that_get_geo_layer_does_not_return_dangling_pointer():
+    """This is a regression test for a bug where get_geo_layer
+    did not call setParent on the returned pointer"""
+    grid = GridGenerator.create_rectangular((16, 16, 1), (1, 1, 1))
+    fault_block_layer = FaultBlockLayer(grid, 0)
+
+    layer = fault_block_layer.get_geo_layer()
+    assert layer.get_nx() == 16
+
+    # Simulate fault_block_layer going out of scope and
+    # getting garbage collected
+    del fault_block_layer
+    gc.collect()
+
+    assert layer.get_nx() == 16
