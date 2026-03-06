@@ -226,13 +226,11 @@ fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id) {
 void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
     int storage_index = layer->get_block(block_id);
     if (storage_index >= 0) {
-
         layer->block_map.at(block_id) = -1;
         layer->blocks.erase(layer->blocks.begin() + storage_index);
-        for (int index = 0; index < layer->block_map.size(); index++) {
-            int current_storage_index = layer->block_map.at(index);
-            if (current_storage_index > storage_index)
-                layer->block_map.at(index) = current_storage_index - 1;
+        for (int &index : layer->block_map) {
+            if (index > storage_index)
+                index -= 1;
         }
     }
 }
