@@ -9,7 +9,15 @@
 #include <resdata/fault_block.hpp>
 #include <resdata/layer.hpp>
 
+#include <vector>
+
 #define FAULT_BLOCK_LAYER_ID 2297476
+
+template <typename T> void remove(std::vector<T> &vec, std::size_t pos) {
+    typename std::vector<T>::iterator it = vec.begin();
+    std::advance(it, pos);
+    vec.erase(it);
+}
 
 /*
    The fault_block object is implemented as a separate object type in
@@ -28,29 +36,45 @@
 
 fault_block_type *fault_block_alloc(const fault_block_layer_type *parent_layer,
                                     int block_id);
-void fault_block_free(fault_block_type *block, int block_id);
+void fault_block_free(fault_block_type *block);
+using block_ptr =
+    std::unique_ptr<fault_block_type, decltype(&fault_block_free)>;
 
 struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
     const rd_grid_type *grid;
-    int_vector_type *block_map;
+    std::vector<int> block_map;
     layer_type *layer;
     int k;
-    vector_type *blocks;
+    std::vector<block_ptr> blocks;
+
+    [[nodiscard]] int get_block(int index) const {
+        if (index >= static_cast<int>(block_map.size()))
+            return -1;
+        else {
+            if (index >= 0)
+                return block_map[index];
+            else {
+                util_abort("%s: index:%d is invalid - only accepts positive "
+                           "indices.\n",
+                           __func__, index);
+            }
+        }
+    }
 };
 
 UTIL_IS_INSTANCE_FUNCTION(fault_block_layer, FAULT_BLOCK_LAYER_ID);
 
 fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
                                               int block_id) {
-    if (int_vector_safe_iget(layer->block_map, block_id) < 0) {
+    if (layer->get_block(block_id) < 0) {
         fault_block_type *block = fault_block_alloc(layer, block_id);
-        int storage_index = vector_get_size(layer->blocks);
+        int storage_index = layer->blocks.size();
 
-        if (block_id >= int_vector_size(layer->block_map))
-            int_vector_resize(layer->block_map, block_id + 1, -1);
-        int_vector_iset(layer->block_map, block_id, storage_index);
-        vector_append_owned_ref(layer->blocks, block, fault_block_free__);
+        if (block_id >= static_cast<int>(layer->block_map.size()))
+            layer->block_map.resize(block_id + 1, -1);
+        layer->block_map[block_id] = storage_index;
+        layer->blocks.emplace_back(block, &fault_block_free);
 
         return block;
     } else
@@ -59,32 +83,27 @@ fault_block_type *fault_block_layer_add_block(fault_block_layer_type *layer,
 
 void fault_block_layer_scan_layer(fault_block_layer_type *fault_layer,
                                   layer_type *layer) {
-    int i, j;
-    int_vector_type *i_list = int_vector_alloc(0, 0);
-    int_vector_type *j_list = int_vector_alloc(0, 0);
+    auto i_list = make_int_vector(0, 0);
+    auto j_list = make_int_vector(0, 0);
 
-    for (j = 0; j < layer_get_ny(layer); j++) {
-        for (i = 0; i < layer_get_nx(layer); i++) {
+    for (int j = 0; j < layer_get_ny(layer); j++) {
+        for (int i = 0; i < layer_get_nx(layer); i++) {
             int cell_value = layer_iget_cell_value(layer, i, j);
             if (cell_value != 0) {
-                layer_trace_block_content(layer, true, i, j, cell_value, i_list,
-                                          j_list);
+                layer_trace_block_content(layer, true, i, j, cell_value,
+                                          i_list.get(), j_list.get());
                 {
-                    int c;
                     int block_id = fault_block_layer_get_next_id(fault_layer);
                     fault_block_type *fault_block =
                         fault_block_layer_add_block(fault_layer, block_id);
-                    for (c = 0; c < int_vector_size(i_list); c++)
+                    for (int c = 0; c < int_vector_size(i_list.get()); c++)
                         fault_block_add_cell(fault_block,
-                                             int_vector_iget(i_list, c),
-                                             int_vector_iget(j_list, c));
+                                             int_vector_iget(i_list.get(), c),
+                                             int_vector_iget(j_list.get(), c));
                 }
             }
         }
     }
-
-    int_vector_free(i_list);
-    int_vector_free(j_list);
 }
 
 /*
@@ -112,28 +131,26 @@ bool fault_block_layer_scan_kw(fault_block_layer_type *layer,
     else if (!rd_type_is_int(rd_kw_get_data_type(fault_block_kw)))
         return false;
     else {
-        int i, j;
         int max_block_id = 0;
-        layer_type *work_layer = layer_alloc(rd_grid_get_nx(layer->grid),
-                                             rd_grid_get_ny(layer->grid));
+        auto work_layer = make_layer(rd_grid_get_nx(layer->grid),
+                                     rd_grid_get_ny(layer->grid));
 
-        for (j = 0; j < rd_grid_get_ny(layer->grid); j++) {
-            for (i = 0; i < rd_grid_get_nx(layer->grid); i++) {
+        for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
+            for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
                 int block_id = rd_kw_iget_int(fault_block_kw, g);
 
                 if (block_id > 0) {
-                    layer_iset_cell_value(work_layer, i, j, block_id);
+                    layer_iset_cell_value(work_layer.get(), i, j, block_id);
                     max_block_id = util_int_max(block_id, max_block_id);
                 }
             }
         }
 
         if (assign_zero)
-            layer_replace_cell_values(work_layer, 0, max_block_id + 1);
+            layer_replace_cell_values(work_layer.get(), 0, max_block_id + 1);
 
-        fault_block_layer_scan_layer(layer, work_layer);
-        layer_free(work_layer);
+        fault_block_layer_scan_layer(layer, work_layer.get());
         return true;
     }
 }
@@ -151,10 +168,8 @@ bool fault_block_layer_load_kw(fault_block_layer_type *layer,
     else if (!rd_type_is_int(rd_kw_get_data_type(fault_block_kw)))
         return false;
     else {
-        int i, j;
-
-        for (j = 0; j < rd_grid_get_ny(layer->grid); j++) {
-            for (i = 0; i < rd_grid_get_nx(layer->grid); i++) {
+        for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
+            for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
                 int block_id = rd_kw_iget_int(fault_block_kw, g);
                 if (block_id > 0) {
@@ -177,13 +192,12 @@ fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
     if ((k < 0) || (k >= rd_grid_get_nz(grid)))
         return NULL;
     else {
-        fault_block_layer_type *layer =
-            (fault_block_layer_type *)util_malloc(sizeof *layer);
+        auto layer = new fault_block_layer_type;
         UTIL_TYPE_ID_INIT(layer, FAULT_BLOCK_LAYER_ID);
         layer->grid = grid;
         layer->k = k;
-        layer->block_map = int_vector_alloc(0, -1);
-        layer->blocks = vector_alloc_new();
+        layer->block_map = std::vector<int>(0);
+        layer->blocks = std::vector<block_ptr>();
         layer->layer = layer_alloc(rd_grid_get_nx(grid), rd_grid_get_ny(grid));
 
         return layer;
@@ -193,69 +207,62 @@ fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
 fault_block_type *
 fault_block_layer_iget_block(const fault_block_layer_type *layer,
                              int storage_index) {
-    return (fault_block_type *)vector_iget(layer->blocks, storage_index);
+    return layer->blocks.at(storage_index).get();
 }
 
 fault_block_type *
 fault_block_layer_get_block(const fault_block_layer_type *layer, int block_id) {
-    int storage_index = int_vector_safe_iget(layer->block_map, block_id);
+    int storage_index = layer->get_block(block_id);
     if (storage_index < 0)
         return NULL;
     else
-        return (fault_block_type *)vector_iget(layer->blocks, storage_index);
+        return layer->blocks.at(storage_index).get();
 }
 
 fault_block_type *
 fault_block_layer_safe_get_block(fault_block_layer_type *layer, int block_id) {
-    int storage_index = int_vector_safe_iget(layer->block_map, block_id);
+    int storage_index = layer->get_block(block_id);
     if (storage_index < 0)
         return fault_block_layer_add_block(layer, block_id);
     else
-        return (fault_block_type *)vector_iget(layer->blocks, storage_index);
+        return layer->blocks.at(storage_index).get();
 }
 
 void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
-    int storage_index = int_vector_safe_iget(layer->block_map, block_id);
+    int storage_index = layer->get_block(block_id);
     if (storage_index >= 0) {
 
-        int_vector_iset(layer->block_map, block_id, -1);
-        vector_idel(layer->blocks, storage_index);
-        {
-            int index;
-
-            for (index = 0; index < int_vector_size(layer->block_map);
-                 index++) {
-                int current_storage_index =
-                    int_vector_iget(layer->block_map, index);
-                if (current_storage_index > storage_index)
-                    int_vector_iset(layer->block_map, index,
-                                    current_storage_index - 1);
-            }
+        layer->block_map.at(block_id) = -1;
+        remove(layer->blocks, storage_index);
+        for (int &index : layer->block_map) {
+            int current_storage_index = index;
+            if (current_storage_index > storage_index)
+                index = current_storage_index - 1;
         }
     }
 }
 
 bool fault_block_layer_has_block(const fault_block_layer_type *layer,
                                  int block_id) {
-    if (int_vector_safe_iget(layer->block_map, block_id) >= 0)
+    if (layer->get_block(block_id) >= 0)
         return true;
     else
         return false;
 }
 
 int fault_block_layer_get_max_id(const fault_block_layer_type *layer) {
-    return int_vector_size(layer->block_map) - 1;
+    return static_cast<int>(layer->block_map.size()) - 1;
 }
 
 int fault_block_layer_get_next_id(const fault_block_layer_type *layer) {
-    if (int_vector_size(layer->block_map) == 0)
+    if (layer->block_map.size() == 0)
         return 1;
     else
-        return int_vector_size(layer->block_map);
+        return layer->block_map.size();
 }
 
 int fault_block_layer_get_size(const fault_block_layer_type *layer) {
-    return vector_get_size(layer->blocks);
+    return layer->blocks.size();
 }
 
 int fault_block_layer_get_k(const fault_block_layer_type *layer) {
@@ -263,10 +270,8 @@ int fault_block_layer_get_k(const fault_block_layer_type *layer) {
 }
 
 void fault_block_layer_free(fault_block_layer_type *layer) {
-    int_vector_free(layer->block_map);
-    vector_free(layer->blocks);
     layer_free(layer->layer);
-    free(layer);
+    delete layer;
 }
 
 void fault_block_layer_insert_block_content(fault_block_layer_type *layer,
@@ -282,10 +287,8 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
     if (rd_type_is_int(rd_kw_get_data_type(faultblock_kw)) &&
         (rd_kw_get_size(faultblock_kw) ==
          rd_grid_get_global_size(layer->grid))) {
-        int i, j;
-
-        for (j = 0; j < rd_grid_get_ny(layer->grid); j++) {
-            for (i = 0; i < rd_grid_get_nx(layer->grid); i++) {
+        for (int j = 0; j < rd_grid_get_ny(layer->grid); j++) {
+            for (int i = 0; i < rd_grid_get_nx(layer->grid); i++) {
                 int g = rd_grid_get_global_index3(layer->grid, i, j, layer->k);
                 int cell_value = layer_iget_cell_value(layer->layer, i, j);
                 rd_kw_iset_int(faultblock_kw, g, cell_value);

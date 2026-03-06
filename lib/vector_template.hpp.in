@@ -18,6 +18,7 @@
 
 #ifndef ERT_@TYPE@_VECTOR_H
 #define ERT_@TYPE@_VECTOR_H
+#include <memory>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -126,6 +127,7 @@ typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
 #ifdef __cplusplus
 }
 #endif
+std::unique_ptr<@TYPE@_vector_type, decltype(&@TYPE@_vector_free)> make_@TYPE@_vector(int, @TYPE@);
 #endif
 //
 

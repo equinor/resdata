@@ -25,12 +25,6 @@ inline std::ostream &operator<<(std::ostream &os,
     return os;
 }
 
-static std::unique_ptr<int_vector_type, decltype(&int_vector_free)>
-make_int_vector() {
-    return std::unique_ptr<int_vector_type, decltype(&int_vector_free)>(
-        int_vector_alloc(0, 0), int_vector_free);
-}
-
 static std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>
 generate_coordkw_grid(
     int num_x, int num_y, int num_z,
@@ -86,8 +80,7 @@ TEST_CASE("Layer getters and setters", "[layer]") {
     GIVEN("A layer") {
         int nx = 10;
         int ny = 8;
-        std::unique_ptr<layer_type, decltype(&layer_free)> layer(
-            layer_alloc(nx, ny), layer_free);
+        auto layer = make_layer(nx, ny);
 
         WHEN("Getting dimensions") {
             int result_nx = layer_get_nx(layer.get());
@@ -270,8 +263,7 @@ TEST_CASE("Layer getters and setters", "[layer]") {
             }
         }
         AND_GIVEN("A layer of the same size") {
-            std::unique_ptr<layer_type, decltype(&layer_free)> dst(
-                layer_alloc(nx, ny), layer_free);
+            auto dst = make_layer(nx, ny);
 
             WHEN("Source layer has some values set") {
                 layer_iset_cell_value(layer.get(), 1, 1, 10);
@@ -297,8 +289,8 @@ TEST_CASE("Layer getters and setters", "[layer]") {
             layer_iset_cell_value(layer.get(), 3, 3, 7);
 
             AND_WHEN("Finding cells equal to value 7") {
-                auto i_list = make_int_vector();
-                auto j_list = make_int_vector();
+                auto i_list = make_int_vector(0, 0);
+                auto j_list = make_int_vector(0, 0);
                 layer_cells_equal(layer.get(), 7, i_list.get(), j_list.get());
 
                 THEN("Three cells are found") {
@@ -323,8 +315,8 @@ TEST_CASE("Layer getters and setters", "[layer]") {
             }
 
             AND_WHEN("Tracing block content") {
-                auto i_list = make_int_vector();
-                auto j_list = make_int_vector();
+                auto i_list = make_int_vector(0, 0);
+                auto j_list = make_int_vector(0, 0);
 
                 AND_WHEN("Tracing block content without erasing") {
                     bool traced =
@@ -376,7 +368,7 @@ TEST_CASE("Layer getters and setters", "[layer]") {
 
             AND_WHEN("Tracing edges") {
                 std::vector<int_point2d_type> corner_list;
-                auto cell_list = make_int_vector();
+                auto cell_list = make_int_vector(0, 0);
                 THEN("The 3x3 block is traced when value is 42") {
                     REQUIRE(layer_trace_block_edge(
                         layer.get(), 2, 2, 42, corner_list, cell_list.get()));
@@ -433,7 +425,7 @@ TEST_CASE("Layer getters and setters", "[layer]") {
 
         WHEN("Tracing edges") {
             std::vector<int_point2d_type> corner_list;
-            auto cell_list = make_int_vector();
+            auto cell_list = make_int_vector(0, 0);
 
             GIVEN("A single non-zero cell block") {
                 layer_iset_cell_value(layer.get(), 5, 5, 7);
