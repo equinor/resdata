@@ -234,10 +234,10 @@ void fault_block_layer_del_block(fault_block_layer_type *layer, int block_id) {
 
         layer->block_map.at(block_id) = -1;
         remove(layer->blocks, storage_index);
-        for (int index = 0; index < layer->block_map.size(); index++) {
-            int current_storage_index = layer->block_map.at(index);
+        for (int &index : layer->block_map) {
+            int current_storage_index = index;
             if (current_storage_index > storage_index)
-                layer->block_map.at(index) = current_storage_index - 1;
+                index = current_storage_index - 1;
         }
     }
 }
