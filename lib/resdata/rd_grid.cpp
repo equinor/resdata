@@ -4706,7 +4706,10 @@ static const float *rd_grid_get_mapaxes(const rd_grid_type *grid) {
 }
 
 rd_kw_type *rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
-    return rd_kw_alloc_new(MAPAXES_KW, 6, RD_FLOAT, grid->mapaxes);
+    const float *mapaxes = rd_grid_get_mapaxes(grid);
+    const int mapaxes_size = mapaxes != NULL ? 6 : 0;
+
+    return rd_kw_alloc_new(MAPAXES_KW, mapaxes_size, RD_FLOAT, mapaxes);
 }
 
 static rd_kw_type *rd_grid_alloc_mapunits_kw(ert_rd_unit_enum output_unit) {
