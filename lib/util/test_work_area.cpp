@@ -187,13 +187,12 @@ TestArea::TestArea(const std::string &test_name, bool store_area)
 }
 
 TestArea::~TestArea() {
+    util_chdir(this->org_cwd.c_str());
     if (!this->store) {
         std::error_code ec;
         std::filesystem::remove_all(this->cwd, ec);
         // silently fail for backwards compatibility
     }
-
-    util_chdir(this->org_cwd.c_str());
 }
 
 const std::string &TestArea::test_cwd() const { return this->cwd; }
