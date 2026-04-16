@@ -5258,7 +5258,7 @@ void rd_grid_compressed_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
         }
     } else
         util_abort("%s: size mismatch target:%d  src:%d  expected %d,%d \n",
-                   rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
+                   __func__, rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
                    rd_grid_get_nactive(grid), rd_grid_get_global_size(grid));
 }
 
@@ -5275,7 +5275,7 @@ void rd_grid_global_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
         }
     } else
         util_abort("%s: size mismatch target:%d  src:%d  expected %d,%d \n",
-                   rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
+                   __func__, rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
                    rd_grid_get_global_size(grid), rd_grid_get_nactive(grid));
 }
 
