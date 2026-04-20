@@ -1,4 +1,3 @@
-from __future__ import print_function
 from cwrap import BaseCClass
 
 from resdata.util.util import monkey_the_camel

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 import datetime
 from resdata.rft import ResdataRFTFile, ResdataRFTCell, ResdataPLTCell, WellTrajectory
 from tests import ResdataTest, equinor_test

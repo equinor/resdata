@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from resdata.util.util import monkey_the_camel
 
 
