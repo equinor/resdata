@@ -6,8 +6,8 @@ from resdata.util.util import IntVector
 from resdata.grid import GridGenerator
 from resdata.geometry import CPolyline
 from resdata.grid.faults import Layer, FaultCollection
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class LayerTest(ResdataTest):

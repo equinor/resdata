@@ -1,14 +1,11 @@
 import datetime
 from resdata.summary import Summary
-from typing_extensions import deprecated
 
 
-@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 def mock_func(rd_sum, key, days):
     return days * 10
 
 
-@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 def createSummary(
     case,
     keys,

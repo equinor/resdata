@@ -25,10 +25,11 @@ from contextlib import contextmanager
 from resdata import ResDataType, UnitSystem
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.summary import Summary, SummaryKeyWordVector, SummaryVarType
-from resdata.util.test import TestAreaContext
-from resdata.util.test.mock import createSummary
 from resdata.util.util import CTime, TimeVector
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
+from tests.util.mock import createSummary
 
 
 @contextmanager

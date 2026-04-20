@@ -1,7 +1,9 @@
 import os
 import shutil
+from typing_extensions import deprecated
 
 
+@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class PathContext(object):
     def __init__(self, path, store=False):
         self.path = path

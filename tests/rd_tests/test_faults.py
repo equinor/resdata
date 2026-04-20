@@ -14,9 +14,9 @@ from resdata.grid.faults import (
     FaultBlockLayer,
     SegmentMap,
 )
-from resdata.util.test import TestAreaContext
 from resdata.geometry import Polyline, CPolyline
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class FaultTest(ResdataTest):

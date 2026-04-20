@@ -5,8 +5,8 @@ from resdata.resfile import ResdataKW, openFortIO, FortIO, ResdataFile
 from resdata.grid import GridGenerator
 from resdata.gravimetry import ResdataSubsidence
 
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 from .create_restart import create_restart
 
 import numpy as np

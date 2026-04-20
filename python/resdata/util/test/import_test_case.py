@@ -2,8 +2,10 @@ import importlib
 import inspect
 import os
 import unittest
+from typing_extensions import deprecated
 
 
+@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class ImportTestCase(unittest.TestCase):
     def import_module(self, module):
         return importlib.import_module(module)

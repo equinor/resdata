@@ -1,7 +1,7 @@
 import random
 from resdata.geometry import Surface
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class SurfaceTest(ResdataTest):

@@ -4,8 +4,8 @@ import cwrap
 from random import randint
 from resdata import ResDataType
 from resdata.resfile import FortIO, ResdataKW, openFortIO, ResdataFile
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class FortIOTest(ResdataTest):

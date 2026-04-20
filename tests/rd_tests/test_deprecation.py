@@ -7,10 +7,11 @@ from resdata import ResDataType
 from resdata.grid import Grid, GridGenerator, ResdataRegion
 from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 from resdata.rft import ResdataRFT
-from resdata.util.test import TestAreaContext
-from resdata.util.test.mock import createSummary
 from resdata.util.util import BoolVector
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
+from tests.util.mock import createSummary
 
 # The class Deprecation_1_9_Test contains methods which will be marked
 # as deprecated in the 1.9.x versions.

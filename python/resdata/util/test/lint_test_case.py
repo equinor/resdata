@@ -3,6 +3,7 @@ import sys
 import fnmatch
 import os
 import unittest
+from typing_extensions import deprecated
 
 try:
     from pylint import epylint as lint
@@ -13,6 +14,7 @@ except ImportError:
     lint = None
 
 
+@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class LintTestCase(unittest.TestCase):
     """This class is a test case for linting."""
 

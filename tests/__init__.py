@@ -1,10 +1,11 @@
 import os.path
 import types
-from resdata.util.test import ExtendedTestCase
 from functools import wraps
 from functools import partial
 import unittest
 from unittest import SkipTest
+
+from .util import ExtendedTestCase
 
 
 def source_root():

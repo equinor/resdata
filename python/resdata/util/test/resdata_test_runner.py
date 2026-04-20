@@ -1,4 +1,5 @@
 import os
+from typing_extensions import deprecated
 
 try:
     from unittest2 import TestLoader, TextTestRunner
@@ -6,6 +7,7 @@ except ImportError:
     from unittest import TestLoader, TextTestRunner
 
 
+@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class ResdataTestRunner(object):
     @staticmethod
     def runTestSuite(tests, test_verbosity=3):

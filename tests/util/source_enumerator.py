@@ -1,9 +1,7 @@
 import os
 import re
-from typing_extensions import deprecated
 
 
-@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class SourceEnumerator(object):
     @classmethod
     def removeComments(cls, code_string):

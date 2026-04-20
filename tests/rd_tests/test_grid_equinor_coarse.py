@@ -2,8 +2,9 @@ import itertools
 
 from resdata.resfile import ResdataRestartFile
 from resdata.grid import Grid
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
 
 
 @equinor_test()

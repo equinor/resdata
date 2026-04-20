@@ -1,9 +1,9 @@
 import math
 
-from resdata.util.test import TestAreaContext
 from resdata.grid import Grid
 
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
 
 
 @equinor_test()

@@ -6,8 +6,9 @@ from resdata.util.util import IntVector
 from resdata import ResDataType, FileMode
 from resdata.resfile import Resdata3DKW, ResdataKW, ResdataFile, FortIO
 from resdata.grid import GridGenerator
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class Resdata3DKWTest(ResdataTest):

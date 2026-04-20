@@ -1,7 +1,8 @@
 from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
 from resdata.util.util import RandomNumberGenerator
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class RngTest(ResdataTest):

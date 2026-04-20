@@ -10,10 +10,10 @@ except ImportError:
 
 from resdata.summary import Summary
 from resdata.summary import ResdataNPV, NPVPriceVector
-
 from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"

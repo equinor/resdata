@@ -9,8 +9,8 @@ from resdata import UnitSystem
 
 from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
 
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
 import csv
 
 base = "ECLIPSE"

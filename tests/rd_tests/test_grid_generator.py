@@ -9,8 +9,9 @@ from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 def generate_ijk_bounds(dims):

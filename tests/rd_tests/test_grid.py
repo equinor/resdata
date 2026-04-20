@@ -13,8 +13,9 @@ from resdata import ResDataType, UnitSystem
 from resdata.resfile import ResdataKW, ResdataFile
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 # This dict is used to verify that corners are mapped to the correct
 # cell with respect to containment.

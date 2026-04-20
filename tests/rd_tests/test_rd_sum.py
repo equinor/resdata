@@ -11,9 +11,9 @@ from pandas.testing import assert_frame_equal
 from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.summary import Summary, SummaryKeyWordVector
 from resdata.summary.rd_sum import date2num
-from resdata.util.test import TestAreaContext
 from resdata.util.util import TimeVector, DoubleVector, StringList
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
 from resfo_utilities.testing import (
     summaries,
     Unsmry,

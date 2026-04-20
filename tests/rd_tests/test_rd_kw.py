@@ -12,8 +12,8 @@ from resdata.grid import ResdataRegion, GridGenerator
 from resdata.resfile import ResdataKW, ResdataFile, FortIO, openFortIO
 
 
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 def copy_long():

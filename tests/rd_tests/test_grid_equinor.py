@@ -14,8 +14,9 @@ from resdata import ResDataType, UnitSystem
 from resdata.resfile import ResdataKW, ResdataFile, openResdataFile
 from resdata.grid import Grid, GridGenerator
 from resdata.util.util import DoubleVector, IntVector
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
 
 
 @equinor_test()

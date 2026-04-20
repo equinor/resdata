@@ -1,7 +1,7 @@
 from resdata.summary import ResdataCmp
-from resdata.util.test import TestAreaContext
-from resdata.util.test.mock import createSummary
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
+from tests.util.mock import createSummary
 
 
 @equinor_test()

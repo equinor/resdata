@@ -3,8 +3,9 @@ from resdata import ResDataType
 from resdata.resfile import ResdataKW, ResdataFile, openFortIO, FortIO
 from resdata.grid import GridGenerator
 from resdata.gravimetry import ResdataGrav
-from resdata.util.test import TestAreaContext
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 def write_kws(filename, kws):

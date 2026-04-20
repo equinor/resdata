@@ -7,8 +7,8 @@ try:
 except ImportError:
     from unittest import skipIf
 
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class WorkAreaTest(ResdataTest):

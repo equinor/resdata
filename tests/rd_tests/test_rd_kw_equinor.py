@@ -4,8 +4,8 @@ import random
 from resdata import ResDataType, FileMode
 from resdata.resfile import ResdataKW, ResdataFile, FortIO
 
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
 
 
 def copy_long():

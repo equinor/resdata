@@ -7,9 +7,11 @@ import gc
 from resdata import FileMode, ResDataType, FileType
 from resdata.resfile import ResdataFile, FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.util.util import CWDContext
-from resdata.util.test import TestAreaContext
 from resdata.grid import Grid
+
 from tests import ResdataTest
+from tests.util import TestAreaContext
+
 from .create_restart import create_restart
 
 

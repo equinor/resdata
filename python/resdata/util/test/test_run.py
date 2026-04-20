@@ -2,9 +2,12 @@ import random
 import os.path
 import subprocess
 import argparse
+from typing_extensions import deprecated
+
 from .test_area import TestAreaContext
 
 
+@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 def path_exists(path):
     if os.path.exists(path):
         return (True, "Path:%s exists" % path)
@@ -12,6 +15,7 @@ def path_exists(path):
         return (False, "ERROR: Path:%s does not exist" % path)
 
 
+@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class TestRun(object):
     default_ert_cmd = "ert"
     default_ert_version = "stable"

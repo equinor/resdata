@@ -4,10 +4,10 @@ from subprocess import CalledProcessError as CallError
 
 from resdata.grid import Cell, Grid
 from resdata.summary import Summary
-from resdata.util.test import TestAreaContext
-from resdata.util.test.mock import createSummary
 
 from tests import ResdataTest
+from tests.util import TestAreaContext
+from tests.util.mock import createSummary
 
 
 def fopr(days):

@@ -3,7 +3,6 @@ import os
 import os.path
 import traceback
 import sys
-from typing_extensions import deprecated
 
 try:
     from unittest2 import TestCase
@@ -21,7 +20,6 @@ from resdata.util.util import Version
 # or lock up.
 
 
-@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 def log_test(test):
     def wrapper(*args):
         sys.stderr.write("starting: %s \n" % test.__name__)
@@ -31,7 +29,6 @@ def log_test(test):
     return wrapper
 
 
-@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class _AssertNotRaisesContext(object):
     def __init__(self, test_class):
         super(_AssertNotRaisesContext, self).__init__()
@@ -53,7 +50,6 @@ class _AssertNotRaisesContext(object):
         return True
 
 
-@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class ExtendedTestCase(TestCase):
     """
     This class provides some extra functionality for testing values that are almost equal.

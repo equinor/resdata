@@ -7,8 +7,8 @@ from resdata.resfile import ResdataKW
 from resdata.grid import Grid, ResdataRegion, GridGenerator
 from resdata.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection
 from resdata.geometry import Polyline, CPolylineCollection
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 import gc
 

@@ -2,10 +2,8 @@ import os.path
 
 from cwrap import BaseCClass
 from resdata import ResdataPrototype
-from typing_extensions import deprecated
 
 
-@deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class TestArea(BaseCClass):
     __test__ = False
 

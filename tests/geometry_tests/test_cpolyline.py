@@ -2,8 +2,8 @@ import math
 
 from resdata.geometry import CPolyline, Polyline
 from resdata.geometry.xyz_io import XYZIo
-from resdata.util.test import TestAreaContext
 from tests import ResdataTest
+from tests.util import TestAreaContext
 
 
 class CPolylineTest(ResdataTest):

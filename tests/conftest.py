@@ -1,5 +1,7 @@
 from hypothesis import HealthCheck, settings
+import os
 import pytest
+from unittest.mock import patch
 
 # Timeout settings are unreliable both on CI and
 # when running pytest with xdist so we disable it
