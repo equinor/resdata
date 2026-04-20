@@ -2,6 +2,9 @@ name: Code Style
 
 on: [pull_request, workflow_dispatch]
 
+permissions:
+   contents: read
+
 jobs:
   formatting:
     name: CMake
