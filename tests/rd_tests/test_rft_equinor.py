@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import datetime
 from resdata.rft import ResdataRFTFile, ResdataRFTCell, ResdataPLTCell, WellTrajectory
 from tests import ResdataTest, equinor_test
