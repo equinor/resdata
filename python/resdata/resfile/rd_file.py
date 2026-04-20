@@ -24,6 +24,7 @@ implementation from the resdata library.
 import ctypes
 import datetime
 import re
+from typing_extensions import deprecated
 
 from cwrap import BaseCClass
 from resdata import FileMode, FileType, ResdataPrototype
@@ -575,8 +576,11 @@ class ResdataFileContextManager(object):
         return False
 
 
+@deprecated(
+    "The function openResdataFile is deprecated, "
+    "and will be removed in version 7. Use open_rd_file."
+)
 def openResdataFile(file_name, flags=FileMode.DEFAULT):
-    print("The function openResdataFile is deprecated, use open_rd_file.")
     return open_rd_file(file_name, flags)
 
 

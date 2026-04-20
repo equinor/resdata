@@ -56,10 +56,9 @@ from .cwd_context import CWDContext
 ###  usage.
 ###
 
-import os
 import warnings
 
-__cc = os.environ.get("RDWARNING", None)  # __cc in (None, 'user', 'dev', 'hard')
+__cc = "dev"
 
 
 def __silencio(msg):
@@ -98,7 +97,8 @@ def monkey_the_camel(class_, camel, method_, method_type=None):
 
     def warned_method(*args, **kwargs):
         __rd_camel_case_warning(
-            "Warning, %s is deprecated, use %s" % (camel, str(method_))
+            f"Warning, {camel} is deprecated. It will be removed in version 7."
+            f" Use {str(method_)}"
         )
         return method_(*shift(*args), **kwargs)
 

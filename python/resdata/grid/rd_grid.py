@@ -18,6 +18,7 @@ import os.path
 import math
 import itertools
 from cwrap import CFILE, BaseCClass, load, open as copen
+from typing_extensions import deprecated
 
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
@@ -269,18 +270,16 @@ class Grid(BaseCClass):
         )
 
     @classmethod
+    @deprecated(
+        "Grid.createRectangular is deprecated. It will be removed in version 7. "
+        "Please use the similar method: GridGenerator.createRectangular.",
+    )
     def create_rectangular(cls, dims, dV, actnum=None):
         """
         Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
 
         With the default value @actnum == None all cells will be active,
         """
-
-        warnings.warn(
-            "Grid.createRectangular is deprecated. "
-            + "Please use the similar method: GridGenerator.createRectangular.",
-            DeprecationWarning,
-        )
 
         if actnum is None:
             rd_grid = cls._alloc_rectangular(

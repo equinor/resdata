@@ -11,6 +11,7 @@ import numpy as np
 from resfo_utilities import RFTReader
 import fnmatch
 import warnings
+from typing_extensions import deprecated
 
 
 def to_float_or_none(value: np.float32 | None) -> float | None:
@@ -211,6 +212,11 @@ def category_to_type_str(s: str) -> str | None:
     return None
 
 
+@deprecated(
+    "ResdataRFTFile is deprecated and will be removed in version 7, see "
+    "resfo-utilities.readthedocs.io/en/latest/user_guide.html"
+    "#module-resfo_utilities._rft_reader to migrate to resfo-utilities. ",
+)
 class ResdataRFTFile:
     """Used to load an RFT file.
 
@@ -223,12 +229,6 @@ class ResdataRFTFile:
     """
 
     def __init__(self, case: str | PathLike[str]) -> None:
-        warnings.warn(
-            "ResdataRFTFile is deprecated, see "
-            "resfo-utilities.readthedocs.io/en/latest/user_guide.html"
-            "#module-resfo_utilities._rft_reader to migrate to resfo-utilities.",
-            DeprecationWarning,
-        )
         try:
             with RFTReader.open(case) as rft:
                 self._entries = [

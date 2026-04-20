@@ -14,6 +14,8 @@ import ctypes
 import pandas as pd
 import re
 from typing import Sequence, List, Tuple, Optional, Union
+from textwrap import dedent
+from typing_extensions import deprecated
 
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
@@ -397,6 +399,10 @@ class Summary(BaseCClass):
         tstep = self._add_tstep(report_step, sim_seconds).setParent(parent=self)
         return tstep
 
+    @deprecated(
+        "The method get_vector() is deprecated, and will be removed in version 7."
+        " Use numpy_vector() instead"
+    )
     def get_vector(self, key, report_only=False):
         """
         Will return SummaryVector according to @key.
@@ -404,10 +410,6 @@ class Summary(BaseCClass):
         Will raise exception KeyError if the summary object does not
         have @key.
         """
-        warnings.warn(
-            "The method get_vector() has been deprecated, use numpy_vector() instead",
-            DeprecationWarning,
-        )
         self.assertKeyValid(key)
         if report_only:
             return SummaryVector(self, key, report_only=True)
@@ -446,6 +448,10 @@ class Summary(BaseCClass):
         """
         return self._create_group_list(pattern)
 
+    @deprecated(
+        "The method get_values() is deprecated, and will be removed in version 7."
+        " Use numpy_vector() instead."
+    )
     def get_values(self, key, report_only=False):
         """
         Will return numpy vector of all values according to @key.
@@ -455,10 +461,6 @@ class Summary(BaseCClass):
         also available as the 'values' property of an SummaryVector
         instance.
         """
-        warnings.warn(
-            "The method get_values() has been deprecated - use numpy_vector() instead.",
-            DeprecationWarning,
-        )
         if self.has_key(key):
             key_index = self._get_general_var_index(key)
             if report_only:
@@ -800,11 +802,11 @@ class Summary(BaseCClass):
 
         return self._get_first_value(key)
 
+    @deprecated(
+        "The function get_last_value() is deprecated, and will be removed in"
+        " version 7. Use last_value() instead"
+    )
     def get_last_value(self, key):
-        warnings.warn(
-            "The function get_last_value() is deprecated, use last_value() instead",
-            DeprecationWarning,
-        )
         return self.last_value(key)
 
     def get_last(self, key):
@@ -869,37 +871,43 @@ class Summary(BaseCClass):
     def __iter__(self):
         return iter(self.keys())
 
+    @deprecated(
+        "The method the [] operator will change behaviour in version 7."
+        " It will then return a plain numpy vector. You are advised to change to"
+        " use the numpy_vector() method right away",
+    )
     def __getitem__(self, key):
         """
         Implements [] operator - @key should be a summary key.
 
         The returned value will be a SummaryVector instance.
         """
-        warnings.warn(
-            "The method the [] operator will change behaviour in the future. It will then return a plain numpy vector. You are advised to change to use the numpy_vector() method right away",
-            DeprecationWarning,
-        )
         return self.get_vector(key)
 
     def scale_vector(self, key, scalar):
-        msg = """The function Summary.scale_vector has been removed. As an alternative you
-are advised to fetch vector as a numpy vector and then scale that yourself:
+        raise NotImplementedError(
+            dedent(
+                """The function Summary.scale_vector has been removed. As an alternative you
+                    are advised to fetch vector as a numpy vector and then scale that yourself:
 
-    vec = rd_sum.numpy_vector(key)
-    vec *= scalar
+                        vec = rd_sum.numpy_vector(key)
+                        vec *= scalar
 
-        """
-        raise NotImplementedError(msg)
+            """
+            )
+        )
 
     def shift_vector(self, key, addend):
-        msg = """The function Summary.shift_vector has been removed. As an alternative you
-are advised to fetch vector as a numpy vector and then scale that yourself:
+        raise NotImplementedError(
+            dedent(
+                """The function Summary.shift_vector has been removed. As an alternative you
+                    are advised to fetch vector as a numpy vector and then scale that yourself:
 
-    vec = rd_sum.numpy_vector(key)
-    vec += scalar
-
-        """
-        raise NotImplementedError(msg)
+                        vec = rd_sum.numpy_vector(key)
+                        vec += scalar
+            """
+            )
+        )
 
     def check_sim_time(self, date):
         """
@@ -1259,6 +1267,10 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
             return self.dates
 
     @property
+    @deprecated(
+        "The mpl_dates property is deprecated and will be removed in version 7."
+        " Use numpy_dates instead"
+    )
     def mpl_dates(self):
         """
         Will return a numpy vector of dates ready for matplotlib
@@ -1267,12 +1279,12 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         i.e. floats - generated by the date2num() function at the top
         of this file.
         """
-        warnings.warn(
-            "The mpl_dates property has been deprecated - use numpy_dates instead",
-            DeprecationWarning,
-        )
         return self.get_mpl_dates(False)
 
+    @deprecated(
+        "The get_mpl_dates( ) method is deprecated and will be removed in"
+        " version 7. Use numpy_dates instead",
+    )
     def get_mpl_dates(self, report_only=False):
         """
         Will return a numpy vector of dates ready for matplotlib
@@ -1283,10 +1295,6 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         format, i.e. floats - generated by the date2num() function at
         the top of this file.
         """
-        warnings.warn(
-            "The get_mpl_dates( ) method has been deprecated - use numpy_dates instead",
-            DeprecationWarning,
-        )
         if report_only:
             return [date2num(dt) for dt in self.report_dates]
         else:

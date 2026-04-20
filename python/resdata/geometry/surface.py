@@ -3,6 +3,7 @@ from __future__ import division
 """
 Create a polygon
 """
+
 import os.path
 import ctypes
 

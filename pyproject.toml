@@ -16,7 +16,6 @@ test = [
   "pytest-timeout",
   "hypothesis",
   "pydantic",
-  "typing_extensions",
   "resfo-utilities[testing]>=0.4.0",
   "numpy",
   "pandas",

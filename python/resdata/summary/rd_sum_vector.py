@@ -1,5 +1,8 @@
 from __future__ import print_function
 import warnings
+from typing_extensions import deprecated
+
+
 from .rd_sum_node import SummaryNode
 
 
@@ -27,7 +30,7 @@ class SummaryVector(object):
 
         if report_only:
             warnings.warn(
-                "The report_only flag to the SummaryVector will be removed",
+                "The report_only flag to the SummaryVector will be removed in version 7.",
                 DeprecationWarning,
             )
 
@@ -88,6 +91,10 @@ class SummaryVector(object):
         return self.__days
 
     @property
+    @deprecated(
+        "The mpl_dates property has been deprecated, and will be "
+        "removed in version 7. Use numpy_dates instead"
+    )
     def mpl_dates(self):
         """
         All the dates as numpy vector of dates in matplotlib format.
@@ -95,11 +102,6 @@ class SummaryVector(object):
         backwards-compatibility for the time-being. Usage will trigger
         a depreciation warning.
         """
-        warnings.warn(
-            "The mpl_dates property has been deprecated - use numpy_dates instead",
-            DeprecationWarning,
-        )
-
         return self.parent.get_mpl_dates(self.report_only)
 
     @property

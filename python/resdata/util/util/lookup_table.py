@@ -64,7 +64,6 @@ class LookupTable(BaseCClass):
     def size(self):
         return len(self)
 
-    # Deprecated properties
     @property
     def max(self):
         return self.getMaxValue()

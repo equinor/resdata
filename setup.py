@@ -148,6 +148,7 @@ skbuild.setup(
         "numpy",
         "pandas",
         "natsort",
+        "typing_extensions",
         "resfo-utilities>=0.4.0",
     ],
     setup_requires=["conan>=2"],

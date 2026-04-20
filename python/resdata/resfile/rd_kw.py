@@ -25,6 +25,7 @@ the resdata library.
 
 import ctypes
 import warnings
+from typing_extensions import deprecated
 
 import numpy as np
 from cwrap import CFILE, BaseCClass
@@ -981,8 +982,10 @@ class ResdataKW(BaseCClass):
         return mm[0]
 
     @property
+    @deprecated(
+        "rd_kw.type is deprecated, it will be removed in version 7. Use .data_type."
+    )
     def type(self):
-        warnings.warn("rd_kw.type is deprecated, use .data_type", DeprecationWarning)
         return self._get_type()
 
     @property
@@ -992,13 +995,10 @@ class ResdataKW(BaseCClass):
     def type_name(self):
         return self.data_type.type_name
 
+    @deprecated(
+        "ResdataTypeEnum is deprecated. You should instead provide an ResDataType",
+    )
     def get_rd_type(self):
-        warnings.warn(
-            "ResdataTypeEnum is deprecated. "
-            + "You should instead provide an ResDataType",
-            DeprecationWarning,
-        )
-
         return self._get_type()
 
     @property
