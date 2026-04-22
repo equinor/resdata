@@ -97,7 +97,8 @@ rd_grid_type *generate_coordkw_grid(
 void write_egrid_with_single_lgr(const fs::path &filename, int nx, int ny,
                                  int nz, int lgr_nx, int lgr_ny, int lgr_nz,
                                  int host_i, int host_j, int host_k,
-                                 const std::string &lgr_name) {
+                                 const std::string &lgr_name,
+                                 const float *mapaxes = nullptr) {
     rd_grid_type *main_grid =
         rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     rd_grid_type *lgr_grid = rd_grid_alloc_rectangular(
@@ -142,6 +143,13 @@ void write_egrid_with_single_lgr(const fs::path &filename, int nx, int ny,
     rd_kw_iset_int(filehead, FILEHEAD_ORGFORMAT_INDEX,
                    FILEHEAD_ORGTYPE_CORNERPOINT);
     write_and_free(filehead, fortio);
+
+    if (mapaxes != nullptr) {
+        rd_kw_type *mapaxes_kw = rd_kw_alloc(MAPAXES_KW, 6, RD_FLOAT);
+        for (int i = 0; i < 6; i++)
+            rd_kw_iset_float(mapaxes_kw, i, mapaxes[i]);
+        write_and_free(mapaxes_kw, fortio);
+    }
 
     write_and_free(make_gridhead(nx, ny, nz, 0), fortio);
     write_grid_body(main_grid, fortio);
@@ -193,6 +201,49 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
 
             rd_grid_free(grid);
         }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
+    GIVEN("An EGRID file with a MAPAXES keyword describing a rotated frame") {
+        // MAPAXES = (y_axis_end, origin, x_axis_end) pairs of (x,y).
+        // Here the origin is offset to (10, 20) and the axes are rotated
+        // by ~45 degrees so that neither unit_x nor unit_y is aligned with
+        // the canonical (1,0) / (0,1) frame.
+        const float mapaxes[6] = {
+            10.0f, 21.0f, // y-axis end point
+            10.0f, 20.0f, // origin
+            11.0f, 21.0f, // x-axis end point
+        };
+        auto filename = dirname / "MAPAXES.EGRID";
+        write_egrid_with_single_lgr(filename, 3, 3, 3, 2, 2, 2, 1, 1, 1,
+                                    "LGR1", mapaxes);
+
+        rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+        REQUIRE(grid != nullptr);
+
+        THEN("The grid reports that mapaxes are in use") {
+            REQUIRE(rd_grid_use_mapaxes(grid));
+        }
+
+        THEN("Regenerating the COORD keyword exercises the inverse mapaxes "
+             "transform") {
+            rd_kw_type *coord_kw = rd_grid_alloc_coord_kw(grid);
+            REQUIRE(coord_kw != nullptr);
+            REQUIRE(rd_kw_get_size(coord_kw) ==
+                    RD_GRID_COORD_SIZE(rd_grid_get_nx(grid),
+                                       rd_grid_get_ny(grid)));
+            rd_kw_free(coord_kw);
+        }
+
+        THEN("Writing the grid as a GRID file exercises the inverse mapaxes "
+             "transform per cell") {
+            auto grid_filename = dirname / "MAPAXES.GRID";
+            rd_grid_fwrite_GRID2(grid, grid_filename.c_str(), RD_METRIC_UNITS);
+            REQUIRE(fs::exists(grid_filename));
+        }
+
+        rd_grid_free(grid);
     }
 }
 
