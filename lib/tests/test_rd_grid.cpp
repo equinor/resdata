@@ -1,4 +1,6 @@
 #include <catch2/catch.hpp>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
@@ -80,6 +82,118 @@ rd_grid_type *generate_coordkw_grid(
     rd_kw_free(zcorn_kw);
 
     return grid;
+}
+
+/**
+ * Writes an EGRID file with a single top-level LGR directly using the fortio
+ * API, since there is no public C API for attaching an LGR to a grid in
+ * memory. The main grid is an nx*ny*nz rectangular grid with unit cells,
+ * and the LGR is a lgr_nx*lgr_ny*lgr_nz rectangular grid that refines the
+ * single host cell at (host_i, host_j, host_k) of the main grid.
+ *
+ * This utility is intended as a building block for tests that need to
+ * exercise EGRID load paths involving LGRs.
+ */
+void write_egrid_with_single_lgr(const fs::path &filename, int nx, int ny,
+                                 int nz, int lgr_nx, int lgr_ny, int lgr_nz,
+                                 int host_i, int host_j, int host_k,
+                                 const std::string &lgr_name) {
+    rd_grid_type *main_grid =
+        rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
+    rd_grid_type *lgr_grid = rd_grid_alloc_rectangular(
+        lgr_nx, lgr_ny, lgr_nz, 1.0 / lgr_nx, 1.0 / lgr_ny, 1.0 / lgr_nz,
+        nullptr);
+
+    const int host_global_index = host_i + host_j * nx + host_k * nx * ny;
+
+    auto make_gridhead = [](int gnx, int gny, int gnz, int grid_nr) {
+        rd_kw_type *kw = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+        rd_kw_scalar_set_int(kw, 0);
+        rd_kw_iset_int(kw, GRIDHEAD_TYPE_INDEX, GRIDHEAD_GRIDTYPE_CORNERPOINT);
+        rd_kw_iset_int(kw, GRIDHEAD_NX_INDEX, gnx);
+        rd_kw_iset_int(kw, GRIDHEAD_NY_INDEX, gny);
+        rd_kw_iset_int(kw, GRIDHEAD_NZ_INDEX, gnz);
+        rd_kw_iset_int(kw, GRIDHEAD_NUMRES_INDEX, 1);
+        rd_kw_iset_int(kw, GRIDHEAD_LGR_INDEX, grid_nr);
+        return kw;
+    };
+
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    auto write_grid_body = [&](rd_grid_type *grid, fortio_type *fortio) {
+        write_and_free(rd_grid_alloc_coord_kw(grid), fortio);
+        write_and_free(rd_grid_alloc_zcorn_kw(grid), fortio);
+        write_and_free(rd_grid_alloc_actnum_kw(grid), fortio);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    rd_kw_type *filehead = rd_kw_alloc(FILEHEAD_KW, 100, RD_INT);
+    rd_kw_scalar_set_int(filehead, 0);
+    rd_kw_iset_int(filehead, FILEHEAD_VERSION_INDEX, 3);
+    rd_kw_iset_int(filehead, FILEHEAD_YEAR_INDEX, 2007);
+    rd_kw_iset_int(filehead, FILEHEAD_TYPE_INDEX,
+                   FILEHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(filehead, FILEHEAD_DUALP_INDEX, FILEHEAD_SINGLE_POROSITY);
+    rd_kw_iset_int(filehead, FILEHEAD_ORGFORMAT_INDEX,
+                   FILEHEAD_ORGTYPE_CORNERPOINT);
+    write_and_free(filehead, fortio);
+
+    write_and_free(make_gridhead(nx, ny, nz, 0), fortio);
+    write_grid_body(main_grid, fortio);
+    write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+
+    rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(lgr_kw, 0, lgr_name.c_str());
+    write_and_free(lgr_kw, fortio);
+
+    rd_kw_type *lgr_parent_kw = rd_kw_alloc(LGR_PARENT_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(lgr_parent_kw, 0, "");
+    write_and_free(lgr_parent_kw, fortio);
+
+    write_and_free(make_gridhead(lgr_nx, lgr_ny, lgr_nz, 1), fortio);
+    write_grid_body(lgr_grid, fortio);
+
+    const int lgr_size = lgr_nx * lgr_ny * lgr_nz;
+    rd_kw_type *hostnum_kw = rd_kw_alloc(HOSTNUM_KW, lgr_size, RD_INT);
+    for (int i = 0; i < lgr_size; i++)
+        rd_kw_iset_int(hostnum_kw, i, host_global_index + 1);
+    write_and_free(hostnum_kw, fortio);
+
+    write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+    write_and_free(rd_kw_alloc(ENDLGR_KW, 0, RD_INT), fortio);
+
+    fortio_fclose(fortio);
+    rd_grid_free(main_grid);
+    rd_grid_free(lgr_grid);
+}
+
+TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
+    GIVEN("An EGRID file containing a main grid and one LGR") {
+        auto filename = dirname / "LGR.EGRID";
+        write_egrid_with_single_lgr(filename, 3, 3, 3, 2, 2, 2, 1, 1, 1,
+                                    "LGR1");
+
+        THEN("The file can be loaded and exposes the LGR") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_get_num_lgr(grid) == 1);
+            REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
+
+            rd_grid_type *lgr = rd_grid_get_lgr(grid, "LGR1");
+            REQUIRE(lgr != nullptr);
+            REQUIRE(rd_grid_get_nx(lgr) == 2);
+            REQUIRE(rd_grid_get_ny(lgr) == 2);
+            REQUIRE(rd_grid_get_nz(lgr) == 2);
+            REQUIRE(rd_grid_get_lgr_nr(lgr) == 1);
+
+            rd_grid_free(grid);
+        }
+    }
 }
 
 TEST_CASE_METHOD(Tmpdir, "Test case loading", "[unittest]") {
