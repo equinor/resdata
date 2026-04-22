@@ -893,6 +893,60 @@ TEST_CASE("NNC Vector", "[unittest]") {
     nnc_vector_free(nnc_vec_diff);
 }
 
+TEST_CASE("Verbose rd_grid_compare on unequal grids", "[unittest]") {
+    GIVEN("Two rectangular grids with different actnum") {
+        int actnum1[] = {1, 1, 1, 1, 1, 1, 1, 1};
+        int actnum2[] = {1, 0, 1, 1, 1, 1, 1, 1};
+        rd_grid_type *g1 = rd_grid_alloc_rectangular(2, 2, 2, 1, 1, 1, actnum1);
+        rd_grid_type *g2 = rd_grid_alloc_rectangular(2, 2, 2, 1, 1, 1, actnum2);
+
+        THEN("rd_grid_compare with verbose=true reports them as unequal") {
+            REQUIRE(!rd_grid_compare(g1, g2, false, false, true));
+        }
+
+        rd_grid_free(g1);
+        rd_grid_free(g2);
+    }
+
+    GIVEN("Two grids with identical actnum but different cell corners") {
+        rd_grid_type *g1 = generate_coordkw_grid(2, 2, 2, {});
+        rd_grid_type *g2 = generate_coordkw_grid(
+            2, 2, 2, {{0, 0, 0, 0, 5.0}, {1, 1, 1, 7, 42.0}});
+
+        THEN("rd_grid_compare detects the corner differences") {
+            REQUIRE(!rd_grid_compare(g1, g2, false, false, true));
+        }
+
+        rd_grid_free(g1);
+        rd_grid_free(g2);
+    }
+
+    GIVEN("Two grids with identical geometry and actnum") {
+        rd_grid_type *g1 = generate_coordkw_grid(2, 2, 2, {});
+        rd_grid_type *g2 = generate_coordkw_grid(2, 2, 2, {});
+
+        THEN("rd_grid_compare reports equality and exercises point_compare") {
+            REQUIRE(rd_grid_compare(g1, g2, false, false, true));
+        }
+
+        rd_grid_free(g1);
+        rd_grid_free(g2);
+    }
+
+    GIVEN("Two grids differing in NNC information") {
+        rd_grid_type *g1 = rd_grid_alloc_rectangular(2, 2, 2, 1, 1, 1, nullptr);
+        rd_grid_type *g2 = rd_grid_alloc_rectangular(2, 2, 2, 1, 1, 1, nullptr);
+        rd_grid_add_self_nnc(g1, 0, 1, 0);
+
+        THEN("rd_grid_compare with include_nnc=true detects the difference") {
+            REQUIRE(!rd_grid_compare(g1, g2, false, true, true));
+        }
+
+        rd_grid_free(g1);
+        rd_grid_free(g2);
+    }
+}
+
 TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
     GIVEN("A grid") {
         rd_grid_type *grid =
