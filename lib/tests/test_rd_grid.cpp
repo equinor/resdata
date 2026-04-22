@@ -180,6 +180,71 @@ void write_egrid_with_single_lgr(const fs::path &filename, int nx, int ny,
     rd_grid_free(lgr_grid);
 }
 
+/**
+ * Writes a single-grid EGRID file with a CORSNUM keyword describing coarse
+ * cell groups. The grid is an nx*ny*nz rectangular grid with unit cells.
+ *
+ * \c corsnum must have nx*ny*nz entries. A value of 0 means the cell is
+ * not part of any coarse group; positive values identify (1-based) the
+ * coarse group the cell belongs to. At least one cell in each referenced
+ * group must be active (see \c actnum) for the group to participate in
+ * the active-index mapping exercised on load.
+ *
+ * \c actnum, if non-null, must also have nx*ny*nz entries. If null, all
+ * cells are treated as active.
+ */
+void write_egrid_with_coarse_groups(const fs::path &filename, int nx, int ny,
+                                    int nz, const int *corsnum,
+                                    const int *actnum = nullptr) {
+    rd_grid_type *grid =
+        rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, actnum);
+
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    rd_kw_type *filehead = rd_kw_alloc(FILEHEAD_KW, 100, RD_INT);
+    rd_kw_scalar_set_int(filehead, 0);
+    rd_kw_iset_int(filehead, FILEHEAD_VERSION_INDEX, 3);
+    rd_kw_iset_int(filehead, FILEHEAD_YEAR_INDEX, 2007);
+    rd_kw_iset_int(filehead, FILEHEAD_TYPE_INDEX,
+                   FILEHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(filehead, FILEHEAD_DUALP_INDEX, FILEHEAD_SINGLE_POROSITY);
+    rd_kw_iset_int(filehead, FILEHEAD_ORGFORMAT_INDEX,
+                   FILEHEAD_ORGTYPE_CORNERPOINT);
+    write_and_free(filehead, fortio);
+
+    rd_kw_type *gridhead = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+    rd_kw_scalar_set_int(gridhead, 0);
+    rd_kw_iset_int(gridhead, GRIDHEAD_TYPE_INDEX,
+                   GRIDHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NX_INDEX, nx);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NY_INDEX, ny);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NZ_INDEX, nz);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NUMRES_INDEX, 1);
+    rd_kw_iset_int(gridhead, GRIDHEAD_LGR_INDEX, 0);
+    write_and_free(gridhead, fortio);
+
+    write_and_free(rd_grid_alloc_coord_kw(grid), fortio);
+    write_and_free(rd_grid_alloc_zcorn_kw(grid), fortio);
+    write_and_free(rd_grid_alloc_actnum_kw(grid), fortio);
+
+    const int size = nx * ny * nz;
+    rd_kw_type *corsnum_kw = rd_kw_alloc(CORSNUM_KW, size, RD_INT);
+    for (int i = 0; i < size; i++)
+        rd_kw_iset_int(corsnum_kw, i, corsnum[i]);
+    write_and_free(corsnum_kw, fortio);
+
+    write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+
+    fortio_fclose(fortio);
+    rd_grid_free(grid);
+}
+
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
     GIVEN("An EGRID file containing a main grid and one LGR") {
         auto filename = dirname / "LGR.EGRID";
@@ -241,6 +306,48 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
             auto grid_filename = dirname / "MAPAXES.GRID";
             rd_grid_fwrite_GRID2(grid, grid_filename.c_str(), RD_METRIC_UNITS);
             REQUIRE(fs::exists(grid_filename));
+        }
+
+        rd_grid_free(grid);
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Load EGRID with coarse cell groups", "[unittest]") {
+    GIVEN("An EGRID file on disc with two coarse cell groups") {
+        const int nx = 3, ny = 3, nz = 3;
+        const int size = nx * ny * nz;
+
+        // Assign two coarse groups (1-based). 0 means the cell is not in a
+        // coarse group. Group 1 covers the two cells along i at (0,0,0)
+        // and (1,0,0); group 2 covers two cells in the last k layer.
+        std::vector<int> corsnum(size, 0);
+        corsnum[0] = 1;
+        corsnum[1] = 1;
+        corsnum[size - 1] = 2;
+        corsnum[size - 2] = 2;
+
+        auto filename = dirname / "CORSNUM.EGRID";
+        write_egrid_with_coarse_groups(filename, nx, ny, nz, corsnum.data());
+
+        rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+        REQUIRE(grid != nullptr);
+
+        THEN("The grid reports that coarse cells are present") {
+            REQUIRE(rd_grid_have_coarse_cells(grid));
+            REQUIRE(rd_grid_get_num_coarse_groups(grid) == 2);
+        }
+
+        THEN("Cells in a coarse group are flagged as such, others are not") {
+            REQUIRE(rd_grid_cell_in_coarse_group1(grid, 0));
+            REQUIRE(rd_grid_cell_in_coarse_group1(grid, 1));
+            REQUIRE_FALSE(rd_grid_cell_in_coarse_group1(grid, 2));
+            REQUIRE(rd_grid_cell_in_coarse_group1(grid, size - 1));
+            REQUIRE(rd_grid_cell_in_coarse_group1(grid, size - 2));
+        }
+
+        THEN("The coarse group objects are accessible by index") {
+            REQUIRE(rd_grid_iget_coarse_group(grid, 0) != nullptr);
+            REQUIRE(rd_grid_iget_coarse_group(grid, 1) != nullptr);
         }
 
         rd_grid_free(grid);
