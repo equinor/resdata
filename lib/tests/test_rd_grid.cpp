@@ -717,6 +717,49 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with coarse cell groups", "[unittest]") {
     }
 }
 
+TEST_CASE("rd_grid_alloc_GRDECL_kw with explicit ACTNUM", "[unittest]") {
+    const int nx = 2, ny = 2, nz = 2;
+    rd_kw_type *coord_kw =
+        rd_kw_alloc(COORD_KW, RD_GRID_COORD_SIZE(nx, ny), RD_FLOAT);
+    rd_kw_type *zcorn_kw =
+        rd_kw_alloc(ZCORN_KW, RD_GRID_ZCORN_SIZE(nx, ny, nz), RD_FLOAT);
+
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
+            int offset = 6 * (i + j * nx);
+            rd_kw_iset_float(coord_kw, offset, i);
+            rd_kw_iset_float(coord_kw, offset + 1, j);
+            rd_kw_iset_float(coord_kw, offset + 2, -1);
+            rd_kw_iset_float(coord_kw, offset + 3, i);
+            rd_kw_iset_float(coord_kw, offset + 4, j);
+            rd_kw_iset_float(coord_kw, offset + 5, -1);
+            for (int k = 0; k < nz; k++) {
+                for (int c = 0; c < 4; c++) {
+                    int zi1 = rd_grid_zcorn_index__(nx, ny, i, j, k, c);
+                    int zi2 = rd_grid_zcorn_index__(nx, ny, i, j, k, c + 4);
+                    rd_kw_iset_float(zcorn_kw, zi1, k);
+                    rd_kw_iset_float(zcorn_kw, zi2, k + 1);
+                }
+            }
+        }
+    }
+
+    const int size = nx * ny * nz;
+    rd_kw_type *actnum_kw = rd_kw_alloc(ACTNUM_KW, size, RD_INT);
+    rd_kw_scalar_set_int(actnum_kw, 1);
+    rd_kw_iset_int(actnum_kw, 0, 0);
+
+    rd_grid_type *grid = rd_grid_alloc_GRDECL_kw(nx, ny, nz, zcorn_kw,
+                                                 coord_kw, actnum_kw, NULL);
+    REQUIRE(grid != nullptr);
+    REQUIRE(rd_grid_get_active_size(grid) == size - 1);
+
+    rd_grid_free(grid);
+    rd_kw_free(actnum_kw);
+    rd_kw_free(coord_kw);
+    rd_kw_free(zcorn_kw);
+}
+
 TEST_CASE_METHOD(Tmpdir, "Test case loading", "[unittest]") {
     GIVEN("A grid on disc") {
         auto filename = dirname / "GRID.EGRID";
