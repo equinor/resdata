@@ -652,6 +652,27 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
 
         rd_grid_free(grid);
     }
+
+    GIVEN("An EGRID file with a degenerate MAPAXES whose axes are collinear") {
+        // x-axis endpoint and y-axis endpoint both lie along the x-axis, so
+        // the cross-product denominator (x1*y2 - x2*y1) is zero. The loader
+        // should discard the MAPAXES in this case.
+        const float mapaxes[6] = {
+            2.0f, 0.0f, // y-axis end point (collinear with x-axis)
+            0.0f, 0.0f, // origin
+            1.0f, 0.0f, // x-axis end point
+        };
+        auto filename = dirname / "MAPAXES_DEGENERATE.EGRID";
+        write_egrid_with_single_lgr(filename, 2, 2, 2, 2, 2, 2, 0, 0, 0,
+                                    "LGR1", mapaxes);
+
+        THEN("The grid loads and reports that mapaxes are not in use") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE_FALSE(rd_grid_use_mapaxes(grid));
+            rd_grid_free(grid);
+        }
+    }
 }
 
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with coarse cell groups", "[unittest]") {
