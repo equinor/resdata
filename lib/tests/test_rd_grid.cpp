@@ -719,6 +719,94 @@ void write_grid_file_with_mapaxes(const fs::path &filename,
     fortio_fclose(fortio);
 }
 
+/**
+ * Writes a minimal .GRID file containing a main grid of size nx*ny*nz and
+ * a single 1x1x1 LGR hosted at main-grid cell 1. The main grid uses simple
+ * unit-cube cells stacked along k. This utility is useful for exercising
+ * GRID-file paths that care about the relative number of CORNERS keywords
+ * vs. the main grid size (num_corners > nx*ny*nz once an LGR is present).
+ */
+void write_grid_file_main_with_lgr(const fs::path &filename, int nx, int ny,
+                                   int nz) {
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    auto write_dimens = [&](fortio_type *fortio, int gnx, int gny, int gnz) {
+        rd_kw_type *dimens = rd_kw_alloc(DIMENS_KW, 3, RD_INT);
+        rd_kw_iset_int(dimens, DIMENS_NX_INDEX, gnx);
+        rd_kw_iset_int(dimens, DIMENS_NY_INDEX, gny);
+        rd_kw_iset_int(dimens, DIMENS_NZ_INDEX, gnz);
+        write_and_free(dimens, fortio);
+    };
+
+    auto write_radial = [&](fortio_type *fortio) {
+        rd_kw_type *radial = rd_kw_alloc(RADIAL_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(radial, 0, "FALSE");
+        write_and_free(radial, fortio);
+    };
+
+    auto write_cell = [&](fortio_type *fortio, int i, int j, int k,
+                          int global_index, int host_cell_1based, float z0,
+                          float z1) {
+        rd_kw_type *coords = rd_kw_alloc(COORDS_KW, 7, RD_INT);
+        rd_kw_iset_int(coords, 0, i + 1);
+        rd_kw_iset_int(coords, 1, j + 1);
+        rd_kw_iset_int(coords, 2, k + 1);
+        rd_kw_iset_int(coords, 3, global_index + 1);
+        rd_kw_iset_int(coords, 4, 1);
+        rd_kw_iset_int(coords, 5, host_cell_1based);
+        rd_kw_iset_int(coords, 6, 0);
+        write_and_free(coords, fortio);
+
+        const float corners[24] = {
+            (float)i,     (float)j,     z0, (float)(i + 1), (float)j,     z0,
+            (float)i,     (float)(j + 1), z0, (float)(i + 1), (float)(j + 1), z0,
+            (float)i,     (float)j,     z1, (float)(i + 1), (float)j,     z1,
+            (float)i,     (float)(j + 1), z1, (float)(i + 1), (float)(j + 1), z1,
+        };
+        rd_kw_type *corners_kw = rd_kw_alloc(CORNERS_KW, 24, RD_FLOAT);
+        for (int c = 0; c < 24; c++)
+            rd_kw_iset_float(corners_kw, c, corners[c]);
+        write_and_free(corners_kw, fortio);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    write_dimens(fortio, nx, ny, nz);
+
+    rd_kw_type *mapunits = rd_kw_alloc(MAPUNITS_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(mapunits, 0, "METRES");
+    write_and_free(mapunits, fortio);
+
+    rd_kw_type *gridunit = rd_kw_alloc(GRIDUNIT_KW, 2, RD_CHAR);
+    rd_kw_iset_string8(gridunit, 0, "METRES");
+    rd_kw_iset_string8(gridunit, 1, "");
+    write_and_free(gridunit, fortio);
+
+    write_radial(fortio);
+
+    int global = 0;
+    for (int k = 0; k < nz; k++)
+        for (int j = 0; j < ny; j++)
+            for (int i = 0; i < nx; i++)
+                write_cell(fortio, i, j, k, global++, 0, (float)k,
+                           (float)(k + 1));
+
+    // LGR section: 1x1x1 LGR covering main-grid cell index 0.
+    rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(lgr_kw, 0, "LGR1");
+    write_and_free(lgr_kw, fortio);
+
+    write_dimens(fortio, 1, 1, 1);
+    write_radial(fortio);
+    write_cell(fortio, 0, 0, 0, 0, 1, 0.0f, 1.0f);
+
+    fortio_fclose(fortio);
+}
+
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
     GIVEN("An EGRID file containing a main grid and one LGR") {
         auto filename = dirname / "LGR.EGRID";
@@ -952,6 +1040,27 @@ TEST_CASE_METHOD(Tmpdir, "Load GRID file with MAPAXES", "[unittest]") {
             rd_grid_type *grid = rd_grid_alloc(filename.c_str());
             REQUIRE(grid != nullptr);
             REQUIRE(rd_grid_use_mapaxes(grid));
+            rd_grid_free(grid);
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "Load GRID file with an even-nz main grid and an LGR "
+                 "exercises the CORNERS-count branch of dual-porosity check",
+                 "[unittest]") {
+    // When the main grid's nz is even, the dual-porosity heuristic is
+    // entered. If an LGR is present, num_corners exceeds nx*ny*nz and the
+    // fracture_index is set to nx*ny*nz/2 (line 2700).
+    GIVEN("A .GRID file with a 1x1x2 main grid and a 1x1x1 LGR") {
+        auto filename = dirname / "EVEN_NZ_WITH_LGR.GRID";
+        write_grid_file_main_with_lgr(filename, 1, 1, 2);
+
+        THEN("The file loads successfully and is not dual-porosity") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE_FALSE(rd_grid_dual_grid(grid));
+            REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
             rd_grid_free(grid);
         }
     }
