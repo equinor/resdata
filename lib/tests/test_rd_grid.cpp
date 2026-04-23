@@ -1337,6 +1337,13 @@ TEST_CASE_METHOD(Tmpdir,
             REQUIRE_FALSE(rd_grid_compare(g1, g2, false, false, true));
         }
 
+        THEN("Writing the dual-porosity grid as a GRID file exercises the "
+             "fracture-cell branch of rd_cell_fwrite_GRID") {
+            auto grid_filename = dirname / "DUALP.GRID";
+            rd_grid_fwrite_GRID2(g1, grid_filename.c_str(), RD_METRIC_UNITS);
+            REQUIRE(fs::exists(grid_filename));
+        }
+
         rd_grid_free(g1);
         rd_grid_free(g2);
     }
