@@ -659,6 +659,66 @@ void write_grid_file_with_lgr_parent(const fs::path &filename,
     fortio_fclose(fortio);
 }
 
+/**
+ * Writes a minimal 1x1x1 single-porosity .GRID file (no LGR) that contains
+ * a valid MAPAXES keyword in the main grid section. This exercises the
+ * branch of rd_grid_alloc_GRID_data__ that calls rd_grid_init_mapaxes on
+ * a grid loaded from a .GRID (as opposed to .EGRID) file.
+ */
+void write_grid_file_with_mapaxes(const fs::path &filename,
+                                  const float *mapaxes) {
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    rd_kw_type *dimens = rd_kw_alloc(DIMENS_KW, 3, RD_INT);
+    rd_kw_iset_int(dimens, DIMENS_NX_INDEX, 1);
+    rd_kw_iset_int(dimens, DIMENS_NY_INDEX, 1);
+    rd_kw_iset_int(dimens, DIMENS_NZ_INDEX, 1);
+    write_and_free(dimens, fortio);
+
+    rd_kw_type *mapunits = rd_kw_alloc(MAPUNITS_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(mapunits, 0, "METRES");
+    write_and_free(mapunits, fortio);
+
+    rd_kw_type *mapaxes_kw = rd_kw_alloc(MAPAXES_KW, 6, RD_FLOAT);
+    for (int i = 0; i < 6; i++)
+        rd_kw_iset_float(mapaxes_kw, i, mapaxes[i]);
+    write_and_free(mapaxes_kw, fortio);
+
+    rd_kw_type *gridunit = rd_kw_alloc(GRIDUNIT_KW, 2, RD_CHAR);
+    rd_kw_iset_string8(gridunit, 0, "METRES");
+    rd_kw_iset_string8(gridunit, 1, "");
+    write_and_free(gridunit, fortio);
+
+    rd_kw_type *radial = rd_kw_alloc(RADIAL_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(radial, 0, "FALSE");
+    write_and_free(radial, fortio);
+
+    rd_kw_type *coords = rd_kw_alloc(COORDS_KW, 5, RD_INT);
+    rd_kw_iset_int(coords, 0, 1);
+    rd_kw_iset_int(coords, 1, 1);
+    rd_kw_iset_int(coords, 2, 1);
+    rd_kw_iset_int(coords, 3, 1);
+    rd_kw_iset_int(coords, 4, 1);
+    write_and_free(coords, fortio);
+
+    const float unit_corners[24] = {
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0,
+        0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+    };
+    rd_kw_type *corners_kw = rd_kw_alloc(CORNERS_KW, 24, RD_FLOAT);
+    for (int c = 0; c < 24; c++)
+        rd_kw_iset_float(corners_kw, c, unit_corners[c]);
+    write_and_free(corners_kw, fortio);
+
+    fortio_fclose(fortio);
+}
+
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
     GIVEN("An EGRID file containing a main grid and one LGR") {
         auto filename = dirname / "LGR.EGRID";
@@ -871,6 +931,27 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
             rd_grid_type *grid = rd_grid_alloc(filename.c_str());
             REQUIRE(grid != nullptr);
             REQUIRE_FALSE(rd_grid_use_mapaxes(grid));
+            rd_grid_free(grid);
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Load GRID file with MAPAXES", "[unittest]") {
+    GIVEN("A .GRID file with a MAPAXES keyword in the main grid section") {
+        // Rotated and translated axes so the loader stores the mapaxes and
+        // sets use_mapaxes on the grid.
+        const float mapaxes[6] = {
+            10.0f, 21.0f, // y-axis end point
+            10.0f, 20.0f, // origin
+            11.0f, 21.0f, // x-axis end point
+        };
+        auto filename = dirname / "MAPAXES.GRID";
+        write_grid_file_with_mapaxes(filename, mapaxes);
+
+        THEN("The grid loads and reports that mapaxes are in use") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_use_mapaxes(grid));
             rd_grid_free(grid);
         }
     }
