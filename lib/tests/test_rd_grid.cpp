@@ -1219,6 +1219,38 @@ TEST_CASE("Verbose rd_grid_compare on unequal grids", "[unittest]") {
     }
 }
 
+TEST_CASE_METHOD(Tmpdir,
+                 "Verbose rd_grid_compare detects coarse_group differences",
+                 "[unittest]") {
+    GIVEN("Two EGRID files differing only in coarse cell group assignment") {
+        const int nx = 2, ny = 2, nz = 2;
+        const int size = nx * ny * nz;
+
+        std::vector<int> corsnum1(size, 0);
+        corsnum1[0] = 1;
+        corsnum1[1] = 1;
+
+        std::vector<int> corsnum2(size, 0);
+        corsnum2[2] = 1;
+        corsnum2[3] = 1;
+
+        auto file1 = dirname / "CORSNUM1.EGRID";
+        auto file2 = dirname / "CORSNUM2.EGRID";
+        write_egrid_with_coarse_groups(file1, nx, ny, nz, corsnum1.data());
+        write_egrid_with_coarse_groups(file2, nx, ny, nz, corsnum2.data());
+
+        rd_grid_type *g1 = rd_grid_alloc(file1.c_str());
+        rd_grid_type *g2 = rd_grid_alloc(file2.c_str());
+
+        THEN("rd_grid_compare with verbose=true reports them as unequal") {
+            REQUIRE_FALSE(rd_grid_compare(g1, g2, false, false, true));
+        }
+
+        rd_grid_free(g1);
+        rd_grid_free(g2);
+    }
+}
+
 TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
     GIVEN("A grid") {
         rd_grid_type *grid =
