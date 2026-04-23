@@ -1365,6 +1365,14 @@ TEST_CASE_METHOD(Tmpdir,
             auto grid_filename = dirname / "DUALP.GRID";
             rd_grid_fwrite_GRID2(g1, grid_filename.c_str(), RD_METRIC_UNITS);
             REQUIRE(fs::exists(grid_filename));
+
+            AND_THEN("Re-loading the dual-porosity GRID file exercises the "
+                     "fracture-cell branch of rd_grid_set_cell_GRID") {
+                rd_grid_type *reloaded = rd_grid_alloc(grid_filename.c_str());
+                REQUIRE(reloaded != nullptr);
+                REQUIRE(rd_grid_dual_grid(reloaded));
+                rd_grid_free(reloaded);
+            }
         }
 
         rd_grid_free(g1);
