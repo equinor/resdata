@@ -181,6 +181,116 @@ void write_egrid_with_single_lgr(const fs::path &filename, int nx, int ny,
 }
 
 /**
+ * Writes an EGRID file with a main grid, a top-level LGR, and a second LGR
+ * nested inside the first. The main grid is an nx*ny*nz rectangular grid
+ * with unit cells, the outer LGR refines the main-grid cell at
+ * (host_i, host_j, host_k) into outer_nx*outer_ny*outer_nz sub-cells, and
+ * the inner LGR further refines the outer-LGR cell at
+ * (inner_host_i, inner_host_j, inner_host_k) into
+ * inner_nx*inner_ny*inner_nz sub-cells.
+ *
+ * The resulting file drives the loader through the nested-LGR paths, where
+ * the inner LGR's LGR_PARENT_KW is set to \c outer_name rather than empty.
+ */
+void write_egrid_with_nested_lgr(
+    const fs::path &filename, int nx, int ny, int nz, int host_i, int host_j,
+    int host_k, int outer_nx, int outer_ny, int outer_nz,
+    const std::string &outer_name, int inner_host_i, int inner_host_j,
+    int inner_host_k, int inner_nx, int inner_ny, int inner_nz,
+    const std::string &inner_name) {
+    rd_grid_type *main_grid =
+        rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
+    rd_grid_type *outer_grid = rd_grid_alloc_rectangular(
+        outer_nx, outer_ny, outer_nz, 1.0 / outer_nx, 1.0 / outer_ny,
+        1.0 / outer_nz, nullptr);
+    rd_grid_type *inner_grid = rd_grid_alloc_rectangular(
+        inner_nx, inner_ny, inner_nz, 1.0 / (outer_nx * inner_nx),
+        1.0 / (outer_ny * inner_ny), 1.0 / (outer_nz * inner_nz), nullptr);
+
+    const int outer_host_global = host_i + host_j * nx + host_k * nx * ny;
+    const int inner_host_global =
+        inner_host_i + inner_host_j * outer_nx +
+        inner_host_k * outer_nx * outer_ny;
+
+    auto make_gridhead = [](int gnx, int gny, int gnz, int grid_nr) {
+        rd_kw_type *kw = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+        rd_kw_scalar_set_int(kw, 0);
+        rd_kw_iset_int(kw, GRIDHEAD_TYPE_INDEX, GRIDHEAD_GRIDTYPE_CORNERPOINT);
+        rd_kw_iset_int(kw, GRIDHEAD_NX_INDEX, gnx);
+        rd_kw_iset_int(kw, GRIDHEAD_NY_INDEX, gny);
+        rd_kw_iset_int(kw, GRIDHEAD_NZ_INDEX, gnz);
+        rd_kw_iset_int(kw, GRIDHEAD_NUMRES_INDEX, 1);
+        rd_kw_iset_int(kw, GRIDHEAD_LGR_INDEX, grid_nr);
+        return kw;
+    };
+
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    auto write_grid_body = [&](rd_grid_type *grid, fortio_type *fortio) {
+        write_and_free(rd_grid_alloc_coord_kw(grid), fortio);
+        write_and_free(rd_grid_alloc_zcorn_kw(grid), fortio);
+        write_and_free(rd_grid_alloc_actnum_kw(grid), fortio);
+    };
+
+    auto write_lgr_section = [&](fortio_type *fortio, const std::string &name,
+                                 const std::string &parent, int grid_nr,
+                                 rd_grid_type *lgr, int host_global_1based) {
+        rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(lgr_kw, 0, name.c_str());
+        write_and_free(lgr_kw, fortio);
+
+        rd_kw_type *lgr_parent_kw = rd_kw_alloc(LGR_PARENT_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(lgr_parent_kw, 0, parent.c_str());
+        write_and_free(lgr_parent_kw, fortio);
+
+        write_and_free(make_gridhead(rd_grid_get_nx(lgr), rd_grid_get_ny(lgr),
+                                     rd_grid_get_nz(lgr), grid_nr),
+                       fortio);
+        write_grid_body(lgr, fortio);
+
+        const int lgr_size = rd_grid_get_global_size(lgr);
+        rd_kw_type *hostnum_kw = rd_kw_alloc(HOSTNUM_KW, lgr_size, RD_INT);
+        for (int i = 0; i < lgr_size; i++)
+            rd_kw_iset_int(hostnum_kw, i, host_global_1based);
+        write_and_free(hostnum_kw, fortio);
+
+        write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+        write_and_free(rd_kw_alloc(ENDLGR_KW, 0, RD_INT), fortio);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    rd_kw_type *filehead = rd_kw_alloc(FILEHEAD_KW, 100, RD_INT);
+    rd_kw_scalar_set_int(filehead, 0);
+    rd_kw_iset_int(filehead, FILEHEAD_VERSION_INDEX, 3);
+    rd_kw_iset_int(filehead, FILEHEAD_YEAR_INDEX, 2007);
+    rd_kw_iset_int(filehead, FILEHEAD_TYPE_INDEX,
+                   FILEHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(filehead, FILEHEAD_DUALP_INDEX, FILEHEAD_SINGLE_POROSITY);
+    rd_kw_iset_int(filehead, FILEHEAD_ORGFORMAT_INDEX,
+                   FILEHEAD_ORGTYPE_CORNERPOINT);
+    write_and_free(filehead, fortio);
+
+    write_and_free(make_gridhead(nx, ny, nz, 0), fortio);
+    write_grid_body(main_grid, fortio);
+    write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+
+    write_lgr_section(fortio, outer_name, "", 1, outer_grid,
+                      outer_host_global + 1);
+    write_lgr_section(fortio, inner_name, outer_name, 2, inner_grid,
+                      inner_host_global + 1);
+
+    fortio_fclose(fortio);
+    rd_grid_free(main_grid);
+    rd_grid_free(outer_grid);
+    rd_grid_free(inner_grid);
+}
+
+/**
  * Writes a single-grid EGRID file with a CORSNUM keyword describing coarse
  * cell groups. The grid is an nx*ny*nz rectangular grid with unit cells.
  *
@@ -434,6 +544,34 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
                 REQUIRE(copy != nullptr);
                 REQUIRE(rd_grid_get_num_lgr(copy) == 1);
                 REQUIRE(rd_grid_has_lgr(copy, "LGR1"));
+                rd_grid_free(copy);
+            }
+
+            rd_grid_free(grid);
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Load EGRID with nested LGRs", "[unittest]") {
+    GIVEN("An EGRID file with an outer LGR and an inner LGR nested in it") {
+        auto filename = dirname / "NESTED.EGRID";
+        write_egrid_with_nested_lgr(filename, 3, 3, 3, 1, 1, 1, 2, 2, 2,
+                                    "OUTER", 0, 0, 0, 2, 2, 2, "INNER");
+
+        THEN("The file can be loaded and both LGRs are accessible") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_get_num_lgr(grid) == 2);
+            REQUIRE(rd_grid_has_lgr(grid, "OUTER"));
+            REQUIRE(rd_grid_has_lgr(grid, "INNER"));
+
+            AND_THEN("Copying the grid preserves both LGRs and exercises the "
+                     "nested-parent branch of rd_grid_alloc_copy") {
+                rd_grid_type *copy = rd_grid_alloc_copy(grid);
+                REQUIRE(copy != nullptr);
+                REQUIRE(rd_grid_get_num_lgr(copy) == 2);
+                REQUIRE(rd_grid_has_lgr(copy, "OUTER"));
+                REQUIRE(rd_grid_has_lgr(copy, "INNER"));
                 rd_grid_free(copy);
             }
 
