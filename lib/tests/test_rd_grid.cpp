@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <fstream>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_grid.hpp>
@@ -807,6 +808,179 @@ void write_grid_file_main_with_lgr(const fs::path &filename, int nx, int ny,
     fortio_fclose(fortio);
 }
 
+/**
+ * Writes a minimal .GRID file containing a 1x1x1 main grid, a 1x1x1
+ * outer LGR hosted at the main-grid cell, and a 1x1x1 inner LGR whose
+ * LGR_KW has two elements so the parent name is set to \c outer_name.
+ * This drives the nested-LGR path in rd_grid_alloc_GRID that resolves
+ * the host grid via rd_grid_get_lgr when lgr_grid->parent_name != NULL.
+ */
+void write_grid_file_with_nested_lgr(const fs::path &filename,
+                                     const char *outer_name,
+                                     const char *inner_name) {
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    auto write_dimens = [&](fortio_type *fortio) {
+        rd_kw_type *dimens = rd_kw_alloc(DIMENS_KW, 3, RD_INT);
+        rd_kw_iset_int(dimens, DIMENS_NX_INDEX, 1);
+        rd_kw_iset_int(dimens, DIMENS_NY_INDEX, 1);
+        rd_kw_iset_int(dimens, DIMENS_NZ_INDEX, 1);
+        write_and_free(dimens, fortio);
+    };
+
+    auto write_radial = [&](fortio_type *fortio) {
+        rd_kw_type *radial = rd_kw_alloc(RADIAL_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(radial, 0, "FALSE");
+        write_and_free(radial, fortio);
+    };
+
+    auto write_cell = [&](fortio_type *fortio, int host_cell_1based) {
+        rd_kw_type *coords = rd_kw_alloc(COORDS_KW, 7, RD_INT);
+        rd_kw_iset_int(coords, 0, 1);
+        rd_kw_iset_int(coords, 1, 1);
+        rd_kw_iset_int(coords, 2, 1);
+        rd_kw_iset_int(coords, 3, 1);
+        rd_kw_iset_int(coords, 4, 1);
+        rd_kw_iset_int(coords, 5, host_cell_1based);
+        rd_kw_iset_int(coords, 6, 0);
+        write_and_free(coords, fortio);
+
+        const float corners[24] = {
+            0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0,
+            0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+        };
+        rd_kw_type *corners_kw = rd_kw_alloc(CORNERS_KW, 24, RD_FLOAT);
+        for (int c = 0; c < 24; c++)
+            rd_kw_iset_float(corners_kw, c, corners[c]);
+        write_and_free(corners_kw, fortio);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    write_dimens(fortio);
+
+    rd_kw_type *mapunits = rd_kw_alloc(MAPUNITS_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(mapunits, 0, "METRES");
+    write_and_free(mapunits, fortio);
+
+    rd_kw_type *gridunit = rd_kw_alloc(GRIDUNIT_KW, 2, RD_CHAR);
+    rd_kw_iset_string8(gridunit, 0, "METRES");
+    rd_kw_iset_string8(gridunit, 1, "");
+    write_and_free(gridunit, fortio);
+
+    write_radial(fortio);
+    write_cell(fortio, 0);
+
+    // Outer LGR: size-1 LGR_KW means "parent is main grid".
+    {
+        rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(lgr_kw, 0, outer_name);
+        write_and_free(lgr_kw, fortio);
+        write_dimens(fortio);
+        write_radial(fortio);
+        write_cell(fortio, 1);
+    }
+
+    // Inner LGR: size-2 LGR_KW with second element = outer_name, so the
+    // loader stores parent_name on the inner LGR and rd_grid_alloc_GRID
+    // resolves the host via rd_grid_get_lgr.
+    {
+        rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 2, RD_CHAR);
+        rd_kw_iset_string8(lgr_kw, 0, inner_name);
+        rd_kw_iset_string8(lgr_kw, 1, outer_name);
+        write_and_free(lgr_kw, fortio);
+        write_dimens(fortio);
+        write_radial(fortio);
+        write_cell(fortio, 1);
+    }
+
+    fortio_fclose(fortio);
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case dispatches on the case input kind",
+                 "[unittest]") {
+    auto basename = dirname / "CASE";
+    auto egrid_path = dirname / "CASE.EGRID";
+    auto grid_path = dirname / "CASE.GRID";
+
+    {
+        rd_grid_type *grid =
+            rd_grid_alloc_rectangular(2, 2, 2, 1.0, 1.0, 1.0, nullptr);
+        rd_grid_fwrite_EGRID2(grid, egrid_path.c_str(), RD_METRIC_UNITS);
+        rd_grid_fwrite_GRID2(grid, grid_path.c_str(), RD_METRIC_UNITS);
+        rd_grid_free(grid);
+    }
+
+    GIVEN("A path that points directly to an existing .EGRID file") {
+        THEN("rd_grid_load_case loads the grid (case 1)") {
+            rd_grid_type *grid = rd_grid_load_case(egrid_path.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
+        }
+    }
+
+    GIVEN("A path that points directly to an existing .GRID file") {
+        THEN("rd_grid_load_case loads the grid (case 1)") {
+            rd_grid_type *grid = rd_grid_load_case(grid_path.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
+        }
+    }
+
+    GIVEN("A case path with no extension (basename only)") {
+        THEN("rd_grid_load_case finds the EGRID via extension search "
+             "(case 3)") {
+            rd_grid_type *grid = rd_grid_load_case(basename.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
+        }
+    }
+
+    GIVEN("A case path pointing to a non-grid file with a .DATA extension") {
+        auto data_path = dirname / "CASE.DATA";
+        {
+            std::ofstream ofs(data_path);
+            ofs << "RUNSPEC\n";
+        }
+        THEN("rd_grid_load_case derives the basename and loads the grid "
+             "(case 3)") {
+            rd_grid_type *grid = rd_grid_load_case(data_path.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
+        }
+    }
+
+    GIVEN("A case path pointing to a non-grid file with known formatted "
+          "status") {
+        // .UNRST is an unformatted restart file: rd_get_file_type returns a
+        // recognized file type but not a grid, so case 2 searches for
+        // unformatted grids only.
+        auto unrst_path = dirname / "CASE.UNRST";
+        {
+            std::ofstream ofs(unrst_path);
+            ofs << "restart stub";
+        }
+        THEN("rd_grid_load_case searches EGRID/GRID with matching formatted "
+             "status (case 2)") {
+            rd_grid_type *grid = rd_grid_load_case(unrst_path.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
+        }
+    }
+
+    GIVEN("A case path that does not correspond to any grid on disc") {
+        auto missing_path = dirname / "NOPE";
+        THEN("rd_grid_load_case returns null") {
+            rd_grid_type *grid = rd_grid_load_case(missing_path.c_str());
+            REQUIRE(grid == nullptr);
+        }
+    }
+}
+
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
     GIVEN("An EGRID file containing a main grid and one LGR") {
         auto filename = dirname / "LGR.EGRID";
@@ -955,6 +1129,20 @@ TEST_CASE_METHOD(Tmpdir,
             REQUIRE(grid != nullptr);
             REQUIRE(rd_grid_get_num_lgr(grid) == 1);
             REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
+            rd_grid_free(grid);
+        }
+    }
+
+    GIVEN("A GRID file with a nested LGR whose parent is another LGR") {
+        auto filename = dirname / "LGR_NESTED.GRID";
+        write_grid_file_with_nested_lgr(filename, "OUTER", "INNER");
+
+        THEN("The file loads and the nested LGR is hosted by the outer LGR") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_get_num_lgr(grid) == 2);
+            REQUIRE(rd_grid_has_lgr(grid, "OUTER"));
+            REQUIRE(rd_grid_has_lgr(grid, "INNER"));
             rd_grid_free(grid);
         }
     }
