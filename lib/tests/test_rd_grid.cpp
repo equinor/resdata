@@ -901,6 +901,54 @@ void write_grid_file_with_nested_lgr(const fs::path &filename,
     fortio_fclose(fortio);
 }
 
+/**
+ * Writes a minimal formatted .FEGRID file (formatted EGRID) for a 1x1x1
+ * single-cell rectangular grid. Used to exercise the case-3 fallback in
+ * rd_grid_alloc_case_filename where neither EGRID nor GRID exists but an
+ * FEGRID does.
+ */
+void write_fegrid_minimal(const fs::path &filename) {
+    rd_grid_type *grid =
+        rd_grid_alloc_rectangular(1, 1, 1, 1.0, 1.0, 1.0, nullptr);
+
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    fortio_type *fortio = fortio_open_writer(filename.c_str(), true, false);
+
+    rd_kw_type *filehead = rd_kw_alloc(FILEHEAD_KW, 100, RD_INT);
+    rd_kw_scalar_set_int(filehead, 0);
+    rd_kw_iset_int(filehead, FILEHEAD_VERSION_INDEX, 3);
+    rd_kw_iset_int(filehead, FILEHEAD_YEAR_INDEX, 2007);
+    rd_kw_iset_int(filehead, FILEHEAD_TYPE_INDEX,
+                   FILEHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(filehead, FILEHEAD_DUALP_INDEX, FILEHEAD_SINGLE_POROSITY);
+    rd_kw_iset_int(filehead, FILEHEAD_ORGFORMAT_INDEX,
+                   FILEHEAD_ORGTYPE_CORNERPOINT);
+    write_and_free(filehead, fortio);
+
+    rd_kw_type *gridhead = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+    rd_kw_scalar_set_int(gridhead, 0);
+    rd_kw_iset_int(gridhead, GRIDHEAD_TYPE_INDEX,
+                   GRIDHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NX_INDEX, 1);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NY_INDEX, 1);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NZ_INDEX, 1);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NUMRES_INDEX, 1);
+    rd_kw_iset_int(gridhead, GRIDHEAD_LGR_INDEX, 0);
+    write_and_free(gridhead, fortio);
+
+    write_and_free(rd_grid_alloc_coord_kw(grid), fortio);
+    write_and_free(rd_grid_alloc_zcorn_kw(grid), fortio);
+    write_and_free(rd_grid_alloc_actnum_kw(grid), fortio);
+    write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+
+    fortio_fclose(fortio);
+    rd_grid_free(grid);
+}
+
 TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case dispatches on the case input kind",
                  "[unittest]") {
     auto basename = dirname / "CASE";
@@ -977,6 +1025,47 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case dispatches on the case input kind",
         THEN("rd_grid_load_case returns null") {
             rd_grid_type *grid = rd_grid_load_case(missing_path.c_str());
             REQUIRE(grid == nullptr);
+        }
+    }
+
+    GIVEN("A directory containing only a .GRID file (no .EGRID)") {
+        auto only_grid_base = dirname / "ONLYGRID";
+        auto only_grid_path = dirname / "ONLYGRID.GRID";
+        rd_grid_type *src =
+            rd_grid_alloc_rectangular(2, 2, 2, 1.0, 1.0, 1.0, nullptr);
+        rd_grid_fwrite_GRID2(src, only_grid_path.c_str(), RD_METRIC_UNITS);
+        rd_grid_free(src);
+
+        THEN("rd_grid_load_case falls back to the .GRID in case 3") {
+            rd_grid_type *grid = rd_grid_load_case(only_grid_base.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
+        }
+
+        AND_WHEN("the case path points to a non-grid file with known "
+                 "formatted status next to only a .GRID") {
+            auto unrst_path = dirname / "ONLYGRID.UNRST";
+            {
+                std::ofstream ofs(unrst_path);
+                ofs << "restart stub";
+            }
+            THEN("rd_grid_load_case falls back to the .GRID in case 2") {
+                rd_grid_type *grid = rd_grid_load_case(unrst_path.c_str());
+                REQUIRE(grid != nullptr);
+                rd_grid_free(grid);
+            }
+        }
+    }
+
+    GIVEN("A directory containing only a formatted .FEGRID file") {
+        auto fegrid_base = dirname / "ONLYFEGRID";
+        auto fegrid_path = dirname / "ONLYFEGRID.FEGRID";
+        write_fegrid_minimal(fegrid_path);
+
+        THEN("rd_grid_load_case falls back to the .FEGRID in case 3") {
+            rd_grid_type *grid = rd_grid_load_case(fegrid_base.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
         }
     }
 }
