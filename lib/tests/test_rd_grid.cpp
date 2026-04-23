@@ -301,6 +301,100 @@ void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
     rd_grid_free(grid);
 }
 
+/**
+ * Writes a minimal single-porosity .GRID file containing a 1x1x1 main grid
+ * and a 1x1x1 LGR covering the single main-grid cell. The LGR_KW is written
+ * with two elements: the LGR name followed by \c parent_name, which allows
+ * the caller to exercise the two-element branch of rd_grid_set_lgr_name_GRID.
+ *
+ * A parent_name of "" or "GLOBAL" is treated by the loader as "no parent"
+ * (main grid is parent); any other non-empty value must match an existing
+ * grid name (nested LGRs) or loading will fail.
+ */
+void write_grid_file_with_lgr_parent(const fs::path &filename,
+                                     const char *lgr_name,
+                                     const char *parent_name) {
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    auto write_dimens = [&](fortio_type *fortio, int nx, int ny, int nz) {
+        rd_kw_type *dimens = rd_kw_alloc(DIMENS_KW, 3, RD_INT);
+        rd_kw_iset_int(dimens, DIMENS_NX_INDEX, nx);
+        rd_kw_iset_int(dimens, DIMENS_NY_INDEX, ny);
+        rd_kw_iset_int(dimens, DIMENS_NZ_INDEX, nz);
+        write_and_free(dimens, fortio);
+    };
+
+    auto write_radial = [&](fortio_type *fortio) {
+        rd_kw_type *radial = rd_kw_alloc(RADIAL_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(radial, 0, "FALSE");
+        write_and_free(radial, fortio);
+    };
+
+    // Writes one cell with COORDS of size 7 (i.e. including host_cell
+    // and coarse_group info) followed by CORNERS. For the main grid the
+    // host_cell and coarse_group fields are 0 (meaning "none").
+    auto write_cell = [&](fortio_type *fortio, int i, int j, int k,
+                          int global_index, int host_cell_1based,
+                          const float *corners) {
+        rd_kw_type *coords = rd_kw_alloc(COORDS_KW, 7, RD_INT);
+        rd_kw_iset_int(coords, 0, i + 1);
+        rd_kw_iset_int(coords, 1, j + 1);
+        rd_kw_iset_int(coords, 2, k + 1);
+        rd_kw_iset_int(coords, 3, global_index + 1);
+        rd_kw_iset_int(coords, 4, 1); // active
+        rd_kw_iset_int(coords, 5, host_cell_1based);
+        rd_kw_iset_int(coords, 6, 0); // coarse group 0 => no group
+        write_and_free(coords, fortio);
+
+        rd_kw_type *corners_kw = rd_kw_alloc(CORNERS_KW, 24, RD_FLOAT);
+        for (int c = 0; c < 24; c++)
+            rd_kw_iset_float(corners_kw, c, corners[c]);
+        write_and_free(corners_kw, fortio);
+    };
+
+    // Unit cube corners (4 top + 4 bottom in x,y,z order matching the
+    // GRID format expectations). Re-used by main cell and LGR cell since
+    // the LGR perfectly overlays the single main cell.
+    const float unit_corners[24] = {
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0,
+        0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    // Main grid header
+    write_dimens(fortio, 1, 1, 1);
+
+    rd_kw_type *mapunits = rd_kw_alloc(MAPUNITS_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(mapunits, 0, "METRES");
+    write_and_free(mapunits, fortio);
+
+    rd_kw_type *gridunit = rd_kw_alloc(GRIDUNIT_KW, 2, RD_CHAR);
+    rd_kw_iset_string8(gridunit, 0, "METRES");
+    rd_kw_iset_string8(gridunit, 1, "");
+    write_and_free(gridunit, fortio);
+
+    write_radial(fortio);
+    write_cell(fortio, 0, 0, 0, 0, 0, unit_corners);
+
+    // LGR section: LGR_KW has two elements so the loader enters the
+    // rd_kw_get_size(lgr_kw) == 2 branch.
+    rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 2, RD_CHAR);
+    rd_kw_iset_string8(lgr_kw, 0, lgr_name);
+    rd_kw_iset_string8(lgr_kw, 1, parent_name);
+    write_and_free(lgr_kw, fortio);
+
+    write_dimens(fortio, 1, 1, 1);
+    write_radial(fortio);
+    write_cell(fortio, 0, 0, 0, 0, 1, unit_corners);
+
+    fortio_fclose(fortio);
+}
+
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
     GIVEN("An EGRID file containing a main grid and one LGR") {
         auto filename = dirname / "LGR.EGRID";
@@ -334,6 +428,37 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
                 rd_grid_free(reloaded);
             }
 
+            rd_grid_free(grid);
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "Load GRID file with two-element LGR_KW exercises the "
+                 "parent_name branch",
+                 "[unittest]") {
+    GIVEN("A GRID file whose LGR_KW has an empty parent name") {
+        auto filename = dirname / "LGR_EMPTY.GRID";
+        write_grid_file_with_lgr_parent(filename, "LGR1", "");
+
+        THEN("The file loads and the LGR descends from the main grid") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_get_num_lgr(grid) == 1);
+            REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
+            rd_grid_free(grid);
+        }
+    }
+
+    GIVEN("A GRID file whose LGR_KW declares parent = \"GLOBAL\"") {
+        auto filename = dirname / "LGR_GLOBAL.GRID";
+        write_grid_file_with_lgr_parent(filename, "LGR1", GLOBAL_STRING);
+
+        THEN("The file loads and the LGR descends from the main grid") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_get_num_lgr(grid) == 1);
+            REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
             rd_grid_free(grid);
         }
     }
