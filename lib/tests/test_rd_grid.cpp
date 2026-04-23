@@ -320,6 +320,20 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
             REQUIRE(rd_grid_get_nz(lgr) == 2);
             REQUIRE(rd_grid_get_lgr_nr(lgr) == 1);
 
+            AND_THEN("Round-tripping the grid through a GRID file exercises "
+                     "the 7-element coords branch of rd_grid_set_cell_GRID") {
+                auto grid_filename = dirname / "LGR.GRID";
+                rd_grid_fwrite_GRID2(grid, grid_filename.c_str(),
+                                     RD_METRIC_UNITS);
+                REQUIRE(fs::exists(grid_filename));
+
+                rd_grid_type *reloaded = rd_grid_alloc(grid_filename.c_str());
+                REQUIRE(reloaded != nullptr);
+                REQUIRE(rd_grid_get_num_lgr(reloaded) == 1);
+                REQUIRE(rd_grid_has_lgr(reloaded, "LGR1"));
+                rd_grid_free(reloaded);
+            }
+
             rd_grid_free(grid);
         }
     }
