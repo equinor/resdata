@@ -311,6 +311,120 @@ void write_egrid_with_nested_lgr(
 }
 
 /**
+ * Writes an EGRID file with a main grid and two sibling LGRs that refine
+ * two different host cells of the main grid, optionally followed by an
+ * amalgamated NNC section (NNCHEADA + NNA1 + NNA2) connecting cells of
+ * lgr1 to cells of lgr2. Useful for exercising the NNC paths between LGRs.
+ */
+void write_egrid_with_two_lgrs_and_amalgamated_nnc(
+    const fs::path &filename, int nx, int ny, int nz,
+    const std::string &lgr1_name, int host1_i, int host1_j, int host1_k,
+    const std::string &lgr2_name, int host2_i, int host2_j, int host2_k,
+    const std::vector<int> &nna1, const std::vector<int> &nna2) {
+    rd_grid_type *main_grid =
+        rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
+    rd_grid_type *lgr1_grid =
+        rd_grid_alloc_rectangular(2, 2, 2, 0.5, 0.5, 0.5, nullptr);
+    rd_grid_type *lgr2_grid =
+        rd_grid_alloc_rectangular(2, 2, 2, 0.5, 0.5, 0.5, nullptr);
+
+    const int host1_global = host1_i + host1_j * nx + host1_k * nx * ny;
+    const int host2_global = host2_i + host2_j * nx + host2_k * nx * ny;
+
+    auto make_gridhead = [](int gnx, int gny, int gnz, int grid_nr) {
+        rd_kw_type *kw = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+        rd_kw_scalar_set_int(kw, 0);
+        rd_kw_iset_int(kw, GRIDHEAD_TYPE_INDEX, GRIDHEAD_GRIDTYPE_CORNERPOINT);
+        rd_kw_iset_int(kw, GRIDHEAD_NX_INDEX, gnx);
+        rd_kw_iset_int(kw, GRIDHEAD_NY_INDEX, gny);
+        rd_kw_iset_int(kw, GRIDHEAD_NZ_INDEX, gnz);
+        rd_kw_iset_int(kw, GRIDHEAD_NUMRES_INDEX, 1);
+        rd_kw_iset_int(kw, GRIDHEAD_LGR_INDEX, grid_nr);
+        return kw;
+    };
+
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    auto write_lgr_section = [&](fortio_type *fortio, const std::string &name,
+                                 int grid_nr, rd_grid_type *lgr,
+                                 int host_global_1based) {
+        rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(lgr_kw, 0, name.c_str());
+        write_and_free(lgr_kw, fortio);
+
+        rd_kw_type *lgr_parent_kw = rd_kw_alloc(LGR_PARENT_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(lgr_parent_kw, 0, "");
+        write_and_free(lgr_parent_kw, fortio);
+
+        write_and_free(make_gridhead(rd_grid_get_nx(lgr), rd_grid_get_ny(lgr),
+                                     rd_grid_get_nz(lgr), grid_nr),
+                       fortio);
+        write_and_free(rd_grid_alloc_coord_kw(lgr), fortio);
+        write_and_free(rd_grid_alloc_zcorn_kw(lgr), fortio);
+        write_and_free(rd_grid_alloc_actnum_kw(lgr), fortio);
+
+        const int lgr_size = rd_grid_get_global_size(lgr);
+        rd_kw_type *hostnum_kw = rd_kw_alloc(HOSTNUM_KW, lgr_size, RD_INT);
+        for (int i = 0; i < lgr_size; i++)
+            rd_kw_iset_int(hostnum_kw, i, host_global_1based);
+        write_and_free(hostnum_kw, fortio);
+
+        write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+        write_and_free(rd_kw_alloc(ENDLGR_KW, 0, RD_INT), fortio);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    rd_kw_type *filehead = rd_kw_alloc(FILEHEAD_KW, 100, RD_INT);
+    rd_kw_scalar_set_int(filehead, 0);
+    rd_kw_iset_int(filehead, FILEHEAD_VERSION_INDEX, 3);
+    rd_kw_iset_int(filehead, FILEHEAD_YEAR_INDEX, 2007);
+    rd_kw_iset_int(filehead, FILEHEAD_TYPE_INDEX,
+                   FILEHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(filehead, FILEHEAD_DUALP_INDEX, FILEHEAD_SINGLE_POROSITY);
+    rd_kw_iset_int(filehead, FILEHEAD_ORGFORMAT_INDEX,
+                   FILEHEAD_ORGTYPE_CORNERPOINT);
+    write_and_free(filehead, fortio);
+
+    write_and_free(make_gridhead(nx, ny, nz, 0), fortio);
+    write_and_free(rd_grid_alloc_coord_kw(main_grid), fortio);
+    write_and_free(rd_grid_alloc_zcorn_kw(main_grid), fortio);
+    write_and_free(rd_grid_alloc_actnum_kw(main_grid), fortio);
+    write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+
+    write_lgr_section(fortio, lgr1_name, 1, lgr1_grid, host1_global + 1);
+    write_lgr_section(fortio, lgr2_name, 2, lgr2_grid, host2_global + 1);
+
+    if (!nna1.empty()) {
+        rd_kw_type *nncheada_kw =
+            rd_kw_alloc(NNCHEADA_KW, NNCHEAD_SIZE, RD_INT);
+        rd_kw_scalar_set_int(nncheada_kw, 0);
+        rd_kw_iset_int(nncheada_kw, NNCHEADA_ILOC1_INDEX, 1);
+        rd_kw_iset_int(nncheada_kw, NNCHEADA_ILOC2_INDEX, 2);
+        write_and_free(nncheada_kw, fortio);
+
+        rd_kw_type *nna1_kw = rd_kw_alloc(NNA1_KW, (int)nna1.size(), RD_INT);
+        for (size_t i = 0; i < nna1.size(); i++)
+            rd_kw_iset_int(nna1_kw, (int)i, nna1[i]);
+        write_and_free(nna1_kw, fortio);
+
+        rd_kw_type *nna2_kw = rd_kw_alloc(NNA2_KW, (int)nna2.size(), RD_INT);
+        for (size_t i = 0; i < nna2.size(); i++)
+            rd_kw_iset_int(nna2_kw, (int)i, nna2[i]);
+        write_and_free(nna2_kw, fortio);
+    }
+
+    fortio_fclose(fortio);
+    rd_grid_free(main_grid);
+    rd_grid_free(lgr1_grid);
+    rd_grid_free(lgr2_grid);
+}
+
+/**
  * Writes a single-grid EGRID file with a CORSNUM keyword describing coarse
  * cell groups. The grid is an nx*ny*nz rectangular grid with unit cells.
  *
@@ -611,6 +725,29 @@ TEST_CASE_METHOD(Tmpdir,
             rd_grid_type *grid = rd_grid_alloc(filename.c_str());
             REQUIRE(grid != nullptr);
             REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
+            rd_grid_free(grid);
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "Load EGRID with amalgamated NNCs between two LGRs",
+                 "[unittest]") {
+    // NNCHEADA + NNA1 + NNA2 describe NNCs between two different LGRs and
+    // drive the amalgamated path rd_grid_init_nnc_amalgamated.
+    const std::vector<int> nna1 = {1};
+    const std::vector<int> nna2 = {1};
+
+    GIVEN("An EGRID file with two LGRs and an amalgamated NNC section") {
+        auto filename = dirname / "LGR_AMALGAMATED_NNC.EGRID";
+        write_egrid_with_two_lgrs_and_amalgamated_nnc(
+            filename, 3, 3, 3, "LGR1", 0, 0, 0, "LGR2", 2, 2, 2, nna1, nna2);
+
+        THEN("The file loads and both LGRs are present") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
+            REQUIRE(rd_grid_has_lgr(grid, "LGR2"));
             rd_grid_free(grid);
         }
     }
