@@ -428,6 +428,15 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
                 rd_grid_free(reloaded);
             }
 
+            AND_THEN("Copying the grid preserves the LGR and exercises the "
+                     "LGR-copy loop in rd_grid_alloc_copy") {
+                rd_grid_type *copy = rd_grid_alloc_copy(grid);
+                REQUIRE(copy != nullptr);
+                REQUIRE(rd_grid_get_num_lgr(copy) == 1);
+                REQUIRE(rd_grid_has_lgr(copy, "LGR1"));
+                rd_grid_free(copy);
+            }
+
             rd_grid_free(grid);
         }
     }
