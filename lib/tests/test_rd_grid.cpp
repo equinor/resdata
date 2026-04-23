@@ -245,6 +245,62 @@ void write_egrid_with_coarse_groups(const fs::path &filename, int nx, int ny,
     rd_grid_free(grid);
 }
 
+/**
+ * Writes a single-grid EGRID file marked as dual porosity. The geometry
+ * is an nx*ny*nz rectangular grid with unit cells; the caller-supplied
+ * ACTNUM uses the dual-porosity bitfield encoding, where each entry is a
+ * combination of CELL_ACTIVE_MATRIX (1) and CELL_ACTIVE_FRACTURE (2).
+ */
+void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
+                               int nz, const int *actnum) {
+    rd_grid_type *grid =
+        rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
+
+    auto write_and_free = [](rd_kw_type *kw, fortio_type *fortio) {
+        rd_kw_fwrite(kw, fortio);
+        rd_kw_free(kw);
+    };
+
+    fortio_type *fortio =
+        fortio_open_writer(filename.c_str(), false, RD_ENDIAN_FLIP);
+
+    rd_kw_type *filehead = rd_kw_alloc(FILEHEAD_KW, 100, RD_INT);
+    rd_kw_scalar_set_int(filehead, 0);
+    rd_kw_iset_int(filehead, FILEHEAD_VERSION_INDEX, 3);
+    rd_kw_iset_int(filehead, FILEHEAD_YEAR_INDEX, 2007);
+    rd_kw_iset_int(filehead, FILEHEAD_TYPE_INDEX,
+                   FILEHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(filehead, FILEHEAD_DUALP_INDEX, FILEHEAD_DUAL_POROSITY);
+    rd_kw_iset_int(filehead, FILEHEAD_ORGFORMAT_INDEX,
+                   FILEHEAD_ORGTYPE_CORNERPOINT);
+    write_and_free(filehead, fortio);
+
+    rd_kw_type *gridhead = rd_kw_alloc(GRIDHEAD_KW, GRIDHEAD_SIZE, RD_INT);
+    rd_kw_scalar_set_int(gridhead, 0);
+    rd_kw_iset_int(gridhead, GRIDHEAD_TYPE_INDEX,
+                   GRIDHEAD_GRIDTYPE_CORNERPOINT);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NX_INDEX, nx);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NY_INDEX, ny);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NZ_INDEX, nz);
+    rd_kw_iset_int(gridhead, GRIDHEAD_NUMRES_INDEX, 1);
+    rd_kw_iset_int(gridhead, GRIDHEAD_LGR_INDEX, 0);
+    write_and_free(gridhead, fortio);
+
+    write_and_free(rd_grid_alloc_coord_kw(grid), fortio);
+    write_and_free(rd_grid_alloc_zcorn_kw(grid), fortio);
+
+    const int size = nx * ny * nz;
+    rd_kw_type *actnum_kw = rd_kw_alloc(ACTNUM_KW, size, RD_INT);
+    for (int i = 0; i < size; i++)
+        rd_kw_iset_int(actnum_kw, i, actnum[i]);
+    write_and_free(actnum_kw, fortio);
+
+    write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+
+    fortio_fclose(fortio);
+    rd_grid_free(grid);
+}
+
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
     GIVEN("An EGRID file containing a main grid and one LGR") {
         auto filename = dirname / "LGR.EGRID";
@@ -1238,6 +1294,41 @@ TEST_CASE_METHOD(Tmpdir,
         auto file2 = dirname / "CORSNUM2.EGRID";
         write_egrid_with_coarse_groups(file1, nx, ny, nz, corsnum1.data());
         write_egrid_with_coarse_groups(file2, nx, ny, nz, corsnum2.data());
+
+        rd_grid_type *g1 = rd_grid_alloc(file1.c_str());
+        rd_grid_type *g2 = rd_grid_alloc(file2.c_str());
+
+        THEN("rd_grid_compare with verbose=true reports them as unequal") {
+            REQUIRE_FALSE(rd_grid_compare(g1, g2, false, false, true));
+        }
+
+        rd_grid_free(g1);
+        rd_grid_free(g2);
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "Verbose rd_grid_compare detects fracture active_index "
+                 "differences on dual-porosity grids",
+                 "[unittest]") {
+    GIVEN("Two dual-porosity EGRID files differing in fracture actnum") {
+        const int nx = 2, ny = 2, nz = 2;
+        const int size = nx * ny * nz;
+
+        // Both grids have the same set of matrix-active cells so that
+        // active_index[MATRIX_INDEX] matches cell-for-cell. The fracture
+        // activity differs in the first cell (2+1=3 vs 1), which shifts
+        // active_index[FRACTURE_INDEX] for every fracture-active cell
+        // that follows.
+        std::vector<int> actnum1(size, CELL_ACTIVE_MATRIX |
+                                           CELL_ACTIVE_FRACTURE);
+        std::vector<int> actnum2 = actnum1;
+        actnum2[0] = CELL_ACTIVE_MATRIX;
+
+        auto file1 = dirname / "DUALP1.EGRID";
+        auto file2 = dirname / "DUALP2.EGRID";
+        write_egrid_dual_porosity(file1, nx, ny, nz, actnum1.data());
+        write_egrid_dual_porosity(file2, nx, ny, nz, actnum2.data());
 
         rd_grid_type *g1 = rd_grid_alloc(file1.c_str());
         rd_grid_type *g2 = rd_grid_alloc(file2.c_str());
