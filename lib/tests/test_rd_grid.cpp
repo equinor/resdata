@@ -2323,6 +2323,46 @@ TEST_CASE_METHOD(Tmpdir,
         rd_grid_free(g1);
         rd_grid_free(g2);
     }
+
+    GIVEN("An EGRID with two coarse groups and another with just one") {
+        const int nx = 2, ny = 2, nz = 2;
+        const int size = nx * ny * nz;
+
+        std::vector<int> corsnum_two(size, 0);
+        corsnum_two[0] = 1;
+        corsnum_two[1] = 1;
+        corsnum_two[2] = 2;
+        corsnum_two[3] = 2;
+
+        std::vector<int> corsnum_one(size, 0);
+        corsnum_one[0] = 1;
+        corsnum_one[1] = 1;
+        corsnum_one[2] = 1;
+        corsnum_one[3] = 1;
+
+        auto file_two = dirname / "CORSNUM_TWO.EGRID";
+        auto file_one = dirname / "CORSNUM_ONE.EGRID";
+        write_egrid_with_coarse_groups(file_two, nx, ny, nz,
+                                       corsnum_two.data());
+        write_egrid_with_coarse_groups(file_one, nx, ny, nz,
+                                       corsnum_one.data());
+
+        rd_grid_type *g_two = rd_grid_alloc(file_two.c_str());
+        rd_grid_type *g_one = rd_grid_alloc(file_one.c_str());
+
+        THEN("rd_grid_compare_coarse_cells takes the unequal-count branch") {
+            REQUIRE_FALSE(rd_grid_compare(g_two, g_one, false, false, true));
+        }
+
+        AND_THEN(
+            "Comparing the two-group grid with itself enters the equal-count "
+            "loop body") {
+            REQUIRE(rd_grid_compare(g_two, g_two, false, false, true));
+        }
+
+        rd_grid_free(g_two);
+        rd_grid_free(g_one);
+    }
 }
 
 TEST_CASE_METHOD(Tmpdir,
