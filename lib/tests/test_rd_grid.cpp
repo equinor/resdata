@@ -362,7 +362,9 @@ void write_egrid_with_coarse_groups(const fs::path &filename, int nx, int ny,
  * combination of CELL_ACTIVE_MATRIX (1) and CELL_ACTIVE_FRACTURE (2).
  */
 void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
-                               int nz, const int *actnum) {
+                               int nz, const int *actnum,
+                               const std::vector<int> &nnc1 = {},
+                               const std::vector<int> &nnc2 = {}) {
     rd_grid_type *grid =
         rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
 
@@ -406,6 +408,24 @@ void write_egrid_dual_porosity(const fs::path &filename, int nx, int ny,
     write_and_free(actnum_kw, fortio);
 
     write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
+
+    if (!nnc1.empty()) {
+        rd_kw_type *nnchead_kw = rd_kw_alloc(NNCHEAD_KW, NNCHEAD_SIZE, RD_INT);
+        rd_kw_scalar_set_int(nnchead_kw, 0);
+        rd_kw_iset_int(nnchead_kw, NNCHEAD_NUMNNC_INDEX, (int)nnc1.size());
+        rd_kw_iset_int(nnchead_kw, NNCHEAD_LGR_INDEX, 0);
+        write_and_free(nnchead_kw, fortio);
+
+        rd_kw_type *nnc1_kw = rd_kw_alloc(NNC1_KW, (int)nnc1.size(), RD_INT);
+        for (size_t i = 0; i < nnc1.size(); i++)
+            rd_kw_iset_int(nnc1_kw, (int)i, nnc1[i]);
+        write_and_free(nnc1_kw, fortio);
+
+        rd_kw_type *nnc2_kw = rd_kw_alloc(NNC2_KW, (int)nnc2.size(), RD_INT);
+        for (size_t i = 0; i < nnc2.size(); i++)
+            rd_kw_iset_int(nnc2_kw, (int)i, nnc2[i]);
+        write_and_free(nnc2_kw, fortio);
+    }
 
     fortio_fclose(fortio);
     rd_grid_free(grid);
@@ -1727,6 +1747,37 @@ TEST_CASE_METHOD(Tmpdir,
 
         rd_grid_free(g1);
         rd_grid_free(g2);
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "Dual-porosity EGRID with NNC to a fracture cell breaks out "
+                 "of the NNC loop",
+                 "[unittest]") {
+    // Dual porosity encodes a file with nz (file) = 2 * nz (grid). After
+    // loading, grid->size = nx*ny*(nz/2). In the file, 1-based cell indices
+    // greater than grid->size refer to fracture cells, and the NNC loop is
+    // expected to break out of the loop as soon as such an index is seen.
+    const int nx = 1, ny = 1, nz = 4; // 2 matrix + 2 fracture layers
+    const int size = nx * ny * nz;
+    std::vector<int> actnum(size, CELL_ACTIVE_MATRIX | CELL_ACTIVE_FRACTURE);
+
+    // First NNC connects two matrix cells (valid); the second references a
+    // fracture cell index > grid->size (= nx*ny*nz/2 = 2) to trigger the
+    // break.
+    const std::vector<int> nnc1 = {1, 3}; // matrix 1, fracture 3 (1-based)
+    const std::vector<int> nnc2 = {2, 4};
+
+    GIVEN("A dual-porosity EGRID with NNCs referencing fracture cells") {
+        auto filename = dirname / "DUALP_NNC.EGRID";
+        write_egrid_dual_porosity(filename, nx, ny, nz, actnum.data(), nnc1,
+                                  nnc2);
+
+        THEN("The file loads and the NNC loop breaks on the fracture index") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            rd_grid_free(grid);
+        }
     }
 }
 
