@@ -98,7 +98,9 @@ void write_egrid_with_single_lgr(const fs::path &filename, int nx, int ny,
                                  int nz, int lgr_nx, int lgr_ny, int lgr_nz,
                                  int host_i, int host_j, int host_k,
                                  const std::string &lgr_name,
-                                 const float *mapaxes = nullptr) {
+                                 const float *mapaxes = nullptr,
+                                 const std::vector<int> &nncg = {},
+                                 const std::vector<int> &nncl = {}) {
     rd_grid_type *main_grid =
         rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     rd_grid_type *lgr_grid = rd_grid_alloc_rectangular(
@@ -174,6 +176,24 @@ void write_egrid_with_single_lgr(const fs::path &filename, int nx, int ny,
 
     write_and_free(rd_kw_alloc(ENDGRID_KW, 0, RD_INT), fortio);
     write_and_free(rd_kw_alloc(ENDLGR_KW, 0, RD_INT), fortio);
+
+    if (!nncg.empty()) {
+        rd_kw_type *nnchead_kw = rd_kw_alloc(NNCHEAD_KW, NNCHEAD_SIZE, RD_INT);
+        rd_kw_scalar_set_int(nnchead_kw, 0);
+        rd_kw_iset_int(nnchead_kw, NNCHEAD_NUMNNC_INDEX, (int)nncg.size());
+        rd_kw_iset_int(nnchead_kw, NNCHEAD_LGR_INDEX, 1);
+        write_and_free(nnchead_kw, fortio);
+
+        rd_kw_type *nncg_kw = rd_kw_alloc(NNCG_KW, (int)nncg.size(), RD_INT);
+        for (size_t i = 0; i < nncg.size(); i++)
+            rd_kw_iset_int(nncg_kw, (int)i, nncg[i]);
+        write_and_free(nncg_kw, fortio);
+
+        rd_kw_type *nncl_kw = rd_kw_alloc(NNCL_KW, (int)nncl.size(), RD_INT);
+        for (size_t i = 0; i < nncl.size(); i++)
+            rd_kw_iset_int(nncl_kw, (int)i, nncl[i]);
+        write_and_free(nncl_kw, fortio);
+    }
 
     fortio_fclose(fortio);
     rd_grid_free(main_grid);
@@ -567,6 +587,30 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
                 rd_grid_free(copy);
             }
 
+            rd_grid_free(grid);
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "Load EGRID with NNCs between the main grid and an LGR",
+                 "[unittest]") {
+    // The NNCHEAD section for the LGR references global-grid cells via NNCG
+    // and LGR cells via NNCL. Loading exercises the LGR branch of
+    // rd_grid_init_nnc.
+    const std::vector<int> nncg = {1};
+    const std::vector<int> nncl = {1};
+
+    GIVEN("An EGRID file with a single LGR and an NNCG/NNCL pair") {
+        auto filename = dirname / "LGR_NNC.EGRID";
+        write_egrid_with_single_lgr(filename, 3, 3, 3, 2, 2, 2, 1, 1, 1,
+                                    "LGR1", nullptr, nncg, nncl);
+
+        THEN("The file loads and the NNCG/NNCL keywords are attached to the "
+             "LGR's connections") {
+            rd_grid_type *grid = rd_grid_alloc(filename.c_str());
+            REQUIRE(grid != nullptr);
+            REQUIRE(rd_grid_has_lgr(grid, "LGR1"));
             rd_grid_free(grid);
         }
     }
