@@ -1308,6 +1308,29 @@ TEST_CASE_METHOD(Tmpdir,
 }
 
 TEST_CASE_METHOD(Tmpdir,
+                 "Verbose rd_grid_compare with include_lgr detects host_cell "
+                 "differences in LGR cells",
+                 "[unittest]") {
+    GIVEN("Two EGRID files with identical main grids but LGRs attached to "
+          "different host cells") {
+        auto file1 = dirname / "LGR_HOST1.EGRID";
+        auto file2 = dirname / "LGR_HOST2.EGRID";
+        write_egrid_with_single_lgr(file1, 3, 3, 3, 2, 2, 2, 0, 0, 0, "LGR1");
+        write_egrid_with_single_lgr(file2, 3, 3, 3, 2, 2, 2, 1, 1, 1, "LGR1");
+
+        rd_grid_type *g1 = rd_grid_alloc(file1.c_str());
+        rd_grid_type *g2 = rd_grid_alloc(file2.c_str());
+
+        THEN("rd_grid_compare with include_lgr=true detects the difference") {
+            REQUIRE_FALSE(rd_grid_compare(g1, g2, true, false, true));
+        }
+
+        rd_grid_free(g1);
+        rd_grid_free(g2);
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
                  "Verbose rd_grid_compare detects fracture active_index "
                  "differences on dual-porosity grids",
                  "[unittest]") {
