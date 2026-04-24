@@ -36,5 +36,10 @@ int rd_coarse_cell_iget_active_value(const rd_coarse_cell_type *coarse_cell,
 int rd_coarse_cell_get_num_active(const rd_coarse_cell_type *coarse_cell);
 #ifdef __cplusplus
 }
+
+#include <memory>
+
+using rd_coarse_cell_ptr =
+    std::unique_ptr<rd_coarse_cell_type, decltype(&rd_coarse_cell_free)>;
 #endif
 #endif
