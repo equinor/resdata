@@ -719,7 +719,7 @@ struct rd_grid_struct {
         LGR_list; /* a vector of rd_grid instances for LGRs. The index
                      corresponds to the order LGRs are read from file.
                      The vector is empty except for the main grid.*/
-    int_vector_type *
+    std::vector<int>
         lgr_index_map; /* a vector that maps LGR-nr for EGRID files to index into the LGR_list.*/
     std::unordered_map<std::string, rd_grid_type *>
         LGR_hash; /* a hash of pointers to rd_grid instances - for name based lookup of lgr. */
@@ -1343,11 +1343,6 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
         grid->use_mapaxes = false;
     }
 
-    if (RD_GRID_MAINGRID_LGR_NR == lgr_nr) { /* this is the main grid */
-        grid->lgr_index_map = int_vector_alloc(0, 0);
-    } else {
-        grid->lgr_index_map = NULL;
-    }
     grid->name = "";
     grid->parent_grid = NULL;
     grid->coarse_cells = vector_alloc_new();
@@ -1844,10 +1839,9 @@ static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
 
 static void rd_grid_add_lgr(rd_grid_type *main_grid, rd_grid_type *lgr_grid) {
     main_grid->LGR_list.emplace_back(lgr_grid, &rd_grid_free);
-    if (lgr_grid->lgr_nr >= int_vector_size(main_grid->lgr_index_map))
-        int_vector_resize(main_grid->lgr_index_map, lgr_grid->lgr_nr + 1, 0);
-    int_vector_iset(main_grid->lgr_index_map, lgr_grid->lgr_nr,
-                    main_grid->LGR_list.size() - 1);
+    if (lgr_grid->lgr_nr >= static_cast<int>(main_grid->lgr_index_map.size()))
+        main_grid->lgr_index_map.resize(lgr_grid->lgr_nr + 1, 0);
+    main_grid->lgr_index_map[lgr_grid->lgr_nr] = main_grid->LGR_list.size() - 1;
     main_grid->LGR_hash[lgr_grid->name] = lgr_grid;
 }
 
@@ -3669,9 +3663,6 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
 void rd_grid_free(rd_grid_type *grid) {
     rd_grid_free_cells(grid);
 
-    if (RD_GRID_MAINGRID_LGR_NR == grid->lgr_nr) { /* This is the main grid. */
-        int_vector_free(grid->lgr_index_map);
-    }
     if (grid->coord_kw != NULL)
         rd_kw_free(grid->coord_kw);
 
@@ -4198,7 +4189,7 @@ bool rd_grid_has_lgr(const rd_grid_type *main_grid, const char *__lgr_name) {
 bool rd_grid_has_lgr_nr(const rd_grid_type *main_grid, int lgr_nr) {
     __assert_main_grid(main_grid);
     {
-        if (int_vector_size(main_grid->lgr_index_map) > lgr_nr)
+        if ((int)main_grid->lgr_index_map.size() > lgr_nr)
             return true;
         else
             return false;
@@ -4251,7 +4242,7 @@ rd_grid_type *rd_grid_get_lgr_from_lgr_nr(const rd_grid_type *main_grid,
                                           int lgr_nr) {
     __assert_main_grid(main_grid);
     {
-        int lgr_index = int_vector_iget(main_grid->lgr_index_map, lgr_nr);
+        int lgr_index = main_grid->lgr_index_map.at(lgr_nr);
         return main_grid->LGR_list.at(lgr_index).get();
     }
 }
@@ -4291,7 +4282,7 @@ const char *rd_grid_get_lgr_name(const rd_grid_type *rd_grid, int lgr_nr) {
     if (lgr_nr == 0)
         return rd_grid_get_name(rd_grid);
     {
-        int lgr_index = int_vector_iget(rd_grid->lgr_index_map, lgr_nr);
+        int lgr_index = rd_grid->lgr_index_map.at(lgr_nr);
         return rd_grid_iget_lgr_name(rd_grid, lgr_index);
     }
 }
