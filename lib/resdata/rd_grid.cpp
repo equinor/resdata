@@ -5282,7 +5282,7 @@ void rd_grid_global_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
 static void rd_grid_init_hostnum_data(const rd_grid_type *grid, int *hostnum) {
     for (int i = 0; i < grid->size; i++) {
         const rd_cell_type *cell = rd_grid_get_cell(grid, i);
-        hostnum[i] = cell->host_cell;
+        hostnum[i] = cell->host_cell + 1;
     }
 }
 
@@ -5331,6 +5331,8 @@ static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
         if (nnc_info) {
             const nnc_vector_type *nnc_vector =
                 nnc_info_get_self_vector(nnc_info);
+            if (!nnc_vector)
+                continue;
             int i;
             for (i = 0; i < nnc_vector_get_size(nnc_vector); i++) {
                 int nnc_index = nnc_vector_iget_nnc_index(nnc_vector, i);

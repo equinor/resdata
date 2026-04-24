@@ -26,6 +26,10 @@ TEST_CASE("rd_grid_compare on unequal grids", "[unittest]") {
         auto g2 = make_rectangular_grid(2, 2, 2, 1, 1, 1, actnum2);
 
         THEN("the grids are unequal") { REQUIRE_FALSE(grid_equal(g1, g2)); }
+        THEN("Each grid is equal to itself") {
+            REQUIRE(grid_equal(g1, g1));
+            REQUIRE(grid_equal(g2, g2));
+        }
     }
 
     GIVEN("Two grids with identical actnum but different cell corners") {
@@ -34,6 +38,10 @@ TEST_CASE("rd_grid_compare on unequal grids", "[unittest]") {
             2, 2, 2, {{0, 0, 0, 0, 5.0}, {1, 1, 1, 7, 42.0}});
 
         THEN("The grids are unequal") { REQUIRE_FALSE(grid_equal(g1, g2)); }
+        THEN("Each grid is equal to itself") {
+            REQUIRE(grid_equal(g1, g1));
+            REQUIRE(grid_equal(g2, g2));
+        }
     }
 
     GIVEN("Two grids with identical geometry and actnum") {
@@ -41,6 +49,10 @@ TEST_CASE("rd_grid_compare on unequal grids", "[unittest]") {
         auto g2 = generate_coordkw_grid(2, 2, 2, {});
 
         THEN("the grids are equal") { REQUIRE(grid_equal(g1, g2)); }
+        THEN("Each grid is equal to itself") {
+            REQUIRE(grid_equal(g1, g1));
+            REQUIRE(grid_equal(g2, g2));
+        }
     }
 
     GIVEN("Two grids differing in NNC information") {
@@ -51,6 +63,10 @@ TEST_CASE("rd_grid_compare on unequal grids", "[unittest]") {
         THEN("The grids are unequal") { REQUIRE_FALSE(grid_equal(g1, g2)); }
         THEN("The grids are equal with include_nnc=false") {
             REQUIRE(rd_grid_compare(g1.get(), g2.get(), true, false, true));
+        }
+        THEN("Each grid is equal to itself") {
+            REQUIRE(grid_equal(g1, g1));
+            REQUIRE(grid_equal(g2, g2));
         }
     }
 }
@@ -77,6 +93,11 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_compare detects coarse_group differences",
             load_egrid_with_coarse_groups(file2, nx, ny, nz, corsnum2.data());
 
         THEN("The grids are unequal") { REQUIRE_FALSE(grid_equal(g1, g2)); }
+
+        THEN("Each grid is equal to itself") {
+            REQUIRE(grid_equal(g1, g1));
+            REQUIRE(grid_equal(g2, g2));
+        }
     }
 
     GIVEN("An EGRID with two coarse groups and another with just one") {
@@ -103,6 +124,28 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_compare detects coarse_group differences",
                                                 corsnum1.data());
 
         THEN("The grids are unequal") { REQUIRE_FALSE(grid_equal(g1, g2)); }
+
+        THEN("Each grid is equal to itself") {
+            REQUIRE(grid_equal(g1, g1));
+            REQUIRE(grid_equal(g2, g2));
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "rd_grid_compare with include_lgr detects host_cell "
+                 "differences in LGR cells",
+                 "[unittest]") {
+    GIVEN("Two EGRID files with identical main grids but LGRs attached to "
+          "different host cells") {
+        auto file1 = dirname / "LGR_HOST1.EGRID";
+        auto file2 = dirname / "LGR_HOST2.EGRID";
+        auto g1 = load_egrid_with_single_lgr(file1, 3, 3, 3, 2, 2, 2, 0, 0, 0,
+                                             "LGR1");
+        auto g2 = load_egrid_with_single_lgr(file2, 3, 3, 3, 2, 2, 2, 1, 1, 1,
+                                             "LGR1");
+
+        THEN("The grids are not equal") { REQUIRE_FALSE(grid_equal(g1, g2)); }
 
         THEN("Each grid is equal to itself") {
             REQUIRE(grid_equal(g1, g1));

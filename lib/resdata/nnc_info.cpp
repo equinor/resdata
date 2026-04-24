@@ -38,7 +38,7 @@ void vector_util_fprintf(const std::vector<T> &vec, FILE *stream,
 
 struct nnc_info_struct {
     UTIL_TYPE_ID_DECLARATION;
-    vector_type *lgr_list; /*List of int vector * for nnc connections for LGRs*/
+    vector_type *lgr_list; /*List of nnc_vectors for LGRs*/
     int_vector_type *
         lgr_index_map; /* A vector that maps LGR-nr to index into the LGR_list.*/
     int lgr_nr; /* The lgr_nr of the cell holding this nnc_info structure. */

@@ -195,6 +195,26 @@ TEST_CASE_METHOD(Tmpdir, "Writing every grid to disk", "[unittest]") {
 
     for (auto &entry : grids) {
         INFO("writing grid: " << entry.label);
+
+        SECTION(
+            ("fwrite_EGRID then rd_grid_alloc (" + entry.label + ")").c_str()) {
+            auto filename = dirname / ("WRITE_" + entry.label + ".EGRID");
+            rd_grid_fwrite_EGRID(entry.grid.get(), filename.c_str(), true);
+            REQUIRE(fs::exists(filename));
+            auto reloaded = read_grid(filename);
+            REQUIRE(reloaded != nullptr);
+        }
+
+        SECTION(("fwrite_EGRID2 then rd_grid_alloc (" + entry.label + ")")
+                    .c_str()) {
+            auto filename = dirname / ("WRITE2_" + entry.label + ".EGRID");
+            rd_grid_fwrite_EGRID2(entry.grid.get(), filename.c_str(),
+                                  RD_METRIC_UNITS);
+            REQUIRE(fs::exists(filename));
+            auto reloaded = read_grid(filename);
+            REQUIRE(reloaded != nullptr);
+        }
+
         SECTION(
             ("fprintf_grdecl2 produces a non-empty file (" + entry.label + ")")
                 .c_str()) {
