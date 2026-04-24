@@ -25,25 +25,24 @@ inline std::ostream &operator<<(std::ostream &os,
     return os;
 }
 
-static std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>
-generate_coordkw_grid(
+static rd_grid_ptr generate_coordkw_grid(
     int num_x, int num_y, int num_z,
     const std::vector<std::tuple<int, int, int, int, double>> &z_vector) {
-    rd_kw_type *coord_kw =
-        rd_kw_alloc(COORD_KW, RD_GRID_COORD_SIZE(num_x, num_y), RD_FLOAT);
-    rd_kw_type *zcorn_kw = rd_kw_alloc(
-        ZCORN_KW, RD_GRID_ZCORN_SIZE(num_x, num_y, num_z), RD_FLOAT);
+    auto coord_kw =
+        make_rd_kw(COORD_KW, RD_GRID_COORD_SIZE(num_x, num_y), RD_FLOAT);
+    auto zcorn_kw =
+        make_rd_kw(ZCORN_KW, RD_GRID_ZCORN_SIZE(num_x, num_y, num_z), RD_FLOAT);
 
     for (int j = 0; j < num_y; j++) {
         for (int i = 0; i < num_x; i++) {
             int offset = 6 * (i + j * num_x);
-            rd_kw_iset_float(coord_kw, offset, i);
-            rd_kw_iset_float(coord_kw, offset + 1, j);
-            rd_kw_iset_float(coord_kw, offset + 2, -1);
+            rd_kw_iset_float(coord_kw.get(), offset, i);
+            rd_kw_iset_float(coord_kw.get(), offset + 1, j);
+            rd_kw_iset_float(coord_kw.get(), offset + 2, -1);
 
-            rd_kw_iset_float(coord_kw, offset + 3, i);
-            rd_kw_iset_float(coord_kw, offset + 4, j);
-            rd_kw_iset_float(coord_kw, offset + 5, -1);
+            rd_kw_iset_float(coord_kw.get(), offset + 3, i);
+            rd_kw_iset_float(coord_kw.get(), offset + 4, j);
+            rd_kw_iset_float(coord_kw.get(), offset + 5, -1);
 
             for (int k = 0; k < num_z; k++) {
                 for (int c = 0; c < 4; c++) {
@@ -54,8 +53,8 @@ generate_coordkw_grid(
                     double z1 = k;
                     double z2 = k + 1;
 
-                    rd_kw_iset_float(zcorn_kw, zi1, z1);
-                    rd_kw_iset_float(zcorn_kw, zi2, z2);
+                    rd_kw_iset_float(zcorn_kw.get(), zi1, z1);
+                    rd_kw_iset_float(zcorn_kw.get(), zi2, z2);
                 }
             }
         }
@@ -63,17 +62,12 @@ generate_coordkw_grid(
 
     for (const auto &[i, j, k, c, z] : z_vector) {
         auto index = rd_grid_zcorn_index__(num_x, num_y, i, j, k, c);
-        rd_kw_iset_float(zcorn_kw, index, z);
+        rd_kw_iset_float(zcorn_kw.get(), index, z);
     }
 
-    std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)> grid(
-        rd_grid_alloc_GRDECL_kw(num_x, num_y, num_z, zcorn_kw, coord_kw, NULL,
-                                NULL),
-        rd_grid_free);
-    rd_kw_free(coord_kw);
-    rd_kw_free(zcorn_kw);
-
-    return grid;
+    return {rd_grid_alloc_GRDECL_kw(num_x, num_y, num_z, zcorn_kw.get(),
+                                    coord_kw.get(), NULL, NULL),
+            &rd_grid_free};
 }
 
 TEST_CASE("Layer getters and setters", "[layer]") {

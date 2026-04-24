@@ -544,6 +544,10 @@ rd_kw_type *rd_kw_alloc(const char *header, int size, rd_data_type data_type) {
     return rd_kw;
 }
 
+rd_kw_ptr make_rd_kw(const char *header, int size, rd_data_type data_type) {
+    return {rd_kw_alloc(header, size, data_type), rd_kw_free};
+}
+
 rd_kw_type *rd_kw_alloc_new_shared(const char *header, int size,
                                    rd_data_type data_type, void *data) {
     rd_kw_type *rd_kw;

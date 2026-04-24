@@ -11,6 +11,7 @@
 #include <resdata/rd_type.hpp>
 
 #ifdef __cplusplus
+#include <memory>
 extern "C" {
 #endif
 
@@ -242,5 +243,9 @@ rd_type_enum rd_kw_get_type(const rd_kw_type *);
 
 #ifdef __cplusplus
 }
+#endif
+#ifdef __cplusplus
+using rd_kw_ptr = std::unique_ptr<rd_kw_type, decltype(&rd_kw_free)>;
+rd_kw_ptr make_rd_kw(const char *header, int size, rd_data_type data_type);
 #endif
 #endif

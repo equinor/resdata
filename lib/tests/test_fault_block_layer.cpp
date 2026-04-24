@@ -8,8 +8,7 @@
 
 #include <catch2/catch.hpp>
 
-static std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>
-make_grid(int nx, int ny, int nz) {
+static rd_grid_ptr make_grid(int nx, int ny, int nz) {
     return {rd_grid_alloc_rectangular(nx, ny, nz, 1, 1, 1, nullptr),
             rd_grid_free};
 }
@@ -18,11 +17,6 @@ static std::unique_ptr<fault_block_layer_type,
                        decltype(&fault_block_layer_free)>
 make_fb_layer(const rd_grid_type *grid, int k) {
     return {fault_block_layer_alloc(grid, k), fault_block_layer_free};
-}
-
-static std::unique_ptr<rd_kw_type, decltype(&rd_kw_free)>
-make_kw(const char *header, int size, rd_data_type data_type) {
-    return {rd_kw_alloc(header, size, data_type), rd_kw_free};
 }
 
 TEST_CASE("fault_block_layer alloc errors", "[fault_block_layer]") {
@@ -180,7 +174,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
              *   0 0 0 0 0
              *   0 0 0 0 0
              */
-            auto kw = make_kw("FAULTBLK", nx * ny * nz, RD_INT);
+            auto kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_INT);
             rd_kw_iset_int(kw.get(), idx(0, 0), 1);
             rd_kw_iset_int(kw.get(), idx(1, 0), 1);
             rd_kw_iset_int(kw.get(), idx(1, 1), 2);
@@ -246,7 +240,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
             WHEN("Exporting to a correctly sized integer keyword") {
                 fault_block_layer_load_kw(layer.get(), kw.get());
-                auto out_kw = make_kw("OUT", nx * ny * nz, RD_INT);
+                auto out_kw = make_rd_kw("OUT", nx * ny * nz, RD_INT);
                 bool ok = fault_block_layer_export(layer.get(), out_kw.get());
 
                 THEN("export returns true") { REQUIRE(ok); }
@@ -261,7 +255,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
 
             WHEN("Exporting to a keyword with wrong size") {
-                auto bad_kw = make_kw("OUT", 1, RD_INT);
+                auto bad_kw = make_rd_kw("OUT", 1, RD_INT);
                 THEN("export returns false") {
                     REQUIRE_FALSE(
                         fault_block_layer_export(layer.get(), bad_kw.get()));
@@ -269,7 +263,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
 
             WHEN("Exporting to a float keyword") {
-                auto float_kw = make_kw("OUT", nx * ny * nz, RD_FLOAT);
+                auto float_kw = make_rd_kw("OUT", nx * ny * nz, RD_FLOAT);
                 THEN("export returns false") {
                     REQUIRE_FALSE(
                         fault_block_layer_export(layer.get(), float_kw.get()));
@@ -277,14 +271,14 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
         }
         WHEN("scan_kw is called with non-integer keyword") {
-            auto float_kw = make_kw("FAULTBLK", nx * ny * nz, RD_FLOAT);
+            auto float_kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_FLOAT);
             THEN("scan_kw returns false") {
                 REQUIRE_FALSE(
                     fault_block_layer_scan_kw(layer.get(), float_kw.get()));
             }
         }
         WHEN("scan_kw is called with wrong size keyword") {
-            auto bad_kw = make_kw("FAULTBLK", 1, RD_INT);
+            auto bad_kw = make_rd_kw("FAULTBLK", 1, RD_INT);
             THEN("scan_kw returns false") {
                 REQUIRE_FALSE(
                     fault_block_layer_scan_kw(layer.get(), bad_kw.get()));
@@ -292,14 +286,14 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
         }
 
         WHEN("load_kw is called with wrong size keyword") {
-            auto bad_kw = make_kw("FAULTBLK", 1, RD_INT);
+            auto bad_kw = make_rd_kw("FAULTBLK", 1, RD_INT);
             THEN("load_kw returns false") {
                 REQUIRE_FALSE(
                     fault_block_layer_load_kw(layer.get(), bad_kw.get()));
             }
         }
         WHEN("load_kw is called with non-integer keyword") {
-            auto float_kw = make_kw("FAULTBLK", nx * ny * nz, RD_FLOAT);
+            auto float_kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_FLOAT);
             THEN("load_kw returns false") {
                 REQUIRE_FALSE(
                     fault_block_layer_load_kw(layer.get(), float_kw.get()));
@@ -456,7 +450,7 @@ TEST_CASE("fault_block_layer methods", "[fault_block_layer]") {
             }
         }
         AND_GIVEN("A kw with nonzero data in k=2") {
-            auto kw = make_kw("FAULTBLK", nx * ny * nz, RD_INT);
+            auto kw = make_rd_kw("FAULTBLK", nx * ny * nz, RD_INT);
 
             // Two cells with block id=1 in the last layer only
             rd_kw_iset_int(kw.get(),

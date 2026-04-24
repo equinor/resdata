@@ -208,5 +208,9 @@ UTIL_SAFE_CAST_HEADER(rd_grid);
 
 #ifdef __cplusplus
 }
+
+#include <memory>
+
+using rd_grid_ptr = std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>;
 #endif
 #endif
