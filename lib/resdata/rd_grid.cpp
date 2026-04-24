@@ -733,7 +733,8 @@ struct rd_grid_struct {
     double unit_y[2];
     double origo[2];
     std::optional<std::array<float, 6>> mapaxes;
-    rd_kw_type *coord_kw; /* Retained for writing the grid to file.
+    rd_kw_ptr coord_kw{nullptr,
+                       &rd_kw_free}; /* Retained for writing the grid to file.
                                         In principal it should be possible to
                                         recalculate this from the cell coordinates,
                                         but in cases with skewed cells this has proved
@@ -1317,7 +1318,6 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
     grid->coarsening_active = false;
 
     grid->dualp_flag = dualp_flag;
-    grid->coord_kw = NULL;
     grid->unit_system = unit_system;
 
     if (global_grid != NULL) {
@@ -2057,8 +2057,8 @@ static rd_grid_type *rd_grid_alloc_GRDECL_data__(
         if (corsnum != NULL)
             rd_grid->coarsening_active = true;
 
-        rd_grid->coord_kw =
-            rd_kw_alloc_new("COORD", 6 * (nx + 1) * (ny + 1), RD_FLOAT, coord);
+        rd_grid->coord_kw.reset(
+            rd_kw_alloc_new("COORD", 6 * (nx + 1) * (ny + 1), RD_FLOAT, coord));
         rd_grid_init_GRDECL_data(rd_grid, zcorn, coord, actnum, corsnum);
 
         rd_grid_init_coarse_cells(rd_grid);
@@ -3663,9 +3663,6 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
 void rd_grid_free(rd_grid_type *grid) {
     rd_grid_free_cells(grid);
 
-    if (grid->coord_kw != NULL)
-        rd_kw_free(grid->coord_kw);
-
     vector_free(grid->coarse_cells);
     delete grid;
 }
@@ -4987,11 +4984,11 @@ void rd_grid_init_coord_data_double(const rd_grid_type *grid, double *coord) {
 }
 
 static void rd_grid_assert_coord_kw(rd_grid_type *grid) {
-    if (grid->coord_kw == NULL) {
-        grid->coord_kw =
-            rd_kw_alloc(COORD_KW, rd_grid_get_coord_size(grid), RD_FLOAT);
-        rd_grid_init_coord_data(grid,
-                                (float *)rd_kw_get_void_ptr(grid->coord_kw));
+    if (!grid->coord_kw) {
+        grid->coord_kw.reset(
+            rd_kw_alloc(COORD_KW, rd_grid_get_coord_size(grid), RD_FLOAT));
+        rd_grid_init_coord_data(grid, static_cast<float *>(rd_kw_get_void_ptr(
+                                          grid->coord_kw.get())));
     }
 }
 
@@ -5058,7 +5055,7 @@ rd_kw_type *rd_grid_alloc_zcorn_kw(const rd_grid_type *grid) {
 
 rd_kw_type *rd_grid_alloc_coord_kw(const rd_grid_type *grid) {
     if (grid->coord_kw)
-        return rd_kw_alloc_copy(grid->coord_kw);
+        return rd_kw_alloc_copy(grid->coord_kw.get());
 
     rd_kw_type *coord_kw =
         rd_kw_alloc(COORD_KW, RD_GRID_COORD_SIZE(grid->nx, grid->ny), RD_FLOAT);
@@ -5276,7 +5273,7 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, fortio_type *fortio,
     {
         rd_grid_assert_coord_kw(grid);
         {
-            rd_kw_type *coord_kw = rd_kw_alloc_copy(grid->coord_kw);
+            rd_kw_type *coord_kw = rd_kw_alloc_copy(grid->coord_kw.get());
             rd_kw_type *zcorn_kw = rd_grid_alloc_zcorn_kw(grid);
 
             if (output_unit != grid->unit_system) {
@@ -5396,7 +5393,7 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
 
     {
         rd_grid_assert_coord_kw(grid);
-        rd_kw_fprintf_grdecl(grid->coord_kw, stream);
+        rd_kw_fprintf_grdecl(grid->coord_kw.get(), stream);
         fprintf(stream, "\n");
     }
 
