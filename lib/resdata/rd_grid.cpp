@@ -729,11 +729,6 @@ struct rd_grid_struct {
     double unit_y[2];
     double origo[2];
     float *mapaxes;
-    /*------------------------------:       the fields below this line are used for blocking algorithms - and not allocated by default.*/
-    int block_dim; /* == 2 for maps and 3 for fields. 0 when not in use. */
-    int block_size;
-    int last_block_index;
-    double_vector_type **values;
     rd_kw_type *coord_kw; /* Retained for writing the grid to file.
                                         In principal it should be possible to
                                         recalculate this from the cell coordinates,
@@ -1374,8 +1369,6 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
         grid->use_mapaxes = false;
     }
 
-    grid->block_dim = 0;
-    grid->values = NULL;
     if (RD_GRID_MAINGRID_LGR_NR == lgr_nr) { /* this is the main grid */
         grid->LGR_list = vector_alloc_new();
         grid->lgr_index_map = int_vector_alloc(0, 0);
@@ -3772,11 +3765,6 @@ void rd_grid_free(rd_grid_type *grid) {
     free(grid->inv_fracture_index_map);
     free(grid->mapaxes);
 
-    if (grid->values != NULL) {
-        for (int i = 0; i < grid->block_size; i++)
-            double_vector_free(grid->values[i]);
-        free(grid->values);
-    }
     if (RD_GRID_MAINGRID_LGR_NR == grid->lgr_nr) { /* This is the main grid. */
         vector_free(grid->LGR_list);
         int_vector_free(grid->lgr_index_map);
