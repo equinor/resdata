@@ -5669,3 +5669,7 @@ rd_grid_ptr make_rectangular_grid(int nx, int ny, int nz, double dx, double dy,
     return {rd_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, actnum),
             &rd_grid_free};
 }
+
+rd_grid_ptr read_grid(const std::filesystem::path &filename) {
+    return {rd_grid_alloc(filename.string().c_str()), &rd_grid_free};
+}

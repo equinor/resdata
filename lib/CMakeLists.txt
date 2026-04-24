@@ -166,6 +166,11 @@ add_executable(
   rd_test_suite
   tests/test_rd_grid_regular.cpp
   tests/test_nnc_info.cpp
+  tests/test_rd_grid_nnc_lgr.cpp
+  tests/test_rd_grid_coarse.cpp
+  tests/test_rd_grid_xyz_lookup.cpp
+  tests/test_rd_grid_compare.cpp
+  tests/test_rd_grid_misc.cpp
   tests/test_rd_util.cpp
   tests/test_geometry.cpp
   tests/testsuite.cpp
