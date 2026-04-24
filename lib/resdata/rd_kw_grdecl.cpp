@@ -8,6 +8,7 @@
 #include <resdata/rd_util.hpp>
 
 #define MAX_GRDECL_HEADER_SIZE 512
+#define MAX_GRDECL_HEADER_SCANF_FMT "%511s"
 
 /*
   This file is devoted to different routines for reading and writing
@@ -55,7 +56,7 @@
 static bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
     long start_pos = util_ftell(stream);
     long current_pos;
-    char next_kw[MAX_GRDECL_HEADER_SIZE];
+    char next_kw[MAX_GRDECL_HEADER_SIZE] = {0};
 
     /*
     Determine if the current position of the file pointer is at the
@@ -99,7 +100,7 @@ static bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
 
     while (true) {
         current_pos = util_ftell(stream);
-        if (fscanf(stream, "%s", next_kw) == 1) {
+        if (fscanf(stream, MAX_GRDECL_HEADER_SCANF_FMT, next_kw) == 1) {
             if ((next_kw[0] == next_kw[1]) && (next_kw[0] == RD_COMMENT_CHAR))
                 // This is a comment line - skip it.
                 util_fskip_lines(stream, 1);
@@ -133,8 +134,8 @@ static bool rd_kw_grdecl_fseek_kw__(const char *kw, FILE *stream) {
     long init_pos = util_ftell(stream);
     while (true) {
         if (rd_kw_grdecl_fseek_next_kw(stream)) {
-            char next_kw[256];
-            fscanf(stream, "%s", next_kw);
+            char next_kw[256] = {0};
+            fscanf(stream, "%255s", next_kw);
             if (strcmp(kw, next_kw) == 0) {
                 offset_type offset = (offset_type)strlen(next_kw);
                 util_fseek(stream, -offset, SEEK_CUR);
@@ -411,8 +412,8 @@ static rd_kw_type *__rd_kw_fscanf_alloc_grdecl__(FILE *stream,
             return NULL; /* Could not find it. */
 
     {
-        char file_header[MAX_GRDECL_HEADER_SIZE];
-        if (fscanf(stream, "%s", file_header) == 1) {
+        char file_header[MAX_GRDECL_HEADER_SIZE] = {0};
+        if (fscanf(stream, MAX_GRDECL_HEADER_SCANF_FMT, file_header) == 1) {
             int kw_size;
             char *data = fscanf_alloc_grdecl_data(file_header, strict,
                                                   data_type, &kw_size, stream);
