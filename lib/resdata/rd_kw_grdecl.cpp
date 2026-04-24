@@ -398,7 +398,7 @@ static rd_kw_type *__rd_kw_fscanf_alloc_grdecl__(FILE *stream,
                                                  const char *header,
                                                  bool strict, int size,
                                                  rd_data_type data_type) {
-    if (header && strlen(header) > MAX_GRDECL_HEADER_SIZE)
+    if (header && strlen(header) >= MAX_GRDECL_HEADER_SIZE)
         util_abort(
             "%s cannot read KW of more than %d bytes. strlen(header) == %d\n",
             __func__, MAX_GRDECL_HEADER_SIZE, strlen(header));
