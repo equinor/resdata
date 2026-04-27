@@ -4418,17 +4418,14 @@ void rd_grid_get_column_property(const rd_grid_type *rd_grid,
         double_vector_reset(column);
         for (int k = 0; k < rd_grid->nz; k++) {
             if (use_global_index) {
-                int global_index =
-                    rd_grid_get_global_index3(rd_grid, i, j, k);
-                double_vector_iset(
-                    column, k, rd_kw_iget_as_double(rd_kw, global_index));
+                int global_index = rd_grid_get_global_index3(rd_grid, i, j, k);
+                double_vector_iset(column, k,
+                                   rd_kw_iget_as_double(rd_kw, global_index));
             } else {
-                int active_index =
-                    rd_grid_get_active_index3(rd_grid, i, j, k);
+                int active_index = rd_grid_get_active_index3(rd_grid, i, j, k);
                 if (active_index >= 0)
                     double_vector_iset(
-                        column, k,
-                        rd_kw_iget_as_double(rd_kw, active_index));
+                        column, k, rd_kw_iget_as_double(rd_kw, active_index));
             }
         }
     } else
@@ -4475,11 +4472,12 @@ void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
             util_abort("%s: invalid type \n", __func__);
 
         {
-            rd_kw_type *tmp_kw = rd_kw_alloc_scatter_copy(
-                rd_kw, rd_grid->size, rd_grid->inv_index_map.data(),
-                default_ptr);
-            rd_kw_fprintf_grdecl__(tmp_kw, special_header, stream);
-            rd_kw_free(tmp_kw);
+            auto tmp_kw =
+                rd_kw_ptr(rd_kw_alloc_scatter_copy(
+                              rd_kw, rd_grid->size,
+                              rd_grid->inv_index_map.data(), default_ptr),
+                          &rd_kw_free);
+            rd_kw_fprintf_grdecl__(tmp_kw.get(), special_header, stream);
         }
     } else
         util_abort("%s: size mismatch. rd_kw must have either nx*ny*ny "
