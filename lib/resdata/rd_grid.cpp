@@ -2249,12 +2249,12 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
         actnum_data = rd_kw_get_int_ptr(actnum_kw);
 
     bool apply_mapaxes = true;
-    rd_kw_type *gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, 0);
+    auto gridhead_kw =
+        rd_kw_ptr(rd_grid_alloc_gridhead_kw(nx, ny, nz, 0), &rd_kw_free);
     rd_kw_type *gridunit_kw = NULL;
     rd_grid_type *rd_grid = rd_grid_alloc_GRDECL_kw__(
-        NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, gridhead_kw, zcorn_kw,
-        coord_kw, gridunit_kw, mapaxes_kw, NULL, actnum_data);
-    rd_kw_free(gridhead_kw);
+        NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, gridhead_kw.get(),
+        zcorn_kw, coord_kw, gridunit_kw, mapaxes_kw, NULL, actnum_data);
     return rd_grid;
 }
 
