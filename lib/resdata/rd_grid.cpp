@@ -683,8 +683,8 @@ struct rd_grid_struct {
     int size; /* == nx*ny*nz */
     int total_active;
     int total_active_fracture;
-    bool *
-        visited; /* internal helper struct used when searching for index - can be NULL. */
+    std::vector<bool>
+        visited; /* internal helper struct used when searching for index - empty when unused. */
     int *
         index_map; /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
     int *
@@ -1339,7 +1339,6 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
 
     grid->dualp_flag = dualp_flag;
     grid->coord_kw = NULL;
-    grid->visited = NULL;
     grid->inv_index_map = NULL;
     grid->index_map = NULL;
     grid->fracture_index_map = NULL;
@@ -3544,18 +3543,14 @@ bool rd_grid_cell_contains_xyz1(const rd_grid_type *rd_grid, int global_index,
 }
 
 static void rd_grid_clear_visited(rd_grid_type *grid) {
-    if (grid->visited == NULL)
-        grid->visited = (bool *)util_calloc(grid->size, sizeof *grid->visited);
-
-    for (int i = 0; i < grid->size; i++)
-        grid->visited[i] = false;
+    grid->visited.assign(grid->size, false);
 }
 
 /*
    Box coordinates are not inclusive, i.e. [i1,i2)
 */
-static int rd_grid_box_contains_xyz(const rd_grid_type *grid, int i1, int i2,
-                                    int j1, int j2, int k1, int k2,
+static int rd_grid_box_contains_xyz(rd_grid_type *grid, int i1, int i2, int j1,
+                                    int j2, int k1, int k2,
                                     const point_type *p) {
 
     int global_index = -1;
@@ -3774,7 +3769,6 @@ void rd_grid_free(rd_grid_type *grid) {
 
     vector_free(grid->coarse_cells);
     free(grid->parent_name);
-    free(grid->visited);
     free(grid->name);
     delete grid;
 }
