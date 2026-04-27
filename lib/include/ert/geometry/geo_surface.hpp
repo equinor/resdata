@@ -45,5 +45,12 @@ void geo_surface_isqrt(geo_surface_type *surface);
 
 #ifdef __cplusplus
 }
+#include <memory>
+using geo_surface_ptr =
+    std::unique_ptr<geo_surface_type, decltype(&geo_surface_free)>;
+
+geo_surface_ptr make_geo_surface(int nx, int ny, double xinc, double yinc,
+                                 double xstart, double ystart, double angle);
+
 #endif
 #endif

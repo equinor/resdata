@@ -367,3 +367,9 @@ void geo_surface_imul(geo_surface_type *self, const geo_surface_type *other) {
 void geo_surface_isqrt(geo_surface_type *surface) {
     geo_pointset_isqrt(surface->pointset);
 }
+
+geo_surface_ptr make_geo_surface(int nx, int ny, double xinc, double yinc,
+                                 double xstart, double ystart, double angle) {
+    return {geo_surface_alloc_new(nx, ny, xinc, yinc, xstart, ystart, angle),
+            &geo_surface_free};
+}

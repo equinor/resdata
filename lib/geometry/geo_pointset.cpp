@@ -199,3 +199,7 @@ void geo_pointset_isqrt(geo_pointset_type *pointset) {
     for (int i = 0; i < pointset->size; i++)
         pointset->zcoord[i] = sqrt(pointset->zcoord[i]);
 }
+
+geo_pointset_ptr make_geo_pointset(bool external_z) {
+    return {geo_pointset_alloc(external_z), &geo_pointset_free};
+}

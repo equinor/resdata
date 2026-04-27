@@ -45,5 +45,11 @@ void geo_region_deselect_below_line(geo_region_type *region,
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using geo_region_ptr =
+    std::unique_ptr<geo_region_type, decltype(&geo_region_free)>;
+geo_region_ptr make_geo_region(const geo_pointset_ptr &pointset,
+                               bool preselect);
 #endif
 #endif

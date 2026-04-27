@@ -33,5 +33,10 @@ void geo_pointset_isqrt(geo_pointset_type *pointset);
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using geo_pointset_ptr =
+    std::unique_ptr<geo_pointset_type, decltype(&geo_pointset_free)>;
+geo_pointset_ptr make_geo_pointset(bool external_z);
 #endif
 #endif

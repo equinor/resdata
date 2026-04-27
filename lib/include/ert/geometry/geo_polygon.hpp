@@ -36,5 +36,12 @@ UTIL_IS_INSTANCE_HEADER(geo_polygon);
 
 #ifdef __cplusplus
 }
+#include <memory>
+#include <string>
+
+using geo_polygon_ptr =
+    std::unique_ptr<geo_polygon_type, decltype(&geo_polygon_free)>;
+
+geo_polygon_ptr make_geo_polygon(std::string name);
 #endif
 #endif

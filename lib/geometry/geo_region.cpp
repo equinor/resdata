@@ -174,3 +174,10 @@ const int_vector_type *geo_region_get_index_list(geo_region_type *region) {
     geo_region_assert_index_list(region);
     return region->index_list;
 }
+
+/** Note that the geo_region is borrowing the pointset and
+ * the lifetime of the pointset has to outlive the geo_region */
+geo_region_ptr make_geo_region(const geo_pointset_ptr &pointset,
+                               bool preselect) {
+    return {geo_region_alloc(pointset.get(), preselect), &geo_region_free};
+}
