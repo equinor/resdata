@@ -4175,12 +4175,7 @@ bool rd_grid_has_lgr(const rd_grid_type *main_grid, const char *__lgr_name) {
 
 bool rd_grid_has_lgr_nr(const rd_grid_type *main_grid, int lgr_nr) {
     __assert_main_grid(main_grid);
-    {
-        if ((int)main_grid->lgr_index_map.size() > lgr_nr)
-            return true;
-        else
-            return false;
-    }
+    return static_cast<int>(main_grid->lgr_index_map.size()) > lgr_nr;
 }
 
 int rd_grid_get_num_coarse_groups(const rd_grid_type *main_grid) {
