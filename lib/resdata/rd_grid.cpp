@@ -3603,11 +3603,11 @@ static bool rd_grid_sublayer_contanins_xy__(const rd_grid_type *grid, double x,
 
 bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
                             int *i, int *j) {
-    geo_polygon_type *polygon = geo_polygon_alloc(NULL);
+    auto polygon = make_geo_polygon("");
     int nx = rd_grid_get_nx(grid);
     int ny = rd_grid_get_ny(grid);
-    bool inside =
-        rd_grid_sublayer_contanins_xy__(grid, x, y, k, 0, nx, 0, ny, polygon);
+    bool inside = rd_grid_sublayer_contanins_xy__(grid, x, y, k, 0, nx, 0, ny,
+                                                  polygon.get());
     if (inside) {
         int i1 = 0;
         int i2 = nx;
@@ -3618,11 +3618,11 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
             if ((i2 - i1) > 1) {
                 int ic = (i1 + i2) / 2;
                 if (rd_grid_sublayer_contanins_xy__(grid, x, y, k, i1, ic, j1,
-                                                    j2, polygon))
+                                                    j2, polygon.get()))
                     i2 = ic;
                 else {
                     if (!rd_grid_sublayer_contanins_xy__(grid, x, y, k, ic, i2,
-                                                         j1, j2, polygon))
+                                                         j1, j2, polygon.get()))
                         util_abort("%s: point nowhere to be found ... \n",
                                    __func__);
                     i1 = ic;
@@ -3632,11 +3632,11 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
             if ((j2 - j1) > 1) {
                 int jc = (j1 + j2) / 2;
                 if (rd_grid_sublayer_contanins_xy__(grid, x, y, k, i1, i2, j1,
-                                                    jc, polygon))
+                                                    jc, polygon.get()))
                     j2 = jc;
                 else {
                     if (!rd_grid_sublayer_contanins_xy__(grid, x, y, k, i1, i2,
-                                                         jc, j2, polygon))
+                                                         jc, j2, polygon.get()))
                         util_abort("%s: point nowhere to be found ... \n",
                                    __func__);
                     j1 = jc;
@@ -3650,8 +3650,6 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
             }
         }
     }
-
-    geo_polygon_free(polygon);
     return inside;
 }
 
