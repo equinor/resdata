@@ -699,9 +699,9 @@ struct rd_grid_struct {
 
     rd_cell_type *cells;
 
-    char *
+    std::optional<std::string>
         parent_name; /* the name of the parent for a nested lgr - for the main grid, and also a
-                                          lgr descending directly from the main grid this will be NULL. */
+                                          lgr descending directly from the main grid this will be nullopt. */
     std::unordered_map<std::string, rd_grid_type *> children;
     const rd_grid_type *
         parent_grid; /* the parent grid for this (lgr) - NULL for the main grid. */
@@ -1373,7 +1373,6 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
         grid->lgr_index_map = NULL;
     }
     grid->name = "";
-    grid->parent_name = NULL;
     grid->parent_grid = NULL;
     grid->coarse_cells = vector_alloc_new();
     grid->eclipse_version = 0;
@@ -1934,7 +1933,7 @@ static void rd_grid_install_lgr_GRID(rd_grid_type *host_grid,
 /**
    sets the name of the lgr and the name of the parent, if this is a
    nested lgr. for normal lgr descending directly from the coarse grid
-   the parent_name is set to NULL.
+   the parent_name is set to nullopt.
 */
 
 static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
@@ -1946,13 +1945,12 @@ static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
     if (rd_file_has_kw(rd_file, LGR_PARENT_KW)) {
         rd_kw_type *parent_kw =
             rd_file_iget_named_kw(rd_file, LGR_PARENT_KW, grid_nr - 1);
-        char *parent = (char *)util_alloc_strip_copy(
-            (const char *)rd_kw_iget_ptr(parent_kw, 0));
+        std::string parent = rd_kw_iget_stripped_string(parent_kw, 0);
 
-        if (strlen(parent) > 0)
+        if (!parent.empty())
             lgr_grid->parent_name = parent;
-        else /* lgr_grid->parent has been initialized to NULL */
-            free(parent);
+        else
+            lgr_grid->parent_name = std::nullopt;
     }
 }
 
@@ -1975,12 +1973,9 @@ static void rd_grid_set_lgr_name_GRID(rd_grid_type *lgr_grid,
        only one element the current lgr is assumed to descend from the main grid
     */
         if (rd_kw_get_size(lgr_kw) == 2) {
-            char *parent = (char *)util_alloc_strip_copy(
-                (const char *)rd_kw_iget_ptr(lgr_kw, 1));
+            std::string parent = rd_kw_iget_stripped_string(lgr_kw, 1);
 
-            if ((strlen(parent) == 0) || (strcmp(parent, GLOBAL_STRING) == 0))
-                free(parent);
-            else
+            if (!parent.empty() && parent != GLOBAL_STRING)
                 lgr_grid->parent_name = parent;
         }
     }
@@ -2143,7 +2138,7 @@ static void rd_grid_copy_content(rd_grid_type *target_grid,
     }
     rd_grid_copy_mapaxes(target_grid, src_grid);
 
-    target_grid->parent_name = util_alloc_string_copy(src_grid->parent_name);
+    target_grid->parent_name = src_grid->parent_name;
     target_grid->name = src_grid->name;
 
     target_grid->coarsening_active = src_grid->coarsening_active;
@@ -2178,10 +2173,11 @@ rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid) {
         rd_grid_add_lgr(
             copy_grid,
             copy_lgr); // This handles the storage ownership of the LGR.
-        if (copy_lgr->parent_name == NULL)
+        if (!copy_lgr->parent_name)
             host_grid = copy_grid;
         else
-            host_grid = rd_grid_get_lgr(copy_grid, copy_lgr->parent_name);
+            host_grid =
+                rd_grid_get_lgr(copy_grid, copy_lgr->parent_name->c_str());
 
         for (int global_lgr_index = 0; global_lgr_index < copy_lgr->size;
              global_lgr_index++) {
@@ -2605,11 +2601,11 @@ static rd_grid_type *rd_grid_alloc_EGRID_all_grids(const char *grid_file,
                     rd_grid_type *host_grid;
                     rd_kw_type *hostnum_kw =
                         rd_file_iget_named_kw(rd_file, HOSTNUM_KW, grid_nr - 1);
-                    if (lgr_grid->parent_name == NULL)
+                    if (!lgr_grid->parent_name)
                         host_grid = main_grid;
                     else
-                        host_grid =
-                            rd_grid_get_lgr(main_grid, lgr_grid->parent_name);
+                        host_grid = rd_grid_get_lgr(
+                            main_grid, lgr_grid->parent_name->c_str());
 
                     rd_grid_install_lgr_EGRID(host_grid, lgr_grid,
                                               rd_kw_get_int_ptr(hostnum_kw));
@@ -2843,11 +2839,11 @@ static rd_grid_type *rd_grid_alloc_GRID(const char *grid_file,
             {
                 rd_grid_type *host_grid;
 
-                if (lgr_grid->parent_name == NULL)
+                if (!lgr_grid->parent_name)
                     host_grid = main_grid;
                 else
-                    host_grid =
-                        rd_grid_get_lgr(main_grid, lgr_grid->parent_name);
+                    host_grid = rd_grid_get_lgr(main_grid,
+                                                lgr_grid->parent_name->c_str());
 
                 rd_grid_install_lgr_GRID(host_grid, lgr_grid);
             }
@@ -3738,7 +3734,6 @@ void rd_grid_free(rd_grid_type *grid) {
         rd_kw_free(grid->coord_kw);
 
     vector_free(grid->coarse_cells);
-    free(grid->parent_name);
     delete grid;
 }
 
@@ -5339,8 +5334,9 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, fortio_type *fortio,
 
         {
             rd_kw_type *lgr_parent_kw = rd_kw_alloc(LGR_PARENT_KW, 1, RD_CHAR);
-            if (grid->parent_name != NULL)
-                rd_kw_iset_string8(lgr_parent_kw, 0, grid->parent_name);
+            if (grid->parent_name.has_value())
+                rd_kw_iset_string8(lgr_parent_kw, 0,
+                                   grid->parent_name->c_str());
             else
                 rd_kw_iset_string8(lgr_parent_kw, 0, "");
 
