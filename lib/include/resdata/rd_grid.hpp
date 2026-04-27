@@ -212,5 +212,8 @@ UTIL_SAFE_CAST_HEADER(rd_grid);
 #include <memory>
 
 using rd_grid_ptr = std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>;
+
+rd_grid_ptr make_rectangular_grid(int nx, int ny, int nz, double dx, double dy,
+                                  double dz, const int *actnum);
 #endif
 #endif

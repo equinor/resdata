@@ -9,8 +9,7 @@
 #include <catch2/catch.hpp>
 
 static rd_grid_ptr make_grid(int nx, int ny, int nz) {
-    return {rd_grid_alloc_rectangular(nx, ny, nz, 1, 1, 1, nullptr),
-            rd_grid_free};
+    return make_rectangular_grid(nx, ny, nz, 1, 1, 1, nullptr);
 }
 
 static std::unique_ptr<fault_block_layer_type,

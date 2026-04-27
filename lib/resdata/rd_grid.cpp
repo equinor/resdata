@@ -5663,3 +5663,9 @@ void export_corners(const rd_grid_type *grid, int index_size,
         }
     }
 }
+
+rd_grid_ptr make_rectangular_grid(int nx, int ny, int nz, double dx, double dy,
+                                  double dz, const int *actnum) {
+    return {rd_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, actnum),
+            &rd_grid_free};
+}
