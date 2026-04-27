@@ -2954,52 +2954,51 @@ rd_grid_alloc_case_filename(const char *case_input) {
     else if (file_type == RD_EGRID_FILE)
         return case_input; /* Case 1 */
     else {
+        using c_str_ptr = std::unique_ptr<char, decltype(&std::free)>;
+        auto own = [](char *p) { return c_str_ptr{p, &std::free}; };
+        auto alloc_filename = [&](const char *path, const char *basename,
+                                  rd_file_enum type, bool fmt) {
+            return own(rd_alloc_filename(path, basename, type, fmt, -1));
+        };
+
         std::optional<std::string> grid_file = std::nullopt;
-        char *path = NULL;
-        char *basename = NULL;
-        util_alloc_file_components(case_input, &path, &basename, NULL);
+        char *path_raw = NULL;
+        char *basename_raw = NULL;
+        util_alloc_file_components(case_input, &path_raw, &basename_raw, NULL);
+        c_str_ptr path = own(path_raw);
+        c_str_ptr basename = own(basename_raw);
         if ((file_type == RD_OTHER_FILE) ||
             (file_type ==
              RD_DATA_FILE)) { /* Case 3 - only basename recognized */
-            char *EGRID =
-                rd_alloc_filename(path, basename, RD_EGRID_FILE, false, -1);
-            char *GRID =
-                rd_alloc_filename(path, basename, RD_GRID_FILE, false, -1);
-            char *FEGRID =
-                rd_alloc_filename(path, basename, RD_EGRID_FILE, true, -1);
-            char *FGRID =
-                rd_alloc_filename(path, basename, RD_GRID_FILE, true, -1);
+            c_str_ptr EGRID = alloc_filename(path.get(), basename.get(),
+                                             RD_EGRID_FILE, false);
+            c_str_ptr GRID =
+                alloc_filename(path.get(), basename.get(), RD_GRID_FILE, false);
+            c_str_ptr FEGRID =
+                alloc_filename(path.get(), basename.get(), RD_EGRID_FILE, true);
+            c_str_ptr FGRID =
+                alloc_filename(path.get(), basename.get(), RD_GRID_FILE, true);
 
-            if (util_file_exists(EGRID))
-                grid_file = EGRID;
-            else if (util_file_exists(GRID))
-                grid_file = GRID;
-            else if (util_file_exists(FEGRID))
-                grid_file = FEGRID;
-            else if (util_file_exists(FGRID))
-                grid_file = FGRID;
+            if (util_file_exists(EGRID.get()))
+                grid_file = EGRID.get();
+            else if (util_file_exists(GRID.get()))
+                grid_file = GRID.get();
+            else if (util_file_exists(FEGRID.get()))
+                grid_file = FEGRID.get();
+            else if (util_file_exists(FGRID.get()))
+                grid_file = FGRID.get();
             /* else: could not find a GRID/EGRID. */
-
-            free(EGRID);
-            free(FEGRID);
-            free(GRID);
-            free(FGRID);
         } else { /* Case 2 - we know the formatted / unformatted status. */
-            char *EGRID =
-                rd_alloc_filename(path, basename, RD_EGRID_FILE, fmt_file, -1);
-            char *GRID =
-                rd_alloc_filename(path, basename, RD_GRID_FILE, fmt_file, -1);
+            c_str_ptr EGRID = alloc_filename(path.get(), basename.get(),
+                                             RD_EGRID_FILE, fmt_file);
+            c_str_ptr GRID = alloc_filename(path.get(), basename.get(),
+                                            RD_GRID_FILE, fmt_file);
 
-            if (util_file_exists(EGRID))
-                grid_file = EGRID;
-            else if (util_file_exists(GRID))
-                grid_file = GRID;
-
-            free(EGRID);
-            free(GRID);
+            if (util_file_exists(EGRID.get()))
+                grid_file = EGRID.get();
+            else if (util_file_exists(GRID.get()))
+                grid_file = GRID.get();
         }
-        free(path);
-        free(basename);
         return grid_file;
     }
 }
