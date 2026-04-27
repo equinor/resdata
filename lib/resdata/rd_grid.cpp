@@ -4416,22 +4416,19 @@ void rd_grid_get_column_property(const rd_grid_type *rd_grid,
                        rd_kw_get_size(rd_kw));
 
         double_vector_reset(column);
-        {
-            int k;
-            for (k = 0; k < rd_grid->nz; k++) {
-                if (use_global_index) {
-                    int global_index =
-                        rd_grid_get_global_index3(rd_grid, i, j, k);
+        for (int k = 0; k < rd_grid->nz; k++) {
+            if (use_global_index) {
+                int global_index =
+                    rd_grid_get_global_index3(rd_grid, i, j, k);
+                double_vector_iset(
+                    column, k, rd_kw_iget_as_double(rd_kw, global_index));
+            } else {
+                int active_index =
+                    rd_grid_get_active_index3(rd_grid, i, j, k);
+                if (active_index >= 0)
                     double_vector_iset(
-                        column, k, rd_kw_iget_as_double(rd_kw, global_index));
-                } else {
-                    int active_index =
-                        rd_grid_get_active_index3(rd_grid, i, j, k);
-                    if (active_index >= 0)
-                        double_vector_iset(
-                            column, k,
-                            rd_kw_iget_as_double(rd_kw, active_index));
-                }
+                        column, k,
+                        rd_kw_iget_as_double(rd_kw, active_index));
             }
         }
     } else
