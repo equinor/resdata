@@ -7,6 +7,8 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <optional>
+#include <array>
 
 #include <ert/util/util.hpp>
 #include <ert/util/double_vector.hpp>
@@ -728,7 +730,7 @@ struct rd_grid_struct {
     double unit_x[2];
     double unit_y[2];
     double origo[2];
-    float *mapaxes;
+    std::optional<std::array<float, 6>> mapaxes;
     rd_kw_type *coord_kw; /* Retained for writing the grid to file.
                                         In principal it should be possible to
                                         recalculate this from the cell coordinates,
@@ -1335,7 +1337,6 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
     grid->lgr_nr = lgr_nr;
     grid->global_grid = global_grid;
     grid->coarsening_active = false;
-    grid->mapaxes = NULL;
 
     grid->dualp_flag = dualp_flag;
     grid->coord_kw = NULL;
@@ -1832,8 +1833,9 @@ static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
         }
         rd_grid->origo[0] = mapaxes[2];
         rd_grid->origo[1] = mapaxes[3];
-        rd_grid->mapaxes = (float *)util_malloc(6 * sizeof *rd_grid->mapaxes);
-        memcpy(rd_grid->mapaxes, mapaxes, 6 * sizeof(float));
+        std::array<float, 6> mapaxes_copy;
+        memcpy(mapaxes_copy.data(), mapaxes, 6 * sizeof(float));
+        rd_grid->mapaxes = mapaxes_copy;
 
         /*
       If the apply_mapaxes variable is false we will not apply the
@@ -2120,13 +2122,7 @@ static rd_grid_type *rd_grid_alloc_GRDECL_data__(
 static void rd_grid_copy_mapaxes(rd_grid_type *target_grid,
                                  const rd_grid_type *src_grid) {
     target_grid->use_mapaxes = src_grid->use_mapaxes;
-    if (src_grid->mapaxes)
-        target_grid->mapaxes =
-            (float *)util_realloc_copy(target_grid->mapaxes, src_grid->mapaxes,
-                                       6 * sizeof *src_grid->mapaxes);
-    else
-        target_grid->mapaxes =
-            (float *)util_realloc_copy(target_grid->mapaxes, NULL, 0);
+    target_grid->mapaxes = src_grid->mapaxes;
 
     for (int i = 0; i < 2; i++) {
         target_grid->unit_x[i] = src_grid->unit_x[i];
@@ -3192,10 +3188,8 @@ static bool rd_grid_compare_mapaxes(const rd_grid_type *g1,
                                     const rd_grid_type *g2, bool verbose) {
     bool equal = true;
     if (g1->use_mapaxes == g2->use_mapaxes) {
-        if (g1->mapaxes) {
-            if (memcmp(g1->mapaxes, g2->mapaxes, 6 * sizeof *g1->mapaxes) != 0)
-                equal = false;
-        }
+        if (g1->mapaxes != g2->mapaxes)
+            equal = false;
     } else
         equal = false;
 
@@ -3735,7 +3729,6 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
 
 void rd_grid_free(rd_grid_type *grid) {
     rd_grid_free_cells(grid);
-    free(grid->mapaxes);
 
     if (RD_GRID_MAINGRID_LGR_NR == grid->lgr_nr) { /* This is the main grid. */
         vector_free(grid->LGR_list);
@@ -4656,16 +4649,17 @@ bool rd_grid_use_mapaxes(const rd_grid_type *grid) { return grid->use_mapaxes; }
 
 void rd_grid_init_mapaxes_data_double(const rd_grid_type *grid,
                                       double *mapaxes) {
-    for (int i = 0; i < 6; i++)
-        mapaxes[i] = grid->mapaxes[i];
+    if (grid->mapaxes.has_value())
+        for (int i = 0; i < 6; i++)
+            mapaxes[i] = grid->mapaxes.value()[i];
 }
 
 static const float *rd_grid_get_mapaxes(const rd_grid_type *grid) {
-    return grid->mapaxes;
+    return grid->mapaxes ? grid->mapaxes->data() : NULL;
 }
 
 rd_kw_type *rd_grid_alloc_mapaxes_kw(const rd_grid_type *grid) {
-    return rd_kw_alloc_new(MAPAXES_KW, 6, RD_FLOAT, grid->mapaxes);
+    return rd_kw_alloc_new(MAPAXES_KW, 6, RD_FLOAT, rd_grid_get_mapaxes(grid));
 }
 
 static rd_kw_type *rd_grid_alloc_mapunits_kw(ert_rd_unit_enum output_unit) {
@@ -5455,7 +5449,7 @@ void rd_grid_fprintf_grdecl2(rd_grid_type *grid, FILE *stream,
         fprintf(stream, "\n");
     }
 
-    if (grid->mapaxes != NULL) {
+    if (grid->mapaxes.has_value()) {
         rd_kw_type *mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid);
         rd_kw_fprintf_grdecl(mapaxes_kw, stream);
         rd_kw_free(mapaxes_kw);
