@@ -2929,17 +2929,18 @@ rd_grid_type *rd_grid_alloc(const char *grid_file) {
    files can be found.
 */
 
-static char *rd_grid_alloc_case_filename(const char *case_input) {
+static std::optional<std::string>
+rd_grid_alloc_case_filename(const char *case_input) {
     rd_file_enum file_type;
     bool fmt_file;
     file_type = rd_get_file_type(case_input, &fmt_file, NULL);
 
     if (file_type == RD_GRID_FILE)
-        return util_alloc_string_copy(case_input); /* Case 1 */
+        return case_input; /* Case 1 */
     else if (file_type == RD_EGRID_FILE)
-        return util_alloc_string_copy(case_input); /* Case 1 */
+        return case_input; /* Case 1 */
     else {
-        char *grid_file = NULL;
+        std::optional<std::string> grid_file = std::nullopt;
         char *path = NULL;
         char *basename = NULL;
         util_alloc_file_components(case_input, &path, &basename, NULL);
@@ -2956,16 +2957,14 @@ static char *rd_grid_alloc_case_filename(const char *case_input) {
                 rd_alloc_filename(path, basename, RD_GRID_FILE, true, -1);
 
             if (util_file_exists(EGRID))
-                grid_file = util_alloc_string_copy(EGRID);
+                grid_file = EGRID;
             else if (util_file_exists(GRID))
-                grid_file = util_alloc_string_copy(GRID);
+                grid_file = GRID;
             else if (util_file_exists(FEGRID))
-                grid_file = util_alloc_string_copy(FEGRID);
+                grid_file = FEGRID;
             else if (util_file_exists(FGRID))
-                grid_file = util_alloc_string_copy(FGRID);
-            /*
-        else: could not find a GRID/EGRID.
-      */
+                grid_file = FGRID;
+            /* else: could not find a GRID/EGRID. */
 
             free(EGRID);
             free(FEGRID);
@@ -2978,9 +2977,9 @@ static char *rd_grid_alloc_case_filename(const char *case_input) {
                 rd_alloc_filename(path, basename, RD_GRID_FILE, fmt_file, -1);
 
             if (util_file_exists(EGRID))
-                grid_file = util_alloc_string_copy(EGRID);
+                grid_file = EGRID;
             else if (util_file_exists(GRID))
-                grid_file = util_alloc_string_copy(GRID);
+                grid_file = GRID;
 
             free(EGRID);
             free(GRID);
@@ -2993,13 +2992,9 @@ static char *rd_grid_alloc_case_filename(const char *case_input) {
 
 rd_grid_type *rd_grid_load_case__(const char *case_input, bool apply_mapaxes) {
     rd_grid_type *rd_grid = NULL;
-    char *grid_file = rd_grid_alloc_case_filename(case_input);
-    if (grid_file != NULL) {
-
-        if (util_file_exists(grid_file))
-            rd_grid = rd_grid_alloc__(grid_file, apply_mapaxes);
-
-        free(grid_file);
+    auto grid_file = rd_grid_alloc_case_filename(case_input);
+    if (grid_file.has_value() && util_file_exists(grid_file.value().c_str())) {
+        rd_grid = rd_grid_alloc__(grid_file.value().c_str(), apply_mapaxes);
     }
     return rd_grid;
 }
@@ -3010,13 +3005,7 @@ rd_grid_type *rd_grid_load_case(const char *case_input) {
 }
 
 bool rd_grid_exists(const char *case_input) {
-    bool exists = false;
-    char *grid_file = rd_grid_alloc_case_filename(case_input);
-    if (grid_file != NULL) {
-        exists = true;
-        free(grid_file);
-    }
-    return exists;
+    return rd_grid_alloc_case_filename(case_input).has_value();
 }
 
 static bool rd_grid_compare_coarse_cells(const rd_grid_type *g1,
