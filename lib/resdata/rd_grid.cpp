@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <cmath>
 
+#include <algorithm>
+#include <memory>
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -666,7 +668,34 @@ struct rd_cell_struct {
     int host_cell; /* the global index of the host cell for an lgr cell, set to -1 for normal cells. */
     int coarse_group; /* The index of the coarse group holding this cell -1 for non-coarsened cells. */
     int cell_flags;
-    nnc_info_type *nnc_info; /* Non-neighbour connection info*/
+    nnc_info_ptr nnc_info{nullptr,
+                          &nnc_info_free}; /* Non-neighbour connection info*/
+
+    rd_cell_struct() = default;
+    ~rd_cell_struct() = default;
+    rd_cell_struct(rd_cell_struct &&) = default;
+    rd_cell_struct &operator=(rd_cell_struct &&) = default;
+
+    rd_cell_struct(const rd_cell_struct &other) { *this = other; }
+    rd_cell_struct &operator=(const rd_cell_struct &other) {
+        if (this == &other)
+            return *this;
+        center = other.center;
+        std::copy(std::begin(other.corner_list), std::end(other.corner_list),
+                  std::begin(corner_list));
+        volume = other.volume;
+        active = other.active;
+        active_index[0] = other.active_index[0];
+        active_index[1] = other.active_index[1];
+        lgr = other.lgr;
+        host_cell = other.host_cell;
+        coarse_group = other.coarse_group;
+        cell_flags = other.cell_flags;
+        nnc_info.reset(other.nnc_info
+                           ? nnc_info_alloc_copy(other.nnc_info.get())
+                           : nullptr);
+        return *this;
+    }
 };
 
 static ert_rd_unit_enum
@@ -774,7 +803,7 @@ static void rd_cell_compare(const rd_cell_type &c1, const rd_cell_type &c2,
 
     if (include_nnc) {
         if (*equal)
-            *equal = nnc_info_equal(c1.nnc_info, c2.nnc_info);
+            *equal = nnc_info_equal(c1.nnc_info.get(), c2.nnc_info.get());
     }
 }
 
@@ -1005,7 +1034,7 @@ static void rd_cell_init(rd_cell_type *cell, bool init_valid) {
     if (init_valid)
         cell->cell_flags = CELL_FLAG_VALID;
 
-    cell->nnc_info = NULL;
+    cell->nnc_info.reset();
 }
 
 /*
@@ -1028,11 +1057,6 @@ static void rd_cell_set_center(rd_cell_type &cell) {
 static void rd_cell_assert_center(rd_cell_type &cell) {
     if (!GET_CELL_FLAG((&cell), CELL_FLAG_CENTER))
         rd_cell_set_center(cell);
-}
-
-static void rd_cell_memcpy(rd_cell_type *target_cell,
-                           const rd_cell_type *src_cell) {
-    memcpy(target_cell, src_cell, sizeof *target_cell);
 }
 
 static double C(double *r, int f1, int f2, int f3) {
@@ -1266,13 +1290,6 @@ static void rd_grid_taint_cells(rd_grid_type *rd_grid) {
     }
 }
 
-static void rd_grid_free_cells(rd_grid_type *grid) {
-    for (auto &cell : grid->cells) {
-        if (cell.nnc_info)
-            nnc_info_free(cell.nnc_info);
-    }
-}
-
 static bool rd_grid_alloc_cells(rd_grid_type *grid, bool init_valid) {
     try {
         grid->cells.resize(grid->size);
@@ -1282,6 +1299,7 @@ static bool rd_grid_alloc_cells(rd_grid_type *grid, bool init_valid) {
 
     for (auto &cell : grid->cells)
         rd_cell_init(&cell, init_valid);
+
     return true;
 }
 
@@ -2086,9 +2104,7 @@ static void rd_grid_copy_content(rd_grid_type *target_grid,
         rd_cell_type *target_cell = &target_grid->cells.at(i);
         const rd_cell_type *src_cell = &src_grid->cells.at(i);
 
-        rd_cell_memcpy(target_cell, src_cell);
-        if (src_cell->nnc_info)
-            target_cell->nnc_info = nnc_info_alloc_copy(src_cell->nnc_info);
+        *target_cell = *src_cell;
     }
     rd_grid_copy_mapaxes(target_grid, src_grid);
 
@@ -2253,7 +2269,7 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
     rd_cell_type &grid_cell = rd_grid->cells.at(global_index);
 
     if (!grid_cell.nnc_info)
-        grid_cell.nnc_info = nnc_info_alloc(rd_grid->lgr_nr);
+        grid_cell.nnc_info.reset(nnc_info_alloc(rd_grid->lgr_nr));
 }
 
 /*
@@ -2303,7 +2319,8 @@ void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
                           int nnc_index) {
     const rd_cell_type &grid_cell = grid->cells.at(cell_index1);
     rd_grid_init_cell_nnc_info(grid, cell_index1);
-    nnc_info_add_nnc(grid_cell.nnc_info, grid->lgr_nr, cell_index2, nnc_index);
+    nnc_info_add_nnc(grid_cell.nnc_info.get(), grid->lgr_nr, cell_index2,
+                     nnc_index);
 }
 
 /*
@@ -2352,8 +2369,8 @@ static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
 
         const rd_cell_type &grid1_cell = grid1->cells.at(grid1_cell_index);
         rd_grid_init_cell_nnc_info(grid1, grid1_cell_index);
-        nnc_info_add_nnc(grid1_cell.nnc_info, grid2->lgr_nr, grid2_cell_index,
-                         nnc_index);
+        nnc_info_add_nnc(grid1_cell.nnc_info.get(), grid2->lgr_nr,
+                         grid2_cell_index, nnc_index);
     }
 }
 
@@ -3050,7 +3067,8 @@ static bool rd_grid_compare_cells(rd_grid_type *g1, rd_grid_type *g2,
 
                 printf("Difference in cell: %d : %d,%d,%d  nnc_equal:%d "
                        "Volume:%g \n",
-                       g, i, j, k, nnc_info_equal(c1.nnc_info, c2.nnc_info),
+                       g, i, j, k,
+                       nnc_info_equal(c1.nnc_info.get(), c2.nnc_info.get()),
                        rd_cell_get_volume(c1));
                 printf("-------------------------------------------------------"
                        "----------\n");
@@ -3661,8 +3679,6 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
 }
 
 void rd_grid_free(rd_grid_type *grid) {
-    rd_grid_free_cells(grid);
-
     vector_free(grid->coarse_cells);
     delete grid;
 }
@@ -4106,7 +4122,7 @@ double rd_grid_get_cell_dy1A(const rd_grid_type *grid, int active_index) {
 const nnc_info_type *rd_grid_get_cell_nnc_info1(const rd_grid_type *grid,
                                                 int global_index) {
     const rd_cell_type &cell = grid->cells.at(global_index);
-    return cell.nnc_info;
+    return cell.nnc_info.get();
 }
 
 /*
@@ -5197,10 +5213,10 @@ static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
     int_vector_type *g2 = int_vector_alloc(0, default_index);
     for (int g = 0; g < rd_grid_get_global_size(grid); g++) {
         const rd_cell_type &cell = grid->cells.at(g);
-        const nnc_info_type *nnc_info = cell.nnc_info;
+        auto &nnc_info = cell.nnc_info;
         if (nnc_info) {
             const nnc_vector_type *nnc_vector =
-                nnc_info_get_self_vector(nnc_info);
+                nnc_info_get_self_vector(nnc_info.get());
             if (!nnc_vector)
                 continue;
             int i;

@@ -44,5 +44,8 @@ bool nnc_info_has_grid_index_list(const nnc_info_type *nnc_info, int lgr_nr);
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using nnc_info_ptr = std::unique_ptr<nnc_info_type, decltype(&nnc_info_free)>;
 #endif
 #endif
