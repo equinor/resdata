@@ -677,7 +677,7 @@ struct rd_grid_struct {
     UTIL_TYPE_ID_DECLARATION;
     int lgr_nr; /* EGRID files: corresponds to item 4 in gridhead - 0 for the main grid.
                                           GRID files: 0 for the main grid, then 1 -> number of LGRs in order read from file*/
-    char *
+    std::string
         name; /* the name of the file for the main grid - name of the lgr for lgrs. */
     int ny, nz, nx;
     int size; /* == nx*ny*nz */
@@ -1375,7 +1375,7 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
         grid->LGR_list = NULL;
         grid->lgr_index_map = NULL;
     }
-    grid->name = NULL;
+    grid->name = "";
     grid->parent_name = NULL;
     grid->parent_grid = NULL;
     grid->coarse_cells = vector_alloc_new();
@@ -1951,8 +1951,7 @@ static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
                                        int grid_nr) {
     rd_kw_type *lgrname_kw =
         rd_file_iget_named_kw(rd_file, LGR_KW, grid_nr - 1);
-    lgr_grid->name = (char *)util_alloc_strip_copy((const char *)rd_kw_iget_ptr(
-        lgrname_kw, 0)); /* trailing zeros are stripped away. */
+    lgr_grid->name = rd_kw_iget_stripped_string(lgrname_kw, 0);
     if (rd_file_has_kw(rd_file, LGR_PARENT_KW)) {
         rd_kw_type *parent_kw =
             rd_file_iget_named_kw(rd_file, LGR_PARENT_KW, grid_nr - 1);
@@ -1977,8 +1976,7 @@ static void rd_grid_set_lgr_name_GRID(rd_grid_type *lgr_grid,
                                       const rd_file_type *rd_file,
                                       int grid_nr) {
     rd_kw_type *lgr_kw = rd_file_iget_named_kw(rd_file, LGR_KW, grid_nr - 1);
-    lgr_grid->name = (char *)util_alloc_strip_copy((const char *)rd_kw_iget_ptr(
-        lgr_kw, 0)); /* trailing zeros are stripped away. */
+    lgr_grid->name = rd_kw_iget_stripped_string(lgr_kw, 0);
     {
         /**
        the lgr keyword can have one or two elements; in the case of two elements
@@ -2161,7 +2159,7 @@ static void rd_grid_copy_content(rd_grid_type *target_grid,
     rd_grid_copy_mapaxes(target_grid, src_grid);
 
     target_grid->parent_name = util_alloc_string_copy(src_grid->parent_name);
-    target_grid->name = util_alloc_string_copy(src_grid->name);
+    target_grid->name = src_grid->name;
 
     target_grid->coarsening_active = src_grid->coarsening_active;
     rd_grid_init_coarse_cells(target_grid);
@@ -2632,7 +2630,7 @@ static rd_grid_type *rd_grid_alloc_EGRID_all_grids(const char *grid_file,
                                               rd_kw_get_int_ptr(hostnum_kw));
                 }
             }
-            main_grid->name = util_alloc_string_copy(grid_file);
+            main_grid->name = grid_file;
             rd_grid_init_nnc(main_grid, rd_file);
             rd_grid_init_nnc_amalgamated(main_grid, rd_file);
 
@@ -2869,7 +2867,7 @@ static rd_grid_type *rd_grid_alloc_GRID(const char *grid_file,
                 rd_grid_install_lgr_GRID(host_grid, lgr_grid);
             }
         }
-        main_grid->name = util_alloc_string_copy(grid_file);
+        main_grid->name = grid_file;
         rd_file_close(rd_file);
         return main_grid;
     }
@@ -3237,11 +3235,11 @@ static bool rd_grid_compare__(const rd_grid_type *g1, const rd_grid_type *g2,
 
     // The name of the parent grid corresponds to a filename; they can be different.
     if (equal && g1->parent_grid) {
-        if (!util_string_equal(g1->name, g2->name)) {
+        if (g1->name != g2->name) {
             equal = false;
             if (verbose)
-                fprintf(stderr, "Difference in name %s <-> %s \n", g1->name,
-                        g2->name);
+                fprintf(stderr, "Difference in name %s <-> %s \n",
+                        g1->name.c_str(), g2->name.c_str());
         }
     }
 
@@ -3769,7 +3767,6 @@ void rd_grid_free(rd_grid_type *grid) {
 
     vector_free(grid->coarse_cells);
     free(grid->parent_name);
-    free(grid->name);
     delete grid;
 }
 
@@ -4375,7 +4372,7 @@ const char *rd_grid_iget_lgr_name(const rd_grid_type *rd_grid, int lgr_index) {
     if (lgr_index < (vector_get_size(rd_grid->LGR_list))) {
         const rd_grid_type *lgr =
             (const rd_grid_type *)vector_iget(rd_grid->LGR_list, lgr_index);
-        return lgr->name;
+        return rd_grid_get_name(lgr);
     } else
         return NULL;
 }
@@ -4383,7 +4380,7 @@ const char *rd_grid_iget_lgr_name(const rd_grid_type *rd_grid, int lgr_index) {
 const char *rd_grid_get_lgr_name(const rd_grid_type *rd_grid, int lgr_nr) {
     __assert_main_grid(rd_grid);
     if (lgr_nr == 0)
-        return rd_grid->name;
+        return rd_grid_get_name(rd_grid);
     {
         int lgr_index = int_vector_iget(rd_grid->lgr_index_map, lgr_nr);
         return rd_grid_iget_lgr_name(rd_grid, lgr_index);
@@ -4392,7 +4389,7 @@ const char *rd_grid_get_lgr_name(const rd_grid_type *rd_grid, int lgr_nr) {
 
 int rd_grid_get_lgr_nr_from_name(const rd_grid_type *grid, const char *name) {
     __assert_main_grid(grid);
-    if (strcmp(name, grid->name) == 0)
+    if (strcmp(name, grid->name.c_str()) == 0)
         return 0;
     else {
         const rd_grid_type *lgr = rd_grid_get_lgr(grid, name);
@@ -4411,7 +4408,7 @@ int rd_grid_get_lgr_nr_from_name(const rd_grid_type *grid, const char *name) {
 int rd_grid_get_lgr_nr(const rd_grid_type *rd_grid) { return rd_grid->lgr_nr; }
 
 const char *rd_grid_get_name(const rd_grid_type *rd_grid) {
-    return rd_grid->name;
+    return rd_grid->name.empty() ? NULL : rd_grid->name.c_str();
 }
 
 int rd_grid_get_global_size(const rd_grid_type *rd_grid) {
@@ -4795,7 +4792,7 @@ static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
                                   ert_rd_unit_enum output_unit) {
     if (grid->parent_grid != NULL) {
         rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
-        rd_kw_iset_string8(lgr_kw, 0, grid->name);
+        rd_kw_iset_string8(lgr_kw, 0, grid->name.c_str());
         rd_kw_fwrite(lgr_kw, fortio);
         rd_kw_free(lgr_kw);
     }
@@ -5361,7 +5358,7 @@ static void rd_grid_fwrite_EGRID__(rd_grid_type *grid, fortio_type *fortio,
     } else {
         {
             rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
-            rd_kw_iset_string8(lgr_kw, 0, grid->name);
+            rd_kw_iset_string8(lgr_kw, 0, grid->name.c_str());
             rd_kw_fwrite(lgr_kw, fortio);
             rd_kw_free(lgr_kw);
         }
