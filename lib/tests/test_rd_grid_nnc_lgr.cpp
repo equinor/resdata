@@ -1,12 +1,18 @@
 #include <catch2/catch.hpp>
+
 #include <algorithm>
 #include <memory>
+#include <filesystem>
+#include <string>
+#include <vector>
+
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <resdata/nnc_info.hpp>
 #include <resdata/nnc_vector.hpp>
-#include <vector>
+#include <resdata/FortIO.hpp>
+#include <resdata/rd_endian_flip.hpp>
 
 #include "grid_fixtures.hpp"
 #include "tmpdir.hpp"
@@ -527,5 +533,232 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with amalgamated NNCs between two LGRs",
             REQUIRE(rd_grid_has_lgr(grid.get(), "LGR1"));
             REQUIRE(rd_grid_has_lgr(grid.get(), "LGR2"));
         }
+    }
+}
+
+bool is_hosted_by(const rd_grid_type *parent, const rd_grid_type *child) {
+    const int n = rd_grid_get_global_size(parent);
+    for (int i = 0; i < n; ++i)
+        if (rd_grid_get_cell_lgr1(parent, i) == child)
+            return true;
+    return false;
+}
+
+TEST_CASE_METHOD(Tmpdir, "Fetching lgr by name and index") {
+    GIVEN("An EGRID with a single LGR named 'MYLGR'") {
+        auto filename = dirname / "EGRID_NAME_BASIC.EGRID";
+        auto grid = load_egrid_with_single_lgr(filename, 2, 2, 2, 1, 1, 1, 0, 0,
+                                               0, "MYLGR");
+        REQUIRE(grid != nullptr);
+
+        THEN("LGR can be fetched by name and index") {
+            REQUIRE(rd_grid_get_num_lgr(grid.get()) == 1);
+            REQUIRE(rd_grid_has_lgr(grid.get(), "MYLGR"));
+            REQUIRE(std::string(rd_grid_iget_lgr_name(grid.get(), 0)) ==
+                    "MYLGR");
+        }
+
+        WHEN("Calling rd_grid_iget_lgr") {
+            rd_grid_type *expected = rd_grid_iget_lgr(grid.get(), 0);
+            REQUIRE(expected != nullptr);
+
+            THEN("It returns the same as get_lgr with its name") {
+                REQUIRE(rd_grid_get_lgr(grid.get(), "MYLGR") == expected);
+            }
+
+            THEN("It returns the same as get_lgr with its name with "
+                 "surrounding whitespace") {
+                REQUIRE(rd_grid_get_lgr(grid.get(), "  MYLGR") == expected);
+                REQUIRE(rd_grid_get_lgr(grid.get(), "MYLGR   ") == expected);
+                REQUIRE(rd_grid_get_lgr(grid.get(), "  MYLGR  ") == expected);
+                REQUIRE_THROWS(rd_grid_get_lgr(grid.get(), "\tMYLGR"));
+            }
+        }
+        SECTION("throws for an unknown name") {
+            REQUIRE_THROWS(rd_grid_get_lgr(grid.get(), "NOPE"));
+        }
+    }
+
+    GIVEN("An EGRID whose LGR_KW will be space padded") {
+        auto filename = dirname / "EGRID_NAME_PAD.EGRID";
+        auto grid = load_egrid_with_single_lgr(filename, 2, 2, 2, 1, 1, 1, 0, 0,
+                                               0, "AB");
+        REQUIRE(grid != nullptr);
+
+        THEN("The name has no trailing whitespace") {
+            std::string name = rd_grid_iget_lgr_name(grid.get(), 0);
+            REQUIRE(name == "AB");
+            REQUIRE(rd_grid_has_lgr(grid.get(), "AB"));
+        }
+    }
+
+    GIVEN("An EGRID with an empty LGR_PARENTW") {
+        auto filename = dirname / "EGRID_PARENT_EMPTY.EGRID";
+        auto grid = load_egrid_with_single_lgr(filename, 2, 2, 2, 1, 1, 1, 0, 0,
+                                               0, "LGR1");
+        REQUIRE(grid != nullptr);
+
+        const rd_grid_type *lgr = rd_grid_get_lgr(grid.get(), "LGR1");
+        REQUIRE(lgr != nullptr);
+
+        THEN("The LGR is hosted by the main grid") {
+            REQUIRE(is_hosted_by(grid.get(), lgr));
+        }
+    }
+
+    GIVEN("An EGRID without any LGR_PARENT at all") {
+        auto filename = dirname / "EGRID_PARENT_MISSING.EGRID";
+        write_egrid_with_single_lgr_no_parent_kw(filename, "LGR1");
+        auto grid = rd_grid_ptr(rd_grid_alloc(filename.c_str()), &rd_grid_free);
+        REQUIRE(grid != nullptr);
+        REQUIRE(rd_grid_has_lgr(grid.get(), "LGR1"));
+
+        const rd_grid_type *lgr = rd_grid_get_lgr(grid.get(), "LGR1");
+
+        THEN("The LGR is hosted by the main grid") {
+            REQUIRE(is_hosted_by(grid.get(), lgr));
+        }
+    }
+
+    GIVEN("An EGRID with a nested LGR whose LGR_PARENT names another LGR") {
+        auto filename = dirname / "EGRID_PARENT_NESTED.EGRID";
+        auto grid =
+            load_egrid_with_nested_lgr(filename, 3, 3, 3, 1, 1, 1, 2, 2, 2,
+                                       "OUTER", 0, 0, 0, 2, 2, 2, "INNER");
+        REQUIRE(grid != nullptr);
+        REQUIRE(rd_grid_has_lgr(grid.get(), "OUTER"));
+        REQUIRE(rd_grid_has_lgr(grid.get(), "INNER"));
+
+        const rd_grid_type *outer = rd_grid_get_lgr(grid.get(), "OUTER");
+        const rd_grid_type *inner = rd_grid_get_lgr(grid.get(), "INNER");
+
+        THEN("OUTER (LGR_PARENT_KW empty) is hosted by the main grid") {
+            REQUIRE(is_hosted_by(grid.get(), outer));
+            REQUIRE_FALSE(is_hosted_by(outer, outer));
+        }
+
+        THEN("INNER is hosted by OUTER, not the main grid") {
+            REQUIRE(is_hosted_by(outer, inner));
+            REQUIRE_FALSE(is_hosted_by(grid.get(), inner));
+        }
+    }
+
+    GIVEN("A GRID file with a one-element LGR_KW") {
+        auto filename = dirname / "GRID_NAME_SIZE1.GRID";
+        auto grid = load_grid_file_main_with_lgr(filename, 1, 1, 2);
+        REQUIRE(grid != nullptr);
+
+        THEN("The LGR is registered with the name from LGR_KW") {
+            REQUIRE(rd_grid_get_num_lgr(grid.get()) == 1);
+            std::string name = rd_grid_iget_lgr_name(grid.get(), 0);
+            REQUIRE_FALSE(name.empty());
+            REQUIRE(name.back() != ' ');
+            REQUIRE(rd_grid_has_lgr(grid.get(), name.c_str()));
+        }
+
+        const rd_grid_type *lgr = rd_grid_iget_lgr(grid.get(), 0);
+        REQUIRE(lgr != nullptr);
+
+        THEN("The LGR is hosted by the main grid") {
+            REQUIRE(is_hosted_by(grid.get(), lgr));
+        }
+    }
+
+    GIVEN("A GRID file with a two-element LGR_KW") {
+        auto filename = dirname / "GRID_NAME_SIZE2.GRID";
+        auto grid = load_grid_file_with_lgr_parent(filename, "MYLGR", "");
+        REQUIRE(grid != nullptr);
+
+        THEN("LGR_KW[0] is used as the LGR name") {
+            REQUIRE(rd_grid_has_lgr(grid.get(), "MYLGR"));
+            REQUIRE(std::string(rd_grid_iget_lgr_name(grid.get(), 0)) ==
+                    "MYLGR");
+        }
+    }
+
+    GIVEN("A GRID file with LGR_KW[1] empty") {
+        auto filename = dirname / "GRID_PARENT_EMPTY.GRID";
+        auto grid = load_grid_file_with_lgr_parent(filename, "LGR1", "");
+        REQUIRE(grid != nullptr);
+
+        const rd_grid_type *lgr = rd_grid_get_lgr(grid.get(), "LGR1");
+        REQUIRE(lgr != nullptr);
+
+        THEN("The LGR is hosted by the main grid (empty parent ignored)") {
+            REQUIRE(is_hosted_by(grid.get(), lgr));
+        }
+    }
+
+    GIVEN("A GRID file with LGR_KW[1] equal to the literal 'GLOBAL'") {
+        auto filename = dirname / "GRID_PARENT_GLOBAL.GRID";
+        auto grid =
+            load_grid_file_with_lgr_parent(filename, "LGR1", GLOBAL_STRING);
+        REQUIRE(grid != nullptr);
+
+        const rd_grid_type *lgr = rd_grid_get_lgr(grid.get(), "LGR1");
+        REQUIRE(lgr != nullptr);
+
+        THEN("'GLOBAL' is treated like an empty parent: hosted by main grid") {
+            REQUIRE(is_hosted_by(grid.get(), lgr));
+        }
+    }
+
+    GIVEN("A GRID file whose inner LGR_KW[1] names an outer LGR") {
+        auto filename = dirname / "GRID_PARENT_NESTED.GRID";
+        auto grid = load_grid_file_with_nested_lgr(filename, "OUTER", "INNER");
+        REQUIRE(grid != nullptr);
+        REQUIRE(rd_grid_has_lgr(grid.get(), "OUTER"));
+        REQUIRE(rd_grid_has_lgr(grid.get(), "INNER"));
+
+        const rd_grid_type *outer = rd_grid_get_lgr(grid.get(), "OUTER");
+        const rd_grid_type *inner = rd_grid_get_lgr(grid.get(), "INNER");
+
+        THEN("OUTER (LGR_KW size 1) is hosted by the main grid") {
+            REQUIRE(is_hosted_by(grid.get(), outer));
+        }
+
+        THEN("INNER  is hosted by OUTER") {
+            REQUIRE(is_hosted_by(outer, inner));
+            REQUIRE_FALSE(is_hosted_by(grid.get(), inner));
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_grid_has_lgr name lookup", "[unittest]") {
+    auto filename = dirname / "HAS_LGR.EGRID";
+    auto grid =
+        load_egrid_with_single_lgr(filename, 2, 2, 2, 1, 1, 1, 0, 0, 0, "LGR1");
+    REQUIRE(grid != nullptr);
+
+    SECTION("returns true for an existing LGR") {
+        REQUIRE(rd_grid_has_lgr(grid.get(), "LGR1"));
+    }
+
+    SECTION("returns false for an unknown LGR name") {
+        REQUIRE_FALSE(rd_grid_has_lgr(grid.get(), "NOPE"));
+    }
+
+    SECTION("strips leading and trailing spaces from the query") {
+        REQUIRE(rd_grid_has_lgr(grid.get(), "  LGR1"));
+        REQUIRE(rd_grid_has_lgr(grid.get(), "LGR1  "));
+        REQUIRE(rd_grid_has_lgr(grid.get(), "  LGR1   "));
+    }
+
+    SECTION("does not strip non-space whitespace (tabs/newlines)") {
+        REQUIRE_FALSE(rd_grid_has_lgr(grid.get(), "LGR1\t"));
+        REQUIRE_FALSE(rd_grid_has_lgr(grid.get(), "\nLGR1"));
+    }
+
+    SECTION("does not strip interior whitespace") {
+        REQUIRE_FALSE(rd_grid_has_lgr(grid.get(), "LG R1"));
+    }
+
+    SECTION("returns false for a NULL name") {
+        REQUIRE_FALSE(rd_grid_has_lgr(grid.get(), nullptr));
+    }
+
+    SECTION("returns false for an empty / whitespace-only name") {
+        REQUIRE_FALSE(rd_grid_has_lgr(grid.get(), ""));
+        REQUIRE_FALSE(rd_grid_has_lgr(grid.get(), "   "));
     }
 }

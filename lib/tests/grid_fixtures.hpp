@@ -519,6 +519,38 @@ inline void write_grid_file_with_mapaxes(const fs::path &filename,
 }
 
 /**
+ * Writes a minimal EGRID file with one LGR but WITHOUT an LGR_PARENT_KW
+ */
+inline void
+write_egrid_with_single_lgr_no_parent_kw(const fs::path &filename,
+                                         const std::string &lgr_name) {
+    auto main_grid = make_rectangular_grid(2, 2, 2, 1.0, 1.0, 1.0, nullptr);
+    auto lgr_grid = make_rectangular_grid(1, 1, 1, 1.0, 1.0, 1.0, nullptr);
+
+    auto fortio = make_fortio_writer(filename, false);
+    write_egrid_filehead(fortio);
+    write_egrid_gridhead(fortio, 2, 2, 2, 0);
+    write_egrid_grid_body(main_grid.get(), fortio);
+    write_empty_kw(fortio, ENDGRID_KW);
+
+    auto lgr_kw = make_rd_kw(LGR_KW, 1, RD_CHAR);
+    rd_kw_iset_string8(lgr_kw.get(), 0, lgr_name.c_str());
+    rd_kw_fwrite(lgr_kw.get(), fortio.get());
+
+    // Deliberately NO LGR_PARENT_KW here.
+
+    write_egrid_gridhead(fortio, 1, 1, 1, 1);
+    write_egrid_grid_body(lgr_grid.get(), fortio);
+
+    auto hostnum_kw = make_rd_kw(HOSTNUM_KW, 1, RD_INT);
+    rd_kw_iset_int(hostnum_kw.get(), 0, 1);
+    rd_kw_fwrite(hostnum_kw.get(), fortio.get());
+
+    write_empty_kw(fortio, ENDGRID_KW);
+    write_empty_kw(fortio, ENDLGR_KW);
+}
+
+/**
  * Writes a minimal formatted .FEGRID file (formatted EGRID) for a 1x1x1
  * single-cell rectangular grid.
  */
