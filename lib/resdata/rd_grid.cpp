@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <string_view>
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -1896,12 +1897,23 @@ static void rd_grid_install_lgr_GRID(rd_grid_type *host_grid,
     rd_grid_install_lgr_common(host_grid, lgr_grid);
 }
 
+static std::string strip_spaces(std::string_view s) {
+    auto first = s.find_first_not_of(' ');
+    if (first == std::string_view::npos)
+        return {};
+    auto last = s.find_last_not_of(' ');
+    return std::string(s.substr(first, last - first + 1));
+}
+
+static std::string rd_kw_iget_stripped_string(const rd_kw_type *kw, int index) {
+    return strip_spaces(static_cast<const char *>(rd_kw_iget_ptr(kw, index)));
+}
+
 /**
    sets the name of the lgr and the name of the parent, if this is a
    nested lgr. for normal lgr descending directly from the coarse grid
    the parent_name is set to nullopt.
 */
-
 static void rd_grid_set_lgr_name_EGRID(rd_grid_type *lgr_grid,
                                        const rd_file_type *rd_file,
                                        int grid_nr) {
@@ -4145,12 +4157,7 @@ static void __assert_main_grid(const rd_grid_type *rd_grid) {
 rd_grid_type *rd_grid_get_lgr(const rd_grid_type *main_grid,
                               const char *__lgr_name) {
     __assert_main_grid(main_grid);
-    {
-        char *lgr_name = util_alloc_strip_copy(__lgr_name);
-        rd_grid_type *lgr_grid = main_grid->LGR_hash.at(lgr_name);
-        free(lgr_name);
-        return lgr_grid;
-    }
+    return main_grid->LGR_hash.at(strip_spaces(__lgr_name));
 }
 
 /**
@@ -4163,12 +4170,7 @@ bool rd_grid_has_lgr(const rd_grid_type *main_grid, const char *__lgr_name) {
         return false;
 
     __assert_main_grid(main_grid);
-    {
-        char *lgr_name = util_alloc_strip_copy(__lgr_name);
-        bool has_lgr = main_grid->LGR_hash.count(lgr_name) > 0;
-        free(lgr_name);
-        return has_lgr;
-    }
+    return main_grid->LGR_hash.count(strip_spaces(__lgr_name)) > 0;
 }
 
 bool rd_grid_has_lgr_nr(const rd_grid_type *main_grid, int lgr_nr) {
