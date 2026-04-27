@@ -834,30 +834,31 @@ static void rd_cell_dump_ascii(rd_cell_type &cell, int i, int j, int k,
 static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
                                 const rd_cell_type &cell, bool fracture_cell,
                                 int coords_size, int i, int j, int k,
-                                int global_index, rd_kw_type *coords_kw,
-                                rd_kw_type *corners_kw, fortio_type *fortio) {
-    rd_kw_iset_int(coords_kw, 0, i + 1);
-    rd_kw_iset_int(coords_kw, 1, j + 1);
-    rd_kw_iset_int(coords_kw, 2, k + 1);
-    rd_kw_iset_int(coords_kw, 3, global_index + 1);
+                                int global_index, const rd_kw_ptr &coords_kw,
+                                const rd_kw_ptr &corners_kw, ERT::FortIO &fortio) {
+    rd_kw_iset_int(coords_kw.get(), 0, i + 1);
+    rd_kw_iset_int(coords_kw.get(), 1, j + 1);
+    rd_kw_iset_int(coords_kw.get(), 2, k + 1);
+    rd_kw_iset_int(coords_kw.get(), 3, global_index + 1);
 
-    rd_kw_iset_int(coords_kw, 4, 0);
+    rd_kw_iset_int(coords_kw.get(), 4, 0);
     if (fracture_cell) {
         if (cell.active & CELL_ACTIVE_FRACTURE)
-            rd_kw_iset_int(coords_kw, 4, 1);
+            rd_kw_iset_int(coords_kw.get(), 4, 1);
     } else {
         if (cell.active & CELL_ACTIVE_MATRIX)
-            rd_kw_iset_int(coords_kw, 4, 1);
+            rd_kw_iset_int(coords_kw.get(), 4, 1);
     }
 
     if (coords_size == 7) {
-        rd_kw_iset_int(coords_kw, 5, cell.host_cell + 1);
-        rd_kw_iset_int(coords_kw, 6, cell.coarse_group + 1);
+        rd_kw_iset_int(coords_kw.get(), 5, cell.host_cell + 1);
+        rd_kw_iset_int(coords_kw.get(), 6, cell.coarse_group + 1);
     }
 
-    rd_kw_fwrite(coords_kw, fortio);
+    rd_kw_fwrite(coords_kw.get(), fortio.get());
     {
-        float *corners = (float *)rd_kw_get_void_ptr(corners_kw);
+        float *corners =
+            static_cast<float *>(rd_kw_get_void_ptr(corners_kw.get()));
         point_type point;
 
         for (int c = 0; c < 8; c++) {
@@ -871,7 +872,7 @@ static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
             corners[3 * c + 2] = point.z;
         }
     }
-    rd_kw_fwrite(corners_kw, fortio);
+    rd_kw_fwrite(corners_kw.get(), fortio.get());
 }
 
 static double max2(double x1, double x2) { return (x1 > x2) ? x1 : x2; }
@@ -4664,72 +4665,66 @@ static void rd_grid_fwrite_main_GRID_headers(const rd_grid_type *rd_grid,
 }
 
 static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
-                                  fortio_type *fortio,
+                                  ERT::FortIO &fortio,
                                   ert_rd_unit_enum output_unit) {
     if (grid->parent_grid != NULL) {
-        rd_kw_type *lgr_kw = rd_kw_alloc(LGR_KW, 1, RD_CHAR);
-        rd_kw_iset_string8(lgr_kw, 0, grid->name.c_str());
-        rd_kw_fwrite(lgr_kw, fortio);
-        rd_kw_free(lgr_kw);
+        auto lgr_kw = make_rd_kw(LGR_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(lgr_kw.get(), 0, grid->name.c_str());
+        rd_kw_fwrite(lgr_kw.get(), fortio.get());
     }
 
     {
-        rd_kw_type *dimens_kw = rd_kw_alloc(DIMENS_KW, 3, RD_INT);
-        rd_kw_iset_int(dimens_kw, 0, grid->nx);
-        rd_kw_iset_int(dimens_kw, 1, grid->ny);
+        auto dimens_kw = make_rd_kw(DIMENS_KW, 3, RD_INT);
+        rd_kw_iset_int(dimens_kw.get(), 0, grid->nx);
+        rd_kw_iset_int(dimens_kw.get(), 1, grid->ny);
         if (grid->dualp_flag == FILEHEAD_SINGLE_POROSITY)
-            rd_kw_iset_int(dimens_kw, 2, grid->nz);
+            rd_kw_iset_int(dimens_kw.get(), 2, grid->nz);
         else
-            rd_kw_iset_int(dimens_kw, 2, 2 * grid->nz);
+            rd_kw_iset_int(dimens_kw.get(), 2, 2 * grid->nz);
 
-        rd_kw_fwrite(dimens_kw, fortio);
-        rd_kw_free(dimens_kw);
+        rd_kw_fwrite(dimens_kw.get(), fortio.get());
     }
 
     if (grid->parent_grid == NULL)
-        rd_grid_fwrite_main_GRID_headers(grid, fortio, output_unit);
+        rd_grid_fwrite_main_GRID_headers(grid, fortio.get(), output_unit);
 
     {
-        rd_kw_type *radial_kw = rd_kw_alloc(RADIAL_KW, 1, RD_CHAR);
-        rd_kw_iset_string8(radial_kw, 0, "FALSE");
-        rd_kw_fwrite(radial_kw, fortio);
-        rd_kw_free(radial_kw);
+        auto radial_kw = make_rd_kw(RADIAL_KW, 1, RD_CHAR);
+        rd_kw_iset_string8(radial_kw.get(), 0, "FALSE");
+        rd_kw_fwrite(radial_kw.get(), fortio.get());
     }
 
-    {
-        rd_kw_type *coords_kw = rd_kw_alloc(COORDS_KW, coords_size, RD_INT);
-        rd_kw_type *corners_kw = rd_kw_alloc(CORNERS_KW, 24, RD_FLOAT);
-        for (int k = 0; k < grid->nz; k++) {
+    auto coords_kw = make_rd_kw(COORDS_KW, coords_size, RD_INT);
+    auto corners_kw = make_rd_kw(CORNERS_KW, 24, RD_FLOAT);
+    for (int k = 0; k < grid->nz; k++) {
+        for (int j = 0; j < grid->ny; j++) {
+            for (int i = 0; i < grid->nx; i++) {
+                int global_index =
+                    rd_grid_get_global_index__(grid, i, j, k);
+                const rd_cell_type *cell =
+                    rd_grid_get_cell(grid, global_index);
+
+                rd_cell_fwrite_GRID(grid, cell, false, coords_size, i, j, k,
+                                    global_index, coords_kw, corners_kw,
+                                    fortio);
+            }
+        }
+    }
+
+    if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
+        for (int k = grid->nz; k < 2 * grid->nz; k++) {
             for (int j = 0; j < grid->ny; j++) {
                 for (int i = 0; i < grid->nx; i++) {
-                    int global_index =
-                        rd_grid_get_global_index__(grid, i, j, k);
+                    int global_index = rd_grid_get_global_index__(
+                        grid, i, j, k - grid->nz);
                     const rd_cell_type &cell = grid->cells.at(global_index);
 
-                    rd_cell_fwrite_GRID(grid, cell, false, coords_size, i, j, k,
-                                        global_index, coords_kw, corners_kw,
-                                        fortio);
+                    rd_cell_fwrite_GRID(grid, cell, true, coords_size, i, j,
+                                        k, global_index, coords_kw,
+                                        corners_kw, fortio);
                 }
             }
         }
-
-        if (grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-            for (int k = grid->nz; k < 2 * grid->nz; k++) {
-                for (int j = 0; j < grid->ny; j++) {
-                    for (int i = 0; i < grid->nx; i++) {
-                        int global_index = rd_grid_get_global_index__(
-                            grid, i, j, k - grid->nz);
-                        const rd_cell_type &cell = grid->cells.at(global_index);
-
-                        rd_cell_fwrite_GRID(grid, cell, true, coords_size, i, j,
-                                            k, global_index, coords_kw,
-                                            corners_kw, fortio);
-                    }
-                }
-            }
-        }
-        rd_kw_free(coords_kw);
-        rd_kw_free(corners_kw);
     }
 }
 
@@ -4738,8 +4733,7 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
     int coords_size = 5;
     bool fmt_file = false;
 
-    fortio_type *fortio =
-        fortio_open_writer(filename, fmt_file, RD_ENDIAN_FLIP);
+    ERT::FortIO fortio(filename, std::ios_base::out, fmt_file, RD_ENDIAN_FLIP);
     if (grid->children.size() > 0)
         coords_size = 7;
 
@@ -4751,7 +4745,6 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
     for (const auto &igrid : grid->LGR_list) {
         rd_grid_fwrite_GRID__(igrid.get(), coords_size, fortio, output_unit);
     }
-    fortio_fclose(fortio);
 }
 
 /*
