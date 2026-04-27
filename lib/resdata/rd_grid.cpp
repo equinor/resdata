@@ -2386,17 +2386,18 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
   */
 
     for (int i = 0; i < num_nnchead_kw; i++) {
-        rd_file_view_type *lgr_view =
-            rd_file_alloc_global_blockview(rd_file, NNCHEAD_KW, i);
+        auto lgr_view = rd_file_view_ptr(
+            rd_file_alloc_global_blockview(rd_file, NNCHEAD_KW, i),
+            &rd_file_view_free);
         rd_kw_type *nnchead_kw =
-            rd_file_view_iget_named_kw(lgr_view, NNCHEAD_KW, 0);
+            rd_file_view_iget_named_kw(lgr_view.get(), NNCHEAD_KW, 0);
         int lgr_nr = rd_kw_iget_int(nnchead_kw, NNCHEAD_LGR_INDEX);
 
-        if (rd_file_view_has_kw(lgr_view, NNC1_KW)) {
+        if (rd_file_view_has_kw(lgr_view.get(), NNC1_KW)) {
             const rd_kw_type *nnc1 =
-                rd_file_view_iget_named_kw(lgr_view, NNC1_KW, 0);
+                rd_file_view_iget_named_kw(lgr_view.get(), NNC1_KW, 0);
             const rd_kw_type *nnc2 =
-                rd_file_view_iget_named_kw(lgr_view, NNC2_KW, 0);
+                rd_file_view_iget_named_kw(lgr_view.get(), NNC2_KW, 0);
 
             {
                 rd_grid_type *grid =
@@ -2407,11 +2408,11 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
             }
         }
 
-        if (rd_file_view_has_kw(lgr_view, NNCL_KW)) {
+        if (rd_file_view_has_kw(lgr_view.get(), NNCL_KW)) {
             const rd_kw_type *nncl =
-                rd_file_view_iget_named_kw(lgr_view, NNCL_KW, 0);
+                rd_file_view_iget_named_kw(lgr_view.get(), NNCL_KW, 0);
             const rd_kw_type *nncg =
-                rd_file_view_iget_named_kw(lgr_view, NNCG_KW, 0);
+                rd_file_view_iget_named_kw(lgr_view.get(), NNCG_KW, 0);
             {
                 rd_grid_type *grid =
                     (lgr_nr > 0)
@@ -2420,8 +2421,6 @@ static void rd_grid_init_nnc(rd_grid_type *main_grid, rd_file_type *rd_file) {
                 rd_grid_init_nnc_cells(main_grid, grid, nncg, nncl);
             }
         }
-
-        rd_file_view_free(lgr_view);
     }
 }
 
