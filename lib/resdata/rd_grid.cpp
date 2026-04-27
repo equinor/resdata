@@ -685,14 +685,14 @@ struct rd_grid_struct {
     int total_active_fracture;
     std::vector<bool>
         visited; /* internal helper struct used when searching for index - empty when unused. */
-    int *
+    std::vector<int>
         index_map; /* this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
-    int *
+    std::vector<int>
         inv_index_map; /* this is list of total_active elements - which point back to the index_map. */
 
-    int *
+    std::vector<int>
         fracture_index_map; /* For fractures: this a list of nx*ny*nz elements, where value -1 means inactive cell .*/
-    int *
+    std::vector<int>
         inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */
 
     rd_cell_type *cells;
@@ -1339,10 +1339,6 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
 
     grid->dualp_flag = dualp_flag;
     grid->coord_kw = NULL;
-    grid->inv_index_map = NULL;
-    grid->index_map = NULL;
-    grid->fracture_index_map = NULL;
-    grid->inv_fracture_index_map = NULL;
     grid->unit_system = unit_system;
 
     if (global_grid != NULL) {
@@ -1528,9 +1524,10 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
    rd_grid->total_active is correct.
 */
 
-static void rd_grid_init_index_map__(rd_grid_type *rd_grid, int *index_map,
-                                     int *inv_index_map, int active_mask,
-                                     int type_index) {
+static void rd_grid_init_index_map__(rd_grid_type *rd_grid,
+                                     std::vector<int> &index_map,
+                                     std::vector<int> &inv_index_map,
+                                     int active_mask, int type_index) {
     for (int global_index = 0; global_index < rd_grid->size; global_index++) {
         const rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
         if (cell->active & active_mask) {
@@ -1546,24 +1543,16 @@ static void rd_grid_init_index_map__(rd_grid_type *rd_grid, int *index_map,
 
 static void rd_grid_realloc_index_map(rd_grid_type *rd_grid) {
     /* Creating the inverse mapping for the matrix cells. */
-    rd_grid->index_map = (int *)util_realloc(
-        rd_grid->index_map, rd_grid->size * sizeof *rd_grid->index_map);
-    rd_grid->inv_index_map = (int *)util_realloc(
-        rd_grid->inv_index_map,
-        rd_grid->total_active * sizeof *rd_grid->inv_index_map);
+    rd_grid->index_map.resize(rd_grid->size);
+    rd_grid->inv_index_map.resize(rd_grid->total_active);
     rd_grid_init_index_map__(rd_grid, rd_grid->index_map,
                              rd_grid->inv_index_map, CELL_ACTIVE_MATRIX,
                              MATRIX_INDEX);
 
     /* Create the inverse mapping for the fractures. */
     if (rd_grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-        rd_grid->fracture_index_map = (int *)util_realloc(
-            rd_grid->fracture_index_map,
-            rd_grid->size * sizeof *rd_grid->fracture_index_map);
-        rd_grid->inv_fracture_index_map =
-            (int *)util_realloc(rd_grid->inv_fracture_index_map,
-                                rd_grid->total_active_fracture *
-                                    sizeof *rd_grid->inv_fracture_index_map);
+        rd_grid->fracture_index_map.resize(rd_grid->size);
+        rd_grid->inv_fracture_index_map.resize(rd_grid->total_active_fracture);
         rd_grid_init_index_map__(rd_grid, rd_grid->fracture_index_map,
                                  rd_grid->inv_fracture_index_map,
                                  CELL_ACTIVE_FRACTURE, FRACTURE_INDEX);
@@ -3157,8 +3146,7 @@ static bool rd_grid_compare_index(const rd_grid_type *g1,
     }
 
     if (equal) {
-        if (memcmp(g1->index_map, g2->index_map,
-                   g1->size * sizeof *g1->index_map) != 0) {
+        if (g1->index_map != g2->index_map) {
             equal = false;
             if (verbose)
                 fprintf(stderr, "Difference in index map \n");
@@ -3166,8 +3154,7 @@ static bool rd_grid_compare_index(const rd_grid_type *g1,
     }
 
     if (equal) {
-        if (memcmp(g1->inv_index_map, g2->inv_index_map,
-                   g1->total_active * sizeof *g1->inv_index_map) != 0) {
+        if (g1->inv_index_map != g2->inv_index_map) {
             equal = false;
             if (verbose)
                 fprintf(stderr, "Difference in inverse index map \n");
@@ -3183,8 +3170,7 @@ static bool rd_grid_compare_index(const rd_grid_type *g1,
         }
 
         if (equal) {
-            if (memcmp(g1->fracture_index_map, g2->fracture_index_map,
-                       g1->size * sizeof *g1->fracture_index_map) != 0) {
+            if (g1->fracture_index_map != g2->fracture_index_map) {
                 equal = false;
                 if (verbose)
                     fprintf(stderr, "Difference in fracture_index_map \n");
@@ -3192,9 +3178,7 @@ static bool rd_grid_compare_index(const rd_grid_type *g1,
         }
 
         if (equal) {
-            if (memcmp(g1->inv_fracture_index_map, g2->inv_fracture_index_map,
-                       g1->total_active_fracture *
-                           sizeof *g1->inv_fracture_index_map) != 0) {
+            if (g1->inv_fracture_index_map != g2->inv_fracture_index_map) {
                 equal = false;
                 if (verbose)
                     fprintf(stderr, "Difference in inv_fracture_index_map \n");
@@ -3751,11 +3735,6 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
 
 void rd_grid_free(rd_grid_type *grid) {
     rd_grid_free_cells(grid);
-    free(grid->index_map);
-    free(grid->inv_index_map);
-
-    free(grid->fracture_index_map);
-    free(grid->inv_fracture_index_map);
     free(grid->mapaxes);
 
     if (RD_GRID_MAINGRID_LGR_NR == grid->lgr_nr) { /* This is the main grid. */
@@ -3860,7 +3839,7 @@ int rd_grid_get_global_index1A(const rd_grid_type *rd_grid, int active_index) {
 
 int rd_grid_get_global_index1F(const rd_grid_type *rd_grid,
                                int active_fracture_index) {
-    if (rd_grid->inv_fracture_index_map == NULL ||
+    if (rd_grid->inv_fracture_index_map.empty() ||
         active_fracture_index >= rd_grid->total_active_fracture)
         return -1;
     return rd_grid->inv_fracture_index_map[active_fracture_index];
@@ -3898,7 +3877,7 @@ int rd_grid_get_active_index1(const rd_grid_type *rd_grid, int global_index) {
 
 int rd_grid_get_active_fracture_index1(const rd_grid_type *rd_grid,
                                        int global_index) {
-    if (rd_grid->fracture_index_map == NULL)
+    if (rd_grid->fracture_index_map.empty())
         return -1;
     else
         return rd_grid->fracture_index_map[global_index];
@@ -4600,7 +4579,8 @@ void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
 
         {
             rd_kw_type *tmp_kw = rd_kw_alloc_scatter_copy(
-                rd_kw, rd_grid->size, rd_grid->inv_index_map, default_ptr);
+                rd_kw, rd_grid->size, rd_grid->inv_index_map.data(),
+                default_ptr);
             rd_kw_fprintf_grdecl__(tmp_kw, special_header, stream);
             rd_kw_free(tmp_kw);
         }
