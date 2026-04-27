@@ -715,8 +715,10 @@ struct rd_grid_struct {
     that these fields will be NULL for lgr grids, i.e. grids with
     lgr_nr > 0.
   */
-    vector_type *
-        LGR_list; /* a vector of rd_grid instances for LGRs - the index corresponds to the order LGRs are read from file*/
+    std::vector<rd_grid_ptr>
+        LGR_list; /* a vector of rd_grid instances for LGRs. The index
+                     corresponds to the order LGRs are read from file.
+                     The vector is empty except for the main grid.*/
     int_vector_type *
         lgr_index_map; /* a vector that maps LGR-nr for EGRID files to index into the LGR_list.*/
     std::unordered_map<std::string, rd_grid_type *>
@@ -1342,10 +1344,8 @@ static rd_grid_type *rd_grid_alloc_empty(rd_grid_type *global_grid,
     }
 
     if (RD_GRID_MAINGRID_LGR_NR == lgr_nr) { /* this is the main grid */
-        grid->LGR_list = vector_alloc_new();
         grid->lgr_index_map = int_vector_alloc(0, 0);
     } else {
-        grid->LGR_list = NULL;
         grid->lgr_index_map = NULL;
     }
     grid->name = "";
@@ -1812,17 +1812,12 @@ static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
     }
 }
 
-static void rd_grid_free__(void *arg) {
-    rd_grid_type *rd_grid = rd_grid_safe_cast(arg);
-    rd_grid_free(rd_grid);
-}
-
 /**
    this function will add a rd_grid instance as a lgr to the main
    grid. the lgr grid as added to two different structures of the main
    grid:
 
-    1. in the main_grid->lgr_list the lgr instances are inserted in
+    1. in the main_grid->LGR_list the lgr instances are inserted in
        order of occurence in the grid file. the following equalities
        should apply:
 
@@ -1832,9 +1827,9 @@ static void rd_grid_free__(void *arg) {
        unfortunately not always. Cases have popped up where the series
        of GRIDHEAD(4) values from lgr to lgr have holes :-(
 
-       when installed in the lgr_list vector the lgr grid is installed
-       with a destructor, i.e. the grid is destroyed when the vector
-       is destroyed.
+       The LGR_list owns the grid via a unique_ptr with rd_grid_free
+       as its deleter, so the grid is destroyed when the vector is
+       destroyed.
 
     2. in the main->lgr_hash the lgr instance is installed with the
        lgrname as key. only a reference is installed in the hash
@@ -1848,11 +1843,11 @@ static void rd_grid_free__(void *arg) {
 */
 
 static void rd_grid_add_lgr(rd_grid_type *main_grid, rd_grid_type *lgr_grid) {
-    vector_append_owned_ref(main_grid->LGR_list, lgr_grid, rd_grid_free__);
+    main_grid->LGR_list.emplace_back(lgr_grid, &rd_grid_free);
     if (lgr_grid->lgr_nr >= int_vector_size(main_grid->lgr_index_map))
         int_vector_resize(main_grid->lgr_index_map, lgr_grid->lgr_nr + 1, 0);
     int_vector_iset(main_grid->lgr_index_map, lgr_grid->lgr_nr,
-                    vector_get_size(main_grid->LGR_list) - 1);
+                    main_grid->LGR_list.size() - 1);
     main_grid->LGR_hash[lgr_grid->name] = lgr_grid;
 }
 
@@ -2128,11 +2123,8 @@ static rd_grid_type *rd_grid_alloc_copy__(const rd_grid_type *src_grid,
 rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid) {
     rd_grid_type *copy_grid = rd_grid_alloc_copy__(src_grid, NULL);
 
-    for (int grid_nr = 0; grid_nr < vector_get_size(src_grid->LGR_list);
-         grid_nr++) {
-        const rd_grid_type *src_lgr = (const rd_grid_type *)vector_iget_const(
-            src_grid->LGR_list, grid_nr);
-        rd_grid_type *copy_lgr = rd_grid_alloc_copy__(src_lgr, copy_grid);
+    for (const auto &src_lgr : src_grid->LGR_list) {
+        rd_grid_type *copy_lgr = rd_grid_alloc_copy__(src_lgr.get(), copy_grid);
         rd_grid_type *host_grid;
 
         rd_grid_add_lgr(
@@ -3203,17 +3195,14 @@ bool rd_grid_compare(rd_grid_type *g1, rd_grid_type *g2, bool include_lgr,
     bool equal = rd_grid_compare__(g1, g2, include_nnc, verbose);
 
     if (equal && include_lgr) {
-        if (vector_get_size(g1->LGR_list) == vector_get_size(g2->LGR_list)) {
-            int grid_nr;
-            for (grid_nr = 0; grid_nr < vector_get_size(g1->LGR_list);
-                 grid_nr++) {
-                rd_grid_type *lgr1 =
-                    (rd_grid_type *)vector_iget(g1->LGR_list, grid_nr);
-                rd_grid_type *lgr2 =
-                    (rd_grid_type *)vector_iget(g2->LGR_list, grid_nr);
+        if (g1->LGR_list.size() == g2->LGR_list.size()) {
+            for (size_t grid_nr = 0; grid_nr < g1->LGR_list.size(); grid_nr++) {
+                auto &lgr1 = g1->LGR_list.at(grid_nr);
+                auto &lgr2 = g2->LGR_list.at(grid_nr);
 
-                printf("Comparing lgr grid:%d \n", grid_nr);
-                equal = rd_grid_compare__(lgr1, lgr2, include_nnc, verbose);
+                printf("Comparing lgr grid:%zu \n", grid_nr);
+                equal = rd_grid_compare__(lgr1.get(), lgr2.get(), include_nnc,
+                                          verbose);
                 if (!equal)
                     break;
             }
@@ -3681,7 +3670,6 @@ void rd_grid_free(rd_grid_type *grid) {
     rd_grid_free_cells(grid);
 
     if (RD_GRID_MAINGRID_LGR_NR == grid->lgr_nr) { /* This is the main grid. */
-        vector_free(grid->LGR_list);
         int_vector_free(grid->lgr_index_map);
     }
     if (grid->coord_kw != NULL)
@@ -4234,7 +4222,7 @@ bool rd_grid_have_coarse_cells(const rd_grid_type *main_grid) {
 */
 int rd_grid_get_num_lgr(const rd_grid_type *main_grid) {
     __assert_main_grid(main_grid);
-    return vector_get_size(main_grid->LGR_list);
+    return main_grid->LGR_list.size();
 }
 
 /**
@@ -4246,7 +4234,7 @@ int rd_grid_get_num_lgr(const rd_grid_type *main_grid) {
 
 rd_grid_type *rd_grid_iget_lgr(const rd_grid_type *main_grid, int lgr_index) {
     __assert_main_grid(main_grid);
-    return (rd_grid_type *)vector_iget(main_grid->LGR_list, lgr_index);
+    return main_grid->LGR_list.at(lgr_index).get();
 }
 
 /*
@@ -4264,7 +4252,7 @@ rd_grid_type *rd_grid_get_lgr_from_lgr_nr(const rd_grid_type *main_grid,
     __assert_main_grid(main_grid);
     {
         int lgr_index = int_vector_iget(main_grid->lgr_index_map, lgr_nr);
-        return (rd_grid_type *)vector_iget(main_grid->LGR_list, lgr_index);
+        return main_grid->LGR_list.at(lgr_index).get();
     }
 }
 
@@ -4290,10 +4278,10 @@ const rd_grid_type *rd_grid_get_cell_lgr1(const rd_grid_type *grid,
 
 const char *rd_grid_iget_lgr_name(const rd_grid_type *rd_grid, int lgr_index) {
     __assert_main_grid(rd_grid);
-    if (lgr_index < (vector_get_size(rd_grid->LGR_list))) {
-        const rd_grid_type *lgr =
-            (const rd_grid_type *)vector_iget(rd_grid->LGR_list, lgr_index);
-        return rd_grid_get_name(lgr);
+    if (lgr_index >= 0 &&
+        static_cast<size_t>(lgr_index) < rd_grid->LGR_list.size()) {
+        const auto &lgr = rd_grid->LGR_list[lgr_index];
+        return rd_grid_get_name(lgr.get());
     } else
         return NULL;
 }
@@ -4795,10 +4783,8 @@ void rd_grid_fwrite_GRID2(const rd_grid_type *grid, const char *filename,
 
     rd_grid_fwrite_GRID__(grid, coords_size, fortio, output_unit);
 
-    for (int i = 0; i < vector_get_size(grid->LGR_list); i++) {
-        const rd_grid_type *igrid =
-            (const rd_grid_type *)vector_iget_const(grid->LGR_list, i);
-        rd_grid_fwrite_GRID__(igrid, coords_size, fortio, output_unit);
+    for (const auto &igrid : grid->LGR_list) {
+        rd_grid_fwrite_GRID__(igrid.get(), coords_size, fortio, output_unit);
     }
     fortio_fclose(fortio);
 }
@@ -5356,9 +5342,8 @@ void rd_grid_fwrite_EGRID2(rd_grid_type *grid, const char *filename,
         fortio_open_writer(filename, fmt_file, RD_ENDIAN_FLIP);
 
     rd_grid_fwrite_EGRID__(grid, fortio, output_unit);
-    for (int i = 0; i < vector_get_size(grid->LGR_list); i++) {
-        rd_grid_type *igrid = (rd_grid_type *)vector_iget(grid->LGR_list, i);
-        rd_grid_fwrite_EGRID__(igrid, fortio, output_unit);
+    for (const auto &igrid : grid->LGR_list) {
+        rd_grid_fwrite_EGRID__(igrid.get(), fortio, output_unit);
     }
     fortio_fclose(fortio);
 }
