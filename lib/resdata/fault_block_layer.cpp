@@ -37,7 +37,7 @@ using block_ptr =
 
 struct fault_block_layer_struct {
     UTIL_TYPE_ID_DECLARATION;
-    const rd_grid_type *grid;
+    rd_grid_type *grid;
     std::vector<int> block_map;
     layer_type *layer;
     int k;
@@ -182,8 +182,7 @@ bool fault_block_layer_load_kw(fault_block_layer_type *layer,
     }
 }
 
-fault_block_layer_type *fault_block_layer_alloc(const rd_grid_type *grid,
-                                                int k) {
+fault_block_layer_type *fault_block_layer_alloc(rd_grid_type *grid, int k) {
     if ((k < 0) || (k >= rd_grid_get_nz(grid)))
         return NULL;
     else {
@@ -292,8 +291,7 @@ bool fault_block_layer_export(const fault_block_layer_type *layer,
         return false;
 }
 
-const rd_grid_type *
-fault_block_layer_get_grid(const fault_block_layer_type *layer) {
+rd_grid_type *fault_block_layer_get_grid(const fault_block_layer_type *layer) {
     return layer->grid;
 }
 

@@ -88,7 +88,7 @@ struct rd_region_struct {
     bool preselect;
     /* Grid properties */
     int grid_nx, grid_ny, grid_nz, grid_vol, grid_active;
-    const rd_grid_type *parent_grid;
+    rd_grid_type *parent_grid;
 };
 
 UTIL_IS_INSTANCE_FUNCTION(rd_region, RD_REGION_TYPE_ID)
@@ -99,7 +99,7 @@ static void rd_region_invalidate_index_list(rd_region_type *region) {
     region->active_index_list_valid = false;
 }
 
-rd_region_type *rd_region_alloc(const rd_grid_type *rd_grid, bool preselect) {
+rd_region_type *rd_region_alloc(rd_grid_type *rd_grid, bool preselect) {
     rd_region_type *region = (rd_region_type *)util_malloc(sizeof *region);
     UTIL_TYPE_ID_INIT(region, RD_REGION_TYPE_ID);
     region->parent_grid = rd_grid;

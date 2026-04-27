@@ -10,8 +10,7 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
 
-static void rd_grid_fwrite_depth(const rd_grid_type *grid,
-                                 fortio_type *init_file,
+static void rd_grid_fwrite_depth(rd_grid_type *grid, fortio_type *init_file,
                                  ert_rd_unit_enum output_unit) {
     rd_kw_type *depth_kw =
         rd_kw_alloc("DEPTH", rd_grid_get_nactive(grid), RD_FLOAT);
@@ -25,7 +24,7 @@ static void rd_grid_fwrite_depth(const rd_grid_type *grid,
     rd_kw_free(depth_kw);
 }
 
-void test_write_depth(const rd_grid_type *grid) {
+void test_write_depth(rd_grid_type *grid) {
     rd::util::TestArea ta("write_depth");
     {
         fortio_type *init_file =

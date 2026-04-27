@@ -579,7 +579,7 @@ static double rd_grav_survey_eval(const rd_grav_survey_type *base_survey,
    all surveys have been added.
 */
 
-rd_grav_type *rd_grav_alloc(const rd_grid_type *rd_grid,
+rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid,
                             const rd_file_type *init_file) {
     rd_grav_type *rd_grav = new rd_grav_type();
 

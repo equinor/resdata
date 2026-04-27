@@ -46,11 +46,11 @@ double rd_grid_get_cell_dy1(const rd_grid_type *grid, int global_index);
 double rd_grid_get_cell_dz1(const rd_grid_type *grid, int global_index);
 double rd_grid_get_cell_thickness1(const rd_grid_type *grid, int global_index);
 
-void rd_grid_get_distance(const rd_grid_type *grid, int global_index1,
+void rd_grid_get_distance(rd_grid_type *grid, int global_index1,
                           int global_index2, double *dx, double *dy,
                           double *dz);
-double rd_grid_get_cdepth1A(const rd_grid_type *grid, int active_index);
-double rd_grid_get_cdepth1(const rd_grid_type *grid, int global_index);
+double rd_grid_get_cdepth1A(rd_grid_type *grid, int active_index);
+double rd_grid_get_cdepth1(rd_grid_type *grid, int global_index);
 bool rd_grid_cell_contains_xyz1(const rd_grid_type *rd_grid, int global_index,
                                 double x, double y, double z);
 double rd_grid_get_cell_volume1(const rd_grid_type *rd_grid, int global_index);
@@ -103,16 +103,16 @@ void rd_grid_get_ijk1(const rd_grid_type *, int global_index, int *, int *,
                       int *);
 void rd_grid_get_ijk1A(const rd_grid_type *, int active_index, int *, int *,
                        int *);
-void rd_grid_get_xyz3(const rd_grid_type *, int, int, int, double *, double *,
+void rd_grid_get_xyz3(rd_grid_type *, int, int, int, double *, double *,
                       double *);
-void rd_grid_get_xyz1(const rd_grid_type *grid, int global_index, double *xpos,
+void rd_grid_get_xyz1(rd_grid_type *grid, int global_index, double *xpos,
                       double *ypos, double *zpos);
-void rd_grid_get_xyz1A(const rd_grid_type *grid, int active_index, double *xpos,
+void rd_grid_get_xyz1A(rd_grid_type *grid, int active_index, double *xpos,
                        double *ypos, double *zpos);
 
 int rd_grid_get_global_size(const rd_grid_type *rd_grid);
-bool rd_grid_compare(const rd_grid_type *g1, const rd_grid_type *g2,
-                     bool include_lgr, bool include_nnc, bool verbose);
+bool rd_grid_compare(rd_grid_type *g1, rd_grid_type *g2, bool include_lgr,
+                     bool include_nnc, bool verbose);
 int rd_grid_get_active_size(const rd_grid_type *rd_grid);
 
 double rd_grid_get_top1A(const rd_grid_type *grid, int active_index);
@@ -166,7 +166,7 @@ rd_kw_type *rd_grid_alloc_actnum_kw(const rd_grid_type *grid);
 rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid);
 bool rd_grid_dual_grid(const rd_grid_type *rd_grid);
 
-bool rd_grid_cell_regular1(const rd_grid_type *rd_grid, int global_index);
+bool rd_grid_cell_regular1(rd_grid_type *rd_grid, int global_index);
 void rd_grid_init_zcorn_data(const rd_grid_type *grid, float *zcorn);
 void rd_grid_init_zcorn_data_double(const rd_grid_type *grid, double *zcorn);
 int rd_grid_get_zcorn_size(const rd_grid_type *grid);
@@ -196,7 +196,7 @@ void rd_grid_export_data_as_double(int index_size, const int *data_index,
                                    const rd_kw_type *kw, double *output);
 void rd_grid_export_volume(const rd_grid_type *grid, int index_size,
                            const int *global_index, double *output);
-void rd_grid_export_position(const rd_grid_type *grid, int index_size,
+void rd_grid_export_position(rd_grid_type *grid, int index_size,
                              const int *global_index, double *output);
 void export_corners(const rd_grid_type *grid, int index_size,
                     const int *global_index, double *output);

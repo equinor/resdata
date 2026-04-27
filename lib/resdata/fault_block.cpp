@@ -19,7 +19,7 @@
 
 struct fault_block_struct {
     UTIL_TYPE_ID_DECLARATION;
-    const rd_grid_type *grid;
+    rd_grid_type *grid;
     const fault_block_layer_type *parent_layer;
     int_vector_type *i_list;
     int_vector_type *j_list;

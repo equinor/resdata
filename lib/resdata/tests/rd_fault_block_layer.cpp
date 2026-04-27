@@ -10,7 +10,7 @@
 #include <resdata/fault_block_layer.hpp>
 #include <resdata/rd_type.hpp>
 
-void test_create(const rd_grid_type *grid, rd_kw_type *fault_block_kw) {
+void test_create(rd_grid_type *grid, rd_kw_type *fault_block_kw) {
     int k = 0;
     int i, j;
 
@@ -38,7 +38,7 @@ void test_create(const rd_grid_type *grid, rd_kw_type *fault_block_kw) {
     }
 }
 
-void test_create_invalid(const rd_grid_type *grid) {
+void test_create_invalid(rd_grid_type *grid) {
     rd_kw_type *fault_blk_kw =
         rd_kw_alloc("FAULTBLK", rd_grid_get_global_size(grid) - 1, RD_INT);
 
@@ -47,7 +47,7 @@ void test_create_invalid(const rd_grid_type *grid) {
     rd_kw_free(fault_blk_kw);
 }
 
-void test_trace_edge(const rd_grid_type *grid) {
+void test_trace_edge(rd_grid_type *grid) {
     const int k = 1;
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
     double_vector_type *x_list = double_vector_alloc(0, 0);
@@ -80,7 +80,7 @@ void test_trace_edge(const rd_grid_type *grid) {
     double_vector_free(y_list);
 }
 
-void test_export(const rd_grid_type *grid) {
+void test_export(rd_grid_type *grid) {
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, 0);
     rd_kw_type *rd_kw1 =
         rd_kw_alloc("FAULTBLK", rd_grid_get_global_size(grid), RD_INT);
@@ -115,7 +115,7 @@ void test_export(const rd_grid_type *grid) {
     rd_kw_free(rd_kw3);
 }
 
-void test_neighbours(const rd_grid_type *grid) {
+void test_neighbours(rd_grid_type *grid) {
     const int k = 0;
     fault_block_layer_type *layer = fault_block_layer_alloc(grid, k);
     geo_polygon_collection_type *polylines = geo_polygon_collection_alloc();

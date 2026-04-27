@@ -6,7 +6,7 @@
 
 #include <resdata/rd_grid.hpp>
 
-void test_copy_grid(const rd_grid_type *grid) {
+void test_copy_grid(rd_grid_type *grid) {
     rd_grid_type *grid_copy = rd_grid_alloc_copy(grid);
     test_assert_true(rd_grid_compare(grid, grid_copy, true, true, true));
     rd_grid_free(grid_copy);

@@ -14,7 +14,7 @@ typedef struct rd_subsidence_struct rd_subsidence_type;
 typedef struct rd_subsidence_survey_struct rd_subsidence_survey_type;
 
 void rd_subsidence_free(rd_subsidence_type *rd_subsidence_config);
-rd_subsidence_type *rd_subsidence_alloc(const rd_grid_type *rd_grid,
+rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
                                         const rd_file_type *init_file);
 rd_subsidence_survey_type *
 rd_subsidence_add_survey_PRESSURE(rd_subsidence_type *subsidence,

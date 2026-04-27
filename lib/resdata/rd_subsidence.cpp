@@ -241,7 +241,7 @@ static double rd_subsidence_survey_eval_geertsma_rporv(
    all surveys have been added.
 */
 
-rd_subsidence_type *rd_subsidence_alloc(const rd_grid_type *rd_grid,
+rd_subsidence_type *rd_subsidence_alloc(rd_grid_type *rd_grid,
                                         const rd_file_type *init_file) {
     rd_subsidence_type *rd_subsidence =
         (rd_subsidence_type *)util_malloc(sizeof *rd_subsidence);

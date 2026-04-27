@@ -732,7 +732,7 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
     auto read_fegrid = read_grid(fegrid_path);
 
     auto load_and_compare = [](const fs::path &case_path,
-                               const rd_grid_type *expected) {
+                               rd_grid_type *expected) {
         auto loaded =
             rd_grid_ptr(rd_grid_load_case(case_path.c_str()), &rd_grid_free);
         REQUIRE(loaded != nullptr);

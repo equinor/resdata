@@ -20,7 +20,7 @@ void test_list(int volume, int nactive, rd_region_type *region) {
     test_assert_int_equal(0, int_vector_size(global_list));
 }
 
-void test_slice(const rd_grid_type *grid) {
+void test_slice(rd_grid_type *grid) {
     int nx = rd_grid_get_nx(grid);
     int ny = rd_grid_get_ny(grid);
     int nz = rd_grid_get_nz(grid);

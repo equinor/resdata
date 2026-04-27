@@ -34,7 +34,7 @@ typedef struct rd_region_struct rd_region_type;
 
 void rd_region_reset(rd_region_type *rd_region);
 rd_region_type *rd_region_alloc_copy(const rd_region_type *rd_region);
-rd_region_type *rd_region_alloc(const rd_grid_type *rd_grid, bool preselect);
+rd_region_type *rd_region_alloc(rd_grid_type *rd_grid, bool preselect);
 void rd_region_free(rd_region_type *region);
 
 const int_vector_type *rd_region_get_active_list(rd_region_type *region);

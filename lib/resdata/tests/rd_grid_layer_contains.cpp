@@ -4,7 +4,7 @@
 
 #include <resdata/rd_grid.hpp>
 
-void test_layer(const rd_grid_type *grid) {
+void test_layer(rd_grid_type *grid) {
     int g;
 
     for (g = 0; g < rd_grid_get_global_size(grid); g += 25) {

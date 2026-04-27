@@ -18,7 +18,7 @@
 */
 
 namespace rd {
-rd_grid_cache::rd_grid_cache(const rd_grid_type *grid) : grid(grid) {
+rd_grid_cache::rd_grid_cache(rd_grid_type *grid) : grid(grid) {
     for (int active_index = 0;
          active_index < rd_grid_get_active_size(this->grid); active_index++) {
         double x, y, z;

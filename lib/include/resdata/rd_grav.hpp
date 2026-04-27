@@ -13,7 +13,7 @@ typedef struct rd_grav_struct rd_grav_type;
 typedef struct rd_grav_survey_struct rd_grav_survey_type;
 
 void rd_grav_free(rd_grav_type *rd_grav_config);
-rd_grav_type *rd_grav_alloc(const rd_grid_type *rd_grid,
+rd_grav_type *rd_grav_alloc(rd_grid_type *rd_grid,
                             const rd_file_type *init_file);
 rd_grav_survey_type *
 rd_grav_add_survey_FIP(rd_grav_type *grav, const char *name,

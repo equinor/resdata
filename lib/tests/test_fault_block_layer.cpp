@@ -14,7 +14,7 @@ static rd_grid_ptr make_grid(int nx, int ny, int nz) {
 
 static std::unique_ptr<fault_block_layer_type,
                        decltype(&fault_block_layer_free)>
-make_fb_layer(const rd_grid_type *grid, int k) {
+make_fb_layer(rd_grid_type *grid, int k) {
     return {fault_block_layer_alloc(grid, k), fault_block_layer_free};
 }
 

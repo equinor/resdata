@@ -7,7 +7,7 @@
 #include <resdata/rd_kw.hpp>
 #include <resdata/fault_block_layer.hpp>
 
-void test_create(const rd_grid_type *grid, const rd_kw_type *fault_block_kw) {
+void test_create(rd_grid_type *grid, const rd_kw_type *fault_block_kw) {
     test_assert_NULL(fault_block_layer_alloc(grid, -1));
     test_assert_NULL(fault_block_layer_alloc(grid, rd_grid_get_nz(grid)));
 

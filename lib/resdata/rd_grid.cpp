@@ -697,7 +697,7 @@ struct rd_grid_struct {
     std::vector<int>
         inv_fracture_index_map; /* For fractures: this is list of total_active elements - which point back to the index_map. */
 
-    rd_cell_type *cells;
+    std::vector<rd_cell_type> cells;
 
     std::optional<std::string>
         parent_name; /* the name of the parent for a nested lgr - for the main grid, and also a
@@ -745,61 +745,61 @@ ert_rd_unit_enum rd_grid_get_unit_system(const rd_grid_type *grid) {
     return grid->unit_system;
 }
 
-static void rd_cell_compare(const rd_cell_type *c1, const rd_cell_type *c2,
+static void rd_cell_compare(const rd_cell_type &c1, const rd_cell_type &c2,
                             bool include_nnc, bool *equal) {
     int i;
 
-    if (c1->active != c2->active)
+    if (c1.active != c2.active)
         *equal = false;
 
-    if (c1->active_index[0] != c2->active_index[0])
+    if (c1.active_index[0] != c2.active_index[0])
         *equal = false;
 
-    if (c1->active_index[1] != c2->active_index[1])
+    if (c1.active_index[1] != c2.active_index[1])
         *equal = false;
 
-    if (c1->coarse_group != c2->coarse_group)
+    if (c1.coarse_group != c2.coarse_group)
         *equal = false;
 
-    if (c1->host_cell != c2->host_cell)
+    if (c1.host_cell != c2.host_cell)
         *equal = false;
 
     if (*equal) {
         for (i = 0; i < 8; i++)
-            point_compare(&c1->corner_list[i], &c2->corner_list[i], equal);
+            point_compare(&c1.corner_list[i], &c2.corner_list[i], equal);
     }
 
     if (include_nnc) {
         if (*equal)
-            *equal = nnc_info_equal(c1->nnc_info, c2->nnc_info);
+            *equal = nnc_info_equal(c1.nnc_info, c2.nnc_info);
     }
 }
 
-static void rd_cell_assert_center(rd_cell_type *cell);
+static void rd_cell_assert_center(rd_cell_type &cell);
 
-static void rd_cell_dump_ascii(rd_cell_type *cell, int i, int j, int k,
+static void rd_cell_dump_ascii(rd_cell_type &cell, int i, int j, int k,
                                FILE *stream, const double *offset) {
     fprintf(stream,
             "Cell: i:%3d  j:%3d    k:%3d   host_cell:%d  CoarseGroup:%4d "
             "active_nr:%6d  active:%d \nCorners:\n",
-            i, j, k, cell->host_cell, cell->coarse_group,
-            cell->active_index[MATRIX_INDEX], cell->active);
+            i, j, k, cell.host_cell, cell.coarse_group,
+            cell.active_index[MATRIX_INDEX], cell.active);
 
     rd_cell_assert_center(cell);
     fprintf(stream, "Center   : ");
-    point_dump_ascii(&cell->center, stream, offset);
+    point_dump_ascii(&cell.center, stream, offset);
     fprintf(stream, "\n");
 
     for (int l = 0; l < 8; l++) {
         fprintf(stream, "Corner %d : ", l);
-        point_dump_ascii(&cell->corner_list[l], stream, offset);
+        point_dump_ascii(&cell.corner_list[l], stream, offset);
         fprintf(stream, "\n");
     }
     fprintf(stream, "\n");
 }
 
 static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
-                                const rd_cell_type *cell, bool fracture_cell,
+                                const rd_cell_type &cell, bool fracture_cell,
                                 int coords_size, int i, int j, int k,
                                 int global_index, rd_kw_type *coords_kw,
                                 rd_kw_type *corners_kw, fortio_type *fortio) {
@@ -810,16 +810,16 @@ static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
 
     rd_kw_iset_int(coords_kw, 4, 0);
     if (fracture_cell) {
-        if (cell->active & CELL_ACTIVE_FRACTURE)
+        if (cell.active & CELL_ACTIVE_FRACTURE)
             rd_kw_iset_int(coords_kw, 4, 1);
     } else {
-        if (cell->active & CELL_ACTIVE_MATRIX)
+        if (cell.active & CELL_ACTIVE_MATRIX)
             rd_kw_iset_int(coords_kw, 4, 1);
     }
 
     if (coords_size == 7) {
-        rd_kw_iset_int(coords_kw, 5, cell->host_cell + 1);
-        rd_kw_iset_int(coords_kw, 6, cell->coarse_group + 1);
+        rd_kw_iset_int(coords_kw, 5, cell.host_cell + 1);
+        rd_kw_iset_int(coords_kw, 6, cell.coarse_group + 1);
     }
 
     rd_kw_fwrite(coords_kw, fortio);
@@ -828,7 +828,7 @@ static void rd_cell_fwrite_GRID(const rd_grid_type *grid,
         point_type point;
 
         for (int c = 0; c < 8; c++) {
-            point_copy_values(&point, &cell->corner_list[c]);
+            point_copy_values(&point, &cell.corner_list[c]);
             if (grid->use_mapaxes)
                 point_mapaxes_invtransform(&point, grid->origo, grid->unit_x,
                                            grid->unit_y);
@@ -863,14 +863,14 @@ static double min8(double x1, double x2, double x3, double x4, double x5,
     return min2(min4(x1, x2, x3, x4), min4(x5, x6, x7, x8));
 }
 
-static double rd_cell_min_z(const rd_cell_type *cell) {
-    return min4(cell->corner_list[0].z, cell->corner_list[1].z,
-                cell->corner_list[2].z, cell->corner_list[3].z);
+static double rd_cell_min_z(const rd_cell_type &cell) {
+    return min4(cell.corner_list[0].z, cell.corner_list[1].z,
+                cell.corner_list[2].z, cell.corner_list[3].z);
 }
 
-static double rd_cell_max_z(const rd_cell_type *cell) {
-    return max4(cell->corner_list[4].z, cell->corner_list[5].z,
-                cell->corner_list[6].z, cell->corner_list[7].z);
+static double rd_cell_max_z(const rd_cell_type &cell) {
+    return max4(cell.corner_list[4].z, cell.corner_list[5].z,
+                cell.corner_list[6].z, cell.corner_list[7].z);
 }
 
 /**
@@ -878,32 +878,32 @@ static double rd_cell_max_z(const rd_cell_type *cell) {
    plane for the x/y min/max.
 */
 
-static double rd_cell_min_x(const rd_cell_type *cell) {
-    return min8(cell->corner_list[0].x, cell->corner_list[1].x,
-                cell->corner_list[2].x, cell->corner_list[3].x,
-                cell->corner_list[4].x, cell->corner_list[5].x,
-                cell->corner_list[6].x, cell->corner_list[7].x);
+static double rd_cell_min_x(const rd_cell_type &cell) {
+    return min8(cell.corner_list[0].x, cell.corner_list[1].x,
+                cell.corner_list[2].x, cell.corner_list[3].x,
+                cell.corner_list[4].x, cell.corner_list[5].x,
+                cell.corner_list[6].x, cell.corner_list[7].x);
 }
 
-static double rd_cell_max_x(const rd_cell_type *cell) {
-    return max8(cell->corner_list[0].x, cell->corner_list[1].x,
-                cell->corner_list[2].x, cell->corner_list[3].x,
-                cell->corner_list[4].x, cell->corner_list[5].x,
-                cell->corner_list[6].x, cell->corner_list[7].x);
+static double rd_cell_max_x(const rd_cell_type &cell) {
+    return max8(cell.corner_list[0].x, cell.corner_list[1].x,
+                cell.corner_list[2].x, cell.corner_list[3].x,
+                cell.corner_list[4].x, cell.corner_list[5].x,
+                cell.corner_list[6].x, cell.corner_list[7].x);
 }
 
-static double rd_cell_min_y(const rd_cell_type *cell) {
-    return min8(cell->corner_list[0].y, cell->corner_list[1].y,
-                cell->corner_list[2].y, cell->corner_list[3].y,
-                cell->corner_list[4].y, cell->corner_list[5].y,
-                cell->corner_list[6].y, cell->corner_list[7].y);
+static double rd_cell_min_y(const rd_cell_type &cell) {
+    return min8(cell.corner_list[0].y, cell.corner_list[1].y,
+                cell.corner_list[2].y, cell.corner_list[3].y,
+                cell.corner_list[4].y, cell.corner_list[5].y,
+                cell.corner_list[6].y, cell.corner_list[7].y);
 }
 
-static double rd_cell_max_y(const rd_cell_type *cell) {
-    return max8(cell->corner_list[0].y, cell->corner_list[1].y,
-                cell->corner_list[2].y, cell->corner_list[3].y,
-                cell->corner_list[4].y, cell->corner_list[5].y,
-                cell->corner_list[6].y, cell->corner_list[7].y);
+static double rd_cell_max_y(const rd_cell_type &cell) {
+    return max8(cell.corner_list[0].y, cell.corner_list[1].y,
+                cell.corner_list[2].y, cell.corner_list[3].y,
+                cell.corner_list[4].y, cell.corner_list[5].y,
+                cell.corner_list[6].y, cell.corner_list[7].y);
 }
 
 /**
@@ -973,12 +973,12 @@ static void rd_cell_taint_cell(rd_cell_type *cell) {
     }
 }
 
-static int rd_cell_get_twist(const rd_cell_type *cell) {
+static int rd_cell_get_twist(const rd_cell_type &cell) {
     int twist_count = 0;
 
     for (int c = 0; c < 4; c++) {
-        const point_type *p1 = &cell->corner_list[c];
-        const point_type *p2 = &cell->corner_list[c + 4];
+        const point_type *p1 = &cell.corner_list[c];
+        const point_type *p2 = &cell.corner_list[c + 4];
         if ((p2->z - p1->z) < 0)
             twist_count += 1;
     }
@@ -1013,28 +1013,23 @@ static int rd_cell_get_tetrahedron_method( int i , int j , int k) {
 #undef mod
 */
 
-static void rd_cell_set_center(rd_cell_type *cell) {
-    point_set(&cell->center, 0, 0, 0);
-    for (auto &c : cell->corner_list)
-        point_inplace_add(&cell->center, &c);
-    point_inplace_scale(&cell->center, 1.0 / 8.0);
+static void rd_cell_set_center(rd_cell_type &cell) {
+    point_set(&cell.center, 0, 0, 0);
+    for (auto &c : cell.corner_list)
+        point_inplace_add(&cell.center, &c);
+    point_inplace_scale(&cell.center, 1.0 / 8.0);
 
-    SET_CELL_FLAG(cell, CELL_FLAG_CENTER);
+    SET_CELL_FLAG((&cell), CELL_FLAG_CENTER);
 }
 
-static void rd_cell_assert_center(rd_cell_type *cell) {
-    if (!GET_CELL_FLAG(cell, CELL_FLAG_CENTER))
+static void rd_cell_assert_center(rd_cell_type &cell) {
+    if (!GET_CELL_FLAG((&cell), CELL_FLAG_CENTER))
         rd_cell_set_center(cell);
 }
 
 static void rd_cell_memcpy(rd_cell_type *target_cell,
                            const rd_cell_type *src_cell) {
     memcpy(target_cell, src_cell, sizeof *target_cell);
-}
-
-static void rd_cell_install_lgr(rd_cell_type *cell,
-                                const rd_grid_type *lgr_grid) {
-    cell->lgr = lgr_grid;
 }
 
 static double C(double *r, int f1, int f2, int f3) {
@@ -1066,15 +1061,15 @@ static double C(double *r, int f1, int f2, int f3) {
     }
 }
 
-static double rd_cell_get_volume(rd_cell_type *cell) {
+static double rd_cell_get_volume(const rd_cell_type &cell) {
     double volume = 0;
     double X[8];
     double Y[8];
     double Z[8];
     for (int c = 0; c < 8; c++) {
-        X[c] = cell->corner_list[c].x;
-        Y[c] = cell->corner_list[c].y;
-        Z[c] = cell->corner_list[c].z;
+        X[c] = cell.corner_list[c].x;
+        Y[c] = cell.corner_list[c].y;
+        Z[c] = cell.corner_list[c].z;
     }
 
     for (int pb = 0; pb <= 1; pb++)
@@ -1226,44 +1221,35 @@ static bool triangle_contains3d(const point_type *p0, const point_type *p1,
          |   |           |   |
          0---1           4---5
 */
-static void rd_cell_init_regular(rd_cell_type *cell, const double *offset,
+static void rd_cell_init_regular(rd_cell_type &cell, const double *offset,
                                  int i, int j, int k, int global_index,
                                  const double *ivec, const double *jvec,
                                  const double *kvec, const int *actnum) {
-    point_set(&cell->corner_list[0], offset[0], offset[1],
+    point_set(&cell.corner_list[0], offset[0], offset[1],
               offset[2]); // Point 0
 
-    cell->corner_list[1] = cell->corner_list[0]; // Point 1
-    point_shift(&cell->corner_list[1], ivec[0], ivec[1], ivec[2]);
+    cell.corner_list[1] = cell.corner_list[0]; // Point 1
+    point_shift(&cell.corner_list[1], ivec[0], ivec[1], ivec[2]);
 
-    cell->corner_list[2] = cell->corner_list[0]; // Point 2
-    point_shift(&cell->corner_list[2], jvec[0], jvec[1], jvec[2]);
+    cell.corner_list[2] = cell.corner_list[0]; // Point 2
+    point_shift(&cell.corner_list[2], jvec[0], jvec[1], jvec[2]);
 
-    cell->corner_list[3] = cell->corner_list[1]; // Point 3
-    point_shift(&cell->corner_list[3], jvec[0], jvec[1], jvec[2]);
+    cell.corner_list[3] = cell.corner_list[1]; // Point 3
+    point_shift(&cell.corner_list[3], jvec[0], jvec[1], jvec[2]);
 
     for (int i = 0; i < 4; i++) {
-        cell->corner_list[i + 4] = cell->corner_list[i]; // Point 4-7
-        point_shift(&cell->corner_list[i + 4], kvec[0], kvec[1], kvec[2]);
+        cell.corner_list[i + 4] = cell.corner_list[i]; // Point 4-7
+        point_shift(&cell.corner_list[i + 4], kvec[0], kvec[1], kvec[2]);
     }
 
     if (actnum != NULL)
-        cell->active = actnum[global_index];
+        cell.active = actnum[global_index];
     else
-        cell->active = CELL_ACTIVE;
+        cell.active = CELL_ACTIVE;
 }
 
 UTIL_SAFE_CAST_FUNCTION(rd_grid, RD_GRID_ID);
 UTIL_IS_INSTANCE_FUNCTION(rd_grid, RD_GRID_ID);
-
-/**
-   this function allocates the internal index_map and inv_index_map fields.
-*/
-
-static rd_cell_type *rd_grid_get_cell(const rd_grid_type *grid,
-                                      int global_index) {
-    return &grid->cells[global_index];
-}
 
 /**
    this function uses heuristics in an attempt to mark cells with
@@ -1272,38 +1258,28 @@ static rd_cell_type *rd_grid_get_cell(const rd_grid_type *grid,
 */
 
 static void rd_grid_taint_cells(rd_grid_type *rd_grid) {
-    for (int i = 0; i < rd_grid->size; i++) {
-        rd_cell_type *cell = rd_grid_get_cell(rd_grid, i);
-        rd_cell_taint_cell(cell);
+    for (auto &cell : rd_grid->cells) {
+        rd_cell_taint_cell(&cell);
     }
 }
 
 static void rd_grid_free_cells(rd_grid_type *grid) {
-    if (!grid->cells)
-        return;
-
-    for (int i = 0; i < grid->size; i++) {
-        rd_cell_type *cell = rd_grid_get_cell(grid, i);
-        if (cell->nnc_info)
-            nnc_info_free(cell->nnc_info);
+    for (auto &cell : grid->cells) {
+        if (cell.nnc_info)
+            nnc_info_free(cell.nnc_info);
     }
-    free(grid->cells);
 }
 
 static bool rd_grid_alloc_cells(rd_grid_type *grid, bool init_valid) {
-    grid->cells = (rd_cell_type *)malloc(grid->size * sizeof *grid->cells);
-    if (!grid->cells)
+    try {
+        grid->cells.resize(grid->size);
+    } catch (const std::bad_alloc &) {
         return false;
-
-    {
-        rd_cell_type *cell0 = rd_grid_get_cell(grid, 0);
-        rd_cell_init(cell0, init_valid);
-        for (int i = 1; i < grid->size; i++) {
-            rd_cell_type *target_cell = rd_grid_get_cell(grid, i);
-            rd_cell_memcpy(target_cell, cell0);
-        }
-        return true;
     }
+
+    for (auto &cell : grid->cells)
+        rd_cell_init(&cell, init_valid);
+    return true;
 }
 
 /**
@@ -1396,15 +1372,15 @@ static void rd_grid_set_cell_EGRID(rd_grid_type *rd_grid, int i, int j, int k,
                                    const int *corsnum) {
 
     const int global_index = rd_grid_get_global_index__(rd_grid, i, j, k);
-    rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
+    rd_cell_type &cell = rd_grid->cells.at(global_index);
 
     for (int iz = 0; iz < 2; iz++) {
         for (int ip = 0; ip < 4; ip++) {
             int c = ip + iz * 4;
-            point_set(&cell->corner_list[c], x[ip][iz], y[ip][iz], z[ip][iz]);
+            point_set(&cell.corner_list[c], x[ip][iz], y[ip][iz], z[ip][iz]);
 
             if (rd_grid->use_mapaxes)
-                point_mapaxes_transform(&cell->corner_list[c], rd_grid->origo,
+                point_mapaxes_transform(&cell.corner_list[c], rd_grid->origo,
                                         rd_grid->unit_x, rd_grid->unit_y);
         }
     }
@@ -1416,12 +1392,12 @@ static void rd_grid_set_cell_EGRID(rd_grid_type *rd_grid, int i, int j, int k,
     for dual porosity models it can also be 2 and 3.
   */
     if (actnum == NULL)
-        cell->active = CELL_ACTIVE;
+        cell.active = CELL_ACTIVE;
     else
-        cell->active = actnum[global_index];
+        cell.active = actnum[global_index];
 
     if (corsnum != NULL)
-        cell->coarse_group = corsnum[global_index] - 1;
+        cell.coarse_group = corsnum[global_index] - 1;
 }
 
 static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
@@ -1431,7 +1407,6 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
     const int j = coords[1] - 1;
     int k = coords[2] - 1;
     int global_index;
-    rd_cell_type *cell;
     bool matrix_cell = true;
     int active_value = CELL_ACTIVE_MATRIX;
 
@@ -1450,7 +1425,7 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
     }
 
     global_index = rd_grid_get_global_index__(rd_grid, i, j, k);
-    cell = rd_grid_get_cell(rd_grid, global_index);
+    rd_cell_type &cell = rd_grid->cells.at(global_index);
 
     /* the coords keyword can optionally contain 4,5 or 7 elements:
 
@@ -1486,16 +1461,16 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
 
         switch (coords_size) {
         case 4: /* all cells active */
-            cell->active += active_value;
+            cell.active += active_value;
             break;
         case 5: /* only spesific cells active - no lgr */
-            cell->active += coords[4] * active_value;
+            cell.active += coords[4] * active_value;
             break;
         case 7:
-            cell->active += coords[4] * active_value;
-            cell->host_cell = coords[5] - 1;
-            cell->coarse_group = coords[6] - 1;
-            if (cell->coarse_group >= 0)
+            cell.active += coords[4] * active_value;
+            cell.host_cell = coords[5] - 1;
+            cell.coarse_group = coords[6] - 1;
+            if (cell.coarse_group >= 0)
                 rd_grid->coarsening_active = true;
             break;
         default:
@@ -1505,17 +1480,17 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
 
         if (matrix_cell) {
             for (c = 0; c < 8; c++) {
-                point_set(&cell->corner_list[c], corners[3 * c],
+                point_set(&cell.corner_list[c], corners[3 * c],
                           corners[3 * c + 1], corners[3 * c + 2]);
 
                 if (rd_grid->use_mapaxes)
-                    point_mapaxes_transform(&cell->corner_list[c],
+                    point_mapaxes_transform(&cell.corner_list[c],
                                             rd_grid->origo, rd_grid->unit_x,
                                             rd_grid->unit_y);
             }
         }
     }
-    SET_CELL_FLAG(cell, CELL_FLAG_VALID);
+    SET_CELL_FLAG((&cell), CELL_FLAG_VALID);
 }
 
 /**
@@ -1529,12 +1504,12 @@ static void rd_grid_init_index_map__(rd_grid_type *rd_grid,
                                      std::vector<int> &inv_index_map,
                                      int active_mask, int type_index) {
     for (int global_index = 0; global_index < rd_grid->size; global_index++) {
-        const rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-        if (cell->active & active_mask) {
-            index_map[global_index] = cell->active_index[type_index];
+        const rd_cell_type &cell = rd_grid->cells.at(global_index);
+        if (cell.active & active_mask) {
+            index_map[global_index] = cell.active_index[type_index];
 
-            if (cell->coarse_group == COARSE_GROUP_NONE)
-                inv_index_map[cell->active_index[type_index]] = global_index;
+            if (cell.coarse_group == COARSE_GROUP_NONE)
+                inv_index_map[cell.active_index[type_index]] = global_index;
             //else: In the case of coarse groups the inv_index_map is set below.
         } else
             index_map[global_index] = -1;
@@ -1613,28 +1588,23 @@ static void rd_grid_realloc_index_map(rd_grid_type *rd_grid) {
 */
 
 static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
-    int global_index;
     int active_index = 0;
     int active_fracture_index = 0;
 
     if (!rd_grid_have_coarse_cells(rd_grid)) {
         /* Keeping a fast path for the 99% most common case of no coarse
        groups and single porosity. */
-        for (global_index = 0; global_index < rd_grid->size; global_index++) {
-            rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-
-            if (cell->active & CELL_ACTIVE_MATRIX) {
-                cell->active_index[MATRIX_INDEX] = active_index;
+        for (rd_cell_type &cell : rd_grid->cells) {
+            if (cell.active & CELL_ACTIVE_MATRIX) {
+                cell.active_index[MATRIX_INDEX] = active_index;
                 active_index++;
             }
         }
 
         if (rd_grid->dualp_flag != FILEHEAD_SINGLE_POROSITY) {
-            for (global_index = 0; global_index < rd_grid->size;
-                 global_index++) {
-                rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-                if (cell->active & CELL_ACTIVE_FRACTURE) {
-                    cell->active_index[FRACTURE_INDEX] = active_fracture_index;
+            for (rd_cell_type &cell : rd_grid->cells) {
+                if (cell.active & CELL_ACTIVE_FRACTURE) {
+                    cell.active_index[FRACTURE_INDEX] = active_fracture_index;
                     active_fracture_index++;
                 }
             }
@@ -1662,28 +1632,29 @@ static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
           case of coarse cells we only set the common active index of
           the entire coarse cell.
     */
-        for (global_index = 0; global_index < rd_grid->size; global_index++) {
-            rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-            if (cell->active != CELL_NOT_ACTIVE) {
-                if (cell->coarse_group == COARSE_GROUP_NONE) {
+        for (int global_index = 0; global_index < rd_grid->size;
+             global_index++) {
+            rd_cell_type &cell = rd_grid->cells.at(global_index);
+            if (cell.active != CELL_NOT_ACTIVE) {
+                if (cell.coarse_group == COARSE_GROUP_NONE) {
 
-                    if (cell->active & CELL_ACTIVE_MATRIX) {
-                        cell->active_index[MATRIX_INDEX] = active_index;
+                    if (cell.active & CELL_ACTIVE_MATRIX) {
+                        cell.active_index[MATRIX_INDEX] = active_index;
                         active_index++;
                     }
 
-                    if (cell->active & CELL_ACTIVE_FRACTURE) {
-                        cell->active_index[FRACTURE_INDEX] =
+                    if (cell.active & CELL_ACTIVE_FRACTURE) {
+                        cell.active_index[FRACTURE_INDEX] =
                             active_fracture_index;
                         active_fracture_index++;
                     }
 
                 } else {
                     rd_coarse_cell_type *coarse_cell =
-                        rd_grid_iget_coarse_group(rd_grid, cell->coarse_group);
+                        rd_grid_iget_coarse_group(rd_grid, cell.coarse_group);
                     rd_coarse_cell_update_index(
                         coarse_cell, global_index, &active_index,
-                        &active_fracture_index, cell->active);
+                        &active_fracture_index, cell.active);
                 }
             }
         }
@@ -1714,20 +1685,19 @@ static void rd_grid_set_active_index(rd_grid_type *rd_grid) {
                     rd_coarse_cell_get_index_ptr(coarse_cell);
 
                 for (int i = 0; i < group_size; i++) {
-                    global_index = coarse_cell_list[i];
+                    int global_index = coarse_cell_list[i];
 
-                    rd_cell_type *cell =
-                        rd_grid_get_cell(rd_grid, global_index);
+                    rd_cell_type &cell = rd_grid->cells.at(global_index);
 
                     if (cell_active_value & CELL_ACTIVE_MATRIX)
-                        cell->active_index[MATRIX_INDEX] = cell_active_index;
+                        cell.active_index[MATRIX_INDEX] = cell_active_index;
 
                     /* Coarse cell and dual porosity - that is probably close to zero measure. */
                     if (cell_active_value & CELL_ACTIVE_FRACTURE) {
                         int cell_active_fracture_index =
                             rd_coarse_cell_get_active_fracture_index(
                                 coarse_cell);
-                        cell->active_index[FRACTURE_INDEX] =
+                        cell.active_index[FRACTURE_INDEX] =
                             cell_active_fracture_index;
                     }
                 }
@@ -1754,13 +1724,13 @@ rd_grid_get_or_create_coarse_cell(rd_grid_type *rd_grid, int coarse_nr) {
 
 static void rd_grid_init_coarse_cells(rd_grid_type *rd_grid) {
     if (rd_grid->coarsening_active) {
-        int global_index;
-        for (global_index = 0; global_index < rd_grid->size; global_index++) {
-            rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-            if (cell->coarse_group != COARSE_GROUP_NONE) {
+        for (int global_index = 0; global_index < rd_grid->size;
+             global_index++) {
+            const rd_cell_type &cell = rd_grid->cells.at(global_index);
+            if (cell.coarse_group != COARSE_GROUP_NONE) {
                 rd_coarse_cell_type *coarse_cell =
                     rd_grid_get_or_create_coarse_cell(rd_grid,
-                                                      cell->coarse_group);
+                                                      cell.coarse_group);
                 int i, j, k;
                 rd_grid_get_ijk1(rd_grid, global_index, &i, &j, &k);
                 rd_coarse_cell_update(coarse_cell, i, j, k, global_index);
@@ -1776,11 +1746,8 @@ rd_coarse_cell_type *rd_grid_iget_coarse_group(const rd_grid_type *rd_grid,
 
 bool rd_grid_cell_in_coarse_group1(const rd_grid_type *main_grid,
                                    int global_index) {
-    rd_cell_type *cell = rd_grid_get_cell(main_grid, global_index);
-    if (cell->coarse_group == COARSE_GROUP_NONE)
-        return false;
-    else
-        return true;
+    const rd_cell_type &cell = main_grid->cells.at(global_index);
+    return cell.coarse_group != COARSE_GROUP_NONE;
 }
 
 static void rd_grid_pillar_cross_planes(const point_type *p0, double e_x,
@@ -1907,11 +1874,11 @@ static void rd_grid_install_lgr_EGRID(rd_grid_type *host_grid,
                                       const int *hostnum) {
     for (int i = 0; i < lgr_grid->size; i++) {
         int host_index = hostnum[i] - 1;
-        rd_cell_type *lgr_cell = rd_grid_get_cell(lgr_grid, i);
-        rd_cell_type *host_cell = rd_grid_get_cell(host_grid, host_index);
+        rd_cell_type &lgr_cell = lgr_grid->cells.at(i);
+        rd_cell_type &host_cell = host_grid->cells.at(host_index);
 
-        rd_cell_install_lgr(host_cell, lgr_grid);
-        lgr_cell->host_cell = host_index;
+        host_cell.lgr = lgr_grid;
+        lgr_cell.host_cell = host_index;
     }
     rd_grid_install_lgr_common(host_grid, lgr_grid);
 }
@@ -1921,11 +1888,9 @@ static void rd_grid_install_lgr_EGRID(rd_grid_type *host_grid,
 */
 static void rd_grid_install_lgr_GRID(rd_grid_type *host_grid,
                                      rd_grid_type *lgr_grid) {
-    for (int i = 0; i < lgr_grid->size; i++) {
-        rd_cell_type *lgr_cell = rd_grid_get_cell(lgr_grid, i);
-        rd_cell_type *host_cell =
-            rd_grid_get_cell(host_grid, lgr_cell->host_cell);
-        rd_cell_install_lgr(host_cell, lgr_grid);
+    for (const rd_cell_type &lgr_cell : lgr_grid->cells) {
+        rd_cell_type &host_cell = host_grid->cells.at(lgr_cell.host_cell);
+        host_cell.lgr = lgr_grid;
     }
     rd_grid_install_lgr_common(host_grid, lgr_grid);
 }
@@ -2129,8 +2094,8 @@ static void rd_grid_copy_mapaxes(rd_grid_type *target_grid,
 static void rd_grid_copy_content(rd_grid_type *target_grid,
                                  const rd_grid_type *src_grid) {
     for (int i = 0; i < src_grid->size; i++) {
-        rd_cell_type *target_cell = rd_grid_get_cell(target_grid, i);
-        const rd_cell_type *src_cell = rd_grid_get_cell(src_grid, i);
+        rd_cell_type *target_cell = &target_grid->cells.at(i);
+        const rd_cell_type *src_cell = &src_grid->cells.at(i);
 
         rd_cell_memcpy(target_cell, src_cell);
         if (src_cell->nnc_info)
@@ -2179,14 +2144,9 @@ rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid) {
             host_grid =
                 rd_grid_get_lgr(copy_grid, copy_lgr->parent_name->c_str());
 
-        for (int global_lgr_index = 0; global_lgr_index < copy_lgr->size;
-             global_lgr_index++) {
-            rd_cell_type *lgr_cell =
-                rd_grid_get_cell(copy_lgr, global_lgr_index);
-            rd_cell_type *host_cell =
-                rd_grid_get_cell(host_grid, lgr_cell->host_cell);
-
-            rd_cell_install_lgr(host_cell, copy_lgr);
+        for (auto &lgr_cell : copy_lgr->cells) {
+            rd_cell_type &host_cell = host_grid->cells.at(lgr_cell.host_cell);
+            host_cell.lgr = copy_lgr;
         }
         rd_grid_install_lgr_common(host_grid, copy_lgr);
     }
@@ -2304,10 +2264,10 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
 
 static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
                                        int global_index) {
-    rd_cell_type *grid_cell = rd_grid_get_cell(rd_grid, global_index);
+    rd_cell_type &grid_cell = rd_grid->cells.at(global_index);
 
-    if (!grid_cell->nnc_info)
-        grid_cell->nnc_info = nnc_info_alloc(rd_grid->lgr_nr);
+    if (!grid_cell.nnc_info)
+        grid_cell.nnc_info = nnc_info_alloc(rd_grid->lgr_nr);
 }
 
 /*
@@ -2355,9 +2315,9 @@ static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
 
 void rd_grid_add_self_nnc(rd_grid_type *grid, int cell_index1, int cell_index2,
                           int nnc_index) {
-    rd_cell_type *grid_cell = rd_grid_get_cell(grid, cell_index1);
+    const rd_cell_type &grid_cell = grid->cells.at(cell_index1);
     rd_grid_init_cell_nnc_info(grid, cell_index1);
-    nnc_info_add_nnc(grid_cell->nnc_info, grid->lgr_nr, cell_index2, nnc_index);
+    nnc_info_add_nnc(grid_cell.nnc_info, grid->lgr_nr, cell_index2, nnc_index);
 }
 
 /*
@@ -2404,13 +2364,10 @@ static void rd_grid_init_nnc_cells(rd_grid_type *grid1, rd_grid_type *grid2,
              (grid2_cell_index >= grid2->size)))
             break;
 
-        {
-            rd_cell_type *grid1_cell =
-                rd_grid_get_cell(grid1, grid1_cell_index);
-            rd_grid_init_cell_nnc_info(grid1, grid1_cell_index);
-            nnc_info_add_nnc(grid1_cell->nnc_info, grid2->lgr_nr,
-                             grid2_cell_index, nnc_index);
-        }
+        const rd_cell_type &grid1_cell = grid1->cells.at(grid1_cell_index);
+        rd_grid_init_cell_nnc_info(grid1, grid1_cell_index);
+        nnc_info_add_nnc(grid1_cell.nnc_info, grid2->lgr_nr, grid2_cell_index,
+                         nnc_index);
     }
 }
 
@@ -2886,7 +2843,7 @@ static rd_grid_type *rd_grid_alloc_regular(int nx, int ny, int nz,
                                         grid_offset[2] + i * ivec[2] +
                                             j * jvec[2] + k * kvec[2]};
 
-                    rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+                    rd_cell_type &cell = grid->cells.at(global_index);
                     rd_cell_init_regular(cell, offset, i, j, k, global_index,
                                          ivec, jvec, kvec, actnum);
                 }
@@ -3090,15 +3047,14 @@ static bool rd_grid_compare_coarse_cells(const rd_grid_type *g1,
         return false;
 }
 
-static bool rd_grid_compare_cells(const rd_grid_type *g1,
-                                  const rd_grid_type *g2, bool include_nnc,
-                                  bool verbose) {
+static bool rd_grid_compare_cells(rd_grid_type *g1, rd_grid_type *g2,
+                                  bool include_nnc, bool verbose) {
     int g;
     bool equal = true;
     for (g = 0; g < g1->size; g++) {
         bool this_equal = true;
-        rd_cell_type *c1 = rd_grid_get_cell(g1, g);
-        rd_cell_type *c2 = rd_grid_get_cell(g2, g);
+        rd_cell_type &c1 = g1->cells.at(g);
+        rd_cell_type &c2 = g2->cells.at(g);
         rd_cell_compare(c1, c2, include_nnc, &this_equal);
 
         if (!this_equal) {
@@ -3108,7 +3064,7 @@ static bool rd_grid_compare_cells(const rd_grid_type *g1,
 
                 printf("Difference in cell: %d : %d,%d,%d  nnc_equal:%d "
                        "Volume:%g \n",
-                       g, i, j, k, nnc_info_equal(c1->nnc_info, c2->nnc_info),
+                       g, i, j, k, nnc_info_equal(c1.nnc_info, c2.nnc_info),
                        rd_cell_get_volume(c1));
                 printf("-------------------------------------------------------"
                        "----------\n");
@@ -3200,7 +3156,7 @@ static bool rd_grid_compare_mapaxes(const rd_grid_type *g1,
    return true all cells must be identical.
 */
 
-static bool rd_grid_compare__(const rd_grid_type *g1, const rd_grid_type *g2,
+static bool rd_grid_compare__(rd_grid_type *g1, rd_grid_type *g2,
                               bool include_nnc, bool verbose) {
 
     bool equal = true;
@@ -3242,8 +3198,8 @@ static bool rd_grid_compare__(const rd_grid_type *g1, const rd_grid_type *g2,
     return equal;
 }
 
-bool rd_grid_compare(const rd_grid_type *g1, const rd_grid_type *g2,
-                     bool include_lgr, bool include_nnc, bool verbose) {
+bool rd_grid_compare(rd_grid_type *g1, rd_grid_type *g2, bool include_lgr,
+                     bool include_nnc, bool verbose) {
     bool equal = rd_grid_compare__(g1, g2, include_nnc, verbose);
 
     if (equal && include_lgr) {
@@ -3251,12 +3207,10 @@ bool rd_grid_compare(const rd_grid_type *g1, const rd_grid_type *g2,
             int grid_nr;
             for (grid_nr = 0; grid_nr < vector_get_size(g1->LGR_list);
                  grid_nr++) {
-                const rd_grid_type *lgr1 =
-                    (const rd_grid_type *)vector_iget_const(g1->LGR_list,
-                                                            grid_nr);
-                const rd_grid_type *lgr2 =
-                    (const rd_grid_type *)vector_iget_const(g2->LGR_list,
-                                                            grid_nr);
+                rd_grid_type *lgr1 =
+                    (rd_grid_type *)vector_iget(g1->LGR_list, grid_nr);
+                rd_grid_type *lgr2 =
+                    (rd_grid_type *)vector_iget(g2->LGR_list, grid_nr);
 
                 printf("Comparing lgr grid:%d \n", grid_nr);
                 equal = rd_grid_compare__(lgr1, lgr2, include_nnc, verbose);
@@ -3279,7 +3233,7 @@ typedef enum {
     Returns whether the given point is contained within the minimal cube
     encapsulating the cell that has all faces parallel to a coordinate plane.
 */
-static bool rd_grid_cube_contains(const rd_cell_type *cell,
+static bool rd_grid_cube_contains(const rd_cell_type &cell,
                                   const point_type *p) {
     if (p->z < rd_cell_min_z(cell))
         return false;
@@ -3305,14 +3259,14 @@ static bool rd_grid_cube_contains(const rd_cell_type *cell,
 /*
    Returns true if and only if p is on plane "plane" of cell when decomposed by "method".
 */
-static bool rd_grid_on_plane(const rd_cell_type *cell, const int method,
+static bool rd_grid_on_plane(const rd_cell_type &cell, const int method,
                              const int plane, const point_type *p) {
     const point_type *p0 =
-        &cell->corner_list[tetrahedron_permutations[method][plane][0]];
+        &cell.corner_list[tetrahedron_permutations[method][plane][0]];
     const point_type *p1 =
-        &cell->corner_list[tetrahedron_permutations[method][plane][1]];
+        &cell.corner_list[tetrahedron_permutations[method][plane][1]];
     const point_type *p2 =
-        &cell->corner_list[tetrahedron_permutations[method][plane][2]];
+        &cell.corner_list[tetrahedron_permutations[method][plane][2]];
     return triangle_contains3d(p0, p1, p2, p);
 }
 
@@ -3334,7 +3288,7 @@ static bool rd_grid_on_plane(const rd_cell_type *cell, const int method,
    Note: The correctness of this function relies *HEAVILY* on the permutation of the
    tetrahedrons in the decompositions.
 */
-static face_status_enum rd_grid_on_cell_face(const rd_cell_type *cell,
+static face_status_enum rd_grid_on_cell_face(const rd_cell_type &cell,
                                              const int method,
                                              const point_type *p,
                                              const bool max_i, const bool max_j,
@@ -3416,20 +3370,20 @@ static bool tetrahedron_by_points_contains(const point_type *p0,
 
  Note: This function relies *HEAVILY* on the permutation of tetrahedron_permutations.
 */
-static bool concave_cell_contains(const rd_cell_type *cell, int method,
+static bool concave_cell_contains(const rd_cell_type &cell, int method,
                                   const point_type *p) {
 
     const point_type *dia[2][2] = {
-        {&cell->corner_list[tetrahedron_permutations[method][0][1]],
-         &cell->corner_list[tetrahedron_permutations[method][0][2]]},
-        {&cell->corner_list[tetrahedron_permutations[method][10][1]],
-         &cell->corner_list[tetrahedron_permutations[method][10][2]]}};
+        {&cell.corner_list[tetrahedron_permutations[method][0][1]],
+         &cell.corner_list[tetrahedron_permutations[method][0][2]]},
+        {&cell.corner_list[tetrahedron_permutations[method][10][1]],
+         &cell.corner_list[tetrahedron_permutations[method][10][2]]}};
 
     const point_type *extra[2][2] = {
-        {&cell->corner_list[tetrahedron_permutations[method][0][0]],
-         &cell->corner_list[tetrahedron_permutations[method][1][0]]},
-        {&cell->corner_list[tetrahedron_permutations[method][10][0]],
-         &cell->corner_list[tetrahedron_permutations[method][11][0]]}};
+        {&cell.corner_list[tetrahedron_permutations[method][0][0]],
+         &cell.corner_list[tetrahedron_permutations[method][1][0]]},
+        {&cell.corner_list[tetrahedron_permutations[method][10][0]],
+         &cell.corner_list[tetrahedron_permutations[method][11][0]]}};
 
     // Test for containment in cell core
     if (tetrahedron_by_points_contains(dia[0][0], dia[1][0], dia[0][1],
@@ -3469,14 +3423,14 @@ static bool rd_grid_cell_contains_xyz3(const rd_grid_type *rd_grid, int i,
                                        int j, int k, double x, double y,
                                        double z) {
     point_type p;
-    rd_cell_type *cell =
-        rd_grid_get_cell(rd_grid, rd_grid_get_global_index3(rd_grid, i, j, k));
+    const rd_cell_type &cell =
+        rd_grid->cells.at(rd_grid_get_global_index3(rd_grid, i, j, k));
     point_set(&p, x, y, z);
     int method =
         (i + j + k) %
         2; // Chooses the approperiate decomposition method for the cell
 
-    if (GET_CELL_FLAG(cell, CELL_FLAG_TAINTED))
+    if (GET_CELL_FLAG((&cell), CELL_FLAG_TAINTED))
         return false;
 
     // Pruning
@@ -3737,18 +3691,18 @@ void rd_grid_free(rd_grid_type *grid) {
     delete grid;
 }
 
-void rd_grid_get_distance(const rd_grid_type *grid, int global_index1,
+void rd_grid_get_distance(rd_grid_type *grid, int global_index1,
                           int global_index2, double *dx, double *dy,
                           double *dz) {
-    rd_cell_type *cell1 = rd_grid_get_cell(grid, global_index1);
-    rd_cell_type *cell2 = rd_grid_get_cell(grid, global_index2);
+    rd_cell_type &cell1 = grid->cells.at(global_index1);
+    rd_cell_type &cell2 = grid->cells.at(global_index2);
 
     rd_cell_assert_center(cell1);
     rd_cell_assert_center(cell2);
     {
-        *dx = cell1->center.x - cell2->center.x;
-        *dy = cell1->center.y - cell2->center.y;
-        *dz = cell1->center.z - cell2->center.z;
+        *dx = cell1.center.x - cell2.center.x;
+        *dy = cell1.center.y - cell2.center.y;
+        *dz = cell1.center.z - cell2.center.z;
     }
 }
 
@@ -3798,8 +3752,8 @@ int rd_grid_get_nactive_fracture(const rd_grid_type *grid) {
 
 static int rd_grid_get_parent_cell1(const rd_grid_type *grid,
                                     int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-    return cell->host_cell;
+    const rd_cell_type &cell = grid->cells.at(global_index);
+    return cell.host_cell;
 }
 
 /**
@@ -3911,19 +3865,19 @@ void rd_grid_get_ijk1A(const rd_grid_type *rd_grid, int active_index, int *i,
   actually is on the inside of the cell.
 */
 
-void rd_grid_get_xyz1(const rd_grid_type *grid, int global_index, double *xpos,
+void rd_grid_get_xyz1(rd_grid_type *grid, int global_index, double *xpos,
                       double *ypos, double *zpos) {
-    rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    rd_cell_type &cell = grid->cells.at(global_index);
     rd_cell_assert_center(cell);
     {
-        *xpos = cell->center.x;
-        *ypos = cell->center.y;
-        *zpos = cell->center.z;
+        *xpos = cell.center.x;
+        *ypos = cell.center.y;
+        *zpos = cell.center.z;
     }
 }
 
-void rd_grid_get_xyz3(const rd_grid_type *grid, int i, int j, int k,
-                      double *xpos, double *ypos, double *zpos) {
+void rd_grid_get_xyz3(rd_grid_type *grid, int i, int j, int k, double *xpos,
+                      double *ypos, double *zpos) {
     const int global_index = rd_grid_get_global_index__(grid, i, j, k);
     rd_grid_get_xyz1(grid, global_index, xpos, ypos, zpos);
 }
@@ -3938,8 +3892,8 @@ void rd_grid_get_cell_corner_xyz1(const rd_grid_type *grid, int global_index,
                                   int corner_nr, double *xpos, double *ypos,
                                   double *zpos) {
     if ((corner_nr >= 0) && (corner_nr <= 7)) {
-        const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-        const point_type point = cell->corner_list[corner_nr];
+        const rd_cell_type &cell = grid->cells.at(global_index);
+        const point_type point = cell.corner_list[corner_nr];
         *xpos = point.x;
         *ypos = point.y;
         *zpos = point.z;
@@ -3948,9 +3902,9 @@ void rd_grid_get_cell_corner_xyz1(const rd_grid_type *grid, int global_index,
 
 void rd_grid_export_cell_corners1(const rd_grid_type *grid, int global_index,
                                   double *x, double *y, double *z) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    const rd_cell_type &cell = grid->cells.at(global_index);
     for (int i = 0; i < 8; i++) {
-        const point_type point = cell->corner_list[i];
+        const point_type point = cell.corner_list[i];
         x[i] = point.x;
         y[i] = point.y;
         z[i] = point.z;
@@ -4001,19 +3955,19 @@ void rd_grid_get_corner_xyz(const rd_grid_type *grid, int i, int j, int k,
     }
 }
 
-void rd_grid_get_xyz1A(const rd_grid_type *grid, int active_index, double *xpos,
+void rd_grid_get_xyz1A(rd_grid_type *grid, int active_index, double *xpos,
                        double *ypos, double *zpos) {
     const int global_index = rd_grid_get_global_index1A(grid, active_index);
     rd_grid_get_xyz1(grid, global_index, xpos, ypos, zpos);
 }
 
-double rd_grid_get_cdepth1(const rd_grid_type *grid, int global_index) {
-    rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+double rd_grid_get_cdepth1(rd_grid_type *grid, int global_index) {
+    rd_cell_type &cell = grid->cells.at(global_index);
     rd_cell_assert_center(cell);
-    return cell->center.z;
+    return cell.center.z;
 }
 
-double rd_grid_get_cdepth1A(const rd_grid_type *grid, int active_index) {
+double rd_grid_get_cdepth1A(rd_grid_type *grid, int active_index) {
     const int global_index = rd_grid_get_global_index1A(grid, active_index);
     return rd_grid_get_cdepth1(grid, global_index);
 }
@@ -4023,11 +3977,11 @@ double rd_grid_get_cdepth1A(const rd_grid_type *grid, int active_index) {
 */
 
 static double rd_grid_get_top1(const rd_grid_type *grid, int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    const rd_cell_type &cell = grid->cells.at(global_index);
     double depth = 0;
 
     for (int i = 0; i < 4; i++)
-        depth += cell->corner_list[i].z;
+        depth += cell.corner_list[i].z;
 
     return depth * 0.25;
 }
@@ -4042,11 +3996,11 @@ static double rd_grid_get_top3(const rd_grid_type *grid, int i, int j, int k) {
 */
 
 static double rd_grid_get_bottom1(const rd_grid_type *grid, int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    const rd_cell_type &cell = grid->cells.at(global_index);
     double depth = 0;
 
     for (int i = 0; i < 4; i++)
-        depth += cell->corner_list[i + 4].z;
+        depth += cell.corner_list[i + 4].z;
 
     return depth * 0.25;
 }
@@ -4098,11 +4052,11 @@ double rd_grid_get_top1A(const rd_grid_type *grid, int active_index) {
 }
 
 double rd_grid_get_cell_dz1(const rd_grid_type *grid, int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    const rd_cell_type &cell = grid->cells.at(global_index);
     double dz = 0;
 
     for (int i = 0; i < 4; i++)
-        dz += (cell->corner_list[i + 4].z - cell->corner_list[i].z);
+        dz += (cell.corner_list[i + 4].z - cell.corner_list[i].z);
 
     return dz * 0.25;
 }
@@ -4117,13 +4071,13 @@ double rd_grid_get_cell_thickness1(const rd_grid_type *grid, int global_index) {
 }
 
 double rd_grid_get_cell_dx1(const rd_grid_type *grid, int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    const rd_cell_type &cell = grid->cells.at(global_index);
     double dx = 0;
     double dy = 0;
 
     for (int c = 1; c < 8; c += 2) {
-        dx += cell->corner_list[c].x - cell->corner_list[c - 1].x;
-        dy += cell->corner_list[c].y - cell->corner_list[c - 1].y;
+        dx += cell.corner_list[c].x - cell.corner_list[c - 1].x;
+        dy += cell.corner_list[c].y - cell.corner_list[c - 1].y;
     }
     dx *= 0.25;
     dy *= 0.25;
@@ -4150,7 +4104,7 @@ double rd_grid_get_cell_dx1A(const rd_grid_type *grid, int active_index) {
 */
 
 double rd_grid_get_cell_dy1(const rd_grid_type *grid, int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
+    const rd_cell_type &cell = grid->cells.at(global_index);
     double dx = 0;
     double dy = 0;
 
@@ -4158,8 +4112,8 @@ double rd_grid_get_cell_dy1(const rd_grid_type *grid, int global_index) {
         for (int i = 0; i < 2; i++) {
             int c1 = i + k * 4;
             int c2 = c1 + 2;
-            dx += cell->corner_list[c2].x - cell->corner_list[c1].x;
-            dy += cell->corner_list[c2].y - cell->corner_list[c1].y;
+            dx += cell.corner_list[c2].x - cell.corner_list[c1].x;
+            dy += cell.corner_list[c2].y - cell.corner_list[c1].y;
         }
     }
     dx *= 0.25;
@@ -4175,8 +4129,8 @@ double rd_grid_get_cell_dy1A(const rd_grid_type *grid, int active_index) {
 
 const nnc_info_type *rd_grid_get_cell_nnc_info1(const rd_grid_type *grid,
                                                 int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-    return cell->nnc_info;
+    const rd_cell_type &cell = grid->cells.at(global_index);
+    return cell.nnc_info;
 }
 
 /*
@@ -4196,16 +4150,16 @@ bool rd_grid_cell_active3(const rd_grid_type *rd_grid, int i, int j, int k) {
 }
 
 bool rd_grid_cell_invalid1(const rd_grid_type *rd_grid, int global_index) {
-    rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-    return GET_CELL_FLAG(cell, CELL_FLAG_TAINTED);
+    const rd_cell_type &cell = rd_grid->cells.at(global_index);
+    return GET_CELL_FLAG((&cell), CELL_FLAG_TAINTED);
 }
 
 bool rd_grid_cell_valid1(const rd_grid_type *rd_grid, int global_index) {
-    rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
-    if (GET_CELL_FLAG(cell, CELL_FLAG_TAINTED))
+    const rd_cell_type &cell = rd_grid->cells.at(global_index);
+    if (GET_CELL_FLAG((&cell), CELL_FLAG_TAINTED))
         return false;
     else
-        return (GET_CELL_FLAG(cell, CELL_FLAG_VALID));
+        return (GET_CELL_FLAG((&cell), CELL_FLAG_VALID));
 }
 
 static void __assert_main_grid(const rd_grid_type *rd_grid) {
@@ -4330,8 +4284,8 @@ rd_grid_type *rd_grid_get_lgr_from_lgr_nr(const rd_grid_type *main_grid,
 
 const rd_grid_type *rd_grid_get_cell_lgr1(const rd_grid_type *grid,
                                           int global_index) {
-    const rd_cell_type *cell = rd_grid_get_cell(grid, global_index);
-    return cell->lgr;
+    const rd_cell_type &cell = grid->cells.at(global_index);
+    return cell.lgr;
 }
 
 const char *rd_grid_iget_lgr_name(const rd_grid_type *rd_grid, int lgr_index) {
@@ -4386,14 +4340,14 @@ int rd_grid_get_active_size(const rd_grid_type *rd_grid) {
     return rd_grid_get_nactive(rd_grid);
 }
 
-bool rd_grid_cell_regular1(const rd_grid_type *rd_grid, int global_index) {
+bool rd_grid_cell_regular1(rd_grid_type *rd_grid, int global_index) {
     double x, y, z;
     rd_grid_get_xyz1(rd_grid, global_index, &x, &y, &z);
     return rd_grid_cell_contains_xyz1(rd_grid, global_index, x, y, z);
 }
 
 double rd_grid_get_cell_volume1(const rd_grid_type *rd_grid, int global_index) {
-    rd_cell_type *cell = rd_grid_get_cell(rd_grid, global_index);
+    const rd_cell_type &cell = rd_grid->cells.at(global_index);
     int i, j, k;
     rd_grid_get_ijk1(rd_grid, global_index, &i, &j, &k);
     return rd_cell_get_volume(cell);
@@ -4797,8 +4751,7 @@ static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
                 for (int i = 0; i < grid->nx; i++) {
                     int global_index =
                         rd_grid_get_global_index__(grid, i, j, k);
-                    const rd_cell_type *cell =
-                        rd_grid_get_cell(grid, global_index);
+                    const rd_cell_type &cell = grid->cells.at(global_index);
 
                     rd_cell_fwrite_GRID(grid, cell, false, coords_size, i, j, k,
                                         global_index, coords_kw, corners_kw,
@@ -4813,8 +4766,7 @@ static void rd_grid_fwrite_GRID__(const rd_grid_type *grid, int coords_size,
                     for (int i = 0; i < grid->nx; i++) {
                         int global_index = rd_grid_get_global_index__(
                             grid, i, j, k - grid->nz);
-                        const rd_cell_type *cell =
-                            rd_grid_get_cell(grid, global_index);
+                        const rd_cell_type &cell = grid->cells.at(global_index);
 
                         rd_cell_fwrite_GRID(grid, cell, true, coords_size, i, j,
                                             k, global_index, coords_kw,
@@ -4920,11 +4872,10 @@ static int rd_grid_get_valid_index(const rd_grid_type *grid, int i, int j,
     int delta = (k1 < k2) ? 1 : -1;
 
     while (true) {
-        rd_cell_type *cell;
         global_index = rd_grid_get_global_index3(grid, i, j, k);
 
-        cell = rd_grid_get_cell(grid, global_index);
-        if (GET_CELL_FLAG(cell, CELL_FLAG_VALID))
+        const rd_cell_type &cell = grid->cells.at(global_index);
+        if (GET_CELL_FLAG((&cell), CELL_FLAG_VALID))
             return global_index;
         else {
             k += delta;
@@ -4960,8 +4911,8 @@ static bool rd_grid_init_coord_section__(const rd_grid_type *grid, int i, int j,
         point_type top_point;
         point_type bottom_point;
 
-        const rd_cell_type *bottom_cell = rd_grid_get_cell(grid, bottom_index);
-        const rd_cell_type *top_cell = rd_grid_get_cell(grid, top_index);
+        const rd_cell_type &bottom_cell = grid->cells.at(bottom_index);
+        const rd_cell_type &top_cell = grid->cells.at(top_index);
 
         /*
       2---3
@@ -4972,9 +4923,9 @@ static bool rd_grid_init_coord_section__(const rd_grid_type *grid, int i, int j,
         int coord_offset =
             6 * ((j + j_corner) * (grid->nx + 1) + (i + i_corner));
         {
-            point_copy_values(&top_point, &top_cell->corner_list[corner_index]);
+            point_copy_values(&top_point, &top_cell.corner_list[corner_index]);
             point_copy_values(&bottom_point,
-                              &bottom_cell->corner_list[corner_index + 4]);
+                              &bottom_cell.corner_list[corner_index + 4]);
 
             if ((top_point.z == bottom_point.z) && (force_set == false)) {
                 return false;
@@ -5077,13 +5028,13 @@ static void rd_grid_init_zcorn_data__(const rd_grid_type *grid,
         for (int i = 0; i < nx; i++) {
             for (int k = 0; k < nz; k++) {
                 const int cell_index = rd_grid_get_global_index3(grid, i, j, k);
-                const rd_cell_type *cell = rd_grid_get_cell(grid, cell_index);
+                const rd_cell_type &cell = grid->cells.at(cell_index);
 
                 for (int l = 0; l < 2; l++) {
-                    point_type p0 = cell->corner_list[4 * l];
-                    point_type p1 = cell->corner_list[4 * l + 1];
-                    point_type p2 = cell->corner_list[4 * l + 2];
-                    point_type p3 = cell->corner_list[4 * l + 3];
+                    point_type p0 = cell.corner_list[4 * l];
+                    point_type p1 = cell.corner_list[4 * l + 1];
+                    point_type p2 = cell.corner_list[4 * l + 2];
+                    point_type p3 = cell.corner_list[4 * l + 3];
 
                     int z1 =
                         k * 8 * nx * ny + j * 4 * nx + 2 * i + l * 4 * nx * ny;
@@ -5149,14 +5100,14 @@ int rd_grid_get_zcorn_size(const rd_grid_type *grid) {
 
 void rd_grid_init_actnum_data(const rd_grid_type *grid, int *actnum) {
     for (int i = 0; i < grid->size; i++) {
-        const rd_cell_type *cell = rd_grid_get_cell(grid, i);
-        if (cell->coarse_group == COARSE_GROUP_NONE)
-            actnum[i] = cell->active;
+        const rd_cell_type &cell = grid->cells.at(i);
+        if (cell.coarse_group == COARSE_GROUP_NONE)
+            actnum[i] = cell.active;
         else {
             /* In the case of coarse cells we must query the coarse cell for
          the original, uncoarsened distribution of actnum values. */
             rd_coarse_cell_type *coarse_cell =
-                rd_grid_iget_coarse_group(grid, cell->coarse_group);
+                rd_grid_iget_coarse_group(grid, cell.coarse_group);
 
             /* 1: Set all the elements in the coarse group to inactive. */
             {
@@ -5229,8 +5180,8 @@ void rd_grid_global_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
 
 static void rd_grid_init_hostnum_data(const rd_grid_type *grid, int *hostnum) {
     for (int i = 0; i < grid->size; i++) {
-        const rd_cell_type *cell = rd_grid_get_cell(grid, i);
-        hostnum[i] = cell->host_cell + 1;
+        const rd_cell_type &cell = grid->cells.at(i);
+        hostnum[i] = cell.host_cell + 1;
     }
 }
 
@@ -5242,8 +5193,8 @@ static rd_kw_type *rd_grid_alloc_hostnum_kw(const rd_grid_type *grid) {
 
 static void rd_grid_init_corsnum_data(const rd_grid_type *grid, int *corsnum) {
     for (int i = 0; i < grid->size; i++) {
-        const rd_cell_type *cell = rd_grid_get_cell(grid, i);
-        corsnum[i] = cell->coarse_group + 1;
+        const rd_cell_type &cell = grid->cells.at(i);
+        corsnum[i] = cell.coarse_group + 1;
     }
 }
 
@@ -5255,13 +5206,12 @@ static rd_kw_type *rd_grid_alloc_corsnum_kw(const rd_grid_type *grid) {
 
 void rd_grid_reset_actnum(rd_grid_type *grid, const int *actnum) {
     const int global_size = rd_grid_get_global_size(grid);
-    int g;
-    for (g = 0; g < global_size; g++) {
-        rd_cell_type *cell = rd_grid_get_cell(grid, g);
+    for (int g = 0; g < global_size; g++) {
+        rd_cell_type &cell = grid->cells.at(g);
         if (actnum)
-            cell->active = actnum[g];
+            cell.active = actnum[g];
         else
-            cell->active = 1;
+            cell.active = 1;
     }
     rd_grid_update_index(grid);
 }
@@ -5271,11 +5221,9 @@ static void rd_grid_fwrite_self_nnc(const rd_grid_type *grid,
     const int default_index = 1;
     int_vector_type *g1 = int_vector_alloc(0, default_index);
     int_vector_type *g2 = int_vector_alloc(0, default_index);
-    int g;
-
-    for (g = 0; g < rd_grid_get_global_size(grid); g++) {
-        rd_cell_type *cell = rd_grid_get_cell(grid, g);
-        const nnc_info_type *nnc_info = cell->nnc_info;
+    for (int g = 0; g < rd_grid_get_global_size(grid); g++) {
+        const rd_cell_type &cell = grid->cells.at(g);
+        const nnc_info_type *nnc_info = cell.nnc_info;
         if (nnc_info) {
             const nnc_vector_type *nnc_vector =
                 nnc_info_get_self_vector(nnc_info);
@@ -5590,7 +5538,7 @@ void rd_grid_export_volume(const rd_grid_type *grid, int index_size,
 }
 
 //This function is meant to be used w/ pandas datafram and numpy
-void rd_grid_export_position(const rd_grid_type *grid, int index_size,
+void rd_grid_export_position(rd_grid_type *grid, int index_size,
                              const int *global_index, double *output) {
     for (int i = 0; i < index_size; i++) {
         int g = global_index[i];
