@@ -2442,7 +2442,7 @@ char *util_alloc_sprintf_va(const char *fmt, va_list ap) {
 
     length = vsnprintf(NULL, 0, fmt, tmp_va);
     s = (char *)util_calloc(length + 1, sizeof *s);
-    vsprintf(s, fmt, ap);
+    vsnprintf(s, length + 1, fmt, ap);
     return s;
 }
 

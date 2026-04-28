@@ -17,7 +17,7 @@ std::string string_format(const char *fmt, ...) {
     {
         va_list va;
         va_start(va, fmt);
-        vsprintf((char *)s.data(), fmt, va);
+        vsnprintf((char *)s.data(), length + 1, fmt, va);
         va_end(va);
     }
     return s;
