@@ -158,6 +158,35 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+# -----------------------------------------------------------------
+# Pybind11 extension module: resdata.grid._grid
+# -----------------------------------------------------------------
+set(PYBIND11_FINDPYTHON ON)
+find_package(pybind11 CONFIG REQUIRED)
+pybind11_add_module(_grid resdata/rd_grid_pybind.cpp)
+target_link_libraries(_grid PRIVATE resdata)
+target_include_directories(_grid PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                         ${CMAKE_CURRENT_BINARY_DIR}/include)
+if(SKBUILD)
+  set(_grid_install_dir "python/resdata/grid")
+  # libresdata.so.6 is installed at python/resdata/.libs/ make _grid.so find it
+  if(APPLE)
+    set_target_properties(_grid PROPERTIES INSTALL_RPATH
+                                           "@loader_path/../.libs")
+  else()
+    set_target_properties(_grid PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
+  endif()
+else()
+  set(_grid_install_dir "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(TARGETS _grid LIBRARY DESTINATION ${_grid_install_dir})
+# When running tests against the build tree (editable install), put the
+# extension directly next to rd_grid.py so it can be imported as
+# resdata.grid._grid without an install step.
+set_target_properties(
+  _grid PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                   ${PROJECT_SOURCE_DIR}/python/resdata/grid)
+
 if(NOT BUILD_TESTS)
   return()
 endif()

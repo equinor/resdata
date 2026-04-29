@@ -26,6 +26,7 @@ from resdata.util.util import IntVector
 from resdata import ResDataType, UnitSystem, ResdataTypeEnum
 from resdata.resfile import ResdataKW, FortIO
 from resdata.grid import Cell
+import resdata.grid._grid as _grid
 
 
 class Grid(BaseCClass):
@@ -34,9 +35,6 @@ class Grid(BaseCClass):
     """
 
     TYPE_NAME = "rd_grid"
-    _fread_alloc = ResdataPrototype(
-        "void* rd_grid_load_case__(char*, bool)", bind=False
-    )
     _grdecl_create = ResdataPrototype(
         "rd_grid_obj rd_grid_alloc_GRDECL_kw(int, int, int, rd_kw, rd_kw, rd_kw, rd_kw)",
         bind=False,
@@ -298,7 +296,7 @@ class Grid(BaseCClass):
         """
         Will create a grid structure from an EGRID or GRID file.
         """
-        c_ptr = self._fread_alloc(filename, apply_mapaxes)
+        c_ptr = _grid._fread_alloc(filename, apply_mapaxes)
         if c_ptr:
             super(Grid, self).__init__(c_ptr)
         else:
