@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 from math import sqrt
+from collections.abc import Sequence
 
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
@@ -8,6 +9,7 @@ from resdata.util.util import IntVector
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.grid import Grid
+import resdata.grid._grid as _grid
 
 
 def flatten(l):
@@ -51,45 +53,29 @@ def pre_mapaxes_translation(translation, mapaxes):
 
 
 class GridGenerator:
-    _alloc_rectangular = ResdataPrototype(
-        "rd_grid_obj rd_grid_alloc_rectangular(int, int, int, double, double, double, int*)",
-        bind=False,
-    )
-
     @classmethod
-    def create_rectangular(cls, dims, dV, actnum=None):
+    def create_rectangular(cls, dims, dV, actnum: Sequence[int] | None = None):
         """
         Will create a new rectangular grid. @dims = (nx,ny,nz)  @dVg = (dx,dy,dz)
 
         With the default value @actnum == None all cells will be active,
         """
         if actnum is None:
-            rd_grid = cls._alloc_rectangular(
+            rd_grid = _grid._alloc_rectangular(
                 dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], None
             )
         else:
-            if not isinstance(actnum, IntVector):
-                tmp = IntVector(initial_size=len(actnum))
-                for index, value in enumerate(actnum):
-                    tmp[index] = value
-                actnum = tmp
-
             if not len(actnum) == dims[0] * dims[1] * dims[2]:
                 raise ValueError(
                     "ACTNUM size mismatch: len(ACTNUM):%d  Expected:%d"
                     % (len(actnum), dims[0] * dims[1] * dims[2])
                 )
-
-            rd_grid = cls._alloc_rectangular(
-                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], actnum.getDataPtr()
+            rd_grid = _grid._alloc_rectangular(
+                dims[0], dims[1], dims[2], dV[0], dV[1], dV[2], list(actnum)
             )
-
-        # If we have not succeeded in creatin the grid we *assume* the
-        # error is due to a failed malloc.
-        if rd_grid is None:
+        if not rd_grid:
             raise MemoryError("Failed to allocated regualar grid")
-
-        return rd_grid
+        return Grid.createPythonObject(rd_grid)
 
     @classmethod
     def create_single_cell_grid(cls, corners):

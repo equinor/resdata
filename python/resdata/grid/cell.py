@@ -71,7 +71,7 @@ class Cell(object):
                 "Cell contains takes a triple (x,y,z), was given %s." % coord
             )
         x, y, z = coord
-        return self._grid._cell_contains(self._idx, x, y, z)
+        return self._grid.cell_contains(x, y, z, ijk=self._ijk)
 
     def __eq__(self, other):
         if isinstance(other, Cell):
