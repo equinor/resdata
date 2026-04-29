@@ -45,8 +45,6 @@ class Grid(BaseCClass):
         "rd_grid_obj rd_grid_alloc_rectangular(int, int, int, double, double, double, int*)",
         bind=False,
     )
-    _exists = ResdataPrototype("bool rd_grid_exists(char*)", bind=False)
-
     _get_numbered_lgr = ResdataPrototype(
         "rd_grid_ref rd_grid_get_lgr_from_lgr_nr(rd_grid, int)"
     )
@@ -65,9 +63,6 @@ class Grid(BaseCClass):
     _get_active_fracture = ResdataPrototype("int rd_grid_get_nactive_fracture(rd_grid)")
     _get_name = ResdataPrototype("char* rd_grid_get_name(rd_grid)")
     _ijk_valid = ResdataPrototype("bool rd_grid_ijk_valid(rd_grid, int, int, int)")
-    _get_active_index3 = ResdataPrototype(
-        "int rd_grid_get_active_index3(rd_grid, int, int, int)"
-    )
     _get_global_index3 = ResdataPrototype(
         "int rd_grid_get_global_index3(rd_grid, int, int, int)"
     )
@@ -84,12 +79,6 @@ class Grid(BaseCClass):
     _get_ijk1 = ResdataPrototype(
         "void rd_grid_get_ijk1(rd_grid, int, int*, int*, int*)"
     )
-    _get_ijk1A = ResdataPrototype(
-        "void rd_grid_get_ijk1A(rd_grid, int, int*, int*, int*)"
-    )
-    _get_xyz3 = ResdataPrototype(
-        "void rd_grid_get_xyz3(rd_grid, int, int, int, double*, double*, double*)"
-    )
     _get_xyz1 = ResdataPrototype(
         "void rd_grid_get_xyz1(rd_grid, int, double*, double*, double*)"
     )
@@ -98,9 +87,6 @@ class Grid(BaseCClass):
     )
     _get_corner_xyz = ResdataPrototype(
         "void rd_grid_get_corner_xyz(rd_grid, int, int, int, double*, double*, double*)"
-    )
-    _get_xyz1A = ResdataPrototype(
-        "void rd_grid_get_xyz1A(rd_grid, int, double*, double*, double*)"
     )
     _get_ij_xy = ResdataPrototype(
         "bool rd_grid_get_ij_from_xy(rd_grid, double, double, int, int*, int*)"
