@@ -67,11 +67,11 @@ class RestartFileTest(ResdataTest):
         self.assertFalse(f_x20.unified())
 
         self.assertEqual(
-            [(10, datetime.datetime(2000, 10, 1, 0, 0, 0), 274.0)], f_x10.timeList()
+            [(10, datetime.datetime(2000, 10, 1, 0, 0, 0), 274.0)], f_x10.time_list()
         )
 
-        unrst_timeList = f_unrst.timeList()
-        self.assertEqual(len(unrst_timeList), 63)
+        unrst_time_list = f_unrst.time_list()
+        self.assertEqual(len(unrst_time_list), 63)
         self.assertEqual(
-            (62, datetime.datetime(2004, 12, 31, 0, 0, 0), 1826.0), unrst_timeList[62]
+            (62, datetime.datetime(2004, 12, 31, 0, 0, 0), 1826.0), unrst_time_list[62]
         )

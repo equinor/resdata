@@ -86,10 +86,10 @@ class Grid(BaseCClass):
         """
         Will inspect the @filename argument and create a new Grid instance.
         """
-        if FortIO.isFortranFile(filename):
+        if FortIO.is_fortran_file(filename):
             return Grid(filename)
         else:
-            return Grid.loadFromGrdecl(filename)
+            return Grid.load_from_grdecl(filename)
 
     @classmethod
     def _python_object_from_ptr(cls, ptr):
@@ -172,7 +172,7 @@ class Grid(BaseCClass):
 
     def _nicename(self):
         """name is often full path to grid, if so, output basename, else name"""
-        name = self.getName()
+        name = self.get_name()
         if os.path.isfile(name):
             name = os.path.basename(name)
         return name
@@ -184,9 +184,9 @@ class Grid(BaseCClass):
         name = self._nicename()
         if name:
             name = '"%s", ' % name
-        g_size = self.getGlobalSize()
-        a_size = self.getNumActive()
-        xyz_s = "%dx%dx%d" % (self.getNX(), self.getNY(), self.getNZ())
+        g_size = self.get_global_size()
+        a_size = self.get_num_active()
+        xyz_s = "%dx%dx%d" % (self.nx, self.ny, self.nz)
         return self._create_repr(
             "%s%s, global_size=%d, active_size=%d" % (name, xyz_s, g_size, a_size)
         )
@@ -211,7 +211,7 @@ class Grid(BaseCClass):
 
     def get_dims(self):
         """A tuple of four elements: (nx, ny, nz, nactive)."""
-        return (self.getNX(), self.getNY(), self.getNZ(), self.getNumActive())
+        return (self.nx, self.ny, self.nz, self.get_num_active())
 
     @property
     def nx(self):
@@ -250,7 +250,7 @@ class Grid(BaseCClass):
         return _grid._get_active_fracture(self)
 
     def get_bounding_box_2d(self, layer=0, lower_left=None, upper_right=None):
-        if 0 <= layer <= self.getNZ():
+        if 0 <= layer <= self.get_nz():
             x = ctypes.c_double()
             y = ctypes.c_double()
             z = ctypes.c_double()
@@ -260,22 +260,22 @@ class Grid(BaseCClass):
                 j1 = 0
             else:
                 i1, j1 = lower_left
-                if not 0 < i1 < self.getNX():
+                if not 0 < i1 < self.get_nx():
                     raise ValueError("lower_left i coordinate invalid")
 
-                if not 0 < j1 < self.getNY():
+                if not 0 < j1 < self.get_ny():
                     raise ValueError("lower_left j coordinate invalid")
 
             if upper_right is None:
-                i2 = self.getNX()
-                j2 = self.getNY()
+                i2 = self.get_nx()
+                j2 = self.get_ny()
             else:
                 i2, j2 = upper_right
 
-                if not 1 < i2 <= self.getNX():
+                if not 1 < i2 <= self.get_nx():
                     raise ValueError("upper_right i coordinate invalid")
 
-                if not 1 < j2 <= self.getNY():
+                if not 1 < j2 <= self.get_ny():
                     raise ValueError("upper_right j coordinate invalid")
 
             if not i1 < i2:
@@ -299,7 +299,7 @@ class Grid(BaseCClass):
             return (p0, p1, p2, p3)
         else:
             raise ValueError(
-                "Invalid layer value:%d  Valid range: [0,%d]" % (layer, self.getNZ())
+                "Invalid layer value:%d  Valid range: [0,%d]" % (layer, self.get_nz())
             )
 
     def get_name(self):
@@ -378,9 +378,9 @@ class Grid(BaseCClass):
         if not active_index is None:
             global_index = _grid._get_global_index1A(self, active_index)
         elif ijk:
-            nx = self.getNX()
-            ny = self.getNY()
-            nz = self.getNZ()
+            nx = self.get_nx()
+            ny = self.get_ny()
+            nz = self.get_nz()
 
             i, j, k = ijk
 
@@ -395,10 +395,10 @@ class Grid(BaseCClass):
 
             global_index = _grid._get_global_index3(self, i, j, k)
         else:
-            if not 0 <= global_index < self.getGlobalSize():
+            if not 0 <= global_index < self.get_global_size():
                 raise IndexError(
                     "Invalid value global_index:%d  Range: [%d,%d)"
-                    % (global_index, 0, self.getGlobalSize())
+                    % (global_index, 0, self.get_global_size())
                 )
         return global_index
 
@@ -464,7 +464,7 @@ class Grid(BaseCClass):
              completely whacked up shape and size; these cells are
              identified by a heuristic - which might fail
 
-        If the validCellGeometry() returns false for a particular
+        If the valid_cell_geometry() returns false for a particular
         cell functions which calculate cell volumes, real world
         coordinates and so on - should not be used.
         """
@@ -551,25 +551,25 @@ class Grid(BaseCClass):
         i,j and k are are upper end inclusive. To get the four
         bounding points of the lower layer of the grid:
 
-           p0 = grid.getNodePos(0, 0, 0)
-           p1 = grid.getNodePos(grid.getNX(), 0, 0)
-           p2 = grid.getNodePos(0, grid.getNY(), 0)
-           p3 = grid.getNodePos(grid.getNX(), grid.getNY(), 0)
+           p0 = grid.get_node_pos(0, 0, 0)
+           p1 = grid.get_node_pos(grid.get_nx(), 0, 0)
+           p2 = grid.get_node_pos(0, grid.get_ny(), 0)
+           p3 = grid.get_node_pos(grid.get_nx(), grid.get_ny(), 0)
 
         """
-        if not 0 <= i <= self.getNX():
+        if not 0 <= i <= self.get_nx():
             raise IndexError(
-                "Invalid I value:%d - valid range: [0,%d]" % (i, self.getNX())
+                "Invalid I value:%d - valid range: [0,%d]" % (i, self.get_nx())
             )
 
-        if not 0 <= j <= self.getNY():
+        if not 0 <= j <= self.get_ny():
             raise IndexError(
-                "Invalid J value:%d - valid range: [0,%d]" % (j, self.getNY())
+                "Invalid J value:%d - valid range: [0,%d]" % (j, self.get_ny())
             )
 
-        if not 0 <= k <= self.getNZ():
+        if not 0 <= k <= self.get_nz():
             raise IndexError(
-                "Invalid K value:%d - valid range: [0,%d]" % (k, self.getNZ())
+                "Invalid K value:%d - valid range: [0,%d]" % (k, self.get_nz())
             )
 
         return _grid._get_corner_xyz(self, i, j, k)
@@ -599,9 +599,9 @@ class Grid(BaseCClass):
 
         The coordinates are in the inclusive interval [0,nx] x [0,ny] x [0,nz].
         """
-        nx = self.getNX()
-        ny = self.getNY()
-        nz = self.getNZ()
+        nx = self.get_nx()
+        ny = self.get_ny()
+        nz = self.get_nz()
 
         corner = 0
 
@@ -618,16 +618,16 @@ class Grid(BaseCClass):
             corner += 4
 
         if _grid._ijk_valid(self, i, j, k):
-            return self.getCellCorner(corner, global_index=i + j * nx + k * nx * ny)
+            return self.get_cell_corner(corner, global_index=i + j * nx + k * nx * ny)
         else:
             raise IndexError("Invalid coordinates: (%d,%d,%d) " % (i, j, k))
 
     def get_layer_xyz(self, xy_corner, layer):
-        nx = self.getNX()
+        nx = self.get_nx()
 
         j, i = divmod(xy_corner, nx + 1)
         k = layer
-        return self.getNodeXYZ(i, j, k)
+        return self.get_node_xyz(i, j, k)
 
     def distance(self, global_index1, global_index2):
         return _grid._get_distance(self, global_index1, global_index2)
@@ -657,7 +657,7 @@ class Grid(BaseCClass):
         Top of the active part of the reservoir; in the column (@i, @j).
         Raises ValueError if (i,j) column is inactive.
         """
-        for k in range(self.getNZ()):
+        for k in range(self.get_nz()):
             a_idx = self.get_active_index(ijk=(i, j, k))
             if a_idx >= 0:
                 return _grid._get_top1A(self, a_idx)
@@ -727,7 +727,7 @@ class Grid(BaseCClass):
         values for k are [0,nz]. If the coordinates (x,y) are found to
         be outside the grid a ValueError exception is raised.
         """
-        if 0 <= k <= self.getNZ():
+        if 0 <= k <= self.get_nz():
             return _grid._get_ij_xy(self, x, y, k)
         else:
             raise IndexError("Invalid layer value:%d" % k)
@@ -739,27 +739,27 @@ class Grid(BaseCClass):
         values for k are [0,nz]. If the coordinates (x,y) are found to
         be outside the grid a ValueError exception is raised.
         """
-        i, j = self.findCellXY(x, y, k)
-        if k == self.getNZ():
+        i, j = self.find_cell_xy(x, y, k)
+        if k == self.get_nz():
             k -= 1
             corner_shift = 4
         else:
             corner_shift = 0
 
-        nx = self.getNX()
-        x0, y0, z0 = self.getCellCorner(corner_shift, ijk=(i, j, k))
+        nx = self.get_nx()
+        x0, y0, z0 = self.get_cell_corner(corner_shift, ijk=(i, j, k))
         d0 = math.sqrt((x0 - x) * (x0 - x) + (y0 - y) * (y0 - y))
         c0 = i + j * (nx + 1)
 
-        x1, y1, z1 = self.getCellCorner(1 + corner_shift, ijk=(i, j, k))
+        x1, y1, z1 = self.get_cell_corner(1 + corner_shift, ijk=(i, j, k))
         d1 = math.sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y))
         c1 = i + 1 + j * (nx + 1)
 
-        x2, y2, z2 = self.getCellCorner(2 + corner_shift, ijk=(i, j, k))
+        x2, y2, z2 = self.get_cell_corner(2 + corner_shift, ijk=(i, j, k))
         d2 = math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y))
         c2 = i + (j + 1) * (nx + 1)
 
-        x3, y3, z3 = self.getCellCorner(3 + corner_shift, ijk=(i, j, k))
+        x3, y3, z3 = self.get_cell_corner(3 + corner_shift, ijk=(i, j, k))
         d3 = math.sqrt((x3 - x) * (x3 - x) + (y3 - y) * (y3 - y))
         c3 = i + 1 + (j + 1) * (nx + 1)
 
@@ -930,7 +930,7 @@ class Grid(BaseCClass):
         """
         Creates an ResdataKW instance based on existing 3D numpy object.
 
-        The method create3D() does the inverse operation; creating a
+        The method create_3d() does the inverse operation; creating a
         3D numpy object from an ResdataKW instance. If the argument @pack
         is true the resulting keyword will have length 'nactive',
         otherwise the element will have length nx*ny*nz.
@@ -938,9 +938,9 @@ class Grid(BaseCClass):
         if array.ndim == 3:
             dims = array.shape
             if (
-                dims[0] == self.getNX()
-                and dims[1] == self.getNY()
-                and dims[2] == self.getNZ()
+                dims[0] == self.get_nx()
+                and dims[1] == self.get_ny()
+                and dims[2] == self.get_nz()
             ):
                 dtype = array.dtype
                 if dtype == np.int32:
@@ -953,9 +953,9 @@ class Grid(BaseCClass):
                     sys.exit("Do not know how to create rd_kw from type:%s" % dtype)
 
                 if pack:
-                    size = self.getNumActive()
+                    size = self.get_num_active()
                 else:
-                    size = self.getGlobalSize()
+                    size = self.get_global_size()
 
                 if len(kw_name) > 8:
                     # Silently truncate to length 8
@@ -964,9 +964,9 @@ class Grid(BaseCClass):
                 kw = ResdataKW(kw_name, size, type)
                 active_index = 0
                 global_index = 0
-                for k in range(self.getNZ()):
-                    for j in range(self.getNY()):
-                        for i in range(self.getNX()):
+                for k in range(self.get_nz()):
+                    for j in range(self.get_ny()):
+                        for i in range(self.get_nx()):
                             if pack:
                                 if self.active(global_index=global_index):
                                     kw[active_index] = array[i, j, k]
@@ -1004,7 +1004,7 @@ class Grid(BaseCClass):
         ResdataKW instance, i.e. modification to the numpy object will not
         be reflected in the keyword.
 
-        The methods createKW() does the inverse operation; creating an
+        The methods create_kw() does the inverse operation; creating an
         ResdataKW instance from a 3D numpy object.
 
         Alternative: Creating the numpy array object is not very
@@ -1015,26 +1015,28 @@ class Grid(BaseCClass):
            value = grid.grid_value(rd_kw, i, j, k)
 
         """
-        if len(rd_kw) == self.getNumActive() or len(rd_kw) == self.getGlobalSize():
-            array = np.ones([self.getGlobalSize()], dtype=rd_kw.dtype) * default
+        if len(rd_kw) == self.get_num_active() or len(rd_kw) == self.get_global_size():
+            array = np.ones([self.get_global_size()], dtype=rd_kw.dtype) * default
             kwa = rd_kw.array
-            if len(rd_kw) == self.getGlobalSize():
+            if len(rd_kw) == self.get_global_size():
                 for i in range(kwa.size):
                     array[i] = kwa[i]
             else:
-                for global_index in range(self.getGlobalSize()):
+                for global_index in range(self.get_global_size()):
                     active_index = _grid._get_active_index1(self, global_index)
                     array[global_index] = kwa[active_index]
 
-            array = array.reshape([self.getNX(), self.getNY(), self.getNZ()], order="F")
+            array = array.reshape(
+                [self.get_nx(), self.get_ny(), self.get_nz()], order="F"
+            )
             return array
         else:
             err_msg_fmt = 'Keyword "%s" has invalid size %d; must be either nactive=%d or nx*ny*nz=%d'
             err_msg = err_msg_fmt % (
                 rd_kw,
                 len(rd_kw),
-                self.getNumActive(),
-                self.getGlobalSize(),
+                self.get_num_active(),
+                self.get_global_size(),
             )
             raise ValueError(err_msg)
 
@@ -1081,17 +1083,17 @@ class Grid(BaseCClass):
 
         """
 
-        if len(rd_kw) == self.getNumActive() or len(rd_kw) == self.getGlobalSize():
+        if len(rd_kw) == self.get_num_active() or len(rd_kw) == self.get_global_size():
             cfile = CFILE(pyfile)
             _grid._fwrite_grdecl(self, rd_kw, special_header, cfile, default_value)
         else:
             raise ValueError(
                 "Keyword: %s has invalid size(%d), must be either nactive:%d  or nx*ny*nz:%d"
                 % (
-                    rd_kw.getName(),
+                    rd_kw.get_name(),
                     len(rd_kw),
-                    self.getNumActive(),
-                    self.getGlobalSize(),
+                    self.get_num_active(),
+                    self.get_global_size(),
                 )
             )
 
@@ -1099,10 +1101,10 @@ class Grid(BaseCClass):
         return IntVector.createPythonObject(_grid._init_actnum(self))
 
     def compressed_kw_copy(self, kw):
-        if len(kw) == self.getNumActive():
+        if len(kw) == self.get_num_active():
             return kw.copy()
-        elif len(kw) == self.getGlobalSize():
-            kw_copy = ResdataKW(kw.getName(), self.getNumActive(), kw.data_type)
+        elif len(kw) == self.get_global_size():
+            kw_copy = ResdataKW(kw.get_name(), self.get_num_active(), kw.data_type)
             _grid._compressed_kw_copy(self, kw_copy, kw)
             return kw_copy
         else:
@@ -1112,10 +1114,10 @@ class Grid(BaseCClass):
             )
 
     def global_kw_copy(self, kw, default_value):
-        if len(kw) == self.getGlobalSize():
+        if len(kw) == self.get_global_size():
             return kw.copy()
-        elif len(kw) == self.getNumActive():
-            kw_copy = ResdataKW(kw.getName(), self.getGlobalSize(), kw.data_type)
+        elif len(kw) == self.get_num_active():
+            kw_copy = ResdataKW(kw.get_name(), self.get_global_size(), kw.data_type)
             kw_copy.assign(default_value)
             _grid._global_kw_copy(self, kw_copy, kw)
             return kw_copy
@@ -1137,7 +1139,7 @@ class Grid(BaseCClass):
         oil volume:
 
            soil = 1 - sgas - swat
-           cell_volume = grid.createVolumeKeyword()
+           cell_volume = grid.create_volume_keyword()
            tmp = cell_volume * soil
            oip = tmp.sum()
 

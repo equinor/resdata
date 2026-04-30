@@ -103,7 +103,7 @@ class GridGenerator:
             None,
         )
 
-        if not corners == [grid.getCellCorner(i, 0) for i in range(8)]:
+        if not corners == [grid.get_cell_corner(i, 0) for i in range(8)]:
             raise AssertionError(
                 "Failed to generate single cell grid. "
                 + "Did not end up the expected corners."
@@ -595,7 +595,7 @@ class GridGenerator:
 
         """
 
-        gdims = grid.getDims()[:-1:]
+        gdims = grid.get_dims()[:-1:]
         nx, ny, nz = gdims
         ijk_bounds = cls.assert_ijk_bounds(gdims, ijk_bounds)
 

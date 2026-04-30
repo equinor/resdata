@@ -32,7 +32,7 @@ def loadKeywords(name):
 
 class ResdataFileTest(ResdataTest):
     def assertFileType(self, filename, expected):
-        file_type, step, fmt_file = ResdataFile.getFileType(filename)
+        file_type, step, fmt_file = ResdataFile.get_filetype(filename)
         self.assertEqual(file_type, expected[0])
         self.assertEqual(fmt_file, expected[1])
         self.assertEqual(step, expected[2])
@@ -210,18 +210,18 @@ class ResdataFileTest(ResdataTest):
             pfx = "ResdataFile("
             self.assertEqual(pfx, repr(rd_file)[: len(pfx)])
             with self.assertRaises(KeyError):
-                rd_file.blockView("NO", 1)
+                rd_file.block_view("NO", 1)
 
             with self.assertRaises(IndexError):
-                rd_file.blockView("HEADER", 100)
+                rd_file.block_view("HEADER", 100)
 
             with self.assertRaises(IndexError):
-                rd_file.blockView("HEADER", 1000)
+                rd_file.block_view("HEADER", 1000)
 
-            bv = rd_file.blockView("HEADER", -1)
+            bv = rd_file.block_view("HEADER", -1)
 
             for i in range(5):
-                view = rd_file.blockView("HEADER", i)
+                view = rd_file.block_view("HEADER", i)
                 self.assertEqual(view.unique_size(), 3)
                 self.assertEqual(len(view), 3)
                 self.assertEqual(view.unique_kw(), ["HEADER", "DATA1", "DATA2"])
@@ -234,7 +234,7 @@ class ResdataFileTest(ResdataTest):
                 self.assertEqual(data2[99], i * 10)
 
             for i in range(5):
-                view = rd_file.blockView2("HEADER", "DATA2", i)
+                view = rd_file.block_view2("HEADER", "DATA2", i)
                 self.assertEqual(len(view), 2)
                 header = view["HEADER"][0]
                 data1 = view["DATA1"][0]
@@ -244,10 +244,10 @@ class ResdataFileTest(ResdataTest):
 
                 self.assertFalse("DATA2" in view)
 
-            view = rd_file.blockView2("HEADER", None, 0)
+            view = rd_file.block_view2("HEADER", None, 0)
             self.assertEqual(len(view), len(rd_file))
 
-            view = rd_file.blockView2(None, "DATA2", 0)
+            view = rd_file.block_view2(None, "DATA2", 0)
 
             with pytest.raises(KeyError, match="The keyword:FAULTY is not in file"):
                 rd_file.block_view2("HEADER", "FAULTY", 0)

@@ -85,7 +85,7 @@ class RegionTest(ResdataTest):
         reg.select_islice(0, 5)
         OK = True
 
-        global_list = reg.getGlobalList()
+        global_list = reg.get_global_list()
         self.assertEqual(global_list.parent(), reg)
 
         for gi in global_list:
@@ -94,12 +94,12 @@ class RegionTest(ResdataTest):
                 OK = False
         self.assertTrue(OK)
         self.assertTrue(
-            self.grid.getNY() * self.grid.getNZ() * 6 == len(reg.getGlobalList())
+            self.grid.get_ny() * self.grid.get_nz() * 6 == len(reg.get_global_list())
         )
 
         reg.select_jslice(7, 8, intersect=True)
         OK = True
-        for gi in reg.getGlobalList():
+        for gi in reg.get_global_list():
             i, j, k = self.grid.get_ijk(global_index=gi)
             if i > 5:
                 OK = False
@@ -108,13 +108,13 @@ class RegionTest(ResdataTest):
                 OK = False
 
         self.assertTrue(OK)
-        self.assertTrue(2 * self.grid.getNZ() * 6 == len(reg.getGlobalList()))
+        self.assertTrue(2 * self.grid.get_nz() * 6 == len(reg.get_global_list()))
 
         reg2 = ResdataRegion(self.grid, False)
         reg2.select_kslice(3, 5)
         reg &= reg2
         OK = True
-        for gi in reg.getGlobalList():
+        for gi in reg.get_global_list():
             i, j, k = self.grid.get_ijk(global_index=gi)
             if i > 5:
                 OK = False
@@ -126,13 +126,13 @@ class RegionTest(ResdataTest):
                 OK = False
 
         self.assertTrue(OK)
-        self.assertTrue(2 * 3 * 6 == len(reg.getGlobalList()))
+        self.assertTrue(2 * 3 * 6 == len(reg.get_global_list()))
 
     def test_index_list(self):
         reg = ResdataRegion(self.grid, False)
         reg.select_islice(0, 5)
-        active_list = reg.getActiveList()
-        global_list = reg.getGlobalList()
+        active_list = reg.get_active_list()
+        global_list = reg.get_global_list()
 
     def test_polygon(self):
         reg = ResdataRegion(self.grid, False)
@@ -142,7 +142,7 @@ class RegionTest(ResdataTest):
         reg.select_inside_polygon(
             [(x - dx, y - dy), (x - dx, y + dy), (x + dx, y + dy), (x + dx, y - dy)]
         )
-        self.assertTrue(self.grid.getNZ() == len(reg.getGlobalList()))
+        self.assertTrue(self.grid.get_nz() == len(reg.get_global_list()))
 
     def test_heidrun(self):
         root = self.createTestPath("Equinor/ECLIPSE/Heidrun")
@@ -157,29 +157,29 @@ class RegionTest(ResdataTest):
 
         reg = ResdataRegion(grid, False)
         reg.select_inside_polygon(polygon)
-        self.assertEqual(0, len(reg.getGlobalList()) % grid.getNZ())
+        self.assertEqual(0, len(reg.get_global_list()) % grid.get_nz())
 
     def test_layer(self):
         region = ResdataRegion(self.grid, False)
-        layer = Layer(self.grid.getNX(), self.grid.getNY() + 1)
+        layer = Layer(self.grid.get_nx(), self.grid.get_ny() + 1)
         with self.assertRaises(ValueError):
-            region.selectFromLayer(layer, 0, 1)
+            region.select_from_layer(layer, 0, 1)
 
-        layer = Layer(self.grid.getNX(), self.grid.getNY())
+        layer = Layer(self.grid.get_nx(), self.grid.get_ny())
         layer[0, 0] = 1
         layer[1, 1] = 1
         layer[2, 2] = 1
 
         with self.assertRaises(ValueError):
-            region.selectFromLayer(layer, -1, 1)
+            region.select_from_layer(layer, -1, 1)
 
         with self.assertRaises(ValueError):
-            region.selectFromLayer(layer, self.grid.getNZ(), 1)
+            region.select_from_layer(layer, self.grid.get_nz(), 1)
 
-        region.selectFromLayer(layer, 0, 2)
-        glist = region.getGlobalList()
+        region.select_from_layer(layer, 0, 2)
+        glist = region.get_global_list()
         self.assertEqual(0, len(glist))
 
-        region.selectFromLayer(layer, 0, 1)
-        glist = region.getGlobalList()
+        region.select_from_layer(layer, 0, 1)
+        glist = region.get_global_list()
         self.assertEqual(3, len(glist))

@@ -88,7 +88,7 @@ class ResdataSMSPECNode(BaseCClass):
 
     @property
     def num(self):
-        return self.getNum()
+        return self.get_num()
 
     @property
     def default(self):
@@ -115,10 +115,10 @@ class ResdataSMSPECNode(BaseCClass):
         nodes which involve (i,j,k) coordinates will contain two
         forms:
 
-            getKey1()  =>  "BPR:10,11,6"
-            getKey2()  =>  "BPR:52423"
+            get_key1()  =>  "BPR:10,11,6"
+            get_key2()  =>  "BPR:52423"
 
-        Where the '52423' in getKey2() corresponds to i + j*nx +
+        Where the '52423' in get_key2() corresponds to i + j*nx +
         k*nx*ny.
         """
         return self._gen_key2()

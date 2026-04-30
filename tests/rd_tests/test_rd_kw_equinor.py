@@ -25,7 +25,7 @@ class KWTest(ResdataTest):
         unrst_file = ResdataFile(unrst_file_path)
         size = 0
         for kw in unrst_file:
-            size += kw.fortIOSize()
+            size += kw.fort_io_size()
 
         stat = os.stat(unrst_file_path)
         self.assertTrue(size == stat.st_size)
@@ -42,7 +42,7 @@ class KWTest(ResdataTest):
         self.assertTrue(swat.equal(swat2))
 
         swat3 = swat.sub_copy(20000, 100, new_header="swat")
-        self.assertTrue(swat3.getName() == "swat")
+        self.assertTrue(swat3.get_name() == "swat")
         self.assertTrue(len(swat3) == 100)
         equal = True
         for i in range(len(swat3)):

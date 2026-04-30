@@ -41,9 +41,9 @@ class KWTest(ResdataTest):
         kw[1] = 5
         kw[2] = 0
 
-        self.assertEqual(10, kw.getMax())
-        self.assertEqual(0, kw.getMin())
-        self.assertEqual((0, 10), kw.getMinMax())
+        self.assertEqual(10, kw.get_max())
+        self.assertEqual(0, kw.get_min())
+        self.assertEqual((0, 10), kw.get_min_max())
 
     def test_deprecated_datatypes(self):
         with warnings.catch_warnings(record=True) as w:
@@ -448,7 +448,7 @@ class KWTest(ResdataTest):
     def test_typename(self):
         kw = ResdataKW("KW", 100, ResDataType.RD_INT)
 
-        self.assertEqual(kw.typeName(), "INTE")
+        self.assertEqual(kw.type_name(), "INTE")
 
     def test_string_alloc(self):
         kw = ResdataKW("KW", 10, ResDataType.RD_STRING(30))

@@ -21,8 +21,8 @@ class FaultBlockTest(ResdataTest):
         self.kw = ResdataKW.read_grdecl(fileH, "FAULTBLK", rd_type=ResDataType.RD_INT)
 
     def test_load(self):
-        for k in range(self.grid.getNZ()):
+        for k in range(self.grid.get_nz()):
             faultBlocks = FaultBlockLayer(self.grid, k)
-            faultBlocks.scanKeyword(self.kw)
+            faultBlocks.scan_keyword(self.kw)
             for block in faultBlocks:
-                centroid = block.getCentroid()
+                centroid = block.get_centroid()

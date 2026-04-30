@@ -6,7 +6,6 @@ import warnings
 
 from tests.util.mock import createSummary
 
-
 try:
     from unittest2 import skipIf, skipUnless, skipIf
 except ImportError:
@@ -92,31 +91,31 @@ class NPVTest(ResdataTest):
 
     def test_expression(self):
         npv = ResdataNPV(self.case)
-        self.assertIsNone(npv.getExpression())
-        npv.setExpression("[FOPT]*$OIL_PRICE - [FGIT]*$GAS_PRICE")
-        self.assertEqual(npv.getExpression(), "[FOPT]*$OIL_PRICE - [FGIT]*$GAS_PRICE")
-        self.assertIn("FOPT", npv.getKeyList())
-        self.assertIn("FGIT", npv.getKeyList())
+        self.assertIsNone(npv.get_expression())
+        npv.set_expression("[FOPT]*$OIL_PRICE - [FGIT]*$GAS_PRICE")
+        self.assertEqual(npv.get_expression(), "[FOPT]*$OIL_PRICE - [FGIT]*$GAS_PRICE")
+        self.assertIn("FOPT", npv.get_key_list())
+        self.assertIn("FGIT", npv.get_key_list())
 
         with self.assertRaises(ValueError):
-            npv.parseExpression("[FOPT")
+            npv.parse_expression("[FOPT")
 
         with self.assertRaises(ValueError):
-            npv.parseExpression("FOPT]")
+            npv.parse_expression("FOPT]")
 
         with self.assertRaises(KeyError):
-            npv.parseExpression("[FoPT]")
+            npv.parse_expression("[FoPT]")
 
         with self.assertRaises(ValueError):
-            npv.parseExpression("[FOPR]")
+            npv.parse_expression("[FOPR]")
 
-        parsedExpression = npv.parseExpression("[FOPT]")
+        parsedExpression = npv.parse_expression("[FOPT]")
         self.assertEqual(parsedExpression, "FOPT[i]")
-        self.assertEqual(1, len(npv.getKeyList()))
+        self.assertEqual(1, len(npv.get_key_list()))
 
-        parsedExpression = npv.parseExpression("[FOPT]*2 + [FGPT] - [WOPT:OP_1]")
+        parsedExpression = npv.parse_expression("[FOPT]*2 + [FGPT] - [WOPT:OP_1]")
         self.assertEqual(parsedExpression, "FOPT[i]*2 + FGPT[i] - WOPT_OP_1[i]")
-        keyList = npv.getKeyList()
+        keyList = npv.get_key_list()
         self.assertEqual(3, len(keyList))
         self.assertIn("FOPT", keyList)
         self.assertIn("FGPT", keyList)
@@ -131,22 +130,22 @@ class NPVTest(ResdataTest):
     def test_eval(self):
         npv = ResdataNPV(self.case)
         npv.compile("[FOPT]")
-        npv1 = npv.evalNPV()
+        npv1 = npv.eval_npv()
 
         npv2 = 0
         sum = Summary(self.case)
-        trange = sum.timeRange()
-        fopr = sum.blockedProduction("FOPT", trange)
+        trange = sum.time_range()
+        fopr = sum.blocked_production("FOPT", trange)
         for v in fopr:
             npv2 += v
         self.assertAlmostEqual(npv1, npv2)
 
         npv.compile("[FOPT] - 0.5*[FOPT] - 0.5*[FOPT]")
-        npv1 = npv.evalNPV()
+        npv1 = npv.eval_npv()
         self.assertTrue(abs(npv1) < 1e-2)
 
         npv.compile("[WOPT:OP_1] - 0.5*[WOPT:OP_1] - 0.5*[WOPT:OP_1]")
-        npv1 = npv.evalNPV()
+        npv1 = npv.eval_npv()
         self.assertTrue(abs(npv1) < 1e-2)
 
     def test_price_vector(self):
@@ -191,11 +190,11 @@ class NPVTest(ResdataTest):
 
         self.assertEqual(
             datetime.date(2000, 1, 1),
-            NPVPriceVector.assertDate(datetime.date(2000, 1, 1)),
+            NPVPriceVector.assert_date(datetime.date(2000, 1, 1)),
         )
         self.assertEqual(
             datetime.date(2000, 1, 1),
-            NPVPriceVector.assertDate(CTime(datetime.date(2000, 1, 1))),
+            NPVPriceVector.assert_date(CTime(datetime.date(2000, 1, 1))),
         )
 
         self.assertEqual(100, vec.eval(datetime.date(2000, 1, 10)))

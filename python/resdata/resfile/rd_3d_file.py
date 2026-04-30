@@ -16,7 +16,7 @@ class Resdata3DFile(ResdataFile):
         # Go through all the keywords and try inplace promotion to Resdata3DKW
         for kw in kw_list:
             try:
-                Resdata3DKW.castFromKW(kw, self.grid)
+                Resdata3DKW.cast_from_kw(kw, self.grid)
             except ValueError:
                 pass
 

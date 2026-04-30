@@ -54,7 +54,7 @@ class ResdataGravTest(ResdataTest):
 
     def test_create(self):
         kws = [
-            ResdataKW(kw, self.grid.getGlobalSize(), ResDataType.RD_FLOAT)
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_FLOAT)
             for kw in [
                 "PORO",
                 "PORV",
@@ -68,15 +68,15 @@ class ResdataGravTest(ResdataTest):
             ]
         ]
         int_kws = [
-            ResdataKW(kw, self.grid.getGlobalSize(), ResDataType.RD_INT)
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_INT)
             for kw in ["FIP_NUM", "PVTNUM"]
         ]
 
         for kw in kws:
-            for i in range(self.grid.getGlobalSize()):
+            for i in range(self.grid.get_global_size()):
                 kw[i] = 0.5
         for kw in int_kws:
-            for i in range(self.grid.getGlobalSize()):
+            for i in range(self.grid.get_global_size()):
                 kw[i] = 0
 
         kws += int_kws
@@ -91,7 +91,7 @@ class ResdataGravTest(ResdataTest):
             grav = ResdataGrav(self.grid, init)
 
             restart_file = ResdataFile("TEST.UNRST")
-            restart_view = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
+            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
 
             grav.new_std_density(1, 0.5)
             grav.add_std_density(1, 0, 0.5)
@@ -110,7 +110,7 @@ class ResdataGravTest(ResdataTest):
 
     def test_create_minimal(self):
         kws = [
-            ResdataKW(kw, self.grid.getGlobalSize(), ResDataType.RD_FLOAT)
+            ResdataKW(kw, self.grid.get_global_size(), ResDataType.RD_FLOAT)
             for kw in [
                 "PORO",
                 "PORV",
@@ -127,7 +127,7 @@ class ResdataGravTest(ResdataTest):
             grav = ResdataGrav(self.grid, init)
 
             restart_file = ResdataFile("TEST.UNRST")
-            restart_view = restart_file.restartView(sim_time=datetime.date(2000, 1, 1))
+            restart_view = restart_file.restart_view(sim_time=datetime.date(2000, 1, 1))
 
             grav.new_std_density(1, 0.5)
             grav.add_std_density(1, 0, 0.5)

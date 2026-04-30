@@ -88,10 +88,10 @@ class RestartTest(ResdataTest):
 
     def test_name(self):
         f = ResdataFile(self.u_file)
-        self.assertTrue(f.getFilename() == self.u_file)
+        self.assertTrue(f.get_filename() == self.u_file)
 
         f = ResdataFile(self.xfile0)
-        self.assertTrue(f.getFilename() == self.xfile0)
+        self.assertTrue(f.get_filename() == self.xfile0)
 
     def test_kw(self):
         f = ResdataFile(self.u_file)

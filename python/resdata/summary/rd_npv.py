@@ -14,9 +14,9 @@ class NPVParseKey(object):
     def __call__(self, matchObject):
         key = matchObject.group(1)
         smspecNode = self.baseCase.smspec_node(key)
-        if smspecNode.isTotal():
+        if smspecNode.is_total():
             var = key.replace(":", "_")
-            self.NPV.addKey(key, var)
+            self.NPV.add_key(key, var)
             return var + "[i]"
         else:
             raise ValueError("Sorry - the key: %s is not a total key - aborting" % key)
@@ -28,7 +28,7 @@ class NPVPriceVector(object):
         if isinstance(argList, list):
             for item in argList:
                 if isinstance(item, tuple) and len(item) == 2:
-                    self.addItem(item)
+                    self.add_item(item)
                 else:
                     raise ValueError(
                         "Each element in list must be tuple with two elements"
@@ -86,12 +86,12 @@ class NPVPriceVector(object):
             return value
 
     def eval(self, date):
-        date = self.assertDate(date)
+        date = self.assert_date(date)
         startDate = self.dateList[0][0]
         if date >= startDate:
             endDate = self.dateList[-1][0]
             if date >= endDate:
-                return self.evalDate(self.dateList[-1], date)
+                return self.eval_date(self.dateList[-1], date)
             else:
                 index1 = 0
                 index2 = len(self.dateList) - 1
@@ -106,7 +106,7 @@ class NPVPriceVector(object):
                         index1 = index
                     else:
                         index2 = index
-                return self.evalDate(self.dateList[index], date)
+                return self.eval_date(self.dateList[index], date)
         else:
             raise ValueError("Input date:%s before start of vector" % date)
 
@@ -156,12 +156,12 @@ class ResdataNPV(object):
         return parsedExpression
 
     def compile(self, expression):
-        parsedExpression = self.parseExpression(expression)
+        parsedExpression = self.parse_expression(expression)
         self.code = (
-            "trange = self.baseCase.timeRange(self.start, self.end, self.interval)\n"
+            "trange = self.baseCase.time_range(self.start, self.end, self.interval)\n"
         )
         for key, var in self.keyList.items():
-            self.code += '%s = self.baseCase.blockedProduction("%s", trange)\n' % (
+            self.code += '%s = self.baseCase.blocked_production("%s", trange)\n' % (
                 var,
                 key,
             )

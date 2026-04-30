@@ -16,7 +16,7 @@ class Resdata3DKW(ResdataKW):
     reading an inactive value. The Resdata3DKW keyword instances are
     returned from the ResdataInitFile and ResdataRestartFile classes, in
     addition you can excplicitly \"cast\" a ResdataKW keyword to Resdata3DKW
-    with the Resdata3DKW.castFromKW() classmethod.
+    with the Resdata3DKW.cast_from_kw() classmethod.
 
     Usage example:
 
@@ -28,10 +28,10 @@ class Resdata3DKW(ResdataKW):
        >>> permx_kw = file["PORO"][0]
        >>> porv_kw = file["PORV"][0]
 
-       >>> permx_kw.setDefault( -1 )
-       >>> for k in range(grid.getNZ()):
-       >>>     for j in range(grid.getNY()):
-       >>>         for i in range(grid.getNX()):
+       >>> permx_kw.set_default( -1 )
+       >>> for k in range(grid.get_nz()):
+       >>>     for j in range(grid.get_ny()):
+       >>>         for i in range(grid.get_nx()):
        >>>             print('"(%d,%d,%d)  Permx:%g  Porv:%g"' % (i,j,k,permx_kw[i,j,k] , porv_kw[i,j,k]))
 
     In the example we open an INIT file and extract the PERMX
@@ -43,7 +43,7 @@ class Resdata3DKW(ResdataKW):
     stored, this active/inactive gymnastics is handled
     transparently. With the call:
 
-        permx_kw.setDefault( -1 )
+        permx_kw.set_default( -1 )
 
     we say that we want the value -1 for all inactive cells in the
     PERMX property.
@@ -52,13 +52,13 @@ class Resdata3DKW(ResdataKW):
 
     def __init__(self, kw, grid, value_type, default_value=0, global_active=False):
         if global_active:
-            size = grid.getGlobalSize()
+            size = grid.get_global_size()
         else:
-            size = grid.getNumActive()
+            size = grid.get_num_active()
         super(Resdata3DKW, self).__init__(kw, size, value_type)
         self.grid = grid
         self.global_active = global_active
-        self.setDefault(default_value)
+        self.set_default(default_value)
 
     @classmethod
     def create(cls, kw, grid, value_type, default_value=0, global_active=False):
@@ -73,7 +73,7 @@ class Resdata3DKW(ResdataKW):
         See the base class ResdataKW.read_grdecl() for more documentation.
         """
         kw = super(Resdata3DKW, cls).read_grdecl(fileH, kw, strict, rd_type)
-        Resdata3DKW.castFromKW(kw, grid)
+        Resdata3DKW.cast_from_kw(kw, grid)
         return kw
 
     def __getitem__(self, index):
@@ -87,7 +87,7 @@ class Resdata3DKW(ResdataKW):
         If the [i,j,k] input corresponds to an inactive cell in a
         keyword with only nactive elements the default value will be
         returned. By default the default value will be 0, but another
-        value can be assigned with the setDefault() method.
+        value can be assigned with the set_default() method.
         """
         if isinstance(index, tuple):
             global_index = self.grid.get_global_index(ijk=index)
@@ -95,7 +95,7 @@ class Resdata3DKW(ResdataKW):
                 index = global_index
             else:
                 if not self.grid.active(global_index=global_index):
-                    return self.getDefault()
+                    return self.get_default()
                 else:
                     index = self.grid.get_active_index(ijk=index)
 
@@ -149,13 +149,13 @@ class Resdata3DKW(ResdataKW):
 
         >>> grid = Grid("CASE.EGRID")
         >>> poro = ResdataKW.read_grdecl(open("poro.grdecl") , "PORO")
-        >>> Resdata3DKW.castFromKW( poro , grid )
+        >>> Resdata3DKW.cast_from_kw( poro , grid )
 
         >>> print('Porosity in cell (10,11,12):%g' % poro[10,11,12])
         """
-        if len(kw) == grid.getGlobalSize():
+        if len(kw) == grid.get_global_size():
             kw.global_active = True
-        elif len(kw) == grid.getNumActive():
+        elif len(kw) == grid.get_num_active():
             kw.global_active = False
         else:
             raise ValueError(
@@ -165,12 +165,12 @@ class Resdata3DKW(ResdataKW):
         kw.__class__ = cls
         kw.default_value = default_value
         kw.grid = grid
-        if len(kw) == grid.getGlobalSize():
+        if len(kw) == grid.get_global_size():
             kw.global_active = True
         else:
             kw.global_active = False
 
-        kw.setDefault(default_value)
+        kw.set_default(default_value)
         return kw
 
     def compressed_copy(self):
@@ -181,7 +181,7 @@ class Resdata3DKW(ResdataKW):
         main purpose of this is to facilitate iteration over the
         active index, and for writing binary files.
         """
-        return self.grid.compressedKWCopy(self)
+        return self.grid.compressed_kw_copy(self)
 
     def global_copy(self):
         """Will return a ResdataKW copy with nx*ny*nz elements.
@@ -191,10 +191,10 @@ class Resdata3DKW(ResdataKW):
         main purpose of this is to facilitate iteration over the
         global index, and for writing binary files.
         """
-        return self.grid.globalKWCopy(self, self.getDefault())
+        return self.grid.global_kw_copy(self, self.get_default())
 
     def dims(self):
-        return (self.grid.getNX(), self.grid.getNY(), self.grid.getNZ())
+        return (self.grid.get_nx(), self.grid.get_ny(), self.grid.get_nz())
 
     def set_default(self, default_value):
         self.default_value = default_value

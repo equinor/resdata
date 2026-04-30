@@ -94,8 +94,8 @@ class ResdataGrav(BaseCClass):
            ...
            date = datetime.datetime(year, month, day)
            rst_file = ResdataFile("CASE.UNRST")
-           restart_view1 = rst_file.restartView(sim_time=date)
-           restart_view2 = rst_file.restartView(report_step=67)
+           restart_view1 = rst_file.restart_view(sim_time=date)
+           restart_view2 = rst_file.restart_view(report_step=67)
 
         The pore volume of each cell will be calculated based on the
         RPORV keyword from the restart files. The methods

@@ -17,24 +17,24 @@ class GridDualTest(ResdataTest):
     def test_dual(self):
         with TestAreaContext("python/grid-test/testDual"):
             grid = Grid(self.egrid_file())
-            self.assertFalse(grid.dualGrid())
-            self.assertTrue(grid.getNumActiveFracture() == 0)
+            self.assertFalse(grid.dual_grid())
+            self.assertTrue(grid.get_num_active_fracture() == 0)
 
             grid2 = Grid(self.grid_file())
-            self.assertFalse(grid.dualGrid())
-            self.assertTrue(grid.getNumActiveFracture() == 0)
+            self.assertFalse(grid.dual_grid())
+            self.assertTrue(grid.get_num_active_fracture() == 0)
 
             dgrid = Grid(
                 self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.EGRID")
             )
-            self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
-            self.assertTrue(dgrid.getNumActive() == 46118)
+            self.assertTrue(dgrid.get_num_active() == dgrid.get_num_active_fracture())
+            self.assertTrue(dgrid.get_num_active() == 46118)
 
             dgrid2 = Grid(
                 self.createTestPath("Equinor/ECLIPSE/DualPoro/DUALPOR_MSW.GRID")
             )
-            self.assertTrue(dgrid.getNumActive() == dgrid.getNumActiveFracture())
-            self.assertTrue(dgrid.getNumActive() == 46118)
+            self.assertTrue(dgrid.get_num_active() == dgrid.get_num_active_fracture())
+            self.assertTrue(dgrid.get_num_active() == 46118)
             self.assertTrue(dgrid.equal(dgrid2))
 
             # The DUAL_DIFF grid has been manipulated to create a
@@ -43,8 +43,8 @@ class GridDualTest(ResdataTest):
             dgrid = Grid(
                 self.createTestPath("Equinor/ECLIPSE/DualPoro/DUAL_DIFF.EGRID")
             )
-            self.assertTrue(dgrid.getNumActive() == 106)
-            self.assertTrue(dgrid.getNumActiveFracture() == 105)
+            self.assertTrue(dgrid.get_num_active() == 106)
+            self.assertTrue(dgrid.get_num_active_fracture() == 105)
 
             self.assertTrue(dgrid.get_active_fracture_index(global_index=0) == -1)
             self.assertTrue(dgrid.get_active_fracture_index(global_index=2) == -1)
