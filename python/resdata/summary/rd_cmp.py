@@ -11,7 +11,7 @@ class ResdataCase(object):
         self.init = None
         self.summary = None
 
-        self.loadSummary()
+        self.load_summary()
 
     def __contains__(self, key):
         return key in self.summary
@@ -26,13 +26,13 @@ class ResdataCase(object):
         self.summary = Summary(self.case)
 
     def start_time_equal(self, other):
-        if self.summary.getDataStartTime() == other.summary.getDataStartTime():
+        if self.summary.get_data_start_time() == other.summary.get_data_start_time():
             return True
         else:
             return False
 
     def end_time_equal(self, other):
-        if self.summary.getEndTime() == other.summary.getEndTime():
+        if self.summary.get_end_time() == other.summary.get_end_time():
             return True
         else:
             return False
@@ -65,19 +65,19 @@ class ResdataCmp(object):
         the basenames of the simulation, with an optional path
         prefix - an extension is accepted, but will be ignored.
 
-        The constructor will start be calling the method initCheck()
+        The constructor will start be calling the method init_check()
         to check that the two cases are 'in the same ballpark'.
         """
         self.test_case = ResdataCase(test_case)
         self.ref_case = ResdataCase(ref_case)
 
-        self.initCheck()
+        self.init_check()
 
     def init_check(self):
         """A crude initial check to verify that the cases can be meaningfully
         compared.
         """
-        if not self.test_case.startTimeEqual(self.ref_case):
+        if not self.test_case.start_time_equal(self.ref_case):
             raise ValueError(
                 "The two cases do not start at the same time - can not be compared"
             )
@@ -92,7 +92,7 @@ class ResdataCmp(object):
         """
         Will check that ref_case and test_case are equally long.
         """
-        return self.test_case.endTimeEqual(self.ref_case)
+        return self.test_case.end_time_equal(self.ref_case)
 
     def cmp_summary_vector(self, key, sample=100):
         """Will compare the summary vectors according to @key.
@@ -111,7 +111,7 @@ class ResdataCmp(object):
         So that a natural way to evaluate the check for numerical
         equality, based on the relative error could be:
 
-           delta, scale = rd_cmp.cmpSummaryVector("WWCT:OP_1")
+           delta, scale = rd_cmp.cmp_summary_vector("WWCT:OP_1")
 
            if delta/scale < 0.0001:
                print("Equal enough")
@@ -125,9 +125,9 @@ class ResdataCmp(object):
         meaning that two simulations which don't have the same
         end-time will compare as equal if they compare equal in the
         common part. If that is not OK you should call the
-        endTimeEqual() method independently.
+        end_time_equal() method independently.
         """
-        return self.test_case.cmpSummaryVector(self.ref_case, key, sample=sample)
+        return self.test_case.cmp_summary_vector(self.ref_case, key, sample=sample)
 
     def test_keys(self):
         """

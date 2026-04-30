@@ -33,19 +33,19 @@ class ResdataCmpTest(ResdataTest):
 
     def test_summary_cmp(self):
         rd_cmp = ResdataCmp(self.root1, self.root1)
-        self.assertEqual((False, False), rd_cmp.hasSummaryVector("MISSING"))
-        self.assertEqual((True, True), rd_cmp.hasSummaryVector("FOPT"))
+        self.assertEqual((False, False), rd_cmp.has_summary_vector("MISSING"))
+        self.assertEqual((True, True), rd_cmp.has_summary_vector("FOPT"))
 
         with self.assertRaises(KeyError):
-            diff = rd_cmp.cmpSummaryVector("MISSING")
+            diff = rd_cmp.cmp_summary_vector("MISSING")
 
-        diff_sum, ref_sum = rd_cmp.cmpSummaryVector("FOPT")
+        diff_sum, ref_sum = rd_cmp.cmp_summary_vector("FOPT")
         self.assertEqual(diff_sum, 0.0)
         self.assertTrue(rd_cmp.endTimeEqual())
 
     def test_wells(self):
         rd_cmp = ResdataCmp(self.root1, self.root1)
-        wells = rd_cmp.testWells()
+        wells = rd_cmp.test_wells()
 
         well_set = set(["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"])
         self.assertEqual(len(wells), len(well_set))

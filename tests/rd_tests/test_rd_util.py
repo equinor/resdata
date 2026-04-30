@@ -12,19 +12,19 @@ class ResdataUtilTest(ResdataTest):
         self.assertEnumIsFullyDefined(ResdataTypeEnum, "rd_type_enum", source_file_path)
 
     def test_file_type(self):
-        file_type, fmt, report = ResdataUtil.inspectExtension("CASE.X0078")
+        file_type, fmt, report = ResdataUtil.inspect_extension("CASE.X0078")
         assert file_type == FileType.RESTART
-        file_type, fmt, report = ResdataUtil.inspectExtension("CASE.UNRST")
+        file_type, fmt, report = ResdataUtil.inspect_extension("CASE.UNRST")
         assert file_type == FileType.UNIFIED_RESTART
         assert report == None
         assert ResdataUtil.get_file_type("CASE.UNRST") == FileType.UNIFIED_RESTART
 
     def test_file_report_nr(self):
-        report_nr = ResdataUtil.reportStep("CASE.X0080")
+        report_nr = ResdataUtil.report_step("CASE.X0080")
         self.assertEqual(report_nr, 80)
 
         with self.assertRaises(ValueError):
-            ResdataUtil.reportStep("CASE.EGRID")
+            ResdataUtil.report_step("CASE.EGRID")
 
 
 def test_num_cpu_from_data_file(tmp_path):

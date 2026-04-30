@@ -84,15 +84,15 @@ class FaultBlockLayer(BaseCClass):
                 raise IndexError("Index:%d out of range: [0,%d)" % (index, len(self)))
         elif isinstance(index, tuple):
             i, j = index
-            if 0 <= i < self.grid_ref.getNX() and 0 <= j < self.grid_ref.getNY():
-                geo_layer = self.getGeoLayer()
+            if 0 <= i < self.grid_ref.get_nx() and 0 <= j < self.grid_ref.get_ny():
+                geo_layer = self.get_geo_layer()
                 block_id = geo_layer[i, j]
                 if block_id == 0:
                     raise ValueError(
                         "No fault block defined for location (%d,%d)" % (i, j)
                     )
                 else:
-                    return self.getBlock(block_id)
+                    return self.get_block(block_id)
             else:
                 raise IndexError("Invalid i,j : (%d,%d)" % (i, j))
         else:
@@ -112,7 +112,7 @@ class FaultBlockLayer(BaseCClass):
                 % (
                     fault_block_kw.type_name,
                     len(fault_block_kw),
-                    self.grid_ref.getGlobalSize(),
+                    self.grid_ref.get_global_size(),
                 )
             )
 
@@ -125,9 +125,9 @@ class FaultBlockLayer(BaseCClass):
             raise ValueError(
                 "The fault block keyword had wrong type/size:  type:%s  size:%d  grid_size:%d"
                 % (
-                    fault_block_kw.typeName(),
+                    fault_block_kw.type_name(),
                     len(fault_block_kw),
-                    self.grid_ref.getGlobalSize(),
+                    self.grid_ref.get_global_size(),
                 )
             )
 
@@ -148,7 +148,7 @@ class FaultBlockLayer(BaseCClass):
 
     def add_block(self, block_id=None):
         if block_id is None:
-            block_id = self.getNextID()
+            block_id = self.get_next_id()
 
         if block_id in self:
             raise KeyError("Layer already contains block with ID:%s" % block_id)
@@ -175,12 +175,12 @@ class FaultBlockLayer(BaseCClass):
         self._insert_block_content(block)
 
     def export_keyword(self, kw):
-        if len(kw) != self.grid_ref.getGlobalSize():
+        if len(kw) != self.grid_ref.get_global_size():
             msg = (
                 "The size of the target keyword must be equal to the size of the grid."
             )
             msg += "  Got:%d Expected:%d."
-            raise ValueError(msg % (len(kw), self.grid_ref.getGlobalSize()))
+            raise ValueError(msg % (len(kw), self.grid_ref.get_global_size()))
 
         if not kw.data_type.is_int():
             raise TypeError("The target kewyord must be of integer type")
@@ -188,36 +188,36 @@ class FaultBlockLayer(BaseCClass):
         self._export_kw(kw)
 
     def add_fault_barrier(self, fault, link_segments=False):
-        layer = self.getGeoLayer()
-        layer.addFaultBarrier(fault, self.getK(), link_segments)
+        layer = self.get_geo_layer()
+        layer.add_fault_barrier(fault, self.get_k(), link_segments)
 
     def add_fault_link(self, fault1, fault2):
-        if not fault1.intersectsFault(fault2, self.getK()):
-            layer = self.getGeoLayer()
-            layer.addIJBarrier(fault1.extendToFault(fault2, self.getK()))
+        if not fault1.intersects_fault(fault2, self.get_k()):
+            layer = self.get_geo_layer()
+            layer.add_ij_barrier(fault1.extend_to_fault(fault2, self.get_k()))
 
     def join_faults(self, fault1, fault2):
-        if not fault1.intersectsFault(fault2, self.getK()):
+        if not fault1.intersects_fault(fault2, self.get_k()):
             layer = self.get_geo_layer()
             try:
-                layer.addIJBarrier(Fault.joinFaults(fault1, fault2, self.getK()))
+                layer.add_ij_barrier(Fault.join_faults(fault1, fault2, self.get_k()))
             except ValueError:
                 err = "Failed to join faults %s and %s"
-                names = (fault1.getName(), fault2.getName())
+                names = (fault1.get_name(), fault2.get_name())
                 print(err % names)
                 raise ValueError(err % names)
 
     def add_polyline_barrier(self, polyline):
-        layer = self.getGeoLayer()
+        layer = self.get_geo_layer()
         p0 = polyline[0]
-        c0 = self.grid_ref.findCellCornerXY(p0[0], p0[1], self.getK())
-        i, j = self.grid_ref.findCellXY(p0[0], p0[1], self.getK())
+        c0 = self.grid_ref.find_cell_corner_xy(p0[0], p0[1], self.get_k())
+        i, j = self.grid_ref.find_cell_xy(p0[0], p0[1], self.get_k())
         print("%g,%g -> %d,%d   %d" % (p0[0], p0[1], i, j, c0))
         for index in range(1, len(polyline)):
             p1 = polyline[index]
-            c1 = self.grid_ref.findCellCornerXY(p1[0], p1[1], self.getK())
-            i, j = self.grid_ref.findCellXY(p1[0], p1[1], self.getK())
-            layer.addInterpBarrier(c0, c1)
+            c1 = self.grid_ref.find_cell_corner_xy(p1[0], p1[1], self.get_k())
+            i, j = self.grid_ref.find_cell_xy(p1[0], p1[1], self.get_k())
+            layer.add_interp_barrier(c0, c1)
             print("%g,%g -> %d,%d   %d" % (p1[0], p1[1], i, j, c1))
             print("Adding barrier %d -> %d" % (c0, c1))
             c0 = c1
@@ -227,8 +227,8 @@ class FaultBlockLayer(BaseCClass):
         return self._get_layer().setParent(self)
 
     def cell_contact(self, p1, p2):
-        layer = self.getGeoLayer()
-        return layer.cellContact(p1, p2)
+        layer = self.get_geo_layer()
+        return layer.cell_contact(p1, p2)
 
 
 monkey_the_camel(FaultBlockLayer, "scanKeyword", FaultBlockLayer.scan_keyword)

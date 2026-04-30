@@ -35,5 +35,5 @@ class Deprecation_2_0_Test(ResdataTest):
 
 class Deprecation_1_9_Test(ResdataTest):
     def test_ResdataRegion_properties(self):
-        grid = GridGenerator.createRectangular((10, 10, 10), (1, 1, 1))
+        grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
         region = ResdataRegion(grid, False)

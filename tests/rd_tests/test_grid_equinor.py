@@ -41,51 +41,51 @@ class GridTest(ResdataTest):
 
     def test_corner(self):
         grid = Grid(self.egrid_file())
-        nx = grid.getNX()
-        ny = grid.getNY()
-        nz = grid.getNZ()
+        nx = grid.get_nx()
+        ny = grid.get_ny()
+        nz = grid.get_nz()
 
-        x1, y1, z1 = grid.getCellCorner(0, ijk=(0, 0, 0))
-        x2, y2, z2 = grid.getLayerXYZ(0, 0)
+        x1, y1, z1 = grid.get_cell_corner(0, ijk=(0, 0, 0))
+        x2, y2, z2 = grid.get_layer_xyz(0, 0)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        x1, y1, z1 = grid.getCellCorner(0, ijk=(0, 1, 0))
-        x2, y2, z2 = grid.getLayerXYZ((nx + 1), 0)
+        x1, y1, z1 = grid.get_cell_corner(0, ijk=(0, 1, 0))
+        x2, y2, z2 = grid.get_layer_xyz((nx + 1), 0)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        x1, y1, z1 = grid.getCellCorner(1, ijk=(nx - 1, 0, 0))
-        x2, y2, z2 = grid.getLayerXYZ(nx, 0)
+        x1, y1, z1 = grid.get_cell_corner(1, ijk=(nx - 1, 0, 0))
+        x2, y2, z2 = grid.get_layer_xyz(nx, 0)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        x1, y1, z1 = grid.getCellCorner(4, ijk=(0, 0, nz - 1))
-        x2, y2, z2 = grid.getLayerXYZ(0, nz)
+        x1, y1, z1 = grid.get_cell_corner(4, ijk=(0, 0, nz - 1))
+        x2, y2, z2 = grid.get_layer_xyz(0, nz)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
-        x1, y1, z1 = grid.getCellCorner(7, ijk=(nx - 1, ny - 1, nz - 1))
-        x2, y2, z2 = grid.getLayerXYZ((nx + 1) * (ny + 1) - 1, nz)
+        x1, y1, z1 = grid.get_cell_corner(7, ijk=(nx - 1, ny - 1, nz - 1))
+        x2, y2, z2 = grid.get_layer_xyz((nx + 1) * (ny + 1) - 1, nz)
         self.assertEqual(x1, x2)
         self.assertEqual(y1, y2)
         self.assertEqual(z1, z2)
 
         with self.assertRaises(IndexError):
-            grid.getLayerXYZ(-1, 0)
+            grid.get_layer_xyz(-1, 0)
 
         with self.assertRaises(IndexError):
-            grid.getLayerXYZ((nx + 1) * (ny + 1), 0)
+            grid.get_layer_xyz((nx + 1) * (ny + 1), 0)
 
         with self.assertRaises(IndexError):
-            grid.getLayerXYZ(0, -1)
+            grid.get_layer_xyz(0, -1)
 
         with self.assertRaises(IndexError):
-            grid.getLayerXYZ(0, nz + 1)
+            grid.get_layer_xyz(0, nz + 1)
 
     def test_GRID(self):
         grid = Grid(self.grid_file())
@@ -94,10 +94,10 @@ class GridTest(ResdataTest):
     def test_EGRID(self):
         grid = Grid(self.egrid_file())
         self.assertTrue(grid)
-        dims = grid.getDims()
-        self.assertEqual(dims[0], grid.getNX())
-        self.assertEqual(dims[1], grid.getNY())
-        self.assertEqual(dims[2], grid.getNZ())
+        dims = grid.get_dims()
+        self.assertEqual(dims[0], grid.get_nx())
+        self.assertEqual(dims[1], grid.get_ny())
+        self.assertEqual(dims[2], grid.get_nz())
 
     def create(self, filename, load_actnum=True):
         fileH = copen(filename, "r")
@@ -153,21 +153,21 @@ class GridTest(ResdataTest):
 
     def test_grdecl_load(self):
         with self.assertRaises(IOError):
-            grid = Grid.loadFromGrdecl("/file/does/not/exists")
+            grid = Grid.load_from_grdecl("/file/does/not/exists")
 
         with TestAreaContext("python/grid-test/grdeclLoad"):
             with open("grid.grdecl", "w") as f:
                 f.write("Hei ...")
 
             with self.assertRaises(ValueError):
-                grid = Grid.loadFromGrdecl("grid.grdecl")
+                grid = Grid.load_from_grdecl("grid.grdecl")
 
             actnum = IntVector(default_value=1, initial_size=1000)
             actnum[0] = 0
             g1 = GridGenerator.create_rectangular(
                 (10, 10, 10), (1, 1, 1), actnum=actnum
             )
-            self.assertEqual(g1.getNumActive(), actnum.elementSum())
+            self.assertEqual(g1.get_num_active(), actnum.elementSum())
             g1.save_EGRID("G.EGRID")
 
             with open("grid.grdecl", "w") as f2:
@@ -185,7 +185,7 @@ class GridTest(ResdataTest):
                     actnum_kw = f["ACTNUM"][0]
                     actnum_kw.write_grdecl(f2)
 
-            g2 = Grid.loadFromGrdecl("grid.grdecl")
+            g2 = Grid.load_from_grdecl("grid.grdecl")
             self.assertTrue(g1.equal(g2))
 
     def test_ACTNUM(self):
@@ -225,27 +225,27 @@ class GridTest(ResdataTest):
     def test_boundingBox(self):
         grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
         with self.assertRaises(ValueError):
-            bbox = grid.getBoundingBox2D(layer=-1)
+            bbox = grid.get_bounding_box_2d(layer=-1)
 
         with self.assertRaises(ValueError):
-            bbox = grid.getBoundingBox2D(layer=11)
+            bbox = grid.get_bounding_box_2d(layer=11)
 
-        bbox = grid.getBoundingBox2D(layer=10)
+        bbox = grid.get_bounding_box_2d(layer=10)
         self.assertEqual(bbox, ((0, 0), (10, 0), (10, 10), (0, 10)))
 
         with self.assertRaises(ValueError):
-            grid.getBoundingBox2D(lower_left=(-1, 0))
+            grid.get_bounding_box_2d(lower_left=(-1, 0))
 
         with self.assertRaises(ValueError):
-            grid.getBoundingBox2D(lower_left=(6, 10))
+            grid.get_bounding_box_2d(lower_left=(6, 10))
 
-        bbox = grid.getBoundingBox2D(lower_left=(3, 3))
+        bbox = grid.get_bounding_box_2d(lower_left=(3, 3))
         self.assertEqual(bbox, ((3, 3), (10, 3), (10, 10), (3, 10)))
 
         with self.assertRaises(ValueError):
-            grid.getBoundingBox2D(lower_left=(3, 3), upper_right=(2, 2))
+            grid.get_bounding_box_2d(lower_left=(3, 3), upper_right=(2, 2))
 
-        bbox = grid.getBoundingBox2D(lower_left=(3, 3), upper_right=(7, 7))
+        bbox = grid.get_bounding_box_2d(lower_left=(3, 3), upper_right=(7, 7))
         self.assertEqual(bbox, ((3, 3), (7, 3), (7, 7), (3, 7)))
 
     @skipIf(
@@ -262,8 +262,8 @@ class GridTest(ResdataTest):
 
         grid1 = Grid(case)
         grid2 = Grid(case)
-        self.assertEqual(grid1.getNumActive(), grid2.getNumActive())
-        self.assertEqual(grid1.getNumActive(), 34770)
+        self.assertEqual(grid1.get_num_active(), grid2.get_num_active())
+        self.assertEqual(grid1.get_num_active(), 34770)
 
     def test_no_mapaxes_check_for_nan(self):
         grid_paths = [
@@ -291,18 +291,18 @@ class GridTest(ResdataTest):
                 "Equinor/ECLIPSE/GRID_INVALID_CELL/PRED_RESEST_0_R_13_0.GRID"
             )
         )
-        self.assertTrue(grid.validCellGeometry(ijk=(27, 0, 0)))
-        self.assertFalse(grid.validCellGeometry(ijk=(0, 0, 0)))
+        self.assertTrue(grid.valid_cell_geometry(ijk=(27, 0, 0)))
+        self.assertFalse(grid.valid_cell_geometry(ijk=(0, 0, 0)))
 
     def test_volume_kw(self):
         grid = Grid(self.egrid_file())
-        vol = grid.createVolumeKeyword()
-        self.assertEqual(len(vol), grid.getNumActive())
+        vol = grid.create_volume_keyword()
+        self.assertEqual(len(vol), grid.get_num_active())
         for active_index, volume in enumerate(vol):
             self.assertEqual(volume, grid.cell_volume(active_index=active_index))
 
-        vol = grid.createVolumeKeyword(active_size=False)
-        self.assertEqual(len(vol), grid.getGlobalSize())
+        vol = grid.create_volume_keyword(active_size=False)
+        self.assertEqual(len(vol), grid.get_global_size())
         for global_index, volume in enumerate(vol):
             self.assertEqual(volume, grid.cell_volume(global_index=global_index))
 

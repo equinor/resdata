@@ -17,7 +17,7 @@ class KWFunctionTest(ResdataTest):
         actnum[nx * ny - 1] = 0
 
         grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1), actnum=actnum)
-        self.assertEqual(grid.getNumActive(), nx * ny * nz - 1)
+        self.assertEqual(grid.get_num_active(), nx * ny * nz - 1)
 
         kw = Resdata3DKW.create("REGIONS", grid, ResDataType.RD_INT, global_active=True)
         kw.assign(0)
@@ -25,7 +25,7 @@ class KWFunctionTest(ResdataTest):
         kw[5, 2, 0] = 0
         kw[0, 9, 0] = 2
 
-        kw.fixUninitialized(grid)
+        kw.fix_uninitialized(grid)
 
         # Not assigned because they are in contact with a '2'; these
         # two are problem cells.

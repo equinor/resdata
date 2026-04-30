@@ -133,7 +133,7 @@ class FortIO(BaseCClass):
         will be truncated to the current position.
         """
         if size is None:
-            size = self.getPosition()
+            size = self.get_position()
 
         if not self._truncate(size):
             raise IOError("Truncate of fortran filehandle:%s failed" % self.filename())

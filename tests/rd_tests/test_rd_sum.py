@@ -65,32 +65,32 @@ class SummaryTest(ResdataTest):
         self.rd_sum = Summary(self.test_file)
 
     def test_time_range_year(self):
-        real_range = self.rd_sum.timeRange(interval="1y", extend_end=False)
-        extended_range = self.rd_sum.timeRange(interval="1y", extend_end=True)
+        real_range = self.rd_sum.time_range(interval="1y", extend_end=False)
+        extended_range = self.rd_sum.time_range(interval="1y", extend_end=True)
         assert real_range[-1] < extended_range[-1]
 
     def test_time_range_day(self):
-        real_range = self.rd_sum.timeRange(interval="1d", extend_end=False)
-        extended_range = self.rd_sum.timeRange(interval="1d", extend_end=True)
+        real_range = self.rd_sum.time_range(interval="1d", extend_end=False)
+        extended_range = self.rd_sum.time_range(interval="1d", extend_end=True)
         assert real_range[-1] == extended_range[-1]
 
     def test_time_range_month(self):
-        real_range = self.rd_sum.timeRange(interval="1m", extend_end=False)
-        extended_range = self.rd_sum.timeRange(interval="1m", extend_end=True)
+        real_range = self.rd_sum.time_range(interval="1m", extend_end=False)
+        extended_range = self.rd_sum.time_range(interval="1m", extend_end=True)
         assert real_range[-1] < extended_range[-1]
 
     def test_dump_csv_line(self):
         rd_sum_vector = SummaryKeyWordVector(self.rd_sum)
-        rd_sum_vector.addKeywords("F*")
+        rd_sum_vector.add_keywords("F*")
 
         with self.assertRaises(KeyError):
-            rd_sum_vector.addKeyword("MISSING")
+            rd_sum_vector.add_keyword("MISSING")
 
         dtime = datetime.datetime(2002, 1, 1, 0, 0, 0)
         with TestAreaContext("Summary/csv_dump"):
             test_file_name = self.createTestPath("dump.csv")
             outputH = copen(test_file_name, "w")
-            self.rd_sum.dumpCSVLine(dtime, rd_sum_vector, outputH)
+            self.rd_sum.dump_csv_line(dtime, rd_sum_vector, outputH)
             assert os.path.isfile(test_file_name)
 
     def test_truncated_smspec(self):
@@ -129,7 +129,7 @@ class SummaryTest(ResdataTest):
 
             with openFortIO("ECLIPSE.SMSPEC", mode=FortIO.WRITE_MODE) as f:
                 for kw in kw_list:
-                    if kw.getName() == "KEYWORDS":
+                    if kw.get_name() == "KEYWORDS":
                         continue
                     kw.fwrite(f)
 
@@ -149,7 +149,7 @@ class SummaryTest(ResdataTest):
             with openFortIO("ECLIPSE.UNSMRY", mode=FortIO.WRITE_MODE) as f:
                 c = 0
                 for kw in kw_list:
-                    if kw.getName() == "PARAMS":
+                    if kw.get_name() == "PARAMS":
                         if c % 5 == 0:
                             continue
                     c += 1
@@ -161,13 +161,13 @@ class SummaryTest(ResdataTest):
     def test_labscale(self):
         case = self.createTestPath("Equinor/ECLIPSE/LabScale/HDMODEL")
         sum = Summary(case, lazy_load=True)
-        self.assertEqual(sum.getStartTime(), datetime.datetime(2013, 1, 1, 0, 0, 0))
-        self.assertEqual(sum.getEndTime(), datetime.datetime(2013, 1, 1, 19, 30, 0))
+        self.assertEqual(sum.get_start_time(), datetime.datetime(2013, 1, 1, 0, 0, 0))
+        self.assertEqual(sum.get_end_time(), datetime.datetime(2013, 1, 1, 19, 30, 0))
         self.assertFloatEqual(sum.getSimulationLength(), 19.50)
 
         sum = Summary(case, lazy_load=False)
-        self.assertEqual(sum.getStartTime(), datetime.datetime(2013, 1, 1, 0, 0, 0))
-        self.assertEqual(sum.getEndTime(), datetime.datetime(2013, 1, 1, 19, 30, 0))
+        self.assertEqual(sum.get_start_time(), datetime.datetime(2013, 1, 1, 0, 0, 0))
+        self.assertEqual(sum.get_end_time(), datetime.datetime(2013, 1, 1, 19, 30, 0))
         self.assertFloatEqual(sum.getSimulationLength(), 19.50)
 
 
@@ -531,10 +531,10 @@ def test_summary_writer_basic():
 
     var = writer.add_variable("FOPT", unit="SM3")
     t_step = writer.add_t_step(1, 1.0)
-    t_step[var.getKey1()] = 1000.0
+    t_step[var.get_key1()] = 1000.0
 
     t_step = writer.add_t_step(2, 2.0)
-    t_step[var.getKey1()] = 2000.0
+    t_step[var.get_key1()] = 2000.0
 
     writer.fwrite()
 
@@ -555,9 +555,9 @@ def test_summary_writer_multiple_variables():
 
     for i in range(1, 5):
         t_step = writer.add_t_step(i, float(i))
-        t_step[fopt.getKey1()] = 100.0 * i
-        t_step[fopr.getKey1()] = 10.0 * i
-        t_step[fwpt.getKey1()] = 50.0 * i
+        t_step[fopt.get_key1()] = 100.0 * i
+        t_step[fopr.get_key1()] = 10.0 * i
+        t_step[fwpt.get_key1()] = 50.0 * i
 
     writer.fwrite()
 
@@ -1104,7 +1104,7 @@ def test_summary_fwrite():
 
     var = writer.add_variable("FOPT")
     t_step = writer.add_t_step(1, 1.0)
-    t_step[var.getKey1()] = 1000.0
+    t_step[var.get_key1()] = 1000.0
 
     assert writer.can_write()
     writer.fwrite()

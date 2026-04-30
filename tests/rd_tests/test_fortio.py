@@ -53,7 +53,7 @@ class FortIOTest(ResdataTest):
         with TestAreaContext("python/fortio/ftruncate") as t:
             with openFortIO("file", mode=FortIO.WRITE_MODE) as f:
                 kw1.fwrite(f)
-                pos1 = f.getPosition()
+                pos1 = f.get_position()
                 kw2.fwrite(f)
 
             # Truncate file in read mode; should fail hard.
@@ -104,5 +104,5 @@ class FortIOTest(ResdataTest):
             with cwrap.open("text_file", "w") as f:
                 kw1.write_grdecl(f)
 
-            self.assertTrue(FortIO.isFortranFile("fortran_file"))
-            self.assertFalse(FortIO.isFortranFile("text_file"))
+            self.assertTrue(FortIO.is_fortran_file("fortran_file"))
+            self.assertFalse(FortIO.is_fortran_file("text_file"))

@@ -21,7 +21,7 @@ class Resdata3DKWTest(ResdataTest):
 
         grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT)
-        self.assertEqual(len(kw), grid.getNumActive())
+        self.assertEqual(len(kw), grid.get_num_active())
 
         self.assertEqual((10, 10, 10), kw.dims())
 
@@ -32,7 +32,7 @@ class Resdata3DKWTest(ResdataTest):
 
         grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT, global_active=True)
-        self.assertEqual(len(kw), grid.getGlobalSize())
+        self.assertEqual(len(kw), grid.get_global_size())
 
         kw.assign(50)
         self.assertEqual(kw[0, 0, 0], 50)
@@ -54,7 +54,7 @@ class Resdata3DKWTest(ResdataTest):
         kw[6, 6, 6] = 0
 
         self.assertEqual(3 * nx * ny * nz - 9, sum(kw))
-        kw.fixUninitialized(grid)
+        kw.fix_uninitialized(grid)
         self.assertEqual(3 * nx * ny * nz, sum(kw))
 
     def test_getitem(self):
@@ -119,16 +119,16 @@ class Resdata3DKWTest(ResdataTest):
 
         grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1), actnum=actnum)
         kw_wrong_size = ResdataKW("KW", 27, ResDataType.RD_FLOAT)
-        kw_global_size = ResdataKW("KW", grid.getGlobalSize(), ResDataType.RD_FLOAT)
-        kw_active_size = ResdataKW("KW", grid.getNumActive(), ResDataType.RD_FLOAT)
+        kw_global_size = ResdataKW("KW", grid.get_global_size(), ResDataType.RD_FLOAT)
+        kw_active_size = ResdataKW("KW", grid.get_num_active(), ResDataType.RD_FLOAT)
 
         with self.assertRaises(ValueError):
-            Resdata3DKW.castFromKW(kw_wrong_size, grid)
+            Resdata3DKW.cast_from_kw(kw_wrong_size, grid)
 
-        Resdata3DKW.castFromKW(kw_global_size, grid)
+        Resdata3DKW.cast_from_kw(kw_global_size, grid)
         self.assertTrue(isinstance(kw_global_size, Resdata3DKW))
 
-        Resdata3DKW.castFromKW(kw_active_size, grid, default_value=66)
+        Resdata3DKW.cast_from_kw(kw_active_size, grid, default_value=66)
         self.assertTrue(isinstance(kw_active_size, Resdata3DKW))
 
         self.assertEqual(kw_active_size[0, 0, 0], 66)
@@ -139,7 +139,7 @@ class Resdata3DKWTest(ResdataTest):
         grid = GridGenerator.create_rectangular((10, 10, 10), (1, 1, 1))
         kw = Resdata3DKW("KW", grid, ResDataType.RD_FLOAT)
         kw.setDefault(55)
-        self.assertTrue(55, kw.getDefault())
+        self.assertTrue(55, kw.get_default())
 
     def test_compressed_copy(self):
         actnum = IntVector(default_value=1, initial_size=1000)
@@ -151,7 +151,7 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(len(kw)):
             kw[i] = i
 
-        kw_copy = kw.compressedCopy()
+        kw_copy = kw.compressed_copy()
         self.assertTrue(isinstance(kw_copy, ResdataKW))
 
         self.assertEqual(len(kw_copy), 500)
@@ -169,13 +169,13 @@ class Resdata3DKWTest(ResdataTest):
             kw[i] = i
 
         kw.setDefault(177)
-        kw_copy = kw.globalCopy()
+        kw_copy = kw.global_copy()
         self.assertTrue(isinstance(kw_copy, ResdataKW))
 
         self.assertEqual(len(kw_copy), 1000)
         for i in range(len(kw)):
             self.assertEqual(kw_copy[2 * i], i)
-            self.assertEqual(kw_copy[2 * i + 1], kw.getDefault())
+            self.assertEqual(kw_copy[2 * i + 1], kw.get_default())
 
 
 def test_read_grdecl(tmp_path):

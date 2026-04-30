@@ -67,7 +67,7 @@ class ResdataRestartFile(Resdata3DFile):
         'nactive' or 'nx*ny*nz' elements.
         """
 
-        file_type, report_step, fmt_file = ResdataFile.getFileType(filename)
+        file_type, report_step, fmt_file = ResdataFile.get_filetype(filename)
         if not file_type in [
             FileType.RESTART,
             FileType.UNIFIED_RESTART,
@@ -98,7 +98,7 @@ class ResdataRestartFile(Resdata3DFile):
                 for index in range(self.num_named_kw("SEQNUM")):
                     self.rst_headers.append(
                         ResdataRestartHead(
-                            rst_view=self.restartView(seqnum_index=index)
+                            rst_view=self.restart_view(seqnum_index=index)
                         )
                     )
             else:
@@ -128,21 +128,21 @@ class ResdataRestartFile(Resdata3DFile):
         For a non-unified restart file the list will have only one element.
         """
 
-        self.assertHeaders()
+        self.assert_headers()
         time_list = []
         for header in self.rst_headers:
             time_list.append(
-                (header.getReportStep(), header.getSimDate(), header.getSimDays())
+                (header.get_report_step(), header.get_sim_date(), header.get_sim_days())
             )
 
         return time_list
 
     def headers(self):
-        self.assertHeaders()
+        self.assert_headers()
         return self.rst_headers
 
     def get_header(self, index):
-        self.assertHeaders()
+        self.assert_headers()
         return self.rst_headers[index]
 
 

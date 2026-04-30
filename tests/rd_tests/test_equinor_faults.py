@@ -86,18 +86,18 @@ class EquinorFaultTest(ResdataTest):
         #  65                               |
         #           o     o     o     o-----o     o     o     o     o     o     o     o     o     o
 
-        f.addRecord(179, 179, 77, 78, 0, 42, "X")
-        f.addRecord(179, 179, 75, 76, 0, 41, "X")
-        f.addRecord(180, 180, 72, 72, 0, 41, "X")
-        f.addRecord(180, 180, 72, 72, 0, 41, "Y")
-        f.addRecord(180, 180, 72, 72, 0, 41, "Y-")
+        f.add_record(179, 179, 77, 78, 0, 42, "X")
+        f.add_record(179, 179, 75, 76, 0, 41, "X")
+        f.add_record(180, 180, 72, 72, 0, 41, "X")
+        f.add_record(180, 180, 72, 72, 0, 41, "Y")
+        f.add_record(180, 180, 72, 72, 0, 41, "Y-")
 
-        f.addRecord(180, 180, 70, 70, 0, 42, "Y")
-        f.addRecord(180, 180, 69, 70, 0, 42, "X")
-        f.addRecord(180, 180, 65, 65, 0, 42, "X")
-        f.addRecord(180, 180, 65, 65, 0, 42, "Y-")
+        f.add_record(180, 180, 70, 70, 0, 42, "Y")
+        f.add_record(180, 180, 69, 70, 0, 42, "X")
+        f.add_record(180, 180, 65, 65, 0, 42, "X")
+        f.add_record(180, 180, 65, 65, 0, 42, "Y-")
 
-        ij_polyline = f.getIJPolyline(19)
+        ij_polyline = f.get_ij_polyline(19)
         ij_list = [
             (180, 79),
             (180, 77),

@@ -552,7 +552,7 @@ class ResdataRegion(BaseCClass):
         if not rd_kw.data_type.is_int():
             raise ValueError(
                 "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.typeName()
+                % rd_kw.type_name()
             )
         self._select_equal(rd_kw, value)
 
@@ -565,7 +565,7 @@ class ResdataRegion(BaseCClass):
         if not rd_kw.data_type.is_int():
             raise ValueError(
                 "The select_equal method must have an integer valued keyword - got:%s"
-                % rd_kw.typeName()
+                % rd_kw.type_name()
             )
         self._deselect_equal(rd_kw, value)
 
@@ -961,21 +961,21 @@ class ResdataRegion(BaseCClass):
         exactly to nx,ny of the grid.
         """
         grid = self.grid
-        if k < 0 or k >= grid.getNZ():
+        if k < 0 or k >= grid.get_nz():
             raise ValueError(
-                "Invalid k value:%d - must be in range [0,%d)" % (k, grid.getNZ())
+                "Invalid k value:%d - must be in range [0,%d)" % (k, grid.get_nz())
             )
 
-        if grid.getNX() != layer.getNX():
+        if grid.get_nx() != layer.get_nx():
             raise ValueError(
                 "NX dimension mismatch. Grid:%d  layer:%d"
-                % (grid.getNX(), layer.getNX())
+                % (grid.get_nx(), layer.get_nx())
             )
 
-        if grid.getNY() != layer.getNY():
+        if grid.get_ny() != layer.get_ny():
             raise ValueError(
                 "NY dimension mismatch. Grid:%d  layer:%d"
-                % (grid.getNY(), layer.getNY())
+                % (grid.get_ny(), layer.get_ny())
             )
 
         self._select_from_layer(layer, k, value)
@@ -1147,7 +1147,7 @@ class ResdataRegion(BaseCClass):
         """
         WIll return a Python list of (ij,k) tuples for the region.
         """
-        global_list = self.getGlobalList()
+        global_list = self.get_global_list()
         ijk_list = []
         for g in global_list:
             ijk_list.append(self.grid.get_ijk(global_index=g))

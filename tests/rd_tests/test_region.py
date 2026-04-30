@@ -11,13 +11,13 @@ from resdata.grid.faults import Layer
 class RegionTest(ResdataTest):
     def test_equal(self):
         grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
-        kw_int = ResdataKW("INT", grid.getGlobalSize(), ResDataType.RD_INT)
-        kw_float = ResdataKW("FLOAT", grid.getGlobalSize(), ResDataType.RD_FLOAT)
+        kw_int = ResdataKW("INT", grid.get_global_size(), ResDataType.RD_INT)
+        kw_float = ResdataKW("FLOAT", grid.get_global_size(), ResDataType.RD_FLOAT)
 
         kw_int[0:49] = 1
         region = ResdataRegion(grid, False)
         region.select_equal(kw_int, 1)
-        glist = region.getGlobalList()
+        glist = region.get_global_list()
         for g in glist:
             self.assertEqual(kw_int[g], 1)
 
@@ -35,11 +35,13 @@ class RegionTest(ResdataTest):
 
     def test_sum(self):
         grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
-        kw_mask = ResdataKW("INT", grid.getGlobalSize(), ResDataType.RD_INT)
-        int_value = ResdataKW("INT", grid.getGlobalSize(), ResDataType.RD_INT)
-        float_value = ResdataKW("FLOAT", grid.getGlobalSize(), ResDataType.RD_FLOAT)
-        double_value = ResdataKW("DOUBLE", grid.getGlobalSize(), ResDataType.RD_DOUBLE)
-        bool_value = ResdataKW("BOOL", grid.getGlobalSize(), ResDataType.RD_BOOL)
+        kw_mask = ResdataKW("INT", grid.get_global_size(), ResDataType.RD_INT)
+        int_value = ResdataKW("INT", grid.get_global_size(), ResDataType.RD_INT)
+        float_value = ResdataKW("FLOAT", grid.get_global_size(), ResDataType.RD_FLOAT)
+        double_value = ResdataKW(
+            "DOUBLE", grid.get_global_size(), ResDataType.RD_DOUBLE
+        )
+        bool_value = ResdataKW("BOOL", grid.get_global_size(), ResDataType.RD_BOOL)
 
         kw_mask[0:50] = 1
 
@@ -419,8 +421,8 @@ def test_deselect_inside_polygon(circumference_polygon, empty_region, full_regio
 
 @pytest.fixture
 def all_true_kw(grid):
-    kw = ResdataKW("BOOL", grid.getGlobalSize(), ResDataType.RD_BOOL)
-    for i in range(grid.getGlobalSize()):
+    kw = ResdataKW("BOOL", grid.get_global_size(), ResDataType.RD_BOOL)
+    for i in range(grid.get_global_size()):
         kw[i] = True
     return kw
 

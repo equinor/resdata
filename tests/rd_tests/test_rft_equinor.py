@@ -34,7 +34,7 @@ class RFTTest(ResdataTest):
             for cell in rft:
                 self.assertIsInstance(cell, ResdataRFTCell)
 
-        for h in rftFile.getHeaders():
+        for h in rftFile.get_headers():
             print(h)
             self.assertIsInstance(h[1], datetime.date)
 
