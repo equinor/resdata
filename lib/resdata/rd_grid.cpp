@@ -1852,12 +1852,14 @@ static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
     in the _install_egrid / install_grid functions further down.
 */
 
-static void rd_grid_add_lgr(rd_grid_type *main_grid, rd_grid_type *lgr_grid) {
-    main_grid->LGR_list.emplace_back(lgr_grid, &rd_grid_free);
+static rd_grid_type *rd_grid_add_lgr(rd_grid_type *main_grid,
+                                     rd_grid_ptr lgr_grid) {
     if (lgr_grid->lgr_nr >= static_cast<int>(main_grid->lgr_index_map.size()))
         main_grid->lgr_index_map.resize(lgr_grid->lgr_nr + 1, 0);
-    main_grid->lgr_index_map[lgr_grid->lgr_nr] = main_grid->LGR_list.size() - 1;
-    main_grid->LGR_hash[lgr_grid->name] = lgr_grid;
+    main_grid->lgr_index_map[lgr_grid->lgr_nr] = main_grid->LGR_list.size();
+    main_grid->LGR_hash[lgr_grid->name] = lgr_grid.get();
+    main_grid->LGR_list.push_back(std::move(lgr_grid));
+    return main_grid->LGR_list.back().get();
 }
 
 static void rd_grid_install_lgr_common(rd_grid_type *host_grid,
@@ -2068,28 +2070,30 @@ static void rd_grid_init_GRDECL_data(rd_grid_type *rd_grid, const float *zcorn,
   0---1
 */
 
-static rd_grid_type *rd_grid_alloc_GRDECL_data__(
+static rd_grid_ptr rd_grid_alloc_GRDECL_data__(
     rd_grid_type *global_grid, ert_rd_unit_enum unit_system, int dualp_flag,
     bool apply_mapaxes, int nx, int ny, int nz, const float *zcorn,
     const float *coord, const int *actnum, const float *mapaxes,
     const int *corsnum, int lgr_nr) {
 
-    rd_grid_type *rd_grid = rd_grid_alloc_empty(
-        global_grid, unit_system, dualp_flag, nx, ny, nz, lgr_nr, true);
+    auto rd_grid =
+        rd_grid_ptr(rd_grid_alloc_empty(global_grid, unit_system, dualp_flag,
+                                        nx, ny, nz, lgr_nr, true),
+                    &rd_grid_free);
     if (rd_grid) {
         if (mapaxes != NULL)
-            rd_grid_init_mapaxes(rd_grid, apply_mapaxes, mapaxes);
+            rd_grid_init_mapaxes(rd_grid.get(), apply_mapaxes, mapaxes);
 
         if (corsnum != NULL)
             rd_grid->coarsening_active = true;
 
         rd_grid->coord_kw.reset(
             rd_kw_alloc_new("COORD", 6 * (nx + 1) * (ny + 1), RD_FLOAT, coord));
-        rd_grid_init_GRDECL_data(rd_grid, zcorn, coord, actnum, corsnum);
+        rd_grid_init_GRDECL_data(rd_grid.get(), zcorn, coord, actnum, corsnum);
 
-        rd_grid_init_coarse_cells(rd_grid);
-        rd_grid_update_index(rd_grid);
-        rd_grid_taint_cells(rd_grid);
+        rd_grid_init_coarse_cells(rd_grid.get());
+        rd_grid_update_index(rd_grid.get());
+        rd_grid_taint_cells(rd_grid.get());
     }
     return rd_grid;
 }
@@ -2123,45 +2127,46 @@ static void rd_grid_copy_content(rd_grid_type *target_grid,
     rd_grid_init_coarse_cells(target_grid);
 }
 
-static rd_grid_type *rd_grid_alloc_copy__(const rd_grid_type *src_grid,
-                                          rd_grid_type *main_grid) {
-    rd_grid_type *copy_grid = rd_grid_alloc_empty(
-        main_grid, src_grid->unit_system, src_grid->dualp_flag,
-        rd_grid_get_nx(src_grid), rd_grid_get_ny(src_grid),
-        rd_grid_get_nz(src_grid), 0, false);
+static rd_grid_ptr rd_grid_alloc_copy__(const rd_grid_type *src_grid,
+                                        rd_grid_type *main_grid) {
+    auto copy_grid =
+        rd_grid_ptr(rd_grid_alloc_empty(
+                        main_grid, src_grid->unit_system, src_grid->dualp_flag,
+                        rd_grid_get_nx(src_grid), rd_grid_get_ny(src_grid),
+                        rd_grid_get_nz(src_grid), 0, false),
+                    &rd_grid_free);
     if (copy_grid) {
         rd_grid_copy_content(
-            copy_grid,
+            copy_grid.get(),
             src_grid); // This will handle everything except LGR relationships which is established in the calling routine
-        rd_grid_update_index(copy_grid);
+        rd_grid_update_index(copy_grid.get());
     }
     return copy_grid;
 }
 
 rd_grid_type *rd_grid_alloc_copy(const rd_grid_type *src_grid) {
-    rd_grid_type *copy_grid = rd_grid_alloc_copy__(src_grid, NULL);
+    auto copy_grid = rd_grid_alloc_copy__(src_grid, NULL);
 
     for (const auto &src_lgr : src_grid->LGR_list) {
-        rd_grid_type *copy_lgr = rd_grid_alloc_copy__(src_lgr.get(), copy_grid);
-        rd_grid_type *host_grid;
+        // This transfers the storage ownership of the LGR to copy_grid
+        auto copy_lgr = rd_grid_alloc_copy__(src_lgr.get(), copy_grid.get());
+        auto *lgr = rd_grid_add_lgr(copy_grid.get(), std::move(copy_lgr));
 
-        rd_grid_add_lgr(
-            copy_grid,
-            copy_lgr); // This handles the storage ownership of the LGR.
-        if (!copy_lgr->parent_name)
-            host_grid = copy_grid;
+        rd_grid_type *host_grid;
+        if (!lgr->parent_name)
+            host_grid = copy_grid.get();
         else
             host_grid =
-                rd_grid_get_lgr(copy_grid, copy_lgr->parent_name->c_str());
+                rd_grid_get_lgr(copy_grid.get(), lgr->parent_name->c_str());
 
-        for (auto &lgr_cell : copy_lgr->cells) {
+        for (auto &lgr_cell : lgr->cells) {
             rd_cell_type &host_cell = host_grid->cells.at(lgr_cell.host_cell);
-            host_cell.lgr = copy_lgr;
+            host_cell.lgr = lgr;
         }
-        rd_grid_install_lgr_common(host_grid, copy_lgr);
+        rd_grid_install_lgr_common(host_grid, lgr);
     }
 
-    return copy_grid;
+    return copy_grid.release();
 }
 
 static const float *
@@ -2182,7 +2187,7 @@ rd_grid_get_mapaxes_from_kw__(const rd_kw_type *mapaxes_kw) {
     return mapaxes_data;
 }
 
-static rd_grid_type *rd_grid_alloc_GRDECL_kw__(
+static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
     rd_grid_type *global_grid, int dualp_flag, bool apply_mapaxes,
     const rd_kw_type *gridhead_kw, const rd_kw_type *zcorn_kw,
     const rd_kw_type *coord_kw, const rd_kw_type *gridunit_kw, /* Can be NULL */
@@ -2266,9 +2271,11 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
     auto gridhead_kw =
         rd_kw_ptr(rd_grid_alloc_gridhead_kw(nx, ny, nz, 0), &rd_kw_free);
     rd_kw_type *gridunit_kw = NULL;
-    rd_grid_type *rd_grid = rd_grid_alloc_GRDECL_kw__(
-        NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, gridhead_kw.get(),
-        zcorn_kw, coord_kw, gridunit_kw, mapaxes_kw, NULL, actnum_data);
+    rd_grid_type *rd_grid =
+        rd_grid_alloc_GRDECL_kw__(NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes,
+                                  gridhead_kw.get(), zcorn_kw, coord_kw,
+                                  gridunit_kw, mapaxes_kw, NULL, actnum_data)
+            .release();
     return rd_grid;
 }
 
@@ -2479,10 +2486,10 @@ static void rd_grid_init_nnc_amalgamated(rd_grid_type *main_grid,
    support LGRs.
 */
 
-static rd_grid_type *rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
-                                           const rd_file_type *rd_file,
-                                           int grid_nr, bool apply_mapaxes,
-                                           const int *ext_actnum) {
+static rd_grid_ptr rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
+                                         const rd_file_type *rd_file,
+                                         int grid_nr, bool apply_mapaxes,
+                                         const int *ext_actnum) {
     rd_kw_type *gridhead_kw =
         rd_file_iget_named_kw(rd_file, GRIDHEAD_KW, grid_nr);
     rd_kw_type *zcorn_kw = rd_file_iget_named_kw(rd_file, ZCORN_KW, grid_nr);
@@ -2530,20 +2537,20 @@ static rd_grid_type *rd_grid_alloc_EGRID__(rd_grid_type *main_grid,
     }
 
     {
-        rd_grid_type *rd_grid = rd_grid_alloc_GRDECL_kw__(
+        auto rd_grid = rd_grid_alloc_GRDECL_kw__(
             main_grid, dualp_flag, apply_mapaxes, gridhead_kw, zcorn_kw,
             coord_kw, gridunit_kw, mapaxes_kw, corsnum_kw, actnum_data);
 
         if (RD_GRID_MAINGRID_LGR_NR != grid_nr)
-            rd_grid_set_lgr_name_EGRID(rd_grid, rd_file, grid_nr);
+            rd_grid_set_lgr_name_EGRID(rd_grid.get(), rd_file, grid_nr);
         rd_grid->eclipse_version = eclipse_version;
         return rd_grid;
     }
 }
 
-static rd_grid_type *rd_grid_alloc_EGRID_all_grids(const char *grid_file,
-                                                   bool apply_mapaxes,
-                                                   const int *ext_actnum) {
+static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
+                                                 bool apply_mapaxes,
+                                                 const int *ext_actnum) {
     rd_file_enum file_type;
     file_type = rd_get_file_type(grid_file, NULL, NULL);
     if (file_type != RD_EGRID_FILE)
@@ -2551,68 +2558,70 @@ static rd_grid_type *rd_grid_alloc_EGRID_all_grids(const char *grid_file,
             "%s: %s wrong file type - expected .EGRID file - aborting \n",
             __func__, grid_file);
     {
-        rd_file_type *rd_file = rd_file_open(grid_file, 0);
+        auto rd_file = rd_file_ptr(rd_file_open(grid_file, 0), &rd_file_close);
         if (rd_file) {
-            int num_grid = rd_file_get_num_named_kw(rd_file, GRIDHEAD_KW);
-            rd_grid_type *main_grid = rd_grid_alloc_EGRID__(
-                NULL, rd_file, 0, apply_mapaxes, ext_actnum);
+            int num_grid = rd_file_get_num_named_kw(rd_file.get(), GRIDHEAD_KW);
+            auto main_grid = rd_grid_alloc_EGRID__(nullptr, rd_file.get(), 0,
+                                                   apply_mapaxes, ext_actnum);
             int grid_nr;
 
             for (grid_nr = 1; grid_nr < num_grid; grid_nr++) {
                 // The apply_mapaxes argument is ignored for LGR -
                 //   it inherits from parent anyway.
-                rd_grid_type *lgr_grid = rd_grid_alloc_EGRID__(
-                    main_grid, rd_file, grid_nr, false, NULL);
-                rd_grid_add_lgr(main_grid, lgr_grid);
+                auto lgr_grid = rd_grid_alloc_EGRID__(
+                    main_grid.get(), rd_file.get(), grid_nr, false, NULL);
+                auto *lgr =
+                    rd_grid_add_lgr(main_grid.get(), std::move(lgr_grid));
                 {
                     rd_grid_type *host_grid;
-                    rd_kw_type *hostnum_kw =
-                        rd_file_iget_named_kw(rd_file, HOSTNUM_KW, grid_nr - 1);
-                    if (!lgr_grid->parent_name)
-                        host_grid = main_grid;
+                    rd_kw_type *hostnum_kw = rd_file_iget_named_kw(
+                        rd_file.get(), HOSTNUM_KW, grid_nr - 1);
+                    if (!lgr->parent_name)
+                        host_grid = main_grid.get();
                     else
-                        host_grid = rd_grid_get_lgr(
-                            main_grid, lgr_grid->parent_name->c_str());
+                        host_grid = rd_grid_get_lgr(main_grid.get(),
+                                                    lgr->parent_name->c_str());
 
-                    rd_grid_install_lgr_EGRID(host_grid, lgr_grid,
+                    rd_grid_install_lgr_EGRID(host_grid, lgr,
                                               rd_kw_get_int_ptr(hostnum_kw));
                 }
             }
             main_grid->name = grid_file;
-            rd_grid_init_nnc(main_grid, rd_file);
-            rd_grid_init_nnc_amalgamated(main_grid, rd_file);
-
-            rd_file_close(rd_file);
+            rd_grid_init_nnc(main_grid.get(), rd_file.get());
+            rd_grid_init_nnc_amalgamated(main_grid.get(), rd_file.get());
             return main_grid;
         } else
             return NULL;
     }
 }
 
-static rd_grid_type *rd_grid_alloc_EGRID(const char *grid_file,
-                                         bool apply_mapaxes) {
+static rd_grid_ptr rd_grid_alloc_EGRID(const char *grid_file,
+                                       bool apply_mapaxes) {
     return rd_grid_alloc_EGRID_all_grids(grid_file, apply_mapaxes, NULL);
 }
 
-static rd_grid_type *rd_grid_alloc_GRID_data__(
+static rd_grid_ptr rd_grid_alloc_GRID_data__(
     rd_grid_type *global_grid, int num_coords, ert_rd_unit_enum unit_system,
     int dualp_flag, bool apply_mapaxes, int nx, int ny, int nz, int grid_nr,
     int coords_size, int **coords, float **corners, const float *mapaxes) {
     if (dualp_flag != FILEHEAD_SINGLE_POROSITY)
         nz = nz / 2;
 
-    rd_grid_type *grid = rd_grid_alloc_empty(
-        global_grid, unit_system, dualp_flag, nx, ny, nz, grid_nr, false);
+    auto grid =
+        rd_grid_ptr(rd_grid_alloc_empty(global_grid, unit_system, dualp_flag,
+                                        nx, ny, nz, grid_nr, false),
+                    &rd_grid_free);
     if (grid) {
         if (mapaxes != NULL)
-            rd_grid_init_mapaxes(grid, apply_mapaxes, mapaxes);
+            rd_grid_init_mapaxes(grid.get(), apply_mapaxes, mapaxes);
 
         for (int i = 0; i < num_coords; i++)
-            rd_grid_set_cell_GRID(grid, coords_size, coords[i], corners[i]);
+            rd_grid_set_cell_GRID(grid.get(), coords_size, coords[i],
+                                  corners[i]);
 
-        rd_grid_init_coarse_cells(grid);
-        rd_grid_update_index(grid);
-        rd_grid_taint_cells(grid);
+        rd_grid_init_coarse_cells(grid.get());
+        rd_grid_update_index(grid.get());
+        rd_grid_taint_cells(grid.get());
     }
     return grid;
 }
@@ -2660,13 +2669,12 @@ static int rd_grid_dual_porosity_GRID_check(rd_file_type *rd_file) {
     }
 }
 
-static rd_grid_type *rd_grid_alloc_GRID__(rd_grid_type *global_grid,
-                                          const rd_file_type *rd_file,
-                                          int cell_offset, int grid_nr,
-                                          int dualp_flag, bool apply_mapaxes) {
+static rd_grid_ptr rd_grid_alloc_GRID__(rd_grid_type *global_grid,
+                                        const rd_file_type *rd_file,
+                                        int cell_offset, int grid_nr,
+                                        int dualp_flag, bool apply_mapaxes) {
     int nx, ny, nz;
     const float *mapaxes_data = NULL;
-    rd_grid_type *grid;
     ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
 
     // 1: Fetching header data from the DIMENS keyword.
@@ -2727,98 +2735,86 @@ static rd_grid_type *rd_grid_alloc_GRID__(rd_grid_type *global_grid,
     function.
   */
 
-    {
-        int num_coords;
+    int num_coords;
 
-        if (global_grid == NULL) {
-            /* This is the main grid - can be both nactive or nx*ny*nz coord elements. */
-            int num_coords_kw = rd_file_get_num_named_kw(rd_file, COORDS_KW);
-            if (num_coords_kw >= nx * ny * nz)
-                num_coords = nx * ny * nz;
-            else
-                num_coords = num_coords_kw;
-        } else
-            /* This is an lgr - always nx*ny*nz elements. */
+    if (global_grid == NULL) {
+        /* This is the main grid - can be both nactive or nx*ny*nz coord elements. */
+        int num_coords_kw = rd_file_get_num_named_kw(rd_file, COORDS_KW);
+        if (num_coords_kw >= nx * ny * nz)
             num_coords = nx * ny * nz;
+        else
+            num_coords = num_coords_kw;
+    } else
+        /* This is an lgr - always nx*ny*nz elements. */
+        num_coords = nx * ny * nz;
 
-        // 3: Fetching the main chunk of cell data from the COORDS and
-        //    CORNERS keywords.
-        {
-            int coords_size = -1;
+    // 3: Fetching the main chunk of cell data from the COORDS and
+    //    CORNERS keywords.
+    int coords_size = -1;
 
-            int **coords = (int **)util_calloc(num_coords, sizeof *coords);
-            float **corners =
-                (float **)util_calloc(num_coords, sizeof *corners);
+    std::vector<int *> coords(num_coords);
+    std::vector<float *> corners(num_coords);
 
-            for (int index = 0; index < num_coords; index++) {
-                const rd_kw_type *coords_kw = rd_file_iget_named_kw(
-                    rd_file, COORDS_KW, index + cell_offset);
-                const rd_kw_type *corners_kw = rd_file_iget_named_kw(
-                    rd_file, CORNERS_KW, index + cell_offset);
+    for (int index = 0; index < num_coords; index++) {
+        const rd_kw_type *coords_kw =
+            rd_file_iget_named_kw(rd_file, COORDS_KW, index + cell_offset);
+        const rd_kw_type *corners_kw =
+            rd_file_iget_named_kw(rd_file, CORNERS_KW, index + cell_offset);
 
-                coords[index] = rd_kw_get_int_ptr(coords_kw);
-                corners[index] = rd_kw_get_float_ptr(corners_kw);
-                coords_size = rd_kw_get_size(coords_kw);
-            }
-            // Create the grid:
-            grid = rd_grid_alloc_GRID_data__(
-                global_grid, num_coords, unit_system, dualp_flag, apply_mapaxes,
-                nx, ny, nz, grid_nr, coords_size, coords, corners,
-                mapaxes_data);
-
-            free(coords);
-            free(corners);
-        }
+        coords[index] = rd_kw_get_int_ptr(coords_kw);
+        corners[index] = rd_kw_get_float_ptr(corners_kw);
+        coords_size = rd_kw_get_size(coords_kw);
     }
+    // Create the grid:
+    auto grid = rd_grid_alloc_GRID_data__(
+        global_grid, num_coords, unit_system, dualp_flag, apply_mapaxes, nx, ny,
+        nz, grid_nr, coords_size, coords.data(), corners.data(), mapaxes_data);
 
     if (grid_nr > 0)
-        rd_grid_set_lgr_name_GRID(grid, rd_file, grid_nr);
+        rd_grid_set_lgr_name_GRID(grid.get(), rd_file, grid_nr);
     return grid;
 }
 
-static rd_grid_type *rd_grid_alloc_GRID(const char *grid_file,
-                                        bool apply_mapaxes) {
+static rd_grid_ptr rd_grid_alloc_GRID(const char *grid_file,
+                                      bool apply_mapaxes) {
 
     rd_file_enum file_type;
     file_type = rd_get_file_type(grid_file, NULL, NULL);
     if (file_type != RD_GRID_FILE)
-        util_abort("%s: %s wrong file type - expected .GRID file - aborting \n",
-                   __func__, grid_file);
+        throw std::invalid_argument(fmt::format(
+            "{}: wrong file type - expected .GRID file", grid_file));
 
-    {
-        int cell_offset = 0;
-        rd_file_type *rd_file = rd_file_open(grid_file, 0);
-        int num_grid = rd_file_get_num_named_kw(rd_file, DIMENS_KW);
-        rd_grid_type *main_grid;
-        int grid_nr;
-        int dualp_flag;
+    int cell_offset = 0;
+    rd_file_ptr rd_file{rd_file_open(grid_file, 0), &rd_file_close};
+    int num_grid = rd_file_get_num_named_kw(rd_file.get(), DIMENS_KW);
+    int grid_nr;
+    int dualp_flag;
 
-        dualp_flag = rd_grid_dual_porosity_GRID_check(rd_file);
-        main_grid = rd_grid_alloc_GRID__(NULL, rd_file, cell_offset, 0,
-                                         dualp_flag, apply_mapaxes);
-        cell_offset += rd_grid_get_global_size(main_grid);
+    dualp_flag = rd_grid_dual_porosity_GRID_check(rd_file.get());
+    auto main_grid = rd_grid_alloc_GRID__(NULL, rd_file.get(), cell_offset, 0,
+                                          dualp_flag, apply_mapaxes);
+    cell_offset += rd_grid_get_global_size(main_grid.get());
 
-        for (grid_nr = 1; grid_nr < num_grid; grid_nr++) {
-            rd_grid_type *lgr_grid = rd_grid_alloc_GRID__(
-                main_grid, rd_file, cell_offset, grid_nr, dualp_flag, false);
-            cell_offset += rd_grid_get_global_size(lgr_grid);
-            rd_grid_add_lgr(main_grid, lgr_grid);
-            {
-                rd_grid_type *host_grid;
+    for (grid_nr = 1; grid_nr < num_grid; grid_nr++) {
+        auto lgr_grid =
+            rd_grid_alloc_GRID__(main_grid.get(), rd_file.get(), cell_offset,
+                                 grid_nr, dualp_flag, false);
+        cell_offset += rd_grid_get_global_size(lgr_grid.get());
+        auto *lgr = rd_grid_add_lgr(main_grid.get(), std::move(lgr_grid));
+        {
+            rd_grid_type *host_grid;
 
-                if (!lgr_grid->parent_name)
-                    host_grid = main_grid;
-                else
-                    host_grid = rd_grid_get_lgr(main_grid,
-                                                lgr_grid->parent_name->c_str());
+            if (!lgr->parent_name)
+                host_grid = main_grid.get();
+            else
+                host_grid =
+                    rd_grid_get_lgr(main_grid.get(), lgr->parent_name->c_str());
 
-                rd_grid_install_lgr_GRID(host_grid, lgr_grid);
-            }
+            rd_grid_install_lgr_GRID(host_grid, lgr);
         }
-        main_grid->name = grid_file;
-        rd_file_close(rd_file);
-        return main_grid;
     }
+    main_grid->name = grid_file;
+    return main_grid;
 }
 
 /**
@@ -2897,10 +2893,9 @@ rd_grid_type *rd_grid_alloc_rectangular(int nx, int ny, int nz, double dx,
    with these keywords.
 */
 
-static rd_grid_type *rd_grid_alloc__(const char *grid_file,
-                                     bool apply_mapaxes) {
+static rd_grid_ptr rd_grid_alloc__(const char *grid_file, bool apply_mapaxes) {
     rd_file_enum file_type;
-    rd_grid_type *rd_grid = NULL;
+    rd_grid_ptr rd_grid{nullptr, &rd_grid_free};
 
     file_type = rd_get_file_type(grid_file, NULL, NULL);
     if (file_type == RD_GRID_FILE)
@@ -2908,15 +2903,15 @@ static rd_grid_type *rd_grid_alloc__(const char *grid_file,
     else if (file_type == RD_EGRID_FILE)
         rd_grid = rd_grid_alloc_EGRID(grid_file, apply_mapaxes);
     else
-        util_abort("%s must have .GRID or .EGRID file - %s not recognized \n",
-                   __func__, grid_file);
+        throw std::invalid_argument(fmt::format(
+            "Must have .GRID or .EGRID file - {} not recognized", grid_file));
 
     return rd_grid;
 }
 
 rd_grid_type *rd_grid_alloc(const char *grid_file) {
     bool apply_mapaxes = true;
-    return rd_grid_alloc__(grid_file, apply_mapaxes);
+    return rd_grid_alloc__(grid_file, apply_mapaxes).release();
 }
 
 /**
@@ -3007,7 +3002,8 @@ rd_grid_type *rd_grid_load_case__(const char *case_input, bool apply_mapaxes) {
     rd_grid_type *rd_grid = NULL;
     auto grid_file = rd_grid_alloc_case_filename(case_input);
     if (grid_file.has_value() && util_file_exists(grid_file.value().c_str())) {
-        rd_grid = rd_grid_alloc__(grid_file.value().c_str(), apply_mapaxes);
+        rd_grid =
+            rd_grid_alloc__(grid_file.value().c_str(), apply_mapaxes).release();
     }
     return rd_grid;
 }
