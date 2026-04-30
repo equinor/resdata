@@ -7,6 +7,7 @@ import pytest
 import functools
 import numpy as np
 import cwrap
+import re
 
 from resdata.util.util import IntVector, DoubleVector
 from resdata import ResDataType, UnitSystem
@@ -405,7 +406,9 @@ class GridTest(ResdataTest):
         with self.assertRaises(IndexError):
             grid.findCellXY(1, 1, nz + 1)
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(
+            ValueError, match=re.escape("Could not find the point:(15,78) in layer:2")
+        ):
             grid.findCellXY(15, 78, 2)
 
         i, j = grid.findCellXY(1.5, 1.5, 2)
