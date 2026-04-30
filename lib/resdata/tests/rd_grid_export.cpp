@@ -78,7 +78,20 @@ void export_mapaxes(const rd_grid_type *grid, rd_file_type *rd_file) {
     }
 }
 
+void export_empty_mapaxes_kw() {
+    rd_grid_type *grid = rd_grid_alloc_rectangular(4, 4, 2, 1, 1, 1, NULL);
+    rd_kw_type *mapaxes_kw = rd_grid_alloc_mapaxes_kw(grid);
+
+    test_assert_not_NULL(mapaxes_kw);
+    test_assert_int_equal(rd_kw_get_size(mapaxes_kw), 0);
+    test_assert_NULL(rd_kw_get_float_ptr(mapaxes_kw));
+
+    rd_kw_free(mapaxes_kw);
+    rd_grid_free(grid);
+}
+
 int main(int argc, char **argv) {
+    export_empty_mapaxes_kw();
     rd::util::TestArea ta("grid_export");
     {
         const char *test_grid = "TEST.EGRID";
