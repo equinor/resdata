@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
 
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_endian_flip.hpp>
@@ -246,18 +247,20 @@ inline rd_grid_ptr generate_coordkw_grid(
  * grid, and the LGR is a lgr_nx*lgr_ny*lgr_nz regular grid in the
  * host cell at (host_i, host_j, host_k) of the main grid.
  */
-inline void write_egrid_with_single_lgr(const fs::path &filename, int nx,
-                                        int ny, int nz, int lgr_nx, int lgr_ny,
-                                        int lgr_nz, int host_i, int host_j,
-                                        int host_k, const std::string &lgr_name,
-                                        const float *mapaxes = nullptr,
-                                        const std::vector<int> &nncg = {},
-                                        const std::vector<int> &nncl = {}) {
+inline void write_egrid_with_single_lgr(
+    const fs::path &filename, int nx, int ny, int nz, int lgr_nx, int lgr_ny,
+    int lgr_nz, int host_i, int host_j, int host_k, const std::string &lgr_name,
+    const float *mapaxes = nullptr, const std::vector<int> &nncg = {},
+    const std::vector<int> &nncl = {},
+    std::optional<int> hostnum_override = std::nullopt) {
     auto main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
     auto lgr_grid = make_rectangular_grid(lgr_nx, lgr_ny, lgr_nz, 1.0 / lgr_nx,
                                           1.0 / lgr_ny, 1.0 / lgr_nz, nullptr);
 
-    const int host_global_index = host_i + host_j * nx + host_k * nx * ny;
+    int host_global_index = host_i + host_j * nx + host_k * nx * ny;
+
+    if (hostnum_override.has_value())
+        host_global_index = hostnum_override.value();
 
     auto fortio = make_fortio_writer(filename);
 

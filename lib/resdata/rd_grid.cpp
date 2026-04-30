@@ -1470,9 +1470,9 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
        In the latter case we must start using the LGRILG keyword.
     */
         if ((RD_GRID_MAINGRID_LGR_NR != rd_grid->lgr_nr) && (coords_size != 7))
-            util_abort("%s: Need 7 element coords keywords for LGR - or "
-                       "reimplement to use LGRILG keyword.\n",
-                       __func__);
+            throw std::invalid_argument(
+                "Need 7 element coords keywords for LGR - or reimplement to "
+                "use LGRILG keyword.");
 
         switch (coords_size) {
         case 4: /* all cells active */
@@ -1489,8 +1489,9 @@ static void rd_grid_set_cell_GRID(rd_grid_type *rd_grid, int coords_size,
                 rd_grid->coarsening_active = true;
             break;
         default:
-            util_abort("%s: coord size:%d unrecognized - should 4,5 or 7.\n",
-                       __func__, coords_size);
+            throw std::invalid_argument(
+                fmt::format("coord size:{} unrecognized - should be 4, 5 or 7.",
+                            coords_size));
         }
 
         if (matrix_cell) {
@@ -1788,9 +1789,9 @@ static void rd_grid_pillar_cross_planes(const point_type *p0, double e_x,
 static void rd_grid_init_mapaxes(rd_grid_type *rd_grid, bool apply_mapaxes,
                                  const float *mapaxes) {
     if (rd_grid->global_grid != NULL)
-        util_abort("%s: GridError: Trying to grid transformation data from "
-                   "mapaxes for a subgrid(lgr)\n",
-                   __func__);
+        throw std::logic_error(
+            "GridError: Trying to grid transformation data from mapaxes for a "
+            "subgrid(lgr)");
     {
         const double unit_y[2] = {mapaxes[0] - mapaxes[2],
                                   mapaxes[1] - mapaxes[3]};
@@ -2212,9 +2213,10 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
   */
 
     if (gtype != GRIDHEAD_GRIDTYPE_CORNERPOINT)
-        util_abort("%s: gtype:%d fatal error when loading grid - must have "
-                   "corner point grid - aborting\n",
-                   __func__, gtype);
+        throw std::invalid_argument(fmt::format(
+            "gtype:{} fatal error when loading grid - must have corner point "
+            "grid",
+            gtype));
 
     {
         const float *mapaxes_data = NULL;
@@ -2554,9 +2556,8 @@ static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
     rd_file_enum file_type;
     file_type = rd_get_file_type(grid_file, NULL, NULL);
     if (file_type != RD_EGRID_FILE)
-        util_abort(
-            "%s: %s wrong file type - expected .EGRID file - aborting \n",
-            __func__, grid_file);
+        throw std::invalid_argument(fmt::format(
+            "{}: wrong file type - expected .EGRID file", grid_file));
     {
         auto rd_file = rd_file_ptr(rd_file_open(grid_file, 0), &rd_file_close);
         if (rd_file) {
@@ -2591,7 +2592,8 @@ static rd_grid_ptr rd_grid_alloc_EGRID_all_grids(const char *grid_file,
             rd_grid_init_nnc_amalgamated(main_grid.get(), rd_file.get());
             return main_grid;
         } else
-            return NULL;
+            throw std::runtime_error(
+                fmt::format("Could not open file {}", grid_file));
     }
 }
 
@@ -3632,8 +3634,7 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
                 else {
                     if (!rd_grid_sublayer_contanins_xy__(grid, x, y, k, ic, i2,
                                                          j1, j2, polygon.get()))
-                        util_abort("%s: point nowhere to be found ... \n",
-                                   __func__);
+                        throw std::logic_error("point nowhere to be found ...");
                     i1 = ic;
                 }
             }
@@ -3646,8 +3647,7 @@ bool rd_grid_get_ij_from_xy(const rd_grid_type *grid, double x, double y, int k,
                 else {
                     if (!rd_grid_sublayer_contanins_xy__(grid, x, y, k, i1, i2,
                                                          jc, j2, polygon.get()))
-                        util_abort("%s: point nowhere to be found ... \n",
-                                   __func__);
+                        throw std::logic_error("point nowhere to be found ...");
                     j1 = jc;
                 }
             }
@@ -3738,9 +3738,10 @@ int rd_grid_get_global_index3(const rd_grid_type *rd_grid, int i, int j,
     if (rd_grid_ijk_valid(rd_grid, i, j, k))
         return rd_grid_get_global_index__(rd_grid, i, j, k);
     else {
-        util_abort("%s: i,j,k = (%d,%d,%d) is invalid:\n\n  nx: [0,%d>\n  ny: "
-                   "[0,%d>\n  nz: [0,%d>\n",
-                   __func__, i, j, k, rd_grid->nx, rd_grid->ny, rd_grid->nz);
+        throw std::out_of_range(fmt::format(
+            "i,j,k = ({},{},{}) is invalid: nx: [0,{}>  ny: [0,{}>  nz: "
+            "[0,{}>",
+            i, j, k, rd_grid->nx, rd_grid->ny, rd_grid->nz));
     }
 }
 
@@ -3823,9 +3824,9 @@ void rd_grid_get_ijk1A(const rd_grid_type *rd_grid, int active_index, int *i,
         int global_index = rd_grid_get_global_index1A(rd_grid, active_index);
         rd_grid_get_ijk1(rd_grid, global_index, i, j, k);
     } else
-        util_abort("%s: error active_index:%d invalid - grid has only:%d "
-                   "active cells. \n",
-                   __func__, active_index, rd_grid->total_active);
+        throw std::out_of_range(fmt::format(
+            "error active_index:{} invalid - grid has only:{} active cells.",
+            active_index, rd_grid->total_active));
 }
 
 /*
@@ -3895,16 +3896,16 @@ static void rd_grid_get_cell_corner_xyz3(const rd_grid_type *grid, int i, int j,
 void rd_grid_get_corner_xyz(const rd_grid_type *grid, int i, int j, int k,
                             double *xpos, double *ypos, double *zpos) {
     if (i < 0 || i > grid->nx)
-        util_abort("%s: invalid i value:%d  Valid range: [0,%d] \n", __func__,
-                   i, grid->nx);
+        throw std::out_of_range(fmt::format(
+            "invalid i value:{}  Valid range: [0,{}]", i, grid->nx));
 
     if (j < 0 || j > grid->ny)
-        util_abort("%s: invalid j value:%d  Valid range: [0,%d] \n", __func__,
-                   j, grid->ny);
+        throw std::out_of_range(fmt::format(
+            "invalid j value:{}  Valid range: [0,{}]", j, grid->ny));
 
     if (k < 0 || k > grid->nz)
-        util_abort("%s: invalid k value:%d  Valid range: [0,%d] \n", __func__,
-                   k, grid->nz);
+        throw std::out_of_range(fmt::format(
+            "invalid k value:{}  Valid range: [0,{}]", k, grid->nz));
 
     {
         int corner_nr = 0;
@@ -4002,8 +4003,8 @@ int rd_grid_locate_depth(const rd_grid_type *grid, double depth, int i, int j) {
 
             k++;
             if (k == grid->nz)
-                util_abort("%s: internal error when scanning for depth:%g \n",
-                           __func__, depth);
+                throw std::logic_error(fmt::format(
+                    "internal error when scanning for depth:{:g}", depth));
         }
     }
 }
@@ -4137,9 +4138,9 @@ bool rd_grid_cell_valid1(const rd_grid_type *rd_grid, int global_index) {
 
 static void __assert_main_grid(const rd_grid_type *rd_grid) {
     if (rd_grid->lgr_nr != RD_GRID_MAINGRID_LGR_NR)
-        util_abort("%s: tried to get LGR grid from another LGR_grid - only "
-                   "main grid can be used as first input \n",
-                   __func__);
+        throw std::invalid_argument(
+            "tried to get LGR grid from another LGR_grid - only main grid "
+            "can be used as first input");
 }
 
 /**
@@ -4358,7 +4359,11 @@ static int rd_grid_get_property_index__(const rd_grid_type *rd_grid,
         /* Will be set to -1 if the cell is not active. */
         lookup_index = rd_grid_get_active_index3(rd_grid, i, j, k);
     else
-        util_abort("%s: incommensurable size ... \n", __func__);
+        throw std::invalid_argument(fmt::format(
+            "incommensurable size: keyword has {} elements, expected nx*ny*nz "
+            "= {} or nactive = {}",
+            kw_size, rd_grid->nx * rd_grid->ny * rd_grid->nz,
+            rd_grid->total_active));
 
     return lookup_index;
 }
@@ -4376,9 +4381,11 @@ double rd_grid_get_property(const rd_grid_type *rd_grid,
             return -1; /* Tried to lookup an inactive cell. */
 
     } else {
-        util_abort("%s: sorry - can not lookup type:%s with %s.\n", __func__,
-                   rd_type_alloc_name(data_type), __func__);
-        return -1;
+        std::unique_ptr<char> type_name(rd_type_alloc_name(data_type));
+        throw std::invalid_argument(fmt::format(
+            "rd_grid_get_property: can not lookup type:{} - keyword type must "
+            "be numeric.",
+            type_name.get()));
     }
 }
 
@@ -4407,10 +4414,10 @@ void rd_grid_get_column_property(const rd_grid_type *rd_grid,
         else if (kw_size == rd_grid->total_active)
             use_global_index = false;
         else
-            util_abort("%s: incommensurable sizes: nx*ny*nz = %d  nactive=%d  "
-                       "kw_size:%d \n",
-                       __func__, rd_grid->size, rd_grid->total_active,
-                       rd_kw_get_size(rd_kw));
+            throw std::invalid_argument(fmt::format(
+                "incommensurable sizes: nx*ny*nz = {}  nactive = {}  "
+                "kw_size = {}",
+                rd_grid->size, rd_grid->total_active, rd_kw_get_size(rd_kw)));
 
         double_vector_reset(column);
         for (int k = 0; k < rd_grid->nz; k++) {
@@ -4425,9 +4432,13 @@ void rd_grid_get_column_property(const rd_grid_type *rd_grid,
                         column, k, rd_kw_iget_as_double(rd_kw, active_index));
             }
         }
-    } else
-        util_abort("%s: sorry - can not lookup type:%s with %s.\n", __func__,
-                   rd_type_alloc_name(data_type), __func__);
+    } else {
+        std::unique_ptr<char> type_name(rd_type_alloc_name(data_type));
+        throw std::invalid_argument(fmt::format(
+            "rd_grid_get_column_property: can not lookup type:{} - keyword "
+            "type must be numeric.",
+            type_name.get()));
+    }
 }
 
 void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
@@ -4459,14 +4470,18 @@ void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
             else if (tmp == 0)
                 bool_default = RD_BOOL_FALSE_INT;
             else
-                util_abort(
-                    "%s: only 0 and 1 are allowed for bool interpolation\n",
-                    __func__);
+                throw std::domain_error(fmt::format(
+                    "Only 0 and 1 are allowed for bool interpolation, got {}",
+                    tmp));
             default_ptr = &bool_default;
         }
 
-        if (default_ptr == NULL)
-            util_abort("%s: invalid type \n", __func__);
+        if (default_ptr == NULL) {
+            std::unique_ptr<char> type_name(
+                rd_type_alloc_name(rd_kw_get_data_type(rd_kw)));
+            throw std::invalid_argument(fmt::format(
+                "rd_grid_grdecl_fprintf_kw: invalid type {}", type_name.get()));
+        }
 
         {
             auto tmp_kw =
@@ -4477,9 +4492,10 @@ void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
             rd_kw_fprintf_grdecl__(tmp_kw.get(), special_header, stream);
         }
     } else
-        util_abort("%s: size mismatch. rd_kw must have either nx*ny*ny "
-                   "elements or nactive elements\n",
-                   __func__);
+        throw std::invalid_argument(fmt::format(
+            "size mismatch: rd_kw has {} elements, must have either nx*ny*nz "
+            "= {} or nactive = {} elements",
+            src_size, rd_grid->size, rd_grid->total_active));
 }
 
 static bool rd_grid_test_lgr_consistency2(const rd_grid_type *parent,
@@ -5096,9 +5112,11 @@ void rd_grid_compressed_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
             }
         }
     } else
-        util_abort("%s: size mismatch target:%d  src:%d  expected %d,%d \n",
-                   __func__, rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
-                   rd_grid_get_nactive(grid), rd_grid_get_global_size(grid));
+        throw std::invalid_argument(fmt::format(
+            "rd_grid_compressed_kw_copy: size mismatch target:{}  src:{}  "
+            "expected {},{}",
+            rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
+            rd_grid_get_nactive(grid), rd_grid_get_global_size(grid)));
 }
 
 void rd_grid_global_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
@@ -5113,9 +5131,11 @@ void rd_grid_global_kw_copy(const rd_grid_type *grid, rd_kw_type *target_kw,
             }
         }
     } else
-        util_abort("%s: size mismatch target:%d  src:%d  expected %d,%d \n",
-                   __func__, rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
-                   rd_grid_get_global_size(grid), rd_grid_get_nactive(grid));
+        throw std::invalid_argument(fmt::format(
+            "rd_grid_global_kw_copy: size mismatch target:{}  src:{}  "
+            "expected {},{}",
+            rd_kw_get_size(target_kw), rd_kw_get_size(src_kw),
+            rd_grid_get_global_size(grid), rd_grid_get_nactive(grid)));
 }
 
 static void rd_grid_init_hostnum_data(const rd_grid_type *grid, int *hostnum) {

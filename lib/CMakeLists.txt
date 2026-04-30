@@ -200,6 +200,7 @@ add_executable(
   tests/test_rd_grid_xyz_lookup.cpp
   tests/test_rd_grid_compare.cpp
   tests/test_rd_grid_misc.cpp
+  tests/test_rd_grid_bounds_checking.cpp
   tests/test_rd_util.cpp
   tests/test_geometry.cpp
   tests/testsuite.cpp
