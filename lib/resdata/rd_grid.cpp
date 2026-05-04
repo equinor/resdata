@@ -2281,12 +2281,10 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
     auto gridhead_kw =
         rd_kw_ptr(rd_grid_alloc_gridhead_kw(nx, ny, nz, 0), &rd_kw_free);
     rd_kw_type *gridunit_kw = NULL;
-    rd_grid_type *rd_grid =
-        rd_grid_alloc_GRDECL_kw__(NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes,
-                                  gridhead_kw.get(), zcorn_kw, coord_kw,
-                                  gridunit_kw, mapaxes_kw, NULL, actnum_data)
-            .release();
-    return rd_grid;
+    return rd_grid_alloc_GRDECL_kw__(
+               NULL, FILEHEAD_SINGLE_POROSITY, apply_mapaxes, gridhead_kw.get(),
+               zcorn_kw, coord_kw, gridunit_kw, mapaxes_kw, NULL, actnum_data)
+        .release();
 }
 
 static void rd_grid_init_cell_nnc_info(rd_grid_type *rd_grid,
