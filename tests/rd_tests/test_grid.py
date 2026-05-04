@@ -3,11 +3,14 @@ import os.path
 from unittest import skip
 import itertools
 import pytest
+from contextlib import suppress
 
 import functools
 import numpy as np
 import cwrap
 import re
+from hypothesis import given
+import hypothesis.strategies as st
 
 from resdata.util.util import IntVector, DoubleVector
 from resdata import ResDataType, UnitSystem
@@ -812,10 +815,152 @@ def test_create_volume_keyword():
     assert list(grid.create_volume_keyword()) == [1.0] * (2 * 3 * 4)
 
 
-invalid_dimensions_grid = b"\x00\x00\x00\x10D  \x00\x00/\n\nSPECGRID\n  1 \xe0\xcd\xdf\xcb\x0b 1  22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222F / \n\nCOORD\n   0.\x880\x1a0000\n/\n\nZCORN\n 0\x00\x00\x00\x10"
+invalid_coord_dimensions_grdecl = """
+MAPUNITS
+ 'METRES  '
+/
+GRIDUNIT
+ 'METRES  ' '        '
+/
+SPECGRID
+  1  1  1  1  F
+/
+COORD
+   0.00000000E+00
+/
+ZCORN
+   0.00000000E+00
+/
+"""
 
 
-def test_that_grid_with_invalid_dimensions_return_none(tmp_path):
-    filename = tmp_path / "invalid.grid"
-    filename.write_bytes(invalid_dimensions_grid)
-    assert Grid.load_from_file(str(filename)) is None
+def test_that_grdecl_with_invalid_coord_dimensions_raises(tmp_path):
+    filename = tmp_path / "invalid.grdecl"
+    filename.write_text(invalid_coord_dimensions_grdecl)
+    with pytest.raises(ValueError, match="size of COORD keyword = 1"):
+        Grid.load_from_file(str(filename))
+
+
+invalid_zcorn_dimensions_grdecl = """
+MAPUNITS
+ 'METRES  '
+/
+GRIDUNIT
+ 'METRES  ' '        '
+/
+SPECGRID
+  1  1  1  1  F
+/
+COORD
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+/
+ZCORN
+   0.00000000E+00
+/
+"""
+
+
+def test_that_grdecl_with_zcorn_dimensions_raises(tmp_path):
+    filename = tmp_path / "invalid.grdecl"
+    filename.write_text(invalid_zcorn_dimensions_grdecl)
+    with pytest.raises(ValueError, match="size of ZCORN keyword = 1"):
+        Grid.load_from_file(str(filename))
+
+
+invalid_actnum_dimensions_grdecl = """
+MAPUNITS
+ 'METRES  '
+/
+GRIDUNIT
+ 'METRES  ' '        '
+/
+SPECGRID
+  1  1  1  1  F
+/
+COORD
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+/
+ZCORN
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+/
+ACTNUM
+   0.00000000E+00 0.00000000E+00 0.00000000E+00 0.00000000E+00
+/
+"""
+
+
+def test_that_grdecl_with_actnum_dimensions_raises(tmp_path):
+    filename = tmp_path / "invalid.grdecl"
+    filename.write_text(invalid_actnum_dimensions_grdecl)
+    with pytest.raises(ValueError, match="size of ACTNUM keyword = 4"):
+        Grid.load_from_file(str(filename))
+
+
+names = st.text(
+    min_size=1,
+    max_size=7,
+    alphabet=st.characters(min_codepoint=40, max_codepoint=126),
+).map(lambda x: x.rjust(8))
+
+
+@st.composite
+def kws(
+    draw,
+    name=names,
+    size=st.integers(min_value=1, max_value=32),
+    datatype=st.sampled_from(
+        [
+            ResDataType.RD_INT,
+            ResDataType.RD_FLOAT,
+            ResDataType.RD_DOUBLE,
+            ResDataType.RD_BOOL,
+            ResDataType.RD_CHAR,
+            ResDataType.RD_STRING,
+        ]
+    ),
+    elements=None,
+):
+    kw = draw(st.builds(ResdataKW, name, size, datatype))
+    for i in range(len(kw)):
+        if elements is not None:
+            kw[i] = draw(elements)
+        elif kw.data_type.is_int():
+            kw[i] = draw(st.integers())
+        elif kw.data_type.is_float():
+            kw[i] = draw(st.floats(width=32, allow_nan=False, allow_infinity=False))
+        elif kw.data_type.is_double():
+            kw[i] = draw(st.floats(width=64, allow_nan=False, allow_infinity=False))
+        elif kw.data_type.is_bool():
+            kw[i] = draw(st.booleans())
+        else:
+            kw[i] = draw(names)
+    return kw
+
+
+@given(
+    specgrid=kws(
+        name=st.just("SPECGRID"),
+        datatype=st.just(ResDataType.RD_INT),
+        elements=st.integers(min_value=1, max_value=3),
+    ),
+    zcorn=kws(name=st.just("ZCORN   "), datatype=st.just(ResDataType.RD_FLOAT)),
+    coord=kws(name=st.just("COORD   "), datatype=st.just(ResDataType.RD_FLOAT)),
+    actnum=kws(name=st.just("ACTNUM  "), datatype=st.just(ResDataType.RD_INT)),
+    mapaxes=kws(name=st.just("MAPAXES "), datatype=st.just(ResDataType.RD_FLOAT)),
+)
+def test_grid_create(specgrid, zcorn, coord, actnum, mapaxes):
+    with suppress(ValueError, IndexError):
+        Grid.create(specgrid, zcorn, coord, actnum, mapaxes)

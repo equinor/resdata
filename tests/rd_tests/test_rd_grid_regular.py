@@ -372,3 +372,36 @@ def test_that_load_from_file_picks_up_grid_file_when_only_grid_exists(
         tmp_path / "ONLYGRID.GRID",
         load_case_setup["grid_3x3x3"],
     )
+
+
+grdecl_with_invalid_coord_length = """
+MAPUNITS
+ 'METRES  '
+/
+
+GRIDUNIT
+ 'METRES  ' '        '
+/
+
+SPECGRID
+  1  1  1  1  F /
+
+COORD
+   0.00000000E+00
+/
+
+ZCORN
+   0.00000000E+00   0.00000000E+00   0.00000000E+00   0.00000000E+00
+   0.00000000E+00   0.00000000E+00   0.00000000E+00   0.00000000E+00
+/
+
+ACTNUM
+           1
+/
+"""
+
+
+def test_that_length_of_grdecl_keywords_are_checked(tmp_path):
+    (grid_file := tmp_path / "grid.GRDECL").write_text(grdecl_with_invalid_coord_length)
+    with pytest.raises(ValueError, match="Invalid size of COORD"):
+        Grid.load_from_grdecl(str(grid_file))
