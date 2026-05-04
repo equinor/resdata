@@ -2202,7 +2202,7 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
     const rd_kw_type *coord_kw, const rd_kw_type *gridunit_kw, /* Can be NULL */
     const rd_kw_type *mapaxes_kw,                              /* Can be NULL */
     const rd_kw_type *corsnum_kw,                              /* Can be NULL */
-    const int *actnum_data) {                                  /* Can be NULL */
+    const int *actnum) {                                       /* Can be NULL */
     int gtype, nx, ny, nz, lgr_nr;
     ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
     gtype = rd_kw_iget_int(gridhead_kw, GRIDHEAD_TYPE_INDEX);
@@ -2242,7 +2242,7 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
     float *coord = rd_kw_get_float_ptr(coord_kw);
     return rd_grid_alloc_GRDECL_data__(global_grid, unit_system, dualp_flag,
                                        apply_mapaxes, nx, ny, nz, zcorn, coord,
-                                       actnum_data, mapaxes, corsnum, lgr_nr);
+                                       actnum, mapaxes, corsnum, lgr_nr);
 }
 
 static rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
