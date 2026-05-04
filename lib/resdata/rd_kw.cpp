@@ -1387,6 +1387,7 @@ void rd_kw_set_header_name(rd_kw_type *rd_kw, const char *header) {
         free(rd_kw->header);
         rd_kw->header = util_alloc_strip_copy(rd_kw->header8);
     } else {
+        free(rd_kw->header);
         rd_kw->header = (char *)util_alloc_copy(header, strlen(header) + 1);
     }
 }
