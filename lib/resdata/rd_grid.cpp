@@ -2079,34 +2079,6 @@ static void rd_grid_init_GRDECL_data(rd_grid_type *rd_grid, const float *zcorn,
   0---1
 */
 
-static rd_grid_ptr rd_grid_alloc_GRDECL_data__(
-    rd_grid_type *global_grid, ert_rd_unit_enum unit_system, int dualp_flag,
-    bool apply_mapaxes, int nx, int ny, int nz, const float *zcorn,
-    const float *coord, const int *actnum, const float *mapaxes,
-    const int *corsnum, int lgr_nr) {
-
-    auto rd_grid =
-        rd_grid_ptr(rd_grid_alloc_empty(global_grid, unit_system, dualp_flag,
-                                        nx, ny, nz, lgr_nr, true),
-                    &rd_grid_free);
-    if (rd_grid) {
-        if (mapaxes != NULL)
-            rd_grid_init_mapaxes(rd_grid.get(), apply_mapaxes, mapaxes);
-
-        if (corsnum != NULL)
-            rd_grid->coarsening_active = true;
-
-        rd_grid->coord_kw.reset(
-            rd_kw_alloc_new("COORD", 6 * (nx + 1) * (ny + 1), RD_FLOAT, coord));
-        rd_grid_init_GRDECL_data(rd_grid.get(), zcorn, coord, actnum, corsnum);
-
-        rd_grid_init_coarse_cells(rd_grid.get());
-        rd_grid_update_index(rd_grid.get());
-        rd_grid_taint_cells(rd_grid.get());
-    }
-    return rd_grid;
-}
-
 static void rd_grid_copy_mapaxes(rd_grid_type *target_grid,
                                  const rd_grid_type *src_grid) {
     target_grid->use_mapaxes = src_grid->use_mapaxes;
@@ -2240,9 +2212,26 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
 
     float *zcorn = rd_kw_get_float_ptr(zcorn_kw);
     float *coord = rd_kw_get_float_ptr(coord_kw);
-    return rd_grid_alloc_GRDECL_data__(global_grid, unit_system, dualp_flag,
-                                       apply_mapaxes, nx, ny, nz, zcorn, coord,
-                                       actnum, mapaxes, corsnum, lgr_nr);
+    auto rd_grid =
+        rd_grid_ptr(rd_grid_alloc_empty(global_grid, unit_system, dualp_flag,
+                                        nx, ny, nz, lgr_nr, true),
+                    &rd_grid_free);
+    if (rd_grid) {
+        if (mapaxes != NULL)
+            rd_grid_init_mapaxes(rd_grid.get(), apply_mapaxes, mapaxes);
+
+        if (corsnum != NULL)
+            rd_grid->coarsening_active = true;
+
+        rd_grid->coord_kw.reset(
+            rd_kw_alloc_new("COORD", 6 * (nx + 1) * (ny + 1), RD_FLOAT, coord));
+        rd_grid_init_GRDECL_data(rd_grid.get(), zcorn, coord, actnum, corsnum);
+
+        rd_grid_init_coarse_cells(rd_grid.get());
+        rd_grid_update_index(rd_grid.get());
+        rd_grid_taint_cells(rd_grid.get());
+    }
+    return rd_grid;
 }
 
 static rd_kw_type *rd_grid_alloc_gridhead_kw(int nx, int ny, int nz,
