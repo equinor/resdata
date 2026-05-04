@@ -2062,17 +2062,6 @@ static void rd_grid_init_GRDECL_data_jslice(rd_grid_type *rd_grid,
     }
 }
 
-static void rd_grid_init_GRDECL_data(rd_grid_type *rd_grid, const float *zcorn,
-                                     const float *coord, const int *actnum,
-                                     const int *corsnum) {
-    const int ny = rd_grid->ny;
-    int j;
-#pragma omp parallel for
-    for (j = 0; j < ny; j++)
-        rd_grid_init_GRDECL_data_jslice(rd_grid, zcorn, coord, actnum, corsnum,
-                                        j);
-}
-
 /*
   2---3
   |   |
@@ -2225,7 +2214,11 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
 
         rd_grid->coord_kw.reset(
             rd_kw_alloc_new("COORD", 6 * (nx + 1) * (ny + 1), RD_FLOAT, coord));
-        rd_grid_init_GRDECL_data(rd_grid.get(), zcorn, coord, actnum, corsnum);
+        int j;
+#pragma omp parallel for
+        for (j = 0; j < ny; j++)
+            rd_grid_init_GRDECL_data_jslice(rd_grid.get(), zcorn, coord, actnum,
+                                            corsnum, j);
 
         rd_grid_init_coarse_cells(rd_grid.get());
         rd_grid_update_index(rd_grid.get());
