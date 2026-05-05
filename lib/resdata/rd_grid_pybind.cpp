@@ -54,16 +54,6 @@ void rd_grid_export_volume(const rd_grid_type *grid, int index_size,
     }
 }
 
-//This function is meant to be used w/ pandas datafram and numpy
-void rd_grid_export_position(rd_grid_type *grid, int index_size,
-                             const int *global_index, double *output) {
-    for (int i = 0; i < index_size; i++) {
-        int g = global_index[i];
-        int j = 3 * i;
-        rd_grid_get_xyz1(grid, g, &output[j], &output[j + 1], &output[j + 2]);
-    }
-}
-
 PYBIND11_MODULE(_grid, m) {
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
 
@@ -448,8 +438,12 @@ PYBIND11_MODULE(_grid, m) {
         py::array_t<double> data(shape);
         auto data_ptr = data.mutable_data();
         std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        rd_grid_export_position(rd_grid, index.size(), index.mutable_data(),
-                                data_ptr);
+        for (int i = 0; i < index.size(); i++) {
+            int g = index.mutable_data()[i];
+            int j = 3 * i;
+            rd_grid_get_xyz1(rd_grid, g, &data_ptr[j], &data_ptr[j + 1],
+                             &data_ptr[j + 2]);
+        }
         return data;
     });
     m.def("_export_corners", [](py::handle self, py::array_t<int32_t> index) {
