@@ -416,11 +416,14 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_export_volume", [](py::handle self, py::array_t<int32_t> index) {
         auto rd_grid = from_cwrap<rd_grid_type>(self);
 
-        py::array_t<double> data(index.size());
+        auto idx_buffer = index.request();
+        int32_t *index_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
+        py::array_t<double> data(idx_buffer.size);
         auto data_ptr = data.mutable_data();
-        std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        for (int i = 0; i < index.size(); i++) {
-            int g = index.mutable_data()[i];
+
+        for (size_t i = 0; i < idx_buffer.size; i++) {
+            int32_t g = index_ptr[i];
             data_ptr[i] = rd_grid_get_cell_volume1(rd_grid, g);
         }
         return data;
