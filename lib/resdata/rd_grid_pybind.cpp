@@ -45,14 +45,6 @@ void rd_grid_export_data_as_double(int index_size, const int *data_index,
     }
 }
 
-//This function is meant to be used w/ pandas datafram and numpy
-void rd_grid_export_volume(const rd_grid_type *grid, int index_size,
-                           const int *global_index, double *output) {
-    for (int i = 0; i < index_size; i++) {
-        int g = global_index[i];
-        output[i] = rd_grid_get_cell_volume1(grid, g);
-    }
-}
 
 PYBIND11_MODULE(_grid, m) {
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
@@ -427,8 +419,10 @@ PYBIND11_MODULE(_grid, m) {
         py::array_t<double> data(index.size());
         auto data_ptr = data.mutable_data();
         std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        rd_grid_export_volume(rd_grid, index.size(), index.mutable_data(),
-                              data_ptr);
+        for (int i = 0; i < index.size(); i++) {
+            int g = index.mutable_data()[i];
+            data_ptr[i] = rd_grid_get_cell_volume1(rd_grid, g);
+        }
         return data;
     });
     m.def("_export_position", [](py::handle self, py::array_t<int32_t> index) {
