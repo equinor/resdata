@@ -434,13 +434,16 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_export_position", [](py::handle self, py::array_t<int32_t> index) {
         auto rd_grid = from_cwrap<rd_grid_type>(self);
 
+        auto idx_buffer = index.request();
+        int32_t *index_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
         std::vector<ptrdiff_t> shape = {index.size(), 3};
         py::array_t<double> data(shape);
         auto data_ptr = data.mutable_data();
-        std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        for (int i = 0; i < index.size(); i++) {
-            int g = index.mutable_data()[i];
-            int j = 3 * i;
+
+        for (size_t i = 0; i < idx_buffer.size; i++) {
+            int32_t g = index_ptr[i];
+            size_t j = 3 * i;
             rd_grid_get_xyz1(rd_grid, g, &data_ptr[j], &data_ptr[j + 1],
                              &data_ptr[j + 2]);
         }
