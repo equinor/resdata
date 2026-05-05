@@ -34,18 +34,6 @@ void rd_grid_export_data_as_int(int index_size, const int *data_index,
     }
 }
 
-//This function is meant to be used w/ pandas datafram and numpy
-//Note: index_size must equal allocated size of output
-void rd_grid_export_data_as_double(int index_size, const int *data_index,
-                                   const rd_kw_type *kw, double *output) {
-    for (int i = 0; i < index_size; i++) {
-        int di = data_index[i];
-        if (di >= 0)
-            output[i] = rd_kw_iget_as_double(kw, di);
-    }
-}
-
-
 PYBIND11_MODULE(_grid, m) {
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
 
@@ -409,9 +397,15 @@ PYBIND11_MODULE(_grid, m) {
     m.def("_export_data_as_double",
           [](ptrdiff_t size, py::array_t<int32_t> indx, py::handle kw,
              py::array_t<double> data) {
-              rd_grid_export_data_as_double(size, indx.mutable_data(),
-                                            from_cwrap<rd_kw_type>(kw),
-                                            data.mutable_data());
+              auto rd_kw = from_cwrap<rd_kw_type>(kw);
+              auto indx_ptr = indx.mutable_data();
+              auto data_ptr = data.mutable_data();
+
+              for (int i = 0; i < size; i++) {
+                  int di = indx_ptr[i];
+                  if (di >= 0)
+                      data_ptr[i] = rd_kw_iget_as_double(rd_kw, di);
+              }
           });
     m.def("_export_volume", [](py::handle self, py::array_t<int32_t> index) {
         auto rd_grid = from_cwrap<rd_grid_type>(self);
