@@ -457,12 +457,18 @@ PYBIND11_MODULE(_grid, m) {
 
         std::vector<ptrdiff_t> shape = {index.size(), 24};
         py::array_t<double> data(shape);
-        auto data_ptr = data.mutable_data();
-        std::fill(data_ptr, data_ptr + data.size(), 0.0);
+        auto data_buffer = data.request();
+        double *data_ptr = static_cast<double *>(data_buffer.ptr);
+
+        auto idx_buffer = index.request();
+        int32_t *index_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
+        std::fill(data_ptr, data_ptr + data_buffer.size, 0.0);
         double x[8], y[8], z[8];
-        int pos = 0;
-        for (int i = 0; i < index.size(); i++) {
-            int g = index.mutable_data()[i];
+        size_t pos = 0;
+
+        for (size_t i = 0; i < idx_buffer.size; i++) {
+            int32_t g = index_ptr[i];
             rd_grid_export_cell_corners1(rd_grid, g, x, y, z);
             for (int j = 0; j < 8; j++) {
                 data_ptr[pos++] = x[j];
