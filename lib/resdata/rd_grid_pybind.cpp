@@ -64,22 +64,6 @@ void rd_grid_export_position(rd_grid_type *grid, int index_size,
     }
 }
 
-//This function is meant to be used w/ pandas dataframe and numpy
-void export_corners(const rd_grid_type *grid, int index_size,
-                    const int *global_index, double *output) {
-    double x[8], y[8], z[8];
-    int pos = 0;
-    for (int i = 0; i < index_size; i++) {
-        int g = global_index[i];
-        rd_grid_export_cell_corners1(grid, g, x, y, z);
-        for (int j = 0; j < 8; j++) {
-            output[pos++] = x[j];
-            output[pos++] = y[j];
-            output[pos++] = z[j];
-        }
-    }
-}
-
 PYBIND11_MODULE(_grid, m) {
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
 
@@ -475,7 +459,17 @@ PYBIND11_MODULE(_grid, m) {
         py::array_t<double> data(shape);
         auto data_ptr = data.mutable_data();
         std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        export_corners(rd_grid, index.size(), index.mutable_data(), data_ptr);
+        double x[8], y[8], z[8];
+        int pos = 0;
+        for (int i = 0; i < index.size(); i++) {
+            int g = index.mutable_data()[i];
+            rd_grid_export_cell_corners1(rd_grid, g, x, y, z);
+            for (int j = 0; j < 8; j++) {
+                data_ptr[pos++] = x[j];
+                data_ptr[pos++] = y[j];
+                data_ptr[pos++] = z[j];
+            }
+        }
         return data;
     });
 }
