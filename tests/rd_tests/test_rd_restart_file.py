@@ -1,6 +1,7 @@
 import datetime
+from pathlib import Path
 
-from tests import ResdataTest, equinor_test
+from tests import ResdataTest, equinor_test, source_root
 from resdata import FileMode
 from resdata.resfile import (
     Resdata3DKW,
@@ -10,6 +11,20 @@ from resdata.resfile import (
     FortIO,
 )
 from resdata.grid import Grid
+
+
+def test_local_restart_headers_and_time_list():
+    base = Path(source_root()) / "test-data" / "local" / "ECLIPSE" / "simple"
+    grid = Grid(str(base / "SIMPLE.EGRID"))
+    rst = ResdataRestartFile(grid, str(base / "SIMPLE.UNRST"))
+
+    tlist = rst.time_list()
+    assert len(tlist) > 0
+    report_step, sim_date, sim_days = tlist[0]
+    assert isinstance(sim_date, datetime.datetime)
+
+    header = rst.get_header(0)
+    assert header.get_report_step() == report_step
 
 
 @equinor_test()

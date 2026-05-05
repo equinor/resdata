@@ -5,7 +5,7 @@ import pytest
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.grid import Grid, ResdataRegion, GridGenerator
-from resdata.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection
+from resdata.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection, Fault
 from resdata.geometry import Polyline, CPolylineCollection
 from tests import ResdataTest
 from tests.util import TestAreaContext
@@ -450,6 +450,27 @@ class FaultBlockTest(ResdataTest):
         nb = b2.getNeighbours()
         self.assertTrue(len(nb) == 1)
         self.assertTrue(b5 in nb)
+
+    def test_fault_block_str(self):
+        grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
+        kw = ResdataKW("FAULTBLK", grid.getGlobalSize(), ResDataType.RD_INT)
+        kw.assign(7)
+        layer = FaultBlockLayer(grid, 0)
+        layer.scanKeyword(kw)
+        block = layer[0]
+        self.assertEqual(str(block), "Block ID: %d" % block.getBlockID())
+
+    def test_add_fault_link(self):
+        grid = GridGenerator.create_rectangular((10, 10, 1), (1, 1, 1))
+        layer = FaultBlockLayer(grid, 0)
+
+        fault1 = Fault(grid, "F1")
+        fault2 = Fault(grid, "F2")
+
+        fault1.add_record(5, 5, 1, 4, 0, 0, "X")
+        fault2.add_record(2, 6, 6, 6, 0, 0, "Y")
+
+        layer.add_fault_link(fault1, fault1)
 
 
 def test_that_get_geo_layer_does_not_return_dangling_pointer():

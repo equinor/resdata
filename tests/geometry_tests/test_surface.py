@@ -32,6 +32,16 @@ class SurfaceTest(ResdataTest):
         self.assertAlmostEqualList(s.getXYZ(i=6, j=13), s.getXYZ(idx=643))
         self.assertFloatEqual(-0.0006, s.getXYZ(i=6, j=13)[2])  # z value
 
+        nx = s.getNX()
+        ny = s.getNY()
+        self.assertEqual(s.getXYZ(i=-1, j=-1), s.getXYZ(i=nx - 1, j=ny - 1))
+
+    def test_repr(self):
+        s = Surface(self.surface_valid)
+        r = repr(s)
+        self.assertIn("nx=49", r)
+        self.assertIn("ny=79", r)
+
     def test_create_new(self):
         with self.assertRaises(ValueError):
             s = Surface(None, 1, 1, 1)

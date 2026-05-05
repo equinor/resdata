@@ -120,6 +120,49 @@ class SumTest(ResdataTest):
         self.assertTrue("FOPT" in case)
         self.assertFalse("WWCT:OPX" in case)
 
+    def test_deprecated_mock_module(self):
+        # Exercise the deprecated resdata.util.test.mock.rd_sum_mock helper
+        # so that its mainline lines (variable creation, addTStep, key access)
+        # are covered. We cannot import the parent package normally because
+        # resdata.util.test.__init__ registers C types that conflict with
+        # tests.util, so we install stub parent packages first and load the
+        # target module directly from its source path under its real name.
+        import importlib.util
+        import os
+        import sys
+        import types
+        import warnings
+
+        import resdata
+
+        for parent in ("resdata.util.test", "resdata.util.test.mock"):
+            if parent not in sys.modules:
+                stub = types.ModuleType(parent)
+                stub.__path__ = []
+                sys.modules[parent] = stub
+
+        path = os.path.join(
+            os.path.dirname(resdata.__file__),
+            "util",
+            "test",
+            "mock",
+            "rd_sum_mock.py",
+        )
+        module_name = "resdata.util.test.mock.rd_sum_mock"
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            case = module.createSummary(
+                "CSV",
+                [("FOPT", None, 0, "SM3"), ("WOPR", "OP_1", 0, "SM3/DAY")],
+            )
+        self.assertIn("FOPT", case)
+        self.assertIn("WOPR:OP_1", case)
+
     def test_TIME_special_case(self):
         case = createSummary(
             "CSV", [("FOPT", None, 0, "SM3"), ("FOPR", None, 0, "SM3/DAY")]
@@ -185,6 +228,7 @@ class SumTest(ResdataTest):
         node3 = case.smspec_node("RGPT:1")
         self.assertEqual(node3.varType(), SummaryVarType.RD_SMSPEC_REGION_VAR)
         self.assertEqual(node3.getNum(), 1)
+        self.assertEqual(node3.num, 1)
         self.assertEqual(node3.default, 0)
         self.assertTrue(node3.isTotal())
         self.assertFalse(node3.isHistorical())
@@ -437,6 +481,15 @@ class SumTest(ResdataTest):
         self.assertEqual(len(time_range), 10)
         self.assertEqual(time_range[0], case.get_data_start_time())
         self.assertEqual(time_range[-1], case.get_end_time())
+
+        # Cover clamping when start is before data_start_time and end is after end_time.
+        data_start = case.get_data_start_time()
+        data_end = case.get_end_time()
+        early_start = data_start - datetime.timedelta(days=10)
+        late_end = data_end + datetime.timedelta(days=10)
+        clamped = case.time_range(start=early_start, end=late_end, num_timestep=5)
+        self.assertEqual(clamped[0], data_start)
+        self.assertEqual(clamped[-1], data_end)
 
     def test_resample(self):
         case = create_case()

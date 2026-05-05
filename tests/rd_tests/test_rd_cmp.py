@@ -3,6 +3,10 @@ from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext
 from tests.util.mock import createSummary
 
+import datetime
+import warnings
+import pytest
+
 
 @equinor_test()
 class ResdataCmpTest(ResdataTest):
@@ -47,3 +51,35 @@ class ResdataCmpTest(ResdataTest):
         self.assertEqual(len(wells), len(well_set))
         for well in wells:
             self.assertTrue(well in well_set)
+
+
+def _make_case(name, sim_start=datetime.date(2010, 1, 1)):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        case = createSummary(
+            name,
+            [("FOPT", None, 0, "SM3"), ("WOPT", "OP1", 0, "SM3")],
+            sim_start=sim_start,
+        )
+    case.fwrite()
+    return case
+
+
+def test_cmp_same_case(tmpdir):
+    with tmpdir.as_cwd():
+        _make_case("CASE1")
+        rd_cmp = ResdataCmp("CASE1", "CASE1")
+        assert rd_cmp.endTimeEqual()
+        diff_sum, ref_sum = rd_cmp.cmpSummaryVector("FOPT")
+        assert diff_sum == 0.0
+        assert (True, True) == rd_cmp.hasSummaryVector("FOPT")
+
+
+def test_cmp_different_start(tmpdir):
+    with tmpdir.as_cwd():
+        _make_case("CASE1", sim_start=datetime.date(2010, 1, 1))
+        _make_case("CASE2", sim_start=datetime.date(2011, 1, 1))
+        with pytest.raises(
+            ValueError, match="The two cases do not start at the same time"
+        ):
+            ResdataCmp("CASE1", "CASE2")

@@ -274,3 +274,29 @@ def test_report_list(tmpdir):
 def test_opening_non_existing_file_throws(tmpdir):
     with pytest.raises(OSError):
         ResdataFile("non_existing_file")
+
+
+def test_keys_returns_unique_kw_names(tmpdir):
+    with tmpdir.as_cwd():
+        kw1 = ResdataKW("AAA", 3, ResDataType.RD_INT)
+        kw2 = ResdataKW("BBB", 3, ResDataType.RD_INT)
+        kw3 = ResdataKW("AAA", 5, ResDataType.RD_INT)
+        with openFortIO("TEST.UNRST", mode=FortIO.WRITE_MODE) as f:
+            kw1.fwrite(f)
+            kw2.fwrite(f)
+            kw3.fwrite(f)
+
+        rd_file = ResdataFile("TEST.UNRST")
+        keys = list(rd_file.keys())
+        assert set(keys) == {"AAA", "BBB"}
+
+
+def test_report_list_non_unified_filename(tmpdir):
+    with tmpdir.as_cwd():
+        kw = ResdataKW("HEADER", 1, ResDataType.RD_INT)
+        kw[0] = 0
+        with openFortIO("CASE.X0042", mode=FortIO.WRITE_MODE) as f:
+            kw.fwrite(f)
+
+        rd_file = ResdataFile("CASE.X0042")
+        assert rd_file.report_list == [42]

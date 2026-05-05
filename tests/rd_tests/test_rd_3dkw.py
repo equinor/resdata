@@ -2,6 +2,8 @@
 import os
 import random
 
+import cwrap
+
 from resdata.util.util import IntVector
 from resdata import ResDataType, FileMode
 from resdata.resfile import Resdata3DKW, ResdataKW, ResdataFile, FortIO
@@ -174,3 +176,18 @@ class Resdata3DKWTest(ResdataTest):
         for i in range(len(kw)):
             self.assertEqual(kw_copy[2 * i], i)
             self.assertEqual(kw_copy[2 * i + 1], kw.getDefault())
+
+
+def test_read_grdecl(tmp_path):
+    nx, ny, nz = 2, 2, 2
+    grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
+    grdecl_file = str(tmp_path / "test.grdecl")
+    with open(grdecl_file, "w") as f:
+        f.write("PORO\n")
+        f.write("%d*0.25 /\n" % (nx * ny * nz))
+
+    with cwrap.open(grdecl_file) as f:
+        kw = Resdata3DKW.read_grdecl(grid, f, "PORO")
+
+    assert isinstance(kw, Resdata3DKW)
+    assert kw[0, 0, 0] == 0.25
