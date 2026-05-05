@@ -810,3 +810,12 @@ def test_write_grdecl(tmpdir):
 def test_create_volume_keyword():
     grid = GridGen.create_rectangular((2, 3, 4), (1, 1, 1))
     assert list(grid.create_volume_keyword()) == [1.0] * (2 * 3 * 4)
+
+
+invalid_dimensions_grid = b"\x00\x00\x00\x10D  \x00\x00/\n\nSPECGRID\n  1 \xe0\xcd\xdf\xcb\x0b 1  22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222F / \n\nCOORD\n   0.\x880\x1a0000\n/\n\nZCORN\n 0\x00\x00\x00\x10"
+
+
+def test_that_grid_with_invalid_dimensions_return_none(tmp_path):
+    filename = tmp_path / "invalid.grid"
+    filename.write_bytes(invalid_dimensions_grid)
+    assert Grid.load_from_file(str(filename)) is None
