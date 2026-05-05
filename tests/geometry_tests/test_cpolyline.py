@@ -82,6 +82,16 @@ class CPolylineTest(ResdataTest):
         line1 = polyline.extendToBBox(bbox, start=False)
         self.assertEqual(line1, CPolyline(init_points=[(3, 3), (10, 10)]))
 
+        line2 = CPolyline(name="MyPoly", init_points=[(1, 1), (3, 3)])
+        extended = line2.extendToBBox(bbox, start=False)
+        self.assertEqual(extended.getName(), "Extend:MyPoly")
+
+    def test_str(self):
+        named = CPolyline(name="MyPoly", init_points=[(0, 0), (1, 1)])
+        self.assertIn("MyPoly", str(named))
+        unnamed = CPolyline(init_points=[(0, 0), (1, 1)])
+        self.assertTrue(str(unnamed).startswith("["))
+
     def test_item(self):
         polyline = CPolyline()
         polyline.addPoint(10, 20)

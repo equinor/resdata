@@ -2,6 +2,10 @@
 import os
 import datetime
 import math
+import warnings
+
+from tests.util.mock import createSummary
+
 
 try:
     from unittest2 import skipIf, skipUnless, skipIf
@@ -30,6 +34,44 @@ def linear1(x):
 
 def linear2(x):
     return 2 * x
+
+
+class NPVMockTest(ResdataTest):
+    """Non-equinor tests for ResdataNPV / NPVPriceVector using mock summaries."""
+
+    def _make_case(self, name="CASE1"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            case = createSummary(
+                name,
+                [("FOPT", None, 0, "SM3"), ("WOPT", "OP1", 0, "SM3")],
+            )
+        case.fwrite()
+        return case
+
+    def test_parse_and_compile(self):
+        with TestAreaContext("npv_mock_parse"):
+            self._make_case("CASE1")
+            npv = ResdataNPV("CASE1")
+            parsed = npv.parse_expression("[FOPT]")
+            self.assertEqual(parsed, "FOPT[i]")
+            self.assertIn("FOPT", npv.get_key_list())
+
+            npv.compile("[FOPT]")
+            value = npv.eval_npv()
+            self.assertIsNotNone(value)
+
+    def test_price_vector_mock(self):
+        vec = NPVPriceVector(
+            [
+                ("01/01/2000", 100),
+                ("01/02/2000", 200),
+                ("01/03/2000", 300),
+            ]
+        )
+        self.assertEqual(300, vec.eval(datetime.date(2000, 4, 1)))
+        self.assertEqual(100, vec.eval(datetime.date(2000, 1, 10)))
+        self.assertEqual(200, vec.eval(datetime.date(2000, 2, 15)))
 
 
 @equinor_test()

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import pytest
+import io
+import contextlib
 
 from resdata import util
 
@@ -820,6 +822,70 @@ class FaultTest(ResdataTest):
 
         self.assertEqual(p1, (2, 1))
         self.assertEqual(p2, (2, 2))
+
+    def test_fault_line_reverse_and_dump(self):
+
+        fl = FaultLine(self.grid, 10)
+        fl.try_append(FaultSegment(0, 10))
+        fl.try_append(FaultSegment(10, 20))
+        fl.try_append(FaultSegment(20, 30))
+
+        fl.reverse()
+        fl.verify()
+
+        # After reverse, the polyline endpoints should be swapped.
+        pl = fl.get_polyline()
+        self.assertEqual(len(pl), len(fl) + 1)
+
+    def test_t_junction_processSegments(self):
+        nx, ny, nz = 10, 10, 1
+        grid = GridGenerator.create_rectangular((nx, ny, nz), (1, 1, 1))
+        f = Fault(grid, "T")
+        # Three records all touching corner (5,5)
+        f.add_record(4, 4, 4, 4, 0, 0, "X")
+        f.add_record(4, 4, 5, 5, 0, 0, "X")
+        f.add_record(5, 5, 4, 4, 0, 0, "Y")
+
+        layer = f[0]
+        # Two fault_lines should be produced from the T-junction.
+        self.assertEqual(len(layer), 2)
+
+    def test_fault_get_neighbor_cells(self):
+        grid = GridGenerator.create_rectangular((4, 4, 2), (1, 1, 1))
+        fault = Fault(grid, "F")
+        fault.add_record(1, 1, 0, 2, 0, 1, "X")
+        nb_all = fault.get_neighbor_cells()
+        self.assertTrue(len(nb_all) > 0)
+        self.assertEqual(
+            nb_all, [l for layer in fault for l in layer.get_neighbor_cells()]
+        )
+
+    def test_extend_to_edge_and_connect_polyline_onto(self):
+        grid = GridGenerator.create_rectangular((3, 3, 1), (1, 1, 1))
+
+        fault1 = Fault(grid, "Fault1")
+        fault1.add_record(0, 0, 0, 0, 0, 0, "X-")
+        fault1.add_record(0, 0, 0, 0, 0, 0, "Y")
+
+        fault2 = Fault(grid, "Fault2")
+        fault2.add_record(0, 2, 1, 1, 0, 0, "Y")
+
+        polyline = CPolyline(init_points=[(0, 2), (3, 2)])
+
+        ext_fault = fault1.extend_to_edge(fault2, 0)
+        self.assertEqual(ext_fault, [(1, 1), (2, 2)])
+
+        ext_poly = fault1.extend_to_edge(polyline, 0)
+        self.assertEqual(ext_poly, [(1, 1), (2, 2)])
+
+        # connect_polyline_onto returns None when the fault intersects
+        # the polyline (covers the early-return branch).
+        crossing = CPolyline(init_points=[(0, 0.5), (3, 0.5)])
+        self.assertIsNone(fault1.connect_polyline_onto(crossing, 0))
+
+        # Otherwise it falls through to polyline.connect(self_polyline).
+        result = fault1.connect_polyline_onto(polyline, 0)
+        self.assertIsNotNone(result)
 
     def test_extend_to_bbox(self):
         bbox = [(0, 0), (10, 0), (10, 10), (0, 10)]

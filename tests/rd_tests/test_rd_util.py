@@ -17,6 +17,7 @@ class ResdataUtilTest(ResdataTest):
         file_type, fmt, report = ResdataUtil.inspectExtension("CASE.UNRST")
         assert file_type == FileType.UNIFIED_RESTART
         assert report == None
+        assert ResdataUtil.get_file_type("CASE.UNRST") == FileType.UNIFIED_RESTART
 
     def test_file_report_nr(self):
         report_nr = ResdataUtil.reportStep("CASE.X0080")

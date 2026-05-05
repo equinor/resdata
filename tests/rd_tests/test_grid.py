@@ -445,6 +445,36 @@ class GridTest(ResdataTest):
         with self.assertRaises(ValueError):
             cp = grid.compressedKWCopy(kw1)
 
+    def test_bounding_box_2d_invalid_corners(self):
+        grid = GridGen.create_rectangular((10, 20, 30), (1, 1, 1))
+        with self.assertRaises(ValueError):
+            grid.get_bounding_box_2d(lower_left=(0, 1))
+        with self.assertRaises(ValueError):
+            grid.get_bounding_box_2d(lower_left=(1, 0))
+        with self.assertRaises(ValueError):
+            grid.get_bounding_box_2d(upper_right=(1, 20))
+        with self.assertRaises(ValueError):
+            grid.get_bounding_box_2d(upper_right=(10, 1))
+
+    def test_create_3d_with_active_size_kw_and_invalid_size(self):
+        nx, ny, nz = 4, 3, 2
+        actnum = ResdataKW("ACTNUM", nx * ny * nz, ResDataType.RD_INT)
+        for i in range(nx * ny * nz):
+            actnum[i] = 1
+        actnum[0] = 0
+        grid = GridGen.create_rectangular((nx, ny, nz), (1, 1, 1), actnum=actnum)
+        num_active = grid.get_num_active()
+        kw = ResdataKW("PRESSURE", num_active, ResDataType.RD_FLOAT)
+        for i in range(num_active):
+            kw[i] = float(i + 1)
+        arr = grid.create_3d(kw, default=-1.0)
+        self.assertEqual(arr.shape, (nx, ny, nz))
+        self.assertAlmostEqual(arr[1, 0, 0], 1.0)
+
+        bad = ResdataKW("BAD", num_active + 5, ResDataType.RD_FLOAT)
+        with self.assertRaises(ValueError):
+            grid.create_3d(bad)
+
     def test_dxdydz(self):
         nx = 10
         ny = 10

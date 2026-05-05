@@ -21,6 +21,9 @@ class RegionTest(ResdataTest):
         for g in glist:
             self.assertEqual(kw_int[g], 1)
 
+        ijk_list = region.get_ijk_list()
+        self.assertEqual(len(ijk_list), len(glist))
+
         with self.assertRaises(ValueError):
             region.select_equal(kw_float, 1)
 

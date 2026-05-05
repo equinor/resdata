@@ -83,6 +83,20 @@ class KWTest(ResdataTest):
         with self.assertRaises(ValueError):
             ResdataKW("ThisIsTooLong", 100, ResDataType.RD_CHAR)
 
+    def test_header_and_str(self):
+        kw = ResdataKW("TESTKW", 3, ResDataType.RD_INT)
+        kw[0] = 1
+        kw[1] = 2
+        kw[2] = 3
+
+        name, length, type_name = kw.header
+        self.assertEqual(name, "TESTKW")
+        self.assertEqual(length, 3)
+        self.assertEqual(type_name, kw.typeName())
+
+        s = kw.str(width=2, max_lines=10)
+        self.assertIn("TESTKW", s)
+
     def test_sum(self):
         for rd_type in [ResDataType.RD_CHAR, ResDataType.RD_STRING(42)]:
             kw_string = ResdataKW("STRING", 100, rd_type)
