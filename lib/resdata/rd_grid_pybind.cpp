@@ -395,17 +395,22 @@ PYBIND11_MODULE(_grid, m) {
                                    data.mutable_data());
     });
     m.def("_export_data_as_double",
-          [](ptrdiff_t size, py::array_t<int32_t> indx, py::handle kw,
-             py::array_t<double> data) {
+          [](py::array_t<int32_t> idx, py::handle kw, double fill_value) {
               auto rd_kw = from_cwrap<rd_kw_type>(kw);
-              auto indx_ptr = indx.mutable_data();
-              auto data_ptr = data.mutable_data();
+              auto idx_buffer = idx.request();
+              int32_t *idx_ptr = static_cast<int32_t *>(idx_buffer.ptr);
 
-              for (int i = 0; i < size; i++) {
-                  int di = indx_ptr[i];
+              py::array_t<double> data(idx_buffer.size);
+              auto data_buffer = data.request();
+              double *data_ptr = static_cast<double *>(data_buffer.ptr);
+              std::fill(data_ptr, data_ptr + data_buffer.size, fill_value);
+
+              for (size_t i = 0; i < idx_buffer.size; i++) {
+                  int32_t di = idx_ptr[i];
                   if (di >= 0)
                       data_ptr[i] = rd_kw_iget_as_double(rd_kw, di);
               }
+              return data;
           });
     m.def("_export_volume", [](py::handle self, py::array_t<int32_t> index) {
         auto rd_grid = from_cwrap<rd_grid_type>(self);

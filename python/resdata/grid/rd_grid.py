@@ -1207,9 +1207,7 @@ class Grid(BaseCClass):
             kw.type is ResdataTypeEnum.RD_FLOAT_TYPE
             or kw.type is ResdataTypeEnum.RD_DOUBLE_TYPE
         ):
-            data = np.full(len(index), default, dtype=np.float64)
-            _grid._export_data_as_double(len(index), index, kw, data)
-            return data
+            return _grid._export_data_as_double(index, kw, np.float64(default))
         else:
             raise TypeError("Keyword must be either int, float or double.")
 
