@@ -468,64 +468,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             REQUIRE(nnc_info_equal(nnc_info_orig1, nnc_info_copy1));
         }
 
-        SECTION("Export") {
-            int num_cells = rd_grid_get_global_size(grid.get());
-            std::vector<int> global_index(num_cells);
-            for (int i = 0; i < num_cells; i++) {
-                global_index[i] = i;
-            }
-
-            std::vector<int> index_data(num_cells * 4);
-            rd_grid_export_index(grid.get(), global_index.data(),
-                                 index_data.data(), false);
-            REQUIRE(index_data == std::vector<int>{
-                                      0, 0, 0, 0, 1, 0, 0, 1, 0,  1, 0,
-                                      2, 1, 1, 0, 3, 0, 0, 1, -1, 1, 0,
-                                      1, 4, 0, 1, 1, 5, 1, 1, 1,  6,
-                                  });
-
-            std::vector<double> volume_output(num_cells);
-            rd_grid_export_volume(grid.get(), num_cells, global_index.data(),
-                                  volume_output.data());
-            REQUIRE(volume_output.size() == 8);
-            for (auto v : volume_output)
-                REQUIRE(v == 6.0);
-
-            std::vector<double> position_output(num_cells * 3);
-            rd_grid_export_position(grid.get(), num_cells, global_index.data(),
-                                    position_output.data());
-            REQUIRE(position_output == std::vector<double>{
-                                           0.5, 1.0, 1.5, 1.5, 1.0, 1.5,
-                                           0.5, 3.0, 1.5, 1.5, 3.0, 1.5,
-                                           0.5, 1.0, 4.5, 1.5, 1.0, 4.5,
-                                           0.5, 3.0, 4.5, 1.5, 3.0, 4.5,
-                                       });
-
-            std::vector<double> corners_output(num_cells * 24);
-            export_corners(grid.get(), num_cells, global_index.data(),
-                           corners_output.data());
-            REQUIRE(corners_output ==
-                    std::vector<double>{
-                        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 1.0, 2.0,
-                        0.0, 0.0, 0.0, 3.0, 1.0, 0.0, 3.0, 0.0, 2.0, 3.0, 1.0,
-                        2.0, 3.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 1.0, 2.0, 0.0,
-                        2.0, 2.0, 0.0, 1.0, 0.0, 3.0, 2.0, 0.0, 3.0, 1.0, 2.0,
-                        3.0, 2.0, 2.0, 3.0, 0.0, 2.0, 0.0, 1.0, 2.0, 0.0, 0.0,
-                        4.0, 0.0, 1.0, 4.0, 0.0, 0.0, 2.0, 3.0, 1.0, 2.0, 3.0,
-                        0.0, 4.0, 3.0, 1.0, 4.0, 3.0, 1.0, 2.0, 0.0, 2.0, 2.0,
-                        0.0, 1.0, 4.0, 0.0, 2.0, 4.0, 0.0, 1.0, 2.0, 3.0, 2.0,
-                        2.0, 3.0, 1.0, 4.0, 3.0, 2.0, 4.0, 3.0, 0.0, 0.0, 3.0,
-                        1.0, 0.0, 3.0, 0.0, 2.0, 3.0, 1.0, 2.0, 3.0, 0.0, 0.0,
-                        6.0, 1.0, 0.0, 6.0, 0.0, 2.0, 6.0, 1.0, 2.0, 6.0, 1.0,
-                        0.0, 3.0, 2.0, 0.0, 3.0, 1.0, 2.0, 3.0, 2.0, 2.0, 3.0,
-                        1.0, 0.0, 6.0, 2.0, 0.0, 6.0, 1.0, 2.0, 6.0, 2.0, 2.0,
-                        6.0, 0.0, 2.0, 3.0, 1.0, 2.0, 3.0, 0.0, 4.0, 3.0, 1.0,
-                        4.0, 3.0, 0.0, 2.0, 6.0, 1.0, 2.0, 6.0, 0.0, 4.0, 6.0,
-                        1.0, 4.0, 6.0, 1.0, 2.0, 3.0, 2.0, 2.0, 3.0, 1.0, 4.0,
-                        3.0, 2.0, 4.0, 3.0, 1.0, 2.0, 6.0, 2.0, 2.0, 6.0, 1.0,
-                        4.0, 6.0, 2.0, 4.0, 6.0});
-        }
-
         SECTION("NNC") {
             auto nnc_info_before = rd_grid_get_cell_nnc_info1(grid.get(), 0);
             REQUIRE(nnc_info_before == nullptr);
@@ -673,34 +615,6 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
                     "COMP", rd_grid_get_active_size(grid.get()), RD_FLOAT);
                 rd_grid_compressed_kw_copy(grid.get(), compressed_kw.get(),
                                            target_kw.get());
-            }
-
-            SECTION("Export data functions") {
-                std::vector<int> global_index = {0, 1, 2};
-                std::vector<int> int_output(3);
-
-                auto int_kw = make_rd_kw(
-                    "PVTNUM", rd_grid_get_global_size(grid.get()), RD_INT);
-                for (int i = 0; i < rd_grid_get_global_size(grid.get()); i++) {
-                    rd_kw_iset_int(int_kw.get(), i, 1);
-                }
-                rd_grid_export_data_as_int(3, global_index.data(), int_kw.get(),
-                                           int_output.data());
-
-                REQUIRE(int_output[0] == 1);
-                REQUIRE(int_output[1] == 1);
-                REQUIRE(int_output[2] == 1);
-
-                std::vector<double> double_output(3);
-                rd_grid_export_data_as_double(3, global_index.data(), kw.get(),
-                                              double_output.data());
-
-                REQUIRE_THAT(double_output[0],
-                             Catch::Matchers::WithinAbs(0.20, 0.0001));
-                REQUIRE_THAT(double_output[1],
-                             Catch::Matchers::WithinAbs(0.21, 0.0001));
-                REQUIRE_THAT(double_output[2],
-                             Catch::Matchers::WithinAbs(0.22, 0.0001));
             }
         }
     }

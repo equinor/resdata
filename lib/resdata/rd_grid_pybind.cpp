@@ -22,6 +22,64 @@ template <typename T> T *from_cwrap(py::handle obj) {
     return reinterpret_cast<T *>(pointer);
 }
 
+//This function is meant to be used w/ pandas datafram and numpy
+//Note: index_size must equal allocated size of output
+void rd_grid_export_data_as_int(int index_size, const int *data_index,
+                                const rd_kw_type *kw, int *output) {
+    int *input = rd_kw_get_int_ptr(kw);
+    for (int i = 0; i < index_size; i++) {
+        int di = data_index[i];
+        if (di >= 0)
+            output[i] = input[di];
+    }
+}
+
+//This function is meant to be used w/ pandas datafram and numpy
+//Note: index_size must equal allocated size of output
+void rd_grid_export_data_as_double(int index_size, const int *data_index,
+                                   const rd_kw_type *kw, double *output) {
+    for (int i = 0; i < index_size; i++) {
+        int di = data_index[i];
+        if (di >= 0)
+            output[i] = rd_kw_iget_as_double(kw, di);
+    }
+}
+
+//This function is meant to be used w/ pandas datafram and numpy
+void rd_grid_export_volume(const rd_grid_type *grid, int index_size,
+                           const int *global_index, double *output) {
+    for (int i = 0; i < index_size; i++) {
+        int g = global_index[i];
+        output[i] = rd_grid_get_cell_volume1(grid, g);
+    }
+}
+
+//This function is meant to be used w/ pandas datafram and numpy
+void rd_grid_export_position(rd_grid_type *grid, int index_size,
+                             const int *global_index, double *output) {
+    for (int i = 0; i < index_size; i++) {
+        int g = global_index[i];
+        int j = 3 * i;
+        rd_grid_get_xyz1(grid, g, &output[j], &output[j + 1], &output[j + 2]);
+    }
+}
+
+//This function is meant to be used w/ pandas dataframe and numpy
+void export_corners(const rd_grid_type *grid, int index_size,
+                    const int *global_index, double *output) {
+    double x[8], y[8], z[8];
+    int pos = 0;
+    for (int i = 0; i < index_size; i++) {
+        int g = global_index[i];
+        rd_grid_export_cell_corners1(grid, g, x, y, z);
+        for (int j = 0; j < 8; j++) {
+            output[pos++] = x[j];
+            output[pos++] = y[j];
+            output[pos++] = z[j];
+        }
+    }
+}
+
 PYBIND11_MODULE(_grid, m) {
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
 

@@ -190,16 +190,6 @@ void rd_grid_export_cell_corners1(const rd_grid_type *grid, int global_index,
 ert_rd_unit_enum rd_grid_get_unit_system(const rd_grid_type *grid);
 void rd_grid_export_index(const rd_grid_type *grid, int *global_index,
                           int *index_data, bool active_only);
-void rd_grid_export_data_as_int(int index_size, const int *global_index,
-                                const rd_kw_type *kw, int *output);
-void rd_grid_export_data_as_double(int index_size, const int *data_index,
-                                   const rd_kw_type *kw, double *output);
-void rd_grid_export_volume(const rd_grid_type *grid, int index_size,
-                           const int *global_index, double *output);
-void rd_grid_export_position(rd_grid_type *grid, int index_size,
-                             const int *global_index, double *output);
-void export_corners(const rd_grid_type *grid, int index_size,
-                    const int *global_index, double *output);
 float rd_grid_output_scaling(const rd_grid_type *grid,
                              ert_rd_unit_enum output_unit);
 
