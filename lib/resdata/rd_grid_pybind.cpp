@@ -22,18 +22,6 @@ template <typename T> T *from_cwrap(py::handle obj) {
     return reinterpret_cast<T *>(pointer);
 }
 
-//This function is meant to be used w/ pandas datafram and numpy
-//Note: index_size must equal allocated size of output
-void rd_grid_export_data_as_int(int index_size, const int *data_index,
-                                const rd_kw_type *kw, int *output) {
-    int *input = rd_kw_get_int_ptr(kw);
-    for (int i = 0; i < index_size; i++) {
-        int di = data_index[i];
-        if (di >= 0)
-            output[i] = input[di];
-    }
-}
-
 PYBIND11_MODULE(_grid, m) {
     m.doc() = "pybind11 bindings between rd_grid.py and rd_grid.cpp";
 
@@ -390,9 +378,16 @@ PYBIND11_MODULE(_grid, m) {
     });
     m.def("_export_data_as_int", [](ptrdiff_t size, py::array_t<int32_t> indx,
                                     py::handle kw, py::array_t<int32_t> data) {
-        rd_grid_export_data_as_int(size, indx.mutable_data(),
-                                   from_cwrap<rd_kw_type>(kw),
-                                   data.mutable_data());
+        auto rd_kw = from_cwrap<rd_kw_type>(kw);
+        int32_t *idx_ptr = indx.mutable_data();
+        int32_t *data_ptr = data.mutable_data();
+
+        int *input = rd_kw_get_int_ptr(kw);
+        for (int i = 0; i < index_size; i++) {
+            int di = data_index[i];
+            if (di >= 0)
+                output[i] = input[di];
+        }
     });
     m.def("_export_data_as_double",
           [](py::array_t<int32_t> idx, py::handle kw, double fill_value) {
