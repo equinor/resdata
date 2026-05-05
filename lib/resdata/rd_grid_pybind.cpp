@@ -376,19 +376,25 @@ PYBIND11_MODULE(_grid, m) {
                              active_only);
         return std::make_tuple(indx, data);
     });
-    m.def("_export_data_as_int", [](ptrdiff_t size, py::array_t<int32_t> indx,
-                                    py::handle kw, py::array_t<int32_t> data) {
-        auto rd_kw = from_cwrap<rd_kw_type>(kw);
-        int32_t *idx_ptr = indx.mutable_data();
-        int32_t *data_ptr = data.mutable_data();
+    m.def("_export_data_as_int",
+          [](py::array_t<int32_t> idx, py::handle kw, int32_t fill_value) {
+              auto rd_kw = from_cwrap<rd_kw_type>(kw);
+              auto idx_buffer = idx.request();
+              int32_t *idx_ptr = static_cast<int32_t *>(idx_buffer.ptr);
 
-        int *input = rd_kw_get_int_ptr(kw);
-        for (int i = 0; i < index_size; i++) {
-            int di = data_index[i];
-            if (di >= 0)
-                output[i] = input[di];
-        }
-    });
+              py::array_t<int32_t> data(idx_buffer.size);
+              auto data_buffer = data.request();
+              int32_t *data_ptr = static_cast<int32_t *>(data_buffer.ptr);
+              std::fill(data_ptr, data_ptr + data_buffer.size, fill_value);
+
+              int *input = rd_kw_get_int_ptr(rd_kw);
+              for (size_t i = 0; i < idx_buffer.size; i++) {
+                  int32_t di = idx_ptr[i];
+                  if (di >= 0)
+                      data_ptr[i] = input[di];
+              }
+              return data;
+          });
     m.def("_export_data_as_double",
           [](py::array_t<int32_t> idx, py::handle kw, double fill_value) {
               auto rd_kw = from_cwrap<rd_kw_type>(kw);
