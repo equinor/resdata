@@ -219,7 +219,7 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
     char newline = '\n';
     bool atEOF = false;
     size_t init_size = 32;
-    size_t buffer_size = 64;
+    size_t buffer_size = 256;
     size_t data_index = 0;
     int sizeof_ctype = rd_type_get_sizeof_ctype(data_type);
     size_t data_size = init_size;
@@ -267,8 +267,9 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                                        __func__, buffer, header);
                     }
                 } else if (rd_type_is_float(data_type)) {
-                    if (sscanf(buffer, "%d*%g", &multiplier, &value.f) == 2) {
-                    } else if (sscanf(buffer, "%g", &value.f) == 1)
+                    if (sscanf(buffer, "%d*%128g", &multiplier, &value.f) ==
+                        2) {
+                    } else if (sscanf(buffer, "%128g", &value.f) == 1)
                         multiplier = 1;
                     else {
                         char_input = true;
@@ -278,8 +279,9 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                                        __func__, buffer, header);
                     }
                 } else if (rd_type_is_double(data_type)) {
-                    if (sscanf(buffer, "%d*%lg", &multiplier, &value.d) == 2) {
-                    } else if (sscanf(buffer, "%lg", &value.d) == 1)
+                    if (sscanf(buffer, "%d*%128lg", &multiplier, &value.d) ==
+                        2) {
+                    } else if (sscanf(buffer, "%128lg", &value.d) == 1)
                         multiplier = 1;
                     else {
                         char_input = true;
