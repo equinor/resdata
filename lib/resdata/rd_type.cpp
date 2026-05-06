@@ -13,7 +13,7 @@
 #define RD_TYPE_NAME_MESSAGE "MESS"
 
 static char *alloc_string_name(const rd_data_type rd_type) {
-    return util_alloc_sprintf("C%03d", rd_type_get_sizeof_iotype(rd_type));
+    return util_alloc_sprintf("C%03zu", rd_type_get_sizeof_iotype(rd_type));
 }
 
 static bool is_rd_string_name(const char *type_name) {
@@ -35,9 +35,9 @@ rd_data_type rd_type_create(const rd_type_enum type,
         (type == RD_STRING_TYPE ? RD_STRING(element_size)
                                 : rd_type_create_from_type(type));
 
-    if ((size_t)rd_type_get_sizeof_iotype(rd_type) != element_size)
+    if (rd_type_get_sizeof_iotype(rd_type) != element_size)
         util_abort(
-            "%s: element_size mismatch for type %d, was: %d, expected: %d\n",
+            "%s: element_size mismatch for type %d, was: %zu, expected: %zu\n",
             __func__, type, element_size, rd_type_get_sizeof_iotype(rd_type));
 
     return rd_type;
@@ -121,7 +121,7 @@ int rd_type_get_sizeof_ctype(const rd_data_type rd_type) {
     return rd_type.element_size;
 }
 
-int rd_type_get_sizeof_iotype(const rd_data_type rd_type) {
+size_t rd_type_get_sizeof_iotype(const rd_data_type rd_type) {
     if (rd_type_is_bool(rd_type))
         return sizeof(int);
 

@@ -118,7 +118,7 @@ rd_type_enum rd_kw_get_type(const rd_kw_type *);
 void rd_kw_set_data_type(rd_kw_type *rd_kw, rd_data_type data_type);
 
 static char *alloc_read_fmt_string(const rd_data_type rd_type) {
-    return util_alloc_sprintf("%%%dc", rd_type_get_sizeof_iotype(rd_type));
+    return util_alloc_sprintf("%%%zuc", rd_type_get_sizeof_iotype(rd_type));
 }
 
 static char *alloc_read_fmt(const rd_data_type data_type) {
@@ -145,7 +145,7 @@ static char *alloc_read_fmt(const rd_data_type data_type) {
 }
 
 static char *alloc_write_fmt_string(const rd_data_type rd_type) {
-    return util_alloc_sprintf(" '%%-%ds'", rd_type_get_sizeof_iotype(rd_type));
+    return util_alloc_sprintf(" '%%-%zus'", rd_type_get_sizeof_iotype(rd_type));
 }
 
 static char *alloc_write_fmt(const rd_data_type data_type) {
@@ -259,8 +259,18 @@ static char *rd_kw_alloc_output_buffer(const rd_kw_type *rd_kw) {
 }
 
 static char *rd_kw_alloc_input_buffer(const rd_kw_type *rd_kw) {
-    size_t buffer_size =
-        rd_kw->size * rd_type_get_sizeof_iotype(rd_kw->data_type);
+    if (rd_kw->size < 0)
+        util_abort("%s : rd_kw->size was negative: %d\n", __func__,
+                   rd_kw->size);
+
+    size_t sizeof_iotype = rd_type_get_sizeof_iotype(rd_kw->data_type);
+    size_t count = static_cast<size_t>(rd_kw->size);
+    if (sizeof_iotype != 0 &&
+        count > std::numeric_limits<size_t>::max() / sizeof_iotype)
+        util_abort("%s : buffer size overflow: %zu * %zu\n", __func__, count,
+                   sizeof_iotype);
+
+    size_t buffer_size = count * sizeof_iotype;
     char *buffer = (char *)util_malloc(buffer_size);
 
     return buffer;
@@ -479,12 +489,17 @@ static void rd_kw_initialize(rd_kw_type *rd_kw, const char *header, int size,
 }
 
 static size_t rd_kw_fortio_data_size(const rd_kw_type *rd_kw) {
+    if (rd_kw->size < 0)
+        util_abort("%s : rd_kw->size was negative: %d\n", __func__,
+                   rd_kw->size);
+
     const int blocksize = get_blocksize(rd_kw->data_type);
     const int num_blocks =
         rd_kw->size / blocksize + (rd_kw->size % blocksize == 0 ? 0 : 1);
 
-    return num_blocks * (4 + 4) + // Fortran fluff for each block
-           rd_kw->size *
+    return static_cast<size_t>(num_blocks) *
+               (4 + 4) + // Fortran fluff for each block
+           static_cast<size_t>(rd_kw->size) *
                rd_type_get_sizeof_iotype(rd_kw->data_type); // Actual data
 }
 

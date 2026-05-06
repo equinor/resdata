@@ -45,7 +45,7 @@ const char *rd_type_alloc_name_python(const rd_data_type *rd_type) {
     return rd_type_alloc_name(*rd_type);
 }
 
-int rd_type_get_sizeof_iotype_python(const rd_data_type *rd_type) {
+size_t rd_type_get_sizeof_iotype_python(const rd_data_type *rd_type) {
     return rd_type_get_sizeof_iotype(*rd_type);
 }
 
