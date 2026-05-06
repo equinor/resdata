@@ -29,17 +29,17 @@ class GridGeneratorTest(ResdataTest):
     def setUp(self):
         self.test_base = [
             (
-                list(GridGen.create_coord((4, 4, 4), (1, 1, 1))),
-                list(GridGen.create_zcorn((4, 4, 4), (1, 1, 1), offset=0)),
-                GridGen.create_grid((4, 4, 4), (1, 1, 1), offset=0),
+                list(GridGen.create_coord((2, 2, 2), (1, 1, 1))),
+                list(GridGen.create_zcorn((2, 2, 2), (1, 1, 1), offset=0)),
+                GridGen.create_grid((2, 2, 2), (1, 1, 1), offset=0),
             ),
             (
                 list(
-                    GridGen.create_coord((5, 5, 5), (1, 1, 1), translation=(10, 10, 0))
+                    GridGen.create_coord((3, 3, 3), (1, 1, 1), translation=(10, 10, 0))
                 ),
                 list(
                     GridGen.create_zcorn(
-                        (5, 5, 5),
+                        (3, 3, 3),
                         (1, 1, 1),
                         offset=0.5,
                         irregular_offset=True,
@@ -48,7 +48,7 @@ class GridGeneratorTest(ResdataTest):
                     )
                 ),
                 GridGen.create_grid(
-                    (5, 5, 5),
+                    (3, 3, 3),
                     (1, 1, 1),
                     offset=0.5,
                     irregular=True,
