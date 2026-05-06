@@ -2,6 +2,8 @@
 #include <cstdarg>
 #include <cstring>
 #include <csignal>
+#include <cinttypes>
+#include <cstdint>
 
 #include "ert/util/build_config.hpp"
 #include <ert/util/util.hpp>
@@ -67,14 +69,15 @@ void test_assert_string_not_equal__(const char *s1, const char *s2,
 
 void test_assert_long_equal__(long i1, long i2, const char *file, long line) {
     if (i1 != i2)
-        test_error_exit("%s:%d => Long values are different i1:[%d]  i2:[%d]\n",
-                        file, line, i1, i2);
+        test_error_exit(
+            "%s:%ld => Long values are different i1:[%ld]  i2:[%ld]\n", file,
+            line, i1, i2);
 }
 
 void test_assert_long_not_equal__(long i1, long i2, const char *file,
                                   long line) {
     if (i1 == i2)
-        test_error_exit("%s:%d => Long values are equal i1:[%d]  i2:[%d]\n",
+        test_error_exit("%s:%ld => Long values are equal i1:[%ld]  i2:[%ld]\n",
                         file, line, i1, i2);
 }
 
@@ -94,7 +97,7 @@ void test_assert_uint_equal__(unsigned int i1, unsigned int i2,
                               const char *file, int line) {
     if (i1 != i2)
         test_error_exit(
-            "%s:%d => Unsigned integers are different i1:[%d]  i2:[%d]\n", file,
+            "%s:%d => Unsigned integers are different i1:[%u]  i2:[%u]\n", file,
             line, i1, i2);
 }
 
@@ -102,7 +105,7 @@ void test_assert_uint_not_equal__(unsigned int i1, unsigned int i2,
                                   const char *file, int line) {
     if (i1 == i2)
         test_error_exit(
-            "%s:%d => Unsigned integers are equal i1:[%d]  i2:[%d]\n", file,
+            "%s:%d => Unsigned integers are equal i1:[%u]  i2:[%u]\n", file,
             line, i1, i2);
 }
 
@@ -138,15 +141,17 @@ void test_assert_size_t_not_equal__(size_t s1, size_t s2, const char *file,
 void test_assert_time_t_equal__(time_t t1, time_t t2, const char *file,
                                 int line) {
     if (t1 != t2)
-        test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]\n",
-                        file, line, t1, t2);
+        test_error_exit("%s:%d => time_t values are different t1:%" PRIdMAX
+                        "  t2:[%" PRIdMAX "]\n",
+                        file, line, (intmax_t)t1, (intmax_t)t2);
 }
 
 void test_assert_time_t_not_equal__(time_t t1, time_t t2, const char *file,
                                     int line) {
     if (t1 == t2)
-        test_error_exit("%s:%d => time_t values are different t1:%d  t2:[%d]\n",
-                        file, line, t1, t2);
+        test_error_exit("%s:%d => time_t values are equal t1:%" PRIdMAX
+                        "  t2:[%" PRIdMAX "]\n",
+                        file, line, (intmax_t)t1, (intmax_t)t2);
 }
 
 void test_assert_true__(bool value, const char *file, int line) {
