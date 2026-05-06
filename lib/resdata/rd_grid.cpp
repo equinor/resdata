@@ -2843,8 +2843,10 @@ static rd_grid_type *rd_grid_alloc_regular(int nx, int ny, int nz,
                                            const double *kvec,
                                            const int *actnum) {
     ert_rd_unit_enum unit_system = RD_METRIC_UNITS;
-    rd_grid_type *grid = rd_grid_alloc_empty(
-        NULL, unit_system, FILEHEAD_SINGLE_POROSITY, nx, ny, nz, 0, true);
+    auto grid = rd_grid_ptr(rd_grid_alloc_empty(NULL, unit_system,
+                                                FILEHEAD_SINGLE_POROSITY, nx,
+                                                ny, nz, 0, true),
+                            &rd_grid_free);
     if (grid) {
         const double grid_offset[3] = {0, 0, 0};
 
@@ -2865,10 +2867,10 @@ static rd_grid_type *rd_grid_alloc_regular(int nx, int ny, int nz,
                 }
             }
         }
-        rd_grid_update_index(grid);
+        rd_grid_update_index(grid.get());
     }
 
-    return grid;
+    return grid.release();
 }
 
 /**
