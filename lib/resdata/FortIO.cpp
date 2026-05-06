@@ -439,9 +439,10 @@ int fortio_init_read(fortio_type *fortio) {
 
 bool fortio_data_fskip(fortio_type *fortio, const int element_size,
                        const int element_count, const int block_count) {
-    int headers = block_count * 4;
-    int trailers = block_count * 4;
-    int bytes_to_skip = headers + trailers + (element_size * element_count);
+    offset_type headers = block_count * 4;
+    offset_type trailers = block_count * 4;
+    offset_type bytes_to_skip =
+        headers + trailers + (element_size * element_count);
 
     return fortio_fseek(fortio, bytes_to_skip, SEEK_CUR);
 }
@@ -454,9 +455,9 @@ void fortio_data_fseek(fortio_type *fortio, offset_type data_offset,
                    __func__, data_element, element_count);
     }
     {
-        int block_index = data_element / block_size;
-        int headers = (block_index + 1) * 4;
-        int trailers = block_index * 4;
+        offset_type block_index = data_element / block_size;
+        offset_type headers = (block_index + 1) * 4;
+        offset_type trailers = block_index * 4;
         offset_type bytes_to_skip =
             data_offset + headers + trailers + (data_element * element_size);
 
