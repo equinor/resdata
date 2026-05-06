@@ -871,11 +871,6 @@ class Summary(BaseCClass):
     def __iter__(self):
         return iter(self.keys())
 
-    @deprecated(
-        "The method the [] operator will change behaviour in version 7."
-        " It will then return a plain numpy vector. You are advised to change to"
-        " use the numpy_vector() method right away",
-    )
     def __getitem__(self, key):
         """
         Implements [] operator - @key should be a summary key.
