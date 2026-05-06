@@ -102,7 +102,7 @@ rd_type_enum rd_type_get_type(const rd_data_type);
 char *rd_type_alloc_name(const rd_data_type);
 
 int rd_type_get_sizeof_ctype(const rd_data_type);
-int rd_type_get_sizeof_iotype(const rd_data_type);
+size_t rd_type_get_sizeof_iotype(const rd_data_type);
 
 bool rd_type_is_equal(const rd_data_type, const rd_data_type);
 
