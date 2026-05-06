@@ -7,9 +7,14 @@ import pytest
 from resdata import ResDataType, UnitSystem
 from resdata.grid import Grid
 from resdata.resfile import ResdataKW
-from cwrap import open as copen
+from resdata.util.util import DoubleVector
+import resdata.grid._grid as _grid
+from cwrap import CFILE, open as copen
 
-from ._grid_fixtures import make_rectangular_grid
+from ._grid_fixtures import (
+    load_egrid_with_single_lgr,
+    make_rectangular_grid,
+)
 
 
 @pytest.fixture
@@ -160,3 +165,116 @@ def test_that_every_grid_can_be_written_as_grdecl(all_grids, tmp_path):
             grid.save_grdecl(f, output_unit=UnitSystem.METRIC)
         assert filename.exists(), f"failed to write {label}"
         assert filename.stat().st_size > 0
+
+
+def test_that_get_global_index3_with_out_of_range_ijk_raises_index_error(
+    rectangular_grid,
+):
+    with pytest.raises(IndexError, match="i,j,k"):
+        _grid._get_global_index3(rectangular_grid, 99, 0, 0)
+
+
+def test_that_get_corner_xyz_with_out_of_range_i_raises_index_error(
+    rectangular_grid,
+):
+    with pytest.raises(IndexError, match="invalid i value"):
+        _grid._get_corner_xyz(rectangular_grid, -1, 0, 0)
+
+
+def test_that_get_corner_xyz_with_out_of_range_j_raises_index_error(
+    rectangular_grid,
+):
+    with pytest.raises(IndexError, match="invalid j value"):
+        _grid._get_corner_xyz(rectangular_grid, 0, 100, 0)
+
+
+def test_that_get_corner_xyz_with_out_of_range_k_raises_index_error(
+    rectangular_grid,
+):
+    with pytest.raises(IndexError, match="invalid k value"):
+        _grid._get_corner_xyz(rectangular_grid, 0, 0, -1)
+
+
+def test_that_fetching_lgr_through_an_lgr_subgrid_raises_value_error(tmp_path):
+    main_grid = load_egrid_with_single_lgr(
+        tmp_path / "MAIN_LGR.EGRID", 3, 3, 3, 2, 2, 2, 1, 1, 1, "LGR1"
+    )
+    lgr = main_grid.get_lgr("LGR1")
+    with pytest.raises(ValueError, match="LGR_grid"):
+        _grid._get_named_lgr(lgr, "ANYTHING")
+
+
+def test_that_grid_value_with_mismatched_kw_size_raises_value_error(
+    rectangular_grid,
+):
+    bad_kw = ResdataKW("BAD", 7, ResDataType.RD_FLOAT)
+    with pytest.raises(ValueError, match="incommensurable size"):
+        _grid._grid_value(rectangular_grid, bad_kw, 0, 0, 0)
+
+
+def test_that_grid_value_with_non_numeric_kw_raises_value_error(rectangular_grid):
+    size = rectangular_grid.get_global_size()
+    char_kw = ResdataKW("CHARKW", size, ResDataType.RD_CHAR)
+    with pytest.raises(ValueError, match="can not lookup type"):
+        _grid._grid_value(rectangular_grid, char_kw, 0, 0, 0)
+
+
+def test_that_load_column_with_mismatched_kw_size_raises_value_error(
+    rectangular_grid,
+):
+    bad_kw = ResdataKW("BAD", 7, ResDataType.RD_FLOAT)
+    column = DoubleVector()
+    with pytest.raises(ValueError, match="incommensurable sizes"):
+        _grid._load_column(rectangular_grid, bad_kw, 0, 0, column)
+
+
+def test_that_load_column_with_non_numeric_kw_raises_value_error(rectangular_grid):
+    size = rectangular_grid.get_global_size()
+    char_kw = ResdataKW("CHARKW", size, ResDataType.RD_CHAR)
+    column = DoubleVector()
+    with pytest.raises(ValueError, match="can not lookup type"):
+        _grid._load_column(rectangular_grid, char_kw, 0, 0, column)
+
+
+def test_that_fwrite_grdecl_with_invalid_bool_default_raises_value_error(
+    grid_with_inactive_cells, tmp_path
+):
+    grid, _ = grid_with_inactive_cells
+    nactive = grid.get_num_active()
+    bool_kw = ResdataKW("BOOLKW", nactive, ResDataType.RD_BOOL)
+    out = tmp_path / "BOOL_OUT.GRDECL"
+    with copen(str(out), "w") as f:
+        cfile = CFILE(f)
+        with pytest.raises(ValueError, match="bool interpolation"):
+            _grid._fwrite_grdecl(grid, bool_kw, None, cfile, 5.0)
+
+
+def test_that_fwrite_grdecl_with_mismatched_kw_size_raises_value_error(
+    rectangular_grid, tmp_path
+):
+    bad_kw = ResdataKW("BAD", 7, ResDataType.RD_FLOAT)
+    out = tmp_path / "BAD_OUT.GRDECL"
+    with copen(str(out), "w") as f:
+        cfile = CFILE(f)
+        with pytest.raises(ValueError, match="size mismatch"):
+            _grid._fwrite_grdecl(rectangular_grid, bad_kw, None, cfile, 0.0)
+
+
+def test_that_compressed_kw_copy_with_mismatched_sizes_raises_value_error(
+    grid_with_inactive_cells,
+):
+    grid, _ = grid_with_inactive_cells
+    target_kw = ResdataKW("T", 3, ResDataType.RD_FLOAT)
+    src_kw = ResdataKW("S", 99, ResDataType.RD_FLOAT)
+    with pytest.raises(ValueError, match="size mismatch"):
+        _grid._compressed_kw_copy(grid, target_kw, src_kw)
+
+
+def test_that_global_kw_copy_with_mismatched_sizes_raises_value_error(
+    grid_with_inactive_cells,
+):
+    grid, _ = grid_with_inactive_cells
+    target_kw = ResdataKW("T", 3, ResDataType.RD_FLOAT)
+    src_kw = ResdataKW("S", 99, ResDataType.RD_FLOAT)
+    with pytest.raises(ValueError, match="size mismatch"):
+        _grid._global_kw_copy(grid, target_kw, src_kw)
