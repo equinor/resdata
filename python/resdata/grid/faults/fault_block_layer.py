@@ -191,7 +191,8 @@ class FaultBlockLayer(BaseCClass):
         layer = self.get_geo_layer()
         layer.add_fault_barrier(fault, self.get_k(), link_segments)
 
-    def add_fault_link(self, fault1, fault2):
+    @deprecated("add_fault_link is deprecated and will be removed in version 7. ")
+    def add_fault_link(self, fault1, fault2):k
         if not fault1.intersects_fault(fault2, self.get_k()):
             layer = self.get_geo_layer()
             layer.add_ij_barrier(fault1.extend_to_fault(fault2, self.get_k()))
