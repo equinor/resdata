@@ -204,8 +204,13 @@ static bool geo_surface_fload_irap(geo_surface_type *surface,
             double *zcoord = NULL;
 
             if (loadz) {
-                zcoord = (double *)util_calloc(surface->nx * surface->ny,
-                                               sizeof *zcoord);
+                if (surface->nx < 0 || surface->ny < 0)
+                    util_abort("%s : surface size was negative: %dx%d\n",
+                               __func__, surface->nx, surface->ny);
+                zcoord =
+                    (double *)util_calloc(static_cast<size_t>(surface->nx) *
+                                              static_cast<size_t>(surface->ny),
+                                          sizeof *zcoord);
                 read_ok = geo_surface_fscanf_zcoord(surface, stream, zcoord);
             }
 
