@@ -1176,6 +1176,7 @@ class ResdataKW(BaseCClass):
         actnum = grid.exportACTNUM()
         self._fix_uninitialized(dims[0], dims[1], dims[2], actnum.getDataPtr())
 
+    @deprecated("get_data_ptr is deprecated and will be removed in version 7.")
     def get_data_ptr(self):
         if self.data_type.is_int():
             return self._int_ptr()
