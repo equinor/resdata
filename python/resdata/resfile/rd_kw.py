@@ -1006,6 +1006,7 @@ class ResdataKW(BaseCClass):
         return (self.get_name(), len(self), self.type_name())
 
     @property
+    @deprecated("array is deprecated and will be removed in version 7.")
     def array(self):
         a = self.data_ptr
         if not a == None:
