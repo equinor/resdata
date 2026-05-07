@@ -1,4 +1,5 @@
 from cwrap import BaseCClass
+from typing_extensions import deprecated
 
 from resdata.util.util import monkey_the_camel
 from resdata import ResDataType
@@ -191,8 +192,8 @@ class FaultBlockLayer(BaseCClass):
         layer = self.get_geo_layer()
         layer.add_fault_barrier(fault, self.get_k(), link_segments)
 
-    @deprecated("add_fault_link is deprecated and will be removed in version 7. ")
-    def add_fault_link(self, fault1, fault2):k
+    @deprecated("add_fault_link is deprecated and will be removed in version 7.")
+    def add_fault_link(self, fault1, fault2):
         if not fault1.intersects_fault(fault2, self.get_k()):
             layer = self.get_geo_layer()
             layer.add_ij_barrier(fault1.extend_to_fault(fault2, self.get_k()))
