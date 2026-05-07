@@ -1,4 +1,5 @@
 #include <tuple>
+#include <algorithm>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -376,38 +377,74 @@ PYBIND11_MODULE(_grid, m) {
                              active_only);
         return std::make_tuple(indx, data);
     });
-    m.def("_export_data_as_int", [](ptrdiff_t size, py::array_t<int32_t> indx,
-                                    py::handle kw, py::array_t<int32_t> data) {
-        rd_grid_export_data_as_int(size, indx.mutable_data(),
-                                   from_cwrap<rd_kw_type>(kw),
-                                   data.mutable_data());
-    });
+    m.def("_export_data_as_int",
+          [](py::array_t<int32_t> idx, py::handle kw, int32_t fill_value) {
+              auto rd_kw = from_cwrap<rd_kw_type>(kw);
+              auto idx_buffer = idx.request();
+              int32_t *idx_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
+              py::array_t<int32_t> data(idx_buffer.size);
+              auto data_buffer = data.request();
+              int32_t *data_ptr = static_cast<int32_t *>(data_buffer.ptr);
+              std::fill(data_ptr, data_ptr + data_buffer.size, fill_value);
+
+              int *input = rd_kw_get_int_ptr(rd_kw);
+              for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
+                  int32_t di = idx_ptr[i];
+                  if (di >= 0)
+                      data_ptr[i] = input[di];
+              }
+              return data;
+          });
     m.def("_export_data_as_double",
-          [](ptrdiff_t size, py::array_t<int32_t> indx, py::handle kw,
-             py::array_t<double> data) {
-              rd_grid_export_data_as_double(size, indx.mutable_data(),
-                                            from_cwrap<rd_kw_type>(kw),
-                                            data.mutable_data());
+          [](py::array_t<int32_t> idx, py::handle kw, double fill_value) {
+              auto rd_kw = from_cwrap<rd_kw_type>(kw);
+              auto idx_buffer = idx.request();
+              int32_t *idx_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
+              py::array_t<double> data(idx_buffer.size);
+              auto data_buffer = data.request();
+              double *data_ptr = static_cast<double *>(data_buffer.ptr);
+              std::fill(data_ptr, data_ptr + data_buffer.size, fill_value);
+
+              for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
+                  int32_t di = idx_ptr[i];
+                  if (di >= 0)
+                      data_ptr[i] = rd_kw_iget_as_double(rd_kw, di);
+              }
+              return data;
           });
     m.def("_export_volume", [](py::handle self, py::array_t<int32_t> index) {
         auto rd_grid = from_cwrap<rd_grid_type>(self);
 
-        py::array_t<double> data(index.size());
+        auto idx_buffer = index.request();
+        int32_t *index_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
+        py::array_t<double> data(idx_buffer.size);
         auto data_ptr = data.mutable_data();
-        std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        rd_grid_export_volume(rd_grid, index.size(), index.mutable_data(),
-                              data_ptr);
+
+        for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
+            int32_t g = index_ptr[i];
+            data_ptr[i] = rd_grid_get_cell_volume1(rd_grid, g);
+        }
         return data;
     });
     m.def("_export_position", [](py::handle self, py::array_t<int32_t> index) {
         auto rd_grid = from_cwrap<rd_grid_type>(self);
 
+        auto idx_buffer = index.request();
+        int32_t *index_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
         std::vector<ptrdiff_t> shape = {index.size(), 3};
         py::array_t<double> data(shape);
         auto data_ptr = data.mutable_data();
-        std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        rd_grid_export_position(rd_grid, index.size(), index.mutable_data(),
-                                data_ptr);
+
+        for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
+            int32_t g = index_ptr[i];
+            size_t j = 3 * i;
+            rd_grid_get_xyz1(rd_grid, g, &data_ptr[j], &data_ptr[j + 1],
+                             &data_ptr[j + 2]);
+        }
         return data;
     });
     m.def("_export_corners", [](py::handle self, py::array_t<int32_t> index) {
@@ -415,9 +452,25 @@ PYBIND11_MODULE(_grid, m) {
 
         std::vector<ptrdiff_t> shape = {index.size(), 24};
         py::array_t<double> data(shape);
-        auto data_ptr = data.mutable_data();
-        std::fill(data_ptr, data_ptr + data.size(), 0.0);
-        export_corners(rd_grid, index.size(), index.mutable_data(), data_ptr);
+        auto data_buffer = data.request();
+        double *data_ptr = static_cast<double *>(data_buffer.ptr);
+
+        auto idx_buffer = index.request();
+        int32_t *index_ptr = static_cast<int32_t *>(idx_buffer.ptr);
+
+        std::fill(data_ptr, data_ptr + data_buffer.size, 0.0);
+        double x[8], y[8], z[8];
+        size_t pos = 0;
+
+        for (py::ssize_t i = 0; i < idx_buffer.size; i++) {
+            int32_t g = index_ptr[i];
+            rd_grid_export_cell_corners1(rd_grid, g, x, y, z);
+            for (int j = 0; j < 8; j++) {
+                data_ptr[pos++] = x[j];
+                data_ptr[pos++] = y[j];
+                data_ptr[pos++] = z[j];
+            }
+        }
         return data;
     });
 }
