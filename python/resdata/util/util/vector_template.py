@@ -28,6 +28,7 @@ float and size_t not currently implemented in the Python version.
 import sys
 
 from cwrap import CFILE, BaseCClass
+from typing_extensions import deprecated
 
 
 class VectorTemplate(BaseCClass):
@@ -528,6 +529,7 @@ class VectorTemplate(BaseCClass):
     def elementSum(self):
         return self._element_sum()
 
+    @deprecated("getDataPtr is deprecated and will be removed in version 7.")
     def getDataPtr(self):
         "Low level function which returns a pointer to underlying storage"
         # Observe that the get_data_ptr() function is not implemented

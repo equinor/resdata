@@ -1097,7 +1097,7 @@ class Grid(BaseCClass):
                 )
             )
 
-    def exportACTNUM(self):
+    def exportACTNUM(self) -> IntVector | None:
         return IntVector.createPythonObject(_grid._init_actnum(self))
 
     def compressed_kw_copy(self, kw):
