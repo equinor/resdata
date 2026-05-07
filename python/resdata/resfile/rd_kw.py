@@ -1175,7 +1175,7 @@ class ResdataKW(BaseCClass):
         """
         dims = grid.get_dims()
         actnum = grid.exportACTNUM()
-        self._fix_uninitialized(dims[0], dims[1], dims[2], actnum.getDataPtr())
+        self._fix_uninitialized(dims[0], dims[1], dims[2], actnum._get_data_ptr())
 
     @deprecated("get_data_ptr is deprecated and will be removed in version 7.")
     def get_data_ptr(self):
