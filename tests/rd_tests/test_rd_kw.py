@@ -3,7 +3,6 @@ import pytest
 import random
 import warnings
 import cwrap
-import random
 
 from resdata import ResDataType, ResdataTypeEnum, FileMode
 from resdata.grid import ResdataRegion, GridGenerator
