@@ -498,7 +498,7 @@ rd_grav_survey_alloc_PORMOD(rd_grav_type *rd_grav,
 
     for (active_index = 0; active_index < size; active_index++)
         survey->porv[active_index] =
-            rd_kw_iget_float(pormod_kw, active_index) *
+            static_cast<double>(rd_kw_iget_float(pormod_kw, active_index)) *
             rd_kw_iget_float(init_porv_kw, global_index[active_index]);
 
     if (!rd_grav_survey_add_phases(rd_grav, survey, restart_file,

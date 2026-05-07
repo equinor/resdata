@@ -339,14 +339,20 @@ static const char *rd_kw_get_header8(const rd_kw_type *rd_kw) {
 const char *rd_kw_get_header(const rd_kw_type *rd_kw) { return rd_kw->header; }
 
 void rd_kw_get_memcpy_data(const rd_kw_type *rd_kw, void *target) {
+    if (rd_kw->size < 0)
+        util_abort("%s : rd_kw size was negative: %d\n", __func__, rd_kw->size);
     memcpy(target, rd_kw->data,
-           rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
+           static_cast<size_t>(rd_kw->size) *
+               rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
 void rd_kw_set_memcpy_data(rd_kw_type *rd_kw, const void *src) {
+    if (rd_kw->size < 0)
+        util_abort("%s : rd_kw size was negative: %d\n", __func__, rd_kw->size);
     if (src != NULL)
         memcpy(rd_kw->data, src,
-               rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type));
+               static_cast<size_t>(rd_kw->size) *
+                   rd_type_get_sizeof_ctype(rd_kw->data_type));
 }
 
 static bool rd_kw_string_eq(const char *s1, const char *s2) {
@@ -392,8 +398,12 @@ static bool rd_kw_header_eq(const rd_kw_type *rd_kw1,
 
 static bool rd_kw_data_equal__(const rd_kw_type *rd_kw, const void *data,
                                int cmp_elements) {
+    if (cmp_elements < 0)
+        util_abort("%s : cmp_elements was negative: %d\n", __func__,
+                   cmp_elements);
     int cmp = memcmp(rd_kw->data, data,
-                     cmp_elements * rd_type_get_sizeof_ctype(rd_kw->data_type));
+                     static_cast<size_t>(cmp_elements) *
+                         rd_type_get_sizeof_ctype(rd_kw->data_type));
     if (cmp == 0)
         return true;
     else
@@ -525,8 +535,12 @@ static void rd_kw_alloc_data(rd_kw_type *rd_kw) {
                    __func__);
 
     {
-        size_t byte_size =
-            rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type);
+
+        if (rd_kw->size < 0)
+            util_abort("%s : rd_kw size was negative: %d\n", __func__,
+                       rd_kw->size);
+        size_t byte_size = static_cast<size_t>(rd_kw->size) *
+                           rd_type_get_sizeof_ctype(rd_kw->data_type);
         rd_kw->data = (char *)util_realloc(rd_kw->data, byte_size);
         if (rd_kw->data) {
             memset(rd_kw->data, 0, byte_size);
@@ -605,8 +619,12 @@ void rd_kw_memcpy_data(rd_kw_type *target, const rd_kw_type *src) {
     if (!rd_kw_size_and_type_equal(target, src))
         util_abort("%s: type/size mismatch \n", __func__);
 
+    if (target->size < 0)
+        util_abort("%s : target size was negative: %d\n", __func__,
+                   target->size);
     memcpy(target->data, src->data,
-           target->size * rd_type_get_sizeof_ctype(target->data_type));
+           static_cast<size_t>(target->size) *
+               rd_type_get_sizeof_ctype(target->data_type));
 }
 
 void rd_kw_memcpy(rd_kw_type *target, const rd_kw_type *src) {
@@ -694,10 +712,15 @@ void rd_kw_resize(rd_kw_type *rd_kw, int new_size) {
                    __func__);
 
     if (new_size != rd_kw->size) {
-        size_t old_byte_size =
-            rd_kw->size * rd_type_get_sizeof_ctype(rd_kw->data_type);
-        size_t new_byte_size =
-            new_size * rd_type_get_sizeof_ctype(rd_kw->data_type);
+        if (rd_kw->size < 0)
+            util_abort("%s : rd_kw size was negative: %d\n", __func__,
+                       rd_kw->size);
+        if (new_size < 0)
+            util_abort("%s : new_size was negative: %d\n", __func__, new_size);
+        size_t old_byte_size = static_cast<size_t>(rd_kw->size) *
+                               rd_type_get_sizeof_ctype(rd_kw->data_type);
+        size_t new_byte_size = static_cast<size_t>(new_size) *
+                               rd_type_get_sizeof_ctype(rd_kw->data_type);
 
         rd_kw->data = (char *)util_realloc(rd_kw->data, new_byte_size);
         if (new_byte_size > old_byte_size) {
@@ -2513,7 +2536,10 @@ static bool rd_kw_elm_equal_numeric__(const rd_kw_type *rd_kw1,
 
 static bool rd_kw_elm_equal__(const rd_kw_type *rd_kw1,
                               const rd_kw_type *rd_kw2, int offset) {
-    size_t data_offset = rd_type_get_sizeof_ctype(rd_kw1->data_type) * offset;
+    if (offset < 0)
+        util_abort("%s : offset was negative: %d\n", __func__, offset);
+    size_t data_offset = static_cast<size_t>(offset) *
+                         rd_type_get_sizeof_ctype(rd_kw1->data_type);
     int cmp = memcmp(&rd_kw1->data[data_offset], &rd_kw2->data[data_offset],
                      rd_type_get_sizeof_ctype(rd_kw1->data_type));
     if (cmp == 0)

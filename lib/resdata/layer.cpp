@@ -77,14 +77,17 @@ layer_type *layer_alloc(int nx, int ny) {
     layer->nx = nx;
     layer->ny = ny;
     layer->cell_sum = 0;
-    layer->cells =
-        std::vector<Cell>((layer->nx + 1) * (layer->ny + 1), {
-                                                                 0,
-                                                                 {0, 0, 0, 0},
-                                                                 false,
-                                                                 false,
-                                                                 true,
-                                                             });
+    if (nx < 0 || ny < 0)
+        util_abort("%s : layer size is negative: %dx%d\n", __func__, nx, ny);
+    layer->cells = std::vector<Cell>((static_cast<size_t>(layer->nx) + 1) *
+                                         (static_cast<size_t>(layer->ny) + 1),
+                                     {
+                                         0,
+                                         {0, 0, 0, 0},
+                                         false,
+                                         false,
+                                         true,
+                                     });
     return layer;
 }
 
@@ -394,8 +397,10 @@ public:
     BlockTracer(layer_type *layer, bool erase, int value,
                 int_vector_type *i_list, int_vector_type *j_list)
         : layer(layer), erase(erase), value(value),
-          visited((layer->nx + 1) * (layer->ny + 1), false), i_list(i_list),
-          j_list(j_list) {}
+          visited((static_cast<size_t>(layer->nx) + 1) *
+                      (static_cast<size_t>(layer->ny) + 1),
+                  false),
+          i_list(i_list), j_list(j_list) {}
 
     void operator()(int i, int j) {
         int g = layer->interior_index(i, j);
