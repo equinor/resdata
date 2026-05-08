@@ -954,6 +954,8 @@ class ResdataKW(BaseCClass):
         Will raise TypeError exception if the keyword is not of
         numerical type.
         """
+        if len(self) == 0:
+            return (np.nan, np.nan)
         if self.data_type.is_float():
             min_ = ctypes.c_float()
             max_ = ctypes.c_float()
@@ -1085,8 +1087,11 @@ class ResdataKW(BaseCClass):
                 "Invalid type - numpy array only valid for int/float/double"
             )
 
-        ap = ctypes.cast(self.data_ptr, ctypes.POINTER(ct * len(self)))
-        return np.frombuffer(ap.contents, dtype=self.dtype)
+        if len(self):
+            ap = ctypes.cast(self.data_ptr, ctypes.POINTER(ct * len(self)))
+            return np.frombuffer(ap.contents, dtype=self.dtype)
+        else:
+            return np.array([], dtype=self.dtype)
 
     def numpy_copy(self):
         """Will return a numpy array which contains a copy of the ResdataKW data.
