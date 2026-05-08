@@ -12,8 +12,7 @@ def test_resdatakw_read_grdecl(tmp_path):
     value = 0.15
     with open(tmp_path / "test.grdecl", "w") as f:
         f.write("COORD\n")
-        for _ in range(num_blocks):
-            f.write(f"{block_size}*{value} \n")
+        f.writelines(f"{block_size}*{value} \n" for _ in range(num_blocks))
         f.write("/\n")
 
     with cwrap.open(str(tmp_path / "test.grdecl")) as f:
