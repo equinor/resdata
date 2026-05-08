@@ -12,6 +12,7 @@ from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.summary import Summary, SummaryKeyWordVector
 from resdata.summary.rd_sum import date2num
 from resdata.util.util import TimeVector, DoubleVector, StringList
+from tests.util.mock import createSummary
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext
 from resfo_utilities.testing import (
@@ -56,6 +57,28 @@ def test_that_year2263_through_pandas_works():
 
     # Roundtrip:
     assert eclsum.pandas_frame().index[1] == datetime.datetime(2262, 12, 31, 23, 57, 52)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_dump_csv_line():
+
+    case = createSummary(
+        "CASE1",
+        [("FOPT", None, 0, "SM3"), ("WOPT", "OP1", 0, "SM3")],
+    )
+    case.fwrite()
+
+    rd_sum = Summary("CASE1")
+    kw_vector = SummaryKeyWordVector(rd_sum)
+    kw_vector.add_keywords("F*")
+
+    dtime = datetime.datetime(2010, 6, 1, 0, 0, 0)
+    out_path = "dump.csv"
+    with copen(out_path, "w") as out_handle:
+        rd_sum.dump_csv_line(dtime, kw_vector, out_handle)
+
+    assert os.path.isfile(out_path)
+    assert os.path.getsize(out_path) > 0
 
 
 @equinor_test()
