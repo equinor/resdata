@@ -265,6 +265,7 @@ def test_report_list(tmpdir):
                 rd_file.restart_get_kw("SEQNUM", datetime.datetime(2000, 1, 1)).name
                 == "SEQNUM"
             )
+            assert rd_file.report_steps == [10]
             assert rd_file.iget_restart_sim_time(0) == datetime.datetime(2000, 1, 1)
             assert rd_file.iget_restart_sim_days(1) == 0.0
             with openFortIO("TEST2.UNRST", FortIO.WRITE_MODE) as fortio:
