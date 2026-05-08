@@ -1,5 +1,7 @@
 from resdata import ResdataPrototype
+
 from .vector_template import VectorTemplate
+from .int_vector import IntVector
 
 
 class BoolVector(VectorTemplate):
@@ -146,8 +148,7 @@ class BoolVector(VectorTemplate):
 
         return bool_vector
 
-    def createActiveList(self):
-        """@rtype: resdata.util.IntVector"""
+    def createActiveList(self) -> IntVector:
         return self._active_list()
 
     def _tostr(self, arr=None):
