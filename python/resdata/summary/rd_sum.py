@@ -385,8 +385,7 @@ class Summary(BaseCClass):
             parent=self
         )
 
-    def add_t_step(self, report_step, sim_days):
-        """@rtype: SummaryTStep"""
+    def add_t_step(self, report_step, sim_days) -> SummaryTStep:
         # report_step int
         if not isinstance(report_step, int):
             raise TypeError("Parameter report_step should be int, was %r" % report_step)
@@ -1141,11 +1140,11 @@ class Summary(BaseCClass):
         """
         return key in self
 
-    def smspec_node(self, key):
+    def smspec_node(self, key) -> ResdataSMSPECNode:
         """
         Will return a ResdataSMSPECNode instance corresponding to @key.
 
-        The returned ResdataSMPECNode instance can then be used to ask for
+        The returned ResdataSMSPECNode instance can then be used to ask for
         various properties of the variable; i.e. if it is a rate
         variable, what is the unit, if it is a total variable and so
         on.
@@ -1164,7 +1163,7 @@ class Summary(BaseCClass):
         return node.unit
 
     @property
-    def unit_system(self):
+    def unit_system(self) -> UnitSystem:
         """
         Will return the unit system in use for this case.
         """
