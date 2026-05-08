@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cmath>
+#include <cinttypes>
 
 #include <vector>
 #include <unordered_map>
@@ -2303,11 +2304,24 @@ static rd_grid_type *rd_grid_alloc_GRDECL_kw__(
         const float *mapaxes_data = NULL;
         const int *corsnum_data = NULL;
 
-        if (mapaxes_kw)
+        if (mapaxes_kw) {
+            if (rd_kw_get_size(mapaxes_kw) != 6)
+                util_abort(
+                    "%s: Invalid size of MAPAXES keyword = %d, expected 6\n",
+                    __func__, rd_kw_get_size(mapaxes_kw));
             mapaxes_data = rd_grid_get_mapaxes_from_kw__(mapaxes_kw);
+        }
 
-        if (corsnum_kw)
+        if (corsnum_kw) {
+            const int64_t expected_corsnum_size = nx64 * ny64 * nz64;
+            if (expected_corsnum_size > std::numeric_limits<int>::max() ||
+                rd_kw_get_size(corsnum_kw) != expected_corsnum_size)
+                util_abort("%s: Invalid size of CORSNUM keyword = %d, expected "
+                           "nx * ny * nz = %" PRId64 "\n",
+                           __func__, rd_kw_get_size(corsnum_kw),
+                           expected_corsnum_size);
             corsnum_data = rd_kw_get_int_ptr(corsnum_kw);
+        }
 
         if (gridunit_kw)
             unit_system = rd_grid_check_unit_system(gridunit_kw);
