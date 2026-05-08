@@ -159,9 +159,7 @@ class GeometryTools(object):
         ray1 = GeometryTools.lineToRay(poly_line[1], poly_line[0])
         intersection1 = GeometryTools.rayPolygonIntersections(
             p1, ray1, bounding_polygon
-        )[
-            0
-        ]  # assume convex
+        )[0]  # assume convex
 
         p2 = poly_line[-1]
         assert GeometryTools.pointInPolygon(p2, bounding_polygon)
@@ -172,9 +170,7 @@ class GeometryTools(object):
         )
         intersection2 = GeometryTools.rayPolygonIntersections(
             p2, ray2, bounding_polygon
-        )[
-            0
-        ]  # assume convex
+        )[0]  # assume convex
 
         return [intersection1[1]] + poly_line + [intersection2[1]]
 
@@ -196,17 +192,13 @@ class GeometryTools(object):
         GeometryTools.rayPolygonIntersections(p1, ray1, bounding_polygon)
         intersection1 = GeometryTools.rayPolygonIntersections(
             p1, ray1, bounding_polygon
-        )[
-            0
-        ]  # assume convex
+        )[0]  # assume convex
 
         p2 = poly_line[-1]
         ray2 = GeometryTools.lineToRay(poly_line[-2], poly_line[-1])
         intersection2 = GeometryTools.rayPolygonIntersections(
             p2, ray2, bounding_polygon
-        )[
-            0
-        ]  # assume convex
+        )[0]  # assume convex
 
         # Check for intersection between the polyline extensions on the inside of the bounadary
         internal_intersection = GeometryTools.lineIntersection(

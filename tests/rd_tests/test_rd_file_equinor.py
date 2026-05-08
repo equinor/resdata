@@ -464,6 +464,7 @@ class ResdataFileEquinorTest(ResdataTest):
 
         def padd(str_len):
             return lambda s: s + (" " * (max(0, str_len - len(s))))
+
         self.assertEqual(list(map(padd(8), keywords_from_file)), keywords_loaded)
 
         # Names

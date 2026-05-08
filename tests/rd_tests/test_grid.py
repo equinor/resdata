@@ -679,9 +679,7 @@ class GridTest(ResdataTest):
             return self.assertTrue(grid.cell_contains(p[0], p[1], p[2], 0))
 
         def assertNotPoint(p):
-            return self.assertFalse(
-                    grid.cell_contains(p[0], p[1], p[2], 0)
-                )
+            return self.assertFalse(grid.cell_contains(p[0], p[1], p[2], 0))
 
         # Cell center
         assertPoint(average(points))
@@ -741,9 +739,7 @@ class GridTest(ResdataTest):
             return self.assertTrue(grid.cell_contains(p[0], p[1], p[2], 0))
 
         def assertNotPoint(p):
-            return self.assertFalse(
-                    grid.cell_contains(p[0], p[1], p[2], 0)
-                )
+            return self.assertFalse(grid.cell_contains(p[0], p[1], p[2], 0))
 
         # Cell center
         assertPoint(average(points))

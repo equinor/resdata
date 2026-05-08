@@ -29,5 +29,5 @@ if __name__ == "__main__":
 
         # print 1-based indices just like in eclipse PRT files
         print(
-            f"({i1+1:02d},{j1+1:02d},{k1+1:02d}) -> ({i2+1:02d},{j2+1:02d},{k2+1:02d})  T:{T}"
+            f"({i1 + 1:02d},{j1 + 1:02d},{k1 + 1:02d}) -> ({i2 + 1:02d},{j2 + 1:02d},{k2 + 1:02d})  T:{T}"
         )

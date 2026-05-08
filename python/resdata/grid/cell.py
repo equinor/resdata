@@ -102,8 +102,10 @@ class Cell(object):
          |   |           |   |
          0---1           4---5
         """
+
         def cs(c):
             return self._grid.get_cell_corner(c, global_index=self._idx)
+
         return [cs(i) for i in range(8)]
 
     def __repr__(self):

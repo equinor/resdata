@@ -36,3 +36,4 @@ jobs:
     - name: ruff
       run: |
         ruff check
+        ruff format --check

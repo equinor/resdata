@@ -33,7 +33,6 @@ from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
 from resdata.util.util import monkey_the_camel
 
 
-
 def dump_type_deprecation_warning():
     warnings.warn(
         "ResdataTypeEnum is deprecated. You should instead provide an ResDataType",
