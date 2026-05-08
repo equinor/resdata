@@ -2217,14 +2217,26 @@ static rd_grid_ptr rd_grid_alloc_GRDECL_kw__(
             "grid",
             gtype));
 
-    const float *mapaxes = NULL;
-    const int *corsnum = NULL;
-
-    if (mapaxes_kw)
+    const float *mapaxes = nullptr;
+    if (mapaxes_kw) {
+        if (rd_kw_get_size(mapaxes_kw) != 6)
+            throw std::invalid_argument(
+                fmt::format("Invalid size of MAPAXES keyword = {}, expected 6",
+                            rd_kw_get_size(mapaxes_kw)));
         mapaxes = rd_grid_get_mapaxes_from_kw__(mapaxes_kw);
+    }
 
-    if (corsnum_kw)
+    const int *corsnum = nullptr;
+    if (corsnum_kw) {
+        const int64_t expected_corsnum_size = nx64 * ny64 * nz64;
+        if (expected_corsnum_size > std::numeric_limits<int>::max() ||
+            rd_kw_get_size(corsnum_kw) != expected_corsnum_size)
+            throw std::invalid_argument(
+                fmt::format("Invalid size of CORSNUM keyword = {}, expected "
+                            "nx * ny * nz = {}",
+                            rd_kw_get_size(corsnum_kw), expected_corsnum_size));
         corsnum = rd_kw_get_int_ptr(corsnum_kw);
+    }
 
     if (gridunit_kw)
         unit_system = rd_grid_check_unit_system(gridunit_kw);

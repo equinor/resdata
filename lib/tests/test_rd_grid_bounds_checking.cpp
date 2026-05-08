@@ -48,3 +48,52 @@ TEST_CASE_METHOD(Tmpdir, "Large nncg raises") {
 
     REQUIRE_THROWS(read_grid(filename));
 }
+
+namespace {
+
+void write_egrid_with_sized_mapaxes(const fs::path &filename, int nx, int ny,
+                                    int nz, int mapaxes_size) {
+    auto grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
+    auto fortio = make_fortio_writer(filename);
+
+    write_egrid_filehead(fortio);
+    std::vector<float> mapaxes(mapaxes_size, 0.0f);
+    write_float_kw(fortio.get(), MAPAXES_KW, mapaxes.data(), mapaxes_size);
+    write_egrid_gridhead(fortio, nx, ny, nz, 0);
+    write_egrid_grid_body(grid.get(), fortio);
+    write_empty_kw(fortio, ENDGRID_KW);
+}
+
+void write_egrid_with_sized_corsnum(const fs::path &filename, int nx, int ny,
+                                    int nz, int corsnum_size) {
+    auto grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
+    auto fortio = make_fortio_writer(filename);
+
+    write_egrid_filehead(fortio);
+    write_egrid_gridhead(fortio, nx, ny, nz, 0);
+    write_egrid_grid_body(grid.get(), fortio);
+    std::vector<int> corsnum(corsnum_size, 0);
+    write_int_kw(fortio.get(), CORSNUM_KW, corsnum.data(), corsnum_size);
+    write_empty_kw(fortio, ENDGRID_KW);
+}
+
+} // namespace
+
+TEST_CASE_METHOD(Tmpdir, "Wrong size MAPAXES raises for EGRID") {
+    auto filename = dirname / "BAD_MAPAXES.EGRID";
+    int bad_size = 7;
+    write_egrid_with_sized_mapaxes(filename, 2, 2, 2, bad_size);
+
+    REQUIRE_THROWS_WITH(read_grid(filename),
+                        Catch::Matchers::Contains("MAPAXES"));
+}
+
+TEST_CASE_METHOD(Tmpdir, "Wrong size CORSNUM raises for EGRID") {
+    auto filename = dirname / "BAD_CORSNUM.EGRID";
+    const int nx = 2, ny = 2, nz = 2;
+    int bad_size = 7;
+    write_egrid_with_sized_corsnum(filename, nx, ny, nz, bad_size);
+
+    REQUIRE_THROWS_WITH(read_grid(filename),
+                        Catch::Matchers::Contains("CORSNUM"));
+}
