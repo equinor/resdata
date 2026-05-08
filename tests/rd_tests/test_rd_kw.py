@@ -1170,7 +1170,10 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw += actual_delta
         model_values += delta
 
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(delta), np.max(np.abs(model_values)))
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(data=st.data(), kw=numeric_kws)
     def isub_scalar(self, data, kw):
@@ -1180,7 +1183,10 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw -= actual_delta
         model_values -= delta
 
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(data=st.data(), kw=numeric_kws)
     def imul_scalar(self, data, kw):
@@ -1190,7 +1196,10 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw *= actual_factor
         model_values *= factor
 
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(factor), np.max(abs(model_values)))
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(kw1=numeric_kws, kw2=numeric_kws)
     def isub(self, kw1, kw2):
