@@ -1,7 +1,7 @@
 import numpy as np
 
 from resdata.util.util import monkey_the_camel
-from resdata.geometry import Polyline, CPolyline, GeometryTools
+from resdata.geometry import CPolyline, GeometryTools
 
 from .fault_line import FaultLine
 from .fault_segments import FaultSegment, SegmentMap
@@ -196,7 +196,7 @@ class Fault(object):
         return FaultSegment(C1, C2)
 
     def add_record(self, I1, I2, J1, J2, K1, K2, face):
-        if not face in Fault.allowed_faces:
+        if face not in Fault.allowed_faces:
             raise ValueError("Invalid face:%s" % face)
 
         if I1 > I2:

@@ -22,7 +22,7 @@ test = [
   "pandas",
 ]
 types = ["mypy", "types-six"]
-format = ["cmake-format", "clang-format", "black"]
+format = ["cmake-format", "clang-format", "ruff"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
@@ -43,3 +43,129 @@ before-all = "brew install zlib"
 before-build = "rm -rf {package}/_skbuild"
 test-groups = ["test"]
 test-command = "pytest {package}/tests"
+
+[tool.ruff.lint]
+select = [
+    "A",     # flake8-builtins
+    "E",     # pycodestyle
+    "W",     # pycodestyle
+    "I",     # isort
+    "B",     # flake-8-bugbear
+    "G",     # logging-format
+    "LOG",   # logging
+    "SIM",   # flake-8-simplify
+    "F",     # pyflakes
+    "FURB",  # refurb
+    "PL",    # pylint
+    "NPY",   # numpy specific rules
+    "C4",    # flake8-comprehensions
+    "ASYNC", # flake8-async
+    "RUF",   # ruff specific rules
+    "UP",    # pyupgrade
+    "ICN",   # flake8-import-conventions
+    "PIE",   # flake8-pie
+    "TRY203",
+    "TRY300",
+]
+ignore = [
+  "A001",
+  "A002",
+  "A004",
+  "B006",
+  "B007",
+  "B011",
+  "B015",
+  "B017",
+  "B018",
+  "B020",
+  "B028",
+  "B904",
+  "B905",
+  "C401",
+  "C405",
+  "C408",
+  "C416",
+  "E402",
+  "E501",
+  "E721",
+  "E722",
+  "E741",
+  "F401",
+  "F403",
+  "F821",
+  "G004",
+  "FURB110",
+  "FURB122",
+  "FURB129",
+  "FURB168",
+  "I001",
+  "PIE790",
+  "PIE808",
+  "PLC0206",
+  "PLC0415",
+  "PLE0302",
+  "PLR0124",
+  "PLR0402",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "PLR1704",
+  "PLR1714",
+  "PLR1722",
+  "PLR1730",
+  "PLR1736",
+  "PLR2004",
+  "PLR2044",
+  "PLR5501",
+  "PLW0120",
+  "PLW0127",
+  "PLW0602",
+  "PLW0603",
+  "PLW1510",
+  "PLW1641",
+  "PLW2901",
+  "RUF005",
+  "RUF010",
+  "RUF012",
+  "RUF015",
+  "RUF059",
+  "RUF064",
+  "RUF100",
+  "SIM101",
+  "SIM102",
+  "SIM103",
+  "SIM105",
+  "SIM108",
+  "SIM109",
+  "SIM110",
+  "SIM113",
+  "SIM114",
+  "SIM115",
+  "SIM117",
+  "SIM118",
+  "SIM201",
+  "SIM210",
+  "SIM300",
+  "TRY300",
+  "UP003",
+  "UP004",
+  "UP006",
+  "UP007",
+  "UP008",
+  "UP015",
+  "UP024",
+  "UP028",
+  "UP031",
+  "UP032",
+  "UP034",
+  "UP035",
+  "UP045",
+  "W291",
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/*" = [
+    "F841", # unused variable
+    "B008",
+]

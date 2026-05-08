@@ -5,7 +5,6 @@ import os.path
 import pytest
 import shutil
 import stat
-import datetime
 
 import cwrap
 

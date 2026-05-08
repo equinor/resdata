@@ -231,7 +231,7 @@ class ResdataFile(BaseCClass):
         self.close()
 
     def block_view(self, kw, kw_index):
-        if not kw in self:
+        if kw not in self:
             raise KeyError('No such keyword "%s".' % kw)
         ls = self.global_view.num_keywords(kw)
         idx = kw_index
@@ -424,7 +424,6 @@ class ResdataFile(BaseCClass):
         keywords and the method will simply return an empty list.
         """
         steps = []
-        seqnum_list = self["SEQNUM"]
         for kw in self["SEQNUM"]:
             steps.append(kw[0])
         return steps

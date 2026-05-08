@@ -198,7 +198,7 @@ class FaultTest(ResdataTest):
         fl.try_append(S1)
         fl.try_append(S2)
         S3 = FaultSegment(40, 30)
-        self.assertTrue(fl.try_append(S3) == False)
+        self.assertTrue(not fl.try_append(S3))
         self.assertEqual(len(fl), 2)
 
         pl = fl.get_polyline()

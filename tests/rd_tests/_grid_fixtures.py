@@ -401,7 +401,6 @@ def write_egrid_dual_porosity(
 ) -> None:
     """Write a dual-porosity EGRID. ACTNUM uses CELL_ACTIVE_MATRIX/FRACTURE bits."""
     grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0)
-    size = nx * ny * nz
 
     with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
         _write_filehead(f, FILEHEAD_DUAL_POROSITY)

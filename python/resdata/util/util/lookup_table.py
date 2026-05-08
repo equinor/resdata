@@ -31,10 +31,10 @@ class LookupTable(BaseCClass):
     def __init__(self, lower_limit=None, upper_limit=None):
         super(LookupTable, self).__init__(self._alloc())
 
-        if not lower_limit is None:
+        if lower_limit is not None:
             self.setLowerLimit(lower_limit)
 
-        if not upper_limit is None:
+        if upper_limit is not None:
             self.setUpperLimit(upper_limit)
 
     def getMaxValue(self):

@@ -1,4 +1,3 @@
-import os
 import re
 from typing_extensions import deprecated
 
