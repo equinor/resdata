@@ -85,7 +85,7 @@ class CTime(BaseCValue):
             return self.value() == other.value()
         elif isinstance(other, (int, datetime.datetime, datetime.date)):
             return self == CTime(other)
-        elif isinstance(other, type(None)):
+        elif other is None:
             return False
         else:
             raise TypeError("CTime does not support type: %s" % other.__class__)
