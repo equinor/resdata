@@ -1,5 +1,5 @@
 from resdata import ResdataPrototype
-from resdata.util.util import VectorTemplate
+from .vector_template import VectorTemplate
 
 
 class BoolVector(VectorTemplate):
