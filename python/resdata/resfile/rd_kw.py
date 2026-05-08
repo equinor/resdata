@@ -25,12 +25,13 @@ the resdata library.
 
 import ctypes
 import warnings
-from typing_extensions import deprecated
+from typing_extensions import deprecated, Self
 
 import numpy as np
 from cwrap import CFILE, BaseCClass
 from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
 from resdata.util.util import monkey_the_camel
+import resdata.resfile._kw as _kw
 
 
 def dump_type_deprecation_warning():
@@ -100,10 +101,6 @@ class ResdataKW(BaseCClass):
     )
     _fread_alloc = ResdataPrototype(
         "rd_kw_obj rd_kw_fread_alloc(rd_fortio)", bind=False
-    )
-    _load_grdecl = ResdataPrototype(
-        "rd_kw_obj rd_kw_fscanf_alloc_grdecl_dynamic_python(FILE, char*, bool, rd_data_type)",
-        bind=False,
     )
     _fseek_grdecl = ResdataPrototype(
         "bool     rd_kw_grdecl_fseek_kw(char*, bool, FILE)", bind=False
@@ -240,7 +237,13 @@ class ResdataKW(BaseCClass):
         return self._copyc()
 
     @classmethod
-    def read_grdecl(cls, fileH, kw, strict=True, rd_type=None):
+    def read_grdecl(
+        cls,
+        fileH,
+        kw: str | None,
+        strict: bool = True,
+        rd_type: ResDataType | None = None,
+    ) -> Self:
         """
         Function to load an ResdataKW instance from a grdecl formatted filehandle.
 
@@ -336,6 +339,10 @@ class ResdataKW(BaseCClass):
             )
 
         return cls._load_grdecl(cfile, kw, strict, rd_type)
+
+    @classmethod
+    def _load_grdecl(cls, cfile, kw, strict, rd_type):
+        return cls.createPythonObject(_kw._load_grdecl(cfile, kw, strict, rd_type))
 
     @classmethod
     def fseek_grdecl(cls, fileH, kw, rewind=False):

@@ -86,16 +86,6 @@ bool rd_type_is_string_python(const rd_data_type *rd_type) {
     return rd_type_is_string(*rd_type);
 }
 
-/**
- *
- * Functions for the ResdataKw prototype
- *
- */
-rd_kw_type *rd_kw_fscanf_alloc_grdecl_dynamic_python(
-    FILE *stream, const char *kw, bool strict, const rd_data_type *data_type) {
-    return rd_kw_fscanf_alloc_grdecl_dynamic__(stream, kw, strict, *data_type);
-}
-
 rd_kw_type *rd_kw_alloc_python(const char *header, int size,
                                const rd_data_type *data_type) {
     return rd_kw_alloc(header, size, *data_type);

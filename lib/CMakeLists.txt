@@ -187,6 +187,32 @@ set_target_properties(
   _grid PROPERTIES LIBRARY_OUTPUT_DIRECTORY
                    ${PROJECT_SOURCE_DIR}/python/resdata/grid)
 
+# -----------------------------------------------------------------
+# Pybind11 extension module: resdata.resfile._kw
+# -----------------------------------------------------------------
+pybind11_add_module(_kw resdata/rd_kw_pybind.cpp)
+target_link_libraries(_kw PRIVATE resdata fmt::fmt)
+target_include_directories(_kw PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                       ${CMAKE_CURRENT_BINARY_DIR}/include)
+if(SKBUILD)
+  set(_kw_install_dir "python/resdata/resfile")
+  # libresdata.so.6 is installed at python/resdata/.libs/ make _kw.so find it
+  if(APPLE)
+    set_target_properties(_kw PROPERTIES INSTALL_RPATH "@loader_path/../.libs")
+  else()
+    set_target_properties(_kw PROPERTIES INSTALL_RPATH "$ORIGIN/../.libs")
+  endif()
+else()
+  set(_kw_install_dir "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(TARGETS _kw LIBRARY DESTINATION ${_kw_install_dir})
+# When running tests against the build tree (editable install), put the
+# extension directly next to rd_kw.py so it can be imported as
+# resdata.resfile._kw without an install step.
+set_target_properties(
+  _kw PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                 ${PROJECT_SOURCE_DIR}/python/resdata/resfile)
+
 if(NOT BUILD_TESTS)
   return()
 endif()
