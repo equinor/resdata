@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
-
 from cwrap import open as copen
 
 import time

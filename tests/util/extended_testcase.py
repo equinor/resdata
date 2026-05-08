@@ -4,10 +4,7 @@ import os.path
 import traceback
 import sys
 
-try:
-    from unittest2 import TestCase
-except ImportError:
-    from unittest import TestCase
+from unittest import TestCase
 
 from .source_enumerator import SourceEnumerator
 from resdata.util.util import installAbortSignals

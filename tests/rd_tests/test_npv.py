@@ -6,11 +6,6 @@ import warnings
 
 from tests.util.mock import createSummary
 
-try:
-    from unittest2 import skipIf, skipUnless, skipIf
-except ImportError:
-    from unittest import skipIf, skipUnless, skipIf
-
 from resdata.summary import Summary
 from resdata.summary import ResdataNPV, NPVPriceVector
 from resdata.util.util import StringList, TimeVector, DoubleVector, CTime

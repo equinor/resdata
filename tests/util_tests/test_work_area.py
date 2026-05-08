@@ -1,11 +1,5 @@
-#!/usr/bin/env python
 import os.path
 import os
-
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
 
 from tests import ResdataTest
 from tests.util import TestAreaContext

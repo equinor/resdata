@@ -1,10 +1,6 @@
-#!/usr/bin/env python
 import math
 
-try:
-    from unittest2 import skipIf
-except ImportError:
-    from unittest import skipIf
+from unittest import skipIf
 
 from cwrap import Prototype
 from cwrap import open as copen
