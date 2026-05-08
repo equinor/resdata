@@ -53,5 +53,4 @@ class XYZIo:
         @type polyline: Polyline or list of tuple of (float, float)
         """
         with open(filename, "w") as fileH:
-            for p in polyline:
-                fileH.write("%g %g\n" % (p[0], p[1]))
+            fileH.writelines("%g %g\n" % (p[0], p[1]) for p in polyline)
