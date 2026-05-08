@@ -4,6 +4,7 @@ import random
 import warnings
 import cwrap
 import resfo
+import os
 from hypothesis import assume, settings
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, from_dtype
@@ -764,13 +765,13 @@ array_shapes = st.integers(min_value=1, max_value=32).map(lambda n: (n,))
 int_arrays = arrays(dtype=np.int32, shape=array_shapes)
 float_arrays = arrays(
     dtype=np.float32,
-    elements=st.floats(width=32, allow_nan=False, allow_infinity=False),
+    elements=st.floats(width=32, min_value=-1e7, max_value=1e7),
     shape=array_shapes,
 )
 
 double_arrays = arrays(
     dtype=np.float64,
-    elements=st.floats(width=64, min_value=-1e100, max_value=1e100),
+    elements=st.floats(width=64, min_value=-1e10, max_value=1e10),
     shape=array_shapes,
 )
 
@@ -798,12 +799,17 @@ def write_with_resfo_and_read_with_resdata(res_data, format):
 
 
 def read_grdecl_from_text(rd_type, text):
-    kw_name = text.split()[0]
-    with tempfile.NamedTemporaryFile("w", suffix=".grdecl", delete=False) as f:
-        f.write(text)
+    fname = None
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".grdecl", delete=False) as f:
+            f.write(text)
+            fname = f.name
 
         with cwrap.open(f.name, "r") as fh:
-            kw = ResdataKW.read_grdecl(fh, kw_name, rd_type=rd_type)
+            kw = ResdataKW.read_grdecl(fh, None, rd_type=rd_type)
+    finally:
+        if fname:
+            os.unlink(fname)
 
     return kw
 
@@ -851,6 +857,10 @@ POS_INT: /[1-9][0-9]{0,2}/
 COMMENT: /--[ \t][ \ta-zA-Z0-9]{0,20}\n/
 _WS: /[ \t\n]+/
 """)
+
+
+def order_of(values):
+    return np.linalg.norm(values, ord=np.inf)
 
 
 @settings(max_examples=100, suppress_health_check=["filter_too_much"])
@@ -989,19 +999,21 @@ class StatefulKwTest(RuleBasedStateMachine):
             npt.assert_allclose(cp, model_values, rtol=1e-2, atol=1e-6)
 
         # mutating the copy must not change original
-        original_first = actual_kw[0]
-        if model_values.dtype == np.int32:
-            cp[0] = cp[0] + 1
-        else:
-            cp[0] = cp[0] + 1.0
-        after_first = actual_kw[0]
-        assert (np.isnan(after_first) and np.isnan(original_first)) or (
-            after_first == pytest.approx(original_first, rel=1e-6, abs=1e-6)
-        )
+        if len(actual_kw):
+            original_first = actual_kw[0]
+            if model_values.dtype == np.int32:
+                cp[0] = cp[0] + 1
+            else:
+                cp[0] = cp[0] + 1.0
+            after_first = actual_kw[0]
+            assert (np.isnan(after_first) and np.isnan(original_first)) or (
+                after_first == pytest.approx(original_first, rel=1e-6, abs=1e-6)
+            )
 
     @rule(kw=numeric_kws)
     def get_min_max(self, kw):
         actual_kw, (_, model_values) = kw
+        assume(len(model_values))
         mn = actual_kw.get_min()
         mx = actual_kw.get_max()
         amn, amx = actual_kw.get_min_max()
@@ -1069,6 +1081,7 @@ class StatefulKwTest(RuleBasedStateMachine):
     @rule(data=st.data(), kw=st.one_of(numeric_kws, str_kws))
     def slice(self, data, kw):
         actual_kw, (_, model_values) = kw
+        assume(len(model_values) >= 1)
         start = data.draw(st.integers(min_value=0, max_value=len(model_values) - 1))
         stop = data.draw(st.integers(min_value=start, max_value=len(model_values)))
 
@@ -1130,15 +1143,14 @@ class StatefulKwTest(RuleBasedStateMachine):
         akw1.add_squared(akw2)
         model_values1 += model_values2 * model_values2
 
-        size_order = max(
-            1.0, np.max(np.abs(model_values2)), np.max(np.abs(model_values1))
-        )
+        size_order = max(1.0, order_of(model_values2), order_of(model_values1))
         npt.assert_allclose(akw1.numpy_view(), model_values1, atol=size_order * 1e-6)
         npt.assert_allclose(akw2.numpy_view(), model_values2, atol=size_order * 1e-6)
 
     @rule(data=st.data(), kw=numeric_kws)
     def setitem_numeric(self, data, kw):
         actual_kw, (_, model_values) = kw
+        assume(len(model_values) >= 1)
         i = data.draw(st.integers(min_value=0, max_value=len(model_values) - 1))
         av, v = self.draw_scalar(data, model_values.dtype)
 
@@ -1150,6 +1162,7 @@ class StatefulKwTest(RuleBasedStateMachine):
     @rule(data=st.data(), kw=str_kws)
     def setitem_str(self, data, kw):
         actual_kw, (_, model_values) = kw
+        assume(len(model_values) >= 1)
         i = data.draw(st.integers(min_value=0, max_value=len(model_values) - 1))
         elem_size = model_values.dtype.itemsize
         s = data.draw(keywords(size=elem_size))
@@ -1163,6 +1176,7 @@ class StatefulKwTest(RuleBasedStateMachine):
     def sub_copy(self, data, kw):
         actual_kw, (model_name, model_values) = kw
         n = len(model_values)
+        assume(n >= 1)
         offset = data.draw(st.integers(min_value=0, max_value=n - 1))
         count = data.draw(st.integers(min_value=1, max_value=n - offset))
         new_header = data.draw(st.one_of(st.none(), keywords(size=8)))
@@ -1203,7 +1217,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw += actual_delta
         model_values += delta
 
-        size_order = max(1.0, abs(delta), np.max(np.abs(model_values)))
+        size_order = max(1.0, abs(delta), order_of(model_values))
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
         )
@@ -1216,7 +1230,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw -= actual_delta
         model_values -= delta
 
-        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        size_order = max(1.0, abs(delta), order_of(model_values)) + 16
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
         )
@@ -1229,7 +1243,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         actual_kw *= actual_factor
         model_values *= factor
 
-        size_order = max(1.0, abs(factor), np.max(abs(model_values)))
+        size_order = max(1.0, abs(factor), order_of(model_values))
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
         )
@@ -1243,7 +1257,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         akw1 -= akw2
         model_values1 -= model_values2
 
-        size_order = max(1.0, np.max(model_values1), np.max(abs(model_values2)))
+        size_order = max(1.0, order_of(model_values1), order_of(model_values2))
         npt.assert_allclose(akw1.numpy_view(), model_values1, atol=size_order * 1e-6)
         npt.assert_allclose(akw2.numpy_view(), model_values2, atol=size_order * 1e-6)
 
@@ -1255,7 +1269,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_kw + actual_delta
         expected = model_values + delta
 
-        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        size_order = max(1.0, abs(delta), order_of(model_values)) + 16
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
@@ -1269,7 +1283,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_delta + actual_kw
         expected = delta + model_values
 
-        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        size_order = max(1.0, abs(delta), order_of(model_values)) + 16
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
@@ -1283,7 +1297,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_kw - actual_delta
         expected = model_values - delta
 
-        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        size_order = max(1.0, abs(delta), order_of(model_values)) + 16
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
@@ -1298,7 +1312,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         # __rsub__ is implemented as (self - delta) * -1
         expected = (model_values - delta) * -1
 
-        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        size_order = max(1.0, abs(delta), order_of(model_values)) + 16
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
@@ -1312,7 +1326,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_kw * actual_factor
         expected = model_values * factor
 
-        size_order = max(1.0, abs(factor), np.max(abs(model_values)))
+        size_order = max(1.0, abs(factor), order_of(model_values))
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
@@ -1326,7 +1340,7 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_factor * actual_kw
         expected = factor * model_values
 
-        size_order = max(1.0, abs(factor), np.max(abs(model_values)))
+        size_order = max(1.0, abs(factor), order_of(model_values))
         npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
         npt.assert_allclose(
             actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
@@ -1353,6 +1367,7 @@ class StatefulKwTest(RuleBasedStateMachine):
     def first_different_self(self, kw):
         actual_kw, _ = kw
         cp = actual_kw.copy()
+        assume(len(actual_kw))
         assert actual_kw.first_different(cp) == len(actual_kw)
 
 

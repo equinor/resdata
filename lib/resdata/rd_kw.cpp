@@ -2360,6 +2360,9 @@ void rd_kw_max_min(const rd_kw_type *rd_kw, void *_max, void *_min) {
 #define RD_KW_MAX_MIN(ctype)                                                   \
     void rd_kw_max_min_##ctype(const rd_kw_type *rd_kw, ctype *_max,           \
                                ctype *_min) {                                  \
+        if (rd_kw->size < 1)                                                   \
+            util_abort("%s: size of zero length array is undefined \n",        \
+                       __func__);                                              \
         KW_MAX_MIN(ctype);                                                     \
     }
 
