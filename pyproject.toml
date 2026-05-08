@@ -47,25 +47,25 @@ test-command = "pytest {package}/tests"
 [tool.ruff.lint]
 select = [
     "A",     # flake8-builtins
-    "E",     # pycodestyle
-    "W",     # pycodestyle
-    "I",     # isort
+    "ASYNC", # flake8-async
     "B",     # flake-8-bugbear
-    "G",     # logging-format
-    "LOG",   # logging
-    "SIM",   # flake-8-simplify
+    "C4",    # flake8-comprehensions
+    "E",     # pycodestyle
     "F",     # pyflakes
     "FURB",  # refurb
-    "PL",    # pylint
-    "NPY",   # numpy specific rules
-    "C4",    # flake8-comprehensions
-    "ASYNC", # flake8-async
-    "RUF",   # ruff specific rules
-    "UP",    # pyupgrade
+    "G",     # logging-format
+    "I",     # isort
     "ICN",   # flake8-import-conventions
+    "LOG",   # logging
+    "NPY",   # numpy specific rules
     "PIE",   # flake8-pie
+    "PL",    # pylint
+    "RUF",   # ruff specific rules
+    "SIM",   # flake-8-simplify
     "TRY203",
     "TRY300",
+    "UP",    # pyupgrade
+    "W",     # pycodestyle
 ]
 ignore = [
   "A001",
@@ -93,11 +93,11 @@ ignore = [
   "F401",
   "F403",
   "F821",
-  "G004",
   "FURB110",
   "FURB122",
   "FURB129",
   "FURB168",
+  "G004",
   "I001",
   "PIE790",
   "PIE808",
