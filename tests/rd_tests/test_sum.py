@@ -279,7 +279,7 @@ class SumTest(ResdataTest):
             self.assertTrue(os.path.isfile("file.csv"))
             with open("file.csv") as f:
                 time_index = -1
-                for line in f.readlines():
+                for line in f:
                     tmp = line.split(sep)
                     self.assertEqual(len(tmp), 4)
 

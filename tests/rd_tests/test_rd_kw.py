@@ -217,7 +217,7 @@ class KWTest(ResdataTest):
 
             data = []
             with open("test") as fileH:
-                for line in fileH.readlines():
+                for line in fileH:
                     tmp = line.split()
                     for elm in tmp:
                         data.append(int(elm))

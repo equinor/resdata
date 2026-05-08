@@ -17,7 +17,7 @@ class FKTest(ResdataTest):
 
             # Load well data
             with open(well_file) as f:
-                lines = [line.split() for line in f.readlines()]
+                lines = [line.split() for line in f]
 
             points = [map(float, line[:3:]) for line in lines]
             exp_cells = [tuple(map(int, line[3::])) for line in lines]
