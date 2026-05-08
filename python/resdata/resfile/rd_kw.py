@@ -29,10 +29,9 @@ from typing_extensions import deprecated
 
 import numpy as np
 from cwrap import CFILE, BaseCClass
-from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum, ResdataUtil
+from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
 from resdata.util.util import monkey_the_camel
 
-from .fortio import FortIO
 
 
 def dump_type_deprecation_warning():
@@ -331,7 +330,7 @@ class ResdataKW(BaseCClass):
         if not isinstance(rd_type, ResDataType):
             raise TypeError("Expected ResDataType, was: %s" % type(rd_type))
 
-        if not rd_type in [ResDataType.RD_FLOAT, ResDataType.RD_INT]:
+        if rd_type not in [ResDataType.RD_FLOAT, ResDataType.RD_INT]:
             raise ValueError(
                 "The type:%s is invalid when loading keyword:%s"
                 % (rd_type.type_name, kw)
@@ -1009,7 +1008,7 @@ class ResdataKW(BaseCClass):
     @deprecated("array is deprecated and will be removed in version 7.")
     def array(self):
         a = self.data_ptr
-        if not a == None:
+        if a is not None:
             a.size = len(self)
             a.__parent__ = self  # Inhibit GC
         return a

@@ -43,7 +43,7 @@ class ResdataFileView(BaseCClass):
         return "ResdataFileView(size=%d) %s" % (len(self), self._ad_str())
 
     def iget_named_kw(self, kw_name, index):
-        if not kw_name in self:
+        if kw_name not in self:
             raise KeyError("No such keyword: %s" % kw_name)
 
         if index >= self.num_keywords(kw_name):
@@ -131,7 +131,7 @@ class ResdataFileView(BaseCClass):
     def block_view2(self, start_kw, stop_kw, start_index):
         idx = start_index
         if start_kw:
-            if not start_kw in self:
+            if start_kw not in self:
                 raise KeyError("The keyword:%s is not in file" % start_kw)
 
             ls = self.num_keywords(start_kw)
@@ -143,7 +143,7 @@ class ResdataFileView(BaseCClass):
                 )
 
         if stop_kw:
-            if not stop_kw in self:
+            if stop_kw not in self:
                 raise KeyError("The keyword:%s is not in file" % stop_kw)
 
         view = self._create_block_view2(start_kw, stop_kw, idx)

@@ -1,4 +1,3 @@
-import sys
 from os.path import isfile
 from collections import namedtuple
 

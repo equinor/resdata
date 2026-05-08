@@ -54,7 +54,7 @@ class WellInfo(BaseCClass):
 
     def __getitem__(self, item: int | str) -> WellTimeLine:
         if isinstance(item, str):
-            if not item in self:
+            if item not in self:
                 raise KeyError("The well '%s' is not in this set." % item)
             well_name = item
 

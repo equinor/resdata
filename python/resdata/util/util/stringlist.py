@@ -160,7 +160,7 @@ class StringList(BaseCClass):
         if isinstance(other, str):
             raise TypeError("Can not | with string.")
         for s in other:
-            if not s in self:
+            if s not in self:
                 self.append(s)
         return self
 

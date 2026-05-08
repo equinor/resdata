@@ -25,7 +25,7 @@ class ResdataRestartHead(BaseCClass):
                 "Cannot construct ResdataRestartHead without one of kw_arg and rst_view, both were None!"
             )
 
-        if not kw_arg is None:
+        if kw_arg is not None:
             report_step, intehead_kw, doubhead_kw, logihead_kw = kw_arg
             c_ptr = self._alloc_from_kw(
                 report_step, intehead_kw, doubhead_kw, logihead_kw
@@ -68,7 +68,7 @@ class ResdataRestartFile(Resdata3DFile):
         """
 
         file_type, report_step, fmt_file = ResdataFile.get_filetype(filename)
-        if not file_type in [
+        if file_type not in [
             FileType.RESTART,
             FileType.UNIFIED_RESTART,
         ]:

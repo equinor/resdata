@@ -16,7 +16,7 @@ class ResdataUtilTest(ResdataTest):
         assert file_type == FileType.RESTART
         file_type, fmt, report = ResdataUtil.inspect_extension("CASE.UNRST")
         assert file_type == FileType.UNIFIED_RESTART
-        assert report == None
+        assert report is None
         assert ResdataUtil.get_file_type("CASE.UNRST") == FileType.UNIFIED_RESTART
 
     def test_file_report_nr(self):
@@ -39,7 +39,7 @@ def test_num_cpu_from_data_file(tmp_path):
 
 def test_get_start_date_reads_from_start_kw_in_data_file(tmp_path):
     data_file = tmp_path / "dfile"
-    data_file.write_text(dedent(f"""\
+    data_file.write_text(dedent("""\
             START
             4 Apr 2024 /
             """))

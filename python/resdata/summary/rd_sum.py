@@ -6,7 +6,6 @@ in the C source files rd_sum.c, rd_smspec.c and rd_sum_data in the
 resdata/src directory.
 """
 
-import warnings
 import numpy as np
 import datetime
 import os.path
@@ -787,7 +786,7 @@ class Summary(BaseCClass):
         The alternative method 'last' will return a SummaryNode
         instance with some extra time related information.
         """
-        if not key in self:
+        if key not in self:
             raise KeyError("No such key:%s" % key)
 
         return self._get_last_value(key)
@@ -796,7 +795,7 @@ class Summary(BaseCClass):
         """
         Will return first value corresponding to @key.
         """
-        if not key in self:
+        if key not in self:
             raise KeyError("No such key:%s" % key)
 
         return self._get_first_value(key)
@@ -864,7 +863,7 @@ class Summary(BaseCClass):
             return False
 
     def assert_key_valid(self, key):
-        if not key in self:
+        if key not in self:
             raise KeyError("The summary key:%s was not recognized" % key)
 
     def __iter__(self):
@@ -990,7 +989,7 @@ class Summary(BaseCClass):
         if end < start:
             raise ValueError("Invalid time interval start after end")
 
-        if not num_timestep is None:
+        if num_timestep is not None:
             return TimeVector.create_linear(CTime(start), CTime(end), num_timestep)
 
         range_start = start
@@ -1484,7 +1483,7 @@ class Summary(BaseCClass):
 
         See solve_days() for further details.
         """
-        if not key in self:
+        if key not in self:
             raise KeyError("Unrecognized key:%s" % key)
 
         if len(self) < 2:
@@ -1575,7 +1574,7 @@ class Summary(BaseCClass):
         corresponding to the arrow 'B* in the figure.
 
         """
-        if not key in self:
+        if key not in self:
             raise KeyError("Unrecognized key:%s" % key)
 
         if len(self) < 2:
@@ -1694,7 +1693,7 @@ class Summary(BaseCClass):
         return new_case
 
 
-import resdata.summary.rd_sum_keyword_vector
+import resdata.summary.rd_sum_keyword_vector  # noqa
 
 Summary._dump_csv_line = ResdataPrototype(
     "void rd_sum_fwrite_interp_csv_line(rd_sum, rd_time_t, rd_sum_vector, FILE)",

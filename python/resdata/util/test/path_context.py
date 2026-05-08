@@ -32,7 +32,7 @@ class PathContext(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.cwd)
-        if self.store == False:
+        if not self.store:
             shutil.rmtree(self.path)
             for path in self.path_list:
                 try:

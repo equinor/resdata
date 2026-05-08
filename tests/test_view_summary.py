@@ -205,7 +205,7 @@ def test_that_case_name_with_formatted_extension_does_not_match_unformatted_summ
     except BaseException:
         # will produce exit code 2
         pass
-    assert f"Could not find any summary files matching" in capsys.readouterr().err
+    assert "Could not find any summary files matching" in capsys.readouterr().err
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -220,7 +220,7 @@ def test_that_case_name_with_unformatted_extension_does_not_match_formatted_summ
     except BaseException:
         # will produce exit code 2
         pass
-    assert f"Could not find any summary files matching" in capsys.readouterr().err
+    assert "Could not find any summary files matching" in capsys.readouterr().err
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import os
 import datetime
 
-from unittest import skipIf, skipUnless, skipIf
+from unittest import skipUnless, skipIf
 
 from resdata.resfile import ResdataFile
 from resdata.summary import Summary
@@ -488,9 +488,10 @@ class SumTest(ResdataTest):
         )
         self.assertIsNotNone(eclipse_summary)
 
-        hwell_padder = lambda key: (
-            key if key.split(":")[-1] != "HWELL_PR" else key + "OD"
-        )
+        def hwell_padder(key):
+            return (
+                    key if key.split(":")[-1] != "HWELL_PR" else key + "OD"
+                )
         self.assertEqual(
             intersect_summary.keys("WWCT*"),
             list(map(hwell_padder, eclipse_summary.keys("WWCT*"))),

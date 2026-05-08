@@ -3,9 +3,7 @@ import numpy as np
 from math import sqrt
 from collections.abc import Sequence
 
-from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
 from resdata.grid import Grid
@@ -381,13 +379,15 @@ class GridGenerator:
 
     @classmethod
     def __misalign_coord(cls, coord, dims, dV):
-        nx, ny, nz = dims
+        nx, _, _ = dims
 
         coord = np.array(
             [list(map(float, coord[i : i + 6 :])) for i in range(0, len(coord), 6)]
         )
 
-        tf = lambda i, j: 1.0 / 2 if abs(i) + abs(j) <= 1 else 0.25
+        def tf(i, j):
+            return 1.0 / 2 if abs(i) + abs(j) <= 1 else 0.25
+
         adjustment = np.array(
             [
                 (0, 0, 0, i * tf(i, j) * dV[0], j * tf(i, j) * dV[1], 0)
@@ -677,10 +677,6 @@ class GridGenerator:
 
         ijk_bounds = cls.assert_ijk_bounds(dims, ijk_bounds)
         cls.assert_decomposition_change(ijk_bounds, decomposition_change)
-
-        nx, ny, nz = dims
-        (lx, ux), (ly, uy), (lz, uz) = ijk_bounds
-        new_nx, new_ny, new_nz = ux - lx + 1, uy - ly + 1, uz - lz + 1
 
         new_coord = cls.extract_coord(dims, coord, ijk_bounds)
         new_zcorn = cls.extract_zcorn(dims, zcorn, ijk_bounds)

@@ -1,7 +1,6 @@
 from cwrap import BaseCClass
 
 from resdata.util.util import monkey_the_camel
-from resdata.util.util import CTime
 from resdata import ResdataPrototype
 
 
@@ -48,13 +47,13 @@ class SummaryTStep(BaseCClass):
 
     def __getitem__(self, key):
         """@rtype: double"""
-        if not key in self:
+        if key not in self:
             raise KeyError("Key '%s' is not available." % key)
 
         return self._get_from_key(key)
 
     def __setitem__(self, key, value):
-        if not key in self:
+        if key not in self:
             raise KeyError("Key '%s' is not available." % key)
 
         self._set_from_key(key, value)

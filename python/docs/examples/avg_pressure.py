@@ -34,7 +34,7 @@ def avg_pressure(p, sw, pv, region, region_id, result):
         p2 = None
         p3 = None
 
-    if not region_id in result:
+    if region_id not in result:
         result[region_id] = [[], [], []]
 
     result[region_id][0].append(p1)

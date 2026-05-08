@@ -10,18 +10,15 @@ wrapper around the rd_grid.c implementation from the resdata library.
 
 import ctypes
 
-import warnings
 import numpy as np
 import pandas as pd
 import sys
 import os.path
 import math
-import itertools
 from collections.abc import Sequence
-from cwrap import CFILE, BaseCClass, load, open as copen
+from cwrap import CFILE, BaseCClass, open as copen
 from typing_extensions import deprecated
 
-from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
 from resdata.util.util import IntVector
 from resdata import ResDataType, UnitSystem, ResdataTypeEnum
@@ -253,7 +250,6 @@ class Grid(BaseCClass):
         if 0 <= layer <= self.get_nz():
             x = ctypes.c_double()
             y = ctypes.c_double()
-            z = ctypes.c_double()
 
             if lower_left is None:
                 i1 = 0
@@ -361,10 +357,10 @@ class Grid(BaseCClass):
         """
 
         set_count = 0
-        if not active_index is None:
+        if active_index is not None:
             set_count += 1
 
-        if not global_index is None:
+        if global_index is not None:
             set_count += 1
 
         if ijk:
@@ -375,7 +371,7 @@ class Grid(BaseCClass):
                 "Exactly one of the keyword arguments active_index, global_index or ijk must be set"
             )
 
-        if not active_index is None:
+        if active_index is not None:
             global_index = _grid._get_global_index1A(self, active_index)
         elif ijk:
             nx = self.get_nx()
@@ -1174,10 +1170,6 @@ class Grid(BaseCClass):
         This index frame should typically be passed to the epxport_data(),
         export_volume() and export_corners() functions.
         """
-        if active_only:
-            size = self.get_num_active()
-        else:
-            size = self.get_global_size()
         indx, data = _grid._export_index_frame(self, active_only)
         return pd.DataFrame(data=data, index=indx, columns=["i", "j", "k", "active"])
 

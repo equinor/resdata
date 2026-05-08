@@ -48,7 +48,7 @@ class CPolyline(BaseCClass):
             raise IOError("No such file:%s" % filename)
 
         polyline = cls._fread_alloc_irap(filename)
-        if not name is None:
+        if name is not None:
             polyline._set_name(name)
         return polyline
 

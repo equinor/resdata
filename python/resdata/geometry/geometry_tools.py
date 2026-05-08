@@ -193,7 +193,7 @@ class GeometryTools(object):
 
         p1 = poly_line[0]
         ray1 = GeometryTools.lineToRay(poly_line[1], poly_line[0])
-        tmp = GeometryTools.rayPolygonIntersections(p1, ray1, bounding_polygon)
+        GeometryTools.rayPolygonIntersections(p1, ray1, bounding_polygon)
         intersection1 = GeometryTools.rayPolygonIntersections(
             p1, ray1, bounding_polygon
         )[
@@ -433,7 +433,7 @@ class GeometryTools(object):
             if index0 < len(polyline) - 1:
                 index2 = index0 + 1
 
-            if not index1 is None:
+            if index1 is not None:
                 p1 = polyline[index1]
                 dy1 = p1[1] - p0[1]
                 dx1 = p1[0] - p0[0]
@@ -443,7 +443,7 @@ class GeometryTools(object):
                 if intercept1:
                     dist1 = GeometryTools.distance(intercept1, p)
 
-            if not index2 is None:
+            if index2 is not None:
                 p2 = polyline[index2]
                 dy2 = p2[1] - p0[1]
                 dx2 = p2[0] - p0[0]
