@@ -32,7 +32,9 @@ def test_help_string(capsys):
         parse_arguments(["summary.x", "-h"])
     assert sysexit.value.code == 0
     captured = capsys.readouterr()
-    assert captured.out == """\
+    assert (
+        captured.out
+        == """\
 usage: summary.x [-h] [--list] [--restart | --no-restart]
                  [--header | --no-header] [--report-only] [-v]
                  CASE [keys ...]
@@ -108,6 +110,7 @@ manipulate this with the extension to the basename:
 * If the extension corresponds to a unified file, summary.x will
   only look for unified files.
 """
+    )
 
 
 def test_that_giving_non_existing_case_is_invalid(tmp_path, capsys):

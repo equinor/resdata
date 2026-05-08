@@ -178,6 +178,6 @@ def test_that_pairwise_compare_distinguishes_all_representative_grids(all_grids)
             if i == j:
                 assert _grids_equal(gi, gj), f"grid {label_i} should be equal to itself"
             else:
-                assert not _grids_equal(
-                    gi, gj
-                ), f"grid {label_i} should differ from {label_j}"
+                assert not _grids_equal(gi, gj), (
+                    f"grid {label_i} should differ from {label_j}"
+                )
