@@ -1100,8 +1100,11 @@ class StatefulKwTest(RuleBasedStateMachine):
         akw1.add_squared(akw2)
         model_values1 += model_values2 * model_values2
 
-        npt.assert_allclose(akw1.numpy_view(), model_values1, rtol=1e-2, atol=1e-5)
-        npt.assert_allclose(akw2.numpy_view(), model_values2, rtol=1e-2, atol=1e-5)
+        size_order = max(
+            1.0, np.max(np.abs(model_values2)), np.max(np.abs(model_values1))
+        )
+        npt.assert_allclose(akw1.numpy_view(), model_values1, atol=size_order * 1e-6)
+        npt.assert_allclose(akw2.numpy_view(), model_values2, atol=size_order * 1e-6)
 
     @rule(data=st.data(), kw=numeric_kws)
     def setitem_numeric(self, data, kw):
@@ -1210,8 +1213,9 @@ class StatefulKwTest(RuleBasedStateMachine):
         akw1 -= akw2
         model_values1 -= model_values2
 
-        npt.assert_allclose(akw1.numpy_view(), model_values1, rtol=1e-2, atol=1e-6)
-        npt.assert_allclose(akw2.numpy_view(), model_values2, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, np.max(model_values1), np.max(abs(model_values2)))
+        npt.assert_allclose(akw1.numpy_view(), model_values1, atol=size_order * 1e-6)
+        npt.assert_allclose(akw2.numpy_view(), model_values2, atol=size_order * 1e-6)
 
     @rule(data=st.data(), kw=numeric_kws)
     def add(self, data, kw):
@@ -1221,8 +1225,11 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_kw + actual_delta
         expected = model_values + delta
 
-        npt.assert_allclose(new_kw.numpy_view(), expected, rtol=1e-2, atol=1e-6)
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(data=st.data(), kw=numeric_kws)
     def radd_returns_copy(self, data, kw):
@@ -1232,8 +1239,11 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_delta + actual_kw
         expected = delta + model_values
 
-        npt.assert_allclose(new_kw.numpy_view(), expected, rtol=1e-2, atol=1e-6)
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(data=st.data(), kw=numeric_kws)
     def sub(self, data, kw):
@@ -1243,8 +1253,11 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_kw - actual_delta
         expected = model_values - delta
 
-        npt.assert_allclose(new_kw.numpy_view(), expected, rtol=1e-2, atol=1e-6)
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(data=st.data(), kw=numeric_kws)
     def rsub(self, data, kw):
@@ -1255,8 +1268,11 @@ class StatefulKwTest(RuleBasedStateMachine):
         # __rsub__ is implemented as (self - delta) * -1
         expected = (model_values - delta) * -1
 
-        npt.assert_allclose(new_kw.numpy_view(), expected, rtol=1e-2, atol=1e-6)
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(delta), np.max(np.abs(model_values))) + 16
+        npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(data=st.data(), kw=numeric_kws)
     def mul(self, data, kw):
@@ -1266,8 +1282,11 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_kw * actual_factor
         expected = model_values * factor
 
-        npt.assert_allclose(new_kw.numpy_view(), expected, rtol=1e-2, atol=1e-6)
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(factor), np.max(abs(model_values)))
+        npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(data=st.data(), kw=numeric_kws)
     def rmul(self, data, kw):
@@ -1277,8 +1296,11 @@ class StatefulKwTest(RuleBasedStateMachine):
         new_kw = actual_factor * actual_kw
         expected = factor * model_values
 
-        npt.assert_allclose(new_kw.numpy_view(), expected, rtol=1e-2, atol=1e-6)
-        npt.assert_allclose(actual_kw.numpy_view(), model_values, rtol=1e-2, atol=1e-6)
+        size_order = max(1.0, abs(factor), np.max(abs(model_values)))
+        npt.assert_allclose(new_kw.numpy_view(), expected, atol=size_order * 1e-6)
+        npt.assert_allclose(
+            actual_kw.numpy_view(), model_values, atol=size_order * 1e-6
+        )
 
     @rule(kw=numeric_kws)
     def abs(self, kw):
