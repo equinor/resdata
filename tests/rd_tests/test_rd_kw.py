@@ -687,3 +687,20 @@ def test_get_ptr_data():
     assert ResdataKW("KW1", 10, ResDataType.RD_INT).get_data_ptr()
     assert ResdataKW("KW1", 10, ResDataType.RD_FLOAT).get_data_ptr()
     assert ResdataKW("KW1", 10, ResDataType.RD_DOUBLE).get_data_ptr()
+
+
+def _write_grdecl(tmp_path, name, body):
+    path = tmp_path / name
+    path.write_text(body)
+    return path
+
+
+def test_read_grdecl_empty_body_returns_zero_len_kw(tmp_path):
+    path = _write_grdecl(tmp_path, "empty.grdecl", "PORO\n/\n")
+    with cwrap.open(str(path), "r") as fh:
+        kw = ResdataKW.read_grdecl(fh, "PORO", rd_type=ResDataType.RD_FLOAT)
+    assert kw is not None
+    assert kw.name == "PORO"
+    assert len(kw) == 0
+    assert len(kw.numpy_view()) == 0
+    assert repr(kw).startswith('ResdataKW(size=0, name="PORO", min=nan, max=nan)')
