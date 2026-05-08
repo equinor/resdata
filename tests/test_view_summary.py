@@ -159,7 +159,7 @@ def create_summary(
         nz=2,
         restarted_from_step=0,
         num_keywords=1 + len(summary_keys),
-        restart=restart if restart else "        ",
+        restart=restart or "        ",
         keywords=["TIME    ", *summary_keys],
         well_names=(
             [":+:+:+:+", *(["A_NAME  "] * len(summary_keys))]
