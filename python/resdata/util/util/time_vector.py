@@ -2,7 +2,9 @@ import datetime
 import re
 
 from resdata import ResdataPrototype
-from resdata.util.util import VectorTemplate, CTime
+
+from .vector_template import VectorTemplate
+from .ctime import CTime
 
 
 class TimeVector(VectorTemplate):
