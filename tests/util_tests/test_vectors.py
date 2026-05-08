@@ -1,12 +1,8 @@
-#!/usr/bin/env python
 import copy
 import datetime
 import six
 
-try:
-    from unittest2 import TestCase
-except ImportError:
-    from unittest import TestCase
+from unittest import TestCase
 
 from resdata.util.util import (
     DoubleVector,
