@@ -38,16 +38,14 @@ class Hash(BaseCClass):
         else:
             raise ValueError("Hash does not support type: %s" % value.__class__)
 
-    def __contains__(self, key):
-        """@rtype: bool"""
+    def __contains__(self, key) -> bool:
         return self._has_key(key)
 
     def __iter__(self):
         for key in self.keys():
             yield key
 
-    def keys(self):
-        """@rtype: StringList"""
+    def keys(self) -> StringList:
         return self._keys()
 
     def free(self):
