@@ -47,25 +47,36 @@ test-command = "pytest {package}/tests"
 [tool.ruff.lint]
 select = [
     "A",     # flake8-builtins
+    "AIR",
     "ASYNC", # flake8-async
     "B",     # flake-8-bugbear
     "C4",    # flake8-comprehensions
+    "DJ",
     "E",     # pycodestyle
     "F",     # pyflakes
+    "FA",
+    "FAST",
+    "FLY",
     "FURB",  # refurb
     "G",     # logging-format
     "I",     # isort
     "ICN",   # flake8-import-conventions
+    "INP",
+    "INT",
     "LOG",   # logging
     "NPY",   # numpy specific rules
     "PIE",   # flake8-pie
     "PL",    # pylint
+    "Q",
     "RUF",   # ruff specific rules
     "SIM",   # flake-8-simplify
+    "SLOT",
+    "TID",
     "TRY203",
     "TRY300",
     "UP",    # pyupgrade
     "W",     # pycodestyle
+    "YTT",
 ]
 ignore = [
   "A001",
