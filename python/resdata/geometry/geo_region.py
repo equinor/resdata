@@ -51,7 +51,7 @@ class GeoRegion(BaseCClass):
                 "Could not construct GeoRegion from pointset %s." % pointset
             )
 
-    def getActiveList(self):
+    def getActiveList(self) -> IntVector:
         return self._get_index_list()
 
     def _assert_polygon(self, polygon):
