@@ -1,10 +1,13 @@
 from os.path import isfile
-from collections import namedtuple
+from typing import NamedTuple
 
-TrajectoryPoint = namedtuple(
-    "TrajectoryPoint",
-    ["utm_x", "utm_y", "measured_depth", "true_vertical_depth", "zone"],
-)
+
+class TrajectoryPoint(NamedTuple):
+    utm_x: float
+    utm_y: float
+    measured_depth: float
+    true_vertical_depth: float
+    zone: str | None
 
 
 def _read_point(line):

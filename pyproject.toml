@@ -67,6 +67,7 @@ select = [
     "NPY",   # numpy specific rules
     "PIE",   # flake8-pie
     "PL",    # pylint
+    "PYI",
     "Q",
     "RUF",   # ruff specific rules
     "SIM",   # flake-8-simplify
