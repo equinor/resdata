@@ -951,7 +951,7 @@ class ResdataRegion(BaseCClass):
         self._select_false(rd_kw)
 
     @select_method
-    def select_from_layer(self, layer, k, value, intersect=False):
+    def select_from_layer(self, layer: Layer, k, value, intersect=False):
         """Will select all the cells in in @layer with value @value - at
         vertical coordinate @k.
 
@@ -1127,7 +1127,7 @@ class ResdataRegion(BaseCClass):
     def global_size(self):
         return len(self._get_global_list())
 
-    def get_active_list(self):
+    def get_active_list(self) -> IntVector:
         """
         IntVector instance with active indices in the region.
         """
@@ -1172,7 +1172,7 @@ class ResdataRegion(BaseCClass):
         """
         return self._contains_active(active_index)
 
-    def kw_index_list(self, rd_kw, force_active):
+    def kw_index_list(self, rd_kw, force_active) -> IntVector:
         return self._get_kw_index_list(rd_kw, force_active)
 
     @property
