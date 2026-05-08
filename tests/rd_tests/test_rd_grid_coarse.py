@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from ._grid_fixtures import load_egrid_with_coarse_groups
+from resdata.grid import Grid
+
+from ._grid_fixtures import (
+    load_egrid_with_coarse_groups,
+    write_egrid_with_coarse_groups,
+)
 
 
 @pytest.fixture
@@ -69,3 +74,13 @@ def test_that_non_consecutive_coarse_group_numbers_report_highest_group(tmp_path
         corsnum,
     )
     assert grid.coarse_groups() == 3
+
+
+def test_that_corsnum_with_wrong_size_raises_when_loading_egrid(tmp_path):
+    nx, ny, nz = 2, 2, 2
+    bad_size = 7
+    filename = tmp_path / "BAD_CORSNUM.EGRID"
+    write_egrid_with_coarse_groups(filename, nx, ny, nz, [0] * bad_size)
+
+    with pytest.raises(ValueError, match="CORSNUM"):
+        Grid(str(filename))

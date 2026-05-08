@@ -14,6 +14,7 @@ from cwrap import CFILE, open as copen
 from ._grid_fixtures import (
     load_egrid_with_single_lgr,
     make_rectangular_grid,
+    write_egrid_with_single_lgr,
 )
 
 
@@ -278,3 +279,25 @@ def test_that_global_kw_copy_with_mismatched_sizes_raises_value_error(
     src_kw = ResdataKW("S", 99, ResDataType.RD_FLOAT)
     with pytest.raises(ValueError, match="size mismatch"):
         _grid._global_kw_copy(grid, target_kw, src_kw)
+
+
+def test_that_mapaxes_with_wrong_size_raises_when_loading_egrid(tmp_path):
+    bad_size = 7
+    filename = tmp_path / "BAD_MAPAXES.EGRID"
+    write_egrid_with_single_lgr(
+        filename,
+        2,
+        2,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        "LGR1",
+        mapaxes=[0.0] * bad_size,
+    )
+
+    with pytest.raises(ValueError, match="MAPAXES"):
+        Grid(str(filename))
