@@ -46,7 +46,7 @@ class WellTrajectory:
             raise OSError('No such file "%s"' % filename)
 
         with open(filename) as fileH:
-            for line in fileH.readlines():
+            for line in fileH:
                 point = _read_point(line)
                 if not point:
                     continue

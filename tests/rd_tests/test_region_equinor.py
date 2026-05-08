@@ -150,7 +150,7 @@ class RegionTest(ResdataTest):
 
         polygon = []
         with open("%s/polygon.ply" % root) as fileH:
-            for line in fileH.readlines():
+            for line in fileH:
                 tmp = line.split()
                 polygon.append((float(tmp[0]), float(tmp[1])))
         self.assertEqual(len(polygon), 11)
