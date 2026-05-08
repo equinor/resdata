@@ -80,7 +80,7 @@ class Layer(BaseCClass):
         self._assert_ij(i, j)
         return self._active_cell(i, j)
 
-    def update_active(self, grid, k):
+    def update_active(self, grid: Grid, k):
         if grid.get_nx() != self.get_nx():
             raise ValueError(
                 "NX dimension mismatch. Grid:%d  layer:%d"
