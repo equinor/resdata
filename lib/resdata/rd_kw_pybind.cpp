@@ -44,5 +44,10 @@ PYBIND11_MODULE(_kw, m) {
                                                       *rd_data_type));
         },
         py::return_value_policy::reference);
+    m.def("_fprintf_grdecl", [](py::handle self, py::handle file) {
+        auto *stream = from_cwrap<FILE>(file);
+        auto *kw = from_cwrap<rd_kw_type>(self);
+        rd_kw_fprintf_grdecl(kw, stream);
+    });
 }
 } // namespace
