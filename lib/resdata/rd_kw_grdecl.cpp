@@ -484,26 +484,6 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw, int size,
 }
 
 /*
-   This function will read and allocate the next keyword in the
-   file. This function does not take either kw or the size of the kw
-   as input, and has virtually zero possibilities to check what it is
-   doing. The function should only be used when you are certain
-   that the input file is well formatted.
-*/
-
-static rd_kw_type *rd_kw_fscanf_alloc_current_grdecl__(FILE *stream,
-                                                       bool strict,
-                                                       rd_data_type data_type) {
-    return __rd_kw_fscanf_alloc_grdecl__(stream, NULL, strict, 0, data_type);
-}
-
-rd_kw_type *rd_kw_fscanf_alloc_current_grdecl(FILE *stream,
-                                              rd_data_type data_type) {
-    bool strict = true;
-    return rd_kw_fscanf_alloc_current_grdecl__(stream, strict, data_type);
-}
-
-/*
   This method allows to write with a different header,
   i.e. PORO_XXXX. This header is even allowed to break the 8 character
   length limit; i.e. loading it back naively will fail.
