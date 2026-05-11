@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cctype>
 #include <optional>
+#include <memory>
 
 #include <ert/util/util.hpp>
 
@@ -417,11 +418,11 @@ void rd_kw_fprintf_grdecl(const rd_kw_type *rd_kw, FILE *stream,
         fprintf(stream, "%s\n", rd_kw_get_header(rd_kw));
 
     {
-        fortio_type *fortio = fortio_alloc_FILE_wrapper(
-            NULL, false, true, true,
-            stream); /* Endian flip should *NOT* be used */
-        rd_kw_fwrite_data(rd_kw, fortio);
-        fortio_free_FILE_wrapper(fortio);
+        auto fortio =
+            std::unique_ptr<fortio_type, decltype(&fortio_free_FILE_wrapper)>(
+                fortio_alloc_FILE_wrapper(nullptr, false, true, true, stream),
+                &fortio_free_FILE_wrapper);
+        rd_kw_fwrite_data(rd_kw, fortio.get());
     }
     fprintf(stream, "/\n");
 }
