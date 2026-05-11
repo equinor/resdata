@@ -114,7 +114,6 @@ class ResdataKW(BaseCClass):
         "rd_kw_obj rd_kw_alloc_slice_copy(rd_kw, int, int, int)"
     )
     _global_copy = ResdataPrototype("rd_kw_obj rd_kw_alloc_global_copy(rd_kw, rd_kw)")
-    _fprintf_grdecl = ResdataPrototype("void     rd_kw_fprintf_grdecl(rd_kw, FILE)")
     _fprintf_data = ResdataPrototype("void     rd_kw_fprintf_data(rd_kw, char*, FILE)")
 
     _get_size = ResdataPrototype("int      rd_kw_get_size(rd_kw)")
@@ -1137,7 +1136,7 @@ class ResdataKW(BaseCClass):
 
         """
         cfile = CFILE(file)
-        self._fprintf_grdecl(cfile)
+        _kw._fprintf_grdecl(self, cfile)
 
     def fprintf_data(self, file, fmt=None):
         """
