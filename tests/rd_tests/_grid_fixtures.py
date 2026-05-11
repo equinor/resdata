@@ -224,7 +224,7 @@ def make_rectangular_grid(
     dx: float,
     dy: float,
     dz: float,
-    actnum: Optional[Sequence[int]] = None,
+    actnum: Sequence[int] | None = None,
 ) -> Grid:
     return GridGenerator.create_rectangular((nx, ny, nz), (dx, dy, dz), actnum)
 
@@ -241,7 +241,7 @@ def write_egrid_with_single_lgr(
     host_j: int,
     host_k: int,
     lgr_name: str,
-    mapaxes: Optional[Sequence[float]] = None,
+    mapaxes: Sequence[float] | None = None,
     nncg: Sequence[int] = (),
     nncl: Sequence[int] = (),
 ) -> None:
@@ -377,7 +377,7 @@ def write_egrid_with_coarse_groups(
     ny: int,
     nz: int,
     corsnum: Sequence[int],
-    actnum: Optional[Sequence[int]] = None,
+    actnum: Sequence[int] | None = None,
 ) -> None:
     grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, actnum)
 
@@ -397,7 +397,7 @@ def write_egrid_dual_porosity(
     actnum: Sequence[int],
     nnc1: Sequence[int] = (),
     nnc2: Sequence[int] = (),
-    corsnum: Optional[Sequence[int]] = None,
+    corsnum: Sequence[int] | None = None,
 ) -> None:
     """Write a dual-porosity EGRID. ACTNUM uses CELL_ACTIVE_MATRIX/FRACTURE bits."""
     grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0)
@@ -479,7 +479,7 @@ def write_grid_file_with_lgrs(
     ny: int,
     nz: int,
     lgrs: Sequence[dict] = (),
-    mapaxes: Optional[Sequence[float]] = None,
+    mapaxes: Sequence[float] | None = None,
 ) -> None:
     """LGR dict keys: lgr_name, parent_name, emit_parent, nx, ny, nz, host_cell."""
     with openFortIO(str(filename), mode=FortIO.WRITE_MODE) as f:
@@ -630,7 +630,7 @@ def generate_coordkw_grid(
     num_y: int,
     num_z: int,
     z_perturbations: Iterable[tuple[int, int, int, int, float]] = (),
-    actnum: Optional[list[int]] = None,
+    actnum: list[int] | None = None,
 ) -> Grid:
     """Build a grid via COORD/ZCORN with integer-coordinate corners.
 

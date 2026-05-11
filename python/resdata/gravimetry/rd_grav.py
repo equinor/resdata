@@ -153,7 +153,7 @@ class ResdataGrav(BaseCClass):
         base_survey,
         monitor_survey,
         pos: tuple[float, float, float],
-        region: Optional[ResdataRegion] = None,
+        region: ResdataRegion | None = None,
         phase_mask=Phase.OIL + Phase.GAS + Phase.WATER,  # type: ignore
     ) -> float:
         """
