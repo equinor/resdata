@@ -239,8 +239,6 @@ void rd_kw_fix_uninitialized(rd_kw_type *rd_kw, int nx, int ny, int nz,
 
 rd_type_enum rd_kw_get_type(const rd_kw_type *);
 
-#include <resdata/rd_kw_grdecl.hpp>
-
 #ifdef __cplusplus
 }
 #endif
