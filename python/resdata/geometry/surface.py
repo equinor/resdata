@@ -68,7 +68,7 @@ class Surface(BaseCClass):
                 c_ptr = self._alloc(filename, True)
                 super().__init__(c_ptr)
             else:
-                raise IOError('No such file "%s".' % filename)
+                raise OSError('No such file "%s".' % filename)
         else:
             s_args = [nx, ny, xinc, yinc, xstart, ystart, angle]
             if None in s_args:

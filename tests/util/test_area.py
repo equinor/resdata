@@ -59,47 +59,47 @@ class TestArea(BaseCClass):
         if os.path.isfile(self.orgPath(filename)):
             self._install_file(filename)
         else:
-            raise IOError("No such file:%s" % filename)
+            raise OSError("No such file:%s" % filename)
 
     def copy_directory(self, directory):
         if os.path.isdir(self.orgPath(directory)):
             self._copy_directory(directory)
         else:
-            raise IOError("No such directory: %s" % directory)
+            raise OSError("No such directory: %s" % directory)
 
     def copy_parent_directory(self, path):
         if os.path.exists(self.orgPath(path)):
             self._copy_parent_directory(path)
         else:
-            raise IOError("No such file or directory: %s" % path)
+            raise OSError("No such file or directory: %s" % path)
 
     def copy_parent_content(self, path):
         if os.path.exists(self.orgPath(path)):
             self._copy_parent_content(path)
         else:
-            raise IOError("No such file or directory: %s" % path)
+            raise OSError("No such file or directory: %s" % path)
 
     def copy_directory_content(self, directory):
         if os.path.isdir(self.orgPath(directory)):
             self._copy_directory_content(directory)
         else:
-            raise IOError("No such directory: %s" % directory)
+            raise OSError("No such directory: %s" % directory)
 
     def copy_file(self, filename):
         if os.path.isfile(self.orgPath(filename)):
             self._copy_file(filename)
         else:
-            raise IOError("No such file:%s" % filename)
+            raise OSError("No such file:%s" % filename)
 
     def free(self):
         self._free()
 
     def getFullPath(self, path):
         if not os.path.exists(path):
-            raise IOError("Path not found:%s" % path)
+            raise OSError("Path not found:%s" % path)
 
         if os.path.isabs(path):
-            raise IOError("Path:%s is already absolute" % path)
+            raise OSError("Path:%s is already absolute" % path)
 
         return os.path.join(self.get_cwd(), path)
 

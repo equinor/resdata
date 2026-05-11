@@ -7,7 +7,7 @@ class CWDContext:
         if os.path.isdir(path):
             os.chdir(path)
         else:
-            raise IOError("Path:%s does not exist" % path)
+            raise OSError("Path:%s does not exist" % path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.cwd)

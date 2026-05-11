@@ -65,7 +65,7 @@ class RandomNumberGenerator(BaseCClass):
         if os.path.isfile(seed_file):
             self._load_state(seed_file)
         else:
-            raise IOError("No such file: %s" % seed_file)
+            raise OSError("No such file: %s" % seed_file)
 
     def saveState(self, seed_file):
         """

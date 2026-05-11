@@ -254,7 +254,7 @@ class Summary(BaseCClass):
             load_case, join_string, include_restart, lazy_load, file_options
         )
         if c_pointer is None:
-            raise IOError(
+            raise OSError(
                 "Failed to create summary instance from argument:%s" % load_case
             )
 
@@ -264,10 +264,10 @@ class Summary(BaseCClass):
     @classmethod
     def load(cls, smspec_file, unsmry_file, key_join_string=":", include_restart=True):
         if not os.path.isfile(smspec_file):
-            raise IOError("No such file: %s" % smspec_file)
+            raise OSError("No such file: %s" % smspec_file)
 
         if not os.path.isfile(unsmry_file):
-            raise IOError("No such file: %s" % unsmry_file)
+            raise OSError("No such file: %s" % unsmry_file)
 
         data_files = StringList()
         data_files.append(unsmry_file)
@@ -275,7 +275,7 @@ class Summary(BaseCClass):
             smspec_file, data_files, key_join_string, include_restart
         )
         if c_ptr is None:
-            raise IOError("Failed to create summary instance")
+            raise OSError("Failed to create summary instance")
 
         rd_sum = cls.createPythonObject(c_ptr)
         rd_sum._load_case = smspec_file

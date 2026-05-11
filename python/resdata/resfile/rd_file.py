@@ -182,7 +182,7 @@ class ResdataFile(BaseCClass):
             c_ptr = self._fast_open(filename, index_filename, flags)
 
         if c_ptr is None:
-            raise IOError('Failed to open file "%s"' % filename)
+            raise OSError('Failed to open file "%s"' % filename)
         else:
             super().__init__(c_ptr)
             self.global_view = self._get_global_view()
@@ -214,7 +214,7 @@ class ResdataFile(BaseCClass):
         if self._writable():
             self._save_kw(kw)
         else:
-            raise IOError(
+            raise OSError(
                 'save_kw: the file "%s" has been opened read only.'
                 % self.get_filename()
             )
@@ -561,7 +561,7 @@ class ResdataFile(BaseCClass):
 
     def write_index(self, index_file_name):
         if not self or not self._write_index(index_file_name):
-            raise IOError("Failed to write index file:%s" % index_file_name)
+            raise OSError("Failed to write index file:%s" % index_file_name)
 
 
 class ResdataFileContextManager:

@@ -45,7 +45,7 @@ class CPolyline(BaseCClass):
     @classmethod
     def createFromXYZFile(cls, filename, name=None):
         if not os.path.isfile(filename):
-            raise IOError("No such file:%s" % filename)
+            raise OSError("No such file:%s" % filename)
 
         polyline = cls._fread_alloc_irap(filename)
         if name is not None:

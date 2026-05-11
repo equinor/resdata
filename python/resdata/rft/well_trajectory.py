@@ -43,7 +43,7 @@ class WellTrajectory:
     def __init__(self, filename):
         self._points = []
         if not isfile(filename):
-            raise IOError('No such file "%s"' % filename)
+            raise OSError('No such file "%s"' % filename)
 
         with open(filename) as fileH:
             for line in fileH.readlines():
