@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     {
         FILE *stream = util_fopen(fault_blk_file, "r");
         fault_blk_kw = rd_kw_fscanf_alloc_grdecl(
-            stream, "FAULTBLK", rd_grid_get_global_size(rd_grid), RD_INT);
+            stream, "FAULTBLK", RD_INT, rd_grid_get_global_size(rd_grid));
         fclose(stream);
     }
 

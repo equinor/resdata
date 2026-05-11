@@ -344,74 +344,56 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
    current position, otherwise it will start with seeking to find @kw
    first.
 
-   Observe that the grdecl files are very weakly structured, so the
-   loading of rd_kw instances from a grdecl file can go wrong in many
-   ways; if the loading fails the function returns NULL.
-
-   The main loop is extremely simple - it is just repeated calls to
-   fscanf() to read one-number-at-atime; when that reading fails that
-   is interpreted as the end of the keyword.
-
-   Currently ONLY integer and float types are supported in rd_type -
+   Currently only integer and float types are supported in rd_type -
    any other types will lead to a hard failure.
 
    The rd_kw class has a quite deeply wired assumption that the
-   header is a string of length 8 (I hope/think that is an ECLIPSE
+   header is a string of length 8 (that is an ECLIPSE
    limitation). The class cannot read/write kw with headers longer than 8 bytes.
    rd_kw_grdecl is a workaround allowing for reading/writing kw with long
    headers.
 
-   -----------------------------------------------------------------
+   kw: If the @kw argument is != NULL the function will start
+     by seeking through the file to find the kw string; if the
+     kw can not be found the function will return NULL - but not
+     fail any more than that.
 
-    header: If the @header argument is != NULL the function will start
-      by seeking through the file to find the header string; if the
-      header can not be found the function will return NULL - but not
-      fail any more than that.
+     If @kw == NULL on input the function will just fscanf() the
+     first available string and use that as kw for the
+     keyword. This can lead to failure in a zillion different ways;
+     it is highly recommended to supply a valid string for the
+     @kw argument.
 
-      If @kw == NULL on input the function will just fscanf() the
-      first available string and use that as header for the
-      keyword. This can lead to failure in a zillion different ways;
-      it is highly recommended to supply a valid string for the
-      @header argument.
-
-    strict: see the documentation of the strict flag in the
-      fscanf_alloc_grdecl_data() function. Most of the exported
-      functions have hardwired strict = true.
+   strict: see the documentation of the strict flag in the
+     fscanf_alloc_grdecl_data() function. Most of the exported
+     functions have hardwired strict = true.
 
 
-    size: If the @size is set to <= 0 the function will just load all
-      data it can find until a terminating '/' is found. If a size
-      argument is given the function will check that there is
-      agreement between the size input argument and the number of
-      elements found on the file.
+   size: If the @size is set to <= 0 the function will just load all
+     data it can find until a terminating '/' is found. If a size
+     argument is given the function will check that there is
+     agreement between the size input argument and the number of
+     elements found on the file.
 
 
-    rd_type: The files have no embedded type information and the type
-      must be supplied by the calling scope. Currently only the
-      RD_FLOAT_TYPE and RD_INT_TYPE types are supported.
-
-   -----------------------------------------------------------------
-
-   This function is static; there are several exported varieties with
-   different sets of default values. These files are tricky to load -
-   if there is something wrong it can be difficult to detect.
+   rd_type: The files have no embedded type information and the type
+     must be supplied by the calling scope. Currently only the
+     RD_FLOAT_TYPE and RD_INT_TYPE types are supported.
 */
-
-static rd_kw_type *__rd_kw_fscanf_alloc_grdecl__(FILE *stream,
-                                                 const char *header,
-                                                 bool strict, int size,
-                                                 rd_data_type data_type) {
-    if (header && strlen(header) >= MAX_GRDECL_HEADER_SIZE)
+rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
+                                      rd_data_type data_type, int size = 0,
+                                      bool strict = true) {
+    if (kw && strlen(kw) >= MAX_GRDECL_HEADER_SIZE)
         util_abort(
-            "%s cannot read KW of more than %d bytes. strlen(header) == %d\n",
-            __func__, MAX_GRDECL_HEADER_SIZE, strlen(header));
+            "%s cannot read KW of more than %d bytes. strlen(kw) == %d\n",
+            __func__, MAX_GRDECL_HEADER_SIZE, strlen(kw));
 
     if (!rd_type_is_numeric(data_type))
         util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",
                    __func__);
 
-    if (header != NULL)
-        if (!rd_kw_grdecl_fseek_kw(header, true, stream))
+    if (kw != NULL)
+        if (!rd_kw_grdecl_fseek_kw(kw, true, stream))
             return NULL; /* Could not find it. */
 
     {
@@ -441,47 +423,6 @@ static rd_kw_type *__rd_kw_fscanf_alloc_grdecl__(FILE *stream,
             /** No header read - probably at EOF */
             return NULL;
     }
-}
-
-/*
-   This function will seek through the file and position the file
-   pointer at the beginning of @kw before starting to load (this
-   includes rewinding the file pointer). If @kw can not be found the
-   function will return NULL.
-
-   As size is not supplied the function will keep loading data until
-   the whole keyword is loaded, and then return.
-*/
-
-rd_kw_type *rd_kw_fscanf_alloc_grdecl_dynamic(FILE *stream, const char *kw,
-                                              bool strict,
-                                              rd_data_type data_type) {
-    return __rd_kw_fscanf_alloc_grdecl__(stream, kw, strict, 0, data_type);
-}
-
-/*
-   This function will seek through the file and position the file
-   pointer at the beginning of @kw before starting to load (this
-   includes rewinding the file pointer). If @kw can not be found the
-   function will return NULL.
-
-   When the data has been loaded the function will compare actual size
-   with the supplied size argument and verify equality; if they differ
-   it will crash hard. If you are uncertain of the size use the
-   rd_kw_fscanf_alloc_grdecl_dynamic() function instead; or supply
-   size == 0.
-*/
-
-static rd_kw_type *rd_kw_fscanf_alloc_grdecl__(FILE *stream, const char *kw,
-                                               bool strict, int size,
-                                               rd_data_type data_type) {
-    return __rd_kw_fscanf_alloc_grdecl__(stream, kw, strict, size, data_type);
-}
-
-rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw, int size,
-                                      rd_data_type data_type) {
-    bool strict = true;
-    return rd_kw_fscanf_alloc_grdecl__(stream, kw, strict, size, data_type);
 }
 
 /*

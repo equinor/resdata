@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
         stream = util_fopen("FILE.grdecl", "r");
         {
             rd_kw_type *rd_kw2 =
-                rd_kw_fscanf_alloc_grdecl(stream, "HEAD", 10, RD_INT);
+                rd_kw_fscanf_alloc_grdecl(stream, "HEAD", RD_INT, 10);
 
             test_assert_not_NULL(rd_kw2);
             test_assert_true(rd_kw_equal(rd_kw, rd_kw2));
@@ -39,10 +39,10 @@ int main(int argc, char **argv) {
         stream = util_fopen("FILE.grdecl", "r");
         {
             rd_kw_type *rd_kw2 =
-                rd_kw_fscanf_alloc_grdecl(stream, "HEAD", 10, RD_INT);
+                rd_kw_fscanf_alloc_grdecl(stream, "HEAD", RD_INT, 10);
 
             test_assert_NULL(rd_kw2);
-            rd_kw2 = rd_kw_fscanf_alloc_grdecl(stream, "HEAD1234", 10, RD_INT);
+            rd_kw2 = rd_kw_fscanf_alloc_grdecl(stream, "HEAD1234", RD_INT, 10);
             test_assert_not_NULL(rd_kw2);
 
             test_assert_string_equal(rd_kw_get_header(rd_kw2), "HEAD1234");
