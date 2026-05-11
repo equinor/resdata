@@ -76,7 +76,7 @@ class Grid(BaseCClass):
 
             return Grid.create(specgrid, zcorn, coord, actnum, mapaxes)
         else:
-            raise IOError("No such file:%s" % filename)
+            raise OSError("No such file:%s" % filename)
 
     @classmethod
     def load_from_file(cls, filename):
@@ -162,7 +162,7 @@ class Grid(BaseCClass):
         if c_ptr:
             super().__init__(c_ptr)
         else:
-            raise IOError("Loading grid from:%s failed" % filename)
+            raise OSError("Loading grid from:%s failed" % filename)
 
     def free(self):
         _grid._free(self)

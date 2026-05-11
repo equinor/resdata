@@ -99,7 +99,7 @@ class FortIO(BaseCClass):
         """
         read_modes = (FortIO.READ_MODE, FortIO.APPEND_MODE, FortIO.READ_AND_WRITE_MODE)
         if mode in read_modes and not os.path.exists(file_name):
-            raise IOError('No such file "%s".' % file_name)
+            raise OSError('No such file "%s".' % file_name)
         if mode == FortIO.READ_MODE:
             c_pointer = self._open_reader(file_name, fmt_file, endian_flip_header)
         elif mode == FortIO.WRITE_MODE:
@@ -113,7 +113,7 @@ class FortIO(BaseCClass):
 
         self.__mode = mode
         if not c_pointer:
-            raise IOError('Failed to open FortIO file "%s".' % file_name)
+            raise OSError('Failed to open FortIO file "%s".' % file_name)
         super().__init__(c_pointer)
 
     def close(self):
@@ -135,7 +135,7 @@ class FortIO(BaseCClass):
             size = self.get_position()
 
         if not self._truncate(size):
-            raise IOError("Truncate of fortran filehandle:%s failed" % self.filename())
+            raise OSError("Truncate of fortran filehandle:%s failed" % self.filename())
 
     def filename(self):
         return self._filename()

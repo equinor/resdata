@@ -82,7 +82,7 @@ class WellInfo(BaseCClass):
 
     def _assert_file_exists(self, rst_file):
         if not isfile(rst_file):
-            raise IOError("No such file %s" % rst_file)
+            raise OSError("No such file %s" % rst_file)
 
     def addWellFile(
         self, rst_file: str | ResdataFile, load_segment_information: bool

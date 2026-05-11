@@ -41,7 +41,7 @@ class TestRun:
                         break
             self.name += "/%08d" % random.randint(0, 100000000)
         else:
-            raise IOError("No such config file: %s" % config_file)
+            raise OSError("No such config file: %s" % config_file)
 
     def parseArgs(self, args):
         parser = argparse.ArgumentParser()
