@@ -7,6 +7,7 @@
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_grdecl.hpp>
 #include <resdata/layer.hpp>
 
 #include "detail/resdata/layer_cxx.hpp"

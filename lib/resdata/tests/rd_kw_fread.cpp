@@ -6,6 +6,7 @@
 
 #include <resdata/rd_endian_flip.hpp>
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_grdecl.hpp>
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_file_view.hpp>

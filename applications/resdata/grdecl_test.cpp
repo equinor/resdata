@@ -21,6 +21,7 @@
 
 #include <ert/util/util.hpp>
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_grdecl.hpp>
 
 int main(int argc, char **argv) {
     fprintf(stderr,

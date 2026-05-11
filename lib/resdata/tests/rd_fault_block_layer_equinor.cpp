@@ -5,6 +5,7 @@
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
+#include <resdata/rd_kw_grdecl.hpp>
 #include <resdata/fault_block_layer.hpp>
 
 void test_create(rd_grid_type *grid, const rd_kw_type *fault_block_kw) {
