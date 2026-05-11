@@ -562,8 +562,8 @@ class Summary(BaseCClass):
 
     def pandas_frame(
         self,
-        time_index: Optional[Sequence[datetime.datetime]] = None,
-        column_keys: Optional[Sequence[str]] = None,
+        time_index: Sequence[datetime.datetime] | None = None,
+        column_keys: Sequence[str] | None = None,
     ) -> pd.DataFrame:
         """Will create a pandas frame with summary data.
 
@@ -625,8 +625,8 @@ class Summary(BaseCClass):
 
     @staticmethod
     def _compile_headers_list(
-        headers: Sequence[str], dims: Optional[list[int]]
-    ) -> list[tuple[str, str, int, str, Optional[str], Optional[tuple[int, int, int]]]]:
+        headers: Sequence[str], dims: list[int] | None
+    ) -> list[tuple[str, str, int, str, str | None, tuple[int, int, int] | None]]:
         """
         Converts column names generated with `Summary.pandas_frame()` so
         that `Summary.from_pandas(sum.pandas_frame()) == sum`.
