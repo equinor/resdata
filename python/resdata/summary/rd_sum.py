@@ -478,7 +478,7 @@ class Summary(BaseCClass):
             raise KeyError("Summary object does not have key:%s" % key)
 
     def _make_time_vector(
-        self, time_index: Sequence[Union[CTime, datetime.datetime, int, datetime.date]]
+        self, time_index: Sequence[CTime | datetime.datetime | int | datetime.date]
     ) -> TimeVector:
         time_points = TimeVector()
         for t in time_index:
