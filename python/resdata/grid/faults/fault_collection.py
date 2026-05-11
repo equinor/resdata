@@ -12,7 +12,7 @@ def dequote(s):
         if s[0] == s[-1]:
             return s[1:-1]
         else:
-            raise ValueError("s[0] != s[-1], s[0]={}, s[-1]={}".format(s[0], s[-1]))
+            raise ValueError(f"s[0] != s[-1], s[0]={s[0]}, s[-1]={s[-1]}")
     else:
         return s
 
