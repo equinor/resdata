@@ -2,6 +2,7 @@
 from itertools import product as prod
 import operator
 import random
+import re
 import numpy as np
 import functools
 
@@ -89,6 +90,18 @@ class GridGeneratorTest(ResdataTest):
 
         with self.assertRaises(ValueError):
             GridGen.extract_subgrid_data(dims, coord, zcorn, ((1, 2), (2, 0), (2, 2)))
+
+    def test_extract_grid_invalid_bound_types(self):
+        dims = (3, 3, 3)
+        zcorn = list(GridGen.create_zcorn(dims, (1, 1, 1), offset=0))
+        coord = list(GridGen.create_coord(dims, (1, 1, 1)))
+
+        with self.assertRaisesRegex(
+            TypeError, re.escape("[<class 'str'>, <class 'int'>]")
+        ):
+            GridGen.extract_subgrid_data(
+                dims, coord, zcorn, (("-1", 0), (2, 2), (2, 2))
+            )
 
     def test_extract_grid_slice_spec(self):
         dims = (4, 4, 4)

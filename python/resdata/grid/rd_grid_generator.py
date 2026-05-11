@@ -716,7 +716,7 @@ class GridGenerator:
             if not (isinstance(bound[0], int) and isinstance(bound[1], int)):
                 raise TypeError(
                     "Expected bound to consist of two integers, ",
-                    "was %s (%s)" % (str(bound), str(map(type, bound))),
+                    "was %s (%s)" % (str(bound), str(list(map(type, bound)))),
                 )
 
             if not (0 <= bound[0] <= bound[1] < n):
