@@ -4491,9 +4491,9 @@ void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
                                const char *special_header, FILE *stream,
                                double double_default) {
     int src_size = rd_kw_get_size(rd_kw);
-    if (src_size == rd_grid->size)
-        rd_kw_fprintf_grdecl__(rd_kw, special_header, stream);
-    else if (src_size == rd_grid->total_active) {
+    if (src_size == rd_grid->size) {
+        rd_kw_fprintf_grdecl(rd_kw, stream, special_header);
+    } else if (src_size == rd_grid->total_active) {
         void *default_ptr = NULL;
         float float_default;
         int int_default;
@@ -4534,7 +4534,7 @@ void rd_grid_grdecl_fprintf_kw(const rd_grid_type *rd_grid,
                               rd_kw, rd_grid->size,
                               rd_grid->inv_index_map.data(), default_ptr),
                           &rd_kw_free);
-            rd_kw_fprintf_grdecl__(tmp_kw.get(), special_header, stream);
+            rd_kw_fprintf_grdecl(tmp_kw.get(), stream, special_header);
         }
     } else
         throw std::invalid_argument(fmt::format(

@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
         fclose(stream);
 
         stream = util_fopen("FILE.grdecl", "w");
-        rd_kw_fprintf_grdecl__(rd_kw, "HEAD1234", stream);
+        rd_kw_fprintf_grdecl(rd_kw, stream, "HEAD1234");
         fclose(stream);
 
         stream = util_fopen("FILE.grdecl", "r");
