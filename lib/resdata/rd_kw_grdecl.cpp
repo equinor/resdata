@@ -231,9 +231,9 @@ void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
 
    Observe that no-spaces-are-allowed-around-the-*
 */
-static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
-                                      rd_data_type data_type, int *kw_size,
-                                      FILE *stream) {
+static std::unique_ptr<char[], void (*)(void *)>
+fscanf_alloc_grdecl_data(const char *header, bool strict,
+                         rd_data_type data_type, int *kw_size, FILE *stream) {
     char newline = '\n';
     bool atEOF = false;
     size_t init_size = 32;
@@ -355,7 +355,7 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
     }
     *kw_size = data_index;
     checked_realloc<char>(data, sizeof_ctype * data_index * sizeof *data.get());
-    return data.release();
+    return data;
 }
 
 /*
@@ -420,13 +420,12 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
         char file_header[MAX_GRDECL_HEADER_SIZE] = {0};
         if (fscanf(stream, MAX_GRDECL_HEADER_SCANF_FMT, file_header) == 1) {
             int kw_size;
-            char *data = fscanf_alloc_grdecl_data(file_header, strict,
-                                                  data_type, &kw_size, stream);
+            auto data = fscanf_alloc_grdecl_data(file_header, strict, data_type,
+                                                 &kw_size, stream);
 
             // Verify size
             if (size > 0)
                 if (size != kw_size) {
-                    free(data);
                     throw std::invalid_argument(
                         fmt::format("size mismatch when loading:{}. File:{} "
                                     "elements. Requested:{} elements",
@@ -436,7 +435,7 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
             {
                 rd_kw_type *rd_kw =
                     rd_kw_alloc_new(file_header, kw_size, data_type, NULL);
-                rd_kw_set_data_ptr(rd_kw, data);
+                rd_kw_set_data_ptr(rd_kw, data.release());
                 return rd_kw;
             }
 
