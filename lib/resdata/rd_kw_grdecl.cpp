@@ -53,45 +53,36 @@
   current line is skipped. Lines starting with the "--" comment marker
   are ignored.
 */
-
 static bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
     long start_pos = util_ftell(stream);
     long current_pos;
     char next_kw[MAX_GRDECL_HEADER_SIZE] = {0};
 
-    /*
-    Determine if the current position of the file pointer is at the
-    beginning of the line; if not skip the rest of the line; this is
-    applies even though the tokens leading up this are not comments.
-  */
+    // Determine if the current position of the file pointer is at the
+    // beginning of the line; if not skip the rest of the line; this is
+    // applies even though the tokens leading up this are not comments.
     {
         while (true) {
             char c;
             if (util_ftell(stream) == 0)
-                /*
-          We are at the very beginning of the file. Can just jump out of
-          the loop.
-        */
+                // We are at the very beginning of the file. Can just jump out
+                // of the loop.
                 break;
 
             util_fseek(stream, -1, SEEK_CUR);
             c = fgetc(stream);
             if (c == '\n') {
-                /*
-           We have walked backwards reaching the start of the line. We
-           have not reached any !isspace() characters on the way and
-           can go back to start_pos and read from there.
-        */
+                // We have walked backwards reaching the start of the line. We
+                // have not reached any !isspace() characters on the way and
+                // can go back to start_pos and read from there.
                 util_fseek(stream, start_pos, SEEK_SET);
                 break;
             }
 
             if (!isspace(c)) {
-                /*
-           We hit a non-whitespace character; this means that start_pos
-           was not at the start of the line. We skip the rest of this
-           line, and then start reading on the next line.
-        */
+                // We hit a non-whitespace character; this means that start_pos
+                // was not at the start of the line. We skip the rest of this
+                // line, and then start reading on the next line.
                 util_fskip_lines(stream, 1);
                 break;
             }
@@ -130,7 +121,6 @@ static bool rd_kw_grdecl_fseek_next_kw(FILE *stream) {
 
   If the kw is not found the file pointer is repositioned.
 */
-
 static bool rd_kw_grdecl_fseek_kw__(const char *kw, FILE *stream) {
     long init_pos = util_ftell(stream);
     while (true) {
@@ -151,7 +141,7 @@ static bool rd_kw_grdecl_fseek_kw__(const char *kw, FILE *stream) {
 
 bool rd_kw_grdecl_fseek_kw(const char *kw, bool rewind, FILE *stream) {
     if (rd_kw_grdecl_fseek_kw__(kw, stream))
-        return true; /* OK - we found the kw between current file pos and EOF. */
+        return true; /* We found the kw between current file pos and EOF. */
     else if (rewind) {
         long int init_pos = util_ftell(stream);
 
@@ -165,7 +155,7 @@ bool rd_kw_grdecl_fseek_kw(const char *kw, bool rewind, FILE *stream) {
                 SEEK_SET); /* Could not find it - reposition to initial position. */
     }
 
-    /* OK: If we are here - that means that we failed to find the kw. */
+    /* If we are here - that means that we failed to find the kw. */
     return false;
 }
 
@@ -173,7 +163,6 @@ bool rd_kw_grdecl_fseek_kw(const char *kw, bool rewind, FILE *stream) {
    Observe that this function does not preserve the '*' structure
    which (might) have been used in the input.
 */
-
 static void iset_range(char *data, int data_index, int sizeof_ctype,
                        void *value_ptr, int multiplier) {
     size_t byte_offset;
@@ -213,7 +202,6 @@ static void iset_range(char *data, int data_index, int sizeof_ctype,
 
    Observe that no-spaces-are-allowed-around-the-*
 */
-
 static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                                       rd_data_type data_type, int *kw_size,
                                       FILE *stream) {
@@ -295,11 +283,9 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                     util_abort("%s: sorry type:%s not supported \n", __func__,
                                rd_type_alloc_name(data_type));
 
-                /*
-          Removing this warning on user request:
-          if (char_input)
-          fprintf(stderr,"Warning: character string: \'%s\' ignored when reading keyword:%s \n",buffer , header);
-        */
+                // Removing this warning on user request:
+                // if (char_input)
+                // fprintf(stderr,"Warning: character string: \'%s\' ignored when reading keyword:%s \n",buffer , header);
                 if (!char_input) {
                     size_t min_size = data_index + multiplier;
                     if (min_size >= data_size) {
@@ -312,11 +298,9 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
 
                             data = (char *)util_realloc(data, byte_size);
                         } else {
-                            /*
-                We are asking for more elements than can possible be adressed in
-                an integer. Return NULL - and data size == 0; let calling scope
-                try to handle it.
-              */
+                            // We are asking for more elements than can possible
+                            // be adressed in an integer. Return NULL - and
+                            // data size == 0; let calling scope try to handle it.
                             data_index = 0;
                             break;
                         }
@@ -424,12 +408,6 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
             return NULL;
     }
 }
-
-/*
-  This method allows to write with a different header,
-  i.e. PORO_XXXX. This header is even allowed to break the 8 character
-  length limit; i.e. loading it back naively will fail.
-*/
 
 void rd_kw_fprintf_grdecl(const rd_kw_type *rd_kw, FILE *stream,
                           const char *special_header = nullptr) {
