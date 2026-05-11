@@ -61,10 +61,8 @@ rd_data_type rd_type_create_from_type(const rd_type_enum type) {
         util_abort("%s: Variable length string type cannot be created"
                    " from type alone!\n",
                    __func__);
-        return RD_STRING(0); /* Dummy */
     default:
         util_abort("%s: invalid rd_type: %d\n", __func__, type);
-        return RD_INT; /* Dummy */
     }
 }
 
@@ -92,7 +90,6 @@ char *rd_type_alloc_name(const rd_data_type rd_type) {
         util_abort("Internal error in %s - internal eclipse_type: %d not "
                    "recognized - aborting \n",
                    __func__, rd_type.type);
-        return NULL; /* Dummy */
     }
 }
 
@@ -113,7 +110,6 @@ rd_data_type rd_type_create_from_name(const char *type_name) {
         return RD_BOOL;
     else {
         util_abort("%s: unrecognized type name:%s \n", __func__, type_name);
-        return RD_INT; /* Dummy */
     }
 }
 
