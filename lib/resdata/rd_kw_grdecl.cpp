@@ -452,16 +452,10 @@ static rd_kw_type *__rd_kw_fscanf_alloc_grdecl__(FILE *stream,
    the whole keyword is loaded, and then return.
 */
 
-rd_kw_type *rd_kw_fscanf_alloc_grdecl_dynamic__(FILE *stream, const char *kw,
-                                                bool strict,
-                                                rd_data_type data_type) {
-    return __rd_kw_fscanf_alloc_grdecl__(stream, kw, strict, 0, data_type);
-}
-
 rd_kw_type *rd_kw_fscanf_alloc_grdecl_dynamic(FILE *stream, const char *kw,
+                                              bool strict,
                                               rd_data_type data_type) {
-    bool strict = true;
-    return rd_kw_fscanf_alloc_grdecl_dynamic__(stream, kw, strict, data_type);
+    return __rd_kw_fscanf_alloc_grdecl__(stream, kw, strict, 0, data_type);
 }
 
 /*
