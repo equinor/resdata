@@ -215,12 +215,12 @@ class KWTest(ResdataTest):
             kw.fprintf_data(fileH)
             fileH.close()
 
-            fileH = open("test")
             data = []
-            for line in fileH.readlines():
-                tmp = line.split()
-                for elm in tmp:
-                    data.append(int(elm))
+            with open("test") as fileH:
+                for line in fileH.readlines():
+                    tmp = line.split()
+                    for elm in tmp:
+                        data.append(int(elm))
 
             for v1, v2 in zip(data, kw):
                 self.assertEqual(v1, v2)
