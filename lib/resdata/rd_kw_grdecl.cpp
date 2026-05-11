@@ -1,5 +1,6 @@
 #include <cstring>
 #include <cctype>
+#include <optional>
 
 #include <ert/util/util.hpp>
 
@@ -489,8 +490,8 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw, int size,
   length limit; i.e. loading it back naively will fail.
 */
 
-void rd_kw_fprintf_grdecl__(const rd_kw_type *rd_kw, const char *special_header,
-                            FILE *stream) {
+void rd_kw_fprintf_grdecl(const rd_kw_type *rd_kw, FILE *stream,
+                          const char *special_header = nullptr) {
     if (special_header)
         fprintf(stream, "%s\n", special_header);
     else
@@ -504,8 +505,4 @@ void rd_kw_fprintf_grdecl__(const rd_kw_type *rd_kw, const char *special_header,
         fortio_free_FILE_wrapper(fortio);
     }
     fprintf(stream, "/\n");
-}
-
-void rd_kw_fprintf_grdecl(const rd_kw_type *rd_kw, FILE *stream) {
-    rd_kw_fprintf_grdecl__(rd_kw, NULL, stream);
 }
