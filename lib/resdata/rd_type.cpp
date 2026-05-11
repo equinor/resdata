@@ -2,6 +2,8 @@
 #include <cstring>
 #include <cctype>
 
+#include <fmt/format.h>
+
 #include <ert/util/util.hpp>
 #include <resdata/rd_type.hpp>
 
@@ -90,6 +92,29 @@ char *rd_type_alloc_name(const rd_data_type rd_type) {
         util_abort("Internal error in %s - internal eclipse_type: %d not "
                    "recognized - aborting \n",
                    __func__, rd_type.type);
+    }
+}
+
+std::string rd_type_name(const rd_data_type rd_type) {
+    switch (rd_type.type) {
+    case (RD_CHAR_TYPE):
+        return RD_TYPE_NAME_CHAR;
+    case (RD_STRING_TYPE):
+        return fmt::format("C{:03}", rd_type_get_sizeof_iotype(rd_type));
+    case (RD_FLOAT_TYPE):
+        return RD_TYPE_NAME_FLOAT;
+    case (RD_DOUBLE_TYPE):
+        return RD_TYPE_NAME_DOUBLE;
+    case (RD_INT_TYPE):
+        return RD_TYPE_NAME_INT;
+    case (RD_BOOL_TYPE):
+        return RD_TYPE_NAME_BOOL;
+    case (RD_MESS_TYPE):
+        return RD_TYPE_NAME_MESSAGE;
+    default:
+        throw std::invalid_argument(fmt::format("internal eclipse_type: {} not "
+                                                "recognized",
+                                                rd_type.type));
     }
 }
 

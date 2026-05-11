@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <ert/util/util.hpp>
+#include <fmt/format.h>
 
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_type.hpp>
@@ -280,9 +281,11 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                     else {
                         char_input = true;
                         if (strict)
-                            util_abort("%s: Malformed content:\"%s\" when "
-                                       "reading keyword:%s \n",
-                                       __func__, buffer.get(), header);
+                            throw std::invalid_argument(
+                                fmt::format("Malformed content:\"{}\" when "
+                                            "reading keyword:{}",
+                                            std::string(buffer.get()),
+                                            std::string(header)));
                     }
                 } else if (rd_type_is_float(data_type)) {
                     if (sscanf(buffer.get(), "%d*%128g", &multiplier,
@@ -292,9 +295,11 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                     else {
                         char_input = true;
                         if (strict)
-                            util_abort("%s: Malformed content:\"%s\" when "
-                                       "reading keyword:%s \n",
-                                       __func__, buffer.get(), header);
+                            throw std::invalid_argument(
+                                fmt::format("Malformed content:\"{}\" when "
+                                            "reading keyword:{}",
+                                            std::string(buffer.get()),
+                                            std::string(header)));
                     }
                 } else if (rd_type_is_double(data_type)) {
                     if (sscanf(buffer.get(), "%d*%128lg", &multiplier,
@@ -304,13 +309,15 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                     else {
                         char_input = true;
                         if (strict)
-                            util_abort("%s: Malformed content:\"%s\" when "
-                                       "reading keyword:%s \n",
-                                       __func__, buffer.get(), header);
+                            throw std::invalid_argument(
+                                fmt::format("Malformed content:\"{}\" when "
+                                            "reading keyword:{}",
+                                            std::string(buffer.get()),
+                                            std::string(header)));
                     }
                 } else
-                    util_abort("%s: sorry type:%s not supported \n", __func__,
-                               rd_type_alloc_name(data_type));
+                    throw std::invalid_argument(fmt::format(
+                        "Type:{} not supported", rd_type_name(data_type)));
 
                 // Removing this warning on user request:
                 // if (char_input)
@@ -397,13 +404,13 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
                                       rd_data_type data_type, int size = 0,
                                       bool strict = true) {
     if (kw && strlen(kw) >= MAX_GRDECL_HEADER_SIZE)
-        util_abort(
-            "%s cannot read KW of more than %d bytes. strlen(kw) == %d\n",
-            __func__, MAX_GRDECL_HEADER_SIZE, strlen(kw));
+        throw std::invalid_argument(fmt::format(
+            "Cannot read KW of more than {} bytes. strlen(kw) == {}",
+            MAX_GRDECL_HEADER_SIZE, strlen(kw)));
 
     if (!rd_type_is_numeric(data_type))
-        util_abort("%s: sorry only types FLOAT, INT and DOUBLE supported\n",
-                   __func__);
+        throw std::invalid_argument(
+            "Only types FLOAT, INT and DOUBLE supported");
 
     if (kw != NULL)
         if (!rd_kw_grdecl_fseek_kw(kw, true, stream))
@@ -420,9 +427,10 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
             if (size > 0)
                 if (size != kw_size) {
                     free(data);
-                    util_abort("%s: size mismatch when loading:%s. File:%d "
-                               "elements. Requested:%d elements \n",
-                               __func__, file_header, kw_size, size);
+                    throw std::invalid_argument(
+                        fmt::format("size mismatch when loading:{}. File:{} "
+                                    "elements. Requested:{} elements",
+                                    file_header, kw_size, size));
                 }
 
             {

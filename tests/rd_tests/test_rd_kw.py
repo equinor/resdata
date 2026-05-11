@@ -741,6 +741,26 @@ def test_read_grdecl_kw_none_loads_first_keyword(tmp_path):
     assert len(kw) == 3
 
 
+def test_read_grdecl_int_strict_raises_on_malformed(tmp_path):
+    path = _write_grdecl(tmp_path, "intkw.grdecl", "INTKW\n  1 2 FOO 3 /\n")
+    with cwrap.open(str(path), "r") as fh:
+        with pytest.raises(
+            ValueError,
+            match=r'Malformed content:"FOO" when reading keyword:INTKW',
+        ):
+            ResdataKW.read_grdecl(fh, "INTKW", rd_type=ResDataType.RD_INT)
+
+
+def test_read_grdecl_float_strict_raises_on_malformed(tmp_path):
+    path = _write_grdecl(tmp_path, "fltkw.grdecl", "FLTKW\n  1.0 2.0 BAR 3.0 /\n")
+    with cwrap.open(str(path), "r") as fh:
+        with pytest.raises(
+            ValueError,
+            match=r'Malformed content:"BAR" when reading keyword:FLTKW',
+        ):
+            ResdataKW.read_grdecl(fh, "FLTKW", rd_type=ResDataType.RD_FLOAT)
+
+
 @st.composite
 def keywords(draw, size=8):
     return draw(

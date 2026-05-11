@@ -4,6 +4,9 @@
 #include <cstdlib>
 
 #ifdef __cplusplus
+
+#include <string>
+
 extern "C" {
 #endif
 
@@ -118,6 +121,8 @@ bool rd_type_is_string(const rd_data_type);
 
 #ifdef __cplusplus
 }
+
+std::string rd_type_name(const rd_data_type);
 #endif
 
 #endif
