@@ -5,7 +5,7 @@ from typing_extensions import deprecated
 from .rd_sum_node import SummaryNode
 
 
-class SummaryVector(object):
+class SummaryVector:
     def __init__(self, parent, key, report_only=False):
         """
         A summary vector with a vector of values and time.

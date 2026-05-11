@@ -4,7 +4,7 @@ from unittest import TestLoader, TextTestRunner
 
 
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")
-class ResdataTestRunner(object):
+class ResdataTestRunner:
     @staticmethod
     def runTestSuite(tests, test_verbosity=3):
         test_runner = TextTestRunner(verbosity=test_verbosity)

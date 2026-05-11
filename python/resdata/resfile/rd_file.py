@@ -564,7 +564,7 @@ class ResdataFile(BaseCClass):
             raise IOError("Failed to write index file:%s" % index_file_name)
 
 
-class ResdataFileContextManager(object):
+class ResdataFileContextManager:
     def __init__(self, rd_file):
         self.__rd_file = rd_file
 

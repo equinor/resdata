@@ -17,7 +17,7 @@ def dequote(s):
         return s
 
 
-class FaultCollection(object):
+class FaultCollection:
     def __init__(self, grid=None, *file_list):
         self.__fault_list = []
         self.__fault_map = {}

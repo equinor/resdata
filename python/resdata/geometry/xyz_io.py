@@ -2,7 +2,7 @@ import os
 from .polyline import Polyline
 
 
-class XYZIo(object):
+class XYZIo:
     @staticmethod
     def readXYZFile(path):
         """@rtype: Polyline"""

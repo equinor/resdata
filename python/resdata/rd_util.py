@@ -96,7 +96,7 @@ FileMode.addEnum("WRITABLE", 2)
 # -----------------------------------------------------------------
 
 
-class ResdataUtil(object):
+class ResdataUtil:
     _get_num_cpu = ResdataPrototype("int rd_get_num_cpu(char*)", bind=False)
     _get_file_type = ResdataPrototype(
         "rd_file_enum rd_get_file_type(char*, bool*, int*)", bind=False

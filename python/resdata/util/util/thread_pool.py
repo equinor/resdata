@@ -53,7 +53,7 @@ class Task(Thread):
             time.sleep(0.01)
 
 
-class ThreadPool(object):
+class ThreadPool:
     def __init__(self, size=None, verbose=False):
         super(ThreadPool, self).__init__()
 

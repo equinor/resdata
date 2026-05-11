@@ -3,7 +3,7 @@ import functools
 import sys
 
 
-class GeometryTools(object):
+class GeometryTools:
     EPSILON = 0.000001
 
     @staticmethod
