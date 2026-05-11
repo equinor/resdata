@@ -102,10 +102,6 @@ class ResdataKW(BaseCClass):
     _fread_alloc = ResdataPrototype(
         "rd_kw_obj rd_kw_fread_alloc(rd_fortio)", bind=False
     )
-    _fseek_grdecl = ResdataPrototype(
-        "bool     rd_kw_grdecl_fseek_kw(char*, bool, FILE)", bind=False
-    )
-
     _sub_copy = ResdataPrototype(
         "rd_kw_obj rd_kw_alloc_sub_copy(rd_kw, char*, int, int)"
     )
@@ -369,7 +365,7 @@ class ResdataKW(BaseCClass):
         search from there after the initial search.
         """
         cfile = CFILE(fileH)
-        return cls._fseek_grdecl(kw, rewind, cfile)
+        return _kw._fseek_grdecl(kw, rewind, cfile)
 
     @classmethod
     def fread(cls, fortio):

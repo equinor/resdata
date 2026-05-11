@@ -49,5 +49,9 @@ PYBIND11_MODULE(_kw, m) {
         auto *kw = from_cwrap<rd_kw_type>(self);
         rd_kw_fprintf_grdecl(kw, stream);
     });
+    m.def("_fseek_grdecl", [](std::string name, bool rewind, py::handle file) {
+        auto *stream = from_cwrap<FILE>(file);
+        return rd_kw_grdecl_fseek_kw(name.c_str(), rewind, stream);
+    });
 }
 } // namespace
