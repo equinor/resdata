@@ -2,7 +2,7 @@ import os
 import re
 
 
-class SourceEnumerator(object):
+class SourceEnumerator:
     @classmethod
     def removeComments(cls, code_string):
         code_string = re.sub(

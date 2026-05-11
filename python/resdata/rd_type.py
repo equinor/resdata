@@ -148,7 +148,7 @@ class ResDataType(BaseCClass):
         return ResDataType(type_name=name)
 
     # Enables one to fetch a type as ResDataType.RD_XXXX
-    class classproperty(object):
+    class classproperty:
         def __init__(self, fget):
             self.fget = fget
 

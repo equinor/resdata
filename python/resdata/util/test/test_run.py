@@ -16,7 +16,7 @@ def path_exists(path):
 
 
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")
-class TestRun(object):
+class TestRun:
     default_ert_cmd = "ert"
     default_ert_version = "stable"
     default_path_prefix = None

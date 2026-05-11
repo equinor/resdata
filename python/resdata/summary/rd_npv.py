@@ -6,7 +6,7 @@ from resdata.util.util import monkey_the_camel
 from .rd_sum import Summary
 
 
-class NPVParseKey(object):
+class NPVParseKey:
     def __init__(self, eclNPV):
         self.baseCase = eclNPV.baseCase
         self.NPV = eclNPV
@@ -22,7 +22,7 @@ class NPVParseKey(object):
             raise ValueError("Sorry - the key: %s is not a total key - aborting" % key)
 
 
-class NPVPriceVector(object):
+class NPVPriceVector:
     def __init__(self, argList):
         self.dateList = []
         if isinstance(argList, list):
@@ -111,7 +111,7 @@ class NPVPriceVector(object):
             raise ValueError("Input date:%s before start of vector" % date)
 
 
-class ResdataNPV(object):
+class ResdataNPV:
     sumKeyRE = re.compile(r"[\[]([\w:,]+)[\]]")
 
     def __init__(self, baseCase):

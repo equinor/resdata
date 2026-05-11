@@ -7,7 +7,7 @@ from resdata.geometry import CPolyline
 from .fault_segments import FaultSegment
 
 
-class FaultLine(object):
+class FaultLine:
     def __init__(self, grid, k):
         self.__grid = grid
         self.__k = k

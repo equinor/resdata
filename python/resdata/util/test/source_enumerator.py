@@ -3,7 +3,7 @@ from typing_extensions import deprecated
 
 
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")
-class SourceEnumerator(object):
+class SourceEnumerator:
     @classmethod
     def removeComments(cls, code_string):
         code_string = re.sub(

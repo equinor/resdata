@@ -162,7 +162,7 @@ class FortIO(BaseCClass):
         self.close()
 
 
-class FortIOContextManager(object):
+class FortIOContextManager:
     def __init__(self, fortio):
         self.__fortio = fortio
 

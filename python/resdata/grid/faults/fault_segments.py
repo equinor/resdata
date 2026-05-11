@@ -1,7 +1,7 @@
 from resdata.util.util import monkey_the_camel
 
 
-class FaultSegment(object):
+class FaultSegment:
     def __init__(self, C1, C2):
         self.__C1 = C1
         self.__C2 = C2
@@ -54,7 +54,7 @@ class FaultSegment(object):
         return "%d -> %d" % (self.__C1, self.__C2)
 
 
-class SegmentMap(object):
+class SegmentMap:
     def __init__(self):
         self.__segment_map = {}
         self.__count_map = {}

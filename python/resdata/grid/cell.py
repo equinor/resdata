@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-class Cell(object):
+class Cell:
     def __init__(self, grid, global_index):
         self._grid = grid
         self._idx = global_index

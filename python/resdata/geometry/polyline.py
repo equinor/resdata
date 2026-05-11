@@ -1,7 +1,7 @@
 from .geometry_tools import GeometryTools
 
 
-class Polyline(object):
+class Polyline:
     def __init__(self, name=None, init_points=None):
         super(Polyline, self).__init__()
         self.__name = name

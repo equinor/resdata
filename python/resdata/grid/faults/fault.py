@@ -7,7 +7,7 @@ from .fault_line import FaultLine
 from .fault_segments import FaultSegment, SegmentMap
 
 
-class FaultLayer(object):
+class FaultLayer:
     def __init__(self, grid, K):
         assert isinstance(K, int)
         self.__grid = grid
@@ -143,7 +143,7 @@ class FaultLayer(object):
 #################################################################
 
 
-class Fault(object):
+class Fault:
     allowed_faces = ["X", "Y", "Z", "I", "J", "K", "X-", "Y-", "Z-", "I-", "J-", "K-"]
 
     def __init__(self, grid, name):

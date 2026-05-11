@@ -7,7 +7,7 @@ from resdata import ResdataPrototype
 from resdata.geometry import Polyline, GeometryTools, CPolylineCollection
 
 
-class FaultBlockCell(object):
+class FaultBlockCell:
     def __init__(self, i, j, k, x, y, z):
         self.i = i
         self.j = j

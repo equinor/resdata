@@ -28,7 +28,7 @@ def log_test(test):
 
 
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")
-class _AssertNotRaisesContext(object):
+class _AssertNotRaisesContext:
     def __init__(self, test_class):
         super(_AssertNotRaisesContext, self).__init__()
         self._test_class = test_class

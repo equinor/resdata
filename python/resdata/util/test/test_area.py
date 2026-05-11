@@ -106,7 +106,7 @@ class TestArea(BaseCClass):
         return os.path.join(self.get_cwd(), path)
 
 
-class TestAreaContext(object):
+class TestAreaContext:
     __test__ = False
 
     def __init__(self, test_name, store_area=False):

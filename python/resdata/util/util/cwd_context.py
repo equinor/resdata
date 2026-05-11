@@ -1,7 +1,7 @@
 import os
 
 
-class CWDContext(object):
+class CWDContext:
     def __init__(self, path):
         self.cwd = os.getcwd()
         if os.path.isdir(path):

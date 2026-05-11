@@ -14,7 +14,7 @@ def cmp_method(method):
     return cmp_wrapper
 
 
-class Version(object):
+class Version:
     def __init__(self, major, minor, micro, git_commit=None, build_time=None):
         self.major = major
         self.minor = minor
