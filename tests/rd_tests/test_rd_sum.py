@@ -496,7 +496,7 @@ def test_summary_export_csv():
     sum.export_csv("output.csv", keys=["FOPR", "FOPT"])
 
     assert os.path.exists("output.csv")
-    with open("output.csv", "r") as f:
+    with open("output.csv") as f:
         content = f.read()
         assert "FOPR" in content
         assert "FOPT" in content
@@ -1182,7 +1182,7 @@ def test_summary_export_csv_with_keys_none():
 
     assert os.path.exists("all_keys.csv")
 
-    with open("all_keys.csv", "r") as f:
+    with open("all_keys.csv") as f:
         content = f.read()
     assert content == dedent("""\
         DAYS;DATE;FOPR;FOPT;FWCT
