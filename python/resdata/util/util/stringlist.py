@@ -67,10 +67,8 @@ class StringList(BaseCClass):
 
         if isinstance(initial, str):
             raise TypeError(
-                (
-                    f'Cannot initialize a StringList from "{initial}".\n'
-                    f'Did you mean "[{initial}]"?'
-                )
+                f'Cannot initialize a StringList from "{initial}".\n'
+                f'Did you mean "[{initial}]"?'
             )
         for s in initial:
             if isinstance(s, bytes):
