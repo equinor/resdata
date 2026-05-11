@@ -710,6 +710,36 @@ def test_get_ptr_data():
     assert ResdataKW("KW1", 10, ResDataType.RD_DOUBLE).get_data_ptr()
 
 
+def _write_grdecl(tmp_path, name, body):
+    path = tmp_path / name
+    path.write_text(body)
+    return path
+
+
+def test_missing_keyword_raises(tmp_path):
+    path = _write_grdecl(tmp_path, "empty.grdecl", "PORO\n/\n")
+    with pytest.raises(ValueError), cwrap.open(str(path), "r") as fh:
+        _ = ResdataKW.read_grdecl(fh, "NOTPORO", rd_type=ResDataType.RD_FLOAT)
+
+
+def test_read_grdecl_empty_body_returns_zero_len_kw(tmp_path):
+    path = _write_grdecl(tmp_path, "empty.grdecl", "PORO\n/\n")
+    with cwrap.open(str(path), "r") as fh:
+        kw = ResdataKW.read_grdecl(fh, "PORO", rd_type=ResDataType.RD_FLOAT)
+    assert kw is not None
+    assert kw.name == "PORO"
+    assert len(kw) == 0
+
+
+def test_read_grdecl_kw_none_loads_first_keyword(tmp_path):
+    path = _write_grdecl(tmp_path, "first.grdecl", "PORO\n  0.1 0.2 0.3 /\n")
+    with cwrap.open(str(path), "r") as fh:
+        kw = ResdataKW.read_grdecl(fh, None, rd_type=ResDataType.RD_FLOAT)
+    assert kw is not None
+    assert kw.name == "PORO"
+    assert len(kw) == 3
+
+
 @st.composite
 def keywords(draw, size=8):
     return draw(
@@ -727,18 +757,6 @@ def str_arrays(draw):
     return draw(st.builds(np.array, st.lists(keywords(size), min_size=1))).astype(
         "|S" + str(size)
     )
-
-
-def _write_grdecl(tmp_path, name, body):
-    path = tmp_path / name
-    path.write_text(body)
-    return path
-
-
-def test_missing_keyword_raises(tmp_path):
-    path = _write_grdecl(tmp_path, "empty.grdecl", "PORO\n/\n")
-    with pytest.raises(ValueError), cwrap.open(str(path), "r") as fh:
-        _ = ResdataKW.read_grdecl(fh, "NOTPORO", rd_type=ResDataType.RD_FLOAT)
 
 
 array_shapes = st.integers(min_value=1, max_value=32).map(lambda n: (n,))
