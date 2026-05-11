@@ -34,7 +34,7 @@ class ResdataSMSPECNode(BaseCClass):
     _get_default = ResdataPrototype("float smspec_node_get_default(rd_smspec_node)")
 
     def __init__(self):
-        super(ResdataSMSPECNode, self).__init__(0)  # null pointer
+        super().__init__(0)  # null pointer
         raise NotImplementedError("Class can not be instantiated directly!")
 
     def cmp(self, other):

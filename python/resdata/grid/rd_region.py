@@ -316,7 +316,7 @@ class ResdataRegion(BaseCClass):
         self.grid = grid
         self.active_index = False
         c_ptr = self._alloc(grid, preselect)
-        super(ResdataRegion, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def free(self):
         self._free()

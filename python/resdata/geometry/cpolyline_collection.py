@@ -35,7 +35,7 @@ class CPolylineCollection(BaseCClass):
 
     def __init__(self):
         c_ptr = self._alloc_new()
-        super(CPolylineCollection, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         self.parent_ref = None
 
     def __contains__(self, name):

@@ -64,7 +64,7 @@ class ResDataType(BaseCClass):
         else:
             c_ptr = self._alloc(type_enum, element_size)
 
-        super(ResDataType, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def _assert_valid_arguments(self, type_enum, element_size, type_name):
         if type_name is not None:

@@ -68,7 +68,7 @@ class ResdataGrav(BaseCClass):
         self.init_file = init_file  # Inhibit premature garbage collection of init_file
 
         c_ptr = self._grav_alloc(grid, init_file)
-        super(ResdataGrav, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
         self.dispatch = {
             "FIP": self.add_survey_FIP,

@@ -21,7 +21,7 @@ class Hash(BaseCClass):
 
     def __init__(self):
         c_ptr = self._alloc()
-        super(Hash, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def __len__(self):
         return self._size()
@@ -61,7 +61,7 @@ class StringHash(Hash):
     _insert_string = ResdataPrototype("void hash_insert_string(rd_hash, char*, char*)")
 
     def __init__(self):
-        super(StringHash, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, str):
@@ -82,7 +82,7 @@ class IntegerHash(Hash):
     _insert_int = ResdataPrototype("void hash_insert_int(rd_hash, char*, int)")
 
     def __init__(self):
-        super(IntegerHash, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, int):
@@ -103,7 +103,7 @@ class DoubleHash(Hash):
     _insert_double = ResdataPrototype("void hash_insert_double(rd_hash, char*, double)")
 
     def __init__(self):
-        super(DoubleHash, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, value):
         if isinstance(value, int):

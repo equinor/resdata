@@ -4,10 +4,10 @@ from resdata.resfile import ResdataFile, Resdata3DKW
 class Resdata3DFile(ResdataFile):
     def __init__(self, grid, filename, flags=0):
         self.grid = grid
-        super(Resdata3DFile, self).__init__(filename, flags)
+        super().__init__(filename, flags)
 
     def __getitem__(self, index):
-        return_arg = super(Resdata3DFile, self).__getitem__(index)
+        return_arg = super().__getitem__(index)
         if isinstance(return_arg, list):
             kw_list = return_arg
         else:

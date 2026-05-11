@@ -38,7 +38,7 @@ class CPolyline(BaseCClass):
 
     def __init__(self, name=None, init_points=()):
         c_ptr = self._alloc_new(name)
-        super(CPolyline, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         for xc, yc in init_points:
             self.addPoint(xc, yc)
 
@@ -120,7 +120,7 @@ class CPolyline(BaseCClass):
         return copy
 
     def __eq__(self, other):
-        if super(CPolyline, self).__eq__(other):
+        if super().__eq__(other):
             return True
         else:
             return self._equal(other)

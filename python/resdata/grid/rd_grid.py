@@ -160,7 +160,7 @@ class Grid(BaseCClass):
         """
         c_ptr = _grid._fread_alloc(filename, apply_mapaxes)
         if c_ptr:
-            super(Grid, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
             raise IOError("Loading grid from:%s failed" % filename)
 

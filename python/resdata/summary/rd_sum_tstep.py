@@ -27,7 +27,7 @@ class SummaryTStep(BaseCClass):
     def __init__(self, report_step, mini_step, sim_days, smspec):
         sim_seconds = sim_days * 24 * 60 * 60
         c_pointer = self._alloc(report_step, mini_step, sim_seconds, smspec)
-        super(SummaryTStep, self).__init__(c_pointer)
+        super().__init__(c_pointer)
 
     def get_sim_days(self):
         """@rtype: double"""

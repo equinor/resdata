@@ -195,7 +195,7 @@ class ResdataKW(BaseCClass):
 
     @classmethod
     def createCReference(cls, c_ptr, parent=None):
-        rd_kw = super(ResdataKW, cls).createCReference(c_ptr, parent=parent)
+        rd_kw = super().createCReference(c_ptr, parent=parent)
         if rd_kw is None:
             raise ValueError("Failed to create ResdataKW instance")
 
@@ -204,7 +204,7 @@ class ResdataKW(BaseCClass):
 
     @classmethod
     def createPythonObject(cls, c_ptr):
-        rd_kw = super(ResdataKW, cls).createPythonObject(c_ptr)
+        rd_kw = super().createPythonObject(c_ptr)
         if rd_kw is None:
             raise ValueError("Failed to create ResdataKW instance")
 
@@ -406,7 +406,7 @@ class ResdataKW(BaseCClass):
             raise TypeError("Expected an ResDataType, received: %s" % type(data_type))
 
         c_ptr = self._alloc_new(name, size, data_type)
-        super(ResdataKW, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         self.__private_init()
 
     def __private_init(self):

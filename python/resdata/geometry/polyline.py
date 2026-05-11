@@ -3,7 +3,7 @@ from .geometry_tools import GeometryTools
 
 class Polyline:
     def __init__(self, name=None, init_points=None):
-        super(Polyline, self).__init__()
+        super().__init__()
         self.__name = name
         self.__points = []
         if init_points:

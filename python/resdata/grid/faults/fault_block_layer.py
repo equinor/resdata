@@ -54,7 +54,7 @@ class FaultBlockLayer(BaseCClass):
     def __init__(self, grid, k):
         c_ptr = self._alloc(grid, k)
         if c_ptr:
-            super(FaultBlockLayer, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
             raise ValueError("Invalid input - failed to create FaultBlockLayer")
 
