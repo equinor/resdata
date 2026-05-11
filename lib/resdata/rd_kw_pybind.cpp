@@ -36,12 +36,12 @@ PYBIND11_MODULE(_kw, m) {
                 throw std::invalid_argument("data_type must not be None");
             if (kw.has_value())
                 return reinterpret_cast<std::uintptr_t>(
-                    rd_kw_fscanf_alloc_grdecl_dynamic(stream, kw->c_str(),
-                                                      strict, *rd_data_type));
+                    rd_kw_fscanf_alloc_grdecl(stream, kw->c_str(),
+                                              *rd_data_type, 0, strict));
             else
                 return reinterpret_cast<std::uintptr_t>(
-                    rd_kw_fscanf_alloc_grdecl_dynamic(stream, nullptr, strict,
-                                                      *rd_data_type));
+                    rd_kw_fscanf_alloc_grdecl(stream, nullptr, *rd_data_type, 0,
+                                              strict));
         },
         py::return_value_policy::reference);
     m.def("_fprintf_grdecl", [](py::handle self, py::handle file) {

@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
         while (true) {
             rd_kw_type *grdecl_kw;
             clock_t begin = clock();
-            grdecl_kw = rd_kw_fscanf_alloc_grdecl(stream, NULL, 0, RD_FLOAT);
+            grdecl_kw = rd_kw_fscanf_alloc_grdecl(stream, nullptr, RD_FLOAT);
             clock_t end = clock();
             double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 

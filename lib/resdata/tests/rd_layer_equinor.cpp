@@ -15,7 +15,7 @@
 rd_kw_type *alloc_faultblock_kw(const char *filename, int grid_size) {
     FILE *stream = util_fopen(filename, "r");
     rd_kw_type *kw =
-        rd_kw_fscanf_alloc_grdecl(stream, "FAULTBLK", grid_size, RD_INT);
+        rd_kw_fscanf_alloc_grdecl(stream, "FAULTBLK", RD_INT, grid_size);
     fclose(stream);
 
     return kw;

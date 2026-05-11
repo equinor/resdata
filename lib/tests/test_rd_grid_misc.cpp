@@ -121,7 +121,7 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
                         fclose(f);
                 });
             return rd_kw_ptr(
-                rd_kw_fscanf_alloc_grdecl(fp.get(), kw, size, data_type),
+                rd_kw_fscanf_alloc_grdecl(fp.get(), kw, data_type, size),
                 &rd_kw_free);
         };
 

@@ -89,7 +89,7 @@ void test_kw_io_charlength() {
         {
             FILE *file = util_fopen("TEST2", "r");
             rd_kw_type *rd_kw_in =
-                rd_kw_fscanf_alloc_grdecl(file, KW1, -1, RD_FLOAT);
+                rd_kw_fscanf_alloc_grdecl(file, KW1, RD_FLOAT, -1);
             test_assert_string_equal(KW1, rd_kw_get_header(rd_kw_in));
             test_assert_int_equal(5, rd_kw_get_size(rd_kw_in));
 
