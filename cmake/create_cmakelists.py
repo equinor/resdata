@@ -63,7 +63,7 @@ def addPythonPackage(relative_module_path, test_sources=False):
 
 
 def addInclude(filename):
-    with open(filename, "r") as include_file:
+    with open(filename) as include_file:
         content = include_file.read()
     return content
 

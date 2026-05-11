@@ -14,7 +14,7 @@ class XYZIo:
 
         polyline = Polyline(name=name)
 
-        with open(path, "r") as f:
+        with open(path) as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -40,7 +40,7 @@ class XYZIo:
 
         polyline = Polyline(name=name)
 
-        with open(path, "r") as f:
+        with open(path) as f:
             for line in f:
                 x, y = map(float, line.split())
                 polyline.addPoint(x, y)

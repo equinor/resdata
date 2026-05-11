@@ -15,7 +15,7 @@ class SourceEnumerator:
 
     @classmethod
     def findEnum(cls, enum_name, full_source_file_path):
-        with open(full_source_file_path, "r") as f:
+        with open(full_source_file_path) as f:
             text = f.read()
 
         text = SourceEnumerator.removeComments(text)
