@@ -252,7 +252,7 @@ class ResdataKW(BaseCClass):
         file. The @kw argument should be the keyword header you are
         searching for, e.g. "PORO" or "PVTNUM"[1], the method will
         then search forward through the file to look for this @kw. If
-        the keyword can not be found the method will return None. The
+        the keyword can not be found the method will raise ValueError. The
         searching will start from the current position in the file; so
         if you want to reposition the file pointer you should use the
         seek() method of the file object first.
