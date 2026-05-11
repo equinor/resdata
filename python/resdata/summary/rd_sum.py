@@ -1686,9 +1686,7 @@ class Summary(BaseCClass):
             new_case_name, time_points, lower_extrapolation, upper_extrapolation
         )
         if new_case is None:
-            raise ValueError(
-                "Failed to create new resampled case:{}".format(new_case_name)
-            )
+            raise ValueError(f"Failed to create new resampled case:{new_case_name}")
 
         return new_case
 
