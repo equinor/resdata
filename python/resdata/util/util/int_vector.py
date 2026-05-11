@@ -95,7 +95,7 @@ class IntVector(VectorTemplate):
     )
 
     def __init__(self, default_value=0, initial_size=0):
-        super(IntVector, self).__init__(default_value, initial_size)
+        super().__init__(default_value, initial_size)
 
     @classmethod
     def active_list(cls, range_string):

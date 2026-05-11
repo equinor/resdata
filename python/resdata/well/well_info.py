@@ -35,7 +35,7 @@ class WellInfo(BaseCClass):
         load_segment_information: bool = True,
     ):
         c_ptr = self._alloc(grid)
-        super(WellInfo, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         if not c_ptr:
             raise ValueError("Unable to construct WellInfo from grid %s." % str(grid))
 

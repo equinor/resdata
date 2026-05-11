@@ -184,7 +184,7 @@ class ResdataFile(BaseCClass):
         if c_ptr is None:
             raise IOError('Failed to open file "%s"' % filename)
         else:
-            super(ResdataFile, self).__init__(c_ptr)
+            super().__init__(c_ptr)
             self.global_view = self._get_global_view()
             self.global_view.setParent(self)
 

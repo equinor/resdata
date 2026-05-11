@@ -128,7 +128,7 @@ class VectorTemplate(BaseCClass):
         Creates a new TVector instance.
         """
         c_pointer = self._alloc(initial_size, default_value)
-        super(VectorTemplate, self).__init__(c_pointer)
+        super().__init__(c_pointer)
         self.element_size = self._element_size()
 
     def __contains__(self, value):

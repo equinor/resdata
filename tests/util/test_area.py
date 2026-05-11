@@ -36,7 +36,7 @@ class TestArea(BaseCClass):
         if c_ptr is None:
             c_ptr = self._test_area_alloc(test_name, store_area)
 
-        super(TestArea, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def get_original_cwd(self):
         return self._get_original_cwd()

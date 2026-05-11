@@ -35,7 +35,7 @@ class CTime(BaseCValue):
                 "Can not convert class %s to CTime" % value.__class__
             )
 
-        super(CTime, self).__init__(value)
+        super().__init__(value)
 
     def ctime(self):
         """@rtype: int"""

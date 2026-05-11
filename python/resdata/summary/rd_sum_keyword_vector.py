@@ -24,7 +24,7 @@ class SummaryKeyWordVector(BaseCClass):
 
     def __init__(self, rd_sum, add_keywords=False):
         c_pointer = self._alloc(rd_sum, add_keywords)
-        super(SummaryKeyWordVector, self).__init__(c_pointer)
+        super().__init__(c_pointer)
 
     def __getitem__(self, index):
         if index < 0:

@@ -114,6 +114,4 @@ class ResdataVersion(Version):
         micro = self._micro_version()
         git_commit = self._git_commit()
         build_time = self._build_time()
-        super(ResdataVersion, self).__init__(
-            major, minor, micro, git_commit, build_time
-        )
+        super().__init__(major, minor, micro, git_commit, build_time)

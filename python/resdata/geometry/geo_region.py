@@ -45,7 +45,7 @@ class GeoRegion(BaseCClass):
         self._preselect = True if preselect else False
         c_ptr = self._alloc(pointset, self._preselect)
         if c_ptr:
-            super(GeoRegion, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
             raise ValueError(
                 "Could not construct GeoRegion from pointset %s." % pointset

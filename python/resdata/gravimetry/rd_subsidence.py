@@ -59,7 +59,7 @@ class ResdataSubsidence(BaseCClass):
         """
         self.init_file = init_file  # Inhibit premature garbage collection of init_file
         c_ptr = self._alloc(grid, init_file)
-        super(ResdataSubsidence, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def __contains__(self, survey_name):
         return self._has_survey(survey_name)

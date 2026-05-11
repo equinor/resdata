@@ -118,7 +118,7 @@ class TimeVector(VectorTemplate):
 
     def __init__(self, default_value=None, initial_size=0):
         if default_value is None:
-            super(TimeVector, self).__init__(CTime(0), initial_size)
+            super().__init__(CTime(0), initial_size)
         else:
             try:
                 default = CTime(default_value)
@@ -127,7 +127,7 @@ class TimeVector(VectorTemplate):
                     "default value invalid - must be type ctime() or date/datetime"
                 )
 
-            super(TimeVector, self).__init__(default, initial_size)
+            super().__init__(default, initial_size)
 
     @classmethod
     def parseTimeUnit(cls, deltaString):

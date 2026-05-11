@@ -61,7 +61,7 @@ class StringList(BaseCClass):
         """
 
         c_ptr = self._alloc()
-        super(StringList, self).__init__(c_ptr)
+        super().__init__(c_ptr)
         if not initial:
             return
 

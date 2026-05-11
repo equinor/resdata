@@ -30,7 +30,7 @@ def log_test(test):
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")
 class _AssertNotRaisesContext:
     def __init__(self, test_class):
-        super(_AssertNotRaisesContext, self).__init__()
+        super().__init__()
         self._test_class = test_class
 
     def __enter__(self):
@@ -61,7 +61,7 @@ class ExtendedTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
         installAbortSignals()
-        super(ExtendedTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def assertFloatEqual(self, first, second, msg=None, tolerance=1e-6):
         try:

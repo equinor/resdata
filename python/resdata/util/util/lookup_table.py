@@ -29,7 +29,7 @@ class LookupTable(BaseCClass):
     )
 
     def __init__(self, lower_limit=None, upper_limit=None):
-        super(LookupTable, self).__init__(self._alloc())
+        super().__init__(self._alloc())
 
         if lower_limit is not None:
             self.setLowerLimit(lower_limit)

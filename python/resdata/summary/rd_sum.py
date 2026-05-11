@@ -258,7 +258,7 @@ class Summary(BaseCClass):
                 "Failed to create summary instance from argument:%s" % load_case
             )
 
-        super(Summary, self).__init__(c_pointer)
+        super().__init__(c_pointer)
         self._load_case = load_case
 
     @classmethod
@@ -283,12 +283,12 @@ class Summary(BaseCClass):
 
     @classmethod
     def createCReference(cls, c_pointer, parent=None):
-        result = super(Summary, cls).createCReference(c_pointer, parent)
+        result = super().createCReference(c_pointer, parent)
         return result
 
     @classmethod
     def createPythonObject(cls, c_pointer):
-        result = super(Summary, cls).createPythonObject(c_pointer)
+        result = super().createPythonObject(c_pointer)
         return result
 
     @staticmethod

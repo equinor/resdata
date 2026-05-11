@@ -28,7 +28,7 @@ class RandomNumberGenerator(BaseCClass):
         assert isinstance(init_mode, RngInitModeEnum)
 
         c_ptr = self._rng_alloc(alg_type, init_mode)
-        super(RandomNumberGenerator, self).__init__(c_ptr)
+        super().__init__(c_ptr)
 
     def stateSize(self):
         return self._state_size()

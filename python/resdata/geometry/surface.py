@@ -66,7 +66,7 @@ class Surface(BaseCClass):
             filename = str(filename)
             if os.path.isfile(filename):
                 c_ptr = self._alloc(filename, True)
-                super(Surface, self).__init__(c_ptr)
+                super().__init__(c_ptr)
             else:
                 raise IOError('No such file "%s".' % filename)
         else:
@@ -77,7 +77,7 @@ class Surface(BaseCClass):
                     % str(s_args)
                 )
             c_ptr = self._new(*s_args)
-            super(Surface, self).__init__(c_ptr)
+            super().__init__(c_ptr)
 
     def __eq__(self, other):
         """

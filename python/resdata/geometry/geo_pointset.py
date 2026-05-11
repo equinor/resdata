@@ -14,7 +14,7 @@ class GeoPointset(BaseCClass):
     def __init__(self, external_z=False):
         c_ptr = self._alloc(external_z)
         if c_ptr:
-            super(GeoPointset, self).__init__(c_ptr)
+            super().__init__(c_ptr)
         else:
             ext = "external" if external_z else "internal"
             raise ValueError("Failed to construct GeoPointset with %s_z." % ext)

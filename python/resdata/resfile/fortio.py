@@ -114,7 +114,7 @@ class FortIO(BaseCClass):
         self.__mode = mode
         if not c_pointer:
             raise IOError('Failed to open FortIO file "%s".' % file_name)
-        super(FortIO, self).__init__(c_pointer)
+        super().__init__(c_pointer)
 
     def close(self):
         if self:

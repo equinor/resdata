@@ -6,7 +6,7 @@ import traceback
 
 class Task(Thread):
     def __init__(self, func, *args, **kwargs):
-        super(Task, self).__init__()
+        super().__init__()
         self.__func = func
         self.__args = args
         self.__kwargs = kwargs
@@ -55,7 +55,7 @@ class Task(Thread):
 
 class ThreadPool:
     def __init__(self, size=None, verbose=False):
-        super(ThreadPool, self).__init__()
+        super().__init__()
 
         if size is None:
             size = multiprocessing.cpu_count()
