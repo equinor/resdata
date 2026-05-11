@@ -175,6 +175,33 @@ static void iset_range(char *data, int data_index, int sizeof_ctype,
     }
 }
 
+template <typename T>
+std::unique_ptr<T[], void (*)(void *)> checked_calloc(size_t num) {
+    T *ptr = static_cast<T *>(std::calloc(num, sizeof(T)));
+
+    if (ptr == nullptr) {
+        throw std::bad_alloc{};
+    }
+    return std::unique_ptr<T[], void (*)(void *)>(
+        ptr, [](void *p) { std::free(p); });
+}
+
+template <typename T>
+void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
+                     size_t new_element_count) {
+    if (new_element_count == 0) {
+        ptr.reset();
+        return;
+    }
+    T *raw_ptr = ptr.release();
+    void *new_raw_ptr = std::realloc(raw_ptr, new_element_count * sizeof(T));
+    if (new_raw_ptr == nullptr) {
+        ptr.reset(raw_ptr);
+        throw std::bad_alloc{};
+    }
+    ptr.reset(static_cast<T *>(new_raw_ptr));
+}
+
 /**
    The @strict flag is used to indicate whether the loader will accept
    character strings embedded into a numerical grdecl keyword; this
@@ -213,12 +240,12 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
     size_t data_index = 0;
     int sizeof_ctype = rd_type_get_sizeof_ctype(data_type);
     size_t data_size = init_size;
-    char *buffer = (char *)util_calloc((buffer_size + 1), sizeof *buffer);
-    char *data = (char *)util_calloc(sizeof_ctype * data_size, sizeof *data);
+    auto buffer = checked_calloc<char>(buffer_size + 1);
+    auto data = checked_calloc<char>(sizeof_ctype * data_size);
 
     while (true) {
-        if (fscanf(stream, "%32s", buffer) == 1) {
-            if (strcmp(buffer, RD_COMMENT_STRING) == 0) {
+        if (fscanf(stream, "%32s", buffer.get()) == 1) {
+            if (strcmp(buffer.get(), RD_COMMENT_STRING) == 0) {
                 // We have read a comment marker - just read up to the end of line.
                 char c;
                 while (true) {
@@ -230,7 +257,7 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                         break;
                     }
                 }
-            } else if (strcmp(buffer, RD_DATA_TERMINATION) == 0)
+            } else if (strcmp(buffer.get(), RD_DATA_TERMINATION) == 0)
                 break;
             else {
                 // We have read a valid input string; scan numerical input values from it.
@@ -246,39 +273,40 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                 bool char_input = false;
 
                 if (rd_type_is_int(data_type)) {
-                    if (sscanf(buffer, "%d*%d", &multiplier, &value.i) == 2) {
-                    } else if (sscanf(buffer, "%d", &value.i) == 1)
+                    if (sscanf(buffer.get(), "%d*%d", &multiplier, &value.i) ==
+                        2) {
+                    } else if (sscanf(buffer.get(), "%d", &value.i) == 1)
                         multiplier = 1;
                     else {
                         char_input = true;
                         if (strict)
                             util_abort("%s: Malformed content:\"%s\" when "
                                        "reading keyword:%s \n",
-                                       __func__, buffer, header);
+                                       __func__, buffer.get(), header);
                     }
                 } else if (rd_type_is_float(data_type)) {
-                    if (sscanf(buffer, "%d*%128g", &multiplier, &value.f) ==
-                        2) {
-                    } else if (sscanf(buffer, "%128g", &value.f) == 1)
+                    if (sscanf(buffer.get(), "%d*%128g", &multiplier,
+                               &value.f) == 2) {
+                    } else if (sscanf(buffer.get(), "%128g", &value.f) == 1)
                         multiplier = 1;
                     else {
                         char_input = true;
                         if (strict)
                             util_abort("%s: Malformed content:\"%s\" when "
                                        "reading keyword:%s \n",
-                                       __func__, buffer, header);
+                                       __func__, buffer.get(), header);
                     }
                 } else if (rd_type_is_double(data_type)) {
-                    if (sscanf(buffer, "%d*%128lg", &multiplier, &value.d) ==
-                        2) {
-                    } else if (sscanf(buffer, "%128lg", &value.d) == 1)
+                    if (sscanf(buffer.get(), "%d*%128lg", &multiplier,
+                               &value.d) == 2) {
+                    } else if (sscanf(buffer.get(), "%128lg", &value.d) == 1)
                         multiplier = 1;
                     else {
                         char_input = true;
                         if (strict)
                             util_abort("%s: Malformed content:\"%s\" when "
                                        "reading keyword:%s \n",
-                                       __func__, buffer, header);
+                                       __func__, buffer.get(), header);
                     }
                 } else
                     util_abort("%s: sorry type:%s not supported \n", __func__,
@@ -291,13 +319,14 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                     size_t min_size = data_index + multiplier;
                     if (min_size >= data_size) {
                         if (min_size <= RD_KW_MAX_SIZE) {
-                            size_t byte_size = sizeof_ctype * sizeof *data;
+                            size_t byte_size =
+                                sizeof_ctype * sizeof *data.get();
 
                             data_size = util_size_t_min(
                                 RD_KW_MAX_SIZE, 2 * (data_index + multiplier));
                             byte_size *= data_size;
 
-                            data = (char *)util_realloc(data, byte_size);
+                            checked_realloc<char>(data, byte_size);
                         } else {
                             // We are asking for more elements than can possible
                             // be adressed in an integer. Return NULL - and
@@ -307,7 +336,7 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
                         }
                     }
 
-                    iset_range(data, data_index, sizeof_ctype, &value,
+                    iset_range(data.get(), data_index, sizeof_ctype, &value,
                                multiplier);
                     data_index += multiplier;
                 }
@@ -317,10 +346,9 @@ static char *fscanf_alloc_grdecl_data(const char *header, bool strict,
         } else
             break;
     }
-    free(buffer);
     *kw_size = data_index;
-    data = (char *)util_realloc(data, sizeof_ctype * data_index * sizeof *data);
-    return data;
+    checked_realloc<char>(data, sizeof_ctype * data_index * sizeof *data.get());
+    return data.release();
 }
 
 /*
