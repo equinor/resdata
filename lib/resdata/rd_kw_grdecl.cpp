@@ -232,8 +232,8 @@ void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
    Observe that no-spaces-are-allowed-around-the-*
 */
 static std::unique_ptr<char[], void (*)(void *)>
-fscanf_alloc_grdecl_data(const char *header, bool strict,
-                         rd_data_type data_type, int *kw_size, FILE *stream) {
+fscanf_grdecl_data(const char *header, bool strict, rd_data_type data_type,
+                   int *kw_size, FILE *stream) {
     char newline = '\n';
     bool atEOF = false;
     size_t init_size = 32;
@@ -385,7 +385,7 @@ fscanf_alloc_grdecl_data(const char *header, bool strict,
      @kw argument.
 
    strict: see the documentation of the strict flag in the
-     fscanf_alloc_grdecl_data() function. Most of the exported
+     fscanf_grdecl_data() function. Most of the exported
      functions have hardwired strict = true.
 
 
@@ -420,8 +420,8 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
         char file_header[MAX_GRDECL_HEADER_SIZE] = {0};
         if (fscanf(stream, MAX_GRDECL_HEADER_SCANF_FMT, file_header) == 1) {
             int kw_size;
-            auto data = fscanf_alloc_grdecl_data(file_header, strict, data_type,
-                                                 &kw_size, stream);
+            auto data = fscanf_grdecl_data(file_header, strict, data_type,
+                                           &kw_size, stream);
 
             // Verify size
             if (size > 0)
