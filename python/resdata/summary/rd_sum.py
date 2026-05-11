@@ -625,8 +625,8 @@ class Summary(BaseCClass):
 
     @staticmethod
     def _compile_headers_list(
-        headers: Sequence[str], dims: Optional[List[int]]
-    ) -> List[Tuple[str, str, int, str, Optional[str], Optional[Tuple[int, int, int]]]]:
+        headers: Sequence[str], dims: Optional[list[int]]
+    ) -> list[tuple[str, str, int, str, Optional[str], Optional[tuple[int, int, int]]]]:
         """
         Converts column names generated with `Summary.pandas_frame()` so
         that `Summary.from_pandas(sum.pandas_frame()) == sum`.

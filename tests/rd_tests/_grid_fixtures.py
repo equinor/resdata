@@ -629,8 +629,8 @@ def generate_coordkw_grid(
     num_x: int,
     num_y: int,
     num_z: int,
-    z_perturbations: Iterable[Tuple[int, int, int, int, float]] = (),
-    actnum: Optional[List[int]] = None,
+    z_perturbations: Iterable[tuple[int, int, int, int, float]] = (),
+    actnum: Optional[list[int]] = None,
 ) -> Grid:
     """Build a grid via COORD/ZCORN with integer-coordinate corners.
 
