@@ -729,6 +729,18 @@ def str_arrays(draw):
     )
 
 
+def _write_grdecl(tmp_path, name, body):
+    path = tmp_path / name
+    path.write_text(body)
+    return path
+
+
+def test_missing_keyword_raises(tmp_path):
+    path = _write_grdecl(tmp_path, "empty.grdecl", "PORO\n/\n")
+    with pytest.raises(ValueError), cwrap.open(str(path), "r") as fh:
+        _ = ResdataKW.read_grdecl(fh, "NOTPORO", rd_type=ResDataType.RD_FLOAT)
+
+
 array_shapes = st.integers(min_value=1, max_value=32).map(lambda n: (n,))
 
 int_arrays = arrays(dtype=np.int32, shape=array_shapes)
