@@ -5,7 +5,6 @@ from resdata.summary import Summary
 from resdata.util.util import TimeVector, CTime
 
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("input_case", metavar="input_case", type=str)
 parser.add_argument("output_case", metavar="output_case", type=str)
@@ -18,14 +17,18 @@ input_case = Summary(args.input_case)
 if args.refcase:
     refcase = Summary(args.refcase)
     report_only = False
-    time_points = refcase.alloc_time_vector( report_only )
+    time_points = refcase.alloc_time_vector(report_only)
 else:
     start_time = input_case.get_data_start_time()
     end_time = input_case.get_end_time()
-    time_points = TimeVector.create_linear(CTime(start_time), CTime(end_time), args.num_timestep)
+    time_points = TimeVector.create_linear(
+        CTime(start_time), CTime(end_time), args.num_timestep
+    )
 
-output_case = input_case.resample(args.output_case,
-                                  time_points,
-                                  lower_extrapolation=args.extrapolation,
-                                  upper_extrapolation=args.extrapolation)
-output_case.fwrite( )
+output_case = input_case.resample(
+    args.output_case,
+    time_points,
+    lower_extrapolation=args.extrapolation,
+    upper_extrapolation=args.extrapolation,
+)
+output_case.fwrite()

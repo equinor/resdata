@@ -9,4 +9,3 @@ Bergen; before you can start using the Equinor specific test data you
 must add the following symlink:
 
     ln -s <enkf_disk_in_Bergen>/ErtTestData Equinor
-

@@ -146,7 +146,7 @@
   3. Query the well_info instance for information about the wells at
      different times; either through the indirect function
      well_info_get_ts() to get the full timeseries for one named well.
-     
+
 
   4. well_info_free() before you go home.
 

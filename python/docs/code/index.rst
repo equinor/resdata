@@ -1271,5 +1271,3 @@ SummaryVector:
        which files should be loaded; i.e. when calling as
        :code:`Summary("CASE.A0056")` the loader will *only* look for
        multiple formatted files.
-
-

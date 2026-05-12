@@ -33,7 +33,7 @@ As this codebase contains both Python and C++ code, there are tests for both Pyt
 ### Python tests
 These tests use [pytest](https://pytest.org) and require that ResData is installed into a Python virtualenv in `--editable` mode, as described in the [Building](#Building) section.
 
-Ensure that pytest is installed and do the following to 
+Ensure that pytest is installed and do the following to
 ```sh
 # Install pytest
 pip install pytest

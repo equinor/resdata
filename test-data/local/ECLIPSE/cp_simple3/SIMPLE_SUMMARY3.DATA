@@ -10,7 +10,7 @@
 
 -- This case is created for testing flow diagnostic implementations
 -- in ResInsight. It is a simple shoe-box grid with an added fault
--- giving non-neighboring connections and two added local grid refinements. 
+-- giving non-neighboring connections and two added local grid refinements.
 
 
 RUNSPEC  ===============================================================
@@ -19,7 +19,7 @@ TITLE
  SIMPLE 2PH MODEL WITH SINGLE FAULT, LGR, AQUIFER (CT & Num) and GRUPNET
 
 DIMENS
-    20  20  10 / 
+    20  20  10 /
 
 METRIC
 
@@ -37,16 +37,16 @@ REGDIMS
     2 5* /
 WELLDIMS
        12   100     4    12     0     0     0     0     0     0     0     0 /
-       
+
 AQUDIMS
- 5  5  1*  1* 1 50 1* 1* /       
+ 5  5  1*  1* 1 50 1* 1* /
 
 WSEGDIMS
  4  30  4  /
- 
+
 FAULTDIM
  10  /
- 
+
 
 TRACERS
 -- NOTRAC NWTRAC NGTRAC NETRAC Diff/NODiff
@@ -59,7 +59,7 @@ START
 1 JAN 2017 /
 
 LGR
-      2      10000  / 
+      2      10000  /
 
 
 UNIFOUT
@@ -85,7 +85,7 @@ MULTFLT
   'FLT4'     0.4  /
   'FLT5'     0.5  /
 /
-  
+
 
 PORO
 4000*0.3
@@ -127,13 +127,13 @@ AQUNUM
  1   20 11  5  1.0E+6  10000    1*   2000     1*    500    1*   1*  /
  1   20 11  6  1.0E+6  10000    1*   2000     1*    500    1*   1*  /
  1   20 11  7  1.0E+6  10000    1*   2000     1*    500    1*   1*  /
- 2   20 11  9  1.0E+6  10000    1*   2000     1*    500    1*   1*  /   
- 2   20 11 10  1.0E+6  10000    1*   2000     1*    500    1*   1*  /   
+ 2   20 11  9  1.0E+6  10000    1*   2000     1*    500    1*   1*  /
+ 2   20 11 10  1.0E+6  10000    1*   2000     1*    500    1*   1*  /
 /
 
 AQUCON
  1 19 19 11 11  5  7 'I+' 1.0 /
- 2 19 19 11 11  9 10 'I+' 1.0 / 
+ 2 19 19 11 11  9 10 'I+' 1.0 /
 /
 
 
@@ -150,7 +150,7 @@ PVTW
 
 ROCK
     400  0 /
-    
+
 PVDG
 --Press  Bg   Visc
  50	0.024958	0.01441
@@ -168,7 +168,7 @@ PVDG
 543.83	0.003295	0.05582
 594.29	0.003200	0.07567
 /
-   
+
 
 --Corey parametrization using exponent of 2
 SWOF
@@ -219,7 +219,7 @@ REGIONS   ===============================================================
 --  ARRAY   VALUE     ------- BOX ------
 --                    I1   I2   J1   J2   K1   K2
 EQUALS
- FIPNUM 1 1 10 1 20 1 10  / 
+ FIPNUM 1 1 10 1 20 1 10  /
  FIPNUM 2 11 20 1 20 1 10 /
 /
 
@@ -240,7 +240,7 @@ TBLKFTR2
   4000*0 /
 
 AQUCT
---# Depth Pres Perm Por  Compr  Radius   H  Angle PVTW Table Csalt Taq 
+--# Depth Pres Perm Por  Compr  Radius   H  Angle PVTW Table Csalt Taq
 1    3    500  2000  0.2  1E-5  10000   20   90   1*   /
 
 AQUANCON
@@ -281,22 +281,22 @@ RWFT
 ROIP
 /
 
-WTPRTR1 
+WTPRTR1
 /
 
-WTPRTR2 
+WTPRTR2
 /
 
-WTPTTR1 
+WTPTTR1
 /
 
-WTPTTR2 
+WTPTTR2
 /
 
-WTITTR1 
+WTITTR1
 /
 
-WTITTR2 
+WTITTR2
 /
 
 -- Analytical Aqufier
@@ -450,12 +450,12 @@ SPRDH
 SPRDF
  'I2' /
  /
- 
+
  -- Network
-GPR 
+GPR
 /
 
-GPRB 
+GPRB
 /
 
 SCHEDULE   ===============================================================
@@ -476,7 +476,7 @@ GRUPNET
  FIELD    1*  /
  PRODA   25   9999 /
  WIA    400   9999 /
-/ 
+/
 
 
 
@@ -486,14 +486,14 @@ WELSPECS
  I2     WIA     2 18    0  WATER /
  P1     PRODA  18  2    0    OIL /
  P2     PRODA  18 18    0    OIL /
- P1_RFT PRODA  18  2    0    OIL / 
- P2_RFT PRODA  18 18    0    OIL / 
+ P1_RFT PRODA  18  2    0    OIL /
+ P2_RFT PRODA  18 18    0    OIL /
 /
 
 COMPDAT
-   	'P1'      2*    2     2  'SHUT'  2*     0.2 	1*    0 / 
-   	'P1'      2*    3    10  'OPEN'  2*     0.2 	1*    0 / 
- 	'P1_RFT'  2*    6    10  'OPEN'  2*     0.2 	1*    0 / 
+   	'P1'      2*    2     2  'SHUT'  2*     0.2 	1*    0 /
+   	'P1'      2*    3    10  'OPEN'  2*     0.2 	1*    0 /
+ 	'P1_RFT'  2*    6    10  'OPEN'  2*     0.2 	1*    0 /
 /
 
 COMPDAT
@@ -522,42 +522,42 @@ COMPDAT
  'I2'   2 15    7    7  'SHUT'  2*  0.2   3*  'Y' /
  'I2'   2 14    7    7  'OPEN'  2*  0.2   3*  'Y' /
 
- 'P2'   18 18   2    2  'OPEN'  2*  0.2   3*   'Y' / 
- 'P2'   18 17   2    2  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 16   2    2  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 15   2    2  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 14   2    2  'OPEN'  2*  0.2   3*   'Y' / 
- 
- 'P2'   18 18   5    5  'OPEN'  2*  0.2   3*   'Y' / 
- 'P2'   18 17   5    5  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 16   5    5  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 15   5    5  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 14   5    5  'OPEN'  2*  0.2   3*   'Y' / 
-  
- 'P2'   18 18   7    7  'OPEN'  2*  0.2   3*   'Y' / 
- 'P2'   18 17   7    7  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 16   7    7  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 15   7    7  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2'   18 14   7    7  'OPEN'  2*  0.2   3*   'Y' / 
+ 'P2'   18 18   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 17   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 16   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 15   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 14   2    2  'OPEN'  2*  0.2   3*   'Y' /
 
- 'P2_RFT'   18 18   2    2  'OPEN'  2*  0.2   3*   'Y' / 
- 'P2_RFT'   18 17   2    2  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 16   2    2  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 15   2    2  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 14   2    2  'OPEN'  2*  0.2   3*   'Y' / 
- 
- 'P2_RFT'   18 18   5    5  'OPEN'  2*  0.2   3*   'Y' / 
- 'P2_RFT'   18 17   5    5  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 16   5    5  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 15   5    5  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 14   5    5  'OPEN'  2*  0.2   3*   'Y' / 
-  
- 'P2_RFT'   18 18   7    7  'OPEN'  2*  0.2   3*   'Y' / 
- 'P2_RFT'   18 17   7    7  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 16   7    7  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 15   7    7  'OPEN'  2*  0.2   3*   'Y' /  
- 'P2_RFT'   18 14   7    7  'OPEN'  2*  0.2   3*   'Y' /  
-/ 
+ 'P2'   18 18   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 17   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 16   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 15   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 14   5    5  'OPEN'  2*  0.2   3*   'Y' /
+
+ 'P2'   18 18   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 17   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 16   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 15   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2'   18 14   7    7  'OPEN'  2*  0.2   3*   'Y' /
+
+ 'P2_RFT'   18 18   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 17   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 16   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 15   2    2  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 14   2    2  'OPEN'  2*  0.2   3*   'Y' /
+
+ 'P2_RFT'   18 18   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 17   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 16   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 15   5    5  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 14   5    5  'OPEN'  2*  0.2   3*   'Y' /
+
+ 'P2_RFT'   18 18   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 17   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 16   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 15   7    7  'OPEN'  2*  0.2   3*   'Y' /
+ 'P2_RFT'   18 14   7    7  'OPEN'  2*  0.2   3*   'Y' /
+/
 
 WELSEGS
 -- Name    Dep 1   Tlen 1  Vol 1
@@ -614,7 +614,7 @@ COMPSEGS
 -- Bottom Branch
     2  18  7  3      7     1*     'Y'    14  /
  /
- 
+
 WELSEGS
 -- Name    Dep 1   Tlen 1  Vol 1
   'P2'       0        1    1*   'INC' /
@@ -647,21 +647,21 @@ COMPSEGS
    18  18  5  3      5      1*     'Y'    14  /
 -- Bottom Branch
    18  18  7  4      7      1*     'Y'    14  /
-/ 
- 
+/
+
 
 WELSPECL
  'I1'    'WIA' 'WELLI1'   5 5    1*      'WATER'  / Injector
- 'I1_GI' 'WIA' 'WELLI1'   5 5    1*      'GAS'  / Injector 
+ 'I1_GI' 'WIA' 'WELLI1'   5 5    1*      'GAS'  / Injector
 /
 COMPDATL
-       'I1'    'WELLI1'  1*  1*   1    12  'OPEN' 2*   0.2 1* 0  /  
-       'I1'    'WELLI1'  1*  1*  13    20  'SHUT' 2*   0.2 1* 0  /         
-       'I1_GI' 'WELLI1'  1*  1*   1     6  'SHUT' 2*   0.2 1* 0  /  
-       'I1_GI' 'WELLI1'  1*  1*   7    14  'OPEN' 2*   0.2 1* 0  /  
-       'I1_GI' 'WELLI1'  1*  1*  15    16  'SHUT' 2*   0.2 1* 0  /  
-       'I1_GI' 'WELLI1'  1*  1*  17    20  'OPEN' 2*   0.2 1* 0  /  
-	      	
+       'I1'    'WELLI1'  1*  1*   1    12  'OPEN' 2*   0.2 1* 0  /
+       'I1'    'WELLI1'  1*  1*  13    20  'SHUT' 2*   0.2 1* 0  /
+       'I1_GI' 'WELLI1'  1*  1*   1     6  'SHUT' 2*   0.2 1* 0  /
+       'I1_GI' 'WELLI1'  1*  1*   7    14  'OPEN' 2*   0.2 1* 0  /
+       'I1_GI' 'WELLI1'  1*  1*  15    16  'SHUT' 2*   0.2 1* 0  /
+       'I1_GI' 'WELLI1'  1*  1*  17    20  'OPEN' 2*   0.2 1* 0  /
+
 /
 
 
@@ -669,7 +669,7 @@ WCONPROD
     'P1' 'OPEN' 'BHP' 5*  350/
     'P2' 'OPEN' 'BHP' 5*  345/
 'P1_RFT' 'STOP' 'BHP' 5*  345/
-'P2_RFT' 'STOP' 'BHP' 5*  345/ 
+'P2_RFT' 'STOP' 'BHP' 5*  345/
 
 /
 
@@ -677,7 +677,7 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'STOP'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 
 WTRACER
@@ -694,12 +694,12 @@ TUNING
 DATES
  1 FEB 2017  /
  /
- 
+
 WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -711,7 +711,7 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 
 
@@ -720,7 +720,7 @@ WRFTPLT
    P1_RFT  YES  REPT  /
    P2_RFT  NO   YES  YES /
   /
-  
+
 DATES
  1 APR 2017  /
  /
@@ -730,7 +730,7 @@ WCONINJE
     'I1'     'WATER'  'STOP'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -742,18 +742,18 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'STOP'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 DATES
  1 JUN 2017  /
  /
 
- 
+
 WCONINJE
     'I1'     'WATER'  'STOP'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -764,7 +764,7 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'STOP'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 DATES
  1 AUG 2017  /
@@ -774,7 +774,7 @@ DATES
     'I1'     'WATER'  'STOP'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -786,18 +786,18 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'STOP'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 DATES
  1 OCT 2017  /
  /
 
- 
+
  WCONINJE
     'I1'     'WATER'  'SHUT'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -809,19 +809,19 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'SHUT'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 
 DATES
  1 DEC 2017  /
  /
 
- 
+
  WCONINJE
     'I1'     'WATER'  'SHUT'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -833,19 +833,19 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'SHUT'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 
 DATES
  1 FEB 2018  /
  /
 
- 
+
  WCONINJE
     'I1'     'WATER'  'SHUT'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -857,19 +857,19 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'SHUT'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
 
 DATES
  1 APR 2018  /
  /
 
- 
+
  WCONINJE
     'I1'     'WATER'  'SHUT'  'RATE'      0  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'      0  1* 550/
     'I1_GI'  'GAS'    'OPEN'  'RATE'  40000  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/	
+    'I2_GI'  'GAS'    'OPEN'  'RATE'  10000  1* 550/
 /
 
 DATES
@@ -881,18 +881,15 @@ WCONINJE
     'I1'     'WATER'  'OPEN'  'RATE'  40  1* 550/
     'I2'     'WATER'  'OPEN'  'RATE'  10  1* 550/
     'I1_GI'  'GAS'    'SHUT'  'RATE'   0  1* 550/
-    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/    
+    'I2_GI'  'GAS'    'OPEN'  'RATE'   0  1* 550/
 /
-  
 
 
-      
+
+
 
 TSTEP
  4*15 /
- 
- 
+
+
 END
-
-
-
