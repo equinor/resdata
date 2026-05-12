@@ -1,5 +1,5 @@
 FAULTS
--- NAME               IX1  IX2    IY1  IY2    IZ1  IZ2   FACE    
+-- NAME               IX1  IX2    IY1  IY2    IZ1  IZ2   FACE
 
 'F1'             126  126     52   52     43   43    'X'    /
 'F1'             127  127     51   51      1   43    'X'    /
@@ -77,5 +77,3 @@ FAULTS
 'F3'              130  130     32   32      1   43   'X-'    /
 'F3'              130  130     32   32      1   43   'Y-'    /
  /
-
-

@@ -130,7 +130,3 @@ typedef @TYPE@ (@TYPE@_ftype) (@TYPE@);
 std::unique_ptr<@TYPE@_vector_type, decltype(&@TYPE@_vector_free)> make_@TYPE@_vector(int, @TYPE@);
 #endif
 //
-
-
-
-

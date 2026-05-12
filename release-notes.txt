@@ -207,4 +207,3 @@ libutil:
   - bug in matrix_dgemm [1286].
   - Resurrected block_fs utilities from the past [1297].
   - Slicing for runpath_list [1356].
-

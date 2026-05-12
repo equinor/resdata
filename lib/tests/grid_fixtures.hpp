@@ -671,7 +671,7 @@ load_egrid_dual_porosity_with_coarse_groups(const fs::path &filename, int nx,
 
 /**
  * A minimal Grid containing a 1x1x1 main grid
- * and a 1x1x1 LGR. 
+ * and a 1x1x1 LGR.
  *
  * A parent_name of "" or "GLOBAL" is treated as "no parent".
  * Any other non-empty value must match an existing grid name (nested LGRs).
