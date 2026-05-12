@@ -22,7 +22,12 @@ test = [
   "pandas",
 ]
 types = ["mypy", "types-six"]
-format = ["cmake-format", "clang-format", "ruff"]
+format = [
+  "clang-format",
+  "cmake-format",
+  "pre-commit",
+  "ruff"
+  ]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
