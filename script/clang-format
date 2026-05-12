@@ -9,7 +9,7 @@ from typing import Iterator, Optional
 DIRECTORIES = ["applications", "lib"]
 
 
-def find_clang_format_binary(clang_format: Optional[str]) -> Path:
+def find_clang_format_binary(clang_format: str | None) -> Path:
     """
     Looks for clang-format binary by searching the PATH environment
     variable. Detect if clang-format was installed from PyPI and use the actual
