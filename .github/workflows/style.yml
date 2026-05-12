@@ -33,7 +33,6 @@ jobs:
         find . -name 'CMakeLists.txt' -o -name '*.cmake' > cmake-src
         xargs cmake-format --check < cmake-src
 
-    - name: ruff
+    - name: pre-commit hooks
       run: |
-        ruff check
-        ruff format --check
+        SKIP=no-commit-to-branch pre-commit run --all-files --show-diff-on-failure
