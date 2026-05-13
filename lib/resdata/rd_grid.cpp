@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <limits>
 
 #include <ert/util/util.hpp>
 #include <ert/util/double_vector.hpp>
@@ -2256,6 +2257,34 @@ static rd_grid_type *rd_grid_alloc_GRDECL_kw__(
     nz = rd_kw_iget_int(gridhead_kw, GRIDHEAD_NZ_INDEX);
     lgr_nr = rd_kw_iget_int(gridhead_kw, GRIDHEAD_LGR_INDEX);
 
+    if (nx <= 0 || ny <= 0 || nz <= 0)
+        util_abort("%s: Invalid grid dimensions: nx=%d, ny=%d, nz=%d\n",
+                   __func__, nx, ny, nz);
+
+    const int64_t nx64 = nx;
+    const int64_t ny64 = ny;
+    const int64_t nz64 = nz;
+    const int64_t expected_coord_size = int64_t{6} * (nx64 + 1) * (ny64 + 1);
+    const int64_t expected_zcorn_size = int64_t{8} * nx64 * ny64 * nz64;
+
+    if (expected_coord_size > std::numeric_limits<int>::max() ||
+        expected_zcorn_size > std::numeric_limits<int>::max())
+        util_abort("%s: Grid dimensions too large: nx=%d, ny=%d, nz=%d\n",
+                   __func__, nx, ny, nz);
+
+    const int coord_size = static_cast<int>(expected_coord_size);
+    const int zcorn_size = static_cast<int>(expected_zcorn_size);
+
+    if (rd_kw_get_size(coord_kw) != coord_size)
+        util_abort("%s: Invalid size of COORD keyword = %d, expected 6 * "
+                   "(nx + 1) * (ny + 1) = %d\n",
+                   __func__, rd_kw_get_size(coord_kw), coord_size);
+
+    if (rd_kw_get_size(zcorn_kw) != zcorn_size)
+        util_abort("%s: Invalid size of ZCORN keyword = %d, expected 8 * "
+                   "nx * ny * nz = %d\n",
+                   __func__, rd_kw_get_size(zcorn_kw), zcorn_size);
+
     /*
     The code used to have this test:
 
@@ -2318,8 +2347,21 @@ rd_grid_alloc_GRDECL_kw(int nx, int ny, int nz, const rd_kw_type *zcorn_kw,
                         const rd_kw_type *mapaxes_kw) { /* Can be NULL */
 
     const int *actnum_data = NULL;
-    if (actnum_kw)
+    if (actnum_kw) {
+        const int64_t expected_actnum_size = int64_t{nx} * ny * nz;
+
+        if (expected_actnum_size > std::numeric_limits<int>::max())
+            util_abort("%s: Grid dimensions too large: nx=%d, ny=%d, nz=%d\n",
+                       __func__, nx, ny, nz);
+
+        const int actnum_size = static_cast<int>(expected_actnum_size);
+
+        if (rd_kw_get_size(actnum_kw) != actnum_size)
+            util_abort("%s: Invalid size of ACTNUM keyword = %d, expected nz "
+                       "* nx * ny = %d\n",
+                       __func__, rd_kw_get_size(actnum_kw), actnum_size);
         actnum_data = rd_kw_get_int_ptr(actnum_kw);
+    }
 
     bool apply_mapaxes = true;
     rd_kw_type *gridhead_kw = rd_grid_alloc_gridhead_kw(nx, ny, nz, 0);
