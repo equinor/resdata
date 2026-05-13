@@ -161,21 +161,6 @@ bool rd_kw_grdecl_fseek_kw(const char *kw, bool rewind, FILE *stream) {
     return false;
 }
 
-/**
-   Observe that this function does not preserve the '*' structure
-   which (might) have been used in the input.
-*/
-static void iset_range(char *data, int data_index, int sizeof_ctype,
-                       void *value_ptr, int multiplier) {
-    size_t byte_offset;
-    for (int index = 0; index < multiplier; index++) {
-        byte_offset =
-            static_cast<size_t>(data_index) + static_cast<size_t>(index);
-        byte_offset *= sizeof_ctype;
-        memcpy(&data[byte_offset], value_ptr, sizeof_ctype);
-    }
-}
-
 template <typename T>
 std::unique_ptr<T[], void (*)(void *)> checked_calloc(size_t num) {
     T *ptr = static_cast<T *>(std::calloc(num, sizeof(T)));
@@ -201,6 +186,31 @@ void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
         throw std::bad_alloc{};
     }
     ptr.reset(static_cast<T *>(new_raw_ptr));
+}
+template <typename T> constexpr const char *value_format();
+template <> constexpr const char *value_format<int>() { return "%d"; }
+template <> constexpr const char *value_format<float>() { return "%128g"; }
+template <> constexpr const char *value_format<double>() { return "%128lg"; }
+
+template <typename T> constexpr const char *multiplier_format();
+template <> constexpr const char *multiplier_format<int>() { return "%d*%d"; }
+template <> constexpr const char *multiplier_format<float>() {
+    return "%d*%128g";
+}
+template <> constexpr const char *multiplier_format<double>() {
+    return "%d*%128lg";
+}
+
+template <typename T>
+std::optional<T> scan_data(std::unique_ptr<char[], void (*)(void *)> &buffer,
+                           int &multiplier) {
+    T value;
+    if (sscanf(buffer.get(), multiplier_format<T>(), &multiplier, &value) == 2)
+        return value;
+    multiplier = 1;
+    if (sscanf(buffer.get(), value_format<T>(), &value) == 1)
+        return value;
+    return std::nullopt;
 }
 
 /**
@@ -231,18 +241,18 @@ void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
 
    Observe that no-spaces-are-allowed-around-the-*
 */
-static std::unique_ptr<char[], void (*)(void *)>
-fscanf_grdecl_data(const char *header, bool strict, rd_data_type data_type,
-                   int *kw_size, FILE *stream) {
+template <typename T>
+static std::unique_ptr<T[], void (*)(void *)>
+fscanf_grdecl_data(const char *header, bool strict, int &kw_size,
+                   FILE *stream) {
     char newline = '\n';
     bool atEOF = false;
     size_t init_size = 32;
     size_t buffer_size = 256;
     size_t data_index = 0;
-    int sizeof_ctype = rd_type_get_sizeof_ctype(data_type);
     size_t data_size = init_size;
     auto buffer = checked_calloc<char>(buffer_size + 1);
-    auto data = checked_calloc<char>(sizeof_ctype * data_size);
+    auto data = checked_calloc<T>(data_size);
 
     while (true) {
         if (fscanf(stream, "%32s", buffer.get()) == 1) {
@@ -264,76 +274,23 @@ fscanf_grdecl_data(const char *header, bool strict, rd_data_type data_type,
                 // We have read a valid input string; scan numerical input values from it.
                 // The multiplier algorithm will fail hard if there are spaces on either side
                 // of the '*'.
-                union {
-                    int i;
-                    float f;
-                    double d;
-                } value;
-
-                int multiplier;
-                bool char_input = false;
-
-                if (rd_type_is_int(data_type)) {
-                    if (sscanf(buffer.get(), "%d*%d", &multiplier, &value.i) ==
-                        2) {
-                    } else if (sscanf(buffer.get(), "%d", &value.i) == 1)
-                        multiplier = 1;
-                    else {
-                        char_input = true;
-                        if (strict)
-                            throw std::invalid_argument(
-                                fmt::format("Malformed content:\"{}\" when "
-                                            "reading keyword:{}",
-                                            std::string(buffer.get()),
-                                            std::string(header)));
-                    }
-                } else if (rd_type_is_float(data_type)) {
-                    if (sscanf(buffer.get(), "%d*%128g", &multiplier,
-                               &value.f) == 2) {
-                    } else if (sscanf(buffer.get(), "%128g", &value.f) == 1)
-                        multiplier = 1;
-                    else {
-                        char_input = true;
-                        if (strict)
-                            throw std::invalid_argument(
-                                fmt::format("Malformed content:\"{}\" when "
-                                            "reading keyword:{}",
-                                            std::string(buffer.get()),
-                                            std::string(header)));
-                    }
-                } else if (rd_type_is_double(data_type)) {
-                    if (sscanf(buffer.get(), "%d*%128lg", &multiplier,
-                               &value.d) == 2) {
-                    } else if (sscanf(buffer.get(), "%128lg", &value.d) == 1)
-                        multiplier = 1;
-                    else {
-                        char_input = true;
-                        if (strict)
-                            throw std::invalid_argument(
-                                fmt::format("Malformed content:\"{}\" when "
-                                            "reading keyword:{}",
-                                            std::string(buffer.get()),
-                                            std::string(header)));
-                    }
-                } else
+                int multiplier = 1;
+                auto value = scan_data<T>(buffer, multiplier);
+                if (!value && strict)
                     throw std::invalid_argument(fmt::format(
-                        "Type:{} not supported", rd_type_name(data_type)));
+                        "Malformed content:\"{}\" when reading keyword:{}",
+                        std::string(buffer.get()), std::string(header)));
 
                 // Removing this warning on user request:
                 // if (char_input)
                 // fprintf(stderr,"Warning: character string: \'%s\' ignored when reading keyword:%s \n",buffer , header);
-                if (!char_input) {
+                if (value) {
                     size_t min_size = data_index + multiplier;
                     if (min_size >= data_size) {
                         if (min_size <= RD_KW_MAX_SIZE) {
-                            size_t byte_size =
-                                sizeof_ctype * sizeof *data.get();
-
                             data_size = util_size_t_min(
                                 RD_KW_MAX_SIZE, 2 * (data_index + multiplier));
-                            byte_size *= data_size;
-
-                            checked_realloc<char>(data, byte_size);
+                            checked_realloc<T>(data, data_size);
                         } else {
                             // We are asking for more elements than can possible
                             // be adressed in an integer. Return NULL - and
@@ -343,9 +300,10 @@ fscanf_grdecl_data(const char *header, bool strict, rd_data_type data_type,
                         }
                     }
 
-                    iset_range(data.get(), data_index, sizeof_ctype, &value,
-                               multiplier);
-                    data_index += multiplier;
+                    size_t end = data_index + multiplier;
+                    while (data_index < end) {
+                        data[data_index++] = *value;
+                    }
                 }
             }
             if (atEOF)
@@ -353,8 +311,8 @@ fscanf_grdecl_data(const char *header, bool strict, rd_data_type data_type,
         } else
             break;
     }
-    *kw_size = data_index;
-    checked_realloc<char>(data, sizeof_ctype * data_index * sizeof *data.get());
+    kw_size = data_index;
+    checked_realloc<T>(data, data_index);
     return data;
 }
 
@@ -420,8 +378,22 @@ rd_kw_type *rd_kw_fscanf_alloc_grdecl(FILE *stream, const char *kw,
         char file_header[MAX_GRDECL_HEADER_SIZE] = {0};
         if (fscanf(stream, MAX_GRDECL_HEADER_SCANF_FMT, file_header) == 1) {
             int kw_size;
-            auto data = fscanf_grdecl_data(file_header, strict, data_type,
-                                           &kw_size, stream);
+            std::unique_ptr<char[], void (*)(void *)> data{nullptr, &std::free};
+            if (rd_type_is_int(data_type)) {
+                data.reset((char *)(fscanf_grdecl_data<int>(file_header, strict,
+                                                            kw_size, stream)
+                                        .release()));
+            } else if (rd_type_is_float(data_type)) {
+                data.reset((char *)(fscanf_grdecl_data<float>(
+                                        file_header, strict, kw_size, stream)
+                                        .release()));
+            } else if (rd_type_is_double(data_type)) {
+                data.reset((char *)(fscanf_grdecl_data<double>(
+                                        file_header, strict, kw_size, stream)
+                                        .release()));
+            } else
+                throw std::invalid_argument(fmt::format(
+                    "Type:{} not supported", rd_type_name(data_type)));
 
             // Verify size
             if (size > 0)
