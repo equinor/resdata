@@ -139,7 +139,7 @@ static rd_sum_type *rd_sum_alloc__(const char *input_arg,
     if (!rd_path_access(input_arg))
         return NULL;
 
-    rd_sum_type *rd_sum = (rd_sum_type *)util_malloc(sizeof *rd_sum);
+    rd_sum_type *rd_sum = new rd_sum_type;
     UTIL_TYPE_ID_INIT(rd_sum, RD_SUM_ID);
 
     rd_sum->rd_case = NULL;
@@ -412,7 +412,7 @@ void rd_sum_free(rd_sum_type *rd_sum) {
     free(rd_sum->rd_case);
 
     free(rd_sum->key_join_string);
-    free(rd_sum);
+    delete rd_sum;
 }
 
 /**
