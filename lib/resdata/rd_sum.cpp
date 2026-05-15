@@ -169,8 +169,7 @@ static void rd_sum_free_data(rd_sum_type *rd_sum) {
 }
 
 static bool rd_sum_fread_data(rd_sum_type *rd_sum,
-                              const stringlist_type *data_files,
-                              bool include_restart, bool lazy_load,
+                              const stringlist_type *data_files, bool lazy_load,
                               int file_options) {
     if (rd_sum->data != NULL)
         rd_sum_free_data(rd_sum);
@@ -206,8 +205,7 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const char *header_file,
     } else
         return false;
 
-    if (rd_sum_fread_data(rd_sum, data_files, include_restart, lazy_load,
-                          file_options)) {
+    if (rd_sum_fread_data(rd_sum, data_files, lazy_load, file_options)) {
         rd_file_enum file_type =
             rd_get_file_type(stringlist_iget(data_files, 0), NULL, NULL);
 
