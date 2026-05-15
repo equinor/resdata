@@ -111,8 +111,6 @@ std::filesystem::path rd_alloc_filename(std::filesystem::path path,
                                         rd_file_enum, bool /* fmt_file */);
 char *rd_alloc_exfilename(const char * /* path */, const char * /* base */,
                           rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
-bool rd_alloc_summary_files(const char *, const char *, const char *, char **,
-                            stringlist_type *);
 extern "C" time_t rd_get_start_date(const char *);
 extern "C" int rd_get_num_cpu(const char *data_file);
 bool rd_fmt_file(const char *filename, bool *__fmt_file);

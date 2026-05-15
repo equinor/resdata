@@ -228,6 +228,235 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const char *header_file,
     return true;
 }
 
+static char *rd_alloc_base_guess(const char *path) {
+    char *base = NULL;
+    stringlist_type *data_files = stringlist_alloc_new();
+    stringlist_type *DATA_files = stringlist_alloc_new();
+    stringlist_select_matching_files(data_files, path, "*.data");
+    stringlist_select_matching_files(DATA_files, path, "*.DATA");
+
+    if ((stringlist_get_size(data_files) + stringlist_get_size(DATA_files)) ==
+        1) {
+        const char *path_name;
+
+        if (stringlist_get_size(data_files) == 1)
+            path_name = stringlist_iget(data_files, 0);
+        else
+            path_name = stringlist_iget(DATA_files, 0);
+
+        util_alloc_file_components(path_name, NULL, &base, NULL);
+    } // Else - found either 0 or more than 1 file with extension DATA - impossible to guess.
+
+    stringlist_free(data_files);
+    stringlist_free(DATA_files);
+
+    return base;
+}
+
+/**
+  The stringlist will be cleared before the actual matching process
+  starts. Observe that in addition to the @path input parameter the
+  @base input can contain an embedded path component.
+*/
+static void rd_alloc_summary_data_files(const char *path, const char *base,
+                                        bool fmt_file,
+                                        stringlist_type *filelist) {
+    char *unif_data_file =
+        rd_alloc_exfilename(path, base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1);
+    int files =
+        rd_select_filelist(path, base, RD_SUMMARY_FILE, fmt_file, filelist);
+
+    if ((files > 0) && (unif_data_file != NULL)) {
+        /*
+       We have both a unified file AND a list of files: BASE.S0000,
+       BASE.S0001, BASE.S0002, ..., must check which is newest and
+       load accordingly.
+    */
+        bool unified_newest = true;
+        int file_nr = 0;
+        while (unified_newest && (file_nr < files)) {
+            if (util_file_difftime(stringlist_iget(filelist, file_nr),
+                                   unif_data_file) > 0)
+                unified_newest = false;
+            file_nr++;
+        }
+
+        if (unified_newest) {
+            stringlist_clear(
+                filelist); /* Clear out all the BASE.Snnnn selections. */
+            stringlist_append_copy(filelist, unif_data_file);
+        }
+    } else if (unif_data_file != NULL) {
+        /* Found a unified summary file :  Clear out all the BASE.Snnnn selections. */
+        stringlist_clear(
+            filelist); /* Clear out all the BASE.Snnnn selections. */
+        stringlist_append_copy(filelist, unif_data_file);
+    }
+    free(unif_data_file);
+}
+
+/**
+   This routine allocates summary header and data files from a
+   directory, and return them by reference; path and base are
+   input. If the function can not find BOTH a summary header file and
+   summary data it will return false and not update the reference
+   variables.
+
+   For the header file there are two possible files:
+
+     1. X.FSMSPEC
+     2. X.SMSPEEC
+
+   For the data there are four different possibilities:
+
+     1. X.A0001, X.A0002, X.A0003, ...
+     2. X.FUNSMRY
+     3. X.S0001, X.S0002, X.S0003, ...
+     4. X.UNSMRY
+
+   In principle a directory can contain all different (altough that is
+   probably not typical). The algorithm is a a two step algorithm:
+
+     1. Determine wether to use X.FSMSPEC or X.SMSPEC based on which
+        is the newest. This also implies a decision of wether to use
+        formatted, or unformatted filed.
+
+     2. Use formatted or unformatted files according to 1. above, and
+        then choose either a list of files or unified files according
+        to which is the newest.
+
+   This algorithm should work in most practical cases, but it is
+   surely possible to fool it.
+*/
+static bool rd_alloc_summary_files(const char *path, const char *_base,
+                                   const char *ext, char **_header_file,
+                                   stringlist_type *filelist) {
+    bool fmt_input = false;
+    bool fmt_set = false;
+    bool fmt_file = true;
+    bool unif_input = false;
+    bool unif_set = false;
+
+    char *header_file = NULL;
+    char *base;
+
+    *_header_file = NULL;
+
+    /* 1: We start by inspecting the input extension and see if we can
+     learn anything about formatted/unformatted and
+     unified/non-unified from this. The input extension can be NULL,
+     in which case we learn nothing.
+  */
+
+    if (_base == NULL)
+        base = rd_alloc_base_guess(path);
+    else
+        base = (char *)_base;
+
+    if (ext != NULL) {
+        rd_file_enum input_type;
+
+        {
+            char *test_name = util_alloc_filename(NULL, base, ext);
+            input_type = rd_get_file_type(test_name, &fmt_input, NULL);
+            free(test_name);
+        }
+
+        if ((input_type != RD_OTHER_FILE) && (input_type != RD_DATA_FILE)) {
+            /*
+         The file has been recognized as a file type from which we can
+         at least infer formatted/unformatted inforamtion.
+      */
+            fmt_set = true;
+            switch (input_type) {
+            case (RD_SUMMARY_FILE):
+            case (RD_RESTART_FILE):
+                unif_input = false;
+                unif_set = true;
+                break;
+            case (RD_UNIFIED_SUMMARY_FILE):
+            case (RD_UNIFIED_RESTART_FILE):
+                unif_input = true;
+                unif_set = true;
+                break;
+            default: /* Nothing wrong with this */
+                break;
+            }
+        }
+    }
+
+    /*
+    2: We continue by looking for header files.
+  */
+
+    {
+        char *fsmspec_file =
+            rd_alloc_exfilename(path, base, RD_SUMMARY_HEADER_FILE, true, -1);
+        char *smspec_file =
+            rd_alloc_exfilename(path, base, RD_SUMMARY_HEADER_FILE, false, -1);
+
+        if ((fsmspec_file == NULL) &&
+            (smspec_file == NULL)) /* Neither file exists */
+            return false;
+
+        if (fmt_set) /* The question of formatted|unformatted has already been settled based on the input filename. */
+            fmt_file = fmt_input;
+        else {
+            if ((fsmspec_file != NULL) &&
+                (smspec_file !=
+                 NULL)) { /* Both fsmspec and smspec exist - we take the newest. */
+                if (util_file_difftime(fsmspec_file, smspec_file) < 0)
+                    fmt_file = true;
+                else
+                    fmt_file = false;
+            } else { /* Only one of fsmspec / smspec exists */
+                if (fsmspec_file != NULL)
+                    fmt_file = true;
+                else
+                    fmt_file = false;
+            }
+        }
+
+        if (fmt_file) {
+            header_file = fsmspec_file;
+            free(smspec_file);
+        } else {
+            header_file = smspec_file;
+            free(fsmspec_file);
+        }
+
+        if (header_file == NULL)
+            return false; /* If you insist on e.g. unformatted and only fsmspec exists - no results for you. */
+    }
+
+    /*
+     3: OK - we have found a SMSPEC / FMSPEC file - continue to look for
+     XXX.Snnnn / XXX.UNSMRY files.
+  */
+
+    if (unif_set) { /* Based on the input file we have inferred whether to look for unified or
+                     non-unified input files. */
+
+        if (unif_input) {
+            char *unif_data_file = rd_alloc_exfilename(
+                path, base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1);
+            if (unif_data_file != NULL) {
+                stringlist_append_copy(filelist, unif_data_file);
+                free(unif_data_file);
+            }
+        } else
+            rd_select_filelist(path, base, RD_SUMMARY_FILE, fmt_file, filelist);
+    } else
+        rd_alloc_summary_data_files(path, base, fmt_file, filelist);
+
+    if (_base == NULL)
+        free(base);
+
+    *_header_file = header_file;
+
+    return (stringlist_get_size(filelist) > 0) ? true : false;
+}
+
 static bool rd_sum_fread_case(rd_sum_type *rd_sum, bool include_restart,
                               bool lazy_load, int file_options) {
     char *header_file;
