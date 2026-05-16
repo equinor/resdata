@@ -349,16 +349,23 @@ char *rd_alloc_filename(const char *path, const char *base,
     return rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr);
 }
 
-fs::path rd_alloc_filename(fs::path path, rd_file_enum file_type,
-                           bool fmt_file) {
-    std::string directory = path.parent_path().string();
-    std::string basename = path.stem().string();
+namespace rd {
+/**
+ * Given the path to a case, eg. test-data/local/eclipse/SIMPLE,
+ * get path to the file of the given type, e.g for RD_EGRID_FILE
+ * you get test-data/local/eclipse/SIMPLE.EGRID.
+ */
+fs::path filename(fs::path casepath, rd_file_enum file_type, bool fmt_file,
+                  int report_nr) {
+    std::string directory = casepath.parent_path().string();
+    std::string basename = casepath.filename().string();
     char *tmp = rd_alloc_filename_static(directory.c_str(), basename.c_str(),
-                                         file_type, fmt_file, -1);
+                                         file_type, fmt_file, report_nr);
     fs::path result = tmp;
     free(tmp);
     return result;
 }
+}; // namespace rd
 
 char *rd_alloc_exfilename(const char *path, const char *base,
                           rd_file_enum file_type, bool fmt_file,

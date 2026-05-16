@@ -14,6 +14,7 @@
 #include <array>
 #include <stdexcept>
 #include <limits>
+#include <filesystem>
 
 #include <fmt/format.h>
 
@@ -36,6 +37,8 @@
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/nnc_info.hpp>
+
+namespace fs = std::filesystem;
 
 /**
   this function implements functionality to load eclispe grid files,
@@ -2990,56 +2993,40 @@ rd_grid_alloc_case_filename(const char *case_input) {
     rd_file_enum file_type;
     bool fmt_file;
     file_type = rd_get_file_type(case_input, &fmt_file, NULL);
+    fs::path case_path(case_input);
+    case_path = case_path.parent_path() / case_path.stem();
 
     if (file_type == RD_GRID_FILE)
         return case_input; /* Case 1 */
     else if (file_type == RD_EGRID_FILE)
         return case_input; /* Case 1 */
     else {
-        using c_str_ptr = std::unique_ptr<char, decltype(&std::free)>;
-        auto own = [](char *p) { return c_str_ptr{p, &std::free}; };
-        auto alloc_filename = [&](const char *path, const char *basename,
-                                  rd_file_enum type, bool fmt) {
-            return own(rd_alloc_filename(path, basename, type, fmt, -1));
-        };
-
         std::optional<std::string> grid_file = std::nullopt;
-        char *path_raw = NULL;
-        char *basename_raw = NULL;
-        util_alloc_file_components(case_input, &path_raw, &basename_raw, NULL);
-        c_str_ptr path = own(path_raw);
-        c_str_ptr basename = own(basename_raw);
         if ((file_type == RD_OTHER_FILE) ||
             (file_type ==
              RD_DATA_FILE)) { /* Case 3 - only basename recognized */
-            c_str_ptr EGRID = alloc_filename(path.get(), basename.get(),
-                                             RD_EGRID_FILE, false);
-            c_str_ptr GRID =
-                alloc_filename(path.get(), basename.get(), RD_GRID_FILE, false);
-            c_str_ptr FEGRID =
-                alloc_filename(path.get(), basename.get(), RD_EGRID_FILE, true);
-            c_str_ptr FGRID =
-                alloc_filename(path.get(), basename.get(), RD_GRID_FILE, true);
+            fs::path EGRID = rd::filename(case_path, RD_EGRID_FILE, false);
+            fs::path GRID = rd::filename(case_path, RD_GRID_FILE, false);
+            fs::path FEGRID = rd::filename(case_path, RD_EGRID_FILE, true);
+            fs::path FGRID = rd::filename(case_path, RD_GRID_FILE, true);
 
-            if (util_file_exists(EGRID.get()))
-                grid_file = EGRID.get();
-            else if (util_file_exists(GRID.get()))
-                grid_file = GRID.get();
-            else if (util_file_exists(FEGRID.get()))
-                grid_file = FEGRID.get();
-            else if (util_file_exists(FGRID.get()))
-                grid_file = FGRID.get();
+            if (rd::try_exists(EGRID))
+                grid_file = EGRID.string();
+            else if (rd::try_exists(GRID))
+                grid_file = GRID.string();
+            else if (rd::try_exists(FEGRID))
+                grid_file = FEGRID.string();
+            else if (rd::try_exists(FGRID))
+                grid_file = FGRID.string();
             /* else: could not find a GRID/EGRID. */
         } else { /* Case 2 - we know the formatted / unformatted status. */
-            c_str_ptr EGRID = alloc_filename(path.get(), basename.get(),
-                                             RD_EGRID_FILE, fmt_file);
-            c_str_ptr GRID = alloc_filename(path.get(), basename.get(),
-                                            RD_GRID_FILE, fmt_file);
+            fs::path EGRID = rd::filename(case_path, RD_EGRID_FILE, fmt_file);
+            fs::path GRID = rd::filename(case_path, RD_GRID_FILE, fmt_file);
 
-            if (util_file_exists(EGRID.get()))
-                grid_file = EGRID.get();
-            else if (util_file_exists(GRID.get()))
-                grid_file = GRID.get();
+            if (rd::try_exists(EGRID))
+                grid_file = EGRID.string();
+            else if (rd::try_exists(GRID))
+                grid_file = GRID.string();
         }
         return grid_file;
     }
