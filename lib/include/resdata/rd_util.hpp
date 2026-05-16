@@ -6,6 +6,7 @@
 #include <ert/util/parser.hpp>
 #include <resdata/rd_type.hpp>
 #include <filesystem>
+#include <system_error>
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,8 +108,6 @@ extern "C" rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
 char *rd_alloc_filename(const char * /* path */, const char * /* base */,
                         rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
 
-std::filesystem::path rd_alloc_filename(std::filesystem::path path,
-                                        rd_file_enum, bool /* fmt_file */);
 char *rd_alloc_exfilename(const char * /* path */, const char * /* base */,
                           rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
 extern "C" time_t rd_get_start_date(const char *);
@@ -128,3 +127,12 @@ int rd_select_filelist(const char *path, const char *base,
 void rd_set_datetime_values(time_t t, int *sec, int *min, int *hour, int *mday,
                             int *month, int *year);
 bool rd_path_access(const char *rd_case);
+namespace rd {
+std::filesystem::path filename(std::filesystem::path path, rd_file_enum,
+                               bool fmt_file, int report_nr = -1);
+
+inline bool try_exists(std::filesystem::path p) noexcept {
+    std::error_code ec;
+    return std::filesystem::exists(p, ec);
+}
+} // namespace rd
