@@ -92,12 +92,11 @@ int main(int argc, char **argv) {
             target_file = argv[2];
             file_convert(src_file, target_file, file_type, fmt_file);
         } else {
-            int file_nr;
-            for (file_nr = 1; file_nr < argc; file_nr++) {
+            for (int i = 1; i < argc; i++) {
                 char *path;
                 char *basename;
                 char *extension;
-                src_file = argv[file_nr];
+                src_file = argv[i];
                 file_type = rd_get_file_type(src_file, &fmt_file, &report_nr);
                 if (file_type == RD_OTHER_FILE) {
                     fprintf(stderr, "File: %s - problem \n", src_file);
