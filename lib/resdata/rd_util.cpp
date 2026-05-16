@@ -256,7 +256,7 @@ static bool base_has_upper(const char *input_base) {
 
 static char *rd_alloc_filename_static(const char *path, const char *base,
                                       rd_file_enum file_type, bool fmt_file,
-                                      int report_nr, bool must_exist) {
+                                      int report_nr) {
     char *filename;
     char *ext;
     switch (file_type) {
@@ -341,20 +341,12 @@ static char *rd_alloc_filename_static(const char *path, const char *base,
     filename = util_alloc_filename(path, base, ext);
     free(ext);
 
-    if (must_exist) {
-        if (!util_file_exists(filename)) {
-            free(filename);
-            filename = NULL;
-        }
-    }
-
     return filename;
 }
 
 char *rd_alloc_filename(const char *path, const char *base,
                         rd_file_enum file_type, bool fmt_file, int report_nr) {
-    return rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr,
-                                    false);
+    return rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr);
 }
 
 fs::path rd_alloc_filename(fs::path path, rd_file_enum file_type,
@@ -362,7 +354,7 @@ fs::path rd_alloc_filename(fs::path path, rd_file_enum file_type,
     std::string directory = path.parent_path().string();
     std::string basename = path.stem().string();
     char *tmp = rd_alloc_filename_static(directory.c_str(), basename.c_str(),
-                                         file_type, fmt_file, -1, false);
+                                         file_type, fmt_file, -1);
     fs::path result = tmp;
     free(tmp);
     return result;
@@ -371,8 +363,13 @@ fs::path rd_alloc_filename(fs::path path, rd_file_enum file_type,
 char *rd_alloc_exfilename(const char *path, const char *base,
                           rd_file_enum file_type, bool fmt_file,
                           int report_nr) {
-    return rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr,
-                                    true);
+    char *filename =
+        rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr);
+    if (!util_file_exists(filename)) {
+        free(filename);
+        filename = NULL;
+    }
+    return filename;
 }
 
 /**
