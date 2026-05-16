@@ -6,15 +6,17 @@
 #include <resdata/rd_coarse_cell.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_kw.hpp>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 void test_coarse_cell(const rd_grid_type *grid, rd_coarse_cell_type *cell) {
     const int_vector_type *global_index_list =
         rd_coarse_cell_get_index_vector(cell);
     const int *ijk = rd_coarse_cell_get_box_ptr(cell);
-    int c;
     int prev_active = 0;
 
-    for (c = 0; c < rd_coarse_cell_get_size(cell); c++) {
+    for (int c = 0; c < rd_coarse_cell_get_size(cell); c++) {
         int gi = int_vector_iget(global_index_list, c);
         int i, j, k;
 
@@ -44,44 +46,39 @@ void test_coarse_cell(const rd_grid_type *grid, rd_coarse_cell_type *cell) {
 }
 
 int main(int argc, char **argv) {
-    const char *case_path = argv[1];
-    char *egrid_file =
-        rd_alloc_filename(NULL, case_path, RD_EGRID_FILE, false, 0);
-    char *rst_file =
-        rd_alloc_filename(NULL, case_path, RD_RESTART_FILE, false, 0);
-    char *init_file =
-        rd_alloc_filename(NULL, case_path, RD_INIT_FILE, false, 0);
+    fs::path case_path(argv[1]);
+    std::string egrid_file =
+        rd::filename(case_path, RD_EGRID_FILE, false, 0).string();
+    std::string rst_file =
+        rd::filename(case_path, RD_RESTART_FILE, false, 0).string();
+    std::string init_file =
+        rd::filename(case_path, RD_INIT_FILE, false, 0).string();
 
-    rd_grid_type *GRID = rd_grid_alloc(egrid_file);
-    rd_file_type *RST_file = rd_file_open(rst_file, 0);
-    rd_file_type *INIT_file = rd_file_open(init_file, 0);
+    rd_grid_ptr GRID = read_grid(egrid_file);
+    rd_file_ptr RST_file(rd_file_open(rst_file.c_str(), 0), &rd_file_close);
+    rd_file_ptr INIT_file(rd_file_open(init_file.c_str(), 0), &rd_file_close);
 
     {
-        test_assert_true(rd_grid_have_coarse_cells(GRID));
-        test_assert_int_equal(rd_grid_get_num_coarse_groups(GRID), 3384);
+        test_assert_true(rd_grid_have_coarse_cells(GRID.get()));
+        test_assert_int_equal(rd_grid_get_num_coarse_groups(GRID.get()), 3384);
     }
 
     {
-        const rd_kw_type *swat0 = rd_file_iget_named_kw(RST_file, "SWAT", 0);
-        const rd_kw_type *porv = rd_file_iget_named_kw(INIT_file, "PORV", 0);
+        const rd_kw_type *swat0 =
+            rd_file_iget_named_kw(RST_file.get(), "SWAT", 0);
+        const rd_kw_type *porv =
+            rd_file_iget_named_kw(INIT_file.get(), "PORV", 0);
 
         test_assert_int_equal(rd_kw_get_size(swat0),
-                              rd_grid_get_active_size(GRID));
+                              rd_grid_get_active_size(GRID.get()));
         test_assert_int_equal(rd_kw_get_size(porv),
-                              rd_grid_get_global_size(GRID));
+                              rd_grid_get_global_size(GRID.get()));
     }
 
-    {
-        int ic;
-        for (ic = 0; ic < rd_grid_get_num_coarse_groups(GRID); ic++) {
-            rd_coarse_cell_type *coarse_cell =
-                rd_grid_iget_coarse_group(GRID, ic);
-            test_coarse_cell(GRID, coarse_cell);
-        }
+    for (int ic = 0; ic < rd_grid_get_num_coarse_groups(GRID.get()); ic++) {
+        rd_coarse_cell_type *coarse_cell =
+            rd_grid_iget_coarse_group(GRID.get(), ic);
+        test_coarse_cell(GRID.get(), coarse_cell);
     }
-
-    rd_file_close(INIT_file);
-    rd_file_close(RST_file);
-    rd_grid_free(GRID);
     exit(0);
 }
