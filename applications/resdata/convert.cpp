@@ -26,33 +26,35 @@
 #include <resdata/FortIO.hpp>
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_endian_flip.hpp>
+#include <filesystem>
 
-void file_convert(const char *src_file, const char *target_file,
+namespace fs = std::filesystem;
+
+void file_convert(const std::string &src_file, const std::string &target_file,
                   rd_file_enum file_type, bool fmt_src) {
-    fortio_type *src, *target;
     bool formatted_src;
 
-    printf("Converting %s -> %s \n", src_file, target_file);
+    printf("Converting %s -> %s \n", src_file.c_str(), target_file.c_str());
     if (file_type != RD_OTHER_FILE)
         formatted_src = fmt_src;
     else {
-        if (util_fmt_bit8(src_file))
+        if (util_fmt_bit8(src_file.c_str()))
             formatted_src = true;
         else
             formatted_src = false;
     }
 
-    target = fortio_open_writer(target_file, !formatted_src, RD_ENDIAN_FLIP);
-    src = fortio_open_reader(src_file, formatted_src, RD_ENDIAN_FLIP);
+    ERT::FortIO target(target_file, std::ios_base::out, !formatted_src);
+    ERT::FortIO src(src_file, std::ios_base::in, formatted_src);
 
     while (true) {
-        if (fortio_read_at_eof(src))
+        if (fortio_read_at_eof(src.get()))
             break;
 
         {
-            rd_kw_type *rd_kw = rd_kw_fread_alloc(src);
+            rd_kw_type *rd_kw = rd_kw_fread_alloc(src.get());
             if (rd_kw) {
-                rd_kw_fwrite(rd_kw, target);
+                rd_kw_fwrite(rd_kw, target.get());
                 rd_kw_free(rd_kw);
             } else {
                 fprintf(stderr, "Reading keyword failed \n");
@@ -60,9 +62,6 @@ void file_convert(const char *src_file, const char *target_file,
             }
         }
     }
-
-    fortio_fclose(src);
-    fortio_fclose(target);
 }
 
 int main(int argc, char **argv) {
@@ -73,13 +72,13 @@ int main(int argc, char **argv) {
         exit(1);
     } else {
 
-        char *src_file = argv[1];
-        char *target_file;
+        std::string src_file(argv[1]);
+        std::string target_file;
 
         int report_nr;
         rd_file_enum file_type;
         bool fmt_file;
-        file_type = rd_get_file_type(src_file, &fmt_file, &report_nr);
+        file_type = rd_get_file_type(src_file.c_str(), &fmt_file, &report_nr);
 
         if (file_type == RD_OTHER_FILE) {
             if (argc != 3) {
@@ -93,28 +92,21 @@ int main(int argc, char **argv) {
             file_convert(src_file, target_file, file_type, fmt_file);
         } else {
             for (int i = 1; i < argc; i++) {
-                char *path;
-                char *basename;
-                char *extension;
-                src_file = argv[i];
-                file_type = rd_get_file_type(src_file, &fmt_file, &report_nr);
+                src_file = std::string(argv[i]);
+                file_type =
+                    rd_get_file_type(src_file.c_str(), &fmt_file, &report_nr);
                 if (file_type == RD_OTHER_FILE) {
-                    fprintf(stderr, "File: %s - problem \n", src_file);
+                    fprintf(stderr, "File: %s - problem \n", src_file.c_str());
                     fprintf(stderr, "In a list of many files ALL must be "
                                     "recognizable by their name. \n");
                     exit(1);
                 }
-                util_alloc_file_components(src_file, &path, &basename,
-                                           &extension);
-
-                target_file = rd_alloc_filename(path, basename, file_type,
-                                                !fmt_file, report_nr);
+                fs::path src_path(src_file);
+                fs::path target_case = src_path.parent_path() / src_path.stem();
+                target_file =
+                    rd::filename(target_case, file_type, !fmt_file, report_nr)
+                        .string();
                 file_convert(src_file, target_file, file_type, fmt_file);
-
-                free(path);
-                free(basename);
-                free(extension);
-                free(target_file);
             }
         }
         return 0;
