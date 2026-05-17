@@ -2,6 +2,7 @@
 #include <memory>
 #include <array>
 #include <limits>
+#include <string>
 
 #include <ert/util/vector.hpp>
 
@@ -118,7 +119,7 @@ public:
     rd_sum_tstep_type *add_new_tstep(int report_step, double sim_seconds);
     bool can_write() const;
     void fwrite_unified(fortio_type *fortio) const;
-    void fwrite_multiple(const char *rd_case, bool fmt_case) const;
+    void fwrite_multiple(const std::string &rd_case, bool fmt_case) const;
     bool fread(const stringlist_type *filelist, bool lazy_load,
                int file_options);
 

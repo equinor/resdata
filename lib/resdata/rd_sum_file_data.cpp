@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 #include <cstring>
+#include <filesystem>
 
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/rd_kw.hpp>
@@ -11,6 +12,8 @@
 
 #include "detail/resdata/rd_sum_file_data.hpp"
 #include "detail/resdata/rd_unsmry_loader.hpp"
+
+namespace fs = std::filesystem;
 
 /*
   This file implements the type rd_sum_data_type. The data structure
@@ -466,7 +469,7 @@ void rd_sum_file_data::fwrite_unified(fortio_type *fortio) const {
     }
 }
 
-void rd_sum_file_data::fwrite_multiple(const char *rd_case,
+void rd_sum_file_data::fwrite_multiple(const std::string &rd_case,
                                        bool fmt_case) const {
     if (this->length() == 0)
         return;
@@ -474,15 +477,11 @@ void rd_sum_file_data::fwrite_multiple(const char *rd_case,
     for (int report_step = this->first_report();
          report_step <= this->last_report(); report_step++) {
         if (this->has_report(report_step)) {
-            char *filename = rd_alloc_filename(NULL, rd_case, RD_SUMMARY_FILE,
-                                               fmt_case, report_step);
-            fortio_type *fortio =
-                fortio_open_writer(filename, fmt_case, RD_ENDIAN_FLIP);
+            fs::path filename =
+                rd::filename(rd_case, RD_SUMMARY_FILE, fmt_case, report_step);
+            ERT::FortIO fortio(filename.string(), std::ios_base::out, fmt_case);
 
-            fwrite_report(report_step, fortio);
-
-            fortio_fclose(fortio);
-            free(filename);
+            fwrite_report(report_step, fortio.get());
         }
     }
 }
