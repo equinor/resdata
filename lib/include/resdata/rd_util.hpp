@@ -105,9 +105,6 @@ typedef enum {
 extern "C" int rd_filename_report_nr(const char *);
 extern "C" rd_file_enum rd_get_file_type(const char *filename, bool *fmt_file,
                                          int *report_nr);
-char *rd_alloc_filename(const char * /* path */, const char * /* base */,
-                        rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
-
 char *rd_alloc_exfilename(const char * /* path */, const char * /* base */,
                           rd_file_enum, bool /* fmt_file */, int /*report_nr*/);
 extern "C" time_t rd_get_start_date(const char *);
