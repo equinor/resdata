@@ -27,6 +27,8 @@
 
 #include "detail/resdata/rd_sum_file_data.hpp"
 
+namespace fs = std::filesystem;
+
 /*
   This file implements the sruct rd_sum_data which manages the actual simulated
   values from a summary file, including all time-related information. In the
@@ -286,32 +288,30 @@ rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
 }
 
 static void rd_sum_data_fwrite_unified(const rd_sum_data_type *data,
-                                       const char *rd_case, bool fmt_case) {
-    char *filename =
-        rd_alloc_filename(NULL, rd_case, RD_UNIFIED_SUMMARY_FILE, fmt_case, 0);
-    fortio_type *fortio =
-        fortio_open_writer(filename, fmt_case, RD_ENDIAN_FLIP);
+                                       const fs::path &rd_case, bool fmt_case) {
+    std::string filename =
+        rd::filename(rd_case, RD_UNIFIED_SUMMARY_FILE, fmt_case, 0).string();
+    ERT::FortIO fortio(filename, std::ios_base::out, fmt_case);
 
-    for (size_t index = 0; index < data->data_files.size(); index++)
-        data->data_files[index]->fwrite_unified(fortio);
-
-    fortio_fclose(fortio);
-    free(filename);
+    for (auto &data_file : data->data_files)
+        data_file->fwrite_unified(fortio.get());
 }
 
 static void rd_sum_data_fwrite_multiple(const rd_sum_data_type *data,
-                                        const char *rd_case, bool fmt_case) {
+                                        const std::string &rd_case,
+                                        bool fmt_case) {
 
-    for (size_t index = 0; index < data->data_files.size(); index++)
-        data->data_files[index]->fwrite_multiple(rd_case, fmt_case);
+    for (auto &data_file : data->data_files)
+        data_file->fwrite_multiple(rd_case.c_str(), fmt_case);
 }
 
 void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
                         bool fmt_case, bool unified) {
+    fs::path case_path(rd_case);
     if (unified)
-        rd_sum_data_fwrite_unified(data, rd_case, fmt_case);
+        rd_sum_data_fwrite_unified(data, case_path, fmt_case);
     else
-        rd_sum_data_fwrite_multiple(data, rd_case, fmt_case);
+        rd_sum_data_fwrite_multiple(data, case_path, fmt_case);
 }
 
 bool rd_sum_data_can_write(const rd_sum_data_type *data) {
