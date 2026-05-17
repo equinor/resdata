@@ -10,8 +10,7 @@
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
-
-#include <stdexcept>
+#include <filesystem>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
@@ -31,6 +30,8 @@
 #ifdef HAVE_FNMATCH
 #include <fnmatch.h>
 #endif
+
+namespace fs = std::filesystem;
 
 /**
    This file implements the indexing into the summary files.
@@ -476,21 +477,17 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
 
 void rd_smspec_fwrite(const rd_smspec_type *smspec, const char *rd_case,
                       bool fmt_file) {
-    char *filename =
-        rd_alloc_filename(NULL, rd_case, RD_SUMMARY_HEADER_FILE, fmt_file, 0);
-    fortio_type *fortio =
-        fortio_open_writer(filename, fmt_file, RD_ENDIAN_FLIP);
+    std::string filename =
+        rd::filename(rd_case, RD_SUMMARY_HEADER_FILE, fmt_file, 0).string();
+    ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
 
-    if (!fortio) {
+    if (!fortio.get()) {
         const char *error_fmt_msg =
             "%s: Unable to open fortio file %s, error: %s .\n";
-        util_abort(error_fmt_msg, __func__, filename, strerror(errno));
+        util_abort(error_fmt_msg, __func__, filename.c_str(), strerror(errno));
     }
 
-    rd_smspec_fortio_fwrite(smspec, fortio);
-
-    fortio_fclose(fortio);
-    free(filename);
+    rd_smspec_fortio_fwrite(smspec, fortio.get());
 }
 
 static rd_smspec_type *
