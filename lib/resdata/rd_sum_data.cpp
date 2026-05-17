@@ -298,11 +298,11 @@ static void rd_sum_data_fwrite_unified(const rd_sum_data_type *data,
 }
 
 static void rd_sum_data_fwrite_multiple(const rd_sum_data_type *data,
-                                        const std::string &rd_case,
+                                        const fs::path &rd_case,
                                         bool fmt_case) {
 
     for (auto &data_file : data->data_files)
-        data_file->fwrite_multiple(rd_case.c_str(), fmt_case);
+        data_file->fwrite_multiple(rd_case.string(), fmt_case);
 }
 
 void rd_sum_data_fwrite(const rd_sum_data_type *data, const char *rd_case,
