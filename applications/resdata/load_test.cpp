@@ -21,52 +21,43 @@
 
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_file.hpp>
+#include <filesystem>
 
-void test_case(const char *base, bool load_all) {
-    char *grid_file = rd_alloc_filename(NULL, base, RD_EGRID_FILE, false, 0);
-    char *init_file = rd_alloc_filename(NULL, base, RD_INIT_FILE, false, 0);
-    char *restart_file =
-        rd_alloc_filename(NULL, base, RD_UNIFIED_RESTART_FILE, false, 0);
+namespace fs = std::filesystem;
 
-    rd_grid_type *grid;
-    rd_file_type *restart;
-    rd_file_type *init;
+void test_case(const std::string &base, bool load_all) {
+    fs::path grid_file = rd::filename(base, RD_EGRID_FILE, false, 0);
+    std::string init_file = rd::filename(base, RD_INIT_FILE, false, 0);
+    std::string restart_file =
+        rd::filename(base, RD_UNIFIED_RESTART_FILE, false, 0);
 
     clock_t begin = clock();
-    grid = rd_grid_alloc(grid_file);
+    rd_grid_ptr grid = read_grid(grid_file);
     clock_t end = clock();
     double grid_time = (double)(end - begin) / CLOCKS_PER_SEC;
 
     begin = clock();
-    init = rd_file_open(init_file, 0);
+    rd_file_ptr init(rd_file_open(init_file.c_str(), 0), &rd_file_close);
     if (load_all)
-        rd_file_load_all(init);
+        rd_file_load_all(init.get());
 
     end = clock();
     double init_time = (double)(end - begin) / CLOCKS_PER_SEC;
 
     begin = clock();
-    restart = rd_file_open(restart_file, 0);
+    rd_file_ptr restart(rd_file_open(restart_file.c_str(), 0), &rd_file_close);
     if (load_all)
-        rd_file_load_all(restart);
+        rd_file_load_all(restart.get());
     end = clock();
     double restarts_time = (double)(end - begin) / CLOCKS_PER_SEC;
 
-    printf("%-64s  Restart:%8.4f    Grid:%8.4f     Init:%8.4f \n", base,
+    printf("%-64s  Restart:%8.4f    Grid:%8.4f     Init:%8.4f \n", base.c_str(),
            restarts_time, grid_time, init_time);
-
-    rd_file_close(init);
-    rd_file_close(restart);
-    rd_grid_free(grid);
-    free(grid_file);
-    free(init_file);
-    free(restart_file);
 }
 
 int main(int argc, char **argv) {
     fprintf(stderr, "** Warning: load_test.x is deprecated\n");
     bool load_all = true;
-    int i;
-    for (i = 1; i < argc; i++)
-        test_case(argv[i], load_all);
+    for (int i = 1; i < argc; i++)
+        test_case(std::string(argv[i]), load_all);
 }
