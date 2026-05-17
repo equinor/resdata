@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdexcept>
 #include <string>
+#include <filesystem>
 
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
