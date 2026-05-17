@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <filesystem>
 
 #include <cstring>
 #include <cmath>
@@ -23,6 +24,8 @@
 #include <resdata/smspec_node.hpp>
 
 #include "detail/util/path.hpp"
+
+namespace fs = std::filesystem;
 
 /**
    The summary data is organised in a header file (.SMSPEC)
@@ -180,16 +183,19 @@ static bool rd_sum_fread_data(rd_sum_type *rd_sum,
 
 static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
                                  int file_options) {
-    char *restart_header = rd_alloc_filename(
-        NULL, rd_smspec_get_restart_case(rd_sum->smspec),
-        RD_SUMMARY_HEADER_FILE, rd_smspec_get_formatted(rd_sum->smspec), -1);
-    rd_sum_type *restart_case = rd_sum_fread_alloc_case2__(
-        restart_header, ":", true, lazy_load, file_options);
+    const char *restart_header = rd_smspec_get_restart_case(rd_sum->smspec);
+    if (restart_header == nullptr)
+        return;
+
+    fs::path restart_path =
+        rd::filename(fs::path(restart_header), RD_SUMMARY_HEADER_FILE,
+                     rd_smspec_get_formatted(rd_sum->smspec), -1);
+    rd_sum_ptr restart_case =
+        read_summary(restart_path.string(), ":", lazy_load, true, file_options);
     if (restart_case) {
-        rd_sum->restart_case = restart_case;
-        rd_sum_data_add_case(rd_sum->data, restart_case->data);
+        rd_sum->restart_case = restart_case.release();
+        rd_sum_data_add_case(rd_sum->data, rd_sum->restart_case->data);
     }
-    free(restart_header);
 }
 
 static bool rd_sum_fread(rd_sum_type *rd_sum, const char *header_file,
