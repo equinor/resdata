@@ -730,4 +730,149 @@ TEST_CASE_METHOD(Tmpdir, "rd_grid_load_case", "[unittest]") {
             load_and_compare(fegrid_base, read_fegrid.get());
         }
     }
+
+    GIVEN("A direct path to an existing .FEGRID file") {
+        THEN("the formatted EGRID at that path is loaded") {
+            load_and_compare(fegrid_path, read_fegrid.get());
+        }
+    }
+
+    GIVEN("A path with a lowercase grid extension") {
+        // Extensions are accepted case-insensitively by rd_get_file_type.
+        auto lower_egrid_path = dirname / "LOWER.egrid";
+        rd_grid_fwrite_EGRID2(grid_2x2x2.get(), lower_egrid_path.c_str(),
+                              RD_METRIC_UNITS);
+        THEN("the file is recognized and loaded") {
+            load_and_compare(lower_egrid_path, grid_2x2x2.get());
+        }
+    }
+
+    GIVEN("A direct path to a non-existing .EGRID file") {
+        auto missing_egrid = dirname / "MISSING.EGRID";
+        THEN("no grid is returned") {
+            REQUIRE(rd_grid_load_case(missing_egrid.c_str()) == nullptr);
+        }
+    }
+
+    GIVEN("A direct path to a non-existing .FEGRID file") {
+        auto missing_fegrid = dirname / "MISSING.FEGRID";
+        THEN("no grid is returned") {
+            REQUIRE(rd_grid_load_case(missing_fegrid.c_str()) == nullptr);
+        }
+    }
+
+    GIVEN("A formatted non-grid file (FUNRST) sharing the basename with an "
+          "unformatted .EGRID only") {
+        // Case 2: the input file has formatted/unformatted status. When the
+        // sentinel is formatted (FUNRST -> fmt_file=true), the function looks
+        // only for FEGRID/FGRID and must NOT pick up the unformatted EGRID
+        // that exists for the same basename.
+        auto funrst_path = dirname / "CASE.FUNRST";
+        {
+            std::ofstream ofs(funrst_path);
+            ofs << "formatted restart stub";
+        }
+        THEN("no grid is returned even though an unformatted .EGRID exists") {
+            REQUIRE(rd_grid_load_case(funrst_path.c_str()) == nullptr);
+        }
+    }
+
+    GIVEN("A formatted non-grid file alongside a .FEGRID with the same "
+          "basename") {
+        auto funrst_path = dirname / "ONLYFEGRID.FUNRST";
+        {
+            std::ofstream ofs(funrst_path);
+            ofs << "formatted restart stub";
+        }
+        THEN("the formatted .FEGRID is loaded") {
+            load_and_compare(funrst_path, read_fegrid.get());
+        }
+    }
+
+    GIVEN("A basename for which only a formatted .FGRID file exists") {
+        auto fgrid_base = dirname / "ONLYFGRID";
+        auto fgrid_path = dirname / "ONLYFGRID.FGRID";
+        {
+            std::ofstream ofs(fgrid_path);
+            ofs << "stub";
+        }
+        THEN("the FGRID is reported as exists") {
+            REQUIRE(rd_grid_exists(fgrid_base.c_str()));
+        }
+    }
+
+    GIVEN("A basename with both .FEGRID and a .FGRID") {
+        auto basename = dirname / "BOTHF";
+        auto fegrid = dirname / "BOTHF.FEGRID";
+        auto fgrid = dirname / "BOTHF.FGRID";
+        write_fegrid_minimal(fegrid);
+        {
+            std::ofstream ofs(fgrid);
+            ofs << "stub";
+        }
+        auto expected = read_grid(fegrid);
+        THEN("the .FEGRID is preferred over the .FGRID") {
+            load_and_compare(basename, expected.get());
+        }
+    }
+
+    GIVEN("A basename with .GRID and .FEGRID") {
+        auto basename = dirname / "MIX";
+        auto mix_grid = dirname / "MIX.GRID";
+        auto mix_fegrid = dirname / "MIX.FEGRID";
+        rd_grid_fwrite_GRID2(grid_2x2x2.get(), mix_grid.c_str(),
+                             RD_METRIC_UNITS);
+        write_fegrid_minimal(mix_fegrid);
+        THEN("the .GRID is preferred over the .FEGRID") {
+            load_and_compare(basename, grid_2x2x2.get());
+        }
+    }
+
+    GIVEN("A direct path to a file with a double extension") {
+        auto double_ext_path = dirname / "CASE.HIST.EGRID";
+        rd_grid_fwrite_EGRID2(grid_2x2x2.get(), double_ext_path.c_str(),
+                              RD_METRIC_UNITS);
+        THEN("the file is recognized by its final extension and loaded") {
+            load_and_compare(double_ext_path, grid_2x2x2.get());
+        }
+        THEN("When the basename is given, the first extension is removed") {
+            auto basename_with_dot = dirname / "CASE.HIST";
+            auto no_ext_egrid = dirname / "CASE.EGRID";
+            rd_grid_fwrite_EGRID2(grid_5x5x5.get(), no_ext_egrid.c_str(),
+                                  RD_METRIC_UNITS);
+            // Load and compare with "CASE.HIST" considers "CASE" the casename
+            // and finds the file "CASE.EGRID".
+            load_and_compare(basename_with_dot, grid_5x5x5.get());
+        }
+    }
+
+    GIVEN("A grid located in a subdirectory") {
+        auto subdir = dirname / "subdir";
+        fs::create_directory(subdir);
+        auto sub_egrid = subdir / "SUB.EGRID";
+        rd_grid_fwrite_EGRID2(grid_2x2x2.get(), sub_egrid.c_str(),
+                              RD_METRIC_UNITS);
+
+        THEN("a direct path to the file loads the grid") {
+            load_and_compare(sub_egrid, grid_2x2x2.get());
+        }
+        THEN("a basename including the subdirectory loads the grid") {
+            load_and_compare(subdir / "SUB", grid_2x2x2.get());
+        }
+    }
+
+    GIVEN("A grid located in a subdirectory whose name contains a dot") {
+        auto subdir = dirname / "sub.with.dot";
+        fs::create_directory(subdir);
+        auto sub_egrid = subdir / "INSIDE.EGRID";
+        rd_grid_fwrite_EGRID2(grid_3x3x3.get(), sub_egrid.c_str(),
+                              RD_METRIC_UNITS);
+
+        THEN("a direct path to the file loads the grid") {
+            load_and_compare(sub_egrid, grid_3x3x3.get());
+        }
+        THEN("a basename including the dotted subdirectory loads the grid") {
+            load_and_compare(subdir / "INSIDE", grid_3x3x3.get());
+        }
+    }
 }
