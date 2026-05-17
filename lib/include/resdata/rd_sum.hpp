@@ -189,5 +189,12 @@ UTIL_IS_INSTANCE_HEADER(rd_sum);
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using rd_sum_ptr = std::unique_ptr<rd_sum_type, decltype(&rd_sum_free)>;
+rd_sum_ptr read_summary(const std::string &filename,
+                        const std::string &key_join_string = ":",
+                        bool lazy_load = true, bool include_restart = true,
+                        int file_options = 0);
 #endif
 #endif
