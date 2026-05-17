@@ -1077,3 +1077,12 @@ double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
     return rd_sum_data_iget_first_value(rd_sum->data,
                                         smspec_node_get_params_index(node));
 }
+
+rd_sum_ptr read_summary(const std::string &filename,
+                        const std::string &key_join_string, bool lazy_load,
+                        bool include_restart, int file_options) {
+    return {rd_sum_fread_alloc_case2__(filename.c_str(),
+                                       key_join_string.c_str(), include_restart,
+                                       lazy_load, file_options),
+            &rd_sum_free};
+}
