@@ -2,6 +2,8 @@
 #include <csignal>
 #include <cmath>
 
+#include <filesystem>
+
 #include <ert/util/test_util.hpp>
 #include <ert/util/util.hpp>
 
@@ -9,17 +11,18 @@
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_kw.hpp>
 
-int main(int argc, char **argv) {
-    const char *path_case = argv[1];
-    char *grid_file =
-        rd_alloc_filename(NULL, path_case, RD_EGRID_FILE, false, 0);
-    char *init_file =
-        rd_alloc_filename(NULL, path_case, RD_INIT_FILE, false, 0);
+namespace fs = std::filesystem;
 
-    rd_file_type *init = rd_file_open(init_file, 0);
-    rd_grid_type *grid = rd_grid_alloc(grid_file);
-    const rd_kw_type *poro_kw = rd_file_iget_named_kw(init, "PORO", 0);
-    const rd_kw_type *porv_kw = rd_file_iget_named_kw(init, "PORV", 0);
+int main(int argc, char **argv) {
+    fs::path path_case(argv[1]);
+    fs::path grid_file = rd::filename(path_case, RD_EGRID_FILE, false, 0);
+    std::string init_file =
+        rd::filename(path_case, RD_INIT_FILE, false, 0).string();
+
+    rd_file_ptr init(rd_file_open(init_file.c_str(), 0), &rd_file_close);
+    rd_grid_ptr grid = read_grid(grid_file);
+    const rd_kw_type *poro_kw = rd_file_iget_named_kw(init.get(), "PORO", 0);
+    const rd_kw_type *porv_kw = rd_file_iget_named_kw(init.get(), "PORV", 0);
     rd_kw_type *multpv = NULL;
     rd_kw_type *NTG = NULL;
     bool error_found = false;
@@ -27,17 +30,17 @@ int main(int argc, char **argv) {
     double total_volume = 0;
     double total_diff = 0;
     int error_count = 0;
-    int iactive;
 
-    if (rd_file_has_kw(init, "NTG"))
-        NTG = rd_file_iget_named_kw(init, "NTG", 0);
+    if (rd_file_has_kw(init.get(), "NTG"))
+        NTG = rd_file_iget_named_kw(init.get(), "NTG", 0);
 
-    if (rd_file_has_kw(init, "MULTPV"))
-        multpv = rd_file_iget_named_kw(init, "MULTPV", 0);
+    if (rd_file_has_kw(init.get(), "MULTPV"))
+        multpv = rd_file_iget_named_kw(init.get(), "MULTPV", 0);
 
-    for (iactive = 0; iactive < rd_grid_get_nactive(grid); ++iactive) {
-        int iglobal = rd_grid_get_global_index1A(grid, iactive);
-        double grid_volume = rd_grid_get_cell_volume1(grid, iglobal);
+    for (int iactive = 0; iactive < rd_grid_get_nactive(grid.get());
+         ++iactive) {
+        int iglobal = rd_grid_get_global_index1A(grid.get(), iactive);
+        double grid_volume = rd_grid_get_cell_volume1(grid.get(), iglobal);
         double eclipse_volume = rd_kw_iget_float(porv_kw, iglobal) /
                                 rd_kw_iget_float(poro_kw, iactive);
 
@@ -61,13 +64,9 @@ int main(int argc, char **argv) {
     printf("Total volume difference: %g %% \n",
            100 * total_diff / total_volume);
 
-    rd_grid_free(grid);
-    rd_file_close(init);
-    free(grid_file);
-    free(init_file);
     if (error_found) {
         printf("Error_count: %d / %d \n", error_count,
-               rd_grid_get_nactive(grid));
+               rd_grid_get_nactive(grid.get()));
         exit(1);
     } else
         exit(0);
