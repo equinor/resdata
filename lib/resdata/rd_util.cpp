@@ -344,11 +344,6 @@ static char *rd_alloc_filename_static(const char *path, const char *base,
     return filename;
 }
 
-char *rd_alloc_filename(const char *path, const char *base,
-                        rd_file_enum file_type, bool fmt_file, int report_nr) {
-    return rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr);
-}
-
 namespace rd {
 /**
  * Given the path to a case, eg. test-data/local/eclipse/SIMPLE,
