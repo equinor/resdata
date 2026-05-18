@@ -364,18 +364,6 @@ fs::path filename(fs::path casepath, rd_file_enum file_type, bool fmt_file,
 }
 }; // namespace rd
 
-char *rd_alloc_exfilename(const char *path, const char *base,
-                          rd_file_enum file_type, bool fmt_file,
-                          int report_nr) {
-    char *filename =
-        rd_alloc_filename_static(path, base, file_type, fmt_file, report_nr);
-    if (!util_file_exists(filename)) {
-        free(filename);
-        filename = NULL;
-    }
-    return filename;
-}
-
 /**
    This function assumes that:
 
