@@ -5,6 +5,9 @@
 #include <cmath>
 #include <ctime>
 #include <locale.h>
+#include <string>
+#include <optional>
+#include <fmt/format.h>
 
 #include <ert/util/hash.hpp>
 #include <ert/util/util.hpp>
@@ -82,14 +85,13 @@ struct rd_sum_struct {
     bool fmt_case;
     bool unified;
     char *key_join_string;
-    char *
-        path; /* The path - as given for the case input. Can be NULL for cwd. */
-    char *abs_path; /* Absolute path. */
-    char *base;     /* Only the basename. */
-    char *
+    std::string path;     /* Path as given for the case input */
+    std::string abs_path; /* Absolute path. */
+    std::string base;     /* Only the basename. */
+    std::string
         rd_case; /* This is the current case, with optional path component. == path + base*/
-    char *
-        ext; /* Only to support selective loading of formatted|unformatted and unified|multiple. (can be NULL) */
+    std::string
+        ext; /* Only to support selective loading of formatted|unformatted and unified|multiple. */
 };
 
 UTIL_SAFE_CAST_FUNCTION(rd_sum, RD_SUM_ID);
@@ -104,37 +106,16 @@ UTIL_IS_INSTANCE_FUNCTION(rd_sum, RD_SUM_ID);
 */
 
 void rd_sum_set_case(rd_sum_type *rd_sum, const char *input_arg) {
-    free(rd_sum->rd_case);
-    free(rd_sum->path);
-    free(rd_sum->abs_path);
-    free(rd_sum->base);
-    free(rd_sum->ext);
-    {
-        std::string path = rd::util::path::dirname(input_arg);
-        std::string base = rd::util::path::basename(input_arg);
-        std::string ext = rd::util::path::extension(input_arg);
-
-        rd_sum->rd_case = util_alloc_filename(path.c_str(), base.c_str(), NULL);
-        if (path.size())
-            rd_sum->path = util_alloc_string_copy(path.c_str());
-        else
-            rd_sum->path = NULL;
-
-        if (base.size())
-            rd_sum->base = util_alloc_string_copy(base.c_str());
-        else
-            rd_sum->base = NULL;
-
-        if (ext.size())
-            rd_sum->ext = util_alloc_string_copy(ext.c_str());
-        else
-            rd_sum->ext = NULL;
-
-        if (path.size() > 0)
-            rd_sum->abs_path = util_alloc_abs_path(path.c_str());
-        else
-            rd_sum->abs_path = util_alloc_cwd();
-    }
+    fs::path input_path(input_arg);
+    fs::path path = input_path.parent_path();
+    rd_sum->path = path.string();
+    rd_sum->base = input_path.stem().string();
+    rd_sum->rd_case = (path / rd_sum->base).string();
+    rd_sum->ext = input_path.extension().string();
+    if (path.empty())
+        rd_sum->abs_path = fs::current_path().string();
+    else
+        rd_sum->abs_path = fs::absolute(path).string();
 }
 
 static rd_sum_type *rd_sum_alloc__(const char *input_arg,
@@ -145,11 +126,6 @@ static rd_sum_type *rd_sum_alloc__(const char *input_arg,
     rd_sum_type *rd_sum = new rd_sum_type;
     UTIL_TYPE_ID_INIT(rd_sum, RD_SUM_ID);
 
-    rd_sum->rd_case = NULL;
-    rd_sum->path = NULL;
-    rd_sum->base = NULL;
-    rd_sum->ext = NULL;
-    rd_sum->abs_path = NULL;
     rd_sum_set_case(rd_sum, input_arg);
     rd_sum->key_join_string = util_alloc_string_copy(key_join_string);
 
@@ -198,15 +174,15 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
     }
 }
 
-static bool rd_sum_fread(rd_sum_type *rd_sum, const char *header_file,
+static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
                          const stringlist_type *data_files,
                          bool include_restart, bool lazy_load,
                          int file_options) {
-    rd_sum->smspec = rd_smspec_fread_alloc(header_file, rd_sum->key_join_string,
-                                           include_restart);
+    rd_sum->smspec = rd_smspec_fread_alloc(
+        header_file.c_str(), rd_sum->key_join_string, include_restart);
     if (rd_sum->smspec) {
         bool fmt_file;
-        rd_get_file_type(header_file, &fmt_file, NULL);
+        rd_get_file_type(header_file.c_str(), &fmt_file, NULL);
         rd_sum->fmt_case = fmt_file;
     } else
         return false;
@@ -232,12 +208,12 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const char *header_file,
     return true;
 }
 
-static char *rd_alloc_base_guess(const char *path) {
+static std::optional<fs::path> base_guess(std::string path) {
     char *base = NULL;
     stringlist_type *data_files = stringlist_alloc_new();
     stringlist_type *DATA_files = stringlist_alloc_new();
-    stringlist_select_matching_files(data_files, path, "*.data");
-    stringlist_select_matching_files(DATA_files, path, "*.DATA");
+    stringlist_select_matching_files(data_files, path.c_str(), "*.data");
+    stringlist_select_matching_files(DATA_files, path.c_str(), "*.DATA");
 
     if ((stringlist_get_size(data_files) + stringlist_get_size(DATA_files)) ==
         1) {
@@ -254,7 +230,13 @@ static char *rd_alloc_base_guess(const char *path) {
     stringlist_free(data_files);
     stringlist_free(DATA_files);
 
-    return base;
+    if (base == nullptr) {
+        return std::nullopt;
+    } else {
+        fs::path result(base);
+        free(base);
+        return result;
+    }
 }
 
 /**
@@ -262,25 +244,28 @@ static char *rd_alloc_base_guess(const char *path) {
   starts. Observe that in addition to the @path input parameter the
   @base input can contain an embedded path component.
 */
-static void rd_alloc_summary_data_files(const char *path, const char *base,
-                                        bool fmt_file,
+static void rd_alloc_summary_data_files(const fs::path &path,
+                                        const fs::path &base, bool fmt_file,
                                         stringlist_type *filelist) {
-    char *unif_data_file =
-        rd_alloc_exfilename(path, base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1);
-    int files =
-        rd_select_filelist(path, base, RD_SUMMARY_FILE, fmt_file, filelist);
+    std::string unif_data_file =
+        rd::filename(path / base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1)
+            .string();
+    std::string pstr = path.string();
+    std::string bstr = base.string();
+    int files = rd_select_filelist(pstr.c_str(), bstr.c_str(), RD_SUMMARY_FILE,
+                                   fmt_file, filelist);
 
-    if ((files > 0) && (unif_data_file != NULL)) {
+    if ((files > 0) && fs::exists(unif_data_file)) {
         /*
-       We have both a unified file AND a list of files: BASE.S0000,
-       BASE.S0001, BASE.S0002, ..., must check which is newest and
-       load accordingly.
-    */
+         We have both a unified file AND a list of files: BASE.S0000,
+         BASE.S0001, BASE.S0002, ..., must check which is newest and
+         load accordingly.
+        */
         bool unified_newest = true;
         int file_nr = 0;
         while (unified_newest && (file_nr < files)) {
             if (util_file_difftime(stringlist_iget(filelist, file_nr),
-                                   unif_data_file) > 0)
+                                   unif_data_file.c_str()) > 0)
                 unified_newest = false;
             file_nr++;
         }
@@ -288,15 +273,14 @@ static void rd_alloc_summary_data_files(const char *path, const char *base,
         if (unified_newest) {
             stringlist_clear(
                 filelist); /* Clear out all the BASE.Snnnn selections. */
-            stringlist_append_copy(filelist, unif_data_file);
+            stringlist_append_copy(filelist, unif_data_file.c_str());
         }
-    } else if (unif_data_file != NULL) {
+    } else if (fs::exists(unif_data_file)) {
         /* Found a unified summary file :  Clear out all the BASE.Snnnn selections. */
         stringlist_clear(
             filelist); /* Clear out all the BASE.Snnnn selections. */
-        stringlist_append_copy(filelist, unif_data_file);
+        stringlist_append_copy(filelist, unif_data_file.c_str());
     }
-    free(unif_data_file);
 }
 
 /**
@@ -332,19 +316,17 @@ static void rd_alloc_summary_data_files(const char *path, const char *base,
    This algorithm should work in most practical cases, but it is
    surely possible to fool it.
 */
-static bool rd_alloc_summary_files(const char *path, const char *_base,
-                                   const char *ext, char **_header_file,
-                                   stringlist_type *filelist) {
+static std::optional<fs::path>
+rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
+                       stringlist_type *filelist) {
     bool fmt_input = false;
     bool fmt_set = false;
     bool fmt_file = true;
     bool unif_input = false;
     bool unif_set = false;
 
-    char *header_file = NULL;
-    char *base;
-
-    *_header_file = NULL;
+    fs::path header_file;
+    fs::path base;
 
     /* 1: We start by inspecting the input extension and see if we can
      learn anything about formatted/unformatted and
@@ -352,25 +334,25 @@ static bool rd_alloc_summary_files(const char *path, const char *_base,
      in which case we learn nothing.
   */
 
-    if (_base == NULL)
-        base = rd_alloc_base_guess(path);
-    else
-        base = (char *)_base;
+    if (_base.empty()) {
+        auto maybe_base = base_guess(path.string());
+        if (!maybe_base)
+            return std::nullopt;
+        base = *maybe_base;
+    } else
+        base = _base;
 
-    if (ext != NULL) {
+    if (!ext.empty()) {
         rd_file_enum input_type;
 
-        {
-            char *test_name = util_alloc_filename(NULL, base, ext);
-            input_type = rd_get_file_type(test_name, &fmt_input, NULL);
-            free(test_name);
-        }
+        std::string filename = base.string() + ext;
+        input_type = rd_get_file_type(filename.c_str(), &fmt_input, NULL);
 
         if ((input_type != RD_OTHER_FILE) && (input_type != RD_DATA_FILE)) {
             /*
-         The file has been recognized as a file type from which we can
-         at least infer formatted/unformatted inforamtion.
-      */
+             The file has been recognized as a file type from which we can
+             at least infer formatted/unformatted information.
+            */
             fmt_set = true;
             switch (input_type) {
             case (RD_SUMMARY_FILE):
@@ -393,45 +375,42 @@ static bool rd_alloc_summary_files(const char *path, const char *_base,
     2: We continue by looking for header files.
   */
 
-    {
-        char *fsmspec_file =
-            rd_alloc_exfilename(path, base, RD_SUMMARY_HEADER_FILE, true, -1);
-        char *smspec_file =
-            rd_alloc_exfilename(path, base, RD_SUMMARY_HEADER_FILE, false, -1);
+    std::string fsmspec_file =
+        rd::filename(path / base, RD_SUMMARY_HEADER_FILE, true, -1).string();
+    std::string smspec_file =
+        rd::filename(path / base, RD_SUMMARY_HEADER_FILE, false, -1).string();
 
-        if ((fsmspec_file == NULL) &&
-            (smspec_file == NULL)) /* Neither file exists */
-            return false;
+    /* Neither file exists */
+    if (!rd::try_exists(fsmspec_file) && !rd::try_exists(smspec_file))
+        return std::nullopt;
 
-        if (fmt_set) /* The question of formatted|unformatted has already been settled based on the input filename. */
-            fmt_file = fmt_input;
-        else {
-            if ((fsmspec_file != NULL) &&
-                (smspec_file !=
-                 NULL)) { /* Both fsmspec and smspec exist - we take the newest. */
-                if (util_file_difftime(fsmspec_file, smspec_file) < 0)
-                    fmt_file = true;
-                else
-                    fmt_file = false;
-            } else { /* Only one of fsmspec / smspec exists */
-                if (fsmspec_file != NULL)
-                    fmt_file = true;
-                else
-                    fmt_file = false;
-            }
+    if (fmt_set) /* The question of formatted|unformatted has already been settled based on the input filename. */
+        fmt_file = fmt_input;
+    else {
+        /* Both fsmspec and smspec exist - we take the newest. */
+        if (rd::try_exists(fsmspec_file) && rd::try_exists(smspec_file)) {
+            if (util_file_difftime(fsmspec_file.c_str(), smspec_file.c_str()) <
+                0)
+                fmt_file = true;
+            else
+                fmt_file = false;
+        } else { /* Only one of fsmspec / smspec exists */
+            if (rd::try_exists(fsmspec_file))
+                fmt_file = true;
+            else
+                fmt_file = false;
         }
-
-        if (fmt_file) {
-            header_file = fsmspec_file;
-            free(smspec_file);
-        } else {
-            header_file = smspec_file;
-            free(fsmspec_file);
-        }
-
-        if (header_file == NULL)
-            return false; /* If you insist on e.g. unformatted and only fsmspec exists - no results for you. */
     }
+
+    if (fmt_file) {
+        header_file = fsmspec_file;
+    } else {
+        header_file = smspec_file;
+    }
+    /* If you insist on e.g. unformatted and only fsmspec exists
+     * no results for you. */
+    if (!fs::exists(header_file))
+        return std::nullopt;
 
     /*
      3: OK - we have found a SMSPEC / FMSPEC file - continue to look for
@@ -442,39 +421,36 @@ static bool rd_alloc_summary_files(const char *path, const char *_base,
                      non-unified input files. */
 
         if (unif_input) {
-            char *unif_data_file = rd_alloc_exfilename(
-                path, base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1);
-            if (unif_data_file != NULL) {
-                stringlist_append_copy(filelist, unif_data_file);
-                free(unif_data_file);
+            fs::path unif_data_file = rd::filename(
+                path / base, RD_UNIFIED_SUMMARY_FILE, fmt_file, -1);
+            if (fs::exists(unif_data_file)) {
+                stringlist_append_copy(filelist,
+                                       unif_data_file.string().c_str());
             }
-        } else
-            rd_select_filelist(path, base, RD_SUMMARY_FILE, fmt_file, filelist);
+        } else {
+            std::string pstr = path.string();
+            std::string bstr = base.string();
+            rd_select_filelist(pstr.c_str(), bstr.c_str(), RD_SUMMARY_FILE,
+                               fmt_file, filelist);
+        }
     } else
         rd_alloc_summary_data_files(path, base, fmt_file, filelist);
 
-    if (_base == NULL)
-        free(base);
-
-    *_header_file = header_file;
-
-    return (stringlist_get_size(filelist) > 0) ? true : false;
+    return header_file;
 }
 
 static bool rd_sum_fread_case(rd_sum_type *rd_sum, bool include_restart,
                               bool lazy_load, int file_options) {
-    char *header_file;
     stringlist_type *summary_file_list = stringlist_alloc_new();
 
     bool caseOK = false;
 
-    rd_alloc_summary_files(rd_sum->path, rd_sum->base, rd_sum->ext,
-                           &header_file, summary_file_list);
-    if ((header_file != NULL) && (stringlist_get_size(summary_file_list) > 0)) {
-        caseOK = rd_sum_fread(rd_sum, header_file, summary_file_list,
+    auto header_file = rd_alloc_summary_files(rd_sum->path, rd_sum->base,
+                                              rd_sum->ext, summary_file_list);
+    if (header_file && (stringlist_get_size(summary_file_list) > 0)) {
+        caseOK = rd_sum_fread(rd_sum, header_file->string(), summary_file_list,
                               include_restart, lazy_load, file_options);
     }
-    free(header_file);
     stringlist_free(summary_file_list);
 
     return caseOK;
@@ -618,8 +594,8 @@ rd_sum_type *rd_sum_alloc_writer(const char *rd_case, bool fmt_output,
 }
 
 void rd_sum_fwrite(const rd_sum_type *rd_sum) {
-    rd_smspec_fwrite(rd_sum->smspec, rd_sum->rd_case, rd_sum->fmt_case);
-    rd_sum_data_fwrite(rd_sum->data, rd_sum->rd_case, rd_sum->fmt_case,
+    rd_smspec_fwrite(rd_sum->smspec, rd_sum->rd_case.c_str(), rd_sum->fmt_case);
+    rd_sum_data_fwrite(rd_sum->data, rd_sum->rd_case.c_str(), rd_sum->fmt_case,
                        rd_sum->unified);
 }
 
@@ -636,13 +612,6 @@ void rd_sum_free(rd_sum_type *rd_sum) {
 
     if (rd_sum->smspec)
         rd_smspec_free(rd_sum->smspec);
-
-    free(rd_sum->path);
-    free(rd_sum->ext);
-    free(rd_sum->abs_path);
-
-    free(rd_sum->base);
-    free(rd_sum->rd_case);
 
     free(rd_sum->key_join_string);
     delete rd_sum;
@@ -1181,16 +1150,26 @@ int rd_sum_get_restart_step(const rd_sum_type *rd_sum) {
 }
 
 const char *rd_sum_get_case(const rd_sum_type *rd_sum) {
-    return rd_sum->rd_case;
+    return rd_sum->rd_case.c_str();
 }
 
-const char *rd_sum_get_path(const rd_sum_type *rd_sum) { return rd_sum->path; }
+const char *rd_sum_get_path(const rd_sum_type *rd_sum) {
+    if (rd_sum->path.empty())
+        return nullptr;
+    return rd_sum->path.c_str();
+}
 
 const char *rd_sum_get_abs_path(const rd_sum_type *rd_sum) {
-    return rd_sum->abs_path;
+    if (rd_sum->abs_path.empty())
+        return nullptr;
+    return rd_sum->abs_path.c_str();
 }
 
-const char *rd_sum_get_base(const rd_sum_type *rd_sum) { return rd_sum->base; }
+const char *rd_sum_get_base(const rd_sum_type *rd_sum) {
+    if (rd_sum->base.empty())
+        return nullptr;
+    return rd_sum->base.c_str();
+}
 
 stringlist_type *
 rd_sum_alloc_matching_general_var_list(const rd_sum_type *rd_sum,
