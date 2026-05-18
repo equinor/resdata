@@ -800,12 +800,12 @@ numeric_res_datas = st.tuples(keywords(8), numeric_arrays)
 str_res_datas = st.tuples(keywords(8), str_arrays())
 
 
-def write_with_resfo_and_read_with_resdata(res_data, format):
-    is_formatted = format == resfo.Format.FORMATTED
+def write_with_resfo_and_read_with_resdata(res_data, file_format):
+    is_formatted = file_format == resfo.Format.FORMATTED
     mode = "w+" if is_formatted else "w+b"
     kw = None
     with tempfile.NamedTemporaryFile(mode=mode, delete=False) as namedtmp:
-        resfo.write(namedtmp, [res_data], format)
+        resfo.write(namedtmp, [res_data], file_format)
         namedtmp.flush()
 
         assert FortIO.is_fortran_file(namedtmp.name) != is_formatted
