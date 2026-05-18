@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include <fstream>
+#include <system_error>
 
 #include <ert/util/ert_api_config.hpp>
 

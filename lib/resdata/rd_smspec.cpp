@@ -664,78 +664,67 @@ bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other) {
 
 static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
                                    const rd_file_type *header) {
-    if (rd_file_has_kw(header, RESTART_KW)) {
-        const rd_kw_type *restart_kw =
-            rd_file_iget_named_kw(header, RESTART_KW, 0);
-        int num_blocks = rd_kw_get_size(restart_kw);
-        num_blocks = 0 ? num_blocks < 0 : num_blocks;
-        char *tmp_base = (char *)calloc(8 * num_blocks + 1, sizeof(char));
-        for (int i = 0; i < num_blocks; i++) {
-            const char *part = (const char *)rd_kw_iget_ptr(restart_kw, i);
-            strncat(tmp_base, part, 8);
-        }
+    if (!rd_file_has_kw(header, RESTART_KW))
+        return;
+    const rd_kw_type *restart_kw = rd_file_iget_named_kw(header, RESTART_KW, 0);
+    int num_blocks = rd_kw_get_size(restart_kw);
+    num_blocks = 0 ? num_blocks < 0 : num_blocks;
+    auto tmp_base = rd::checked_calloc<char>(8 * num_blocks + 1);
+    for (int i = 0; i < num_blocks; i++) {
+        const char *part = (const char *)rd_kw_iget_ptr(restart_kw, i);
+        strncat(tmp_base.get(), part, 8);
+    }
 
-        char *restart_base = util_alloc_strip_copy(tmp_base);
-        free(tmp_base);
-        if (strlen(restart_base)) { /* We ignore the empty ones. */
-            char *smspec_header;
+    std::string restart_base = rd::strip_spaces(std::string(tmp_base.get()));
 
-            /*
-        The conditional block here is to support the following situation:
+    /* We ignore the empty ones. */
+    if (!restart_base.size())
+        return;
 
-           1. A simulation with a restart has been performed on Posix with path
-              separator '/'.
+    std::string smspec_header;
+    fs::path dir = fs::path(rd_smspec->header_file).parent_path();
 
-           2. The simulation is loaded on windows, where the native path
-              separator is '\'.
+    /*
+    The conditional block here is to support the following situation:
 
-        This code block will translate '/' -> '\' in the restart keyword which
-        is read from the summary file.
-      */
+    1. A simulation with a restart has been performed on Posix with path
+       separator '/'.
+
+    2. The simulation is loaded on windows, where the native path
+       separator is '\'.
+
+    This code block will translate '/' -> '\' in the restart keyword which
+    is read from the summary file.
+    */
 
 #ifdef ERT_WINDOWS
-            for (int i = 0; i < strlen(restart_base); i++) {
-                if (restart_base[i] == UTIL_POSIX_PATH_SEP_CHAR)
-                    restart_base[i] = UTIL_PATH_SEP_CHAR;
-            }
+    for (int i = 0; i < restart_base.size(); i++) {
+        if (restart_base[i] == UTIL_POSIX_PATH_SEP_CHAR)
+            restart_base[i] = UTIL_PATH_SEP_CHAR;
+    }
 #endif
 
-            std::string path = "";
-            if (util_is_abs_path(restart_base)) {
-                path = rd::util::path::dirname(restart_base);
-                std::string base = rd::util::path::basename(restart_base);
-                smspec_header = rd_alloc_exfilename(path.c_str(), base.c_str(),
-                                                    RD_SUMMARY_HEADER_FILE,
-                                                    rd_smspec->formatted, 0);
-            } else {
-                path = rd::util::path::dirname(rd_smspec->header_file);
-                smspec_header = rd_alloc_exfilename(path.c_str(), restart_base,
-                                                    RD_SUMMARY_HEADER_FILE,
-                                                    rd_smspec->formatted, 0);
-            }
-
-            if (smspec_header) {
-                if (!util_same_file(
-                        smspec_header,
-                        rd_smspec->header_file
-                            .c_str())) /* Restart from the current case is ignored. */
-                {
-                    if (util_is_abs_path(restart_base))
-                        rd_smspec->restart_case = restart_base;
-                    else {
-                        char *tmp_path = util_alloc_filename(
-                            path.c_str(), restart_base, NULL);
-                        char *abs_path = util_alloc_abs_path(tmp_path);
-                        rd_smspec->restart_case = abs_path;
-                        free(abs_path);
-                        free(tmp_path);
-                    }
-                }
-                free(smspec_header);
-            }
-        }
-        free(restart_base);
+    fs::path restart_path(restart_base);
+    if (restart_path.is_relative()) {
+        restart_path = dir / restart_path;
     }
+    smspec_header = rd::filename(restart_path, RD_SUMMARY_HEADER_FILE,
+                                 rd_smspec->formatted, 0)
+                        .string();
+
+    std::error_code ec;
+    if (!fs::exists(smspec_header, ec) || ec)
+        return;
+
+    // Restart from current case is ignored
+    if (util_same_file(smspec_header.c_str(), rd_smspec->header_file.c_str()))
+        return;
+
+    // restart_path should not exist, but we are checking
+    // anyways to keep existing behavior
+    if (fs::exists(restart_path, ec) && !ec)
+        restart_path = fs::canonical(restart_path);
+    rd_smspec->restart_case = restart_path.string();
 }
 
 static const rd::smspec_node *
