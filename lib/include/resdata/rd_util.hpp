@@ -1,5 +1,6 @@
 #pragma once
 #include <ctime>
+#include <cstdlib>
 
 #include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
@@ -7,6 +8,7 @@
 #include <resdata/rd_type.hpp>
 #include <filesystem>
 #include <system_error>
+#include <memory>
 
 #ifdef __cplusplus
 extern "C" {
@@ -131,5 +133,31 @@ std::filesystem::path filename(std::filesystem::path path, rd_file_enum,
 inline bool try_exists(std::filesystem::path p) noexcept {
     std::error_code ec;
     return std::filesystem::exists(p, ec);
+}
+template <typename T>
+std::unique_ptr<T[], void (*)(void *)> checked_calloc(size_t num) {
+    T *ptr = static_cast<T *>(std::calloc(num, sizeof(T)));
+
+    if (ptr == nullptr) {
+        throw std::bad_alloc{};
+    }
+    return std::unique_ptr<T[], void (*)(void *)>(
+        ptr, [](void *p) { std::free(p); });
+}
+
+template <typename T>
+void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
+                     size_t new_element_count) {
+    if (new_element_count == 0) {
+        ptr.reset();
+        return;
+    }
+    T *raw_ptr = ptr.release();
+    void *new_raw_ptr = std::realloc(raw_ptr, new_element_count * sizeof(T));
+    if (new_raw_ptr == nullptr) {
+        ptr.reset(raw_ptr);
+        throw std::bad_alloc{};
+    }
+    ptr.reset(static_cast<T *>(new_raw_ptr));
 }
 } // namespace rd
