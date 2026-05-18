@@ -188,8 +188,8 @@ class TimeVector(VectorTemplate):
         return currentTime
 
     def appendTime(self, num, timeUnit):
-        next = self.nextTime(num, timeUnit)
-        self.append(CTime(next))
+        next_time = self.nextTime(num, timeUnit)
+        self.append(CTime(next_time))
 
     @classmethod
     def createRegular(cls, start, end, deltaString):

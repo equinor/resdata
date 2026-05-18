@@ -83,14 +83,14 @@ class WorkAreaTest(ResdataTest):
 
 def test_make_files(tmp_path):
     file = tmp_path / "file"
-    dir = tmp_path / "dir"
+    dir1 = tmp_path / "dir1"
     dir2 = tmp_path / "dir2"
     dir3 = tmp_path / "dir3"
     dir4 = tmp_path / "dir4"
     dir_file = dir2 / "file2"
     dir_file2 = dir3 / "file3"
     dir_file3 = dir4 / "file4"
-    dir.mkdir()
+    dir1.mkdir()
     dir2.mkdir()
     dir3.mkdir()
     dir4.mkdir()
@@ -101,7 +101,7 @@ def test_make_files(tmp_path):
 
     abs_file = file.absolute()
     abs_dir_file = dir_file.absolute()
-    abs_dir = dir.absolute()
+    abs_dir1 = dir1.absolute()
     abs_dir2 = dir2.absolute()
     abs_dir_file2 = dir_file2.absolute()
     abs_dir_file3 = dir_file3.absolute()
@@ -113,9 +113,9 @@ def test_make_files(tmp_path):
         test_area.install_file(str(abs_dir_file))
         assert os.path.exists(test_area.get_cwd() / dir_file)
 
-        test_area.copy_directory(str(abs_dir))
-        assert os.path.exists(test_area.get_cwd() / dir)
-        assert os.path.isdir(test_area.get_cwd() / dir)
+        test_area.copy_directory(str(abs_dir1))
+        assert os.path.exists(test_area.get_cwd() / dir1)
+        assert os.path.isdir(test_area.get_cwd() / dir1)
 
         test_area.copy_directory_content(str(abs_dir2))
         assert os.path.exists(os.path.join(test_area.get_cwd(), "file2"))

@@ -55,16 +55,16 @@ class CPolyline(BaseCClass):
     def __str__(self):
         name = self.getName()
         if name:
-            str = "%s [" % name
+            string = "%s [" % name
         else:
-            str = "["
+            string = "["
 
         for index, p in enumerate(self):
-            str += "(%g,%g)" % p
+            string += "(%g,%g)" % p
             if index < len(self) - 1:
-                str += ","
-        str += "]"
-        return str
+                string += ","
+        string += "]"
+        return string
 
     def __repr__(self):
         return str(self)

@@ -26,7 +26,7 @@ class ResdataWellTest3(ResdataTest):
 
         grid = Grid(grid_path)
         well_info = WellInfo(grid, rst_path)
-        sum = Summary(sum_path)
+        summary = Summary(sum_path)
 
         for wtl in well_info:
             for well_state in wtl:

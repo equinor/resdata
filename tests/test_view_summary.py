@@ -176,9 +176,9 @@ def create_summary(
             simulator=Simulator.ECLIPSE_100,
         ),
     )
-    format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
-    smspec.to_file(f"{case}.{formatted}SMSPEC", file_format=format)
-    unsmry.to_file(f"{case}.{formatted}UNSMRY", file_format=format)
+    _format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
+    smspec.to_file(f"{case}.{formatted}SMSPEC", file_format=_format)
+    unsmry.to_file(f"{case}.{formatted}UNSMRY", file_format=_format)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -704,8 +704,8 @@ def create_split_case(
             simulator=Simulator.ECLIPSE_100,
         ),
     )
-    format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
-    smspec.to_file(f"{case}.{formatted}SMSPEC", file_format=format)
+    _format = resfo.Format.FORMATTED if formatted == "F" else resfo.Format.UNFORMATTED
+    smspec.to_file(f"{case}.{formatted}SMSPEC", file_format=_format)
     for i, t in enumerate(times):
         smry = Unsmry(
             steps=[
@@ -720,7 +720,7 @@ def create_split_case(
                 )
             ]
         )
-        smry.to_file(f"{case}.{'A' if formatted else 'S'}{i:04d}", file_format=format)
+        smry.to_file(f"{case}.{'A' if formatted else 'S'}{i:04d}", file_format=_format)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -790,14 +790,14 @@ def test_that_formatted_unified_is_chosen_over_unformatted_split(capsys):
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_files_can_be_in_a_different_directory(monkeypatch, capsys):
-    dir = Path("subdir")
-    dir.mkdir()
-    monkeypatch.chdir(dir)
+    subdir = Path("subdir")
+    subdir.mkdir()
+    monkeypatch.chdir(subdir)
     create_summary(summary_keys=("FOPR",))
     monkeypatch.chdir("..")
 
     capsys.readouterr()  # Ensure empty capture
-    run(["summary.x", "-v", str(dir / "TEST"), "*"])
+    run(["summary.x", "-v", str(subdir / "TEST"), "*"])
     df = output_as_df(capsys.readouterr().out)
     assert df.to_csv() == dedent("""\
             ,Days,dd/mm/yyyy,FOPR
@@ -820,15 +820,15 @@ def test_that_empty_extension_is_ignored(capsys):
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_that_relative_path_restart_is_relative_to_base_case(monkeypatch, capsys):
-    dir = Path("subdir")
-    dir.mkdir()
-    monkeypatch.chdir(dir)
+    subdir = Path("subdir")
+    subdir.mkdir()
+    monkeypatch.chdir(subdir)
     create_summary(case="RESTART", summary_keys=("FOPT",))
     create_summary(restart="RESTART", summary_keys=("FOPR", "FGIP"))
     monkeypatch.chdir("..")
 
     capsys.readouterr()  # Ensure empty capture
-    run(["summary.x", "-v", str(dir / "TEST"), "*"])
+    run(["summary.x", "-v", str(subdir / "TEST"), "*"])
     assert keys_in_header(capsys.readouterr().out) == ["FGIP", "FOPR", "FOPT"]
 
 
@@ -856,13 +856,13 @@ def test_that_restart_and_base_times_are_concated(capsys):
 @pytest.mark.usefixtures("use_tmpdir")
 @pytest.mark.timeout(10)
 def test_performance_with_many_keys(monkeypatch, benchmark):
-    dir = Path("subdir")
-    dir.mkdir()
-    monkeypatch.chdir(dir)
+    subdir = Path("subdir")
+    subdir.mkdir()
+    monkeypatch.chdir(subdir)
     create_summary(case="TEST", summary_keys=[f"WWIT:N-{i}" for i in range(5000)])
     monkeypatch.chdir("..")
 
     def bench():
-        run(["summary.x", "-v", str(dir / "TEST"), "*"])
+        run(["summary.x", "-v", str(subdir / "TEST"), "*"])
 
     benchmark(bench)

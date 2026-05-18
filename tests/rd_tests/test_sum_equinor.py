@@ -19,9 +19,9 @@ case = "%s/%s" % (path, base)
 
 
 def sum_get(*args):
-    sum = args[0]
+    summary = args[0]
     key = args[1]
-    vec = sum[key]
+    vec = summary[key]
 
 
 @equinor_test()
@@ -37,37 +37,38 @@ class SumTest(ResdataTest):
 
     def test_invalid(self):
         with self.assertRaises(IOError):
-            sum = Summary("Does/not/exist")
+            Summary("Does/not/exist")
 
     def test_KeyError(self):
-        sum = self.rd_sum
+        summary = self.rd_sum
         with self.assertRaises(KeyError):
-            v = sum.numpy_vector("KeyMissing")
+            v = summary.numpy_vector("KeyMissing")
 
         with self.assertRaises(KeyError):
-            v = sum.get_interp("Missing", days=750)
+            v = summary.get_interp("Missing", days=750)
 
         with self.assertRaises(KeyError):
-            v = sum.get_interp_vector("Missing", days_list=[750])
+            v = summary.get_interp_vector("Missing", days_list=[750])
 
     def test_contains(self):
         self.assertTrue("FOPT" in self.rd_sum)
         self.assertFalse("MISSING" in self.rd_sum)
 
     def test_interp(self):
-        sum = self.rd_sum
+        summary = self.rd_sum
 
-        self.assertAlmostEqual(sum.get_interp("WWCT:OP_3", days=750), 0.11719122)
+        self.assertAlmostEqual(summary.get_interp("WWCT:OP_3", days=750), 0.11719122)
         self.assertAlmostEqual(
-            sum.get_interp("WWCT:OP_3", date=datetime.date(2004, 1, 1)), 0.603358387947
+            summary.get_interp("WWCT:OP_3", date=datetime.date(2004, 1, 1)),
+            0.603358387947,
         )
 
-        v = sum.get_interp_vector("WOPT:OP_1", days_list=[100, 200, 400])
+        v = summary.get_interp_vector("WOPT:OP_1", days_list=[100, 200, 400])
         self.assertAlmostEqualList(
             [805817.11875, 1614955.34677419, 3289267.67857143], v
         )
 
-        v = sum.get_interp_vector(
+        v = summary.get_interp_vector(
             "WGPT:OP_2",
             date_list=[
                 datetime.date(2002, 1, 1),
@@ -77,33 +78,35 @@ class SumTest(ResdataTest):
         )
         self.assertAlmostEqualList(v, [8.20773632e08, 9.68444032e08, 1.02515213e09])
 
-        self.assertEqual(sum.get_interp("FOPT", days=0), 0)
+        self.assertEqual(summary.get_interp("FOPT", days=0), 0)
 
-        self.assertEqual(sum.get_interp("WOPR:OP_1", days=0), 0)
-        self.assertEqual(sum.get_interp("WOPR:OP_1", date=datetime.date(2000, 1, 1)), 0)
-
-        self.assertEqual(sum.get_interp("WOPR:OP_1", days=31), 7996)
+        self.assertEqual(summary.get_interp("WOPR:OP_1", days=0), 0)
         self.assertEqual(
-            sum.get_interp("WOPR:OP_1", date=datetime.date(2000, 2, 1)), 7996
+            summary.get_interp("WOPR:OP_1", date=datetime.date(2000, 1, 1)), 0
         )
 
-        FPR = sum.numpy_vector("FPR")
-        self.assertFloatEqual(sum.get_interp("FPR", days=0), FPR[0])
-        self.assertFloatEqual(sum.get_interp("FPR", days=31), FPR[1])
+        self.assertEqual(summary.get_interp("WOPR:OP_1", days=31), 7996)
+        self.assertEqual(
+            summary.get_interp("WOPR:OP_1", date=datetime.date(2000, 2, 1)), 7996
+        )
+
+        FPR = summary.numpy_vector("FPR")
+        self.assertFloatEqual(summary.get_interp("FPR", days=0), FPR[0])
+        self.assertFloatEqual(summary.get_interp("FPR", days=31), FPR[1])
 
         with self.assertRaises(ValueError):
-            sum.get_interp("WOPR:OP_1")
+            summary.get_interp("WOPR:OP_1")
 
         with self.assertRaises(ValueError):
-            sum.get_interp("WOPR:OP_1", days=10, date=datetime.date(2000, 1, 1))
+            summary.get_interp("WOPR:OP_1", days=10, date=datetime.date(2000, 1, 1))
 
     def test_LLINEAR(self):
-        sum = Summary(
+        summary = Summary(
             self.createTestPath(
                 "Equinor/ECLIPSE/Heidrun/LGRISSUE/EM-LTAA-ISEG_CARFIN_NWPROPS"
             )
         )
-        self.assertTrue(sum.has_key("LLINEARS"))
+        self.assertTrue(summary.has_key("LLINEARS"))
 
     def test_wells(self):
         wells = self.rd_sum.wells()
@@ -131,60 +134,62 @@ class SumTest(ResdataTest):
         self.assertEqual(len(self.rd_sum), 63)
 
     def test_dates(self):
-        sum = self.rd_sum
-        d = sum.dates
+        summary = self.rd_sum
+        d = summary.dates
 
         self.assertEqual(d[0], datetime.datetime(2000, 1, 1, 0, 0, 0))
         self.assertEqual(d[62], datetime.datetime(2004, 12, 31, 0, 0, 0))
         self.assertEqual(len(d), 63)
         self.assertEqual(d[25], datetime.datetime(2001, 12, 1, 0, 0, 0))
-        self.assertEqual(sum.iget_date(25), datetime.datetime(2001, 12, 1, 0, 0, 0))
+        self.assertEqual(summary.iget_date(25), datetime.datetime(2001, 12, 1, 0, 0, 0))
 
-        mpl_dates = sum.mpl_dates
+        mpl_dates = summary.mpl_dates
         self.assertAlmostEqual(mpl_dates[25], 730820)
 
-        days = sum.days
+        days = summary.days
         self.assertAlmostEqual(days[50], 1461)
 
-        self.assertEqual(sum.start_time, datetime.datetime(2000, 1, 1, 0, 0, 0))
-        self.assertEqual(sum.end_time, datetime.datetime(2004, 12, 31, 0, 0, 0))
-        self.assertTrue(sum.check_sim_time(datetime.datetime(2004, 12, 31, 0, 0, 0)))
-        self.assertEqual(sum.end_date, datetime.date(2004, 12, 31))
+        self.assertEqual(summary.start_time, datetime.datetime(2000, 1, 1, 0, 0, 0))
+        self.assertEqual(summary.end_time, datetime.datetime(2004, 12, 31, 0, 0, 0))
+        self.assertTrue(
+            summary.check_sim_time(datetime.datetime(2004, 12, 31, 0, 0, 0))
+        )
+        self.assertEqual(summary.end_date, datetime.date(2004, 12, 31))
 
     def test_dates2(self):
-        sum = Summary(self.createTestPath("Equinor/ECLIPSE/FF12/FF12_2013B3_AMAP2"))
-        self.assertEqual(sum.end_date, datetime.date(2045, 1, 1))
+        summary = Summary(self.createTestPath("Equinor/ECLIPSE/FF12/FF12_2013B3_AMAP2"))
+        self.assertEqual(summary.end_date, datetime.date(2045, 1, 1))
 
     def test_keys(self):
-        sum = self.rd_sum
-        self.assertRaises(KeyError, sum.__getitem__, "BJARNE")
+        summary = self.rd_sum
+        self.assertRaises(KeyError, summary.__getitem__, "BJARNE")
 
-        v = sum["FOPT"]
+        v = summary["FOPT"]
         self.assertEqual(len(v), 63)
 
     def test_index(self):
-        sum = self.rd_sum
-        index = sum.get_key_index("TCPUDAY")
+        summary = self.rd_sum
+        index = summary.get_key_index("TCPUDAY")
         self.assertEqual(index, 10239)
 
     def test_report(self):
-        sum = self.rd_sum
-        self.assertEqual(sum.get_report(date=datetime.date(2000, 10, 1)), 10)
-        self.assertEqual(sum.get_report(date=datetime.date(2000, 10, 3)), -1)
-        self.assertEqual(sum.get_report(date=datetime.date(1980, 10, 3)), -1)
-        self.assertEqual(sum.get_report(date=datetime.date(2012, 10, 3)), -1)
+        summary = self.rd_sum
+        self.assertEqual(summary.get_report(date=datetime.date(2000, 10, 1)), 10)
+        self.assertEqual(summary.get_report(date=datetime.date(2000, 10, 3)), -1)
+        self.assertEqual(summary.get_report(date=datetime.date(1980, 10, 3)), -1)
+        self.assertEqual(summary.get_report(date=datetime.date(2012, 10, 3)), -1)
 
-        self.assertEqual(sum.get_report(days=91), 3)
-        self.assertEqual(sum.get_report(days=92), -1)
+        self.assertEqual(summary.get_report(days=91), 3)
+        self.assertEqual(summary.get_report(days=92), -1)
         self.assertAlmostEqual(
-            sum.get_interp("FOPT", days=91), sum.get_from_report("FOPT", 3)
+            summary.get_interp("FOPT", days=91), summary.get_from_report("FOPT", 3)
         )
 
-        self.assertEqual(sum.first_report, 1)
-        self.assertEqual(sum.last_report, 62)
+        self.assertEqual(summary.first_report, 1)
+        self.assertEqual(summary.last_report, 62)
 
-        self.assertEqual(sum.get_report_time(10), datetime.date(2000, 10, 1))
-        self.assertFloatEqual(sum.get_from_report("FOPT", 10), 6.67447e06)
+        self.assertEqual(summary.get_report_time(10), datetime.date(2000, 10, 1))
+        self.assertFloatEqual(summary.get_from_report("FOPT", 10), 6.67447e06)
 
     def test_fwrite(self):
         rd_sum = Summary(self.case, lazy_load=False)
@@ -193,7 +198,7 @@ class SumTest(ResdataTest):
             self.assertTrue(True)
 
     def test_block(self):
-        sum = self.rd_sum
+        summary = self.rd_sum
         index_ijk = sum.get_key_index("BPR:15,28,1")
         index_num = sum.get_key_index("BPR:1095")
         self.assertEqual(index_ijk, index_num)
@@ -225,63 +230,63 @@ class SumTest(ResdataTest):
     def test_case2(self):
         cwd = os.getcwd()
         os.chdir(self.createTestPath(path))
-        sum = Summary(base)
-        self.assertIsNone(sum.path)
-        self.assertTrue(sum.base == base)
-        self.assertTrue(sum.case == base)
-        self.assertTrue(sum.abs_path == self.createTestPath(path))
+        summary = Summary(base)
+        self.assertIsNone(summary.path)
+        self.assertTrue(summary.base == base)
+        self.assertTrue(summary.case == base)
+        self.assertTrue(summary.abs_path == self.createTestPath(path))
         os.chdir(cwd)
 
     def test_var_properties(self):
-        sum = self.rd_sum
-        self.assertRaises(KeyError, sum.smspec_node, "BJARNE")
+        summary = self.rd_sum
+        self.assertRaises(KeyError, summary.smspec_node, "BJARNE")
 
-        node = sum.smspec_node("FOPT")
+        node = summary.smspec_node("FOPT")
         self.assertTrue(node.is_total())
         self.assertFalse(node.is_historical())
 
-        node = sum.smspec_node("FOPR")
+        node = summary.smspec_node("FOPR")
         self.assertFalse(node.is_total())
         self.assertFalse(node.is_historical())
         self.assertTrue(node.keyword == "FOPR")
 
-        node = sum.smspec_node("FOPRH")
+        node = summary.smspec_node("FOPRH")
         self.assertFalse(node.is_total())
         self.assertTrue(node.is_historical())
         self.assertTrue(node.is_rate())
         self.assertTrue(node.keyword == "FOPRH")
 
-        node = sum.smspec_node("WOPR:OP_1")
+        node = summary.smspec_node("WOPR:OP_1")
         self.assertFalse(node.is_total())
         self.assertTrue(node.is_rate())
         self.assertTrue(node.keyword == "WOPR")
 
-        node = sum.smspec_node("WOPT:OP_1")
+        node = summary.smspec_node("WOPT:OP_1")
         self.assertTrue(node.is_total())
         self.assertFalse(node.is_rate())
         self.assertTrue(node.unit == "SM3")
         self.assertTrue(node.wgname == "OP_1")
         self.assertTrue(node.keyword == "WOPT")
 
-        self.assertTrue(sum.unit("FOPR") == "SM3/DAY")
+        self.assertTrue(summary.unit("FOPR") == "SM3/DAY")
 
-        node = sum.smspec_node("FOPTH")
+        node = summary.smspec_node("FOPTH")
         self.assertTrue(node.is_total())
         self.assertFalse(node.is_rate())
         self.assertIsNone(node.wgname)
-        node = sum.smspec_node("BPR:1095")
+        node = summary.smspec_node("BPR:1095")
         self.assertEqual(node.num, 1095)
 
     def test_stringlist_gc(self):
-        sum = Summary(self.case)
-        wells = sum.wells()
+        summary = Summary(self.case)
+        wells = summary.wells()
         well1 = wells[0]
         del wells
         self.assertTrue(well1 == "OP_1")
 
     def test_stringlist_reference(self):
-        sum = Summary(self.case)
-        wells = sum.wells()
+        summary = Summary(self.case)
+        wells = summary.wells()
         self.assertListEqual(
             [well for well in wells],
             ["OP_1", "OP_2", "OP_3", "OP_4", "OP_5", "WI_1", "WI_2", "WI_3"],
@@ -289,8 +294,8 @@ class SumTest(ResdataTest):
         self.assertIsInstance(wells, StringList)
 
     def test_stringlist_setitem(self):
-        sum = Summary(self.case)
-        wells = sum.wells()
+        summary = Summary(self.case)
+        wells = summary.wells()
         wells[0] = "Bjarne"
         well0 = wells[0]
         self.assertTrue(well0 == "Bjarne")
@@ -300,8 +305,8 @@ class SumTest(ResdataTest):
         self.assertTrue(wells[0] == "XXX")
 
     def test_segment(self):
-        sum = Summary(self.createTestPath("Equinor/ECLIPSE/Oseberg/F8MLT/F8MLT-F4"))
-        segment_vars = sum.keys("SOFR:F-8:*")
+        summary = Summary(self.createTestPath("Equinor/ECLIPSE/Oseberg/F8MLT/F8MLT-F4"))
+        segment_vars = summary.keys("SOFR:F-8:*")
         self.assertIn("SOFR:F-8:1", segment_vars)
         for var in segment_vars:
             tmp = var.split(":")
@@ -316,21 +321,21 @@ class SumTest(ResdataTest):
         )
 
     def test_time_range(self):
-        sum = Summary(self.case)
+        summary = Summary(self.case)
         with self.assertRaises(TypeError):
-            trange = sum.time_range(interval="1")
-            trange = sum.time_range(interval="1X")
-            trange = sum.time_range(interval="YY")
-            trange = sum.time_range(interval="MY")
+            trange = summary.time_range(interval="1")
+            trange = summary.time_range(interval="1X")
+            trange = summary.time_range(interval="YY")
+            trange = summary.time_range(interval="MY")
 
         with self.assertRaises(ValueError):
-            trange = sum.time_range(
+            trange = summary.time_range(
                 start=datetime.datetime(2000, 1, 1), end=datetime.datetime(1999, 1, 1)
             )
 
         sim_start = datetime.datetime(2000, 1, 1, 0, 0, 0)
         sim_end = datetime.datetime(2004, 12, 31, 0, 0, 0)
-        trange = sum.time_range(interval="1Y")
+        trange = summary.time_range(interval="1Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[1] == datetime.date(2001, 1, 1))
         self.assertTrue(trange[2] == datetime.date(2002, 1, 1))
@@ -338,15 +343,15 @@ class SumTest(ResdataTest):
         self.assertTrue(trange[4] == datetime.date(2004, 1, 1))
         self.assertTrue(trange[5] == datetime.date(2005, 1, 1))
 
-        trange = sum.time_range(interval="1M")
+        trange = summary.time_range(interval="1M")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2005, 1, 1))
 
-        trange = sum.time_range(start=datetime.date(2002, 1, 15), interval="1M")
+        trange = summary.time_range(start=datetime.date(2002, 1, 15), interval="1M")
         self.assertTrue(trange[0] == datetime.date(2002, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2005, 1, 1))
 
-        trange = sum.time_range(
+        trange = summary.time_range(
             start=datetime.date(2002, 1, 15),
             end=datetime.date(2003, 1, 15),
             interval="1M",
@@ -354,7 +359,7 @@ class SumTest(ResdataTest):
         self.assertTrue(trange[0] == datetime.date(2002, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2003, 2, 1))
 
-        trange = sum.time_range(
+        trange = summary.time_range(
             start=datetime.date(2002, 1, 15),
             end=datetime.datetime(2003, 1, 15, 0, 0, 0),
             interval="1M",
@@ -364,44 +369,48 @@ class SumTest(ResdataTest):
 
     # Loading this dataset is a test of loading a case where one report step is missing.
     def test_Heidrun(self):
-        sum = Summary(
+        summary = Summary(
             self.createTestPath("Equinor/ECLIPSE/Heidrun/Summary/FF12_2013B3_CLEAN_RS")
         )
-        self.assertEqual(452, len(sum))
-        self.assertFloatEqual(1.8533144e8, sum.last_value("FOPT"))
+        self.assertEqual(452, len(summary))
+        self.assertFloatEqual(1.8533144e8, summary.last_value("FOPT"))
 
-        trange = sum.time_range(start=datetime.date(2015, 1, 1), interval="1M")
+        trange = summary.time_range(start=datetime.date(2015, 1, 1), interval="1M")
         self.assertTrue(trange[0] == datetime.date(2016, 2, 1))
         for t in trange:
-            sum.get_interp("FOPT", date=t)
+            summary.get_interp("FOPT", date=t)
 
     def test_regularProduction(self):
-        sum = Summary(self.case)
+        summary = Summary(self.case)
         with self.assertRaises(TypeError):
-            trange = TimeVector.createRegular(sum.start_time, sum.end_time, "1M")
-            prod = sum.blocked_production("FOPR", trange)
+            trange = TimeVector.createRegular(
+                summary.start_time, summary.end_time, "1M"
+            )
+            prod = summary.blocked_production("FOPR", trange)
 
         with self.assertRaises(KeyError):
-            trange = TimeVector.createRegular(sum.start_time, sum.end_time, "1M")
-            prod = sum.blocked_production("NoNotThis", trange)
+            trange = TimeVector.createRegular(
+                summary.start_time, summary.end_time, "1M"
+            )
+            prod = summary.blocked_production("NoNotThis", trange)
 
-        trange = sum.time_range(interval="2Y")
+        trange = summary.time_range(interval="2Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2006, 1, 1))
 
-        trange = sum.time_range(interval="5Y")
+        trange = summary.time_range(interval="5Y")
         self.assertTrue(trange[0] == datetime.date(2000, 1, 1))
         self.assertTrue(trange[-1] == datetime.date(2005, 1, 1))
 
-        trange = sum.time_range(interval="6M")
-        wprod1 = sum.blocked_production("WOPT:OP_1", trange)
-        wprod2 = sum.blocked_production("WOPT:OP_2", trange)
-        wprod3 = sum.blocked_production("WOPT:OP_3", trange)
-        wprod4 = sum.blocked_production("WOPT:OP_4", trange)
-        wprod5 = sum.blocked_production("WOPT:OP_5", trange)
+        trange = summary.time_range(interval="6M")
+        wprod1 = summary.blocked_production("WOPT:OP_1", trange)
+        wprod2 = summary.blocked_production("WOPT:OP_2", trange)
+        wprod3 = summary.blocked_production("WOPT:OP_3", trange)
+        wprod4 = summary.blocked_production("WOPT:OP_4", trange)
+        wprod5 = summary.blocked_production("WOPT:OP_5", trange)
 
-        fprod = sum.blocked_production("FOPT", trange)
-        gprod = sum.blocked_production("GOPT:OP", trange)
+        fprod = summary.blocked_production("FOPT", trange)
+        gprod = summary.blocked_production("GOPT:OP", trange)
         wprod = wprod1 + wprod2 + wprod3 + wprod4 + wprod5
         for w, f, g in zip(wprod, fprod, gprod):
             self.assertFloatEqual(w, f)

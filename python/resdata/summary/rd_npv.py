@@ -115,9 +115,9 @@ class ResdataNPV:
     sumKeyRE = re.compile(r"[\[]([\w:,]+)[\]]")
 
     def __init__(self, baseCase):
-        sum = Summary(baseCase)
-        if sum:
-            self.baseCase = sum
+        summary = Summary(baseCase)
+        if summary:
+            self.baseCase = summary
         else:
             raise Error("Failed to open summary case:%s" % baseCase)
         self.expression = None

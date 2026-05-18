@@ -702,11 +702,11 @@ class ResdataKW(BaseCClass):
             elif self.data_type.is_double():
                 return self._float_sum()
             elif self.data_type.is_bool():
-                sum = 0
+                _sum = 0
                 for elm in self:
                     if elm:
-                        sum += 1
-                return sum
+                        _sum += 1
+                return _sum
             else:
                 raise ValueError(
                     'The keyword "%s" is of string type - sum is not implemented'

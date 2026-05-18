@@ -61,7 +61,6 @@ def test_that_year2263_through_pandas_works():
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_dump_csv_line():
-
     case = createSummary(
         "CASE1",
         [("FOPT", None, 0, "SM3"), ("WOPT", "OP1", 0, "SM3")],
@@ -183,15 +182,23 @@ class SummaryTest(ResdataTest):
 
     def test_labscale(self):
         case = self.createTestPath("Equinor/ECLIPSE/LabScale/HDMODEL")
-        sum = Summary(case, lazy_load=True)
-        self.assertEqual(sum.get_start_time(), datetime.datetime(2013, 1, 1, 0, 0, 0))
-        self.assertEqual(sum.get_end_time(), datetime.datetime(2013, 1, 1, 19, 30, 0))
-        self.assertFloatEqual(sum.getSimulationLength(), 19.50)
+        summary = Summary(case, lazy_load=True)
+        self.assertEqual(
+            summary.get_start_time(), datetime.datetime(2013, 1, 1, 0, 0, 0)
+        )
+        self.assertEqual(
+            summary.get_end_time(), datetime.datetime(2013, 1, 1, 19, 30, 0)
+        )
+        self.assertFloatEqual(summary.getSimulationLength(), 19.50)
 
-        sum = Summary(case, lazy_load=False)
-        self.assertEqual(sum.get_start_time(), datetime.datetime(2013, 1, 1, 0, 0, 0))
-        self.assertEqual(sum.get_end_time(), datetime.datetime(2013, 1, 1, 19, 30, 0))
-        self.assertFloatEqual(sum.getSimulationLength(), 19.50)
+        summary = Summary(case, lazy_load=False)
+        self.assertEqual(
+            summary.get_start_time(), datetime.datetime(2013, 1, 1, 0, 0, 0)
+        )
+        self.assertEqual(
+            summary.get_end_time(), datetime.datetime(2013, 1, 1, 19, 30, 0)
+        )
+        self.assertFloatEqual(summary.getSimulationLength(), 19.50)
 
 
 @given(summaries())
@@ -201,9 +208,9 @@ def test_to_from_pandas(summary):
     assume(len(smspec.keywords) == len(set(smspec.keywords)))
     smspec.to_file("TEST.SMSPEC")
     unsmry.to_file("TEST.UNSMRY")
-    sum = Summary("TEST", lazy_load=False)
+    summary = Summary("TEST", lazy_load=False)
 
-    baseline = sum.pandas_frame()
+    baseline = summary.pandas_frame()
     roundtrip = Summary.from_pandas(
         "TEST", baseline, dims=(smspec.nx, smspec.ny, smspec.nz)
     ).pandas_frame()
@@ -285,20 +292,20 @@ def create_summary(
             simulator=Simulator.ECLIPSE_100,
         ),
     )
-    format = resfo.Format.FORMATTED if formatted else resfo.Format.UNFORMATTED
-    smspec.to_file(f"{case}.{'F' if formatted else ''}SMSPEC", file_format=format)
-    unsmry.to_file(f"{case}.{'F' if formatted else ''}UNSMRY", file_format=format)
+    _format = resfo.Format.FORMATTED if formatted else resfo.Format.UNFORMATTED
+    smspec.to_file(f"{case}.{'F' if formatted else ''}SMSPEC", file_format=_format)
+    unsmry.to_file(f"{case}.{'F' if formatted else ''}UNSMRY", file_format=_format)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_has_key():
     create_summary(summary_keys=("FOPR", "FOPT", "FWCT"))
 
-    sum = Summary("TEST")
-    assert sum.has_key("FOPR")
-    assert sum.has_key("FOPT")
-    assert sum.has_key("FWCT")
-    assert not sum.has_key("NONEXISTENT")
+    summary = Summary("TEST")
+    assert summary.has_key("FOPR")
+    assert summary.has_key("FOPT")
+    assert summary.has_key("FWCT")
+    assert not summary.has_key("NONEXISTENT")
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -306,8 +313,8 @@ def test_that_the_start_date_property_is_the_start_date_from_the_file():
     create_summary(
         start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0)
     )
-    sum = Summary("TEST")
-    assert sum.start_date == datetime.date(2000, 1, 1)
+    summary = Summary("TEST")
+    assert summary.start_date == datetime.date(2000, 1, 1)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -318,8 +325,8 @@ def test_summary_numpy_vector():
         values=[[100.0], [110.0], [120.0], [130.0]],
     )
 
-    sum = Summary("TEST")
-    data = sum.numpy_vector("FOPR")
+    summary = Summary("TEST")
+    data = summary.numpy_vector("FOPR")
 
     assert data.tolist() == pytest.approx(
         [
@@ -339,23 +346,23 @@ def test_summary_first_and_last_value():
         values=[[100.0], [200.0], [300.0]],
     )
 
-    sum = Summary("TEST")
-    assert sum.first_value("FOPT") == pytest.approx(100.0)
-    assert sum.last_value("FOPT") == pytest.approx(300.0)
+    summary = Summary("TEST")
+    assert summary.first_value("FOPT") == pytest.approx(100.0)
+    assert summary.last_value("FOPT") == pytest.approx(300.0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_dates_and_times():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0, 3.0))
 
-    sum = Summary("TEST")
-    dates = sum.dates
+    summary = Summary("TEST")
+    dates = summary.dates
 
     assert len(dates) == 4
     assert dates[0] == datetime.datetime(2000, 1, 1, 0, 0, 0)
     assert dates[1] == datetime.datetime(2000, 1, 2, 0, 0, 0)
 
-    days = sum.days
+    days = summary.days
     assert len(days) == 4
     assert days[0] == pytest.approx(0.0)
     assert days[1] == pytest.approx(1.0)
@@ -365,13 +372,13 @@ def test_summary_dates_and_times():
 def test_summary_keys_filtering():
     create_summary(summary_keys=("FOPR", "FOPT", "FWCT", "FGPR", "FGPT"))
 
-    sum = Summary("TEST")
-    assert list(sum.keys()) == ["FGPR", "FGPT", "FOPR", "FOPT", "FWCT"]
+    summary = Summary("TEST")
+    assert list(summary.keys()) == ["FGPR", "FGPT", "FOPR", "FOPT", "FWCT"]
 
-    f_keys = sum.keys(pattern="F*")
+    f_keys = summary.keys(pattern="F*")
     assert len(f_keys) >= 5
 
-    fop_keys = sum.keys(pattern="FOP*")
+    fop_keys = summary.keys(pattern="FOP*")
     assert "FOPR" in fop_keys
     assert "FOPT" in fop_keys
 
@@ -384,8 +391,8 @@ def test_summary_pandas_frame():
         values=[[100.0, 1000.0], [110.0, 1100.0], [120.0, 1200.0]],
     )
 
-    sum = Summary("TEST")
-    df = sum.pandas_frame(column_keys=["FOPR", "FOPT"])
+    summary = Summary("TEST")
+    df = summary.pandas_frame(column_keys=["FOPR", "FOPT"])
 
     assert set(df.columns) == {"FOPR", "FOPT"}
     assert df["FOPR"].to_numpy().tolist() == pytest.approx([100.0, 110.0, 120.0])
@@ -400,10 +407,10 @@ def test_summary_iget_access():
         values=[[100.0], [200.0], [300.0]],
     )
 
-    sum = Summary("TEST")
-    assert sum.iget("FOPR", 0) == pytest.approx(100.0)
-    assert sum.iget("FOPR", 1) == pytest.approx(200.0)
-    assert sum.iget("FOPR", 2) == pytest.approx(300.0)
+    summary = Summary("TEST")
+    assert summary.iget("FOPR", 0) == pytest.approx(100.0)
+    assert summary.iget("FOPR", 1) == pytest.approx(200.0)
+    assert summary.iget("FOPR", 2) == pytest.approx(300.0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -425,10 +432,10 @@ def test_summary_lazy_vs_eager_load():
 def test_summary_contains_operator():
     create_summary(summary_keys=("FOPR", "FOPT"))
 
-    sum = Summary("TEST")
-    assert "FOPR" in sum
-    assert "FOPT" in sum
-    assert "NONEXISTENT" not in sum
+    summary = Summary("TEST")
+    assert "FOPR" in summary
+    assert "FOPT" in summary
+    assert "NONEXISTENT" not in summary
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -447,26 +454,26 @@ def test_summary_start_and_end_time():
         start_date=Date(day=15, month=3, year=2010, hour=0, minutes=0, micro_seconds=0),
     )
 
-    sum = Summary("TEST")
-    assert sum.start_time == datetime.datetime(2010, 3, 15, 0, 0, 0)
-    assert sum.end_time == datetime.datetime(2010, 3, 25, 0, 0, 0)
+    summary = Summary("TEST")
+    assert summary.start_time == datetime.datetime(2010, 3, 15, 0, 0, 0)
+    assert summary.end_time == datetime.datetime(2010, 3, 25, 0, 0, 0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_sim_length():
     create_summary(summary_keys=("FOPR",), times=(0.0, 10.0, 20.0, 30.0))
 
-    sum = Summary("TEST")
-    assert sum.sim_length == pytest.approx(30.0)
+    summary = Summary("TEST")
+    assert summary.sim_length == pytest.approx(30.0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_iget_date():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    date0 = sum.iget_date(0)
-    date1 = sum.iget_date(1)
+    summary = Summary("TEST")
+    date0 = summary.iget_date(0)
+    date1 = summary.iget_date(1)
 
     assert date0 == datetime.datetime(2000, 1, 1, 0, 0, 0)
     assert date1 == datetime.datetime(2000, 1, 2, 0, 0, 0)
@@ -476,10 +483,10 @@ def test_summary_iget_date():
 def test_summary_iget_days():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.5, 3.0))
 
-    sum = Summary("TEST")
-    assert sum.iget_days(0) == pytest.approx(0.0)
-    assert sum.iget_days(1) == pytest.approx(1.5)
-    assert sum.iget_days(2) == pytest.approx(3.0)
+    summary = Summary("TEST")
+    assert summary.iget_days(0) == pytest.approx(0.0)
+    assert summary.iget_days(1) == pytest.approx(1.5)
+    assert summary.iget_days(2) == pytest.approx(3.0)
 
 
 def test_summary_var_type():
@@ -492,8 +499,8 @@ def test_summary_var_type():
 def test_summary_export_csv():
     create_summary(summary_keys=("FOPR", "FOPT"), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    sum.export_csv("output.csv", keys=["FOPR", "FOPT"])
+    summary = Summary("TEST")
+    summary.export_csv("output.csv", keys=["FOPR", "FOPT"])
 
     assert os.path.exists("output.csv")
     with open("output.csv") as f:
@@ -510,19 +517,19 @@ def test_summary_check_sim_time():
         start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
     )
 
-    sum = Summary("TEST")
-    assert sum.check_sim_time(datetime.datetime(2000, 1, 1, 0, 0, 0))
-    assert sum.check_sim_time(datetime.datetime(2000, 1, 15, 0, 0, 0))
-    assert sum.check_sim_time(datetime.datetime(2000, 1, 21, 0, 0, 0))
-    assert not sum.check_sim_time(datetime.datetime(2000, 1, 31, 0, 0, 0))
+    summary = Summary("TEST")
+    assert summary.check_sim_time(datetime.datetime(2000, 1, 1, 0, 0, 0))
+    assert summary.check_sim_time(datetime.datetime(2000, 1, 15, 0, 0, 0))
+    assert summary.check_sim_time(datetime.datetime(2000, 1, 21, 0, 0, 0))
+    assert not summary.check_sim_time(datetime.datetime(2000, 1, 31, 0, 0, 0))
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_numpy_dates():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    np_dates = sum.numpy_dates
+    summary = Summary("TEST")
+    np_dates = summary.numpy_dates
 
     assert np_dates.tolist() == [
         datetime.datetime(2000, 1, 1, 0, 0),
@@ -536,15 +543,15 @@ def test_summary_numpy_dates():
 def test_summary_key_error_on_missing_key():
     create_summary(summary_keys=("FOPR",))
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
     with pytest.raises(KeyError):
-        sum.numpy_vector("NONEXISTENT")
+        summary.numpy_vector("NONEXISTENT")
 
     with pytest.raises(KeyError):
-        sum.last_value("NONEXISTENT")
+        summary.last_value("NONEXISTENT")
 
     with pytest.raises(KeyError):
-        sum.first_value("NONEXISTENT")
+        summary.first_value("NONEXISTENT")
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -619,8 +626,8 @@ def test_summary_time_range():
         start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
     )
 
-    sum = Summary("TEST")
-    time_range = sum.time_range(interval="10d")
+    summary = Summary("TEST")
+    time_range = summary.time_range(interval="10d")
     assert isinstance(time_range, TimeVector)
     assert [t.datetime() for t in time_range] == [
         datetime.datetime(2000, 1, 1, 0, 0),
@@ -645,8 +652,8 @@ def test_summary_time_range():
 def test_summary_unit():
     create_summary(summary_keys=("FOPR",))
 
-    sum = Summary("TEST")
-    unit = sum.unit("FOPR")
+    summary = Summary("TEST")
+    unit = summary.unit("FOPR")
     assert unit == "SM3"
 
 
@@ -654,36 +661,36 @@ def test_summary_unit():
 def test_summary_case_property():
     create_summary(summary_keys=("FOPR",), case="MYCASE")
 
-    sum = Summary("MYCASE")
-    assert sum.case == "MYCASE"
+    summary = Summary("MYCASE")
+    assert summary.case == "MYCASE"
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_base_and_path(tmpdir):
     create_summary(summary_keys=("FOPR",))
 
-    sum = Summary("TEST")
-    assert sum.case == "TEST"
-    assert sum.base == "TEST"
-    assert sum.path is None
-    assert sum.abs_path == tmpdir
+    summary = Summary("TEST")
+    assert summary.case == "TEST"
+    assert summary.base == "TEST"
+    assert summary.path is None
+    assert summary.abs_path == tmpdir
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_length_property():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0, 3.0, 4.0))
 
-    sum = Summary("TEST")
-    assert sum.length == 5
-    assert len(sum) == 5
+    summary = Summary("TEST")
+    assert summary.length == 5
+    assert len(summary) == 5
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_smspec_node():
     create_summary(summary_keys=("FOPR",))
 
-    sum = Summary("TEST")
-    node = sum.smspec_node("FOPR")
+    summary = Summary("TEST")
+    node = summary.smspec_node("FOPR")
 
     assert node is not None
     assert node.keyword == "FOPR"
@@ -697,16 +704,16 @@ def test_summary_get_interp():
         values=[[100.0], [200.0], [300.0]],
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
     # Test at exact time points
-    value_at_0 = sum.get_interp("FOPR", days=0.0)
+    value_at_0 = summary.get_interp("FOPR", days=0.0)
     assert value_at_0 == pytest.approx(100.0)
 
-    value_at_2 = sum.get_interp("FOPR", days=2.0)
+    value_at_2 = summary.get_interp("FOPR", days=2.0)
     assert value_at_2 == pytest.approx(200.0)
 
-    value_at_4 = sum.get_interp("FOPR", days=4.0)
+    value_at_4 = summary.get_interp("FOPR", days=4.0)
     assert value_at_4 == pytest.approx(300.0)
 
 
@@ -718,9 +725,11 @@ def test_summary_get_interp_vector():
         values=[[100.0], [200.0], [300.0]],
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
-    interp_values = sum.get_interp_vector("FOPR", days_list=[0.0, 1.0, 2.0, 3.0, 4.0])
+    interp_values = summary.get_interp_vector(
+        "FOPR", days_list=[0.0, 1.0, 2.0, 3.0, 4.0]
+    )
     assert list(interp_values) == pytest.approx(
         [
             100.0,
@@ -740,9 +749,9 @@ def test_summary_pandas_frame_with_time_index():
         values=[[100.0], [150.0], [200.0], [250.0]],
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
-    df = sum.pandas_frame(
+    df = summary.pandas_frame(
         time_index=[
             datetime.datetime(2000, 1, 1),
             datetime.datetime(2000, 1, 6),
@@ -768,9 +777,9 @@ def test_summary_static_methods():
 def test_summary_get_key_index():
     create_summary(summary_keys=("FOPR", "FOPT"))
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
-    assert sum.get_key_index("FOPR") == 1
+    assert summary.get_key_index("FOPR") == 1
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -781,22 +790,22 @@ def test_summary_iiget():
         values=[[100.0], [200.0], [300.0]],
     )
 
-    sum = Summary("TEST")
-    key_index = sum.get_key_index("FOPR")
+    summary = Summary("TEST")
+    key_index = summary.get_key_index("FOPR")
 
-    assert sum.iiget(0, key_index) == pytest.approx(100.0)
-    assert sum.iiget(1, key_index) == pytest.approx(200.0)
-    assert sum.iiget(2, key_index) == pytest.approx(300.0)
+    assert summary.iiget(0, key_index) == pytest.approx(100.0)
+    assert summary.iiget(1, key_index) == pytest.approx(200.0)
+    assert summary.iiget(2, key_index) == pytest.approx(300.0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_load_method():
     create_summary(summary_keys=("FOPR",), case="LOADTEST")
 
-    sum = Summary.load("LOADTEST.SMSPEC", "LOADTEST.UNSMRY")
+    summary = Summary.load("LOADTEST.SMSPEC", "LOADTEST.UNSMRY")
 
-    assert "FOPR" in sum
-    assert len(sum) == 3
+    assert "FOPR" in summary
+    assert len(summary) == 3
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -806,16 +815,16 @@ def test_summary_data_start():
         start_date=Date(day=20, month=6, year=2015, hour=0, minutes=0, micro_seconds=0),
     )
 
-    sum = Summary("TEST")
-    assert sum.data_start == datetime.datetime(2015, 6, 20, 0, 0, 0)
+    summary = Summary("TEST")
+    assert summary.data_start == datetime.datetime(2015, 6, 20, 0, 0, 0)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_first_day():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    assert sum.first_day == pytest.approx(0.0)
+    summary = Summary("TEST")
+    assert summary.first_day == pytest.approx(0.0)
 
 
 def test_date2num():
@@ -877,8 +886,8 @@ def test_summary_wells():
     smspec.to_file("TEST.SMSPEC")
     unsmry.to_file("TEST.UNSMRY")
 
-    sum = Summary("TEST")
-    wells = sum.wells()
+    summary = Summary("TEST")
+    wells = summary.wells()
     assert isinstance(wells, StringList)
     assert list(wells) == ["WELL1", "WELL2"]
 
@@ -887,8 +896,8 @@ def test_summary_wells():
 def test_summary_groups():
     create_summary(summary_keys=("FOPR",))
 
-    sum = Summary("TEST")
-    groups = sum.groups()
+    summary = Summary("TEST")
+    groups = summary.groups()
     assert isinstance(groups, StringList)
     assert list(groups) == []
 
@@ -901,14 +910,14 @@ def test_summary_numpy_vector_with_time_index():
         values=[[100.0], [150.0], [200.0]],
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
     time_index = [
         datetime.datetime(2000, 1, 1),
         datetime.datetime(2000, 1, 6),
     ]
 
-    data = sum.numpy_vector("FOPR", time_index=time_index)
+    data = summary.numpy_vector("FOPR", time_index=time_index)
     assert data.tolist() == pytest.approx([100.0, 150.0])
 
 
@@ -920,10 +929,10 @@ def test_summary_time_range_with_start():
         start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
     custom_start = datetime.datetime(2000, 1, 15)
-    time_range = sum.time_range(start=custom_start, interval="10d")
+    time_range = summary.time_range(start=custom_start, interval="10d")
 
     assert isinstance(time_range, TimeVector)
     assert [t.datetime() for t in time_range] == [
@@ -947,10 +956,10 @@ def test_summary_time_range_with_end():
         start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0),
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
     custom_end = datetime.datetime(2000, 2, 15)
-    time_range = sum.time_range(end=custom_end, interval="10d")
+    time_range = summary.time_range(end=custom_end, interval="10d")
 
     assert isinstance(time_range, TimeVector)
     assert [t.datetime() for t in time_range] == [
@@ -972,7 +981,7 @@ def test_summary_blocked_production():
         values=[[0.0], [1000.0], [2500.0], [4000.0]],
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
     time_range = [
         datetime.datetime(2000, 1, 1),
@@ -980,7 +989,7 @@ def test_summary_blocked_production():
         datetime.datetime(2000, 1, 21),
     ]
 
-    blocked = sum.blocked_production("FOPT", time_range)
+    blocked = summary.blocked_production("FOPT", time_range)
     assert isinstance(blocked, DoubleVector)
     assert list(blocked) == pytest.approx([1000.0, 1500.0])
 
@@ -991,9 +1000,9 @@ def test_summary_get_report_time():
         start_date=Date(day=1, month=1, year=2000, hour=0, minutes=0, micro_seconds=0)
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
-    assert sum.get_report_time(0) == datetime.date(day=1, month=1, year=2000)
+    assert summary.get_report_time(0) == datetime.date(day=1, month=1, year=2000)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1004,7 +1013,7 @@ def test_summary_get_interp_vector_with_date_list():
         values=[[100.0], [200.0], [300.0]],
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
     date_list = [
         datetime.datetime(2000, 1, 1),
@@ -1012,7 +1021,7 @@ def test_summary_get_interp_vector_with_date_list():
         datetime.datetime(2000, 1, 5),
     ]
 
-    interp_values = sum.get_interp_vector("FOPR", date_list=date_list)
+    interp_values = summary.get_interp_vector("FOPR", date_list=date_list)
     assert list(interp_values) == pytest.approx([100.0, 200.0, 300.0])
 
 
@@ -1020,24 +1029,24 @@ def test_summary_get_interp_vector_with_date_list():
 def test_that_restart_case_for_cases_without_restart_is_none():
     create_summary(summary_keys=("FOPR",))
 
-    sum = Summary("TEST")
-    assert sum.restart_case is None
+    summary = Summary("TEST")
+    assert summary.restart_case is None
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_get_days():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    assert sum.get_days() == pytest.approx([0.0, 1.0, 2.0])
+    summary = Summary("TEST")
+    assert summary.get_days() == pytest.approx([0.0, 1.0, 2.0])
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_get_dates():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    assert sum.get_dates() == [
+    summary = Summary("TEST")
+    assert summary.get_dates() == [
         datetime.datetime(2000, 1, 1, 0, 0),
         datetime.datetime(2000, 1, 2, 0, 0),
         datetime.datetime(2000, 1, 3, 0, 0),
@@ -1048,12 +1057,12 @@ def test_summary_get_dates():
 def test_summary_report_step_property():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    assert sum.report_step == [1, 2, 3]
-    assert sum.get_report_step() == [1, 2, 3]
-    assert [sum.iget_report(i) for i in range(3)] == [1, 2, 3]
-    assert sum.first_report == 1
-    assert sum.last_report == 3
+    summary = Summary("TEST")
+    assert summary.report_step == [1, 2, 3]
+    assert summary.get_report_step() == [1, 2, 3]
+    assert [summary.iget_report(i) for i in range(3)] == [1, 2, 3]
+    assert summary.first_report == 1
+    assert summary.last_report == 3
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1064,8 +1073,8 @@ def test_summary_end_date():
         start_date=Date(day=10, month=5, year=2010, hour=0, minutes=0, micro_seconds=0),
     )
 
-    sum = Summary("TEST")
-    assert sum.end_date == datetime.date(2010, 5, 12)
+    summary = Summary("TEST")
+    assert summary.end_date == datetime.date(2010, 5, 12)
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1076,8 +1085,8 @@ def test_summary_first_gt_index():
         values=[[100.0], [200.0], [300.0]],
     )
 
-    sum = Summary("TEST")
-    assert sum.first_gt_index("FOPR", 150.0) == 1
+    summary = Summary("TEST")
+    assert summary.first_gt_index("FOPR", 150.0) == 1
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1088,8 +1097,8 @@ def test_summary_first_lt_index():
         values=[[300.0], [200.0], [100.0]],
     )
 
-    sum = Summary("TEST")
-    assert sum.first_lt_index("FOPR", 250.0) == 1
+    summary = Summary("TEST")
+    assert summary.first_lt_index("FOPR", 250.0) == 1
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1101,8 +1110,10 @@ def test_summary_solve_dates():
         values=[[100.0], [150.0], [200.0], [250.0]],
     )
 
-    sum = Summary("TEST")
-    assert sum.solve_dates("FOPR", 175.0) == [datetime.datetime(2000, 1, 2, 0, 0, 1)]
+    summary = Summary("TEST")
+    assert summary.solve_dates("FOPR", 175.0) == [
+        datetime.datetime(2000, 1, 2, 0, 0, 1)
+    ]
 
 
 @pytest.mark.usefixtures("use_tmpdir")
@@ -1114,8 +1125,8 @@ def test_summary_solve_days():
         values=[[100.0], [150.0], [200.0], [250.0]],
     )
 
-    sum = Summary("TEST")
-    days = sum.solve_days("FOPR", 175.0)
+    summary = Summary("TEST")
+    days = summary.solve_days("FOPR", 175.0)
     assert isinstance(days, DoubleVector)
     assert list(days) == pytest.approx([1.000011])
 
@@ -1132,11 +1143,11 @@ def test_summary_fwrite():
     assert writer.can_write()
     writer.fwrite()
 
-    sum = Summary("FWRITE_TEST")
-    assert len(sum) == 1
-    assert list(sum.keys()) == ["FOPT"]
-    assert sum.days == [1.0]
-    kw = sum["FOPT"]
+    summary = Summary("FWRITE_TEST")
+    assert len(summary) == 1
+    assert list(summary.keys()) == ["FOPT"]
+    assert summary.days == [1.0]
+    kw = summary["FOPT"]
     assert kw.values.tolist() == [1000.0]
 
 
@@ -1144,8 +1155,8 @@ def test_summary_fwrite():
 def test_summary_alloc_time_vector():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    time_vec = sum.alloc_time_vector(False)
+    summary = Summary("TEST")
+    time_vec = summary.alloc_time_vector(False)
     assert isinstance(time_vec, TimeVector)
     assert [t.datetime() for t in time_vec] == [
         datetime.datetime(2000, 1, 1, 0, 0),
@@ -1158,9 +1169,9 @@ def test_summary_alloc_time_vector():
 def test_summary_alloc_data_vector():
     create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    key_index = sum.get_key_index("FOPR")
-    data_vec = sum.alloc_data_vector(key_index, False)
+    summary = Summary("TEST")
+    key_index = summary.get_key_index("FOPR")
+    data_vec = summary.alloc_data_vector(key_index, False)
     assert isinstance(data_vec, DoubleVector)
     assert list(data_vec) == [100.0, 110.0, 120.0]
 
@@ -1169,16 +1180,16 @@ def test_summary_alloc_data_vector():
 def test_summary_get_general_var_index():
     create_summary(summary_keys=("FOPR",))
 
-    sum = Summary("TEST")
-    assert sum.get_general_var_index("FOPR") == 1
+    summary = Summary("TEST")
+    assert summary.get_general_var_index("FOPR") == 1
 
 
 @pytest.mark.usefixtures("use_tmpdir")
 def test_summary_export_csv_with_keys_none():
     create_summary(summary_keys=("FOPR", "FOPT", "FWCT"), times=(0.0, 1.0, 2.0))
 
-    sum = Summary("TEST")
-    sum.export_csv("all_keys.csv", keys=None)
+    summary = Summary("TEST")
+    summary.export_csv("all_keys.csv", keys=None)
 
     assert os.path.exists("all_keys.csv")
 
@@ -1200,14 +1211,14 @@ def test_summary_resample():
         values=[[100.0], [150.0], [200.0], [250.0]],
     )
 
-    sum = Summary("TEST")
+    summary = Summary("TEST")
 
     time_points = TimeVector()
     time_points.append(datetime.datetime(2000, 1, 1))
     time_points.append(datetime.datetime(2000, 1, 6))
     time_points.append(datetime.datetime(2000, 1, 11))
 
-    resampled = sum.resample("RESAMPLED", time_points)
+    resampled = summary.resample("RESAMPLED", time_points)
 
     assert resampled.alloc_time_vector(False) == time_points
     assert resampled["FOPR"].values.tolist() == pytest.approx([100.0, 150.0, 200.0])
