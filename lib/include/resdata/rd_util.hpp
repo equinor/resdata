@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <system_error>
 #include <memory>
+#include <string>
+#include <string_view>
 
 #ifdef __cplusplus
 extern "C" {
@@ -159,5 +161,12 @@ void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
         throw std::bad_alloc{};
     }
     ptr.reset(static_cast<T *>(new_raw_ptr));
+}
+inline std::string strip_spaces(std::string_view s) {
+    auto first = s.find_first_not_of(' ');
+    if (first == std::string_view::npos)
+        return {};
+    auto last = s.find_last_not_of(' ');
+    return std::string(s.substr(first, last - first + 1));
 }
 } // namespace rd
