@@ -45,12 +45,12 @@ class RandomNumberGenerator(BaseCClass):
         """@rtype: float"""
         return self._get_double()
 
-    def getInt(self, max=None):
+    def getInt(self, maximum=None):
         """@rtype: float"""
-        if max is None:
-            max = self._get_max_int()
+        if maximum is None:
+            maximum = self._get_max_int()
 
-        return self._get_int(max)
+        return self._get_int(maximum)
 
     def forward(self):
         return self._forward()

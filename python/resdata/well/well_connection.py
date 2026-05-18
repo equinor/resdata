@@ -86,7 +86,7 @@ class WellConnection(BaseCClass):
         frac = "fracture " if self.isFractureConnection() else ""
         open_ = "open " if self.isOpen() else "shut "
         msw = " (multi segment)" if self.isMultiSegmentWell() else ""
-        dir = WellConnectionDirection(self.direction())
+        direction = WellConnectionDirection(self.direction())
         addr = self._address()
         return (
             "WellConnection(%s %s%s%s, rates = (O:%s,G:%s,W:%s), direction = %s) at 0x%x"
@@ -98,7 +98,7 @@ class WellConnection(BaseCClass):
                 self.oilRate(),
                 self.gasRate(),
                 self.waterRate(),
-                dir,
+                direction,
                 addr,
             )
         )

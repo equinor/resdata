@@ -160,8 +160,8 @@ class FaultBlock(BaseCClass):
 
         parent_layer = self.get_parent_layer()
         neighbour_list = []
-        for id in neighbour_id_list:
-            neighbour_list.append(parent_layer.get_block(id))
+        for _id in neighbour_id_list:
+            neighbour_list.append(parent_layer.get_block(_id))
         return neighbour_list
 
     def get_parent_layer(self):

@@ -18,7 +18,7 @@ path = "Equinor/ECLIPSE/Gurbat"
 case = "%s/%s" % (path, base)
 
 
-def callable(x):
+def _callable(x):
     return 1
 
 
@@ -128,9 +128,9 @@ class NPVTest(ResdataTest):
         npv1 = npv.eval_npv()
 
         npv2 = 0
-        sum = Summary(self.case)
-        trange = sum.time_range()
-        fopr = sum.blocked_production("FOPT", trange)
+        summary = Summary(self.case)
+        trange = summary.time_range()
+        fopr = summary.blocked_production("FOPT", trange)
         for v in fopr:
             npv2 += v
         self.assertAlmostEqual(npv1, npv2)
@@ -174,7 +174,7 @@ class NPVTest(ResdataTest):
 
         NPVPriceVector([("01/01/2000", 100)])
         NPVPriceVector([("01/01/2000", 77.99)])
-        NPVPriceVector([("01/01/2000", callable)])
+        NPVPriceVector([("01/01/2000", _callable)])
 
         vec = NPVPriceVector(
             [("01/01/2000", 100), ("01/02/2000", 200), ("01/03/2000", 300)]

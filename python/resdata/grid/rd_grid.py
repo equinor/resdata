@@ -940,11 +940,11 @@ class Grid(BaseCClass):
             ):
                 dtype = array.dtype
                 if dtype == np.int32:
-                    type = ResDataType.RD_INT
+                    datatype = ResDataType.RD_INT
                 elif dtype == np.float32:
-                    type = ResDataType.RD_FLOAT
+                    datatype = ResDataType.RD_FLOAT
                 elif dtype == np.float64:
-                    type = ResDataType.RD_DOUBLE
+                    datatype = ResDataType.RD_DOUBLE
                 else:
                     sys.exit("Do not know how to create rd_kw from type:%s" % dtype)
 
@@ -957,7 +957,7 @@ class Grid(BaseCClass):
                     # Silently truncate to length 8
                     kw_name = kw_name[0:8]
 
-                kw = ResdataKW(kw_name, size, type)
+                kw = ResdataKW(kw_name, size, datatype)
                 active_index = 0
                 global_index = 0
                 for k in range(self.get_nz()):

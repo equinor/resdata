@@ -819,7 +819,7 @@ def test_summary_to_pandas_frame(time_index_type):
 
 
 def test_t_step():
-    sum = createSummary(
+    summary = createSummary(
         "CASE",
         [
             ("FOPT", None, 0, "SM3"),
@@ -832,25 +832,25 @@ def test_t_step():
         sim_start=datetime.date(2010, 1, 1),
         func_table={"FOPT": fopt, "FOPR": fopr, "FGPT": fgpt},
     )
-    assert sum.path is None
-    assert sum.end_time.date() == sum.end_date
+    assert summary.path is None
+    assert summary.end_time.date() == summary.end_date
 
-    t_step = sum.add_t_step(11, 101)
+    t_step = summary.add_t_step(11, 101)
     assert t_step.get_report() == 11
     assert t_step.get_sim_days() == 101
     assert t_step.get_mini_step() == 10 * 10
-    assert sum.iget_days(100) == 101
+    assert summary.iget_days(100) == 101
     assert "FOPT" in t_step
     assert t_step["FOPT"] == 0.0
     t_step["FOPT"] = 100.0
     assert t_step["FOPT"] == 100.0
     assert t_step.get_sim_time().datetime() == datetime.datetime(2010, 4, 12, 0, 0)
 
-    node = sum.get_last("FOPT")
+    node = summary.get_last("FOPT")
     assert node.days == 101
-    assert sum.get_report(days=101) == 11
+    assert summary.get_report(days=101) == 11
 
-    assert list(sum.get_interp_vector("FOPT", days_list=[1, 10, 20, 30, 101])) == [
+    assert list(summary.get_interp_vector("FOPT", days_list=[1, 10, 20, 30, 101])) == [
         1.0,
         10.0,
         20.0,
@@ -858,18 +858,18 @@ def test_t_step():
         100.0,
     ]
 
-    assert sum.get_from_report("FOPT", 11) == 100.0
-    assert sum.first_gt("FOPT", 10).days == 11
-    assert sum.first_lt("FOPT", 10).days == 0
-    assert sum.first_gt_index("FOPT", 10) == 11
-    assert sum.first_lt_index("FOPT", 10) == 0
+    assert summary.get_from_report("FOPT", 11) == 100.0
+    assert summary.first_gt("FOPT", 10).days == 11
+    assert summary.first_lt("FOPT", 10).days == 0
+    assert summary.first_gt_index("FOPT", 10) == 11
+    assert summary.first_lt_index("FOPT", 10) == 0
 
-    assert sum.get_last("FOPT").days == 101.0
-    assert sum["FOPT"].first.days == 0
+    assert summary.get_last("FOPT").days == 101.0
+    assert summary["FOPT"].first.days == 0
 
 
 def test_that_end_time_is_sim_start_when_there_are_no_steps():
-    sum = createSummary(
+    summary = createSummary(
         "CASE",
         [],
         sim_length_days=100,
@@ -878,6 +878,6 @@ def test_that_end_time_is_sim_start_when_there_are_no_steps():
         sim_start=datetime.date(2010, 1, 1),
         func_table={},
     )
-    assert sum.end_date == sum.start_date
+    assert summary.end_date == summary.start_date
     # Note that in this situation
     # sum.data_start will raise
