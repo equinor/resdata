@@ -161,32 +161,6 @@ bool rd_kw_grdecl_fseek_kw(const char *kw, bool rewind, FILE *stream) {
     return false;
 }
 
-template <typename T>
-std::unique_ptr<T[], void (*)(void *)> checked_calloc(size_t num) {
-    T *ptr = static_cast<T *>(std::calloc(num, sizeof(T)));
-
-    if (ptr == nullptr) {
-        throw std::bad_alloc{};
-    }
-    return std::unique_ptr<T[], void (*)(void *)>(
-        ptr, [](void *p) { std::free(p); });
-}
-
-template <typename T>
-void checked_realloc(std::unique_ptr<T[], void (*)(void *)> &ptr,
-                     size_t new_element_count) {
-    if (new_element_count == 0) {
-        ptr.reset();
-        return;
-    }
-    T *raw_ptr = ptr.release();
-    void *new_raw_ptr = std::realloc(raw_ptr, new_element_count * sizeof(T));
-    if (new_raw_ptr == nullptr) {
-        ptr.reset(raw_ptr);
-        throw std::bad_alloc{};
-    }
-    ptr.reset(static_cast<T *>(new_raw_ptr));
-}
 template <typename T> constexpr const char *value_format();
 template <> constexpr const char *value_format<int>() { return "%d"; }
 template <> constexpr const char *value_format<float>() { return "%128g"; }
@@ -251,8 +225,8 @@ fscanf_grdecl_data(const char *header, bool strict, int &kw_size,
     size_t buffer_size = 256;
     size_t data_index = 0;
     size_t data_size = init_size;
-    auto buffer = checked_calloc<char>(buffer_size + 1);
-    auto data = checked_calloc<T>(data_size);
+    auto buffer = rd::checked_calloc<char>(buffer_size + 1);
+    auto data = rd::checked_calloc<T>(data_size);
 
     while (true) {
         if (fscanf(stream, "%32s", buffer.get()) == 1) {
@@ -290,7 +264,7 @@ fscanf_grdecl_data(const char *header, bool strict, int &kw_size,
                         if (min_size <= RD_KW_MAX_SIZE) {
                             data_size = util_size_t_min(
                                 RD_KW_MAX_SIZE, 2 * (data_index + multiplier));
-                            checked_realloc<T>(data, data_size);
+                            rd::checked_realloc<T>(data, data_size);
                         } else {
                             // We are asking for more elements than can possible
                             // be adressed in an integer. Return NULL - and
@@ -312,7 +286,7 @@ fscanf_grdecl_data(const char *header, bool strict, int &kw_size,
             break;
     }
     kw_size = data_index;
-    checked_realloc<T>(data, data_index);
+    rd::checked_realloc<T>(data, data_index);
     return data;
 }
 
