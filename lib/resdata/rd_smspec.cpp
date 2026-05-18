@@ -668,7 +668,7 @@ static void rd_smspec_load_restart(rd_smspec_type *rd_smspec,
         return;
     const rd_kw_type *restart_kw = rd_file_iget_named_kw(header, RESTART_KW, 0);
     int num_blocks = rd_kw_get_size(restart_kw);
-    num_blocks = 0 ? num_blocks < 0 : num_blocks;
+    num_blocks = (num_blocks < 0) ? 0 : num_blocks;
     auto tmp_base = rd::checked_calloc<char>(8 * num_blocks + 1);
     for (int i = 0; i < num_blocks; i++) {
         const char *part = (const char *)rd_kw_iget_ptr(restart_kw, i);
