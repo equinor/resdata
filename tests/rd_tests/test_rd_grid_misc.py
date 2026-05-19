@@ -129,18 +129,7 @@ def test_that_active_sized_int_keyword_fills_default_in_inactive_indices(
 def test_that_every_grid_can_be_written_to_disk_as_egrid_and_read_back(
     all_grids, tmp_path
 ):
-    # Some of the grids fail, so excluded until it can be fixed
-    labels = {
-        "rect-2x2x2",
-        "rect-2x2x2-inactive",
-        "rect-3x3x3",
-        "coordkw-perturbed",
-        "egrid-single-lgr",
-        "egrid-nested-lgr",
-    }
     for label, grid in all_grids:
-        if label not in labels:
-            continue
         filename = tmp_path / f"WRITE_{label}.EGRID"
         grid.save_EGRID(str(filename))
         assert filename.exists(), f"failed to write {label}"
@@ -149,18 +138,7 @@ def test_that_every_grid_can_be_written_to_disk_as_egrid_and_read_back(
 
 
 def test_that_every_grid_can_be_written_as_grdecl(all_grids, tmp_path):
-    # Some of the grids fail, so excluded until it can be fixed
-    labels = {
-        "rect-2x2x2",
-        "rect-2x2x2-inactive",
-        "rect-3x3x3",
-        "coordkw-perturbed",
-        "egrid-single-lgr",
-        "egrid-nested-lgr",
-    }
     for label, grid in all_grids:
-        if label not in labels:
-            continue
         filename = tmp_path / f"WRITE_{label}.GRDECL"
         with copen(str(filename), "w") as f:
             grid.save_grdecl(f, output_unit=UnitSystem.METRIC)
