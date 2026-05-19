@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import os
 import random
-from resdata import ResDataType, FileMode
-from resdata.resfile import ResdataKW, ResdataFile, FortIO
+
+from resdata import FileMode, ResDataType
+from resdata.resfile import FortIO, ResdataFile, ResdataKW
 
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext

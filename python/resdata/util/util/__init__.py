@@ -21,30 +21,6 @@ The modules included in the util package are:
 
 """
 
-import resdata
-from cwrap import Prototype
-
-
-from .version import Version, ResdataVersion
-
-from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
-
-from .ctime import CTime
-
-from .permutation_vector import PermutationVector
-from .vector_template import VectorTemplate
-from .double_vector import DoubleVector
-from .int_vector import IntVector
-from .bool_vector import BoolVector
-from .time_vector import TimeVector
-from .stringlist import StringList
-from .rng import RandomNumberGenerator
-from .lookup_table import LookupTable
-from .hash import Hash, StringHash, DoubleHash, IntegerHash
-from .thread_pool import ThreadPool
-from .install_abort_signals import installAbortSignals, updateAbortSignals
-from .cwd_context import CWDContext
-
 ###
 ###  monkey_the_camel is a function temporarily added to resdata while we are in
 ###  the process of changing camelCase function names to snake_case function
@@ -53,8 +29,28 @@ from .cwd_context import CWDContext
 ###  See https://github.com/Equinor/resdata/issues/142 for a discussion and for
 ###  usage.
 ###
-
 import warnings
+
+from cwrap import Prototype
+
+import resdata
+from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
+
+from .bool_vector import BoolVector
+from .ctime import CTime
+from .cwd_context import CWDContext
+from .double_vector import DoubleVector
+from .hash import DoubleHash, Hash, IntegerHash, StringHash
+from .install_abort_signals import installAbortSignals, updateAbortSignals
+from .int_vector import IntVector
+from .lookup_table import LookupTable
+from .permutation_vector import PermutationVector
+from .rng import RandomNumberGenerator
+from .stringlist import StringList
+from .thread_pool import ThreadPool
+from .time_vector import TimeVector
+from .vector_template import VectorTemplate
+from .version import ResdataVersion, Version
 
 __cc = "dev"
 

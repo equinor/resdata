@@ -11,10 +11,10 @@ for specification of the summary file format.
 import argparse
 import fnmatch
 import logging
-import warnings
 import os
 import re
 import sys
+import warnings
 from collections import defaultdict
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
@@ -26,13 +26,13 @@ from typing import Callable, assert_never
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from natsort import natsorted
 from resfo_utilities import (
-    SummaryReader,
     InvalidSummaryError,
     InvalidSummaryKeyError,
+    SummaryReader,
     make_summary_key,
 )
-from natsort import natsorted
 
 logger = logging.getLogger(__name__)
 

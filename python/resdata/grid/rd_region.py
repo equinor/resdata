@@ -11,19 +11,16 @@ When the selection process is complete the region instance can be
 queried for the corresponding list of indices.
 """
 
-from functools import wraps
 import ctypes
+from functools import wraps
 
 from cwrap import BaseCClass
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
-
-from resdata import ResdataPrototype
-from resdata.grid.faults import Layer
-from resdata import ResDataType
-from resdata.resfile import ResdataKW
+from resdata import ResdataPrototype, ResDataType
 from resdata.geometry import CPolyline
+from resdata.grid.faults import Layer
+from resdata.resfile import ResdataKW
+from resdata.util.util import IntVector, monkey_the_camel
 
 
 def select_method(select):

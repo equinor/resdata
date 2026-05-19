@@ -1,4 +1,5 @@
 from resdata import ResdataPrototype
+
 from .vector_template import VectorTemplate
 
 

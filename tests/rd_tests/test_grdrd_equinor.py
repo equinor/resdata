@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 import os
-from resdata.resfile import ResdataKW, Resdata3DKW
-from resdata.grid import Grid
-from tests import ResdataTest, equinor_test
 
 from cwrap import open as copen
+from resdata.grid import Grid
+from resdata.resfile import Resdata3DKW, ResdataKW
+
+from tests import ResdataTest, equinor_test
 
 
 @equinor_test()

@@ -1,9 +1,8 @@
 import time
-from datetime import datetime, date
+from datetime import date, datetime
+from unittest import TestCase
 
 from resdata.util.util import CTime
-
-from unittest import TestCase
 
 
 class CTimeTest(TestCase):

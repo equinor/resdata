@@ -6,30 +6,37 @@ in the C source files rd_sum.c, rd_smspec.c and rd_sum_data in the
 resdata/src directory.
 """
 
-import numpy as np
+import ctypes
 import datetime
 import os.path
-import ctypes
-import pandas as pd
 import re
-from typing import Sequence, List, Tuple, Optional, Union
 from textwrap import dedent
-from typing_extensions import deprecated
+from typing import List, Optional, Sequence, Tuple, Union
+
+import numpy as np
+import pandas as pd
 
 # Observe that there is some convention conflict with the C code
 # regarding order of arguments: The C code generally takes the time
 # index as the first argument and the key/key_index as second
 # argument. In the python code this order has been reversed.
-from cwrap import BaseCClass, CFILE
+from cwrap import CFILE, BaseCClass
+from typing_extensions import deprecated
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector
+from resdata import ResdataPrototype, UnitSystem
+from resdata.util.util import (
+    CTime,
+    DoubleVector,
+    IntVector,
+    StringList,
+    TimeVector,
+    monkey_the_camel,
+)
 
+from .rd_smspec_node import ResdataSMSPECNode
 from .rd_sum_tstep import SummaryTStep
 from .rd_sum_var_type import SummaryVarType
 from .rd_sum_vector import SummaryVector
-from .rd_smspec_node import ResdataSMSPECNode
-from resdata import ResdataPrototype, UnitSystem
 
 # , SummaryKeyWordVector
 

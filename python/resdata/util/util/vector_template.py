@@ -30,6 +30,8 @@ import sys
 from cwrap import CFILE, BaseCClass
 from typing_extensions import deprecated
 
+from .permutation_vector import PermutationVector
+
 
 class VectorTemplate(BaseCClass):
     TYPE_NAME = "rd_vector_template"
@@ -669,10 +671,10 @@ class VectorTemplate(BaseCClass):
     def _permute(self, *_):
         raise NotImplementedError()
 
-    def _sort_perm(self, *_):
+    def _sort_perm(self, *_) -> PermutationVector:
         raise NotImplementedError()
 
-    def _rsort_perm(self, *_):
+    def _rsort_perm(self, *_) -> PermutationVector:
         raise NotImplementedError()
 
     def _select_unique(self, *_):

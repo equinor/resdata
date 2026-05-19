@@ -9,22 +9,22 @@ wrapper around the rd_grid.c implementation from the resdata library.
 """
 
 import ctypes
+import math
+import os.path
+import sys
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
-import sys
-import os.path
-import math
-from collections.abc import Sequence
-from cwrap import CFILE, BaseCClass, open as copen
+from cwrap import CFILE, BaseCClass
+from cwrap import open as copen
 from typing_extensions import deprecated
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
-from resdata import ResDataType, UnitSystem, ResdataTypeEnum
-from resdata.resfile import ResdataKW, FortIO
-from resdata.grid import Cell
 import resdata.grid._grid as _grid
+from resdata import ResDataType, ResdataTypeEnum, UnitSystem
+from resdata.grid import Cell
+from resdata.resfile import FortIO, ResdataKW
+from resdata.util.util import IntVector, monkey_the_camel
 
 
 class Grid(BaseCClass):

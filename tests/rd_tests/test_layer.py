@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from unittest import skipIf
 import time
+from unittest import skipIf
 
-from resdata.util.util import IntVector
-from resdata.grid import GridGenerator
 from resdata.geometry import CPolyline
-from resdata.grid.faults import Layer, FaultCollection
+from resdata.grid import GridGenerator
+from resdata.grid.faults import FaultCollection, Layer
+from resdata.util.util import IntVector
+
 from tests import ResdataTest
 from tests.util import TestAreaContext
 

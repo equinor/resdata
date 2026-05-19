@@ -1,7 +1,7 @@
 from resdata import ResdataPrototype
 
-from .vector_template import VectorTemplate
 from .int_vector import IntVector
+from .vector_template import VectorTemplate
 
 
 class BoolVector(VectorTemplate):

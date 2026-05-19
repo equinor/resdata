@@ -1,32 +1,33 @@
 import datetime
 import os.path
-
 from textwrap import dedent
+
 import numpy as np
 import pandas as pd
 import pytest
+import resfo
 from cwrap import open as copen
 from hypothesis import assume, given
 from pandas.testing import assert_frame_equal
 from resdata.resfile import FortIO, ResdataKW, openFortIO, openResdataFile
 from resdata.summary import Summary, SummaryKeyWordVector
 from resdata.summary.rd_sum import date2num
-from resdata.util.util import TimeVector, DoubleVector, StringList
-from tests.util.mock import createSummary
-from tests import ResdataTest, equinor_test
-from tests.util import TestAreaContext
+from resdata.util.util import DoubleVector, StringList, TimeVector
 from resfo_utilities.testing import (
-    summaries,
-    Unsmry,
+    Date,
+    Simulator,
+    Smspec,
+    SmspecIntehead,
     SummaryMiniStep,
     SummaryStep,
-    Smspec,
-    Date,
-    SmspecIntehead,
-    Simulator,
     UnitSystem,
+    Unsmry,
+    summaries,
 )
-import resfo
+
+from tests import ResdataTest, equinor_test
+from tests.util import TestAreaContext
+from tests.util.mock import createSummary
 
 
 def test_write_repr():

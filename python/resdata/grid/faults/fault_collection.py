@@ -1,7 +1,8 @@
 import re
 
-from resdata.util.util import monkey_the_camel
 from resdata.grid import Grid
+from resdata.util.util import monkey_the_camel
+
 from .fault import Fault
 
 comment_regexp = re.compile("--.*")

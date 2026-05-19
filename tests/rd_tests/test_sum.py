@@ -2,11 +2,11 @@ import csv
 import datetime
 import os
 import os.path
-import pytest
 import shutil
 import stat
 
 import cwrap
+import pytest
 
 
 def assert_frame_equal(a, b):

@@ -1,22 +1,21 @@
 #!/usr/bin/env python
-import pytest
-import io
 import contextlib
+import io
 
-from resdata import util
-
-from resdata import ResDataType
-from resdata.resfile import ResdataKW
+import pytest
+from resdata import ResDataType, util
+from resdata.geometry import CPolyline, Polyline
 from resdata.grid import Grid, GridGenerator
 from resdata.grid.faults import (
-    FaultCollection,
     Fault,
+    FaultBlockLayer,
+    FaultCollection,
     FaultLine,
     FaultSegment,
-    FaultBlockLayer,
     SegmentMap,
 )
-from resdata.geometry import Polyline, CPolyline
+from resdata.resfile import ResdataKW
+
 from tests import ResdataTest
 from tests.util import TestAreaContext
 

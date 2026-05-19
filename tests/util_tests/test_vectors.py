@@ -1,16 +1,15 @@
 import copy
 import datetime
-import six
-
 from unittest import TestCase
 
+import six
 from resdata.util.util import (
+    BoolVector,
+    CTime,
     DoubleVector,
     IntVector,
-    BoolVector,
-    TimeVector,
-    CTime,
     PermutationVector,
+    TimeVector,
 )
 
 

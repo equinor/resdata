@@ -1,6 +1,7 @@
 import os
-from typing_extensions import deprecated
 from unittest import TestLoader, TextTestRunner
+
+from typing_extensions import deprecated
 
 
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")

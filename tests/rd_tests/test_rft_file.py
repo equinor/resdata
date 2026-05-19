@@ -1,12 +1,14 @@
 import datetime
-from resdata.rft import ResdataRFTFile, ResdataRFTCell, ResdataPLTCell
-from tests import source_root
-import pytest
 import shutil
-from pathlib import Path
-import numpy as np
-import resfo
 from functools import partial
+from pathlib import Path
+
+import numpy as np
+import pytest
+import resfo
+from resdata.rft import ResdataPLTCell, ResdataRFTCell, ResdataRFTFile
+
+from tests import source_root
 
 
 @pytest.fixture

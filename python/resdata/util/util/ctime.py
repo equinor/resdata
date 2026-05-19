@@ -3,6 +3,7 @@ import datetime
 import time
 
 from cwrap import BaseCValue
+
 from resdata import ResdataPrototype
 
 

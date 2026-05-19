@@ -3,14 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from resdata import ResDataType
 from resdata.grid import Grid
 from resdata.resfile import ResdataKW
 
 from ._grid_fixtures import (
-    make_rectangular_grid,
     generate_coordkw_grid,
+    make_rectangular_grid,
     write_fegrid_minimal,
 )
 

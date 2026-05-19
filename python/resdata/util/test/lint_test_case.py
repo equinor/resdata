@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import sys
 import fnmatch
 import os
+import sys
 import unittest
+
 from typing_extensions import deprecated
 
 try:

@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
 
 import pytest
-
 from resdata import ResDataType
 from resdata.grid import Grid, GridGenerator
 from resdata.resfile import FortIO, ResdataKW, openFortIO

@@ -3,11 +3,10 @@ import os
 import random
 
 import cwrap
-
-from resdata.util.util import IntVector
-from resdata import ResDataType, FileMode
-from resdata.resfile import Resdata3DKW, ResdataKW, ResdataFile, FortIO
+from resdata import FileMode, ResDataType
 from resdata.grid import GridGenerator
+from resdata.resfile import FortIO, Resdata3DKW, ResdataFile, ResdataKW
+from resdata.util.util import IntVector
 
 from tests import ResdataTest
 from tests.util import TestAreaContext

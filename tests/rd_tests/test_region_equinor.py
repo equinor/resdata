@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-from resdata.resfile import ResdataFile
 from resdata.grid import Grid, ResdataRegion
 from resdata.grid.faults import Layer
+from resdata.resfile import ResdataFile
+
 from tests import ResdataTest, equinor_test
 
 

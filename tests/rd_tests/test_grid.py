@@ -1,22 +1,21 @@
 #!/usr/bin/env python
-import os.path
-from unittest import skip
-import itertools
-import pytest
-from contextlib import suppress
-
 import functools
-import numpy as np
-import cwrap
+import itertools
+import os.path
 import re
-from hypothesis import given
-import hypothesis.strategies as st
+from contextlib import suppress
+from unittest import skip
 
-from resdata.util.util import IntVector, DoubleVector
+import cwrap
+import hypothesis.strategies as st
+import numpy as np
+import pytest
+from hypothesis import given
 from resdata import ResDataType, UnitSystem
-from resdata.resfile import ResdataKW, ResdataFile
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
+from resdata.resfile import ResdataFile, ResdataKW
+from resdata.util.util import DoubleVector, IntVector
 
 from tests import ResdataTest
 from tests.util import TestAreaContext

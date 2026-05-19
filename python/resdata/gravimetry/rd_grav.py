@@ -10,6 +10,7 @@ rd_grav.c implementation in the resdata library.
 from typing import Optional
 
 from cwrap import BaseCClass
+
 from resdata import Phase, ResdataPrototype
 from resdata.grid import Grid, ResdataRegion
 from resdata.resfile import ResdataFile, ResdataFileView

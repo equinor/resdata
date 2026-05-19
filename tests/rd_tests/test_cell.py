@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-from resdata.grid import Cell, Grid
-from tests import ResdataTest
 from unittest import skipUnless
+
+from resdata.grid import Cell, Grid
+
+from tests import ResdataTest
 
 
 class CellTest(ResdataTest):

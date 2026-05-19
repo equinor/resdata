@@ -1,8 +1,9 @@
 import os.path
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
-from resdata.util.enums import RngInitModeEnum, RngAlgTypeEnum
+from resdata.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
 
 class RandomNumberGenerator(BaseCClass):

@@ -31,8 +31,8 @@ before giving up completely.
 """
 
 import ctypes as ct
-import warnings
 import pathlib
+import warnings
 from importlib.util import find_spec
 
 warnings.filterwarnings(
@@ -101,11 +101,11 @@ class ResdataPrototype(Prototype):
 
 from .rd_type import ResDataType, ResdataTypeEnum
 from .rd_util import (
-    FileType,
     FileMode,
+    FileType,
     Phase,
-    UnitSystem,
     ResdataUtil,
+    UnitSystem,
 )
 from .util.util import ResdataVersion, updateAbortSignals
 

@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import os
-import cwrap
 from random import randint
+
+import cwrap
 from resdata import ResDataType
-from resdata.resfile import FortIO, ResdataKW, openFortIO, ResdataFile
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
+
 from tests import ResdataTest
 from tests.util import TestAreaContext
 

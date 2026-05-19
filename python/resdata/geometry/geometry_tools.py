@@ -1,6 +1,6 @@
-from math import sqrt
 import functools
 import sys
+from math import sqrt
 
 
 class GeometryTools:

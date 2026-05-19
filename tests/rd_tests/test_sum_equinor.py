@@ -1,17 +1,15 @@
-import os
+import csv
 import datetime
+import os
+from unittest import skipIf, skipUnless
 
-from unittest import skipUnless, skipIf
-
+from resdata import UnitSystem
 from resdata.resfile import ResdataFile
 from resdata.summary import Summary
-from resdata import UnitSystem
-
-from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
+from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
 
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext
-import csv
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"

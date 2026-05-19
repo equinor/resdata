@@ -1,8 +1,9 @@
 import os.path
 
 from cwrap import BaseCClass
-from resdata import ResdataPrototype
 from typing_extensions import deprecated
+
+from resdata import ResdataPrototype
 
 
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")

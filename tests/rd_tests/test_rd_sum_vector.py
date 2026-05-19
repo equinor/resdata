@@ -1,6 +1,7 @@
 import warnings
 
-from resdata.summary import SummaryVector, Summary
+from resdata.summary import Summary, SummaryVector
+
 from tests import ResdataTest, equinor_test
 
 

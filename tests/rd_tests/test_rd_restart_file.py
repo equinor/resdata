@@ -1,16 +1,17 @@
 import datetime
 from pathlib import Path
 
-from tests import ResdataTest, equinor_test, source_root
 from resdata import FileMode
+from resdata.grid import Grid
 from resdata.resfile import (
+    FortIO,
     Resdata3DKW,
+    ResdataFile,
     ResdataKW,
     ResdataRestartFile,
-    ResdataFile,
-    FortIO,
 )
-from resdata.grid import Grid
+
+from tests import ResdataTest, equinor_test, source_root
 
 
 def test_local_restart_headers_and_time_list():

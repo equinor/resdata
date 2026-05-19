@@ -1,8 +1,8 @@
-from resdata.grid import Grid
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import IntVector
+
 from resdata import ResdataPrototype
+from resdata.grid import Grid
+from resdata.util.util import IntVector, monkey_the_camel
 
 
 class Layer(BaseCClass):

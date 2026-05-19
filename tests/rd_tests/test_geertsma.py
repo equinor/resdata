@@ -1,15 +1,16 @@
 import datetime
+
+import numpy as np
 import pytest
 from resdata import ResDataType
-from resdata.resfile import ResdataKW, openFortIO, FortIO, ResdataFile
-from resdata.grid import GridGenerator
 from resdata.gravimetry import ResdataSubsidence
+from resdata.grid import GridGenerator
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
 from tests import ResdataTest
 from tests.util import TestAreaContext
-from .create_restart import create_restart
 
-import numpy as np
+from .create_restart import create_restart
 
 
 def create_init(grid, case):

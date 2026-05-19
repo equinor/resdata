@@ -1,4 +1,5 @@
 from resdata.util.util import monkey_the_camel
+
 from .rd_sum import Summary
 
 

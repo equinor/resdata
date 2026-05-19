@@ -2,11 +2,11 @@ import os
 from pathlib import Path
 
 import pytest
+from resdata import FileMode
+from resdata.grid import Grid
+from resdata.resfile import FortIO, Resdata3DKW, ResdataFile, ResdataInitFile, ResdataKW
 
 from tests import ResdataTest, equinor_test, source_root
-from resdata import FileMode
-from resdata.resfile import Resdata3DKW, ResdataKW, ResdataInitFile, ResdataFile, FortIO
-from resdata.grid import Grid
 
 
 def test_load_local_init_file():

@@ -1,8 +1,9 @@
-import pytest
 import datetime
 from textwrap import dedent
 
+import pytest
 from resdata import FileType, ResdataTypeEnum, ResdataUtil
+
 from tests import ResdataTest
 
 

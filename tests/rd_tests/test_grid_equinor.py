@@ -1,14 +1,12 @@
 import math
-
+import time
 from unittest import skipIf
 
 from cwrap import Prototype
 from cwrap import open as copen
-
-import time
 from resdata import ResDataType, UnitSystem
-from resdata.resfile import ResdataKW, ResdataFile, openResdataFile
 from resdata.grid import Grid, GridGenerator
+from resdata.resfile import ResdataFile, ResdataKW, openResdataFile
 from resdata.util.util import DoubleVector, IntVector
 
 from tests import ResdataTest, equinor_test

@@ -1,5 +1,5 @@
-import os.path
 import os
+import os.path
 
 from tests import ResdataTest
 from tests.util import TestAreaContext

@@ -1,4 +1,5 @@
-from resdata.geometry import GeoRegion, GeoPointset, CPolyline, Surface
+from resdata.geometry import CPolyline, GeoPointset, GeoRegion, Surface
+
 from tests import ResdataTest
 from tests.util import TestAreaContext
 
