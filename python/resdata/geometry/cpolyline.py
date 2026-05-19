@@ -6,7 +6,9 @@ import ctypes
 import os.path
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
+
 from .geometry_tools import GeometryTools
 
 

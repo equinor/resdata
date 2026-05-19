@@ -1,5 +1,7 @@
 import datetime
-from resdata.rft import ResdataRFTFile, ResdataRFTCell, ResdataPLTCell, WellTrajectory
+
+from resdata.rft import ResdataPLTCell, ResdataRFTCell, ResdataRFTFile, WellTrajectory
+
 from tests import ResdataTest, equinor_test
 
 

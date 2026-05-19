@@ -1,11 +1,13 @@
-from os.path import isfile
 from collections.abc import Iterator
+from os.path import isfile
 
 from cwrap import BaseCClass
+
+from resdata import ResdataPrototype
 from resdata.grid import Grid
 from resdata.resfile.rd_file import ResdataFile
-from resdata.well import WellTimeLine
-from resdata import ResdataPrototype
+
+from .well_time_line import WellTimeLine
 
 
 class WellInfo(BaseCClass):

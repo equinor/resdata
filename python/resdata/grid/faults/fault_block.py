@@ -1,10 +1,10 @@
 import ctypes
+
 from cwrap import BaseCClass
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import DoubleVector, IntVector
 from resdata import ResdataPrototype
-from resdata.geometry import Polyline, GeometryTools, CPolylineCollection
+from resdata.geometry import CPolylineCollection, GeometryTools, Polyline
+from resdata.util.util import DoubleVector, IntVector, monkey_the_camel
 
 
 class FaultBlockCell:

@@ -1,6 +1,8 @@
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
-from resdata.well import WellState
+
+from .well_state import WellState
 
 
 class WellTimeLine(BaseCClass):

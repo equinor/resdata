@@ -1,6 +1,6 @@
+import functools
 import os.path
 from unittest import SkipTest
-import functools
 
 from .util import ExtendedTestCase
 

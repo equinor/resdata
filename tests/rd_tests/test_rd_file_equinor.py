@@ -4,7 +4,7 @@ import os.path
 from unittest import skipIf
 
 from resdata import FileMode, FileType
-from resdata.resfile import ResdataFile, FortIO, ResdataKW, openFortIO, openResdataFile
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO, openResdataFile
 
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext

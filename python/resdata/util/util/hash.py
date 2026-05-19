@@ -1,8 +1,10 @@
 from ctypes import c_void_p
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
-from resdata.util.util import StringList
+
+from .stringlist import StringList
 
 
 class Hash(BaseCClass):

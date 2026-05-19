@@ -25,13 +25,14 @@ the resdata library.
 
 import ctypes
 import warnings
-from typing_extensions import deprecated, Self
 
 import numpy as np
 from cwrap import CFILE, BaseCClass
+from typing_extensions import Self, deprecated
+
+import resdata.resfile._kw as _kw
 from resdata import ResdataPrototype, ResDataType, ResdataTypeEnum
 from resdata.util.util import monkey_the_camel
-import resdata.resfile._kw as _kw
 
 
 def dump_type_deprecation_warning():

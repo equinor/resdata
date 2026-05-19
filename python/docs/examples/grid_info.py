@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
-from resdata.grid import ResdataRegion, Grid
+
+from resdata.grid import Grid, ResdataRegion
 
 
 def volume_min_max(grid):

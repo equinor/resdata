@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-import os
 import datetime
 import math
+import os
 import warnings
 
-from tests.util.mock import createSummary
-
-from resdata.summary import Summary
-from resdata.summary import ResdataNPV, NPVPriceVector
-from resdata.util.util import StringList, TimeVector, DoubleVector, CTime
+from resdata.summary import NPVPriceVector, ResdataNPV, Summary
+from resdata.util.util import CTime, DoubleVector, StringList, TimeVector
 
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext
+from tests.util.mock import createSummary
 
 base = "ECLIPSE"
 path = "Equinor/ECLIPSE/Gurbat"

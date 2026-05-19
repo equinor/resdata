@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 import datetime
-from resdata.util.util import CTime
+
 from resdata.rft import (
-    ResdataRFTFile,
-    ResdataRFTCell,
     ResdataPLTCell,
     ResdataRFT,
+    ResdataRFTCell,
+    ResdataRFTFile,
     WellTrajectory,
 )
+from resdata.util.util import CTime
+
 from tests import ResdataTest
 
 

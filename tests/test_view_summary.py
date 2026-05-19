@@ -1,30 +1,31 @@
+import logging
 import os
 import stat
-from view_summary.__main__ import parse_arguments, run
-from contextlib import suppress
-import resfo
-import logging
 from collections import defaultdict
-from textwrap import dedent
-import pytest
-from pathlib import Path
-from hypothesis import given, settings, HealthCheck
-import hypothesis.strategies as st
+from contextlib import suppress
 from io import StringIO
+from pathlib import Path
+from textwrap import dedent
+
+import hypothesis.strategies as st
+import numpy as np
+import pandas as pd
+import pytest
+import resfo
+from hypothesis import HealthCheck, given, settings
 from resfo_utilities.testing import (
-    summaries,
-    Unsmry,
+    Date,
+    Simulator,
+    Smspec,
+    SmspecIntehead,
     SummaryMiniStep,
     SummaryStep,
-    Smspec,
-    Date,
-    SmspecIntehead,
-    Simulator,
     UnitSystem,
+    Unsmry,
+    summaries,
     summary_variables,
 )
-import pandas as pd
-import numpy as np
+from view_summary.__main__ import parse_arguments, run
 
 
 def test_help_string(capsys):

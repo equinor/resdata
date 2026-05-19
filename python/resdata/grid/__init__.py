@@ -10,8 +10,8 @@ rd_grid_generator/GridGenerator: This can be used to generate various
   grids.
 """
 
-import resdata.util.util
 import resdata.geometry
+import resdata.util.util
 
 from .cell import Cell
 from .rd_grid import Grid

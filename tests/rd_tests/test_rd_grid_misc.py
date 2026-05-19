@@ -3,13 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
+import resdata.grid._grid as _grid
+from cwrap import CFILE
+from cwrap import open as copen
 from resdata import ResDataType, UnitSystem
 from resdata.grid import Grid
 from resdata.resfile import ResdataKW
 from resdata.util.util import DoubleVector
-import resdata.grid._grid as _grid
-from cwrap import CFILE, open as copen
 
 from ._grid_fixtures import (
     load_egrid_with_single_lgr,

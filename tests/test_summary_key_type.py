@@ -1,6 +1,5 @@
 from hypothesis import given
 from resdata.summary import Summary, SummaryVarType
-
 from resfo_utilities import SummaryKeyType, is_rate
 from resfo_utilities.testing import summary_variables
 

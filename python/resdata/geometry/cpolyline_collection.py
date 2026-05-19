@@ -3,6 +3,7 @@ Create a polygon
 """
 
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
 from resdata.geometry import CPolyline
 

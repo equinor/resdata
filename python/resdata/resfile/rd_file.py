@@ -24,12 +24,15 @@ implementation from the resdata library.
 import ctypes
 import datetime
 import re
-from typing_extensions import deprecated
 
 from cwrap import BaseCClass
+from typing_extensions import deprecated
+
 from resdata import FileMode, FileType, ResdataPrototype
-from resdata.resfile import ResdataKW
 from resdata.util.util import CTime, monkey_the_camel
+
+from .rd_file_view import ResdataFileView
+from .rd_kw import ResdataKW
 
 
 class ResdataFile(BaseCClass):
@@ -185,7 +188,7 @@ class ResdataFile(BaseCClass):
             raise OSError('Failed to open file "%s"' % filename)
         else:
             super().__init__(c_ptr)
-            self.global_view = self._get_global_view()
+            self.global_view: ResdataFileView = self._get_global_view()
             self.global_view.setParent(self)
 
     def save_kw(self, kw):

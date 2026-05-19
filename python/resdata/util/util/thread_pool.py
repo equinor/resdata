@@ -1,7 +1,7 @@
 import multiprocessing
-from threading import Thread
 import time
 import traceback
+from threading import Thread
 
 
 class Task(Thread):

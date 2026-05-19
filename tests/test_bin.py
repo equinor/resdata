@@ -1,7 +1,8 @@
-import sys
-import pytest
-import subprocess
 import signal
+import subprocess
+import sys
+
+import pytest
 
 
 @pytest.mark.skipif(

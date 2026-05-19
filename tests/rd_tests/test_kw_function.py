@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import os
 import random
+
 from resdata import ResDataType
-from resdata.resfile import ResdataKW, Resdata3DKW
 from resdata.grid import GridGenerator
+from resdata.resfile import Resdata3DKW, ResdataKW
 from resdata.util.util import IntVector
+
 from tests import ResdataTest
 
 

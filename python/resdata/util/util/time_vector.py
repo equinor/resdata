@@ -3,8 +3,8 @@ import re
 
 from resdata import ResdataPrototype
 
-from .vector_template import VectorTemplate
 from .ctime import CTime
+from .vector_template import VectorTemplate
 
 
 class TimeVector(VectorTemplate):

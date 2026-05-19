@@ -1,6 +1,8 @@
 from cwrap import BaseCClass
+
 from resdata import ResdataPrototype
-from resdata.well import WellConnectionDirection
+
+from .well_connection_direction_enum import WellConnectionDirection
 
 
 class WellConnection(BaseCClass):

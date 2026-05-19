@@ -1,4 +1,5 @@
 import datetime
+
 from resdata.summary import Summary
 
 

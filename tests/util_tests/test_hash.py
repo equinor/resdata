@@ -1,7 +1,8 @@
 from ctypes import c_void_p
 
+from resdata.util.util import DoubleHash, Hash, IntegerHash, StringHash
+
 from tests import ResdataTest
-from resdata.util.util import Hash, StringHash, DoubleHash, IntegerHash
 
 
 class HashTest(ResdataTest):

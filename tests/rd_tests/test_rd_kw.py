@@ -1,24 +1,22 @@
-import pytest
-
-import random
-import warnings
-import cwrap
-import resfo
 import os
-from hypothesis import assume, settings
+import random
+import tempfile
+import warnings
+
+import cwrap
 import hypothesis.strategies as st
-from hypothesis.extra.numpy import arrays, from_dtype
-from hypothesis.extra.lark import from_lark
-from hypothesis.stateful import Bundle, RuleBasedStateMachine, rule
-from lark import Lark
 import numpy as np
 import numpy.testing as npt
-import tempfile
-
-from resdata import ResDataType, ResdataTypeEnum, FileMode
-from resdata.grid import ResdataRegion, GridGenerator
-from resdata.resfile import ResdataKW, ResdataFile, FortIO, openFortIO
-
+import pytest
+import resfo
+from hypothesis import assume, settings
+from hypothesis.extra.lark import from_lark
+from hypothesis.extra.numpy import arrays, from_dtype
+from hypothesis.stateful import Bundle, RuleBasedStateMachine, rule
+from lark import Lark
+from resdata import FileMode, ResDataType, ResdataTypeEnum
+from resdata.grid import GridGenerator, ResdataRegion
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO
 
 from tests import ResdataTest
 from tests.util import TestAreaContext

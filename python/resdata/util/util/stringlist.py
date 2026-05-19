@@ -16,8 +16,9 @@ return a normal python list of string objects, used in this way you
 hardly need to notice that the StringList class is at play.
 """
 
-from resdata import ResdataPrototype
 from cwrap import BaseCClass
+
+from resdata import ResdataPrototype
 
 
 class StringList(BaseCClass):

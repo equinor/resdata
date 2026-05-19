@@ -1,11 +1,12 @@
-from resdata import ResDataType
 import numpy as np
 import pytest
-from resdata.resfile import ResdataKW
-from resdata.grid import Grid, ResdataRegion, GridGenerator
-from resdata.util.util import IntVector
-from tests import ResdataTest
+from resdata import ResDataType
+from resdata.grid import Grid, GridGenerator, ResdataRegion
 from resdata.grid.faults import Layer
+from resdata.resfile import ResdataKW
+from resdata.util.util import IntVector
+
+from tests import ResdataTest
 
 
 class RegionTest(ResdataTest):

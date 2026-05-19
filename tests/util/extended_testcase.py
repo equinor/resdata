@@ -1,14 +1,13 @@
 import numbers
 import os
 import os.path
-import traceback
 import sys
-
+import traceback
 from unittest import TestCase
 
+from resdata.util.util import Version, installAbortSignals
+
 from .source_enumerator import SourceEnumerator
-from resdata.util.util import installAbortSignals
-from resdata.util.util import Version
 
 # Function wrapper which can be used to add decorator @log_test to test
 # methods. When a test has been decorated with @log_test it will print

@@ -1,9 +1,11 @@
 from cwrap import BaseCClass
 from typing_extensions import deprecated
 
-from resdata.util.util import monkey_the_camel
 from resdata import ResdataPrototype
-from resdata.grid.faults import Fault
+from resdata.util.util import monkey_the_camel
+
+from .fault import Fault
+from .layer import Layer
 
 
 class FaultBlockLayer(BaseCClass):
@@ -168,7 +170,7 @@ class FaultBlockLayer(BaseCClass):
     def free(self):
         self._free()
 
-    def scan_layer(self, layer):
+    def scan_layer(self, layer: Layer) -> None:
         self._scan_layer(layer)
 
     def insert_block_content(self, block):
@@ -223,7 +225,7 @@ class FaultBlockLayer(BaseCClass):
             print("Adding barrier %d -> %d" % (c0, c1))
             c0 = c1
 
-    def get_geo_layer(self):
+    def get_geo_layer(self) -> Layer:
         """Returns the underlying geometric layer."""
         return self._get_layer().setParent(self)
 

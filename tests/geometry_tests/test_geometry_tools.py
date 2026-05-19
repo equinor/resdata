@@ -1,7 +1,8 @@
 import math
 
-from resdata.geometry import Polyline, GeometryTools, CPolyline
+from resdata.geometry import CPolyline, GeometryTools, Polyline
 from resdata.geometry.xyz_io import XYZIo
+
 from tests import ResdataTest
 from tests.util import TestAreaContext
 

@@ -25,8 +25,9 @@ more extensive wrapping of the fortio implementation would be easy.
 import os
 
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
+
 from resdata import ResdataPrototype
+from resdata.util.util import monkey_the_camel
 
 
 class FortIO(BaseCClass):

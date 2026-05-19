@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-from _ctypes import ArgumentError
-import os
 import datetime
+import os
+from _ctypes import ArgumentError
+
 from resdata.resfile import ResdataFile
+
 from tests import ResdataTest, equinor_test
 
 

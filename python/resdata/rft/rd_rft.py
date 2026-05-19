@@ -1,17 +1,20 @@
 """Module for loading RFT files."""
 
-from resdata.rft import ResdataPLTCell, ResdataRFTCell
-from resdata.util.util import monkey_the_camel
-from os import PathLike
-from typing import Any, cast
-from collections.abc import Mapping
 import datetime
-import numpy.typing as npt
-import numpy as np
-from resfo_utilities import RFTReader
 import fnmatch
 import warnings
+from collections.abc import Mapping
+from os import PathLike
+from typing import Any, cast
+
+import numpy as np
+import numpy.typing as npt
+from resfo_utilities import RFTReader
 from typing_extensions import deprecated
+
+from resdata.util.util import monkey_the_camel
+
+from .rd_rft_cell import ResdataPLTCell, ResdataRFTCell
 
 
 def to_float_or_none(value: np.float32 | None) -> float | None:

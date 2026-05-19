@@ -1,13 +1,13 @@
-import shutil
-import pytest
 import datetime
-import os.path
 import gc
+import os.path
+import shutil
 
-from resdata import FileMode, ResDataType, FileType
-from resdata.resfile import ResdataFile, FortIO, ResdataKW, openFortIO, openResdataFile
-from resdata.util.util import CWDContext
+import pytest
+from resdata import FileMode, FileType, ResDataType
 from resdata.grid import Grid
+from resdata.resfile import FortIO, ResdataFile, ResdataKW, openFortIO, openResdataFile
+from resdata.util.util import CWDContext
 
 from tests import ResdataTest
 from tests.util import TestAreaContext

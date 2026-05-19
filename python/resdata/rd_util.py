@@ -13,6 +13,7 @@ functions from rd_util.c which are not bound to any class type.
 import ctypes
 
 from cwrap import BaseCEnum
+
 from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
 

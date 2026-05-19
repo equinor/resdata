@@ -1,10 +1,10 @@
-from resdata import ResDataType
-from resdata.resfile import ResdataKW
-from resdata.grid import Grid
-from tests import ResdataTest, equinor_test
-from resdata.grid.faults import FaultBlock, FaultBlockLayer
-
 from cwrap import open as copen
+from resdata import ResDataType
+from resdata.grid import Grid
+from resdata.grid.faults import FaultBlock, FaultBlockLayer
+from resdata.resfile import ResdataKW
+
+from tests import ResdataTest, equinor_test
 
 
 @equinor_test()

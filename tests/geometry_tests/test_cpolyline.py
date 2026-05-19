@@ -2,6 +2,7 @@ import math
 
 from resdata.geometry import CPolyline, Polyline
 from resdata.geometry.xyz_io import XYZIo
+
 from tests import ResdataTest
 from tests.util import TestAreaContext
 

@@ -1,6 +1,7 @@
-from resdata import ResdataPrototype
-import sys
 import os
+import sys
+
+from resdata import ResdataPrototype
 
 
 def installAbortSignals():

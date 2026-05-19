@@ -1,13 +1,14 @@
 import itertools
-import numpy as np
-from math import sqrt
 from collections.abc import Sequence
+from math import sqrt
 
-from resdata.util.util import monkey_the_camel
-from resdata import ResDataType
-from resdata.resfile import ResdataKW
-from resdata.grid import Grid
+import numpy as np
+
 import resdata.grid._grid as _grid
+from resdata import ResDataType
+from resdata.grid import Grid
+from resdata.resfile import ResdataKW
+from resdata.util.util import monkey_the_camel
 
 
 def flatten(l):

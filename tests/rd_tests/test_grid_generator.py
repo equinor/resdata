@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-from itertools import product as prod
+import functools
 import operator
 import random
 import re
-import numpy as np
-import functools
+from itertools import product as prod
 
+import numpy as np
 from resdata import ResDataType
-from resdata.resfile import ResdataKW
 from resdata.grid import Grid
 from resdata.grid import GridGenerator as GridGen
+from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
 from tests.util import TestAreaContext

@@ -1,10 +1,11 @@
-from cwrap import open as copen
-
 import time
+
+from cwrap import open as copen
 from resdata import ResDataType
-from resdata.resfile import ResdataKW
 from resdata.grid import Grid
-from resdata.grid.faults import FaultCollection, Fault, FaultLine, FaultSegment
+from resdata.grid.faults import Fault, FaultCollection, FaultLine, FaultSegment
+from resdata.resfile import ResdataKW
+
 from tests import ResdataTest, equinor_test
 
 

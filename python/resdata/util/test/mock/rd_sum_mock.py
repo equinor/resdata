@@ -1,6 +1,8 @@
 import datetime
-from resdata.summary import Summary
+
 from typing_extensions import deprecated
+
+from resdata.summary import Summary
 
 
 @deprecated("resdata.util.test is deprecated and will be removed in version 7")

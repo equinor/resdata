@@ -1,8 +1,8 @@
-from six import string_types
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import CTime
+from six import string_types
+
 from resdata import ResdataPrototype
+from resdata.util.util import CTime, monkey_the_camel
 
 
 class ResdataFileView(BaseCClass):

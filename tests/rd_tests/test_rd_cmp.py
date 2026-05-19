@@ -1,11 +1,12 @@
+import datetime
+import warnings
+
+import pytest
 from resdata.summary import ResdataCmp
+
 from tests import ResdataTest, equinor_test
 from tests.util import TestAreaContext
 from tests.util.mock import createSummary
-
-import datetime
-import warnings
-import pytest
 
 
 @equinor_test()

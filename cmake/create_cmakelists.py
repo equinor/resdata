@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from os import listdir
-from os.path import isfile, join, isdir, islink
 import sys
+from os import listdir
+from os.path import isdir, isfile, islink, join
 
 
 def findFilesAndDirectories(directory):

@@ -1,6 +1,6 @@
 import warnings
-from typing_extensions import deprecated
 
+from typing_extensions import deprecated
 
 from .rd_sum_node import SummaryNode
 

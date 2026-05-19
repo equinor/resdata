@@ -1,16 +1,16 @@
 #!/usr/bin/env python
+import gc
+
 import cwrap
 import pytest
-
 from resdata import ResDataType
+from resdata.geometry import CPolylineCollection, Polyline
+from resdata.grid import Grid, GridGenerator, ResdataRegion
+from resdata.grid.faults import Fault, FaultBlock, FaultBlockLayer, FaultCollection
 from resdata.resfile import ResdataKW
-from resdata.grid import Grid, ResdataRegion, GridGenerator
-from resdata.grid.faults import FaultBlock, FaultBlockLayer, FaultCollection, Fault
-from resdata.geometry import Polyline, CPolylineCollection
+
 from tests import ResdataTest
 from tests.util import TestAreaContext
-
-import gc
 
 
 class FaultBlockTest(ResdataTest):

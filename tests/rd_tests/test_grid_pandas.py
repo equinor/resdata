@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 import numpy as np
 import pandas as pd
-
 from resdata import ResdataTypeEnum
-
-from resdata.resfile import ResdataKW
-
 from resdata.grid import Grid, GridGenerator
+from resdata.resfile import ResdataKW
 
 from tests import ResdataTest
 

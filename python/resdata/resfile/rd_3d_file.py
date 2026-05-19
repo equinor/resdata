@@ -1,4 +1,5 @@
-from resdata.resfile import ResdataFile, Resdata3DKW
+from .rd_3dkw import Resdata3DKW
+from .rd_file import ResdataFile
 
 
 class Resdata3DFile(ResdataFile):

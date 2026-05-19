@@ -1,6 +1,8 @@
 import time
+
 from resdata.util.util import ThreadPool
 from resdata.util.util.thread_pool import Task
+
 from tests import ResdataTest
 
 

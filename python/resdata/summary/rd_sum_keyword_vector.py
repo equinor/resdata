@@ -4,8 +4,9 @@
 # argument. In the python code this order has been reversed.
 
 from cwrap import BaseCClass
-from resdata.util.util import monkey_the_camel
+
 from resdata import ResdataPrototype
+from resdata.util.util import monkey_the_camel
 
 
 class SummaryKeyWordVector(BaseCClass):

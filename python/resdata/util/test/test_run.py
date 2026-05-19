@@ -1,7 +1,8 @@
-import random
-import os.path
-import subprocess
 import argparse
+import os.path
+import random
+import subprocess
+
 from typing_extensions import deprecated
 
 from .test_area import TestAreaContext

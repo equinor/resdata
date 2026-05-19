@@ -1,8 +1,7 @@
 import sys
 
-from resdata.util.util import monkey_the_camel
-from resdata.util.util import DoubleVector
 from resdata.geometry import CPolyline
+from resdata.util.util import DoubleVector, monkey_the_camel
 
 from .fault_segments import FaultSegment
 
