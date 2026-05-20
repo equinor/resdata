@@ -247,8 +247,7 @@ class ResdataWellTest(ResdataTest):
         ResdataWellTest.__well_info = None
         ResdataWellTest.__well_info_with_no_well_segments = None
 
-    def getWellInfoWithNoWellSegments(self):
-        """@rtype: WellInfo"""
+    def getWellInfoWithNoWellSegments(self) -> WellInfo:
         if ResdataWellTest.__well_info_with_no_well_segments is None:
             grid_path = self.createTestPath(
                 "Equinor/ECLIPSE/Troll/MSW/T07-4A-W2012-16-F3.EGRID"
@@ -267,8 +266,7 @@ class ResdataWellTest(ResdataTest):
 
         return ResdataWellTest.__well_info_with_no_well_segments
 
-    def getWellInfo(self):
-        """@rtype: WellInfo"""
+    def getWellInfo(self) -> WellInfo:
         if ResdataWellTest.__well_info is None:
             grid_path = self.createTestPath(
                 "Equinor/ECLIPSE/Troll/MSW/T07-4A-W2012-16-F3.EGRID"

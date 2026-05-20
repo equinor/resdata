@@ -122,8 +122,7 @@ class FortIO(BaseCClass):
             self._close()
             self._invalidateCPointer()
 
-    def get_position(self):
-        """@rtype: long"""
+    def get_position(self) -> int:
         return self._get_position()
 
     def truncate(self, size=None):
@@ -148,11 +147,8 @@ class FortIO(BaseCClass):
         self._seek(position, whence)
 
     @classmethod
-    def is_fortran_file(cls, filename, endian_flip=True):
-        """@rtype: bool
-        @type filename: str
-
-
+    def is_fortran_file(cls, filename: str, endian_flip: bool = True) -> bool:
+        """
         Will use heuristics to try to guess if @filename is a binary
         file written in fortran style. ASCII files will return false,
         even if they are structured as ECLIPSE keywords.

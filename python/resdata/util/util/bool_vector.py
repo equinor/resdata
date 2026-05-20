@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from resdata import ResdataPrototype
 
 from .int_vector import IntVector
@@ -103,12 +105,11 @@ class BoolVector(VectorTemplate):
     def __init__(self, default_value=False, initial_size=0):
         super().__init__(default_value, initial_size)
 
-    def count(self, value=True):
-        """@rtype: int"""
+    def count(self, value: bool = True) -> int:
         return self._count_equal(value)
 
     @classmethod
-    def createActiveMask(cls, range_string):
+    def createActiveMask(cls, range_string) -> BoolVector:
         """
         Will create a BoolVector instance with the values from @range_string.
 
@@ -121,24 +122,19 @@ class BoolVector(VectorTemplate):
            "1,4-7,10X" =>  {}
 
         The empty list will evaluate to false
-        @rtype: BoolVector
         """
         return cls._create_active_mask(range_string)
 
-    def updateActiveMask(self, range_string):
+    def updateActiveMask(self, range_string: str) -> bool:
         """
         Updates a bool vector based on a range string.
-        @type range_string: str
-        @type bool_vector: BoolVector
-        @rtype: bool
         """
         return self._update_active_mask(range_string, self)
 
     @classmethod
-    def createFromList(cls, size, source_list):
+    def createFromList(cls, size, source_list) -> BoolVector:
         """
         Allocates a bool vector from a Python list of indexes
-        @rtype: BoolVector
         """
         bool_vector = BoolVector(False, size)
 

@@ -38,8 +38,7 @@ class CTime(BaseCValue):
 
         super().__init__(value)
 
-    def ctime(self):
-        """@rtype: int"""
+    def ctime(self) -> int:
         return self.value()
 
     def time(self):
@@ -135,9 +134,8 @@ class CTime(BaseCValue):
         return time.strptime(self, "%Y-%m-%d %H:%M:S%")
 
     @classmethod
-    def timezone(cls):
+    def timezone(cls) -> str:
         """
         Returns the current timezone "in" C
-        @rtype: str
         """
         return CTime._timezone()

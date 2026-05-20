@@ -129,6 +129,5 @@ class IntVector(VectorTemplate):
         """
         return cls._create_value_list(range_string)
 
-    def count(self, value):
-        """@rtype: int"""
+    def count(self, value: int) -> int:
         return self._count_equal(value)

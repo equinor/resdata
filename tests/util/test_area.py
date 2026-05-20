@@ -111,10 +111,7 @@ class TestAreaContext:
         self.test_name = test_name
         self.store_area = store_area
 
-    def __enter__(self):
-        """
-        @rtype: TestArea
-        """
+    def __enter__(self) -> TestArea:
         self.test_area = TestArea(self.test_name, store_area=self.store_area)
         return self.test_area
 
