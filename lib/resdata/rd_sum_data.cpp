@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <filesystem>
+#include <memory>
 
 #include <ert/util/util.hpp>
 #include <ert/util/vector.hpp>
@@ -214,8 +215,10 @@ private:
 
 struct rd_sum_data_struct {
     const rd_smspec_type *smspec;
-    std::vector<rd::rd_sum_file_data *>
-        data_files; // List of rd_sum_file_data instances
+    std::vector<std::shared_ptr<rd::rd_sum_file_data>>
+        data_files; /** These data files are shared_ptr
+                       as rd_sum_data_add_case makes file_data
+                       ownership shared among rd_sum_data. */
     CaseIndex index;
 };
 
@@ -227,9 +230,6 @@ void rd_sum_data_free(rd_sum_data_type *data) {
     if (!data)
         throw std::invalid_argument(__func__ + std::string(": invalid delete"));
 
-    if (data->data_files.size() > 0)
-        delete data->data_files.back();
-
     delete data;
 }
 
@@ -237,11 +237,6 @@ rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
     rd_sum_data_type *data = new rd_sum_data_type();
     data->smspec = smspec;
     return data;
-}
-
-static void rd_sum_data_append_file_data(rd_sum_data_type *sum_data,
-                                         rd::rd_sum_file_data *file_data) {
-    sum_data->data_files.push_back(file_data);
 }
 
 /**
@@ -281,8 +276,7 @@ double rd_sum_data_iget_sim_days(const rd_sum_data_type *data,
 
 rd_sum_data_type *rd_sum_data_alloc_writer(rd_smspec_type *smspec) {
     rd_sum_data_type *data = rd_sum_data_alloc(smspec);
-    rd::rd_sum_file_data *file_data = new rd::rd_sum_file_data(smspec);
-    rd_sum_data_append_file_data(data, file_data);
+    data->data_files.push_back(std::make_shared<rd::rd_sum_file_data>(smspec));
     rd_sum_data_build_index(data);
     return data;
 }
@@ -560,8 +554,8 @@ rd_sum_data_alloc_seconds_solution(const rd_sum_data_type *data,
 
 static void rd_sum_data_build_index(rd_sum_data_type *self) {
     std::sort(self->data_files.begin(), self->data_files.end(),
-              [](const rd::rd_sum_file_data *case1,
-                 const rd::rd_sum_file_data *case2) {
+              [](const std::shared_ptr<rd::rd_sum_file_data> &case1,
+                 const std::shared_ptr<rd::rd_sum_file_data> &case2) {
                   return case1->get_data_start() < case2->get_data_start();
               });
 
@@ -613,7 +607,7 @@ static void rd_sum_data_build_index(rd_sum_data_type *self) {
 rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
                                              int report_step,
                                              double sim_seconds) {
-    rd::rd_sum_file_data *file_data = data->data_files.back();
+    const auto &file_data = data->data_files.back();
     rd_sum_tstep_type *tstep =
         file_data->add_new_tstep(report_step, sim_seconds);
     rd_sum_data_build_index(data);
@@ -622,7 +616,7 @@ rd_sum_tstep_type *rd_sum_data_add_new_tstep(rd_sum_data_type *data,
 
 void rd_sum_data_add_case(rd_sum_data_type *self,
                           const rd_sum_data_type *other) {
-    for (auto other_file : other->data_files)
+    for (auto &other_file : other->data_files)
         self->data_files.push_back(other_file);
 
     rd_sum_data_build_index(self);
@@ -639,9 +633,9 @@ void rd_sum_data_add_case(rd_sum_data_type *self,
 
 bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
                        bool lazy_load, int file_options) {
-    rd::rd_sum_file_data *file_data = new rd::rd_sum_file_data(data->smspec);
+    auto file_data = std::make_shared<rd::rd_sum_file_data>(data->smspec);
     if (file_data->fread(filelist, lazy_load, file_options)) {
-        rd_sum_data_append_file_data(data, file_data);
+        data->data_files.push_back(file_data);
         rd_sum_data_build_index(data);
         return true;
     }
@@ -688,7 +682,7 @@ int rd_sum_data_iget_report_step(const rd_sum_data_type *data,
 double rd_sum_data_iget(const rd_sum_data_type *data, int time_index,
                         int params_index) {
     const auto &index_node = data->index.lookup(time_index);
-    rd::rd_sum_file_data *file_data = data->data_files[index_node.data_index];
+    const auto &file_data = data->data_files[index_node.data_index];
     const auto &params_map = index_node.params_map;
     if (params_map[params_index] >= 0)
         return file_data->iget(time_index - index_node.offset,

@@ -30,6 +30,7 @@ struct WriteSpec {
     int nz = 12;
     int num_report_steps = 5;
     int num_ministep = 10;
+    double start_seconds = 0.0;
     double ministep_length = 86400.0; // one day in seconds
 };
 
@@ -52,7 +53,7 @@ time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
     const rd::smspec_node *wwct =
         rd_smspec_add_node(smspec, "WWCT", "OP-1", "(1)", 0.0f);
 
-    double sim_seconds = 0.0;
+    double sim_seconds = spec.start_seconds;
     for (int report_step = 0; report_step < spec.num_report_steps;
          ++report_step) {
         for (int step = 0; step < spec.num_ministep; ++step) {
@@ -66,7 +67,7 @@ time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
     }
     rd_sum_fwrite(rd_sum.get());
 
-    time_t end_time = spec.start_time;
+    time_t end_time = spec.start_seconds + spec.start_time;
     util_inplace_forward_seconds_utc(
         &end_time,
         (spec.num_report_steps * spec.num_ministep - 1) * spec.ministep_length);
@@ -221,6 +222,48 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE_THAT(double_vector_iget(data.get(), 0),
                          WithinAbs(0.0, 1e-6));
         }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Loading a case with data before its parent in time") {
+    WriteSpec spec;
+    spec.start_seconds = 1.0;
+    auto base_path = (dirname / "CASE1").string();
+    write_test_summary(base_path, spec, /*fmt_output=*/false,
+                       /*unified=*/true);
+    auto restart_path = (dirname / "CASE2").string();
+    constexpr double child_fopt_value = 1.0e9;
+    {
+        auto restart_sum = rd_sum_ptr(
+            rd_sum_alloc_restart_writer(restart_path.c_str(), base_path.c_str(),
+                                        /*fmt_output=*/false,
+                                        /*unified=*/true, ":", spec.start_time,
+                                        true, spec.nx, spec.ny, spec.nz),
+            &rd_sum_free);
+        rd_smspec_type *smspec = rd_sum_get_smspec(restart_sum.get());
+        const rd::smspec_node *fopt =
+            rd_smspec_add_node(smspec, "FOPT", "SM3", 99.0f);
+        // The child case has a single ministep at sim_seconds = 0, i.e.
+        // before the data_start in the parent.
+        rd_sum_tstep_type *tstep = rd_sum_add_tstep(restart_sum.get(), 1, 0.0);
+        rd_sum_tstep_set_from_node(tstep, *fopt, child_fopt_value);
+        rd_sum_fwrite(restart_sum.get());
+    }
+
+    auto rd_sum = read_summary(restart_path);
+    REQUIRE(rd_sum != nullptr);
+    REQUIRE(rd_sum_has_key(rd_sum.get(), "FOPT"));
+
+    const int length = rd_sum_get_data_length(rd_sum.get());
+    REQUIRE(length > 0);
+
+    REQUIRE_THAT(rd_sum_get_general_var(rd_sum.get(), 0, "FOPT"),
+                 WithinAbs(child_fopt_value, 1e-3));
+    for (int i = 1; i < length; ++i) {
+        REQUIRE_THAT(
+            rd_sum_get_general_var(rd_sum.get(), i, "FOPT"),
+            WithinAbs(spec.start_seconds + (i - 1) * spec.ministep_length,
+                      1e-3));
     }
 }
 
