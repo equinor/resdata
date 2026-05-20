@@ -264,8 +264,7 @@ class StringList(BaseCClass):
         """
         self._sort(cmp_flag)
 
-    def index(self, value):
-        """@rtype: int"""
+    def index(self, value: str) -> int:
         if isinstance(value, bytes):
             value.decode("ascii")
         if isinstance(value, str):

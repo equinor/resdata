@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Module for loading and querying summary data.
 
@@ -321,10 +323,9 @@ class Summary(BaseCClass):
         unified=True,
         time_in_days=True,
         key_join_string=":",
-    ):
+    ) -> Summary:
         """
         The writer is not generally usable.
-        @rtype: Summary
         """
 
         start = CTime(start_time)
@@ -348,10 +349,9 @@ class Summary(BaseCClass):
         unified=True,
         time_in_days=True,
         key_join_string=":",
-    ):
+    ) -> Summary:
         """
         The writer is not generally usable.
-        @rtype: Summary
         """
 
         start = CTime(start_time)

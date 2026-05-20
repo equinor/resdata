@@ -42,12 +42,10 @@ class RandomNumberGenerator(BaseCClass):
             )
         self._set_state(seed_string)
 
-    def getDouble(self):
-        """@rtype: float"""
+    def getDouble(self) -> float:
         return self._get_double()
 
-    def getInt(self, maximum=None):
-        """@rtype: float"""
+    def getInt(self, maximum: int | None = None) -> float:
         if maximum is None:
             maximum = self._get_max_int()
 

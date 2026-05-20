@@ -5,6 +5,7 @@ from resdata import ResdataPrototype
 from resdata.util.util import monkey_the_camel
 
 from .fault import Fault
+from .fault_block import FaultBlock
 from .layer import Layer
 
 
@@ -72,10 +73,7 @@ class FaultBlockLayer(BaseCClass):
     def __repr__(self):
         return self._create_repr("size=%d, k=%d" % (len(self), self.get_k()))
 
-    def __getitem__(self, index):
-        """
-        @rtype: FaultBlock
-        """
+    def __getitem__(self, index) -> FaultBlock:
         if isinstance(index, int):
             if index < 0:
                 index += len(self)
@@ -133,10 +131,7 @@ class FaultBlockLayer(BaseCClass):
                 )
             )
 
-    def get_block(self, block_id):
-        """
-        @rtype: FaultBlock
-        """
+    def get_block(self, block_id) -> FaultBlock:
         if block_id in self:
             return self._get_block(block_id).setParent(self)
         else:

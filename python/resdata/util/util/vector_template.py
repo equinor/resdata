@@ -431,21 +431,13 @@ class VectorTemplate(BaseCClass):
         else:
             raise IndexError("The vector is empty!")
 
-    def minIndex(self, reverse=False):
-        """
-        @type reverse: bool
-        @rtype: int
-        """
+    def minIndex(self, reverse: bool = False) -> int:
         if len(self) > 0:
             return self._get_min_index(reverse)
         else:
             raise IndexError("The vector is empty!")
 
-    def maxIndex(self, reverse=False):
-        """
-        @type reverse: bool
-        @rtype: int
-        """
+    def maxIndex(self, reverse: bool = False) -> int:
         if len(self) > 0:
             return self._get_max_index(reverse)
         else:
@@ -462,10 +454,9 @@ class VectorTemplate(BaseCClass):
         """
         self._idel_block(index, block_size)
 
-    def sort(self, reverse=False):
+    def sort(self, reverse: bool = False):
         """
         Sort the vector inplace in increasing numerical order or decreasing order if reverse is True.
-        @type reverse: bool
         """
         if not reverse:
             self._sort()
@@ -496,7 +487,7 @@ class VectorTemplate(BaseCClass):
     def __repr__(self):
         return self._create_repr("size = %d" % len(self))
 
-    def permute(self, permutation_vector):
+    def permute(self, permutation_vector: PermutationVector) -> None:
         """
         Reorders this vector based on the indexes in permutation_vector.
         @type permutation_vector: PermutationVector
@@ -504,11 +495,9 @@ class VectorTemplate(BaseCClass):
 
         self._permute(permutation_vector)
 
-    def permutationSort(self, reverse=False):
+    def permutationSort(self, reverse: bool = False) -> PermutationVector | None:
         """
         Returns the permutation vector for sorting of this vector. Vector is not sorted.
-         @type reverse: bool
-         @@rtype: PermutationVector
         """
         if len(self) > 0:
             if not reverse:
