@@ -7,11 +7,11 @@
 #include <paths.h>
 #endif
 
-#include <ert/util/ert_api_config.hpp>
-
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+
+#include <filesystem>
 
 #include <ert/util/util.hpp>
 #include <ert/util/test_work_area.hpp>
@@ -187,10 +187,12 @@ TestArea::TestArea(const std::string &test_name, bool store_area)
 }
 
 TestArea::~TestArea() {
-    if (!this->store)
-        util_clear_directory(this->cwd.c_str(), true, true);
-
     util_chdir(this->org_cwd.c_str());
+    if (!this->store) {
+        std::error_code ec;
+        std::filesystem::remove_all(this->cwd, ec);
+        // silently fail for backwards compatibility
+    }
 }
 
 const std::string &TestArea::test_cwd() const { return this->cwd; }

@@ -109,7 +109,6 @@ void util_make_path(const char *);
 double util_file_difftime(const char *, const char *);
 size_t util_file_size(const char *);
 size_t util_fd_size(int fd);
-void util_clear_directory(const char *path, bool strict_uid, bool unlink_root);
 void util_strupr(char *);
 bool util_string_equal(const char *s1, const char *s2);
 char *util_alloc_strupr_copy(const char *);
