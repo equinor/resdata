@@ -84,27 +84,24 @@ int main(int argc, char **argv) {
         const char *test_grid = "TEST.EGRID";
         const char *grid_file;
         if (argc == 1) {
-            rd_grid_type *grid =
-                rd_grid_alloc_rectangular(4, 4, 2, 1, 1, 1, NULL);
+            rd_grid_ptr grid = make_rectangular_grid(4, 4, 2, 1, 1, 1, NULL);
             grid_file = test_grid;
-            rd_grid_fwrite_EGRID(grid, grid_file, true);
-            rd_grid_free(grid);
+            rd_grid_fwrite_EGRID(grid.get(), grid_file, true);
         } else
             grid_file = argv[1];
 
         {
-            rd_grid_type *rd_grid = rd_grid_alloc(grid_file);
+            rd_grid_ptr rd_grid = read_grid(grid_file);
             if (argc == 1)
-                test_assert_true(rd_grid_get_unit_system(rd_grid) ==
+                test_assert_true(rd_grid_get_unit_system(rd_grid.get()) ==
                                  RD_METRIC_UNITS);
             rd_file_type *rd_file = rd_file_open(grid_file, 0);
 
-            export_actnum(rd_grid, rd_file);
-            export_coord(rd_grid, rd_file);
-            export_zcorn(rd_grid, rd_file);
-            export_mapaxes(rd_grid, rd_file);
+            export_actnum(rd_grid.get(), rd_file);
+            export_coord(rd_grid.get(), rd_file);
+            export_zcorn(rd_grid.get(), rd_file);
+            export_mapaxes(rd_grid.get(), rd_file);
             rd_file_close(rd_file);
-            rd_grid_free(rd_grid);
         }
     }
 }

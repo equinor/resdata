@@ -52,18 +52,16 @@ void test_create(rd_grid_type *grid, const rd_kw_type *fault_block_kw) {
 int main(int argc, char **argv) {
     const char *grid_file = argv[1];
     const char *fault_blk_file = argv[2];
-    rd_grid_type *rd_grid = rd_grid_alloc(grid_file);
+    rd_grid_ptr rd_grid = read_grid(grid_file);
     rd_kw_type *fault_blk_kw;
     {
         FILE *stream = util_fopen(fault_blk_file, "r");
         fault_blk_kw = rd_kw_fscanf_alloc_grdecl(
-            stream, "FAULTBLK", RD_INT, rd_grid_get_global_size(rd_grid));
+            stream, "FAULTBLK", RD_INT, rd_grid_get_global_size(rd_grid.get()));
         fclose(stream);
     }
 
-    test_create(rd_grid, fault_blk_kw);
-
-    rd_grid_free(rd_grid);
+    test_create(rd_grid.get(), fault_blk_kw);
     rd_kw_free(fault_blk_kw);
     exit(0);
 }

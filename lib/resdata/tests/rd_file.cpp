@@ -40,10 +40,8 @@ void test_truncated() {
     rd::util::TestArea ta("truncate_file");
     int num_kw;
     {
-        rd_grid_type *grid =
-            rd_grid_alloc_rectangular(20, 20, 20, 1, 1, 1, NULL);
-        rd_grid_fwrite_EGRID2(grid, "TEST.EGRID", RD_METRIC_UNITS);
-        rd_grid_free(grid);
+        rd_grid_ptr grid = make_rectangular_grid(20, 20, 20, 1, 1, 1, NULL);
+        rd_grid_fwrite_EGRID2(grid.get(), "TEST.EGRID", RD_METRIC_UNITS);
     }
     {
         rd_file_type *rd_file = rd_file_open("TEST.EGRID", 0);
@@ -69,10 +67,8 @@ void test_mixed_case() {
     rd::util::TestArea ta("mixed_case_file");
     int num_kw;
     {
-        rd_grid_type *grid =
-            rd_grid_alloc_rectangular(20, 20, 20, 1, 1, 1, NULL);
-        rd_grid_fwrite_EGRID2(grid, "TESTcase.EGRID", RD_METRIC_UNITS);
-        rd_grid_free(grid);
+        rd_grid_ptr grid = make_rectangular_grid(20, 20, 20, 1, 1, 1, NULL);
+        rd_grid_fwrite_EGRID2(grid.get(), "TESTcase.EGRID", RD_METRIC_UNITS);
     }
     {
         rd_file_type *rd_file = rd_file_open("TESTcase.EGRID", 0);

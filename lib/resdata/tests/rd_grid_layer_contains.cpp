@@ -24,7 +24,6 @@ void test_layer(rd_grid_type *grid) {
 }
 
 int main(int argc, char **argv) {
-    rd_grid_type *grid = rd_grid_alloc(argv[1]);
-    test_layer(grid);
-    rd_grid_free(grid);
+    rd_grid_ptr grid = read_grid(argv[1]);
+    test_layer(grid.get());
 }

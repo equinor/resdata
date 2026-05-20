@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     const char *case_path = argv[1];
     char *grid_file = util_alloc_filename(NULL, case_path, "EGRID");
     stringlist_type *file_list = stringlist_alloc_new();
-    rd_grid_type *grid = rd_grid_alloc(grid_file);
+    rd_grid_ptr grid = read_grid(grid_file);
     rd_select_filelist(NULL, case_path, RD_RESTART_FILE, false, file_list);
 
     printf("Searching in:%s \n", case_path);
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
         }
     }
     {
-        well_info_type *well_info = well_info_alloc(grid);
+        well_info_type *well_info = well_info_alloc(grid.get());
         int i;
         for (i = 0; i < stringlist_get_size(file_list); i++) {
             printf("Loading file:%s \n", stringlist_iget(file_list, i));
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     }
 
     {
-        well_info_type *well_info = well_info_alloc(grid);
+        well_info_type *well_info = well_info_alloc(grid.get());
         int i;
         stringlist_reverse(file_list);
         for (i = 0; i < stringlist_get_size(file_list); i++)
@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
                                    true);
         well_info_free(well_info);
     }
-    rd_grid_free(grid);
     free(grid_file);
 
     exit(0);
