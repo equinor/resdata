@@ -20,8 +20,8 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
     double eps_x = 1e-4;
     double eps_y = 1e-4;
     double eps_z = 1e-3;
-    rd_grid_type *grid = rd_grid_alloc(grid_fname.c_str());
-    if (grid == NULL) {
+    rd_grid_ptr grid = read_grid(grid_fname);
+    if (!grid) {
         std::cerr << "Could not open " << grid_fname << std::endl;
         exit(-1);
     }
@@ -33,12 +33,12 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
     rd_kw_type *dx = rd_file_iget_named_kw(init_file, "DX", 0);
     rd_kw_type *dy = rd_file_iget_named_kw(init_file, "DY", 0);
     rd_kw_type *dz = rd_file_iget_named_kw(init_file, "DZ", 0);
-    for (int a = 0; a < rd_grid_get_active_size(grid); a += 100) {
-        int g = rd_grid_get_global_index1A(grid, a);
+    for (int a = 0; a < rd_grid_get_active_size(grid.get()); a += 100) {
+        int g = rd_grid_get_global_index1A(grid.get(), a);
 
-        double dxg = rd_grid_get_cell_dx1(grid, g);
-        double dyg = rd_grid_get_cell_dy1(grid, g);
-        double dzg = rd_grid_get_cell_dz1(grid, g);
+        double dxg = rd_grid_get_cell_dx1(grid.get(), g);
+        double dyg = rd_grid_get_cell_dy1(grid.get(), g);
+        double dzg = rd_grid_get_cell_dz1(grid.get(), g);
 
         double dxi = rd_kw_iget_float(dx, a);
         double dyi = rd_kw_iget_float(dy, a);
@@ -53,7 +53,6 @@ void test_dxdydz(const std::string &grid_fname, const std::string &init_fname) {
         test_assert_true(err_z < eps_z);
     }
     rd_file_close(init_file);
-    rd_grid_free(grid);
 }
 
 int main(int argc, char **argv) {

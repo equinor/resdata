@@ -125,15 +125,13 @@ void test_write_read() {
         test_assert_true(rd_sum_has_key(rd_sum, "WWCT:OP-1"));
         test_assert_true(rd_sum_has_key(rd_sum, "BPR:567"));
         {
-            rd_grid_type *grid =
-                rd_grid_alloc_rectangular(nx, ny, nz, 1, 1, 1, NULL);
+            rd_grid_ptr grid = make_rectangular_grid(nx, ny, nz, 1, 1, 1, NULL);
             int i, j, k;
             char *ijk_key;
-            rd_grid_get_ijk1(grid, 567 - 1, &i, &j, &k);
+            rd_grid_get_ijk1(grid.get(), 567 - 1, &i, &j, &k);
             ijk_key = util_alloc_sprintf("BPR:%d,%d,%d", i + 1, j + 1, k + 1);
 
             free(ijk_key);
-            rd_grid_free(grid);
         }
 
         test_assert_throw(rd_sum_get_general_var(rd_sum, 1, "NO_SUCH_KEY"),

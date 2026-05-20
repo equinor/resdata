@@ -77,8 +77,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with a single LGR", "[unittest]") {
             }
 
             AND_THEN("Copying the grid preserves the LGR") {
-                auto copy =
-                    rd_grid_ptr(rd_grid_alloc_copy(grid.get()), &rd_grid_free);
+                auto copy = copy_grid(grid);
                 REQUIRE(copy != nullptr);
                 REQUIRE(rd_grid_get_num_lgr(copy.get()) == 1);
                 REQUIRE(rd_grid_has_lgr(copy.get(), "LGR1"));
@@ -121,8 +120,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with nested LGRs", "[unittest]") {
             REQUIRE(rd_grid_has_lgr(grid.get(), "INNER"));
 
             AND_THEN("Copying the grid preserves both LGRs") {
-                auto copy =
-                    rd_grid_ptr(rd_grid_alloc_copy(grid.get()), &rd_grid_free);
+                auto copy = copy_grid(grid);
                 REQUIRE(copy != nullptr);
                 REQUIRE(rd_grid_get_num_lgr(copy.get()) == 2);
                 REQUIRE(rd_grid_has_lgr(copy.get(), "OUTER"));
@@ -245,8 +243,7 @@ TEST_CASE_METHOD(Tmpdir, "LGR name lookup functions", "[unittest]") {
         }
 
         THEN("rd_grid_alloc_copy preserves the main grid and LGR names") {
-            auto copy =
-                rd_grid_ptr(rd_grid_alloc_copy(grid.get()), &rd_grid_free);
+            auto copy = copy_grid(grid);
             REQUIRE(copy != nullptr);
             REQUIRE(std::string(rd_grid_get_name(copy.get())) ==
                     filename.string());
@@ -370,8 +367,7 @@ TEST_CASE_METHOD(Tmpdir, "Load EGRID with MAPAXES", "[unittest]") {
         }
 
         THEN("rd_grid_alloc_copy preserves the MAPAXES") {
-            auto copy =
-                rd_grid_ptr(rd_grid_alloc_copy(grid.get()), &rd_grid_free);
+            auto copy = copy_grid(grid);
             REQUIRE(copy != nullptr);
             REQUIRE(rd_grid_use_mapaxes(copy.get()));
 
@@ -609,7 +605,7 @@ TEST_CASE_METHOD(Tmpdir, "Fetching lgr by name and index") {
     GIVEN("An EGRID without any LGR_PARENT at all") {
         auto filename = dirname / "EGRID_PARENT_MISSING.EGRID";
         write_egrid_with_single_lgr_no_parent_kw(filename, "LGR1");
-        auto grid = rd_grid_ptr(rd_grid_alloc(filename.c_str()), &rd_grid_free);
+        auto grid = read_grid(filename);
         REQUIRE(grid != nullptr);
         REQUIRE(rd_grid_has_lgr(grid.get(), "LGR1"));
 

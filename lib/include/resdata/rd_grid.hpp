@@ -206,5 +206,8 @@ using rd_grid_ptr = std::unique_ptr<rd_grid_type, decltype(&rd_grid_free)>;
 rd_grid_ptr make_rectangular_grid(int nx, int ny, int nz, double dx, double dy,
                                   double dz, const int *actnum);
 rd_grid_ptr read_grid(const std::filesystem::path &filename);
+inline rd_grid_ptr copy_grid(const rd_grid_ptr &src_grid) {
+    return {rd_grid_alloc_copy(src_grid.get()), &rd_grid_free};
+}
 #endif
 #endif
