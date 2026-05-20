@@ -62,15 +62,13 @@ void test_layer(const rd_grid_type *rd_grid, const rd_kw_type *faultblock_kw,
 }
 
 int main(int argc, char **argv) {
-    rd_grid_type *rd_grid = rd_grid_alloc(argv[1]);
+    rd_grid_ptr rd_grid = read_grid(argv[1]);
     rd_kw_type *faultblock_kw =
-        alloc_faultblock_kw(argv[2], rd_grid_get_global_size(rd_grid));
-    int k;
+        alloc_faultblock_kw(argv[2], rd_grid_get_global_size(rd_grid.get()));
 
-    for (k = 0; k < rd_grid_get_nz(rd_grid); k++)
-        test_layer(rd_grid, faultblock_kw, k);
+    for (int k = 0; k < rd_grid_get_nz(rd_grid.get()); k++)
+        test_layer(rd_grid.get(), faultblock_kw, k);
 
     rd_kw_free(faultblock_kw);
-    rd_grid_free(rd_grid);
     exit(0);
 }

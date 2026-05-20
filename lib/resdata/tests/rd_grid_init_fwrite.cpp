@@ -108,25 +108,22 @@ void test_write_dims(const rd_grid_type *grid) {
     }
 }
 
-rd_grid_type *create_grid() {
+rd_grid_ptr create_grid() {
     int nx = 10;
     int ny = 10;
     int nz = 8;
-    int_vector_type *actnum = int_vector_alloc(nx * ny * nz, 1);
+    auto actnum = make_int_vector(nx * ny * nz, 1);
 
-    rd_grid_type *rd_grid = rd_grid_alloc_rectangular(
-        nx, ny, nz, 1, 1, 1, int_vector_get_ptr(actnum));
-    int_vector_free(actnum);
-    return rd_grid;
+    return make_rectangular_grid(nx, ny, nz, 1, 1, 1,
+                                 int_vector_get_ptr(actnum.get()));
 }
 
 int main(int argc, char **argv) {
     util_install_signals();
     {
-        rd_grid_type *grid = create_grid();
+        rd_grid_ptr grid = create_grid();
 
-        test_write_depth(grid);
-        test_write_dims(grid);
-        rd_grid_free(grid);
+        test_write_depth(grid.get());
+        test_write_dims(grid.get());
     }
 }

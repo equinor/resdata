@@ -38,11 +38,7 @@ void test_slice(rd_grid_type *grid) {
 }
 
 int main(int argc, char **argv) {
-    const char *grid_file = argv[1];
-    rd_grid_type *grid = rd_grid_alloc(grid_file);
-
-    test_slice(grid);
-
-    rd_grid_free(grid);
+    rd_grid_ptr grid = read_grid(argv[1]);
+    test_slice(grid.get());
     exit(0);
 }

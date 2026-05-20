@@ -434,8 +434,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
         }
 
         SECTION("copy & reset actnum") {
-            auto copy =
-                rd_grid_ptr(rd_grid_alloc_copy(grid.get()), &rd_grid_free);
+            auto copy = copy_grid(grid.get());
             REQUIRE(copy != nullptr);
             REQUIRE(
                 rd_grid_compare(grid.get(), copy.get(), false, false, false));
@@ -453,8 +452,7 @@ TEST_CASE("Test utility functions on a regular grid", "[unittest]") {
             rd_grid_add_self_nnc(grid.get(), 0, 2, 1);
             rd_grid_add_self_nnc(grid.get(), 1, 3, 2);
 
-            auto copy =
-                rd_grid_ptr(rd_grid_alloc_copy(grid.get()), &rd_grid_free);
+            auto copy = copy_grid(grid.get());
             REQUIRE(copy != nullptr);
 
             auto nnc_info_orig = rd_grid_get_cell_nnc_info1(grid.get(), 0);

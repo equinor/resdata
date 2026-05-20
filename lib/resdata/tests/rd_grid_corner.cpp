@@ -46,11 +46,9 @@ void test_OK(const rd_grid_type *grid) {
 }
 
 int main(int argc, char **argv) {
-    rd_grid_type *grid = rd_grid_alloc_rectangular(10, 10, 10, 1, 1, 1, NULL);
+    rd_grid_ptr grid = make_rectangular_grid(10, 10, 10, 1, 1, 1, NULL);
 
-    test_invalid(grid);
-    test_OK(grid);
-
-    rd_grid_free(grid);
+    test_invalid(grid.get());
+    test_OK(grid.get());
     exit(0);
 }

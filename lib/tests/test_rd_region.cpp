@@ -8,22 +8,22 @@ int num_selected(rd_region_type *region) {
 }
 
 TEST_CASE("rd_region", "[rd_region]") {
-    rd_grid_type *grid = rd_grid_alloc_rectangular(10, 10, 10, 1, 1, 1, NULL);
+    rd_grid_ptr grid = make_rectangular_grid(10, 10, 10, 1, 1, 1, NULL);
 
     SECTION("Allocate with preselect true") {
-        rd_region_type *region = rd_region_alloc(grid, true);
+        rd_region_type *region = rd_region_alloc(grid.get(), true);
         REQUIRE(num_selected(region) == 1000);
         rd_region_free(region);
     }
 
     SECTION("Allocate with preselect false") {
-        rd_region_type *region = rd_region_alloc(grid, false);
+        rd_region_type *region = rd_region_alloc(grid.get(), false);
         REQUIRE(num_selected(region) == 0);
         rd_region_free(region);
     }
 
     SECTION("Copy region") {
-        rd_region_type *region1 = rd_region_alloc(grid, false);
+        rd_region_type *region1 = rd_region_alloc(grid.get(), false);
         rd_region_select_i1i2(region1, 0, 4);
 
         rd_region_type *region2 = rd_region_alloc_copy(region1);
@@ -34,7 +34,7 @@ TEST_CASE("rd_region", "[rd_region]") {
     }
 
     SECTION("Basic Region operations") {
-        rd_region_type *region = rd_region_alloc(grid, false);
+        rd_region_type *region = rd_region_alloc(grid.get(), false);
 
         SECTION("Set and get name") {
             rd_region_set_name(region, "TestRegion");
@@ -91,16 +91,16 @@ TEST_CASE("rd_region", "[rd_region]") {
             }
 
             SECTION("Contains global") {
-                int global_idx = rd_grid_get_global_index3(grid, 2, 0, 0);
+                int global_idx = rd_grid_get_global_index3(grid.get(), 2, 0, 0);
                 REQUIRE(rd_region_contains_global(region, global_idx) == true);
-                global_idx = rd_grid_get_global_index3(grid, 0, 0, 0);
+                global_idx = rd_grid_get_global_index3(grid.get(), 0, 0, 0);
                 REQUIRE(rd_region_contains_global(region, global_idx) == false);
             }
 
             SECTION("Contains active") {
-                int active_idx = rd_grid_get_active_index3(grid, 2, 0, 0);
+                int active_idx = rd_grid_get_active_index3(grid.get(), 2, 0, 0);
                 REQUIRE(rd_region_contains_active(region, active_idx) == true);
-                active_idx = rd_grid_get_active_index3(grid, 0, 0, 0);
+                active_idx = rd_grid_get_active_index3(grid.get(), 0, 0, 0);
                 REQUIRE(rd_region_contains_active(region, active_idx) == false);
             }
         }
@@ -315,7 +315,7 @@ TEST_CASE("rd_region", "[rd_region]") {
         }
 
         SECTION("Region binary operations") {
-            rd_region_type *region2 = rd_region_alloc(grid, false);
+            rd_region_type *region2 = rd_region_alloc(grid.get(), false);
 
             rd_region_select_i1i2(region, 0, 5);
             rd_region_select_i1i2(region2, 3, 9);
@@ -530,5 +530,4 @@ TEST_CASE("rd_region", "[rd_region]") {
         }
         rd_region_free(region);
     }
-    rd_grid_free(grid);
 }
