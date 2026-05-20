@@ -24,9 +24,7 @@ using namespace Matchers;
 
 TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
     GIVEN("A grid") {
-        auto grid =
-            rd_grid_ptr(rd_grid_alloc_rectangular(3, 3, 3, 1, 1, 1, nullptr),
-                        &rd_grid_free);
+        auto grid = make_rectangular_grid(3, 3, 3, 1, 1, 1, nullptr);
 
         SECTION("exists") {
             auto filename = (dirname / "TEST.EGRID");
@@ -43,8 +41,7 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
             auto filename = (dirname / "TEST.GRID");
             rd_grid_fwrite_GRID2(grid.get(), filename.c_str(), RD_METRIC_UNITS);
 
-            auto loaded =
-                rd_grid_ptr(rd_grid_alloc(filename.c_str()), &rd_grid_free);
+            auto loaded = read_grid(filename);
             REQUIRE(loaded != nullptr);
             REQUIRE(
                 rd_grid_compare(grid.get(), loaded.get(), false, false, false));
@@ -95,9 +92,7 @@ TEST_CASE_METHOD(Tmpdir, "Test grid file I/O", "[unittest]") {
         std::vector<int> actnum(global_size, 1);
         actnum[0] = 0;
         actnum[3] = 0;
-        auto grid = rd_grid_ptr(
-            rd_grid_alloc_rectangular(nx, ny, nz, 1, 1, 1, actnum.data()),
-            &rd_grid_free);
+        auto grid = make_rectangular_grid(nx, ny, nz, 1, 1, 1, actnum.data());
         const int nactive = rd_grid_get_active_size(grid.get());
         REQUIRE(nactive < global_size);
 

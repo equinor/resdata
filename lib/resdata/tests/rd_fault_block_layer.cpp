@@ -155,17 +155,16 @@ void test_neighbours(rd_grid_type *grid) {
 }
 
 int main(int argc, char **argv) {
-    rd_grid_type *rd_grid = rd_grid_alloc_rectangular(9, 9, 2, 1, 1, 1, NULL);
+    rd_grid_ptr rd_grid = make_rectangular_grid(9, 9, 2, 1, 1, 1, NULL);
     rd_kw_type *fault_blk_kw =
-        rd_kw_alloc("FAULTBLK", rd_grid_get_global_size(rd_grid), RD_INT);
+        rd_kw_alloc("FAULTBLK", rd_grid_get_global_size(rd_grid.get()), RD_INT);
 
-    test_create(rd_grid, fault_blk_kw);
-    test_create_invalid(rd_grid);
-    test_trace_edge(rd_grid);
-    test_export(rd_grid);
-    test_neighbours(rd_grid);
+    test_create(rd_grid.get(), fault_blk_kw);
+    test_create_invalid(rd_grid.get());
+    test_trace_edge(rd_grid.get());
+    test_export(rd_grid.get());
+    test_neighbours(rd_grid.get());
 
-    rd_grid_free(rd_grid);
     rd_kw_free(fault_blk_kw);
     exit(0);
 }

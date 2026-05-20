@@ -328,15 +328,9 @@ inline void write_egrid_with_two_lgrs_and_amalgamated_nnc(
     const std::string &lgr1_name, int host1_i, int host1_j, int host1_k,
     const std::string &lgr2_name, int host2_i, int host2_j, int host2_k,
     const std::vector<int> &nna1, const std::vector<int> &nna2) {
-    auto main_grid = rd_grid_ptr(
-        rd_grid_alloc_rectangular(nx, ny, nz, 1.0, 1.0, 1.0, nullptr),
-        &rd_grid_free);
-    auto lgr1_grid =
-        rd_grid_ptr(rd_grid_alloc_rectangular(2, 2, 2, 0.5, 0.5, 0.5, nullptr),
-                    &rd_grid_free);
-    auto lgr2_grid =
-        rd_grid_ptr(rd_grid_alloc_rectangular(2, 2, 2, 0.5, 0.5, 0.5, nullptr),
-                    &rd_grid_free);
+    auto main_grid = make_rectangular_grid(nx, ny, nz, 1.0, 1.0, 1.0, nullptr);
+    auto lgr1_grid = make_rectangular_grid(2, 2, 2, 0.5, 0.5, 0.5, nullptr);
+    auto lgr2_grid = make_rectangular_grid(2, 2, 2, 0.5, 0.5, 0.5, nullptr);
 
     const int host1_global = host1_i + host1_j * nx + host1_k * nx * ny;
     const int host2_global = host2_i + host2_j * nx + host2_k * nx * ny;

@@ -78,15 +78,14 @@ void test_well_point(rd_grid_type *grid, const point_type *expected) {
 int main(int argc, char **argv) {
     util_install_signals();
     {
-        rd_grid_type *grid = rd_grid_alloc(argv[1]);
-        vector_type *expected = load_expected(grid, argv[2]);
+        rd_grid_ptr grid = read_grid(argv[1]);
+        vector_type *expected = load_expected(grid.get(), argv[2]);
 
         for (int c = 0; c < vector_get_size(expected); c++) {
             const point_type *p =
                 (const point_type *)vector_iget_const(expected, c);
-            test_well_point(grid, p);
+            test_well_point(grid.get(), p);
         }
-        rd_grid_free(grid);
         vector_free(expected);
     }
     exit(0);

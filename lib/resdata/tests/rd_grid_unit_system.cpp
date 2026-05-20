@@ -8,23 +8,19 @@
 #include <resdata/rd_file.hpp>
 
 void test_EGRID(const char *filename, ert_rd_unit_enum unit_system) {
-    rd_grid_type *grid = rd_grid_alloc_rectangular(4, 4, 2, 1, 1, 1, NULL);
-    rd_grid_fwrite_EGRID2(grid, filename, unit_system);
-    rd_grid_free(grid);
+    rd_grid_ptr grid = make_rectangular_grid(4, 4, 2, 1, 1, 1, NULL);
+    rd_grid_fwrite_EGRID2(grid.get(), filename, unit_system);
 
-    rd_grid_type *grid2 = rd_grid_alloc(filename);
-    test_assert_int_equal(rd_grid_get_unit_system(grid2), unit_system);
-    rd_grid_free(grid2);
+    rd_grid_ptr grid2 = read_grid(filename);
+    test_assert_int_equal(rd_grid_get_unit_system(grid2.get()), unit_system);
 }
 
 void test_GRID(const char *filename, ert_rd_unit_enum unit_system) {
-    rd_grid_type *grid = rd_grid_alloc_rectangular(4, 4, 2, 1, 1, 1, NULL);
-    rd_grid_fwrite_GRID2(grid, filename, unit_system);
-    rd_grid_free(grid);
+    rd_grid_ptr grid = make_rectangular_grid(4, 4, 2, 1, 1, 1, NULL);
+    rd_grid_fwrite_GRID2(grid.get(), filename, unit_system);
 
-    rd_grid_type *grid2 = rd_grid_alloc(filename);
-    test_assert_int_equal(rd_grid_get_unit_system(grid2), unit_system);
-    rd_grid_free(grid2);
+    rd_grid_ptr grid2 = read_grid(filename);
+    test_assert_int_equal(rd_grid_get_unit_system(grid2.get()), unit_system);
 }
 
 int main(int argc, char **argv) {
