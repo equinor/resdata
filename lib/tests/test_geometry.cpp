@@ -1,9 +1,10 @@
+#include "ert/util/int_vector.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include <ert/geometry/geo_surface.hpp>
 #include <ert/geometry/geo_region.hpp>
 #include <ert/geometry/geo_polygon.hpp>
 #include <ert/geometry/geo_pointset.hpp>
 
-#include <catch2/catch.hpp>
 #include <memory>
 
 using namespace Catch;

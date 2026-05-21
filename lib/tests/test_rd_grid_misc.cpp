@@ -9,7 +9,14 @@
  * reading it back yields a grid that compares equal to the original.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_message.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <cstdio>
+#include <filesystem>
+#include <memory>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_grdecl.hpp>
@@ -17,6 +24,8 @@
 #include <vector>
 
 #include "grid_fixtures.hpp"
+#include "resdata/rd_type.hpp"
+#include "resdata/rd_util.hpp"
 #include "tmpdir.hpp"
 
 using namespace Catch;

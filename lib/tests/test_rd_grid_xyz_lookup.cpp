@@ -17,15 +17,13 @@
  * The optional start_index is a hint where to start the search.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 
 #include "grid_fixtures.hpp"
-
-using namespace Catch;
-using namespace Matchers;
 
 TEST_CASE("rd_grid_get_global_index_from_xyz on a single unit cell",
           "[unittest]") {

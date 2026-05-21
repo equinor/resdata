@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <memory>
 #include <resdata/nnc_info.hpp>
 #include <resdata/nnc_vector.hpp>

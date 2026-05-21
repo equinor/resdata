@@ -1,6 +1,7 @@
-#include <catch2/catch.hpp>
-
 #include <algorithm>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <memory>
 #include <filesystem>
 #include <string>
@@ -15,6 +16,7 @@
 #include <resdata/rd_endian_flip.hpp>
 
 #include "grid_fixtures.hpp"
+#include "resdata/rd_util.hpp"
 #include "tmpdir.hpp"
 
 using namespace Catch;

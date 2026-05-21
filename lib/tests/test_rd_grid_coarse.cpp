@@ -7,7 +7,7 @@
  * any coarse group" and positive values are group identifiers.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
@@ -15,9 +15,6 @@
 
 #include "grid_fixtures.hpp"
 #include "tmpdir.hpp"
-
-using namespace Catch;
-using namespace Matchers;
 
 TEST_CASE_METHOD(Tmpdir, "Load EGRID with coarse cell groups", "[unittest]") {
     GIVEN("An EGRID file on disc with two coarse cell groups") {

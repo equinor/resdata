@@ -1,8 +1,6 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <resdata/rd_util.hpp>
-
-using namespace Catch;
-using namespace Matchers;
 
 TEST_CASE("Test file type format check", "[unittest]") {
     bool is_fmt = false;

@@ -1,6 +1,7 @@
 #ifndef LIB_TESTS_TMPDIR_HPP
 #define LIB_TESTS_TMPDIR_HPP
-#include <catch2/catch.hpp>
+#include <catch2/catch_message.hpp>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 

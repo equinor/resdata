@@ -7,18 +7,25 @@
  * rd_grid_alloc_rectangular().
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <memory>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <vector>
 
+#include "ert/util/double_vector.hpp"
+#include "ert/util/util.hpp"
 #include "grid_fixtures.hpp"
+#include "resdata/nnc_info.hpp"
+#include "resdata/nnc_vector.hpp"
+#include "resdata/rd_type.hpp"
+#include "resdata/rd_util.hpp"
 #include "tmpdir.hpp"
-
-using namespace Catch;
-using namespace Matchers;
 
 TEST_CASE("Test unfractured grids", "[unittest]") {
     GIVEN("An unfractured grid") {

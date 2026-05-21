@@ -1,15 +1,18 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <cstddef>
+#include <ostream>
 #include <resdata/layer.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
 #include <ert/util/int_vector.hpp>
 #include "detail/resdata/layer_cxx.hpp"
+#include "resdata/rd_type.hpp"
 
 #include <vector>
 #include <tuple>
 #include <memory>
-
-#include <catch2/catch.hpp>
 
 using namespace Catch;
 using namespace Matchers;

@@ -1,5 +1,9 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>

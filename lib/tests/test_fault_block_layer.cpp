@@ -1,3 +1,5 @@
+#include "resdata/rd_type.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include <resdata/fault_block_layer.hpp>
 #include <resdata/fault_block.hpp>
 #include <resdata/rd_grid.hpp>
@@ -5,8 +7,6 @@
 #include <resdata/layer.hpp>
 
 #include <memory>
-
-#include <catch2/catch.hpp>
 
 static rd_grid_ptr make_grid(int nx, int ny, int nz) {
     return make_rectangular_grid(nx, ny, nz, 1, 1, 1, nullptr);
