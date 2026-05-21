@@ -1,7 +1,13 @@
-#include <catch2/catch.hpp>
+#include "ert/util/int_vector.hpp"
+#include "resdata/rd_type.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <cstddef>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_region.hpp>
 #include <resdata/rd_kw.hpp>
+#include <string>
 
 int num_selected(rd_region_type *region) {
     return int_vector_size(rd_region_get_global_list(region));
@@ -393,7 +399,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 rd_region_set_kw_float(region, kw, 3.14f, false);
                 const int_vector_type *list = rd_region_get_global_list(region);
                 int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_float(kw, idx) == Approx(3.14f));
+                REQUIRE_THAT(rd_kw_iget_float(kw, idx),
+                             Catch::Matchers::WithinAbs(3.14f, 0.01f));
                 rd_kw_free(kw);
             }
 
@@ -402,7 +409,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 rd_region_set_kw_double(region, kw, 2.71, false);
                 const int_vector_type *list = rd_region_get_global_list(region);
                 int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_double(kw, idx) == Approx(2.71));
+                REQUIRE_THAT(rd_kw_iget_double(kw, idx),
+                             Catch::Matchers::WithinAbs(2.71, 0.01));
                 rd_kw_free(kw);
             }
 
@@ -424,7 +432,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 rd_region_scale_kw_float(region, kw, 2.0f, false);
                 const int_vector_type *list = rd_region_get_global_list(region);
                 int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_float(kw, idx) == Approx(20.0f));
+                REQUIRE_THAT(rd_kw_iget_float(kw, idx),
+                             Catch::Matchers::WithinAbs(20.0f, 0.01f));
                 rd_kw_free(kw);
             }
 
@@ -451,7 +460,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 rd_region_kw_iadd(region, kw1, kw2, false);
                 const int_vector_type *list = rd_region_get_global_list(region);
                 int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_float(kw1, idx) == Approx(15.0f));
+                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                             Catch::Matchers::WithinAbs(15.0f, 0.01));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);
             }
@@ -466,7 +476,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 rd_region_kw_isub(region, kw1, kw2, false);
                 const int_vector_type *list = rd_region_get_global_list(region);
                 int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_float(kw1, idx) == Approx(7.0f));
+                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                             Catch::Matchers::WithinAbs(7.0f, 0.01f));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);
             }
@@ -481,7 +492,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 rd_region_kw_imul(region, kw1, kw2, false);
                 const int_vector_type *list = rd_region_get_global_list(region);
                 int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_float(kw1, idx) == Approx(20.0f));
+                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                             Catch::Matchers::WithinAbs(20.0f, 0.01f));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);
             }
@@ -496,7 +508,8 @@ TEST_CASE("rd_region", "[rd_region]") {
                 rd_region_kw_idiv(region, kw1, kw2, false);
                 const int_vector_type *list = rd_region_get_global_list(region);
                 int idx = int_vector_iget(list, 0);
-                REQUIRE(rd_kw_iget_float(kw1, idx) == Approx(5.0f));
+                REQUIRE_THAT(rd_kw_iget_float(kw1, idx),
+                             Catch::Matchers::WithinAbs(5.0f, 0.01f));
                 rd_kw_free(kw1);
                 rd_kw_free(kw2);
             }
@@ -515,7 +528,7 @@ TEST_CASE("rd_region", "[rd_region]") {
                 for (int i = 0; i < 1000; i++)
                     rd_kw_iset_float(kw, i, 2.5f);
                 float sum = rd_region_sum_kw_float(region, kw, false);
-                REQUIRE(sum == Approx(1250.0f));
+                REQUIRE_THAT(sum, Catch::Matchers::WithinAbs(1250.0f, 0.01f));
                 rd_kw_free(kw);
             }
 
@@ -524,7 +537,7 @@ TEST_CASE("rd_region", "[rd_region]") {
                 for (int i = 0; i < 1000; i++)
                     rd_kw_iset_double(kw, i, 2.5);
                 double sum = rd_region_sum_kw_double(region, kw, false);
-                REQUIRE(sum == Approx(1250.0));
+                REQUIRE_THAT(sum, Catch::Matchers::WithinAbs(1250.0, 0.01f));
                 rd_kw_free(kw);
             }
         }

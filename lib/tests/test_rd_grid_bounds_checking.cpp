@@ -1,7 +1,14 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_contains.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+#include <filesystem>
 #include <resdata/rd_grid.hpp>
+#include <vector>
 
 #include "grid_fixtures.hpp"
+#include "resdata/rd_kw_magic.hpp"
 #include "tmpdir.hpp"
 
 TEST_CASE_METHOD(Tmpdir, "Negative hostnum raises") {
@@ -85,7 +92,7 @@ TEST_CASE_METHOD(Tmpdir, "Wrong size MAPAXES raises for EGRID") {
     write_egrid_with_sized_mapaxes(filename, 2, 2, 2, bad_size);
 
     REQUIRE_THROWS_WITH(read_grid(filename),
-                        Catch::Matchers::Contains("MAPAXES"));
+                        Catch::Matchers::ContainsSubstring("MAPAXES"));
 }
 
 TEST_CASE_METHOD(Tmpdir, "Wrong size CORSNUM raises for EGRID") {
@@ -95,5 +102,5 @@ TEST_CASE_METHOD(Tmpdir, "Wrong size CORSNUM raises for EGRID") {
     write_egrid_with_sized_corsnum(filename, nx, ny, nz, bad_size);
 
     REQUIRE_THROWS_WITH(read_grid(filename),
-                        Catch::Matchers::Contains("CORSNUM"));
+                        Catch::Matchers::ContainsSubstring("CORSNUM"));
 }

@@ -2,7 +2,7 @@
  * Test rd_grid_compare across many kinds of grids.
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <resdata/rd_grid.hpp>
 #include <resdata/rd_kw.hpp>
 #include <resdata/rd_kw_magic.hpp>
@@ -10,9 +10,6 @@
 
 #include "grid_fixtures.hpp"
 #include "tmpdir.hpp"
-
-using namespace Catch;
-using namespace Matchers;
 
 bool grid_equal(const rd_grid_ptr &g1, const rd_grid_ptr &g2) {
     return rd_grid_compare(g1.get(), g2.get(), true, true, true);

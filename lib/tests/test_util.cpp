@@ -1,14 +1,14 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <cstdlib>
 #include <ert/util/util.hpp>
+#include <filesystem>
 
 #include "tmpdir.hpp"
-
-using namespace Catch;
-using namespace Matchers;
 
 TEST_CASE_METHOD(Tmpdir, "Test getcwd after unlink cwd", "[unittest]") {
     GIVEN("Test directory") {
         auto subdir = dirname / "unlink";
+        auto previous_cwd = fs::current_path();
         fs::create_directory(subdir);
         fs::current_path(subdir);
 
@@ -22,6 +22,6 @@ TEST_CASE_METHOD(Tmpdir, "Test getcwd after unlink cwd", "[unittest]") {
             CHECK_THROWS(util_alloc_cwd());
         }
 
-        fs::current_path(dirname);
+        fs::current_path(previous_cwd);
     }
 }

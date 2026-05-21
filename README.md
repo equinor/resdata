@@ -43,7 +43,7 @@ pytest python/tests
 ```
 
 ### C++ tests
-ResData uses a homegrown testing suite as well as [Catch2, 2.x](https://github.com/catchorg/Catch2) which is compiled via CMake and ran using `ctest`.
+ResData uses a homegrown testing suite as well as [Catch2, 3.x](https://github.com/catchorg/Catch2) which is compiled via CMake and ran using `ctest`.
 
 Ensure that `cmake` and `conan` version 2 is installed.
 
