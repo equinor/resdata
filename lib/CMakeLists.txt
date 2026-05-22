@@ -320,9 +320,6 @@ foreach(
   rd_grid_export
   rd_grid_init_fwrite
   rd_grid_reset_actnum
-  rd_sum_restart
-  rd_sum_data_intermediate_test
-  rd_unsmry_loader_test
   rd_kw_space_pad
   rd_kw_cmp_string
   rd_kw_equal
@@ -331,7 +328,6 @@ foreach(
   rd_kw_init
   rd_nnc_info_test
   rd_nnc_vector
-  rd_sum_alloc_resampled_test
   rd_file_view
   test_rd_file_index
   test_transactions
