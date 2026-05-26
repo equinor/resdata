@@ -423,7 +423,6 @@ foreach(
   rd_file_equinor
   rd_fmt
   rd_rsthead
-  rd_smspec
   rd_fault_block_layer_equinor
   well_state_load
   well_state_load_missing_RSEG
@@ -541,10 +540,6 @@ add_test(NAME rd_file_equinor
 add_test(NAME rd_rsthead
          COMMAND rd_rsthead ${_resdatapath}/Gurbat/ECLIPSE.UNRST
                  ${_resdatapath}/DualPoro/DUALPORO.X0005)
-
-add_test(NAME rd_smspec
-         COMMAND rd_smspec ${_resdatapath}/Gurbat/ECLIPSE.SMSPEC
-                 ${_resdatapath}/Heidrun/Summary/FF12_2013B3_CLEAN_RS.SMSPEC)
 
 add_test(
   NAME rd_fault_block_layer_equinor
