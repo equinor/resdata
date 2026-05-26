@@ -239,6 +239,11 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE_THAT(double_vector_iget(data.get(), 0),
                          WithinAbs(0.0, 1e-6));
         }
+
+        THEN("rd_smspec_equal is reflexive on the loaded smspec") {
+            const rd_smspec_type *smspec = rd_sum_get_smspec(rd_sum.get());
+            REQUIRE(rd_smspec_equal(smspec, smspec));
+        }
     }
 }
 
@@ -809,6 +814,26 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
         };
 
         WHEN("All parent SMSPEC files are present") {
+            THEN("rd_smspec_equal is false for cases with different BPR") {
+                auto sum1 = read_summary(case1_path, ":", true,
+                                         /*include_restart=*/false);
+                auto sum2 = read_summary(case2_path, ":", true,
+                                         /*include_restart=*/false);
+                auto sum3 = read_summary(case3_path, ":", true,
+                                         /*include_restart=*/false);
+                const rd_smspec_type *s1 = rd_sum_get_smspec(sum1.get());
+                const rd_smspec_type *s2 = rd_sum_get_smspec(sum2.get());
+                const rd_smspec_type *s3 = rd_sum_get_smspec(sum3.get());
+
+                REQUIRE_FALSE(rd_smspec_equal(s1, s2));
+                REQUIRE_FALSE(rd_smspec_equal(s2, s1));
+                REQUIRE_FALSE(rd_smspec_equal(s2, s3));
+                REQUIRE_FALSE(rd_smspec_equal(s3, s2));
+
+                REQUIRE(rd_smspec_equal(s1, s3));
+                REQUIRE(rd_smspec_equal(s3, s1));
+            }
+
             THEN("Loading CASE1 returns its own data only") {
                 auto sum = read_summary(case1_path);
 
@@ -910,8 +935,7 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
             rd_kw_type *nums =
                 rd_file_iget_named_kw(smspec_in.get(), "NUMS", 0);
             rd_kw_resize(nums, 5);
-            auto *nums_ptr =
-                static_cast<unsigned int *>(rd_kw_get_void_ptr(nums));
+            int *nums_ptr = rd_kw_get_int_ptr(nums);
             nums_ptr[3] = 5;
             nums_ptr[4] = 8;
 
