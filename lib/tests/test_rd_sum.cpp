@@ -237,6 +237,10 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE(rd_sum_get_restart_case(rd_sum.get()) == nullptr);
         }
 
+        THEN("get_restart_step is <= 0 if there is no restart") {
+            REQUIRE(rd_sum_get_restart_step(rd_sum.get()) <= 0);
+        }
+
         SECTION("Allocated time and data vectors") {
             auto times = std::unique_ptr<time_t_vector_type,
                                          void (*)(time_t_vector_type *)>(
@@ -688,17 +692,6 @@ TEST_CASE_METHOD(Tmpdir, "Relative './' prefix produces a normalized case") {
     REQUIRE(std::string(rd_sum_get_base(rd_sum.get())) == "CASE");
     REQUIRE(fs::path(rd_sum_get_abs_path(rd_sum.get())).is_absolute());
     REQUIRE(fs::equivalent(rd_sum_get_abs_path(rd_sum.get()), dirname));
-}
-
-TEST_CASE_METHOD(Tmpdir, "rd_sum_get_restart_case is null without restart") {
-    WriteSpec spec;
-    auto case_path = (dirname / "CASE").string();
-    write_test_summary(case_path, spec, /*fmt=*/false, /*unified=*/true);
-
-    auto rd_sum = read_summary(case_path);
-    REQUIRE(rd_sum != nullptr);
-    REQUIRE(rd_sum_get_restart_case(rd_sum.get()) == nullptr);
-    REQUIRE(rd_sum_get_restart_step(rd_sum.get()) <= 0);
 }
 
 namespace {
