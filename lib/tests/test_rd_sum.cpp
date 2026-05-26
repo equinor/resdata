@@ -13,6 +13,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include <ert/util/stringlist.hpp>
@@ -37,6 +38,19 @@
 
 using namespace Catch;
 using namespace Matchers;
+
+namespace {
+struct Chdir {
+    fs::path prev;
+    explicit Chdir(const fs::path &target) : prev(fs::current_path()) {
+        fs::current_path(target);
+    }
+    ~Chdir() {
+        std::error_code ec;
+        fs::current_path(prev, ec);
+    }
+};
+} // namespace
 
 namespace {
 
@@ -114,6 +128,10 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE(rd_sum_get_first_report_step(rd_sum.get()) == 1);
             REQUIRE(rd_sum_get_last_report_step(rd_sum.get()) ==
                     spec.num_report_steps);
+        }
+
+        SECTION("rd_sum_is_instance") {
+            REQUIRE(rd_sum_is_instance(rd_sum.get()));
         }
 
         THEN("data length matches the number of written ministeps") {
@@ -292,31 +310,99 @@ TEST_CASE_METHOD(Tmpdir, "Loading a case with data before its parent in time") {
 TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     const bool fmt_output = GENERATE(true, false);
     const bool unified = GENERATE(true, false);
+    Chdir cd{dirname};
     WriteSpec spec;
-    auto base_path = (dirname / "CASE1").string();
-    write_test_summary(base_path, spec, fmt_output, unified);
+    const std::string base_name = "CASE1";
+    const std::string restart_name = "CASE2";
+    write_test_summary(base_name, spec, fmt_output, unified);
 
-    auto restart_path = (dirname / "CASE2").string();
     {
         auto restart_sum = rd_sum_ptr(
             rd_sum_alloc_restart_writer(
-                restart_path.c_str(), base_path.c_str(), fmt_output, unified,
+                restart_name.c_str(), base_name.c_str(), fmt_output, unified,
                 ":", spec.start_time, true, spec.nx, spec.ny, spec.nz),
             &rd_sum_free);
         rd_smspec_type *smspec = rd_sum_get_smspec(restart_sum.get());
+        REQUIRE(rd_smspec_get_params_size(smspec) == 1);
         const rd::smspec_node *fopt =
             rd_smspec_add_node(smspec, "FOPT", "SM3", 99.0f);
+        rd_smspec_add_node(smspec, "BPR", 567, "BARS", 0.0f);
+        rd_smspec_add_node(smspec, "WWCT", "OP-1", "(1)", 0.0f);
+        REQUIRE(rd_smspec_get_params_size(smspec) == 4);
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(restart_sum.get(), 1, 0.0);
         rd_sum_tstep_set_from_node(tstep, *fopt, 0.0);
+        REQUIRE(rd_sum_tstep_get_from_node(tstep, *fopt) == 0.0);
         rd_sum_fwrite(restart_sum.get());
     }
 
     const std::string smspec_ext = fmt_output ? ".FSMSPEC" : ".SMSPEC";
     auto restart_file = rd_file_ptr(
-        rd_file_open((restart_path + smspec_ext).c_str(), 0), &rd_file_close);
+        rd_file_open((restart_name + smspec_ext).c_str(), 0), &rd_file_close);
     REQUIRE(restart_file != nullptr);
     rd_file_view_type *view = rd_file_get_global_view(restart_file.get());
     REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
+
+    SECTION("Parent case name is padded across 8-char blocks") {
+        rd_kw_type *restart_kw =
+            rd_file_view_iget_named_kw(view, RESTART_KW, 0);
+        REQUIRE(rd_kw_get_size(restart_kw) == 8);
+        REQUIRE(std::string(static_cast<const char *>(
+                    rd_kw_iget_ptr(restart_kw, 0))) == "CASE1   ");
+        REQUIRE(std::string(static_cast<const char *>(
+                    rd_kw_iget_ptr(restart_kw, 1))) == "        ");
+    }
+
+    SECTION("Loading with include_restart inserts the parent's FOPT values") {
+        auto restart_sum = read_summary(restart_name);
+        auto base_sum = read_summary(base_name);
+        REQUIRE(restart_sum != nullptr);
+        REQUIRE(base_sum != nullptr);
+        const int n = rd_sum_get_data_length(base_sum.get());
+        for (int i = 0; i < n; ++i) {
+            REQUIRE(rd_sum_get_general_var(base_sum.get(), i, "FOPT") ==
+                    rd_sum_get_general_var(restart_sum.get(), i, "FOPT"));
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
+    Chdir cd{dirname};
+    std::string restart_case;
+    for (int n = 0; n < 8; ++n)
+        restart_case += "WWWWGGG" + std::to_string(n);
+    REQUIRE(restart_case.size() == 64);
+
+    const std::string name = "THE_CASE";
+    const time_t start_time = util_make_date_utc(1, 1, 2010);
+    {
+        auto rd_sum =
+            rd_sum_ptr(rd_sum_alloc_restart_writer2(
+                           name.c_str(), restart_case.c_str(), 77, false, true,
+                           ":", start_time, true, 3, 3, 3),
+                       &rd_sum_free);
+        rd_sum_fwrite(rd_sum.get());
+    }
+
+    auto smspec_file = rd_file_ptr(rd_file_open((name + ".SMSPEC").c_str(), 0),
+                                   &rd_file_close);
+    rd_file_view_type *view = rd_file_get_global_view(smspec_file.get());
+    REQUIRE(rd_file_view_has_kw(view, RESTART_KW));
+    rd_kw_type *restart_kw = rd_file_view_iget_named_kw(view, RESTART_KW, 0);
+    REQUIRE(rd_kw_get_size(restart_kw) == 8);
+    for (int n = 0; n < 8; ++n) {
+        const std::string expected = "WWWWGGG" + std::to_string(n);
+        REQUIRE(std::string(rd_kw_iget_char_ptr(restart_kw, n)) == expected);
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "Restart names >64 characters are ignored") {
+    const time_t start_time = util_make_date_utc(1, 1, 2010);
+    const std::string too_long(72, 'A');
+    auto smspec = std::unique_ptr<rd_smspec_type, decltype(&rd_smspec_free)>(
+        rd_smspec_alloc_restart_writer(":", too_long.c_str(), 10, start_time,
+                                       true, 3, 3, 3),
+        &rd_smspec_free);
+    REQUIRE(rd_smspec_get_restart_case(smspec.get()) == nullptr);
 }
 
 namespace {
@@ -495,10 +581,8 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum getters preserve path/base/case relations") {
                        /*unified=*/true);
 
     SECTION("input without a directory: path is null and abs_path is cwd") {
-        auto previous_cwd = fs::current_path();
-        fs::current_path(subdir);
+        Chdir cd{subdir};
         auto rd_sum = read_summary("CASE");
-        fs::current_path(previous_cwd);
 
         REQUIRE(rd_sum != nullptr);
         REQUIRE(rd_sum_get_path(rd_sum.get()) == nullptr);
@@ -597,10 +681,8 @@ TEST_CASE_METHOD(Tmpdir, "Relative './' prefix produces a normalized case") {
     auto case_path = (dirname / "CASE").string();
     write_test_summary(case_path, spec, /*fmt=*/false, /*unified=*/true);
 
-    auto previous_cwd = fs::current_path();
-    fs::current_path(dirname);
+    Chdir cd{dirname};
     auto rd_sum = read_summary("./CASE");
-    fs::current_path(previous_cwd);
 
     REQUIRE(rd_sum != nullptr);
     REQUIRE(std::string(rd_sum_get_base(rd_sum.get())) == "CASE");

@@ -331,7 +331,6 @@ foreach(
   rd_file_view
   test_rd_file_index
   test_transactions
-  rd_sum_writer
   rd_filenames
   rd_make_date_no_shift
   rd_make_date_shift
