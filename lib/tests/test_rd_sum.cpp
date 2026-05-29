@@ -440,6 +440,12 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
                 REQUIRE(time_t_vector_iget(sol.get(), 0) ==
                         rd_sum_iget_sim_time(rd_sum.get(), 2));
             }
+
+            THEN("unknown key throws std::out_of_range") {
+                REQUIRE_THROWS_AS(rd_sum_alloc_time_solution(
+                                      rd_sum.get(), "NO_SUCH_KEY", 0.0, false),
+                                  std::out_of_range);
+            }
         }
     }
 }
