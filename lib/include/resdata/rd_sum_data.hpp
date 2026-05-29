@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdio>
 #include <cstdlib>
 #include <cstdint>
 #include <ctime>
@@ -7,6 +8,7 @@
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
 
+#include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_sum_vector.hpp>
