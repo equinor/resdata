@@ -8,6 +8,7 @@
 #include <ert/util/double_vector.hpp>
 #include <ert/util/stringlist.hpp>
 
+#include <memory>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
@@ -100,3 +101,6 @@ void rd_sum_data_init_double_frame_interp(const rd_sum_data_type *data,
 void rd_sum_data_init_double_vector_interp(
     const rd_sum_data_type *data, const rd::smspec_node &smspec_node,
     const time_t_vector_type *time_points, double *output_data);
+
+using rd_sum_data_ptr =
+    std::unique_ptr<rd_sum_data_type, decltype(&rd_sum_data_free)>;

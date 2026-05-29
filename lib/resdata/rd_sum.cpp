@@ -80,8 +80,8 @@ struct rd_sum_struct {
     UTIL_TYPE_ID_DECLARATION;
     rd_smspec_ptr smspec{
         nullptr,
-        &rd_smspec_free};   /* Internalized version of the SMSPEC file. */
-    rd_sum_data_type *data; /* The data - can be NULL. */
+        &rd_smspec_free}; /* Internalized version of the SMSPEC file. */
+    rd_sum_data_ptr data{nullptr, &rd_sum_data_free};
     rd_sum_type *restart_case;
 
     bool fmt_case;
@@ -131,7 +131,6 @@ static rd_sum_type *rd_sum_alloc__(const char *input_arg,
     rd_sum_set_case(rd_sum, input_arg);
     rd_sum->key_join_string = key_join_string;
 
-    rd_sum->data = NULL;
     rd_sum->restart_case = NULL;
 
     return rd_sum;
@@ -143,19 +142,12 @@ static rd_sum_type *rd_sum_alloc__(const char *input_arg,
    reused with calls to rd_sum_fread_realloc_data().
 */
 
-static void rd_sum_free_data(rd_sum_type *rd_sum) {
-    rd_sum_data_free(rd_sum->data);
-    rd_sum->data = NULL;
-}
-
 static bool rd_sum_fread_data(rd_sum_type *rd_sum,
                               const stringlist_type *data_files, bool lazy_load,
                               int file_options) {
-    if (rd_sum->data != NULL)
-        rd_sum_free_data(rd_sum);
-
-    rd_sum->data = rd_sum_data_alloc(rd_sum->smspec.get());
-    return rd_sum_data_fread(rd_sum->data, data_files, lazy_load, file_options);
+    rd_sum->data.reset(rd_sum_data_alloc(rd_sum->smspec.get()));
+    return rd_sum_data_fread(rd_sum->data.get(), data_files, lazy_load,
+                             file_options);
 }
 
 static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
@@ -172,7 +164,8 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
         read_summary(restart_path.string(), ":", lazy_load, true, file_options);
     if (restart_case) {
         rd_sum->restart_case = restart_case.release();
-        rd_sum_data_add_case(rd_sum->data, rd_sum->restart_case->data);
+        rd_sum_data_add_case(rd_sum->data.get(),
+                             rd_sum->restart_case->data.get());
     }
 }
 
@@ -487,7 +480,7 @@ rd_sum_type *rd_sum_fread_alloc(const char *header_file,
 const rd::smspec_node *rd_sum_add_var(rd_sum_type *rd_sum, const char *keyword,
                                       const char *wgname, int num,
                                       const char *unit, float default_value) {
-    if (rd_sum_data_get_length(rd_sum->data) > 0)
+    if (rd_sum_data_get_length(rd_sum->data.get()) > 0)
         throw std::invalid_argument(
             "Can not interchange variable adding and timesteps.\n");
 
@@ -501,7 +494,7 @@ const rd::smspec_node *rd_sum_add_local_var(rd_sum_type *rd_sum,
                                             const char *unit, const char *lgr,
                                             int lgr_i, int lgr_j, int lgr_k,
                                             float default_value) {
-    if (rd_sum_data_get_length(rd_sum->data) > 0)
+    if (rd_sum_data_get_length(rd_sum->data.get()) > 0)
         throw std::invalid_argument(
             "Can not interchange variable adding and timesteps.\n");
 
@@ -531,7 +524,7 @@ const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
 rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
                                     double sim_seconds) {
     rd_sum_tstep_type *new_tstep =
-        rd_sum_data_add_new_tstep(rd_sum->data, report_step, sim_seconds);
+        rd_sum_data_add_new_tstep(rd_sum->data.get(), report_step, sim_seconds);
     return new_tstep;
 }
 
@@ -554,7 +547,7 @@ rd_sum_alloc_writer__(const char *rd_case, const char *restart_case,
             rd_sum->smspec.reset(rd_smspec_alloc_writer(
                 key_join_string, sim_start, time_in_days, nx, ny, nz));
 
-        rd_sum->data = rd_sum_data_alloc_writer(rd_sum->smspec.get());
+        rd_sum->data.reset(rd_sum_data_alloc_writer(rd_sum->smspec.get()));
     }
     return rd_sum;
 }
@@ -598,20 +591,18 @@ rd_sum_type *rd_sum_alloc_writer(const char *rd_case, bool fmt_output,
 void rd_sum_fwrite(const rd_sum_type *rd_sum) {
     rd_smspec_fwrite(rd_sum->smspec.get(), rd_sum->rd_case.c_str(),
                      rd_sum->fmt_case);
-    rd_sum_data_fwrite(rd_sum->data, rd_sum->rd_case.c_str(), rd_sum->fmt_case,
-                       rd_sum->unified);
+    rd_sum_data_fwrite(rd_sum->data.get(), rd_sum->rd_case.c_str(),
+                       rd_sum->fmt_case, rd_sum->unified);
 }
 
 bool rd_sum_can_write(const rd_sum_type *rd_sum) {
-    return rd_sum_data_can_write(rd_sum->data);
+    return rd_sum_data_can_write(rd_sum->data.get());
 }
 
 void rd_sum_free(rd_sum_type *rd_sum) {
     if (rd_sum->restart_case)
         rd_sum_free(rd_sum->restart_case);
 
-    if (rd_sum->data)
-        rd_sum_free_data(rd_sum);
     delete rd_sum;
 }
 
@@ -665,11 +656,11 @@ rd_sum_type *rd_sum_fread_alloc_case(const char *input_file,
 
 double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
                                 const rd::smspec_node *node) {
-    return rd_sum_data_get_from_sim_time(rd_sum->data, sim_time, *node);
+    return rd_sum_data_get_from_sim_time(rd_sum->data.get(), sim_time, *node);
 }
 
 double rd_sum_time2days(const rd_sum_type *rd_sum, time_t sim_time) {
-    return rd_sum_data_time2days(rd_sum->data, sim_time);
+    return rd_sum_data_time2days(rd_sum->data.get(), sim_time);
 }
 
 const rd::smspec_node *rd_sum_get_general_var_node(const rd_sum_type *rd_sum,
@@ -696,7 +687,7 @@ bool rd_sum_has_key(const rd_sum_type *rd_sum, const char *lookup_kw) {
 double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
                               const char *lookup_kw) {
     int params_index = rd_sum_get_general_var_params_index(rd_sum, lookup_kw);
-    return rd_sum_data_iget(rd_sum->data, time_index, params_index);
+    return rd_sum_data_iget(rd_sum->data.get(), time_index, params_index);
 }
 
 #ifdef __cplusplus
@@ -705,13 +696,15 @@ extern "C" {
 void rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
                               const rd_sum_vector_type *key_words,
                               double_vector_type *data) {
-    rd_sum_data_get_interp_vector(rd_sum->data, sim_time, key_words, data);
+    rd_sum_data_get_interp_vector(rd_sum->data.get(), sim_time, key_words,
+                                  data);
 }
 
 void rd_sum_fwrite_interp_csv_line(const rd_sum_type *rd_sum, time_t sim_time,
                                    const rd_sum_vector_type *key_words,
                                    FILE *fp) {
-    rd_sum_data_fwrite_interp_csv_line(rd_sum->data, sim_time, key_words, fp);
+    rd_sum_data_fwrite_interp_csv_line(rd_sum->data.get(), sim_time, key_words,
+                                       fp);
 }
 }
 #endif
@@ -725,7 +718,7 @@ double rd_sum_get_general_var_from_sim_time(const rd_sum_type *rd_sum,
 double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
                                             double sim_days, const char *var) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, var);
-    return rd_sum_data_get_from_sim_days(rd_sum->data, sim_days, *node);
+    return rd_sum_data_get_from_sim_days(rd_sum->data.get(), sim_days, *node);
 }
 
 rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
@@ -795,7 +788,7 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
                 if (!node.is_rate())
                     value = rd_sum_data_iget_first_value(
-                        rd_sum->data, node.get_params_index());
+                        rd_sum->data.get(), node.get_params_index());
                 double_vector_iset(data, i - 1, value);
             }
         } else if (input_t > end_time) {
@@ -807,7 +800,7 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
                     rd_smspec_iget_node_w_node_index(rd_sum->smspec.get(), i);
                 if (!node.is_rate())
                     value = rd_sum_data_iget_last_value(
-                        rd_sum->data, node.get_params_index());
+                        rd_sum->data.get(), node.get_params_index());
                 double_vector_iset(data, i - 1, value);
             }
         } else {
@@ -833,7 +826,7 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
 }
 
 double rd_sum_iget(const rd_sum_type *rd_sum, int time_index, int param_index) {
-    return rd_sum_data_iget(rd_sum->data, time_index, param_index);
+    return rd_sum_data_iget(rd_sum->data.get(), time_index, param_index);
 }
 
 rd_smspec_var_type rd_sum_identify_var_type(const char *var) {
@@ -846,30 +839,30 @@ const char *rd_sum_get_unit(const rd_sum_type *rd_sum, const char *gen_key) {
 }
 
 int rd_sum_get_last_report_step(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_last_report_step(rd_sum->data);
+    return rd_sum_data_get_last_report_step(rd_sum->data.get());
 }
 
 int rd_sum_get_first_report_step(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_first_report_step(rd_sum->data);
+    return rd_sum_data_get_first_report_step(rd_sum->data.get());
 }
 
 int rd_sum_iget_report_end(const rd_sum_type *rd_sum, int report_step) {
-    return rd_sum_data_iget_report_end(rd_sum->data, report_step);
+    return rd_sum_data_iget_report_end(rd_sum->data.get(), report_step);
 }
 
 int rd_sum_iget_report_step(const rd_sum_type *rd_sum, int internal_index) {
-    return rd_sum_data_iget_report_step(rd_sum->data, internal_index);
+    return rd_sum_data_iget_report_step(rd_sum->data.get(), internal_index);
 }
 
 time_t_vector_type *rd_sum_alloc_time_vector(const rd_sum_type *rd_sum,
                                              bool report_only) {
-    return rd_sum_data_alloc_time_vector(rd_sum->data, report_only);
+    return rd_sum_data_alloc_time_vector(rd_sum->data.get(), report_only);
 }
 
 void rd_sum_init_double_vector(const rd_sum_type *rd_sum, const char *gen_key,
                                double *data) {
     int params_index = rd_sum_get_general_var_params_index(rd_sum, gen_key);
-    rd_sum_data_init_double_vector(rd_sum->data, params_index, data);
+    rd_sum_data_init_double_vector(rd_sum->data.get(), params_index, data);
 }
 
 void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
@@ -878,32 +871,33 @@ void rd_sum_init_double_vector_interp(const rd_sum_type *rd_sum,
                                       double *data) {
     const rd::smspec_node &node =
         rd_smspec_get_general_var_node(rd_sum->smspec.get(), gen_key);
-    rd_sum_data_init_double_vector_interp(rd_sum->data, node, time_points,
+    rd_sum_data_init_double_vector_interp(rd_sum->data.get(), node, time_points,
                                           data);
 }
 
 void rd_sum_init_datetime64_vector(const rd_sum_type *rd_sum, int64_t *data,
                                    int multiplier) {
-    rd_sum_data_init_datetime64_vector(rd_sum->data, data, multiplier);
+    rd_sum_data_init_datetime64_vector(rd_sum->data.get(), data, multiplier);
 }
 
 void rd_sum_init_double_frame(const rd_sum_type *rd_sum,
                               const rd_sum_vector_type *keywords,
                               double *data) {
-    rd_sum_data_init_double_frame(rd_sum->data, keywords, data);
+    rd_sum_data_init_double_frame(rd_sum->data.get(), keywords, data);
 }
 
 void rd_sum_init_double_frame_interp(const rd_sum_type *rd_sum,
                                      const rd_sum_vector_type *keywords,
                                      const time_t_vector_type *time_points,
                                      double *data) {
-    rd_sum_data_init_double_frame_interp(rd_sum->data, keywords, time_points,
-                                         data);
+    rd_sum_data_init_double_frame_interp(rd_sum->data.get(), keywords,
+                                         time_points, data);
 }
 
 double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
                                              int data_index, bool report_only) {
-    return rd_sum_data_alloc_data_vector(rd_sum->data, data_index, report_only);
+    return rd_sum_data_alloc_data_vector(rd_sum->data.get(), data_index,
+                                         report_only);
 }
 
 /**
@@ -920,11 +914,11 @@ double_vector_type *rd_sum_alloc_data_vector(const rd_sum_type *rd_sum,
 
 static int rd_sum_get_limiting(const rd_sum_type *rd_sum, int smspec_index,
                                double limit, bool gt) {
-    const int length = rd_sum_data_get_length(rd_sum->data);
+    const int length = rd_sum_data_get_length(rd_sum->data.get());
     int internal_index = 0;
     do {
         double value =
-            rd_sum_data_iget(rd_sum->data, internal_index, smspec_index);
+            rd_sum_data_iget(rd_sum->data.get(), internal_index, smspec_index);
         if (gt) {
             if (value > limit)
                 break;
@@ -952,15 +946,15 @@ int rd_sum_get_first_lt(const rd_sum_type *rd_sum, int param_index,
 }
 
 time_t rd_sum_get_report_time(const rd_sum_type *rd_sum, int report_step) {
-    return rd_sum_data_get_report_time(rd_sum->data, report_step);
+    return rd_sum_data_get_report_time(rd_sum->data.get(), report_step);
 }
 
 time_t rd_sum_iget_sim_time(const rd_sum_type *rd_sum, int index) {
-    return rd_sum_data_iget_sim_time(rd_sum->data, index);
+    return rd_sum_data_iget_sim_time(rd_sum->data.get(), index);
 }
 
 time_t rd_sum_get_data_start(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_data_start(rd_sum->data);
+    return rd_sum_data_get_data_start(rd_sum->data.get());
 }
 
 time_t rd_sum_get_start_time(const rd_sum_type *rd_sum) {
@@ -969,14 +963,14 @@ time_t rd_sum_get_start_time(const rd_sum_type *rd_sum) {
 
 time_t rd_sum_get_end_time(const rd_sum_type *rd_sum) {
     try {
-        return rd_sum_data_get_sim_end(rd_sum->data);
+        return rd_sum_data_get_sim_end(rd_sum->data.get());
     } catch (std::out_of_range const &) {
         return rd_smspec_get_start_time(rd_sum->smspec.get());
     }
 }
 
 double rd_sum_iget_sim_days(const rd_sum_type *rd_sum, int index) {
-    return rd_sum_data_iget_sim_days(rd_sum->data, index);
+    return rd_sum_data_iget_sim_days(rd_sum->data.get(), index);
 }
 
 /*#define DAYS_DATE_FORMAT    "%7.2f   %02d/%02d/%04d   "
@@ -1092,9 +1086,10 @@ static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
         int report;
 
         for (report = first_report; report <= last_report; report++) {
-            if (rd_sum_data_has_report_step(rd_sum->data, report)) {
+            if (rd_sum_data_has_report_step(rd_sum->data.get(), report)) {
                 int time_index;
-                time_index = rd_sum_data_iget_report_end(rd_sum->data, report);
+                time_index =
+                    rd_sum_data_iget_report_end(rd_sum->data.get(), report);
                 __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var,
                                       var_index, date_string, fmt);
             }
@@ -1198,34 +1193,34 @@ stringlist_type *rd_sum_alloc_group_list(const rd_sum_type *rd_sum,
 }
 
 double rd_sum_get_first_day(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_first_day(rd_sum->data);
+    return rd_sum_data_get_first_day(rd_sum->data.get());
 }
 
 double rd_sum_get_sim_length(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_sim_length(rd_sum->data);
+    return rd_sum_data_get_sim_length(rd_sum->data.get());
 }
 
 /**
    Will return the number of data blocks.
 */
 int rd_sum_get_data_length(const rd_sum_type *rd_sum) {
-    return rd_sum_data_get_length(rd_sum->data);
+    return rd_sum_data_get_length(rd_sum->data.get());
 }
 
 bool rd_sum_check_sim_time(const rd_sum_type *sum, time_t sim_time) {
-    return rd_sum_data_check_sim_time(sum->data, sim_time);
+    return rd_sum_data_check_sim_time(sum->data.get(), sim_time);
 }
 
 bool rd_sum_check_sim_days(const rd_sum_type *sum, double sim_days) {
-    return rd_sum_data_check_sim_days(sum->data, sim_days);
+    return rd_sum_data_check_sim_days(sum->data.get(), sim_days);
 }
 
 int rd_sum_get_report_step_from_time(const rd_sum_type *sum, time_t sim_time) {
-    return rd_sum_data_get_report_step_from_time(sum->data, sim_time);
+    return rd_sum_data_get_report_step_from_time(sum->data.get(), sim_time);
 }
 
 int rd_sum_get_report_step_from_days(const rd_sum_type *sum, double sim_days) {
-    return rd_sum_data_get_report_step_from_days(sum->data, sim_days);
+    return rd_sum_data_get_report_step_from_days(sum->data.get(), sim_days);
 }
 
 rd_smspec_type *rd_sum_get_smspec(const rd_sum_type *rd_sum) {
@@ -1242,8 +1237,8 @@ static double_vector_type *
 rd_sum_alloc_seconds_solution(const rd_sum_type *rd_sum, const char *gen_key,
                               double cmp_value, bool rates_clamp_lower) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return rd_sum_data_alloc_seconds_solution(rd_sum->data, *node, cmp_value,
-                                              rates_clamp_lower);
+    return rd_sum_data_alloc_seconds_solution(rd_sum->data.get(), *node,
+                                              cmp_value, rates_clamp_lower);
 }
 
 double_vector_type *rd_sum_alloc_days_solution(const rd_sum_type *rd_sum,
@@ -1283,14 +1278,14 @@ ert_rd_unit_enum rd_sum_get_unit_system(const rd_sum_type *rd_sum) {
 double rd_sum_get_last_value_gen_key(const rd_sum_type *rd_sum,
                                      const char *gen_key) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return rd_sum_data_iget_last_value(rd_sum->data,
+    return rd_sum_data_iget_last_value(rd_sum->data.get(),
                                        smspec_node_get_params_index(node));
 }
 
 double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
                                       const char *gen_key) {
     const rd::smspec_node *node = rd_sum_get_general_var_node(rd_sum, gen_key);
-    return rd_sum_data_iget_first_value(rd_sum->data,
+    return rd_sum_data_iget_first_value(rd_sum->data.get(),
                                         smspec_node_get_params_index(node));
 }
 
