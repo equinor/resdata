@@ -1,7 +1,8 @@
-#ifndef ERT_RD_SMSPEC
-#define ERT_RD_SMSPEC
+#pragma once
 
 #include <ctime>
+
+#include <vector>
 
 #include <ert/util/float_vector.hpp>
 #include <ert/util/stringlist.hpp>
@@ -11,8 +12,6 @@
 
 typedef struct rd_smspec_struct rd_smspec_type;
 
-#ifdef __cplusplus
-#include <vector>
 const std::vector<float> &
 rd_smspec_get_params_default(const rd_smspec_type *rd_smspec);
 const rd::smspec_node &
@@ -27,12 +26,6 @@ rd_smspec_iget_node_w_node_index(const rd_smspec_type *smspec, int node_index);
 const rd::smspec_node &
 rd_smspec_iget_node_w_params_index(const rd_smspec_type *smspec,
                                    int params_index);
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
    These are the different variable types, see table 3.4 in the
    ECLIPSE file format docuemntation for naming conventions.
@@ -95,10 +88,6 @@ int rd_smspec_num_nodes(const rd_smspec_type *smspec);
 bool rd_smspec_equal(const rd_smspec_type *self, const rd_smspec_type *other);
 ert_rd_unit_enum rd_smspec_get_unit_system(const rd_smspec_type *smspec);
 
-#ifdef __cplusplus
-}
-#endif
-
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const rd::smspec_node &node);
 const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
@@ -134,5 +123,3 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *unit, const char *lgr,
                                           int lgr_i, int lgr_j, int lgr_k,
                                           float default_value);
-
-#endif
