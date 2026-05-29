@@ -937,21 +937,19 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                  params_index++) {
                 float default_value = PARAMS_GLOBAL_DEFAULT;
                 int num = SMSPEC_NUMS_INVALID;
-                char *well = (char *)util_alloc_strip_copy(
-                    (const char *)rd_kw_iget_ptr(wells, params_index));
-                char *kw = (char *)util_alloc_strip_copy(
-                    (const char *)rd_kw_iget_ptr(keywords, params_index));
-                char *unit = (char *)util_alloc_strip_copy(
-                    (const char *)rd_kw_iget_ptr(units, params_index));
+                std::string well =
+                    rd_kw_iget_stripped_string(wells, params_index);
+                std::string kw =
+                    rd_kw_iget_stripped_string(keywords, params_index);
+                std::string unit =
+                    rd_kw_iget_stripped_string(units, params_index);
 
                 rd_smspec_var_type var_type;
                 if (nums != NULL)
                     num = rd_kw_iget_int(nums, params_index);
-                var_type = rd::smspec_node::valid_type(kw, well, num);
+                var_type =
+                    rd::smspec_node::valid_type(kw.c_str(), well.c_str(), num);
                 if (var_type == RD_SMSPEC_INVALID_VAR) {
-                    free(kw);
-                    free(well);
-                    free(unit);
                     continue;
                 }
 
@@ -959,33 +957,26 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
                     int lgr_i = rd_kw_iget_int(numlx, params_index);
                     int lgr_j = rd_kw_iget_int(numly, params_index);
                     int lgr_k = rd_kw_iget_int(numlz, params_index);
-                    char *lgr_name = (char *)util_alloc_strip_copy(
-                        (const char *)rd_kw_iget_ptr(lgrs, params_index));
+                    std::string lgr_name =
+                        rd_kw_iget_stripped_string(lgrs, params_index);
 
                     rd_smspec_insert_node(
                         rd_smspec,
-                        std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
-                            params_index, kw, well, unit, lgr_name, lgr_i,
-                            lgr_j, lgr_k, default_value,
-                            rd_smspec->key_join_string.c_str())));
-                    free(lgr_name);
+                        std::make_unique<rd::smspec_node>(
+                            params_index, kw.c_str(), well.c_str(),
+                            unit.c_str(), lgr_name.c_str(), lgr_i, lgr_j, lgr_k,
+                            default_value, rd_smspec->key_join_string.c_str()));
                 } else
                     rd_smspec_insert_node(
                         rd_smspec,
-                        std::unique_ptr<rd::smspec_node>(new rd::smspec_node(
-                            params_index, kw, well, num, unit,
-                            rd_smspec->grid_dims, default_value,
-                            rd_smspec->key_join_string.c_str())));
-
-                free(kw);
-                free(well);
-                free(unit);
+                        std::make_unique<rd::smspec_node>(
+                            params_index, kw.c_str(), well.c_str(), num,
+                            unit.c_str(), rd_smspec->grid_dims, default_value,
+                            rd_smspec->key_join_string.c_str()));
             }
         }
 
-        char *header_str = util_alloc_realpath(header_file.c_str());
-        rd_smspec->header_file = header_str;
-        free(header_str);
+        rd_smspec->header_file = fs::canonical(header_file).string();
         if (include_restart)
             rd_smspec_load_restart(rd_smspec, header);
 
