@@ -327,16 +327,13 @@ static rd_data_type get_wgnames_type(const rd_smspec_type *smspec) {
 
 static void rd_smspec_fwrite_INTEHEAD(const rd_smspec_type *smspec,
                                       fortio_type *fortio) {
-    rd_kw_type *intehead =
-        rd_kw_alloc(INTEHEAD_KW, INTEHEAD_SMSPEC_SIZE, RD_INT);
-    rd_kw_iset_int(intehead, INTEHEAD_SMSPEC_UNIT_INDEX, smspec->unit_system);
-    /*
-    The simulator type is just hardcoded to ECLIPSE100.
-  */
-    rd_kw_iset_int(intehead, INTEHEAD_SMSPEC_IPROG_INDEX,
+    rd_kw_ptr intehead = make_rd_kw(INTEHEAD_KW, INTEHEAD_SMSPEC_SIZE, RD_INT);
+    rd_kw_iset_int(intehead.get(), INTEHEAD_SMSPEC_UNIT_INDEX,
+                   smspec->unit_system);
+    /* The simulator type is just hardcoded to ECLIPSE100. */
+    rd_kw_iset_int(intehead.get(), INTEHEAD_SMSPEC_IPROG_INDEX,
                    INTEHEAD_ECLIPSE100_VALUE);
-    rd_kw_fwrite(intehead, fortio);
-    rd_kw_free(intehead);
+    rd_kw_fwrite(intehead.get(), fortio);
 }
 
 static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
