@@ -1,6 +1,4 @@
-#ifndef ERT_RD_SUM_DATA_H
-#define ERT_RD_SUM_DATA_H
-
+#pragma once
 #include <cstdlib>
 #include <cstdint>
 #include <ctime>
@@ -12,10 +10,6 @@
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
 #include <resdata/rd_sum_vector.hpp>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct rd_sum_data_struct rd_sum_data_type;
 
@@ -104,8 +98,3 @@ void rd_sum_data_init_double_frame_interp(const rd_sum_data_type *data,
 void rd_sum_data_init_double_vector_interp(
     const rd_sum_data_type *data, const rd::smspec_node &smspec_node,
     const time_t_vector_type *time_points, double *output_data);
-
-#ifdef __cplusplus
-}
-#endif
-#endif
