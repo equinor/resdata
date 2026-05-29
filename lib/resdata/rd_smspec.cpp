@@ -402,19 +402,19 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
     rd_smspec_fwrite_DIMENS(smspec, fortio);
 
     int num_nodes = rd_smspec_num_nodes(smspec);
-    rd_kw_type *keywords_kw = rd_kw_alloc(KEYWORDS_KW, num_nodes, RD_CHAR);
-    rd_kw_type *units_kw = rd_kw_alloc(UNITS_KW, num_nodes, RD_CHAR);
-    rd_kw_type *nums_kw = NULL;
+    auto keywords_kw = make_rd_kw(KEYWORDS_KW, num_nodes, RD_CHAR);
+    auto units_kw = make_rd_kw(UNITS_KW, num_nodes, RD_CHAR);
+    rd_kw_ptr nums_kw{nullptr, &rd_kw_free};
 
     // If the names_type is an RD_STRING we expect this to be an INTERSECT
     // summary, otherwise an ECLIPSE summary.
     rd_data_type names_type = get_wgnames_type(smspec);
-    rd_kw_type *wgnames_kw =
-        rd_kw_alloc(rd_type_is_char(names_type) ? WGNAMES_KW : NAMES_KW,
-                    num_nodes, names_type);
+    auto wgnames_kw =
+        make_rd_kw(rd_type_is_char(names_type) ? WGNAMES_KW : NAMES_KW,
+                   num_nodes, names_type);
 
     if (smspec->need_nums)
-        nums_kw = rd_kw_alloc(NUMS_KW, num_nodes, RD_INT);
+        nums_kw.reset(rd_kw_alloc(NUMS_KW, num_nodes, RD_INT));
 
     for (int i = 0; i < rd_smspec_num_nodes(smspec); i++) {
         const rd::smspec_node &smspec_node =
@@ -439,35 +439,30 @@ static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
       stage.
     */
         if (smspec_node.get_var_type() == RD_SMSPEC_INVALID_VAR) {
-            rd_kw_iset_string8(keywords_kw, i, "WWCT");
-            rd_kw_iset_string8(units_kw, i, "????????");
-            rd_kw_iset_string_ptr(wgnames_kw, i, DUMMY_WELL);
+            rd_kw_iset_string8(keywords_kw.get(), i, "WWCT");
+            rd_kw_iset_string8(units_kw.get(), i, "????????");
+            rd_kw_iset_string_ptr(wgnames_kw.get(), i, DUMMY_WELL);
         } else {
-            rd_kw_iset_string8(keywords_kw, i,
+            rd_kw_iset_string8(keywords_kw.get(), i,
                                smspec_node_get_keyword(&smspec_node));
-            rd_kw_iset_string8(units_kw, i, smspec_node_get_unit(&smspec_node));
+            rd_kw_iset_string8(units_kw.get(), i,
+                               smspec_node_get_unit(&smspec_node));
             {
                 const char *wgname = DUMMY_WELL;
                 if (smspec_node_get_wgname(&smspec_node))
                     wgname = smspec_node_get_wgname(&smspec_node);
-                rd_kw_iset_string_ptr(wgnames_kw, i, wgname);
+                rd_kw_iset_string_ptr(wgnames_kw.get(), i, wgname);
             }
         }
 
-        if (nums_kw != NULL)
-            rd_kw_iset_int(nums_kw, i, smspec_node.get_num());
+        if (nums_kw)
+            rd_kw_iset_int(nums_kw.get(), i, smspec_node.get_num());
     }
-    rd_kw_fwrite(keywords_kw, fortio);
-    rd_kw_fwrite(wgnames_kw, fortio);
-    if (nums_kw != NULL)
-        rd_kw_fwrite(nums_kw, fortio);
-    rd_kw_fwrite(units_kw, fortio);
-
-    rd_kw_free(keywords_kw);
-    rd_kw_free(wgnames_kw);
-    rd_kw_free(units_kw);
-    if (nums_kw != NULL)
-        rd_kw_free(nums_kw);
+    rd_kw_fwrite(keywords_kw.get(), fortio);
+    rd_kw_fwrite(wgnames_kw.get(), fortio);
+    if (nums_kw)
+        rd_kw_fwrite(nums_kw.get(), fortio);
+    rd_kw_fwrite(units_kw.get(), fortio);
 
     rd_smspec_fwrite_STARTDAT(smspec, fortio);
 }
