@@ -338,10 +338,10 @@ static void rd_smspec_fwrite_INTEHEAD(const rd_smspec_type *smspec,
 
 static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
                                      fortio_type *fortio) {
-    rd_kw_type *restart_kw =
-        rd_kw_alloc(RESTART_KW, SUMMARY_RESTART_SIZE, RD_CHAR);
+    rd_kw_ptr restart_kw =
+        make_rd_kw(RESTART_KW, SUMMARY_RESTART_SIZE, RD_CHAR);
     for (int i = 0; i < SUMMARY_RESTART_SIZE; i++)
-        rd_kw_iset_string8(restart_kw, i, "");
+        rd_kw_iset_string8(restart_kw.get(), i, "");
 
     if (smspec->restart_case.size() > 0) {
         size_t restart_case_len = smspec->restart_case.size();
@@ -349,13 +349,12 @@ static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
         size_t offset = 0;
         for (size_t i = 0; i < SUMMARY_RESTART_SIZE; i++) {
             if (offset < restart_case_len)
-                rd_kw_iset_string8(restart_kw, i,
+                rd_kw_iset_string8(restart_kw.get(), i,
                                    &smspec->restart_case[offset]);
             offset += RD_STRING8_LENGTH;
         }
     }
-    rd_kw_fwrite(restart_kw, fortio);
-    rd_kw_free(restart_kw);
+    rd_kw_fwrite(restart_kw.get(), fortio);
 }
 
 static void rd_smspec_fwrite_DIMENS(const rd_smspec_type *smspec,
