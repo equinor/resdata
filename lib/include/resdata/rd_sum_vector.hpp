@@ -36,5 +36,13 @@ UTIL_IS_INSTANCE_HEADER(rd_sum_vector);
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using rd_sum_vector_ptr =
+    std::unique_ptr<rd_sum_vector_type, decltype(&rd_sum_vector_free)>;
+inline rd_sum_vector_ptr make_sum_vector(const rd_sum_type *rd_sum,
+                                         bool add_keywords) {
+    return {rd_sum_vector_alloc(rd_sum, add_keywords), &rd_sum_vector_free};
+}
 #endif
 #endif

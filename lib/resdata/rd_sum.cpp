@@ -1,3 +1,7 @@
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <memory>
 #include <stdexcept>
 #include <filesystem>
 
@@ -7,6 +11,7 @@
 #include <locale.h>
 #include <string>
 #include <optional>
+#include <utility>
 #include <fmt/format.h>
 
 #include <ert/util/hash.hpp>
@@ -17,17 +22,19 @@
 #include <ert/util/bool_vector.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/stringlist.hpp>
+#include <ert/util/double_vector.hpp>
+#include <ert/util/type_macros.hpp>
 
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_sum.hpp>
-
+#include <resdata/rd_sum_tstep.hpp>
+#include <resdata/rd_sum_vector.hpp>
 #include <resdata/rd_sum_data.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_data.hpp>
 #include <resdata/smspec_node.hpp>
-#include <utility>
 
-#include "detail/util/path.hpp"
+#include <detail/util/path.hpp>
 
 namespace fs = std::filesystem;
 
@@ -121,15 +128,16 @@ void rd_sum_set_case(rd_sum_type *rd_sum, const char *input_arg) {
         rd_sum->abs_path = fs::absolute(path).string();
 }
 
-static rd_sum_type *rd_sum_alloc__(const char *input_arg,
-                                   const std::string &key_join_string) {
+static rd_sum_ptr rd_sum_alloc__(const char *input_arg,
+                                 const std::string &key_join_string) {
     if (!rd_path_access(input_arg))
-        return NULL;
+        return {nullptr, &rd_sum_free};
 
-    rd_sum_type *rd_sum = new rd_sum_type;
-    UTIL_TYPE_ID_INIT(rd_sum, RD_SUM_ID);
+    rd_sum_ptr rd_sum{nullptr, &rd_sum_free};
+    rd_sum.reset(new rd_sum_type);
+    UTIL_TYPE_ID_INIT(rd_sum.get(), RD_SUM_ID);
 
-    rd_sum_set_case(rd_sum, input_arg);
+    rd_sum_set_case(rd_sum.get(), input_arg);
     rd_sum->key_join_string = key_join_string;
 
     return rd_sum;
@@ -203,34 +211,23 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
 }
 
 static std::optional<fs::path> base_guess(std::string path) {
-    char *base = NULL;
-    stringlist_type *data_files = stringlist_alloc_new();
-    stringlist_type *DATA_files = stringlist_alloc_new();
-    stringlist_select_matching_files(data_files, path.c_str(), "*.data");
-    stringlist_select_matching_files(DATA_files, path.c_str(), "*.DATA");
+    stringlist_ptr data_files = make_stringlist();
+    stringlist_ptr DATA_files = make_stringlist();
+    stringlist_select_matching_files(data_files.get(), path.c_str(), "*.data");
+    stringlist_select_matching_files(DATA_files.get(), path.c_str(), "*.DATA");
 
-    if ((stringlist_get_size(data_files) + stringlist_get_size(DATA_files)) ==
-        1) {
-        const char *path_name;
+    if ((stringlist_get_size(data_files.get()) +
+         stringlist_get_size(DATA_files.get())) == 1) {
+        const char *path_name{};
 
-        if (stringlist_get_size(data_files) == 1)
-            path_name = stringlist_iget(data_files, 0);
+        if (stringlist_get_size(data_files.get()) == 1)
+            path_name = stringlist_iget(data_files.get(), 0);
         else
-            path_name = stringlist_iget(DATA_files, 0);
+            path_name = stringlist_iget(DATA_files.get(), 0);
 
-        util_alloc_file_components(path_name, NULL, &base, NULL);
+        return fs::path(path_name).stem();
     } // Else - found either 0 or more than 1 file with extension DATA - impossible to guess.
-
-    stringlist_free(data_files);
-    stringlist_free(DATA_files);
-
-    if (base == nullptr) {
-        return std::nullopt;
-    } else {
-        fs::path result(base);
-        free(base);
-        return result;
-    }
+    return std::nullopt;
 }
 
 /**
@@ -435,17 +432,17 @@ rd_alloc_summary_files(fs::path path, fs::path _base, std::string ext,
 
 static bool rd_sum_fread_case(rd_sum_type *rd_sum, bool include_restart,
                               bool lazy_load, int file_options) {
-    stringlist_type *summary_file_list = stringlist_alloc_new();
+    stringlist_ptr summary_file_list = make_stringlist();
 
     bool caseOK = false;
 
-    auto header_file = rd_alloc_summary_files(rd_sum->path, rd_sum->base,
-                                              rd_sum->ext, summary_file_list);
-    if (header_file && (stringlist_get_size(summary_file_list) > 0)) {
-        caseOK = rd_sum_fread(rd_sum, header_file->string(), summary_file_list,
-                              include_restart, lazy_load, file_options);
+    auto header_file = rd_alloc_summary_files(
+        rd_sum->path, rd_sum->base, rd_sum->ext, summary_file_list.get());
+    if (header_file && (stringlist_get_size(summary_file_list.get()) > 0)) {
+        caseOK =
+            rd_sum_fread(rd_sum, header_file->string(), summary_file_list.get(),
+                         include_restart, lazy_load, file_options);
     }
-    stringlist_free(summary_file_list);
 
     return caseOK;
 }
@@ -465,15 +462,14 @@ rd_sum_type *rd_sum_fread_alloc(const char *header_file,
                                 const char *key_join_string,
                                 bool include_restart, bool lazy_load,
                                 int file_options) {
-    rd_sum_type *rd_sum = rd_sum_alloc__(header_file, key_join_string);
+    rd_sum_ptr rd_sum = rd_sum_alloc__(header_file, key_join_string);
     if (rd_sum) {
-        if (!rd_sum_fread(rd_sum, header_file, data_files, include_restart,
-                          lazy_load, file_options)) {
-            rd_sum_free(rd_sum);
-            rd_sum = NULL;
+        if (!rd_sum_fread(rd_sum.get(), header_file, data_files,
+                          include_restart, lazy_load, file_options)) {
+            return nullptr;
         }
     }
-    return rd_sum;
+    return rd_sum.release();
 }
 
 const rd::smspec_node *rd_sum_add_var(rd_sum_type *rd_sum, const char *keyword,
@@ -533,7 +529,7 @@ rd_sum_alloc_writer__(const char *rd_case, const char *restart_case,
                       const char *key_join_string, time_t sim_start,
                       bool time_in_days, int nx, int ny, int nz) {
 
-    rd_sum_type *rd_sum = rd_sum_alloc__(rd_case, key_join_string);
+    rd_sum_ptr rd_sum = rd_sum_alloc__(rd_case, key_join_string);
     if (rd_sum) {
         rd_sum->unified = unified;
         rd_sum->fmt_case = fmt_output;
@@ -548,7 +544,7 @@ rd_sum_alloc_writer__(const char *rd_case, const char *restart_case,
 
         rd_sum->data.reset(rd_sum_data_alloc_writer(rd_sum->smspec.get()));
     }
-    return rd_sum;
+    return rd_sum.release();
 }
 
 rd_sum_type *
@@ -623,19 +619,15 @@ rd_sum_type *rd_sum_fread_alloc_case2__(const char *input_file,
                                         const char *key_join_string,
                                         bool include_restart, bool lazy_load,
                                         int file_options) {
-    rd_sum_type *rd_sum = rd_sum_alloc__(input_file, key_join_string);
+    rd_sum_ptr rd_sum = rd_sum_alloc__(input_file, key_join_string);
     if (!rd_sum)
-        return NULL;
+        return nullptr;
 
-    if (rd_sum_fread_case(rd_sum, include_restart, lazy_load, file_options))
-        return rd_sum;
+    if (rd_sum_fread_case(rd_sum.get(), include_restart, lazy_load,
+                          file_options))
+        return rd_sum.release();
     else {
-        /*
-      Loading a case failed - we discard the partly initialized
-      rd_sum structure and jump ship.
-    */
-        rd_sum_free(rd_sum);
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -766,9 +758,9 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
     start filling it up with data.
 
   */
-    rd_sum_vector_type *rd_sum_vector = rd_sum_vector_alloc(rd_sum, true);
-    double_vector_type *data =
-        double_vector_alloc(rd_sum_vector_get_size(rd_sum_vector), 0);
+    rd_sum_vector_ptr rd_sum_vector = make_sum_vector(rd_sum, true);
+    auto data =
+        make_double_vector(rd_sum_vector_get_size(rd_sum_vector.get()), 0);
 
     for (int report_step = 0; report_step < time_t_vector_size(times);
          report_step++) {
@@ -783,7 +775,7 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
                 if (!node.is_rate())
                     value = rd_sum_data_iget_first_value(
                         rd_sum->data.get(), node.get_params_index());
-                double_vector_iset(data, i - 1, value);
+                double_vector_iset(data.get(), i - 1, value);
             }
         } else if (input_t > end_time) {
             //clamping to the last value for t > end_time or if it is a rate than derivative is 0
@@ -795,27 +787,27 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
                 if (!node.is_rate())
                     value = rd_sum_data_iget_last_value(
                         rd_sum->data.get(), node.get_params_index());
-                double_vector_iset(data, i - 1, value);
+                double_vector_iset(data.get(), i - 1, value);
             }
         } else {
             /* Look up interpolated data in the original case. */
-            rd_sum_get_interp_vector(rd_sum, input_t, rd_sum_vector, data);
+            rd_sum_get_interp_vector(rd_sum, input_t, rd_sum_vector.get(),
+                                     data.get());
         }
 
         /* Add timestep corresponding to the interpolated data in the resampled case. */
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(
             rd_sum_resampled, report_step, input_t - input_start);
         for (int data_index = 0;
-             data_index < rd_sum_vector_get_size(rd_sum_vector); data_index++) {
-            double value = double_vector_iget(data, data_index);
+             data_index < rd_sum_vector_get_size(rd_sum_vector.get());
+             data_index++) {
+            double value = double_vector_iget(data.get(), data_index);
             int params_index =
                 data_index +
                 1; // The +1 shift is because the first element in the tstep is time value.
             rd_sum_tstep_iset(tstep, params_index, value);
         }
     }
-    double_vector_free(data);
-    rd_sum_vector_free(rd_sum_vector);
     return rd_sum_resampled;
 }
 
@@ -1041,12 +1033,9 @@ static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
 static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
                            const stringlist_type *var_list, bool report_only,
                            const rd_sum_fmt_type *fmt) {
-    bool_vector_type *has_var =
-        bool_vector_alloc(stringlist_get_size(var_list), false);
-    int_vector_type *var_index =
-        int_vector_alloc(stringlist_get_size(var_list), -1);
-    char *date_string =
-        (char *)util_malloc(DATE_STRING_LENGTH * sizeof *date_string);
+    auto has_var = make_bool_vector(stringlist_get_size(var_list), false);
+    auto var_index = make_int_vector(stringlist_get_size(var_list), -1);
+    auto date_string = rd::checked_calloc<char>(DATE_STRING_LENGTH);
 
     char *current_locale = NULL;
     if (fmt->locale != NULL)
@@ -1057,8 +1046,8 @@ static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
         for (ivar = 0; ivar < stringlist_get_size(var_list); ivar++) {
             if (rd_sum_has_general_var(rd_sum,
                                        stringlist_iget(var_list, ivar))) {
-                bool_vector_iset(has_var, ivar, true);
-                int_vector_iset(var_index, ivar,
+                bool_vector_iset(has_var.get(), ivar, true);
+                int_vector_iset(var_index.get(), ivar,
                                 rd_sum_get_general_var_params_index(
                                     rd_sum, stringlist_iget(var_list, ivar)));
             } else {
@@ -1066,13 +1055,13 @@ static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
                         "** Warning: could not find variable: \'%s\' in "
                         "summary file \n",
                         stringlist_iget(var_list, ivar));
-                bool_vector_iset(has_var, ivar, false);
+                bool_vector_iset(has_var.get(), ivar, false);
             }
         }
     }
 
     if (fmt->print_header)
-        rd_sum_fprintf_header(rd_sum, var_list, has_var, stream, fmt);
+        rd_sum_fprintf_header(rd_sum, var_list, has_var.get(), stream, fmt);
 
     if (report_only) {
         int first_report = rd_sum_get_first_report_step(rd_sum);
@@ -1084,23 +1073,19 @@ static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
                 int time_index;
                 time_index =
                     rd_sum_data_iget_report_end(rd_sum->data.get(), report);
-                __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var,
-                                      var_index, date_string, fmt);
+                __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var.get(),
+                                      var_index.get(), date_string.get(), fmt);
             }
         }
     } else {
         int time_index;
         for (time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
              time_index++)
-            __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var,
-                                  var_index, date_string, fmt);
+            __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var.get(),
+                                  var_index.get(), date_string.get(), fmt);
     }
-
-    int_vector_free(var_index);
-    bool_vector_free(has_var);
     if (current_locale != NULL)
         setlocale(LC_NUMERIC, current_locale);
-    free(date_string);
 }
 #undef DATE_STRING_LENGTH
 
@@ -1123,13 +1108,12 @@ void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
                        const stringlist_type *var_list, const char *date_format,
                        const char *sep) {
     FILE *stream = util_mkdir_fopen(filename, "w");
-    char *date_header = util_alloc_sprintf("DAYS%sDATE", sep);
+    std::string date_header = fmt::format("DAYS{}DATE", sep);
     bool report_only = false;
     rd_sum_fmt_type fmt;
-    rd_sum_fmt_init_csv(&fmt, date_format, date_header, sep);
+    rd_sum_fmt_init_csv(&fmt, date_format, date_header.c_str(), sep);
     rd_sum_fprintf(rd_sum, stream, var_list, report_only, &fmt);
     fclose(stream);
-    free(date_header);
 }
 
 const rd_sum_type *rd_sum_get_restart_case(const rd_sum_type *rd_sum) {
@@ -1249,20 +1233,21 @@ time_t_vector_type *rd_sum_alloc_time_solution(const rd_sum_type *rd_sum,
                                                const char *gen_key,
                                                double cmp_value,
                                                bool rates_clamp_lower) {
-    time_t_vector_type *solution = time_t_vector_alloc(0, 0);
+    auto solution = make_time_t_vector(0, 0);
     {
-        double_vector_type *seconds = rd_sum_alloc_seconds_solution(
-            rd_sum, gen_key, cmp_value, rates_clamp_lower);
+        std::unique_ptr<double_vector_type, decltype(&double_vector_free)>
+            seconds{rd_sum_alloc_seconds_solution(rd_sum, gen_key, cmp_value,
+                                                  rates_clamp_lower),
+                    &double_vector_free};
         time_t start_time = rd_sum_get_start_time(rd_sum);
-        for (int i = 0; i < double_vector_size(seconds); i++) {
+        for (int i = 0; i < double_vector_size(seconds.get()); i++) {
             time_t t = start_time;
-            util_inplace_forward_seconds_utc(&t,
-                                             double_vector_iget(seconds, i));
-            time_t_vector_append(solution, t);
+            util_inplace_forward_seconds_utc(
+                &t, double_vector_iget(seconds.get(), i));
+            time_t_vector_append(solution.get(), t);
         }
-        double_vector_free(seconds);
     }
-    return solution;
+    return solution.release();
 }
 
 ert_rd_unit_enum rd_sum_get_unit_system(const rd_sum_type *rd_sum) {
