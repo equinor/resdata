@@ -2,6 +2,7 @@
 
 #include <ctime>
 
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -124,3 +125,14 @@ const rd::smspec_node *rd_smspec_add_node(rd_smspec_type *rd_smspec,
                                           const char *unit, const char *lgr,
                                           int lgr_i, int lgr_j, int lgr_k,
                                           float default_value);
+
+using rd_smspec_ptr =
+    std::unique_ptr<rd_smspec_type, decltype(&rd_smspec_free)>;
+
+inline rd_smspec_ptr read_smspec(const std::string &header_file,
+                                 const std::string &key_join_string,
+                                 bool include_restart) {
+    return {
+        rd_smspec_fread_alloc(header_file, key_join_string, include_restart),
+        &rd_smspec_free};
+}
