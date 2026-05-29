@@ -84,7 +84,7 @@ struct rd_sum_struct {
 
     bool fmt_case;
     bool unified;
-    char *key_join_string;
+    std::string key_join_string;
     std::string path;     /* Path as given for the case input */
     std::string abs_path; /* Absolute path. */
     std::string base;     /* Only the basename. */
@@ -119,7 +119,7 @@ void rd_sum_set_case(rd_sum_type *rd_sum, const char *input_arg) {
 }
 
 static rd_sum_type *rd_sum_alloc__(const char *input_arg,
-                                   const char *key_join_string) {
+                                   const std::string &key_join_string) {
     if (!rd_path_access(input_arg))
         return NULL;
 
@@ -127,7 +127,7 @@ static rd_sum_type *rd_sum_alloc__(const char *input_arg,
     UTIL_TYPE_ID_INIT(rd_sum, RD_SUM_ID);
 
     rd_sum_set_case(rd_sum, input_arg);
-    rd_sum->key_join_string = util_alloc_string_copy(key_join_string);
+    rd_sum->key_join_string = key_join_string;
 
     rd_sum->smspec = NULL;
     rd_sum->data = NULL;
@@ -178,8 +178,8 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
                          const stringlist_type *data_files,
                          bool include_restart, bool lazy_load,
                          int file_options) {
-    rd_sum->smspec = rd_smspec_fread_alloc(
-        header_file.c_str(), rd_sum->key_join_string, include_restart);
+    rd_sum->smspec = rd_smspec_fread_alloc(header_file, rd_sum->key_join_string,
+                                           include_restart);
     if (rd_sum->smspec) {
         bool fmt_file;
         rd_get_file_type(header_file.c_str(), &fmt_file, NULL);
@@ -612,8 +612,6 @@ void rd_sum_free(rd_sum_type *rd_sum) {
 
     if (rd_sum->smspec)
         rd_smspec_free(rd_sum->smspec);
-
-    free(rd_sum->key_join_string);
     delete rd_sum;
 }
 
@@ -761,8 +759,9 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
 
     //create elc_sum_resampled with TIME node only
     rd_sum_type *rd_sum_resampled = rd_sum_alloc_writer(
-        rd_case, rd_sum->fmt_case, rd_sum->unified, rd_sum->key_join_string,
-        input_start, time_in_days, grid_dims[0], grid_dims[1], grid_dims[2]);
+        rd_case, rd_sum->fmt_case, rd_sum->unified,
+        rd_sum->key_join_string.c_str(), input_start, time_in_days,
+        grid_dims[0], grid_dims[1], grid_dims[2]);
 
     //add remaining nodes
     for (int i = 0; i < rd_smspec_num_nodes(rd_sum->smspec); i++) {

@@ -3,6 +3,7 @@
 #include <ctime>
 
 #include <vector>
+#include <string>
 
 #include <ert/util/float_vector.hpp>
 #include <ert/util/stringlist.hpp>
@@ -50,8 +51,8 @@ rd_smspec_type *rd_smspec_alloc_writer(const char *key_join_string,
 void rd_smspec_fwrite(const rd_smspec_type *smspec, const char *rd_case,
                       bool fmt_file);
 
-rd_smspec_type *rd_smspec_fread_alloc(const char *header_file,
-                                      const char *key_join_string,
+rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
+                                      const std::string &key_join_string,
                                       bool include_restart);
 void rd_smspec_free(rd_smspec_type *);
 

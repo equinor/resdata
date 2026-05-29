@@ -237,8 +237,8 @@ int rd_smspec_get_params_size(const rd_smspec_type *smspec) {
     return smspec->params_size;
 }
 
-static rd_smspec_type *rd_smspec_alloc_empty(bool write_mode,
-                                             const char *key_join_string) {
+static rd_smspec_type *
+rd_smspec_alloc_empty(bool write_mode, const std::string &key_join_string) {
     rd_smspec_type *rd_smspec = new rd_smspec_type();
     UTIL_TYPE_ID_INIT(rd_smspec, RD_SMSPEC_ID);
 
@@ -864,9 +864,9 @@ static bool rd_smspec_check_header(rd_file_type *header) {
 }
 
 static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
-                                   const char *header_file,
+                                   const std::string &header_file,
                                    bool include_restart) {
-    rd_file_type *header = rd_file_open(header_file, 0);
+    rd_file_type *header = rd_file_open(header_file.c_str(), 0);
     if (header && rd_smspec_check_header(header)) {
         const char *names_alias = get_active_keyword_alias(header, WGNAMES_KW);
         rd_kw_type *wells = rd_file_iget_named_kw(header, names_alias, 0);
@@ -940,7 +940,7 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
         rd_smspec->restart_step =
             rd_kw_iget_int(dimens, DIMENS_SMSPEC_RESTART_STEP_INDEX);
 
-        rd_get_file_type(header_file, &rd_smspec->formatted, NULL);
+        rd_get_file_type(header_file.c_str(), &rd_smspec->formatted, NULL);
 
         {
             for (params_index = 0; params_index < rd_kw_get_size(wells);
@@ -993,7 +993,7 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
             }
         }
 
-        char *header_str = util_alloc_realpath(header_file);
+        char *header_str = util_alloc_realpath(header_file.c_str());
         rd_smspec->header_file = header_str;
         free(header_str);
         if (include_restart)
@@ -1006,8 +1006,8 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
         return false;
 }
 
-rd_smspec_type *rd_smspec_fread_alloc(const char *header_file,
-                                      const char *key_join_string,
+rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
+                                      const std::string &key_join_string,
                                       bool include_restart) {
     rd_smspec_type *rd_smspec = rd_smspec_alloc_empty(false, key_join_string);
 
