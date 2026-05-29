@@ -1914,11 +1914,6 @@ static void rd_grid_install_lgr_GRID(rd_grid_type *host_grid,
     rd_grid_install_lgr_common(host_grid, lgr_grid);
 }
 
-static std::string rd_kw_iget_stripped_string(const rd_kw_type *kw, int index) {
-    return rd::strip_spaces(
-        static_cast<const char *>(rd_kw_iget_ptr(kw, index)));
-}
-
 /**
    sets the name of the lgr and the name of the parent, if this is a
    nested lgr. for normal lgr descending directly from the coarse grid
