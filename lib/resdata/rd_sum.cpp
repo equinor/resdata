@@ -31,7 +31,6 @@
 #include <resdata/rd_sum_vector.hpp>
 #include <resdata/rd_sum_data.hpp>
 #include <resdata/rd_smspec.hpp>
-#include <resdata/rd_sum_data.hpp>
 #include <resdata/smspec_node.hpp>
 
 #include <detail/util/path.hpp>
