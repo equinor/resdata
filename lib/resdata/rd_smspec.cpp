@@ -237,10 +237,10 @@ int rd_smspec_get_params_size(const rd_smspec_type *smspec) {
     return smspec->params_size;
 }
 
-static rd_smspec_type *
-rd_smspec_alloc_empty(bool write_mode, const std::string &key_join_string) {
-    rd_smspec_type *rd_smspec = new rd_smspec_type();
-    UTIL_TYPE_ID_INIT(rd_smspec, RD_SMSPEC_ID);
+static rd_smspec_ptr rd_smspec_alloc_empty(bool write_mode,
+                                           const std::string &key_join_string) {
+    rd_smspec_ptr rd_smspec{new rd_smspec_type(), &rd_smspec_free};
+    UTIL_TYPE_ID_INIT(rd_smspec.get(), RD_SMSPEC_ID);
 
     rd_smspec->sim_start_time = -1;
     rd_smspec->key_join_string = key_join_string;
@@ -486,7 +486,7 @@ static rd_smspec_type *
 rd_smspec_alloc_writer__(const char *key_join_string, const char *restart_case,
                          int restart_step, time_t sim_start, bool time_in_days,
                          int nx, int ny, int nz) {
-    rd_smspec_type *rd_smspec = rd_smspec_alloc_empty(true, key_join_string);
+    rd_smspec_ptr rd_smspec = rd_smspec_alloc_empty(true, key_join_string);
     /*
     Only a total of 9 * 8 characters is set aside for the restart keyword, if
     the supplied restart case is longer than that we silently ignore it.
@@ -508,14 +508,14 @@ rd_smspec_alloc_writer__(const char *key_join_string, const char *restart_case,
 
         if (time_in_days) {
             rd_smspec->time_seconds = 3600 * 24;
-            time_node = rd_smspec_add_node(rd_smspec, "TIME", "DAYS", 0);
+            time_node = rd_smspec_add_node(rd_smspec.get(), "TIME", "DAYS", 0);
         } else {
             rd_smspec->time_seconds = 3600;
-            time_node = rd_smspec_add_node(rd_smspec, "TIME", "HOURS", 0);
+            time_node = rd_smspec_add_node(rd_smspec.get(), "TIME", "HOURS", 0);
         }
         rd_smspec->time_index = time_node->get_params_index();
     }
-    return rd_smspec;
+    return rd_smspec.release();
 }
 
 rd_smspec_type *rd_smspec_alloc_restart_writer(
@@ -1001,9 +1001,9 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
 rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
                                       const std::string &key_join_string,
                                       bool include_restart) {
-    rd_smspec_type *rd_smspec = rd_smspec_alloc_empty(false, key_join_string);
+    rd_smspec_ptr rd_smspec = rd_smspec_alloc_empty(false, key_join_string);
 
-    if (rd_smspec_fread_header(rd_smspec, header_file, include_restart)) {
+    if (rd_smspec_fread_header(rd_smspec.get(), header_file, include_restart)) {
 
         const rd::smspec_node *time_node =
             rd_smspec_get_var_node(rd_smspec->misc_var_index, "TIME");
@@ -1042,13 +1042,12 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
                        "information, need either TIME, or DAY/MONTH/YEAR "
                        "information. Can not proceed.",
                        __func__);
-            return NULL;
+            return nullptr;
         }
-        return rd_smspec;
+        return rd_smspec.release();
     } else {
         /** Failed to load from disk. */
-        rd_smspec_free(rd_smspec);
-        return NULL;
+        return nullptr;
     }
 }
 
