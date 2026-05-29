@@ -379,20 +379,20 @@ static void rd_smspec_fwrite_DIMENS(const rd_smspec_type *smspec,
 
 static void rd_smspec_fwrite_STARTDAT(const rd_smspec_type *smspec,
                                       fortio_type *fortio) {
-    rd_kw_type *startdat_kw = rd_kw_alloc(STARTDAT_KW, STARTDAT_SIZE, RD_INT);
+    auto startdat_kw = make_rd_kw(STARTDAT_KW, STARTDAT_SIZE, RD_INT);
     int second, minute, hour, mday, month, year;
     rd_set_datetime_values(smspec->sim_start_time, &second, &minute, &hour,
                            &mday, &month, &year);
 
-    rd_kw_iset_int(startdat_kw, STARTDAT_DAY_INDEX, mday);
-    rd_kw_iset_int(startdat_kw, STARTDAT_MONTH_INDEX, month);
-    rd_kw_iset_int(startdat_kw, STARTDAT_YEAR_INDEX, year);
-    rd_kw_iset_int(startdat_kw, STARTDAT_HOUR_INDEX, hour);
-    rd_kw_iset_int(startdat_kw, STARTDAT_MINUTE_INDEX, minute);
-    rd_kw_iset_int(startdat_kw, STARTDAT_MICRO_SECOND_INDEX, second * 1000000);
+    rd_kw_iset_int(startdat_kw.get(), STARTDAT_DAY_INDEX, mday);
+    rd_kw_iset_int(startdat_kw.get(), STARTDAT_MONTH_INDEX, month);
+    rd_kw_iset_int(startdat_kw.get(), STARTDAT_YEAR_INDEX, year);
+    rd_kw_iset_int(startdat_kw.get(), STARTDAT_HOUR_INDEX, hour);
+    rd_kw_iset_int(startdat_kw.get(), STARTDAT_MINUTE_INDEX, minute);
+    rd_kw_iset_int(startdat_kw.get(), STARTDAT_MICRO_SECOND_INDEX,
+                   second * 1000000);
 
-    rd_kw_fwrite(startdat_kw, fortio);
-    rd_kw_free(startdat_kw);
+    rd_kw_fwrite(startdat_kw.get(), fortio);
 }
 
 static void rd_smspec_fortio_fwrite(const rd_smspec_type *smspec,
