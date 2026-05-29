@@ -359,18 +359,20 @@ static void rd_smspec_fwrite_RESTART(const rd_smspec_type *smspec,
 
 static void rd_smspec_fwrite_DIMENS(const rd_smspec_type *smspec,
                                     fortio_type *fortio) {
-    rd_kw_type *dimens_kw = rd_kw_alloc(DIMENS_KW, DIMENS_SIZE, RD_INT);
+    rd_kw_ptr dimens_kw = make_rd_kw(DIMENS_KW, DIMENS_SIZE, RD_INT);
     int num_nodes = rd_smspec_num_nodes(smspec);
-    rd_kw_iset_int(dimens_kw, DIMENS_SMSPEC_SIZE_INDEX, num_nodes);
-    rd_kw_iset_int(dimens_kw, DIMENS_SMSPEC_NX_INDEX, smspec->grid_dims[0]);
-    rd_kw_iset_int(dimens_kw, DIMENS_SMSPEC_NY_INDEX, smspec->grid_dims[1]);
-    rd_kw_iset_int(dimens_kw, DIMENS_SMSPEC_NZ_INDEX, smspec->grid_dims[2]);
-    rd_kw_iset_int(dimens_kw, 4, 0); // Do not know what this is for.
-    rd_kw_iset_int(dimens_kw, DIMENS_SMSPEC_RESTART_STEP_INDEX,
+    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_SIZE_INDEX, num_nodes);
+    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_NX_INDEX,
+                   smspec->grid_dims[0]);
+    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_NY_INDEX,
+                   smspec->grid_dims[1]);
+    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_NZ_INDEX,
+                   smspec->grid_dims[2]);
+    rd_kw_iset_int(dimens_kw.get(), 4, 0); // Do not know what this is for.
+    rd_kw_iset_int(dimens_kw.get(), DIMENS_SMSPEC_RESTART_STEP_INDEX,
                    smspec->restart_step);
 
-    rd_kw_fwrite(dimens_kw, fortio);
-    rd_kw_free(dimens_kw);
+    rd_kw_fwrite(dimens_kw.get(), fortio);
 }
 
 static void rd_smspec_fwrite_STARTDAT(const rd_smspec_type *smspec,
