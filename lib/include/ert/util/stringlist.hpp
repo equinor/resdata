@@ -53,5 +53,14 @@ UTIL_IS_INSTANCE_HEADER(stringlist);
 
 #ifdef __cplusplus
 }
+#include <memory>
+
+using stringlist_ptr =
+    std::unique_ptr<stringlist_type, decltype(&stringlist_free)>;
+
+inline stringlist_ptr make_stringlist() {
+    return {stringlist_alloc_new(), &stringlist_free};
+}
+
 #endif
 #endif

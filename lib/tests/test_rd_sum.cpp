@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <sstream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -76,13 +77,12 @@ time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
                             spec.start_time, true, spec.nx, spec.ny, spec.nz),
         &rd_sum_free);
 
-    rd_smspec_type *smspec = rd_sum_get_smspec(rd_sum.get());
     const rd::smspec_node *fopt =
-        rd_smspec_add_node(smspec, "FOPT", "SM3", 99.0f);
+        rd_sum_add_var(rd_sum.get(), "FOPT", nullptr, 0, "SM3", 99.0f);
     const rd::smspec_node *bpr =
-        rd_smspec_add_node(smspec, "BPR", 567, "BARS", 0.0f);
+        rd_sum_add_var(rd_sum.get(), "BPR", nullptr, 567, "BARS", 0.0f);
     const rd::smspec_node *wwct =
-        rd_smspec_add_node(smspec, "WWCT", "OP-1", "(1)", 0.0f);
+        rd_sum_add_var(rd_sum.get(), "WWCT", "OP-1", 0, "(1)", 0.0f);
 
     double sim_seconds = spec.start_seconds;
     for (int report_step = 0; report_step < spec.num_report_steps;
@@ -122,12 +122,37 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE(rd_sum_get_start_time(rd_sum.get()) == spec.start_time);
             REQUIRE(rd_sum_get_data_start(rd_sum.get()) == spec.start_time);
             REQUIRE(rd_sum_get_end_time(rd_sum.get()) == end_time);
+            REQUIRE_THAT(rd_sum_get_first_day(rd_sum.get()),
+                         WithinAbs(spec.start_seconds / 86400.0, 1e-9));
+            const double last_sim_days =
+                (spec.num_report_steps * spec.num_ministep - 1) *
+                spec.ministep_length / 86400.0;
+            REQUIRE_THAT(rd_sum_get_sim_length(rd_sum.get()),
+                         WithinAbs(last_sim_days, 1e-6));
         }
 
         SECTION("report steps") {
             REQUIRE(rd_sum_get_first_report_step(rd_sum.get()) == 1);
             REQUIRE(rd_sum_get_last_report_step(rd_sum.get()) ==
                     spec.num_report_steps);
+            REQUIRE(rd_sum_iget_report_step(rd_sum.get(), 0) == 1);
+            REQUIRE(rd_sum_iget_report_step(rd_sum.get(), spec.num_ministep) ==
+                    2);
+            REQUIRE(rd_sum_iget_report_end(rd_sum.get(), 1) ==
+                    spec.num_ministep - 1);
+            const double end_of_first_report_days =
+                (spec.num_ministep - 1) * spec.ministep_length / 86400.0;
+            REQUIRE(rd_sum_get_report_step_from_days(
+                        rd_sum.get(), end_of_first_report_days) == 1);
+            REQUIRE_THROWS_AS(
+                rd_sum_iget_report_end(rd_sum.get(), spec.num_report_steps + 1),
+                std::invalid_argument);
+            REQUIRE_THROWS_AS(rd_sum_iget_report_step(rd_sum.get(), -1),
+                              std::invalid_argument);
+            REQUIRE_THROWS_AS(
+                rd_sum_iget_report_step(
+                    rd_sum.get(), spec.num_report_steps * spec.num_ministep),
+                std::invalid_argument);
         }
 
         SECTION("rd_sum_is_instance") {
@@ -145,6 +170,9 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE(rd_sum_has_key(rd_sum.get(), "WWCT:OP-1"));
             REQUIRE(rd_sum_has_general_var(rd_sum.get(), "FOPT"));
             REQUIRE_FALSE(rd_sum_has_key(rd_sum.get(), "NO_SUCH_KEY"));
+            REQUIRE(rd_sum_identify_var_type("FOPT") == RD_SMSPEC_FIELD_VAR);
+            REQUIRE(rd_sum_identify_var_type("WWCT") == RD_SMSPEC_WELL_VAR);
+            REQUIRE(rd_sum_identify_var_type("BPR") == RD_SMSPEC_BLOCK_VAR);
         }
 
         THEN("units are stored") {
@@ -154,6 +182,7 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
                     "BARS");
             REQUIRE(std::string(rd_sum_get_unit(rd_sum.get(), "WWCT:OP-1")) ==
                     "(1)");
+            REQUIRE(rd_sum_get_unit_system(rd_sum.get()) == RD_METRIC_UNITS);
         }
 
         THEN("first and last values agree with the linear model") {
@@ -176,13 +205,20 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             const int n = rd_sum_get_data_length(rd_sum.get());
             for (int i = 0; i < n; ++i) {
                 const double expected = i * spec.ministep_length;
+                time_t expected_time = spec.start_time;
+                util_inplace_forward_seconds_utc(&expected_time, expected);
+
                 REQUIRE_THAT(rd_sum_get_general_var(rd_sum.get(), i, "FOPT"),
                              WithinAbs(expected, 1e-3));
                 REQUIRE_THAT(rd_sum_iget_sim_days(rd_sum.get(), i),
                              WithinAbs(expected / 86400.0, 1e-6));
+                REQUIRE_THAT(rd_sum_get_general_var_from_sim_time(
+                                 rd_sum.get(), expected_time, "FOPT"),
+                             WithinAbs(expected, 1e-3));
+                REQUIRE_THAT(rd_sum_get_general_var_from_sim_days(
+                                 rd_sum.get(), static_cast<double>(i), "FOPT"),
+                             WithinAbs(expected, 1e-3));
 
-                time_t expected_time = spec.start_time;
-                util_inplace_forward_seconds_utc(&expected_time, expected);
                 REQUIRE(rd_sum_iget_sim_time(rd_sum.get(), i) == expected_time);
             }
         }
@@ -191,22 +227,87 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE_THROWS_AS(
                 rd_sum_get_general_var(rd_sum.get(), 0, "NO_SUCH_KEY"),
                 std::out_of_range);
+            REQUIRE_THROWS_AS(rd_sum_get_general_var_params_index(
+                                  rd_sum.get(), "NO_SUCH_KEY"),
+                              std::out_of_range);
+            REQUIRE_THROWS_AS(
+                rd_sum_get_general_var_node(rd_sum.get(), "NO_SUCH_KEY"),
+                std::out_of_range);
+        }
+
+        THEN("iget with out-of-range internal index throws") {
+            const int n = rd_sum_get_data_length(rd_sum.get());
+            REQUIRE_THROWS_AS(rd_sum_iget_sim_time(rd_sum.get(), -1),
+                              std::invalid_argument);
+            REQUIRE_THROWS_AS(rd_sum_iget_sim_time(rd_sum.get(), n),
+                              std::invalid_argument);
+            REQUIRE_THROWS_AS(rd_sum_iget_sim_days(rd_sum.get(), n),
+                              std::invalid_argument);
+        }
+
+        THEN("first_gt returns the first index exceeding the limit") {
+            const int fopt_idx =
+                rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
+
+            REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx, -1.0) == 0);
+            REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx, 0.0) == 1);
+            REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx,
+                                        spec.ministep_length) == 2);
+            REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx,
+                                        2.5 * spec.ministep_length) == 3);
+
+            const double last_sim_seconds =
+                (spec.num_report_steps * spec.num_ministep - 1) *
+                spec.ministep_length;
+            REQUIRE(rd_sum_get_first_gt(rd_sum.get(), fopt_idx,
+                                        last_sim_seconds) == -1);
+
+            const int bpr_idx =
+                rd_sum_get_general_var_params_index(rd_sum.get(), "BPR:567");
+            REQUIRE(rd_sum_get_first_gt(rd_sum.get(), bpr_idx,
+                                        10.0 * spec.ministep_length) == 2);
+        }
+
+        THEN("first_lt returns the first index below the limit") {
+            const int fopt_idx =
+                rd_sum_get_general_var_params_index(rd_sum.get(), "FOPT");
+
+            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, 1.0) == 0);
+            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, 0.0) == -1);
+            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), fopt_idx, -1.0) == -1);
+
+            const int wwct_idx =
+                rd_sum_get_general_var_params_index(rd_sum.get(), "WWCT:OP-1");
+            REQUIRE(rd_sum_get_first_lt(rd_sum.get(), wwct_idx, 1.0) == 0);
         }
 
         THEN("matching general var list collects keys") {
-            auto list =
-                std::unique_ptr<stringlist_type, void (*)(stringlist_type *)>(
-                    rd_sum_alloc_matching_general_var_list(rd_sum.get(), "F*"),
-                    &stringlist_free);
+            auto list = stringlist_ptr(
+                rd_sum_alloc_matching_general_var_list(rd_sum.get(), "F*"),
+                &stringlist_free);
             REQUIRE(stringlist_get_size(list.get()) == 1);
             REQUIRE(std::string(stringlist_iget(list.get(), 0)) == "FOPT");
         }
 
+        THEN("select_matching_general_var_list appends new matches") {
+            auto keys = make_stringlist();
+
+            rd_sum_select_matching_general_var_list(rd_sum.get(), "F*",
+                                                    keys.get());
+            REQUIRE(stringlist_get_size(keys.get()) == 1);
+            REQUIRE(std::string(stringlist_iget(keys.get(), 0)) == "FOPT");
+
+            rd_sum_select_matching_general_var_list(rd_sum.get(), "W*",
+                                                    keys.get());
+            REQUIRE(stringlist_get_size(keys.get()) == 2);
+            REQUIRE(stringlist_contains(keys.get(), "FOPT"));
+            REQUIRE(stringlist_contains(keys.get(), "WWCT:OP-1"));
+        }
+
         THEN("well list returns the producer") {
             auto wells =
-                std::unique_ptr<stringlist_type, void (*)(stringlist_type *)>(
-                    rd_sum_alloc_well_list(rd_sum.get(), nullptr),
-                    &stringlist_free);
+                stringlist_ptr(rd_sum_alloc_well_list(rd_sum.get(), nullptr),
+                               &stringlist_free);
             REQUIRE(stringlist_get_size(wells.get()) == 1);
             REQUIRE(std::string(stringlist_iget(wells.get(), 0)) == "OP-1");
         }
@@ -260,12 +361,279 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
                     rd_sum_get_data_length(rd_sum.get()));
             REQUIRE_THAT(double_vector_iget(data.get(), 0),
                          WithinAbs(0.0, 1e-6));
+
+            REQUIRE_THROWS_AS(
+                rd_sum_alloc_data_vector(rd_sum.get(), 9999, false),
+                std::out_of_range);
         }
 
         THEN("rd_smspec_equal is reflexive on the loaded smspec") {
             const rd_smspec_type *smspec = rd_sum_get_smspec(rd_sum.get());
             REQUIRE(rd_smspec_equal(smspec, smspec));
         }
+
+        WHEN("calling rd_sum_alloc_time_solution") {
+            using time_vec_ptr =
+                std::unique_ptr<time_t_vector_type,
+                                void (*)(time_t_vector_type *)>;
+            auto solve = [&](const char *key, double cmp,
+                             bool clamp_lower = false) {
+                return time_vec_ptr(rd_sum_alloc_time_solution(
+                                        rd_sum.get(), key, cmp, clamp_lower),
+                                    &time_t_vector_free);
+            };
+
+            const double day = spec.ministep_length;
+
+            THEN("Solving for monotonic gives single crossing") {
+                auto sol = solve("FOPT", 1.5 * day);
+                REQUIRE(time_t_vector_size(sol.get()) == 1);
+                time_t expected = spec.start_time;
+                util_inplace_forward_seconds_utc(&expected, 1.5 * day);
+                REQUIRE(time_t_vector_iget(sol.get(), 0) == expected);
+            }
+
+            THEN("Solving for exact sample returns that value") {
+                auto sol = solve("FOPT", 2.0 * day);
+                REQUIRE(time_t_vector_size(sol.get()) == 1);
+                REQUIRE(time_t_vector_iget(sol.get(), 0) ==
+                        rd_sum_iget_sim_time(rd_sum.get(), 2));
+            }
+
+            THEN("value below the series range yields empty") {
+                auto sol = solve("FOPT", -1.0);
+                REQUIRE(sol.get() != nullptr);
+                REQUIRE(time_t_vector_size(sol.get()) == 0);
+            }
+
+            THEN("value above the series range yields empty") {
+                const double last =
+                    (spec.num_report_steps * spec.num_ministep - 1) * day;
+                auto sol = solve("FOPT", 10.0 * last);
+                REQUIRE(sol.get() != nullptr);
+                REQUIRE(time_t_vector_size(sol.get()) == 0);
+            }
+
+            THEN("resolution uses the requested key") {
+                auto fopt_sol = solve("FOPT", 1.5 * day);
+                auto bpr_sol = solve("BPR:567", 10.0 * 1.5 * day);
+                REQUIRE(time_t_vector_size(bpr_sol.get()) == 1);
+                REQUIRE(time_t_vector_iget(bpr_sol.get(), 0) ==
+                        time_t_vector_iget(fopt_sol.get(), 0));
+            }
+
+            THEN("rate variable with rates_clamp_lower=true picks the lower "
+                 "edge") {
+                auto sol = solve("WWCT:OP-1", 100.0 * 1.5 * day,
+                                 /*clamp_lower=*/true);
+                REQUIRE(time_t_vector_size(sol.get()) == 1);
+                time_t expected = spec.start_time;
+                util_inplace_forward_seconds_utc(&expected, day + 1);
+                REQUIRE(time_t_vector_iget(sol.get(), 0) == expected);
+            }
+
+            THEN("rate variable with rates_clamp_lower=false picks the upper "
+                 "edge") {
+                auto sol = solve("WWCT:OP-1", 100.0 * 1.5 * day,
+                                 /*clamp_lower=*/false);
+                REQUIRE(time_t_vector_size(sol.get()) == 1);
+                REQUIRE(time_t_vector_iget(sol.get(), 0) ==
+                        rd_sum_iget_sim_time(rd_sum.get(), 2));
+            }
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir,
+                 "rd_sum_alloc_time_solution finds multiple crossings on a "
+                 "non-monotonic series") {
+    const auto case_path = (dirname / "NMCASE").string();
+    const time_t start_time = util_make_date_utc(1, 1, 2010);
+    const double dt = 86400.0;
+    const std::vector<double> samples{0.0, 1.0, 2.0, 3.0, 2.0, 1.0, 0.0};
+
+    {
+        auto rd_sum =
+            rd_sum_ptr(rd_sum_alloc_writer(case_path.c_str(), /*fmt=*/false,
+                                           /*unified=*/true, ":", start_time,
+                                           true, 10, 10, 10),
+                       &rd_sum_free);
+        const rd::smspec_node *bpr =
+            rd_sum_add_var(rd_sum.get(), "BPR", nullptr, 567, "BARS", 0.0f);
+
+        double sim_seconds = 0.0;
+        for (std::size_t i = 0; i < samples.size(); ++i) {
+            rd_sum_tstep_type *tstep = rd_sum_add_tstep(
+                rd_sum.get(), static_cast<int>(i) + 1, sim_seconds);
+            rd_sum_tstep_set_from_node(tstep, *bpr, samples[i]);
+            sim_seconds += dt;
+        }
+        rd_sum_fwrite(rd_sum.get());
+    }
+
+    auto rd_sum = read_summary(case_path);
+
+    auto sol =
+        std::unique_ptr<time_t_vector_type, void (*)(time_t_vector_type *)>(
+            rd_sum_alloc_time_solution(rd_sum.get(), "BPR:567", 1.5,
+                                       /*rates_clamp_lower=*/false),
+            &time_t_vector_free);
+
+    REQUIRE(time_t_vector_size(sol.get()) == 2);
+
+    time_t rising = start_time;
+    util_inplace_forward_seconds_utc(&rising, 1.5 * dt);
+    time_t falling = start_time;
+    util_inplace_forward_seconds_utc(&falling, 4.5 * dt);
+
+    REQUIRE(time_t_vector_iget(sol.get(), 0) == rising);
+    REQUIRE(time_t_vector_iget(sol.get(), 1) == falling);
+    REQUIRE(time_t_vector_iget(sol.get(), 0) <
+            time_t_vector_iget(sol.get(), 1));
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_sum_add_local_var registers LGR smspec nodes") {
+    GIVEN("A writer with local variables added") {
+        const auto case_path = (dirname / "LOCALCASE").string();
+        const time_t start_time = util_make_date_utc(1, 1, 2010);
+
+        auto rd_sum =
+            rd_sum_ptr(rd_sum_alloc_writer(case_path.c_str(), /*fmt=*/false,
+                                           /*unified=*/true, ":", start_time,
+                                           true, 10, 10, 10),
+                       &rd_sum_free);
+
+        const rd::smspec_node *lwell = rd_sum_add_local_var(
+            rd_sum.get(), "LWOPR", "OP-1", 0, "SM3/DAY", "LGR1", 1, 2, 3, 0.0f);
+        const rd::smspec_node *lblock = rd_sum_add_local_var(
+            rd_sum.get(), "LBPR", "", 0, "BARS", "LGR1", 4, 5, 6, 0.0f);
+        const rd::smspec_node *lcompl = rd_sum_add_local_var(
+            rd_sum.get(), "LCPR", "OP-1", 0, "SM3/DAY", "LGR1", 7, 8, 9, 0.0f);
+
+        THEN("registers local well, block and completion variables") {
+            REQUIRE(lwell != nullptr);
+            REQUIRE(lblock != nullptr);
+            REQUIRE(lcompl != nullptr);
+
+            REQUIRE(std::string(lwell->get_keyword()) == "LWOPR");
+            REQUIRE(std::string(lwell->get_lgr_name()) == "LGR1");
+            REQUIRE(std::string(lwell->get_wgname()) == "OP-1");
+
+            REQUIRE(std::string(lblock->get_keyword()) == "LBPR");
+            REQUIRE(std::string(lblock->get_lgr_name()) == "LGR1");
+            REQUIRE(lblock->get_lgr_ijk()[0] == 4);
+            REQUIRE(lblock->get_lgr_ijk()[1] == 5);
+            REQUIRE(lblock->get_lgr_ijk()[2] == 6);
+
+            REQUIRE(std::string(lcompl->get_keyword()) == "LCPR");
+            REQUIRE(std::string(lcompl->get_lgr_name()) == "LGR1");
+            REQUIRE(std::string(lcompl->get_wgname()) == "OP-1");
+            REQUIRE(lcompl->get_lgr_ijk()[0] == 7);
+            REQUIRE(lcompl->get_lgr_ijk()[1] == 8);
+            REQUIRE(lcompl->get_lgr_ijk()[2] == 9);
+        }
+
+        THEN("generated gen_key follows the LOCAL_* format") {
+            REQUIRE(std::string(lwell->get_gen_key1()) == "LWOPR:LGR1:OP-1");
+            REQUIRE(std::string(lblock->get_gen_key1()) == "LBPR:LGR1:4,5,6");
+            REQUIRE(std::string(lcompl->get_gen_key1()) ==
+                    "LCPR:LGR1:OP-1:7,8,9");
+        }
+
+        THEN("adding a local var after a timestep has been written throws") {
+            auto rd_sum =
+                rd_sum_ptr(rd_sum_alloc_writer(case_path.c_str(), /*fmt=*/false,
+                                               /*unified=*/true, ":",
+                                               start_time, true, 10, 10, 10),
+                           &rd_sum_free);
+
+            const rd::smspec_node *fopt =
+                rd_sum_add_var(rd_sum.get(), "FOPT", nullptr, 0, "SM3", 0.0f);
+            rd_sum_tstep_type *tstep = rd_sum_add_tstep(rd_sum.get(), 1, 0.0);
+            rd_sum_tstep_set_from_node(tstep, *fopt, 0.0);
+
+            REQUIRE_THROWS_AS(rd_sum_add_local_var(rd_sum.get(), "LWOPR",
+                                                   "OP-1", 0, "SM3/DAY", "LGR1",
+                                                   1, 2, 3, 0.0f),
+                              std::invalid_argument);
+            REQUIRE_THROWS_AS(rd_sum_add_var(rd_sum.get(), "WOPR", "OP-1", 0,
+                                             "SM3/DAY", 0.0f),
+                              std::invalid_argument);
+        }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "rd_sum_alloc_group_list returns group names") {
+    const auto case_path = (dirname / "GCASE").string();
+
+    {
+        auto rd_sum =
+            rd_sum_ptr(rd_sum_alloc_writer(
+                           case_path.c_str(), /*fmt_output=*/false,
+                           /*unified=*/true, ":",
+                           util_make_date_utc(1, 1, 2010), true, 10, 10, 10),
+                       &rd_sum_free);
+
+        const rd::smspec_node *gopr_g1 =
+            rd_sum_add_var(rd_sum.get(), "GOPR", "G1", 0, "SM3/DAY", 0.0f);
+        const rd::smspec_node *gopt_g1 =
+            rd_sum_add_var(rd_sum.get(), "GOPT", "G1", 0, "SM3", 0.0f);
+        const rd::smspec_node *gwct_g2 =
+            rd_sum_add_var(rd_sum.get(), "GWCT", "G2", 0, "(1)", 0.0f);
+        const rd::smspec_node *ggpr_north =
+            rd_sum_add_var(rd_sum.get(), "GGPR", "NORTH", 0, "SM3/DAY", 0.0f);
+        const rd::smspec_node *wopr_op1 =
+            rd_sum_add_var(rd_sum.get(), "WOPR", "OP-1", 0, "SM3/DAY", 0.0f);
+
+        rd_sum_tstep_type *tstep = rd_sum_add_tstep(rd_sum.get(), 1, 0.0);
+        rd_sum_tstep_set_from_node(tstep, *gopr_g1, 0.0);
+        rd_sum_tstep_set_from_node(tstep, *gopt_g1, 0.0);
+        rd_sum_tstep_set_from_node(tstep, *gwct_g2, 0.0);
+        rd_sum_tstep_set_from_node(tstep, *ggpr_north, 0.0);
+        rd_sum_tstep_set_from_node(tstep, *wopr_op1, 0.0);
+        rd_sum_fwrite(rd_sum.get());
+    }
+
+    auto rd_sum = read_summary(case_path);
+
+    SECTION("null pattern enumerates all unique groups") {
+        auto groups = stringlist_ptr(
+            rd_sum_alloc_group_list(rd_sum.get(), nullptr), &stringlist_free);
+        REQUIRE(stringlist_get_size(groups.get()) == 3);
+        REQUIRE(stringlist_contains(groups.get(), "G1"));
+        REQUIRE(stringlist_contains(groups.get(), "G2"));
+        REQUIRE(stringlist_contains(groups.get(), "NORTH"));
+    }
+
+    SECTION("exact pattern matches a single group") {
+        auto groups = stringlist_ptr(
+            rd_sum_alloc_group_list(rd_sum.get(), "G1"), &stringlist_free);
+        REQUIRE(stringlist_get_size(groups.get()) == 1);
+        REQUIRE(std::string(stringlist_iget(groups.get(), 0)) == "G1");
+    }
+
+    SECTION("glob pattern matches a subset of groups") {
+        auto groups = stringlist_ptr(
+            rd_sum_alloc_group_list(rd_sum.get(), "G*"), &stringlist_free);
+        REQUIRE(stringlist_get_size(groups.get()) == 2);
+        REQUIRE(stringlist_contains(groups.get(), "G1"));
+        REQUIRE(stringlist_contains(groups.get(), "G2"));
+        REQUIRE_FALSE(stringlist_contains(groups.get(), "NORTH"));
+    }
+
+    SECTION("non-matching pattern returns an empty list") {
+        auto groups = stringlist_ptr(
+            rd_sum_alloc_group_list(rd_sum.get(), "DOES_NOT_EXIST"),
+            &stringlist_free);
+        REQUIRE(groups.get() != nullptr);
+        REQUIRE(stringlist_get_size(groups.get()) == 0);
+    }
+
+    SECTION("wildcard pattern returns only group names, never well names") {
+        auto groups = stringlist_ptr(rd_sum_alloc_group_list(rd_sum.get(), "*"),
+                                     &stringlist_free);
+        REQUIRE(stringlist_get_size(groups.get()) == 3);
+        REQUIRE_FALSE(stringlist_contains(groups.get(), "OP-1"));
     }
 }
 
@@ -284,9 +652,11 @@ TEST_CASE_METHOD(Tmpdir, "Loading a case with data before its parent in time") {
                                         /*unified=*/true, ":", spec.start_time,
                                         true, spec.nx, spec.ny, spec.nz),
             &rd_sum_free);
-        rd_smspec_type *smspec = rd_sum_get_smspec(restart_sum.get());
+
+        REQUIRE(rd_sum_can_write(restart_sum.get()));
+
         const rd::smspec_node *fopt =
-            rd_smspec_add_node(smspec, "FOPT", "SM3", 99.0f);
+            rd_sum_add_var(restart_sum.get(), "FOPT", nullptr, 0, "SM3", 99.0f);
         // The child case has a single ministep at sim_seconds = 0, i.e.
         // before the data_start in the parent.
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(restart_sum.get(), 1, 0.0);
@@ -329,9 +699,9 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
         rd_smspec_type *smspec = rd_sum_get_smspec(restart_sum.get());
         REQUIRE(rd_smspec_get_params_size(smspec) == 1);
         const rd::smspec_node *fopt =
-            rd_smspec_add_node(smspec, "FOPT", "SM3", 99.0f);
-        rd_smspec_add_node(smspec, "BPR", 567, "BARS", 0.0f);
-        rd_smspec_add_node(smspec, "WWCT", "OP-1", "(1)", 0.0f);
+            rd_sum_add_var(restart_sum.get(), "FOPT", nullptr, 0, "SM3", 99.0f);
+        rd_sum_add_var(restart_sum.get(), "BPR", nullptr, 567, "BARS", 0.0f);
+        rd_sum_add_var(restart_sum.get(), "WWCT", "OP-1", 0, "(1)", 0.0f);
         REQUIRE(rd_smspec_get_params_size(smspec) == 4);
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(restart_sum.get(), 1, 0.0);
         rd_sum_tstep_set_from_node(tstep, *fopt, 0.0);
@@ -839,12 +1209,10 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
                           path.c_str(), restart_from.c_str(), false, true, ":",
                           start_time, true, nx, ny, nz);
             auto sum = rd_sum_ptr(raw, &rd_sum_free);
-            rd_smspec_type *smspec = rd_sum_get_smspec(sum.get());
-
             std::vector<const rd::smspec_node *> nodes;
             for (int cell : bpr_cells)
-                nodes.push_back(
-                    rd_smspec_add_node(smspec, "BPR", cell, "BARS", 0.0f));
+                nodes.push_back(rd_sum_add_var(sum.get(), "BPR", nullptr, cell,
+                                               "BARS", 0.0f));
 
             const int num_steps =
                 bpr_data.empty() ? 0 : int(bpr_data[0].size());
@@ -1299,9 +1667,12 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
             REQUIRE(resampled);
 
             THEN("Report times line up with the requested vector") {
-                for (size_t i = 0; i < days.size(); i++)
-                    REQUIRE(rd_sum_get_report_time(resampled.get(), i) ==
-                            util_make_date_utc(days[i], 1, 2010));
+                for (size_t i = 0; i < days.size(); i++) {
+                    time_t date = util_make_date_utc(days[i], 1, 2010);
+                    REQUIRE(rd_sum_get_report_time(resampled.get(), i) == date);
+                    REQUIRE_THAT(rd_sum_time2days(resampled.get(), date),
+                                 WithinAbs(days[i] - 2, 1e-6));
+                }
             }
 
             const rd_smspec_type *smspec = rd_sum_get_smspec(resampled.get());
@@ -1330,5 +1701,226 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
                     WithinAbs(25920000.0, 1e-3));
             }
         }
+    }
+}
+
+TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
+    GIVEN("A summary case written into a subdirectory with a .DATA file") {
+        const fs::path subdir = dirname / "sub";
+        fs::create_directory(subdir);
+
+        const std::string base = "CASE";
+        const auto case_path = (subdir / base).string();
+        WriteSpec spec;
+        spec.num_report_steps = 2;
+        spec.num_ministep = 2;
+
+        const std::string unique_well = "UNIQ-WELL-XYZ-42";
+        const std::string unique_key = "WOPR:" + unique_well;
+        const float unique_scale = 17.5f;
+        {
+            auto rd_sum = rd_sum_ptr(
+                rd_sum_alloc_writer(case_path.c_str(),
+                                    /*fmt_output=*/false,
+                                    /*unified=*/true, ":", spec.start_time,
+                                    true, spec.nx, spec.ny, spec.nz),
+                &rd_sum_free);
+            const rd::smspec_node *wopr = rd_sum_add_var(
+                rd_sum.get(), "WOPR", unique_well.c_str(), 0, "SM3/DAY", 0.0f);
+            double sim_seconds = spec.start_seconds;
+            for (int report_step = 0; report_step < spec.num_report_steps;
+                 ++report_step) {
+                for (int step = 0; step < spec.num_ministep; ++step) {
+                    rd_sum_tstep_type *tstep = rd_sum_add_tstep(
+                        rd_sum.get(), report_step + 1, sim_seconds);
+                    rd_sum_tstep_set_from_node(tstep, *wopr,
+                                               unique_scale * sim_seconds);
+                    sim_seconds += spec.ministep_length;
+                }
+            }
+            rd_sum_fwrite(rd_sum.get());
+        }
+
+        // Empty DATA file so base_guess can identify the case.
+        std::ofstream((subdir / (base + ".DATA")).string()).close();
+
+        WHEN("loading via read_summary with the directory path") {
+            const std::string dir_path = subdir.string() + "/";
+            auto guessed = read_summary(dir_path);
+            REQUIRE(guessed.get() != nullptr);
+
+            AND_WHEN(
+                "loading the same files explicitly via rd_sum_fread_alloc") {
+                const std::string header_file =
+                    (subdir / (base + ".SMSPEC")).string();
+                auto data_files = make_stringlist();
+                stringlist_append_copy(
+                    data_files.get(),
+                    (subdir / (base + ".UNSMRY")).string().c_str());
+
+                auto explicit_sum = rd_sum_ptr(
+                    rd_sum_fread_alloc(header_file.c_str(), data_files.get(),
+                                       ":", /*include_restart=*/true,
+                                       /*lazy_load=*/true,
+                                       /*file_options=*/0),
+                    &rd_sum_free);
+                REQUIRE(explicit_sum.get() != nullptr);
+
+                THEN("both methods loads the same case") {
+                    REQUIRE(rd_sum_has_general_var(guessed.get(),
+                                                   unique_key.c_str()));
+                    REQUIRE(rd_sum_has_general_var(explicit_sum.get(),
+                                                   unique_key.c_str()));
+
+                    REQUIRE(rd_sum_get_start_time(guessed.get()) ==
+                            rd_sum_get_start_time(explicit_sum.get()));
+                    REQUIRE(rd_sum_get_end_time(guessed.get()) ==
+                            rd_sum_get_end_time(explicit_sum.get()));
+
+                    const int n = rd_sum_get_data_length(guessed.get());
+                    REQUIRE(n == rd_sum_get_data_length(explicit_sum.get()));
+                    REQUIRE(n == spec.num_report_steps * spec.num_ministep);
+
+                    REQUIRE(std::string(rd_sum_get_unit(guessed.get(),
+                                                        unique_key.c_str())) ==
+                            "SM3/DAY");
+                    REQUIRE(std::string(rd_sum_get_unit(explicit_sum.get(),
+                                                        unique_key.c_str())) ==
+                            "SM3/DAY");
+
+                    for (int i = 0; i < n; ++i) {
+                        const double expected =
+                            unique_scale * i * spec.ministep_length;
+                        REQUIRE_THAT(rd_sum_get_general_var(guessed.get(), i,
+                                                            unique_key.c_str()),
+                                     WithinAbs(expected, 1e-3));
+                        REQUIRE_THAT(rd_sum_get_general_var(explicit_sum.get(),
+                                                            i,
+                                                            unique_key.c_str()),
+                                     WithinAbs(expected, 1e-3));
+                    }
+
+                    auto wells = stringlist_ptr(
+                        rd_sum_alloc_well_list(guessed.get(), nullptr),
+                        &stringlist_free);
+                    REQUIRE(stringlist_get_size(wells.get()) == 1);
+                    REQUIRE(std::string(stringlist_iget(wells.get(), 0)) ==
+                            unique_well);
+                }
+
+                THEN("rd_sum_get_base returns nullptr for the guessed case") {
+                    REQUIRE(rd_sum_get_base(guessed.get()) == nullptr);
+                    REQUIRE(std::string(rd_sum_get_base(explicit_sum.get())) ==
+                            base);
+                }
+            }
+        }
+    }
+}
+
+namespace {
+std::vector<std::string> split(const std::string &line, char sep) {
+    std::vector<std::string> out;
+    std::string cur;
+    for (char c : line) {
+        if (c == sep) {
+            out.push_back(cur);
+            cur.clear();
+        } else {
+            cur.push_back(c);
+        }
+    }
+    out.push_back(cur);
+    return out;
+}
+} // namespace
+
+TEST_CASE_METHOD(Tmpdir, "rd_sum_export_csv writes the requested keys") {
+    WriteSpec spec;
+    spec.num_report_steps = 2;
+    spec.num_ministep = 3;
+    auto case_path = (dirname / "CASE").string();
+    write_test_summary(case_path, spec, /*fmt_output=*/false,
+                       /*unified=*/true);
+    auto rd_sum = read_summary(case_path);
+    REQUIRE(rd_sum.get() != nullptr);
+    const int n = rd_sum_get_data_length(rd_sum.get());
+
+    SECTION("subset of keys with comma separator and ISO date") {
+        auto vars = make_stringlist();
+        stringlist_append_copy(vars.get(), "FOPT");
+        stringlist_append_copy(vars.get(), "BPR:567");
+
+        const auto csv_path = (dirname / "out.csv").string();
+        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars.get(),
+                          "%Y-%m-%d", ",");
+
+        REQUIRE(fs::exists(csv_path));
+        std::ifstream in(csv_path, std::ios::binary);
+        std::string content((std::istreambuf_iterator<char>(in)),
+                            std::istreambuf_iterator<char>());
+        REQUIRE(content.find("\r\n") != std::string::npos);
+
+        std::vector<std::string> lines;
+        {
+            std::string line;
+            std::stringstream ss(content);
+            while (std::getline(ss, line)) {
+                if (!line.empty() && line.back() == '\r')
+                    line.pop_back();
+                if (!line.empty())
+                    lines.push_back(line);
+            }
+        }
+        REQUIRE(lines.size() == static_cast<size_t>(n + 1));
+
+        const auto header = split(lines[0], ',');
+        REQUIRE(header.size() == 4);
+        REQUIRE(header[0] == "DAYS");
+        REQUIRE(header[1] == "DATE");
+        REQUIRE(header[2] == "FOPT");
+        REQUIRE(header[3] == "BPR:567");
+
+        for (int i = 0; i < n; ++i) {
+            const auto cols = split(lines[i + 1], ',');
+            REQUIRE(cols.size() == 4);
+            REQUIRE_THAT(
+                std::stod(cols[0]),
+                WithinAbs(rd_sum_iget_sim_days(rd_sum.get(), i), 1e-2));
+            REQUIRE(cols[1] == "2010-01-0" + std::to_string(i + 1));
+            REQUIRE_THAT(
+                std::stod(cols[2]),
+                WithinAbs(rd_sum_get_general_var(rd_sum.get(), i, "FOPT"),
+                          1e-3));
+            REQUIRE_THAT(
+                std::stod(cols[3]),
+                WithinAbs(rd_sum_get_general_var(rd_sum.get(), i, "BPR:567"),
+                          1e-3));
+        }
+    }
+
+    SECTION("missing keys are skipped and parent dirs are created") {
+        auto vars = make_stringlist();
+        stringlist_append_copy(vars.get(), "FOPT");
+        stringlist_append_copy(vars.get(), "NOPE:DOES_NOT_EXIST");
+        stringlist_append_copy(vars.get(), "WWCT:OP-1");
+
+        const auto csv_path = (dirname / "csv-out" / "out.csv").string();
+        rd_sum_export_csv(rd_sum.get(), csv_path.c_str(), vars.get(),
+                          "%d/%m/%Y", ";");
+        REQUIRE(fs::exists(csv_path));
+
+        std::ifstream in(csv_path, std::ios::binary);
+        std::string first_line;
+        std::getline(in, first_line);
+        if (!first_line.empty() && first_line.back() == '\r')
+            first_line.pop_back();
+
+        const auto header = split(first_line, ';');
+        REQUIRE(header.size() == 4);
+        REQUIRE(header[0] == "DAYS");
+        REQUIRE(header[1] == "DATE");
+        REQUIRE(header[2] == "FOPT");
+        REQUIRE(header[3] == "WWCT:OP-1");
     }
 }
