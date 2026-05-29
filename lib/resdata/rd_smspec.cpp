@@ -267,13 +267,10 @@ rd_smspec_alloc_empty(bool write_mode, const std::string &key_join_string) {
     return rd_smspec;
 }
 
-int *rd_smspec_alloc_mapping(const rd_smspec_type *self,
-                             const rd_smspec_type *other) {
+std::vector<int> rd_smspec_alloc_mapping(const rd_smspec_type *self,
+                                         const rd_smspec_type *other) {
     int params_size = rd_smspec_get_params_size(self);
-    int *mapping = (int *)util_malloc(params_size * sizeof *mapping);
-
-    for (int i = 0; i < params_size; i++)
-        mapping[i] = -1;
+    std::vector<int> mapping(params_size, -1);
 
     for (int i = 0; i < rd_smspec_num_nodes(self); i++) {
         const rd::smspec_node &self_node =

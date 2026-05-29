@@ -38,8 +38,8 @@ rd_smspec_iget_node_w_params_index(const rd_smspec_type *smspec,
    rd_smspec_install_gen_key() must be updated.
 */
 
-int *rd_smspec_alloc_mapping(const rd_smspec_type *self,
-                             const rd_smspec_type *other);
+std::vector<int> rd_smspec_alloc_mapping(const rd_smspec_type *self,
+                                         const rd_smspec_type *other);
 const int *rd_smspec_get_index_map(const rd_smspec_type *smspec);
 rd_smspec_var_type rd_smspec_identify_var_type(const char *var);
 rd_smspec_type *rd_smspec_alloc_restart_writer(

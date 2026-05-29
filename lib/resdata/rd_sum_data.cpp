@@ -586,13 +586,8 @@ static void rd_sum_data_build_index(rd_sum_data_type *self) {
             node.time2 = data->get_sim_end();
             node.days1 = data->get_days_start();
             node.days2 = data->get_sim_length();
-            {
-                int *tmp_map =
-                    rd_smspec_alloc_mapping(self->smspec, data->smspec());
-                node.params_map.assign(
-                    tmp_map, tmp_map + rd_smspec_get_params_size(self->smspec));
-                free(tmp_map);
-            }
+            node.params_map =
+                rd_smspec_alloc_mapping(self->smspec, data->smspec());
         }
     }
 }
