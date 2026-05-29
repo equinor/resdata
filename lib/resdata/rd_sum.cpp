@@ -25,6 +25,7 @@
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_data.hpp>
 #include <resdata/smspec_node.hpp>
+#include <utility>
 
 #include "detail/util/path.hpp"
 
@@ -82,7 +83,7 @@ struct rd_sum_struct {
         nullptr,
         &rd_smspec_free}; /* Internalized version of the SMSPEC file. */
     rd_sum_data_ptr data{nullptr, &rd_sum_data_free};
-    rd_sum_type *restart_case;
+    rd_sum_ptr restart_case{nullptr, &rd_sum_free};
 
     bool fmt_case;
     bool unified;
@@ -131,8 +132,6 @@ static rd_sum_type *rd_sum_alloc__(const char *input_arg,
     rd_sum_set_case(rd_sum, input_arg);
     rd_sum->key_join_string = key_join_string;
 
-    rd_sum->restart_case = NULL;
-
     return rd_sum;
 }
 
@@ -163,7 +162,7 @@ static void rd_sum_fread_history(rd_sum_type *rd_sum, bool lazy_load,
     rd_sum_ptr restart_case =
         read_summary(restart_path.string(), ":", lazy_load, true, file_options);
     if (restart_case) {
-        rd_sum->restart_case = restart_case.release();
+        rd_sum->restart_case = std::move(restart_case);
         rd_sum_data_add_case(rd_sum->data.get(),
                              rd_sum->restart_case->data.get());
     }
@@ -599,12 +598,7 @@ bool rd_sum_can_write(const rd_sum_type *rd_sum) {
     return rd_sum_data_can_write(rd_sum->data.get());
 }
 
-void rd_sum_free(rd_sum_type *rd_sum) {
-    if (rd_sum->restart_case)
-        rd_sum_free(rd_sum->restart_case);
-
-    delete rd_sum;
-}
+void rd_sum_free(rd_sum_type *rd_sum) { delete rd_sum; }
 
 /**
    This function takes an input file, and loads the corresponding
@@ -1139,7 +1133,7 @@ void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
 }
 
 const rd_sum_type *rd_sum_get_restart_case(const rd_sum_type *rd_sum) {
-    return rd_sum->restart_case;
+    return rd_sum->restart_case.get();
 }
 
 int rd_sum_get_restart_step(const rd_sum_type *rd_sum) {
