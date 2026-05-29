@@ -12,6 +12,7 @@
 
 #ifdef __cplusplus
 #include <memory>
+#include <string>
 extern "C" {
 #endif
 
@@ -245,5 +246,10 @@ rd_type_enum rd_kw_get_type(const rd_kw_type *);
 #ifdef __cplusplus
 using rd_kw_ptr = std::unique_ptr<rd_kw_type, decltype(&rd_kw_free)>;
 rd_kw_ptr make_rd_kw(const char *header, int size, rd_data_type data_type);
+inline std::string rd_kw_iget_stripped_string(const rd_kw_type *kw, int index) {
+    return rd::strip_spaces(
+        static_cast<const char *>(rd_kw_iget_ptr(kw, index)));
+}
+
 #endif
 #endif
