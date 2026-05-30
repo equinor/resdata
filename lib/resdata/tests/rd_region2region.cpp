@@ -36,17 +36,14 @@ int main(int argc, char **argv) {
 
     const char *headerfile = argv[1];
 
-    rd_sum_type *rd_sum = rd_sum_fread_alloc_case(headerfile, ":");
+    rd_sum_ptr rd_sum = read_summary(headerfile);
 
     if (rd_sum) {
-        has_r2r_key(rd_sum);
-        get_unit(rd_sum);
-        get_var_params_index(rd_sum);
+        has_r2r_key(rd_sum.get());
+        get_unit(rd_sum.get());
+        get_var_params_index(rd_sum.get());
     } else
         test_error_exit("rd_region2region_test: Test file not read correctly");
-
-    if (rd_sum)
-        rd_sum_free(rd_sum);
 
     exit(0);
 }
