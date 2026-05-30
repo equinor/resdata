@@ -53,8 +53,6 @@ void rd_sum_data_get_interp_vector(const rd_sum_data_type *data,
                                    const rd_sum_vector_type *keylist,
                                    double_vector_type *results);
 
-bool rd_sum_data_has_report_step(const rd_sum_data_type *, int);
-
 void rd_sum_data_free(rd_sum_data_type *);
 int rd_sum_data_get_last_report_step(const rd_sum_data_type *data);
 int rd_sum_data_get_first_report_step(const rd_sum_data_type *data);

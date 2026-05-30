@@ -256,8 +256,7 @@ rd_sum_data_type *rd_sum_data_alloc(rd_smspec_type *smspec) {
    If the supplied report_step is invalid the function will set both
    return values to -1 (the return value from safe_iget). In that case
    it is the responsability of the calling scope to check the return
-   values, alternatively one can use the query function
-   rd_sum_data_has_report_step() first.
+   values.
 */
 
 static double rd_sum_data_iget_sim_seconds(const rd_sum_data_type *data,
@@ -635,16 +634,6 @@ bool rd_sum_data_fread(rd_sum_data_type *data, const stringlist_type *filelist,
         return true;
     }
     return false;
-}
-
-bool rd_sum_data_has_report_step(const rd_sum_data_type *data,
-                                 int report_step) {
-    if (!data->index.has_report(report_step))
-        return false;
-
-    const auto &index_node = data->index.lookup_report(report_step);
-    const auto &file_data = data->data_files[index_node.data_index];
-    return file_data->has_report(report_step);
 }
 
 /**
