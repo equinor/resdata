@@ -33,11 +33,10 @@ void test_days(const rd_sum_type *rd_sum) {
 int main(int argc, char **argv) {
     const char *case1 = argv[1];
 
-    rd_sum_type *rd_sum1 = rd_sum_fread_alloc_case(case1, ":");
+    rd_sum_ptr rd_sum1 = read_summary(case1);
 
-    test_assert_true(rd_sum_is_instance(rd_sum1));
-    test_time_range(rd_sum1);
-    test_days(rd_sum1);
-    rd_sum_free(rd_sum1);
+    test_assert_true(rd_sum_is_instance(rd_sum1.get()));
+    test_time_range(rd_sum1.get());
+    test_days(rd_sum1.get());
     exit(0);
 }

@@ -87,8 +87,8 @@ def date2num(dt):
 
 class Summary(BaseCClass):
     TYPE_NAME = "rd_sum"
-    _fread_alloc_case2 = ResdataPrototype(
-        "void*     rd_sum_fread_alloc_case2__(char*, char*, bool, bool, int)",
+    _fread_alloc_case = ResdataPrototype(
+        "void*     rd_sum_fread_alloc_case(char*, char*, bool, bool, int)",
         bind=False,
     )
     _fread_alloc = ResdataPrototype(
@@ -259,7 +259,7 @@ class Summary(BaseCClass):
         """
         if not load_case:
             raise ValueError("load_case must be the basename of the simulation")
-        c_pointer = self._fread_alloc_case2(
+        c_pointer = self._fread_alloc_case(
             load_case, join_string, include_restart, lazy_load, file_options
         )
         if c_pointer is None:

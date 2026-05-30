@@ -613,11 +613,10 @@ void rd_sum_free(rd_sum_type *rd_sum) { delete rd_sum; }
    iterate backwards to load summary information from previous runs
    (this is goverened by the local variable include_restart).
 */
-
-rd_sum_type *rd_sum_fread_alloc_case2__(const char *input_file,
-                                        const char *key_join_string,
-                                        bool include_restart, bool lazy_load,
-                                        int file_options) {
+rd_sum_type *rd_sum_fread_alloc_case(const char *input_file,
+                                     const char *key_join_string,
+                                     bool include_restart, bool lazy_load,
+                                     int file_options) {
     rd_sum_ptr rd_sum = rd_sum_alloc__(input_file, key_join_string);
     if (!rd_sum)
         return nullptr;
@@ -628,15 +627,6 @@ rd_sum_type *rd_sum_fread_alloc_case2__(const char *input_file,
     else {
         return nullptr;
     }
-}
-
-rd_sum_type *rd_sum_fread_alloc_case(const char *input_file,
-                                     const char *key_join_string) {
-    bool include_restart = true;
-    bool lazy_load = true;
-    int file_options = 0;
-    return rd_sum_fread_alloc_case2__(input_file, key_join_string,
-                                      include_restart, lazy_load, file_options);
 }
 
 double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
@@ -1270,8 +1260,7 @@ double rd_sum_get_first_value_gen_key(const rd_sum_type *rd_sum,
 rd_sum_ptr read_summary(const std::string &filename,
                         const std::string &key_join_string, bool lazy_load,
                         bool include_restart, int file_options) {
-    return {rd_sum_fread_alloc_case2__(filename.c_str(),
-                                       key_join_string.c_str(), include_restart,
-                                       lazy_load, file_options),
+    return {rd_sum_fread_alloc_case(filename.c_str(), key_join_string.c_str(),
+                                    include_restart, lazy_load, file_options),
             &rd_sum_free};
 }
