@@ -1020,7 +1020,7 @@ static void rd_sum_fprintf_header(const rd_sum_type *rd_sum,
 }
 
 static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
-                           const stringlist_type *var_list, bool report_only,
+                           const stringlist_type *var_list,
                            const rd_sum_fmt_type *fmt) {
     auto has_var = make_bool_vector(stringlist_get_size(var_list), false);
     auto var_index = make_int_vector(stringlist_get_size(var_list), -1);
@@ -1052,27 +1052,11 @@ static void rd_sum_fprintf(const rd_sum_type *rd_sum, FILE *stream,
     if (fmt->print_header)
         rd_sum_fprintf_header(rd_sum, var_list, has_var.get(), stream, fmt);
 
-    if (report_only) {
-        int first_report = rd_sum_get_first_report_step(rd_sum);
-        int last_report = rd_sum_get_last_report_step(rd_sum);
-        int report;
+    for (int time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
+         time_index++)
+        __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var.get(),
+                              var_index.get(), date_string.get(), fmt);
 
-        for (report = first_report; report <= last_report; report++) {
-            if (rd_sum_data_has_report_step(rd_sum->data.get(), report)) {
-                int time_index;
-                time_index =
-                    rd_sum_data_iget_report_end(rd_sum->data.get(), report);
-                __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var.get(),
-                                      var_index.get(), date_string.get(), fmt);
-            }
-        }
-    } else {
-        int time_index;
-        for (time_index = 0; time_index < rd_sum_get_data_length(rd_sum);
-             time_index++)
-            __rd_sum_fprintf_line(rd_sum, stream, time_index, has_var.get(),
-                                  var_index.get(), date_string.get(), fmt);
-    }
     if (current_locale != NULL)
         setlocale(LC_NUMERIC, current_locale);
 }
@@ -1098,10 +1082,9 @@ void rd_sum_export_csv(const rd_sum_type *rd_sum, const char *filename,
                        const char *sep) {
     FILE *stream = util_mkdir_fopen(filename, "w");
     std::string date_header = fmt::format("DAYS{}DATE", sep);
-    bool report_only = false;
     rd_sum_fmt_type fmt;
     rd_sum_fmt_init_csv(&fmt, date_format, date_header.c_str(), sep);
-    rd_sum_fprintf(rd_sum, stream, var_list, report_only, &fmt);
+    rd_sum_fprintf(rd_sum, stream, var_list, &fmt);
     fclose(stream);
 }
 
