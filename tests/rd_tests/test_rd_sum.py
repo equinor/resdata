@@ -1407,3 +1407,70 @@ def test_that_missing_permissions_raises_oserror(tmp_path):
             Summary.load(str(smspec_path), str(unsmry_path))
     finally:
         smspec_path.chmod(mode)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_add_variable_after_tstep_raises():
+    writer = Summary.writer("AFTER_TSTEP", datetime.datetime(2000, 1, 1), 5, 5, 5)
+    var = writer.add_variable("FOPT")
+    t_step = writer.add_t_step(1, 1.0)
+    t_step[var.get_key1()] = 1.0
+
+    with pytest.raises(ValueError, match="interchange variable adding and timesteps"):
+        writer.add_variable("FWPT")
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_add_local_variable_after_tstep_raises():
+    writer = Summary.writer("AFTER_TSTEP_LGR", datetime.datetime(2000, 1, 1), 5, 5, 5)
+    var = writer.add_variable("FOPT")
+    t_step = writer.add_t_step(1, 1.0)
+    t_step[var.get_key1()] = 1.0
+
+    with pytest.raises(ValueError, match="interchange variable adding and timesteps"):
+        writer.add_variable("BLOCK", lgr="LGR1", lgr_ijk=(1, 1, 1))
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_iget_date_with_invalid_index_raises():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+    summary = Summary("TEST")
+
+    with pytest.raises(ValueError, match="Internal error when looking up index"):
+        summary.iget_date(99999)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_get_from_report_with_invalid_step_raises():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+    summary = Summary("TEST")
+
+    with pytest.raises(ValueError, match="Internal error when looking up report"):
+        summary.get_from_report("FOPR", 99999)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_get_interp_direct_with_out_of_range_time_raises():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+    summary = Summary("TEST")
+
+    with pytest.raises(IndexError, match="Invalid time_t instance"):
+        summary.get_interp_direct("FOPR", datetime.datetime(2099, 1, 1))
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_alloc_data_vector_with_out_of_range_index_raises():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+    summary = Summary("TEST")
+
+    with pytest.raises(IndexError, match="Out of range"):
+        summary.alloc_data_vector(99999, False)
+
+
+@pytest.mark.usefixtures("use_tmpdir")
+def test_get_general_var_index_with_unknown_key_raises():
+    create_summary(summary_keys=("FOPR",), times=(0.0, 1.0, 2.0))
+    summary = Summary("TEST")
+
+    with pytest.raises(IndexError, match="Invalid lookup summary object"):
+        summary.get_general_var_index("NO_SUCH_KEY")
