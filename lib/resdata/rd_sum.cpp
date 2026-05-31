@@ -114,7 +114,7 @@ UTIL_IS_INSTANCE_FUNCTION(rd_sum, RD_SUM_ID);
    The actual loading is implemented in the rd_sum_data.c file.
 */
 
-void rd_sum_set_case(rd_sum_type *rd_sum, const char *input_arg) {
+void rd_sum_set_case(rd_sum_type *rd_sum, const std::string &input_arg) {
     fs::path input_path(input_arg);
     fs::path path = input_path.parent_path();
     rd_sum->path = path.string();
@@ -127,9 +127,9 @@ void rd_sum_set_case(rd_sum_type *rd_sum, const char *input_arg) {
         rd_sum->abs_path = fs::absolute(path).string();
 }
 
-static rd_sum_ptr rd_sum_alloc__(const char *input_arg,
+static rd_sum_ptr rd_sum_alloc__(std::string input_arg,
                                  const std::string &key_join_string) {
-    if (!rd_path_access(input_arg))
+    if (!rd_path_access(input_arg.c_str()))
         return {nullptr, &rd_sum_free};
 
     rd_sum_ptr rd_sum{nullptr, &rd_sum_free};
@@ -505,12 +505,12 @@ const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
 
 /*
   Observe the time argument in rd_sum_add_tstep() and the bool flag
-  time_in_days in rd_sum_alloc_writer() can be misleading:
+  time_in_days in make_summary_writer() can be misleading:
 
   - The time argument 'sim_seconds' to rd_sum_add_tstep() should
     *ALWAYS* be in seconds.
 
-  - The 'sim_in_days' argument to the rd_sum_alloc_writer( ) is just
+  - The 'sim_in_days' argument to the make_summary_writer() is just
     a very very basic unit support in the output. If sim_in_days ==
     true the output time unit will be days, otherwise it will be hours.
 */
@@ -522,12 +522,12 @@ rd_sum_tstep_type *rd_sum_add_tstep(rd_sum_type *rd_sum, int report_step,
     return new_tstep;
 }
 
-static rd_sum_type *
-rd_sum_alloc_writer__(const char *rd_case, const char *restart_case,
-                      int restart_step, bool fmt_output, bool unified,
-                      const char *key_join_string, time_t sim_start,
-                      bool time_in_days, int nx, int ny, int nz) {
-
+rd_sum_ptr make_summary_writer(std::string rd_case, bool fmt_output,
+                               bool unified, std::string key_join_string,
+                               time_t sim_start, bool time_in_days, int nx,
+                               int ny, int nz,
+                               std::optional<std::string> restart_case,
+                               int restart_step) {
     rd_sum_ptr rd_sum = rd_sum_alloc__(rd_case, key_join_string);
     if (rd_sum) {
         rd_sum->unified = unified;
@@ -535,51 +535,15 @@ rd_sum_alloc_writer__(const char *rd_case, const char *restart_case,
 
         if (restart_case)
             rd_sum->smspec.reset(rd_smspec_alloc_restart_writer(
-                key_join_string, restart_case, restart_step, sim_start,
-                time_in_days, nx, ny, nz));
+                key_join_string.c_str(), restart_case->c_str(), restart_step,
+                sim_start, time_in_days, nx, ny, nz));
         else
             rd_sum->smspec.reset(rd_smspec_alloc_writer(
-                key_join_string, sim_start, time_in_days, nx, ny, nz));
+                key_join_string.c_str(), sim_start, time_in_days, nx, ny, nz));
 
         rd_sum->data.reset(rd_sum_data_alloc_writer(rd_sum->smspec.get()));
     }
-    return rd_sum.release();
-}
-
-rd_sum_type *
-rd_sum_alloc_restart_writer2(const char *rd_case, const char *restart_case,
-                             int restart_step, bool fmt_output, bool unified,
-                             const char *key_join_string, time_t sim_start,
-                             bool time_in_days, int nx, int ny, int nz) {
-    return rd_sum_alloc_writer__(rd_case, restart_case, restart_step,
-                                 fmt_output, unified, key_join_string,
-                                 sim_start, time_in_days, nx, ny, nz);
-}
-
-/*
-  This does not take in the restart_step argument is depcrecated. You should use the
-  rd_sum_alloc_restart_writer2() function.
-*/
-
-rd_sum_type *rd_sum_alloc_restart_writer(const char *rd_case,
-                                         const char *restart_case,
-                                         bool fmt_output, bool unified,
-                                         const char *key_join_string,
-                                         time_t sim_start, bool time_in_days,
-                                         int nx, int ny, int nz) {
-    int restart_step = 0;
-    return rd_sum_alloc_writer__(rd_case, restart_case, restart_step,
-                                 fmt_output, unified, key_join_string,
-                                 sim_start, time_in_days, nx, ny, nz);
-}
-
-rd_sum_type *rd_sum_alloc_writer(const char *rd_case, bool fmt_output,
-                                 bool unified, const char *key_join_string,
-                                 time_t sim_start, bool time_in_days, int nx,
-                                 int ny, int nz) {
-    return rd_sum_alloc_writer__(rd_case, NULL, 0, fmt_output, unified,
-                                 key_join_string, sim_start, time_in_days, nx,
-                                 ny, nz);
+    return rd_sum;
 }
 
 void rd_sum_fwrite(const rd_sum_type *rd_sum) {
@@ -691,11 +655,10 @@ double rd_sum_get_general_var_from_sim_days(const rd_sum_type *rd_sum,
     return rd_sum_data_get_from_sim_days(rd_sum->data.get(), sim_days, *node);
 }
 
-rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
-                                   const char *rd_case,
-                                   const time_t_vector_type *times,
-                                   bool lower_extrapolation,
-                                   bool upper_extrapolation) {
+rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
+                                 const time_t_vector_type *times,
+                                 bool lower_extrapolation,
+                                 bool upper_extrapolation) {
     /*
     If lower and  / or upper extrapolation is set to true it makes sure that resampling returns the first / last value of the simulation
     or in the case of derivate / rate then it gets zero. if these are set to false, we jus throw exception
@@ -707,11 +670,11 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
     time_t input_end = time_t_vector_get_last(times);
 
     if (!lower_extrapolation && input_start < start_time)
-        return NULL;
+        return {nullptr, &rd_sum_free};
     if (!upper_extrapolation && input_end > end_time)
-        return NULL;
+        return {nullptr, &rd_sum_free};
     if (!time_t_vector_is_sorted(times, false))
-        return NULL;
+        return {nullptr, &rd_sum_free};
 
     const int *grid_dims = rd_smspec_get_grid_dims(rd_sum->smspec.get());
 
@@ -722,7 +685,7 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
         time_in_days = true;
 
     //create elc_sum_resampled with TIME node only
-    rd_sum_type *rd_sum_resampled = rd_sum_alloc_writer(
+    rd_sum_ptr rd_sum_resampled = make_summary_writer(
         rd_case, rd_sum->fmt_case, rd_sum->unified,
         rd_sum->key_join_string.c_str(), input_start, time_in_days,
         grid_dims[0], grid_dims[1], grid_dims[2]);
@@ -734,7 +697,7 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
         if (util_string_equal(smspec_node_get_gen_key1(&node), "TIME"))
             continue;
 
-        rd_sum_add_smspec_node(rd_sum_resampled, &node);
+        rd_sum_add_smspec_node(rd_sum_resampled.get(), &node);
     }
 
     /*
@@ -781,7 +744,7 @@ rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
 
         /* Add timestep corresponding to the interpolated data in the resampled case. */
         rd_sum_tstep_type *tstep = rd_sum_add_tstep(
-            rd_sum_resampled, report_step, input_t - input_start);
+            rd_sum_resampled.get(), report_step, input_t - input_start);
         for (int data_index = 0;
              data_index < rd_sum_vector_get_size(rd_sum_vector.get());
              data_index++) {

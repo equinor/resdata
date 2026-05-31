@@ -58,34 +58,25 @@ PYBIND11_MODULE(_rd_sum, m) {
         "_create_writer",
         [](std::string rd_case, bool fmt_output, bool unified,
            std::string key_join_string, std::time_t sim_start,
-           bool time_in_days, int nx, int ny, int nz) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_writer(
-                rd_case.c_str(), fmt_output, unified, key_join_string.c_str(),
-                sim_start, time_in_days, nx, ny, nz));
-        },
-        py::return_value_policy::reference);
-    m.def(
-        "_create_restart_writer",
-        [](std::string rd_case, std::optional<std::string> restart_case,
-           int restart_step, bool fmt_output, bool unified,
-           std::string key_join_string, std::time_t sim_start,
-           bool time_in_days, int nx, int ny, int nz) {
+           bool time_in_days, int nx, int ny, int nz,
+           std::optional<std::string> restart_case, int restart_step) {
             return reinterpret_cast<std::uintptr_t>(
-                rd_sum_alloc_restart_writer2(
-                    rd_case.c_str(),
-                    restart_case.has_value() ? restart_case->c_str() : nullptr,
-                    restart_step, fmt_output, unified, key_join_string.c_str(),
-                    sim_start, time_in_days, nx, ny, nz));
+                make_summary_writer(rd_case, fmt_output, unified,
+                                    key_join_string, sim_start, time_in_days,
+                                    nx, ny, nz, restart_case, restart_step)
+                    .release());
         },
         py::return_value_policy::reference);
     m.def(
         "_resample",
         [](py::handle self, std::string new_case, py::handle times,
            bool lower_extrapolation, bool upper_extrapolation) {
-            return reinterpret_cast<std::uintptr_t>(rd_sum_alloc_resample(
-                from_cwrap<rd_sum_type>(self), new_case.c_str(),
-                from_cwrap<time_t_vector_type>(times), lower_extrapolation,
-                upper_extrapolation));
+            return reinterpret_cast<std::uintptr_t>(
+                rd_sum_alloc_resample(from_cwrap<rd_sum_type>(self),
+                                      new_case.c_str(),
+                                      from_cwrap<time_t_vector_type>(times),
+                                      lower_extrapolation, upper_extrapolation)
+                    .release());
         },
         py::return_value_policy::reference);
     m.def("_free",
@@ -227,7 +218,7 @@ PYBIND11_MODULE(_rd_sum, m) {
         return rd_sum_can_write(from_cwrap<rd_sum_type>(self));
     });
     m.def("_set_case", [](py::handle self, std::string input_arg) {
-        rd_sum_set_case(from_cwrap<rd_sum_type>(self), input_arg.c_str());
+        rd_sum_set_case(from_cwrap<rd_sum_type>(self), input_arg);
     });
     m.def(
         "_alloc_time_vector",

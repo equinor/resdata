@@ -216,6 +216,8 @@ class Summary(BaseCClass):
             nx,
             ny,
             nz,
+            None,
+            0,
         )
         smry = Summary._python_object_from_ptr(ptr)
         smry._load_case = "writer"
@@ -241,10 +243,8 @@ class Summary(BaseCClass):
 
         start = CTime(start_time)
 
-        ptr = _rd_sum._create_restart_writer(
+        ptr = _rd_sum._create_writer(
             case,
-            restart_case,
-            restart_step,
             fmt_output,
             unified,
             key_join_string,
@@ -253,6 +253,8 @@ class Summary(BaseCClass):
             nx,
             ny,
             nz,
+            restart_case,
+            restart_step,
         )
         smry = Summary._python_object_from_ptr(ptr)
         smry._load_case = "restart_writer"
