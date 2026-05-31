@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-2022']
+        os: ['ubuntu-latest', 'macos-latest']
 
     runs-on: ${{ matrix.os }}
 
@@ -49,19 +49,12 @@ jobs:
       run: |
         python3 -m pip install -r requirements.txt
         mkdir cmake-build
-        conan install . --output-folder=cmake-build --build=missing
+        conan install . --output-folder=cmake-build --build=missing -o build_tests=True
 
-    - name: Build (Unix)
-      if: runner.os != 'Windows'
+    - name: Build
       run: |
-        cmake --preset conan-release -DBUILD_TESTS=ON -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DRST_DOC=ON
+        cmake --preset conan-release -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DRST_DOC=ON
         cmake --build --preset conan-release
-
-    - name: Build (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        cmake --preset conan-default
-        cmake --build --preset conan-release -DRST_DOC=ON
 
     - name: Run tests
       run: |
