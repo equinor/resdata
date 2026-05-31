@@ -150,8 +150,8 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE_THROWS_AS(rd_sum_iget_report_step(rd_sum.get(), -1),
                               std::invalid_argument);
             REQUIRE_THROWS_AS(
-                rd_sum_iget_report_step(
-                    rd_sum.get(), spec.num_report_steps * spec.num_ministep),
+                rd_sum_iget_report_step(rd_sum.get(), spec.num_report_steps *
+                                                          spec.num_ministep),
                 std::invalid_argument);
         }
 
@@ -332,6 +332,18 @@ TEST_CASE_METHOD(Tmpdir, "Read summary written by writer") {
             REQUIRE_FALSE(rd_sum_check_sim_days(rd_sum.get(),
                                                 spec.num_report_steps *
                                                     spec.num_ministep * 10.0));
+        }
+        THEN("get_general_var_from_sim_time with out-of-range time throws") {
+            time_t before = spec.start_time;
+            util_inplace_forward_seconds_utc(&before, -spec.ministep_length);
+            REQUIRE_THROWS_AS(rd_sum_get_general_var_from_sim_time(
+                                  rd_sum.get(), before, "FOPT"),
+                              std::out_of_range);
+            time_t after = end_time;
+            util_inplace_forward_seconds_utc(&after, spec.ministep_length);
+            REQUIRE_THROWS_AS(rd_sum_get_general_var_from_sim_time(
+                                  rd_sum.get(), after, "FOPT"),
+                              std::out_of_range);
         }
         THEN("Path accessors point at the written case") {
             REQUIRE(std::string(rd_sum_get_base(rd_sum.get())) == "CASE");

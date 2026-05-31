@@ -197,9 +197,9 @@ static bool rd_sum_fread(rd_sum_type *rd_sum, const std::string &header_file,
         else if (file_type == RD_UNIFIED_SUMMARY_FILE)
             rd_sum->unified = true;
         else
-            util_abort("%s: FileTypeError, should be RD_SUMMARY_FILE OR "
-                       "RD_UNIFIED_SUMMARY_FILE \n",
-                       __func__);
+            throw std::invalid_argument(
+                "FileTypeError, should be RD_SUMMARY_FILE OR "
+                "RD_UNIFIED_SUMMARY_FILE");
     } else
         return false;
 
