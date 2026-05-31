@@ -19,7 +19,6 @@
 #include <resdata/smspec_node.hpp>
 #include "resdata/rd_util.hpp"
 
-
 typedef struct {
     char *locale;
     const char *sep;
@@ -39,6 +38,9 @@ typedef struct rd_sum_vector_struct rd_sum_vector_type;
 
 typedef struct rd_sum_struct rd_sum_type;
 
+void rd_sum_free(rd_sum_type *);
+using rd_sum_ptr = std::unique_ptr<rd_sum_type, decltype(&rd_sum_free)>;
+
 double rd_sum_get_from_sim_time(const rd_sum_type *rd_sum, time_t sim_time,
                                 const rd::smspec_node *node);
 double rd_sum_time2days(const rd_sum_type *rd_sum, time_t sim_time);
@@ -52,7 +54,6 @@ const char *rd_sum_get_unit(const rd_sum_type *sum, const char *gen_key);
 double rd_sum_iget(const rd_sum_type *rd_sum, int time_index, int param_index);
 int rd_sum_get_data_length(const rd_sum_type *rd_sum);
 
-void rd_sum_free(rd_sum_type *);
 rd_sum_type *rd_sum_fread_alloc(const char *, const stringlist_type *data_files,
                                 const char *key_join_string,
                                 bool include_restart, bool lazy_load,
@@ -60,11 +61,10 @@ rd_sum_type *rd_sum_fread_alloc(const char *, const stringlist_type *data_files,
 rd_sum_type *rd_sum_fread_alloc_case(const char *, const char *key_join_string,
                                      bool include_restart, bool lazy_load,
                                      int file_options);
-rd_sum_type *rd_sum_alloc_resample(const rd_sum_type *rd_sum,
-                                   const char *rd_case,
-                                   const time_t_vector_type *times,
-                                   bool lower_extrapolation,
-                                   bool upper_extrapolation);
+rd_sum_ptr rd_sum_alloc_resample(const rd_sum_type *rd_sum, const char *rd_case,
+                                 const time_t_vector_type *times,
+                                 bool lower_extrapolation,
+                                 bool upper_extrapolation);
 
 double rd_sum_get_general_var(const rd_sum_type *rd_sum, int time_index,
                               const char *lookup_kw);
@@ -123,23 +123,7 @@ rd_smspec_type *rd_sum_get_smspec(const rd_sum_type *rd_sum);
 rd_smspec_var_type rd_sum_identify_var_type(const char *var);
 
 int rd_sum_iget_report_end(const rd_sum_type *rd_sum, int report_step);
-rd_sum_type *
-rd_sum_alloc_restart_writer2(const char *rd_case, const char *restart_case,
-                             int restart_step, bool fmt_output, bool unified,
-                             const char *key_join_string, time_t sim_start,
-                             bool time_in_days, int nx, int ny, int nz);
-void rd_sum_set_case(rd_sum_type *rd_sum, const char *input_arg);
-
-rd_sum_type *rd_sum_alloc_restart_writer(const char *rd_case,
-                                         const char *restart_case,
-                                         bool fmt_output, bool unified,
-                                         const char *key_join_string,
-                                         time_t sim_start, bool time_in_days,
-                                         int nx, int ny, int nz);
-rd_sum_type *rd_sum_alloc_writer(const char *rd_case, bool fmt_output,
-                                 bool unified, const char *key_join_string,
-                                 time_t sim_start, bool time_in_days, int nx,
-                                 int ny, int nz);
+void rd_sum_set_case(rd_sum_type *rd_sum, const std::string &input_arg);
 void rd_sum_fwrite(const rd_sum_type *rd_sum);
 bool rd_sum_can_write(const rd_sum_type *rd_sum);
 const rd::smspec_node *rd_sum_add_smspec_node(rd_sum_type *rd_sum,
@@ -196,8 +180,13 @@ void rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
 
 UTIL_IS_INSTANCE_HEADER(rd_sum);
 
-using rd_sum_ptr = std::unique_ptr<rd_sum_type, decltype(&rd_sum_free)>;
 rd_sum_ptr read_summary(const std::string &filename,
                         const std::string &key_join_string = ":",
                         bool lazy_load = true, bool include_restart = true,
                         int file_options = 0);
+rd_sum_ptr
+make_summary_writer(std::string rd_case, bool fmt_output, bool unified,
+                    std::string key_join_string, time_t sim_start,
+                    bool time_in_days, int nx, int ny, int nz,
+                    std::optional<std::string> restart_case = std::nullopt,
+                    int restart_step = 0);

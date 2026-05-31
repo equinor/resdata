@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
       6-8: Grid dimensions.
   */
     bool time_in_days = true;
-    rd_sum_type *rd_sum = rd_sum_alloc_writer(
+    rd_sum_ptr rd_sum = make_summary_writer(
         "/tmp/CASE", false, true, ":", start_time, time_in_days, nx, ny, nz);
 
     /*
@@ -193,10 +193,10 @@ int main(int argc, char **argv) {
       6. A defualt value for this variable.
 
   */
-    rd_sum_add_var(rd_sum, "FOPT", NULL, 0, "Barrels", 99.0);
-    rd_sum_add_var(rd_sum, "BPR", NULL, 567, "BARS", 0.0);
-    rd_sum_add_var(rd_sum, "WWCT", "OP-1", 0, "(1)", 0.0);
-    rd_sum_add_var(rd_sum, "WOPR", "OP-1", 0, "Barrels", 0.0);
+    rd_sum_add_var(rd_sum.get(), "FOPT", NULL, 0, "Barrels", 99.0);
+    rd_sum_add_var(rd_sum.get(), "BPR", NULL, 567, "BARS", 0.0);
+    rd_sum_add_var(rd_sum.get(), "WWCT", "OP-1", 0, "(1)", 0.0);
+    rd_sum_add_var(rd_sum.get(), "WOPR", "OP-1", 0, "Barrels", 0.0);
 
     /*
     The return value from the rd_sum_add_var() function is an
@@ -221,9 +221,9 @@ int main(int argc, char **argv) {
   */
 
     const rd::smspec_node *wwct_wellx =
-        rd_sum_add_var(rd_sum, "WWCT", NULL, 0, "(1)", 0.0);
+        rd_sum_add_var(rd_sum.get(), "WWCT", NULL, 0, "(1)", 0.0);
     const rd::smspec_node *wopr_wellx =
-        rd_sum_add_var(rd_sum, "WOPR", NULL, 0, "Barrels", 0.0);
+        rd_sum_add_var(rd_sum.get(), "WOPR", NULL, 0, "Barrels", 0.0);
 
     {
         int num_dates = 10;
@@ -254,8 +254,8 @@ int main(int argc, char **argv) {
              elements which are not set explicitly will have the
              default value given in the rd_sum_add_var() call.
           */
-                    rd_sum_tstep_type *tstep =
-                        rd_sum_add_tstep(rd_sum, report_step + 1, sim_days);
+                    rd_sum_tstep_type *tstep = rd_sum_add_tstep(
+                        rd_sum.get(), report_step + 1, sim_days);
 
                     /*
             We can just set a value by it's index using the
@@ -286,6 +286,5 @@ int main(int argc, char **argv) {
         }
     }
 
-    rd_sum_fwrite(rd_sum);
-    rd_sum_free(rd_sum);
+    rd_sum_fwrite(rd_sum.get());
 }

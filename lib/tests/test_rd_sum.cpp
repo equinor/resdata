@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <optional>
 #include <sstream>
 #include <memory>
 #include <stdexcept>
@@ -72,10 +73,9 @@ struct WriteSpec {
  */
 time_t write_test_summary(const std::string &case_path, const WriteSpec &spec,
                           bool fmt_output, bool unified) {
-    auto rd_sum = rd_sum_ptr(
-        rd_sum_alloc_writer(case_path.c_str(), fmt_output, unified, ":",
-                            spec.start_time, true, spec.nx, spec.ny, spec.nz),
-        &rd_sum_free);
+    auto rd_sum =
+        make_summary_writer(case_path, fmt_output, unified, ":",
+                            spec.start_time, true, spec.nx, spec.ny, spec.nz);
 
     const rd::smspec_node *fopt =
         rd_sum_add_var(rd_sum.get(), "FOPT", nullptr, 0, "SM3", 99.0f);
@@ -471,11 +471,9 @@ TEST_CASE_METHOD(Tmpdir,
     const std::vector<double> samples{0.0, 1.0, 2.0, 3.0, 2.0, 1.0, 0.0};
 
     {
-        auto rd_sum =
-            rd_sum_ptr(rd_sum_alloc_writer(case_path.c_str(), /*fmt=*/false,
-                                           /*unified=*/true, ":", start_time,
-                                           true, 10, 10, 10),
-                       &rd_sum_free);
+        auto rd_sum = make_summary_writer(case_path, /*fmt=*/false,
+                                          /*unified=*/true, ":", start_time,
+                                          true, 10, 10, 10);
         const rd::smspec_node *bpr =
             rd_sum_add_var(rd_sum.get(), "BPR", nullptr, 567, "BARS", 0.0f);
 
@@ -515,11 +513,9 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_add_local_var registers LGR smspec nodes") {
         const auto case_path = (dirname / "LOCALCASE").string();
         const time_t start_time = util_make_date_utc(1, 1, 2010);
 
-        auto rd_sum =
-            rd_sum_ptr(rd_sum_alloc_writer(case_path.c_str(), /*fmt=*/false,
-                                           /*unified=*/true, ":", start_time,
-                                           true, 10, 10, 10),
-                       &rd_sum_free);
+        auto rd_sum = make_summary_writer(case_path, /*fmt=*/false,
+                                          /*unified=*/true, ":", start_time,
+                                          true, 10, 10, 10);
 
         const rd::smspec_node *lwell = rd_sum_add_local_var(
             rd_sum.get(), "LWOPR", "OP-1", 0, "SM3/DAY", "LGR1", 1, 2, 3, 0.0f);
@@ -559,11 +555,9 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_add_local_var registers LGR smspec nodes") {
         }
 
         THEN("adding a local var after a timestep has been written throws") {
-            auto rd_sum =
-                rd_sum_ptr(rd_sum_alloc_writer(case_path.c_str(), /*fmt=*/false,
-                                               /*unified=*/true, ":",
-                                               start_time, true, 10, 10, 10),
-                           &rd_sum_free);
+            auto rd_sum = make_summary_writer(case_path, /*fmt=*/false,
+                                              /*unified=*/true, ":", start_time,
+                                              true, 10, 10, 10);
 
             const rd::smspec_node *fopt =
                 rd_sum_add_var(rd_sum.get(), "FOPT", nullptr, 0, "SM3", 0.0f);
@@ -585,12 +579,10 @@ TEST_CASE_METHOD(Tmpdir, "rd_sum_alloc_group_list returns group names") {
     const auto case_path = (dirname / "GCASE").string();
 
     {
-        auto rd_sum =
-            rd_sum_ptr(rd_sum_alloc_writer(
-                           case_path.c_str(), /*fmt_output=*/false,
-                           /*unified=*/true, ":",
-                           util_make_date_utc(1, 1, 2010), true, 10, 10, 10),
-                       &rd_sum_free);
+        auto rd_sum = make_summary_writer(case_path, /*fmt_output=*/false,
+                                          /*unified=*/true, ":",
+                                          util_make_date_utc(1, 1, 2010), true,
+                                          10, 10, 10);
 
         const rd::smspec_node *gopr_g1 =
             rd_sum_add_var(rd_sum.get(), "GOPR", "G1", 0, "SM3/DAY", 0.0f);
@@ -664,12 +656,11 @@ TEST_CASE_METHOD(Tmpdir, "Loading a case with data before its parent in time") {
     auto restart_path = (dirname / "CASE2").string();
     constexpr double child_fopt_value = 1.0e9;
     {
-        auto restart_sum = rd_sum_ptr(
-            rd_sum_alloc_restart_writer(restart_path.c_str(), base_path.c_str(),
-                                        /*fmt_output=*/false,
-                                        /*unified=*/true, ":", spec.start_time,
-                                        true, spec.nx, spec.ny, spec.nz),
-            &rd_sum_free);
+        auto restart_sum =
+            make_summary_writer(restart_path,
+                                /*fmt_output=*/false,
+                                /*unified=*/true, ":", spec.start_time, true,
+                                spec.nx, spec.ny, spec.nz, base_path);
 
         REQUIRE(rd_sum_can_write(restart_sum.get()));
 
@@ -709,11 +700,9 @@ TEST_CASE_METHOD(Tmpdir, "Restart writer writes has restart kw") {
     write_test_summary(base_name, spec, fmt_output, unified);
 
     {
-        auto restart_sum = rd_sum_ptr(
-            rd_sum_alloc_restart_writer(
-                restart_name.c_str(), base_name.c_str(), fmt_output, unified,
-                ":", spec.start_time, true, spec.nx, spec.ny, spec.nz),
-            &rd_sum_free);
+        auto restart_sum = make_summary_writer(
+            restart_name, fmt_output, unified, ":", spec.start_time, true,
+            spec.nx, spec.ny, spec.nz, base_name);
         rd_smspec_type *smspec = rd_sum_get_smspec(restart_sum.get());
         REQUIRE(rd_smspec_get_params_size(smspec) == 1);
         const rd::smspec_node *fopt =
@@ -767,11 +756,8 @@ TEST_CASE_METHOD(Tmpdir, "Restart case names are split across the 8 blocks") {
     const std::string name = "THE_CASE";
     const time_t start_time = util_make_date_utc(1, 1, 2010);
     {
-        auto rd_sum =
-            rd_sum_ptr(rd_sum_alloc_restart_writer2(
-                           name.c_str(), restart_case.c_str(), 77, false, true,
-                           ":", start_time, true, 3, 3, 3),
-                       &rd_sum_free);
+        auto rd_sum = make_summary_writer(name, false, true, ":", start_time,
+                                          true, 3, 3, 3, restart_case, 77);
         rd_sum_fwrite(rd_sum.get());
     }
 
@@ -1215,18 +1201,13 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
         };
 
         auto write_case = [&](const std::string &path,
-                              const std::string &restart_from,
+                              const std::optional<std::string> &restart_from,
                               double start_seconds, int report_step_offset,
                               const std::vector<std::vector<double>> &bpr_data,
                               const std::vector<int> &bpr_cells) {
-            rd_sum_type *raw =
-                restart_from.empty()
-                    ? rd_sum_alloc_writer(path.c_str(), false, true, ":",
-                                          start_time, true, nx, ny, nz)
-                    : rd_sum_alloc_restart_writer(
-                          path.c_str(), restart_from.c_str(), false, true, ":",
-                          start_time, true, nx, ny, nz);
-            auto sum = rd_sum_ptr(raw, &rd_sum_free);
+            rd_sum_ptr sum =
+                make_summary_writer(path, false, true, ":", start_time, true,
+                                    nx, ny, nz, restart_from);
             std::vector<const rd::smspec_node *> nodes;
             for (int cell : bpr_cells)
                 nodes.push_back(rd_sum_add_var(sum.get(), "BPR", nullptr, cell,
@@ -1251,7 +1232,7 @@ SCENARIO_METHOD(Tmpdir, "Loading Restarts") {
         const auto case3_path = (dirname / "CASE3").string();
         const auto case4_path = (dirname / "CASE4").string();
 
-        write_case(case1_path, "", 0.0, 0, case1_bpr, {1, 2, 3});
+        write_case(case1_path, std::nullopt, 0.0, 0, case1_bpr, {1, 2, 3});
         // CASE2 starts at 7.5 days, after CASE1's last step (6 days).
         write_case(case2_path, case1_path, 2.5 * step_spacing, 3, case2_bpr,
                    {1, 2});
@@ -1552,10 +1533,8 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
                 time_t_vector_append(times.get(),
                                      util_make_date_utc(d, 1, 2010));
 
-            auto resampled =
-                rd_sum_ptr(rd_sum_alloc_resample(rd_sum.get(), "kk",
-                                                 times.get(), false, false),
-                           &rd_sum_free);
+            auto resampled = rd_sum_alloc_resample(rd_sum.get(), "kk",
+                                                   times.get(), false, false);
             REQUIRE(resampled);
 
             THEN("Report times line up with the requested vector") {
@@ -1603,11 +1582,10 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
             time_t_vector_append(times.get(), util_make_date_utc(4, 1, 2010));
             time_t_vector_append(times.get(), util_make_date_utc(12, 1, 2010));
 
-            auto resampled = rd_sum_ptr(
+            auto resampled =
                 rd_sum_alloc_resample(rd_sum.get(), "kk", times.get(),
                                       /*lower_extrapolation=*/true,
-                                      /*upper_extrapolation=*/true),
-                &rd_sum_free);
+                                      /*upper_extrapolation=*/true);
             REQUIRE(resampled);
 
             const rd_smspec_type *smspec = rd_sum_get_smspec(resampled.get());
@@ -1654,8 +1632,8 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
             time_t_vector_append(times.get(), util_make_date_utc(2, 1, 2010));
 
             THEN("rd_sum_alloc_resample returns null") {
-                REQUIRE(rd_sum_alloc_resample(rd_sum.get(), "kk", times.get(),
-                                              false, false) == nullptr);
+                REQUIRE_FALSE(rd_sum_alloc_resample(rd_sum.get(), "kk",
+                                                    times.get(), false, false));
             }
         }
     }
@@ -1678,10 +1656,8 @@ SCENARIO_METHOD(Tmpdir, "rd_sum_alloc_resample over a time vector") {
                 time_t_vector_append(times.get(),
                                      util_make_date_utc(d, 1, 2010));
 
-            auto resampled =
-                rd_sum_ptr(rd_sum_alloc_resample(rd_sum.get(), "kk",
-                                                 times.get(), false, true),
-                           &rd_sum_free);
+            auto resampled = rd_sum_alloc_resample(rd_sum.get(), "kk",
+                                                   times.get(), false, true);
             REQUIRE(resampled);
 
             THEN("Report times line up with the requested vector") {
@@ -1737,12 +1713,11 @@ TEST_CASE_METHOD(Tmpdir, "fread_alloc_case guesses base when given directory") {
         const std::string unique_key = "WOPR:" + unique_well;
         const float unique_scale = 17.5f;
         {
-            auto rd_sum = rd_sum_ptr(
-                rd_sum_alloc_writer(case_path.c_str(),
+            auto rd_sum =
+                make_summary_writer(case_path,
                                     /*fmt_output=*/false,
                                     /*unified=*/true, ":", spec.start_time,
-                                    true, spec.nx, spec.ny, spec.nz),
-                &rd_sum_free);
+                                    true, spec.nx, spec.ny, spec.nz);
             const rd::smspec_node *wopr = rd_sum_add_var(
                 rd_sum.get(), "WOPR", unique_well.c_str(), 0, "SM3/DAY", 0.0f);
             double sim_seconds = spec.start_seconds;
