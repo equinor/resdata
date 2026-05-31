@@ -18,6 +18,8 @@
 #include <ert/util/stringlist.hpp>
 #include "detail/util/path.hpp"
 
+#include <fmt/format.h>
+
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_file.hpp>
 #include <resdata/rd_kw_magic.hpp>
@@ -471,11 +473,10 @@ void rd_smspec_fwrite(const rd_smspec_type *smspec, const char *rd_case,
         rd::filename(rd_case, RD_SUMMARY_HEADER_FILE, fmt_file, 0).string();
     ERT::FortIO fortio(filename, std::ios_base::out, fmt_file);
 
-    if (!fortio.get()) {
-        const char *error_fmt_msg =
-            "%s: Unable to open fortio file %s, error: %s .\n";
-        util_abort(error_fmt_msg, __func__, filename.c_str(), strerror(errno));
-    }
+    if (!fortio.get())
+        throw std::runtime_error(
+            fmt::format("Unable to open fortio file {}, error: {}", filename,
+                        strerror(errno)));
 
     rd_smspec_fortio_fwrite(smspec, fortio.get());
 }
@@ -874,9 +875,8 @@ static bool rd_smspec_fread_header(rd_smspec_type *rd_smspec,
         rd_smspec->num_regions = 0;
         rd_smspec->params_size = rd_kw_get_size(keywords);
         if (startdat == NULL)
-            util_abort(
-                "%s: could not locate STARTDAT keyword in header - aborting \n",
-                __func__);
+            throw std::invalid_argument(
+                "Could not locate STARTDAT keyword in header");
 
         if (rd_file_has_kw(header, NUMS_KW))
             nums = rd_file_iget_named_kw(header, NUMS_KW, 0);
@@ -1005,8 +1005,8 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
             else if (util_string_equal(time_unit, "HOURS"))
                 rd_smspec->time_seconds = 3600;
             else
-                util_abort("%s: time_unit:%s not recognized \n", __func__,
-                           time_unit);
+                throw std::invalid_argument(
+                    fmt::format("time_unit:{} not recognized", time_unit));
         }
 
         const rd::smspec_node *day_node =
@@ -1027,11 +1027,10 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
             // Seems the restart file can also have time specified with
             // 'YEARS' as basic time unit; that mode is not supported.
 
-            util_abort("%s: Sorry the SMSPEC file seems to lack all time "
-                       "information, need either TIME, or DAY/MONTH/YEAR "
-                       "information. Can not proceed.",
-                       __func__);
-            return nullptr;
+            throw std::invalid_argument(
+                "The SMSPEC file seems to lack all time information, need "
+                "either TIME, or DAY/MONTH/YEAR information. Can not "
+                "proceed.");
         }
         return rd_smspec.release();
     } else {
@@ -1045,7 +1044,7 @@ rd_smspec_type *rd_smspec_fread_alloc(const std::string &header_file,
    rd_smcspec_var_type there are a set accessor functions:
 
    xx_get_xx: This function will take the apropriate input, and
-   return a double value. The function will fail with util_abort()
+   return a double value. The function will fail
    if the rd_smspec object can not recognize the input. THis
    function is not here.
 

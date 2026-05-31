@@ -15,6 +15,8 @@
 #include <ert/util/stringlist.hpp>
 #include <ert/util/test_util.hpp>
 
+#include <fmt/format.h>
+
 #include <resdata/rd_util.hpp>
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_data.hpp>
@@ -405,29 +407,15 @@ bool rd_sum_data_check_sim_days(const rd_sum_data_type *data, double sim_days) {
      sequence has no holes.
 */
 
-static void fprintf_date_utc(time_t t, FILE *stream) {
-    int mday, year, month;
-
-    util_set_datetime_values_utc(t, NULL, NULL, NULL, &mday, &month, &year);
-    fprintf(stream, "%02d/%02d/%4d", mday, month, year);
-}
-
 static int rd_sum_data_get_index_from_sim_time(const rd_sum_data_type *data,
                                                time_t sim_time) {
     if (!rd_sum_data_check_sim_time(data, sim_time)) {
         time_t start_time = rd_sum_data_get_data_start(data);
         time_t end_time = rd_sum_data_get_sim_end(data);
-
-        fprintf(stderr, "Simulation start: ");
-        fprintf_date_utc(rd_smspec_get_start_time(data->smspec), stderr);
-        fprintf(stderr, "Data start......: ");
-        fprintf_date_utc(start_time, stderr);
-        fprintf(stderr, "Simulation end .: ");
-        fprintf_date_utc(end_time, stderr);
-        fprintf(stderr, "Requested date .: ");
-        fprintf_date_utc(sim_time, stderr);
-        util_abort("%s: invalid time_t instance:%d  interval:  [%d,%d]\n",
-                   __func__, sim_time, start_time, end_time);
+        throw std::out_of_range(fmt::format(
+            "Invalid time_t instance:{} interval:[{},{}] (simulation start:{})",
+            sim_time, start_time, end_time,
+            rd_smspec_get_start_time(data->smspec)));
     }
 
     /*
