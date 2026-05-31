@@ -1,20 +1,24 @@
-#ifndef ERT_RD_SUM_H
-#define ERT_RD_SUM_H
+#pragma once
 
+#include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <ctime>
+
+#include <memory>
+#include <optional>
+#include <string>
 
 #include <ert/util/stringlist.hpp>
 #include <ert/util/time_t_vector.hpp>
 #include <ert/util/double_vector.hpp>
+#include "ert/util/type_macros.hpp"
 
 #include <resdata/rd_smspec.hpp>
 #include <resdata/rd_sum_tstep.hpp>
 #include <resdata/smspec_node.hpp>
+#include "resdata/rd_util.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct {
     char *locale;
@@ -192,14 +196,8 @@ void rd_sum_get_interp_vector(const rd_sum_type *rd_sum, time_t sim_time,
 
 UTIL_IS_INSTANCE_HEADER(rd_sum);
 
-#ifdef __cplusplus
-}
-#include <memory>
-
 using rd_sum_ptr = std::unique_ptr<rd_sum_type, decltype(&rd_sum_free)>;
 rd_sum_ptr read_summary(const std::string &filename,
                         const std::string &key_join_string = ":",
                         bool lazy_load = true, bool include_restart = true,
                         int file_options = 0);
-#endif
-#endif
