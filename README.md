@@ -50,7 +50,7 @@ Ensure that `cmake` and `conan` version 2 is installed.
 ```sh
 #set up conan
 conan profile detect
-conan install -of build --build=missing .
+conan install -of build --build=missing . -o build_tests=True
 cmake --preset=conan-release -DENABLE_ASAN=ON -DENABLE_UBSAN=ON
 
 
